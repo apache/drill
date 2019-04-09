@@ -23,13 +23,7 @@ package org.apache.drill.exec.proto;
 public final class SchemaDefProtos {
   private SchemaDefProtos() {}
   public static void registerAllExtensions(
-      com.google.protobuf.ExtensionRegistryLite registry) {
-  }
-
-  public static void registerAllExtensions(
       com.google.protobuf.ExtensionRegistry registry) {
-    registerAllExtensions(
-        (com.google.protobuf.ExtensionRegistryLite) registry);
   }
   /**
    * Protobuf enum {@code exec.ValueMode}
@@ -39,15 +33,15 @@ public final class SchemaDefProtos {
     /**
      * <code>VALUE_VECTOR = 0;</code>
      */
-    VALUE_VECTOR(0),
+    VALUE_VECTOR(0, 0),
     /**
      * <code>RLE = 1;</code>
      */
-    RLE(1),
+    RLE(1, 1),
     /**
      * <code>DICT = 2;</code>
      */
-    DICT(2),
+    DICT(2, 2),
     ;
 
     /**
@@ -64,19 +58,9 @@ public final class SchemaDefProtos {
     public static final int DICT_VALUE = 2;
 
 
-    public final int getNumber() {
-      return value;
-    }
+    public final int getNumber() { return value; }
 
-    /**
-     * @deprecated Use {@link #forNumber(int)} instead.
-     */
-    @java.lang.Deprecated
     public static ValueMode valueOf(int value) {
-      return forNumber(value);
-    }
-
-    public static ValueMode forNumber(int value) {
       switch (value) {
         case 0: return VALUE_VECTOR;
         case 1: return RLE;
@@ -89,17 +73,17 @@ public final class SchemaDefProtos {
         internalGetValueMap() {
       return internalValueMap;
     }
-    private static final com.google.protobuf.Internal.EnumLiteMap<
-        ValueMode> internalValueMap =
+    private static com.google.protobuf.Internal.EnumLiteMap<ValueMode>
+        internalValueMap =
           new com.google.protobuf.Internal.EnumLiteMap<ValueMode>() {
             public ValueMode findValueByNumber(int number) {
-              return ValueMode.forNumber(number);
+              return ValueMode.valueOf(number);
             }
           };
 
     public final com.google.protobuf.Descriptors.EnumValueDescriptor
         getValueDescriptor() {
-      return getDescriptor().getValues().get(ordinal());
+      return getDescriptor().getValues().get(index);
     }
     public final com.google.protobuf.Descriptors.EnumDescriptor
         getDescriptorForType() {
@@ -121,9 +105,11 @@ public final class SchemaDefProtos {
       return VALUES[desc.getIndex()];
     }
 
+    private final int index;
     private final int value;
 
-    private ValueMode(int value) {
+    private ValueMode(int index, int value) {
+      this.index = index;
       this.value = value;
     }
 
@@ -135,7 +121,7 @@ public final class SchemaDefProtos {
       getDescriptor() {
     return descriptor;
   }
-  private static  com.google.protobuf.Descriptors.FileDescriptor
+  private static com.google.protobuf.Descriptors.FileDescriptor
       descriptor;
   static {
     java.lang.String[] descriptorData = {
@@ -145,19 +131,18 @@ public final class SchemaDefProtos {
       "chemaDefProtosH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-        new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
-          public com.google.protobuf.ExtensionRegistry assignDescriptors(
-              com.google.protobuf.Descriptors.FileDescriptor root) {
-            descriptor = root;
-            return null;
-          }
-        };
+      new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
+        public com.google.protobuf.ExtensionRegistry assignDescriptors(
+            com.google.protobuf.Descriptors.FileDescriptor root) {
+          descriptor = root;
+          return null;
+        }
+      };
     com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
           org.apache.drill.common.types.TypeProtos.getDescriptor(),
         }, assigner);
-    org.apache.drill.common.types.TypeProtos.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)

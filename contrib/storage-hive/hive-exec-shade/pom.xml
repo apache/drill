@@ -142,10 +142,6 @@
               <pattern>org.apache.avro.</pattern>
               <shadedPattern>hive.org.apache.avro.</shadedPattern>
             </relocation>
-            <relocation>
-              <pattern>com.google.protobuf.</pattern>
-              <shadedPattern>hive.com.google.protobuf.</shadedPattern>
-            </relocation>
           </relocations>
           <filters>
             <filter>

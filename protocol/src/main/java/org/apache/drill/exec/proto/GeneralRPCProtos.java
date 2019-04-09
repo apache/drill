@@ -23,13 +23,7 @@ package org.apache.drill.exec.proto;
 public final class GeneralRPCProtos {
   private GeneralRPCProtos() {}
   public static void registerAllExtensions(
-      com.google.protobuf.ExtensionRegistryLite registry) {
-  }
-
-  public static void registerAllExtensions(
       com.google.protobuf.ExtensionRegistry registry) {
-    registerAllExtensions(
-        (com.google.protobuf.ExtensionRegistryLite) registry);
   }
   /**
    * Protobuf enum {@code exec.rpc.RpcMode}
@@ -39,23 +33,23 @@ public final class GeneralRPCProtos {
     /**
      * <code>REQUEST = 0;</code>
      */
-    REQUEST(0),
+    REQUEST(0, 0),
     /**
      * <code>RESPONSE = 1;</code>
      */
-    RESPONSE(1),
+    RESPONSE(1, 1),
     /**
      * <code>RESPONSE_FAILURE = 2;</code>
      */
-    RESPONSE_FAILURE(2),
+    RESPONSE_FAILURE(2, 2),
     /**
      * <code>PING = 3;</code>
      */
-    PING(3),
+    PING(3, 3),
     /**
      * <code>PONG = 4;</code>
      */
-    PONG(4),
+    PONG(4, 4),
     ;
 
     /**
@@ -80,19 +74,9 @@ public final class GeneralRPCProtos {
     public static final int PONG_VALUE = 4;
 
 
-    public final int getNumber() {
-      return value;
-    }
+    public final int getNumber() { return value; }
 
-    /**
-     * @deprecated Use {@link #forNumber(int)} instead.
-     */
-    @java.lang.Deprecated
     public static RpcMode valueOf(int value) {
-      return forNumber(value);
-    }
-
-    public static RpcMode forNumber(int value) {
       switch (value) {
         case 0: return REQUEST;
         case 1: return RESPONSE;
@@ -107,17 +91,17 @@ public final class GeneralRPCProtos {
         internalGetValueMap() {
       return internalValueMap;
     }
-    private static final com.google.protobuf.Internal.EnumLiteMap<
-        RpcMode> internalValueMap =
+    private static com.google.protobuf.Internal.EnumLiteMap<RpcMode>
+        internalValueMap =
           new com.google.protobuf.Internal.EnumLiteMap<RpcMode>() {
             public RpcMode findValueByNumber(int number) {
-              return RpcMode.forNumber(number);
+              return RpcMode.valueOf(number);
             }
           };
 
     public final com.google.protobuf.Descriptors.EnumValueDescriptor
         getValueDescriptor() {
-      return getDescriptor().getValues().get(ordinal());
+      return getDescriptor().getValues().get(index);
     }
     public final com.google.protobuf.Descriptors.EnumDescriptor
         getDescriptorForType() {
@@ -139,19 +123,21 @@ public final class GeneralRPCProtos {
       return VALUES[desc.getIndex()];
     }
 
+    private final int index;
     private final int value;
 
-    private RpcMode(int value) {
+    private RpcMode(int index, int value) {
+      this.index = index;
       this.value = value;
     }
 
     // @@protoc_insertion_point(enum_scope:exec.rpc.RpcMode)
   }
 
-  public interface AckOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:exec.rpc.Ack)
-      com.google.protobuf.MessageOrBuilder {
+  public interface AckOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
 
+    // optional bool ok = 1;
     /**
      * <code>optional bool ok = 1;</code>
      */
@@ -164,32 +150,36 @@ public final class GeneralRPCProtos {
   /**
    * Protobuf type {@code exec.rpc.Ack}
    */
-  public  static final class Ack extends
-      com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:exec.rpc.Ack)
-      AckOrBuilder {
-  private static final long serialVersionUID = 0L;
+  public static final class Ack extends
+      com.google.protobuf.GeneratedMessage
+      implements AckOrBuilder {
     // Use Ack.newBuilder() to construct.
-    private Ack(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+    private Ack(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
+      this.unknownFields = builder.getUnknownFields();
     }
-    private Ack() {
-      ok_ = false;
+    private Ack(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final Ack defaultInstance;
+    public static Ack getDefaultInstance() {
+      return defaultInstance;
     }
 
+    public Ack getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
     @java.lang.Override
     public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
+        getUnknownFields() {
       return this.unknownFields;
     }
     private Ack(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
-      this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
+      initFields();
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -201,16 +191,16 @@ public final class GeneralRPCProtos {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 8: {
               bitField0_ |= 0x00000001;
               ok_ = input.readBool();
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
               break;
             }
           }
@@ -219,7 +209,7 @@ public final class GeneralRPCProtos {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
         throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
+            e.getMessage()).setUnfinishedMessage(this);
       } finally {
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -230,15 +220,30 @@ public final class GeneralRPCProtos {
       return org.apache.drill.exec.proto.GeneralRPCProtos.internal_static_exec_rpc_Ack_descriptor;
     }
 
-    @java.lang.Override
-    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return org.apache.drill.exec.proto.GeneralRPCProtos.internal_static_exec_rpc_Ack_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               org.apache.drill.exec.proto.GeneralRPCProtos.Ack.class, org.apache.drill.exec.proto.GeneralRPCProtos.Ack.Builder.class);
     }
 
+    public static com.google.protobuf.Parser<Ack> PARSER =
+        new com.google.protobuf.AbstractParser<Ack>() {
+      public Ack parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new Ack(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<Ack> getParserForType() {
+      return PARSER;
+    }
+
     private int bitField0_;
+    // optional bool ok = 1;
     public static final int OK_FIELD_NUMBER = 1;
     private boolean ok_;
     /**
@@ -254,29 +259,30 @@ public final class GeneralRPCProtos {
       return ok_;
     }
 
+    private void initFields() {
+      ok_ = false;
+    }
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
+      if (isInitialized != -1) return isInitialized == 1;
 
       memoizedIsInitialized = 1;
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
+      getSerializedSize();
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         output.writeBool(1, ok_);
       }
-      unknownFields.writeTo(output);
+      getUnknownFields().writeTo(output);
     }
 
-    @java.lang.Override
+    private int memoizedSerializedSize = -1;
     public int getSerializedSize() {
-      int size = memoizedSize;
+      int size = memoizedSerializedSize;
       if (size != -1) return size;
 
       size = 0;
@@ -284,59 +290,18 @@ public final class GeneralRPCProtos {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(1, ok_);
       }
-      size += unknownFields.getSerializedSize();
-      memoizedSize = size;
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
       return size;
     }
 
+    private static final long serialVersionUID = 0L;
     @java.lang.Override
-    public boolean equals(final java.lang.Object obj) {
-      if (obj == this) {
-       return true;
-      }
-      if (!(obj instanceof org.apache.drill.exec.proto.GeneralRPCProtos.Ack)) {
-        return super.equals(obj);
-      }
-      org.apache.drill.exec.proto.GeneralRPCProtos.Ack other = (org.apache.drill.exec.proto.GeneralRPCProtos.Ack) obj;
-
-      boolean result = true;
-      result = result && (hasOk() == other.hasOk());
-      if (hasOk()) {
-        result = result && (getOk()
-            == other.getOk());
-      }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
     }
 
-    @java.lang.Override
-    public int hashCode() {
-      if (memoizedHashCode != 0) {
-        return memoizedHashCode;
-      }
-      int hash = 41;
-      hash = (19 * hash) + getDescriptor().hashCode();
-      if (hasOk()) {
-        hash = (37 * hash) + OK_FIELD_NUMBER;
-        hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
-            getOk());
-      }
-      hash = (29 * hash) + unknownFields.hashCode();
-      memoizedHashCode = hash;
-      return hash;
-    }
-
-    public static org.apache.drill.exec.proto.GeneralRPCProtos.Ack parseFrom(
-        java.nio.ByteBuffer data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static org.apache.drill.exec.proto.GeneralRPCProtos.Ack parseFrom(
-        java.nio.ByteBuffer data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
     public static org.apache.drill.exec.proto.GeneralRPCProtos.Ack parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
@@ -360,59 +325,46 @@ public final class GeneralRPCProtos {
     }
     public static org.apache.drill.exec.proto.GeneralRPCProtos.Ack parseFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+      return PARSER.parseFrom(input);
     }
     public static org.apache.drill.exec.proto.GeneralRPCProtos.Ack parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return PARSER.parseFrom(input, extensionRegistry);
     }
     public static org.apache.drill.exec.proto.GeneralRPCProtos.Ack parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
+      return PARSER.parseDelimitedFrom(input);
     }
     public static org.apache.drill.exec.proto.GeneralRPCProtos.Ack parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
     }
     public static org.apache.drill.exec.proto.GeneralRPCProtos.Ack parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+      return PARSER.parseFrom(input);
     }
     public static org.apache.drill.exec.proto.GeneralRPCProtos.Ack parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return PARSER.parseFrom(input, extensionRegistry);
     }
 
-    @java.lang.Override
+    public static Builder newBuilder() { return Builder.create(); }
     public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder() {
-      return DEFAULT_INSTANCE.toBuilder();
-    }
     public static Builder newBuilder(org.apache.drill.exec.proto.GeneralRPCProtos.Ack prototype) {
-      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+      return newBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
-    public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
-    }
+    public Builder toBuilder() { return newBuilder(this); }
 
     @java.lang.Override
     protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
       Builder builder = new Builder(parent);
       return builder;
     }
@@ -420,16 +372,14 @@ public final class GeneralRPCProtos {
      * Protobuf type {@code exec.rpc.Ack}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:exec.rpc.Ack)
-        org.apache.drill.exec.proto.GeneralRPCProtos.AckOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.GeneralRPCProtos.AckOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return org.apache.drill.exec.proto.GeneralRPCProtos.internal_static_exec_rpc_Ack_descriptor;
       }
 
-      @java.lang.Override
-      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return org.apache.drill.exec.proto.GeneralRPCProtos.internal_static_exec_rpc_Ack_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
@@ -442,16 +392,18 @@ public final class GeneralRPCProtos {
       }
 
       private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
       private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
         }
       }
-      @java.lang.Override
+      private static Builder create() {
+        return new Builder();
+      }
+
       public Builder clear() {
         super.clear();
         ok_ = false;
@@ -459,18 +411,19 @@ public final class GeneralRPCProtos {
         return this;
       }
 
-      @java.lang.Override
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return org.apache.drill.exec.proto.GeneralRPCProtos.internal_static_exec_rpc_Ack_descriptor;
       }
 
-      @java.lang.Override
       public org.apache.drill.exec.proto.GeneralRPCProtos.Ack getDefaultInstanceForType() {
         return org.apache.drill.exec.proto.GeneralRPCProtos.Ack.getDefaultInstance();
       }
 
-      @java.lang.Override
       public org.apache.drill.exec.proto.GeneralRPCProtos.Ack build() {
         org.apache.drill.exec.proto.GeneralRPCProtos.Ack result = buildPartial();
         if (!result.isInitialized()) {
@@ -479,7 +432,6 @@ public final class GeneralRPCProtos {
         return result;
       }
 
-      @java.lang.Override
       public org.apache.drill.exec.proto.GeneralRPCProtos.Ack buildPartial() {
         org.apache.drill.exec.proto.GeneralRPCProtos.Ack result = new org.apache.drill.exec.proto.GeneralRPCProtos.Ack(this);
         int from_bitField0_ = bitField0_;
@@ -493,39 +445,6 @@ public final class GeneralRPCProtos {
         return result;
       }
 
-      @java.lang.Override
-      public Builder clone() {
-        return (Builder) super.clone();
-      }
-      @java.lang.Override
-      public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
-        return (Builder) super.setField(field, value);
-      }
-      @java.lang.Override
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
-      }
-      @java.lang.Override
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
-      }
-      @java.lang.Override
-      public Builder setRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
-      }
-      @java.lang.Override
-      public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
-      }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof org.apache.drill.exec.proto.GeneralRPCProtos.Ack) {
           return mergeFrom((org.apache.drill.exec.proto.GeneralRPCProtos.Ack)other);
@@ -540,17 +459,14 @@ public final class GeneralRPCProtos {
         if (other.hasOk()) {
           setOk(other.getOk());
         }
-        this.mergeUnknownFields(other.unknownFields);
-        onChanged();
+        this.mergeUnknownFields(other.getUnknownFields());
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -560,7 +476,7 @@ public final class GeneralRPCProtos {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
           parsedMessage = (org.apache.drill.exec.proto.GeneralRPCProtos.Ack) e.getUnfinishedMessage();
-          throw e.unwrapIOException();
+          throw e;
         } finally {
           if (parsedMessage != null) {
             mergeFrom(parsedMessage);
@@ -570,6 +486,7 @@ public final class GeneralRPCProtos {
       }
       private int bitField0_;
 
+      // optional bool ok = 1;
       private boolean ok_ ;
       /**
        * <code>optional bool ok = 1;</code>
@@ -601,63 +518,22 @@ public final class GeneralRPCProtos {
         onChanged();
         return this;
       }
-      @java.lang.Override
-      public final Builder setUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.setUnknownFields(unknownFields);
-      }
-
-      @java.lang.Override
-      public final Builder mergeUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.mergeUnknownFields(unknownFields);
-      }
-
 
       // @@protoc_insertion_point(builder_scope:exec.rpc.Ack)
     }
 
-    // @@protoc_insertion_point(class_scope:exec.rpc.Ack)
-    private static final org.apache.drill.exec.proto.GeneralRPCProtos.Ack DEFAULT_INSTANCE;
     static {
-      DEFAULT_INSTANCE = new org.apache.drill.exec.proto.GeneralRPCProtos.Ack();
+      defaultInstance = new Ack(true);
+      defaultInstance.initFields();
     }
 
-    public static org.apache.drill.exec.proto.GeneralRPCProtos.Ack getDefaultInstance() {
-      return DEFAULT_INSTANCE;
-    }
-
-    @java.lang.Deprecated public static final com.google.protobuf.Parser<Ack>
-        PARSER = new com.google.protobuf.AbstractParser<Ack>() {
-      @java.lang.Override
-      public Ack parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Ack(input, extensionRegistry);
-      }
-    };
-
-    public static com.google.protobuf.Parser<Ack> parser() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<Ack> getParserForType() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public org.apache.drill.exec.proto.GeneralRPCProtos.Ack getDefaultInstanceForType() {
-      return DEFAULT_INSTANCE;
-    }
-
+    // @@protoc_insertion_point(class_scope:exec.rpc.Ack)
   }
 
-  public interface RpcHeaderOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:exec.rpc.RpcHeader)
-      com.google.protobuf.MessageOrBuilder {
+  public interface RpcHeaderOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
 
+    // optional .exec.rpc.RpcMode mode = 1;
     /**
      * <code>optional .exec.rpc.RpcMode mode = 1;</code>
      */
@@ -667,71 +543,75 @@ public final class GeneralRPCProtos {
      */
     org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode getMode();
 
+    // optional int32 coordination_id = 2;
     /**
+     * <code>optional int32 coordination_id = 2;</code>
+     *
      * <pre>
      * reusable coordination identifier.  Sender defines.  Server returns on return.  Irrelevant for purely single direction rpc.
      * </pre>
-     *
-     * <code>optional int32 coordination_id = 2;</code>
      */
     boolean hasCoordinationId();
     /**
+     * <code>optional int32 coordination_id = 2;</code>
+     *
      * <pre>
      * reusable coordination identifier.  Sender defines.  Server returns on return.  Irrelevant for purely single direction rpc.
      * </pre>
-     *
-     * <code>optional int32 coordination_id = 2;</code>
      */
     int getCoordinationId();
 
+    // optional int32 rpc_type = 3;
     /**
+     * <code>optional int32 rpc_type = 3;</code>
+     *
      * <pre>
      * a rpc mode specific rpc type.
      * </pre>
-     *
-     * <code>optional int32 rpc_type = 3;</code>
      */
     boolean hasRpcType();
     /**
+     * <code>optional int32 rpc_type = 3;</code>
+     *
      * <pre>
      * a rpc mode specific rpc type.
      * </pre>
-     *
-     * <code>optional int32 rpc_type = 3;</code>
      */
     int getRpcType();
   }
   /**
    * Protobuf type {@code exec.rpc.RpcHeader}
    */
-  public  static final class RpcHeader extends
-      com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:exec.rpc.RpcHeader)
-      RpcHeaderOrBuilder {
-  private static final long serialVersionUID = 0L;
+  public static final class RpcHeader extends
+      com.google.protobuf.GeneratedMessage
+      implements RpcHeaderOrBuilder {
     // Use RpcHeader.newBuilder() to construct.
-    private RpcHeader(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+    private RpcHeader(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
+      this.unknownFields = builder.getUnknownFields();
     }
-    private RpcHeader() {
-      mode_ = 0;
-      coordinationId_ = 0;
-      rpcType_ = 0;
+    private RpcHeader(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final RpcHeader defaultInstance;
+    public static RpcHeader getDefaultInstance() {
+      return defaultInstance;
     }
 
+    public RpcHeader getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
     @java.lang.Override
     public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
+        getUnknownFields() {
       return this.unknownFields;
     }
     private RpcHeader(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
-      this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
+      initFields();
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -743,15 +623,21 @@ public final class GeneralRPCProtos {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 8: {
               int rawValue = input.readEnum();
-                @SuppressWarnings("deprecation")
               org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode value = org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode.valueOf(rawValue);
               if (value == null) {
                 unknownFields.mergeVarintField(1, rawValue);
               } else {
                 bitField0_ |= 0x00000001;
-                mode_ = rawValue;
+                mode_ = value;
               }
               break;
             }
@@ -765,20 +651,13 @@ public final class GeneralRPCProtos {
               rpcType_ = input.readInt32();
               break;
             }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
         throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
+            e.getMessage()).setUnfinishedMessage(this);
       } finally {
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -789,17 +668,32 @@ public final class GeneralRPCProtos {
       return org.apache.drill.exec.proto.GeneralRPCProtos.internal_static_exec_rpc_RpcHeader_descriptor;
     }
 
-    @java.lang.Override
-    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return org.apache.drill.exec.proto.GeneralRPCProtos.internal_static_exec_rpc_RpcHeader_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader.class, org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader.Builder.class);
     }
 
+    public static com.google.protobuf.Parser<RpcHeader> PARSER =
+        new com.google.protobuf.AbstractParser<RpcHeader>() {
+      public RpcHeader parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new RpcHeader(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<RpcHeader> getParserForType() {
+      return PARSER;
+    }
+
     private int bitField0_;
+    // optional .exec.rpc.RpcMode mode = 1;
     public static final int MODE_FIELD_NUMBER = 1;
-    private int mode_;
+    private org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode mode_;
     /**
      * <code>optional .exec.rpc.RpcMode mode = 1;</code>
      */
@@ -810,73 +704,76 @@ public final class GeneralRPCProtos {
      * <code>optional .exec.rpc.RpcMode mode = 1;</code>
      */
     public org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode getMode() {
-      @SuppressWarnings("deprecation")
-      org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode result = org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode.valueOf(mode_);
-      return result == null ? org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode.REQUEST : result;
+      return mode_;
     }
 
+    // optional int32 coordination_id = 2;
     public static final int COORDINATION_ID_FIELD_NUMBER = 2;
     private int coordinationId_;
     /**
+     * <code>optional int32 coordination_id = 2;</code>
+     *
      * <pre>
      * reusable coordination identifier.  Sender defines.  Server returns on return.  Irrelevant for purely single direction rpc.
      * </pre>
-     *
-     * <code>optional int32 coordination_id = 2;</code>
      */
     public boolean hasCoordinationId() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     /**
+     * <code>optional int32 coordination_id = 2;</code>
+     *
      * <pre>
      * reusable coordination identifier.  Sender defines.  Server returns on return.  Irrelevant for purely single direction rpc.
      * </pre>
-     *
-     * <code>optional int32 coordination_id = 2;</code>
      */
     public int getCoordinationId() {
       return coordinationId_;
     }
 
+    // optional int32 rpc_type = 3;
     public static final int RPC_TYPE_FIELD_NUMBER = 3;
     private int rpcType_;
     /**
+     * <code>optional int32 rpc_type = 3;</code>
+     *
      * <pre>
      * a rpc mode specific rpc type.
      * </pre>
-     *
-     * <code>optional int32 rpc_type = 3;</code>
      */
     public boolean hasRpcType() {
       return ((bitField0_ & 0x00000004) == 0x00000004);
     }
     /**
+     * <code>optional int32 rpc_type = 3;</code>
+     *
      * <pre>
      * a rpc mode specific rpc type.
      * </pre>
-     *
-     * <code>optional int32 rpc_type = 3;</code>
      */
     public int getRpcType() {
       return rpcType_;
     }
 
+    private void initFields() {
+      mode_ = org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode.REQUEST;
+      coordinationId_ = 0;
+      rpcType_ = 0;
+    }
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
+      if (isInitialized != -1) return isInitialized == 1;
 
       memoizedIsInitialized = 1;
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
+      getSerializedSize();
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeEnum(1, mode_);
+        output.writeEnum(1, mode_.getNumber());
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeInt32(2, coordinationId_);
@@ -884,18 +781,18 @@ public final class GeneralRPCProtos {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         output.writeInt32(3, rpcType_);
       }
-      unknownFields.writeTo(output);
+      getUnknownFields().writeTo(output);
     }
 
-    @java.lang.Override
+    private int memoizedSerializedSize = -1;
     public int getSerializedSize() {
-      int size = memoizedSize;
+      int size = memoizedSerializedSize;
       if (size != -1) return size;
 
       size = 0;
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeEnumSize(1, mode_);
+          .computeEnumSize(1, mode_.getNumber());
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
@@ -905,75 +802,18 @@ public final class GeneralRPCProtos {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(3, rpcType_);
       }
-      size += unknownFields.getSerializedSize();
-      memoizedSize = size;
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
       return size;
     }
 
+    private static final long serialVersionUID = 0L;
     @java.lang.Override
-    public boolean equals(final java.lang.Object obj) {
-      if (obj == this) {
-       return true;
-      }
-      if (!(obj instanceof org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader)) {
-        return super.equals(obj);
-      }
-      org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader other = (org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader) obj;
-
-      boolean result = true;
-      result = result && (hasMode() == other.hasMode());
-      if (hasMode()) {
-        result = result && mode_ == other.mode_;
-      }
-      result = result && (hasCoordinationId() == other.hasCoordinationId());
-      if (hasCoordinationId()) {
-        result = result && (getCoordinationId()
-            == other.getCoordinationId());
-      }
-      result = result && (hasRpcType() == other.hasRpcType());
-      if (hasRpcType()) {
-        result = result && (getRpcType()
-            == other.getRpcType());
-      }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
     }
 
-    @java.lang.Override
-    public int hashCode() {
-      if (memoizedHashCode != 0) {
-        return memoizedHashCode;
-      }
-      int hash = 41;
-      hash = (19 * hash) + getDescriptor().hashCode();
-      if (hasMode()) {
-        hash = (37 * hash) + MODE_FIELD_NUMBER;
-        hash = (53 * hash) + mode_;
-      }
-      if (hasCoordinationId()) {
-        hash = (37 * hash) + COORDINATION_ID_FIELD_NUMBER;
-        hash = (53 * hash) + getCoordinationId();
-      }
-      if (hasRpcType()) {
-        hash = (37 * hash) + RPC_TYPE_FIELD_NUMBER;
-        hash = (53 * hash) + getRpcType();
-      }
-      hash = (29 * hash) + unknownFields.hashCode();
-      memoizedHashCode = hash;
-      return hash;
-    }
-
-    public static org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader parseFrom(
-        java.nio.ByteBuffer data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader parseFrom(
-        java.nio.ByteBuffer data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
     public static org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
@@ -997,59 +837,46 @@ public final class GeneralRPCProtos {
     }
     public static org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader parseFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+      return PARSER.parseFrom(input);
     }
     public static org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return PARSER.parseFrom(input, extensionRegistry);
     }
     public static org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
+      return PARSER.parseDelimitedFrom(input);
     }
     public static org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
     }
     public static org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+      return PARSER.parseFrom(input);
     }
     public static org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return PARSER.parseFrom(input, extensionRegistry);
     }
 
-    @java.lang.Override
+    public static Builder newBuilder() { return Builder.create(); }
     public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder() {
-      return DEFAULT_INSTANCE.toBuilder();
-    }
     public static Builder newBuilder(org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader prototype) {
-      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+      return newBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
-    public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
-    }
+    public Builder toBuilder() { return newBuilder(this); }
 
     @java.lang.Override
     protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
       Builder builder = new Builder(parent);
       return builder;
     }
@@ -1057,16 +884,14 @@ public final class GeneralRPCProtos {
      * Protobuf type {@code exec.rpc.RpcHeader}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:exec.rpc.RpcHeader)
-        org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeaderOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeaderOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return org.apache.drill.exec.proto.GeneralRPCProtos.internal_static_exec_rpc_RpcHeader_descriptor;
       }
 
-      @java.lang.Override
-      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return org.apache.drill.exec.proto.GeneralRPCProtos.internal_static_exec_rpc_RpcHeader_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
@@ -1079,19 +904,21 @@ public final class GeneralRPCProtos {
       }
 
       private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
       private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
         }
       }
-      @java.lang.Override
+      private static Builder create() {
+        return new Builder();
+      }
+
       public Builder clear() {
         super.clear();
-        mode_ = 0;
+        mode_ = org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode.REQUEST;
         bitField0_ = (bitField0_ & ~0x00000001);
         coordinationId_ = 0;
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -1100,18 +927,19 @@ public final class GeneralRPCProtos {
         return this;
       }
 
-      @java.lang.Override
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return org.apache.drill.exec.proto.GeneralRPCProtos.internal_static_exec_rpc_RpcHeader_descriptor;
       }
 
-      @java.lang.Override
       public org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader getDefaultInstanceForType() {
         return org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader.getDefaultInstance();
       }
 
-      @java.lang.Override
       public org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader build() {
         org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader result = buildPartial();
         if (!result.isInitialized()) {
@@ -1120,7 +948,6 @@ public final class GeneralRPCProtos {
         return result;
       }
 
-      @java.lang.Override
       public org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader buildPartial() {
         org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader result = new org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader(this);
         int from_bitField0_ = bitField0_;
@@ -1142,39 +969,6 @@ public final class GeneralRPCProtos {
         return result;
       }
 
-      @java.lang.Override
-      public Builder clone() {
-        return (Builder) super.clone();
-      }
-      @java.lang.Override
-      public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
-        return (Builder) super.setField(field, value);
-      }
-      @java.lang.Override
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
-      }
-      @java.lang.Override
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
-      }
-      @java.lang.Override
-      public Builder setRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
-      }
-      @java.lang.Override
-      public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
-      }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader) {
           return mergeFrom((org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader)other);
@@ -1195,17 +989,14 @@ public final class GeneralRPCProtos {
         if (other.hasRpcType()) {
           setRpcType(other.getRpcType());
         }
-        this.mergeUnknownFields(other.unknownFields);
-        onChanged();
+        this.mergeUnknownFields(other.getUnknownFields());
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -1215,7 +1006,7 @@ public final class GeneralRPCProtos {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
           parsedMessage = (org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader) e.getUnfinishedMessage();
-          throw e.unwrapIOException();
+          throw e;
         } finally {
           if (parsedMessage != null) {
             mergeFrom(parsedMessage);
@@ -1225,7 +1016,8 @@ public final class GeneralRPCProtos {
       }
       private int bitField0_;
 
-      private int mode_ = 0;
+      // optional .exec.rpc.RpcMode mode = 1;
+      private org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode mode_ = org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode.REQUEST;
       /**
        * <code>optional .exec.rpc.RpcMode mode = 1;</code>
        */
@@ -1236,9 +1028,7 @@ public final class GeneralRPCProtos {
        * <code>optional .exec.rpc.RpcMode mode = 1;</code>
        */
       public org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode getMode() {
-        @SuppressWarnings("deprecation")
-        org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode result = org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode.valueOf(mode_);
-        return result == null ? org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode.REQUEST : result;
+        return mode_;
       }
       /**
        * <code>optional .exec.rpc.RpcMode mode = 1;</code>
@@ -1248,7 +1038,7 @@ public final class GeneralRPCProtos {
           throw new NullPointerException();
         }
         bitField0_ |= 0x00000001;
-        mode_ = value.getNumber();
+        mode_ = value;
         onChanged();
         return this;
       }
@@ -1257,38 +1047,39 @@ public final class GeneralRPCProtos {
        */
       public Builder clearMode() {
         bitField0_ = (bitField0_ & ~0x00000001);
-        mode_ = 0;
+        mode_ = org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode.REQUEST;
         onChanged();
         return this;
       }
 
+      // optional int32 coordination_id = 2;
       private int coordinationId_ ;
       /**
+       * <code>optional int32 coordination_id = 2;</code>
+       *
        * <pre>
        * reusable coordination identifier.  Sender defines.  Server returns on return.  Irrelevant for purely single direction rpc.
        * </pre>
-       *
-       * <code>optional int32 coordination_id = 2;</code>
        */
       public boolean hasCoordinationId() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
+       * <code>optional int32 coordination_id = 2;</code>
+       *
        * <pre>
        * reusable coordination identifier.  Sender defines.  Server returns on return.  Irrelevant for purely single direction rpc.
        * </pre>
-       *
-       * <code>optional int32 coordination_id = 2;</code>
        */
       public int getCoordinationId() {
         return coordinationId_;
       }
       /**
+       * <code>optional int32 coordination_id = 2;</code>
+       *
        * <pre>
        * reusable coordination identifier.  Sender defines.  Server returns on return.  Irrelevant for purely single direction rpc.
        * </pre>
-       *
-       * <code>optional int32 coordination_id = 2;</code>
        */
       public Builder setCoordinationId(int value) {
         bitField0_ |= 0x00000002;
@@ -1297,11 +1088,11 @@ public final class GeneralRPCProtos {
         return this;
       }
       /**
+       * <code>optional int32 coordination_id = 2;</code>
+       *
        * <pre>
        * reusable coordination identifier.  Sender defines.  Server returns on return.  Irrelevant for purely single direction rpc.
        * </pre>
-       *
-       * <code>optional int32 coordination_id = 2;</code>
        */
       public Builder clearCoordinationId() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -1310,33 +1101,34 @@ public final class GeneralRPCProtos {
         return this;
       }
 
+      // optional int32 rpc_type = 3;
       private int rpcType_ ;
       /**
+       * <code>optional int32 rpc_type = 3;</code>
+       *
        * <pre>
        * a rpc mode specific rpc type.
        * </pre>
-       *
-       * <code>optional int32 rpc_type = 3;</code>
        */
       public boolean hasRpcType() {
         return ((bitField0_ & 0x00000004) == 0x00000004);
       }
       /**
+       * <code>optional int32 rpc_type = 3;</code>
+       *
        * <pre>
        * a rpc mode specific rpc type.
        * </pre>
-       *
-       * <code>optional int32 rpc_type = 3;</code>
        */
       public int getRpcType() {
         return rpcType_;
       }
       /**
+       * <code>optional int32 rpc_type = 3;</code>
+       *
        * <pre>
        * a rpc mode specific rpc type.
        * </pre>
-       *
-       * <code>optional int32 rpc_type = 3;</code>
        */
       public Builder setRpcType(int value) {
         bitField0_ |= 0x00000004;
@@ -1345,11 +1137,11 @@ public final class GeneralRPCProtos {
         return this;
       }
       /**
+       * <code>optional int32 rpc_type = 3;</code>
+       *
        * <pre>
        * a rpc mode specific rpc type.
        * </pre>
-       *
-       * <code>optional int32 rpc_type = 3;</code>
        */
       public Builder clearRpcType() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -1357,152 +1149,116 @@ public final class GeneralRPCProtos {
         onChanged();
         return this;
       }
-      @java.lang.Override
-      public final Builder setUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.setUnknownFields(unknownFields);
-      }
-
-      @java.lang.Override
-      public final Builder mergeUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.mergeUnknownFields(unknownFields);
-      }
-
 
       // @@protoc_insertion_point(builder_scope:exec.rpc.RpcHeader)
     }
 
-    // @@protoc_insertion_point(class_scope:exec.rpc.RpcHeader)
-    private static final org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader DEFAULT_INSTANCE;
     static {
-      DEFAULT_INSTANCE = new org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader();
+      defaultInstance = new RpcHeader(true);
+      defaultInstance.initFields();
     }
 
-    public static org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader getDefaultInstance() {
-      return DEFAULT_INSTANCE;
-    }
-
-    @java.lang.Deprecated public static final com.google.protobuf.Parser<RpcHeader>
-        PARSER = new com.google.protobuf.AbstractParser<RpcHeader>() {
-      @java.lang.Override
-      public RpcHeader parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new RpcHeader(input, extensionRegistry);
-      }
-    };
-
-    public static com.google.protobuf.Parser<RpcHeader> parser() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<RpcHeader> getParserForType() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader getDefaultInstanceForType() {
-      return DEFAULT_INSTANCE;
-    }
-
+    // @@protoc_insertion_point(class_scope:exec.rpc.RpcHeader)
   }
 
-  public interface CompleteRpcMessageOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:exec.rpc.CompleteRpcMessage)
-      com.google.protobuf.MessageOrBuilder {
+  public interface CompleteRpcMessageOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
 
+    // optional .exec.rpc.RpcHeader header = 1;
     /**
+     * <code>optional .exec.rpc.RpcHeader header = 1;</code>
+     *
      * <pre>
      * required
      * </pre>
-     *
-     * <code>optional .exec.rpc.RpcHeader header = 1;</code>
      */
     boolean hasHeader();
     /**
+     * <code>optional .exec.rpc.RpcHeader header = 1;</code>
+     *
      * <pre>
      * required
      * </pre>
-     *
-     * <code>optional .exec.rpc.RpcHeader header = 1;</code>
      */
     org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader getHeader();
     /**
+     * <code>optional .exec.rpc.RpcHeader header = 1;</code>
+     *
      * <pre>
      * required
      * </pre>
-     *
-     * <code>optional .exec.rpc.RpcHeader header = 1;</code>
      */
     org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeaderOrBuilder getHeaderOrBuilder();
 
+    // optional bytes protobuf_body = 2;
     /**
+     * <code>optional bytes protobuf_body = 2;</code>
+     *
      * <pre>
      * required
      * </pre>
-     *
-     * <code>optional bytes protobuf_body = 2;</code>
      */
     boolean hasProtobufBody();
     /**
+     * <code>optional bytes protobuf_body = 2;</code>
+     *
      * <pre>
      * required
      * </pre>
-     *
-     * <code>optional bytes protobuf_body = 2;</code>
      */
     com.google.protobuf.ByteString getProtobufBody();
 
+    // optional bytes raw_body = 3;
     /**
+     * <code>optional bytes raw_body = 3;</code>
+     *
      * <pre>
      * optional
      * </pre>
-     *
-     * <code>optional bytes raw_body = 3;</code>
      */
     boolean hasRawBody();
     /**
+     * <code>optional bytes raw_body = 3;</code>
+     *
      * <pre>
      * optional
      * </pre>
-     *
-     * <code>optional bytes raw_body = 3;</code>
      */
     com.google.protobuf.ByteString getRawBody();
   }
   /**
    * Protobuf type {@code exec.rpc.CompleteRpcMessage}
    */
-  public  static final class CompleteRpcMessage extends
-      com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:exec.rpc.CompleteRpcMessage)
-      CompleteRpcMessageOrBuilder {
-  private static final long serialVersionUID = 0L;
+  public static final class CompleteRpcMessage extends
+      com.google.protobuf.GeneratedMessage
+      implements CompleteRpcMessageOrBuilder {
     // Use CompleteRpcMessage.newBuilder() to construct.
-    private CompleteRpcMessage(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+    private CompleteRpcMessage(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
+      this.unknownFields = builder.getUnknownFields();
     }
-    private CompleteRpcMessage() {
-      protobufBody_ = com.google.protobuf.ByteString.EMPTY;
-      rawBody_ = com.google.protobuf.ByteString.EMPTY;
+    private CompleteRpcMessage(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final CompleteRpcMessage defaultInstance;
+    public static CompleteRpcMessage getDefaultInstance() {
+      return defaultInstance;
     }
 
+    public CompleteRpcMessage getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
     @java.lang.Override
     public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
+        getUnknownFields() {
       return this.unknownFields;
     }
     private CompleteRpcMessage(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
-      this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
+      initFields();
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -1514,6 +1270,13 @@ public final class GeneralRPCProtos {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -1537,20 +1300,13 @@ public final class GeneralRPCProtos {
               rawBody_ = input.readBytes();
               break;
             }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
         throw e.setUnfinishedMessage(this);
       } catch (java.io.IOException e) {
         throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
+            e.getMessage()).setUnfinishedMessage(this);
       } finally {
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -1561,110 +1317,130 @@ public final class GeneralRPCProtos {
       return org.apache.drill.exec.proto.GeneralRPCProtos.internal_static_exec_rpc_CompleteRpcMessage_descriptor;
     }
 
-    @java.lang.Override
-    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return org.apache.drill.exec.proto.GeneralRPCProtos.internal_static_exec_rpc_CompleteRpcMessage_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               org.apache.drill.exec.proto.GeneralRPCProtos.CompleteRpcMessage.class, org.apache.drill.exec.proto.GeneralRPCProtos.CompleteRpcMessage.Builder.class);
     }
 
+    public static com.google.protobuf.Parser<CompleteRpcMessage> PARSER =
+        new com.google.protobuf.AbstractParser<CompleteRpcMessage>() {
+      public CompleteRpcMessage parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new CompleteRpcMessage(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<CompleteRpcMessage> getParserForType() {
+      return PARSER;
+    }
+
     private int bitField0_;
+    // optional .exec.rpc.RpcHeader header = 1;
     public static final int HEADER_FIELD_NUMBER = 1;
     private org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader header_;
     /**
+     * <code>optional .exec.rpc.RpcHeader header = 1;</code>
+     *
      * <pre>
      * required
      * </pre>
-     *
-     * <code>optional .exec.rpc.RpcHeader header = 1;</code>
      */
     public boolean hasHeader() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
+     * <code>optional .exec.rpc.RpcHeader header = 1;</code>
+     *
      * <pre>
      * required
      * </pre>
-     *
-     * <code>optional .exec.rpc.RpcHeader header = 1;</code>
      */
     public org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader getHeader() {
-      return header_ == null ? org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader.getDefaultInstance() : header_;
+      return header_;
     }
     /**
+     * <code>optional .exec.rpc.RpcHeader header = 1;</code>
+     *
      * <pre>
      * required
      * </pre>
-     *
-     * <code>optional .exec.rpc.RpcHeader header = 1;</code>
      */
     public org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeaderOrBuilder getHeaderOrBuilder() {
-      return header_ == null ? org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader.getDefaultInstance() : header_;
+      return header_;
     }
 
+    // optional bytes protobuf_body = 2;
     public static final int PROTOBUF_BODY_FIELD_NUMBER = 2;
     private com.google.protobuf.ByteString protobufBody_;
     /**
+     * <code>optional bytes protobuf_body = 2;</code>
+     *
      * <pre>
      * required
      * </pre>
-     *
-     * <code>optional bytes protobuf_body = 2;</code>
      */
     public boolean hasProtobufBody() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     /**
+     * <code>optional bytes protobuf_body = 2;</code>
+     *
      * <pre>
      * required
      * </pre>
-     *
-     * <code>optional bytes protobuf_body = 2;</code>
      */
     public com.google.protobuf.ByteString getProtobufBody() {
       return protobufBody_;
     }
 
+    // optional bytes raw_body = 3;
     public static final int RAW_BODY_FIELD_NUMBER = 3;
     private com.google.protobuf.ByteString rawBody_;
     /**
+     * <code>optional bytes raw_body = 3;</code>
+     *
      * <pre>
      * optional
      * </pre>
-     *
-     * <code>optional bytes raw_body = 3;</code>
      */
     public boolean hasRawBody() {
       return ((bitField0_ & 0x00000004) == 0x00000004);
     }
     /**
+     * <code>optional bytes raw_body = 3;</code>
+     *
      * <pre>
      * optional
      * </pre>
-     *
-     * <code>optional bytes raw_body = 3;</code>
      */
     public com.google.protobuf.ByteString getRawBody() {
       return rawBody_;
     }
 
+    private void initFields() {
+      header_ = org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader.getDefaultInstance();
+      protobufBody_ = com.google.protobuf.ByteString.EMPTY;
+      rawBody_ = com.google.protobuf.ByteString.EMPTY;
+    }
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
+      if (isInitialized != -1) return isInitialized == 1;
 
       memoizedIsInitialized = 1;
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
+      getSerializedSize();
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeMessage(1, getHeader());
+        output.writeMessage(1, header_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeBytes(2, protobufBody_);
@@ -1672,18 +1448,18 @@ public final class GeneralRPCProtos {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         output.writeBytes(3, rawBody_);
       }
-      unknownFields.writeTo(output);
+      getUnknownFields().writeTo(output);
     }
 
-    @java.lang.Override
+    private int memoizedSerializedSize = -1;
     public int getSerializedSize() {
-      int size = memoizedSize;
+      int size = memoizedSerializedSize;
       if (size != -1) return size;
 
       size = 0;
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(1, getHeader());
+          .computeMessageSize(1, header_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
@@ -1693,76 +1469,18 @@ public final class GeneralRPCProtos {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(3, rawBody_);
       }
-      size += unknownFields.getSerializedSize();
-      memoizedSize = size;
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
       return size;
     }
 
+    private static final long serialVersionUID = 0L;
     @java.lang.Override
-    public boolean equals(final java.lang.Object obj) {
-      if (obj == this) {
-       return true;
-      }
-      if (!(obj instanceof org.apache.drill.exec.proto.GeneralRPCProtos.CompleteRpcMessage)) {
-        return super.equals(obj);
-      }
-      org.apache.drill.exec.proto.GeneralRPCProtos.CompleteRpcMessage other = (org.apache.drill.exec.proto.GeneralRPCProtos.CompleteRpcMessage) obj;
-
-      boolean result = true;
-      result = result && (hasHeader() == other.hasHeader());
-      if (hasHeader()) {
-        result = result && getHeader()
-            .equals(other.getHeader());
-      }
-      result = result && (hasProtobufBody() == other.hasProtobufBody());
-      if (hasProtobufBody()) {
-        result = result && getProtobufBody()
-            .equals(other.getProtobufBody());
-      }
-      result = result && (hasRawBody() == other.hasRawBody());
-      if (hasRawBody()) {
-        result = result && getRawBody()
-            .equals(other.getRawBody());
-      }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
     }
 
-    @java.lang.Override
-    public int hashCode() {
-      if (memoizedHashCode != 0) {
-        return memoizedHashCode;
-      }
-      int hash = 41;
-      hash = (19 * hash) + getDescriptor().hashCode();
-      if (hasHeader()) {
-        hash = (37 * hash) + HEADER_FIELD_NUMBER;
-        hash = (53 * hash) + getHeader().hashCode();
-      }
-      if (hasProtobufBody()) {
-        hash = (37 * hash) + PROTOBUF_BODY_FIELD_NUMBER;
-        hash = (53 * hash) + getProtobufBody().hashCode();
-      }
-      if (hasRawBody()) {
-        hash = (37 * hash) + RAW_BODY_FIELD_NUMBER;
-        hash = (53 * hash) + getRawBody().hashCode();
-      }
-      hash = (29 * hash) + unknownFields.hashCode();
-      memoizedHashCode = hash;
-      return hash;
-    }
-
-    public static org.apache.drill.exec.proto.GeneralRPCProtos.CompleteRpcMessage parseFrom(
-        java.nio.ByteBuffer data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static org.apache.drill.exec.proto.GeneralRPCProtos.CompleteRpcMessage parseFrom(
-        java.nio.ByteBuffer data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
     public static org.apache.drill.exec.proto.GeneralRPCProtos.CompleteRpcMessage parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
@@ -1786,59 +1504,46 @@ public final class GeneralRPCProtos {
     }
     public static org.apache.drill.exec.proto.GeneralRPCProtos.CompleteRpcMessage parseFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+      return PARSER.parseFrom(input);
     }
     public static org.apache.drill.exec.proto.GeneralRPCProtos.CompleteRpcMessage parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return PARSER.parseFrom(input, extensionRegistry);
     }
     public static org.apache.drill.exec.proto.GeneralRPCProtos.CompleteRpcMessage parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
+      return PARSER.parseDelimitedFrom(input);
     }
     public static org.apache.drill.exec.proto.GeneralRPCProtos.CompleteRpcMessage parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
     }
     public static org.apache.drill.exec.proto.GeneralRPCProtos.CompleteRpcMessage parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
+      return PARSER.parseFrom(input);
     }
     public static org.apache.drill.exec.proto.GeneralRPCProtos.CompleteRpcMessage parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
+      return PARSER.parseFrom(input, extensionRegistry);
     }
 
-    @java.lang.Override
+    public static Builder newBuilder() { return Builder.create(); }
     public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder() {
-      return DEFAULT_INSTANCE.toBuilder();
-    }
     public static Builder newBuilder(org.apache.drill.exec.proto.GeneralRPCProtos.CompleteRpcMessage prototype) {
-      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+      return newBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
-    public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
-    }
+    public Builder toBuilder() { return newBuilder(this); }
 
     @java.lang.Override
     protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
       Builder builder = new Builder(parent);
       return builder;
     }
@@ -1846,16 +1551,14 @@ public final class GeneralRPCProtos {
      * Protobuf type {@code exec.rpc.CompleteRpcMessage}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:exec.rpc.CompleteRpcMessage)
-        org.apache.drill.exec.proto.GeneralRPCProtos.CompleteRpcMessageOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.GeneralRPCProtos.CompleteRpcMessageOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return org.apache.drill.exec.proto.GeneralRPCProtos.internal_static_exec_rpc_CompleteRpcMessage_descriptor;
       }
 
-      @java.lang.Override
-      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return org.apache.drill.exec.proto.GeneralRPCProtos.internal_static_exec_rpc_CompleteRpcMessage_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
@@ -1868,21 +1571,23 @@ public final class GeneralRPCProtos {
       }
 
       private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
         super(parent);
         maybeForceBuilderInitialization();
       }
       private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
           getHeaderFieldBuilder();
         }
       }
-      @java.lang.Override
+      private static Builder create() {
+        return new Builder();
+      }
+
       public Builder clear() {
         super.clear();
         if (headerBuilder_ == null) {
-          header_ = null;
+          header_ = org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader.getDefaultInstance();
         } else {
           headerBuilder_.clear();
         }
@@ -1894,18 +1599,19 @@ public final class GeneralRPCProtos {
         return this;
       }
 
-      @java.lang.Override
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return org.apache.drill.exec.proto.GeneralRPCProtos.internal_static_exec_rpc_CompleteRpcMessage_descriptor;
       }
 
-      @java.lang.Override
       public org.apache.drill.exec.proto.GeneralRPCProtos.CompleteRpcMessage getDefaultInstanceForType() {
         return org.apache.drill.exec.proto.GeneralRPCProtos.CompleteRpcMessage.getDefaultInstance();
       }
 
-      @java.lang.Override
       public org.apache.drill.exec.proto.GeneralRPCProtos.CompleteRpcMessage build() {
         org.apache.drill.exec.proto.GeneralRPCProtos.CompleteRpcMessage result = buildPartial();
         if (!result.isInitialized()) {
@@ -1914,7 +1620,6 @@ public final class GeneralRPCProtos {
         return result;
       }
 
-      @java.lang.Override
       public org.apache.drill.exec.proto.GeneralRPCProtos.CompleteRpcMessage buildPartial() {
         org.apache.drill.exec.proto.GeneralRPCProtos.CompleteRpcMessage result = new org.apache.drill.exec.proto.GeneralRPCProtos.CompleteRpcMessage(this);
         int from_bitField0_ = bitField0_;
@@ -1940,39 +1645,6 @@ public final class GeneralRPCProtos {
         return result;
       }
 
-      @java.lang.Override
-      public Builder clone() {
-        return (Builder) super.clone();
-      }
-      @java.lang.Override
-      public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
-        return (Builder) super.setField(field, value);
-      }
-      @java.lang.Override
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
-      }
-      @java.lang.Override
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
-      }
-      @java.lang.Override
-      public Builder setRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
-      }
-      @java.lang.Override
-      public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
-      }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof org.apache.drill.exec.proto.GeneralRPCProtos.CompleteRpcMessage) {
           return mergeFrom((org.apache.drill.exec.proto.GeneralRPCProtos.CompleteRpcMessage)other);
@@ -1993,17 +1665,14 @@ public final class GeneralRPCProtos {
         if (other.hasRawBody()) {
           setRawBody(other.getRawBody());
         }
-        this.mergeUnknownFields(other.unknownFields);
-        onChanged();
+        this.mergeUnknownFields(other.getUnknownFields());
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -2013,7 +1682,7 @@ public final class GeneralRPCProtos {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
           parsedMessage = (org.apache.drill.exec.proto.GeneralRPCProtos.CompleteRpcMessage) e.getUnfinishedMessage();
-          throw e.unwrapIOException();
+          throw e;
         } finally {
           if (parsedMessage != null) {
             mergeFrom(parsedMessage);
@@ -2023,39 +1692,40 @@ public final class GeneralRPCProtos {
       }
       private int bitField0_;
 
-      private org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader header_ = null;
-      private com.google.protobuf.SingleFieldBuilderV3<
+      // optional .exec.rpc.RpcHeader header = 1;
+      private org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader header_ = org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
           org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader, org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader.Builder, org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeaderOrBuilder> headerBuilder_;
       /**
+       * <code>optional .exec.rpc.RpcHeader header = 1;</code>
+       *
        * <pre>
        * required
        * </pre>
-       *
-       * <code>optional .exec.rpc.RpcHeader header = 1;</code>
        */
       public boolean hasHeader() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
+       * <code>optional .exec.rpc.RpcHeader header = 1;</code>
+       *
        * <pre>
        * required
        * </pre>
-       *
-       * <code>optional .exec.rpc.RpcHeader header = 1;</code>
        */
       public org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader getHeader() {
         if (headerBuilder_ == null) {
-          return header_ == null ? org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader.getDefaultInstance() : header_;
+          return header_;
         } else {
           return headerBuilder_.getMessage();
         }
       }
       /**
+       * <code>optional .exec.rpc.RpcHeader header = 1;</code>
+       *
        * <pre>
        * required
        * </pre>
-       *
-       * <code>optional .exec.rpc.RpcHeader header = 1;</code>
        */
       public Builder setHeader(org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader value) {
         if (headerBuilder_ == null) {
@@ -2071,11 +1741,11 @@ public final class GeneralRPCProtos {
         return this;
       }
       /**
+       * <code>optional .exec.rpc.RpcHeader header = 1;</code>
+       *
        * <pre>
        * required
        * </pre>
-       *
-       * <code>optional .exec.rpc.RpcHeader header = 1;</code>
        */
       public Builder setHeader(
           org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader.Builder builderForValue) {
@@ -2089,16 +1759,15 @@ public final class GeneralRPCProtos {
         return this;
       }
       /**
+       * <code>optional .exec.rpc.RpcHeader header = 1;</code>
+       *
        * <pre>
        * required
        * </pre>
-       *
-       * <code>optional .exec.rpc.RpcHeader header = 1;</code>
        */
       public Builder mergeHeader(org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader value) {
         if (headerBuilder_ == null) {
           if (((bitField0_ & 0x00000001) == 0x00000001) &&
-              header_ != null &&
               header_ != org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader.getDefaultInstance()) {
             header_ =
               org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader.newBuilder(header_).mergeFrom(value).buildPartial();
@@ -2113,15 +1782,15 @@ public final class GeneralRPCProtos {
         return this;
       }
       /**
+       * <code>optional .exec.rpc.RpcHeader header = 1;</code>
+       *
        * <pre>
        * required
        * </pre>
-       *
-       * <code>optional .exec.rpc.RpcHeader header = 1;</code>
        */
       public Builder clearHeader() {
         if (headerBuilder_ == null) {
-          header_ = null;
+          header_ = org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader.getDefaultInstance();
           onChanged();
         } else {
           headerBuilder_.clear();
@@ -2130,11 +1799,11 @@ public final class GeneralRPCProtos {
         return this;
       }
       /**
+       * <code>optional .exec.rpc.RpcHeader header = 1;</code>
+       *
        * <pre>
        * required
        * </pre>
-       *
-       * <code>optional .exec.rpc.RpcHeader header = 1;</code>
        */
       public org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader.Builder getHeaderBuilder() {
         bitField0_ |= 0x00000001;
@@ -2142,34 +1811,33 @@ public final class GeneralRPCProtos {
         return getHeaderFieldBuilder().getBuilder();
       }
       /**
+       * <code>optional .exec.rpc.RpcHeader header = 1;</code>
+       *
        * <pre>
        * required
        * </pre>
-       *
-       * <code>optional .exec.rpc.RpcHeader header = 1;</code>
        */
       public org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeaderOrBuilder getHeaderOrBuilder() {
         if (headerBuilder_ != null) {
           return headerBuilder_.getMessageOrBuilder();
         } else {
-          return header_ == null ?
-              org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader.getDefaultInstance() : header_;
+          return header_;
         }
       }
       /**
+       * <code>optional .exec.rpc.RpcHeader header = 1;</code>
+       *
        * <pre>
        * required
        * </pre>
-       *
-       * <code>optional .exec.rpc.RpcHeader header = 1;</code>
        */
-      private com.google.protobuf.SingleFieldBuilderV3<
+      private com.google.protobuf.SingleFieldBuilder<
           org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader, org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader.Builder, org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeaderOrBuilder> 
           getHeaderFieldBuilder() {
         if (headerBuilder_ == null) {
-          headerBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+          headerBuilder_ = new com.google.protobuf.SingleFieldBuilder<
               org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader, org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader.Builder, org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeaderOrBuilder>(
-                  getHeader(),
+                  header_,
                   getParentForChildren(),
                   isClean());
           header_ = null;
@@ -2177,33 +1845,34 @@ public final class GeneralRPCProtos {
         return headerBuilder_;
       }
 
+      // optional bytes protobuf_body = 2;
       private com.google.protobuf.ByteString protobufBody_ = com.google.protobuf.ByteString.EMPTY;
       /**
+       * <code>optional bytes protobuf_body = 2;</code>
+       *
        * <pre>
        * required
        * </pre>
-       *
-       * <code>optional bytes protobuf_body = 2;</code>
        */
       public boolean hasProtobufBody() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
+       * <code>optional bytes protobuf_body = 2;</code>
+       *
        * <pre>
        * required
        * </pre>
-       *
-       * <code>optional bytes protobuf_body = 2;</code>
        */
       public com.google.protobuf.ByteString getProtobufBody() {
         return protobufBody_;
       }
       /**
+       * <code>optional bytes protobuf_body = 2;</code>
+       *
        * <pre>
        * required
        * </pre>
-       *
-       * <code>optional bytes protobuf_body = 2;</code>
        */
       public Builder setProtobufBody(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -2215,11 +1884,11 @@ public final class GeneralRPCProtos {
         return this;
       }
       /**
+       * <code>optional bytes protobuf_body = 2;</code>
+       *
        * <pre>
        * required
        * </pre>
-       *
-       * <code>optional bytes protobuf_body = 2;</code>
        */
       public Builder clearProtobufBody() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -2228,33 +1897,34 @@ public final class GeneralRPCProtos {
         return this;
       }
 
+      // optional bytes raw_body = 3;
       private com.google.protobuf.ByteString rawBody_ = com.google.protobuf.ByteString.EMPTY;
       /**
+       * <code>optional bytes raw_body = 3;</code>
+       *
        * <pre>
        * optional
        * </pre>
-       *
-       * <code>optional bytes raw_body = 3;</code>
        */
       public boolean hasRawBody() {
         return ((bitField0_ & 0x00000004) == 0x00000004);
       }
       /**
+       * <code>optional bytes raw_body = 3;</code>
+       *
        * <pre>
        * optional
        * </pre>
-       *
-       * <code>optional bytes raw_body = 3;</code>
        */
       public com.google.protobuf.ByteString getRawBody() {
         return rawBody_;
       }
       /**
+       * <code>optional bytes raw_body = 3;</code>
+       *
        * <pre>
        * optional
        * </pre>
-       *
-       * <code>optional bytes raw_body = 3;</code>
        */
       public Builder setRawBody(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -2266,11 +1936,11 @@ public final class GeneralRPCProtos {
         return this;
       }
       /**
+       * <code>optional bytes raw_body = 3;</code>
+       *
        * <pre>
        * optional
        * </pre>
-       *
-       * <code>optional bytes raw_body = 3;</code>
        */
       public Builder clearRawBody() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -2278,80 +1948,39 @@ public final class GeneralRPCProtos {
         onChanged();
         return this;
       }
-      @java.lang.Override
-      public final Builder setUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.setUnknownFields(unknownFields);
-      }
-
-      @java.lang.Override
-      public final Builder mergeUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.mergeUnknownFields(unknownFields);
-      }
-
 
       // @@protoc_insertion_point(builder_scope:exec.rpc.CompleteRpcMessage)
     }
 
-    // @@protoc_insertion_point(class_scope:exec.rpc.CompleteRpcMessage)
-    private static final org.apache.drill.exec.proto.GeneralRPCProtos.CompleteRpcMessage DEFAULT_INSTANCE;
     static {
-      DEFAULT_INSTANCE = new org.apache.drill.exec.proto.GeneralRPCProtos.CompleteRpcMessage();
+      defaultInstance = new CompleteRpcMessage(true);
+      defaultInstance.initFields();
     }
 
-    public static org.apache.drill.exec.proto.GeneralRPCProtos.CompleteRpcMessage getDefaultInstance() {
-      return DEFAULT_INSTANCE;
-    }
-
-    @java.lang.Deprecated public static final com.google.protobuf.Parser<CompleteRpcMessage>
-        PARSER = new com.google.protobuf.AbstractParser<CompleteRpcMessage>() {
-      @java.lang.Override
-      public CompleteRpcMessage parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new CompleteRpcMessage(input, extensionRegistry);
-      }
-    };
-
-    public static com.google.protobuf.Parser<CompleteRpcMessage> parser() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<CompleteRpcMessage> getParserForType() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public org.apache.drill.exec.proto.GeneralRPCProtos.CompleteRpcMessage getDefaultInstanceForType() {
-      return DEFAULT_INSTANCE;
-    }
-
+    // @@protoc_insertion_point(class_scope:exec.rpc.CompleteRpcMessage)
   }
 
-  private static final com.google.protobuf.Descriptors.Descriptor
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_rpc_Ack_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_exec_rpc_Ack_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_rpc_RpcHeader_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_exec_rpc_RpcHeader_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_rpc_CompleteRpcMessage_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_exec_rpc_CompleteRpcMessage_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
     return descriptor;
   }
-  private static  com.google.protobuf.Descriptors.FileDescriptor
+  private static com.google.protobuf.Descriptors.FileDescriptor
       descriptor;
   static {
     java.lang.String[] descriptorData = {
@@ -2367,37 +1996,36 @@ public final class GeneralRPCProtos {
       "c.protoB\020GeneralRPCProtosH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-        new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
-          public com.google.protobuf.ExtensionRegistry assignDescriptors(
-              com.google.protobuf.Descriptors.FileDescriptor root) {
-            descriptor = root;
-            return null;
-          }
-        };
+      new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
+        public com.google.protobuf.ExtensionRegistry assignDescriptors(
+            com.google.protobuf.Descriptors.FileDescriptor root) {
+          descriptor = root;
+          internal_static_exec_rpc_Ack_descriptor =
+            getDescriptor().getMessageTypes().get(0);
+          internal_static_exec_rpc_Ack_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_rpc_Ack_descriptor,
+              new java.lang.String[] { "Ok", });
+          internal_static_exec_rpc_RpcHeader_descriptor =
+            getDescriptor().getMessageTypes().get(1);
+          internal_static_exec_rpc_RpcHeader_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_rpc_RpcHeader_descriptor,
+              new java.lang.String[] { "Mode", "CoordinationId", "RpcType", });
+          internal_static_exec_rpc_CompleteRpcMessage_descriptor =
+            getDescriptor().getMessageTypes().get(2);
+          internal_static_exec_rpc_CompleteRpcMessage_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_rpc_CompleteRpcMessage_descriptor,
+              new java.lang.String[] { "Header", "ProtobufBody", "RawBody", });
+          return null;
+        }
+      };
     com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
           org.apache.drill.exec.proto.CoordinationProtos.getDescriptor(),
         }, assigner);
-    internal_static_exec_rpc_Ack_descriptor =
-      getDescriptor().getMessageTypes().get(0);
-    internal_static_exec_rpc_Ack_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_exec_rpc_Ack_descriptor,
-        new java.lang.String[] { "Ok", });
-    internal_static_exec_rpc_RpcHeader_descriptor =
-      getDescriptor().getMessageTypes().get(1);
-    internal_static_exec_rpc_RpcHeader_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_exec_rpc_RpcHeader_descriptor,
-        new java.lang.String[] { "Mode", "CoordinationId", "RpcType", });
-    internal_static_exec_rpc_CompleteRpcMessage_descriptor =
-      getDescriptor().getMessageTypes().get(2);
-    internal_static_exec_rpc_CompleteRpcMessage_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_exec_rpc_CompleteRpcMessage_descriptor,
-        new java.lang.String[] { "Header", "ProtobufBody", "RawBody", });
-    org.apache.drill.exec.proto.CoordinationProtos.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)
