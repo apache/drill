@@ -1792,7 +1792,7 @@
               <execution>
                 <id>source-release-checksum</id>
                 <goals>
-                  <goal>artifacts</goal>
+                  <goal>files</goal>
                 </goals>
               </execution>
             </executions>
@@ -1800,6 +1800,17 @@
               <algorithms>
                 <algorithm>SHA-512</algorithm>
               </algorithms>
+              <fileSets>
+                <!--Override fileSet from the Apache Parent POM-->
+                <fileSet>
+                  <directory>${project.build.directory}</directory>
+                  <includes>
+                    <include>apache-drill-${project.version}.tar.gz</include>
+                    <include>apache-drill-${project.version}-src.tar.gz</include>
+                    <include>apache-drill-${project.version}-src.zip</include>
+                  </includes>
+                </fileSet>
+              </fileSets>
             </configuration>
           </plugin>
 
