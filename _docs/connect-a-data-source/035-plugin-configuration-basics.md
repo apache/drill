@@ -79,7 +79,7 @@ The following table describes the attributes you configure for storage plugins i
   </tr>
   <tr>
     <td>"formats" . . . "type"</td>
-    <td>"pcap"<br>"pcapng"<br>"text"<br>"parquet"<br>"json"<br>"maprdb"<br>"avro"<br>"image"<br>"sequencefile"<br>"httpd"<br>"[syslog]({{site.baseurl}}/docs/syslog-format-plugin/)"</td>
+    <td>"pcap"<br>"pcapng"<br>"text"<br>"parquet"<br>"json"<br>"maprdb"<br>"avro"<br>"image"<br>"sequencefile"<br>"[ltsv](https://drill.apache.org/docs/ltsv-format-plugin/)"<br>"httpd"<br>"[syslog]({{site.baseurl}}/docs/syslog-format-plugin/)"</td>
     <td>yes</td>
     <td>Format type. You can define two formats, csv and psv, as type "Text", but having different delimiters. </td>
   </tr>
