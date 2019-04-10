@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserRemoteException;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
@@ -77,7 +78,14 @@ public class QueryWrapper {
         .setAutolimitRowcount(autoLimitRowCount)
         .build();
 
-    webUserConnection.setAutoLimitRowCount(autoLimitRowCount);
+    int defaultMaxRows = webUserConnection.getSession().getOptions().getOption(ExecConstants.QUERY_MAX_ROWS).num_val.intValue();
+    int maxRows;
+    if (autoLimitRowCount > 0 && defaultMaxRows > 0) {
+      maxRows = Math.min(autoLimitRowCount, defaultMaxRows);
+    } else {
+      maxRows = Math.max(autoLimitRowCount, defaultMaxRows);
+    }
+    webUserConnection.setAutoLimitRowCount(maxRows);
 
     // Submit user query to Drillbit work queue.
     final QueryId queryId = workManager.getUserWorker().submitWork(webUserConnection, runQuery);

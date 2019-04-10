@@ -216,27 +216,31 @@ public class DrillSqlWorker {
     return handler.getPlan(sqlNode);
   }
 
-  private static boolean isAutoLimitShouldBeApplied(QueryContext context, SqlNode sqlNode) {
-    return (context.getOptions().getOption(ExecConstants.QUERY_MAX_ROWS).num_val.intValue() > 0) && sqlNode.getKind().belongsTo(SqlKind.QUERY)
-        && (sqlNode.getKind() != SqlKind.ORDER_BY || isAutoLimitLessThanOrderByFetch((SqlOrderBy) sqlNode, context));
+  private static boolean isAutoLimitShouldBeApplied(SqlNode sqlNode, int queryMaxRows) {
+    return (queryMaxRows > 0) && sqlNode.getKind().belongsTo(SqlKind.QUERY)
+        && (sqlNode.getKind() != SqlKind.ORDER_BY || isAutoLimitLessThanOrderByFetch((SqlOrderBy) sqlNode, queryMaxRows));
   }
 
   private static SqlNode checkAndApplyAutoLimit(SqlConverter parser, QueryContext context, String sql) {
     SqlNode sqlNode = parser.parse(sql);
-    if (isAutoLimitShouldBeApplied(context, sqlNode)) {
-      sqlNode = wrapWithAutoLimit(sqlNode, context);
+    int queryMaxRows = context.getOptions().getOption(ExecConstants.QUERY_MAX_ROWS).num_val.intValue();
+    if (isAutoLimitShouldBeApplied(sqlNode, queryMaxRows)) {
+      sqlNode = wrapWithAutoLimit(sqlNode, queryMaxRows);
     } else {
-      context.getOptions().setLocalOption(ExecConstants.QUERY_MAX_ROWS, 0);
+      //Force setting to zero IFF autoLimit was intended to be set originally but is inapplicable
+      if (queryMaxRows > 0) {
+        context.getOptions().setLocalOption(ExecConstants.QUERY_MAX_ROWS, 0);
+      }
     }
     return sqlNode;
   }
 
-  private static boolean isAutoLimitLessThanOrderByFetch(SqlOrderBy orderBy, QueryContext context) {
-    return orderBy.fetch == null || Integer.parseInt(orderBy.fetch.toString()) > context.getOptions().getOption(ExecConstants.QUERY_MAX_ROWS).num_val.intValue();
+  private static boolean isAutoLimitLessThanOrderByFetch(SqlOrderBy orderBy, int queryMaxRows) {
+    return orderBy.fetch == null || Integer.parseInt(orderBy.fetch.toString()) > queryMaxRows;
   }
 
-  private static SqlNode wrapWithAutoLimit(SqlNode sqlNode, QueryContext context) {
-    SqlNumericLiteral autoLimitLiteral = SqlLiteral.createExactNumeric(String.valueOf(context.getOptions().getOption(ExecConstants.QUERY_MAX_ROWS).num_val.intValue()), SqlParserPos.ZERO);
+  private static SqlNode wrapWithAutoLimit(SqlNode sqlNode, int queryMaxRows) {
+    SqlNumericLiteral autoLimitLiteral = SqlLiteral.createExactNumeric(String.valueOf(queryMaxRows), SqlParserPos.ZERO);
     if (sqlNode.getKind() == SqlKind.ORDER_BY) {
       SqlOrderBy orderBy = (SqlOrderBy) sqlNode;
       return new SqlOrderBy(orderBy.getParserPosition(), orderBy.query, orderBy.orderList, orderBy.offset, autoLimitLiteral);
