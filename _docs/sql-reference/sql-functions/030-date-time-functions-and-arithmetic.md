@@ -1,6 +1,6 @@
 ---
 title: "Date/Time Functions and Arithmetic"
-date: 2019-01-15
+date: 2019-04-10
 parent: "SQL Functions"
 ---
 
@@ -24,11 +24,13 @@ This section covers the Drill [time zone limitation]({{site.baseurl}}/docs/data-
 [NOW]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#other-date-and-time-functions)               | TIMESTAMP  
 [TIMEOFDAY]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#other-date-and-time-functions)         | VARCHAR  
 [UNIX_TIMESTAMP]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#unix_timestamp)                   | BIGINT 
+[NEARESTDATE]({{ site.baseurl }}/docs/date-time-functions-and-arithmetic/#nearestdate)**                       | TIMESTAMP
 [TIMESTAMPADD]({{site.baseurl}}/docs/date-time-functions-and-arithmetic/#timestampadd)*                     | Inferred based on unit of time
 [TIMESTAMPDIFF]({{site.baseurl}}/docs/date-time-functions-and-arithmetic/#timestampdiff)*					   | Inferred based on unit of time												   |  
 |   
 
 *Supported in Drill 1.15 and later.
+**Supported in Drill 1.16 and later.
 
 ## AGE
 Returns the interval between two timestamps or subtracts a timestamp from midnight of the current date.
@@ -676,6 +678,60 @@ SELECT UNIX_TIMESTAMP('2015-05-29 08:18:53.0', 'yyyy-MM-dd HH:mm:ss.SSS') FROM (
 +-------------+
 1 row selected (0.171 seconds)  
 ```    
+
+##NEARESTDATE  
+Quickly and easily aggregates timestamp data by various units of time.   
+
+**Note:** Drill 1.16 and later supports the NEARESTDATE function.
+
+###NEARESTDATE Syntax  
+
+NEARESTDATE(*column*, '*interval*' )   
+    
+
+###NEARESTDATE Usage Notes 
+* Use with COUNT and GROUP BY to aggregate timestamp data. 
+* *column* is a data source column with timestamp values.  
+* *interval* is any of the following units of time: 
+	* YEAR
+	* QUARTER
+	* MONTH
+	* WEEK_SUNDAY
+	* WEEK_MONDAY
+	* DAY
+	* HOUR
+	* HALF_HOUR
+	* QUARTER_HOUR
+	* MINUTE
+	* 30SECOND
+	* 15SECOND
+	* SECOND  
+
+###NEARESTDATE Examples   
+
+The following example uses the NEARESTDATE function to aggregate hire dates by year:
+
+	SELECT NEARESTDATE(hire_date, 'YEAR' ) AS hireDate, COUNT(*) AS `count` FROM cp.`employee.json` GROUP BY NEARESTDATE(hire_date, 'YEAR');
+	+-----------------------+-------+
+	|       hireDate        | count |
+	+-----------------------+-------+
+	| 1994-01-01 00:00:00.0 | 23    |
+	| 1998-01-01 00:00:00.0 | 539   |
+	| 1996-01-01 00:00:00.0 | 503   |
+	| 1995-01-01 00:00:00.0 | 12    |
+	| 1997-01-01 00:00:00.0 | 74    |
+	| 1993-01-01 00:00:00.0 | 4     |
+	+-----------------------+-------+   
+
+The following example applies the NEARESTDATE function to a timestamp value (2019-02-01 07:22:00) and returns the timestamp value for each time unit indicated:  
+
+	SELECT nearestDate( TO_TIMESTAMP('2019-02-01 07:22:00', 'yyyy-MM-dd HH:mm:ss'), 'YEAR') AS nearest_year, nearestDate( TO_TIMESTAMP('2019-02-01 07:22:00', 'yyyy-MM-dd HH:mm:ss'), 'QUARTER') AS nearest_quarter, nearestDate( TO_TIMESTAMP('2019-02-15 07:22:00', 'yyyy-MM-dd HH:mm:ss'), 'MONTH') AS nearest_month, nearestDate( TO_TIMESTAMP('2019-02-15 07:22:00', 'yyyy-MM-dd HH:mm:ss'), 'DAY') AS nearest_day, nearestDate( TO_TIMESTAMP('2019-02-15 07:22:00', 'yyyy-MM-dd HH:mm:ss'), 'WEEK_SUNDAY') AS nearest_week_sunday, nearestDate( TO_TIMESTAMP('2019-02-15 07:22:00', 'yyyy-MM-dd HH:mm:ss'), 'WEEK_MONDAY') AS nearest_week_monday, nearestDate( TO_TIMESTAMP('2019-02-15 07:22:00', 'yyyy-MM-dd HH:mm:ss'), 'HOUR') AS nearest_hour, nearestDate( TO_TIMESTAMP('2019-02-15 07:42:00', 'yyyy-MM-dd HH:mm:ss'), 'HALF_HOUR') AS nearest_half_hour, nearestDate( TO_TIMESTAMP('2019-02-15 07:48:00', 'yyyy-MM-dd HH:mm:ss'), 'QUARTER_HOUR') AS nearest_quarter_hour, nearestDate( TO_TIMESTAMP('2019-02-15 07:22:00', 'yyyy-MM-dd HH:mm:ss'), 'MINUTE') AS nearest_minute, nearestDate( TO_TIMESTAMP('2019-02-15 07:22:22', 'yyyy-MM-dd HH:mm:ss'), 'HALF_MINUTE') AS nearest_30second, nearestDate( TO_TIMESTAMP('2019-02-15 07:22:22', 'yyyy-MM-dd HH:mm:ss'), 'QUARTER_MINUTE') AS nearest_15second, nearestDate( TO_TIMESTAMP('2019-02-15 07:22:31', 'yyyy-MM-dd HH:mm:ss'), 'SECOND') AS nearest_second FROM (VALUES(1));
+	+-----------------------+-----------------------+-----------------------+-----------------------+-----------------------+-----------------------+-----------------------+-----------------------+-----------------------+-----------------------+-----------------------+-----------------------+-----------------------+
+	|     nearest_year      |    nearest_quarter    |     nearest_month     |      nearest_day      |  nearest_week_sunday  |  nearest_week_monday  |     nearest_hour      |   nearest_half_hour   | nearest_quarter_hour  |    nearest_minute     |   nearest_30second    |   nearest_15second    |    nearest_second     |
+	+-----------------------+-----------------------+-----------------------+-----------------------+-----------------------+-----------------------+-----------------------+-----------------------+-----------------------+-----------------------+-----------------------+-----------------------+-----------------------+
+	| 2019-01-01 00:00:00.0 | 2019-01-01 00:00:00.0 | 2019-02-01 00:00:00.0 | 2019-02-15 00:00:00.0 | 2019-02-10 00:00:00.0 | 2019-02-11 00:00:00.0 | 2019-02-15 07:00:00.0 | 2019-02-15 07:30:00.0 | 2019-02-15 07:45:00.0 | 2019-02-15 07:22:00.0 | 2019-02-15 07:22:00.0 | 2019-02-15 07:22:15.0 | 2019-02-15 07:22:31.0 |
+	+-----------------------+-----------------------+-----------------------+-----------------------+-----------------------+-----------------------+-----------------------+-----------------------+-----------------------+-----------------------+-----------------------+-----------------------+-----------------------+
+	
 
 ##TIMESTAMPADD  
 Adds an interval of time, in the given time units, to a datetime expression.  
