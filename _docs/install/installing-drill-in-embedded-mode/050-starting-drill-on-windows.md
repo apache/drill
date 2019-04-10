@@ -1,27 +1,32 @@
 ---
 title: "Starting Drill on Windows"
-date: 2019-04-08
+date: 2019-04-10
 parent: "Installing Drill in Embedded Mode"
 ---
 Complete the following steps to launch the Drill:
 
 1. Open the Windows command prompt.  
 2. Navigate to the Drill installation folder, for example:  
-`cd \Users\Bridget Bevens\drill_repo\apache-drill-1.16.0-SNAPSHOT` 
+`cd \Users\user1\drill_repo\apache-drill-1.16.0-SNAPSHOT` 
 3. Go to the `bin` directory, for example:  
 `cd bin`
 4. Enter either of the following commands to start Drill:     
 	- `sqlline.bat -u "jdbc:drill:zk=local"`  
     - `drill-embedded.bat` (Supported in Drill 1.16 and later.)  
 
-The Drill prompt appears:  
-
-	"A Drill is a terrible thing to waste."
-	apache drill> 
+			C:\Users\user1\drill_repo\apache-drill-1.16.0-SNAPSHOT\bin>drill-embedded.bat
+		
+			DRILL_ARGS - " -u jdbc:drill:zk=local"
+			HADOOP_HOME not detected...
+			HBASE_HOME not detected...
+			Calculating Drill classpath...
+			Apache Drill 1.16.0-SNAPSHOT
+			"Drill never goes out of style."
+			apache drill>
 
 You can run a test query to verify that Drill is running, for example:  
 
-	//Drill's classpath contains sample data, including an employees.json file that you can query. Switch schema to cp, for classpath.  
+	//Drill's classpath contains sample data, including an employee.json file that you can query. Switch schema to cp, for classpath.  
  
 	apache drill>use cp;
 	+------+--------------------------------+

@@ -1,6 +1,6 @@
 ---
 title: "Syslog Format Plugin"
-date: 2019-04-08
+date: 2019-04-10
 parent: "Connect a Data Source"
 ---
 
@@ -9,7 +9,7 @@ Starting in Drill 1.16, Drill provides a syslog format plugin, which enables Dri
 	<165>1 2003-10-11T22:14:15.003Z mymachine.example.com evntslog - ID47 [exampleSDID@32473 iut="3" eventSource="Application" eventID="1011"][examplePriority@32473 class="high"]  
 
 ## Configuration Options
-This syslog format plugin has the following configuration options:
+The syslog format plugin provides the following configuration options:
 
 
 

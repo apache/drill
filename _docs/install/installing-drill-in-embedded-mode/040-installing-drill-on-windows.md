@@ -1,6 +1,6 @@
 ---
 title: "Installing Drill on Windows"
-date: 2019-04-08
+date: 2019-04-10
 parent: "Installing Drill in Embedded Mode"
 ---
 
@@ -19,10 +19,13 @@ Before you download and install Drill on your Windows machine, complete the foll
 1.	Go to System Properties. 
 2.	On the Advanced Tab, click Environment Variables.  
 ![](https://i.imgur.com/lpytfmu.png)  
-3.	Click New, and enter JAVA_HOME as the variable name. For the variable value, enter the path to your JDK installation. Instead of using `Program Files` in the path name, use `progra~1`. This is required because Drill cannot use file paths with spaces.![](https://i.imgur.com/3CUoNNZ.png)  
-4.	Click OK to continue. 
-5.	In the System Variables section, select Path and then click Edit.![](https://i.imgur.com/nqv68Nu.png)
-6.	In the Edit Environment Variable window, click New and enter `%JAVA_HOME%\bin`.![](https://i.imgur.com/2kevwLV.png)
+3.	Click New, and enter JAVA_HOME as the variable name. For the variable value, enter the path to your JDK installation. If you installed JDK in the default installation location, instead of using `Program Files` in the path name, use `progra~1`. This is required because Drill cannot use file paths with spaces.    
+![](https://i.imgur.com/3CUoNNZ.png)  
+4.	Click OK to continue.   
+5.	In the System Variables section, select Path and then click Edit.  
+![](https://i.imgur.com/nqv68Nu.png)
+6.	In the Edit Environment Variable window, click New and enter `%JAVA_HOME%\bin`.  
+![](https://i.imgur.com/2kevwLV.png)
 7.	Click OK to continue and exit the System Properties window.    
 
 
@@ -41,7 +44,7 @@ You, or the user that will start Drill, must manually create and own UDF directo
 
 2.	To verify that you (or the user that will run Drill) owns the directories and files, go to the `"%userprofile%\drill"` directory, right-click on it, and select Properties from the list.  
 ![](https://i.imgur.com/lLLYOMX.png)
-3.	Verify that you are the owner for all the directories within drill, including the /udf, /registry, /tmp, and /staging directories. If you are not the owner, Edit the permissions. 
+3.	Verify that you are the owner for all the directories within drill, including the /udf, /registry, /tmp, and /staging directories. If you are not the owner, edit the permissions. 
 
 
 ## Download and Install Drill 
