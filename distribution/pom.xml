@@ -21,7 +21,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <artifactId>drill-root</artifactId>
+    <artifactId>apache-drill</artifactId>
     <groupId>org.apache.drill</groupId>
     <version>1.17.0-SNAPSHOT</version>
   </parent>
@@ -170,7 +170,7 @@
                 <descriptor>src/assemble/bin-assembly.xml</descriptor>
               </descriptors>
               <appendAssemblyId>false</appendAssemblyId>
-              <finalName>apache-drill-${project.version}</finalName>
+              <finalName>${project.parent.artifactId}-${project.version}</finalName>
             </configuration>
           </execution>
           <execution>
@@ -185,7 +185,7 @@
                 <descriptor>src/assemble/bin-assembly-dir.xml</descriptor>
               </descriptors>
               <appendAssemblyId>false</appendAssemblyId>
-              <finalName>apache-drill-${project.version}</finalName>
+              <finalName>${project.artifactId}-${project.version}</finalName>
             </configuration>
           </execution>
         </executions>
@@ -390,7 +390,7 @@
                   <directory>/opt/drill</directory>
                   <sources>
                     <source>
-                      <location>target/apache-drill-${project.version}/apache-drill-${project.version}/git.properties</location>
+                      <location>target/${project.parent.artifactId}-${project.version}/${project.parent.artifactId}-${project.version}/git.properties</location>
                     </source>
                   </sources>
                 </mapping>
@@ -398,7 +398,7 @@
                   <directory>/opt/drill</directory>
                   <sources>
                     <source>
-                      <location>target/apache-drill-${project.version}/apache-drill-${project.version}/KEYS</location>
+                      <location>target/${project.parent.artifactId}-${project.version}/${project.parent.artifactId}-${project.version}/KEYS</location>
                     </source>
                   </sources>
                 </mapping>
@@ -406,7 +406,7 @@
                   <directory>/opt/drill</directory>
                   <sources>
                     <source>
-                      <location>target/apache-drill-${project.version}/apache-drill-${project.version}/LICENSE</location>
+                      <location>target/${project.parent.artifactId}-${project.version}/${project.parent.artifactId}-${project.version}/LICENSE</location>
                     </source>
                   </sources>
                 </mapping>
@@ -414,7 +414,7 @@
                   <directory>/opt/drill</directory>
                   <sources>
                     <source>
-                      <location>target/apache-drill-${project.version}/apache-drill-${project.version}/NOTICE</location>
+                      <location>target/${project.parent.artifactId}-${project.version}/${project.parent.artifactId}-${project.version}/NOTICE</location>
                     </source>
                   </sources>
                 </mapping>
@@ -422,7 +422,7 @@
                   <directory>/opt/drill</directory>
                   <sources>
                     <source>
-                      <location>target/apache-drill-${project.version}/apache-drill-${project.version}/README.md</location>
+                      <location>target/${project.parent.artifactId}-${project.version}/${project.parent.artifactId}-${project.version}/README.md</location>
                     </source>
                   </sources>
                 </mapping>
@@ -430,7 +430,7 @@
                   <directory>/opt/drill/jars</directory>
                   <sources>
                     <source>
-                      <location>target/apache-drill-${project.version}/apache-drill-${project.version}/jars</location>
+                      <location>target/${project.parent.artifactId}-${project.version}/${project.parent.artifactId}-${project.version}/jars</location>
                     </source>
                   </sources>
                 </mapping>
@@ -438,7 +438,7 @@
                   <directory>/opt/drill/bin</directory>
                   <sources>
                     <source>
-                      <location>target/apache-drill-${project.version}/apache-drill-${project.version}/bin</location>
+                      <location>target/${project.parent.artifactId}-${project.version}/${project.parent.artifactId}-${project.version}/bin</location>
                     </source>
                   </sources>
                 </mapping>
@@ -446,7 +446,7 @@
 		<directory>/opt/drill/sample-data</directory>
                   <sources>
                     <source>
-                      <location>target/apache-drill-${project.version}/apache-drill-${project.version}/sample-data</location>
+                      <location>target/${project.parent.artifactId}-${project.version}/${project.parent.artifactId}-${project.version}/sample-data</location>
                     </source>
                   </sources>
                 </mapping>
@@ -454,7 +454,7 @@
                   <directory>/etc/drill/conf</directory>
                   <sources>
                     <source>
-                      <location>target/apache-drill-${project.version}/apache-drill-${project.version}/conf</location>
+                      <location>target/${project.parent.artifactId}-${project.version}/${project.parent.artifactId}-${project.version}/conf</location>
                     </source>
                   </sources>
                   <configuration>true</configuration>
@@ -490,10 +490,10 @@
                 </goals>
                 <configuration>
                   <skipPOMs>false</skipPOMs>
-                  <deb>distribution/target/apache-drill-${project.version}/apache-drill-${project.version}.deb</deb>
+                  <deb>distribution/target/${project.parent.artifactId}-${project.version}/${project.parent.artifactId}-${project.version}.deb</deb>
                   <dataSet>
                     <data>
-                      <src>target/apache-drill-${project.version}/apache-drill-${project.version}/git.properties</src>
+                      <src>target/${project.parent.artifactId}-${project.version}/${project.parent.artifactId}-${project.version}/git.properties</src>
                       <type>file</type>
                       <mapper>
                         <type>perm</type>
@@ -501,7 +501,7 @@
                       </mapper>
                     </data>
                     <data>
-                      <src>target/apache-drill-${project.version}/apache-drill-${project.version}/KEYS</src>
+                      <src>target/${project.parent.artifactId}-${project.version}${project.parent.artifactId}-${project.version}/KEYS</src>
                       <type>file</type>
                       <mapper>
                         <type>perm</type>
@@ -509,7 +509,7 @@
                       </mapper>
                     </data>
                     <data>
-                      <src>target/apache-drill-${project.version}/apache-drill-${project.version}/LICENSE</src>
+                      <src>target/${project.parent.artifactId}-${project.version}/${project.parent.artifactId}-${project.version}/LICENSE</src>
                       <type>file</type>
                       <mapper>
                         <type>perm</type>
@@ -517,7 +517,7 @@
                       </mapper>
                     </data>
                     <data>
-                      <src>target/apache-drill-${project.version}/apache-drill-${project.version}/NOTICE</src>
+                      <src>target/${project.parent.artifactId}-${project.version}/${project.parent.artifactId}-${project.version}/NOTICE</src>
                       <type>file</type>
                       <mapper>
                         <type>perm</type>
@@ -525,7 +525,7 @@
                       </mapper>
                     </data>
                     <data>
-                      <src>target/apache-drill-${project.version}/apache-drill-${project.version}/README.md</src>
+                      <src>target/${project.parent.artifactId}-${project.version}/${project.parent.artifactId}-${project.version}/README.md</src>
                       <type>file</type>
                       <mapper>
                         <type>perm</type>
@@ -533,7 +533,7 @@
                       </mapper>
                     </data>
                     <data>
-                      <src>target/apache-drill-${project.version}/apache-drill-${project.version}/jars</src>
+                      <src>target/${project.parent.artifactId}-${project.version}/${project.parent.artifactId}-${project.version}/jars</src>
                       <type>directory</type>
                       <mapper>
                         <type>perm</type>
@@ -541,7 +541,7 @@
                       </mapper>
                     </data>
                     <data>
-                      <src>target/apache-drill-${project.version}/apache-drill-${project.version}/bin</src>
+                      <src>target/${project.parent.artifactId}-${project.version}/${project.parent.artifactId}-${project.version}/bin</src>
                       <type>directory</type>
                       <mapper>
                         <type>perm</type>
@@ -550,7 +550,7 @@
                       </mapper>
                     </data>
                     <data>
-                      <src>target/apache-drill-${project.version}/apache-drill-${project.version}/sample-data</src>
+                      <src>target/${project.parent.artifactId}-${project.version}/${project.parent.artifactId}-${project.version}/sample-data</src>
                       <type>directory</type>
                       <mapper>
                         <type>perm</type>
@@ -559,7 +559,7 @@
                       </mapper>
                     </data>
                     <data>
-                      <src>target/apache-drill-${project.version}/apache-drill-${project.version}/conf</src>
+                      <src>target/${project.parent.artifactId}-${project.version}/${project.parent.artifactId}-${project.version}/conf</src>
                       <type>directory</type>
                       <mapper>
                         <type>perm</type>

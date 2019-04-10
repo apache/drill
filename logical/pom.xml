@@ -22,7 +22,7 @@
   <modelVersion>4.0.0</modelVersion>
   
   <parent>
-    <artifactId>drill-root</artifactId>
+    <artifactId>apache-drill</artifactId>
     <groupId>org.apache.drill</groupId>
     <version>1.17.0-SNAPSHOT</version>
   </parent>
