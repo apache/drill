@@ -352,23 +352,15 @@ public class Metadata {
     writeFile(metadataTableWithRelativePaths.fileMetadata, new Path(path, METADATA_FILENAME), fs);
     writeFile(metadataTableWithRelativePaths.getSummary(), new Path(path, METADATA_SUMMARY_FILENAME), fs);
     Metadata_V4.MetadataSummary metadataSummaryWithRelativePaths = metadataTableWithRelativePaths.getSummary();
-
-    if (directoryList.size() > 0 && childFiles.size() == 0) {
-      ParquetTableMetadataDirs parquetTableMetadataDirsRelativePaths =
-          new ParquetTableMetadataDirs(metadataSummaryWithRelativePaths.directories);
-      writeFile(parquetTableMetadataDirsRelativePaths, new Path(path, METADATA_DIRECTORIES_FILENAME), fs);
-      if (timer != null) {
-        logger.debug("Creating metadata files recursively took {} ms", timer.elapsed(TimeUnit.MILLISECONDS));
-      }
-      ParquetTableMetadataDirs parquetTableMetadataDirs = new ParquetTableMetadataDirs(directoryList);
-      return Pair.of(parquetTableMetadata, parquetTableMetadataDirs);
-    }
-    List<Path> emptyDirList = new ArrayList<>();
+    // Directories list will be empty at the leaf level directories. For sub-directories with both files and directories,
+    // only the directories will be included in the list.
+    writeFile(new ParquetTableMetadataDirs(metadataSummaryWithRelativePaths.directories),
+        new Path(path, METADATA_DIRECTORIES_FILENAME), fs);
     if (timer != null) {
       logger.debug("Creating metadata files recursively took {} ms", timer.elapsed(TimeUnit.MILLISECONDS));
       timer.stop();
     }
-    return Pair.of(parquetTableMetadata, new ParquetTableMetadataDirs(emptyDirList));
+    return Pair.of(parquetTableMetadata, new ParquetTableMetadataDirs(directoryList));
   }
 
   /**
