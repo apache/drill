@@ -190,11 +190,11 @@ public class TestConvertCountToDirectScan extends PlanTestBase {
       testPlanMatchingPatterns(sql, new String[]{numFilesPattern, usedMetaSummaryPattern, recordReaderPattern});
 
       testBuilder()
-              .sqlQuery(sql)
-              .unOrdered()
-              .baselineColumns("star_count", "int_column_count", "vrchr_column_count")
-              .baselineValues(24L, 8L, 12L)
-              .go();
+          .sqlQuery(sql)
+          .unOrdered()
+          .baselineColumns("star_count", "int_column_count", "vrchr_column_count")
+          .baselineValues(24L, 8L, 12L)
+          .go();
 
     } finally {
       test("drop table if exists %s", tableName);
@@ -222,17 +222,17 @@ public class TestConvertCountToDirectScan extends PlanTestBase {
 
       int expectedNumFiles = 1;
       String numFilesPattern = "numFiles = " + expectedNumFiles;
-      String usedMetaSummaryPattern = "usedMetadataSummaryFile = false";
+      String usedMetaSummaryPattern = "usedMetadataSummaryFile = true";
       String recordReaderPattern = "DynamicPojoRecordReader";
 
       testPlanMatchingPatterns(sql, new String[]{numFilesPattern, usedMetaSummaryPattern, recordReaderPattern});
 
       testBuilder()
-              .sqlQuery(sql)
-              .unOrdered()
-              .baselineColumns("star_count", "int_column_count", "vrchr_column_count")
-              .baselineValues(6L, 2L, 3L)
-              .go();
+          .sqlQuery(sql)
+          .unOrdered()
+          .baselineColumns("star_count", "int_column_count", "vrchr_column_count")
+          .baselineValues(6L, 2L, 3L)
+          .go();
 
     } finally {
       test("drop table if exists %s", tableName);
@@ -264,11 +264,77 @@ public class TestConvertCountToDirectScan extends PlanTestBase {
       testPlanMatchingPatterns(sql, new String[]{usedMetaSummaryPattern, recordReaderPattern});
 
       testBuilder()
-              .sqlQuery(sql)
-              .unOrdered()
-              .baselineColumns("star_count")
-              .baselineValues(250L)
-              .go();
+          .sqlQuery(sql)
+          .unOrdered()
+          .baselineColumns("star_count")
+          .baselineValues(250L)
+          .go();
+
+    } finally {
+      test("drop table if exists %s", tableName);
+    }
+  }
+
+  @Test
+  public void testCountsForLeafDirectories() throws Exception {
+    test("use dfs.tmp");
+    String tableName = "parquet_table_counts";
+
+    try {
+      test("create table `%s/1` as select * from cp.`tpch/nation.parquet`", tableName);
+      test("create table `%s/2` as select * from cp.`tpch/nation.parquet`", tableName);
+      test("create table `%s/3` as select * from cp.`tpch/nation.parquet`", tableName);
+      test("refresh table metadata %s", tableName);
+
+      String sql = String.format("select\n" +
+              "count(*) as star_count\n" +
+              "from `%s/1`", tableName);
+
+      int expectedNumFiles = 1;
+      String numFilesPattern = "numFiles = " + expectedNumFiles;
+      String usedMetaSummaryPattern = "usedMetadataSummaryFile = true";
+      String recordReaderPattern = "DynamicPojoRecordReader";
+
+      testPlanMatchingPatterns(sql, new String[]{numFilesPattern, usedMetaSummaryPattern, recordReaderPattern});
+
+      testBuilder()
+          .sqlQuery(sql)
+          .unOrdered()
+          .baselineColumns("star_count")
+          .baselineValues(25L)
+          .go();
+
+    } finally {
+      test("drop table if exists %s", tableName);
+    }
+  }
+
+  @Test
+  public void testCountsForDirWithFilesAndDir() throws Exception {
+    test("use dfs.tmp");
+    String tableName = "parquet_table_counts";
+
+    try {
+      test("create table `%s/1` as select * from cp.`tpch/nation.parquet`", tableName);
+      test("create table `%s/1/2` as select * from cp.`tpch/nation.parquet`", tableName);
+      test("create table `%s/1/3` as select * from cp.`tpch/nation.parquet`", tableName);
+      test("refresh table metadata %s", tableName);
+
+      String sql = String.format("select count(*) as star_count from `%s/1`", tableName);
+
+      int expectedNumFiles = 1;
+      String numFilesPattern = "numFiles = " + expectedNumFiles;
+      String usedMetaSummaryPattern = "usedMetadataSummaryFile = true";
+      String recordReaderPattern = "DynamicPojoRecordReader";
+
+      testPlanMatchingPatterns(sql, new String[]{numFilesPattern, usedMetaSummaryPattern, recordReaderPattern});
+
+      testBuilder()
+          .sqlQuery(sql)
+          .unOrdered()
+          .baselineColumns("star_count")
+          .baselineValues(75L)
+          .go();
 
     } finally {
       test("drop table if exists %s", tableName);
