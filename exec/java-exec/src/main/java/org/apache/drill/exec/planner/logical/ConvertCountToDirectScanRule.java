@@ -138,8 +138,14 @@ public class ConvertCountToDirectScanRule extends RelOptRule {
 
     //  Rule is applicable only if the statistics for row count and null count are available from the metadata,
     FormatSelection formatSelection = (FormatSelection) selection;
-    Pair<Boolean, Metadata_V4.MetadataSummary> status = checkMetadataForScanStats(settings, drillTable, formatSelection);
 
+    // Rule cannot be applied if the selection had wildcard since the totalrowcount cannot be read from the parent directory
+    if (formatSelection.getSelection().hadWildcard()) {
+      logger.debug("Rule does not apply when there is a wild card since the COUNT could not be determined from metadata.");
+      return;
+    }
+
+    Pair<Boolean, Metadata_V4.MetadataSummary> status = checkMetadataForScanStats(settings, drillTable, formatSelection);
     if (!status.getLeft()) {
       logger.debug("Rule does not apply since MetadataSummary metadata was not found.");
       return;
