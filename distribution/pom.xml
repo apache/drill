@@ -185,7 +185,7 @@
                 <descriptor>src/assemble/bin-assembly-dir.xml</descriptor>
               </descriptors>
               <appendAssemblyId>false</appendAssemblyId>
-              <finalName>${project.artifactId}-${project.version}</finalName>
+              <finalName>${project.parent.artifactId}-${project.version}</finalName>
             </configuration>
           </execution>
         </executions>
