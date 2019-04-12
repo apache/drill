@@ -184,6 +184,16 @@ public class TestInfoSchema extends BaseTestQuery {
   }
 
   @Test
+  public void describeTableWithTableKeyword() throws Exception {
+    test("USE INFORMATION_SCHEMA");
+    testBuilder()
+        .sqlQuery("DESCRIBE TABLE CATALOGS")
+        .unOrdered()
+        .sqlBaselineQuery("DESCRIBE CATALOGS")
+        .go();
+  }
+
+  @Test
   public void describeTableWithSchema() throws Exception{
     testBuilder()
         .sqlQuery("DESCRIBE INFORMATION_SCHEMA.`TABLES`")
@@ -193,6 +203,15 @@ public class TestInfoSchema extends BaseTestQuery {
         .baselineValues("TABLE_SCHEMA", "CHARACTER VARYING", "NO")
         .baselineValues("TABLE_NAME", "CHARACTER VARYING", "NO")
         .baselineValues("TABLE_TYPE", "CHARACTER VARYING", "NO")
+        .go();
+  }
+
+  @Test
+  public void describeTableWithSchemaAndTableKeyword() throws Exception {
+    testBuilder()
+        .sqlQuery("DESCRIBE TABLE INFORMATION_SCHEMA.`TABLES`")
+        .unOrdered()
+        .sqlBaselineQuery("DESCRIBE INFORMATION_SCHEMA.`TABLES`")
         .go();
   }
 
@@ -220,7 +239,29 @@ public class TestInfoSchema extends BaseTestQuery {
           .baselineValues("TABLE_TYPE", "CHARACTER VARYING", "NO")
           .go();
     } finally {
-      test("DROP VIEW dfs.tmp.`TABLES`");
+      test("DROP VIEW IF EXISTS dfs.tmp.`TABLES`");
+    }
+  }
+
+  @Test
+  public void describeWhenSameTableNameExistsInMultipleSchemasWithTableKeyword() throws Exception {
+    try {
+      test("USE dfs.tmp");
+      test("CREATE OR REPLACE VIEW `TABLES` AS SELECT full_name FROM cp.`employee.json`");
+
+      testBuilder()
+          .sqlQuery("DESCRIBE TABLE `TABLES`")
+          .unOrdered()
+          .sqlBaselineQuery("DESCRIBE `TABLES`")
+          .go();
+
+      testBuilder()
+          .sqlQuery("DESCRIBE TABLE INFORMATION_SCHEMA.`TABLES`")
+          .unOrdered()
+          .sqlBaselineQuery("DESCRIBE INFORMATION_SCHEMA.`TABLES`")
+          .go();
+    } finally {
+      test("DROP VIEW IF EXISTS dfs.tmp.`TABLES`");
     }
   }
 
@@ -236,12 +277,31 @@ public class TestInfoSchema extends BaseTestQuery {
   }
 
   @Test
+  public void describeTableWithColumnNameAndTableKeyword() throws Exception {
+    test("USE INFORMATION_SCHEMA");
+    testBuilder()
+        .sqlQuery("DESCRIBE TABLE `TABLES` TABLE_CATALOG")
+        .unOrdered()
+        .sqlBaselineQuery("DESCRIBE `TABLES` TABLE_CATALOG")
+        .go();
+  }
+
+  @Test
   public void describeTableWithSchemaAndColumnName() throws Exception{
     testBuilder()
         .sqlQuery("DESCRIBE INFORMATION_SCHEMA.`TABLES` TABLE_CATALOG")
         .unOrdered()
         .baselineColumns("COLUMN_NAME", "DATA_TYPE", "IS_NULLABLE")
         .baselineValues("TABLE_CATALOG", "CHARACTER VARYING", "NO")
+        .go();
+  }
+
+  @Test
+  public void describeTableWithSchemaAndColumnNameAndTableKeyword() throws Exception {
+    testBuilder()
+        .sqlQuery("DESCRIBE TABLE INFORMATION_SCHEMA.`TABLES` TABLE_CATALOG")
+        .unOrdered()
+        .sqlBaselineQuery("DESCRIBE INFORMATION_SCHEMA.`TABLES` TABLE_CATALOG")
         .go();
   }
 
