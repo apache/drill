@@ -3138,6 +3138,27 @@
             "title": "Creating a Basic Drill Cluster", 
             "url": "/docs/creating-a-basic-drill-cluster/"
         }, 
+        "Cryptography Functions": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Functions", 
+                    "url": "/docs/sql-functions/"
+                }, 
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "SQL Window Functions", 
+            "next_url": "/docs/sql-window-functions/", 
+            "parent": "SQL Functions", 
+            "previous_title": "String Distance Functions", 
+            "previous_url": "/docs/string-distance-functions/", 
+            "relative_path": "_docs/sql-reference/sql-functions/063-cryptography-functions.md", 
+            "title": "Cryptography Functions", 
+            "url": "/docs/cryptography-functions/"
+        }, 
         "Custom Function Interfaces": {
             "breadcrumbs": [
                 {
@@ -12145,14 +12166,35 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "SQL Window Functions", 
-                    "next_url": "/docs/sql-window-functions/", 
+                    "next_title": "Cryptography Functions", 
+                    "next_url": "/docs/cryptography-functions/", 
                     "parent": "SQL Functions", 
                     "previous_title": "Phonetic Functions", 
                     "previous_url": "/docs/phonetic-functions/", 
                     "relative_path": "_docs/sql-reference/sql-functions/062-string-distance-functions.md", 
                     "title": "String Distance Functions", 
                     "url": "/docs/string-distance-functions/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Functions", 
+                            "url": "/docs/sql-functions/"
+                        }, 
+                        {
+                            "title": "SQL Reference", 
+                            "url": "/docs/sql-reference/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "SQL Window Functions", 
+                    "next_url": "/docs/sql-window-functions/", 
+                    "parent": "SQL Functions", 
+                    "previous_title": "String Distance Functions", 
+                    "previous_url": "/docs/string-distance-functions/", 
+                    "relative_path": "_docs/sql-reference/sql-functions/063-cryptography-functions.md", 
+                    "title": "Cryptography Functions", 
+                    "url": "/docs/cryptography-functions/"
                 }
             ], 
             "next_title": "About SQL Function Examples", 
@@ -12508,14 +12550,35 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "SQL Window Functions", 
-                            "next_url": "/docs/sql-window-functions/", 
+                            "next_title": "Cryptography Functions", 
+                            "next_url": "/docs/cryptography-functions/", 
                             "parent": "SQL Functions", 
                             "previous_title": "Phonetic Functions", 
                             "previous_url": "/docs/phonetic-functions/", 
                             "relative_path": "_docs/sql-reference/sql-functions/062-string-distance-functions.md", 
                             "title": "String Distance Functions", 
                             "url": "/docs/string-distance-functions/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Functions", 
+                                    "url": "/docs/sql-functions/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "SQL Window Functions", 
+                            "next_url": "/docs/sql-window-functions/", 
+                            "parent": "SQL Functions", 
+                            "previous_title": "String Distance Functions", 
+                            "previous_url": "/docs/string-distance-functions/", 
+                            "relative_path": "_docs/sql-reference/sql-functions/063-cryptography-functions.md", 
+                            "title": "Cryptography Functions", 
+                            "url": "/docs/cryptography-functions/"
                         }
                     ], 
                     "next_title": "About SQL Function Examples", 
@@ -12644,8 +12707,8 @@
                     "next_title": "SQL Window Functions Introduction", 
                     "next_url": "/docs/sql-window-functions-introduction/", 
                     "parent": "SQL Reference", 
-                    "previous_title": "String Distance Functions", 
-                    "previous_url": "/docs/string-distance-functions/", 
+                    "previous_title": "Cryptography Functions", 
+                    "previous_url": "/docs/cryptography-functions/", 
                     "relative_path": "_docs/sql-reference/055-sql-window-functions.md", 
                     "title": "SQL Window Functions", 
                     "url": "/docs/sql-window-functions/"
@@ -13655,8 +13718,8 @@
             "next_title": "SQL Window Functions Introduction", 
             "next_url": "/docs/sql-window-functions-introduction/", 
             "parent": "SQL Reference", 
-            "previous_title": "String Distance Functions", 
-            "previous_url": "/docs/string-distance-functions/", 
+            "previous_title": "Cryptography Functions", 
+            "previous_url": "/docs/cryptography-functions/", 
             "relative_path": "_docs/sql-reference/055-sql-window-functions.md", 
             "title": "SQL Window Functions", 
             "url": "/docs/sql-window-functions/"
@@ -14475,8 +14538,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "SQL Window Functions", 
-            "next_url": "/docs/sql-window-functions/", 
+            "next_title": "Cryptography Functions", 
+            "next_url": "/docs/cryptography-functions/", 
             "parent": "SQL Functions", 
             "previous_title": "Phonetic Functions", 
             "previous_url": "/docs/phonetic-functions/", 
@@ -20060,14 +20123,35 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "SQL Window Functions", 
-                            "next_url": "/docs/sql-window-functions/", 
+                            "next_title": "Cryptography Functions", 
+                            "next_url": "/docs/cryptography-functions/", 
                             "parent": "SQL Functions", 
                             "previous_title": "Phonetic Functions", 
                             "previous_url": "/docs/phonetic-functions/", 
                             "relative_path": "_docs/sql-reference/sql-functions/062-string-distance-functions.md", 
                             "title": "String Distance Functions", 
                             "url": "/docs/string-distance-functions/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Functions", 
+                                    "url": "/docs/sql-functions/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "SQL Window Functions", 
+                            "next_url": "/docs/sql-window-functions/", 
+                            "parent": "SQL Functions", 
+                            "previous_title": "String Distance Functions", 
+                            "previous_url": "/docs/string-distance-functions/", 
+                            "relative_path": "_docs/sql-reference/sql-functions/063-cryptography-functions.md", 
+                            "title": "Cryptography Functions", 
+                            "url": "/docs/cryptography-functions/"
                         }
                     ], 
                     "next_title": "About SQL Function Examples", 
@@ -20196,8 +20280,8 @@
                     "next_title": "SQL Window Functions Introduction", 
                     "next_url": "/docs/sql-window-functions-introduction/", 
                     "parent": "SQL Reference", 
-                    "previous_title": "String Distance Functions", 
-                    "previous_url": "/docs/string-distance-functions/", 
+                    "previous_title": "Cryptography Functions", 
+                    "previous_url": "/docs/cryptography-functions/", 
                     "relative_path": "_docs/sql-reference/055-sql-window-functions.md", 
                     "title": "SQL Window Functions", 
                     "url": "/docs/sql-window-functions/"
