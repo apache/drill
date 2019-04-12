@@ -1,6 +1,6 @@
 ---
 title: "String Manipulation"
-date: 2016-01-14
+date: 2019-04-12
 parent: "SQL Functions"
 ---
 
@@ -18,6 +18,7 @@ Function| Return Type
 [LPAD]({{ site.baseurl }}/docs/string-manipulation/#lpad)| VARCHAR
 [LTRIM]({{ site.baseurl }}/docs/string-manipulation/#ltrim)| VARCHAR
 [POSITION]({{ site.baseurl }}/docs/string-manipulation/#position)| INTEGER
+[REGEXP_MATCHES]({{ site.baseurl }}/docs/string-manipulation/#regexp_matches)|BOOLEAN
 [REGEXP_REPLACE]({{ site.baseurl }}/docs/string-manipulation/#regexp_replace)|VARCHAR
 [RPAD]({{ site.baseurl }}/docs/string-manipulation/#rpad)| VARCHAR
 [RTRIM]({{ site.baseurl }}/docs/string-manipulation/#rtrim)| VARCHAR
@@ -262,7 +263,50 @@ Returns the location of a substring.
     +------------+
     1 row selected (0.12 seconds)
 
-## REGEXP_REPLACE
+
+##REGEXP_MATCHES  
+
+Matches a regexp pattern to a target string. Returns a boolean value; true if the value matches the regexp, false if the value does not match the regexp.  
+
+###REGEXP_MATCHES Syntax 
+
+REGEXP_MATCHES(string_expression, pattern)
+
+*string_expression* is the string to be matched.  
+
+*pattern* is the regular expression.  
+
+### REGEXP_MATCHES Examples
+
+Shows several POSIX metacharacters that return true for the given string expressions:   
+
+	select regexp_matches('abc', 'abc|def') as a, regexp_matches('cat', '[hc]at$') as b,  regexp_matches('cat', '.at') as c, regexp_matches('cat', '[hc]at') as d, regexp_matches('cat', '[^b]at') as e, regexp_matches('cat', '^[hc]at') as f, regexp_matches('[a]', '\[.\]') as g, regexp_matches('sat', 's.*') as h, regexp_matches('sat','[^hc]at') as i, regexp_matches('hat', '[hc]?at') as j, regexp_matches('cchchat', '[hc]*at') as k, regexp_matches('chat', '[hc]+at') as l;
+	
+	+------+------+------+------+------+------+------+------+------+------+------+------+
+	|  a   |  b   |  c   |  d   |  e   |  f   |  g   |  h   |  i   |  j   |  k   |  l   |
+	+------+------+------+------+------+------+------+------+------+------+------+------+
+	| true | true | true | true | true | true | true | true | true | true | true | true |
+	+------+------+------+------+------+------+------+------+------+------+------+------+  
+
+Shows case-sensitivity:
+
+	select regexp_matches('abc', 'A*.C');
+	+--------+
+	| EXPR$0 |
+	+--------+
+	| false  |
+	+--------+
+	
+	select regexp_matches('abc', 'a*.c');
+	+--------+
+	| EXPR$0 |
+	+--------+
+	| true   |
+	+--------+
+
+
+
+##REGEXP_REPLACE
 
 Substitutes new text for substrings that match [Java regular expression patterns](http://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html).
 
