@@ -178,7 +178,7 @@
                   <version>${project.version}</version>
                   <type>jar</type>
                   <overWrite>true</overWrite>
-                  <outputDirectory>${project.build.directory}/classes</outputDirectory>
+                  <outputDirectory>${project.build.outputDirectory}</outputDirectory>
                   <includes>**/**</includes>
                 </artifactItem>
               </artifactItems>

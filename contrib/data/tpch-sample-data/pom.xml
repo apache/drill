@@ -49,7 +49,7 @@
               <url>http://apache-drill.s3.amazonaws.com/files/sf-0.01_tpc-h_parquet_typed.tgz</url>
               <outputFileName>tpch.tgz</outputFileName>
               <unpack>true</unpack>
-              <outputDirectory>${project.build.directory}/classes/tpch</outputDirectory>
+              <outputDirectory>${project.build.outputDirectory}/tpch</outputDirectory>
             </configuration>
           </execution>
         </executions>

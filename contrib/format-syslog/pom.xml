@@ -71,7 +71,7 @@
               <goal>copy-resources</goal>
             </goals>
             <configuration>
-              <outputDirectory>${basedir}/target/classes/org/apache/drill/exec/store/syslog
+              <outputDirectory>${project.build.outputDirectory}/org/apache/drill/exec/store/syslog
               </outputDirectory>
               <resources>
                 <resource>

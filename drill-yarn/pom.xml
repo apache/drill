@@ -57,7 +57,7 @@
             </goals>
             <configuration>
               <dotGitDirectory>${project.basedir}/../.git</dotGitDirectory>
-              <generateGitPropertiesFilename>target/classes/git.properties</generateGitPropertiesFilename>
+              <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties</generateGitPropertiesFilename>
             </configuration>
           </execution>
         </executions>

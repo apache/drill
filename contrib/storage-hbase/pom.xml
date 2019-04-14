@@ -114,7 +114,7 @@
               <goal>copy-resources</goal>
             </goals>
             <configuration>
-              <outputDirectory>${basedir}/target/classes/org/apache/drill/exec/expr/fn/impl</outputDirectory>
+              <outputDirectory>${project.build.outputDirectory}/org/apache/drill/exec/expr/fn/impl</outputDirectory>
               <resources>
                 <resource>
                   <directory>src/main/java/org/apache/drill/exec/expr/fn/impl</directory>
@@ -125,7 +125,7 @@
                   <filtering>true</filtering>
                 </resource>
                 <resource>
-                  <directory>target/generated-sources</directory>
+                  <directory>${project.build.directory}/generated-sources</directory>
                   <!-- <include>*/org</include> -->
                   <filtering>true</filtering>
                 </resource>

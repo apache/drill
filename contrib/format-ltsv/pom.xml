@@ -64,7 +64,7 @@
               <goal>copy-resources</goal>
             </goals>
             <configuration>
-              <outputDirectory>${basedir}/target/classes/org/apache/drill/exec/store/ltsv
+              <outputDirectory>${project.build.outputDirectory}/org/apache/drill/exec/store/ltsv
               </outputDirectory>
               <resources>
                 <resource>

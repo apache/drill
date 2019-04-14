@@ -43,7 +43,6 @@
     <sourceReleaseAssemblyDescriptor>source-release-zip-tar</sourceReleaseAssemblyDescriptor>
 
     <target.gen.source.path>${project.build.directory}/generated-sources</target.gen.source.path>
-    <proto.cas.path>${project.basedir}/src/main/protobuf/</proto.cas.path>
     <dep.junit.version>4.12</dep.junit.version>
     <dep.slf4j.version>1.7.25</dep.slf4j.version>
     <shaded.guava.version>23.0</shaded.guava.version>
@@ -546,7 +545,7 @@
               <goal>revision</goal>
             </goals>
             <configuration>
-              <generateGitPropertiesFilename>target/classes/git.properties</generateGitPropertiesFilename>
+              <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties</generateGitPropertiesFilename>
             </configuration>
           </execution>
           <execution>
