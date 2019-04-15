@@ -1,0 +1,26 @@
+{
+  "storage":{
+    "dfs": {
+      "type": "file",
+      "formats": {
+        "syslog": {
+          "type": "syslog",
+          "extensions": [
+            "syslog"
+          ]
+        }
+      }
+    },
+    "s3": {
+      "type": "file",
+      "formats": {
+        "syslog": {
+          "type": "syslog",
+          "extensions": [
+            "syslog"
+          ]
+        }
+      }
+    }
+  }
+}

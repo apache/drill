@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.dfs;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -48,7 +49,7 @@ public class FileSystemConfig extends StoragePluginConfig {
     Map<String, WorkspaceConfig> caseInsensitiveWorkspaces = CaseInsensitiveMap.newHashMap();
     Optional.ofNullable(workspaces).ifPresent(caseInsensitiveWorkspaces::putAll);
     this.workspaces = caseInsensitiveWorkspaces;
-    this.formats = formats;
+    this.formats = formats != null ? formats : new LinkedHashMap<>();
   }
 
   @JsonProperty

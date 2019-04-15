@@ -1,0 +1,26 @@
+{
+  "storage":{
+    "dfs": {
+      "type": "file",
+      "formats": {
+        "ltsv": {
+          "type": "ltsv",
+          "extensions": [
+            "ltsv"
+          ]
+        }
+      }
+    },
+    "s3": {
+      "type": "file",
+      "formats": {
+        "ltsv": {
+          "type": "ltsv",
+          "extensions": [
+            "ltsv"
+          ]
+        }
+      }
+    }
+  }
+}
