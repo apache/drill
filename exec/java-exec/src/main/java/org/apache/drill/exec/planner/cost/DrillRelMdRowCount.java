@@ -87,6 +87,7 @@ public class DrillRelMdRowCount extends RelMdRowCount{
     return rel.estimateRowCount(mq);
   }
 
+  @Override
   public Double getRowCount(RelNode rel, RelMetadataQuery mq) {
     if (rel instanceof TableScan) {
       return getRowCountInternal((TableScan)rel, mq);
