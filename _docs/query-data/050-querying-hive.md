@@ -1,13 +1,25 @@
 ---
 title: "Querying Hive"
-date: 2018-06-26 00:42:18 UTC
+date: 2019-04-16
 parent: "Query Data"
 ---
 This is a simple exercise that provides steps for creating a Hive table and
 inserting data that you can query using Drill. Before you perform the steps,
-download the [customers.csv](http://doc.mapr.com/download/attachments/28868943/customers.csv?version=1&modificationDate=1426874930765&api=v2) file.  
+download the [customers.csv](http://doc.mapr.com/download/attachments/28868943/customers.csv?version=1&modificationDate=1426874930765&api=v2) file.   
 
-{% include startnote.html %}Drill 1.8 implements the IF EXISTS parameter for the DROP TABLE and DROP VIEW commands, making IF a reserved word in Drill. As a result, you must include backticks around the Hive \``IF`` conditional function when you use it in a query on Hive tables. Alternatively, you can use the CASE statement instead of the IF function.{% include endnote.html %}
+
+{% include startnote.html %}Drill 1.8 implements the IF EXISTS parameter for the DROP TABLE and DROP VIEW commands, making IF a reserved word in Drill. As a result, you must include backticks around the Hive IF conditional function when you use it in a query on Hive tables. Alternatively, you can use the CASE statement instead of the IF function.{% include endnote.html %}  
+
+## Hive Views
+
+Starting in Drill 1.16, you can query Hive views from Drill like you would query Hive tables in a hive schema, for example:    
+	
+	SELECT * FROM hive.`hive_view`;  
+
+For storage-based authorization, access to Hive views depends on the user’s permissions on the underlying tables in the view definition. When a user selects from a Hive view, the view is expanded (converted into a query), and the underlying tables referenced in the query are validated for permissions.    
+  
+
+##Creating and Querying a Hive Table
 
 To create a Hive table and query it with Drill, complete the following steps:
 

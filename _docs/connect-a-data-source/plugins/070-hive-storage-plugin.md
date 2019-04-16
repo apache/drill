@@ -8,13 +8,6 @@ Prior to Drill 1.13, Drill supported Hive 1.0. Drill 1.13 and later includes ver
 To access Hive tables using custom SerDes or InputFormat/OutputFormat, all nodes running Drillbits must have the SerDes or InputFormat/OutputFormat `JAR` files in the 
 `<drill_installation_directory>/jars/3rdparty` folder.   
 
-## Hive Views
-
-Starting in Drill 1.16, you can query Hive views from Drill like you would query Hive tables in a hive schema, for example:    
-	
-	SELECT * FROM hive.`hive_view`;  
-
-For storage-based authorization, access to Hive views depends on the user’s permissions on the underlying tables in the view definition. When a user selects from a Hive view, the view is expanded (converted into a query), and the underlying tables referenced in the query are validated for permissions.    
 
 ## Setting Hive Properties  
 
