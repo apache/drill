@@ -83,7 +83,7 @@ public class DrillRelMdDistinctRowCount extends RelMdDistinctRowCount{
     if (rel instanceof DrillScanRelBase) {                  // Applies to both Drill Logical and Physical Rels
       if (!DrillRelOptUtil.guessRows(rel)) {
         DrillTable table = Utilities.getDrillTable(rel.getTable());
-        return getDistinctRowCount(((DrillScanRelBase) rel), mq, table, groupKey, rel.getRowType(), predicate);
+        return getDistinctRowCountInternal(((DrillScanRelBase) rel), mq, table, groupKey, rel.getRowType(), predicate);
       } else {
         /* If we are not using statistics OR there is no table or metadata (stats) table associated with scan,
          * estimate the distinct row count. Consistent with the estimation of Aggregate row count in
@@ -108,7 +108,7 @@ public class DrillRelMdDistinctRowCount extends RelMdDistinctRowCount{
       return mq.getDistinctRowCount(((SingleRel) rel).getInput(), groupKey, predicate);
     } else if (rel instanceof DrillJoinRelBase && !DrillRelOptUtil.guessRows(rel)) {
       //Assume ndv is unaffected by the join
-      return getDistinctRowCount(((DrillJoinRelBase) rel), mq, groupKey, predicate);
+      return getDistinctRowCountInternal(((DrillJoinRelBase) rel), mq, groupKey, predicate);
     } else if (rel instanceof RelSubset && !DrillRelOptUtil.guessRows(rel)) {
       if (((RelSubset) rel).getBest() != null) {
         return mq.getDistinctRowCount(((RelSubset) rel).getBest(), groupKey, predicate);
@@ -124,8 +124,8 @@ public class DrillRelMdDistinctRowCount extends RelMdDistinctRowCount{
    * set of columns indicated by groupKey.
    * column").
    */
-  private Double getDistinctRowCount(DrillScanRelBase scan, RelMetadataQuery mq, DrillTable table,
-                                     ImmutableBitSet groupKey, RelDataType type, RexNode predicate) {
+  private Double getDistinctRowCountInternal(DrillScanRelBase scan, RelMetadataQuery mq, DrillTable table,
+      ImmutableBitSet groupKey, RelDataType type, RexNode predicate) {
     double selectivity, rowCount;
     /* If predicate is present, determine its selectivity to estimate filtered rows.
      * Thereafter, compute the number of distinct rows.
@@ -174,7 +174,7 @@ public class DrillRelMdDistinctRowCount extends RelMdDistinctRowCount{
     }
   }
 
-  public Double getDistinctRowCount(DrillJoinRelBase joinRel, RelMetadataQuery mq, ImmutableBitSet groupKey,
+  private Double getDistinctRowCountInternal(DrillJoinRelBase joinRel, RelMetadataQuery mq, ImmutableBitSet groupKey,
        RexNode predicate) {
     if (DrillRelOptUtil.guessRows(joinRel)) {
       return super.getDistinctRowCount(joinRel, mq, groupKey, predicate);
