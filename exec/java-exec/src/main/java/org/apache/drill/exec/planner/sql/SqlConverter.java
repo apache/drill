@@ -26,6 +26,10 @@ import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 
+import org.apache.calcite.util.Static;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.drill.exec.planner.sql.parser.DrillParserUtil;
+import org.apache.drill.exec.planner.sql.parser.impl.DrillSqlParseException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.base.MetadataProviderManager;
 import org.apache.drill.exec.physical.base.TableMetadataProvider;
@@ -59,6 +63,7 @@ import org.apache.calcite.runtime.Hook;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlIdentifier;
+import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlOperatorTable;
 import org.apache.calcite.sql.parser.SqlParseException;
@@ -90,7 +95,6 @@ import org.apache.drill.exec.planner.physical.DrillDistributionTraitDef;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.store.dfs.FileSelection;
-import static org.apache.calcite.util.Static.RESOURCE;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
 import org.apache.drill.exec.store.ColumnExplorer;
@@ -106,6 +110,7 @@ public class SqlConverter {
 
   private final JavaTypeFactory typeFactory;
   private final SqlParser.Config parserConfig;
+
   // Allow the default config to be modified using immutable configs
   private SqlToRelConverter.Config sqlToRelConverterConfig;
   private final DrillCalciteCatalogReader catalog;
@@ -143,7 +148,7 @@ public class SqlConverter {
     this.sqlToRelConverterConfig = new SqlToRelConverterConfig();
     this.isInnerQuery = false;
     this.typeFactory = new JavaTypeFactoryImpl(DRILL_TYPE_SYSTEM);
-    this.defaultSchema =  context.getNewDefaultSchema();
+    this.defaultSchema = context.getNewDefaultSchema();
     this.rootSchema = rootSchema(defaultSchema);
     this.temporarySchema = context.getConfig().getString(ExecConstants.DEFAULT_TEMPORARY_WORKSPACE);
     this.session = context.getSession();
@@ -191,15 +196,15 @@ public class SqlConverter {
       SqlParser parser = SqlParser.create(sql, parserConfig);
       return parser.parseStmt();
     } catch (SqlParseException e) {
+      DrillSqlParseException dex = new DrillSqlParseException(e);
       UserException.Builder builder = UserException
-          .parseError(e)
-          .addContext("SQL Query", formatSQLParsingError(sql, e.getPos()));
+          .parseError(dex)
+          .addContext(formatSQLParsingError(sql, dex));
       if (isInnerQuery) {
         builder.message("Failure parsing a view your query is dependent upon.");
       }
       throw builder.build(logger);
     }
-
   }
 
   public SqlNode validate(final SqlNode parsedNode) {
@@ -265,26 +270,25 @@ public class SqlConverter {
         SqlNode node,
         RelDataType targetRowType,
         SqlValidatorScope scope) {
-      switch (node.getKind()) {
-        case AS:
-          SqlNode sqlNode = ((SqlCall) node).operand(0);
-          switch (sqlNode.getKind()) {
-            case IDENTIFIER:
-              SqlIdentifier tempNode = (SqlIdentifier) sqlNode;
-              DrillCalciteCatalogReader catalogReader = (SqlConverter.DrillCalciteCatalogReader) getCatalogReader();
+      if (node.getKind() == SqlKind.AS) {
+        SqlNode sqlNode = ((SqlCall) node).operand(0);
+        switch (sqlNode.getKind()) {
+          case IDENTIFIER:
+            SqlIdentifier tempNode = (SqlIdentifier) sqlNode;
+            DrillCalciteCatalogReader catalogReader = (DrillCalciteCatalogReader) getCatalogReader();
 
-              changeNamesIfTableIsTemporary(tempNode);
+            changeNamesIfTableIsTemporary(tempNode);
 
-              // Check the schema and throw a valid SchemaNotFound exception instead of TableNotFound exception.
-              if (catalogReader.getTable(tempNode.names) == null) {
-                catalogReader.isValidSchema(tempNode.names);
-              }
-              break;
-            case UNNEST:
-              if (((SqlCall) node).operandCount() < 3) {
-                throw RESOURCE.validationError("Alias table and column name are required for UNNEST").ex();
-              }
-          }
+            // Check the schema and throw a valid SchemaNotFound exception instead of TableNotFound exception.
+            if (catalogReader.getTable(tempNode.names) == null) {
+              catalogReader.isValidSchema(tempNode.names);
+            }
+            break;
+          case UNNEST:
+            if (((SqlCall) node).operandCount() < 3) {
+              throw Static.RESOURCE.validationError("Alias table and column name are required for UNNEST").ex();
+            }
+        }
       }
       super.validateFrom(node, targetRowType, scope);
     }
@@ -493,30 +497,44 @@ public class SqlConverter {
   }
 
   /**
+   * Formats sql exception with context name included and with
+   * graphical representation for the {@link DrillSqlParseException}
    *
-   * @param sql
-   *          the SQL sent to the server
-   * @param pos
-   *          the position of the error
+   * @param sql     the SQL sent to the server
+   * @param ex      exception object
    * @return The sql with a ^ character under the error
    */
-  static String formatSQLParsingError(String sql, SqlParserPos pos) {
-    if (pos == null) {
-      return sql;
-    }
-    StringBuilder sb = new StringBuilder();
-    String[] lines = sql.split("\n");
-    for (int i = 0; i < lines.length; i++) {
-      String line = lines[i];
-      sb.append(line).append("\n");
-      if (i == (pos.getLineNum() - 1)) {
-        for (int j = 0; j < pos.getColumnNum() - 1; j++) {
-          sb.append(" ");
+  static String formatSQLParsingError(String sql, DrillSqlParseException ex) {
+    final String sqlErrorMessageHeader = "SQL Query: ";
+    final SqlParserPos pos = ex.getPos();
+
+    if (pos != null) {
+      int issueLineNumber = pos.getLineNum() - 1;  // recalculates to base 0
+      int issueColumnNumber = pos.getColumnNum() - 1;  // recalculates to base 0
+      int messageHeaderLength = sqlErrorMessageHeader.length();
+
+      // If the issue happens on the first line, header width should be calculated alongside with the sql query
+      int shiftLength = (issueLineNumber == 0) ? issueColumnNumber + messageHeaderLength : issueColumnNumber;
+
+      StringBuilder sb = new StringBuilder();
+      String[] lines = sql.split(DrillParserUtil.EOL);
+
+      for (int i = 0; i < lines.length; i++) {
+        sb.append(lines[i]);
+
+        if (i == issueLineNumber) {
+          sb
+              .append(DrillParserUtil.EOL)
+              .append(StringUtils.repeat(' ', shiftLength))
+              .append("^");
         }
-        sb.append("^\n");
+        if (i < lines.length - 1) {
+          sb.append(DrillParserUtil.EOL);
+        }
       }
+      sql = sb.toString();
     }
-    return sb.toString();
+    return sqlErrorMessageHeader + sql;
   }
 
   private static SchemaPlus rootSchema(SchemaPlus schema) {
