@@ -115,7 +115,7 @@ public class PlanSplitter {
     if ( req.getSplitPlan() ) {
       final List<QueryWorkUnit> queryWorkUnits = parallelizer.getSplitFragments(
           queryContext.getOptions().getOptionList(), queryContext.getCurrentEndpoint(),
-          queryId, queryContext.getActiveEndpoints(), dContext.getPlanReader(), rootFragment,
+          queryId, queryContext.getOnlineEndpointUUIDs(), dContext.getPlanReader(), rootFragment,
           queryContext.getSession(), queryContext.getQueryContextInfo());
 
       for (QueryWorkUnit queryWorkUnit : queryWorkUnits) {
@@ -130,7 +130,7 @@ public class PlanSplitter {
       }
     } else {
       final QueryWorkUnit queryWorkUnit = parallelizer.generateWorkUnit(queryContext.getOptions().getOptionList(), queryContext.getCurrentEndpoint(),
-          queryId, queryContext.getActiveEndpoints(), rootFragment,
+          queryId, queryContext.getOnlineEndpointUUIDs(), rootFragment,
           queryContext.getSession(), queryContext.getQueryContextInfo());
 //      planner.visitPhysicalPlan(queryWorkUnit);
       queryWorkUnit.applyPlan(dContext.getPlanReader());

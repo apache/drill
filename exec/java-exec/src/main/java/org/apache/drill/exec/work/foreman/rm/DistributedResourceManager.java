@@ -216,7 +216,7 @@ public class DistributedResourceManager implements ResourceManager {
     @Override
     public QueryParallelizer getParallelizer(boolean planHasMemory) {
       // currently memory planning is disabled. Enable it once the RM functionality is fully implemented.
-      return new DistributedQueueParallelizer(true || planHasMemory, this.context);
+      return new DistributedQueueParallelizer(true || planHasMemory, this.context, this);
     }
 
     @Override

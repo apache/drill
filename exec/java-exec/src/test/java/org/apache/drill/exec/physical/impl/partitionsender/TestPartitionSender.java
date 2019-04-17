@@ -213,7 +213,7 @@ public class TestPartitionSender extends PlanTestBase {
     final QueryContextInformation queryContextInfo = Utilities.createQueryContextInfo("dummySchemaName", "938ea2d9-7cb9-4baf-9414-a5a0b7777e8e");
     final QueryWorkUnit qwu = PARALLELIZER.generateWorkUnit(options, drillbitContext.getEndpoint(),
         QueryId.getDefaultInstance(),
-        drillbitContext.getBits(), rootFragment, USER_SESSION, queryContextInfo);
+        drillbitContext.getOnlineEndpointUUIDs(), rootFragment, USER_SESSION, queryContextInfo);
     qwu.applyPlan(planReader);
 
     final List<MinorFragmentEndpoint> mfEndPoints = PhysicalOperatorUtil.getIndexOrderedEndpoints(Lists.newArrayList(drillbitContext.getBits()));

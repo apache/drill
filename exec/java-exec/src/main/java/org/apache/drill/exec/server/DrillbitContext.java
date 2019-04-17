@@ -46,6 +46,7 @@ import org.apache.drill.exec.work.foreman.rm.ResourceManager;
 import org.apache.drill.exec.work.foreman.rm.ResourceManagerBuilder;
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -168,6 +169,10 @@ public class DrillbitContext implements AutoCloseable {
 
   public Collection<DrillbitEndpoint> getBits() {
     return coord.getOnlineEndPoints();
+  }
+
+  public Map<DrillbitEndpoint, String> getOnlineEndpointUUIDs() {
+    return coord.getOnlineEndpointsUUID();
   }
 
   public boolean isOnline(DrillbitEndpoint endpoint) {

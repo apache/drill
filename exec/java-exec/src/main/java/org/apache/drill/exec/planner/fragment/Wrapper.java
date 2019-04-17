@@ -23,7 +23,7 @@ import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.apache.drill.exec.planner.cost.NodeResource;
+import org.apache.drill.exec.resourcemgr.NodeResources;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.exec.physical.PhysicalOperatorSetupException;
 import org.apache.drill.exec.physical.base.AbstractPhysicalVisitor;
@@ -55,7 +55,7 @@ public class Wrapper {
   // A Drillbit can have n number of minor fragments then the NodeResource
   // contains cumulative resources required for all the minor fragments
   // for that major fragment on that Drillbit.
-  private Map<DrillbitEndpoint, NodeResource> nodeResourceMap;
+  private Map<DrillbitEndpoint, NodeResources> nodeResourceMap;
 
   // List of fragments this particular fragment depends on for determining its parallelization and endpoint assignments.
   private final List<Wrapper> fragmentDependencies = Lists.newArrayList();
@@ -218,22 +218,22 @@ public class Wrapper {
    */
   public void computeCpuResources() {
     Preconditions.checkArgument(nodeResourceMap == null);
-    BinaryOperator<NodeResource> merge = (first, second) -> {
-      NodeResource result = NodeResource.create();
+    BinaryOperator<NodeResources> merge = (first, second) -> {
+      NodeResources result = NodeResources.create();
       result.add(first);
       result.add(second);
       return result;
     };
 
-    Function<DrillbitEndpoint, NodeResource> cpuPerEndpoint = (endpoint) -> new NodeResource(1, 0);
+    Function<DrillbitEndpoint, NodeResources> cpuPerEndpoint = (endpoint) -> new NodeResources(1, 0);
 
     nodeResourceMap = endpoints.stream()
                                .collect(Collectors.groupingBy(Function.identity(),
-                                        Collectors.reducing(NodeResource.create(),
+                                        Collectors.reducing(NodeResources.create(),
                                                             cpuPerEndpoint, merge)));
   }
 
-  public Map<DrillbitEndpoint, NodeResource> getResourceMap() {
+  public Map<DrillbitEndpoint, NodeResources> getResourceMap() {
     return nodeResourceMap;
   }
 }

@@ -18,12 +18,16 @@
 package org.apache.drill.exec.planner.fragment;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.util.function.CheckedConsumer;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalOperatorSetupException;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.planner.cost.NodeResource;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.resourcemgr.NodeResources;
+import org.apache.drill.exec.resourcemgr.config.QueryQueueConfig;
+import org.apache.drill.exec.resourcemgr.config.exception.QueueSelectionException;
+import org.apache.drill.exec.work.foreman.rm.QueryResourceManager;
 
 import java.util.Map;
 import java.util.HashMap;
@@ -43,12 +47,14 @@ import java.util.stream.Collectors;
 public class DistributedQueueParallelizer extends SimpleParallelizer {
   private final boolean planHasMemory;
   private final QueryContext queryContext;
+  private final QueryResourceManager rm;
   private final Map<DrillbitEndpoint, Map<PhysicalOperator, Long>> operators;
 
-  public DistributedQueueParallelizer(boolean memoryPlanning, QueryContext queryContext) {
+  public DistributedQueueParallelizer(boolean memoryPlanning, QueryContext queryContext, QueryResourceManager queryRM) {
     super(queryContext);
     this.planHasMemory = memoryPlanning;
     this.queryContext = queryContext;
+    this.rm = queryRM;
     this.operators = new HashMap<>();
   }
 
@@ -75,38 +81,47 @@ public class DistributedQueueParallelizer extends SimpleParallelizer {
    *
    * @param planningSet context of the fragments.
    * @param roots root fragments.
-   * @param activeEndpoints currently active endpoints.
+   * @param onlineEndpointUUIDs currently active endpoints.
    * @throws PhysicalOperatorSetupException
    */
   public void adjustMemory(PlanningSet planningSet, Set<Wrapper> roots,
-                           Collection<DrillbitEndpoint> activeEndpoints) throws PhysicalOperatorSetupException {
+                           Map<DrillbitEndpoint, String> onlineEndpointUUIDs) throws ExecutionSetupException {
 
     if (planHasMemory) {
       return;
     }
     // total node resources for the query plan maintained per drillbit.
-    final Map<DrillbitEndpoint, NodeResource> totalNodeResources =
-            activeEndpoints.stream().collect(Collectors.toMap(x ->x,
-                                                              x -> NodeResource.create()));
+    final Map<DrillbitEndpoint, NodeResources> totalNodeResources =
+            onlineEndpointUUIDs.keySet().stream().collect(Collectors.toMap(x ->x,
+                                                              x -> NodeResources.create()));
 
     // list of the physical operators and their memory requirements per drillbit.
     final Map<DrillbitEndpoint, List<Pair<PhysicalOperator, Long>>> operators =
-            activeEndpoints.stream().collect(Collectors.toMap(x -> x,
+            onlineEndpointUUIDs.keySet().stream().collect(Collectors.toMap(x -> x,
                                                               x -> new ArrayList<>()));
 
     for (Wrapper wrapper : roots) {
       traverse(wrapper, CheckedConsumer.throwingConsumerWrapper((Wrapper fragment) -> {
         MemoryCalculator calculator = new MemoryCalculator(planningSet, queryContext);
         fragment.getNode().getRoot().accept(calculator, fragment);
-        NodeResource.merge(totalNodeResources, fragment.getResourceMap());
+        NodeResources.merge(totalNodeResources, fragment.getResourceMap());
         operators.entrySet()
                   .stream()
                   .forEach((entry) -> entry.getValue()
                                            .addAll(calculator.getBufferedOperators(entry.getKey())));
       }));
     }
-    //queryrm.selectQueue( pass the max node Resource) returns queue configuration.
-    Map<DrillbitEndpoint, List<Pair<PhysicalOperator, Long>>> memoryAdjustedOperators = ensureOperatorMemoryWithinLimits(operators, totalNodeResources, 10);
+
+    QueryQueueConfig queueConfig = null;
+    try {
+      queueConfig = this.rm.selectQueue(max(totalNodeResources.values()));
+    } catch (QueueSelectionException exception) {
+      throw new ExecutionSetupException(exception.getMessage());
+    }
+
+    Map<DrillbitEndpoint,
+        List<Pair<PhysicalOperator, Long>>> memoryAdjustedOperators = ensureOperatorMemoryWithinLimits(operators, totalNodeResources,
+                                                                                                       queueConfig.getMaxQueryMemoryInMBPerNode());
     memoryAdjustedOperators.entrySet().stream().forEach((x) -> {
       Map<PhysicalOperator, Long> memoryPerOperator = x.getValue().stream()
                                                                   .collect(Collectors.toMap(operatorLongPair -> operatorLongPair.getLeft(),
@@ -114,6 +129,27 @@ public class DistributedQueueParallelizer extends SimpleParallelizer {
                                                                                             (mem_1, mem_2) -> (mem_1 + mem_2)));
       this.operators.put(x.getKey(), memoryPerOperator);
     });
+
+    this.rm.setCost(convertToUUID(totalNodeResources, onlineEndpointUUIDs));
+  }
+
+  private Map<String, NodeResources> convertToUUID(Map<DrillbitEndpoint, NodeResources> nodeResourcesMap,
+                                                   Map<DrillbitEndpoint, String> onlineEndpointUUIDs) {
+    Map<String, NodeResources> nodeResourcesPerUUID = new HashMap<>();
+    for (Map.Entry<DrillbitEndpoint, NodeResources> nodeResource : nodeResourcesMap.entrySet()) {
+      nodeResourcesPerUUID.put(onlineEndpointUUIDs.get(nodeResource.getKey()), nodeResource.getValue());
+    }
+    return nodeResourcesPerUUID;
+  }
+
+  private NodeResources max(Collection<NodeResources> resources) {
+    NodeResources maxResource = null;
+    for (NodeResources resource : resources) {
+      if (maxResource == null || maxResource.getMemoryInBytes() < resource.getMemoryInBytes()) {
+        maxResource = resource;
+      }
+    }
+    return maxResource;
   }
 
 
@@ -126,12 +162,12 @@ public class DistributedQueueParallelizer extends SimpleParallelizer {
    */
   private Map<DrillbitEndpoint, List<Pair<PhysicalOperator, Long>>>
           ensureOperatorMemoryWithinLimits(Map<DrillbitEndpoint, List<Pair<PhysicalOperator, Long>>> memoryPerOperator,
-                                           Map<DrillbitEndpoint, NodeResource> nodeResourceMap, int nodeLimit) {
+                                           Map<DrillbitEndpoint, NodeResources> nodeResourceMap, long nodeLimit) {
     // Get the physical operators which are above the node memory limit.
     Map<DrillbitEndpoint, List<Pair<PhysicalOperator, Long>>> onlyMemoryAboveLimitOperators = new HashMap<>();
     memoryPerOperator.entrySet().stream().forEach((entry) -> {
       onlyMemoryAboveLimitOperators.putIfAbsent(entry.getKey(), new ArrayList<>());
-      if (nodeResourceMap.get(entry.getKey()).getMemory() > nodeLimit) {
+      if (nodeResourceMap.get(entry.getKey()).getMemoryInBytes() > nodeLimit) {
         onlyMemoryAboveLimitOperators.get(entry.getKey()).addAll(entry.getValue());
       }
     });
@@ -148,6 +184,8 @@ public class DistributedQueueParallelizer extends SimpleParallelizer {
           return Pair.of(operatorMemory.getKey(), (long) Math.ceil(operatorMemory.getValue()/totalMemory * nodeLimit));
         }).collect(Collectors.toList());
         memoryAdjustedDrillbits.put(entry.getKey(), adjustedMemory);
+        NodeResources nodeResources = nodeResourceMap.get(entry.getKey());
+        nodeResources.setMemoryInBytes(adjustedMemory.stream().mapToLong(Pair::getValue).sum());
       }
     );
 

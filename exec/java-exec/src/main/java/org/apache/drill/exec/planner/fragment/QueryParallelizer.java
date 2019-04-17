@@ -25,7 +25,7 @@ import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.options.OptionList;
 import org.apache.drill.exec.work.QueryWorkUnit;
 
-import java.util.Collection;
+import java.util.Map;
 
 /**
  * This class parallelizes the query plan. Once the optimizer finishes its job by producing a
@@ -50,7 +50,7 @@ public interface QueryParallelizer extends ParallelizationParameters {
    * @param options List of all options that are set for the current session.
    * @param foremanNode Endpoint information of the foreman node.
    * @param queryId Unique ID of the query.
-   * @param activeEndpoints Currently active endpoints on which the plan can run.
+   * @param onlineEndpoints Currently active endpoints on which the plan can run.
    * @param rootFragment root of the fragment tree of the transformed physical plan
    * @param session user session object.
    * @param queryContextInfo query context.
@@ -58,6 +58,6 @@ public interface QueryParallelizer extends ParallelizationParameters {
    * @throws ExecutionSetupException
    */
   QueryWorkUnit generateWorkUnit(OptionList options, DrillbitEndpoint foremanNode, QueryId queryId,
-                                 Collection<DrillbitEndpoint> activeEndpoints, Fragment rootFragment,
+                                 Map<DrillbitEndpoint, String> onlineEndpoints, Fragment rootFragment,
                                  UserSession session, QueryContextInformation queryContextInfo) throws ExecutionSetupException;
 }

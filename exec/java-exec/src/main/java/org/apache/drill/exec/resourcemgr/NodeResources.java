@@ -25,6 +25,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
 import java.io.IOException;
 import java.util.Map;
@@ -43,18 +44,18 @@ public class NodeResources {
 
   private long memoryInBytes;
 
-  private int numVirtualCpu;
+  private long numVirtualCpu;
 
   private static final int CURRENT_VERSION = 1;
 
-  public NodeResources(long memoryInBytes, int numVirtualCpu) {
+  public NodeResources(long memoryInBytes, long numVirtualCpu) {
     this(CURRENT_VERSION, memoryInBytes, numVirtualCpu);
   }
 
   @JsonCreator
   public NodeResources(@JsonProperty("version") int version,
                        @JsonProperty("memoryInBytes") long memoryInBytes,
-                       @JsonProperty("numVirtualCpu") int numVirtualCpu) {
+                       @JsonProperty("numVirtualCpu") long numVirtualCpu) {
     this.version = version;
     this.memoryInBytes = memoryInBytes;
     this.numVirtualCpu = numVirtualCpu;
@@ -78,7 +79,7 @@ public class NodeResources {
     return Math.round(getMemoryInMB() / 1024L);
   }
 
-  public int getNumVirtualCpu() {
+  public long getNumVirtualCpu() {
     return numVirtualCpu;
   }
 
@@ -102,8 +103,8 @@ public class NodeResources {
     this.memoryInBytes += other.getMemoryInBytes();
   }
 
-  public static Map<String, NodeResources> merge(Map<String, NodeResources> to,
-                                                 Map<String, NodeResources> from) {
+  public static Map<DrillbitEndpoint, NodeResources> merge(Map<DrillbitEndpoint, NodeResources> to,
+                                                           Map<DrillbitEndpoint, NodeResources> from) {
     to.entrySet().stream().forEach((toEntry) -> toEntry.getValue().add(from.get(toEntry.getKey())));
     return to;
   }
@@ -116,7 +117,7 @@ public class NodeResources {
   @Override
   public int hashCode() {
     int result = 31 ^ Integer.hashCode(version);
-    result = result ^ Integer.hashCode(numVirtualCpu);
+    result = result ^ Long.hashCode(numVirtualCpu);
     result = result ^ Long.hashCode(memoryInBytes);
     return result;
   }
@@ -133,6 +134,18 @@ public class NodeResources {
     NodeResources other = (NodeResources) obj;
     return this.version == other.getVersion() && this.numVirtualCpu == other.getNumVirtualCpu() &&
       this.memoryInBytes == other.getMemoryInBytes();
+  }
+
+  public static NodeResources create() {
+    return create(0,0);
+  }
+
+  public static NodeResources create(long cpu) {
+    return create(cpu,0);
+  }
+
+  public static NodeResources create(long cpu, long memory) {
+    return new NodeResources(CURRENT_VERSION, memory, cpu);
   }
 
   public static class NodeResourcesDe extends StdDeserializer<NodeResources> {

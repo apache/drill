@@ -50,7 +50,7 @@ public class ZKQueueParallelizer extends SimpleParallelizer {
 
   @Override
   public void adjustMemory(PlanningSet planningSet, Set<Wrapper> roots,
-                           Collection<DrillbitEndpoint> activeEndpoints) throws PhysicalOperatorSetupException {
+                           Map<DrillbitEndpoint, String> onlineEndpointUUIDs) throws PhysicalOperatorSetupException {
     if (planHasMemory) {
       return;
     }

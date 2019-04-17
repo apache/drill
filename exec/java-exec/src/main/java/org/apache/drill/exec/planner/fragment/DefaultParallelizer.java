@@ -22,8 +22,8 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.util.memory.DefaultMemoryAllocationUtilities;
 
-import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
 
@@ -51,7 +51,7 @@ public class DefaultParallelizer extends SimpleParallelizer {
 
   @Override
   public void adjustMemory(PlanningSet planningSet, Set<Wrapper> roots,
-                           Collection<DrillbitEndpoint> activeEndpoints) {
+                           Map<DrillbitEndpoint, String> onlineEndpointUUIDs) {
     if (planHasMemory) {
       return;
     }

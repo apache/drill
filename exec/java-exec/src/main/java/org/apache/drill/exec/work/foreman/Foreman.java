@@ -615,7 +615,8 @@ public class Foreman implements Runnable {
 
     return rm.getParallelizer(plan.getProperties().hasResourcePlan).generateWorkUnit(queryContext.getOptions().getOptionList(),
                                                                         queryContext.getCurrentEndpoint(),
-                                                                        queryId, queryContext.getOnlineEndpoints(),
+                                                                        queryId,
+                                                                        queryContext.getOnlineEndpointUUIDs(),
                                                                         rootFragment, initiatingClient.getSession(),
                                                                         queryContext.getQueryContextInfo());
   }

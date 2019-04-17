@@ -17,12 +17,10 @@
  */
 package org.apache.drill.exec.ops;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-
+import io.netty.buffer.DrillBuf;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.AutoCloseables;
+import org.apache.drill.common.DrillNode;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -51,12 +49,13 @@ import org.apache.drill.exec.store.SchemaTreeProvider;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.testing.ExecutionControls;
 import org.apache.drill.exec.util.Utilities;
-
 import org.apache.drill.shaded.guava.com.google.common.base.Function;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 
-import io.netty.buffer.DrillBuf;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 // TODO - consider re-name to PlanningContext, as the query execution context actually appears
 // in fragment contexts
@@ -240,6 +239,14 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
 
   public Collection<DrillbitEndpoint> getOnlineEndpoints() {
     return drillbitContext.getBits();
+  }
+
+  /**
+   * TODO: Change it to use {@link DrillNode} instead of DrillbitEndpoint
+   * @return map of endpoint to UUIDs
+   */
+  public Map<DrillbitEndpoint, String> getOnlineEndpointUUIDs() {
+    return drillbitContext.getOnlineEndpointUUIDs();
   }
 
   public DrillConfig getConfig() {

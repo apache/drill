@@ -23,8 +23,8 @@ import org.apache.drill.exec.physical.base.Exchange;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.AbstractMuxExchange;
 import org.apache.drill.exec.planner.AbstractOpWrapperVisitor;
-import org.apache.drill.exec.planner.cost.NodeResource;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.resourcemgr.NodeResources;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 import java.util.ArrayList;
@@ -70,11 +70,11 @@ public class MemoryCalculator extends AbstractOpWrapperVisitor<Void, RuntimeExce
                      Map<DrillbitEndpoint, Integer> minorFragsPerDrillBit,
                      Function<Entry<DrillbitEndpoint, Integer>, Long> getMemory) {
 
-    NodeResource.merge(currFrag.getResourceMap(),
+    NodeResources.merge(currFrag.getResourceMap(),
                        minorFragsPerDrillBit.entrySet()
                                             .stream()
                                             .collect(Collectors.toMap((x) -> x.getKey(),
-                                                                      (x) -> NodeResource.create(0,
+                                                                      (x) -> NodeResources.create(0,
                                                                                                   getMemory.apply(x)))));
   }
 
