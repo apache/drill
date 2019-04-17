@@ -20,27 +20,29 @@ package org.apache.drill.exec.physical.impl.statistics;
 /*
  * Base Statistics class - all statistics classes should extend this class
  */
-public abstract class Statistic {
+public interface Statistic {
   /*
    * The lifecycle states for statistics
    */
-  public enum State {INIT, CONFIG, MERGE, COMPLETE};
+  enum State {INIT, CONFIG, MERGE, COMPLETE}
+
+  long NO_COLUMN_STATS = -1;
   /*
    * List of statistics used in Drill.
    */
-  public static final String COLNAME = "column";
-  public static final String COLTYPE = "majortype";
-  public static final String SCHEMA = "schema";
-  public static final String COMPUTED = "computed";
-  public static final String ROWCOUNT = "rowcount";
-  public static final String NNROWCOUNT = "nonnullrowcount";
-  public static final String NDV = "approx_count_distinct";
-  public static final String HLL_MERGE = "hll_merge";
-  public static final String HLL = "hll";
-  public static final String AVG_WIDTH = "avg_width";
-  public static final String SUM_WIDTH = "sum_width";
-  public static final String CNT_DUPS = "approx_count_dups";
-  public static final String SUM_DUPS = "sum";
-  public static final String TDIGEST = "tdigest";
-  public static final String TDIGEST_MERGE = "tdigest_merge";
+  String COLNAME = "column";
+  String COLTYPE = "majortype";
+  String SCHEMA = "schema";
+  String COMPUTED = "computed";
+  String ROWCOUNT = "rowcount";
+  String NNROWCOUNT = "nonnullrowcount";
+  String NDV = "approx_count_distinct";
+  String HLL_MERGE = "hll_merge";
+  String HLL = "hll";
+  String AVG_WIDTH = "avg_width";
+  String SUM_WIDTH = "sum_width";
+  String CNT_DUPS = "approx_count_dups";
+  String SUM_DUPS = "sum";
+  String TDIGEST = "tdigest";
+  String TDIGEST_MERGE = "tdigest_merge";
 }

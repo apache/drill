@@ -31,8 +31,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 
-import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.ScanStats;
+import org.apache.drill.exec.physical.impl.statistics.Statistic;
 import org.apache.drill.exec.planner.common.CountToDirectScanUtils;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
 
@@ -288,7 +288,7 @@ public class ConvertCountToDirectScanRule extends RelOptRule {
 
           Metadata_V4.ColumnTypeMetadata_v4 columnMetadata = metadataSummary.getColumnTypeInfo(new Metadata_V4.ColumnTypeMetadata_v4.Key(simplePath));
 
-         if (columnMetadata == null || columnMetadata.totalNullCount == GroupScan.NO_COLUMN_STATS) {
+         if (columnMetadata == null || columnMetadata.totalNullCount == Statistic.NO_COLUMN_STATS) {
             // if column stats is not available don't apply this rule, return empty counts
             return ImmutableMap.of();
           } else {

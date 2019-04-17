@@ -18,7 +18,7 @@
 package org.apache.drill.exec.expr;
 
 import org.apache.drill.exec.expr.stat.RowsMatch;
-import org.apache.drill.exec.physical.base.GroupScan;
+import org.apache.drill.exec.physical.impl.statistics.Statistic;
 import org.apache.drill.metastore.ColumnStatistics;
 import org.apache.drill.metastore.ColumnStatisticsKind;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
@@ -76,7 +76,7 @@ public class IsPredicate<C extends Comparable<C>> extends LogicalExpressionBase 
         || !stat.containsStatistic(ColumnStatisticsKind.MIN_VALUE)
         || !stat.containsStatistic(ColumnStatisticsKind.MAX_VALUE)
         || !stat.containsStatistic(ColumnStatisticsKind.NULLS_COUNT)
-        || (long) stat.getStatistic(ColumnStatisticsKind.NULLS_COUNT) == GroupScan.NO_COLUMN_STATS;
+        || (long) stat.getStatistic(ColumnStatisticsKind.NULLS_COUNT) == Statistic.NO_COLUMN_STATS;
   }
 
   /**

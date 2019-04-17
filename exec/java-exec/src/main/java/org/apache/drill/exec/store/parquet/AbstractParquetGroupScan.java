@@ -24,6 +24,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.drill.common.expression.ExpressionStringBuilder;
 import org.apache.drill.exec.physical.base.AbstractGroupScanWithMetadata;
 import org.apache.drill.exec.physical.base.ParquetMetadataProvider;
+import org.apache.drill.exec.physical.impl.statistics.Statistic;
 import org.apache.drill.metastore.BaseMetadata;
 import org.apache.drill.metastore.LocationProvider;
 import org.apache.drill.metastore.PartitionMetadata;
@@ -330,7 +331,7 @@ public abstract class AbstractParquetGroupScan extends AbstractGroupScanWithMeta
     maxRecords = Math.max(maxRecords, 1); // Make sure it request at least 1 row -> 1 rowGroup.
     if (getTableMetadata() != null) {
       long tableRowCount = (long) TableStatisticsKind.ROW_COUNT.getValue(getTableMetadata());
-      if (tableRowCount == NO_COLUMN_STATS || tableRowCount <= maxRecords) {
+      if (tableRowCount == Statistic.NO_COLUMN_STATS || tableRowCount <= maxRecords) {
         logger.debug("limit push down does not apply, since total number of rows [{}] is less or equal to the required [{}].",
             tableRowCount, maxRecords);
         return null;

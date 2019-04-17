@@ -124,7 +124,7 @@ public class SimpleFileTableMetadataProvider implements TableMetadataProvider {
 
     @Override
     @SuppressWarnings("unchecked")
-    public TableMetadataProvider build() throws IOException {
+    public TableMetadataProvider build() {
       SchemaProvider schemaProvider = metadataProviderManager.getSchemaProvider();
       TableMetadataProvider source = metadataProviderManager.getTableMetadataProvider();
       if (source == null) {

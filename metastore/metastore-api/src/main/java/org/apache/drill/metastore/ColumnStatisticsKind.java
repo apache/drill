@@ -17,7 +17,6 @@
  */
 package org.apache.drill.metastore;
 
-import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.expr.ExactStatisticsConstants;
 import org.apache.drill.exec.physical.impl.statistics.Statistic;
 
@@ -38,8 +37,8 @@ public enum ColumnStatisticsKind implements CollectableColumnStatisticsKind {
       long nullsCount = 0;
       for (ColumnStatistics statistics : statisticsList) {
         Long statNullsCount = (Long) statistics.getStatistic(this);
-        if (statNullsCount == null || statNullsCount == GroupScan.NO_COLUMN_STATS) {
-          return GroupScan.NO_COLUMN_STATS;
+        if (statNullsCount == null || statNullsCount == Statistic.NO_COLUMN_STATS) {
+          return Statistic.NO_COLUMN_STATS;
         } else {
           nullsCount += statNullsCount;
         }

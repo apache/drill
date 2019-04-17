@@ -20,7 +20,7 @@ package org.apache.drill.exec.store.parquet;
 import org.apache.commons.lang3.mutable.MutableLong;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.exec.physical.base.GroupScan;
+import org.apache.drill.exec.physical.impl.statistics.Statistic;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.SchemaPathUtils;
 import org.apache.drill.metastore.BaseMetadata;
@@ -109,10 +109,10 @@ public class ParquetGroupScanStatistics<T extends BaseMetadata & LocationProvide
           previousCount = emptyCount;
         }
         Long nullsNum = (Long) statistics.getStatistic(ColumnStatisticsKind.NULLS_COUNT);
-        if (previousCount.longValue() != GroupScan.NO_COLUMN_STATS && nullsNum != null && nullsNum != GroupScan.NO_COLUMN_STATS) {
+        if (previousCount.longValue() != Statistic.NO_COLUMN_STATS && nullsNum != null && nullsNum != Statistic.NO_COLUMN_STATS) {
           previousCount.add(localRowCount - nullsNum);
         } else {
-          previousCount.setValue(GroupScan.NO_COLUMN_STATS);
+          previousCount.setValue(Statistic.NO_COLUMN_STATS);
         }
         ColumnMetadata columnMetadata = SchemaPathUtils.getColumnMetadata(schemaPath, metadata.getSchema());
         TypeProtos.MajorType majorType = columnMetadata != null ? columnMetadata.majorType() : null;
@@ -207,7 +207,7 @@ public class ParquetGroupScanStatistics<T extends BaseMetadata & LocationProvide
 
   private boolean isSingleVal(ColumnStatistics columnStatistics, long rowCount) {
     Long numNulls = (Long) columnStatistics.getStatistic(ColumnStatisticsKind.NULLS_COUNT);
-    if (numNulls != null && numNulls != GroupScan.NO_COLUMN_STATS) {
+    if (numNulls != null && numNulls != Statistic.NO_COLUMN_STATS) {
       Object min = columnStatistics.getStatistic(ColumnStatisticsKind.MIN_VALUE);
       Object max = columnStatistics.getStatistic(ColumnStatisticsKind.MAX_VALUE);
       if (min != null) {

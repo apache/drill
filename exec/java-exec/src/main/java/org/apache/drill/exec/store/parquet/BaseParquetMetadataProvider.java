@@ -17,9 +17,10 @@
  */
 package org.apache.drill.exec.store.parquet;
 
-import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.ParquetMetadataProvider;
+import org.apache.drill.exec.physical.impl.statistics.Statistic;
 import org.apache.drill.exec.planner.common.DrillStatsTable;
+import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.metastore.BaseMetadata;
 import org.apache.drill.metastore.ColumnStatisticsImpl;
@@ -190,12 +191,12 @@ public abstract class BaseParquetMetadataProvider implements ParquetMetadataProv
 
       if (this.schema == null) {
         schema = new TupleSchema();
-        fields.forEach((schemaPath, majorType) -> SchemaPathUtils.addColumnMetadata(schema, schemaPath, majorType));
+        fields.forEach((schemaPath, majorType) -> MetadataUtils.addColumnMetadata(schema, schemaPath, majorType));
       } else {
         // merges specified schema with schema from table
         fields.forEach((schemaPath, majorType) -> {
           if (SchemaPathUtils.getColumnMetadata(schemaPath, schema) == null) {
-            SchemaPathUtils.addColumnMetadata(schema, schemaPath, majorType);
+            MetadataUtils.addColumnMetadata(schema, schemaPath, majorType);
           }
         });
       }
@@ -306,8 +307,8 @@ public abstract class BaseParquetMetadataProvider implements ParquetMetadataProv
             statistics.put(ColumnStatisticsKind.MIN_VALUE, partitionKey);
             statistics.put(ColumnStatisticsKind.MAX_VALUE, partitionKey);
 
-            statistics.put(ColumnStatisticsKind.NULLS_COUNT, GroupScan.NO_COLUMN_STATS);
-            statistics.put(TableStatisticsKind.ROW_COUNT, GroupScan.NO_COLUMN_STATS);
+            statistics.put(ColumnStatisticsKind.NULLS_COUNT, Statistic.NO_COLUMN_STATS);
+            statistics.put(TableStatisticsKind.ROW_COUNT, Statistic.NO_COLUMN_STATS);
             columnsStatistics.put(partitionColumn,
                 new ColumnStatisticsImpl<>(statistics,
                         ParquetTableMetadataUtils.getComparator(getParquetGroupScanStatistics().getTypeForColumn(partitionColumn).getMinorType())));

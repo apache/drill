@@ -34,6 +34,7 @@ import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.expr.stat.RowsMatch;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.ops.UdfUtilities;
+import org.apache.drill.exec.physical.impl.statistics.Statistic;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
@@ -155,13 +156,13 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
     long colNulls;
     if (columnStats != null) {
       Long nulls = (Long) columnStats.getStatistic(ColumnStatisticsKind.NULLS_COUNT);
-      colNulls = nulls != null ? nulls : GroupScan.NO_COLUMN_STATS;
+      colNulls = nulls != null ? nulls : Statistic.NO_COLUMN_STATS;
     } else {
       return 0;
     }
-    return GroupScan.NO_COLUMN_STATS == tableRowCount
-        || GroupScan.NO_COLUMN_STATS == colNulls
-        ? GroupScan.NO_COLUMN_STATS : tableRowCount - colNulls;
+    return Statistic.NO_COLUMN_STATS == tableRowCount
+        || Statistic.NO_COLUMN_STATS == colNulls
+        ? Statistic.NO_COLUMN_STATS : tableRowCount - colNulls;
   }
 
   @Override
@@ -363,7 +364,7 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
     GroupScanWithMetadataFilterer prunedMetadata = getFilterer();
     if (getTableMetadata() != null) {
       long tableRowCount = (long) TableStatisticsKind.ROW_COUNT.getValue(getTableMetadata());
-      if (tableRowCount == NO_COLUMN_STATS || tableRowCount <= maxRecords) {
+      if (tableRowCount == Statistic.NO_COLUMN_STATS || tableRowCount <= maxRecords) {
         logger.debug("limit push down does not apply, since total number of rows [{}] is less or equal to the required [{}].",
             tableRowCount, maxRecords);
         return null;
@@ -428,7 +429,7 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
     int currentRowCount = 0;
     for (T metadata : metadataList) {
       long rowCount = (long) TableStatisticsKind.ROW_COUNT.getValue(metadata);
-      if (rowCount == NO_COLUMN_STATS) {
+      if (rowCount == Statistic.NO_COLUMN_STATS) {
         return null;
       } else if (currentRowCount + rowCount <= maxRecords) {
         currentRowCount += rowCount;

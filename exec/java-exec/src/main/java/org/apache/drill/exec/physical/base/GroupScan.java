@@ -46,8 +46,6 @@ public interface GroupScan extends Scan, HasAffinity {
    */
   List<SchemaPath> ALL_COLUMNS = ImmutableList.of(SchemaPath.STAR_COLUMN);
 
-  long NO_COLUMN_STATS = -1;
-
   void applyAssignments(List<DrillbitEndpoint> endpoints) throws PhysicalOperatorSetupException;
 
   SubScan getSpecificScan(int minorFragmentId) throws ExecutionSetupException;

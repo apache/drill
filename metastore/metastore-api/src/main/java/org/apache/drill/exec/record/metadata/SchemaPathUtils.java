@@ -17,11 +17,8 @@
  */
 package org.apache.drill.exec.record.metadata;
 
-import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.exec.record.MaterializedField;
 
 public class SchemaPathUtils {
 
@@ -50,36 +47,5 @@ public class SchemaPathUtils {
     return colMetadata;
   }
 
-  /**
-   * Adds column with specified schema path and type into specified {@code TupleMetadata schema}.
-   *
-   * @param schema     tuple schema where column should be added
-   * @param schemaPath schema path of the column which should be added
-   * @param type       type of the column which should be added
-   */
-  public static void addColumnMetadata(TupleMetadata schema, SchemaPath schemaPath, TypeProtos.MajorType type) {
-    PathSegment.NameSegment colPath = schemaPath.getUnIndexed().getRootSegment();
-    ColumnMetadata colMetadata;
 
-    while (!colPath.isLastPath()) {
-      colMetadata = schema.metadata(colPath.getPath());
-      if (colMetadata == null) {
-        colMetadata = MetadataUtils.newMap(colPath.getPath(), null);
-        schema.addColumn(colMetadata);
-      }
-      if (!colMetadata.isMap()) {
-        throw new DrillRuntimeException(String.format("Expected map, but was %s", colMetadata.majorType()));
-      }
-
-      schema = colMetadata.mapSchema();
-      colPath = (PathSegment.NameSegment) colPath.getChild();
-    }
-
-    colMetadata = schema.metadata(colPath.getPath());
-    if (colMetadata == null) {
-      schema.addColumn(new PrimitiveColumnMetadata(MaterializedField.create(colPath.getPath(), type)));
-    } else if (!colMetadata.majorType().equals(type)) {
-      throw new DrillRuntimeException(String.format("Types mismatch: existing type: %s, new type: %s", colMetadata.majorType(), type));
-    }
-  }
 }
