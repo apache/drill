@@ -33,6 +33,7 @@ import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.ScanStats;
+import org.apache.drill.exec.physical.impl.statistics.Statistic;
 import org.apache.drill.exec.planner.logical.DrillAggregateRel;
 import org.apache.drill.exec.planner.logical.DrillProjectRel;
 import org.apache.drill.exec.planner.logical.DrillScanRel;
@@ -202,7 +203,7 @@ public class ConvertCountToDirectScanPrule extends Prule {
           }
 
           cnt = oldGrpScan.getColumnValueCount(simplePath);
-          if (cnt == GroupScan.NO_COLUMN_STATS) {
+          if (cnt == Statistic.NO_COLUMN_STATS) {
             // if column stats is not available don't apply this rule, return empty counts
             return ImmutableMap.of();
           }

@@ -347,7 +347,6 @@
             <!-- Relocate Drill classes to minimize classloader hell. -->
             <relocation><pattern>org.apache.drill.exec.</pattern><shadedPattern>oadd.org.apache.drill.exec.</shadedPattern></relocation>
             <relocation><pattern>org.apache.drill.common.</pattern><shadedPattern>oadd.org.apache.drill.common.</shadedPattern></relocation>
-            <relocation><pattern>org.apache.drill.metastore.</pattern><shadedPattern>oadd.org.apache.drill.metastore.</shadedPattern></relocation>
 
             <!-- Move dependencies out of path -->
             <relocation><pattern>antlr.</pattern><shadedPattern>oadd.antlr.</shadedPattern></relocation>
@@ -489,6 +488,7 @@
                <exclude>org/apache/commons/pool2/**</exclude>
                <exclude>org/apache/http/**</exclude>
                <exclude>org/apache/directory/**</exclude>
+               <exclude>org/apache/drill/metastore/**</exclude>
                <exclude>com/jcraft/**</exclude>
                <exclude>**/mapr/**</exclude>
                <exclude>org/yaml/**</exclude>
@@ -664,7 +664,6 @@
                   <!-- Relocate Drill classes to minimize classloader hell. -->
                   <relocation><pattern>org.apache.drill.exec.</pattern><shadedPattern>oadd.org.apache.drill.exec.</shadedPattern></relocation>
                   <relocation><pattern>org.apache.drill.common.</pattern><shadedPattern>oadd.org.apache.drill.common.</shadedPattern></relocation>
-                  <relocation><pattern>org.apache.drill.metastore.</pattern><shadedPattern>oadd.org.apache.drill.metastore.</shadedPattern></relocation>
 
                   <!-- Move dependencies out of path -->
                   <relocation><pattern>antlr.</pattern><shadedPattern>oadd.antlr.</shadedPattern></relocation>
@@ -788,6 +787,7 @@
                       <exclude>org/apache/drill/exec/rpc/data/**</exclude>
                       <exclude>org/apache/drill/exec/rpc/control/**</exclude>
                       <exclude>org/apache/drill/exec/work/**</exclude>
+                      <exclude>org/apache/drill/metastore/**</exclude>
                       <exclude>org/apache/hadoop/**</exclude>
                       <exclude>org/apache/commons/pool2/**</exclude>
                       <exclude>org/apache/http/**</exclude>

@@ -64,8 +64,7 @@ public class MapColumnMetadata extends AbstractColumnMetadata {
     mapSchema = (TupleSchema) from.mapSchema.copy();
   }
 
-  public MapColumnMetadata(String name, DataMode mode,
-      TupleSchema mapSchema) {
+  public MapColumnMetadata(String name, DataMode mode, TupleSchema mapSchema) {
     super(name, MinorType.MAP, mode);
     if (mapSchema == null) {
       this.mapSchema = new TupleSchema();
