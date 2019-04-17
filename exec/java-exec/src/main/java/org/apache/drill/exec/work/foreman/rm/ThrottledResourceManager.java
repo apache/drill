@@ -18,13 +18,19 @@
 package org.apache.drill.exec.work.foreman.rm;
 
 import org.apache.drill.exec.ops.QueryContext;
-import org.apache.drill.exec.planner.fragment.ZKQueueParallelizer;
 import org.apache.drill.exec.planner.fragment.QueryParallelizer;
+import org.apache.drill.exec.planner.fragment.ZKQueueParallelizer;
+import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.exec.resourcemgr.NodeResources;
+import org.apache.drill.exec.resourcemgr.config.QueryQueueConfig;
+import org.apache.drill.exec.resourcemgr.config.exception.QueueSelectionException;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.work.foreman.Foreman;
 import org.apache.drill.exec.work.foreman.rm.QueryQueue.QueryQueueException;
 import org.apache.drill.exec.work.foreman.rm.QueryQueue.QueueLease;
 import org.apache.drill.exec.work.foreman.rm.QueryQueue.QueueTimeoutException;
+
+import java.util.Map;
 
 /**
  * Global resource manager that provides basic admission control (AC) via a
@@ -76,14 +82,20 @@ public class ThrottledResourceManager extends AbstractResourceManager {
     }
 
     @Override
+    public void setCost(Map<String, NodeResources> costOnAssignedEndpoints) {
+      throw new UnsupportedOperationException("QueuedQueryResourceManager doesn't use this implementation for setting" +
+        " cost");
+    }
+
+    @Override
     public QueryParallelizer getParallelizer(boolean planHasMemory) {
       // currently memory planning is disabled. Enable it once the RM functionality is fully implemented.
       return new ZKQueueParallelizer(planHasMemory, this, this.queryContext);
     }
 
-    @Override
-    public void admit() throws QueueTimeoutException, QueryQueueException {
+    public QueryAdmitResponse admit() throws QueueTimeoutException, QueryQueueException {
       lease = rm.queue().enqueue(foreman.getQueryId(), queryCost);
+      return QueryAdmitResponse.ADMITTED;
     }
 
     public long queryMemoryPerNode() {
@@ -100,6 +112,26 @@ public class ThrottledResourceManager extends AbstractResourceManager {
     @Override
     public long minimumOperatorMemory() {
       return rm.minimumOperatorMemory();
+    }
+
+    @Override
+    public boolean reserveResources(QueryQueueConfig selectedQueue, UserBitShared.QueryId queryId) throws Exception {
+      // no op
+      return true;
+    }
+
+    @Override
+    public QueryQueueConfig selectQueue(NodeResources maxNodeResource) throws QueueSelectionException {
+      throw new UnsupportedOperationException("Select queue is not supported in QueuedQueryResourceManager");
+    }
+
+    @Override
+    public String getLeaderId() {
+      throw new UnsupportedOperationException("Leader is not supported in QueuedQueryResourceManager");
+    }
+
+    public void updateState(QueryRMState state) {
+      // no-op Doesn't support any state machine
     }
 
     @Override
@@ -141,6 +173,12 @@ public class ThrottledResourceManager extends AbstractResourceManager {
   @Override
   public QueryResourceManager newQueryRM(Foreman foreman) {
     return new QueuedQueryResourceManager(this, foreman);
+  }
+
+  @Override
+  public void addToWaitingQueue(QueryResourceManager queryRM) {
+    // no-op
+    return;
   }
 
   @Override

@@ -15,35 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.coord.zk;
+package org.apache.drill.exec.resourcemgr.rmblobmgr.rmblob;
 
-import org.apache.drill.exec.coord.ClusterCoordinator.RegistrationHandle;
-import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-public class ZKRegistrationHandle implements RegistrationHandle {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ZKRegistrationHandle.class);
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property="type")
+public interface RMStateBlob {
 
-  public final String id;
-  public DrillbitEndpoint endpoint;
-
-  public ZKRegistrationHandle(String id, DrillbitEndpoint endpoint) {
-    super();
-    this.id = id;
-    this.endpoint = endpoint;
-  }
-
-  public DrillbitEndpoint getEndPoint() {
-    return endpoint;
-  }
-
-  public String getId() {
-    return id;
-  }
-
-  @Override
-  public void setEndPoint(DrillbitEndpoint endpoint) {
-    this.endpoint = endpoint;
-  }
-
-
+  int getVersion();
 }

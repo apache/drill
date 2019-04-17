@@ -75,7 +75,14 @@ public class WorkManager implements AutoCloseable {
    */
   private final ConcurrentMap<FragmentHandle, FragmentExecutor> runningFragments = Maps.newConcurrentMap();
 
-  private final ConcurrentMap<QueryId, Foreman> queries = Maps.newConcurrentMap();
+  // Map of all the queries which are admitted by queue leader
+  private final ConcurrentMap<QueryId, Foreman> runningQueries = Maps.newConcurrentMap();
+  // Map of all the queries which are waiting for admit response from the queue leader
+  private final ConcurrentMap<QueryId, Foreman> waitingQueries = Maps.newConcurrentMap();
+  // Lock to protect access of both waiting queries and running queries. This is needed to avoid race conditions For
+  // Example: when query cancellation is received and at same time query is moved between 2 maps
+  private Lock queryMapAccess = new ReentrantLock();
+
 
   private final BootStrapContext bContext;
   private DrillbitContext dContext;
@@ -193,8 +200,13 @@ public class WorkManager implements AutoCloseable {
           logger.warn("Timed out after {} millis. Shutting down before all fragments and foremen " +
             "have completed.", EXIT_TIMEOUT_MS);
 
-          for (QueryId queryId: queries.keySet()) {
+          for (QueryId queryId: runningQueries.keySet()) {
             logger.warn("Query {} is still running.", QueryIdHelper.getQueryId(queryId));
+          }
+
+          for (QueryId queryId: waitingQueries.keySet()) {
+            logger.warn("Query {} is in waiting queue and has not yet started running.",
+              QueryIdHelper.getQueryId(queryId));
           }
 
           for (FragmentHandle fragmentHandle: runningFragments.keySet()) {
@@ -212,7 +224,12 @@ public class WorkManager implements AutoCloseable {
   }
 
   private boolean areQueriesAndFragmentsEmpty() {
-    return queries.isEmpty() && runningFragments.isEmpty();
+    try {
+      queryMapAccess.lock();
+      return runningQueries.isEmpty() && waitingQueries.isEmpty() && runningFragments.isEmpty();
+    } finally {
+      queryMapAccess.unlock();
+    }
   }
 
   /**
@@ -222,7 +239,8 @@ public class WorkManager implements AutoCloseable {
     isEmptyLock.lock();
     try {
       if (isEmptyCondition != null) {
-        logger.info("Waiting for {} running queries before shutting down.", queries.size());
+        logger.info("Waiting for {} running queries before shutting down.", runningQueries.size());
+        logger.info("Waiting for {} waiting queries before shutting down.", waitingQueries.size());
         logger.info("Waiting for {} running fragments before shutting down.", runningFragments.size());
 
         if (areQueriesAndFragmentsEmpty()) {
@@ -239,10 +257,16 @@ public class WorkManager implements AutoCloseable {
    *  shutdown request is triggered.
    */
   public synchronized Map<String, Integer> getRemainingQueries() {
-        Map<String, Integer> queriesInfo = new HashMap<String, Integer>();
-        queriesInfo.put("queriesCount", queries.size());
-        queriesInfo.put("fragmentsCount", runningFragments.size());
-        return queriesInfo;
+    try {
+      queryMapAccess.lock();
+      final Map<String, Integer> queriesInfo = new HashMap<String, Integer>();
+      queriesInfo.put("queriesCount", runningQueries.size() + waitingQueries.size());
+      queriesInfo.put("fragmentsCount", runningFragments.size());
+      return queriesInfo;
+    } finally {
+      queryMapAccess.unlock();
+    }
+
   }
 
   /**
@@ -250,10 +274,30 @@ public class WorkManager implements AutoCloseable {
    */
   public class WorkerBee {
     public void addNewForeman(final Foreman foreman) {
-      queries.put(foreman.getQueryId(), foreman);
+      try {
+        queryMapAccess.lock();
+        // Always put foreman inside waiting queries map first. Only after query is admitted by leader or enqueue
+        // returns true in case when RM is disabled the query will be moved to running map
+        waitingQueries.put(foreman.getQueryId(), foreman);
+      } finally {
+        queryMapAccess.unlock();
+      }
 
       // We're relying on the Foreman to clean itself up with retireForeman().
       executor.execute(foreman);
+    }
+
+    public void moveToRunningQueries(QueryId queryId) {
+      try {
+        queryMapAccess.lock();
+        final Foreman foremanForQuery = waitingQueries.get(queryId);
+        waitingQueries.remove(queryId);
+        if (foremanForQuery != null) {
+          runningQueries.put(queryId, foremanForQuery);
+        }
+      } finally {
+        queryMapAccess.unlock();
+      }
     }
 
     /**
@@ -267,8 +311,9 @@ public class WorkManager implements AutoCloseable {
     public boolean cancelForeman(final QueryId queryId, DrillUserPrincipal principal) {
       Preconditions.checkNotNull(queryId);
 
-      final Foreman foreman = queries.get(queryId);
+      final Foreman foreman = getForemanForQueryId(queryId);
       if (foreman == null) {
+        // Foreman not found in both running and waiting queries map
         return false;
       }
 
@@ -316,7 +361,13 @@ public class WorkManager implements AutoCloseable {
       Preconditions.checkNotNull(foreman);
 
       final QueryId queryId = foreman.getQueryId();
-      final boolean wasRemoved = queries.remove(queryId, foreman);
+      final boolean wasRemoved;
+      try {
+        queryMapAccess.lock();
+        wasRemoved = runningQueries.remove(queryId, foreman) || waitingQueries.remove(queryId, foreman);
+      } finally {
+        queryMapAccess.unlock();
+      }
 
       if (!wasRemoved) {
         logger.warn("Couldn't find retiring Foreman for query " + queryId);
@@ -326,7 +377,14 @@ public class WorkManager implements AutoCloseable {
     }
 
     public Foreman getForemanForQueryId(final QueryId queryId) {
-      return queries.get(queryId);
+      final Foreman foreman;
+      try {
+        queryMapAccess.lock();
+        foreman = runningQueries.getOrDefault(queryId, waitingQueries.getOrDefault(queryId, null));
+      } finally {
+        queryMapAccess.unlock();
+      }
+      return foreman;
     }
 
     public DrillbitContext getContext() {
@@ -391,7 +449,16 @@ public class WorkManager implements AutoCloseable {
       runtimeFilter.retainBuffers(1);
       //to foreman
       if (toForeman) {
-        Foreman foreman = queries.get(queryId);
+        // Foreman should be in runningQueries map only not in waitingQueries map since RTF will be received if query
+        // is actually executing
+        final Foreman foreman;
+        try {
+          queryMapAccess.lock();
+          foreman = runningQueries.get(queryId);
+        } finally {
+          queryMapAccess.unlock();
+        }
+
         if (foreman != null) {
           executor.execute(new Runnable() {
             @Override
@@ -426,9 +493,9 @@ public class WorkManager implements AutoCloseable {
   }
 
   /**
-   * Periodically gather current statistics. {@link QueryManager} uses a FragmentStatusListener to
-   * maintain changes to state, and should be current. However, we want to collect current statistics
-   * about RUNNING queries, such as current memory consumption, number of rows processed, and so on.
+   * Periodically gather current statistics. {@link org.apache.drill.exec.work.foreman.QueryManager} uses a
+   * FragmentStatusListener to maintain changes to state, and should be current. However, we want to collect current
+   * statistics about RUNNING queries, such as current memory consumption, number of rows processed, and so on.
    * The FragmentStatusListener only tracks changes to state, so the statistics kept there will be
    * stale; this thread probes for current values.
    *

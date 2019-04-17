@@ -18,14 +18,46 @@
 package org.apache.drill.exec.work.foreman.rm;
 
 import org.apache.drill.exec.planner.fragment.QueryParallelizer;
+import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.exec.resourcemgr.NodeResources;
+import org.apache.drill.exec.resourcemgr.config.QueryQueueConfig;
+import org.apache.drill.exec.resourcemgr.config.exception.QueueSelectionException;
 import org.apache.drill.exec.work.foreman.rm.QueryQueue.QueryQueueException;
 import org.apache.drill.exec.work.foreman.rm.QueryQueue.QueueTimeoutException;
+
+import java.util.Map;
 
 /**
  * Extends a {@link QueryResourceAllocator} to provide queueing support.
  */
 
 public interface QueryResourceManager {
+
+  enum QueryAdmitResponse {
+    UNKNOWN,
+    ADMITTED,
+    WAIT_FOR_RESPONSE;
+
+    @Override
+    public String toString() {
+      return name().toLowerCase();
+    }
+  }
+
+  enum QueryRMState {
+    STARTED,
+    ENQUEUED,
+    ADMITTED,
+    RESERVED_RESOURCES,
+    RELEASED_RESOURCES,
+    DEQUEUED,
+    COMPLETED;
+
+    @Override
+    public String toString() {
+      return name().toLowerCase();
+    }
+  }
 
   /**
    * Hint that this resource manager queues. Allows the Foreman
@@ -44,6 +76,7 @@ public interface QueryResourceManager {
 
   void setCost(double cost);
 
+  void setCost(Map<String, NodeResources> costOnAssignedEndpoints);
   /**
    * Create a parallelizer to parallelize each major fragment of the query into
    * many minor fragments. The parallelizer encapsulates the logic of how much
@@ -59,11 +92,9 @@ public interface QueryResourceManager {
    * approach.)
    * @throws QueryQueueException if something goes wrong with the
    * queue mechanism
-   * @throws QueueTimeoutException if the query timed out waiting to
-   * be admitted.
    */
 
-  void admit() throws QueueTimeoutException, QueryQueueException;
+  QueryAdmitResponse admit() throws QueueTimeoutException, QueryQueueException;
 
 
   /**
@@ -80,6 +111,20 @@ public interface QueryResourceManager {
 
   long minimumOperatorMemory();
 
+  /**
+   * Updates the state machine of queryRM
+   * @param newState new target state
+   */
+  void updateState(QueryRMState newState);
+
+  /**
+   * Called to reserve resources required by query. Updates the queryRM state to RESERVED_RESOURCES if successful
+   */
+  boolean reserveResources(QueryQueueConfig selectedQueue, UserBitShared.QueryId queryId) throws Exception;
+
+  QueryQueueConfig selectQueue(NodeResources maxNodeResource) throws QueueSelectionException;
+
+  String getLeaderId();
   /**
    * Mark the query as completing, giving up its slot in the
    * cluster. Releases any lease that may be held for a system with queues.

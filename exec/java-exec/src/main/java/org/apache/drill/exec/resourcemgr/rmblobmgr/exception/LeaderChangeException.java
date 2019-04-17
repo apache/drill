@@ -15,35 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.coord.zk;
+package org.apache.drill.exec.resourcemgr.rmblobmgr.exception;
 
-import org.apache.drill.exec.coord.ClusterCoordinator.RegistrationHandle;
-import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
-
-public class ZKRegistrationHandle implements RegistrationHandle {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ZKRegistrationHandle.class);
-
-  public final String id;
-  public DrillbitEndpoint endpoint;
-
-  public ZKRegistrationHandle(String id, DrillbitEndpoint endpoint) {
-    super();
-    this.id = id;
-    this.endpoint = endpoint;
+public class LeaderChangeException extends Exception {
+  public LeaderChangeException(String message) {
+    super(message);
   }
 
-  public DrillbitEndpoint getEndPoint() {
-    return endpoint;
+  public LeaderChangeException(String message, Exception ex) {
+    super(message, ex);
   }
-
-  public String getId() {
-    return id;
-  }
-
-  @Override
-  public void setEndPoint(DrillbitEndpoint endpoint) {
-    this.endpoint = endpoint;
-  }
-
-
 }

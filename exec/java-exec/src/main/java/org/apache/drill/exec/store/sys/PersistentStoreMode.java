@@ -22,5 +22,6 @@ package org.apache.drill.exec.store.sys;
  */
 public enum PersistentStoreMode {
   PERSISTENT,
-  BLOB_PERSISTENT
+  BLOB_PERSISTENT,
+  PERSISTENT_TRANSACTION
 }

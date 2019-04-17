@@ -47,7 +47,7 @@ public class QueryQueueConfigImpl implements QueryQueueConfig {
   private static final String MAX_QUERY_MEMORY_PER_NODE_FORMAT = "([0-9]+)\\s*([kKmMgG]?)\\s*$";
 
   // Required queue configurations in MAX_QUERY_MEMORY_PER_NODE_FORMAT pattern
-  private static final String MAX_QUERY_MEMORY_PER_NODE_KEY = "max_query_memory_per_node";
+  public static final String MAX_QUERY_MEMORY_PER_NODE_KEY = "max_query_memory_per_node";
 
   private final String queueUUID;
 

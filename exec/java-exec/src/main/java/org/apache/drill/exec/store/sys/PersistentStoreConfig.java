@@ -103,14 +103,21 @@ public class PersistentStoreConfig<V> {
       return this;
     }
 
-    public StoreConfigBuilder<V> persist(){
-      this.mode = PersistentStoreMode.PERSISTENT;
+    public StoreConfigBuilder<V> mode(PersistentStoreMode mode) {
+      this.mode = mode;
       return this;
     }
 
+    public StoreConfigBuilder<V> persist(){
+      return mode(PersistentStoreMode.PERSISTENT);
+    }
+
     public StoreConfigBuilder<V> blob(){
-      this.mode = PersistentStoreMode.BLOB_PERSISTENT;
-      return this;
+      return mode(PersistentStoreMode.BLOB_PERSISTENT);
+    }
+
+    public StoreConfigBuilder<V> persistWithTransaction(){
+      return mode(PersistentStoreMode.PERSISTENT_TRANSACTION);
     }
 
     public StoreConfigBuilder<V> setCapacity(int capacity) {

@@ -17,26 +17,11 @@
  */
 package org.apache.drill.exec.coord.zk;
 
-import static org.apache.drill.shaded.guava.com.google.common.collect.Collections2.transform;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.ArrayList;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import org.apache.curator.framework.imps.DefaultACLProvider;
-import org.apache.drill.shaded.guava.com.google.common.base.Throwables;
-import org.apache.commons.collections.keyvalue.MultiKey;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.api.ACLProvider;
+import org.apache.curator.framework.imps.DefaultACLProvider;
 import org.apache.curator.framework.state.ConnectionState;
 import org.apache.curator.framework.state.ConnectionStateListener;
 import org.apache.curator.retry.RetryNTimes;
@@ -57,7 +42,21 @@ import org.apache.drill.exec.coord.store.TransientStoreConfig;
 import org.apache.drill.exec.coord.store.TransientStoreFactory;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.State;
-import org.apache.drill.shaded.guava.com.google.common.base.Function;
+import org.apache.drill.shaded.guava.com.google.common.base.Throwables;
+
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Manages cluster coordination utilizing zookeeper. *
@@ -74,8 +73,8 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
   private ServiceCache<DrillbitEndpoint> serviceCache;
   private DrillbitEndpoint endpoint;
 
-  // endpointsMap maps Multikey( comprises of endoint address and port) to Drillbit endpoints
-  private ConcurrentHashMap<MultiKey, DrillbitEndpoint> endpointsMap = new ConcurrentHashMap<MultiKey,DrillbitEndpoint>();
+  // endpointsMap maps String UUID to Drillbit endpoints
+  private ConcurrentHashMap<String, DrillbitEndpoint> endpointsMap = new ConcurrentHashMap<>();
   private static final Pattern ZK_COMPLEX_STRING = Pattern.compile("(^.*?)/(.*)/([^/]*)$");
 
   public ZKClusterCoordinator(DrillConfig config, String connect) {
@@ -237,7 +236,12 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
 
   @Override
   public Collection<DrillbitEndpoint> getAvailableEndpoints() {
-    return this.endpoints;
+    return getAvailableEndpointsUUID().values();
+  }
+
+  @Override
+  public Map<String, DrillbitEndpoint> getAvailableEndpointsUUID() {
+    return this.endpointsMap;
   }
 
   /*
@@ -249,14 +253,19 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
    */
   @Override
   public Collection<DrillbitEndpoint> getOnlineEndPoints() {
-    Collection<DrillbitEndpoint> runningEndPoints = new ArrayList<>();
-    for (DrillbitEndpoint endpoint: endpoints){
-      if(isDrillbitInState(endpoint, State.ONLINE)) {
-        runningEndPoints.add(endpoint);
+    return getOnlineEndpointsUUID().keySet();
+  }
+
+  @Override
+  public Map<DrillbitEndpoint, String> getOnlineEndpointsUUID() {
+    Map<DrillbitEndpoint, String> onlineEndpointsUUID = new HashMap<>();
+    for (Map.Entry<String, DrillbitEndpoint> endpointEntry : endpointsMap.entrySet()) {
+      if (isDrillbitInState(endpointEntry.getValue(), State.ONLINE)) {
+        onlineEndpointsUUID.put(endpointEntry.getValue(), endpointEntry.getKey());
       }
     }
-    logger.debug("Online endpoints in ZK are" + runningEndPoints.toString());
-    return runningEndPoints;
+    logger.debug("Online endpoints in ZK are" + onlineEndpointsUUID.keySet().toString());
+    return onlineEndpointsUUID;
   }
 
   @Override
@@ -273,14 +282,11 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
   private synchronized void updateEndpoints() {
     try {
       // All active bits in the Zookeeper
-      Collection<DrillbitEndpoint> newDrillbitSet =
-      transform(discovery.queryForInstances(serviceName),
-        new Function<ServiceInstance<DrillbitEndpoint>, DrillbitEndpoint>() {
-          @Override
-          public DrillbitEndpoint apply(ServiceInstance<DrillbitEndpoint> input) {
-            return input.getPayload();
-          }
-        });
+      final Map<String, DrillbitEndpoint> activeEndpointsUUID = discovery.queryForInstances(serviceName).stream()
+        .collect(Collectors.toMap(ServiceInstance::getId, ServiceInstance::getPayload));
+
+      final Map<DrillbitEndpoint, String> UUIDtoEndpoints = activeEndpointsUUID.entrySet().stream()
+        .collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey));
 
       // set of newly dead bits : original bits - new set of active bits.
       Set<DrillbitEndpoint> unregisteredBits = new HashSet<>();
@@ -290,29 +296,32 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
 
       // Updates the endpoints map if there is a change in state of the endpoint or with the addition
       // of new drillbit endpoints. Registered endpoints is set to newly live drillbit endpoints.
-      for ( DrillbitEndpoint endpoint : newDrillbitSet) {
-        String endpointAddress = endpoint.getAddress();
-        int endpointPort = endpoint.getUserPort();
-        if (! endpointsMap.containsKey(new MultiKey(endpointAddress, endpointPort))) {
-          registeredBits.add(endpoint);
-        }
-        endpointsMap.put(new MultiKey(endpointAddress, endpointPort),endpoint);
+      for (Map.Entry<String, DrillbitEndpoint> endpointToUUID : activeEndpointsUUID.entrySet()) {
+        endpointsMap.put(endpointToUUID.getKey(), endpointToUUID.getValue());
       }
+
       // Remove all the endpoints that are newly dead
-      for ( MultiKey key: endpointsMap.keySet()) {
-        if(!newDrillbitSet.contains(endpointsMap.get(key))) {
-          unregisteredBits.add(endpointsMap.get(key));
-          endpointsMap.remove(key);
+      for ( String bitUUID: endpointsMap.keySet()) {
+        if (!activeEndpointsUUID.containsKey(bitUUID)) {
+          final DrillbitEndpoint unregisteredBit = endpointsMap.get(bitUUID);
+          unregisteredBits.add(unregisteredBit);
+
+          if (UUIDtoEndpoints.containsKey(unregisteredBit)) {
+            logger.info("Drillbit registered again with different UUID. [Details: Address: {}, UserPort: {}," +
+              " PreviousUUID: {}, CurrentUUID: {}", unregisteredBit.getAddress(), unregisteredBit.getUserPort(),
+              bitUUID, UUIDtoEndpoints.get(unregisteredBit));
+          }
+          endpointsMap.remove(bitUUID);
         }
       }
       endpoints = endpointsMap.values();
       if (logger.isDebugEnabled()) {
         StringBuilder builder = new StringBuilder();
         builder.append("Active drillbit set changed.  Now includes ");
-        builder.append(newDrillbitSet.size());
+        builder.append(activeEndpointsUUID.size());
         builder.append(" total bits. New active drillbits:\n");
         builder.append("Address | User Port | Control Port | Data Port | Version | State\n");
-        for (DrillbitEndpoint bit: newDrillbitSet) {
+        for (DrillbitEndpoint bit: activeEndpointsUUID.values()) {
           builder.append(bit.getAddress()).append(" | ");
           builder.append(bit.getUserPort()).append(" | ");
           builder.append(bit.getControlPort()).append(" | ");

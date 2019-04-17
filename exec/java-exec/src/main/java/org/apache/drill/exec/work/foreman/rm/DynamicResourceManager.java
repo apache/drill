@@ -66,6 +66,11 @@ public class DynamicResourceManager implements ResourceManager {
     return activeRm.newQueryRM(foreman);
   }
 
+  @Override
+  public void addToWaitingQueue(QueryResourceManager queryRM) {
+    throw new UnsupportedOperationException("Dynamic Resource Manager needs to be retired");
+  }
+
   private void refreshRM() {
     long now = System.currentTimeMillis();
     if (now < nextUpdateTime) {

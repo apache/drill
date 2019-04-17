@@ -17,6 +17,18 @@
  */
 package org.apache.drill.exec.resourcemgr;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+
+import java.io.IOException;
+import java.util.Map;
+
 /**
  * Provides resources for a node in cluster. Currently it is used to support only 2 kind of resources:
  * <ul>
@@ -29,28 +41,39 @@ public class NodeResources {
 
   private final int version;
 
-  private final long memoryInBytes;
+  private long memoryInBytes;
 
-  private final int numVirtualCpu;
+  private int numVirtualCpu;
+
+  private static final int CURRENT_VERSION = 1;
 
   public NodeResources(long memoryInBytes, int numVirtualCpu) {
+    this(CURRENT_VERSION, memoryInBytes, numVirtualCpu);
+  }
+
+  @JsonCreator
+  public NodeResources(@JsonProperty("version") int version,
+                       @JsonProperty("memoryInBytes") long memoryInBytes,
+                       @JsonProperty("numVirtualCpu") int numVirtualCpu) {
+    this.version = version;
     this.memoryInBytes = memoryInBytes;
     this.numVirtualCpu = numVirtualCpu;
-    this.version = 1;
   }
 
   public NodeResources(long memoryInBytes, int numPhysicalCpu, int vFactor) {
-    this(memoryInBytes, numPhysicalCpu * vFactor);
+    this(CURRENT_VERSION, memoryInBytes, numPhysicalCpu * vFactor);
   }
 
   public long getMemoryInBytes() {
     return memoryInBytes;
   }
 
+  @JsonIgnore
   public long getMemoryInMB() {
     return Math.round((memoryInBytes / 1024L) / 1024L);
   }
 
+  @JsonIgnore
   public long getMemoryInGB() {
     return Math.round(getMemoryInMB() / 1024L);
   }
@@ -59,8 +82,70 @@ public class NodeResources {
     return numVirtualCpu;
   }
 
+  public int getVersion() {
+    return version;
+  }
+
+  public void setMemoryInBytes(long memoryInBytes) {
+    this.memoryInBytes = memoryInBytes;
+  }
+
+  public void setNumVirtualCpu(int numVCpu) {
+    this.numVirtualCpu = numVCpu;
+  }
+
+  public void add(NodeResources other) {
+    if (other == null) {
+      return;
+    }
+    this.numVirtualCpu += other.getNumVirtualCpu();
+    this.memoryInBytes += other.getMemoryInBytes();
+  }
+
+  public static Map<String, NodeResources> merge(Map<String, NodeResources> to,
+                                                 Map<String, NodeResources> from) {
+    to.entrySet().stream().forEach((toEntry) -> toEntry.getValue().add(from.get(toEntry.getKey())));
+    return to;
+  }
+
   @Override
   public String toString() {
     return "{ Version: " + version + ", MemoryInBytes: " + memoryInBytes + ", VirtualCPU: " + numVirtualCpu + " }";
+  }
+
+  @Override
+  public int hashCode() {
+    int result = 31 ^ Integer.hashCode(version);
+    result = result ^ Integer.hashCode(numVirtualCpu);
+    result = result ^ Long.hashCode(memoryInBytes);
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (obj == null || (obj.getClass() != this.getClass())) {
+      return false;
+    }
+
+    if (this == obj) {
+      return true;
+    }
+    NodeResources other = (NodeResources) obj;
+    return this.version == other.getVersion() && this.numVirtualCpu == other.getNumVirtualCpu() &&
+      this.memoryInBytes == other.getMemoryInBytes();
+  }
+
+  public static class NodeResourcesDe extends StdDeserializer<NodeResources> {
+
+    private static final ObjectMapper mapper = new ObjectMapper();
+
+    public NodeResourcesDe() {
+      super(NodeResources.class);
+    }
+
+    @Override
+    public NodeResources deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+      return mapper.readValue(p, NodeResources.class);
+    }
   }
 }

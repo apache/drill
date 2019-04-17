@@ -21,7 +21,13 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.planner.fragment.QueryParallelizer;
 import org.apache.drill.exec.planner.fragment.DefaultParallelizer;
+import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.exec.resourcemgr.NodeResources;
+import org.apache.drill.exec.resourcemgr.config.QueryQueueConfig;
+import org.apache.drill.exec.resourcemgr.config.exception.QueueSelectionException;
 import org.apache.drill.exec.work.foreman.Foreman;
+
+import java.util.Map;
 
 /**
  * Represents a default resource manager for clusters that do not provide query
@@ -33,7 +39,6 @@ import org.apache.drill.exec.work.foreman.Foreman;
 public class DefaultResourceManager implements ResourceManager {
 
   public static class DefaultQueryResourceManager implements QueryResourceManager {
-
     private final DefaultResourceManager rm;
     private final QueryContext queryContext;
 
@@ -48,13 +53,36 @@ public class DefaultResourceManager implements ResourceManager {
     }
 
     @Override
+    public void setCost(Map<String, NodeResources> costOnAssignedEndpoints) {
+      // Nothing to do by default
+    }
+
+    @Override
     public QueryParallelizer getParallelizer(boolean memoryPlanning){
       return new DefaultParallelizer(memoryPlanning, queryContext);
     }
 
-    @Override
-    public void admit() {
+    public QueryAdmitResponse admit() {
       // No queueing by default
+      return QueryAdmitResponse.ADMITTED;
+    }
+
+    public boolean reserveResources(QueryQueueConfig selectedQueue, UserBitShared.QueryId queryId) throws Exception {
+      return true;
+    }
+
+    @Override
+    public QueryQueueConfig selectQueue(NodeResources maxNodeResource)  throws QueueSelectionException {
+      throw new UnsupportedOperationException("Queue is not supported in default resource manager");
+    }
+
+    @Override
+    public String getLeaderId() {
+      throw new UnsupportedOperationException("Leader is not supported in the DefaultResourceManager");
+    }
+
+    public void updateState(QueryRMState newState) {
+      // no op since Default QueryRM doesn't have any state machine
     }
 
     @Override
@@ -100,6 +128,11 @@ public class DefaultResourceManager implements ResourceManager {
   @Override
   public QueryResourceManager newQueryRM(final Foreman foreman) {
     return new DefaultQueryResourceManager(this, foreman);
+  }
+
+  public void addToWaitingQueue(final QueryResourceManager queryRM) {
+    throw new UnsupportedOperationException("For Default ResourceManager there shouldn't be any query in waiting " +
+      "queue");
   }
 
   @Override

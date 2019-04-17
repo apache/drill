@@ -17,15 +17,6 @@
  */
 package org.apache.drill.exec.coord.local;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
-
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.DistributedSemaphore;
 import org.apache.drill.exec.coord.store.CachingTransientStoreFactory;
@@ -34,8 +25,16 @@ import org.apache.drill.exec.coord.store.TransientStoreConfig;
 import org.apache.drill.exec.coord.store.TransientStoreFactory;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.State;
-
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 public class LocalClusterCoordinator extends ClusterCoordinator {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LocalClusterCoordinator.class);
@@ -103,7 +102,15 @@ public class LocalClusterCoordinator extends ClusterCoordinator {
 
   @Override
   public Collection<DrillbitEndpoint> getAvailableEndpoints() {
-    return endpoints.values();
+    return getAvailableEndpointsUUID().values();
+  }
+
+  public Map<String, DrillbitEndpoint> getAvailableEndpointsUUID() {
+    Map<String, DrillbitEndpoint> availableEndpointsUUID = new HashMap<>();
+    for (Map.Entry<RegistrationHandle, DrillbitEndpoint> entry : endpoints.entrySet()) {
+      availableEndpointsUUID.put(entry.getKey().getId(), entry.getValue());
+    }
+    return availableEndpointsUUID;
   }
 
   /**
@@ -115,18 +122,26 @@ public class LocalClusterCoordinator extends ClusterCoordinator {
    */
   @Override
   public Collection<DrillbitEndpoint> getOnlineEndPoints() {
-    Collection<DrillbitEndpoint> runningEndPoints = new ArrayList<>();
-    for (DrillbitEndpoint endpoint: endpoints.values()){
-      if(isDrillbitInState(endpoint, State.ONLINE)) {
-        runningEndPoints.add(endpoint);
+    return getOnlineEndpointsUUID().keySet();
+  }
+
+  public Map<DrillbitEndpoint, String> getOnlineEndpointsUUID() {
+    Map<DrillbitEndpoint, String> onlineEndpointsUUID = new HashMap<>();
+    for (Map.Entry<RegistrationHandle, DrillbitEndpoint> entry : endpoints.entrySet()) {
+      if(isDrillbitInState(entry.getValue(), State.ONLINE)) {
+        onlineEndpointsUUID.put(entry.getValue(), entry.getKey().getId());
       }
     }
-    return runningEndPoints;
+    return onlineEndpointsUUID;
   }
 
   private class Handle implements RegistrationHandle {
     private final UUID id = UUID.randomUUID();
     private DrillbitEndpoint drillbitEndpoint;
+
+    private Handle(DrillbitEndpoint data) {
+      drillbitEndpoint = data;
+    }
 
     /**
      * Get the drillbit endpoint associated with the registration handle
@@ -140,8 +155,9 @@ public class LocalClusterCoordinator extends ClusterCoordinator {
       this.drillbitEndpoint = endpoint;
     }
 
-    private Handle(DrillbitEndpoint data) {
-      drillbitEndpoint = data;
+    @Override
+    public String getId() {
+      return id.toString();
     }
 
     @Override
