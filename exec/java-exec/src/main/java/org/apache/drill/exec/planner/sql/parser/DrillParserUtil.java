@@ -32,6 +32,11 @@ public class DrillParserUtil {
 
   private static final int CONDITION_LIST_CAPACITY = 3;
 
+  /**
+   * System-depended end of line character
+   */
+  public static final String EOL = System.lineSeparator();
+
   public static SqlNode createCondition(SqlNode left, SqlOperator op, SqlNode right) {
 
     // if one of the operands is null, return the other
