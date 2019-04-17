@@ -634,3 +634,66 @@ SqlNode SqlAnalyzeTable() :
         return new SqlAnalyzeTable(pos, tblName, estimate, fieldList, percent);
     }
 }
+
+
+/**
+ * Parses a SET statement without a leading "ALTER <SCOPE>":
+ *
+ * SET &lt;NAME&gt; [ = VALUE ]
+ * <p>
+ * Statement handles in: {@link SetAndResetOptionHandler}
+ */
+DrillSqlSetOption DrillSqlSetOption(Span s, String scope) :
+{
+    SqlParserPos pos;
+    SqlIdentifier name;
+    SqlNode val = null;
+}
+{
+    <SET> {
+        s.add(this);
+    }
+    name = CompoundIdentifier()
+    (
+        <EQ>
+        (
+            val = Literal()
+        |
+            val = SimpleIdentifier()
+        )
+    )?
+    {
+      pos = (val == null) ? s.end(name) : s.end(val);
+
+      return new DrillSqlSetOption(pos, scope, name, val);
+    }
+}
+
+/**
+ * Parses a RESET statement without a leading "ALTER <SCOPE>":
+ *
+ *  RESET { <NAME> | ALL }
+ * <p>
+ * Statement handles in: {@link SetAndResetOptionHandler}
+ */
+DrillSqlResetOption DrillSqlResetOption(Span s, String scope) :
+{
+    SqlIdentifier name;
+}
+{
+    <RESET> {
+        s.add(this);
+    }
+    (
+        name = CompoundIdentifier()
+    |
+        <ALL> {
+            name = new SqlIdentifier(token.image.toUpperCase(Locale.ROOT), getPos());
+        }
+    )
+    {
+        return new DrillSqlResetOption(s.end(name), scope, name);
+    }
+}
+
+

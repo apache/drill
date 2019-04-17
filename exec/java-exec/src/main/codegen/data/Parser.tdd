@@ -59,7 +59,9 @@
     "SqlRefreshMetadata()",
     "SqlCreateFunction()",
     "SqlDropFunction()",
-    "SqlAnalyzeTable()"
+    "SqlAnalyzeTable()",
+    "DrillSqlSetOption(Span.of(), null)",
+    "DrillSqlResetOption(Span.of(), null)"
   ]
 
   # List of methods for parsing custom literals.
@@ -87,6 +89,8 @@
   # List of methods for parsing extensions to "ALTER <scope>" calls.
   # Each must accept arguments "(SqlParserPos pos, String scope)".
   alterStatementParserMethods: [
+    "DrillSqlSetOption",
+    "DrillSqlResetOption"
   ]
 
   # List of methods for parsing extensions to "DROP" calls.
