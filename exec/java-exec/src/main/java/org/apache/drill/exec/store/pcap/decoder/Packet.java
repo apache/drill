@@ -408,7 +408,7 @@ public class Packet {
     timestamp = timestampMicro / 1000L;
     originalLength = getIntFileOrder(byteOrder, header, offset + PacketConstants.ORIGINAL_LENGTH_OFFSET);
     packetLength = getIntFileOrder(byteOrder, header, offset + PacketConstants.ACTUAL_LENGTH_OFFSET);
-    Preconditions.checkState(originalLength < maxLength,
+    Preconditions.checkState(originalLength <= maxLength,
         "Packet too long (%d bytes)", originalLength);
   }
 
