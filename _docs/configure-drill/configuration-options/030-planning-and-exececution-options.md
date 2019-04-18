@@ -38,9 +38,9 @@ See [Querying the Options Table]({{site.baseurl}}/docs/querying-system-tables/#q
 
 ### Setting Options from the Drill Web UI  
 
-When Drill is running, you can access the Drill Web UI at `http://<drill-hostname>:8047/`. The Drill Web UI has an Options button located in the upper right corner that you can click to display an Options page. The Options page lists all the Drill options that you can set. When you set options from this page, you are setting the options at the system level. To override an option for the duration of a session, set the option from the Drill shell using the SET command.  
+When Drill is running, you can access the Drill Web UI at `http://<drill-hostname>:8047/`. The Drill Web UI has an Options button located in the upper right corner that you can click to display an Options page. 
 
-![](https://i.imgur.com/WMij8gQ.png) 
+The Options page lists all the Drill options that you can set at the system level. To override an option for the duration of a session, set the option from the Drill shell using the SET command.  
 
 Starting in Drill 1.15, the Options page includes the following enhancements:  
   
@@ -91,7 +91,7 @@ Issuing the query after setting the `web.display_format.timestamp` option to the
  
 	2008-02-23 12:23:34.00  
 
-##Limiting the Number of Rows Returned for Result Sets  
+##Setting an Auto Limit on the Number of Rows Returned for Result Sets  
 The `exec.query.max_rows` option, introduced in Drill 1.16, automatically limits the number of rows that Drill returns from a result set. When you configure a limit, the limit is automatically applied by Drill when you run a query. You do not need to include the LIMIT clause. Configuring a limit on results reduces the amount of processing and streaming work for the web server when using the Drill WEb UI. 
 
 The default setting for `exec.query.max_rows` is 0, which indicates no limit; queries will return all results. An administrator can modify the exec.query.max_rows setting at the system level (setting persists across restarts) from the Options page in the Drill Web UI or using the ALTER SYSTEM command. Alternatively, the option can be set at the session level (valid for a user session only) using the SET command or from SQLLine.  

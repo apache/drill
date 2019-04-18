@@ -1,9 +1,11 @@
 ---
 title: "LIMIT Clause"
-date: 2018-08-05 04:52:50 UTC
+date: 2019-04-18
 parent: "SQL Commands"
 ---
-The LIMIT clause limits the result set to the specified number of rows. You can use LIMIT with or without an ORDER BY clause.
+The LIMIT clause limits the result set to the specified number of rows. You can use LIMIT with or without an ORDER BY clause.  
+
+Starting in Drill 1.16, you can configure an automatic limit on the number of rows returned from a result set. See [Setting an Auto Limit on the Number of Rows Returned for Result Sets]({{site.baseurl}}/docs/planning-and-execution-options/#setting-an-auto-limit-on-the-number-of-rows-returned-for-result-sets).
 
 
 ## Syntax
@@ -72,23 +74,13 @@ Hive has a list of functions with return type NVARCHAR, which the query planner 
 **Unsupported Operators and Functions**  
 LIMIT 0 optimizations do not work for queries with the UNION [ALL] set operator or the following complex functions:  
 
-
 - KVGEN or MAPPIFY  
 - FLATTEN  
 - CONVERT_FROMJSON  
 - CONVERT_TOJSON  
 - CONVERT_TOSIMPLEJSON  
 - CONVERT_TOEXTENDEDJSON  
-- AVG (window function)
-
-
- 
-   
-
- 
-
- 
- 
+- AVG (window function)  
 
 ## Examples
 The following example query includes the ORDER BY and LIMIT clauses and returns the top 20 sales totals by month and state:  
