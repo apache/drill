@@ -655,7 +655,7 @@ public class TestExternalSortInternals extends SubOperatorTest {
 
   @Test
   public void testMetrics() {
-    OperatorStats stats = new OperatorStats(100, 101, 0, fixture.allocator());
+    OperatorStats stats = new OperatorStats(100, 101, 0, fixture.allocator(), 0);
     SortMetrics metrics = new SortMetrics(stats);
 
     // Input stats

@@ -64,7 +64,6 @@ public class ZKQueueParallelizer extends SimpleParallelizer {
     }
 
     endpointMap = collector.getNodeMap();
-
     ZKQueueMemoryAllocationUtilities.planMemory(queryContext, this.resourceManager, endpointMap);
   }
 

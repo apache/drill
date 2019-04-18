@@ -55,6 +55,7 @@ public class Materializer extends AbstractPhysicalVisitor<PhysicalOperator, Mate
       PhysicalOperator materializedSender = exchange.getSender(iNode.getMinorFragmentId(), child);
       materializedSender.setOperatorId(0);
       materializedSender.setCost(exchange.getCost());
+      materializedSender.setMaxAllocation(exchange.getMaxAllocation());
 //      logger.debug("Visit sending exchange, materialized {} with child {}.", materializedSender, child);
       return materializedSender;
 
@@ -62,6 +63,7 @@ public class Materializer extends AbstractPhysicalVisitor<PhysicalOperator, Mate
       // receiving exchange.
       PhysicalOperator materializedReceiver = exchange.getReceiver(iNode.getMinorFragmentId());
       materializedReceiver.setOperatorId(Short.MAX_VALUE & exchange.getOperatorId());
+      materializedReceiver.setMaxAllocation(exchange.getMaxAllocation());
 //      logger.debug("Visit receiving exchange, materialized receiver: {}.", materializedReceiver);
       materializedReceiver.setCost(exchange.getCost());
       return materializedReceiver;
@@ -70,8 +72,10 @@ public class Materializer extends AbstractPhysicalVisitor<PhysicalOperator, Mate
 
   @Override
   public PhysicalOperator visitGroupScan(GroupScan groupScan, IndexedFragmentNode iNode) throws ExecutionSetupException {
+    iNode.addAllocation(groupScan);
     SubScan child = groupScan.getSpecificScan(iNode.getMinorFragmentId());
     child.setOperatorId(Short.MAX_VALUE & groupScan.getOperatorId());
+    child.setMaxAllocation(groupScan.getMaxAllocation());
     // remember the subscan for future use
     iNode.addSubScan(child);
     return child;
@@ -89,11 +93,11 @@ public class Materializer extends AbstractPhysicalVisitor<PhysicalOperator, Mate
   @Override
   public PhysicalOperator visitStore(Store store, IndexedFragmentNode iNode) throws ExecutionSetupException {
     PhysicalOperator child = store.getChild().accept(this, iNode);
-
     iNode.addAllocation(store);
 
     try {
       PhysicalOperator o = store.getSpecificStore(child, iNode.getMinorFragmentId());
+      o.setMaxAllocation(store.getMaxAllocation());
       o.setOperatorId(Short.MAX_VALUE & store.getOperatorId());
 //      logger.debug("New materialized store node {} with child {}", o, child);
       return o;
@@ -112,6 +116,7 @@ public class Materializer extends AbstractPhysicalVisitor<PhysicalOperator, Mate
     }
     PhysicalOperator newOp = op.getNewWithChildren(children);
     newOp.setCost(op.getCost());
+    newOp.setMaxAllocation(op.getMaxAllocation());
     newOp.setOperatorId(Short.MAX_VALUE & op.getOperatorId());
     return newOp;
   }
@@ -128,6 +133,7 @@ public class Materializer extends AbstractPhysicalVisitor<PhysicalOperator, Mate
 
     PhysicalOperator newOp = op.getNewWithChildren(children);
     newOp.setCost(op.getCost());
+    newOp.setMaxAllocation(op.getMaxAllocation());
     newOp.setOperatorId(Short.MAX_VALUE & op.getOperatorId());
 
     ((LateralJoinPOP) newOp).setUnnestForLateralJoin(unnestForThisLateral);
@@ -138,6 +144,7 @@ public class Materializer extends AbstractPhysicalVisitor<PhysicalOperator, Mate
   public PhysicalOperator visitUnnest(UnnestPOP unnest, IndexedFragmentNode value) throws ExecutionSetupException {
     PhysicalOperator newOp = visitOp(unnest, value);
     value.addUnnest((UnnestPOP) newOp);
+    newOp.setMaxAllocation(unnest.getMaxAllocation());
     return newOp;
   }
 
@@ -157,6 +164,7 @@ public class Materializer extends AbstractPhysicalVisitor<PhysicalOperator, Mate
     PhysicalOperator newOp = op.getNewWithChildren(children);
     newOp.setCost(op.getCost());
     newOp.setOperatorId(Short.MAX_VALUE & op.getOperatorId());
+    newOp.setMaxAllocation(op.getMaxAllocation());
 
     ((RowKeyJoinPOP)newOp).setSubScanForRowKeyJoin(subScanInLeftInput);
 

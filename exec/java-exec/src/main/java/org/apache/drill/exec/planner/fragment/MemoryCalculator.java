@@ -49,11 +49,13 @@ public class MemoryCalculator extends AbstractOpWrapperVisitor<Void, RuntimeExce
   // List of all the buffered operators and their memory requirement per drillbit.
   private final Map<DrillNode, List<Pair<PhysicalOperator, Long>>> bufferedOperators;
   private final QueryContext queryContext;
+  private final long MINIMUM_MEMORY_FOR_BUFFER_OPERS;
 
-  public MemoryCalculator(PlanningSet planningSet, QueryContext context) {
+  public MemoryCalculator(PlanningSet planningSet, QueryContext context, long minMemory) {
     this.planningSet = planningSet;
     this.bufferedOperators = new HashMap<>();
     this.queryContext = context;
+    this.MINIMUM_MEMORY_FOR_BUFFER_OPERS = minMemory;
   }
 
   // Helper method to compute the minor fragment count per drillbit. This method returns
@@ -86,7 +88,7 @@ public class MemoryCalculator extends AbstractOpWrapperVisitor<Void, RuntimeExce
           getMinorFragCountPerDrillbit(fragment),
           // get the memory requirements for the sender operator.
           (x) -> exchange.getSenderMemory(receivingFragment.getWidth(), x.getValue()));
-    return visitOp(exchange, fragment);
+    return visit(exchange, fragment);
   }
 
   @Override
@@ -117,19 +119,26 @@ public class MemoryCalculator extends AbstractOpWrapperVisitor<Void, RuntimeExce
     return null;
   }
 
+  private Void visit(PhysicalOperator op, Wrapper fragment) {
+    for (PhysicalOperator child : op) {
+      child.accept(this, fragment);
+    }
+    return null;
+  }
+
   public List<Pair<PhysicalOperator, Long>> getBufferedOperators(DrillNode endpoint) {
     return this.bufferedOperators.getOrDefault(endpoint, new ArrayList<>());
   }
 
   @Override
   public Void visitOp(PhysicalOperator op, Wrapper fragment) {
-    long memoryCost = (int)Math.ceil(op.getCost().getMemoryCost());
+    long memoryCost = (long)Math.ceil(op.getCost().getMemoryCost());
     if (op.isBufferedOperator(queryContext)) {
       // If the operator is a buffered operator then get the memory estimates of the optimizer.
       // The memory estimates of the optimizer are for the whole operator spread across all the
       // minor fragments. Divide this memory estimation by fragment width to get the memory
       // requirement per minor fragment.
-      long memoryCostPerMinorFrag = (int)Math.ceil(memoryCost/fragment.getAssignedEndpoints().size());
+      long memoryCostPerMinorFrag = Math.max((long)Math.ceil(memoryCost/fragment.getAssignedEndpoints().size()), MINIMUM_MEMORY_FOR_BUFFER_OPERS);
       Map<DrillNode, Integer> drillbitEndpointMinorFragMap = getMinorFragCountPerDrillbit(fragment);
 
       Map<DrillNode,
@@ -137,7 +146,7 @@ public class MemoryCalculator extends AbstractOpWrapperVisitor<Void, RuntimeExce
                               drillbitEndpointMinorFragMap.entrySet().stream()
                                                           .collect(Collectors.toMap((x) -> x.getKey(),
                                                                               (x) -> Pair.of(op,
-                                                                                memoryCostPerMinorFrag * x.getValue())));
+                                                                                memoryCostPerMinorFrag)));
       bufferedOperatorsPerDrillbit.entrySet().forEach((x) -> {
         bufferedOperators.putIfAbsent(x.getKey(), new ArrayList<>());
         bufferedOperators.get(x.getKey()).add(x.getValue());
@@ -153,10 +162,7 @@ public class MemoryCalculator extends AbstractOpWrapperVisitor<Void, RuntimeExce
             getMinorFragCountPerDrillbit(fragment),
             (x) -> memoryCost * x.getValue());
     }
-    for (PhysicalOperator child : op) {
-      child.accept(this, fragment);
-    }
-    return null;
+    return visit(op, fragment);
   }
 }
 

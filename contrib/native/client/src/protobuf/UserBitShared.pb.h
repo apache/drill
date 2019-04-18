@@ -3504,6 +3504,13 @@ class OperatorProfile : public ::google::protobuf::Message /* @@protoc_insertion
   ::google::protobuf::int64 wait_nanos() const;
   void set_wait_nanos(::google::protobuf::int64 value);
 
+  // optional int64 optimal_mem_allocation = 10;
+  bool has_optimal_mem_allocation() const;
+  void clear_optimal_mem_allocation();
+  static const int kOptimalMemAllocationFieldNumber = 10;
+  ::google::protobuf::int64 optimal_mem_allocation() const;
+  void set_optimal_mem_allocation(::google::protobuf::int64 value);
+
   // @@protoc_insertion_point(class_scope:exec.shared.OperatorProfile)
  private:
   void set_has_operator_id();
@@ -3518,6 +3525,8 @@ class OperatorProfile : public ::google::protobuf::Message /* @@protoc_insertion
   void clear_has_peak_local_memory_allocated();
   void set_has_wait_nanos();
   void clear_has_wait_nanos();
+  void set_has_optimal_mem_allocation();
+  void clear_has_optimal_mem_allocation();
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
   ::google::protobuf::internal::HasBits<1> _has_bits_;
@@ -3530,6 +3539,7 @@ class OperatorProfile : public ::google::protobuf::Message /* @@protoc_insertion
   ::google::protobuf::int64 process_nanos_;
   ::google::protobuf::int64 peak_local_memory_allocated_;
   ::google::protobuf::int64 wait_nanos_;
+  ::google::protobuf::int64 optimal_mem_allocation_;
   friend struct ::protobuf_UserBitShared_2eproto::TableStruct;
 };
 // -------------------------------------------------------------------
@@ -8078,6 +8088,30 @@ inline void OperatorProfile::set_wait_nanos(::google::protobuf::int64 value) {
   set_has_wait_nanos();
   wait_nanos_ = value;
   // @@protoc_insertion_point(field_set:exec.shared.OperatorProfile.wait_nanos)
+}
+
+// optional int64 optimal_mem_allocation = 10;
+inline bool OperatorProfile::has_optimal_mem_allocation() const {
+  return (_has_bits_[0] & 0x00000040u) != 0;
+}
+inline void OperatorProfile::set_has_optimal_mem_allocation() {
+  _has_bits_[0] |= 0x00000040u;
+}
+inline void OperatorProfile::clear_has_optimal_mem_allocation() {
+  _has_bits_[0] &= ~0x00000040u;
+}
+inline void OperatorProfile::clear_optimal_mem_allocation() {
+  optimal_mem_allocation_ = GOOGLE_LONGLONG(0);
+  clear_has_optimal_mem_allocation();
+}
+inline ::google::protobuf::int64 OperatorProfile::optimal_mem_allocation() const {
+  // @@protoc_insertion_point(field_get:exec.shared.OperatorProfile.optimal_mem_allocation)
+  return optimal_mem_allocation_;
+}
+inline void OperatorProfile::set_optimal_mem_allocation(::google::protobuf::int64 value) {
+  set_has_optimal_mem_allocation();
+  optimal_mem_allocation_ = value;
+  // @@protoc_insertion_point(field_set:exec.shared.OperatorProfile.optimal_mem_allocation)
 }
 
 // -------------------------------------------------------------------

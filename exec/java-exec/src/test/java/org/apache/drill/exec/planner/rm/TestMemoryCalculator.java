@@ -27,7 +27,7 @@ import org.apache.drill.exec.planner.fragment.Fragment;
 import org.apache.drill.exec.planner.fragment.PlanningSet;
 import org.apache.drill.exec.planner.fragment.SimpleParallelizer;
 import org.apache.drill.exec.planner.fragment.Wrapper;
-import org.apache.drill.exec.planner.fragment.common.DrillNode;
+import org.apache.drill.common.DrillNode;
 import org.apache.drill.exec.pop.PopUnitTestBase;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared;
@@ -44,9 +44,10 @@ import org.apache.drill.test.ClientFixture;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.junit.AfterClass;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -59,6 +60,8 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -90,7 +93,7 @@ public class TestMemoryCalculator extends PlanTestBase {
                                                                     UserBitShared.QueryId.getDefaultInstance());
 
   private static Map<DrillbitEndpoint, String> onlineEndpoints;
-  private Map<DrillNode, NodeResources> resources;
+  private Map<String, NodeResources> totalResources;
 
   @AfterClass
   public static void close() throws Exception {
@@ -102,7 +105,16 @@ public class TestMemoryCalculator extends PlanTestBase {
     final QueryQueueConfig queueConfig = mock(QueryQueueConfig.class);
 
     when(queueConfig.getMaxQueryMemoryInMBPerNode()).thenReturn(10L);
+    when(queueConfig.getQueueTotalMemoryInMB(anyInt())).thenReturn(100L);
     when(mockRM.selectQueue(any(NodeResources.class))).thenReturn(queueConfig);
+    when(mockRM.minimumOperatorMemory()).thenReturn(40L);
+    doAnswer(new Answer<Object>() {
+      @Override
+      public Object answer(InvocationOnMock invocation) throws Throwable {
+        totalResources = (Map<String, NodeResources>) invocation.getArguments()[0];
+        return null;
+      }
+    }).when(mockRM).setCost(any(Map.class));
 
     return mockRM;
   }
@@ -116,7 +128,7 @@ public class TestMemoryCalculator extends PlanTestBase {
     List<Wrapper> mockdependencies = new ArrayList<>();
 
     for (Wrapper dependency : rootFragment.getFragmentDependencies()) {
-      mockdependencies.add(mockWrapper(dependency, resourceMap, endpoints, originalToMockWrapper));
+      mockdependencies.add(mockWrapper(dependency, getNodeResources(), endpoints, originalToMockWrapper));
     }
 
     when(mockWrapper.getNode()).thenReturn(rootFragment.getNode());
@@ -129,11 +141,9 @@ public class TestMemoryCalculator extends PlanTestBase {
   }
 
   private final PlanningSet mockPlanningSet(PlanningSet planningSet,
-                                       Map<DrillNode, NodeResources> resourceMap,
                                        List<DrillbitEndpoint> endpoints) {
     Map<Fragment, Wrapper> wrapperToMockWrapper = new HashMap<>();
-    Wrapper rootFragment = mockWrapper( planningSet.getRootWrapper(), resourceMap,
-                                        endpoints, wrapperToMockWrapper);
+    Wrapper rootFragment = mockWrapper(planningSet.getRootWrapper(), getNodeResources(), endpoints, wrapperToMockWrapper);
     PlanningSet mockPlanningSet = mock(PlanningSet.class);
     when(mockPlanningSet.getRootWrapper()).thenReturn(rootFragment);
     when(mockPlanningSet.get(any(Fragment.class))).thenAnswer(invocation -> {
@@ -196,10 +206,13 @@ public class TestMemoryCalculator extends PlanTestBase {
   }
 
   private PlanningSet preparePlanningSet(List<DrillbitEndpoint> activeEndpoints, long slice_target,
-                                         Map<DrillNode, NodeResources> resources, String sql,
-                                         SimpleParallelizer parallelizer) throws Exception {
+                                         String sql, SimpleParallelizer parallelizer) throws Exception {
     Fragment rootFragment = getRootFragmentFromPlan(drillbitContext, getPlanForQuery(sql, 10, slice_target));
-    return mockPlanningSet(parallelizer.prepareFragmentTree(rootFragment), resources, activeEndpoints);
+    return mockPlanningSet(parallelizer.prepareFragmentTree(rootFragment), activeEndpoints);
+  }
+
+  private Map<DrillNode, NodeResources> getNodeResources() {
+    return onlineEndpoints.keySet().stream().collect(Collectors.toMap(x -> DrillNode.create(x), x -> NodeResources.create()));
   }
 
   @BeforeClass
@@ -207,21 +220,14 @@ public class TestMemoryCalculator extends PlanTestBase {
     onlineEndpoints = getEndpoints(2, new HashSet<>());
   }
 
-  @Before
-  public void setupForEachTest() {
-    // Have to create separately for each test since it is updated my MemoryCalculator during merge
-    resources = onlineEndpoints.keySet().stream().collect(Collectors.toMap(x -> DrillNode.create(x),
-      x -> NodeResources.create()));
-  }
-
   @Test
   public void TestSingleMajorFragmentWithProjectAndScan() throws Exception {
     String sql = "SELECT * from cp.`tpch/nation.parquet`";
 
     SimpleParallelizer parallelizer = new DistributedQueueParallelizer(false, queryContext, mockResourceManager());
-    PlanningSet planningSet = preparePlanningSet(new ArrayList<>(onlineEndpoints.keySet()), DEFAULT_SLICE_TARGET, resources, sql, parallelizer);
+    PlanningSet planningSet = preparePlanningSet(new ArrayList<>(onlineEndpoints.keySet()), DEFAULT_SLICE_TARGET, sql, parallelizer);
     parallelizer.adjustMemory(planningSet, createSet(planningSet.getRootWrapper()), onlineEndpoints);
-    assertTrue("memory requirement is different", Iterables.all(resources.entrySet(), (e) -> e.getValue().getMemoryInBytes() == 30));
+    assertTrue("memory requirement is different", Iterables.all(totalResources.entrySet(), (e) -> e.getValue().getMemoryInBytes() == 30));
   }
 
 
@@ -230,21 +236,20 @@ public class TestMemoryCalculator extends PlanTestBase {
     String sql = "SELECT dept_id, count(*) from cp.`tpch/lineitem.parquet` group by dept_id";
 
     SimpleParallelizer parallelizer = new DistributedQueueParallelizer(false, queryContext, mockResourceManager());
-    PlanningSet planningSet = preparePlanningSet(new ArrayList<>(onlineEndpoints.keySet()), DEFAULT_SLICE_TARGET, resources, sql, parallelizer);
+    PlanningSet planningSet = preparePlanningSet(new ArrayList<>(onlineEndpoints.keySet()), DEFAULT_SLICE_TARGET, sql, parallelizer);
     parallelizer.adjustMemory(planningSet, createSet(planningSet.getRootWrapper()), onlineEndpoints);
-    assertTrue("memory requirement is different", Iterables.all(resources.entrySet(), (e) -> e.getValue().getMemoryInBytes() == 529570));
+    assertTrue("memory requirement is different", Iterables.all(totalResources.entrySet(), (e) -> e.getValue().getMemoryInBytes() == 529570));
   }
 
 
   @Test
-  public void TestTwoMajorFragmentWithSortyProjectAndScan() throws Exception {
+  public void TestTwoMajorFragmentWithSortProjectAndScan() throws Exception {
     String sql = "SELECT * from cp.`tpch/lineitem.parquet` order by dept_id";
 
     SimpleParallelizer parallelizer = new DistributedQueueParallelizer(false, queryContext, mockResourceManager());
-    PlanningSet planningSet = preparePlanningSet(new ArrayList<>(onlineEndpoints.keySet()), 2, resources, sql,
-      parallelizer);
+    PlanningSet planningSet = preparePlanningSet(new ArrayList<>(onlineEndpoints.keySet()), 2, sql, parallelizer);
     parallelizer.adjustMemory(planningSet, createSet(planningSet.getRootWrapper()), onlineEndpoints);
-    assertTrue("memory requirement is different", Iterables.all(resources.entrySet(), (e) -> e.getValue().getMemoryInBytes() == 481490));
+    assertTrue("memory requirement is different", Iterables.all(totalResources.entrySet(), (e) -> e.getValue().getMemoryInBytes() == 481460));
   }
 
   @Test

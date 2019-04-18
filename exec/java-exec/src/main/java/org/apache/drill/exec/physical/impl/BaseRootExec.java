@@ -54,7 +54,7 @@ public abstract class BaseRootExec implements RootExec {
     }
     //Creating new stat for appending to list
     stats = new OperatorStats(new OpProfileDef(config.getOperatorId(),
-        config.getOperatorType(), OperatorUtilities.getChildCount(config)),
+        config.getOperatorType(), OperatorUtilities.getChildCount(config), config.getMaxAllocation()),
       this.oContext.getAllocator());
     fragmentContext.getStats().addOperatorStats(this.stats);
     this.fragmentContext = fragmentContext;

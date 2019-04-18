@@ -17,18 +17,16 @@
  */
 package org.apache.drill.exec.planner.fragment;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.base.AbstractPhysicalVisitor;
 import org.apache.drill.exec.physical.base.Exchange;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.util.memory.ZKQueueMemoryAllocationUtilities;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
-
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 public class Fragment implements Iterable<Fragment.ExchangeFragmentPair> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Fragment.class);

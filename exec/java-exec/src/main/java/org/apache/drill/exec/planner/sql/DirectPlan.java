@@ -21,15 +21,18 @@ import org.apache.drill.common.logical.PlanProperties;
 import org.apache.drill.common.logical.PlanProperties.Generator.ResultMode;
 import org.apache.drill.common.logical.PlanProperties.PlanPropertiesBuilder;
 import org.apache.drill.common.logical.PlanProperties.PlanType;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
+import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.Screen;
+import org.apache.drill.exec.planner.cost.PrelCostEstimates;
 import org.apache.drill.exec.planner.sql.handlers.DefaultSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.SimpleCommandResult;
-import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.direct.DirectGroupScan;
 import org.apache.drill.exec.store.pojo.PojoRecordReader;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -43,20 +46,24 @@ public class DirectPlan {
 
   @SuppressWarnings("unchecked")
   public static <T> PhysicalPlan createDirectPlan(QueryContext context, T obj){
-    return createDirectPlan(context.getCurrentEndpoint(), Collections.singletonList(obj), (Class<T>) obj.getClass());
+    return createDirectPlan(context, Collections.singletonList(obj), (Class<T>) obj.getClass());
 
   }
 
-  public static <T> PhysicalPlan createDirectPlan(DrillbitEndpoint endpoint, List<T> records, Class<T> clazz){
+  public static <T> PhysicalPlan createDirectPlan(QueryContext context, List<T> records, Class<T> clazz){
     PojoRecordReader<T> reader = new PojoRecordReader<>(clazz, records);
     DirectGroupScan scan = new DirectGroupScan(reader);
-    Screen screen = new Screen(scan, endpoint);
+    Screen screen = new Screen(scan, context.getCurrentEndpoint());
 
     PlanPropertiesBuilder propsBuilder = PlanProperties.builder();
     propsBuilder.type(PlanType.APACHE_DRILL_PHYSICAL);
     propsBuilder.version(1);
     propsBuilder.resultMode(ResultMode.EXEC);
     propsBuilder.generator(DirectPlan.class.getSimpleName(), "");
+    Collection<PhysicalOperator> pops = DefaultSqlHandler.getPops(screen);
+    for (PhysicalOperator pop : pops) {
+      pop.setCost(new PrelCostEstimates(context.getOptions().getLong(ExecConstants.OUTPUT_BATCH_SIZE), 0));
+    }
     return new PhysicalPlan(propsBuilder.build(), DefaultSqlHandler.getPops(screen));
 
   }

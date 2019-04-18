@@ -67,7 +67,7 @@ public class TestDrillFileSystem {
     InputStream is = null;
     Configuration conf = new Configuration();
     conf.set(FileSystem.FS_DEFAULT_NAME_KEY, FileSystem.DEFAULT_FS);
-    OpProfileDef profileDef = new OpProfileDef(0 /*operatorId*/, 0 /*operatorType*/, 0 /*inputCount*/);
+    OpProfileDef profileDef = new OpProfileDef(0 /*operatorId*/, 0 /*operatorType*/, 0 /*inputCount*/, 0 /*optimalMemoryAllocation*/);
     OperatorStats stats = new OperatorStats(profileDef, null /*allocator*/);
 
     // start wait time method in OperatorStats expects the OperatorStats state to be in "processing"

@@ -938,6 +938,21 @@ class PlanFragment : public ::google::protobuf::Message /* @@protoc_insertion_po
   ::std::string* release_options_json();
   void set_allocated_options_json(::std::string* options_json);
 
+  // optional string endpointUUID = 18;
+  bool has_endpointuuid() const;
+  void clear_endpointuuid();
+  static const int kEndpointUUIDFieldNumber = 18;
+  const ::std::string& endpointuuid() const;
+  void set_endpointuuid(const ::std::string& value);
+  #if LANG_CXX11
+  void set_endpointuuid(::std::string&& value);
+  #endif
+  void set_endpointuuid(const char* value);
+  void set_endpointuuid(const char* value, size_t size);
+  ::std::string* mutable_endpointuuid();
+  ::std::string* release_endpointuuid();
+  void set_allocated_endpointuuid(::std::string* endpointuuid);
+
   // optional .exec.bit.FragmentHandle handle = 1;
   bool has_handle() const;
   void clear_handle();
@@ -1077,6 +1092,8 @@ class PlanFragment : public ::google::protobuf::Message /* @@protoc_insertion_po
   void clear_has_options_json();
   void set_has_context();
   void clear_has_context();
+  void set_has_endpointuuid();
+  void clear_has_endpointuuid();
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
   ::google::protobuf::internal::HasBits<1> _has_bits_;
@@ -1084,6 +1101,7 @@ class PlanFragment : public ::google::protobuf::Message /* @@protoc_insertion_po
   ::google::protobuf::RepeatedPtrField< ::exec::bit::control::Collector > collector_;
   ::google::protobuf::internal::ArenaStringPtr fragment_json_;
   ::google::protobuf::internal::ArenaStringPtr options_json_;
+  ::google::protobuf::internal::ArenaStringPtr endpointuuid_;
   ::exec::bit::FragmentHandle* handle_;
   ::exec::DrillbitEndpoint* assignment_;
   ::exec::DrillbitEndpoint* foreman_;
@@ -2142,13 +2160,13 @@ inline void CustomMessage::set_allocated_message(::std::string* message) {
 
 // optional .exec.bit.FragmentHandle handle = 1;
 inline bool PlanFragment::has_handle() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
+  return (_has_bits_[0] & 0x00000008u) != 0;
 }
 inline void PlanFragment::set_has_handle() {
-  _has_bits_[0] |= 0x00000004u;
+  _has_bits_[0] |= 0x00000008u;
 }
 inline void PlanFragment::clear_has_handle() {
-  _has_bits_[0] &= ~0x00000004u;
+  _has_bits_[0] &= ~0x00000008u;
 }
 inline const ::exec::bit::FragmentHandle& PlanFragment::_internal_handle() const {
   return *handle_;
@@ -2196,13 +2214,13 @@ inline void PlanFragment::set_allocated_handle(::exec::bit::FragmentHandle* hand
 
 // optional float network_cost = 4;
 inline bool PlanFragment::has_network_cost() const {
-  return (_has_bits_[0] & 0x00000080u) != 0;
+  return (_has_bits_[0] & 0x00000100u) != 0;
 }
 inline void PlanFragment::set_has_network_cost() {
-  _has_bits_[0] |= 0x00000080u;
+  _has_bits_[0] |= 0x00000100u;
 }
 inline void PlanFragment::clear_has_network_cost() {
-  _has_bits_[0] &= ~0x00000080u;
+  _has_bits_[0] &= ~0x00000100u;
 }
 inline void PlanFragment::clear_network_cost() {
   network_cost_ = 0;
@@ -2220,13 +2238,13 @@ inline void PlanFragment::set_network_cost(float value) {
 
 // optional float cpu_cost = 5;
 inline bool PlanFragment::has_cpu_cost() const {
-  return (_has_bits_[0] & 0x00000100u) != 0;
+  return (_has_bits_[0] & 0x00000200u) != 0;
 }
 inline void PlanFragment::set_has_cpu_cost() {
-  _has_bits_[0] |= 0x00000100u;
+  _has_bits_[0] |= 0x00000200u;
 }
 inline void PlanFragment::clear_has_cpu_cost() {
-  _has_bits_[0] &= ~0x00000100u;
+  _has_bits_[0] &= ~0x00000200u;
 }
 inline void PlanFragment::clear_cpu_cost() {
   cpu_cost_ = 0;
@@ -2244,13 +2262,13 @@ inline void PlanFragment::set_cpu_cost(float value) {
 
 // optional float disk_cost = 6;
 inline bool PlanFragment::has_disk_cost() const {
-  return (_has_bits_[0] & 0x00000200u) != 0;
+  return (_has_bits_[0] & 0x00000400u) != 0;
 }
 inline void PlanFragment::set_has_disk_cost() {
-  _has_bits_[0] |= 0x00000200u;
+  _has_bits_[0] |= 0x00000400u;
 }
 inline void PlanFragment::clear_has_disk_cost() {
-  _has_bits_[0] &= ~0x00000200u;
+  _has_bits_[0] &= ~0x00000400u;
 }
 inline void PlanFragment::clear_disk_cost() {
   disk_cost_ = 0;
@@ -2268,13 +2286,13 @@ inline void PlanFragment::set_disk_cost(float value) {
 
 // optional float memory_cost = 7;
 inline bool PlanFragment::has_memory_cost() const {
-  return (_has_bits_[0] & 0x00000400u) != 0;
+  return (_has_bits_[0] & 0x00000800u) != 0;
 }
 inline void PlanFragment::set_has_memory_cost() {
-  _has_bits_[0] |= 0x00000400u;
+  _has_bits_[0] |= 0x00000800u;
 }
 inline void PlanFragment::clear_has_memory_cost() {
-  _has_bits_[0] &= ~0x00000400u;
+  _has_bits_[0] &= ~0x00000800u;
 }
 inline void PlanFragment::clear_memory_cost() {
   memory_cost_ = 0;
@@ -2358,13 +2376,13 @@ inline void PlanFragment::set_allocated_fragment_json(::std::string* fragment_js
 
 // optional bool leaf_fragment = 9;
 inline bool PlanFragment::has_leaf_fragment() const {
-  return (_has_bits_[0] & 0x00000800u) != 0;
+  return (_has_bits_[0] & 0x00001000u) != 0;
 }
 inline void PlanFragment::set_has_leaf_fragment() {
-  _has_bits_[0] |= 0x00000800u;
+  _has_bits_[0] |= 0x00001000u;
 }
 inline void PlanFragment::clear_has_leaf_fragment() {
-  _has_bits_[0] &= ~0x00000800u;
+  _has_bits_[0] &= ~0x00001000u;
 }
 inline void PlanFragment::clear_leaf_fragment() {
   leaf_fragment_ = false;
@@ -2382,13 +2400,13 @@ inline void PlanFragment::set_leaf_fragment(bool value) {
 
 // optional .exec.DrillbitEndpoint assignment = 10;
 inline bool PlanFragment::has_assignment() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
+  return (_has_bits_[0] & 0x00000010u) != 0;
 }
 inline void PlanFragment::set_has_assignment() {
-  _has_bits_[0] |= 0x00000008u;
+  _has_bits_[0] |= 0x00000010u;
 }
 inline void PlanFragment::clear_has_assignment() {
-  _has_bits_[0] &= ~0x00000008u;
+  _has_bits_[0] &= ~0x00000010u;
 }
 inline const ::exec::DrillbitEndpoint& PlanFragment::_internal_assignment() const {
   return *assignment_;
@@ -2436,13 +2454,13 @@ inline void PlanFragment::set_allocated_assignment(::exec::DrillbitEndpoint* ass
 
 // optional .exec.DrillbitEndpoint foreman = 11;
 inline bool PlanFragment::has_foreman() const {
-  return (_has_bits_[0] & 0x00000010u) != 0;
+  return (_has_bits_[0] & 0x00000020u) != 0;
 }
 inline void PlanFragment::set_has_foreman() {
-  _has_bits_[0] |= 0x00000010u;
+  _has_bits_[0] |= 0x00000020u;
 }
 inline void PlanFragment::clear_has_foreman() {
-  _has_bits_[0] &= ~0x00000010u;
+  _has_bits_[0] &= ~0x00000020u;
 }
 inline const ::exec::DrillbitEndpoint& PlanFragment::_internal_foreman() const {
   return *foreman_;
@@ -2490,13 +2508,13 @@ inline void PlanFragment::set_allocated_foreman(::exec::DrillbitEndpoint* forema
 
 // optional int64 mem_initial = 12 [default = 20000000];
 inline bool PlanFragment::has_mem_initial() const {
-  return (_has_bits_[0] & 0x00001000u) != 0;
+  return (_has_bits_[0] & 0x00002000u) != 0;
 }
 inline void PlanFragment::set_has_mem_initial() {
-  _has_bits_[0] |= 0x00001000u;
+  _has_bits_[0] |= 0x00002000u;
 }
 inline void PlanFragment::clear_has_mem_initial() {
-  _has_bits_[0] &= ~0x00001000u;
+  _has_bits_[0] &= ~0x00002000u;
 }
 inline void PlanFragment::clear_mem_initial() {
   mem_initial_ = GOOGLE_LONGLONG(20000000);
@@ -2514,13 +2532,13 @@ inline void PlanFragment::set_mem_initial(::google::protobuf::int64 value) {
 
 // optional int64 mem_max = 13 [default = 2000000000];
 inline bool PlanFragment::has_mem_max() const {
-  return (_has_bits_[0] & 0x00002000u) != 0;
+  return (_has_bits_[0] & 0x00004000u) != 0;
 }
 inline void PlanFragment::set_has_mem_max() {
-  _has_bits_[0] |= 0x00002000u;
+  _has_bits_[0] |= 0x00004000u;
 }
 inline void PlanFragment::clear_has_mem_max() {
-  _has_bits_[0] &= ~0x00002000u;
+  _has_bits_[0] &= ~0x00004000u;
 }
 inline void PlanFragment::clear_mem_max() {
   mem_max_ = GOOGLE_LONGLONG(2000000000);
@@ -2538,13 +2556,13 @@ inline void PlanFragment::set_mem_max(::google::protobuf::int64 value) {
 
 // optional .exec.shared.UserCredentials credentials = 14;
 inline bool PlanFragment::has_credentials() const {
-  return (_has_bits_[0] & 0x00000020u) != 0;
+  return (_has_bits_[0] & 0x00000040u) != 0;
 }
 inline void PlanFragment::set_has_credentials() {
-  _has_bits_[0] |= 0x00000020u;
+  _has_bits_[0] |= 0x00000040u;
 }
 inline void PlanFragment::clear_has_credentials() {
-  _has_bits_[0] &= ~0x00000020u;
+  _has_bits_[0] &= ~0x00000040u;
 }
 inline const ::exec::shared::UserCredentials& PlanFragment::_internal_credentials() const {
   return *credentials_;
@@ -2658,13 +2676,13 @@ inline void PlanFragment::set_allocated_options_json(::std::string* options_json
 
 // optional .exec.bit.control.QueryContextInformation context = 16;
 inline bool PlanFragment::has_context() const {
-  return (_has_bits_[0] & 0x00000040u) != 0;
+  return (_has_bits_[0] & 0x00000080u) != 0;
 }
 inline void PlanFragment::set_has_context() {
-  _has_bits_[0] |= 0x00000040u;
+  _has_bits_[0] |= 0x00000080u;
 }
 inline void PlanFragment::clear_has_context() {
-  _has_bits_[0] &= ~0x00000040u;
+  _has_bits_[0] &= ~0x00000080u;
 }
 inline void PlanFragment::clear_context() {
   if (context_ != NULL) context_->Clear();
@@ -2742,6 +2760,72 @@ inline const ::google::protobuf::RepeatedPtrField< ::exec::bit::control::Collect
 PlanFragment::collector() const {
   // @@protoc_insertion_point(field_list:exec.bit.control.PlanFragment.collector)
   return collector_;
+}
+
+// optional string endpointUUID = 18;
+inline bool PlanFragment::has_endpointuuid() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void PlanFragment::set_has_endpointuuid() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void PlanFragment::clear_has_endpointuuid() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void PlanFragment::clear_endpointuuid() {
+  endpointuuid_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  clear_has_endpointuuid();
+}
+inline const ::std::string& PlanFragment::endpointuuid() const {
+  // @@protoc_insertion_point(field_get:exec.bit.control.PlanFragment.endpointUUID)
+  return endpointuuid_.GetNoArena();
+}
+inline void PlanFragment::set_endpointuuid(const ::std::string& value) {
+  set_has_endpointuuid();
+  endpointuuid_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:exec.bit.control.PlanFragment.endpointUUID)
+}
+#if LANG_CXX11
+inline void PlanFragment::set_endpointuuid(::std::string&& value) {
+  set_has_endpointuuid();
+  endpointuuid_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:exec.bit.control.PlanFragment.endpointUUID)
+}
+#endif
+inline void PlanFragment::set_endpointuuid(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  set_has_endpointuuid();
+  endpointuuid_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:exec.bit.control.PlanFragment.endpointUUID)
+}
+inline void PlanFragment::set_endpointuuid(const char* value, size_t size) {
+  set_has_endpointuuid();
+  endpointuuid_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:exec.bit.control.PlanFragment.endpointUUID)
+}
+inline ::std::string* PlanFragment::mutable_endpointuuid() {
+  set_has_endpointuuid();
+  // @@protoc_insertion_point(field_mutable:exec.bit.control.PlanFragment.endpointUUID)
+  return endpointuuid_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* PlanFragment::release_endpointuuid() {
+  // @@protoc_insertion_point(field_release:exec.bit.control.PlanFragment.endpointUUID)
+  if (!has_endpointuuid()) {
+    return NULL;
+  }
+  clear_has_endpointuuid();
+  return endpointuuid_.ReleaseNonDefaultNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void PlanFragment::set_allocated_endpointuuid(::std::string* endpointuuid) {
+  if (endpointuuid != NULL) {
+    set_has_endpointuuid();
+  } else {
+    clear_has_endpointuuid();
+  }
+  endpointuuid_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), endpointuuid);
+  // @@protoc_insertion_point(field_set_allocated:exec.bit.control.PlanFragment.endpointUUID)
 }
 
 // -------------------------------------------------------------------

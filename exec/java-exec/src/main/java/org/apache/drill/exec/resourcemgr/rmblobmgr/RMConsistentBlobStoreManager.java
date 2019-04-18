@@ -404,7 +404,7 @@ public class RMConsistentBlobStoreManager implements RMBlobStoreManager {
       throw new RMBlobUpdateException(String.format("Failed to update the cluster state blob and queue blob in a " +
         "transaction. [Details: %s]", exceptionStringBuilder.toString()));
     }
-    logger.debug("Successfully updated the blobs in a transaction. [Details: %s]", exceptionStringBuilder.toString());
+    logger.debug("Successfully updated the blobs in a transaction. [Details: {}]", exceptionStringBuilder.toString());
 
     // Reset the exceptionStringBuilder for next event
     exceptionStringBuilder.delete(0, exceptionStringBuilder.length());
