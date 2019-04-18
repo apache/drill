@@ -1,41 +1,89 @@
 ---
 title: "Query Profiles"
-date: 2018-12-08
+date: 2019-04-18
 parent: "Identifying Performance Issues"
 ---
 
-A profile is a summary of metrics collected for each query that Drill executes. Query profiles provide information that you can use to monitor and analyze query performance. When Drill executes a query, Drill writes the profile of each query to disk, which is either the local filesystem or a distributed file system, such as HDFS. As of Drill 1.11, Drill can [store profiles in memory]({{site.baseurl}}/docs/start-up-options/#configuring-start-up-options) instead of writing them to disk. You can view query profiles in the Drill Web UI at `http://<IP address or host name>:8047`.  
+A profile is a summary of metrics collected for each query that Drill executes. Query profiles provide information that you can use to monitor and analyze query performance. When Drill executes a query, Drill writes the profile of each query to disk, which is either the local filesystem or a distributed file system, such as HDFS. As of Drill 1.11, Drill can [store profiles in memory]({{site.baseurl}}/docs/start-up-options/#configuring-start-up-options) instead of writing them to disk. You can view query profiles in the Drill Web UI at `http://<IP address or host name>:8047`. Starting in Drill 1.16, the Drill Web UI displays warning messages in the query profile if there are issues that have performance impact. In addition to viewing query profiles, you can modify, resubmit, or cancel queries from the Drill Web UI. 
 
-##Query Profiles in the Drill Web UI 
-The Drill Web UI provides aggregate statistics across profile lists. Profile lists consist of data from major and minor fragments, operators, and input streams. You can use profiles in conjunction with Drill logs for debugging purposes. In addition to viewing query profiles, you can modify, resubmit, or cancel queries from the Drill Web UI.  
+The Drill Web UI provides aggregate statistics across profile lists. Profile lists consist of data from major and minor fragments, operators, and input streams. Use query profiles in conjunction with Drill logs to debug issues.  
 
-###Query, Fragment, and Operator Identifiers  
- 
-Metrics in a query profile are associated with a coordinate system of identifiers. Drill uses a coordinate system comprised of query, fragment, and operator identifiers to track query execution activities and resources. Drill assigns a unique identifier, the QueryID, to each query received and then assigns an identifier to each fragment and operator that executes the query. An example of a QueryID is 2aa98add-15b3-e155-5669-603c03bfde86. The following images shows an example of fragment and operator identifiers:
+## Viewing a Query Profile  
 
-![]({{ site.baseurl }}/docs/img/xx-xx-xx.png)  
+You can view query profiles in the Profiles tab of the Drill Web UI. When you select the Profiles tab, you see a list of queries than ran or are currently running in the cluster.  
 
-### Viewing a Query Profile  
+![]({{ site.baseurl }}/docs/img/list_queries.png)  
 
-You can view query profiles in the Profiles tab of the Drill Web UI. When you select the Profiles tab, you see a list of the last 100 queries than ran or are currently running in the cluster.  
+Starting in Drill 1.16, you can sort the columns on the Profiles page. For example, if you want to quickly locate queries with the longest running times, you can sort the Duration column in descending order such that the longest running queries appear at the top of the list. You can also use the Search Profiles field to filter the list of query profiles and then use the sort feature.
 
-![]({{ site.baseurl }}/docs/img/list_queries.png)
+For example, the following image shows the query profiles filtered by the mapr user on a specific date with the Duration column sorted in descending order:   
 
-You must click on a query to see its profile.  
+![](https://i.imgur.com/IVA2fKG.png)
 
-![]({{ site.baseurl }}/docs/img/query_profile.png)  
+To see the profile for a specific query, click on the query in the profiles list.   
 
-When you select a profile, notice that the URL in the address bar contains the QueryID, as shown in the following URL:
+![]({{ site.baseurl }}/docs/img/query_profile.png)    
 
-       http://<drill_node>:8047/profiles/2aa98add-15b3-e155-5669-603c03bfde86
- 
 The Query Profile section summarizes a few key details about the query, including: 
  
  * The state of the query, either running, completed, or failed.  
  * The node operating as the Foreman; the Drillbit that receives a query from the client or application becomes the Foreman and drives the entire query. 
  * The total number of minor fragments required to execute the query.
 
-Further down you can see the Fragment Profiles and Operator Profiles sections. 
+When you select a profile, notice that the URL in the address bar contains the QueryID, as shown in the following URL:
+
+       http://<drill_node>:8047/profiles/2aa98add-15b3-e155-5669-603c03bfde86  
+
+##Query, Fragment, and Operator Identifiers  
+ 
+Metrics in a query profile are associated with a coordinate system of identifiers. Drill uses a coordinate system comprised of query, fragment, and operator identifiers to track query execution activities and resources. Drill assigns a unique identifier, the QueryID, to each query received and then assigns an identifier to each fragment and operator that executes the query. An example of a QueryID is 2aa98add-15b3-e155-5669-603c03bfde86. The following image shows an example of fragment and operator identifiers:    
+
+![]({{ site.baseurl }}/docs/img/xx-xx-xx.png)  
+  
+
+## Query Profile Warnings  
+When Drill executes a query, the workload should be uniformly distributed across the fragments and operators processing the data. When you evaluate a query profile in the Drill Web UI, seeing a disproportionate distribution of work across fragments (in terms of time) or excess memory use typically indicates performance issues and requires some performance tuning.  
+
+Starting in Drill 1.16, the Drill Web UI displays warning messages in the query profile for the following issues:  
+
+- No query progress within a certain amount of time  
+- Operators spilling data to disk (operators do not have enough memory to complete operations completely in-memory)  
+- Operators spending significantly more time waiting for data than processing it 
+
+In addition to the warnings, the Operator Profiles section of the query profile also displays an icon in the column to indicate which operator is askew. 
+
+The following table lists the warnings, icons, configurable options related to the warnings, and option descriptions:  
+
+| Warning   Message                                                                                                                                                                        | Icon                                                                                                                                    | Related   Option(s)                                                                     | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| !WARNING: No fragments have made any progress in the last 300 seconds. (See Last Progress below.)                                                                                      | None                                                                                                                                    |       drill.exec.http.profile.warning.progress.threshold                                | If   none of the fragments make any progress within the set time, a warning   displays. Time is set in seconds. Default is 300 seconds (5 minutes). You can see fragment activity in the Fragment Profiles section of the query profile.                                                                                                                                                                                                                                                                                           |
+| !WARNING: Some operators have data spilled to disk. This will result in performance loss. (See Avg Peak memory and Max Peak Memory below)                                              | ![](https://i.imgur.com/rnT6Uq5.png) Look for the icon in the Avg Peak Memory and Max Peak Memory columns to find the operators that spilled data to   disk.         |       See [Sort-Based and Hash-Based Memory Constrained Operators](https://drill.apache.org/docs/sort-based-and-hash-based-memory-constrained-operators/) for related   options. |       Hovering the mouse over the icon reveals the average number of spills. The higher the value, the greater the degradation.                                                                                                                                                                                                                                                                                                                                                                                                   |
+| !WARNING: Some of the operators spent more time waiting for data  than processing it. (See AVG WAIT TIME as compared to Average Process Time   for the operators below.)                 |  ![](https://i.imgur.com/hxwsiaA.png) Look for the icon in the Max Process Time or Max Wait Time columns to locate the operators that waited or processed too   long. |       drill.exec.http.profile.warning.time.skew.min                                     | Sets   the minimum threshold for operators with the longest processing or waiting   fragment. When the slowest fragment hits this threshold and runs or waits at   least 2X (default setting) longer than the average fragment, the Drill Web UI displays a warning message. Default is 2.                The drill.exec.http.profile.warning.time.skew.ratio.process option sets the   threshold ratio for processing. The   drill.exec.http.profile.warning.time.skew.ratio.wait option sets the threshold ratio for waiting.  |
+| See warning for drill.exec.http.profile.warning.time.skew.min                                                                                                                            |                                                                                                                                         |       drill.exec.http.profile.warning.time.skew.ratio.process                           |       Defines the threshold ratio for   processing. When the maxProcessing:avgProcessing ratio exceeds the defined threshold, the Drill Web UI displays a skew warning. Default is 2.                                                                                                                                                                                                                                                                                                                                              |
+| See warning for drill.exec.http.profile.warning.time.skew.min                                                                                                                            |                                                                                                                                         |       drill.exec.http.profile.warning.time.skew.ratio.wait                              |       Defines the threshold ratio for waiting.   When the maxWait:avgWait ratio exceeds the defined threshold, the Drill Web   UI displays a skew warning. Default is 2.                                                                                                                                                                                                                                                                                                                                                             |
+| !WARNING: Some of the SCAN operators spent more time waiting for data than processing it. (See AVG WAIT TIME as compared to Average Process Time for the scan operators below.) |  ![](https://i.imgur.com/HHA5CkV.png) Look for the icon in the Avg Wait Time or Avg Process Time columns to locate the scan operators that waited too long.             |       drill.exec.http.profile.warning.scan.wait.min                                     |       Sets a minimum threshold ratio for the   scan operator to wait. When the average wait time exceeds the processing time   the Drill Web UI displays the warning. Default is 60 seconds.                                                                                                                                                                                                                                                                                                                                         |  
+
+### Configuring Warning Threshold Options  
+You can configure thresholds for the warnings through configuration options in the drill-override.conf file, as shown:  
+
+	http: {
+	    profile.warning: {
+	        progress.threshold: 300,
+	        time.skew: {
+	            min: 2,
+	            ratio: {
+	                process: 2
+	                wait: 2
+	            }
+	        },
+	        scan.wait.min: 60
+	    },
+	    ...
+	}
+
+You must restart Drillbits after you modify drill-override.conf.
+
+The following sections describe the Fragment Profiles and Operator Profiles sections of the Drill Web UI in more detail. 
  
 ## Fragment Profiles  
 

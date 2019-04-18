@@ -1,6 +1,6 @@
 ---
 title: "Starting the Web UI"
-date: 2018-12-28
+date: 2019-04-18
 parent: Install Drill
 ---
 
@@ -11,19 +11,30 @@ The Drill Web UI is one of several [client interfaces](/docs/architecture-introd
 - [View query profiles]({{site.baseurl}}/docs/query-profiles/)
 - [Update and configure storage plugins]({{site.baseurl}}/docs/storage-plugin-registration/)
 - View [logs]({{site.baseurl}}/docs/log-and-debug-introduction/) and [metrics]({{site.baseurl}}/docs/monitoring-metrics/)
-- [Set configuration options]({{site.baseurl}}/docs/planning-and-execution-options/#setting-options-from-the-drill-web-ui)  
-
-Starting in Drill 1.15, you can use a Meta+Enter key combination instead of clicking the Submit button to submit queries through the query editor (Query page) in  Drill Web UI. On Mac keyboards, the combination is Ctrl+Meta or Ctrl+Enter. On Windows and Linux, the combination is Ctrl+Enter; however, on Linux, if you mapped the meta key to another physical key on the keyboard, use that key + Enter. 
+- [Set configuration options]({{site.baseurl}}/docs/planning-and-execution-options/#setting-options-from-the-drill-web-ui)   
  
 ## Accessing the Web UI
-To access the Drill Web UI, enter the URL appropriate for your Drill configuration. The following list describes the URLs for various Drill configurations: 
+To access the Drill Web UI, enter `http(s)://<drill-hostname-or-ip-address>:8047` in your browser's address bar. Note that Drill must be running on the node in order to access the Drill Web UI. 
 
-* `http://<IP address or host name>:8047`  
+The following list describes the URLs for various Drill configurations: 
+
+* `http://<drill-hostname-or-ip-address>:8047`  
   Use this URL when [HTTPS support]({{site.baseurl}}/docs/configuring-web-console-and-rest-api-security/#https-support) is disabled (the default).
-* `https://<IP address or host name>:8047`  
+* `https://<drill-hostname-or-ip-address>:8047`  
   Use this URL when HTTPS support is enabled.  
 * `http://localhost:8047`   
-  Use  this URL when running Drill in embedded mode (./drill-embedded).
+  Use  this URL when running Drill in embedded mode (./drill-embedded).  
+
+## Running Queries from the Web UI  
+
+To run a query in the Web UI, click Query in the toolbar to access the Query page. Enter your query in the query editor and click Submit or press Ctrl+Enter to submit the query. 
+
+Starting in Drill 1.15, you can use a Meta+Enter key combination to submit queries through the query editor. On Mac keyboards, the combination is Ctrl+Meta or Ctrl+Enter. On Windows and Linux, the combination is Ctrl+Enter; however, on Linux, if you mapped the meta key to another physical key on the keyboard, use that key + Enter.
+
+Starting in Drill 1.16, a Query Submitted pop-up window appears when you submit a query.   
+![](https://i.imgur.com/MOcBlZo.png)  
+The pop-up serves as an indicator that a query is in progress and prevents any further action until the query returns results. The pop-up includes a Check Status button that links to the Profiles page. If needed, you can [cancel the query from the Profiles page]({{site.baseurl}}/docs/monitoring-and-canceling-queries-in-the-drill-web-ui/). 
+
 
 ## Web UI Security
 

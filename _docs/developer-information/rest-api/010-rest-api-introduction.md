@@ -1,6 +1,6 @@
 ---
 title: "REST API Introduction"
-date: 2018-12-08
+date: 2019-04-18
 parent: "REST API"
 ---
 
@@ -62,7 +62,8 @@ Submit a query and return results.
 **Parameters**
 
 * queryType--SQL, PHYSICAL, or LOGICAL are valid types. Use only "SQL". Other types are for internal use only.  
-* query--A SQL query that runs in Drill.
+* query--A SQL query that runs in Drill.  
+* autoLimit--Limits the number of rows returned from the result set. (Drill 1.16+)
 
 **Request Body**
 
@@ -73,7 +74,7 @@ Submit a query and return results.
 
 **Example**
 
-     curl -X POST -H "Content-Type: application/json" -d '{"queryType":"SQL", "query": "select * from dfs.`/Users/joe-user/apache-drill-1.4.0/sample-data/donuts.json` where name= \u0027Cake\u0027"}' http://localhost:8047/query.json
+     curl -X POST -H "Content-Type: application/json" -d '{"queryType":"SQL", "query": "select * from dfs.`/Users/joe-user/apache-drill-1.4.0/sample-data/donuts.json` where name= \u0027Cake\u0027", "autoLimit":1}' http://localhost:8047/query.json
 
 **Response Body**
 

@@ -1,16 +1,47 @@
 ---
 title: "Query Data Introduction"
-date: 2018-12-08
+date: 2019-04-18
 parent: "Query Data"
 ---
-You can query local and distributed file systems, Hive, HBase data, complex data, INFORMATION SCHEMA, and system tables as described in the subtopics of this section. 
-
-The query specifies the data source location and includes data casting. 
+You can submit SQL queries against various data sources from the [Drill shell (SQLLine)]({{site.baseurl}}/docs/configuring-the-drill-shell/), [Drill Web UI]({{site.baseurl}}/docs/starting-the-web-ui/), [REST API]({{site.baseurl}}/docs/rest-api/), and tools that connect to Drill via [ODBC or JDBC]({{site.baseurl}}/docs/odbc-jdbc-interfaces/). Drill has [several storage and format plugins]({{site.baseurl}}/docs/connect-a-data-source-introduction/) that enable queries against multiple data sources and data formats, including [complex data]({{site.baseurl}}/docs/querying-complex-data). 
+ 
+The following sections provide some general information about Drill queries.
 
 ## Specifying the Data Source Location
-The optional [USE statement]({{site.baseurl}}/docs/use) runs subsequent queries against a particular [storage plugin]({{site.baseurl}}/docs/connect-a-data-source-introduction/). The USE statement typically saves typing some of the storage plugin information in the FROM statement. If you omit the USE statement, specify a storage plugin, such as dfs, and optionally a workspace, such as default, and a path to the data source using dot notation and back ticks. For example:
+The optional [USE command]({{site.baseurl}}/docs/use) runs subsequent queries against a particular [storage plugin or schema]({{site.baseurl}}/docs/connect-a-data-source-introduction/). When you run the USE command to switch to a particular storage plugin or schema, you do not have to include the full path to the data in the FROM clause, for example:
 
-``dfs.`default`.`/Users/drill-user/apache-drill-1.1.0/log/sqlline_queries.json```;
+The following query was run before switching to the dfs.schema. A workspace named "samples" was configured in the dfs storage plugin, creating a schema named `dfs.samples`. Notice that you have to use dot notation for the schema and back ticks around the table name. In some cases you may point to a directory or file in the schema, in which case you would put back ticks around the entire path, for example ```dfs.samples.`/nation/data/nation.parquet/````.  
+
+
+	apache drill> select * from dfs.samples.`nation1`;
+	+-------------+----------------+-------------+----------------------+
+	| N_NATIONKEY |     N_NAME     | N_REGIONKEY |      N_COMMENT       |
+	+-------------+----------------+-------------+----------------------+
+	| 0           | ALGERIA        | 0           |  haggle. carefully f |
+	| 1           | ARGENTINA      | 1           | al foxes promise sly |
+	...
+	+-------------+----------------+-------------+----------------------+
+
+Running USE to switch to the `dfs.samples` schema: 
+
+	apache drill> use dfs.samples;
+	+------+-----------------------------------------+
+	|  ok  |                 summary                 |
+	+------+-----------------------------------------+
+	| true | Default schema changed to [dfs.samples] |
+	+------+-----------------------------------------+  
+
+Query written without identifying the schema (without dot notation or back ticks):
+
+	apache drill (dfs.samples)> select * from nation1;
+	+-------------+----------------+-------------+----------------------+
+	| N_NATIONKEY |     N_NAME     | N_REGIONKEY |      N_COMMENT       |
+	+-------------+----------------+-------------+----------------------+
+	| 0           | ALGERIA        | 0           |  haggle. carefully f |
+	| 1           | ARGENTINA      | 1           | al foxes promise sly |
+	...
+	+-------------+----------------+-------------+----------------------+
+
 
 ## Casting Data
 In some cases, Drill converts schema-less data to correctly-typed data implicitly. In this case, you do not need to [cast the data]({{site.baseurl}}/docs/supported-data-types/#casting-and-converting-data-types) to another type. The file format of the data and the nature of your query determines the requirement for casting or converting. Differences in casting depend on the data source. 
@@ -22,15 +53,12 @@ To query HBase data using Drill, convert every column of an HBase table to/from 
 
 ## Troubleshooting Queries
 
-In addition to testing queries interactively in the Drill shell, and examining error messages, use the [EXPLAIN command]({{site.baseurl}}/docs/explain/) to analyze errors and troubleshoot queries
-that do not run. For example, if you run into a casting error, the query plan
-text may help you isolate the problem.
+In addition to analyzing error messages printed by the Drill shell, you can troubleshoot queries from the [Profiles page]({{ site.baseurl }}/docs/identifying-performance-issues/) in the Drill Web UI or run the [EXPLAIN command]({{site.baseurl}}/docs/explain/) to review the query plan for issues. For example, if you run into a casting error, the query plan text may help you isolate the problem.
 
     0: jdbc:drill:zk=local> !set maxwidth 10000
-    0: jdbc:drill:zk=local> explain plan for select ... ;
+    0: jdbc:drill:zk=local> explain plan for <query>;
 
-[Drill shell commands]({{site.baseurl}}/docs/configuring-the-drill-shell/) include the `!set <set variable> <value>` to increase the default text display (number of characters). By
-default, most of the plan output is hidden.
+[Drill shell commands]({{site.baseurl}}/docs/configuring-the-drill-shell/) include the `!set <set variable> <value>` to increase the default text display (number of characters). By default, most of the plan output is hidden.
 
 ## Query Syntax Tips
 

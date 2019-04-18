@@ -1,6 +1,6 @@
 ---
 title: "Configuring Storage Plugins"
-date: 2018-12-08
+date: 2019-04-18
 parent: "Storage Plugin Configuration"
 ---  
 
@@ -88,11 +88,15 @@ The file is removed after Drill uses the file for the first time.
 
 ## Exporting Storage Plugin Configurations  
 
-Starting in Drill 1.14, you can export and save your storage plugin configurations from the Storage page in the Drill Web UI. The Export option next to each enabled storage plugin provides an easy way to export your storage plugin configurations to a JSON file when you want to save and reuse the configurations. For example, before an upgrade.  
+Starting in Drill 1.14, you can export and save your storage plugin configurations from the Storage page in the Drill Web UI. The Export option next to each enabled storage plugin provides an easy way to export each storage plugin configuration to a JSON file when you want to save and reuse the configurations. For example, before an upgrade.  
 
 ![](https://i.imgur.com/MnLY75q.png)  
 
-You can also access the Export option on the Update page, by selecting the Update option next to an enabled or disabled storage plugin. 
+You can also access the Export option on the Update page, by selecting the Update option next to an enabled or disabled storage plugin.  
+
+Starting in Drill 1.16, you can export all storage plugin configurations at once, by clicking the Export All button. You have the option to export all storage plugin configurations to a HOCON format (.conf file) or a JSON file.  
+
+![](https://i.imgur.com/91ubjpb.png)
 
 When you need to configure the storage plugin, copy and paste the contents of the JSON file into the Configuration field. You can access the Configuration field for a storage plugin by selecting Update next to the storage plugin.
 
