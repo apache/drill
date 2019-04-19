@@ -93,10 +93,17 @@ public class StorageResources {
   }
 
   @GET
+  @Path("/storage.json")
+  @Produces(MediaType.APPLICATION_JSON)
+  public List<PluginConfigWrapper> getPluginsJSON() {
+    return getConfigsFor(ALL_PLUGINS);
+  }
+
+  @GET
   @Path("/storage")
   @Produces(MediaType.TEXT_HTML)
   public Viewable getPlugins() {
-    List<PluginConfigWrapper> list = getConfigsFor(ALL_PLUGINS);
+    List<PluginConfigWrapper> list = getPluginsJSON();
     return ViewableWithPermissions.create(authEnabled.get(), "/rest/storage/list.ftl", sc, list);
   }
 
