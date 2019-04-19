@@ -1,6 +1,6 @@
 ---
 title: "REST API Introduction"
-date: 2019-04-18
+date: 2019-04-19
 parent: "REST API"
 ---
 
@@ -69,7 +69,8 @@ Submit a query and return results.
 
         {
           "queryType" : "SQL",
-          "query" : "<Drill query>"
+          "query" : "<Drill query>",
+		  "autoLimit" : "<rows returned>"
         }
 
 **Example**
