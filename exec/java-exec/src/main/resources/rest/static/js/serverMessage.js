@@ -19,7 +19,7 @@ function serverMessage(data) {
             .removeClass("alert-danger")
             .addClass("alert-info")
             .text(data.result).alert();
-        setTimeout(function() { location.reload(); }, 800);
+        setTimeout(function() { window.location.href = "/storage"; }, 800);
     } else {
         messageEl.addClass("hidden");
         // Wait a fraction of a second before showing the message again. This
