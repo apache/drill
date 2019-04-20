@@ -31,6 +31,7 @@ import java.util.stream.StreamSupport;
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -44,6 +45,7 @@ import javax.ws.rs.core.SecurityContext;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.core.JsonParser;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
@@ -76,10 +78,17 @@ public class StorageResources {
   private static final Comparator<PluginConfigWrapper> PLUGIN_COMPARATOR =
       Comparator.comparing(PluginConfigWrapper::getName);
 
+  /**
+   * Regex allows the following paths:
+   * /storage/{group}/plugins/export
+   * /storage/{group}/plugins/export/{format}
+   * Note: for the second case the format involves the leading slash, therefore it should be removed then
+   */
   @GET
-  @Path("/storage/{group}/plugins/export/{format}")
+  @Path("/storage/{group}/plugins/export{format: (/[^/]+?)*}")
   @Produces(MediaType.APPLICATION_JSON)
   public Response getConfigsFor(@PathParam("group") String pluginGroup, @PathParam("format") String format) {
+    format = StringUtils.isNotEmpty(format) ? format.replace("/", "") : JSON_FORMAT;
     return isSupported(format)
         ? Response.ok()
             .entity(getConfigsFor(pluginGroup).toArray())
@@ -146,10 +155,17 @@ public class StorageResources {
     }
   }
 
+  /**
+   * Regex allows the following paths:
+   * /storage/{name}/export
+   * "/storage/{name}/export/{format}
+   * Note: for the second case the format involves the leading slash, therefore it should be removed then
+   */
   @GET
-  @Path("/storage/{name}/export/{format}")
+  @Path("/storage/{name}/export{format: (/[^/]+?)*}")
   @Produces(MediaType.APPLICATION_JSON)
   public Response exportPlugin(@PathParam("name") String name, @PathParam("format") String format) {
+    format = StringUtils.isNotEmpty(format) ? format.replace("/", "") : JSON_FORMAT;
     return isSupported(format)
         ? Response.ok(getPluginConfig(name))
             .header(HttpHeaders.CONTENT_DISPOSITION, String.format("attachment;filename=\"%s.%s\"", name, format))
@@ -159,8 +175,8 @@ public class StorageResources {
             .build();
   }
 
-  @GET
-  @Path("/storage/{name}/delete")
+  @DELETE
+  @Path("/storage/{name}.json")
   @Produces(MediaType.APPLICATION_JSON)
   public JsonResult deletePlugin(@PathParam("name") String name) {
     return getPluginConfig(name).deleteFromStorage(storage)
@@ -212,13 +228,48 @@ public class StorageResources {
     return JSON_FORMAT.equalsIgnoreCase(format) || HOCON_FORMAT.equalsIgnoreCase(format);
   }
 
-  private List<PluginConfigWrapper> getConfigsFor(String pluginGroup) {
+  /**
+   * Regex allows the following paths:
+   * /storage.json
+   * /storage/{group}-plugins.json
+   * Note: for the second case the group involves the leading slash, therefore it should be removed then
+   */
+  @GET
+  @Path("/storage{group: (/[^/]+?)*}-plugins.json")
+  @Produces(MediaType.APPLICATION_JSON)
+  public List<PluginConfigWrapper> getConfigsFor(@PathParam("group") String pluginGroup) {
+    pluginGroup = StringUtils.isNotEmpty(pluginGroup) ? pluginGroup.replace("/", "") : ALL_PLUGINS;
     return StreamSupport.stream(
         Spliterators.spliteratorUnknownSize(storage.getStore().getAll(), Spliterator.ORDERED), false)
             .filter(byPluginGroup(pluginGroup))
             .map(entry -> new PluginConfigWrapper(entry.getKey(), entry.getValue()))
             .sorted(PLUGIN_COMPARATOR)
             .collect(Collectors.toList());
+  }
+
+  /**
+   * @deprecated use {@link #createOrUpdatePluginJSON} instead
+   */
+  @POST
+  @Path("/storage/{name}")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  @Deprecated
+  public JsonResult createOrUpdatePlugin(PluginConfigWrapper plugin) {
+    return createOrUpdatePluginJSON(plugin);
+  }
+
+  /**
+   * @deprecated use the method with DELETE request {@link #deletePlugin(String)} instead
+   */
+  @GET
+  @Path("/storage/{name}/delete")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Deprecated
+  public JsonResult deletePluginViaGet(@PathParam("name") String name) {
+    return getPluginConfig(name).deleteFromStorage(storage)
+        ? message("Success")
+        : message("Error (unable to delete %s storage plugin)", name);
   }
 
   private Predicate<Map.Entry<String, StoragePluginConfig>> byPluginGroup(String pluginGroup) {
