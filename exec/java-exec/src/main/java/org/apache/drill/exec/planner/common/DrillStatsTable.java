@@ -120,7 +120,7 @@ public class DrillStatsTable {
     Long ndvCol = ndv.get(col);
     // Ndv estimation techniques like HLL may over-estimate, hence cap it at rowCount
     if (ndvCol != null) {
-      return Math.min(ndvCol, rowCount);
+      return (double) Math.min(ndvCol, rowCount);
     }
     return null;
   }
@@ -184,7 +184,6 @@ public class DrillStatsTable {
     }
     return histogram.get(column);
   }
-
 
   /**
    * Read the stats from storage and keep them in memory.
@@ -337,7 +336,7 @@ public class DrillStatsTable {
       this.type = type;
     }
     @JsonGetter ("schema")
-    public double getSchema() {
+    public long getSchema() {
       return this.schema;
     }
     @JsonSetter ("schema")
@@ -493,6 +492,10 @@ public class DrillStatsTable {
       Histogram histogram = statsProvider.getHistogram(fieldName);
       if (histogram != null) {
         statisticsValues.put(ColumnStatisticsKind.HISTOGRAM, histogram);
+      }
+      Double rowcount = statsProvider.getRowCount();
+      if (rowcount != null) {
+        statisticsValues.put(ColumnStatisticsKind.ROWCOUNT, rowcount);
       }
       return statisticsValues;
     }

@@ -126,6 +126,23 @@ public enum ColumnStatisticsKind implements CollectableColumnStatisticsKind {
   },
 
   /**
+   * Column statistics kind which represents total row count for the specific column.
+   */
+  ROWCOUNT(Statistic.ROWCOUNT) {
+    @Override
+    public Double mergeStatistics(List<? extends ColumnStatistics> statisticsList) {
+      double rowCount = 0;
+      for (ColumnStatistics statistics : statisticsList) {
+        Double count = (Double) statistics.getStatistic(this);
+        if (count != null) {
+          rowCount += count;
+        }
+      }
+      return rowCount;
+    }
+  },
+
+  /**
    * Column statistics kind which represents number of distinct values for the specific column.
    */
   NVD(Statistic.NDV) {

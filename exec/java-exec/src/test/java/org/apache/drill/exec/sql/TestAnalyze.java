@@ -415,6 +415,16 @@ public class TestAnalyze extends BaseTestQuery {
               "Scan.*columns=\\[`store_id`\\].*rowcount = 1128.0.*"};
       PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan2, new String[]{});
 
+      query = "select 1 from dfs.tmp.employee1 where store_id between 1 and 23";
+      String[] expectedPlan3 = {"Filter\\(condition.*\\).*rowcount = 1090.*,.*",
+        "Scan.*columns=\\[`store_id`\\].*rowcount = 1128.0.*"};
+      PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan3, new String[]{});
+
+      query = "select count(*) from dfs.tmp.employee1 where store_id between 10 and 20";
+      String[] expectedPlan4 = {"Filter\\(condition.*\\).*rowcount = 5??.*,.*",
+        "Scan.*columns=\\[`store_id`\\].*rowcount = 1128.0.*"};
+      PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan4, new String[]{});
+
     } finally {
       test("ALTER SESSION SET `planner.slice_target` = " + ExecConstants.SLICE_TARGET_DEFAULT);
     }
@@ -475,6 +485,24 @@ public class TestAnalyze extends BaseTestQuery {
               .baselineValues("`null_boolean_col`", 0)
               .go();
 
+    } finally {
+      test("ALTER SESSION SET `planner.slice_target` = " + ExecConstants.SLICE_TARGET_DEFAULT);
+    }
+  }
+
+
+  @Test
+  public void testHistogramWithIntervalPredicate() throws Exception {
+    try {
+      test("ALTER SESSION SET `planner.slice_target` = 1");
+      test("ALTER SESSION SET `store.format` = 'parquet'");
+      test("create table dfs.tmp.orders2 as select * from cp.`tpch/orders.parquet`");
+      test("analyze table dfs.tmp.orders2 compute statistics");
+      test("alter session set `planner.statistics.use` = true");
+
+      String query = "select 1 from dfs.tmp.orders2 o where o.o_orderdate >= date '1996-10-01' and o.o_orderdate < date '1996-10-01' + interval '3' month";
+      String[] expectedPlan1 = {"Filter\\(condition.*\\).*rowcount = 59?.*,.*", "Scan.*columns=\\[`o_orderdate`\\].*rowcount = 15000.0.*"};
+      PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan1, new String[]{});
     } finally {
       test("ALTER SESSION SET `planner.slice_target` = " + ExecConstants.SLICE_TARGET_DEFAULT);
     }

@@ -35,7 +35,8 @@ public interface Histogram {
   /**
    * For a filter condition, estimate the selectivity (matching rows/total rows) for this histogram
    * @param filter
+   * @param totalRowCount
    * @return estimated selectivity or NULL if it could not be estimated for any reason
    */
-  Double estimatedSelectivity(final RexNode filter);
+  Double estimatedSelectivity(final RexNode filter, final long totalRowCount);
 }
