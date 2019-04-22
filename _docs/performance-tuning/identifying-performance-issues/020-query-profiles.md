@@ -55,61 +55,14 @@ In addition to the warnings, the Operator Profiles section of the query profile 
 The following table lists the warnings, icons, configurable options related to the warnings, and option descriptions:  
   
 
-<style type="text/css">
-.tg  {border-collapse:collapse;border-spacing:0;}
-.tg td{font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:black;}
-.tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:black;}
-.tg .tg-my39{font-weight:bold;background-color:#c0c0c0;text-align:left}
-.tg .tg-s268{text-align:left}
-</style>
-<table class="tg">
-  <tr>
-    <th class="tg-my39">Warning Message</th>
-    <th class="tg-my39">Icon&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
-    <th class="tg-my39">Related Option(s)</th>
-    <th class="tg-my39">Description&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
-  </tr>
-  <tr>
-    <td class="tg-s268">!WARNING: No fragments have made any progress in the last 300 seconds. (See Last Progress below.)</td>
-    <td class="tg-s268">None</td>
-    <td class="tg-s268">drill.exec.http.profile.warning.progress.threshold</td>
-    <td class="tg-s268">If none of the fragments make any progress within the set time, a warning displays. Time is set in seconds. Default is 300 seconds (5 minutes). You can see fragment activity in the Fragment Profiles section of the query profile. </td>
-  </tr>
-  <tr>
-    <td class="tg-s268">!WARNING: Some operators have data spilled to disk. This will result in performance loss. (See Avg Peak memory and Max Peak Memory below)</td>
-    <td class="tg-s268"><img src="ui-spilled-data.png"
-     alt="spilled data icon"
-     style="float: left"/>Look for the icon in the Avg Peak Memory and Max Peak Memory columns to find the operators that spilled data to disk. </td>
-    <td class="tg-s268">See Sort-Based and Hash-Based Memory Constrained operators for related options.</td>
-    <td class="tg-s268">Hovering the mouse over the icon reveals the average number of spills. The higher the value, the greater the degradation</td>
-  </tr>
-  <tr>
-    <td class="tg-s268">!WARNING: Some of the operators spent more time waiting for data than processing it. (See AVG WAIT TIME as compared to Average Process Time for the operators below)</td>
-    <td class="tg-s268">Look for the icon in the Max Process Time or Max Wait Time columns to locate the operators that waited or processed too long.</td>
-    <td class="tg-s268">drill.exec.http.profile.warning.time.skew.min</td>
-    <td class="tg-s268">Sets the minimum threshold for operators with the longest processing or waiting fragment. When the slowest fragment hits this threshold and runs or waits at least 2X (default setting) longer than the average fragment, the Drill Web UI displays a warning message. Default is 2.&nbsp;&nbsp;The drill.exec.http.profile.warning.time.skew.ratio.process option sets the threshold ratio for processing. The drill.exec.http.profile.warning.time.skew.ratio.wait option sets the threshold ratio for waiting. </td>
-  </tr>
-  <tr>
-    <td class="tg-s268">See warning for drill.exec.http.profile.warning.time.skew.min</td>
-    <td class="tg-s268"> </td>
-    <td class="tg-s268">drill.exec.http.profile.warning.time.skew.ratio.process<br>  </td>
-    <td class="tg-s268">Defines the threshold ratio for processing. When the maxProcessing:avgProcessing ratio exceeds the defined threshold, the Drill Web UI displays a skew warning. Default is 2.</td>
-  </tr>
-  <tr>
-    <td class="tg-s268">See warning for drill.exec.http.profile.warning.time.skew.min</td>
-    <td class="tg-s268"> </td>
-    <td class="tg-s268">drill.exec.http.profile.warning.time.skew.ratio.wait<br>  </td>
-    <td class="tg-s268">Defines the threshold ratio for waiting. When the maxWait:avgWait ratio exceeds the defined threshold, the Drill Web UI displays a skew warning. Default is 2. </td>
-  </tr>
-  <tr>
-    <td class="tg-s268">!WARNING: Some of the SCAN operators spent more time waiting for data than processing it. (See AVG WAIT TIME as compared to Average Process Time for the scan operators below)</td>
-    <td class="tg-s268">Look for the icon in the Avg Wait Time or Avg Process Time columns to locate the scan operators that waited too long.</td>
-    <td class="tg-s268">drill.exec.http.profile.warning.scan.wait.min</td>
-    <td class="tg-s268">Sets a minimum threshold ratio for the scan operator to wait. When the average wait time exceeds the processing time the Drill Web UI displays the warning. Default is 60 seconds. </td>
-  </tr>
-</table>
-
-
+| Warning   Message                                                                                                                                                                        | Icon                                                                                                                                    | Related   Option(s)                                                                     | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| !WARNING: No fragments have made any progress in the last 300   seconds. (See Last Progress below.)                                                                                      | None                                                                                                                                    |       drill.exec.http.profile.warning.progress.threshold                                | If   none of the fragments make any progress within the set time, a warning   displays. Time is set in seconds. Default is 300 seconds (5 minutes). You can   see fragment activity in the Fragment Profiles section of the query profile.                                                                                                                                                                                                                                                                                           |
+| !WARNING: Some operators have data spilled to disk. This will   result in performance loss. (See Avg Peak memory and Max Peak Memory below)                                              |       ![](https://i.imgur.com/b8LGKmq.png) Look for the icon in the Avg Peak Memory   and Max Peak Memory columns to find the operators that spilled data to   disk.         |       See Sort-Based and Hash-Based Memory Constrained operators for related   options. |       Hovering the mouse over the icon reveals   the average number of spills. The higher the value, the greater the   degradation                                                                                                                                                                                                                                                                                                                                                                                                   |
+| !WARNING: Some of the operators spent more time waiting for data   than processing it. (See AVG WAIT TIME as compared to Average Process Time   for the operators below)                 |       ![](https://i.imgur.com/UrHy2Fv.png) Look for the icon in the Max Process Time   or Max Wait Time columns to locate the operators that waited or processed too   long. |       drill.exec.http.profile.warning.time.skew.min                                     | Sets   the minimum threshold for operators with the longest processing or waiting   fragment. When the slowest fragment hits this threshold and runs or waits at   least 2X (default setting) longer than the average fragment, the Drill Web UI   displays a warning message. Default is 2.                The drill.exec.http.profile.warning.time.skew.ratio.process option sets the   threshold ratio for processing. The   drill.exec.http.profile.warning.time.skew.ratio.wait option sets the   threshold ratio for waiting.  |
+| See warning for drill.exec.http.profile.warning.time.skew.min                                                                                                                            | ![](https://i.imgur.com/UrHy2Fv.png)                                                                                                                                        |       drill.exec.http.profile.warning.time.skew.ratio.process                           |       Defines the threshold ratio for   processing. When the maxProcessing:avgProcessing ratio exceeds the defined   threshold, the Drill Web UI displays a skew warning. Default is 2.                                                                                                                                                                                                                                                                                                                                              |
+| See warning for drill.exec.http.profile.warning.time.skew.min                                                                                                                            | ![](https://i.imgur.com/UrHy2Fv.png)                                                                                                                                       |       drill.exec.http.profile.warning.time.skew.ratio.wait                              |       Defines the threshold ratio for waiting.   When the maxWait:avgWait ratio exceeds the defined threshold, the Drill Web   UI displays a skew warning. Default is 2.                                                                                                                                                                                                                                                                                                                                                             |
+|       !WARNING: Some of the   SCAN operators spent more time waiting for data than processing it. (See AVG   WAIT TIME as compared to Average Process Time for the scan operators below) |       ![](https://i.imgur.com/RLk2eAU.png) Look for the icon in the Avg Wait Time or Avg Process Time columns to locate the scan operators that waited too long.             |       drill.exec.http.profile.warning.scan.wait.min                                     |       Sets a minimum threshold ratio for the   scan operator to wait. When the average wait time exceeds the processing time   the Drill Web UI displays the warning. Default is 60 seconds.                                                                                                                                                                                                                                                                                                                                         |
 
 
 ### Configuring Warning Threshold Options  
