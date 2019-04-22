@@ -507,6 +507,25 @@ public class TestCTTAS extends BaseTestQuery {
     }
   }
 
+  @Test // DRILL-7050
+  public void testTemporaryTableInSubQuery() throws Exception {
+    test("create temporary table source as (select 1 as id union all select 2 as id)");
+
+    String query =
+        "select t1.id as id,\n" +
+            "(select count(t2.id)\n" +
+            "from source t2 where t2.id = t1.id) as c\n" +
+        "from source t1";
+
+    testBuilder()
+        .sqlQuery(query)
+        .ordered()
+        .baselineColumns("id", "c")
+        .baselineValues(1, 1L)
+        .baselineValues(2, 1L)
+        .go();
+  }
+
   private void expectUserRemoteExceptionWithMessage(String message) {
     thrown.expect(UserRemoteException.class);
     thrown.expectMessage(containsString(message));

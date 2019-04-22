@@ -330,6 +330,19 @@ public class SqlConverter {
       }
     }
 
+    @Override
+    protected void inferUnknownTypes(
+        RelDataType inferredType,
+        SqlValidatorScope scope,
+        SqlNode node) {
+      // calls validateQuery() for SqlSelect to be sure that temporary table name will be changed
+      // for the case when it is used in sub-select
+      if (node.getKind() == SqlKind.SELECT) {
+        validateQuery(node, scope, inferredType);
+      }
+      super.inferUnknownTypes(inferredType, scope, node);
+    }
+
     private void changeNamesIfTableIsTemporary(SqlIdentifier tempNode) {
       List<String> temporaryTableNames = ((SqlConverter.DrillCalciteCatalogReader) getCatalogReader()).getTemporaryNames(tempNode.names);
       if (temporaryTableNames != null) {
