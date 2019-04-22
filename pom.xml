@@ -50,7 +50,7 @@
     <guava.version>19.0</guava.version>
     <forkCount>2</forkCount>
     <parquet.version>1.10.0</parquet.version>
-    <calcite.version>1.18.0-drill-r0</calcite.version>
+    <calcite.version>1.18.0-drill-r1</calcite.version>
     <avatica.version>1.13.0</avatica.version>
     <janino.version>3.0.11</janino.version>
     <sqlline.version>1.7.0</sqlline.version>

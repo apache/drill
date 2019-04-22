@@ -26,6 +26,7 @@ import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 
+import org.apache.calcite.sql.SqlKind;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.base.MetadataProviderManager;
 import org.apache.drill.exec.physical.base.TableMetadataProvider;
@@ -324,6 +325,19 @@ public class SqlConverter {
           .containsKey(SqlValidatorUtil.getAlias(exp, -1))) {
         super.addToSelectList(list, aliases, fieldList, exp, scope, includeSystemVars);
       }
+    }
+
+    @Override
+    protected void inferUnknownTypes(
+        RelDataType inferredType,
+        SqlValidatorScope scope,
+        SqlNode node) {
+      // calls validateQuery() for SqlSelect to be sure that temporary table name will be changed
+      // for the case when it is used in sub-select
+      if (node.getKind() == SqlKind.SELECT) {
+        validateQuery(node, scope, inferredType);
+      }
+      super.inferUnknownTypes(inferredType, scope, node);
     }
 
     private void changeNamesIfTableIsTemporary(SqlIdentifier tempNode) {
