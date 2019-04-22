@@ -1,6 +1,6 @@
 ---
 title: "Query Profiles"
-date: 2019-04-19
+date: 2019-04-22
 parent: "Identifying Performance Issues"
 ---
 
@@ -55,253 +55,59 @@ In addition to the warnings, the Operator Profiles section of the query profile 
 The following table lists the warnings, icons, configurable options related to the warnings, and option descriptions:  
   
 
-<html>
-
-<head>
-<meta http-equiv=Content-Type content="text/html; charset=windows-1252">
-<meta name=Generator content="Microsoft Word 15 (filtered)">
-<style>
+<style type="text/css">
+.tg  {border-collapse:collapse;border-spacing:0;}
+.tg td{font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:black;}
+.tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:black;}
+.tg .tg-my39{font-weight:bold;background-color:#c0c0c0;text-align:left}
+.tg .tg-s268{text-align:left}
 </style>
-
-</head>
-
-<body lang=EN-US>
-
-<div class=WordSection1>
-
-<table class=MsoTableGrid border=1 cellspacing=0 cellpadding=0
- style='border-collapse:collapse;border:none'>
- <tr>
-  <td width=216 valign=top style='width:161.75pt;border:solid windowtext 1.0pt;
-  background:#E7E6E6;padding:0in 5.4pt 0in 5.4pt'>
-  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-  normal'><b><span style='font-size:9.0pt;font-family:"Arial",sans-serif'>Warning</span></b></p>
-  </td>
-  <td width=186 valign=top style='width:139.4pt;border:solid windowtext 1.0pt;
-  border-left:none;background:#E7E6E6;padding:0in 5.4pt 0in 5.4pt'>
-  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-  normal'><b><span style='font-size:9.0pt;font-family:"Arial",sans-serif'>Icon</span></b></p>
-  </td>
-  <td width=295 valign=top style='width:221.3pt;border:solid windowtext 1.0pt;
-  border-left:none;background:#E7E6E6;padding:0in 5.4pt 0in 5.4pt'>
-  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-  normal'><b><span style='font-size:9.0pt;font-family:"Arial",sans-serif'>Option</span></b></p>
-  </td>
-  <td width=306 valign=top style='width:229.65pt;border:solid windowtext 1.0pt;
-  border-left:none;background:#E7E6E6;padding:0in 5.4pt 0in 5.4pt'>
-  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-  normal'><b><span style='font-size:9.0pt;font-family:"Arial",sans-serif'>Description</span></b></p>
-  </td>
- </tr>
- <tr>
-  <td width=216 valign=top style='width:161.75pt;border:solid windowtext 1.0pt;
-  border-top:none;padding:0in 5.4pt 0in 5.4pt'>
-  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-  normal'><span style='font-size:9.0pt;font-family:"Arial",sans-serif;
-  color:black'>!WARNING: No fragments have made any progress in the last 300
-  seconds. (See Last Progress below.)</span></span></p>
-  </td>
-  <td width=186 valign=top style='width:139.4pt;border-top:none;border-left:
-  none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
-  padding:0in 5.4pt 0in 5.4pt'>
-  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-  normal'><span style='font-size:9.0pt;font-family:"Arial",sans-serif'>None</span></p>
-  </td>
-  <td width=295 valign=top style='width:221.3pt;border-top:none;border-left:
-  none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
-  padding:0in 5.4pt 0in 5.4pt'>
-  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-  normal'><span style='font-size:9.0pt;font-family:"Arial",sans-serif;
-  color:black'>drill.exec.http.profile.warning.progress.threshold</span></span></p>
-  </td>
-  <td width=306 valign=top style='width:229.65pt;border-top:none;border-left:
-  none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
-  padding:0in 5.4pt 0in 5.4pt'>
-  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-  normal'><span class=apple-style-span><span style='font-size:9.0pt;font-family:
-  "Arial",sans-serif;color:#333333'>If none of the fragments make any progress
-  within the set time, a warning appears. Time is set in seconds. Default is
-  300 seconds (5 minutes). You can see fragment activity in the Fragment
-  Profiles section of the query profile.</span></span></span></p>
-  </td>
- </tr>
- <tr>
-  <td width=216 valign=top style='width:161.75pt;border:solid windowtext 1.0pt;
-  border-top:none;padding:0in 5.4pt 0in 5.4pt'>
-  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-  normal'><span style='font-size:9.0pt;font-family:"Arial",sans-serif'>!</span><span
-  style='font-size:9.0pt;font-family:"Arial",sans-serif'> WARNING: Some
-  operators have data spilled to disk. This will result in performance loss.
-  (See Avg Peak memory and Max Peak Memory below)</span></p>
-  </td>
-  <td width=186 valign=top style='width:139.4pt;border-top:none;border-left:
-  none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
-  padding:0in 5.4pt 0in 5.4pt'>
-  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-  normal'><span style='font-size:9.0pt;font-family:"Arial",sans-serif'>Look for
-  the icon in the Avg Peak Memory and Max Peak Memory columns to find the
-  operators that spilled data to disk.</span></p>
-  </td>
-  <td width=295 valign=top style='width:221.3pt;border-top:none;border-left:
-  none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
-  padding:0in 5.4pt 0in 5.4pt'>
-  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-  normal'><span style='font-size:9.0pt;font-family:"Arial",sans-serif'>See
-  Sort-Based and Hash-Based Memory Constrained operators for related options.</span></p>
-  </td>
-  <td width=306 valign=top style='width:229.65pt;border-top:none;border-left:
-  none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
-  padding:0in 5.4pt 0in 5.4pt'>
-  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-  normal'><span style='font-size:9.0pt;font-family:"Arial",sans-serif'>Hovering
-  the mouse over the icon reveals the average number of spills. The higher the
-  value, the greater the degradation.</span></p>
-  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-  normal'><span style='font-size:9.0pt;font-family:"Arial",sans-serif'>&nbsp;</span></p>
-  </td>
- </tr>
- <tr>
-  <td width=216 valign=top style='width:161.75pt;border:solid windowtext 1.0pt;
-  border-top:none;padding:0in 5.4pt 0in 5.4pt'>
-  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-  normal'><span style='font-size:9.0pt;font-family:"Arial",sans-serif'>!WARNING:
-  Some of the operators spent more time waiting for data than processing it.
-  (See AVG WAIT TIME as compared to Average Process Time for the operators
-  below.</span></p>
-  </td>
-  <td width=186 valign=top style='width:139.4pt;border-top:none;border-left:
-  none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
-  padding:0in 5.4pt 0in 5.4pt'>
-  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-  normal'><span style='font-size:9.0pt;font-family:"Arial",sans-serif'>Look for
-  the icon in the Max Process Time or Max Wait Time columns to locate the
-  operators that waited or processed too long.</span></p>
-  </td>
-  <td width=295 valign=top style='width:221.3pt;border-top:none;border-left:
-  none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
-  padding:0in 5.4pt 0in 5.4pt'>
-  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-  normal'><span style='font-size:9.0pt;font-family:"Arial",sans-serif'>drill.exec.http.profile.warning.time.skew.min</span></p>
-  </td>
-  <td width=306 valign=top style='width:229.65pt;border-top:none;border-left:
-  none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
-  padding:0in 5.4pt 0in 5.4pt'>
-  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-  normal'><span style='font-size:9.0pt;font-family:"Arial",sans-serif'>Sets the
-  minimum threshold for operators with the longest processing or waiting
-  fragment. When the slowest fragment hits this threshold and runs or waits at
-  least 2X (default setting) longer than the average fragment, the Drill Web UI
-  displays a warning message. Default is 2.&nbsp;The
-  drill.exec.http.profile.warning.time.skew.ratio.process option sets the
-  threshold ratio for processing. The drill.exec.http.profile.warning.time.skew.ratio.wait
-  option sets the threshold ratio for waiting.</span></p>
-  </td>
- </tr>
- <tr>
-  <td width=216 valign=top style='width:161.75pt;border:solid windowtext 1.0pt;
-  border-top:none;padding:0in 5.4pt 0in 5.4pt'>
-  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-  normal'><span class=apple-style-span><span style='font-size:9.0pt;font-family:
-  "Arial",sans-serif;color:#333333'>See warning for
-  drill.exec.http.profile.warning.time.skew.min</span></span></span></p>
-  </td>
-  <td width=186 valign=top style='width:139.4pt;border-top:none;border-left:
-  none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
-  padding:0in 5.4pt 0in 5.4pt'>
-  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-  normal'><span style='font-size:9.0pt;font-family:"Arial",sans-serif'>&nbsp;</span></p>
-  </td>
-  <td width=295 valign=top style='width:221.3pt;border-top:none;border-left:
-  none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
-  padding:0in 5.4pt 0in 5.4pt'>
-  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-  normal'><span class=apple-style-span><span style='font-size:9.0pt;font-family:
-  "Arial",sans-serif;color:#333333'>drill.exec.http.profile.warning.time.skew.ratio.process</span></span></span></p>
-  </td>
-  <td width=306 valign=top style='width:229.65pt;border-top:none;border-left:
-  none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
-  padding:0in 5.4pt 0in 5.4pt'>
-  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-  normal'><span class=apple-style-span><span style='font-size:9.0pt;font-family:
-  "Arial",sans-serif;color:#333333'>Defines the threshold ratio for processing.
-  When the maxProcessing:avgProcessing ratio exceeds the defined threshold, the
-  Drill Web UI displays a skew warning. Default is 2.</span></span></span></p>
-  </td>
- </tr>
- <tr>
-  <td width=216 valign=top style='width:161.75pt;border:solid windowtext 1.0pt;
-  border-top:none;padding:0in 5.4pt 0in 5.4pt'>
-  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-  normal'><span class=apple-style-span><span style='font-size:9.0pt;font-family:
-  "Arial",sans-serif;color:#333333'>See warning for
-  drill.exec.http.profile.warning.time.skew.min</span></span></span></p>
-  </td>
-  <td width=186 valign=top style='width:139.4pt;border-top:none;border-left:
-  none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
-  padding:0in 5.4pt 0in 5.4pt'>
-  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-  normal'><span style='font-size:9.0pt;font-family:"Arial",sans-serif'>&nbsp;</span></p>
-  </td>
-  <td width=295 valign=top style='width:221.3pt;border-top:none;border-left:
-  none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
-  padding:0in 5.4pt 0in 5.4pt'>
-  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-  normal'><span class=apple-style-span><span style='font-size:9.0pt;font-family:
-  "Arial",sans-serif;color:#333333'>drill.exec.http.profile.warning.time.skew.ratio.wait</span></span></span></p>
-  </td>
-  <td width=306 valign=top style='width:229.65pt;border-top:none;border-left:
-  none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
-  padding:0in 5.4pt 0in 5.4pt'>
-  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-  normal'><span class=apple-style-span><span style='font-size:9.0pt;font-family:
-  "Arial",sans-serif;color:#333333'>Defines the threshold ratio for waiting.
-  When the maxWait:avgWait ratio exceeds the defined threshold, the Drill Web
-  UI displays a skew warning. Default is 2.</span></span></span></p>
-  </td>
- </tr>
- <tr>
-  <td width=216 valign=top style='width:161.75pt;border:solid windowtext 1.0pt;
-  border-top:none;padding:0in 5.4pt 0in 5.4pt'>
-  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-  normal'><span style='font-size:9.0pt;font-family:"Arial",sans-serif'>!WARNING:
-  Some of the SCAN operators spent more time waiting for data than processing
-  it. (See AVG WAIT TIME as compared to Average Process Time for the scan
-  operators below.</span></p>
-  </td>
-  <td width=186 valign=top style='width:139.4pt;border-top:none;border-left:
-  none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
-  padding:0in 5.4pt 0in 5.4pt'>
-  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-  normal'><span style='font-size:9.0pt;font-family:"Arial",sans-serif'>Look for
-  the icon in the Avg Wait Time or Avg Process Time columns to locate the scan
-  operators that waited too long.</span></p>
-  </td>
-  <td width=295 valign=top style='width:221.3pt;border-top:none;border-left:
-  none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
-  padding:0in 5.4pt 0in 5.4pt'>
-  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-  normal'><span style='font-size:9.0pt;font-family:"Arial",sans-serif'>drill.exec.http.profile.warning.scan.wait.min</span></p>
-  </td>
-  <td width=306 valign=top style='width:229.65pt;border-top:none;border-left:
-  none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
-  padding:0in 5.4pt 0in 5.4pt'>
-  <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-  normal'><span style='font-size:9.0pt;font-family:"Arial",sans-serif'>Sets a
-  minimum threshold ratio for the scan operator to wait. When the average wait
-  time exceeds the processing time the Drill Web UI displays the warning.
-  Default is 60 seconds.</span></p>
-  </td>
- </tr>
+<table class="tg">
+  <tr>
+    <th class="tg-my39">Warning Message</th>
+    <th class="tg-my39">Icon&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
+    <th class="tg-my39">Related Option(s)</th>
+    <th class="tg-my39">Description&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
+  </tr>
+  <tr>
+    <td class="tg-s268">!WARNING: No fragments have made any progress in the last 300 seconds. (See Last Progress below.)</td>
+    <td class="tg-s268">None</td>
+    <td class="tg-s268">drill.exec.http.profile.warning.progress.threshold</td>
+    <td class="tg-s268">If none of the fragments make any progress within the set time, a warning displays. Time is set in seconds. Default is 300 seconds (5 minutes). You can see fragment activity in the Fragment Profiles section of the query profile. </td>
+  </tr>
+  <tr>
+    <td class="tg-s268">!WARNING: Some operators have data spilled to disk. This will result in performance loss. (See Avg Peak memory and Max Peak Memory below)</td>
+    <td class="tg-s268"><img src="ui-spilled-data.png"
+     alt="spilled data icon"
+     style="float: left"/>Look for the icon in the Avg Peak Memory and Max Peak Memory columns to find the operators that spilled data to disk. </td>
+    <td class="tg-s268">See Sort-Based and Hash-Based Memory Constrained operators for related options.</td>
+    <td class="tg-s268">Hovering the mouse over the icon reveals the average number of spills. The higher the value, the greater the degradation</td>
+  </tr>
+  <tr>
+    <td class="tg-s268">!WARNING: Some of the operators spent more time waiting for data than processing it. (See AVG WAIT TIME as compared to Average Process Time for the operators below)</td>
+    <td class="tg-s268">Look for the icon in the Max Process Time or Max Wait Time columns to locate the operators that waited or processed too long.</td>
+    <td class="tg-s268">drill.exec.http.profile.warning.time.skew.min</td>
+    <td class="tg-s268">Sets the minimum threshold for operators with the longest processing or waiting fragment. When the slowest fragment hits this threshold and runs or waits at least 2X (default setting) longer than the average fragment, the Drill Web UI displays a warning message. Default is 2.&nbsp;&nbsp;The drill.exec.http.profile.warning.time.skew.ratio.process option sets the threshold ratio for processing. The drill.exec.http.profile.warning.time.skew.ratio.wait option sets the threshold ratio for waiting. </td>
+  </tr>
+  <tr>
+    <td class="tg-s268">See warning for drill.exec.http.profile.warning.time.skew.min</td>
+    <td class="tg-s268"> </td>
+    <td class="tg-s268">drill.exec.http.profile.warning.time.skew.ratio.process<br>  </td>
+    <td class="tg-s268">Defines the threshold ratio for processing. When the maxProcessing:avgProcessing ratio exceeds the defined threshold, the Drill Web UI displays a skew warning. Default is 2.</td>
+  </tr>
+  <tr>
+    <td class="tg-s268">See warning for drill.exec.http.profile.warning.time.skew.min</td>
+    <td class="tg-s268"> </td>
+    <td class="tg-s268">drill.exec.http.profile.warning.time.skew.ratio.wait<br>  </td>
+    <td class="tg-s268">Defines the threshold ratio for waiting. When the maxWait:avgWait ratio exceeds the defined threshold, the Drill Web UI displays a skew warning. Default is 2. </td>
+  </tr>
+  <tr>
+    <td class="tg-s268">!WARNING: Some of the SCAN operators spent more time waiting for data than processing it. (See AVG WAIT TIME as compared to Average Process Time for the scan operators below)</td>
+    <td class="tg-s268">Look for the icon in the Avg Wait Time or Avg Process Time columns to locate the scan operators that waited too long.</td>
+    <td class="tg-s268">drill.exec.http.profile.warning.scan.wait.min</td>
+    <td class="tg-s268">Sets a minimum threshold ratio for the scan operator to wait. When the average wait time exceeds the processing time the Drill Web UI displays the warning. Default is 60 seconds. </td>
+  </tr>
 </table>
-
-<p class=MsoNormal>&nbsp;</p>
-
-</div>
-
-</body>
-
-</html>
-
 
 
 
