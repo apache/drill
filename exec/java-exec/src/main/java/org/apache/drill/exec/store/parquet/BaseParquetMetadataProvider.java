@@ -24,6 +24,7 @@ import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.metastore.BaseMetadata;
 import org.apache.drill.metastore.ColumnStatisticsImpl;
+import org.apache.drill.metastore.NonInterestingColumnsMetadata;
 import org.apache.drill.metastore.StatisticsKind;
 import org.apache.drill.metastore.TableMetadata;
 import org.apache.drill.metastore.TableStatisticsKind;
@@ -88,6 +89,7 @@ public abstract class BaseParquetMetadataProvider implements ParquetMetadataProv
   private TableMetadata tableMetadata;
   private List<PartitionMetadata> partitions;
   private Map<Path, FileMetadata> files;
+  private NonInterestingColumnsMetadata nonInterestingColumnsMetadata;
 
   // whether metadata for row groups should be collected to create files, partitions and table metadata
   private final boolean collectMetadata = false;
@@ -160,6 +162,7 @@ public abstract class BaseParquetMetadataProvider implements ParquetMetadataProv
       TableMetadata tableMetadata = getTableMetadata();
       getPartitionsMetadata();
       getRowGroupsMeta();
+      getNonInterestingColumnsMeta();
       this.tableMetadata = ParquetTableMetadataUtils.updateRowCount(tableMetadata, getRowGroupsMeta());
       parquetTableMetadata = null;
     }
@@ -178,7 +181,16 @@ public abstract class BaseParquetMetadataProvider implements ParquetMetadataProv
     getFilesMetadata();
     getPartitionsMetadata();
     getRowGroupsMeta();
+    getNonInterestingColumnsMeta();
     parquetTableMetadata = null;
+  }
+
+  @Override
+  public NonInterestingColumnsMetadata getNonInterestingColumnsMeta() {
+    if (nonInterestingColumnsMetadata == null) {
+      nonInterestingColumnsMetadata = ParquetTableMetadataUtils.getNonInterestingColumnsMeta(parquetTableMetadata);
+    }
+    return nonInterestingColumnsMetadata;
   }
 
   @Override
@@ -235,7 +247,6 @@ public abstract class BaseParquetMetadataProvider implements ParquetMetadataProv
               new ColumnStatisticsImpl(DrillStatsTable.getEstimatedColumnStats(statsTable, column),
                   ParquetTableMetadataUtils.getNaturalNullsFirstComparator()));
         }
-        columnsStatistics.putAll(ParquetTableMetadataUtils.populateNonInterestingColumnsStats(columnsStatistics.keySet(), parquetTableMetadata));
       }
       tableMetadata = new FileTableMetadata(tableName, tableLocation, schema, columnsStatistics, tableStatistics,
           -1L, "", partitionKeys);

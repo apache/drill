@@ -19,6 +19,7 @@ package org.apache.drill.exec.physical.base;
 
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.metastore.FileMetadata;
+import org.apache.drill.metastore.NonInterestingColumnsMetadata;
 import org.apache.drill.metastore.PartitionMetadata;
 import org.apache.drill.metastore.TableMetadata;
 import org.apache.hadoop.fs.Path;
@@ -85,4 +86,10 @@ public interface TableMetadataProvider {
    * @return list of {@link FileMetadata} instances which belongs to specified partitions
    */
   List<FileMetadata> getFilesForPartition(PartitionMetadata partition);
+
+  /**
+   * Returns {@link NonInterestingColumnsMetadata} instance which provides metadata for non-interesting columns.
+   * @return {@link NonInterestingColumnsMetadata} instance
+   */
+  NonInterestingColumnsMetadata getNonInterestingColumnsMeta();
 }

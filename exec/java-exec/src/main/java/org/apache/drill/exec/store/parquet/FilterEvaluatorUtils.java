@@ -21,6 +21,7 @@ import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.SchemaPathUtils;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.parquet.metadata.MetadataBase;
+import org.apache.drill.metastore.NonInterestingColumnsMetadata;
 import org.apache.drill.metastore.RowGroupMetadata;
 import org.apache.drill.metastore.TableStatisticsKind;
 import org.apache.drill.exec.expr.FilterBuilder;
@@ -62,7 +63,14 @@ public class FilterEvaluatorUtils {
             expr.<Set<SchemaPath>, Void, RuntimeException>accept(new FieldReferenceFinder(), null));
 
     RowGroupMetadata rowGroupMetadata = new ArrayList<>(ParquetTableMetadataUtils.getRowGroupsMetadata(footer).values()).get(rowGroupIndex);
+    NonInterestingColumnsMetadata nonInterestingColumnsMetadata = ParquetTableMetadataUtils.getNonInterestingColumnsMeta(footer);
     Map<SchemaPath, ColumnStatistics> columnsStatistics = rowGroupMetadata.getColumnsStatistics();
+
+    // Add column statistics of non-interesting columns if there are any
+    if (nonInterestingColumnsMetadata != null) {
+      columnsStatistics.putAll(nonInterestingColumnsMetadata.getColumnsStatistics());
+    }
+
     columnsStatistics = ParquetTableMetadataUtils.addImplicitColumnsStatistics(columnsStatistics,
         schemaPathsInExpr, Collections.emptyList(), options, rowGroupMetadata.getLocation(), true);
 
