@@ -290,6 +290,7 @@ public abstract class AbstractParquetGroupScan extends AbstractGroupScanWithMeta
       builder.withRowGroups(rowGroupsMap)
           .withTable(getTableMetadata())
           .withPartitions(getNextOrEmpty(getPartitionsMetadata()))
+          .withNonInterestingColumns(getNonInterestingColumnsMetadata())
           .withFiles(filesMap)
           .withMatching(false);
     }
@@ -363,6 +364,7 @@ public abstract class AbstractParquetGroupScan extends AbstractGroupScanWithMeta
         .withTable(getTableMetadata())
         .withPartitions(getPartitionsMetadata())
         .withFiles(qualifiedFiles)
+        .withNonInterestingColumns(getNonInterestingColumnsMetadata())
         .withMatching(matchAllMetadata)
         .build();
   }
@@ -500,6 +502,7 @@ public abstract class AbstractParquetGroupScan extends AbstractGroupScanWithMeta
       newScan.files = files;
       newScan.rowGroups = rowGroups;
       newScan.matchAllMetadata = matchAllMetadata;
+      newScan.nonInterestingColumnsMetadata = nonInterestingColumnsMetadata;
       // since builder is used when pruning happens, entries and fileSet should be expanded
       if (!newScan.getFilesMetadata().isEmpty()) {
         newScan.entries = newScan.getFilesMetadata().keySet().stream()

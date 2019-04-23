@@ -26,6 +26,7 @@ import org.apache.drill.metastore.ColumnStatistics;
 import org.apache.drill.metastore.ColumnStatisticsImpl;
 import org.apache.drill.metastore.FileMetadata;
 import org.apache.drill.metastore.FileTableMetadata;
+import org.apache.drill.metastore.NonInterestingColumnsMetadata;
 import org.apache.drill.metastore.PartitionMetadata;
 import org.apache.drill.metastore.TableMetadata;
 import org.apache.hadoop.fs.Path;
@@ -83,6 +84,11 @@ public class SimpleFileTableMetadataProvider implements TableMetadataProvider {
 
   @Override
   public List<FileMetadata> getFilesForPartition(PartitionMetadata partition) {
+    return null;
+  }
+
+  @Override
+  public NonInterestingColumnsMetadata getNonInterestingColumnsMeta() {
     return null;
   }
 
