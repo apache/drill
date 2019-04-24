@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.common;
 
+import com.carrotsearch.hppc.IntArrayList;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.commons.lang3.tuple.Pair;
@@ -399,7 +400,7 @@ public class HashPartition implements HashJoinMemoryCalculator.PartitionStat {
   public boolean setRecordMatched(int compositeIndex) {
     return hjHelper.setRecordMatched(compositeIndex);
   }
-  public List<Integer> getNextUnmatchedIndex() {
+  public IntArrayList getNextUnmatchedIndex() {
     return hjHelper.getNextUnmatchedIndex();
   }
   //

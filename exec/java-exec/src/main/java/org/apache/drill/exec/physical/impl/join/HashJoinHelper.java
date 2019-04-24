@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.join;
 
+import com.carrotsearch.hppc.IntArrayList;
 import io.netty.buffer.ByteBuf;
 
 import java.util.ArrayList;
@@ -163,8 +164,8 @@ public class HashJoinHelper {
     return info.getLinks().get(recordIdx);
   }
 
-  public List<Integer> getNextUnmatchedIndex() {
-    List<Integer> compositeIndexes = new ArrayList<>();
+  public IntArrayList getNextUnmatchedIndex() {
+    IntArrayList compositeIndexes = new IntArrayList();
 
     for (int i = 0; i < buildInfoList.size(); i++) {
       BuildInfo info = buildInfoList.get(i);
