@@ -18,8 +18,8 @@
 package org.apache.drill.exec.physical.impl.join;
 
 import java.util.ArrayList;
-import java.util.List;
 
+import com.carrotsearch.hppc.IntArrayList;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.physical.config.HashJoinPOP;
 import org.apache.drill.exec.physical.impl.common.HashPartition;
@@ -72,7 +72,7 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
   private ProbeState probeState = ProbeState.PROBE_PROJECT;
 
   // For outer or right joins, this is a list of unmatched records that needs to be projected
-  private List<Integer> unmatchedBuildIndexes = null;
+  private IntArrayList unmatchedBuildIndexes = null;
 
   private  HashPartition partitions[];
 
