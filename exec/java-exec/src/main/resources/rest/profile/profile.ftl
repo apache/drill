@@ -57,7 +57,9 @@
       //No Progress Warning
       let noProgressFragmentCount = document.querySelectorAll('td[class=no-progress-tag]').length;
       let majorFragmentCount = document.querySelectorAll('#fragment-overview table tbody tr').length;
-      toggleWarning("noProgressWarning", majorFragmentCount, noProgressFragmentCount);
+      if (majorFragmentCount > 0) { // For fast-failed queries majorFragmentCount=0
+        toggleWarning("noProgressWarning", majorFragmentCount, noProgressFragmentCount);
+      }
 
       //Spill To Disk Warnings
       let spillCount = document.querySelectorAll('td[class=spill-tag]').length;
