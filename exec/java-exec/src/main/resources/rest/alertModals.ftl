@@ -33,8 +33,8 @@
       <!-- Modal content-->
       <div class="modal-content">
         <div class="modal-header modalHeaderAlert">
-          <button type="button" class="close closeX" data-dismiss="modal" style="color:red;font-size:200%">×</button>
-          <h4 class="modal-title"><span class="glyphicon glyphicon-alert" style="font-size:125%"></span><span id="modalHeader" style="font-family:Helvetica Neue,Helvetica,Arial,sans-serif;white-space:pre">~ErrorMessage~ Title</span></h4>
+          <button type="button" class="close closeX" data-dismiss="modal"><span class="glyphicon glyphicon-remove" style="color:red;font-size:125%"></span></button>
+          <h4 class="modal-title"><span class="glyphicon glyphicon-alert" style="font-size:125%">&#xe209;</span><span id="modalHeader" style="font-family:Helvetica Neue,Helvetica,Arial,sans-serif;white-space:pre">~ErrorMessage~ Title</span></h4>
         </div>
         <div class="modal-body" id="modalBody" style="line-height:3">
         ~ErrorMessage Details~
