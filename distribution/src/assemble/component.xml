@@ -21,10 +21,9 @@
 <component xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
            xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
-  <moduleSets>
-    <moduleSet>
-      <useAllReactorProjects>true</useAllReactorProjects>
-      <!--Now, select which projects to include in this module-set. -->
+  <dependencySets>
+    <dependencySet>
+      <!-- Now, select which projects to include in this module-set. -->
       <includes>
         <include>org.apache.drill.exec:drill-jdbc:jar</include>
         <include>org.apache.drill:drill-protocol:jar</include>
@@ -48,80 +47,29 @@
         <include>org.apache.drill.contrib:drill-opentsdb-storage:jar</include>
         <include>org.apache.drill.contrib:drill-udfs:jar</include>
       </includes>
-      <sources>
-        <includeModuleDirectory>false</includeModuleDirectory>
-        <fileSets>
-          <fileSet>
-            <directory>target</directory>
-            <outputDirectory>jars</outputDirectory>
-            <includes>
-              <include>*.jar</include>
-            </includes>
-            <excludes>
-              <exclude>*sources.jar</exclude>
-              <exclude>*javadoc.jar</exclude>
-              <exclude>*tests.jar</exclude>
-              <exclude>original-*</exclude>
-            </excludes>
-          </fileSet>
-        </fileSets>
-      </sources>
-    </moduleSet>
+      <outputDirectory>jars</outputDirectory>
+      <useProjectArtifact>false</useProjectArtifact>
+    </dependencySet>
 
-    <moduleSet>
-      <useAllReactorProjects>true</useAllReactorProjects>
+    <dependencySet>
       <!-- Drill-on-YARN goes into its own directory so it does not end up
            on the Drillbit class path. Define the jars/tools folder as any jar
            we ship that is not used by drillbits. -->
       <includes>
         <include>org.apache.drill:drill-yarn:jar</include>
       </includes>
-      <sources>
-        <includeModuleDirectory>false</includeModuleDirectory>
-        <fileSets>
-          <fileSet>
-            <directory>target</directory>
-            <outputDirectory>jars/tools</outputDirectory>
-            <includes>
-              <include>*.jar</include>
-            </includes>
-            <excludes>
-              <exclude>*sources.jar</exclude>
-              <exclude>*javadoc.jar</exclude>
-              <exclude>*tests.jar</exclude>
-            </excludes>
-          </fileSet>
-        </fileSets>
-      </sources>
-    </moduleSet>
+      <outputDirectory>jars/tools</outputDirectory>
+      <useProjectArtifact>false</useProjectArtifact>
+    </dependencySet>
 
-    <moduleSet>
-      <useAllReactorProjects>true</useAllReactorProjects>
+    <dependencySet>
       <includes>
         <include>org.apache.drill.exec:drill-jdbc-all:jar</include>
       </includes>
-      <sources>
-        <includeModuleDirectory>false</includeModuleDirectory>
-        <fileSets>
-          <fileSet>
-            <directory>target</directory>
-            <outputDirectory>jars/jdbc-driver</outputDirectory>
-            <includes>
-              <include>*.jar</include>
-            </includes>
-            <excludes>
-              <exclude>*sources.jar</exclude>
-              <exclude>*javadoc.jar</exclude>
-              <exclude>*tests.jar</exclude>
-              <exclude>original-*</exclude>
-            </excludes>
-          </fileSet>
-        </fileSets>
-      </sources>
-    </moduleSet>
-  </moduleSets>
+      <outputDirectory>jars/jdbc-driver</outputDirectory>
+      <useProjectArtifact>false</useProjectArtifact>
+    </dependencySet>
 
-  <dependencySets>
     <dependencySet>
       <outputDirectory>jars</outputDirectory>
       <unpack>false</unpack>
