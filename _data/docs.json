@@ -12,14 +12,35 @@
                 }
             ], 
             "children": [], 
-            "next_title": "CREATE TABLE AS (CTAS)", 
-            "next_url": "/docs/create-table-as-ctas/", 
+            "next_title": "CREATE OR REPLACE SCHEMA", 
+            "next_url": "/docs/create-or-replace-schema/", 
             "parent": "SQL Commands", 
             "previous_title": "RESET", 
             "previous_url": "/docs/reset/", 
             "relative_path": "_docs/sql-reference/sql-commands/020-alter-system.md", 
             "title": "ALTER SYSTEM", 
             "url": "/docs/alter-system/"
+        }, 
+        "ANALYZE TABLE": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Commands", 
+                    "url": "/docs/sql-commands/"
+                }, 
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "SET", 
+            "next_url": "/docs/set/", 
+            "parent": "SQL Commands", 
+            "previous_title": "Supported SQL Commands", 
+            "previous_url": "/docs/supported-sql-commands/", 
+            "relative_path": "_docs/sql-reference/sql-commands/009-analyze-table.md", 
+            "title": "ANALYZE TABLE", 
+            "url": "/docs/analyze-table/"
         }, 
         "About SQL Function Examples": {
             "breadcrumbs": [
@@ -992,6 +1013,27 @@
             "title": "CREATE FUNCTION USING JAR", 
             "url": "/docs/create-function-using-jar/"
         }, 
+        "CREATE OR REPLACE SCHEMA": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Commands", 
+                    "url": "/docs/sql-commands/"
+                }, 
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "CREATE TABLE AS (CTAS)", 
+            "next_url": "/docs/create-table-as-ctas/", 
+            "parent": "SQL Commands", 
+            "previous_title": "ALTER SYSTEM", 
+            "previous_url": "/docs/alter-system/", 
+            "relative_path": "_docs/sql-reference/sql-commands/021-create-schema.md", 
+            "title": "CREATE OR REPLACE SCHEMA", 
+            "url": "/docs/create-or-replace-schema/"
+        }, 
         "CREATE TABLE AS (CTAS)": {
             "breadcrumbs": [
                 {
@@ -1007,8 +1049,8 @@
             "next_title": "CREATE TEMPORARY TABLE AS (CTTAS)", 
             "next_url": "/docs/create-temporary-table-as-cttas/", 
             "parent": "SQL Commands", 
-            "previous_title": "ALTER SYSTEM", 
-            "previous_url": "/docs/alter-system/", 
+            "previous_title": "CREATE OR REPLACE SCHEMA", 
+            "previous_url": "/docs/create-or-replace-schema/", 
             "relative_path": "_docs/sql-reference/sql-commands/030-create-table-as.md", 
             "title": "CREATE TABLE AS (CTAS)", 
             "url": "/docs/create-table-as-ctas/"
@@ -10406,6 +10448,27 @@
             "title": "RDBMS Storage Plugin", 
             "url": "/docs/rdbms-storage-plugin/"
         }, 
+        "REFRESH TABLE METADATA": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Commands", 
+                    "url": "/docs/sql-commands/"
+                }, 
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "RESET", 
+            "next_url": "/docs/reset/", 
+            "parent": "SQL Commands", 
+            "previous_title": "SET", 
+            "previous_url": "/docs/set/", 
+            "relative_path": "_docs/sql-reference/sql-commands/011-refresh-table-metadata.md", 
+            "title": "REFRESH TABLE METADATA", 
+            "url": "/docs/refresh-table-metadata/"
+        }, 
         "REPEATED_CONTAINS": {
             "breadcrumbs": [
                 {
@@ -10463,8 +10526,8 @@
             "next_title": "ALTER SYSTEM", 
             "next_url": "/docs/alter-system/", 
             "parent": "SQL Commands", 
-            "previous_title": "SET", 
-            "previous_url": "/docs/set/", 
+            "previous_title": "REFRESH TABLE METADATA", 
+            "previous_url": "/docs/refresh-table-metadata/", 
             "relative_path": "_docs/sql-reference/sql-commands/012-reset.md", 
             "title": "RESET", 
             "url": "/docs/reset/"
@@ -11181,11 +11244,11 @@
                 }
             ], 
             "children": [], 
-            "next_title": "RESET", 
-            "next_url": "/docs/reset/", 
+            "next_title": "REFRESH TABLE METADATA", 
+            "next_url": "/docs/refresh-table-metadata/", 
             "parent": "SQL Commands", 
-            "previous_title": "Supported SQL Commands", 
-            "previous_url": "/docs/supported-sql-commands/", 
+            "previous_title": "ANALYZE TABLE", 
+            "previous_url": "/docs/analyze-table/", 
             "relative_path": "_docs/sql-reference/sql-commands/010-set.md", 
             "title": "SET", 
             "url": "/docs/set/"
@@ -11273,8 +11336,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "SET", 
-                    "next_url": "/docs/set/", 
+                    "next_title": "ANALYZE TABLE", 
+                    "next_url": "/docs/analyze-table/", 
                     "parent": "SQL Commands", 
                     "previous_title": "SQL Commands", 
                     "previous_url": "/docs/sql-commands/", 
@@ -11294,11 +11357,32 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "RESET", 
-                    "next_url": "/docs/reset/", 
+                    "next_title": "SET", 
+                    "next_url": "/docs/set/", 
                     "parent": "SQL Commands", 
                     "previous_title": "Supported SQL Commands", 
                     "previous_url": "/docs/supported-sql-commands/", 
+                    "relative_path": "_docs/sql-reference/sql-commands/009-analyze-table.md", 
+                    "title": "ANALYZE TABLE", 
+                    "url": "/docs/analyze-table/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Commands", 
+                            "url": "/docs/sql-commands/"
+                        }, 
+                        {
+                            "title": "SQL Reference", 
+                            "url": "/docs/sql-reference/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "REFRESH TABLE METADATA", 
+                    "next_url": "/docs/refresh-table-metadata/", 
+                    "parent": "SQL Commands", 
+                    "previous_title": "ANALYZE TABLE", 
+                    "previous_url": "/docs/analyze-table/", 
                     "relative_path": "_docs/sql-reference/sql-commands/010-set.md", 
                     "title": "SET", 
                     "url": "/docs/set/"
@@ -11315,11 +11399,32 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "ALTER SYSTEM", 
-                    "next_url": "/docs/alter-system/", 
+                    "next_title": "RESET", 
+                    "next_url": "/docs/reset/", 
                     "parent": "SQL Commands", 
                     "previous_title": "SET", 
                     "previous_url": "/docs/set/", 
+                    "relative_path": "_docs/sql-reference/sql-commands/011-refresh-table-metadata.md", 
+                    "title": "REFRESH TABLE METADATA", 
+                    "url": "/docs/refresh-table-metadata/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Commands", 
+                            "url": "/docs/sql-commands/"
+                        }, 
+                        {
+                            "title": "SQL Reference", 
+                            "url": "/docs/sql-reference/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "ALTER SYSTEM", 
+                    "next_url": "/docs/alter-system/", 
+                    "parent": "SQL Commands", 
+                    "previous_title": "REFRESH TABLE METADATA", 
+                    "previous_url": "/docs/refresh-table-metadata/", 
                     "relative_path": "_docs/sql-reference/sql-commands/012-reset.md", 
                     "title": "RESET", 
                     "url": "/docs/reset/"
@@ -11336,8 +11441,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "CREATE TABLE AS (CTAS)", 
-                    "next_url": "/docs/create-table-as-ctas/", 
+                    "next_title": "CREATE OR REPLACE SCHEMA", 
+                    "next_url": "/docs/create-or-replace-schema/", 
                     "parent": "SQL Commands", 
                     "previous_title": "RESET", 
                     "previous_url": "/docs/reset/", 
@@ -11357,11 +11462,32 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "CREATE TEMPORARY TABLE AS (CTTAS)", 
-                    "next_url": "/docs/create-temporary-table-as-cttas/", 
+                    "next_title": "CREATE TABLE AS (CTAS)", 
+                    "next_url": "/docs/create-table-as-ctas/", 
                     "parent": "SQL Commands", 
                     "previous_title": "ALTER SYSTEM", 
                     "previous_url": "/docs/alter-system/", 
+                    "relative_path": "_docs/sql-reference/sql-commands/021-create-schema.md", 
+                    "title": "CREATE OR REPLACE SCHEMA", 
+                    "url": "/docs/create-or-replace-schema/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Commands", 
+                            "url": "/docs/sql-commands/"
+                        }, 
+                        {
+                            "title": "SQL Reference", 
+                            "url": "/docs/sql-reference/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "CREATE TEMPORARY TABLE AS (CTTAS)", 
+                    "next_url": "/docs/create-temporary-table-as-cttas/", 
+                    "parent": "SQL Commands", 
+                    "previous_title": "CREATE OR REPLACE SCHEMA", 
+                    "previous_url": "/docs/create-or-replace-schema/", 
                     "relative_path": "_docs/sql-reference/sql-commands/030-create-table-as.md", 
                     "title": "CREATE TABLE AS (CTAS)", 
                     "url": "/docs/create-table-as-ctas/"
@@ -12873,8 +12999,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "SET", 
-                            "next_url": "/docs/set/", 
+                            "next_title": "ANALYZE TABLE", 
+                            "next_url": "/docs/analyze-table/", 
                             "parent": "SQL Commands", 
                             "previous_title": "SQL Commands", 
                             "previous_url": "/docs/sql-commands/", 
@@ -12894,11 +13020,32 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "RESET", 
-                            "next_url": "/docs/reset/", 
+                            "next_title": "SET", 
+                            "next_url": "/docs/set/", 
                             "parent": "SQL Commands", 
                             "previous_title": "Supported SQL Commands", 
                             "previous_url": "/docs/supported-sql-commands/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/009-analyze-table.md", 
+                            "title": "ANALYZE TABLE", 
+                            "url": "/docs/analyze-table/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "REFRESH TABLE METADATA", 
+                            "next_url": "/docs/refresh-table-metadata/", 
+                            "parent": "SQL Commands", 
+                            "previous_title": "ANALYZE TABLE", 
+                            "previous_url": "/docs/analyze-table/", 
                             "relative_path": "_docs/sql-reference/sql-commands/010-set.md", 
                             "title": "SET", 
                             "url": "/docs/set/"
@@ -12915,11 +13062,32 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "ALTER SYSTEM", 
-                            "next_url": "/docs/alter-system/", 
+                            "next_title": "RESET", 
+                            "next_url": "/docs/reset/", 
                             "parent": "SQL Commands", 
                             "previous_title": "SET", 
                             "previous_url": "/docs/set/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/011-refresh-table-metadata.md", 
+                            "title": "REFRESH TABLE METADATA", 
+                            "url": "/docs/refresh-table-metadata/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "ALTER SYSTEM", 
+                            "next_url": "/docs/alter-system/", 
+                            "parent": "SQL Commands", 
+                            "previous_title": "REFRESH TABLE METADATA", 
+                            "previous_url": "/docs/refresh-table-metadata/", 
                             "relative_path": "_docs/sql-reference/sql-commands/012-reset.md", 
                             "title": "RESET", 
                             "url": "/docs/reset/"
@@ -12936,8 +13104,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "CREATE TABLE AS (CTAS)", 
-                            "next_url": "/docs/create-table-as-ctas/", 
+                            "next_title": "CREATE OR REPLACE SCHEMA", 
+                            "next_url": "/docs/create-or-replace-schema/", 
                             "parent": "SQL Commands", 
                             "previous_title": "RESET", 
                             "previous_url": "/docs/reset/", 
@@ -12957,11 +13125,32 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "CREATE TEMPORARY TABLE AS (CTTAS)", 
-                            "next_url": "/docs/create-temporary-table-as-cttas/", 
+                            "next_title": "CREATE TABLE AS (CTAS)", 
+                            "next_url": "/docs/create-table-as-ctas/", 
                             "parent": "SQL Commands", 
                             "previous_title": "ALTER SYSTEM", 
                             "previous_url": "/docs/alter-system/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/021-create-schema.md", 
+                            "title": "CREATE OR REPLACE SCHEMA", 
+                            "url": "/docs/create-or-replace-schema/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "CREATE TEMPORARY TABLE AS (CTTAS)", 
+                            "next_url": "/docs/create-temporary-table-as-cttas/", 
+                            "parent": "SQL Commands", 
+                            "previous_title": "CREATE OR REPLACE SCHEMA", 
+                            "previous_url": "/docs/create-or-replace-schema/", 
                             "relative_path": "_docs/sql-reference/sql-commands/030-create-table-as.md", 
                             "title": "CREATE TABLE AS (CTAS)", 
                             "url": "/docs/create-table-as-ctas/"
@@ -14643,8 +14832,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "SET", 
-            "next_url": "/docs/set/", 
+            "next_title": "ANALYZE TABLE", 
+            "next_url": "/docs/analyze-table/", 
             "parent": "SQL Commands", 
             "previous_title": "SQL Commands", 
             "previous_url": "/docs/sql-commands/", 
@@ -20446,8 +20635,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "SET", 
-                            "next_url": "/docs/set/", 
+                            "next_title": "ANALYZE TABLE", 
+                            "next_url": "/docs/analyze-table/", 
                             "parent": "SQL Commands", 
                             "previous_title": "SQL Commands", 
                             "previous_url": "/docs/sql-commands/", 
@@ -20467,11 +20656,32 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "RESET", 
-                            "next_url": "/docs/reset/", 
+                            "next_title": "SET", 
+                            "next_url": "/docs/set/", 
                             "parent": "SQL Commands", 
                             "previous_title": "Supported SQL Commands", 
                             "previous_url": "/docs/supported-sql-commands/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/009-analyze-table.md", 
+                            "title": "ANALYZE TABLE", 
+                            "url": "/docs/analyze-table/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "REFRESH TABLE METADATA", 
+                            "next_url": "/docs/refresh-table-metadata/", 
+                            "parent": "SQL Commands", 
+                            "previous_title": "ANALYZE TABLE", 
+                            "previous_url": "/docs/analyze-table/", 
                             "relative_path": "_docs/sql-reference/sql-commands/010-set.md", 
                             "title": "SET", 
                             "url": "/docs/set/"
@@ -20488,11 +20698,32 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "ALTER SYSTEM", 
-                            "next_url": "/docs/alter-system/", 
+                            "next_title": "RESET", 
+                            "next_url": "/docs/reset/", 
                             "parent": "SQL Commands", 
                             "previous_title": "SET", 
                             "previous_url": "/docs/set/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/011-refresh-table-metadata.md", 
+                            "title": "REFRESH TABLE METADATA", 
+                            "url": "/docs/refresh-table-metadata/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "ALTER SYSTEM", 
+                            "next_url": "/docs/alter-system/", 
+                            "parent": "SQL Commands", 
+                            "previous_title": "REFRESH TABLE METADATA", 
+                            "previous_url": "/docs/refresh-table-metadata/", 
                             "relative_path": "_docs/sql-reference/sql-commands/012-reset.md", 
                             "title": "RESET", 
                             "url": "/docs/reset/"
@@ -20509,8 +20740,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "CREATE TABLE AS (CTAS)", 
-                            "next_url": "/docs/create-table-as-ctas/", 
+                            "next_title": "CREATE OR REPLACE SCHEMA", 
+                            "next_url": "/docs/create-or-replace-schema/", 
                             "parent": "SQL Commands", 
                             "previous_title": "RESET", 
                             "previous_url": "/docs/reset/", 
@@ -20530,11 +20761,32 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "CREATE TEMPORARY TABLE AS (CTTAS)", 
-                            "next_url": "/docs/create-temporary-table-as-cttas/", 
+                            "next_title": "CREATE TABLE AS (CTAS)", 
+                            "next_url": "/docs/create-table-as-ctas/", 
                             "parent": "SQL Commands", 
                             "previous_title": "ALTER SYSTEM", 
                             "previous_url": "/docs/alter-system/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/021-create-schema.md", 
+                            "title": "CREATE OR REPLACE SCHEMA", 
+                            "url": "/docs/create-or-replace-schema/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "CREATE TEMPORARY TABLE AS (CTTAS)", 
+                            "next_url": "/docs/create-temporary-table-as-cttas/", 
+                            "parent": "SQL Commands", 
+                            "previous_title": "CREATE OR REPLACE SCHEMA", 
+                            "previous_url": "/docs/create-or-replace-schema/", 
                             "relative_path": "_docs/sql-reference/sql-commands/030-create-table-as.md", 
                             "title": "CREATE TABLE AS (CTAS)", 
                             "url": "/docs/create-table-as-ctas/"
