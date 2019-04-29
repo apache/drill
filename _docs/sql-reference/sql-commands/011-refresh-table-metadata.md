@@ -1,6 +1,6 @@
 ---
 title: "REFRESH TABLE METADATA"
-date: 2019-04-23
+date: 2019-04-29
 parent: "SQL Commands"
 ---
 Run the REFRESH TABLE METADATA command on Parquet tables and directories to generate a metadata cache file. REFRESH TABLE METADATA collects metadata from the footers of Parquet files and writes the metadata to a metadata file (`.drill.parquet_file_metadata.v4`) and a summary file (`.drill.parquet_summary_metadata.v4`). The planner uses the metadata cache file to prune extraneous data during the query planning phase. Run the REFRESH TABLE METADATA command if planning time is a significant percentage of the total elapsed time of the query.   
@@ -34,7 +34,7 @@ Run the [EXPLAIN]({{site.baseurl}}/docs/explain/) command to determine the query
 ## Usage Notes  
 
 ### Metadata Storage  
-- Drill traverses directories for Parquet files and gathers the metadata from the footer of the files. Drill stores the collected metadata in a metadata cache file, `.drill.parquet_metadata`, at each directory level.  
+- Drill traverses directories for Parquet files and gathers the metadata from the footer of the files. Drill stores the collected metadata in a metadata cache file, `.drill.parquet_file_metadata.v4`, a summary file, `.drill.parquet_summary_metadata.v4`, and a directories file, `.drill.parquet_metadata_directories` file at each directory level.     
 - The metadata cache file stores metadata for files in that directory, as well as the metadata for the files in the subdirectories.  
 - For each row group in a Parquet file, the metadata cache file stores the column names in the row group and the column statistics, such as the min/max values and null count.  
 - If the Parquet data is updated, for example data is added to a file, Drill automatically  refreshes the Parquet metadata when you issue the next query against the Parquet data.  
@@ -70,22 +70,31 @@ Sets the number of row groups that a table can have. You can increase the thresh
 ## Limitations
 Currently, Drill does not support runtime rowgroup pruning. 
 
-<!--
+
 ## Examples  
-These examples use a schema, `dfs.samples`, which points to the `/home` directory. The `/home` directory contains a subdirectory, `parquet`, which
-contains the `nation.parquet` and a subdirectory, `dir1` with the `region.parquet` file. You can access the `nation.parquet` and `region.parquet` Parquet files in the `sample-data` directory of your Drill installation.  
+These examples use a schema, `dfs.samples`, which points to the `/tmp` directory. The `/tmp` directory contains the following subdirectories and files used in the examples:  
 
-	[root@doc23 dir1]# pwd
-	/home/parquet/dir1
-	 
+	[root@doc23 parquet1]# pwd
+	/tmp/parquet1
+	
+	[root@doc23 parquet1]# ls
+	Parquet
+	
+	[root@doc23 parquet1]# cd parquet
+	
 	[root@doc23 parquet]# ls
-	dir1  nation.parquet
-	 
-	[root@doc23 dir1]# ls
-	region.parquet  
+	nation.parquet  test
+	
+	[root@doc23 parquet]# cd test
+	
+	[root@doc23 test]# ls
+	nation.parquet
 
-Change schemas to use `dfs.samples`:
+**Note:** You can access the sample `nation.parquet` file in the `sample-data` directory of your Drill installation.
+
  
+Change schemas to switch to `dfs.samples`: 
+
 	use dfs.samples;
 	+-------+------------------------------------------+
 	|  ok   |                 summary        	      |
@@ -93,116 +102,60 @@ Change schemas to use `dfs.samples`:
 	| true  | Default schema changed to [dfs.samples]  |
 	+-------+------------------------------------------+  
 
-### Running REFRESH TABLE METADATA on a Directory  
-Running the REFRESH TABLE METADATA command on the `parquet` directory generates metadata cache files at each directory level.  
+### Running REFRESH TABLE METADATA on a Directory
+Running the REFRESH TABLE METADATA command on the “parquet1” directory generates metadata cache files at each directory level.
 
-	REFRESH TABLE METADATA parquet;  
-	+-------+---------------------------------------------------+
-	|  ok   |                  	summary                  	|
-	+-------+---------------------------------------------------+
-	| true  | Successfully updated metadata for table parquet.  |
-	+-------+---------------------------------------------------+  
+	apache drill (dfs.samples)> REFRESH TABLE METADATA parquet1;
+	+------+---------------------------------------------------+
+	|  ok  |                      summary                      |
+	+------+---------------------------------------------------+
+	| true | Successfully updated metadata for table parquet1. |
+	+------+---------------------------------------------------+
 
-When looking at the `parquet` directory and `dir1` subdirectory, you can see that a metadata cache file was created at each level:
+When looking at the “parquet1” directory and subdirectories, you can see that a metadata cache and summary (hidden) files were created at each level:
 
+**Note:** The CRC files are Cyclical Redundancy Check checksum files used to verify the data integrity of other files. 
+
+	[root@doc23 parquet1]# ls -la
+	total 36
+	drwxr-xr-x   3 root root  284 Apr 29 11:46 .
+	drwxrwxrwt. 51 root root 8192 Apr 29 11:44 ..
+	-rw-r--r--   1 root root 1037 Apr 29 11:46 .drill.parquet_file_metadata.v4
+	-rw-r--r--   1 root root   20 Apr 29 11:46 ..drill.parquet_file_metadata.v4.crc
+	-rw-r--r--   1 root root   51 Apr 29 11:46 .drill.parquet_metadata_directories
+	-rw-r--r--   1 root root   12 Apr 29 11:46 ..drill.parquet_metadata_directories.crc
+	-rw-r--r--   1 root root 1334 Apr 29 11:46 .drill.parquet_summary_metadata.v4
+	-rw-r--r--   1 root root   20 Apr 29 11:46 ..drill.parquet_summary_metadata.v4.crc
+	drwxr-xr-x   3 root root  212 Apr 29 11:30 parquet  
+	
+	[root@doc23 parquet1]# cd parquet
 	[root@doc23 parquet]# ls -la
-	drwxr-xr-x   2 root root   95 Mar 18 17:49 dir1
-	-rw-r--r--   1 root root 2642 Mar 18 17:52 .drill.parquet_metadata
-	-rw-r--r--   1 root root   32 Mar 18 17:52 ..drill.parquet_metadata.crc
-	-rwxr-xr-x   1 root root 1210 Mar 13 13:32 nation.parquet
-	 
-	[root@doc23 dir1]# ls -la
-	-rw-r--r-- 1 root root 1235 Mar 18 17:52 .drill.parquet_metadata
-	-rw-r--r-- 1 root root   20 Mar 18 17:52 ..drill.parquet_metadata.crc
-	-rwxr-xr-x 1 root root  455 Mar 18 17:41 region.parquet  
+	total 20
+	drwxr-xr-x 3 root root  212 Apr 29 11:30 .
+	drwxr-xr-x 3 root root  284 Apr 29 11:46 ..
+	-rw-r--r-- 1 root root 1021 Apr 29 11:46 .drill.parquet_file_metadata.v4
+	-rw-r--r-- 1 root root   16 Apr 29 11:46 ..drill.parquet_file_metadata.v4.crc
+	-rw-r--r-- 1 root root 1315 Apr 29 11:46 .drill.parquet_summary_metadata.v4
+	-rw-r--r-- 1 root root   20 Apr 29 11:46 ..drill.parquet_summary_metadata.v4.crc
+	-rwxr-xr-x 1 root root 1210 Apr 29 11:23 nation.parquet
+	drwxr-xr-x 2 root root  200 Apr 29 11:46 test
+	
+	[root@doc23 test]# ls -la
+	total 20
+	drwxr-xr-x 2 root root  200 Apr 29 11:46 .
+	drwxr-xr-x 3 root root  212 Apr 29 11:30 ..
+	-rw-r--r-- 1 root root  517 Apr 29 11:46 .drill.parquet_file_metadata.v4
+	-rw-r--r-- 1 root root   16 Apr 29 11:46 ..drill.parquet_file_metadata.v4.crc
+	-rw-r--r-- 1 root root 1308 Apr 29 11:46 .drill.parquet_summary_metadata.v4
+	-rw-r--r-- 1 root root   20 Apr 29 11:46 ..drill.parquet_summary_metadata.v4.crc
+	-rwxr-xr-x 1 root root 1210 Apr 29 11:23 nation.parquet  
 
-The following sections compare the content of the metadata cache file in  the `parquet` and `dir1` directories:  
+Looking at the `.drill.parquet_file_metadata.v4` file in the `/tmp/parquet1` directory, you can see that the file contains the paths to the Parquet files in the subdirectories, as well as metadata for those files: 
 
-**Content of the metadata cache file in the directory named `parquet` that contains the nation.parquet file and subdirectory `dir1`.**  
-
-
-	[root@doc23 parquet]# cat .drill.parquet_metadata
+	[root@doc23 parquet1]# cat .drill.parquet_file_metadata.v4
 	{
-	  "metadata_version" : "3.3",
-	  "columnTypeInfo" : {
-	    "`N_COMMENT`" : {
-	      "name" : [ "N_COMMENT" ],
-	      "primitiveType" : "BINARY",
-	      "originalType" : "UTF8",
-	      "precision" : 0,
-	      "scale" : 0,
-	      "repetitionLevel" : 0,
-	      "definitionLevel" : 0
-	    },
-	    "`N_NATIONKEY`" : {
-	      "name" : [ "N_NATIONKEY" ],
-	      "primitiveType" : "INT64",
-	      "originalType" : null,
-	      "precision" : 0,
-	      "scale" : 0,
-	      "repetitionLevel" : 0,
-	      "definitionLevel" : 0
-	    },
-	    "`R_REGIONKEY`" : {
-	      "name" : [ "R_REGIONKEY" ],
-	      "primitiveType" : "INT64",
-	      "originalType" : null,
-	      "precision" : 0,
-	      "scale" : 0,
-	      "repetitionLevel" : 0,
-	      "definitionLevel" : 0
-	    },
-	    "`R_COMMENT`" : {
-	      "name" : [ "R_COMMENT" ],
-	      "primitiveType" : "BINARY",
-	      "originalType" : "UTF8",
-	      "precision" : 0,
-	      "scale" : 0,
-	      "repetitionLevel" : 0,
-	      "definitionLevel" : 0
-	    },
-	    "`N_REGIONKEY`" : {
-	      "name" : [ "N_REGIONKEY" ],
-	      "primitiveType" : "INT64",
-	      "originalType" : null,
-	      "precision" : 0,
-	      "scale" : 0,
-	      "repetitionLevel" : 0,
-	      "definitionLevel" : 0
-	    },
-	    "`R_NAME`" : {
-	      "name" : [ "R_NAME" ],
-	      "primitiveType" : "BINARY",
-	      "originalType" : "UTF8",
-	      "precision" : 0,
-	      "scale" : 0,
-	      "repetitionLevel" : 0,
-	      "definitionLevel" : 0
-	    },
-	    "`N_NAME`" : {
-	      "name" : [ "N_NAME" ],
-	      "primitiveType" : "BINARY",
-	      "originalType" : "UTF8",
-	      "precision" : 0,
-	      "scale" : 0,
-	      "repetitionLevel" : 0,
-	      "definitionLevel" : 0
-	    }
-	  },
 	  "files" : [ {
-	    "path" : "dir1/region.parquet",
-	    "length" : 455,
-	    "rowGroups" : [ {
-	      "start" : 4,
-	      "length" : 250,
-	      "rowCount" : 5,
-	      "hostAffinity" : {
-	        "localhost" : 1.0
-	      },
-	      "columns" : [ ]
-	    } ]
-	  }, {
-	    "path" : "nation.parquet",
+	    "path" : "parquet/test/nation.parquet",
 	    "length" : 1210,
 	    "rowGroups" : [ {
 	      "start" : 4,
@@ -211,72 +164,130 @@ The following sections compare the content of the metadata cache file in  the `p
 	      "hostAffinity" : {
 	        "localhost" : 1.0
 	      },
-	      "columns" : [ ]
+	      "columns" : [ {
+	        "name" : [ "N_NATIONKEY" ],
+	        "nulls" : -1
+	      }, {
+	        "name" : [ "N_NAME" ],
+	        "nulls" : -1
+	      }, {
+	        "name" : [ "N_REGIONKEY" ],
+	        "nulls" : -1
+	      }, {
+	        "name" : [ "N_COMMENT" ],
+	        "nulls" : -1
+	      } ]
 	    } ]
-	  } ],
-	  "directories" : [ "dir1" ],
-	  "drillVersion" : "1.16.0-SNAPSHOT"  
+	  }, {
+	    "path" : "parquet/nation.parquet",
+	    "length" : 1210,
+	    "rowGroups" : [ {
+	      "start" : 4,
+	      "length" : 944,
+	      "rowCount" : 25,
+	      "hostAffinity" : {
+	        "localhost" : 1.0
+	      },
+	      "columns" : [ {
+	        "name" : [ "N_NATIONKEY" ],
+	        "nulls" : -1
+	      }, {
+	        "name" : [ "N_NAME" ],
+	        "nulls" : -1
+	      }, {
+	        "name" : [ "N_REGIONKEY" ],
+	        "nulls" : -1
+	      }, {
+	        "name" : [ "N_COMMENT" ],
+	        "nulls" : -1
+	      } ]
+	    } ]
+	  } ]
 
-**Content of the directory named `dir1` that contains the `region.parquet` file and no subdirectories.**  
 
-	[root@doc23 dir1]# cat .drill.parquet_metadata
+Looking at the `.drill.parquet_summary_metadata.v4` file in the `parquet1` directory, you can see information about each of the columns in the files and the list of subdirectories and interesting columns (useful when indicating columns in the REFRESH TABLE METADATA command):  
+
+	[root@doc23 parquet1]# cat .drill.parquet_summary_metadata.v4
 	{
-	  "metadata_version" : "3.3",
 	  "columnTypeInfo" : {
-	   	"`R_REGIONKEY`" : {
-	   	"name" : [ "R_REGIONKEY" ],
-	   	"primitiveType" : "INT64",
-	   	"originalType" : null,
-	   	"precision" : 0,
-	   	"scale" : 0,
-	   	"repetitionLevel" : 0,
-	   	"definitionLevel" : 0
-	   	},
-	   	"`R_COMMENT`" : {
-	   	"name" : [ "R_COMMENT" ],
-	   	"primitiveType" : "BINARY",
-	   	"originalType" : "UTF8",
-	   	"precision" : 0,
-	   	"scale" : 0,
-	   	"repetitionLevel" : 0,
-	   	"definitionLevel" : 0
-	   	},
-	   	"`R_NAME`" : {
-	   	"name" : [ "R_NAME" ],
-	   	"primitiveType" : "BINARY",
+	    "`N_COMMENT`" : {
+	      "name" : [ "N_COMMENT" ],
+	      "primitiveType" : "BINARY",
 	      "originalType" : "UTF8",
-	   	"precision" : 0,
-	   	"scale" : 0,
-	   	"repetitionLevel" : 0,
-	   	"definitionLevel" : 0
-	   	}
+	      "precision" : 0,
+	      "scale" : 0,
+	      "repetitionLevel" : 0,
+	      "definitionLevel" : 0,
+	      "totalNullCount" : -1,
+	      "isInteresting" : true
+	    },
+	    "`N_NATIONKEY`" : {
+	      "name" : [ "N_NATIONKEY" ],
+	      "primitiveType" : "INT64",
+	      "originalType" : null,
+	      "precision" : 0,
+	      "scale" : 0,
+	      "repetitionLevel" : 0,
+	      "definitionLevel" : 0,
+	      "totalNullCount" : -1,
+	      "isInteresting" : true
+	    },
+	    "`N_REGIONKEY`" : {
+	      "name" : [ "N_REGIONKEY" ],
+	      "primitiveType" : "INT64",
+	      "originalType" : null,
+	      "precision" : 0,
+	      "scale" : 0,
+	      "repetitionLevel" : 0,
+	      "definitionLevel" : 0,
+	      "totalNullCount" : -1,
+	      "isInteresting" : true
+	    },
+	    "`N_NAME`" : {
+	      "name" : [ "N_NAME" ],
+	      "primitiveType" : "BINARY",
+	      "originalType" : "UTF8",
+	      "precision" : 0,
+	      "scale" : 0,
+	      "repetitionLevel" : 0,
+	      "definitionLevel" : 0,
+	      "totalNullCount" : -1,
+	      "isInteresting" : true
+	    }
 	  },
-	  "files" : [ {
-	   	"path" : "region.parquet",
-	   	"length" : 455,
-	   	"rowGroups" : [ {
-	   	"start" : 4,
-	   	"length" : 250,
-	   	"rowCount" : 5,
-	   	"hostAffinity" : {
-	   	"localhost" : 1.0
-	   	},
-	   	"columns" : [ ]
-	   	} ]
-	  } ],
-	  "directories" : [ ],
-	  "drillVersion" : "1.16.0-SNAPSHOT"
-	}  
+	  "directories" : [ "parquet/test", "parquet" ],
+	  "drillVersion" : "1.16.0-SNAPSHOT",
+	  "totalRowCount" : 50,
+	  "allColumnsInteresting" : true,
+	  "metadata_version" : "4"  
 
-### Verifying that the Planner is Using the Metadata Cache File 
+###Verifying that the Planner is Using the Metadata Cache or Summary Files
 
 When the planner uses metadata cache files, the query plan includes the `usedMetadataFile` flag. You can access the query plan in the Drill Web UI, by clicking on the query in the Profiles page, or by running the EXPLAIN PLAN FOR command, as shown:
 
-	EXPLAIN PLAN FOR SELECT * FROM parquet;  
- 
+	apache drill (dfs.samples)> explain plan for select * from parquet1;
+	+----------------------------------------------------------------------------------+----------------------------------------------------------------------------------+
+	|                                       text                                       |                                       json                                       |
+	+----------------------------------------------------------------------------------+----------------------------------------------------------------------------------+
 	| 00-00    Screen
 	00-01      Project(**=[$0])
-	00-02      Scan(table=[[dfs, samples, parquet]], groupscan=[ParquetGroupScan [entries=[ReadEntryWithPath [path=/home/parquet]], selectionRoot=/home/parquet, numFiles=1, numRowGroups=2, usedMetadataFile=true, cacheFileRoot=/home/parquet, columns=[`**`]]])
-	|... 
+	00-02        Scan(table=[[dfs, samples, parquet1]], groupscan=[ParquetGroupScan [entries=[ReadEntryWithPath [path=/tmp/parquet1]], selectionRoot=/tmp/parquet1, numFiles=1, numRowGroups=2, usedMetadataFile=true, cacheFileRoot=/tmp/parquet1, columns=[`**`]]])  
+	 |   
 
--->	
+When you run the EXPLAIN command with a COUNT() query, as shown, you can see that the query planner uses the summary cache file and avoids reading the larger metadata cache file. The query plan includes the `usedMetadataSummaryFile` flag.
+
+	apache drill (dfs.samples)> explain plan for select count(*) from parquet1;
+	+----------------------------------------------------------------------------------+----------------------------------------------------------------------------------+
+	|                                       text                                       |                                       json                                       |
+	+----------------------------------------------------------------------------------+----------------------------------------------------------------------------------+
+	| 00-00    Screen
+	00-01      Project(EXPR$0=[$0])
+	00-02        DirectScan(groupscan=[files = [file:/tmp/parquet1/.drill.parquet_summary_metadata.v4], numFiles = 1, usedMetadataSummaryFile = true, DynamicPojoRecordReader{records = [[50]]}])
+	 | 
+
+	
+	
+
+
+
+

@@ -1,10 +1,10 @@
 ---
 title: "CREATE OR REPLACE SCHEMA"
-date: 2019-04-25
+date: 2019-04-29
 parent: "SQL Commands"
 ---
 
-Starting in Drill 1.16, you can define a schema for text files using the CREATE OR REPLACE SCHEMA command. Running this command generates a hidden .drill.schema file in the table’s root directory. The .drill.schema file stores the schema definition in JSON format. Drill uses the schema file at runtime if the exec.storage.enable_v3_text_reader and store.table.use_schema_file options are enabled. Alternatively, you can create the schema file manually. When created manually, the file content must comply with the structure recognized by the Drill.  
+Starting in Drill 1.16, you can define a schema for text files using the CREATE OR REPLACE SCHEMA command. Running this command generates a hidden `.drill.schema` file in the table’s root directory. The `.drill.schema` file stores the schema definition in JSON format. Drill uses the schema file at runtime if the `exec.storage.enable_v3_text_reader` and `store.table.use_schema_file` options are enabled. Alternatively, you can create the schema file manually. If created manually, the file content must comply with the structure recognized by the Drill.  
 
 ##Syntax
 
@@ -187,7 +187,7 @@ Values are trimmed when converting to any type, except for varchar.
 ### Schema Mode (Column Order)
 The schema mode determines the ordering of columns returned for wildcard (*) queries. The mode is set through the `drill.strict` property. You can set this property to true (strict) or false (not strict). If you do not indicate the mode, the default is false (not strict).  
 
-**Not Strict (Default)**
+**Not Strict (Default)**  
 Columns defined in the schema are projected in the defined order. Columns not defined in the schema are appended to the defined columns, as shown:  
 
 	create or replace schema (id int, start_date date format 'yyyy-MM-dd') for table dfs.tmp.`text_table` properties ('drill.strict' = 'false');
@@ -210,7 +210,7 @@ Columns defined in the schema are projected in the defined order. Columns not de
  
 Note that the “name” column, which was not included in the schema was appended to the end of the table.
 
-**Strict**
+**Strict**  
 Setting the `drill.strict` property  to “true” changes the schema mode to strict, which means that the reader ignores any columns NOT included in the schema. The query only returns the columns defined in the schema, as shown:
  
 	create or replace schema (id int, start_date date format 'yyyy-MM-dd') for table dfs.tmp.`text_table` properties ('drill.strict' = 'true');
