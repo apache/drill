@@ -321,6 +321,10 @@ public class Metadata {
         Map<ColumnTypeMetadata_v4.Key, Long> totalNullCountMap = parquetFileAndRowCountMetadata.getTotalNullCountMap();
         for (ColumnTypeMetadata_v4.Key column: totalNullCountMap.keySet()) {
           ColumnTypeMetadata_v4 columnTypeMetadata_v4 = columnTypeInfoSet.get(column);
+          // If the column is not present in columnTypeInfoSet, get it from parquetTableMetadata
+          if (columnTypeMetadata_v4 == null) {
+            columnTypeMetadata_v4 = parquetTableMetadata.getColumnTypeInfoMap().get(column);
+          }
           // If the existing total null count or the null count of the child file is unknown(-1), update the total null count
           // as unknown
           if ( columnTypeMetadata_v4.totalNullCount < 0 || totalNullCountMap.get(column) < 0) {
