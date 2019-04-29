@@ -1385,4 +1385,21 @@ public class TestParquetMetadataCache extends PlanTestBase {
         .go();
   }
 
+  @Test
+  public void testRefreshSchemaChange() throws Exception {
+    String tableName = "orders_nation_ctas";
+    test("use dfs");
+
+    test("create table `%s/t1` as select * from cp.`tpch/orders.parquet`", tableName);
+    test("create table `%s/t2` as select * from cp.`tpch/nation.parquet`", tableName);
+    String query = String.format("refresh table metadata %s", tableName);
+
+    testBuilder()
+            .sqlQuery(query)
+            .unOrdered()
+            .baselineColumns("ok", "summary")
+            .baselineValues(true, "Successfully updated metadata for table orders_nation_ctas.")
+            .go();
+    checkForMetadataFile(tableName);
+  }
 }
