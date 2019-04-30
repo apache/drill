@@ -26,7 +26,7 @@ import java.util.List;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexLiteral;
-import com.clearspring.analytics.stream.quantile.TDigest;
+import com.tdunning.math.stats.MergingDigest;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
@@ -255,7 +255,7 @@ public class NumericEquiDepthHistogram implements Histogram {
   public static NumericEquiDepthHistogram buildFromTDigest(final byte[] tdigest_array,
                                                            final int numBuckets,
                                                            final long nonNullCount) {
-    TDigest tdigest = TDigest.fromBytes(java.nio.ByteBuffer.wrap(tdigest_array));
+    MergingDigest tdigest = MergingDigest.fromBytes(java.nio.ByteBuffer.wrap(tdigest_array));
 
     NumericEquiDepthHistogram histogram = new NumericEquiDepthHistogram(numBuckets);
 
