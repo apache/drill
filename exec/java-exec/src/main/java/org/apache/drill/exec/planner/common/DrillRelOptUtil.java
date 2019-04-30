@@ -678,10 +678,16 @@ public abstract class DrillRelOptUtil {
                 super.visitCall(call);
               } else {
                 if (call.getKind() == SqlKind.EQUALS) {
-                  int leftFieldCount = join.getLeft().getRowType().getFieldCount();
-                  int rightFieldCount = join.getRight().getRowType().getFieldCount();
                   RexNode leftComparand = call.operands.get(0);
                   RexNode rightComparand = call.operands.get(1);
+                  // If a join condition predicate has something more complicated than a RexInputRef
+                  // we bail out!
+                  if (!(leftComparand instanceof RexInputRef && rightComparand instanceof RexInputRef)) {
+                    joinConditions.clear();
+                    throw new Util.FoundOne(call);
+                  }
+                  int leftFieldCount = join.getLeft().getRowType().getFieldCount();
+                  int rightFieldCount = join.getRight().getRowType().getFieldCount();
                   RexInputRef leftFieldAccess = (RexInputRef) leftComparand;
                   RexInputRef rightFieldAccess = (RexInputRef) rightComparand;
                   if (leftFieldAccess.getIndex() >= leftFieldCount + rightFieldCount ||

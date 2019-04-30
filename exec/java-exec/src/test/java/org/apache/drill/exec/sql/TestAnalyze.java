@@ -290,7 +290,7 @@ public class TestAnalyze extends BaseTestQuery {
     query = " select emp.employee_id from dfs.tmp.employeeUseStat emp join dfs.tmp.departmentUseStat dept"
             + " on emp.department_id = dept.department_id "
             + " group by emp.employee_id";
-    String[] expectedPlan8 = {"HashAgg\\(group=\\[\\{0\\}\\]\\).*rowcount = 115.49475630811243,.*",
+    String[] expectedPlan8 = {"HashAgg\\(group=\\[\\{0\\}\\]\\).*rowcount = 730.0992454469841,.*",
             "HashJoin\\(condition.*\\).*rowcount = 1155.0,.*",
             "Scan.*columns=\\[`department_id`, `employee_id`\\].*rowcount = 1155.0.*",
             "Scan.*columns=\\[`department_id`\\].*rowcount = 12.0.*"};

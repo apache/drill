@@ -55,8 +55,12 @@ import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.metastore.ColumnStatistics;
 import org.apache.drill.metastore.ColumnStatisticsKind;
 import org.apache.drill.metastore.TableMetadata;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DrillRelMdDistinctRowCount extends RelMdDistinctRowCount{
+  private static final Logger logger = LoggerFactory.getLogger(DrillRelMdDistinctRowCount.class);
+
   private static final DrillRelMdDistinctRowCount INSTANCE =
       new DrillRelMdDistinctRowCount();
 
@@ -142,10 +146,7 @@ public class DrillRelMdDistinctRowCount extends RelMdDistinctRowCount{
     if (groupKey.length() == 0) {
       return selectivity * rowCount;
     }
-    /* If predicate is present, determine its selectivity to estimate filtered rows. Thereafter,
-     * compute the number of distinct rows
-     */
-    selectivity = mq.getSelectivity(scan, predicate);
+
     TableMetadata tableMetadata;
     try {
       tableMetadata = table.getGroupScan().getTableMetadata();
@@ -154,38 +155,43 @@ public class DrillRelMdDistinctRowCount extends RelMdDistinctRowCount{
       return scan.estimateRowCount(mq) * 0.1;
     }
 
-    double s = 1.0;
-    boolean allCols = true;
+    double estRowCnt = 1.0;
+    String colName = "";
+    boolean allColsHaveNDV = true;
     for (int i = 0; i < groupKey.length(); i++) {
-      final String colName = type.getFieldNames().get(i);
-      // Skip NDV, if not available
+      colName = type.getFieldNames().get(i);
       if (!groupKey.get(i)) {
-        allCols = false;
-        break;
+        continue;
       }
       ColumnStatistics columnStatistics = tableMetadata != null ?
           tableMetadata.getColumnStatistics(SchemaPath.getSimplePath(colName)) : null;
       Double ndv = columnStatistics != null ? (Double) columnStatistics.getStatistic(ColumnStatisticsKind.NDV) : null;
+      // Skip NDV, if not available
       if (ndv == null) {
-        continue;
+        allColsHaveNDV = false;
+        break;
       }
-      s *= ndv;
+      estRowCnt *= ndv;
       selectivity = getPredSelectivityContainingInputRef(predicate, i, mq, scan);
       /* If predicate is on group-by column, scale down the NDV by selectivity. Consider the query
        * select a, b from t where a = 10 group by a, b. Here, NDV(a) will be scaled down by SEL(a)
        * whereas NDV(b) will not.
        */
       if (selectivity > 0) {
-        s *= selectivity;
+        estRowCnt *= selectivity;
       }
     }
-    s = Math.min(s, rowCount);
-    if (!allCols) {
+    estRowCnt = Math.min(estRowCnt, rowCount);
+    if (!allColsHaveNDV) {
+      if (logger.isDebugEnabled()) {
+        logger.debug(String.format("NDV not available for %s(%s). Using default rowcount for group-by %s",
+            (tableMetadata != null ? tableMetadata.getTableName() : ""), colName, groupKey.toString()));
+      }
       // Could not get any NDV estimate from stats - probably stats not present for GBY cols. So Guess!
       return scan.estimateRowCount(mq) * 0.1;
     } else {
     /* rowCount maybe less than NDV(different source), sanity check OR NDV not used at all */
-      return s;
+      return estRowCnt;
     }
   }
 
@@ -239,18 +245,28 @@ public class DrillRelMdDistinctRowCount extends RelMdDistinctRowCount{
       if (groupKey.get(idx)) {
         // GBY key is present in some filter - now try options A) and B) as described above
         double ndvSGby = Double.MAX_VALUE;
+        Double ndv;
         boolean presentInFilter = false;
         ImmutableBitSet sGby = getSingleGbyKey(groupKey, idx);
         if (sGby != null) {
+          // If we see any NULL ndv i.e. cant process ..we bail out!
           for (ImmutableBitSet jFilter : joinFiltersSet) {
             if (jFilter.contains(sGby)) {
               presentInFilter = true;
               // Found join condition containing this GBY key. Pick min NDV across all columns in this join
               for (int fidx : jFilter) {
                 if (fidx < left.getRowType().getFieldCount()) {
-                  ndvSGby = Math.min(ndvSGby, mq.getDistinctRowCount(left, ImmutableBitSet.of(fidx), leftPred));
+                  ndv = mq.getDistinctRowCount(left, ImmutableBitSet.of(fidx), leftPred);
+                  if (ndv == null) {
+                    return super.getDistinctRowCount(joinRel, mq, groupKey, predicate);
+                  }
+                  ndvSGby = Math.min(ndvSGby, ndv);
                 } else {
-                  ndvSGby = Math.min(ndvSGby, mq.getDistinctRowCount(right, ImmutableBitSet.of(fidx-left.getRowType().getFieldCount()), rightPred));
+                  ndv = mq.getDistinctRowCount(right, ImmutableBitSet.of(fidx-left.getRowType().getFieldCount()), rightPred);
+                  if (ndv == null) {
+                    return super.getDistinctRowCount(joinRel, mq, groupKey, predicate);
+                  }
+                  ndvSGby = Math.min(ndvSGby, ndv);
                 }
               }
               break;
@@ -260,9 +276,17 @@ public class DrillRelMdDistinctRowCount extends RelMdDistinctRowCount{
           if (!presentInFilter) {
             for (int sidx : sGby) {
               if (sidx < left.getRowType().getFieldCount()) {
-                ndvSGby = mq.getDistinctRowCount(left, ImmutableBitSet.of(sidx), leftPred);
+                ndv = mq.getDistinctRowCount(left, ImmutableBitSet.of(sidx), leftPred);
+                if (ndv == null) {
+                  return super.getDistinctRowCount(joinRel, mq, groupKey, predicate);
+                }
+                ndvSGby = ndv;
               } else {
-                ndvSGby = mq.getDistinctRowCount(right, ImmutableBitSet.of(sidx-left.getRowType().getFieldCount()), rightPred);
+                ndv = mq.getDistinctRowCount(right, ImmutableBitSet.of(sidx-left.getRowType().getFieldCount()), rightPred);
+                if (ndv == null) {
+                  return super.getDistinctRowCount(joinRel, mq, groupKey, predicate);
+                }
+                ndvSGby = ndv;
               }
             }
           }
