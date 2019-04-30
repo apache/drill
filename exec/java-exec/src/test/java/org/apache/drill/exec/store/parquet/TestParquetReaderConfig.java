@@ -45,7 +45,7 @@ public class TestParquetReaderConfig {
 
     // change the default: set autoCorrectCorruptedDates to false
     // keep the default: set enableStringsSignedMinMax to false
-    readerConfig = new ParquetReaderConfig(false, false, false, false, false);
+    readerConfig = new ParquetReaderConfig(false, false, false, false, false, 0L);
 
     value = mapper.writeValueAsString(readerConfig);
     assertEquals("{\"autoCorrectCorruptedDates\":false}", value);
@@ -79,12 +79,12 @@ public class TestParquetReaderConfig {
   @Test
   public void testReadOptions() {
     // set enableStringsSignedMinMax to true
-    ParquetReaderConfig readerConfig = new ParquetReaderConfig(false, false, false, true, true);
+    ParquetReaderConfig readerConfig = new ParquetReaderConfig(false, false, false, true, true, 12345L);
     ParquetReadOptions readOptions = readerConfig.toReadOptions();
     assertTrue(readOptions.useSignedStringMinMax());
 
     // set enableStringsSignedMinMax to false
-    readerConfig = new ParquetReaderConfig(false, false, false, true, false);
+    readerConfig = new ParquetReaderConfig(false, false, false, true, false, 12345L);
     readOptions = readerConfig.toReadOptions();
     assertFalse(readOptions.useSignedStringMinMax());
   }

@@ -440,8 +440,7 @@ public class Metadata {
   private List<ParquetFileAndRowCountMetadata> getParquetFileMetadata_v4(ParquetTableMetadata_v4 parquetTableMetadata_v4, Map<FileStatus, FileSystem> fileStatusMap, boolean allColumnsInteresting, Set<String> columnSet) throws IOException {
       return TimedCallable.run("Fetch parquet metadata", logger,
         Collectors.toList(fileStatusMap,
-            (fileStatus, fileSystem) -> new MetadataGatherer(parquetTableMetadata_v4, fileStatus, fileSystem, allColumnsInteresting, columnSet)),
-        16
+            (fileStatus, fileSystem) -> new MetadataGatherer(parquetTableMetadata_v4, fileStatus, fileSystem, allColumnsInteresting, columnSet)), 16, readerConfig.timeoutPerRunnableInMsec()
     );
   }
 

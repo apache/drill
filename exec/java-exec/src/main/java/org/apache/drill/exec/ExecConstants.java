@@ -354,6 +354,10 @@ public final class ExecConstants {
       "enables statistics usage for varchar and decimal data types. Default is unset, i.e. empty string. " +
       "Allowed values: 'true', 'false', '' (empty string)."), "true", "false", "");
 
+  public static final String PARQUET_REFRESH_TIMEOUT = "store.parquet.refresh_timeout_per_runnable_in_msec";
+  public static final LongValidator PARQUET_REFRESH_TIMEOUT_VALIDATOR = new LongValidator(PARQUET_REFRESH_TIMEOUT,
+    new OptionDescription("Sets a timeout (in msec) for REFRESH TABLE METADATA processing of a single subdirectory"));
+
   public static final String PARQUET_PAGEREADER_ASYNC = "store.parquet.reader.pagereader.async";
   public static final OptionValidator PARQUET_PAGEREADER_ASYNC_VALIDATOR = new BooleanValidator(PARQUET_PAGEREADER_ASYNC,
       new OptionDescription("Enable the asynchronous page reader. This pipelines the reading of data from disk for high performance."));

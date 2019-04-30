@@ -166,14 +166,13 @@ public abstract class TimedCallable<V> implements Callable<V> {
       throw e;
     } finally {
       long time = System.nanoTime() - start;
-      if (logger.isWarnEnabled()) {
-        long timeMillis = TimeUnit.MILLISECONDS.convert(time, TimeUnit.NANOSECONDS);
-        if (timeMillis > TIMEOUT_PER_RUNNABLE_IN_MSECS) {
-          logger.warn("Task '{}' execution time {} ms exceeds timeout {} ms.", this, timeMillis, TIMEOUT_PER_RUNNABLE_IN_MSECS);
-        } else {
-          logger.debug("Task '{}' execution time is {} ms", this, timeMillis);
-        }
+      long timeMillis = TimeUnit.MILLISECONDS.convert(time, TimeUnit.NANOSECONDS);
+      if (timeMillis > TIMEOUT_PER_RUNNABLE_IN_MSECS) {
+        logger.warn("Task '{}' execution time {} ms exceeds timeout {} ms.", this, timeMillis, TIMEOUT_PER_RUNNABLE_IN_MSECS);
+      } else {
+        logger.debug("Task '{}' execution time is {} ms", this, timeMillis);
       }
+
       executionTime = time;
     }
   }
@@ -188,6 +187,23 @@ public abstract class TimedCallable<V> implements Callable<V> {
     return unit.convert(executionTime, TimeUnit.NANOSECONDS);
   }
 
+  /**
+   * Execute the list of runnables with the given parallelization.  At end, return values and report completion time
+   * stats to provided logger. Each runnable is allowed a certain timeout. If the timeout exceeds, existing/pending
+   * tasks will be cancelled and a {@link UserException} is thrown.
+   * @param activity Name of activity for reporting in logger.
+   * @param logger The logger to use to report results.
+   * @param tasks List of callable that should be executed and timed.  If this list has one item, task will be
+   *                  completed in-thread. Each callable must handle {@link InterruptedException}s.
+   * @param parallelism  The number of threads that should be run to complete this task.
+   * @param timeout if bigger than zero, set the timeout per runnable (in msec)
+   * @return The list of outcome objects.
+   * @throws IOException All exceptions are coerced to IOException since this was build for storage system tasks initially.
+   */
+  public static <V> List<V> run(final String activity, final Logger logger, final List<TimedCallable<V>> tasks, int parallelism, long timeout) throws IOException {
+    TIMEOUT_PER_RUNNABLE_IN_MSECS = timeout;
+    return run(activity, logger, tasks, parallelism);
+  }
 
   /**
    * Execute the list of runnables with the given parallelization.  At end, return values and report completion time

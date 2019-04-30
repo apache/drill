@@ -50,6 +50,7 @@ public class ParquetReaderConfig {
   private boolean enableTimeReadCounter = false;
   private boolean autoCorrectCorruptedDates = true;
   private boolean enableStringsSignedMinMax = false;
+  private long timeoutPerRunnableInMsec = 15_000;
 
   public static ParquetReaderConfig.Builder builder() {
     return new ParquetReaderConfig.Builder();
@@ -64,12 +65,15 @@ public class ParquetReaderConfig {
                              @JsonProperty("enableBytesTotalCounter") Boolean enableBytesTotalCounter,
                              @JsonProperty("enableTimeReadCounter") Boolean enableTimeReadCounter,
                              @JsonProperty("autoCorrectCorruptedDates") Boolean autoCorrectCorruptedDates,
-                             @JsonProperty("enableStringsSignedMinMax") Boolean enableStringsSignedMinMax) {
+                             @JsonProperty("enableStringsSignedMinMax") Boolean enableStringsSignedMinMax,
+                             @JsonProperty("timeoutPerRunnableInMsec") Long timeoutPerRunnableInMsec) {
     this.enableBytesReadCounter = enableBytesReadCounter == null ? this.enableBytesReadCounter : enableBytesReadCounter;
     this.enableBytesTotalCounter = enableBytesTotalCounter == null ? this.enableBytesTotalCounter : enableBytesTotalCounter;
     this.enableTimeReadCounter = enableTimeReadCounter == null ? this.enableTimeReadCounter : enableTimeReadCounter;
     this.autoCorrectCorruptedDates = autoCorrectCorruptedDates == null ? this.autoCorrectCorruptedDates : autoCorrectCorruptedDates;
     this.enableStringsSignedMinMax = enableStringsSignedMinMax == null ? this.enableStringsSignedMinMax : enableStringsSignedMinMax;
+    this.timeoutPerRunnableInMsec = timeoutPerRunnableInMsec == null || Long.valueOf(timeoutPerRunnableInMsec) <= 0 ? // zero means: use default
+      this.timeoutPerRunnableInMsec : timeoutPerRunnableInMsec;
   }
 
   private ParquetReaderConfig() { }
@@ -99,6 +103,9 @@ public class ParquetReaderConfig {
     return enableStringsSignedMinMax;
   }
 
+  @JsonProperty("timeoutPerRunnableInMsec")
+  public long timeoutPerRunnableInMsec() { return timeoutPerRunnableInMsec; }
+
   public ParquetReadOptions toReadOptions() {
     return ParquetReadOptions.builder()
       .useSignedStringMinMax(enableStringsSignedMinMax)
@@ -119,7 +126,8 @@ public class ParquetReaderConfig {
       enableBytesTotalCounter,
       enableTimeReadCounter,
       autoCorrectCorruptedDates,
-      enableStringsSignedMinMax);
+      enableStringsSignedMinMax,
+      timeoutPerRunnableInMsec);
   }
 
   @Override
@@ -135,7 +143,8 @@ public class ParquetReaderConfig {
       && enableBytesTotalCounter == that.enableBytesTotalCounter
       && enableTimeReadCounter == that.enableTimeReadCounter
       && autoCorrectCorruptedDates == that.autoCorrectCorruptedDates
-      && enableStringsSignedMinMax == that.enableStringsSignedMinMax;
+      && enableStringsSignedMinMax == that.enableStringsSignedMinMax
+      && timeoutPerRunnableInMsec == that.timeoutPerRunnableInMsec;
   }
 
   @Override
@@ -146,6 +155,7 @@ public class ParquetReaderConfig {
       + ", enableTimeReadCounter=" + enableTimeReadCounter
       + ", autoCorrectCorruptedDates=" + autoCorrectCorruptedDates
       + ", enableStringsSignedMinMax=" + enableStringsSignedMinMax
+      + ", timeoutPerRunnableInMsec=" + timeoutPerRunnableInMsec
       + '}';
   }
 
@@ -188,10 +198,12 @@ public class ParquetReaderConfig {
 
       // last assign values from session options, session options have higher priority than other configurations
       if (options != null) {
-        String option = options.getOption(ExecConstants.PARQUET_READER_STRINGS_SIGNED_MIN_MAX_VALIDATOR);
-        if (!option.isEmpty()) {
-          readerConfig.enableStringsSignedMinMax = Boolean.valueOf(option);
+        String optionSignedMinMax = options.getOption(ExecConstants.PARQUET_READER_STRINGS_SIGNED_MIN_MAX_VALIDATOR);
+        if (!optionSignedMinMax.isEmpty()) {
+          readerConfig.enableStringsSignedMinMax = Boolean.valueOf(optionSignedMinMax);
         }
+        Long optionTimeout = options.getOption(ExecConstants.PARQUET_REFRESH_TIMEOUT_VALIDATOR);
+        readerConfig.timeoutPerRunnableInMsec = Long.valueOf(optionTimeout);
       }
 
       return readerConfig;
