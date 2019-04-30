@@ -1,6 +1,6 @@
 ---
 title: "REFRESH TABLE METADATA"
-date: 2019-04-29
+date: 2019-04-30
 parent: "SQL Commands"
 ---
 Run the REFRESH TABLE METADATA command on Parquet tables and directories to generate a metadata cache file. REFRESH TABLE METADATA collects metadata from the footers of Parquet files and writes the metadata to a metadata file (`.drill.parquet_file_metadata.v4`) and a summary file (`.drill.parquet_summary_metadata.v4`). The planner uses the metadata cache file to prune extraneous data during the query planning phase. Run the REFRESH TABLE METADATA command if planning time is a significant percentage of the total elapsed time of the query.   
@@ -34,8 +34,9 @@ Run the [EXPLAIN]({{site.baseurl}}/docs/explain/) command to determine the query
 ## Usage Notes  
 
 ### Metadata Storage  
-- Drill traverses directories for Parquet files and gathers the metadata from the footer of the files. Drill stores the collected metadata in a metadata cache file, `.drill.parquet_file_metadata.v4`, a summary file, `.drill.parquet_summary_metadata.v4`, and a directories file, `.drill.parquet_metadata_directories` file at each directory level.     
-- The metadata cache file stores metadata for files in that directory, as well as the metadata for the files in the subdirectories.  
+-  Drill traverses directories for Parquet files and gathers the metadata from the footer of the files. Drill stores the collected metadata in a metadata cache file, `.drill.parquet_file_metadata.v4`, a summary file, `.drill.parquet_summary_metadata.v4`, and a directories file, `.drill.parquet_metadata_directories` file at each directory level.  
+-  Introduced in Drill 1.16, the summary file, `.drill.parquet_summary_metadata.v4`, optimizes planning for certain queries, like COUNT(*) queries, such that the planner can use the summary file instead of the larger metadata cache file.       
+- The metadata cache file stores metadata for files in the current directory, as well as the metadata for the files in subdirectories.  
 - For each row group in a Parquet file, the metadata cache file stores the column names in the row group and the column statistics, such as the min/max values and null count.  
 - If the Parquet data is updated, for example data is added to a file, Drill automatically  refreshes the Parquet metadata when you issue the next query against the Parquet data.  
 
