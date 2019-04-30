@@ -67,13 +67,13 @@ public class TDigestFunctions {
     public void setup() {
       work = new ObjectHolder();
       compression.value = (int) options.getLong(org.apache.drill.exec.ExecConstants.TDIGEST_COMPRESSION);
-      work.obj = new com.clearspring.analytics.stream.quantile.TDigest(compression.value);
+      work.obj = new com.tdunning.math.stats.MergingDigest(compression.value);
     }
 
     @Override
     public void add() {
       if (work.obj != null) {
-        com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
+        com.tdunning.math.stats.MergingDigest tdigest = (com.tdunning.math.stats.MergingDigest) work.obj;
         tdigest.add(in.value);
       }
     }
@@ -81,7 +81,7 @@ public class TDigestFunctions {
     @Override
     public void output() {
       if (work.obj != null) {
-        com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
+        com.tdunning.math.stats.MergingDigest tdigest = (com.tdunning.math.stats.MergingDigest) work.obj;
         try {
           if (tdigest.size() > 0) {
             int size = tdigest.smallByteSize();
@@ -105,7 +105,7 @@ public class TDigestFunctions {
 
     @Override
     public void reset() {
-      work.obj = new com.clearspring.analytics.stream.quantile.TDigest(compression.value);
+      work.obj = new com.tdunning.math.stats.MergingDigest(compression.value);
     }
   }
 
@@ -122,13 +122,13 @@ public class TDigestFunctions {
     public void setup() {
       work = new ObjectHolder();
       compression.value = (int) options.getLong(org.apache.drill.exec.ExecConstants.TDIGEST_COMPRESSION);
-      work.obj = new com.clearspring.analytics.stream.quantile.TDigest(compression.value);
+      work.obj = new com.tdunning.math.stats.MergingDigest(compression.value);
     }
 
     @Override
     public void add() {
       if (work.obj != null) {
-        com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
+        com.tdunning.math.stats.MergingDigest tdigest = (com.tdunning.math.stats.MergingDigest) work.obj;
         if (in.isSet == 1) {
           tdigest.add(in.value);
         } else {
@@ -140,7 +140,7 @@ public class TDigestFunctions {
     @Override
     public void output() {
       if (work.obj != null) {
-        com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
+        com.tdunning.math.stats.MergingDigest tdigest = (com.tdunning.math.stats.MergingDigest) work.obj;
         try {
           if (tdigest.size() > 0) {
             int size = tdigest.smallByteSize();
@@ -164,7 +164,7 @@ public class TDigestFunctions {
 
     @Override
     public void reset() {
-      work.obj = new com.clearspring.analytics.stream.quantile.TDigest(compression.value);
+      work.obj = new com.tdunning.math.stats.MergingDigest(compression.value);
     }
   }
 
@@ -181,13 +181,13 @@ public class TDigestFunctions {
     public void setup() {
       work = new ObjectHolder();
       compression.value = (int) options.getLong(org.apache.drill.exec.ExecConstants.TDIGEST_COMPRESSION);
-      work.obj = new com.clearspring.analytics.stream.quantile.TDigest(compression.value);
+      work.obj = new com.tdunning.math.stats.MergingDigest(compression.value);
     }
 
     @Override
     public void add() {
       if (work.obj != null) {
-        com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
+        com.tdunning.math.stats.MergingDigest tdigest = (com.tdunning.math.stats.MergingDigest) work.obj;
         tdigest.add(in.value);
       }
     }
@@ -195,7 +195,7 @@ public class TDigestFunctions {
     @Override
     public void output() {
       if (work.obj != null) {
-        com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
+        com.tdunning.math.stats.MergingDigest tdigest = (com.tdunning.math.stats.MergingDigest) work.obj;
         try {
           if (tdigest.size() > 0) {
             int size = tdigest.smallByteSize();
@@ -219,7 +219,7 @@ public class TDigestFunctions {
 
     @Override
     public void reset() {
-      work.obj = new com.clearspring.analytics.stream.quantile.TDigest(compression.value);
+      work.obj = new com.tdunning.math.stats.MergingDigest(compression.value);
     }
   }
 
@@ -236,13 +236,13 @@ public class TDigestFunctions {
     public void setup() {
       work = new ObjectHolder();
       compression.value = (int) options.getLong(org.apache.drill.exec.ExecConstants.TDIGEST_COMPRESSION);
-      work.obj = new com.clearspring.analytics.stream.quantile.TDigest(compression.value);
+      work.obj = new com.tdunning.math.stats.MergingDigest(compression.value);
     }
 
     @Override
     public void add() {
       if (work.obj != null) {
-        com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
+        com.tdunning.math.stats.MergingDigest tdigest = (com.tdunning.math.stats.MergingDigest) work.obj;
         if (in.isSet == 1) {
           tdigest.add(in.value);
         } else {
@@ -254,7 +254,7 @@ public class TDigestFunctions {
     @Override
     public void output() {
       if (work.obj != null) {
-        com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
+        com.tdunning.math.stats.MergingDigest tdigest = (com.tdunning.math.stats.MergingDigest) work.obj;
         try {
           if (tdigest.size() > 0) {
             int size = tdigest.smallByteSize();
@@ -278,7 +278,7 @@ public class TDigestFunctions {
 
     @Override
     public void reset() {
-      work.obj = new com.clearspring.analytics.stream.quantile.TDigest(compression.value);
+      work.obj = new com.tdunning.math.stats.MergingDigest(compression.value);
     }
   }
 
@@ -295,13 +295,13 @@ public class TDigestFunctions {
     public void setup() {
       work = new ObjectHolder();
       compression.value = (int) options.getLong(org.apache.drill.exec.ExecConstants.TDIGEST_COMPRESSION);
-      work.obj = new com.clearspring.analytics.stream.quantile.TDigest(compression.value);
+      work.obj = new com.tdunning.math.stats.MergingDigest(compression.value);
     }
 
     @Override
     public void add() {
       if (work.obj != null) {
-        com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
+        com.tdunning.math.stats.MergingDigest tdigest = (com.tdunning.math.stats.MergingDigest) work.obj;
         tdigest.add(in.value);
       }
     }
@@ -309,7 +309,7 @@ public class TDigestFunctions {
     @Override
     public void output() {
       if (work.obj != null) {
-        com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
+        com.tdunning.math.stats.MergingDigest tdigest = (com.tdunning.math.stats.MergingDigest) work.obj;
         try {
           if (tdigest.size() > 0) {
             int size = tdigest.smallByteSize();
@@ -333,7 +333,7 @@ public class TDigestFunctions {
 
     @Override
     public void reset() {
-      work.obj = new com.clearspring.analytics.stream.quantile.TDigest(compression.value);
+      work.obj = new com.tdunning.math.stats.MergingDigest(compression.value);
     }
   }
 
@@ -350,13 +350,13 @@ public class TDigestFunctions {
     public void setup() {
       work = new ObjectHolder();
       compression.value = (int) options.getLong(org.apache.drill.exec.ExecConstants.TDIGEST_COMPRESSION);
-      work.obj = new com.clearspring.analytics.stream.quantile.TDigest(compression.value);
+      work.obj = new com.tdunning.math.stats.MergingDigest(compression.value);
     }
 
     @Override
     public void add() {
       if (work.obj != null) {
-        com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
+        com.tdunning.math.stats.MergingDigest tdigest = (com.tdunning.math.stats.MergingDigest) work.obj;
         if (in.isSet == 1) {
           tdigest.add(in.value);
         } else {
@@ -368,7 +368,7 @@ public class TDigestFunctions {
     @Override
     public void output() {
       if (work.obj != null) {
-        com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
+        com.tdunning.math.stats.MergingDigest tdigest = (com.tdunning.math.stats.MergingDigest) work.obj;
         try {
           if (tdigest.size() > 0) {
             int size = tdigest.smallByteSize();
@@ -392,7 +392,7 @@ public class TDigestFunctions {
 
     @Override
     public void reset() {
-      work.obj = new com.clearspring.analytics.stream.quantile.TDigest(compression.value);
+      work.obj = new com.tdunning.math.stats.MergingDigest(compression.value);
     }
   }
 
@@ -409,13 +409,13 @@ public class TDigestFunctions {
     public void setup() {
       work = new ObjectHolder();
       compression.value = (int) options.getLong(org.apache.drill.exec.ExecConstants.TDIGEST_COMPRESSION);
-      work.obj = new com.clearspring.analytics.stream.quantile.TDigest(compression.value);
+      work.obj = new com.tdunning.math.stats.MergingDigest(compression.value);
     }
 
     @Override
     public void add() {
       if (work.obj != null) {
-        com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
+        com.tdunning.math.stats.MergingDigest tdigest = (com.tdunning.math.stats.MergingDigest) work.obj;
         tdigest.add(in.value);
       }
     }
@@ -423,7 +423,7 @@ public class TDigestFunctions {
     @Override
     public void output() {
       if (work.obj != null) {
-        com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
+        com.tdunning.math.stats.MergingDigest tdigest = (com.tdunning.math.stats.MergingDigest) work.obj;
         try {
           if (tdigest.size() > 0) {
             int size = tdigest.smallByteSize();
@@ -447,7 +447,7 @@ public class TDigestFunctions {
 
     @Override
     public void reset() {
-      work.obj = new com.clearspring.analytics.stream.quantile.TDigest(compression.value);
+      work.obj = new com.tdunning.math.stats.MergingDigest(compression.value);
     }
   }
 
@@ -464,13 +464,13 @@ public class TDigestFunctions {
     public void setup() {
       work = new ObjectHolder();
       compression.value = (int) options.getLong(org.apache.drill.exec.ExecConstants.TDIGEST_COMPRESSION);
-      work.obj = new com.clearspring.analytics.stream.quantile.TDigest(compression.value);
+      work.obj = new com.tdunning.math.stats.MergingDigest(compression.value);
     }
 
     @Override
     public void add() {
       if (work.obj != null) {
-        com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
+        com.tdunning.math.stats.MergingDigest tdigest = (com.tdunning.math.stats.MergingDigest) work.obj;
         if (in.isSet == 1) {
           tdigest.add(in.value);
         } else {
@@ -482,7 +482,7 @@ public class TDigestFunctions {
     @Override
     public void output() {
       if (work.obj != null) {
-        com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
+        com.tdunning.math.stats.MergingDigest tdigest = (com.tdunning.math.stats.MergingDigest) work.obj;
         try {
           if (tdigest.size() > 0) {
             int size = tdigest.smallByteSize();
@@ -506,7 +506,7 @@ public class TDigestFunctions {
 
     @Override
     public void reset() {
-      work.obj = new com.clearspring.analytics.stream.quantile.TDigest(compression.value);
+      work.obj = new com.tdunning.math.stats.MergingDigest(compression.value);
     }
   }
 
@@ -523,13 +523,13 @@ public class TDigestFunctions {
     public void setup() {
       work = new ObjectHolder();
       compression.value = (int) options.getLong(org.apache.drill.exec.ExecConstants.TDIGEST_COMPRESSION);
-      work.obj = new com.clearspring.analytics.stream.quantile.TDigest(compression.value);
+      work.obj = new com.tdunning.math.stats.MergingDigest(compression.value);
     }
 
     @Override
     public void add() {
       if (work.obj != null) {
-        com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
+        com.tdunning.math.stats.MergingDigest tdigest = (com.tdunning.math.stats.MergingDigest) work.obj;
         tdigest.add(in.value);
       }
     }
@@ -537,7 +537,7 @@ public class TDigestFunctions {
     @Override
     public void output() {
       if (work.obj != null) {
-        com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
+        com.tdunning.math.stats.MergingDigest tdigest = (com.tdunning.math.stats.MergingDigest) work.obj;
         try {
           if (tdigest.size() > 0) {
             int size = tdigest.smallByteSize();
@@ -561,7 +561,7 @@ public class TDigestFunctions {
 
     @Override
     public void reset() {
-      work.obj = new com.clearspring.analytics.stream.quantile.TDigest(compression.value);
+      work.obj = new com.tdunning.math.stats.MergingDigest(compression.value);
     }
   }
 
@@ -578,13 +578,13 @@ public class TDigestFunctions {
     public void setup() {
       work = new ObjectHolder();
       compression.value = (int) options.getLong(org.apache.drill.exec.ExecConstants.TDIGEST_COMPRESSION);
-      work.obj = new com.clearspring.analytics.stream.quantile.TDigest(compression.value);
+      work.obj = new com.tdunning.math.stats.MergingDigest(compression.value);
     }
 
     @Override
     public void add() {
       if (work.obj != null) {
-        com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
+        com.tdunning.math.stats.MergingDigest tdigest = (com.tdunning.math.stats.MergingDigest) work.obj;
         if (in.isSet == 1) {
           tdigest.add(in.value);
         } else {
@@ -596,7 +596,7 @@ public class TDigestFunctions {
     @Override
     public void output() {
       if (work.obj != null) {
-        com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
+        com.tdunning.math.stats.MergingDigest tdigest = (com.tdunning.math.stats.MergingDigest) work.obj;
         try {
           if (tdigest.size() > 0) {
             int size = tdigest.smallByteSize();
@@ -620,7 +620,7 @@ public class TDigestFunctions {
 
     @Override
     public void reset() {
-      work.obj = new com.clearspring.analytics.stream.quantile.TDigest(compression.value);
+      work.obj = new com.tdunning.math.stats.MergingDigest(compression.value);
     }
   }
 
@@ -637,13 +637,13 @@ public class TDigestFunctions {
     public void setup() {
       work = new ObjectHolder();
       compression.value = (int) options.getLong(org.apache.drill.exec.ExecConstants.TDIGEST_COMPRESSION);
-      work.obj = new com.clearspring.analytics.stream.quantile.TDigest(compression.value);
+      work.obj = new com.tdunning.math.stats.MergingDigest(compression.value);
     }
 
     @Override
     public void add() {
       if (work.obj != null) {
-        com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
+        com.tdunning.math.stats.MergingDigest tdigest = (com.tdunning.math.stats.MergingDigest) work.obj;
         tdigest.add(in.value);
       }
     }
@@ -651,7 +651,7 @@ public class TDigestFunctions {
     @Override
     public void output() {
       if (work.obj != null) {
-        com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
+        com.tdunning.math.stats.MergingDigest tdigest = (com.tdunning.math.stats.MergingDigest) work.obj;
         try {
           if (tdigest.size() > 0) {
             int size = tdigest.smallByteSize();
@@ -675,7 +675,7 @@ public class TDigestFunctions {
 
     @Override
     public void reset() {
-      work.obj = new com.clearspring.analytics.stream.quantile.TDigest(compression.value);
+      work.obj = new com.tdunning.math.stats.MergingDigest(compression.value);
     }
   }
 
@@ -692,13 +692,13 @@ public class TDigestFunctions {
     public void setup() {
       work = new ObjectHolder();
       compression.value = (int) options.getLong(org.apache.drill.exec.ExecConstants.TDIGEST_COMPRESSION);
-      work.obj = new com.clearspring.analytics.stream.quantile.TDigest(compression.value);
+      work.obj = new com.tdunning.math.stats.MergingDigest(compression.value);
     }
 
     @Override
     public void add() {
       if (work.obj != null) {
-        com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
+        com.tdunning.math.stats.MergingDigest tdigest = (com.tdunning.math.stats.MergingDigest) work.obj;
         if (in.isSet == 1) {
           tdigest.add(in.value);
         } else {
@@ -710,7 +710,7 @@ public class TDigestFunctions {
     @Override
     public void output() {
       if (work.obj != null) {
-        com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
+        com.tdunning.math.stats.MergingDigest tdigest = (com.tdunning.math.stats.MergingDigest) work.obj;
         try {
           if (tdigest.size() > 0) {
             int size = tdigest.smallByteSize();
@@ -734,7 +734,7 @@ public class TDigestFunctions {
 
     @Override
     public void reset() {
-      work.obj = new com.clearspring.analytics.stream.quantile.TDigest(compression.value);
+      work.obj = new com.tdunning.math.stats.MergingDigest(compression.value);
     }
   }
 
@@ -751,13 +751,13 @@ public class TDigestFunctions {
     public void setup() {
       work = new ObjectHolder();
       compression.value = (int) options.getLong(org.apache.drill.exec.ExecConstants.TDIGEST_COMPRESSION);
-      work.obj = new com.clearspring.analytics.stream.quantile.TDigest(compression.value);
+      work.obj = new com.tdunning.math.stats.MergingDigest(compression.value);
     }
 
     @Override
     public void add() {
       if (work.obj != null) {
-        com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
+        com.tdunning.math.stats.MergingDigest tdigest = (com.tdunning.math.stats.MergingDigest) work.obj;
         tdigest.add(in.value);
       }
     }
@@ -765,7 +765,7 @@ public class TDigestFunctions {
     @Override
     public void output() {
       if (work.obj != null) {
-        com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
+        com.tdunning.math.stats.MergingDigest tdigest = (com.tdunning.math.stats.MergingDigest) work.obj;
         try {
           if (tdigest.size() > 0) {
             int size = tdigest.smallByteSize();
@@ -789,7 +789,7 @@ public class TDigestFunctions {
 
     @Override
     public void reset() {
-      work.obj = new com.clearspring.analytics.stream.quantile.TDigest(compression.value);
+      work.obj = new com.tdunning.math.stats.MergingDigest(compression.value);
     }
   }
 
@@ -806,13 +806,13 @@ public class TDigestFunctions {
     public void setup() {
       work = new ObjectHolder();
       compression.value = (int) options.getLong(org.apache.drill.exec.ExecConstants.TDIGEST_COMPRESSION);
-      work.obj = new com.clearspring.analytics.stream.quantile.TDigest(compression.value);
+      work.obj = new com.tdunning.math.stats.MergingDigest(compression.value);
     }
 
     @Override
     public void add() {
       if (work.obj != null) {
-        com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
+        com.tdunning.math.stats.MergingDigest tdigest = (com.tdunning.math.stats.MergingDigest) work.obj;
         if (in.isSet == 1) {
           tdigest.add(in.value);
         } else {
@@ -824,7 +824,7 @@ public class TDigestFunctions {
     @Override
     public void output() {
       if (work.obj != null) {
-        com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
+        com.tdunning.math.stats.MergingDigest tdigest = (com.tdunning.math.stats.MergingDigest) work.obj;
         try {
           if (tdigest.size() > 0) {
             int size = tdigest.smallByteSize();
@@ -848,7 +848,7 @@ public class TDigestFunctions {
 
     @Override
     public void reset() {
-      work.obj = new com.clearspring.analytics.stream.quantile.TDigest(compression.value);
+      work.obj = new com.tdunning.math.stats.MergingDigest(compression.value);
     }
   }
 
@@ -865,13 +865,13 @@ public class TDigestFunctions {
     public void setup() {
       work = new ObjectHolder();
       compression.value = (int) options.getLong(org.apache.drill.exec.ExecConstants.TDIGEST_COMPRESSION);
-      work.obj = new com.clearspring.analytics.stream.quantile.TDigest(compression.value);
+      work.obj = new com.tdunning.math.stats.MergingDigest(compression.value);
     }
 
     @Override
     public void add() {
       if (work.obj != null) {
-        com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
+        com.tdunning.math.stats.MergingDigest tdigest = (com.tdunning.math.stats.MergingDigest) work.obj;
         tdigest.add(in.value);
       }
     }
@@ -879,7 +879,7 @@ public class TDigestFunctions {
     @Override
     public void output() {
       if (work.obj != null) {
-        com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
+        com.tdunning.math.stats.MergingDigest tdigest = (com.tdunning.math.stats.MergingDigest) work.obj;
         try {
           if (tdigest.size() > 0) {
             int size = tdigest.smallByteSize();
@@ -903,7 +903,7 @@ public class TDigestFunctions {
 
     @Override
     public void reset() {
-      work.obj = new com.clearspring.analytics.stream.quantile.TDigest(compression.value);
+      work.obj = new com.tdunning.math.stats.MergingDigest(compression.value);
     }
   }
 
@@ -920,13 +920,13 @@ public class TDigestFunctions {
     public void setup() {
       work = new ObjectHolder();
       compression.value = (int) options.getLong(org.apache.drill.exec.ExecConstants.TDIGEST_COMPRESSION);
-      work.obj = new com.clearspring.analytics.stream.quantile.TDigest(compression.value);
+      work.obj = new com.tdunning.math.stats.MergingDigest(compression.value);
     }
 
     @Override
     public void add() {
       if (work.obj != null) {
-        com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
+        com.tdunning.math.stats.MergingDigest tdigest = (com.tdunning.math.stats.MergingDigest) work.obj;
         if (in.isSet == 1) {
           tdigest.add(in.value);
         } else {
@@ -938,7 +938,7 @@ public class TDigestFunctions {
     @Override
     public void output() {
       if (work.obj != null) {
-        com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
+        com.tdunning.math.stats.MergingDigest tdigest = (com.tdunning.math.stats.MergingDigest) work.obj;
         try {
           if (tdigest.size() > 0) {
             int size = tdigest.smallByteSize();
@@ -962,7 +962,7 @@ public class TDigestFunctions {
 
     @Override
     public void reset() {
-      work.obj = new com.clearspring.analytics.stream.quantile.TDigest(compression.value);
+      work.obj = new com.tdunning.math.stats.MergingDigest(compression.value);
     }
   }
 
@@ -1097,18 +1097,18 @@ public class TDigestFunctions {
     public void setup() {
       work = new ObjectHolder();
       compression.value = (int) options.getLong(org.apache.drill.exec.ExecConstants.TDIGEST_COMPRESSION);
-      work.obj = new com.clearspring.analytics.stream.quantile.TDigest(compression.value);
+      work.obj = new com.tdunning.math.stats.MergingDigest(compression.value);
     }
 
     @Override
     public void add() {
       if (work.obj != null) {
-        com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
+        com.tdunning.math.stats.MergingDigest tdigest = (com.tdunning.math.stats.MergingDigest) work.obj;
         try {
           if (in.isSet != 0) {
             byte[] buf = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(in.start, in.end, in.buffer).getBytes();
-            com.clearspring.analytics.stream.quantile.TDigest other =
-              com.clearspring.analytics.stream.quantile.TDigest.fromBytes(java.nio.ByteBuffer.wrap(buf));
+            com.tdunning.math.stats.MergingDigest other =
+              com.tdunning.math.stats.MergingDigest.fromBytes(java.nio.ByteBuffer.wrap(buf));
             tdigest.add(other);
           }
         } catch (Exception e) {
@@ -1120,7 +1120,7 @@ public class TDigestFunctions {
     @Override
     public void output() {
       if (work.obj != null) {
-        com.clearspring.analytics.stream.quantile.TDigest tdigest = (com.clearspring.analytics.stream.quantile.TDigest) work.obj;
+        com.tdunning.math.stats.MergingDigest tdigest = (com.tdunning.math.stats.MergingDigest) work.obj;
         try {
           int size = tdigest.smallByteSize();
           java.nio.ByteBuffer byteBuf = java.nio.ByteBuffer.allocate(size);
@@ -1140,7 +1140,7 @@ public class TDigestFunctions {
 
     @Override
     public void reset() {
-      work.obj = new com.clearspring.analytics.stream.quantile.TDigest(compression.value);
+      work.obj = new com.tdunning.math.stats.MergingDigest(compression.value);
     }
   }
 }

@@ -20,7 +20,7 @@ package org.apache.drill.exec.physical.impl.statistics;
 // Library implementing TDigest algorithm to derive approximate quantiles. Please refer to:
 // 'Computing Extremely Accurate Quantiles using t-Digests' by Ted Dunning and Otmar Ertl
 
-import com.clearspring.analytics.stream.quantile.TDigest;
+import com.tdunning.math.stats.MergingDigest;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.server.options.OptionManager;
@@ -33,7 +33,7 @@ import java.util.Map;
 import java.nio.ByteBuffer;
 
 public class TDigestMergedStatistic extends AbstractMergedStatistic {
-  private Map<String, TDigest> tdigestHolder;
+  private Map<String, MergingDigest> tdigestHolder;
   private int compression;
 
   public TDigestMergedStatistic() {
@@ -63,7 +63,7 @@ public class TDigestMergedStatistic extends AbstractMergedStatistic {
     assert (input.getField().getType().getMinorType() == TypeProtos.MinorType.MAP);
     for (ValueVector vv : input) {
       String colName = vv.getField().getName();
-      TDigest colTdigestHolder = null;
+      MergingDigest colTdigestHolder = null;
       if (tdigestHolder.get(colName) != null) {
         colTdigestHolder = tdigestHolder.get(colName);
       }
@@ -71,7 +71,7 @@ public class TDigestMergedStatistic extends AbstractMergedStatistic {
       NullableVarBinaryVector.Accessor accessor = tdigestVector.getAccessor();
 
       if (!accessor.isNull(0)) {
-        TDigest other = TDigest.fromBytes(ByteBuffer.wrap(accessor.get(0)));
+        MergingDigest other = MergingDigest.fromBytes(ByteBuffer.wrap(accessor.get(0)));
         if (colTdigestHolder != null) {
           colTdigestHolder.add(other);
           tdigestHolder.put(colName, colTdigestHolder);
@@ -82,7 +82,7 @@ public class TDigestMergedStatistic extends AbstractMergedStatistic {
     }
   }
 
-  public TDigest getStat(String colName) {
+  public MergingDigest getStat(String colName) {
     if (state != State.COMPLETE) {
       throw new IllegalStateException(String.format("Statistic `%s` has not completed merging statistics",
           name));
@@ -98,7 +98,7 @@ public class TDigestMergedStatistic extends AbstractMergedStatistic {
     assert (state == State.MERGE);
     for (ValueVector outMapCol : output) {
       String colName = outMapCol.getField().getName();
-      TDigest colTdigestHolder = tdigestHolder.get(colName);
+      MergingDigest colTdigestHolder = tdigestHolder.get(colName);
       NullableVarBinaryVector vv = (NullableVarBinaryVector) outMapCol;
       vv.allocateNewSafe();
       try {
