@@ -148,7 +148,7 @@ Histogram statistics are generated for each column, as shown:
 
 qhistogram":{"category":"numeric-equi-depth","numRowsPerBucket":150,"buckets":[0.0,2.0,4.0,7.0,9.0,12.0,15.199999999999978,17.0,19.0,22.0,24.0]
 
-In this example, there are 11 buckets. Each bucket contains 150 rows, which is an approximation of the number of rows (1500)/number of buckets (11). The list of numbers for the “buckets” property indicates value ranges where buckets start and end. Starting from 0, the first number (0.0) denotes the end of the first bucket and the start of the second bucket. The second number (2.0) denotes the end of the second and start of the third bucket, and so on.  
+In this example, there are 11 buckets. Each bucket contains 150 rows, which is an approximation of the number of rows (1500)/number of buckets (11). The list of numbers for the “buckets” property indicates boundaries for each bucket. Starting from 0, the first number (0.0) denotes the end of the first bucket and the start point of the second bucket. The second number (2.0) denotes end point for the second bucket and starting point for the third bucket, and so on.  
   
 
 ## Limitations  
