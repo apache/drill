@@ -1,6 +1,6 @@
 ---
 title: "ANALYZE TABLE"
-date: 2019-04-30
+date: 2019-05-02
 parent: "SQL Commands"
 ---  
 
@@ -65,9 +65,9 @@ Note that `/.stats.drill` is the directory to which the JSON file with statistic
 	- Rowcount (total number of entries in the table)  
 	- Nonnullrowcount (total number of non-null entries in the table)  
 	- NDV (total distinct values in the table)  
-	- Avgwidth (average width of a column/average number of characters in a column)  
-	- Majortype (data type of the column values)  
-	- Histogram (represents the frequency distribution of values (numeric data) in a column) See Histograms.  
+	- Avgwidth (average width, in bytes, of a column)  
+	- Majortype (data type and data mode (OPTIONAL, REQUIRED, REPEATED) of the column values)  
+	- Histogram (represents the frequency distribution of values (numeric data) in a column) See [Histograms]({{site.baseurl}}/docs/analyze-table/#histograms).  
 	- When you look at the statistics file, statistics for each column display in the following format (c_nationkey is used as an example column):  
 	
 			{"column":"`c_nationkey`","majortype":{"type":"INT","mode":"REQUIRED"},"schema":1.0,"rowcount":1500.0,"nonnullrowcount":1500.0,"ndv":25,"avgwidth":4.0,"histogram":{"category":"numeric-equi-depth","numRowsPerBucket":150,"buckets":[0.0,2.0,4.0,7.0,9.0,12.0,15.199999999999978,17.0,19.0,22.0,24.0]}}  
@@ -126,6 +126,9 @@ Typically, the types of queries that benefit from statistics are those that incl
 - Range predicates (filters) on numeric columns
   
 ## Histograms
+
+**Note:** Currently, histograms are supported for numeric columns only.  
+ 
 Histograms show the distribution of data to determine if data is skewed or normally distributed. Histogram statistics improve the selectivity estimates used by the optimizer to create the most efficient query plans possible. Histogram statistics are useful for range predicates to help determine how many rows belong to a particular range.   
  
 Running the ANALYZE TABLE statement generates equi-depth histogram statistics on each column in a table. Equi-depth histograms distribute distinct column values across buckets of varying widths, with all buckets having approximately the same number of rows. The fixed number of rows per bucket is predetermined by `ceil(number_rows/n)`, where `n` is the number of buckets. The number of distinct values in each bucket depends on the distribution of the values in a column. Equi-depth histograms are better suited for skewed data because the more frequent column values have their own bucket or span more than one bucket instead of being lumped together with less frequent values.
@@ -148,7 +151,7 @@ Histogram statistics are generated for each column, as shown:
 
 qhistogram":{"category":"numeric-equi-depth","numRowsPerBucket":150,"buckets":[0.0,2.0,4.0,7.0,9.0,12.0,15.199999999999978,17.0,19.0,22.0,24.0]
 
-In this example, there are 11 buckets. Each bucket contains 150 rows, which is an approximation of the number of rows (1500)/number of buckets (11). The list of numbers for the “buckets” property indicates boundaries for each bucket. Starting from 0, the first number (0.0) denotes the end of the first bucket and the start point of the second bucket. The second number (2.0) denotes end point for the second bucket and starting point for the third bucket, and so on.  
+In this example, there are 10 buckets. Each bucket contains 150 rows, which is calculated as the number of rows (1500)/number of buckets (10). The list of numbers for the “buckets” property indicates bucket boundaries, with the first bucket starting at 0.0 and ending at 2.0. The end of the first bucket is the start point for the second bucket, such that the second bucket starts at 2.0 and ends at 4.0, and so on for the remainder of the buckets. 
   
 
 ## Limitations  

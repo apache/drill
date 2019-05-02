@@ -1,9 +1,28 @@
 ---
 title: "Configuring the Drill Shell"
-date: 2018-12-30
+date: 2019-05-02
 parent: "Configure Drill"
 ---  
 Drill uses SQLLine as the Drill shell. SQLLine is a pure-Java console-based utility for connecting to relational databases and running SQL commands. 
+
+Starting in Drill 1.16, Drill uses SQLLine 1.7. This upgrade changes the default Drill prompt to `apache drill>`. If you switch to a specific schema, for example `dfs.tmp`, the prompt includes the current schema, as shown:  
+	use dfs.tmp;
+	+------+-------------------------------------+
+	|  ok  |               summary               |
+	+------+-------------------------------------+
+	| true | Default schema changed to [dfs.tmp] |
+	+------+-------------------------------------+
+	
+	apache drill (dfs.tmp)>
+
+To return to the previous prompt display, modify `drill-sqlline-override.conf`, and set `drill.sqlline.prompt.with_schema` to false.
+
+Alternatively, you can define a custom prompt using the command `!set prompt <new-prompt>`, as shown:  
+  
+	apache drill (dfs.tmp)> !set prompt good-drill
+	good-drill   
+
+You can use `prompt`, `promptScript`, or `rightPrompt` with the `!set` command. These properties can be overridden in `drill-sqlline-override.conf`.
 
 Starting in Drill 1.15, Drill uses SQLLine 1.6, which you can customize through the Drill [configuration file, drill-sqlline-override.conf]({{site.baseurl}}/docs/configuring-the-drill-shell/#customizing-sqlline-in-the-drill-sqlline-override-conf-file). Before installing and running Drill with SQLLine 1.6, delete the old SQLLine history file located in:  
 

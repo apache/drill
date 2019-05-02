@@ -1,10 +1,19 @@
 ---
 title: "CREATE OR REPLACE SCHEMA"
-date: 2019-04-29
+date: 2019-05-02
 parent: "SQL Commands"
 ---
 
-Starting in Drill 1.16, you can define a schema for text files using the CREATE OR REPLACE SCHEMA command. Running this command generates a hidden `.drill.schema` file in the table’s root directory. The `.drill.schema` file stores the schema definition in JSON format. Drill uses the schema file at runtime if the `exec.storage.enable_v3_text_reader` and `store.table.use_schema_file` options are enabled. Alternatively, you can create the schema file manually. If created manually, the file content must comply with the structure recognized by the Drill.  
+Starting in Drill 1.16, you can define a schema for text files using the CREATE OR REPLACE SCHEMA command. Schema is only available for tables represented by a directory. To use this feature with a single file, put the file inside a directory, and use the directory name to query the table.
+
+In Drill 1.16, this feature is in preview status and disabled by default. You can enable this feature by setting the `exec.storage.enable_v3_text_reader` and `store.table.use_schema_file` system/session options to true. The feature is currently only available for text (CSV) files.
+
+Running this command generates a hidden `.drill.schema` file in the table’s root directory. The `.drill.schema` file stores the schema definition in JSON format. Alternatively, you can create the schema file manually. If created manually, the file content must comply with the structure recognized by the Drill.  
+
+The end of this topic provides [examples]({{site.baseurl}}/docs/create-or-replace-schema/#examples) that show how the feature is used. You may want to review this section before reading the reference material.  
+
+Please post your experience and suggestions to the "[user](user@drill.apache.org)" mailing list.
+
 
 ##Syntax
 
@@ -12,30 +21,29 @@ The CREATE OR REPLACE SCHEMA command supports the following syntax:
 
 	CREATE [OR REPLACE] SCHEMA
 	[LOAD 'file:///path/to/file']
-	[(column_name data_type nullability format default properties {prop='val', ...})]
-	[FOR TABLE `table_name`]
-	[PATH 'file:///schema_file_path/schema_file_name'] 
-	[PROPERTIES ('key1'='value1', 'key2'='value2', ...)]  
+	[(column_name data_type [nullability] [format] [default] [properties {prop='val', ...})]]
+	[FOR TABLE `table_name` | PATH 'file:///schema_file_path/schema_file_name'] 
+	[PROPERTIES ('key1'='value1', 'key2'='value2', ...)]   
 
 ##Parameters
 
 *OR REPLACE*  
-Existing schema is dropped and replaced with the new schema. Only supported when using FOR TABLE. Not supported when using PATH because it prevents malicious deletion of any file. You must manually delete any schema file created in a custom location. 
+Existing schema is dropped and replaced with the new schema. Prevents malicious deletion of any file. Only supported when using FOR TABLE. Not supported when using PATH. Instead, you must manually delete any schema file created in a custom PATH location.  
 
 *LOAD*  
 Loads raw schema (list of column names with their attributes) from a file. You must indicate the path to the file after the LOAD keyword. Note that columns should be listed or provided when using the LOAD clause; at least one option is required for the successful schema creation.
 
 *column_name*  
-Name of the column for which schema is created. Case-insensitive. 
+Name of the column for which schema is created. Case-insensitive. The name must match the name in the data file or data source. You cannot rename columns using the schema mechanism. 
 
 *data_type*  
 Data type defined for the column. See Supported Data Types. 
 
 *format*  
-Sets the format for date and time data types when converting from string.
+Sets the format for date and time data types when converting from string. See [Format for Date, Time Conversion]({{site.baseurl}}/docs/create-or-replace-schema/#format-for-date-time-conversion).
 
-*default*  
-Sets a default value for non-nullable columns, such that queries return the default value instead of null. 
+*default*    
+Used for non-nullable columns. The default value is returned by queries when the column is missing from a data file. The default value is a string enclosed in single quotes, like '10'. If you provide a format, the value must be valid for that format. 
 
 *properties*  
 Keyword to include optional properties. See Related Options below.  
@@ -57,7 +65,16 @@ List of properties as key-value pairs in  parenthesis.
 
 ## Related Options 
 
-You must enable the following options for Drill to use the schema created during query execution:
+In Drill 1.16, you must enable the following options for Drill to use the schema created during query execution: 
+
+**exec.storage.enable_v3_text_reader**  
+Enables the preview "version 3" of the text (CSV) file reader. The V3 text reader is the only reader in Drill 1.16 that supports file schemas.  
+
+**store.table.use_schema_file**  
+Enables the use of the schema file mechanism.
+
+You can enable these options, as shown:
+
  
 	set `exec.storage.enable_v3_text_reader` = true;
 	+------+---------------------------------------------+
@@ -73,27 +90,42 @@ You must enable the following options for Drill to use the schema created during
 	| true | store.table.use_schema_file updated. |
 	+------+--------------------------------------+ 
 
-## Related Properties  
+## Related Properties   
 
-When you create a schema, you can set the following properties within the CREATE [OR REPLACE] SCHEMA command:   
+Drill normally uses "schema on read" to load data from your tables. The schema mechanism allows you to perform some data cleanup and transformations on your data. You can:  
+
+- Identify which columns to load, ignoring columns that are not needed by users.  
+- Handle schema evolution by providing names and default values for columns that may be missing from some of your older (or newer) data files.  
+- Convert text fields to numbers, dates, times or timestamps without having to add a CAST to every query (or define a view.)  
+ 
+
+When you create a schema, you can set the following column properties within the CREATE [OR REPLACE] SCHEMA command: 
+
+(`drill.format, drill.default, drill.blank-as`)  
+
+You can also set the following table properties:
+
+(`drill.strict`)  
+
+The following sections describe the properties that aid in data clean up and transformation:   
 
 **drill.strict**  
-A table property that determines the ordering of columns returned for wildcard (*) queries. Accepts a value of true or false. See Schema Mode (Column Order). 
+Table property that determines the set of columns returned for a wildcard (*) query. With `drill.strict=false` (the default), a wildcard includes all columns in the table, whether or not they are listed in the schema. With `drill.strict=true`, a wildcard includes only the columns defined in the schema, and in the order defined by the schema. See [Schema Mode (Column Order)]({{site.baseurl}}/docs/create-or-replace-schema/#schema-mode-column-order). 
  
 **drill.format**  
-A column property that ensures proper conversion when converting string values to date and time data types. See Format for Date, Time Conversion.
+Same as the format parameter. (The format parameter is stored as a property in the schema file.) See the format parameter for the supported formats. Also, see [Format for Date, Time Conversion]({{site.baseurl}}/docs/create-or-replace-schema/#format-for-date-time-conversion).
 
 **drill.default**  
-A column property that sets non-nullable columns to a “default” value when creating the schema. See Column Modes (Nullable and Non-Nullable Columns).  
+Same as the default parameter. (The default parameter is stored as a property in the schema file.) See [Column Modes (Nullable and Non-Nullable Columns]({{site.baseurl}}/docs/create-or-replace-schema/#column-modes-nullable-and-non-nullable-columns)).  
 
 **drill.blank-as**  
 A property that sets how Drill handles blank column values. Accepts the following values:  
-- **null**: If the column is nullable, treat the blank as null. If non-nullable, leave the blank unchanged.  
-- **0**: Replace blanks with the value "0" for numeric types.   
-- **skip**: Skip blank values. This sets the column to its default value: NULL for nullable columns, the default value for non-nullable columns.  
-- If left empty, blanks have no special meaning. A blank is parsed as any other string, which typically produces an error.  
+- **null**: If the column is nullable, treat the blank as null. If non-nullable, leave the blank unchanged.    
+- **0**: Replace blanks with the value "0" for numeric types.  
+- **skip**: Skip blank values. This sets the column to its default value: NULL for nullable columns, or the default value for non-nullable columns.  
+- If left empty, blanks have no special meaning. A blank is parsed as any other string, which typically produces an error for text columns converted to a numeric type.   
 
-See Handling Policy for Blank Column Values.  
+See [Handling Policy for Blank Column Values]({{site.baseurl}}/docs/create-or-replace-schema/#handling-policy-for-blank-column-values).  
 
 ### Setting Properties
 Include properties after the “properties” keyword, as shown in the following example where the date format is set to `'yyyy-MM-dd'` through the `drill.format` column property:
@@ -150,11 +182,11 @@ The defined schema and configured properties are stored and reflected in the sch
 
 
     DROP SCHEMA [IF EXISTS] FOR TABLE `table_name`
-See Dropping Schema for a Table in the Examples section at the end of this topic. 
+See [Dropping Schema for a Table]({{site.baseurl}}/docs/create-or-replace-schema/#dropping-schema-for-a-table). 
 
 
     DESCRIBE SCHEMA FOR TABLE `table_name`
-See Describing Schema for a Table in the Examples section at the end of this topic.   
+See [Describing Schema for a Table]({{site.baseurl}}/docs/create-or-replace-schema/#describing-schema-for-a-table).   
 
 ## Supported Data Types
 
@@ -181,11 +213,12 @@ Values are trimmed when converting to any type, except for varchar.
 - Schema provisioning only works with tables defined as directories because Drill must have a place to store the schema file. The directory can contain one or more files.  
 - Text files must have headers. The default extension for delimited text files with headers is `.csvh`. Note that the column names that appear in the headers match column definitions in the schema.  
 - You do not have to enumerate all columns in a file when creating a schema. You can indicate the columns of interest only.  
-- Columns in the defined schema do not have to be in the same order as in the data file. However, the names must match. The case can differ, for example “name” and “NAME” are acceptable.   
+- Columns in the defined schema do not have to be in the same order as in the data file.  
+- Column names must match. The case can differ, for example “name” and “NAME” are acceptable.   
 - Queries on columns with data types that cannot be converted fail with a `DATA_READ_ERROR`.   
 
-### Schema Mode (Column Order)
-The schema mode determines the ordering of columns returned for wildcard (*) queries. The mode is set through the `drill.strict` property. You can set this property to true (strict) or false (not strict). If you do not indicate the mode, the default is false (not strict).  
+### Schema Mode (Column Order)  
+The schema mode determines the set of columns returned for wildcard (*) queries and the  ordering of those columns. The mode is set through the `drill.strict` property. You can set this property to true (strict) or false (not strict). If you do not indicate the mode, the default is false (not strict).  
 
 **Not Strict (Default)**  
 Columns defined in the schema are projected in the defined order. Columns not defined in the schema are appended to the defined columns, as shown:  
@@ -234,6 +267,8 @@ Setting the `drill.strict` property  to “true” changes the schema mode to st
 Note that the “name” column, which was not included in the schema was ignored and not returned in the result set.  
 
 ## Including Additional Columns in the Schema
+The ability to include additional columns in the schema enables schema evolution, which is useful when some columns appear only in newer (or older) files. 
+
 When you create a schema, you can include columns that do not exist in the table and these columns will be projected. This feature ensures that queries return the correct results whether the files have a specific column or not. Note that schema mode does not affect the behavior of this feature.
  
 For example, the “comment” column is not in the text_table, but added when creating the schema:  
@@ -256,7 +291,9 @@ You can see the “comment” column returned in the result set.
 	| 3	   | 2016-01-01 |  null   | Pebbles |
 	| 4	   | null   	|  null   | Barney  |
 	| null | null   	|  null   | Dino	|
-	+------+------------+---------+---------+  
+	+------+------------+---------+---------+    
+
+
 
 ## Column Modes (Nullable and Non-Nullable Columns)
 If a column in the schema is nullable (allows null values), and the column has a null value, the column value is returned as null. If the column is required (not nullable), but contains a null value, Drill returns the default value provided. If no default value is provided, Drill sets the column value to the natural default. 
@@ -409,7 +446,7 @@ Note that date, time type conversion uses the Joda time library, thus the format
 
 
 ## Limitations
-None
+This feature is currently in the alpha phase (preview, experimental) for Drill 1.16 and only applies to text (CSV) files in this release. You must enable this feature through the `exec.storage.enable_v3_text_reader` and `store.table.use_schema_file` system/session options.
 
 ## Examples
 Examples throughout this topic use the files and directories described in the following section, Directory and File Setup.   
