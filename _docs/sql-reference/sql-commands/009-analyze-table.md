@@ -115,7 +115,7 @@ If you use any of these words in a Drill query, you must enclose the word in bac
 
 - After you run the ANALYZE TABLE statement, you can view the profile for ANALYZE in the Drill Web UI. Go to `http://<drill-hostname-or-ip>:8047/profiles`, and click the ANALYZE TABLE statement for which you want to view the profile.  
 - Should you notice any performance issues, you may want to decrease the value of the `planner.slice_target` option.   
-- Generating statistics on large data sets can unnecessarily consume time and resources, such as memory and CPU. ANALYZE TABLE can compute statistics on a sample (subset of the data indicated as a percentage) to limit the amount of resources needed for computation. Drill still scans the entire data set, but only computes on the rows selected for sampling. Rows are randomly selected for the sample. Note that the quality of statistics increases with the sample size.    
+- Generating statistics on large data sets can consume time and resources, such as memory and CPU. ANALYZE TABLE can compute statistics on a sample (subset of the data indicated as a percentage) to limit the amount of resources needed for computation. Drill still scans the entire data set, but only computes on the rows selected for sampling. Rows are randomly selected for the sample. Note that the quality of statistics increases with the sample size.    
  
 ## Queries that Benefit from Statistics
 Typically, the types of queries that benefit from statistics are those that include:
