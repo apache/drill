@@ -4,7 +4,7 @@ date: 2019-05-02
 parent: "SQL Commands"
 ---  
 
-Drill 1.16 and later supports the ANALYZE TABLE statement. The ANALYZE TABLE statement computes statistics on Parquet data stored in tables and directories. ANALYZE TABLE writes statistics to a JSON file in the `.stats.drill` directory, for example `/user/table1/.stats.drill/0_0.json`. The optimizer in Drill uses these statistics to estimate filter, aggregation, and join cardinalities to create more efficient query plans. 
+Drill 1.16 and later supports the ANALYZE TABLE statement. The ANALYZE TABLE statement computes statistics on Parquet data stored in tables and directories. ANALYZE TABLE writes statistics to a JSON file in the `.stats.drill` directory, for example `/user/table1/.stats.drill/0_0.json`. The optimizer in Drill uses these statistics to estimate filter, aggregation, and join cardinalities and create more efficient query plans. 
 
 You can run the ANALYZE TABLE statement to calculate statistics for tables, columns, and directories with Parquet data; however, Drill will not use the statistics for query planning unless you enable the `planner.statistics.use` option, as shown:
 
