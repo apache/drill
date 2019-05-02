@@ -1,6 +1,6 @@
 ---
 title: "Drill Introduction"
-date: 2018-12-08
+date: 2019-05-02
 parent: "Getting Started"
 ---
 Drill is an Apache open-source SQL query engine for Big Data exploration.
@@ -8,7 +8,52 @@ Drill is designed from the ground up to support high-performance analysis on
 the semi-structured and rapidly evolving data coming from modern Big Data
 applications, while still providing the familiarity and ecosystem of ANSI SQL,
 the industry-standard query language. Drill provides plug-and-play integration
-with existing Apache Hive and Apache HBase deployments.  
+with existing Apache Hive and Apache HBase deployments.   
+
+## What's New in Apache Drill 1.16  
+- [ANALYZE TABLE statement]({{site.baseurl}}/docs/analyze-table/) to computes statistics on Parquet data ([DRILL-1328](https://issues.apache.org/jira/browse/DRILL-1328))   
+- [CREATE OR REPLACE SCHEMA command]({{site.baseurl}}/docs/create-or-replace-schema/) to define a schema for text files ([DRILL-6964](https://issues.apache.org/jira/browse/DRILL-6964))   
+- [REFRESH TABLE METADATA command]({{site.baseurl}}/docs/refresh-table-metadata/) can generate metadata cache files for specific columns ([DRILL-7058](https://issues.apache.org/jira/browse/DRILL-7058))  
+- [SYSLOG (RFC-5424) Format Plugin]({{site.baseurl}}/docs/syslog-format-plugin/) ([DRILL-6582](https://issues.apache.org/jira/browse/DRILL-6582))
+- [NEAREST DATE function]({{site.baseurl}}/docs/date-time-functions-and-arithmetic/#nearestdate) to facilitate time series analysis ([DRILL-7077](https://issues.apache.org/jira/browse/DRILL-7077))
+- [Format plugin for LTSV files]({{site.baseurl}}/docs/ltsv-format-plugin/) ([DRILL-7014](https://issues.apache.org/jira/browse/DRILL-7014))  
+- Ability to query Hive views, like querying Hive tables in a hive schema, for example `SELECT * FROM hive.`hive_view`; ([DRILL-540](https://issues.apache.org/jira/browse/DRILL-540))
+- [Upgrade to SQLLine 1.7]({{site.baseurl}}/docs/configuring-the-drill-shell/) changes the default prompt to `apache drill (schema_name)>` or you can define a custom prompt using the command `!set prompt <new-prompt>`. ([DRILL-6989](https://issues.apache.org/jira/browse/DRILL-6989)) 
+- Calcite updated to version 1.18.0 ([DRILL-6862](https://issues.apache.org/jira/browse/DRILL-6862))    
+- Several Drill Web UI improvements, including:
+	- [Storage plugin management improvements](https://drill.apache.org/docs/configuring-storage-plugins/#exporting-storage-plugin-configurations) ([DRILL-6562](https://issues.apache.org/jira/browse/DRILL-6562))  
+	- [Query progress indicators and warnings ]({{site.baseurl}}/docs/query-profiles/#query-profile-warnings) ([DRILL-6879](https://issues.apache.org/jira/browse/DRILL-6879))
+	- Ability to [limit the result size for better UI response]({{site.baseurl}}/docs/planning-and-execution-options/#setting-an-auto-limit-on-the-number-of-rows-returned-for-result-sets) ([DRILL-6050](https://issues.apache.org/jira/browse/DRILL-6050))  
+	- Ability to [sort the list of profiles in the Drill Web UI]({{site.baseurl}}/docs/query-profiles/#viewing-a-query-profile) ([DRILL-6942](https://issues.apache.org/jira/browse/DRILL-6942)) 
+	- [Display query state in query result page]({{site.baseurl}}/docs/starting-the-web-ui/#running-queries-from-the-web-ui) ([DRILL-6939](https://issues.apache.org/jira/browse/DRILL-6939))  
+	- [Button to reset the options filter](https://drill.apache.org/docs/planning-and-execution-options/#setting-options-from-the-drill-web-ui) ([DRILL-6921](https://issues.apache.org/jira/browse/DRILL-6921))    
+
+## What's New in Apache Drill 1.15  
+
+- Drill can leverage [indexes]({{site.baseurl}}/docs/querying-indexes-introduction/) to create index-based query plans. ([DRILL-6381](https://issues.apache.org/jira/browse/DRILL-6381)) 
+- Support for aliases in the [GROUP BY clause]({{site.baseurl}}/docs/group-by-clause/). ([DRILL-1248](https://issues.apache.org/jira/browse/DRILL-1248))
+- [CROSS JOIN](https://drill.apache.org/docs/from-clause/#join-types) support. ([DRILL-786](https://issues.apache.org/jira/browse/DRILL-786))
+- The INFORMATION_SCHEMA contains a [FILES table]({{site.baseurl}}/docs/querying-the-information-schema/#files) that you can query for information about directories and files. ([DRILL-6680](https://issues.apache.org/jira/browse/DRILL-6680)) 
+- [System functions table]({{site.baseurl}}/docs/querying-system-tables/#querying-the-functions-table) that exposes the available SQL functions in Drill and also detects UDFs that have been dynamically loaded into Drill. ([DRILL-3988](https://issues.apache.org/jira/browse/DRILL-3988))
+- New [system options table]({{site.baseurl}}/docs/querying-system-tables/#querying-the-options-table). ([DRILL-6684](https://issues.apache.org/jira/browse/DRILL-6684))
+- Support for [TIMESTAMPADD]({{site.baseurl}}/docs/date-time-functions-and-arithmetic/#timestampadd) and [TIMESTAMPDIFF]({{site.baseurl}}/docs/date-time-functions-and-arithmetic/#timestampdiff) datetime functions. ([DRILL-3610](https://issues.apache.org/jira/browse/DRILL-3610))
+- Ability to [secure znodes with custom ACLs]({{site.baseurl}}/docs/configuring-custom-acls-to-secure-znodes/) (Access Control Lists) ([DRILL-5671](https://issues.apache.org/jira/browse/DRILL-5671)).
+- All [cast and data type conversion functions]({{site.baseurl}}/docs/data-type-conversion/) return null for an empty string ('') when the `drill.exec.functions.cast_empty_string_to_null` option is enabled. ([DRILL-6817](https://issues.apache.org/jira/browse/DRILL-6817))
+- [Storage plugin names are case-insensitive]({{site.baseurl}}/docs/lexical-structure/). ([DRILL-6492](https://issues.apache.org/jira/browse/DRILL-6492))
+- Ability to access your AWS access key ID and secret access key using the Credential Provider API for the [S3 storage plugin]({{site.baseurl}}/docs/s3-storage-plugin/#using-an-external-provider-for-credentials). ([DRILL-6662](https://issues.apache.org/jira/browse/DRILL-6662))
+- [Upgrade to SQLLine 1.6]({{site.baseurl}}/docs/configuring-the-drill-shell/) includes the ability to add custom configuration. ([DRILL-3853](https://issues.apache.org/jira/browse/DRILL-3853))
+- [New SQLLine connection parameters]({{site.baseurl}}/docs/configuring-the-drill-shell/#sqlline-connection-parameters) ([DRILL-3933](https://issues.apache.org/jira/browse/DRILL-3933))
+- New option, `exec.query.return_result_set_for_ddl`, [prevents Drill from returning a result set for DDL statements]({{site.baseurl}}/docs/interfaces-introduction/) when set to "false." Useful for clients tools that connect to Drill (via JDBC) if they do not expect a result set. ([DRILL-6834](https://issues.apache.org/jira/browse/DRILL-6834))
+- [Parquet filter pushdown for VARCHAR and DECIMAL data types]({{site.baseurl}}/docs/parquet-filter-pushdown/#parquet-filter-pushdown-for-varchar-and-decimal-data-types) ([DRILL-6744](https://issues.apache.org/jira/browse/DRILL-6744))
+- Improved query performance with the [semi-join functionality](https://drill.apache.org/docs/sort-based-and-hash-based-memory-constrained-operators/#disabling-the-hash-operators) inside the Hash-Join operator. ([DRILL-6735](https://issues.apache.org/jira/browse/DRILL-6735))
+- [Lateral join](https://drill.apache.org/docs/lateral-join/) functionality is enabled by default. ([DRILL-6729](https://issues.apache.org/jira/browse/DRILL-6729))
+- Support JPPD (Join Predicate Push Down). [DRILL-6385](https://issues.apache.org/jira/browse/DRILL-6385)
+- Multiple [Web UI improvements]({{site.baseurl}}/docs/planning-and-execution-options/#setting-options-from-the-drill-web-ui) to simplify the use of options and submit queries, including:
+	- Search field 
+	- Quick Filters ([DRILL-5735](https://issues.apache.org/jira/browse/DRILL-5735))
+	- Default button ([DRILL-6668](https://issues.apache.org/jira/browse/DRILL-6668))
+	- [Web display options]({{site.baseurl}}/docs/planning-and-execution-options/#setting-options-from-the-drill-web-ui) ([DRILL-6544](https://issues.apache.org/jira/browse/DRILL-6544)) 
+	- [Meta+Enter key combination to submit queries]({{site.baseurl}}/docs/starting-the-web-ui/) ([DRILL-6611](https://issues.apache.org/jira/browse/DRILL-6611))  
 
 ## What's New in Apache Drill 1.14  
 - Ability to [run Drill in a Docker container]({{site.baseurl}}/docs/running-drill-on-docker/). ([DRILL-6346](https://issues.apache.org/jira/browse/DRILL-6346))  
