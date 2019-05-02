@@ -1,8 +1,8 @@
 ---
 layout: post
-title: "Drill User Meetup 2018"
+title: "Drill User Meetup 2019"
 code:
 excerpt: Drill User Meetup coming soon.
 authors: ["bbevens"]
-date: 2018-10-16 19:18:04 UTC
+date: 2019-05-02
 ---
