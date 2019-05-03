@@ -228,6 +228,7 @@ public class ConvertCountToDirectScanRule extends RelOptRule {
    *   2. For COUNT(*) and COUNT(<non null column>) and COUNT(<implicit column>), the count = total row count
    *   3. For COUNT(nullable column), count = (total row count - column's null count)
    *   4. Also count can not be calculated for parition columns.
+   *   5. For the columns that are not present in the Summary(Non-existent columns), the count = 0
    *
    * @param settings planner options
    * @param metadataSummary metadata summary containing row counts and column counts
@@ -288,7 +289,10 @@ public class ConvertCountToDirectScanRule extends RelOptRule {
 
           Metadata_V4.ColumnTypeMetadata_v4 columnMetadata = metadataSummary.getColumnTypeInfo(new Metadata_V4.ColumnTypeMetadata_v4.Key(simplePath));
 
-         if (columnMetadata == null || columnMetadata.totalNullCount == Statistic.NO_COLUMN_STATS) {
+          if (columnMetadata == null) {
+            // If the column doesn't exist in the table, row count is set to 0
+            cnt = 0;
+          } else if (columnMetadata.totalNullCount == Statistic.NO_COLUMN_STATS) {
             // if column stats is not available don't apply this rule, return empty counts
             return ImmutableMap.of();
           } else {
