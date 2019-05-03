@@ -90,25 +90,16 @@ function submitQuery() {
             if (typeof userName !== 'undefined' && userName !== null && userName.length > 0) {
               request.setRequestHeader("User-Name", userName);
             }
-			//TODO if this works, should I store other params too? most likely no, as quey is sufficient
-			sessionStorage.cachedQuery = $("#query").attr('value');
-			console.log("Cached :: " + sessionStorage.cachedQuery);
+            //Storing query for injection if navigating back to previous page
+            sessionStorage.cachedQuery = $("#query").attr('value');
         },
         url: "/query",
         data: $("#queryForm").serializeArray(),
         success: function (response) {
             closePopup();
-			/*
-			Check if exception? Clear
-			*/
-            //
-            //var newDoc = document.open();
-			var newDoc = document.open("text/html", "replace");
+            var newDoc = document.open("text/html", "replace");
             newDoc.write(response);
             newDoc.close();
-			//1stNull: Reference Link in sessionStorage=location.pathname, and query
-			//window.history.pushState(null, null, '/result');
-			//TODO Ingres
         },
         error: function (request, textStatus, errorThrown) {
             closePopup();

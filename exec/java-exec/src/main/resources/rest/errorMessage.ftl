@@ -20,12 +20,10 @@
 <#include "*/generic.ftl">
 <#macro page_head>
 <script>
+  //Hack to mimic browser back button
   function goToPreviousPage() {
-    console.log("Going back from "+location.pathname + " to " +  document.referrer + "( "+window.history.state+" )");
-    //window.history.go(-1);
-	sessionStorage.useCachedQuery = true;
-	console.log("Reloading with query: " + sessionStorage.cachedQuery)
-	location.reload();
+    sessionStorage.useCachedQuery = true;
+    location.reload();
   }
 </script>
 </#macro>
@@ -40,7 +38,7 @@
     </div>
     <div class="panel-body"><span style="font-family:courier,monospace;white-space:pre-wrap">${model}</span></div>
   </div>
-  <button type="reset" class="btn btn-default" id="backBtn" style="display:inline" Xonclick="window.history.back()" onclick="goToPreviousPage()"><span class="glyphicon glyphicon-step-backward"></span> Back</button>
+  <button type="reset" class="btn btn-default" id="backBtn" style="display:inline" onclick="goToPreviousPage()"><span class="glyphicon glyphicon-step-backward"></span> Back</button>
 </#macro>
 
 <@page_html/>

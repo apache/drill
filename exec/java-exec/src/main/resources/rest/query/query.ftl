@@ -104,17 +104,14 @@
     editor.getSession().setUseSoftTabs(true);
     editor.setTheme("ace/theme/sqlserver");
     editor.$blockScrolling = "Infinity";
-	var retrievedQuery = sessionStorage.getItem("cachedQuery");
-	var useCachedQuery = sessionStorage.getItem("useCachedQuery");
-	console.log("Checking cQ : " + retrievedQuery);
-	var referingUrl = document.referrer;
-	console.log("Checking dR: " + referingUrl);
-	if (useCachedQuery !== null && (typeof useCachedQuery !== 'undefined')) {
+    var retrievedQuery = sessionStorage.getItem("cachedQuery");
+    var useCachedQuery = sessionStorage.getItem("useCachedQuery");
+    if (useCachedQuery !== null && retrievedQuery !== null) {
       editor.setValue(retrievedQuery);
       editor.clearSelection(); // This will remove the highlight over the text
-	}
-	sessionStorage.removeItem("useCachedQuery");
-	sessionStorage.removeItem("cachedQuery");
+    }
+    sessionStorage.removeItem("useCachedQuery");
+    sessionStorage.removeItem("cachedQuery");
     editor.setOptions({
       enableSnippets: true,
       enableBasicAutocompletion: true,
@@ -143,17 +140,6 @@
       if (e.target.form) //Submit [Wrapped] Query 
         <#if model.isOnlyImpersonationEnabled()>doSubmitQueryWithUserName()<#else>doSubmitQueryWithAutoLimit()</#if>;
     });
-
-	/*
-    $(document).ready(function() {
-	  console.log("Populating with : " + sessionStorage.cachedQuery);
-	  if (sessionStorage.getItem("cachedQuery") !== null) {
-	    var retrievedQuery = sessionStorage.removeItem("cachedQuery");
-        ace.edit("query-editor-format").setValue(sessionStorage.cachedQuery);
-        $('#query').attr('value',retrievedQuery);
-	  }
-	});
-	*/
   </script>
 </#macro>
 
