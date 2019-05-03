@@ -19,6 +19,15 @@
 -->
 <#include "*/generic.ftl">
 <#macro page_head>
+<script>
+  function goToPreviousPage() {
+    console.log("Going back from "+location.pathname + " to " +  document.referrer + "( "+window.history.state+" )");
+    //window.history.go(-1);
+	sessionStorage.useCachedQuery = true;
+	console.log("Reloading with query: " + sessionStorage.cachedQuery)
+	location.reload();
+  }
+</script>
 </#macro>
 
 <#macro page_body>
@@ -31,7 +40,7 @@
     </div>
     <div class="panel-body"><span style="font-family:courier,monospace;white-space:pre-wrap">${model}</span></div>
   </div>
-  <a class="btn btn-default" id="backBtn" style="display:inline" onclick="window.history.back()"><span class="glyphicon glyphicon-step-backward"></span> Back</a>
+  <button type="reset" class="btn btn-default" id="backBtn" style="display:inline" Xonclick="window.history.back()" onclick="goToPreviousPage()"><span class="glyphicon glyphicon-step-backward"></span> Back</button>
 </#macro>
 
 <@page_html/>
