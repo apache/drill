@@ -49,7 +49,7 @@ public class ${aggrtype.className}DateTypeFunctions {
 <#list aggrtype.types as type>
 <#if type.major == "Date">
 @FunctionTemplate(name = "${aggrtype.funcName}", scope = FunctionTemplate.FunctionScope.POINT_AGGREGATE)
-public static class ${type.inputType}${aggrtype.className} implements DrillAggFunc{
+public static class ${type.inputType}${aggrtype.className} implements DrillAggFunc {
 
   @Param ${type.inputType}Holder in;
   @Workspace ${type.runningType}Holder value;
@@ -81,6 +81,13 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 		    break sout;
 	    }
 	  </#if>
+    <#if aggrtype.funcName == "single_value">
+      if (nonNullCount.value > 0) {
+        throw org.apache.drill.common.exceptions.UserException.functionError()
+            .message("Input for single_value function has more than one row")
+            .build();
+      }
+    </#if>
     nonNullCount.value = 1;
 	  <#if aggrtype.funcName == "min">
 
@@ -131,7 +138,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     </#if>
 	  <#elseif aggrtype.funcName == "count">
 	    value.value++;
-    <#elseif aggrtype.funcName == "any_value">
+    <#elseif aggrtype.funcName == "any_value" || aggrtype.funcName == "single_value">
       <#if type.outputType?ends_with("Interval")>
         value.days = in.days;
         value.months = in.months;
@@ -139,6 +146,8 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
       <#elseif type.outputType?ends_with("IntervalDay")>
         value.days = in.days;
         value.milliseconds = in.milliseconds;
+      <#else>
+        value.value = in.value;
       </#if>
     <#else>
 	  // TODO: throw an error ?

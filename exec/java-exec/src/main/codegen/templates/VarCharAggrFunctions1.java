@@ -52,7 +52,6 @@ import io.netty.buffer.ByteBuf;
 @SuppressWarnings("unused")
 
 public class ${aggrtype.className}VarBytesFunctions {
-	static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(${aggrtype.className}Functions.class);
 
 <#list aggrtype.types as type>
 <#if type.major == "VarBytes">
@@ -90,7 +89,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
         break sout;
       }
     </#if>
-    <#if aggrtype.className == "AnyValue">
+    <#if aggrtype.className == "AnyValue" || aggrtype.className == "SingleValue">
       if (nonNullCount.value == 0) {
         nonNullCount.value = 1;
         int inputLength = in.end - in.start;
@@ -98,6 +97,12 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
         byte[] tempArray = new byte[inputLength];
         in.buffer.getBytes(in.start, tempArray, 0, inputLength);
         tmp.setBytes(tempArray);
+      <#if aggrtype.className == "SingleValue">
+      } else {
+        throw org.apache.drill.common.exceptions.UserException.functionError()
+            .message("Input for single_value function has more than one row")
+            .build();
+      </#if>
       }
     <#else>
     nonNullCount.value = 1;
