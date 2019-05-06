@@ -108,6 +108,18 @@ public class TestDateConversions extends BaseTestQuery {
   }
 
   @Test
+  public void testToTimeWithDateTimePatternFormat() throws Exception {
+    mockUsDateFormatSymbols();
+
+    testBuilder()
+        .sqlQuery("select TO_TIME('2016-03-03 00:00', 'yyyy-MM-dd HH:mm') as `result` from (values(1))")
+        .unOrdered()
+        .baselineColumns("result")
+        .baselineValues(LocalTime.of(0,0,0))
+        .go();
+  }
+
+  @Test
   public void testPostgresTime() throws Exception {
     mockUsDateFormatSymbols();
 
