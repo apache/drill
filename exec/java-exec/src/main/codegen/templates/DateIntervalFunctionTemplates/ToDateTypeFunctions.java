@@ -82,7 +82,7 @@ public class G${convert.from}To${convert.to} implements DrillSimpleFunc {
     <#elseif convert.to == "TimeStamp" || convert.to == "NullableTimeStamp">
     out.value = org.joda.time.DateTime.parse(input, format).withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis();
     <#elseif convert.to == "Time" || convert.to == "NullableTime">
-    out.value = (int) ((format.parseDateTime(input)).withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis());
+    out.value = format.parseDateTime(input).withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillisOfDay();
     </#if>
   }
 }
