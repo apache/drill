@@ -48,72 +48,82 @@ import org.apache.drill.exec.vector.complex.writer.BaseWriter.*;
 @SuppressWarnings("unused")
 
 public class ${aggrtype.className}ComplexFunctions {
-static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(${aggrtype.className}ComplexFunctions.class);
 
 <#list aggrtype.types as type>
 <#if type.major == "Complex">
 
-@FunctionTemplate(name = "${aggrtype.funcName}", scope = FunctionTemplate.FunctionScope.POINT_AGGREGATE)
-public static class ${type.inputType}${aggrtype.className} implements DrillAggFunc{
-  @Param ${type.inputType}Holder inHolder;
-  @Workspace BigIntHolder nonNullCount;
-  @Output ComplexWriter writer;
+  @FunctionTemplate(name = "${aggrtype.funcName}",
+                  <#if type.major == "VarDecimal">
+                    returnType = FunctionTemplate.ReturnType.DECIMAL_AVG_AGGREGATE,
+                  </#if>
+                    scope = FunctionTemplate.FunctionScope.POINT_AGGREGATE)
+  public static class ${type.inputType}${aggrtype.className} implements DrillAggFunc {
+    @Param ${type.inputType}Holder inHolder;
+    @Workspace BigIntHolder nonNullCount;
+    @Output ComplexWriter writer;
 
-  public void setup() {
-    nonNullCount = new BigIntHolder();
-    nonNullCount.value = 0;
-  }
+    public void setup() {
+      nonNullCount = new BigIntHolder();
+      nonNullCount.value = 0;
+    }
 
-  @Override
-  public void add() {
-  <#if type.inputType?starts_with("Nullable")>
-    sout: {
-    if (inHolder.isSet == 0) {
-    // processing nullable input and the value is null, so don't do anything...
-    break sout;
-    }
-  </#if>
-  <#if aggrtype.funcName == "any_value">
-    <#if type.runningType?starts_with("Map")>
-    if (nonNullCount.value == 0) {
-      org.apache.drill.exec.expr.fn.impl.MappifyUtility.createMap(inHolder.reader, writer, "any_value");
-    }
-    <#elseif type.runningType?starts_with("RepeatedMap")>
-    if (nonNullCount.value == 0) {
-      org.apache.drill.exec.expr.fn.impl.MappifyUtility.createRepeatedMapOrList(inHolder.reader, writer, "any_value");
-    }
-    <#elseif type.runningType?starts_with("List")>
-    if (nonNullCount.value == 0) {
-      org.apache.drill.exec.expr.fn.impl.MappifyUtility.createList(inHolder.reader, writer, "any_value");
-    }
-    <#elseif type.runningType?starts_with("RepeatedList")>
-    if (nonNullCount.value == 0) {
-      org.apache.drill.exec.expr.fn.impl.MappifyUtility.createRepeatedMapOrList(inHolder.reader, writer, "any_value");
-    }
-    <#elseif type.runningType?starts_with("Repeated")>
-    if (nonNullCount.value == 0) {
-      org.apache.drill.exec.expr.fn.impl.MappifyUtility.createList(inHolder.reader, writer, "any_value");
-    }
+    @Override
+    public void add() {
+    <#if type.inputType?starts_with("Nullable")>
+      sout: {
+      if (inHolder.isSet == 0) {
+      // processing nullable input and the value is null, so don't do anything...
+      break sout;
+      }
     </#if>
-  </#if>
-    nonNullCount.value = 1;
-  <#if type.inputType?starts_with("Nullable")>
-    } // end of sout block
-  </#if>
-  }
+    <#if aggrtype.funcName == "single_value">
+      if (nonNullCount.value > 0) {
+        throw org.apache.drill.common.exceptions.UserException.functionError()
+            .message("Input for single_value function has more than one row")
+            .build();
+      }
+    </#if>
+    <#if aggrtype.funcName == "any_value" || aggrtype.funcName == "single_value">
+      <#if type.runningType?starts_with("Map")>
+      if (nonNullCount.value == 0) {
+        org.apache.drill.exec.expr.fn.impl.MappifyUtility.createMap(inHolder.reader, writer, "${aggrtype.funcName}");
+      }
+      <#elseif type.runningType?starts_with("RepeatedMap")>
+      if (nonNullCount.value == 0) {
+        org.apache.drill.exec.expr.fn.impl.MappifyUtility.createRepeatedMapOrList(inHolder.reader, writer, "${aggrtype.funcName}");
+      }
+      <#elseif type.runningType?starts_with("List")>
+      if (nonNullCount.value == 0) {
+        org.apache.drill.exec.expr.fn.impl.MappifyUtility.createList(inHolder.reader, writer, "${aggrtype.funcName}");
+      }
+      <#elseif type.runningType?starts_with("RepeatedList")>
+      if (nonNullCount.value == 0) {
+        org.apache.drill.exec.expr.fn.impl.MappifyUtility.createRepeatedMapOrList(inHolder.reader, writer, "${aggrtype.funcName}");
+      }
+      <#elseif type.runningType?starts_with("Repeated")>
+      if (nonNullCount.value == 0) {
+        org.apache.drill.exec.expr.fn.impl.MappifyUtility.createList(inHolder.reader, writer, "${aggrtype.funcName}");
+      }
+      </#if>
+    </#if>
+      nonNullCount.value = 1;
+    <#if type.inputType?starts_with("Nullable")>
+      } // end of sout block
+    </#if>
+    }
 
-  @Override
-  public void output() {
-    //Do nothing since the complex writer takes care of everything!
-  }
+    @Override
+    public void output() {
+      //Do nothing since the complex writer takes care of everything!
+    }
 
-  @Override
-  public void reset() {
-  <#if aggrtype.funcName == "any_value">
-    nonNullCount.value = 0;
-  </#if>
+    @Override
+    public void reset() {
+    <#if aggrtype.funcName == "any_value" || aggrtype.funcName == "single_value">
+      nonNullCount.value = 0;
+    </#if>
+    }
   }
-}
 </#if>
 </#list>
 }

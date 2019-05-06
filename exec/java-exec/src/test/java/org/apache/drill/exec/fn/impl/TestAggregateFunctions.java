@@ -18,6 +18,7 @@
 package org.apache.drill.exec.fn.impl;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.apache.commons.lang3.tuple.Pair;
@@ -38,6 +39,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
+import org.apache.drill.test.TestBuilder;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -51,10 +53,13 @@ import java.io.FileWriter;
 import java.math.BigDecimal;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertTrue;
@@ -582,7 +587,7 @@ public class TestAggregateFunctions extends BaseTestQuery {
 
   @Test
   public void testSingleValueFunction() throws Exception {
-    List<String> tableNames = ImmutableList.of(
+    List<String> tableNames = Arrays.asList(
         "cp.`parquet/alltypes_required.parquet`",
         "cp.`parquet/alltypes_optional.parquet`");
     for (String tableName : tableNames) {
@@ -620,8 +625,7 @@ public class TestAggregateFunctions extends BaseTestQuery {
       loader.clear();
       result.release();
 
-      String columnsList = columns.stream()
-          .collect(Collectors.joining(", "));
+      String columnsList = String.join(", ", columns);
 
       final List<Map<String, Object>> baselineRecords = new ArrayList<>();
       baselineRecords.add(resultingValues);
@@ -640,11 +644,112 @@ public class TestAggregateFunctions extends BaseTestQuery {
   }
 
   @Test
-  public void testSingleValueWithMultipleValuesInput() throws Exception {
+  public void testHashAggSingleValueFunction() throws Exception {
+    List<String> tableNames = Arrays.asList(
+        "cp.`parquet/alltypes_required.parquet`",
+        "cp.`parquet/alltypes_optional.parquet`");
+    for (String tableName : tableNames) {
+      Map<String, Object> resultingValues = getBaselineRecords(tableName);
+
+      List<Boolean> optionValues = Arrays.asList(true, false);
+
+      try {
+        for (Boolean optionValue : optionValues) {
+          for (Map.Entry<String, Object> entry : resultingValues.entrySet()) {
+            String columnName = String.format("`%s`", entry.getKey());
+
+            // disable interval types when stream agg is disabled due to DRILL-7241
+            if (optionValue || !columnName.startsWith("`col_intrvl")) {
+              setSessionOption(PlannerSettings.STREAMAGG.getOptionName(), optionValue);
+              testBuilder()
+                  .sqlQuery("select single_value(t.%1$s) as %1$s\n" +
+                      "from (select %1$s from %2$s limit 1) t group by t.%1$s", columnName, tableName)
+                  .ordered()
+                  .baselineRecords(Collections.singletonList(ImmutableMap.of(columnName, entry.getValue())))
+                  .go();
+            }
+          }
+        }
+      } finally {
+        resetSessionOption(PlannerSettings.STREAMAGG.getOptionName());
+      }
+    }
+  }
+
+  private static Map<String, Object> getBaselineRecords(String tableName) throws Exception {
+    QueryDataBatch result =
+        testSqlWithResults(String.format("select * from %s limit 1", tableName)).get(0);
+
+    Map<String, Object> resultingValues = new HashMap<>();
+
+    RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
+    loader.load(result.getHeader().getDef(), result.getData());
+
+    for (VectorWrapper<?> vectorWrapper : loader.getContainer()) {
+      String fieldName = vectorWrapper.getField().getName();
+      Object object = vectorWrapper.getValueVector().getAccessor().getObject(0);
+      // VarCharVector returns Text instance, but baseline values should contain String value
+      if (object instanceof Text) {
+        object = object.toString();
+      }
+      resultingValues.put(fieldName, object);
+    }
+    loader.clear();
+    result.release();
+    return resultingValues;
+  }
+
+  @Test
+  public void testSingleValueWithComplexInput() throws Exception {
+    String query = "select single_value(a) as any_a, single_value(f) as any_f, single_value(m) as any_m," +
+        "single_value(p) as any_p from (select * from cp.`store/json/test_anyvalue.json` limit 1)";
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("any_a", "any_f", "any_m", "any_p")
+        .baselineValues(TestBuilder.listOf(TestBuilder.mapOf("b", 10L, "c", 15L),
+            TestBuilder.mapOf("b", 20L, "c", 45L)),
+            TestBuilder.listOf(TestBuilder.mapOf("g", TestBuilder.mapOf("h",
+                TestBuilder.listOf(TestBuilder.mapOf("k", 10L), TestBuilder.mapOf("k", 20L))))),
+            TestBuilder.listOf(TestBuilder.mapOf("n", TestBuilder.listOf(1L, 2L, 3L))),
+            TestBuilder.mapOf("q", TestBuilder.listOf(27L, 28L, 29L)))
+        .go();
+  }
+
+  @Test
+  public void testSingleValueWithMultipleValuesInputsAllTypes() throws Exception {
+    List<String> tableNames = Arrays.asList(
+        "cp.`parquet/alltypes_required.parquet`",
+        "cp.`parquet/alltypes_optional.parquet`");
+    for (String tableName : tableNames) {
+      QueryDataBatch result =
+          testSqlWithResults(String.format("select * from %s limit 1", tableName)).get(0);
+
+      RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
+      loader.load(result.getHeader().getDef(), result.getData());
+
+      List<String> columns = StreamSupport.stream(loader.getContainer().spliterator(), false)
+          .map(vectorWrapper -> vectorWrapper.getField().getName())
+          .collect(Collectors.toList());
+      loader.clear();
+      result.release();
+      for (String columnName : columns) {
+        try {
+          test("select single_value(t.%1$s) as %1$s from %2$s t", columnName, tableName);
+        } catch (UserRemoteException e) {
+          assertTrue("No expected current \"FUNCTION ERROR\" and/or \"Input for single_value function has more than one row\"",
+              e.getMessage().matches("^FUNCTION ERROR(.|\\n)*Input for single_value function has more than one row(.|\\n)*"));
+        }
+      }
+    }
+  }
+
+  @Test
+  public void testSingleValueWithMultipleComplexInputs() throws Exception {
     thrown.expect(UserRemoteException.class);
     thrown.expectMessage(containsString("FUNCTION ERROR"));
     thrown.expectMessage(containsString("Input for single_value function has more than one row"));
-    test("select single_value(n_name) from cp.`tpch/nation.parquet`");
+    test("select single_value(t1.a) from cp.`store/json/test_anyvalue.json` t1");
   }
 
   /*
