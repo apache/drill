@@ -1,6 +1,6 @@
 ---
 title: "Using the JDBC Driver"
-date: 2018-10-30 21:47:13 UTC
+date: 2019-05-07
 parent: "ODBC/JDBC Interfaces"
 ---
 This section explains how to install and use the JDBC driver for Apache Drill. To use the JDBC driver, you have to:
@@ -111,11 +111,16 @@ For definitions of other URL components, see [Using the JDBC URL for a Random Dr
 
 The class name for the JDBC driver is [org.apache.drill.jdbc.Driver]({{site.baseurl}}/api/1.2/jdbc/). For details, see the Apache Drill JDBC Driver version 1.2.0 [Javadoc]({{site.baseurl}}/api/1.2/jdbc/).  
 
-As of Drill 1.13, you can use the setQueryTimeout(int milliseconds) method in the interface DrillStatement to limit the amount of time that the JDBC driver allows a query to run before canceling the query. The setQueryTimeout method sets the number of seconds that the JDBC driver waits for a Statement object to execute before canceling it. By default, there is no limit on the amount of time allowed for a running statement to complete. When you configure a limit, an SQLTimeoutException is thrown if a statement exceeds the limit. A JDBC driver must apply this limit to the execute, executeQuery, and executeUpdate methods.
+Starting in Drill 1.16, the DrillStatement interface supports the setMaxRows method. The setMaxRows method sets a limit on the number of rows returned for a result set. The limit set is applied automatically at runtime. By default, there is no limit on the number of rows returned. See [Setting an Auto Limit on the Number of Rows Returned for Result Sets](https://drill.apache.org/docs/planning-and-execution-options/#setting-an-auto-limit-on-the-number-of-rows-returned-for-result-sets).  
+ 
+Starting in 1.13, the DrillStatement interface supports the setQueryTimeout method. The setQueryTimeout method limits the amount of time that the JDBC driver allows a query to run before canceling the query. The setQueryTimeout method sets the number of seconds that the JDBC driver waits for a Statement object to execute before canceling it. By default, there is no limit on the amount of time allowed for a running statement to complete. When you configure a limit, an SQLTimeoutException is thrown if a statement exceeds the limit. A JDBC driver must apply this limit to the execute, executeQuery, and executeUpdate methods.
+  
+
+
 
 ## Example of Connecting to Drill Programmatically
 
-The following sample code shows using the class name in a snippet that connects to Drill using the Drill-Jdbc-all driver:
+The following sample code shows you how to use the class name in a snippet to connect to Drill using the Drill-Jdbc-all driver:
 
 ```
 Class.forName("org.apache.drill.jdbc.Driver");

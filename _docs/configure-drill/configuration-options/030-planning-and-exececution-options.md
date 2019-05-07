@@ -1,6 +1,6 @@
 ---
 title: "Planning and Execution Options"
-date: 2019-04-18
+date: 2019-05-07
 parent: "Configuration Options"
 ---
 You can set Drill query planning and execution options per cluster, at the
@@ -115,7 +115,7 @@ The `exec.query.max_rows` option overrides row limit settings configured in the 
 ### Drill Web UI Row Limit Settings  
 In addition to the `exec.query.max_rows` option, the Query page in the Drill Web UI provides a field where you can enter a limit on the number of rows returned from a result set when you run a query.  
   
-**Note:** You can also configure the row limit for a REST client through the [autoLimit parameter in the REST API]({{site.baseurl}}/docs/rest-api-introduction/#post-query-json).   
+**Note:** You can also configure the row limit for a REST client through the [autoLimit parameter in the REST API]({{site.baseurl}}/docs/rest-api-introduction/#post-query-json) or a JDBC client through the `setMaxRows` method in the [Java API]({{site.baseurl}}/docs/using-the-jdbc-driver/#using-the-drill-driver-class-name).   
   
 ![](https://i.imgur.com/7nF0RBq.png)    
 When you submit the query, results display across one or multiple pages. You can set the number of results that display per page. When results span multiple pages, scroll through the pages using the links in the bottom right corner of the screen.
