@@ -107,6 +107,8 @@ public abstract class AbstractParquetScanBatchCreator {
       long totalPruneTime = 0;
       long totalRowgroups = rowGroupScan.getRowGroupReadEntries().size();
       Stopwatch pruneTimer = Stopwatch.createUnstarted();
+      int countMatchClassCastExceptions = 0; // in case match() hits CCE, count and report these
+      String matchCastErrorMessage = ""; // report the error too (Java insists on initializing this ....)
 
       // If pruning - Prepare the predicate and the columns before the FOR LOOP
       if ( doRuntimePruning ) {
@@ -182,22 +184,31 @@ public abstract class AbstractParquetScanBatchCreator {
           Map<SchemaPath, ColumnStatistics> columnsStatistics = ParquetTableMetadataUtils.getRowGroupColumnStatistics(tableMetadataV4, rowGroupMetadata);
 
           //
-          // Perform the Run-Time Pruning - i.e. Skip this rowgroup if the match fails
+          // Perform the Run-Time Pruning - i.e. Skip/prune this rowgroup if the match fails
           //
-          RowsMatch match = FilterEvaluatorUtils.matches(filterPredicate, columnsStatistics, footerRowCount);
+          RowsMatch matchResult = RowsMatch.ALL; // default (in case of exception) - do not prune this rowgroup
+          try {
+            matchResult = FilterEvaluatorUtils.matches(filterPredicate, columnsStatistics, footerRowCount);
 
-          // collect logging info
-          long timeToRead = pruneTimer.elapsed(TimeUnit.MICROSECONDS);
+            // collect logging info
+            long timeToRead = pruneTimer.elapsed(TimeUnit.MICROSECONDS);
+            totalPruneTime += timeToRead;
+            logger.trace("Run-time pruning: {} row-group {} (RG index: {} row count: {}), took {} usec", // trace each single rowgroup
+              matchResult == RowsMatch.NONE ? "Excluded" : "Included", rowGroup.getPath(), rowGroupIndex, footerRowCount, timeToRead);
+          } catch (ClassCastException cce) {
+            countMatchClassCastExceptions++; // one more CCE occured
+            matchCastErrorMessage = cce.getMessage(); // report the (last) error message
+          } catch (Exception e) {
+            // in case some unexpected exception is raised
+            logger.warn("Run-time pruning check failed - {}. Skip pruning rowgroup - {}", e.getMessage(), rowGroup.getPath());
+          }
           pruneTimer.stop();
           pruneTimer.reset();
-          totalPruneTime += timeToRead;
-          logger.trace("Run-time pruning: {} row-group {} (RG index: {} row count: {}), took {} usec", // trace each single rowgroup
-            match == RowsMatch.NONE ? "Excluded" : "Included", rowGroup.getPath(), rowGroupIndex, footerRowCount, timeToRead);
 
-          // If this rowgroup failed the match - skip it
-          if (match == RowsMatch.NONE) {
+          // If this rowgroup failed the match - skip it (i.e., no reader for this rowgroup)
+          if (matchResult == RowsMatch.NONE) {
             rowgroupsPruned++; // one more RG was pruned
-            if (firstRowGroup == null) {  // keep first RG, to be used in case all row groups are pruned
+            if (firstRowGroup == null) {  // keep the first RG, to be used in case all row groups are pruned
               firstRowGroup = rowGroup;
               firstFooter = footer;
             }
@@ -214,9 +225,13 @@ public abstract class AbstractParquetScanBatchCreator {
         mapWithMaxColumns = createReaderAndImplicitColumns(context, rowGroupScan, oContext, columnExplorer, readers, implicitColumns, mapWithMaxColumns, firstRowGroup, fs,
           firstFooter, true);
       }
+      // do some logging, if relevant
       if ( totalPruneTime > 0 ) {
         logger.info("Finished parquet_runtime_pruning in {} usec. Out of given {} rowgroups, {} were pruned. {}", totalPruneTime, totalRowgroups, rowgroupsPruned,
           totalRowgroups == rowgroupsPruned ? "ALL_PRUNED !!" : "");
+      }
+      if ( countMatchClassCastExceptions > 0 ) {
+        logger.info("Run-time pruning skipped for {} out of {} rowgroups due to: {}",countMatchClassCastExceptions, totalRowgroups, matchCastErrorMessage);
       }
 
       // Update stats (same in every reader - the others would just overwrite the stats)
