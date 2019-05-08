@@ -326,7 +326,7 @@ const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUT
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::control::PlanFragment, options_json_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::control::PlanFragment, context_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::control::PlanFragment, collector_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::control::PlanFragment, endpointuuid_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::control::PlanFragment, assignedendpointuuid_),
   3,
   8,
   9,
@@ -451,7 +451,7 @@ void AddDescriptorsImpl() {
       "c.bit.FragmentHandle\"G\n\023InitializeFragme"
       "nts\0220\n\010fragment\030\001 \003(\0132\036.exec.bit.control"
       ".PlanFragment\".\n\rCustomMessage\022\014\n\004type\030\001"
-      " \001(\005\022\017\n\007message\030\002 \001(\014\"\222\004\n\014PlanFragment\022("
+      " \001(\005\022\017\n\007message\030\002 \001(\014\"\232\004\n\014PlanFragment\022("
       "\n\006handle\030\001 \001(\0132\030.exec.bit.FragmentHandle"
       "\022\024\n\014network_cost\030\004 \001(\002\022\020\n\010cpu_cost\030\005 \001(\002"
       "\022\021\n\tdisk_cost\030\006 \001(\002\022\023\n\013memory_cost\030\007 \001(\002"
@@ -464,33 +464,33 @@ void AddDescriptorsImpl() {
       "ls\022\024\n\014options_json\030\017 \001(\t\022:\n\007context\030\020 \001("
       "\0132).exec.bit.control.QueryContextInforma"
       "tion\022.\n\tcollector\030\021 \003(\0132\033.exec.bit.contr"
-      "ol.Collector\022\024\n\014endpointUUID\030\022 \001(\t\"\210\001\n\tC"
-      "ollector\022\"\n\032opposite_major_fragment_id\030\001"
-      " \001(\005\022#\n\027incoming_minor_fragment\030\002 \003(\005B\002\020"
-      "\001\022\035\n\025supports_out_of_order\030\003 \001(\010\022\023\n\013is_s"
-      "pooling\030\004 \001(\010\"w\n\027QueryContextInformation"
-      "\022\030\n\020query_start_time\030\001 \001(\003\022\021\n\ttime_zone\030"
-      "\002 \001(\005\022\033\n\023default_schema_name\030\003 \001(\t\022\022\n\nse"
-      "ssion_id\030\004 \001(\t\"f\n\017WorkQueueStatus\022(\n\010end"
-      "point\030\001 \001(\0132\026.exec.DrillbitEndpoint\022\024\n\014q"
-      "ueue_length\030\002 \001(\005\022\023\n\013report_time\030\003 \001(\003\"h"
-      "\n\020FinishedReceiver\022*\n\010receiver\030\001 \001(\0132\030.e"
-      "xec.bit.FragmentHandle\022(\n\006sender\030\002 \001(\0132\030"
-      ".exec.bit.FragmentHandle*\206\003\n\007RpcType\022\r\n\t"
-      "HANDSHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\034\n\030REQ"
-      "_INITIALIZE_FRAGMENTS\020\003\022\027\n\023REQ_CANCEL_FR"
-      "AGMENT\020\006\022\031\n\025REQ_RECEIVER_FINISHED\020\007\022\027\n\023R"
-      "EQ_FRAGMENT_STATUS\020\010\022\022\n\016REQ_BIT_STATUS\020\t"
-      "\022\024\n\020REQ_QUERY_STATUS\020\n\022\024\n\020REQ_QUERY_CANC"
-      "EL\020\017\022\030\n\024REQ_UNPAUSE_FRAGMENT\020\020\022\016\n\nREQ_CU"
-      "STOM\020\021\022\030\n\024RESP_FRAGMENT_HANDLE\020\013\022\030\n\024RESP"
-      "_FRAGMENT_STATUS\020\014\022\023\n\017RESP_BIT_STATUS\020\r\022"
-      "\025\n\021RESP_QUERY_STATUS\020\016\022\017\n\013RESP_CUSTOM\020\022\022"
-      "\020\n\014SASL_MESSAGE\020\023B+\n\033org.apache.drill.ex"
-      "ec.protoB\nBitControlH\001"
+      "ol.Collector\022\034\n\024assignedEndpointUUID\030\022 \001"
+      "(\t\"\210\001\n\tCollector\022\"\n\032opposite_major_fragm"
+      "ent_id\030\001 \001(\005\022#\n\027incoming_minor_fragment\030"
+      "\002 \003(\005B\002\020\001\022\035\n\025supports_out_of_order\030\003 \001(\010"
+      "\022\023\n\013is_spooling\030\004 \001(\010\"w\n\027QueryContextInf"
+      "ormation\022\030\n\020query_start_time\030\001 \001(\003\022\021\n\tti"
+      "me_zone\030\002 \001(\005\022\033\n\023default_schema_name\030\003 \001"
+      "(\t\022\022\n\nsession_id\030\004 \001(\t\"f\n\017WorkQueueStatu"
+      "s\022(\n\010endpoint\030\001 \001(\0132\026.exec.DrillbitEndpo"
+      "int\022\024\n\014queue_length\030\002 \001(\005\022\023\n\013report_time"
+      "\030\003 \001(\003\"h\n\020FinishedReceiver\022*\n\010receiver\030\001"
+      " \001(\0132\030.exec.bit.FragmentHandle\022(\n\006sender"
+      "\030\002 \001(\0132\030.exec.bit.FragmentHandle*\206\003\n\007Rpc"
+      "Type\022\r\n\tHANDSHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020"
+      "\002\022\034\n\030REQ_INITIALIZE_FRAGMENTS\020\003\022\027\n\023REQ_C"
+      "ANCEL_FRAGMENT\020\006\022\031\n\025REQ_RECEIVER_FINISHE"
+      "D\020\007\022\027\n\023REQ_FRAGMENT_STATUS\020\010\022\022\n\016REQ_BIT_"
+      "STATUS\020\t\022\024\n\020REQ_QUERY_STATUS\020\n\022\024\n\020REQ_QU"
+      "ERY_CANCEL\020\017\022\030\n\024REQ_UNPAUSE_FRAGMENT\020\020\022\016"
+      "\n\nREQ_CUSTOM\020\021\022\030\n\024RESP_FRAGMENT_HANDLE\020\013"
+      "\022\030\n\024RESP_FRAGMENT_STATUS\020\014\022\023\n\017RESP_BIT_S"
+      "TATUS\020\r\022\025\n\021RESP_QUERY_STATUS\020\016\022\017\n\013RESP_C"
+      "USTOM\020\022\022\020\n\014SASL_MESSAGE\020\023B+\n\033org.apache."
+      "drill.exec.protoB\nBitControlH\001"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 2022);
+      descriptor, 2030);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "BitControl.proto", &protobuf_RegisterTypes);
   ::protobuf_ExecutionProtos_2eproto::AddDescriptors();
@@ -2031,7 +2031,7 @@ const int PlanFragment::kCredentialsFieldNumber;
 const int PlanFragment::kOptionsJsonFieldNumber;
 const int PlanFragment::kContextFieldNumber;
 const int PlanFragment::kCollectorFieldNumber;
-const int PlanFragment::kEndpointUUIDFieldNumber;
+const int PlanFragment::kAssignedEndpointUUIDFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 PlanFragment::PlanFragment()
@@ -2055,9 +2055,9 @@ PlanFragment::PlanFragment(const PlanFragment& from)
   if (from.has_options_json()) {
     options_json_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.options_json_);
   }
-  endpointuuid_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.has_endpointuuid()) {
-    endpointuuid_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.endpointuuid_);
+  assignedendpointuuid_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.has_assignedendpointuuid()) {
+    assignedendpointuuid_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.assignedendpointuuid_);
   }
   if (from.has_handle()) {
     handle_ = new ::exec::bit::FragmentHandle(*from.handle_);
@@ -2093,7 +2093,7 @@ PlanFragment::PlanFragment(const PlanFragment& from)
 void PlanFragment::SharedCtor() {
   fragment_json_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   options_json_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  endpointuuid_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  assignedendpointuuid_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   ::memset(&handle_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&leaf_fragment_) -
       reinterpret_cast<char*>(&handle_)) + sizeof(leaf_fragment_));
@@ -2109,7 +2109,7 @@ PlanFragment::~PlanFragment() {
 void PlanFragment::SharedDtor() {
   fragment_json_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   options_json_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  endpointuuid_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  assignedendpointuuid_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   if (this != internal_default_instance()) delete handle_;
   if (this != internal_default_instance()) delete assignment_;
   if (this != internal_default_instance()) delete foreman_;
@@ -2147,7 +2147,7 @@ void PlanFragment::Clear() {
       options_json_.ClearNonDefaultToEmptyNoArena();
     }
     if (cached_has_bits & 0x00000004u) {
-      endpointuuid_.ClearNonDefaultToEmptyNoArena();
+      assignedendpointuuid_.ClearNonDefaultToEmptyNoArena();
     }
     if (cached_has_bits & 0x00000008u) {
       GOOGLE_DCHECK(handle_ != NULL);
@@ -2393,16 +2393,16 @@ bool PlanFragment::MergePartialFromCodedStream(
         break;
       }
 
-      // optional string endpointUUID = 18;
+      // optional string assignedEndpointUUID = 18;
       case 18: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
             static_cast< ::google::protobuf::uint8>(146u /* 146 & 0xFF */)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_endpointuuid()));
+                input, this->mutable_assignedendpointuuid()));
           ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
-            this->endpointuuid().data(), static_cast<int>(this->endpointuuid().length()),
+            this->assignedendpointuuid().data(), static_cast<int>(this->assignedendpointuuid().length()),
             ::google::protobuf::internal::WireFormat::PARSE,
-            "exec.bit.control.PlanFragment.endpointUUID");
+            "exec.bit.control.PlanFragment.assignedEndpointUUID");
         } else {
           goto handle_unusual;
         }
@@ -2530,14 +2530,14 @@ void PlanFragment::SerializeWithCachedSizes(
       output);
   }
 
-  // optional string endpointUUID = 18;
+  // optional string assignedEndpointUUID = 18;
   if (cached_has_bits & 0x00000004u) {
     ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
-      this->endpointuuid().data(), static_cast<int>(this->endpointuuid().length()),
+      this->assignedendpointuuid().data(), static_cast<int>(this->assignedendpointuuid().length()),
       ::google::protobuf::internal::WireFormat::SERIALIZE,
-      "exec.bit.control.PlanFragment.endpointUUID");
+      "exec.bit.control.PlanFragment.assignedEndpointUUID");
     ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      18, this->endpointuuid(), output);
+      18, this->assignedendpointuuid(), output);
   }
 
   if (_internal_metadata_.have_unknown_fields()) {
@@ -2655,15 +2655,15 @@ void PlanFragment::SerializeWithCachedSizes(
         17, this->collector(static_cast<int>(i)), deterministic, target);
   }
 
-  // optional string endpointUUID = 18;
+  // optional string assignedEndpointUUID = 18;
   if (cached_has_bits & 0x00000004u) {
     ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
-      this->endpointuuid().data(), static_cast<int>(this->endpointuuid().length()),
+      this->assignedendpointuuid().data(), static_cast<int>(this->assignedendpointuuid().length()),
       ::google::protobuf::internal::WireFormat::SERIALIZE,
-      "exec.bit.control.PlanFragment.endpointUUID");
+      "exec.bit.control.PlanFragment.assignedEndpointUUID");
     target =
       ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        18, this->endpointuuid(), target);
+        18, this->assignedendpointuuid(), target);
   }
 
   if (_internal_metadata_.have_unknown_fields()) {
@@ -2709,11 +2709,11 @@ size_t PlanFragment::ByteSizeLong() const {
           this->options_json());
     }
 
-    // optional string endpointUUID = 18;
-    if (has_endpointuuid()) {
+    // optional string assignedEndpointUUID = 18;
+    if (has_assignedendpointuuid()) {
       total_size += 2 +
         ::google::protobuf::internal::WireFormatLite::StringSize(
-          this->endpointuuid());
+          this->assignedendpointuuid());
     }
 
     // optional .exec.bit.FragmentHandle handle = 1;
@@ -2832,8 +2832,8 @@ void PlanFragment::MergeFrom(const PlanFragment& from) {
       options_json_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.options_json_);
     }
     if (cached_has_bits & 0x00000004u) {
-      set_has_endpointuuid();
-      endpointuuid_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.endpointuuid_);
+      set_has_assignedendpointuuid();
+      assignedendpointuuid_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.assignedendpointuuid_);
     }
     if (cached_has_bits & 0x00000008u) {
       mutable_handle()->::exec::bit::FragmentHandle::MergeFrom(from.handle());
@@ -2906,7 +2906,7 @@ void PlanFragment::InternalSwap(PlanFragment* other) {
     GetArenaNoVirtual());
   options_json_.Swap(&other->options_json_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
     GetArenaNoVirtual());
-  endpointuuid_.Swap(&other->endpointuuid_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+  assignedendpointuuid_.Swap(&other->assignedendpointuuid_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
     GetArenaNoVirtual());
   swap(handle_, other->handle_);
   swap(assignment_, other->assignment_);

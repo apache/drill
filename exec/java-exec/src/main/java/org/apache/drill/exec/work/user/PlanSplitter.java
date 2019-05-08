@@ -132,7 +132,6 @@ public class PlanSplitter {
       final QueryWorkUnit queryWorkUnit = parallelizer.generateWorkUnit(queryContext.getOptions().getOptionList(), queryContext.getCurrentEndpoint(),
           queryId, queryContext.getOnlineEndpointUUIDs(), rootFragment,
           queryContext.getSession(), queryContext.getQueryContextInfo());
-//      planner.visitPhysicalPlan(queryWorkUnit);
       queryWorkUnit.applyPlan(dContext.getPlanReader());
       fragments.add(queryWorkUnit.getRootFragment());
       fragments.addAll(queryWorkUnit.getFragments());

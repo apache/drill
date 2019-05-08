@@ -35,17 +35,38 @@ public class DrillNode {
     return new DrillNode(endpoint);
   }
 
-  public boolean equals(Object other) {
-    if (!(other instanceof DrillNode)) {
-      return false;
+  public boolean equals(Object obj) {
+    if (obj == this) {
+      return true;
     }
+    if (!(obj instanceof DrillNode)) {
+      return super.equals(obj);
+    }
+    DrillbitEndpoint other = ((DrillNode)obj).endpoint;
 
-    DrillbitEndpoint otherEndpoint = ((DrillNode) other).endpoint;
-    return endpoint.getAddress().equals(otherEndpoint.getAddress()) &&
-           endpoint.getUserPort() == otherEndpoint.getUserPort() &&
-           endpoint.getControlPort() == otherEndpoint.getControlPort() &&
-           endpoint.getDataPort() == otherEndpoint.getDataPort() &&
-           endpoint.getVersion().equals(otherEndpoint.getVersion());
+    boolean result = true;
+    result = result && (endpoint.hasAddress() == other.hasAddress());
+    if (endpoint.hasAddress()) {
+      result = result && endpoint.getAddress()
+        .equals(other.getAddress());
+    }
+    result = result && (endpoint.hasUserPort() == other.hasUserPort());
+    if (endpoint.hasUserPort()) {
+      result = result && (endpoint.getUserPort() == other.getUserPort());
+    }
+    result = result && (endpoint.hasControlPort() == other.hasControlPort());
+    if (endpoint.hasControlPort()) {
+      result = result && (endpoint.getControlPort() == other.getControlPort());
+    }
+    result = result && (endpoint.hasDataPort() == other.hasDataPort());
+    if (endpoint.hasDataPort()) {
+      result = result && (endpoint.getDataPort() == other.getDataPort());
+    }
+    result = result && (endpoint.hasVersion() == other.hasVersion());
+    if (endpoint.hasVersion()) {
+      result = result && endpoint.getVersion().equals(other.getVersion());
+    }
+    return result;
   }
 
   @Override
@@ -81,8 +102,8 @@ public class DrillNode {
     StringBuilder sb = new StringBuilder();
 
     return sb.append("endpoint address :")
-      .append(endpoint.getAddress())
+      .append(endpoint.hasAddress() ? endpoint.getAddress() : "no-address")
       .append("endpoint user port: ")
-      .append(endpoint.getUserPort()).toString();
+      .append(endpoint.hasUserPort() ? endpoint.getUserPort() : "no-userport").toString();
   }
 }

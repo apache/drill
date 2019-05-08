@@ -47,7 +47,7 @@ import java.util.stream.Collectors;
  * fragment is based on the cluster state and provided queue configuration.
  */
 public class DistributedQueueParallelizer extends SimpleParallelizer {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DistributedQueueParallelizer.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DistributedQueueParallelizer.class);
   private final boolean planHasMemory;
   private final QueryContext queryContext;
   private final QueryResourceManager rm;
@@ -62,23 +62,21 @@ public class DistributedQueueParallelizer extends SimpleParallelizer {
   }
 
   // return the memory computed for a physical operator on a drillbitendpoint.
+  // At this stage buffered operator memory could have been reduced depending upon
+  // the selected queue limits.
   public BiFunction<DrillbitEndpoint, PhysicalOperator, Long> getMemory() {
     return (endpoint, operator) -> {
+      long operatorsMemory = operator.getMaxAllocation();
       if (!planHasMemory) {
-        final DrillNode drillEndpointNode = DrillNode.create(endpoint);
         if (operator.isBufferedOperator(queryContext)) {
-          Long operatorsMemory = operators.get(drillEndpointNode).get(operator);
-          logger.debug(" Memory requirement for the operator {} in endpoint {} is {}", operator, endpoint, operatorsMemory);
-          return operatorsMemory;
+          final DrillNode drillEndpointNode = DrillNode.create(endpoint);
+          operatorsMemory = operators.get(drillEndpointNode).get(operator);
         } else {
-          Long nonBufferedMemory = (long)operator.getCost().getMemoryCost();
-          logger.debug(" Memory requirement for the operator {} in endpoint {} is {}", operator, endpoint, nonBufferedMemory);
-          return nonBufferedMemory;
+          operatorsMemory = (long)operator.getCost().getMemoryCost();
         }
       }
-      else {
-        return operator.getMaxAllocation();
-      }
+      logger.debug(" Memory requirement for the operator {} in endpoint {} is {}", operator, endpoint, operatorsMemory);
+      return operatorsMemory;
     };
   }
 

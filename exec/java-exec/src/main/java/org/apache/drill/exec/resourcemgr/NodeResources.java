@@ -44,18 +44,18 @@ public class NodeResources {
 
   private long memoryInBytes;
 
-  private long numVirtualCpu;
+  private int numVirtualCpu;
 
   private static final int CURRENT_VERSION = 1;
 
-  public NodeResources(long memoryInBytes, long numVirtualCpu) {
+  public NodeResources(long memoryInBytes, int numVirtualCpu) {
     this(CURRENT_VERSION, memoryInBytes, numVirtualCpu);
   }
 
   @JsonCreator
   public NodeResources(@JsonProperty("version") int version,
                        @JsonProperty("memoryInBytes") long memoryInBytes,
-                       @JsonProperty("numVirtualCpu") long numVirtualCpu) {
+                       @JsonProperty("numVirtualCpu") int numVirtualCpu) {
     this.version = version;
     this.memoryInBytes = memoryInBytes;
     this.numVirtualCpu = numVirtualCpu;
@@ -79,7 +79,7 @@ public class NodeResources {
     return Math.round(getMemoryInMB() / 1024L);
   }
 
-  public long getNumVirtualCpu() {
+  public int getNumVirtualCpu() {
     return numVirtualCpu;
   }
 
@@ -140,11 +140,11 @@ public class NodeResources {
     return create(0,0);
   }
 
-  public static NodeResources create(long cpu) {
+  public static NodeResources create(int cpu) {
     return create(cpu,0);
   }
 
-  public static NodeResources create(long cpu, long memory) {
+  public static NodeResources create(int cpu, long memory) {
     return new NodeResources(CURRENT_VERSION, memory, cpu);
   }
 

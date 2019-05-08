@@ -17,39 +17,17 @@
  */
 package org.apache.drill.exec.util.memory;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.ops.QueryContext;
-import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.server.options.OptionManager;
-import org.apache.drill.exec.server.options.OptionSet;
 
-import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
-
-public class DefaultMemoryAllocationUtilities {
+public class DefaultMemoryAllocationUtilities extends MemoryAllocationUtilities {
 
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DefaultMemoryAllocationUtilities.class);
 
-
-  public static void setupBufferedMemoryAllocations(PhysicalPlan plan, final QueryContext queryContext) {
-    setupBufferedOpsMemoryAllocations(plan.getProperties().hasResourcePlan,
-                                      getBufferedOperators(plan.getSortedOperators(), queryContext), queryContext);
-  }
-
-  public static List<PhysicalOperator> getBufferedOperators(List<PhysicalOperator> operators, QueryContext queryContext) {
-    final List<PhysicalOperator> bufferedOpList = new ArrayList<>();
-    for (final PhysicalOperator op : operators) {
-      if (op.isBufferedOperator(queryContext)) {
-        bufferedOpList.add(op);
-      }
-    }
-    return bufferedOpList;
-  }
 
   /**
    * Helper method to setup Memory Allocations
@@ -105,65 +83,5 @@ public class DefaultMemoryAllocationUtilities {
     }
   }
 
-  /**
-   * Compute per-operator memory based on the computed per-node memory, the
-   * number of operators, and the computed number of fragments (which house
-   * the operators.) Enforces a floor on the amount of memory per operator.
-   *
-   * @param optionManager system option manager
-   * @param maxAllocPerNode computed query memory per node
-   * @param opCount number of buffering operators in this query
-   * @return the per-operator memory
-   */
 
-  public static long computeOperatorMemory(OptionSet optionManager, long maxAllocPerNode, int opCount) {
-    final long maxWidth = optionManager.getOption(ExecConstants.MAX_WIDTH_PER_NODE);
-    final double cpuLoadAverage = optionManager.getOption(ExecConstants.CPU_LOAD_AVERAGE);
-    final long maxWidthPerNode = ExecConstants.MAX_WIDTH_PER_NODE.computeMaxWidth(cpuLoadAverage, maxWidth);
-    final long maxOperatorAlloc = maxAllocPerNode / (opCount * maxWidthPerNode);
-    logger.debug("Max buffered operator alloc: {}", maxOperatorAlloc);
-
-    // User configurable option to allow forcing minimum memory.
-    // Ensure that the buffered ops receive the minimum memory needed to make progress.
-    // Without this, the math might work out to allocate too little memory.
-
-    return Math.max(maxOperatorAlloc,
-        optionManager.getOption(ExecConstants.MIN_MEMORY_PER_BUFFERED_OP));
-  }
-
-  /**
-   * Per-node memory calculations based on a number of constraints.
-   * <p>
-   * Factored out into a separate method to allow unit testing.
-   * @param config Drill config
-   * @param optionManager system options
-   * @param directMemory amount of direct memory
-   * @return memory per query per node
-   */
-
-  @VisibleForTesting
-  public static long computeQueryMemory(DrillConfig config, OptionSet optionManager, long directMemory) {
-
-    // Memory computed as a percent of total memory.
-
-    long perQueryMemory = Math.round(directMemory *
-        optionManager.getOption(ExecConstants.PERCENT_MEMORY_PER_QUERY));
-
-    // But, must allow at least the amount given explicitly for
-    // backward compatibility.
-
-    perQueryMemory = Math.max(perQueryMemory,
-        optionManager.getOption(ExecConstants.MAX_QUERY_MEMORY_PER_NODE));
-
-    // Compute again as either the total direct memory, or the
-    // configured maximum top-level allocation (10 GB).
-
-    long maxAllocPerNode = Math.min(directMemory,
-        config.getLong(RootAllocatorFactory.TOP_LEVEL_MAX_ALLOC));
-
-    // Final amount per node per query is the minimum of these two.
-
-    maxAllocPerNode = Math.min(maxAllocPerNode, perQueryMemory);
-    return maxAllocPerNode;
-  }
 }

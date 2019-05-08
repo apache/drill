@@ -66,7 +66,7 @@ public final class PlanFragment implements Externalizable, Message<PlanFragment>
     private String optionsJson;
     private QueryContextInformation context;
     private List<Collector> collector;
-    private String endpointUUID;
+    private String assignedEndpointUUID;
 
     public PlanFragment()
     {
@@ -270,16 +270,16 @@ public final class PlanFragment implements Externalizable, Message<PlanFragment>
         return this;
     }
 
-    // endpointUUID
+    // assignedEndpointUUID
 
-    public String getEndpointUUID()
+    public String getAssignedEndpointUUID()
     {
-        return endpointUUID;
+        return assignedEndpointUUID;
     }
 
-    public PlanFragment setEndpointUUID(String endpointUUID)
+    public PlanFragment setAssignedEndpointUUID(String assignedEndpointUUID)
     {
-        this.endpointUUID = endpointUUID;
+        this.assignedEndpointUUID = assignedEndpointUUID;
         return this;
     }
 
@@ -391,7 +391,7 @@ public final class PlanFragment implements Externalizable, Message<PlanFragment>
                     break;
 
                 case 18:
-                    message.endpointUUID = input.readString();
+                    message.assignedEndpointUUID = input.readString();
                     break;
                 default:
                     input.handleUnknownField(number, this);
@@ -459,8 +459,8 @@ public final class PlanFragment implements Externalizable, Message<PlanFragment>
         }
 
 
-        if(message.endpointUUID != null)
-            output.writeString(18, message.endpointUUID, false);
+        if(message.assignedEndpointUUID != null)
+            output.writeString(18, message.assignedEndpointUUID, false);
     }
 
     public String getFieldName(int number)
@@ -482,7 +482,7 @@ public final class PlanFragment implements Externalizable, Message<PlanFragment>
             case 15: return "optionsJson";
             case 16: return "context";
             case 17: return "collector";
-            case 18: return "endpointUUID";
+            case 18: return "assignedEndpointUUID";
             default: return null;
         }
     }
@@ -511,7 +511,7 @@ public final class PlanFragment implements Externalizable, Message<PlanFragment>
         __fieldMap.put("optionsJson", 15);
         __fieldMap.put("context", 16);
         __fieldMap.put("collector", 17);
-        __fieldMap.put("endpointUUID", 18);
+        __fieldMap.put("assignedEndpointUUID", 18);
     }
     
 }

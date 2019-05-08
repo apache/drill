@@ -79,7 +79,7 @@ message PlanFragment {
   optional string options_json = 15;
   optional QueryContextInformation context = 16;
   repeated Collector collector = 17;
-  optional string endpointUUID = 18;
+  optional string assignedEndpointUUID = 18;
 }
 
 message Collector {

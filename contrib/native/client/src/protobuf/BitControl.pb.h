@@ -938,20 +938,20 @@ class PlanFragment : public ::google::protobuf::Message /* @@protoc_insertion_po
   ::std::string* release_options_json();
   void set_allocated_options_json(::std::string* options_json);
 
-  // optional string endpointUUID = 18;
-  bool has_endpointuuid() const;
-  void clear_endpointuuid();
-  static const int kEndpointUUIDFieldNumber = 18;
-  const ::std::string& endpointuuid() const;
-  void set_endpointuuid(const ::std::string& value);
+  // optional string assignedEndpointUUID = 18;
+  bool has_assignedendpointuuid() const;
+  void clear_assignedendpointuuid();
+  static const int kAssignedEndpointUUIDFieldNumber = 18;
+  const ::std::string& assignedendpointuuid() const;
+  void set_assignedendpointuuid(const ::std::string& value);
   #if LANG_CXX11
-  void set_endpointuuid(::std::string&& value);
+  void set_assignedendpointuuid(::std::string&& value);
   #endif
-  void set_endpointuuid(const char* value);
-  void set_endpointuuid(const char* value, size_t size);
-  ::std::string* mutable_endpointuuid();
-  ::std::string* release_endpointuuid();
-  void set_allocated_endpointuuid(::std::string* endpointuuid);
+  void set_assignedendpointuuid(const char* value);
+  void set_assignedendpointuuid(const char* value, size_t size);
+  ::std::string* mutable_assignedendpointuuid();
+  ::std::string* release_assignedendpointuuid();
+  void set_allocated_assignedendpointuuid(::std::string* assignedendpointuuid);
 
   // optional .exec.bit.FragmentHandle handle = 1;
   bool has_handle() const;
@@ -1092,8 +1092,8 @@ class PlanFragment : public ::google::protobuf::Message /* @@protoc_insertion_po
   void clear_has_options_json();
   void set_has_context();
   void clear_has_context();
-  void set_has_endpointuuid();
-  void clear_has_endpointuuid();
+  void set_has_assignedendpointuuid();
+  void clear_has_assignedendpointuuid();
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
   ::google::protobuf::internal::HasBits<1> _has_bits_;
@@ -1101,7 +1101,7 @@ class PlanFragment : public ::google::protobuf::Message /* @@protoc_insertion_po
   ::google::protobuf::RepeatedPtrField< ::exec::bit::control::Collector > collector_;
   ::google::protobuf::internal::ArenaStringPtr fragment_json_;
   ::google::protobuf::internal::ArenaStringPtr options_json_;
-  ::google::protobuf::internal::ArenaStringPtr endpointuuid_;
+  ::google::protobuf::internal::ArenaStringPtr assignedendpointuuid_;
   ::exec::bit::FragmentHandle* handle_;
   ::exec::DrillbitEndpoint* assignment_;
   ::exec::DrillbitEndpoint* foreman_;
@@ -2762,70 +2762,70 @@ PlanFragment::collector() const {
   return collector_;
 }
 
-// optional string endpointUUID = 18;
-inline bool PlanFragment::has_endpointuuid() const {
+// optional string assignedEndpointUUID = 18;
+inline bool PlanFragment::has_assignedendpointuuid() const {
   return (_has_bits_[0] & 0x00000004u) != 0;
 }
-inline void PlanFragment::set_has_endpointuuid() {
+inline void PlanFragment::set_has_assignedendpointuuid() {
   _has_bits_[0] |= 0x00000004u;
 }
-inline void PlanFragment::clear_has_endpointuuid() {
+inline void PlanFragment::clear_has_assignedendpointuuid() {
   _has_bits_[0] &= ~0x00000004u;
 }
-inline void PlanFragment::clear_endpointuuid() {
-  endpointuuid_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  clear_has_endpointuuid();
+inline void PlanFragment::clear_assignedendpointuuid() {
+  assignedendpointuuid_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  clear_has_assignedendpointuuid();
 }
-inline const ::std::string& PlanFragment::endpointuuid() const {
-  // @@protoc_insertion_point(field_get:exec.bit.control.PlanFragment.endpointUUID)
-  return endpointuuid_.GetNoArena();
+inline const ::std::string& PlanFragment::assignedendpointuuid() const {
+  // @@protoc_insertion_point(field_get:exec.bit.control.PlanFragment.assignedEndpointUUID)
+  return assignedendpointuuid_.GetNoArena();
 }
-inline void PlanFragment::set_endpointuuid(const ::std::string& value) {
-  set_has_endpointuuid();
-  endpointuuid_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:exec.bit.control.PlanFragment.endpointUUID)
+inline void PlanFragment::set_assignedendpointuuid(const ::std::string& value) {
+  set_has_assignedendpointuuid();
+  assignedendpointuuid_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:exec.bit.control.PlanFragment.assignedEndpointUUID)
 }
 #if LANG_CXX11
-inline void PlanFragment::set_endpointuuid(::std::string&& value) {
-  set_has_endpointuuid();
-  endpointuuid_.SetNoArena(
+inline void PlanFragment::set_assignedendpointuuid(::std::string&& value) {
+  set_has_assignedendpointuuid();
+  assignedendpointuuid_.SetNoArena(
     &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:exec.bit.control.PlanFragment.endpointUUID)
+  // @@protoc_insertion_point(field_set_rvalue:exec.bit.control.PlanFragment.assignedEndpointUUID)
 }
 #endif
-inline void PlanFragment::set_endpointuuid(const char* value) {
+inline void PlanFragment::set_assignedendpointuuid(const char* value) {
   GOOGLE_DCHECK(value != NULL);
-  set_has_endpointuuid();
-  endpointuuid_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:exec.bit.control.PlanFragment.endpointUUID)
+  set_has_assignedendpointuuid();
+  assignedendpointuuid_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:exec.bit.control.PlanFragment.assignedEndpointUUID)
 }
-inline void PlanFragment::set_endpointuuid(const char* value, size_t size) {
-  set_has_endpointuuid();
-  endpointuuid_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+inline void PlanFragment::set_assignedendpointuuid(const char* value, size_t size) {
+  set_has_assignedendpointuuid();
+  assignedendpointuuid_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:exec.bit.control.PlanFragment.endpointUUID)
+  // @@protoc_insertion_point(field_set_pointer:exec.bit.control.PlanFragment.assignedEndpointUUID)
 }
-inline ::std::string* PlanFragment::mutable_endpointuuid() {
-  set_has_endpointuuid();
-  // @@protoc_insertion_point(field_mutable:exec.bit.control.PlanFragment.endpointUUID)
-  return endpointuuid_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+inline ::std::string* PlanFragment::mutable_assignedendpointuuid() {
+  set_has_assignedendpointuuid();
+  // @@protoc_insertion_point(field_mutable:exec.bit.control.PlanFragment.assignedEndpointUUID)
+  return assignedendpointuuid_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline ::std::string* PlanFragment::release_endpointuuid() {
-  // @@protoc_insertion_point(field_release:exec.bit.control.PlanFragment.endpointUUID)
-  if (!has_endpointuuid()) {
+inline ::std::string* PlanFragment::release_assignedendpointuuid() {
+  // @@protoc_insertion_point(field_release:exec.bit.control.PlanFragment.assignedEndpointUUID)
+  if (!has_assignedendpointuuid()) {
     return NULL;
   }
-  clear_has_endpointuuid();
-  return endpointuuid_.ReleaseNonDefaultNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  clear_has_assignedendpointuuid();
+  return assignedendpointuuid_.ReleaseNonDefaultNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline void PlanFragment::set_allocated_endpointuuid(::std::string* endpointuuid) {
-  if (endpointuuid != NULL) {
-    set_has_endpointuuid();
+inline void PlanFragment::set_allocated_assignedendpointuuid(::std::string* assignedendpointuuid) {
+  if (assignedendpointuuid != NULL) {
+    set_has_assignedendpointuuid();
   } else {
-    clear_has_endpointuuid();
+    clear_has_assignedendpointuuid();
   }
-  endpointuuid_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), endpointuuid);
-  // @@protoc_insertion_point(field_set_allocated:exec.bit.control.PlanFragment.endpointUUID)
+  assignedendpointuuid_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), assignedendpointuuid);
+  // @@protoc_insertion_point(field_set_allocated:exec.bit.control.PlanFragment.assignedEndpointUUID)
 }
 
 // -------------------------------------------------------------------

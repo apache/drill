@@ -672,8 +672,8 @@ public final class SchemaBitControl
                 for(org.apache.drill.exec.proto.BitControl.Collector collector : message.getCollectorList())
                     output.writeObject(17, collector, org.apache.drill.exec.proto.SchemaBitControl.Collector.WRITE, true);
 
-                if(message.hasEndpointUUID())
-                    output.writeString(18, message.getEndpointUUID(), false);
+                if(message.hasAssignedEndpointUUID())
+                    output.writeString(18, message.getAssignedEndpointUUID(), false);
             }
             public boolean isInitialized(org.apache.drill.exec.proto.BitControl.PlanFragment message)
             {
@@ -765,7 +765,7 @@ public final class SchemaBitControl
 
                             break;
                         case 18:
-                            builder.setEndpointUUID(input.readString());
+                            builder.setAssignedEndpointUUID(input.readString());
                             break;
                         default:
                             input.handleUnknownField(number, this);
@@ -822,7 +822,7 @@ public final class SchemaBitControl
                 case 15: return "optionsJson";
                 case 16: return "context";
                 case 17: return "collector";
-                case 18: return "endpointUUID";
+                case 18: return "assignedEndpointUUID";
                 default: return null;
             }
         }
@@ -849,7 +849,7 @@ public final class SchemaBitControl
             fieldMap.put("optionsJson", 15);
             fieldMap.put("context", 16);
             fieldMap.put("collector", 17);
-            fieldMap.put("endpointUUID", 18);
+            fieldMap.put("assignedEndpointUUID", 18);
         }
     }
 

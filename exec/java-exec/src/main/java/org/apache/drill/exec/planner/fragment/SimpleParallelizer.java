@@ -338,7 +338,7 @@ public abstract class SimpleParallelizer implements QueryParallelizer {
         PlanFragment fragment = PlanFragment.newBuilder()
             .setForeman(foremanNode)
             .setHandle(handle)
-            .setEndpointUUID(endpointUUID)
+            .setAssignedEndpointUUID(endpointUUID)
             .setAssignment(endpoint)
             .setLeafFragment(isLeafFragment)
             .setContext(queryContextInfo)

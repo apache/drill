@@ -800,7 +800,7 @@ const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUT
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::shared::OperatorProfile, peak_local_memory_allocated_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::shared::OperatorProfile, metric_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::shared::OperatorProfile, wait_nanos_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::shared::OperatorProfile, optimal_mem_allocation_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::shared::OperatorProfile, max_allocation_),
   ~0u,
   0,
   1,
@@ -1015,68 +1015,68 @@ void AddDescriptorsImpl() {
       "y_used\030\007 \001(\003\022\027\n\017max_memory_used\030\010 \001(\003\022(\n"
       "\010endpoint\030\t \001(\0132\026.exec.DrillbitEndpoint\022"
       "\023\n\013last_update\030\n \001(\003\022\025\n\rlast_progress\030\013 "
-      "\001(\003\"\237\002\n\017OperatorProfile\0221\n\rinput_profile"
+      "\001(\003\"\227\002\n\017OperatorProfile\0221\n\rinput_profile"
       "\030\001 \003(\0132\032.exec.shared.StreamProfile\022\023\n\013op"
       "erator_id\030\003 \001(\005\022\025\n\roperator_type\030\004 \001(\005\022\023"
       "\n\013setup_nanos\030\005 \001(\003\022\025\n\rprocess_nanos\030\006 \001"
       "(\003\022#\n\033peak_local_memory_allocated\030\007 \001(\003\022"
       "(\n\006metric\030\010 \003(\0132\030.exec.shared.MetricValu"
-      "e\022\022\n\nwait_nanos\030\t \001(\003\022\036\n\026optimal_mem_all"
-      "ocation\030\n \001(\003\"B\n\rStreamProfile\022\017\n\007record"
-      "s\030\001 \001(\003\022\017\n\007batches\030\002 \001(\003\022\017\n\007schemas\030\003 \001("
-      "\003\"J\n\013MetricValue\022\021\n\tmetric_id\030\001 \001(\005\022\022\n\nl"
-      "ong_value\030\002 \001(\003\022\024\n\014double_value\030\003 \001(\001\")\n"
-      "\010Registry\022\035\n\003jar\030\001 \003(\0132\020.exec.shared.Jar"
-      "\"/\n\003Jar\022\014\n\004name\030\001 \001(\t\022\032\n\022function_signat"
-      "ure\030\002 \003(\t\"W\n\013SaslMessage\022\021\n\tmechanism\030\001 "
-      "\001(\t\022\014\n\004data\030\002 \001(\014\022\'\n\006status\030\003 \001(\0162\027.exec"
-      ".shared.SaslStatus*5\n\nRpcChannel\022\017\n\013BIT_"
-      "CONTROL\020\000\022\014\n\010BIT_DATA\020\001\022\010\n\004USER\020\002*V\n\tQue"
-      "ryType\022\007\n\003SQL\020\001\022\013\n\007LOGICAL\020\002\022\014\n\010PHYSICAL"
-      "\020\003\022\r\n\tEXECUTION\020\004\022\026\n\022PREPARED_STATEMENT\020"
-      "\005*\207\001\n\rFragmentState\022\013\n\007SENDING\020\000\022\027\n\023AWAI"
-      "TING_ALLOCATION\020\001\022\013\n\007RUNNING\020\002\022\014\n\010FINISH"
-      "ED\020\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAILED\020\005\022\032\n\026CANCE"
-      "LLATION_REQUESTED\020\006*\374\t\n\020CoreOperatorType"
-      "\022\021\n\rSINGLE_SENDER\020\000\022\024\n\020BROADCAST_SENDER\020"
-      "\001\022\n\n\006FILTER\020\002\022\022\n\016HASH_AGGREGATE\020\003\022\r\n\tHAS"
-      "H_JOIN\020\004\022\016\n\nMERGE_JOIN\020\005\022\031\n\025HASH_PARTITI"
-      "ON_SENDER\020\006\022\t\n\005LIMIT\020\007\022\024\n\020MERGING_RECEIV"
-      "ER\020\010\022\034\n\030ORDERED_PARTITION_SENDER\020\t\022\013\n\007PR"
-      "OJECT\020\n\022\026\n\022UNORDERED_RECEIVER\020\013\022\032\n\026RANGE"
-      "_PARTITION_SENDER\020\014\022\n\n\006SCREEN\020\r\022\034\n\030SELEC"
-      "TION_VECTOR_REMOVER\020\016\022\027\n\023STREAMING_AGGRE"
-      "GATE\020\017\022\016\n\nTOP_N_SORT\020\020\022\021\n\rEXTERNAL_SORT\020"
-      "\021\022\t\n\005TRACE\020\022\022\t\n\005UNION\020\023\022\014\n\010OLD_SORT\020\024\022\032\n"
-      "\026PARQUET_ROW_GROUP_SCAN\020\025\022\021\n\rHIVE_SUB_SC"
-      "AN\020\026\022\025\n\021SYSTEM_TABLE_SCAN\020\027\022\021\n\rMOCK_SUB_"
-      "SCAN\020\030\022\022\n\016PARQUET_WRITER\020\031\022\023\n\017DIRECT_SUB"
-      "_SCAN\020\032\022\017\n\013TEXT_WRITER\020\033\022\021\n\rTEXT_SUB_SCA"
-      "N\020\034\022\021\n\rJSON_SUB_SCAN\020\035\022\030\n\024INFO_SCHEMA_SU"
-      "B_SCAN\020\036\022\023\n\017COMPLEX_TO_JSON\020\037\022\025\n\021PRODUCE"
-      "R_CONSUMER\020 \022\022\n\016HBASE_SUB_SCAN\020!\022\n\n\006WIND"
-      "OW\020\"\022\024\n\020NESTED_LOOP_JOIN\020#\022\021\n\rAVRO_SUB_S"
-      "CAN\020$\022\021\n\rPCAP_SUB_SCAN\020%\022\022\n\016KAFKA_SUB_SC"
-      "AN\020&\022\021\n\rKUDU_SUB_SCAN\020\'\022\013\n\007FLATTEN\020(\022\020\n\014"
-      "LATERAL_JOIN\020)\022\n\n\006UNNEST\020*\022,\n(HIVE_DRILL"
-      "_NATIVE_PARQUET_ROW_GROUP_SCAN\020+\022\r\n\tJDBC"
-      "_SCAN\020,\022\022\n\016REGEX_SUB_SCAN\020-\022\023\n\017MAPRDB_SU"
-      "B_SCAN\020.\022\022\n\016MONGO_SUB_SCAN\020/\022\017\n\013KUDU_WRI"
-      "TER\0200\022\026\n\022OPEN_TSDB_SUB_SCAN\0201\022\017\n\013JSON_WR"
-      "ITER\0202\022\026\n\022HTPPD_LOG_SUB_SCAN\0203\022\022\n\016IMAGE_"
-      "SUB_SCAN\0204\022\025\n\021SEQUENCE_SUB_SCAN\0205\022\023\n\017PAR"
-      "TITION_LIMIT\0206\022\023\n\017PCAPNG_SUB_SCAN\0207\022\022\n\016R"
-      "UNTIME_FILTER\0208\022\017\n\013ROWKEY_JOIN\0209\022\023\n\017SYSL"
-      "OG_SUB_SCAN\020:\022\030\n\024STATISTICS_AGGREGATE\020;\022"
-      "\020\n\014UNPIVOT_MAPS\020<\022\024\n\020STATISTICS_MERGE\020=\022"
-      "\021\n\rLTSV_SUB_SCAN\020>*g\n\nSaslStatus\022\020\n\014SASL"
-      "_UNKNOWN\020\000\022\016\n\nSASL_START\020\001\022\024\n\020SASL_IN_PR"
-      "OGRESS\020\002\022\020\n\014SASL_SUCCESS\020\003\022\017\n\013SASL_FAILE"
-      "D\020\004B.\n\033org.apache.drill.exec.protoB\rUser"
-      "BitSharedH\001"
+      "e\022\022\n\nwait_nanos\030\t \001(\003\022\026\n\016max_allocation\030"
+      "\n \001(\003\"B\n\rStreamProfile\022\017\n\007records\030\001 \001(\003\022"
+      "\017\n\007batches\030\002 \001(\003\022\017\n\007schemas\030\003 \001(\003\"J\n\013Met"
+      "ricValue\022\021\n\tmetric_id\030\001 \001(\005\022\022\n\nlong_valu"
+      "e\030\002 \001(\003\022\024\n\014double_value\030\003 \001(\001\")\n\010Registr"
+      "y\022\035\n\003jar\030\001 \003(\0132\020.exec.shared.Jar\"/\n\003Jar\022"
+      "\014\n\004name\030\001 \001(\t\022\032\n\022function_signature\030\002 \003("
+      "\t\"W\n\013SaslMessage\022\021\n\tmechanism\030\001 \001(\t\022\014\n\004d"
+      "ata\030\002 \001(\014\022\'\n\006status\030\003 \001(\0162\027.exec.shared."
+      "SaslStatus*5\n\nRpcChannel\022\017\n\013BIT_CONTROL\020"
+      "\000\022\014\n\010BIT_DATA\020\001\022\010\n\004USER\020\002*V\n\tQueryType\022\007"
+      "\n\003SQL\020\001\022\013\n\007LOGICAL\020\002\022\014\n\010PHYSICAL\020\003\022\r\n\tEX"
+      "ECUTION\020\004\022\026\n\022PREPARED_STATEMENT\020\005*\207\001\n\rFr"
+      "agmentState\022\013\n\007SENDING\020\000\022\027\n\023AWAITING_ALL"
+      "OCATION\020\001\022\013\n\007RUNNING\020\002\022\014\n\010FINISHED\020\003\022\r\n\t"
+      "CANCELLED\020\004\022\n\n\006FAILED\020\005\022\032\n\026CANCELLATION_"
+      "REQUESTED\020\006*\374\t\n\020CoreOperatorType\022\021\n\rSING"
+      "LE_SENDER\020\000\022\024\n\020BROADCAST_SENDER\020\001\022\n\n\006FIL"
+      "TER\020\002\022\022\n\016HASH_AGGREGATE\020\003\022\r\n\tHASH_JOIN\020\004"
+      "\022\016\n\nMERGE_JOIN\020\005\022\031\n\025HASH_PARTITION_SENDE"
+      "R\020\006\022\t\n\005LIMIT\020\007\022\024\n\020MERGING_RECEIVER\020\010\022\034\n\030"
+      "ORDERED_PARTITION_SENDER\020\t\022\013\n\007PROJECT\020\n\022"
+      "\026\n\022UNORDERED_RECEIVER\020\013\022\032\n\026RANGE_PARTITI"
+      "ON_SENDER\020\014\022\n\n\006SCREEN\020\r\022\034\n\030SELECTION_VEC"
+      "TOR_REMOVER\020\016\022\027\n\023STREAMING_AGGREGATE\020\017\022\016"
+      "\n\nTOP_N_SORT\020\020\022\021\n\rEXTERNAL_SORT\020\021\022\t\n\005TRA"
+      "CE\020\022\022\t\n\005UNION\020\023\022\014\n\010OLD_SORT\020\024\022\032\n\026PARQUET"
+      "_ROW_GROUP_SCAN\020\025\022\021\n\rHIVE_SUB_SCAN\020\026\022\025\n\021"
+      "SYSTEM_TABLE_SCAN\020\027\022\021\n\rMOCK_SUB_SCAN\020\030\022\022"
+      "\n\016PARQUET_WRITER\020\031\022\023\n\017DIRECT_SUB_SCAN\020\032\022"
+      "\017\n\013TEXT_WRITER\020\033\022\021\n\rTEXT_SUB_SCAN\020\034\022\021\n\rJ"
+      "SON_SUB_SCAN\020\035\022\030\n\024INFO_SCHEMA_SUB_SCAN\020\036"
+      "\022\023\n\017COMPLEX_TO_JSON\020\037\022\025\n\021PRODUCER_CONSUM"
+      "ER\020 \022\022\n\016HBASE_SUB_SCAN\020!\022\n\n\006WINDOW\020\"\022\024\n\020"
+      "NESTED_LOOP_JOIN\020#\022\021\n\rAVRO_SUB_SCAN\020$\022\021\n"
+      "\rPCAP_SUB_SCAN\020%\022\022\n\016KAFKA_SUB_SCAN\020&\022\021\n\r"
+      "KUDU_SUB_SCAN\020\'\022\013\n\007FLATTEN\020(\022\020\n\014LATERAL_"
+      "JOIN\020)\022\n\n\006UNNEST\020*\022,\n(HIVE_DRILL_NATIVE_"
+      "PARQUET_ROW_GROUP_SCAN\020+\022\r\n\tJDBC_SCAN\020,\022"
+      "\022\n\016REGEX_SUB_SCAN\020-\022\023\n\017MAPRDB_SUB_SCAN\020."
+      "\022\022\n\016MONGO_SUB_SCAN\020/\022\017\n\013KUDU_WRITER\0200\022\026\n"
+      "\022OPEN_TSDB_SUB_SCAN\0201\022\017\n\013JSON_WRITER\0202\022\026"
+      "\n\022HTPPD_LOG_SUB_SCAN\0203\022\022\n\016IMAGE_SUB_SCAN"
+      "\0204\022\025\n\021SEQUENCE_SUB_SCAN\0205\022\023\n\017PARTITION_L"
+      "IMIT\0206\022\023\n\017PCAPNG_SUB_SCAN\0207\022\022\n\016RUNTIME_F"
+      "ILTER\0208\022\017\n\013ROWKEY_JOIN\0209\022\023\n\017SYSLOG_SUB_S"
+      "CAN\020:\022\030\n\024STATISTICS_AGGREGATE\020;\022\020\n\014UNPIV"
+      "OT_MAPS\020<\022\024\n\020STATISTICS_MERGE\020=\022\021\n\rLTSV_"
+      "SUB_SCAN\020>*g\n\nSaslStatus\022\020\n\014SASL_UNKNOWN"
+      "\020\000\022\016\n\nSASL_START\020\001\022\024\n\020SASL_IN_PROGRESS\020\002"
+      "\022\020\n\014SASL_SUCCESS\020\003\022\017\n\013SASL_FAILED\020\004B.\n\033o"
+      "rg.apache.drill.exec.protoB\rUserBitShare"
+      "dH\001"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 5691);
+      descriptor, 5683);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "UserBitShared.proto", &protobuf_RegisterTypes);
   ::protobuf_Types_2eproto::AddDescriptors();
@@ -8687,7 +8687,7 @@ const int OperatorProfile::kProcessNanosFieldNumber;
 const int OperatorProfile::kPeakLocalMemoryAllocatedFieldNumber;
 const int OperatorProfile::kMetricFieldNumber;
 const int OperatorProfile::kWaitNanosFieldNumber;
-const int OperatorProfile::kOptimalMemAllocationFieldNumber;
+const int OperatorProfile::kMaxAllocationFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 OperatorProfile::OperatorProfile()
@@ -8705,15 +8705,15 @@ OperatorProfile::OperatorProfile(const OperatorProfile& from)
       metric_(from.metric_) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   ::memcpy(&operator_id_, &from.operator_id_,
-    static_cast<size_t>(reinterpret_cast<char*>(&optimal_mem_allocation_) -
-    reinterpret_cast<char*>(&operator_id_)) + sizeof(optimal_mem_allocation_));
+    static_cast<size_t>(reinterpret_cast<char*>(&max_allocation_) -
+    reinterpret_cast<char*>(&operator_id_)) + sizeof(max_allocation_));
   // @@protoc_insertion_point(copy_constructor:exec.shared.OperatorProfile)
 }
 
 void OperatorProfile::SharedCtor() {
   ::memset(&operator_id_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&optimal_mem_allocation_) -
-      reinterpret_cast<char*>(&operator_id_)) + sizeof(optimal_mem_allocation_));
+      reinterpret_cast<char*>(&max_allocation_) -
+      reinterpret_cast<char*>(&operator_id_)) + sizeof(max_allocation_));
 }
 
 OperatorProfile::~OperatorProfile() {
@@ -8749,8 +8749,8 @@ void OperatorProfile::Clear() {
   cached_has_bits = _has_bits_[0];
   if (cached_has_bits & 127u) {
     ::memset(&operator_id_, 0, static_cast<size_t>(
-        reinterpret_cast<char*>(&optimal_mem_allocation_) -
-        reinterpret_cast<char*>(&operator_id_)) + sizeof(optimal_mem_allocation_));
+        reinterpret_cast<char*>(&max_allocation_) -
+        reinterpret_cast<char*>(&operator_id_)) + sizeof(max_allocation_));
   }
   _has_bits_.Clear();
   _internal_metadata_.Clear();
@@ -8874,14 +8874,14 @@ bool OperatorProfile::MergePartialFromCodedStream(
         break;
       }
 
-      // optional int64 optimal_mem_allocation = 10;
+      // optional int64 max_allocation = 10;
       case 10: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
             static_cast< ::google::protobuf::uint8>(80u /* 80 & 0xFF */)) {
-          set_has_optimal_mem_allocation();
+          set_has_max_allocation();
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
-                 input, &optimal_mem_allocation_)));
+                 input, &max_allocation_)));
         } else {
           goto handle_unusual;
         }
@@ -8963,9 +8963,9 @@ void OperatorProfile::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteInt64(9, this->wait_nanos(), output);
   }
 
-  // optional int64 optimal_mem_allocation = 10;
+  // optional int64 max_allocation = 10;
   if (cached_has_bits & 0x00000040u) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt64(10, this->optimal_mem_allocation(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteInt64(10, this->max_allocation(), output);
   }
 
   if (_internal_metadata_.have_unknown_fields()) {
@@ -9029,9 +9029,9 @@ void OperatorProfile::SerializeWithCachedSizes(
     target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(9, this->wait_nanos(), target);
   }
 
-  // optional int64 optimal_mem_allocation = 10;
+  // optional int64 max_allocation = 10;
   if (cached_has_bits & 0x00000040u) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(10, this->optimal_mem_allocation(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(10, this->max_allocation(), target);
   }
 
   if (_internal_metadata_.have_unknown_fields()) {
@@ -9116,11 +9116,11 @@ size_t OperatorProfile::ByteSizeLong() const {
           this->wait_nanos());
     }
 
-    // optional int64 optimal_mem_allocation = 10;
-    if (has_optimal_mem_allocation()) {
+    // optional int64 max_allocation = 10;
+    if (has_max_allocation()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::Int64Size(
-          this->optimal_mem_allocation());
+          this->max_allocation());
     }
 
   }
@@ -9174,7 +9174,7 @@ void OperatorProfile::MergeFrom(const OperatorProfile& from) {
       wait_nanos_ = from.wait_nanos_;
     }
     if (cached_has_bits & 0x00000040u) {
-      optimal_mem_allocation_ = from.optimal_mem_allocation_;
+      max_allocation_ = from.max_allocation_;
     }
     _has_bits_[0] |= cached_has_bits;
   }
@@ -9212,7 +9212,7 @@ void OperatorProfile::InternalSwap(OperatorProfile* other) {
   swap(process_nanos_, other->process_nanos_);
   swap(peak_local_memory_allocated_, other->peak_local_memory_allocated_);
   swap(wait_nanos_, other->wait_nanos_);
-  swap(optimal_mem_allocation_, other->optimal_mem_allocation_);
+  swap(max_allocation_, other->max_allocation_);
   swap(_has_bits_[0], other->_has_bits_[0]);
   _internal_metadata_.Swap(&other->_internal_metadata_);
 }

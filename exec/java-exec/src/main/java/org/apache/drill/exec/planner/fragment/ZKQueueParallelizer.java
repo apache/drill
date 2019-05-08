@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.fragment;
 
+import org.apache.drill.common.DrillNode;
 import org.apache.drill.common.util.function.CheckedConsumer;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalOperatorSetupException;
@@ -26,9 +27,10 @@ import org.apache.drill.exec.planner.AbstractOpWrapperVisitor;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.util.memory.ZKQueueMemoryAllocationUtilities;
 import org.apache.drill.exec.work.foreman.rm.QueryResourceManager;
-import org.apache.drill.shaded.guava.com.google.common.collect.ArrayListMultimap;
-import org.apache.drill.shaded.guava.com.google.common.collect.Multimap;
+
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Set;
@@ -69,15 +71,17 @@ public class ZKQueueParallelizer extends SimpleParallelizer {
 
 
   public class Collector extends AbstractOpWrapperVisitor<Void, RuntimeException> {
-    private final Multimap<DrillbitEndpoint, PhysicalOperator> bufferedOperators;
+    private final Map<DrillNode, List<PhysicalOperator>> bufferedOperators;
 
     public Collector() {
-      this.bufferedOperators = ArrayListMultimap.create();
+      this.bufferedOperators = new HashMap<>();
     }
 
     private void getMinorFragCountPerDrillbit(Wrapper currFragment, PhysicalOperator operator) {
       for (DrillbitEndpoint endpoint : currFragment.getAssignedEndpoints()) {
-        bufferedOperators.put(endpoint, operator);
+        DrillNode node = new DrillNode(endpoint);
+        bufferedOperators.putIfAbsent(node, new ArrayList<>());
+        bufferedOperators.get(node).add(operator);
       }
     }
 
@@ -103,10 +107,10 @@ public class ZKQueueParallelizer extends SimpleParallelizer {
     }
 
     public Map<String, Collection<PhysicalOperator>> getNodeMap() {
-      Map<DrillbitEndpoint, Collection<PhysicalOperator>> endpointCollectionMap = bufferedOperators.asMap();
+      Map<DrillNode, List<PhysicalOperator>> endpointCollectionMap = bufferedOperators;
       Map<String, Collection<PhysicalOperator>> nodeMap = new HashMap<>();
-      for (Map.Entry<DrillbitEndpoint, Collection<PhysicalOperator>> entry : endpointCollectionMap.entrySet()) {
-        nodeMap.put(entry.getKey().getAddress(), entry.getValue());
+      for (Map.Entry<DrillNode, List<PhysicalOperator>> entry : endpointCollectionMap.entrySet()) {
+        nodeMap.put(entry.getKey().toString(), entry.getValue());
       }
 
       return nodeMap;

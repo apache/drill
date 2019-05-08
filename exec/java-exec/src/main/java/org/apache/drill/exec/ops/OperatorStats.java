@@ -88,7 +88,7 @@ public class OperatorStats {
   }
 
   @VisibleForTesting
-  public OperatorStats(int operatorId, int operatorType, int inputCount, BufferAllocator allocator, long initialAllocation) {
+  public OperatorStats(int operatorId, int operatorType, int inputCount, BufferAllocator allocator, long optimalMemAllocation) {
     super();
     this.allocator = allocator;
     this.operatorId = operatorId;
@@ -97,7 +97,7 @@ public class OperatorStats {
     this.recordsReceivedByInput = new long[inputCount];
     this.batchesReceivedByInput = new long[inputCount];
     this.schemaCountByInput = new long[inputCount];
-    this.optimalMemoryAllocation = initialAllocation;
+    this.optimalMemoryAllocation = optimalMemAllocation;
   }
 
   private String assertionError(String msg){
@@ -208,7 +208,7 @@ public class OperatorStats {
         .setOperatorId(operatorId) //
         .setSetupNanos(setupNanos) //
         .setProcessNanos(processingNanos)
-        .setOptimalMemAllocation(optimalMemoryAllocation)
+        .setMaxAllocation(optimalMemoryAllocation)
         .setWaitNanos(waitNanos);
 
     if (allocator != null) {
