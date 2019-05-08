@@ -20,9 +20,11 @@ package org.apache.drill.exec.planner.fragment;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.util.DrillStringUtils;
@@ -39,6 +41,7 @@ import org.apache.drill.exec.physical.base.Receiver;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.planner.fragment.Fragment.ExchangeFragmentPair;
 import org.apache.drill.exec.planner.fragment.Materializer.IndexedFragmentNode;
+import org.apache.drill.common.DrillNode;
 import org.apache.drill.exec.proto.BitControl.Collector;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.BitControl.QueryContextInformation;
@@ -175,7 +178,7 @@ public abstract class SimpleParallelizer implements QueryParallelizer {
   }
 
   public abstract void adjustMemory(PlanningSet planningSet, Set<Wrapper> roots,
-                                    Collection<DrillbitEndpoint> activeEndpoints) throws PhysicalOperatorSetupException;
+                                    Map<DrillbitEndpoint, String> onlineEndpointUUIDs) throws ExecutionSetupException;
 
   /**
    * The starting function for the whole parallelization and memory computation logic.
@@ -191,7 +194,7 @@ public abstract class SimpleParallelizer implements QueryParallelizer {
    * @param options List of options set by the user.
    * @param foremanNode foreman node for this query plan.
    * @param queryId  Query ID.
-   * @param activeEndpoints currently active endpoins on which this plan will run.
+   * @param onlineEndpoints currently active endpoins on which this plan will run.
    * @param rootFragment Root major fragment.
    * @param session session context.
    * @param queryContextInfo query context.
@@ -200,17 +203,17 @@ public abstract class SimpleParallelizer implements QueryParallelizer {
    */
   @Override
   public final QueryWorkUnit generateWorkUnit(OptionList options, DrillbitEndpoint foremanNode, QueryId queryId,
-                                              Collection<DrillbitEndpoint> activeEndpoints, Fragment rootFragment,
+                                              Map<DrillbitEndpoint, String> onlineEndpoints, Fragment rootFragment,
                                               UserSession session, QueryContextInformation queryContextInfo) throws ExecutionSetupException {
     PlanningSet planningSet = prepareFragmentTree(rootFragment);
 
     Set<Wrapper> rootFragments = getRootFragments(planningSet);
 
-    collectStatsAndParallelizeFragments(planningSet, rootFragments, activeEndpoints);
+    collectStatsAndParallelizeFragments(planningSet, rootFragments, onlineEndpoints.keySet());
 
-    adjustMemory(planningSet, rootFragments, activeEndpoints);
+    adjustMemory(planningSet, rootFragments, onlineEndpoints);
 
-    return generateWorkUnit(options, foremanNode, queryId, rootFragment, planningSet, session, queryContextInfo);
+    return generateWorkUnit(options, foremanNode, queryId, rootFragment, planningSet, session, queryContextInfo, onlineEndpoints);
   }
 
   /**
@@ -218,7 +221,7 @@ public abstract class SimpleParallelizer implements QueryParallelizer {
    * @param options
    * @param foremanNode
    * @param queryId
-   * @param activeEndpoints
+   * @param onlineEndpointUUIDs
    * @param reader
    * @param rootFragment
    * @param session
@@ -227,7 +230,7 @@ public abstract class SimpleParallelizer implements QueryParallelizer {
    * @throws ExecutionSetupException
    */
   public List<QueryWorkUnit> getSplitFragments(OptionList options, DrillbitEndpoint foremanNode, QueryId queryId,
-      Collection<DrillbitEndpoint> activeEndpoints, PhysicalPlanReader reader, Fragment rootFragment,
+      Map<DrillbitEndpoint, String> onlineEndpointUUIDs, PhysicalPlanReader reader, Fragment rootFragment,
       UserSession session, QueryContextInformation queryContextInfo) throws ExecutionSetupException {
     // no op
     throw new UnsupportedOperationException("Use children classes");
@@ -293,8 +296,9 @@ public abstract class SimpleParallelizer implements QueryParallelizer {
 
   protected QueryWorkUnit generateWorkUnit(OptionList options, DrillbitEndpoint foremanNode, QueryId queryId,
                                            Fragment rootNode, PlanningSet planningSet, UserSession session,
-                                           QueryContextInformation queryContextInfo) throws ExecutionSetupException {
+                                           QueryContextInformation queryContextInfo, Map<DrillbitEndpoint, String> onlineEndpoints) throws ExecutionSetupException {
     List<MinorFragmentDefn> fragmentDefns = new ArrayList<>( );
+    Map<DrillNode, String> nodeMap = onlineEndpoints.entrySet().stream().collect(Collectors.toMap(entry -> DrillNode.create(entry.getKey()), entry -> entry.getValue()));
 
     MinorFragmentDefn rootFragmentDefn = null;
     FragmentRoot rootOperator = null;
@@ -329,10 +333,13 @@ public abstract class SimpleParallelizer implements QueryParallelizer {
             .setQueryId(queryId)
             .build();
 
+        DrillbitEndpoint endpoint = wrapper.getAssignedEndpoint(minorFragmentId);
+        String endpointUUID =  nodeMap.get(DrillNode.create(endpoint));
         PlanFragment fragment = PlanFragment.newBuilder()
             .setForeman(foremanNode)
             .setHandle(handle)
-            .setAssignment(wrapper.getAssignedEndpoint(minorFragmentId))
+            .setAssignedEndpointUUID(endpointUUID)
+            .setAssignment(endpoint)
             .setLeafFragment(isLeafFragment)
             .setContext(queryContextInfo)
             .setMemInitial(wrapper.getInitialAllocation())

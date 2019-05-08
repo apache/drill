@@ -17,23 +17,13 @@
  */
 package org.apache.drill.exec.rpc.user;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.apache.drill.shaded.guava.com.google.common.base.Strings;
-
 import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
 import org.apache.calcite.tools.ValidationException;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.DrillProperties;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerUtil;
@@ -41,14 +31,22 @@ import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.proto.UserProtos.UserProperties;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.SessionOptionManager;
-
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.StorageStrategy;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Strings;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class UserSession implements AutoCloseable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserSession.class);
@@ -126,7 +124,7 @@ public class UserSession implements AutoCloseable {
         sb.append(DrillProperties.QUOTING_IDENTIFIERS).append(",");
       }
 
-      if (userSession.properties.containsKey(DrillProperties.QUERY_TAGS)) {
+      if (userSession.properties.containsKey(DrillProperties.QUERY_TAGS.toLowerCase())) {
         sb.append(DrillProperties.QUERY_TAGS);
       }
 
@@ -145,9 +143,9 @@ public class UserSession implements AutoCloseable {
             userSession.properties.getProperty(DrillProperties.QUOTING_IDENTIFIERS));
         }
 
-        if (userSession.properties.containsKey(DrillProperties.QUERY_TAGS)) {
+        if (userSession.properties.containsKey(DrillProperties.QUERY_TAGS.toLowerCase())) {
           userSession.setSessionOption(ExecConstants.RM_QUERY_TAGS_KEY,
-            userSession.properties.getProperty(DrillProperties.QUERY_TAGS));
+            userSession.properties.getProperty(DrillProperties.QUERY_TAGS.toLowerCase()));
         }
       }
       UserSession session = userSession;

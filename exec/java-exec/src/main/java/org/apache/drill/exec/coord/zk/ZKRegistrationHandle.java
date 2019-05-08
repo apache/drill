@@ -26,8 +26,18 @@ public class ZKRegistrationHandle implements RegistrationHandle {
   public final String id;
   public DrillbitEndpoint endpoint;
 
+  public ZKRegistrationHandle(String id, DrillbitEndpoint endpoint) {
+    super();
+    this.id = id;
+    this.endpoint = endpoint;
+  }
+
   public DrillbitEndpoint getEndPoint() {
     return endpoint;
+  }
+
+  public String getId() {
+    return id;
   }
 
   @Override
@@ -35,10 +45,5 @@ public class ZKRegistrationHandle implements RegistrationHandle {
     this.endpoint = endpoint;
   }
 
-  public ZKRegistrationHandle(String id, DrillbitEndpoint endpoint) {
-    super();
-    this.id = id;
-    this.endpoint = endpoint;
-  }
 
 }

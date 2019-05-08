@@ -17,22 +17,23 @@
  */
 package org.apache.drill.exec.store.sys.store.provider;
 
-import java.io.IOException;
-
-import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.coord.zk.ZKClusterCoordinator;
 import org.apache.drill.exec.exception.StoreException;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.sys.PersistentStore;
-import org.apache.drill.exec.store.sys.PersistentStoreRegistry;
 import org.apache.drill.exec.store.sys.PersistentStoreConfig;
+import org.apache.drill.exec.store.sys.PersistentStoreRegistry;
 import org.apache.drill.exec.store.sys.VersionedPersistentStore;
 import org.apache.drill.exec.store.sys.store.LocalPersistentStore;
 import org.apache.drill.exec.store.sys.store.VersionedDelegatingStore;
 import org.apache.drill.exec.store.sys.store.ZookeeperPersistentStore;
+import org.apache.drill.exec.store.sys.store.ZookeeperTransactionalPersistenceStore;
+import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.apache.hadoop.fs.Path;
+
+import java.io.IOException;
 
 public class ZookeeperPersistentStoreProvider extends BasePersistentStoreProvider {
 //  private static final Logger logger = LoggerFactory.getLogger(ZookeeperPersistentStoreProvider.class);
@@ -69,14 +70,23 @@ public class ZookeeperPersistentStoreProvider extends BasePersistentStoreProvide
     switch(config.getMode()){
     case BLOB_PERSISTENT:
       return new LocalPersistentStore<>(fs, blobRoot, config);
-    case PERSISTENT:
-      final ZookeeperPersistentStore<V> store = new ZookeeperPersistentStore<>(curator, config);
-      try {
-        store.start();
-      } catch (Exception e) {
-        throw new StoreException("unable to start zookeeper store", e);
-      }
-      return store;
+      case PERSISTENT:
+        final ZookeeperPersistentStore<V> store = new ZookeeperPersistentStore<>(curator, config);
+        try {
+          store.start();
+        } catch (Exception e) {
+          throw new StoreException("unable to start zookeeper store", e);
+        }
+        return store;
+      case PERSISTENT_TRANSACTION:
+        final ZookeeperTransactionalPersistenceStore<V> transactionStore =
+          new ZookeeperTransactionalPersistenceStore<>(curator, config);
+        try {
+          transactionStore.start();
+        } catch (Exception e) {
+          throw new StoreException("unable to start zookeeper transactional store", e);
+        }
+        return transactionStore;
     default:
       throw new IllegalStateException();
     }
@@ -95,6 +105,15 @@ public class ZookeeperPersistentStoreProvider extends BasePersistentStoreProvide
           throw new StoreException("unable to start zookeeper store", e);
         }
         return store;
+      case PERSISTENT_TRANSACTION:
+        final ZookeeperTransactionalPersistenceStore<V> transactionStore =
+          new ZookeeperTransactionalPersistenceStore<>(curator, config);
+        try {
+          transactionStore.start();
+        } catch (Exception e) {
+          throw new StoreException("unable to start versioned zookeeper transactional store", e);
+        }
+        return transactionStore;
       default:
         throw new IllegalStateException();
     }

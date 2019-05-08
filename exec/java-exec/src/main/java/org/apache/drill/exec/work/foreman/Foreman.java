@@ -17,9 +17,6 @@
  */
 package org.apache.drill.exec.work.foreman;
 
-import org.apache.drill.exec.work.filter.RuntimeFilterRouter;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import com.google.protobuf.InvalidProtocolBufferException;
 import io.netty.channel.ChannelFuture;
 import io.netty.util.concurrent.Future;
@@ -61,9 +58,13 @@ import org.apache.drill.exec.testing.ControlsInjectorFactory;
 import org.apache.drill.exec.util.Pointer;
 import org.apache.drill.exec.work.QueryWorkUnit;
 import org.apache.drill.exec.work.WorkManager.WorkerBee;
+import org.apache.drill.exec.work.filter.RuntimeFilterRouter;
 import org.apache.drill.exec.work.foreman.rm.QueryQueue.QueueTimeoutException;
 import org.apache.drill.exec.work.foreman.rm.QueryQueue.QueryQueueException;
+import org.apache.drill.exec.work.foreman.rm.QueryResourceManager.QueryAdmitResponse;
 import org.apache.drill.exec.work.foreman.rm.QueryResourceManager;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import java.io.IOException;
@@ -254,35 +255,47 @@ public class Foreman implements Runnable {
     }
 
     queryText = queryRequest.getPlan();
-    queryStateProcessor.moveToState(QueryState.PLANNING, null);
 
     try {
       injector.injectChecked(queryContext.getExecutionControls(), "run-try-beginning", ForemanException.class);
-
-      // convert a run query request into action
-      switch (queryRequest.getType()) {
-      case LOGICAL:
-        parseAndRunLogicalPlan(queryRequest.getPlan());
-        break;
-      case PHYSICAL:
-        parseAndRunPhysicalPlan(queryRequest.getPlan());
-        break;
-      case SQL:
-        final String sql = queryRequest.getPlan();
-        // log query id, username and query text before starting any real work. Also, put
-        // them together such that it is easy to search based on query id
-        logger.info("Query text for query with id {} issued by {}: {}", queryIdString,
-            queryContext.getQueryUserName(), sql);
-        runSQL(sql);
-        break;
-      case EXECUTION:
-        runFragment(queryRequest.getFragmentsList());
-        break;
-      case PREPARED_STATEMENT:
-        runPreparedStatement(queryRequest.getPreparedStatementHandle());
-        break;
-      default:
-        throw new IllegalStateException();
+      switch (getState()) {
+        case PREPARING:
+          queryStateProcessor.moveToState(QueryState.PLANNING, null);
+          // convert a run query request into action
+          switch (queryRequest.getType()) {
+            case LOGICAL:
+              parseAndRunLogicalPlan(queryRequest.getPlan());
+              break;
+            case PHYSICAL:
+              parseAndRunPhysicalPlan(queryRequest.getPlan());
+              break;
+            case SQL:
+              final String sql = queryRequest.getPlan();
+              // log query id, username and query text before starting any real work. Also, put
+              // them together such that it is easy to search based on query id
+              logger.info("Query text for query with id {} issued by {}: {}", queryIdString,
+                queryContext.getQueryUserName(), sql);
+              runSQL(sql);
+              break;
+            case EXECUTION:
+              runFragment(queryRequest.getFragmentsList());
+              break;
+            case PREPARED_STATEMENT:
+              runPreparedStatement(queryRequest.getPreparedStatementHandle());
+              break;
+            default:
+              throw new IllegalStateException();
+          }
+          break;
+        case ENQUEUED:
+          startAdmittedQuery();
+          break;
+        case STARTING:
+          reserveAndRunFragments();
+          break;
+        default:
+          throw new IllegalStateException(String.format("Foreman object is not expected to be in this state %s inside " +
+            "run method", getState()));
       }
       injector.injectChecked(queryContext.getExecutionControls(), "run-try-end", ForemanException.class);
     } catch (final ForemanException e) {
@@ -302,7 +315,7 @@ public class Foreman implements Runnable {
       queryStateProcessor.moveToState(QueryState.FAILED, e);
     } catch (AssertionError | Exception ex) {
       queryStateProcessor.moveToState(QueryState.FAILED,
-          new ForemanException("Unexpected exception during fragment initialization: " + ex.getMessage(), ex));
+        new ForemanException("Unexpected exception during fragment initialization: " + ex.getMessage(), ex));
     } finally {
       // restore the thread's original name
       currentThread.setName(originalName);
@@ -310,8 +323,8 @@ public class Foreman implements Runnable {
 
     /*
      * Note that despite the run() completing, the Foreman continues to exist, and receives
-     * events (indirectly, through the QueryManager's use of stateListener), about fragment
-     * completions. It won't go away until everything is completed, failed, or cancelled.
+     * events about its enqueued successfully or not, (indirectly, through the QueryManager's use of stateListener),
+     * about fragment completions. It won't go away until everything is completed, failed, or cancelled.
      */
   }
 
@@ -412,7 +425,7 @@ public class Foreman implements Runnable {
   private void runPhysicalPlan(final PhysicalPlan plan, Pointer<String> textPlan) throws ExecutionSetupException {
     validatePlan(plan);
 
-    queryRM.visitAbstractPlan(plan);
+    queryRM.setCost(plan.totalCost());
     final QueryWorkUnit work = getQueryWorkUnit(plan, queryRM);
     if (enableRuntimeFilter) {
       runtimeFilterRouter = new RuntimeFilterRouter(work, drillbitContext);
@@ -421,9 +434,6 @@ public class Foreman implements Runnable {
     if (textPlan != null) {
       queryManager.setPlanText(textPlan.value);
     }
-    queryRM.visitPhysicalPlan(work);
-    queryRM.setCost(plan.totalCost());
-    queryManager.setTotalCost(plan.totalCost());
     work.applyPlan(drillbitContext.getPlanReader());
     logWorkUnit(work);
 
@@ -480,9 +490,34 @@ public class Foreman implements Runnable {
    * Moves query to RUNNING state.
    */
   private void startQueryProcessing() {
-    enqueue();
-    runFragments();
-    queryStateProcessor.moveToState(QueryState.RUNNING, null);
+    if (!enqueue()) {
+      // Since enqueue is async call based on response from scheduler the query will be in wait, execute or fail state
+      return;
+    }
+    startAdmittedQuery();
+  }
+
+  private void startAdmittedQuery() {
+    // move query into the running map
+    fragmentsRunner.getBee().moveToRunningQueries(queryId);
+    queryRM.updateState(QueryResourceManager.QueryRMState.ADMITTED);
+    queryStateProcessor.moveToState(QueryState.STARTING, null);
+    reserveAndRunFragments();
+  }
+
+  private void reserveAndRunFragments() {
+    // Now try to reserve the resources required by this query
+    try {
+      if (!queryRM.reserveResources()) {
+        // query is added to RM waiting queue
+        logger.info("Query {} is added to the RM waiting queue of rm pool {} since it was not able to reserve " +
+            "required resources", queryIdString, queryRM.queueName());
+        return;
+      }
+      runFragments();
+    } catch (Exception ex) {
+      queryStateProcessor.moveToState(QueryState.FAILED, ex);
+    }
   }
 
   /**
@@ -490,14 +525,13 @@ public class Foreman implements Runnable {
    * Foreman run will be blocked until query is enqueued.
    * In case of failures (ex: queue timeout exception) will move query to FAILED state.
    */
-  private void enqueue() {
+  private boolean enqueue() {
     queryStateProcessor.moveToState(QueryState.ENQUEUED, null);
-
     try {
-      queryRM.admit();
-      queryStateProcessor.moveToState(QueryState.STARTING, null);
+      return queryRM.admit() != QueryAdmitResponse.WAIT_FOR_RESPONSE;
     } catch (QueueTimeoutException | QueryQueueException e) {
       queryStateProcessor.moveToState(QueryState.FAILED, e);
+      return false;
     } finally {
       String queueName = queryRM.queueName();
       queryManager.setQueueName(queueName == null ? "Unknown" : queueName);
@@ -529,6 +563,7 @@ public class Foreman implements Runnable {
        */
       startProcessingEvents();
     }
+    queryStateProcessor.moveToState(QueryState.RUNNING, null);
   }
 
   /**
@@ -553,7 +588,7 @@ public class Foreman implements Runnable {
     }
 
     queryText = serverState.getSqlQuery();
-    logger.info("Prepared statement query for QueryId {} : {}", queryId, queryText);
+    logger.info("Prepared statement query for QueryId {} : {}", queryIdString, queryText);
     runSQL(queryText);
 
   }
@@ -575,7 +610,8 @@ public class Foreman implements Runnable {
 
     return rm.getParallelizer(plan.getProperties().hasResourcePlan).generateWorkUnit(queryContext.getOptions().getOptionList(),
                                                                         queryContext.getCurrentEndpoint(),
-                                                                        queryId, queryContext.getOnlineEndpoints(),
+                                                                        queryId,
+                                                                        queryContext.getOnlineEndpointUUIDs(),
                                                                         rootFragment, initiatingClient.getSession(),
                                                                         queryContext.getQueryContextInfo());
   }
@@ -584,8 +620,7 @@ public class Foreman implements Runnable {
     if (! logger.isTraceEnabled()) {
       return;
     }
-    logger.trace(String.format("PlanFragments for query %s \n%s",
-        queryId, queryWorkUnit.stringifyFragments()));
+    logger.trace(String.format("PlanFragments for query %s \n%s", queryIdString, queryWorkUnit.stringifyFragments()));
   }
 
   private void runSQL(final String sql) throws ExecutionSetupException {

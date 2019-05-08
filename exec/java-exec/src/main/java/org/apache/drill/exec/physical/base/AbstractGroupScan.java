@@ -103,18 +103,6 @@ public abstract class AbstractGroupScan extends AbstractBase implements GroupSca
 
   @Override
   @JsonIgnore
-  public long getInitialAllocation() {
-    return 0;
-  }
-
-  @Override
-  @JsonIgnore
-  public long getMaxAllocation() {
-    return 0;
-  }
-
-  @Override
-  @JsonIgnore
   public boolean canPushdownProjects(List<SchemaPath> columns) {
     return false;
   }

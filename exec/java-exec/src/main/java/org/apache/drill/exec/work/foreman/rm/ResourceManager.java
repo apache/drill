@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.work.foreman.rm;
 
-import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.work.foreman.Foreman;
 
 /**
@@ -41,16 +40,6 @@ public interface ResourceManager {
   long memoryPerNode();
 
   int cpusPerNode();
-
-  /**
-   * Create a resource manager to prepare or describe a query. In this form, no
-   * queuing is done, but the plan is created as if queuing had been done. Used
-   * when executing EXPLAIN PLAN.
-   *
-   * @return a resource manager for the query
-   */
-
-  QueryResourceAllocator newResourceAllocator(QueryContext queryContext);
 
   /**
    * Create a resource manager to execute a query.

@@ -92,7 +92,7 @@ public class ShowFilesHandler extends DefaultSqlHandler {
         .map(fileStatus -> new ShowFilesCommandResult(new Records.File(wsSchema.getFullSchemaName(), wsSchema, fileStatus)))
         .collect(Collectors.toList());
 
-    return DirectPlan.createDirectPlan(context.getCurrentEndpoint(), records, ShowFilesCommandResult.class);
+    return DirectPlan.createDirectPlan(context, records, ShowFilesCommandResult.class);
   }
 
   /**

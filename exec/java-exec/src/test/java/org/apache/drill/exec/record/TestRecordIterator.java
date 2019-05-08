@@ -77,7 +77,7 @@ public class TestRecordIterator extends PopUnitTestBase {
     RecordBatch singleBatch = exec.getIncoming();
     PhysicalOperator dummyPop = operatorList.iterator().next();
     OpProfileDef def = new OpProfileDef(dummyPop.getOperatorId(), UserBitShared.CoreOperatorType.MOCK_SUB_SCAN_VALUE,
-      OperatorUtilities.getChildCount(dummyPop));
+      OperatorUtilities.getChildCount(dummyPop), dummyPop.getMaxAllocation());
     OperatorStats stats = exec.getContext().getStats().newOperatorStats(def, exec.getContext().getAllocator());
     RecordIterator iter = new RecordIterator(singleBatch, null, exec.getContext().newOperatorContext(dummyPop, stats), 0, false, null);
     int totalRecords = 0;
@@ -133,7 +133,7 @@ public class TestRecordIterator extends PopUnitTestBase {
     RecordBatch singleBatch = exec.getIncoming();
     PhysicalOperator dummyPop = operatorList.iterator().next();
     OpProfileDef def = new OpProfileDef(dummyPop.getOperatorId(), UserBitShared.CoreOperatorType.MOCK_SUB_SCAN_VALUE,
-        OperatorUtilities.getChildCount(dummyPop));
+        OperatorUtilities.getChildCount(dummyPop), dummyPop.getMaxAllocation());
     OperatorStats stats = exec.getContext().getStats().newOperatorStats(def, exec.getContext().getAllocator());
     RecordIterator iter = new RecordIterator(singleBatch, null, exec.getContext().newOperatorContext(dummyPop, stats), 0, null);
     List<ValueVector> vectors;

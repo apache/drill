@@ -17,18 +17,8 @@
  */
 package org.apache.drill;
 
-import java.nio.file.Paths;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.util.List;
-import java.util.Stack;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
+import org.apache.calcite.sql.SqlExplain.Depth;
+import org.apache.calcite.sql.SqlExplainLevel;
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.record.RecordBatchLoader;
@@ -37,12 +27,22 @@ import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.store.parquet.metadata.Metadata;
 import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.calcite.sql.SqlExplain.Depth;
-import org.apache.calcite.sql.SqlExplainLevel;
-
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.test.QueryTestUtil;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.Stack;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class PlanTestBase extends BaseTestQuery {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PlanTestBase.class);
@@ -92,7 +92,23 @@ public class PlanTestBase extends BaseTestQuery {
 
   public static void testPlanMatchingPatterns(String query, Pattern[] expectedPatterns, Pattern[] excludedPatterns)
     throws Exception {
-    final String plan = getPlanInString("EXPLAIN PLAN for " + QueryTestUtil.normalizeQuery(query), OPTIQ_FORMAT);
+    testPlanMatchingPatterns(query, OPTIQ_FORMAT, expectedPatterns, excludedPatterns);
+  }
+
+  public static void testPlanMatchingPatterns(String query, String planFormat,
+                                              String[] expectedPatterns, String[] excludedPatterns)
+    throws Exception {
+    Preconditions.checkArgument((planFormat.equals(OPTIQ_FORMAT) || planFormat.equals(JSON_FORMAT)), "Unsupported " +
+      "plan format %s is provided for explain plan query. Supported formats are: %s, %s", planFormat, OPTIQ_FORMAT,
+      JSON_FORMAT);
+    testPlanMatchingPatterns(query, planFormat, stringsToPatterns(expectedPatterns),
+      stringsToPatterns(excludedPatterns));
+  }
+
+  private static void testPlanMatchingPatterns(String query, String planFormat,
+                                              Pattern[] expectedPatterns, Pattern[] excludedPatterns)
+    throws Exception {
+    final String plan = getPlanInString("EXPLAIN PLAN for " + QueryTestUtil.normalizeQuery(query), planFormat);
 
     // Check and make sure all expected patterns are in the plan
     if (expectedPatterns != null) {

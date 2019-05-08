@@ -22,7 +22,7 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.scanner.persistence.ScanResult;
-import org.apache.drill.exec.proto.CoordinationProtos;
+import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.junit.experimental.categories.Category;
@@ -41,7 +41,7 @@ public class PhysicalPlanReaderTestFactory {
     ScanResult scanResult = ClassPathScanner.fromPrescan(c);
     return new PhysicalPlanReader(
         c, scanResult, new LogicalPlanPersistence(c, scanResult),
-        CoordinationProtos.DrillbitEndpoint.getDefaultInstance(),
+        DrillbitEndpoint.getDefaultInstance(),
         storageRegistry);
   }
   public static PhysicalPlanReader defaultPhysicalPlanReader(DrillConfig c) {
@@ -59,8 +59,14 @@ public class PhysicalPlanReaderTestFactory {
         c.getConfig(),
         c.getClasspathScan(),
         c.getLpPersistence(),
-        CoordinationProtos.DrillbitEndpoint.getDefaultInstance(),
+        DrillbitEndpoint.getDefaultInstance(),
         storageRegistry);
+  }
+
+  public static PhysicalPlanReader defaultPhysicalPlanReader(DrillConfig c, StoragePluginRegistry storageRegistry,
+                                                             DrillbitEndpoint ep) {
+    ScanResult scanResult = ClassPathScanner.fromPrescan(c);
+    return new PhysicalPlanReader(c, scanResult, new LogicalPlanPersistence(c, scanResult), ep, storageRegistry);
   }
 
 }

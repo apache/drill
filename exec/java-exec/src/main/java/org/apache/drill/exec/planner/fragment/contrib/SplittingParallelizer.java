@@ -17,11 +17,10 @@
  */
 package org.apache.drill.exec.planner.fragment.contrib;
 
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-
+import java.util.Map;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.util.DrillStringUtils;
 import org.apache.drill.exec.ops.QueryContext;
@@ -29,7 +28,7 @@ import org.apache.drill.exec.physical.base.Exchange;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
-import org.apache.drill.exec.planner.fragment.DefaultQueryParallelizer;
+import org.apache.drill.exec.planner.fragment.DefaultParallelizer;
 import org.apache.drill.exec.planner.fragment.Fragment;
 import org.apache.drill.exec.planner.fragment.PlanningSet;
 import org.apache.drill.exec.planner.fragment.Wrapper;
@@ -57,7 +56,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
  * allows not to pollute parent class with non-authentic functionality
  *
  */
-public class SplittingParallelizer extends DefaultQueryParallelizer {
+public class SplittingParallelizer extends DefaultParallelizer {
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SplittingParallelizer.class);
 
@@ -70,7 +69,7 @@ public class SplittingParallelizer extends DefaultQueryParallelizer {
    * @param options
    * @param foremanNode
    * @param queryId
-   * @param activeEndpoints
+   * @param onlineEndpointUUIDs
    * @param reader
    * @param rootFragment
    * @param session
@@ -79,19 +78,18 @@ public class SplittingParallelizer extends DefaultQueryParallelizer {
    * @throws ExecutionSetupException
    */
   public List<QueryWorkUnit> getSplitFragments(OptionList options, DrillbitEndpoint foremanNode, QueryId queryId,
-      Collection<DrillbitEndpoint> activeEndpoints, PhysicalPlanReader reader, Fragment rootFragment,
+      Map<DrillbitEndpoint, String> onlineEndpointUUIDs, PhysicalPlanReader reader, Fragment rootFragment,
       UserSession session, QueryContextInformation queryContextInfo) throws ExecutionSetupException {
 
     final PlanningSet planningSet = this.prepareFragmentTree(rootFragment);
 
     Set<Wrapper> rootFragments = getRootFragments(planningSet);
 
-    collectStatsAndParallelizeFragments(planningSet, rootFragments, activeEndpoints);
+    collectStatsAndParallelizeFragments(planningSet, rootFragments, onlineEndpointUUIDs.keySet());
 
-    adjustMemory(planningSet, rootFragments, activeEndpoints);
+    adjustMemory(planningSet, rootFragments, onlineEndpointUUIDs);
 
-    return generateWorkUnits(
-        options, foremanNode, queryId, reader, rootFragment, planningSet, session, queryContextInfo);
+    return generateWorkUnits(options, foremanNode, queryId, reader, rootFragment, planningSet, session, queryContextInfo, onlineEndpointUUIDs);
   }
 
   /**
@@ -113,7 +111,7 @@ public class SplittingParallelizer extends DefaultQueryParallelizer {
    */
   private List<QueryWorkUnit> generateWorkUnits(OptionList options, DrillbitEndpoint foremanNode, QueryId queryId,
       PhysicalPlanReader reader, Fragment rootNode, PlanningSet planningSet,
-      UserSession session, QueryContextInformation queryContextInfo) throws ExecutionSetupException {
+      UserSession session, QueryContextInformation queryContextInfo, Map<DrillbitEndpoint, String> onlineEndpointUUIDs) throws ExecutionSetupException {
 
     // now we generate all the individual plan fragments and associated assignments. Note, we need all endpoints
     // assigned before we can materialize, so we start a new loop here rather than utilizing the previous one.
@@ -147,7 +145,7 @@ public class SplittingParallelizer extends DefaultQueryParallelizer {
     DrillbitEndpoint[] endPoints = leafFragEndpoints;
     if ( plansCount == 0 ) {
       // no exchange, return list of single QueryWorkUnit
-      workUnits.add(generateWorkUnit(options, foremanNode, queryId, rootNode, planningSet, session, queryContextInfo));
+      workUnits.add(generateWorkUnit(options, foremanNode, queryId, rootNode, planningSet, session, queryContextInfo, onlineEndpointUUIDs));
       return workUnits;
     }
 

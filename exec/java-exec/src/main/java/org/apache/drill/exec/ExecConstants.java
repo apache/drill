@@ -691,6 +691,7 @@ public final class ExecConstants {
       new OptionDescription("Indicates how long a query can wait in queue before the query fails. Range: 0-9223372036854775807"));
 
   // New Smart RM boot time configs
+  public static final String RM_WAIT_THREAD_INTERVAL = "exec.rm.wait_thread_interval";
   public static final String RM_QUERY_TAGS_KEY = "exec.rm.queryTags";
   public static final StringValidator RM_QUERY_TAGS_VALIDATOR = new StringValidator(RM_QUERY_TAGS_KEY,
     new OptionDescription("Allows user to set coma separated list of tags for all the queries submitted over a session"));

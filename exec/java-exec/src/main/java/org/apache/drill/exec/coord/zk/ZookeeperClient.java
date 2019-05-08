@@ -17,26 +17,29 @@
  */
 package org.apache.drill.exec.coord.zk;
 
-import java.util.Iterator;
-import java.util.Map;
-
-import javax.annotation.Nullable;
-
-import org.apache.drill.shaded.guava.com.google.common.base.Function;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.apache.drill.shaded.guava.com.google.common.base.Strings;
-import org.apache.drill.shaded.guava.com.google.common.collect.Iterables;
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.api.transaction.CuratorTransaction;
+import org.apache.curator.framework.api.transaction.CuratorTransactionFinal;
 import org.apache.curator.framework.recipes.cache.ChildData;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.drill.common.collections.ImmutableEntry;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.exception.VersionMismatchException;
 import org.apache.drill.exec.store.sys.store.DataChangeVersion;
+import org.apache.drill.shaded.guava.com.google.common.base.Function;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Strings;
+import org.apache.drill.shaded.guava.com.google.common.collect.Iterables;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.KeeperException.NodeExistsException;
 import org.apache.zookeeper.data.Stat;
+
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /**
  * A namespace aware Zookeeper client.
@@ -227,10 +230,30 @@ public class ZookeeperClient implements AutoCloseable {
 
     final String target = PathUtils.join(root, path);
     try {
-      curator.create().withMode(mode).forPath(target);
+      curator.create().creatingParentsIfNeeded().withMode(mode).forPath(target);
       getCache().rebuildNode(target);
     } catch (final Exception e) {
       throw new DrillRuntimeException("unable to put ", e);
+    }
+  }
+
+  public void createAsTransaction(List<String> paths) {
+    Preconditions.checkNotNull(paths, "no paths provided to create");
+    CuratorTransaction transaction = curator.inTransaction();
+    List<String> targetPaths = new ArrayList<>();
+    try {
+      for (String path : paths) {
+        final String target = PathUtils.join(root, path);
+        targetPaths.add(target);
+        transaction = transaction.create().withMode(mode).forPath(target).and();
+      }
+      ((CuratorTransactionFinal)transaction).commit();
+
+      for (String target : targetPaths) {
+        getCache().rebuildNode(target);
+      }
+    } catch (Exception ex) {
+      throw new DrillRuntimeException("Failed to create paths in transactional manner", ex);
     }
   }
 
@@ -273,7 +296,7 @@ public class ZookeeperClient implements AutoCloseable {
       boolean hasNode = hasPath(path, true);
       if (!hasNode) {
         try {
-          curator.create().withMode(mode).forPath(target, data);
+          curator.create().creatingParentsIfNeeded().withMode(mode).forPath(target, data);
         } catch (NodeExistsException e) {
           // Handle race conditions since Drill is distributed and other
           // drillbits may have just created the node. This assumes that we do want to
@@ -301,6 +324,54 @@ public class ZookeeperClient implements AutoCloseable {
     }
   }
 
+  public void putAsTransaction(Map<String, byte[]> pathsWithData) {
+    putAsTransaction(pathsWithData, null);
+  }
+
+  /**
+   * Puts the given sets of blob and their data's in a transactional manner. It expects all the blob path to exist
+   * before calling this api.
+   * @param pathsWithData - map of blob paths to update and the final data
+   * @param version - version holder
+   */
+  public void putAsTransaction(Map<String, byte[]> pathsWithData, DataChangeVersion version) {
+    Preconditions.checkNotNull(pathsWithData, "paths and their data to write as transaction is missing");
+    List<String> targetPaths = new ArrayList<>();
+    CuratorTransaction transaction = curator.inTransaction();
+    long totalDataBytes = 0;
+
+    try {
+      for (Map.Entry<String, byte[]> entry : pathsWithData.entrySet()) {
+        final String target = PathUtils.join(root, entry.getKey());
+
+        if (version != null) {
+          transaction = transaction.setData().withVersion(version.getVersion()).forPath(target, entry.getValue()).and();
+        } else {
+          transaction = transaction.setData().forPath(target, entry.getValue()).and();
+        }
+        targetPaths.add(target);
+        totalDataBytes += entry.getValue().length;
+      }
+
+      // If total set operator payload is greater than 1MB then curator set operation will fail
+      if (totalDataBytes >= 1_048_576) {
+        throw new UnsupportedOperationException("Curator doesn't support transactional put of more than 1 MB");
+      }
+
+      // if commit fails then an exception will be thrown
+      ((CuratorTransactionFinal)transaction).commit();
+      // if successful then rebuild the cache
+      for (String target : targetPaths) {
+        getCache().rebuildNode(target);
+      }
+    } catch (KeeperException.BadVersionException ex) {
+      throw new VersionMismatchException("Failed to put data to blobs as a single transaction because of mismatch " +
+        "in version", version.getVersion(), ex);
+    } catch (Exception ex) {
+      throw new DrillRuntimeException("Failed to write data to blobs as a single transaction", ex);
+    }
+  }
+
   /**
    * Puts the given byte sequence into the given path if path is does not exist.
    *
@@ -315,7 +386,7 @@ public class ZookeeperClient implements AutoCloseable {
     final String target = PathUtils.join(root, path);
     try {
       try {
-        curator.create().withMode(mode).forPath(target, data);
+        curator.create().creatingParentsIfNeeded().withMode(mode).forPath(target, data);
         getCache().rebuildNode(target);
         return null;
       } catch (NodeExistsException e) {
@@ -341,6 +412,33 @@ public class ZookeeperClient implements AutoCloseable {
       getCache().rebuildNode(target);
     } catch (final Exception e) {
       throw new DrillRuntimeException(String.format("unable to delete node at %s", target), e);
+    }
+  }
+
+  /**
+   * Deletes all the blobs residing at list of given paths as a single transaction
+   *
+   * @param pathList target paths to delete
+   */
+  public void deleteAsTransaction(List<String> pathList) {
+    Preconditions.checkNotNull(pathList, "List of paths to delete as transaction is required");
+    final List<String> targetPaths = new ArrayList<>();
+    CuratorTransaction transaction = curator.inTransaction();
+
+    try {
+      for (String path : pathList) {
+        final String target = PathUtils.join(root, path);
+        transaction = transaction.delete().forPath(target).and();
+        targetPaths.add(target);
+      }
+      ((CuratorTransactionFinal)transaction).commit();
+
+      for (String target : targetPaths) {
+        getCache().rebuildNode(target);
+      }
+    } catch (Exception ex) {
+      throw new DrillRuntimeException(String.format("unable to delete blobs as transaction at %s",
+        String.join(",", targetPaths)), ex);
     }
   }
 

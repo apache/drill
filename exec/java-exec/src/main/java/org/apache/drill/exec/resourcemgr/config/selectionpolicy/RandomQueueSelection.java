@@ -18,6 +18,7 @@
 package org.apache.drill.exec.resourcemgr.config.selectionpolicy;
 
 import org.apache.drill.exec.ops.QueryContext;
+import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.resourcemgr.NodeResources;
 import org.apache.drill.exec.resourcemgr.config.ResourcePool;
 import org.apache.drill.exec.resourcemgr.config.exception.QueueSelectionException;
@@ -39,13 +40,14 @@ public class RandomQueueSelection extends AbstractQueueSelectionPolicy {
   @Override
   public ResourcePool selectQueue(List<ResourcePool> allPools, QueryContext queryContext,
                                   NodeResources maxResourcePerNode) throws QueueSelectionException {
+    final String queryIdString = QueryIdHelper.getQueryId(queryContext.getQueryId());
     if (allPools.size() == 0) {
       throw new QueueSelectionException(String.format("Input pool list is empty to apply %s selection policy",
         getSelectionPolicy().toString()));
     }
     Collections.shuffle(allPools);
     ResourcePool selectedPool = allPools.get(0);
-    logger.debug("Selected random pool: {} for query: {}", selectedPool.getPoolName(), queryContext.getQueryId());
+    logger.debug("Selected random pool: {} for query: {}", selectedPool.getPoolName(), queryIdString);
     return selectedPool;
   }
 }

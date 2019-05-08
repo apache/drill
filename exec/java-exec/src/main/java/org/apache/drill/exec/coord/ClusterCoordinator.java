@@ -17,15 +17,15 @@
  */
 package org.apache.drill.exec.coord;
 
-import java.util.Collection;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
 import org.apache.drill.exec.coord.store.TransientStore;
 import org.apache.drill.exec.coord.store.TransientStoreConfig;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.State;
 import org.apache.drill.exec.work.foreman.DrillbitStatusListener;
+
+import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Pluggable interface built to manage cluster coordination. Allows Drillbit or DrillClient to register its capabilities
@@ -60,6 +60,10 @@ public abstract class ClusterCoordinator implements AutoCloseable {
    */
   public abstract Collection<DrillbitEndpoint> getAvailableEndpoints();
 
+  public Map<String, DrillbitEndpoint> getAvailableEndpointsUUID() {
+    throw new UnsupportedOperationException("Only supported by Zookeeper Cluster Coordinator outside YARN");
+  }
+
   /**
    * Get a collection of ONLINE drillbit endpoints by excluding the drillbits
    * that are in QUIESCENT state (drillbits that are shutting down). Primarily used by the planner
@@ -70,6 +74,10 @@ public abstract class ClusterCoordinator implements AutoCloseable {
 
   public abstract Collection<DrillbitEndpoint> getOnlineEndPoints();
 
+  public Map<DrillbitEndpoint, String> getOnlineEndpointsUUID() {
+    throw new UnsupportedOperationException("Only supported by Zookeeper Cluster Coordinator outside YARN");
+  }
+
   public abstract RegistrationHandle update(RegistrationHandle handle, State state);
 
   public interface RegistrationHandle {
@@ -78,6 +86,8 @@ public abstract class ClusterCoordinator implements AutoCloseable {
      * @return drillbit endpoint
      */
     public abstract DrillbitEndpoint getEndPoint();
+
+    public abstract String getId();
 
     public abstract void setEndPoint(DrillbitEndpoint endpoint);
   }
@@ -96,17 +106,17 @@ public abstract class ClusterCoordinator implements AutoCloseable {
 
   /**
    * Actions to take when there are a set of new de-active drillbits.
-   * @param unregisteredBits
+   * @param unregisteredBitsUUID
    */
-  protected void drillbitUnregistered(Set<DrillbitEndpoint> unregisteredBits) {
+  protected void drillbitUnregistered(Map<DrillbitEndpoint, String> unregisteredBitsUUID) {
     for (DrillbitStatusListener listener : listeners.keySet()) {
-      listener.drillbitUnregistered(unregisteredBits);
+      listener.drillbitUnregistered(unregisteredBitsUUID);
     }
   }
 
-  protected void drillbitRegistered(Set<DrillbitEndpoint> registeredBits) {
+  protected void drillbitRegistered(Map<DrillbitEndpoint, String> registeredBitsUUID) {
     for (DrillbitStatusListener listener : listeners.keySet()) {
-      listener.drillbitRegistered(registeredBits);
+      listener.drillbitRegistered(registeredBitsUUID);
     }
   }
 

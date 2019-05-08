@@ -326,21 +326,23 @@ const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUT
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::control::PlanFragment, options_json_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::control::PlanFragment, context_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::control::PlanFragment, collector_),
-  2,
-  7,
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::control::PlanFragment, assignedendpointuuid_),
+  3,
   8,
   9,
   10,
-  0,
   11,
-  3,
-  4,
+  0,
   12,
-  13,
+  4,
   5,
-  1,
+  13,
+  14,
   6,
+  1,
+  7,
   ~0u,
+  2,
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::control::Collector, _has_bits_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::control::Collector, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -394,11 +396,11 @@ static const ::google::protobuf::internal::MigrationSchema schemas[] GOOGLE_PROT
   { 20, 27, sizeof(::exec::bit::control::FragmentStatus)},
   { 29, 35, sizeof(::exec::bit::control::InitializeFragments)},
   { 36, 43, sizeof(::exec::bit::control::CustomMessage)},
-  { 45, 65, sizeof(::exec::bit::control::PlanFragment)},
-  { 80, 89, sizeof(::exec::bit::control::Collector)},
-  { 93, 102, sizeof(::exec::bit::control::QueryContextInformation)},
-  { 106, 114, sizeof(::exec::bit::control::WorkQueueStatus)},
-  { 117, 124, sizeof(::exec::bit::control::FinishedReceiver)},
+  { 45, 66, sizeof(::exec::bit::control::PlanFragment)},
+  { 82, 91, sizeof(::exec::bit::control::Collector)},
+  { 95, 104, sizeof(::exec::bit::control::QueryContextInformation)},
+  { 108, 116, sizeof(::exec::bit::control::WorkQueueStatus)},
+  { 119, 126, sizeof(::exec::bit::control::FinishedReceiver)},
 };
 
 static ::google::protobuf::Message const * const file_default_instances[] = {
@@ -449,7 +451,7 @@ void AddDescriptorsImpl() {
       "c.bit.FragmentHandle\"G\n\023InitializeFragme"
       "nts\0220\n\010fragment\030\001 \003(\0132\036.exec.bit.control"
       ".PlanFragment\".\n\rCustomMessage\022\014\n\004type\030\001"
-      " \001(\005\022\017\n\007message\030\002 \001(\014\"\374\003\n\014PlanFragment\022("
+      " \001(\005\022\017\n\007message\030\002 \001(\014\"\232\004\n\014PlanFragment\022("
       "\n\006handle\030\001 \001(\0132\030.exec.bit.FragmentHandle"
       "\022\024\n\014network_cost\030\004 \001(\002\022\020\n\010cpu_cost\030\005 \001(\002"
       "\022\021\n\tdisk_cost\030\006 \001(\002\022\023\n\013memory_cost\030\007 \001(\002"
@@ -462,32 +464,33 @@ void AddDescriptorsImpl() {
       "ls\022\024\n\014options_json\030\017 \001(\t\022:\n\007context\030\020 \001("
       "\0132).exec.bit.control.QueryContextInforma"
       "tion\022.\n\tcollector\030\021 \003(\0132\033.exec.bit.contr"
-      "ol.Collector\"\210\001\n\tCollector\022\"\n\032opposite_m"
-      "ajor_fragment_id\030\001 \001(\005\022#\n\027incoming_minor"
-      "_fragment\030\002 \003(\005B\002\020\001\022\035\n\025supports_out_of_o"
-      "rder\030\003 \001(\010\022\023\n\013is_spooling\030\004 \001(\010\"w\n\027Query"
-      "ContextInformation\022\030\n\020query_start_time\030\001"
-      " \001(\003\022\021\n\ttime_zone\030\002 \001(\005\022\033\n\023default_schem"
-      "a_name\030\003 \001(\t\022\022\n\nsession_id\030\004 \001(\t\"f\n\017Work"
-      "QueueStatus\022(\n\010endpoint\030\001 \001(\0132\026.exec.Dri"
-      "llbitEndpoint\022\024\n\014queue_length\030\002 \001(\005\022\023\n\013r"
-      "eport_time\030\003 \001(\003\"h\n\020FinishedReceiver\022*\n\010"
-      "receiver\030\001 \001(\0132\030.exec.bit.FragmentHandle"
-      "\022(\n\006sender\030\002 \001(\0132\030.exec.bit.FragmentHand"
-      "le*\206\003\n\007RpcType\022\r\n\tHANDSHAKE\020\000\022\007\n\003ACK\020\001\022\013"
-      "\n\007GOODBYE\020\002\022\034\n\030REQ_INITIALIZE_FRAGMENTS\020"
-      "\003\022\027\n\023REQ_CANCEL_FRAGMENT\020\006\022\031\n\025REQ_RECEIV"
-      "ER_FINISHED\020\007\022\027\n\023REQ_FRAGMENT_STATUS\020\010\022\022"
-      "\n\016REQ_BIT_STATUS\020\t\022\024\n\020REQ_QUERY_STATUS\020\n"
-      "\022\024\n\020REQ_QUERY_CANCEL\020\017\022\030\n\024REQ_UNPAUSE_FR"
-      "AGMENT\020\020\022\016\n\nREQ_CUSTOM\020\021\022\030\n\024RESP_FRAGMEN"
-      "T_HANDLE\020\013\022\030\n\024RESP_FRAGMENT_STATUS\020\014\022\023\n\017"
-      "RESP_BIT_STATUS\020\r\022\025\n\021RESP_QUERY_STATUS\020\016"
-      "\022\017\n\013RESP_CUSTOM\020\022\022\020\n\014SASL_MESSAGE\020\023B+\n\033o"
-      "rg.apache.drill.exec.protoB\nBitControlH\001"
+      "ol.Collector\022\034\n\024assignedEndpointUUID\030\022 \001"
+      "(\t\"\210\001\n\tCollector\022\"\n\032opposite_major_fragm"
+      "ent_id\030\001 \001(\005\022#\n\027incoming_minor_fragment\030"
+      "\002 \003(\005B\002\020\001\022\035\n\025supports_out_of_order\030\003 \001(\010"
+      "\022\023\n\013is_spooling\030\004 \001(\010\"w\n\027QueryContextInf"
+      "ormation\022\030\n\020query_start_time\030\001 \001(\003\022\021\n\tti"
+      "me_zone\030\002 \001(\005\022\033\n\023default_schema_name\030\003 \001"
+      "(\t\022\022\n\nsession_id\030\004 \001(\t\"f\n\017WorkQueueStatu"
+      "s\022(\n\010endpoint\030\001 \001(\0132\026.exec.DrillbitEndpo"
+      "int\022\024\n\014queue_length\030\002 \001(\005\022\023\n\013report_time"
+      "\030\003 \001(\003\"h\n\020FinishedReceiver\022*\n\010receiver\030\001"
+      " \001(\0132\030.exec.bit.FragmentHandle\022(\n\006sender"
+      "\030\002 \001(\0132\030.exec.bit.FragmentHandle*\206\003\n\007Rpc"
+      "Type\022\r\n\tHANDSHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020"
+      "\002\022\034\n\030REQ_INITIALIZE_FRAGMENTS\020\003\022\027\n\023REQ_C"
+      "ANCEL_FRAGMENT\020\006\022\031\n\025REQ_RECEIVER_FINISHE"
+      "D\020\007\022\027\n\023REQ_FRAGMENT_STATUS\020\010\022\022\n\016REQ_BIT_"
+      "STATUS\020\t\022\024\n\020REQ_QUERY_STATUS\020\n\022\024\n\020REQ_QU"
+      "ERY_CANCEL\020\017\022\030\n\024REQ_UNPAUSE_FRAGMENT\020\020\022\016"
+      "\n\nREQ_CUSTOM\020\021\022\030\n\024RESP_FRAGMENT_HANDLE\020\013"
+      "\022\030\n\024RESP_FRAGMENT_STATUS\020\014\022\023\n\017RESP_BIT_S"
+      "TATUS\020\r\022\025\n\021RESP_QUERY_STATUS\020\016\022\017\n\013RESP_C"
+      "USTOM\020\022\022\020\n\014SASL_MESSAGE\020\023B+\n\033org.apache."
+      "drill.exec.protoB\nBitControlH\001"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 2000);
+      descriptor, 2030);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "BitControl.proto", &protobuf_RegisterTypes);
   ::protobuf_ExecutionProtos_2eproto::AddDescriptors();
@@ -2028,6 +2031,7 @@ const int PlanFragment::kCredentialsFieldNumber;
 const int PlanFragment::kOptionsJsonFieldNumber;
 const int PlanFragment::kContextFieldNumber;
 const int PlanFragment::kCollectorFieldNumber;
+const int PlanFragment::kAssignedEndpointUUIDFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 PlanFragment::PlanFragment()
@@ -2050,6 +2054,10 @@ PlanFragment::PlanFragment(const PlanFragment& from)
   options_json_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   if (from.has_options_json()) {
     options_json_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.options_json_);
+  }
+  assignedendpointuuid_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.has_assignedendpointuuid()) {
+    assignedendpointuuid_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.assignedendpointuuid_);
   }
   if (from.has_handle()) {
     handle_ = new ::exec::bit::FragmentHandle(*from.handle_);
@@ -2085,6 +2093,7 @@ PlanFragment::PlanFragment(const PlanFragment& from)
 void PlanFragment::SharedCtor() {
   fragment_json_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   options_json_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  assignedendpointuuid_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   ::memset(&handle_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&leaf_fragment_) -
       reinterpret_cast<char*>(&handle_)) + sizeof(leaf_fragment_));
@@ -2100,6 +2109,7 @@ PlanFragment::~PlanFragment() {
 void PlanFragment::SharedDtor() {
   fragment_json_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   options_json_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  assignedendpointuuid_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   if (this != internal_default_instance()) delete handle_;
   if (this != internal_default_instance()) delete assignment_;
   if (this != internal_default_instance()) delete foreman_;
@@ -2129,7 +2139,7 @@ void PlanFragment::Clear() {
 
   collector_.Clear();
   cached_has_bits = _has_bits_[0];
-  if (cached_has_bits & 127u) {
+  if (cached_has_bits & 255u) {
     if (cached_has_bits & 0x00000001u) {
       fragment_json_.ClearNonDefaultToEmptyNoArena();
     }
@@ -2137,31 +2147,33 @@ void PlanFragment::Clear() {
       options_json_.ClearNonDefaultToEmptyNoArena();
     }
     if (cached_has_bits & 0x00000004u) {
+      assignedendpointuuid_.ClearNonDefaultToEmptyNoArena();
+    }
+    if (cached_has_bits & 0x00000008u) {
       GOOGLE_DCHECK(handle_ != NULL);
       handle_->Clear();
     }
-    if (cached_has_bits & 0x00000008u) {
+    if (cached_has_bits & 0x00000010u) {
       GOOGLE_DCHECK(assignment_ != NULL);
       assignment_->Clear();
     }
-    if (cached_has_bits & 0x00000010u) {
+    if (cached_has_bits & 0x00000020u) {
       GOOGLE_DCHECK(foreman_ != NULL);
       foreman_->Clear();
     }
-    if (cached_has_bits & 0x00000020u) {
+    if (cached_has_bits & 0x00000040u) {
       GOOGLE_DCHECK(credentials_ != NULL);
       credentials_->Clear();
     }
-    if (cached_has_bits & 0x00000040u) {
+    if (cached_has_bits & 0x00000080u) {
       GOOGLE_DCHECK(context_ != NULL);
       context_->Clear();
     }
   }
-  network_cost_ = 0;
-  if (cached_has_bits & 16128u) {
-    ::memset(&cpu_cost_, 0, static_cast<size_t>(
+  if (cached_has_bits & 32512u) {
+    ::memset(&network_cost_, 0, static_cast<size_t>(
         reinterpret_cast<char*>(&leaf_fragment_) -
-        reinterpret_cast<char*>(&cpu_cost_)) + sizeof(leaf_fragment_));
+        reinterpret_cast<char*>(&network_cost_)) + sizeof(leaf_fragment_));
     mem_initial_ = GOOGLE_LONGLONG(20000000);
     mem_max_ = GOOGLE_LONGLONG(2000000000);
   }
@@ -2381,6 +2393,22 @@ bool PlanFragment::MergePartialFromCodedStream(
         break;
       }
 
+      // optional string assignedEndpointUUID = 18;
+      case 18: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(146u /* 146 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_assignedendpointuuid()));
+          ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
+            this->assignedendpointuuid().data(), static_cast<int>(this->assignedendpointuuid().length()),
+            ::google::protobuf::internal::WireFormat::PARSE,
+            "exec.bit.control.PlanFragment.assignedEndpointUUID");
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
       default: {
       handle_unusual:
         if (tag == 0) {
@@ -2409,28 +2437,28 @@ void PlanFragment::SerializeWithCachedSizes(
 
   cached_has_bits = _has_bits_[0];
   // optional .exec.bit.FragmentHandle handle = 1;
-  if (cached_has_bits & 0x00000004u) {
+  if (cached_has_bits & 0x00000008u) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
       1, this->_internal_handle(), output);
   }
 
   // optional float network_cost = 4;
-  if (cached_has_bits & 0x00000080u) {
+  if (cached_has_bits & 0x00000100u) {
     ::google::protobuf::internal::WireFormatLite::WriteFloat(4, this->network_cost(), output);
   }
 
   // optional float cpu_cost = 5;
-  if (cached_has_bits & 0x00000100u) {
+  if (cached_has_bits & 0x00000200u) {
     ::google::protobuf::internal::WireFormatLite::WriteFloat(5, this->cpu_cost(), output);
   }
 
   // optional float disk_cost = 6;
-  if (cached_has_bits & 0x00000200u) {
+  if (cached_has_bits & 0x00000400u) {
     ::google::protobuf::internal::WireFormatLite::WriteFloat(6, this->disk_cost(), output);
   }
 
   // optional float memory_cost = 7;
-  if (cached_has_bits & 0x00000400u) {
+  if (cached_has_bits & 0x00000800u) {
     ::google::protobuf::internal::WireFormatLite::WriteFloat(7, this->memory_cost(), output);
   }
 
@@ -2445,34 +2473,34 @@ void PlanFragment::SerializeWithCachedSizes(
   }
 
   // optional bool leaf_fragment = 9;
-  if (cached_has_bits & 0x00000800u) {
+  if (cached_has_bits & 0x00001000u) {
     ::google::protobuf::internal::WireFormatLite::WriteBool(9, this->leaf_fragment(), output);
   }
 
   // optional .exec.DrillbitEndpoint assignment = 10;
-  if (cached_has_bits & 0x00000008u) {
+  if (cached_has_bits & 0x00000010u) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
       10, this->_internal_assignment(), output);
   }
 
   // optional .exec.DrillbitEndpoint foreman = 11;
-  if (cached_has_bits & 0x00000010u) {
+  if (cached_has_bits & 0x00000020u) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
       11, this->_internal_foreman(), output);
   }
 
   // optional int64 mem_initial = 12 [default = 20000000];
-  if (cached_has_bits & 0x00001000u) {
+  if (cached_has_bits & 0x00002000u) {
     ::google::protobuf::internal::WireFormatLite::WriteInt64(12, this->mem_initial(), output);
   }
 
   // optional int64 mem_max = 13 [default = 2000000000];
-  if (cached_has_bits & 0x00002000u) {
+  if (cached_has_bits & 0x00004000u) {
     ::google::protobuf::internal::WireFormatLite::WriteInt64(13, this->mem_max(), output);
   }
 
   // optional .exec.shared.UserCredentials credentials = 14;
-  if (cached_has_bits & 0x00000020u) {
+  if (cached_has_bits & 0x00000040u) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
       14, this->_internal_credentials(), output);
   }
@@ -2488,7 +2516,7 @@ void PlanFragment::SerializeWithCachedSizes(
   }
 
   // optional .exec.bit.control.QueryContextInformation context = 16;
-  if (cached_has_bits & 0x00000040u) {
+  if (cached_has_bits & 0x00000080u) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
       16, this->_internal_context(), output);
   }
@@ -2500,6 +2528,16 @@ void PlanFragment::SerializeWithCachedSizes(
       17,
       this->collector(static_cast<int>(i)),
       output);
+  }
+
+  // optional string assignedEndpointUUID = 18;
+  if (cached_has_bits & 0x00000004u) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
+      this->assignedendpointuuid().data(), static_cast<int>(this->assignedendpointuuid().length()),
+      ::google::protobuf::internal::WireFormat::SERIALIZE,
+      "exec.bit.control.PlanFragment.assignedEndpointUUID");
+    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+      18, this->assignedendpointuuid(), output);
   }
 
   if (_internal_metadata_.have_unknown_fields()) {
@@ -2518,29 +2556,29 @@ void PlanFragment::SerializeWithCachedSizes(
 
   cached_has_bits = _has_bits_[0];
   // optional .exec.bit.FragmentHandle handle = 1;
-  if (cached_has_bits & 0x00000004u) {
+  if (cached_has_bits & 0x00000008u) {
     target = ::google::protobuf::internal::WireFormatLite::
       InternalWriteMessageToArray(
         1, this->_internal_handle(), deterministic, target);
   }
 
   // optional float network_cost = 4;
-  if (cached_has_bits & 0x00000080u) {
+  if (cached_has_bits & 0x00000100u) {
     target = ::google::protobuf::internal::WireFormatLite::WriteFloatToArray(4, this->network_cost(), target);
   }
 
   // optional float cpu_cost = 5;
-  if (cached_has_bits & 0x00000100u) {
+  if (cached_has_bits & 0x00000200u) {
     target = ::google::protobuf::internal::WireFormatLite::WriteFloatToArray(5, this->cpu_cost(), target);
   }
 
   // optional float disk_cost = 6;
-  if (cached_has_bits & 0x00000200u) {
+  if (cached_has_bits & 0x00000400u) {
     target = ::google::protobuf::internal::WireFormatLite::WriteFloatToArray(6, this->disk_cost(), target);
   }
 
   // optional float memory_cost = 7;
-  if (cached_has_bits & 0x00000400u) {
+  if (cached_has_bits & 0x00000800u) {
     target = ::google::protobuf::internal::WireFormatLite::WriteFloatToArray(7, this->memory_cost(), target);
   }
 
@@ -2556,36 +2594,36 @@ void PlanFragment::SerializeWithCachedSizes(
   }
 
   // optional bool leaf_fragment = 9;
-  if (cached_has_bits & 0x00000800u) {
+  if (cached_has_bits & 0x00001000u) {
     target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(9, this->leaf_fragment(), target);
   }
 
   // optional .exec.DrillbitEndpoint assignment = 10;
-  if (cached_has_bits & 0x00000008u) {
+  if (cached_has_bits & 0x00000010u) {
     target = ::google::protobuf::internal::WireFormatLite::
       InternalWriteMessageToArray(
         10, this->_internal_assignment(), deterministic, target);
   }
 
   // optional .exec.DrillbitEndpoint foreman = 11;
-  if (cached_has_bits & 0x00000010u) {
+  if (cached_has_bits & 0x00000020u) {
     target = ::google::protobuf::internal::WireFormatLite::
       InternalWriteMessageToArray(
         11, this->_internal_foreman(), deterministic, target);
   }
 
   // optional int64 mem_initial = 12 [default = 20000000];
-  if (cached_has_bits & 0x00001000u) {
+  if (cached_has_bits & 0x00002000u) {
     target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(12, this->mem_initial(), target);
   }
 
   // optional int64 mem_max = 13 [default = 2000000000];
-  if (cached_has_bits & 0x00002000u) {
+  if (cached_has_bits & 0x00004000u) {
     target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(13, this->mem_max(), target);
   }
 
   // optional .exec.shared.UserCredentials credentials = 14;
-  if (cached_has_bits & 0x00000020u) {
+  if (cached_has_bits & 0x00000040u) {
     target = ::google::protobuf::internal::WireFormatLite::
       InternalWriteMessageToArray(
         14, this->_internal_credentials(), deterministic, target);
@@ -2603,7 +2641,7 @@ void PlanFragment::SerializeWithCachedSizes(
   }
 
   // optional .exec.bit.control.QueryContextInformation context = 16;
-  if (cached_has_bits & 0x00000040u) {
+  if (cached_has_bits & 0x00000080u) {
     target = ::google::protobuf::internal::WireFormatLite::
       InternalWriteMessageToArray(
         16, this->_internal_context(), deterministic, target);
@@ -2615,6 +2653,17 @@ void PlanFragment::SerializeWithCachedSizes(
     target = ::google::protobuf::internal::WireFormatLite::
       InternalWriteMessageToArray(
         17, this->collector(static_cast<int>(i)), deterministic, target);
+  }
+
+  // optional string assignedEndpointUUID = 18;
+  if (cached_has_bits & 0x00000004u) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
+      this->assignedendpointuuid().data(), static_cast<int>(this->assignedendpointuuid().length()),
+      ::google::protobuf::internal::WireFormat::SERIALIZE,
+      "exec.bit.control.PlanFragment.assignedEndpointUUID");
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
+        18, this->assignedendpointuuid(), target);
   }
 
   if (_internal_metadata_.have_unknown_fields()) {
@@ -2660,6 +2709,13 @@ size_t PlanFragment::ByteSizeLong() const {
           this->options_json());
     }
 
+    // optional string assignedEndpointUUID = 18;
+    if (has_assignedendpointuuid()) {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::StringSize(
+          this->assignedendpointuuid());
+    }
+
     // optional .exec.bit.FragmentHandle handle = 1;
     if (has_handle()) {
       total_size += 1 +
@@ -2695,13 +2751,13 @@ size_t PlanFragment::ByteSizeLong() const {
           *context_);
     }
 
+  }
+  if (_has_bits_[8 / 32] & 32512u) {
     // optional float network_cost = 4;
     if (has_network_cost()) {
       total_size += 1 + 4;
     }
 
-  }
-  if (_has_bits_[8 / 32] & 16128u) {
     // optional float cpu_cost = 5;
     if (has_cpu_cost()) {
       total_size += 1 + 4;
@@ -2776,42 +2832,45 @@ void PlanFragment::MergeFrom(const PlanFragment& from) {
       options_json_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.options_json_);
     }
     if (cached_has_bits & 0x00000004u) {
-      mutable_handle()->::exec::bit::FragmentHandle::MergeFrom(from.handle());
+      set_has_assignedendpointuuid();
+      assignedendpointuuid_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.assignedendpointuuid_);
     }
     if (cached_has_bits & 0x00000008u) {
-      mutable_assignment()->::exec::DrillbitEndpoint::MergeFrom(from.assignment());
+      mutable_handle()->::exec::bit::FragmentHandle::MergeFrom(from.handle());
     }
     if (cached_has_bits & 0x00000010u) {
-      mutable_foreman()->::exec::DrillbitEndpoint::MergeFrom(from.foreman());
+      mutable_assignment()->::exec::DrillbitEndpoint::MergeFrom(from.assignment());
     }
     if (cached_has_bits & 0x00000020u) {
-      mutable_credentials()->::exec::shared::UserCredentials::MergeFrom(from.credentials());
+      mutable_foreman()->::exec::DrillbitEndpoint::MergeFrom(from.foreman());
     }
     if (cached_has_bits & 0x00000040u) {
-      mutable_context()->::exec::bit::control::QueryContextInformation::MergeFrom(from.context());
+      mutable_credentials()->::exec::shared::UserCredentials::MergeFrom(from.credentials());
     }
     if (cached_has_bits & 0x00000080u) {
+      mutable_context()->::exec::bit::control::QueryContextInformation::MergeFrom(from.context());
+    }
+  }
+  if (cached_has_bits & 32512u) {
+    if (cached_has_bits & 0x00000100u) {
       network_cost_ = from.network_cost_;
     }
-    _has_bits_[0] |= cached_has_bits;
-  }
-  if (cached_has_bits & 16128u) {
-    if (cached_has_bits & 0x00000100u) {
+    if (cached_has_bits & 0x00000200u) {
       cpu_cost_ = from.cpu_cost_;
     }
-    if (cached_has_bits & 0x00000200u) {
+    if (cached_has_bits & 0x00000400u) {
       disk_cost_ = from.disk_cost_;
     }
-    if (cached_has_bits & 0x00000400u) {
+    if (cached_has_bits & 0x00000800u) {
       memory_cost_ = from.memory_cost_;
     }
-    if (cached_has_bits & 0x00000800u) {
+    if (cached_has_bits & 0x00001000u) {
       leaf_fragment_ = from.leaf_fragment_;
     }
-    if (cached_has_bits & 0x00001000u) {
+    if (cached_has_bits & 0x00002000u) {
       mem_initial_ = from.mem_initial_;
     }
-    if (cached_has_bits & 0x00002000u) {
+    if (cached_has_bits & 0x00004000u) {
       mem_max_ = from.mem_max_;
     }
     _has_bits_[0] |= cached_has_bits;
@@ -2846,6 +2905,8 @@ void PlanFragment::InternalSwap(PlanFragment* other) {
   fragment_json_.Swap(&other->fragment_json_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
     GetArenaNoVirtual());
   options_json_.Swap(&other->options_json_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+    GetArenaNoVirtual());
+  assignedendpointuuid_.Swap(&other->assignedendpointuuid_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
     GetArenaNoVirtual());
   swap(handle_, other->handle_);
   swap(assignment_, other->assignment_);

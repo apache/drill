@@ -66,6 +66,7 @@ public final class PlanFragment implements Externalizable, Message<PlanFragment>
     private String optionsJson;
     private QueryContextInformation context;
     private List<Collector> collector;
+    private String assignedEndpointUUID;
 
     public PlanFragment()
     {
@@ -269,6 +270,19 @@ public final class PlanFragment implements Externalizable, Message<PlanFragment>
         return this;
     }
 
+    // assignedEndpointUUID
+
+    public String getAssignedEndpointUUID()
+    {
+        return assignedEndpointUUID;
+    }
+
+    public PlanFragment setAssignedEndpointUUID(String assignedEndpointUUID)
+    {
+        this.assignedEndpointUUID = assignedEndpointUUID;
+        return this;
+    }
+
     // java serialization
 
     public void readExternal(ObjectInput in) throws IOException
@@ -376,6 +390,9 @@ public final class PlanFragment implements Externalizable, Message<PlanFragment>
                     message.collector.add(input.mergeObject(null, Collector.getSchema()));
                     break;
 
+                case 18:
+                    message.assignedEndpointUUID = input.readString();
+                    break;
                 default:
                     input.handleUnknownField(number, this);
             }   
@@ -441,6 +458,9 @@ public final class PlanFragment implements Externalizable, Message<PlanFragment>
             }
         }
 
+
+        if(message.assignedEndpointUUID != null)
+            output.writeString(18, message.assignedEndpointUUID, false);
     }
 
     public String getFieldName(int number)
@@ -462,6 +482,7 @@ public final class PlanFragment implements Externalizable, Message<PlanFragment>
             case 15: return "optionsJson";
             case 16: return "context";
             case 17: return "collector";
+            case 18: return "assignedEndpointUUID";
             default: return null;
         }
     }
@@ -490,6 +511,7 @@ public final class PlanFragment implements Externalizable, Message<PlanFragment>
         __fieldMap.put("optionsJson", 15);
         __fieldMap.put("context", 16);
         __fieldMap.put("collector", 17);
+        __fieldMap.put("assignedEndpointUUID", 18);
     }
     
 }

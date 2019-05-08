@@ -17,15 +17,6 @@
  */
 package org.apache.drill.yarn.zk;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.RetryNTimes;
@@ -40,6 +31,15 @@ import org.apache.drill.yarn.appMaster.Task;
 import org.apache.drill.yarn.appMaster.TaskLifecycleListener.Event;
 import org.apache.drill.yarn.zk.ZKRegistry.DrillbitTracker;
 import org.junit.Test;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests for the AM version of the cluster coordinator. The AM version has no
@@ -108,14 +108,13 @@ public class TestZkRegistry {
     protected Set<DrillbitEndpoint> removed;
 
     @Override
-    public void drillbitUnregistered(
-        Set<DrillbitEndpoint> unregisteredDrillbits) {
-      removed = unregisteredDrillbits;
+    public void drillbitUnregistered(Map<DrillbitEndpoint, String> unregisteredDrillbitsUUID) {
+      removed = unregisteredDrillbitsUUID.keySet();
     }
 
     @Override
-    public void drillbitRegistered(Set<DrillbitEndpoint> registeredDrillbits) {
-      added = registeredDrillbits;
+    public void drillbitRegistered(Map<DrillbitEndpoint, String> registeredDrillbitsUUID) {
+      added = registeredDrillbitsUUID.keySet();
     }
 
     public void clear() {

@@ -17,15 +17,6 @@
  */
 package org.apache.drill.exec.store.sys.store;
 
-import java.io.IOException;
-import java.util.Iterator;
-import java.util.Map;
-
-import javax.annotation.Nullable;
-
-import org.apache.drill.shaded.guava.com.google.common.base.Function;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.apache.drill.shaded.guava.com.google.common.collect.Iterators;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.drill.common.collections.ImmutableEntry;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
@@ -37,7 +28,15 @@ import org.apache.drill.exec.store.sys.BasePersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreConfig;
 import org.apache.drill.exec.store.sys.PersistentStoreMode;
 import org.apache.drill.exec.store.sys.VersionedPersistentStore;
+import org.apache.drill.shaded.guava.com.google.common.base.Function;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.collect.Iterators;
 import org.apache.zookeeper.CreateMode;
+
+import javax.annotation.Nullable;
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * Zookeeper based implementation of {@link org.apache.drill.exec.store.sys.PersistentStore}.
@@ -45,8 +44,8 @@ import org.apache.zookeeper.CreateMode;
 public class ZookeeperPersistentStore<V> extends BasePersistentStore<V> implements VersionedPersistentStore<V> {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ZookeeperPersistentStore.class);
 
-  private final PersistentStoreConfig<V> config;
-  private final ZookeeperClient client;
+  protected final PersistentStoreConfig<V> config;
+  protected final ZookeeperClient client;
 
   public ZookeeperPersistentStore(final CuratorFramework framework, final PersistentStoreConfig<V> config) throws StoreException {
     this.config = Preconditions.checkNotNull(config);

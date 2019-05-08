@@ -45,7 +45,7 @@ public class OperatorStats {
   public long[] recordsReceivedByInput;
   public long[] batchesReceivedByInput;
   private long[] schemaCountByInput;
-
+  private long optimalMemoryAllocation;
 
   private boolean inProcessing = false;
   private boolean inSetup = false;
@@ -62,7 +62,7 @@ public class OperatorStats {
   private int inputCount;
 
   public OperatorStats(OpProfileDef def, BufferAllocator allocator){
-    this(def.getOperatorId(), def.getOperatorType(), def.getIncomingCount(), allocator);
+    this(def.getOperatorId(), def.getOperatorType(), def.getIncomingCount(), allocator, def.optimalMemoryAllocation);
   }
 
   /**
@@ -74,7 +74,7 @@ public class OperatorStats {
    */
 
   public OperatorStats(OperatorStats original, boolean isClean) {
-    this(original.operatorId, original.operatorType, original.inputCount, original.allocator);
+    this(original.operatorId, original.operatorType, original.inputCount, original.allocator, original.optimalMemoryAllocation);
 
     if ( !isClean ) {
       inProcessing = original.inProcessing;
@@ -88,7 +88,7 @@ public class OperatorStats {
   }
 
   @VisibleForTesting
-  public OperatorStats(int operatorId, int operatorType, int inputCount, BufferAllocator allocator) {
+  public OperatorStats(int operatorId, int operatorType, int inputCount, BufferAllocator allocator, long optimalMemAllocation) {
     super();
     this.allocator = allocator;
     this.operatorId = operatorId;
@@ -97,6 +97,7 @@ public class OperatorStats {
     this.recordsReceivedByInput = new long[inputCount];
     this.batchesReceivedByInput = new long[inputCount];
     this.schemaCountByInput = new long[inputCount];
+    this.optimalMemoryAllocation = optimalMemAllocation;
   }
 
   private String assertionError(String msg){
@@ -207,6 +208,7 @@ public class OperatorStats {
         .setOperatorId(operatorId) //
         .setSetupNanos(setupNanos) //
         .setProcessNanos(processingNanos)
+        .setMaxAllocation(optimalMemoryAllocation)
         .setWaitNanos(waitNanos);
 
     if (allocator != null) {

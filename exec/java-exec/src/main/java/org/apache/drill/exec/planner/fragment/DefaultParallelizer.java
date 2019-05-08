@@ -20,10 +20,10 @@ package org.apache.drill.exec.planner.fragment;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
-import org.apache.drill.exec.util.MemoryAllocationUtilities;
+import org.apache.drill.exec.util.memory.DefaultMemoryAllocationUtilities;
 
-import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
 
@@ -32,18 +32,18 @@ import java.util.function.BiFunction;
  * The memory computation of the operators is based on the earlier logic to assign memory for the buffered
  * operators.
  */
-public class DefaultQueryParallelizer extends SimpleParallelizer {
+public class DefaultParallelizer extends SimpleParallelizer {
   private final boolean planHasMemory;
   private final QueryContext queryContext;
 
-  public DefaultQueryParallelizer(boolean memoryAvailableInPlan, QueryContext queryContext) {
+  public DefaultParallelizer(boolean memoryAvailableInPlan, QueryContext queryContext) {
     super(queryContext);
     this.planHasMemory = memoryAvailableInPlan;
     this.queryContext = queryContext;
   }
 
-  public DefaultQueryParallelizer(boolean memoryPlanning, long parallelizationThreshold, int maxWidthPerNode,
-                                  int maxGlobalWidth, double affinityFactor) {
+  public DefaultParallelizer(boolean memoryPlanning, long parallelizationThreshold, int maxWidthPerNode,
+                             int maxGlobalWidth, double affinityFactor) {
     super(parallelizationThreshold, maxWidthPerNode, maxGlobalWidth, affinityFactor);
     this.planHasMemory = memoryPlanning;
     this.queryContext = null;
@@ -51,12 +51,12 @@ public class DefaultQueryParallelizer extends SimpleParallelizer {
 
   @Override
   public void adjustMemory(PlanningSet planningSet, Set<Wrapper> roots,
-                           Collection<DrillbitEndpoint> activeEndpoints) {
+                           Map<DrillbitEndpoint, String> onlineEndpointUUIDs) {
     if (planHasMemory) {
       return;
     }
     List<PhysicalOperator> bufferedOpers = planningSet.getRootWrapper().getNode().getBufferedOperators(queryContext);
-    MemoryAllocationUtilities.setupBufferedOpsMemoryAllocations(planHasMemory, bufferedOpers, queryContext);
+    DefaultMemoryAllocationUtilities.setupBufferedOpsMemoryAllocations(planHasMemory, bufferedOpers, queryContext);
   }
 
   @Override

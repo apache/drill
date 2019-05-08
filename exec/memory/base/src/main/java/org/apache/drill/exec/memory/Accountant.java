@@ -17,15 +17,13 @@
  */
 package org.apache.drill.exec.memory;
 
-import java.util.concurrent.atomic.AtomicLong;
-
-import javax.annotation.concurrent.ThreadSafe;
-
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.util.AssertionUtil;
-
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+
+import javax.annotation.concurrent.ThreadSafe;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Provides a concurrent way to manage account for memory usage without locking. Used as basis for Allocators. All
@@ -111,8 +109,8 @@ public class Accountant implements AutoCloseable {
   public Accountant(Accountant parent, long reservation, long maxAllocation) {
     Preconditions.checkArgument(reservation >= 0, "The initial reservation size must be non-negative.");
     Preconditions.checkArgument(maxAllocation >= 0, "The maximum allocation limit must be non-negative.");
-    Preconditions.checkArgument(reservation <= maxAllocation,
-        "The initial reservation size must be <= the maximum allocation.");
+    Preconditions.checkArgument(reservation <= maxAllocation, String.format("The initial reservation size %d " +
+        "must be <= the maximum allocation %d.", reservation, maxAllocation));
     Preconditions.checkArgument(reservation == 0 || parent != null, "The root accountant can't reserve memory.");
 
     this.parent = parent;

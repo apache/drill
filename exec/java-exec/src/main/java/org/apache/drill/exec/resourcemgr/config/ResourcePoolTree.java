@@ -32,6 +32,8 @@ public interface ResourcePoolTree {
 
   ResourcePool getRootPool();
 
+  NodeResources getRootPoolResources();
+
   Map<String, QueryQueueConfig> getAllLeafQueues();
 
   double getResourceShare();

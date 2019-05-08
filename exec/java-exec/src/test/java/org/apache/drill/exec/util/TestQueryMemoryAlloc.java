@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.util.memory.ZKQueueMemoryAllocationUtilities;
 import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.DrillTest;
 import org.apache.drill.test.OperatorFixture;
@@ -48,17 +49,17 @@ public class TestQueryMemoryAlloc extends DrillTest {
       optionManager.setLocalOption(ExecConstants.MAX_QUERY_MEMORY_PER_NODE_KEY, 2 * ONE_GB);
 
       // Out-of-box memory, use query memory per node as floor.
-      long mem = MemoryAllocationUtilities.computeQueryMemory(fixture.config(), optionManager, 8 * ONE_GB);
+      long mem = ZKQueueMemoryAllocationUtilities.computeQueryMemory(fixture.config(), optionManager, 8 * ONE_GB);
       assertEquals(2 * ONE_GB, mem);
 
       // Up to 40 GB, query memory dominates.
 
-      mem = MemoryAllocationUtilities.computeQueryMemory(fixture.config(), optionManager, 40 * ONE_GB);
+      mem = ZKQueueMemoryAllocationUtilities.computeQueryMemory(fixture.config(), optionManager, 40 * ONE_GB);
       assertEquals(2 * ONE_GB, mem);
 
       // After 40 GB, the percent dominates
 
-      mem = MemoryAllocationUtilities.computeQueryMemory(fixture.config(), optionManager, 100 * ONE_GB);
+      mem = ZKQueueMemoryAllocationUtilities.computeQueryMemory(fixture.config(), optionManager, 100 * ONE_GB);
       assertEquals(5 * ONE_GB, mem);
     }
   }
@@ -76,17 +77,17 @@ public class TestQueryMemoryAlloc extends DrillTest {
       optionManager.setLocalOption(ExecConstants.MAX_QUERY_MEMORY_PER_NODE_KEY, 3 * ONE_GB);
 
       // Out-of-box memory, use query memory per node as floor.
-      long mem = MemoryAllocationUtilities.computeQueryMemory(fixture.config(), optionManager, 8 * ONE_GB);
+      long mem = ZKQueueMemoryAllocationUtilities.computeQueryMemory(fixture.config(), optionManager, 8 * ONE_GB);
       assertEquals(3 * ONE_GB, mem);
 
       // Up to 60 GB, query memory dominates.
 
-      mem = MemoryAllocationUtilities.computeQueryMemory(fixture.config(), optionManager, 60 * ONE_GB);
+      mem = ZKQueueMemoryAllocationUtilities.computeQueryMemory(fixture.config(), optionManager, 60 * ONE_GB);
       assertEquals(3 * ONE_GB, mem);
 
       // After 60 GB, the percent dominates
 
-      mem = MemoryAllocationUtilities.computeQueryMemory(fixture.config(), optionManager, 100 * ONE_GB);
+      mem = ZKQueueMemoryAllocationUtilities.computeQueryMemory(fixture.config(), optionManager, 100 * ONE_GB);
       assertEquals(5 * ONE_GB, mem);
     }
   }
@@ -105,17 +106,17 @@ public class TestQueryMemoryAlloc extends DrillTest {
 
       // Out-of-box memory, use query memory per node as floor.
 
-      long mem = MemoryAllocationUtilities.computeQueryMemory(fixture.config(), optionManager, 8 * ONE_GB);
+      long mem = ZKQueueMemoryAllocationUtilities.computeQueryMemory(fixture.config(), optionManager, 8 * ONE_GB);
       assertEquals(2 * ONE_GB, mem);
 
       // Up to 20 GB, query memory dominates.
 
-      mem = MemoryAllocationUtilities.computeQueryMemory(fixture.config(), optionManager, 20 * ONE_GB);
+      mem = ZKQueueMemoryAllocationUtilities.computeQueryMemory(fixture.config(), optionManager, 20 * ONE_GB);
       assertEquals(2 * ONE_GB, mem);
 
       // After 20 GB, the percent dominates
 
-      mem = MemoryAllocationUtilities.computeQueryMemory(fixture.config(), optionManager, 30 * ONE_GB);
+      mem = ZKQueueMemoryAllocationUtilities.computeQueryMemory(fixture.config(), optionManager, 30 * ONE_GB);
       assertEquals(3 * ONE_GB, mem);
     }
   }
@@ -145,12 +146,12 @@ public class TestQueryMemoryAlloc extends DrillTest {
 
       // Enough memory to go above configured minimum.
 
-      long opMinMem = MemoryAllocationUtilities.computeOperatorMemory(optionManager, 4 * ONE_GB, 2);
+      long opMinMem = ZKQueueMemoryAllocationUtilities.computeOperatorMemory(optionManager, 4 * ONE_GB, 2);
       assertEquals(4 * ONE_GB / 10 / 2, opMinMem);
 
       // Too little memory per operator. Use configured minimum.
 
-      opMinMem = MemoryAllocationUtilities.computeOperatorMemory(optionManager, ONE_GB, 100);
+      opMinMem = ZKQueueMemoryAllocationUtilities.computeOperatorMemory(optionManager, ONE_GB, 100);
       assertEquals(40 * ONE_MB, opMinMem);
     }
   }

@@ -17,12 +17,10 @@
  */
 package org.apache.drill.exec.pop;
 
-import java.util.List;
-
 import org.apache.drill.categories.PlannerTest;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.planner.PhysicalPlanReaderTestFactory;
-import org.apache.drill.exec.planner.fragment.DefaultQueryParallelizer;
+import org.apache.drill.exec.planner.fragment.DefaultParallelizer;
 import org.apache.drill.exec.planner.fragment.Fragment;
 import org.apache.drill.exec.planner.fragment.SimpleParallelizer;
 import org.apache.drill.exec.proto.BitControl.QueryContextInformation;
@@ -34,9 +32,10 @@ import org.apache.drill.exec.server.options.OptionList;
 import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.exec.work.QueryWorkUnit;
 import org.junit.Test;
-
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.junit.experimental.categories.Category;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
@@ -51,19 +50,20 @@ public class TestFragmentChecker extends PopUnitTestBase{
   }
 
   private void print(String fragmentFile, int bitCount, int expectedFragmentCount) throws Exception {
-    PhysicalPlanReader ppr = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(CONFIG);
-    Fragment fragmentRoot = getRootFragment(ppr, fragmentFile);
-    SimpleParallelizer par = new DefaultQueryParallelizer(true, 1000*1000, 5, 10, 1.2);
-    List<DrillbitEndpoint> endpoints = Lists.newArrayList();
+    SimpleParallelizer par = new DefaultParallelizer(true, 1000*1000, 5, 10, 1.2);
+    Map<DrillbitEndpoint, String> endpoints = new HashMap<>();
     DrillbitEndpoint localBit = null;
     for(int i =0; i < bitCount; i++) {
       DrillbitEndpoint b1 = DrillbitEndpoint.newBuilder().setAddress("localhost").setControlPort(1234+i).build();
       if (i == 0) {
         localBit = b1;
       }
-      endpoints.add(b1);
+      StringBuilder sb = new StringBuilder();
+      endpoints.put(b1, sb.append("Drillbit-").append(i).toString());
     }
 
+    final PhysicalPlanReader ppr = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(CONFIG, null, localBit);
+    Fragment fragmentRoot = getRootFragment(ppr, fragmentFile);
     final QueryContextInformation queryContextInfo = Utilities.createQueryContextInfo("dummySchemaName", "938ea2d9-7cb9-4baf-9414-a5a0b7777e8e");
     QueryWorkUnit qwu = par.generateWorkUnit(new OptionList(), localBit, QueryId.getDefaultInstance(), endpoints, fragmentRoot,
         UserSession.Builder.newBuilder().withCredentials(UserBitShared.UserCredentials.newBuilder().setUserName("foo").build()).build(),

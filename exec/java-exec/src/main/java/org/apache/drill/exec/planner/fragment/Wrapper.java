@@ -17,14 +17,6 @@
  */
 package org.apache.drill.exec.planner.fragment;
 
-import java.util.List;
-import java.util.Map;
-import java.util.function.BinaryOperator;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
-import org.apache.drill.exec.planner.cost.NodeResource;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.exec.physical.PhysicalOperatorSetupException;
 import org.apache.drill.exec.physical.base.AbstractPhysicalVisitor;
 import org.apache.drill.exec.physical.base.Exchange;
@@ -33,10 +25,18 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Store;
 import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.planner.fragment.Fragment.ExchangeFragmentPair;
+import org.apache.drill.common.DrillNode;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
-
+import org.apache.drill.exec.resourcemgr.NodeResources;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+
+import java.util.List;
+import java.util.Map;
+import java.util.function.BinaryOperator;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * A wrapping class that allows us to add additional information to each fragment node for planning purposes.
@@ -55,7 +55,7 @@ public class Wrapper {
   // A Drillbit can have n number of minor fragments then the NodeResource
   // contains cumulative resources required for all the minor fragments
   // for that major fragment on that Drillbit.
-  private Map<DrillbitEndpoint, NodeResource> nodeResourceMap;
+  private Map<DrillNode, NodeResources> nodeResourceMap;
 
   // List of fragments this particular fragment depends on for determining its parallelization and endpoint assignments.
   private final List<Wrapper> fragmentDependencies = Lists.newArrayList();
@@ -218,22 +218,22 @@ public class Wrapper {
    */
   public void computeCpuResources() {
     Preconditions.checkArgument(nodeResourceMap == null);
-    BinaryOperator<NodeResource> merge = (first, second) -> {
-      NodeResource result = NodeResource.create();
+    BinaryOperator<NodeResources> merge = (first, second) -> {
+      NodeResources result = NodeResources.create();
       result.add(first);
       result.add(second);
       return result;
     };
 
-    Function<DrillbitEndpoint, NodeResource> cpuPerEndpoint = (endpoint) -> new NodeResource(1, 0);
+    Function<DrillNode, NodeResources> cpuPerEndpoint = (endpoint) -> new NodeResources(1, 0);
 
-    nodeResourceMap = endpoints.stream()
+    nodeResourceMap = endpoints.stream().map(x -> DrillNode.create(x))
                                .collect(Collectors.groupingBy(Function.identity(),
-                                        Collectors.reducing(NodeResource.create(),
+                                        Collectors.reducing(NodeResources.create(),
                                                             cpuPerEndpoint, merge)));
   }
 
-  public Map<DrillbitEndpoint, NodeResource> getResourceMap() {
+  public Map<DrillNode, NodeResources> getResourceMap() {
     return nodeResourceMap;
   }
 }

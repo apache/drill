@@ -19,7 +19,6 @@ package org.apache.drill.exec.work.foreman.rm;
 
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.work.foreman.Foreman;
@@ -59,12 +58,6 @@ public class DynamicResourceManager implements ResourceManager {
   @Override
   public int cpusPerNode() {
     return activeRm.cpusPerNode();
-  }
-
-  @Override
-  public synchronized QueryResourceAllocator newResourceAllocator(QueryContext queryContext) {
-    refreshRM();
-    return activeRm.newResourceAllocator(queryContext);
   }
 
   @Override

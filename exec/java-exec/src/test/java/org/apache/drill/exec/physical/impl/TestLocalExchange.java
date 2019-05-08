@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl;
 
-import org.apache.drill.exec.planner.fragment.DefaultQueryParallelizer;
+import org.apache.drill.exec.planner.fragment.DefaultParallelizer;
 import org.apache.drill.shaded.guava.com.google.common.collect.ArrayListMultimap;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
@@ -82,7 +82,7 @@ public class TestLocalExchange extends PlanTestBase {
       .withCredentials(UserBitShared.UserCredentials.newBuilder().setUserName("foo").build())
       .build();
 
-  private static final SimpleParallelizer PARALLELIZER = new DefaultQueryParallelizer(
+  private static final SimpleParallelizer PARALLELIZER = new DefaultParallelizer(
       true,
       1 /*parallelizationThreshold (slice_count)*/,
       6 /*maxWidthPerNode*/,
@@ -399,7 +399,7 @@ public class TestLocalExchange extends PlanTestBase {
     final QueryContextInformation queryContextInfo = Utilities.createQueryContextInfo("dummySchemaName", "938ea2d9-7cb9-4baf-9414-a5a0b7777e8e");
     QueryWorkUnit qwu = PARALLELIZER.generateWorkUnit(new OptionList(), drillbitContext.getEndpoint(),
         QueryId.getDefaultInstance(),
-        drillbitContext.getBits(), rootFragment, USER_SESSION, queryContextInfo);
+        drillbitContext.getOnlineEndpointUUIDs(), rootFragment, USER_SESSION, queryContextInfo);
     qwu.applyPlan(planReader);
 
     // Make sure the number of minor fragments with HashPartitioner within a major fragment is not more than the

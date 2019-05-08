@@ -18,6 +18,7 @@
 package org.apache.drill.exec.resourcemgr.config.selectionpolicy;
 
 import org.apache.drill.exec.ops.QueryContext;
+import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.resourcemgr.NodeResources;
 import org.apache.drill.exec.resourcemgr.config.ResourcePool;
 import org.apache.drill.exec.resourcemgr.config.exception.QueueSelectionException;
@@ -39,14 +40,15 @@ public class DefaultQueueSelection extends AbstractQueueSelectionPolicy {
   @Override
   public ResourcePool selectQueue(List<ResourcePool> allPools, QueryContext queryContext,
                                   NodeResources maxResourcePerNode) throws QueueSelectionException {
+    final String queryIdString = QueryIdHelper.getQueryId(queryContext.getQueryId());
     for (ResourcePool pool : allPools) {
       if (pool.isDefaultPool()) {
-        logger.debug("Selected default pool: {} for the query: {}", pool.getPoolName(), queryContext.getQueryId());
+        logger.debug("Selected default pool: {} for the query: {}", pool.getPoolName(), queryIdString);
         return pool;
       }
     }
 
     throw new QueueSelectionException(String.format("There is no default pool to select from list of pools provided " +
-      "for the query: %s", queryContext.getQueryId()));
+      "for the query: %s", queryIdString));
   }
 }
