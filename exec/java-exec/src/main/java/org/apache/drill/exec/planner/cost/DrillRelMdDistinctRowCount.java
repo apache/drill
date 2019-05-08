@@ -136,7 +136,7 @@ public class DrillRelMdDistinctRowCount extends RelMdDistinctRowCount{
    */
   private Double getDistinctRowCountInternal(TableScan scan, RelMetadataQuery mq, DrillTable table,
       ImmutableBitSet groupKey, RelDataType type, RexNode predicate) {
-    double selectivity, rowCount;
+    double selectivity, gbyColPredSel, rowCount;
     /* If predicate is present, determine its selectivity to estimate filtered rows.
      * Thereafter, compute the number of distinct rows.
      */
@@ -172,16 +172,17 @@ public class DrillRelMdDistinctRowCount extends RelMdDistinctRowCount{
         break;
       }
       estRowCnt *= ndv;
-      selectivity = getPredSelectivityContainingInputRef(predicate, i, mq, scan);
+      gbyColPredSel = getPredSelectivityContainingInputRef(predicate, i, mq, scan);
       /* If predicate is on group-by column, scale down the NDV by selectivity. Consider the query
        * select a, b from t where a = 10 group by a, b. Here, NDV(a) will be scaled down by SEL(a)
        * whereas NDV(b) will not.
        */
-      if (selectivity > 0) {
-        estRowCnt *= selectivity;
+      if (gbyColPredSel > 0) {
+        estRowCnt *= gbyColPredSel;
       }
     }
-    estRowCnt = Math.min(estRowCnt, rowCount);
+    // Estimated NDV should not exceed number of rows after applying the filters
+    estRowCnt = Math.min(estRowCnt, selectivity*rowCount);
     if (!allColsHaveNDV) {
       if (logger.isDebugEnabled()) {
         logger.debug(String.format("NDV not available for %s(%s). Using default rowcount for group-by %s",
