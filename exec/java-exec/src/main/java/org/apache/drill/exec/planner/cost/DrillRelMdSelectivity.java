@@ -311,7 +311,8 @@ public class DrillRelMdSelectivity extends RelMdSelectivity {
       Histogram histogram = columnStatistics != null ? (Histogram) columnStatistics.getStatistic(ColumnStatisticsKind.HISTOGRAM) : null;
       if (histogram != null) {
         Double totalCount = (Double) columnStatistics.getStatistic(ColumnStatisticsKind.ROWCOUNT);
-        Double sel = histogram.estimatedSelectivity(orPred, totalCount.longValue());
+        Double ndv = (Double) columnStatistics.getStatistic(ColumnStatisticsKind.NDV);
+        Double sel = histogram.estimatedSelectivity(orPred, totalCount.longValue(), ndv.longValue());
         if (sel != null) {
           return sel;
         }

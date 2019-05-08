@@ -425,6 +425,18 @@ public class TestAnalyze extends BaseTestQuery {
         "Scan.*columns=\\[`store_id`\\].*rowcount = 1128.0.*"};
       PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan4, new String[]{});
 
+      // col > end_point of last bucket
+      query = "select 1 from dfs.tmp.employee1 where store_id > 24";
+      String[] expectedPlan5 = {"Filter\\(condition.*\\).*rowcount = 1.0,.*",
+        "Scan.*columns=\\[`store_id`\\].*rowcount = 1128.0.*"};
+      PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan5, new String[]{});
+
+      // col < start_point of first bucket
+      query = "select 1 from dfs.tmp.employee1 where store_id < 1";
+      String[] expectedPlan6 = {"Filter\\(condition.*\\).*rowcount = 1.0,.*",
+        "Scan.*columns=\\[`store_id`\\].*rowcount = 1128.0.*"};
+      PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan6, new String[]{});
+
     } finally {
       test("ALTER SESSION SET `planner.slice_target` = " + ExecConstants.SLICE_TARGET_DEFAULT);
     }

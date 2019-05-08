@@ -30,7 +30,9 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexLiteral;
 import com.tdunning.math.stats.MergingDigest;
 import org.apache.calcite.sql.SqlOperator;
+import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.collect.BoundType;
 import org.apache.drill.shaded.guava.com.google.common.collect.Range;
 
 /**
@@ -85,6 +87,11 @@ public class NumericEquiDepthHistogram implements Histogram {
     return buckets;
   }
 
+  @VisibleForTesting
+  protected void setBucketValue(int index, Double value) {
+    buckets[index] = value;
+  }
+
   /**
    * Get the number of buckets in the histogram
    * number of buckets is 1 less than the total # entries in the buckets array since last
@@ -105,7 +112,7 @@ public class NumericEquiDepthHistogram implements Histogram {
    * first and last bucket may be partially covered and all other buckets in the middle are fully covered.
    */
   @Override
-  public Double estimatedSelectivity(final RexNode columnFilter, final long totalRowCount) {
+  public Double estimatedSelectivity(final RexNode columnFilter, final long totalRowCount, final long ndv) {
     if (numRowsPerBucket == 0) {
       return null;
     }
@@ -127,7 +134,7 @@ public class NumericEquiDepthHistogram implements Histogram {
     int unknown = unknownFilterList.size();
 
     if (valuesRange.hasLowerBound() || valuesRange.hasUpperBound()) {
-      numSelectedRows = getSelectedRows(valuesRange);
+      numSelectedRows = getSelectedRows(valuesRange, ndv);
     } else {
       numSelectedRows = 0;
     }
@@ -178,101 +185,143 @@ public class NumericEquiDepthHistogram implements Histogram {
     return currentRange;
   }
 
-  private long getSelectedRows(final Range range) {
-    final int numBuckets = buckets.length - 1;
+  @VisibleForTesting
+  protected long getSelectedRows(final Range range, final long ndv) {
     double startBucketFraction = 1.0;
     double endBucketFraction = 1.0;
     long numRows = 0;
     int result;
     Double lowValue = null;
     Double highValue = null;
-    final int first = 0;
-    final int last = buckets.length - 1;
-    int startBucket = first;
-    int endBucket = last;
+    final int firstStartPointIndex = 0;
+    final int lastEndPointIndex = buckets.length - 1;
+    int startBucket = firstStartPointIndex;
+    int endBucket = lastEndPointIndex - 1;
 
     if (range.hasLowerBound()) {
       lowValue = (Double) range.lowerEndpoint();
 
-      // if low value is greater than the end point of the last bucket then none of the rows qualify
-      if (lowValue.compareTo(buckets[last]) > 0) {
+      // if low value is greater than the end point of the last bucket or if it is equal but the range is open (i.e
+      // predicate is of type > 5 where 5 is the end point of last bucket) then none of the rows qualify
+      result = lowValue.compareTo(buckets[lastEndPointIndex]);
+      if (result > 0 || result == 0 && range.lowerBoundType() == BoundType.OPEN)  {
         return 0;
       }
-
-      result = lowValue.compareTo(buckets[first]);
+      result = lowValue.compareTo(buckets[firstStartPointIndex]);
 
       // if low value is less than or equal to the first bucket's start point then start with the first bucket and all
       // rows in first bucket are included
       if (result <= 0) {
-        startBucket = first;
+        startBucket = firstStartPointIndex;
         startBucketFraction = 1.0;
       } else {
-        // Use a simplified logic where we treat > and >= the same when computing selectivity since the
-        // difference is going to be very small for reasonable sized data sets
-        startBucket = getContainingBucket(lowValue, numBuckets);
+        startBucket = getContainingBucket(lowValue, lastEndPointIndex, true);
+
         // expecting start bucket to be >= 0 since other conditions have been handled previously
         Preconditions.checkArgument(startBucket >= 0, "Expected start bucket id >= 0");
-        startBucketFraction = ((double) (buckets[startBucket + 1] - lowValue)) / (buckets[startBucket + 1] - buckets[startBucket]);
+
+       if (buckets[startBucket + 1].doubleValue() == buckets[startBucket].doubleValue()) {
+         // if start and end points of the bucket are the same, consider entire bucket
+         startBucketFraction = 1.0;
+       } else if (range.lowerBoundType() == BoundType.CLOSED && buckets[startBucket + 1].doubleValue() == lowValue.doubleValue()) {
+         // predicate is of type >= 5.0 and 5.0 happens to be the start point of the bucket
+         // In this case, use the overall NDV to approximate
+         startBucketFraction = 1.0 / ndv;
+       } else {
+          startBucketFraction = ((double) (buckets[startBucket + 1] - lowValue)) / (buckets[startBucket + 1] - buckets[startBucket]);
+        }
       }
     }
 
     if (range.hasUpperBound()) {
       highValue = (Double) range.upperEndpoint();
 
-      // if the high value is less than the start point of the first bucket then none of the rows qualify
-      if (highValue.compareTo(buckets[first]) < 0) {
+      // if the high value is less than the start point of the first bucket or if it is equal but the range is open (i.e
+      // predicate is of type < 1 where 1 is the start point of the first bucket) then none of the rows qualify
+      result = highValue.compareTo(buckets[firstStartPointIndex]);
+      if (result < 0 || (result == 0 && range.upperBoundType() == BoundType.OPEN)) {
         return 0;
       }
 
-      result = highValue.compareTo(buckets[last]);
+      result = highValue.compareTo(buckets[lastEndPointIndex]);
 
       // if high value is greater than or equal to the last bucket's end point then include the last bucket and all rows in
       // last bucket qualify
       if (result >= 0) {
-        endBucket = last;
+        endBucket = lastEndPointIndex - 1;
         endBucketFraction = 1.0;
       } else {
-        // Use a simplified logic where we treat < and <= the same when computing selectivity since the
-        // difference is going to be very small for reasonable sized data sets
-        endBucket = getContainingBucket(highValue, numBuckets);
+        endBucket = getContainingBucket(highValue, lastEndPointIndex, false);
+
         // expecting end bucket to be >= 0 since other conditions have been handled previously
         Preconditions.checkArgument(endBucket >= 0, "Expected end bucket id >= 0");
-        endBucketFraction = ((double)(highValue - buckets[endBucket])) / (buckets[endBucket + 1] - buckets[endBucket]);
+
+        if (buckets[endBucket + 1].doubleValue() == buckets[endBucket].doubleValue()) {
+          // if start and end points of the bucket are the same, consider entire bucket
+          endBucketFraction = 1.0;
+        } else if (range.upperBoundType() == BoundType.CLOSED && buckets[endBucket].doubleValue() == highValue.doubleValue()) {
+          // predicate is of type <= 5.0 and 5.0 happens to be the start point of the bucket
+          // In this case, use the overall NDV to approximate
+          endBucketFraction = 1.0/ndv;
+        } else {
+          endBucketFraction = ((double) (highValue - buckets[endBucket])) / (buckets[endBucket + 1] - buckets[endBucket]);
+        }
       }
     }
 
-    Preconditions.checkArgument(startBucket <= endBucket);
+    Preconditions.checkArgument(startBucket >= 0 && startBucket + 1 <= lastEndPointIndex, "Invalid startBucket: " + startBucket);
+    Preconditions.checkArgument(endBucket >= 0 && endBucket + 1 <= lastEndPointIndex, "Invalid endBucket: " +  endBucket);
+    Preconditions.checkArgument(startBucket <= endBucket,
+      "Start bucket: " + startBucket + " should be less than or equal to end bucket: " + endBucket);
 
-    // if the endBucketId corresponds to the last endpoint, then adjust it to be one less
-    if (endBucket == last) {
-      endBucket = last - 1;
-    }
-    if (startBucket == endBucket && highValue != null && lowValue != null) {
+    if (startBucket == endBucket) {
       // if the start and end buckets are the same, interpolate based on the difference between the high and low value
-      numRows = (long) ((highValue - lowValue) / (buckets[endBucket + 1] - buckets[startBucket]) * numRowsPerBucket);
+      if (highValue != null && lowValue != null) {
+        numRows = (long) ((highValue - lowValue) / (buckets[startBucket + 1] - buckets[startBucket]) * numRowsPerBucket);
+      } else if (highValue != null) {
+        numRows = (long) (endBucketFraction * numRowsPerBucket);
+      } else {
+        numRows = (long) (startBucketFraction * numRowsPerBucket);
+      }
     } else {
-      numRows = (long) ((startBucketFraction + endBucketFraction) * numRowsPerBucket + (endBucket - startBucket - 1) * numRowsPerBucket);
+      int numIntermediateBuckets = (endBucket > startBucket + 1) ? (endBucket - startBucket - 1) : 0;
+      numRows = (long) ((startBucketFraction + endBucketFraction) * numRowsPerBucket + numIntermediateBuckets * numRowsPerBucket);
     }
 
     return numRows;
   }
 
-  private int getContainingBucket(final Double value, final int numBuckets) {
+  /**
+   * Get the start point of the containing bucket for the supplied value. If there are multiple buckets with the
+   * same start point, return either the first matching or last matching depending on firstMatching flag
+   * @param value the input double value
+   * @param lastEndPointIndex
+   * @param firstMatching If true, return the first bucket that matches the specified criteria otherwise return the last one
+   * @return index of either the first or last matching bucket if a match was found, otherwise return -1
+   */
+  private int getContainingBucket(final Double value, final int lastEndPointIndex, final boolean firstMatching) {
     int i = 0;
     int containing_bucket = -1;
+
     // check which bucket this value falls in
-    for (; i <= numBuckets; i++) {
+    for (; i <= lastEndPointIndex; i++) {
       int result = buckets[i].compareTo(value);
       if (result > 0) {
         containing_bucket = i - 1;
         break;
       } else if (result == 0) {
-        containing_bucket = i;
-        break;
+        // if we are already at the lastEndPointIndex, mark the containing bucket
+        // as i-1 because the containing bucket should correspond to the start point of the bucket
+        // (recall that lastEndPointIndex is the final end point of the last bucket)
+        containing_bucket = (i == lastEndPointIndex) ? i - 1 : i;
+        if (firstMatching) {
+          // break if we are only interested in the first matching bucket
+          break;
+        }
       }
     }
     return containing_bucket;
-  }
+   }
 
   private Double getLiteralValue(final RexNode filter) {
     Double value = null;

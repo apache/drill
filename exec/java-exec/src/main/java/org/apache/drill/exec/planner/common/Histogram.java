@@ -38,5 +38,5 @@ public interface Histogram {
    * @param totalRowCount
    * @return estimated selectivity or NULL if it could not be estimated for any reason
    */
-  Double estimatedSelectivity(final RexNode filter, final long totalRowCount);
+  Double estimatedSelectivity(final RexNode filter, final long totalRowCount, final long ndv);
 }
