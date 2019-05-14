@@ -61,6 +61,8 @@ public class DynamicRootSchema extends DynamicSchema {
   @Override
   protected CalciteSchema getImplicitSubSchema(String schemaName,
                                                boolean caseSensitive) {
+    // Drill registers schemas in lower case, see AbstractSchema constructor
+    schemaName = schemaName == null ? null : schemaName.toLowerCase();
     CalciteSchema retSchema = getSubSchemaMap().get(schemaName);
     if (retSchema != null) {
       return retSchema;
