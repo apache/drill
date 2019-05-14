@@ -1,9 +1,9 @@
 {
-  head:{
-    type:"APACHE_DRILL_PHYSICAL",
-    version:"1",
-    generator:{
-      type:"manual"
+  "head":{
+    "type":"APACHE_DRILL_PHYSICAL",
+    "version":"1",
+    "generator":{
+      "type":"manual"
     }
   },
   "graph" : [ {
@@ -13,6 +13,7 @@
     "storage" : {
       "type" : "file",
       "connection" : "file:///",
+      "enabled": true,
       "workspaces" : {
         "root" : {
           "location" : "/",

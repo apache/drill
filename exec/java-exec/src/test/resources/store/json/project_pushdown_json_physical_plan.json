@@ -36,7 +36,7 @@
     "format" : {
       "type" : "json"
     },
-    "columns" : [ "`field_1`", "`field_3`.`inner_1`", "`field_3`.`inner_2`", "`field_4`.`inner_1`", "`non_existent_at_root`", "`non_existent`.`nested`.`field`"],
+    "columns" : [ "`field_1`", "`field_3`.`inner_1`", "`field_3`.`inner_2`", "`field_4`.`inner_1`", "`non_existent_at_root`", "`non_existent`.`nested`.`field`" ],
     "selectionRoot" : "/store/json/schema_change_int_to_string.json",
     "cost" : {
       "memoryCost" : 0,

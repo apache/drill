@@ -11,7 +11,8 @@
     "fs" :
       {
         "type":"file",
-        "connection" : "file:///"
+        "connection" : "file:///",
+        "enabled": true
       }
   },
   query:[

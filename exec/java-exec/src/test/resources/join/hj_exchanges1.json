@@ -17,6 +17,7 @@
     "storage" : {
       "type" : "file",
       "connection" : "classpath:///",
+      "enabled": true,
       "workspaces" : null,
       "formats" : {
         "json" : {

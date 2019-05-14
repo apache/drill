@@ -31,6 +31,7 @@ import org.junit.experimental.categories.Category;
 
 import static org.apache.drill.exec.util.StoragePluginTestUtils.CP_PLUGIN_NAME;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -76,5 +77,10 @@ public class TestDisabledPlugin extends ClusterTest {
       assertTrue("Incorrect error message",
         e.getMessage().contains("VALIDATION ERROR: Schema"));
     }
+  }
+
+  @Test
+  public void testDisabledPluginGet() throws Exception {
+    assertNull(pluginRegistry.getPlugin(CP_PLUGIN_NAME));
   }
 }

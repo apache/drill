@@ -27,29 +27,37 @@ public class TestMongoFilterPushDown extends MongoTestBase {
 
   @Test
   public void testFilterPushDownIsEqual() throws Exception {
-    String queryString = String.format(
-        TEST_FILTER_PUSH_DOWN_EQUAL_QUERY_TEMPLATE_1, EMPLOYEE_DB,
-        EMPINFO_COLLECTION);
-    String expectedExpr = "\"$eq\" : 52.17";
-    testHelper(queryString, expectedExpr, 1);
+    String queryString = String.format(TEST_FILTER_PUSH_DOWN_EQUAL_QUERY_TEMPLATE_1, EMPLOYEE_DB, EMPINFO_COLLECTION);
+
+    testBuilder()
+        .sqlQuery(queryString)
+        .unOrdered()
+        .expectsNumRecords(1)
+        .go();
   }
 
   @Test
   public void testFilterPushDownLessThanWithSingleField() throws Exception {
-    String queryString = String.format(
-        TEST_FILTER_PUSH_DOWN_LESS_THAN_QUERY_TEMPLATE_1, EMPLOYEE_DB,
+    String queryString = String.format(TEST_FILTER_PUSH_DOWN_LESS_THAN_QUERY_TEMPLATE_1, EMPLOYEE_DB,
         EMPINFO_COLLECTION);
-    String expectedExpr = "\"$lt\" : 52.17";
-    testHelper(queryString, expectedExpr, 9);
+
+    testBuilder()
+        .sqlQuery(queryString)
+        .unOrdered()
+        .expectsNumRecords(9)
+        .go();
   }
 
   @Test
   public void testFilterPushDownGreaterThanWithSingleField() throws Exception {
-    String queryString = String.format(
-        TEST_FILTER_PUSH_DOWN_GREATER_THAN_QUERY_TEMPLATE_1, EMPLOYEE_DB,
+    String queryString = String.format(TEST_FILTER_PUSH_DOWN_GREATER_THAN_QUERY_TEMPLATE_1, EMPLOYEE_DB,
         EMPINFO_COLLECTION);
-    String expectedExpr = "\"$gt\" : 52.17";
-    testHelper(queryString, expectedExpr, 9);
+
+    testBuilder()
+        .sqlQuery(queryString)
+        .unOrdered()
+        .expectsNumRecords(9)
+        .go();
   }
 
 }

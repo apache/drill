@@ -72,7 +72,6 @@ public class HiveSchemaFactory extends AbstractSchemaFactory {
     isDrillImpersonationEnabled = plugin.getContext().getConfig().getBoolean(ExecConstants.IMPERSONATION_ENABLED);
 
     try {
-      // TODO: DRILL-6412. Clients for plugin should be instantiated only for the case, when plugin is enabled
       processUserMetastoreClient =
           DrillHiveMetaStoreClientFactory.createCloseableClientWithCaching(hiveConf);
     } catch (MetaException e) {

@@ -41,28 +41,24 @@ public class BaseHBaseTest extends BaseTestQuery {
   public static final String HBASE_STORAGE_PLUGIN_NAME = "hbase";
 
   protected static Configuration conf = HBaseConfiguration.create();
-
   protected static HBaseStoragePlugin storagePlugin;
-
   protected static HBaseStoragePluginConfig storagePluginConfig;
 
   @BeforeClass
   public static void setupDefaultTestCluster() throws Exception {
-    /*
-     * Change the following to HBaseTestsSuite.configure(false, true)
-     * if you want to test against an externally running HBase cluster.
-     */
-    HBaseTestsSuite.configure(true /*manageHBaseCluster*/, true /*createTables*/);
+    boolean isManaged = Boolean.valueOf(System.getProperty("drill.hbase.tests.managed", "true"));
+    HBaseTestsSuite.configure(isManaged, true);
     HBaseTestsSuite.initCluster();
 
     BaseTestQuery.setupDefaultTestCluster();
 
-    final StoragePluginRegistry pluginRegistry = getDrillbitContext().getStorage();
-    storagePlugin = (HBaseStoragePlugin) pluginRegistry.getPlugin(HBASE_STORAGE_PLUGIN_NAME);
-    storagePluginConfig = storagePlugin.getConfig();
+    StoragePluginRegistry pluginRegistry = getDrillbitContext().getStorage();
+    storagePluginConfig = new HBaseStoragePluginConfig(null, false);
     storagePluginConfig.setEnabled(true);
     storagePluginConfig.setZookeeperPort(HBaseTestsSuite.getZookeeperPort());
-    pluginRegistry.createOrUpdate(HBASE_STORAGE_PLUGIN_NAME, storagePluginConfig, true);
+
+    storagePlugin = (HBaseStoragePlugin) pluginRegistry.createOrUpdate(HBASE_STORAGE_PLUGIN_NAME,
+        storagePluginConfig, true);
   }
 
   @AfterClass
@@ -72,11 +68,14 @@ public class BaseHBaseTest extends BaseTestQuery {
 
   protected String getPlanText(String planFile, String tableName) throws IOException {
     return Files.asCharSource(DrillFileUtils.getResourceAsFile(planFile), Charsets.UTF_8).read()
-        .replaceFirst("\"hbase\\.zookeeper\\.property\\.clientPort\".*:.*\\d+", "\"hbase.zookeeper.property.clientPort\" : " + HBaseTestsSuite.getZookeeperPort())
+        .replaceFirst(
+            "\"hbase\\.zookeeper\\.property\\.clientPort\".*:.*\\d+",
+            "\"hbase.zookeeper.property.clientPort\" : " + HBaseTestsSuite.getZookeeperPort())
         .replace("[TABLE_NAME]", tableName);
   }
 
-  protected void runHBasePhysicalVerifyCount(String planFile, String tableName, int expectedRowCount) throws Exception{
+  protected void runHBasePhysicalVerifyCount(String planFile, String tableName, int expectedRowCount)
+      throws Exception {
     String physicalPlan = getPlanText(planFile, tableName);
     List<QueryDataBatch> results = testPhysicalWithResults(physicalPlan);
     logResultAndVerifyRowCount(results, expectedRowCount);
@@ -87,12 +86,13 @@ public class BaseHBaseTest extends BaseTestQuery {
     return testSqlWithResults(sql);
   }
 
-  protected void runHBaseSQLVerifyCount(String sql, int expectedRowCount) throws Exception{
+  protected void runHBaseSQLVerifyCount(String sql, int expectedRowCount) throws Exception {
     List<QueryDataBatch> results = runHBaseSQLlWithResults(sql);
     logResultAndVerifyRowCount(results, expectedRowCount);
   }
 
-  private void logResultAndVerifyRowCount(List<QueryDataBatch> results, int expectedRowCount) throws SchemaChangeException {
+  private void logResultAndVerifyRowCount(List<QueryDataBatch> results, int expectedRowCount)
+      throws SchemaChangeException {
     int rowCount = logResult(results);
     if (expectedRowCount != -1) {
       Assert.assertEquals(expectedRowCount, rowCount);

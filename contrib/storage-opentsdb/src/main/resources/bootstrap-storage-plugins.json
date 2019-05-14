@@ -1,9 +1,9 @@
 {
   "storage": {
-    openTSDB: {
-      type: "openTSDB",
-      connection: "http://localhost:10000",
-      enabled: false
+    "openTSDB": {
+      "type": "openTSDB",
+      "connection": "http://localhost:10000",
+      "enabled": false
     }
   }
 }
