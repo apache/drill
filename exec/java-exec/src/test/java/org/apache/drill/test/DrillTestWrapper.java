@@ -862,6 +862,7 @@ public class DrillTestWrapper {
     for (Map<String, Object> expectedRecord : expectedRecords) {
       i = 0;
       found = false;
+      StringBuilder mismatchHistory = new StringBuilder();
       findMatch:
       for (Map<String, Object> actualRecord : actualRecords) {
         for (String s : actualRecord.keySet()) {
@@ -870,6 +871,9 @@ public class DrillTestWrapper {
           }
           if (! compareValues(expectedRecord.get(s), actualRecord.get(s), counter, s, approximateEquality, tolerance)) {
             i++;
+            mismatchHistory.append("column: ").append(s)
+                .append(" exp: |").append(expectedRecord.get(s))
+                .append("| act: |").append(actualRecord.get(s)).append("|\n");
             continue findMatch;
           }
         }
@@ -895,6 +899,7 @@ public class DrillTestWrapper {
         }
         String actualRecordExamples = sb.toString();
         throw new Exception(String.format("After matching %d records, did not find expected record in result set:\n %s\n\n" +
+                "Mismatch column: \n" + mismatchHistory + "\n" +
             "Some examples of expected records:\n%s\n\n Some examples of records returned by the test query:\n%s",
             counter, printRecord(expectedRecord), expectedRecordExamples, actualRecordExamples));
       } else {
@@ -916,11 +921,10 @@ public class DrillTestWrapper {
   }
 
   private String printRecord(Map<String, ?> record) {
-    String ret = "";
-    for (String s : record.keySet()) {
-      ret += s + " : "  + record.get(s) + ", ";
-    }
-    return ret + "\n";
+    StringBuilder sb = new StringBuilder();
+    record.keySet().stream().sorted()
+        .forEach(key -> sb.append(key).append(" : ").append(record.get(key)).append(", "));
+    return sb.append(System.lineSeparator()).toString();
   }
 
   private void test(String query) throws Exception {

@@ -517,7 +517,7 @@ public class HiveUtilities {
         .append("Unsupported Hive data type ").append(unsupportedType).append(". ")
         .append(System.lineSeparator())
         .append("Following Hive data types are supported in Drill for querying: ")
-        .append("BOOLEAN, TINYINT, SMALLINT, INT, BIGINT, FLOAT, DOUBLE, DATE, TIMESTAMP, BINARY, DECIMAL, STRING, VARCHAR and CHAR");
+        .append("BOOLEAN, TINYINT, SMALLINT, INT, BIGINT, FLOAT, DOUBLE, DATE, TIMESTAMP, BINARY, DECIMAL, STRING, VARCHAR, CHAR, ARRAY.");
 
     throw UserException.unsupportedError()
         .message(errMsg.toString())
