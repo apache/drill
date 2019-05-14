@@ -26,6 +26,7 @@ import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 
+import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.util.Static;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.exec.planner.sql.parser.DrillParserUtil;
@@ -33,7 +34,6 @@ import org.apache.drill.exec.planner.sql.parser.impl.DrillSqlParseException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.base.MetadataProviderManager;
 import org.apache.drill.exec.physical.base.TableMetadataProvider;
-import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 import org.apache.drill.shaded.guava.com.google.common.cache.CacheBuilder;
 import org.apache.drill.shaded.guava.com.google.common.cache.CacheLoader;
 import org.apache.drill.shaded.guava.com.google.common.cache.LoadingCache;
@@ -79,7 +79,6 @@ import org.apache.calcite.sql.validate.SqlValidatorUtil;
 import org.apache.calcite.sql2rel.SqlToRelConverter;
 import org.apache.calcite.tools.RelBuilderFactory;
 import org.apache.calcite.util.Util;
-import org.apache.commons.collections.ListUtils;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.Types;
@@ -271,7 +270,8 @@ public class SqlConverter {
         RelDataType targetRowType,
         SqlValidatorScope scope) {
       if (node.getKind() == SqlKind.AS) {
-        SqlNode sqlNode = ((SqlCall) node).operand(0);
+        SqlCall sqlCall = (SqlCall) node;
+        SqlNode sqlNode = sqlCall.operand(0);
         switch (sqlNode.getKind()) {
           case IDENTIFIER:
             SqlIdentifier tempNode = (SqlIdentifier) sqlNode;
@@ -280,12 +280,10 @@ public class SqlConverter {
             changeNamesIfTableIsTemporary(tempNode);
 
             // Check the schema and throw a valid SchemaNotFound exception instead of TableNotFound exception.
-            if (catalogReader.getTable(tempNode.names) == null) {
-              catalogReader.isValidSchema(tempNode.names);
-            }
+            catalogReader.isValidSchema(tempNode.names);
             break;
           case UNNEST:
-            if (((SqlCall) node).operandCount() < 3) {
+            if (sqlCall.operandCount() < 3) {
               throw Static.RESOURCE.validationError("Alias table and column name are required for UNNEST").ex();
             }
         }
@@ -670,7 +668,6 @@ public class SqlConverter {
     private final DrillConfig drillConfig;
     private final UserSession session;
     private boolean allowTemporaryTables;
-    private final SchemaPlus rootSchema;
 
     private final LoadingCache<DrillTableKey, MetadataProviderManager> tableCache;
 
@@ -685,7 +682,6 @@ public class SqlConverter {
       this.drillConfig = drillConfig;
       this.session = session;
       this.allowTemporaryTables = true;
-      this.rootSchema = rootSchema;
       this.tableCache =
           CacheBuilder.newBuilder()
             .build(new CacheLoader<DrillTableKey, MetadataProviderManager>() {
@@ -759,27 +755,26 @@ public class SqlConverter {
     }
 
     /**
-     * check if the schema provided is a valid schema:
+     * Checks if the schema provided is a valid schema:
      * <li>schema is not indicated (only one element in the names list)<li/>
      *
      * @param names list of schema and table names, table name is always the last element
      * @throws UserException if the schema is not valid.
      */
-    private void isValidSchema(final List<String> names) throws UserException {
-      SchemaPlus defaultSchema = session.getDefaultSchema(this.rootSchema);
-      String defaultSchemaCombinedPath = SchemaUtilites.getSchemaPath(defaultSchema);
+    private void isValidSchema(List<String> names) throws UserException {
       List<String> schemaPath = Util.skipLast(names);
-      String schemaPathCombined = SchemaUtilites.getSchemaPath(schemaPath);
-      String commonPrefix = SchemaUtilites.getPrefixSchemaPath(defaultSchemaCombinedPath,
-              schemaPathCombined,
-              parserConfig.caseSensitive());
-      boolean isPrefixDefaultPath = commonPrefix.length() == defaultSchemaCombinedPath.length();
-      List<String> fullSchemaPath = Strings.isNullOrEmpty(defaultSchemaCombinedPath) ? schemaPath :
-              isPrefixDefaultPath ? schemaPath : ListUtils.union(SchemaUtilites.getSchemaPathAsList(defaultSchema), schemaPath);
-      if (names.size() > 1 && (SchemaUtilites.findSchema(this.rootSchema, fullSchemaPath) == null &&
-              SchemaUtilites.findSchema(this.rootSchema, schemaPath) == null)) {
-        SchemaUtilites.throwSchemaNotFoundException(defaultSchema, schemaPath);
+
+      for (List<String> currentSchema : getSchemaPaths()) {
+        List<String> fullSchemaPath = new ArrayList<>(currentSchema);
+        fullSchemaPath.addAll(schemaPath);
+        CalciteSchema schema = SqlValidatorUtil.getSchema(getRootSchema(),
+            fullSchemaPath, nameMatcher());
+
+        if (schema != null) {
+         return;
+        }
       }
+      SchemaUtilites.throwSchemaNotFoundException(defaultSchema, schemaPath);
     }
 
     /**
