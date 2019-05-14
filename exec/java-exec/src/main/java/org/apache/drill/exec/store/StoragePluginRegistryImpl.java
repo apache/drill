@@ -133,23 +133,17 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
       boolean done = false;
       try {
         if (oldPlugin != null) {
-          if (config.isEnabled()) {
-            done = enabledPlugins.replace(name, oldPlugin, newPlugin);
-          } else {
-            done = enabledPlugins.remove(name, oldPlugin);
-          }
-          if (done) {
-            closePlugin(oldPlugin);
-          }
-        } else if (config.isEnabled()) {
+          done = newPlugin == null
+              ? enabledPlugins.remove(name, oldPlugin)
+              : enabledPlugins.replace(name, oldPlugin, newPlugin);
+        } else if (newPlugin != null) {
           done = (null == enabledPlugins.putIfAbsent(name, newPlugin));
         } else {
           done = true;
         }
       } finally {
-        if (!done) {
-          closePlugin(newPlugin);
-        }
+        StoragePlugin pluginToClose = done ? oldPlugin : newPlugin;
+        closePlugin(pluginToClose);
       }
 
       if (done) {
@@ -511,17 +505,27 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
     enabledPlugins.putAll(activePlugins);
   }
 
+  /**
+   * Creates plugin instance with the given {@code name} and configuration {@code pluginConfig}.
+   * The plugin need to be present in a list of available plugins and be enabled in the configuration
+   *
+   * @param name name of the plugin
+   * @param pluginConfig plugin configuration
+   * @return plugin client or {@code null} if plugin is disabled
+   */
   private StoragePlugin create(String name, StoragePluginConfig pluginConfig) throws ExecutionSetupException {
-    // TODO: DRILL-6412: clients for storage plugins shouldn't be created, if storage plugin is disabled
-    // Creating of the StoragePlugin leads to instantiating storage clients
+    if (!pluginConfig.isEnabled()) {
+      return null;
+    }
+
     StoragePlugin plugin;
-    Constructor<? extends StoragePlugin> c = availablePlugins.get(pluginConfig.getClass());
-    if (c == null) {
+    Constructor<? extends StoragePlugin> constructor = availablePlugins.get(pluginConfig.getClass());
+    if (constructor == null) {
       throw new ExecutionSetupException(String.format("Failure finding StoragePlugin constructor for config %s",
           pluginConfig));
     }
     try {
-      plugin = c.newInstance(pluginConfig, context, name);
+      plugin = constructor.newInstance(pluginConfig, context, name);
       plugin.start();
       return plugin;
     } catch (ReflectiveOperationException | IOException e) {

@@ -8,57 +8,66 @@
     "type" : "APACHE_DRILL_PHYSICAL",
     "resultMode" : "EXEC"
   },
-  graph:[
-    {
-        @id:1,
-        pop:"fs-scan",
-        format: {type: "json"},
-        storage:{type: "file", connection: "file:///"},
-        files:["#{TEST_FILE_1}"]
+  "graph" : [ {
+    "@id" : 1,
+    "pop" : "fs-scan",
+    "format" : {
+      "type" : "json"
     },
-    {
-        @id:2,
-        pop:"fs-scan",
-        format: {type: "json"},
-        storage:{type: "file", connection: "file:///"},
-        files:["#{TEST_FILE_2}"]
+    "storage" : {
+      "type" : "file",
+      "connection" : "file:///",
+      "enabled": true
     },
-    {
-        "pop" : "project",
-        "@id" : 3,
-        "exprs" : [ {
-          "ref" : "A",
-          "expr" : "A"
-        },
-        { "ref" : "CCOL", "expr" : "C" }
-        ],
-
-        "child" : 1
+    "files" : [ "#{TEST_FILE_1}" ]
+  }, {
+    "@id" : 2,
+    "pop" : "fs-scan",
+    "format" : {
+      "type" : "json"
     },
-    {
-        "pop" : "project",
-        "@id" : 4,
-        "exprs" : [ {
-          "ref" : "B",
-          "expr" : "B"
-        },
-        { "ref" : "DCOL", "expr" : "D" }
-        ],
-
-        "child" : 2
+    "storage" : {
+      "type" : "file",
+      "connection" : "file:///",
+      "enabled": true
     },
-    {
-        @id: 5,
-        right: 3,
-        left: 4,
-        pop: "hash-join",
-        conditions: [ {relationship: "==", left: "B", right: "A"} ],
-        joinType : "INNER"
-    },
-    {
-        @id: 6,
-        child: 5,
-        pop: "screen"
-     }
-  ]
+    "files" : [ "#{TEST_FILE_2}" ]
+  }, {
+    "pop" : "project",
+    "@id" : 3,
+    "exprs" : [ {
+      "ref" : "A",
+      "expr" : "A"
+    }, {
+      "ref" : "CCOL",
+      "expr" : "C"
+    } ],
+    "child" : 1
+  }, {
+    "pop" : "project",
+    "@id" : 4,
+    "exprs" : [ {
+      "ref" : "B",
+      "expr" : "B"
+    }, {
+      "ref" : "DCOL",
+      "expr" : "D"
+    } ],
+    "child" : 2
+  }, {
+    "@id" : 5,
+    "right" : 3,
+    "left" : 4,
+    "pop" : "hash-join",
+    "conditions" : [ {
+      "relationship" : "==",
+      "left" : "B",
+      "right" : "A"
+    } ],
+    "joinType" : "INNER"
+  }, {
+    "@id" : 6,
+    "child" : 5,
+    "pop" : "screen"
+  } ]
 }

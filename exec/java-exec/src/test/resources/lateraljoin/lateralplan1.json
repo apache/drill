@@ -53,7 +53,7 @@
     "exprs" : [ {
       "ref" : "`ITEM`",
       "expr" : "`o_shop`"
-    }],
+    } ],
     "child" : 7,
     "outputProj" : false,
     "initialAllocation" : 1000000,
@@ -64,7 +64,7 @@
     "@id" : 4,
     "left" : 5,
     "right" : 6,
-    "unnestForLateralJoin": 7,
+    "unnestForLateralJoin" : 7,
     "initialAllocation" : 1000000,
     "maxAllocation" : 10000000000,
     "cost" : 1000.0
@@ -83,7 +83,7 @@
     "initialAllocation" : 1000000,
     "maxAllocation" : 10000000000,
     "cost" : 1000.0
-  },  {
+  }, {
     "pop" : "screen",
     "@id" : 0,
     "child" : 3,
@@ -92,4 +92,3 @@
     "cost" : 1000.0
   } ]
 }
-

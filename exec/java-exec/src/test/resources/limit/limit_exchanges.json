@@ -18,6 +18,7 @@
       "type" : "file",
       "connection" : "classpath:///",
       "workspaces" : null,
+      "enabled": true,
       "formats" : {
         "psv" : {
           "type" : "text",
@@ -63,8 +64,7 @@
     "pop" : "union-exchange",
     "@id" : 4,
     "child" : 3
-  },
-{
+  }, {
     "pop" : "project",
     "@id" : 5,
     "exprs" : [ {
@@ -72,8 +72,7 @@
       "expr" : "`N_NATIONKEY`"
     } ],
     "child" : 4
-  },
-{
+  }, {
     "pop" : "limit",
     "@id" : 6,
     "child" : 5,

@@ -17,14 +17,15 @@
     "storage" : {
       "type" : "file",
       "connection" : "classpath:///",
+      "enabled": true,
       "workspaces" : {
         "default" : {
-          location: "/",
-          writable: false
+          "location" : "/",
+          "writable" : false
         },
         "home" : {
-          location: "/",
-          writable: false
+          "location" : "/",
+          "writable" : false
         }
       },
       "formats" : null
@@ -48,12 +49,12 @@
       "connection" : "classpath:///",
       "workspaces" : {
         "default" : {
-          location: "/",
-          writable: false
+          "location" : "/",
+          "writable" : false
         },
         "home" : {
-          location: "/",
-          writable: false
+          "location" : "/",
+          "writable" : false
         }
       },
       "formats" : null
