@@ -17,79 +17,42 @@
  */
 package org.apache.drill.exec.store.mongo;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.List;
-
-import org.apache.drill.PlanTestBase;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.ClusterTest;
 import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.BeforeClass;
 
-public class MongoTestBase extends PlanTestBase implements MongoTestConstants {
-  protected static MongoStoragePlugin storagePlugin;
-  protected static MongoStoragePluginConfig storagePluginConfig;
+public class MongoTestBase extends ClusterTest implements MongoTestConstants {
+  private static StoragePluginRegistry pluginRegistry;
 
   @BeforeClass
   public static void setUpBeforeClass() throws Exception {
-    // Make sure this test is only running as part of the suit
-    Assume.assumeTrue(MongoTestSuit.isRunningSuite());
+    startCluster(ClusterFixture.builder(dirTestWatcher));
+    pluginRegistry = cluster.drillbit().getContext().getStorage();
+
     MongoTestSuit.initMongo();
-    initMongoStoragePlugin();
+    initMongoStoragePlugin(MongoTestSuit.getConnectionURL());
   }
 
-  public static void initMongoStoragePlugin() throws Exception {
-    final StoragePluginRegistry pluginRegistry = getDrillbitContext().getStorage();
-    storagePlugin = (MongoStoragePlugin) pluginRegistry.getPlugin(MongoStoragePluginConfig.NAME);
-    storagePluginConfig = storagePlugin.getConfig();
+  private static void initMongoStoragePlugin(String connectionURI) throws Exception {
+    MongoStoragePluginConfig storagePluginConfig = new MongoStoragePluginConfig(connectionURI);
     storagePluginConfig.setEnabled(true);
     pluginRegistry.createOrUpdate(MongoStoragePluginConfig.NAME, storagePluginConfig, true);
-    if (System.getProperty("drill.mongo.tests.bson.reader", "true").equalsIgnoreCase("false")) {
-      testNoResult(String.format("alter session set `%s` = false", ExecConstants.MONGO_BSON_RECORD_READER));
-    } else {
-      testNoResult(String.format("alter session set `%s` = true", ExecConstants.MONGO_BSON_RECORD_READER));
-    }
-  }
 
-  public List<QueryDataBatch> runMongoSQLWithResults(String sql)
-      throws Exception {
-    return testSqlWithResults(sql);
-  }
-
-  public void runMongoSQLVerifyCount(String sql, int expectedRowCount)
-      throws Exception {
-    List<QueryDataBatch> results = runMongoSQLWithResults(sql);
-    logResultAndVerifyRowCount(results, expectedRowCount);
-  }
-
-  public void logResultAndVerifyRowCount(List<QueryDataBatch> results,
-                                         int expectedRowCount) throws SchemaChangeException {
-    int rowCount = logResult(results);
-    if (expectedRowCount != -1) {
-      Assert.assertEquals(expectedRowCount, rowCount);
-    }
-  }
-
-  public void testHelper(String query, String expectedExprInPlan,
-      int expectedRecordCount) throws Exception {
-    testPhysicalPlan(query, expectedExprInPlan);
-    int actualRecordCount = testSql(query);
-    assertEquals(
-        String.format(
-            "Received unexpected number of rows in output: expected=%d, received=%s",
-            expectedRecordCount, actualRecordCount), expectedRecordCount,
-        actualRecordCount);
+    client.testBuilder()
+        .sqlQuery("alter session set `%s` = %s",
+            ExecConstants.MONGO_BSON_RECORD_READER,
+            System.getProperty("drill.mongo.tests.bson.reader", "true"))
+        .unOrdered()
+        .expectsEmptyResultSet();
   }
 
   @AfterClass
   public static void tearDownMongoTestBase() throws Exception {
+    pluginRegistry.deletePlugin(MongoStoragePluginConfig.NAME);
     MongoTestSuit.tearDownCluster();
-    storagePlugin = null;
   }
 
 }

@@ -17,34 +17,34 @@
  */
 package org.apache.drill.exec.store.mongo;
 
-public interface MongoTestConstants {
 
-  public static final String LOCALHOST = "localhost";
+public interface MongoTestConstants {
+  String LOCALHOST = "localhost";
   // TODO: DRILL-3934: add some randomization to this as it fails when running concurrent builds
   int CONFIG_SERVER_1_PORT = 61114;
   int CONFIG_SERVER_2_PORT = 61215;
   int CONFIG_SERVER_3_PORT = 61316;
-  public static final int MONGOD_1_PORT = 27020;
-  public static final int MONGOD_2_PORT = 27021;
-  public static final int MONGOD_3_PORT = 27022;
+  int MONGOD_1_PORT = 27020;
+  int MONGOD_2_PORT = 27021;
+  int MONGOD_3_PORT = 27022;
 
-  public static final int MONGOD_4_PORT = 27023;
-  public static final int MONGOD_5_PORT = 27024;
-  public static final int MONGOD_6_PORT = 27025;
+  int MONGOD_4_PORT = 27023;
+  int MONGOD_5_PORT = 27024;
+  int MONGOD_6_PORT = 27025;
 
-  public static final int MONGOS_PORT = 27017;
+  int MONGOS_PORT = 27017;
 
-  public static final String EMPLOYEE_DB = "employee";
-  public static final String DONUTS_DB = "donuts";
+  String EMPLOYEE_DB = "employee";
+  String DONUTS_DB = "donuts";
 
-  public static final String DONUTS_COLLECTION = "donuts";
-  public static final String EMPINFO_COLLECTION = "empinfo";
-  public static final String EMPTY_COLLECTION = "empty";
-  public static final String SCHEMA_CHANGE_COLLECTION = "schema_change";
+  String DONUTS_COLLECTION = "donuts";
+  String EMPINFO_COLLECTION = "empinfo";
+  String EMPTY_COLLECTION = "empty";
+  String SCHEMA_CHANGE_COLLECTION = "schema_change";
 
-  public static final String DONUTS_DATA = "donuts.json";
-  public static final String EMP_DATA = "emp.json";
-  public static final String SCHEMA_CHANGE_DATA = "schema_change_int_to_string.json";
+  String DONUTS_DATA = "donuts.json";
+  String EMP_DATA = "emp.json";
+  String SCHEMA_CHANGE_DATA = "schema_change_int_to_string.json";
 
   String STORAGE_ENGINE = "wiredTiger";
   String DATATYPE_DB = "datatype";
@@ -52,31 +52,31 @@ public interface MongoTestConstants {
   String DATATYPE_DATA = "datatype-oid.json";
 
   String CONFIG_REPLICA_SET = "config_replicas";
-  public static final String REPLICA_SET_1_NAME = "shard_1_replicas";
-  public static final String REPLICA_SET_2_NAME = "shard_2_replicas";
+  String REPLICA_SET_1_NAME = "shard_1_replicas";
+  String REPLICA_SET_2_NAME = "shard_2_replicas";
 
   // test queries
-  public static final String TEST_QUERY_1 = "SELECT * FROM mongo.employee.`empinfo` limit 5";
-  public static final String TEST_QUERY_LIMIT = "SELECT first_name, last_name FROM mongo.employee.`empinfo` limit 2;";
+  String TEST_QUERY_1 = "SELECT * FROM mongo.employee.`empinfo` limit 5";
+  String TEST_QUERY_LIMIT = "SELECT first_name, last_name FROM mongo.employee.`empinfo` limit 2;";
 
   // test query template1
-  public static final String TEST_QUERY_PROJECT_PUSH_DOWN_TEMPLATE_1 = "SELECT `employee_id` FROM mongo.%s.`%s`";
-  public static final String TEST_QUERY_PROJECT_PUSH_DOWN__TEMPLATE_2 = "select `employee_id`, `rating` from mongo.%s.`%s`";
-  public static final String TEST_QUERY_PROJECT_PUSH_DOWN__TEMPLATE_3 = "select * from mongo.%s.`%s`";
-  public static final String TEST_FILTER_PUSH_DOWN_IS_NULL_QUERY_TEMPLATE_1 = "SELECT `employee_id` FROM mongo.%s.`%s` where position_id is null";
-  public static final String TEST_FILTER_PUSH_DOWN_IS_NOT_NULL_QUERY_TEMPLATE_1 = "SELECT `employee_id` FROM mongo.%s.`%s` where position_id is not null";
-  public static final String TEST_FILTER_PUSH_DOWN_EQUAL_QUERY_TEMPLATE_1 = "SELECT `full_name` FROM mongo.%s.`%s` where rating = 52.17";
-  public static final String TEST_FILTER_PUSH_DOWN_NOT_EQUAL_QUERY_TEMPLATE_1 = "SELECT `employee_id` FROM mongo.%s.`%s` where rating != 52.17";
-  public static final String TEST_FILTER_PUSH_DOWN_LESS_THAN_QUERY_TEMPLATE_1 = "SELECT `full_name` FROM mongo.%s.`%s` where rating < 52.17";
-  public static final String TEST_FILTER_PUSH_DOWN_GREATER_THAN_QUERY_TEMPLATE_1 = "SELECT `full_name` FROM mongo.%s.`%s` where rating > 52.17";
-  public static final String TEST_EMPTY_TABLE_QUERY_TEMPLATE = "select count(*) from mongo.%s.`%s`";
+  String TEST_QUERY_PROJECT_PUSH_DOWN_TEMPLATE_1 = "SELECT `employee_id` FROM mongo.%s.`%s`";
+  String TEST_QUERY_PROJECT_PUSH_DOWN__TEMPLATE_2 = "select `employee_id`, `rating` from mongo.%s.`%s`";
+  String TEST_QUERY_PROJECT_PUSH_DOWN__TEMPLATE_3 = "select * from mongo.%s.`%s`";
+  String TEST_FILTER_PUSH_DOWN_IS_NULL_QUERY_TEMPLATE_1 = "SELECT `employee_id` FROM mongo.%s.`%s` where position_id is null";
+  String TEST_FILTER_PUSH_DOWN_IS_NOT_NULL_QUERY_TEMPLATE_1 = "SELECT `employee_id` FROM mongo.%s.`%s` where position_id is not null";
+  String TEST_FILTER_PUSH_DOWN_EQUAL_QUERY_TEMPLATE_1 = "SELECT `full_name` FROM mongo.%s.`%s` where rating = 52.17";
+  String TEST_FILTER_PUSH_DOWN_NOT_EQUAL_QUERY_TEMPLATE_1 = "SELECT `employee_id` FROM mongo.%s.`%s` where rating != 52.17";
+  String TEST_FILTER_PUSH_DOWN_LESS_THAN_QUERY_TEMPLATE_1 = "SELECT `full_name` FROM mongo.%s.`%s` where rating < 52.17";
+  String TEST_FILTER_PUSH_DOWN_GREATER_THAN_QUERY_TEMPLATE_1 = "SELECT `full_name` FROM mongo.%s.`%s` where rating > 52.17";
+  String TEST_EMPTY_TABLE_QUERY_TEMPLATE = "select count(*) from mongo.%s.`%s`";
 
-  public static final String TEST_BOOLEAN_FILTER_QUERY_TEMPLATE1 = "select `employee_id` from mongo.%s.`%s` where isFTE = true";
-  public static final String TEST_BOOLEAN_FILTER_QUERY_TEMPLATE2 = "select `employee_id` from mongo.%s.`%s` where isFTE = false";
-  public static final String TEST_BOOLEAN_FILTER_QUERY_TEMPLATE3 = "select `employee_id` from mongo.%s.`%s` where position_id = 16 and isFTE = true";
-  public static final String TEST_BOOLEAN_FILTER_QUERY_TEMPLATE4 = "select `employee_id` from mongo.%s.`%s` where (position_id = 16 and isFTE = true) or last_name = 'Yonce'";
+  String TEST_BOOLEAN_FILTER_QUERY_TEMPLATE1 = "select `employee_id` from mongo.%s.`%s` where isFTE = true";
+  String TEST_BOOLEAN_FILTER_QUERY_TEMPLATE2 = "select `employee_id` from mongo.%s.`%s` where isFTE = false";
+  String TEST_BOOLEAN_FILTER_QUERY_TEMPLATE3 = "select `employee_id` from mongo.%s.`%s` where position_id = 16 and isFTE = true";
+  String TEST_BOOLEAN_FILTER_QUERY_TEMPLATE4 = "select `employee_id` from mongo.%s.`%s` where (position_id = 16 and isFTE = true) or last_name = 'Yonce'";
 
-  public static final String TEST_STAR_QUERY_UNSHARDED_DB = "select * from mongo.%s.`%s`";
-  public static final String TEST_STAR_QUERY_UNSHARDED_DB_PROJECT_FILTER = "select t.name as name,t.topping.type as type from mongo.%s.`%s` t where t.sales >= 150";
-  public static final String TEST_STAR_QUERY_UNSHARDED_DB_GROUP_PROJECT_FILTER = "select t.topping.type as type,count(t.topping.type) as typeCount from mongo.%s.`%s` t group by t.topping.type order by typeCount";
+  String TEST_STAR_QUERY_UNSHARDED_DB = "select * from mongo.%s.`%s`";
+  String TEST_STAR_QUERY_UNSHARDED_DB_PROJECT_FILTER = "select t.name as name,t.topping.type as type from mongo.%s.`%s` t where t.sales >= 150";
+  String TEST_STAR_QUERY_UNSHARDED_DB_GROUP_PROJECT_FILTER = "select t.topping.type as type,count(t.topping.type) as typeCount from mongo.%s.`%s` t group by t.topping.type order by typeCount";
 }

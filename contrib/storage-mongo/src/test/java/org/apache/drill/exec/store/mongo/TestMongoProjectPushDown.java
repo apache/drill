@@ -63,32 +63,42 @@ public class TestMongoProjectPushDown extends MongoTestBase {
                       "inner_3", mapOf()))
               .go();
     } finally {
-      test(String.format("alter session set `%s` = false", ExecConstants.MONGO_READER_READ_NUMBERS_AS_DOUBLE));
+      run("alter session set `%s` = false", ExecConstants.MONGO_READER_READ_NUMBERS_AS_DOUBLE);
     }
   }
 
   @Test
   public void testSingleColumnProject() throws Exception {
-    String query = String.format(TEST_QUERY_PROJECT_PUSH_DOWN_TEMPLATE_1,
-        EMPLOYEE_DB, EMPINFO_COLLECTION);
-    String expectedColNames = " \"columns\" : [ \"`employee_id`\" ]";
-    testHelper(query, expectedColNames, 19);
+    String query = String.format(TEST_QUERY_PROJECT_PUSH_DOWN_TEMPLATE_1, EMPLOYEE_DB, EMPINFO_COLLECTION);
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("employee_id")
+        .expectsNumRecords(19)
+        .go();
   }
 
   @Test
   public void testMultipleColumnsProject() throws Exception {
-    String query = String.format(TEST_QUERY_PROJECT_PUSH_DOWN__TEMPLATE_2,
-        EMPLOYEE_DB, EMPINFO_COLLECTION);
-    String expectedColNames = "\"columns\" : [ \"`employee_id`\", \"`rating`\" ]";
-    testHelper(query, expectedColNames, 19);
+    String query = String.format(TEST_QUERY_PROJECT_PUSH_DOWN__TEMPLATE_2, EMPLOYEE_DB, EMPINFO_COLLECTION);
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("employee_id", "rating")
+        .expectsNumRecords(19)
+        .go();
   }
 
   @Test
   public void testStarProject() throws Exception {
-    String query = String.format(TEST_QUERY_PROJECT_PUSH_DOWN__TEMPLATE_3,
-        EMPLOYEE_DB, EMPINFO_COLLECTION);
-    String expectedColNames = "*";
-    testHelper(query, expectedColNames, 19);
+    String query = String.format(TEST_QUERY_PROJECT_PUSH_DOWN__TEMPLATE_3, EMPLOYEE_DB, EMPINFO_COLLECTION);
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .expectsNumRecords(19)
+        .go();
   }
 
 }
