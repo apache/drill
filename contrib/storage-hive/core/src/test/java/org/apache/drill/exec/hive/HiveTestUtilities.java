@@ -25,6 +25,7 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.util.EnumSet;
 import java.util.Set;
 
+import org.apache.drill.test.TestTools;
 import org.apache.hadoop.hive.ql.CommandNeedRetryException;
 import org.apache.hadoop.hive.ql.Driver;
 import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
@@ -81,6 +82,33 @@ public class HiveTestUtilities {
           String.format("Failed to set all posix permissions for directory [%s]", dir), e);
     }
     return dir;
+  }
+
+  /**
+   * Load data from test resources file into table.
+   *
+   * @param driver hive driver
+   * @param tableName destination
+   * @param relativeTestResourcePath path to test resource
+   */
+  public static void loadData(Driver driver, String tableName, Path relativeTestResourcePath){
+    String dataAbsPath = TestTools.getResourceFile(relativeTestResourcePath).getAbsolutePath();
+    String loadDataSql = String.format("LOAD DATA LOCAL INPATH '%s' OVERWRITE INTO TABLE %s", dataAbsPath, tableName);
+    executeQuery(driver, loadDataSql);
+  }
+
+  /**
+   * Performs insert from select.
+   *
+   * @param driver hive driver
+   * @param srcTable source
+   * @param destTable destination
+   */
+  public static void insertData(Driver driver, String srcTable, String destTable){
+    executeQuery(driver, String.format(
+        "INSERT OVERWRITE TABLE %s SELECT * FROM %s",
+        destTable, srcTable
+    ));
   }
 
 }
