@@ -55,6 +55,8 @@
   <div id="message" class="hidden alert alert-info">
   </div>
 
+  <#include "*/confirmationModals.ftl">
+
   <#-- Modal window-->
   <div class="modal fade" id="pluginsModal" tabindex="-1" role="dialog" aria-labelledby="exportPlugin" aria-hidden="true">
     <div class="modal-dialog modal-sm" role="document">
@@ -106,18 +108,27 @@
       textarea.val(editor.getSession().getValue());
     });
 
-    $.get("/storage/${model.getName()}.json", function(data) {
+    $.get("/storage/" + encodeURIComponent("${model.getName()}") + ".json", function(data) {
       $("#config").val(JSON.stringify(data.config, null, 2));
       editor.getSession().setValue( JSON.stringify(data.config, null, 2) );
     });
 
 
     $("#enabled").click(function() {
-      $.get("/storage/${model.getName()}/enable/<#if model.enabled()>false<#else>true</#if>", function(data) {
-        $("#message").removeClass("hidden").text(data.result).alert();
-        setTimeout(function() { location.reload(); }, 800);
-      });
+      const enabled = ${model.enabled()?c};
+      if (enabled) {
+        showConfirmationDialog('"${model.getName()}"' + ' plugin will be disabled. Proceed?', proceed);
+      } else {
+        proceed();
+      }
+      function proceed() {
+        $.get("/storage/" + encodeURIComponent("${model.getName()}") + "/enable/<#if model.enabled()>false<#else>true</#if>", function(data) {
+          $("#message").removeClass("hidden").text(data.result).alert();
+          setTimeout(function() { location.reload(); }, 800);
+        });
+      }
     });
+
     function doUpdate() {
       $("#updateForm").ajaxForm({
         dataType: 'json',
@@ -126,9 +137,9 @@
     }
 
     function deleteFunction() {
-      if (confirm("Are you sure?")) {
-        $.get("/storage/${model.getName()}/delete", serverMessage);
-      }
+      showConfirmationDialog('"${model.getName()}"' + ' plugin will be deleted. Proceed?', function() {
+        $.get("/storage/" + encodeURIComponent("${model.getName()}") + "/delete", serverMessage);
+      });
     }
 
     // Modal window management
@@ -146,7 +157,7 @@
           format = 'conf';
         }
 
-        let url = '/storage/' + exportInstance + '/export/' + format;
+        let url = '/storage/' + encodeURIComponent(exportInstance) + '/export/' + format;
         window.open(url);
       });
     })
