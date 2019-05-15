@@ -204,6 +204,10 @@ public class StorageResources {
   @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   @Produces(MediaType.APPLICATION_JSON)
   public JsonResult createOrUpdatePlugin(@FormParam("name") String name, @FormParam("config") String storagePluginConfig) {
+    name = name.trim();
+    if (name.isEmpty()) {
+      return message("Error (a storage name cannot be empty)");
+    }
     try {
       mapper.configure(JsonParser.Feature.ALLOW_COMMENTS, true);
       StoragePluginConfig config = mapper.readValue(new StringReader(storagePluginConfig), StoragePluginConfig.class);
