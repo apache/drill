@@ -32,6 +32,8 @@
   <div class="page-header">
   </div>
 
+  <#include "*/confirmationModals.ftl">
+
   <h4 class="col-xs-6">Plugin Management</h4>
   <table style="margin: 10px" class="table">
     <tbody>
@@ -61,7 +63,7 @@
                 ${plugin.getName()}
               </td>
               <td style="border:none;">
-                <button type="button" class="btn btn-primary" onclick="location.href='/storage/${plugin.getName()}'">
+                <button type="button" class="btn btn-primary" onclick="doUpdate('${plugin.getName()}')">
                   Update
                 </button>
                 <button type="button" class="btn btn-warning" onclick="doEnable('${plugin.getName()}', false)">
@@ -90,7 +92,7 @@
                 ${plugin.getName()}
               </td>
               <td style="border:none;">
-                <button type="button" class="btn btn-primary" onclick="location.href='/storage/${plugin.getName()}'">
+                <button type="button" class="btn btn-primary" onclick="doUpdate('${plugin.getName()}')">
                   Update
                 </button>
                 <button type="button" class="btn btn-success" onclick="doEnable('${plugin.getName()}', true)">
@@ -200,11 +202,20 @@
 
   <script>
     function doEnable(name, flag) {
-      if (flag || confirm(name + ' plugin will be disabled')) {
-        $.get("/storage/" + name + "/enable/" + flag, function() {
+      if (flag) {
+        proceed();
+      } else {
+        showConfirmationDialog('"' + name + '"' + ' plugin will be disabled. Proceed?', proceed);
+      }
+      function proceed() {
+        $.get("/storage/" + encodeURIComponent(name) + "/enable/" + flag, function() {
           location.reload();
         });
       }
+    }
+
+    function doUpdate(name) {
+      window.location.href = "/storage/" + encodeURIComponent(name);
     }
 
     function doCreate() {
@@ -271,7 +282,7 @@
           }
           url = '/storage/' + pluginGroup + '/plugins/export/' + format;
         } else {
-          url = '/storage/' + exportInstance + '/export/' + format;
+          url = '/storage/' + encodeURIComponent(exportInstance) + '/export/' + format;
         }
         window.open(url);
       });
