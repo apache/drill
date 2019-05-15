@@ -236,6 +236,11 @@ public final class ExecConstants {
   public static final String SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE = "drill.exec.sys.store.provider.local.write";
   public static final String PROFILES_STORE_INMEMORY = "drill.exec.profiles.store.inmemory";
   public static final String PROFILES_STORE_CAPACITY = "drill.exec.profiles.store.capacity";
+  public static final String PROFILES_STORE_CACHE_SIZE = "drill.exec.profiles.store.cache.size";
+  public static final String PROFILES_STORE_INDEX_ENABLED = "drill.exec.profiles.store.index.enabled";
+  public static final String PROFILES_STORE_INDEX_FORMAT = "drill.exec.profiles.store.index.format";
+  public static final String PROFILES_STORE_INDEX_MAX = "drill.exec.profiles.store.index.max";
+  public static final String PROFILES_STORE_INDEX_SUPPORTED_FS = "drill.exec.profiles.store.index.supported.fs";
   public static final String IMPERSONATION_ENABLED = "drill.exec.impersonation.enabled";
   public static final String IMPERSONATION_MAX_CHAINED_USER_HOPS = "drill.exec.impersonation.max_chained_user_hops";
   public static final String AUTHENTICATION_MECHANISMS = "drill.exec.security.auth.mechanisms";

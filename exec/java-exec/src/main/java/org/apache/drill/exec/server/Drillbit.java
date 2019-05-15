@@ -33,16 +33,20 @@ import org.apache.drill.exec.coord.zk.ZKClusterCoordinator;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.State;
+import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
 import org.apache.drill.exec.server.DrillbitStateManager.DrillbitState;
 import org.apache.drill.exec.server.options.OptionDefinition;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.server.options.OptionValue.OptionScope;
+import org.apache.drill.exec.server.profile.ProfileIndexer;
 import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.server.rest.WebServer;
 import org.apache.drill.exec.service.ServiceEngine;
 import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.exec.store.sys.PersistentStore;
 import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 import org.apache.drill.exec.store.sys.PersistentStoreRegistry;
+import org.apache.drill.exec.store.sys.store.LocalPersistentStore;
 import org.apache.drill.exec.store.sys.store.provider.CachingPersistentStoreProvider;
 import org.apache.drill.exec.store.sys.store.provider.InMemoryStoreProvider;
 import org.apache.drill.exec.store.sys.store.provider.LocalPersistentStoreProvider;
@@ -235,6 +239,15 @@ public class Drillbit implements AutoCloseable {
     shutdownHook = new ShutdownThread(this, new StackTrace());
     Runtime.getRuntime().addShutdownHook(shutdownHook);
     gracefulShutdownThread.start();
+
+    // Launch an archiving job that is # files and time bound
+    PersistentStore<QueryProfile> queryProfileStore = drillbitContext.getProfileStoreContext().getCompletedProfileStore();
+    if (queryProfileStore instanceof LocalPersistentStore
+        && context.getConfig().getBoolean(ExecConstants.PROFILES_STORE_INDEX_ENABLED)) {
+      ProfileIndexer profileIndexer = new ProfileIndexer(coord, drillbitContext);
+      profileIndexer.indexProfiles();
+    }
+
     logger.info("Startup completed ({} ms).", w.elapsed(TimeUnit.MILLISECONDS));
   }
 

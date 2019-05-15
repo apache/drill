@@ -38,6 +38,7 @@ import org.apache.hadoop.fs.Path;
 public class LocalPersistentStoreProvider extends BasePersistentStoreProvider {
 //  private static final Logger logger = LoggerFactory.getLogger(LocalPersistentStoreProvider.class);
 
+  private final DrillConfig drillConfig;
   private final Path path;
   private final DrillFileSystem fs;
   // This flag is used in testing. Ideally, tests should use a specific PersistentStoreProvider that knows
@@ -49,10 +50,11 @@ public class LocalPersistentStoreProvider extends BasePersistentStoreProvider {
   }
 
   public LocalPersistentStoreProvider(final DrillConfig config) throws StoreException {
-    this.path = new Path(config.getString(ExecConstants.SYS_STORE_PROVIDER_LOCAL_PATH));
-    this.enableWrite = config.getBoolean(ExecConstants.SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE);
+    this.drillConfig = config;
+    this.path = new Path(drillConfig.getString(ExecConstants.SYS_STORE_PROVIDER_LOCAL_PATH));
+    this.enableWrite = drillConfig.getBoolean(ExecConstants.SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE);
     try {
-      this.fs = LocalPersistentStore.getFileSystem(config, path);
+      this.fs = LocalPersistentStore.getFileSystem(drillConfig, path);
     } catch (IOException e) {
       throw new StoreException("unable to get filesystem", e);
     }
@@ -64,7 +66,7 @@ public class LocalPersistentStoreProvider extends BasePersistentStoreProvider {
     case BLOB_PERSISTENT:
     case PERSISTENT:
       if (enableWrite) {
-        return new LocalPersistentStore<>(fs, path, storeConfig);
+        return new LocalPersistentStore<>(fs, path, storeConfig, drillConfig);
       }
       return new NoWriteLocalStore<>();
     default:

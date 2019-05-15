@@ -37,6 +37,7 @@ import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import javax.xml.bind.annotation.XmlRootElement;
 
+
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
@@ -90,7 +91,7 @@ public class ProfileResources {
 
     public ProfileInfo(DrillConfig drillConfig, String queryId, long startTime, long endTime, String foreman, String query,
                        String state, String user, double totalCost, String queueName) {
-      this.queryId = queryId;
+      this.queryId = queryId.substring(queryId.lastIndexOf('/') + 1);
       this.startTime = startTime;
       this.endTime = endTime;
       this.time = new Date(startTime);
@@ -349,7 +350,7 @@ public class ProfileResources {
         return queryProfile;
       }
     } catch (final Exception e) {
-      throw new DrillRuntimeException("error while retrieving profile", e);
+      throw new DrillRuntimeException("Error while retrieving profile: " + e.getMessage(), e);
     }
 
     throw UserException.validationError()
@@ -378,7 +379,7 @@ public class ProfileResources {
       ProfileWrapper wrapper = new ProfileWrapper(getQueryProfile(queryId), work.getContext().getConfig());
       return ViewableWithPermissions.create(authEnabled.get(), "/rest/profile/profile.ftl", sc, wrapper);
     } catch (Exception | Error e) {
-      logger.error("Exception was thrown when fetching profile {} :\n{}", queryId, e);
+      logger.error("Exception was thrown when fetching profile {} :\n{}\n====\n", queryId, e);
       return ViewableWithPermissions.create(authEnabled.get(), "/rest/errorMessage.ftl", sc, e);
     }
   }

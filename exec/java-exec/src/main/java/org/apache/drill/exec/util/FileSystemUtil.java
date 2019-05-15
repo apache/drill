@@ -192,6 +192,18 @@ public class FileSystemUtil {
   }
 
   /**
+   * Helper method that will rename/move file specified in the source path to a destination path
+   *
+   * @param fs current file system
+   * @param src path to source
+   * @param dst path to destination
+   * @return status of rename/move
+   */
+  public static boolean rename(FileSystem fs, Path src, Path dst) throws IOException {
+    return fs.rename(src, dst);
+  }
+
+  /**
    * Helper method that merges given filters into one and
    * determines which listing method should be called based on recursive flag value.
    *
