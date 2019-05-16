@@ -35,13 +35,13 @@ import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
 import org.apache.drill.exec.physical.rowSet.impl.RowSetTestUtils;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.apache.hadoop.fs.Path;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 /**
  * Test the "columns" array mechanism integrated with the scan schema
@@ -251,11 +251,11 @@ public class TestColumnsArray extends SubOperatorTest {
     mock.scanner.close();
   }
 
-  private ScanSchemaOrchestrator buildScan(List<SchemaPath> cols) {
+  private ScanSchemaOrchestrator buildScan(boolean requireColumns, List<SchemaPath> cols) {
 
     // Set up the columns array manager
 
-    ColumnsArrayManager colsManager = new ColumnsArrayManager(false);
+    ColumnsArrayManager colsManager = new ColumnsArrayManager(requireColumns);
 
     // Configure the schema orchestrator
 
@@ -273,7 +273,7 @@ public class TestColumnsArray extends SubOperatorTest {
 
   @Test
   public void testMissingColumnsColumn() {
-    ScanSchemaOrchestrator scanner = buildScan(
+    ScanSchemaOrchestrator scanner = buildScan(true,
         RowSetTestUtils.projectList(ColumnsArrayManager.COLUMNS_COL));
 
     TupleMetadata tableSchema = new SchemaBuilder()
@@ -294,7 +294,7 @@ public class TestColumnsArray extends SubOperatorTest {
 
   @Test
   public void testNotRepeated() {
-    ScanSchemaOrchestrator scanner = buildScan(
+    ScanSchemaOrchestrator scanner = buildScan(true,
         RowSetTestUtils.projectList(ColumnsArrayManager.COLUMNS_COL));
 
     TupleMetadata tableSchema = new SchemaBuilder()
@@ -310,6 +310,37 @@ public class TestColumnsArray extends SubOperatorTest {
       // Expected
     }
 
+    scanner.close();
+  }
+
+  /**
+   * Verify that if the columns column is not required, that `columns`
+   * is treated like any other column.
+   */
+  @Test
+  public void testReqularCol() {
+    ScanSchemaOrchestrator scanner = buildScan(false,
+        RowSetTestUtils.projectList(ColumnsArrayManager.COLUMNS_COL));
+
+    TupleMetadata tableSchema = new SchemaBuilder()
+        .add(ColumnsArrayManager.COLUMNS_COL, MinorType.VARCHAR)
+        .buildSchema();
+
+    ReaderSchemaOrchestrator reader = scanner.startReader();
+    ResultSetLoader rsLoader = reader.makeTableLoader(tableSchema);
+    reader.defineSchema();
+
+    reader.startBatch();
+    rsLoader.writer()
+      .addRow("fred");
+    reader.endBatch();
+
+    SingleRowSet expected = fixture.rowSetBuilder(tableSchema)
+      .addRow("fred")
+      .build();
+
+    RowSetUtilities.verify(expected,
+        fixture.wrap(scanner.output()));
     scanner.close();
   }
 }

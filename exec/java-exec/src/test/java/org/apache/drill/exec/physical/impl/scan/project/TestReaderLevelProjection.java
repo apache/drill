@@ -30,10 +30,10 @@ import java.util.List;
 import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.physical.impl.scan.ScanTestUtils;
 import org.apache.drill.exec.physical.impl.scan.project.AbstractUnresolvedColumn.UnresolvedColumn;
 import org.apache.drill.exec.physical.impl.scan.project.NullColumnBuilder.NullBuilderBuilder;
 import org.apache.drill.exec.physical.impl.scan.project.ResolvedTuple.ResolvedRow;
-import org.apache.drill.exec.physical.impl.scan.ScanTestUtils;
 import org.apache.drill.exec.physical.rowSet.impl.RowSetTestUtils;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
@@ -59,7 +59,7 @@ public class TestReaderLevelProjection extends SubOperatorTest {
 
   @Test
   public void testWildcard() {
-    final ScanLevelProjection scanProj = new ScanLevelProjection(
+    final ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectAll(),
         ScanTestUtils.parsers());
     assertEquals(1, scanProj.columns().size());
@@ -100,7 +100,7 @@ public class TestReaderLevelProjection extends SubOperatorTest {
 
     // Simulate SELECT c, b, a ...
 
-    final ScanLevelProjection scanProj = new ScanLevelProjection(
+    final ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectList("c", "b", "a"),
         ScanTestUtils.parsers());
     assertEquals(3, scanProj.columns().size());
@@ -144,7 +144,7 @@ public class TestReaderLevelProjection extends SubOperatorTest {
 
     // Simulate SELECT c, v, b, w ...
 
-    final ScanLevelProjection scanProj = new ScanLevelProjection(
+    final ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectList("c", "v", "b", "w"),
         ScanTestUtils.parsers());
     assertEquals(4, scanProj.columns().size());
@@ -195,7 +195,7 @@ public class TestReaderLevelProjection extends SubOperatorTest {
 
     // Simulate SELECT c, a ...
 
-    final ScanLevelProjection scanProj = new ScanLevelProjection(
+    final ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectList("c", "a"),
         ScanTestUtils.parsers());
     assertEquals(2, scanProj.columns().size());
@@ -236,7 +236,7 @@ public class TestReaderLevelProjection extends SubOperatorTest {
 
     // Simulate SELECT c, a ...
 
-    final ScanLevelProjection scanProj = new ScanLevelProjection(
+    final ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectList("b"),
         ScanTestUtils.parsers());
     assertEquals(1, scanProj.columns().size());
@@ -273,7 +273,7 @@ public class TestReaderLevelProjection extends SubOperatorTest {
 
     // Simulate SELECT a, b.c.d ...
 
-    final ScanLevelProjection scanProj = new ScanLevelProjection(
+    final ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectList("a", "b.c.d"),
         ScanTestUtils.parsers());
     assertEquals(2, scanProj.columns().size());
@@ -343,7 +343,7 @@ public class TestReaderLevelProjection extends SubOperatorTest {
 
     // Simulate SELECT a.c, a.d, a.e.f ...
 
-    final ScanLevelProjection scanProj = new ScanLevelProjection(
+    final ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectList("x", "a.c", "a.d", "a.e.f", "y"),
         ScanTestUtils.parsers());
     assertEquals(3, scanProj.columns().size());
@@ -444,7 +444,7 @@ public class TestReaderLevelProjection extends SubOperatorTest {
 
     // Simulate SELECT a.b, a.c ...
 
-    final ScanLevelProjection scanProj = new ScanLevelProjection(
+    final ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectList("a.b", "a.c"),
         ScanTestUtils.parsers());
     assertEquals(1, scanProj.columns().size());
@@ -489,7 +489,7 @@ public class TestReaderLevelProjection extends SubOperatorTest {
 
     // Simulate SELECT a.b ...
 
-    final ScanLevelProjection scanProj = new ScanLevelProjection(
+    final ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectList("a.b"),
         ScanTestUtils.parsers());
 
@@ -522,7 +522,7 @@ public class TestReaderLevelProjection extends SubOperatorTest {
 
     // Simulate SELECT a[0] ...
 
-    final ScanLevelProjection scanProj = new ScanLevelProjection(
+    final ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectList("a[0]"),
         ScanTestUtils.parsers());
 
@@ -558,7 +558,7 @@ public class TestReaderLevelProjection extends SubOperatorTest {
 
     // Simulate SELECT a[0] ...
 
-    final ScanLevelProjection scanProj = new ScanLevelProjection(
+    final ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectList("a[0]"),
         ScanTestUtils.parsers());
 
@@ -594,7 +594,7 @@ public class TestReaderLevelProjection extends SubOperatorTest {
 
     // Simulate SELECT * ...
 
-    final ScanLevelProjection scanProj = new ScanLevelProjection(
+    final ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectAll(),
         ScanTestUtils.parsers(),
         outputSchema);
@@ -654,7 +654,7 @@ public class TestReaderLevelProjection extends SubOperatorTest {
 
     // Simulate SELECT * ...
 
-    final ScanLevelProjection scanProj = new ScanLevelProjection(
+    final ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectAll(),
         ScanTestUtils.parsers(),
         outputSchema);

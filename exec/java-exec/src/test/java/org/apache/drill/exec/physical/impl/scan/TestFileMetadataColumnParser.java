@@ -20,24 +20,25 @@ package org.apache.drill.exec.physical.impl.scan;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+
 import java.util.List;
 
 import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.impl.scan.file.FileMetadataColumn;
 import org.apache.drill.exec.physical.impl.scan.file.FileMetadataManager;
-import org.apache.drill.exec.physical.impl.scan.file.PartitionColumn;
 import org.apache.drill.exec.physical.impl.scan.file.FileMetadataManager.FileMetadataOptions;
-import org.apache.drill.exec.physical.impl.scan.project.ColumnProjection;
-import org.apache.drill.exec.physical.impl.scan.project.ScanLevelProjection;
+import org.apache.drill.exec.physical.impl.scan.file.PartitionColumn;
 import org.apache.drill.exec.physical.impl.scan.project.AbstractUnresolvedColumn.UnresolvedColumn;
 import org.apache.drill.exec.physical.impl.scan.project.AbstractUnresolvedColumn.UnresolvedWildcardColumn;
+import org.apache.drill.exec.physical.impl.scan.project.ColumnProjection;
+import org.apache.drill.exec.physical.impl.scan.project.ScanLevelProjection;
 import org.apache.drill.exec.physical.rowSet.impl.RowSetTestUtils;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.hadoop.fs.Path;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 @Category(RowSetTests.class)
 public class TestFileMetadataColumnParser extends SubOperatorTest {
@@ -63,7 +64,7 @@ public class TestFileMetadataColumnParser extends SubOperatorTest {
 
     // Simulate SELECT a, b, c ...
 
-    ScanLevelProjection scanProj = new ScanLevelProjection(
+    ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectList("a", "b", "c"),
         Lists.newArrayList(metadataManager.projectionParser()));
 
@@ -87,7 +88,7 @@ public class TestFileMetadataColumnParser extends SubOperatorTest {
 
     // Simulate SELECT a, fqn, filEPath, filename, suffix ...
 
-    ScanLevelProjection scanProj = new ScanLevelProjection(
+    ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectList("a",
             ScanTestUtils.FULLY_QUALIFIED_NAME_COL,
             "filEPath", // Sic, to test case sensitivity
@@ -133,7 +134,7 @@ public class TestFileMetadataColumnParser extends SubOperatorTest {
     // is preferred over "natural" name.
     String dir1 = "DIR1";
     String dir2 = ScanTestUtils.partitionColName(2);
-    ScanLevelProjection scanProj = new ScanLevelProjection(
+    ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectList(dir2, dir1, dir0, "a"),
         Lists.newArrayList(metadataManager.projectionParser()));
 
@@ -159,7 +160,7 @@ public class TestFileMetadataColumnParser extends SubOperatorTest {
         fixture.getOptionManager(),
         standardOptions(filePath));
 
-    ScanLevelProjection scanProj = new ScanLevelProjection(
+    ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectAll(),
         Lists.newArrayList(metadataManager.projectionParser()));
 
@@ -185,7 +186,7 @@ public class TestFileMetadataColumnParser extends SubOperatorTest {
         fixture.getOptionManager(),
         options);
 
-    ScanLevelProjection scanProj = new ScanLevelProjection(
+    ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectAll(),
         Lists.newArrayList(metadataManager.projectionParser()));
 
@@ -215,7 +216,7 @@ public class TestFileMetadataColumnParser extends SubOperatorTest {
         fixture.getOptionManager(),
         options);
 
-    ScanLevelProjection scanProj = new ScanLevelProjection(
+    ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectList(
             SchemaPath.DYNAMIC_STAR,
             ScanTestUtils.FILE_NAME_COL,
@@ -246,7 +247,7 @@ public class TestFileMetadataColumnParser extends SubOperatorTest {
         fixture.getOptionManager(),
         options);
 
-    ScanLevelProjection scanProj = new ScanLevelProjection(
+    ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectList(
             ScanTestUtils.FILE_NAME_COL,
             SchemaPath.DYNAMIC_STAR,
@@ -278,7 +279,7 @@ public class TestFileMetadataColumnParser extends SubOperatorTest {
         fixture.getOptionManager(),
         standardOptions(filePath));
 
-    ScanLevelProjection scanProj = new ScanLevelProjection(
+    ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectList(SchemaPath.DYNAMIC_STAR,
             ScanTestUtils.partitionColName(8)),
         Lists.newArrayList(metadataManager.projectionParser()));
@@ -299,7 +300,7 @@ public class TestFileMetadataColumnParser extends SubOperatorTest {
         fixture.getOptionManager(),
         options);
 
-    ScanLevelProjection scanProj = new ScanLevelProjection(
+    ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectList(SchemaPath.DYNAMIC_STAR,
             ScanTestUtils.partitionColName(8)),
         Lists.newArrayList(metadataManager.projectionParser()));
@@ -325,7 +326,7 @@ public class TestFileMetadataColumnParser extends SubOperatorTest {
         fixture.getOptionManager(),
         options);
 
-    ScanLevelProjection scanProj = new ScanLevelProjection(
+    ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectList(SchemaPath.DYNAMIC_STAR,
             ScanTestUtils.partitionColName(8)),
         Lists.newArrayList(metadataManager.projectionParser()));
@@ -358,7 +359,7 @@ public class TestFileMetadataColumnParser extends SubOperatorTest {
         fixture.getOptionManager(),
         options);
 
-    ScanLevelProjection scanProj = new ScanLevelProjection(
+    ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectList(SchemaPath.DYNAMIC_STAR,
             ScanTestUtils.partitionColName(1)),
         Lists.newArrayList(metadataManager.projectionParser()));
@@ -382,7 +383,7 @@ public class TestFileMetadataColumnParser extends SubOperatorTest {
         fixture.getOptionManager(),
         options);
 
-    ScanLevelProjection scanProj = new ScanLevelProjection(
+    ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectList(SchemaPath.DYNAMIC_STAR,
             ScanTestUtils.partitionColName(1)),
         Lists.newArrayList(metadataManager.projectionParser()));
@@ -409,7 +410,7 @@ public class TestFileMetadataColumnParser extends SubOperatorTest {
         fixture.getOptionManager(),
         standardOptions(filePath));
 
-    ScanLevelProjection scanProj = new ScanLevelProjection(
+    ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectList(
             ScanTestUtils.FILE_NAME_COL + ".a",
             ScanTestUtils.FILE_PATH_COL + "[0]",

@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.scan.framework;
 
+import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.scan.RowBatchReader;
 import org.apache.drill.exec.physical.impl.scan.ScanOperatorEvents;
@@ -169,6 +170,8 @@ public class ManagedScanFramework implements ScanOperatorEvents {
   public ScanSchemaOrchestrator scanOrchestrator() {
     return scanOrchestrator;
   }
+
+  public CustomErrorContext errorContext() { return builder.errorContext(); }
 
   protected void configure() { }
 

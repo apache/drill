@@ -17,11 +17,18 @@
  */
 package org.apache.drill.exec.store.easy.text.compliant;
 
+import static org.apache.drill.test.rowSet.RowSetUtilities.strArray;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 
 import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
@@ -31,12 +38,6 @@ import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSetBuilder;
 import org.apache.drill.test.rowSet.RowSetReader;
 import org.apache.drill.test.rowSet.RowSetUtilities;
-
-import static org.apache.drill.test.rowSet.RowSetUtilities.strArray;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -390,6 +391,53 @@ public class TestCsvWithoutHeaders extends BaseCsvTest {
         }
       }
       assertFalse(iter.hasNext());
+    } finally {
+      resetV3();
+    }
+  }
+
+  /**
+   * When the `columns` array is allowed, the projection list cannot
+   * implicitly suggest that `columns` is a map.
+   * <p>
+   * V2 message: DATA_READ ERROR: Selected column 'columns' must be an array index
+   */
+
+  @Test
+  public void testColumnsAsMap() throws IOException {
+    String sql = "SELECT `%s`.columns.foo FROM `dfs.data`.`%s`";
+    try {
+      enableV3(true);
+      client.queryBuilder().sql(sql, TEST_FILE_NAME, TEST_FILE_NAME).run();
+    } catch (UserRemoteException e) {
+      assertTrue(e.getMessage().contains(
+          "VALIDATION ERROR: Column `columns` has map elements, but must be an array"));
+      assertTrue(e.getMessage().contains("Plugin config name: csv"));
+    } catch (Exception e) {
+      fail();
+    } finally {
+      resetV3();
+    }
+  }
+  /**
+   * When the `columns` array is allowed, and an index is projected,
+   * it must be below the maximum.
+   * <p>
+   * V2 message: INTERNAL_ERROR ERROR: 70000
+   */
+
+  @Test
+  public void testColumnsIndexOverflow() throws IOException {
+    String sql = "SELECT columns[70000] FROM `dfs.data`.`%s`";
+    try {
+      enableV3(true);
+      client.queryBuilder().sql(sql, TEST_FILE_NAME, TEST_FILE_NAME).run();
+    } catch (UserRemoteException e) {
+      assertTrue(e.getMessage().contains(
+          "VALIDATION ERROR: `columns`[70000] index out of bounds, max supported size is 65536"));
+      assertTrue(e.getMessage().contains("Plugin config name: csv"));
+    } catch (Exception e) {
+      fail();
     } finally {
       resetV3();
     }

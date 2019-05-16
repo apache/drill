@@ -197,7 +197,8 @@ public class ShimBatchReader implements RowBatchReader, NegotiatorListener {
   public ResultSetLoader build(SchemaNegotiatorImpl schemaNegotiator) {
     this.schemaNegotiator = schemaNegotiator;
     readerOrchestrator.setBatchSize(schemaNegotiator.batchSize);
-    tableLoader = readerOrchestrator.makeTableLoader(schemaNegotiator.tableSchema);
+    tableLoader = readerOrchestrator.makeTableLoader(schemaNegotiator.errorContext(),
+        schemaNegotiator.tableSchema);
     return tableLoader;
   }
 }

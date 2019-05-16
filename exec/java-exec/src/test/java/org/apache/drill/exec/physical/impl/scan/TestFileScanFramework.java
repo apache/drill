@@ -50,7 +50,6 @@ import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.mapred.FileSplit;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -115,11 +114,9 @@ public class TestFileScanFramework extends SubOperatorTest {
     }
 
     @Override
-    public ManagedReader<? extends FileSchemaNegotiator> newReader(
-        FileSplit split) {
+    public ManagedReader<? extends FileSchemaNegotiator> newReader() {
       MockFileReader reader = readerIter.next();
       assert reader != null;
-      assert split.getPath().equals(reader.filePath());
       return reader;
     }
   }

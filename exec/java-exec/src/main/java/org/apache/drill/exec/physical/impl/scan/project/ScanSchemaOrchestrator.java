@@ -22,11 +22,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.physical.impl.scan.project.ScanLevelProjection.ScanProjectionParser;
 import org.apache.drill.exec.physical.impl.scan.project.ReaderLevelProjection.ReaderProjectionResolver;
+import org.apache.drill.exec.physical.impl.scan.project.ScanLevelProjection.ScanProjectionParser;
 import org.apache.drill.exec.physical.rowSet.impl.ResultVectorCacheImpl;
 import org.apache.drill.exec.physical.rowSet.impl.SchemaTransformer;
 import org.apache.drill.exec.physical.rowSet.impl.SchemaTransformerImpl;
@@ -170,6 +171,11 @@ public class ScanSchemaOrchestrator {
     private Map<String, String> conversionProps;
 
     /**
+     * Context for error messages.
+     */
+    private CustomErrorContext context;
+
+    /**
      * Specify an optional metadata manager. Metadata is a set of constant
      * columns with per-reader values. For file-based sources, this is usually
      * the implicit and partition columns; but it could be other items for other
@@ -258,6 +264,14 @@ public class ScanSchemaOrchestrator {
       }
       conversionProps.put(key, value);
     }
+
+    public void setContext(CustomErrorContext context) {
+      this.context = context;
+    }
+
+    public CustomErrorContext errorContext() {
+      return context;
+    }
   }
 
   public static class ScanSchemaOptions {
@@ -286,6 +300,11 @@ public class ScanSchemaOrchestrator {
     public final boolean allowRequiredNullColumns;
     public final SchemaTransformer schemaTransformer;
 
+    /**
+     * Context for error messages.
+     */
+    public final CustomErrorContext context;
+
     protected ScanSchemaOptions(ScanOrchestratorBuilder builder) {
       nullType = builder.nullType;
       scanBatchRecordLimit = builder.scanBatchRecordLimit;
@@ -294,13 +313,15 @@ public class ScanSchemaOrchestrator {
       schemaResolvers = builder.schemaResolvers;
       projection = builder.projection;
       useSchemaSmoothing = builder.useSchemaSmoothing;
+      context = builder.context;
       boolean allowRequiredNulls = builder.allowRequiredNullColumns;
       if (builder.schemaTransformer != null) {
         // Use client-provided conversions
         schemaTransformer = builder.schemaTransformer;
       } else if (builder.outputSchema != null) {
         // Use only implicit conversions
-        schemaTransformer = new SchemaTransformerImpl(builder.outputSchema, builder.conversionProps);
+        schemaTransformer = new SchemaTransformerImpl(
+            builder.outputSchema, builder.conversionProps);
         if (builder.outputSchema.getBooleanProperty(TupleMetadata.IS_STRICT_SCHEMA_PROP)) {
           allowRequiredNulls = true;
         }
@@ -333,14 +354,14 @@ public class ScanSchemaOrchestrator {
    * vectors rather than vector instances, this cache can be deprecated.
    */
 
-  ResultVectorCacheImpl vectorCache;
-  ScanLevelProjection scanProj;
+  protected final ResultVectorCacheImpl vectorCache;
+  protected final ScanLevelProjection scanProj;
   private ReaderSchemaOrchestrator currentReader;
-  SchemaSmoother schemaSmoother;
+  protected final SchemaSmoother schemaSmoother;
 
   // Output
 
-  VectorContainer outputContainer;
+  protected VectorContainer outputContainer;
 
   public ScanSchemaOrchestrator(BufferAllocator allocator, ScanOrchestratorBuilder builder) {
     this.allocator = allocator;
@@ -376,9 +397,16 @@ public class ScanSchemaOrchestrator {
     if (options.schemaTransformer != null) {
       outputSchema = options.schemaTransformer.outputSchema();
     }
-    scanProj = new ScanLevelProjection(options.projection, options.parsers, outputSchema);
+    scanProj = ScanLevelProjection.builder()
+        .projection(options.projection)
+        .parsers(options.parsers)
+        .outputSchema(outputSchema)
+        .context(builder.errorContext())
+        .build();
     if (scanProj.projectAll() && options.useSchemaSmoothing) {
       schemaSmoother = new SchemaSmoother(scanProj, options.schemaResolvers);
+    } else {
+      schemaSmoother = null;
     }
 
     // Build the output container.

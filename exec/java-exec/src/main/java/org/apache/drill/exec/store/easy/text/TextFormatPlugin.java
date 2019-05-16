@@ -22,7 +22,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
@@ -35,12 +37,12 @@ import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.MetadataProviderManager;
 import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.physical.base.ScanStats.GroupScanProperty;
-import org.apache.drill.exec.planner.common.DrillStatsTable.TableStatistics;
 import org.apache.drill.exec.physical.impl.scan.columns.ColumnsScanFramework.ColumnsScanBuilder;
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileReaderFactory;
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileScanBuilder;
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
+import org.apache.drill.exec.planner.common.DrillStatsTable.TableStatistics;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
@@ -63,6 +65,7 @@ import org.apache.drill.exec.store.schedule.CompleteFileWork;
 import org.apache.drill.exec.store.text.DrillTextRecordReader;
 import org.apache.drill.exec.store.text.DrillTextRecordWriter;
 import org.apache.drill.exec.vector.accessor.convert.AbstractConvertFromString;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -73,7 +76,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 
 public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextFormatConfig> {
   private final static String PLUGIN_NAME = "text";
@@ -190,11 +192,10 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
     }
 
     @Override
-    public ManagedReader<? extends FileSchemaNegotiator> newReader(
-        FileSplit split) {
+    public ManagedReader<? extends FileSchemaNegotiator> newReader() {
       TextParsingSettingsV3 settings = new TextParsingSettingsV3();
       settings.set(plugin.getConfig());
-      return new CompliantTextBatchReader(split, fileSystem(), settings);
+      return new CompliantTextBatchReader(settings);
     }
   }
 
@@ -215,6 +216,20 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
         EasySubScan scan) throws ExecutionSetupException {
       ColumnsScanBuilder builder = new ColumnsScanBuilder();
       builder.setReaderFactory(new ColumnsReaderFactory(textPlugin));
+
+      // Provide custom error context
+      builder.setContext(
+          new CustomErrorContext() {
+            @Override
+            public void addContext(UserException.Builder builder) {
+              builder.addContext("Format plugin:", PLUGIN_NAME);
+              builder.addContext("Plugin config name:", textPlugin.getName());
+              builder.addContext("Extract headers:",
+                  Boolean.toString(textPlugin.getConfig().isHeaderExtractionEnabled()));
+              builder.addContext("Skip headers:",
+                  Boolean.toString(textPlugin.getConfig().isSkipFirstLine()));
+            }
+          });
 
       // If this format has no headers, or wants to skip them,
       // then we must use the columns column to hold the data.

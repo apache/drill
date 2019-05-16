@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.scan.project;
 
+import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.exec.physical.impl.scan.project.NullColumnBuilder.NullBuilderBuilder;
 import org.apache.drill.exec.physical.impl.scan.project.ResolvedTuple.ResolvedRow;
 import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
@@ -25,6 +26,7 @@ import org.apache.drill.exec.physical.rowSet.impl.ResultSetLoaderImpl;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 
 /**
  * Orchestrates projection tasks for a single reader within the set that the
@@ -60,12 +62,18 @@ public class ReaderSchemaOrchestrator implements VectorSource {
     }
   }
 
+  @VisibleForTesting
   public ResultSetLoader makeTableLoader(TupleMetadata readerSchema) {
+    return makeTableLoader(scanOrchestrator.scanProj.context(), readerSchema);
+  }
+
+  public ResultSetLoader makeTableLoader(CustomErrorContext errorContext, TupleMetadata readerSchema) {
     OptionBuilder options = new OptionBuilder();
     options.setRowCountLimit(Math.min(readerBatchSize, scanOrchestrator.options.scanBatchRecordLimit));
     options.setVectorCache(scanOrchestrator.vectorCache);
     options.setBatchSizeLimit(scanOrchestrator.options.scanBatchByteLimit);
     options.setSchemaTransform(scanOrchestrator.options.schemaTransformer);
+    options.setContext(errorContext);
 
     // Set up a selection list if available and is a subset of
     // table columns. (Only needed for non-wildcard queries.)

@@ -531,6 +531,13 @@ public class UserException extends DrillRuntimeException {
       return this;
     }
 
+    public Builder addContext(CustomErrorContext context) {
+      if (context != null) {
+        context.addContext(this);
+      }
+      return this;
+    }
+
     /**
      * pushes a string value to the top of the context
      *

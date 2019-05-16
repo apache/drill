@@ -63,7 +63,7 @@ public class TestScanLevelProjection extends SubOperatorTest {
     // Simulate SELECT a, b, c ...
     // Build the projection plan and verify
 
-    final ScanLevelProjection scanProj = new ScanLevelProjection(
+    final ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectList("a", "b", "c"),
         ScanTestUtils.parsers());
 
@@ -106,7 +106,7 @@ public class TestScanLevelProjection extends SubOperatorTest {
 
   @Test
   public void testMap() {
-    final ScanLevelProjection scanProj = new ScanLevelProjection(
+    final ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectList("a.x", "b.x", "a.y", "b.y", "c"),
         ScanTestUtils.parsers());
 
@@ -155,7 +155,7 @@ public class TestScanLevelProjection extends SubOperatorTest {
 
   @Test
   public void testArray() {
-    final ScanLevelProjection scanProj = new ScanLevelProjection(
+    final ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectList("a[1]", "a[3]"),
         ScanTestUtils.parsers());
 
@@ -199,7 +199,7 @@ public class TestScanLevelProjection extends SubOperatorTest {
 
   @Test
   public void testWildcard() {
-    final ScanLevelProjection scanProj = new ScanLevelProjection(
+    final ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectAll(),
         ScanTestUtils.parsers());
 
@@ -238,7 +238,7 @@ public class TestScanLevelProjection extends SubOperatorTest {
 
   @Test
   public void testEmptyProjection() {
-    final ScanLevelProjection scanProj = new ScanLevelProjection(
+    final ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectList(),
         ScanTestUtils.parsers());
 
@@ -264,7 +264,7 @@ public class TestScanLevelProjection extends SubOperatorTest {
 
   @Test
   public void testWildcardAndColumns() {
-    ScanLevelProjection scanProj = new ScanLevelProjection(
+    ScanLevelProjection scanProj = ScanLevelProjection.build(
           RowSetTestUtils.projectList(SchemaPath.DYNAMIC_STAR, "a"),
           ScanTestUtils.parsers());
 
@@ -293,7 +293,7 @@ public class TestScanLevelProjection extends SubOperatorTest {
 
   @Test
   public void testColumnAndWildcard() {
-    ScanLevelProjection scanProj = new ScanLevelProjection(
+    ScanLevelProjection scanProj = ScanLevelProjection.build(
           RowSetTestUtils.projectList("a", SchemaPath.DYNAMIC_STAR),
           ScanTestUtils.parsers());
 
@@ -313,7 +313,7 @@ public class TestScanLevelProjection extends SubOperatorTest {
   @Test
   public void testErrorTwoWildcards() {
     try {
-      new ScanLevelProjection(
+      ScanLevelProjection.build(
           RowSetTestUtils.projectList(SchemaPath.DYNAMIC_STAR, SchemaPath.DYNAMIC_STAR),
           ScanTestUtils.parsers());
       fail();
@@ -328,7 +328,7 @@ public class TestScanLevelProjection extends SubOperatorTest {
 
     // Simulate SELECT a
 
-    final ScanLevelProjection scanProj = new ScanLevelProjection(
+    final ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectList("a"),
         ScanTestUtils.parsers(),
         outputSchema);
@@ -347,7 +347,7 @@ public class TestScanLevelProjection extends SubOperatorTest {
         .add("b", MinorType.BIGINT)
         .buildSchema();
 
-    final ScanLevelProjection scanProj = new ScanLevelProjection(
+    final ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectAll(),
         ScanTestUtils.parsers(),
         outputSchema);
@@ -378,7 +378,7 @@ public class TestScanLevelProjection extends SubOperatorTest {
         .buildSchema();
     outputSchema.setProperty(TupleMetadata.IS_STRICT_SCHEMA_PROP, Boolean.TRUE.toString());
 
-    final ScanLevelProjection scanProj = new ScanLevelProjection(
+    final ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectAll(),
         ScanTestUtils.parsers(),
         outputSchema);

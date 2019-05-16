@@ -44,16 +44,18 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
 public class ExplicitSchemaProjection extends ReaderLevelProjection {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExplicitSchemaProjection.class);
 
+  private final ScanLevelProjection scanProj;
+
   public ExplicitSchemaProjection(ScanLevelProjection scanProj,
       TupleMetadata readerSchema,
       ResolvedTuple rootTuple,
       List<ReaderProjectionResolver> resolvers) {
     super(resolvers);
-    resolveRootTuple(scanProj, rootTuple, readerSchema);
+    this.scanProj = scanProj;
+    resolveRootTuple(rootTuple, readerSchema);
   }
 
-  private void resolveRootTuple(ScanLevelProjection scanProj,
-      ResolvedTuple rootTuple,
+  private void resolveRootTuple(ResolvedTuple rootTuple,
       TupleMetadata readerSchema) {
     for (ColumnProjection col : scanProj.columns()) {
       if (col instanceof UnresolvedColumn) {
@@ -117,8 +119,10 @@ public class ExplicitSchemaProjection extends ReaderLevelProjection {
       throw UserException
         .validationError()
         .message("Project list implies a map column, but actual column is not a map")
-        .addContext("Projected column", requestedCol.fullName())
-        .addContext("Actual type", column.type().name())
+        .addContext("Projected column:", requestedCol.fullName())
+        .addContext("Table column:", column.name())
+        .addContext("Type:", column.type().name())
+        .addContext(scanProj.context())
         .build(logger);
     }
 
@@ -172,8 +176,11 @@ public class ExplicitSchemaProjection extends ReaderLevelProjection {
       throw UserException
         .validationError()
         .message("Project list implies an array, but actual column is not an array")
-        .addContext("Projected column", requestedCol.fullName())
-        .addContext("Actual cardinality", column.mode().name())
+        .addContext("Projected column:", requestedCol.fullName())
+        .addContext("Table column:", column.name())
+        .addContext("Type:", column.type().name())
+        .addContext("Actual cardinality:", column.mode().name())
+        .addContext(scanProj.context())
         .build(logger);
     }
 

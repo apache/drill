@@ -46,13 +46,12 @@ import org.apache.drill.exec.physical.rowSet.impl.RowSetTestUtils;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.dfs.easy.FileWork;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.mapred.FileSplit;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 
 /**
@@ -72,11 +71,9 @@ public class TestColumnsArrayFramework extends SubOperatorTest {
     }
 
     @Override
-    public ManagedReader<? extends FileSchemaNegotiator> newReader(
-        FileSplit split) {
+    public ManagedReader<? extends FileSchemaNegotiator> newReader() {
       DummyColumnsReader reader = readerIter.next();
       assert reader != null;
-      assert split.getPath().equals(reader.filePath());
       return reader;
     }
   }
@@ -199,6 +196,7 @@ public class TestColumnsArrayFramework extends SubOperatorTest {
     ColumnsScanFixtureBuilder builder = new ColumnsScanFixtureBuilder();
     builder.setProjection(RowSetTestUtils.projectList(ColumnsArrayManager.COLUMNS_COL));
     builder.addReader(reader);
+    builder.builder.requireColumnsArray(true);
     ScanFixture scanFixture = builder.build();
     ScanOperatorExec scan = scanFixture.scanOp;
 
@@ -234,6 +232,7 @@ public class TestColumnsArrayFramework extends SubOperatorTest {
         SchemaPath.parseFromString(ColumnsArrayManager.COLUMNS_COL + "[1]"),
         SchemaPath.parseFromString(ColumnsArrayManager.COLUMNS_COL + "[3]")));
     builder.addReader(reader);
+    builder.builder.requireColumnsArray(true);
     ScanFixture scanFixture = builder.build();
     ScanOperatorExec scan = scanFixture.scanOp;
 

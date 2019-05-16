@@ -19,6 +19,7 @@ package org.apache.drill.exec.physical.rowSet.impl;
 
 import java.util.ArrayList;
 
+import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -120,9 +121,11 @@ public class ColumnBuilder {
   }
 
   private final SchemaTransformer schemaTransformer;
+  private final CustomErrorContext context;
 
-  public ColumnBuilder(SchemaTransformer schemaTransformer) {
+  public ColumnBuilder(SchemaTransformer schemaTransformer, CustomErrorContext context) {
     this.schemaTransformer = schemaTransformer;
+    this.context = context;
   }
 
   /**
@@ -252,27 +255,13 @@ public class ColumnBuilder {
 
   private void incompatibleProjection(ProjectionType projType,
       ColumnMetadata columnSchema) {
-    StringBuilder buf = new StringBuilder()
-      .append("Projection of type ");
-    switch (projType) {
-    case ARRAY:
-      buf.append("array (a[n])");
-      break;
-    case TUPLE:
-      buf.append("tuple (a.x)");
-      break;
-    case TUPLE_ARRAY:
-      buf.append("tuple array (a[n].x");
-      break;
-    default:
-      throw new IllegalStateException("Unexpected projection type: " + projType);
-    }
-    buf.append(" is not compatible with column `")
-      .append(columnSchema.name())
-      .append("` of type ")
-      .append(Types.getSqlTypeName(columnSchema.majorType()));
-    throw UserException.validationError()
-      .message(buf.toString())
+    throw UserException
+      .validationError()
+      .message("Incompatible projection type and data type for column `%s`", columnSchema.name())
+      .addContext("Column:", columnSchema.name())
+      .addContext("Type:", Types.getSqlTypeName(columnSchema.majorType()))
+      .addContext("Projection type:", projType.label())
+      .addContext(context)
       .build(logger);
   }
 

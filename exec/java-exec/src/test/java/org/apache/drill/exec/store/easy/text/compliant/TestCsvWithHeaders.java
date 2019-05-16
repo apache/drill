@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.util.Iterator;
 
 import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
@@ -84,7 +85,7 @@ import org.junit.experimental.categories.Category;
 @Category(RowSetTests.class)
 public class TestCsvWithHeaders extends BaseCsvTest {
 
-  private static final String TEST_FILE_NAME = "case2.csv";
+  private static final String TEST_FILE_NAME = "basic.csv";
 
   private static String invalidHeaders[] = {
       "$,,9b,c,c,c_2",
@@ -103,11 +104,20 @@ public class TestCsvWithHeaders extends BaseCsvTest {
       "30"
   };
 
+  public static final String COLUMNS_FILE_NAME = "columns.csv";
+
+  private static String columnsCol[] = {
+      "author,columns",
+      "fred,\"Rocks Today,Dino Wrangling\"",
+      "barney,Bowlarama"
+  };
+
   @BeforeClass
   public static void setup() throws Exception {
     BaseCsvTest.setup(false,  true);
     buildFile(TEST_FILE_NAME, validHeaders);
     buildNestedTable();
+    buildFile(COLUMNS_FILE_NAME, columnsCol);
   }
 
   private static final String EMPTY_FILE = "empty.csv";
@@ -867,6 +877,107 @@ public class TestCsvWithHeaders extends BaseCsvTest {
       assertFalse(iter.hasNext());
     }
     finally {
+      resetV3();
+    }
+  }
+
+  /**
+   * The column name `columns` is treated as a plain old
+   * column when using column headers.
+   */
+  @Test
+  public void testColumnsColV3() throws IOException {
+    try {
+      enableV3(true);
+
+      String sql = "SELECT author, columns FROM `dfs.data`.`%s`";
+      RowSet actual = client.queryBuilder().sql(sql, COLUMNS_FILE_NAME).rowSet();
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+          .add("author", MinorType.VARCHAR)
+          .add("columns", MinorType.VARCHAR)
+          .buildSchema();
+
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+          .addRow("fred", "Rocks Today,Dino Wrangling")
+          .addRow("barney", "Bowlarama")
+          .build();
+      RowSetUtilities.verify(expected, actual);
+    } finally {
+      resetV3();
+    }
+  }
+
+  /**
+   * The column name `columns` is treated as a plain old
+   * column when using column headers. If used with an index,
+   * validation will fail because the VarChar column is not an array
+   */
+  @Test
+  public void testColumnsIndexV3() throws IOException {
+    try {
+      enableV3(true);
+
+      String sql = "SELECT author, columns[0] FROM `dfs.data`.`%s`";
+      client.queryBuilder().sql(sql, COLUMNS_FILE_NAME).run();
+    } catch (UserRemoteException e) {
+      assertTrue(e.getMessage().contains(
+          "VALIDATION ERROR: Unexpected `columns`[x]; columns array not enabled"));
+      assertTrue(e.getMessage().contains("Format plugin: text"));
+      assertTrue(e.getMessage().contains("Plugin config name: csv"));
+      assertTrue(e.getMessage().contains("Extract headers: true"));
+      assertTrue(e.getMessage().contains("Skip headers: false"));
+    } catch (Exception e) {
+      fail();
+    } finally {
+      resetV3();
+    }
+  }
+
+  @Test
+  public void testColumnsMissingV3() throws IOException {
+    try {
+      enableV3(true);
+
+      String sql = "SELECT a, columns FROM `dfs.data`.`%s`";
+      RowSet actual = client.queryBuilder().sql(sql, TEST_FILE_NAME).rowSet();
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+          .add("a", MinorType.VARCHAR)
+          .add("columns", MinorType.VARCHAR)
+          .buildSchema();
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+          .addRow("10", "")
+          .build();
+      RowSetUtilities.verify(expected, actual);
+    } finally {
+      resetV3();
+    }
+  }
+
+  /**
+   * If columns[x] is used, then this can't possibly match a valid
+   * text reader column, so raise an error instead.
+   */
+  @Test
+  public void testColumnsIndexMissingV3() throws IOException {
+    try {
+      enableV3(true);
+
+      String sql = "SELECT a, columns[0] FROM `dfs.data`.`%s`";
+      client.queryBuilder().sql(sql, TEST_FILE_NAME).run();
+    } catch (UserRemoteException e) {
+      // Note: this error is caught before reading any tables,
+      // so no table information is available.
+      assertTrue(e.getMessage().contains(
+          "VALIDATION ERROR: Unexpected `columns`[x]; columns array not enabled"));
+      assertTrue(e.getMessage().contains("Format plugin: text"));
+      assertTrue(e.getMessage().contains("Plugin config name: csv"));
+      assertTrue(e.getMessage().contains("Extract headers: true"));
+      assertTrue(e.getMessage().contains("Skip headers: false"));
+    } catch (Exception e) {
+      fail();
+    } finally {
       resetV3();
     }
   }
