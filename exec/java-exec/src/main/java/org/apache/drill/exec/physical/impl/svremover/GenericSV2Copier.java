@@ -18,7 +18,6 @@
 package org.apache.drill.exec.physical.impl.svremover;
 
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.vector.SchemaChangeCallBack;
@@ -28,14 +27,13 @@ public class GenericSV2Copier extends AbstractSV2Copier {
   public GenericSV2Copier(RecordBatch incomingBatch, VectorContainer outputContainer,
                           SchemaChangeCallBack callBack) {
     for(VectorWrapper<?> vv : incomingBatch){
-      TransferPair pair = vv.getValueVector().makeTransferPair(outputContainer.addOrGet(vv.getField(), callBack));
-      transferPairs.add(pair);
+      transferPairs.add(vv.getValueVector().makeTransferPair(outputContainer.addOrGet(vv.getField(), callBack)));
     }
   }
 
   @Override
   public void copyEntry(int inIndex, int outIndex) {
-    for ( int i = 0;  i < vvIn.length;  i++ ) {
+    for (int i = 0; i < vvIn.length; i++) {
       vvOut[i].copyEntry(outIndex, vvIn[i], inIndex);
     }
   }

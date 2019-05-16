@@ -17,12 +17,12 @@
  */
 package org.apache.drill.test.rowSet.test;
 
+import static org.apache.drill.test.rowSet.RowSetUtilities.dec;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.apache.drill.test.rowSet.RowSetUtilities.dec;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -32,26 +32,28 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.record.SimpleVectorWrapper;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.DateUtilities;
+import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.ArrayReader;
 import org.apache.drill.exec.vector.accessor.ScalarReader;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.ValueType;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.test.SubOperatorTest;
+import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
+import org.apache.drill.test.rowSet.RowSetBuilder;
 import org.apache.drill.test.rowSet.RowSetReader;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Instant;
 import org.joda.time.LocalDate;
 import org.joda.time.LocalTime;
 import org.joda.time.Period;
-import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
-import org.apache.drill.test.rowSet.RowSetBuilder;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 /**
  * Verify that simple scalar (non-repeated) column readers
@@ -678,6 +680,9 @@ public class TestScalarAccessors extends SubOperatorTest {
         .addRow("abcd")
         .build();
     assertEquals(3, rs.rowCount());
+    SimpleVectorWrapper<?> vw = (SimpleVectorWrapper<?>) rs.container().getValueVector(0);
+    NullableVarCharVector v = (NullableVarCharVector) vw.getValueVector();
+    assertEquals(3, v.getMutator().getLastSet());
 
     RowSetReader reader = rs.reader();
     ScalarReader colReader = reader.scalar(0);

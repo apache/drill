@@ -15,17 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import org.apache.drill.common.types.TypeProtos.DataMode;
-import org.apache.drill.exec.memory.AllocationManager.BufferLedger;
-import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.util.DecimalUtility;
-import org.apache.drill.exec.vector.BaseDataValueVector;
-import org.apache.drill.exec.vector.NullableVectorDefinitionSetter;
-
-import java.lang.Override;
-import java.lang.UnsupportedOperationException;
-import java.util.Set;
-
 <@pp.dropOutputFile />
 <#list vv.types as type>
 <#list type.minor as minor>
@@ -41,6 +30,7 @@ import java.util.Set;
 package org.apache.drill.exec.vector;
 
 <#include "/@includes/vv_imports.ftl" />
+import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 
 /**
  * Nullable${minor.class} implements a vector of values which could be null.  Elements in the vector
@@ -457,6 +447,13 @@ public final class ${className} extends BaseDataValueVector implements <#if type
     mutator.exchange(other.getMutator());
   }
 
+  @Override
+  public void finalizeLastSet(int count) {
+    <#if type.major = "VarLen">
+    mutator.lastSet = count;
+    </#if>
+  }
+
   <#if type.major != "VarLen">
   @Override
   public void toNullable(ValueVector nullableVector) {
@@ -756,6 +753,7 @@ public final class ${className} extends BaseDataValueVector implements <#if type
       values.getMutator().setValueCount(valueCount);
       bits.getMutator().setValueCount(valueCount);
     }
+    
     <#if type.major == "VarLen">
     /** Enables this wrapper container class to participate in bulk mutator logic */
     private final class VarLenBulkInputCallbackImpl implements VarLenBulkInput.BulkInputCallback<VarLenBulkEntry> {
@@ -849,6 +847,11 @@ public final class ${className} extends BaseDataValueVector implements <#if type
       <#if type.major = "VarLen">lastSet = -1;</#if>
     }
 
+    <#if type.major = "VarLen">
+    @VisibleForTesting
+    public int getLastSet() { return lastSet; }
+    
+    </#if>
     // For nullable vectors, exchanging buffers (done elsewhere)
     // requires also exchanging mutator state (done here.)
 

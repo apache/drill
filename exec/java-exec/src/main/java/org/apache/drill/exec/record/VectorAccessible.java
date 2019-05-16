@@ -23,7 +23,7 @@ import org.apache.drill.exec.record.selection.SelectionVector4;
 
 // TODO javadoc
 public interface VectorAccessible extends Iterable<VectorWrapper<?>> {
-  // TODO are these <?> releated in any way? Should they be the same one?
+  // TODO are these <?> related in any way? Should they be the same one?
   // TODO javadoc
   VectorWrapper<?> getValueAccessorById(Class<?> clazz, int... fieldIds);
 
