@@ -17,15 +17,15 @@
  */
 package org.apache.drill.exec.physical.impl.svremover;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.vector.ValueVector;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public abstract class AbstractSV2Copier extends AbstractCopier {
   protected ValueVector[] vvIn;
@@ -35,21 +35,18 @@ public abstract class AbstractSV2Copier extends AbstractCopier {
   @Override
   public void setup(VectorAccessible incoming, VectorContainer outgoing) {
     super.setup(incoming, outgoing);
-    this.sv2 = incoming.getSelectionVector2();
+    sv2 = incoming.getSelectionVector2();
 
     final int count = outgoing.getNumberOfColumns();
     vvIn = new ValueVector[count];
 
-    {
-      int index = 0;
-
-      for (VectorWrapper vectorWrapper: incoming) {
-        vvIn[index] = vectorWrapper.getValueVector();
-        index++;
-      }
+    int index = 0;
+    for (VectorWrapper<?> vectorWrapper: incoming) {
+      vvIn[index++] = vectorWrapper.getValueVector();
     }
   }
 
+  @Override
   public void copyEntryIndirect(int inIndex, int outIndex) {
     copyEntry(sv2.getIndex(inIndex), outIndex);
   }

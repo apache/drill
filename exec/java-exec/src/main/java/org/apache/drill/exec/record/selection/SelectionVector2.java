@@ -17,11 +17,11 @@
  */
 package org.apache.drill.exec.record.selection;
 
-import io.netty.buffer.DrillBuf;
-
-import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.exception.OutOfMemoryException;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.record.DeadBuf;
+
+import io.netty.buffer.DrillBuf;
 
 /**
  * A selection vector that fronts, at most, 64K values.
@@ -158,12 +158,12 @@ public class SelectionVector2 implements AutoCloseable {
   }
 
   public void setRecordCount(int recordCount){
-//    logger.debug("Seting record count to {}", recordCount);
+//    logger.debug("Setting record count to {}", recordCount);
     this.recordCount = recordCount;
   }
 
   public boolean canDoFullTransfer() {
-    return (recordCount == batchActualRecordCount);
+    return recordCount == batchActualRecordCount;
   }
 
   public void setBatchActualRecordCount(int actualRecordCount) {
