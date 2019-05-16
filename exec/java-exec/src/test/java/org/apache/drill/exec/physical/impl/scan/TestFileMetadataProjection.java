@@ -32,9 +32,10 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.impl.scan.file.FileMetadata;
 import org.apache.drill.exec.physical.impl.scan.file.FileMetadataColumn;
 import org.apache.drill.exec.physical.impl.scan.file.FileMetadataManager;
+import org.apache.drill.exec.physical.impl.scan.file.FileMetadataManager.FileMetadataOptions;
 import org.apache.drill.exec.physical.impl.scan.file.MetadataColumn;
 import org.apache.drill.exec.physical.impl.scan.file.PartitionColumn;
-import org.apache.drill.exec.physical.impl.scan.file.FileMetadataManager.FileMetadataOptions;
+import org.apache.drill.exec.physical.impl.scan.project.AbstractUnresolvedColumn.UnresolvedColumn;
 import org.apache.drill.exec.physical.impl.scan.project.ColumnProjection;
 import org.apache.drill.exec.physical.impl.scan.project.ExplicitSchemaProjection;
 import org.apache.drill.exec.physical.impl.scan.project.NullColumnBuilder;
@@ -42,15 +43,14 @@ import org.apache.drill.exec.physical.impl.scan.project.NullColumnBuilder.NullBu
 import org.apache.drill.exec.physical.impl.scan.project.ResolvedColumn;
 import org.apache.drill.exec.physical.impl.scan.project.ResolvedTuple.ResolvedRow;
 import org.apache.drill.exec.physical.impl.scan.project.ScanLevelProjection;
-import org.apache.drill.exec.physical.impl.scan.project.AbstractUnresolvedColumn.UnresolvedColumn;
 import org.apache.drill.exec.physical.rowSet.impl.RowSetTestUtils;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.hadoop.fs.Path;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 @Category(RowSetTests.class)
 public class TestFileMetadataProjection extends SubOperatorTest {
@@ -179,7 +179,7 @@ public class TestFileMetadataProjection extends SubOperatorTest {
         fixture.getOptionManager(),
         standardOptions(filePath));
 
-    ScanLevelProjection scanProj = new ScanLevelProjection(
+    ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectList(
             ScanTestUtils.FILE_NAME_COL,
             "a",
@@ -264,7 +264,7 @@ public class TestFileMetadataProjection extends SubOperatorTest {
         fixture.getOptionManager(),
         standardOptions(filePath));
 
-    ScanLevelProjection scanProj = new ScanLevelProjection(
+    ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectList(
           "a",
           ScanTestUtils.FULLY_QUALIFIED_NAME_COL,
@@ -314,7 +314,7 @@ public class TestFileMetadataProjection extends SubOperatorTest {
         fixture.getOptionManager(),
         standardOptions(filePath));
 
-    ScanLevelProjection scanProj = new ScanLevelProjection(
+    ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectList("dir11"),
         ScanTestUtils.parsers(metadataManager.projectionParser()));
 

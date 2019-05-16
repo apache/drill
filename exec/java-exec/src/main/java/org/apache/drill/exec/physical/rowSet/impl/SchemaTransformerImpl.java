@@ -20,6 +20,7 @@ package org.apache.drill.exec.physical.rowSet.impl;
 import java.util.Map;
 
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.physical.impl.scan.project.ScanLevelProjection.ScanProjectionType;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.ProjectionType;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
@@ -155,8 +156,9 @@ public class SchemaTransformerImpl implements SchemaTransformer {
         if (defn.conversionClass == null) {
           throw UserException.validationError()
             .message("Runtime type conversion not available")
-            .addContext("Input type", inputSchema.typeString())
-            .addContext("Output type", outputCol.typeString())
+            .addContext("Column:", outputCol.name())
+            .addContext("Input type:", inputSchema.typeString())
+            .addContext("Output type:", outputCol.typeString())
             .build(logger);
         }
         factory = StandardConversions.factory(defn.conversionClass, properties);

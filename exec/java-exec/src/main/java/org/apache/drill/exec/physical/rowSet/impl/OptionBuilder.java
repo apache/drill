@@ -19,11 +19,13 @@ package org.apache.drill.exec.physical.rowSet.impl;
 
 import java.util.Collection;
 
+import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.rowSet.ResultVectorCache;
 import org.apache.drill.exec.physical.rowSet.impl.ResultSetLoaderImpl.ResultSetOptions;
 import org.apache.drill.exec.physical.rowSet.project.RequestedTuple;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
@@ -42,6 +44,11 @@ public class OptionBuilder {
   protected TupleMetadata schema;
   protected long maxBatchSize;
   protected SchemaTransformer schemaTransformer;
+
+  /**
+   * Error message context
+   */
+  protected CustomErrorContext errorContext;
 
   public OptionBuilder() {
     // Start with the default option values.
@@ -143,8 +150,13 @@ public class OptionBuilder {
     return this;
   }
 
-  // TODO: No setter for vector length yet: is hard-coded
-  // at present in the value vector.
+  /**
+   * Provides context for error messages.
+   */
+  public OptionBuilder setContext(CustomErrorContext context) {
+    this.errorContext = context;
+    return this;
+  }
 
   public ResultSetOptions build() {
     Preconditions.checkArgument(projection == null || projectionSet == null);

@@ -22,7 +22,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.drill.common.exceptions.ChildErrorContext;
+import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.exceptions.UserException.Builder;
 import org.apache.drill.exec.physical.impl.scan.file.FileMetadataManager.FileMetadataOptions;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedScanFramework;
@@ -73,6 +76,20 @@ public class FileScanFramework extends ManagedScanFramework {
    */
 
   public interface FileSchemaNegotiator extends SchemaNegotiator {
+
+    /**
+     * Gives the Drill file system for this operator.
+     */
+
+    DrillFileSystem fileSystem();
+
+    /**
+     * Describes the file split (path and block offset) for this scan.
+     *
+     * @return Hadoop file split object with the file path, block
+     * offset, and length.
+     */
+    FileSplit split();
   }
 
   /**
@@ -84,8 +101,39 @@ public class FileScanFramework extends ManagedScanFramework {
   public static class FileSchemaNegotiatorImpl extends SchemaNegotiatorImpl
       implements FileSchemaNegotiator {
 
-    public FileSchemaNegotiatorImpl(ManagedScanFramework framework) {
+    private final FileSplit split;
+
+    public FileSchemaNegotiatorImpl(FileScanFramework framework) {
       super(framework);
+      this.split = framework.currentSplit;
+      context = new FileRowSetContext(parentErrorContext(), split);
+    }
+
+    @Override
+    public DrillFileSystem fileSystem() {
+      return ((FileScanFramework) framework).dfs;
+    }
+
+    @Override
+    public FileSplit split() { return split; }
+  }
+
+  public static class FileRowSetContext extends ChildErrorContext {
+
+    private final FileSplit split;
+
+    public FileRowSetContext(CustomErrorContext parent, FileSplit split) {
+      super(parent);
+      this.split = split;
+    }
+
+    @Override
+    public void addContext(Builder builder) {
+      super.addContext(builder);
+      builder.addContext("File:", Path.getPathWithoutSchemeAndAuthority(split.getPath()).toString());
+      if (split.getStart() != 0) {
+        builder.addContext("Offset:", split.getStart());
+      }
     }
   }
 
@@ -113,9 +161,17 @@ public class FileScanFramework extends ManagedScanFramework {
     }
   }
 
+  /**
+   * Iterates over the splits for the present scan. For each, creates a
+   * new reader. The file framework passes the file split (and the Drill
+   * file system) in via the schema negotiator at open time. This protocol
+   * makes clear that the constructor for the reader should do nothing;
+   * work should be done in the open() call.
+   */
+
   public abstract static class FileReaderFactory implements ReaderFactory {
 
-    protected FileScanFramework fileFramework;
+    private FileScanFramework fileFramework;
 
     @Override
     public void bind(ManagedScanFramework baseFramework) {
@@ -124,16 +180,13 @@ public class FileScanFramework extends ManagedScanFramework {
 
     @Override
     public ManagedReader<? extends SchemaNegotiator> next() {
-      FileSplit split = fileFramework.nextSplit();
-      if (split == null) {
+      if (fileFramework.nextSplit() == null) {
         return null;
       }
-      return newReader(split);
+      return newReader();
     }
 
-    protected DrillFileSystem fileSystem() { return fileFramework.dfs; }
-
-    public abstract ManagedReader<? extends FileSchemaNegotiator> newReader(FileSplit split);
+    public abstract ManagedReader<? extends FileSchemaNegotiator> newReader();
   }
 
   private FileMetadataManager metadataManager;

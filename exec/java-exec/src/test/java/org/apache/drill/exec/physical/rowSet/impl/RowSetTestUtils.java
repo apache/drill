@@ -55,7 +55,7 @@ public class RowSetTestUtils {
 
   public static List<SchemaPath> projectAll() {
     return Lists.newArrayList(
-        new SchemaPath[] {SchemaPath.getSimplePath(SchemaPath.DYNAMIC_STAR)});
+        new SchemaPath[] {SchemaPath.STAR_COLUMN});
   }
 
   @SafeVarargs

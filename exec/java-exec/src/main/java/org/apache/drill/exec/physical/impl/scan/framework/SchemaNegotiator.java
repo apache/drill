@@ -17,8 +17,10 @@
  */
 package org.apache.drill.exec.physical.impl.scan.framework;
 
+import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
+import org.apache.drill.exec.physical.rowSet.RowSetLoader;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 
 /**
@@ -57,6 +59,12 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
 public interface SchemaNegotiator {
 
   OperatorContext context();
+
+  /**
+   * Specify an advanced error context which allows the reader to
+   * fill in custom context values.
+   */
+  void setErrorContext(CustomErrorContext context);
 
   /**
    * Specify the table schema if this is an early-schema reader. Need
@@ -110,4 +118,12 @@ public interface SchemaNegotiator {
    */
 
   boolean isProjectionEmpty();
+
+  /**
+   * The context to use as a parent when creating a custom context.
+   * <p>
+   * (Obtain the error context for this reader from the
+   * {@link ResultSetLoader}.
+   */
+  CustomErrorContext parentErrorContext();
 }

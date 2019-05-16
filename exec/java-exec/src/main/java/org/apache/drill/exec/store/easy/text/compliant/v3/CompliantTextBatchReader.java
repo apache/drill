@@ -51,21 +51,19 @@ public class CompliantTextBatchReader implements ManagedReader<ColumnsSchemaNego
   // settings to be used while parsing
   private final TextParsingSettingsV3 settings;
   // Chunk of the file to be read by this reader
-  private final FileSplit split;
+  private FileSplit split;
   // text reader implementation
   private TextReader reader;
   // input buffer
   private DrillBuf readBuffer;
   // working buffer to handle whitespaces
   private DrillBuf whitespaceBuffer;
-  private final DrillFileSystem dfs;
+  private DrillFileSystem dfs;
 
   private RowSetLoader writer;
 
-  public CompliantTextBatchReader(FileSplit split, DrillFileSystem dfs, TextParsingSettingsV3 settings) {
-    this.split = split;
+  public CompliantTextBatchReader(TextParsingSettingsV3 settings) {
     this.settings = settings;
-    this.dfs = dfs;
 
     // Validate. Otherwise, these problems show up later as a data
     // read error which is very confusing.
@@ -82,13 +80,15 @@ public class CompliantTextBatchReader implements ManagedReader<ColumnsSchemaNego
    * Performs the initial setup required for the record reader.
    * Initializes the input stream, handling of the output record batch
    * and the actual reader to be used.
-   * @param context  operator context from which buffer's will be allocated and managed
+   * @param errorContext  operator context from which buffer's will be allocated and managed
    * @param outputMutator  Used to create the schema in the output record batch
    */
 
   @Override
   public boolean open(ColumnsSchemaNegotiator schemaNegotiator) {
     final OperatorContext context = schemaNegotiator.context();
+    dfs = schemaNegotiator.fileSystem();
+    split = schemaNegotiator.split();
 
     // Note: DO NOT use managed buffers here. They remain in existence
     // until the fragment is shut down. The buffers here are large.
@@ -99,10 +99,6 @@ public class CompliantTextBatchReader implements ManagedReader<ColumnsSchemaNego
 
     readBuffer = context.getAllocator().buffer(READ_BUFFER);
     whitespaceBuffer = context.getAllocator().buffer(WHITE_SPACE_BUFFER);
-
-    // TODO: Set this based on size of record rather than
-    // absolute count.
-
     schemaNegotiator.setBatchSize(MAX_RECORDS_PER_BATCH);
 
     // setup Output, Input, and Reader
@@ -173,7 +169,7 @@ public class CompliantTextBatchReader implements ManagedReader<ColumnsSchemaNego
    * @return field name strings
    */
 
-  private String [] extractHeader() throws IOException {
+  private String[] extractHeader() throws IOException {
     assert settings.isHeaderExtractionEnabled();
 
     // don't skip header in case skipFirstLine is set true

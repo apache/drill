@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.rowSet.impl;
 
+import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
@@ -53,6 +54,11 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
     protected final long maxBatchSize;
     protected final SchemaTransformer schemaTransformer;
 
+    /**
+     * Context for error messages.
+     */
+    protected final CustomErrorContext errorContext;
+
     public ResultSetOptions() {
       vectorSizeLimit = ValueVector.MAX_BUFFER_SIZE;
       rowCountLimit = DEFAULT_ROW_COUNT;
@@ -61,6 +67,7 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
       schema = null;
       maxBatchSize = -1;
       schemaTransformer = null;
+      errorContext = null;
     }
 
     public ResultSetOptions(OptionBuilder builder) {
@@ -70,6 +77,7 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
       schema = builder.schema;
       maxBatchSize = builder.maxBatchSize;
       schemaTransformer = builder.schemaTransformer;
+      errorContext = builder.errorContext;
 
       // If projection, build the projection map.
       // The caller might have already built the map. If so,
@@ -287,7 +295,7 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
     if (schemaTransformer == null) {
       schemaTransformer = new DefaultSchemaTransformer(null);
     }
-    columnBuilder = new ColumnBuilder(schemaTransformer);
+    columnBuilder = new ColumnBuilder(schemaTransformer, options.errorContext);
 
     // Set the projections
 
@@ -845,4 +853,7 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
 
   @Override
   public ColumnBuilder columnBuilder() { return columnBuilder; }
+
+  @Override
+  public CustomErrorContext context() { return options.errorContext; }
 }

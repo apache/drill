@@ -82,4 +82,21 @@ public enum ProjectionType {
       throw new IllegalStateException(toString());
     }
   }
+
+  public String label() {
+    switch (this) {
+    case SCALAR:
+      return "scalar (a)";
+    case ARRAY:
+      return "array (a[n])";
+    case TUPLE:
+      return "tuple (a.x)";
+    case TUPLE_ARRAY:
+      return "tuple array (a[n].x)";
+    case WILDCARD:
+      return "wildcard (*)";
+    default:
+      return name();
+    }
+  }
 }

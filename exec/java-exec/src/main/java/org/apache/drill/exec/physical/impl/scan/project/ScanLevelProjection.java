@@ -20,6 +20,7 @@ package org.apache.drill.exec.physical.impl.scan.project;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.impl.scan.project.AbstractUnresolvedColumn.UnresolvedColumn;
 import org.apache.drill.exec.physical.impl.scan.project.AbstractUnresolvedColumn.UnresolvedSchemaColumn;
@@ -31,6 +32,7 @@ import org.apache.drill.exec.physical.rowSet.project.RequestedTupleImpl;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.ProjectionType;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 
 /**
  * Parses and analyzes the projection list passed to the scanner. The
@@ -224,8 +226,67 @@ public class ScanLevelProjection {
     void build();
   }
 
+  public static class Builder {
+    private List<SchemaPath> projectionList;
+    private List<ScanProjectionParser> parsers = new ArrayList<>();
+    private TupleMetadata outputSchema;
+    /**
+     * Context used with error messages.
+     */
+    protected CustomErrorContext errorContext;
+
+    /**
+     * Specify the set of columns in the SELECT list. Since the column list
+     * comes from the query planner, assumes that the planner has checked
+     * the list for syntax and uniqueness.
+     *
+     * @param queryCols list of columns in the SELECT list in SELECT list order
+     * @return this builder
+     */
+    public Builder projection(List<SchemaPath> projectionList) {
+      this.projectionList = projectionList;
+      return this;
+    }
+
+    public Builder parsers(List<ScanProjectionParser> parsers) {
+      this.parsers.addAll(parsers);
+      return this;
+    }
+
+    public Builder outputSchema(TupleMetadata outputSchema) {
+      this.outputSchema = outputSchema;
+      return this;
+    }
+
+    public Builder context(CustomErrorContext context) {
+      this.errorContext = context;
+      return this;
+    }
+
+    public ScanLevelProjection build() {
+      return new ScanLevelProjection(this);
+    }
+
+    public TupleMetadata outputSchema( ) {
+      return outputSchema == null || outputSchema.size() == 0
+          ? null : outputSchema;
+    }
+
+    public List<SchemaPath> projectionList() {
+      if (projectionList == null) {
+        projectionList = new ArrayList<>();
+        projectionList.add(SchemaPath.STAR_COLUMN);
+      }
+      return projectionList;
+    }
+  }
+
   // Input
 
+  /**
+   * Context used with error messages.
+   */
+  protected final CustomErrorContext errorContext;
   protected final List<SchemaPath> projectionList;
   protected final TupleMetadata outputSchema;
 
@@ -257,27 +318,42 @@ public class ScanLevelProjection {
   protected RequestedTuple readerProjection;
   protected ScanProjectionType projectionType = ScanProjectionType.EMPTY;
 
-  /**
-   * Specify the set of columns in the SELECT list. Since the column list
-   * comes from the query planner, assumes that the planner has checked
-   * the list for syntax and uniqueness.
-   *
-   * @param queryCols list of columns in the SELECT list in SELECT list order
-   * @return this builder
-   */
-  public ScanLevelProjection(List<SchemaPath> projectionList,
-      List<ScanProjectionParser> parsers) {
-    this(projectionList, parsers, null);
+  private ScanLevelProjection(Builder builder) {
+    this.projectionList = builder.projectionList();
+    this.parsers = builder.parsers;
+    this.outputSchema = builder.outputSchema();
+    this.errorContext = builder.errorContext;
+    doParse();
   }
 
-  public ScanLevelProjection(List<SchemaPath> projectionList,
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  /**
+   * Builder shortcut, primarily for tests.
+   */
+  @VisibleForTesting
+  public static ScanLevelProjection build(List<SchemaPath> projectionList,
+      List<ScanProjectionParser> parsers) {
+    return new Builder()
+        .projection(projectionList)
+        .parsers(parsers)
+        .build();
+  }
+
+  /**
+   * Builder shortcut, primarily for tests.
+   */
+  @VisibleForTesting
+  public static ScanLevelProjection build(List<SchemaPath> projectionList,
       List<ScanProjectionParser> parsers,
       TupleMetadata outputSchema) {
-    this.projectionList = projectionList;
-    this.parsers = parsers;
-    this.outputSchema = outputSchema == null || outputSchema.size() == 0
-        ? null : outputSchema;
-    doParse();
+    return new Builder()
+        .projection(projectionList)
+        .parsers(parsers)
+        .outputSchema(outputSchema)
+        .build();
   }
 
   private void doParse() {
@@ -483,6 +559,8 @@ public class ScanLevelProjection {
       }
     }
   }
+
+  public CustomErrorContext context() { return errorContext; }
 
   /**
    * Return the set of columns from the SELECT list
