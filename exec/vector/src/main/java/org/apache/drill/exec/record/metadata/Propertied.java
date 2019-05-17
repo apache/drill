@@ -46,4 +46,6 @@ public interface Propertied {
   void setProperty(String key, String value);
   boolean booleanProperty(String key);
   boolean booleanProperty(String key, boolean defaultValue);
+  void setBooleanProperty(String key, boolean value);
 }
+

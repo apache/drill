@@ -159,26 +159,6 @@ public class TestMetadataProperties {
   }
 
   @Test
-  public void testProjected() {
-    PrimitiveColumnMetadata col = new PrimitiveColumnMetadata("c", MinorType.INT, DataMode.OPTIONAL);
-    AbstractPropertied props = col;
-    assertTrue(col.isProjected());
-    col.setProjected(true);
-    assertTrue(col.isProjected());
-
-    // Projected is the default, so no properties set.
-    assertFalse(props.hasProperties());
-
-    col.setProjected(false);
-    assertFalse(col.isProjected());
-    assertTrue(props.hasProperties());
-
-    // Sanity check that the expected prop was set
-
-    assertEquals("false", col.property(ColumnMetadata.PROJECTED_PROP));
-  }
-
-  @Test
   public void testFormat() {
     PrimitiveColumnMetadata col = new PrimitiveColumnMetadata("c", MinorType.INT, DataMode.OPTIONAL);
     AbstractPropertied props = col;

@@ -224,73 +224,7 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
     }
   }
 
-  /**
-   * Builds the V3 text scan operator.
-   */
-  private static class TextScanBatchCreator extends ScanFrameworkCreator {
-
-    private final TextFormatPlugin textPlugin;
-
-    public TextScanBatchCreator(TextFormatPlugin plugin) {
-      super(plugin);
-      textPlugin = plugin;
-    }
-
-    @Override
-    protected FileScanBuilder frameworkBuilder(
-        OptionManager options,
-        EasySubScan scan) throws ExecutionSetupException {
-      ColumnsScanBuilder builder = new ColumnsScanBuilder();
-      TextParsingSettingsV3 settings = new TextParsingSettingsV3(textPlugin.getConfig(), scan, options);
-      builder.setReaderFactory(new ColumnsReaderFactory(settings));
-
-      // Provide custom error context
-      builder.setContext(
-          new CustomErrorContext() {
-            @Override
-            public void addContext(UserException.Builder builder) {
-              builder.addContext("Format plugin:", PLUGIN_NAME);
-              builder.addContext("Plugin config name:", textPlugin.getName());
-              builder.addContext("Extract headers:",
-                  Boolean.toString(settings.isHeaderExtractionEnabled()));
-              builder.addContext("Skip first line:",
-                  Boolean.toString(settings.isSkipFirstLine()));
-            }
-          });
-
-      // If this format has no headers, or wants to skip them,
-      // then we must use the columns column to hold the data.
-
-      builder.requireColumnsArray(settings.isUseRepeatedVarChar());
-
-      // Text files handle nulls in an unusual way. Missing columns
-      // are set to required Varchar and filled with blanks. Yes, this
-      // means that the SQL statement or code cannot differentiate missing
-      // columns from empty columns, but that is how CSV and other text
-      // files have been defined within Drill.
-
-      builder.setNullType(
-          MajorType.newBuilder()
-            .setMinorType(MinorType.VARCHAR)
-            .setMode(DataMode.REQUIRED)
-            .build());
-
-      // Pass along the output schema, if any
-
-      builder.setOutputSchema(scan.getSchema());
-
-      // CSV maps blank columns to nulls (for nullable non-string columns),
-      // or to the default value (for non-nullable non-string columns.)
-
-      builder.setConversionProperty(AbstractConvertFromString.BLANK_ACTION_PROP,
-          AbstractConvertFromString.BLANK_AS_NULL);
-
-      return builder;
-    }
-  }
-
-  public TextFormatPlugin(String name, DrillbitContext context,
-      Configuration fsConf, StoragePluginConfig storageConfig) {
+  public TextFormatPlugin(String name, DrillbitContext context, Configuration fsConf, StoragePluginConfig storageConfig) {
      this(name, context, fsConf, storageConfig, new TextFormatConfig());
   }
 
@@ -369,13 +303,14 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
   protected FileScanBuilder frameworkBuilder(
       OptionManager options, EasySubScan scan) throws ExecutionSetupException {
     ColumnsScanBuilder builder = new ColumnsScanBuilder();
-    builder.setReaderFactory(new ColumnsReaderFactory(this));
+    TextParsingSettingsV3 settings =
+        new TextParsingSettingsV3(getConfig(), scan, options);
+    builder.setReaderFactory(new ColumnsReaderFactory(settings));
 
     // If this format has no headers, or wants to skip them,
     // then we must use the columns column to hold the data.
 
-    builder.requireColumnsArray(
-        ! getConfig().isHeaderExtractionEnabled());
+    builder.requireColumnsArray(settings.isUseRepeatedVarChar());
 
     // Text files handle nulls in an unusual way. Missing columns
     // are set to required Varchar and filled with blanks. Yes, this
@@ -388,7 +323,8 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
     // CSV maps blank columns to nulls (for nullable non-string columns),
     // or to the default value (for non-nullable non-string columns.)
 
-    builder.setConversionProperty(AbstractConvertFromString.BLANK_ACTION_PROP,
+    builder.typeConverterBuilder().setConversionProperty(
+        AbstractConvertFromString.BLANK_ACTION_PROP,
         AbstractConvertFromString.BLANK_AS_NULL);
 
     // The text readers use required Varchar columns to represent null columns.

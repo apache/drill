@@ -161,6 +161,4 @@ public class BaseCsvTest extends ClusterTest {
     resetV3();
     resetSchema();
   }
-
->>>>>>> ea212504f... DRILL-7279: Enable provided schema for text files without headers
 }

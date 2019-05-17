@@ -322,6 +322,9 @@ public abstract class AbstractArrayWriter implements ArrayWriter, WriterEvents {
   public boolean nullable() { return false; }
 
   @Override
+  public boolean isProjected() { return true; }
+
+  @Override
   public void setNull() {
     throw new IllegalStateException("Not nullable");
   }

@@ -127,6 +127,9 @@ public abstract class AbstractScalarWriterImpl extends AbstractScalarWriter impl
   public void saveRow() { }
 
   @Override
+  public boolean isProjected() { return true; }
+
+  @Override
   public void dump(HierarchicalFormatter format) {
     format
       .startObject(this)

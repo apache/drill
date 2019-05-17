@@ -20,6 +20,7 @@ package org.apache.drill.exec.physical.impl.scan.project;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -29,14 +30,15 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.impl.scan.ScanTestUtils;
 import org.apache.drill.exec.physical.impl.scan.project.AbstractUnresolvedColumn.UnresolvedColumn;
-import org.apache.drill.exec.physical.impl.scan.project.AbstractUnresolvedColumn.UnresolvedSchemaColumn;
 import org.apache.drill.exec.physical.impl.scan.project.AbstractUnresolvedColumn.UnresolvedWildcardColumn;
 import org.apache.drill.exec.physical.impl.scan.project.ScanLevelProjection.ScanProjectionType;
+import org.apache.drill.exec.physical.rowSet.ProjectionSet;
+import org.apache.drill.exec.physical.rowSet.ProjectionSet.ColumnReadProjection;
 import org.apache.drill.exec.physical.rowSet.impl.RowSetTestUtils;
-import org.apache.drill.exec.physical.rowSet.project.ImpliedTupleRequest;
+import org.apache.drill.exec.physical.rowSet.project.ProjectionType;
 import org.apache.drill.exec.physical.rowSet.project.RequestedTuple;
 import org.apache.drill.exec.physical.rowSet.project.RequestedTuple.RequestedColumn;
-import org.apache.drill.exec.record.metadata.ProjectionType;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.test.SubOperatorTest;
@@ -68,7 +70,7 @@ public class TestScanLevelProjection extends SubOperatorTest {
         ScanTestUtils.parsers());
 
     assertFalse(scanProj.projectAll());
-    assertFalse(scanProj.projectNone());
+    assertFalse(scanProj.isEmptyProjection());
 
     assertEquals(3, scanProj.requestedCols().size());
     assertEquals("a", scanProj.requestedCols().get(0).rootName());
@@ -91,11 +93,18 @@ public class TestScanLevelProjection extends SubOperatorTest {
     assertNotNull(outputProj.get("a"));
     assertTrue(outputProj.get("a").isSimple());
 
-    RequestedTuple readerProj = scanProj.readerProjection();
-    assertEquals(3, readerProj.projections().size());
-    assertNotNull(readerProj.get("a"));
-    assertEquals(ProjectionType.UNSPECIFIED, readerProj.projectionType("a"));
-    assertEquals(ProjectionType.UNPROJECTED, readerProj.projectionType("d"));
+    // Make up a reader schema and test the projection set.
+
+    TupleMetadata readerSchema = new SchemaBuilder()
+        .add("a", MinorType.INT)
+        .add("b", MinorType.INT)
+        .add("c", MinorType.INT)
+        .add("d", MinorType.INT)
+        .buildSchema();
+
+    ProjectionSet projSet = scanProj.projectionSet().build();
+    assertTrue(projSet.readProjection(readerSchema.metadata("a")).isProjected());
+    assertFalse(projSet.readProjection(readerSchema.metadata("d")).isProjected());
   }
 
   /**
@@ -106,12 +115,16 @@ public class TestScanLevelProjection extends SubOperatorTest {
 
   @Test
   public void testMap() {
+
+    // SELECT a.x, b.x, a.y, b.y, c
+    // We infer a and b are maps.
+
     final ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectList("a.x", "b.x", "a.y", "b.y", "c"),
         ScanTestUtils.parsers());
 
     assertFalse(scanProj.projectAll());
-    assertFalse(scanProj.projectNone());
+    assertFalse(scanProj.isEmptyProjection());
 
     assertEquals(3, scanProj.columns().size());
     assertEquals("a", scanProj.columns().get(0).name());
@@ -122,12 +135,12 @@ public class TestScanLevelProjection extends SubOperatorTest {
 
     assertTrue(scanProj.columns().get(0) instanceof UnresolvedColumn);
 
-    // Map structure
+    // Inferred map structure
 
     final RequestedColumn a = ((UnresolvedColumn) scanProj.columns().get(0)).element();
     assertTrue(a.isTuple());
-    assertEquals(ProjectionType.UNSPECIFIED, a.mapProjection().projectionType("x"));
-    assertEquals(ProjectionType.UNSPECIFIED, a.mapProjection().projectionType("y"));
+    assertEquals(ProjectionType.GENERAL, a.mapProjection().projectionType("x"));
+    assertEquals(ProjectionType.GENERAL, a.mapProjection().projectionType("y"));
     assertEquals(ProjectionType.UNPROJECTED,  a.mapProjection().projectionType("z"));
 
     final RequestedColumn c = ((UnresolvedColumn) scanProj.columns().get(2)).element();
@@ -140,12 +153,33 @@ public class TestScanLevelProjection extends SubOperatorTest {
     assertNotNull(outputProj.get("a"));
     assertTrue(outputProj.get("a").isTuple());
 
-    RequestedTuple readerProj = scanProj.readerProjection();
-    assertEquals(3, readerProj.projections().size());
-    assertNotNull(readerProj.get("a"));
-    assertEquals(ProjectionType.TUPLE, readerProj.projectionType("a"));
-    assertEquals(ProjectionType.UNSPECIFIED, readerProj.projectionType("c"));
-    assertEquals(ProjectionType.UNPROJECTED, readerProj.projectionType("d"));
+    // Make up a reader schema and test the projection set.
+
+    TupleMetadata readerSchema = new SchemaBuilder()
+        .addMap("a")
+          .add("x", MinorType.INT)
+          .add("y", MinorType.INT)
+          .resumeSchema()
+        .addMap("b")
+          .add("x", MinorType.INT)
+          .add("y", MinorType.INT)
+          .resumeSchema()
+        .add("c", MinorType.INT)
+        .add("d", MinorType.INT)
+        .buildSchema();
+
+    // Verify the projection set as if we were a reader. Note that the
+    // projection type is used here for testing; should not be used by
+    // an actual reader.
+
+    ProjectionSet projSet = scanProj.projectionSet().build();
+    ColumnReadProjection aProj = projSet.readProjection(readerSchema.metadata("a"));
+    assertTrue(aProj.isProjected());
+    assertEquals(ProjectionType.TUPLE, aProj.projectionType());
+    ColumnReadProjection cProj = projSet.readProjection(readerSchema.metadata("c"));
+    assertTrue(cProj.isProjected());
+    assertEquals(ProjectionType.GENERAL, cProj.projectionType());
+    assertFalse(projSet.readProjection(readerSchema.metadata("d")).isProjected());
   }
 
   /**
@@ -160,7 +194,7 @@ public class TestScanLevelProjection extends SubOperatorTest {
         ScanTestUtils.parsers());
 
     assertFalse(scanProj.projectAll());
-    assertFalse(scanProj.projectNone());
+    assertFalse(scanProj.isEmptyProjection());
 
     assertEquals(1, scanProj.columns().size());
     assertEquals("a", scanProj.columns().get(0).name());
@@ -185,11 +219,18 @@ public class TestScanLevelProjection extends SubOperatorTest {
     assertNotNull(outputProj.get("a"));
     assertTrue(outputProj.get("a").isArray());
 
-    RequestedTuple readerProj = scanProj.readerProjection();
-    assertEquals(1, readerProj.projections().size());
-    assertNotNull(readerProj.get("a"));
-    assertEquals(ProjectionType.ARRAY, readerProj.projectionType("a"));
-    assertEquals(ProjectionType.UNPROJECTED, readerProj.projectionType("c"));
+    // Make up a reader schema and test the projection set.
+
+    TupleMetadata readerSchema = new SchemaBuilder()
+        .addArray("a", MinorType.INT)
+        .add("c", MinorType.INT)
+        .buildSchema();
+
+    ProjectionSet projSet = scanProj.projectionSet().build();
+    ColumnReadProjection aProj = projSet.readProjection(readerSchema.metadata("a"));
+    assertTrue(aProj.isProjected());
+    assertEquals(ProjectionType.ARRAY, aProj.projectionType());
+    assertFalse(projSet.readProjection(readerSchema.metadata("c")).isProjected());
   }
 
   /**
@@ -204,7 +245,7 @@ public class TestScanLevelProjection extends SubOperatorTest {
         ScanTestUtils.parsers());
 
     assertTrue(scanProj.projectAll());
-    assertFalse(scanProj.projectNone());
+    assertFalse(scanProj.isEmptyProjection());
     assertEquals(1, scanProj.requestedCols().size());
     assertTrue(scanProj.requestedCols().get(0).isDynamicStar());
 
@@ -223,12 +264,19 @@ public class TestScanLevelProjection extends SubOperatorTest {
 
     RequestedTuple outputProj = scanProj.rootProjection();
     assertEquals(1, outputProj.projections().size());
-    assertNotNull(outputProj.get("**"));
-    assertTrue(outputProj.get("**").isWildcard());
+    assertNotNull(outputProj.get(SchemaPath.DYNAMIC_STAR));
+    assertTrue(outputProj.get(SchemaPath.DYNAMIC_STAR).isWildcard());
 
-    RequestedTuple readerProj = scanProj.readerProjection();
-    assertTrue(readerProj instanceof ImpliedTupleRequest);
-    assertEquals(ProjectionType.UNSPECIFIED, readerProj.projectionType("a"));
+    // Make up a reader schema and test the projection set.
+
+    TupleMetadata readerSchema = new SchemaBuilder()
+        .add("a", MinorType.INT)
+        .add("c", MinorType.INT)
+        .buildSchema();
+
+    ProjectionSet projSet = scanProj.projectionSet().build();
+    assertTrue(projSet.readProjection(readerSchema.metadata("a")).isProjected());
+    assertTrue(projSet.readProjection(readerSchema.metadata("c")).isProjected());
   }
 
   /**
@@ -243,7 +291,7 @@ public class TestScanLevelProjection extends SubOperatorTest {
         ScanTestUtils.parsers());
 
     assertFalse(scanProj.projectAll());
-    assertTrue(scanProj.projectNone());
+    assertTrue(scanProj.isEmptyProjection());
     assertEquals(0, scanProj.requestedCols().size());
 
     // Verify tuple projection
@@ -251,9 +299,14 @@ public class TestScanLevelProjection extends SubOperatorTest {
     RequestedTuple outputProj = scanProj.rootProjection();
     assertEquals(0, outputProj.projections().size());
 
-    RequestedTuple readerProj = scanProj.readerProjection();
-    assertTrue(readerProj instanceof ImpliedTupleRequest);
-    assertEquals(ProjectionType.UNPROJECTED, readerProj.projectionType("a"));
+    // Make up a reader schema and test the projection set.
+
+    TupleMetadata readerSchema = new SchemaBuilder()
+        .add("a", MinorType.INT)
+        .buildSchema();
+
+    ProjectionSet projSet = scanProj.projectionSet().build();
+    assertFalse(projSet.readProjection(readerSchema.metadata("a")).isProjected());
   }
 
   /**
@@ -269,7 +322,7 @@ public class TestScanLevelProjection extends SubOperatorTest {
           ScanTestUtils.parsers());
 
     assertTrue(scanProj.projectAll());
-    assertFalse(scanProj.projectNone());
+    assertFalse(scanProj.isEmptyProjection());
     assertEquals(2, scanProj.requestedCols().size());
     assertEquals(1, scanProj.columns().size());
 
@@ -277,14 +330,20 @@ public class TestScanLevelProjection extends SubOperatorTest {
 
     RequestedTuple outputProj = scanProj.rootProjection();
     assertEquals(2, outputProj.projections().size());
-    assertNotNull(outputProj.get("**"));
-    assertTrue(outputProj.get("**").isWildcard());
+    assertNotNull(outputProj.get(SchemaPath.DYNAMIC_STAR));
+    assertTrue(outputProj.get(SchemaPath.DYNAMIC_STAR).isWildcard());
     assertNotNull(outputProj.get("a"));
 
-    RequestedTuple readerProj = scanProj.readerProjection();
-    assertTrue(readerProj instanceof ImpliedTupleRequest);
-    assertEquals(ProjectionType.UNSPECIFIED, readerProj.projectionType("a"));
-    assertEquals(ProjectionType.UNSPECIFIED, readerProj.projectionType("c"));
+    // Make up a reader schema and test the projection set.
+
+    TupleMetadata readerSchema = new SchemaBuilder()
+        .add("a", MinorType.INT)
+        .add("c", MinorType.INT)
+        .buildSchema();
+
+    ProjectionSet projSet = scanProj.projectionSet().build();
+    assertTrue(projSet.readProjection(readerSchema.metadata("a")).isProjected());
+    assertTrue(projSet.readProjection(readerSchema.metadata("c")).isProjected());
   }
 
   /**
@@ -298,7 +357,7 @@ public class TestScanLevelProjection extends SubOperatorTest {
           ScanTestUtils.parsers());
 
     assertTrue(scanProj.projectAll());
-    assertFalse(scanProj.projectNone());
+    assertFalse(scanProj.isEmptyProjection());
     assertEquals(2, scanProj.requestedCols().size());
     assertEquals(1, scanProj.columns().size());
   }
@@ -355,15 +414,42 @@ public class TestScanLevelProjection extends SubOperatorTest {
     assertEquals(ScanProjectionType.SCHEMA_WILDCARD, scanProj.projectionType());
 
     assertEquals(2, scanProj.columns().size());
-    assertEquals("a", scanProj.columns().get(0).name());
-    assertTrue(scanProj.columns().get(0) instanceof UnresolvedSchemaColumn);
-    assertEquals("b", scanProj.columns().get(1).name());
-    assertTrue(scanProj.columns().get(1) instanceof UnresolvedSchemaColumn);
+    ColumnProjection aCol = scanProj.columns().get(0);
+    assertEquals("a", aCol.name());
+    assertTrue(aCol instanceof UnresolvedColumn);
+    assertSame(outputSchema.metadata("a"), ((UnresolvedColumn) aCol).metadata());
+    ColumnProjection bCol = scanProj.columns().get(1);
+    assertEquals("b", bCol.name());
+    assertTrue(bCol instanceof UnresolvedColumn);
+    assertSame(outputSchema.metadata("b"), ((UnresolvedColumn) bCol).metadata());
 
-    RequestedTuple readerProj = scanProj.readerProjection();
-    assertEquals(2, readerProj.projections().size());
-    assertEquals(ProjectionType.SCALAR, readerProj.projectionType("a"));
-    assertEquals(ProjectionType.SCALAR, readerProj.projectionType("b"));
+    ProjectionSet projSet = scanProj.projectionSet().build();
+    assertTrue(projSet.readProjection(outputSchema.metadata("a")).isProjected());
+    assertTrue(projSet.readProjection(outputSchema.metadata("b")).isProjected());
+  }
+
+  @Test
+  public void testOutputSchemaWildcardSpecialCols() {
+    TupleMetadata outputSchema = new SchemaBuilder()
+        .add("a", MinorType.INT)
+        .add("b", MinorType.BIGINT)
+        .add("c", MinorType.VARCHAR)
+        .buildSchema();
+
+    // Mark b as special; not expanded in wildcard.
+
+    outputSchema.metadata("b").setBooleanProperty(ColumnMetadata.EXCLUDE_FROM_WILDCARD, true);
+
+    final ScanLevelProjection scanProj = ScanLevelProjection.build(
+        RowSetTestUtils.projectAll(),
+        ScanTestUtils.parsers(),
+        outputSchema);
+
+    assertEquals(ScanProjectionType.SCHEMA_WILDCARD, scanProj.projectionType());
+
+    assertEquals(2, scanProj.columns().size());
+    assertEquals("a", scanProj.columns().get(0).name());
+    assertEquals("c", scanProj.columns().get(1).name());
   }
 
   /**
@@ -387,13 +473,21 @@ public class TestScanLevelProjection extends SubOperatorTest {
 
     assertEquals(2, scanProj.columns().size());
     assertEquals("a", scanProj.columns().get(0).name());
-    assertTrue(scanProj.columns().get(0) instanceof UnresolvedSchemaColumn);
+    assertTrue(scanProj.columns().get(0) instanceof UnresolvedColumn);
     assertEquals("b", scanProj.columns().get(1).name());
-    assertTrue(scanProj.columns().get(1) instanceof UnresolvedSchemaColumn);
+    assertTrue(scanProj.columns().get(1) instanceof UnresolvedColumn);
 
-    RequestedTuple readerProj = scanProj.readerProjection();
-    assertEquals(2, readerProj.projections().size());
-    assertEquals(ProjectionType.SCALAR, readerProj.projectionType("a"));
-    assertEquals(ProjectionType.SCALAR, readerProj.projectionType("b"));
+    // Make up a reader schema and test the projection set.
+
+    TupleMetadata readerSchema = new SchemaBuilder()
+        .add("a", MinorType.INT)
+        .add("b", MinorType.INT)
+        .add("c", MinorType.INT)
+        .buildSchema();
+
+    ProjectionSet projSet = scanProj.projectionSet().build();
+    assertTrue(projSet.readProjection(readerSchema.metadata("a")).isProjected());
+    assertTrue(projSet.readProjection(readerSchema.metadata("b")).isProjected());
+    assertFalse(projSet.readProjection(readerSchema.metadata("c")).isProjected());
   }
 }

@@ -24,33 +24,47 @@ import org.apache.drill.exec.record.metadata.ColumnMetadata;
  * Represents a projected column that has not yet been bound to a
  * table column, special column or a null column. Once bound, this
  * column projection is replaced with the detailed binding.
+ * <p>
+ * Occurs in a scan-level projection to identify columns needed in
+ * the output batch. Once we see reader data, we create a
+ * {@link ResolvedColumn} to replace this unresolved form. The
+ * resolved form identifies how to map data from its source (reader,
+ * null column builder, etc.) to the output batch. Thus the columns
+ * here are placeholders to be rewritten once more data is available.
  */
+
 public abstract class AbstractUnresolvedColumn implements ColumnProjection {
+
+  /**
+   * Represents an unresolved table column to be provided by the
+   * reader (or filled in with nulls.) May be associated with
+   * a provided schema column.
+   */
 
   public static class UnresolvedColumn extends AbstractUnresolvedColumn {
 
+    private final ColumnMetadata colDefn;
+
     public UnresolvedColumn(RequestedColumn inCol) {
-      super(inCol);
+      this(inCol, null);
     }
-  }
+
+    public UnresolvedColumn(RequestedColumn inCol, ColumnMetadata colDefn) {
+      super(inCol);
+      this.colDefn = colDefn;
+    }
+
+    public ColumnMetadata metadata() { return colDefn; }
+
+    @Override
+    public String name() { return colDefn == null ? super.name() : colDefn.name(); }
+ }
 
   public static class UnresolvedWildcardColumn extends AbstractUnresolvedColumn {
 
     public UnresolvedWildcardColumn(RequestedColumn inCol) {
       super(inCol);
     }
-  }
-
-  public static class UnresolvedSchemaColumn extends AbstractUnresolvedColumn {
-
-    private final ColumnMetadata colDefn;
-
-    public UnresolvedSchemaColumn(RequestedColumn inCol, ColumnMetadata colDefn) {
-      super(inCol);
-      this.colDefn = colDefn;
-    }
-
-    public ColumnMetadata metadata() { return colDefn; }
   }
 
   /**

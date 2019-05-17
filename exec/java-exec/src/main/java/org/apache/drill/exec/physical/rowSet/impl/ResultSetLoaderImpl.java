@@ -20,13 +20,12 @@ package org.apache.drill.exec.physical.rowSet.impl;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.physical.impl.scan.project.projSet.ProjectionSetFactory;
+import org.apache.drill.exec.physical.rowSet.ProjectionSet;
 import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
 import org.apache.drill.exec.physical.rowSet.ResultVectorCache;
 import org.apache.drill.exec.physical.rowSet.RowSetLoader;
 import org.apache.drill.exec.physical.rowSet.impl.TupleState.RowState;
-import org.apache.drill.exec.physical.rowSet.project.ImpliedTupleRequest;
-import org.apache.drill.exec.physical.rowSet.project.RequestedTuple;
-import org.apache.drill.exec.physical.rowSet.project.RequestedTupleImpl;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.ValueVector;
@@ -49,10 +48,9 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
     protected final int vectorSizeLimit;
     protected final int rowCountLimit;
     protected final ResultVectorCache vectorCache;
-    protected final RequestedTuple projectionSet;
+    protected final ProjectionSet projectionSet;
     protected final TupleMetadata schema;
     protected final long maxBatchSize;
-    protected final SchemaTransformer schemaTransformer;
 
     /**
      * Context for error messages.
@@ -62,11 +60,10 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
     public ResultSetOptions() {
       vectorSizeLimit = ValueVector.MAX_BUFFER_SIZE;
       rowCountLimit = DEFAULT_ROW_COUNT;
-      projectionSet = new ImpliedTupleRequest(true);
+      projectionSet = ProjectionSetFactory.projectAll();
       vectorCache = null;
       schema = null;
       maxBatchSize = -1;
-      schemaTransformer = null;
       errorContext = null;
     }
 
@@ -76,18 +73,10 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
       vectorCache = builder.vectorCache;
       schema = builder.schema;
       maxBatchSize = builder.maxBatchSize;
-      schemaTransformer = builder.schemaTransformer;
       errorContext = builder.errorContext;
-
-      // If projection, build the projection map.
-      // The caller might have already built the map. If so,
-      // use it.
-
-      if (builder.projectionSet != null) {
-        projectionSet = builder.projectionSet;
-      } else {
-        projectionSet = RequestedTupleImpl.parse(builder.projection);
-      }
+      projectionSet = builder.projectionSet == null ?
+          ProjectionSetFactory.projectAll() :
+          builder.projectionSet;
     }
 
     public void dump(HierarchicalFormatter format) {
@@ -284,18 +273,14 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
 
   protected int accumulatedBatchSize;
 
-  protected final RequestedTuple projectionSet;
+  protected final ProjectionSet projectionSet;
 
   public ResultSetLoaderImpl(BufferAllocator allocator, ResultSetOptions options) {
     this.allocator = allocator;
     this.options = options;
     targetRowCount = options.rowCountLimit;
     writerIndex = new WriterIndexImpl(this);
-    SchemaTransformer schemaTransformer = options.schemaTransformer;
-    if (schemaTransformer == null) {
-      schemaTransformer = new DefaultSchemaTransformer(null);
-    }
-    columnBuilder = new ColumnBuilder(schemaTransformer, options.errorContext);
+    columnBuilder = new ColumnBuilder();
 
     // Set the projections
 
@@ -362,6 +347,9 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
     }
     return activeSchemaVersion;
   }
+
+  @Override
+  public int activeSchemaVersion( ) { return activeSchemaVersion; }
 
   @Override
   public int schemaVersion() {

@@ -86,4 +86,13 @@ public class AbstractPropertied implements Propertied {
     String value = property(key);
     return value == null ? defaultValue : Boolean.parseBoolean(value);
   }
+
+  @Override
+  public void setBooleanProperty(String key, boolean value) {
+    if (value) {
+      setProperty(key, Boolean.toString(value));
+    } else {
+      setProperty(key, null);
+    }
+  }
 }

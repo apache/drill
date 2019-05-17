@@ -17,6 +17,11 @@
  */
 package org.apache.drill.exec.store.log;
 
+import static org.junit.Assert.assertEquals;
+
+import java.util.List;
+
+import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.BatchSchema;
@@ -31,15 +36,14 @@ import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.rowSet.RowSet;
-import org.apache.drill.test.rowSet.RowSetComparison;
+import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.List;
-
+// Log reader now hosted on the row set framework
+@Category(RowSetTests.class)
 public class TestLogReader extends ClusterTest {
 
   public static final String DATE_ONLY_PATTERN = "(\\d\\d\\d\\d)-(\\d\\d)-(\\d\\d) .*";
@@ -92,7 +96,6 @@ public class TestLogReader extends ClusterTest {
     logConfig.getSchema().add( new LogFormatField("module"));
     logConfig.getSchema().add( new LogFormatField("message"));
 
-
     //Set up additional configs to check the time/date formats
     LogFormatConfig logDateConfig = new LogFormatConfig();
     logDateConfig.setExtension("log2");
@@ -111,7 +114,6 @@ public class TestLogReader extends ClusterTest {
     mysqlLogConfig.setExtension("sqllog");
     mysqlLogConfig.setRegex("(\\d{6})\\s(\\d{2}:\\d{2}:\\d{2})\\s+(\\d+)\\s(\\w+)\\s+(.+)");
 
-
     // Define a temporary format plugin for the "cp" storage plugin.
     Drillbit drillbit = cluster.drillbit();
     final StoragePluginRegistry pluginRegistry = drillbit.getContext().getStorage();
@@ -122,7 +124,6 @@ public class TestLogReader extends ClusterTest {
     pluginConfig.getFormats().put("date-log",logDateConfig);
     pluginConfig.getFormats().put( "mysql-log", mysqlLogConfig);
     pluginRegistry.createOrUpdate("cp", pluginConfig, false);
-
   }
 
   @Test
@@ -142,19 +143,13 @@ public class TestLogReader extends ClusterTest {
         .addRow(2017, 12, 19)
         .build();
 
-    new RowSetComparison(expected).verifyAndClearAll(results);
+    RowSetUtilities.verify(expected, results);
   }
 
   @Test
   public void testWildcardLargeFile() throws RpcException {
     String sql = "SELECT * FROM cp.`regex/large.log1`";
     List<QueryDataBatch> batches = client.queryBuilder().sql(sql).results();
-
-    BatchSchema expectedSchema = new SchemaBuilder()
-        .addNullable("year", MinorType.INT)
-        .addNullable("month", MinorType.INT)
-        .addNullable("day", MinorType.INT)
-        .build();
 
     for (QueryDataBatch queryDataBatch : batches) {
       queryDataBatch.release();
@@ -179,7 +174,7 @@ public class TestLogReader extends ClusterTest {
 
 //    results.print();
 //    expected.print();
-    new RowSetComparison(expected).verifyAndClearAll(results);
+    RowSetUtilities.verify(expected, results);
   }
 
   @Test
@@ -201,7 +196,7 @@ public class TestLogReader extends ClusterTest {
 
 //    results.print();
 //    expected.print();
-    new RowSetComparison(expected).verifyAndClearAll(results);
+    RowSetUtilities.verify(expected, results);
   }
 
   @Test
@@ -218,9 +213,8 @@ public class TestLogReader extends ClusterTest {
         .addRow("2017-12-18 10:52:37,652 [main] INFO  o.a.drill.common.config.DrillConfig - Configuration and plugin file(s) identified in 115ms.")
         .addRow("2017-12-19 11:12:27,278 [main] ERROR o.apache.drill.exec.server.Drillbit - Failure during initial startup of Drillbit.")
         .build();
-    new RowSetComparison(expected).verifyAndClearAll(results);
+    RowSetUtilities.verify(expected, results);
   }
-
 
   @Test
   public void testDate() throws RpcException {
@@ -235,8 +229,7 @@ public class TestLogReader extends ClusterTest {
         .addRow("TIMESTAMP")
         .build();
 
-    new RowSetComparison(expected).verifyAndClearAll(results);
-
+    RowSetUtilities.verify(expected, results);
   }
 
   @Test
@@ -249,7 +242,21 @@ public class TestLogReader extends ClusterTest {
   @Test
   public void testFull() throws RpcException {
     String sql = "SELECT * FROM cp.`regex/simple.log1`";
-    client.queryBuilder().sql(sql).printCsv();
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+    BatchSchema expectedSchema = new SchemaBuilder()
+        .addNullable("year", MinorType.INT)
+        .addNullable("month", MinorType.INT)
+        .addNullable("day", MinorType.INT)
+        .build();
+
+    RowSet expected = client.rowSetBuilder(expectedSchema)
+        .addRow(2017, 12, 17)
+        .addRow(2017, 12, 18)
+        .addRow(2017, 12, 19)
+        .build();
+
+    RowSetUtilities.verify(expected, results);
   }
 
   //This section tests log queries without a defined schema
@@ -276,7 +283,7 @@ public class TestLogReader extends ClusterTest {
 
     //results.print();
     //expected.print();
-    new RowSetComparison(expected).verifyAndClearAll(results);
+    RowSetUtilities.verify(expected, results);
   }
 
   @Test
@@ -300,7 +307,7 @@ public class TestLogReader extends ClusterTest {
         .addRow("070917", "16:29:12", "21", "Query","select * from location where id = 1 LIMIT 1" )
         .build();
 
-    new RowSetComparison(expected).verifyAndClearAll(results);
+    RowSetUtilities.verify(expected, results);
   }
 
   @Test
@@ -321,7 +328,7 @@ public class TestLogReader extends ClusterTest {
         .addRow("070917", "select * from location where id = 1 LIMIT 1" )
         .build();
 
-    new RowSetComparison(expected).verifyAndClearAll(results);
+    RowSetUtilities.verify(expected, results);
   }
 
   @Test
@@ -341,13 +348,14 @@ public class TestLogReader extends ClusterTest {
         .addRow("070917 16:29:12      21 Query       select * from location where id = 1 LIMIT 1" )
         .build();
 
-    new RowSetComparison(expected).verifyAndClearAll(results);
+    RowSetUtilities.verify(expected, results);
   }
 
   @Test
   public void testUMNoSchema() throws RpcException {
     String sql = "SELECT _unmatched_rows FROM cp.`regex/mysql.sqllog`";
     RowSet results = client.queryBuilder().sql(sql).rowSet();
+    results.print();
 
     BatchSchema expectedSchema = new SchemaBuilder()
         .addNullable("_unmatched_rows", MinorType.VARCHAR)
@@ -357,7 +365,7 @@ public class TestLogReader extends ClusterTest {
         .addRow("dfadkfjaldkjafsdfjlksdjflksjdlkfjsldkfjslkjl")
         .build();
 
-    new RowSetComparison(expected).verifyAndClearAll(results);
+    RowSetUtilities.verify(expected, results);
   }
 
   @Test
@@ -379,7 +387,6 @@ public class TestLogReader extends ClusterTest {
         .addRow( null, "dfadkfjaldkjafsdfjlksdjflksjdlkfjsldkfjslkjl")
         .build();
 
-    new RowSetComparison(expected).verifyAndClearAll(results);
+    RowSetUtilities.verify(expected, results);
   }
-
 }

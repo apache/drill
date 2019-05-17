@@ -34,9 +34,9 @@ import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
 import org.apache.drill.exec.physical.rowSet.impl.RowSetTestUtils;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
+import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetUtilities;
@@ -403,7 +403,7 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
     // Verify that unprojected column is unprojected in the
     // table loader.
 
-    assertFalse(loader.writer().column("b").schema().isProjected());
+    assertFalse(loader.writer().column("b").isProjected());
 
     BatchSchema expectedSchema = new SchemaBuilder()
         .add("a", MinorType.INT)
@@ -463,8 +463,8 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
     // table loader.
 
     assertTrue(loader.isProjectionEmpty());
-    assertFalse(loader.writer().column("a").schema().isProjected());
-    assertFalse(loader.writer().column("b").schema().isProjected());
+    assertFalse(loader.writer().column("a").isProjected());
+    assertFalse(loader.writer().column("b").isProjected());
 
     // Verify empty batch.
 

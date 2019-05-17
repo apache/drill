@@ -22,6 +22,10 @@ import static org.apache.drill.test.rowSet.RowSetUtilities.strArray;
 
 import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.physical.impl.scan.project.projSet.ProjectionSetBuilder;
+import org.apache.drill.exec.physical.impl.scan.project.projSet.ProjectionSetFactory;
+import org.apache.drill.exec.physical.impl.scan.project.projSet.TypeConverter;
+import org.apache.drill.exec.physical.rowSet.ProjectionSet;
 import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
 import org.apache.drill.exec.physical.rowSet.RowSetLoader;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
@@ -66,11 +70,15 @@ public class TestResultSetLoaderTypeConversion extends SubOperatorTest {
     TestColumnConverter.setConverterProp(schema.metadata("n3"),
         TestColumnConverter.CONVERT_TO_INT);
 
-    SchemaTransformer schemaTransform = new DefaultSchemaTransformer(new ConverterFactory());
+   ProjectionSet projSet = new ProjectionSetBuilder()
+        .typeConverter(TypeConverter.builder()
+            .transform(ProjectionSetFactory.simpleTransform(new ConverterFactory()))
+            .build())
+        .build();
     ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
         .setSchema(schema)
         .setRowCountLimit(ValueVector.MAX_ROW_COUNT)
-        .setSchemaTransform(schemaTransform)
+        .setProjection(projSet)
         .build();
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
     rsLoader.startBatch();
@@ -117,10 +125,13 @@ public class TestResultSetLoaderTypeConversion extends SubOperatorTest {
         .addArray("n3", MinorType.VARCHAR)
         .buildSchema();
 
+    ProjectionSet projSet = new ProjectionSetBuilder()
+        .outputSchema(outputSchema)
+        .build();
     ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
         .setSchema(inputSchema)
         .setRowCountLimit(ValueVector.MAX_ROW_COUNT)
-        .setSchemaTransform(new SchemaTransformerImpl(outputSchema, null))
+        .setProjection(projSet)
         .build();
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
     rsLoader.startBatch();
@@ -167,10 +178,13 @@ public class TestResultSetLoaderTypeConversion extends SubOperatorTest {
         .add("n2", MinorType.VARCHAR)
         .buildSchema();
 
+    ProjectionSet projSet = new ProjectionSetBuilder()
+        .outputSchema(outputSchema)
+        .build();
     ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
         .setSchema(inputSchema)
         .setRowCountLimit(ValueVector.MAX_ROW_COUNT)
-        .setSchemaTransform(new SchemaTransformerImpl(outputSchema, null))
+        .setProjection(projSet)
         .build();
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
     rsLoader.startBatch();

@@ -93,4 +93,7 @@ public class DummyArrayWriter extends AbstractArrayWriter {
 
   @Override
   public void bindIndex(ColumnWriterIndex index) { }
+
+  @Override
+  public boolean isProjected() { return false; }
 }
