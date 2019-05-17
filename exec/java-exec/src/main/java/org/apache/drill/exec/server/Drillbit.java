@@ -240,7 +240,7 @@ public class Drillbit implements AutoCloseable {
     Runtime.getRuntime().addShutdownHook(shutdownHook);
     gracefulShutdownThread.start();
 
-    // Launch an archiving job that is # files and time bound
+    // Launch an archiving job that is limited by # files (so as to be timebound)
     PersistentStore<QueryProfile> queryProfileStore = drillbitContext.getProfileStoreContext().getCompletedProfileStore();
     if (queryProfileStore instanceof LocalPersistentStore
         && context.getConfig().getBoolean(ExecConstants.PROFILES_STORE_INDEX_ENABLED)) {

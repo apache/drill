@@ -29,7 +29,6 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.coord.ClusterCoordinator;
@@ -113,7 +112,6 @@ public class ProfileIndexer {
     this.sysFileSuffixFilter = new DrillSysFilePathFilter();
     String indexPathPattern = drillConfig.getString(ExecConstants.PROFILES_STORE_INDEX_FORMAT);
     this.indexedPathFormat = new SimpleDateFormat(indexPathPattern);
-    logger.info("Organizing any existing unindexed profiles");
   }
 
 
@@ -211,8 +209,7 @@ public class ProfileIndexer {
       QueryProfile profile = pStoreConfig.getSerializer().deserialize(IOUtils.toByteArray(is));
       return profile.getStart();
     } catch (IOException e) {
-      logger.info("Unable to deserialize {}\n---{}====", srcPath, e.getMessage()); //Illegal character ((CTRL-CHAR, code 0)): only regular white space (\r, \n, \t) is allowed between tokens       at [Source: [B@f76ca5b; line: 1, column: 65538]
-      logger.info("deserialization RCA==> \n {}", ExceptionUtils.getRootCause(e));
+      logger.error("Unable to deserialize {}\n{}", srcPath, e.getMessage());
     }
     return Long.MIN_VALUE;
   }

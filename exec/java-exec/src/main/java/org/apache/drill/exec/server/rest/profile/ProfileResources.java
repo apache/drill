@@ -37,7 +37,6 @@ import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import javax.xml.bind.annotation.XmlRootElement;
 
-
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
@@ -74,7 +73,6 @@ public class ProfileResources {
   public static class ProfileInfo implements Comparable<ProfileInfo> {
     private static final int QUERY_SNIPPET_MAX_CHAR = 150;
     private static final int QUERY_SNIPPET_MAX_LINES = 8;
-
     public static final SimpleDateFormat format = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
 
     private final String queryId;
@@ -379,7 +377,7 @@ public class ProfileResources {
       ProfileWrapper wrapper = new ProfileWrapper(getQueryProfile(queryId), work.getContext().getConfig());
       return ViewableWithPermissions.create(authEnabled.get(), "/rest/profile/profile.ftl", sc, wrapper);
     } catch (Exception | Error e) {
-      logger.error("Exception was thrown when fetching profile {} :\n{}\n====\n", queryId, e);
+      logger.error("Exception was thrown when fetching profile {} :\n{}", queryId, e);
       return ViewableWithPermissions.create(authEnabled.get(), "/rest/errorMessage.ftl", sc, e);
     }
   }

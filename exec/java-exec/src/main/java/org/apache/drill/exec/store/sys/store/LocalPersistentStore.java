@@ -67,10 +67,7 @@ import org.slf4j.LoggerFactory;
 
 public class LocalPersistentStore<V> extends BasePersistentStore<V> {
   private static final Logger logger = LoggerFactory.getLogger(LocalPersistentStore.class);
-
-  //Provides a threshold above which we report an event's time
-  //TODO Configurable threshold?
-  private static final long RESPONSE_TIME_THRESHOLD_MSEC = /*200*/0L;
+  //Sub directory where external profiles can be dumped for rendering
   private static final String DIORAMA = "diorama";
 
   private static final int DRILL_SYS_FILE_EXT_SIZE = DRILL_SYS_FILE_SUFFIX.length();
@@ -86,8 +83,6 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
   private final PathFilter sysFileSuffixFilter;
   private final Comparator<String> profilePathComparator;
   private final Function<String, Entry<String, V>> stringTransformer;
-  //TODO Do we need this?
-  private  Function<FileStatus, Entry<String, V>> fileStatusTransformer;
 
   private final int deserializedCacheCapacity;
   private final CacheLoader<String, V> cacheLoader;
@@ -103,7 +98,6 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
       throw new RuntimeException("Failure setting pstore configuration path.");
     }
 
-    //TODO: int cacheCapacity = drillConfig.getInt(ExecConstants.HTTP_MAX_PROFILES [or] PROFILES_STORE_CACHE_SIZE
     deserializedCacheCapacity = drillConfig.getInt(ExecConstants.PROFILES_STORE_CACHE_SIZE);
 
     indexPathPattern = drillConfig.getString(ExecConstants.PROFILES_STORE_INDEX_FORMAT);
@@ -137,23 +131,11 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
       }
     };
 
-    /*// Transformer function to extract profile based on FileStatus
-    this.fileStatusTransformer = new Function<FileStatus, Entry<String, V>>() {
-      @Nullable
-      @Override
-      public Entry<String, V> apply(FileStatus fStatus) {
-        Path fPath = fStatus.getPath();
-        String sanSuffixName = fPath.getName().substring(0, fPath.getName().length() - DRILL_SYS_FILE_EXT_SIZE);
-        return new ImmutableEntry<>(sanSuffixName, get(fStatus));
-      }
-    };*/
-
     //Defining Cache loader for handling missing entries
     this.cacheLoader = new CacheLoader<String, V>() {
       @Override
       public V load(String srcPathAsStr) {
         //Cache miss to force loading from FS
-        //logger.info("cacheMiss::fetchFromFS:: {}", srcPathAsStr);
         return deserializeFromFileSystem(srcPathAsStr);
       }
     };
@@ -162,10 +144,7 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
     this.deserializedVCache = CacheBuilder.newBuilder()
         .initialCapacity(Math.max(deserializedCacheCapacity/5, 20)) //startingCapacity: 20% or 20
         .maximumSize(deserializedCacheCapacity)
-        .recordStats() //TODO Should we get rid of this since we arent using it?
         .build(cacheLoader);
-
-
   }
 
   public Path getBasePath() {
@@ -205,77 +184,59 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
   }
 
   @Override
-    public Iterator<Map.Entry<String, V>> getRange/*Neo*/(int skip, int take) {
-      try {
-        List<String> files = new LinkedList<>();
-        // Sort and explore Directory stack using DepthFirstSearch
-        LinkedList<FileStatus> profileDirStack = new LinkedList<FileStatus>(DrillFileSystemUtil.listDirectoriesSafe(fs, basePath, false));
-        profileDirStack.sort(Comparator.naturalOrder());
-        logger.info("dirSize:: {} ", profileDirStack.size());
+  public Iterator<Map.Entry<String, V>> getRange(int skip, int take) {
+    try {
+      List<String> files = new LinkedList<>();
+      // Sort and explore Directory stack using DepthFirstSearch
+      LinkedList<FileStatus> profileDirStack = new LinkedList<FileStatus>(DrillFileSystemUtil.listDirectoriesSafe(fs, basePath, false));
+      profileDirStack.sort(Comparator.naturalOrder());
 
-        int collectedProfileCount = 0;
-        while (!profileDirStack.isEmpty()) {
-          // Explore dir from top of stack
-          FileStatus latestDir = profileDirStack.removeLast();
+      int collectedProfileCount = 0;
+      while (!profileDirStack.isEmpty()) {
+        // Explore dir from top of stack
+        FileStatus latestDir = profileDirStack.removeLast();
 
-          // Read all profiles in last dir
-          List<FileStatus> profileStatus = DrillFileSystemUtil.listFiles(fs, latestDir.getPath(), false, sysFileSuffixFilter);
-          if (!profileStatus.isEmpty()) {
-            List<String> additions = new LinkedList<>();
-            for (FileStatus stat : profileStatus) {
-              String filePathStr = stat.getPath().toUri().getPath();
-              additions.add(filePathStr.substring(0, filePathStr.length() - DRILL_SYS_FILE_EXT_SIZE));
-            }
-            //Sort additions & append (saves time in resorting entire list)
-            additions.sort(profilePathComparator);
-            files.addAll(additions);
-
-            //[sodBug]
-            if (!files.isEmpty()) {
-              logger.info("First is {}", files.get(0));
-            }
-
-            int _pCount = profileStatus.size();
-            if (_pCount > 0) {
-              collectedProfileCount += _pCount;
-              logger.info("# profiles added = {} [Total: {} (act) / {} (est)] ", _pCount, files.size(), collectedProfileCount);
-            }
-            //[eodBug]
+        // Read all profiles in last dir
+        List<FileStatus> profileStatus = DrillFileSystemUtil.listFiles(fs, latestDir.getPath(), false, sysFileSuffixFilter);
+        if (!profileStatus.isEmpty()) {
+          List<String> additions = new LinkedList<>();
+          for (FileStatus stat : profileStatus) {
+            String filePathStr = stat.getPath().toUri().getPath();
+            additions.add(filePathStr.substring(0, filePathStr.length() - DRILL_SYS_FILE_EXT_SIZE));
           }
-
-          // Explore subdirectories
-          List<FileStatus> childSubdirStack = DrillFileSystemUtil.listDirectoriesSafe(fs, latestDir.getPath(), false);
-          // Sorting list before addition to stack
-          childSubdirStack.sort(Comparator.naturalOrder());
-          if (!childSubdirStack.isEmpty()) {
-            profileDirStack.addAll(childSubdirStack);
-          } else {
-            logger.info("foundLeaf:: {}", latestDir.getPath().toUri());
-          }
-
-          // Terminate exploration if required count has been met
-          if ( collectedProfileCount >= (skip + take) ) {
-            profileDirStack.clear();
-          }
+          //Sort additions & append (saves time in resorting entire list)
+          additions.sort(profilePathComparator);
+          files.addAll(additions);
         }
 
-        //Sorting not required since preSorted //dBug
-        logger.info("Post Scan First is {}", files.get(0));
+        // Explore subdirectories
+        List<FileStatus> childSubdirStack = DrillFileSystemUtil.listDirectoriesSafe(fs, latestDir.getPath(), false);
+        // Sorting list before addition to stack
+        childSubdirStack.sort(Comparator.naturalOrder());
+        if (!childSubdirStack.isEmpty()) {
+          profileDirStack.addAll(childSubdirStack);
+        } else {
+          //Found Leaf dir
+        }
 
-        Iterator<Entry<String, V>> rangeIterator = Iterables.transform(Iterables.limit(Iterables.skip(files, skip), take), this.stringTransformer).iterator();
-        logger.info("CacheSTATS::{}:: {}", (take+skip), this.deserializedVCache.stats().toString());
-        return rangeIterator;
-      } catch (IOException e) {
-        throw new RuntimeException(e);
+        // Terminate exploration if required count has been met
+        if ( collectedProfileCount >= (skip + take) ) {
+          profileDirStack.clear();
+        }
       }
+
+      //Sorting not required since preSorted
+      Iterator<Entry<String, V>> rangeIterator = Iterables.transform(Iterables.limit(Iterables.skip(files, skip), take), this.stringTransformer).iterator();
+      return rangeIterator;
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
+  }
 
   private Path makePath(String name) {
     Preconditions.checkArgument(
-        //!name.contains("/") &&
         !name.contains(":") &&
         !name.contains(".."));
-//    return new Path(basePath, name + DRILL_SYS_FILE_SUFFIX);
     return new Path(name + DRILL_SYS_FILE_SUFFIX);
   }
 
@@ -302,7 +263,6 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
   public V get(String key) {
     Path actualPath = makePath(key);
     try {
-      //logger.info("key2make::{}", key);
       if (!fs.exists(actualPath)) {
         //Generate paths within upper and lower bounds to test
         List<String> possibleDirs = getPossiblePaths(key.substring(key.lastIndexOf('/') + 1));
@@ -315,7 +275,6 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
-//    logger.info("DeSerializing {}", actualPath.toUri().getPath());
     return deserializedVCache.getUnchecked(actualPath.toString());
   }
 
@@ -369,10 +328,8 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
   // Gets deserialized by exact path (Used for listing)
   private V getViaAbsolutePath(String key) {
     try {
-//      logger.info("key2make::{}", key);
       Path path = makePath(key);
       if (!fs.exists(path)) {
-//        logger.info("gotNullPath for {} ", key);
         return null;
       }
     } catch (IOException e) {
@@ -398,90 +355,79 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
   }
 
   // Infers the list of possible directories where the profile is located (Used for blind lookup of key)
-    private List<String> getPossiblePaths(String queryIdString) {
-      //Reqd::
-      QueryId queryId = QueryIdHelper.getQueryIdFromString(queryIdString);
-      long lowerBoundTime = (Integer.MAX_VALUE - ((queryId.getPart1() + Integer.MAX_VALUE) >> 32)) * 1000; // +/- 1000 for border cases
-      long upperBoundTime = (Integer.MAX_VALUE - ((queryId.getPart1() + Integer.MIN_VALUE) >> 32)) * 1000; // +/- 1000 for border cases
-      //[sodBug]
-      Date lowerBoundDate = new Date(lowerBoundTime);
-      String lowerBoundPath = indexedPathFormat.format(lowerBoundDate);
-      logger.info("Inferred LowerBound Time is {} . Look from {}", lowerBoundDate, lowerBoundPath);
-      Date upperBoundDate = new Date(upperBoundTime);
-      logger.info("Inferred UpperBound Time is {} . Look until {}", upperBoundDate, indexedPathFormat.format(upperBoundDate));
-      //[eodBug]
-
-      if (incrementType == null) {
-        return new ArrayList<>(0); //Empty
-      }
-
-      Date currDate = lowerBoundDate;
-      logger.info("currDate.after(upperBoundDate) : {}", currDate.after(upperBoundDate));
-      int increment = 0;
-
-      Set<String> possibleSrcDirSet = new TreeSet<>();
-      do {
-        //Add tokenized parents as well
-        String[] possibleDirTokens = indexedPathFormat.format(currDate).split("/");
-        String possibleDir = "";
-        for (String token : possibleDirTokens) {
-          if (possibleDir.isEmpty()) {
-            possibleDir = token;
-          } else {
-            possibleDir = possibleDir.concat("/").concat(token);
-          }
-          // Adding
-          possibleSrcDirSet.add(possibleDir);
-          //logger.info("Added {}", possibleDir);
-        }
-
-        // Incrementing
-        switch (incrementType) {
-        case Minute:
-          currDate = DateUtils.addMinutes(lowerBoundDate, ++increment);
-          break;
-
-        case Hour:
-          currDate = DateUtils.addHours(lowerBoundDate, ++increment);
-          break;
-
-        case Day:
-          currDate = DateUtils.addDays(lowerBoundDate, ++increment);
-          break;
-
-        case Month:
-          currDate = DateUtils.addMonths(lowerBoundDate, ++increment);
-          break;
-
-        case Year:
-          currDate = DateUtils.addYears(lowerBoundDate, ++increment);
-          break;
-
-        default:
-          break;
-        }
-      } while (!currDate.after(upperBoundDate));
-
-      List<String> sortedPossibleDirs = new ArrayList<String>();
-      sortedPossibleDirs.addAll(possibleSrcDirSet);
-      sortedPossibleDirs.sort(Comparator.reverseOrder());
-
-      //TODO [sodBug]
-      for (String possibility : sortedPossibleDirs) {
-        logger.info("Possibility :: {}", possibility);
-      }
-      //[eodBug]
-
-      return sortedPossibleDirs;
-      /*
-      // create a new queryid where the first four bytes are a growing time (each new value comes earlier in sequence).  Last 12 bytes are random.
-      final long time = (int) (System.currentTimeMillis()/1000);
-      final long p1 = ((Integer.MAX_VALUE - time) << 32) + r.nextInt();
-       */
+  // Ref: https://github.com/apache/drill/blob/master/exec/java-exec/src/main/java/org/apache/drill/exec/work/user/UserWorker.java#L67
+  private List<String> getPossiblePaths(String queryIdString) {
+    QueryId queryId = QueryIdHelper.getQueryIdFromString(queryIdString);
+    long lowerBoundTime = (Integer.MAX_VALUE - ((queryId.getPart1() + Integer.MAX_VALUE) >> 32)) * 1000; // +/- 1000 for border cases
+    long upperBoundTime = (Integer.MAX_VALUE - ((queryId.getPart1() + Integer.MIN_VALUE) >> 32)) * 1000; // +/- 1000 for border cases
+    Date lowerBoundDate = new Date(lowerBoundTime);
+    Date upperBoundDate = new Date(upperBoundTime);
+    if (incrementType == null) {
+      return new ArrayList<>(0); //Empty
     }
 
-  //TODO | FIXME: Guava to Handle RuntimeException by
-  //Deserialize path's contents (leveraged by Guava Cache)
+    // Iterate through possible matches
+    Date currDate = lowerBoundDate;
+    Set<String> possibleSrcDirSet = new TreeSet<>();
+    int increment = 0;
+    do {
+      //Add tokenized parents as well
+      String[] possibleDirTokens = indexedPathFormat.format(currDate).split("/");
+      String possibleDir = "";
+      for (String token : possibleDirTokens) {
+        if (possibleDir.isEmpty()) {
+          possibleDir = token;
+        } else {
+          possibleDir = possibleDir.concat("/").concat(token);
+        }
+        // Adding
+        possibleSrcDirSet.add(possibleDir);
+      }
+
+      // Incrementing
+      switch (incrementType) {
+      case Minute:
+        currDate = DateUtils.addMinutes(lowerBoundDate, ++increment);
+        break;
+
+      case Hour:
+        currDate = DateUtils.addHours(lowerBoundDate, ++increment);
+        break;
+
+      case Day:
+        currDate = DateUtils.addDays(lowerBoundDate, ++increment);
+        break;
+
+      case Month:
+        currDate = DateUtils.addMonths(lowerBoundDate, ++increment);
+        break;
+
+      case Year:
+        currDate = DateUtils.addYears(lowerBoundDate, ++increment);
+        break;
+
+      default:
+        break;
+      }
+    } while (!currDate.after(upperBoundDate));
+
+    List<String> sortedPossibleDirs = new ArrayList<String>();
+    sortedPossibleDirs.addAll(possibleSrcDirSet);
+    sortedPossibleDirs.sort(Comparator.reverseOrder());
+
+    // For Debugging only
+    if (logger.isDebugEnabled()) {
+      logger.debug("Inferred LowerBound Time is {} . Look from {}", lowerBoundDate, indexedPathFormat.format(lowerBoundDate));
+      logger.debug("Inferred UpperBound Time is {} . Look until {}", upperBoundDate, indexedPathFormat.format(upperBoundDate));
+      for (String possibility : sortedPossibleDirs) {
+        logger.debug("Possible dir :: {}", possibility);
+      }
+    }
+
+    return sortedPossibleDirs;
+  }
+
+  // Deserialize path's contents (leveraged by Guava Cache)
   private V deserializeFromFileSystem(String srcPath) {
     final Path path = new Path(srcPath);
     try (InputStream is = fs.open(path)) {
@@ -491,7 +437,7 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
     }
   }
 
-  //Enumerator
+  //Enumerator used for date increment during path discovery
   private enum IncrementType {
     Minute, Hour, Day, Month, Year
   }
