@@ -18,10 +18,12 @@
 package org.apache.drill.test.rowSet.test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
@@ -33,7 +35,9 @@ import org.apache.drill.exec.vector.accessor.writer.ColumnWriterFactory;
 import org.apache.drill.exec.vector.accessor.writer.MapWriter;
 import org.apache.drill.test.SubOperatorTest;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category(RowSetTests.class)
 public class TestDummyWriter extends SubOperatorTest {
 
   /**
@@ -130,15 +134,9 @@ public class TestDummyWriter extends SubOperatorTest {
         .buildSchema();
     List<AbstractObjectWriter> writers = new ArrayList<>();
 
-    // Mark schema as non-projected
-
-    schema.metadata("m1").setProjected(false);
-    schema.metadata("m2").setProjected(false);
-
     // Create the writers
 
     {
-      schema.metadata("m1").setProjected(false);
       TupleMetadata mapSchema = schema.metadata("m1").mapSchema();
       List<AbstractObjectWriter> members = new ArrayList<>();
       members.add(ColumnWriterFactory.buildColumnWriter(mapSchema.metadata("a"), null, null));
@@ -147,7 +145,6 @@ public class TestDummyWriter extends SubOperatorTest {
     }
 
     {
-      schema.metadata("m2").setProjected(false);
       TupleMetadata mapSchema = schema.metadata("m2").mapSchema();
       List<AbstractObjectWriter> members = new ArrayList<>();
       members.add(ColumnWriterFactory.buildColumnWriter(mapSchema.metadata("c"), null, null));
@@ -160,6 +157,15 @@ public class TestDummyWriter extends SubOperatorTest {
 
     rootWriter.startWrite();
     rootWriter.startRow();
+
+    // Nothing is projected
+
+    assertFalse(rootWriter.tuple("m1").isProjected());
+    assertFalse(rootWriter.tuple("m1").scalar("a").isProjected());
+    assertFalse(rootWriter.tuple("m1").array("b").isProjected());
+    assertFalse(rootWriter.array("m2").isProjected());
+    assertFalse(rootWriter.array("m2").tuple().isProjected());
+    assertFalse(rootWriter.array("m2").tuple().scalar("c").isProjected());
 
     // Dummy columns seem real.
 

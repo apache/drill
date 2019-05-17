@@ -115,4 +115,7 @@ public class DummyScalarWriter extends AbstractScalarWriterImpl {
 
   @Override
   public void setDefaultValue(Object value) { }
+
+  @Override
+  public boolean isProjected() { return false; }
 }

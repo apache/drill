@@ -17,11 +17,11 @@
  */
 package org.apache.drill.exec.record.metadata;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -30,10 +30,11 @@ import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.metadata.schema.parser.SchemaExprParser;
 import org.joda.time.format.DateTimeFormatter;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.stream.Collectors;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 /**
  * Abstract definition of column metadata. Allows applications to create
@@ -201,21 +202,6 @@ public abstract class AbstractColumnMetadata extends AbstractPropertied implemen
       // Cardinality always 1 for optional, repeated modes
       return 1;
     }
-  }
-
-  @Override
-  public void setProjected(boolean projected) {
-    if (projected) {
-      // Projected is the default
-      setProperty(PROJECTED_PROP, null);
-    } else {
-      PropertyAccessor.set(this, PROJECTED_PROP, projected);
-    }
-  }
-
-  @Override
-  public boolean isProjected() {
-    return PropertyAccessor.getBoolean(this, PROJECTED_PROP, true);
   }
 
   @Override

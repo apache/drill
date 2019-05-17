@@ -22,9 +22,9 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.physical.rowSet.ProjectionSet;
 import org.apache.drill.exec.physical.rowSet.ResultVectorCache;
 import org.apache.drill.exec.physical.rowSet.impl.ColumnState.BaseContainerColumnState;
-import org.apache.drill.exec.physical.rowSet.project.RequestedTuple;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.VectorContainer;
@@ -316,7 +316,7 @@ public abstract class TupleState extends ContainerState
 
     public MapState(LoaderInternals events,
         ResultVectorCache vectorCache,
-        RequestedTuple projectionSet) {
+        ProjectionSet projectionSet) {
       super(events, vectorCache, projectionSet);
     }
 
@@ -388,7 +388,7 @@ public abstract class TupleState extends ContainerState
 
     public SingleMapState(LoaderInternals events,
         ResultVectorCache vectorCache,
-        RequestedTuple projectionSet) {
+        ProjectionSet projectionSet) {
       super(events, vectorCache, projectionSet);
     }
 
@@ -408,7 +408,7 @@ public abstract class TupleState extends ContainerState
 
     public MapArrayState(LoaderInternals events,
         ResultVectorCache vectorCache,
-        RequestedTuple projectionSet) {
+        ProjectionSet projectionSet) {
       super(events, vectorCache, projectionSet);
     }
 
@@ -459,7 +459,7 @@ public abstract class TupleState extends ContainerState
 
   protected TupleState(LoaderInternals events,
       ResultVectorCache vectorCache,
-      RequestedTuple projectionSet) {
+      ProjectionSet projectionSet) {
     super(events, vectorCache, projectionSet);
   }
 
@@ -533,7 +533,7 @@ public abstract class TupleState extends ContainerState
 
       // Ignore unprojected columns
 
-      if (! colState.schema().isProjected()) {
+      if (! colState.writer().isProjected()) {
         continue;
       }
 

@@ -59,6 +59,11 @@ public abstract class AbstractWriteConverter extends AbstractScalarWriter {
   }
 
   @Override
+  public boolean isProjected() {
+    return baseWriter.isProjected();
+  }
+
+  @Override
   public boolean nullable() {
     return baseWriter.nullable();
   }

@@ -52,17 +52,26 @@ public interface ColumnMetadata extends Propertied {
   String FORMAT_PROP = DRILL_PROP_PREFIX + "format";
 
   /**
-   * Indicates if the column is projected. Used only for internal
-   * reader-provided schemas.
-   */
-  String PROJECTED_PROP = DRILL_PROP_PREFIX + "projected";
-
-  /**
    * Indicates how to handle blanks. Must be one of the valid values defined
    * in AbstractConvertFromString. Normally set on the converter by the plugin
    * rather than by the user in the schema.
    */
   String BLANK_AS_PROP = DRILL_PROP_PREFIX + "blank-as";
+
+  /**
+   * Indicates whether to project the column in a wildcard (*) query.
+   * Special columns may be excluded from projection. Certain "special"
+   * columns may be available only when explicitly requested. For example,
+   * the log reader has a "_raw" column which includes the entire input
+   * line before parsing. This column can be requested explicitly:<br>
+   * <tt>SELECT foo, bar, _raw FROM ...</tt><br>
+   * but the column will <i>not</i> be included when using the wildcard:<br>
+   * <tt>SELECT * FROM ...</tt>
+   * <p>
+   * Marking a column (either in the provided schema or the reader schema)
+   * will prevent that column from appearing in a wildcard expansion.
+   */
+  String EXCLUDE_FROM_WILDCARD = DRILL_PROP_PREFIX + "special";
 
   /**
    * Rough characterization of Drill types into metadata categories.
@@ -267,15 +276,6 @@ public interface ColumnMetadata extends Propertied {
    */
 
   ColumnMetadata cloneEmpty();
-
-  /**
-   * Reports whether, in this context, the column is projected outside
-   * of the context. (That is, whether the column is backed by an actual
-   * value vector.)
-   */
-
-  boolean isProjected();
-  void setProjected(boolean projected);
 
   int precision();
   int scale();

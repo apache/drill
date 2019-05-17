@@ -79,6 +79,9 @@ public abstract class AbstractObjectWriter implements ObjectWriter {
   @Override
   public void setObject(Object value) { writer().setObject(value); }
 
+  @Override
+  public boolean isProjected() { return writer().isProjected(); }
+
   public abstract void dump(HierarchicalFormatter format);
 
   protected static ScalarWriter convertWriter(

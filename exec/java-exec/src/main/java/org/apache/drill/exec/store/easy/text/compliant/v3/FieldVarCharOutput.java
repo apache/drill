@@ -45,7 +45,7 @@ class FieldVarCharOutput extends BaseFieldOutput {
     final TupleMetadata schema = writer.tupleSchema();
     final boolean projectionMask[] = new boolean[schema.size()];
     for (int i = 0; i < schema.size(); i++) {
-      projectionMask[i] = schema.metadata(i).isProjected();
+      projectionMask[i] = writer.column(i).isProjected();
     }
     return projectionMask;
   }

@@ -20,6 +20,7 @@ package org.apache.drill.exec.physical.impl.scan.project;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.exec.physical.impl.scan.project.NullColumnBuilder.NullBuilderBuilder;
 import org.apache.drill.exec.physical.impl.scan.project.ResolvedTuple.ResolvedRow;
+import org.apache.drill.exec.physical.impl.scan.project.projSet.ProjectionSetBuilder;
 import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
 import org.apache.drill.exec.physical.rowSet.impl.OptionBuilder;
 import org.apache.drill.exec.physical.rowSet.impl.ResultSetLoaderImpl;
@@ -72,7 +73,6 @@ public class ReaderSchemaOrchestrator implements VectorSource {
     options.setRowCountLimit(Math.min(readerBatchSize, scanOrchestrator.options.scanBatchRecordLimit));
     options.setVectorCache(scanOrchestrator.vectorCache);
     options.setBatchSizeLimit(scanOrchestrator.options.scanBatchByteLimit);
-    options.setSchemaTransform(scanOrchestrator.options.schemaTransformer);
     options.setContext(errorContext);
 
     // Set up a selection list if available and is a subset of
@@ -82,9 +82,9 @@ public class ReaderSchemaOrchestrator implements VectorSource {
     // the odd case where the reader claims a fixed schema, but
     // adds a column later.
 
-    if (! scanOrchestrator.scanProj.projectAll()) {
-      options.setProjectionSet(scanOrchestrator.scanProj.readerProjection());
-    }
+    ProjectionSetBuilder projBuilder = scanOrchestrator.scanProj.projectionSet();
+    projBuilder.typeConverter(scanOrchestrator.options.typeConverter);
+    options.setProjection(projBuilder.build());
     options.setSchema(readerSchema);
 
     // Create the table loader
@@ -208,13 +208,11 @@ public class ReaderSchemaOrchestrator implements VectorSource {
   }
 
   private ResolvedRow newRootTuple() {
-    NullBuilderBuilder nullBuilder = new NullBuilderBuilder()
+    return new ResolvedRow(new NullBuilderBuilder()
         .setNullType(scanOrchestrator.options.nullType)
-        .allowRequiredNullColumns(scanOrchestrator.options.allowRequiredNullColumns);
-    if (scanOrchestrator.options.schemaTransformer != null) {
-      nullBuilder.setOutputSchema(scanOrchestrator.options.schemaTransformer.outputSchema());
-    }
-    return new ResolvedRow(nullBuilder.build());
+        .allowRequiredNullColumns(scanOrchestrator.options.allowRequiredNullColumns)
+        .setOutputSchema(scanOrchestrator.options.outputSchema())
+        .build());
   }
 
   /**

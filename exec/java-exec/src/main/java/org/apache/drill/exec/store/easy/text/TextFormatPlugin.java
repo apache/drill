@@ -251,12 +251,12 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
 
       // Pass along the output schema, if any
 
-      builder.setOutputSchema(scan.getSchema());
+      builder.typeConverterBuilder().providedSchema(scan.getSchema());
 
       // CSV maps blank columns to nulls (for nullable non-string columns),
       // or to the default value (for non-nullable non-string columns.)
 
-      builder.setConversionProperty(AbstractConvertFromString.BLANK_ACTION_PROP,
+      builder.typeConverterBuilder().setConversionProperty(AbstractConvertFromString.BLANK_ACTION_PROP,
           AbstractConvertFromString.BLANK_AS_NULL);
 
       return builder;

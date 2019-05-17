@@ -78,4 +78,16 @@ public class ResolvedNullColumn extends ResolvedColumn implements NullColumnSpec
 
   @Override
   public String defaultValue() { return defaultValue; }
+
+  @Override
+  public String toString() {
+    StringBuilder buf = new StringBuilder();
+    buf
+      .append("[")
+      .append(getClass().getSimpleName())
+      .append(" name=")
+      .append(name())
+      .append("]");
+    return buf.toString();
+  }
 }

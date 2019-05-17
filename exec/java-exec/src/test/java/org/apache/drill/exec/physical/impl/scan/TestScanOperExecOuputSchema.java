@@ -21,18 +21,19 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.apache.drill.categories.RowSetTests;
-import org.apache.drill.common.types.Types;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.physical.impl.scan.ScanTestUtils.ScanFixture;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
 import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
 import org.apache.drill.exec.physical.rowSet.RowSetLoader;
 import org.apache.drill.exec.physical.rowSet.impl.RowSetTestUtils;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
+import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -108,10 +109,9 @@ public class TestScanOperExecOuputSchema extends BaseScanOperatorExecTest {
     outputSchema.metadata("e").setDefaultValue("30");
 
     BaseScanFixtureBuilder builder = new BaseScanFixtureBuilder();
-    // Project (schema + reader), (reader only), (schema only), (neither)
     builder.setProjection(new String[]{"a", "b", "d", "f"});
     builder.addReader(new MockSimpleReader());
-    builder.builder.setOutputSchema(outputSchema);
+    builder.builder.typeConverterBuilder().providedSchema(outputSchema);
     builder.builder.setNullType(Types.optional(MinorType.VARCHAR));
     ScanFixture scanFixture = builder.build();
     ScanOperatorExec scan = scanFixture.scanOp;
@@ -148,10 +148,15 @@ public class TestScanOperExecOuputSchema extends BaseScanOperatorExecTest {
     scanFixture.close();
   }
 
+  /**
+   * Test non-strict specified schema, with a wildcard, with extra
+   * reader columns. Reader columns are included in output.
+   */
+
   @Test
   public void testOutputSchemaWithWildcard() {
     TupleMetadata outputSchema = new SchemaBuilder()
-        .add("a", MinorType.INT) // Projected, in reader
+        .add("a", MinorType.INT)    // Projected, in reader
         .add("d", MinorType.BIGINT) // Projected, not in reader
         .add("e", MinorType.BIGINT) // Not projected, not in reader
         .buildSchema();
@@ -159,10 +164,9 @@ public class TestScanOperExecOuputSchema extends BaseScanOperatorExecTest {
     outputSchema.metadata("e").setDefaultValue("30");
 
     BaseScanFixtureBuilder builder = new BaseScanFixtureBuilder();
-    // Project (schema + reader), (reader only), (schema only), (neither)
     builder.setProjection(RowSetTestUtils.projectAll());
     builder.addReader(new MockSimpleReader());
-    builder.builder.setOutputSchema(outputSchema);
+    builder.builder.typeConverterBuilder().providedSchema(outputSchema);
     builder.builder.setNullType(Types.optional(MinorType.VARCHAR));
     ScanFixture scanFixture = builder.build();
     ScanOperatorExec scan = scanFixture.scanOp;
@@ -203,7 +207,7 @@ public class TestScanOperExecOuputSchema extends BaseScanOperatorExecTest {
   @Test
   public void testStrictOutputSchemaWithWildcard() {
     TupleMetadata outputSchema = new SchemaBuilder()
-        .add("a", MinorType.INT) // Projected, in reader
+        .add("a", MinorType.INT)    // Projected, in reader
         .add("d", MinorType.BIGINT) // Projected, not in reader
         .add("e", MinorType.BIGINT) // Not projected, not in reader
         .buildSchema();
@@ -212,10 +216,10 @@ public class TestScanOperExecOuputSchema extends BaseScanOperatorExecTest {
     outputSchema.setProperty(TupleMetadata.IS_STRICT_SCHEMA_PROP, Boolean.TRUE.toString());
 
     BaseScanFixtureBuilder builder = new BaseScanFixtureBuilder();
-    // Project (schema + reader), (reader only), (schema only), (neither)
+    // Project schema only
     builder.setProjection(RowSetTestUtils.projectAll());
     builder.addReader(new MockSimpleReader());
-    builder.builder.setOutputSchema(outputSchema);
+    builder.builder.typeConverterBuilder().providedSchema(outputSchema);
     builder.builder.setNullType(Types.optional(MinorType.VARCHAR));
     ScanFixture scanFixture = builder.build();
     ScanOperatorExec scan = scanFixture.scanOp;
@@ -242,6 +246,57 @@ public class TestScanOperExecOuputSchema extends BaseScanOperatorExecTest {
     {
       SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
           .addRow(10, 20L, 30L)
+          .build();
+      RowSetUtilities.verify(expected,
+          fixture.wrap(scan.batchAccessor().getOutgoingContainer()));
+    }
+
+    assertFalse(scan.next());
+    scanFixture.close();
+  }
+
+  @Test
+  public void testStrictOutputSchemaWithWildcardAndSpecialCols() {
+    TupleMetadata outputSchema = new SchemaBuilder()
+        .add("a", MinorType.INT)    // Projected, in reader
+        .add("d", MinorType.BIGINT) // Projected, not in reader
+        .add("e", MinorType.BIGINT) // Not projected, not in reader
+        .buildSchema();
+    outputSchema.metadata("d").setDefaultValue("20");
+    outputSchema.metadata("e").setDefaultValue("30");
+    outputSchema.setProperty(TupleMetadata.IS_STRICT_SCHEMA_PROP, Boolean.TRUE.toString());
+    outputSchema.metadata("a").setBooleanProperty(ColumnMetadata.EXCLUDE_FROM_WILDCARD, true);
+
+    BaseScanFixtureBuilder builder = new BaseScanFixtureBuilder();
+    // Project schema only
+    builder.setProjection(RowSetTestUtils.projectAll());
+    builder.addReader(new MockSimpleReader());
+    builder.builder.typeConverterBuilder().providedSchema(outputSchema);
+    builder.builder.setNullType(Types.optional(MinorType.VARCHAR));
+    ScanFixture scanFixture = builder.build();
+    ScanOperatorExec scan = scanFixture.scanOp;
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("d", MinorType.BIGINT)
+        .add("e", MinorType.BIGINT)
+         .buildSchema();
+
+    // Initial schema
+
+    assertTrue(scan.buildSchema());
+    {
+      SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
+           .build();
+      RowSetUtilities.verify(expected,
+          fixture.wrap(scan.batchAccessor().getOutgoingContainer()));
+    }
+
+    // Batch with defaults and null types
+
+    assertTrue(scan.next());
+    {
+      SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
+          .addRow(20L, 30L)
           .build();
       RowSetUtilities.verify(expected,
           fixture.wrap(scan.batchAccessor().getOutgoingContainer()));

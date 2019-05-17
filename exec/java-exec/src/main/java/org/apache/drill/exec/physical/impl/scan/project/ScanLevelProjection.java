@@ -23,14 +23,13 @@ import java.util.List;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.impl.scan.project.AbstractUnresolvedColumn.UnresolvedColumn;
-import org.apache.drill.exec.physical.impl.scan.project.AbstractUnresolvedColumn.UnresolvedSchemaColumn;
 import org.apache.drill.exec.physical.impl.scan.project.AbstractUnresolvedColumn.UnresolvedWildcardColumn;
-import org.apache.drill.exec.physical.rowSet.project.RequestedColumnImpl;
+import org.apache.drill.exec.physical.impl.scan.project.projSet.ProjectionSetBuilder;
+import org.apache.drill.exec.physical.rowSet.project.ImpliedTupleRequest;
 import org.apache.drill.exec.physical.rowSet.project.RequestedTuple;
 import org.apache.drill.exec.physical.rowSet.project.RequestedTuple.RequestedColumn;
 import org.apache.drill.exec.physical.rowSet.project.RequestedTupleImpl;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
-import org.apache.drill.exec.record.metadata.ProjectionType;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 
@@ -201,11 +200,6 @@ public class ScanLevelProjection {
     public boolean isWildcard() {
       return this == WILDCARD ||
              this == SCHEMA_WILDCARD ||
-             this == STRICT_SCHEMA_WILDCARD;
-    }
-
-    public boolean hasSchema() {
-      return this == SCHEMA_WILDCARD ||
              this == STRICT_SCHEMA_WILDCARD;
     }
   }
@@ -399,18 +393,20 @@ public class ScanLevelProjection {
     // projection. With a schema, we want the schema columns (which may
     // or may not correspond to reader columns.)
 
-    List<RequestedColumn> outputProj;
-    if (projectionType == ScanProjectionType.WILDCARD) {
-      outputProj = null;
+    if (projectionType != ScanProjectionType.EMPTY &&
+        projectionType != ScanProjectionType.EXPLICIT) {
+
+      readerProjection = ImpliedTupleRequest.ALL_MEMBERS;
     } else {
-      outputProj = new ArrayList<>();
+
+      List<RequestedColumn> outputProj = new ArrayList<>();
       for (ColumnProjection col : outputCols) {
         if (col instanceof AbstractUnresolvedColumn) {
           outputProj.add(((AbstractUnresolvedColumn) col).element());
         }
       }
+      readerProjection = RequestedTupleImpl.build(outputProj);
     }
-    readerProjection = RequestedTupleImpl.build(outputProj);
   }
 
   /**
@@ -428,9 +424,9 @@ public class ScanLevelProjection {
       throw new IllegalArgumentException("Duplicate * entry in project list");
     }
 
-    // Expand schema columns, if provided
+    // Expand strict schema columns, if provided
 
-    expandOutputSchema();
+    boolean expanded = expandOutputSchema();
 
     // Remember the wildcard position, if we need to insert it.
     // Ensures that the main wildcard expansion occurs before add-on
@@ -454,7 +450,7 @@ public class ScanLevelProjection {
     // If not consumed, put the wildcard column into the projection list as a
     // placeholder to be filled in later with actual table columns.
 
-    if (hasOutputSchema()) {
+    if (expanded) {
       projectionType =
           outputSchema.getBooleanProperty(TupleMetadata.IS_STRICT_SCHEMA_PROP)
           ? ScanProjectionType.STRICT_SCHEMA_WILDCARD
@@ -465,9 +461,9 @@ public class ScanLevelProjection {
     }
   }
 
-  private void expandOutputSchema() {
+  private boolean expandOutputSchema() {
     if (outputSchema == null) {
-      return;
+      return false;
     }
 
     // Expand the wildcard. From the perspective of the reader, this is an explicit
@@ -477,10 +473,16 @@ public class ScanLevelProjection {
 
     for (int i = 0; i < outputSchema.size(); i++) {
       ColumnMetadata col = outputSchema.metadata(i);
-      RequestedColumn projCol = new RequestedColumnImpl(readerProjection, col.name(),
-          ProjectionType.typeFor(col.majorType()));
-      outputCols.add(new UnresolvedSchemaColumn(projCol, col));
+
+      // Skip columns tagged as "special"; those that should not expand
+      // automatically.
+
+      if (col.getBooleanProperty(ColumnMetadata.EXCLUDE_FROM_WILDCARD)) {
+        continue;
+      }
+      outputCols.add(new UnresolvedColumn(null, col));
     }
+    return true;
   }
 
   /**
@@ -524,7 +526,15 @@ public class ScanLevelProjection {
 
     // This is a desired table column.
 
-    addTableColumn(new UnresolvedColumn(inCol));
+    addTableColumn(inCol);
+  }
+
+  private void addTableColumn(RequestedColumn inCol) {
+    ColumnMetadata outputCol = null;
+    if (outputSchema != null) {
+      outputCol = outputSchema.metadata(inCol.name());
+    }
+    addTableColumn(new UnresolvedColumn(inCol, outputCol));
   }
 
   public void addTableColumn(ColumnProjection outCol) {
@@ -598,11 +608,16 @@ public class ScanLevelProjection {
    * the wildcard)
    */
 
-  public boolean projectNone() { return projectionType == ScanProjectionType.EMPTY; }
+  public boolean isEmptyProjection() { return projectionType == ScanProjectionType.EMPTY; }
 
   public RequestedTuple rootProjection() { return outputProjection; }
 
-  public RequestedTuple readerProjection() { return readerProjection; }
+  public ProjectionSetBuilder projectionSet() {
+    return new ProjectionSetBuilder()
+      .outputSchema(outputSchema)
+      .parsedProjection(readerProjection)
+      .errorContext(errorContext);
+  }
 
   public boolean hasOutputSchema() { return outputSchema != null; }
 
