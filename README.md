@@ -8,8 +8,7 @@ Apache Drill is a distributed MPP query layer that supports SQL and alternative 
 
 ## Developers
 
-Please read [Environment.md](docs/dev/Environment.md) for setting up and running Apache Drill. For complete developer documentation see [DevDocs.md](docs/dev/DevDocs.md) and 
-also use slack channel for discussions.
+Please read [Environment.md](docs/dev/Environment.md) for setting up and running Apache Drill. For complete developer documentation see [DevDocs.md](docs/dev/DevDocs.md)
 
 ## More Information
 Please see the [Apache Drill Website](http://drill.apache.org/) or the [Apache Drill Documentation](http://drill.apache.org/docs/) for more information including:
@@ -23,7 +22,7 @@ Please see the [Apache Drill Website](http://drill.apache.org/) or the [Apache D
 ## Join the community!
 Apache Drill is an Apache Foundation project and is seeking all types of users and contributions.
 Please say hello on the [Apache Drill mailing list](http://drill.apache.org/mailinglists/)
-or join our [Slack Channel](https://apache-drill.slack.com/) if you need help with using or developing Apache Drill.
+or [join](https://bit.ly/2VM0XS8) our [Slack Channel](https://apache-drill.slack.com/) if you need help with using or developing Apache Drill.
 (More information can be found on [Apache Drill website](http://drill.apache.org/)).
 
 ## Export Control
