@@ -390,7 +390,7 @@ $(window).on('load',(function () {
         // add json profile on click
         $('#full-json-profile-json').on('shown.bs.collapse', function (e) {
             if (jsonprofileshown) return;
-            $('#full-json-profile-json').html(JSON.stringify(globalconfig.profile, null, 4));
+            $('#full-json-profile-json').text(JSON.stringify(globalconfig.profile, null, 4)).html();
         });
 
         //builddomtable(d3.select("#timing-table")
