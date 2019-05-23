@@ -62,12 +62,21 @@
         var inputValuesKeys = Object.keys(inputValues);
         for (i=0; i<inputValuesKeys.length; ++i) {
             let currKey=inputValuesKeys[i];
-            updatedHtml=updatedHtml.replace(currKey, inputValues[currKey]);
+            updatedHtml=updatedHtml.replace(currKey, escapeHtml(inputValues[currKey]));
         }
         modalBody.innerHTML=updatedHtml;
       }
       //Show Alert
       $('#errorModal').modal('show');
+    }
+
+    function escapeHtml(str) {
+        return str.replace(/&/g,'&amp;')
+            .replace(/</g,'&lt;')
+            .replace(/>/g,'&gt;')
+            .replace(/"/g,'&quot;')
+            .replace(/'/g,'&#x27;')
+            .replace(/\//g,'&#x2F;');
     }
 
     //Map of error messages to populate the alert modal
