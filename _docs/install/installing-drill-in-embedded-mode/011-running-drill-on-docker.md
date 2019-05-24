@@ -1,12 +1,12 @@
 ---
 title: "Running Drill on Docker"
-date: 2019-05-02
+date: 2019-05-24
 parent: "Installing Drill in Embedded Mode"
 ---  
 
-Starting in Drill 1.14, you can run Drill in a [Docker container](https://www.docker.com/what-container#/package_software). Running Drill in a container is the simplest way to start using Drill; all you need is the Docker client installed on your machine. You simply run a Docker command, and your Docker client downloads the Drill Docker image from the apache-drill repository on [Docker Hub](https://docs.docker.com/docker-hub/) and then brings up a container with Apache Drill  running in embedded mode.
+Starting in Drill 1.14, you can run Drill in a [Docker container](https://www.docker.com/what-container#/package_software). Running Drill in a container is the simplest way to start using Drill; all you need is the Docker client installed on your machine. You simply run a Docker command, and your Docker client downloads the Drill Docker image from the apache-drill repository on [Docker Hub](https://docs.docker.com/docker-hub/) and brings up a container with Apache Drill running in embedded mode.
 
-**Note:** Currently, you can only run Drill in embedded mode in a Docker container. Embedded mode is when a single instance of Drill runs on a node or in a container. You do not have to perform any configuration tasks when Drill runs in embedded mode.  
+Currently, you can only run Drill in embedded mode in a Docker container. Embedded mode is when a single instance of Drill runs on a node or in a container. You do not have to perform any configuration tasks when Drill runs in embedded mode.  
 
 ## Prerequisite  
 
@@ -30,12 +30,12 @@ The following table describes the options:
 | `-t`                           | Allocates a pseudo-tty (a shell).                                                                                                                                                                                                                                                                                        |
 | `--name`                       | Identifies the container. If you do not use this   option to identify a name for the container, the daemon generates a container ID for you. When you use this option to identify a container name,   you can use the name to reference the container within a Docker network in   foreground or detached mode.  |
 | `-p`                           | The TCP port for the Drill Web UI. If needed, you can   change this port using the `drill.exec.http.port` [start-up option]({{site.baseurl}}/docs/start-up-options/).                                                                                                                                                                                                 |
-| `drill/apache-drill:<version>` | The Docker Hub repository and tag. In the following   example, `drill/apache-drill` is   the repository and `1.15.0`   is the tag:     `drill/apache-drill:1.16.0`     The tag correlates with the version of Drill. When a new version of Drill   is available, you can use the new version as the tag.                           |
+| `drill/apache-drill:<version>` | The Docker Hub repository and tag. In the following   example, `drill/apache-drill` is   the repository and `1.16.0`   is the tag:     `drill/apache-drill:1.16.0`     The tag correlates with the version of Drill. When a new version of Drill   is available, you can use the new version as the tag.                           |
 | `bin/bash`                     | Connects to the Drill container using a bash shell.                                                                                                                                                                                                                                                      |  
 
 ### Running the Drill Docker Container in Foreground Mode  
 
-Open a terminal window (Command Prompt or PowerShell, but not PowerShell ISE) and then issue the following command and opitons to connect to SQLLine (the Drill shell):   
+Open a terminal window (Command Prompt or PowerShell, but not PowerShell ISE) and then issue the following command and options to connect to SQLLine (the Drill shell):   
 
        docker run -i --name drill-1.16.0 -p 8047:8047 -t drill/apache-drill:1.16.0 /bin/bash  
 
@@ -43,7 +43,7 @@ When you issue the docker run command, the Drill process starts in a container. 
 
        Jun 29, 2018 3:28:21 AM org.glassfish.jersey.server.ApplicationHandler initialize
        INFO: Initiating Jersey application, version Jersey: 2.8 2014-04-29 01:25:26...
-       apache drill 1.15.0 
+       apache drill 1.16.0 
        "json ain't no thang"
        0: jdbc:drill:zk=local>  
 
@@ -67,7 +67,7 @@ Open a terminal window (Command Prompt or PowerShell, but not PowerShell ISE) an
 
 After you issue the commands, the Drill process starts in a container. SQLLine prints a message, and the prompt appears:  
 
-       apache drill 1.15.0 
+       apache drill 1.16.0 
        "json ain't no thang"
        0: jdbc:drill:drillbit=localhost>  
 

@@ -1,6 +1,6 @@
 ---
 title: "MapR-DB Format"
-date: 2018-06-26 00:42:18 UTC
+date: 2019-05-24
 parent: "Connect a Data Source"
 ---
 
@@ -16,6 +16,8 @@ Instead of including the name of a file, you include the table name in the query
 
        SELECT * FROM mfs.`/users/max/mytable`;   
 
-**Note:** Starting in Drill 1.14, the MapR Drill installation package includes a hive-maprdb-json-handler, which enables you to create Hive external tables from MapR-DB JSON tables and then query the tables using the Hive schema. Drill can use the native Drill reader to read the Hive external tables. The native Drill reader enables Drill to perform faster reads of data and apply filter pushdown optimizations. The hive-maprdb-json-handler is not included in the Apache Drill installation package.
+Starting in Drill 1.14, the MapR Drill installation package includes a hive-maprdb-json-handler, which enables you to create Hive external tables from MapR-DB JSON tables and then query the tables using the Hive schema. Drill can use the native Drill reader to read the Hive external tables. The native Drill reader enables Drill to perform faster reads of data and apply filter pushdown optimizations. The hive-maprdb-json-handler is not included in the Apache Drill installation package.  
+
+Starting in Drill 1.16, you can include the `readTimestampWithZoneOffset` option in the maprdb format plugin configuration. When enabled (set to 'true'), Drill converts timestamp values from UTC to local time zone when reading the values from MapR Database. The option is disabled by default and does not impact the `store.hive.maprdb_json.read_timestamp_with_timezone_offset` setting.  
 
 

@@ -1,6 +1,6 @@
 ---
 title: "Data Type Conversion"
-date: 2019-02-19
+date: 2019-05-24
 parent: "SQL Functions"
 ---
 Drill supports the following functions for casting and converting data types:
@@ -10,7 +10,7 @@ Drill supports the following functions for casting and converting data types:
 * [STRING_BINARY]({{ site.baseurl }}/docs/data-type-conversion/#string_binary-function) and [BINARY_STRING]({{ site.baseurl }}/docs/data-type-conversion/#binary_string-function)
 * [Other Data Type Conversions]({{ site.baseurl }}/docs/data-type-conversion/#other-data-type-conversions)  
 
-**Note:** Starting in Drill 1.15, all cast and data type conversion functions return null for an empty string ('') when the `drill.exec.functions.cast_empty_string_to_null` option is enabled, for example:    
+Starting in Drill 1.15, all cast and data type conversion functions return null for an empty string ('') when the `drill.exec.functions.cast_empty_string_to_null` option is enabled, for example:    
 
 	SELECT CAST('' AS DATE), TO_TIMESTAMP('', 'yyyy-MM-dd HH:mm:ss') FROM (VALUES(2));
 	+---------+---------+
@@ -897,10 +897,50 @@ Convert a UTC date to a timestamp offset from the UTC time zone code.
     +------------------------+---------+
     | 2015-03-30 20:49:00.0  | UTC     |
     +------------------------+---------+
-    1 row selected (0.148 seconds)
+    1 row selected (0.148 seconds)  
 
-## Time Zone Limitation
-Currently Drill does not support conversion of a date, time, or timestamp from one time zone to another. Queries of data associated with a time zone can return inconsistent results or an error. For more information, see the ["Understanding Drill's Timestamp and Timezone"](http://www.openkb.info/2015/05/understanding-drills-timestamp-and.html#.VUzhotpVhHw) blog. The Drill time zone is based on the operating system time zone unless you override it. To work around the limitation, configure Drill to use [UTC](http://www.timeanddate.com/time/aboututc.html)-based time, convert your data to UTC timestamps, and perform date/time operation in UTC.  
+## Enabling Time Zone Offset   
+
+Starting in Drill 1.16, the `store.hive.maprdb_json.read_timestamp_with_timezone_offset` option enables Drill to read timestamp values with a timezone offset when using the hive plugin with the Drill native MaprDB JSON reader enabled through the  `store.hive.maprdb_json.optimize_scan_with_native_reader option`. The `store.hive.maprdb_json.read_timestamp_with_timezone_offset` option is disabled (set to 'false') by default. You can enable this option from the Options page in the Drill Web UI or from the command line using the SET or ALTER SYSTEM commands.
+
+**Important**  
+Internally, Drill stores timestamp values in UTC format, for example 2018-01-01T20:12:12.123Z. When you enable the timezone offset option, select on a table returns different timestamp values. If you filter on timestamp values when this option is enabled, you must include the new timestamp value in the filter condition. 
+
+For example, look at the timestamp values when the `store.hive.maprdb_json.read_timestamp_with_timezone_offset` option is disabled (set to 'false'):   
+
+
+	select * from dfs.`/tmp/timestamp`;
+	-------------------------------------------------------
+	_id	datestring	datetimestamp
+	-------------------------------------------------------
+	1	2018-01-01 12:12:12.123	2018-01-01 20:12:12.123
+	2	9999-12-31 23:59:59.999	10000-01-01 07:59:59.999
+	-------------------------------------------------------  
+
+When the option is enabled (set to 'true'), you can see the difference in the timestamp values returned:  
+
+	select * from dfs.`/tmp/timestamp`;
+	------------------------------------------------------
+	_id	datestring	datetimestamp
+	------------------------------------------------------
+	1	2018-01-01 12:12:12.123	2018-01-01 12:12:12.123
+	2	9999-12-31 23:59:59.999	9999-12-31 23:59:59.999
+	------------------------------------------------------  
+
+When the option is enabled, queries that filter on timestamp values must include the new timestamp value in the filter condition, as shown:  
+
+	select * from dfs.`/tmp/timestamp` where datetimestamp=timestamp '2018-01-01 12:12:12.123';
+	------------------------------------------------------
+	_id	datestring	datetimestamp
+	------------------------------------------------------
+	1	2018-01-01 12:12:12.123	2018-01-01 12:12:12.123
+	------------------------------------------------------  
+
+Notice that the WHERE clause uses the `2018-01-01 12:12:12.123` format versus the `2018-01-01 20:12:12.123` format.
+
+## Time Zone Limitation  
+
+Drill does not support conversion of a date, time, or timestamp from one time zone to another. Queries of data associated with a time zone can return inconsistent results or an error. For more information, see the ["Understanding Drill's Timestamp and Timezone"](http://www.openkb.info/2015/05/understanding-drills-timestamp-and.html#.VUzhotpVhHw) blog. The Drill time zone is based on the operating system time zone unless you override it. To work around the limitation, configure Drill to use [UTC](http://www.timeanddate.com/time/aboututc.html)-based time, convert your data to UTC timestamps, and perform date/time operation in UTC.  
 
 1. Take a look at the Drill time zone configuration by running the TIMEOFDAY function or by querying the system.options table. This TIMEOFDAY function returns the local date and time with time zone information. 
 
@@ -941,7 +981,9 @@ You can use the ‘z’ option to identify the time zone in TO_TIMESTAMP to make
     +------------------------+-----------+
     | 2015-03-30 20:49:00.0  | UTC       |
     +------------------------+-----------+
-    1 row selected (0.097 seconds)
+    1 row selected (0.097 seconds)  
+
+
 
 <!-- DRILL-448 Support timestamp with time zone -->
 

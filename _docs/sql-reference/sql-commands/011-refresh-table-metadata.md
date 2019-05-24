@@ -1,6 +1,6 @@
 ---
 title: "REFRESH TABLE METADATA"
-date: 2019-04-30
+date: 2019-05-24
 parent: "SQL Commands"
 ---
 Run the REFRESH TABLE METADATA command on Parquet tables and directories to generate a metadata cache file. REFRESH TABLE METADATA collects metadata from the footers of Parquet files and writes the metadata to a metadata file (`.drill.parquet_file_metadata.v4`) and a summary file (`.drill.parquet_summary_metadata.v4`). The planner uses the metadata cache file to prune extraneous data during the query planning phase. Run the REFRESH TABLE METADATA command if planning time is a significant percentage of the total elapsed time of the query.   
@@ -69,7 +69,10 @@ Enables filter pushdown optimization for Parquet files. Drill reads the file met
 Sets the number of row groups that a table can have. You can increase the threshold if the filter can prune many row groups. However, if this setting is too high, the filter evaluation overhead increases. Base this setting on the data set. Reduce this setting if the planning time is significant or you do not see any benefit at runtime. Default is 10000.  (Drill 1.9+)  
 
 ## Limitations
-Currently, Drill does not support runtime rowgroup pruning. 
+
+
+- Drill does not support runtime rowgroup pruning.  
+- REFRESH TABLE METADATA does not count null values for decimal, varchar, and interval data types.
 
 
 ## Examples  
