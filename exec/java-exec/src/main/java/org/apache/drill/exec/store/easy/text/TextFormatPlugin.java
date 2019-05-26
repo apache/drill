@@ -28,9 +28,8 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
-import org.apache.drill.common.types.TypeProtos.DataMode;
-import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
@@ -42,7 +41,6 @@ import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileReade
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileScanBuilder;
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
-import org.apache.drill.exec.planner.common.DrillStatsTable.TableStatistics;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
@@ -67,7 +65,6 @@ import org.apache.drill.exec.store.text.DrillTextRecordWriter;
 import org.apache.drill.exec.vector.accessor.convert.AbstractConvertFromString;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.FileSplit;
 
@@ -199,70 +196,6 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
     }
   }
 
-  /**
-   * Builds the V3 text scan operator.
-   */
-  private static class TextScanBatchCreator extends ScanFrameworkCreator {
-
-    private final TextFormatPlugin textPlugin;
-
-    public TextScanBatchCreator(TextFormatPlugin plugin) {
-      super(plugin);
-      textPlugin = plugin;
-    }
-
-    @Override
-    protected FileScanBuilder frameworkBuilder(
-        EasySubScan scan) throws ExecutionSetupException {
-      ColumnsScanBuilder builder = new ColumnsScanBuilder();
-      builder.setReaderFactory(new ColumnsReaderFactory(textPlugin));
-
-      // Provide custom error context
-      builder.setContext(
-          new CustomErrorContext() {
-            @Override
-            public void addContext(UserException.Builder builder) {
-              builder.addContext("Format plugin:", PLUGIN_NAME);
-              builder.addContext("Plugin config name:", textPlugin.getName());
-              builder.addContext("Extract headers:",
-                  Boolean.toString(textPlugin.getConfig().isHeaderExtractionEnabled()));
-              builder.addContext("Skip headers:",
-                  Boolean.toString(textPlugin.getConfig().isSkipFirstLine()));
-            }
-          });
-
-      // If this format has no headers, or wants to skip them,
-      // then we must use the columns column to hold the data.
-
-      builder.requireColumnsArray(
-          ! textPlugin.getConfig().isHeaderExtractionEnabled());
-
-      // Text files handle nulls in an unusual way. Missing columns
-      // are set to required Varchar and filled with blanks. Yes, this
-      // means that the SQL statement or code cannot differentiate missing
-      // columns from empty columns, but that is how CSV and other text
-      // files have been defined within Drill.
-
-      builder.setNullType(
-          MajorType.newBuilder()
-            .setMinorType(MinorType.VARCHAR)
-            .setMode(DataMode.REQUIRED)
-            .build());
-
-      // Pass along the output schema, if any
-
-      builder.setOutputSchema(scan.getSchema());
-
-      // CSV maps blank columns to nulls (for nullable non-string columns),
-      // or to the default value (for non-nullable non-string columns.)
-
-      builder.setConversionProperty(AbstractConvertFromString.BLANK_ACTION_PROP,
-          AbstractConvertFromString.BLANK_AS_NULL);
-
-      return builder;
-    }
-  }
-
   public TextFormatPlugin(String name, DrillbitContext context, Configuration fsConf, StoragePluginConfig storageConfig) {
      this(name, context, fsConf, storageConfig, new TextFormatConfig());
   }
@@ -284,6 +217,9 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
     config.defaultName = PLUGIN_NAME;
     config.readerOperatorType = CoreOperatorType.TEXT_SUB_SCAN_VALUE;
     config.writerOperatorType = CoreOperatorType.TEXT_WRITER_VALUE;
+
+    // Uncomment this, and remove useEnhancedScan(), when v2 is retired
+    //config.useEnhancedScan = true;
     return config;
   }
 
@@ -304,16 +240,12 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
   }
 
   @Override
-  protected ScanBatchCreator scanBatchCreator(OptionManager options) {
+  protected boolean useEnhancedScan(OptionManager options) {
     // Create the "legacy", "V2" reader or the new "V3" version based on
     // the result set loader. This code should be temporary: the two
     // readers provide identical functionality for the user; only the
     // internals differ.
-    if (options.getBoolean(ExecConstants.ENABLE_V3_TEXT_READER_KEY)) {
-      return new TextScanBatchCreator(this);
-    } else {
-      return new ClassicScanBatchCreator(this);
-    }
+    return options.getBoolean(ExecConstants.ENABLE_V3_TEXT_READER_KEY);
   }
 
   // TODO: Remove this once the V2 reader is removed.
@@ -337,6 +269,53 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
   }
 
   @Override
+  protected FileScanBuilder frameworkBuilder(
+      OptionManager options, EasySubScan scan) throws ExecutionSetupException {
+    ColumnsScanBuilder builder = new ColumnsScanBuilder();
+    builder.setReaderFactory(new ColumnsReaderFactory(this));
+
+    // If this format has no headers, or wants to skip them,
+    // then we must use the columns column to hold the data.
+
+    builder.requireColumnsArray(
+        ! getConfig().isHeaderExtractionEnabled());
+
+    // Text files handle nulls in an unusual way. Missing columns
+    // are set to required Varchar and filled with blanks. Yes, this
+    // means that the SQL statement or code cannot differentiate missing
+    // columns from empty columns, but that is how CSV and other text
+    // files have been defined within Drill.
+
+    builder.setNullType(Types.required(MinorType.VARCHAR));
+
+    // CSV maps blank columns to nulls (for nullable non-string columns),
+    // or to the default value (for non-nullable non-string columns.)
+
+    builder.setConversionProperty(AbstractConvertFromString.BLANK_ACTION_PROP,
+        AbstractConvertFromString.BLANK_AS_NULL);
+
+    // The text readers use required Varchar columns to represent null columns.
+
+    builder.allowRequiredNullColumns(true);
+
+    // Provide custom error context
+    builder.setContext(
+        new CustomErrorContext() {
+          @Override
+          public void addContext(UserException.Builder builder) {
+            builder.addContext("Format plugin:", PLUGIN_NAME);
+            builder.addContext("Plugin config name:", getName());
+            builder.addContext("Extract headers:",
+                Boolean.toString(getConfig().isHeaderExtractionEnabled()));
+            builder.addContext("Skip first line:",
+                Boolean.toString(getConfig().isSkipFirstLine()));
+          }
+        });
+
+    return builder;
+  }
+
+  @Override
   public RecordWriter getRecordWriter(final FragmentContext context, final EasyWriter writer) throws IOException {
     final Map<String, String> options = new HashMap<>();
 
@@ -352,21 +331,6 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
     recordWriter.init(options);
 
     return recordWriter;
-  }
-
-  @Override
-  public boolean supportsStatistics() {
-    return false;
-  }
-
-  @Override
-  public TableStatistics readStatistics(FileSystem fs, Path statsTablePath) {
-    throw new UnsupportedOperationException("unimplemented");
-  }
-
-  @Override
-  public void writeStatistics(TableStatistics statistics, FileSystem fs, Path statsTablePath) {
-    throw new UnsupportedOperationException("unimplemented");
   }
 
   @Override

@@ -23,9 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.drill.exec.physical.base.MetadataProviderManager;
-import org.apache.drill.shaded.guava.com.google.common.base.Functions;
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -35,17 +33,21 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.AbstractWriter;
+import org.apache.drill.exec.physical.base.MetadataProviderManager;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.physical.base.ScanStats.GroupScanProperty;
 import org.apache.drill.exec.physical.impl.ScanBatch;
-import org.apache.drill.exec.physical.impl.WriterRecordBatch;
 import org.apache.drill.exec.physical.impl.StatisticsWriterRecordBatch;
+import org.apache.drill.exec.physical.impl.WriterRecordBatch;
 import org.apache.drill.exec.physical.impl.protocol.OperatorRecordBatch;
 import org.apache.drill.exec.physical.impl.scan.ScanOperatorExec;
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework;
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileReaderFactory;
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileScanBuilder;
+import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
+import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
+import org.apache.drill.exec.planner.common.DrillStatsTable.TableStatistics;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
@@ -62,11 +64,13 @@ import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.store.dfs.FormatMatcher;
 import org.apache.drill.exec.store.dfs.FormatPlugin;
 import org.apache.drill.exec.store.schedule.CompleteFileWork;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
-
+import org.apache.drill.shaded.guava.com.google.common.base.Functions;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 
 /**
  * Base class for various file readers.
@@ -79,6 +83,8 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
  */
 
 public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements FormatPlugin {
+
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EasyFormatPlugin.class);
 
   /**
    * Defines the static, programmer-defined options for this plugin. These
@@ -104,214 +110,43 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
 
     public boolean supportsProjectPushdown;
     public boolean supportsAutoPartitioning;
+    public boolean supportsStatistics;
     public int readerOperatorType = -1;
     public int writerOperatorType = -1;
+
+    // Choose whether to use the "traditional" or "enhanced" reader
+    // structure. Can also be selected at runtime by overriding
+    // useEnhancedScan().
+
+    public boolean useEnhancedScan;
   }
 
   /**
-   * Creates the scan batch to use with the plugin. Drill supports the "classic"
-   * style of scan batch and readers, along with the newer size-aware,
-   * component-based version. The implementation of this class assembles the
-   * readers and scan batch operator as needed for each version.
+   * Builds the readers for the V3 text scan operator.
    */
-
-  public interface ScanBatchCreator {
-    CloseableRecordBatch buildScan(
-        final FragmentContext context, EasySubScan scan)
-            throws ExecutionSetupException;
-  }
-
-  /**
-   * Use the original scanner based on the {@link RecordReader} interface.
-   * Requires that the storage plugin roll its own solutions for null columns.
-   * Is not able to limit vector or batch sizes. Retained or backward
-   * compatibility with "classic" format plugins which have not yet been
-   * upgraded to use the new framework.
-   */
-
-  public static class ClassicScanBatchCreator implements ScanBatchCreator {
+  private static class EasyReaderFactory extends FileReaderFactory {
 
     private final EasyFormatPlugin<? extends FormatPluginConfig> plugin;
+    private final EasySubScan scan;
+    private final FragmentContext context;
 
-    public ClassicScanBatchCreator(EasyFormatPlugin<? extends FormatPluginConfig> plugin) {
+    public EasyReaderFactory(EasyFormatPlugin<? extends FormatPluginConfig> plugin,
+        final EasySubScan scan, FragmentContext context) {
       this.plugin = plugin;
+      this.scan = scan;
+      this.context = context;
     }
 
     @Override
-    public CloseableRecordBatch buildScan(
-        final FragmentContext context, EasySubScan scan) throws ExecutionSetupException {
-      final ColumnExplorer columnExplorer = new ColumnExplorer(context.getOptions(), scan.getColumns());
-
-      if (! columnExplorer.isStarQuery()) {
-        scan = new EasySubScan(scan.getUserName(), scan.getWorkUnits(), scan.getFormatPlugin(),
-            columnExplorer.getTableColumns(), scan.getSelectionRoot(), scan.getPartitionDepth(), scan.getSchema());
-        scan.setOperatorId(scan.getOperatorId());
-      }
-
-      final OperatorContext oContext = context.newOperatorContext(scan);
-      final DrillFileSystem dfs;
+    public ManagedReader<? extends FileSchemaNegotiator> newReader() {
       try {
-        dfs = oContext.newFileSystem(plugin.easyConfig().fsConf);
-      } catch (final IOException e) {
-        throw new ExecutionSetupException(String.format("Failed to create FileSystem: %s", e.getMessage()), e);
+        return plugin.newBatchReader(scan, context.getOptions());
+      } catch (ExecutionSetupException e) {
+        throw UserException.validationError(e)
+          .addContext("Reason", "Failed to create a batch reader")
+          .addContext(errorContext())
+          .build(logger);
       }
-
-      final List<RecordReader> readers = new LinkedList<>();
-      final List<Map<String, String>> implicitColumns = Lists.newArrayList();
-      Map<String, String> mapWithMaxColumns = Maps.newLinkedHashMap();
-      final boolean supportsFileImplicitColumns = scan.getSelectionRoot() != null;
-      for (final FileWork work : scan.getWorkUnits()) {
-        final RecordReader recordReader = getRecordReader(
-            plugin, context, dfs, work, scan.getColumns(), scan.getUserName());
-        readers.add(recordReader);
-        final List<String> partitionValues = ColumnExplorer.listPartitionValues(
-            work.getPath(), scan.getSelectionRoot(), false);
-        final Map<String, String> implicitValues = columnExplorer.populateImplicitColumns(
-            work.getPath(), partitionValues, supportsFileImplicitColumns);
-        implicitColumns.add(implicitValues);
-        if (implicitValues.size() > mapWithMaxColumns.size()) {
-          mapWithMaxColumns = implicitValues;
-        }
-      }
-
-      // all readers should have the same number of implicit columns, add missing ones with value null
-      final Map<String, String> diff = Maps.transformValues(mapWithMaxColumns, Functions.constant((String) null));
-      for (final Map<String, String> map : implicitColumns) {
-        map.putAll(Maps.difference(map, diff).entriesOnlyOnRight());
-      }
-
-      return new ScanBatch(context, oContext, readers, implicitColumns);
-    }
-
-    /**
-     * Create a record reader given a file system, a file description and other
-     * information. For backward compatibility, calls the plugin method by
-     * default.
-     *
-     * @param plugin
-     *          the plugin creating the scan
-     * @param context
-     *          fragment context for the fragment running the scan
-     * @param dfs
-     *          Drill's distributed file system facade
-     * @param fileWork
-     *          description of the file to scan
-     * @param columns
-     *          list of columns to project
-     * @param userName
-     *          the name of the user performing the scan
-     * @return a scan operator
-     * @throws ExecutionSetupException
-     *           if anything goes wrong
-     */
-
-    public RecordReader getRecordReader(EasyFormatPlugin<? extends FormatPluginConfig> plugin,
-        FragmentContext context, DrillFileSystem dfs, FileWork fileWork,
-        List<SchemaPath> columns, String userName) throws ExecutionSetupException {
-      return plugin.getRecordReader(context, dfs, fileWork, columns, userName);
-    }
-  }
-
-  /**
-   * Revised scanner based on the revised {@link org.apache.drill.exec.physical.rowSet.ResultSetLoader}
-   * and {@link org.apache.drill.exec.physical.impl.scan.RowBatchReader} classes.
-   * Handles most projection tasks automatically. Able to limit
-   * vector and batch sizes. Use this for new format plugins.
-   */
-
-  public abstract static class ScanFrameworkCreator
-      implements ScanBatchCreator {
-
-    protected EasyFormatPlugin<? extends FormatPluginConfig> plugin;
-
-    public ScanFrameworkCreator(EasyFormatPlugin<? extends FormatPluginConfig> plugin) {
-      this.plugin = plugin;
-    }
-
-    /**
-     * Builds the revised {@link FileBatchReader}-based scan batch.
-     *
-     * @param context
-     * @param scan
-     * @return
-     * @throws ExecutionSetupException
-     */
-
-    @Override
-    public CloseableRecordBatch buildScan(
-        final FragmentContext context,
-        final EasySubScan scan) throws ExecutionSetupException {
-
-      // Assemble the scan operator and its wrapper.
-
-      try {
-        final FileScanBuilder builder = frameworkBuilder(scan);
-        builder.setProjection(scan.getColumns());
-        builder.setFiles(scan.getWorkUnits());
-        builder.setConfig(plugin.easyConfig().fsConf);
-
-        // The text readers use required Varchar columns to represent null columns.
-
-        builder.allowRequiredNullColumns(true);
-        final Path selectionRoot = scan.getSelectionRoot();
-        if (selectionRoot != null) {
-          builder.metadataOptions().setSelectionRoot(selectionRoot);
-          builder.metadataOptions().setPartitionDepth(scan.getPartitionDepth());
-        }
-        FileScanFramework framework = builder.buildFileFramework();
-        return new OperatorRecordBatch(
-            context, scan,
-            new ScanOperatorExec(
-                framework));
-      } catch (final UserException e) {
-        // Rethrow user exceptions directly
-        throw e;
-      } catch (final Throwable e) {
-        // Wrap all others
-        throw new ExecutionSetupException(e);
-      }
-    }
-
-    /**
-     * Create the plugin-specific framework that manages the scan. The framework
-     * creates batch readers one by one for each file or block. It defines semantic
-     * rules for projection. It handles "early" or "late" schema readers. A typical
-     * framework builds on standardized frameworks for files in general or text
-     * files in particular.
-     *
-     * @param scan the physical operation definition for the scan operation. Contains
-     * one or more files to read. (The Easy format plugin works only for files.)
-     * @return the scan framework which orchestrates the scan operation across
-     * potentially many files
-     * @throws ExecutionSetupException for all setup failures
-     */
-    protected abstract FileScanBuilder frameworkBuilder(
-        EasySubScan scan) throws ExecutionSetupException;
-  }
-
-  /**
-   * Generic framework creator for files that just use the basic file
-   * support: metadata, etc. Specialized use cases (special "columns"
-   * column, say) will require a specialized implementation.
-   */
-
-  public abstract static class FileScanFrameworkCreator extends ScanFrameworkCreator {
-
-    private final FileReaderFactory readerCreator;
-
-    public FileScanFrameworkCreator(EasyFormatPlugin<? extends FormatPluginConfig> plugin,
-        FileReaderFactory readerCreator) {
-      super(plugin);
-      this.readerCreator = readerCreator;
-    }
-
-    @Override
-    protected FileScanBuilder frameworkBuilder(
-        EasySubScan scan) throws ExecutionSetupException {
-
-      FileScanBuilder builder = new FileScanBuilder();
-      builder.setReaderFactory(readerCreator);
-      return builder;
     }
   }
 
@@ -428,26 +263,173 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
 
   protected CloseableRecordBatch getReaderBatch(final FragmentContext context,
       final EasySubScan scan) throws ExecutionSetupException {
-    return scanBatchCreator(context.getOptions()).buildScan(context, scan);
+    if (useEnhancedScan(context.getOptions())) {
+      return buildScan(context, scan);
+    } else {
+      return buildScanBatch(context, scan);
+    }
   }
 
   /**
-   * Create the scan batch creator. Needed only when using the revised scan batch. In that
-   * case, override the <tt>readerIterator()</tt> method on the custom scan batch
-   * creator implementation.
+   * Choose whether to use the enhanced scan based on the row set and scan
+   * framework, or the "traditional" ad-hoc structure based on ScanBatch.
+   * Normally set as a config option. Override this method if you want to
+   * make the choice based on a system/session option.
    *
-   * @return the strategy for creating the scan batch for this plugin
+   * @return true to use the enhanced scan framework, false for the
+   * traditional scan-batch framework
    */
 
-  protected ScanBatchCreator scanBatchCreator(OptionManager options) {
-    return new ClassicScanBatchCreator(this);
+  protected boolean useEnhancedScan(OptionManager options) {
+    return easyConfig.useEnhancedScan;
+  }
+
+  /**
+   * Use the original scanner based on the {@link RecordReader} interface.
+   * Requires that the storage plugin roll its own solutions for null columns.
+   * Is not able to limit vector or batch sizes. Retained or backward
+   * compatibility with "classic" format plugins which have not yet been
+   * upgraded to use the new framework.
+   */
+
+  private CloseableRecordBatch buildScanBatch(FragmentContext context,
+      EasySubScan scan) throws ExecutionSetupException {
+    final ColumnExplorer columnExplorer =
+        new ColumnExplorer(context.getOptions(), scan.getColumns());
+
+    if (! columnExplorer.isStarQuery()) {
+      scan = new EasySubScan(scan.getUserName(), scan.getWorkUnits(), scan.getFormatPlugin(),
+          columnExplorer.getTableColumns(), scan.getSelectionRoot(),
+          scan.getPartitionDepth(), scan.getSchema());
+      scan.setOperatorId(scan.getOperatorId());
+    }
+
+    final OperatorContext oContext = context.newOperatorContext(scan);
+    final DrillFileSystem dfs;
+    try {
+      dfs = oContext.newFileSystem(easyConfig().fsConf);
+    } catch (final IOException e) {
+      throw new ExecutionSetupException(String.format("Failed to create FileSystem: %s", e.getMessage()), e);
+    }
+
+    final List<RecordReader> readers = new LinkedList<>();
+    final List<Map<String, String>> implicitColumns = Lists.newArrayList();
+    Map<String, String> mapWithMaxColumns = Maps.newLinkedHashMap();
+    final boolean supportsFileImplicitColumns = scan.getSelectionRoot() != null;
+    for (final FileWork work : scan.getWorkUnits()) {
+      final RecordReader recordReader = getRecordReader(
+          context, dfs, work, scan.getColumns(), scan.getUserName());
+      readers.add(recordReader);
+      final List<String> partitionValues = ColumnExplorer.listPartitionValues(
+          work.getPath(), scan.getSelectionRoot(), false);
+      final Map<String, String> implicitValues = columnExplorer.populateImplicitColumns(
+          work.getPath(), partitionValues, supportsFileImplicitColumns);
+      implicitColumns.add(implicitValues);
+      if (implicitValues.size() > mapWithMaxColumns.size()) {
+        mapWithMaxColumns = implicitValues;
+      }
+    }
+
+    // all readers should have the same number of implicit columns, add missing ones with value null
+    final Map<String, String> diff = Maps.transformValues(mapWithMaxColumns, Functions.constant((String) null));
+    for (final Map<String, String> map : implicitColumns) {
+      map.putAll(Maps.difference(map, diff).entriesOnlyOnRight());
+    }
+
+    return new ScanBatch(context, oContext, readers, implicitColumns);
+  }
+
+  /**
+   * Revised scanner based on the revised {@link org.apache.drill.exec.physical.rowSet.ResultSetLoader}
+   * and {@link org.apache.drill.exec.physical.impl.scan.RowBatchReader} classes.
+   * Handles most projection tasks automatically. Able to limit
+   * vector and batch sizes. Use this for new format plugins.
+   */
+
+  private CloseableRecordBatch buildScan(FragmentContext context, EasySubScan scan) throws ExecutionSetupException {
+
+    // Assemble the scan operator and its wrapper.
+
+    try {
+      final FileScanBuilder builder = frameworkBuilder(context.getOptions(), scan);
+      builder.setProjection(scan.getColumns());
+      builder.setFiles(scan.getWorkUnits());
+      builder.setConfig(easyConfig().fsConf);
+      builder.setUserName(scan.getUserName());
+
+      // Pass along the output schema, if any
+
+      builder.setOutputSchema(scan.getSchema());
+      final Path selectionRoot = scan.getSelectionRoot();
+      if (selectionRoot != null) {
+        builder.metadataOptions().setSelectionRoot(selectionRoot);
+        builder.metadataOptions().setPartitionDepth(scan.getPartitionDepth());
+      }
+
+      // Add batch reader, if none specified
+
+      if (builder.readerFactory() == null) {
+        builder.setReaderFactory(new EasyReaderFactory(this, scan, context));
+      }
+
+      // Add error context, if none is specified
+
+      if (builder.errorContext() == null) {
+        builder.setContext(
+            new CustomErrorContext() {
+              @Override
+              public void addContext(UserException.Builder builder) {
+                builder.addContext("Format plugin:",
+                    EasyFormatPlugin.this.getClass().getSimpleName());
+                builder.addContext("Plugin config name:", getName());
+              }
+            });
+      }
+
+      FileScanFramework framework = builder.buildFileFramework();
+      return new OperatorRecordBatch(context, scan,
+          new ScanOperatorExec(framework));
+    } catch (final UserException e) {
+      // Rethrow user exceptions directly
+      throw e;
+    } catch (final Throwable e) {
+      // Wrap all others
+      throw new ExecutionSetupException(e);
+    }
+  }
+
+  public ManagedReader<? extends FileSchemaNegotiator> newBatchReader(
+      EasySubScan scan, OptionManager options) throws ExecutionSetupException {
+    throw new ExecutionSetupException("Must implement newBatchReader() if using the enhanced framework.");
+  }
+
+  /**
+   * Create the plugin-specific framework that manages the scan. The framework
+   * creates batch readers one by one for each file or block. It defines semantic
+   * rules for projection. It handles "early" or "late" schema readers. A typical
+   * framework builds on standardized frameworks for files in general or text
+   * files in particular.
+   *
+   * @param scan the physical operation definition for the scan operation. Contains
+   * one or more files to read. (The Easy format plugin works only for files.)
+   * @return the scan framework which orchestrates the scan operation across
+   * potentially many files
+   * @throws ExecutionSetupException for all setup failures
+   */
+
+  protected FileScanBuilder frameworkBuilder(
+      OptionManager options, EasySubScan scan) throws ExecutionSetupException {
+    throw new ExecutionSetupException("Must implement frameworkBuilder() if using the enhanced framework.");
   }
 
   public boolean isStatisticsRecordWriter(FragmentContext context, EasyWriter writer) {
     return false;
   }
 
-  public abstract RecordWriter getRecordWriter(FragmentContext context, EasyWriter writer) throws IOException;
+  public RecordWriter getRecordWriter(FragmentContext context,
+                                      EasyWriter writer) throws IOException {
+    throw new UnsupportedOperationException("unimplemented");
+  }
 
   public StatisticsRecordWriter getStatisticsRecordWriter(FragmentContext context, EasyWriter writer) throws IOException
   {
@@ -519,4 +501,18 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
 
   public int getReaderOperatorType() { return easyConfig.readerOperatorType; }
   public int getWriterOperatorType() { return easyConfig.writerOperatorType; }
+
+  @Override
+  public boolean supportsStatistics() { return easyConfig.supportsStatistics; }
+
+  @Override
+  public TableStatistics readStatistics(FileSystem fs, Path statsTablePath) throws IOException {
+    throw new UnsupportedOperationException("unimplemented");
+  }
+
+  @Override
+  public void writeStatistics(TableStatistics statistics, FileSystem fs,
+      Path statsTablePath) throws IOException {
+    throw new UnsupportedOperationException("unimplemented");
+  }
 }

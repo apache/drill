@@ -100,6 +100,11 @@ public class SchemaNegotiatorImpl implements SchemaNegotiator {
     batchSize = maxRecordsPerBatch;
   }
 
+  @Override
+  public String userName() {
+    return framework.builder.userName;
+  }
+
   /**
    * Callback from the schema negotiator to build the schema from information from
    * both the table and scan operator. Returns the result set loader to be used
