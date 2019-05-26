@@ -64,7 +64,14 @@ public interface SchemaNegotiator {
    * Specify an advanced error context which allows the reader to
    * fill in custom context values.
    */
+
   void setErrorContext(CustomErrorContext context);
+
+  /*
+   * The name of the user running the query.
+   */
+
+  String userName();
 
   /**
    * Specify the table schema if this is an early-schema reader. Need

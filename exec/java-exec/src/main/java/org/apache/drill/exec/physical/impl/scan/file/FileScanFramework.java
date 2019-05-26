@@ -62,7 +62,8 @@ import org.apache.hadoop.mapred.FileSplit;
 
 public class FileScanFramework extends ManagedScanFramework {
 
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FileScanFramework.class);
+  private static final org.slf4j.Logger logger =
+      org.slf4j.LoggerFactory.getLogger(FileScanFramework.class);
 
   /**
    * The file schema negotiator adds no behavior at present, but is
@@ -80,7 +81,6 @@ public class FileScanFramework extends ManagedScanFramework {
     /**
      * Gives the Drill file system for this operator.
      */
-
     DrillFileSystem fileSystem();
 
     /**
@@ -184,6 +184,10 @@ public class FileScanFramework extends ManagedScanFramework {
         return null;
       }
       return newReader();
+    }
+
+    public CustomErrorContext errorContext() {
+      return fileFramework == null ? null : fileFramework.errorContext();
     }
 
     public abstract ManagedReader<? extends FileSchemaNegotiator> newReader();
