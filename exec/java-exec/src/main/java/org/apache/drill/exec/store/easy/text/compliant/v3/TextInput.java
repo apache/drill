@@ -147,7 +147,6 @@ final class TextInput {
     }
   }
 
-
   /**
    * Helper method to get the most recent characters consumed since the last record started.
    * May get an incomplete string since we don't support stream rewind.  Returns empty string for now.
@@ -195,7 +194,6 @@ final class TextInput {
       underlyingBuffer.put(b);
     }
   }
-
 
   /**
    * Read more data into the buffer. Will also manage split end conditions.

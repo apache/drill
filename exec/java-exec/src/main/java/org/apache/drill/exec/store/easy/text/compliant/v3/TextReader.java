@@ -17,13 +17,13 @@
  */
 package org.apache.drill.exec.store.easy.text.compliant.v3;
 
-import io.netty.buffer.DrillBuf;
-
 import java.io.IOException;
 
 import org.apache.drill.common.exceptions.UserException;
 
 import com.univocity.parsers.common.TextParsingException;
+
+import io.netty.buffer.DrillBuf;
 
 /*******************************************************************************
  * Portions Copyright 2014 uniVocity Software Pty Ltd
@@ -46,6 +46,10 @@ public final class TextReader {
 
   private final TextInput input;
   private final TextOutput output;
+
+  // TODO: Remove this; it is a vestige of the "V2" implementation
+  // and appears to be used only for white-space handling, which is
+  // overkill.
   private final DrillBuf workBuf;
 
   private byte ch;
@@ -230,6 +234,15 @@ public final class TextReader {
    * Recursive function invoked when a quote is encountered. Function also
    * handles the case when there are non-white space characters in the field
    * after the quoted value.
+   * <p>
+   * Handles quotes and quote escapes:
+   * <ul>
+   * <li>[escape][quote] - escapes the quote</li>
+   * <li>[escape][! quote] - emits both the escape and
+   * the next char</li>
+   * <li>escape = quote, [quote][quote] - escapes the
+   * quote.</li>
+   * </ul>
    * @param prev  previous byte read
    * @throws IOException for input file read errors
    */
@@ -239,11 +252,22 @@ public final class TextReader {
     final TextOutput output = this.output;
     final TextInput input = this.input;
     final byte quote = this.quote;
+    final byte quoteEscape = this.quoteEscape;
 
     ch = input.nextCharNoNewLineCheck();
 
     while (!(prev == quote && (ch == delimiter || ch == newLine || isWhite(ch)))) {
-      if (ch != quote) {
+      if (ch == quote) {
+        if (prev == quoteEscape) {
+          output.append(ch);
+          prev = NULL_BYTE;
+        } else {
+          prev = ch;
+        }
+      } else {
+        if (prev == quoteEscape) {
+          output.append(prev);
+        }
         if (prev == quote) { // unescaped quote detected
           if (parseUnescapedQuotes) {
             output.append(quote);
@@ -260,13 +284,12 @@ public final class TextReader {
                     + "Cannot parse CSV input.");
           }
         }
-        output.append(ch);
-        prev = ch;
-      } else if (prev == quoteEscape) {
-        output.append(quote);
-        prev = NULL_BYTE;
-      } else {
-        prev = ch;
+        if (ch == quoteEscape) {
+          prev = ch;
+        } else {
+          output.append(ch);
+          prev = ch;
+        }
       }
       ch = input.nextCharNoNewLineCheck();
     }

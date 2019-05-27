@@ -147,6 +147,142 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
           .addContext(errorContext())
           .build(logger);
       }
+
+      return new ScanBatch(context, oContext, readers, implicitColumns);
+    }
+
+    /**
+     * Create a record reader given a file system, a file description and other
+     * information. For backward compatibility, calls the plugin method by
+     * default.
+     *
+     * @param plugin
+     *          the plugin creating the scan
+     * @param context
+     *          fragment context for the fragment running the scan
+     * @param dfs
+     *          Drill's distributed file system facade
+     * @param fileWork
+     *          description of the file to scan
+     * @param columns
+     *          list of columns to project
+     * @param userName
+     *          the name of the user performing the scan
+     * @return a scan operator
+     * @throws ExecutionSetupException
+     *           if anything goes wrong
+     */
+
+    public RecordReader getRecordReader(EasyFormatPlugin<? extends FormatPluginConfig> plugin,
+        FragmentContext context, DrillFileSystem dfs, FileWork fileWork,
+        List<SchemaPath> columns, String userName) throws ExecutionSetupException {
+      return plugin.getRecordReader(context, dfs, fileWork, columns, userName);
+    }
+  }
+
+  /**
+   * Revised scanner based on the revised {@link org.apache.drill.exec.physical.rowSet.ResultSetLoader}
+   * and {@link org.apache.drill.exec.physical.impl.scan.RowBatchReader} classes.
+   * Handles most projection tasks automatically. Able to limit
+   * vector and batch sizes. Use this for new format plugins.
+   */
+
+  public abstract static class ScanFrameworkCreator
+      implements ScanBatchCreator {
+
+    protected EasyFormatPlugin<? extends FormatPluginConfig> plugin;
+
+    public ScanFrameworkCreator(EasyFormatPlugin<? extends FormatPluginConfig> plugin) {
+      this.plugin = plugin;
+    }
+
+    /**
+     * Builds the revised {@link FileBatchReader}-based scan batch.
+     *
+     * @param context
+     * @param scan
+     * @return
+     * @throws ExecutionSetupException
+     */
+
+    @Override
+    public CloseableRecordBatch buildScan(
+        final FragmentContext context,
+        final EasySubScan scan) throws ExecutionSetupException {
+
+      // Assemble the scan operator and its wrapper.
+
+      try {
+        final FileScanBuilder builder = frameworkBuilder(context.getOptions(), scan);
+        builder.setProjection(scan.getColumns());
+        builder.setFiles(scan.getWorkUnits());
+        builder.setConfig(plugin.easyConfig().fsConf);
+
+        // The text readers use required Varchar columns to represent null columns.
+
+        builder.allowRequiredNullColumns(true);
+        final Path selectionRoot = scan.getSelectionRoot();
+        if (selectionRoot != null) {
+          builder.metadataOptions().setSelectionRoot(selectionRoot);
+          builder.metadataOptions().setPartitionDepth(scan.getPartitionDepth());
+        }
+        FileScanFramework framework = builder.buildFileFramework();
+        return new OperatorRecordBatch(
+            context, scan,
+            new ScanOperatorExec(
+                framework));
+      } catch (final UserException e) {
+        // Rethrow user exceptions directly
+        throw e;
+      } catch (final Throwable e) {
+        // Wrap all others
+        throw new ExecutionSetupException(e);
+      }
+    }
+
+    /**
+     * Create the plugin-specific framework that manages the scan. The framework
+     * creates batch readers one by one for each file or block. It defines semantic
+     * rules for projection. It handles "early" or "late" schema readers. A typical
+     * framework builds on standardized frameworks for files in general or text
+     * files in particular.
+     *
+     * @param options system/session options which can be used to control or
+     * customize the scan framework
+     * @param scan the physical operation definition for the scan operation. Contains
+     * one or more files to read. (The Easy format plugin works only for files.)
+     * @return the scan framework which orchestrates the scan operation across
+     * potentially many files
+     * @throws ExecutionSetupException for all setup failures
+     */
+    protected abstract FileScanBuilder frameworkBuilder(
+        OptionManager options, EasySubScan scan) throws ExecutionSetupException;
+  }
+
+  /**
+   * Generic framework creator for files that just use the basic file
+   * support: metadata, etc. Specialized use cases (special "columns"
+   * column, say) will require a specialized implementation.
+   */
+
+  public abstract static class FileScanFrameworkCreator extends ScanFrameworkCreator {
+
+    private final FileReaderFactory readerCreator;
+
+    public FileScanFrameworkCreator(EasyFormatPlugin<? extends FormatPluginConfig> plugin,
+        FileReaderFactory readerCreator) {
+      super(plugin);
+      this.readerCreator = readerCreator;
+    }
+
+    @Override
+    protected FileScanBuilder frameworkBuilder(
+        OptionManager options, EasySubScan scan) throws ExecutionSetupException {
+
+      FileScanBuilder builder = new FileScanBuilder();
+      builder.setReaderFactory(readerCreator);
+      return builder;
+>>>>>>> ea212504f... DRILL-7279: Enable provided schema for text files without headers
     }
   }
 
@@ -182,11 +318,11 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
    * @param name name of the plugin
    * @param config configuration options for this plugin which determine
    * developer-defined runtime behavior
-   * @param context the global server-wide drillbit context
+   * @param context the global server-wide Drillbit context
    * @param storageConfig the configuration for the storage plugin that owns this
    * format plugin
    * @param formatConfig the Jackson-serialized format configuration as created
-   * by the user in the Drill web console. Holds user-defined options.
+   * by the user in the Drill web console. Holds user-defined options
    */
 
   protected EasyFormatPlugin(String name, EasyFormatConfig config, DrillbitContext context,

@@ -17,13 +17,11 @@
  */
 package org.apache.drill.exec.store.easy.text.compliant;
 
+import static org.apache.drill.test.rowSet.RowSetUtilities.dec;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.apache.drill.test.rowSet.RowSetUtilities.dec;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.Iterator;
 
 import org.apache.drill.categories.RowSetTests;
@@ -56,7 +54,6 @@ import org.junit.experimental.categories.Category;
 public class TestCsvWithSchema extends BaseCsvTest {
 
   protected static final String FILE1_NAME = "file1.csv";
-  protected static final String FILE_N_NAME = "file%d.csv";
 
   private static String basicFileContents[] = {
     "intcol,datecol,str,dub",
@@ -107,26 +104,6 @@ public class TestCsvWithSchema extends BaseCsvTest {
   @BeforeClass
   public static void setup() throws Exception {
     BaseCsvTest.setup(false,  true);
-  }
-
-  private static String buildTable(String tableName, String[]...fileContents) throws IOException {
-    File rootDir = new File(testDir, tableName);
-    rootDir.mkdir();
-    for (int i = 0; i < fileContents.length; i++) {
-      String fileName = String.format(FILE_N_NAME, i);
-      buildFile(new File(rootDir, fileName), fileContents[i]);
-    }
-    return "`dfs.data`.`" + tableName + "`";
-  }
-
-  private void enableSchemaSupport() {
-    enableV3(true);
-    enableSchema(true);
-  }
-
-  private void resetSchemaSupport() {
-    resetV3();
-    resetSchema();
   }
 
   /**
@@ -1407,7 +1384,7 @@ public class TestCsvWithSchema extends BaseCsvTest {
    * value.
    */
   @Test
-  public void testBlankColsWithNDefaultValue() throws Exception {
+  public void testBlankColsWithNoDefaultValue() throws Exception {
     String tableName = "blankColsNullableSchema";
     String tablePath = buildTable(tableName, blankColContents);
 

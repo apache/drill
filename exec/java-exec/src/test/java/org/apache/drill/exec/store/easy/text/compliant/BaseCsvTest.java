@@ -120,6 +120,7 @@ public class BaseCsvTest extends ClusterTest {
       }
     }
   }
+
   protected String buildBigColFile(boolean withHeader) throws IOException {
     String fileName = "hugeCol.csv";
     try(PrintWriter out = new PrintWriter(new FileWriter(new File(testDir, fileName)))) {
@@ -138,4 +139,28 @@ public class BaseCsvTest extends ClusterTest {
     }
     return fileName;
   }
+
+  protected static final String FILE_N_NAME = "file%d.csv";
+
+  protected static String buildTable(String tableName, String[]...fileContents) throws IOException {
+    File rootDir = new File(testDir, tableName);
+    rootDir.mkdir();
+    for (int i = 0; i < fileContents.length; i++) {
+      String fileName = String.format(FILE_N_NAME, i);
+      buildFile(new File(rootDir, fileName), fileContents[i]);
+    }
+    return "`dfs.data`.`" + tableName + "`";
+  }
+
+  protected void enableSchemaSupport() {
+    enableV3(true);
+    enableSchema(true);
+  }
+
+  protected void resetSchemaSupport() {
+    resetV3();
+    resetSchema();
+  }
+
+>>>>>>> ea212504f... DRILL-7279: Enable provided schema for text files without headers
 }

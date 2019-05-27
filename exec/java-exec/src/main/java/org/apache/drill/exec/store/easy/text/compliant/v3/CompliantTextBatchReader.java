@@ -105,10 +105,10 @@ public class CompliantTextBatchReader implements ManagedReader<ColumnsSchemaNego
     try {
       TextOutput output;
 
-      if (settings.isHeaderExtractionEnabled()) {
-        output = openWithHeaders(schemaNegotiator);
-      } else {
+      if (settings.isUseRepeatedVarChar()) {
         output = openWithoutHeaders(schemaNegotiator);
+      } else {
+        output = openWithHeaders(schemaNegotiator, settings.providedHeaders());
       }
       if (output == null) {
         return false;
@@ -122,10 +122,17 @@ public class CompliantTextBatchReader implements ManagedReader<ColumnsSchemaNego
 
   /**
    * Extract header and use that to define the reader schema.
+   *
+   * @param schemaNegotiator used to define the reader schema
+   * @param providedHeaders "artificial" headers created from a
+   * provided schema, if any. Used when using a provided schema
+   * with a text file that contains no headers; ignored for
+   * text file with headers
    */
 
-  private TextOutput openWithHeaders(ColumnsSchemaNegotiator schemaNegotiator) throws IOException {
-    final String [] fieldNames = extractHeader();
+  private TextOutput openWithHeaders(ColumnsSchemaNegotiator schemaNegotiator,
+      String[] providedHeaders) throws IOException {
+    final String [] fieldNames = providedHeaders == null ? extractHeader() : providedHeaders;
     if (fieldNames == null) {
       return null;
     }
