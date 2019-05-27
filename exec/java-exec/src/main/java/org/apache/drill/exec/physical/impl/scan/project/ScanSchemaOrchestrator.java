@@ -322,7 +322,7 @@ public class ScanSchemaOrchestrator {
         // Use only implicit conversions
         schemaTransformer = new SchemaTransformerImpl(
             builder.outputSchema, builder.conversionProps);
-        if (builder.outputSchema.getBooleanProperty(TupleMetadata.IS_STRICT_SCHEMA_PROP)) {
+        if (builder.outputSchema.booleanProperty(TupleMetadata.IS_STRICT_SCHEMA_PROP)) {
           allowRequiredNulls = true;
         }
       } else {

@@ -17,45 +17,140 @@
  */
 package org.apache.drill.exec.store.easy.text.compliant.v3;
 
+import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.store.dfs.easy.EasySubScan;
+import org.apache.drill.exec.store.easy.text.TextFormatPlugin;
 import org.apache.drill.exec.store.easy.text.TextFormatPlugin.TextFormatConfig;
-
 import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
 
 // TODO: Remove the "V3" suffix once the V2 version is retired.
 public class TextParsingSettingsV3 {
 
-  public static final TextParsingSettingsV3 DEFAULT = new TextParsingSettingsV3();
+  private final String emptyValue = null;
+  private final boolean parseUnescapedQuotes = true;
+  private final byte quote;
+  private final byte quoteEscape;
+  private final byte delimiter;
+  private final byte comment;
 
-  private String emptyValue = null;
-  private boolean parseUnescapedQuotes = true;
-  private byte quote = b('"');
-  private byte quoteEscape = b('"');
-  private byte delimiter = b(',');
-  private byte comment = b('#');
-
-  private long maxCharsPerColumn = Character.MAX_VALUE;
-  private byte normalizedNewLine = b('\n');
-  private byte[] newLineDelimiter = {normalizedNewLine};
-  private boolean ignoreLeadingWhitespaces;
-  private boolean ignoreTrailingWhitespaces;
-  private String lineSeparatorString = "\n";
+  private final long maxCharsPerColumn = Character.MAX_VALUE;
+  private final byte normalizedNewLine = b('\n');
+  private final byte[] newLineDelimiter;
+  private final boolean ignoreLeadingWhitespaces = false;
+  private final boolean ignoreTrailingWhitespaces = false;
+  private final String lineSeparatorString = "\n";
   private boolean skipFirstLine;
 
-  private boolean headerExtractionEnabled;
-  private boolean useRepeatedVarChar = true;
+  private final boolean headerExtractionEnabled;
+  private final boolean useRepeatedVarChar;
+  private final String providedHeaders[];
 
-  public void set(TextFormatConfig config){
-    this.quote = bSafe(config.getQuote(), "quote");
-    this.quoteEscape = bSafe(config.getEscape(), "escape");
-    this.newLineDelimiter = config.getLineDelimiter().getBytes(Charsets.UTF_8);
-    this.delimiter = bSafe(config.getFieldDelimiter(), "fieldDelimiter");
-    this.comment = bSafe(config.getComment(), "comment");
-    this.skipFirstLine = config.isSkipFirstLine();
-    this.headerExtractionEnabled = config.isHeaderExtractionEnabled();
-    if (this.headerExtractionEnabled) {
-      // In case of header TextRecordReader will use set of VarChar vectors vs RepeatedVarChar
-      this.useRepeatedVarChar = false;
+  /**
+   * Configure the properties for this one scan based on:
+   * <p>
+   * <ul>
+   * <li>The defaults in the plugin config (if properties not defined
+   * in the config JSON.</li>
+   * <li>The config values from the config JSON as stored in the
+   * plugin config.</li>
+   * <li>Table function settings expressed in the query (and passed
+   * in as part of the plugin config.</li>
+   * <li>Table properties.</li>
+   * </ul>
+   * <p>
+   * The result is that the user can customize the behavior of a table just
+   * via the table properties; the user need not define a new storage
+   * config just to change a property. For example, by default, the
+   * <tt>`csv`</tt> config has no headers. But, if the user has a ".csv"
+   * file with headers, the user can just customize the table properties.
+   */
+  public TextParsingSettingsV3(TextFormatConfig config,
+      EasySubScan scan, OptionManager options) {
+    TupleMetadata providedSchema = scan.getSchema();
+    boolean extractHeaders = config.isHeaderExtractionEnabled();
+    boolean skipFirst = config.isSkipFirstLine();
+    String providedHeaders[] = null;
+    byte delimChar = bSafe(config.getFieldDelimiter(), "fieldDelimiter");
+    byte commentChar = bSafe(config.getComment(), "comment");
+    byte quoteChar = bSafe(config.getQuote(), "quote");
+    byte quoteEscapeChar = bSafe(config.getEscape(), "escape");
+    byte[] newlineDelim = config.getLineDelimiter().getBytes(Charsets.UTF_8);
+    if (providedSchema != null) {
+      extractHeaders = providedSchema.booleanProperty(
+          TextFormatPlugin.HAS_HEADERS_PROP, extractHeaders);
+      skipFirst = ! extractHeaders & providedSchema.booleanProperty(
+          TextFormatPlugin.SKIP_FIRST_LINE_PROP, skipFirstLine);
+      if (!extractHeaders && ! providedSchema.isEmpty()) {
+        providedHeaders = new String[providedSchema.size()];
+        for (int i = 0; i < providedHeaders.length; i++) {
+          providedHeaders[i] = providedSchema.metadata(i).name();
+        }
+      }
+      delimChar = overrideChar(providedSchema, TextFormatPlugin.DELIMITER_PROP, delimChar);
+      quoteChar = overrideChar(providedSchema, TextFormatPlugin.QUOTE_PROP, quoteChar);
+      quoteEscapeChar = overrideChar(providedSchema, TextFormatPlugin.QUOTE_ESCAPE_PROP, quoteEscapeChar);
+      newlineDelim = newlineDelimBytes(providedSchema, newlineDelim);
+      commentChar = commentChar(providedSchema, commentChar);
     }
+    skipFirstLine = !extractHeaders && skipFirst;
+    headerExtractionEnabled = extractHeaders;
+    this.providedHeaders = providedHeaders;
+    useRepeatedVarChar = !extractHeaders && providedHeaders == null;
+
+    quote = quoteChar;
+    quoteEscape = quoteEscapeChar;
+    newLineDelimiter = newlineDelim;
+    delimiter = delimChar;
+    comment = commentChar;
+  }
+
+  /**
+   * Parse a delimiter from table properties. If the property is unset,
+   * or is a blank string, then uses the delimiter from the plugin config.
+   * Else, if non-blank, uses the first character of the property value.
+   */
+
+  private static byte overrideChar(TupleMetadata providedSchema, String propName, byte configValue) {
+    String value = providedSchema.property(propName);
+    if (value == null || value.isEmpty()) {
+      return configValue;
+    }
+    // Text reader supports only ASCII text and characters.
+    return (byte) value.charAt(0);
+  }
+
+  /**
+   * Parse a comment character from table properties. If the property is unset,
+   * then uses the delimiter from the plugin config. If the properry value is
+   * blank, then uses ASCII NUL (0) as the comment. This value should never
+   * match anything, and effectively disables the comment feature.
+   * Else, if non-blank, uses the first character of the property value.
+   */
+
+  private static byte commentChar(TupleMetadata providedSchema, byte configValue) {
+    String value = providedSchema.property(TextFormatPlugin.COMMENT_CHAR_PROP);
+    if (value == null) {
+      return configValue;
+    }
+    if (value.isEmpty()) {
+      return 0;
+    }
+    // Text reader supports only ASCII text and characters.
+    return (byte) value.charAt(0);
+  }
+
+  /**
+   * Return either line delimiter from table properties, or the one
+   * provided as a parameter from the plugin config. The line delimiter
+   * can contain multiple bytes.
+   */
+  private static byte[] newlineDelimBytes(TupleMetadata providedSchema, byte[] configValue) {
+    String value = providedSchema.property(TextFormatPlugin.LINE_DELIM_PROP);
+    if (value == null || value.isEmpty()) {
+      return configValue;
+    }
+    return value.getBytes();
   }
 
   public byte getComment() {
@@ -72,10 +167,6 @@ public class TextParsingSettingsV3 {
 
   public boolean isUseRepeatedVarChar() {
     return useRepeatedVarChar;
-  }
-
-  public void setUseRepeatedVarChar(boolean useRepeatedVarChar) {
-    this.useRepeatedVarChar = useRepeatedVarChar;
   }
 
   private static byte bSafe(char c, String name) {
@@ -104,32 +195,8 @@ public class TextParsingSettingsV3 {
     return quote;
   }
 
-  /**
-   * Defines the character used for escaping values where the field delimiter is
-   * part of the value. Defaults to '"'
-   *
-   * @param quote
-   *          the quote character
-   */
-  public void setQuote(byte quote) {
-    this.quote = quote;
-  }
-
   public String getLineSeparatorString() {
     return lineSeparatorString;
-  }
-
-  /**
-   * Identifies whether or not a given character is used for escaping values
-   * where the field delimiter is part of the value
-   *
-   * @param ch
-   *          the character to be verified
-   * @return true if the given character is the character used for escaping
-   *         values, false otherwise
-   */
-  public boolean isQuote(byte ch) {
-    return this.quote == ch;
   }
 
   /**
@@ -141,52 +208,11 @@ public class TextParsingSettingsV3 {
   }
 
   /**
-   * Defines the character used for escaping quotes inside an already quoted
-   * value. Defaults to '"'
-   *
-   * @param quoteEscape
-   *          the quote escape character
-   */
-  public void setQuoteEscape(byte quoteEscape) {
-    this.quoteEscape = quoteEscape;
-  }
-
-  /**
-   * Identifies whether or not a given character is used for escaping quotes
-   * inside an already quoted value.
-   *
-   * @param ch
-   *          the character to be verified
-   * @return true if the given character is the quote escape character, false
-   *         otherwise
-   */
-  public boolean isQuoteEscape(byte ch) {
-    return this.quoteEscape == ch;
-  }
-
-  /**
    * Returns the field delimiter character. Defaults to ','
    * @return the field delimiter character
    */
   public byte getDelimiter() {
     return delimiter;
-  }
-
-  /**
-   * Defines the field delimiter character. Defaults to ','
-   * @param delimiter the field delimiter character
-   */
-  public void setDelimiter(byte delimiter) {
-    this.delimiter = delimiter;
-  }
-
-  /**
-   * Identifies whether or not a given character represents a field delimiter
-   * @param ch the character to be verified
-   * @return true if the given character is the field delimiter character, false otherwise
-   */
-  public boolean isDelimiter(byte ch) {
-    return this.delimiter == ch;
   }
 
   /**
@@ -203,20 +229,6 @@ public class TextParsingSettingsV3 {
   }
 
   /**
-   * Sets the String representation of an empty value (defaults to null)
-   *
-   * <p>
-   * When reading, if the parser does not read any character from the input, and
-   * the input is within quotes, the empty is used instead of an empty string
-   *
-   * @param emptyValue
-   *          the String representation of an empty value
-   */
-  public void setEmptyValue(String emptyValue) {
-    this.emptyValue = emptyValue;
-  }
-
-  /**
    * Indicates whether the CSV parser should accept unescaped quotes inside
    * quoted values and parse them normally. Defaults to {@code true}.
    *
@@ -225,21 +237,6 @@ public class TextParsingSettingsV3 {
    */
   public boolean isParseUnescapedQuotes() {
     return parseUnescapedQuotes;
-  }
-
-  /**
-   * Configures how to handle unescaped quotes inside quoted values. If set to
-   * {@code true}, the parser will parse the quote normally as part of the
-   * value. If set the {@code false}, a
-   * {@link com.univocity.parsers.common.TextParsingException} will be thrown.
-   * Defaults to {@code true}.
-   *
-   * @param parseUnescapedQuotes
-   *          indicates whether or not the CSV parser should accept unescaped
-   *          quotes inside quoted values.
-   */
-  public void setParseUnescapedQuotes(boolean parseUnescapedQuotes) {
-    this.parseUnescapedQuotes = parseUnescapedQuotes;
   }
 
   /**
@@ -254,52 +251,21 @@ public class TextParsingSettingsV3 {
     return headerExtractionEnabled;
   }
 
-  /**
-   * Defines whether or not the first valid record parsed from the input should
-   * be considered as the row containing the names of each column
-   *
-   * @param headerExtractionEnabled
-   *          a flag indicating whether the first valid record parsed from the
-   *          input should be considered as the row containing the names of each
-   *          column
-   */
-  public void setHeaderExtractionEnabled(boolean headerExtractionEnabled) {
-    this.headerExtractionEnabled = headerExtractionEnabled;
-  }
-
   public long getMaxCharsPerColumn() {
     return maxCharsPerColumn;
-  }
-
-  public void setMaxCharsPerColumn(long maxCharsPerColumn) {
-    this.maxCharsPerColumn = maxCharsPerColumn;
-  }
-
-  public void setComment(byte comment) {
-    this.comment = comment;
   }
 
   public byte getNormalizedNewLine() {
     return normalizedNewLine;
   }
 
-  public void setNormalizedNewLine(byte normalizedNewLine) {
-    this.normalizedNewLine = normalizedNewLine;
-  }
-
   public boolean isIgnoreLeadingWhitespaces() {
     return ignoreLeadingWhitespaces;
-  }
-
-  public void setIgnoreLeadingWhitespaces(boolean ignoreLeadingWhitespaces) {
-    this.ignoreLeadingWhitespaces = ignoreLeadingWhitespaces;
   }
 
   public boolean isIgnoreTrailingWhitespaces() {
     return ignoreTrailingWhitespaces;
   }
 
-  public void setIgnoreTrailingWhitespaces(boolean ignoreTrailingWhitespaces) {
-    this.ignoreTrailingWhitespaces = ignoreTrailingWhitespaces;
-  }
+  public String[] providedHeaders() { return providedHeaders; }
 }

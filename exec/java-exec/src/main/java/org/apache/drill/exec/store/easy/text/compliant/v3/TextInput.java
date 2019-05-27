@@ -17,22 +17,21 @@
  */
 package org.apache.drill.exec.store.easy.text.compliant.v3;
 
-import io.netty.buffer.DrillBuf;
-import io.netty.util.internal.PlatformDependent;
+import static org.apache.drill.exec.memory.BoundsChecking.rangeCheck;
 
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.hadoop.fs.ByteBufferReadable;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Seekable;
 import org.apache.hadoop.io.compress.CompressionInputStream;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-
-import static org.apache.drill.exec.memory.BoundsChecking.rangeCheck;
+import io.netty.buffer.DrillBuf;
+import io.netty.util.internal.PlatformDependent;
 
 /**
  * Class that fronts an InputStream to provide a byte consumption interface.
@@ -148,7 +147,6 @@ final class TextInput {
     }
   }
 
-
   /**
    * Helper method to get the most recent characters consumed since the last record started.
    * May get an incomplete string since we don't support stream rewind.  Returns empty string for now.
@@ -196,7 +194,6 @@ final class TextInput {
       underlyingBuffer.put(b);
     }
   }
-
 
   /**
    * Read more data into the buffer. Will also manage split end conditions.

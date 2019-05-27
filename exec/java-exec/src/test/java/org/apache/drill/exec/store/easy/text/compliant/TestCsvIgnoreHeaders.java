@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.easy.text.compliant;
 
 import static org.apache.drill.test.rowSet.RowSetUtilities.strArray;
+
 import java.io.File;
 import java.io.IOException;
 
@@ -56,19 +57,19 @@ public class TestCsvIgnoreHeaders  extends BaseCsvTest{
 
   @Test
   public void testColumns() throws IOException {
+    String fileName = "simple.csv";
+    buildFile(fileName, withHeaders);
     try {
       enableV3(false);
-      doTestColumns();
+      doTestColumns(fileName);
       enableV3(true);
-      doTestColumns();
+      doTestColumns(fileName);
     } finally {
       resetV3();
     }
   }
 
-  private void doTestColumns() throws IOException {
-    String fileName = "simple.csv";
-    buildFile(fileName, withHeaders);
+  private void doTestColumns(String fileName) throws IOException {
     String sql = "SELECT columns FROM `dfs.data`.`%s`";
     RowSet actual = client.queryBuilder().sql(sql, fileName).rowSet();
 

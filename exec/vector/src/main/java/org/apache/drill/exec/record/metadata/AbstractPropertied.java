@@ -63,7 +63,8 @@ public class AbstractPropertied implements Propertied {
     if (properties == null) {
       return defValue;
     }
-    return properties.get(key);
+    String value = properties.get(key);
+    return value == null ? defValue : value;
   }
 
   @Override
@@ -76,7 +77,13 @@ public class AbstractPropertied implements Propertied {
   }
 
   @Override
-  public boolean getBooleanProperty(String key) {
-    return Boolean.parseBoolean(property(key, Boolean.FALSE.toString()));
+  public boolean booleanProperty(String key) {
+    return booleanProperty(key, false);
+  }
+
+  @Override
+  public boolean booleanProperty(String key, boolean defaultValue) {
+    String value = property(key);
+    return value == null ? defaultValue : Boolean.parseBoolean(value);
   }
 }

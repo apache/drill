@@ -926,7 +926,7 @@ public class TestCsvWithHeaders extends BaseCsvTest {
       assertTrue(e.getMessage().contains("Format plugin: text"));
       assertTrue(e.getMessage().contains("Plugin config name: csv"));
       assertTrue(e.getMessage().contains("Extract headers: true"));
-      assertTrue(e.getMessage().contains("Skip headers: false"));
+      assertTrue(e.getMessage().contains("Skip first line: false"));
     } catch (Exception e) {
       fail();
     } finally {
@@ -974,7 +974,7 @@ public class TestCsvWithHeaders extends BaseCsvTest {
       assertTrue(e.getMessage().contains("Format plugin: text"));
       assertTrue(e.getMessage().contains("Plugin config name: csv"));
       assertTrue(e.getMessage().contains("Extract headers: true"));
-      assertTrue(e.getMessage().contains("Skip headers: false"));
+      assertTrue(e.getMessage().contains("Skip first line: false"));
     } catch (Exception e) {
       fail();
     } finally {

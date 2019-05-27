@@ -118,4 +118,27 @@ public class BaseCsvTest extends ClusterTest {
       }
     }
   }
+
+  protected static final String FILE_N_NAME = "file%d.csv";
+
+  protected static String buildTable(String tableName, String[]...fileContents) throws IOException {
+    File rootDir = new File(testDir, tableName);
+    rootDir.mkdir();
+    for (int i = 0; i < fileContents.length; i++) {
+      String fileName = String.format(FILE_N_NAME, i);
+      buildFile(new File(rootDir, fileName), fileContents[i]);
+    }
+    return "`dfs.data`.`" + tableName + "`";
+  }
+
+  protected void enableSchemaSupport() {
+    enableV3(true);
+    enableSchema(true);
+  }
+
+  protected void resetSchemaSupport() {
+    resetV3();
+    resetSchema();
+  }
+
 }

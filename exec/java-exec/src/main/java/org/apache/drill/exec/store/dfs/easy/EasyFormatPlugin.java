@@ -23,9 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.drill.exec.physical.base.MetadataProviderManager;
-import org.apache.drill.shaded.guava.com.google.common.base.Functions;
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -35,12 +32,13 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.AbstractWriter;
+import org.apache.drill.exec.physical.base.MetadataProviderManager;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.physical.base.ScanStats.GroupScanProperty;
 import org.apache.drill.exec.physical.impl.ScanBatch;
-import org.apache.drill.exec.physical.impl.WriterRecordBatch;
 import org.apache.drill.exec.physical.impl.StatisticsWriterRecordBatch;
+import org.apache.drill.exec.physical.impl.WriterRecordBatch;
 import org.apache.drill.exec.physical.impl.protocol.OperatorRecordBatch;
 import org.apache.drill.exec.physical.impl.scan.ScanOperatorExec;
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework;
@@ -62,11 +60,12 @@ import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.store.dfs.FormatMatcher;
 import org.apache.drill.exec.store.dfs.FormatPlugin;
 import org.apache.drill.exec.store.schedule.CompleteFileWork;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
-
+import org.apache.drill.shaded.guava.com.google.common.base.Functions;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 
 /**
  * Base class for various file readers.
@@ -245,7 +244,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
       // Assemble the scan operator and its wrapper.
 
       try {
-        final FileScanBuilder builder = frameworkBuilder(scan);
+        final FileScanBuilder builder = frameworkBuilder(context.getOptions(), scan);
         builder.setProjection(scan.getColumns());
         builder.setFiles(scan.getWorkUnits());
         builder.setConfig(plugin.easyConfig().fsConf);
@@ -279,6 +278,8 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
      * framework builds on standardized frameworks for files in general or text
      * files in particular.
      *
+     * @param options system/session options which can be used to control or
+     * customize the scan framework
      * @param scan the physical operation definition for the scan operation. Contains
      * one or more files to read. (The Easy format plugin works only for files.)
      * @return the scan framework which orchestrates the scan operation across
@@ -286,7 +287,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
      * @throws ExecutionSetupException for all setup failures
      */
     protected abstract FileScanBuilder frameworkBuilder(
-        EasySubScan scan) throws ExecutionSetupException;
+        OptionManager options, EasySubScan scan) throws ExecutionSetupException;
   }
 
   /**
@@ -307,7 +308,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
 
     @Override
     protected FileScanBuilder frameworkBuilder(
-        EasySubScan scan) throws ExecutionSetupException {
+        OptionManager options, EasySubScan scan) throws ExecutionSetupException {
 
       FileScanBuilder builder = new FileScanBuilder();
       builder.setReaderFactory(readerCreator);
@@ -347,11 +348,11 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
    * @param name name of the plugin
    * @param config configuration options for this plugin which determine
    * developer-defined runtime behavior
-   * @param context the global server-wide drillbit context
+   * @param context the global server-wide Drillbit context
    * @param storageConfig the configuration for the storage plugin that owns this
    * format plugin
    * @param formatConfig the Jackson-serialized format configuration as created
-   * by the user in the Drill web console. Holds user-defined options.
+   * by the user in the Drill web console. Holds user-defined options
    */
 
   protected EasyFormatPlugin(String name, EasyFormatConfig config, DrillbitContext context,

@@ -456,7 +456,7 @@ public class ScanLevelProjection {
 
     if (hasOutputSchema()) {
       projectionType =
-          outputSchema.getBooleanProperty(TupleMetadata.IS_STRICT_SCHEMA_PROP)
+          outputSchema.booleanProperty(TupleMetadata.IS_STRICT_SCHEMA_PROP)
           ? ScanProjectionType.STRICT_SCHEMA_WILDCARD
           : ScanProjectionType.SCHEMA_WILDCARD;
     } else if (wildcardPosn != -1) {

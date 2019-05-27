@@ -259,19 +259,19 @@ public class TestCsvWithoutHeaders extends BaseCsvTest {
 
   @Test
   public void testRaggedRows() throws IOException {
+    String fileName = "ragged.csv";
+    buildFile(fileName, raggedRows);
     try {
       enableV3(false);
-      doTestRaggedRows();
+      doTestRaggedRows(fileName);
       enableV3(true);
-      doTestRaggedRows();
+      doTestRaggedRows(fileName);
     } finally {
       resetV3();
     }
   }
 
-  private void doTestRaggedRows() throws IOException {
-    String fileName = "ragged.csv";
-    buildFile(fileName, raggedRows);
+  private void doTestRaggedRows(String fileName) throws IOException {
     String sql = "SELECT columns FROM `dfs.data`.`%s`";
     RowSet actual = client.queryBuilder().sql(sql, fileName).rowSet();
 
