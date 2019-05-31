@@ -1,6 +1,6 @@
 ---
 title: "REFRESH TABLE METADATA"
-date: 2019-05-24
+date: 2019-05-31
 parent: "SQL Commands"
 ---
 Run the REFRESH TABLE METADATA command on Parquet tables and directories to generate a metadata cache file. REFRESH TABLE METADATA collects metadata from the footers of Parquet files and writes the metadata to a metadata file (`.drill.parquet_file_metadata.v4`) and a summary file (`.drill.parquet_summary_metadata.v4`). The planner uses the metadata cache file to prune extraneous data during the query planning phase. Run the REFRESH TABLE METADATA command if planning time is a significant percentage of the total elapsed time of the query.   
@@ -97,7 +97,7 @@ These examples use a schema, `dfs.samples`, which points to the `/tmp` directory
 **Note:** You can access the sample `nation.parquet` file in the `sample-data` directory of your Drill installation.
 
  
-Change schemas to switch to `dfs.samples`: 
+Change to the `dfs.samples` schema: 
 
 	use dfs.samples;
 	+-------+------------------------------------------+

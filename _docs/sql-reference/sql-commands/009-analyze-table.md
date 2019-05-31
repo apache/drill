@@ -1,16 +1,17 @@
 ---
 title: "ANALYZE TABLE"
-date: 2019-05-02
+date: 2019-05-31
 parent: "SQL Commands"
 ---  
 
-Drill 1.16 and later supports the ANALYZE TABLE statement. The ANALYZE TABLE statement computes statistics on Parquet data stored in tables and directories. ANALYZE TABLE writes statistics to a JSON file in the `.stats.drill` directory, for example `/user/table1/.stats.drill/0_0.json`. The optimizer in Drill uses these statistics to estimate filter, aggregation, and join cardinalities and create more efficient query plans. 
+Drill 1.16 and later supports the ANALYZE TABLE statement. The ANALYZE TABLE statement computes statistics on Parquet data stored in tables and directories. The optimizer in Drill uses statistics to estimate filter, aggregation, and join cardinalities and create an optimal query plan. 
+ANALYZE TABLE writes statistics to a JSON file in the `.stats.drill` directory, for example `/user/table1/.stats.drill/0_0.json`. 
 
-You can run the ANALYZE TABLE statement to calculate statistics for tables, columns, and directories with Parquet data; however, Drill will not use the statistics for query planning unless you enable the `planner.statistics.use` option, as shown:
+Drill will not use the statistics for query planning unless you enable the `planner.statistics.use` option, as shown:
 
 	SET `planner.statistics.use` = true;
 
-Alternatively, you can enable the option in the Drill Web UI at `http://<drill-hostname-or-ip>:8047/options`.
+Alternatively, you can enable the option in the Drill Web UI at `http://<drill-hostname-or-ip-address>:8047/options`.
 
 ## Syntax
 
@@ -41,15 +42,15 @@ An integer that specifies the percentage of data on which to compute statistics.
 
 ## Related Command  
 
-If you drop a table on which you have run ANALYZE TABLE, the statistics are automatically removed with the table:  
+If you drop a table that you have already run ANALYZE TABLE against, the statistics are automatically removed with the table:  
 
 	DROP TABLE [IF EXISTS] [workspace.]name  
 
-If you want to remove statistics for a table (and keep the table), you must remove the directory in which Drill stores the statistics:  
+To remove statistics for a table you want to keep, you must remove the directory in which Drill stores the statistics:  
 
 	DROP TABLE [IF EXISTS] [workspace.]name/.stats.drill  
 
-If you have already issued the ANALYZE TABLE statement against specific columns, a table, or directory, you must run the DROP TABLE statement with `/.stats.drill` before you can successfully run the ANALYZE TABLE statement against the data source again, for example:
+If you have already issued the ANALYZE TABLE statement against specific columns, table, or directory, you must run the DROP TABLE statement with `/.stats.drill` before you can successfully run the ANALYZE TABLE statement against the data source again, for example:
 
 	DROP TABLE `table_stats/Tpch0.01/parquet/customer/.stats.drill`;
 
@@ -146,10 +147,10 @@ For the predicate `"WHERE a = 5"`, in the example histogram above, you can see t
  
 Next, consider the range predicate `"WHERE a > 5 AND a <= 16"`.  The range spans part of bucket [1, 7] and entire buckets [8, 9], [10, 11] and [12, 16].  The total estimate = (7-5)/7 * 16 + 16 + 16 + 16 = 53 (approximately).  The actual count is 59.
 
-**Viewing Histogram Statistics for a Column**
+**Viewing Histogram Statistics for a Column**  
 Histogram statistics are generated for each column, as shown:  
 
-qhistogram":{"category":"numeric-equi-depth","numRowsPerBucket":150,"buckets":[0.0,2.0,4.0,7.0,9.0,12.0,15.199999999999978,17.0,19.0,22.0,24.0]
+	qhistogram":{"category":"numeric-equi-depth","numRowsPerBucket":150,"buckets":[0.0,2.0,4.0,7.0,9.0,12.0,15.199999999999978,17.0,19.0,22.0,24.0]
 
 In this example, there are 10 buckets. Each bucket contains 150 rows, which is calculated as the number of rows (1500)/number of buckets (10). The list of numbers for the “buckets” property indicates bucket boundaries, with the first bucket starting at 0.0 and ending at 2.0. The end of the first bucket is the start point for the second bucket, such that the second bucket starts at 2.0 and ends at 4.0, and so on for the remainder of the buckets. 
   

@@ -1,6 +1,6 @@
 ---
 title: "CREATE OR REPLACE SCHEMA"
-date: 2019-05-02
+date: 2019-05-31
 parent: "SQL Commands"
 ---
 
@@ -625,7 +625,9 @@ You can easily drop the schema for a table using the DROP SCHEMA [IF EXISTS] FOR
 ##Troubleshooting 
 
 **Schema defined as incorrect data type produces DATA_READ_ERROR**  
-Assume that you defined schema on the “name” column as integer, as shown:
+  
+Assume that you defined schema on the “name” column as integer, as shown:  
+  
 	create or replace schema (name int) for table dfs.tmp.`text_table`;
 	+------+-----------------------------------------+
 	|  ok  |                 summary                 |

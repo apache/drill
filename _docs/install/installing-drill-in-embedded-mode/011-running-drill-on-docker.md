@@ -1,6 +1,6 @@
 ---
 title: "Running Drill on Docker"
-date: 2019-05-24
+date: 2019-05-31
 parent: "Installing Drill in Embedded Mode"
 ---  
 
@@ -10,19 +10,16 @@ Currently, you can only run Drill in embedded mode in a Docker container. Embedd
 
 ## Prerequisite  
 
-You must have the Docker client (version 18 or later) installed on your machine.  
+You must have the Docker client (version 18 or later) [installed on your machine](https://docs.docker.com/install/).  
 
-- [Docker for Mac](https://www.docker.com/docker-mac)  
-- [Docker for Windows](https://www.docker.com/docker-windows)  
-- [Docker for Oracle Linux](https://www.docker.com/docker-oracle-linux)  
 
 ## Running Drill in a Docker Container  
 
-You can start and run a Docker container in “detached” mode or “foreground” mode. Foreground is the default mode. Foreground mode runs the Drill process in the container and attaches the console to Drill’s standard input, output, and standard error. Detached mode runs the container in the background.
+You can start and run a Docker container in detached mode or foreground mode. [Detached mode]({{site.baseurl}}/docs/running-drill-on-docker/#running-the-drill-docker-container-in-detached-mode) runs the container in the background. Foreground is the default mode. [Foreground mode]({{site.baseurl}}/docs/running-drill-on-docker/#running-the-drill-docker-container-in-foreground-mode) runs the Drill process in the container and attaches the console to Drill’s standard input, output, and standard error. 
 
-Whether you run the Docker container in detached or foreground mode, you start Drill in a container by issuing the docker run command with some options. 
+Whether you run the Docker container in detached or foreground mode, you start Drill in a container by issuing the docker `run` command with some options, as described in the following table: 
 
-The following table describes the options:  
+ 
 
 | Option                       | Description                                                                                                                                                                                                                                                                                                              |
 |------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -55,7 +52,7 @@ At the prompt, you can enter the following simple query to verify that Drill is 
 
 Open a terminal window (Command Prompt or PowerShell, but not PowerShell ISE) and then issue the following commands and options to connect to SQLLine (the Drill shell):  
 
-**Note:** When you run the Drill Docker container in Detached mode, you connect to SQLLine (the Drill shell) using drill-localhost.  
+**Note:** When you run the Drill Docker container in detached mode, you connect to SQLLine (the Drill shell) using drill-localhost.  
 
        $ docker run -i --name drill-1.16.0 -p 8047:8047 --detach -t drill/apache-drill:1.16.0 /bin/bash
        <displays container ID>
