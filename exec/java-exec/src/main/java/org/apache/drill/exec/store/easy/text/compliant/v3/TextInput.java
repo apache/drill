@@ -17,22 +17,21 @@
  */
 package org.apache.drill.exec.store.easy.text.compliant.v3;
 
-import io.netty.buffer.DrillBuf;
-import io.netty.util.internal.PlatformDependent;
+import static org.apache.drill.exec.memory.BoundsChecking.rangeCheck;
 
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.hadoop.fs.ByteBufferReadable;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Seekable;
 import org.apache.hadoop.io.compress.CompressionInputStream;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-
-import static org.apache.drill.exec.memory.BoundsChecking.rangeCheck;
+import io.netty.buffer.DrillBuf;
+import io.netty.util.internal.PlatformDependent;
 
 /**
  * Class that fronts an InputStream to provide a byte consumption interface.

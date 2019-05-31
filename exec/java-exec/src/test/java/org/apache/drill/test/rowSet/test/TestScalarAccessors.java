@@ -18,6 +18,7 @@
 package org.apache.drill.test.rowSet.test;
 
 import static org.apache.drill.test.rowSet.RowSetUtilities.dec;
+import static org.apache.drill.test.rowSet.RowSetUtilities.strArray;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -39,14 +40,19 @@ import org.apache.drill.exec.vector.DateUtilities;
 import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.ArrayReader;
+import org.apache.drill.exec.vector.accessor.ArrayWriter;
 import org.apache.drill.exec.vector.accessor.ScalarReader;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.ValueType;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.test.SubOperatorTest;
+import org.apache.drill.test.rowSet.DirectRowSet;
+import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetBuilder;
 import org.apache.drill.test.rowSet.RowSetReader;
+import org.apache.drill.test.rowSet.RowSetUtilities;
+import org.apache.drill.test.rowSet.RowSetWriter;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Instant;
 import org.joda.time.LocalDate;
@@ -1773,5 +1779,88 @@ public class TestScalarAccessors extends SubOperatorTest {
       // Expected
     }
     rsb.build().clear();
+  }
+
+  /**
+   * Test the ability to append bytes to a VarChar column. Should work for
+   * Var16Char, but that type is not yet supported in Drill.
+   */
+
+  @Test
+  public void testAppend() {
+    doTestAppend(new SchemaBuilder()
+        .add("col", MinorType.VARCHAR)
+        .buildSchema());
+    doTestAppend(new SchemaBuilder()
+        .addNullable("col", MinorType.VARCHAR)
+        .buildSchema());
+  }
+
+  private void doTestAppend(TupleMetadata schema) {
+    DirectRowSet rs = DirectRowSet.fromSchema(fixture.allocator(), schema);
+    RowSetWriter writer = rs.writer(100);
+    ScalarWriter colWriter = writer.scalar("col");
+
+    byte first[] = "abc".getBytes();
+    byte second[] = "12345".getBytes();
+    colWriter.setBytes(first, first.length);
+    colWriter.appendBytes(second, second.length);
+    writer.save();
+    colWriter.setBytes(second, second.length);
+    colWriter.appendBytes(first, first.length);
+    writer.save();
+    colWriter.setBytes(first, first.length);
+    colWriter.appendBytes(second, second.length);
+    writer.save();
+    RowSet actual = writer.done();
+
+    RowSet expected = new RowSetBuilder(fixture.allocator(), schema)
+        .addSingleCol("abc12345")
+        .addSingleCol("12345abc")
+        .addSingleCol("abc12345")
+        .build();
+
+    RowSetUtilities.verify(expected, actual);
+  }
+
+  /**
+   * Test the ability to append bytes to a VarChar column. Should work for
+   * Var16Char, but that type is not yet supported in Drill.
+   */
+
+  @Test
+  public void testAppendWithArray() {
+    TupleMetadata schema = new SchemaBuilder()
+        .addArray("col", MinorType.VARCHAR)
+        .buildSchema();
+
+    DirectRowSet rs = DirectRowSet.fromSchema(fixture.allocator(), schema);
+    RowSetWriter writer = rs.writer(100);
+    ArrayWriter arrayWriter = writer.array("col");
+    ScalarWriter colWriter = arrayWriter.scalar();
+
+    byte first[] = "abc".getBytes();
+    byte second[] = "12345".getBytes();
+    for (int i = 0; i < 3; i++) {
+      colWriter.setBytes(first, first.length);
+      colWriter.appendBytes(second, second.length);
+      arrayWriter.save();
+      colWriter.setBytes(second, second.length);
+      colWriter.appendBytes(first, first.length);
+      arrayWriter.save();
+      colWriter.setBytes(first, first.length);
+      colWriter.appendBytes(second, second.length);
+      arrayWriter.save();
+      writer.save();
+    }
+    RowSet actual = writer.done();
+
+    RowSet expected = new RowSetBuilder(fixture.allocator(), schema)
+        .addSingleCol(strArray("abc12345", "12345abc", "abc12345"))
+        .addSingleCol(strArray("abc12345", "12345abc", "abc12345"))
+        .addSingleCol(strArray("abc12345", "12345abc", "abc12345"))
+        .build();
+
+    RowSetUtilities.verify(expected, actual);
   }
 }

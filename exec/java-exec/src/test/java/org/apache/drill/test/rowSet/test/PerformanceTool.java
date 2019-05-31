@@ -34,8 +34,8 @@ import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 import org.apache.drill.exec.vector.accessor.writer.AbstractArrayWriter.ArrayObjectWriter;
 import org.apache.drill.exec.vector.accessor.writer.NullableScalarWriter;
 import org.apache.drill.exec.vector.accessor.writer.ScalarArrayWriter;
-import org.apache.drill.test.OperatorFixture;
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
+import org.apache.drill.test.OperatorFixture;
 
 /**
  * Tests the performance of the writers compared to using the value
@@ -178,6 +178,9 @@ public class PerformanceTool {
 
     @Override
     public final void nextElement() { index++; }
+
+    @Override
+    public final void prevElement() { }
 
     @Override
     public void rollover() { }

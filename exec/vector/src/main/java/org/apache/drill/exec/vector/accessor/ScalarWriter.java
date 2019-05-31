@@ -70,6 +70,7 @@ public interface ScalarWriter extends ColumnWriter {
   void setDouble(double value);
   void setString(String value);
   void setBytes(byte[] value, int len);
+  void appendBytes(byte[] value, int len);
   void setDecimal(BigDecimal value);
   void setPeriod(Period value);
   void setDate(LocalDate value);

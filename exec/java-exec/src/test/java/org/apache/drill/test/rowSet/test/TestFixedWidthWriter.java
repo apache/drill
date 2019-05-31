@@ -56,6 +56,9 @@ public class TestFixedWidthWriter extends SubOperatorTest {
     public void nextElement() { }
 
     @Override
+    public void prevElement() { }
+
+    @Override
     public void rollover() { }
 
     @Override

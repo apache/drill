@@ -110,6 +110,11 @@ public abstract class AbstractWriteConverter extends AbstractScalarWriter {
   }
 
   @Override
+  public void appendBytes(byte[] value, int len) {
+    throw conversionError("bytes");
+  }
+
+  @Override
   public void setDecimal(BigDecimal value) {
     baseWriter.setDecimal(value);
   }

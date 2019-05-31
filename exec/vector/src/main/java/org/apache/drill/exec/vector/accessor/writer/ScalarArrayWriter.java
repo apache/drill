@@ -60,6 +60,9 @@ public class ScalarArrayWriter extends BaseArrayWriter {
 
     @Override
     public final void nextElement() { next(); }
+
+    @Override
+    public final void prevElement() { prev(); }
   }
 
   private final ScalarWriter elementWriter;

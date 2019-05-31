@@ -264,6 +264,11 @@ public abstract class BaseScalarWriter extends AbstractScalarWriterImpl {
   }
 
   @Override
+  public void appendBytes(byte[] value, int len) {
+    throw conversionError("bytes");
+  }
+
+  @Override
   public void setDecimal(BigDecimal value) {
     throw conversionError("Decimal");
   }

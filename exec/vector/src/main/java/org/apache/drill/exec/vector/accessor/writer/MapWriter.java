@@ -51,6 +51,7 @@ public abstract class MapWriter extends AbstractTupleWriter {
     @Override public int rowStartIndex() { return baseIndex.rowStartIndex(); }
     @Override public int vectorIndex() { return baseIndex.vectorIndex(); }
     @Override public void nextElement() { }
+    @Override public void prevElement() { }
     @Override public void rollover() { }
 
     @Override public ColumnWriterIndex outerIndex() {

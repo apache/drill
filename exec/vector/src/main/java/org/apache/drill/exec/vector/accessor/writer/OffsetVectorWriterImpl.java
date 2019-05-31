@@ -253,6 +253,12 @@ public class OffsetVectorWriterImpl extends AbstractFixedWidthWriter implements 
     nextOffset = newOffset;
   }
 
+  public final void reviseOffset(final int newOffset) {
+    final int writeIndex = vectorIndex.vectorIndex() + 1;
+    drillBuf.setInt(writeIndex * VALUE_WIDTH, newOffset);
+    nextOffset = newOffset;
+  }
+
   public final void fillOffset(final int newOffset) {
     drillBuf.setInt((++lastWriteIndex + 1) * VALUE_WIDTH, newOffset);
     nextOffset = newOffset;

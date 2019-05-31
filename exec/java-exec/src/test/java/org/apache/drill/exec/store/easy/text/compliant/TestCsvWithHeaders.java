@@ -981,4 +981,29 @@ public class TestCsvWithHeaders extends BaseCsvTest {
       resetV3();
     }
   }
+
+  @Test
+  public void testHugeColumn() throws IOException {
+    String fileName = buildBigColFile(true);
+    try {
+      enableV3(true);
+      String sql = "SELECT * FROM `dfs.data`.`%s`";
+      RowSet actual = client.queryBuilder().sql(sql, fileName).rowSet();
+      assertEquals(10, actual.rowCount());
+      RowSetReader reader = actual.reader();
+      while (reader.next()) {
+        int i = reader.logicalIndex();
+        assertEquals(Integer.toString(i + 1), reader.scalar(0).getString());
+        String big = reader.scalar(1).getString();
+        assertEquals(BIG_COL_SIZE, big.length());
+        for (int j = 0; j < BIG_COL_SIZE; j++) {
+          assertEquals((char) ((j + i) % 26 + 'A'), big.charAt(j));
+        }
+        assertEquals(Integer.toString((i + 1) * 10), reader.scalar(2).getString());
+      }
+      actual.clear();
+    } finally {
+      resetV3();
+    }
+  }
 }

@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.easy.text.compliant.v3;
 
 import org.apache.drill.exec.physical.rowSet.RowSetLoader;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.vector.accessor.ScalarWriter;
 
 /**
  * Class is responsible for generating record batches for text file inputs. We generate
@@ -52,11 +53,12 @@ class FieldVarCharOutput extends BaseFieldOutput {
 
   @Override
   public boolean endField() {
-    if (fieldProjected) {
-      writer.scalar(currentFieldIndex)
-        .setBytes(fieldBytes, currentDataPointer);
-    }
-
+    writeToVector();
     return super.endField();
+  }
+
+  @Override
+  protected ScalarWriter columnWriter() {
+    return writer.scalar(currentFieldIndex);
   }
 }

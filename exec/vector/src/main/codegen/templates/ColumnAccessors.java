@@ -415,6 +415,17 @@ public class ColumnAccessors {
       buf.writerIndex(VALUE_WIDTH);
     }
     </#if>
+    
+    <#if drillType == "VarChar" || drillType == "Var16Char" || drillType == "VarBinary">
+    @Override
+    public final void appendBytes(final byte[] value, final int len) {
+      vectorIndex.prevElement();
+      final int offset = prepareAppend(len);
+      drillBuf.setBytes(offset, value, 0, len);
+      offsetsWriter.reviseOffset(offset + len);
+      vectorIndex.nextElement();
+    }
+    </#if>
     <#if drillType == "VarChar">
 
     @Override

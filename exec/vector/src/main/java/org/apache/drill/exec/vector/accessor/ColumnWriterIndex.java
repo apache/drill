@@ -48,12 +48,21 @@ public interface ColumnWriterIndex {
   int vectorIndex();
 
   /**
-   * Index for array elements that allows the caller to increment the
-   * index. For arrays, writing (or saving) one value automatically
+   * Increment the index for an array.
+   * For arrays, writing (or saving) one value automatically
    * moves to the next value. Ignored for non-element indexes.
    */
 
   void nextElement();
+
+  /**
+   * Decrement the index for an array. Used exclusively for
+   * appending bytes to a VarChar, Var16Char or VarBytes
+   * column. Assumed to be followed by another call
+   * to nextElement().
+   */
+
+  void prevElement();
 
   /**
    * When handling overflow, the index must be reset so that the current row

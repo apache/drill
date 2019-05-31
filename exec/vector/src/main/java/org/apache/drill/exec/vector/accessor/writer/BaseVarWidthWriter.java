@@ -85,6 +85,13 @@ public abstract class BaseVarWidthWriter extends BaseScalarWriter {
     return offsetsWriter.nextOffset;
   }
 
+  protected final int prepareAppend(final int width) {
+    // No fill empties needed: must have been done
+    // on previous setBytes() call.
+
+    return writeOffset(width);
+  }
+
   @Override
   protected final void setBuffer() {
     drillBuf = vector().getBuffer();
