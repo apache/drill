@@ -17,13 +17,17 @@
  */
 package org.apache.drill.exec.store.easy.text.compliant.v3;
 
-import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.physical.rowSet.RowSetLoader;
+import org.apache.drill.exec.vector.accessor.ScalarWriter;
 
 public abstract class BaseFieldOutput extends TextOutput {
 
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseFieldOutput.class);
-  private static final int MAX_FIELD_LENGTH = 1024 * 64;
+  /**
+   * Width of the per-field data buffer. Fields can be larger.
+   * In that case, subsequent buffers are appended to the vector
+   * to form the full field.
+   */
+  private static final int BUFFER_LEN = 1024;
 
   // track which field is getting appended
   protected int currentFieldIndex = -1;
@@ -31,6 +35,8 @@ public abstract class BaseFieldOutput extends TextOutput {
   protected int currentDataPointer;
   // track if field is still getting appended
   private boolean fieldOpen = true;
+  // number of bytes written to field thus far
+  protected int fieldWriteCount;
   // holds chars for a field
   protected byte[] fieldBytes;
   protected final RowSetLoader writer;
@@ -84,7 +90,7 @@ public abstract class BaseFieldOutput extends TextOutput {
     // If we project at least one field, allocate a buffer.
 
     if (maxField >= 0) {
-      fieldBytes = new byte[MAX_FIELD_LENGTH];
+      fieldBytes = new byte[BUFFER_LEN];
     }
   }
 
@@ -104,6 +110,7 @@ public abstract class BaseFieldOutput extends TextOutput {
     assert index == currentFieldIndex + 1;
     currentFieldIndex = index;
     currentDataPointer = 0;
+    fieldWriteCount = 0;
     fieldOpen = true;
 
     // Figure out if this field is projected.
@@ -122,17 +129,40 @@ public abstract class BaseFieldOutput extends TextOutput {
     if (! fieldProjected) {
       return;
     }
-    if (currentDataPointer >= MAX_FIELD_LENGTH - 1) {
-      throw UserException
-          .unsupportedError()
-          .message("Text column is too large.")
-          .addContext("Column", currentFieldIndex)
-          .addContext("Limit", MAX_FIELD_LENGTH)
-          .build(logger);
+    if (currentDataPointer >= BUFFER_LEN - 1) {
+      writeToVector();
     }
 
     fieldBytes[currentDataPointer++] = data;
   }
+
+
+  /**
+   * Write a buffer of data to the underlying vector using the
+   * column writer. The buffer holds a complete or partial chunk
+   * of data for the field. If this is the first data for the field,
+   * write the bytes. If this is a second buffer for the same field,
+   * append the bytes. The append will work if the underlying vector
+   * is VarChar, it will fail if a type conversion shim is in between.
+   * (This is generally OK because the previous setBytes should have
+   * failed because a large int or date is not supported.)
+   */
+
+  protected void writeToVector() {
+    if (!fieldProjected) {
+      return;
+    }
+    ScalarWriter colWriter = columnWriter();
+    if (fieldWriteCount == 0) {
+       colWriter.setBytes(fieldBytes, currentDataPointer);
+    } else {
+      colWriter.appendBytes(fieldBytes, currentDataPointer);
+    }
+    fieldWriteCount += currentDataPointer;
+    currentDataPointer = 0;
+  }
+
+  protected abstract ScalarWriter columnWriter();
 
   @Override
   public boolean endField() {

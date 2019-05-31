@@ -72,6 +72,9 @@ public class DummyScalarWriter extends AbstractScalarWriterImpl {
   public void setBytes(byte[] value, int len) { }
 
   @Override
+  public void appendBytes(byte[] value, int len) { }
+
+  @Override
   public void setDecimal(BigDecimal value) { }
 
   @Override

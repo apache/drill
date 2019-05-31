@@ -144,7 +144,12 @@ public abstract class AbstractArrayWriter implements ArrayWriter, WriterEvents {
     @Override
     public void nextElement() { }
 
-    public void next() { elementIndex++; }
+    @Override
+    public void prevElement() { }
+
+    protected void next() { elementIndex++; }
+
+    protected void prev() { elementIndex--; }
 
     public int valueStartOffset() { return offsetsWriter.nextOffset(); }
 

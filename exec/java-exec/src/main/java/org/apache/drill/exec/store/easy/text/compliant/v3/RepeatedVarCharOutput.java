@@ -120,7 +120,7 @@ public class RepeatedVarCharOutput extends BaseFieldOutput {
 
       // Save the field.
 
-      columnWriter.setBytes(fieldBytes, currentDataPointer);
+      writeToVector();
     } else {
 
       // The field is not projected.
@@ -133,5 +133,10 @@ public class RepeatedVarCharOutput extends BaseFieldOutput {
     // Return whether the rest of the fields should be read.
 
     return super.endField();
+  }
+
+  @Override
+  protected ScalarWriter columnWriter() {
+    return columnWriter;
   }
 }

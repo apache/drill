@@ -60,6 +60,9 @@ public class NullableScalarWriter extends AbstractScalarWriterImpl {
     }
 
     @Override
+    public void prevElement() { }
+
+    @Override
     public void rollover() {
       parentIndex.rollover();
     }
@@ -177,6 +180,11 @@ public class NullableScalarWriter extends AbstractScalarWriterImpl {
     baseWriter.setBytes(value, len);
     isSetWriter.setInt(1);
     writerIndex.nextElement();
+  }
+
+  @Override
+  public void appendBytes(byte[] value, int len) {
+    baseWriter.appendBytes(value, len);
   }
 
   @Override

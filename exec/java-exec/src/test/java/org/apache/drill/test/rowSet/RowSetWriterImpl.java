@@ -81,6 +81,9 @@ public class RowSetWriterImpl extends AbstractTupleWriter implements RowSetWrite
     public final void nextElement() { }
 
     @Override
+    public final void prevElement() { }
+
+    @Override
     public void rollover() {
       throw new UnsupportedOperationException("Rollover not supported in the row set writer.");
     }

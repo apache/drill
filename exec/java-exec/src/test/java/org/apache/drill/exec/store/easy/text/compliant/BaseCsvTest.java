@@ -29,6 +29,8 @@ import org.apache.drill.test.ClusterTest;
 
 public class BaseCsvTest extends ClusterTest {
 
+  protected final int BIG_COL_SIZE = 70_000;
+
   protected static final String PART_DIR = "root";
   protected static final String NESTED_DIR = "nested";
   protected static final String ROOT_FILE = "first.csv";
@@ -117,5 +119,23 @@ public class BaseCsvTest extends ClusterTest {
         out.println(line);
       }
     }
+  }
+  protected String buildBigColFile(boolean withHeader) throws IOException {
+    String fileName = "hugeCol.csv";
+    try(PrintWriter out = new PrintWriter(new FileWriter(new File(testDir, fileName)))) {
+      if (withHeader) {
+        out.println("id,big,n");
+      }
+      for (int i = 0; i < 10; i++) {
+        out.print(i + 1);
+        out.print(",");
+        for (int j = 0; j < BIG_COL_SIZE; j++) {
+          out.print((char) ((j + i) % 26 + 'A'));
+        }
+        out.print(",");
+        out.println((i + 1) * 10);
+      }
+    }
+    return fileName;
   }
 }

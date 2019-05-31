@@ -106,6 +106,9 @@ class WriterIndexImpl implements ColumnWriterIndex {
   public void nextElement() { }
 
   @Override
+  public void prevElement() { }
+
+  @Override
   public ColumnWriterIndex outerIndex() { return null; }
 
   @Override
