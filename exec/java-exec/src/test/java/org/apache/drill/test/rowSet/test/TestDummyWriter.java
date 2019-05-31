@@ -30,7 +30,7 @@ import org.apache.drill.exec.vector.accessor.ValueType;
 import org.apache.drill.exec.vector.accessor.writer.AbstractObjectWriter;
 import org.apache.drill.exec.vector.accessor.writer.AbstractTupleWriter;
 import org.apache.drill.exec.vector.accessor.writer.ColumnWriterFactory;
-import org.apache.drill.exec.vector.accessor.writer.MapWriter;
+import org.apache.drill.exec.vector.accessor.writer.StructWriter;
 import org.apache.drill.test.SubOperatorTest;
 import org.junit.Test;
 
@@ -112,7 +112,7 @@ public class TestDummyWriter extends SubOperatorTest {
   }
 
   /**
-   * Test a dummy map or map array. A (non-enforced) rule is that such maps
+   * Test a dummy struct or struct array. A (non-enforced) rule is that such maps
    * contain only dummy writers. The writers act like "real" writers.
    */
 
@@ -120,11 +120,11 @@ public class TestDummyWriter extends SubOperatorTest {
   public void testDummyMap() {
 
     TupleMetadata schema = new SchemaBuilder()
-        .addMap("m1")
+        .addStruct("m1")
           .add("a", MinorType.INT)
           .addArray("b", MinorType.VARCHAR)
           .resumeSchema()
-        .addMapArray("m2")
+        .addStructArray("m2")
           .add("c", MinorType.INT)
           .resumeSchema()
         .buildSchema();
@@ -143,7 +143,7 @@ public class TestDummyWriter extends SubOperatorTest {
       List<AbstractObjectWriter> members = new ArrayList<>();
       members.add(ColumnWriterFactory.buildColumnWriter(mapSchema.metadata("a"), null, null));
       members.add(ColumnWriterFactory.buildColumnWriter(mapSchema.metadata("b"), null, null));
-      writers.add(MapWriter.buildMapWriter(schema.metadata("m1"), null, members));
+      writers.add(StructWriter.buildStructWriter(schema.metadata("m1"), null, members));
     }
 
     {
@@ -151,7 +151,7 @@ public class TestDummyWriter extends SubOperatorTest {
       TupleMetadata mapSchema = schema.metadata("m2").mapSchema();
       List<AbstractObjectWriter> members = new ArrayList<>();
       members.add(ColumnWriterFactory.buildColumnWriter(mapSchema.metadata("c"), null, null));
-      writers.add(MapWriter.buildMapWriter(schema.metadata("m2"), null, members));
+      writers.add(StructWriter.buildStructWriter(schema.metadata("m2"), null, members));
     }
 
     AbstractTupleWriter rootWriter = new RootWriterFixture(schema, writers);
@@ -166,7 +166,7 @@ public class TestDummyWriter extends SubOperatorTest {
     rootWriter.tuple("m1").scalar("a").setInt(20);
     rootWriter.tuple(0).array("b").scalar().setString("foo");
 
-    // Dummy array map seems real.
+    // Dummy array struct seems real.
 
     rootWriter.array("m2").tuple().scalar("c").setInt(30);
     rootWriter.array("m2").save();

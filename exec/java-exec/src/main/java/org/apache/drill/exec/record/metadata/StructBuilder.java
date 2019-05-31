@@ -33,17 +33,17 @@ import org.apache.drill.exec.record.MaterializedField;
  * All <tt>resumeXXX</tt> methods do not produce any action and return null.
  * To access built column {@link #buildColumn()} should be used.
  */
-public class MapBuilder implements SchemaContainer {
+public class StructBuilder implements SchemaContainer {
   private final SchemaContainer parent;
   private final TupleBuilder tupleBuilder = new TupleBuilder();
   private final String memberName;
   private final DataMode mode;
 
-  public MapBuilder(String memberName, DataMode mode) {
+  public StructBuilder(String memberName, DataMode mode) {
     this(null, memberName, mode);
   }
 
-  public MapBuilder(SchemaContainer parent, String memberName, DataMode mode) {
+  public StructBuilder(SchemaContainer parent, String memberName, DataMode mode) {
     this.parent = parent;
     this.memberName = memberName;
     this.mode = mode;
@@ -54,82 +54,82 @@ public class MapBuilder implements SchemaContainer {
     tupleBuilder.addColumn(column);
   }
 
-  public MapBuilder add(String name, MajorType type) {
+  public StructBuilder add(String name, MajorType type) {
     return add(MaterializedField.create(name, type));
   }
 
-  public MapBuilder add(MaterializedField col) {
+  public StructBuilder add(MaterializedField col) {
     tupleBuilder.add(col);
     return this;
   }
 
-  public MapBuilder add(String name, MinorType type, DataMode mode) {
+  public StructBuilder add(String name, MinorType type, DataMode mode) {
     tupleBuilder.add(name, type, mode);
     return this;
   }
 
-  public MapBuilder add(String name, MinorType type) {
+  public StructBuilder add(String name, MinorType type) {
     tupleBuilder.add(name, type);
     return this;
   }
 
-  public MapBuilder add(String name, MinorType type, int width) {
+  public StructBuilder add(String name, MinorType type, int width) {
     tupleBuilder.add(name, type, width);
     return this;
   }
 
-  public MapBuilder add(String name, MinorType type, int precision, int scale) {
+  public StructBuilder add(String name, MinorType type, int precision, int scale) {
     return addDecimal(name, type, DataMode.REQUIRED, precision, scale);
   }
 
-  public MapBuilder addNullable(String name, MinorType type) {
+  public StructBuilder addNullable(String name, MinorType type) {
     tupleBuilder.addNullable(name,  type);
     return this;
   }
 
-  public MapBuilder addNullable(String name, MinorType type, int width) {
+  public StructBuilder addNullable(String name, MinorType type, int width) {
     tupleBuilder.addNullable(name, type, width);
     return this;
   }
 
-  public MapBuilder addNullable(String name, MinorType type, int precision, int scale) {
+  public StructBuilder addNullable(String name, MinorType type, int precision, int scale) {
     return addDecimal(name, type, DataMode.OPTIONAL, precision, scale);
   }
 
-  public MapBuilder addArray(String name, MinorType type) {
+  public StructBuilder addArray(String name, MinorType type) {
     tupleBuilder.addArray(name, type);
     return this;
   }
 
-  public MapBuilder addArray(String name, MinorType type, int dims) {
+  public StructBuilder addArray(String name, MinorType type, int dims) {
     tupleBuilder.addArray(name,  type, dims);
     return this;
   }
 
-  public MapBuilder addArray(String name, MinorType type, int precision, int scale) {
+  public StructBuilder addArray(String name, MinorType type, int precision, int scale) {
     return addDecimal(name, type, DataMode.REPEATED, precision, scale);
   }
 
-  public MapBuilder addDecimal(String name, MinorType type,
-      DataMode mode, int precision, int scale) {
+  public StructBuilder addDecimal(String name, MinorType type,
+                                  DataMode mode, int precision, int scale) {
     tupleBuilder.addDecimal(name, type, mode, precision, scale);
     return this;
   }
 
   /**
    * Add a map column. The returned schema builder is for the nested
-   * map. Building that map, using {@link MapBuilder#resumeSchema()},
+   * map. Building that map, using {@link StructBuilder#resumeSchema()},
    * will return the original schema builder.
    *
    * @param name the name of the map column
    * @return a builder for the map
    */
-  public MapBuilder addMap(String name) {
-    return tupleBuilder.addMap(this, name);
+  public StructBuilder addStruct(String name) {
+    return tupleBuilder.addStruct(this, name);
   }
 
-  public MapBuilder addMapArray(String name) {
-    return tupleBuilder.addMapArray(this, name);
+  public StructBuilder addStructArray(String name) {
+    return tupleBuilder.addStructArray(this, name);
   }
 
   public UnionBuilder addUnion(String name) {
@@ -144,8 +144,8 @@ public class MapBuilder implements SchemaContainer {
     return tupleBuilder.addRepeatedList(this, name);
   }
 
-  public MapColumnMetadata buildColumn() {
-    return new MapColumnMetadata(memberName, mode, tupleBuilder.schema());
+  public StructColumnMetadata buildColumn() {
+    return new StructColumnMetadata(memberName, mode, tupleBuilder.schema());
   }
 
   public void build() {
@@ -159,9 +159,9 @@ public class MapBuilder implements SchemaContainer {
     return (SchemaBuilder) parent;
   }
 
-  public MapBuilder resumeMap() {
+  public StructBuilder resumeStruct() {
     build();
-    return (MapBuilder) parent;
+    return (StructBuilder) parent;
   }
 
   public RepeatedListBuilder resumeList() {

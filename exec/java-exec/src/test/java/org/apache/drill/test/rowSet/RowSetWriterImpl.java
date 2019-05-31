@@ -163,8 +163,8 @@ public class RowSetWriterImpl extends AbstractTupleWriter implements RowSetWrite
   @Override
   public ColumnMetadata schema() {
     // The top-level tuple (the data row) is not associated
-    // with a parent column. By contrast, a map tuple is
-    // associated with the column that defines the map.
+    // with a parent column. By contrast, a struct tuple is
+    // associated with the column that defines the struct.
     return null;
   }
 }

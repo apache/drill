@@ -51,7 +51,7 @@ import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.exec.vector.complex.fn.FieldSelection;
-import org.apache.drill.exec.vector.complex.impl.MapOrListWriterImpl;
+import org.apache.drill.exec.vector.complex.impl.StructOrListWriterImpl;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -172,14 +172,14 @@ public class AvroRecordReader extends AbstractRecordReader {
 
     switch (type) {
       case RECORD:
-        process(container, schema, null, new MapOrListWriterImpl(writer.rootAsMap()), fieldSelection);
+        process(container, schema, null, new StructOrListWriterImpl(writer.rootAsStruct()), fieldSelection);
         break;
       default:
         throw new DrillRuntimeException("Root object must be record type. Found: " + type);
     }
   }
 
-  private void process(final Object value, final Schema schema, final String fieldName, MapOrListWriterImpl writer, FieldSelection fieldSelection) {
+  private void process(final Object value, final Schema schema, final String fieldName, StructOrListWriterImpl writer, FieldSelection fieldSelection) {
     if (value == null) {
       return;
     }
@@ -188,14 +188,14 @@ public class AvroRecordReader extends AbstractRecordReader {
     switch (type) {
       case RECORD:
         // list field of MapOrListWriter will be non null when we want to store array of maps/records.
-        MapOrListWriterImpl _writer = writer;
+        StructOrListWriterImpl _writer = writer;
 
         for (final Schema.Field field : schema.getFields()) {
           if (field.schema().getType() == Schema.Type.RECORD ||
               (field.schema().getType() == Schema.Type.UNION &&
               field.schema().getTypes().get(0).getType() == Schema.Type.NULL &&
               field.schema().getTypes().get(1).getType() == Schema.Type.RECORD)) {
-              _writer = (MapOrListWriterImpl) writer.map(field.name());
+              _writer = (StructOrListWriterImpl) writer.struct(field.name());
           }
 
           process(((GenericRecord) value).get(field.name()), field.schema(), field.name(), _writer, fieldSelection.getChild(field.name()));
@@ -208,9 +208,9 @@ public class AvroRecordReader extends AbstractRecordReader {
         Schema elementSchema = array.getSchema().getElementType();
         Type elementType = elementSchema.getType();
         if (elementType == Schema.Type.RECORD || elementType == Schema.Type.MAP){
-          writer = (MapOrListWriterImpl) writer.list(fieldName).listoftmap(fieldName);
+          writer = (StructOrListWriterImpl) writer.list(fieldName).listoftstruct(fieldName);
         } else {
-          writer = (MapOrListWriterImpl) writer.list(fieldName);
+          writer = (StructOrListWriterImpl) writer.list(fieldName);
         }
         for (final Object o : array) {
           writer.start();
@@ -229,7 +229,7 @@ public class AvroRecordReader extends AbstractRecordReader {
         @SuppressWarnings("unchecked")
         final HashMap<Object, Object> map = (HashMap<Object, Object>) value;
         Schema valueSchema = schema.getValueType();
-        writer = (MapOrListWriterImpl) writer.map(fieldName);
+        writer = (StructOrListWriterImpl) writer.struct(fieldName);
         writer.start();
         for (Entry<Object, Object> entry : map.entrySet()) {
           process(entry.getValue(), valueSchema, entry.getKey().toString(), writer, fieldSelection.getChild(entry.getKey().toString()));
@@ -242,7 +242,7 @@ public class AvroRecordReader extends AbstractRecordReader {
       default:
         assert fieldName != null;
 
-        if (writer.isMapWriter()) {
+        if (writer.isStructWriter()) {
           if (fieldSelection.isNeverValid()) {
             break;
           }
@@ -255,7 +255,7 @@ public class AvroRecordReader extends AbstractRecordReader {
   }
 
   private void processPrimitive(final Object value, final Schema schema, final String fieldName,
-                                final MapOrListWriterImpl writer) {
+                                final StructOrListWriterImpl writer) {
     LogicalType logicalType = schema.getLogicalType();
     String logicalTypeName = logicalType != null ? logicalType.getName() : "";
 

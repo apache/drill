@@ -77,7 +77,7 @@ import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter.StructWriter;
 import org.apache.drill.exec.vector.complex.writer.FieldWriter;
 import org.apache.drill.exec.vector.complex.writer.VarCharWriter;
 import org.apache.hadoop.fs.FileStatus;
@@ -149,7 +149,7 @@ public class ImageRecordReader extends AbstractRecordReader {
       writer.allocate();
       writer.reset();
 
-      final MapWriter rootWriter = writer.rootAsMap();
+      final StructWriter rootWriter = writer.rootAsStruct();
       final FileType fileType = FileTypeDetector.detectFileType(metadataStream);
       final Metadata metadata = ImageMetadataReader.readMetadata(metadataStream);
 
@@ -176,7 +176,7 @@ public class ImageRecordReader extends AbstractRecordReader {
             // If an EPS file contains a TIFF preview, skip the next IFD0
             skipEPSPreview = directory.containsTag(EpsDirectory.TAG_TIFF_PREVIEW_SIZE);
           }
-          final MapWriter directoryWriter = rootWriter.map(formatName(directory.getName()));
+          final StructWriter directoryWriter = rootWriter.struct(formatName(directory.getName()));
           processDirectory(directoryWriter, directory, metadata);
           if (directory instanceof XmpDirectory) {
             processXmpDirectory(directoryWriter, (XmpDirectory) directory);
@@ -197,7 +197,7 @@ public class ImageRecordReader extends AbstractRecordReader {
     }
   }
 
-  private void processGenericMetadataDirectory(final MapWriter writer,
+  private void processGenericMetadataDirectory(final StructWriter writer,
                                                final GenericMetadataDirectory directory) {
     for (Tag tag : directory.getTags()) {
       try {
@@ -213,7 +213,7 @@ public class ImageRecordReader extends AbstractRecordReader {
     }
   }
 
-  private void processDirectory(final MapWriter writer, final Directory directory, final Metadata metadata) {
+  private void processDirectory(final StructWriter writer, final Directory directory, final Metadata metadata) {
     for (Tag tag : directory.getTags()) {
       try {
         final int tagType = tag.getTagType();
@@ -260,7 +260,7 @@ public class ImageRecordReader extends AbstractRecordReader {
     }
   }
 
-  private void processXmpDirectory(final MapWriter writer, final XmpDirectory directory) {
+  private void processXmpDirectory(final StructWriter writer, final XmpDirectory directory) {
     HashSet<String> listItems = new HashSet<>();
     XMPMeta xmpMeta = directory.getXMPMeta();
     if (xmpMeta != null) {
@@ -288,13 +288,13 @@ public class ImageRecordReader extends AbstractRecordReader {
                 String parent = elements[j - 1];
                 boolean isList = elements[j].startsWith("[");
                 if (parent.startsWith("[")) {
-                  writerSub = (FieldWriter) (isList ? writerSub.list() : writerSub.map());
+                  writerSub = (FieldWriter) (isList ? writerSub.list() : writerSub.struct());
                   if (listItems.add(path.replaceFirst("[^\\]]+$", ""))) {
                     writerSub.start();
                   }
                 } else {
                   writerSub = (FieldWriter)
-                      (isList ? writerSub.list(formatName(parent)) : writerSub.map(formatName(parent)));
+                      (isList ? writerSub.list(formatName(parent)) : writerSub.struct(formatName(parent)));
                 }
               }
               String parent = elements[elements.length - 1];
@@ -311,7 +311,7 @@ public class ImageRecordReader extends AbstractRecordReader {
     }
   }
 
-  private void writeValue(final MapWriter writer, final String tagName, final Object value) {
+  private void writeValue(final StructWriter writer, final String tagName, final Object value) {
     if (value == null) {
       return;
     }
@@ -399,18 +399,18 @@ public class ImageRecordReader extends AbstractRecordReader {
       }
     } else if (value instanceof JpegComponent) {
       final JpegComponent v = (JpegComponent) value;
-      writer.map(tagName).integer("ComponentId").writeInt(v.getComponentId());
-      writer.map(tagName).integer("HorizontalSamplingFactor").writeInt(v.getHorizontalSamplingFactor());
-      writer.map(tagName).integer("VerticalSamplingFactor").writeInt(v.getVerticalSamplingFactor());
-      writer.map(tagName).integer("QuantizationTableNumber").writeInt(v.getQuantizationTableNumber());
+      writer.struct(tagName).integer("ComponentId").writeInt(v.getComponentId());
+      writer.struct(tagName).integer("HorizontalSamplingFactor").writeInt(v.getHorizontalSamplingFactor());
+      writer.struct(tagName).integer("VerticalSamplingFactor").writeInt(v.getVerticalSamplingFactor());
+      writer.struct(tagName).integer("QuantizationTableNumber").writeInt(v.getQuantizationTableNumber());
     } else if (value instanceof List<?>) {
       ListWriter listWriter = writer.list(tagName);
       for (Object v : (List<?>) value) {
         if (v instanceof KeyValuePair) {
-          listWriter.map().start();
-          writeString(listWriter.map().varChar("Key"), ((KeyValuePair) v).getKey());
-          writeString(listWriter.map().varChar("Value"), ((KeyValuePair) v).getValue().toString());
-          listWriter.map().end();
+          listWriter.struct().start();
+          writeString(listWriter.struct().varChar("Key"), ((KeyValuePair) v).getKey());
+          writeString(listWriter.struct().varChar("Value"), ((KeyValuePair) v).getValue().toString());
+          listWriter.struct().end();
         } else {
           writeString(listWriter.varChar(), v.toString());
         }

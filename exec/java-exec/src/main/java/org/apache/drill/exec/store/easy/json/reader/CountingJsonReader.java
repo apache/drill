@@ -48,7 +48,7 @@ public class CountingJsonReader extends BaseJsonProcessor {
         throw new com.fasterxml.jackson.core.JsonParseException(
             parser, String.format("Cannot read from the middle of a record. Current token was %s ", token));
       }
-      writer.rootAsMap().bit("count").writeBit(1);
+      writer.rootAsStruct().bit("count").writeBit(1);
       parser.skipChildren();
     } catch (com.fasterxml.jackson.core.JsonParseException ex) {
       if (ignoreJSONParseError()) {

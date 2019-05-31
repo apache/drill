@@ -114,12 +114,12 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
           schemaChanged = true;
           vector = TypeHelper.getNewVector(fieldDef, allocator);
 
-        // If the field is a map, check if the map schema changed.
+        // If the field is a struct, check if the struct schema changed.
 
-        } else if (vector.getField().getType().getMinorType() == MinorType.MAP  &&
+        } else if (vector.getField().getType().getMinorType() == MinorType.STRUCT  &&
                    ! isSameSchema(vector.getField().getChildren(), field.getChildList())) {
 
-          // The map schema changed. Discard the old map and create a new one.
+          // The struct schema changed. Discard the old struct and create a new one.
 
           schemaChanged = true;
           vector.clear();
@@ -175,9 +175,9 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
    * Check if two schemas are the same. The schemas, given as lists, represent the
    * children of the original and new maps (AKA structures.)
    *
-   * @param currentChildren current children of a Drill map
+   * @param currentChildren current children of a Drill struct
    * @param newChildren new children, in an incoming batch, of the same
-   * Drill map
+   * Drill struct
    * @return true if the schemas are identical, false if a child is missing
    * or has changed type or cardinality (AKA "mode").
    */
@@ -198,7 +198,7 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
     for (SerializedField newChild : newChildren) {
       MaterializedField currentChild = childMap.get(newChild.getNamePart().getName());
 
-      // New map member?
+      // New struct member?
 
       if (currentChild == null) {
         return false;

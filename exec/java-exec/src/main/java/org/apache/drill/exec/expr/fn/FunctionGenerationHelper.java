@@ -154,7 +154,7 @@ public class FunctionGenerationHelper {
   }
 
   private static boolean isComparableType(MajorType type) {
-    if (type.getMinorType() == MinorType.MAP ||
+    if (type.getMinorType() == MinorType.STRUCT ||
         type.getMinorType() == MinorType.LIST ||
         type.getMode() == TypeProtos.DataMode.REPEATED ) {
       return false;

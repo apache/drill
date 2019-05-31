@@ -22,7 +22,7 @@ package org.apache.drill.exec.vector.accessor;
  * <ul>
  * <li>Array of scalars. Read the values using {@link #elements()}, which provides
  * an array-like access to the scalars.</li>
- * <li>A repeated map. Use {@link #tuple(int)} to get a tuple reader for a
+ * <li>A repeated struct. Use {@link #tuple(int)} to get a tuple reader for a
  * specific array element. Use {@link #size()} to learn the number of maps in
  * the array.</li>
  * <li>List of lists. Use the {@link #array(int)} method to get the nested list

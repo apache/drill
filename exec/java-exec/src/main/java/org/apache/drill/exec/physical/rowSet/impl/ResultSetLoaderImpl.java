@@ -33,8 +33,7 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
 
 /**
- * Implementation of the result set loader. Caches vectors
- * for a row or map.
+ * Implementation of the result set loader. Caches vectors for a row or struct.
  *
  * @see {@link ResultSetLoader}
  */

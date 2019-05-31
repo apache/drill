@@ -83,7 +83,7 @@ public interface ColumnMetadata extends Propertied {
     PRIMITIVE,
 
     /**
-     * Map or repeated map. Also describes the row as a whole.
+     * Struct or repeated struct. Also describes the row as a whole.
      */
 
     TUPLE,
@@ -157,7 +157,7 @@ public interface ColumnMetadata extends Propertied {
   boolean isNullable();
   boolean isArray();
   boolean isVariableWidth();
-  boolean isMap();
+  boolean isStruct();
   boolean isVariant();
 
   /**
@@ -260,7 +260,7 @@ public interface ColumnMetadata extends Propertied {
 
   /**
    * Create an empty version of this column. If the column is a scalar,
-   * produces a simple copy. If a map, produces a clone without child
+   * produces a simple copy. If a struct, produces a clone without child
    * columns.
    *
    * @return empty clone of this column

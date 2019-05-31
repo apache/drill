@@ -58,13 +58,13 @@ public class ComplexCopier {
         }
         writer.endList();
         break;
-      case MAP:
+      case STRUCT:
         writer.start();
         if (reader.isSet()) {
           for(String name : reader){
             FieldReader childReader = reader.reader(name);
             if(childReader.isSet()){
-              writeValue(childReader, getMapWriterForReader(childReader, writer, name));
+              writeValue(childReader, getStructWriterForReader(childReader, writer, name));
             }
           }
         }
@@ -92,7 +92,7 @@ public class ComplexCopier {
     }
  }
 
-  private static FieldWriter getMapWriterForReader(FieldReader reader, MapWriter writer, String name) {
+  private static FieldWriter getStructWriterForReader(FieldReader reader, StructWriter writer, String name) {
     switch (reader.getType().getMinorType()) {
     <#list vv.types as type><#list type.minor as minor><#assign name = minor.class?cap_first />
     <#assign fields = minor.fields!type.fields />
@@ -105,8 +105,8 @@ public class ComplexCopier {
       return (FieldWriter) writer.${uncappedName}(name, reader.getType().getScale(), reader.getType().getPrecision());
     </#if>
     </#list></#list>
-    case MAP:
-      return (FieldWriter) writer.map(name);
+    case STRUCT:
+      return (FieldWriter) writer.struct(name);
     case LIST:
       return (FieldWriter) writer.list(name);
     default:
@@ -127,8 +127,8 @@ public class ComplexCopier {
       return (FieldWriter) writer.${uncappedName}(reader.getType().getScale(), reader.getType().getPrecision());
     </#if>
     </#list></#list>
-    case MAP:
-      return (FieldWriter) writer.map();
+    case STRUCT:
+      return (FieldWriter) writer.struct();
     case LIST:
       return (FieldWriter) writer.list();
     default:

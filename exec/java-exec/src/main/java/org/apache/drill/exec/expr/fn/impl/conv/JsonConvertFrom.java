@@ -116,10 +116,10 @@ public class JsonConvertFrom {
     @Override
     public void eval() {
       if (in.isSet == 0) {
-        // Return empty map
-        org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter mapWriter = writer.rootAsMap();
-        mapWriter.start();
-        mapWriter.end();
+        // Return empty struct
+        org.apache.drill.exec.vector.complex.writer.BaseWriter.StructWriter structWriter = writer.rootAsStruct();
+        structWriter.start();
+        structWriter.end();
         return;
       }
 
@@ -152,10 +152,10 @@ public class JsonConvertFrom {
     @Override
     public void eval() {
       if (in.isSet == 0) {
-        // Return empty map
-        org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter mapWriter = writer.rootAsMap();
-        mapWriter.start();
-        mapWriter.end();
+        // Return empty struct
+        org.apache.drill.exec.vector.complex.writer.BaseWriter.StructWriter structWriter = writer.rootAsStruct();
+        structWriter.start();
+        structWriter.end();
         return;
       }
 

@@ -34,10 +34,10 @@ public class TestMaterializedField {
   private static final String PARENT_SECOND_NAME = "parent2";
   private static final String CHILD_NAME = "child";
   private static final String CHILD_SECOND_NAME = "child2";
-  private static final TypeProtos.MajorType PARENT_TYPE = Types.repeated(TypeProtos.MinorType.MAP);
+  private static final TypeProtos.MajorType PARENT_TYPE = Types.repeated(TypeProtos.MinorType.STRUCT);
   private static final TypeProtos.MajorType PARENT_SECOND_TYPE = Types.repeated(TypeProtos.MinorType.LIST);
-  private static final TypeProtos.MajorType CHILD_TYPE = Types.repeated(TypeProtos.MinorType.MAP);
-  private static final TypeProtos.MajorType CHILD_SECOND_TYPE = Types.repeated(TypeProtos.MinorType.MAP);
+  private static final TypeProtos.MajorType CHILD_TYPE = Types.repeated(TypeProtos.MinorType.STRUCT);
+  private static final TypeProtos.MajorType CHILD_SECOND_TYPE = Types.repeated(TypeProtos.MinorType.STRUCT);
 
   // set of (name, type) tuples representing a test case
   private static final Object[][] matrix = {

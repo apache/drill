@@ -96,11 +96,11 @@ public class DrillConstExecutor implements RexExecutor {
       // cannot represent this as a literal according to calcite
       TypeProtos.MinorType.INTERVAL,
 
-      // TODO - map and list are used in Drill but currently not expressible as literals, these can however be
+      // TODO - struct and list are used in Drill but currently not expressible as literals, these can however be
       // outputs of functions that take literals as inputs (such as a convert_fromJSON with a literal string
       // as input), so we need to identify functions with these return types as non-foldable until we have a
       // literal representation for them
-      TypeProtos.MinorType.MAP, TypeProtos.MinorType.LIST,
+      TypeProtos.MinorType.STRUCT, TypeProtos.MinorType.LIST,
 
       // TODO - DRILL-2551 - Varbinary is used in execution, but it is missing a literal definition
       // in the logical expression representation and subsequently is not supported in

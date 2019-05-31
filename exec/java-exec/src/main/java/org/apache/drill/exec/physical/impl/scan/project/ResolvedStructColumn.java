@@ -20,44 +20,44 @@ package org.apache.drill.exec.physical.impl.scan.project;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.physical.impl.scan.project.ResolvedTuple.ResolvedMap;
+import org.apache.drill.exec.physical.impl.scan.project.ResolvedTuple.ResolvedStruct;
 import org.apache.drill.exec.physical.impl.scan.project.ResolvedTuple.ResolvedMapArray;
 import org.apache.drill.exec.physical.impl.scan.project.ResolvedTuple.ResolvedSingleMap;
 import org.apache.drill.exec.record.MaterializedField;
 
 /**
- * Represents a column which is implicitly a map (because it has children
+ * Represents a column which is implicitly a struct (because it has children
  * in the project list), but which does not match any column in the table.
- * This kind of column gives rise to a map of null columns in the output.
+ * This kind of column gives rise to a struct of null columns in the output.
  */
 
-public class ResolvedMapColumn extends ResolvedColumn {
+public class ResolvedStructColumn extends ResolvedColumn {
 
   private final MaterializedField schema;
   private final ResolvedTuple parent;
-  private final ResolvedMap members;
+  private final ResolvedStruct members;
 
-  public ResolvedMapColumn(ResolvedTuple parent, String name) {
+  public ResolvedStructColumn(ResolvedTuple parent, String name) {
     super(parent, -1);
     schema = MaterializedField.create(name,
-        Types.required(MinorType.MAP));
+        Types.required(MinorType.STRUCT));
     this.parent = parent;
     members = new ResolvedSingleMap(this);
     parent.addChild(members);
   }
 
-  public ResolvedMapColumn(ResolvedTuple parent,
-      MaterializedField schema, int sourceIndex) {
+  public ResolvedStructColumn(ResolvedTuple parent,
+                              MaterializedField schema, int sourceIndex) {
     super(parent, sourceIndex);
     this.schema = schema;
     this.parent = parent;
 
-    // This column corresponds to an input map.
+    // This column corresponds to an input struct.
     // We may have to create a matching new output
-    // map. Determine whether it is a single map or
+    // struct. Determine whether it is a single struct or
     // an array.
 
-    assert schema.getType().getMinorType() == MinorType.MAP;
+    assert schema.getType().getMinorType() == MinorType.STRUCT;
     if (schema.getType().getMode() == DataMode.REPEATED) {
       members = new ResolvedMapArray(this);
     } else {

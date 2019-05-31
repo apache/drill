@@ -44,17 +44,17 @@
  * makes clear if the term refers to single value or all values for a
  * column for a row set. Columns are backed by value vectors.</dd>
  * <dt>Map</dt>
- * <dd>In Drill, a map is what other systems call a "structure". It is,
- * in fact, a nested tuple. In a Java or Python map, each map instance has
- * a distinct set of name/value pairs. But, in Drill, all map instances have
- * the same schema; hence the so-called "map" is really a tuple. This
+ * <dd>In Drill, a struct is what other systems call a "structure". It is,
+ * in fact, a nested tuple. In a Java or Python struct, each struct instance has
+ * a distinct set of name/value pairs. But, in Drill, all struct instances have
+ * the same schema; hence the so-called "struct" is really a tuple. This
  * implementation exploits that fact and treats the row, and nested maps,
  * almost identically: both provide columns indexed by name or position.</dd>
  * <dt>Row Set Mutator</dt>
  * <dd>An awkward name, but retains the "mutator" name from the previous
  * generation. The mechanism to build a result set as series of row sets.</dd>
  * <dt>Tuple Loader</dt>
- * <dd>Mechanism to build a single tuple (row or map) by providing name
+ * <dd>Mechanism to build a single tuple (row or struct) by providing name
  * or index access to columns. A better name would b "tuple writer", but
  * that name is already used elsewhere.</dd>
  * <dt>Column Loader</dt>
@@ -105,10 +105,10 @@
  * part of the {@link TupleLoader} object available from the
  * {@link #root()} method.
  * <h4>Using the Schema</h4>
- * Presents columns using a physical schema. That is, map columns appear
- * as columns that provide a nested map schema. Presumes that column
- * access is primarily structural: first get a map, then process all
- * columns for the map.
+ * Presents columns using a physical schema. That is, struct columns appear
+ * as columns that provide a nested struct schema. Presumes that column
+ * access is primarily structural: first get a struct, then process all
+ * columns for the struct.
  * <p>
  * If the input is a flat structure, then the physical schema has a
  * flattened schema as the degenerate case.

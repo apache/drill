@@ -21,7 +21,7 @@ import java.util.List;
 import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.vector.complex.IndexHolder;
 import org.apache.drill.exec.vector.complex.writer.IntervalWriter;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter.StructWriter;
 
 <@pp.dropOutputFile />
 <#list vv.types as type>
@@ -82,11 +82,11 @@ public class ${nullMode}${name}ReaderImpl extends AbstractFieldReader {
   }
 
   <#if minor.class == "VarDecimal">
-  public void copyAsField(String name, MapWriter writer, int scale, int precision) {
+  public void copyAsField(String name, StructWriter writer, int scale, int precision) {
     Repeated${minor.class?cap_first}WriterImpl impl
         = (Repeated${minor.class?cap_first}WriterImpl) writer.list(name).${lowerName}(scale, precision);
   <#else>
-  public void copyAsField(String name, MapWriter writer) {
+  public void copyAsField(String name, StructWriter writer) {
     Repeated${minor.class?cap_first}WriterImpl impl = (Repeated${minor.class?cap_first}WriterImpl) writer.list(name).${lowerName}();
   </#if>
     impl.vector.copyFromSafe(idx(), impl.idx(), vector);
@@ -121,11 +121,11 @@ public class ${nullMode}${name}ReaderImpl extends AbstractFieldReader {
   }
 
   <#if minor.class == "VarDecimal">
-  public void copyAsField(String name, MapWriter writer, int scale, int precision) {
+  public void copyAsField(String name, StructWriter writer, int scale, int precision) {
     ${nullMode}${minor.class?cap_first}WriterImpl impl
         = (${nullMode}${minor.class?cap_first}WriterImpl) writer.${lowerName}(name, scale, precision);
 <#else>
-  public void copyAsField(String name, MapWriter writer) {
+  public void copyAsField(String name, StructWriter writer) {
     ${nullMode}${minor.class?cap_first}WriterImpl impl = (${nullMode}${minor.class?cap_first}WriterImpl) writer.${lowerName}(name);
   </#if>
     impl.vector.copyFromSafe(idx(), impl.idx(), vector);

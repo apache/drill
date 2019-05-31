@@ -19,8 +19,8 @@ package org.apache.drill.exec.store.mapr.db.json;
 
 import java.nio.ByteBuffer;
 
-import org.apache.drill.exec.vector.complex.impl.MapOrListWriterImpl;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapOrListWriter;
+import org.apache.drill.exec.vector.complex.impl.StructOrListWriterImpl;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter.StructOrListWriter;
 import org.ojai.DocumentReader;
 
 import com.mapr.org.apache.hadoop.hbase.util.Bytes;
@@ -33,47 +33,47 @@ public class AllTextValueWriter extends OjaiValueWriter {
     super(buffer);
   }
 
-  protected void writeTimeStamp(MapOrListWriterImpl writer, String fieldName, DocumentReader reader) {
+  protected void writeTimeStamp(StructOrListWriterImpl writer, String fieldName, DocumentReader reader) {
     writeString(writer, fieldName, reader.getTimestamp().toUTCString());
   }
 
-  protected void writeTime(MapOrListWriterImpl writer, String fieldName, DocumentReader reader) {
+  protected void writeTime(StructOrListWriterImpl writer, String fieldName, DocumentReader reader) {
     writeString(writer, fieldName, reader.getTime().toTimeStr());
   }
 
-  protected void writeDate(MapOrListWriterImpl writer, String fieldName, DocumentReader reader) {
+  protected void writeDate(StructOrListWriterImpl writer, String fieldName, DocumentReader reader) {
     writeString(writer, fieldName, reader.getDate().toDateStr());
   }
 
-  protected void writeDouble(MapOrListWriterImpl writer, String fieldName, DocumentReader reader) {
+  protected void writeDouble(StructOrListWriterImpl writer, String fieldName, DocumentReader reader) {
     writeString(writer, fieldName, String.valueOf(reader.getDouble()));
   }
 
-  protected void writeFloat(MapOrListWriterImpl writer, String fieldName, DocumentReader reader) {
+  protected void writeFloat(StructOrListWriterImpl writer, String fieldName, DocumentReader reader) {
     writeString(writer, fieldName, String.valueOf(reader.getFloat()));
   }
 
-  protected void writeLong(MapOrListWriterImpl writer, String fieldName, DocumentReader reader) {
+  protected void writeLong(StructOrListWriterImpl writer, String fieldName, DocumentReader reader) {
     writeString(writer, fieldName, String.valueOf(reader.getLong()));
   }
 
-  protected void writeInt(MapOrListWriterImpl writer, String fieldName, DocumentReader reader) {
+  protected void writeInt(StructOrListWriterImpl writer, String fieldName, DocumentReader reader) {
     writeString(writer, fieldName, String.valueOf(reader.getInt()));
   }
 
-  protected void writeShort(MapOrListWriterImpl writer, String fieldName, DocumentReader reader) {
+  protected void writeShort(StructOrListWriterImpl writer, String fieldName, DocumentReader reader) {
     writeString(writer, fieldName, String.valueOf(reader.getShort()));
   }
 
-  protected void writeByte(MapOrListWriterImpl writer, String fieldName, DocumentReader reader) {
+  protected void writeByte(StructOrListWriterImpl writer, String fieldName, DocumentReader reader) {
     writeString(writer, fieldName, String.valueOf(reader.getByte()));
   }
 
-  protected void writeBoolean(MapOrListWriterImpl writer, String fieldName, DocumentReader reader) {
+  protected void writeBoolean(StructOrListWriterImpl writer, String fieldName, DocumentReader reader) {
     writeString(writer, fieldName, String.valueOf(reader.getBoolean()));
   }
 
-  protected void writeBinary(MapOrListWriter writer, String fieldName, ByteBuffer buf) {
+  protected void writeBinary(StructOrListWriter writer, String fieldName, ByteBuffer buf) {
     writeString(writer, fieldName, Bytes.toString(buf));
   }
 

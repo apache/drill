@@ -22,16 +22,16 @@ import java.util.List;
 import org.apache.drill.exec.record.MaterializedField;
 
 /**
- * Metadata description of the schema of a row or a map.
- * In Drill, both rows and maps are
+ * Metadata description of the schema of a row or a struct.
+ * In Drill, both rows and structs are
  * tuples: both are an ordered collection of values, defined by a
  * schema. Each tuple has a schema that defines the column ordering
  * for indexed access. Each tuple also provides methods to get column
  * accessors by name or index.
  * <p>
  * Models the physical schema of a row set showing the logical hierarchy of fields
- * with map fields as first-class fields. Map members appear as children
- * under the map, much as they appear in the physical value-vector
+ * with struct fields as first-class fields. Struct members appear as children
+ * under the struct, much as they appear in the physical value-vector
  * implementation.
  * <ul>
  * <li>Provides fast lookup by name or index.</li>

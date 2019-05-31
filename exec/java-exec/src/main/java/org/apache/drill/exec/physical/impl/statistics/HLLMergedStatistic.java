@@ -30,7 +30,7 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.vector.NullableVarBinaryVector;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.complex.MapVector;
+import org.apache.drill.exec.vector.complex.StructVector;
 
 public class HLLMergedStatistic extends AbstractMergedStatistic {
   private Map<String, HyperLogLog> hllHolder;
@@ -58,9 +58,9 @@ public class HLLMergedStatistic extends AbstractMergedStatistic {
   }
 
   @Override
-  public void merge(MapVector input) {
+  public void merge(StructVector input) {
     // Check the input is a Map Vector
-    assert (input.getField().getType().getMinorType() == TypeProtos.MinorType.MAP);
+    assert (input.getField().getType().getMinorType() == TypeProtos.MinorType.STRUCT);
     for (ValueVector vv : input) {
       String colName = vv.getField().getName();
       HyperLogLog colHLLHolder = null;
@@ -97,9 +97,9 @@ public class HLLMergedStatistic extends AbstractMergedStatistic {
   }
 
   @Override
-  public void setOutput(MapVector output) {
+  public void setOutput(StructVector output) {
     // Check the input is a Map Vector
-    assert (output.getField().getType().getMinorType() == TypeProtos.MinorType.MAP);
+    assert (output.getField().getType().getMinorType() == TypeProtos.MinorType.STRUCT);
     // Dependencies have been configured correctly
     assert (state == State.MERGE);
     for (ValueVector outMapCol : output) {

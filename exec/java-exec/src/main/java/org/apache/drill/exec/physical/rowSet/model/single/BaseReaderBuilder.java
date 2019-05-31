@@ -35,7 +35,7 @@ import org.apache.drill.exec.vector.accessor.reader.MapReader;
 import org.apache.drill.exec.vector.accessor.reader.UnionReaderImpl;
 import org.apache.drill.exec.vector.accessor.reader.VectorAccessor;
 import org.apache.drill.exec.vector.accessor.reader.VectorAccessors.SingleVectorAccessor;
-import org.apache.drill.exec.vector.complex.AbstractMapVector;
+import org.apache.drill.exec.vector.complex.AbstractStructVector;
 import org.apache.drill.exec.vector.complex.ListVector;
 import org.apache.drill.exec.vector.complex.RepeatedListVector;
 import org.apache.drill.exec.vector.complex.UnionVector;
@@ -77,8 +77,8 @@ public abstract class BaseReaderBuilder extends AbstractReaderBuilder {
     final MajorType type = va.type();
 
     switch(type.getMinorType()) {
-    case MAP:
-      return buildMap((AbstractMapVector) vector, va, type.getMode(), descrip);
+    case STRUCT:
+      return buildMap((AbstractStructVector) vector, va, type.getMode(), descrip);
     case UNION:
       return buildUnion((UnionVector) vector, va, descrip);
     case LIST:
@@ -93,7 +93,7 @@ public abstract class BaseReaderBuilder extends AbstractReaderBuilder {
     }
   }
 
-  private AbstractObjectReader buildMap(AbstractMapVector vector, VectorAccessor va, DataMode mode, VectorDescrip descrip) {
+  private AbstractObjectReader buildMap(AbstractStructVector vector, VectorAccessor va, DataMode mode, VectorDescrip descrip) {
 
     final boolean isArray = mode == DataMode.REPEATED;
 
@@ -102,7 +102,7 @@ public abstract class BaseReaderBuilder extends AbstractReaderBuilder {
     final AbstractObjectReader mapReader = MapReader.build(
         descrip.metadata,
         isArray ? null : va,
-        buildMapMembers(vector,
+        buildStructMembers(vector,
             descrip.parent.childProvider(descrip.metadata)));
 
     // Single map
@@ -116,10 +116,10 @@ public abstract class BaseReaderBuilder extends AbstractReaderBuilder {
     return ArrayReaderImpl.buildTuple(descrip.metadata, va, mapReader);
   }
 
-  protected List<AbstractObjectReader> buildMapMembers(AbstractMapVector mapVector, MetadataProvider provider) {
+  protected List<AbstractObjectReader> buildStructMembers(AbstractStructVector structVector, MetadataProvider provider) {
     final List<AbstractObjectReader> readers = new ArrayList<>();
     int i = 0;
-    for (final ValueVector vector : mapVector) {
+    for (final ValueVector vector : structVector) {
       final VectorDescrip descrip = new VectorDescrip(provider, i, vector.getField());
       readers.add(buildVectorReader(vector, descrip));
       i++;
@@ -177,12 +177,12 @@ public abstract class BaseReaderBuilder extends AbstractReaderBuilder {
    * The four "modes" of list vector, and thus list reader, are:
    * <ul>
    * <li>Similar to a scalar array.</li>
-   * <li>Similar to a map (tuple) array.</li>
+   * <li>Similar to a struct (tuple) array.</li>
    * <li>The only way to represent an array of unions.</li>
    * <li>The only way to represent an array of lists.</li>
    * </ul>
    * Lists add an extra feature compared to the "regular" scalar or
-   * map arrays. Each array entry can be either null or empty (regular
+   * struct arrays. Each array entry can be either null or empty (regular
    * arrays can only be empty.)
    * <p>
    * When working with unions, this introduces an ambiguity: both the

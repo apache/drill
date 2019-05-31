@@ -33,11 +33,10 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * Defines the schema of a tuple: either the top-level row or a nested
- * "map" (really structure). A schema is a collection of columns (backed
- * by vectors in the loader itself.) Columns are accessible by name or
- * index. New columns may be added at any time; the new column takes the
- * next available index.
+ * Defines the schema of a tuple: either the top-level row or a nested "struct".
+ * A schema is a collection of columns (backed by vectors in the loader itself.)
+ * Columns are accessible by name or index. New columns may be added at any time;
+ * the new column takes the next available index.
  */
 @JsonAutoDetect(
   fieldVisibility = JsonAutoDetect.Visibility.NONE,
@@ -48,7 +47,7 @@ import java.util.stream.Collectors;
 @JsonPropertyOrder({"columns", "properties"})
 public class TupleSchema extends AbstractPropertied implements TupleMetadata {
 
-  private MapColumnMetadata parentMap;
+  private StructColumnMetadata parentMap;
   private final TupleNameSpace<ColumnMetadata> nameSpace = new TupleNameSpace<>();
 
   public TupleSchema() { }
@@ -62,7 +61,7 @@ public class TupleSchema extends AbstractPropertied implements TupleMetadata {
     setProperties(properties);
   }
 
-  public void bind(MapColumnMetadata parentMap) {
+  public void bind(StructColumnMetadata parentMap) {
     this.parentMap = parentMap;
   }
 
@@ -132,7 +131,7 @@ public class TupleSchema extends AbstractPropertied implements TupleMetadata {
   }
 
   @Override
-  public MapColumnMetadata parent() { return parentMap; }
+  public StructColumnMetadata parent() { return parentMap; }
 
   @Override
   public int size() { return nameSpace.count(); }

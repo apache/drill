@@ -72,11 +72,11 @@ public interface RowSetWriter extends TupleWriter {
    * for scalars. For example, <tt>int[]</tt> for an <tt>INTEGER</tt>
    * column.</li>
    * <li>For a Map, an <tt>Object<tt> array with values encoded as above.
-   * (In fact, the list here is the same as the map format.</li>
-   * <li>For a list (repeated map, list of list), an <tt>Object</tt>
-   * array with values encoded as above. (So, for a repeated map, an outer
-   * <tt>Object</tt> map encodes the array, an inner one encodes the
-   * map members.</li>
+   * (In fact, the list here is the same as the struct format.</li>
+   * <li>For a list (repeated struct, list of list), an <tt>Object</tt>
+   * array with values encoded as above. (So, for a repeated struct, an outer
+   * <tt>Object</tt> struct encodes the array, an inner one encodes the
+   * struct members.</li>
    * </ul>
    *
    * @param values variable-length argument list of column values

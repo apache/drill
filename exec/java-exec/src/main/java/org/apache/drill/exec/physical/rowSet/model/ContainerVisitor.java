@@ -23,11 +23,11 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.complex.AbstractMapVector;
+import org.apache.drill.exec.vector.complex.AbstractStructVector;
 import org.apache.drill.exec.vector.complex.BaseRepeatedValueVector;
 import org.apache.drill.exec.vector.complex.ListVector;
 import org.apache.drill.exec.vector.complex.RepeatedListVector;
-import org.apache.drill.exec.vector.complex.RepeatedMapVector;
+import org.apache.drill.exec.vector.complex.RepeatedStructVector;
 
 public class ContainerVisitor<R, A> {
 
@@ -53,11 +53,11 @@ public class ContainerVisitor<R, A> {
     final MinorType type = majorType.getMinorType();
     final DataMode mode = majorType.getMode();
     switch (type) {
-    case MAP:
+    case STRUCT:
       if (mode == DataMode.REPEATED) {
-        return visitRepeatedMap((RepeatedMapVector) vector, arg);
+        return visitRepeatedStruct((RepeatedStructVector) vector, arg);
       } else {
-        return visitMap((AbstractMapVector) vector, arg);
+        return visitStruct((AbstractStructVector) vector, arg);
       }
     case LIST:
       if (mode == DataMode.REPEATED) {
@@ -74,17 +74,17 @@ public class ContainerVisitor<R, A> {
     }
   }
 
-  protected R visitRepeatedMap(RepeatedMapVector vector, A arg) {
+  protected R visitRepeatedStruct(RepeatedStructVector vector, A arg) {
     visitChildren(vector, arg);
     return visitVector(vector, arg);
   }
 
-  protected R visitMap(AbstractMapVector vector, A arg) {
+  protected R visitStruct(AbstractStructVector vector, A arg) {
     visitChildren(vector, arg);
     return visitVector(vector, arg);
   }
 
-  private R visitChildren(AbstractMapVector vector, A arg) {
+  private R visitChildren(AbstractStructVector vector, A arg) {
     for (int i = 0; i < vector.size(); i++) {
       apply(vector.getChildByOrdinal(i), arg);
     }

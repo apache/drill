@@ -108,7 +108,7 @@ public class BuildFromSchema {
   private void buildColumn(ParentShim parent, ColumnMetadata colSchema) {
     if (colSchema.isMultiList()) {
       buildRepeatedList(parent, colSchema);
-    } else if (colSchema.isMap()) {
+    } else if (colSchema.isStruct()) {
       buildMap(parent, colSchema);
     } else if (isSingleList(colSchema)) {
       buildSingleList(parent, colSchema);
@@ -212,7 +212,7 @@ public class BuildFromSchema {
 
   /**
    * We've just built a writer for column. If the column is structured
-   * (AKA "complex", meaning a map or list or array), then we need to
+   * (AKA "complex", meaning a struct or list or array), then we need to
    * build writer for the components of the column. We do that recursively
    * here.
    *
@@ -225,7 +225,7 @@ public class BuildFromSchema {
     if (colSchema.isMultiList()) {
       // For completeness, should never occur.
       assert false;
-    } else if (colSchema.isMap()) {
+    } else if (colSchema.isStruct()) {
       expandMap(colWriter, colSchema);
     } else if (isSingleList(colSchema)) {
       // For completeness, should never occur.

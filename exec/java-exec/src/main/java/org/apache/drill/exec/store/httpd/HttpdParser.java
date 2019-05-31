@@ -26,7 +26,7 @@ import nl.basjes.parse.core.exceptions.DissectionFailure;
 import nl.basjes.parse.core.exceptions.InvalidDissectorException;
 import nl.basjes.parse.core.exceptions.MissingDissectorsException;
 import nl.basjes.parse.httpdlog.HttpdLoglineParser;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter.StructWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -294,7 +294,7 @@ public class HttpdParser {
     LOGFIELDS.put("request.referer.last", "HTTP.URI:request.referer.last");
   }
 
-  public HttpdParser(final MapWriter mapWriter, final DrillBuf managedBuffer, final String logFormat,
+  public HttpdParser(final StructWriter structWriter, final DrillBuf managedBuffer, final String logFormat,
                      final String timestampFormat, final Map<String, String> fieldMapping)
           throws NoSuchMethodException, MissingDissectorsException, InvalidDissectorException {
 
@@ -303,7 +303,7 @@ public class HttpdParser {
     this.record = new HttpdLogRecord(managedBuffer, timestampFormat);
     this.parser = new HttpdLoglineParser<>(HttpdLogRecord.class, logFormat, timestampFormat);
 
-    setupParser(mapWriter, logFormat, fieldMapping);
+    setupParser(structWriter, logFormat, fieldMapping);
 
     if (timestampFormat != null && !timestampFormat.trim().isEmpty()) {
       LOG.info("Custom timestamp format has been specified. This is an informational note only as custom timestamps is rather unusual.");
@@ -384,7 +384,7 @@ public class HttpdParser {
     }
   }
 
-  private void setupParser(final MapWriter mapWriter, final String logFormat, final Map<String, String> fieldMapping)
+  private void setupParser(final StructWriter structWriter, final String logFormat, final Map<String, String> fieldMapping)
           throws NoSuchMethodException, MissingDissectorsException, InvalidDissectorException {
 
     /**
@@ -434,7 +434,7 @@ public class HttpdParser {
       }
 
       LOG.debug("Setting up drill field: {}, parser field: {}, which casts as: {}", entry.getKey(), entry.getValue(), casts);
-      record.addField(parser, mapWriter, casts, entry.getValue(), entry.getKey());
+      record.addField(parser, structWriter, casts, entry.getValue(), entry.getKey());
     }
   }
 }

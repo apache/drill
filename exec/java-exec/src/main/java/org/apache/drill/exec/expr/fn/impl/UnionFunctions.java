@@ -319,8 +319,8 @@ public class UnionFunctions {
     @Override
     public void eval() {
       if (in.isSet == 1) {
-        if (in.reader.getType().getMinorType() != org.apache.drill.common.types.TypeProtos.MinorType.MAP) {
-          throw new UnsupportedOperationException("The input is not a MAP type");
+        if (in.reader.getType().getMinorType() != org.apache.drill.common.types.TypeProtos.MinorType.STRUCT) {
+          throw new UnsupportedOperationException("The input is not a STRUCT type");
         }
         out.reader = in.reader;
       } else {
@@ -342,7 +342,7 @@ public class UnionFunctions {
     @Override
     public void eval() {
       if (in.isSet == 1) {
-        out.value = in.getType().getMinorType() == org.apache.drill.common.types.TypeProtos.MinorType.MAP ? 1 : 0;
+        out.value = in.getType().getMinorType() == org.apache.drill.common.types.TypeProtos.MinorType.STRUCT ? 1 : 0;
       } else {
         out.value = 0;
       }

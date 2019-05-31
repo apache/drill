@@ -50,7 +50,7 @@ import org.apache.drill.exec.vector.accessor.TupleWriter;
 import org.apache.drill.exec.vector.accessor.VariantReader;
 import org.apache.drill.exec.vector.accessor.VariantWriter;
 import org.apache.drill.exec.vector.complex.ListVector;
-import org.apache.drill.exec.vector.complex.MapVector;
+import org.apache.drill.exec.vector.complex.StructVector;
 import org.apache.drill.exec.vector.complex.UnionVector;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSetReader;
@@ -81,7 +81,7 @@ public class TestVariantAccessors extends SubOperatorTest {
 
         .addUnion("u")
           .addType(MinorType.INT)
-          .addMap()
+          .addStruct()
             .addNullable("c", MinorType.BIGINT)
             .addNullable("d", MinorType.VARCHAR)
             .resumeUnion()
@@ -101,17 +101,17 @@ public class TestVariantAccessors extends SubOperatorTest {
     assertTrue(vector instanceof UnionVector);
     final UnionVector union = (UnionVector) vector;
 
-    final MapVector typeMap = union.getTypeMap();
+    final StructVector typeMap = union.getTypeStruct();
     ValueVector member = typeMap.getChild(MinorType.INT.name());
     assertTrue(member instanceof NullableIntVector);
 
-    // Inner map
+    // Inner struct
 
-    member = typeMap.getChild(MinorType.MAP.name());
-    assertTrue(member instanceof MapVector);
-    member = typeMap.getChild(MinorType.MAP.name());
-    assertTrue(member instanceof MapVector);
-    final MapVector childMap = (MapVector) member;
+    member = typeMap.getChild(MinorType.STRUCT.name());
+    assertTrue(member instanceof StructVector);
+    member = typeMap.getChild(MinorType.STRUCT.name());
+    assertTrue(member instanceof StructVector);
+    final StructVector childMap = (StructVector) member;
     ValueVector mapMember = childMap.getChild("c");
     assertNotNull(mapMember);
     assertTrue(mapMember instanceof NullableBigIntVector);
@@ -313,7 +313,7 @@ public class TestVariantAccessors extends SubOperatorTest {
 
         .addList("list1")
           .addType(MinorType.BIGINT)
-          .addMap()
+          .addStruct()
             .addNullable("a", MinorType.INT)
             .addNullable("b", MinorType.VARCHAR)
             .resumeUnion()
@@ -344,18 +344,18 @@ public class TestVariantAccessors extends SubOperatorTest {
     final List<MinorType> types = unionType.getSubTypeList();
     assertEquals(3, types.size());
     assertTrue(types.contains(MinorType.BIGINT));
-    assertTrue(types.contains(MinorType.MAP));
+    assertTrue(types.contains(MinorType.STRUCT));
     assertTrue(types.contains(MinorType.LIST));
 
-    final MapVector typeMap = union.getTypeMap();
+    final StructVector typeMap = union.getTypeStruct();
     ValueVector member = typeMap.getChild(MinorType.BIGINT.name());
     assertTrue(member instanceof NullableBigIntVector);
 
     // Map inside the list
 
-    member = typeMap.getChild(MinorType.MAP.name());
-    assertTrue(member instanceof MapVector);
-    final MapVector childMap = (MapVector) member;
+    member = typeMap.getChild(MinorType.STRUCT.name());
+    assertTrue(member instanceof StructVector);
+    final StructVector childMap = (StructVector) member;
     ValueVector mapMember = childMap.getChild("a");
     assertNotNull(mapMember);
     assertTrue(mapMember instanceof NullableIntVector);
@@ -375,7 +375,7 @@ public class TestVariantAccessors extends SubOperatorTest {
 
   /**
    * Test a variant (AKA "union vector") at the top level which
-   * includes a map.
+   * includes a struct.
    */
 
   @Test
@@ -383,7 +383,7 @@ public class TestVariantAccessors extends SubOperatorTest {
     final TupleMetadata schema = new SchemaBuilder()
         .addUnion("u")
           .addType(MinorType.VARCHAR)
-          .addMap()
+          .addStruct()
             .addNullable("a", MinorType.INT)
             .addNullable("b", MinorType.VARCHAR)
             .resumeUnion()
@@ -409,8 +409,8 @@ public class TestVariantAccessors extends SubOperatorTest {
       final ScalarWriter strWriter = strObj.scalar();
       assertSame(strWriter, vw.scalar(MinorType.VARCHAR));
 
-      assertTrue(vw.hasType(MinorType.MAP));
-      final ObjectWriter mapObj = vw.member(MinorType.MAP);
+      assertTrue(vw.hasType(MinorType.STRUCT));
+      final ObjectWriter mapObj = vw.member(MinorType.STRUCT);
       final TupleWriter mWriter = mapObj.tuple();
       assertSame(mWriter, vw.tuple());
 
@@ -423,9 +423,9 @@ public class TestVariantAccessors extends SubOperatorTest {
       strWriter.setString("first");
       writer.save();
 
-      // Second row: a map
+      // Second row: a struct
 
-      vw.setType(MinorType.MAP);
+      vw.setType(MinorType.STRUCT);
       aWriter.setInt(20);
       bWriter.setString("fred");
       writer.save();
@@ -435,9 +435,9 @@ public class TestVariantAccessors extends SubOperatorTest {
       vw.setNull();
       writer.save();
 
-      // Fourth row: map with a null string
+      // Fourth row: struct with a null string
 
-      vw.setType(MinorType.MAP);
+      vw.setType(MinorType.STRUCT);
       aWriter.setInt(40);
       bWriter.setNull();
       writer.save();
@@ -468,8 +468,8 @@ public class TestVariantAccessors extends SubOperatorTest {
       final ScalarReader strReader = strObj.scalar();
       assertSame(strReader, vr.scalar(MinorType.VARCHAR));
 
-      assertTrue(vr.hasType(MinorType.MAP));
-      final ObjectReader mapObj = vr.member(MinorType.MAP);
+      assertTrue(vr.hasType(MinorType.STRUCT));
+      final ObjectReader mapObj = vr.member(MinorType.STRUCT);
       final TupleReader mReader = mapObj.tuple();
       assertSame(mReader, vr.tuple());
 
@@ -485,11 +485,11 @@ public class TestVariantAccessors extends SubOperatorTest {
       assertTrue(mReader.isNull());
       assertEquals("first", strReader.getString());
 
-      // Second row: a map
+      // Second row: a struct
 
       assertTrue(reader.next());
       assertFalse(vr.isNull());
-      assertEquals(MinorType.MAP, vr.dataType());
+      assertEquals(MinorType.STRUCT, vr.dataType());
       assertTrue(strReader.isNull());
       assertFalse(mReader.isNull());
       assertFalse(aReader.isNull());
@@ -506,10 +506,10 @@ public class TestVariantAccessors extends SubOperatorTest {
       assertTrue(aReader.isNull());
       assertTrue(bReader.isNull());
 
-      // Fourth row: map with a null string
+      // Fourth row: struct with a null string
 
       assertTrue(reader.next());
-      assertEquals(MinorType.MAP, vr.dataType());
+      assertEquals(MinorType.STRUCT, vr.dataType());
       assertEquals(40, aReader.getInt());
       assertTrue(bReader.isNull());
 
@@ -666,7 +666,7 @@ public class TestVariantAccessors extends SubOperatorTest {
   }
 
   /**
-   * List of maps. Like a repeated map, but each list entry can be
+   * List of maps. Like a repeated struct, but each list entry can be
    * null.
    */
 
@@ -674,7 +674,7 @@ public class TestVariantAccessors extends SubOperatorTest {
   public void testListOfMaps() {
     final TupleMetadata schema = new SchemaBuilder()
         .addList("list")
-          .addMap()
+          .addStruct()
             .addNullable("a", MinorType.INT)
             .addNullable("b", MinorType.VARCHAR)
             .resumeUnion()
@@ -701,8 +701,8 @@ public class TestVariantAccessors extends SubOperatorTest {
       bWriter.setString("fred");
 
       listArray.save();
-      // Can't mark the map as null. Instead, we simply skip
-      // the map and the contained nullable members will automatically
+      // Can't mark the struct as null. Instead, we simply skip
+      // the struct and the contained nullable members will automatically
       // back-fill each entry with a null value.
       listArray.save();
 
@@ -766,7 +766,7 @@ public class TestVariantAccessors extends SubOperatorTest {
       assertEquals("fred", bReader.getString());
 
       assertTrue(listArray.next());
-      // Awkward: the map has no null state, but its
+      // Awkward: the struct has no null state, but its
       // members do.
       assertTrue(aReader.isNull());
       assertTrue(bReader.isNull());

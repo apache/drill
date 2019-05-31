@@ -28,10 +28,10 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.store.easy.json.reader.BaseJsonProcessor;
 import org.apache.drill.exec.vector.complex.fn.VectorOutput.ListVectorOutput;
-import org.apache.drill.exec.vector.complex.fn.VectorOutput.MapVectorOutput;
+import org.apache.drill.exec.vector.complex.fn.VectorOutput.StructVectorOutput;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter.StructWriter;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
@@ -48,7 +48,7 @@ public class JsonReader extends BaseJsonProcessor {
   private final WorkingBuffer workingBuffer;
   private final List<SchemaPath> columns;
   private final boolean allTextMode;
-  private final MapVectorOutput mapOutput;
+  private final StructVectorOutput mapOutput;
   private final ListVectorOutput listOutput;
   private final boolean extended = true;
   private final boolean readNumbersAsDouble;
@@ -90,7 +90,7 @@ public class JsonReader extends BaseJsonProcessor {
     private  DrillBuf managedBuf;
     private  WorkingBuffer workingBuffer;
     private  List<SchemaPath> columns;
-    private  MapVectorOutput mapOutput;
+    private StructVectorOutput mapOutput;
     private  ListVectorOutput listOutput;
     private  String currentFieldName = "<none>";
     private  boolean readNumbersAsDouble;
@@ -103,7 +103,7 @@ public class JsonReader extends BaseJsonProcessor {
     public Builder(DrillBuf managedBuf) {
       this.managedBuf = managedBuf;
       this.workingBuffer = new WorkingBuffer(managedBuf);
-      this.mapOutput = new MapVectorOutput(workingBuffer);
+      this.mapOutput = new StructVectorOutput(workingBuffer);
       this.listOutput = new ListVectorOutput(workingBuffer);
       this.enableNanInf = true;
     }
@@ -242,7 +242,7 @@ public class JsonReader extends BaseJsonProcessor {
 
     switch (t) {
     case START_OBJECT:
-      writeDataSwitch(writer.rootAsMap());
+      writeDataSwitch(writer.rootAsStruct());
       break;
     case START_ARRAY:
       if (inOuterList) {
@@ -255,7 +255,7 @@ public class JsonReader extends BaseJsonProcessor {
         t = parser.nextToken();
         if (t == JsonToken.START_OBJECT) {
           inOuterList = true;
-          writeDataSwitch(writer.rootAsMap());
+          writeDataSwitch(writer.rootAsStruct());
         } else {
           String message = "The top level of your document must either be a single array of maps or a set "
               + "of white space delimited maps.";
@@ -290,7 +290,7 @@ public class JsonReader extends BaseJsonProcessor {
 
   }
 
-  private void writeDataSwitch(MapWriter w) throws IOException {
+  private void writeDataSwitch(StructWriter w) throws IOException {
     if (this.allTextMode) {
       writeDataAllText(w, this.selection, true);
     } else {
@@ -321,7 +321,7 @@ public class JsonReader extends BaseJsonProcessor {
 
   /**
    *
-   * @param map
+   * @param struct
    * @param selection
    * @param moveForward
    *          Whether or not we should start with using the current token or the
@@ -329,10 +329,10 @@ public class JsonReader extends BaseJsonProcessor {
    *          token and ignore the current one.
    * @throws IOException
    */
-  private void writeData(MapWriter map, FieldSelection selection,
+  private void writeData(StructWriter struct, FieldSelection selection,
       boolean moveForward) throws IOException {
     //
-    map.start();
+    struct.start();
     try {
       outside: while (true) {
 
@@ -360,39 +360,39 @@ public class JsonReader extends BaseJsonProcessor {
 
         switch (parser.nextToken()) {
         case START_ARRAY:
-          writeData(map.list(fieldName));
+          writeData(struct.list(fieldName));
           break;
         case START_OBJECT:
-          if (!writeMapDataIfTyped(map, fieldName)) {
-            writeData(map.map(fieldName), childSelection, false);
+          if (!writeMapDataIfTyped(struct, fieldName)) {
+            writeData(struct.struct(fieldName), childSelection, false);
           }
           break;
         case END_OBJECT:
           break outside;
 
         case VALUE_FALSE: {
-          map.bit(fieldName).writeBit(0);
+          struct.bit(fieldName).writeBit(0);
           break;
         }
         case VALUE_TRUE: {
-          map.bit(fieldName).writeBit(1);
+          struct.bit(fieldName).writeBit(1);
           break;
         }
         case VALUE_NULL:
           // do nothing as we don't have a type.
           break;
         case VALUE_NUMBER_FLOAT:
-          map.float8(fieldName).writeFloat8(parser.getDoubleValue());
+          struct.float8(fieldName).writeFloat8(parser.getDoubleValue());
           break;
         case VALUE_NUMBER_INT:
           if (this.readNumbersAsDouble) {
-            map.float8(fieldName).writeFloat8(parser.getDoubleValue());
+            struct.float8(fieldName).writeFloat8(parser.getDoubleValue());
           } else {
-            map.bigInt(fieldName).writeBigInt(parser.getLongValue());
+            struct.bigInt(fieldName).writeBigInt(parser.getLongValue());
           }
           break;
         case VALUE_STRING:
-          handleString(parser, map, fieldName);
+          handleString(parser, struct, fieldName);
           break;
 
         default:
@@ -403,15 +403,15 @@ public class JsonReader extends BaseJsonProcessor {
 
       }
     } finally {
-      map.end();
+      struct.end();
     }
 
   }
 
-  private void writeDataAllText(MapWriter map, FieldSelection selection,
+  private void writeDataAllText(StructWriter struct, FieldSelection selection,
       boolean moveForward) throws IOException {
     //
-    map.start();
+    struct.start();
     outside: while (true) {
 
       JsonToken t;
@@ -439,11 +439,11 @@ public class JsonReader extends BaseJsonProcessor {
 
       switch (parser.nextToken()) {
       case START_ARRAY:
-        writeDataAllText(map.list(fieldName));
+        writeDataAllText(struct.list(fieldName));
         break;
       case START_OBJECT:
-        if (!writeMapDataIfTyped(map, fieldName)) {
-          writeDataAllText(map.map(fieldName), childSelection, false);
+        if (!writeMapDataIfTyped(struct, fieldName)) {
+          writeDataAllText(struct.struct(fieldName), childSelection, false);
         }
         break;
       case END_OBJECT:
@@ -455,7 +455,7 @@ public class JsonReader extends BaseJsonProcessor {
       case VALUE_NUMBER_FLOAT:
       case VALUE_NUMBER_INT:
       case VALUE_STRING:
-        handleString(parser, map, fieldName);
+        handleString(parser, struct, fieldName);
         break;
       case VALUE_NULL:
         // do nothing as we don't have a type.
@@ -466,7 +466,7 @@ public class JsonReader extends BaseJsonProcessor {
             parser.getCurrentToken()).build(logger);
       }
     }
-    map.end();
+    struct.end();
 
   }
 
@@ -479,7 +479,7 @@ public class JsonReader extends BaseJsonProcessor {
    * @return
    * @throws IOException
    */
-  private boolean writeMapDataIfTyped(MapWriter writer, String fieldName)
+  private boolean writeMapDataIfTyped(StructWriter writer, String fieldName)
       throws IOException {
     if (extended) {
       return mapOutput.run(writer, fieldName);
@@ -506,7 +506,7 @@ public class JsonReader extends BaseJsonProcessor {
     }
   }
 
-  private void handleString(JsonParser parser, MapWriter writer,
+  private void handleString(JsonParser parser, StructWriter writer,
       String fieldName) throws IOException {
     writer.varChar(fieldName).writeVarChar(0,
         workingBuffer.prepareVarCharHolder(parser.getText()),
@@ -530,7 +530,7 @@ public class JsonReader extends BaseJsonProcessor {
           break;
         case START_OBJECT:
           if (!writeListDataIfTyped(list)) {
-            writeData(list.map(), FieldSelection.ALL_VALID, false);
+            writeData(list.struct(), FieldSelection.ALL_VALID, false);
           }
           break;
         case END_ARRAY:
@@ -601,7 +601,7 @@ public class JsonReader extends BaseJsonProcessor {
         break;
       case START_OBJECT:
         if (!writeListDataIfTyped(list)) {
-          writeDataAllText(list.map(), FieldSelection.ALL_VALID, false);
+          writeDataAllText(list.struct(), FieldSelection.ALL_VALID, false);
         }
         break;
       case END_ARRAY:

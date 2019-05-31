@@ -84,7 +84,7 @@
  * <dl>
  * <dt>ObjectWriter, ObjectReader</dt>
  * <dd>Drill follows a JSON data model. A row is a tuple (AKA structure). Each
- * column is a scalar, a map (AKA tuple, structure) or an array (AKA a repeated
+ * column is a scalar, a struct (AKA tuple, structure) or an array (AKA a repeated
  * value.)</dd>
  * <dt>TupleWriter, TupleReader</dt>
  * <dd>In relational terms, a tuple is an ordered collection of values, where
@@ -164,8 +164,8 @@
  *
  * <h4>Tuple Model</h4>
  *
- * Drill has the idea of row and of a map. (A Drill map is much like a "struct":
- * every instance of the "map" must have the same columns.) Both are instances
+ * Drill has the idea of row and of a struct. (A Drill struct is much like a "struct":
+ * every instance of the "struct" must have the same columns.) Both are instances
  * of the relational concept of a "tuple." In relational theory, a tuple is
  * a collection of values in which each value has a name and a position. The
  * name is for the user, the position (index) allows efficient implementation.

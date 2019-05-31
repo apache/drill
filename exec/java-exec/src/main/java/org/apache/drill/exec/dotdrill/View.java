@@ -226,7 +226,7 @@ public class View {
      * Gets key type for fields whose type is
      * {@link org.apache.calcite.sql.type.SqlTypeName#MAP}
      *
-     * @return key type of map
+     * @return key type of struct
      */
     public Field getKeyType() {
       return keyType;
@@ -236,7 +236,7 @@ public class View {
      * Gets value type for fields whose type is
      * {@link org.apache.calcite.sql.type.SqlTypeName#MAP}
      *
-     * @return value type of map
+     * @return value type of struct
      */
     public Field getValueType() {
       return valueType;
@@ -261,7 +261,7 @@ public class View {
      * Checks that for MAP fields key and value types
      * were persisted
      *
-     * @return is map key and value types present
+     * @return is struct key and value types present
      */
     @JsonIgnore
     boolean isMapTypesPresent() {
@@ -339,7 +339,7 @@ public class View {
         type = factory.createMapType(getType(field.getKeyType(), factory), getType(field.getValueType(), factory));
       } else {
          /*
-            For older views that doesn't have info about map key and value types,
+            For older views that doesn't have info about struct key and value types,
             chosen type is ANY. Because use of raw MAP type causes creation of
             MAP cast expression that can't be serialized by ExpressionStringBuilder's
             visitCastExpression(CastExpression e, StringBuilder sb) method.

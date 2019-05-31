@@ -34,7 +34,7 @@ import org.joda.time.format.ISODateTimeFormat;
 import java.math.BigDecimal;
 
 /**
- * Primitive (non-map) column. Describes non-nullable, nullable and array types
+ * Primitive (non-struct) column. Describes non-nullable, nullable and array types
  * (which differ only in mode, but not in metadata structure.)
  * <p>
  * Metadata is of two types:

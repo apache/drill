@@ -82,13 +82,13 @@ public class ExplicitSchemaProjection extends ReaderLevelProjection {
       RequestedColumn requestedCol,
       ColumnMetadata column, int sourceIndex) {
 
-    // Is the requested column implied to be a map?
-    // A requested column is a map if the user requests x.y and we
+    // Is the requested column implied to be a struct?
+    // A requested column is a struct if the user requests x.y and we
     // are resolving column x. The presence of y as a member implies
-    // that x is a map.
+    // that x is a struct.
 
     if (requestedCol.isTuple()) {
-      resolveMap(outputTuple, requestedCol, column, sourceIndex);
+      resolveStruct(outputTuple, requestedCol, column, sourceIndex);
     }
 
     // Is the requested column implied to be an array?
@@ -99,7 +99,7 @@ public class ExplicitSchemaProjection extends ReaderLevelProjection {
       resolveArray(outputTuple, requestedCol, column, sourceIndex);
     }
 
-    // A plain old column. Might be an array or a map, but if
+    // A plain old column. Might be an array or a struct, but if
     // so, the request list just mentions it by name without implying
     // the column type. That is, the project list just contains x
     // by itself.
@@ -109,16 +109,16 @@ public class ExplicitSchemaProjection extends ReaderLevelProjection {
     }
   }
 
-  private void resolveMap(ResolvedTuple outputTuple,
-      RequestedColumn requestedCol, ColumnMetadata column,
-      int sourceIndex) {
+  private void resolveStruct(ResolvedTuple outputTuple,
+                             RequestedColumn requestedCol, ColumnMetadata column,
+                             int sourceIndex) {
 
-    // If the actual column isn't a map, then the request is invalid.
+    // If the actual column isn't a struct, then the request is invalid.
 
-    if (! column.isMap()) {
+    if (! column.isStruct()) {
       throw UserException
         .validationError()
-        .message("Project list implies a map column, but actual column is not a map")
+        .message("Project list implies a struct column, but actual column is not a struct")
         .addContext("Projected column:", requestedCol.fullName())
         .addContext("Table column:", column.name())
         .addContext("Type:", column.type().name())
@@ -126,22 +126,22 @@ public class ExplicitSchemaProjection extends ReaderLevelProjection {
         .build(logger);
     }
 
-    // The requested column is implied to be a map because it lists
+    // The requested column is implied to be a struct because it lists
     // members to project. Project these.
 
-    ResolvedMapColumn mapCol = new ResolvedMapColumn(outputTuple,
+    ResolvedStructColumn mapCol = new ResolvedStructColumn(outputTuple,
         column.schema(), sourceIndex);
     resolveTuple(mapCol.members(), requestedCol.mapProjection(),
         column.mapSchema());
 
-    // If the projection is simple, then just project the map column
-    // as is. A projection is simple if all map columns from the table
+    // If the projection is simple, then just project the struct column
+    // as is. A projection is simple if all struct columns from the table
     // are projected, and no null columns are needed. The simple case
     // occurs more often than one might expect because the result set
     // loader only projected those columns that were needed, so the only
     // issue we have to handle is null columns.
     //
-    // In the simple case, we discard the map tuple just created
+    // In the simple case, we discard the struct tuple just created
     // since we ended up not needing it.
 
     if (mapCol.members().isSimpleProjection()) {
@@ -150,8 +150,8 @@ public class ExplicitSchemaProjection extends ReaderLevelProjection {
     }
 
     // The resolved tuple may have a subset of table columns
-    // and/or null columns. Project a new map that will be created
-    // to hold the projected map elements.
+    // and/or null columns. Project a new struct that will be created
+    // to hold the projected struct elements.
 
     else {
       outputTuple.add(mapCol);
@@ -195,7 +195,7 @@ public class ExplicitSchemaProjection extends ReaderLevelProjection {
    * project list. (If the actual column name is `X` (upper case), but the
    * project list requests `x` (lower case), project the column using the
    * lower-case name. The column type comes from the table column. The source
-   * index is the location in the table map or row.
+   * index is the location in the table struct or row.
    *
    * @param outputTuple
    *          projected tuple being built
@@ -221,16 +221,16 @@ public class ExplicitSchemaProjection extends ReaderLevelProjection {
   /**
    * Resolve a null column. This is a projected column which does not match
    * an implicit or table column. We consider two cases: a simple top-level
-   * column reference ("a", say) and an implied map reference ("a.b", say.)
-   * If the column appears to be a map, determine the set of children, which
-   * map appear to any depth, that were requested.
+   * column reference ("a", say) and an implied struct reference ("a.b", say.)
+   * If the column appears to be a struct, determine the set of children, which
+   * struct appear to any depth, that were requested.
    */
 
   private void resolveNullColumn(ResolvedTuple outputTuple,
       RequestedColumn requestedCol) {
     ResolvedColumn nullCol;
     if (requestedCol.isTuple()) {
-      nullCol = resolveMapMembers(outputTuple, requestedCol);
+      nullCol = resolveStructMembers(outputTuple, requestedCol);
     } else {
       nullCol = outputTuple.nullBuilder.add(requestedCol.name());
     }
@@ -238,23 +238,23 @@ public class ExplicitSchemaProjection extends ReaderLevelProjection {
   }
 
   /**
-   * A child column of a map is not projected. Recurse to determine the full
+   * A child column of a struct is not projected. Recurse to determine the full
    * set of nullable child columns.
    *
-   * @param projectedColumn the map column which was projected
    * @return a list of null markers for the requested children
    */
 
-  private ResolvedColumn resolveMapMembers(ResolvedTuple outputTuple, RequestedColumn col) {
-    ResolvedMapColumn mapCol = new ResolvedMapColumn(outputTuple, col.name());
+  private ResolvedColumn resolveStructMembers(ResolvedTuple outputTuple, RequestedColumn col) {
+    ResolvedStructColumn mapCol = new ResolvedStructColumn(outputTuple, col.name());
     ResolvedTuple members = mapCol.members();
     for (RequestedColumn child : col.mapProjection().projections()) {
       if (child.isTuple()) {
-        members.add(resolveMapMembers(members, child));
+        members.add(resolveStructMembers(members, child));
       } else {
         members.add(outputTuple.nullBuilder.add(child.name()));
       }
     }
     return mapCol;
   }
+
 }

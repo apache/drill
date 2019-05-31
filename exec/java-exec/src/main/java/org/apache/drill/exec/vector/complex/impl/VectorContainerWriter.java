@@ -23,21 +23,21 @@ import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.util.CallBack;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.complex.MapVector;
+import org.apache.drill.exec.vector.complex.StructVector;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 
 public class VectorContainerWriter extends AbstractFieldWriter implements ComplexWriter {
   //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VectorContainerWriter.class);
 
-  private final SingleMapWriter mapRoot;
-  private final SpecialMapVector mapVector;
+  private final SingleStructWriter mapRoot;
+  private final SpecialStructVector structVector;
   private final OutputMutator mutator;
 
   public VectorContainerWriter(OutputMutator mutator, boolean unionEnabled) {
     super(null);
     this.mutator = mutator;
-    mapVector = new SpecialMapVector(mutator.getCallBack());
-    mapRoot = new SingleMapWriter(mapVector, this, unionEnabled);
+    structVector = new SpecialStructVector(mutator.getCallBack());
+    mapRoot = new SingleStructWriter(structVector, this, unionEnabled);
   }
 
   public VectorContainerWriter(OutputMutator mutator) {
@@ -46,7 +46,7 @@ public class VectorContainerWriter extends AbstractFieldWriter implements Comple
 
   @Override
   public MaterializedField getField() {
-    return mapVector.getField();
+    return structVector.getField();
   }
 
   @Override
@@ -54,8 +54,8 @@ public class VectorContainerWriter extends AbstractFieldWriter implements Comple
     return mapRoot.getValueCapacity();
   }
 
-  public MapVector getMapVector() {
-    return mapVector;
+  public StructVector getStructVector() {
+    return structVector;
   }
 
   @Override
@@ -67,7 +67,7 @@ public class VectorContainerWriter extends AbstractFieldWriter implements Comple
   public void close() throws Exception {
     clear();
     mapRoot.close();
-    mapVector.close();
+    structVector.close();
   }
 
   @Override
@@ -75,7 +75,7 @@ public class VectorContainerWriter extends AbstractFieldWriter implements Comple
     mapRoot.clear();
   }
 
-  public SingleMapWriter getWriter() {
+  public SingleStructWriter getWriter() {
     return mapRoot;
   }
 
@@ -95,9 +95,9 @@ public class VectorContainerWriter extends AbstractFieldWriter implements Comple
     mapRoot.allocate();
   }
 
-  private class SpecialMapVector extends MapVector {
+  private class SpecialStructVector extends StructVector {
 
-    public SpecialMapVector(CallBack callback) {
+    public SpecialStructVector(CallBack callback) {
       super("", null, callback);
     }
 
@@ -114,7 +114,7 @@ public class VectorContainerWriter extends AbstractFieldWriter implements Comple
   }
 
   @Override
-  public MapWriter rootAsMap() {
+  public StructWriter rootAsStruct() {
     return mapRoot;
   }
 

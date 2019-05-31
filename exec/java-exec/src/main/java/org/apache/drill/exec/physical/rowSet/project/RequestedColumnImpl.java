@@ -174,9 +174,9 @@ public class RequestedColumnImpl implements RequestedColumn {
     case ARRAY:
       return "array column";
     case TUPLE:
-      return "map column";
+      return "struct column";
     case TUPLE_ARRAY:
-      return "repeated map";
+      return "repeated struct";
     case WILDCARD:
       return "wildcard";
     default:

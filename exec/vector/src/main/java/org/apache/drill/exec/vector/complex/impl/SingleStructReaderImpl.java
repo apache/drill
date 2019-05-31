@@ -22,19 +22,19 @@ import java.util.Map;
 
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.complex.MapVector;
+import org.apache.drill.exec.vector.complex.StructVector;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter.StructWriter;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 
 @SuppressWarnings("unused")
-public class SingleMapReaderImpl extends AbstractFieldReader{
+public class SingleStructReaderImpl extends AbstractFieldReader{
 
-  private final MapVector vector;
+  private final StructVector vector;
   private final Map<String, FieldReader> fields = Maps.newHashMap();
 
-  public SingleMapReaderImpl(MapVector vector) {
+  public SingleStructReaderImpl(StructVector vector) {
     this.vector = vector;
   }
 
@@ -89,17 +89,15 @@ public class SingleMapReaderImpl extends AbstractFieldReader{
   }
 
   @Override
-  public void copyAsValue(MapWriter writer){
-    SingleMapWriter impl = (SingleMapWriter) writer;
+  public void copyAsValue(StructWriter writer){
+    SingleStructWriter impl = (SingleStructWriter) writer;
     impl.container.copyFromSafe(idx(), impl.idx(), vector);
   }
 
   @Override
-  public void copyAsField(String name, MapWriter writer){
-    SingleMapWriter impl = (SingleMapWriter) writer.map(name);
+  public void copyAsField(String name, StructWriter writer){
+    SingleStructWriter impl = (SingleStructWriter) writer.struct(name);
     impl.container.copyFromSafe(idx(), impl.idx(), vector);
   }
 
-
 }
-

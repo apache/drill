@@ -36,17 +36,17 @@ import org.apache.drill.exec.record.MaterializedField;
  * Code:<pre><code>
  *     TupleMetadata schema = new SchemaBuilder()
  *        .add("c", MinorType.INT)
- *        .addMap("a")
+ *        .addStruct("a")
  *          .addNullable("b", MinorType.VARCHAR)
  *          .add("d", MinorType.INT)
- *          .addMap("e") // or .addMapArray("e")
+ *          .addStruct("e") // or .addStructArray("e")
  *            .add("f", MinorType.VARCHAR)
- *            .resumeMap()
+ *            .resumeStruct()
  *          .add("g", MinorType.INT)
  *          .resumeSchema()
  *        .addUnion("h") // or .addList("h")
  *          .addType(MinorType.INT)
- *          .addMap()
+ *          .addStruct()
  *            .add("h1", MinorType.INT)
  *            .resumeUnion()
  *          .addList()
@@ -92,7 +92,7 @@ public class SchemaBuilder implements SchemaContainer {
   /**
    * Create a column schema using the "basic three" properties of name, type and
    * cardinality (AKA "data mode.") Use the {@link ColumnBuilder} for to set
-   * other schema attributes. Name is relative to the enclosing map or tuple;
+   * other schema attributes. Name is relative to the enclosing struct or tuple;
    * it is not the fully qualified path name.
    */
 
@@ -181,19 +181,19 @@ public class SchemaBuilder implements SchemaContainer {
   }
 
   /**
-   * Add a map column. The returned schema builder is for the nested
-   * map. Building that map, using {@link MapBuilder#resumeSchema()},
+   * Add a struct column. The returned schema builder is for the nested
+   * struct. Building that struct, using {@link StructBuilder#resumeSchema()},
    * will return the original schema builder.
    *
-   * @param name the name of the map column
-   * @return a builder for the map
+   * @param name the name of the struct column
+   * @return a builder for the struct
    */
-  public MapBuilder addMap(String name) {
-    return tupleBuilder.addMap(this, name);
+  public StructBuilder addStruct(String name) {
+    return tupleBuilder.addStruct(this, name);
   }
 
-  public MapBuilder addMapArray(String name) {
-    return tupleBuilder.addMapArray(this, name);
+  public StructBuilder addStructArray(String name) {
+    return tupleBuilder.addStructArray(this, name);
   }
 
   public UnionBuilder addUnion(String name) {

@@ -46,7 +46,7 @@ import org.junit.experimental.categories.Category;
  * mechanism. When we project, we have the set of column the user
  * wants "the schema level" and the set of columns on offer from
  * the data source "the scan level." The projection mechanism
- * combines these to map out the actual projection.
+ * combines these to struct out the actual projection.
  */
 
 @Category(RowSetTests.class)
@@ -263,9 +263,9 @@ public class TestReaderLevelProjection extends SubOperatorTest {
   }
 
   /**
-   * Test the obscure case that the data source contains a map, but we
-   * project only one of the members of the map. The output should be a
-   * map that contains only the members we request.
+   * Test the obscure case that the data source contains a struct, but we
+   * project only one of the members of the struct. The output should be a
+   * struct that contains only the members we request.
    */
 
   @Test
@@ -298,7 +298,7 @@ public class TestReaderLevelProjection extends SubOperatorTest {
     final List<ResolvedColumn> columns = rootTuple.columns();
     assertEquals(2, columns.size());
 
-    // Should have resolved a to a table column, b to a missing map.
+    // Should have resolved a to a table column, b to a missing struct.
 
     // A is projected
 
@@ -306,35 +306,35 @@ public class TestReaderLevelProjection extends SubOperatorTest {
     assertEquals("a", aCol.name());
     assertTrue(aCol instanceof ResolvedTableColumn);
 
-    // B is not projected, is implicitly a map
+    // B is not projected, is implicitly a struct
 
     final ResolvedColumn bCol = columns.get(1);
     assertEquals("b", bCol.name());
-    assertTrue(bCol instanceof ResolvedMapColumn);
+    assertTrue(bCol instanceof ResolvedStructColumn);
 
-    final ResolvedMapColumn bMap = (ResolvedMapColumn) bCol;
+    final ResolvedStructColumn bMap = (ResolvedStructColumn) bCol;
     final ResolvedTuple bMembers = bMap.members();
     assertNotNull(bMembers);
     assertEquals(1, bMembers.columns().size());
 
-    // C is a map within b
+    // C is a struct within b
 
     final ResolvedColumn cCol = bMembers.columns().get(0);
-    assertTrue(cCol instanceof ResolvedMapColumn);
+    assertTrue(cCol instanceof ResolvedStructColumn);
 
-    final ResolvedMapColumn cMap = (ResolvedMapColumn) cCol;
+    final ResolvedStructColumn cMap = (ResolvedStructColumn) cCol;
     final ResolvedTuple cMembers = cMap.members();
     assertNotNull(cMembers);
     assertEquals(1, cMembers.columns().size());
 
-    // D is an unknown column type (not a map)
+    // D is an unknown column type (not a struct)
 
     final ResolvedColumn dCol = cMembers.columns().get(0);
     assertTrue(dCol instanceof ResolvedNullColumn);
   }
 
   /**
-   * Test of a map with missing columns.
+   * Test of a struct with missing columns.
    * table of (a{b, c}), project a.c, a.d, a.e.f
    */
 
@@ -353,7 +353,7 @@ public class TestReaderLevelProjection extends SubOperatorTest {
     final TupleMetadata tableSchema = new SchemaBuilder()
         .add("x", MinorType.VARCHAR)
         .add("y", MinorType.INT)
-        .addMap("a")
+        .addStruct("a")
           .add("b", MinorType.BIGINT)
           .add("c", MinorType.FLOAT8)
           .resumeSchema()
@@ -368,9 +368,9 @@ public class TestReaderLevelProjection extends SubOperatorTest {
     final List<ResolvedColumn> columns = rootTuple.columns();
     assertEquals(3, columns.size());
 
-    // Should have resolved a.b to a map column,
-    // a.d to a missing nested map, and a.e.f to a missing
-    // nested map member
+    // Should have resolved a.b to a struct column,
+    // a.d to a missing nested struct, and a.e.f to a missing
+    // nested struct member
 
     // X is projected
 
@@ -392,9 +392,9 @@ public class TestReaderLevelProjection extends SubOperatorTest {
 
     final ResolvedColumn aCol = columns.get(1);
     assertEquals("a", aCol.name());
-    assertTrue(aCol instanceof ResolvedMapColumn);
+    assertTrue(aCol instanceof ResolvedStructColumn);
 
-    final ResolvedMapColumn aMap = (ResolvedMapColumn) aCol;
+    final ResolvedStructColumn aMap = (ResolvedStructColumn) aCol;
     final ResolvedTuple aMembers = aMap.members();
     assertFalse(aMembers.isSimpleProjection());
     assertNotNull(aMembers);
@@ -413,13 +413,13 @@ public class TestReaderLevelProjection extends SubOperatorTest {
     assertEquals("d", adCol.name());
     assertTrue(adCol instanceof ResolvedNullColumn);
 
-    // a.e is not in the table, is implicitly a map
+    // a.e is not in the table, is implicitly a struct
 
     final ResolvedColumn aeCol = aMembers.columns().get(2);
     assertEquals("e", aeCol.name());
-    assertTrue(aeCol instanceof ResolvedMapColumn);
+    assertTrue(aeCol instanceof ResolvedStructColumn);
 
-    final ResolvedMapColumn aeMap = (ResolvedMapColumn) aeCol;
+    final ResolvedStructColumn aeMap = (ResolvedStructColumn) aeCol;
     final ResolvedTuple aeMembers = aeMap.members();
     assertFalse(aeMembers.isSimpleProjection());
     assertNotNull(aeMembers);
@@ -433,10 +433,10 @@ public class TestReaderLevelProjection extends SubOperatorTest {
   }
 
   /**
-   * Simple map project. This is an internal case in which the
-   * query asks for a set of columns inside a map, and the table
+   * Simple struct project. This is an internal case in which the
+   * query asks for a set of columns inside a struct, and the table
    * loader produces exactly that set. No special projection is
-   * needed, the map is projected as a whole.
+   * needed, the struct is projected as a whole.
    */
 
   @Test
@@ -452,7 +452,7 @@ public class TestReaderLevelProjection extends SubOperatorTest {
     // Simulate a data source, with early schema, of (a{b, c})
 
     final TupleMetadata tableSchema = new SchemaBuilder()
-        .addMap("a")
+        .addStruct("a")
           .add("b", MinorType.BIGINT)
           .add("c", MinorType.FLOAT8)
           .resumeSchema()
@@ -467,11 +467,11 @@ public class TestReaderLevelProjection extends SubOperatorTest {
     final List<ResolvedColumn> columns = rootTuple.columns();
     assertEquals(1, columns.size());
 
-    // Should have resolved a.b to a map column,
-    // a.d to a missing nested map, and a.e.f to a missing
-    // nested map member
+    // Should have resolved a.b to a struct column,
+    // a.d to a missing nested struct, and a.e.f to a missing
+    // nested struct member
 
-    // a is projected as a vector, not as a structured map
+    // a is projected as a vector, not as a structured struct
 
     final ResolvedColumn aCol = columns.get(0);
     assertEquals("a", aCol.name());
@@ -481,7 +481,7 @@ public class TestReaderLevelProjection extends SubOperatorTest {
   }
 
   /**
-   * Project of a non-map as a map
+   * Project of a non-struct as a struct
    */
 
   @Test
@@ -494,7 +494,7 @@ public class TestReaderLevelProjection extends SubOperatorTest {
         ScanTestUtils.parsers());
 
     // Simulate a data source, with early schema, of (a)
-    // where a is not a map.
+    // where a is not a struct.
 
     final TupleMetadata tableSchema = new SchemaBuilder()
         .add("a", MinorType.VARCHAR)

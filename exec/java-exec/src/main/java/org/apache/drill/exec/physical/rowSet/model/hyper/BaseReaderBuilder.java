@@ -54,7 +54,7 @@ import org.apache.drill.exec.vector.accessor.reader.VectorAccessors.BaseHyperVec
  * The solution is to build the readers in two passes. The first builds a
  * metadata model for each batch and merges those models. (This version
  * requires strict identity in schemas; a fancier solution could handle,
- * say, the addition of map members in one batch vs. another or the addition
+ * say, the addition of struct members in one batch vs. another or the addition
  * of union/list members across batches.)
  * <p>
  * The metadata (by design) has the information we need, so in the second pass
@@ -148,7 +148,7 @@ public abstract class BaseReaderBuilder extends AbstractReaderBuilder {
 
   protected AbstractObjectReader buildVectorReader(VectorAccessor va, ColumnMetadata metadata) {
     switch(metadata.type()) {
-    case MAP:
+    case STRUCT:
       return buildMap(va, metadata.mode(), metadata);
     case UNION:
       return buildUnion(va, metadata);

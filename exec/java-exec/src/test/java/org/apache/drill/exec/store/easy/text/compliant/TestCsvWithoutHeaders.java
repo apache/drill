@@ -398,7 +398,7 @@ public class TestCsvWithoutHeaders extends BaseCsvTest {
 
   /**
    * When the `columns` array is allowed, the projection list cannot
-   * implicitly suggest that `columns` is a map.
+   * implicitly suggest that `columns` is a struct.
    * <p>
    * V2 message: DATA_READ ERROR: Selected column 'columns' must be an array index
    */
@@ -411,7 +411,7 @@ public class TestCsvWithoutHeaders extends BaseCsvTest {
       client.queryBuilder().sql(sql, TEST_FILE_NAME, TEST_FILE_NAME).run();
     } catch (UserRemoteException e) {
       assertTrue(e.getMessage().contains(
-          "VALIDATION ERROR: Column `columns` has map elements, but must be an array"));
+          "VALIDATION ERROR: Column `columns` has struct elements, but must be an array"));
       assertTrue(e.getMessage().contains("Plugin config name: csv"));
     } catch (Exception e) {
       fail();

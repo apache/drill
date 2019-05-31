@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.physical.impl.unnest;
 
+import org.apache.drill.exec.physical.rowSet.impl.TestResultSetLoaderStructArray;
+import org.apache.drill.exec.vector.complex.StructVector;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.drill.categories.OperatorTest;
@@ -45,7 +47,6 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.mock.MockStorePOP;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarCharVector;
-import org.apache.drill.exec.vector.complex.MapVector;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSetBuilder;
@@ -651,7 +652,7 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
           }
 
           for (int valueIndex = 0; valueIndex < valueCount; valueIndex++) {
-            if (vv instanceof MapVector) {
+            if (vv instanceof StructVector) {
               if (!compareMapBaseline(baseline[batchIndex][vectorIndex][valueIndex], vv
                   .getAccessor()
                   .getObject(valueIndex))) {
@@ -702,7 +703,7 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
   }
 
   /**
-   * Build a schema with a repeated map -
+   * Build a schema with a repeated struct -
    *
    *  {
    *    rowNum,
@@ -716,14 +717,14 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
    *    ]
    *  }
    *
-   * @see org.apache.drill.exec.physical.rowSet.impl.TestResultSetLoaderMapArray TestResultSetLoaderMapArray for
+   * @see TestResultSetLoaderStructArray TestResultSetLoaderMapArray for
    * similar schema and data
    * @return TupleMetadata corresponding to the schema
    */
   private TupleMetadata getRepeatedMapSchema() {
     TupleMetadata schema = new SchemaBuilder()
         .add("rowNum", TypeProtos.MinorType.INT)
-        .addMapArray("unnestColumn")
+        .addStructArray("unnestColumn")
           .add("colA", TypeProtos.MinorType.INT)
           .addArray("colB", TypeProtos.MinorType.VARCHAR)
         .resumeSchema()
@@ -968,7 +969,7 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
           }
 
           for (int valueIndex = 0; valueIndex < valueCount; valueIndex++) {
-            if (vv instanceof MapVector) {
+            if (vv instanceof StructVector) {
               if (!compareMapBaseline(baseline[batchIndex][vectorIndex][valueIndex], vv
                   .getAccessor()
                   .getObject(valueIndex))) {

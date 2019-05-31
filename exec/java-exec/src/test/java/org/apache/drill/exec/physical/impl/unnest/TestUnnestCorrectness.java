@@ -29,6 +29,7 @@ import org.apache.drill.exec.physical.base.LateralContract;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.UnnestPOP;
 import org.apache.drill.exec.physical.impl.MockRecordBatch;
+import org.apache.drill.exec.physical.rowSet.impl.TestResultSetLoaderStructArray;
 import org.apache.drill.exec.planner.common.DrillUnnestRelBase;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
@@ -37,7 +38,7 @@ import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.store.mock.MockStorePOP;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarCharVector;
-import org.apache.drill.exec.vector.complex.MapVector;
+import org.apache.drill.exec.vector.complex.StructVector;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSetBuilder;
@@ -583,7 +584,7 @@ import static org.junit.Assert.assertTrue;
         }
         for (int j = 0; j < valueCount; j++) {
 
-          if (vv instanceof MapVector) {
+          if (vv instanceof StructVector) {
             if (!compareMapBaseline((Object) baseline[i][j], vv.getAccessor().getObject(j))) {
               fail("Test failed in validating unnest(Map) output. Value mismatch");
             }
@@ -631,7 +632,7 @@ import static org.junit.Assert.assertTrue;
   }
 
   /**
-   * Build a schema with a repeated map -
+   * Build a schema with a repeated struct -
    *
    *  {
    *    rowNum,
@@ -645,14 +646,14 @@ import static org.junit.Assert.assertTrue;
    *    ]
    *  }
    *
-   * @see org.apache.drill.exec.physical.rowSet.impl.TestResultSetLoaderMapArray TestResultSetLoaderMapArray for
+   * @see TestResultSetLoaderStructArray TestResultSetLoaderMapArray for
    * similar schema and data
    * @return TupleMetadata corresponding to the schema
    */
   private TupleMetadata getRepeatedMapSchema() {
     TupleMetadata schema = new SchemaBuilder()
         .add("rowNum", TypeProtos.MinorType.INT)
-        .addMapArray("unnestColumn")
+        .addStructArray("unnestColumn")
           .add("colA", TypeProtos.MinorType.INT)
           .addArray("colB", TypeProtos.MinorType.VARCHAR)
         .resumeSchema()

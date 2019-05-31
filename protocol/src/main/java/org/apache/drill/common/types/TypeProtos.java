@@ -46,12 +46,12 @@ public final class TypeProtos {
     LATE(0),
     /**
      * <pre>
-     *  an empty map column.  Useful for conceptual setup.  Children listed within here
+     *  an empty struct column.  Useful for conceptual setup.  Children listed within here
      * </pre>
      *
-     * <code>MAP = 1;</code>
+     * <code>STRUCT = 1;</code>
      */
-    MAP(1),
+    STRUCT(1),
     /**
      * <pre>
      *  single byte signed integer
@@ -347,12 +347,12 @@ public final class TypeProtos {
     public static final int LATE_VALUE = 0;
     /**
      * <pre>
-     *  an empty map column.  Useful for conceptual setup.  Children listed within here
+     *  an empty struct column.  Useful for conceptual setup.  Children listed within here
      * </pre>
      *
-     * <code>MAP = 1;</code>
+     * <code>STRUCT = 1;</code>
      */
-    public static final int MAP_VALUE = 1;
+    public static final int STRUCT_VALUE = 1;
     /**
      * <pre>
      *  single byte signed integer
@@ -653,7 +653,7 @@ public final class TypeProtos {
     public static MinorType forNumber(int value) {
       switch (value) {
         case 0: return LATE;
-        case 1: return MAP;
+        case 1: return STRUCT;
         case 3: return TINYINT;
         case 4: return SMALLINT;
         case 5: return INT;
@@ -2188,23 +2188,23 @@ public final class TypeProtos {
       "de\030\002 \001(\0162\020.common.DataMode\022\r\n\005width\030\003 \001(" +
       "\005\022\021\n\tprecision\030\004 \001(\005\022\r\n\005scale\030\005 \001(\005\022\020\n\010t" +
       "imeZone\030\006 \001(\005\022#\n\010sub_type\030\007 \003(\0162\021.common" +
-      ".MinorType*\245\004\n\tMinorType\022\010\n\004LATE\020\000\022\007\n\003MA" +
-      "P\020\001\022\013\n\007TINYINT\020\003\022\014\n\010SMALLINT\020\004\022\007\n\003INT\020\005\022" +
-      "\n\n\006BIGINT\020\006\022\014\n\010DECIMAL9\020\007\022\r\n\tDECIMAL18\020\010" +
-      "\022\023\n\017DECIMAL28SPARSE\020\t\022\023\n\017DECIMAL38SPARSE" +
-      "\020\n\022\t\n\005MONEY\020\013\022\010\n\004DATE\020\014\022\010\n\004TIME\020\r\022\n\n\006TIM" +
-      "ETZ\020\016\022\017\n\013TIMESTAMPTZ\020\017\022\r\n\tTIMESTAMP\020\020\022\014\n" +
-      "\010INTERVAL\020\021\022\n\n\006FLOAT4\020\022\022\n\n\006FLOAT8\020\023\022\007\n\003B" +
-      "IT\020\024\022\r\n\tFIXEDCHAR\020\025\022\017\n\013FIXED16CHAR\020\026\022\017\n\013" +
-      "FIXEDBINARY\020\027\022\013\n\007VARCHAR\020\030\022\r\n\tVAR16CHAR\020" +
-      "\031\022\r\n\tVARBINARY\020\032\022\t\n\005UINT1\020\035\022\t\n\005UINT2\020\036\022\t" +
-      "\n\005UINT4\020\037\022\t\n\005UINT8\020 \022\022\n\016DECIMAL28DENSE\020!" +
-      "\022\022\n\016DECIMAL38DENSE\020\"\022\010\n\004NULL\020%\022\020\n\014INTERV" +
-      "ALYEAR\020&\022\017\n\013INTERVALDAY\020\'\022\010\n\004LIST\020(\022\022\n\016G" +
-      "ENERIC_OBJECT\020)\022\t\n\005UNION\020*\022\016\n\nVARDECIMAL" +
-      "\020+*4\n\010DataMode\022\014\n\010OPTIONAL\020\000\022\014\n\010REQUIRED" +
-      "\020\001\022\014\n\010REPEATED\020\002B-\n\035org.apache.drill.com" +
-      "mon.typesB\nTypeProtosH\001"
+      ".MinorType*\250\004\n\tMinorType\022\010\n\004LATE\020\000\022\n\n\006ST" +
+      "RUCT\020\001\022\013\n\007TINYINT\020\003\022\014\n\010SMALLINT\020\004\022\007\n\003INT" +
+      "\020\005\022\n\n\006BIGINT\020\006\022\014\n\010DECIMAL9\020\007\022\r\n\tDECIMAL1" +
+      "8\020\010\022\023\n\017DECIMAL28SPARSE\020\t\022\023\n\017DECIMAL38SPA" +
+      "RSE\020\n\022\t\n\005MONEY\020\013\022\010\n\004DATE\020\014\022\010\n\004TIME\020\r\022\n\n\006" +
+      "TIMETZ\020\016\022\017\n\013TIMESTAMPTZ\020\017\022\r\n\tTIMESTAMP\020\020" +
+      "\022\014\n\010INTERVAL\020\021\022\n\n\006FLOAT4\020\022\022\n\n\006FLOAT8\020\023\022\007" +
+      "\n\003BIT\020\024\022\r\n\tFIXEDCHAR\020\025\022\017\n\013FIXED16CHAR\020\026\022" +
+      "\017\n\013FIXEDBINARY\020\027\022\013\n\007VARCHAR\020\030\022\r\n\tVAR16CH" +
+      "AR\020\031\022\r\n\tVARBINARY\020\032\022\t\n\005UINT1\020\035\022\t\n\005UINT2\020" +
+      "\036\022\t\n\005UINT4\020\037\022\t\n\005UINT8\020 \022\022\n\016DECIMAL28DENS" +
+      "E\020!\022\022\n\016DECIMAL38DENSE\020\"\022\010\n\004NULL\020%\022\020\n\014INT" +
+      "ERVALYEAR\020&\022\017\n\013INTERVALDAY\020\'\022\010\n\004LIST\020(\022\022" +
+      "\n\016GENERIC_OBJECT\020)\022\t\n\005UNION\020*\022\016\n\nVARDECI" +
+      "MAL\020+*4\n\010DataMode\022\014\n\010OPTIONAL\020\000\022\014\n\010REQUI" +
+      "RED\020\001\022\014\n\010REPEATED\020\002B-\n\035org.apache.drill." +
+      "common.typesB\nTypeProtosH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {

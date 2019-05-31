@@ -25,20 +25,20 @@ import org.apache.drill.exec.record.metadata.ProjectionType;
 import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 import org.apache.drill.exec.vector.accessor.writer.AbstractArrayWriter.ArrayObjectWriter;
 import org.apache.drill.exec.vector.accessor.writer.dummy.DummyArrayWriter;
-import org.apache.drill.exec.vector.complex.AbstractMapVector;
-import org.apache.drill.exec.vector.complex.MapVector;
-import org.apache.drill.exec.vector.complex.RepeatedMapVector;
+import org.apache.drill.exec.vector.complex.AbstractStructVector;
+import org.apache.drill.exec.vector.complex.StructVector;
+import org.apache.drill.exec.vector.complex.RepeatedStructVector;
 
 /**
  * Writer for a Drill Map type. Maps are actually tuples, just like rows.
  */
 
-public abstract class MapWriter extends AbstractTupleWriter {
+public abstract class StructWriter extends AbstractTupleWriter {
 
   /**
    * Wrap the outer index to avoid incrementing the array index
    * on the call to <tt>nextElement().</tt> For maps, the increment
-   * is done at the map level, not the column level.
+   * is done at the struct level, not the column level.
    */
 
   private static class MemberWriterIndex implements ColumnWriterIndex {
@@ -70,25 +70,25 @@ public abstract class MapWriter extends AbstractTupleWriter {
   }
 
   /**
-   * Writer for a single (non-array) map. Clients don't really "write" maps;
-   * rather, this writer is a holder for the columns within the map, and those
+   * Writer for a single (non-array) struct. Clients don't really "write" maps;
+   * rather, this writer is a holder for the columns within the struct, and those
    * columns are what is written.
    */
 
-  protected static class SingleMapWriter extends MapWriter {
-    private final MapVector mapVector;
+  protected static class SingleStructWriter extends StructWriter {
+    private final StructVector structVector;
 
-    protected SingleMapWriter(ColumnMetadata schema, MapVector vector, List<AbstractObjectWriter> writers) {
+    protected SingleStructWriter(ColumnMetadata schema, StructVector vector, List<AbstractObjectWriter> writers) {
       super(schema, writers);
-      mapVector = vector;
+      structVector = vector;
     }
 
     @Override
     public void endWrite() {
       super.endWrite();
 
-      // A non repeated map has a field that holds the value count.
-      // Update it. (A repeated map uses the offset vector's value count.)
+      // A non repeated struct has a field that holds the value count.
+      // Update it. (A repeated struct uses the offset vector's value count.)
       // Special form of set value count: used only for
       // this class to avoid setting the value count of children.
       // Setting these counts was already done. Doing it again
@@ -97,36 +97,36 @@ public abstract class MapWriter extends AbstractTupleWriter {
       // and the initial value of -1 will cause all values to
       // be overwritten.
 
-      mapVector.setMapValueCount(vectorIndex.vectorIndex());
+      structVector.setMapValueCount(vectorIndex.vectorIndex());
     }
 
     @Override
     public void preRollover() {
       super.preRollover();
-      mapVector.setMapValueCount(vectorIndex.rowStartIndex());
+      structVector.setMapValueCount(vectorIndex.rowStartIndex());
     }
   }
 
   /**
    * Writer for a an array of maps. A single array index coordinates writes
    * to the constituent member vectors so that, say, the values for (row 10,
-   * element 5) all occur to the same position in the columns within the map.
-   * Since the map is an array, it has an associated offset vector, which the
+   * element 5) all occur to the same position in the columns within the struct.
+   * Since the struct is an array, it has an associated offset vector, which the
    * parent array writer is responsible for maintaining.
    */
 
-  protected static class ArrayMapWriter extends MapWriter {
+  protected static class ArrayStructWriter extends StructWriter {
 
-    protected ArrayMapWriter(ColumnMetadata schema, List<AbstractObjectWriter> writers) {
+    protected ArrayStructWriter(ColumnMetadata schema, List<AbstractObjectWriter> writers) {
       super(schema, writers);
     }
 
     @Override
     public void bindIndex(ColumnWriterIndex index) {
 
-      // This is a repeated map, so the provided index is an array element
+      // This is a repeated struct, so the provided index is an array element
       // index. Convert this to an index that will not increment the element
-      // index on each write so that a map with three members, say, won't
+      // index on each write so that a struct with three members, say, won't
       // increment the index for each member. Rather, the index must be
       // incremented at the array level.
 
@@ -134,10 +134,10 @@ public abstract class MapWriter extends AbstractTupleWriter {
     }
   }
 
-  protected static class DummyMapWriter extends MapWriter {
+  protected static class DummyStructWriter extends StructWriter {
 
-    protected DummyMapWriter(ColumnMetadata schema,
-        List<AbstractObjectWriter> writers) {
+    protected DummyStructWriter(ColumnMetadata schema,
+                                List<AbstractObjectWriter> writers) {
       super(schema, writers);
     }
 
@@ -145,10 +145,10 @@ public abstract class MapWriter extends AbstractTupleWriter {
     public ProjectionType projectionType(String columnName) { return ProjectionType.UNPROJECTED; }
   }
 
-  protected static class DummyArrayMapWriter extends MapWriter {
+  protected static class DummyArrayStructWriter extends StructWriter {
 
-    protected DummyArrayMapWriter(ColumnMetadata schema,
-        List<AbstractObjectWriter> writers) {
+    protected DummyArrayStructWriter(ColumnMetadata schema,
+                                     List<AbstractObjectWriter> writers) {
       super(schema, writers);
     }
 
@@ -158,43 +158,43 @@ public abstract class MapWriter extends AbstractTupleWriter {
 
   protected final ColumnMetadata mapColumnSchema;
 
-  protected MapWriter(ColumnMetadata schema, List<AbstractObjectWriter> writers) {
+  protected StructWriter(ColumnMetadata schema, List<AbstractObjectWriter> writers) {
     super(schema.mapSchema(), writers);
     mapColumnSchema = schema;
   }
 
-  public static TupleObjectWriter buildMap(ColumnMetadata schema, MapVector vector,
+  public static TupleObjectWriter buildMap(ColumnMetadata schema, StructVector vector,
       List<AbstractObjectWriter> writers) {
-    MapWriter mapWriter;
+    StructWriter structWriter;
     if (schema.isProjected()) {
 
-      // Vector is not required for a map writer; the map's columns
-      // are written, but not the (non-array) map.
+      // Vector is not required for a struct writer; the struct's columns
+      // are written, but not the (non-array) struct.
 
-      mapWriter = new SingleMapWriter(schema, vector, writers);
+      structWriter = new SingleStructWriter(schema, vector, writers);
     } else {
       assert vector == null;
-      mapWriter = new DummyMapWriter(schema, writers);
+      structWriter = new DummyStructWriter(schema, writers);
     }
-    return new TupleObjectWriter(mapWriter);
+    return new TupleObjectWriter(structWriter);
   }
 
   public static ArrayObjectWriter buildMapArray(ColumnMetadata schema,
-      RepeatedMapVector mapVector,
+      RepeatedStructVector repeatedStructVector,
       List<AbstractObjectWriter> writers) {
-    MapWriter mapWriter;
+    StructWriter structWriter;
     if (schema.isProjected()) {
-      assert mapVector != null;
-      mapWriter = new ArrayMapWriter(schema, writers);
+      assert repeatedStructVector != null;
+      structWriter = new ArrayStructWriter(schema, writers);
     } else {
-      assert mapVector == null;
-      mapWriter = new DummyArrayMapWriter(schema, writers);
+      assert repeatedStructVector == null;
+      structWriter = new DummyArrayStructWriter(schema, writers);
     }
-    TupleObjectWriter mapArray = new TupleObjectWriter(mapWriter);
+    TupleObjectWriter mapArray = new TupleObjectWriter(structWriter);
     AbstractArrayWriter arrayWriter;
     if (schema.isProjected()) {
       arrayWriter = new ObjectArrayWriter(schema,
-          mapVector.getOffsetVector(),
+          repeatedStructVector.getOffsetVector(),
           mapArray);
     } else  {
       arrayWriter = new DummyArrayWriter(schema, mapArray);
@@ -202,20 +202,20 @@ public abstract class MapWriter extends AbstractTupleWriter {
     return new ArrayObjectWriter(arrayWriter);
   }
 
-  public static AbstractObjectWriter buildMapWriter(ColumnMetadata schema,
-      AbstractMapVector vector,
-      List<AbstractObjectWriter> writers) {
+  public static AbstractObjectWriter buildStructWriter(ColumnMetadata schema,
+                                                       AbstractStructVector vector,
+                                                       List<AbstractObjectWriter> writers) {
     if (schema.isArray()) {
-      return MapWriter.buildMapArray(schema,
-          (RepeatedMapVector) vector, writers);
+      return StructWriter.buildMapArray(schema,
+          (RepeatedStructVector) vector, writers);
     } else {
-      return MapWriter.buildMap(schema, (MapVector) vector, writers);
+      return StructWriter.buildMap(schema, (StructVector) vector, writers);
     }
   }
 
-  public static AbstractObjectWriter buildMapWriter(ColumnMetadata schema, AbstractMapVector vector) {
+  public static AbstractObjectWriter buildStructWriter(ColumnMetadata schema, AbstractStructVector vector) {
     assert schema.mapSchema().size() == 0;
-    return buildMapWriter(schema, vector, new ArrayList<AbstractObjectWriter>());
+    return buildStructWriter(schema, vector, new ArrayList<AbstractObjectWriter>());
   }
 
   @Override

@@ -79,7 +79,7 @@ public final class RowSetBuilder {
 
   /**
    * Add a new row using column values passed as variable-length arguments. Expects
-   * map values to be flattened. a schema of (a:int, b:map(c:varchar)) would be>
+   * struct values to be flattened. a schema of (a:int, b:struct(c:varchar)) would be>
    * set as <br><tt>add(10, "foo");</tt><br> Values of arrays can be expressed as a Java
    * array. A schema of (a:int, b:int[]) can be set as<br>
    * <tt>add(10, new int[] {100, 200});</tt><br>

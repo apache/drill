@@ -87,7 +87,7 @@ public class VectorUtil {
 
   public static String formatFieldSchema(MaterializedField field) {
     String colName = field.getName() + "<" + field.getType().getMinorType() + "(" + field.getType().getMode() + ")" + ">";
-    if (field.getType().getMinorType() == MinorType.MAP) {
+    if (field.getType().getMinorType() == MinorType.STRUCT) {
       colName += expandMapSchema(field);
     }
     return colName;

@@ -80,7 +80,7 @@ public class RowSetPrinter {
       }
       ColumnMetadata colSchema = schema.metadata(i);
       out.print(colSchema.name());
-      if (colSchema.isMap()) {
+      if (colSchema.isStruct()) {
         out.print("{");
         printTupleSchema(out, colSchema.mapSchema());
         out.print("}");

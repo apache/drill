@@ -117,7 +117,7 @@
       {inputType: "VarBinary", outputType: "NullableVarBinary", runningType: "VarBinary", major: "VarBytes"},
       {inputType: "NullableVarBinary", outputType: "NullableVarBinary", runningType: "VarBinary", major: "VarBytes"}
       {inputType: "List", outputType: "List", runningType: "List", major: "Complex"}
-      {inputType: "Map", outputType: "Map", runningType: "Map", major: "Complex"}
+      {inputType: "Struct", outputType: "Struct", runningType: "Struct", major: "Complex"}
       {inputType: "RepeatedBit", outputType: "RepeatedBit", runningType: "RepeatedBit", major: "Complex"},
       {inputType: "RepeatedInt", outputType: "RepeatedInt", runningType: "RepeatedInt", major: "Complex"},
       {inputType: "RepeatedBigInt", outputType: "RepeatedBigInt", runningType: "RepeatedBigInt", major: "Complex"},
@@ -133,7 +133,7 @@
       {inputType: "RepeatedVarBinary", outputType: "RepeatedVarBinary", runningType: "RepeatedVarBinary", major: "Complex"},
       {inputType: "RepeatedVarDecimal", outputType: "RepeatedVarDecimal", runningType: "RepeatedVarDecimal", major: "Complex"},
       {inputType: "RepeatedList", outputType: "RepeatedList", runningType: "RepeatedList", major: "Complex"},
-      {inputType: "RepeatedMap", outputType: "RepeatedMap", runningType: "RepeatedMap", major: "Complex"}
+      {inputType: "RepeatedStruct", outputType: "RepeatedStruct", runningType: "RepeatedStruct", major: "Complex"}
      ]
     },
     {className: "SingleValue", funcName: "single_value", types: [
@@ -164,7 +164,7 @@
       {inputType: "VarBinary", outputType: "NullableVarBinary", runningType: "VarBinary", major: "VarBytes"},
       {inputType: "NullableVarBinary", outputType: "NullableVarBinary", runningType: "VarBinary", major: "VarBytes"}
       {inputType: "List", outputType: "List", runningType: "List", major: "Complex"}
-      {inputType: "Map", outputType: "Map", runningType: "Map", major: "Complex"}
+      {inputType: "Struct", outputType: "Struct", runningType: "Struct", major: "Complex"}
       {inputType: "RepeatedBit", outputType: "RepeatedBit", runningType: "RepeatedBit", major: "Complex"},
       {inputType: "RepeatedInt", outputType: "RepeatedInt", runningType: "RepeatedInt", major: "Complex"},
       {inputType: "RepeatedBigInt", outputType: "RepeatedBigInt", runningType: "RepeatedBigInt", major: "Complex"},
@@ -180,7 +180,7 @@
       {inputType: "RepeatedVarBinary", outputType: "RepeatedVarBinary", runningType: "RepeatedVarBinary", major: "Complex"},
       {inputType: "RepeatedVarDecimal", outputType: "RepeatedVarDecimal", runningType: "RepeatedVarDecimal", major: "Complex"},
       {inputType: "RepeatedList", outputType: "RepeatedList", runningType: "RepeatedList", major: "Complex"},
-      {inputType: "RepeatedMap", outputType: "RepeatedMap", runningType: "RepeatedMap", major: "Complex"}
+      {inputType: "RepeatedStruct", outputType: "RepeatedStruct", runningType: "RepeatedStruct", major: "Complex"}
      ]
     }
   ]

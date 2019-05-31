@@ -22,7 +22,7 @@ import static org.ojai.DocumentConstants.ID_KEY;
 
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter.StructWriter;
 import org.ojai.Value;
 
 import com.mapr.db.impl.IdCodec;
@@ -41,7 +41,7 @@ class IdOnlyVectorWriter extends DocumentReaderVectorWriter {
   @Override
   public void writeDBDocument(VectorContainerWriter vectorWriter, DBDocumentReaderBase reader)
       throws SchemaChangeException {
-    MapWriter writer = vectorWriter.rootAsMap();
+    StructWriter writer = vectorWriter.rootAsStruct();
 
     Value id = reader.getId();
     try {

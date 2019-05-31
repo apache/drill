@@ -41,7 +41,7 @@ import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.vector.NullableVarBinaryVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarBinaryVector;
-import org.apache.drill.exec.vector.complex.MapVector;
+import org.apache.drill.exec.vector.complex.StructVector;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Connection;
@@ -66,7 +66,7 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
 
   private OutputMutator outputMutator;
 
-  private Map<String, MapVector> familyVectorMap;
+  private Map<String, StructVector> familyVectorMap;
   private VarBinaryVector rowKeyVector;
 
   private Table hTable;
@@ -162,7 +162,7 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
     try {
       hTable = connection.getTable(hbaseTableName);
 
-      // Add top-level column-family map vectors to output in the order specified
+      // Add top-level column-family struct vectors to output in the order specified
       // when creating reader (order of first appearance in query).
       for (SchemaPath column : getColumns()) {
         if (column.equals(ROW_KEY_PATH)) {
@@ -173,14 +173,14 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
         }
       }
 
-      // Add map and child vectors for any HBase columns that are requested (in
+      // Add struct and child vectors for any HBase columns that are requested (in
       // order to avoid later creation of dummy NullableIntVectors for them).
       final Set<Map.Entry<byte[], NavigableSet<byte []>>> familiesEntries =
           hbaseScanColumnsOnly.getFamilyMap().entrySet();
       for (Map.Entry<byte[], NavigableSet<byte []>> familyEntry : familiesEntries) {
         final String familyName = new String(familyEntry.getKey(),
                                              StandardCharsets.UTF_8);
-        final MapVector familyVector = getOrCreateFamilyVector(familyName, false);
+        final StructVector familyVector = getOrCreateFamilyVector(familyName, false);
         final Set<byte []> children = familyEntry.getValue();
         if (null != children) {
           for (byte[] childNameBytes : children) {
@@ -191,7 +191,7 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
         }
       }
 
-      // Add map vectors for any HBase column families that are requested.
+      // Add struct vectors for any HBase column families that are requested.
       for (String familyName : completeFamilies) {
         getOrCreateFamilyVector(familyName, false);
       }
@@ -251,7 +251,7 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
           final int familyOffset = cell.getFamilyOffset();
           final int familyLength = cell.getFamilyLength();
           final byte[] familyArray = cell.getFamilyArray();
-          final MapVector mv = getOrCreateFamilyVector(new String(familyArray, familyOffset, familyLength), true);
+          final StructVector mv = getOrCreateFamilyVector(new String(familyArray, familyOffset, familyLength), true);
 
           final int qualifierOffset = cell.getQualifierOffset();
           final int qualifierLength = cell.getQualifierLength();
@@ -273,13 +273,13 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
     return rowCount;
   }
 
-  private MapVector getOrCreateFamilyVector(String familyName, boolean allocateOnCreate) {
+  private StructVector getOrCreateFamilyVector(String familyName, boolean allocateOnCreate) {
     try {
-      MapVector v = familyVectorMap.get(familyName);
+      StructVector v = familyVectorMap.get(familyName);
       if(v == null) {
         SchemaPath column = SchemaPath.getSimplePath(familyName);
         MaterializedField field = MaterializedField.create(column.getAsNamePart().getName(), COLUMN_FAMILY_TYPE);
-        v = outputMutator.addField(field, MapVector.class);
+        v = outputMutator.addField(field, StructVector.class);
         if (allocateOnCreate) {
           v.allocateNew();
         }
@@ -292,7 +292,7 @@ public class HBaseRecordReader extends AbstractRecordReader implements DrillHBas
     }
   }
 
-  private NullableVarBinaryVector getOrCreateColumnVector(MapVector mv, String qualifier) {
+  private NullableVarBinaryVector getOrCreateColumnVector(StructVector mv, String qualifier) {
     int oldSize = mv.size();
     NullableVarBinaryVector v = mv.addOrGet(qualifier, COLUMN_TYPE, NullableVarBinaryVector.class);
     if (oldSize != mv.size()) {

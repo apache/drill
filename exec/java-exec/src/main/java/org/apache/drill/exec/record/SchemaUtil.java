@@ -60,7 +60,7 @@ public class SchemaUtil {
           typeSetMap.put(path, currentTypes);
         }
         MinorType newType = field.getType().getMinorType();
-        if (newType == MinorType.MAP || newType == MinorType.LIST) {
+        if (newType == MinorType.STRUCT || newType == MinorType.LIST) {
           throw new RuntimeException("Schema change not currently supported for schemas with complex types");
         }
         if (newType == MinorType.UNION) {

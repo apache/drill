@@ -31,7 +31,7 @@
  * avoiding the need for multiple implementations of vector traversal. (Traversal
  * is needed because maps contain vectors, some of which can be maps, resulting
  * in a tree structure. Further, the API provided by containers (a top-level
- * tuple) differs from that of a map vector (nested tuple.) This structure provides
+ * tuple) differs from that of a struct vector (nested tuple.) This structure provides
  * a uniform API for both cases.
  * <p>
  * Three primary tasks provided by this structure are:

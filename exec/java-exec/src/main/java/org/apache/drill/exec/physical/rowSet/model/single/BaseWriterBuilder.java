@@ -31,12 +31,12 @@ import org.apache.drill.exec.vector.accessor.convert.ColumnConversionFactory;
 import org.apache.drill.exec.vector.accessor.writer.AbstractObjectWriter;
 import org.apache.drill.exec.vector.accessor.writer.ColumnWriterFactory;
 import org.apache.drill.exec.vector.accessor.writer.ListWriterImpl;
-import org.apache.drill.exec.vector.accessor.writer.MapWriter;
+import org.apache.drill.exec.vector.accessor.writer.StructWriter;
 import org.apache.drill.exec.vector.accessor.writer.RepeatedListWriter;
 import org.apache.drill.exec.vector.accessor.writer.UnionWriterImpl;
 import org.apache.drill.exec.vector.accessor.writer.AbstractArrayWriter.ArrayObjectWriter;
 import org.apache.drill.exec.vector.accessor.writer.UnionWriterImpl.VariantObjectWriter;
-import org.apache.drill.exec.vector.complex.AbstractMapVector;
+import org.apache.drill.exec.vector.complex.AbstractStructVector;
 import org.apache.drill.exec.vector.complex.ListVector;
 import org.apache.drill.exec.vector.complex.RepeatedListVector;
 import org.apache.drill.exec.vector.complex.UnionVector;
@@ -75,10 +75,10 @@ public abstract class BaseWriterBuilder {
   private AbstractObjectWriter buildVectorWriter(ValueVector vector, VectorDescrip descrip) {
     final MajorType type = vector.getField().getType();
     switch (type.getMinorType()) {
-    case MAP:
-      return MapWriter.buildMapWriter(descrip.metadata,
-          (AbstractMapVector) vector,
-          buildMap((AbstractMapVector) vector, descrip));
+    case STRUCT:
+      return StructWriter.buildStructWriter(descrip.metadata,
+          (AbstractStructVector) vector,
+          buildStruct((AbstractStructVector) vector, descrip));
 
     case UNION:
       return buildUnion((UnionVector) vector, descrip);
@@ -91,7 +91,7 @@ public abstract class BaseWriterBuilder {
     }
   }
 
-  private List<AbstractObjectWriter> buildMap(AbstractMapVector vector, VectorDescrip descrip) {
+  private List<AbstractObjectWriter> buildStruct(AbstractStructVector vector, VectorDescrip descrip) {
     final List<AbstractObjectWriter> writers = new ArrayList<>();
     final MetadataProvider provider = descrip.parent.childProvider(descrip.metadata);
     int i = 0;

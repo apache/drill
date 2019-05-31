@@ -195,8 +195,8 @@
  *
  * The above covers the case of scalar, top-level columns. The extension to
  * scalar maps is straightforward: at run time, the members of maps are just
- * simple scalar vectors that reside in a map name space, but the structure
- * of map fields is the same as for top-level fields. (Think of map fields
+ * simple scalar vectors that reside in a struct name space, but the structure
+ * of struct fields is the same as for top-level fields. (Think of struct fields
  * as being "flattened" into the top-level tuple.)
  * <p>
  * Arrays are a different matter: each row can have many values associated
@@ -234,8 +234,8 @@
  * <li>Start with the row index of the overflow row.</li>
  * <li>If column c, say, is an array, obtain the index of the first value for
  * the overflow row.</li>
- * <li>If c is a list, or a repeated map, then repeat the above, for each
- * member of c (a single column for a list, a set of columns for a map), but
+ * <li>If c is a list, or a repeated struct, then repeat the above, for each
+ * member of c (a single column for a list, a set of columns for a struct), but
  * replace the row index with the index of the first element.</li>
  * </ul>
  * The result will be a walk of the value tree in which the overflow index
@@ -260,7 +260,7 @@
  * but 20 elements in array B.
  * <p>
  * Further, arrays can be singular (a repeated int, say) or for an entire
- * tuple (a repeated map.) And, since Drill supports the full JSON model, in
+ * tuple (a repeated struct.) And, since Drill supports the full JSON model, in
  * the most general case, there is a tree of array indexes that can be nested
  * to an arbitrary level. (A row can have an array of maps which contains a
  * column that is, itself, a list of repeated maps, a field of which is an
@@ -289,7 +289,7 @@
  * <li>Arrays (as a generated repeated vector),</li>
  * <li>Lists (as a {@link ListVector}),</li>
  * <li>Repeated lists (as a {@link RepeatedList vector}, and</li>
- * <li>Repeated maps ({@link RepeatedMapVector}.</li>
+ * <li>Repeated structs ({@link RepeatedStructVector}.</li>
  * </ul>
  * If we were to work directly with the above abstractions the code would be
  * vastly complex. Instead, we abstract out the common structure into the

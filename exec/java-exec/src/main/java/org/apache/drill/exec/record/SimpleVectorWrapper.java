@@ -20,7 +20,7 @@ package org.apache.drill.exec.record;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.complex.AbstractMapVector;
+import org.apache.drill.exec.vector.complex.AbstractStructVector;
 import org.apache.drill.exec.vector.complex.FieldIdUtil;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
@@ -86,7 +86,7 @@ public class SimpleVectorWrapper<T extends ValueVector> implements VectorWrapper
 
     ValueVector vector = this.vector;
     for (int i = 1; i < ids.length; i++) {
-      final AbstractMapVector mapLike = AbstractMapVector.class.cast(vector);
+      final AbstractStructVector mapLike = AbstractStructVector.class.cast(vector);
       if (mapLike == null) {
         return null;
       }

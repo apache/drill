@@ -25,8 +25,8 @@ import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.ProjectionType;
 
 /**
- * Abstract representation of a container of vectors: a row, a map, a
- * repeated map, a list or a union.
+ * Abstract representation of a container of vectors: a row, a struct, a
+ * repeated struct, a list or a union.
  * <p>
  * The container is responsible for creating new columns in response
  * from a writer listener event. Column creation requires a set of
@@ -111,7 +111,7 @@ public abstract class ContainerState {
   /**
    * In order to allocate the correct-sized vectors, the container must know
    * its member cardinality: the number of elements in each row. This
-   * is 1 for a single map or union, but may be any number for a map array
+   * is 1 for a single struct or union, but may be any number for a struct array
    * or a list. Then,
    * this value is recursively pushed downward to compute the cardinality
    * of lists of maps that contains lists of maps, and so on.

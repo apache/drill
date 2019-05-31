@@ -41,8 +41,8 @@ import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.TupleReader;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
 import org.apache.drill.exec.vector.accessor.ValueType;
-import org.apache.drill.exec.vector.complex.MapVector;
-import org.apache.drill.exec.vector.complex.RepeatedMapVector;
+import org.apache.drill.exec.vector.complex.RepeatedStructVector;
+import org.apache.drill.exec.vector.complex.StructVector;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.DirectRowSet;
 import org.apache.drill.test.rowSet.RowSet.ExtendableRowSet;
@@ -309,7 +309,7 @@ public class TestRowSet extends SubOperatorTest {
   }
 
   /**
-   * Test a simple map structure at the top level of a row.
+   * Test a simple struct structure at the top level of a row.
    *
    * @throws VectorOverflowException should never occur
    */
@@ -318,7 +318,7 @@ public class TestRowSet extends SubOperatorTest {
   public void testMapStructure() {
     final TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.INT)
-        .addMap("m")
+        .addStruct("m")
           .addArray("b", MinorType.INT)
           .resumeSchema()
         .buildSchema();
@@ -429,10 +429,10 @@ public class TestRowSet extends SubOperatorTest {
 
     assertFalse(reader.next());
 
-    // Verify that the map accessor's value count was set.
+    // Verify that the struct accessor's value count was set.
 
-    final MapVector mapVector = (MapVector) actual.container().getValueVector(1).getValueVector();
-    assertEquals(actual.rowCount(), mapVector.getAccessor().getValueCount());
+    final StructVector structVector = (StructVector) actual.container().getValueVector(1).getValueVector();
+    assertEquals(actual.rowCount(), structVector.getAccessor().getValueCount());
 
     final SingleRowSet expected = fixture.rowSetBuilder(schema)
         .addRow(10, objArray(intArray(11, 12)))
@@ -446,7 +446,7 @@ public class TestRowSet extends SubOperatorTest {
   public void testRepeatedMapStructure() {
     final TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.INT)
-        .addMapArray("m")
+        .addStructArray("m")
           .add("b", MinorType.INT)
           .add("c", MinorType.INT)
           .resumeSchema()
@@ -545,7 +545,7 @@ public class TestRowSet extends SubOperatorTest {
     assertEquals(112, mapReader.scalar(1).getInt());
 
     // Row 2: use explicit positioning,
-    // but access scalars through the map reader.
+    // but access scalars through the struct reader.
 
     assertTrue(reader.next());
     assertEquals(20, aReader.getInt());
@@ -571,10 +571,10 @@ public class TestRowSet extends SubOperatorTest {
 
     assertFalse(reader.next());
 
-    // Verify that the map accessor's value count was set.
+    // Verify that the struct accessor's value count was set.
 
-    final RepeatedMapVector mapVector = (RepeatedMapVector) actual.container().getValueVector(1).getValueVector();
-    assertEquals(3, mapVector.getAccessor().getValueCount());
+    final RepeatedStructVector repeatedStructVector = (RepeatedStructVector) actual.container().getValueVector(1).getValueVector();
+    assertEquals(3, repeatedStructVector.getAccessor().getValueCount());
 
     // Verify the readers and writers again using the testing tools.
 
@@ -752,7 +752,7 @@ public class TestRowSet extends SubOperatorTest {
     final TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.VARCHAR)
         .addArray("b", MinorType.INT)
-        .addMap("c")
+        .addStruct("c")
           .add("c1", MinorType.INT)
           .add("c2", MinorType.VARCHAR)
           .resumeSchema()

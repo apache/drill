@@ -97,7 +97,7 @@ public class PreparedStatementProvider {
       .put(MinorType.INTERVAL, Period.class.getName())
       .put(MinorType.INTERVALYEAR, Period.class.getName())
       .put(MinorType.INTERVALDAY, Period.class.getName())
-      .put(MinorType.MAP, Object.class.getName())
+      .put(MinorType.STRUCT, Object.class.getName())
       .put(MinorType.LIST, Object.class.getName())
       .put(MinorType.UNION, Object.class.getName())
       .build();

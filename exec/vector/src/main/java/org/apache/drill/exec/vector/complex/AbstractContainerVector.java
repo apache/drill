@@ -112,15 +112,16 @@ public abstract class AbstractContainerVector implements ValueVector {
   }
 
   MajorType getLastPathType() {
-    if ((this.getField().getType().getMinorType() == MinorType.LIST &&
-        this.getField().getType().getMode() == DataMode.REPEATED)) {  // Use Repeated scalar type instead of Required List.
+    MinorType minorType = this.getField().getType().getMinorType();
+    DataMode mode = this.getField().getType().getMode();
+
+    if ((minorType == MinorType.LIST && mode == DataMode.REPEATED)) {  // Use Repeated scalar type instead of Required List.
       VectorWithOrdinal vord = getChildVectorWithOrdinal(null);
       ValueVector v = vord.vector;
       if (!(v instanceof AbstractContainerVector)) {
         return v.getField().getType();
       }
-    } else if (this.getField().getType().getMinorType() == MinorType.MAP &&
-        this.getField().getType().getMode() == DataMode.REPEATED) {  // Use Required Map
+    } else if (minorType == MinorType.STRUCT && mode == DataMode.REPEATED) {  // Use Required Map
       return this.getField().getType().toBuilder().setMode(DataMode.REQUIRED).build();
     }
 

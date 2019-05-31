@@ -27,7 +27,7 @@ import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VectorDescriptor;
 import org.apache.drill.exec.vector.ZeroVector;
-import org.apache.drill.exec.vector.complex.AbstractMapVector;
+import org.apache.drill.exec.vector.complex.AbstractStructVector;
 import org.apache.drill.exec.vector.complex.ListVector;
 import org.apache.drill.exec.vector.complex.UnionVector;
 import org.apache.drill.exec.vector.complex.writer.FieldWriter;
@@ -36,11 +36,11 @@ import org.apache.drill.exec.vector.complex.writer.FieldWriter;
  * This FieldWriter implementation delegates all FieldWriter API calls to an inner FieldWriter. This inner field writer
  * can start as a specific type, and this class will promote the writer to a UnionWriter if a call is made that the specifically
  * typed writer cannot handle. A new UnionVector is created, wrapping the original vector, and replaces the original vector
- * in the parent vector, which can be either an AbstractMapVector or a ListVector.
+ * in the parent vector, which can be either an AbstractStructVector or a ListVector.
  */
 public class PromotableWriter extends AbstractPromotableFieldWriter {
 
-  private final AbstractMapVector parentContainer;
+  private final AbstractStructVector parentContainer;
   private final ListVector listVector;
   private int position;
 
@@ -54,7 +54,7 @@ public class PromotableWriter extends AbstractPromotableFieldWriter {
   private State state;
   private FieldWriter writer;
 
-  public PromotableWriter(ValueVector v, AbstractMapVector parentContainer) {
+  public PromotableWriter(ValueVector v, AbstractStructVector parentContainer) {
     super(null);
     this.parentContainer = parentContainer;
     this.listVector = null;
@@ -141,8 +141,8 @@ public class PromotableWriter extends AbstractPromotableFieldWriter {
   }
 
   @Override
-  public boolean isEmptyMap() {
-    return writer.isEmptyMap();
+  public boolean isEmptyStruct() {
+    return writer.isEmptyStruct();
   }
 
   @Override

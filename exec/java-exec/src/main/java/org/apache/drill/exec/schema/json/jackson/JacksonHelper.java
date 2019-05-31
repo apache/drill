@@ -33,7 +33,7 @@ public class JacksonHelper {
   public static final MajorType BOOLEAN_TYPE = Types.optional(MinorType.BIT);
   public static final MajorType REPEATED_BOOLEAN_TYPE = Types.repeated(MinorType.BIT);
   public static final MajorType ARRAY_TYPE = Types.repeated(MinorType.LATE);
-  public static final MajorType MAP_TYPE = Types.repeated(MinorType.MAP);
+  public static final MajorType STRUCT_TYPE = Types.repeated(MinorType.STRUCT);
   public static final MajorType INT_TYPE = Types.optional(MinorType.BIGINT);
   public static final MajorType REPEATED_INT_TYPE = Types.repeated(MinorType.BIGINT);
   public static final MajorType FLOAT_TYPE = Types.optional(MinorType.FLOAT4);
@@ -51,7 +51,7 @@ public class JacksonHelper {
         case START_ARRAY:
           return ARRAY_TYPE;
         case START_OBJECT:
-          return MAP_TYPE;
+          return STRUCT_TYPE;
         case VALUE_NUMBER_INT:
           return REPEATED_INT_TYPE;
         case VALUE_NUMBER_FLOAT:
@@ -68,7 +68,7 @@ public class JacksonHelper {
         case START_ARRAY:
           return ARRAY_TYPE;
         case START_OBJECT:
-          return MAP_TYPE;
+          return STRUCT_TYPE;
         case VALUE_NUMBER_INT:
           return INT_TYPE;
         case VALUE_NUMBER_FLOAT:

@@ -637,7 +637,7 @@ public class TestSorter extends DrillTest {
   @Ignore("DRILL-5384")
   public void testMapKey() throws Exception {
     BatchSchema schema = new SchemaBuilder()
-        .addMap("map")
+        .addStruct("map")
           .add("key", MinorType.INT)
           .add("value", MinorType.VARCHAR)
           .resumeSchema()
@@ -655,7 +655,7 @@ public class TestSorter extends DrillTest {
         .addRow(2, "second")
         .addRow(3, "third")
         .build();
-    Sort popConfig = makeSortConfig("map.key", Ordering.ORDER_ASC, Ordering.NULLS_LAST);
+    Sort popConfig = makeSortConfig("struct.key", Ordering.ORDER_ASC, Ordering.NULLS_LAST);
     runSorterTest(popConfig, input, output);
   }
 }

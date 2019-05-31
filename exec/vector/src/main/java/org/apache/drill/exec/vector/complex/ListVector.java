@@ -49,7 +49,7 @@ import org.apache.drill.exec.vector.complex.writer.FieldWriter;
  * "Non-repeated" LIST vector. This vector holds some other vector as
  * its data element. Unlike a repeated vector, the child element can
  * change dynamically. It starts as nothing (the LATE type). It can then
- * change to a single type (typically a map but can be anything.) If
+ * change to a single type (typically a struct but can be anything.) If
  * another type is needed, the list morphs again, this time to a list
  * of unions. The prior single type becomes a member of the new union
  * (which requires back-filling is-set values.)
@@ -114,10 +114,10 @@ import org.apache.drill.exec.vector.complex.writer.FieldWriter;
  * be null. But individual maps can't be null. In a list, however, individual
  * ints can be null (because we use a nullable int vector.)</li>
  * </ul>
- * So, when a list of (non-nullable maps) converts to a list of unions (one of
- * which is a map), we suddenly now have the list null bit and the union null
+ * So, when a list of (non-nullable structs) converts to a list of unions (one of
+ * which is a struct), we suddenly now have the list null bit and the union null
  * bit to worry about. We have to go and back-patch the isSet vector for all
- * the existing map entries in the new union so that we don't end up with all
+ * the existing struct entries in the new union so that we don't end up with all
  * previous entries becoming null by default.
  * <p>
  * Another issue is that the metadata for a list should reflect the structure
@@ -126,7 +126,7 @@ import org.apache.drill.exec.vector.complex.writer.FieldWriter;
  * <code>MaterializedField</code> contains subtypes for each type in the
  * union. Now, note that the LIST's metadata contains the child, so we need
  * to update the LIST's <code>MaterializedField</code> each time we add a
- * type to the UNION. And, since the LIST is part of a row or map, then we
+ * type to the UNION. And, since the LIST is part of a row or struct, then we
  * have to update the metadata in those objects to propagate the change.
  * <p>
  * The problem is that the original design assumed that
@@ -183,7 +183,7 @@ public class ListVector extends BaseRepeatedValueVector {
     this.writer = new UnionListWriter(this);
     this.reader = new UnionListReader(this);
 //
-//    // To be consistent with the map vector, create the child if a child is
+//    // To be consistent with the struct vector, create the child if a child is
 //    // given in the field. This is a mess. See DRILL-6046.
 //    But, can't do this because the deserialization mechanism passes in a
 //    field with children filled in, but with no expectation that the vector will
@@ -416,7 +416,7 @@ public class ListVector extends BaseRepeatedValueVector {
     // MajorType is immutable, must build a new one and replace the type
     // in the materialized field. (We replace the type, rather than creating
     // a new materialized field, to preserve the link to this field from
-    // a parent map, list or union.)
+    // a parent struct, list or union.)
 
     assert field.getType().getSubTypeCount() == 0;
     field.replaceType(
@@ -497,9 +497,9 @@ public class ListVector extends BaseRepeatedValueVector {
         }
       } else {
 
-        // The value is not nullable. (Perhaps it is a map.)
+        // The value is not nullable. (Perhaps it is a struct.)
         // Note that the original design of lists have a flaw: if the sole member
-        // is a map, then map entries can't be nullable when the only type, but
+        // is a struct, then struct entries can't be nullable when the only type, but
         // become nullable when in a union. What a mess...
 
         for (int i = 0; i < valueCount; i++) {

@@ -196,7 +196,7 @@ public class TestBatchSerialization extends DrillTest {
   }
 
   /**
-   * Tests a map type and an SV2.
+   * Tests a struct type and an SV2.
    *
    * @throws IOException
    */
@@ -205,7 +205,7 @@ public class TestBatchSerialization extends DrillTest {
   public void testMap() throws IOException {
     BatchSchema schema = new SchemaBuilder()
         .add("top", MinorType.INT)
-        .addMap("map")
+        .addStruct("map")
           .add("key", MinorType.INT)
           .add("value", MinorType.VARCHAR)
           .resumeSchema()

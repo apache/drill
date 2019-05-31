@@ -17,12 +17,12 @@
  */
 <@pp.dropOutputFile />
 <#list ["Single", "Repeated"] as mode>
-<@pp.changeOutputFile name="/org/apache/drill/exec/vector/complex/impl/${mode}MapWriter.java" />
+<@pp.changeOutputFile name="/org/apache/drill/exec/vector/complex/impl/${mode}StructWriter.java" />
 <#if mode == "Single">
-<#assign containerClass = "MapVector" />
+<#assign containerClass = "StructVector" />
 <#assign index = "idx()">
 <#else>
-<#assign containerClass = "RepeatedMapVector" />
+<#assign containerClass = "RepeatedStructVector" />
 <#assign index = "currentChildIndex">
 </#if>
 
@@ -34,7 +34,7 @@ package org.apache.drill.exec.vector.complex.impl;
 import java.util.Map;
 
 import org.apache.drill.common.types.TypeProtos.DataMode;
-import org.apache.drill.exec.expr.holders.RepeatedMapHolder;
+import org.apache.drill.exec.expr.holders.RepeatedStructHolder;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.drill.exec.vector.complex.writer.FieldWriter;
@@ -45,7 +45,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
  * This class is generated using FreeMarker and the ${.template_name} template.
  */
 @SuppressWarnings("unused")
-public class ${mode}MapWriter extends AbstractFieldWriter {
+public class ${mode}StructWriter extends AbstractFieldWriter {
 
   protected final ${containerClass} container;
   private final Map<String, FieldWriter> fields = Maps.newHashMap();
@@ -53,13 +53,13 @@ public class ${mode}MapWriter extends AbstractFieldWriter {
 
   private final boolean unionEnabled;
 
-  public ${mode}MapWriter(${containerClass} container, FieldWriter parent, boolean unionEnabled) {
+  public ${mode}StructWriter(${containerClass} container, FieldWriter parent, boolean unionEnabled) {
     super(parent);
     this.container = container;
     this.unionEnabled = unionEnabled;
   }
 
-  public ${mode}MapWriter(${containerClass} container, FieldWriter parent) {
+  public ${mode}StructWriter(${containerClass} container, FieldWriter parent) {
     this(container, parent, false);
   }
 
@@ -69,7 +69,7 @@ public class ${mode}MapWriter extends AbstractFieldWriter {
   }
 
   @Override
-  public boolean isEmptyMap() {
+  public boolean isEmptyStruct() {
     return 0 == container.size();
   }
 
@@ -79,15 +79,15 @@ public class ${mode}MapWriter extends AbstractFieldWriter {
   }
 
   @Override
-  public MapWriter map(String name) {
+  public StructWriter struct(String name) {
       FieldWriter writer = fields.get(name.toLowerCase());
-    if(writer == null){
-      int vectorCount=container.size();
-        MapVector vector = container.addOrGet(name, MapVector.TYPE, MapVector.class);
-      if(!unionEnabled){
-        writer = new SingleMapWriter(vector, this);
-      } else {
+    if(writer == null) {
+      int vectorCount = container.size();
+      StructVector vector = container.addOrGet(name, StructVector.TYPE, StructVector.class);
+      if(unionEnabled) {
         writer = new PromotableWriter(vector, container);
+      } else {
+        writer = new SingleStructWriter(vector, this);
       }
       if(vectorCount != container.size()) {
         writer.allocate();
@@ -142,16 +142,16 @@ public class ${mode}MapWriter extends AbstractFieldWriter {
   <#if mode == "Repeated">
   public void start() {
       // update the repeated vector to state that there is current+1 objects.
-    final RepeatedMapHolder h = new RepeatedMapHolder();
-    final RepeatedMapVector map = (RepeatedMapVector) container;
-    final RepeatedMapVector.Mutator mutator = map.getMutator();
+    final RepeatedStructHolder h = new RepeatedStructHolder();
+    final RepeatedStructVector struct = (RepeatedStructVector) container;
+    final RepeatedStructVector.Mutator mutator = struct.getMutator();
 
     // Make sure that the current vector can support the end position of this list.
     if(container.getValueCapacity() <= idx()) {
       mutator.setValueCount(idx()+1);
     }
 
-    map.getAccessor().get(idx(), h);
+    struct.getAccessor().get(idx(), h);
     if (h.start >= h.end) {
       container.getMutator().startNewValue(idx());
     }

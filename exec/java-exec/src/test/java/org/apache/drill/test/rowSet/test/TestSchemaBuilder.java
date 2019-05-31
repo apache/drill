@@ -30,7 +30,7 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.ColumnMetadata.StructureType;
-import org.apache.drill.exec.record.metadata.MapBuilder;
+import org.apache.drill.exec.record.metadata.StructBuilder;
 import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.RepeatedListBuilder;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
@@ -113,14 +113,14 @@ public class TestSchemaBuilder extends DrillTest {
   }
 
   /**
-   * Tests creating a map within a row.
-   * Also the basic map add column methods.
+   * Tests creating a struct within a row.
+   * Also the basic struct add column methods.
    */
 
   @Test
   public void testMapInRow() {
     TupleMetadata schema = new SchemaBuilder()
-        .addMap("m")
+        .addStruct("m")
           .add("a", MinorType.VARCHAR, DataMode.OPTIONAL) // Generic
           .add("b", MinorType.INT) // Required
           .addNullable("c", MinorType.FLOAT8) // Convenience
@@ -132,7 +132,7 @@ public class TestSchemaBuilder extends DrillTest {
 
     ColumnMetadata m = schema.metadata(0);
     assertEquals("m", m.name());
-    assertTrue(m.isMap());
+    assertTrue(m.isStruct());
     assertEquals(DataMode.REQUIRED, m.mode());
 
     TupleMetadata mapSchema = m.mapSchema();
@@ -292,7 +292,7 @@ public class TestSchemaBuilder extends DrillTest {
     TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.VARCHAR, 21)
         .addNullable("b", MinorType.VARCHAR, 22)
-        .addMap("m")
+        .addStruct("m")
           .add("c", MinorType.VARCHAR, 23)
           .addNullable("d", MinorType.VARCHAR, 24)
           .resumeSchema()
@@ -321,7 +321,7 @@ public class TestSchemaBuilder extends DrillTest {
         .addNullable("a", MinorType.DECIMAL18, 5, 2)
         .add("b", MinorType.DECIMAL18, 6, 3)
         .addArray("c", MinorType.DECIMAL18, 7, 4)
-        .addMap("m")
+        .addStruct("m")
           .addNullable("d", MinorType.DECIMAL18, 8, 1)
           .resumeSchema()
         .buildSchema();
@@ -357,7 +357,7 @@ public class TestSchemaBuilder extends DrillTest {
         .addArray("c", MinorType.VARDECIMAL, 7, 4)
         .add("e", MinorType.VARDECIMAL)
         .add("g", MinorType.VARDECIMAL, 38, 4)
-        .addMap("m")
+        .addStruct("m")
           .addNullable("d", MinorType.VARDECIMAL, 8, 1)
           .add("f", MinorType.VARDECIMAL)
           .resumeSchema()
@@ -449,16 +449,16 @@ public class TestSchemaBuilder extends DrillTest {
   }
 
   /**
-   * Verify that the map-in-map plumbing works.
+   * Verify that the struct-in-struct plumbing works.
    */
 
   @Test
   public void testMapInMap() {
     TupleMetadata schema = new SchemaBuilder()
-        .addMap("m1")
-          .addMap("m2")
+        .addStruct("m1")
+          .addStruct("m2")
             .add("a", MinorType.INT)
-            .resumeMap()
+            .resumeStruct()
           .add("b", MinorType.VARCHAR)
           .resumeSchema()
         .buildSchema();
@@ -476,16 +476,16 @@ public class TestSchemaBuilder extends DrillTest {
   }
 
   /**
-   * Verify that the union-in-map plumbing works.
+   * Verify that the union-in-struct plumbing works.
    */
 
   @Test
   public void testUnionInMap() {
     TupleMetadata schema = new SchemaBuilder()
-        .addMap("m1")
+        .addStruct("m1")
           .addUnion("u")
             .addType(MinorType.INT)
-            .resumeMap()
+            .resumeStruct()
           .add("b", MinorType.VARCHAR)
           .resumeSchema()
         .buildSchema();
@@ -502,16 +502,16 @@ public class TestSchemaBuilder extends DrillTest {
   }
 
   /**
-   * Verify that the repeated list-in-map plumbing works.
+   * Verify that the repeated list-in-struct plumbing works.
    */
 
   @Test
   public void testRepeatedListInMap() {
     TupleMetadata schema = new SchemaBuilder()
-        .addMap("m1")
+        .addStruct("m1")
           .addRepeatedList("r")
             .addArray(MinorType.INT)
-            .resumeMap()
+            .resumeStruct()
           .add("b", MinorType.VARCHAR)
           .resumeSchema()
         .buildSchema();
@@ -536,7 +536,7 @@ public class TestSchemaBuilder extends DrillTest {
   public void testMapInUnion() {
     TupleMetadata schema = new SchemaBuilder()
         .addUnion("u")
-          .addMap()
+          .addStruct()
             .add("a", MinorType.INT)
             .add("b", MinorType.VARCHAR)
             .resumeUnion()
@@ -547,7 +547,7 @@ public class TestSchemaBuilder extends DrillTest {
     ColumnMetadata u = schema.metadata("u");
     VariantMetadata variant = u.variantSchema();
 
-    ColumnMetadata mapType = variant.member(MinorType.MAP);
+    ColumnMetadata mapType = variant.member(MinorType.STRUCT);
     assertNotNull(mapType);
 
     TupleMetadata mapSchema = mapType.mapSchema();
@@ -616,7 +616,7 @@ public class TestSchemaBuilder extends DrillTest {
   public void testMapInRepeatedList() {
     TupleMetadata schema = new SchemaBuilder()
         .addRepeatedList("x")
-          .addMapArray()
+          .addStructArray()
             .add("a", MinorType.INT)
             .addNullable("b", MinorType.VARCHAR)
             .resumeList()
@@ -625,7 +625,7 @@ public class TestSchemaBuilder extends DrillTest {
 
     ColumnMetadata list = schema.metadata("x");
     ColumnMetadata mapCol = list.childSchema();
-    assertTrue(mapCol.isMap());
+    assertTrue(mapCol.isStruct());
     TupleMetadata mapSchema = mapCol.mapSchema();
 
     ColumnMetadata a = mapSchema.metadata("a");
@@ -704,14 +704,14 @@ public class TestSchemaBuilder extends DrillTest {
 
   @Test
   public void testStandaloneMapBuilder() {
-    ColumnMetadata columnMetadata= new MapBuilder("m1", DataMode.OPTIONAL)
+    ColumnMetadata columnMetadata= new StructBuilder("m1", DataMode.OPTIONAL)
       .addNullable("b", MinorType.BIGINT)
-      .addMap("m2")
+      .addStruct("m2")
       .addNullable("v", MinorType.VARCHAR)
-      .resumeMap()
+      .resumeStruct()
       .buildColumn();
 
-    assertTrue(columnMetadata.isMap());
+    assertTrue(columnMetadata.isStruct());
     assertTrue(columnMetadata.isNullable());
     assertEquals("m1", columnMetadata.name());
 
@@ -724,7 +724,7 @@ public class TestSchemaBuilder extends DrillTest {
 
     ColumnMetadata col1 = schema.metadata(1);
     assertEquals("m2", col1.name());
-    assertTrue(col1.isMap());
+    assertTrue(col1.isStruct());
     assertFalse(col1.isNullable());
 
     ColumnMetadata child = col1.mapSchema().metadata(0);
@@ -736,7 +736,7 @@ public class TestSchemaBuilder extends DrillTest {
   @Test
   public void testStandaloneRepeatedListBuilder() {
     ColumnMetadata columnMetadata = new RepeatedListBuilder("l")
-      .addMapArray()
+      .addStructArray()
       .addNullable("v", MinorType.VARCHAR)
       .add("i", MinorType.INT)
       .resumeList()
@@ -749,7 +749,7 @@ public class TestSchemaBuilder extends DrillTest {
     ColumnMetadata child = columnMetadata.childSchema();
     assertEquals("l", child.name());
     assertTrue(child.isArray());
-    assertTrue(child.isMap());
+    assertTrue(child.isStruct());
 
     TupleMetadata mapSchema = child.mapSchema();
 

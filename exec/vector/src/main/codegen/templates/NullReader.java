@@ -35,7 +35,7 @@ public class NullReader extends AbstractBaseReader implements FieldReader {
   
   public static final NullReader INSTANCE = new NullReader();
   public static final NullReader EMPTY_LIST_INSTANCE = new NullReader(Types.repeated(TypeProtos.MinorType.NULL));
-  public static final NullReader EMPTY_MAP_INSTANCE = new NullReader(Types.required(TypeProtos.MinorType.MAP));
+  public static final NullReader EMPTY_STRUCT_INSTANCE = new NullReader(Types.required(TypeProtos.MinorType.STRUCT));
   private MajorType type;
   
   private NullReader() {
@@ -51,7 +51,7 @@ public class NullReader extends AbstractBaseReader implements FieldReader {
     return type;
   }
   
-  public void copyAsValue(MapWriter writer) {}
+  public void copyAsValue(StructWriter writer) {}
 
   public void copyAsValue(ListWriter writer) {}
 
@@ -94,15 +94,15 @@ public class NullReader extends AbstractBaseReader implements FieldReader {
     return false;
   }
   
-  public RepeatedMapReader map() {
+  public RepeatedStructReader struct() {
+    return this;
+  }
+
+  public StructReader struct(String name) {
     return this;
   }
   
   public RepeatedListReader list() {
-    return this;
-  }
-  
-  public MapReader map(String name) {
     return this;
   }
   

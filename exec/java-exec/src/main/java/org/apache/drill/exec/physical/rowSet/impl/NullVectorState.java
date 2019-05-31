@@ -21,7 +21,7 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
 
 /**
- * Do-nothing vector state for a map column which has no actual vector
+ * Do-nothing vector state for a struct column which has no actual vector
  * associated with it.
  */
 
@@ -30,7 +30,7 @@ public class NullVectorState implements VectorState {
   /**
    * Near-do-nothing state for a vector that requires no work to
    * allocate or roll-over, but where we do want to at least track
-   * the vector itself. (Used for map and union pseudo-vectors.)
+   * the vector itself. (Used for struct and union pseudo-vectors.)
    */
 
   public static class UnmanagedVectorState extends NullVectorState {

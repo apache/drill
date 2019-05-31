@@ -43,7 +43,7 @@ public enum ProjectionType {
   }
 
   public static ProjectionType typeFor(MajorType majorType) {
-    if (majorType.getMinorType() == MinorType.MAP) {
+    if (majorType.getMinorType() == MinorType.STRUCT) {
       if (majorType.getMode() == DataMode.REPEATED) {
         return TUPLE_ARRAY;
       } else {

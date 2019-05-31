@@ -85,7 +85,7 @@ public class TestResultSetLoaderUnions extends SubOperatorTest {
         .add("id", MinorType.INT)
         .addUnion("u")
           .addType(MinorType.VARCHAR)
-          .addMap()
+          .addStruct()
             .addNullable("a", MinorType.INT)
             .addNullable("b", MinorType.VARCHAR)
             .resumeUnion()
@@ -107,8 +107,8 @@ public class TestResultSetLoaderUnions extends SubOperatorTest {
     assertTrue(vw.hasType(MinorType.VARCHAR));
     assertNotNull(vw.memberWriter(MinorType.VARCHAR));
 
-    assertTrue(vw.hasType(MinorType.MAP));
-    assertNotNull(vw.memberWriter(MinorType.MAP));
+    assertTrue(vw.hasType(MinorType.STRUCT));
+    assertNotNull(vw.memberWriter(MinorType.STRUCT));
 
     // Write values
 
@@ -155,7 +155,7 @@ public class TestResultSetLoaderUnions extends SubOperatorTest {
 
     writer.start();
     writer.scalar("id").setInt(2);
-    final TupleWriter innerMap = variant.member(MinorType.MAP).tuple();
+    final TupleWriter innerMap = variant.member(MinorType.STRUCT).tuple();
     innerMap.addColumn(SchemaBuilder.columnSchema("a", MinorType.INT, DataMode.OPTIONAL));
     innerMap.scalar("a").setInt(20);
     innerMap.addColumn(SchemaBuilder.columnSchema("b", MinorType.VARCHAR, DataMode.OPTIONAL));
@@ -177,7 +177,7 @@ public class TestResultSetLoaderUnions extends SubOperatorTest {
         .add("id", MinorType.INT)
         .addUnion("u")
           .addType(MinorType.VARCHAR)
-          .addMap()
+          .addStruct()
             .addNullable("a", MinorType.INT)
             .addNullable("b", MinorType.VARCHAR)
             .resumeUnion()
@@ -473,9 +473,9 @@ public class TestResultSetLoaderUnions extends SubOperatorTest {
    * <ul>
    * <li>Write nulls to a list with no type. (This test ensures that
    * adding a (nullable) scalar "does the right thing.")</li>
-   * <li>Add a map to the list. Maps carry no "bits" vector, so null
+   * <li>Add a struct to the list. Maps carry no "bits" vector, so null
    * list entries to that point are lost. (For maps, we could go straight
-   * to a union, with just a map, to preserve the null states. This whole
+   * to a union, with just a struct, to preserve the null states. This whole
    * area is a huge mess...)</li>
    * <li>Do the type transitions when writing to a row. (The tests here
    * do the transition between rows.</li>
@@ -644,7 +644,7 @@ public class TestResultSetLoaderUnions extends SubOperatorTest {
     RowSetUtilities.verify(expected, results);
   }
 
-  // TODO: Simple list of map
-  // TODO: Regular list of map
+  // TODO: Simple list of struct
+  // TODO: Regular list of struct
   // TODO: Regular list of union
 }

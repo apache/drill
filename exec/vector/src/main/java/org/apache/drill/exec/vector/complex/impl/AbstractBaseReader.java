@@ -48,7 +48,7 @@ abstract class AbstractBaseReader implements FieldReader{
 
   @Override
   public Iterator<String> iterator() {
-    throw new IllegalStateException("The current reader doesn't support reading as a map.");
+    throw new IllegalStateException("The current reader doesn't support reading as a struct.");
   }
 
   public MajorType getType(){

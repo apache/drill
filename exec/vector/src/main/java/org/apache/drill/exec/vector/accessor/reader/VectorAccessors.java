@@ -24,7 +24,7 @@ import org.apache.drill.exec.vector.NullableVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VariableWidthVector;
 import org.apache.drill.exec.vector.accessor.ColumnReaderIndex;
-import org.apache.drill.exec.vector.complex.AbstractMapVector;
+import org.apache.drill.exec.vector.complex.AbstractStructVector;
 import org.apache.drill.exec.vector.complex.RepeatedValueVector;
 import org.apache.drill.exec.vector.complex.ListVector;
 import org.apache.drill.exec.vector.complex.UnionVector;
@@ -60,7 +60,7 @@ import org.apache.drill.exec.vector.complex.UnionVector;
  * <p>
  * Sometimes the navigation is static (the "bits" vector for
  * a nullable vector.) Other times, it is a bit more dynamic: a
- * member of a map (given by index) or the member of a union
+ * member of a struct (given by index) or the member of a union
  * (given by type.)
  * <p>
  * These accessors can be chained to handle deeply-nested
@@ -308,7 +308,7 @@ public class VectorAccessors {
   }
 
   /**
-   * Vector accessor for AbstractMapVector &rarr; member vector
+   * Vector accessor for AbstractStructVector &rarr; member vector
    */
 
   public static class MapMemberHyperVectorAccessor extends BaseHyperVectorAccessor {
@@ -325,7 +325,7 @@ public class VectorAccessors {
     @SuppressWarnings("unchecked")
     @Override
     public <T extends ValueVector> T vector() {
-      AbstractMapVector vector = mapAccessor.vector();
+      AbstractStructVector vector = mapAccessor.vector();
       return (T) vector.getChildByOrdinal(index);
     }
   }

@@ -22,7 +22,7 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
-import org.apache.drill.exec.record.metadata.MapBuilder;
+import org.apache.drill.exec.record.metadata.StructBuilder;
 import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.RepeatedListBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
@@ -78,7 +78,7 @@ public class SchemaVisitor extends SchemaParserBaseVisitor<TupleMetadata> {
   }
 
   /**
-   * Visits various types of columns (primitive, map, array) and stores their metadata
+   * Visits various types of columns (primitive, struct, array) and stores their metadata
    * into {@link ColumnMetadata} class.
    */
   public static class ColumnVisitor extends SchemaParserBaseVisitor<ColumnMetadata> {
@@ -156,7 +156,7 @@ public class SchemaVisitor extends SchemaParserBaseVisitor<TupleMetadata> {
   }
 
   /**
-   * Visits simple and map types, storing their metadata into {@link ColumnMetadata} holder.
+   * Visits simple and struct types, storing their metadata into {@link ColumnMetadata} holder.
    */
   private static class TypeVisitor extends SchemaParserBaseVisitor<ColumnMetadata> {
 
@@ -273,9 +273,7 @@ public class SchemaVisitor extends SchemaParserBaseVisitor<TupleMetadata> {
 
     @Override
     public ColumnMetadata visitStruct_type(SchemaParser.Struct_typeContext ctx) {
-      // internally Drill refers to structs as maps and currently does not have true map notion
-      // Drill maps will be renamed to structs in future
-      MapBuilder builder = new MapBuilder(null, name, mode);
+      StructBuilder builder = new StructBuilder(null, name, mode);
       ColumnDefVisitor visitor = new ColumnDefVisitor();
       ctx.columns().column_def().forEach(
         c -> builder.addColumn(c.accept(visitor))

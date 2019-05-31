@@ -284,14 +284,14 @@ public class TestHyperVectorReaders extends SubOperatorTest {
 
   /**
    * Maps are an interesting case. The hyper-vector wrapper holds a mirror-image of the
-   * map members. So, we can reach the map members either via the vector wrappers or
-   * the original map vector.
+   * struct members. So, we can reach the struct members either via the vector wrappers or
+   * the original struct vector.
    */
 
   @Test
   public void testMap() {
     TupleMetadata schema = new SchemaBuilder()
-        .addMap("m")
+        .addStruct("m")
           .add("a", MinorType.INT)
           .add("b", MinorType.VARCHAR)
           .resumeSchema()
@@ -331,7 +331,7 @@ public class TestHyperVectorReaders extends SubOperatorTest {
   public void testRepeatedMap() {
     TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.INT)
-        .addMapArray("ma")
+        .addStructArray("ma")
           .add("b", MinorType.INT)
           .add("c", MinorType.VARCHAR)
           .resumeSchema()

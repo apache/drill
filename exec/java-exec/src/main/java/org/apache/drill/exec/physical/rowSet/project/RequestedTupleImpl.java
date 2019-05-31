@@ -32,24 +32,24 @@ import org.apache.drill.exec.record.metadata.TupleNameSpace;
  * <p>
  * A column is projected if it is explicitly listed in the selection list.
  * <p>
- * If a column is a map, then the projection for the map's columns is based on
+ * If a column is a struct, then the projection for the struct's columns is based on
  * two rules:
  * <ol>
- * <li>If the projection list includes at least one explicit mention of a map
+ * <li>If the projection list includes at least one explicit mention of a struct
  * member, then include only those columns explicitly listed.</li>
- * <li>If the projection at the parent level lists only the map column itself
- * (which the projection can't know is a map), then assume this implies all
- * columns, as if the entry where "map.*".</li>
+ * <li>If the projection at the parent level lists only the struct column itself
+ * (which the projection can't know is a struct), then assume this implies all
+ * columns, as if the entry where "struct.*".</li>
  * </ol>
  * <p>
  * Examples:<br>
  * <code>m</code><br>
- * If <code>m</code> turns out to be a map, project all members of
+ * If <code>m</code> turns out to be a struct, project all members of
  * <code>m</code>.<br>
  * <code>m.a</code><br>
- * Column <code>m</code> must be a map. Project only column <code>a</code>.<br>
+ * Column <code>m</code> must be a struct. Project only column <code>a</code>.<br>
  * <code>m, m.a</code><br>
- * Tricky case. We interpret this as projecting only the "a" element of map m.
+ * Tricky case. We interpret this as projecting only the "a" element of struct m.
  * <p>
  * The projection set is built from a list of columns, represented as
  * {@link SchemaPath} objects, provided by the physical plan. The structure of
@@ -67,7 +67,7 @@ import org.apache.drill.exec.record.metadata.TupleNameSpace;
  * <ul>
  * The parser here consumes only names, this mechanism does not consider
  * array indexes. As a result, there may be multiple projected columns that
- * map to the same projection here: `columns`[1] and `columns`[2] both map to
+ * struct to the same projection here: `columns`[1] and `columns`[2] both struct to
  * the name `columns`, for example.
  */
 
@@ -116,8 +116,8 @@ public class RequestedTupleImpl implements RequestedTuple {
       return mapProj;
     }
 
-    // No explicit information for the map. Members inherit the
-    // same projection as the map itself.
+    // No explicit information for the struct. Members inherit the
+    // same projection as the struct itself.
 
     if (col != null) {
       return col.projectAllMembers(true);
@@ -218,14 +218,14 @@ public class RequestedTupleImpl implements RequestedTuple {
       return;
     }
 
-    // Else the column is a known map.
+    // Else the column is a known struct.
 
     assert member.isTuple();
 
     // Allow both a.b (existing) and a (this column)
-    // Since we we know a is a map, and we've projected the
-    // whole map, modify the projection of the column to
-    // project the entire map.
+    // Since we we know a is a struct, and we've projected the
+    // whole struct, modify the projection of the column to
+    // project the entire struct.
 
     member.projectAllMembers(true);
   }
@@ -236,20 +236,20 @@ public class RequestedTupleImpl implements RequestedTuple {
     RequestedTuple map;
     if (member == null) {
       // New member. Since this is internal, this new member
-      // must be a map.
+      // must be a struct.
 
       member = new RequestedColumnImpl(this, name);
       projection.add(name, member);
       map = member.asTuple();
     } else if (member.isTuple()) {
 
-      // Known map. Add to it.
+      // Known struct. Add to it.
 
       map = member.asTuple();
     } else {
 
       // Member was previously projected by itself. We now
-      // know it is a map. So, project entire map. (Earlier
+      // know it is a struct. So, project entire struct. (Earlier
       // we saw `a`. Now we see `a`.`b`.)
 
       map = member.projectAllMembers(true);
@@ -281,7 +281,7 @@ public class RequestedTupleImpl implements RequestedTuple {
     }
     member.addIndex(index);
 
-    // Drills SQL parser does not support map arrays: a[0].c
+    // Drills SQL parser does not support struct arrays: a[0].c
     // But, the SchemaPath does support them, so no harm in
     // parsing them here.
 

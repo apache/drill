@@ -72,7 +72,7 @@ public class TestScanBatchWriters extends SubOperatorTest {
 
       writer.allocate();
       writer.reset();
-      BaseWriter.MapWriter map = writer.rootAsMap();
+      BaseWriter.StructWriter map = writer.rootAsStruct();
 
       // Write one record (10, "Fred", [100, 110, 120] )
 

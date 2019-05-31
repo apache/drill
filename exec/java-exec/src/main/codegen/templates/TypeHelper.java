@@ -31,7 +31,7 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.accessor.*;
-import org.apache.drill.exec.vector.complex.RepeatedMapVector;
+import org.apache.drill.exec.vector.complex.RepeatedStructVector;
 import org.apache.drill.exec.util.CallBack;
 
 /*
@@ -58,7 +58,7 @@ public class TypeHelper extends BasicTypeHelper {
       }
     </#list>
     </#list>
-    case MAP:
+    case STRUCT:
     case LIST:
     case NULL:
       return new GenericAccessor(vector);
@@ -70,7 +70,7 @@ public class TypeHelper extends BasicTypeHelper {
     switch (type) {
     case UNION:
       return model._ref(UnionHolder.class);
-    case MAP:
+    case STRUCT:
     case LIST:
       return model._ref(ComplexHolder.class);
       

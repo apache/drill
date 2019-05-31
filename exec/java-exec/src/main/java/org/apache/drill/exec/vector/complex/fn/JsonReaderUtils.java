@@ -33,7 +33,7 @@ public class JsonReaderUtils {
                                     boolean allTextMode,
                                     List<BaseWriter.ListWriter> emptyArrayWriters) {
 
-    List<BaseWriter.MapWriter> writerList = Lists.newArrayList();
+    List<BaseWriter.StructWriter> writerList = Lists.newArrayList();
     List<PathSegment> fieldPathList = Lists.newArrayList();
     BitSet emptyStatus = new BitSet(columns.size());
     int i = 0;
@@ -41,14 +41,14 @@ public class JsonReaderUtils {
     // first pass: collect which fields are empty
     for (SchemaPath sp : columns) {
       PathSegment fieldPath = sp.getRootSegment();
-      BaseWriter.MapWriter fieldWriter = writer.rootAsMap();
+      BaseWriter.StructWriter fieldWriter = writer.rootAsStruct();
       while (fieldPath.getChild() != null && !fieldPath.getChild().isArray()) {
-        fieldWriter = fieldWriter.map(fieldPath.getNameSegment().getPath());
+        fieldWriter = fieldWriter.struct(fieldPath.getNameSegment().getPath());
         fieldPath = fieldPath.getChild();
       }
       writerList.add(fieldWriter);
       fieldPathList.add(fieldPath);
-      if (fieldWriter.isEmptyMap()) {
+      if (fieldWriter.isEmptyStruct()) {
         emptyStatus.set(i, true);
       }
       if (i == 0 && !allTextMode) {
@@ -69,7 +69,7 @@ public class JsonReaderUtils {
     // may be shared by multiple fields whereas we want to keep track of all fields
     // independently, so we rely on the emptyStatus.
     for (int j = 0; j < fieldPathList.size(); j++) {
-      BaseWriter.MapWriter fieldWriter = writerList.get(j);
+      BaseWriter.StructWriter fieldWriter = writerList.get(j);
       PathSegment fieldPath = fieldPathList.get(j);
       if (emptyStatus.get(j)) {
         if (allTextMode) {

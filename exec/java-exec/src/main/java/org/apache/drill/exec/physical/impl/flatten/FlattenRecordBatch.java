@@ -55,7 +55,7 @@ import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.util.record.RecordBatchStats;
 import org.apache.drill.exec.util.record.RecordBatchStats.RecordBatchIOType;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.complex.RepeatedMapVector;
+import org.apache.drill.exec.vector.complex.RepeatedStructVector;
 import org.apache.drill.exec.vector.complex.RepeatedValueVector;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 
@@ -217,7 +217,7 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
       }
       //when incoming recordCount is 0, don't throw exception since the type being seen here is not solid
       logger.error("setFlattenVector cast failed and recordcount is 0, create empty vector anyway.");
-      vector = new RepeatedMapVector(field, oContext.getAllocator(), null);
+      vector = new RepeatedStructVector(field, oContext.getAllocator(), null);
     } else {
       vector = RepeatedValueVector.class.cast(inVV);
     }
@@ -364,15 +364,15 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
     final ValueVector flattenField = incoming.getValueAccessorById(vectorClass, fieldId.getFieldIds()).getValueVector();
 
     TransferPair tp = null;
-    if (flattenField instanceof RepeatedMapVector) {
-      tp = ((RepeatedMapVector)flattenField).getTransferPairToSingleMap(reference.getAsNamePart().getName(), oContext.getAllocator());
+    if (flattenField instanceof RepeatedStructVector) {
+      tp = ((RepeatedStructVector)flattenField).getTransferPairToSingleMap(reference.getAsNamePart().getName(), oContext.getAllocator());
     } else if ( !(flattenField instanceof RepeatedValueVector) ) {
       if(incoming.getRecordCount() != 0) {
         throw UserException.unsupportedError().message("Flatten does not support inputs of non-list values.").build(logger);
       }
       logger.error("Cannot cast {} to RepeatedValueVector", flattenField);
       //when incoming recordCount is 0, don't throw exception since the type being seen here is not solid
-      final ValueVector vv = new RepeatedMapVector(flattenField.getField(), oContext.getAllocator(), null);
+      final ValueVector vv = new RepeatedStructVector(flattenField.getField(), oContext.getAllocator(), null);
       tp = RepeatedValueVector.class.cast(vv).getTransferPair(reference.getAsNamePart().getName(), oContext.getAllocator());
     } else {
       final ValueVector vvIn = RepeatedValueVector.class.cast(flattenField).getDataVector();

@@ -23,7 +23,7 @@ import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.exec.record.metadata.ProjectionType;
 
 /**
- * Represents the set of columns projected for a tuple (row or map.)
+ * Represents the set of columns projected for a tuple (row or struct.)
  * The projected columns might themselves be columns, so returns a
  * projection set for such columns. Represents the set of requested
  * columns and tuples as expressed in the physical plan.
@@ -34,7 +34,7 @@ import org.apache.drill.exec.record.metadata.ProjectionType;
  * all columns are projected. Example: the root tuple (the row) in
  * a <tt>SELECT *</tt> query.</li>
  * <li>Project none  (also {@link ImpliedTupleRequest#NO_MEMBERS}): used when no
- * columns are projected from a tuple, such as when a map itself is
+ * columns are projected from a tuple, such as when a struct itself is
  * not projected, so none of its member columns are projected.</li>
  * <li>Project some ({@link RequestedTupleImpl}: used in the
  * <tt>SELECT a, c, e</tt> case in which the query identifies which
@@ -42,7 +42,7 @@ import org.apache.drill.exec.record.metadata.ProjectionType;
  * d in our example.)</li>
  * </ul>
  * <p>
- * The result is that each tuple (row and map) has an associated
+ * The result is that each tuple (row and struct) has an associated
  * projection set which the code can query to determine if a newly
  * added column is wanted (and so should have a backing vector) or
  * is unwanted (and can just receive a dummy writer.)
@@ -62,10 +62,10 @@ public interface RequestedTuple {
    * forms which are consolidated in to this abstraction.
    * <p>
    * Depending on the syntax, we can infer if a column must
-   * be an array or map. This is definitive: though we know that
-   * columns of the form above must be an array or a map,
+   * be an array or struct. This is definitive: though we know that
+   * columns of the form above must be an array or a struct,
    * we cannot know if a simple column reference might refer
-   * to an array or map.
+   * to an array or struct.
    */
 
   public interface RequestedColumn {

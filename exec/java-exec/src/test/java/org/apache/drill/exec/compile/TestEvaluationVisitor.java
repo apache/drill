@@ -41,8 +41,8 @@ public class TestEvaluationVisitor {
       .addId(1)
       .addId(3)
       .remainder(path.getRootSegment())
-      .intermediateType(Types.optional(MinorType.MAP))
-      .finalType(Types.repeated(MinorType.MAP))
+      .intermediateType(Types.optional(MinorType.STRUCT))
+      .finalType(Types.repeated(MinorType.STRUCT))
       .hyper()
       .withIndex()
       .build();
@@ -51,8 +51,8 @@ public class TestEvaluationVisitor {
 
     TypedFieldId outId = TypedFieldId.newBuilder()
         .addId(1)
-        .finalType(Types.repeated(MinorType.MAP))
-        .intermediateType(Types.repeated(MinorType.MAP))
+        .finalType(Types.repeated(MinorType.STRUCT))
+        .intermediateType(Types.repeated(MinorType.STRUCT))
         .build();
     ValueVectorWriteExpression e2 = new ValueVectorWriteExpression(outId, e, true);
 

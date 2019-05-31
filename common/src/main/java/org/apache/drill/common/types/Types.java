@@ -48,7 +48,7 @@ public class Types {
   public static boolean isComplex(final MajorType type) {
     switch(type.getMinorType()) {
     case LIST:
-    case MAP:
+    case STRUCT:
       return true;
     default:
       return false;
@@ -187,7 +187,7 @@ public class Types {
       // Composite types and other types that are not atomic types (SQL standard
       // or not) except ARRAY types (handled above):
 
-      case MAP:             return "STRUCT"; // Drill map represents struct and in future will be renamed
+      case STRUCT:          return "STRUCT"; // Drill map represents struct and in future will be renamed
       case LATE:            return "ANY";
       case NULL:            return "NULL";
       case UNION:           return "UNION";
@@ -343,7 +343,7 @@ public class Types {
           case GENERIC_OBJECT:
           case LATE:
           case LIST:
-          case MAP:
+          case STRUCT:
           case UNION:
           case NULL:
           case TIMETZ:      // SQL TIME WITH TIME ZONE
@@ -430,7 +430,7 @@ public class Types {
             : 22; // the first 4 bytes give the number of days, so we assume max is P2147483648DT12H60M60S
 
       case INTERVAL:
-      case MAP:
+      case STRUCT:
       case LATE:
       case NULL:
       case UNION:
@@ -729,7 +729,7 @@ public class Types {
    */
   public static boolean isSortable(MinorType type) {
     // Currently only map and list columns are not sortable.
-    return type != MinorType.MAP && type != MinorType.LIST;
+    return type != MinorType.STRUCT && type != MinorType.LIST;
   }
 
   /**

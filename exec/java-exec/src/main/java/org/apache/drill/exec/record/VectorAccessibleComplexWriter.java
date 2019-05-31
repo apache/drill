@@ -19,11 +19,11 @@ package org.apache.drill.exec.record;
 
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.complex.MapVector;
+import org.apache.drill.exec.vector.complex.StructVector;
 import org.apache.drill.exec.vector.complex.impl.ComplexWriterImpl;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 
-public class VectorAccessibleComplexWriter extends MapVector {
+public class VectorAccessibleComplexWriter extends StructVector {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VectorAccessibleComplexWriter.class);
 
   private final VectorContainer vc;

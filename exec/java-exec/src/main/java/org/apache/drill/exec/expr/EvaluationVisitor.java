@@ -517,7 +517,7 @@ public class EvaluationVisitor {
 
         while (seg != null) {
           if (seg.isArray()) {
-            // stop once we get to the last segment and the final type is neither complex nor repeated (map, list, repeated list).
+            // stop once we get to the last segment and the final type is neither complex nor repeated (struct, list, repeated list).
             // In case of non-complex and non-repeated type, we return Holder, in stead of FieldReader.
             if (seg.isLastPath() && !complex && !repeated && !listVector) {
               break;
@@ -565,7 +565,7 @@ public class EvaluationVisitor {
             JClass nrClass = generator.getModel().ref(org.apache.drill.exec.vector.complex.impl.NullReader.class);
             JExpression nullReader;
             if (complex) {
-              nullReader = nrClass.staticRef("EMPTY_MAP_INSTANCE");
+              nullReader = nrClass.staticRef("EMPTY_STRUCT_INSTANCE");
             } else if (repeated) {
               nullReader = nrClass.staticRef("EMPTY_LIST_INSTANCE");
             } else {
@@ -597,7 +597,7 @@ public class EvaluationVisitor {
     /*  Check if a Path expression could produce a NullReader. A path expression will produce a null reader, when:
      *   1) It contains an array segment as non-leaf segment :  a.b[2].c.  segment [2] might produce null reader.
      *   2) It contains an array segment as leaf segment, AND the final output is complex or repeated : a.b[2], when
-     *     the final type of this expression is a map, or releated list, or repeated map.
+     *     the final type of this expression is a struct, or releated list, or repeated struct.
      */
     private boolean isNullReaderLikely(PathSegment seg, boolean complexOrRepeated) {
       while (seg != null) {

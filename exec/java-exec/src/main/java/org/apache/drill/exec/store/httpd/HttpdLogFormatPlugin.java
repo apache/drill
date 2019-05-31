@@ -139,7 +139,7 @@ public class HttpdLogFormatPlugin extends EasyFormatPlugin<HttpdLogFormatConfig>
         final Map<String, String> fieldMapping = !isStarQuery() ? makeParserFields() : null;
         writer = new VectorContainerWriter(output);
 
-        parser = new HttpdParser(writer.rootAsMap(), context.getManagedBuffer(),
+        parser = new HttpdParser(writer.rootAsStruct(), context.getManagedBuffer(),
                 HttpdLogFormatPlugin.this.getConfig().getLogFormat(),
                 HttpdLogFormatPlugin.this.getConfig().getTimestampFormat(),
                 fieldMapping);

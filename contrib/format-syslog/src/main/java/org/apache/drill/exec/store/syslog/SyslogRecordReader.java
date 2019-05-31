@@ -114,7 +114,7 @@ public class SyslogRecordReader extends AbstractRecordReader {
     int recordCount = 0;
 
     try {
-      BaseWriter.MapWriter map = this.writer.rootAsMap();
+      BaseWriter.StructWriter map = this.writer.rootAsStruct();
       String line = null;
 
       while (recordCount < MAX_RECORDS_PER_BATCH && (line = this.reader.readLine()) != null) {
@@ -170,7 +170,7 @@ public class SyslogRecordReader extends AbstractRecordReader {
     return recordCount;
   }
 
-  private void writeAllColumns(BaseWriter.MapWriter map, SyslogMessage parsedMessage) {
+  private void writeAllColumns(BaseWriter.StructWriter map, SyslogMessage parsedMessage) {
 
     long milliseconds = 0;
     try {
@@ -207,7 +207,7 @@ public class SyslogRecordReader extends AbstractRecordReader {
     mapStringField("message", parsedMessage.getMessage(), map);
   }
 
-  private void writeProjectedColumns(BaseWriter.MapWriter map, SyslogMessage parsedMessage) throws UserException {
+  private void writeProjectedColumns(BaseWriter.StructWriter map, SyslogMessage parsedMessage) throws UserException {
     String columnName;
 
     for (SchemaPath col : projectedColumns) {
@@ -282,8 +282,8 @@ public class SyslogRecordReader extends AbstractRecordReader {
     }
   }
 
-  //Helper function to map strings
-  private void mapStringField(String name, String value, BaseWriter.MapWriter map) {
+  //Helper function to struct strings
+  private void mapStringField(String name, String value, BaseWriter.StructWriter map) {
     if (value == null) {
       return;
     }
@@ -303,7 +303,7 @@ public class SyslogRecordReader extends AbstractRecordReader {
   }
 
   //Helper function to flatten structured data
-  private void mapFlattenedStructuredData(Map<String, List<StructuredDataParameter>> data, BaseWriter.MapWriter map) {
+  private void mapFlattenedStructuredData(Map<String, List<StructuredDataParameter>> data, BaseWriter.StructWriter map) {
     Iterator<Map.Entry<String, List<StructuredDataParameter>>> entries = data.entrySet().iterator();
     while (entries.hasNext()) {
       Map.Entry<String, List<StructuredDataParameter>> entry = entries.next();
@@ -339,8 +339,8 @@ public class SyslogRecordReader extends AbstractRecordReader {
     return result;
   }
 
-  //Helper function to map arrays
-  private void mapComplexField(String mapName, Map<String, List<StructuredDataParameter>> data, BaseWriter.MapWriter map) {
+  //Helper function to struct arrays
+  private void mapComplexField(String mapName, Map<String, List<StructuredDataParameter>> data, BaseWriter.StructWriter map) {
     Iterator<Map.Entry<String, List<StructuredDataParameter>>> entries = data.entrySet().iterator();
     while (entries.hasNext()) {
       Map.Entry<String, List<StructuredDataParameter>> entry = entries.next();
@@ -362,12 +362,12 @@ public class SyslogRecordReader extends AbstractRecordReader {
         rowHolder.end = rowStringBytes.length;
         rowHolder.buffer = this.buffer;
 
-        map.map(mapName).varChar(fieldName).write(rowHolder);
+        map.struct(mapName).varChar(fieldName).write(rowHolder);
       }
     }
   }
 
-  private void mapStructuredDataField(String fieldName, BaseWriter.MapWriter map, SyslogMessage parsedMessage) {
+  private void mapStructuredDataField(String fieldName, BaseWriter.StructWriter map, SyslogMessage parsedMessage) {
     String fieldValue = getFieldFromStructuredData(fieldName, parsedMessage);
     VarCharHolder rowHolder = new VarCharHolder();
 
@@ -378,7 +378,7 @@ public class SyslogRecordReader extends AbstractRecordReader {
     rowHolder.end = rowStringBytes.length;
     rowHolder.buffer = this.buffer;
 
-    map.map("structured_data").varChar(fieldName).write(rowHolder);
+    map.struct("structured_data").varChar(fieldName).write(rowHolder);
   }
 
   public SimpleDateFormat getValidDateObject(String d) {

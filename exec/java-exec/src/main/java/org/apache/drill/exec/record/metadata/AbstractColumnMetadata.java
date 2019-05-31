@@ -137,7 +137,7 @@ public abstract class AbstractColumnMetadata extends AbstractPropertied implemen
   public int dimensions() { return isArray() ? 1 : 0; }
 
   @Override
-  public boolean isMap() { return false; }
+  public boolean isStruct() { return false; }
 
   @Override
   public boolean isVariant() { return false; }
@@ -302,7 +302,7 @@ public abstract class AbstractColumnMetadata extends AbstractPropertied implemen
     builder.append(typeString());
 
     // Drill does not have nullability notion for complex types
-    if (!isNullable() && !isArray() && !isMap()) {
+    if (!isNullable() && !isArray() && !isStruct()) {
       builder.append(" NOT NULL");
     }
 

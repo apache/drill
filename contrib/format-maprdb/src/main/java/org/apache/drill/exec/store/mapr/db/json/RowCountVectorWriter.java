@@ -34,7 +34,7 @@ class RowCountVectorWriter extends DocumentReaderVectorWriter {
   @Override
   protected void writeDBDocument(VectorContainerWriter vectorWriter, DBDocumentReaderBase reader)
       throws SchemaChangeException {
-    vectorWriter.rootAsMap().bit("count").writeBit(1);
+    vectorWriter.rootAsStruct().bit("count").writeBit(1);
   }
 
 }

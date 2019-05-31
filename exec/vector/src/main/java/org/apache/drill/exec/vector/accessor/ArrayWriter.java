@@ -30,7 +30,7 @@ package org.apache.drill.exec.vector.accessor;
  * entries. As a convenience, writing to the scalar automatically advances
  * the current array write position, since exactly one item can be written
  * per array entry.</li>
- * <li>A repeated map type is presented as an array writer with tuple
+ * <li>A repeated struct type is presented as an array writer with tuple
  * entries. The client must advance the array write position explicitly since
  * a tuple can have any number of entries and the array writer cannot determine
  * when a value is complete.</li>
@@ -45,11 +45,11 @@ package org.apache.drill.exec.vector.accessor;
  * Although the list vector supports a union of any Drill type, the only sane
  * combinations are:
  * <ul>
- * <li>One of a (single or repeated) (map or list), or</li>
+ * <li>One of a (single or repeated) (struct or list), or</li>
  * <li>One or more scalar type.</li>
  * </ul>
  *
- * If a particular array has only one type (single/repeated map/list), then,
+ * If a particular array has only one type (single/repeated struct/list), then,
  * for convenience, the caller can directly request a writer of that type
  * without having to first retrieve the variant (although the indirect
  * route is, of course, available.)

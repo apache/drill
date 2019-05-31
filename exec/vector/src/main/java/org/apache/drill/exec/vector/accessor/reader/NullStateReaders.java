@@ -142,7 +142,7 @@ public class NullStateReaders {
   /**
    * Handle the awkward situation with complex types. They don't carry their own
    * bits (null state) vector. Instead, we define them as null if the type of
-   * the union is other than the type of the map or list. (Since the same vector
+   * the union is other than the type of the struct or list. (Since the same vector
    * that holds state also holds the is-null value, this check includes the
    * check if the entire union is null.)
    */

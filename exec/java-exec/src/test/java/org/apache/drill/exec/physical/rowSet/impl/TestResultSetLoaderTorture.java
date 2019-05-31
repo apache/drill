@@ -49,7 +49,7 @@ import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
  * previous tests. Run this test only <i>after</i> all other tests
  * pass. Combined conditions tested:
  * <ul>
- * <li>Nested maps and map arrays.</li>
+ * <li>Nested structs and struct arrays.</li>
  * <li>Nullable VarChar (which has an offset vector and null-bit vector
  * be kept in sync.)
  * <li>Repeated Varchar (which requires to offset vectors be kept in
@@ -187,7 +187,7 @@ public class TestResultSetLoaderTorture extends SubOperatorTest {
           print("s2." + i, "s2-" + innerCount);
         }
 
-        // Map3: a non-repeated map
+        // Map3: a non-repeated struct
 
         // n2: usual int
 
@@ -319,7 +319,7 @@ public class TestResultSetLoaderTorture extends SubOperatorTest {
           assertEquals("s2-" + readState.innerCount, s2Reader.getString());
         }
 
-        // Map3: a non-repeated map
+        // Map3: a non-repeated struct
 
         // n2: usual int
 
@@ -366,16 +366,16 @@ public class TestResultSetLoaderTorture extends SubOperatorTest {
   private void doTortureTest() {
     TupleMetadata schema = new SchemaBuilder()
         .add("n0", MinorType.INT)
-        .addMap("m1")
+        .addStruct("m1")
           .addNullable("n1", MinorType.INT)
-          .addMapArray("m2")
+          .addStructArray("m2")
             .addNullable("n2", MinorType.INT)
             .addNullable("s2", MinorType.VARCHAR)
-            .addMap("m3")
+            .addStruct("m3")
               .addNullable("n3", MinorType.INT)
               .addArray("s3", MinorType.VARCHAR)
-              .resumeMap()
-            .resumeMap()
+              .resumeStruct()
+            .resumeStruct()
           .resumeSchema()
         .buildSchema();
     ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()

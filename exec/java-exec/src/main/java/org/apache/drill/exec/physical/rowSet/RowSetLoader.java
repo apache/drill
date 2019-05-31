@@ -68,10 +68,10 @@ public interface RowSetLoader extends TupleWriter {
    * <li>For scalar arrays, an array of a suitable Java primitive type for
    * scalars. For example, <tt>int[]</tt> for an <tt>INTEGER</tt> column.</li>
    * <li>For a Map, an <tt>Object<tt> array with values encoded as above.
-   * (In fact, the list here is the same as the map format.</li>
-   * <li>For a list (repeated map, list of list), an <tt>Object</tt> array with
-   * values encoded as above. (So, for a repeated map, an outer <tt>Object</tt>
-   * map encodes the array, an inner one encodes the map members.</li>
+   * (In fact, the list here is the same as the struct format.</li>
+   * <li>For a list (repeated struct, list of list), an <tt>Object</tt> array with
+   * values encoded as above. (So, for a repeated struct, an outer <tt>Object</tt>
+   * struct encodes the array, an inner one encodes the struct members.</li>
    * </ul>
    *
    * @param values
@@ -84,7 +84,7 @@ public interface RowSetLoader extends TupleWriter {
   /**
    * Similar to {@link #addRow(Object...)}, but for the odd case in which a
    * row consists of a single column that is an object array (such as for
-   * a list or map) and so is ambiguous.
+   * a list or struct) and so is ambiguous.
    *
    * @param value value of the one and only column
    * @return this writer

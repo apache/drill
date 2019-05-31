@@ -99,7 +99,7 @@ public class LTSVRecordReader extends AbstractRecordReader {
     int recordCount = 0;
 
     try {
-      BaseWriter.MapWriter map = this.writer.rootAsMap();
+      BaseWriter.StructWriter map = this.writer.rootAsStruct();
       String line = null;
 
       while (recordCount < MAX_RECORDS_PER_BATCH && (line = this.reader.readLine()) != null) {

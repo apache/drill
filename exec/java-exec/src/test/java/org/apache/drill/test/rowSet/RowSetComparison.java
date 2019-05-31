@@ -374,7 +374,7 @@ public class RowSetComparison {
     case LIST:
       verifyArray(label, ev.array(), av.array());
       break;
-    case MAP:
+    case STRUCT:
       verifyTuple(label, ev.tuple(), av.tuple());
       break;
     case UNION:

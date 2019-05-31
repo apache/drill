@@ -75,7 +75,7 @@ public class TestTupleSchema extends SubOperatorTest {
     assertFalse(col.isNullable());
     assertFalse(col.isArray());
     assertFalse(col.isVariableWidth());
-    assertFalse(col.isMap());
+    assertFalse(col.isStruct());
     assertTrue(col.isEquivalent(col));
     assertFalse(col.isVariant());
 
@@ -116,7 +116,7 @@ public class TestTupleSchema extends SubOperatorTest {
     assertTrue(col.isNullable());
     assertFalse(col.isArray());
     assertFalse(col.isVariableWidth());
-    assertFalse(col.isMap());
+    assertFalse(col.isStruct());
     assertFalse(col.isVariant());
 
     assertEquals(4, col.expectedWidth());
@@ -137,7 +137,7 @@ public class TestTupleSchema extends SubOperatorTest {
     assertFalse(col.isNullable());
     assertTrue(col.isArray());
     assertFalse(col.isVariableWidth());
-    assertFalse(col.isMap());
+    assertFalse(col.isStruct());
     assertFalse(col.isVariant());
 
     assertEquals(4, col.expectedWidth());
@@ -164,7 +164,7 @@ public class TestTupleSchema extends SubOperatorTest {
     assertFalse(col.isNullable());
     assertFalse(col.isArray());
     assertTrue(col.isVariableWidth());
-    assertFalse(col.isMap());
+    assertFalse(col.isStruct());
     assertFalse(col.isVariant());
 
     // A different precision is a different type.
@@ -200,7 +200,7 @@ public class TestTupleSchema extends SubOperatorTest {
     assertTrue(col.isNullable());
     assertFalse(col.isArray());
     assertTrue(col.isVariableWidth());
-    assertFalse(col.isMap());
+    assertFalse(col.isStruct());
     assertFalse(col.isVariant());
 
     assertEquals(50, col.expectedWidth());
@@ -221,7 +221,7 @@ public class TestTupleSchema extends SubOperatorTest {
     assertFalse(col.isNullable());
     assertTrue(col.isArray());
     assertTrue(col.isVariableWidth());
-    assertFalse(col.isMap());
+    assertFalse(col.isStruct());
     assertFalse(col.isVariant());
 
     assertEquals(50, col.expectedWidth());
@@ -250,7 +250,7 @@ public class TestTupleSchema extends SubOperatorTest {
     assertFalse(col.isNullable());
     assertFalse(col.isArray());
     assertFalse(col.isVariableWidth());
-    assertFalse(col.isMap());
+    assertFalse(col.isStruct());
     assertFalse(col.isVariant());
 
     assertEquals(3, col.precision());
@@ -260,29 +260,29 @@ public class TestTupleSchema extends SubOperatorTest {
   }
 
   /**
-   * Tests a map column. Maps can only be required or repeated, not nullable.
-   * (But, the columns in the map can be nullable.)
+   * Tests a struct column. Maps can only be required or repeated, not nullable.
+   * (But, the columns in the struct can be nullable.)
    */
 
   @Test
   public void testMapColumn() {
 
-    MaterializedField field = SchemaBuilder.columnSchema("m", MinorType.MAP, DataMode.REQUIRED );
+    MaterializedField field = SchemaBuilder.columnSchema("m", MinorType.STRUCT, DataMode.REQUIRED );
     ColumnMetadata col = MetadataUtils.fromField(field);
 
-    assertTrue(col instanceof MapColumnMetadata);
+    assertTrue(col instanceof StructColumnMetadata);
     assertNotNull(col.mapSchema());
     assertEquals(0, col.mapSchema().size());
     assertSame(col, col.mapSchema().parent());
 
-    MapColumnMetadata mapCol = (MapColumnMetadata) col;
+    StructColumnMetadata mapCol = (StructColumnMetadata) col;
     assertNull(mapCol.parentTuple());
 
     assertEquals(ColumnMetadata.StructureType.TUPLE, col.structureType());
     assertFalse(col.isNullable());
     assertFalse(col.isArray());
     assertFalse(col.isVariableWidth());
-    assertTrue(col.isMap());
+    assertTrue(col.isStruct());
     assertFalse(col.isVariant());
 
     assertEquals(0, col.expectedWidth());
@@ -297,17 +297,17 @@ public class TestTupleSchema extends SubOperatorTest {
   @Test
   public void testRepeatedMapColumn() {
 
-    MaterializedField field = SchemaBuilder.columnSchema("m", MinorType.MAP, DataMode.REPEATED );
+    MaterializedField field = SchemaBuilder.columnSchema("m", MinorType.STRUCT, DataMode.REPEATED );
     ColumnMetadata col = MetadataUtils.fromField(field);
 
-    assertTrue(col instanceof MapColumnMetadata);
+    assertTrue(col instanceof StructColumnMetadata);
     assertNotNull(col.mapSchema());
     assertEquals(0, col.mapSchema().size());
 
     assertFalse(col.isNullable());
     assertTrue(col.isArray());
     assertFalse(col.isVariableWidth());
-    assertTrue(col.isMap());
+    assertTrue(col.isStruct());
     assertFalse(col.isVariant());
 
     assertEquals(0, col.expectedWidth());
@@ -349,7 +349,7 @@ public class TestTupleSchema extends SubOperatorTest {
     assertTrue(col instanceof VariantColumnMetadata);
 
     assertTrue(col.isNullable());
-    assertFalse(col.isMap());
+    assertFalse(col.isStruct());
     assertTrue(col.isVariant());
 
     assertEquals(0, col.expectedWidth());
@@ -533,7 +533,7 @@ public class TestTupleSchema extends SubOperatorTest {
   }
 
   /**
-   * Test a complex map schema of the form:<br>
+   * Test a complex struct schema of the form:<br>
    * a.`b.x`.`c.y`.d<br>
    * in which columns "a", "b.x" and "c.y" are maps, "b.x" and "c.y" are names
    * that contains dots, and d is primitive.
@@ -546,15 +546,15 @@ public class TestTupleSchema extends SubOperatorTest {
 
     TupleSchema root = new TupleSchema();
 
-    MaterializedField fieldA = SchemaBuilder.columnSchema("a", MinorType.MAP, DataMode.REQUIRED);
+    MaterializedField fieldA = SchemaBuilder.columnSchema("a", MinorType.STRUCT, DataMode.REQUIRED);
     ColumnMetadata colA = root.add(fieldA);
     TupleMetadata mapA = colA.mapSchema();
 
-    MaterializedField fieldB = SchemaBuilder.columnSchema("b.x", MinorType.MAP, DataMode.REQUIRED);
+    MaterializedField fieldB = SchemaBuilder.columnSchema("b.x", MinorType.STRUCT, DataMode.REQUIRED);
     ColumnMetadata colB = mapA.add(fieldB);
     TupleMetadata mapB = colB.mapSchema();
 
-    MaterializedField fieldC = SchemaBuilder.columnSchema("c.y", MinorType.MAP, DataMode.REQUIRED);
+    MaterializedField fieldC = SchemaBuilder.columnSchema("c.y", MinorType.STRUCT, DataMode.REQUIRED);
     ColumnMetadata colC = mapB.add(fieldC);
     TupleMetadata mapC = colC.mapSchema();
 
@@ -619,12 +619,12 @@ public class TestTupleSchema extends SubOperatorTest {
 
     // Create a materialized field with the desired structure.
 
-    MaterializedField fieldA = SchemaBuilder.columnSchema("a", MinorType.MAP, DataMode.REQUIRED);
+    MaterializedField fieldA = SchemaBuilder.columnSchema("a", MinorType.STRUCT, DataMode.REQUIRED);
 
-    MaterializedField fieldB = SchemaBuilder.columnSchema("b.x", MinorType.MAP, DataMode.REQUIRED);
+    MaterializedField fieldB = SchemaBuilder.columnSchema("b.x", MinorType.STRUCT, DataMode.REQUIRED);
     fieldA.addChild(fieldB);
 
-    MaterializedField fieldC = SchemaBuilder.columnSchema("c.y", MinorType.MAP, DataMode.REQUIRED);
+    MaterializedField fieldC = SchemaBuilder.columnSchema("c.y", MinorType.STRUCT, DataMode.REQUIRED);
     fieldB.addChild(fieldC);
 
     MaterializedField fieldD = SchemaBuilder.columnSchema("d", MinorType.VARCHAR, DataMode.REQUIRED);
@@ -779,7 +779,7 @@ public class TestTupleSchema extends SubOperatorTest {
         .addList("list")
           .addType(MinorType.BIGINT)
           .addType(MinorType.VARCHAR)
-          .addMap()
+          .addStruct()
             .add("a", MinorType.INT)
             .add("b", MinorType.VARCHAR)
             .resumeUnion()
@@ -796,10 +796,10 @@ public class TestTupleSchema extends SubOperatorTest {
     VariantMetadata union = col.variantSchema();
     assertNotNull(union);
     assertEquals(4, union.size());
-    assertTrue(union.hasType(MinorType.MAP));
+    assertTrue(union.hasType(MinorType.STRUCT));
     assertTrue(union.hasType(MinorType.LIST));
 
-    ColumnMetadata mapCol = union.member(MinorType.MAP);
+    ColumnMetadata mapCol = union.member(MinorType.STRUCT);
     TupleMetadata mapSchema = mapCol.mapSchema();
     assertEquals(2, mapSchema.size());
 

@@ -100,7 +100,7 @@ public abstract class BaseTupleModel implements TupleModel {
    * Perform the work of keeping the list of columns and schema in-sync
    * as columns are added. This is protected because derived classes
    * must add logic to keep the new column in sync with the underlying
-   * container or map vector.
+   * container or struct vector.
    *
    * @param column column implementation to add
    */

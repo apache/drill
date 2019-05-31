@@ -32,7 +32,7 @@ import org.apache.drill.exec.expr.holders.IntHolder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.physical.base.GroupScan;
-import org.apache.drill.exec.vector.complex.impl.MapOrListWriterImpl;
+import org.apache.drill.exec.vector.complex.impl.StructOrListWriterImpl;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 import org.apache.drill.exec.vector.complex.writer.TimeStampWriter;
@@ -73,14 +73,14 @@ public class BsonRecordReader {
     BsonType readBsonType = reader.getCurrentBsonType();
     switch (readBsonType) {
     case DOCUMENT:
-      writeToListOrMap(reader, new MapOrListWriterImpl(writer.rootAsMap()), false, null);
+      writeToListOrMap(reader, new StructOrListWriterImpl(writer.rootAsStruct()), false, null);
       break;
     default:
       throw new DrillRuntimeException("Root object must be DOCUMENT type. Found: " + readBsonType);
     }
   }
 
-  private void writeToListOrMap(BsonReader reader, final MapOrListWriterImpl writer, boolean isList, String fieldName) {
+  private void writeToListOrMap(BsonReader reader, final StructOrListWriterImpl writer, boolean isList, String fieldName) {
     writer.start();
     // If isList is true, then filedName can be null as it is not required while
     // writing
@@ -110,7 +110,7 @@ public class BsonRecordReader {
         break;
       case ARRAY:
         reader.readStartArray();
-        writeToListOrMap(reader, (MapOrListWriterImpl) writer.list(fieldName), true, fieldName);
+        writeToListOrMap(reader, (StructOrListWriterImpl) writer.list(fieldName), true, fieldName);
         atLeastOneWrite = true;
         break;
       case BINARY:
@@ -131,11 +131,11 @@ public class BsonRecordReader {
       case DOCUMENT:
         reader.readStartDocument();
         // To handle nested Documents.
-        MapOrListWriterImpl _writer = writer;
+        StructOrListWriterImpl _writer = writer;
         if (!isList) {
-          _writer = (MapOrListWriterImpl) writer.map(fieldName);
+          _writer = (StructOrListWriterImpl) writer.struct(fieldName);
         } else {
-          _writer = (MapOrListWriterImpl) writer.listoftmap(fieldName);
+          _writer = (StructOrListWriterImpl) writer.listoftstruct(fieldName);
         }
         writeToListOrMap(reader, _writer, false, fieldName);
         atLeastOneWrite = true;
@@ -190,7 +190,7 @@ public class BsonRecordReader {
     }
   }
 
-  private void writeBinary(BsonReader reader, final MapOrListWriterImpl writer, String fieldName, boolean isList) {
+  private void writeBinary(BsonReader reader, final StructOrListWriterImpl writer, String fieldName, boolean isList) {
     final VarBinaryHolder vb = new VarBinaryHolder();
     BsonBinary readBinaryData = reader.readBinaryData();
     byte[] data = readBinaryData.getData();
@@ -247,18 +247,18 @@ public class BsonRecordReader {
     }
   }
 
-  private void writeTimeStamp(int timestamp, final MapOrListWriterImpl writer, String fieldName, boolean isList) {
+  private void writeTimeStamp(int timestamp, final StructOrListWriterImpl writer, String fieldName, boolean isList) {
     DateTime dateTime = new DateTime(timestamp*1000L);
     TimeStampWriter t;
     if (isList == false) {
-      t = writer.map.timeStamp(fieldName);
+      t = writer.struct.timeStamp(fieldName);
     } else {
       t = writer.list.timeStamp();
     }
     t.writeTimeStamp(dateTime.withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis());
   }
 
-  private void writeString(String readString, final MapOrListWriterImpl writer, String fieldName, boolean isList) {
+  private void writeString(String readString, final StructOrListWriterImpl writer, String fieldName, boolean isList) {
     int length;
     byte[] strBytes;
     try {
@@ -280,13 +280,13 @@ public class BsonRecordReader {
     }
   }
 
-  private void writeObjectId(BsonReader reader, final MapOrListWriterImpl writer, String fieldName, boolean isList) {
+  private void writeObjectId(BsonReader reader, final StructOrListWriterImpl writer, String fieldName, boolean isList) {
     final VarBinaryHolder vObj = new VarBinaryHolder();
     final byte[] objBytes = reader.readObjectId().toByteArray();
     writeBinary(writer, fieldName, isList, vObj, objBytes);
   }
 
-  private void writeDouble(double readDouble, final MapOrListWriterImpl writer, String fieldName, boolean isList) {
+  private void writeDouble(double readDouble, final StructOrListWriterImpl writer, String fieldName, boolean isList) {
     final Float8Holder f8h = new Float8Holder();
     f8h.value = readDouble;
     if (isList == false) {
@@ -296,18 +296,18 @@ public class BsonRecordReader {
     }
   }
 
-  private void writeDateTime(long readDateTime, final MapOrListWriterImpl writer, String fieldName, boolean isList) {
+  private void writeDateTime(long readDateTime, final StructOrListWriterImpl writer, String fieldName, boolean isList) {
     DateTime date = new DateTime(readDateTime);
     TimeStampWriter dt;
     if (isList == false) {
-      dt = writer.map.timeStamp(fieldName);
+      dt = writer.struct.timeStamp(fieldName);
     } else {
       dt = writer.list.timeStamp();
     }
     dt.writeTimeStamp(date.withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis());
   }
 
-  private void writeBoolean(boolean readBoolean, final MapOrListWriterImpl writer, String fieldName, boolean isList) {
+  private void writeBoolean(boolean readBoolean, final StructOrListWriterImpl writer, String fieldName, boolean isList) {
     final BitHolder bit = new BitHolder();
     bit.value = readBoolean ? 1 : 0;
     if (isList == false) {
@@ -317,7 +317,7 @@ public class BsonRecordReader {
     }
   }
 
-  private void writeBinary(final MapOrListWriterImpl writer, String fieldName, boolean isList,
+  private void writeBinary(final StructOrListWriterImpl writer, String fieldName, boolean isList,
       final VarBinaryHolder vb, final byte[] bytes) {
     ensure(bytes.length);
     workBuf.setBytes(0, bytes);
@@ -331,7 +331,7 @@ public class BsonRecordReader {
     }
   }
 
-  private void writeInt64(long readInt64, final MapOrListWriterImpl writer, String fieldName, boolean isList) {
+  private void writeInt64(long readInt64, final StructOrListWriterImpl writer, String fieldName, boolean isList) {
     final BigIntHolder bh = new BigIntHolder();
     bh.value = readInt64;
     if (isList == false) {
@@ -341,7 +341,7 @@ public class BsonRecordReader {
     }
   }
 
-  private void writeInt32(int readInt32, final MapOrListWriterImpl writer, String fieldName, boolean isList) {
+  private void writeInt32(int readInt32, final StructOrListWriterImpl writer, String fieldName, boolean isList) {
     final IntHolder ih = new IntHolder();
     ih.value = readInt32;
     if (isList == false) {
@@ -357,9 +357,9 @@ public class BsonRecordReader {
       // for count purposes.
       SchemaPath sp = columns.get(0);
       PathSegment root = sp.getRootSegment();
-      BaseWriter.MapWriter fieldWriter = writer.rootAsMap();
+      BaseWriter.StructWriter fieldWriter = writer.rootAsStruct();
       while (root.getChild() != null && !root.getChild().isArray()) {
-        fieldWriter = fieldWriter.map(root.getNameSegment().getPath());
+        fieldWriter = fieldWriter.struct(root.getNameSegment().getPath());
         root = root.getChild();
       }
       fieldWriter.integer(root.getNameSegment().getPath());

@@ -25,7 +25,7 @@ import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.MaterializedField;
 
 /**
- * Internal tuple builder shared by the schema and map builders.
+ * Internal tuple builder shared by the schema and struct builders.
  * Those two classes can't inherit from this class because their
  * versions of the "add" methods return themselves to allow fluent
  * construction.
@@ -118,20 +118,20 @@ public class TupleBuilder implements SchemaContainer {
   }
 
   /**
-   * Add a map column. The returned schema builder is for the nested
-   * map. Building that map, using {@link MapBuilder#resumeSchema()},
+   * Add a struct column. The returned schema builder is for the nested
+   * struct. Building that struct, using {@link StructBuilder#resumeSchema()},
    * will return the original schema builder.
    *
    * @param parent schema container
-   * @param name the name of the map column
-   * @return a builder for the map
+   * @param name the name of the struct column
+   * @return a builder for the struct
    */
-  public MapBuilder addMap(SchemaContainer parent, String name) {
-    return new MapBuilder(parent, name, DataMode.REQUIRED);
+  public StructBuilder addStruct(SchemaContainer parent, String name) {
+    return new StructBuilder(parent, name, DataMode.REQUIRED);
   }
 
-  public MapBuilder addMapArray(SchemaContainer parent, String name) {
-    return new MapBuilder(parent, name, DataMode.REPEATED);
+  public StructBuilder addStructArray(SchemaContainer parent, String name) {
+    return new StructBuilder(parent, name, DataMode.REPEATED);
   }
 
   public UnionBuilder addUnion(SchemaContainer parent, String name) {

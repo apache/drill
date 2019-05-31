@@ -83,7 +83,7 @@ public class ParquetResultListener implements UserResultsListener {
   private <T> void assertField(ValueVector valueVector, int index,
       TypeProtos.MinorType expectedMinorType, T value, String name, int parentFieldId) {
 
-    if (expectedMinorType == TypeProtos.MinorType.MAP) {
+    if (expectedMinorType == TypeProtos.MinorType.STRUCT) {
       return;
     }
 

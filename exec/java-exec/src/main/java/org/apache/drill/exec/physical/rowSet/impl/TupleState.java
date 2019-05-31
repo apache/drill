@@ -38,14 +38,14 @@ import org.apache.drill.exec.vector.accessor.TupleWriter;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
 import org.apache.drill.exec.vector.accessor.writer.AbstractObjectWriter;
 import org.apache.drill.exec.vector.accessor.writer.AbstractTupleWriter;
-import org.apache.drill.exec.vector.complex.AbstractMapVector;
+import org.apache.drill.exec.vector.complex.AbstractStructVector;
 
 /**
- * Represents the loader state for a tuple: a row or a map. This is "state" in
+ * Represents the loader state for a tuple: a row or a struct. This is "state" in
  * the sense of variables that are carried along with each tuple. Handles
  * write-time issues such as defining new columns, allocating memory, handling
- * overflow, assembling the output version of the map, and so on. Each
- * row and map in the result set has a tuple state instances associated
+ * overflow, assembling the output version of the struct, and so on. Each
+ * row and struct in the result set has a tuple state instances associated
  * with it.
  * <p>
  * Here, by "tuple" we mean a container of vectors, each of which holds
@@ -76,7 +76,7 @@ import org.apache.drill.exec.vector.complex.AbstractMapVector;
  * the output container across batches, meaning that updates are incremental:
  * we need only add columns that are new since the last update. And, those new
  * columns will always appear directly after all existing columns in the row
- * or in a map.
+ * or in a struct.
  * <p>
  * As special case occurs when columns are added in the overflow row. These
  * columns <i>do not</i> appear in the output container for the main part
@@ -85,7 +85,7 @@ import org.apache.drill.exec.vector.complex.AbstractMapVector;
  * <p>
  * Since the container here may contain a subset of the internal columns, an
  * interesting case occurs for maps. The maps in the output container are
- * <b>not</b> the same as those used internally. Since a map column can contain
+ * <b>not</b> the same as those used internally. Since a struct column can contain
  * either one list of columns or another, the internal and external maps must
  * differ. The set of child vectors (except for child maps) are shared.
  */
@@ -94,7 +94,7 @@ public abstract class TupleState extends ContainerState
   implements AbstractTupleWriter.TupleWriterListener {
 
   /**
-   * Represents a map column (either single or repeated). Includes maps that
+   * Represents a struct column (either single or repeated). Includes maps that
    * are top-level, nested within other maps, or nested inside a union.
    * Schema management is a bit complex:
    * <table border=1>
@@ -120,7 +120,7 @@ public abstract class TupleState extends ContainerState
    * <p>
    * New columns can be added at any time for data readers that discover
    * their schema as data is read (such as JSON). In this case, new columns
-   * always appear at the end of the map (remember, in Drill, a "map" is actually
+   * always appear at the end of the struct (remember, in Drill, a "struct" is actually
    * a structured: an ordered, named list of columns.) When looking for newly
    * added columns, they will always be at the end.
    */
@@ -157,7 +157,7 @@ public abstract class TupleState extends ContainerState
     }
 
     /**
-     * Indicate if this map is versioned. A versionable map has three attributes:
+     * Indicate if this struct is versioned. A versionable struct has three attributes:
      * <ol>
      * <li>Columns can be unprojected. (Columns appear as writers for the client
      * of the result set loader, but are not materialized and do not appear in
@@ -166,7 +166,7 @@ public abstract class TupleState extends ContainerState
      * <li>As a result, the output schema is a subset of the internal input
      * schema.</li>
      * </ul>
-     * @return <tt>true</tt> if this map is versioned as described above
+     * @return <tt>true</tt> if this struct is versioned as described above
      */
 
     public boolean isVersioned() { return isVersioned; }
@@ -176,24 +176,24 @@ public abstract class TupleState extends ContainerState
   }
 
   /**
-   * State for a map vector. If the map is repeated, it will have an offset
-   * vector. The map vector itself is a pseudo-vector that is simply a
+   * State for a struct vector. If the struct is repeated, it will have an offset
+   * vector. The struct vector itself is a pseudo-vector that is simply a
    * container for other vectors, and so needs no management itself.
    */
 
-  public static class MapVectorState implements VectorState {
+  public static class StructVectorState implements VectorState {
 
-    private final AbstractMapVector mapVector;
+    private final AbstractStructVector structVector;
     private final VectorState offsets;
 
-    public MapVectorState(AbstractMapVector mapVector, VectorState offsets) {
-      this.mapVector = mapVector;
+    public StructVectorState(AbstractStructVector structVector, VectorState offsets) {
+      this.structVector = structVector;
       this.offsets = offsets;
     }
 
     @Override
     public int allocate(int cardinality) {
-      // The mapVector is a pseudo-vector; nothing to allocate.
+      // The structVector is a pseudo-vector; nothing to allocate.
 
       return offsets.allocate(cardinality);
     }
@@ -220,7 +220,7 @@ public abstract class TupleState extends ContainerState
 
     @SuppressWarnings("unchecked")
     @Override
-    public AbstractMapVector vector() { return mapVector; }
+    public AbstractStructVector vector() { return structVector; }
 
     public VectorState offsetVectorState() { return offsets; }
 
@@ -302,13 +302,13 @@ public abstract class TupleState extends ContainerState
   }
 
   /**
-   * Represents a tuple defined as a Drill map: single or repeated. Note that
-   * the map vector does not exist here; it is assembled only when "harvesting"
+   * Represents a tuple defined as a Drill struct: single or repeated. Note that
+   * the struct vector does not exist here; it is assembled only when "harvesting"
    * a batch. This design supports the obscure case in which a new column
    * is added during an overflow row, so exists within this abstraction,
-   * but is not published to the map that makes up the output.
+   * but is not published to the struct that makes up the output.
    * <p>
-   * The map state is associated with a map vector. This vector is built
+   * The struct state is associated with a struct vector. This vector is built
    * either during harvest time (normal maps) or on the fly (union maps.)
    */
 
@@ -327,13 +327,13 @@ public abstract class TupleState extends ContainerState
 
     @Override
     public int addOutputColumn(ValueVector vector, ColumnMetadata colSchema) {
-      final AbstractMapVector mapVector = parentColumn.vector();
+      final AbstractStructVector structVector = parentColumn.vector();
       if (isVersioned()) {
-        mapVector.putChild(colSchema.name(), vector);
+        structVector.putChild(colSchema.name(), vector);
       }
       final int index = outputSchema.addColumn(colSchema);
-      assert mapVector.size() == outputSchema.size();
-      assert mapVector.getField().getChildren().size() == outputSchema.size();
+      assert structVector.size() == outputSchema.size();
+      assert structVector.getField().getChildren().size() == outputSchema.size();
       return index;
     }
 
@@ -341,8 +341,8 @@ public abstract class TupleState extends ContainerState
     protected void addColumn(ColumnState colState) {
       super.addColumn(colState);
 
-      // If the map is materialized (because it is nested inside a union)
-      // then add the new vector to the map at add time. But, for top-level
+      // If the struct is materialized (because it is nested inside a union)
+      // then add the new vector to the struct at add time. But, for top-level
       // maps, or those nested inside other maps (but not a union or
       // repeated list), defer
       // adding the column until harvest time, to allow for the case that
@@ -351,13 +351,13 @@ public abstract class TupleState extends ContainerState
       // columns must be nullable, so back-filling of nulls is possible.
 
       if (! isVersioned()) {
-        final AbstractMapVector mapVector = parentColumn.vector();
-        mapVector.putChild(colState.schema().name(), colState.vector());
+        final AbstractStructVector structVector = parentColumn.vector();
+        structVector.putChild(colState.schema().name(), colState.vector());
       }
     }
 
     /**
-     * A map is within a union if the map vector has been materialized.
+     * A struct is within a union if the struct vector has been materialized.
      * Top-level maps are built at harvest time. But, due to the complexity
      * of unions, maps within unions are materialized. This method ensures
      * that maps are materialized regardless of nesting depth within
@@ -393,8 +393,8 @@ public abstract class TupleState extends ContainerState
     }
 
     /**
-     * Return the tuple writer for the map. If this is a single
-     * map, then it is the writer itself. If this is a map array,
+     * Return the tuple writer for the struct. If this is a single
+     * struct, then it is the writer itself. If this is a struct array,
      * then the tuple is nested inside the array.
      */
 
@@ -413,8 +413,8 @@ public abstract class TupleState extends ContainerState
     }
 
     /**
-     * Return the tuple writer for the map. If this is a single
-     * map, then it is the writer itself. If this is a map array,
+     * Return the tuple writer for the struct. If this is a single
+     * struct, then it is the writer itself. If this is a struct array,
      * then the tuple is nested inside the array.
      */
 
@@ -440,8 +440,8 @@ public abstract class TupleState extends ContainerState
   protected final TupleSchema schema = new TupleSchema();
 
   /**
-   * Metadata description of the output container (for the row) or map
-   * (for map or repeated map.)
+   * Metadata description of the output container (for the row) or struct
+   * (for struct or repeated struct.)
    * <p>
    * Rows and maps have an output schema which may differ from the internal schema.
    * The output schema excludes unprojected columns. It also excludes
@@ -469,7 +469,7 @@ public abstract class TupleState extends ContainerState
 
   /**
    * Returns an ordered set of the columns which make up the tuple.
-   * Column order is the same as that defined by the map's schema,
+   * Column order is the same as that defined by the struct's schema,
    * to allow indexed access. New columns always appear at the end
    * of the list to preserve indexes.
    *
@@ -543,7 +543,7 @@ public abstract class TupleState extends ContainerState
       // version cutoff, skip that column for now. But, if this tuple is
       // within a union, then we always add all columns because union
       // semantics are too muddy to play the deferred column game. Further,
-      // all columns in a map within a union must be nullable, so we know we
+      // all columns in a struct within a union must be nullable, so we know we
       // can fill the column with nulls. (Something that is not true for
       // normal maps.)
 
@@ -552,12 +552,12 @@ public abstract class TupleState extends ContainerState
         prevHarvestIndex = i;
       }
 
-      // If the column is a map, then we have to recurse into the map
-      // itself. If the map is inside a union, then the map's vectors
-      // already appear in the map vector, but we still must update the
+      // If the column is a struct, then we have to recurse into the struct
+      // itself. If the struct is inside a union, then the struct's vectors
+      // already appear in the struct vector, but we still must update the
       // output schema.
 
-      if (colState.schema().isMap()) {
+      if (colState.schema().isStruct()) {
         final MapState childMap = ((MapColumnState) colState).mapState();
         childMap.updateOutput(curSchemaVersion);
       }

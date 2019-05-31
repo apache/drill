@@ -78,7 +78,7 @@ public class RepeatedListState extends ContainerState implements RepeatedListWri
    * Track the repeated list vector. The vector state holds onto the repeated
    * list vector, but only performs operations on the actual storage: the
    * offset vector. The child column state manages the repeated list content
-   * (which may be complex: another repeated list, a map, a union, etc.)
+   * (which may be complex: another repeated list, a struct, a union, etc.)
    */
 
   public static class RepeatedListVectorState implements VectorState {

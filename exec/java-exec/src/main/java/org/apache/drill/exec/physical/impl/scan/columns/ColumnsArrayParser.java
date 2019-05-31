@@ -118,13 +118,13 @@ public class ColumnsArrayParser implements ScanProjectionParser {
       return false;
     }
 
-    // The columns column cannot be a map. That is, the following is
+    // The columns column cannot be a struct. That is, the following is
     // not allowed: columns.foo.
 
     if (inCol.isTuple()) {
       throw UserException
         .validationError()
-        .message("Column `%s` has map elements, but must be an array", inCol.name())
+        .message("Column `%s` has struct elements, but must be an array", inCol.name())
         .addContext(builder.context())
         .build(logger);
     }

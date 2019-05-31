@@ -33,7 +33,7 @@ public class FieldIdUtil {
   public static TypedFieldId getFieldIdIfMatchesUnion(UnionVector unionVector, TypedFieldId.Builder builder, boolean addToBreadCrumb, PathSegment seg) {
     if (seg != null) {
       if (seg.isNamed()) {
-        ValueVector v = unionVector.getMap();
+        ValueVector v = unionVector.getStruct();
         if (v != null) {
           return getFieldIdIfMatches(v, builder, addToBreadCrumb, seg);
         } else {
@@ -59,7 +59,7 @@ public class FieldIdUtil {
 
 
   public static TypedFieldId getFieldIdIfMatches(ValueVector vector, TypedFieldId.Builder builder, boolean addToBreadCrumb, PathSegment seg) {
-    if (vector instanceof RepeatedMapVector && seg != null && seg.isArray() && !seg.isLastPath()) {
+    if (vector instanceof RepeatedStructVector && seg != null && seg.isArray() && !seg.isLastPath()) {
       if (addToBreadCrumb) {
         addToBreadCrumb = false;
         builder.remainder(seg);
@@ -67,7 +67,7 @@ public class FieldIdUtil {
       // skip the first array segment as there is no corresponding child vector.
       seg = seg.getChild();
 
-      // multi-level numbered access to a repeated map is not possible so return if the next part is also an array
+      // multi-level numbered access to a repeated struct is not possible so return if the next part is also an array
       // segment.
       if (seg.isArray()) {
         return null;

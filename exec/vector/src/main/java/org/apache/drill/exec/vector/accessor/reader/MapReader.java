@@ -32,10 +32,10 @@ public class MapReader extends AbstractTupleReader {
   protected final ColumnMetadata schema;
 
   /**
-   * Accessor for the map vector. This class does not use the map vector
-   * directory. However, in the case of a map hyper-vector, we need to
+   * Accessor for the struct vector. This class does not use the struct vector
+   * directory. However, in the case of a struct hyper-vector, we need to
    * tell the vector which batch to use. (For an array, the array does
-   * this work and the map accessor is null.)
+   * this work and the struct accessor is null.)
    */
 
   private final VectorAccessor mapAccessor;

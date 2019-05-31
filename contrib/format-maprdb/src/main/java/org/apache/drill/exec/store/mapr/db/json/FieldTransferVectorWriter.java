@@ -20,7 +20,7 @@ package org.apache.drill.exec.store.mapr.db.json;
 import static org.apache.drill.exec.store.mapr.PluginErrorHandler.dataReadError;
 
 import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.vector.complex.impl.MapOrListWriterImpl;
+import org.apache.drill.exec.vector.complex.impl.StructOrListWriterImpl;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.ojai.DocumentReader.EventType;
 
@@ -39,11 +39,11 @@ class FieldTransferVectorWriter extends DocumentReaderVectorWriter {
   @Override
   protected void writeDBDocument(VectorContainerWriter vectorWriter, DBDocumentReaderBase reader)
       throws SchemaChangeException {
-    MapOrListWriterImpl writer = new MapOrListWriterImpl(vectorWriter.rootAsMap());
+    StructOrListWriterImpl writer = new StructOrListWriterImpl(vectorWriter.rootAsStruct());
     if (reader.next() != EventType.START_MAP) {
       throw dataReadError(logger, "The document did not start with START_MAP!");
     }
-    valueWriter.writeToListOrMap(writer, reader);
+    valueWriter.writeToListOrStruct(writer, reader);
   }
 
 }

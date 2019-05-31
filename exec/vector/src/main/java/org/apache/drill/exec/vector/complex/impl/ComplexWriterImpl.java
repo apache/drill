@@ -20,7 +20,7 @@ package org.apache.drill.exec.vector.complex.impl;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.vector.complex.MapVector;
+import org.apache.drill.exec.vector.complex.StructVector;
 import org.apache.drill.exec.vector.complex.StateTool;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 
@@ -29,24 +29,24 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 public class ComplexWriterImpl extends AbstractFieldWriter implements ComplexWriter {
 //  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ComplexWriterImpl.class);
 
-  private SingleMapWriter mapRoot;
+  private SingleStructWriter structRoot;
   private SingleListWriter listRoot;
-  private final MapVector container;
+  private final StructVector container;
 
   Mode mode = Mode.INIT;
   private final String name;
   private final boolean unionEnabled;
 
-  private enum Mode { INIT, MAP, LIST };
+  private enum Mode { INIT, STRUCT, LIST };
 
-  public ComplexWriterImpl(String name, MapVector container, boolean unionEnabled){
+  public ComplexWriterImpl(String name, StructVector container, boolean unionEnabled){
     super(null);
     this.name = name;
     this.container = container;
     this.unionEnabled = unionEnabled;
   }
 
-  public ComplexWriterImpl(String name, MapVector container){
+  public ComplexWriterImpl(String name, StructVector container){
     this(name, container, false);
   }
 
@@ -72,7 +72,7 @@ public class ComplexWriterImpl extends AbstractFieldWriter implements ComplexWri
   @Override
   public void close() throws Exception {
     clear();
-    mapRoot.close();
+    structRoot.close();
     if (listRoot != null) {
       listRoot.close();
     }
@@ -80,25 +80,25 @@ public class ComplexWriterImpl extends AbstractFieldWriter implements ComplexWri
 
   @Override
   public void clear(){
-    switch(mode){
-    case MAP:
-      mapRoot.clear();
-      break;
-    case LIST:
-      listRoot.clear();
-      break;
+    switch (mode) {
+      case STRUCT:
+        structRoot.clear();
+        break;
+      case LIST:
+        listRoot.clear();
+        break;
     }
   }
 
   @Override
   public void setValueCount(int count){
-    switch(mode){
-    case MAP:
-      mapRoot.setValueCount(count);
-      break;
-    case LIST:
-      listRoot.setValueCount(count);
-      break;
+    switch (mode) {
+      case STRUCT:
+        structRoot.setValueCount(count);
+        break;
+      case LIST:
+        listRoot.setValueCount(count);
+        break;
     }
   }
 
@@ -106,8 +106,8 @@ public class ComplexWriterImpl extends AbstractFieldWriter implements ComplexWri
   public void setPosition(int index){
     super.setPosition(index);
     switch(mode){
-    case MAP:
-      mapRoot.setPosition(index);
+    case STRUCT:
+      structRoot.setPosition(index);
       break;
     case LIST:
       listRoot.setPosition(index);
@@ -116,54 +116,53 @@ public class ComplexWriterImpl extends AbstractFieldWriter implements ComplexWri
   }
 
 
-  public MapWriter directMap(){
+  public StructWriter directMap(){
     Preconditions.checkArgument(name == null);
 
     switch(mode){
 
     case INIT:
-      MapVector map = (MapVector) container;
-      mapRoot = new SingleMapWriter(map, this, unionEnabled);
-      mapRoot.setPosition(idx());
-      mode = Mode.MAP;
+      structRoot = new SingleStructWriter(container, this, unionEnabled);
+      structRoot.setPosition(idx());
+      mode = Mode.STRUCT;
       break;
 
-    case MAP:
+    case STRUCT:
       break;
 
     default:
-        check(Mode.INIT, Mode.MAP);
+        check(Mode.INIT, Mode.STRUCT);
     }
 
-    return mapRoot;
+    return structRoot;
   }
 
   @Override
-  public MapWriter rootAsMap() {
+  public StructWriter rootAsStruct() {
     switch(mode){
 
     case INIT:
-      MapVector map = container.addOrGet(name, Types.required(MinorType.MAP), MapVector.class);
-      mapRoot = new SingleMapWriter(map, this, unionEnabled);
-      mapRoot.setPosition(idx());
-      mode = Mode.MAP;
+      StructVector struct = container.addOrGet(name, Types.required(MinorType.STRUCT), StructVector.class);
+      structRoot = new SingleStructWriter(struct, this, unionEnabled);
+      structRoot.setPosition(idx());
+      mode = Mode.STRUCT;
       break;
 
-    case MAP:
+    case STRUCT:
       break;
 
     default:
-        check(Mode.INIT, Mode.MAP);
+        check(Mode.INIT, Mode.STRUCT);
     }
 
-    return mapRoot;
+    return structRoot;
   }
 
 
   @Override
   public void allocate() {
-    if(mapRoot != null) {
-      mapRoot.allocate();
+    if(structRoot != null) {
+      structRoot.allocate();
     } else if(listRoot != null) {
       listRoot.allocate();
     }
@@ -183,7 +182,7 @@ public class ComplexWriterImpl extends AbstractFieldWriter implements ComplexWri
       break;
 
     default:
-        check(Mode.INIT, Mode.MAP);
+        check(Mode.INIT, Mode.STRUCT);
     }
 
     return listRoot;

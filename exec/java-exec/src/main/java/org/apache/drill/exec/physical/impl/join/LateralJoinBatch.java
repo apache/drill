@@ -868,7 +868,7 @@ public class LateralJoinBatch extends AbstractBinaryRecordBatch<LateralJoinPOP> 
           Types.overrideMode(rightField.getType(), TypeProtos.DataMode.OPTIONAL);
 
         // Create the right field with optional type. This will also take care of creating
-        // children fields in case of ValueVectors of map type
+        // children fields in case of ValueVectors of struct type
         rightField = rightField.withType(outputType);
       }
       container.addOrGet(rightField);

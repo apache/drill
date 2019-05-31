@@ -22,8 +22,8 @@ option optimize_for = SPEED;
 
 
 enum MinorType {
-    LATE = 0;   //  late binding type
-    MAP = 1;   //  an empty map column.  Useful for conceptual setup.  Children listed within here
+    LATE = 0; //  late binding type
+    STRUCT = 1; //  an empty struct column.  Useful for conceptual setup.  Children listed within here
 
     TINYINT = 3;   //  single byte signed integer
     SMALLINT = 4;   //  two byte signed integer

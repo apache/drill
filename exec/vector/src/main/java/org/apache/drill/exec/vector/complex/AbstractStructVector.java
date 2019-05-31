@@ -37,15 +37,15 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 /**
- * Base class for MapVectors. Currently used by RepeatedMapVector and MapVector
+ * Base class for StructVectors. Currently used by RepeatedStructVector and StructVector
  */
-public abstract class AbstractMapVector extends AbstractContainerVector {
+public abstract class AbstractStructVector extends AbstractContainerVector {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractContainerVector.class);
 
-  // Maintains a map with key as field name and value is the vector itself
+  // Maintains a struct with key as field name and value is the vector itself
   private final MapWithOrdinal<String, ValueVector> vectors = new MapWithOrdinal<>();
 
-  protected AbstractMapVector(MaterializedField field, BufferAllocator allocator, CallBack callBack) {
+  protected AbstractStructVector(MaterializedField field, BufferAllocator allocator, CallBack callBack) {
     super(field.clone(), allocator, callBack);
     // create the hierarchy of the child vectors based on the materialized field
     for (MaterializedField child : field.getChildren()) {
@@ -227,9 +227,9 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
   public List<ValueVector> getPrimitiveVectors() {
     final List<ValueVector> primitiveVectors = Lists.newArrayList();
     for (final ValueVector v : vectors.values()) {
-      if (v instanceof AbstractMapVector) {
-        AbstractMapVector mapVector = (AbstractMapVector) v;
-        primitiveVectors.addAll(mapVector.getPrimitiveVectors());
+      if (v instanceof AbstractStructVector) {
+        AbstractStructVector structVector = (AbstractStructVector) v;
+        primitiveVectors.addAll(structVector.getPrimitiveVectors());
       } else {
         primitiveVectors.add(v);
       }
@@ -314,14 +314,14 @@ public abstract class AbstractMapVector extends AbstractContainerVector {
 
   @Override
   public void exchange(ValueVector other) {
-    AbstractMapVector otherMap = (AbstractMapVector) other;
-    if (vectors.size() != otherMap.vectors.size()) {
+    AbstractStructVector otherStruct = (AbstractStructVector) other;
+    if (vectors.size() != otherStruct.vectors.size()) {
       throw new IllegalStateException("Maps have different column counts");
     }
     for (int i = 0; i < vectors.size(); i++) {
       assert vectors.getByOrdinal(i).getField().isEquivalent(
-          otherMap.vectors.getByOrdinal(i).getField());
-      vectors.getByOrdinal(i).exchange(otherMap.vectors.getByOrdinal(i));
+          otherStruct.vectors.getByOrdinal(i).getField());
+      vectors.getByOrdinal(i).exchange(otherStruct.vectors.getByOrdinal(i));
     }
   }
 }

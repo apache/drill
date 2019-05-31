@@ -28,8 +28,8 @@ import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.complex.AbstractMapVector;
-import org.apache.drill.exec.vector.complex.RepeatedMapVector;
+import org.apache.drill.exec.vector.complex.AbstractStructVector;
+import org.apache.drill.exec.vector.complex.RepeatedStructVector;
 
 /**
  * Given a vector container, and a metadata schema that matches the container,
@@ -72,11 +72,11 @@ public class VectorAllocator {
     final MajorType type = vector.getField().getType();
     assert vector.getField().getName().equals(metadata.name());
     assert type.getMinorType() == metadata.type();
-    if (type.getMinorType() == MinorType.MAP) {
+    if (type.getMinorType() == MinorType.STRUCT) {
       if (type.getMode() == DataMode.REPEATED) {
-        allocateMapArray((RepeatedMapVector) vector, metadata, valueCount, mdProvider);
+        allocateStructArray((RepeatedStructVector) vector, metadata, valueCount, mdProvider);
       } else {
-        allocateMap((AbstractMapVector) vector, metadata, valueCount, mdProvider);
+        allocateStruct((AbstractStructVector) vector, metadata, valueCount, mdProvider);
       }
     } else {
       allocatePrimitive(vector, metadata, valueCount);
@@ -91,14 +91,14 @@ public class VectorAllocator {
         metadata.expectedElementCount());
   }
 
-  private void allocateMapArray(RepeatedMapVector vector,
-      ColumnMetadata metadata, int valueCount, MetadataProvider mdProvider) {
+  private void allocateStructArray(RepeatedStructVector vector,
+                                   ColumnMetadata metadata, int valueCount, MetadataProvider mdProvider) {
     vector.getOffsetVector().allocateNew(valueCount);
     final int expectedValueCount = valueCount * metadata.expectedElementCount();
-    allocateMap(vector, metadata, expectedValueCount, mdProvider);
+    allocateStruct(vector, metadata, expectedValueCount, mdProvider);
   }
 
-  private void allocateMap(AbstractMapVector vector, ColumnMetadata metadata, int valueCount, MetadataProvider mdProvider) {
+  private void allocateStruct(AbstractStructVector vector, ColumnMetadata metadata, int valueCount, MetadataProvider mdProvider) {
     final MetadataProvider mapProvider = mdProvider.childProvider(metadata);
     final TupleMetadata mapSchema = metadata.mapSchema();
     assert mapSchema != null;

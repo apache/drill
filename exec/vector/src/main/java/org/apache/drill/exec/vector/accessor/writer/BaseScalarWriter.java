@@ -52,11 +52,11 @@ import io.netty.buffer.DrillBuf;
  * A repeat level is defined as any of the following:
  * <ul>
  * <li>The set of top-level scalar columns, or those within a
- * top-level, non-repeated map, or nested to any depth within
+ * top-level, non-repeated struct, or nested to any depth within
  * non-repeated maps rooted at the top level.</li>
  * <li>The values for a single scalar array.</li>
- * <li>The set of scalar columns within a repeated map, or
- * nested within non-repeated maps within a repeated map.</li>
+ * <li>The set of scalar columns within a repeated struct, or
+ * nested within non-repeated struct types within a repeated struct.</li>
  * </ul>
  * Items at a repeat level index together and share a vector
  * index. However, the columns within a repeat level

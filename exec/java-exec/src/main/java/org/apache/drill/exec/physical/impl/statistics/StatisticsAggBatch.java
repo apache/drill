@@ -25,7 +25,6 @@ import org.apache.drill.common.expression.FunctionCallFactory;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.ValueExpressions;
-import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
@@ -48,7 +47,7 @@ import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.ColumnExplorer;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.FieldIdUtil;
-import org.apache.drill.exec.vector.complex.MapVector;
+import org.apache.drill.exec.vector.complex.StructVector;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 /*
@@ -99,7 +98,7 @@ public class StatisticsAggBatch extends StreamingAggBatch {
   /*
    * Create the field id for the value vector corresponding to the materialized expression
    */
-  private TypedFieldId createVVFieldId(LogicalExpression mle, String name, MapVector parent) {
+  private TypedFieldId createVVFieldId(LogicalExpression mle, String name, StructVector parent) {
     Class<? extends ValueVector> vvc =
             TypeHelper.getValueVectorClass(mle.getMajorType().getMinorType(),
                     mle.getMajorType().getMode());
@@ -117,8 +116,8 @@ public class StatisticsAggBatch extends StreamingAggBatch {
   /*
    * Creates the key column within the parent value vector
    */
-  private void createNestedKeyColumn(MapVector parent, String name, LogicalExpression expr,
-      List<LogicalExpression> keyExprs, List<TypedFieldId> keyOutputIds)
+  private void createNestedKeyColumn(StructVector parent, String name, LogicalExpression expr,
+                                     List<LogicalExpression> keyExprs, List<TypedFieldId> keyOutputIds)
           throws SchemaChangeException {
     LogicalExpression mle = PhysicalOperatorUtil.materializeExpression(expr, incoming, context);
     TypedFieldId id = createVVFieldId(mle, name, parent);
@@ -127,11 +126,11 @@ public class StatisticsAggBatch extends StreamingAggBatch {
   }
 
   /*
-   * Creates the value vector within the parent value vector. The map vector key is
+   * Creates the value vector within the parent value vector. The struct vector key is
    * is the column name and value is the statistic expression e.g. "salary" : NDV(emp.salary)
    */
-  private void addMapVector(String name, MapVector parent, LogicalExpression expr,
-      List<LogicalExpression> valueExprs) throws SchemaChangeException {
+  private void addStructVector(String name, StructVector parent, LogicalExpression expr,
+                               List<LogicalExpression> valueExprs) throws SchemaChangeException {
     LogicalExpression mle = PhysicalOperatorUtil.materializeExpression(expr, incoming, context);
     TypedFieldId id = createVVFieldId(mle, name, parent);
     valueExprs.add(new ValueVectorWriteExpression(id, mle, true));
@@ -180,10 +179,10 @@ public class StatisticsAggBatch extends StreamingAggBatch {
     List<TypedFieldId> keyOutputIds = Lists.newArrayList();
     String [] colMeta = new String [] {Statistic.COLNAME, Statistic.COLTYPE};
     container.clear();
-    // Generate the `column` map containing the columns in the incoming schema. Ignore
+    // Generate the `column` struct containing the columns in the incoming schema. Ignore
     // the implicit columns
     for (String col : colMeta) {
-      MapVector parent = new MapVector(col, oContext.getAllocator(), null);
+      StructVector parent = new StructVector(col, oContext.getAllocator(), null);
       container.add(parent);
       for (MaterializedField mf : incoming.getSchema()) {
         LogicalExpression expr;
@@ -209,7 +208,7 @@ public class StatisticsAggBatch extends StreamingAggBatch {
     // NDV <<"employee_id" : 500>, <"salary" : 10>> represents a MAP of NDVs (# distinct values)
     // employee NDV = 500, salary NDV = 10
     for (String func : functions) {
-      MapVector parent = new MapVector(func, oContext.getAllocator(), null);
+      StructVector parent = new StructVector(func, oContext.getAllocator(), null);
       container.add(parent);
 
       for (MaterializedField mf : incoming.getSchema()) {
@@ -219,7 +218,7 @@ public class StatisticsAggBatch extends StreamingAggBatch {
           List<LogicalExpression> args = Lists.newArrayList();
           args.add(SchemaPath.getSimplePath(mf.getName()));
           LogicalExpression call = FunctionCallFactory.createExpression(func, args);
-          addMapVector(SchemaPath.getSimplePath(mf.getName()).toString(), parent, call, valueExprs);
+          addStructVector(SchemaPath.getSimplePath(mf.getName()).toString(), parent, call, valueExprs);
         }
       }
     }
@@ -228,24 +227,15 @@ public class StatisticsAggBatch extends StreamingAggBatch {
   }
 
   private boolean isColMinorTypeValid(MaterializedField mf) throws UnsupportedOperationException {
-    String mTypeStr = null;
-    if (mf.getType().getMinorType() == TypeProtos.MinorType.GENERIC_OBJECT) {
-      mTypeStr = "GENERIC OBJECT";
-    } else if (mf.getType().getMinorType() == TypeProtos.MinorType.LATE) {
-      mTypeStr = "LATE";
-    }else if (mf.getType().getMinorType() == TypeProtos.MinorType.LIST) {
-      mTypeStr = "LIST";
-    } else if (mf.getType().getMinorType() == TypeProtos.MinorType.MAP) {
-      mTypeStr = "MAP";
-    } else if (mf.getType().getMinorType() == TypeProtos.MinorType.UNION) {
-      mTypeStr = "UNION";
-    }
-    if (mTypeStr != null) {
-      return false;
-      //throw new UnsupportedOperationException(String.format("Column %s has data-type %s which is not supported",
-      //    mf.getName(), mTypeStr));
-    } else {
-      return true;
+    switch (mf.getType().getMinorType()) {
+      case GENERIC_OBJECT:
+      case LATE:
+      case LIST:
+      case STRUCT:
+      case UNION:
+        return false;
+      default:
+        return true;
     }
   }
 }

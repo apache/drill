@@ -45,7 +45,7 @@ import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
  * <p>
  * The offset vector is an implementation of a repeat level. A repeat
  * level can occur for a single array, or for a collection of columns
- * within a repeated map. (A repeat level also occurs for variable-width
+ * within a repeated struct. (A repeat level also occurs for variable-width
  * fields, but this is a bit harder to see, so let's ignore that for
  * now.)
  * <p>
@@ -69,8 +69,8 @@ import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
  * From the data vector's perspective, its last-write (lw') reflects
  * the last element written. If this is an array of scalars, then the
  * write index is automatically incremented, as illustrated by v'.
- * (For map arrays, the index must be incremented by calling
- * <tt>save()</tt> on the map array writer.)
+ * (For struct arrays, the index must be incremented by calling
+ * <tt>save()</tt> on the struct array writer.)
  * <p>
  * Suppose the client now skips some arrays:<pre><code>
  *       Offset Vector          Data Vector

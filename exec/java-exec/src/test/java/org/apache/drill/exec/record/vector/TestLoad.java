@@ -260,7 +260,7 @@ public class TestLoad extends ExecTest {
 
     BatchSchema schema1 = new SchemaBuilder()
         .add("a", MinorType.INT)
-        .addMap("m")
+        .addStruct("m")
           .resumeSchema()
         .build();
     {
@@ -278,12 +278,12 @@ public class TestLoad extends ExecTest {
       batchLoader.getContainer().zeroVectors();
     }
 
-    // Add column to map: a: INT, m: MAP{b: VARCHAR}
+    // Add column to struct: a: INT, m: MAP{b: VARCHAR}
     // Schema change: Yes
 
     BatchSchema schema2 = new SchemaBuilder()
         .add("a", MinorType.INT)
-        .addMap("m")
+        .addStruct("m")
           .add("b", MinorType.VARCHAR)
           .resumeSchema()
         .build();
@@ -308,7 +308,7 @@ public class TestLoad extends ExecTest {
     {
       BatchSchema schema = new SchemaBuilder()
           .add("a", MinorType.INT)
-          .addMap("m")
+          .addStruct("m")
             .add("b", MinorType.VARCHAR)
             .add("c", MinorType.INT)
             .resumeSchema()
@@ -324,7 +324,7 @@ public class TestLoad extends ExecTest {
     {
       BatchSchema schema = new SchemaBuilder()
           .add("a", MinorType.INT)
-          .addMap("m")
+          .addStruct("m")
             .add("b", MinorType.VARCHAR)
             .resumeSchema()
           .build();
@@ -339,7 +339,7 @@ public class TestLoad extends ExecTest {
     {
       BatchSchema schema = new SchemaBuilder()
           .add("a", MinorType.INT)
-          .addMap("m")
+          .addStruct("m")
             .add("b", MinorType.INT)
             .resumeSchema()
           .build();
@@ -348,7 +348,7 @@ public class TestLoad extends ExecTest {
       batchLoader.getContainer().zeroVectors();
     }
 
-    // Empty map: a: INT, m: MAP{}
+    // Empty struct: a: INT, m: MAP{}
 
     {
       assertTrue(loadBatch(allocator, batchLoader, schema1));
@@ -356,7 +356,7 @@ public class TestLoad extends ExecTest {
       batchLoader.getContainer().zeroVectors();
     }
 
-    // Drop map: a: INT
+    // Drop struct: a: INT
 
     {
       BatchSchema schema = new SchemaBuilder()

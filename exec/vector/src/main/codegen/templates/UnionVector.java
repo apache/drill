@@ -49,24 +49,24 @@ import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTes
 
 /**
  * A vector which can hold values of different types. It does so by using a
- * MapVector which contains a vector for each primitive type that is stored.
- * MapVector is used in order to take advantage of its
+ * StructVector which contains a vector for each primitive type that is stored.
+ * StructVector is used in order to take advantage of its
  * serialization/deserialization methods, as well as the addOrGet method.
  *
  * For performance reasons, UnionVector stores a cached reference to each
- * subtype vector, to avoid having to do the map lookup each time the vector is
+ * subtype vector, to avoid having to do the struct lookup each time the vector is
  * accessed.
  */
 public class UnionVector implements ValueVector {
 
   public static final int NULL_MARKER = 0;
   public static final String TYPE_VECTOR_NAME = "types";
-  public static final String INTERNAL_MAP_NAME = "internal";
+  public static final String INTERNAL_STRUCT_NAME = "internal";
   
   private static final MajorType MAJOR_TYPES[] = new MajorType[MinorType.values().length];
   
   static {
-    MAJOR_TYPES[MinorType.MAP.ordinal()] = Types.optional(MinorType.MAP);
+    MAJOR_TYPES[MinorType.STRUCT.ordinal()] = Types.optional(MinorType.STRUCT);
     MAJOR_TYPES[MinorType.LIST.ordinal()] = Types.optional(MinorType.LIST);
     <#list vv.types as type>
       <#list type.minor as minor>
@@ -87,29 +87,29 @@ public class UnionVector implements ValueVector {
   private int valueCount;
 
   /**
-   * Map which holds one vector for each subtype, along with a vector that indicates
+   * Struct which holds one vector for each subtype, along with a vector that indicates
    * types and the null state. There appears to be no reason other than convenience
-   * for using a map. Future implementations may wish to store vectors directly in
+   * for using a struct. Future implementations may wish to store vectors directly in
    * the union vector, but must then implement the required vector serialization/
    * deserialization and other functionality.
    */
   
-  private MapVector internalMap;
+  private StructVector internalStruct;
   
   /**
    * Cached type vector. The vector's permament location is in the
-   * internal map, it is cached for performance. Call
+   * internal struct, it is cached for performance. Call
    * {@link #getTypeVector()} to get the cached copy, or to refresh
-   * the cache from the internal map if not set.
+   * the cache from the internal struct if not set.
    */
   
   private UInt1Vector typeVector;
 
   /**
    * Set of cached vectors that duplicate vectors store in the
-   * internal map. Used to avoid a name lookup on every access.
+   * internal struct. Used to avoid a name lookup on every access.
    * The cache is populated as vectors are added. But, after the
-   * union is sent over the wire, the map is populated, but the
+   * union is sent over the wire, the struct is populated, but the
    * array is not. It will be repopulated upon first access to
    * the deserialized vectors.
    */
@@ -130,9 +130,9 @@ public class UnionVector implements ValueVector {
     
     this.field = field.clone();
     this.allocator = allocator;
-    this.internalMap = new MapVector(INTERNAL_MAP_NAME, allocator, callBack);
-    this.typeVector = internalMap.addOrGet(TYPE_VECTOR_NAME, Types.required(MinorType.UINT1), UInt1Vector.class);
-    this.field.addChild(internalMap.getField().clone());
+    this.internalStruct = new StructVector(INTERNAL_STRUCT_NAME, allocator, callBack);
+    this.typeVector = internalStruct.addOrGet(TYPE_VECTOR_NAME, Types.required(MinorType.UINT1), UInt1Vector.class);
+    this.field.addChild(internalStruct.getField().clone());
     this.callBack = callBack;
   }
 
@@ -166,7 +166,7 @@ public class UnionVector implements ValueVector {
     assert vector.getField().getType().getMode() == DataMode.OPTIONAL;
     assert vector.getField().getName().equals(type.name().toLowerCase());
     cachedSubtypes[type.ordinal()] = vector;
-    internalMap.putChild(type.name(), vector);
+    internalStruct.putChild(type.name(), vector);
     addSubType(type);
   }
   
@@ -192,11 +192,11 @@ public class UnionVector implements ValueVector {
    */
   
   private <T extends ValueVector> T classicAddType(MinorType type, Class<? extends ValueVector> vectorClass) {
-    int vectorCount = internalMap.size();
+    int vectorCount = internalStruct.size();
     @SuppressWarnings("unchecked")
-    T vector = (T) internalMap.addOrGet(type.name().toLowerCase(), MAJOR_TYPES[type.ordinal()], vectorClass);
+    T vector = (T) internalStruct.addOrGet(type.name().toLowerCase(), MAJOR_TYPES[type.ordinal()], vectorClass);
     cachedSubtypes[type.ordinal()] = vector;
-    if (internalMap.size() > vectorCount) {
+    if (internalStruct.size() > vectorCount) {
       vector.allocateNew();
       addSubType(type);
       if (callBack != null) {
@@ -206,12 +206,12 @@ public class UnionVector implements ValueVector {
     return vector;
   }
 
-  public MapVector getMap() {
-    MapVector mapVector = subtype(MinorType.MAP);
-    if (mapVector == null) {
-      mapVector = classicAddType(MinorType.MAP, MapVector.class);
+  public StructVector getStruct() {
+    StructVector structVector = subtype(MinorType.STRUCT);
+    if (structVector == null) {
+      structVector = classicAddType(MinorType.STRUCT, StructVector.class);
     }
-    return mapVector;
+    return structVector;
   }
 
   public ListVector getList() {
@@ -253,8 +253,8 @@ public class UnionVector implements ValueVector {
   
   public ValueVector getMember(MinorType type) {
     switch (type) {
-    case MAP:
-      return getMap();
+    case STRUCT:
+      return getStruct();
     case LIST:
       return getList();
   <#-- This awkard switch statement and call to type-specific method logic
@@ -286,32 +286,31 @@ public class UnionVector implements ValueVector {
 
   public UInt1Vector getTypeVector() {
     if (typeVector == null) {
-      typeVector = (UInt1Vector) internalMap.getChild(TYPE_VECTOR_NAME);
+      typeVector = (UInt1Vector) internalStruct.getChild(TYPE_VECTOR_NAME);
     }
     return typeVector;
   }
   
   @VisibleForTesting
-  public MapVector getTypeMap() {
-    return internalMap;
+  public StructVector getTypeStruct() {
+    return internalStruct;
   }
 
   @Override
   public void allocateNew() throws OutOfMemoryException {
-    internalMap.allocateNew();
+    internalStruct.allocateNew();
     getTypeVector().zeroVector();
   }
 
   public void allocateNew(int rowCount) throws OutOfMemoryException {
-    // The map vector does not have a form that takes a row count,
-    // but it should.
-    internalMap.allocateNew();
+    // The struct vector does not have a form that takes a row count, but it should.
+    internalStruct.allocateNew();
     getTypeVector().zeroVector();
   }
 
   @Override
   public boolean allocateNewSafe() {
-    boolean safe = internalMap.allocateNewSafe();
+    boolean safe = internalStruct.allocateNewSafe();
     if (safe) {
       getTypeVector().zeroVector();
     }
@@ -323,7 +322,7 @@ public class UnionVector implements ValueVector {
 
   @Override
   public int getValueCapacity() {
-    return Math.min(getTypeVector().getValueCapacity(), internalMap.getValueCapacity());
+    return Math.min(getTypeVector().getValueCapacity(), internalStruct.getValueCapacity());
   }
 
   @Override
@@ -331,7 +330,7 @@ public class UnionVector implements ValueVector {
 
   @Override
   public void clear() {
-    internalMap.clear();
+    internalStruct.clear();
   }
 
   @Override
@@ -339,12 +338,12 @@ public class UnionVector implements ValueVector {
 
   @Override
   public void collectLedgers(Set<BufferLedger> ledgers) {
-    internalMap.collectLedgers(ledgers);
+    internalStruct.collectLedgers(ledgers);
   }
 
   @Override
   public int getPayloadByteCount(int valueCount) {
-    return internalMap.getPayloadByteCount(valueCount);
+    return internalStruct.getPayloadByteCount(valueCount);
   }
 
   @Override
@@ -363,7 +362,7 @@ public class UnionVector implements ValueVector {
   }
 
   public void transferTo(UnionVector target) {
-    internalMap.makeTransferPair(target.internalMap).transfer();
+    internalStruct.makeTransferPair(target.internalStruct).transfer();
     target.valueCount = valueCount;
   }
 
@@ -394,10 +393,10 @@ public class UnionVector implements ValueVector {
     String name = v.getField().getType().getMinorType().name().toLowerCase();
     MajorType type = v.getField().getType();
     MinorType minorType = type.getMinorType();
-    Preconditions.checkState(internalMap.getChild(name) == null, String.format("%s vector already exists", name));
-    final ValueVector newVector = internalMap.addOrGet(name, type, BasicTypeHelper.getValueVectorClass(minorType, type.getMode()));
+    Preconditions.checkState(internalStruct.getChild(name) == null, String.format("%s vector already exists", name));
+    final ValueVector newVector = internalStruct.addOrGet(name, type, BasicTypeHelper.getValueVectorClass(minorType, type.getMode()));
     v.makeTransferPair(newVector).transfer();
-    internalMap.putChild(name, newVector);
+    internalStruct.putChild(name, newVector);
     cachedSubtypes[minorType.ordinal()] = newVector;
     addSubType(minorType);
     return newVector;
@@ -488,18 +487,18 @@ public class UnionVector implements ValueVector {
             .getAsBuilder()
             .setBufferLength(getBufferSize())
             .setValueCount(valueCount)
-            .addChild(internalMap.getMetadata())
+            .addChild(internalStruct.getMetadata())
             .build();
   }
 
   @Override
   public int getBufferSize() {
-    return internalMap.getBufferSize();
+    return internalStruct.getBufferSize();
   }
 
   @Override
   public int getAllocatedSize() {
-    return internalMap.getAllocatedSize();
+    return internalStruct.getAllocatedSize();
   }
 
   @Override
@@ -518,19 +517,19 @@ public class UnionVector implements ValueVector {
 
   @Override
   public DrillBuf[] getBuffers(boolean clear) {
-    return internalMap.getBuffers(clear);
+    return internalStruct.getBuffers(clear);
   }
 
   @Override
   public void load(UserBitShared.SerializedField metadata, DrillBuf buffer) {
     valueCount = metadata.getValueCount();
 
-    internalMap.load(metadata.getChild(0), buffer);
+    internalStruct.load(metadata.getChild(0), buffer);
   }
 
   @Override
   public Iterator<ValueVector> iterator() {
-    return internalMap.iterator();
+    return internalStruct.iterator();
   }
 
   public class Accessor extends BaseValueVector.BaseAccessor {
@@ -549,8 +548,8 @@ public class UnionVector implements ValueVector {
         return get${name}Vector().getAccessor().getObject(index);
       </#if>
       </#list></#list>
-      case MinorType.MAP_VALUE:
-        return getMap().getAccessor().getObject(index);
+      case MinorType.STRUCT_VALUE:
+        return getStruct().getAccessor().getObject(index);
       case MinorType.LIST_VALUE:
         return getList().getAccessor().getObject(index);
       default:
@@ -593,7 +592,7 @@ public class UnionVector implements ValueVector {
     @Override
     public void setValueCount(int valueCount) {
       UnionVector.this.valueCount = valueCount;
-      internalMap.getMutator().setValueCount(valueCount);
+      internalStruct.getMutator().setValueCount(valueCount);
     }
 
     public void setSafe(int index, UnionHolder holder) {
@@ -615,7 +614,7 @@ public class UnionVector implements ValueVector {
         break;
       </#if>
       </#list></#list>
-      case MAP:
+      case STRUCT:
         ComplexCopier.copy(reader, writer);
         break;
       case LIST:

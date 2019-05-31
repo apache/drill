@@ -345,11 +345,11 @@ public class TestCopier extends SubOperatorTest {
   public void testMapType(OperatorFixture fixture) throws Exception {
     BatchSchema schema = new SchemaBuilder()
         .add("key", MinorType.INT)
-        .addMap("m1")
+        .addStruct("m1")
           .add("b", MinorType.INT)
-          .addMap("m2")
+          .addStruct("m2")
             .add("c", MinorType.INT)
-            .resumeMap()
+            .resumeStruct()
           .resumeSchema()
         .build();
 

@@ -23,7 +23,7 @@ import org.apache.drill.exec.vector.accessor.writer.WriterEvents;
  * Represents a column within a tuple. A column can be an array, a scalar or a
  * tuple. Each has an associated column metadata (schema) and a writer. The
  * writer is one of three kinds, depending on the kind of the column. If the
- * column is a map, then the column also has an associated tuple loader to
+ * column is a struct, then the column also has an associated tuple loader to
  * define and write to the tuple.
  * <p>
  * This interface defines a writer to set values for value vectors using a

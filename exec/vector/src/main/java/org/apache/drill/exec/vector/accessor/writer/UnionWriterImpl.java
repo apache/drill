@@ -230,7 +230,7 @@ public class UnionWriterImpl implements VariantWriter, WriterEvents {
    * The corresponding metadata must already have been added to the schema.
    * Called by the shim's <tt>addMember</tt> to do writer-level tasks.
    *
-   * @param colWriter the column writer to add
+   * @param writer the column writer to add
    */
 
   protected void addMember(AbstractObjectWriter writer) {
@@ -259,7 +259,7 @@ public class UnionWriterImpl implements VariantWriter, WriterEvents {
 
   @Override
   public TupleWriter tuple() {
-    return member(MinorType.MAP).tuple();
+    return member(MinorType.STRUCT).tuple();
   }
 
   @Override
@@ -357,9 +357,9 @@ public class UnionWriterImpl implements VariantWriter, WriterEvents {
     } else if (value instanceof Float) {
       scalar(MinorType.FLOAT4).setDouble((Float) value);
     } else if (value instanceof Object[]) {
-      if (hasType(MinorType.MAP) && hasType(MinorType.LIST)) {
-        throw new UnsupportedOperationException("Union has both a map and a list, so Object[] is ambiguous");
-      } else if (hasType(MinorType.MAP)) {
+      if (hasType(MinorType.STRUCT) && hasType(MinorType.LIST)) {
+        throw new UnsupportedOperationException("Union has both a struct and a list, so Object[] is ambiguous");
+      } else if (hasType(MinorType.STRUCT)) {
         tuple().setObject(value);
       } else if (hasType(MinorType.LIST)) {
         array().setObject(value);

@@ -124,7 +124,7 @@ public class EventBasedRecordWriter {
     switch (reader.getType().getMinorType()) {
       case UNION:
         return recordWriter.getNewUnionConverter(fieldId, fieldName, reader);
-      case MAP:
+      case STRUCT:
         switch (reader.getType().getMode()) {
           case REQUIRED:
           case OPTIONAL:

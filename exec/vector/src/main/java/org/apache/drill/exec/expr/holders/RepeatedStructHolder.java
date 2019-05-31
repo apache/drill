@@ -19,14 +19,26 @@ package org.apache.drill.exec.expr.holders;
 
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.vector.complex.StructVector;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
-public class MapHolder implements ValueHolder {
-    public static final TypeProtos.MajorType TYPE = Types.required(TypeProtos.MinorType.MAP);
-    public FieldReader reader;
+public final class RepeatedStructHolder implements ValueHolder{
 
-    public TypeProtos.MajorType getType() {
-        return TYPE;
-    }
+    public static final TypeProtos.MajorType TYPE = Types.repeated(TypeProtos.MinorType.STRUCT);
+
+//    public final LinkedHashSet<ValueHolder> children = null;
+
+    public TypeProtos.MajorType getType() {return TYPE;}
+
+    /** The first index (inclusive) into the Vector. **/
+    public int start;
+
+    /** The last index (exclusive) into the Vector. **/
+    public int end;
+
+    /** The Vector holding the actual values. **/
+    public StructVector vector;
+
+    public FieldReader reader;
 
 }

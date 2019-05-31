@@ -21,7 +21,7 @@
  * or metdata-based construction, allocation, reading and writing of
  * the vectors.
  * <p>
- * The classes here walk the container/map/vector tree to apply
+ * The classes here walk the container/struct/vector tree to apply
  * operations.
  */
 

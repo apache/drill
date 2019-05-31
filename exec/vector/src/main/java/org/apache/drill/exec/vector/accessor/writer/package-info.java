@@ -33,7 +33,7 @@
  * <li>By repeat levels</li>
  * </ul>
  * <p>
- * A repeated map, a list, a repeated list and any array (repeated) scalar all
+ * A repeated struct, a list, a repeated list and any array (repeated) scalar all
  * are array-like. Nullable and required modes are identical (single values),
  * but a nullable has an additional is-set ("bit") vector.
  * <p>
@@ -41,11 +41,11 @@
  * to simplify the problem:
  * <p>
  * <ul>
- * <li>Both the top-level row, and a Drill map are "tuples" and are treated
+ * <li>Both the top-level row, and a Drill struct are "tuples" and are treated
  * similarly in the model.</li>
- * <li>All non-map, non-list (that is, scalar) data types are treated
+ * <li>All non-struct, non-list (that is, scalar) data types are treated
  * uniformly.</li>
- * <li>All arrays (whether a list, a repeated list, a repeated map, or a
+ * <li>All arrays (whether a list, a repeated list, a repeated struct, or a
  * repeated scalar) are treated uniformly.</li>
  * </ul>
  *
@@ -69,8 +69,8 @@
  * many elements in the array-valued column. An offset vector indexes
  * to the first value for each row. Each scalar array has its own
  * per-array index to point to the next write position.</li>
- * <li>Map arrays introduce a repeat level for a group of columns
- * (those that make up the map.) A single offset vector points to
+ * <li>Struct arrays introduce a repeat level for a group of columns
+ * (those that make up the struct.) A single offset vector points to
  * the common start position for the columns. A common index points
  * to the common next write position.<li>
  * <li>Lists also introduce a repeat level. (Details to be worked

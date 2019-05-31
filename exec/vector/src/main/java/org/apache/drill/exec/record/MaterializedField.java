@@ -33,7 +33,7 @@ import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 
 /**
  * Meta-data description of a column characterized by a name and a type
- * (including both data type and cardinality AKA mode). For map types,
+ * (including both data type and cardinality AKA mode). For struct types,
  * the description includes the nested columns.)
  */
 
@@ -100,14 +100,14 @@ public class MaterializedField {
    * and unions. To add a subtype, we must create a whole new major type.
    * <p>
    * It appears that the <tt>MaterializedField</tt> class was also meant
-   * to be immutable. But, it holds the children for a map, and contains
+   * to be immutable. But, it holds the children for a struct, and contains
    * methods to add children. So, it is not immutable.
    * <p>
    * This method allows evolving a list or union without the need to create
    * a new <tt>MaterializedField</tt>. Doing so is problematic for nested
-   * maps because the map (or list, or union) holds onto the
+   * structs because the struct (or list, or union) holds onto the
    * <tt>MaterializedField</tt>'s of its children. There is no way for
-   * an inner map to reach out and change the child of its parent.
+   * an inner struct to reach out and change the child of its parent.
    * <p>
    * By allowing the non-critical metadata to change, we preserve the
    * child relationships as a list or union evolves.
@@ -212,7 +212,7 @@ public class MaterializedField {
     }
     final MaterializedField other = (MaterializedField) obj;
     // DRILL-1872: Compute equals only on key. See also the comment
-    // in MapVector$MapTransferPair
+    // in StructVector$MapTransferPair
 
     return this.name.equalsIgnoreCase(other.name) &&
       Objects.equals(this.type, other.type);
@@ -227,7 +227,7 @@ public class MaterializedField {
    * <li>Names must be identical, ignoring case. (Drill, like SQL, is
    * case insensitive.)
    * <li>Type, mode, precision and scale must be identical.</li>
-   * <li>Child columns are ignored unless the type is a map. That is, the
+   * <li>Child columns are ignored unless the type is a struct. That is, the
    * hidden "$bits" and "$offsets" vector columns are not compared, as
    * one schema may be an "original" (without these hidden columns) while
    * the other may come from a vector (which has the hidden columns added.
@@ -247,12 +247,12 @@ public class MaterializedField {
    * how Materialized field and ValueVector objects are updated inside the container which both ValueVector and
    * Materialized Field object both mutable.
    * <p>
-   * For example: For cases of MapVector it can so happen that only the children field type changed but
+   * For example: For cases of StructVector it can so happen that only the children field type changed but
    * the parent Map type and name remained same. In these cases we replace the children field ValueVector from parent
-   * MapVector inside main batch container, with new type of vector. Thus the reference of parent MaprVector inside
-   * batch container remains same but the reference of children field ValueVector stored inside MapVector get's updated.
+   * StructVector inside main batch container, with new type of vector. Thus the reference of parent MaprVector inside
+   * batch container remains same but the reference of children field ValueVector stored inside StructVector get's updated.
    * During this update it also replaces the Materialized field for that children field which is stored in childrens
-   * list of the parent MapVector Materialized Field.
+   * list of the parent StructVector Materialized Field.
    * Since the children list of parent Materialized Field is updated, this make this class mutable. Hence there should
    * not be any check for object reference equality here but instead there should be deep comparison which is what
    * this method is now performing. Since if we have object reference check then in above cases it will return true for
@@ -282,7 +282,7 @@ public class MaterializedField {
     // Compare children -- but only for maps, not the internal children
     // for Varchar, repeated or nullable types.
 
-    if (type.getMinorType() != MinorType.MAP) {
+    if (type.getMinorType() != MinorType.STRUCT) {
       return true;
     }
 
@@ -352,7 +352,7 @@ public class MaterializedField {
     // Compare children -- but only for maps, not the internal children
     // for Varchar, repeated or nullable types.
 
-    if (type.getMinorType() != MinorType.MAP) {
+    if (type.getMinorType() != MinorType.STRUCT) {
       return true;
     }
 

@@ -169,7 +169,7 @@ public class JdbcDataTest extends JdbcTestBase {
         .returns("C=4\n" + "C=4\n" + "C=4\n" + "C=4\n" + "C=4\n");
   }
 
-  /** Query that projects an element from the map. */
+  /** Query that projects an element from the struct. */
   @Test
   public void testProject() throws Exception {
     withModel(MODEL, "DONUTS").sql("select _MAP['ppu'] as ppu from donuts")
@@ -212,7 +212,7 @@ public class JdbcDataTest extends JdbcTestBase {
   }
 
   /**
-   * Query with subquery, filter, and projection of one real and one nonexistent field from a map field.
+   * Query with subquery, filter, and projection of one real and one nonexistent field from a struct field.
    */
   @Test
   public void testProjectFilterSubquery() throws Exception {

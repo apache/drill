@@ -60,7 +60,7 @@ public abstract class AbstractSingleRowSet extends AbstractRowSet implements Sin
    * this row set. Used when building a row set reader.
    * @param rowIndex object that points to the current row
    * @return an array of column readers: in the same order as the
-   * (non-map) vectors.
+   * (non-struct) vectors.
    */
 
   protected RowSetReader buildReader(ReaderIndex rowIndex) {

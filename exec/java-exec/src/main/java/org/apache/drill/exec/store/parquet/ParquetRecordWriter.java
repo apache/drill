@@ -190,12 +190,10 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
 
   private boolean containsComplexVectors(BatchSchema schema) {
     for (MaterializedField field : schema) {
-      MinorType type = field.getType().getMinorType();
-      switch (type) {
-      case MAP:
-      case LIST:
-        return true;
-      default:
+      switch (field.getType().getMinorType()) {
+        case STRUCT:
+        case LIST:
+          return true;
       }
     }
     return false;
@@ -285,7 +283,7 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
     MinorType minorType = field.getType().getMinorType();
     DataMode dataMode = field.getType().getMode();
     switch (minorType) {
-      case MAP:
+      case STRUCT:
         List<Type> types = Lists.newArrayList();
         for (MaterializedField childField : field.getChildren()) {
           types.add(getType(childField));

@@ -20,7 +20,7 @@ package org.apache.drill.exec.vector.accessor;
 /**
  * Type of writer. Follows the JSON-style model, with the
  * most abstract object types being a scalar (primitive),
- * tuple (map or row) or an array (repeated type.)
+ * tuple (struct or row) or an array (repeated type.)
  */
 
 public enum ObjectType {

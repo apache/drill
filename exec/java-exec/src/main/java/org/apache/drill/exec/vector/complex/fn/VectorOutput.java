@@ -37,7 +37,7 @@ import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.vector.DateUtilities;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter.StructWriter;
 import org.apache.drill.exec.vector.complex.writer.BigIntWriter;
 import org.apache.drill.exec.vector.complex.writer.DateWriter;
 import org.apache.drill.exec.vector.complex.writer.IntervalWriter;
@@ -286,16 +286,16 @@ abstract class VectorOutput {
 
   }
 
-  static class MapVectorOutput extends VectorOutput {
+  static class StructVectorOutput extends VectorOutput {
 
-    private MapWriter writer;
+    private StructWriter writer;
     private String fieldName;
 
-    public MapVectorOutput(WorkingBuffer work) {
+    public StructVectorOutput(WorkingBuffer work) {
       super(work);
     }
 
-    public boolean run(MapWriter writer, String fieldName) throws IOException{
+    public boolean run(StructWriter writer, String fieldName) throws IOException{
       this.fieldName = fieldName;
       this.writer = writer;
       return innerRun();

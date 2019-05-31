@@ -35,7 +35,7 @@ import org.apache.drill.exec.vector.accessor.VariantWriter;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
 
 /**
- * Implementation for a writer for a tuple (a row or a map.) Provides access to each
+ * Implementation for a writer for a tuple (a row or a struct.) Provides access to each
  * column using either a name or a numeric index.
  * <p>
  * A tuple maintains an internal state needed to handle dynamic column additions.
@@ -44,8 +44,8 @@ import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
  * the tuple lifecycle. This lifecycle works for all three cases of:
  * <ul>
  * <li>Top-level tuple (row).</li>
- * <li>Nested tuple (map).</li>
- * <li>Array of tuples (repeated map).</li>
+ * <li>Nested tuple (struct).</li>
+ * <li>Array of tuples (repeated struct).</li>
  * </ul>
  *
  * Specifically, the transitions, for batch, row and array events, are:
@@ -132,7 +132,7 @@ public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
 
   /**
    * Listener (callback) to handle requests to add a new column to a tuple (row
-   * or map). Implemented and bound by the client code that creates or uses the
+   * or struct). Implemented and bound by the client code that creates or uses the
    * tuple writer. If no listener is bound, then an attempt to add a column
    * throws an exception.
    */

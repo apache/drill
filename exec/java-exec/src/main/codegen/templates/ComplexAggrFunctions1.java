@@ -41,7 +41,7 @@ import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
-import org.apache.drill.exec.vector.complex.MapUtility;
+import org.apache.drill.exec.vector.complex.StructUtility;
 import org.apache.drill.exec.vector.complex.writer.*;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.*;
 
@@ -84,11 +84,11 @@ public class ${aggrtype.className}ComplexFunctions {
       }
     </#if>
     <#if aggrtype.funcName == "any_value" || aggrtype.funcName == "single_value">
-      <#if type.runningType?starts_with("Map")>
+      <#if type.runningType?starts_with("Struct")>
       if (nonNullCount.value == 0) {
         org.apache.drill.exec.expr.fn.impl.MappifyUtility.createMap(inHolder.reader, writer, "${aggrtype.funcName}");
       }
-      <#elseif type.runningType?starts_with("RepeatedMap")>
+      <#elseif type.runningType?starts_with("RepeatedStruct")>
       if (nonNullCount.value == 0) {
         org.apache.drill.exec.expr.fn.impl.MappifyUtility.createRepeatedMapOrList(inHolder.reader, writer, "${aggrtype.funcName}");
       }

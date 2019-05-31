@@ -24,8 +24,8 @@ import org.apache.drill.exec.vector.NullableVector;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VariableWidthVector;
-import org.apache.drill.exec.vector.complex.MapVector;
-import org.apache.drill.exec.vector.complex.RepeatedMapVector;
+import org.apache.drill.exec.vector.complex.RepeatedStructVector;
+import org.apache.drill.exec.vector.complex.StructVector;
 import org.apache.drill.exec.vector.complex.RepeatedValueVector;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSet;
@@ -507,7 +507,7 @@ public class TestRecordBatchSizer extends SubOperatorTest {
   @Test
   public void testSizerMap() {
     BatchSchema schema = new SchemaBuilder()
-      .addMap("map")
+      .addStruct("map")
         .add("key", MinorType.INT)
         .add("value", MinorType.VARCHAR)
       .resumeSchema()
@@ -542,9 +542,9 @@ public class TestRecordBatchSizer extends SubOperatorTest {
 
       // Allocates to nearest power of two
       colSize.allocateVector(v, testRowCount);
-      MapVector mapVector = (MapVector)v;
-      ValueVector keyVector = mapVector.getChild("key");
-      ValueVector valueVector1 = mapVector.getChild("value");
+      StructVector structVector = (StructVector)v;
+      ValueVector keyVector = structVector.getChild("key");
+      ValueVector valueVector1 = structVector.getChild("value");
       assertEquals((Integer.highestOneBit(testRowCount) << 1), keyVector.getValueCapacity());
       UInt4Vector offsetVector = ((VariableWidthVector)valueVector1).getOffsetVector();
       assertEquals((Integer.highestOneBit(testRowCount) << 1), offsetVector.getValueCapacity());
@@ -552,9 +552,9 @@ public class TestRecordBatchSizer extends SubOperatorTest {
 
       // Allocates the same as value passed since it is already power of two.
       colSize.allocateVector(v, testRowCountPowerTwo-1);
-      mapVector = (MapVector)v;
-      keyVector = mapVector.getChild("key");
-      valueVector1 = mapVector.getChild("value");
+      structVector = (StructVector)v;
+      keyVector = structVector.getChild("key");
+      valueVector1 = structVector.getChild("value");
       assertEquals((Integer.highestOneBit(testRowCountPowerTwo -1) << 1), keyVector.getValueCapacity());
       offsetVector = ((VariableWidthVector)valueVector1).getOffsetVector();
       assertEquals(testRowCountPowerTwo, offsetVector.getValueCapacity());
@@ -562,9 +562,9 @@ public class TestRecordBatchSizer extends SubOperatorTest {
 
       // Allocate for max rows.
       colSize.allocateVector(v, ValueVector.MAX_ROW_COUNT -1);
-      mapVector = (MapVector)v;
-      keyVector = mapVector.getChild("key");
-      valueVector1 = mapVector.getChild("value");
+      structVector = (StructVector)v;
+      keyVector = structVector.getChild("key");
+      valueVector1 = structVector.getChild("value");
       assertEquals(ValueVector.MAX_ROW_COUNT, keyVector.getValueCapacity());
       offsetVector = ((VariableWidthVector)valueVector1).getOffsetVector();
       assertEquals(ValueVector.MAX_ROW_COUNT, offsetVector.getValueCapacity());
@@ -572,9 +572,9 @@ public class TestRecordBatchSizer extends SubOperatorTest {
 
       // Allocate for 0 rows. should atleast do allocation for 1 row.
       colSize.allocateVector(v, 0);
-      mapVector = (MapVector)v;
-      keyVector = mapVector.getChild("key");
-      valueVector1 = mapVector.getChild("value");
+      structVector = (StructVector)v;
+      keyVector = structVector.getChild("key");
+      valueVector1 = structVector.getChild("value");
       assertEquals(ValueVector.MIN_ROW_COUNT, keyVector.getValueCapacity());
       offsetVector = ((VariableWidthVector)valueVector1).getOffsetVector();
       assertEquals(ValueVector.MIN_ROW_COUNT+1, offsetVector.getValueCapacity());
@@ -590,7 +590,7 @@ public class TestRecordBatchSizer extends SubOperatorTest {
 
   @Test
   public void testSizerRepeatedMap() {
-    BatchSchema schema = new SchemaBuilder().addMapArray("map").
+    BatchSchema schema = new SchemaBuilder().addStructArray("map").
       add("key", MinorType.INT).
       add("value", MinorType.VARCHAR).
       resumeSchema().build();
@@ -628,13 +628,13 @@ public class TestRecordBatchSizer extends SubOperatorTest {
 
       // Allocates to nearest power of two
       colSize.allocateVector(v, testRowCount);
-      RepeatedMapVector mapVector = (RepeatedMapVector)v;
+      RepeatedStructVector structVector = (RepeatedStructVector)v;
 
-      offsetVector = ((RepeatedValueVector)mapVector).getOffsetVector();
+      offsetVector = ((RepeatedValueVector)structVector).getOffsetVector();
       assertEquals((Integer.highestOneBit(testRowCount) << 1), offsetVector.getValueCapacity());
 
-      ValueVector keyVector = mapVector.getChild("key");
-      ValueVector valueVector1 = mapVector.getChild("value");
+      ValueVector keyVector = structVector.getChild("key");
+      ValueVector valueVector1 = structVector.getChild("value");
       assertEquals(((Integer.highestOneBit(testRowCount) << 1) * 2), keyVector.getValueCapacity());
       offsetVector = ((VariableWidthVector)valueVector1).getOffsetVector();
       assertEquals((Integer.highestOneBit(testRowCount) << 1)*2, offsetVector.getValueCapacity());
@@ -642,13 +642,13 @@ public class TestRecordBatchSizer extends SubOperatorTest {
 
       // Allocates the same as value passed since it is already power of two.
       colSize.allocateVector(v, testRowCountPowerTwo-1);
-      mapVector = (RepeatedMapVector)v;
+      structVector = (RepeatedStructVector)v;
 
-      offsetVector = ((RepeatedValueVector)mapVector).getOffsetVector();
+      offsetVector = ((RepeatedValueVector)structVector).getOffsetVector();
       assertEquals(testRowCountPowerTwo, offsetVector.getValueCapacity());
 
-      keyVector = mapVector.getChild("key");
-      valueVector1 = mapVector.getChild("value");
+      keyVector = structVector.getChild("key");
+      valueVector1 = structVector.getChild("value");
       assertEquals(testRowCountPowerTwo*2, keyVector.getValueCapacity());
       offsetVector = ((VariableWidthVector)valueVector1).getOffsetVector();
       assertEquals(testRowCountPowerTwo*2, offsetVector.getValueCapacity());
@@ -656,13 +656,13 @@ public class TestRecordBatchSizer extends SubOperatorTest {
 
       // Allocate for max rows.
       colSize.allocateVector(v,  ValueVector.MAX_ROW_COUNT -1);
-      mapVector = (RepeatedMapVector)v;
+      structVector = (RepeatedStructVector)v;
 
-      offsetVector = ((RepeatedValueVector)mapVector).getOffsetVector();
+      offsetVector = ((RepeatedValueVector)structVector).getOffsetVector();
       assertEquals(ValueVector.MAX_ROW_COUNT, offsetVector.getValueCapacity());
 
-      keyVector = mapVector.getChild("key");
-      valueVector1 = mapVector.getChild("value");
+      keyVector = structVector.getChild("key");
+      valueVector1 = structVector.getChild("value");
       assertEquals(ValueVector.MAX_ROW_COUNT * 2, keyVector.getValueCapacity());
       offsetVector = ((VariableWidthVector)valueVector1).getOffsetVector();
       assertEquals(ValueVector.MAX_ROW_COUNT * 2, offsetVector.getValueCapacity());
@@ -670,13 +670,13 @@ public class TestRecordBatchSizer extends SubOperatorTest {
 
       // Allocate for 0 rows. should atleast do allocation for 1 row.
       colSize.allocateVector(v, 0);
-      mapVector = (RepeatedMapVector)v;
+      structVector = (RepeatedStructVector)v;
 
-      offsetVector = ((RepeatedValueVector)mapVector).getOffsetVector();
+      offsetVector = ((RepeatedValueVector)structVector).getOffsetVector();
       assertEquals(ValueVector.MIN_ROW_COUNT, offsetVector.getValueCapacity());
 
-      keyVector = mapVector.getChild("key");
-      valueVector1 = mapVector.getChild("value");
+      keyVector = structVector.getChild("key");
+      valueVector1 = structVector.getChild("value");
       assertEquals(ValueVector.MIN_ROW_COUNT, keyVector.getValueCapacity());
       offsetVector = ((VariableWidthVector)valueVector1).getOffsetVector();
       assertEquals(ValueVector.MIN_ROW_COUNT+1, offsetVector.getValueCapacity());
@@ -692,13 +692,13 @@ public class TestRecordBatchSizer extends SubOperatorTest {
   @Test
   public void testSizerNestedMap() {
     BatchSchema schema = new SchemaBuilder()
-      .addMap("map")
+      .addStruct("map")
         .add("key", MinorType.INT)
         .add("value", MinorType.VARCHAR)
-        .addMap("childMap")
+        .addStruct("childMap")
           .add("childKey", MinorType.INT)
           .add("childValue", MinorType.VARCHAR)
-          .resumeMap()
+          .resumeStruct()
        .resumeSchema()
       .build();
 
@@ -733,16 +733,16 @@ public class TestRecordBatchSizer extends SubOperatorTest {
 
       // Allocates to nearest power of two
       colSize.allocateVector(v, testRowCount);
-      MapVector mapVector = (MapVector)v;
-      ValueVector keyVector = mapVector.getChild("key");
-      ValueVector valueVector1 = mapVector.getChild("value");
+      StructVector structVector = (StructVector)v;
+      ValueVector keyVector = structVector.getChild("key");
+      ValueVector valueVector1 = structVector.getChild("value");
       assertEquals((Integer.highestOneBit(testRowCount) << 1), keyVector.getValueCapacity());
       offsetVector = ((VariableWidthVector)valueVector1).getOffsetVector();
       assertEquals((Integer.highestOneBit(testRowCount) << 1), offsetVector.getValueCapacity());
       assertEquals(Integer.highestOneBit(testRowCount  << 1)-1, valueVector1.getValueCapacity());
-      MapVector childMapVector = (MapVector) mapVector.getChild("childMap");
-      ValueVector childKeyVector = childMapVector.getChild("childKey");
-      ValueVector childValueVector1 = childMapVector.getChild("childValue");
+      StructVector childStructVector = (StructVector) structVector.getChild("childMap");
+      ValueVector childKeyVector = childStructVector.getChild("childKey");
+      ValueVector childValueVector1 = childStructVector.getChild("childValue");
       assertEquals((Integer.highestOneBit(testRowCount) << 1), childKeyVector.getValueCapacity());
       offsetVector = ((VariableWidthVector)valueVector1).getOffsetVector();
       assertEquals((Integer.highestOneBit(testRowCount) << 1), offsetVector.getValueCapacity());
@@ -750,16 +750,16 @@ public class TestRecordBatchSizer extends SubOperatorTest {
 
       // Allocates the same as value passed since it is already power of two.
       colSize.allocateVector(v, testRowCountPowerTwo-1);
-      mapVector = (MapVector)v;
-      keyVector = mapVector.getChild("key");
-      valueVector1 = mapVector.getChild("value");
+      structVector = (StructVector)v;
+      keyVector = structVector.getChild("key");
+      valueVector1 = structVector.getChild("value");
       assertEquals(testRowCountPowerTwo, keyVector.getValueCapacity());
       offsetVector = ((VariableWidthVector)valueVector1).getOffsetVector();
       assertEquals(testRowCountPowerTwo, offsetVector.getValueCapacity());
       assertEquals(testRowCountPowerTwo-1, valueVector1.getValueCapacity());
-      childMapVector = (MapVector) mapVector.getChild("childMap");
-      childKeyVector = childMapVector.getChild("childKey");
-      childValueVector1 = childMapVector.getChild("childValue");
+      childStructVector = (StructVector) structVector.getChild("childMap");
+      childKeyVector = childStructVector.getChild("childKey");
+      childValueVector1 = childStructVector.getChild("childValue");
       assertEquals(testRowCountPowerTwo, childKeyVector.getValueCapacity());
       offsetVector = ((VariableWidthVector)valueVector1).getOffsetVector();
       assertEquals(testRowCountPowerTwo, offsetVector.getValueCapacity());
@@ -767,16 +767,16 @@ public class TestRecordBatchSizer extends SubOperatorTest {
 
       // Allocate for max rows.
       colSize.allocateVector(v, ValueVector.MAX_ROW_COUNT-1);
-      mapVector = (MapVector)v;
-      keyVector = mapVector.getChild("key");
-      valueVector1 = mapVector.getChild("value");
+      structVector = (StructVector)v;
+      keyVector = structVector.getChild("key");
+      valueVector1 = structVector.getChild("value");
       assertEquals(ValueVector.MAX_ROW_COUNT, keyVector.getValueCapacity());
       offsetVector = ((VariableWidthVector)valueVector1).getOffsetVector();
       assertEquals(ValueVector.MAX_ROW_COUNT, offsetVector.getValueCapacity());
       assertEquals(ValueVector.MAX_ROW_COUNT-1, valueVector1.getValueCapacity());
-      childMapVector = (MapVector) mapVector.getChild("childMap");
-      childKeyVector = childMapVector.getChild("childKey");
-      childValueVector1 = childMapVector.getChild("childValue");
+      childStructVector = (StructVector) structVector.getChild("childMap");
+      childKeyVector = childStructVector.getChild("childKey");
+      childValueVector1 = childStructVector.getChild("childValue");
       assertEquals(ValueVector.MAX_ROW_COUNT, childKeyVector.getValueCapacity());
       offsetVector = ((VariableWidthVector)valueVector1).getOffsetVector();
       assertEquals(ValueVector.MAX_ROW_COUNT, offsetVector.getValueCapacity());
@@ -784,16 +784,16 @@ public class TestRecordBatchSizer extends SubOperatorTest {
 
       // Allocate for 0 rows. should atleast do allocation for 1 row.
       colSize.allocateVector(v,  0);
-      mapVector = (MapVector)v;
-      keyVector = mapVector.getChild("key");
-      valueVector1 = mapVector.getChild("value");
+      structVector = (StructVector)v;
+      keyVector = structVector.getChild("key");
+      valueVector1 = structVector.getChild("value");
       assertEquals(ValueVector.MIN_ROW_COUNT, keyVector.getValueCapacity());
       offsetVector = ((VariableWidthVector)valueVector1).getOffsetVector();
       assertEquals(ValueVector.MIN_ROW_COUNT+1, offsetVector.getValueCapacity());
       assertEquals(ValueVector.MIN_ROW_COUNT, valueVector1.getValueCapacity());
-      childMapVector = (MapVector) mapVector.getChild("childMap");
-      childKeyVector = childMapVector.getChild("childKey");
-      childValueVector1 = childMapVector.getChild("childValue");
+      childStructVector = (StructVector) structVector.getChild("childMap");
+      childKeyVector = childStructVector.getChild("childKey");
+      childValueVector1 = childStructVector.getChild("childValue");
       assertEquals(ValueVector.MIN_ROW_COUNT, childKeyVector.getValueCapacity());
       offsetVector = ((VariableWidthVector)valueVector1).getOffsetVector();
       assertEquals(ValueVector.MIN_ROW_COUNT+1, offsetVector.getValueCapacity());
@@ -1211,7 +1211,7 @@ public class TestRecordBatchSizer extends SubOperatorTest {
   @Test
   public void testEmptyBatchMap() {
     BatchSchema schema = new SchemaBuilder()
-      .addMap("map")
+      .addStruct("map")
       .add("key", MinorType.INT)
       .add("value", MinorType.VARCHAR)
       .resumeSchema()
@@ -1243,9 +1243,9 @@ public class TestRecordBatchSizer extends SubOperatorTest {
 
       // Allocates to nearest power of two
       colSize.allocateVector(v, testRowCount);
-      MapVector mapVector = (MapVector)v;
-      ValueVector keyVector = mapVector.getChild("key");
-      ValueVector valueVector1 = mapVector.getChild("value");
+      StructVector structVector = (StructVector)v;
+      ValueVector keyVector = structVector.getChild("key");
+      ValueVector valueVector1 = structVector.getChild("value");
       assertEquals((Integer.highestOneBit(testRowCount) << 1), keyVector.getValueCapacity());
       UInt4Vector offsetVector = ((VariableWidthVector)valueVector1).getOffsetVector();
       assertEquals((Integer.highestOneBit(testRowCount) << 1), offsetVector.getValueCapacity());
@@ -1253,9 +1253,9 @@ public class TestRecordBatchSizer extends SubOperatorTest {
 
       // Allocates the same as value passed since it is already power of two.
       colSize.allocateVector(v, testRowCountPowerTwo-1);
-      mapVector = (MapVector)v;
-      keyVector = mapVector.getChild("key");
-      valueVector1 = mapVector.getChild("value");
+      structVector = (StructVector)v;
+      keyVector = structVector.getChild("key");
+      valueVector1 = structVector.getChild("value");
       assertEquals((Integer.highestOneBit(testRowCountPowerTwo -1) << 1), keyVector.getValueCapacity());
       offsetVector = ((VariableWidthVector)valueVector1).getOffsetVector();
       assertEquals(testRowCountPowerTwo, offsetVector.getValueCapacity());
@@ -1263,9 +1263,9 @@ public class TestRecordBatchSizer extends SubOperatorTest {
 
       // Allocate for max rows.
       colSize.allocateVector(v, ValueVector.MAX_ROW_COUNT -1);
-      mapVector = (MapVector)v;
-      keyVector = mapVector.getChild("key");
-      valueVector1 = mapVector.getChild("value");
+      structVector = (StructVector)v;
+      keyVector = structVector.getChild("key");
+      valueVector1 = structVector.getChild("value");
       assertEquals(ValueVector.MAX_ROW_COUNT, keyVector.getValueCapacity());
       offsetVector = ((VariableWidthVector)valueVector1).getOffsetVector();
       assertEquals(ValueVector.MAX_ROW_COUNT, offsetVector.getValueCapacity());
@@ -1273,9 +1273,9 @@ public class TestRecordBatchSizer extends SubOperatorTest {
 
       // Allocate for 0 rows. should atleast do allocation for 1 row.
       colSize.allocateVector(v, 0);
-      mapVector = (MapVector)v;
-      keyVector = mapVector.getChild("key");
-      valueVector1 = mapVector.getChild("value");
+      structVector = (StructVector)v;
+      keyVector = structVector.getChild("key");
+      valueVector1 = structVector.getChild("value");
       assertEquals(ValueVector.MIN_ROW_COUNT, keyVector.getValueCapacity());
       offsetVector = ((VariableWidthVector)valueVector1).getOffsetVector();
       assertEquals(ValueVector.MIN_ROW_COUNT+1, offsetVector.getValueCapacity());
@@ -1291,7 +1291,7 @@ public class TestRecordBatchSizer extends SubOperatorTest {
 
   @Test
   public void testEmptyBatchRepeatedMap() {
-    BatchSchema schema = new SchemaBuilder().addMapArray("map").
+    BatchSchema schema = new SchemaBuilder().addStructArray("map").
       add("key", MinorType.INT).
       add("value", MinorType.VARCHAR).
       resumeSchema().build();
@@ -1324,13 +1324,13 @@ public class TestRecordBatchSizer extends SubOperatorTest {
 
       // Allocates to nearest power of two
       colSize.allocateVector(v, testRowCount);
-      RepeatedMapVector mapVector = (RepeatedMapVector)v;
+      RepeatedStructVector structVector = (RepeatedStructVector)v;
 
-      offsetVector = ((RepeatedValueVector)mapVector).getOffsetVector();
+      offsetVector = ((RepeatedValueVector)structVector).getOffsetVector();
       assertEquals((Integer.highestOneBit(testRowCount) << 1), offsetVector.getValueCapacity());
 
-      ValueVector keyVector = mapVector.getChild("key");
-      ValueVector valueVector1 = mapVector.getChild("value");
+      ValueVector keyVector = structVector.getChild("key");
+      ValueVector valueVector1 = structVector.getChild("value");
       assertEquals(((Integer.highestOneBit(testRowCount * STD_REPETITION_FACTOR) << 1)), keyVector.getValueCapacity());
       offsetVector = ((VariableWidthVector)valueVector1).getOffsetVector();
       assertEquals((Integer.highestOneBit(testRowCount * STD_REPETITION_FACTOR) << 1), offsetVector.getValueCapacity());
@@ -1338,13 +1338,13 @@ public class TestRecordBatchSizer extends SubOperatorTest {
 
       // Allocates the same as value passed since it is already power of two.
       colSize.allocateVector(v, testRowCountPowerTwo-1);
-      mapVector = (RepeatedMapVector)v;
+      structVector = (RepeatedStructVector)v;
 
-      offsetVector = ((RepeatedValueVector)mapVector).getOffsetVector();
+      offsetVector = ((RepeatedValueVector)structVector).getOffsetVector();
       assertEquals(testRowCountPowerTwo, offsetVector.getValueCapacity());
 
-      keyVector = mapVector.getChild("key");
-      valueVector1 = mapVector.getChild("value");
+      keyVector = structVector.getChild("key");
+      valueVector1 = structVector.getChild("value");
       assertEquals(Integer.highestOneBit(testRowCountPowerTwo * STD_REPETITION_FACTOR) << 1, keyVector.getValueCapacity());
       offsetVector = ((VariableWidthVector)valueVector1).getOffsetVector();
       assertEquals(Integer.highestOneBit((int)(testRowCountPowerTwo * STD_REPETITION_FACTOR)) << 1, offsetVector.getValueCapacity());
@@ -1352,13 +1352,13 @@ public class TestRecordBatchSizer extends SubOperatorTest {
 
       // Allocate for max rows.
       colSize.allocateVector(v,  ValueVector.MAX_ROW_COUNT -1);
-      mapVector = (RepeatedMapVector)v;
+      structVector = (RepeatedStructVector)v;
 
-      offsetVector = ((RepeatedValueVector)mapVector).getOffsetVector();
+      offsetVector = ((RepeatedValueVector)structVector).getOffsetVector();
       assertEquals(ValueVector.MAX_ROW_COUNT, offsetVector.getValueCapacity());
 
-      keyVector = mapVector.getChild("key");
-      valueVector1 = mapVector.getChild("value");
+      keyVector = structVector.getChild("key");
+      valueVector1 = structVector.getChild("value");
       assertEquals(Integer.highestOneBit(ValueVector.MAX_ROW_COUNT * STD_REPETITION_FACTOR) << 1, keyVector.getValueCapacity());
       offsetVector = ((VariableWidthVector)valueVector1).getOffsetVector();
       assertEquals(Integer.highestOneBit(ValueVector.MAX_ROW_COUNT * STD_REPETITION_FACTOR) << 1, offsetVector.getValueCapacity());
@@ -1366,13 +1366,13 @@ public class TestRecordBatchSizer extends SubOperatorTest {
 
       // Allocate for 0 rows. should atleast do allocation for 1 row.
       colSize.allocateVector(v, 0);
-      mapVector = (RepeatedMapVector)v;
+      structVector = (RepeatedStructVector)v;
 
-      offsetVector = ((RepeatedValueVector)mapVector).getOffsetVector();
+      offsetVector = ((RepeatedValueVector)structVector).getOffsetVector();
       assertEquals(ValueVector.MIN_ROW_COUNT, offsetVector.getValueCapacity());
 
-      keyVector = mapVector.getChild("key");
-      valueVector1 = mapVector.getChild("value");
+      keyVector = structVector.getChild("key");
+      valueVector1 = structVector.getChild("value");
       assertEquals(ValueVector.MIN_ROW_COUNT, keyVector.getValueCapacity());
       offsetVector = ((VariableWidthVector)valueVector1).getOffsetVector();
       assertEquals(ValueVector.MIN_ROW_COUNT+1, offsetVector.getValueCapacity());
@@ -1388,13 +1388,13 @@ public class TestRecordBatchSizer extends SubOperatorTest {
   @Test
   public void testEmptyBatchNestedMap() {
     BatchSchema schema = new SchemaBuilder()
-      .addMap("map")
+      .addStruct("map")
       .add("key", MinorType.INT)
       .add("value", MinorType.VARCHAR)
-      .addMap("childMap")
+      .addStruct("childMap")
       .add("childKey", MinorType.INT)
       .add("childValue", MinorType.VARCHAR)
-      .resumeMap()
+      .resumeStruct()
       .resumeSchema()
       .build();
 
@@ -1426,16 +1426,16 @@ public class TestRecordBatchSizer extends SubOperatorTest {
 
       // Allocates to nearest power of two
       colSize.allocateVector(v, testRowCount);
-      MapVector mapVector = (MapVector)v;
-      ValueVector keyVector = mapVector.getChild("key");
-      ValueVector valueVector1 = mapVector.getChild("value");
+      StructVector structVector = (StructVector)v;
+      ValueVector keyVector = structVector.getChild("key");
+      ValueVector valueVector1 = structVector.getChild("value");
       assertEquals((Integer.highestOneBit(testRowCount) << 1), keyVector.getValueCapacity());
       offsetVector = ((VariableWidthVector)valueVector1).getOffsetVector();
       assertEquals((Integer.highestOneBit(testRowCount) << 1), offsetVector.getValueCapacity());
       assertEquals(Integer.highestOneBit(testRowCount  << 1)-1, valueVector1.getValueCapacity());
-      MapVector childMapVector = (MapVector) mapVector.getChild("childMap");
-      ValueVector childKeyVector = childMapVector.getChild("childKey");
-      ValueVector childValueVector1 = childMapVector.getChild("childValue");
+      StructVector childStructVector = (StructVector) structVector.getChild("childMap");
+      ValueVector childKeyVector = childStructVector.getChild("childKey");
+      ValueVector childValueVector1 = childStructVector.getChild("childValue");
       assertEquals((Integer.highestOneBit(testRowCount) << 1), childKeyVector.getValueCapacity());
       offsetVector = ((VariableWidthVector)valueVector1).getOffsetVector();
       assertEquals((Integer.highestOneBit(testRowCount) << 1), offsetVector.getValueCapacity());
@@ -1443,16 +1443,16 @@ public class TestRecordBatchSizer extends SubOperatorTest {
 
       // Allocates the same as value passed since it is already power of two.
       colSize.allocateVector(v, testRowCountPowerTwo-1);
-      mapVector = (MapVector)v;
-      keyVector = mapVector.getChild("key");
-      valueVector1 = mapVector.getChild("value");
+      structVector = (StructVector)v;
+      keyVector = structVector.getChild("key");
+      valueVector1 = structVector.getChild("value");
       assertEquals(testRowCountPowerTwo, keyVector.getValueCapacity());
       offsetVector = ((VariableWidthVector)valueVector1).getOffsetVector();
       assertEquals(testRowCountPowerTwo, offsetVector.getValueCapacity());
       assertEquals(testRowCountPowerTwo-1, valueVector1.getValueCapacity());
-      childMapVector = (MapVector) mapVector.getChild("childMap");
-      childKeyVector = childMapVector.getChild("childKey");
-      childValueVector1 = childMapVector.getChild("childValue");
+      childStructVector = (StructVector) structVector.getChild("childMap");
+      childKeyVector = childStructVector.getChild("childKey");
+      childValueVector1 = childStructVector.getChild("childValue");
       assertEquals(testRowCountPowerTwo, childKeyVector.getValueCapacity());
       offsetVector = ((VariableWidthVector)valueVector1).getOffsetVector();
       assertEquals(testRowCountPowerTwo, offsetVector.getValueCapacity());
@@ -1460,16 +1460,16 @@ public class TestRecordBatchSizer extends SubOperatorTest {
 
       // Allocate for max rows.
       colSize.allocateVector(v, ValueVector.MAX_ROW_COUNT-1);
-      mapVector = (MapVector)v;
-      keyVector = mapVector.getChild("key");
-      valueVector1 = mapVector.getChild("value");
+      structVector = (StructVector)v;
+      keyVector = structVector.getChild("key");
+      valueVector1 = structVector.getChild("value");
       assertEquals(ValueVector.MAX_ROW_COUNT, keyVector.getValueCapacity());
       offsetVector = ((VariableWidthVector)valueVector1).getOffsetVector();
       assertEquals(ValueVector.MAX_ROW_COUNT, offsetVector.getValueCapacity());
       assertEquals(ValueVector.MAX_ROW_COUNT-1, valueVector1.getValueCapacity());
-      childMapVector = (MapVector) mapVector.getChild("childMap");
-      childKeyVector = childMapVector.getChild("childKey");
-      childValueVector1 = childMapVector.getChild("childValue");
+      childStructVector = (StructVector) structVector.getChild("childMap");
+      childKeyVector = childStructVector.getChild("childKey");
+      childValueVector1 = childStructVector.getChild("childValue");
       assertEquals(ValueVector.MAX_ROW_COUNT, childKeyVector.getValueCapacity());
       offsetVector = ((VariableWidthVector)valueVector1).getOffsetVector();
       assertEquals(ValueVector.MAX_ROW_COUNT, offsetVector.getValueCapacity());
@@ -1477,16 +1477,16 @@ public class TestRecordBatchSizer extends SubOperatorTest {
 
       // Allocate for 0 rows. should atleast do allocation for 1 row.
       colSize.allocateVector(v,  0);
-      mapVector = (MapVector)v;
-      keyVector = mapVector.getChild("key");
-      valueVector1 = mapVector.getChild("value");
+      structVector = (StructVector)v;
+      keyVector = structVector.getChild("key");
+      valueVector1 = structVector.getChild("value");
       assertEquals(ValueVector.MIN_ROW_COUNT, keyVector.getValueCapacity());
       offsetVector = ((VariableWidthVector)valueVector1).getOffsetVector();
       assertEquals(ValueVector.MIN_ROW_COUNT+1, offsetVector.getValueCapacity());
       assertEquals(ValueVector.MIN_ROW_COUNT, valueVector1.getValueCapacity());
-      childMapVector = (MapVector) mapVector.getChild("childMap");
-      childKeyVector = childMapVector.getChild("childKey");
-      childValueVector1 = childMapVector.getChild("childValue");
+      childStructVector = (StructVector) structVector.getChild("childMap");
+      childKeyVector = childStructVector.getChild("childKey");
+      childValueVector1 = childStructVector.getChild("childValue");
       assertEquals(ValueVector.MIN_ROW_COUNT, childKeyVector.getValueCapacity());
       offsetVector = ((VariableWidthVector)valueVector1).getOffsetVector();
       assertEquals(ValueVector.MIN_ROW_COUNT+1, offsetVector.getValueCapacity());

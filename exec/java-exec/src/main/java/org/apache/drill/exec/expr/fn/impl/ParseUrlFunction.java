@@ -29,9 +29,9 @@ import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 import javax.inject.Inject;
 
 /**
- * The {@code parse_url} function takes an URL and returns a map of components of the URL.
+ * The {@code parse_url} function takes an URL and returns a struct of components of the URL.
  * It acts as a wrapper for {@link java.net.URL}. If an optional URL component is absent,
- * e.g. there is no anchor (reference) element, the {@code "ref"} entry will not be added to resulting map.
+ * e.g. there is no anchor (reference) element, the {@code "ref"} entry will not be added to resulting struct.
  *
  * <p>For example, {@code parse_url('http://example.com/some/path?key=value#ref')} will return:
  * <pre>
@@ -64,12 +64,12 @@ public class ParseUrlFunction {
 
     @Override
     public void eval() {
-      org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter mapWriter = outWriter.rootAsMap();
+      org.apache.drill.exec.vector.complex.writer.BaseWriter.StructWriter structWriter = outWriter.rootAsStruct();
 
       String urlString =
           org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(in.start, in.end, in.buffer);
       try {
-        mapWriter.start();
+        structWriter.start();
 
         java.net.URL aURL = new java.net.URL(urlString);
         // Diamond operator can not be used here because Janino does not support
@@ -95,23 +95,23 @@ public class ParseUrlFunction {
             rowHolder.start = 0;
             rowHolder.end = protocolBytes.length;
             rowHolder.buffer = outBuffer;
-            mapWriter.varChar((String) entry.getKey()).write(rowHolder);
+            structWriter.varChar((String) entry.getKey()).write(rowHolder);
           }
         }
 
         java.lang.Integer port = aURL.getPort();
         // If port number is not specified in URL string, it is assigned a default value of -1.
-        // Include port number into resulting map only if it was specified.
+        // Include port number into resulting struct only if it was specified.
         if (port != -1) {
           org.apache.drill.exec.expr.holders.IntHolder intHolder = new org.apache.drill.exec.expr.holders.IntHolder();
           intHolder.value = port;
-          mapWriter.integer("port").write(intHolder);
+          structWriter.integer("port").write(intHolder);
         }
 
-        mapWriter.end();
+        structWriter.end();
       } catch (Exception e) {
-        // Enclose map
-        mapWriter.end();
+        // Enclose struct
+        structWriter.end();
       }
     }
   }
@@ -132,19 +132,19 @@ public class ParseUrlFunction {
 
     @Override
     public void eval() {
-      org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter mapWriter = outWriter.rootAsMap();
+      org.apache.drill.exec.vector.complex.writer.BaseWriter.StructWriter structWriter = outWriter.rootAsStruct();
 
       if (in.isSet == 0) {
-        // Return empty map
-        mapWriter.start();
-        mapWriter.end();
+        // Return empty struct
+        structWriter.start();
+        structWriter.end();
         return;
       }
 
       String urlString =
           org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(in.start, in.end, in.buffer);
       try {
-        mapWriter.start();
+        structWriter.start();
 
         java.net.URL aURL = new java.net.URL(urlString);
         // Diamond operator can not be used here because Janino does not support
@@ -170,23 +170,23 @@ public class ParseUrlFunction {
             rowHolder.start = 0;
             rowHolder.end = protocolBytes.length;
             rowHolder.buffer = outBuffer;
-            mapWriter.varChar((String) entry.getKey()).write(rowHolder);
+            structWriter.varChar((String) entry.getKey()).write(rowHolder);
           }
         }
 
         java.lang.Integer port = aURL.getPort();
         // If port number is not specified in URL string, it is assigned a default value of -1.
-        // Include port number into resulting map only if it was specified.
+        // Include port number into resulting struct only if it was specified.
         if (port != -1) {
           org.apache.drill.exec.expr.holders.IntHolder intHolder = new org.apache.drill.exec.expr.holders.IntHolder();
           intHolder.value = port;
-          mapWriter.integer("port").write(intHolder);
+          structWriter.integer("port").write(intHolder);
         }
 
-        mapWriter.end();
+        structWriter.end();
       } catch (Exception e) {
-        // Enclose map
-        mapWriter.end();
+        // Enclose struct
+        structWriter.end();
       }
     }
   }

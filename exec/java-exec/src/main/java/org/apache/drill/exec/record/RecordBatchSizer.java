@@ -36,9 +36,9 @@ import org.apache.drill.exec.vector.UInt1Vector;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.UntypedNullVector;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.complex.AbstractMapVector;
+import org.apache.drill.exec.vector.complex.AbstractStructVector;
 import org.apache.drill.exec.vector.complex.RepeatedListVector;
-import org.apache.drill.exec.vector.complex.RepeatedMapVector;
+import org.apache.drill.exec.vector.complex.RepeatedStructVector;
 import org.apache.drill.exec.vector.complex.RepeatedValueVector;
 import org.apache.drill.exec.vector.VariableWidthVector;
 
@@ -99,8 +99,8 @@ public class RecordBatchSizer {
      * Number of occurrences of the value in the batch. This is trivial
      * for top-level scalars: it is the record count. For a top-level
      * repeated vector, this is the number of arrays, also the record
-     * count. For a value nested inside a repeated map, it is the
-     * total number of values across all maps, and may be less than,
+     * count. For a value nested inside a repeated struct, it is the
+     * total number of values across all structs, and may be less than,
      * greater than (but unlikely) same as the row count.
      */
 
@@ -125,7 +125,7 @@ public class RecordBatchSizer {
 
     /**
      * Indicates if it is variable width column.
-     * For map columns, this is true if any of the children is variable
+     * For struct columns, this is true if any of the children is variable
      * width column.
      */
 
@@ -143,7 +143,7 @@ public class RecordBatchSizer {
     private boolean isOptional;
 
     /**
-     * Child columns if this is a map column.
+     * Child columns if this is a struct column.
      */
     private Map<String, ColumnSize> children = CaseInsensitiveMap.newHashMap();
 
@@ -286,7 +286,7 @@ public class RecordBatchSizer {
     }
 
     /**
-     * This is the total data size for the column, including children for map
+     * This is the total data size for the column, including children for struct
      * columns. Does not include any overhead of metadata vectors.
      */
     public int getTotalDataSize() {
@@ -298,7 +298,7 @@ public class RecordBatchSizer {
     }
 
     /**
-     * This is the total net size for the column, including children for map
+     * This is the total net size for the column, including children for struct
      * columns. Includes overhead of metadata vectors.
      */
     public int getTotalNetSize() {
@@ -326,7 +326,7 @@ public class RecordBatchSizer {
     }
 
     public boolean isComplex() {
-      return metadata.getType().getMinorType() == MinorType.MAP ||
+      return metadata.getType().getMinorType() == MinorType.STRUCT ||
         metadata.getType().getMinorType() == MinorType.UNION ||
         metadata.getType().getMinorType() == MinorType.LIST;
     }
@@ -456,13 +456,13 @@ public class RecordBatchSizer {
       return childCount;
     }
 
-    private void allocateMap(AbstractMapVector map, int recordCount) {
-      if (map instanceof RepeatedMapVector) {
-        ((RepeatedMapVector) map).allocateOffsetsNew(recordCount);
+    private void allocateStruct(AbstractStructVector struct, int recordCount) {
+      if (struct instanceof RepeatedStructVector) {
+        ((RepeatedStructVector) struct).allocateOffsetsNew(recordCount);
           recordCount *= getEntryCardinalityForAlloc();
         }
 
-      for (ValueVector vector : map) {
+      for (ValueVector vector : struct) {
         children.get(vector.getField().getName()).allocateVector(vector, recordCount);
       }
     }
@@ -477,8 +477,8 @@ public class RecordBatchSizer {
     }
 
     public void allocateVector(ValueVector vector, int recordCount) {
-      if (vector instanceof AbstractMapVector) {
-        allocateMap((AbstractMapVector) vector, recordCount);
+      if (vector instanceof AbstractStructVector) {
+        allocateStruct((AbstractStructVector) vector, recordCount);
         return;
       }
 
@@ -760,10 +760,10 @@ public class RecordBatchSizer {
   private ColumnSize measureColumn(ValueVector v, String prefix) {
     ColumnSize colSize = new ColumnSize(v, prefix);
     switch (v.getField().getType().getMinorType()) {
-      case MAP:
-        // Maps consume no size themselves. However, their contained
+      case STRUCT:
+        // Structs consume no size themselves. However, their contained
         // vectors do consume space, so visit columns recursively.
-        expandMap(colSize, (AbstractMapVector) v, prefix + v.getField().getName() + ".");
+        expandStruct(colSize, (AbstractStructVector) v, prefix + v.getField().getName() + ".");
         break;
       case LIST:
         // complex ListVector cannot be casted to RepeatedListVector.
@@ -783,16 +783,16 @@ public class RecordBatchSizer {
     return colSize;
   }
 
-  private void expandMap(ColumnSize colSize, AbstractMapVector mapVector, String prefix) {
-    for (ValueVector vector : mapVector) {
+  private void expandStruct(ColumnSize colSize, AbstractStructVector structVector, String prefix) {
+    for (ValueVector vector : structVector) {
       colSize.children.put(vector.getField().getName(), measureColumn(vector, prefix));
     }
 
-    // For a repeated map, we need the memory for the offset vector (only).
-    // Map elements are recursively expanded above.
+    // For a repeated struct, we need the memory for the offset vector (only).
+    // Struct elements are recursively expanded above.
 
-    if (mapVector.getField().getDataMode() == DataMode.REPEATED) {
-      ((RepeatedMapVector) mapVector).getOffsetVector().collectLedgers(ledgers);
+    if (structVector.getField().getDataMode() == DataMode.REPEATED) {
+      ((RepeatedStructVector) structVector).getOffsetVector().collectLedgers(ledgers);
     }
   }
 

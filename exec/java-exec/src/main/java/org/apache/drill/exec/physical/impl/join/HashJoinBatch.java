@@ -1138,10 +1138,10 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
       for (final MaterializedField field : buildSchema) {
         final MajorType inputType = field.getType();
         final MajorType outputType;
-        // If left or full outer join, then the output type must be nullable. However, map types are
+        // If left or full outer join, then the output type must be nullable. However, struct types are
         // not nullable so we must exclude them from the check below (see DRILL-2197).
         if (joinIsLeftOrFull && inputType.getMode() == DataMode.REQUIRED
-            && inputType.getMinorType() != TypeProtos.MinorType.MAP) {
+            && inputType.getMinorType() != TypeProtos.MinorType.STRUCT) {
           outputType = Types.overrideMode(inputType, DataMode.OPTIONAL);
         } else {
           outputType = inputType;
@@ -1159,10 +1159,10 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
         final MajorType inputType = vv.getField().getType();
         final MajorType outputType;
 
-        // If right or full outer join then the output type should be optional. However, map types are
+        // If right or full outer join then the output type should be optional. However, struct types are
         // not nullable so we must exclude them from the check below (see DRILL-2771, DRILL-2197).
         if (joinIsRightOrFull && inputType.getMode() == DataMode.REQUIRED
-            && inputType.getMinorType() != TypeProtos.MinorType.MAP) {
+            && inputType.getMinorType() != TypeProtos.MinorType.STRUCT) {
           outputType = Types.overrideMode(inputType, DataMode.OPTIONAL);
         } else {
           outputType = inputType;

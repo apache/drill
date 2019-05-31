@@ -23,15 +23,15 @@ import java.util.Map.Entry;
 
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.complex.AbstractMapVector;
-import org.apache.drill.exec.vector.complex.RepeatedMapVector;
+import org.apache.drill.exec.vector.complex.AbstractStructVector;
+import org.apache.drill.exec.vector.complex.RepeatedStructVector;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 
 /**
  * Prototype mechanism to allocate vectors based on expected
- * data sizes. This version uses a name-based map of fields
+ * data sizes. This version uses a name-based struct of fields
  * to sizes. Better to represent the batch structurally and
  * simply iterate over the schema rather than doing a per-field
  * lookup. But, the mechanisms needed to do the efficient solution
@@ -107,8 +107,8 @@ public class VectorInitializer {
   public void allocateVector(ValueVector vector, String prefix, int recordCount) {
     String key = prefix + vector.getField().getName();
     AllocationHint hint = hints.get(key);
-    if (vector instanceof AbstractMapVector) {
-      allocateMap((AbstractMapVector) vector, prefix, recordCount, hint);
+    if (vector instanceof AbstractStructVector) {
+      allocateStruct((AbstractStructVector) vector, prefix, recordCount, hint);
     } else {
       allocateVector(vector, recordCount, hint);
     }
@@ -134,17 +134,17 @@ public class VectorInitializer {
     }
   }
 
-  private void allocateMap(AbstractMapVector map, String prefix, int recordCount, AllocationHint hint) {
-    if (map instanceof RepeatedMapVector) {
-      ((RepeatedMapVector) map).allocateOffsetsNew(recordCount);
+  private void allocateStruct(AbstractStructVector struct, String prefix, int recordCount, AllocationHint hint) {
+    if (struct instanceof RepeatedStructVector) {
+      ((RepeatedStructVector) struct).allocateOffsetsNew(recordCount);
       if (hint == null) {
         recordCount *= 10;
       } else {
         recordCount *= hint.elementCount;
       }
     }
-    prefix += map.getField().getName() + ".";
-    for (ValueVector vector : map) {
+    prefix += struct.getField().getName() + ".";
+    for (ValueVector vector : struct) {
       allocateVector(vector, prefix, recordCount);
     }
   }

@@ -126,7 +126,7 @@ public class ColumnDef {
       break;
     case LIST:
       break;
-    case MAP:
+    case STRUCT:
       break;
     case MONEY:
       break;

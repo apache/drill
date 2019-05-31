@@ -15,6 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import org.apache.drill.common.types.TypeProtos;
+
 <@pp.dropOutputFile />
 <@pp.changeOutputFile name="/org/apache/drill/exec/vector/complex/impl/UnionWriter.java" />
 
@@ -33,7 +36,7 @@ public class UnionWriter extends AbstractFieldWriter implements FieldWriter {
 
   // Accessed by UnionReader
   protected UnionVector data;
-  private MapWriter mapWriter;
+  private StructWriter structWriter;
   private UnionListWriter listWriter;
   private List<BaseWriter> writers = Lists.newArrayList();
 
@@ -61,13 +64,13 @@ public class UnionWriter extends AbstractFieldWriter implements FieldWriter {
 
   @Override
   public void start() {
-    data.getMutator().setType(idx(), MinorType.MAP);
-    getMapWriter().start();
+    data.getMutator().setType(idx(), MinorType.STRUCT);
+    getStructWriter().start();
   }
 
   @Override
   public void end() {
-    getMapWriter().end();
+    getStructWriter().end();
   }
 
   @Override
@@ -81,18 +84,18 @@ public class UnionWriter extends AbstractFieldWriter implements FieldWriter {
     getListWriter().endList();
   }
 
-  private MapWriter getMapWriter() {
-    if (mapWriter == null) {
-      mapWriter = new SingleMapWriter(data.getMap(), null, true);
-      mapWriter.setPosition(idx());
-      writers.add(mapWriter);
+  private StructWriter getStructWriter() {
+    if (structWriter == null) {
+      structWriter = new SingleStructWriter(data.getStruct(), null, true);
+      structWriter.setPosition(idx());
+      writers.add(structWriter);
     }
-    return mapWriter;
+    return structWriter;
   }
 
-  public MapWriter asMap() {
-    data.getMutator().setType(idx(), MinorType.MAP);
-    return getMapWriter();
+  public StructWriter asStruct() {
+    data.getMutator().setType(idx(), MinorType.STRUCT);
+    return getStructWriter();
   }
 
   private ListWriter getListWriter() {
@@ -149,10 +152,10 @@ public class UnionWriter extends AbstractFieldWriter implements FieldWriter {
   public void writeNull() { }
 
   @Override
-  public MapWriter map() {
+  public StructWriter struct() {
     data.getMutator().setType(idx(), MinorType.LIST);
     getListWriter().setPosition(idx());
-    return getListWriter().map();
+    return getListWriter().struct();
   }
 
   @Override
@@ -164,16 +167,16 @@ public class UnionWriter extends AbstractFieldWriter implements FieldWriter {
 
   @Override
   public ListWriter list(String name) {
-    data.getMutator().setType(idx(), MinorType.MAP);
-    getMapWriter().setPosition(idx());
-    return getMapWriter().list(name);
+    data.getMutator().setType(idx(), MinorType.STRUCT);
+    getStructWriter().setPosition(idx());
+    return getStructWriter().list(name);
   }
 
   @Override
-  public MapWriter map(String name) {
-    data.getMutator().setType(idx(), MinorType.MAP);
-    getMapWriter().setPosition(idx());
-    return getMapWriter().map(name);
+  public StructWriter struct(String name) {
+    data.getMutator().setType(idx(), MinorType.STRUCT);
+    getStructWriter().setPosition(idx());
+    return getStructWriter().struct(name);
   }
 
   <#list vv.types as type><#list type.minor as minor>
@@ -184,9 +187,9 @@ public class UnionWriter extends AbstractFieldWriter implements FieldWriter {
   <#if minor.class == "VarDecimal">
   @Override
   public ${capName}Writer ${lowerName}(String name, int scale, int precision) {
-    data.getMutator().setType(idx(), MinorType.MAP);
-    getMapWriter().setPosition(idx());
-    return getMapWriter().${lowerName}(name, scale, precision);
+    data.getMutator().setType(idx(), MinorType.STRUCT);
+    getStructWriter().setPosition(idx());
+    return getStructWriter().${lowerName}(name, scale, precision);
   }
 
   @Override
@@ -198,9 +201,9 @@ public class UnionWriter extends AbstractFieldWriter implements FieldWriter {
   <#else>
   @Override
   public ${capName}Writer ${lowerName}(String name) {
-    data.getMutator().setType(idx(), MinorType.MAP);
-    getMapWriter().setPosition(idx());
-    return getMapWriter().${lowerName}(name);
+    data.getMutator().setType(idx(), MinorType.STRUCT);
+    getStructWriter().setPosition(idx());
+    return getStructWriter().${lowerName}(name);
   }
 
   @Override

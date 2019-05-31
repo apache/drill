@@ -24,7 +24,7 @@ import org.apache.drill.exec.store.TestOutputMutator;
 import org.apache.drill.exec.util.BatchPrinter;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter.StructWriter;
 import org.junit.Test;
 
 public class TestPromotableWriter {
@@ -34,28 +34,28 @@ public class TestPromotableWriter {
     BufferAllocator allocator = RootAllocatorFactory.newRoot(DrillConfig.create());
     TestOutputMutator output = new TestOutputMutator(allocator);
     ComplexWriter rootWriter = new VectorContainerWriter(output, true);
-    MapWriter writer = rootWriter.rootAsMap();
+    StructWriter writer = rootWriter.rootAsStruct();
 
 
     rootWriter.setPosition(0);
     {
-      writer.map("map").bigInt("a").writeBigInt(1);
+      writer.struct("map").bigInt("a").writeBigInt(1);
     }
     rootWriter.setPosition(1);
     {
-      writer.map("map").float4("a").writeFloat4(2.0f);
+      writer.struct("map").float4("a").writeFloat4(2.0f);
     }
     rootWriter.setPosition(2);
     {
-      writer.map("map").list("a").startList();
-      writer.map("map").list("a").endList();
+      writer.struct("map").list("a").startList();
+      writer.struct("map").list("a").endList();
     }
     rootWriter.setPosition(3);
     {
-      writer.map("map").list("a").startList();
-      writer.map("map").list("a").bigInt().writeBigInt(3);
-      writer.map("map").list("a").float4().writeFloat4(4);
-      writer.map("map").list("a").endList();
+      writer.struct("map").list("a").startList();
+      writer.struct("map").list("a").bigInt().writeBigInt(3);
+      writer.struct("map").list("a").float4().writeFloat4(4);
+      writer.struct("map").list("a").endList();
     }
     rootWriter.setValueCount(4);
     BatchPrinter.printBatch(output.getContainer());

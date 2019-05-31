@@ -27,7 +27,7 @@ import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.metadata.VariantMetadata;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.complex.AbstractMapVector;
+import org.apache.drill.exec.vector.complex.AbstractStructVector;
 import org.apache.drill.exec.vector.complex.ListVector;
 import org.apache.drill.exec.vector.complex.RepeatedListVector;
 import org.apache.drill.exec.vector.complex.UnionVector;
@@ -69,7 +69,7 @@ public class BuildVectorsFromMetadata {
   private ValueVector buildVector(ColumnMetadata metadata) {
     switch (metadata.structureType()) {
     case TUPLE:
-      return buildMap(metadata);
+      return buildStruct(metadata);
     case VARIANT:
       if (metadata.isArray()) {
         return builList(metadata);
@@ -93,42 +93,42 @@ public class BuildVectorsFromMetadata {
   }
 
   /**
-   * Build a map column including the members of the map given a map
+   * Build a struct column including the members of the struct given a struct
    * column schema.
    *
-   * @param schema the schema of the map column
-   * @return the completed map vector column model
+   * @param schema the schema of the struct column
+   * @return the completed struct vector column model
    */
 
-  private AbstractMapVector buildMap(ColumnMetadata schema) {
+  private AbstractStructVector buildStruct(ColumnMetadata schema) {
 
-    // Creating the map vector will create its contained vectors if we
+    // Creating the struct vector will create its contained vectors if we
     // give it a materialized field with children. So, instead pass a clone
     // without children so we can add the children as we add vectors.
 
-    final AbstractMapVector mapVector = (AbstractMapVector) TypeHelper.getNewVector(schema.emptySchema(), allocator, null);
-    populateMap(mapVector, schema.mapSchema(), false);
-    return mapVector;
+    final AbstractStructVector structVector = (AbstractStructVector) TypeHelper.getNewVector(schema.emptySchema(), allocator, null);
+    populateStruct(structVector, schema.mapSchema(), false);
+    return structVector;
   }
 
   /**
    * Create the contents building the model as we go.
    *
-   * @param mapVector the vector to populate
-   * @param mapSchema description of the map
+   * @param structVector the vector to populate
+   * @param mapSchema description of the struct
    */
 
-  private void populateMap(AbstractMapVector mapVector,
-      TupleMetadata mapSchema, boolean inUnion) {
+  private void populateStruct(AbstractStructVector structVector,
+                              TupleMetadata mapSchema, boolean inUnion) {
     for (int i = 0; i < mapSchema.size(); i++) {
       final ColumnMetadata childSchema = mapSchema.metadata(i);
 
       // Check for union-compatible types. But, maps must be required.
 
-      if (inUnion && ! childSchema.isMap() && childSchema.mode() == DataMode.REQUIRED) {
+      if (inUnion && ! childSchema.isStruct() && childSchema.mode() == DataMode.REQUIRED) {
         throw new IllegalArgumentException("Map members in a list or union must not be non-nullable");
       }
-      mapVector.putChild(childSchema.name(), buildVector(childSchema));
+      structVector.putChild(childSchema.name(), buildVector(childSchema));
     }
   }
 
@@ -147,15 +147,15 @@ public class BuildVectorsFromMetadata {
         populateList((ListVector) childVector,
             variantSchema.member(MinorType.LIST).variantSchema());
         break;
-      case MAP:
+      case STRUCT:
 
-        // Force the map to require nullable or repeated types.
+        // Force the struct to require nullable or repeated types.
         // Not perfect; does not extend down to maps within maps.
         // Since this code is used in testing, not adding that complexity
         // for now.
 
-        populateMap((AbstractMapVector) childVector,
-            variantSchema.member(MinorType.MAP).mapSchema(),
+        populateStruct((AbstractStructVector) childVector,
+            variantSchema.member(MinorType.STRUCT).mapSchema(),
             true);
         break;
       default:

@@ -43,7 +43,7 @@ import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.vector.BigIntVector;
 import org.apache.drill.exec.vector.DateVector;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.complex.MapVector;
+import org.apache.drill.exec.vector.complex.StructVector;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 /**
@@ -63,7 +63,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
  *       "region_id"  : BIGINT - nonnullstatcount(region_id)
  *       "sales_city" : BIGINT - nonnullstatcount(sales_city)
  *       "cnt"        : BIGINT - nonnullstatcount(cnt)
- *   .... another map for next stats function ....
+ *   .... another struct for next stats function ....
  * Schema of outgoing batch:
  *    "schema" : BIGINT - Schema number. For each schema change this number is incremented.
  *    "computed" : DATE - What time is it computed?
@@ -80,7 +80,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
  *       "region_id"  : BIGINT - nonnullstatcount(region_id)
  *       "sales_city" : BIGINT - nonnullstatcount(sales_city)
  *       "cnt"        : BIGINT - nonnullstatcount(cnt)
- *   .... another map for next stats function ....
+ *   .... another struct for next stats function ....
  */
 public class StatisticsMergeBatch extends AbstractSingleRecordBatch<StatisticsMerge> {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StatisticsMergeBatch.class);
@@ -114,10 +114,10 @@ public class StatisticsMergeBatch extends AbstractSingleRecordBatch<StatisticsMe
   }
 
   /*
-   * Adds the `name` column value vector in the `parent` map vector. These `name` columns are
+   * Adds the `name` column value vector in the `parent` struct vector. These `name` columns are
    * table columns for which statistics will be computed.
    */
-  private ValueVector addMapVector(String name, MapVector parent, LogicalExpression expr)
+  private ValueVector addStructVector(String name, StructVector parent, LogicalExpression expr)
       throws SchemaChangeException {
     LogicalExpression mle = PhysicalOperatorUtil.materializeExpression(expr, incoming, context);
     Class<? extends ValueVector> vvc =
@@ -142,7 +142,7 @@ public class StatisticsMergeBatch extends AbstractSingleRecordBatch<StatisticsMe
     //Populate the columns list from the `columns` map
     for (VectorWrapper<?> vw : incoming) {
       String inputFunc = vw.getField().getName();
-      if (vw.getField().getType().getMinorType() != TypeProtos.MinorType.MAP) {
+      if (vw.getField().getType().getMinorType() != TypeProtos.MinorType.STRUCT) {
         continue;
       }
       if (inputFunctions.get(inputFunc)) {
@@ -154,8 +154,8 @@ public class StatisticsMergeBatch extends AbstractSingleRecordBatch<StatisticsMe
       if (vw.getField().getName().equals(Statistic.COLNAME)) {
         columnsList = Lists.newArrayList();
         for (ValueVector vv : vw.getValueVector()) {
-          if (vv.getField().getType().getMinorType() == TypeProtos.MinorType.MAP) {
-            throw new IllegalArgumentException("StatisticsMerge of nested map is not supported");
+          if (vv.getField().getType().getMinorType() == TypeProtos.MinorType.STRUCT) {
+            throw new IllegalArgumentException("StatisticsMerge of nested struct is not supported");
           }
           columnsList.add(vv.getField().getName());
         }
@@ -165,7 +165,7 @@ public class StatisticsMergeBatch extends AbstractSingleRecordBatch<StatisticsMe
     // Verify the rest of the maps have the same columns
     for (VectorWrapper<?> vw : incoming) {
       String inputFunc = vw.getField().getName();
-      if (vw.getField().getType().getMinorType() != TypeProtos.MinorType.MAP) {
+      if (vw.getField().getType().getMinorType() != TypeProtos.MinorType.STRUCT) {
         continue;
       }
       if (!inputFunctions.get(inputFunc)) {
@@ -219,7 +219,7 @@ public class StatisticsMergeBatch extends AbstractSingleRecordBatch<StatisticsMe
     calendar.setTimeInMillis(System.currentTimeMillis());
     createKeyColumn(Statistic.COMPUTED, ValueExpressions.getDate(calendar));
 
-    // Create output map vectors corresponding to each statistic (e.g. rowcount)
+    // Create output struct vectors corresponding to each statistic (e.g. rowcount)
     for (MergedStatistic statistic : mergedStatisticList) {
       String targetTypeStatistic = statistic.getInput();
       for (VectorWrapper<?> vw : incoming) {
@@ -239,16 +239,16 @@ public class StatisticsMergeBatch extends AbstractSingleRecordBatch<StatisticsMe
    */
   private void addVectorToOutgoingContainer(String outStatName, VectorWrapper vw)
       throws SchemaChangeException {
-    // Input map vector
-    MapVector inputVector = (MapVector) vw.getValueVector();
+    // Input struct vector
+    StructVector inputVector = (StructVector) vw.getValueVector();
     assert inputVector.getPrimitiveVectors().size() > 0;
-    // Proceed to create output map vector with same name e.g. statcount etc.
+    // Proceed to create output struct vector with same name e.g. statcount etc.
     MajorType mt = inputVector.getField().getType();
     MaterializedField mf = MaterializedField.create(outStatName, mt);
 
     ValueVector outputValueVector = TypeHelper.getNewVector(mf, oContext.getAllocator());
     container.add(outputValueVector);
-    MapVector outputVector = (MapVector) outputValueVector;
+    StructVector outputVector = (StructVector) outputValueVector;
 
     for (ValueVector vv : inputVector) {
       String columnName = vv.getField().getName();
@@ -293,9 +293,9 @@ public class StatisticsMergeBatch extends AbstractSingleRecordBatch<StatisticsMe
         vv.allocateNewSafe();
         vv.getMutator().setSafe(0, cal.getTimeInMillis());
       } else {
-        // Populate the rest of the merged statistics. Each statistic is a map which
+        // Populate the rest of the merged statistics. Each statistic is a struct which
         // contains <COL_NAME, STATS_VALUE> pairs
-        MapVector vv = (MapVector) vw.getValueVector();
+        StructVector vv = (StructVector) vw.getValueVector();
         for (MergedStatistic outputStat : mergedStatisticList) {
           if (outputStatName.equals(outputStat.getName())) {
             outputStat.setOutput(vv);
@@ -326,7 +326,7 @@ public class StatisticsMergeBatch extends AbstractSingleRecordBatch<StatisticsMe
     for (MergedStatistic outputStat : mergedStatisticList) {
       String inputStat = outputStat.getInput();
       for (VectorWrapper<?> vw : incoming) {
-        MapVector vv = (MapVector) vw.getValueVector();
+        StructVector vv = (StructVector) vw.getValueVector();
         if (vv.getField().getName().equals(inputStat)) {
           outputStat.merge(vv);
           break;
@@ -405,4 +405,5 @@ public class StatisticsMergeBatch extends AbstractSingleRecordBatch<StatisticsMe
   public int getRecordCount() {
     return recordCount;
   }
+
 }

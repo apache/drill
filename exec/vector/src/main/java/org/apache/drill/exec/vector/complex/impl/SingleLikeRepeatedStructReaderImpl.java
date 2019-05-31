@@ -22,40 +22,40 @@ import java.util.Iterator;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.vector.complex.RepeatedMapVector;
+import org.apache.drill.exec.vector.complex.RepeatedStructVector;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter.StructWriter;
 
-public class SingleLikeRepeatedMapReaderImpl extends AbstractFieldReader{
+public class SingleLikeRepeatedStructReaderImpl extends AbstractFieldReader{
 
-  private RepeatedMapReaderImpl delegate;
+  private RepeatedStructReaderImpl delegate;
 
-  public SingleLikeRepeatedMapReaderImpl(RepeatedMapVector vector, FieldReader delegate) {
-    this.delegate = (RepeatedMapReaderImpl) delegate;
+  public SingleLikeRepeatedStructReaderImpl(RepeatedStructVector vector, FieldReader delegate) {
+    this.delegate = (RepeatedStructReaderImpl) delegate;
   }
 
   @Override
   public int size() {
-    throw new UnsupportedOperationException("You can't call size on a single map reader.");
+    throw new UnsupportedOperationException("You can't call size on a single struct reader.");
   }
 
   @Override
   public boolean next() {
-    throw new UnsupportedOperationException("You can't call next on a single map reader.");
+    throw new UnsupportedOperationException("You can't call next on a single struct reader.");
   }
 
   @Override
   public MajorType getType() {
-    return Types.required(MinorType.MAP);
+    return Types.required(MinorType.STRUCT);
   }
 
 
   @Override
-  public void copyAsValue(MapWriter writer) {
+  public void copyAsValue(StructWriter writer) {
     delegate.copyAsValueSingle(writer);
   }
 
-  public void copyAsValueSingle(MapWriter writer){
+  public void copyAsValueSingle(StructWriter writer){
     delegate.copyAsValueSingle(writer);
   }
 
@@ -83,6 +83,5 @@ public class SingleLikeRepeatedMapReaderImpl extends AbstractFieldReader{
   public boolean isSet() {
     return ! delegate.isNull();
   }
-
 
 }

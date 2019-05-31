@@ -101,7 +101,7 @@ public class TestFillEmpties extends SubOperatorTest {
     case GENERIC_OBJECT:
     case LATE:
     case LIST:
-    case MAP:
+    case STRUCT:
     case NULL:
     case UNION:
       // Writer N/A

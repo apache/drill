@@ -44,7 +44,7 @@ import org.apache.drill.exec.store.mapr.db.MapRDBSubScanSpec;
 import org.apache.drill.exec.util.EncodedSchemaPathSet;
 import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.complex.fn.JsonReaderUtils;
-import org.apache.drill.exec.vector.complex.impl.MapOrListWriterImpl;
+import org.apache.drill.exec.vector.complex.impl.StructOrListWriterImpl;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.hadoop.fs.Path;
 import org.ojai.Document;
@@ -306,7 +306,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
            * @param reader    document reader
            */
           @Override
-          protected void writeTimeStamp(MapOrListWriterImpl writer, String fieldName, DocumentReader reader) {
+          protected void writeTimeStamp(StructOrListWriterImpl writer, String fieldName, DocumentReader reader) {
             String formattedTimestamp = Instant.ofEpochMilli(reader.getTimestampLong())
                 .atZone(ZoneId.systemDefault()).format(DateUtility.UTC_FORMATTER);
             writeString(writer, fieldName, formattedTimestamp);
@@ -319,7 +319,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
       if (readTimestampWithZoneOffset) {
         valueWriter = new NumbersAsDoubleValueWriter(buffer) {
           @Override
-          protected void writeTimeStamp(MapOrListWriterImpl writer, String fieldName, DocumentReader reader) {
+          protected void writeTimeStamp(StructOrListWriterImpl writer, String fieldName, DocumentReader reader) {
             writeTimestampWithLocalZoneOffset(writer, fieldName, reader);
           }
         };
@@ -330,7 +330,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
       if (readTimestampWithZoneOffset) {
         valueWriter = new OjaiValueWriter(buffer) {
           @Override
-          protected void writeTimeStamp(MapOrListWriterImpl writer, String fieldName, DocumentReader reader) {
+          protected void writeTimeStamp(StructOrListWriterImpl writer, String fieldName, DocumentReader reader) {
             writeTimestampWithLocalZoneOffset(writer, fieldName, reader);
           }
         };
@@ -357,7 +357,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
    * @param fieldName name of the field
    * @param reader    document reader
    */
-  private void writeTimestampWithLocalZoneOffset(MapOrListWriterImpl writer, String fieldName, DocumentReader reader) {
+  private void writeTimestampWithLocalZoneOffset(StructOrListWriterImpl writer, String fieldName, DocumentReader reader) {
     Instant utcInstant = Instant.ofEpochMilli(reader.getTimestampLong());
     ZonedDateTime localZonedDateTime = utcInstant.atZone(ZoneId.systemDefault());
     ZonedDateTime convertedZonedDateTime = localZonedDateTime.withZoneSameLocal(ZoneId.of("UTC"));

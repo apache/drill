@@ -137,7 +137,7 @@
  * much like a row. That is, Drill consists of nested tuples (the row and maps),
  * each of which contains columns which can be maps. Thus, there is a set of
  * alternating layers of tuples, columns, tuples, and so on until we get to leaf
- * (non-map) columns. As a result, most of the above structures are in the form
+ * (non-struct) columns. As a result, most of the above structures are in the form
  * of tuple trees, requiring recursive algorithms to apply rules down through the
  * nested layers of tuples.
  * <p>

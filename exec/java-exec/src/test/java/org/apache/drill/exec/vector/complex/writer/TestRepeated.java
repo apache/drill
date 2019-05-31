@@ -25,12 +25,12 @@ import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.IntHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.RootAllocatorFactory;
-import org.apache.drill.exec.vector.complex.MapVector;
+import org.apache.drill.exec.vector.complex.StructVector;
 import org.apache.drill.exec.vector.complex.fn.JsonWriter;
 import org.apache.drill.exec.vector.complex.impl.ComplexWriterImpl;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter.StructWriter;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -71,11 +71,11 @@ public class TestRepeated {
 //    MapVector v = new MapVector("", allocator);
 //    ComplexWriter writer = new ComplexWriterImpl("col", v);
 //
-//    MapWriter map = writer.rootAsMap();
+//    StructWriter struct = writer.rootAsStruct();
 //
-//    map.start();
-//    ListWriter list = map.list("a");
-//    MapWriter inner = list.map();
+//    struct.start();
+//    ListWriter list = struct.list("a");
+//    StructWriter inner = list.struct();
 //
 //    IntHolder holder = new IntHolder();
 //    IntWriter xCol = inner.integer("x");
@@ -99,11 +99,11 @@ public class TestRepeated {
 //
 //    inner.end();
 //
-//    IntWriter numCol = map.integer("nums");
+//    IntWriter numCol = struct.integer("nums");
 //    holder.value = 14;
 //    numCol.write(holder);
 //
-//    map.end();
+//    struct.end();
 //
 //
 //    assertTrue(writer.ok());
@@ -129,12 +129,12 @@ public class TestRepeated {
      *
      */
 
-    final MapVector mapVector = new MapVector("", allocator, null);
-    final ComplexWriterImpl writer = new ComplexWriterImpl("col", mapVector);
+    final StructVector structVector = new StructVector("", allocator, null);
+    final ComplexWriterImpl writer = new ComplexWriterImpl("col", structVector);
     writer.allocate();
 
     {
-      final MapWriter map = writer.rootAsMap();
+      final StructWriter map = writer.rootAsStruct();
       final ListWriter list = map.list("a");
       list.startList();
 
@@ -167,7 +167,7 @@ public class TestRepeated {
       holder.value = 14;
       numCol.write(holder);
 
-      final MapWriter repeatedMap = map.list("b").map();
+      final StructWriter repeatedMap = map.list("b").struct();
       repeatedMap.start();
       holder.value = 1;
       repeatedMap.integer("c").write(holder);
@@ -187,7 +187,7 @@ public class TestRepeated {
     {
       writer.setPosition(1);
 
-      final MapWriter map = writer.rootAsMap();
+      final StructWriter map = writer.rootAsStruct();
       final ListWriter list = map.list("a");
       list.startList();
 
@@ -220,7 +220,7 @@ public class TestRepeated {
       holder.value = -28;
       numCol.write(holder);
 
-      final MapWriter repeatedMap = map.list("b").map();
+      final StructWriter repeatedMap = map.list("b").struct();
       repeatedMap.start();
       holder.value = -1;
       repeatedMap.integer("c").write(holder);
@@ -241,7 +241,7 @@ public class TestRepeated {
 
     final ByteArrayOutputStream stream = new ByteArrayOutputStream();
     final JsonWriter jsonWriter = new JsonWriter(stream, true, true);
-    final FieldReader reader = mapVector.getChild("col", MapVector.class).getReader();
+    final FieldReader reader = structVector.getChild("col", StructVector.class).getReader();
     reader.setPosition(0);
     jsonWriter.write(reader);
     reader.setPosition(1);

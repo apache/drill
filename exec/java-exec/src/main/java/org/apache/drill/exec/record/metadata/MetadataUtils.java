@@ -43,7 +43,7 @@ public class MetadataUtils {
   /**
    * Create a column metadata object that holds the given
    * {@link MaterializedField}. The type of the object will be either a
-   * primitive or map column, depending on the field's type. The logic
+   * primitive or struct column, depending on the field's type. The logic
    * here mimics the code as written, which is very messy in some places.
    *
    * @param field the materialized field to wrap
@@ -54,8 +54,8 @@ public class MetadataUtils {
     MajorType majorType = field.getType();
     MinorType type = majorType.getMinorType();
     switch (type) {
-    case MAP:
-      return MetadataUtils.newMap(field);
+    case STRUCT:
+      return MetadataUtils.newStruct(field);
     case UNION:
       if (field.getType().getMode() != DataMode.OPTIONAL) {
         throw new UnsupportedOperationException(type.name() + " type must be nullable");
@@ -91,8 +91,8 @@ public class MetadataUtils {
   }
 
   public static ColumnMetadata fromView(MaterializedField field) {
-    if (field.getType().getMinorType() == MinorType.MAP) {
-      return new MapColumnMetadata(field, null);
+    if (field.getType().getMinorType() == MinorType.STRUCT) {
+      return new StructColumnMetadata(field, null);
     } else {
       return new PrimitiveColumnMetadata(field);
     }
@@ -123,26 +123,26 @@ public class MetadataUtils {
   }
 
   /**
-   * Create a column metadata object for a map column, given the
+   * Create a column metadata object for a struct column, given the
    * {@link MaterializedField} that describes the column, and a list
-   * of column metadata objects that describe the columns in the map.
+   * of column metadata objects that describe the columns in the struct.
    *
-   * @param field the materialized field that describes the map column
+   * @param field the materialized field that describes the struct column
    * @param schema metadata that describes the tuple of columns in
-   * the map
-   * @return a map column metadata for the map
+   * the struct
+   * @return a struct column metadata for the struct
    */
 
-  public static MapColumnMetadata newMap(MaterializedField field, TupleSchema schema) {
-    return new MapColumnMetadata(field, schema);
+  public static StructColumnMetadata newStruct(MaterializedField field, TupleSchema schema) {
+    return new StructColumnMetadata(field, schema);
   }
 
-  public static MapColumnMetadata newMap(MaterializedField field) {
-    return new MapColumnMetadata(field, fromFields(field.getChildren()));
+  public static StructColumnMetadata newStruct(MaterializedField field) {
+    return new StructColumnMetadata(field, fromFields(field.getChildren()));
   }
 
-  public static MapColumnMetadata newMap(String name, TupleMetadata schema) {
-    return new MapColumnMetadata(name, DataMode.REQUIRED, (TupleSchema) schema);
+  public static StructColumnMetadata newStruct(String name, TupleMetadata schema) {
+    return new StructColumnMetadata(name, DataMode.REQUIRED, (TupleSchema) schema);
   }
 
   public static VariantColumnMetadata newVariant(MaterializedField field, VariantSchema schema) {
@@ -164,19 +164,19 @@ public class MetadataUtils {
     return new RepeatedListColumnMetadata(name, child);
   }
 
-  public static ColumnMetadata newMapArray(String name, TupleMetadata schema) {
-    return new MapColumnMetadata(name, DataMode.REPEATED, (TupleSchema) schema);
+  public static ColumnMetadata newStructArray(String name, TupleMetadata schema) {
+    return new StructColumnMetadata(name, DataMode.REPEATED, (TupleSchema) schema);
   }
 
   public static PrimitiveColumnMetadata newScalar(String name, MinorType type,
       DataMode mode) {
-    assert type != MinorType.MAP && type != MinorType.UNION && type != MinorType.LIST;
+    assert type != MinorType.STRUCT && type != MinorType.UNION && type != MinorType.LIST;
     return new PrimitiveColumnMetadata(name, type, mode);
   }
 
   public static PrimitiveColumnMetadata newScalar(String name, MajorType type) {
     MinorType minorType = type.getMinorType();
-    assert minorType != MinorType.MAP && minorType != MinorType.UNION && minorType != MinorType.LIST;
+    assert minorType != MinorType.STRUCT && minorType != MinorType.UNION && minorType != MinorType.LIST;
     return new PrimitiveColumnMetadata(name, type);
   }
 
@@ -222,11 +222,11 @@ public class MetadataUtils {
     while (!colPath.isLastPath()) {
       colMetadata = schema.metadata(colPath.getPath());
       if (colMetadata == null) {
-        colMetadata = MetadataUtils.newMap(colPath.getPath(), null);
+        colMetadata = MetadataUtils.newStruct(colPath.getPath(), null);
         schema.addColumn(colMetadata);
       }
-      if (!colMetadata.isMap()) {
-        throw new DrillRuntimeException(String.format("Expected map, but was %s", colMetadata.majorType()));
+      if (!colMetadata.isStruct()) {
+        throw new DrillRuntimeException(String.format("Expected struct, but was %s", colMetadata.majorType()));
       }
 
       schema = colMetadata.mapSchema();

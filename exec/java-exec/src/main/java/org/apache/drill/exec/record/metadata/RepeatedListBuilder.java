@@ -52,11 +52,11 @@ public class RepeatedListBuilder implements SchemaContainer {
     return new RepeatedListBuilder(this, name);
   }
 
-  public MapBuilder addMapArray() {
+  public StructBuilder addStructArray() {
     // Existing code uses the repeated list name as the name of
     // the vector within the list.
 
-    return new MapBuilder(this, name, DataMode.REPEATED);
+    return new StructBuilder(this, name, DataMode.REPEATED);
   }
 
   public RepeatedListBuilder addArray(MinorType type) {
@@ -92,9 +92,9 @@ public class RepeatedListBuilder implements SchemaContainer {
     return (UnionBuilder) parent;
   }
 
-  public MapBuilder resumeMap() {
+  public StructBuilder resumeStruct() {
     build();
-    return (MapBuilder) parent;
+    return (StructBuilder) parent;
   }
 
   @Override

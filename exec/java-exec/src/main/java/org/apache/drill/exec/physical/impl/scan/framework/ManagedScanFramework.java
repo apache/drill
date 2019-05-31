@@ -79,7 +79,7 @@ import org.apache.drill.exec.physical.impl.scan.project.ScanSchemaOrchestrator.S
  * negotiator.</li>
  * <li>The reader "negotiates" a schema with the framework. The framework
  * knows the projection list from the query plan, knows something about
- * data types (whether a column should be scalar, a map or an array), and
+ * data types (whether a column should be scalar, a struct or an array), and
  * knows about the schema already defined by prior readers. The reader knows
  * what schema it can produce (if "early schema.") The schema negotiator
  * class handles this task.</li>

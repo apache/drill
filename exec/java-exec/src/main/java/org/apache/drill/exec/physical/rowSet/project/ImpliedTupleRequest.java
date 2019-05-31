@@ -25,8 +25,8 @@ import org.apache.drill.exec.record.metadata.ProjectionType;
 
 /**
  * Represents a wildcard: SELECT * when used at the root tuple.
- * When used with maps, means selection of all map columns, either
- * implicitly, or because the map itself is selected.
+ * When used with structs, means selection of all struct columns, either
+ * implicitly, or because the struct itself is selected.
  */
 
 public class ImpliedTupleRequest implements RequestedTuple {

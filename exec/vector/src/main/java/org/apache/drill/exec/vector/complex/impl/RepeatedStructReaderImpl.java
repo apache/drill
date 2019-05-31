@@ -20,24 +20,24 @@ package org.apache.drill.exec.vector.complex.impl;
 import java.util.Map;
 
 import org.apache.drill.common.types.TypeProtos.MajorType;
-import org.apache.drill.exec.expr.holders.RepeatedMapHolder;
+import org.apache.drill.exec.expr.holders.RepeatedStructHolder;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.complex.RepeatedMapVector;
+import org.apache.drill.exec.vector.complex.RepeatedStructVector;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter.StructWriter;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 
 @SuppressWarnings("unused")
-public class RepeatedMapReaderImpl extends AbstractFieldReader{
+public class RepeatedStructReaderImpl extends AbstractFieldReader{
   private static final int NO_VALUES = Integer.MAX_VALUE - 1;
 
-  private final RepeatedMapVector vector;
+  private final RepeatedStructVector vector;
   private final Map<String, FieldReader> fields = Maps.newHashMap();
   private int currentOffset;
   private int maxOffset;
 
-  public RepeatedMapReaderImpl(RepeatedMapVector vector) {
+  public RepeatedStructReaderImpl(RepeatedStructVector vector) {
     this.vector = vector;
   }
 
@@ -64,7 +64,7 @@ public class RepeatedMapReaderImpl extends AbstractFieldReader{
     }
 
     setChildrenPosition(currentOffset);
-    return new SingleLikeRepeatedMapReaderImpl(vector, this);
+    return new SingleLikeRepeatedStructReaderImpl(vector, this);
   }
 
   @Override
@@ -91,7 +91,7 @@ public class RepeatedMapReaderImpl extends AbstractFieldReader{
     }
 
     super.setPosition(index);
-    RepeatedMapHolder h = new RepeatedMapHolder();
+    RepeatedStructHolder h = new RepeatedStructHolder();
     vector.getAccessor().get(index, h);
     if (h.start == h.end) {
       currentOffset = NO_VALUES;
@@ -104,7 +104,7 @@ public class RepeatedMapReaderImpl extends AbstractFieldReader{
 
   public void setSinglePosition(int index, int childIndex) {
     super.setPosition(index);
-    RepeatedMapHolder h = new RepeatedMapHolder();
+    RepeatedStructHolder h = new RepeatedStructHolder();
     vector.getAccessor().get(index, h);
     if (h.start == h.end) {
       currentOffset = NO_VALUES;
@@ -153,28 +153,28 @@ public class RepeatedMapReaderImpl extends AbstractFieldReader{
   }
 
   @Override
-  public void copyAsValue(MapWriter writer) {
+  public void copyAsValue(StructWriter writer) {
     if (isNull()) {
       return;
     }
-    RepeatedMapWriter impl = (RepeatedMapWriter) writer;
+    RepeatedStructWriter impl = (RepeatedStructWriter) writer;
     impl.container.copyFromSafe(idx(), impl.idx(), vector);
   }
 
-  public void copyAsValueSingle(MapWriter writer) {
+  public void copyAsValueSingle(StructWriter writer) {
     if (isNull()) {
       return;
     }
-    SingleMapWriter impl = (SingleMapWriter) writer;
+    SingleStructWriter impl = (SingleStructWriter) writer;
     impl.container.copyFromSafe(currentOffset, impl.idx(), vector);
   }
 
   @Override
-  public void copyAsField(String name, MapWriter writer) {
+  public void copyAsField(String name, StructWriter writer) {
     if (isNull()) {
       return;
     }
-    RepeatedMapWriter impl = (RepeatedMapWriter) writer.map(name);
+    RepeatedStructWriter impl = (RepeatedStructWriter) writer.struct(name);
     impl.container.copyFromSafe(idx(), impl.idx(), vector);
   }
 

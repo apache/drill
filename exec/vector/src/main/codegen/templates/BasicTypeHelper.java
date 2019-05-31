@@ -32,7 +32,7 @@ import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.vector.complex.RepeatedMapVector;
+import org.apache.drill.exec.vector.complex.RepeatedStructVector;
 import org.apache.drill.exec.util.CallBack;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
@@ -77,13 +77,13 @@ public class BasicTypeHelper {
     switch (type) {
     case UNION:
       return UnionVector.class;
-    case MAP:
+    case STRUCT:
       switch (mode) {
       case OPTIONAL:
       case REQUIRED:
-        return MapVector.class;
+        return StructVector.class;
       case REPEATED:
-        return RepeatedMapVector.class;
+        return RepeatedStructVector.class;
       }
 
     case LIST:
@@ -119,15 +119,15 @@ public class BasicTypeHelper {
   }
   public static Class<?> getReaderClassName( MinorType type, DataMode mode, boolean isSingularRepeated){
     switch (type) {
-    case MAP:
+    case STRUCT:
       switch (mode) {
       case REQUIRED:
         if (!isSingularRepeated)
-          return SingleMapReaderImpl.class;
+          return SingleStructReaderImpl.class;
         else
-          return SingleLikeRepeatedMapReaderImpl.class;
+          return SingleLikeRepeatedStructReaderImpl.class;
       case REPEATED:
-          return RepeatedMapReaderImpl.class;
+          return RepeatedStructReaderImpl.class;
       }
     case LIST:
       switch (mode) {
@@ -156,19 +156,21 @@ public class BasicTypeHelper {
       throw new UnsupportedOperationException(buildErrorMessage("get reader class name", type, mode));
   }
 
-  public static Class<?> getWriterInterface( MinorType type, DataMode mode){
+  public static Class<?> getWriterInterface(MinorType type, DataMode mode){
     switch (type) {
-    case UNION: return UnionWriter.class;
-    case MAP: return MapWriter.class;
-    case LIST: return ListWriter.class;
+      case UNION:
+        return UnionWriter.class;
+      case STRUCT:
+        return StructWriter.class;
+      case LIST:
+        return ListWriter.class;
 <#list vv.types as type>
   <#list type.minor as minor>
-      case ${minor.class?upper_case}: return ${minor.class}Writer.class;
+      case ${minor.class?upper_case}:
+        return ${minor.class}Writer.class;
   </#list>
 </#list>
-      default:
-        break;
-      }
+    }
       throw new UnsupportedOperationException(buildErrorMessage("get writer interface", type, mode));
   }
 
@@ -176,13 +178,13 @@ public class BasicTypeHelper {
     switch (type) {
     case UNION:
       return UnionWriter.class;
-    case MAP:
+    case STRUCT:
       switch (mode) {
-      case REQUIRED:
-      case OPTIONAL:
-        return SingleMapWriter.class;
-      case REPEATED:
-        return RepeatedMapWriter.class;
+        case REQUIRED:
+        case OPTIONAL:
+          return SingleStructWriter.class;
+        case REPEATED:
+          return RepeatedStructWriter.class;
       }
     case LIST:
       switch (mode) {
@@ -286,13 +288,13 @@ public class BasicTypeHelper {
     case UNION:
       return new UnionVector(field, allocator, callBack);
 
-    case MAP:
+    case STRUCT:
       switch (type.getMode()) {
       case REQUIRED:
       case OPTIONAL:
-        return new MapVector(field, allocator, callBack);
+        return new StructVector(field, allocator, callBack);
       case REPEATED:
-        return new RepeatedMapVector(field, allocator, callBack);
+        return new RepeatedStructVector(field, allocator, callBack);
       }
     case LIST:
       switch (type.getMode()) {

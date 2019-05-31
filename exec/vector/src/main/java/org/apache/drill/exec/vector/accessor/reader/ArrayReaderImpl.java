@@ -37,7 +37,7 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 /**
  * Reader for an array-valued column. This reader provides access to specific
  * array members via an array index. This class implements all arrays. The
- * behavior for specific array types (scalar, map, lists, etc.) is provided
+ * behavior for specific array types (scalar, struct, lists, etc.) is provided
  * through composition.
  */
 
@@ -219,19 +219,19 @@ public class ArrayReaderImpl implements ArrayReader, ReaderEvents {
   }
 
   /**
-   * Build a repeated map reader.
+   * Build a repeated struct reader.
    *
-   * @param arrayAccessor vector accessor for the repeated map vector
+   * @param arrayAccessor vector accessor for the repeated struct vector
    * @param elementReader tuple reader that provides access to each
    * tuple in the array
-   * @return object reader that wraps the map array reader
+   * @return object reader that wraps the struct array reader
    */
 
   public static AbstractObjectReader buildTuple(ColumnMetadata schema,
       VectorAccessor arrayAccessor,
       AbstractObjectReader elementReader) {
 
-    // Create the array reader over the map vector.
+    // Create the array reader over the struct vector.
 
     ArrayReaderImpl arrayReader = new ArrayReaderImpl(schema, arrayAccessor, elementReader);
 
@@ -246,7 +246,7 @@ public class ArrayReaderImpl implements ArrayReader, ReaderEvents {
 
   /**
    * Build a list reader. Lists entries can be null. The reader can be a simple
-   * scalar, a map, a union, or another list.
+   * scalar, a struct, a union, or another list.
    *
    * @param listAccessor
    * @param elementReader

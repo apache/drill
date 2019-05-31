@@ -33,7 +33,7 @@ import org.apache.drill.exec.physical.rowSet.impl.SingleVectorState.OffsetVector
 import org.apache.drill.exec.physical.rowSet.impl.SingleVectorState.SimpleVectorState;
 import org.apache.drill.exec.physical.rowSet.impl.TupleState.MapArrayState;
 import org.apache.drill.exec.physical.rowSet.impl.TupleState.MapColumnState;
-import org.apache.drill.exec.physical.rowSet.impl.TupleState.MapVectorState;
+import org.apache.drill.exec.physical.rowSet.impl.TupleState.StructVectorState;
 import org.apache.drill.exec.physical.rowSet.impl.TupleState.SingleMapState;
 import org.apache.drill.exec.physical.rowSet.impl.UnionState.UnionColumnState;
 import org.apache.drill.exec.physical.rowSet.impl.UnionState.UnionVectorState;
@@ -56,14 +56,14 @@ import org.apache.drill.exec.vector.accessor.writer.AbstractTupleWriter.TupleObj
 import org.apache.drill.exec.vector.accessor.writer.ColumnWriterFactory;
 import org.apache.drill.exec.vector.accessor.writer.EmptyListShim;
 import org.apache.drill.exec.vector.accessor.writer.ListWriterImpl;
-import org.apache.drill.exec.vector.accessor.writer.MapWriter;
+import org.apache.drill.exec.vector.accessor.writer.StructWriter;
 import org.apache.drill.exec.vector.accessor.writer.RepeatedListWriter;
 import org.apache.drill.exec.vector.accessor.writer.UnionWriterImpl;
 import org.apache.drill.exec.vector.accessor.writer.UnionWriterImpl.VariantObjectWriter;
 import org.apache.drill.exec.vector.complex.ListVector;
-import org.apache.drill.exec.vector.complex.MapVector;
+import org.apache.drill.exec.vector.complex.StructVector;
 import org.apache.drill.exec.vector.complex.RepeatedListVector;
-import org.apache.drill.exec.vector.complex.RepeatedMapVector;
+import org.apache.drill.exec.vector.complex.RepeatedStructVector;
 import org.apache.drill.exec.vector.complex.RepeatedValueVector;
 import org.apache.drill.exec.vector.complex.UnionVector;
 
@@ -72,7 +72,7 @@ import org.apache.drill.exec.vector.complex.UnionVector;
  * the parent context that will hold the column.
  * <p>
  * Does not support recursive column creation. For the most part, composite columns
- * (maps, map arrays, unions and lists) must start empty. Build the composite first,
+ * (structs, struct arrays, unions and lists) must start empty. Build the composite first,
  * then add its members using the writer for the column. This ensures a uniform API
  * for adding columns whether done dynamically at read time or statically at create
  * time.
@@ -266,35 +266,35 @@ public class ColumnBuilder {
   }
 
   /**
-   * Build a new map (single or repeated) column. Except for maps nested inside
-   * of unions, no map vector is created
+   * Build a new struct (single or repeated) column. Except for maps nested inside
+   * of unions, no struct vector is created
    * here, instead we create a tuple state to hold the columns, and defer the
-   * map vector (or vector container) until harvest time.
+   * struct vector (or vector container) until harvest time.
    *
-   * @param columnSchema description of the map column
-   * @return column state for the map column
+   * @param columnSchema description of the struct column
+   * @return column state for the struct column
    */
 
   private ColumnState buildMap(ContainerState parent, ColumnTransform outputCol) {
     ColumnMetadata columnSchema = outputCol.outputSchema();
 
     // When dynamically adding columns, must add the (empty)
-    // map by itself, then add columns to the map via separate
+    // struct by itself, then add columns to the struct via separate
     // calls.
 
-    assert columnSchema.isMap();
+    assert columnSchema.isStruct();
     assert columnSchema.mapSchema().size() == 0;
 
     // Create the vector, vector state and writer.
 
     if (columnSchema.isArray()) {
-      return buildMapArray(parent, outputCol);
+      return buildStructArray(parent, outputCol);
     } else {
-      return buildSingleMap(parent, outputCol);
+      return buildSingleStruct(parent, outputCol);
     }
   }
 
-  private ColumnState buildSingleMap(ContainerState parent, ColumnTransform outputCol) {
+  private ColumnState buildSingleStruct(ContainerState parent, ColumnTransform outputCol) {
     ProjectionType projType = outputCol.projectionType();
     ColumnMetadata columnSchema = outputCol.outputSchema();
 
@@ -306,61 +306,61 @@ public class ColumnBuilder {
     default:
       break;
     }
-    MapVector vector;
+    StructVector vector;
     VectorState vectorState;
     if (projType == ProjectionType.UNPROJECTED) {
       vector = null;
       vectorState = new NullVectorState();
     } else {
 
-      // Don't get the map vector from the vector cache. Map vectors may
+      // Don't get the struct vector from the vector cache. Struct vectors may
       // have content that varies from batch to batch. Only the leaf
       // vectors can be cached.
 
       assert columnSchema.mapSchema().isEmpty();
-      vector = new MapVector(columnSchema.schema(), parent.loader().allocator(), null);
-      vectorState = new MapVectorState(vector, new NullVectorState());
+      vector = new StructVector(columnSchema.schema(), parent.loader().allocator(), null);
+      vectorState = new StructVectorState(vector, new NullVectorState());
     }
-    final TupleObjectWriter mapWriter = MapWriter.buildMap(columnSchema, vector, new ArrayList<>());
+    final TupleObjectWriter tupleWriter = StructWriter.buildMap(columnSchema, vector, new ArrayList<>());
     final SingleMapState mapState = new SingleMapState(parent.loader(),
         parent.vectorCache().childCache(columnSchema.name()),
         parent.projectionSet().mapProjection(columnSchema.name()));
-    return new MapColumnState(mapState, mapWriter, vectorState, parent.isVersioned());
+    return new MapColumnState(mapState, tupleWriter, vectorState, parent.isVersioned());
   }
 
-  private ColumnState buildMapArray(ContainerState parent, ColumnTransform outputCol) {
+  private ColumnState buildStructArray(ContainerState parent, ColumnTransform outputCol) {
     ProjectionType projType = outputCol.projectionType();
     ColumnMetadata columnSchema = outputCol.outputSchema();
 
-    // Create the map's offset vector.
+    // Create the struct's offset vector.
 
-    RepeatedMapVector mapVector;
+    RepeatedStructVector structVector;
     UInt4Vector offsetVector;
     if (projType == ProjectionType.UNPROJECTED) {
-      mapVector = null;
+      structVector = null;
       offsetVector = null;
     } else {
 
-      // Creating the map vector will create its contained vectors if we
+      // Creating the struct vector will create its contained vectors if we
       // give it a materialized field with children. So, instead pass a clone
       // without children so we can add them.
 
       final ColumnMetadata mapColSchema = columnSchema.cloneEmpty();
 
-      // Don't get the map vector from the vector cache. Map vectors may
+      // Don't get the struct vector from the vector cache. Struct vectors may
       // have content that varies from batch to batch. Only the leaf
       // vectors can be cached.
 
       assert columnSchema.mapSchema().isEmpty();
-      mapVector = new RepeatedMapVector(mapColSchema.schema(),
+      structVector = new RepeatedStructVector(mapColSchema.schema(),
           parent.loader().allocator(), null);
-      offsetVector = mapVector.getOffsetVector();
+      offsetVector = structVector.getOffsetVector();
     }
 
     // Create the writer using the offset vector
 
-    final AbstractObjectWriter writer = MapWriter.buildMapArray(
-        columnSchema, mapVector, new ArrayList<>());
+    final AbstractObjectWriter writer = StructWriter.buildMapArray(
+        columnSchema, structVector, new ArrayList<>());
 
     // Wrap the offset vector in a vector state
 
@@ -373,14 +373,14 @@ public class ColumnBuilder {
           offsetVector,
           writer.array().entry().events());
     }
-    final VectorState mapVectorState = new MapVectorState(mapVector, offsetVectorState);
+    final VectorState structVectorState = new StructVectorState(structVector, offsetVectorState);
 
     // Assemble it all into the column state.
 
     final MapArrayState mapState = new MapArrayState(parent.loader(),
         parent.vectorCache().childCache(columnSchema.name()),
         parent.projectionSet().mapProjection(columnSchema.name()));
-    return new MapColumnState(mapState, writer, mapVectorState, parent.isVersioned());
+    return new MapColumnState(mapState, writer, structVectorState, parent.isVersioned());
   }
 
   /**
@@ -629,7 +629,7 @@ public class ColumnBuilder {
         columnSchema.emptySchema(), parent.loader().allocator(), null);
 
     // No inner type yet. The result set loader builds the subtype
-    // incrementally because it might be complex (a map or another
+    // incrementally because it might be complex (a struct or another
     // repeated list.) To start, use a dummy to avoid need for if-statements
     // everywhere.
 

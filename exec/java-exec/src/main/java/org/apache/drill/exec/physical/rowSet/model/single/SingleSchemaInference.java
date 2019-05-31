@@ -30,7 +30,7 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.metadata.TupleSchema;
 import org.apache.drill.exec.record.metadata.VariantSchema;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.complex.AbstractMapVector;
+import org.apache.drill.exec.vector.complex.AbstractStructVector;
 import org.apache.drill.exec.vector.complex.ListVector;
 import org.apache.drill.exec.vector.complex.RepeatedListVector;
 import org.apache.drill.exec.vector.complex.UnionVector;
@@ -67,8 +67,8 @@ public class SingleSchemaInference {
   private ColumnMetadata inferVector(ValueVector vector) {
     final MaterializedField field = vector.getField();
     switch (field.getType().getMinorType()) {
-    case MAP:
-      return MetadataUtils.newMap(field, inferMapSchema((AbstractMapVector) vector));
+    case STRUCT:
+      return MetadataUtils.newStruct(field, inferMapSchema((AbstractStructVector) vector));
     case LIST:
       if (field.getDataMode() == DataMode.REPEATED) {
         return MetadataUtils.newRepeatedList(field.getName(),
@@ -83,7 +83,7 @@ public class SingleSchemaInference {
     }
   }
 
-  private TupleSchema inferMapSchema(AbstractMapVector vector) {
+  private TupleSchema inferMapSchema(AbstractStructVector vector) {
     final List<ColumnMetadata> columns = new ArrayList<>();
     for (int i = 0; i < vector.size(); i++) {
       columns.add(inferVector(vector.getChildByOrdinal(i)));

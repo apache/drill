@@ -20,10 +20,11 @@ package org.apache.drill.exec.physical.rowSet.model;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.vector.complex.AbstractStructVector;
 
 /**
  * Common interface to access a tuple backed by a vector container or a
- * map vector. Provides a visitor interface to apply tasks such as vector
+ * struct vector. Provides a visitor interface to apply tasks such as vector
  * allocation, reader or writer creation, and so on. Allows either static
  * or dynamic vector allocation.
  * <p>
@@ -34,9 +35,8 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
  * Drill we call this a "record batch", but that term has been overloaded to
  * mean the runtime implementation of an operator.</dd>
  * <dt>Tuple</dt>
- * <dd>The relational-theory term for a row. Drill maps have a fixed schema.
- * Impala, Hive and other tools use the term "structure" (or "struct") for
- * what Drill calls a map. A structure is simply a nested tuple, modeled
+ * <dd>The relational-theory term for a row.
+ * A structure is simply a nested tuple, modeled
  * here by the same tuple abstraction used for rows.</dd>
  * <dt>Column</dt>
  * <dd>A column is represented by a vector (which may have internal
@@ -72,7 +72,7 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
  * <p>
  * Tuples provide access to columns by both index and name. Both the schema and
  * model classes follow this convention. Compared with the VectorContainer and
- * {@link org.apache.drill.exec.vector.complex.AbstractMapVector} classes, the vector index is a first-class concept:
+ * {@link AbstractStructVector} classes, the vector index is a first-class concept:
  * the column model and schema are guaranteed to reside at the same index relative
  * to the enclosing tuple. In addition, name access is efficient using a hash
  * index.

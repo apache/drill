@@ -34,14 +34,14 @@ import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.complex.MapVector;
+import org.apache.drill.exec.vector.complex.StructVector;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 
 /**
  * Unpivot maps. Assumptions are:
- *  1) all child vectors in a map are of same type.
- *  2) Each map contains the same number of fields and field names are also same (types could be different).
+ *  1) all child vectors in a struct are of same type.
+ *  2) Each struct contains the same number of fields and field names are also same (types could be different).
  *
  * Example input and output:
  * Schema of input:
@@ -60,7 +60,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
  *       "region_id"  : BIGINT - nonnullstatcount(region_id)
  *       "sales_city" : BIGINT - nonnullstatcount(sales_city)
  *       "cnt"        : BIGINT - nonnullstatcount(cnt)
- *   .... another map for next stats function ....
+ *   .... another struct for next stats function ....
  *
  * Schema of output:
  *  "schema"           : BIGINT - Schema number. For each schema change this number is incremented.
@@ -68,7 +68,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
  *  "column"           : column name
  *  "statscount"       : BIGINT
  *  "nonnullstatcount" : BIGINT
- *  .... one column for each map type ...
+ *  .... one column for each struct type ...
  */
 public class UnpivotMapsRecordBatch extends AbstractSingleRecordBatch<UnpivotMaps> {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UnpivotMapsRecordBatch.class);
@@ -80,7 +80,7 @@ public class UnpivotMapsRecordBatch extends AbstractSingleRecordBatch<UnpivotMap
 
   private Map<MaterializedField, Map<String, ValueVector>> dataSrcVecMap = null;
 
-  // Map of non-map fields to VV in the incoming schema
+  // Map of non-struct fields to VV in the incoming schema
   private Map<MaterializedField, ValueVector> copySrcVecMap = null;
 
   private List<TransferPair> transferList;
@@ -180,12 +180,12 @@ public class UnpivotMapsRecordBatch extends AbstractSingleRecordBatch<UnpivotMap
   }
 
   /**
-   * Identify the list of fields within a map which are unpivoted as columns in output
+   * Identify the list of fields within a struct which are unpivoted as columns in output
    */
   private void buildKeyList() {
     List<String> lastMapKeyList = null;
     for (VectorWrapper<?> vw : incoming) {
-      if (vw.getField().getType().getMinorType() != MinorType.MAP) {
+      if (vw.getField().getType().getMinorType() != MinorType.STRUCT) {
         continue;
       }
 
@@ -220,10 +220,10 @@ public class UnpivotMapsRecordBatch extends AbstractSingleRecordBatch<UnpivotMap
         continue;
       }
 
-      MapVector mapVector = (MapVector) vw.getValueVector();
-      assert mapVector.getPrimitiveVectors().size() > 0;
+      StructVector structVector = (StructVector) vw.getValueVector();
+      assert structVector.getPrimitiveVectors().size() > 0;
 
-      MajorType mt = mapVector.iterator().next().getField().getType();
+      MajorType mt = structVector.iterator().next().getField().getType();
       MaterializedField mf = MaterializedField.create(colName, mt);
       assert !dataSrcVecMap.containsKey(mf);
       container.add(TypeHelper.getNewVector(mf, oContext.getAllocator()));
@@ -231,14 +231,14 @@ public class UnpivotMapsRecordBatch extends AbstractSingleRecordBatch<UnpivotMap
       Map<String, ValueVector> m = Maps.newHashMap();
       dataSrcVecMap.put(mf, m);
 
-      for (ValueVector vv : mapVector) {
+      for (ValueVector vv : structVector) {
         String fieldName = SchemaPath.getSimplePath(vv.getField().getName()).toString();
         if (!keyList.contains(fieldName)) {
           throw new UnsupportedOperationException("Unpivot data vector " +
               ds + " contains key " + fieldName + " not contained in key source!");
         }
-        if (vv.getField().getType().getMinorType() == MinorType.MAP) {
-          throw new UnsupportedOperationException("Unpivot of nested map is not supported!");
+        if (vv.getField().getType().getMinorType() == MinorType.STRUCT) {
+          throw new UnsupportedOperationException("Unpivot of nested struct is not supported!");
         }
         m.put(fieldName, vv);
       }

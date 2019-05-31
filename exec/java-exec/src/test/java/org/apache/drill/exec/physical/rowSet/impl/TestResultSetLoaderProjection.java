@@ -203,15 +203,15 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
   public void testMapProjection() {
     List<SchemaPath> selection = RowSetTestUtils.projectList("m1", "m2.d");
     TupleMetadata schema = new SchemaBuilder()
-        .addMap("m1")
+        .addStruct("m1")
           .add("a", MinorType.INT)
           .add("b", MinorType.INT)
           .resumeSchema()
-        .addMap("m2")
+        .addStruct("m2")
           .add("c", MinorType.INT)
           .add("d", MinorType.INT)
           .resumeSchema()
-        .addMap("m3")
+        .addStruct("m3")
           .add("e", MinorType.INT)
           .add("f", MinorType.INT)
           .resumeSchema()
@@ -227,21 +227,21 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
 
     TupleMetadata actualSchema = rootWriter.tupleSchema();
     ColumnMetadata m1Md = actualSchema.metadata("m1");
-    assertTrue(m1Md.isMap());
+    assertTrue(m1Md.isStruct());
     assertTrue(m1Md.isProjected());
     assertEquals(2, m1Md.mapSchema().size());
     assertTrue(m1Md.mapSchema().metadata("a").isProjected());
     assertTrue(m1Md.mapSchema().metadata("b").isProjected());
 
     ColumnMetadata m2Md = actualSchema.metadata("m2");
-    assertTrue(m2Md.isMap());
+    assertTrue(m2Md.isStruct());
     assertTrue(m2Md.isProjected());
     assertEquals(2, m2Md.mapSchema().size());
     assertFalse(m2Md.mapSchema().metadata("c").isProjected());
     assertTrue(m2Md.mapSchema().metadata("d").isProjected());
 
     ColumnMetadata m3Md = actualSchema.metadata("m3");
-    assertTrue(m3Md.isMap());
+    assertTrue(m3Md.isStruct());
     assertFalse(m3Md.isProjected());
     assertEquals(2, m3Md.mapSchema().size());
     assertFalse(m3Md.mapSchema().metadata("e").isProjected());
@@ -258,11 +258,11 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
     // Verify. Only the projected columns appear in the result set.
 
     BatchSchema expectedSchema = new SchemaBuilder()
-      .addMap("m1")
+      .addStruct("m1")
         .add("a", MinorType.INT)
         .add("b", MinorType.INT)
         .resumeSchema()
-      .addMap("m2")
+      .addStruct("m2")
         .add("d", MinorType.INT)
         .resumeSchema()
       .build();
@@ -278,7 +278,7 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
   public void testMapProjectionMemberAndMap() {
     List<SchemaPath> selection = RowSetTestUtils.projectList("m1", "m1.b");
     TupleMetadata schema = new SchemaBuilder()
-        .addMap("m1")
+        .addStruct("m1")
           .add("a", MinorType.INT)
           .add("b", MinorType.INT)
           .resumeSchema()
@@ -294,7 +294,7 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
 
     TupleMetadata actualSchema = rootWriter.tupleSchema();
     ColumnMetadata m1Md = actualSchema.metadata("m1");
-    assertTrue(m1Md.isMap());
+    assertTrue(m1Md.isStruct());
     assertTrue(m1Md.isProjected());
     assertEquals(2, m1Md.mapSchema().size());
     assertTrue(m1Md.mapSchema().metadata("a").isProjected());
@@ -308,8 +308,8 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
       .addSingleCol(mapValue( 1,  2))
       .addSingleCol(mapValue(11, 12));
 
-    // Verify. The whole map appears in the result set because the
-    // project list included the whole map as well as a map member.
+    // Verify. The whole struct appears in the result set because the
+    // project list included the whole struct as well as a struct member.
 
     SingleRowSet expected = fixture.rowSetBuilder(schema)
       .addSingleCol(mapValue( 1,  2))
@@ -320,7 +320,7 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
   }
 
   /**
-   * Test a map array. Use the convenience methods to set values.
+   * Test a struct array. Use the convenience methods to set values.
    * Only the projected array members should appear in the harvested
    * results.
    */
@@ -329,15 +329,15 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
   public void testMapArrayProjection() {
     List<SchemaPath> selection = RowSetTestUtils.projectList("m1", "m2.d");
     TupleMetadata schema = new SchemaBuilder()
-        .addMapArray("m1")
+        .addStructArray("m1")
           .add("a", MinorType.INT)
           .add("b", MinorType.INT)
           .resumeSchema()
-        .addMapArray("m2")
+        .addStructArray("m2")
           .add("c", MinorType.INT)
           .add("d", MinorType.INT)
           .resumeSchema()
-        .addMapArray("m3")
+        .addStructArray("m3")
           .add("e", MinorType.INT)
           .add("f", MinorType.INT)
           .resumeSchema()
@@ -364,11 +364,11 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
     // Verify. Only the projected columns appear in the result set.
 
     BatchSchema expectedSchema = new SchemaBuilder()
-      .addMapArray("m1")
+      .addStructArray("m1")
         .add("a", MinorType.INT)
         .add("b", MinorType.INT)
         .resumeSchema()
-      .addMapArray("m2")
+      .addStructArray("m2")
         .add("d", MinorType.INT)
         .resumeSchema()
       .build();
@@ -550,7 +550,7 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
   public void testMapArrayConflict() {
     List<SchemaPath> selection = RowSetTestUtils.projectList("col[0]");
     TupleMetadata schema = new SchemaBuilder()
-        .addMap("col")
+        .addStruct("col")
           .add("child", MinorType.VARCHAR)
           .resumeSchema()
         .buildSchema();
@@ -571,7 +571,7 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
   public void testMapMapArrayConflict() {
     List<SchemaPath> selection = RowSetTestUtils.projectList("col[0].child");
     TupleMetadata schema = new SchemaBuilder()
-        .addMap("col")
+        .addStruct("col")
           .add("child", MinorType.VARCHAR)
           .resumeSchema()
         .buildSchema();

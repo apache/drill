@@ -496,7 +496,7 @@ public class TestFileScanFramework extends SubOperatorTest {
     @Override
     public boolean open(FileSchemaNegotiator schemaNegotiator) {
       TupleMetadata schema = new SchemaBuilder()
-          .addMap("m1")
+          .addStruct("m1")
             .add("a", MinorType.INT)
             .add("b", MinorType.INT)
             .resumeSchema()
@@ -526,7 +526,7 @@ public class TestFileScanFramework extends SubOperatorTest {
     MockMapReader reader = new MockMapReader();
     reader.batchLimit = 1;
 
-    // Select one of the two map columns
+    // Select one of the two struct columns
 
     FileScanFixtureBuilder builder = new FileScanFixtureBuilder();
     builder.setProjection(new String[] {"m1.a"});
@@ -537,7 +537,7 @@ public class TestFileScanFramework extends SubOperatorTest {
     // Expect data and implicit columns
 
     BatchSchema expectedSchema = new SchemaBuilder()
-        .addMap("m1")
+        .addStruct("m1")
           .add("a", MinorType.INT)
           .resumeSchema()
         .build();

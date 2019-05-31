@@ -20,7 +20,7 @@ package org.apache.drill.exec.physical.impl.statistics;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarCharVector;
-import org.apache.drill.exec.vector.complex.MapVector;
+import org.apache.drill.exec.vector.complex.StructVector;
 
 public class ColumnMergedStatistic extends AbstractMergedStatistic {
 
@@ -45,16 +45,16 @@ public class ColumnMergedStatistic extends AbstractMergedStatistic {
   }
 
   @Override
-  public void merge(MapVector input) {
+  public void merge(StructVector input) {
     // Check the input is a Map Vector
-    assert (input.getField().getType().getMinorType() == TypeProtos.MinorType.MAP);
+    assert (input.getField().getType().getMinorType() == TypeProtos.MinorType.STRUCT);
   }
 
   @Override
-  public void setOutput(MapVector output) {
+  public void setOutput(StructVector output) {
     // Check the input is a Map Vector
-    assert (output.getField().getType().getMinorType() == TypeProtos.MinorType.MAP);
-    MapVector outputMap = (MapVector) output;
+    assert (output.getField().getType().getMinorType() == TypeProtos.MinorType.STRUCT);
+    StructVector outputMap = (StructVector) output;
     for (ValueVector outMapCol : outputMap) {
       String colName = outMapCol.getField().getName();
       VarCharVector vv = (VarCharVector) outMapCol;

@@ -26,7 +26,7 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.RepeatedListVector;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter.StructWriter;
 
 public class RepeatedListReaderImpl extends AbstractFieldReader{
   private static final int NO_VALUES = Integer.MAX_VALUE - 1;
@@ -58,7 +58,7 @@ public class RepeatedListReaderImpl extends AbstractFieldReader{
   }
 
   @Override
-  public void copyAsField(String name, MapWriter writer) {
+  public void copyAsField(String name, StructWriter writer) {
     if (isEmpty()) {
       return;
     }

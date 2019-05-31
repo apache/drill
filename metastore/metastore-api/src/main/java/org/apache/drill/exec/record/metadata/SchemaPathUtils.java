@@ -37,7 +37,7 @@ public class SchemaPathUtils {
     PathSegment.NameSegment colPath = schemaPath.getUnIndexed().getRootSegment();
     ColumnMetadata colMetadata = schema.metadata(colPath.getPath());
     while (!colPath.isLastPath() && colMetadata != null) {
-      if (!colMetadata.isMap()) {
+      if (!colMetadata.isStruct()) {
         colMetadata = null;
         break;
       }

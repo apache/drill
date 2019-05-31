@@ -120,7 +120,7 @@ public class JsonWriter {
         }
         gen.writeEndArray();
         break;
-      case MAP:
+      case STRUCT:
         gen.writeStartObject();
         if (reader.isSet()) {
           for(String name : reader){
@@ -232,7 +232,7 @@ public class JsonWriter {
           }
         }
         break;
-      case MAP:
+      case STRUCT:
         while(reader.next()){
           gen.writeStartObject();
           for(String name : reader){

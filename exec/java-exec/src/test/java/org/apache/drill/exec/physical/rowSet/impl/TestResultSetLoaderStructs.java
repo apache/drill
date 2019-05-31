@@ -43,7 +43,7 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.TupleReader;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
-import org.apache.drill.exec.vector.complex.MapVector;
+import org.apache.drill.exec.vector.complex.StructVector;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
@@ -54,17 +54,17 @@ import org.junit.experimental.categories.Category;
 
 
 /**
- * Test (non-array) map support in the result set loader and related classes.
+ * Test (non-array) struct support in the result set loader and related classes.
  */
 
 @Category(RowSetTests.class)
-public class TestResultSetLoaderMaps extends SubOperatorTest {
+public class TestResultSetLoaderStructs extends SubOperatorTest {
 
   @Test
   public void testBasics() {
     final TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.INT)
-        .addMap("m")
+        .addStruct("m")
           .add("c", MinorType.INT)
           .add("d", MinorType.VARCHAR)
           .resumeSchema()
@@ -82,7 +82,7 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
     assertEquals(5, rsLoader.schemaVersion());
     final TupleMetadata actualSchema = rootWriter.tupleSchema();
     assertEquals(3, actualSchema.size());
-    assertTrue(actualSchema.metadata(1).isMap());
+    assertTrue(actualSchema.metadata(1).isStruct());
     assertEquals(2, actualSchema.metadata("m").mapSchema().size());
     assertEquals(2, actualSchema.column("m").getChildren().size());
 
@@ -121,8 +121,8 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
     final RowSet actual = fixture.wrap(rsLoader.harvest());
     assertEquals(5, rsLoader.schemaVersion());
     assertEquals(2, actual.rowCount());
-    final MapVector mapVector = (MapVector) actual.container().getValueVector(1).getValueVector();
-    assertEquals(2, mapVector.getAccessor().getValueCount());
+    final StructVector structVector = (StructVector) actual.container().getValueVector(1).getValueVector();
+    assertEquals(2, structVector.getAccessor().getValueCount());
 
     // Validate data
 
@@ -136,7 +136,7 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
   }
 
   /**
-   * Create schema with a map, then add columns to the map
+   * Create schema with a struct, then add columns to the struct
    * after delivering the first batch. The new columns should appear
    * in the second-batch output.
    */
@@ -145,7 +145,7 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
   public void testMapEvolution() {
     final TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.INT)
-        .addMap("m")
+        .addStruct("m")
           .add("b", MinorType.VARCHAR)
           .resumeSchema()
         .buildSchema();
@@ -197,7 +197,7 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
 
     final TupleMetadata expectedSchema = new SchemaBuilder()
         .add("a", MinorType.INT)
-        .addMap("m")
+        .addStruct("m")
           .add("b", MinorType.VARCHAR)
           .add("c", MinorType.INT)
           .add("d", MinorType.BIGINT)
@@ -214,7 +214,7 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
   }
 
   /**
-   * Test adding a map to a loader after writing the first row.
+   * Test adding a struct to a loader after writing the first row.
    */
 
   @Test
@@ -229,15 +229,15 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
     assertEquals(1, rsLoader.schemaVersion());
     final RowSetLoader rootWriter = rsLoader.writer();
 
-    // Start without the map. Add a map after the first row.
+    // Start without the struct. Add a struct after the first row.
 
     rsLoader.startBatch();
     rootWriter.addRow(10);
 
-    final int mapIndex = rootWriter.addColumn(SchemaBuilder.columnSchema("m", MinorType.MAP, DataMode.REQUIRED));
+    final int mapIndex = rootWriter.addColumn(SchemaBuilder.columnSchema("m", MinorType.STRUCT, DataMode.REQUIRED));
     final TupleWriter mapWriter = rootWriter.tuple(mapIndex);
 
-    // Add a column to the map with the same name as the top-level column.
+    // Add a column to the struct with the same name as the top-level column.
     // Verifies that the name spaces are independent.
 
     final int colIndex = mapWriter.addColumn(SchemaBuilder.columnSchema("a", MinorType.VARCHAR, DataMode.REQUIRED));
@@ -257,8 +257,8 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
     assertEquals(3, rsLoader.schemaVersion());
     assertEquals(3, actual.rowCount());
 
-    final MapVector mapVector = (MapVector) actual.container().getValueVector(1).getValueVector();
-    final MaterializedField mapField = mapVector.getField();
+    final StructVector structVector = (StructVector) actual.container().getValueVector(1).getValueVector();
+    final MaterializedField mapField = structVector.getField();
     assertEquals(1, mapField.getChildren().size());
     assertTrue(mapWriter.scalar(colIndex).schema().schema().isEquivalent(
         mapField.getChildren().iterator().next()));
@@ -267,7 +267,7 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
 
     final TupleMetadata expectedSchema = new SchemaBuilder()
         .add("a", MinorType.INT)
-        .addMap("m")
+        .addStruct("m")
           .add("a", MinorType.VARCHAR)
           .resumeSchema()
         .buildSchema();
@@ -282,7 +282,7 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
   }
 
   /**
-   * Test adding an empty map to a loader after writing the first row.
+   * Test adding an empty struct to a loader after writing the first row.
    * Then add columns in another batch. Yes, this is a bizarre condition,
    * but we must check it anyway for robustness.
    */
@@ -299,12 +299,12 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
     assertEquals(1, rsLoader.schemaVersion());
     final RowSetLoader rootWriter = rsLoader.writer();
 
-    // Start without the map. Add a map after the first row.
+    // Start without the struct. Add a struct after the first row.
 
     rsLoader.startBatch();
     rootWriter.addRow(10);
 
-    final int mapIndex = rootWriter.addColumn(SchemaBuilder.columnSchema("m", MinorType.MAP, DataMode.REQUIRED));
+    final int mapIndex = rootWriter.addColumn(SchemaBuilder.columnSchema("m", MinorType.STRUCT, DataMode.REQUIRED));
     final TupleWriter mapWriter = rootWriter.tuple(mapIndex);
 
     rootWriter
@@ -319,7 +319,7 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
 
     TupleMetadata expectedSchema = new SchemaBuilder()
         .add("a", MinorType.INT)
-        .addMap("m")
+        .addStruct("m")
           .resumeSchema()
         .buildSchema();
     SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
@@ -330,7 +330,7 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
 
     RowSetUtilities.verify(expected, actual);
 
-    // Now add another column to the map
+    // Now add another column to the struct
 
     rsLoader.startBatch();
     mapWriter.addColumn(SchemaBuilder.columnSchema("a", MinorType.VARCHAR, DataMode.REQUIRED));
@@ -347,7 +347,7 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
 
     expectedSchema = new SchemaBuilder()
         .add("a", MinorType.INT)
-        .addMap("m")
+        .addStruct("m")
           .add("a", MinorType.VARCHAR)
           .resumeSchema()
         .buildSchema();
@@ -361,7 +361,7 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
   }
 
   /**
-   * Create nested maps. Then, add columns to each map
+   * Create nested maps. Then, add columns to each struct
    * on the fly. Use required, variable-width columns since
    * those require the most processing and are most likely to
    * fail if anything is out of place.
@@ -371,11 +371,11 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
   public void testNestedMapsRequired() {
     final TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.INT)
-        .addMap("m1")
+        .addStruct("m1")
           .add("b", MinorType.VARCHAR)
-          .addMap("m2")
+          .addStruct("m2")
             .add("c", MinorType.VARCHAR)
-            .resumeMap()
+            .resumeStruct()
           .resumeSchema()
         .buildSchema();
     final ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
@@ -424,13 +424,13 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
 
     final TupleMetadata expectedSchema = new SchemaBuilder()
         .add("a", MinorType.INT)
-        .addMap("m1")
+        .addStruct("m1")
           .add("b", MinorType.VARCHAR)
-          .addMap("m2")
+          .addStruct("m2")
             .add("c", MinorType.VARCHAR)
             .add("e", MinorType.VARCHAR)
             .add("g", MinorType.VARCHAR)
-            .resumeMap()
+            .resumeStruct()
           .add("d", MinorType.VARCHAR)
           .add("f", MinorType.VARCHAR)
           .resumeSchema()
@@ -446,7 +446,7 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
   }
 
   /**
-   * Create nested maps. Then, add columns to each map
+   * Create nested maps. Then, add columns to each struct
    * on the fly. This time, with nullable types.
    */
 
@@ -454,11 +454,11 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
   public void testNestedMapsNullable() {
     final TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.INT)
-        .addMap("m1")
+        .addStruct("m1")
           .addNullable("b", MinorType.VARCHAR)
-          .addMap("m2")
+          .addStruct("m2")
             .addNullable("c", MinorType.VARCHAR)
-            .resumeMap()
+            .resumeStruct()
           .resumeSchema()
         .buildSchema();
     final ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
@@ -503,13 +503,13 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
     actual = fixture.wrap(rsLoader.harvest());
     final TupleMetadata expectedSchema = new SchemaBuilder()
         .add("a", MinorType.INT)
-        .addMap("m1")
+        .addStruct("m1")
           .addNullable("b", MinorType.VARCHAR)
-          .addMap("m2")
+          .addStruct("m2")
             .addNullable("c", MinorType.VARCHAR)
             .addNullable("e", MinorType.VARCHAR)
             .addNullable("g", MinorType.VARCHAR)
-            .resumeMap()
+            .resumeStruct()
           .addNullable("d", MinorType.VARCHAR)
           .addNullable("f", MinorType.VARCHAR)
           .resumeSchema()
@@ -525,7 +525,7 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
   }
 
   /**
-   * Test a map that contains a scalar array. No reason to suspect that this
+   * Test a struct that contains a scalar array. No reason to suspect that this
    * will have problem as the array writer is fully tested in the accessor
    * subsystem. Still, need to test the cardinality methods of the loader
    * layer.
@@ -535,7 +535,7 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
   public void testMapWithArray() {
     final TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.INT)
-        .addMap("m")
+        .addStruct("m")
           .addArray("c", MinorType.INT)
           .addArray("d", MinorType.VARCHAR)
           .resumeSchema()
@@ -596,8 +596,8 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
   }
 
   /**
-   * Create a schema with a map, then trigger an overflow on one of the columns
-   * in the map. Proper overflow handling should occur regardless of nesting
+   * Create a schema with a struct, then trigger an overflow on one of the columns
+   * in the struct. Proper overflow handling should occur regardless of nesting
    * depth.
    */
 
@@ -605,13 +605,13 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
   public void testMapWithOverflow() {
     final TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.INT)
-        .addMap("m1")
+        .addStruct("m1")
           .add("b", MinorType.INT)
-          .addMap("m2")
+          .addStruct("m2")
             .add("c", MinorType.INT) // Before overflow, written
             .add("d", MinorType.VARCHAR)
             .add("e", MinorType.INT) // After overflow, not yet written
-            .resumeMap()
+            .resumeStruct()
           .resumeSchema()
         .buildSchema();
     final ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
@@ -648,11 +648,11 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
     RowSet result = fixture.wrap(rsLoader.harvest());
     assertEquals(expectedCount, result.rowCount());
 
-    // Ensure the odd map vector value count variable is set correctly.
+    // Ensure the odd struct vector value count variable is set correctly.
 
-    final MapVector m1Vector = (MapVector) result.container().getValueVector(1).getValueVector();
+    final StructVector m1Vector = (StructVector) result.container().getValueVector(1).getValueVector();
     assertEquals(expectedCount, m1Vector.getAccessor().getValueCount());
-    final MapVector m2Vector = (MapVector) m1Vector.getChildByOrdinal(1);
+    final StructVector m2Vector = (StructVector) m1Vector.getChildByOrdinal(1);
     assertEquals(expectedCount, m2Vector.getAccessor().getValueCount());
 
     result.clear();
@@ -671,7 +671,7 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
 
   /**
    * Test the case in which a new column is added during the overflow row. Unlike
-   * the top-level schema case, internally we must create a copy of the map, and
+   * the top-level schema case, internally we must create a copy of the struct, and
    * move vectors across only when the result is to include the schema version
    * of the target column. For overflow, the new column is added after the
    * first batch; it is added in the second batch that contains the overflow
@@ -682,7 +682,7 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
   public void testMapOverflowWithNewColumn() {
     final TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.INT)
-        .addMap("m")
+        .addStruct("m")
           .add("b", MinorType.INT)
           .add("c", MinorType.VARCHAR)
           .resumeSchema()
@@ -775,7 +775,7 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
   public void testOverwriteRow() {
     final TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.INT)
-        .addMap("m")
+        .addStruct("m")
           .add("b", MinorType.INT)
           .add("c", MinorType.VARCHAR)
         .resumeSchema()
@@ -832,7 +832,7 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
   }
 
   /**
-   * Verify that map name spaces (and implementations) are
+   * Verify that struct name spaces (and implementations) are
    * independent.
    */
 
@@ -840,11 +840,11 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
   public void testNameSpace() {
     final TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.INT)
-        .addMap("m")
+        .addStruct("m")
           .add("a", MinorType.INT)
-          .addMap("m")
+          .addStruct("m")
             .add("a", MinorType.INT)
-            .resumeMap()
+            .resumeStruct()
           .resumeSchema()
         .buildSchema();
     final ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()

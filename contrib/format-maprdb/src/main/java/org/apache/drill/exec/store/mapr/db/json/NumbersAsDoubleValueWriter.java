@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.mapr.db.json;
 
-import org.apache.drill.exec.vector.complex.impl.MapOrListWriterImpl;
+import org.apache.drill.exec.vector.complex.impl.StructOrListWriterImpl;
 import org.ojai.DocumentReader;
 
 import io.netty.buffer.DrillBuf;
@@ -28,23 +28,23 @@ public class NumbersAsDoubleValueWriter extends OjaiValueWriter {
     super(buffer);
   }
 
-  protected void writeFloat(MapOrListWriterImpl writer, String fieldName, DocumentReader reader) {
+  protected void writeFloat(StructOrListWriterImpl writer, String fieldName, DocumentReader reader) {
     writer.float8(fieldName).writeFloat8(reader.getFloat());
   }
 
-  protected void writeLong(MapOrListWriterImpl writer, String fieldName, DocumentReader reader) {
+  protected void writeLong(StructOrListWriterImpl writer, String fieldName, DocumentReader reader) {
       writer.float8(fieldName).writeFloat8(reader.getLong());
   }
 
-  protected void writeInt(MapOrListWriterImpl writer, String fieldName, DocumentReader reader) {
+  protected void writeInt(StructOrListWriterImpl writer, String fieldName, DocumentReader reader) {
       writer.float8(fieldName).writeFloat8(reader.getInt());
   }
 
-  protected void writeShort(MapOrListWriterImpl writer, String fieldName, DocumentReader reader) {
+  protected void writeShort(StructOrListWriterImpl writer, String fieldName, DocumentReader reader) {
       writer.float8(fieldName).writeFloat8(reader.getShort());
   }
 
-  protected void writeByte(MapOrListWriterImpl writer, String fieldName, DocumentReader reader) {
+  protected void writeByte(StructOrListWriterImpl writer, String fieldName, DocumentReader reader) {
       writer.float8(fieldName).writeFloat8(reader.getByte());
   }
 

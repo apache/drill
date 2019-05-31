@@ -22,7 +22,7 @@ import java.util.Map;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarCharVector;
-import org.apache.drill.exec.vector.complex.MapVector;
+import org.apache.drill.exec.vector.complex.StructVector;
 
 public class ColTypeMergedStatistic extends AbstractMergedStatistic {
   private Map<String, byte[]> typeHolder;
@@ -49,9 +49,8 @@ public class ColTypeMergedStatistic extends AbstractMergedStatistic {
   }
 
   @Override
-  public void merge(MapVector input) {
-    // Check the input is a Map Vector
-    assert (input.getField().getType().getMinorType() == TypeProtos.MinorType.MAP);
+  public void merge(StructVector input) {
+    assert (input.getField().getType().getMinorType() == TypeProtos.MinorType.STRUCT);
     for (ValueVector vv : input) {
       String colName = vv.getField().getName();
       if (typeHolder.get(colName) == null) {
@@ -71,9 +70,8 @@ public class ColTypeMergedStatistic extends AbstractMergedStatistic {
   }
 
   @Override
-  public void setOutput(MapVector output) {
-    // Check the input is a Map Vector
-    assert (output.getField().getType().getMinorType() == TypeProtos.MinorType.MAP);
+  public void setOutput(StructVector output) {
+    assert (output.getField().getType().getMinorType() == TypeProtos.MinorType.STRUCT);
     for (ValueVector outMapCol : output) {
       String colName = outMapCol.getField().getName();
       VarCharVector vv = (VarCharVector) outMapCol;

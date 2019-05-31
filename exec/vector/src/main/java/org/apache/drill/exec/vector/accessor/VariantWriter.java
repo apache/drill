@@ -42,13 +42,13 @@ import org.apache.drill.exec.record.metadata.VariantMetadata;
  * the type for a row), then calling the set method on that writer for each
  * row, <b>and</b> calling {@link #setType(MinorType)} for each row.
  * <p>
- * This writer acts as somewhat like a map: it allows access to
+ * This writer acts as somewhat like a struct: it allows access to
  * type-specific writers.
  * <p>
  * Although the union and list vectors supports a union of any Drill
  * type, the only sane combinations are:
  * <ul>
- * <li>One of a (single or repeated) (map or list), or</li>
+ * <li>One of a (single or repeated) (struct or list), or</li>
  * <li>One or more scalar type.</li>
  * </ul>
  *

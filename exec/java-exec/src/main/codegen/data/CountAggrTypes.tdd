@@ -56,8 +56,8 @@
     "RepeatedDecimal38Sparse",
     "List"
     "RepeatedList",
-    "Map"
-    "RepeatedMap"
+    "Struct"
+    "RepeatedStruct"
   ]
 }
 

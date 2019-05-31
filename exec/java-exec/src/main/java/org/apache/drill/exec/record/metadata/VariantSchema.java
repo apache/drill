@@ -43,14 +43,14 @@ public class VariantSchema implements VariantMetadata {
     switch (type) {
     case LIST:
       return new VariantColumnMetadata(name, type, null);
-    case MAP:
-      // Although maps do not have a bits vector, when used in a
-      // union the map must be marked as optional since the union as a
-      // whole can be null, implying that the map is null by implication.
+    case STRUCT:
+      // Although structs do not have a bits vector, when used in a
+      // union the struct must be marked as optional since the union as a
+      // whole can be null, implying that the struct is null by implication.
       // (In fact, the readers have a special mechanism to work out the
       // null state in this case.
 
-      return new MapColumnMetadata(name, DataMode.OPTIONAL, null);
+      return new StructColumnMetadata(name, DataMode.OPTIONAL, null);
     case UNION:
       throw new IllegalArgumentException("Cannot add a union to a union");
     default:
@@ -122,11 +122,11 @@ public class VariantSchema implements VariantMetadata {
     return types.values();
   }
 
-  public void addMap(MapColumnMetadata mapCol) {
+  public void addMap(StructColumnMetadata mapCol) {
     Preconditions.checkArgument(! mapCol.isArray());
     Preconditions.checkState(! isSimple);
-    checkType(MinorType.MAP);
-    types.put(MinorType.MAP, mapCol);
+    checkType(MinorType.STRUCT);
+    types.put(MinorType.STRUCT, mapCol);
   }
 
   public void addList(VariantColumnMetadata listCol) {
@@ -145,8 +145,8 @@ public class VariantSchema implements VariantMetadata {
     case LIST:
       col = new VariantColumnMetadata(field);
       break;
-    case MAP:
-      col = new MapColumnMetadata(field);
+    case STRUCT:
+      col = new StructColumnMetadata(field);
       break;
     case UNION:
       throw new IllegalArgumentException("Cannot add a union to a union");

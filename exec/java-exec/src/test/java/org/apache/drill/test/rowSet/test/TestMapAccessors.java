@@ -37,7 +37,7 @@ import org.apache.drill.exec.vector.accessor.ScalarReader;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.TupleReader;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
-import org.apache.drill.exec.vector.complex.RepeatedMapVector;
+import org.apache.drill.exec.vector.complex.RepeatedStructVector;
 import org.apache.drill.test.ClientFixture;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.SubOperatorTest;
@@ -52,7 +52,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 /**
- * Test map support in the column readers and writers.
+ * Test struct support in the column readers and writers.
  * <p>
  * The tests here are a simplified form of those in
  * TestResultSetLoaderMaps -- the RowSet mechanism requires a fixed
@@ -66,7 +66,7 @@ public class TestMapAccessors extends SubOperatorTest {
   public void testBasics() {
     final TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.INT)
-        .addMap("m")
+        .addStruct("m")
           .add("c", MinorType.INT)
           .add("d", MinorType.VARCHAR)
           .resumeSchema()
@@ -80,7 +80,7 @@ public class TestMapAccessors extends SubOperatorTest {
 
     final TupleMetadata actualSchema = rootWriter.tupleSchema();
     assertEquals(3, actualSchema.size());
-    assertTrue(actualSchema.metadata(1).isMap());
+    assertTrue(actualSchema.metadata(1).isStruct());
     assertEquals(2, actualSchema.metadata("m").mapSchema().size());
     assertEquals(2, actualSchema.column("m").getChildren().size());
 
@@ -151,11 +151,11 @@ public class TestMapAccessors extends SubOperatorTest {
   public void testNestedMapsRequired() {
     final TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.INT)
-        .addMap("m1")
+        .addStruct("m1")
           .add("b", MinorType.VARCHAR)
-          .addMap("m2")
+          .addStruct("m2")
             .add("c", MinorType.VARCHAR)
-            .resumeMap()
+            .resumeStruct()
           .add("d", MinorType.VARCHAR)
           .resumeSchema()
         .buildSchema();
@@ -205,7 +205,7 @@ public class TestMapAccessors extends SubOperatorTest {
   public void testBasicRepeatedMap() {
     TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.INT)
-        .addMapArray("m")
+        .addStructArray("m")
           .add("c", MinorType.INT)
           .add("d", MinorType.VARCHAR)
           .resumeSchema()
@@ -219,7 +219,7 @@ public class TestMapAccessors extends SubOperatorTest {
     TupleMetadata actualSchema = rootWriter.tupleSchema();
     assertEquals(2, actualSchema.size());
     assertTrue(actualSchema.metadata(1).isArray());
-    assertTrue(actualSchema.metadata(1).isMap());
+    assertTrue(actualSchema.metadata(1).isStruct());
     assertEquals(2, actualSchema.metadata("m").mapSchema().size());
     assertEquals(2, actualSchema.column("m").getChildren().size());
     TupleWriter mapWriter = rootWriter.array("m").tuple();
@@ -243,8 +243,8 @@ public class TestMapAccessors extends SubOperatorTest {
     // Verify the first batch
 
     RowSet actual = builder.build();
-    RepeatedMapVector mapVector = (RepeatedMapVector) actual.container().getValueVector(1).getValueVector();
-    MaterializedField mapField = mapVector.getField();
+    RepeatedStructVector structVector = (RepeatedStructVector) actual.container().getValueVector(1).getValueVector();
+    MaterializedField mapField = structVector.getField();
     assertEquals(2, mapField.getChildren().size());
     Iterator<MaterializedField> iter = mapField.getChildren().iterator();
     assertTrue(mapWriter.scalar(0).schema().schema().isEquivalent(iter.next()));
@@ -273,7 +273,7 @@ public class TestMapAccessors extends SubOperatorTest {
   public void testNestedArray() {
     TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.INT)
-        .addMapArray("m")
+        .addStructArray("m")
           .add("c", MinorType.INT)
           .addArray("d", MinorType.VARCHAR)
           .resumeSchema()
@@ -326,12 +326,12 @@ public class TestMapAccessors extends SubOperatorTest {
   public void testDoubleNestedArray() {
     TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.INT)
-        .addMapArray("m1")
+        .addStructArray("m1")
           .add("b", MinorType.INT)
-          .addMapArray("m2")
+          .addStructArray("m2")
             .add("c", MinorType.INT)
             .addArray("d", MinorType.VARCHAR)
-            .resumeMap()
+            .resumeStruct()
           .resumeSchema()
         .buildSchema();
 
@@ -400,10 +400,10 @@ public class TestMapAccessors extends SubOperatorTest {
   }
 
   /**
-   * Test that the schema inference handles repeated map vectors.
+   * Test that the schema inference handles repeated struct vectors.
    * <p>
-   * It turns out that when some operators create a map array, it adds the
-   * $offset$ vector to the list of children for the map's MaterializedField.
+   * It turns out that when some operators create a struct array, it adds the
+   * $offset$ vector to the list of children for the struct's MaterializedField.
    * But, the RowSet utilities do not. This test verifies that both forms
    * work.
    */
@@ -417,7 +417,7 @@ public class TestMapAccessors extends SubOperatorTest {
       RowSet actual = client.queryBuilder().sql(sql).rowSet();
 
       TupleMetadata schema = new SchemaBuilder()
-          .addMapArray("a")
+          .addStructArray("a")
             .addNullable("c", MinorType.BIGINT)
             .resumeSchema()
           .addNullable("b", MinorType.FLOAT8)

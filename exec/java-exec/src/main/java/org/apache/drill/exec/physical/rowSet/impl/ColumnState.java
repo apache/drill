@@ -30,7 +30,7 @@ import org.apache.drill.exec.vector.accessor.writer.WriterEvents.ColumnWriterLis
 /**
  * Represents the write-time state for a column including the writer and the (optional)
  * backing vector. Implements per-column operations such as vector overflow. If a column
- * is a (possibly repeated) map, then the column state will hold a tuple state.
+ * is a (possibly repeated) struct, then the column state will hold a tuple state.
  * <p>
  * If a column is not projected, then the writer exists (to make life easier for the
  * reader), but there will be no vector backing the writer.
@@ -44,7 +44,7 @@ public abstract class ColumnState {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ColumnState.class);
 
   /**
-   * Primitive (non-map) column state. Handles all three cardinalities.
+   * Primitive (non-struct) column state. Handles all three cardinalities.
    * Column metadata is hosted on the writer.
    */
 

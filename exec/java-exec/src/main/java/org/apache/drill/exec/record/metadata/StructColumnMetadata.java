@@ -25,31 +25,31 @@ import org.apache.drill.exec.record.MaterializedField;
 import java.util.stream.Collectors;
 
 /**
- * Describes a map and repeated map. Both are tuples that have a tuple
+ * Describes a struct and repeated struct. Both are tuples that have a tuple
  * schema as part of the column definition.
  */
-public class MapColumnMetadata extends AbstractColumnMetadata {
+public class StructColumnMetadata extends AbstractColumnMetadata {
 
   private TupleMetadata parentTuple;
   private final TupleSchema mapSchema;
 
   /**
-   * Build a new map column from the field provided
+   * Build a new struct column from the field provided
    *
-   * @param schema materialized field description of the map
+   * @param schema materialized field description of the struct
    */
-  public MapColumnMetadata(MaterializedField schema) {
+  public StructColumnMetadata(MaterializedField schema) {
     this(schema, null);
   }
 
   /**
-   * Build a map column metadata by cloning the type information (but not
+   * Build a struct column metadata by cloning the type information (but not
    * the children) of the materialized field provided.
    *
    * @param schema the schema to use
    * @param mapSchema parent schema
    */
-  MapColumnMetadata(MaterializedField schema, TupleSchema mapSchema) {
+  StructColumnMetadata(MaterializedField schema, TupleSchema mapSchema) {
     super(schema);
     if (mapSchema == null) {
       this.mapSchema = new TupleSchema();
@@ -59,13 +59,13 @@ public class MapColumnMetadata extends AbstractColumnMetadata {
     this.mapSchema.bind(this);
   }
 
-  public MapColumnMetadata(MapColumnMetadata from) {
+  public StructColumnMetadata(StructColumnMetadata from) {
     super(from);
     mapSchema = (TupleSchema) from.mapSchema.copy();
   }
 
-  public MapColumnMetadata(String name, DataMode mode, TupleSchema mapSchema) {
-    super(name, MinorType.MAP, mode);
+  public StructColumnMetadata(String name, DataMode mode, TupleSchema mapSchema) {
+    super(name, MinorType.STRUCT, mode);
     if (mapSchema == null) {
       this.mapSchema = new TupleSchema();
     } else {
@@ -75,7 +75,7 @@ public class MapColumnMetadata extends AbstractColumnMetadata {
 
   @Override
   public ColumnMetadata copy() {
-    return new MapColumnMetadata(this);
+    return new StructColumnMetadata(this);
   }
 
   @Override
@@ -93,13 +93,13 @@ public class MapColumnMetadata extends AbstractColumnMetadata {
   public int expectedWidth() { return 0; }
 
   @Override
-  public boolean isMap() { return true; }
+  public boolean isStruct() { return true; }
 
   public TupleMetadata parentTuple() { return parentTuple; }
 
   @Override
   public ColumnMetadata cloneEmpty() {
-    return new MapColumnMetadata(name, mode, new TupleSchema());
+    return new StructColumnMetadata(name, mode, new TupleSchema());
   }
 
   @Override

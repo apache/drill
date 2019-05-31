@@ -105,7 +105,7 @@ public class BatchSchema implements Iterable<MaterializedField> {
    * Caveat emptor.
    *
    * This check used for detecting actual schema change inside operator record batch will not work for
-   * AbstractContainerVectors (like MapVector). In each record batch a reference to incoming batch schema is
+   * AbstractContainerVectors (like StructVector). In each record batch a reference to incoming batch schema is
    * stored (let say S:{a: int}) and then equals is called on that stored reference and current incoming batch schema.
    * Internally schema object has references to Materialized fields from vectors in container. If there is change in
    * incoming batch schema, then the upstream will create a new ValueVector in its output container with the new
@@ -114,7 +114,7 @@ public class BatchSchema implements Iterable<MaterializedField> {
    * to old schema object (S) and hence first check will not be satisfied and then it will call equals on each of the
    * Materialized Field (a.equals(a")). Since new materialized field is created for newly created vector the equals
    * check on field will return false. And schema change will be detected in this case.
-   * Now consider instead of int vector there is a MapVector such that initial schema was (let say S:{a:{b:int, c:int}}
+   * Now consider instead of int vector there is a StructVector such that initial schema was (let say S:{a:{b:int, c:int}}
    * and then later schema for Map field c changes, then in container Map vector will be found but later the children
    * vector for field c will be replaced. This new schema object will be created as (S":{a:{b:int, c":varchar}}). Now
    * when S.equals(S") is called it will eventually call a.equals(a) which will return true even though the schema of

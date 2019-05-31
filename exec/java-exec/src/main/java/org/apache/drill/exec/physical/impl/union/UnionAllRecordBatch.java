@@ -202,7 +202,7 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
       // rename columns or
       // cast data types (Minortype or DataMode)
       if (container.getSchema().getColumn(index).hasSameTypeAndMode(vvIn.getField())
-          && vvIn.getField().getType().getMinorType() != TypeProtos.MinorType.MAP // Per DRILL-5521, existing bug for map transfer
+          && vvIn.getField().getType().getMinorType() != TypeProtos.MinorType.STRUCT // Per DRILL-5521, existing bug for struct transfer
           ) {
         // Transfer column
         TransferPair tp = vvIn.makeTransferPair(vvOut);

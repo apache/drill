@@ -68,9 +68,9 @@ public class UnionBuilder implements SchemaContainer {
     return this;
   }
 
-  public MapBuilder addMap() {
-    checkType(MinorType.MAP);
-    return new MapBuilder(this, Types.typeKey(MinorType.MAP), DataMode.OPTIONAL);
+  public StructBuilder addStruct() {
+    checkType(MinorType.STRUCT);
+    return new StructBuilder(this, Types.typeKey(MinorType.STRUCT), DataMode.OPTIONAL);
   }
 
   public UnionBuilder addList() {
@@ -98,9 +98,9 @@ public class UnionBuilder implements SchemaContainer {
     return (SchemaBuilder) parent;
   }
 
-  public MapBuilder resumeMap() {
+  public StructBuilder resumeStruct() {
     build();
-    return (MapBuilder) parent;
+    return (StructBuilder) parent;
   }
 
   public UnionBuilder resumeUnion() {

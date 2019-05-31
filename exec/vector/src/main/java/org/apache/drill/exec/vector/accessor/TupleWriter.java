@@ -48,7 +48,7 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
  * Convenience methods allow getting a column as a scalar, tuple or array. These
  * methods throw an exception if the column is not of the requested type.
  *
- * @see {@link SingleMapWriter}, the class which this class replaces
+ * @see {@link SingleStructWriter}, the class which this class replaces
  */
 
 public interface TupleWriter extends ColumnWriter {
@@ -84,7 +84,7 @@ public interface TupleWriter extends ColumnWriter {
   ProjectionType projectionType(String columnName);
 
   /**
-   * Add a column to the tuple (row or map) that backs this writer. Support for
+   * Add a column to the tuple (row or struct) that backs this writer. Support for
    * this operation depends on whether the client code has registered a listener
    * to implement the addition. Throws an exception if no listener is
    * implemented, or if the add request is otherwise invalid (duplicate name,

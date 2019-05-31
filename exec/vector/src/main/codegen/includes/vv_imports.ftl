@@ -48,7 +48,7 @@ import org.apache.drill.exec.vector.complex.*;
 import org.apache.drill.exec.vector.complex.reader.*;
 import org.apache.drill.exec.vector.complex.impl.*;
 import org.apache.drill.exec.vector.complex.writer.*;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter.StructWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.exec.util.JsonStringArrayList;
 import org.apache.drill.exec.memory.AllocationManager.BufferLedger;

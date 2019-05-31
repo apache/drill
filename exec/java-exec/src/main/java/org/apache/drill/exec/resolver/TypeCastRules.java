@@ -677,7 +677,7 @@ public class TypeCastRules {
     rule.add(MinorType.FIXEDBINARY);
     rules.put(MinorType.VARBINARY, rule);
 
-    rules.put(MinorType.MAP, Sets.newHashSet(MinorType.MAP));
+    rules.put(MinorType.STRUCT, Sets.newHashSet(MinorType.STRUCT));
     rules.put(MinorType.LIST, Sets.newHashSet(MinorType.LIST));
     rules.put(MinorType.UNION, Sets.newHashSet(MinorType.UNION));
   }
@@ -717,7 +717,7 @@ public class TypeCastRules {
 
   /*
    * Function checks if casting is allowed from the 'from' -> 'to' minor type. If its allowed
-   * we also check if the precedence map allows such a cast and return true if both cases are satisfied
+   * we also check if the precedence struct allows such a cast and return true if both cases are satisfied
    */
   public static MinorType getLeastRestrictiveType(List<MinorType> types) {
     assert types.size() >= 2;
@@ -770,7 +770,7 @@ public class TypeCastRules {
     // Indicates whether we used secondary cast rules
     boolean secondaryCast = false;
 
-    // number of arguments that could implicitly casts using precedence map or didn't require casting at all
+    // number of arguments that could implicitly casts using precedence struct or didn't require casting at all
     int nCasts = 0;
 
     /*

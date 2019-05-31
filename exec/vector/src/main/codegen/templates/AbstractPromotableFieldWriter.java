@@ -55,12 +55,12 @@ abstract class AbstractPromotableFieldWriter extends AbstractFieldWriter {
 
   @Override
   public void start() {
-    getWriter(MinorType.MAP).start();
+    getWriter(MinorType.STRUCT).start();
   }
 
   @Override
   public void end() {
-    getWriter(MinorType.MAP).end();
+    getWriter(MinorType.STRUCT).end();
   }
 
   @Override
@@ -100,8 +100,8 @@ abstract class AbstractPromotableFieldWriter extends AbstractFieldWriter {
   }
 
   @Override
-  public MapWriter map() {
-    return getWriter(MinorType.LIST).map();
+  public StructWriter struct() {
+    return getWriter(MinorType.LIST).struct();
   }
 
   @Override
@@ -110,13 +110,13 @@ abstract class AbstractPromotableFieldWriter extends AbstractFieldWriter {
   }
 
   @Override
-  public MapWriter map(String name) {
-    return getWriter(MinorType.MAP).map(name);
+  public StructWriter struct(String name) {
+    return getWriter(MinorType.STRUCT).struct(name);
   }
 
   @Override
   public ListWriter list(String name) {
-    return getWriter(MinorType.MAP).list(name);
+    return getWriter(MinorType.STRUCT).list(name);
   }
 
   <#list vv.types as type><#list type.minor as minor>
@@ -128,7 +128,7 @@ abstract class AbstractPromotableFieldWriter extends AbstractFieldWriter {
 
   @Override
   public ${capName}Writer ${lowerName}(String name, int scale, int precision) {
-    return getWriter(MinorType.MAP).${lowerName}(name, scale, precision);
+    return getWriter(MinorType.STRUCT).${lowerName}(name, scale, precision);
   }
 
   @Override
@@ -140,7 +140,7 @@ abstract class AbstractPromotableFieldWriter extends AbstractFieldWriter {
 
   @Override
   public ${capName}Writer ${lowerName}(String name) {
-    return getWriter(MinorType.MAP).${lowerName}(name);
+    return getWriter(MinorType.STRUCT).${lowerName}(name);
   }
 
   @Override

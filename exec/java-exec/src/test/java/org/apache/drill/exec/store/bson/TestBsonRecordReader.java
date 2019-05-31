@@ -29,7 +29,7 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.BufferManager;
 import org.apache.drill.exec.ops.BufferManagerImpl;
 import org.apache.drill.exec.store.TestOutputMutator;
-import org.apache.drill.exec.vector.complex.impl.SingleMapReaderImpl;
+import org.apache.drill.exec.vector.complex.impl.SingleStructReaderImpl;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.bson.BsonBinary;
@@ -74,7 +74,7 @@ public class TestBsonRecordReader {
     bsonDoc.append("seqNo", new BsonInt64(10));
     writer.reset();
     bsonReader.write(writer, new BsonDocumentReader(bsonDoc));
-    SingleMapReaderImpl mapReader = (SingleMapReaderImpl) writer.getMapVector().getReader();
+    SingleStructReaderImpl mapReader = (SingleStructReaderImpl) writer.getStructVector().getReader();
     assertEquals(10L, mapReader.reader("seqNo").readLong().longValue());
   }
 
@@ -85,7 +85,7 @@ public class TestBsonRecordReader {
     bsonDoc.append("ts_large", new BsonTimestamp(1000000000, 10));
     writer.reset();
     bsonReader.write(writer, new BsonDocumentReader(bsonDoc));
-    SingleMapReaderImpl mapReader = (SingleMapReaderImpl) writer.getMapVector().getReader();
+    SingleStructReaderImpl mapReader = (SingleStructReaderImpl) writer.getStructVector().getReader();
     assertEquals(1000000L, mapReader.reader("ts_small").readLocalDateTime().atZone(ZoneOffset.systemDefault()).toInstant().toEpochMilli());
     assertEquals(1000000000000L, mapReader.reader("ts_large").readLocalDateTime().atZone(ZoneOffset.systemDefault()).toInstant().toEpochMilli());
   }
@@ -96,7 +96,7 @@ public class TestBsonRecordReader {
     bsonDoc.append("symbolKey", new BsonSymbol("test_symbol"));
     writer.reset();
     bsonReader.write(writer, new BsonDocumentReader(bsonDoc));
-    SingleMapReaderImpl mapReader = (SingleMapReaderImpl) writer.getMapVector().getReader();
+    SingleStructReaderImpl mapReader = (SingleStructReaderImpl) writer.getStructVector().getReader();
     assertEquals("test_symbol", mapReader.reader("symbolKey").readText().toString());
   }
 
@@ -106,7 +106,7 @@ public class TestBsonRecordReader {
     bsonDoc.append("stringKey", new BsonString("test_string"));
     writer.reset();
     bsonReader.write(writer, new BsonDocumentReader(bsonDoc));
-    SingleMapReaderImpl mapReader = (SingleMapReaderImpl) writer.getMapVector().getReader();
+    SingleStructReaderImpl mapReader = (SingleStructReaderImpl) writer.getStructVector().getReader();
     assertEquals("test_string", mapReader.reader("stringKey").readText().toString());
   }
 
@@ -116,7 +116,7 @@ public class TestBsonRecordReader {
     bsonDoc.append("stringKey", new BsonString("§§§§§§§§§1"));
     writer.reset();
     bsonReader.write(writer, new BsonDocumentReader(bsonDoc));
-    SingleMapReaderImpl mapReader = (SingleMapReaderImpl) writer.getMapVector().getReader();
+    SingleStructReaderImpl mapReader = (SingleStructReaderImpl) writer.getStructVector().getReader();
     assertEquals("§§§§§§§§§1",
         mapReader.reader("stringKey").readText().toString());
   }
@@ -128,7 +128,7 @@ public class TestBsonRecordReader {
     bsonDoc.append("_idKey", value);
     writer.reset();
     bsonReader.write(writer, new BsonDocumentReader(bsonDoc));
-    SingleMapReaderImpl mapReader = (SingleMapReaderImpl) writer.getMapVector().getReader();
+    SingleStructReaderImpl mapReader = (SingleStructReaderImpl) writer.getStructVector().getReader();
     byte[] readByteArray = mapReader.reader("_idKey").readByteArray();
     assertTrue(Arrays.equals(value.getValue().toByteArray(), readByteArray));
   }
@@ -139,7 +139,7 @@ public class TestBsonRecordReader {
     bsonDoc.append("nullKey", new BsonNull());
     writer.reset();
     bsonReader.write(writer, new BsonDocumentReader(bsonDoc));
-    SingleMapReaderImpl mapReader = (SingleMapReaderImpl) writer.getMapVector().getReader();
+    SingleStructReaderImpl mapReader = (SingleStructReaderImpl) writer.getStructVector().getReader();
     assertEquals(null, mapReader.reader("nullKey").readObject());
   }
 
@@ -149,7 +149,7 @@ public class TestBsonRecordReader {
     bsonDoc.append("doubleKey", new BsonDouble(12.35));
     writer.reset();
     bsonReader.write(writer, new BsonDocumentReader(bsonDoc));
-    SingleMapReaderImpl mapReader = (SingleMapReaderImpl) writer.getMapVector().getReader();
+    SingleStructReaderImpl mapReader = (SingleStructReaderImpl) writer.getStructVector().getReader();
     assertEquals(12.35d, mapReader.reader("doubleKey").readDouble().doubleValue(), 0.00001);
   }
 
@@ -171,8 +171,8 @@ public class TestBsonRecordReader {
     bw.flush();
     writer.reset();
     bsonReader.write(writer, new BsonDocumentReader(bsonDoc));
-    FieldReader reader = writer.getMapVector().getReader();
-    SingleMapReaderImpl mapReader = (SingleMapReaderImpl) reader;
+    FieldReader reader = writer.getStructVector().getReader();
+    SingleStructReaderImpl mapReader = (SingleStructReaderImpl) reader;
     FieldReader reader3 = mapReader.reader("b");
     assertEquals("MongoDB", mapReader.reader("a").readText().toString());
   }
@@ -195,9 +195,9 @@ public class TestBsonRecordReader {
     }
     writer.reset();
     bsonReader.write(writer, new BsonDocumentReader(topDoc));
-    SingleMapReaderImpl mapReader = (SingleMapReaderImpl) writer.getMapVector().getReader();
+    SingleStructReaderImpl mapReader = (SingleStructReaderImpl) writer.getStructVector().getReader();
     for (int i = 0; i < count; ++i) {
-      SingleMapReaderImpl reader = (SingleMapReaderImpl) mapReader.reader("doc" + i);
+      SingleStructReaderImpl reader = (SingleStructReaderImpl) mapReader.reader("doc" + i);
       assertEquals("drillMongo1" + i, reader.reader("k1" + i).readText().toString());
       assertEquals("drillMongo2" + i, reader.reader("k2" + i).readText().toString());
     }
@@ -209,7 +209,7 @@ public class TestBsonRecordReader {
     bsonDoc.append("dateTimeKey", new BsonDateTime(5262729712L));
     writer.reset();
     bsonReader.write(writer, new BsonDocumentReader(bsonDoc));
-    SingleMapReaderImpl mapReader = (SingleMapReaderImpl) writer.getMapVector().getReader();
+    SingleStructReaderImpl mapReader = (SingleStructReaderImpl) writer.getStructVector().getReader();
     assertEquals(5262729712L, mapReader.reader("dateTimeKey").readLocalDateTime().atZone(ZoneOffset.systemDefault()).toInstant().toEpochMilli());
   }
 
@@ -219,7 +219,7 @@ public class TestBsonRecordReader {
     bsonDoc.append("booleanKey", new BsonBoolean(true));
     writer.reset();
     bsonReader.write(writer, new BsonDocumentReader(bsonDoc));
-    SingleMapReaderImpl mapReader = (SingleMapReaderImpl) writer.getMapVector().getReader();
+    SingleStructReaderImpl mapReader = (SingleStructReaderImpl) writer.getStructVector().getReader();
     assertTrue(mapReader.reader("booleanKey").readBoolean());
   }
 
@@ -246,7 +246,7 @@ public class TestBsonRecordReader {
     bsonDoc.append("bsonBoolean", bsonBoolean);
     writer.reset();
     bsonReader.write(writer, new BsonDocumentReader(bsonDoc));
-    SingleMapReaderImpl mapReader = (SingleMapReaderImpl) writer.getMapVector().getReader();
+    SingleStructReaderImpl mapReader = (SingleStructReaderImpl) writer.getStructVector().getReader();
     assertTrue(Arrays.equals(bytes, mapReader.reader("binaryKey").readByteArray()));
     assertEquals("binaryStringValue", mapReader.reader("binaryStringKey").readText().toString());
     assertEquals(23.0123, mapReader.reader("binaryDouble").readDouble().doubleValue(), 0);
@@ -268,7 +268,7 @@ public class TestBsonRecordReader {
     bw.writeEndDocument();
     bw.flush();
     bsonReader.write(writer, new BsonDocumentReader(bsonDoc));
-    SingleMapReaderImpl mapReader = (SingleMapReaderImpl) writer.getMapVector().getReader();
+    SingleStructReaderImpl mapReader = (SingleStructReaderImpl) writer.getStructVector().getReader();
     FieldReader reader = mapReader.reader("arrayKey");
     assertEquals(3, reader.size());
   }

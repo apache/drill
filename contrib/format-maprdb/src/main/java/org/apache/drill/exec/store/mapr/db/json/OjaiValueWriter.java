@@ -23,9 +23,9 @@ import static org.apache.drill.exec.store.mapr.PluginErrorHandler.unsupportedErr
 import java.nio.ByteBuffer;
 
 import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.vector.complex.impl.MapOrListWriterImpl;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapOrListWriter;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
+import org.apache.drill.exec.vector.complex.impl.StructOrListWriterImpl;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter.StructOrListWriter;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter.StructWriter;
 import org.ojai.DocumentReader;
 import org.ojai.DocumentReader.EventType;
 import org.slf4j.Logger;
@@ -49,7 +49,7 @@ public class OjaiValueWriter {
   /*
    * Precondition to call this function is that the DBDocumentReader has already emitted START_MAP/START_ARRAY event.
    */
-  protected void writeToListOrMap(MapOrListWriterImpl writer, DocumentReader reader) throws SchemaChangeException {
+  protected void writeToListOrStruct(StructOrListWriterImpl writer, DocumentReader reader) throws SchemaChangeException {
     String fieldName = null;
     writer.start();
     outside: while (true) {
@@ -107,10 +107,10 @@ public class OjaiValueWriter {
         case INTERVAL:
           throw unsupportedError(logger, "Interval type is currently not supported.");
         case START_MAP:
-          writeToListOrMap((MapOrListWriterImpl) (reader.inMap() ? writer.map(fieldName) : writer.listoftmap(fieldName)), reader);
+          writeToListOrStruct((StructOrListWriterImpl) (reader.inMap() ? writer.struct(fieldName) : writer.listoftstruct(fieldName)), reader);
           break;
         case START_ARRAY:
-          writeToListOrMap((MapOrListWriterImpl) writer.list(fieldName), reader);
+          writeToListOrStruct((StructOrListWriterImpl) writer.list(fieldName), reader);
           break;
         default:
           throw unsupportedError(logger, "Unsupported type: %s encountered during the query.", event);
@@ -122,69 +122,69 @@ public class OjaiValueWriter {
     writer.end();
   }
 
-  protected void writeTimeStamp(MapOrListWriterImpl writer, String fieldName, DocumentReader reader) {
+  protected void writeTimeStamp(StructOrListWriterImpl writer, String fieldName, DocumentReader reader) {
     writer.timeStamp(fieldName).writeTimeStamp(reader.getTimestampLong());
   }
 
-  protected void writeTime(MapOrListWriterImpl writer, String fieldName, DocumentReader reader) {
+  protected void writeTime(StructOrListWriterImpl writer, String fieldName, DocumentReader reader) {
     writer.time(fieldName).writeTime(reader.getTimeInt());
   }
 
-  protected void writeDate(MapOrListWriterImpl writer, String fieldName, DocumentReader reader) {
+  protected void writeDate(StructOrListWriterImpl writer, String fieldName, DocumentReader reader) {
     long milliSecondsSinceEpoch = reader.getDateInt() * MILLISECONDS_IN_A_DAY;
     writer.date(fieldName).writeDate(milliSecondsSinceEpoch);
   }
 
-  protected void writeDouble(MapOrListWriterImpl writer, String fieldName, DocumentReader reader) {
+  protected void writeDouble(StructOrListWriterImpl writer, String fieldName, DocumentReader reader) {
     writer.float8(fieldName).writeFloat8(reader.getDouble());
   }
 
-  protected void writeFloat(MapOrListWriterImpl writer, String fieldName, DocumentReader reader) {
+  protected void writeFloat(StructOrListWriterImpl writer, String fieldName, DocumentReader reader) {
     writer.float4(fieldName).writeFloat4(reader.getFloat());
   }
 
-  protected void writeLong(MapOrListWriterImpl writer, String fieldName, DocumentReader reader) {
+  protected void writeLong(StructOrListWriterImpl writer, String fieldName, DocumentReader reader) {
     writer.bigInt(fieldName).writeBigInt(reader.getLong());
   }
 
-  protected void writeInt(MapOrListWriterImpl writer, String fieldName, DocumentReader reader) {
+  protected void writeInt(StructOrListWriterImpl writer, String fieldName, DocumentReader reader) {
     writer.integer(fieldName).writeInt(reader.getInt());
   }
 
-  protected void writeShort(MapOrListWriterImpl writer, String fieldName, DocumentReader reader) {
+  protected void writeShort(StructOrListWriterImpl writer, String fieldName, DocumentReader reader) {
     writer.smallInt(fieldName).writeSmallInt(reader.getShort());
   }
 
-  protected void writeByte(MapOrListWriterImpl writer, String fieldName, DocumentReader reader) {
+  protected void writeByte(StructOrListWriterImpl writer, String fieldName, DocumentReader reader) {
     writer.tinyInt(fieldName).writeTinyInt(reader.getByte());
   }
 
-  protected void writeBoolean(MapOrListWriterImpl writer, String fieldName, DocumentReader reader) {
+  protected void writeBoolean(StructOrListWriterImpl writer, String fieldName, DocumentReader reader) {
     writer.bit(fieldName).writeBit(reader.getBoolean() ? 1 : 0);
   }
 
-  protected void writeBinary(MapOrListWriter writer, String fieldName, ByteBuffer buf) {
+  protected void writeBinary(StructOrListWriter writer, String fieldName, ByteBuffer buf) {
     int bufLen = buf.remaining();
     buffer = buffer.reallocIfNeeded(bufLen);
     buffer.setBytes(0, buf, buf.position(), bufLen);
     writer.varBinary(fieldName).writeVarBinary(0, bufLen, buffer);
   }
 
-  protected void writeString(MapOrListWriter writer, String fieldName, String value) {
+  protected void writeString(StructOrListWriter writer, String fieldName, String value) {
     final byte[] strBytes = Bytes.toBytes(value);
     buffer = buffer.reallocIfNeeded(strBytes.length);
     buffer.setBytes(0, strBytes);
     writer.varChar(fieldName).writeVarChar(0, strBytes.length, buffer);
   }
 
-  protected void writeBinary(MapWriter writer, String fieldName, ByteBuffer buf) {
+  protected void writeBinary(StructWriter writer, String fieldName, ByteBuffer buf) {
     int bufLen = buf.remaining();
     buffer = buffer.reallocIfNeeded(bufLen);
     buffer.setBytes(0, buf, buf.position(), bufLen);
     writer.varBinary(fieldName).writeVarBinary(0, bufLen, buffer);
   }
 
-  protected void writeString(MapWriter writer, String fieldName, String value) {
+  protected void writeString(StructWriter writer, String fieldName, String value) {
     final byte[] strBytes = Bytes.toBytes(value);
     buffer = buffer.reallocIfNeeded(strBytes.length);
     buffer.setBytes(0, strBytes);

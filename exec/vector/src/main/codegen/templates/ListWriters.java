@@ -43,7 +43,7 @@ public class ${mode}ListWriter extends AbstractFieldWriter {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(${mode}ListWriter.class);
 
   enum Mode {
-    INIT, IN_MAP, IN_LIST
+    INIT, IN_STRUCT, IN_LIST
     <#list vv.types as type><#list type.minor as minor>,
     IN_${minor.class?upper_case}</#list></#list> }
 
@@ -104,27 +104,27 @@ public class ${mode}ListWriter extends AbstractFieldWriter {
   }
 
   @Override
-  public MapWriter map() {
+  public StructWriter struct() {
     switch (mode) {
     case INIT:
       final ValueVector oldVector = container.getChild(name);
-      final RepeatedMapVector vector = container.addOrGet(name, RepeatedMapVector.TYPE, RepeatedMapVector.class);
+      final RepeatedStructVector vector = container.addOrGet(name, RepeatedStructVector.TYPE, RepeatedStructVector.class);
       innerVector = vector;
-      writer = new RepeatedMapWriter(vector, this);
+      writer = new RepeatedStructWriter(vector, this);
       // oldVector will be null if it's first batch being created and it might not be same as newly added vector
       // if new batch has schema change
       if (oldVector == null || oldVector != vector) {
         writer.allocate();
       }
       writer.setPosition(${index});
-      mode = Mode.IN_MAP;
+      mode = Mode.IN_STRUCT;
       return writer;
-    case IN_MAP:
+    case IN_STRUCT:
       return writer;
     default:
       throw UserException
         .unsupportedError()
-        .message(getUnsupportedErrorMsg("MAP", mode.name()))
+        .message(getUnsupportedErrorMsg("STRUCT", mode.name()))
         .build(logger);
     }
   }

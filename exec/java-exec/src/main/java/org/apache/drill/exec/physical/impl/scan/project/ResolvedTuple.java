@@ -27,16 +27,16 @@ import org.apache.drill.exec.physical.rowSet.ResultVectorCache;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.complex.AbstractMapVector;
-import org.apache.drill.exec.vector.complex.MapVector;
-import org.apache.drill.exec.vector.complex.RepeatedMapVector;
+import org.apache.drill.exec.vector.complex.AbstractStructVector;
+import org.apache.drill.exec.vector.complex.RepeatedStructVector;
+import org.apache.drill.exec.vector.complex.StructVector;
 
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 
 /**
  * Drill rows are made up of a tree of tuples, with the row being the root
  * tuple. Each tuple contains columns, some of which may be maps. This
- * class represents each row or map in the output projection.
+ * class represents each row or struct in the output projection.
  * <p>
  * Output columns within the tuple can be projected from the data source,
  * might be null (requested columns that don't match a data source column)
@@ -47,10 +47,10 @@ import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTes
  *
  * <h4>Null Handling</h4>
  *
- * The project list might reference a "missing" map if the project list
+ * The project list might reference a "missing" struct if the project list
  * includes, say, <tt>SELECT a.b.c</tt> but <tt>`a`</tt> does not exist
- * in the data source. In this case, the column a is implied to be a map,
- * so the projection mechanism will create a null map for <tt>`a`</tt>
+ * in the data source. In this case, the column a is implied to be a struct,
+ * so the projection mechanism will create a null struct for <tt>`a`</tt>
  * and <tt>`b`</tt>, and will create a null column for <tt>`c`</tt>.
  * <p>
  * To accomplish this recursive null processing, each tuple is associated
@@ -90,7 +90,7 @@ import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTes
  *
  * <h4>Projection Mapping</h4>
  *
- * Each column is is mapped into the output tuple (vector container or map) in
+ * Each column is is mapped into the output tuple (vector container or struct) in
  * the order that the columns are defined here. (That order follows the project
  * list for explicit projection, or the table schema for implicit projection.)
  * The source, however, may be in any order (at least for the table schema.)
@@ -171,19 +171,19 @@ public abstract class ResolvedTuple implements VectorSource {
   }
 
   /**
-   * Represents a map implied by the project list, whether or not the map
+   * Represents a struct implied by the project list, whether or not the struct
    * actually appears in the table schema.
-   * The column is implied to be a map because it contains
-   * children. This implementation builds the map and its children.
+   * The column is implied to be a struct because it contains
+   * children. This implementation builds the struct and its children.
    */
 
-  public static abstract class ResolvedMap extends ResolvedTuple {
+  public static abstract class ResolvedStruct extends ResolvedTuple {
 
-    protected final ResolvedMapColumn parentColumn;
-    protected AbstractMapVector inputMap;
-    protected AbstractMapVector outputMap;
+    protected final ResolvedStructColumn parentColumn;
+    protected AbstractStructVector inputMap;
+    protected AbstractStructVector outputMap;
 
-    public ResolvedMap(ResolvedMapColumn parentColumn) {
+    public ResolvedStruct(ResolvedStructColumn parentColumn) {
       super(parentColumn.parent().nullBuilder == null
           ? null : parentColumn.parent().nullBuilder.newChild(parentColumn.name()));
       this.parentColumn = parentColumn;
@@ -200,10 +200,10 @@ public abstract class ResolvedTuple implements VectorSource {
       return inputMap.getChildByOrdinal(index);
     }
 
-    public AbstractMapVector buildMap() {
+    public AbstractStructVector buildMap() {
       if (parentColumn.sourceIndex() != -1) {
         final ResolvedTuple parentTuple = parentColumn.parent();
-        inputMap = (AbstractMapVector) parentTuple.vector(parentColumn.sourceIndex());
+        inputMap = (AbstractStructVector) parentTuple.vector(parentColumn.sourceIndex());
       }
       final MaterializedField colSchema = parentColumn.schema();
       outputMap = createMap(inputMap,
@@ -214,8 +214,8 @@ public abstract class ResolvedTuple implements VectorSource {
       return outputMap;
     }
 
-    protected abstract AbstractMapVector createMap(AbstractMapVector inputMap,
-        MaterializedField create, BufferAllocator allocator);
+    protected abstract AbstractStructVector createMap(AbstractStructVector inputMap,
+                                                      MaterializedField create, BufferAllocator allocator);
 
     @Override
     public BufferAllocator allocator() {
@@ -226,22 +226,22 @@ public abstract class ResolvedTuple implements VectorSource {
     public String name() { return parentColumn.name(); }
   }
 
-  public static class ResolvedSingleMap extends ResolvedMap {
+  public static class ResolvedSingleMap extends ResolvedStruct {
 
-    public ResolvedSingleMap(ResolvedMapColumn parentColumn) {
+    public ResolvedSingleMap(ResolvedStructColumn parentColumn) {
       super(parentColumn);
     }
 
     @Override
-    protected AbstractMapVector createMap(AbstractMapVector inputMap,
-        MaterializedField schema, BufferAllocator allocator) {
-      return new MapVector(schema,
+    protected AbstractStructVector createMap(AbstractStructVector inputMap,
+                                             MaterializedField schema, BufferAllocator allocator) {
+      return new StructVector(schema,
           allocator, null);
     }
 
     @Override
     public void setRowCount(int rowCount) {
-      ((MapVector) outputMap).setMapValueCount(rowCount);
+      ((StructVector) outputMap).setMapValueCount(rowCount);
       cascadeRowCount(rowCount);
     }
 
@@ -252,33 +252,33 @@ public abstract class ResolvedTuple implements VectorSource {
   }
 
   /**
-   * Represents a map tuple (not the map column, rather the value of the
-   * map column.) When projecting, we create a new repeated map vector,
+   * Represents a struct tuple (not the struct column, rather the value of the
+   * struct column.) When projecting, we create a new repeated struct vector,
    * but share the offsets vector from input to output. The size of the
    * offset vector reveals the number of elements in the "inner" array,
    * which is the number of null values to create if null columns are
    * added.
    */
 
-  public static class ResolvedMapArray extends ResolvedMap {
+  public static class ResolvedMapArray extends ResolvedStruct {
 
     private int valueCount;
 
-    public ResolvedMapArray(ResolvedMapColumn parentColumn) {
+    public ResolvedMapArray(ResolvedStructColumn parentColumn) {
       super(parentColumn);
     }
 
     @Override
-    protected AbstractMapVector createMap(AbstractMapVector inputMap,
-        MaterializedField schema, BufferAllocator allocator) {
+    protected AbstractStructVector createMap(AbstractStructVector inputMap,
+                                             MaterializedField schema, BufferAllocator allocator) {
 
-      // Create a new map array, reusing the offset vector from
-      // the original input map.
+      // Create a new struct array, reusing the offset vector from
+      // the original input struct.
 
-      final RepeatedMapVector source = (RepeatedMapVector) inputMap;
+      final RepeatedStructVector source = (RepeatedStructVector) inputMap;
       final UInt4Vector offsets = source.getOffsetVector();
       valueCount = offsets.getAccessor().getValueCount();
-      return new RepeatedMapVector(schema,
+      return new RepeatedStructVector(schema,
           offsets, null);
     }
 

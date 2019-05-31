@@ -142,7 +142,7 @@ public class ProjectMemoryManager extends RecordBatchMemoryManager {
 
     public boolean isComplex(MajorType majorType) {
         MinorType minorType = majorType.getMinorType();
-        return minorType == MinorType.MAP || minorType == MinorType.UNION || minorType == MinorType.LIST;
+        return minorType == MinorType.STRUCT || minorType == MinorType.UNION || minorType == MinorType.LIST;
     }
 
     boolean isFixedWidth(TypedFieldId fieldId) {

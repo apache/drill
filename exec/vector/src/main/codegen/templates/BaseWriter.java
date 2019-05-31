@@ -33,12 +33,12 @@ package org.apache.drill.exec.vector.complex.writer;
   FieldWriter getParent();
   int getValueCapacity();
 
-  public interface MapWriter extends BaseWriter {
+  public interface StructWriter extends BaseWriter {
 
     MaterializedField getField();
 
     /**
-     * Whether this writer is a map writer and is empty (has no children).
+     * Whether this writer is a struct writer and is empty (has no children).
      * 
      * <p>
      *   Intended only for use in determining whether to add dummy vector to
@@ -46,21 +46,27 @@ package org.apache.drill.exec.vector.complex.writer;
      * </p>
      * 
      */
-    boolean isEmptyMap();
+    boolean isEmptyStruct();
 
-    <#list vv.types as type><#list type.minor as minor>
-    <#assign lowerName = minor.class?uncap_first />
-    <#if lowerName == "int" ><#assign lowerName = "integer" /></#if>
-    <#assign upperName = minor.class?upper_case />
-    <#assign capName = minor.class?cap_first />
-    <#if minor.class?contains("Decimal") >
+    <#list vv.types as type>
+    <#list type.minor as minor>
+      <#assign lowerName = minor.class?uncap_first />
+      <#if lowerName == "int" >
+        <#assign lowerName = "integer" />
+      </#if>
+
+      <#assign upperName = minor.class?upper_case />
+      <#assign capName = minor.class?cap_first />
+
+      <#if minor.class?contains("Decimal") >
     ${capName}Writer ${lowerName}(String name, int scale, int precision);
-    </#if>
+      </#if>
     ${capName}Writer ${lowerName}(String name);
-    </#list></#list>
+    </#list>
+    </#list>
 
     void copyReaderToField(String name, FieldReader reader);
-    MapWriter map(String name);
+    StructWriter struct(String name);
     ListWriter list(String name);
     void start();
     void end();
@@ -69,7 +75,7 @@ package org.apache.drill.exec.vector.complex.writer;
   public interface ListWriter extends BaseWriter {
     void startList();
     void endList();
-    MapWriter map();
+    StructWriter struct();
     ListWriter list();
     void copyReader(FieldReader reader);
 
@@ -92,7 +98,7 @@ package org.apache.drill.exec.vector.complex.writer;
     void allocate();
     void clear();
     void copyReader(FieldReader reader);
-    MapWriter rootAsMap();
+    StructWriter rootAsStruct();
     ListWriter rootAsList();
 
     void setPosition(int index);
@@ -100,13 +106,13 @@ package org.apache.drill.exec.vector.complex.writer;
     void reset();
   }
 
-  public interface MapOrListWriter {
+  public interface StructOrListWriter {
     void start();
     void end();
-    MapOrListWriter map(String name);
-    MapOrListWriter listoftmap(String name);
-    MapOrListWriter list(String name);
-    boolean isMapWriter();
+    StructOrListWriter struct(String name);
+    StructOrListWriter listoftstruct(String name);
+    StructOrListWriter list(String name);
+    boolean isStructWriter();
     boolean isListWriter();
     UInt1Writer uInt1(String name);
     UInt2Writer uInt2(String name);

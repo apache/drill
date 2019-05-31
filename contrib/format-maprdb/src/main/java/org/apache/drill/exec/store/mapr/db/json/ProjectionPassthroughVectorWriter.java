@@ -24,9 +24,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.vector.complex.impl.MapOrListWriterImpl;
+import org.apache.drill.exec.vector.complex.impl.StructOrListWriterImpl;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapOrListWriter;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter.StructOrListWriter;
 import org.ojai.DocumentConstants;
 import org.ojai.DocumentReader.EventType;
 import org.ojai.util.DocumentReaderWithProjection;
@@ -58,25 +58,25 @@ class ProjectionPassthroughVectorWriter extends DocumentReaderVectorWriter {
       throw dataReadError(logger, "The document did not start with START_MAP!");
     }
 
-    MapOrListWriterImpl writer = new MapOrListWriterImpl(vectorWriter.rootAsMap());
+    StructOrListWriterImpl writer = new StructOrListWriterImpl(vectorWriter.rootAsStruct());
     writer.start();
-    MapOrListWriter documentMapWriter = writer.map(DBConstants.DOCUMENT_FIELD);
-    documentMapWriter.start();
+    StructOrListWriter documentStructWriter = writer.struct(DBConstants.DOCUMENT_FIELD);
+    documentStructWriter.start();
 
     // write _id field data
     if (includeId) {
-      valueWriter.writeBinary(documentMapWriter, DocumentConstants.ID_KEY, reader.getIdData());
+      valueWriter.writeBinary(documentStructWriter, DocumentConstants.ID_KEY, reader.getIdData());
     }
 
     // write rest of the data buffers
     Map<Integer, ByteBuffer> dataMap = reader.getDataMap();
     for (Entry<Integer, ByteBuffer> familyData : dataMap.entrySet()) {
-      valueWriter.writeBinary(documentMapWriter, String.valueOf(familyData.getKey()), familyData.getValue());
+      valueWriter.writeBinary(documentStructWriter, String.valueOf(familyData.getKey()), familyData.getValue());
     }
-    documentMapWriter.end();
+    documentStructWriter.end();
 
     DocumentReaderWithProjection p = new DocumentReaderWithProjection(reader, projector);
-    valueWriter.writeToListOrMap(writer, p);
+    valueWriter.writeToListOrStruct(writer, p);
   }
 
 }

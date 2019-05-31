@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.unnest;
 
+import org.apache.drill.exec.vector.complex.RepeatedStructVector;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.common.exceptions.UserException;
@@ -42,7 +43,6 @@ import org.apache.drill.exec.util.record.RecordBatchStats;
 import org.apache.drill.exec.util.record.RecordBatchStats.RecordBatchIOType;
 import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.complex.RepeatedMapVector;
 import org.apache.drill.exec.vector.complex.RepeatedValueVector;
 
 import java.util.List;
@@ -262,7 +262,7 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
       // Inherited from FLATTEN. When does this happen???
       //when incoming recordCount is 0, don't throw exception since the type being seen here is not solid
       logger.error("setUnnestVector cast failed and recordcount is 0, create empty vector anyway.");
-      vector = new RepeatedMapVector(field, oContext.getAllocator(), null);
+      vector = new RepeatedStructVector(field, oContext.getAllocator(), null);
     } else {
       vector = RepeatedValueVector.class.cast(inVV);
     }
@@ -327,8 +327,8 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
     final ValueVector unnestField = incoming.getValueAccessorById(vectorClass, typeFieldIds).getValueVector();
 
     TransferPair tp = null;
-    if (unnestField instanceof RepeatedMapVector) {
-      tp = ((RepeatedMapVector) unnestField)
+    if (unnestField instanceof RepeatedStructVector) {
+      tp = ((RepeatedStructVector) unnestField)
           .getTransferPairToSingleMap(reference.getAsNamePart().getName(), oContext.getAllocator());
     } else if (!(unnestField instanceof RepeatedValueVector)) {
       if (incoming.getRecordCount() != 0) {
@@ -337,7 +337,7 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
       }
       logger.error("Cannot cast {} to RepeatedValueVector", unnestField);
       //when incoming recordCount is 0, don't throw exception since the type being seen here is not solid
-      final ValueVector vv = new RepeatedMapVector(unnestField.getField(), oContext.getAllocator(), null);
+      final ValueVector vv = new RepeatedStructVector(unnestField.getField(), oContext.getAllocator(), null);
       tp = RepeatedValueVector.class.cast(vv)
           .getTransferPair(reference.getAsNamePart().getName(), oContext.getAllocator());
     } else {

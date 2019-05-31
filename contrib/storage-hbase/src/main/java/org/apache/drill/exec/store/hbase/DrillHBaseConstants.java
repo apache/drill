@@ -31,7 +31,7 @@ public interface DrillHBaseConstants {
 
   public static final MajorType ROW_KEY_TYPE = Types.required(MinorType.VARBINARY);
 
-  public static final MajorType COLUMN_FAMILY_TYPE = Types.required(MinorType.MAP);
+  public static final MajorType COLUMN_FAMILY_TYPE = Types.required(MinorType.STRUCT);
 
   public static final MajorType COLUMN_TYPE = Types.optional(MinorType.VARBINARY);
 

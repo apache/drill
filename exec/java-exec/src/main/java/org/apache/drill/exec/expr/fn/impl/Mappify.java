@@ -30,9 +30,9 @@ import javax.inject.Inject;
 public class Mappify {
 
   /*
-   * The following function can be invoked when we want to convert a map to a repeated map where every
+   * The following function can be invoked when we want to convert a struct to a repeated struct where every
    * with two fields in each entry:
-   * key: the name of the field in the original map and
+   * key: the name of the field in the original struct and
    * value: value of the field
    *
    * For eg, consider the following json file:

@@ -24,7 +24,7 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.vector.complex.AbstractContainerVector;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter.StructWriter;
 
 @SuppressWarnings("unused")
 public class SingleListReaderImpl extends AbstractFieldReader{
@@ -79,7 +79,7 @@ public class SingleListReaderImpl extends AbstractFieldReader{
   }
 
   @Override
-  public void copyAsField(String name, MapWriter writer) {
+  public void copyAsField(String name, StructWriter writer) {
     throw new UnsupportedOperationException("Generic list copying not yet supported.  Please resolve to typed list.");
   }
 

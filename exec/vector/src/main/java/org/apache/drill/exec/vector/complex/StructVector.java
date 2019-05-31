@@ -40,28 +40,28 @@ import org.apache.drill.exec.util.JsonStringHashMap;
 import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.SchemaChangeCallBack;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.complex.RepeatedMapVector.MapSingleCopier;
-import org.apache.drill.exec.vector.complex.impl.SingleMapReaderImpl;
+import org.apache.drill.exec.vector.complex.RepeatedStructVector.MapSingleCopier;
+import org.apache.drill.exec.vector.complex.impl.SingleStructReaderImpl;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Ordering;
 import org.apache.drill.shaded.guava.com.google.common.primitives.Ints;
 
-public class MapVector extends AbstractMapVector {
+public class StructVector extends AbstractStructVector {
 
-  public final static MajorType TYPE = Types.required(MinorType.MAP);
+  public final static MajorType TYPE = Types.required(MinorType.STRUCT);
 
-  private final SingleMapReaderImpl reader = new SingleMapReaderImpl(MapVector.this);
+  private final SingleStructReaderImpl reader = new SingleStructReaderImpl(StructVector.this);
   private final Accessor accessor = new Accessor();
   private final Mutator mutator = new Mutator();
   private int valueCount;
 
-  public MapVector(String path, BufferAllocator allocator, CallBack callBack) {
+  public StructVector(String path, BufferAllocator allocator, CallBack callBack) {
     this(MaterializedField.create(path, TYPE), allocator, callBack);
   }
 
-  public MapVector(MaterializedField field, BufferAllocator allocator, CallBack callBack) {
+  public StructVector(MaterializedField field, BufferAllocator allocator, CallBack callBack) {
     super(field, allocator, callBack);
   }
 
@@ -71,14 +71,14 @@ public class MapVector extends AbstractMapVector {
   transient private MapTransferPair ephPair;
   transient private MapSingleCopier ephPair2;
 
-  public void copyFromSafe(int fromIndex, int thisIndex, MapVector from) {
+  public void copyFromSafe(int fromIndex, int thisIndex, StructVector from) {
     if (ephPair == null || ephPair.from != from) {
       ephPair = (MapTransferPair) from.makeTransferPair(this);
     }
     ephPair.copyValueSafe(fromIndex, thisIndex);
   }
 
-  public void copyFromSafe(int fromSubIndex, int thisIndex, RepeatedMapVector from) {
+  public void copyFromSafe(int fromSubIndex, int thisIndex, RepeatedStructVector from) {
     if (ephPair2 == null || ephPair2.from != from) {
       ephPair2 = from.makeSingularCopier(this);
     }
@@ -87,7 +87,7 @@ public class MapVector extends AbstractMapVector {
 
   @Override
   public void copyEntry(int toIndex, ValueVector from, int fromIndex) {
-    copyFromSafe(fromIndex, toIndex, (MapVector) from);
+    copyFromSafe(fromIndex, toIndex, (StructVector) from);
   }
 
   @Override
@@ -152,7 +152,7 @@ public class MapVector extends AbstractMapVector {
 
   @Override
   public TransferPair makeTransferPair(ValueVector to) {
-    return new MapTransferPair(this, (MapVector) to);
+    return new MapTransferPair(this, (StructVector) to);
   }
 
   @Override
@@ -162,18 +162,18 @@ public class MapVector extends AbstractMapVector {
 
   protected static class MapTransferPair implements TransferPair{
     private final TransferPair[] pairs;
-    private final MapVector from;
-    private final MapVector to;
+    private final StructVector from;
+    private final StructVector to;
 
-    public MapTransferPair(MapVector from, String path, BufferAllocator allocator) {
-      this(from, new MapVector(MaterializedField.create(path, TYPE), allocator, new SchemaChangeCallBack()), false);
+    public MapTransferPair(StructVector from, String path, BufferAllocator allocator) {
+      this(from, new StructVector(MaterializedField.create(path, TYPE), allocator, new SchemaChangeCallBack()), false);
     }
 
-    public MapTransferPair(MapVector from, MapVector to) {
+    public MapTransferPair(StructVector from, StructVector to) {
       this(from, to, true);
     }
 
-    protected MapTransferPair(MapVector from, MapVector to, boolean allocate) {
+    protected MapTransferPair(StructVector from, StructVector to, boolean allocate) {
       this.from = from;
       this.to = to;
       this.pairs = new TransferPair[from.size()];
@@ -188,7 +188,7 @@ public class MapVector extends AbstractMapVector {
         if (vector == null) {
           continue;
         }
-        //DRILL-1872: we add the child fields for the vector, looking up the field by name. For a map vector,
+        //DRILL-1872: we add the child fields for the vector, looking up the field by name. For a struct vector,
         // the child fields may be nested fields of the top level child. For example if the structure
         // of a child field is oa.oab.oabc then we add oa, then add oab to oa then oabc to oab.
         // But the children member of a Materialized field is a HashSet. If the fields are added in the
@@ -317,8 +317,8 @@ public class MapVector extends AbstractMapVector {
         // TODO(DRILL-4001):  Resolve this hack:
         // The index/value count check in the following if statement is a hack
         // to work around the current fact that RecordBatchLoader.load and
-        // MapVector.load leave child vectors with a length of zero (as opposed
-        // to matching the lengths of siblings and the parent map vector)
+        // StructVector.load leave child vectors with a length of zero (as opposed
+        // to matching the lengths of siblings and the parent struct vector)
         // because they don't remove (or set the lengths of) vectors from
         // previous batches that aren't in the current batch.
         if (v != null && index < v.getAccessor().getValueCount()) {
@@ -347,11 +347,11 @@ public class MapVector extends AbstractMapVector {
   }
 
   /**
-   * Set the value count for the map without setting the counts for the contained
+   * Set the value count for the struct without setting the counts for the contained
    * vectors. Use this only when the values of the contained vectors are set
    * elsewhere in the code.
    *
-   * @param valueCount number of items in the map
+   * @param valueCount number of items in the struct
    */
 
   public void setMapValueCount(int valueCount) {
@@ -403,9 +403,9 @@ public class MapVector extends AbstractMapVector {
   @Override
   public void exchange(ValueVector other) {
     super.exchange(other);
-    MapVector otherMap = (MapVector) other;
-    int temp = otherMap.valueCount;
-    otherMap.valueCount = valueCount;
+    StructVector otherStruct = (StructVector) other;
+    int temp = otherStruct.valueCount;
+    otherStruct.valueCount = valueCount;
     valueCount = temp;
   }
 }

@@ -28,7 +28,7 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.record.MajorTypeSerDe;
 import org.apache.drill.exec.vector.NullableFloat8Vector;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.complex.MapVector;
+import org.apache.drill.exec.vector.complex.StructVector;
 
 public class AvgWidthMergedStatistic extends AbstractMergedStatistic {
   private Map<String, Double> sumHolder;
@@ -61,9 +61,9 @@ public class AvgWidthMergedStatistic extends AbstractMergedStatistic {
   }
 
   @Override
-  public void merge(MapVector input) {
+  public void merge(StructVector input) {
     // Check the input is a Map Vector
-    assert (input.getField().getType().getMinorType() == TypeProtos.MinorType.MAP);
+    assert (input.getField().getType().getMinorType() == TypeProtos.MinorType.STRUCT);
     for (ValueVector vv : input) {
       NullableFloat8Vector fv = (NullableFloat8Vector) vv;
       NullableFloat8Vector.Accessor accessor = fv.getAccessor();
@@ -88,9 +88,9 @@ public class AvgWidthMergedStatistic extends AbstractMergedStatistic {
   }
 
   @Override
-  public void setOutput(MapVector output) {
+  public void setOutput(StructVector output) {
     // Check the input is a Map Vector
-    assert (output.getField().getType().getMinorType() == TypeProtos.MinorType.MAP);
+    assert (output.getField().getType().getMinorType() == TypeProtos.MinorType.STRUCT);
     // Dependencies have been configured correctly
     assert (state == State.MERGE);
     for (ValueVector outMapCol : output) {

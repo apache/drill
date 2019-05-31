@@ -264,7 +264,7 @@ public class TestRowBatchMerger extends SubOperatorTest {
 
   /**
    * Test the ability to create maps from whole cloth if requested in
-   * the projection list, and the map is not available from the data
+   * the projection list, and the struct is not available from the data
    * source.
    */
 
@@ -281,12 +281,12 @@ public class TestRowBatchMerger extends SubOperatorTest {
     ResolvedRow resolvedTuple = new ResolvedRow(builder);
     resolvedTuple.add(new TestProjection(resolvedTuple, 1));
 
-    ResolvedMapColumn nullMapCol = new ResolvedMapColumn(resolvedTuple, "map1");
+    ResolvedStructColumn nullMapCol = new ResolvedStructColumn(resolvedTuple, "map1");
     ResolvedTuple nullMap = nullMapCol.members();
     nullMap.add(nullMap.nullBuilder().add("null1"));
     nullMap.add(nullMap.nullBuilder().add("null2", Types.optional(MinorType.VARCHAR)));
 
-    ResolvedMapColumn nullMapCol2 = new ResolvedMapColumn(nullMap, "map2");
+    ResolvedStructColumn nullMapCol2 = new ResolvedStructColumn(nullMap, "map2");
     ResolvedTuple nullMap2 = nullMapCol2.members();
     nullMap2.add(nullMap2.nullBuilder().add("null3"));
     nullMap.add(nullMapCol2);
@@ -314,12 +314,12 @@ public class TestRowBatchMerger extends SubOperatorTest {
 
     BatchSchema expectedSchema = new SchemaBuilder()
         .add("a", MinorType.INT)
-        .addMap("map1")
+        .addStruct("map1")
           .addNullable("null1", MinorType.INT)
           .addNullable("null2", MinorType.VARCHAR)
-          .addMap("map2")
+          .addStruct("map2")
             .addNullable("null3", MinorType.INT)
-            .resumeMap()
+            .resumeStruct()
           .resumeSchema()
         .add("d", MinorType.VARCHAR)
         .build();
@@ -334,7 +334,7 @@ public class TestRowBatchMerger extends SubOperatorTest {
   }
 
   /**
-   * Test that the merger mechanism can rewrite a map to include
+   * Test that the merger mechanism can rewrite a struct to include
    * projected null columns.
    */
 
@@ -345,7 +345,7 @@ public class TestRowBatchMerger extends SubOperatorTest {
 
     BatchSchema inputSchema = new SchemaBuilder()
         .add("b", MinorType.VARCHAR)
-        .addMap("a")
+        .addStruct("a")
           .add("c", MinorType.INT)
           .resumeSchema()
         .build();
@@ -361,7 +361,7 @@ public class TestRowBatchMerger extends SubOperatorTest {
     ResolvedRow resolvedTuple = new ResolvedRow(builder);
 
     resolvedTuple.add(new TestProjection(resolvedTuple, 0));
-    ResolvedMapColumn mapCol = new ResolvedMapColumn(resolvedTuple,
+    ResolvedStructColumn mapCol = new ResolvedStructColumn(resolvedTuple,
         inputSchema.getColumn(1), 1);
     resolvedTuple.add(mapCol);
     ResolvedTuple map = mapCol.members();
@@ -388,7 +388,7 @@ public class TestRowBatchMerger extends SubOperatorTest {
 
     BatchSchema expectedSchema = new SchemaBuilder()
         .add("b", MinorType.VARCHAR)
-        .addMap("a")
+        .addStruct("a")
           .add("c", MinorType.INT)
           .addNullable("null1", MinorType.INT)
           .resumeSchema()
@@ -403,7 +403,7 @@ public class TestRowBatchMerger extends SubOperatorTest {
   }
 
   /**
-   * Test that the merger mechanism can rewrite a map array to include
+   * Test that the merger mechanism can rewrite a struct array to include
    * projected null columns.
    */
 
@@ -414,7 +414,7 @@ public class TestRowBatchMerger extends SubOperatorTest {
 
     BatchSchema inputSchema = new SchemaBuilder()
         .add("b", MinorType.VARCHAR)
-        .addMapArray("a")
+        .addStructArray("a")
           .add("c", MinorType.INT)
           .resumeSchema()
         .build();
@@ -430,7 +430,7 @@ public class TestRowBatchMerger extends SubOperatorTest {
     ResolvedRow resolvedTuple = new ResolvedRow(builder);
 
     resolvedTuple.add(new TestProjection(resolvedTuple, 0));
-    ResolvedMapColumn mapCol = new ResolvedMapColumn(resolvedTuple,
+    ResolvedStructColumn mapCol = new ResolvedStructColumn(resolvedTuple,
         inputSchema.getColumn(1), 1);
     resolvedTuple.add(mapCol);
     ResolvedTuple map = mapCol.members();
@@ -457,7 +457,7 @@ public class TestRowBatchMerger extends SubOperatorTest {
 
     BatchSchema expectedSchema = new SchemaBuilder()
         .add("b", MinorType.VARCHAR)
-        .addMapArray("a")
+        .addStructArray("a")
           .add("c", MinorType.INT)
           .addNullable("null1", MinorType.INT)
           .resumeSchema()

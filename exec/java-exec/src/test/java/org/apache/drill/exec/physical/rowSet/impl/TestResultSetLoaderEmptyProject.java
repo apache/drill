@@ -167,7 +167,7 @@ public class TestResultSetLoaderEmptyProject extends SubOperatorTest {
   public void testEmptyMapProjection() {
     List<SchemaPath> selection = Lists.newArrayList();
     TupleMetadata schema = new SchemaBuilder()
-        .addMap("map")
+        .addStruct("map")
           .add("a", MinorType.INT)
           .add("b", MinorType.INT)
           .resumeSchema()
@@ -198,7 +198,7 @@ public class TestResultSetLoaderEmptyProject extends SubOperatorTest {
 
   /**
    * Test disjoint projection, but with maps. Project top-level columns
-   * a, b, when those columns actually appear in a map which is not
+   * a, b, when those columns actually appear in a struct which is not
    * projected.
    */
 
@@ -208,7 +208,7 @@ public class TestResultSetLoaderEmptyProject extends SubOperatorTest {
         SchemaPath.getSimplePath("a"),
         SchemaPath.getSimplePath("b"));
     TupleMetadata schema = new SchemaBuilder()
-        .addMap("map")
+        .addStruct("map")
           .add("a", MinorType.INT)
           .add("b", MinorType.INT)
           .resumeSchema()

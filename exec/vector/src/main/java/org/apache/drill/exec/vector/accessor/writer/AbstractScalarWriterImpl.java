@@ -82,7 +82,7 @@ public abstract class AbstractScalarWriterImpl extends AbstractScalarWriter impl
    * Indicates the position in the vector to write. Set via an object so that
    * all writers (within the same subtree) can agree on the write position.
    * For example, all top-level, simple columns see the same row index.
-   * All columns within a repeated map see the same (inner) index, etc.
+   * All columns within a repeated struct see the same (inner) index, etc.
    */
 
   protected ColumnWriterIndex vectorIndex;

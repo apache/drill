@@ -43,8 +43,8 @@ import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.fn.output.OutputWidthCalculator;
 import org.apache.drill.exec.expr.holders.ListHolder;
-import org.apache.drill.exec.expr.holders.MapHolder;
-import org.apache.drill.exec.expr.holders.RepeatedMapHolder;
+import org.apache.drill.exec.expr.holders.StructHolder;
+import org.apache.drill.exec.expr.holders.RepeatedStructHolder;
 import org.apache.drill.exec.ops.UdfUtilities;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
@@ -217,16 +217,16 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
           sub.decl(fieldReadClass, parameter.getName(), JExpr._new(singularReaderClass).arg(inputVariable.getHolder()));
         } else if (!parameter.isFieldReader() && inputVariable.isReader() && Types.isComplex(parameter.getType())) {
           // For complex data-types (repeated maps/lists) the input to the aggregate will be a FieldReader. However, aggregate
-          // functions like ANY_VALUE, will assume the input to be a RepeatedMapHolder etc. Generate boilerplate code, to map
+          // functions like ANY_VALUE, will assume the input to be a RepeatedStructHolder etc. Generate boilerplate code, to struct
           // from FieldReader to respective Holder.
-          if (parameter.getType().getMinorType() == MinorType.MAP) {
+          if (parameter.getType().getMinorType() == MinorType.STRUCT) {
             JType holderClass;
             if (parameter.getType().getMode() == TypeProtos.DataMode.REPEATED) {
-              holderClass = g.getModel()._ref(RepeatedMapHolder.class);
+              holderClass = g.getModel()._ref(RepeatedStructHolder.class);
               JVar holderVar = sub.decl(holderClass, parameter.getName(), JExpr._new(holderClass));
               sub.assign(holderVar.ref("reader"), inputVariable.getHolder());
             } else {
-              holderClass = g.getModel()._ref(MapHolder.class);
+              holderClass = g.getModel()._ref(StructHolder.class);
               JVar holderVar = sub.decl(holderClass, parameter.getName(), JExpr._new(holderClass));
               sub.assign(holderVar.ref("reader"), inputVariable.getHolder());
             }

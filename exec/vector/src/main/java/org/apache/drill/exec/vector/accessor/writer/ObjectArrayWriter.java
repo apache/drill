@@ -24,7 +24,7 @@ import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.accessor.writer.AbstractArrayWriter.BaseArrayWriter;
 
 /**
- * Writer for an array of either a map or another array. Here, the contents
+ * Writer for an array of either a struct or another array. Here, the contents
  * are a structure and need explicit saves. State transitions in addition to the
  * base class are:
  *
@@ -38,11 +38,11 @@ import org.apache.drill.exec.vector.accessor.writer.AbstractArrayWriter.BaseArra
  * </table>
  *
  * This class is use for arrays of maps (and for arrays of arrays). When used
- * with a map, then we have a single offset vector pointing into a group of
- * arrays. Consider the simple case of a map of three scalars. Here, we have
+ * with a struct, then we have a single offset vector pointing into a group of
+ * arrays. Consider the simple case of a struct of three scalars. Here, we have
  * a hybrid of the states discussed for the {@link BaseScalarWriter} and those
  * discussed for {@link OffsetVectorWriterImpl}. That is, the offset vector
- * points into one map element. The individual elements can we Behind,
+ * points into one struct element. The individual elements can we Behind,
  * Written or Unwritten, depending on the specific actions taken by the
  * client.
  * <p>
@@ -65,7 +65,7 @@ import org.apache.drill.exec.vector.accessor.writer.AbstractArrayWriter.BaseArra
  *     of the array that starts at position 10.</li>
  * <li>Since the row is active, the end position of the row has not yet
  *     been written, and so is blank in the offset vector.</li>
- * <li>The previous row had a two-element map array written, starting
+ * <li>The previous row had a two-element struct array written, starting
  *     at offset 8 and ending at offset 9 (inclusive), identified as
  *     writing the next start offset (exclusive) into the following
  *     offset array slot.</li>
@@ -73,7 +73,7 @@ import org.apache.drill.exec.vector.accessor.writer.AbstractArrayWriter.BaseArra
  *     previous row. It is currently in the Behind state with the last
  *     write position for A, lwa, pointing to the last write.</li>
  * <li>Column B is in the Unwritten state. A value was written for
- *     previous element in the map array, but not for the current element.
+ *     previous element in the struct array, but not for the current element.
  *     We see this by the fact that the last write position for B, lwb,
  *     is one behind v'.</li>
  * <li>Column C has been written for the current array element and is

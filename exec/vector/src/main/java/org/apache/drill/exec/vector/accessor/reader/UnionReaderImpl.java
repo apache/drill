@@ -115,7 +115,7 @@ public class UnionReaderImpl implements VariantReader, ReaderEvents {
       NullStateReader nullReader;
       MinorType type = MinorType.values()[i];
       switch(type) {
-      case MAP:
+      case STRUCT:
       case LIST:
         nullReader = new NullStateReaders.ComplexMemberStateReader(typeReader, type);
         break;
@@ -234,7 +234,7 @@ public class UnionReaderImpl implements VariantReader, ReaderEvents {
 
   @Override
   public TupleReader tuple() {
-    return requireReader(MinorType.MAP).tuple();
+    return requireReader(MinorType.STRUCT).tuple();
   }
 
   @Override

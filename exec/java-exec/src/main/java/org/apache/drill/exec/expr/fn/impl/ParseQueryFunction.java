@@ -60,7 +60,7 @@ public class ParseQueryFunction {
 
     @Override
     public void eval() {
-      org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter mapWriter = outWriter.rootAsMap();
+      org.apache.drill.exec.vector.complex.writer.BaseWriter.StructWriter structWriter = outWriter.rootAsStruct();
 
       String queryString =
           org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(in.start, in.end, in.buffer);
@@ -87,7 +87,7 @@ public class ParseQueryFunction {
       }
 
       String[] queryParameters = queryString.split("&");
-      mapWriter.start();
+      structWriter.start();
       for (String parameter : queryParameters) {
         String[] keyValue = parameter.split("=", 2);
         if (keyValue.length != 2) {
@@ -105,9 +105,9 @@ public class ParseQueryFunction {
         valueHolder.end = valueBytes.length;
         valueHolder.buffer = outBuffer;
 
-        mapWriter.varChar(keyValue[0]).write(valueHolder);
+        structWriter.varChar(keyValue[0]).write(valueHolder);
       }
-      mapWriter.end();
+      structWriter.end();
     }
   }
 
@@ -127,12 +127,12 @@ public class ParseQueryFunction {
 
     @Override
     public void eval() {
-      org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter mapWriter = outWriter.rootAsMap();
+      org.apache.drill.exec.vector.complex.writer.BaseWriter.StructWriter structWriter = outWriter.rootAsStruct();
 
       if (in.isSet == 0) {
-        // Return empty map
-        mapWriter.start();
-        mapWriter.end();
+        // Return empty struct
+        structWriter.start();
+        structWriter.end();
         return;
       }
 
@@ -161,7 +161,7 @@ public class ParseQueryFunction {
       }
 
       String[] queryParameters = queryString.split("&");
-      mapWriter.start();
+      structWriter.start();
       for (String parameter : queryParameters) {
         String[] keyValue = parameter.split("=", 2);
         if (keyValue.length != 2) {
@@ -179,9 +179,9 @@ public class ParseQueryFunction {
         valueHolder.end = valueBytes.length;
         valueHolder.buffer = outBuffer;
 
-        mapWriter.varChar(keyValue[0]).write(valueHolder);
+        structWriter.varChar(keyValue[0]).write(valueHolder);
       }
-      mapWriter.end();
+      structWriter.end();
     }
   }
 }

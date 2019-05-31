@@ -81,10 +81,10 @@ public interface ColumnWriter {
    * must be a Java array. The type of the array must match the type of
    * element in the repeated vector. That is, if the vector is
    * a <tt>Repeated Int</tt>, provide an <tt>int[]</tt> array.</tt></li>
-   * <li>Tuple (map or row): The Java object must be an array of objects
+   * <li>Tuple (struct or row): The Java object must be an array of objects
    * in which the members of the array have a 1:1 correspondence with the
    * members of the tuple in the order defined by the writer metadata.
-   * That is, if the map is (Int, Varchar), provide a <tt>Object[]</tt>
+   * That is, if the struct is (Int, Varchar), provide a <tt>Object[]</tt>
    * array like this: <tt>{10, "fred"}</tt>.</li>
    * <li>Union: Uses the Java object type to determine the type of the
    * backing vector. Creates a vector

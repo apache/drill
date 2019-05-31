@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.statistics;
 
-import org.apache.drill.exec.vector.complex.MapVector;
+import org.apache.drill.exec.vector.complex.StructVector;
 
 /*
  * Interface for implementing a merged statistic. A merged statistic can merge
@@ -52,11 +52,11 @@ public interface MergedStatistic {
    *
    * @param input - the input value vector to merge
    */
-  void merge(MapVector input);
+  void merge(StructVector input);
 
   /** Sets the merged statistic value in the output (outgoing value vector)
    *
    * @param output - the output vector where to populate the statistic value
    */
-  void setOutput(MapVector output);
+  void setOutput(StructVector output);
 }

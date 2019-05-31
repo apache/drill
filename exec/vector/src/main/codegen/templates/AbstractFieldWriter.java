@@ -80,29 +80,29 @@ abstract class AbstractFieldWriter extends AbstractBaseWriter implements FieldWr
   /**
    * This implementation returns {@code false}.
    * <p>  
-   *   Must be overridden by map writers.
+   *   Must be overridden by struct writers.
    * </p>  
    */
   @Override
-  public boolean isEmptyMap() {
+  public boolean isEmptyStruct() {
     return false;
   }
 
   @Override
-  public MapWriter map() {
-    fail("Map");
+  public StructWriter struct() {
+    fail("Struct");
+    return null;
+  }
+
+  @Override
+  public StructWriter struct(String name) {
+    fail("Struct");
     return null;
   }
 
   @Override
   public ListWriter list() {
     fail("List");
-    return null;
-  }
-
-  @Override
-  public MapWriter map(String name) {
-    fail("Map");
     return null;
   }
 

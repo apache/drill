@@ -519,7 +519,7 @@ public class TestJsonReader extends BaseTestQuery {
     File table_dir = dirTestWatcher.makeTestTmpSubDir(Paths.get("multi_batch"));
     BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(new File(table_dir, "a.json")));
     for (int i = 0; i < 10000; i++) {
-      os.write("{ type : \"map\", data : { a : 1 } }\n".getBytes());
+      os.write("{ type : \"struct\", data : { a : 1 } }\n".getBytes());
       os.write("{ type : \"bigint\", data : 1 }\n".getBytes());
     }
     os.flush();
@@ -527,7 +527,7 @@ public class TestJsonReader extends BaseTestQuery {
 
     try {
       testBuilder()
-              .sqlQuery("select sum(cast(case when `type` = 'map' then t.data.a else data end as bigint)) `sum` from dfs.tmp.multi_batch t")
+              .sqlQuery("select sum(cast(case when `type` = 'struct' then t.data.a else data end as bigint)) `sum` from dfs.tmp.multi_batch t")
               .ordered()
               .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
               .baselineColumns("sum")
@@ -543,7 +543,7 @@ public class TestJsonReader extends BaseTestQuery {
     File table_dir = dirTestWatcher.makeTestTmpSubDir(Paths.get("multi_file"));
     BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(new File(table_dir, "a.json")));
     for (int i = 0; i < 10000; i++) {
-      os.write("{ type : \"map\", data : { a : 1 } }\n".getBytes());
+      os.write("{ type : \"struct\", data : { a : 1 } }\n".getBytes());
     }
     os.flush();
     os.close();
@@ -556,7 +556,7 @@ public class TestJsonReader extends BaseTestQuery {
 
     try {
       testBuilder()
-              .sqlQuery("select sum(cast(case when `type` = 'map' then t.data.a else data end as bigint)) `sum` from dfs.tmp.multi_file t")
+              .sqlQuery("select sum(cast(case when `type` = 'struct' then t.data.a else data end as bigint)) `sum` from dfs.tmp.multi_file t")
               .ordered()
               .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
               .baselineColumns("sum")
@@ -690,7 +690,7 @@ public class TestJsonReader extends BaseTestQuery {
 
   @Test // DRILL-5521
   public void testKvgenWithUnionAll() throws Exception {
-    String fileName = "map.json";
+    String fileName = "struct.json";
     try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(dirTestWatcher.getRootDir(), fileName)))) {
       writer.write("{\"rk\": \"a\", \"m\": {\"a\":\"1\"}}");
     }

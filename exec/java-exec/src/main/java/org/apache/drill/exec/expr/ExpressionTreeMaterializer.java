@@ -582,7 +582,7 @@ public class ExpressionTreeMaterializer {
       if (type == MinorType.UNION) {
         return arg;
       }
-      if (type == MinorType.LIST || type == MinorType.MAP) {
+      if (type == MinorType.LIST || type == MinorType.STRUCT) {
         return getExceptionFunction("Unable to cast union to " + type);
       }
       String castFuncName = String.format("assert_%s", type.toString());

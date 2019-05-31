@@ -43,7 +43,7 @@ import org.apache.drill.exec.vector.accessor.ScalarReader;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.TupleReader;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
-import org.apache.drill.exec.vector.complex.RepeatedMapVector;
+import org.apache.drill.exec.vector.complex.RepeatedStructVector;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
@@ -53,7 +53,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 /**
- * Test map array support in the result set loader.
+ * Test struct array support in the result set loader.
  * <p>
  * The tests here should be considered in the "extra for experts"
  * category: run and/or debug these tests only after the scalar
@@ -62,13 +62,13 @@ import org.junit.experimental.categories.Category;
  */
 
 @Category(RowSetTests.class)
-public class TestResultSetLoaderMapArray extends SubOperatorTest {
+public class TestResultSetLoaderStructArray extends SubOperatorTest {
 
   @Test
   public void testBasics() {
     TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.INT)
-        .addMapArray("m")
+        .addStructArray("m")
           .add("c", MinorType.INT)
           .add("d", MinorType.VARCHAR)
           .resumeSchema()
@@ -84,7 +84,7 @@ public class TestResultSetLoaderMapArray extends SubOperatorTest {
     TupleMetadata actualSchema = rootWriter.tupleSchema();
     assertEquals(2, actualSchema.size());
     assertTrue(actualSchema.metadata(1).isArray());
-    assertTrue(actualSchema.metadata(1).isMap());
+    assertTrue(actualSchema.metadata(1).isStruct());
     assertEquals(2, actualSchema.metadata("m").mapSchema().size());
     assertEquals(2, actualSchema.column("m").getChildren().size());
     TupleWriter mapWriter = rootWriter.array("m").tuple();
@@ -109,10 +109,10 @@ public class TestResultSetLoaderMapArray extends SubOperatorTest {
     // Verify the first batch
 
     RowSet actual = fixture.wrap(rsLoader.harvest());
-    RepeatedMapVector mapVector = (RepeatedMapVector) actual.container().getValueVector(1).getValueVector();
-    MaterializedField mapField = mapVector.getField();
-    assertEquals(2, mapField.getChildren().size());
-    Iterator<MaterializedField> iter = mapField.getChildren().iterator();
+    RepeatedStructVector structVector = (RepeatedStructVector) actual.container().getValueVector(1).getValueVector();
+    MaterializedField structVectorField = structVector.getField();
+    assertEquals(2, structVectorField.getChildren().size());
+    Iterator<MaterializedField> iter = structVectorField.getChildren().iterator();
     assertTrue(mapWriter.scalar(0).schema().schema().isEquivalent(iter.next()));
     assertTrue(mapWriter.scalar(1).schema().schema().isEquivalent(iter.next()));
 
@@ -128,7 +128,7 @@ public class TestResultSetLoaderMapArray extends SubOperatorTest {
         .build();
     RowSetUtilities.verify(expected, actual);
 
-    // In the second, create a row, then add a map member.
+    // In the second, create a row, then add a struct member.
     // Should be back-filled to empty for the first row.
 
     rsLoader.startBatch();
@@ -151,13 +151,13 @@ public class TestResultSetLoaderMapArray extends SubOperatorTest {
     // Verify the second batch
 
     actual = fixture.wrap(rsLoader.harvest());
-    mapVector = (RepeatedMapVector) actual.container().getValueVector(1).getValueVector();
-    mapField = mapVector.getField();
-    assertEquals(3, mapField.getChildren().size());
+    structVector = (RepeatedStructVector) actual.container().getValueVector(1).getValueVector();
+    structVectorField = structVector.getField();
+    assertEquals(3, structVectorField.getChildren().size());
 
     TupleMetadata expectedSchema = new SchemaBuilder()
         .add("a", MinorType.INT)
-        .addMapArray("m")
+        .addStructArray("m")
           .add("c", MinorType.INT)
           .add("d", MinorType.VARCHAR)
           .addNullable("e", MinorType.VARCHAR)
@@ -184,7 +184,7 @@ public class TestResultSetLoaderMapArray extends SubOperatorTest {
   public void testNestedArray() {
     TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.INT)
-        .addMapArray("m")
+        .addStructArray("m")
           .add("c", MinorType.INT)
           .addArray("d", MinorType.VARCHAR)
           .resumeSchema()
@@ -236,12 +236,12 @@ public class TestResultSetLoaderMapArray extends SubOperatorTest {
   public void testDoubleNestedArray() {
     TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.INT)
-        .addMapArray("m1")
+        .addStructArray("m1")
           .add("b", MinorType.INT)
-          .addMapArray("m2")
+          .addStructArray("m2")
             .add("c", MinorType.INT)
             .addArray("d", MinorType.VARCHAR)
-            .resumeMap()
+            .resumeStruct()
           .resumeSchema()
         .buildSchema();
     ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
@@ -324,7 +324,7 @@ public class TestResultSetLoaderMapArray extends SubOperatorTest {
   public void testOverwriteRow() {
     TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.INT)
-        .addMapArray("m")
+        .addStructArray("m")
           .add("b", MinorType.INT)
           .add("c", MinorType.VARCHAR)
         .resumeSchema()
@@ -391,14 +391,14 @@ public class TestResultSetLoaderMapArray extends SubOperatorTest {
 
   /**
    * Check that the "fill-empties" logic descends down into
-   * a repeated map.
+   * a repeated struct.
    */
 
   @Test
   public void testOmittedValues() {
     TupleMetadata schema = new SchemaBuilder()
         .add("id", MinorType.INT)
-        .addMapArray("m")
+        .addStructArray("m")
           .addNullable("a", MinorType.INT)
           .addNullable("b", MinorType.VARCHAR)
           .resumeSchema()
@@ -471,7 +471,7 @@ public class TestResultSetLoaderMapArray extends SubOperatorTest {
   @Test
   public void testCloseWithoutHarvest() {
     TupleMetadata schema = new SchemaBuilder()
-        .addMapArray("m")
+        .addStructArray("m")
           .add("a", MinorType.INT)
           .add("b", MinorType.VARCHAR)
           .resumeSchema()

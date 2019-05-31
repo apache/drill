@@ -310,14 +310,14 @@ public class ListState extends ContainerState
     // a scalar, it is nullable. Automatic back-fill will fill prior values
     // with null, so there is nothing to do here.
     //
-    // Note, however, that if this first type is a map, there is no way
-    // to mark that map as null; we loose the nullability state. However,
-    // if we later promote the single-type map to a union, we can't
+    // Note, however, that if this first type is a struct, there is no way
+    // to mark that struct as null; we loose the nullability state. However,
+    // if we later promote the single-type struct to a union, we can't
     // recover the null states and so the previously-null values won't
     // be null. We could fix this, for a single batch, by keeping track
     // of the null positions. But, there is no way to mark later maps
     // as null. Another choice would be to force a transition directly
-    // to a union if the first type is a map. None of this has ever worked
+    // to a union if the first type is a struct. None of this has ever worked
     // and so is left as an exercise for later once we work out what we
     // actually want to support.
 

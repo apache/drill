@@ -23,8 +23,8 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 
 /**
  * Describes the contents of a list or union field. Such fields are,
- * in effect, a map from minor type to vector, represented here as
- * a map from minor type to column metadata. The child columns used here
+ * in effect, a struct from minor type to vector, represented here as
+ * a struct from minor type to column metadata. The child columns used here
  * are a useful fiction. The column name is made up to be the same as
  * the name of the type.
  * <p>
@@ -36,14 +36,14 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
  * Variants can contain three kinds of children:
  * <ul>
  * <li>Nullable (optional) scalar vectors.</li>
- * <li>Non-nullable (required) map.</li>
+ * <li>Non-nullable (required) struct.</li>
  * <li>Nullable (optional) list.</li>
  * </ul>
  * <p>
  * A union cannot contain a repeated vector. Instead, the
  * union can contain a list. Note also that maps can never be optional,
- * so they are required in the union, even though the map is, in effect,
- * optional (the map is effectively null if it is not used for a give
+ * so they are required in the union, even though the struct is, in effect,
+ * optional (the struct is effectively null if it is not used for a give
  * row.) Yes, this is confusing, but it is how the vectors are
  * implemented (for now.)
  * <p>
@@ -56,8 +56,8 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
  * lists don't. Here, both types declare their member types. (Another
  * useful fiction.)
  * <p>
- * A union or list can contain a map. Maps have structure. To support this,
- * the metadata allows adding a map column that contains the map structure.
+ * A union or list can contain a struct. To support this,
+ * the metadata allows adding a struct column that contains the struct structure.
  * Such metadata exist only in this system; it is not easily accessible in
  * the vector implementation.
  * <p>
@@ -91,7 +91,7 @@ public interface VariantMetadata {
 
   /**
    * Add a column for any supported type to the variant.
-   * Use this to add structure to a list or map member.
+   * Use this to add structure to a list or struct member.
    *
    * @param col column to add. The column must have the correct
    * mode. The column's type is used as the type key

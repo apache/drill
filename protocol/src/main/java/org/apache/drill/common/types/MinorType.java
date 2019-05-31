@@ -23,7 +23,7 @@ package org.apache.drill.common.types;
 public enum MinorType implements com.dyuproject.protostuff.EnumLite<MinorType>
 {
     LATE(0),
-    MAP(1),
+    STRUCT(1),
     TINYINT(3),
     SMALLINT(4),
     INT(5),
@@ -79,7 +79,7 @@ public enum MinorType implements com.dyuproject.protostuff.EnumLite<MinorType>
         switch(number) 
         {
             case 0: return LATE;
-            case 1: return MAP;
+            case 1: return STRUCT;
             case 3: return TINYINT;
             case 4: return SMALLINT;
             case 5: return INT;

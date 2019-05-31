@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.statistics;
 
-import org.apache.drill.exec.vector.complex.MapVector;
+import org.apache.drill.exec.vector.complex.StructVector;
 
 public abstract class AbstractMergedStatistic implements MergedStatistic, Statistic {
   protected String name;
@@ -41,8 +41,9 @@ public abstract class AbstractMergedStatistic implements MergedStatistic, Statis
   public abstract String getInput();
 
   @Override
-  public abstract void merge(MapVector input);
+  public abstract void merge(StructVector input);
 
   @Override
-  public abstract void setOutput(MapVector output);
+  public abstract void setOutput(StructVector output);
+
 }

@@ -32,7 +32,7 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.expr.BasicTypeHelper;
 import org.apache.drill.exec.expr.holders.ComplexHolder;
-import org.apache.drill.exec.expr.holders.RepeatedMapHolder;
+import org.apache.drill.exec.expr.holders.RepeatedStructHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.AllocationManager.BufferLedger;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
@@ -47,27 +47,27 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VectorDescriptor;
 import org.apache.drill.exec.vector.SchemaChangeCallBack;
 import org.apache.drill.exec.vector.complex.impl.NullReader;
-import org.apache.drill.exec.vector.complex.impl.RepeatedMapReaderImpl;
+import org.apache.drill.exec.vector.complex.impl.RepeatedStructReaderImpl;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 
-public class RepeatedMapVector extends AbstractMapVector
+public class RepeatedStructVector extends AbstractStructVector
     implements RepeatedValueVector {
 
-  public final static MajorType TYPE = MajorType.newBuilder().setMinorType(MinorType.MAP).setMode(DataMode.REPEATED).build();
+  public final static MajorType TYPE = MajorType.newBuilder().setMinorType(MinorType.STRUCT).setMode(DataMode.REPEATED).build();
 
   private final UInt4Vector offsets;   // offsets to start of each record (considering record indices are 0-indexed)
-  private final RepeatedMapReaderImpl reader = new RepeatedMapReaderImpl(RepeatedMapVector.this);
+  private final RepeatedStructReaderImpl reader = new RepeatedStructReaderImpl(RepeatedStructVector.this);
   private final RepeatedMapAccessor accessor = new RepeatedMapAccessor();
   private final Mutator mutator = new Mutator();
   private final EmptyValuePopulator emptyPopulator;
 
-  public RepeatedMapVector(MaterializedField field, BufferAllocator allocator, CallBack callBack) {
+  public RepeatedStructVector(MaterializedField field, BufferAllocator allocator, CallBack callBack) {
     this(field, new UInt4Vector(BaseRepeatedValueVector.OFFSETS_FIELD, allocator), callBack);
   }
 
-  public RepeatedMapVector(MaterializedField field, UInt4Vector offsets, CallBack callBack) {
+  public RepeatedStructVector(MaterializedField field, UInt4Vector offsets, CallBack callBack) {
     super(field, offsets.getAllocator(), callBack);
     this.offsets = offsets;
     this.emptyPopulator = new EmptyValuePopulator(offsets);
@@ -95,7 +95,7 @@ public class RepeatedMapVector extends AbstractMapVector
   }
 
   @Override
-  public RepeatedMapReaderImpl getReader() { return reader; }
+  public RepeatedStructReaderImpl getReader() { return reader; }
 
   public void allocateNew(int groupCount, int innerValueCount) {
     clear();
@@ -167,18 +167,18 @@ public class RepeatedMapVector extends AbstractMapVector
 
   @Override
   public TransferPair makeTransferPair(ValueVector to) {
-    return new RepeatedMapTransferPair(this, (RepeatedMapVector)to);
+    return new RepeatedMapTransferPair(this, (RepeatedStructVector)to);
   }
 
-  MapSingleCopier makeSingularCopier(MapVector to) {
+  MapSingleCopier makeSingularCopier(StructVector to) {
     return new MapSingleCopier(this, to);
   }
 
   protected static class MapSingleCopier {
     private final TransferPair[] pairs;
-    public final RepeatedMapVector from;
+    public final RepeatedStructVector from;
 
-    public MapSingleCopier(RepeatedMapVector from, MapVector to) {
+    public MapSingleCopier(RepeatedStructVector from, StructVector to) {
       this.from = from;
       this.pairs = new TransferPair[from.size()];
 
@@ -238,19 +238,19 @@ public class RepeatedMapVector extends AbstractMapVector
 
   protected static class SingleMapTransferPair implements TransferPair {
     private final TransferPair[] pairs;
-    private final RepeatedMapVector from;
-    private final MapVector to;
-    private static final MajorType MAP_TYPE = Types.required(MinorType.MAP);
+    private final RepeatedStructVector from;
+    private final StructVector to;
+    private static final MajorType STRUCT_TYPE = Types.required(MinorType.STRUCT);
 
-    public SingleMapTransferPair(RepeatedMapVector from, String path, BufferAllocator allocator) {
-      this(from, new MapVector(MaterializedField.create(path, MAP_TYPE), allocator, new SchemaChangeCallBack()), false);
+    public SingleMapTransferPair(RepeatedStructVector from, String path, BufferAllocator allocator) {
+      this(from, new StructVector(MaterializedField.create(path, STRUCT_TYPE), allocator, new SchemaChangeCallBack()), false);
     }
 
-    public SingleMapTransferPair(RepeatedMapVector from, MapVector to) {
+    public SingleMapTransferPair(RepeatedStructVector from, StructVector to) {
       this(from, to, true);
     }
 
-    public SingleMapTransferPair(RepeatedMapVector from, MapVector to, boolean allocate) {
+    public SingleMapTransferPair(RepeatedStructVector from, StructVector to, boolean allocate) {
       this.from = from;
       this.to = to;
       this.pairs = new TransferPair[from.size()];
@@ -304,18 +304,18 @@ public class RepeatedMapVector extends AbstractMapVector
   private static class RepeatedMapTransferPair implements TransferPair{
 
     private final TransferPair[] pairs;
-    private final RepeatedMapVector to;
-    private final RepeatedMapVector from;
+    private final RepeatedStructVector to;
+    private final RepeatedStructVector from;
 
-    public RepeatedMapTransferPair(RepeatedMapVector from, String path, BufferAllocator allocator) {
-      this(from, new RepeatedMapVector(MaterializedField.create(path, TYPE), allocator, new SchemaChangeCallBack()), false);
+    public RepeatedMapTransferPair(RepeatedStructVector from, String path, BufferAllocator allocator) {
+      this(from, new RepeatedStructVector(MaterializedField.create(path, TYPE), allocator, new SchemaChangeCallBack()), false);
     }
 
-    public RepeatedMapTransferPair(RepeatedMapVector from, RepeatedMapVector to) {
+    public RepeatedMapTransferPair(RepeatedStructVector from, RepeatedStructVector to) {
       this(from, to, true);
     }
 
-    public RepeatedMapTransferPair(RepeatedMapVector from, RepeatedMapVector to, boolean allocate) {
+    public RepeatedMapTransferPair(RepeatedStructVector from, RepeatedStructVector to, boolean allocate) {
       this.from = from;
       this.to = to;
       this.pairs = new TransferPair[from.size()];
@@ -355,7 +355,7 @@ public class RepeatedMapVector extends AbstractMapVector
 
     @Override
     public void copyValueSafe(int srcIndex, int destIndex) {
-      RepeatedMapHolder holder = new RepeatedMapHolder();
+      RepeatedStructHolder holder = new RepeatedStructHolder();
       from.getAccessor().get(srcIndex, holder);
       to.emptyPopulator.populate(destIndex + 1);
       int newIndex = to.offsets.getAccessor().get(destIndex);
@@ -397,7 +397,7 @@ public class RepeatedMapVector extends AbstractMapVector
 
   transient private RepeatedMapTransferPair ephPair;
 
-  public void copyFromSafe(int fromIndex, int thisIndex, RepeatedMapVector from) {
+  public void copyFromSafe(int fromIndex, int thisIndex, RepeatedStructVector from) {
     if (ephPair == null || ephPair.from != from) {
       ephPair = (RepeatedMapTransferPair) from.makeTransferPair(this);
     }
@@ -406,7 +406,7 @@ public class RepeatedMapVector extends AbstractMapVector
 
   @Override
   public void copyEntry(int toIndex, ValueVector from, int fromIndex) {
-    copyFromSafe(fromIndex, toIndex, (RepeatedMapVector) from);
+    copyFromSafe(fromIndex, toIndex, (RepeatedStructVector) from);
   }
 
   @Override
@@ -422,7 +422,7 @@ public class RepeatedMapVector extends AbstractMapVector
   @Override
   public void exchange(ValueVector other) {
     super.exchange(other);
-    offsets.exchange(((RepeatedMapVector) other).offsets);
+    offsets.exchange(((RepeatedStructVector) other).offsets);
   }
 
   @Override
@@ -526,7 +526,7 @@ public class RepeatedMapVector extends AbstractMapVector
       return false;
     }
 
-    public void get(int index, RepeatedMapHolder holder) {
+    public void get(int index, RepeatedStructHolder holder) {
       assert index < getValueCapacity() :
         String.format("Attempted to access index %d when value capacity is %d",
             index, getValueCapacity());
@@ -542,7 +542,7 @@ public class RepeatedMapVector extends AbstractMapVector
     }
 
     public void get(int index, int arrayIndex, ComplexHolder holder) {
-      final RepeatedMapHolder h = new RepeatedMapHolder();
+      final RepeatedStructHolder h = new RepeatedStructHolder();
       get(index, h);
       final int offset = h.start + arrayIndex;
 

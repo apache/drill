@@ -60,9 +60,9 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarCharVector;
 import org.apache.drill.exec.vector.VariableWidthVector;
 import org.apache.drill.exec.vector.complex.ListVector;
-import org.apache.drill.exec.vector.complex.MapVector;
+import org.apache.drill.exec.vector.complex.RepeatedStructVector;
+import org.apache.drill.exec.vector.complex.StructVector;
 import org.apache.drill.exec.vector.complex.RepeatedListVector;
-import org.apache.drill.exec.vector.complex.RepeatedMapVector;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -654,11 +654,11 @@ the interface to load has changed
     fields[4] = MaterializedField.create(EMPTY_SCHEMA_PATH, RepeatedFloat4Holder.TYPE);
     fields[5] = MaterializedField.create(EMPTY_SCHEMA_PATH, RepeatedVarBinaryHolder.TYPE);
 
-    fields[6] = MaterializedField.create(EMPTY_SCHEMA_PATH, MapVector.TYPE);
+    fields[6] = MaterializedField.create(EMPTY_SCHEMA_PATH, StructVector.TYPE);
     fields[6].addChild(fields[0] /*bit*/);
     fields[6].addChild(fields[2] /*varchar*/);
 
-    fields[7] = MaterializedField.create(EMPTY_SCHEMA_PATH, RepeatedMapVector.TYPE);
+    fields[7] = MaterializedField.create(EMPTY_SCHEMA_PATH, RepeatedStructVector.TYPE);
     fields[7].addChild(fields[1] /*int*/);
     fields[7].addChild(fields[3] /*optional var16char*/);
 
@@ -727,8 +727,8 @@ the interface to load has changed
         MaterializedField.create(EMPTY_SCHEMA_PATH, VarCharHolder.TYPE),
         MaterializedField.create(EMPTY_SCHEMA_PATH, NullableVarCharHolder.TYPE),
         MaterializedField.create(EMPTY_SCHEMA_PATH, RepeatedListVector.TYPE),
-        MaterializedField.create(EMPTY_SCHEMA_PATH, MapVector.TYPE),
-        MaterializedField.create(EMPTY_SCHEMA_PATH, RepeatedMapVector.TYPE)
+        MaterializedField.create(EMPTY_SCHEMA_PATH, StructVector.TYPE),
+        MaterializedField.create(EMPTY_SCHEMA_PATH, RepeatedStructVector.TYPE)
     };
 
     final ValueVector[] vectors = {
@@ -737,8 +737,8 @@ the interface to load has changed
         new VarCharVector(fields[2], allocator),
         new NullableVarCharVector(fields[3], allocator),
         new RepeatedListVector(fields[4], allocator, null),
-        new MapVector(fields[5], allocator, null),
-        new RepeatedMapVector(fields[6], allocator, null)
+        new StructVector(fields[5], allocator, null),
+        new RepeatedStructVector(fields[6], allocator, null)
     };
 
     try {
@@ -761,8 +761,8 @@ the interface to load has changed
     builder.put(VarCharVector.class, offsetChild);
     builder.put(NullableVarCharVector.class, new ChildVerifier(UInt1Holder.TYPE, Types.optional(TypeProtos.MinorType.VARCHAR)));
     builder.put(RepeatedListVector.class, new ChildVerifier(UInt4Holder.TYPE, Types.LATE_BIND_TYPE));
-    builder.put(MapVector.class, noChild);
-    builder.put(RepeatedMapVector.class, offsetChild);
+    builder.put(StructVector.class, noChild);
+    builder.put(RepeatedStructVector.class, offsetChild);
     final ImmutableMap<Class<? extends ValueVector>, VectorVerifier> children = builder.build();
 
     testVectors(new VectorVerifier() {
