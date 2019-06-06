@@ -706,8 +706,7 @@ public class HiveUtilities {
       final Category category = TypeInfoUtils.getTypeInfoFromTypeString(hiveField.getType()).getCategory();
       if (category == Category.MAP ||
           category == Category.STRUCT ||
-          category == Category.UNION ||
-          category == Category.LIST) {
+          category == Category.UNION) {
         logger.debug("Hive table contains unsupported data type: {}", category);
         return true;
       }

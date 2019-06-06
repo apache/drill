@@ -21,8 +21,13 @@ import java.math.BigDecimal;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.drill.categories.HiveStorageTest;
+import org.apache.drill.categories.SlowTest;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.hive.HiveTestFixture;
 import org.apache.drill.exec.hive.HiveTestUtilities;
 import org.apache.drill.exec.util.StoragePluginTestUtils;
@@ -39,15 +44,21 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.drill.exec.expr.fn.impl.DateUtility.parseBest;
 import static org.apache.drill.exec.expr.fn.impl.DateUtility.parseLocalDate;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.junit.Assert.assertThat;
 
-@Category({HiveStorageTest.class})
+@Category({SlowTest.class, HiveStorageTest.class})
 public class TestHiveArrays extends ClusterTest {
 
   private static HiveTestFixture hiveTestFixture;
 
+  private static final String[] TYPES = {"int", "string", "varchar(5)", "char(2)", "tinyint",
+      "smallint", "decimal(9,3)", "boolean", "bigint", "float", "double", "date", "timestamp"};
+
   @BeforeClass
   public static void setUp() throws Exception {
-    startCluster(ClusterFixture.builder(dirTestWatcher));
+    startCluster(ClusterFixture.builder(dirTestWatcher)
+        .sessionOption(ExecConstants.HIVE_OPTIMIZE_PARQUET_SCAN_WITH_NATIVE_READER, true));
     hiveTestFixture = HiveTestFixture.builder(dirTestWatcher).build();
     hiveTestFixture.getDriverManager().runWithinSession(TestHiveArrays::generateData);
     hiveTestFixture.getPluginManager().addHivePluginTo(cluster.drillbit());
@@ -61,87 +72,13 @@ public class TestHiveArrays extends ClusterTest {
   }
 
   private static void generateData(Driver d) {
-    // int_array
-    HiveTestUtilities.executeQuery(d,
-        "CREATE TABLE int_array(rid INT, arr_n_0 ARRAY<INT>, arr_n_1 ARRAY<ARRAY<INT>>,arr_n_2 ARRAY<ARRAY<ARRAY<INT>>>) " +
-            "ROW FORMAT SERDE 'org.apache.hive.hcatalog.data.JsonSerDe' STORED AS TEXTFILE");
-    HiveTestUtilities.loadData(d, "int_array", Paths.get("complex_types/array/int_array.json"));
-
-    // string_array
-    HiveTestUtilities.executeQuery(d,
-        "CREATE TABLE string_array(rid INT, arr_n_0 ARRAY<STRING>, arr_n_1 ARRAY<ARRAY<STRING>>,arr_n_2 ARRAY<ARRAY<ARRAY<STRING>>>) " +
-            "ROW FORMAT SERDE 'org.apache.hive.hcatalog.data.JsonSerDe' STORED AS TEXTFILE");
-    HiveTestUtilities.loadData(d, "string_array", Paths.get("complex_types/array/string_array.json"));
-
-    // varchar_array
-    HiveTestUtilities.executeQuery(d,
-        "CREATE TABLE varchar_array(rid INT, arr_n_0 ARRAY<VARCHAR(5)>,arr_n_1 ARRAY<ARRAY<VARCHAR(5)>>,arr_n_2 ARRAY<ARRAY<ARRAY<VARCHAR(5)>>>) " +
-            "ROW FORMAT SERDE 'org.apache.hive.hcatalog.data.JsonSerDe' STORED AS TEXTFILE");
-    HiveTestUtilities.loadData(d, "varchar_array", Paths.get("complex_types/array/varchar_array.json"));
-
-    // char_array
-    HiveTestUtilities.executeQuery(d,
-        "CREATE TABLE char_array(rid INT, arr_n_0 ARRAY<CHAR(2)>,arr_n_1 ARRAY<ARRAY<CHAR(2)>>, arr_n_2 ARRAY<ARRAY<ARRAY<CHAR(2)>>>) " +
-            "ROW FORMAT SERDE 'org.apache.hive.hcatalog.data.JsonSerDe' STORED AS TEXTFILE");
-    HiveTestUtilities.loadData(d, "char_array", Paths.get("complex_types/array/char_array.json"));
-
-    // tinyint_array
-    HiveTestUtilities.executeQuery(d,
-        "CREATE TABLE tinyint_array(rid INT, arr_n_0 ARRAY<TINYINT>, arr_n_1 ARRAY<ARRAY<TINYINT>>, arr_n_2 ARRAY<ARRAY<ARRAY<TINYINT>>> ) " +
-            "ROW FORMAT SERDE 'org.apache.hive.hcatalog.data.JsonSerDe' STORED AS TEXTFILE");
-    HiveTestUtilities.loadData(d, "tinyint_array", Paths.get("complex_types/array/tinyint_array.json"));
-
-    // smallint_array
-    HiveTestUtilities.executeQuery(d,
-        "CREATE TABLE smallint_array(rid INT, arr_n_0 ARRAY<SMALLINT>, arr_n_1 ARRAY<ARRAY<SMALLINT>>, arr_n_2 ARRAY<ARRAY<ARRAY<SMALLINT>>>) " +
-            "ROW FORMAT SERDE 'org.apache.hive.hcatalog.data.JsonSerDe' STORED AS TEXTFILE");
-    HiveTestUtilities.loadData(d, "smallint_array", Paths.get("complex_types/array/smallint_array.json"));
-
-    // decimal_array
-    HiveTestUtilities.executeQuery(d,
-        "CREATE TABLE decimal_array(rid INT, arr_n_0 ARRAY<DECIMAL(9,3)>, arr_n_1 ARRAY<ARRAY<DECIMAL(9,3)>>,arr_n_2 ARRAY<ARRAY<ARRAY<DECIMAL(9,3)>>>) " +
-            "ROW FORMAT SERDE 'org.apache.hive.hcatalog.data.JsonSerDe' STORED AS TEXTFILE");
-    HiveTestUtilities.loadData(d, "decimal_array", Paths.get("complex_types/array/decimal_array.json"));
-
-    // boolean_array
-    HiveTestUtilities.executeQuery(d,
-        "CREATE TABLE boolean_array(rid INT, arr_n_0 ARRAY<BOOLEAN>, arr_n_1 ARRAY<ARRAY<BOOLEAN>>,arr_n_2 ARRAY<ARRAY<ARRAY<BOOLEAN>>>) " +
-            "ROW FORMAT SERDE 'org.apache.hive.hcatalog.data.JsonSerDe' STORED AS TEXTFILE");
-    HiveTestUtilities.loadData(d, "boolean_array", Paths.get("complex_types/array/boolean_array.json"));
-
-    // bigint_array
-    HiveTestUtilities.executeQuery(d,
-        "CREATE TABLE bigint_array(rid INT, arr_n_0 ARRAY<BIGINT>, arr_n_1 ARRAY<ARRAY<BIGINT>>,arr_n_2 ARRAY<ARRAY<ARRAY<BIGINT>>>) " +
-            "ROW FORMAT SERDE 'org.apache.hive.hcatalog.data.JsonSerDe' STORED AS TEXTFILE");
-    HiveTestUtilities.loadData(d, "bigint_array", Paths.get("complex_types/array/bigint_array.json"));
-
-    // float_array
-    HiveTestUtilities.executeQuery(d,
-        "CREATE TABLE float_array(rid INT, arr_n_0 ARRAY<FLOAT>, arr_n_1 ARRAY<ARRAY<FLOAT>>,arr_n_2 ARRAY<ARRAY<ARRAY<FLOAT>>>) " +
-            "ROW FORMAT SERDE 'org.apache.hive.hcatalog.data.JsonSerDe' STORED AS TEXTFILE");
-    HiveTestUtilities.loadData(d, "float_array", Paths.get("complex_types/array/float_array.json"));
-
-    // double_array
-    HiveTestUtilities.executeQuery(d,
-        "CREATE TABLE double_array(rid INT, arr_n_0 ARRAY<DOUBLE>, arr_n_1 ARRAY<ARRAY<DOUBLE>>, arr_n_2 ARRAY<ARRAY<ARRAY<DOUBLE>>>) " +
-            "ROW FORMAT SERDE 'org.apache.hive.hcatalog.data.JsonSerDe' STORED AS TEXTFILE");
-    HiveTestUtilities.loadData(d, "double_array", Paths.get("complex_types/array/double_array.json"));
-
-    // date_array
-    HiveTestUtilities.executeQuery(d,
-        "CREATE TABLE date_array(rid INT, arr_n_0 ARRAY<DATE>, arr_n_1 ARRAY<ARRAY<DATE>>,arr_n_2 ARRAY<ARRAY<ARRAY<DATE>>>) " +
-            "ROW FORMAT SERDE 'org.apache.hive.hcatalog.data.JsonSerDe' STORED AS TEXTFILE");
-    HiveTestUtilities.loadData(d, "date_array", Paths.get("complex_types/array/date_array.json"));
-
-    // timestamp_array
-    HiveTestUtilities.executeQuery(d,
-        "CREATE TABLE timestamp_array(rid INT, arr_n_0 ARRAY<TIMESTAMP>, arr_n_1 ARRAY<ARRAY<TIMESTAMP>>,arr_n_2 ARRAY<ARRAY<ARRAY<TIMESTAMP>>>) " +
-            "ROW FORMAT SERDE 'org.apache.hive.hcatalog.data.JsonSerDe' STORED AS TEXTFILE");
-    HiveTestUtilities.loadData(d, "timestamp_array", Paths.get("complex_types/array/timestamp_array.json"));
+    Stream.of(TYPES).forEach(type -> {
+      createJsonTable(d, type);
+      createParquetTable(d, type);
+    });
 
     // binary_array
-    HiveTestUtilities.executeQuery(d,
-        "CREATE TABLE binary_array(arr_n_0 ARRAY<BINARY>) STORED AS TEXTFILE");
+    HiveTestUtilities.executeQuery(d, "CREATE TABLE binary_array(arr_n_0 ARRAY<BINARY>) STORED AS TEXTFILE");
     HiveTestUtilities.executeQuery(d, "insert into binary_array select array(binary('First'),binary('Second'),binary('Third'))");
     HiveTestUtilities.executeQuery(d, "insert into binary_array select array(binary('First'))");
 
@@ -205,73 +142,88 @@ public class TestHiveArrays extends ClusterTest {
     );
   }
 
+  private static void createJsonTable(Driver d, String type) {
+    String tableName = getTableNameFromType(type);
+    String ddl = String.format(
+        "CREATE TABLE %s(rid INT, arr_n_0 ARRAY<%2$s>, arr_n_1 ARRAY<ARRAY<%2$s>>, arr_n_2 ARRAY<ARRAY<ARRAY<%2$s>>>) " +
+            "ROW FORMAT SERDE 'org.apache.hive.hcatalog.data.JsonSerDe' STORED AS TEXTFILE",
+        tableName, type.toUpperCase());
+
+    HiveTestUtilities.executeQuery(d, ddl);
+    HiveTestUtilities.loadData(d, tableName, Paths.get(String.format("complex_types/array/%s.json", tableName)));
+  }
+
+  private static void createParquetTable(Driver d, String type) {
+      String from = getTableNameFromType(type);
+      String to = from.concat("_p");
+      String ddl = String.format(
+          "CREATE TABLE %s(rid INT, arr_n_0 ARRAY<%2$s>, arr_n_1 ARRAY<ARRAY<%2$s>>, arr_n_2 ARRAY<ARRAY<ARRAY<%2$s>>>) STORED AS PARQUET",
+          to, type.toUpperCase());
+      HiveTestUtilities.executeQuery(d, ddl);
+      HiveTestUtilities.insertData(d, from, to);
+  }
+
+  private static String getTableNameFromType(String type) {
+    String tblType = type.split("\\(")[0];
+    return tblType.toLowerCase() + "_array";
+  }
+
   @Test
   public void intArray() throws Exception {
+    checkIntArrayInTable("int_array");
+  }
 
+  @Test
+  public void intArrayParquet() throws Exception {
+    checkNativeScanUsed("int_array_p");
+    checkIntArrayInTable("int_array_p");
+  }
+
+  private void checkNativeScanUsed(String table) throws Exception {
+    String plan = queryBuilder().sql("SELECT rid FROM hive.`%s`", table).explainText();
+    assertThat(plan, containsString("HiveDrillNativeParquetScan"));
+  }
+
+  private void checkIntArrayInTable(String tableName) throws Exception {
     // Nesting 0: reading ARRAY<INT>
     testBuilder()
-        .sqlQuery("SELECT arr_n_0 FROM hive.`int_array`")
+        .sqlQuery("SELECT arr_n_0 FROM hive.`%s`", tableName)
         .unOrdered()
         .baselineColumns("arr_n_0")
-        .baselineValuesForSingleColumn(asList(-1, 0, 1))
-        .baselineValuesForSingleColumn(emptyList())
-        .baselineValuesForSingleColumn(Collections.singletonList(100500))
+        .baselineValues(asList(-1, 0, 1))
+        .baselineValues(emptyList())
+        .baselineValues(asList(100500))
         .go();
 
     // Nesting 1: reading ARRAY<ARRAY<INT>>
     testBuilder()
-        .sqlQuery("SELECT arr_n_1 FROM hive.`int_array`")
+        .sqlQuery("SELECT arr_n_1 FROM hive.`%s`", tableName)
         .unOrdered()
         .baselineColumns("arr_n_1")
-        .baselineValuesForSingleColumn(asList(asList(-1, 0, 1), asList(-2, 1)))
-        .baselineValuesForSingleColumn(asList(emptyList(), emptyList()))
-        .baselineValuesForSingleColumn(asList(asList(100500, 500100)))
+        .baselineValues(asList(asList(-1, 0, 1), asList(-2, 1)))
+        .baselineValues(asList(emptyList(), emptyList()))
+        .baselineValues(asList(asList(100500, 500100)))
         .go();
 
     // Nesting 2: reading ARRAY<ARRAY<ARRAY<INT>>>
     testBuilder()
-        .sqlQuery("SELECT arr_n_2 FROM hive.`int_array` order by rid")
+        .sqlQuery("SELECT arr_n_2 FROM hive.`%s` order by rid", tableName)
         .ordered()
         .baselineColumns("arr_n_2")
-        .baselineValuesForSingleColumn(
-            asList( // row
-                asList( // [0]
-                    asList(7, 81),//[0][0]
-                    asList(-92, 54, -83),//[0][1]
-                    asList(-10, -59)//[0][2]
-                ),
-                asList( // [1]
-                    asList(-43, -80)//[1][0]
-                ),
-                asList( // [2]
-                    asList(-70, -62)//[2][0]
-                )
-            )
-        )
-        .baselineValuesForSingleColumn(
-            asList( // row
-                asList( // [0]
-                    asList(34, -18)//[0][0]
-                ),
-                asList( // [1]
-                    asList(-87, 87),//[1][0]
-                    asList(52, 58),//[1][1]
-                    asList(58, 20, -81),//[1][2]
-                    asList(-94, -93)//[1][3]
-                )
-            )
-        )
-        .baselineValuesForSingleColumn(
-            asList( // row
-                asList( // [0]
-                    asList(-56, 9),//[0][0]
-                    asList(39, 5)//[0][1]
-                ),
-                asList( // [1]
-                    asList(28, 88, -28)//[1][0]
-                )
-            )
-        ).go();
+        .baselineValues(asList(
+            asList(asList(7, 81), asList(-92, 54, -83), asList(-10, -59)),
+            asList(asList(-43, -80)),
+            asList(asList(-70, -62))
+        ))
+        .baselineValues(asList(
+            asList(asList(34, -18)),
+            asList(asList(-87, 87), asList(52, 58), asList(58, 20, -81), asList(-94, -93))
+        ))
+        .baselineValues(asList(
+            asList(asList(-56, 9), asList(39, 5)),
+            asList(asList(28, 88, -28))
+        ))
+        .go();
   }
 
   @Test
@@ -374,7 +326,7 @@ public class TestHiveArrays extends ClusterTest {
         .sqlQuery("DESCRIBE hive.`int_array` arr_n_0")
         .unOrdered()
         .baselineColumns("COLUMN_NAME", "DATA_TYPE", "IS_NULLABLE")
-        .baselineValues("arr_n_0", "ARRAY", "YES") //todo: fix to ARRAY<INTEGER>
+        .baselineValues("arr_n_0", "ARRAY", "YES")//todo: fix to ARRAY<INTEGER>
         .go();
     testBuilder()
         .sqlQuery("DESCRIBE hive.`int_array` arr_n_1")
@@ -411,101 +363,64 @@ public class TestHiveArrays extends ClusterTest {
 
   @Test
   public void stringArray() throws Exception {
+    checkStringArrayInTable("string_array");
+  }
+
+  @Test
+  public void stringArrayParquet() throws Exception {
+    checkNativeScanUsed("string_array_p");
+    checkStringArrayInTable("string_array_p");
+  }
+
+  private void checkStringArrayInTable(String table) throws Exception {
     // Nesting 0: reading ARRAY<STRING>
     testBuilder()
-        .sqlQuery("SELECT arr_n_0 FROM hive.`string_array`")
+        .sqlQuery("SELECT arr_n_0 FROM hive.`%s`", table)
         .unOrdered()
         .baselineColumns("arr_n_0")
-        .baselineValuesForSingleColumn(asList(new Text("First Value Of Array"), new Text("komlnp"), new Text("The Last Value")))
-        .baselineValuesForSingleColumn(emptyList())
-        .baselineValuesForSingleColumn(Collections.singletonList(new Text("ABCaBcA-1-2-3")))
+        .baselineValues(asTextList("First Value Of Array", "komlnp", "The Last Value"))
+        .baselineValues(emptyList())
+        .baselineValues(asTextList("ABCaBcA-1-2-3"))
         .go();
 
     // Nesting 1: reading ARRAY<ARRAY<STRING>>
     testBuilder()
-        .sqlQuery("SELECT arr_n_1 FROM hive.`string_array`")
+        .sqlQuery("SELECT arr_n_1 FROM hive.`%s`", table)
         .unOrdered()
         .baselineColumns("arr_n_1")
-        .baselineValuesForSingleColumn(asList(asList(new Text("Array 0, Value 0"), new Text("Array 0, Value 1")), asList(new Text("Array 1"))))
-        .baselineValuesForSingleColumn(asList(emptyList(), emptyList()))
-        .baselineValuesForSingleColumn(asList(asList(new Text("One"))))
+        .baselineValues(asList(asTextList("Array 0, Value 0", "Array 0, Value 1"), asTextList("Array 1")))
+        .baselineValues(asList(emptyList(), emptyList()))
+        .baselineValues(asList(asTextList("One")))
         .go();
 
     // Nesting 2: reading ARRAY<ARRAY<ARRAY<STRING>>>
     testBuilder()
-        .sqlQuery("SELECT arr_n_2 FROM hive.`string_array` order by rid")
+        .sqlQuery("SELECT arr_n_2 FROM hive.`%s` order by rid", table)
         .ordered()
         .baselineColumns("arr_n_2")
-        .baselineValuesForSingleColumn(
-            asList( // row
-                asList( // [0]
-                    asList(new Text("dhMGOr1QVO"), new Text("NZpzBl"), new Text("LC8mjYyOJ7l8dHUpk"))//[0][0]
-                ),
-                asList( // [1]
-                    asList(new Text("JH")),//[1][0]
-                    asList(new Text("aVxgfxAu")),//[1][1]
-                    asList(new Text("fF amN8z8"))//[1][2]
-                ),
-                asList( // [2]
-                    asList(new Text("denwte5R39dSb2PeG"), new Text("Gbosj97RXTvBK1w"), new Text("S3whFvN")),//[2][0]
-                    asList(new Text("2sNbYGQhkt303Gnu"), new Text("rwG"), new Text("SQH766A8XwHg2pTA6a"))//[2][1]
-                ),
-                asList( // [3]
-                    asList(new Text("L"), new Text("khGFDtDluFNoo5hT")),//[3][0]
-                    asList(new Text("b8")),//[3][1]
-                    asList(new Text("Z"))//[3][2]
-                ),
-                asList( // [4]
-                    asList(new Text("DTEuW"), new Text("b0Wt84hIl"), new Text("A1H")),//[4][0]
-                    asList(new Text("h2zXh3Qc"), new Text("NOcgU8"), new Text("RGfVgv2rvDG")),//[4][1]
-                    asList(new Text("Hfn1ov9hB7fZN"), new Text("0ZgCD3"))//[4][2]
-                )
-            )
-        )
-        .baselineValuesForSingleColumn(
-            asList( // row
-                asList( // [0]
-                    asList(new Text("nk"), new Text("HA"), new Text("CgAZCxTbTrFWJL3yM")),//[0][0]
-                    asList(new Text("T7fGXYwtBb"), new Text("G6vc")),//[0][1]
-                    asList(new Text("GrwB5j3LBy9")),//[0][2]
-                    asList(new Text("g7UreegD1H97"), new Text("dniQ5Ehhps7c1pBuM"), new Text("S wSNMGj7c")),//[0][3]
-                    asList(new Text("iWTEJS0"), new Text("4F"))//[0][4]
-                ),
-                asList( // [1]
-                    asList(new Text("YpRcC01u6i6KO"), new Text("ujpMrvEfUWfKm"), new Text("2d")),//[1][0]
-                    asList(new Text("2"), new Text("HVDH"), new Text("5Qx Q6W112"))//[1][1]
-                )
-            )
-        )
-        .baselineValuesForSingleColumn(
-            asList( // row
-                asList( // [0]
-                    asList(new Text("S8d2vjNu680hSim6iJ")),//[0][0]
-                    asList(new Text("lRLaT9RvvgzhZ3C"), new Text("igSX1CP"), new Text("FFZMwMvAOod8")),//[0][1]
-                    asList(new Text("iBX"), new Text("sG")),//[0][2]
-                    asList(new Text("ChRjuDPz99WeU9"), new Text("2gBBmMUXV9E5E"), new Text(" VkEARI2upO"))//[0][3]
-                ),
-                asList( // [1]
-                    asList(new Text("UgMok3Q5wmd")),//[1][0]
-                    asList(new Text("8Zf9CLfUSWK"), new Text(""), new Text("NZ7v")),//[1][1]
-                    asList(new Text("vQE3I5t26"), new Text("251BeQJue"))//[1][2]
-                ),
-                asList( // [2]
-                    asList(new Text("Rpo8"))//[2][0]
-                ),
-                asList( // [3]
-                    asList(new Text("jj3njyupewOM Ej0pu"), new Text("aePLtGgtyu4aJ5"), new Text("cKHSvNbImH1MkQmw0Cs")),//[3][0]
-                    asList(new Text("VSO5JgI2x7TnK31L5"), new Text("hIub"), new Text("eoBSa0zUFlwroSucU")),//[3][1]
-                    asList(new Text("V8Gny91lT"), new Text("5hBncDZ"))//[3][2]
-                ),
-                asList( // [4]
-                    asList(new Text("Y3"), new Text("StcgywfU"), new Text("BFTDChc")),//[4][0]
-                    asList(new Text("5JNwXc2UHLld7"), new Text("v")),//[4][1]
-                    asList(new Text("9UwBhJMSDftPKuGC")),//[4][2]
-                    asList(new Text("E hQ9NJkc0GcMlB"), new Text("IVND1Xp1Nnw26DrL9"))//[4][3]
-                )
-            )
-        ).go();
+        .baselineValues(asList(
+            asList(asTextList("dhMGOr1QVO", "NZpzBl", "LC8mjYyOJ7l8dHUpk")),
+            asList(asTextList("JH"), asTextList("aVxgfxAu"), asTextList("fF amN8z8")),
+            asList(asTextList("denwte5R39dSb2PeG", "Gbosj97RXTvBK1w", "S3whFvN"), asTextList("2sNbYGQhkt303Gnu", "rwG", "SQH766A8XwHg2pTA6a")),
+            asList(asTextList("L", "khGFDtDluFNoo5hT"), asTextList("b8"), asTextList("Z")),
+            asList(asTextList("DTEuW", "b0Wt84hIl", "A1H"), asTextList("h2zXh3Qc", "NOcgU8", "RGfVgv2rvDG"), asTextList("Hfn1ov9hB7fZN", "0ZgCD3"))
+        ))
+        .baselineValues(asList(
+            asList(asTextList("nk", "HA", "CgAZCxTbTrFWJL3yM"), asTextList("T7fGXYwtBb", "G6vc"), asTextList("GrwB5j3LBy9"),
+                asTextList("g7UreegD1H97", "dniQ5Ehhps7c1pBuM", "S wSNMGj7c"), asTextList("iWTEJS0", "4F")),
+            asList(asTextList("YpRcC01u6i6KO", "ujpMrvEfUWfKm", "2d"), asTextList("2", "HVDH", "5Qx Q6W112"))
+        ))
+        .baselineValues(asList(
+            asList(asTextList("S8d2vjNu680hSim6iJ"), asTextList("lRLaT9RvvgzhZ3C", "igSX1CP", "FFZMwMvAOod8"),
+                asTextList("iBX", "sG"), asTextList("ChRjuDPz99WeU9", "2gBBmMUXV9E5E", " VkEARI2upO")),
+            asList(asTextList("UgMok3Q5wmd"), asTextList("8Zf9CLfUSWK", "", "NZ7v"), asTextList("vQE3I5t26", "251BeQJue")),
+            asList(asTextList("Rpo8")),
+            asList(asTextList("jj3njyupewOM Ej0pu", "aePLtGgtyu4aJ5", "cKHSvNbImH1MkQmw0Cs"), asTextList("VSO5JgI2x7TnK31L5", "hIub", "eoBSa0zUFlwroSucU"),
+                asTextList("V8Gny91lT", "5hBncDZ")),
+            asList(asTextList("Y3", "StcgywfU", "BFTDChc"), asTextList("5JNwXc2UHLld7", "v"), asTextList("9UwBhJMSDftPKuGC"),
+                asTextList("E hQ9NJkc0GcMlB", "IVND1Xp1Nnw26DrL9"))
+        ))
+        .go();
   }
 
   @Test
@@ -514,35 +429,10 @@ public class TestHiveArrays extends ClusterTest {
     testBuilder()
         .sqlQuery("SELECT arr_n_0[0], arr_n_0[1], arr_n_1[0], arr_n_1[1], arr_n_0[3], arr_n_1[3] FROM hive.`string_array`")
         .unOrdered()
-        .baselineColumns(
-            "EXPR$0",
-            "EXPR$1",
-            "EXPR$2",
-            "EXPR$3",
-            "EXPR$4",
-            "EXPR$5")
-        .baselineValues(
-            "First Value Of Array",
-            "komlnp",
-            asList(new Text("Array 0, Value 0"), new Text("Array 0, Value 1")),
-            asList(new Text("Array 1")),
-            null,
-            emptyList()
-        )
-        .baselineValues(
-            null,
-            null,
-            emptyList(),
-            emptyList(),
-            null,
-            emptyList())
-        .baselineValues(
-            "ABCaBcA-1-2-3",
-            null,
-            asList(new Text("One")),
-            emptyList(),
-            null,
-            emptyList())
+        .baselineColumns("EXPR$0", "EXPR$1", "EXPR$2", "EXPR$3", "EXPR$4", "EXPR$5")
+        .baselineValues("First Value Of Array", "komlnp", asTextList("Array 0, Value 0", "Array 0, Value 1"), asTextList("Array 1"), null, emptyList())
+        .baselineValues(null, null, emptyList(), emptyList(), null, emptyList())
+        .baselineValues("ABCaBcA-1-2-3", null, asTextList("One"), emptyList(), null, emptyList())
         .go();
   }
 
@@ -553,9 +443,9 @@ public class TestHiveArrays extends ClusterTest {
         .sqlQuery("SELECT arr_n_0 FROM hive.`varchar_array`")
         .unOrdered()
         .baselineColumns("arr_n_0")
-        .baselineValuesForSingleColumn(asList(new Text("Five"), new Text("One"), new Text("T")))
-        .baselineValuesForSingleColumn(emptyList())
-        .baselineValuesForSingleColumn(asList(new Text("ZZ0"), new Text("-c54g"), new Text("ooo"), new Text("k22k")))
+        .baselineValues(asTextList("Five", "One", "T"))
+        .baselineValues(emptyList())
+        .baselineValues(asTextList("ZZ0", "-c54g", "ooo", "k22k"))
         .go();
 
     // Nesting 1: reading ARRAY<ARRAY<VARCHAR(5)>>
@@ -563,12 +453,9 @@ public class TestHiveArrays extends ClusterTest {
         .sqlQuery("SELECT arr_n_1 FROM hive.`varchar_array`")
         .unOrdered()
         .baselineColumns("arr_n_1")
-        .baselineValuesForSingleColumn(asList(
-            asList(new Text("Five"), new Text("One"), new Text("$42")),
-            asList(new Text("T"), new Text("K"), new Text("O"))
-        ))
-        .baselineValuesForSingleColumn(asList(emptyList(), emptyList()))
-        .baselineValuesForSingleColumn(asList(asList(new Text("-c54g"))))
+        .baselineValues(asList(asTextList("Five", "One", "$42"), asTextList("T", "K", "O")))
+        .baselineValues(asList(emptyList(), emptyList()))
+        .baselineValues(asList(asTextList("-c54g")))
         .go();
 
     // Nesting 2: reading ARRAY<ARRAY<ARRAY<VARCHAR(5)>>>
@@ -576,58 +463,21 @@ public class TestHiveArrays extends ClusterTest {
         .sqlQuery("SELECT arr_n_2 FROM hive.`varchar_array` order by rid")
         .ordered()
         .baselineColumns("arr_n_2")
-        .baselineValuesForSingleColumn(
-            asList( // row
-                asList( // [0]
-                    asList(new Text("")),//[0][0]
-                    asList(new Text("Gt"), new Text(""), new Text("")),//[0][1]
-                    asList(new Text("9R3y")),//[0][2]
-                    asList(new Text("X3a4"))//[0][3]
-                ),
-                asList( // [1]
-                    asList(new Text("o"), new Text("6T"), new Text("QKAZ")),//[1][0]
-                    asList(new Text(""), new Text("xf8r"), new Text("As")),//[1][1]
-                    asList(new Text("5kS3"))//[1][2]
-                ),
-                asList( // [2]
-                    asList(new Text(""), new Text("S7Gx")),//[2][0]
-                    asList(new Text("ml"), new Text("27pL"), new Text("VPxr")),//[2][1]
-                    asList(new Text("")),//[2][2]
-                    asList(new Text("e"), new Text("Dj"))//[2][3]
-                ),
-                asList( // [3]
-                    asList(new Text(""), new Text("XYO"), new Text("fEWz")),//[3][0]
-                    asList(new Text(""), new Text("oU")),//[3][1]
-                    asList(new Text("o 8"), new Text(""), new Text("")),//[3][2]
-                    asList(new Text("giML"), new Text("H7g")),//[3][3]
-                    asList(new Text("SWX9"), new Text("H"), new Text("emwt"))//[3][4]
-                ),
-                asList( // [4]
-                    asList(new Text("Sp"))//[4][0]
-                )
-            )
-        )
-        .baselineValuesForSingleColumn(
-            asList( // row
-                asList( // [0]
-                    asList(new Text("GCx")),//[0][0]
-                    asList(new Text(""), new Text("V")),//[0][1]
-                    asList(new Text("pF"), new Text("R7"), new Text("")),//[0][2]
-                    asList(new Text(""), new Text("AKal"))//[0][3]
-                )
-            )
-        )
-        .baselineValuesForSingleColumn(
-            asList( // row
-                asList( // [0]
-                    asList(new Text("m"), new Text("MBAv"), new Text("7R9F")),//[0][0]
-                    asList(new Text("ovv")),//[0][1]
-                    asList(new Text("p 7l"))//[0][2]
-                )
-            )
-        )
+        .baselineValues(asList(
+            asList(asTextList(""), asTextList("Gt", "", ""), asTextList("9R3y"), asTextList("X3a4")),
+            asList(asTextList("o", "6T", "QKAZ"), asTextList("", "xf8r", "As"), asTextList("5kS3")),
+            asList(asTextList("", "S7Gx"), asTextList("ml", "27pL", "VPxr"), asTextList(""), asTextList("e", "Dj")),
+            asList(asTextList("", "XYO", "fEWz"), asTextList("", "oU"), asTextList("o 8", "", ""),
+                asTextList("giML", "H7g"), asTextList("SWX9", "H", "emwt")),
+            asList(asTextList("Sp"))
+        ))
+        .baselineValues(asList(
+            asList(asTextList("GCx"), asTextList("", "V"), asTextList("pF", "R7", ""), asTextList("", "AKal"))
+        ))
+        .baselineValues(asList(
+            asList(asTextList("m", "MBAv", "7R9F"), asTextList("ovv"), asTextList("p 7l"))
+        ))
         .go();
-
   }
 
   @Test
@@ -637,98 +487,61 @@ public class TestHiveArrays extends ClusterTest {
         .sqlQuery("SELECT arr_n_0[0], arr_n_0[1], arr_n_1[0], arr_n_1[1], arr_n_0[3], arr_n_1[3] FROM hive.`varchar_array`")
         .unOrdered()
         .baselineColumns("EXPR$0", "EXPR$1", "EXPR$2", "EXPR$3", "EXPR$4", "EXPR$5")
-        .baselineValues(
-            "Five",
-            "One",
-            asList(new Text("Five"), new Text("One"), new Text("$42")),
-            asList(new Text("T"), new Text("K"), new Text("O")),
-            null,
-            emptyList())
-        .baselineValues(
-            null,
-            null,
-            emptyList(),
-            emptyList(),
-            null,
-            emptyList())
-        .baselineValues(
-            "ZZ0",
-            "-c54g",
-            asList(new Text("-c54g")),
-            emptyList(),
-            "k22k",
-            emptyList())
+        .baselineValues("Five", "One", asTextList("Five", "One", "$42"), asTextList("T", "K", "O"), null, emptyList())
+        .baselineValues(null, null, emptyList(), emptyList(), null, emptyList())
+        .baselineValues("ZZ0", "-c54g", asTextList("-c54g"), emptyList(), "k22k", emptyList())
         .go();
   }
 
   @Test
   public void charArray() throws Exception {
+    checkCharArrayInTable("char_array");
+  }
+
+  @Test
+  public void charArrayParquet() throws Exception {
+    checkNativeScanUsed("char_array_p");
+    checkCharArrayInTable("char_array_p");
+  }
+
+  private void checkCharArrayInTable(String table) throws Exception {
     // Nesting 0: reading ARRAY<CHAR(2)>
     testBuilder()
-        .sqlQuery("SELECT arr_n_0 FROM hive.`char_array`")
+        .sqlQuery("SELECT arr_n_0 FROM hive.`%s`", table)
         .unOrdered()
         .baselineColumns("arr_n_0")
-        .baselineValuesForSingleColumn(asList(new Text("aa"), new Text("cc"), new Text("ot")))
-        .baselineValuesForSingleColumn(emptyList())
-        .baselineValuesForSingleColumn(asList(new Text("+a"), new Text("-c"), new Text("*t")))
+        .baselineValues(asTextList("aa", "cc", "ot"))
+        .baselineValues(emptyList())
+        .baselineValues(asTextList("+a", "-c", "*t"))
         .go();
 
     // Nesting 1: reading ARRAY<ARRAY<CHAR(2)>>
     testBuilder()
-        .sqlQuery("SELECT arr_n_1 FROM hive.`char_array`")
+        .sqlQuery("SELECT arr_n_1 FROM hive.`%s`", table)
         .unOrdered()
         .baselineColumns("arr_n_1")
-        .baselineValuesForSingleColumn(asList(
-            asList(new Text("aa")),
-            asList(new Text("cc"), new Text("ot"))))
-        .baselineValuesForSingleColumn(asList(emptyList(), emptyList()))
-        .baselineValuesForSingleColumn(asList(asList(new Text("*t"))))
+        .baselineValues(asList(asTextList("aa"), asTextList("cc", "ot")))
+        .baselineValues(asList(emptyList(), emptyList()))
+        .baselineValues(asList(asTextList("*t")))
         .go();
 
     // Nesting 2: reading ARRAY<ARRAY<ARRAY<CHAR(2)>>>
     testBuilder()
-        .sqlQuery("SELECT arr_n_2 FROM hive.`char_array` order by rid")
+        .sqlQuery("SELECT arr_n_2 FROM hive.`%s` order by rid", table)
         .ordered()
         .baselineColumns("arr_n_2")
-        .baselineValuesForSingleColumn(
-            asList( // row
-                asList( // [0]
-                    asList(new Text("eT"))//[0][0]
-                ),
-                asList( // [1]
-                    asList(new Text("w9"), new Text("fC"), new Text("ww")),//[1][0]
-                    asList(new Text("3o"), new Text("f7"), new Text("Za")),//[1][1]
-                    asList(new Text("lX"), new Text("iv"), new Text("jI"))//[1][2]
-                ),
-                asList( // [2]
-                    asList(new Text("S3"), new Text("Qa"), new Text("aG")),//[2][0]
-                    asList(new Text("bj"), new Text("gc"), new Text("NO"))//[2][1]
-                )
-            )
-        )
-        .baselineValuesForSingleColumn(
-            asList( // row
-                asList( // [0]
-                    asList(new Text("PV"), new Text("tH"), new Text("B7")),//[0][0]
-                    asList(new Text("uL")),//[0][1]
-                    asList(new Text("7b"), new Text("uf")),//[0][2]
-                    asList(new Text("zj")),//[0][3]
-                    asList(new Text("sA"), new Text("hf"), new Text("hR"))//[0][4]
-                )
-            )
-        )
-        .baselineValuesForSingleColumn(
-            asList( // row
-                asList( // [0]
-                    asList(new Text("W1"), new Text("FS")),//[0][0]
-                    asList(new Text("le"), new Text("c0")),//[0][1]
-                    asList(new Text(""), new Text("0v"))//[0][2]
-                ),
-                asList( // [1]
-                    asList(new Text("gj"))//[1][0]
-                )
-            )
-        )
+        .baselineValues(asList(
+            asList(asTextList("eT")),
+            asList(asTextList("w9", "fC", "ww"), asTextList("3o", "f7", "Za"), asTextList("lX", "iv", "jI")),
+            asList(asTextList("S3", "Qa", "aG"), asTextList("bj", "gc", "NO"))
+        ))
+        .baselineValues(asList(
+            asList(asTextList("PV", "tH", "B7"), asTextList("uL"), asTextList("7b", "uf"), asTextList("zj"), asTextList("sA", "hf", "hR"))
+        ))
+        .baselineValues(asList(
+            asList(asTextList("W1", "FS"), asTextList("le", "c0"), asTextList("", "0v")),
+            asList(asTextList("gj"))
+        ))
         .go();
   }
 
@@ -739,117 +552,65 @@ public class TestHiveArrays extends ClusterTest {
         .sqlQuery("SELECT arr_n_0[0], arr_n_0[1], arr_n_1[0], arr_n_1[1], arr_n_0[3], arr_n_1[3] FROM hive.`char_array`")
         .unOrdered()
         .baselineColumns("EXPR$0", "EXPR$1", "EXPR$2", "EXPR$3", "EXPR$4", "EXPR$5")
-        .baselineValues(
-            "aa",
-            "cc",
-            asList(new Text("aa")),
-            asList(new Text("cc"), new Text("ot")),
-            null,
-            emptyList())
-        .baselineValues(
-            null,
-            null,
-            emptyList(),
-            emptyList(),
-            null,
-            emptyList())
-        .baselineValues(
-            "+a",
-            "-c",
-            asList(new Text("*t")),
-            emptyList(),
-            null,
-            emptyList())
+        .baselineValues("aa", "cc", asTextList("aa"), asTextList("cc", "ot"), null, emptyList())
+        .baselineValues(null, null, emptyList(), emptyList(), null, emptyList())
+        .baselineValues("+a", "-c", asTextList("*t"), emptyList(), null, emptyList())
         .go();
   }
 
   @Test
   public void tinyintArray() throws Exception {
+    checkTinyintArrayInTable("tinyint_array");
+  }
+
+  @Test
+  public void tinyintArrayParquet() throws Exception {
+    checkNativeScanUsed("tinyint_array_p");
+    checkTinyintArrayInTable("tinyint_array_p");
+  }
+
+  private void checkTinyintArrayInTable(String table) throws Exception {
     // Nesting 0: reading ARRAY<TINYINT>
     testBuilder()
-        .sqlQuery("SELECT arr_n_0 FROM hive.`tinyint_array`")
+        .sqlQuery("SELECT arr_n_0 FROM hive.`%s`", table)
         .unOrdered()
         .baselineColumns("arr_n_0")
-        .baselineValuesForSingleColumn(asList(-128, 0, 127))
-        .baselineValuesForSingleColumn(emptyList())
-        .baselineValuesForSingleColumn(asList(-101))
+        .baselineValues(asList(-128, 0, 127))
+        .baselineValues(emptyList())
+        .baselineValues(asList(-101))
         .go();
 
     // Nesting 1: reading ARRAY<ARRAY<TINYINT>>
     testBuilder()
-        .sqlQuery("SELECT arr_n_1 FROM hive.`tinyint_array`")
+        .sqlQuery("SELECT arr_n_1 FROM hive.`%s`", table)
         .unOrdered()
         .baselineColumns("arr_n_1")
-        .baselineValuesForSingleColumn(asList(asList(-128, -127), asList(0, 1), asList(127, 126)))
-        .baselineValuesForSingleColumn(asList(emptyList(), emptyList()))
-        .baselineValuesForSingleColumn(asList(asList(-102)))
+        .baselineValues(asList(asList(-128, -127), asList(0, 1), asList(127, 126)))
+        .baselineValues(asList(emptyList(), emptyList()))
+        .baselineValues(asList(asList(-102)))
         .go();
 
     // Nesting 2: reading ARRAY<ARRAY<ARRAY<TINYINT>>>
     testBuilder()
-        .sqlQuery("SELECT arr_n_2 FROM hive.`tinyint_array` order by rid")
+        .sqlQuery("SELECT arr_n_2 FROM hive.`%s` order by rid", table)
         .ordered()
         .baselineColumns("arr_n_2")
-        .baselineValuesForSingleColumn(
-            asList( // row
-                asList( // [0]
-                    asList(31, 65, 54),//[0][0]
-                    asList(66),//[0][1]
-                    asList(22),//[0][2]
-                    asList(-33, -125, 116)//[0][3]
-                ),
-                asList( // [1]
-                    asList(-5, -10)//[1][0]
-                ),
-                asList( // [2]
-                    asList(78),//[2][0]
-                    asList(86),//[2][1]
-                    asList(90, 34),//[2][2]
-                    asList(32)//[2][3]
-                ),
-                asList( // [3]
-                    asList(103, -49, -33),//[3][0]
-                    asList(-30),//[3][1]
-                    asList(107, 24, 74),//[3][2]
-                    asList(16, -58)//[3][3]
-                ),
-                asList( // [4]
-                    asList(-119, -8),//[4][0]
-                    asList(50, -99, 26),//[4][1]
-                    asList(-119)//[4][2]
-                )
-            )
-        )
-        .baselineValuesForSingleColumn(
-            asList( // row
-                asList( // [0]
-                    asList(-90, -113),//[0][0]
-                    asList(71, -65)//[0][1]
-                ),
-                asList( // [1]
-                    asList(88, -83)//[1][0]
-                ),
-                asList( // [2]
-                    asList(11),//[2][0]
-                    asList(121, -57)//[2][1]
-                ),
-                asList( // [3]
-                    asList(-79),//[3][0]
-                    asList(16, -111, -111),//[3][1]
-                    asList(90, 106),//[3][2]
-                    asList(33, 29, 42),//[3][3]
-                    asList(74)//[3][4]
-                )
-            )
-        )
-        .baselineValuesForSingleColumn(
-            asList( // row
-                asList( // [0]
-                    asList(74, -115),//[0][0]
-                    asList(19, 85, 3)//[0][1]
-                )
-            )
-        )
+        .baselineValues(asList(
+            asList(asList(31, 65, 54), asList(66), asList(22), asList(-33, -125, 116)),
+            asList(asList(-5, -10)),
+            asList(asList(78), asList(86), asList(90, 34), asList(32)),
+            asList(asList(103, -49, -33), asList(-30), asList(107, 24, 74), asList(16, -58)),
+            asList(asList(-119, -8), asList(50, -99, 26), asList(-119))
+        ))
+        .baselineValues(asList(
+            asList(asList(-90, -113), asList(71, -65)),
+            asList(asList(88, -83)),
+            asList(asList(11), asList(121, -57)),
+            asList(asList(-79), asList(16, -111, -111), asList(90, 106), asList(33, 29, 42), asList(74))
+        ))
+        .baselineValues(asList(
+            asList(asList(74, -115), asList(19, 85, 3))
+        ))
         .go();
   }
 
@@ -868,471 +629,369 @@ public class TestHiveArrays extends ClusterTest {
 
   @Test
   public void smallintArray() throws Exception {
+    checkSmallintArrayInTable("smallint_array");
+  }
+
+  @Test
+  public void smallintArrayParquet() throws Exception {
+    checkNativeScanUsed("smallint_array_p");
+    checkSmallintArrayInTable("smallint_array_p");
+  }
+
+  private void checkSmallintArrayInTable(String table) throws Exception {
     // Nesting 0: reading ARRAY<SMALLINT>
     testBuilder()
-        .sqlQuery("SELECT arr_n_0 FROM hive.`smallint_array`")
+        .sqlQuery("SELECT arr_n_0 FROM hive.`%s`", table)
         .unOrdered()
         .baselineColumns("arr_n_0")
-        .baselineValuesForSingleColumn(asList(-32768, 0, 32767))
-        .baselineValuesForSingleColumn(emptyList())
-        .baselineValuesForSingleColumn(asList(10500))
+        .baselineValues(asList(-32768, 0, 32767))
+        .baselineValues(emptyList())
+        .baselineValues(asList(10500))
         .go();
 
     // Nesting 1: reading ARRAY<ARRAY<SMALLINT>>
     testBuilder()
-        .sqlQuery("SELECT arr_n_1 FROM hive.`smallint_array`")
+        .sqlQuery("SELECT arr_n_1 FROM hive.`%s`", table)
         .unOrdered()
         .baselineColumns("arr_n_1")
-        .baselineValuesForSingleColumn(asList(asList(-32768, -32768), asList(0, 0), asList(32767, 32767)))
-        .baselineValuesForSingleColumn(asList(emptyList(), emptyList()))
-        .baselineValuesForSingleColumn(asList(asList(10500, 5010)))
+        .baselineValues(asList(asList(-32768, -32768), asList(0, 0), asList(32767, 32767)))
+        .baselineValues(asList(emptyList(), emptyList()))
+        .baselineValues(asList(asList(10500, 5010)))
         .go();
 
     // Nesting 2: reading ARRAY<ARRAY<ARRAY<SMALLINT>>>
     testBuilder()
-        .sqlQuery("SELECT arr_n_2 FROM hive.`smallint_array` order by rid")
+        .sqlQuery("SELECT arr_n_2 FROM hive.`%s` order by rid", table)
         .ordered()
         .baselineColumns("arr_n_2")
-        .baselineValuesForSingleColumn(
-            asList( // row
-                asList( // [0]
-                    asList(-28752)//[0][0]
-                ),
-                asList( // [1]
-                    asList(17243, 15652),//[1][0]
-                    asList(-9684),//[1][1]
-                    asList(10176, 18123),//[1][2]
-                    asList(-15404, 15420),//[1][3]
-                    asList(11136, -19435)//[1][4]
-                ),
-                asList( // [2]
-                    asList(-29634, -12695),//[2][0]
-                    asList(4350, -24289, -10889)//[2][1]
-                ),
-                asList( // [3]
-                    asList(13731),//[3][0]
-                    asList(27661, -15794, 21784),//[3][1]
-                    asList(14341, -4635),//[3][2]
-                    asList(1601, -29973),//[3][3]
-                    asList(2750, 30373, -11630)//[3][4]
-                ),
-                asList( // [4]
-                    asList(-11383)//[4][0]
-                )
-            )
-        )
-        .baselineValuesForSingleColumn(
-            asList( // row
-                asList( // [0]
-                    asList(23860),//[0][0]
-                    asList(-27345, 19068),//[0][1]
-                    asList(-7174, 286, 14673)//[0][2]
-                ),
-                asList( // [1]
-                    asList(14844, -9087),//[1][0]
-                    asList(-25185, 219),//[1][1]
-                    asList(26875),//[1][2]
-                    asList(-4699),//[1][3]
-                    asList(-3853, -15729, 11472)//[1][4]
-                ),
-                asList( // [2]
-                    asList(-29142),//[2][0]
-                    asList(-13859),//[2][1]
-                    asList(-23073, 31368, -26542)//[2][2]
-                ),
-                asList( // [3]
-                    asList(14914, 14656),//[3][0]
-                    asList(4636, 6289)//[3][1]
-                )
-            )
-        )
-        .baselineValuesForSingleColumn(
-            asList( // row
-                asList( // [0]
-                    asList(10426, 31865),//[0][0]
-                    asList(-19088),//[0][1]
-                    asList(-4774),//[0][2]
-                    asList(17988)//[0][3]
-                ),
-                asList( // [1]
-                    asList(-6214, -26836, 30715)//[1][0]
-                ),
-                asList( // [2]
-                    asList(-4231),//[2][0]
-                    asList(31742, -661),//[2][1]
-                    asList(-22842, 4203),//[2][2]
-                    asList(18278)//[2][3]
-                )
-            )
-        )
+        .baselineValues(asList(
+            asList(asList(-28752)),
+            asList(asList(17243, 15652), asList(-9684), asList(10176, 18123), asList(-15404, 15420), asList(11136, -19435)),
+            asList(asList(-29634, -12695), asList(4350, -24289, -10889)),
+            asList(asList(13731), asList(27661, -15794, 21784), asList(14341, -4635), asList(1601, -29973), asList(2750, 30373, -11630)),
+            asList(asList(-11383))
+        ))
+        .baselineValues(asList(
+            asList(asList(23860), asList(-27345, 19068), asList(-7174, 286, 14673)),
+            asList(asList(14844, -9087), asList(-25185, 219), asList(26875), asList(-4699), asList(-3853, -15729, 11472)),
+            asList(asList(-29142), asList(-13859), asList(-23073, 31368, -26542)),
+            asList(asList(14914, 14656), asList(4636, 6289))
+        ))
+        .baselineValues(asList(
+            asList(asList(10426, 31865), asList(-19088), asList(-4774), asList(17988)),
+            asList(asList(-6214, -26836, 30715)),
+            asList(asList(-4231), asList(31742, -661), asList(-22842, 4203), asList(18278))
+        ))
         .go();
   }
 
   @Test
   public void decimalArray() throws Exception {
+    checkDecimalArrayInTable("decimal_array");
+  }
+
+  @Test
+  public void decimalArrayParquet() throws Exception {
+    checkNativeScanUsed("decimal_array_p");
+    checkDecimalArrayInTable("decimal_array_p");
+  }
+
+  private void checkDecimalArrayInTable(String table) throws Exception {
     // Nesting 0: reading ARRAY<DECIMAL(9,3)>
     testBuilder()
-        .sqlQuery("SELECT arr_n_0 FROM hive.`decimal_array`")
+        .sqlQuery("SELECT arr_n_0 FROM hive.`%s`", table)
         .unOrdered()
         .baselineColumns("arr_n_0")
-        .baselineValuesForSingleColumn(asList(new BigDecimal("-100000.000"), new BigDecimal("102030.001"), new BigDecimal("0.001")))
-        .baselineValuesForSingleColumn(emptyList())
-        .baselineValuesForSingleColumn(Collections.singletonList(new BigDecimal("-10.500")))
+        .baselineValues(asList(new BigDecimal("-100000.000"), new BigDecimal("102030.001"), new BigDecimal("0.001")))
+        .baselineValues(emptyList())
+        .baselineValues(asList(new BigDecimal("-10.500")))
         .go();
 
     // Nesting 1: reading ARRAY<ARRAY<DECIMAL(9,3)>>
     testBuilder()
-        .sqlQuery("SELECT arr_n_1 FROM hive.`decimal_array`")
+        .sqlQuery("SELECT arr_n_1 FROM hive.`%s`", table)
         .unOrdered()
         .baselineColumns("arr_n_1")
-        .baselineValuesForSingleColumn(asList(
+        .baselineValues(asList(
             asList(new BigDecimal("-100000.000"), new BigDecimal("102030.001")),
             asList(new BigDecimal("0.101"), new BigDecimal("0.102")),
             asList(new BigDecimal("0.001"), new BigDecimal("327670.001"))))
-        .baselineValuesForSingleColumn(asList(emptyList(), emptyList()))
-        .baselineValuesForSingleColumn(asList(asList(new BigDecimal("10.500"), new BigDecimal("5.010"))))
+        .baselineValues(asList(emptyList(), emptyList()))
+        .baselineValues(asList(asList(new BigDecimal("10.500"), new BigDecimal("5.010"))))
         .go();
 
     // Nesting 2: reading ARRAY<ARRAY<ARRAY<DECIMAL(9,3)>>>
     testBuilder()
-        .sqlQuery("SELECT arr_n_2 FROM hive.`decimal_array` order by rid")
+        .sqlQuery("SELECT arr_n_2 FROM hive.`%s` order by rid", table)
         .ordered()
         .baselineColumns("arr_n_2")
-        .baselineValuesForSingleColumn(
-            asList( // row
-                asList( // [0]
-                    asList(new BigDecimal("9.453")),//[0][0]
-                    asList(new BigDecimal("8.233"), new BigDecimal("-146577.465")),//[0][1]
-                    asList(new BigDecimal("-911144.423"), new BigDecimal("-862766.866"), new BigDecimal("-129948.784"))//[0][2]
-                ),
-                asList( // [1]
-                    asList(new BigDecimal("931346.867"))//[1][0]
-                ),
-                asList( // [2]
-                    asList(new BigDecimal("81.750")),//[2][0]
-                    asList(new BigDecimal("587225.077"), new BigDecimal("-3.930")),//[2][1]
-                    asList(new BigDecimal("0.042")),//[2][2]
-                    asList(new BigDecimal("-342346.511"))//[2][3]
-                )
+        .baselineValues(asList( // row
+            asList( // [0]
+                asList(new BigDecimal("9.453")),//[0][0]
+                asList(new BigDecimal("8.233"), new BigDecimal("-146577.465")),//[0][1]
+                asList(new BigDecimal("-911144.423"), new BigDecimal("-862766.866"), new BigDecimal("-129948.784"))//[0][2]
+            ),
+            asList( // [1]
+                asList(new BigDecimal("931346.867"))//[1][0]
+            ),
+            asList( // [2]
+                asList(new BigDecimal("81.750")),//[2][0]
+                asList(new BigDecimal("587225.077"), new BigDecimal("-3.930")),//[2][1]
+                asList(new BigDecimal("0.042")),//[2][2]
+                asList(new BigDecimal("-342346.511"))//[2][3]
             )
-        )
-        .baselineValuesForSingleColumn(
-            asList( // row
-                asList( // [0]
-                    asList(new BigDecimal("375098.406"), new BigDecimal("84.509")),//[0][0]
-                    asList(new BigDecimal("-446325.287"), new BigDecimal("3.671")),//[0][1]
-                    asList(new BigDecimal("286958.380"), new BigDecimal("314821.890"), new BigDecimal("18513.303")),//[0][2]
-                    asList(new BigDecimal("-444023.971"), new BigDecimal("827746.528"), new BigDecimal("-54.986")),//[0][3]
-                    asList(new BigDecimal("-44520.406"))//[0][4]
-                )
+        ))
+        .baselineValues(asList( // row
+            asList( // [0]
+                asList(new BigDecimal("375098.406"), new BigDecimal("84.509")),//[0][0]
+                asList(new BigDecimal("-446325.287"), new BigDecimal("3.671")),//[0][1]
+                asList(new BigDecimal("286958.380"), new BigDecimal("314821.890"), new BigDecimal("18513.303")),//[0][2]
+                asList(new BigDecimal("-444023.971"), new BigDecimal("827746.528"), new BigDecimal("-54.986")),//[0][3]
+                asList(new BigDecimal("-44520.406"))//[0][4]
             )
-        )
-        .baselineValuesForSingleColumn(
-            asList( // row
-                asList( // [0]
-                    asList(new BigDecimal("906668.849"), new BigDecimal("1.406")),//[0][0]
-                    asList(new BigDecimal("-494177.333"), new BigDecimal("952997.058"))//[0][1]
-                ),
-                asList( // [1]
-                    asList(new BigDecimal("642385.159"), new BigDecimal("369753.830"), new BigDecimal("634889.981")),//[1][0]
-                    asList(new BigDecimal("83970.515"), new BigDecimal("-847315.758"), new BigDecimal("-0.600")),//[1][1]
-                    asList(new BigDecimal("73013.870")),//[1][2]
-                    asList(new BigDecimal("337872.675"), new BigDecimal("375940.114"), new BigDecimal("-2.670")),//[1][3]
-                    asList(new BigDecimal("-7.899"), new BigDecimal("755611.538"))//[1][4]
-                )
+        ))
+        .baselineValues(asList( // row
+            asList( // [0]
+                asList(new BigDecimal("906668.849"), new BigDecimal("1.406")),//[0][0]
+                asList(new BigDecimal("-494177.333"), new BigDecimal("952997.058"))//[0][1]
+            ),
+            asList( // [1]
+                asList(new BigDecimal("642385.159"), new BigDecimal("369753.830"), new BigDecimal("634889.981")),//[1][0]
+                asList(new BigDecimal("83970.515"), new BigDecimal("-847315.758"), new BigDecimal("-0.600")),//[1][1]
+                asList(new BigDecimal("73013.870")),//[1][2]
+                asList(new BigDecimal("337872.675"), new BigDecimal("375940.114"), new BigDecimal("-2.670")),//[1][3]
+                asList(new BigDecimal("-7.899"), new BigDecimal("755611.538"))//[1][4]
             )
-        )
+        ))
         .go();
   }
 
   @Test
   public void booleanArray() throws Exception {
+    checkBooleanArrayInTable("boolean_array");
+  }
+
+  @Test
+  public void booleanArrayParquet() throws Exception {
+    checkNativeScanUsed("boolean_array_p");
+    checkBooleanArrayInTable("boolean_array_p");
+  }
+
+  private void checkBooleanArrayInTable(String table) throws Exception {
     // Nesting 0: reading ARRAY<BOOLEAN>
     testBuilder()
-        .sqlQuery("SELECT arr_n_0 FROM hive.`boolean_array`")
+        .sqlQuery("SELECT arr_n_0 FROM hive.`%s`", table)
         .unOrdered()
         .baselineColumns("arr_n_0")
-        .baselineValuesForSingleColumn(asList(false, true, false, true, false))
-        .baselineValuesForSingleColumn(emptyList())
-        .baselineValuesForSingleColumn(Collections.singletonList(true))
+        .baselineValues(asList(false, true, false, true, false))
+        .baselineValues(emptyList())
+        .baselineValues(Collections.singletonList(true))
         .go();
 
     // Nesting 1: reading ARRAY<ARRAY<BOOLEAN>>
     testBuilder()
-        .sqlQuery("SELECT arr_n_1 FROM hive.`boolean_array`")
+        .sqlQuery("SELECT arr_n_1 FROM hive.`%s`", table)
         .unOrdered()
         .baselineColumns("arr_n_1")
-        .baselineValuesForSingleColumn(asList(asList(true, false, true), asList(false, false)))
-        .baselineValuesForSingleColumn(asList(emptyList(), emptyList()))
-        .baselineValuesForSingleColumn(asList(asList(false, true)))
+        .baselineValues(asList(asList(true, false, true), asList(false, false)))
+        .baselineValues(asList(emptyList(), emptyList()))
+        .baselineValues(asList(asList(false, true)))
         .go();
 
     // Nesting 2: reading ARRAY<ARRAY<ARRAY<BOOLEAN>>>
     testBuilder()
-        .sqlQuery("SELECT arr_n_2 FROM hive.`boolean_array` order by rid")
+        .sqlQuery("SELECT arr_n_2 FROM hive.`%s` order by rid", table)
         .ordered()
         .baselineColumns("arr_n_2")
-        .baselineValuesForSingleColumn(
-            asList( // row
-                asList( // [0]
-                    asList(false, true)//[0][0]
-                ),
-                asList( // [1]
-                    asList(true),//[1][0]
-                    asList(false, true),//[1][1]
-                    asList(true),//[1][2]
-                    asList(true)//[1][3]
-                ),
-                asList( // [2]
-                    asList(false),//[2][0]
-                    asList(true, false, false),//[2][1]
-                    asList(true, true),//[2][2]
-                    asList(false, true, false)//[2][3]
-                ),
-                asList( // [3]
-                    asList(false, true),//[3][0]
-                    asList(true, false),//[3][1]
-                    asList(true, false, true)//[3][2]
-                ),
-                asList( // [4]
-                    asList(false),//[4][0]
-                    asList(false),//[4][1]
-                    asList(false)//[4][2]
-                )
-            )
-        )
-        .baselineValuesForSingleColumn(
-            asList( // row
-                asList( // [0]
-                    asList(false, true),//[0][0]
-                    asList(false),//[0][1]
-                    asList(false, false),//[0][2]
-                    asList(true, true, true),//[0][3]
-                    asList(false)//[0][4]
-                ),
-                asList( // [1]
-                    asList(false, false, true)//[1][0]
-                ),
-                asList( // [2]
-                    asList(false, true),//[2][0]
-                    asList(true, false)//[2][1]
-                )
-            )
-        )
-        .baselineValuesForSingleColumn(
-            asList( // row
-                asList( // [0]
-                    asList(true, true),//[0][0]
-                    asList(false, true, false),//[0][1]
-                    asList(true),//[0][2]
-                    asList(true, true, false)//[0][3]
-                ),
-                asList( // [1]
-                    asList(false),//[1][0]
-                    asList(false, true),//[1][1]
-                    asList(false),//[1][2]
-                    asList(false)//[1][3]
-                ),
-                asList( // [2]
-                    asList(true, true, true),//[2][0]
-                    asList(true, true, true),//[2][1]
-                    asList(false),//[2][2]
-                    asList(false)//[2][3]
-                ),
-                asList( // [3]
-                    asList(false, false)//[3][0]
-                )
-            )
-        )
+        .baselineValues(asList(
+            asList(asList(false, true)),
+            asList(asList(true), asList(false, true), asList(true), asList(true)),
+            asList(asList(false), asList(true, false, false), asList(true, true), asList(false, true, false)),
+            asList(asList(false, true), asList(true, false), asList(true, false, true)),
+            asList(asList(false), asList(false), asList(false))
+        ))
+        .baselineValues(asList(
+            asList(asList(false, true), asList(false), asList(false, false), asList(true, true, true), asList(false)),
+            asList(asList(false, false, true)),
+            asList(asList(false, true), asList(true, false))
+        ))
+        .baselineValues(asList(
+            asList(asList(true, true), asList(false, true, false), asList(true), asList(true, true, false)),
+            asList(asList(false), asList(false, true), asList(false), asList(false)),
+            asList(asList(true, true, true), asList(true, true, true), asList(false), asList(false)),
+            asList(asList(false, false))
+        ))
         .go();
   }
 
   @Test
   public void bigintArray() throws Exception {
+    checkBigintArrayInTable("bigint_array");
+  }
+
+  @Test
+  public void bigintArrayParquet() throws Exception {
+    checkNativeScanUsed("bigint_array_p");
+    checkBigintArrayInTable("bigint_array_p");
+  }
+
+  private void checkBigintArrayInTable(String table) throws Exception {
     // Nesting 0: reading ARRAY<BIGINT>
     testBuilder()
-        .sqlQuery("SELECT arr_n_0 FROM hive.`bigint_array`")
+        .sqlQuery("SELECT arr_n_0 FROM hive.`%s`", table)
         .unOrdered()
         .baselineColumns("arr_n_0")
-        .baselineValuesForSingleColumn(asList(-9223372036854775808L, 0L, 10000000010L, 9223372036854775807L))
-        .baselineValuesForSingleColumn(emptyList())
-        .baselineValuesForSingleColumn(Collections.singletonList(10005000L))
+        .baselineValues(asList(-9223372036854775808L, 0L, 10000000010L, 9223372036854775807L))
+        .baselineValues(emptyList())
+        .baselineValues(asList(10005000L))
         .go();
 
     // Nesting 1: reading ARRAY<ARRAY<BIGINT>>
     testBuilder()
-        .sqlQuery("SELECT arr_n_1 FROM hive.`bigint_array`")
+        .sqlQuery("SELECT arr_n_1 FROM hive.`%s`", table)
         .unOrdered()
         .baselineColumns("arr_n_1")
-        .baselineValuesForSingleColumn(asList(
-            asList(-9223372036854775808L, 0L, 10000000010L),
-            asList(9223372036854775807L, 9223372036854775807L)))
-        .baselineValuesForSingleColumn(asList(emptyList(), emptyList()))
-        .baselineValuesForSingleColumn(asList(asList(10005000L, 100050010L)))
+        .baselineValues(asList(asList(-9223372036854775808L, 0L, 10000000010L), asList(9223372036854775807L, 9223372036854775807L)))
+        .baselineValues(asList(emptyList(), emptyList()))
+        .baselineValues(asList(asList(10005000L, 100050010L)))
         .go();
 
     // Nesting 2: reading ARRAY<ARRAY<ARRAY<BIGINT>>>
     testBuilder()
-        .sqlQuery("SELECT arr_n_2 FROM hive.`bigint_array` order by rid")
+        .sqlQuery("SELECT arr_n_2 FROM hive.`%s` order by rid", table)
         .ordered()
         .baselineColumns("arr_n_2")
-        .baselineValuesForSingleColumn(
-            asList( // row
-                asList( // [0]
-                    asList(7345032157033769004L),//[0][0]
-                    asList(-2306607274383855051L, 3656249581579032003L)//[0][1]
-                ),
-                asList( // [1]
-                    asList(6044100897358387146L, 4737705104728607904L)//[1][0]
-                )
+        .baselineValues(asList(
+            asList( // [0]
+                asList(7345032157033769004L),//[0][0]
+                asList(-2306607274383855051L, 3656249581579032003L)//[0][1]
+            ),
+            asList( // [1]
+                asList(6044100897358387146L, 4737705104728607904L)//[1][0]
             )
-        )
-        .baselineValuesForSingleColumn(
-            asList( // row
-                asList( // [0]
-                    asList(4833583793282587107L, -8917877693351417844L, -3226305034926780974L)//[0][0]
-                )
+        ))
+        .baselineValues(asList(
+            asList( // [0]
+                asList(4833583793282587107L, -8917877693351417844L, -3226305034926780974L)//[0][0]
             )
-        )
-        .baselineValuesForSingleColumn(
-            asList( // row
-                asList( // [0]
-                    asList(8679405200896733338L, 8581721713860760451L, 1150622751848016114L),//[0][0]
-                    asList(-6672104994192826124L, 4807952216371616134L),//[0][1]
-                    asList(-7874492057876324257L)//[0][2]
-                ),
-                asList( // [1]
-                    asList(8197656735200560038L),//[1][0]
-                    asList(7643173300425098029L, -3186442699228156213L, -8370345321491335247L),//[1][1]
-                    asList(8781633305391982544L, -7187468334864189662L)//[1][2]
-                ),
-                asList( // [2]
-                    asList(6685428436181310098L),//[2][0]
-                    asList(1358587806266610826L),//[2][1]
-                    asList(-2077124879355227614L, -6787493227661516341L),//[2][2]
-                    asList(3713296190482954025L, -3890396613053404789L),//[2][3]
-                    asList(4636761050236625699L, 5268453104977816600L)//[2][4]
-                )
+        ))
+        .baselineValues(asList(
+            asList( // [0]
+                asList(8679405200896733338L, 8581721713860760451L, 1150622751848016114L),//[0][0]
+                asList(-6672104994192826124L, 4807952216371616134L),//[0][1]
+                asList(-7874492057876324257L)//[0][2]
+            ),
+            asList( // [1]
+                asList(8197656735200560038L),//[1][0]
+                asList(7643173300425098029L, -3186442699228156213L, -8370345321491335247L),//[1][1]
+                asList(8781633305391982544L, -7187468334864189662L)//[1][2]
+            ),
+            asList( // [2]
+                asList(6685428436181310098L),//[2][0]
+                asList(1358587806266610826L),//[2][1]
+                asList(-2077124879355227614L, -6787493227661516341L),//[2][2]
+                asList(3713296190482954025L, -3890396613053404789L),//[2][3]
+                asList(4636761050236625699L, 5268453104977816600L)//[2][4]
             )
-        )
+        ))
         .go();
   }
 
   @Test
   public void floatArray() throws Exception {
+    checkFloatArrayInTable("float_array");
+  }
+
+  @Test
+  public void floatArrayParquet() throws Exception {
+    checkNativeScanUsed("float_array_p");
+    checkFloatArrayInTable("float_array_p");
+  }
+
+  private void checkFloatArrayInTable(String table) throws Exception {
     // Nesting 0: reading ARRAY<FLOAT>
     testBuilder()
-        .sqlQuery("SELECT arr_n_0 FROM hive.`float_array`")
+        .sqlQuery("SELECT arr_n_0 FROM hive.`%s`", table)
         .unOrdered()
         .baselineColumns("arr_n_0")
-        .baselineValuesForSingleColumn(asList(-32.058f, 94.47389f, 16.107912f))
-        .baselineValuesForSingleColumn(emptyList())
-        .baselineValuesForSingleColumn(Collections.singletonList(25.96484f))
+        .baselineValues(asList(-32.058f, 94.47389f, 16.107912f))
+        .baselineValues(emptyList())
+        .baselineValues(Collections.singletonList(25.96484f))
         .go();
 
     // Nesting 1: reading ARRAY<ARRAY<FLOAT>>
     testBuilder()
-        .sqlQuery("SELECT arr_n_1 FROM hive.`float_array`")
+        .sqlQuery("SELECT arr_n_1 FROM hive.`%s`", table)
         .unOrdered()
         .baselineColumns("arr_n_1")
-        .baselineValuesForSingleColumn(asList(asList(-82.399826f, 12.633938f, 86.19402f), asList(-13.03544f, 64.65487f)))
-        .baselineValuesForSingleColumn(asList(emptyList(), emptyList()))
-        .baselineValuesForSingleColumn(asList(asList(15.259451f, -15.259451f)))
+        .baselineValues(asList(asList(-82.399826f, 12.633938f, 86.19402f), asList(-13.03544f, 64.65487f)))
+        .baselineValues(asList(emptyList(), emptyList()))
+        .baselineValues(asList(asList(15.259451f, -15.259451f)))
         .go();
 
     // Nesting 2: reading ARRAY<ARRAY<ARRAY<FLOAT>>>
     testBuilder()
-        .sqlQuery("SELECT arr_n_2 FROM hive.`float_array` order by rid")
+        .sqlQuery("SELECT arr_n_2 FROM hive.`%s` order by rid", table)
         .ordered()
         .baselineColumns("arr_n_2")
-        .baselineValuesForSingleColumn(
-            asList( // row
-                asList( // [0]
-                    asList(-5.6506114f),//[0][0]
-                    asList(26.546333f, 3724.8389f),//[0][1]
-                    asList(-53.65775f, 686.8335f, -0.99032f)//[0][2]
-                )
-            )
-        )
-        .baselineValuesForSingleColumn(
-            asList( // row
-                asList( // [0]
-                    asList(29.042528f),//[0][0]
-                    asList(3524.3398f, -8856.58f, 6.8508215f)//[0][1]
-                ),
-                asList( // [1]
-                    asList(-0.73994386f, -2.0008986f),//[1][0]
-                    asList(-9.903006f, -271.26172f),//[1][1]
-                    asList(-131.80347f),//[1][2]
-                    asList(39.721367f, -4870.5444f),//[1][3]
-                    asList(-1.4830998f, -766.3066f, -0.1659732f)//[1][4]
-                ),
-                asList( // [2]
-                    asList(3467.0298f, -240.64255f),//[2][0]
-                    asList(2.4072556f, -85.89145f)//[2][1]
-                )
-            )
-        )
-        .baselineValuesForSingleColumn(
-            asList( // row
-                asList( // [0]
-                    asList(-888.68243f, -38.09065f),//[0][0]
-                    asList(-6948.154f, -185.64319f, 0.7401936f),//[0][1]
-                    asList(-705.2718f, -932.4041f)//[0][2]
-                ),
-                asList( // [1]
-                    asList(-2.581712f, 0.28686252f, -0.98652786f),//[1][0]
-                    asList(-57.448563f, -0.0057083773f, -0.21712556f),//[1][1]
-                    asList(-8.076653f, -8149.519f, -7.5968184f),//[1][2]
-                    asList(8.823492f),//[1][3]
-                    asList(-9134.323f, 467.53275f, -59.763447f)//[1][4]
-                ),
-                asList( // [2]
-                    asList(0.33596575f, 6805.2256f, -3087.9531f),//[2][0]
-                    asList(9816.865f, -164.90712f, -1.9071647f)//[2][1]
-                ),
-                asList( // [3]
-                    asList(-0.23883149f),//[3][0]
-                    asList(-5.3763375f, -4.7661624f)//[3][1]
-                ),
-                asList( // [4]
-                    asList(-52.42167f, 247.91452f),//[4][0]
-                    asList(9499.771f),//[4][1]
-                    asList(-0.6549191f, 4340.83f)//[4][2]
-                )
-            )
-        )
+        .baselineValues(asList(
+            asList(asList(-5.6506114f), asList(26.546333f, 3724.8389f), asList(-53.65775f, 686.8335f, -0.99032f))
+        ))
+        .baselineValues(asList(
+            asList(asList(29.042528f), asList(3524.3398f, -8856.58f, 6.8508215f)),
+            asList(asList(-0.73994386f, -2.0008986f), asList(-9.903006f, -271.26172f), asList(-131.80347f),
+                asList(39.721367f, -4870.5444f), asList(-1.4830998f, -766.3066f, -0.1659732f)),
+            asList(asList(3467.0298f, -240.64255f), asList(2.4072556f, -85.89145f))
+        ))
+        .baselineValues(asList(
+            asList(asList(-888.68243f, -38.09065f), asList(-6948.154f, -185.64319f, 0.7401936f), asList(-705.2718f, -932.4041f)),
+            asList(asList(-2.581712f, 0.28686252f, -0.98652786f), asList(-57.448563f, -0.0057083773f, -0.21712556f),
+                asList(-8.076653f, -8149.519f, -7.5968184f), asList(8.823492f), asList(-9134.323f, 467.53275f, -59.763447f)),
+            asList(asList(0.33596575f, 6805.2256f, -3087.9531f), asList(9816.865f, -164.90712f, -1.9071647f)),
+            asList(asList(-0.23883149f), asList(-5.3763375f, -4.7661624f)),
+            asList(asList(-52.42167f, 247.91452f), asList(9499.771f), asList(-0.6549191f, 4340.83f))
+        ))
         .go();
   }
 
   @Test
   public void doubleArray() throws Exception {
+    checkDoubleArrayInTable("double_array");
+  }
+
+  @Test
+  public void doubleArrayParquet() throws Exception {
+    checkNativeScanUsed("double_array_p");
+    checkDoubleArrayInTable("double_array_p");
+  }
+
+  private void checkDoubleArrayInTable(String table) throws Exception {
     // Nesting 0: reading ARRAY<DOUBLE>
     testBuilder()
-        .sqlQuery("SELECT arr_n_0 FROM hive.`double_array`")
+        .sqlQuery("SELECT arr_n_0 FROM hive.`%s`", table)
         .unOrdered()
         .baselineColumns("arr_n_0")
-        .baselineValuesForSingleColumn(asList(-13.241563769628, 0.3436367772981237, 9.73366))
-        .baselineValuesForSingleColumn(emptyList())
-        .baselineValuesForSingleColumn(asList(15.581409176959358))
+        .baselineValues(asList(-13.241563769628, 0.3436367772981237, 9.73366))
+        .baselineValues(emptyList())
+        .baselineValues(asList(15.581409176959358))
         .go();
 
     // Nesting 1: reading ARRAY<ARRAY<DOUBLE>>
     testBuilder()
-        .sqlQuery("SELECT arr_n_1 FROM hive.`double_array`")
+        .sqlQuery("SELECT arr_n_1 FROM hive.`%s`", table)
         .unOrdered()
         .baselineColumns("arr_n_1")
-        .baselineValuesForSingleColumn(asList(asList(-24.049666910012498, 14.975034200, 1.19975056092457), asList(-2.293376758961259, 80.783)))
-        .baselineValuesForSingleColumn(asList(emptyList(), emptyList()))
-        .baselineValuesForSingleColumn(asList(asList(0.47745359256854, -0.47745359256854)))
+        .baselineValues(asList(asList(-24.049666910012498, 14.975034200, 1.19975056092457), asList(-2.293376758961259, 80.783)))
+        .baselineValues(asList(emptyList(), emptyList()))
+        .baselineValues(asList(asList(0.47745359256854, -0.47745359256854)))
         .go();
 
     // Nesting 2: reading ARRAY<ARRAY<ARRAY<DOUBLE>>>
     testBuilder()
-        .sqlQuery("SELECT arr_n_2 FROM hive.`double_array` order by rid")
+        .sqlQuery("SELECT arr_n_2 FROM hive.`%s` order by rid", table)
         .ordered()
         .baselineColumns("arr_n_2")
-        .baselineValuesForSingleColumn(
+        .baselineValues(
             asList( // row
                 asList( // [0]
                     asList(-9.269519394436928),//[0][0]
@@ -1343,7 +1002,7 @@ public class TestHiveArrays extends ClusterTest {
                 )
             )
         )
-        .baselineValuesForSingleColumn(
+        .baselineValues(
             asList( // row
                 asList( // [0]
                     asList(-7966.1700155142025, 2519.664646202656),//[0][0]
@@ -1370,7 +1029,7 @@ public class TestHiveArrays extends ClusterTest {
                 )
             )
         )
-        .baselineValuesForSingleColumn(
+        .baselineValues(
             asList( // row
                 asList( // [0]
                     asList(0.054727088545119096, 0.3289046600776335, -183.0613955159468)//[0][0]
@@ -1389,125 +1048,139 @@ public class TestHiveArrays extends ClusterTest {
 
   @Test
   public void dateArray() throws Exception {
+    checkDateArrayInTable("date_array");
+  }
 
+  @Test
+  public void dateArrayParquet() throws Exception {
+    checkNativeScanUsed("date_array_p");
+    checkDateArrayInTable("date_array_p");
+  }
+
+  private void checkDateArrayInTable(String table) throws Exception {
     // Nesting 0: reading ARRAY<DATE>
     testBuilder()
-        .sqlQuery("SELECT arr_n_0 FROM hive.`date_array`")
+        .sqlQuery("SELECT arr_n_0 FROM hive.`%s`", table)
         .unOrdered()
         .baselineColumns("arr_n_0")
-        .baselineValuesForSingleColumn(asList(
+        .baselineValues(asList(
             parseLocalDate("2018-10-21"),
             parseLocalDate("2017-07-11"),
             parseLocalDate("2018-09-23")))
-        .baselineValuesForSingleColumn(emptyList())
-        .baselineValuesForSingleColumn(asList(parseLocalDate("2018-07-14")))
+        .baselineValues(emptyList())
+        .baselineValues(asList(parseLocalDate("2018-07-14")))
         .go();
 
     // Nesting 1: reading ARRAY<ARRAY<DATE>>
     testBuilder()
-        .sqlQuery("SELECT arr_n_1 FROM hive.`date_array`")
+        .sqlQuery("SELECT arr_n_1 FROM hive.`%s`", table)
         .unOrdered()
         .baselineColumns("arr_n_1")
-        .baselineValuesForSingleColumn(asList(
+        .baselineValues(asList(
             asList(parseLocalDate("2017-03-21"), parseLocalDate("2017-09-10"), parseLocalDate("2018-01-17")),
             asList(parseLocalDate("2017-03-24"), parseLocalDate("2018-09-22"))))
-        .baselineValuesForSingleColumn(asList(emptyList(), emptyList()))
-        .baselineValuesForSingleColumn(asList(asList(parseLocalDate("2017-08-09"), parseLocalDate("2017-08-28"))))
+        .baselineValues(asList(emptyList(), emptyList()))
+        .baselineValues(asList(asList(parseLocalDate("2017-08-09"), parseLocalDate("2017-08-28"))))
         .go();
 
     // Nesting 2: reading ARRAY<ARRAY<ARRAY<DATE>>>
     testBuilder()
-        .sqlQuery("SELECT arr_n_2 FROM hive.`date_array` order by rid")
+        .sqlQuery("SELECT arr_n_2 FROM hive.`%s` order by rid", table)
         .ordered()
         .baselineColumns("arr_n_2")
-        .baselineValuesForSingleColumn(
-            asList( // row
-                asList( // [0]
-                    asList(parseLocalDate("1952-08-24")),//[0][0]
-                    asList(parseLocalDate("1968-10-05"), parseLocalDate("1951-07-27")),//[0][1]
-                    asList(parseLocalDate("1943-11-18"), parseLocalDate("1991-04-27"))//[0][2]
-                ),
-                asList( // [1]
-                    asList(parseLocalDate("1981-12-27"), parseLocalDate("1984-02-03")),//[1][0]
-                    asList(parseLocalDate("1953-04-15"), parseLocalDate("2002-08-15"), parseLocalDate("1926-12-10")),//[1][1]
-                    asList(parseLocalDate("2009-08-09"), parseLocalDate("1919-08-30"), parseLocalDate("1906-04-10")),//[1][2]
-                    asList(parseLocalDate("1995-10-28"), parseLocalDate("1989-09-07")),//[1][3]
-                    asList(parseLocalDate("2002-01-03"), parseLocalDate("1929-03-17"), parseLocalDate("1939-10-23"))//[1][4]
-                )
+        .baselineValues(asList( // row
+            asList( // [0]
+                asList(parseLocalDate("1952-08-24")),//[0][0]
+                asList(parseLocalDate("1968-10-05"), parseLocalDate("1951-07-27")),//[0][1]
+                asList(parseLocalDate("1943-11-18"), parseLocalDate("1991-04-27"))//[0][2]
+            ),
+            asList( // [1]
+                asList(parseLocalDate("1981-12-27"), parseLocalDate("1984-02-03")),//[1][0]
+                asList(parseLocalDate("1953-04-15"), parseLocalDate("2002-08-15"), parseLocalDate("1926-12-10")),//[1][1]
+                asList(parseLocalDate("2009-08-09"), parseLocalDate("1919-08-30"), parseLocalDate("1906-04-10")),//[1][2]
+                asList(parseLocalDate("1995-10-28"), parseLocalDate("1989-09-07")),//[1][3]
+                asList(parseLocalDate("2002-01-03"), parseLocalDate("1929-03-17"), parseLocalDate("1939-10-23"))//[1][4]
             )
-        )
-        .baselineValuesForSingleColumn(
-            asList( // row
-                asList( // [0]
-                    asList(parseLocalDate("1936-05-05"), parseLocalDate("1941-04-12"), parseLocalDate("1914-04-15"))//[0][0]
-                ),
-                asList( // [1]
-                    asList(parseLocalDate("1944-05-09"), parseLocalDate("2002-02-11"))//[1][0]
-                )
+        ))
+        .baselineValues(asList( // row
+            asList( // [0]
+                asList(parseLocalDate("1936-05-05"), parseLocalDate("1941-04-12"), parseLocalDate("1914-04-15"))//[0][0]
+            ),
+            asList( // [1]
+                asList(parseLocalDate("1944-05-09"), parseLocalDate("2002-02-11"))//[1][0]
             )
-        )
-        .baselineValuesForSingleColumn(
-            asList( // row
-                asList( // [0]
-                    asList(parseLocalDate("1965-04-18"), parseLocalDate("2012-11-07"), parseLocalDate("1961-03-15")),//[0][0]
-                    asList(parseLocalDate("1922-05-22"), parseLocalDate("1978-03-25")),//[0][1]
-                    asList(parseLocalDate("1935-05-29"))//[0][2]
-                ),
-                asList( // [1]
-                    asList(parseLocalDate("1904-07-08"), parseLocalDate("1968-05-23"), parseLocalDate("1946-03-31")),//[1][0]
-                    asList(parseLocalDate("2014-01-28")),//[1][1]
-                    asList(parseLocalDate("1938-09-20"), parseLocalDate("1920-07-09"), parseLocalDate("1990-12-31")),//[1][2]
-                    asList(parseLocalDate("1984-07-20"), parseLocalDate("1988-11-25")),//[1][3]
-                    asList(parseLocalDate("1941-12-21"), parseLocalDate("1939-01-16"), parseLocalDate("2012-09-19"))//[1][4]
-                ),
-                asList( // [2]
-                    asList(parseLocalDate("2020-12-28")),//[2][0]
-                    asList(parseLocalDate("1930-11-13")),//[2][1]
-                    asList(parseLocalDate("2014-05-02"), parseLocalDate("1935-02-16"), parseLocalDate("1919-01-17")),//[2][2]
-                    asList(parseLocalDate("1972-04-20"), parseLocalDate("1951-05-30"), parseLocalDate("1963-01-11"))//[2][3]
-                ),
-                asList( // [3]
-                    asList(parseLocalDate("1993-03-20"), parseLocalDate("1978-12-31")),//[3][0]
-                    asList(parseLocalDate("1965-12-15"), parseLocalDate("1970-09-02"), parseLocalDate("2010-05-25"))//[3][1]
-                )
+        ))
+        .baselineValues(asList( // row
+            asList( // [0]
+                asList(parseLocalDate("1965-04-18"), parseLocalDate("2012-11-07"), parseLocalDate("1961-03-15")),//[0][0]
+                asList(parseLocalDate("1922-05-22"), parseLocalDate("1978-03-25")),//[0][1]
+                asList(parseLocalDate("1935-05-29"))//[0][2]
+            ),
+            asList( // [1]
+                asList(parseLocalDate("1904-07-08"), parseLocalDate("1968-05-23"), parseLocalDate("1946-03-31")),//[1][0]
+                asList(parseLocalDate("2014-01-28")),//[1][1]
+                asList(parseLocalDate("1938-09-20"), parseLocalDate("1920-07-09"), parseLocalDate("1990-12-31")),//[1][2]
+                asList(parseLocalDate("1984-07-20"), parseLocalDate("1988-11-25")),//[1][3]
+                asList(parseLocalDate("1941-12-21"), parseLocalDate("1939-01-16"), parseLocalDate("2012-09-19"))//[1][4]
+            ),
+            asList( // [2]
+                asList(parseLocalDate("2020-12-28")),//[2][0]
+                asList(parseLocalDate("1930-11-13")),//[2][1]
+                asList(parseLocalDate("2014-05-02"), parseLocalDate("1935-02-16"), parseLocalDate("1919-01-17")),//[2][2]
+                asList(parseLocalDate("1972-04-20"), parseLocalDate("1951-05-30"), parseLocalDate("1963-01-11"))//[2][3]
+            ),
+            asList( // [3]
+                asList(parseLocalDate("1993-03-20"), parseLocalDate("1978-12-31")),//[3][0]
+                asList(parseLocalDate("1965-12-15"), parseLocalDate("1970-09-02"), parseLocalDate("2010-05-25"))//[3][1]
             )
-        )
+        ))
         .go();
   }
 
   @Test
   public void timestampArray() throws Exception {
+    checkTimestampArrayInTable("timestamp_array");
+  }
+
+  @Test
+  public void timestampArrayParquet() throws Exception {
+    checkNativeScanUsed("timestamp_array_p");
+    checkTimestampArrayInTable("timestamp_array_p");
+  }
+
+  private void checkTimestampArrayInTable(String table) throws Exception {
     // Nesting 0: reading ARRAY<TIMESTAMP>
     testBuilder()
-        .sqlQuery("SELECT arr_n_0 FROM hive.`timestamp_array`")
+        .sqlQuery("SELECT arr_n_0 FROM hive.`%s`", table)
+        .optionSettingQueriesForTestQuery("alter session set `" + ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP + "` = true")
         .unOrdered()
         .baselineColumns("arr_n_0")
-        .baselineValuesForSingleColumn(asList(
+        .baselineValues(asList(
             parseBest("2018-10-21 04:51:36"),
             parseBest("2017-07-11 09:26:48"),
             parseBest("2018-09-23 03:02:33")))
-        .baselineValuesForSingleColumn(emptyList())
-        .baselineValuesForSingleColumn(asList(parseBest("2018-07-14 05:20:34")))
+        .baselineValues(emptyList())
+        .baselineValues(asList(parseBest("2018-07-14 05:20:34")))
         .go();
 
     // Nesting 1: reading ARRAY<ARRAY<TIMESTAMP>>
     testBuilder()
-        .sqlQuery("SELECT arr_n_1 FROM hive.`timestamp_array`")
+        .sqlQuery("SELECT arr_n_1 FROM hive.`%s`", table)
         .unOrdered()
         .baselineColumns("arr_n_1")
-        .baselineValuesForSingleColumn(asList(
+        .baselineValues(asList(
             asList(parseBest("2017-03-21 12:52:33"), parseBest("2017-09-10 01:29:24"), parseBest("2018-01-17 04:45:23")),
             asList(parseBest("2017-03-24 01:03:23"), parseBest("2018-09-22 05:00:26"))))
-        .baselineValuesForSingleColumn(asList(emptyList(), emptyList()))
-        .baselineValuesForSingleColumn(asList(asList(parseBest("2017-08-09 08:26:08"), parseBest("2017-08-28 09:47:23"))))
+        .baselineValues(asList(emptyList(), emptyList()))
+        .baselineValues(asList(asList(parseBest("2017-08-09 08:26:08"), parseBest("2017-08-28 09:47:23"))))
         .go();
 
     // Nesting 2: reading ARRAY<ARRAY<ARRAY<TIMESTAMP>>>
     testBuilder()
-        .sqlQuery("SELECT arr_n_2 FROM hive.`timestamp_array` order by rid")
+        .sqlQuery("SELECT arr_n_2 FROM hive.`%s` order by rid", table)
         .ordered()
         .baselineColumns("arr_n_2")
-        .baselineValuesForSingleColumn(
+        .baselineValues(
             asList( // row
                 asList( // [0]
                     asList(parseBest("1929-01-08 19:31:47")),//[0][0]
@@ -1529,7 +1202,7 @@ public class TestHiveArrays extends ClusterTest {
                 )
             )
         )
-        .baselineValuesForSingleColumn(
+        .baselineValues(
             asList( // row
                 asList( // [0]
                     asList(parseBest("1904-12-10 00:39:14")),//[0][0]
@@ -1546,7 +1219,7 @@ public class TestHiveArrays extends ClusterTest {
                 )
             )
         )
-        .baselineValuesForSingleColumn(
+        .baselineValues(
             asList( // row
                 asList( // [0]
                     asList(parseBest("1999-12-07 01:16:45")),//[0][0]
@@ -1566,8 +1239,8 @@ public class TestHiveArrays extends ClusterTest {
         .sqlQuery("SELECT arr_n_0 FROM hive.`binary_array`")
         .unOrdered()
         .baselineColumns("arr_n_0")
-        .baselineValuesForSingleColumn(asList(new StringBytes("First"), new StringBytes("Second"), new StringBytes("Third")))
-        .baselineValuesForSingleColumn(asList(new StringBytes("First")))
+        .baselineValues(asList(new StringBytes("First"), new StringBytes("Second"), new StringBytes("Third")))
+        .baselineValues(asList(new StringBytes("First")))
         .go();
   }
 
@@ -1587,14 +1260,14 @@ public class TestHiveArrays extends ClusterTest {
             asList(-1, 0, 1),
             asList(asList(-1, 0, 1), asList(-2, 1)),
 
-            asList(new Text("First Value Of Array"), new Text("komlnp"), new Text("The Last Value")),
-            asList(asList(new Text("Array 0, Value 0"), new Text("Array 0, Value 1")), asList(new Text("Array 1"))),
+            asTextList("First Value Of Array", "komlnp", "The Last Value"),
+            asList(asTextList("Array 0, Value 0", "Array 0, Value 1"), asTextList("Array 1")),
 
-            asList(new Text("Five"), new Text("One"), new Text("T")),
-            asList(asList(new Text("Five"), new Text("One"), new Text("$42")), asList(new Text("T"), new Text("K"), new Text("O"))),
+            asTextList("Five", "One", "T"),
+            asList(asTextList("Five", "One", "$42"), asTextList("T", "K", "O")),
 
-            asList(new Text("aa"), new Text("cc"), new Text("ot")),
-            asList(asList(new Text("aa")), asList(new Text("cc"), new Text("ot"))),
+            asTextList("aa", "cc", "ot"),
+            asList(asTextList("aa"), asTextList("cc", "ot")),
 
             asList(-128, 0, 127),
             asList(asList(-128, -127), asList(0, 1), asList(127, 126)),
@@ -1704,14 +1377,14 @@ public class TestHiveArrays extends ClusterTest {
             asList(-1, 0, 1),
             asList(asList(-1, 0, 1), asList(-2, 1)),
 
-            asList(new Text("First Value Of Array"), new Text("komlnp"), new Text("The Last Value")),
-            asList(asList(new Text("Array 0, Value 0"), new Text("Array 0, Value 1")), asList(new Text("Array 1"))),
+            asTextList("First Value Of Array", "komlnp", "The Last Value"),
+            asList(asTextList("Array 0, Value 0", "Array 0, Value 1"), asTextList("Array 1")),
 
-            asList(new Text("Five"), new Text("One"), new Text("T")),
-            asList(asList(new Text("Five"), new Text("One"), new Text("$42")), asList(new Text("T"), new Text("K"), new Text("O"))),
+            asTextList("Five", "One", "T"),
+            asList(asTextList("Five", "One", "$42"), asTextList("T", "K", "O")),
 
-            asList(new Text("aa"), new Text("cc"), new Text("ot")),
-            asList(asList(new Text("aa")), asList(new Text("cc"), new Text("ot"))),
+            asTextList("aa", "cc", "ot"),
+            asList(asTextList("aa"), asTextList("cc", "ot")),
 
             asList(-128, 0, 127),
             asList(asList(-128, -127), asList(0, 1), asList(127, 126)),
@@ -1773,6 +1446,12 @@ public class TestHiveArrays extends ClusterTest {
       return new String(bytes);
     }
 
+  }
+
+  private static List<Text> asTextList(String... strings) {
+    return Stream.of(strings)
+        .map(Text::new)
+        .collect(Collectors.toList());
   }
 
 }
