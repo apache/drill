@@ -58,13 +58,13 @@ import org.apache.parquet.hadoop.metadata.ParquetMetadata;
 import org.apache.parquet.io.ColumnIOFactory;
 import org.apache.parquet.io.MessageColumnIO;
 import org.apache.parquet.io.RecordReader;
-import org.apache.parquet.schema.GroupType;
 import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.Type;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
+import org.apache.parquet.schema.Types;
 
 public class DrillParquetReader extends CommonParquetRecordReader {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillParquetReader.class);
@@ -106,9 +106,9 @@ public class DrillParquetReader extends CommonParquetRecordReader {
     this.recordsPerBatch = (int) fragmentContext.getOptions().getLong(ExecConstants.PARQUET_COMPLEX_BATCH_NUM_RECORDS);
   }
 
-  public static MessageType getProjection(MessageType schema,
-                                          Collection<SchemaPath> columns,
-                                          List<SchemaPath> columnsNotFound) {
+  private static MessageType getProjection(MessageType schema,
+                                           Collection<SchemaPath> columns,
+                                           List<SchemaPath> columnsNotFound) {
     MessageType projection = null;
 
     String messageName = schema.getName();
@@ -121,17 +121,15 @@ public class DrillParquetReader extends CommonParquetRecordReader {
     // get a list of modified columns which have the array elements removed from the schema path since parquet schema doesn't include array elements
     List<SchemaPath> modifiedColumns = Lists.newLinkedList();
     for (SchemaPath path : columns) {
+
       List<String> segments = Lists.newArrayList();
-      PathSegment seg = path.getRootSegment();
-      do {
+      for (PathSegment seg = path.getRootSegment(); seg != null; seg = seg.getChild()) {
         if (seg.isNamed()) {
           segments.add(seg.getNameSegment().getPath());
         }
-      } while ((seg = seg.getChild()) != null);
-      String[] pathSegments = new String[segments.size()];
-      segments.toArray(pathSegments);
-      SchemaPath modifiedSchemaPath = SchemaPath.getCompoundPath(pathSegments);
-      modifiedColumns.add(modifiedSchemaPath);
+      }
+
+      modifiedColumns.add(SchemaPath.getCompoundPath(segments.toArray(new String[0])));
     }
 
     // convert the columns in the parquet schema to a list of SchemaPath columns so that they can be compared in case insensitive manner
@@ -268,12 +266,16 @@ public class DrillParquetReader extends CommonParquetRecordReader {
   }
 
   private static Type getType(String[] pathSegments, int depth, MessageType schema) {
-    Type type = schema.getType(Arrays.copyOfRange(pathSegments, 0, depth + 1));
-    if (depth + 1 == pathSegments.length) {
+    int nextDepth = depth + 1;
+    Type type = schema.getType(Arrays.copyOfRange(pathSegments, 0, nextDepth));
+    if (nextDepth == pathSegments.length) {
       return type;
     } else {
       Preconditions.checkState(!type.isPrimitive());
-      return new GroupType(type.getRepetition(), type.getName(), getType(pathSegments, depth + 1, schema));
+      return Types.buildGroup(type.getRepetition())
+          .as(type.getOriginalType())
+          .addField(getType(pathSegments, nextDepth, schema))
+          .named(type.getName());
     }
   }
 

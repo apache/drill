@@ -38,7 +38,7 @@ public class DrillParquetRecordMaterializer extends RecordMaterializer<Void> {
                                         Collection<SchemaPath> columns, OptionManager options,
                                         ParquetReaderUtility.DateCorruptionStatus containsCorruptedDates) {
     writer = new VectorContainerWriter(mutator);
-    root = new DrillParquetGroupConverter(mutator, writer.rootAsMap(), schema, columns, options, containsCorruptedDates);
+    root = new DrillParquetGroupConverter(mutator, writer.rootAsMap(), schema, columns, options, containsCorruptedDates, false, "");
   }
 
   public void setPosition(int position) {
