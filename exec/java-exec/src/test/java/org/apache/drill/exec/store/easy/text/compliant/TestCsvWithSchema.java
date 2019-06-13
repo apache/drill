@@ -34,14 +34,12 @@ import org.apache.drill.test.rowSet.DirectRowSet;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSetBuilder;
 import org.apache.drill.test.rowSet.RowSetComparison;
-import org.apache.drill.test.rowSet.RowSetReader;
 import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.joda.time.Instant;
 import org.joda.time.LocalDate;
 import org.joda.time.LocalTime;
 import org.joda.time.Period;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -72,11 +70,6 @@ public class TestCsvWithSchema extends BaseCsvTest {
     "1,wilma,2019-01-18,female",
     "2,fred,2019-01-19,male",
     "4,betty,2019-05-04,NA"
-  };
-
-  private static final String multi2FullContents[] = {
-    "id,name,date",
-    "3,barney,2001-01-16,NA"
   };
 
   private static final String reordered2Contents[] = {
@@ -308,93 +301,6 @@ public class TestCsvWithSchema extends BaseCsvTest {
   }
 
   /**
-   * Test the schema we get in V2 when the table read order is random.
-   * Worst-case: the two files have different column counts and
-   * column orders.
-   * <p>
-   * Though the results are random, we iterate 10 times which, in most runs,
-   * shows the random variation in schemas:
-   * <ul>
-   * <li>Sometimes the first batch has three columns, sometimes four.</li>
-   * <li>Sometimes the column `id` is in position 0, sometimes in position 1
-   * (correlated with the above).</li>
-   * <li>Due to the fact that sometimes the first file (with four columns)
-   * is returned first, sometimes the second file (with three columns) is
-   * returned first.</li>
-   * </ul>
-   */
-  @Test
-  public void testSchemaRaceV2() throws Exception {
-    try {
-      enableV3(false);
-      enableSchema(false);
-      enableMultiScan();
-      String tablePath = buildTable("schemaRaceV2", multi1Contents, reordered2Contents);
-      boolean sawFile1First = false;
-      boolean sawFile2First = false;
-      boolean sawFullSchema = false;
-      boolean sawPartialSchema = false;
-      boolean sawIdAsCol0 = false;
-      boolean sawIdAsCol1 = false;
-      String sql = "SELECT * FROM " + tablePath;
-      for (int i = 0; i < 10; i++) {
-        Iterator<DirectRowSet> iter = client.queryBuilder().sql(sql).rowSetIterator();
-        int batchCount = 0;
-        while(iter.hasNext()) {
-          batchCount++;
-          RowSet result = iter.next();
-          TupleMetadata resultSchema = result.schema();
-          if (resultSchema.size() == 4) {
-            sawFullSchema = true;
-          } else {
-            assertEquals(3, resultSchema.size());
-            sawPartialSchema = true;
-          }
-          if (resultSchema.index("id") == 0) {
-            sawIdAsCol0 = true;
-          } else {
-            assertEquals(1, resultSchema.index("id"));
-            sawIdAsCol1 = true;
-          }
-          if (batchCount == 1) {
-            RowSetReader reader = result.reader();
-            assertTrue(reader.next());
-            String id = reader.scalar("id").getString();
-            if (id.equals("1")) {
-              sawFile1First = true;
-            } else {
-              assertEquals("3", id);
-              sawFile2First = true;
-            }
-          }
-          result.clear();
-        }
-      }
-
-      // Outcome is random (which is the key problem). Don't assert on these
-      // because doing so can lead to a flakey test.
-
-      if (!sawFile1First || ! sawFile2First || !sawFullSchema || !sawPartialSchema || !sawIdAsCol0 || !sawIdAsCol1) {
-        System.out.println("Some variations did not occur");
-        System.out.println(String.format("File 1 first: %s", sawFile1First));
-        System.out.println(String.format("File 1 second: %s", sawFile2First));
-        System.out.println(String.format("Full schema: %s", sawFullSchema));
-        System.out.println(String.format("Partial schema: %s", sawPartialSchema));
-        System.out.println(String.format("`id` as col 0: %s", sawIdAsCol0));
-        System.out.println(String.format("`id` as col 1: %s", sawIdAsCol1));
-      }
-      // Sanity checks
-      assertTrue(sawFullSchema);
-      assertTrue(sawFile1First || sawFile2First);
-      assertTrue(sawIdAsCol0 || sawIdAsCol1);
-    } finally {
-      resetV3();
-      resetSchema();
-      resetMultiScan();
-    }
-  }
-
-  /**
    * Show that, without schema, the hard schema change for the "missing"
    * gender column causes an error in the sort operator when presented with
    * one batch in which gender is VARCHAR, another in which it is
@@ -406,89 +312,23 @@ public class TestCsvWithSchema extends BaseCsvTest {
     try {
       enableSchema(false);
       enableMultiScan();
-      enableV3(false);
       String tablePath = buildTable("wildcardSortV2", multi1Contents, reordered2Contents);
-      doTestWildcardSortFailure(tablePath);
-      enableV3(true);
-      doTestWildcardSortFailure(tablePath);
-    } finally {
-      resetV3();
-      resetSchema();
-      resetMultiScan();
-    }
-  }
-
-  private void doTestWildcardSortFailure(String tablePath) throws Exception {
-    String sql = "SELECT * FROM " + tablePath + " ORDER BY id";
-    boolean sawError = false;
-    for (int i = 0; i < 10; i++) {
-      try {
-        // When this fails it will print a nasty stack trace.
-        RowSet result = client.queryBuilder().sql(sql).rowSet();
-        assertEquals(4, result.rowCount());
-        result.clear();
-      } catch (RpcException e) {
-        assertTrue(e.getCause() instanceof UserRemoteException);
-        sawError = true;
-        break;
-      }
-    }
-    assertTrue(sawError);
-  }
-
-  /**
-   * Test an explicit projection with a sort. Using the sort 1) will blow up
-   * if the internal schema is inconsistent, and 2) allows easier verification
-   * of the merged table results.
-   * <p>
-   * Fails with <code><pre>
-   * #: id, name, gender
-   * 0: "1", "barney  ", "      "
-   * 1: "2", "    ", "    "
-   * 2: "3", " 
-    * ", ""
-   * 3: "4", "  
-   *    " java.lang.NegativeArraySizeException: null
-   *      at io.netty.buffer.DrillBuf.unsafeGetMemory(DrillBuf.java:852) ~[classes/:4.0.48.Final]
-   * </pre></code>
-   */
-  @Test
-  @Ignore("Vectors get corrupted somehow")
-  public void testV2ExplicitSortFailure() throws Exception {
-    try {
-      enableSchema(false);
-      enableMultiScan();
-      enableV3(false);
-      // V2 fails on ragged columns, use consistent columns
-      String tablePath = buildTable("explicitSortV2", multi1Contents, multi2FullContents);
-      String sql = "SELECT id, name, gender FROM " + tablePath + " ORDER BY id";
-      TupleMetadata expectedSchema = new SchemaBuilder()
-          .add("id", MinorType.VARCHAR)
-          .add("name", MinorType.VARCHAR)
-          .add("gender", MinorType.VARCHAR)
-          .buildSchema();
-      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-          .addRow("1", "wilma", "female")
-          .addRow("2", "fred", "male")
-          .addRow("3", "barney", "NA")
-          .addRow("4", "betty", "NA")
-          .build();
+      String sql = "SELECT * FROM " + tablePath + " ORDER BY id";
       boolean sawError = false;
       for (int i = 0; i < 10; i++) {
         try {
+          // When this fails it will print a nasty stack trace.
           RowSet result = client.queryBuilder().sql(sql).rowSet();
-          result.print();
-          new RowSetComparison(expected).verifyAndClear(result);
+          assertEquals(4, result.rowCount());
+          result.clear();
         } catch (RpcException e) {
           assertTrue(e.getCause() instanceof UserRemoteException);
           sawError = true;
           break;
         }
       }
-      expected.clear();
       assertTrue(sawError);
     } finally {
-      resetV3();
       resetSchema();
       resetMultiScan();
     }
@@ -504,13 +344,11 @@ public class TestCsvWithSchema extends BaseCsvTest {
    * orders (file1 first sometimes, file2 other times.)
    */
   @Test
-  public void testV3ExplicitSort() throws Exception {
+  public void testExplicitSort() throws Exception {
     try {
       enableSchema(false);
       enableMultiScan();
-      enableV3(true);
-      // V3 handles ragged columns
-      String tablePath = buildTable("v3ExplictSort", raggedMulti1Contents, reordered2Contents);
+      String tablePath = buildTable("explictSort1", raggedMulti1Contents, reordered2Contents);
       String sql = "SELECT id, name, gender FROM " + tablePath + " ORDER BY id";
       TupleMetadata expectedSchema = new SchemaBuilder()
           .add("id", MinorType.VARCHAR)
@@ -529,7 +367,6 @@ public class TestCsvWithSchema extends BaseCsvTest {
       }
       expected.clear();
     } finally {
-      resetV3();
       resetSchema();
       resetMultiScan();
     }
@@ -547,7 +384,7 @@ public class TestCsvWithSchema extends BaseCsvTest {
       enableSchemaSupport();
       enableMultiScan();
       // V3 handles ragged columns
-      String tablePath = buildTable("v3ExplictSort", raggedMulti1Contents, reordered2Contents);
+      String tablePath = buildTable("explictSort2", raggedMulti1Contents, reordered2Contents);
       run(SCHEMA_SQL, tablePath);
       String sql = "SELECT id, name, gender FROM " + tablePath + " ORDER BY id";
       TupleMetadata expectedSchema = new SchemaBuilder()
@@ -641,8 +478,8 @@ public class TestCsvWithSchema extends BaseCsvTest {
    * variation in inputs.
    */
   @Test
-  public void testWildcardV3LenientSchema() throws Exception {
-    String tableName = "wildcardLenientV3";
+  public void testWildcardLenientSchema() throws Exception {
+    String tableName = "wildcardLenient";
     String tablePath = buildTable(tableName, multi1Contents,
         reordered2Contents, nameOnlyContents);
 
@@ -677,8 +514,8 @@ public class TestCsvWithSchema extends BaseCsvTest {
    * projected.
    */
   @Test
-  public void testWildcardV3StrictSchema() throws Exception {
-    String tableName = "wildcardStrictV3";
+  public void testWildcardStrictSchema() throws Exception {
+    String tableName = "wildcardStrict";
     String tablePath = buildTable(tableName, multi1Contents,
         reordered2Contents, nameOnlyContents);
 
@@ -717,7 +554,7 @@ public class TestCsvWithSchema extends BaseCsvTest {
    */
   @Test
   public void testMultiFragmentStrictSchema() throws Exception {
-    String tableName = "wildcardStrict2V3";
+    String tableName = "wildcardStrict2";
     String tablePath = buildTable(tableName, multi1Contents,
         reordered2Contents, nameOnlyContents);
 
@@ -1114,7 +951,6 @@ public class TestCsvWithSchema extends BaseCsvTest {
           .build();
       RowSetUtilities.verify(expected, actual);
     } finally {
-      resetV3();
       resetSchema();
     }
   }

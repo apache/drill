@@ -15,13 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.easy.text.compliant;
+package org.apache.drill.exec.store.easy.text.reader;
 
-/* Base class for producing output record batches while dealing with
- * Text files.
+
+/**
+ * Base class for producing output record batches while dealing with
+ * text files. Defines the interface called from text parsers to create
+ * the corresponding value vectors (record batch).
  */
+
 abstract class TextOutput {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TextOutput.class);
+
+  public abstract void startRecord();
 
   /**
    * Start processing a new field within a record.
@@ -43,18 +48,18 @@ abstract class TextOutput {
 
   /**
    * Add the provided data but drop any whitespace.
-   * @param data
+   * @param data character to append
    */
-  public void appendIgnoringWhitespace(byte data){
-    if(TextReader.isWhite(data)){
+  public void appendIgnoringWhitespace(byte data) {
+    if (TextReader.isWhite(data)) {
       // noop
-    }else{
+    } else {
       append(data);
     }
   }
 
   /**
-   * This function appends the byte to the output character data buffer
+   * Appends a byte to the output character data buffer
    * @param data  current byte read
    */
   public abstract void append(byte data);
@@ -71,17 +76,13 @@ abstract class TextOutput {
   public abstract long getRecordCount();
 
   /**
-   * Informs output to setup for new record batch.
+   * Indicates if the current batch is full and reading for this batch
+   * should stop.
+   *
+   * @return true if the batch is full and the reader must exit to allow
+   * the batch to be sent downstream, false if the reader may continue to
+   * add rows to the current batch
    */
-  public abstract void startBatch();
 
-  /**
-   * Does any final cleanup that is required for closing a batch.  Example might include closing the last field.
-   */
-  public abstract void finishBatch();
-
-  /**
-   * Helper method to check if the current record has any non-empty fields
-   */
-  public abstract boolean rowHasData();
+  public abstract boolean isFull();
 }

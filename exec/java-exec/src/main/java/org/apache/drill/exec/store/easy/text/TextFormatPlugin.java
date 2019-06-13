@@ -47,27 +47,19 @@ import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
-import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.RecordWriter;
-import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
 import org.apache.drill.exec.store.dfs.easy.EasyGroupScan;
 import org.apache.drill.exec.store.dfs.easy.EasySubScan;
 import org.apache.drill.exec.store.dfs.easy.EasyWriter;
-import org.apache.drill.exec.store.dfs.easy.FileWork;
-import org.apache.drill.exec.store.easy.text.compliant.CompliantTextRecordReader;
-import org.apache.drill.exec.store.easy.text.compliant.TextParsingSettings;
-import org.apache.drill.exec.store.easy.text.compliant.v3.CompliantTextBatchReader;
-import org.apache.drill.exec.store.easy.text.compliant.v3.TextParsingSettingsV3;
+import org.apache.drill.exec.store.easy.text.reader.CompliantTextBatchReader;
+import org.apache.drill.exec.store.easy.text.reader.TextParsingSettings;
+import org.apache.drill.exec.store.easy.text.writer.TextRecordWriter;
 import org.apache.drill.exec.store.schedule.CompleteFileWork;
-import org.apache.drill.exec.store.text.DrillTextRecordReader;
-import org.apache.drill.exec.store.text.DrillTextRecordWriter;
 import org.apache.drill.exec.vector.accessor.convert.AbstractConvertFromString;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.mapred.FileSplit;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -212,9 +204,9 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
    */
   private static class ColumnsReaderFactory extends FileReaderFactory {
 
-    private final TextParsingSettingsV3 settings;
+    private final TextParsingSettings settings;
 
-    public ColumnsReaderFactory(TextParsingSettingsV3 settings) {
+    public ColumnsReaderFactory(TextParsingSettings settings) {
       this.settings = settings;
     }
 
@@ -246,9 +238,7 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
     config.defaultName = PLUGIN_NAME;
     config.readerOperatorType = CoreOperatorType.TEXT_SUB_SCAN_VALUE;
     config.writerOperatorType = CoreOperatorType.TEXT_WRITER_VALUE;
-
-    // Uncomment this, and remove useEnhancedScan(), when v2 is retired
-    //config.useEnhancedScan = true;
+    config.useEnhancedScan = true;
     return config;
   }
 
@@ -271,40 +261,11 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
   }
 
   @Override
-  protected boolean useEnhancedScan(OptionManager options) {
-    // Create the "legacy", "V2" reader or the new "V3" version based on
-    // the result set loader. This code should be temporary: the two
-    // readers provide identical functionality for the user; only the
-    // internals differ.
-    return options.getBoolean(ExecConstants.ENABLE_V3_TEXT_READER_KEY);
-  }
-
-  // TODO: Remove this once the V2 reader is removed.
-  @Override
-  public RecordReader getRecordReader(FragmentContext context,
-                                      DrillFileSystem dfs,
-                                      FileWork fileWork,
-                                      List<SchemaPath> columns,
-                                      String userName) {
-    Path path = dfs.makeQualified(fileWork.getPath());
-    FileSplit split = new FileSplit(path, fileWork.getStart(), fileWork.getLength(), new String[]{""});
-
-    if (context.getOptions().getBoolean(ExecConstants.ENABLE_NEW_TEXT_READER_KEY)) {
-      TextParsingSettings settings = new TextParsingSettings();
-      settings.set(formatConfig);
-      return new CompliantTextRecordReader(split, dfs, settings, columns);
-    } else {
-      char delim = formatConfig.getFieldDelimiter();
-      return new DrillTextRecordReader(split, dfs.getConf(), context, delim, columns);
-    }
-  }
-
-  @Override
   protected FileScanBuilder frameworkBuilder(
       OptionManager options, EasySubScan scan) throws ExecutionSetupException {
     ColumnsScanBuilder builder = new ColumnsScanBuilder();
-    TextParsingSettingsV3 settings =
-        new TextParsingSettingsV3(getConfig(), scan, options);
+    TextParsingSettings settings =
+        new TextParsingSettings(getConfig(), scan, options);
     builder.setReaderFactory(new ColumnsReaderFactory(settings));
 
     // If this format has no headers, or wants to skip them,
@@ -359,7 +320,7 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
     options.put("separator", getConfig().getFieldDelimiterAsString());
     options.put("extension", getConfig().getExtensions().get(0));
 
-    RecordWriter recordWriter = new DrillTextRecordWriter(
+    RecordWriter recordWriter = new TextRecordWriter(
         context.getAllocator(), writer.getStorageStrategy(), writer.getFormatPlugin().getFsConf());
     recordWriter.init(options);
 

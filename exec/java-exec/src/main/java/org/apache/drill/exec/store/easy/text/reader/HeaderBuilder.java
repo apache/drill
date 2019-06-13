@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.easy.text.compliant.v3;
+package org.apache.drill.exec.store.easy.text.reader;
 
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;

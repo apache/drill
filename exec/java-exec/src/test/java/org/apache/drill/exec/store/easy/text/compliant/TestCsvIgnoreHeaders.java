@@ -33,9 +33,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-// CSV reader now hosted on the row set framework
 @Category(RowSetTests.class)
-public class TestCsvIgnoreHeaders  extends BaseCsvTest{
+public class TestCsvIgnoreHeaders extends BaseCsvTest{
 
   private static String withHeaders[] = {
       "a,b,c",
@@ -59,17 +58,6 @@ public class TestCsvIgnoreHeaders  extends BaseCsvTest{
   public void testColumns() throws IOException {
     String fileName = "simple.csv";
     buildFile(fileName, withHeaders);
-    try {
-      enableV3(false);
-      doTestColumns(fileName);
-      enableV3(true);
-      doTestColumns(fileName);
-    } finally {
-      resetV3();
-    }
-  }
-
-  private void doTestColumns(String fileName) throws IOException {
     String sql = "SELECT columns FROM `dfs.data`.`%s`";
     RowSet actual = client.queryBuilder().sql(sql, fileName).rowSet();
 
@@ -86,17 +74,6 @@ public class TestCsvIgnoreHeaders  extends BaseCsvTest{
 
   @Test
   public void testRaggedRows() throws IOException {
-    try {
-      enableV3(false);
-      doTestRaggedRows();
-      enableV3(true);
-      doTestRaggedRows();
-    } finally {
-      resetV3();
-    }
-  }
-
-  private void doTestRaggedRows() throws IOException {
     String fileName = "ragged.csv";
     TestCsvWithHeaders.buildFile(new File(testDir, fileName), raggedRows);
     String sql = "SELECT columns FROM `dfs.data`.`%s`";

@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.util.Iterator;
 
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.test.rowSet.DirectRowSet;
@@ -49,14 +48,8 @@ import org.junit.Test;
  * persist.
  * <p>
  * The solution is to figure out the max partition depth in the
- * EasySubScan rather than in each scan operator.
- * <p>
- * The tests here test both the "V2" (AKA "new text reader") which has
- * many issues, and the "V3" (row-set-based version) that has fixes.
- * <p>
- * See DRILL-7082 for the multi-scan race (fixed in V3), and
- * DRILL-7083 for the problem with partition columns returning nullable INT
- * (also fixed in V3.)
+ * EasySubScan rather than in each scan operator, which is done in the
+ * current "V3" version. The tests here verify this behavior.
  */
 
 public class TestPartitionRace extends BaseCsvTest {
@@ -77,61 +70,11 @@ public class TestPartitionRace extends BaseCsvTest {
 
   /**
    * Oddly, when run in a single fragment, the files occur in a
-   * stable order, the partition always appars, and it appears in
+   * stable order, the partition always appears, and it appears in
    * the first column position.
    */
   @Test
-  public void testSingleScanV2() throws IOException {
-    String sql = "SELECT * FROM `dfs.data`.`%s`";
-
-    try {
-      enableV3(false);
-
-      // Loop to run the query 10 times, or until we see the race
-
-      boolean sawMissingPartition = false;
-      boolean sawPartitionFirst = false;
-      boolean sawPartitionLast = false;
-
-      // Read the two batches.
-
-      Iterator<DirectRowSet> iter = client.queryBuilder().sql(sql, PART_DIR).rowSetIterator();
-      for (int j = 0; j < 2; j++) {
-        assertTrue(iter.hasNext());
-        RowSet rowSet = iter.next();
-
-        // Check location of partition column
-
-        int posn = rowSet.schema().index("dir0");
-        if (posn == -1) {
-          sawMissingPartition = true;
-        } else if (posn == 0) {
-          sawPartitionFirst = true;
-        } else {
-          sawPartitionLast = true;
-        }
-        rowSet.clear();
-      }
-      assertFalse(iter.hasNext());
-
-      // When run in a single fragment, the partition column appears
-      // all the time, and is in the first column position.
-
-      assertFalse(sawMissingPartition);
-      assertTrue(sawPartitionFirst);
-      assertFalse(sawPartitionLast);
-    } finally {
-      resetV3();
-      client.resetSession(ExecConstants.MIN_READER_WIDTH_KEY);
-    }
-  }
-
-  /**
-   * V3 provides the same schema for the single- and multi-scan
-   * cases.
-   */
-  @Test
-  public void testSingleScanV3() throws IOException {
+  public void testSingleScan() throws IOException {
     String sql = "SELECT * FROM `dfs.data`.`%s`";
 
     TupleMetadata expectedSchema = new SchemaBuilder()
@@ -141,142 +84,40 @@ public class TestPartitionRace extends BaseCsvTest {
         .addNullable("dir0", MinorType.VARCHAR)
         .buildSchema();
 
-    try {
-      enableV3(true);
+    // Loop to run the query 10 times to verify no race
 
-      // Loop to run the query 10 times to verify no race
+    // First batch is empty; just carries the schema.
 
-      // First batch is empty; just carries the schema.
+    Iterator<DirectRowSet> iter = client.queryBuilder().sql(sql, PART_DIR).rowSetIterator();
+    assertTrue(iter.hasNext());
+    RowSet rowSet = iter.next();
+    assertEquals(0, rowSet.rowCount());
+    rowSet.clear();
 
-      Iterator<DirectRowSet> iter = client.queryBuilder().sql(sql, PART_DIR).rowSetIterator();
+    // Read the two batches.
+
+    for (int j = 0; j < 2; j++) {
       assertTrue(iter.hasNext());
-      RowSet rowSet = iter.next();
-      assertEquals(0, rowSet.rowCount());
-      rowSet.clear();
+      rowSet = iter.next();
 
-      // Read the two batches.
+      // Figure out which record this is and test accordingly.
 
-      for (int j = 0; j < 2; j++) {
-        assertTrue(iter.hasNext());
-        rowSet = iter.next();
-
-        // Figure out which record this is and test accordingly.
-
-        RowSetReader reader = rowSet.reader();
-        assertTrue(reader.next());
-        String col1 = reader.scalar("a").getString();
-        if (col1.equals("10")) {
-          RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-              .addRow("10", "foo", "bar", null)
-              .build();
-          RowSetUtilities.verify(expected, rowSet);
-        } else {
-          RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-              .addRow("20", "fred", "wilma", NESTED_DIR)
-              .build();
-          RowSetUtilities.verify(expected, rowSet);
-        }
+      RowSetReader reader = rowSet.reader();
+      assertTrue(reader.next());
+      String col1 = reader.scalar("a").getString();
+      if (col1.equals("10")) {
+        RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+            .addRow("10", "foo", "bar", null)
+            .build();
+        RowSetUtilities.verify(expected, rowSet);
+      } else {
+        RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+            .addRow("20", "fred", "wilma", NESTED_DIR)
+            .build();
+        RowSetUtilities.verify(expected, rowSet);
       }
-      assertFalse(iter.hasNext());
-    } finally {
-      resetV3();
     }
-  }
-
-  /**
-   * When forced to run in two fragments, the fun really starts. The
-   * partition column (usually) appears in the last column position instead
-   * of the first. The partition may or may not occur in the first row
-   * depending on which file is read first. The result is that the
-   * other columns will jump around. If we tried to create an expected
-   * result set, we'd be frustrated because the schema randomly changes.
-   * <p>
-   * Just to be clear: this behavior is a bug, not a feature. But, it is
-   * an established baseline for the "V2" reader.
-   * <p>
-   * This is really a test (demonstration) of the wrong behavior. This test
-   * is pretty unreliable. In particular, the position of the partition column
-   * seems to randomly shift from first to last position across runs.
-   */
-  @Test
-  public void testRaceV2() throws IOException {
-    String sql = "SELECT * FROM `dfs.data`.`%s`";
-
-    try {
-      enableV3(false);
-      enableMultiScan();
-
-      // Loop to run the query 10 times, or until we see the race
-
-      boolean sawRootFirst = false;
-      boolean sawNestedFirst = false;
-      boolean sawMissingPartition = false;
-      boolean sawPartitionFirst = false;
-      boolean sawPartitionLast = false;
-      for (int i = 0; i < 10; i++) {
-
-        // Read the two batches.
-
-        Iterator<DirectRowSet> iter = client.queryBuilder().sql(sql, PART_DIR).rowSetIterator();
-        for (int j = 0; j < 2; j++) {
-          assertTrue(iter.hasNext());
-          RowSet rowSet = iter.next();
-
-          // Check location of partition column
-
-          int posn = rowSet.schema().index("dir0");
-          if (posn == -1) {
-            sawMissingPartition = true;
-          } else if (posn == 0) {
-            sawPartitionFirst = true;
-          } else {
-            sawPartitionLast = true;
-          }
-
-          // Figure out which record this is and test accordingly.
-
-          RowSetReader reader = rowSet.reader();
-          assertTrue(reader.next());
-          String col1 = reader.scalar("a").getString();
-          if (col1.equals("10")) {
-            if (i == 0) {
-              sawRootFirst = true;
-            }
-          } else {
-            if (i == 0) {
-              sawNestedFirst = true;
-            }
-          }
-          rowSet.clear();
-        }
-        assertFalse(iter.hasNext());
-        if (sawMissingPartition &&
-            sawPartitionFirst &&
-            sawPartitionLast &&
-            sawRootFirst &&
-            sawNestedFirst) {
-          // The following should appear most of the time.
-          System.out.println("All variations occurred");
-          return;
-        }
-      }
-
-      // If you see this, maybe something got fixed. Or, maybe the
-      // min parallelization hack above stopped working.
-      // Or, you were just unlucky and can try the test again.
-      // We print messages, rather than using assertTrue, to avoid
-      // introducing a flaky test.
-
-      System.out.println("Some variations did not occur");
-      System.out.println(String.format("Missing partition: %s", sawMissingPartition));
-      System.out.println(String.format("Partition first: %s", sawPartitionFirst));
-      System.out.println(String.format("Partition last: %s", sawPartitionLast));
-      System.out.println(String.format("Outer first: %s", sawRootFirst));
-      System.out.println(String.format("Nested first: %s", sawNestedFirst));
-    } finally {
-      resetV3();
-      resetMultiScan();
-    }
+    assertFalse(iter.hasNext());
   }
 
   /**
@@ -286,7 +127,7 @@ public class TestPartitionRace extends BaseCsvTest {
    * "jump around" when files are shifted to a new partition depth.
    */
   @Test
-  public void testNoRaceV3() throws IOException {
+  public void testNoRace() throws IOException {
     String sql = "SELECT * FROM `dfs.data`.`%s`";
 
     TupleMetadata expectedSchema = new SchemaBuilder()
@@ -297,7 +138,6 @@ public class TestPartitionRace extends BaseCsvTest {
         .buildSchema();
 
     try {
-      enableV3(true);
       enableMultiScan();
 
       // Loop to run the query 10 times or until we see both files
@@ -363,7 +203,6 @@ public class TestPartitionRace extends BaseCsvTest {
       System.out.println(String.format("Outer first: %s", sawRootFirst));
       System.out.println(String.format("Nested first: %s", sawNestedFirst));
     } finally {
-      resetV3();
       resetMultiScan();
     }
   }

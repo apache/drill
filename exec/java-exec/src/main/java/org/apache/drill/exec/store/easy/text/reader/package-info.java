@@ -15,15 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.easy.text.compliant.v3;
-
-class StreamFinishedPseudoException extends RuntimeException {
-
-  public static final StreamFinishedPseudoException INSTANCE = new StreamFinishedPseudoException();
-
-  private StreamFinishedPseudoException() {
-    super("", null, false, true);
-
-  }
-
-}
+/**
+ * Version 3 of the text reader. Hosts the "compliant" text reader on
+ * the row set framework.
+ */
+package org.apache.drill.exec.store.easy.text.reader;

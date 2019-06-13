@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.easy.text.compliant.v3;
+package org.apache.drill.exec.store.easy.text.reader;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -49,7 +49,7 @@ public class CompliantTextBatchReader implements ManagedReader<ColumnsSchemaNego
   private static final int WHITE_SPACE_BUFFER = 64 * 1024;
 
   // settings to be used while parsing
-  private final TextParsingSettingsV3 settings;
+  private final TextParsingSettings settings;
   // Chunk of the file to be read by this reader
   private FileSplit split;
   // text reader implementation
@@ -62,7 +62,7 @@ public class CompliantTextBatchReader implements ManagedReader<ColumnsSchemaNego
 
   private RowSetLoader writer;
 
-  public CompliantTextBatchReader(TextParsingSettingsV3 settings) {
+  public CompliantTextBatchReader(TextParsingSettings settings) {
     this.settings = settings;
 
     // Validate. Otherwise, these problems show up later as a data
