@@ -170,7 +170,7 @@ public class TestSelectWithOption extends BaseTestQuery {
     // It seems that a parameter can not be called "escape"
     testWithResult(format("select columns from table(%s(`escape` => '$', type => 'TeXT', fieldDelimiter => '|', quote => '@'))", quoteTableName),
         listOf("b", "0"),
-        listOf("b$@c", "1")); // shouldn't $ be removed here?
+        listOf("b@c", "1"));
   }
 
   @Test
@@ -230,9 +230,14 @@ public class TestSelectWithOption extends BaseTestQuery {
     String jsonTableName = genCSVTable("testVariationsJSON",
         "{\"columns\": [\"f\",\"g\"]}");
     // the extension is actually csv
-    testWithResult(format("select columns from %s", jsonTableName),
-        listOf("{\"columns\": [\"f\"", "g\"]}\n")
-        );
+    // Don't try to read the CSV file, however, as it does not
+    // contain proper quotes for CSV.
+    // File contents:
+    // {"columns": ["f","g"]}
+    // CSV would require:
+    // "{""columns"": [""f"",""g""]}"
+    // A bug in older versions appeared to have the perverse
+    // effect of allowing the above to kinds-sorta work.
     String[] jsonQueries = {
         format("select columns from table(%s(type => 'JSON'))", jsonTableName),
         // we can use named format plugin configurations too!

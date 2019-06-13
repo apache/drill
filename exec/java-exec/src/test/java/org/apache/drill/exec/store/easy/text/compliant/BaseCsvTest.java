@@ -80,14 +80,6 @@ public class BaseCsvTest extends ClusterTest {
     buildFile(new File(nestedDir, NESTED_FILE), secondFile);
   }
 
-  protected void enableV3(boolean enable) {
-    client.alterSession(ExecConstants.ENABLE_V3_TEXT_READER_KEY, enable);
-  }
-
-  protected void resetV3() {
-    client.resetSession(ExecConstants.ENABLE_V3_TEXT_READER_KEY);
-  }
-
   protected void enableMultiScan() {
 
     // Special test-only feature to force even small scans
@@ -153,12 +145,10 @@ public class BaseCsvTest extends ClusterTest {
   }
 
   protected void enableSchemaSupport() {
-    enableV3(true);
     enableSchema(true);
   }
 
   protected void resetSchemaSupport() {
-    resetV3();
     resetSchema();
   }
 }

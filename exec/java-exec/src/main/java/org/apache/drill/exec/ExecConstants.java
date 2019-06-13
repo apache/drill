@@ -713,13 +713,28 @@ public final class ExecConstants {
   public static final OptionValidator ENABLE_VERBOSE_ERRORS = new BooleanValidator(ENABLE_VERBOSE_ERRORS_KEY,
       new OptionDescription("Toggles verbose output of executable error messages"));
 
+  /**
+   * Key used in earlier versions to use the original ("V1") text reader. Since at least Drill 1.8
+   * users have used the ("compliant") ("V2") version. Deprecated in Drill 1.17; the "V3" reader
+   * with schema support is always used. Retained for backward compatibility, but does
+   * nothing.
+   */
+  @Deprecated
   public static final String ENABLE_NEW_TEXT_READER_KEY = "exec.storage.enable_new_text_reader";
+  @Deprecated
   public static final OptionValidator ENABLE_NEW_TEXT_READER = new BooleanValidator(ENABLE_NEW_TEXT_READER_KEY,
-      new OptionDescription("Enables the text reader that complies with the RFC 4180 standard for text/csv files."));
+      new OptionDescription("Deprecated. Drill's text reader complies with the RFC 4180 standard for text/csv files."));
 
+  /**
+   * Flag used in Drill 1.16 to select the row-set based ("V3") or the original
+   * "compliant" ("V2") text reader. In Drill 1.17, the "V3" version is always
+   * used. Retained for backward compatibility, but does nothing.
+   */
+  @Deprecated
   public static final String ENABLE_V3_TEXT_READER_KEY = "exec.storage.enable_v3_text_reader";
+  @Deprecated
   public static final OptionValidator ENABLE_V3_TEXT_READER = new BooleanValidator(ENABLE_V3_TEXT_READER_KEY,
-      new OptionDescription("Enables the row set based version of the text/csv reader."));
+      new OptionDescription("Deprecated. The \"V3\" text reader is always used."));
 
   public static final String MIN_READER_WIDTH_KEY = "exec.storage.min_width";
   public static final OptionValidator MIN_READER_WIDTH = new LongValidator(MIN_READER_WIDTH_KEY,

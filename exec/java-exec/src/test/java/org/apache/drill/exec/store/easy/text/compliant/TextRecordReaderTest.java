@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.text;
+package org.apache.drill.exec.store.easy.text.compliant;
 
 import static org.junit.Assert.assertEquals;
 
@@ -29,10 +29,9 @@ import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.util.VectorUtil;
-import org.junit.Test;
-
 import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
 import org.apache.drill.shaded.guava.com.google.common.io.Files;
+import org.junit.Test;
 
 public class TextRecordReaderTest extends PopUnitTestBase {
 
@@ -63,5 +62,4 @@ public class TextRecordReaderTest extends PopUnitTestBase {
       assertEquals(5, count);
     }
   }
-
 }

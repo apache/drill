@@ -15,21 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.text;
+package org.apache.drill.exec.store.easy.text.compliant;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType;
+import org.apache.drill.test.BaseTestQuery;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class TestNewTextReader extends BaseTestQuery {
+public class TestTextReader extends BaseTestQuery {
 
   @Test
   public void fieldDelimiterWithinQuotes() throws Exception {
@@ -60,10 +60,7 @@ public class TestNewTextReader extends BaseTestQuery {
       test("select max(columns[1]) as %s from cp.`textinput/input1.csv` where %s is not null", COL_NAME, COL_NAME);
       fail("Query should have failed");
     } catch(UserRemoteException ex) {
-      assertEquals(ErrorType.DATA_READ, ex.getErrorType());
-      // Change to the following if V3 is enabled
-      // assertEquals(ErrorType.VALIDATION, ex.getErrorType());
-      assertTrue("Error message should contain " + COL_NAME, ex.getMessage().contains(COL_NAME));
+      assertEquals(ErrorType.VALIDATION, ex.getErrorType());
     }
   }
 

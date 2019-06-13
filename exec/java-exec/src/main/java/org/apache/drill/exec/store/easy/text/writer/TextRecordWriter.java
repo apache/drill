@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.text;
+package org.apache.drill.exec.store.easy.text.writer;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -24,18 +24,17 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.store.StorageStrategy;
 import org.apache.drill.exec.store.EventBasedRecordWriter.FieldConverter;
+import org.apache.drill.exec.store.StorageStrategy;
 import org.apache.drill.exec.store.StringOutputRecordWriter;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
+import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
-
-public class DrillTextRecordWriter extends StringOutputRecordWriter {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillTextRecordWriter.class);
+public class TextRecordWriter extends StringOutputRecordWriter {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TextRecordWriter.class);
 
   private final StorageStrategy storageStrategy;
 
@@ -47,7 +46,6 @@ public class DrillTextRecordWriter extends StringOutputRecordWriter {
   private String fieldDelimiter;
   private String extension;
 
-  private static String eol = System.getProperty("line.separator");
   private int index;
   private PrintStream stream = null;
   private FileSystem fs = null;
@@ -58,7 +56,7 @@ public class DrillTextRecordWriter extends StringOutputRecordWriter {
 
   private Configuration fsConf;
 
-  public DrillTextRecordWriter(BufferAllocator allocator, StorageStrategy storageStrategy, Configuration fsConf) {
+  public TextRecordWriter(BufferAllocator allocator, StorageStrategy storageStrategy, Configuration fsConf) {
     super(allocator);
     this.storageStrategy = storageStrategy == null ? StorageStrategy.DEFAULT : storageStrategy;
     this.fsConf = new Configuration(fsConf);

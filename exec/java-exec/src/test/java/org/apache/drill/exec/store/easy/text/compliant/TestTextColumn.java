@@ -15,15 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.text;
+package org.apache.drill.exec.store.easy.text.compliant;
+
+import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
-import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
+import org.apache.drill.test.BaseTestQuery;
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
 
 public class TestTextColumn extends BaseTestQuery {
   @Test
@@ -51,9 +51,9 @@ public class TestTextColumn extends BaseTestQuery {
         + "columns[3] as col4 from cp.`store/text/data/letters.csv`");
 
     final TestResultSet expectedResultSet = new TestResultSet();
-    expectedResultSet.addRow("a, b,", "c", "d,, \\n e", "f\\\"g");
-    expectedResultSet.addRow("d, e,", "f", "g,, \\n h", "i\\\"j");
-    expectedResultSet.addRow("g, h,", "i", "j,, \\n k", "l\\\"m");
+    expectedResultSet.addRow("a, b,", "c", "d,, \\n e", "f\"g");
+    expectedResultSet.addRow("d, e,", "f", "g,, \\n h", "i\"j");
+    expectedResultSet.addRow("g, h,", "i", "j,, \\n k", "l\"m");
 
     TestResultSet actualResultSet = new TestResultSet(actualResults);
     assertEquals(expectedResultSet, actualResultSet);
@@ -73,5 +73,4 @@ public class TestTextColumn extends BaseTestQuery {
         .sqlBaselineQuery("select COLUMNS[0], CoLuMnS[1] from cp.`store/text/data/letters.csv`")
         .go();
   }
-
 }

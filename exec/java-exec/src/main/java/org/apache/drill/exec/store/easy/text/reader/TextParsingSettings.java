@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.easy.text.compliant.v3;
+package org.apache.drill.exec.store.easy.text.reader;
 
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.server.options.OptionManager;
@@ -24,8 +24,7 @@ import org.apache.drill.exec.store.easy.text.TextFormatPlugin;
 import org.apache.drill.exec.store.easy.text.TextFormatPlugin.TextFormatConfig;
 import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
 
-// TODO: Remove the "V3" suffix once the V2 version is retired.
-public class TextParsingSettingsV3 {
+public class TextParsingSettings {
 
   private final String emptyValue = null;
   private final boolean parseUnescapedQuotes = true;
@@ -65,7 +64,7 @@ public class TextParsingSettingsV3 {
    * <tt>`csv`</tt> config has no headers. But, if the user has a ".csv"
    * file with headers, the user can just customize the table properties.
    */
-  public TextParsingSettingsV3(TextFormatConfig config,
+  public TextParsingSettings(TextFormatConfig config,
       EasySubScan scan, OptionManager options) {
     TupleMetadata providedSchema = scan.getSchema();
     boolean extractHeaders = config.isHeaderExtractionEnabled();

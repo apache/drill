@@ -15,13 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
- * Original version of the "compliant" text reader. This is version 2 of
- * the text reader. This version is retained for temporary backward
- * compatibility as we productize the newer version 3 based on the
- * row set framework.
- * <p>
- * TODO: Remove the files in this package and move the files from the
- * "v3" sub-package here once the version 3 implementation stabilizes.
- */
-package org.apache.drill.exec.store.easy.text.compliant;
+package org.apache.drill.exec.store.easy.text.reader;
+
+@SuppressWarnings("serial")
+class StreamFinishedPseudoException extends RuntimeException {
+  public static final StreamFinishedPseudoException INSTANCE =
+        new StreamFinishedPseudoException();
+
+  private StreamFinishedPseudoException() {
+    super("", null, false, true);
+  }
+}

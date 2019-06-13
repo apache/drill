@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.exec.store.easy.text.compliant.v3.HeaderBuilder;
+import org.apache.drill.exec.store.easy.text.reader.HeaderBuilder;
 import org.apache.drill.test.DrillTest;
 import org.apache.hadoop.fs.Path;
 import org.junit.Test;

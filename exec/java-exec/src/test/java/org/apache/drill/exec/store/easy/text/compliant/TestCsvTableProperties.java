@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 
+import org.apache.drill.TestSelectWithOption;
 import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
@@ -47,6 +48,9 @@ import org.junit.experimental.categories.Category;
  * is provided, the text format plugin will create columns
  * using that schema rather than using the "columns" array
  * column.
+ *
+ * @see {@link TestSelectWithOption} for similar tests using table
+ * properties within SQL
  */
 
 @Category(RowSetTests.class)
@@ -447,5 +451,68 @@ public class TestCsvTableProperties extends BaseCsvTest {
     } finally {
       resetSchemaSupport();
     }
+  }
+
+  private static String messyQuotesData[] = {
+      "first\"field\"here,another \"field",
+      "end quote\",another\"",
+      "many\"\"\"\",more\"\"",
+      "\"not\"end\",\"\"wtf\" \"",
+      "\"newline\nhere\",\"and here\"\"\n\""
+    };
+
+  /**
+   * The legacy "V2" text reader had special handling for quotes
+   * that appear inside fields. Example:<pre><tt>
+   * first"field"here,another "field</tt></pre>
+   * <p>
+   * Since behavior in this case is ill-defined, the reader
+   * apparently treated quotes as normal characters unless the
+   * field started with a quote. There is an option in the UniVocity
+   * code to set this behavior, but it is not exposed in Drill.
+   * So, this test verifies the non-customizable messy quote handling
+   * logic.
+   * <p>
+   * If a field starts with a quote, quoting rules kick in, including
+   * the quote escape, which is, by default, itself a quote. So
+   * <br><code>"foo""bar"</code><br>
+   * is read as
+   * <br><code>foo"bar</code><br>
+   * But, for fields not starting with a quote, the quote escape
+   * is ignored, so:
+   * <br><code>foo""bar</code><br>
+   * is read as
+   * <br><code>foo""bar</code><br>
+   * This seems more like a bug than a feature, but it does appear to be
+   * how the "new" text reader always worked, so the behavior is preserved.
+   * <p>
+   * Also, seems that the text reader supported embedded newlines, even
+   * though such behavior <i><b>will not work</b></i> if the embedded
+   * newline occurs near a split. In this case, the reader will scan
+   * forward to find a record delimiter (a newline by default), will
+   * find the embedded newline, and will read a partial first record.
+   * Again, this appears to be legacy behavior, and so is preserved,
+   * even if broken.
+   * <p>
+   * The key thing is that if the CSV is well-formed (no messy quotes,
+   * properly quoted fields with proper escapes, no embedded newlines)
+   * then things will work OK.
+   */
+
+  @Test
+  public void testMessyQuotes() throws Exception {
+   String tablePath = buildTable("messyQuotes", messyQuotesData);
+    RowSet actual = client.queryBuilder().sql(SELECT_ALL, tablePath).rowSet();
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .addArray("columns", MinorType.VARCHAR)
+        .buildSchema();
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addSingleCol(strArray("first\"field\"here", "another \"field"))
+        .addSingleCol(strArray("end quote\"", "another\""))
+        .addSingleCol(strArray("many\"\"\"\"", "more\"\""))
+        .addSingleCol(strArray("not\"end", "\"wtf\" "))
+        .addSingleCol(strArray("newline\nhere", "and here\"\n"))
+        .build();
+    RowSetUtilities.verify(expected, actual);
   }
 }

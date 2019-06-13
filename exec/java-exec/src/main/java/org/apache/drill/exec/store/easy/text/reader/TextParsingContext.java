@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.easy.text.compliant;
+package org.apache.drill.exec.store.easy.text.reader;
 
 import java.io.IOException;
 
@@ -25,9 +25,9 @@ class TextParsingContext implements ParsingContext {
 
   private final TextInput input;
   private final TextOutput output;
-  protected boolean stopped = false;
+  protected boolean stopped;
 
-  private int[] extractedIndexes = null;
+  private int[] extractedIndexes;
 
   public TextParsingContext(TextInput input, TextOutput output) {
     this.input = input;
@@ -117,6 +117,10 @@ class TextParsingContext implements ParsingContext {
   @Override
   public boolean columnsReordered() {
     return false;
+  }
+
+  public boolean isFull() {
+    return output.isFull();
   }
 }
 
