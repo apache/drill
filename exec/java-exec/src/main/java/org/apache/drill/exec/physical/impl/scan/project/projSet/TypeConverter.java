@@ -59,6 +59,8 @@ public class TypeConverter {
       return this;
     }
 
+    public TupleMetadata providedSchema() { return providedSchema; }
+
     public Builder transform(TypeConverter.CustomTypeTransform transform) {
       this.transform = transform;
       return this;

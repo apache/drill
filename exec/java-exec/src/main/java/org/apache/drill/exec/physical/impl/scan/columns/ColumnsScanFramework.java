@@ -18,8 +18,11 @@
 package org.apache.drill.exec.physical.impl.scan.columns;
 
 import org.apache.drill.exec.physical.impl.scan.ScanOperatorEvents;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework;
 import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiatorImpl;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 
 /**
  * Scan framework for a file that supports the special "columns" column.
@@ -36,11 +39,18 @@ import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiatorImpl;
 
 public class ColumnsScanFramework extends FileScanFramework {
 
+  public static final String COLUMNS_COL = "columns";
+
   public static class ColumnsScanBuilder extends FileScanBuilder {
     protected boolean requireColumnsArray;
+    protected boolean allowOtherCols;
 
     public void requireColumnsArray(boolean flag) {
       requireColumnsArray = flag;
+    }
+
+    public void allowOtherCols(boolean flag) {
+      allowOtherCols = flag;
     }
 
     @Override
@@ -84,8 +94,10 @@ public class ColumnsScanFramework extends FileScanFramework {
   @Override
   protected void configure() {
     super.configure();
+    ColumnsScanBuilder colScanBuilder = ((ColumnsScanBuilder) builder);
     columnsArrayManager = new ColumnsArrayManager(
-       ((ColumnsScanBuilder) builder).requireColumnsArray);
+       colScanBuilder.requireColumnsArray,
+       colScanBuilder.allowOtherCols);
     builder.addParser(columnsArrayManager.projectionParser());
     builder.addResolver(columnsArrayManager.resolver());
   }
@@ -94,4 +106,9 @@ public class ColumnsScanFramework extends FileScanFramework {
   protected SchemaNegotiatorImpl newNegotiator() {
     return new ColumnsSchemaNegotiatorImpl(this);
   }
+
+  public static TupleMetadata columnsSchema() {
+    return new SchemaBuilder()
+      .addArray(ColumnsScanFramework.COLUMNS_COL, MinorType.VARCHAR)
+      .buildSchema();  }
 }

@@ -17,16 +17,18 @@
  */
 package org.apache.drill.exec.store.log;
 
-import static org.junit.Assert.assertEquals;
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
 
-import java.util.List;
-
+import org.apache.commons.io.FileUtils;
+import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.rpc.RpcException;
-import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
@@ -34,18 +36,32 @@ import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
+import org.apache.drill.test.QueryRowSetIterator;
 import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+import static org.apache.drill.test.rowSet.RowSetUtilities.strArray;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+@Category(RowSetTests.class)
 public class TestLogReader extends ClusterTest {
 
   public static final String DATE_ONLY_PATTERN = "(\\d\\d\\d\\d)-(\\d\\d)-(\\d\\d) .*";
 
   @ClassRule
   public static final BaseDirTestWatcher dirTestWatcher = new BaseDirTestWatcher();
+
+  protected static File schemaAndConfigDir;
+  protected static File schemaOnlyDir;
+
+  private static File tableFuncDir;
 
   @BeforeClass
   public static void setup() throws Exception {
@@ -68,7 +84,7 @@ public class TestLogReader extends ClusterTest {
     sampleConfig.setRegex(DATE_ONLY_PATTERN);
 
     sampleConfig.setSchema();
-    sampleConfig.getSchema().add( new LogFormatField("year","INT"));
+    sampleConfig.getSchema().add( new LogFormatField("year", "INT"));
     sampleConfig.getSchema().add( new LogFormatField("month", "INT"));
     sampleConfig.getSchema().add( new LogFormatField("day", "INT"));
 
@@ -81,12 +97,12 @@ public class TestLogReader extends ClusterTest {
         "\\[([^]]*)] (\\w+)\\s+(\\S+) - (.*)");
 
     logConfig.setSchema();
-    logConfig.getSchema().add( new LogFormatField("year","INT"));
-    logConfig.getSchema().add( new LogFormatField("month","INT"));
-    logConfig.getSchema().add( new LogFormatField("day","INT"));
-    logConfig.getSchema().add( new LogFormatField("hour","INT"));
-    logConfig.getSchema().add( new LogFormatField("minute","INT"));
-    logConfig.getSchema().add( new LogFormatField("second","INT"));
+    logConfig.getSchema().add( new LogFormatField("year", "INT"));
+    logConfig.getSchema().add( new LogFormatField("month", "INT"));
+    logConfig.getSchema().add( new LogFormatField("day", "INT"));
+    logConfig.getSchema().add( new LogFormatField("hour", "INT"));
+    logConfig.getSchema().add( new LogFormatField("minute", "INT"));
+    logConfig.getSchema().add( new LogFormatField("second", "INT"));
     logConfig.getSchema().add( new LogFormatField("thread"));
     logConfig.getSchema().add( new LogFormatField("level"));
     logConfig.getSchema().add( new LogFormatField("module"));
@@ -120,6 +136,32 @@ public class TestLogReader extends ClusterTest {
     pluginConfig.getFormats().put("date-log",logDateConfig);
     pluginConfig.getFormats().put( "mysql-log", mysqlLogConfig);
     pluginRegistry.createOrUpdate("cp", pluginConfig, false);
+
+    // Config similar to the above, but with no type info. Types
+    // will be provided via the provided schema mechanism. Column names
+    // are required so that the format and provided schemas match up.
+
+    LogFormatConfig untypedConfig = new LogFormatConfig();
+
+    untypedConfig.setExtension("logu");
+    untypedConfig.setRegex(DATE_ONLY_PATTERN);
+
+    untypedConfig.setSchema();
+    untypedConfig.getSchema().add( new LogFormatField("year"));
+    untypedConfig.getSchema().add( new LogFormatField("month"));
+    untypedConfig.getSchema().add( new LogFormatField("day"));
+
+    // Create a test directory we can write to.
+
+    schemaAndConfigDir = cluster.makeDataDir("sAndC", "logu", untypedConfig);
+
+    // Empty configuration: regex and columns defined in the
+    // provided schema
+
+    LogFormatConfig emptyConfig = new LogFormatConfig();
+    emptyConfig.setExtension("loge");
+    schemaOnlyDir = cluster.makeDataDir("SOnly", "loge", emptyConfig);
+    tableFuncDir = cluster.makeDataDir("tf", "logf", emptyConfig);
   }
 
   @Test
@@ -142,18 +184,21 @@ public class TestLogReader extends ClusterTest {
     RowSetUtilities.verify(expected, results);
   }
 
+  /**
+   * Tests for no crashes; does not validate results, unfortunately.
+   */
   @Test
   public void testWildcardLargeFile() throws RpcException {
     String sql = "SELECT * FROM cp.`regex/large.log1`";
-    List<QueryDataBatch> batches = client.queryBuilder().sql(sql).results();
+    QueryRowSetIterator iter = client.queryBuilder().sql(sql).rowSetIterator();
 
-    for (QueryDataBatch queryDataBatch : batches) {
-      queryDataBatch.release();
+    for (RowSet rowSet : iter) {
+      rowSet.clear();
     }
   }
 
   @Test
-  public void testExplicit() throws RpcException {
+  public void testExplicitProject() throws RpcException {
     String sql = "SELECT `day`, `month` FROM cp.`regex/simple.log1`";
     RowSet results = client.queryBuilder().sql(sql).rowSet();
 
@@ -172,7 +217,7 @@ public class TestLogReader extends ClusterTest {
   }
 
   @Test
-  public void testMissing() throws RpcException {
+  public void testMissingColumns() throws RpcException {
     String sql = "SELECT `day`, `missing`, `month` FROM cp.`regex/simple.log1`";
     RowSet results = client.queryBuilder().sql(sql).rowSet();
 
@@ -251,52 +296,25 @@ public class TestLogReader extends ClusterTest {
     RowSetUtilities.verify(expected, results);
   }
 
-  //This section tests log queries without a defined schema
+  /**
+   * Test log queries without a defined schema using select *
+   */
+
   @Test
   public void testStarQueryNoSchema() throws RpcException {
     String sql = "SELECT * FROM cp.`regex/mysql.sqllog`";
     RowSet results = client.queryBuilder().sql(sql).rowSet();
 
     TupleMetadata expectedSchema = new SchemaBuilder()
-        .addNullable("field_0", MinorType.VARCHAR)
-        .addNullable("field_1", MinorType.VARCHAR)
-        .addNullable("field_2", MinorType.VARCHAR)
-        .addNullable("field_3", MinorType.VARCHAR)
-        .addNullable("field_4", MinorType.VARCHAR)
+        .addArray("columns", MinorType.VARCHAR)
         .buildSchema();
 
     RowSet expected = client.rowSetBuilder(expectedSchema)
-        .addRow("070823", "21:00:32", "1", "Connect", "root@localhost on test1")
-        .addRow("070823", "21:00:48", "1", "Query", "show tables")
-        .addRow("070823", "21:00:56", "1", "Query", "select * from category" )
-        .addRow("070917", "16:29:01", "21", "Query","select * from location" )
-        .addRow("070917", "16:29:12", "21", "Query","select * from location where id = 1 LIMIT 1" )
-        .build();
-
-    //results.print();
-    //expected.print();
-    RowSetUtilities.verify(expected, results);
-  }
-
-  @Test
-  public void testAllFieldsQueryNoSchema() throws RpcException {
-    String sql = "SELECT field_0, field_1, field_2, field_3, field_4 FROM cp.`regex/mysql.sqllog`";
-    RowSet results = client.queryBuilder().sql(sql).rowSet();
-
-    TupleMetadata expectedSchema = new SchemaBuilder()
-        .addNullable("field_0", MinorType.VARCHAR)
-        .addNullable("field_1", MinorType.VARCHAR)
-        .addNullable("field_2", MinorType.VARCHAR)
-        .addNullable("field_3", MinorType.VARCHAR)
-        .addNullable("field_4", MinorType.VARCHAR)
-        .buildSchema();
-
-    RowSet expected = client.rowSetBuilder(expectedSchema)
-        .addRow("070823", "21:00:32", "1", "Connect", "root@localhost on test1")
-        .addRow("070823", "21:00:48", "1", "Query", "show tables")
-        .addRow("070823", "21:00:56", "1", "Query", "select * from category" )
-        .addRow("070917", "16:29:01", "21", "Query","select * from location" )
-        .addRow("070917", "16:29:12", "21", "Query","select * from location where id = 1 LIMIT 1" )
+        .addSingleCol(strArray("070823", "21:00:32", "1", "Connect", "root@localhost on test1"))
+        .addSingleCol(strArray("070823", "21:00:48", "1", "Query", "show tables"))
+        .addSingleCol(strArray("070823", "21:00:56", "1", "Query", "select * from category" ))
+        .addSingleCol(strArray("070917", "16:29:01", "21", "Query","select * from location" ))
+        .addSingleCol(strArray("070917", "16:29:12", "21", "Query","select * from location where id = 1 LIMIT 1" ))
         .build();
 
     RowSetUtilities.verify(expected, results);
@@ -304,12 +322,12 @@ public class TestLogReader extends ClusterTest {
 
   @Test
   public void testSomeFieldsQueryNoSchema() throws RpcException {
-    String sql = "SELECT field_0, field_4 FROM cp.`regex/mysql.sqllog`";
+    String sql = "SELECT columns[0], columns[4] FROM cp.`regex/mysql.sqllog`";
     RowSet results = client.queryBuilder().sql(sql).rowSet();
 
     TupleMetadata expectedSchema = new SchemaBuilder()
-        .addNullable("field_0", MinorType.VARCHAR)
-        .addNullable("field_4", MinorType.VARCHAR)
+        .addNullable("EXPR$0", MinorType.VARCHAR)
+        .addNullable("EXPR$1", MinorType.VARCHAR)
         .buildSchema();
 
     RowSet expected = client.rowSetBuilder(expectedSchema)
@@ -381,4 +399,341 @@ public class TestLogReader extends ClusterTest {
 
     RowSetUtilities.verify(expected, results);
   }
+
+  /**
+   * Build a table, temporary for this test, using the table name and resource
+   * provided.
+   *
+   * @param tableName name of the table within the test-temporary dfs.data
+   * workspace
+   * @param fileName name of the one and only file in the table (allows using
+   * plugin-specific extensions)
+   * @param resource path to an existing resource file to copy into the
+   * table as the given file name
+   * @return the SQL path for the table
+   * @throws IOException if the file operations fail
+   */
+
+  private String buildTable(File dir, String ws, String tableName,
+      String fileName, String resource) throws IOException {
+
+    // We need to create a schema file. Create a temporary test
+    // table.
+
+    File tableDir = new File(dir, tableName);
+    tableDir.mkdirs();
+
+    // Copy the "simple.log1" data file. Use a distinct extension
+    // configured above to provide field names but no types.
+
+    File dest = new File(tableDir, fileName);
+    URL url = getClass().getResource(resource);
+    FileUtils.copyURLToFile(url, dest);
+    return "dfs." + ws + "." + tableName;
+  }
+
+  @Test
+  public void testProvidedSchema() throws Exception {
+    String tablePath = buildTable(schemaAndConfigDir, "sAndC", "schema",
+        "sample.logu", "/regex/simple.log1");
+    try {
+
+      // Define the provided table schema
+
+      client.alterSession(ExecConstants.STORE_TABLE_USE_SCHEMA_FILE, true);
+      String schemaSql = "create schema (`year` int not null, `month` int not null, " +
+          "`day` int not null) " +
+          "for table " + tablePath;
+      run(schemaSql);
+
+      // Run a query using the provided schema.
+
+      String sql = "SELECT * FROM %s";
+      RowSet results = client.queryBuilder().sql(sql, tablePath).rowSet();
+
+      // Verify that the returned data used the schema.
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+          .add("year", MinorType.INT)
+          .add("month", MinorType.INT)
+          .add("day", MinorType.INT)
+          .buildSchema();
+
+      RowSet expected = client.rowSetBuilder(expectedSchema)
+          .addRow(2017, 12, 17)
+          .addRow(2017, 12, 18)
+          .addRow(2017, 12, 19)
+          .build();
+
+      RowSetUtilities.verify(expected, results);
+    } finally {
+      client.resetSession(ExecConstants.STORE_TABLE_USE_SCHEMA_FILE);
+    }
+  }
+
+  /**
+   * Test the case in which the plugin config contains no information
+   * other than the file extensions. The regex is provided by the provided
+   * schema, but no columns are defined, so we use the columns[] array.
+   */
+
+  @Test
+  public void testSchemaOnlyNoCols() throws Exception {
+    String tablePath = buildTable(schemaOnlyDir, "sOnly", "noCols", "sample.loge", "/regex/simple.log1");
+    try {
+      client.alterSession(ExecConstants.STORE_TABLE_USE_SCHEMA_FILE, true);
+      String schemaSql = "create schema ()" +
+          " for table %s properties ('%s'='%s')";
+      run(schemaSql, tablePath, LogFormatPlugin.REGEX_PROP, DATE_ONLY_PATTERN);
+
+      String sql = "SELECT * FROM %s";
+      RowSet results = client.queryBuilder().sql(sql, tablePath).rowSet();
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+          .addArray("columns", MinorType.VARCHAR)
+          .buildSchema();
+
+      RowSet expected = client.rowSetBuilder(expectedSchema)
+          .addSingleCol(strArray("2017", "12", "17"))
+          .addSingleCol(strArray("2017", "12", "18"))
+          .addSingleCol(strArray("2017", "12", "19"))
+          .build();
+
+      RowSetUtilities.verify(expected, results);
+    } finally {
+      client.resetSession(ExecConstants.STORE_TABLE_USE_SCHEMA_FILE);
+    }
+  }
+
+  /**
+   * Test the case in which the plugin config contains no information
+   * other than the file extensions. The provided schema includes both
+   * the regex and the set of columns and types.
+   */
+
+  @Test
+  public void testSchemaOnlyWithCols() throws Exception {
+    String tablePath = buildTable(schemaOnlyDir, "sOnly", "withCols", "sample.loge", "/regex/simple.log1");
+    try {
+      client.alterSession(ExecConstants.STORE_TABLE_USE_SCHEMA_FILE, true);
+      String schemaSql = "create schema (`year` int not null, `month` int not null, " +
+          "`day` int not null) " +
+          " for table " + tablePath +
+          " properties ('" + LogFormatPlugin.REGEX_PROP +
+          "'='" + DATE_ONLY_PATTERN + "')";
+      run(schemaSql);
+
+      String sql = "SELECT * FROM %s";
+      RowSet results = client.queryBuilder().sql(sql, tablePath).rowSet();
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+          .add("year", MinorType.INT)
+          .add("month", MinorType.INT)
+          .add("day", MinorType.INT)
+          .buildSchema();
+
+      RowSet expected = client.rowSetBuilder(expectedSchema)
+          .addRow(2017, 12, 17)
+          .addRow(2017, 12, 18)
+          .addRow(2017, 12, 19)
+          .build();
+
+      RowSetUtilities.verify(expected, results);
+    } finally {
+      client.resetSession(ExecConstants.STORE_TABLE_USE_SCHEMA_FILE);
+    }
+  }
+
+  /**
+   * Corner case: provided schema has the regex and two of the three
+   * columns, the third takes a default name and type.
+   */
+
+  @Test
+  public void testSchemaOnlyWithMissingCols() throws Exception {
+    String tablePath = buildTable(schemaOnlyDir, "sOnly", "missingCols", "sample.loge", "/regex/simple.log1");
+    try {
+      client.alterSession(ExecConstants.STORE_TABLE_USE_SCHEMA_FILE, true);
+      String schemaSql = "create schema (`year` int not null, `month` int not null) " +
+          " for table " + tablePath +
+          " properties ('" + LogFormatPlugin.REGEX_PROP +
+          "'='" + DATE_ONLY_PATTERN + "')";
+      run(schemaSql);
+
+      String sql = "SELECT * FROM %s";
+      RowSet results = client.queryBuilder().sql(sql, tablePath).rowSet();
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+          .add("year", MinorType.INT)
+          .add("month", MinorType.INT)
+          .addNullable("field_2", MinorType.VARCHAR)
+          .buildSchema();
+
+      RowSet expected = client.rowSetBuilder(expectedSchema)
+          .addRow(2017, 12, "17")
+          .addRow(2017, 12, "18")
+          .addRow(2017, 12, "19")
+          .build();
+
+      RowSetUtilities.verify(expected, results);
+    } finally {
+      client.resetSession(ExecConstants.STORE_TABLE_USE_SCHEMA_FILE);
+    }
+  }
+
+  /**
+   * Verify that an error is thrown if no pattern is provided in
+   * the plugin config, table function or provided schema.
+   */
+
+  @Test
+  public void testEmptyPattern() throws Exception {
+    String tablePath = buildTable(tableFuncDir, "tf", "emptyRegex",
+        "sample.logf", "/regex/simple.log1");
+    try {
+     String sql = "SELECT * FROM %s";
+     client.queryBuilder().sql(sql, tablePath).run();
+     fail();
+    } catch (Exception e) {
+      assertTrue(e.getMessage().contains("Regex property is required"));
+    }
+  }
+
+  /**
+   * Test the ability to use table functions to specify the regex.
+   */
+
+  @Test
+  public void testTableFunction() throws Exception {
+    String tablePath = buildTable(tableFuncDir, "tf", "table1",
+        "sample.logf", "/regex/simple.log1");
+
+    // Run a query using a table function.
+
+    String escaped = DATE_ONLY_PATTERN.replace("\\", "\\\\");
+    String sql = "SELECT * FROM table(%s(type => '%s', regex => '%s', maxErrors => 10))";
+    RowSet results = client.queryBuilder().sql(sql, tablePath,
+        LogFormatPlugin.PLUGIN_NAME, escaped).rowSet();
+
+    // Verify that the returned data used the schema.
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .addArray("columns", MinorType.VARCHAR)
+        .buildSchema();
+
+    RowSet expected = client.rowSetBuilder(expectedSchema)
+        .addSingleCol(strArray("2017", "12", "17"))
+        .addSingleCol(strArray("2017", "12", "18"))
+        .addSingleCol(strArray("2017", "12", "19"))
+        .build();
+
+    RowSetUtilities.verify(expected, results);
+  }
+
+  /**
+   * Test the use of a table function to provide the regex. Verify
+   * that the plugin throws an error if no groups are defined.
+   */
+
+  @Test
+  public void testTableFunctionNoGroups() throws Exception {
+    String tablePath = buildTable(tableFuncDir, "tf", "noGroups",
+        "sample.logf", "/regex/simple.log1");
+
+    // Use a table function to pass in a regex without a group.
+
+    try {
+      String sql = "SELECT * FROM table(%s(type => '%s', regex => '''foo'''))";
+      client.queryBuilder().sql(sql, tablePath, LogFormatPlugin.PLUGIN_NAME).run();
+      fail();
+    } catch (Exception e) {
+      assertTrue(e.getMessage().contains("Regex property has no groups"));
+    }
+  }
+
+  /**
+   * Test the use of the schema table function to provide a schema
+   * including types. In this form, the regex must be provided by the
+   * plugin config or (as in this test), as table properties.
+   */
+
+  @Test
+  public void testTableFunctionWithSchema() throws Exception {
+    String tablePath = buildTable(tableFuncDir, "tf", "table2",
+        "sample.logf", "/regex/simple.log1");
+    try {
+      client.alterSession(ExecConstants.STORE_TABLE_USE_SCHEMA_FILE, true);
+
+      // Run a query using a table function.
+
+      String escaped = DATE_ONLY_PATTERN.replace("\\", "\\\\");
+      String sql = "SELECT * FROM table(%s(" +
+         "schema=>'inline=(`year` int, `month` int, `day` int) properties {`%s`=`%s`}'))";
+      RowSet results = client.queryBuilder().sql(sql, tablePath,
+         LogFormatPlugin.REGEX_PROP, escaped).rowSet();
+
+      // Verify that the returned data used the schema.
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+          .addNullable("year", MinorType.INT)
+          .addNullable("month", MinorType.INT)
+          .addNullable("day", MinorType.INT)
+          .buildSchema();
+
+      RowSet expected = client.rowSetBuilder(expectedSchema)
+          .addRow(2017, 12, 17)
+          .addRow(2017, 12, 18)
+          .addRow(2017, 12, 19)
+          .build();
+
+      RowSetUtilities.verify(expected, results);
+    } finally {
+      client.resetSession(ExecConstants.STORE_TABLE_USE_SCHEMA_FILE);
+    }
+  }
+
+  /**
+   * Test that a schema can be provided in a table function that also includes
+   * plugin config. This case fails for the log format plugin because, unfortunately,
+   * the log format plugin has a config field called "schema" which is not a string
+   * and is found by the code before trying to treat "schema" as a schema.
+   * So, this test is disabled.
+   */
+
+  @Test
+  @Ignore("Use of schema conflicts with plugin field")
+  public void testTableFunctionWithConfigAndSchema() throws Exception {
+    String tablePath = buildTable(tableFuncDir, "tf", "table2",
+        "sample.logf", "/regex/simple.log1");
+    try {
+      client.alterSession(ExecConstants.STORE_TABLE_USE_SCHEMA_FILE, true);
+
+      // Run a query using a table function.
+
+      String escaped = DATE_ONLY_PATTERN.replace("\\", "\\\\");
+      String sql = "SELECT * FROM table(%s(type => '%s', regex => '%s', " +
+         "schema=>'inline=(`year` int, `month` int, `day` int)'))";
+      RowSet results = client.queryBuilder().sql(sql, tablePath,
+          LogFormatPlugin.PLUGIN_NAME, escaped).rowSet();
+
+      // Verify that the returned data used the schema.
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+          .addNullable("year", MinorType.INT)
+          .addNullable("month", MinorType.INT)
+          .addNullable("day", MinorType.INT)
+          .buildSchema();
+
+      RowSet expected = client.rowSetBuilder(expectedSchema)
+          .addRow(2017, 12, 17)
+          .addRow(2017, 12, 18)
+          .addRow(2017, 12, 19)
+          .build();
+
+      RowSetUtilities.verify(expected, results);
+    } finally {
+      client.resetSession(ExecConstants.STORE_TABLE_USE_SCHEMA_FILE);
+    }
+  }
+
 }

@@ -17,22 +17,25 @@
  */
 package org.apache.drill.exec.store.log;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.apache.drill.shaded.guava.com.google.common.base.Objects;
-import org.apache.drill.common.logical.FormatPluginConfig;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-@JsonTypeName("logRegex")
+import org.apache.drill.common.logical.FormatPluginConfig;
+import org.apache.drill.shaded.guava.com.google.common.base.Objects;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+
+@JsonTypeName(LogFormatPlugin.PLUGIN_NAME)
 public class LogFormatConfig implements FormatPluginConfig {
 
-  private String regex;
-  private String extension;
-  private int maxErrors = 10;
-  private List<LogFormatField> schema;
+  // Fields must be public for table functions to work: DRILL-6672
+
+  public String regex;
+  public String extension;
+  public int maxErrors = 10;
+  public List<LogFormatField> schema;
 
   public String getRegex() {
     return regex;
@@ -52,11 +55,11 @@ public class LogFormatConfig implements FormatPluginConfig {
 
   //Setters
   public void setExtension(String ext) {
-    this.extension = ext;
+    extension = ext;
   }
 
   public void setMaxErrors(int errors) {
-    this.maxErrors = errors;
+    maxErrors = errors;
   }
 
   public void setRegex(String regex) {
@@ -64,7 +67,7 @@ public class LogFormatConfig implements FormatPluginConfig {
   }
 
   public void setSchema() {
-    this.schema = new ArrayList<LogFormatField>();
+    schema = new ArrayList<LogFormatField>();
   }
 
   @Override
@@ -88,13 +91,18 @@ public class LogFormatConfig implements FormatPluginConfig {
   }
 
   @JsonIgnore
+  public boolean hasSchema() {
+    return schema != null  &&  ! schema.isEmpty();
+  }
+
+  @JsonIgnore
   public List<String> getFieldNames() {
-    List<String> result = new ArrayList<String>();
-    if (this.schema == null) {
+    List<String> result = new ArrayList<>();
+    if (! hasSchema()) {
       return result;
     }
 
-    for (LogFormatField field : this.schema) {
+    for (LogFormatField field : schema) {
       result.add(field.getFieldName());
     }
     return result;
@@ -102,18 +110,21 @@ public class LogFormatConfig implements FormatPluginConfig {
 
   @JsonIgnore
   public String getDataType(int fieldIndex) {
-    LogFormatField f = this.schema.get(fieldIndex);
-    return f.getFieldType().toUpperCase();
+    LogFormatField field = getField(fieldIndex);
+    return field == null ? null : field.getFieldType();
   }
 
   @JsonIgnore
   public LogFormatField getField(int fieldIndex) {
-    return this.schema.get(fieldIndex);
+    if (schema == null || fieldIndex >= schema.size()) {
+      return null;
+    }
+    return schema.get(fieldIndex);
   }
 
   @JsonIgnore
-  public String getDateFormat(int patternIndex) {
-    LogFormatField f = this.schema.get(patternIndex);
-    return f.getFormat();
+  public String getDateFormat(int fieldIndex) {
+    LogFormatField field = getField(fieldIndex);
+    return field == null ? null : field.getFormat();
   }
 }

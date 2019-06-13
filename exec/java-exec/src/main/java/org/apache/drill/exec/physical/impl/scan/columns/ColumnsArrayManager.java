@@ -19,11 +19,14 @@ package org.apache.drill.exec.physical.impl.scan.columns;
 
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.exec.physical.impl.scan.project.ColumnProjection;
+import org.apache.drill.exec.physical.impl.scan.project.ReaderLevelProjection.ReaderProjectionResolver;
 import org.apache.drill.exec.physical.impl.scan.project.ResolvedTuple;
 import org.apache.drill.exec.physical.impl.scan.project.ScanLevelProjection.ScanProjectionParser;
-import org.apache.drill.exec.physical.impl.scan.project.ReaderLevelProjection.ReaderProjectionResolver;
+import org.apache.drill.exec.physical.impl.scan.project.ScanSchemaOrchestrator;
+import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 
 /**
  * Handles the special case in which the entire row is returned as a
@@ -76,14 +79,17 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
 
 public class ColumnsArrayManager implements ReaderProjectionResolver {
 
-  public static final String COLUMNS_COL = "columns";
-
   // Internal
 
   private final ColumnsArrayParser parser;
 
+  public ColumnsArrayManager(boolean requireColumnsArray, boolean allowOtherCols) {
+    parser = new ColumnsArrayParser(requireColumnsArray, allowOtherCols);
+  }
+
+  @VisibleForTesting
   public ColumnsArrayManager(boolean requireColumnsArray) {
-    parser = new ColumnsArrayParser(requireColumnsArray);
+    this(requireColumnsArray, false);
   }
 
   public ScanProjectionParser projectionParser() { return parser; }
@@ -91,8 +97,7 @@ public class ColumnsArrayManager implements ReaderProjectionResolver {
   public ReaderProjectionResolver resolver() { return this; }
 
   @Override
-  public void startResolution() {
-  }
+  public void startResolution() { }
 
   @Override
   public boolean resolveColumn(ColumnProjection col, ResolvedTuple outputTuple,
@@ -108,13 +113,13 @@ public class ColumnsArrayManager implements ReaderProjectionResolver {
       throw new IllegalStateException("Table schema must have exactly one column.");
     }
 
-    final int tabColIndex = tableSchema.index(COLUMNS_COL);
+    final int tabColIndex = tableSchema.index(ColumnsScanFramework.COLUMNS_COL);
     if (tabColIndex == -1) {
-      throw new IllegalStateException("Table schema must include only one column named `" + COLUMNS_COL + "`");
+      throw new IllegalStateException("Table schema must include only one column named `" + ColumnsScanFramework.COLUMNS_COL + "`");
     }
     final MaterializedField tableCol = tableSchema.column(tabColIndex);
     if (tableCol.getType().getMode() != DataMode.REPEATED) {
-      throw new IllegalStateException("Table schema column `" + COLUMNS_COL +
+      throw new IllegalStateException("Table schema column `" + ColumnsScanFramework.COLUMNS_COL +
           "` is of mode " + tableCol.getType().getMode() +
           " but expected " + DataMode.REPEATED);
     }
