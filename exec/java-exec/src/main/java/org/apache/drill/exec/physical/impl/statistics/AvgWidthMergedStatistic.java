@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.apache.drill.common.types.MinorType;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.record.MajorTypeSerDe;
 import org.apache.drill.exec.vector.NullableFloat8Vector;
@@ -139,9 +138,9 @@ public class AvgWidthMergedStatistic extends AbstractMergedStatistic {
     }
     // If variable length type - then use the nonNullCount. Otherwise, use the Count,
     // since even NULL values take up the same space.
-    if (type == MinorType.VAR16CHAR.getNumber()
-        || type == MinorType.VARCHAR.getNumber()
-        || type == MinorType.VARBINARY.getNumber()) {
+    if (type == TypeProtos.MinorType.VAR16CHAR.getNumber()
+        || type == TypeProtos.MinorType.VARCHAR.getNumber()
+        || type == TypeProtos.MinorType.VARBINARY.getNumber()) {
       return nonNullStatCounts.getStat(colName);
     } else {
       return statCounts.getStat(colName);

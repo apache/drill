@@ -37,14 +37,14 @@
       <artifactId>protobuf-java</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.dyuproject.protostuff</groupId>
+      <groupId>io.protostuff</groupId>
       <artifactId>protostuff-core</artifactId>
-      <version>1.0.8</version>
+      <version>1.6.0</version>
     </dependency>
     <dependency>
-      <groupId>com.dyuproject.protostuff</groupId>
+      <groupId>io.protostuff</groupId>
       <artifactId>protostuff-json</artifactId>
-      <version>1.0.8</version>
+      <version>1.6.0</version>
     </dependency>
   </dependencies>
 
@@ -82,9 +82,9 @@
             </executions>
           </plugin>
           <plugin>
-            <groupId>com.dyuproject.protostuff</groupId>
+            <groupId>io.protostuff</groupId>
             <artifactId>protostuff-maven-plugin</artifactId>
-            <version>1.0.8</version>
+            <version>1.6.0</version>
             <configuration>
               <protoModules>
                 <protoModule>
@@ -95,27 +95,6 @@
                   <options>
                     <property>
                       <name>generate_field_map</name>
-                    </property>
-                  </options>
-                </protoModule>
-                <protoModule>
-                  <source>src/main/protobuf/</source>
-                  <outputDir>src/main/java</outputDir>
-                  <output>java_bean</output>
-                  <encoding>UTF-8</encoding>
-                  <options>
-                    <property>
-                      <name>generate_field_map</name>
-                    </property>
-                    <property>
-                      <name>org.apache.drill.exec.proto</name>
-                      <value>org.apache.drill.exec.proto.beans</value>
-                    </property>
-                    <property>
-                      <name>primitive_numbers_if_optional</name>
-                    </property>
-                    <property>
-                      <name>builder_pattern</name>
                     </property>
                   </options>
                 </protoModule>
@@ -134,7 +113,7 @@
           <plugin>
             <groupId>com.github.igor-petruk.protobuf</groupId>
             <artifactId>protobuf-maven-plugin</artifactId>
-            <version>0.6.3</version>
+            <version>0.6.5</version>
             <executions>
               <execution>
                 <goals>

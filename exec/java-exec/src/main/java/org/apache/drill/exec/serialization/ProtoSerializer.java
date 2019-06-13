@@ -20,8 +20,8 @@ package org.apache.drill.exec.serialization;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-import com.dyuproject.protostuff.JsonIOUtil;
-import com.dyuproject.protostuff.Schema;
+import io.protostuff.JsonIOUtil;
+import io.protostuff.Schema;
 import org.apache.drill.shaded.guava.com.google.common.base.Objects;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import com.google.protobuf.Message;
