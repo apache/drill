@@ -24,7 +24,7 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.ops.OperatorContext;
-import org.apache.drill.exec.physical.impl.scan.columns.ColumnsArrayManager;
+import org.apache.drill.exec.physical.impl.scan.columns.ColumnsScanFramework;
 import org.apache.drill.exec.physical.impl.scan.columns.ColumnsSchemaNegotiator;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.physical.rowSet.RowSetLoader;
@@ -151,9 +151,7 @@ public class CompliantTextBatchReader implements ManagedReader<ColumnsSchemaNego
 
   private TextOutput openWithoutHeaders(
       ColumnsSchemaNegotiator schemaNegotiator) {
-    final TupleMetadata schema = new TupleSchema();
-    schema.addColumn(MetadataUtils.newScalar(ColumnsArrayManager.COLUMNS_COL, MinorType.VARCHAR, DataMode.REPEATED));
-    schemaNegotiator.setTableSchema(schema, true);
+    schemaNegotiator.setTableSchema(ColumnsScanFramework.columnsSchema(), true);
     writer = schemaNegotiator.build().writer();
     return new RepeatedVarCharOutput(writer, schemaNegotiator.projectedIndexes());
   }

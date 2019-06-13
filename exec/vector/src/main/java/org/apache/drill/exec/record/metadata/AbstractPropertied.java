@@ -95,4 +95,20 @@ public class AbstractPropertied implements Propertied {
       setProperty(key, null);
     }
   }
+
+  @Override
+  public int intProperty(String key) {
+    return intProperty(key, 0);
+  }
+
+  @Override
+  public int intProperty(String key, int defaultValue) {
+    String value = property(key);
+    return value == null ? defaultValue : Integer.parseInt(value);
+  }
+
+  @Override
+  public void setIntProperty(String key, int value) {
+    setProperty(key, Integer.toString(value));
+  }
 }

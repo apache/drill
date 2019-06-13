@@ -47,5 +47,26 @@ public interface Propertied {
   boolean booleanProperty(String key);
   boolean booleanProperty(String key, boolean defaultValue);
   void setBooleanProperty(String key, boolean value);
+  int intProperty(String key);
+  int intProperty(String key, int defaultValue);
+  void setIntProperty(String key, int value);
+
+  /**
+   * Drill-wide properties are of the form:<br><tt>
+   * drill.<prop name></tt><br>
+   * While plugin-specific properties are of the form:<tt><br>
+   * drill.<plugin name>.<config prop name></br>
+   * Where "config prop name" is the field name in the plugin config.
+   * <p>
+   * This function generates the "drill.<plugin name>." prefix.
+   *
+   * @param pluginName name used in the "type" field of the plugin
+   * config
+   * @return the "drill.<plugin name>." prefix
+   */
+
+  public static String pluginPrefix(String pluginName) {
+    return DRILL_PROP_PREFIX + pluginName + ".";
+  }
 }
 

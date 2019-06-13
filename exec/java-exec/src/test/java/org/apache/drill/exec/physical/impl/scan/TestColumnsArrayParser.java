@@ -26,8 +26,8 @@ import static org.junit.Assert.fail;
 import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.physical.impl.scan.columns.ColumnsArrayManager;
 import org.apache.drill.exec.physical.impl.scan.columns.ColumnsArrayParser;
+import org.apache.drill.exec.physical.impl.scan.columns.ColumnsScanFramework;
 import org.apache.drill.exec.physical.impl.scan.columns.UnresolvedColumnsArrayColumn;
 import org.apache.drill.exec.physical.impl.scan.file.FileMetadataColumn;
 import org.apache.drill.exec.physical.impl.scan.file.FileMetadataManager;
@@ -52,14 +52,14 @@ public class TestColumnsArrayParser extends SubOperatorTest {
   @Test
   public void testColumnsArray() {
     ScanLevelProjection scanProj = ScanLevelProjection.build(
-        RowSetTestUtils.projectList(ColumnsArrayManager.COLUMNS_COL),
+        RowSetTestUtils.projectList(ColumnsScanFramework.COLUMNS_COL),
         ScanTestUtils.parsers(new ColumnsArrayParser(true)));
 
     assertFalse(scanProj.projectAll());
     assertEquals(1, scanProj.requestedCols().size());
 
     assertEquals(1, scanProj.columns().size());
-    assertEquals(ColumnsArrayManager.COLUMNS_COL, scanProj.columns().get(0).name());
+    assertEquals(ColumnsScanFramework.COLUMNS_COL, scanProj.columns().get(0).name());
 
     // Verify column type
 
@@ -69,14 +69,14 @@ public class TestColumnsArrayParser extends SubOperatorTest {
   @Test
   public void testRequiredColumnsArray() {
     ScanLevelProjection scanProj = ScanLevelProjection.build(
-        RowSetTestUtils.projectList(ColumnsArrayManager.COLUMNS_COL),
+        RowSetTestUtils.projectList(ColumnsScanFramework.COLUMNS_COL),
         ScanTestUtils.parsers(new ColumnsArrayParser(true)));
 
     assertFalse(scanProj.projectAll());
     assertEquals(1, scanProj.requestedCols().size());
 
     assertEquals(1, scanProj.columns().size());
-    assertEquals(ColumnsArrayManager.COLUMNS_COL, scanProj.columns().get(0).name());
+    assertEquals(ColumnsScanFramework.COLUMNS_COL, scanProj.columns().get(0).name());
 
     // Verify column type
 
@@ -93,7 +93,7 @@ public class TestColumnsArrayParser extends SubOperatorTest {
     assertEquals(1, scanProj.requestedCols().size());
 
     assertEquals(1, scanProj.columns().size());
-    assertEquals(ColumnsArrayManager.COLUMNS_COL, scanProj.columns().get(0).name());
+    assertEquals(ColumnsScanFramework.COLUMNS_COL, scanProj.columns().get(0).name());
 
     // Verify column type
 
@@ -125,15 +125,15 @@ public class TestColumnsArrayParser extends SubOperatorTest {
 
    ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectList(
-            ColumnsArrayManager.COLUMNS_COL + "[3]",
-            ColumnsArrayManager.COLUMNS_COL + "[1]"),
+            ColumnsScanFramework.COLUMNS_COL + "[3]",
+            ColumnsScanFramework.COLUMNS_COL + "[1]"),
         ScanTestUtils.parsers(new ColumnsArrayParser(true)));
 
     assertFalse(scanProj.projectAll());
     assertEquals(2, scanProj.requestedCols().size());
 
     assertEquals(1, scanProj.columns().size());
-    assertEquals(ColumnsArrayManager.COLUMNS_COL, scanProj.columns().get(0).name());
+    assertEquals(ColumnsScanFramework.COLUMNS_COL, scanProj.columns().get(0).name());
 
     // Verify column type
 
@@ -159,7 +159,7 @@ public class TestColumnsArrayParser extends SubOperatorTest {
   public void testErrorColumnsArrayAndColumn() {
     try {
       ScanLevelProjection.build(
-          RowSetTestUtils.projectList(ColumnsArrayManager.COLUMNS_COL, "a"),
+          RowSetTestUtils.projectList(ColumnsScanFramework.COLUMNS_COL, "a"),
           ScanTestUtils.parsers(new ColumnsArrayParser(true)));
       fail();
     } catch (UserException e) {
@@ -175,7 +175,7 @@ public class TestColumnsArrayParser extends SubOperatorTest {
   public void testErrorColumnAndColumnsArray() {
     try {
       ScanLevelProjection.build(
-          RowSetTestUtils.projectList("a", ColumnsArrayManager.COLUMNS_COL),
+          RowSetTestUtils.projectList("a", ColumnsScanFramework.COLUMNS_COL),
           ScanTestUtils.parsers(new ColumnsArrayParser(true)));
       fail();
     } catch (UserException e) {
@@ -191,7 +191,7 @@ public class TestColumnsArrayParser extends SubOperatorTest {
   public void testErrorTwoColumnsArray() {
     try {
       ScanLevelProjection.build(
-          RowSetTestUtils.projectList(ColumnsArrayManager.COLUMNS_COL, ColumnsArrayManager.COLUMNS_COL),
+          RowSetTestUtils.projectList(ColumnsScanFramework.COLUMNS_COL, ColumnsScanFramework.COLUMNS_COL),
           ScanTestUtils.parsers(new ColumnsArrayParser(false)));
       fail();
     } catch (UserException e) {
@@ -245,7 +245,7 @@ public class TestColumnsArrayParser extends SubOperatorTest {
 
     ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectList(ScanTestUtils.FILE_NAME_COL,
-            ColumnsArrayManager.COLUMNS_COL,
+            ColumnsScanFramework.COLUMNS_COL,
             ScanTestUtils.SUFFIX_COL),
         ScanTestUtils.parsers(new ColumnsArrayParser(true),
             metadataManager.projectionParser()));
@@ -255,7 +255,7 @@ public class TestColumnsArrayParser extends SubOperatorTest {
     assertEquals(3, scanProj.columns().size());
 
     assertEquals(ScanTestUtils.FILE_NAME_COL, scanProj.columns().get(0).name());
-    assertEquals(ColumnsArrayManager.COLUMNS_COL, scanProj.columns().get(1).name());
+    assertEquals(ColumnsScanFramework.COLUMNS_COL, scanProj.columns().get(1).name());
     assertEquals(ScanTestUtils.SUFFIX_COL, scanProj.columns().get(2).name());
 
     // Verify column type
@@ -280,14 +280,14 @@ public class TestColumnsArrayParser extends SubOperatorTest {
     ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectList(
             SchemaPath.DYNAMIC_STAR,
-            ColumnsArrayManager.COLUMNS_COL),
+            ColumnsScanFramework.COLUMNS_COL),
         ScanTestUtils.parsers(new ColumnsArrayParser(true)));
 
     assertFalse(scanProj.projectAll());
     assertEquals(2, scanProj.requestedCols().size());
 
     assertEquals(1, scanProj.columns().size());
-    assertEquals(ColumnsArrayManager.COLUMNS_COL, scanProj.columns().get(0).name());
+    assertEquals(ColumnsScanFramework.COLUMNS_COL, scanProj.columns().get(0).name());
 
     // Verify column type
 

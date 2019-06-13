@@ -18,35 +18,31 @@
 
 package org.apache.drill.exec.store.log;
 
+import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
+
+/**
+ * The three configuration options for a field are:
+ * <ol>
+ * <li>The field name</li>
+ * <li>The data type (fieldType). Field type defaults to VARCHAR
+ * if it is not specified</li>
+ * <li>The format string which is used for date/time fields.
+ * This field is ignored if used with a non date/time field.</li>
+ * </ol>
+ */
 @JsonTypeName("regexReaderFieldDescription")
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class LogFormatField {
 
-  /*
-   * The three configuration options for a field are:
-   * 1.  The field name
-   * 2.  The data type (fieldType).  Field type defaults to VARCHAR if it is not specified
-   * 3.  The format string which is used for date/time fields.  This field is ignored if used with a non
-   * date/time field.
-   * */
+  private final String fieldName;
+  private final String fieldType;
+  private final String format;
 
-  private String fieldName = "";
-  private String fieldType = "VARCHAR";
-  private String format;
-
-  //These will be used in the future for field validation and masking
-  //public String validator;
-  //public double minValue;
-  //public double maxValue;
-
-
-  public LogFormatField() {
-  }
-
-  //These constructors are used for unit testing
+  @VisibleForTesting
   public LogFormatField(String fieldName) {
     this(fieldName, null, null);
   }
@@ -61,26 +57,9 @@ public class LogFormatField {
     this.format = format;
   }
 
-  public String getFieldName() {
-    return fieldName;
-  }
+  public String getFieldName() { return fieldName; }
 
-  public String getFieldType() {
-    return fieldType;
-  }
+  public String getFieldType() { return fieldType; }
 
-  public String getFormat() {
-    return format;
-  }
-
-
-  /*
-  public String getValidator() { return validator; }
-
-  public double getMinValue() { return minValue; }
-
-  public double getMaxValue() {
-    return maxValue;
-  }
-  */
+  public String getFormat() { return format; }
 }
