@@ -17,6 +17,8 @@
  */
 package org.apache.drill.metastore.metadata;
 
+import java.util.stream.Stream;
+
 /**
  * Enum with possible types of metadata.
  */
@@ -57,5 +59,23 @@ public enum MetadataType {
   /**
    * Metadata type which helps to indicate that there is no overflow of metadata.
    */
-  NONE
+  NONE,
+
+  /**
+   * Metadata type which belongs to views.
+   */
+  VIEW;
+
+  /**
+   * Converts metadata type string representation into {@link MetadataType} instance.
+   *
+   * @param value metadata
+   * @return metadata type instance, null otherwise
+   */
+  public static MetadataType fromValue(String value) {
+    return Stream.of(values())
+      .filter(type -> type.name().equalsIgnoreCase(value))
+      .findAny()
+      .orElse(null);
+  }
 }

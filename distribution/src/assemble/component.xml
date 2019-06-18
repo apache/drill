@@ -33,6 +33,8 @@
         <include>org.apache.drill.memory:drill-memory-base:jar</include>
         <include>org.apache.drill.exec:drill-rpc:jar</include>
         <include>org.apache.drill.exec:drill-java-exec:jar</include>
+        <include>org.apache.drill.metastore:drill-metastore-api:jar</include>
+        <include>org.apache.drill.metastore:drill-iceberg-metastore:jar</include>
         <include>org.apache.drill.contrib.storage-hive:drill-storage-hive-core:jar</include>
         <include>org.apache.drill.contrib.storage-hive:drill-hive-exec-shaded:jar</include>
         <include>org.apache.drill.contrib.data:tpch-sample-data:jar</include>
@@ -119,6 +121,7 @@
         <exclude>org.apache.drill.contrib.data</exclude>
         <exclude>org.apache.drill.contrib.storage-hive</exclude>
         <exclude>org.apache.drill.memory</exclude>
+        <exclude>org.apache.drill.metastore</exclude>
         <!-- Below Hive jars are already included in drill-hive-exec-shaded.jar -->
         <exclude>junit:junit:jar</exclude>
         <!-- exclude or sqlline has problems -->

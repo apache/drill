@@ -66,7 +66,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class WorkManager implements AutoCloseable {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WorkManager.class);
 
-  public static final int EXIT_TIMEOUT_MS = 5000;
+  private static final int EXIT_TIMEOUT_MS = 5000;
 
   /*
    * We use a {@see java.util.concurrent.ConcurrentHashMap} because it promises never to throw a

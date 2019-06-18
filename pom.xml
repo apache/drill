@@ -86,7 +86,7 @@
     <hbase.version>2.1.1</hbase.version>
     <fmpp.version>1.0</fmpp.version>
     <freemarker.version>2.3.28</freemarker.version>
-    <javassist.version>3.24.0-GA</javassist.version>
+    <javassist.version>3.25.0-GA</javassist.version>
     <msgpack.version>0.6.6</msgpack.version>
     <reflections.version>0.9.10</reflections.version>
     <avro.version>1.9.0</avro.version>

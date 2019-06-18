@@ -17,6 +17,7 @@
  */
 package org.apache.drill.metastore.metadata;
 
+import org.apache.drill.metastore.components.tables.TableMetadataUnit;
 import org.apache.hadoop.fs.Path;
 
 import java.util.Map;
@@ -42,6 +43,7 @@ public class RowGroupMetadata extends BaseMetadata implements LocationProvider {
     return path;
   }
 
+  @Override
   public Path getLocation() {
     return path.getParent();
   }
@@ -64,13 +66,21 @@ public class RowGroupMetadata extends BaseMetadata implements LocationProvider {
     return hostAffinity;
   }
 
+  @Override
+  protected void toMetadataUnitBuilder(TableMetadataUnit.Builder builder) {
+    builder.hostAffinity(hostAffinity);
+    builder.rowGroupIndex(rowGroupIndex);
+    builder.path(path.toUri().getPath());
+    builder.location(getLocation().toUri().getPath());
+  }
+
   public static RowGroupMetadataBuilder builder() {
     return new RowGroupMetadataBuilder();
   }
 
   public static class RowGroupMetadataBuilder extends BaseMetadataBuilder<RowGroupMetadataBuilder> {
     private Map<String, Float> hostAffinity;
-    private int rowGroupIndex;
+    private Integer rowGroupIndex;
     private Path path;
 
     public RowGroupMetadataBuilder hostAffinity(Map<String, Float> hostAffinity) {
@@ -91,6 +101,8 @@ public class RowGroupMetadata extends BaseMetadata implements LocationProvider {
     @Override
     protected void checkRequiredValues() {
       super.checkRequiredValues();
+      Objects.requireNonNull(rowGroupIndex, "rowGroupIndex was not set");
+      Objects.requireNonNull(hostAffinity, "hostAffinity was not set");
       Objects.requireNonNull(path, "path was not set");
     }
 
@@ -103,6 +115,16 @@ public class RowGroupMetadata extends BaseMetadata implements LocationProvider {
     @Override
     protected RowGroupMetadataBuilder self() {
       return this;
+    }
+
+    @Override
+    protected RowGroupMetadataBuilder metadataUnitInternal(TableMetadataUnit unit) {
+      hostAffinity(unit.hostAffinity());
+      rowGroupIndex(unit.rowGroupIndex());
+      if (unit.path() != null) {
+        path(new Path(unit.path()));
+      }
+      return self();
     }
   }
 }

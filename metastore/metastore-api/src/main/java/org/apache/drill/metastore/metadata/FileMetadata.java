@@ -17,6 +17,7 @@
  */
 package org.apache.drill.metastore.metadata;
 
+import org.apache.drill.metastore.components.tables.TableMetadataUnit;
 import org.apache.hadoop.fs.Path;
 
 import java.util.Objects;
@@ -26,12 +27,10 @@ import java.util.Objects;
  */
 public class FileMetadata extends BaseMetadata implements LocationProvider {
   private final Path path;
-  private final long lastModifiedTime;
 
   private FileMetadata(FileMetadataBuilder builder) {
     super(builder);
     this.path = builder.path;
-    this.lastModifiedTime = builder.lastModifiedTime;
   }
 
   @Override
@@ -39,18 +38,15 @@ public class FileMetadata extends BaseMetadata implements LocationProvider {
     return path;
   }
 
-  /**
-   * Allows to check the time, when any files were modified.
-   * It is in Unix Timestamp, unit of measurement is millisecond.
-   *
-   * @return last modified time of files
-   */
-  public long getLastModifiedTime() {
-    return lastModifiedTime;
-  }
-
+  @Override
   public Path getLocation() {
     return path.getParent();
+  }
+
+  @Override
+  protected void toMetadataUnitBuilder(TableMetadataUnit.Builder builder) {
+    builder.path(path.toUri().getPath());
+    builder.location(getLocation().toUri().getPath());
   }
 
   public static FileMetadataBuilder builder() {
@@ -59,15 +55,9 @@ public class FileMetadata extends BaseMetadata implements LocationProvider {
 
   public static class FileMetadataBuilder extends BaseMetadataBuilder<FileMetadataBuilder> {
     private Path path;
-    private long lastModifiedTime;
 
     public FileMetadataBuilder path(Path path) {
       this.path = path;
-      return self();
-    }
-
-    public FileMetadataBuilder lastModifiedTime(long lastModifiedTime) {
-      this.lastModifiedTime = lastModifiedTime;
       return self();
     }
 
@@ -86,6 +76,14 @@ public class FileMetadata extends BaseMetadata implements LocationProvider {
     @Override
     protected FileMetadataBuilder self() {
       return this;
+    }
+
+    @Override
+    protected FileMetadataBuilder metadataUnitInternal(TableMetadataUnit unit) {
+      if (unit.path() != null) {
+        path(new Path(unit.path()));
+      }
+      return self();
     }
   }
 }

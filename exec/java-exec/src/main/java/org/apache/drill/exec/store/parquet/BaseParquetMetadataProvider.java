@@ -255,7 +255,7 @@ public abstract class BaseParquetMetadataProvider implements ParquetMetadataProv
               new ColumnStatistics(DrillStatsTable.getEstimatedColumnStats(statsTable, column)));
         }
       }
-      MetadataInfo metadataInfo = new MetadataInfo(MetadataType.TABLE, MetadataInfo.GENERAL_INFO_KEY, null);
+      MetadataInfo metadataInfo = MetadataInfo.builder().type(MetadataType.TABLE).build();
       tableMetadata = BaseTableMetadata.builder()
           .tableInfo(TableInfo.UNKNOWN_TABLE_INFO)
           .metadataInfo(metadataInfo)
@@ -337,7 +337,7 @@ public abstract class BaseParquetMetadataProvider implements ParquetMetadataProv
             columnsStatistics.put(partitionColumn,
                 new ColumnStatistics<>(statistics,
                     getParquetGroupScanStatistics().getTypeForColumn(partitionColumn).getMinorType()));
-            MetadataInfo metadataInfo = new MetadataInfo(MetadataType.PARTITION, MetadataInfo.GENERAL_INFO_KEY, null);
+            MetadataInfo metadataInfo = MetadataInfo.builder().type(MetadataType.PARTITION).build();
             TableMetadata tableMetadata = getTableMetadata();
             PartitionMetadata partitionMetadata = PartitionMetadata.builder()
                 .tableInfo(tableMetadata.getTableInfo())
@@ -429,16 +429,16 @@ public abstract class BaseParquetMetadataProvider implements ParquetMetadataProv
   }
 
   private static <T extends BaseMetadata & LocationProvider> SegmentMetadata combineToSegmentMetadata(Collection<T> metadataList, SchemaPath column) {
-    List<Path> metadataLocations = metadataList.stream()
+    Set<Path> metadataLocations = metadataList.stream()
         .map(metadata -> metadata.getPath()) // used lambda instead of method reference due to JDK-8141508
-        .collect(Collectors.toList());
+        .collect(Collectors.toSet());
     return combineToSegmentMetadata(metadataList, column, metadataLocations);
   }
 
   private static SegmentMetadata combineSegmentMetadata(Collection<SegmentMetadata> metadataList, SchemaPath column) {
-    List<Path> metadataLocations = metadataList.stream()
+    Set<Path> metadataLocations = metadataList.stream()
         .flatMap(metadata -> metadata.getLocations().stream())
-        .collect(Collectors.toList());
+        .collect(Collectors.toSet());
 
     return combineToSegmentMetadata(metadataList, column, metadataLocations);
   }
@@ -453,7 +453,7 @@ public abstract class BaseParquetMetadataProvider implements ParquetMetadataProv
    * @return {@link SegmentMetadata} from combined metadata
    */
   private static <T extends BaseMetadata & LocationProvider> SegmentMetadata combineToSegmentMetadata(Collection<T> metadataList,
-      SchemaPath column, List<Path> metadataLocations) {
+      SchemaPath column, Set<Path> metadataLocations) {
     List<StatisticsHolder> segmentStatistics =
         Collections.singletonList(
             new StatisticsHolder<>(
@@ -461,7 +461,7 @@ public abstract class BaseParquetMetadataProvider implements ParquetMetadataProv
                 TableStatisticsKind.ROW_COUNT));
     // this code is used only to collect segment metadata to be used only during filtering,
     // so metadata identifier is not required here and in other places in this class
-    MetadataInfo metadataInfo = new MetadataInfo(MetadataType.SEGMENT, MetadataInfo.GENERAL_INFO_KEY, null);
+    MetadataInfo metadataInfo = MetadataInfo.builder().type(MetadataType.SEGMENT).build();
     T firstMetadata = metadataList.iterator().next();
 
     return SegmentMetadata.builder()

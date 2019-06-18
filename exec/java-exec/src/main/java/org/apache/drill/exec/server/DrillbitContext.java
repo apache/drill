@@ -44,6 +44,8 @@ import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 import org.apache.drill.exec.work.foreman.rm.ResourceManager;
 import org.apache.drill.exec.work.foreman.rm.ResourceManagerBuilder;
+import org.apache.drill.metastore.Metastore;
+import org.apache.drill.metastore.MetastoreRegistry;
 
 import java.util.Collection;
 import java.util.Map.Entry;
@@ -74,6 +76,7 @@ public class DrillbitContext implements AutoCloseable {
   private final DrillOperatorTable table;
   private final QueryProfileStoreContext profileStoreContext;
   private ResourceManager resourceManager;
+  private final MetastoreRegistry metastoreRegistry;
 
   public DrillbitContext(
       DrillbitEndpoint endpoint,
@@ -120,7 +123,8 @@ public class DrillbitContext implements AutoCloseable {
     table = new DrillOperatorTable(functionRegistry, systemOptions);
 
     //This profile store context is built from the profileStoreProvider
-    profileStoreContext = new QueryProfileStoreContext(context.getConfig(), profileStoreProvider, coord);
+    profileStoreContext = new QueryProfileStoreContext(config, profileStoreProvider, coord);
+    this.metastoreRegistry = new MetastoreRegistry(config);
   }
 
   public QueryProfileStoreContext getProfileStoreContext() {
@@ -300,5 +304,9 @@ public class DrillbitContext implements AutoCloseable {
 
   public ResourceManager getResourceManager() {
     return resourceManager;
+  }
+
+  public Metastore getMetastore() {
+    return metastoreRegistry.get();
   }
 }

@@ -18,10 +18,13 @@
 package org.apache.drill.metastore.metadata;
 
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.metastore.components.tables.TableMetadataUnit;
 import org.apache.hadoop.fs.Path;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Metadata which corresponds to the segment level of table.
@@ -30,8 +33,7 @@ public class SegmentMetadata extends BaseMetadata implements LocationProvider {
   private final SchemaPath column;
   private final Path path;
   private final List<String> partitionValues;
-  private final List<Path> locations;
-  private final long lastModifiedTime;
+  private final Set<Path> locations;
 
   private SegmentMetadata(SegmentMetadataBuilder builder) {
     super(builder);
@@ -39,14 +41,19 @@ public class SegmentMetadata extends BaseMetadata implements LocationProvider {
     this.path = builder.path;
     this.partitionValues = builder.partitionValues;
     this.locations = builder.locations;
-    this.lastModifiedTime = builder.lastModifiedTime;
   }
 
-  public SchemaPath getSegmentColumn() {
+  public SchemaPath getColumn() {
     return column;
   }
 
+  @Override
   public Path getPath() {
+    return path;
+  }
+
+  @Override
+  public Path getLocation() {
     return path;
   }
 
@@ -54,18 +61,21 @@ public class SegmentMetadata extends BaseMetadata implements LocationProvider {
     return partitionValues;
   }
 
-  public List<Path> getLocations() {
+  public Set<Path> getLocations() {
     return locations;
   }
 
-  /**
-   * Allows to check the time, when any files were modified.
-   * It is in Unix Timestamp, unit of measurement is millisecond.
-   *
-   * @return last modified time of files
-   */
-  public long getLastModifiedTime() {
-    return lastModifiedTime;
+  @Override
+  protected void toMetadataUnitBuilder(TableMetadataUnit.Builder builder) {
+    if (column != null) {
+      builder.column(column.toString());
+    }
+    builder.path(path.toUri().getPath());
+    builder.location(getLocation().toUri().getPath());
+    builder.partitionValues(partitionValues);
+    builder.locations(locations.stream()
+      .map(location -> location.toUri().getPath())
+      .collect(Collectors.toList()));
   }
 
   public static SegmentMetadataBuilder builder() {
@@ -76,21 +86,15 @@ public class SegmentMetadata extends BaseMetadata implements LocationProvider {
     private SchemaPath column;
     private List<String> partitionValues;
     private Path path;
-    private List<Path> locations;
-    private long lastModifiedTime = BaseTableMetadata.NON_DEFINED_LAST_MODIFIED_TIME;
+    private Set<Path> locations;
 
-    public SegmentMetadataBuilder locations(List<Path> locations) {
+    public SegmentMetadataBuilder locations(Set<Path> locations) {
       this.locations = locations;
       return self();
     }
 
     public SegmentMetadataBuilder path(Path path) {
       this.path = path;
-      return self();
-    }
-
-    public SegmentMetadataBuilder lastModifiedTime(long lastModifiedTime) {
-      this.lastModifiedTime = lastModifiedTime;
       return self();
     }
 
@@ -107,10 +111,8 @@ public class SegmentMetadata extends BaseMetadata implements LocationProvider {
     @Override
     protected void checkRequiredValues() {
       super.checkRequiredValues();
-      Objects.requireNonNull(column, "column was not set");
-      Objects.requireNonNull(partitionValues, "partitionValues were not set");
-      Objects.requireNonNull(locations, "locations were not set");
       Objects.requireNonNull(path, "path was not set");
+      Objects.requireNonNull(locations, "locations were not set");
     }
 
     @Override
@@ -122,6 +124,21 @@ public class SegmentMetadata extends BaseMetadata implements LocationProvider {
     @Override
     protected SegmentMetadataBuilder self() {
       return this;
+    }
+
+    @Override
+    protected SegmentMetadataBuilder metadataUnitInternal(TableMetadataUnit unit) {
+      if (unit.locations() != null) {
+        locations(unit.locations().stream()
+          .map(Path::new)
+          .collect(Collectors.toSet()));
+      }
+      if (unit.path() != null) {
+        path(new Path(unit.path()));
+      }
+      partitionValues(unit.partitionValues());
+      column(SchemaPath.parseFromString(unit.column()));
+      return self();
     }
   }
 }

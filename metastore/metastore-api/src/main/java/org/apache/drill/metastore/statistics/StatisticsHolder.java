@@ -22,7 +22,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -37,7 +36,7 @@ import java.io.IOException;
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class StatisticsHolder<T> {
 
-  static final ObjectWriter OBJECT_WRITER = new ObjectMapper().setDefaultPrettyPrinter(new DefaultPrettyPrinter()).writer();
+  private static final ObjectWriter OBJECT_WRITER = new ObjectMapper().writerFor(StatisticsHolder.class);
   private static final ObjectReader OBJECT_READER = new ObjectMapper().readerFor(StatisticsHolder.class);
 
   private final T statisticsValue;
@@ -66,11 +65,19 @@ public class StatisticsHolder<T> {
     return statisticsKind;
   }
 
-  public static StatisticsHolder of(String serialized) throws IOException {
-    return OBJECT_READER.readValue(serialized);
+  public static StatisticsHolder of(String serialized) {
+    try {
+      return OBJECT_READER.readValue(serialized);
+    } catch (IOException e) {
+      throw new IllegalArgumentException("Unable to convert statistics holder from json string" + serialized, e);
+    }
   }
 
-  public String jsonString() throws JsonProcessingException {
-    return OBJECT_WRITER.writeValueAsString(this);
+  public String jsonString() {
+    try {
+      return OBJECT_WRITER.writeValueAsString(this);
+    } catch (JsonProcessingException e) {
+      throw new IllegalStateException("Unable to convert statistics holder to json string", e);
+    }
   }
 }

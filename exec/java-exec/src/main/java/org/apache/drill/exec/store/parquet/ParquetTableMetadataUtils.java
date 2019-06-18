@@ -151,7 +151,7 @@ public class ParquetTableMetadataUtils {
     TupleSchema schema = new TupleSchema();
     columns.forEach((schemaPath, majorType) -> SchemaPathUtils.addColumnMetadata(schema, schemaPath, majorType));
 
-    MetadataInfo metadataInfo = new MetadataInfo(MetadataType.ROW_GROUP, MetadataInfo.GENERAL_INFO_KEY, null);
+    MetadataInfo metadataInfo = MetadataInfo.builder().type(MetadataType.ROW_GROUP).build();
 
     return RowGroupMetadata.builder()
         .tableInfo(TableInfo.UNKNOWN_TABLE_INFO)
@@ -183,7 +183,7 @@ public class ParquetTableMetadataUtils {
 
     Set<SchemaPath> columns = rowGroupMetadata.getColumnsStatistics().keySet();
 
-    MetadataInfo metadataInfo = new MetadataInfo(MetadataType.FILE, MetadataInfo.GENERAL_INFO_KEY, null);
+    MetadataInfo metadataInfo = MetadataInfo.builder().type(MetadataType.FILE).build();
 
     return FileMetadata.builder()
         .tableInfo(rowGroupMetadata.getTableInfo())
@@ -213,7 +213,7 @@ public class ParquetTableMetadataUtils {
 
     FileMetadata fileMetadata = files.iterator().next();
 
-    MetadataInfo metadataInfo = new MetadataInfo(MetadataType.PARTITION, MetadataInfo.GENERAL_INFO_KEY, null);
+    MetadataInfo metadataInfo = MetadataInfo.builder().type(MetadataType.PARTITION).build();
 
     return PartitionMetadata.builder()
         .tableInfo(fileMetadata.getTableInfo())

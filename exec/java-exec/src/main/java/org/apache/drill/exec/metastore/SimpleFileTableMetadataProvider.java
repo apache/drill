@@ -167,7 +167,7 @@ public class SimpleFileTableMetadataProvider implements TableMetadataProvider {
           logger.debug("Unable to read schema from schema provider [{}]: {}", (tableName != null ? tableName : location), e.getMessage());
           logger.trace("Error when reading the schema", e);
         }
-        MetadataInfo metadataInfo = new MetadataInfo(MetadataType.TABLE, MetadataInfo.GENERAL_INFO_KEY, null);
+        MetadataInfo metadataInfo = MetadataInfo.builder().type(MetadataType.TABLE).build();
         TableMetadata tableMetadata = BaseTableMetadata.builder()
             .tableInfo(TableInfo.UNKNOWN_TABLE_INFO)
             .metadataInfo(metadataInfo)
