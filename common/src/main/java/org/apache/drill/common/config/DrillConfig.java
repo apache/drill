@@ -19,6 +19,7 @@ package org.apache.drill.common.config;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.ConfigMergeable;
 import com.typesafe.config.ConfigRenderOptions;
 import io.netty.util.internal.PlatformDependent;
 import org.apache.drill.common.exceptions.DrillConfigurationException;
@@ -153,7 +154,7 @@ public class DrillConfig extends NestedConfig {
    */
   @VisibleForTesting
   public static DrillConfig create(Properties testConfigurations) {
-    return create(null, testConfigurations, true, new DrillExecConfigFileInfo());
+    return create(null, testConfigurations, true, new DrillExecConfigFileInfo(), null);
   }
 
   /**
@@ -161,7 +162,7 @@ public class DrillConfig extends NestedConfig {
    *          see {@link #create(String)}'s {@code overrideFileResourcePathname}
    */
   public static DrillConfig create(String overrideFileResourcePathname, boolean enableServerConfigs) {
-    return create(overrideFileResourcePathname, null, enableServerConfigs, new DrillExecConfigFileInfo());
+    return create(overrideFileResourcePathname, null, enableServerConfigs, new DrillExecConfigFileInfo(), null);
   }
 
   /**
@@ -181,7 +182,7 @@ public class DrillConfig extends NestedConfig {
    *  @return A merged Config object.
    */
   public static DrillConfig createForRM() {
-    return create(null, null, true, new DrillRMConfigFileInfo());
+    return create(null, null, true, new DrillRMConfigFileInfo(), null);
   }
 
   /**
@@ -203,12 +204,15 @@ public class DrillConfig extends NestedConfig {
    *          whether to enable server-specific configuration options
    * @param configInfo
    *          see {@link ConfigFileInfo}
+   * @param fallbackConfig
+   *          existing config which will be used as fallback
    * @return {@link DrillConfig} object with all configs from passed in resource files
    */
-  private static DrillConfig create(String overrideFileResourcePathname,
-                                    final Properties overriderProps,
-                                    final boolean enableServerConfigs,
-                                    ConfigFileInfo configInfo) {
+  public static DrillConfig create(String overrideFileResourcePathname,
+                                   Properties overriderProps,
+                                   boolean enableServerConfigs,
+                                   ConfigFileInfo configInfo,
+                                   ConfigMergeable fallbackConfig) {
     final StringBuilder logString = new StringBuilder();
     final Stopwatch watch = Stopwatch.createStarted();
     overrideFileResourcePathname = overrideFileResourcePathname == null ?
@@ -239,11 +243,16 @@ public class DrillConfig extends NestedConfig {
     }
     logString.append("\n");
 
+    // Add fallback config for default and module configuration
+    if (fallbackConfig != null) {
+      fallback = fallback.withFallback(fallbackConfig);
+    }
+
     final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 
     // 3. Load distribution specific configuration file.
     final URL distribConfigFileUrl = classLoader.getResource(configInfo.getDistributionFileName());
-    if (null != distribConfigFileUrl ) {
+    if (distribConfigFileUrl != null) {
       logString.append("Distribution Specific Configuration File: ").append(distribConfigFileUrl).append("\n");
     }
     fallback =
@@ -254,13 +263,13 @@ public class DrillConfig extends NestedConfig {
 
     // (Per ConfigFactory.load(...)'s mention of using Thread.getContextClassLoader():)
     final URL overrideFileUrl = classLoader.getResource(overrideFileResourcePathname);
-    if (null != overrideFileUrl ) {
+    if (overrideFileUrl != null) {
       logString.append("Override File: ").append(overrideFileUrl).append("\n");
     }
     Config effectiveConfig =
         ConfigFactory.load(overrideFileResourcePathname).withFallback(fallback);
 
-    // 4. Apply any overriding properties.
+    // 5. Apply any overriding properties.
     if (overriderProps != null) {
       logString.append("Overridden Properties:\n");
       for(Entry<Object, Object> entry : overriderProps.entrySet()){
@@ -273,7 +282,7 @@ public class DrillConfig extends NestedConfig {
           ConfigFactory.parseProperties(overriderProps).withFallback(effectiveConfig);
     }
 
-    // 5. Create DrillConfig object from Config object.
+    // 6. Create DrillConfig object from Config object.
     logger.info("Configuration and plugin file(s) identified in {}ms.\n{}",
         watch.elapsed(TimeUnit.MILLISECONDS),
         logString);

@@ -17,7 +17,6 @@
  */
 package org.apache.drill.metastore.metadata;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.metastore.statistics.BaseStatisticsKind;
 import org.apache.drill.metastore.statistics.ColumnStatistics;
@@ -37,7 +36,7 @@ import static org.junit.Assert.assertTrue;
 public class MetadataSerDeTest {
 
   @Test
-  public void testStatisticsHolderSerialization() throws Exception {
+  public void testStatisticsHolderSerialization() {
     checkStatisticsHolderSerialization(1, TableStatisticsKind.ROW_COUNT,
         "{\"statisticsValue\":1,\"statisticsKind\":{\"exact\":true,\"name\":\"rowCount\"}}");
     checkStatisticsHolderSerialization(1.234, TableStatisticsKind.EST_ROW_COUNT,
@@ -55,7 +54,7 @@ public class MetadataSerDeTest {
   }
 
   @Test
-  public void testStatisticsHolderDeserialization() throws Exception {
+  public void testStatisticsHolderDeserialization() {
     checkStatisticsHolderDeserialization(1, TableStatisticsKind.ROW_COUNT);
     checkStatisticsHolderDeserialization(1.234, TableStatisticsKind.EST_ROW_COUNT);
     checkStatisticsHolderDeserialization(true, TableStatisticsKind.HAS_DESCRIPTIVE_STATISTICS);
@@ -66,7 +65,7 @@ public class MetadataSerDeTest {
   }
 
   @Test
-  public void testColumnStatisticsSerialization() throws Exception {
+  public void testColumnStatisticsSerialization() {
     List<StatisticsHolder> statistics = Arrays.asList(
         new StatisticsHolder<>("aaa", ColumnStatisticsKind.MIN_VALUE),
         new StatisticsHolder<>("zzz", ColumnStatisticsKind.MAX_VALUE),
@@ -91,7 +90,7 @@ public class MetadataSerDeTest {
   }
 
   @Test
-  public void testColumnStatisticsDeserialization() throws Exception {
+  public void testColumnStatisticsDeserialization() {
     List<StatisticsHolder> statistics = Arrays.asList(
         new StatisticsHolder<>("aaa", ColumnStatisticsKind.MIN_VALUE),
         new StatisticsHolder<>("zzz", ColumnStatisticsKind.MAX_VALUE),
@@ -114,11 +113,10 @@ public class MetadataSerDeTest {
           statistic.getStatisticsValue(),
           deserialized.get(statistic.getStatisticsKind()));
     }
-
   }
 
   private <T> void checkStatisticsHolderSerialization(T statisticsValue,
-      BaseStatisticsKind statisticsKind, String expectedString) throws JsonProcessingException {
+      BaseStatisticsKind statisticsKind, String expectedString) {
     StatisticsHolder<T> statisticsHolder =
         new StatisticsHolder<>(statisticsValue, statisticsKind);
     String serializedStatisticsHolder = statisticsHolder.jsonString();
@@ -129,7 +127,7 @@ public class MetadataSerDeTest {
   }
 
   private <T> void checkStatisticsHolderDeserialization(T statisticsValue,
-      BaseStatisticsKind statisticsKind) throws Exception {
+      BaseStatisticsKind statisticsKind) {
     StatisticsHolder<T> rowCount =
         new StatisticsHolder<>(statisticsValue, statisticsKind);
     StatisticsHolder deserializedRowCount = StatisticsHolder.of(rowCount.jsonString());

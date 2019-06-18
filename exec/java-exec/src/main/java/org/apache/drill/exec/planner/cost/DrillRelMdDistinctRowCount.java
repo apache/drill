@@ -186,7 +186,7 @@ public class DrillRelMdDistinctRowCount extends RelMdDistinctRowCount{
     if (!allColsHaveNDV) {
       if (logger.isDebugEnabled()) {
         logger.debug(String.format("NDV not available for %s(%s). Using default rowcount for group-by %s",
-            (tableMetadata != null ? tableMetadata.getTableInfo().getName() : ""), colName, groupKey.toString()));
+            (tableMetadata != null ? tableMetadata.getTableInfo().name() : ""), colName, groupKey.toString()));
       }
       // Could not get any NDV estimate from stats - probably stats not present for GBY cols. So Guess!
       return scan.estimateRowCount(mq) * 0.1;

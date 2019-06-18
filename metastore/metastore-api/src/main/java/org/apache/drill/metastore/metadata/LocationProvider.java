@@ -25,9 +25,20 @@ import org.apache.hadoop.fs.Path;
 public interface LocationProvider {
 
   /**
-   * Returns location of this metadata.
+   * Returns path of the metadata.
+   * For files and row groups - full path to the file including file name.
+   * For segments - path to the segment directory.
+   *
+   * @return metadata path
+   */
+  Path getPath();
+
+  /**
+   * Returns location of the metadata.
+   * For files and row groups - path to the parent directory they reside it.
+   * For segments - path to the segment directory.
    *
    * @return metadata location
    */
-  Path getPath();
+  Path getLocation();
 }

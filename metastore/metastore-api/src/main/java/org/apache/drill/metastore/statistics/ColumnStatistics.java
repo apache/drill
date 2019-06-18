@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.metastore.util.TableMetadataUtils;
 
@@ -35,8 +36,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import static org.apache.drill.metastore.statistics.StatisticsHolder.OBJECT_WRITER;
 
 /**
  * Represents collection of statistics values for specific column.
@@ -64,6 +63,7 @@ import static org.apache.drill.metastore.statistics.StatisticsHolder.OBJECT_WRIT
 @JsonPropertyOrder({"statistics", "comparator"})
 public class ColumnStatistics<T> {
 
+  private static final ObjectWriter OBJECT_WRITER = new ObjectMapper().writerFor(ColumnStatistics.class);
   private static final ObjectReader OBJECT_READER = new ObjectMapper().readerFor(ColumnStatistics.class);
 
   private final Map<String, StatisticsHolder> statistics;
@@ -169,11 +169,19 @@ public class ColumnStatistics<T> {
     return type;
   }
 
-  public String jsonString() throws JsonProcessingException {
-    return OBJECT_WRITER.writeValueAsString(this);
+  public String jsonString() {
+    try {
+      return OBJECT_WRITER.writeValueAsString(this);
+    } catch (JsonProcessingException e) {
+      throw new IllegalStateException("Unable to convert column statistics to json string", e);
+    }
   }
 
-  public static ColumnStatistics of(String columnStatistics) throws IOException {
-    return OBJECT_READER.readValue(columnStatistics);
+  public static ColumnStatistics of(String columnStatistics) {
+    try {
+      return OBJECT_READER.readValue(columnStatistics);
+    } catch (IOException e) {
+      throw new IllegalArgumentException("Unable to convert column statistics from json string: " + columnStatistics, e);
+    }
   }
 }

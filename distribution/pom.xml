@@ -78,6 +78,16 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
+      <groupId>org.apache.drill.metastore</groupId>
+      <artifactId>drill-metastore-api</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.drill.metastore</groupId>
+      <artifactId>drill-iceberg-metastore</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-common</artifactId>
       <exclusions>
@@ -294,6 +304,17 @@
           <artifactId>drill-format-ltsv</artifactId>
           <version>${project.version}</version>
         </dependency>
+        <!--
+         drill-format-mapr is intentionally excluded from distribution for the default profile
+         to avoid adding mapr-specific jars into jars/3rdparty folder and inflation of the target jar.
+         For more details please see DRILL-7213 and DRILL-6929.
+
+         <dependency>
+           <groupId>org.apache.drill.contrib</groupId>
+           <artifactId>drill-format-mapr</artifactId>
+           <version>${project.version}</version>
+         </dependency>
+         -->
       </dependencies>
     </profile>
 

@@ -20,6 +20,7 @@ package org.apache.drill.metastore.metadata;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.metastore.components.tables.TableMetadataUnit;
 import org.apache.drill.metastore.statistics.ColumnStatistics;
 import org.apache.drill.metastore.statistics.StatisticsKind;
 
@@ -92,4 +93,12 @@ public interface Metadata {
   TableInfo getTableInfo();
 
   MetadataInfo getMetadataInfo();
+
+  /**
+   * Converts {@link Metadata} implementation into {@link TableMetadataUnit} instance
+   * which will be used to write data into Drill Metastore Tables.
+   *
+   * @return metadata unit instance
+   */
+  TableMetadataUnit toMetadataUnit();
 }

@@ -18,6 +18,7 @@
 package org.apache.drill.metastore.metadata;
 
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.metastore.components.tables.TableMetadataUnit;
 import org.apache.drill.metastore.statistics.ColumnStatistics;
 import org.apache.drill.metastore.statistics.StatisticsHolder;
 import org.apache.hadoop.fs.Path;
@@ -26,16 +27,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * Base implementation of {@link TableMetadata} interface.
  */
 public class BaseTableMetadata extends BaseMetadata implements TableMetadata {
 
-  public static final long NON_DEFINED_LAST_MODIFIED_TIME = -1;
-
   private final Path location;
-  private final long lastModifiedTime;
   private final Map<String, String> partitionKeys;
   private final List<SchemaPath> interestingColumns;
 
@@ -44,7 +43,6 @@ public class BaseTableMetadata extends BaseMetadata implements TableMetadata {
     this.location = builder.location;
     this.partitionKeys = builder.partitionKeys;
     this.interestingColumns = builder.interestingColumns;
-    this.lastModifiedTime = builder.lastModifiedTime;
   }
 
   public boolean isPartitionColumn(String fieldName) {
@@ -58,11 +56,6 @@ public class BaseTableMetadata extends BaseMetadata implements TableMetadata {
   @Override
   public Path getLocation() {
     return location;
-  }
-
-  @Override
-  public long getLastModifiedTime() {
-    return lastModifiedTime;
   }
 
   @Override
@@ -98,23 +91,30 @@ public class BaseTableMetadata extends BaseMetadata implements TableMetadata {
         .build();
   }
 
+  @Override
+  protected void toMetadataUnitBuilder(TableMetadataUnit.Builder builder) {
+    if (location != null) {
+      builder.location(location.toUri().getPath());
+    }
+    builder.partitionKeys(partitionKeys);
+    if (interestingColumns != null) {
+    builder.interestingColumns(interestingColumns.stream()
+      .map(SchemaPath::toString)
+      .collect(Collectors.toList()));
+    }
+  }
+
   public static BaseTableMetadataBuilder builder() {
     return new BaseTableMetadataBuilder();
   }
 
   public static class BaseTableMetadataBuilder extends BaseMetadataBuilder<BaseTableMetadataBuilder> {
     private Path location;
-    private long lastModifiedTime = NON_DEFINED_LAST_MODIFIED_TIME;
     private Map<String, String> partitionKeys;
     private List<SchemaPath> interestingColumns;
 
     public BaseTableMetadataBuilder location(Path location) {
       this.location = location;
-      return self();
-    }
-
-    public BaseTableMetadataBuilder lastModifiedTime(long lastModifiedTime) {
-      this.lastModifiedTime = lastModifiedTime;
       return self();
     }
 
@@ -143,6 +143,20 @@ public class BaseTableMetadata extends BaseMetadata implements TableMetadata {
     @Override
     protected BaseTableMetadataBuilder self() {
       return this;
+    }
+
+    @Override
+    protected BaseTableMetadataBuilder metadataUnitInternal(TableMetadataUnit unit) {
+      if (unit.location() != null) {
+        location(new Path(unit.location()));
+      }
+      partitionKeys(unit.partitionKeys());
+      if (unit.interestingColumns() != null) {
+        interestingColumns(unit.interestingColumns().stream()
+          .map(SchemaPath::parseFromString)
+          .collect(Collectors.toList()));
+      }
+      return self();
     }
   }
 }

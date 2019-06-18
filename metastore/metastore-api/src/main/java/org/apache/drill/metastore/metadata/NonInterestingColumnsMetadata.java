@@ -20,6 +20,7 @@ package org.apache.drill.metastore.metadata;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.metastore.components.tables.TableMetadataUnit;
 import org.apache.drill.metastore.statistics.ColumnStatistics;
 import org.apache.drill.metastore.statistics.StatisticsKind;
 
@@ -82,6 +83,11 @@ public class NonInterestingColumnsMetadata implements Metadata {
 
   @Override
   public MetadataInfo getMetadataInfo() {
+    return null;
+  }
+
+  @Override
+  public TableMetadataUnit toMetadataUnit() {
     return null;
   }
 }

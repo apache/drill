@@ -17,6 +17,12 @@
  */
 package org.apache.drill.metastore.metadata;
 
+import org.apache.drill.metastore.components.tables.TableMetadataUnit;
+import org.apache.drill.metastore.expressions.FilterExpression;
+
+import java.util.Objects;
+import java.util.StringJoiner;
+
 /**
  * General table information.
  */
@@ -29,6 +35,10 @@ public class TableInfo {
       .type(UNKNOWN)
       .owner(UNKNOWN)
       .build();
+
+  public static final String STORAGE_PLUGIN = "storagePlugin";
+  public static final String WORKSPACE = "workspace";
+  public static final String TABLE_NAME = "tableName";
 
   private final String storagePlugin;
   private final String workspace;
@@ -44,24 +54,71 @@ public class TableInfo {
     this.owner = builder.owner;
   }
 
-  public String getStoragePlugin() {
+  public String storagePlugin() {
     return storagePlugin;
   }
 
-  public String getWorkspace() {
+  public String workspace() {
     return workspace;
   }
 
-  public String getName() {
+  public String name() {
     return name;
   }
 
-  public String getType() {
+  public String type() {
     return type;
   }
 
-  public String getOwner() {
+  public String owner() {
     return owner;
+  }
+
+  public FilterExpression toFilter() {
+    FilterExpression storagePluginFilter = FilterExpression.equal(STORAGE_PLUGIN, storagePlugin);
+    FilterExpression workspaceFilter = FilterExpression.equal(WORKSPACE, workspace);
+    FilterExpression tableNameFilter = FilterExpression.equal(TABLE_NAME, name);
+    return FilterExpression.and(storagePluginFilter, workspaceFilter, tableNameFilter);
+  }
+
+  public void toMetadataUnitBuilder(TableMetadataUnit.Builder builder) {
+    builder.storagePlugin(storagePlugin);
+    builder.workspace(workspace);
+    builder.tableName(name);
+    builder.tableType(type);
+    builder.owner(owner);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(storagePlugin, workspace, name, type, owner);
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    TableInfo tableInfo = (TableInfo) o;
+    return Objects.equals(storagePlugin, tableInfo.storagePlugin)
+      && Objects.equals(workspace, tableInfo.workspace)
+      && Objects.equals(name, tableInfo.name)
+      && Objects.equals(type, tableInfo.type)
+      && Objects.equals(owner, tableInfo.owner);
+  }
+
+  @Override
+  public String toString() {
+    return new StringJoiner(", ", TableInfo.class.getSimpleName() + "[", "]")
+      .add("storagePlugin=" + storagePlugin)
+      .add("workspace=" + workspace)
+      .add("name=" + name)
+      .add("type=" + type)
+      .add("owner=" + owner)
+      .toString();
   }
 
   public static TableInfoBuilder builder() {
@@ -100,7 +157,18 @@ public class TableInfo {
       return this;
     }
 
+    public TableInfoBuilder metadataUnit(TableMetadataUnit unit) {
+      return storagePlugin(unit.storagePlugin())
+        .workspace(unit.workspace())
+        .name(unit.tableName())
+        .type(unit.tableType())
+        .owner(unit.owner());
+    }
+
     public TableInfo build() {
+      Objects.requireNonNull(storagePlugin, "storagePlugin was not set");
+      Objects.requireNonNull(workspace, "workspace was not set");
+      Objects.requireNonNull(name, "name was not set");
       return new TableInfo(this);
     }
 

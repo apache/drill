@@ -20,10 +20,11 @@ package org.apache.drill.metastore.metadata;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.metastore.util.SchemaPathUtils;
+import org.apache.drill.metastore.components.tables.TableMetadataUnit;
 import org.apache.drill.metastore.statistics.ColumnStatistics;
 import org.apache.drill.metastore.statistics.StatisticsHolder;
 import org.apache.drill.metastore.statistics.StatisticsKind;
+import org.apache.drill.metastore.util.SchemaPathUtils;
 
 import java.util.Collection;
 import java.util.Map;
@@ -35,11 +36,15 @@ import java.util.stream.Collectors;
  * Common provider of tuple schema, column metadata, and statistics for table, partition, file or row group.
  */
 public abstract class BaseMetadata implements Metadata {
+
+  public static final long UNDEFINED_TIME = -1;
+
   protected final TableInfo tableInfo;
   protected final MetadataInfo metadataInfo;
   protected final TupleMetadata schema;
   protected final Map<SchemaPath, ColumnStatistics> columnsStatistics;
   protected final Map<String, StatisticsHolder> metadataStatistics;
+  protected final long lastModifiedTime;
 
   protected <T extends BaseMetadataBuilder<T>> BaseMetadata(BaseMetadataBuilder<T> builder) {
     this.tableInfo = builder.tableInfo;
@@ -51,6 +56,7 @@ public abstract class BaseMetadata implements Metadata {
             statistic -> statistic.getStatisticsKind().getName(),
             Function.identity(),
             (a, b) -> a.getStatisticsKind().isExact() ? a : b));
+    this.lastModifiedTime = builder.lastModifiedTime;
   }
 
   @Override
@@ -102,12 +108,53 @@ public abstract class BaseMetadata implements Metadata {
     return metadataInfo;
   }
 
+  /**
+   * Allows to check the time, when any files were modified.
+   * It is in Unix Timestamp, unit of measurement is millisecond.
+   * Undefined time value will be indicated using {@link #UNDEFINED_TIME} value.
+   *
+   * @return last modified time of files
+   */
+  public long getLastModifiedTime() {
+    return lastModifiedTime;
+  }
+
+  @Override
+  public TableMetadataUnit toMetadataUnit() {
+    TableMetadataUnit.Builder builder = TableMetadataUnit.builder();
+
+    tableInfo.toMetadataUnitBuilder(builder);
+    metadataInfo.toMetadataUnitBuilder(builder);
+
+    if (schema != null) {
+      builder.schema(schema.jsonString());
+    }
+
+    builder.columnsStatistics(columnsStatistics.entrySet().stream()
+      .collect(Collectors.toMap(
+        entry -> entry.getKey().toString(),
+        entry -> entry.getValue().jsonString(),
+        (o, n) -> n)));
+
+    builder.metadataStatistics(metadataStatistics.values().stream()
+      .map(StatisticsHolder::jsonString)
+      .collect(Collectors.toList()));
+
+    builder.lastModifiedTime(lastModifiedTime);
+
+    toMetadataUnitBuilder(builder);
+    return builder.build();
+  }
+
+  protected abstract void toMetadataUnitBuilder(TableMetadataUnit.Builder builder);
+
   public static abstract class BaseMetadataBuilder<T extends BaseMetadataBuilder<T>> {
     protected TableInfo tableInfo;
     protected MetadataInfo metadataInfo;
     protected TupleMetadata schema;
     protected Map<SchemaPath, ColumnStatistics> columnsStatistics;
     protected Collection<StatisticsHolder> metadataStatistics;
+    protected long lastModifiedTime = UNDEFINED_TIME;
 
     public T tableInfo(TableInfo tableInfo) {
       this.tableInfo = tableInfo;
@@ -134,6 +181,37 @@ public abstract class BaseMetadata implements Metadata {
       return self();
     }
 
+    public T lastModifiedTime(long lastModifiedTime) {
+      this.lastModifiedTime = lastModifiedTime;
+      return self();
+    }
+
+    public T metadataUnit(TableMetadataUnit unit) {
+      tableInfo(TableInfo.builder().metadataUnit(unit).build());
+      metadataInfo(MetadataInfo.builder().metadataUnit(unit).build());
+      schema(TupleMetadata.of(unit.schema()));
+
+      if (unit.columnsStatistics() != null) {
+        columnsStatistics(unit.columnsStatistics().entrySet().stream()
+          .collect(Collectors.toMap(
+            entry -> SchemaPath.parseFromString(entry.getKey()),
+            entry -> ColumnStatistics.of(entry.getValue()),
+            (o, n) -> n)));
+      }
+
+      if (unit.metadataStatistics() != null) {
+        metadataStatistics(unit.metadataStatistics().stream()
+          .map(StatisticsHolder::of)
+          .collect(Collectors.toList()));
+      }
+
+      if (unit.lastModifiedTime() != null) {
+        lastModifiedTime(unit.lastModifiedTime());
+      }
+
+      return metadataUnitInternal(unit);
+    }
+
     protected void checkRequiredValues() {
       Objects.requireNonNull(tableInfo, "tableInfo was not set");
       Objects.requireNonNull(metadataInfo, "metadataInfo was not set");
@@ -144,5 +222,7 @@ public abstract class BaseMetadata implements Metadata {
     public abstract BaseMetadata build();
 
     protected abstract T self();
+
+    protected abstract T metadataUnitInternal(TableMetadataUnit unit);
   }
 }

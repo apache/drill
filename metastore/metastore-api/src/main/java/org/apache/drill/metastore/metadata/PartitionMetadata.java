@@ -18,11 +18,13 @@
 package org.apache.drill.metastore.metadata;
 
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.metastore.components.tables.TableMetadataUnit;
 import org.apache.hadoop.fs.Path;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Represents a metadata for the table part, which corresponds to the specific partition key.
@@ -31,14 +33,12 @@ public class PartitionMetadata extends BaseMetadata {
   private final SchemaPath column;
   private final List<String> partitionValues;
   private final Set<Path> locations;
-  private final long lastModifiedTime;
 
   private PartitionMetadata(PartitionMetadataBuilder builder) {
     super(builder);
     this.column = builder.column;
     this.partitionValues = builder.partitionValues;
     this.locations = builder.locations;
-    this.lastModifiedTime = builder.lastModifiedTime;
   }
 
   /**
@@ -59,18 +59,17 @@ public class PartitionMetadata extends BaseMetadata {
     return locations;
   }
 
-  /**
-   * Allows to check the time, when any files were modified.
-   * It is in Unix Timestamp, unit of measurement is millisecond.
-   *
-   * @return last modified time of files
-   */
-  public long getLastModifiedTime() {
-    return lastModifiedTime;
-  }
-
   public List<String> getPartitionValues() {
     return partitionValues;
+  }
+
+  @Override
+  protected void toMetadataUnitBuilder(TableMetadataUnit.Builder builder) {
+    builder.column(column.toString());
+    builder.partitionValues(partitionValues);
+    builder.locations(locations.stream()
+      .map(location -> location.toUri().getPath())
+      .collect(Collectors.toList()));
   }
 
   public static PartitionMetadataBuilder builder() {
@@ -81,15 +80,9 @@ public class PartitionMetadata extends BaseMetadata {
     private SchemaPath column;
     private List<String> partitionValues;
     private Set<Path> locations;
-    private long lastModifiedTime = BaseTableMetadata.NON_DEFINED_LAST_MODIFIED_TIME;
 
     public PartitionMetadataBuilder locations(Set<Path> locations) {
       this.locations = locations;
-      return self();
-    }
-
-    public PartitionMetadataBuilder lastModifiedTime(long lastModifiedTime) {
-      this.lastModifiedTime = lastModifiedTime;
       return self();
     }
 
@@ -120,6 +113,18 @@ public class PartitionMetadata extends BaseMetadata {
     @Override
     protected PartitionMetadataBuilder self() {
       return this;
+    }
+
+    @Override
+    protected PartitionMetadataBuilder metadataUnitInternal(TableMetadataUnit unit) {
+      if (unit.locations() != null) {
+        locations(unit.locations().stream()
+          .map(Path::new)
+          .collect(Collectors.toSet()));
+      }
+      partitionValues(unit.partitionValues());
+      column(SchemaPath.parseFromString(unit.column()));
+      return self();
     }
   }
 }
