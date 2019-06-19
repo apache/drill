@@ -19,7 +19,12 @@ package org.apache.drill.exec.store.parquet;
 
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.exec.physical.impl.statistics.Statistic;
+import org.apache.drill.metastore.statistics.BaseStatisticsKind;
+import org.apache.drill.metastore.metadata.MetadataInfo;
+import org.apache.drill.metastore.metadata.MetadataType;
+import org.apache.drill.metastore.metadata.TableInfo;
+import org.apache.drill.metastore.statistics.TableStatisticsKind;
+import org.apache.drill.metastore.statistics.Statistic;
 import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.metadata.TupleSchema;
@@ -29,30 +34,24 @@ import org.apache.drill.exec.store.ColumnExplorer;
 import org.apache.drill.exec.store.parquet.metadata.MetadataBase;
 import org.apache.drill.exec.store.parquet.metadata.MetadataVersion;
 import org.apache.drill.exec.store.parquet.metadata.Metadata_V4;
-import org.apache.drill.metastore.BaseMetadata;
-import org.apache.drill.metastore.CollectableColumnStatisticsKind;
-import org.apache.drill.metastore.ColumnStatistics;
-import org.apache.drill.metastore.ColumnStatisticsImpl;
-import org.apache.drill.metastore.ColumnStatisticsKind;
-import org.apache.drill.metastore.FileMetadata;
-import org.apache.drill.metastore.NonInterestingColumnsMetadata;
-import org.apache.drill.metastore.PartitionMetadata;
-import org.apache.drill.metastore.RowGroupMetadata;
-import org.apache.drill.metastore.StatisticsKind;
-import org.apache.drill.metastore.TableMetadata;
-import org.apache.drill.metastore.TableStatisticsKind;
-import org.apache.drill.exec.expr.ExactStatisticsConstants;
+import org.apache.drill.metastore.statistics.CollectableColumnStatisticsKind;
+import org.apache.drill.metastore.statistics.ColumnStatistics;
+import org.apache.drill.metastore.statistics.ColumnStatisticsKind;
+import org.apache.drill.metastore.metadata.FileMetadata;
+import org.apache.drill.metastore.metadata.NonInterestingColumnsMetadata;
+import org.apache.drill.metastore.metadata.PartitionMetadata;
+import org.apache.drill.metastore.metadata.RowGroupMetadata;
+import org.apache.drill.metastore.statistics.StatisticsHolder;
+import org.apache.drill.metastore.util.TableMetadataUtils;
+import org.apache.drill.metastore.statistics.ExactStatisticsConstants;
 import org.apache.drill.exec.expr.StatisticsProvider;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.apache.drill.shaded.guava.com.google.common.collect.LinkedListMultimap;
 import org.apache.drill.shaded.guava.com.google.common.collect.Multimap;
 import org.apache.drill.shaded.guava.com.google.common.primitives.Longs;
-import org.apache.drill.shaded.guava.com.google.common.primitives.UnsignedBytes;
 import org.apache.hadoop.fs.Path;
 import org.apache.parquet.io.api.Binary;
 import org.apache.parquet.schema.OriginalType;
-import org.apache.parquet.schema.PrimitiveComparator;
 import org.apache.parquet.schema.PrimitiveType;
 import org.joda.time.DateTimeConstants;
 
@@ -60,15 +59,13 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Comparator;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Utility class for converting parquet metadata classes to metastore metadata classes.
@@ -76,10 +73,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @SuppressWarnings("WeakerAccess")
 public class ParquetTableMetadataUtils {
 
-  private static final Comparator<byte[]> UNSIGNED_LEXICOGRAPHICAL_BINARY_COMPARATOR = Comparator.nullsFirst((b1, b2) ->
-      PrimitiveComparator.UNSIGNED_LEXICOGRAPHICAL_BINARY_COMPARATOR.compare(Binary.fromReusedByteArray(b1), Binary.fromReusedByteArray(b2)));
-
-  static final List<CollectableColumnStatisticsKind> PARQUET_STATISTICS =
+  static final List<CollectableColumnStatisticsKind> PARQUET_COLUMN_STATISTICS =
           ImmutableList.of(
               ColumnStatisticsKind.MAX_VALUE,
               ColumnStatisticsKind.MIN_VALUE,
@@ -111,8 +105,7 @@ public class ParquetTableMetadataUtils {
     columnsStatistics = new HashMap<>(columnsStatistics);
     for (Map.Entry<String, String> partitionValue : implicitColValues.entrySet()) {
       columnsStatistics.put(SchemaPath.getCompoundPath(partitionValue.getKey()),
-          new StatisticsProvider.MinMaxStatistics<>(partitionValue.getValue(),
-              partitionValue.getValue(), Comparator.nullsFirst(Comparator.naturalOrder())));
+          StatisticsProvider.getConstantColumnStatistics(partitionValue.getValue(), TypeProtos.MinorType.VARCHAR));
     }
     return columnsStatistics;
   }
@@ -148,78 +141,58 @@ public class ParquetTableMetadataUtils {
   public static RowGroupMetadata getRowGroupMetadata(MetadataBase.ParquetTableMetadataBase tableMetadata,
       MetadataBase.RowGroupMetadata rowGroupMetadata, int rgIndexInFile, Path location) {
     Map<SchemaPath, ColumnStatistics> columnsStatistics = getRowGroupColumnStatistics(tableMetadata, rowGroupMetadata);
-    Map<StatisticsKind, Object> rowGroupStatistics = new HashMap<>();
-    rowGroupStatistics.put(TableStatisticsKind.ROW_COUNT, rowGroupMetadata.getRowCount());
-    rowGroupStatistics.put(() -> ExactStatisticsConstants.START, rowGroupMetadata.getStart());
-    rowGroupStatistics.put(() -> ExactStatisticsConstants.LENGTH, rowGroupMetadata.getLength());
+    List<StatisticsHolder> rowGroupStatistics = new ArrayList<>();
+    rowGroupStatistics.add(new StatisticsHolder<>(rowGroupMetadata.getRowCount(), TableStatisticsKind.ROW_COUNT));
+    rowGroupStatistics.add(new StatisticsHolder<>(rowGroupMetadata.getStart(), new BaseStatisticsKind(ExactStatisticsConstants.START, true)));
+    rowGroupStatistics.add(new StatisticsHolder<>(rowGroupMetadata.getLength(), new BaseStatisticsKind(ExactStatisticsConstants.LENGTH, true)));
 
     Map<SchemaPath, TypeProtos.MajorType> columns = getRowGroupFields(tableMetadata, rowGroupMetadata);
 
     TupleSchema schema = new TupleSchema();
     columns.forEach((schemaPath, majorType) -> MetadataUtils.addColumnMetadata(schema, schemaPath, majorType));
 
-    return new RowGroupMetadata(
-        schema, columnsStatistics, rowGroupStatistics, rowGroupMetadata.getHostAffinity(), rgIndexInFile, location);
-  }
+    MetadataInfo metadataInfo = new MetadataInfo(MetadataType.ROW_GROUP, MetadataInfo.GENERAL_INFO_KEY, null);
 
-  /**
-   * Merges list of specified metadata into the map of {@link ColumnStatistics} with columns as keys.
-   *
-   * @param <T>                 type of metadata to collect
-   * @param metadataList        list of metadata to be merged
-   * @param columns             set of columns whose statistics should be merged
-   * @param statisticsToCollect kinds of statistics that should be collected
-   * @param parquetTableMetadata ParquetTableMetadata object to fetch the non-interesting columns
-   * @return list of merged metadata
-   */
-  @SuppressWarnings("unchecked")
-  public static <T extends BaseMetadata> Map<SchemaPath, ColumnStatistics> mergeColumnsStatistics(
-          Collection<T> metadataList, Set<SchemaPath> columns, List<CollectableColumnStatisticsKind> statisticsToCollect, MetadataBase.ParquetTableMetadataBase parquetTableMetadata) {
-    Map<SchemaPath, ColumnStatistics> columnsStatistics = new HashMap<>();
-
-    for (SchemaPath column : columns) {
-      List<ColumnStatistics> statisticsList = new ArrayList<>();
-      for (T metadata : metadataList) {
-        ColumnStatistics statistics = metadata.getColumnsStatistics().get(column);
-        if (statistics == null) {
-          // schema change happened, set statistics which represents all nulls
-          statistics = new ColumnStatisticsImpl(
-              ImmutableMap.of(ColumnStatisticsKind.NULLS_COUNT, metadata.getStatistic(TableStatisticsKind.ROW_COUNT)),
-              getNaturalNullsFirstComparator());
-        }
-        statisticsList.add(statistics);
-      }
-      Map<StatisticsKind, Object> statisticsMap = new HashMap<>();
-      for (CollectableColumnStatisticsKind statisticsKind : statisticsToCollect) {
-        Object mergedStatistic = statisticsKind.mergeStatistics(statisticsList);
-        statisticsMap.put(statisticsKind, mergedStatistic);
-      }
-      columnsStatistics.put(column, new ColumnStatisticsImpl(statisticsMap, statisticsList.iterator().next().getValueComparator()));
-    }
-    return columnsStatistics;
+    return RowGroupMetadata.builder()
+        .tableInfo(TableInfo.UNKNOWN_TABLE_INFO)
+        .metadataInfo(metadataInfo)
+        .schema(schema)
+        .columnsStatistics(columnsStatistics)
+        .metadataStatistics(rowGroupStatistics)
+        .hostAffinity(rowGroupMetadata.getHostAffinity())
+        .rowGroupIndex(rgIndexInFile)
+        .path(location)
+        .build();
   }
 
   /**
    * Returns {@link FileMetadata} instance received by merging specified {@link RowGroupMetadata} list.
    *
    * @param rowGroups list of {@link RowGroupMetadata} to be merged
-   * @param tableName name of the table
-   * @param parquetTableMetadata the source of column metadata for non-interesting column's statistics
    * @return {@link FileMetadata} instance
    */
-  public static FileMetadata getFileMetadata(List<RowGroupMetadata> rowGroups, String tableName,
-      MetadataBase.ParquetTableMetadataBase parquetTableMetadata) {
+  public static FileMetadata getFileMetadata(List<RowGroupMetadata> rowGroups) {
     if (rowGroups.isEmpty()) {
       return null;
     }
-    Map<StatisticsKind, Object> fileStatistics = new HashMap<>();
-    fileStatistics.put(TableStatisticsKind.ROW_COUNT, TableStatisticsKind.ROW_COUNT.mergeStatistics(rowGroups));
+    List<StatisticsHolder> fileStatistics = new ArrayList<>();
+    fileStatistics.add(new StatisticsHolder<>(TableStatisticsKind.ROW_COUNT.mergeStatistics(rowGroups), TableStatisticsKind.ROW_COUNT));
 
-    TupleMetadata schema = rowGroups.iterator().next().getSchema();
+    RowGroupMetadata rowGroupMetadata = rowGroups.iterator().next();
+    TupleMetadata schema = rowGroupMetadata.getSchema();
 
-    return new FileMetadata(rowGroups.iterator().next().getLocation(), schema,
-      mergeColumnsStatistics(rowGroups, rowGroups.iterator().next().getColumnsStatistics().keySet(), PARQUET_STATISTICS, parquetTableMetadata),
-      fileStatistics, tableName, -1);
+    Set<SchemaPath> columns = rowGroupMetadata.getColumnsStatistics().keySet();
+
+    MetadataInfo metadataInfo = new MetadataInfo(MetadataType.FILE, MetadataInfo.GENERAL_INFO_KEY, null);
+
+    return FileMetadata.builder()
+        .tableInfo(rowGroupMetadata.getTableInfo())
+        .metadataInfo(metadataInfo)
+        .path(rowGroupMetadata.getPath())
+        .schema(schema)
+        .columnsStatistics(TableMetadataUtils.mergeColumnsStatistics(rowGroups, columns, PARQUET_COLUMN_STATISTICS))
+        .metadataStatistics(fileStatistics)
+        .build();
   }
 
   /**
@@ -227,33 +200,31 @@ public class ParquetTableMetadataUtils {
    *
    * @param partitionColumn partition column
    * @param files           list of files to be merged
-   * @param tableName       name of the table
    * @return {@link PartitionMetadata} instance
    */
-  public static PartitionMetadata getPartitionMetadata(SchemaPath partitionColumn, List<FileMetadata> files, String tableName) {
+  public static PartitionMetadata getPartitionMetadata(SchemaPath partitionColumn, List<FileMetadata> files) {
     Set<Path> locations = new HashSet<>();
     Set<SchemaPath> columns = new HashSet<>();
 
     for (FileMetadata file : files) {
       columns.addAll(file.getColumnsStatistics().keySet());
-      locations.add(file.getLocation());
+      locations.add(file.getPath());
     }
 
-    Map<StatisticsKind, Object> partStatistics = new HashMap<>();
-    partStatistics.put(TableStatisticsKind.ROW_COUNT, TableStatisticsKind.ROW_COUNT.mergeStatistics(files));
+    FileMetadata fileMetadata = files.iterator().next();
 
-    return new PartitionMetadata(partitionColumn, files.iterator().next().getSchema(),
-        mergeColumnsStatistics(files, columns, PARQUET_STATISTICS, null), partStatistics, locations, tableName, -1);
-  }
+    MetadataInfo metadataInfo = new MetadataInfo(MetadataType.PARTITION, MetadataInfo.GENERAL_INFO_KEY, null);
 
-  /**
-   * Returns "natural order" comparator which threads nulls as min values.
-   *
-   * @param <T> type to compare
-   * @return "natural order" comparator
-   */
-  public static <T extends Comparable<T>> Comparator<T> getNaturalNullsFirstComparator() {
-    return Comparator.nullsFirst(Comparator.naturalOrder());
+    return PartitionMetadata.builder()
+        .tableInfo(fileMetadata.getTableInfo())
+        .metadataInfo(metadataInfo)
+        .column(partitionColumn)
+        .schema(fileMetadata.getSchema())
+        .columnsStatistics(TableMetadataUtils.mergeColumnsStatistics(files, columns, PARQUET_COLUMN_STATISTICS))
+        .metadataStatistics(Collections.singletonList(new StatisticsHolder<>(TableStatisticsKind.ROW_COUNT.mergeStatistics(files), TableStatisticsKind.ROW_COUNT)))
+        .partitionValues(Collections.emptyList())
+        .locations(locations)
+        .build();
   }
 
   /**
@@ -264,7 +235,6 @@ public class ParquetTableMetadataUtils {
    * @param rowGroupMetadata metadata to convert
    * @return map with converted row group metadata
    */
-  @SuppressWarnings("unchecked")
   public static Map<SchemaPath, ColumnStatistics> getRowGroupColumnStatistics(
       MetadataBase.ParquetTableMetadataBase tableMetadata, MetadataBase.RowGroupMetadata rowGroupMetadata) {
 
@@ -279,13 +249,13 @@ public class ParquetTableMetadataUtils {
       }
       PrimitiveType.PrimitiveTypeName primitiveType = getPrimitiveTypeName(tableMetadata, column);
       OriginalType originalType = getOriginalType(tableMetadata, column);
-      Comparator comparator = getComparator(primitiveType, originalType);
+      TypeProtos.MinorType type = ParquetReaderUtility.getMinorType(primitiveType, originalType);
 
-      Map<StatisticsKind, Object> statistics = new HashMap<>();
-      statistics.put(ColumnStatisticsKind.MIN_VALUE, getValue(column.getMinValue(), primitiveType, originalType));
-      statistics.put(ColumnStatisticsKind.MAX_VALUE, getValue(column.getMaxValue(), primitiveType, originalType));
-      statistics.put(ColumnStatisticsKind.NULLS_COUNT, nulls);
-      columnsStatistics.put(colPath, new ColumnStatisticsImpl(statistics, comparator));
+      List<StatisticsHolder> statistics = new ArrayList<>();
+      statistics.add(new StatisticsHolder<>(getValue(column.getMinValue(), primitiveType, originalType), ColumnStatisticsKind.MIN_VALUE));
+      statistics.add(new StatisticsHolder<>(getValue(column.getMaxValue(), primitiveType, originalType), ColumnStatisticsKind.MAX_VALUE));
+      statistics.add(new StatisticsHolder<>(nulls, ColumnStatisticsKind.NULLS_COUNT));
+      columnsStatistics.put(colPath, new ColumnStatistics<>(statistics, type));
     }
     return columnsStatistics;
   }
@@ -298,7 +268,7 @@ public class ParquetTableMetadataUtils {
   public static NonInterestingColumnsMetadata getNonInterestingColumnsMeta(MetadataBase.ParquetTableMetadataBase parquetTableMetadata) {
     Map<SchemaPath, ColumnStatistics> columnsStatistics = new HashMap<>();
     if (parquetTableMetadata instanceof Metadata_V4.ParquetTableMetadata_v4) {
-      ConcurrentHashMap<Metadata_V4.ColumnTypeMetadata_v4.Key, Metadata_V4.ColumnTypeMetadata_v4> columnTypeInfoMap =
+      Map<Metadata_V4.ColumnTypeMetadata_v4.Key, Metadata_V4.ColumnTypeMetadata_v4> columnTypeInfoMap =
               ((Metadata_V4.ParquetTableMetadata_v4) parquetTableMetadata).getColumnTypeInfoMap();
 
       if (columnTypeInfoMap == null) {
@@ -308,12 +278,12 @@ public class ParquetTableMetadataUtils {
       for (Metadata_V4.ColumnTypeMetadata_v4 columnTypeMetadata : columnTypeInfoMap.values()) {
         if (!columnTypeMetadata.isInteresting) {
           SchemaPath schemaPath = SchemaPath.getCompoundPath(columnTypeMetadata.name);
-          Map<StatisticsKind, Object> statistics = new HashMap<>();
-          statistics.put(ColumnStatisticsKind.NULLS_COUNT, Statistic.NO_COLUMN_STATS);
+          List<StatisticsHolder> statistics = new ArrayList<>();
+          statistics.add(new StatisticsHolder<>(Statistic.NO_COLUMN_STATS, ColumnStatisticsKind.NULLS_COUNT));
           PrimitiveType.PrimitiveTypeName primitiveType = columnTypeMetadata.primitiveType;
           OriginalType originalType = columnTypeMetadata.originalType;
-          Comparator comparator = getComparator(primitiveType, originalType);
-          columnsStatistics.put(schemaPath, new ColumnStatisticsImpl<>(statistics, comparator));
+          TypeProtos.MinorType type = ParquetReaderUtility.getMinorType(primitiveType, originalType);
+          columnsStatistics.put(schemaPath, new ColumnStatistics<>(statistics, type));
         }
       }
       return new NonInterestingColumnsMetadata(columnsStatistics);
@@ -482,80 +452,6 @@ public class ParquetTableMetadataUtils {
   }
 
   /**
-   * Returns {@link Comparator} instance considering specified {@code primitiveType} and {@code originalType}.
-   *
-   * @param primitiveType primitive type of the column
-   * @param originalType  original type og the column
-   * @return {@link Comparator} instance
-   */
-  public static Comparator getComparator(PrimitiveType.PrimitiveTypeName primitiveType, OriginalType originalType) {
-    if (originalType != null) {
-      switch (originalType) {
-        case UINT_8:
-        case UINT_16:
-        case UINT_32:
-          return getNaturalNullsFirstComparator();
-        case UINT_64:
-          return getNaturalNullsFirstComparator();
-        case DATE:
-        case INT_8:
-        case INT_16:
-        case INT_32:
-        case INT_64:
-        case TIME_MICROS:
-        case TIME_MILLIS:
-        case TIMESTAMP_MICROS:
-        case TIMESTAMP_MILLIS:
-        case DECIMAL:
-        case UTF8:
-          return getNaturalNullsFirstComparator();
-        case INTERVAL:
-          return UNSIGNED_LEXICOGRAPHICAL_BINARY_COMPARATOR;
-        default:
-          return getNaturalNullsFirstComparator();
-      }
-    } else {
-      switch (primitiveType) {
-        case INT32:
-        case INT64:
-        case FLOAT:
-        case DOUBLE:
-        case BOOLEAN:
-        case BINARY:
-        case INT96:
-        case FIXED_LEN_BYTE_ARRAY:
-          return getNaturalNullsFirstComparator();
-        default:
-          throw new UnsupportedOperationException("Unsupported type: " + primitiveType);
-      }
-    }
-  }
-
-  /**
-   * Returns {@link Comparator} instance considering specified {@code type}.
-   *
-   * @param type type of the column
-   * @return {@link Comparator} instance
-   */
-  public static Comparator getComparator(TypeProtos.MinorType type) {
-    switch (type) {
-      case INTERVALDAY:
-      case INTERVAL:
-      case INTERVALYEAR:
-        return UNSIGNED_LEXICOGRAPHICAL_BINARY_COMPARATOR;
-      case UINT1:
-        return Comparator.nullsFirst(UnsignedBytes::compare);
-      case UINT2:
-      case UINT4:
-        return Comparator.nullsFirst(Integer::compareUnsigned);
-      case UINT8:
-        return Comparator.nullsFirst(Long::compareUnsigned);
-      default:
-        return getNaturalNullsFirstComparator();
-    }
-  }
-
-  /**
    * Returns map of column names with their drill types for specified {@code file}.
    *
    * @param parquetTableMetadata the source of primitive and original column types
@@ -681,22 +577,4 @@ public class ParquetTableMetadataUtils {
     return columns;
   }
 
-  /**
-   * Updates row cont and column nulls count for specified table metadata and returns new {@link TableMetadata} instance with updated statistics.
-   *
-   * @param tableMetadata table statistics to update
-   * @param statistics    list of statistics whose row count should be considered
-   * @return new {@link TableMetadata} instance with updated statistics
-   */
-  public static TableMetadata updateRowCount(TableMetadata tableMetadata, Collection<? extends BaseMetadata> statistics) {
-    Map<StatisticsKind, Object> newStats = new HashMap<>();
-
-    newStats.put(TableStatisticsKind.ROW_COUNT, TableStatisticsKind.ROW_COUNT.mergeStatistics(statistics));
-
-    Map<SchemaPath, ColumnStatistics> columnsStatistics =
-        mergeColumnsStatistics(statistics, tableMetadata.getColumnsStatistics().keySet(),
-            ImmutableList.of(ColumnStatisticsKind.NULLS_COUNT), null);
-
-    return tableMetadata.cloneWithStats(columnsStatistics, newStats);
-  }
 }

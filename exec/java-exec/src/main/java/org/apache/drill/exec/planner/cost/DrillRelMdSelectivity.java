@@ -54,17 +54,17 @@ import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.planner.common.DrillJoinRelBase;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
 import org.apache.drill.exec.planner.common.DrillScanRelBase;
-import org.apache.drill.exec.planner.common.Histogram;
+import org.apache.drill.metastore.statistics.Histogram;
 import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.planner.physical.ScanPrel;
 import org.apache.drill.exec.util.Utilities;
-import org.apache.drill.metastore.ColumnStatistics;
-import org.apache.drill.metastore.ColumnStatisticsKind;
-import org.apache.drill.metastore.TableMetadata;
-import org.apache.drill.metastore.TableStatisticsKind;
+import org.apache.drill.metastore.statistics.TableStatisticsKind;
+import org.apache.drill.metastore.statistics.ColumnStatistics;
+import org.apache.drill.metastore.statistics.ColumnStatisticsKind;
+import org.apache.drill.metastore.metadata.TableMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -145,7 +145,7 @@ public class DrillRelMdSelectivity extends RelMdSelectivity {
       try {
         TableMetadata tableMetadata;
         if (table != null && (tableMetadata = table.getGroupScan().getTableMetadata()) != null
-            && (boolean) TableStatisticsKind.HAS_STATISTICS.getValue(tableMetadata)) {
+            && TableStatisticsKind.HAS_DESCRIPTIVE_STATISTICS.getValue(tableMetadata)) {
           List<SchemaPath> fieldNames;
           if (rel instanceof DrillScanRelBase) {
             fieldNames = ((DrillScanRelBase) rel).getGroupScan().getColumns();
@@ -295,7 +295,7 @@ public class DrillRelMdSelectivity extends RelMdSelectivity {
     SchemaPath col = getColumn(orPred, fieldNames);
     if (col != null) {
       ColumnStatistics columnStatistics = tableMetadata != null ? tableMetadata.getColumnStatistics(col) : null;
-      Double ndv = columnStatistics != null ? (Double) columnStatistics.getStatistic(ColumnStatisticsKind.NDV) : null;
+      Double ndv = columnStatistics != null ? ColumnStatisticsKind.NDV.getFrom(columnStatistics) : null;
       if (ndv != null) {
         return 1.00 / ndv;
       }
@@ -308,10 +308,10 @@ public class DrillRelMdSelectivity extends RelMdSelectivity {
     SchemaPath col = getColumn(orPred, fieldNames);
     if (col != null) {
       ColumnStatistics columnStatistics = tableMetadata != null ? tableMetadata.getColumnStatistics(col) : null;
-      Histogram histogram = columnStatistics != null ? (Histogram) columnStatistics.getStatistic(ColumnStatisticsKind.HISTOGRAM) : null;
+      Histogram histogram = columnStatistics != null ? ColumnStatisticsKind.HISTOGRAM.getFrom(columnStatistics) : null;
       if (histogram != null) {
-        Double totalCount = (Double) columnStatistics.getStatistic(ColumnStatisticsKind.ROWCOUNT);
-        Double ndv = (Double) columnStatistics.getStatistic(ColumnStatisticsKind.NDV);
+        Double totalCount = ColumnStatisticsKind.ROWCOUNT.getFrom(columnStatistics);
+        Double ndv = ColumnStatisticsKind.NDV.getFrom(columnStatistics);
         Double sel = histogram.estimatedSelectivity(orPred, totalCount.longValue(), ndv.longValue());
         if (sel != null) {
           return sel;
@@ -325,10 +325,10 @@ public class DrillRelMdSelectivity extends RelMdSelectivity {
     SchemaPath col = getColumn(orPred, fieldNames);
     if (col != null) {
       ColumnStatistics columnStatistics = tableMetadata != null ? tableMetadata.getColumnStatistics(col) : null;
-      Double nonNullCount = columnStatistics != null ? (Double) columnStatistics.getStatistic(ColumnStatisticsKind.NON_NULL_COUNT) : null;
+      Double nonNullCount = columnStatistics != null ? ColumnStatisticsKind.NON_NULL_COUNT.getFrom(columnStatistics) : null;
       if (nonNullCount != null) {
         // Cap selectivity below Calcite Guess
-        return Math.min(nonNullCount / (Double) TableStatisticsKind.EST_ROW_COUNT.getValue(tableMetadata),
+        return Math.min(nonNullCount / TableStatisticsKind.EST_ROW_COUNT.getValue(tableMetadata),
             RelMdUtil.guessSelectivity(orPred));
       }
     }

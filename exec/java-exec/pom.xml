@@ -292,11 +292,6 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.drill.metastore</groupId>
-      <artifactId>drill-file-metastore-plugin</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
       <groupId>com.beust</groupId>
       <artifactId>jcommander</artifactId>
       <version>1.30</version>

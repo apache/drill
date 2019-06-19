@@ -23,7 +23,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.exec.record.metadata.TupleSchema;
 import org.apache.drill.exec.store.parquet.ParquetReaderConfig;
-import org.apache.drill.metastore.LocationProvider;
+import org.apache.drill.metastore.metadata.LocationProvider;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.LogicalExpression;
@@ -211,14 +211,14 @@ public class HiveDrillNativeParquetScan extends AbstractParquetGroupScan {
 
   @Override
   protected List<String> getPartitionValues(LocationProvider locationProvider) {
-    return hivePartitionHolder.get(locationProvider.getLocation());
+    return hivePartitionHolder.get(locationProvider.getPath());
   }
 
   /**
    * Implementation of RowGroupScanFilterer which uses {@link HiveDrillNativeParquetScanFilterer} as source and
    * builds {@link HiveDrillNativeParquetScanFilterer} instance with filtered metadata.
    */
-  private class HiveDrillNativeParquetScanFilterer extends RowGroupScanFilterer {
+  private class HiveDrillNativeParquetScanFilterer extends RowGroupScanFilterer<HiveDrillNativeParquetScanFilterer> {
 
     public HiveDrillNativeParquetScanFilterer(HiveDrillNativeParquetScan source) {
       super(source);
@@ -227,6 +227,11 @@ public class HiveDrillNativeParquetScan extends AbstractParquetGroupScan {
     @Override
     protected AbstractParquetGroupScan getNewScan() {
       return new HiveDrillNativeParquetScan((HiveDrillNativeParquetScan) source);
+    }
+
+    @Override
+    protected HiveDrillNativeParquetScanFilterer self() {
+      return this;
     }
   }
 }

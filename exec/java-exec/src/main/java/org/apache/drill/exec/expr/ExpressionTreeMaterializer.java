@@ -27,7 +27,7 @@ import java.util.Optional;
 import java.util.Queue;
 
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
-import org.apache.drill.exec.record.metadata.SchemaPathUtils;
+import org.apache.drill.metastore.util.SchemaPathUtils;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;

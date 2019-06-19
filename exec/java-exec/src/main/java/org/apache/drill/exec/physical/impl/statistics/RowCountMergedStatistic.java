@@ -23,6 +23,7 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.vector.NullableBigIntVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.MapVector;
+import org.apache.drill.metastore.statistics.Statistic;
 
 public class RowCountMergedStatistic extends AbstractMergedStatistic {
 

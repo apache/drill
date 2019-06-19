@@ -18,9 +18,9 @@
 package org.apache.drill.exec.expr;
 
 import org.apache.drill.exec.expr.stat.RowsMatch;
-import org.apache.drill.exec.physical.impl.statistics.Statistic;
-import org.apache.drill.metastore.ColumnStatistics;
-import org.apache.drill.metastore.ColumnStatisticsKind;
+import org.apache.drill.metastore.statistics.Statistic;
+import org.apache.drill.metastore.statistics.ColumnStatistics;
+import org.apache.drill.metastore.statistics.ColumnStatisticsKind;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.LogicalExpressionBase;
@@ -73,10 +73,10 @@ public class IsPredicate<C extends Comparable<C>> extends LogicalExpressionBase 
    */
   static boolean isNullOrEmpty(ColumnStatistics stat) {
     return stat == null
-        || !stat.containsStatistic(ColumnStatisticsKind.MIN_VALUE)
-        || !stat.containsStatistic(ColumnStatisticsKind.MAX_VALUE)
-        || !stat.containsStatistic(ColumnStatisticsKind.NULLS_COUNT)
-        || (long) stat.getStatistic(ColumnStatisticsKind.NULLS_COUNT) == Statistic.NO_COLUMN_STATS;
+        || !stat.contains(ColumnStatisticsKind.MIN_VALUE)
+        || !stat.contains(ColumnStatisticsKind.MAX_VALUE)
+        || !stat.contains(ColumnStatisticsKind.NULLS_COUNT)
+        || ColumnStatisticsKind.NULLS_COUNT.getFrom(stat) == Statistic.NO_COLUMN_STATS;
   }
 
   /**
@@ -96,7 +96,7 @@ public class IsPredicate<C extends Comparable<C>> extends LogicalExpressionBase 
    * @return <tt>true</tt> if the statistics does not have nulls and <tt>false</tt> otherwise
    */
   static boolean hasNoNulls(ColumnStatistics stat) {
-    return (long) stat.getStatistic(ColumnStatisticsKind.NULLS_COUNT) == 0;
+    return ColumnStatisticsKind.NULLS_COUNT.getFrom(stat) == 0;
   }
 
   /**
@@ -129,13 +129,13 @@ public class IsPredicate<C extends Comparable<C>> extends LogicalExpressionBase 
    */
   static boolean isAllNulls(ColumnStatistics stat, long rowCount) {
     Preconditions.checkArgument(rowCount >= 0, String.format("negative rowCount %d is not valid", rowCount));
-    return (long) stat.getStatistic(ColumnStatisticsKind.NULLS_COUNT) == rowCount;
+    return ColumnStatisticsKind.NULLS_COUNT.getFrom(stat) == rowCount;
   }
 
-  static boolean hasNonNullValues(ColumnStatistics stat, long rowCount) {
-    return rowCount > (long) stat.getStatistic(ColumnStatisticsKind.NULLS_COUNT)
-      && stat.getValueStatistic(ColumnStatisticsKind.MIN_VALUE) != null
-      && stat.getValueStatistic(ColumnStatisticsKind.MAX_VALUE) != null;
+  static <T> boolean hasNonNullValues(ColumnStatistics<T> stat, long rowCount) {
+    return rowCount > ColumnStatisticsKind.NULLS_COUNT.getFrom(stat)
+        && ColumnStatisticsKind.MIN_VALUE.getValueStatistic(stat) != null
+        && ColumnStatisticsKind.MAX_VALUE.getValueStatistic(stat) != null;
   }
 
   /**
@@ -158,10 +158,10 @@ public class IsPredicate<C extends Comparable<C>> extends LogicalExpressionBase 
       if (!hasNonNullValues(exprStat, evaluator.getRowCount())) {
         return RowsMatch.SOME;
       }
-      if (!exprStat.getValueStatistic(ColumnStatisticsKind.MAX_VALUE)) {
+      if (!ColumnStatisticsKind.MAX_VALUE.getValueStatistic(exprStat)) {
         return RowsMatch.NONE;
       }
-      return exprStat.getValueStatistic(ColumnStatisticsKind.MIN_VALUE) ? checkNull(exprStat) : RowsMatch.SOME;
+      return ColumnStatisticsKind.MIN_VALUE.getValueStatistic(exprStat) ? checkNull(exprStat) : RowsMatch.SOME;
     });
   }
 
@@ -176,10 +176,10 @@ public class IsPredicate<C extends Comparable<C>> extends LogicalExpressionBase 
       if (!hasNonNullValues(exprStat, evaluator.getRowCount())) {
         return RowsMatch.SOME;
       }
-      if (exprStat.getValueStatistic(ColumnStatisticsKind.MIN_VALUE)) {
+      if (ColumnStatisticsKind.MIN_VALUE.getValueStatistic(exprStat)) {
         return RowsMatch.NONE;
       }
-      return exprStat.getValueStatistic(ColumnStatisticsKind.MAX_VALUE) ? RowsMatch.SOME : checkNull(exprStat);
+      return ColumnStatisticsKind.MAX_VALUE.getValueStatistic(exprStat) ? RowsMatch.SOME : checkNull(exprStat);
     });
   }
 
@@ -194,10 +194,10 @@ public class IsPredicate<C extends Comparable<C>> extends LogicalExpressionBase 
       if (!hasNonNullValues(exprStat, evaluator.getRowCount())) {
         return RowsMatch.SOME;
       }
-      if (exprStat.getValueStatistic(ColumnStatisticsKind.MIN_VALUE)) {
+      if (ColumnStatisticsKind.MIN_VALUE.getValueStatistic(exprStat)) {
         return hasNoNulls(exprStat) ? RowsMatch.NONE : RowsMatch.SOME;
       }
-      return exprStat.getValueStatistic(ColumnStatisticsKind.MAX_VALUE) ? RowsMatch.SOME : RowsMatch.ALL;
+      return ColumnStatisticsKind.MAX_VALUE.getValueStatistic(exprStat) ? RowsMatch.SOME : RowsMatch.ALL;
     });
   }
 
@@ -212,10 +212,10 @@ public class IsPredicate<C extends Comparable<C>> extends LogicalExpressionBase 
       if (!hasNonNullValues(exprStat, evaluator.getRowCount())) {
         return RowsMatch.SOME;
       }
-      if (!exprStat.getValueStatistic(ColumnStatisticsKind.MAX_VALUE)) {
+      if (!ColumnStatisticsKind.MAX_VALUE.getValueStatistic(exprStat)) {
         return hasNoNulls(exprStat) ? RowsMatch.NONE : RowsMatch.SOME;
       }
-      return exprStat.getValueStatistic(ColumnStatisticsKind.MIN_VALUE) ? RowsMatch.ALL : RowsMatch.SOME;
+      return ColumnStatisticsKind.MIN_VALUE.getValueStatistic(exprStat) ? RowsMatch.ALL : RowsMatch.SOME;
     });
   }
 

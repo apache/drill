@@ -25,11 +25,13 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.jsontype.NamedType;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -50,9 +52,11 @@ import org.apache.drill.exec.store.dfs.FormatPlugin;
 import org.apache.drill.exec.store.dfs.FormatSelection;
 import org.apache.drill.exec.store.parquet.ParquetFormatConfig;
 import org.apache.drill.exec.util.ImpersonationUtil;
-import org.apache.drill.metastore.ColumnStatisticsKind;
-import org.apache.drill.metastore.StatisticsKind;
-import org.apache.drill.metastore.TableStatisticsKind;
+import org.apache.drill.metastore.statistics.Histogram;
+import org.apache.drill.metastore.statistics.TableStatisticsKind;
+import org.apache.drill.metastore.statistics.ColumnStatisticsKind;
+import org.apache.drill.metastore.statistics.StatisticsHolder;
+import org.apache.drill.metastore.statistics.StatisticsKind;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
@@ -452,53 +456,54 @@ public class DrillStatsTable {
         .addDeserializer(TypeProtos.MajorType.class, new MajorTypeSerDe.De())
         .addDeserializer(SchemaPath.class, new SchemaPath.De());
     mapper.registerModule(deModule);
+    mapper.registerSubtypes(new NamedType(NumericEquiDepthHistogram.class, "numeric-equi-depth"));
     return mapper;
   }
 
   /**
-   * Returns map of {@link StatisticsKind} and statistics values obtained from specified {@link DrillStatsTable}.
+   * Returns list of {@link StatisticsKind} and statistics values obtained from specified {@link DrillStatsTable}.
    *
    * @param statsProvider the source of statistics
-   * @return map of {@link StatisticsKind} and statistics values
+   * @return list of {@link StatisticsKind} and statistics values
    */
-  public static Map<StatisticsKind, Object> getEstimatedTableStats(DrillStatsTable statsProvider) {
+  public static List<StatisticsHolder> getEstimatedTableStats(DrillStatsTable statsProvider) {
     if (statsProvider != null && statsProvider.isMaterialized()) {
-      Map<StatisticsKind, Object> tableStatistics = new HashMap<>();
-      tableStatistics.put(TableStatisticsKind.EST_ROW_COUNT, statsProvider.getRowCount());
-      tableStatistics.put(TableStatisticsKind.HAS_STATISTICS, Boolean.TRUE);
+      List<StatisticsHolder> tableStatistics = Arrays.asList(
+          new StatisticsHolder<>(statsProvider.getRowCount(), TableStatisticsKind.EST_ROW_COUNT),
+          new StatisticsHolder<>(Boolean.TRUE, TableStatisticsKind.HAS_DESCRIPTIVE_STATISTICS));
       return tableStatistics;
     }
-    return Collections.emptyMap();
+    return Collections.emptyList();
   }
 
   /**
-   * Returns map of {@link StatisticsKind} and statistics values obtained from specified {@link DrillStatsTable} for specified column.
+   * Returns list of {@link StatisticsKind} and statistics values obtained from specified {@link DrillStatsTable} for specified column.
    *
    * @param statsProvider the source of statistics
    * @param fieldName     name of the columns whose statistics should be obtained
-   * @return map of {@link StatisticsKind} and statistics values
+   * @return list of {@link StatisticsKind} and statistics values
    */
-  public static Map<StatisticsKind, Object> getEstimatedColumnStats(DrillStatsTable statsProvider, SchemaPath fieldName) {
+  public static List<StatisticsHolder> getEstimatedColumnStats(DrillStatsTable statsProvider, SchemaPath fieldName) {
     if (statsProvider != null && statsProvider.isMaterialized()) {
-      Map<StatisticsKind, Object> statisticsValues = new HashMap<>();
+      List<StatisticsHolder> statisticsValues = new ArrayList<>();
       Double ndv = statsProvider.getNdv(fieldName);
       if (ndv != null) {
-        statisticsValues.put(ColumnStatisticsKind.NDV, ndv);
+        statisticsValues.add(new StatisticsHolder<>(ndv, ColumnStatisticsKind.NDV));
       }
       Double nonNullCount = statsProvider.getNNRowCount(fieldName);
       if (nonNullCount != null) {
-        statisticsValues.put(ColumnStatisticsKind.NON_NULL_COUNT, nonNullCount);
+        statisticsValues.add(new StatisticsHolder<>(nonNullCount, ColumnStatisticsKind.NON_NULL_COUNT));
       }
       Histogram histogram = statsProvider.getHistogram(fieldName);
       if (histogram != null) {
-        statisticsValues.put(ColumnStatisticsKind.HISTOGRAM, histogram);
+        statisticsValues.add(new StatisticsHolder<>(histogram, ColumnStatisticsKind.HISTOGRAM));
       }
       Double rowcount = statsProvider.getRowCount();
       if (rowcount != null) {
-        statisticsValues.put(ColumnStatisticsKind.ROWCOUNT, rowcount);
+        statisticsValues.add(new StatisticsHolder<>(rowcount, ColumnStatisticsKind.ROWCOUNT));
       }
       return statisticsValues;
     }
-    return Collections.emptyMap();
+    return Collections.emptyList();
   }
 }

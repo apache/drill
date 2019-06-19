@@ -44,6 +44,7 @@ import org.apache.drill.exec.vector.BigIntVector;
 import org.apache.drill.exec.vector.DateVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.MapVector;
+import org.apache.drill.metastore.statistics.Statistic;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 /**

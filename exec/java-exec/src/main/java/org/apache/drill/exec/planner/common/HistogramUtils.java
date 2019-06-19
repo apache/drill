@@ -18,6 +18,7 @@
 package org.apache.drill.exec.planner.common;
 
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.metastore.statistics.Histogram;
 
 public class HistogramUtils {
 

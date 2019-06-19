@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.store.parquet;
 
-import org.apache.drill.exec.physical.base.ParquetTableMetadataProvider;
-import org.apache.drill.exec.physical.base.TableMetadataProviderBuilder;
+import org.apache.drill.metastore.ParquetTableMetadataProvider;
+import org.apache.drill.metastore.metadata.TableMetadataProviderBuilder;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.store.dfs.ReadEntryWithPath;

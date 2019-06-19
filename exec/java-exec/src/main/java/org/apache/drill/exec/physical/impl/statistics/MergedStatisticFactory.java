@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.physical.impl.statistics;
 
+import org.apache.drill.metastore.statistics.Statistic;
+
 import java.util.HashMap;
 
 public class MergedStatisticFactory {

@@ -20,19 +20,20 @@ package org.apache.drill.exec.store.parquet;
 import org.apache.commons.lang3.mutable.MutableLong;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.exec.physical.impl.statistics.Statistic;
+import org.apache.drill.metastore.statistics.TableStatisticsKind;
+import org.apache.drill.metastore.statistics.Statistic;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
-import org.apache.drill.exec.record.metadata.SchemaPathUtils;
-import org.apache.drill.metastore.BaseMetadata;
+import org.apache.drill.metastore.util.SchemaPathUtils;
+import org.apache.drill.metastore.metadata.BaseMetadata;
 import org.apache.hadoop.fs.Path;
-import org.apache.drill.metastore.ColumnStatistics;
-import org.apache.drill.metastore.ColumnStatisticsKind;
-import org.apache.drill.metastore.LocationProvider;
-import org.apache.drill.metastore.TableStatisticsKind;
+import org.apache.drill.metastore.statistics.ColumnStatistics;
+import org.apache.drill.metastore.statistics.ColumnStatisticsKind;
+import org.apache.drill.metastore.metadata.LocationProvider;
 import org.apache.drill.shaded.guava.com.google.common.collect.HashBasedTable;
 import org.apache.drill.shaded.guava.com.google.common.collect.Table;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,7 +55,7 @@ public class ParquetGroupScanStatistics<T extends BaseMetadata & LocationProvide
   private long rowCount;
 
 
-  public ParquetGroupScanStatistics(List<T> rowGroupInfos) {
+  public ParquetGroupScanStatistics(Collection<T> rowGroupInfos) {
     collect(rowGroupInfos);
   }
 
@@ -95,11 +96,11 @@ public class ParquetGroupScanStatistics<T extends BaseMetadata & LocationProvide
     return partitionValueMap.column(column);
   }
 
-  public void collect(List<T> metadataList) {
+  public void collect(Collection<T> metadataList) {
     resetHolders();
     boolean first = true;
     for (T metadata : metadataList) {
-      long localRowCount = (long) TableStatisticsKind.ROW_COUNT.getValue(metadata);
+      long localRowCount = TableStatisticsKind.ROW_COUNT.getValue(metadata);
       for (Map.Entry<SchemaPath, ColumnStatistics> columnsStatistics : metadata.getColumnsStatistics().entrySet()) {
         SchemaPath schemaPath = columnsStatistics.getKey();
         ColumnStatistics statistics = columnsStatistics.getValue();
@@ -108,7 +109,7 @@ public class ParquetGroupScanStatistics<T extends BaseMetadata & LocationProvide
         if (previousCount == null) {
           previousCount = emptyCount;
         }
-        Long nullsNum = (Long) statistics.getStatistic(ColumnStatisticsKind.NULLS_COUNT);
+        Long nullsNum = ColumnStatisticsKind.NULLS_COUNT.getFrom(statistics);
         if (previousCount.longValue() != Statistic.NO_COLUMN_STATS && nullsNum != null && nullsNum != Statistic.NO_COLUMN_STATS) {
           previousCount.add(localRowCount - nullsNum);
         } else {
@@ -118,8 +119,8 @@ public class ParquetGroupScanStatistics<T extends BaseMetadata & LocationProvide
         TypeProtos.MajorType majorType = columnMetadata != null ? columnMetadata.majorType() : null;
         boolean partitionColumn = checkForPartitionColumn(statistics, first, localRowCount, majorType, schemaPath);
         if (partitionColumn) {
-          Object value = partitionValueMap.get(metadata.getLocation(), schemaPath);
-          Object currentValue = statistics.getStatistic(ColumnStatisticsKind.MAX_VALUE);
+          Object value = partitionValueMap.get(metadata.getPath(), schemaPath);
+          Object currentValue = ColumnStatisticsKind.MAX_VALUE.getFrom(statistics);
           if (value != null && value != BaseParquetMetadataProvider.NULL_VALUE) {
             if (value != currentValue) {
               partitionColTypeMap.remove(schemaPath);
@@ -127,10 +128,10 @@ public class ParquetGroupScanStatistics<T extends BaseMetadata & LocationProvide
           } else {
             // the value of a column with primitive type can not be null,
             // so checks that there are really null value and puts it to the map
-            if (localRowCount == (long) statistics.getStatistic(ColumnStatisticsKind.NULLS_COUNT)) {
-              partitionValueMap.put(metadata.getLocation(), schemaPath, BaseParquetMetadataProvider.NULL_VALUE);
+            if (localRowCount == ColumnStatisticsKind.NULLS_COUNT.getFrom(statistics)) {
+              partitionValueMap.put(metadata.getPath(), schemaPath, BaseParquetMetadataProvider.NULL_VALUE);
             } else {
-              partitionValueMap.put(metadata.getLocation(), schemaPath, currentValue);
+              partitionValueMap.put(metadata.getPath(), schemaPath, currentValue);
             }
           }
         } else {
@@ -206,10 +207,10 @@ public class ParquetGroupScanStatistics<T extends BaseMetadata & LocationProvide
   }
 
   private boolean isSingleVal(ColumnStatistics columnStatistics, long rowCount) {
-    Long numNulls = (Long) columnStatistics.getStatistic(ColumnStatisticsKind.NULLS_COUNT);
+    Long numNulls = ColumnStatisticsKind.NULLS_COUNT.getFrom(columnStatistics);
     if (numNulls != null && numNulls != Statistic.NO_COLUMN_STATS) {
-      Object min = columnStatistics.getStatistic(ColumnStatisticsKind.MIN_VALUE);
-      Object max = columnStatistics.getStatistic(ColumnStatisticsKind.MAX_VALUE);
+      Object min = columnStatistics.get(ColumnStatisticsKind.MIN_VALUE);
+      Object max = columnStatistics.get(ColumnStatisticsKind.MAX_VALUE);
       if (min != null) {
         return (numNulls == 0 || numNulls == rowCount) && Objects.deepEquals(min, max);
       } else {

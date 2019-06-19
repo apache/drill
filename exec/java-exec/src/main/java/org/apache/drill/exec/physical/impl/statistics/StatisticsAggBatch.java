@@ -49,6 +49,7 @@ import org.apache.drill.exec.store.ColumnExplorer;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.FieldIdUtil;
 import org.apache.drill.exec.vector.complex.MapVector;
+import org.apache.drill.metastore.statistics.Statistic;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 /*

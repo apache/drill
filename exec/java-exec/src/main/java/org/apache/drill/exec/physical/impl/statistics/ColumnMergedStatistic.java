@@ -21,6 +21,7 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarCharVector;
 import org.apache.drill.exec.vector.complex.MapVector;
+import org.apache.drill.metastore.statistics.Statistic;
 
 public class ColumnMergedStatistic extends AbstractMergedStatistic {
 

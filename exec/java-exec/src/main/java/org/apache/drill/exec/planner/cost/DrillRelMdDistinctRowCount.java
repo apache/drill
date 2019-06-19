@@ -52,9 +52,9 @@ import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.util.Utilities;
-import org.apache.drill.metastore.ColumnStatistics;
-import org.apache.drill.metastore.ColumnStatisticsKind;
-import org.apache.drill.metastore.TableMetadata;
+import org.apache.drill.metastore.statistics.ColumnStatistics;
+import org.apache.drill.metastore.statistics.ColumnStatisticsKind;
+import org.apache.drill.metastore.metadata.TableMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -165,7 +165,7 @@ public class DrillRelMdDistinctRowCount extends RelMdDistinctRowCount{
       }
       ColumnStatistics columnStatistics = tableMetadata != null ?
           tableMetadata.getColumnStatistics(SchemaPath.getSimplePath(colName)) : null;
-      Double ndv = columnStatistics != null ? (Double) columnStatistics.getStatistic(ColumnStatisticsKind.NDV) : null;
+      Double ndv = columnStatistics != null ? ColumnStatisticsKind.NDV.getFrom(columnStatistics) : null;
       // Skip NDV, if not available
       if (ndv == null) {
         allColsHaveNDV = false;
@@ -186,7 +186,7 @@ public class DrillRelMdDistinctRowCount extends RelMdDistinctRowCount{
     if (!allColsHaveNDV) {
       if (logger.isDebugEnabled()) {
         logger.debug(String.format("NDV not available for %s(%s). Using default rowcount for group-by %s",
-            (tableMetadata != null ? tableMetadata.getTableName() : ""), colName, groupKey.toString()));
+            (tableMetadata != null ? tableMetadata.getTableInfo().getName() : ""), colName, groupKey.toString()));
       }
       // Could not get any NDV estimate from stats - probably stats not present for GBY cols. So Guess!
       return scan.estimateRowCount(mq) * 0.1;

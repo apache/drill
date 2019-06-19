@@ -70,6 +70,5 @@
 
   <modules>
     <module>metastore-api</module>
-    <module>file-metadata</module>
   </modules>
 </project>

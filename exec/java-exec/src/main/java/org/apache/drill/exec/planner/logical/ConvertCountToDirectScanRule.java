@@ -32,7 +32,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 
 import org.apache.drill.exec.physical.base.ScanStats;
-import org.apache.drill.exec.physical.impl.statistics.Statistic;
+import org.apache.drill.metastore.statistics.Statistic;
 import org.apache.drill.exec.planner.common.CountToDirectScanUtils;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
 
@@ -107,8 +107,8 @@ public class ConvertCountToDirectScanRule extends RelOptRule {
 
   @Override
   public void onMatch(RelOptRuleCall call) {
-    final Aggregate agg = (Aggregate) call.rel(0);
-    final TableScan scan = (TableScan) call.rel(call.rels.length - 1);
+    final Aggregate agg = call.rel(0);
+    final TableScan scan = call.rel(call.rels.length - 1);
     final Project project = call.rels.length == 3 ? (Project) call.rel(1) : null;
 
     // Qualifying conditions for rule:

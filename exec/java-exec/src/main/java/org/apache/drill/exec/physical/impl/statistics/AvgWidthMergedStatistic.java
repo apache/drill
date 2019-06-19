@@ -28,6 +28,7 @@ import org.apache.drill.exec.record.MajorTypeSerDe;
 import org.apache.drill.exec.vector.NullableFloat8Vector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.MapVector;
+import org.apache.drill.metastore.statistics.Statistic;
 
 public class AvgWidthMergedStatistic extends AbstractMergedStatistic {
   private Map<String, Double> sumHolder;

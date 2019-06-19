@@ -36,6 +36,7 @@ import org.apache.drill.exec.vector.NullableBigIntVector;
 import org.apache.drill.exec.vector.NullableVarBinaryVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.MapVector;
+import org.apache.drill.metastore.statistics.Statistic;
 
 public class NDVMergedStatistic extends AbstractMergedStatistic {
   private Map<String, HyperLogLog> hllHolder;

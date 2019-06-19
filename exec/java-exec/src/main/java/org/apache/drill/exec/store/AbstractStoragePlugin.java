@@ -27,7 +27,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
-import org.apache.drill.exec.physical.base.MetadataProviderManager;
+import org.apache.drill.metastore.MetadataProviderManager;
 import org.apache.drill.exec.planner.PlannerPhase;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;

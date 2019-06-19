@@ -23,8 +23,8 @@ import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
 import org.apache.drill.exec.expr.stat.RowsMatch;
-import org.apache.drill.metastore.ColumnStatistics;
-import org.apache.drill.metastore.ColumnStatisticsKind;
+import org.apache.drill.metastore.statistics.ColumnStatistics;
+import org.apache.drill.metastore.statistics.ColumnStatisticsKind;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -86,12 +86,13 @@ public class ComparisonPredicate<C extends Comparable<C>> extends LogicalExpress
    * where Column1 and Column2 are from same parquet table.
    */
   @Override
+  @SuppressWarnings("unchecked")
   public RowsMatch matches(StatisticsProvider<C> evaluator) {
-    ColumnStatistics<C> leftStat = left.accept(evaluator, null);
+    ColumnStatistics leftStat = left.accept(evaluator, null);
     if (IsPredicate.isNullOrEmpty(leftStat)) {
       return RowsMatch.SOME;
     }
-    ColumnStatistics<C> rightStat = right.accept(evaluator, null);
+    ColumnStatistics rightStat = right.accept(evaluator, null);
     if (IsPredicate.isNullOrEmpty(rightStat)) {
       return RowsMatch.SOME;
     }
@@ -126,14 +127,13 @@ public class ComparisonPredicate<C extends Comparable<C>> extends LogicalExpress
    * @param scale adjustment scale
    * @return adjusted statistics
    */
-  @SuppressWarnings("unchecked")
-  private ColumnStatistics<C> adjustDecimalStatistics(ColumnStatistics<C> statistics, int scale) {
-    BigInteger min = new BigDecimal((BigInteger) statistics.getStatistic(ColumnStatisticsKind.MIN_VALUE))
+  private ColumnStatistics adjustDecimalStatistics(ColumnStatistics<BigInteger> statistics, int scale) {
+    BigInteger min = new BigDecimal(ColumnStatisticsKind.MIN_VALUE.getValueStatistic(statistics))
         .setScale(scale, RoundingMode.HALF_UP).unscaledValue();
-    BigInteger max = new BigDecimal((BigInteger) statistics.getStatistic(ColumnStatisticsKind.MAX_VALUE))
+    BigInteger max = new BigDecimal(ColumnStatisticsKind.MAX_VALUE.getValueStatistic(statistics))
         .setScale(scale, RoundingMode.HALF_UP).unscaledValue();
 
-    return new StatisticsProvider.MinMaxStatistics(min, max, Comparator.nullsFirst(Comparator.naturalOrder()));
+    return StatisticsProvider.getColumnStatistics(min, max, ColumnStatisticsKind.NULLS_COUNT.getFrom(statistics), TypeProtos.MinorType.VARDECIMAL);
   }
 
   /**
@@ -188,11 +188,11 @@ public class ComparisonPredicate<C extends Comparable<C>> extends LogicalExpress
   }
 
   static <C> C getMaxValue(ColumnStatistics<C> leftStat) {
-    return leftStat.getValueStatistic(ColumnStatisticsKind.MAX_VALUE);
+    return ColumnStatisticsKind.MAX_VALUE.getValueStatistic(leftStat);
   }
 
   static <C> C getMinValue(ColumnStatistics<C> leftStat) {
-    return leftStat.getValueStatistic(ColumnStatisticsKind.MIN_VALUE);
+    return ColumnStatisticsKind.MIN_VALUE.getValueStatistic(leftStat);
   }
 
   /**

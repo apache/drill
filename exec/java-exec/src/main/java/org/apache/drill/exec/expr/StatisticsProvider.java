@@ -37,13 +37,12 @@ import org.apache.drill.exec.expr.holders.IntHolder;
 import org.apache.drill.exec.expr.holders.TimeStampHolder;
 import org.apache.drill.exec.expr.holders.ValueHolder;
 import org.apache.drill.exec.vector.ValueHolderHelper;
-import org.apache.drill.metastore.ColumnStatistics;
-import org.apache.drill.metastore.ColumnStatisticsImpl;
-import org.apache.drill.metastore.ColumnStatisticsKind;
-import org.apache.drill.metastore.StatisticsKind;
+import org.apache.drill.metastore.statistics.ColumnStatistics;
+import org.apache.drill.metastore.statistics.ColumnStatisticsKind;
+import org.apache.drill.metastore.statistics.StatisticsHolder;
 
 import java.math.BigInteger;
-import java.util.Comparator;
+import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.Map;
@@ -64,7 +63,7 @@ public class StatisticsProvider<T extends Comparable<T>> extends AbstractExprVis
   }
 
   @Override
-  public ColumnStatisticsImpl visitUnknown(LogicalExpression e, Void value) {
+  public ColumnStatistics visitUnknown(LogicalExpression e, Void value) {
     // do nothing for the unknown expression
     return null;
   }
@@ -76,74 +75,59 @@ public class StatisticsProvider<T extends Comparable<T>> extends AbstractExprVis
       return columnStatistics;
     } else if (typedFieldExpr.getMajorType().equals(Types.OPTIONAL_INT)) {
       // field does not exist.
-      MinMaxStatistics<Integer> statistics = new MinMaxStatistics<>(null, null, Integer::compareTo);
-      statistics.setNullsCount(rowCount); // all values are nulls
-      return statistics;
+      return StatisticsProvider.getColumnStatistics(null, null, rowCount, typedFieldExpr.getMajorType().getMinorType());
     }
     return null;
   }
 
   @Override
   public ColumnStatistics<Integer> visitIntConstant(ValueExpressions.IntExpression expr, Void value) {
-    int exprValue = expr.getInt();
-    return new MinMaxStatistics<>(exprValue, exprValue, Integer::compareTo);
+    return getConstantColumnStatistics(expr.getInt(), expr);
   }
 
   @Override
   public ColumnStatistics<Boolean> visitBooleanConstant(ValueExpressions.BooleanExpression expr, Void value) {
-    boolean exprValue = expr.getBoolean();
-    return new MinMaxStatistics<>(exprValue, exprValue, Boolean::compareTo);
+    return getConstantColumnStatistics(expr.getBoolean(), expr);
   }
 
   @Override
   public ColumnStatistics<Long> visitLongConstant(ValueExpressions.LongExpression expr, Void value) {
-    long exprValue = expr.getLong();
-    return new MinMaxStatistics<>(exprValue, exprValue, Long::compareTo);
+    return getConstantColumnStatistics(expr.getLong(), expr);
   }
 
   @Override
   public ColumnStatistics<Float> visitFloatConstant(ValueExpressions.FloatExpression expr, Void value) {
-    float exprValue = expr.getFloat();
-    return new MinMaxStatistics<>(exprValue, exprValue, Float::compareTo);
+    return getConstantColumnStatistics(expr.getFloat(), expr);
   }
 
   @Override
   public ColumnStatistics<Double> visitDoubleConstant(ValueExpressions.DoubleExpression expr, Void value) {
-    double exprValue = expr.getDouble();
-    return new MinMaxStatistics<>(exprValue, exprValue, Double::compareTo);
+    return getConstantColumnStatistics(expr.getDouble(), expr);
   }
 
   @Override
   public ColumnStatistics<Long> visitDateConstant(ValueExpressions.DateExpression expr, Void value) {
-    long exprValue = expr.getDate();
-    return new MinMaxStatistics<>(exprValue, exprValue, Long::compareTo);
+    return getConstantColumnStatistics(expr.getDate(), expr);
   }
 
   @Override
-  public ColumnStatistics<Long> visitTimeStampConstant(ValueExpressions.TimeStampExpression tsExpr, Void value) {
-    long exprValue = tsExpr.getTimeStamp();
-    return new MinMaxStatistics<>(exprValue, exprValue, Long::compareTo);
+  public ColumnStatistics<Long> visitTimeStampConstant(ValueExpressions.TimeStampExpression expr, Void value) {
+    return getConstantColumnStatistics(expr.getTimeStamp(), expr);
   }
 
   @Override
-  public ColumnStatistics<Integer> visitTimeConstant(ValueExpressions.TimeExpression timeExpr, Void value) {
-    int exprValue = timeExpr.getTime();
-    return new MinMaxStatistics<>(exprValue, exprValue, Integer::compareTo);
+  public ColumnStatistics<Integer> visitTimeConstant(ValueExpressions.TimeExpression expr, Void value) {
+    return getConstantColumnStatistics(expr.getTime(), expr);
   }
 
   @Override
-  public ColumnStatistics<String> visitQuotedStringConstant(ValueExpressions.QuotedString quotedString, Void value) {
-    String binary = quotedString.getString();
-    return new MinMaxStatistics<>(binary, binary, Comparator.nullsFirst(Comparator.naturalOrder()));
+  public ColumnStatistics<String> visitQuotedStringConstant(ValueExpressions.QuotedString expr, Void value) {
+    return getConstantColumnStatistics(expr.getString(), expr);
   }
 
   @Override
-  public ColumnStatistics<BigInteger> visitVarDecimalConstant(ValueExpressions.VarDecimalExpression decExpr, Void value) {
-    BigInteger unscaled = decExpr.getBigDecimal().unscaledValue();
-    return new MinMaxStatistics<>(
-        unscaled,
-        unscaled,
-        Comparator.nullsFirst(Comparator.naturalOrder()));
+  public ColumnStatistics<BigInteger> visitVarDecimalConstant(ValueExpressions.VarDecimalExpression expr, Void value) {
+    return getConstantColumnStatistics(expr.getBigDecimal().unscaledValue(), expr);
   }
 
   @Override
@@ -167,8 +151,7 @@ public class StatisticsProvider<T extends Comparable<T>> extends AbstractExprVis
     return null;
   }
 
-  @SuppressWarnings("unchecked")
-  private ColumnStatistics<T> evalCastFunc(FunctionHolderExpression holderExpr, ColumnStatistics<T> input) {
+  private ColumnStatistics evalCastFunc(FunctionHolderExpression holderExpr, ColumnStatistics<T> input) {
     try {
       DrillSimpleFuncHolder funcHolder = (DrillSimpleFuncHolder) holderExpr.getHolder();
 
@@ -218,89 +201,89 @@ public class StatisticsProvider<T extends Comparable<T>> extends AbstractExprVis
       ValueHolder minFuncHolder = InterpreterEvaluator.evaluateFunction(interpreter, args1, holderExpr.getName());
       ValueHolder maxFuncHolder = InterpreterEvaluator.evaluateFunction(interpreter, args2, holderExpr.getName());
 
-      MinMaxStatistics statistics;
       switch (destType) {
         case INT:
-          statistics = new MinMaxStatistics<>(((IntHolder) minFuncHolder).value, ((IntHolder) maxFuncHolder).value, Integer::compareTo);
-          break;
+          return StatisticsProvider.getColumnStatistics(
+              ((IntHolder) minFuncHolder).value,
+              ((IntHolder) maxFuncHolder).value,
+              ColumnStatisticsKind.NULLS_COUNT.getFrom(input),
+              destType);
         case BIGINT:
-          statistics = new MinMaxStatistics<>(((BigIntHolder) minFuncHolder).value, ((BigIntHolder) maxFuncHolder).value, Long::compareTo);
-          break;
+          return StatisticsProvider.getColumnStatistics(
+              ((BigIntHolder) minFuncHolder).value,
+              ((BigIntHolder) maxFuncHolder).value,
+              ColumnStatisticsKind.NULLS_COUNT.getFrom(input),
+              destType);
         case FLOAT4:
-          statistics = new MinMaxStatistics<>(((Float4Holder) minFuncHolder).value, ((Float4Holder) maxFuncHolder).value, Float::compareTo);
-          break;
+          return StatisticsProvider.getColumnStatistics(
+              ((Float4Holder) minFuncHolder).value,
+              ((Float4Holder) maxFuncHolder).value,
+              ColumnStatisticsKind.NULLS_COUNT.getFrom(input),
+              destType);
         case FLOAT8:
-          statistics = new MinMaxStatistics<>(((Float8Holder) minFuncHolder).value, ((Float8Holder) maxFuncHolder).value, Double::compareTo);
-          break;
+          return StatisticsProvider.getColumnStatistics(
+              ((Float8Holder) minFuncHolder).value,
+              ((Float8Holder) maxFuncHolder).value,
+              ColumnStatisticsKind.NULLS_COUNT.getFrom(input),
+              destType);
         case TIMESTAMP:
-          statistics = new MinMaxStatistics<>(((TimeStampHolder) minFuncHolder).value, ((TimeStampHolder) maxFuncHolder).value, Long::compareTo);
-          break;
+          return StatisticsProvider.getColumnStatistics(
+              ((TimeStampHolder) minFuncHolder).value,
+              ((TimeStampHolder) maxFuncHolder).value,
+              ColumnStatisticsKind.NULLS_COUNT.getFrom(input),
+              destType);
         default:
           return null;
       }
-      statistics.setNullsCount((long) input.getStatistic(ColumnStatisticsKind.NULLS_COUNT));
-      return statistics;
     } catch (Exception e) {
-      throw new DrillRuntimeException("Error in evaluating function of " + holderExpr.getName() );
+      throw new DrillRuntimeException("Error in evaluating function of " + holderExpr.getName());
     }
   }
 
-  public static class MinMaxStatistics<V> implements ColumnStatistics<V> {
-    private final V minVal;
-    private final V maxVal;
-    private final Comparator<V> valueComparator;
-    private long nullsCount;
+  /**
+   * Returns {@link ColumnStatistics} instance with set min, max values and nulls count statistics specified in the arguments.
+   *
+   * @param minVal     min value
+   * @param maxVal     max value
+   * @param nullsCount nulls count
+   * @param type       type of the column
+   * @param <V>        type of min and max values
+   * @return {@link ColumnStatistics} instance with set min, max values and nulls count statistics
+   */
+  public static <V> ColumnStatistics<V> getColumnStatistics(V minVal, V maxVal, long nullsCount, TypeProtos.MinorType type) {
+    return new ColumnStatistics<>(
+        Arrays.asList(new StatisticsHolder<>(minVal, ColumnStatisticsKind.MIN_VALUE),
+            new StatisticsHolder<>(maxVal, ColumnStatisticsKind.MAX_VALUE),
+            new StatisticsHolder<>(nullsCount, ColumnStatisticsKind.NULLS_COUNT)),
+        type);
+  }
 
-    public MinMaxStatistics(V minVal, V maxVal, Comparator<V> valueComparator) {
-      this.minVal = minVal;
-      this.maxVal = maxVal;
-      this.valueComparator = valueComparator;
-    }
+  /**
+   * Returns {@link ColumnStatistics} instance with min and max values set to {@code minMaxValue}
+   * and nulls count set to 0. Resulting {@link ColumnStatistics} instance corresponds
+   * to a constant value, so nulls count is set to 0.
+   *
+   * @param minMaxValue value of min and max statistics
+   * @param expr        source of column type
+   * @param <V>         type of min and max values
+   * @return {@link ColumnStatistics} instance with min and max values set to {@code minMaxValue} and nulls count set to 0
+   */
+  public static <V> ColumnStatistics<V> getConstantColumnStatistics(V minMaxValue, LogicalExpression expr) {
+    return getConstantColumnStatistics(minMaxValue, expr.getMajorType().getMinorType());
+  }
 
-    @Override
-    public Object getStatistic(StatisticsKind statisticsKind) {
-      switch (statisticsKind.getName()) {
-        case ExactStatisticsConstants.MIN_VALUE:
-          return minVal;
-        case ExactStatisticsConstants.MAX_VALUE:
-          return maxVal;
-        case ExactStatisticsConstants.NULLS_COUNT:
-          return nullsCount;
-        default:
-          return null;
-      }
-    }
-
-    @Override
-    public boolean containsStatistic(StatisticsKind statisticsKind) {
-      switch (statisticsKind.getName()) {
-        case ExactStatisticsConstants.MIN_VALUE:
-        case ExactStatisticsConstants.MAX_VALUE:
-        case ExactStatisticsConstants.NULLS_COUNT:
-          return true;
-        default:
-          return false;
-      }
-    }
-
-    @Override
-    public boolean containsExactStatistics(StatisticsKind statisticsKind) {
-      return true;
-    }
-
-    @Override
-    public Comparator<V> getValueComparator() {
-      return valueComparator;
-    }
-
-    @Override
-    public ColumnStatistics<V> cloneWithStats(ColumnStatistics statistics) {
-      throw new UnsupportedOperationException("MinMaxStatistics does not support cloneWithStats");
-    }
-
-    void setNullsCount(long nullsCount) {
-      this.nullsCount = nullsCount;
-    }
+  /**
+   * Returns {@link ColumnStatistics} instance with min and max values set to {@code minMaxValue}
+   * and nulls count set to 0. Resulting {@link ColumnStatistics} instance corresponds
+   * to a constant value, so nulls count is set to 0.
+   *
+   * @param minMaxValue value of min and max statistics
+   * @param type        column type
+   * @param <V>         type of min and max values
+   * @return {@link ColumnStatistics} instance with min and max values set to {@code minMaxValue} and nulls count set to 0
+   */
+  public static <V> ColumnStatistics<V> getConstantColumnStatistics(V minMaxValue, TypeProtos.MinorType type) {
+    return getColumnStatistics(minMaxValue, minMaxValue, 0, type);
   }
 
   private static final Map<TypeProtos.MinorType, Set<TypeProtos.MinorType>> CAST_FUNC = new EnumMap<>(TypeProtos.MinorType.class);
