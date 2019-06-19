@@ -22,6 +22,7 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
+import org.apache.drill.test.TestBuilder;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -322,4 +323,15 @@ public class TestVarArgFunctions extends ClusterTest {
         .baselineValues("collect_to_list", "LATE-REQUIRED...", "LATE", "built-in", false)
         .go();
   }
+
+  @Test
+  public void testSimpleRowFunction() throws Exception {
+    testBuilder()
+        .sqlQuery("SELECT ROW(1,2) as abc")
+        .unOrdered()
+        .baselineColumns("abc")
+        .baselineValues(TestBuilder.mapOf("EXPR$0", 1, "EXPR$1", 2))
+        .go();
+  }
+
 }

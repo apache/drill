@@ -538,8 +538,12 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
      * 2.2) Break up all expressions with complex outputs into their own project operations
      */
     phyRelNode = phyRelNode.accept(
-        new SplitUpComplexExpressions(config.getConverter().getTypeFactory(), context.getDrillOperatorTable(), context
-            .getPlannerSettings().functionImplementationRegistry), null);
+        new SplitUpComplexExpressions(
+            config.getConverter().getTypeFactory(),
+            context.getPlannerSettings().functionImplementationRegistry,
+            phyRelNode.getCluster().getRexBuilder()
+        ),
+        null);
 
     /*
      * 2.3) Projections that contain reference to flatten are rewritten as Flatten operators followed by Project

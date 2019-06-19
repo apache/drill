@@ -34,6 +34,7 @@ import org.apache.drill.exec.util.StoragePluginTestUtils;
 import org.apache.drill.exec.util.Text;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
+import org.apache.drill.test.TestBuilder;
 import org.apache.hadoop.hive.ql.Driver;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -140,6 +141,16 @@ public class TestHiveArrays extends ClusterTest {
         "   int_array.rid=date_array.rid AND" +
         "   int_array.rid=timestamp_array.rid "
     );
+
+    HiveTestUtilities.executeQuery(d,
+        "CREATE TABLE struct_array(rid INT, " +
+            "arr_n_0 ARRAY<STRUCT<a:INT,b:BOOLEAN,c:STRING>>," +
+            "arr_n_1 ARRAY<ARRAY<STRUCT<x:DOUBLE,y:DOUBLE>>>, " +
+            "arr_n_2 ARRAY<ARRAY<ARRAY<STRUCT<t:INT,d:DATE>>>>" +
+            ") " +
+            "ROW FORMAT SERDE 'org.apache.hive.hcatalog.data.JsonSerDe' STORED AS TEXTFILE"
+    );
+    HiveTestUtilities.loadData(d, "struct_array", Paths.get("complex_types/array/struct_array.json"));
   }
 
   private static void createJsonTable(Driver d, String type) {
@@ -154,13 +165,13 @@ public class TestHiveArrays extends ClusterTest {
   }
 
   private static void createParquetTable(Driver d, String type) {
-      String from = getTableNameFromType(type);
-      String to = from.concat("_p");
-      String ddl = String.format(
-          "CREATE TABLE %s(rid INT, arr_n_0 ARRAY<%2$s>, arr_n_1 ARRAY<ARRAY<%2$s>>, arr_n_2 ARRAY<ARRAY<ARRAY<%2$s>>>) STORED AS PARQUET",
-          to, type.toUpperCase());
-      HiveTestUtilities.executeQuery(d, ddl);
-      HiveTestUtilities.insertData(d, from, to);
+    String from = getTableNameFromType(type);
+    String to = from.concat("_p");
+    String ddl = String.format(
+        "CREATE TABLE %s(rid INT, arr_n_0 ARRAY<%2$s>, arr_n_1 ARRAY<ARRAY<%2$s>>, arr_n_2 ARRAY<ARRAY<ARRAY<%2$s>>>) STORED AS PARQUET",
+        to, type.toUpperCase());
+    HiveTestUtilities.executeQuery(d, ddl);
+    HiveTestUtilities.insertData(d, from, to);
   }
 
   private static String getTableNameFromType(String type) {
@@ -1416,6 +1427,121 @@ public class TestHiveArrays extends ClusterTest {
             asList(asList(parseBest("2017-03-21 12:52:33"), parseBest("2017-09-10 01:29:24"), parseBest("2018-01-17 04:45:23")),
                 asList(parseBest("2017-03-24 01:03:23"), parseBest("2018-09-22 05:00:26")))
         )
+        .go();
+  }
+
+  @Test
+  public void arrayOfStructs() throws Exception {
+    testBuilder()
+        .sqlQuery("SELECT arr_n_0 FROM hive.struct_array")
+        .unOrdered()
+        .baselineColumns("arr_n_0")
+        .baselineValues(asList(
+            TestBuilder.mapOf("a", -1, "b", true, "c", "asdpo daasree"),
+            TestBuilder.mapOf("a", 0, "b", false, "c", "xP>vcx _2p3 >.mm,//"),
+            TestBuilder.mapOf("a", 902, "b", false, "c", "*-//------*")
+        ))
+        .baselineValues(asList())
+        .go();
+  }
+
+  @Test
+  public void arrayOfStructsAccessByIndex() throws Exception {
+    testBuilder()
+        .sqlQuery("SELECT rid,arr_n_0[2] FROM hive.struct_array")
+        .unOrdered()
+        .baselineColumns("rid", "EXPR$1")
+        .baselineValues(1, TestBuilder.mapOf("a", 902, "b", false, "c", "*-//------*"))
+        .baselineValues(2, TestBuilder.mapOf())
+        .go();
+  }
+
+  @Test
+  public void nestedArrayOfStructs() throws Exception {
+    testBuilder()
+        .sqlQuery("SELECT arr_n_1 FROM hive.struct_array")
+        .unOrdered()
+        .baselineColumns("arr_n_1")
+        .baselineValues(asList(
+            asList(
+                TestBuilder.mapOf("x", 17.9231, "y", -12.12),
+                TestBuilder.mapOf("x", 0.0001, "y", -1.1),
+                TestBuilder.mapOf("x", 101.1, "y", -989.11)
+            ),
+            asList(
+                TestBuilder.mapOf("x", 77.32, "y", -11.11),
+                TestBuilder.mapOf("x", 13.1, "y", -1.1)
+            )
+        ))
+        .baselineValues(asList(
+            asList(),
+            asList(TestBuilder.mapOf("x", 21.221, "y", -21.221))
+        ))
+        .go();
+  }
+
+  @Test
+  public void doublyNestedArrayOfStructs() throws Exception {
+    testBuilder()
+        .sqlQuery("SELECT arr_n_2 FROM hive.struct_array ORDER BY rid")
+        .ordered()
+        .baselineColumns("arr_n_2")
+        .baselineValues(asList(
+            asList(
+                asList(
+                    TestBuilder.mapOf("t", 1, "d", parseLocalDate("2018-10-21")),
+                    TestBuilder.mapOf("t", 2, "d", parseLocalDate("2017-07-11"))
+                ),
+                asList(
+                    TestBuilder.mapOf("t", 3, "d", parseLocalDate("2018-09-23")),
+                    TestBuilder.mapOf("t", 4, "d", parseLocalDate("1965-04-18")),
+                    TestBuilder.mapOf("t", 5, "d", parseLocalDate("1922-05-22"))
+                ),
+                asList(
+                    TestBuilder.mapOf("t", 6, "d", parseLocalDate("1921-05-22")),
+                    TestBuilder.mapOf("t", 7, "d", parseLocalDate("1923-05-22"))
+                )
+            ),
+            asList(
+                asList(
+                    TestBuilder.mapOf("t", 8, "d", parseLocalDate("2002-02-11")),
+                    TestBuilder.mapOf("t", 9, "d", parseLocalDate("2017-03-24"))
+                )
+            ),
+            asList(
+                asList(
+                    TestBuilder.mapOf("t", 10, "d", parseLocalDate("1919-01-17")),
+                    TestBuilder.mapOf("t", 11, "d", parseLocalDate("1965-12-15"))
+                )
+            )
+        ))
+        .baselineValues(asList(
+            asList(
+                asList(
+                    TestBuilder.mapOf("t", 12, "d", parseLocalDate("2018-09-23")),
+                    TestBuilder.mapOf("t", 13, "d", parseLocalDate("1939-10-23")),
+                    TestBuilder.mapOf("t", 14, "d", parseLocalDate("1922-05-22"))
+                )
+            ),
+            asList(
+                asList(
+                    TestBuilder.mapOf("t", 15, "d", parseLocalDate("2018-09-23")),
+                    TestBuilder.mapOf("t", 16, "d", parseLocalDate("1965-04-18"))
+                )
+            )
+        ))
+        .go();
+  }
+
+
+  @Test
+  public void doublyNestedArrayOfStructsPrimitiveFieldAccess() throws Exception {
+    testBuilder()
+        .sqlQuery("SELECT sa.arr_n_2[0][0][1].d FROM hive.struct_array sa ORDER BY rid")
+        .ordered()
+        .baselineColumns("EXPR$0")
+        .baselineValues(parseLocalDate("2017-07-11"))
+        .baselineValues(parseLocalDate("1939-10-23"))
         .go();
   }
 
