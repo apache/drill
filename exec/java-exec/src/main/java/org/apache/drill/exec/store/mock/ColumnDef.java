@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.mock;
 
+import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.store.mock.MockTableDef.MockColumn;
@@ -33,14 +34,27 @@ public class ColumnDef {
   public String name;
   public int width;
   public FieldGen generator;
+  public boolean nullable;
+  public int nullablePercent;
 
   public ColumnDef(MockColumn mockCol) {
     this.mockCol = mockCol;
     name = mockCol.getName();
-    if (mockCol.getMinorType() == MinorType.VARCHAR && mockCol.getPrecision() > 0) {
-      width = mockCol.getPrecision();
+    if (mockCol.getMinorType() == MinorType.VARCHAR &&
+        mockCol.getWidth() > 0) {
+      width = mockCol.getWidth();
     } else {
       width = TypeHelper.getSize(mockCol.getMajorType());
+    }
+    nullable = mockCol.getMode() == DataMode.OPTIONAL;
+    if (nullable) {
+      nullablePercent = 25;
+      if (mockCol.properties != null) {
+        Object value = mockCol.properties.get("nulls");
+        if (value != null  && value instanceof Integer) {
+          nullablePercent = (Integer) value;
+        }
+      }
     }
     makeGenerator();
   }
@@ -68,7 +82,6 @@ public class ColumnDef {
           | IllegalAccessException | ClassCastException e) {
         throw new IllegalArgumentException("Generator " + genName + " is undefined for mock field " + name);
       }
-      generator.setup(this);
       return;
     }
 
@@ -167,7 +180,6 @@ public class ColumnDef {
     if (generator == null) {
       throw new IllegalArgumentException("No default column generator for column " + name + " of type " + minorType);
     }
-    generator.setup(this);
   }
 
   public ColumnDef(MockColumn mockCol, int rep) {

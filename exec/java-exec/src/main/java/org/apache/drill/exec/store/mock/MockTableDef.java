@@ -40,6 +40,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName("mock-table")
 public class MockTableDef {
+
   /**
    * Describes one simulated file (or block) within the logical file scan
    * described by this group scan. Each block can have a distinct schema to test
@@ -171,7 +172,8 @@ public class MockTableDef {
         b.setPrecision(precision);
       }
       if (width != null) {
-        b.setWidth(width);
+        //b.setWidth(width); // Legacy
+        b.setPrecision(width); // Since DRILL-5419
       }
       if (scale != null) {
         b.setScale(scale);

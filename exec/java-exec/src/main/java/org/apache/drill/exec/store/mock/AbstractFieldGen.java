@@ -17,17 +17,19 @@
  */
 package org.apache.drill.exec.store.mock;
 
-/**
- * Generates random field values uniformly distributed over
- * the range +-1 million, with any number of digits past
- * the decimal point.
- */
+import java.util.Random;
 
-public class DoubleGen extends AbstractFieldGen {
+import org.apache.drill.exec.vector.accessor.ScalarWriter;
+
+public abstract class AbstractFieldGen implements FieldGen {
+
+  protected ColumnDef colDef;
+  protected ScalarWriter colWriter;
+  protected final Random rand = new Random();
 
   @Override
-  public void setValue() {
-    colWriter.setDouble(rand.nextDouble() * 2_000_000 - 1_000_000);
+  public void setup(ColumnDef colDef, ScalarWriter colLoader) {
+    this.colDef = colDef;
+    this.colWriter = colLoader;
   }
-
 }

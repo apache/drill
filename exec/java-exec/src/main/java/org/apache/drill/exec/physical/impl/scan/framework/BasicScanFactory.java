@@ -35,9 +35,9 @@ import org.apache.drill.exec.physical.impl.scan.framework.ManagedScanFramework.R
 
 public class BasicScanFactory implements ReaderFactory {
 
-  private final Iterator<ManagedReader<? extends SchemaNegotiator>> iterator;
+  private final Iterator<ManagedReader<SchemaNegotiator>> iterator;
 
-  public BasicScanFactory(Iterator<ManagedReader<? extends SchemaNegotiator>> iterator) {
+  public BasicScanFactory(Iterator<ManagedReader<SchemaNegotiator>> iterator) {
     this.iterator = iterator;
   }
 

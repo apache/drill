@@ -19,10 +19,6 @@ package org.apache.drill.exec.store.mock;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Random;
-
-import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.VarCharVector;
 
 /**
  * Very simple date value generator that produces ISO dates
@@ -37,12 +33,11 @@ import org.apache.drill.exec.vector.VarCharVector;
  * new Java 8 classes because Drill prefers to build with Java 7.
  */
 
-public class DateGen implements FieldGen {
+public class DateGen extends AbstractFieldGen {
 
   private final int ONE_DAY = 24 * 60 * 60 * 1000;
   private final int ONE_YEAR = ONE_DAY * 365;
 
-  private final Random rand = new Random();
   private long baseTime;
   private SimpleDateFormat fmt;
 
@@ -53,17 +48,9 @@ public class DateGen implements FieldGen {
   }
 
   @Override
-  public void setup(ColumnDef colDef) { }
-
-  private long value() {
-    return baseTime + rand.nextInt(365) * ONE_DAY;
-  }
-
-  @Override
-  public void setValue(ValueVector v, int index) {
-    VarCharVector vector = (VarCharVector) v;
-    long randTime = baseTime + value();
+  public void setValue() {
+    long randTime = baseTime + baseTime + rand.nextInt(365) * ONE_DAY;
     String str = fmt.format(new Date(randTime));
-    vector.getMutator().setSafe(index, str.getBytes());
+    colWriter.setString(str);
   }
 }

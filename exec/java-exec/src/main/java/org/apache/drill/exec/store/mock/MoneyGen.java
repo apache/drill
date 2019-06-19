@@ -17,11 +17,6 @@
  */
 package org.apache.drill.exec.store.mock;
 
-import java.util.Random;
-
-import org.apache.drill.exec.vector.Float8Vector;
-import org.apache.drill.exec.vector.ValueVector;
-
 /**
  * Generates a mock money field as a double over the range 0
  * to 1 million. Values include cents. That is the value
@@ -29,20 +24,11 @@ import org.apache.drill.exec.vector.ValueVector;
  * 999,999.99.
  */
 
-public class MoneyGen implements FieldGen {
-
-  private final Random rand = new Random();
+public class MoneyGen extends AbstractFieldGen {
 
   @Override
-  public void setup(ColumnDef colDef) { }
-
-  private double value() {
-    return Math.ceil(rand.nextDouble() * 1_000_000 * 100) / 100;
-  }
-
-  @Override
-  public void setValue(ValueVector v, int index) {
-    Float8Vector vector = (Float8Vector) v;
-    vector.getMutator().set(index, value());
+  public void setValue() {
+    double value = Math.ceil(rand.nextDouble() * 1_000_000 * 100) / 100;
+    colWriter.setDouble(value);
   }
 }

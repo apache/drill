@@ -17,7 +17,15 @@
  */
 package org.apache.drill.exec.physical.impl.agg;
 
+import static junit.framework.TestCase.fail;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import java.util.List;
+
 import org.apache.drill.categories.OperatorTest;
+import org.apache.drill.categories.SlowTest;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.physical.impl.aggregate.HashAggTemplate;
@@ -30,16 +38,10 @@ import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.DrillTest;
 import org.apache.drill.test.ProfileParser;
 import org.apache.drill.test.QueryBuilder;
-import org.apache.drill.categories.SlowTest;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.util.List;
-
-import static junit.framework.TestCase.fail;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Test spilling for the Hash Aggr operator (using the mock reader)
@@ -47,57 +49,62 @@ import static org.junit.Assert.assertTrue;
 @Category({SlowTest.class, OperatorTest.class})
 public class TestHashAggrSpill extends DrillTest {
 
+  // Matches the "2400K" in the table name.
+  public static final int DEFAULT_ROW_COUNT = 2_400_000;
+
   @Rule
   public final BaseDirTestWatcher dirTestWatcher = new BaseDirTestWatcher();
 
-    /**
-     *  A template for Hash Aggr spilling tests
-     *
-     * @throws Exception
-     */
-    private void testSpill(long maxMem, long numPartitions, long minBatches, int maxParallel, boolean fallback, boolean predict,
-                           String sql, long expectedRows, int cycle, int fromPart, int toPart) throws Exception {
-        ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
-          .sessionOption(ExecConstants.HASHAGG_MAX_MEMORY_KEY,maxMem)
-          .sessionOption(ExecConstants.HASHAGG_NUM_PARTITIONS_KEY,numPartitions)
-          .sessionOption(ExecConstants.HASHAGG_MIN_BATCHES_PER_PARTITION_KEY,minBatches)
-          .configProperty(ExecConstants.SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE, false)
-          .sessionOption(PlannerSettings.FORCE_2PHASE_AGGR_KEY,true)
-          .sessionOption(ExecConstants.HASHAGG_FALLBACK_ENABLED_KEY, fallback)
-          .sessionOption(ExecConstants.HASHAGG_USE_MEMORY_PREDICTION_KEY,predict)
-          .maxParallelization(maxParallel)
-          .saveProfiles();
-        String sqlStr = sql != null ? sql :  // if null then use this default query
-          "SELECT empid_s17, dept_i, branch_i, AVG(salary_i) FROM `mock`.`employee_1200K` GROUP BY empid_s17, dept_i, branch_i";
+  /**
+   *  A template for Hash Aggr spilling tests
+   *
+   * @throws Exception
+   */
+  private void testSpill(long maxMem, long numPartitions, long minBatches, int maxParallel, boolean fallback, boolean predict,
+                         String sql, long expectedRows, int cycle, int fromPart, int toPart) throws Exception {
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
+      .sessionOption(ExecConstants.HASHAGG_MAX_MEMORY_KEY,maxMem)
+      .sessionOption(ExecConstants.HASHAGG_NUM_PARTITIONS_KEY,numPartitions)
+      .sessionOption(ExecConstants.HASHAGG_MIN_BATCHES_PER_PARTITION_KEY,minBatches)
+      .configProperty(ExecConstants.SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE, false)
+      .sessionOption(PlannerSettings.FORCE_2PHASE_AGGR_KEY,true)
+      .sessionOption(ExecConstants.HASHAGG_FALLBACK_ENABLED_KEY, fallback)
+      .sessionOption(ExecConstants.HASHAGG_USE_MEMORY_PREDICTION_KEY,predict)
+      .maxParallelization(maxParallel)
+      .saveProfiles();
+    String sqlStr = sql != null ? sql :  // if null then use this default query
+      "SELECT empid_s17, dept_i, branch_i, AVG(salary_i) FROM `mock`.`employee_2400K` GROUP BY empid_s17, dept_i, branch_i";
 
-        try (ClusterFixture cluster = builder.build();
-             ClientFixture client = cluster.clientFixture()) {
-          runAndDump(client, sqlStr, expectedRows, cycle, fromPart, toPart);
-        }
+    try (ClusterFixture cluster = builder.build();
+         ClientFixture client = cluster.clientFixture()) {
+      runAndDump(client, sqlStr, expectedRows, cycle, fromPart, toPart);
     }
-    /**
-     * Test "normal" spilling: Only 2 (or 3) partitions (out of 4) would require spilling
-     * ("normal spill" means spill-cycle = 1 )
-     *
-     * @throws Exception
-     */
-    @Test
-    public void testSimpleHashAggrSpill() throws Exception {
-        testSpill(68_000_000, 16, 2, 2, false, true, null,
-          1_200_000, 1,2, 3
-          );
-    }
-    /**
-     * Test with "needed memory" prediction turned off
-     * (i.e., do exercise code paths that catch OOMs from the Hash Table and recover)
-     *
-     * @throws Exception
-     */
-    @Test
-    public void testNoPredictHashAggrSpill() throws Exception {
-      testSpill(58_000_000, 16, 2, 2, false, false /* no prediction */, null,
-        1_200_000, 1, 1, 1);
-    }
+  }
+
+  /**
+   * Test "normal" spilling: Only 2 (or 3) partitions (out of 4) would require spilling
+   * ("normal spill" means spill-cycle = 1 )
+   *
+   * @throws Exception
+   */
+  @Test
+  public void testSimpleHashAggrSpill() throws Exception {
+    testSpill(68_000_000, 16, 2, 2, false, true, null,
+        DEFAULT_ROW_COUNT, 1,2, 3);
+  }
+
+  /**
+   * Test with "needed memory" prediction turned off
+   * (i.e., exercise code paths that catch OOMs from the Hash Table and recover)
+   *
+   * @throws Exception
+   */
+  @Test
+  @Ignore("DRILL-7301")
+  public void testNoPredictHashAggrSpill() throws Exception {
+    testSpill(135_000_000, 16, 2, 2, false, false /* no prediction */, null,
+        DEFAULT_ROW_COUNT, 1, 1, 1);
+  }
 
   private void runAndDump(ClientFixture client, String sql, long expectedRows, long spillCycle, long fromSpilledPartitions, long toSpilledPartitions) throws Exception {
     QueryBuilder.QuerySummary summary = client.queryBuilder().sql(sql).run();
@@ -108,13 +115,14 @@ public class TestHashAggrSpill extends DrillTest {
     ProfileParser profile = client.parseProfile(summary.queryIdString());
     List<ProfileParser.OperatorProfile> ops = profile.getOpsOfType(UserBitShared.CoreOperatorType.HASH_AGGREGATE_VALUE);
 
-    assertTrue(!ops.isEmpty());
+    assertFalse(ops.isEmpty());
     // check for the first op only
     ProfileParser.OperatorProfile hag0 = ops.get(0);
     long opCycle = hag0.getMetric(HashAggTemplate.Metric.SPILL_CYCLE.ordinal());
     assertEquals(spillCycle, opCycle);
     long op_spilled_partitions = hag0.getMetric(HashAggTemplate.Metric.SPILLED_PARTITIONS.ordinal());
-    assertTrue(op_spilled_partitions >= fromSpilledPartitions && op_spilled_partitions <= toSpilledPartitions);
+    assertTrue(op_spilled_partitions >= fromSpilledPartitions);
+    assertTrue(op_spilled_partitions <= toSpilledPartitions);
   }
 
   /**
@@ -125,8 +133,9 @@ public class TestHashAggrSpill extends DrillTest {
   @Test
   public void testHashAggrSecondaryTertiarySpill() throws Exception {
 
-    testSpill(58_000_000, 16, 3, 1, false, true, "SELECT empid_s44, dept_i, branch_i, AVG(salary_i) FROM `mock`.`employee_1100K` GROUP BY empid_s44, dept_i, branch_i",
-      1_100_000, 3, 2, 2);
+    testSpill(58_000_000, 16, 3, 1, false, true,
+        "SELECT empid_s44, dept_i, branch_i, AVG(salary_i) FROM `mock`.`employee_1100K` GROUP BY empid_s44, dept_i, branch_i",
+        1_100_000, 3, 2, 2);
   }
 
   /**
@@ -139,7 +148,7 @@ public class TestHashAggrSpill extends DrillTest {
 
     try {
       testSpill(34_000_000, 4, 5, 2, false /* no fallback */, true, null,
-        1_200_000, 0 /* no spill due to fallback to pre-1.11 */, 0, 0);
+          DEFAULT_ROW_COUNT, 0 /* no spill due to fallback to pre-1.11 */, 0, 0);
       fail(); // in case the above test did not throw
     } catch (Exception ex) {
       assertTrue(ex instanceof UserRemoteException);
@@ -157,6 +166,6 @@ public class TestHashAggrSpill extends DrillTest {
   @Test
   public void testHashAggrSuccessWithFallbackEnabled() throws Exception {
     testSpill(34_000_000, 4, 5, 2, true /* do fallback */, true, null,
-      1_200_000, 0 /* no spill due to fallback to pre-1.11 */, 0, 0);
+        DEFAULT_ROW_COUNT, 0 /* no spill due to fallback to pre-1.11 */, 0, 0);
   }
 }

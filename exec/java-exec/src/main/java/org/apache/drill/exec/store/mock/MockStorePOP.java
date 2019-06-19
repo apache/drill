@@ -68,6 +68,4 @@ public class MockStorePOP extends AbstractStore {
   public int getOperatorType() {
     throw new UnsupportedOperationException();
   }
-
-
 }

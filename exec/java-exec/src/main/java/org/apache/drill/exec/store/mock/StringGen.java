@@ -17,10 +17,7 @@
  */
 package org.apache.drill.exec.store.mock;
 
-import java.util.Random;
-
-import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.VarCharVector;
+import org.apache.drill.exec.vector.accessor.ScalarWriter;
 
 /**
  * Generates a mock string field of the given length. Fields are composed
@@ -29,13 +26,13 @@ import org.apache.drill.exec.vector.VarCharVector;
  * DDDD, MMMM, AAAA, RRRR, ...
  */
 
-public class StringGen implements FieldGen {
+public class StringGen extends AbstractFieldGen {
 
-  private final Random rand = new Random();
   private int length;
 
   @Override
-  public void setup(ColumnDef colDef) {
+  public void setup(ColumnDef colDef, ScalarWriter colLoader) {
+    super.setup(colDef, colLoader);
     length = colDef.width;
   }
 
@@ -49,8 +46,7 @@ public class StringGen implements FieldGen {
   }
 
   @Override
-  public void setValue(ValueVector v, int index) {
-    VarCharVector vector = (VarCharVector) v;
-    vector.getMutator().setSafe(index, value().getBytes());
+  public void setValue() {
+    colWriter.setString(value());
   }
 }
