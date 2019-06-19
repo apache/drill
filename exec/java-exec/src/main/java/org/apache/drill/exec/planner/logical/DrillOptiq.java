@@ -215,6 +215,17 @@ public class DrillOptiq {
         switch(call.getKind()){
         case CAST:
           return getDrillCastFunctionFromOptiq(call);
+        case ROW:
+          List<RelDataTypeField> fieldList = call.getType().getFieldList();
+          List<RexNode> oldOperands = call.getOperands();
+          List<LogicalExpression> newOperands = new ArrayList<>();
+          for (int i = 0; i < oldOperands.size(); i++) {
+            RexLiteral nameOperand = getRexBuilder().makeLiteral(fieldList.get(i).getName());
+            RexNode valueOperand = call.operands.get(i);
+            newOperands.add(nameOperand.accept(this));
+            newOperands.add(valueOperand.accept(this));
+          }
+          return FunctionCallFactory.createExpression(call.op.getName().toLowerCase(), newOperands);
         case LIKE:
         case SIMILAR:
           return getDrillFunctionFromOptiqCall(call);
@@ -326,7 +337,8 @@ public class DrillOptiq {
 
     @Override
     public LogicalExpression visitFieldAccess(RexFieldAccess fieldAccess) {
-      return super.visitFieldAccess(fieldAccess);
+      SchemaPath logicalRef = (SchemaPath) fieldAccess.getReferenceExpr().accept(this);
+      return logicalRef.getChild(fieldAccess.getField().getName());
     }
 
     private LogicalExpression getDrillCastFunctionFromOptiq(RexCall call){

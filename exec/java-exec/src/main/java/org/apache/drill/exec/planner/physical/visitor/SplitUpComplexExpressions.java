@@ -27,15 +27,16 @@ import org.apache.calcite.rel.type.RelDataTypeFieldImpl;
 import org.apache.calcite.rel.type.RelRecordType;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexCall;
+import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.calcite.sql.validate.SqlValidatorUtil;
 import org.apache.calcite.tools.RelConversionException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.planner.physical.ProjectPrel;
-import org.apache.drill.exec.planner.sql.DrillOperatorTable;
 import org.apache.drill.exec.planner.types.RelDataTypeDrillImpl;
 import org.apache.drill.exec.planner.types.RelDataTypeHolder;
 
@@ -44,22 +45,21 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 public class SplitUpComplexExpressions extends BasePrelVisitor<Prel, Object, RelConversionException> {
 
-  RelDataTypeFactory factory;
-  DrillOperatorTable table;
-  FunctionImplementationRegistry funcReg;
+  private final RelDataTypeFactory factory;
+  private final RexBuilder rexBuilder;
+  private final FunctionImplementationRegistry funcReg;
 
-  public SplitUpComplexExpressions(RelDataTypeFactory factory, DrillOperatorTable table, FunctionImplementationRegistry funcReg) {
-    super();
+  public SplitUpComplexExpressions(RelDataTypeFactory factory, FunctionImplementationRegistry funcReg, RexBuilder rexBuilder) {
     this.factory = factory;
-    this.table = table;
     this.funcReg = funcReg;
+    this.rexBuilder = rexBuilder;
   }
 
   @Override
-  public Prel visitPrel(Prel prel, Object value) throws RelConversionException {
-    List<RelNode> children = Lists.newArrayList();
-    for(Prel child : prel){
-      child = child.accept(this, null);
+  public Prel visitPrel(Prel prel, Object unused) throws RelConversionException {
+    List<RelNode> children = new ArrayList<>();
+    for (Prel child : prel) {
+      child = child.accept(this, unused);
       children.add(child);
     }
     return (Prel) prel.copy(prel.getTraitSet(), children);
@@ -67,80 +67,83 @@ public class SplitUpComplexExpressions extends BasePrelVisitor<Prel, Object, Rel
 
 
   @Override
-  public Prel visitProject(ProjectPrel project, Object unused) throws RelConversionException {
+  public Prel visitProject(final ProjectPrel project, Object unused) throws RelConversionException {
+    final Prel oldInput = (Prel) project.getInput(0);
+    RelNode newInput = oldInput.accept(this, unused);
 
-    // Apply the rule to the child
-    RelNode originalInput = ((Prel)project.getInput(0)).accept(this, null);
-    project = (ProjectPrel) project.copy(project.getTraitSet(), Lists.newArrayList(originalInput));
+    ProjectPrel newProject = (ProjectPrel) project.copy(project.getTraitSet(), Lists.newArrayList(newInput));
 
-    List<RexNode> exprList = new ArrayList<>();
-
-    List<RelDataTypeField> relDataTypes = new ArrayList<>();
-    List<RelDataTypeField> origRelDataTypes = new ArrayList<>();
-    int i = 0;
-    final int lastColumnReferenced = PrelUtil.getLastUsedColumnReference(project.getProjects());
-
+    final int lastColumnReferenced = PrelUtil.getLastUsedColumnReference(newProject.getProjects());
     if (lastColumnReferenced == -1) {
-      return project;
+      return newProject;
     }
 
+    List<RelDataTypeField> projectFields = newProject.getRowType().getFieldList();
+    List<RelDataTypeField> origRelDataTypes = new ArrayList<>();
+    List<RexNode> exprList = new ArrayList<>();
     final int lastRexInput = lastColumnReferenced + 1;
-    RexVisitorComplexExprSplitter exprSplitter = new RexVisitorComplexExprSplitter(factory, funcReg, lastRexInput);
-
-    for (RexNode rex : project.getChildExps()) {
-      origRelDataTypes.add(project.getRowType().getFieldList().get(i));
-      i++;
-      exprList.add(rex.accept(exprSplitter));
-    }
-    List<RexNode> complexExprs = exprSplitter.getComplexExprs();
-
-    if (complexExprs.size() == 1 && findTopComplexFunc(project.getChildExps()).size() == 1) {
-      return project;
+    RexVisitorComplexExprSplitter exprSplitter = new RexVisitorComplexExprSplitter(funcReg, rexBuilder, lastRexInput);
+    int i = 0;
+    for (RexNode rex : newProject.getChildExps()) {
+      RelDataTypeField originField = projectFields.get(i++);
+      RexNode splitRex = rex.accept(exprSplitter);
+      origRelDataTypes.add(originField);
+      exprList.add(splitRex);
     }
 
-    ProjectPrel childProject;
-
-    List<RexNode> allExprs = new ArrayList<>();
-    int exprIndex = 0;
-    List<String> fieldNames = originalInput.getRowType().getFieldNames();
-    for (int index = 0; index < lastRexInput; index++) {
-      RexBuilder builder = new RexBuilder(factory);
-      allExprs.add(builder.makeInputRef( new RelDataTypeDrillImpl(new RelDataTypeHolder(), factory), index));
-
-      if (fieldNames.get(index).contains(SchemaPath.DYNAMIC_STAR)) {
-        relDataTypes.add(new RelDataTypeFieldImpl(fieldNames.get(index), allExprs.size(), factory.createSqlType(SqlTypeName.ANY)));
-      } else {
-        relDataTypes.add(new RelDataTypeFieldImpl("EXPR$" + exprIndex, allExprs.size(), factory.createSqlType(SqlTypeName.ANY)));
-        exprIndex++;
-      }
+    final List<RexNode> complexExprs = exprSplitter.getComplexExprs();
+    if (complexExprs.size() == 1 && findTopComplexFunc(newProject.getChildExps()).size() == 1) {
+      return newProject;
     }
-    RexNode currRexNode;
-    int index = lastRexInput - 1;
 
     // if the projection expressions contained complex outputs, split them into their own individual projects
     if (complexExprs.size() > 0 ) {
+      List<RexNode> allExprs = new ArrayList<>();
+      int exprIndex = 0;
+      List<String> fieldNames = newInput.getRowType().getFieldNames();
+
+      List<RelDataTypeField> relDataTypes = new ArrayList<>();
+      for (int index = 0; index < lastRexInput; index++) {
+        allExprs.add(rexBuilder.makeInputRef( new RelDataTypeDrillImpl(new RelDataTypeHolder(), factory), index));
+
+        if (fieldNames.get(index).contains(SchemaPath.DYNAMIC_STAR)) {
+          relDataTypes.add(new RelDataTypeFieldImpl(fieldNames.get(index), allExprs.size(), factory.createSqlType(SqlTypeName.ANY)));
+        } else {
+          relDataTypes.add(new RelDataTypeFieldImpl(getExprName(exprIndex), allExprs.size(), factory.createSqlType(SqlTypeName.ANY)));
+          exprIndex++;
+        }
+      }
+      RexNode currRexNode;
+      int index = lastRexInput - 1;
       while (complexExprs.size() > 0) {
         if ( index >= lastRexInput ) {
-          allExprs.remove(allExprs.size() - 1);
-          RexBuilder builder = new RexBuilder(factory);
-          allExprs.add(builder.makeInputRef( new RelDataTypeDrillImpl(new RelDataTypeHolder(), factory), index));
+          RexInputRef newLastRex = rexBuilder.makeInputRef(new RelDataTypeDrillImpl(new RelDataTypeHolder(), factory), index);
+          // replace last rex with new one
+          allExprs.set(allExprs.size() - 1, newLastRex);
         }
         index++;
         exprIndex++;
 
         currRexNode = complexExprs.remove(0);
         allExprs.add(currRexNode);
-        relDataTypes.add(new RelDataTypeFieldImpl("EXPR$" + exprIndex, allExprs.size(), factory.createSqlType(SqlTypeName.ANY)));
-        childProject = new ProjectPrel(project.getCluster(), project.getTraitSet(), originalInput, ImmutableList.copyOf(allExprs), new RelRecordType(relDataTypes));
-        originalInput = childProject;
+        relDataTypes.add(new RelDataTypeFieldImpl(getExprName(exprIndex), allExprs.size(), factory.createSqlType(SqlTypeName.ANY)));
+
+        RelRecordType childProjectType = new RelRecordType(relDataTypes);
+        ProjectPrel childProject  = new ProjectPrel(newProject.getCluster(), newProject.getTraitSet(), newInput, ImmutableList.copyOf(allExprs), childProjectType);
+        newInput = childProject;
       }
-      // copied from above, find a better way to do this
-      allExprs.remove(allExprs.size() - 1);
-      RexBuilder builder = new RexBuilder(factory);
-      allExprs.add(builder.makeInputRef( new RelDataTypeDrillImpl(new RelDataTypeHolder(), factory), index));
-      relDataTypes.add(new RelDataTypeFieldImpl("EXPR$" + index, allExprs.size(), factory.createSqlType(SqlTypeName.ANY) ));
+
+      allExprs.set(allExprs.size() - 1,
+          rexBuilder.makeInputRef(new RelDataTypeDrillImpl(new RelDataTypeHolder(), factory), index));
+
+      relDataTypes.add(new RelDataTypeFieldImpl(getExprName(exprIndex), allExprs.size(), factory.createSqlType(SqlTypeName.ANY)));
     }
-    return (Prel) project.copy(project.getTraitSet(), originalInput, exprList, new RelRecordType(origRelDataTypes));
+
+    return (Prel) project.copy(project.getTraitSet(), newInput, exprList, new RelRecordType(origRelDataTypes));
+  }
+
+  private String getExprName(int exprIndex) {
+    return SqlValidatorUtil.EXPR_SUGGESTER.apply(null, exprIndex, 0);
   }
 
   /**

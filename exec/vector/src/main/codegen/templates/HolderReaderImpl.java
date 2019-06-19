@@ -319,7 +319,9 @@ public void copyAsField(String name, MapWriter writer) {
 <#else>
   <#if !(minor.class == "Decimal9" || minor.class == "Decimal18")>
   public void copyAsValue(${minor.class?cap_first}Writer writer) {
-    writer.write${minor.class}(<#list fields as field>holder.${field.name}<#if field_has_next>, </#if></#list>);
+    if (isSet()) {
+      writer.write${minor.class}(<#list fields as field>holder.${field.name}<#if field_has_next>, </#if></#list>);
+    }
   }
 
     <#if minor.class == "VarDecimal">
@@ -329,7 +331,9 @@ public void copyAsField(String name, MapWriter writer) {
   public void copyAsField(String name, MapWriter writer) {
     ${minor.class?cap_first}Writer impl = writer.${lowerName}(name);
     </#if>
-    impl.write${minor.class}(<#list fields as field>holder.${field.name}<#if field_has_next>, </#if></#list>);
+    if (isSet()) {
+      impl.write${minor.class}(<#list fields as field>holder.${field.name}<#if field_has_next>,</#if></#list>);
+    }
   }
 
   </#if>

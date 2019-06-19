@@ -347,10 +347,10 @@ public class View {
          */
         type = factory.createSqlType(SqlTypeName.ANY);
       }
-    } else if (typeName == SqlTypeName.ARRAY) {
+    } else if (typeName == SqlTypeName.ARRAY || typeName == SqlTypeName.ROW) {
       /*
-       * Treat array type as any to avoid generation of CAST(fieldName,'ARRAY')
-       * unsupported in Drill.
+       * Treat as ANY to avoid generation of unsupported casts, like:
+       * CAST(fieldName,'ARRAY') or CAST(fieldName,'ROW')
        */
       type = factory.createSqlType(SqlTypeName.ANY);
     } else {

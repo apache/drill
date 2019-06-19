@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.calcite.avatica.util.TimeUnit;
 import org.apache.calcite.rel.type.RelDataType;
@@ -93,6 +94,13 @@ public class DrillConvertletTable implements SqlRexConvertletTable {
         SqlStdOperatorTable.TIMESTAMP_DIFF, operands);
   };
 
+  private static final SqlRexConvertlet ROW_CONVERTLET = (cx, call) -> {
+    List<RexNode> args = call.getOperandList().stream()
+        .map(cx::convertExpression)
+        .collect(Collectors.toList());
+    return cx.getRexBuilder().makeCall(SqlStdOperatorTable.ROW, args);
+  };
+
   static {
     // Use custom convertlet for EXTRACT function
     map.put(SqlStdOperatorTable.EXTRACT, DrillExtractConvertlet.INSTANCE);
@@ -108,6 +116,7 @@ public class DrillConvertletTable implements SqlRexConvertletTable {
     map.put(SqlStdOperatorTable.VAR_POP, new DrillAvgVarianceConvertlet(SqlKind.VAR_POP));
     map.put(SqlStdOperatorTable.VAR_SAMP, new DrillAvgVarianceConvertlet(SqlKind.VAR_SAMP));
     map.put(SqlStdOperatorTable.VARIANCE, new DrillAvgVarianceConvertlet(SqlKind.VAR_SAMP));
+    map.put(SqlStdOperatorTable.ROW, ROW_CONVERTLET);
   }
 
   /*

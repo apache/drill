@@ -23,6 +23,7 @@ import java.util.function.Function;
 import io.netty.buffer.DrillBuf;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.store.hive.writers.complex.HiveListWriter;
+import org.apache.drill.exec.store.hive.writers.complex.HiveStructWriter;
 import org.apache.drill.exec.store.hive.writers.primitive.HiveBinaryWriter;
 import org.apache.drill.exec.store.hive.writers.primitive.HiveBooleanWriter;
 import org.apache.drill.exec.store.hive.writers.primitive.HiveByteWriter;
@@ -54,6 +55,7 @@ import org.apache.drill.exec.vector.complex.writer.VarDecimalWriter;
 import org.apache.hadoop.hive.serde2.objectinspector.ListObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.StructField;
+import org.apache.hadoop.hive.serde2.objectinspector.StructObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.BinaryObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.BooleanObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.ByteObjectInspector;
@@ -125,6 +127,19 @@ public final class HiveValueWriterFactory {
         ObjectInspector elementInspector = listObjectInspector.getListElementObjectInspector();
         HiveValueWriter elementValueWriter = createHiveValueWriter(null, elemTypeInfo, elementInspector, listWriter);
         return new HiveListWriter(listObjectInspector, listWriter, elementValueWriter);
+      }
+      case STRUCT: {
+        StructObjectInspector structObjectInspector = (StructObjectInspector) objectInspector;
+        StructField[] structFields = structObjectInspector.getAllStructFieldRefs().toArray(new StructField[0]);
+        HiveValueWriter[] structFieldWriters = new HiveValueWriter[structFields.length];
+        MapWriter structWriter = extractWriter(columnName, parentWriter, MapWriter::map, ListWriter::map);
+        for (int fieldIdx = 0; fieldIdx < structFields.length; fieldIdx++) {
+          StructField field = structFields[fieldIdx];
+          ObjectInspector fieldObjectInspector = field.getFieldObjectInspector();
+          TypeInfo fieldTypeInfo = TypeInfoUtils.getTypeInfoFromTypeString(fieldObjectInspector.getTypeName());
+          structFieldWriters[fieldIdx] = createHiveValueWriter(field.getFieldName(), fieldTypeInfo, fieldObjectInspector, structWriter);
+        }
+        return new HiveStructWriter(structObjectInspector, structFields, structFieldWriters, structWriter);
       }
     }
     throwUnsupportedHiveDataTypeError(typeInfo.getCategory().toString());

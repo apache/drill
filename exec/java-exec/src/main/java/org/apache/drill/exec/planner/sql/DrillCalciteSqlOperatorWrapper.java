@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.sql;
 
+import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlCallBinding;
 import org.apache.calcite.sql.SqlLiteral;
@@ -25,6 +26,7 @@ import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.SqlOperatorBinding;
 import org.apache.calcite.sql.SqlSyntax;
 import org.apache.calcite.sql.SqlWriter;
+import org.apache.calcite.sql.fun.SqlRowOperator;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.validate.SqlMonotonicity;
 import org.apache.calcite.sql.validate.SqlValidator;
@@ -135,5 +137,14 @@ public class DrillCalciteSqlOperatorWrapper extends SqlOperator implements Drill
       int leftPrec,
       int rightPrec) {
     operator.unparse(writer, call, leftPrec, rightPrec);
+  }
+
+  @Override
+  public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
+    if (operator instanceof SqlRowOperator) {
+      return operator.inferReturnType(opBinding);
+    } else {
+      return super.inferReturnType(opBinding);
+    }
   }
 }

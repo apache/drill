@@ -20,7 +20,6 @@ package org.apache.drill.exec.planner.physical.visitor;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexCorrelVariable;
@@ -34,22 +33,21 @@ import org.apache.calcite.rex.RexOver;
 import org.apache.calcite.rex.RexRangeRef;
 import org.apache.calcite.rex.RexVisitorImpl;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.planner.physical.ProjectPrel;
-import org.apache.drill.exec.planner.types.RelDataTypeDrillImpl;
-import org.apache.drill.exec.planner.types.RelDataTypeHolder;
 
 public class RexVisitorComplexExprSplitter extends RexVisitorImpl<RexNode> {
 
-  RelDataTypeFactory factory;
-  FunctionImplementationRegistry funcReg;
-  List<RexNode> complexExprs;
-  List<ProjectPrel> projects;
-  int lastUsedIndex;
+  private final FunctionImplementationRegistry funcReg;
+  private final RexBuilder rexBuilder;
+  private final List<RexNode> complexExprs;
 
-  public RexVisitorComplexExprSplitter(RelDataTypeFactory factory, FunctionImplementationRegistry funcReg, int firstUnused) {
+  private int lastUsedIndex;
+
+  public RexVisitorComplexExprSplitter(FunctionImplementationRegistry funcReg,
+                                       RexBuilder rexBuilder,
+                                       int firstUnused) {
     super(true);
-    this.factory = factory;
     this.funcReg = funcReg;
+    this.rexBuilder = rexBuilder;
     this.complexExprs = new ArrayList<>();
     this.lastUsedIndex = firstUnused;
   }
@@ -85,21 +83,21 @@ public class RexVisitorComplexExprSplitter extends RexVisitorImpl<RexNode> {
 
   @Override
   public RexNode visitCall(RexCall call) {
+    final List<RexNode> newOps = new ArrayList<>();
+    for (RexNode operand : call.operands) {
+      RexNode newOp = operand.accept(this);
+      newOps.add(newOp);
+    }
+    final RexCall newCall = call.clone(call.getType(), newOps);
 
     String functionName = call.getOperator().getName();
-
-    List<RexNode> newOps = new ArrayList<>();
-    for (RexNode operand : call.operands) {
-      newOps.add(operand.accept(this));
-    }
-    if (funcReg.isFunctionComplexOutput(functionName) ) {
-      RexBuilder builder = new RexBuilder(factory);
-      RexNode ret = builder.makeInputRef( new RelDataTypeDrillImpl(new RelDataTypeHolder(), factory), lastUsedIndex);
-      lastUsedIndex++;
-      complexExprs.add(call.clone(new RelDataTypeDrillImpl(new RelDataTypeHolder(),factory), newOps));
+    if (funcReg.isFunctionComplexOutput(functionName)) {
+      RexNode ret = rexBuilder.makeInputRef(newCall.getType(), lastUsedIndex++);
+      complexExprs.add(newCall);
       return ret;
+    } else {
+      return newCall;
     }
-    return call.clone(call.getType(), newOps);
   }
 
   @Override
