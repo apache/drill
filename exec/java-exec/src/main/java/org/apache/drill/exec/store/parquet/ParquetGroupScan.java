@@ -22,12 +22,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.apache.drill.exec.physical.base.FileSystemMetadataProviderManager;
-import org.apache.drill.exec.physical.base.MetadataProviderManager;
-import org.apache.drill.exec.physical.base.ParquetTableMetadataProvider;
+import org.apache.drill.metastore.FileSystemMetadataProviderManager;
+import org.apache.drill.metastore.MetadataProviderManager;
+import org.apache.drill.metastore.ParquetTableMetadataProvider;
 import org.apache.drill.exec.record.metadata.TupleSchema;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
-import org.apache.drill.metastore.LocationProvider;
+import org.apache.drill.metastore.metadata.LocationProvider;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
@@ -291,7 +291,7 @@ public class ParquetGroupScan extends AbstractParquetGroupScan {
 
   @Override
   protected List<String> getPartitionValues(LocationProvider locationProvider) {
-    return ColumnExplorer.listPartitionValues(locationProvider.getLocation(), selectionRoot, false);
+    return ColumnExplorer.listPartitionValues(locationProvider.getPath(), selectionRoot, false);
   }
 
   // overridden protected methods block end
@@ -300,7 +300,7 @@ public class ParquetGroupScan extends AbstractParquetGroupScan {
    * Implementation of RowGroupScanFilterer which uses {@link ParquetGroupScan} as source and
    * builds {@link ParquetGroupScan} instance with filtered metadata.
    */
-  private class ParquetGroupScanFilterer extends RowGroupScanFilterer {
+  private class ParquetGroupScanFilterer extends RowGroupScanFilterer<ParquetGroupScanFilterer> {
 
     public ParquetGroupScanFilterer(ParquetGroupScan source) {
       super(source);
@@ -309,6 +309,11 @@ public class ParquetGroupScan extends AbstractParquetGroupScan {
     @Override
     protected AbstractParquetGroupScan getNewScan() {
       return new ParquetGroupScan((ParquetGroupScan) source);
+    }
+
+    @Override
+    protected ParquetGroupScanFilterer self() {
+      return this;
     }
   }
 }

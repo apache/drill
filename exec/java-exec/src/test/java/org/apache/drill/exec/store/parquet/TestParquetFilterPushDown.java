@@ -30,8 +30,8 @@ import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.store.parquet.columnreaders.ParquetRecordReader;
 import org.apache.drill.exec.store.parquet.metadata.Metadata;
 import org.apache.drill.exec.store.parquet.metadata.MetadataBase;
-import org.apache.drill.metastore.ColumnStatistics;
-import org.apache.drill.metastore.ColumnStatisticsKind;
+import org.apache.drill.metastore.statistics.ColumnStatistics;
+import org.apache.drill.metastore.statistics.ColumnStatisticsKind;
 import org.apache.drill.exec.expr.IsPredicate;
 import org.apache.drill.exec.expr.StatisticsProvider;
 import org.apache.drill.test.BaseDirTestWatcher;
@@ -602,12 +602,10 @@ public class TestParquetFilterPushDown extends PlanTestBase {
     Mockito.doReturn(booleanStatistics).when(le).accept(ArgumentMatchers.any(), ArgumentMatchers.any());
     StatisticsProvider<Boolean> re = Mockito.mock(StatisticsProvider.class);
     Mockito.when(re.getRowCount()).thenReturn(2L); // 2 rows
-    Mockito.when(booleanStatistics.containsStatistic(ArgumentMatchers.any())).thenReturn(true); // stat is not empty
-    Mockito.when(booleanStatistics.getStatistic(ColumnStatisticsKind.NULLS_COUNT)).thenReturn(0L); // no nulls
-    Mockito.when(booleanStatistics.getStatistic(ColumnStatisticsKind.MIN_VALUE)).thenReturn(false); // min false
-    Mockito.when(booleanStatistics.getValueStatistic(ColumnStatisticsKind.MIN_VALUE)).thenReturn(false); // min false
-    Mockito.when(booleanStatistics.getStatistic(ColumnStatisticsKind.MAX_VALUE)).thenReturn(true); // max true
-    Mockito.when(booleanStatistics.getValueStatistic(ColumnStatisticsKind.MAX_VALUE)).thenReturn(true); // max false
+    Mockito.when(booleanStatistics.contains(ArgumentMatchers.any())).thenReturn(true); // stat is not empty
+    Mockito.when(booleanStatistics.get(ColumnStatisticsKind.NULLS_COUNT)).thenReturn(0L); // no nulls
+    Mockito.when(booleanStatistics.get(ColumnStatisticsKind.MIN_VALUE)).thenReturn(false); // min false
+    Mockito.when(booleanStatistics.get(ColumnStatisticsKind.MAX_VALUE)).thenReturn(true); // max true
     Mockito.when(booleanStatistics.getValueComparator()).thenReturn(Comparator.nullsFirst(Comparator.naturalOrder())); // comparator
     IsPredicate isTrue = (IsPredicate) IsPredicate.createIsPredicate(FunctionGenerationHelper.IS_TRUE, le);
     assertEquals(RowsMatch.SOME, isTrue.matches(re));
@@ -627,12 +625,10 @@ public class TestParquetFilterPushDown extends PlanTestBase {
     Mockito.doReturn(booleanStatistics).when(le).accept(ArgumentMatchers.any(), ArgumentMatchers.any());
     StatisticsProvider<Boolean> re = Mockito.mock(StatisticsProvider.class);
     Mockito.when(re.getRowCount()).thenReturn(2L); // 2 rows
-    Mockito.when(booleanStatistics.containsStatistic(ArgumentMatchers.any())).thenReturn(true); // stat is not empty
-    Mockito.when(booleanStatistics.getStatistic(ColumnStatisticsKind.NULLS_COUNT)).thenReturn(0L); // no nulls
-    Mockito.when(booleanStatistics.getStatistic(ColumnStatisticsKind.MIN_VALUE)).thenReturn(false); // min false
-    Mockito.when(booleanStatistics.getValueStatistic(ColumnStatisticsKind.MIN_VALUE)).thenReturn(false); // min false
-    Mockito.when(booleanStatistics.getStatistic(ColumnStatisticsKind.MAX_VALUE)).thenReturn(false); // max false
-    Mockito.when(booleanStatistics.getValueStatistic(ColumnStatisticsKind.MAX_VALUE)).thenReturn(false); // max false
+    Mockito.when(booleanStatistics.contains(ArgumentMatchers.any())).thenReturn(true); // stat is not empty
+    Mockito.when(booleanStatistics.get(ColumnStatisticsKind.NULLS_COUNT)).thenReturn(0L); // no nulls
+    Mockito.when(booleanStatistics.get(ColumnStatisticsKind.MIN_VALUE)).thenReturn(false); // min false
+    Mockito.when(booleanStatistics.get(ColumnStatisticsKind.MAX_VALUE)).thenReturn(false); // max false
     Mockito.when(booleanStatistics.getValueComparator()).thenReturn(Comparator.nullsFirst(Comparator.naturalOrder())); // comparator
     IsPredicate isTrue = (IsPredicate) IsPredicate.createIsPredicate(FunctionGenerationHelper.IS_TRUE, le);
     assertEquals(RowsMatch.NONE, isTrue.matches(re));
@@ -652,12 +648,10 @@ public class TestParquetFilterPushDown extends PlanTestBase {
     Mockito.doReturn(booleanStatistics).when(le).accept(ArgumentMatchers.any(), ArgumentMatchers.any());
     StatisticsProvider<Boolean> re = Mockito.mock(StatisticsProvider.class);
     Mockito.when(re.getRowCount()).thenReturn(Long.valueOf(2)); // 2 rows
-    Mockito.when(booleanStatistics.containsStatistic(ArgumentMatchers.any())).thenReturn(true); // stat is not empty
-    Mockito.when(booleanStatistics.getStatistic(ColumnStatisticsKind.NULLS_COUNT)).thenReturn(0L); // no nulls
-    Mockito.when(booleanStatistics.getStatistic(ColumnStatisticsKind.MIN_VALUE)).thenReturn(true); // min false
-    Mockito.when(booleanStatistics.getValueStatistic(ColumnStatisticsKind.MIN_VALUE)).thenReturn(true); // min false
-    Mockito.when(booleanStatistics.getStatistic(ColumnStatisticsKind.MAX_VALUE)).thenReturn(true); // max false
-    Mockito.when(booleanStatistics.getValueStatistic(ColumnStatisticsKind.MAX_VALUE)).thenReturn(true); // max false
+    Mockito.when(booleanStatistics.contains(ArgumentMatchers.any())).thenReturn(true); // stat is not empty
+    Mockito.when(booleanStatistics.get(ColumnStatisticsKind.NULLS_COUNT)).thenReturn(0L); // no nulls
+    Mockito.when(booleanStatistics.get(ColumnStatisticsKind.MIN_VALUE)).thenReturn(true); // min false
+    Mockito.when(booleanStatistics.get(ColumnStatisticsKind.MAX_VALUE)).thenReturn(true); // max false
     IsPredicate isTrue = (IsPredicate) IsPredicate.createIsPredicate(FunctionGenerationHelper.IS_TRUE, le);
     assertEquals(RowsMatch.ALL, isTrue.matches(re));
     IsPredicate isFalse = (IsPredicate)  IsPredicate.createIsPredicate(FunctionGenerationHelper.IS_FALSE, le);

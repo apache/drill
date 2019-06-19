@@ -71,7 +71,7 @@ public class ColumnExplorer {
 
   /**
    * Constructor for using the column explorer to probe existing columns in the
-   * {@link ProjectRecordBatch}.
+   * {@link org.apache.drill.exec.physical.impl.project.ProjectRecordBatch}.
    */
   // TODO: This is awkward. This class is being used for two distinct things:
   // 1. The definition of the metadata columns, and

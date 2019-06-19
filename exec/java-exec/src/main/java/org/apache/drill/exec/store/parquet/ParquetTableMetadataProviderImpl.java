@@ -17,9 +17,9 @@
  */
 package org.apache.drill.exec.store.parquet;
 
-import org.apache.drill.exec.physical.base.MetadataProviderManager;
-import org.apache.drill.exec.physical.base.ParquetMetadataProvider;
-import org.apache.drill.exec.physical.base.ParquetTableMetadataProvider;
+import org.apache.drill.metastore.MetadataProviderManager;
+import org.apache.drill.metastore.ParquetMetadataProvider;
+import org.apache.drill.metastore.ParquetTableMetadataProvider;
 import org.apache.drill.exec.planner.common.DrillStatsTable;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.metadata.schema.SchemaProvider;

@@ -28,8 +28,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.calcite.plan.RelOptPlanner;
-import org.apache.drill.metastore.TableMetadata;
-import org.apache.drill.metastore.TableStatisticsKind;
+import org.apache.drill.metastore.statistics.TableStatisticsKind;
+import org.apache.drill.metastore.metadata.TableMetadata;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.hep.HepRelVertex;
 import org.apache.calcite.plan.volcano.RelSubset;
@@ -593,7 +593,7 @@ public abstract class DrillRelOptUtil {
         TableMetadata tableMetadata;
         return table == null
             || (tableMetadata = table.getGroupScan().getTableMetadata()) == null
-            || !((Boolean) TableStatisticsKind.HAS_STATISTICS.getValue(tableMetadata));
+            || !TableStatisticsKind.HAS_DESCRIPTIVE_STATISTICS.getValue(tableMetadata);
       } catch (IOException e) {
         RelOptPlanner.LOGGER.debug("Unable to obtain table metadata due to exception:", e);
         return true;

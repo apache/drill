@@ -17,11 +17,12 @@
  */
 package org.apache.drill.exec.store.dfs.easy;
 
-import org.apache.drill.exec.physical.base.TableMetadataProviderBuilder;
+import org.apache.drill.metastore.SimpleFileTableMetadataProvider;
+import org.apache.drill.metastore.metadata.TableMetadataProviderBuilder;
 import org.apache.hadoop.fs.Path;
 
 /**
- * Builder for {@link org.apache.drill.exec.physical.base.SimpleFileTableMetadataProvider}.
+ * Builder for {@link SimpleFileTableMetadataProvider}.
  */
 public interface SimpleFileTableMetadataProviderBuilder extends TableMetadataProviderBuilder {
 

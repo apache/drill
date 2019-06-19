@@ -31,6 +31,7 @@ import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.vector.NullableVarBinaryVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.MapVector;
+import org.apache.drill.metastore.statistics.Statistic;
 
 public class HLLMergedStatistic extends AbstractMergedStatistic {
   private Map<String, HyperLogLog> hllHolder;

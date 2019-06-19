@@ -18,6 +18,7 @@
 package org.apache.drill.exec.planner.common;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
@@ -30,6 +31,7 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexLiteral;
 import com.tdunning.math.stats.MergingDigest;
 import org.apache.calcite.sql.SqlOperator;
+import org.apache.drill.metastore.statistics.Histogram;
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.BoundType;
@@ -46,7 +48,7 @@ public class NumericEquiDepthHistogram implements Histogram {
    * histogram boundaries are approximate and even if some values lie outside the
    * range, we cannot be absolutely sure
    */
-  static final double SMALL_SELECTIVITY = 0.0001;
+  private static final double SMALL_SELECTIVITY = 0.0001;
 
   /** For equi-depth, all buckets will have same (approx) number of rows */
   @JsonProperty("numRowsPerBucket")
@@ -97,6 +99,7 @@ public class NumericEquiDepthHistogram implements Histogram {
    * number of buckets is 1 less than the total # entries in the buckets array since last
    * entry is the end point of the last bucket
    */
+  @JsonIgnore
   public int getNumBuckets() {
     return buckets.length - 1;
   }

@@ -594,50 +594,66 @@ public class ParquetReaderUtility {
    * @return major type
    */
   public static TypeProtos.MajorType getType(PrimitiveTypeName type, OriginalType originalType, int scale, int precision) {
+    TypeProtos.MinorType minorType = getMinorType(type, originalType);
+    if (originalType == OriginalType.DECIMAL) {
+      return Types.withScaleAndPrecision(minorType, TypeProtos.DataMode.OPTIONAL, scale, precision);
+    }
+
+    return Types.optional(minorType);
+  }
+
+  /**
+   * Builds minor type using given {@code OriginalType originalType} or {@code PrimitiveTypeName type}.
+   *
+   * @param type         parquet primitive type
+   * @param originalType parquet original type
+   * @return minor type
+   */
+  public static TypeProtos.MinorType getMinorType(PrimitiveTypeName type, OriginalType originalType) {
     if (originalType != null) {
       switch (originalType) {
         case DECIMAL:
-          return Types.withScaleAndPrecision(TypeProtos.MinorType.VARDECIMAL, TypeProtos.DataMode.OPTIONAL, scale, precision);
+          return TypeProtos.MinorType.VARDECIMAL;
         case DATE:
-          return Types.optional(TypeProtos.MinorType.DATE);
+          return TypeProtos.MinorType.DATE;
         case TIME_MILLIS:
-          return Types.optional(TypeProtos.MinorType.TIME);
+          return TypeProtos.MinorType.TIME;
         case TIMESTAMP_MILLIS:
-          return Types.optional(TypeProtos.MinorType.TIMESTAMP);
+          return TypeProtos.MinorType.TIMESTAMP;
         case UTF8:
-          return Types.optional(TypeProtos.MinorType.VARCHAR);
+          return TypeProtos.MinorType.VARCHAR;
         case UINT_8:
-          return Types.optional(TypeProtos.MinorType.UINT1);
+          return TypeProtos.MinorType.UINT1;
         case UINT_16:
-          return Types.optional(TypeProtos.MinorType.UINT2);
+          return TypeProtos.MinorType.UINT2;
         case UINT_32:
-          return Types.optional(TypeProtos.MinorType.UINT4);
+          return TypeProtos.MinorType.UINT4;
         case UINT_64:
-          return Types.optional(TypeProtos.MinorType.UINT8);
+          return TypeProtos.MinorType.UINT8;
         case INT_8:
-          return Types.optional(TypeProtos.MinorType.TINYINT);
+          return TypeProtos.MinorType.TINYINT;
         case INT_16:
-          return Types.optional(TypeProtos.MinorType.SMALLINT);
+          return TypeProtos.MinorType.SMALLINT;
         case INTERVAL:
-          return Types.optional(TypeProtos.MinorType.INTERVAL);
+          return TypeProtos.MinorType.INTERVAL;
       }
     }
 
     switch (type) {
       case BOOLEAN:
-        return Types.optional(TypeProtos.MinorType.BIT);
+        return TypeProtos.MinorType.BIT;
       case INT32:
-        return Types.optional(TypeProtos.MinorType.INT);
+        return TypeProtos.MinorType.INT;
       case INT64:
-        return Types.optional(TypeProtos.MinorType.BIGINT);
+        return TypeProtos.MinorType.BIGINT;
       case FLOAT:
-        return Types.optional(TypeProtos.MinorType.FLOAT4);
+        return TypeProtos.MinorType.FLOAT4;
       case DOUBLE:
-        return Types.optional(TypeProtos.MinorType.FLOAT8);
+        return TypeProtos.MinorType.FLOAT8;
       case BINARY:
       case FIXED_LEN_BYTE_ARRAY:
       case INT96:
-        return Types.optional(TypeProtos.MinorType.VARBINARY);
+        return TypeProtos.MinorType.VARBINARY;
       default:
         // Should never hit this
         throw new UnsupportedOperationException("Unsupported type:" + type);

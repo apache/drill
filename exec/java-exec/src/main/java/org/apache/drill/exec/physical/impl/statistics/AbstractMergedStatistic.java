@@ -18,6 +18,7 @@
 package org.apache.drill.exec.physical.impl.statistics;
 
 import org.apache.drill.exec.vector.complex.MapVector;
+import org.apache.drill.metastore.statistics.Statistic;
 
 public abstract class AbstractMergedStatistic implements MergedStatistic, Statistic {
   protected String name;

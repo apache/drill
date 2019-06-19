@@ -18,7 +18,7 @@
 package org.apache.drill.exec.planner.logical;
 
 import org.apache.calcite.schema.Schema;
-import org.apache.drill.exec.physical.base.MetadataProviderManager;
+import org.apache.drill.metastore.MetadataProviderManager;
 import org.apache.drill.exec.planner.types.RelDataTypeDrillImpl;
 import org.apache.drill.exec.planner.types.RelDataTypeHolder;
 import org.apache.drill.exec.store.StoragePlugin;

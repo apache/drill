@@ -33,7 +33,7 @@ import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.ScanStats;
-import org.apache.drill.exec.physical.impl.statistics.Statistic;
+import org.apache.drill.metastore.statistics.Statistic;
 import org.apache.drill.exec.planner.logical.DrillAggregateRel;
 import org.apache.drill.exec.planner.logical.DrillProjectRel;
 import org.apache.drill.exec.planner.logical.DrillScanRel;
@@ -97,8 +97,8 @@ public class ConvertCountToDirectScanPrule extends Prule {
 
   @Override
   public void onMatch(RelOptRuleCall call) {
-    final DrillAggregateRel agg = (DrillAggregateRel) call.rel(0);
-    final DrillScanRel scan = (DrillScanRel) call.rel(call.rels.length - 1);
+    final DrillAggregateRel agg = call.rel(0);
+    final DrillScanRel scan = call.rel(call.rels.length - 1);
     final DrillProjectRel project = call.rels.length == 3 ? (DrillProjectRel) call.rel(1) : null;
 
     final GroupScan oldGrpScan = scan.getGroupScan();
@@ -115,7 +115,7 @@ public class ConvertCountToDirectScanPrule extends Prule {
     }
 
     Map<String, Long> result = collectCounts(settings, agg, scan, project);
-    logger.trace("Calculated the following aggregate counts: ", result);
+    logger.trace("Calculated the following aggregate counts: {}", result);
     // if could not determine the counts, rule won't be applied
     if (result.isEmpty()) {
       return;
