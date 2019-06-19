@@ -17,26 +17,11 @@
  */
 package org.apache.drill.exec.store.mock;
 
-import java.util.Random;
-
-import org.apache.drill.exec.vector.BitVector;
-import org.apache.drill.exec.vector.ValueVector;
-
-public class BooleanGen implements FieldGen {
-
-  private Random rand = new Random();
+public class BooleanGen extends AbstractFieldGen {
 
   @Override
-  public void setup(ColumnDef colDef) { }
-
-  public int value() {
-    return rand.nextBoolean() ? 1 : 0;
-  }
-
-  @Override
-  public void setValue(ValueVector v, int index ) {
-    BitVector vector = (BitVector) v;
-    vector.getMutator().set(index, value());
+  public void setValue() {
+    colWriter.setInt(rand.nextBoolean() ? 1 : 0);
   }
 
 }

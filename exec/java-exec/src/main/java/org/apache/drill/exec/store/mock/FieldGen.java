@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.mock;
 
-import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.accessor.ScalarWriter;
 
 /**
  * Interface which all mock column data generators must
@@ -32,6 +32,6 @@ import org.apache.drill.exec.vector.ValueVector;
  * of such casts.)
  */
 public interface FieldGen {
-  void setup(ColumnDef colDef);
-  void setValue(ValueVector v, int index);
+  void setup(ColumnDef colDef, ScalarWriter colLoader);
+  void setValue();
 }

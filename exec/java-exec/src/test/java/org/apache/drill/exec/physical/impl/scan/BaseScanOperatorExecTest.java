@@ -148,7 +148,7 @@ public class BaseScanOperatorExecTest extends SubOperatorTest {
   public static class BaseScanFixtureBuilder extends ScanFixtureBuilder {
 
     public ScanFrameworkBuilder builder = new ScanFrameworkBuilder();
-    public final List<ManagedReader<? extends SchemaNegotiator>> readers = new ArrayList<>();
+    public final List<ManagedReader<SchemaNegotiator>> readers = new ArrayList<>();
 
     public BaseScanFixtureBuilder() {
       super(fixture);
@@ -157,8 +157,19 @@ public class BaseScanOperatorExecTest extends SubOperatorTest {
     @Override
     public ScanFrameworkBuilder builder() { return builder; }
 
-    public void addReader(ManagedReader<? extends SchemaNegotiator> reader) {
+    public void addReader(ManagedReader<SchemaNegotiator> reader) {
       readers.add(reader);
+    }
+
+    public void addReaders(List<ManagedReader<SchemaNegotiator>> readers) {
+      this.readers.addAll(readers);
+    }
+
+    @SuppressWarnings("unchecked")
+    public void addReaders(ManagedReader<SchemaNegotiator>...readers) {
+      for (ManagedReader<SchemaNegotiator> reader : readers) {
+        addReader(reader);
+      }
     }
 
     @Override
@@ -169,17 +180,15 @@ public class BaseScanOperatorExecTest extends SubOperatorTest {
   }
 
   @SafeVarargs
-  public static BaseScanFixtureBuilder simpleBuilder(ManagedReader<? extends SchemaNegotiator>...readers) {
+  public static BaseScanFixtureBuilder simpleBuilder(ManagedReader<SchemaNegotiator>...readers) {
     BaseScanFixtureBuilder builder = new BaseScanFixtureBuilder();
     builder.projectAll();
-    for (ManagedReader<? extends SchemaNegotiator> reader : readers) {
-      builder.addReader(reader);
-    }
+    builder.addReaders(readers);
     return builder;
   }
 
   @SafeVarargs
-  public static ScanFixture simpleFixture(ManagedReader<? extends SchemaNegotiator>...readers) {
+  public static ScanFixture simpleFixture(ManagedReader<SchemaNegotiator>...readers) {
     return simpleBuilder(readers).build();
   }
 }

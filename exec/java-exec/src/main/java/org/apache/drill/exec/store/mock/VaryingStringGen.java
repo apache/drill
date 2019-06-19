@@ -20,10 +20,10 @@ package org.apache.drill.exec.store.mock;
 import java.util.Map;
 import java.util.Random;
 
-import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.VarCharVector;
+import org.apache.drill.exec.vector.accessor.ScalarWriter;
 
-public class VaryingStringGen implements FieldGen {
+
+public class VaryingStringGen extends AbstractFieldGen {
 
   private Random rand = new Random();
   private int length;
@@ -32,7 +32,8 @@ public class VaryingStringGen implements FieldGen {
   private int valueCount;
 
   @Override
-  public void setup(ColumnDef colDef) {
+  public void setup(ColumnDef colDef, ScalarWriter colLoader) {
+    super.setup(colDef, colLoader);
     length = colDef.width;
     Map<String,Object> props = colDef.mockCol.properties;
     span = 1000;
@@ -63,8 +64,7 @@ public class VaryingStringGen implements FieldGen {
   }
 
   @Override
-  public void setValue(ValueVector v, int index) {
-    VarCharVector vector = (VarCharVector) v;
-    vector.getMutator().setSafe(index, value().getBytes());
+  public void setValue() {
+    colWriter.setString(value());
   }
 }

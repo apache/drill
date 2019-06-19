@@ -194,7 +194,14 @@ public class SchemaBuilder implements SchemaContainer {
     return tupleBuilder.addRepeatedList(this, name);
   }
 
+  // Retained for backward compatibility. build() used to create
+  // a batch schema; now can be used to create a TupleMetadata.
+
   public TupleMetadata buildSchema() {
+    return build();
+  }
+
+  public TupleMetadata build() {
     return tupleBuilder.schema();
   }
 }

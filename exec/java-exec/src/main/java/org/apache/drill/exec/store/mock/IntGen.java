@@ -17,31 +17,16 @@
  */
 package org.apache.drill.exec.store.mock;
 
-import java.util.Random;
-
-import org.apache.drill.exec.vector.IntVector;
-import org.apache.drill.exec.vector.ValueVector;
-
 /**
  * Generates integer values uniformly randomly distributed over
  * the entire 32-bit integer range from
  * {@link Integer.MIN_VALUE} to {@link Integer.MAX_VALUE}.
  */
 
-public class IntGen implements FieldGen {
-
-  private final Random rand = new Random();
+public class IntGen extends AbstractFieldGen {
 
   @Override
-  public void setup(ColumnDef colDef) { }
-
-  private int value() {
-    return rand.nextInt();
-  }
-
-  @Override
-  public void setValue(ValueVector v, int index) {
-    IntVector vector = (IntVector) v;
-    vector.getMutator().set(index, value());
+  public void setValue() {
+    colWriter.setInt(rand.nextInt());
   }
 }
