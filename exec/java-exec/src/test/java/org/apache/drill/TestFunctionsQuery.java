@@ -18,6 +18,7 @@
 package org.apache.drill;
 
 import static org.apache.drill.exec.expr.fn.impl.DateUtility.formatTimeStamp;
+import static org.hamcrest.CoreMatchers.containsString;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -1007,5 +1008,12 @@ public class TestFunctionsQuery extends BaseTestQuery {
           .schemaBaseLine(expectedSchema)
           .go();
     }
+  }
+
+  @Test // DRILL-7297
+  public void testErrorInUdf() throws Exception {
+    expectedException.expect(UserRemoteException.class);
+    expectedException.expectMessage(containsString("Error from UDF"));
+    test("select error_function()");
   }
 }
