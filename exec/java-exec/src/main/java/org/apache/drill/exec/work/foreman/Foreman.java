@@ -285,9 +285,9 @@ public class Foreman implements Runnable {
         throw new IllegalStateException();
       }
       injector.injectChecked(queryContext.getExecutionControls(), "run-try-end", ForemanException.class);
-    } catch (final ForemanException e) {
+    } catch (ForemanException | UserException e) {
       queryStateProcessor.moveToState(QueryState.FAILED, e);
-    } catch (final OutOfMemoryError | OutOfMemoryException e) {
+    } catch (OutOfMemoryError | OutOfMemoryException e) {
       if (FailureUtils.isDirectMemoryOOM(e)) {
         queryStateProcessor.moveToState(QueryState.FAILED, UserException.memoryError(e).build(logger));
       } else {
@@ -298,9 +298,7 @@ public class Foreman implements Runnable {
          */
         FailureUtils.unrecoverableFailure(e, "Unable to handle out of memory condition in Foreman.", EXIT_CODE_HEAP_OOM);
       }
-    } catch (UserException e) {
-      queryStateProcessor.moveToState(QueryState.FAILED, e);
-    } catch (AssertionError | Exception ex) {
+    } catch (Throwable ex) {
       queryStateProcessor.moveToState(QueryState.FAILED,
           new ForemanException("Unexpected exception during fragment initialization: " + ex.getMessage(), ex));
     } finally {
