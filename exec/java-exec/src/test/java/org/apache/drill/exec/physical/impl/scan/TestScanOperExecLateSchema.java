@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.physical.impl.scan.BaseScanOperatorExecTest.BaseScanFixtureBuilder;
 import org.apache.drill.exec.physical.impl.scan.ScanTestUtils.ScanFixture;
 import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
 import org.apache.drill.exec.physical.rowSet.RowSetLoader;
@@ -133,6 +134,49 @@ public class TestScanOperExecLateSchema extends BaseScanOperatorExecTest {
     verifier.verifyAndClearAll(fixture.wrap(scan.batchAccessor().getOutgoingContainer()));
 
     // EOF
+
+    assertFalse(scan.next());
+    assertTrue(reader.closeCalled);
+    assertEquals(0, scan.batchAccessor().getRowCount());
+
+    scanFixture.close();
+  }
+
+  @Test
+  public void testLateSchemaLifecycleNoSchemaBatch() {
+
+    // Create a mock reader, return two batches: one schema-only, another with data.
+
+    MockLateSchemaReader reader = new MockLateSchemaReader();
+    reader.batchLimit = 2;
+    reader.returnDataOnFirst = true;
+
+    // Create the scan operator
+
+    BaseScanFixtureBuilder builder = simpleBuilder(reader);
+    builder.enableSchemaBatch = false;
+    ScanFixture scanFixture = builder.build();
+    ScanOperatorExec scan = scanFixture.scanOp;
+
+    // Standard startup
+
+    assertFalse(reader.openCalled);
+
+    // Create the expected result.
+
+    // First batch with data.
+
+    assertTrue(scan.next());
+    RowSetUtilities.verify(makeExpected(0),
+        fixture.wrap(scan.batchAccessor().getOutgoingContainer()));
+
+    // Second batch.
+
+    assertTrue(scan.next());
+    RowSetUtilities.verify(makeExpected(20),
+        fixture.wrap(scan.batchAccessor().getOutgoingContainer()));
+
+     // EOF
 
     assertFalse(scan.next());
     assertTrue(reader.closeCalled);

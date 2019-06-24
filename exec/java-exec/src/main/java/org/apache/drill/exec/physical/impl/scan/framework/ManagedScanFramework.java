@@ -146,6 +146,11 @@ public class ManagedScanFramework implements ScanOperatorEvents {
     public void setUserName(String userName) {
       this.userName = userName;
     }
+
+    @Override
+    public ScanOperatorEvents buildEvents() {
+      return new ManagedScanFramework(this);
+    }
   }
 
   // Inputs

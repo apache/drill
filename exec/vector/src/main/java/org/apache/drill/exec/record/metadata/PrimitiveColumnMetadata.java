@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.record.metadata;
 
+import java.math.BigDecimal;
+
 import org.apache.drill.common.types.BooleanType;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
@@ -30,8 +32,6 @@ import org.joda.time.Period;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
-
-import java.math.BigDecimal;
 
 /**
  * Primitive (non-map) column. Describes non-nullable, nullable and array types
@@ -166,6 +166,20 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
 
   @Override
   public MajorType majorType() {
+
+    // Set the precision for all types. Some (naive) code in Drill
+    // checks if precision is set as a way to determine if the precision
+    // is non-zero. (DRILL-7308)
+    //
+    // If we try to set the precision only if non-zero, then other code
+    // fails, such as the TPC-H SF1 customer table test in the Functional
+    // test suite.
+    //
+    // So, the protocol is: if a type might use precision (DECIMAL, VARCHAR),
+    // the precision should be set, even if zero. Code that wants to know if
+    // the precision is zero should check for the zero value, it should NOT
+    // check if the precision is set or not.
+
     return MajorType.newBuilder()
         .setMinorType(type)
         .setMode(mode)

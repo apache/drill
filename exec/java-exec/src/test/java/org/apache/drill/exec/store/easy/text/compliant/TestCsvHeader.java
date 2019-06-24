@@ -17,19 +17,21 @@
  */
 package org.apache.drill.exec.store.easy.text.compliant;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import org.apache.drill.test.BaseTestQuery;
-import org.apache.drill.test.TestBuilder;
-
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.nio.file.Paths;
 import java.util.List;
 
+import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.test.TestBuilder;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category(RowSetTests.class)
 public class TestCsvHeader extends BaseTestQuery{
 
   private static final String ROOT = "store/text/data/cars.csvh";

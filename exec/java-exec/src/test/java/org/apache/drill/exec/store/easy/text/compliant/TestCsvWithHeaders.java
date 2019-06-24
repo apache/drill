@@ -51,13 +51,9 @@ import org.junit.experimental.categories.Category;
  * seems to be a bug in the Project operator.</li>
  * </ul>
  *
- * The tests all demonstrate that the row set scan framework
- * delivers a first empty batch from each scan. I (Paul) had understood
- * that we had an "fast schema" path as the result of the "empty batch"
- * project. However, the V2 reader did not provide the schema-only
- * first batch. So, not sure if doing so is a feature, or a bug because
- * things changed. Easy enough to change if we choose to. If so, the
- * tests here would remove the test for that schema-only batch.
+ * The tests assume that the "early schema" mechanism is disabled: that
+ * the first batch either contains data, or that the first batch is empty
+ * only if there is no data at all to be read.
  *
  * @see {@link TestHeaderBuilder}
  */
@@ -100,8 +96,21 @@ public class TestCsvWithHeaders extends BaseCsvTest {
     buildFile(COLUMNS_FILE_NAME, columnsCol);
   }
 
-  private static final String EMPTY_FILE = "empty.csv";
-
+  /**
+   * An empty file with schema is invalid: there is no header line
+   * and so there is no schema. It is probably not helpful to return a
+   * batch with an empty schema; doing so would simply conflict with the
+   * schema of a non-empty file. Also, there is no reason to throw an
+   * error; this is not a problem serious enough to fail the query. Instead,
+   * we elect to simply return no results at all: no schema and no data.
+   * <p>
+   * Prior research revealed that most DB engines can handle a null
+   * empty result set: no schema, no rows. For example:
+   * <br><tt>SELECT * FROM VALUES ();</tt><br>
+   * The implementation tested here follows that pattern.
+   *
+   * @see {@link TestCsvWithoutHeaders#testEmptyFile()}
+   */
   @Test
   public void testEmptyFile() throws IOException {
     buildFile(EMPTY_FILE, new String[] {});
@@ -354,12 +363,15 @@ public class TestCsvWithHeaders extends BaseCsvTest {
         .addNullable("dir0", MinorType.VARCHAR)
         .buildSchema();
 
-    // First batch is empty; just carries the schema.
+    RowSet rowSet;
+    if (SCHEMA_BATCH_ENABLED) {
+      // First batch is empty; just carries the schema.
 
-    assertTrue(iter.hasNext());
-    RowSet rowSet = iter.next();
-    assertEquals(0, rowSet.rowCount());
-    rowSet.clear();
+      assertTrue(iter.hasNext());
+      rowSet = iter.next();
+      assertEquals(0, rowSet.rowCount());
+      rowSet.clear();
+    }
 
     // Read the other two batches.
 
@@ -409,12 +421,15 @@ public class TestCsvWithHeaders extends BaseCsvTest {
         .addNullable("dir10", MinorType.VARCHAR)
         .buildSchema();
 
-    // First batch is empty; just carries the schema.
+    RowSet rowSet;
+    if (SCHEMA_BATCH_ENABLED) {
+      // First batch is empty; just carries the schema.
 
-    assertTrue(iter.hasNext());
-    RowSet rowSet = iter.next();
-    RowSetUtilities.verify(new RowSetBuilder(client.allocator(), expectedSchema).build(),
-        rowSet);
+      assertTrue(iter.hasNext());
+      rowSet = iter.next();
+      RowSetUtilities.verify(new RowSetBuilder(client.allocator(), expectedSchema).build(),
+          rowSet);
+    }
 
     // Read the two batches.
 
@@ -461,12 +476,15 @@ public class TestCsvWithHeaders extends BaseCsvTest {
         .addNullable("dir1", MinorType.VARCHAR)
         .buildSchema();
 
-    // First batch is empty; just carries the schema.
+    RowSet rowSet;
+    if (SCHEMA_BATCH_ENABLED) {
+      // First batch is empty; just carries the schema.
 
-    assertTrue(iter.hasNext());
-    RowSet rowSet = iter.next();
-    RowSetUtilities.verify(new RowSetBuilder(client.allocator(), expectedSchema).build(),
-        rowSet);
+      assertTrue(iter.hasNext());
+      rowSet = iter.next();
+      RowSetUtilities.verify(new RowSetBuilder(client.allocator(), expectedSchema).build(),
+          rowSet);
+    }
 
     // Read the two batches.
 

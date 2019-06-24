@@ -34,13 +34,11 @@ import org.apache.drill.exec.physical.impl.scan.ScanTestUtils.ScanFixture;
 import org.apache.drill.exec.physical.impl.scan.ScanTestUtils.ScanFixtureBuilder;
 import org.apache.drill.exec.physical.impl.scan.TestFileScanFramework.DummyFileWork;
 import org.apache.drill.exec.physical.impl.scan.columns.ColumnsArrayManager;
-import org.apache.drill.exec.physical.impl.scan.columns.ColumnsScanFramework;
 import org.apache.drill.exec.physical.impl.scan.columns.ColumnsScanFramework.ColumnsScanBuilder;
 import org.apache.drill.exec.physical.impl.scan.columns.ColumnsSchemaNegotiator;
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileReaderFactory;
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
-import org.apache.drill.exec.physical.impl.scan.framework.ManagedScanFramework;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedScanFramework.ScanFrameworkBuilder;
 import org.apache.drill.exec.physical.rowSet.impl.RowSetTestUtils;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
@@ -95,7 +93,7 @@ public class TestColumnsArrayFramework extends SubOperatorTest {
     }
 
     @Override
-    protected ManagedScanFramework newFramework() {
+    public ScanFixture build() {
 
       // Bass-ackward construction of the list of files from
       // a set of text fixture readers. Normal implementations
@@ -109,7 +107,7 @@ public class TestColumnsArrayFramework extends SubOperatorTest {
       builder.setConfig(new Configuration());
       builder.setFiles(blocks);
       builder.setReaderFactory(new MockFileReaderFactory(readers));
-      return new ColumnsScanFramework(builder);
+      return super.build();
     }
   }
 

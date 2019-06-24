@@ -230,7 +230,7 @@ public class CompliantTextBatchReader implements ManagedReader<ColumnsSchemaNego
       // Return false on the batch that hits EOF. The scan operator
       // knows to process any rows in this final batch.
 
-      return more && writer.rowCount() > 0;
+      return more;
     } catch (IOException | TextParsingException e) {
       if (e.getCause() != null  && e.getCause() instanceof UserException) {
         throw (UserException) e.getCause();

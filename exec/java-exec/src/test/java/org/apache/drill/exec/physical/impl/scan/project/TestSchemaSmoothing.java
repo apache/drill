@@ -28,6 +28,7 @@ import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.impl.protocol.SchemaTracker;
 import org.apache.drill.exec.physical.impl.scan.ScanTestUtils;
+import org.apache.drill.exec.physical.impl.scan.ScanTestUtils.MockScanBuilder;
 import org.apache.drill.exec.physical.impl.scan.file.FileMetadataColumn;
 import org.apache.drill.exec.physical.impl.scan.file.FileMetadataManager;
 import org.apache.drill.exec.physical.impl.scan.file.FileMetadataManager.FileMetadataOptions;
@@ -816,7 +817,7 @@ public class TestSchemaSmoothing extends SubOperatorTest {
 
   @Test
   public void testWildcardSmoothing() {
-    ScanOrchestratorBuilder builder = new ScanOrchestratorBuilder();
+    ScanOrchestratorBuilder builder = new MockScanBuilder();
     builder.enableSchemaSmoothing(true);
     builder.setProjection(RowSetTestUtils.projectAll());
     final ScanSchemaOrchestrator projector = new ScanSchemaOrchestrator(fixture.allocator(), builder);

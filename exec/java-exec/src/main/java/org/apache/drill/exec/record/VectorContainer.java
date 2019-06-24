@@ -41,11 +41,11 @@ public class VectorContainer implements VectorAccessible {
   private final BufferAllocator allocator;
   protected final List<VectorWrapper<?>> wrappers = Lists.newArrayList();
   private BatchSchema schema;
-
-  private int recordCount = 0;
-  private boolean initialized = false;
+  private int recordCount;
+  private boolean initialized;
   // private BufferAllocator allocator;
-  private boolean schemaChanged = true; // Schema has changed since last built. Must rebuild schema
+  // Schema has changed since last built. Must rebuild schema
+  private boolean schemaChanged = true;
 
   public VectorContainer() {
     allocator = null;
@@ -93,8 +93,18 @@ public class VectorContainer implements VectorAccessible {
 
   public BufferAllocator getAllocator() { return allocator; }
 
-  public boolean isSchemaChanged() {
-    return schemaChanged;
+  public boolean isSchemaChanged() { return schemaChanged; }
+
+  /**
+   * Indicate the schema changed. Normally set by mutating this container.
+   * If schemas are built externally, call this if the schema contained
+   * here is different than the one provided in a previous batch. (Some
+   * operators don't trust OK_NEW_SCHEMA, and use the schema changed
+   * flag for the "real" truth.
+   */
+
+  public void schemaChanged() {
+    schemaChanged = true;
   }
 
   public void addHyperList(List<ValueVector> vectors) {
@@ -237,7 +247,7 @@ public class VectorContainer implements VectorAccessible {
     }
 
   public TypedFieldId add(ValueVector vv) {
-    schemaChanged = true;
+    schemaChanged();
     schema = null;
     int i = wrappers.size();
     wrappers.add(SimpleVectorWrapper.create(vv));
@@ -255,7 +265,7 @@ public class VectorContainer implements VectorAccessible {
 
   public void add(ValueVector[] hyperVector, boolean releasable) {
     assert hyperVector.length != 0;
-    schemaChanged = true;
+    schemaChanged();
     schema = null;
     Class<?> clazz = hyperVector[0].getClass();
     ValueVector[] c = (ValueVector[]) Array.newInstance(clazz, hyperVector.length);
@@ -266,7 +276,7 @@ public class VectorContainer implements VectorAccessible {
 
   public void remove(ValueVector v) {
     schema = null;
-    schemaChanged = true;
+    schemaChanged();
     for (Iterator<VectorWrapper<?>> iter = wrappers.iterator(); iter.hasNext();) {
       VectorWrapper<?> w = iter.next();
       if (!w.isHyper() && v == w.getValueVector()) {
@@ -280,7 +290,7 @@ public class VectorContainer implements VectorAccessible {
 
   private void replace(ValueVector old, ValueVector newVector) {
     schema = null;
-    schemaChanged = true;
+    schemaChanged();
     int i = 0;
     for (VectorWrapper<?> w : wrappers){
       if (!w.isHyper() && old == w.getValueVector()) {
@@ -355,8 +365,8 @@ public class VectorContainer implements VectorAccessible {
     for (VectorWrapper<?> v : wrappers) {
       bldr.addField(v.getField());
     }
-    this.schema = bldr.build();
-    this.schemaChanged = false;
+    schema = bldr.build();
+    schemaChanged = false;
   }
 
   @Override
@@ -500,7 +510,7 @@ public class VectorContainer implements VectorAccessible {
     String separator = "";
     sb.append("[");
 
-    for (VectorWrapper vectorWrapper: wrappers) {
+    for (VectorWrapper<?> vectorWrapper: wrappers) {
       sb.append(separator);
       separator = ", ";
       final String columnName = vectorWrapper.getField().getName();

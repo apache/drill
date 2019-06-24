@@ -26,6 +26,19 @@ import org.apache.drill.exec.record.RecordBatch.IterOutcome;
  * between the iterator protocol and the operator executable protocol.
  * Implemented as a separate class in anticipation of eventually
  * changing the record batch (iterator) protocol.
+ *
+ * <h4>Schema-Only Batch</h4>
+ *
+ * The scan operator is designed to provide an initial, empty, schema-only
+ * batch. At the time that this code was written, it was (mis-?) understood
+ * that Drill used a "fast schema" path that provided a schema-only batch
+ * as the first batch. However, it turns out that most operators fail when
+ * presented with an empty batch: many do not properly set the offset
+ * vector for variable-width vectors to an initial 0 position, causing all
+ * kinds of issues.
+ * <p>
+ * To work around this issue, the code defaults to *not* providing the
+ * schema batch.
  */
 
 public class OperatorDriver {
@@ -38,16 +51,13 @@ public class OperatorDriver {
     START,
 
     /**
-     * The first call to next() has been made and schema (only)
-     * was returned. On the subsequent call to next(), return any
-     * data that might have accompanied that first batch.
+     * Attempting to start the operator.
      */
 
-    SCHEMA,
+    STARTING,
 
     /**
-     * The second call to next() has been made and there is more
-     * data to deliver on subsequent calls.
+     * Read from readers.
      */
 
     RUN,
@@ -93,11 +103,13 @@ public class OperatorDriver {
   private final OperatorExec operatorExec;
   private final BatchAccessor batchAccessor;
   private int schemaVersion;
+  private final boolean enableSchemaBatch;
 
-  public OperatorDriver(OperatorContext opContext, OperatorExec opExec) {
+  public OperatorDriver(OperatorContext opContext, OperatorExec opExec, boolean enableSchemaBatch) {
     this.opContext = opContext;
     this.operatorExec = opExec;
     batchAccessor = operatorExec.batchAccessor();
+    this.enableSchemaBatch = enableSchemaBatch;
   }
 
   /**
@@ -156,9 +168,17 @@ public class OperatorDriver {
    */
 
   private IterOutcome start() {
-    state = State.SCHEMA;
+    state = State.STARTING;
+    schemaVersion = -1;
+    if (!enableSchemaBatch) {
+      return doNext();
+    }
     if (operatorExec.buildSchema()) {
       schemaVersion = batchAccessor.schemaVersion();
+
+      // Report schema change.
+
+      batchAccessor.getOutgoingContainer().schemaChanged();
       state = State.RUN;
       return IterOutcome.OK_NEW_SCHEMA;
     } else {
@@ -178,10 +198,23 @@ public class OperatorDriver {
       return IterOutcome.NONE;
     }
     int newVersion = batchAccessor.schemaVersion();
-    if (newVersion != schemaVersion) {
+    boolean schemaChanged = newVersion != schemaVersion;
+
+    // Set the container schema changed based on whether the
+    // current schema differs from that the last time through
+    // this method. That is, we take "schema changed" to be
+    // "schema changed since last call to next." The result hide
+    // trivial changes within this operator.
+
+    if (schemaChanged) {
+      batchAccessor.getOutgoingContainer().schemaChanged();
+    }
+    if (state == State.STARTING || schemaChanged) {
       schemaVersion = newVersion;
+      state = State.RUN;
       return IterOutcome.OK_NEW_SCHEMA;
     }
+    state = State.RUN;
     return IterOutcome.OK;
   }
 
@@ -189,11 +222,15 @@ public class OperatorDriver {
    * Implement a cancellation, and ignore any exception that is
    * thrown. We're already in trouble here, no need to keep track
    * of additional things that go wrong.
+   * <p>
+   * Cancellation is done only if the operator is doing work.
+   * The request is not propagated if either the operator never
+   * started, or is already finished.
    */
 
   private void cancelSilently() {
     try {
-      if (state == State.SCHEMA || state == State.RUN) {
+      if (state == State.STARTING || state == State.RUN) {
         operatorExec.cancel();
       }
     } catch (Throwable t) {

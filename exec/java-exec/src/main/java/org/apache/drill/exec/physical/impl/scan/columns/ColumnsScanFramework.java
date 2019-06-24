@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.scan.columns;
 
+import org.apache.drill.exec.physical.impl.scan.ScanOperatorEvents;
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework;
 import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiatorImpl;
 
@@ -43,7 +44,7 @@ public class ColumnsScanFramework extends FileScanFramework {
     }
 
     @Override
-    public FileScanFramework buildFileFramework() {
+    public ScanOperatorEvents buildEvents() {
       return new ColumnsScanFramework(this);
     }
   }
