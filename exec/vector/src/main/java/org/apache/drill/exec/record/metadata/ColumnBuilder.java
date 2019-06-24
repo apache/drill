@@ -50,13 +50,24 @@ public class ColumnBuilder {
   }
 
   public ColumnBuilder setPrecision(int precision) {
-    typeBuilder.setPrecision(precision);
+
+    // Set the precision only if non-zero. Some (naive) code in Drill
+    // checks if precision is set as a way to determine if the precision
+    // is non-zero. The correct pattern is to check if the precision is
+    // non-zero. This unnecessary check exists simply to avoid breaking
+    // that incorrect code.
+
+    if (precision != 0) {
+      typeBuilder.setPrecision(precision);
+    }
     return this;
   }
 
   public ColumnBuilder setPrecisionAndScale(int precision, int scale) {
-    typeBuilder.setPrecision(precision);
-    typeBuilder.setScale(scale);
+    if (precision != 0) {
+      typeBuilder.setPrecision(precision);
+      typeBuilder.setScale(scale);
+    }
     return this;
   }
 

@@ -398,10 +398,10 @@ public class MaterializedField {
       .append("` (")
       .append(type.getMinorType().name());
 
-    if (type.hasPrecision()) {
+    if (type.hasPrecision() && (type.getPrecision() > 0 || Types.isDecimalType(type))) {
       builder.append("(");
       builder.append(type.getPrecision());
-      if (type.hasScale()) {
+      if (type.hasScale() && type.getScale() > 0) {
         builder.append(", ");
         builder.append(type.getScale());
       }

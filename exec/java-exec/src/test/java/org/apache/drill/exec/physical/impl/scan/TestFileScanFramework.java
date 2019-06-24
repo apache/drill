@@ -30,12 +30,10 @@ import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.impl.scan.ScanTestUtils.ScanFixture;
 import org.apache.drill.exec.physical.impl.scan.ScanTestUtils.ScanFixtureBuilder;
-import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework;
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileReaderFactory;
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileScanBuilder;
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
-import org.apache.drill.exec.physical.impl.scan.framework.ManagedScanFramework;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedScanFramework.ScanFrameworkBuilder;
 import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
 import org.apache.drill.exec.physical.rowSet.RowSetLoader;
@@ -141,7 +139,7 @@ public class TestFileScanFramework extends SubOperatorTest {
     }
 
     @Override
-    protected ManagedScanFramework newFramework() {
+    public ScanFixture build() {
 
       // Bass-ackward construction of the list of files from
       // a set of text fixture readers. Normal implementations
@@ -155,7 +153,7 @@ public class TestFileScanFramework extends SubOperatorTest {
       builder.setConfig(new Configuration());
       builder.setFiles(blocks);
       builder.setReaderFactory(new MockFileReaderFactory(readers));
-      return new FileScanFramework(builder);
+      return super.build();
     }
   }
 

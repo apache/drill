@@ -26,6 +26,7 @@ import org.apache.drill.common.exceptions.ChildErrorContext;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserException.Builder;
+import org.apache.drill.exec.physical.impl.scan.ScanOperatorEvents;
 import org.apache.drill.exec.physical.impl.scan.file.FileMetadataManager.FileMetadataOptions;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedScanFramework;
@@ -156,7 +157,8 @@ public class FileScanFramework extends ManagedScanFramework {
 
     public FileMetadataOptions metadataOptions() { return metadataOptions; }
 
-    public FileScanFramework buildFileFramework() {
+    @Override
+    public ScanOperatorEvents buildEvents() {
       return new FileScanFramework(this);
     }
   }

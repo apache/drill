@@ -24,6 +24,12 @@ import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.physical.impl.protocol.OperatorDriver;
+import org.apache.drill.exec.physical.impl.protocol.OperatorRecordBatch;
+import org.apache.drill.exec.physical.impl.scan.ScanOperatorEvents;
+import org.apache.drill.exec.physical.impl.scan.ScanOperatorExec;
 import org.apache.drill.exec.physical.impl.scan.project.ReaderLevelProjection.ReaderProjectionResolver;
 import org.apache.drill.exec.physical.impl.scan.project.ScanLevelProjection.ScanProjectionParser;
 import org.apache.drill.exec.physical.impl.scan.project.projSet.TypeConverter;
@@ -31,6 +37,7 @@ import org.apache.drill.exec.physical.rowSet.impl.ResultVectorCacheImpl;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 
 /**
  * Performs projection of a record reader, along with a set of static
@@ -152,7 +159,7 @@ public class ScanSchemaOrchestrator {
   public static final int DEFAULT_BATCH_BYTE_COUNT = ValueVector.MAX_BUFFER_SIZE;
   public static final int MAX_BATCH_ROW_COUNT = ValueVector.MAX_ROW_COUNT;
 
-  public static class ScanOrchestratorBuilder {
+  public abstract static class ScanOrchestratorBuilder {
 
     private MajorType nullType;
     private MetadataManager metadataManager;
@@ -166,8 +173,43 @@ public class ScanSchemaOrchestrator {
     private TypeConverter.Builder typeConverterBuilder = TypeConverter.builder();
 
     /**
+     * Option that enables whether the scan operator starts with an empty
+     * schema-only batch (the so-called "fast schema" that Drill once tried
+     * to provide) or starts with a non-empty data batch (which appears to
+     * be the standard since the "Empty Batches" project some time back.)
+     * See more details in {@link OperatorDriver} Javadoc.
+     * <p>
+     * Defaults to <tt>false</tt>, meaning to <i>not</i> provide the empty
+     * schema batch. DRILL-7305 explains that many operators fail when
+     * presented with an empty batch, so do not enable this feature until
+     * those issues are fixed. Of course, do enable the feature if you want
+     * to track down the DRILL-7305 bugs.
+     */
+
+    private boolean enableSchemaBatch;
+
+    /**
+     * Option to disable empty results. An empty result occurs if no
+     * reader has any data, but at least one reader can provide a schema.
+     * In this case, the scan can return a single, empty batch, with
+     * an associated schema. This is the correct SQL result for an
+     * empty query. However, if this result triggers empty-batch bugs
+     * in other operators, we can, instead, disable this feature and
+     * return a null result set: no schema, no batch, just a "fast NONE",
+     * an immediate return of NONE from the Volcano iterator.
+     * <p>
+     * Disabling this option is not desirable: it means that the user
+     * gets no schema for queries that should be able to return one. So,
+     * disable this option only if we cannot find or fix empty-batch
+     * bugs.
+     */
+
+    public boolean disableEmptyResults;
+
+    /**
      * Context for error messages.
      */
+
     private CustomErrorContext errorContext;
 
     /**
@@ -242,6 +284,14 @@ public class ScanSchemaOrchestrator {
       this.projection = projection;
     }
 
+    public void enableSchemaBatch(boolean option) {
+      enableSchemaBatch = option;
+    }
+
+    public void disableEmptyResults(boolean option) {
+      disableEmptyResults = option;
+    }
+
     public TypeConverter.Builder typeConverterBuilder() {
       return typeConverterBuilder;
     }
@@ -253,6 +303,18 @@ public class ScanSchemaOrchestrator {
     public CustomErrorContext errorContext() {
       return errorContext;
     }
+
+    @VisibleForTesting
+    public ScanOperatorExec buildScan() {
+      return new ScanOperatorExec(buildEvents(),
+          ! disableEmptyResults);
+    }
+
+    public OperatorRecordBatch buildScanOperator(FragmentContext fragContext, PhysicalOperator pop) {
+      return new OperatorRecordBatch(fragContext, pop, buildScan(), enableSchemaBatch);
+    }
+
+    public abstract ScanOperatorEvents buildEvents();
   }
 
   public static class ScanSchemaOptions {

@@ -25,7 +25,9 @@ import java.util.List;
 import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.physical.impl.scan.ScanTestUtils.MockScanBuilder;
 import org.apache.drill.exec.physical.impl.scan.columns.ColumnsArrayManager;
+import org.apache.drill.exec.physical.impl.scan.columns.ColumnsScanFramework.ColumnsScanBuilder;
 import org.apache.drill.exec.physical.impl.scan.file.FileMetadataManager;
 import org.apache.drill.exec.physical.impl.scan.file.FileMetadataManager.FileMetadataOptions;
 import org.apache.drill.exec.physical.impl.scan.project.ReaderSchemaOrchestrator;
@@ -82,7 +84,7 @@ public class TestColumnsArray extends SubOperatorTest {
 
     // Configure the schema orchestrator
 
-    ScanOrchestratorBuilder builder = new ScanOrchestratorBuilder();
+    ScanOrchestratorBuilder builder = new MockScanBuilder();
     builder.withMetadata(metadataManager);
     builder.addParser(colsManager.projectionParser());
     builder.addResolver(colsManager.resolver());
@@ -259,7 +261,7 @@ public class TestColumnsArray extends SubOperatorTest {
 
     // Configure the schema orchestrator
 
-    ScanOrchestratorBuilder builder = new ScanOrchestratorBuilder();
+    ScanOrchestratorBuilder builder = new ColumnsScanBuilder();
     builder.addParser(colsManager.projectionParser());
     builder.addResolver(colsManager.resolver());
     builder.setProjection(cols);

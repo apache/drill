@@ -24,8 +24,10 @@ import static org.junit.Assert.assertTrue;
 import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.exec.physical.impl.scan.ScanTestUtils.ScanFixture;
 import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
-import org.apache.drill.test.rowSet.RowSetComparison;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
+import org.apache.drill.test.rowSet.RowSetBuilder;
+import org.apache.drill.test.rowSet.RowSetComparison;
+import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -78,6 +80,44 @@ public class TestScanOperExecEarlySchema extends BaseScanOperatorExecTest {
     assertEquals(0, scan.batchAccessor().getRowCount());
 
     // Next call, return with data.
+
+    assertTrue(scan.next());
+    verifier.verifyAndClearAll(fixture.wrap(scan.batchAccessor().getOutgoingContainer()));
+
+    // EOF
+
+    assertFalse(scan.next());
+    assertEquals(0, scan.batchAccessor().getRowCount());
+
+    // Next again: no-op
+
+    assertFalse(scan.next());
+    scanFixture.close();
+
+    // Close again: no-op
+
+    scan.close();
+  }
+
+  @Test
+  public void testEarlySchemaLifecycleNoSchemaBatch() {
+
+    // Create a mock reader, return one batch with data.
+
+    MockEarlySchemaReader reader = new MockEarlySchemaReader();
+    reader.batchLimit = 1;
+
+    // Create the scan operator
+
+    BaseScanFixtureBuilder builder = simpleBuilder(reader);
+    builder.enableSchemaBatch = false;
+    ScanFixture scanFixture = builder.build();
+    ScanOperatorExec scan = scanFixture.scanOp;
+
+    SingleRowSet expected = makeExpected();
+    RowSetComparison verifier = new RowSetComparison(expected);
+
+    // First batch: return with data.
 
     assertTrue(scan.next());
     verifier.verifyAndClearAll(fixture.wrap(scan.batchAccessor().getOutgoingContainer()));
@@ -182,12 +222,18 @@ public class TestScanOperExecEarlySchema extends BaseScanOperatorExecTest {
     ScanOperatorExec scan = scanFixture.scanOp;
     assertTrue(scan.buildSchema());
 
-    // EOF
+    // EOF. Returns a single empty batch with early schema
+    // in order to provide an empty result set.
 
-    assertFalse(scan.next());
+    assertTrue(scan.next());
     assertTrue(reader.closeCalled);
     assertEquals(0, scan.batchAccessor().getRowCount());
 
+    RowSetUtilities.verify(
+        RowSetBuilder.emptyBatch(fixture.allocator(), expectedSchema()),
+        fixture.wrap(scan.batchAccessor().getOutgoingContainer()));
+
+    assertFalse(scan.next());
     scanFixture.close();
   }
 

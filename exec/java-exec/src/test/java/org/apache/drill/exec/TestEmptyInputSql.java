@@ -49,8 +49,9 @@ public class TestEmptyInputSql extends BaseTestQuery {
   }
 
   /**
-   * Test with query against an empty file. Select clause has regular column reference, and an expression.
-   *
+   * Test with query against an empty file. Select clause has regular column
+   * reference, and an expression.
+   * <p>
    * regular column "key" is assigned with nullable-int
    * expression "key + 100" is materialized with nullable-int as output type.
    */
@@ -112,7 +113,6 @@ public class TestEmptyInputSql extends BaseTestQuery {
         .schemaBaseLine(expectedSchema)
         .build()
         .run();
-
   }
 
   @Test

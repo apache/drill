@@ -87,8 +87,7 @@ public class SchemaSmoother {
   }
 
   public ReaderLevelProjection resolve(
-      TupleMetadata tableSchema,
-      ResolvedTuple outputTuple) {
+      TupleMetadata tableSchema, ResolvedTuple outputTuple) {
 
     // If a prior schema exists, try resolving the new table using the
     // prior schema. If this works, use the projection. Else, start

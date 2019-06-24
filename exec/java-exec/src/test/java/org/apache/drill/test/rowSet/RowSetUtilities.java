@@ -26,6 +26,7 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.selection.SelectionVector2;
+import org.apache.drill.exec.vector.VectorOverflowException;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.ValueType;
 import org.bouncycastle.util.Arrays;
@@ -264,5 +265,4 @@ public class RowSetUtilities {
   public static BigDecimal dec(String value) {
     return new BigDecimal(value);
   }
-
 }

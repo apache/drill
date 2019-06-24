@@ -28,6 +28,7 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.physical.impl.scan.ScanTestUtils.ScanFixture;
 import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
+import org.apache.drill.exec.record.VectorContainer;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -373,6 +374,9 @@ public class TestScanOperExecBasics extends BaseScanOperatorExecTest {
 
   /**
    * Test multiple readers, all EOF on first batch.
+   * The scan will return one empty batch to declare the
+   * early schema. Results in an empty (rather than null)
+   * result set.
    */
 
   @Test
@@ -388,10 +392,15 @@ public class TestScanOperExecBasics extends BaseScanOperatorExecTest {
     // EOF
 
     assertTrue(scan.buildSchema());
-    assertFalse(scan.next());
+    assertTrue(scan.next());
+    VectorContainer container = scan.batchAccessor().getOutgoingContainer();
+    assertEquals(0, container.getRecordCount());
+    assertEquals(2, container.getNumberOfColumns());
+
     assertTrue(reader1.closeCalled);
     assertTrue(reader2.closeCalled);
     assertEquals(0, scan.batchAccessor().getRowCount());
+    assertFalse(scan.next());
 
     scanFixture.close();
   }

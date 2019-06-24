@@ -131,10 +131,13 @@ class ReaderState {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ReaderState.class);
 
   private enum State {
+
     /**
      * Initial state before opening the reader.
      */
+
     START,
+
     /**
      * The scan operator is obligated to provide a "fast schema", without data,
      * before the first row of data. "Early schema" readers (those that provide
@@ -152,7 +155,9 @@ class ReaderState {
      * the next call to {@link ReaderState#next()} will return this look-ahead
      * batch rather than reading a new one.
      */
+
     LOOK_AHEAD,
+
     /**
      * As above, but the reader hit EOF during the read of the look-ahead batch.
      * The {@link ReaderState#next()} checks if the lookahead batch has any
@@ -166,26 +171,33 @@ class ReaderState {
      * row in the result set loader. That look-ahead is handled by the
      * (shim) reader which this class manages.
      */
+
     LOOK_AHEAD_WITH_EOF,
+
     /**
      * Normal state: the reader has supplied data but not yet reported EOF.
      */
+
     ACTIVE,
+
     /**
      * The reader has reported EOF. No look-ahead batch is active. The
      * reader's next() method will no longer be called.
      */
+
     EOF,
+
     /**
      * The reader is closed: no further operations are allowed.
      */
-    CLOSED };
+
+    CLOSED
+  };
 
   final ScanOperatorExec scanOp;
   private final RowBatchReader reader;
   private State state = State.START;
   private VectorContainer lookahead;
-  private int schemaVersion = -1;
 
   public ReaderState(ScanOperatorExec scanOp, RowBatchReader reader) {
     this.scanOp = scanOp;
@@ -302,8 +314,7 @@ class ReaderState {
       // Bind the output container to the output of the scan operator.
       // This returns an empty batch with the schema filled in.
 
-      scanOp.containerAccessor.setContainer(reader.output());
-      schemaVersion = reader.schemaVersion();
+      scanOp.containerAccessor.setSchema(reader.output());
       return true;
     }
 
@@ -313,13 +324,13 @@ class ReaderState {
       return false;
     }
     VectorContainer container = reader.output();
-    schemaVersion = reader.schemaVersion();
     if (container.getRecordCount() == 0) {
       return true;
     }
 
     // The reader returned actual data. Just forward the schema
-    // in a dummy container, saving the data for next time.
+    // in the operator's container, saving the data for next time
+    // in a dummy container.
 
     assert lookahead == null;
     lookahead = new VectorContainer(scanOp.context.getAllocator(), scanOp.containerAccessor.getSchema());
@@ -347,7 +358,11 @@ class ReaderState {
       lookahead.exchange(scanOp.containerAccessor.getOutgoingContainer());
       assert lookahead.getRecordCount() == 0;
       lookahead = null;
-      state = state == State.LOOK_AHEAD_WITH_EOF ? State.EOF : State.ACTIVE;
+      if (state == State.LOOK_AHEAD_WITH_EOF) {
+        state = State.EOF;
+      } else {
+        state = State.ACTIVE;
+      }
       return true;
 
     case ACTIVE:
@@ -395,9 +410,6 @@ class ReaderState {
     boolean more;
     try {
       more = reader.next();
-      if (! more) {
-        state = State.EOF;
-      }
     } catch (UserException e) {
       throw e;
     } catch (InvalidConversionError e) {
@@ -417,8 +429,30 @@ class ReaderState {
     }
 
     VectorContainer output = reader.output();
-    if (! more && output.getRecordCount() == 0) {
-      return false;
+    if (! more) {
+      state = State.EOF;
+
+      // The reader can indicate EOF (they can't return any more rows)
+      // while returning a non-empty final batch. This is the typical
+      // case with files: the reader read some records and then hit
+      // EOF. Avoids the need for the reader to keep an EOF state.
+
+      if (output.getRecordCount() == 0) {
+
+        // No results, possibly from the first batch.
+        // If the scan has no schema, but this (possibly empty) reader
+        // does have a schema, then pass along this empty batch
+        // as a candidate empty result set of the entire scan.
+
+        if (scanOp.containerAccessor.schemaVersion() == 0 &&
+            reader.schemaVersion() > 0) {
+          scanOp.containerAccessor.setSchema(output);
+        }
+        return false;
+      }
+
+      // EOF (the reader can provide no more batches), but
+      // the reader did provide rows in this batch. Fall through.
     }
 
     // Late schema readers may change their schema between batches.
@@ -427,11 +461,7 @@ class ReaderState {
     // a reader that starts with a schema, but later changes it, has
     // morphed from an early- to late-schema reader.)
 
-    int newVersion = reader.schemaVersion();
-    if (newVersion > schemaVersion) {
-      scanOp.containerAccessor.setContainer(output);
-      schemaVersion = newVersion;
-    }
+    scanOp.containerAccessor.addBatch(output);
     return true;
   }
 

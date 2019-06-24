@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.physical.impl.scan.BaseScanOperatorExecTest.BaseScanFixtureBuilder;
 import org.apache.drill.exec.physical.impl.scan.ScanTestUtils.ScanFixture;
 import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
 import org.apache.drill.exec.physical.rowSet.RowSetLoader;
@@ -124,6 +125,26 @@ public class TestScanOperExecSmoothing extends BaseScanOperatorExecTest {
     assertTrue(scan.buildSchema());
     assertEquals(1, scan.batchAccessor().schemaVersion());
     scan.batchAccessor().release();
+
+    readSchemaChangeBatches(scanFixture, reader2);
+  }
+
+  @Test
+  public void testSchemaChangeNoSchemaBatch() {
+    MockEarlySchemaReader reader1 = new MockEarlySchemaReader();
+    reader1.batchLimit = 2;
+    MockEarlySchemaReader reader2 = new MockEarlySchemaReader2();
+    reader2.batchLimit = 2;
+
+    BaseScanFixtureBuilder builder = simpleBuilder(reader1, reader2);
+    builder.enableSchemaBatch = false;
+    ScanFixture scanFixture = builder.build();
+
+    readSchemaChangeBatches(scanFixture, reader2);
+  }
+
+  private void readSchemaChangeBatches(ScanFixture scanFixture, MockEarlySchemaReader reader2) {
+    ScanOperatorExec scan = scanFixture.scanOp;
 
     // First batch
 

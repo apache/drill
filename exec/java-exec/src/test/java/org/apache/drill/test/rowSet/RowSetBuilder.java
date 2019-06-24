@@ -17,15 +17,15 @@
  */
 package org.apache.drill.test.rowSet;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
+import java.util.Set;
+
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.accessor.convert.ColumnConversionFactory;
+import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
-
-import java.util.Set;
 
 /**
  * Fluent builder to quickly build up an row set (record batch)
@@ -73,6 +73,10 @@ public final class RowSetBuilder {
       int capacity, ColumnConversionFactory conversionFactory) {
     rowSet = DirectRowSet.fromSchema(allocator, schema);
     writer = rowSet.writer(capacity, conversionFactory);
+  }
+
+  public static RowSet emptyBatch(BufferAllocator allocator, TupleMetadata schema) {
+    return new RowSetBuilder(allocator, schema).build();
   }
 
   public RowSetWriter writer() { return writer; }

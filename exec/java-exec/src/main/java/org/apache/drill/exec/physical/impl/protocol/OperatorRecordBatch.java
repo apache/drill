@@ -57,7 +57,8 @@ public class OperatorRecordBatch implements CloseableRecordBatch {
   private final BatchAccessor batchAccessor;
   private IterOutcome lastOutcome;
 
-  public OperatorRecordBatch(FragmentContext context, PhysicalOperator config, OperatorExec opExec) {
+  public OperatorRecordBatch(FragmentContext context, PhysicalOperator config,
+      OperatorExec opExec, boolean enableSchemaBatch) {
     OperatorContext opContext = context.newOperatorContext(config);
     opContext.getStats().startProcessing();
 
@@ -66,7 +67,7 @@ public class OperatorRecordBatch implements CloseableRecordBatch {
 
     try {
       opExec.bind(opContext);
-      driver = new OperatorDriver(opContext, opExec);
+      driver = new OperatorDriver(opContext, opExec, enableSchemaBatch);
       batchAccessor = opExec.batchAccessor();
     } catch (UserException e) {
       opContext.close();

@@ -288,7 +288,7 @@ public class TestCsvWithSchema extends BaseCsvTest {
             sawSchema = true;
           }
         }
-        assertTrue(sawSchema);
+        assertTrue(!SCHEMA_BATCH_ENABLED || sawSchema);
         assertTrue(sawFile1);
         assertTrue(sawFile2);
       }

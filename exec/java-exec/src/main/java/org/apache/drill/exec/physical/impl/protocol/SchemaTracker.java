@@ -51,6 +51,9 @@ import org.apache.drill.exec.vector.ValueVector;
  * vector is just as serious as a change in schema. Hence, operators
  * try to use the same vectors for their entire lives. That is the change
  * tracked here.
+ * <p>
+ * Schema versions start at 1. A schema version of 0 means that no
+ * output batch was ever presented.
  */
 
 // TODO: Does not handle SV4 situations
@@ -62,7 +65,6 @@ public class SchemaTracker {
   private List<ValueVector> currentVectors = new ArrayList<>();
 
   public void trackSchema(VectorContainer newBatch) {
-
     if (! isSameSchema(newBatch)) {
       schemaVersion++;
       captureSchema(newBatch);

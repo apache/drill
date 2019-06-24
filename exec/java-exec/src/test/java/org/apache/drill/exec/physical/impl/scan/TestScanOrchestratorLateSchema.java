@@ -22,6 +22,7 @@ import static org.junit.Assert.assertFalse;
 import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.physical.impl.scan.ScanTestUtils.MockScanBuilder;
 import org.apache.drill.exec.physical.impl.scan.project.ReaderSchemaOrchestrator;
 import org.apache.drill.exec.physical.impl.scan.project.ScanSchemaOrchestrator;
 import org.apache.drill.exec.physical.impl.scan.project.ScanSchemaOrchestrator.ScanOrchestratorBuilder;
@@ -55,7 +56,7 @@ public class TestScanOrchestratorLateSchema extends SubOperatorTest {
 
   @Test
   public void testLateSchemaWildcard() {
-    ScanOrchestratorBuilder builder = new ScanOrchestratorBuilder();
+    ScanOrchestratorBuilder builder = new MockScanBuilder();
 
     // SELECT * ...
 
@@ -111,7 +112,7 @@ public class TestScanOrchestratorLateSchema extends SubOperatorTest {
 
   @Test
   public void testLateSchemaSelectDisjoint() {
-    ScanOrchestratorBuilder builder = new ScanOrchestratorBuilder();
+    ScanOrchestratorBuilder builder = new MockScanBuilder();
 
     // SELECT a, c ...
 

@@ -28,6 +28,7 @@ import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.impl.protocol.SchemaTracker;
+import org.apache.drill.exec.physical.impl.scan.ScanTestUtils.MockScanBuilder;
 import org.apache.drill.exec.physical.impl.scan.file.FileMetadataManager;
 import org.apache.drill.exec.physical.impl.scan.file.FileMetadataManager.FileMetadataOptions;
 import org.apache.drill.exec.physical.impl.scan.project.ReaderSchemaOrchestrator;
@@ -76,7 +77,7 @@ public class TestScanOrchestratorMetadata extends SubOperatorTest {
         fixture.getOptionManager(),
         standardOptions(filePath));
 
-    ScanOrchestratorBuilder builder = new ScanOrchestratorBuilder();
+    ScanOrchestratorBuilder builder = new MockScanBuilder();
     builder.withMetadata(metadataManager);
 
     // SELECT *, filename, suffix ...
@@ -135,7 +136,7 @@ public class TestScanOrchestratorMetadata extends SubOperatorTest {
 
   @Test
   public void testSelectNone() {
-    ScanOrchestratorBuilder builder = new ScanOrchestratorBuilder();
+    ScanOrchestratorBuilder builder = new MockScanBuilder();
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
         fixture.getOptionManager(),
@@ -203,7 +204,7 @@ public class TestScanOrchestratorMetadata extends SubOperatorTest {
         .setMode(DataMode.OPTIONAL)
         .build();
 
-    ScanOrchestratorBuilder builder = new ScanOrchestratorBuilder();
+    ScanOrchestratorBuilder builder = new MockScanBuilder();
     builder.setNullType(nullType);
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
@@ -280,7 +281,7 @@ public class TestScanOrchestratorMetadata extends SubOperatorTest {
 
   @Test
   public void testMixture() {
-    ScanOrchestratorBuilder builder = new ScanOrchestratorBuilder();
+    ScanOrchestratorBuilder builder = new MockScanBuilder();
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
         fixture.getOptionManager(),
@@ -344,7 +345,7 @@ public class TestScanOrchestratorMetadata extends SubOperatorTest {
 
   @Test
   public void testMetadataMulti() {
-    ScanOrchestratorBuilder builder = new ScanOrchestratorBuilder();
+    ScanOrchestratorBuilder builder = new MockScanBuilder();
     Path filePathA = new Path("hdfs:///w/x/y/a.csv");
     Path filePathB = new Path("hdfs:///w/x/b.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(

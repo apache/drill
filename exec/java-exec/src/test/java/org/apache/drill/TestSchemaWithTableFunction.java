@@ -23,7 +23,6 @@ import org.apache.drill.exec.util.StoragePluginTestUtils;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -51,12 +50,6 @@ public class TestSchemaWithTableFunction extends ClusterTest {
     dirTestWatcher.copyResourceToRoot(Paths.get(DATA_PATH));
     ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher);
     startCluster(builder);
-    client.alterSession(ExecConstants.ENABLE_V3_TEXT_READER_KEY, true);
-  }
-
-  @AfterClass
-  public static void cleanUp() {
-    client.resetSession(ExecConstants.ENABLE_V3_TEXT_READER_KEY);
   }
 
   @Test
@@ -72,7 +65,7 @@ public class TestSchemaWithTableFunction extends ClusterTest {
       .go();
 
     String plan = queryBuilder().sql(query, table).explainText();
-    assertTrue(plan.contains("schema=[TupleSchema [PrimitiveColumnMetadata [`Year` (INT(0, 0):OPTIONAL)]]]"));
+    assertTrue(plan.contains("schema=[TupleSchema [PrimitiveColumnMetadata [`Year` (INT:OPTIONAL)]]]"));
   }
 
   @Test
@@ -160,7 +153,7 @@ public class TestSchemaWithTableFunction extends ClusterTest {
         .go();
 
       String plan = queryBuilder().sql(query, table).explainText();
-      assertTrue(plan.contains("schema=[TupleSchema [PrimitiveColumnMetadata [`id` (INT(0, 0):OPTIONAL)]]]"));
+      assertTrue(plan.contains("schema=[TupleSchema [PrimitiveColumnMetadata [`id` (INT:OPTIONAL)]]]"));
     } finally {
       client.resetSession(ExecConstants.OUTPUT_FORMAT_OPTION);
       run("drop table if exists %s", table);

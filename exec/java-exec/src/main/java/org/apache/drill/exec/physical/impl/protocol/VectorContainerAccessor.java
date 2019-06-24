@@ -57,10 +57,26 @@ public class VectorContainerAccessor implements BatchAccessor {
 
   private VectorContainer container;
   private SchemaTracker schemaTracker = new SchemaTracker();
+  private int batchCount;
 
   /**
-   * Set the vector container. Done initially, and any time the schema of
-   * the container may have changed. May be called with the same container
+   * Define a schema that does not necessarily contain any data.
+   * Call this to declare a schema when there are no results to
+   * report.
+   */
+
+  public void setSchema(VectorContainer container) {
+    this.container = container;
+    if (container != null) {
+      schemaTracker.trackSchema(container);
+    }
+  }
+
+  /**
+   * Define an output batch. Called each time a new batch is sent
+   * downstream. Checks if the schema of this batch is the same as
+   * that of any previous batch, and updates the schema version if
+   * the schema changes. May be called with the same container
    * as the previous call, or a different one. A schema change occurs
    * unless the vectors are identical across the two containers.
    *
@@ -68,12 +84,12 @@ public class VectorContainerAccessor implements BatchAccessor {
    * downstream
    */
 
-  public void setContainer(VectorContainer container) {
-    this.container = container;
-    if (container != null) {
-      schemaTracker.trackSchema(container);
-    }
+  public void addBatch(VectorContainer container) {
+    setSchema(container);
+    batchCount++;
   }
+
+  public int batchCount() { return batchCount; }
 
   @Override
   public BatchSchema getSchema() {

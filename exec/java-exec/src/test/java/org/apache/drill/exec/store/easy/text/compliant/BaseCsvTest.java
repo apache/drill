@@ -35,6 +35,17 @@ public class BaseCsvTest extends ClusterTest {
   protected static final String NESTED_DIR = "nested";
   protected static final String ROOT_FILE = "first.csv";
   protected static final String NESTED_FILE = "second.csv";
+  protected static final String EMPTY_FILE = "empty.csv";
+
+  /**
+   * The scan operator can return an empty schema batch as
+   * the first batch. But, this broke multiple operators that
+   * do not handle this case. So, it is turned off for now.
+   * Tests that verified the empty batch use this flag to
+   * disable that checking.
+   */
+
+  protected static boolean SCHEMA_BATCH_ENABLED = false;
 
   protected static String validHeaders[] = {
       "a,b,c",

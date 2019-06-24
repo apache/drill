@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 
+import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
@@ -35,6 +36,7 @@ import org.apache.drill.test.rowSet.RowSetReader;
 import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Demonstrates a race condition inherent in the way that partition
@@ -52,6 +54,7 @@ import org.junit.Test;
  * current "V3" version. The tests here verify this behavior.
  */
 
+@Category(RowSetTests.class)
 public class TestPartitionRace extends BaseCsvTest {
 
   @BeforeClass
@@ -84,15 +87,16 @@ public class TestPartitionRace extends BaseCsvTest {
         .addNullable("dir0", MinorType.VARCHAR)
         .buildSchema();
 
-    // Loop to run the query 10 times to verify no race
-
-    // First batch is empty; just carries the schema.
-
     Iterator<DirectRowSet> iter = client.queryBuilder().sql(sql, PART_DIR).rowSetIterator();
-    assertTrue(iter.hasNext());
-    RowSet rowSet = iter.next();
-    assertEquals(0, rowSet.rowCount());
-    rowSet.clear();
+    RowSet rowSet;
+    if (SCHEMA_BATCH_ENABLED) {
+      // First batch is empty; just carries the schema.
+
+      assertTrue(iter.hasNext());
+      rowSet = iter.next();
+      assertEquals(0, rowSet.rowCount());
+      rowSet.clear();
+    }
 
     // Read the two batches.
 
@@ -147,13 +151,16 @@ public class TestPartitionRace extends BaseCsvTest {
       boolean sawNestedFirst = false;
       for (int i = 0; i < 10; i++) {
 
-        // First batch is empty; just carries the schema.
-
         Iterator<DirectRowSet> iter = client.queryBuilder().sql(sql, PART_DIR).rowSetIterator();
-        assertTrue(iter.hasNext());
-        RowSet rowSet = iter.next();
-        assertEquals(0, rowSet.rowCount());
-        rowSet.clear();
+        RowSet rowSet;
+        if (SCHEMA_BATCH_ENABLED) {
+          // First batch is empty; just carries the schema.
+
+          assertTrue(iter.hasNext());
+          rowSet = iter.next();
+          assertEquals(0, rowSet.rowCount());
+          rowSet.clear();
+        }
 
         // Read the two batches.
 
