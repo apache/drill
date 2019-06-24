@@ -18,7 +18,8 @@
     limitations under the License.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <artifactId>drill-contrib-parent</artifactId>
@@ -114,7 +115,7 @@
               <goal>copy-resources</goal>
             </goals>
             <configuration>
-              <outputDirectory>${basedir}/target/classes/org/apache/drill/exec/expr/fn/impl</outputDirectory>
+              <outputDirectory>${project.build.outputDirectory}/org/apache/drill/exec/expr/fn/impl</outputDirectory>
               <resources>
                 <resource>
                   <directory>src/main/java/org/apache/drill/exec/expr/fn/impl</directory>
@@ -125,7 +126,7 @@
                   <filtering>true</filtering>
                 </resource>
                 <resource>
-                  <directory>target/generated-sources</directory>
+                  <directory>${project.build.directory}/generated-sources</directory>
                   <!-- <include>*/org</include> -->
                   <filtering>true</filtering>
                 </resource>

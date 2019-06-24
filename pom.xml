@@ -18,7 +18,8 @@
     limitations under the License.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
@@ -29,7 +30,7 @@
   </parent>
 
   <groupId>org.apache.drill</groupId>
-  <artifactId>drill-root</artifactId>
+  <artifactId>apache-drill</artifactId>
   <version>1.17.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
@@ -42,8 +43,7 @@
     <maven.compiler.target>1.8</maven.compiler.target>
     <sourceReleaseAssemblyDescriptor>source-release-zip-tar</sourceReleaseAssemblyDescriptor>
 
-    <target.gen.source.path>${project.basedir}/target/generated-sources</target.gen.source.path>
-    <proto.cas.path>${project.basedir}/src/main/protobuf/</proto.cas.path>
+    <target.gen.source.path>${project.build.directory}/generated-sources</target.gen.source.path>
     <dep.junit.version>4.12</dep.junit.version>
     <dep.slf4j.version>1.7.25</dep.slf4j.version>
     <shaded.guava.version>23.0</shaded.guava.version>
@@ -546,7 +546,7 @@
               <goal>revision</goal>
             </goals>
             <configuration>
-              <generateGitPropertiesFilename>target/classes/git.properties</generateGitPropertiesFilename>
+              <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties</generateGitPropertiesFilename>
             </configuration>
           </execution>
           <execution>
@@ -1805,9 +1805,9 @@
                 <fileSet>
                   <directory>${project.build.directory}</directory>
                   <includes>
-                    <include>apache-drill-${project.version}.tar.gz</include>
-                    <include>apache-drill-${project.version}-src.tar.gz</include>
-                    <include>apache-drill-${project.version}-src.zip</include>
+                    <include>${project.artifactId}-${project.version}.tar.gz</include>
+                    <include>${project.artifactId}-${project.version}-src.tar.gz</include>
+                    <include>${project.artifactId}-${project.version}-src.zip</include>
                   </includes>
                 </fileSet>
               </fileSets>
@@ -1822,7 +1822,7 @@
                 <id>source-release-assembly</id>
                 <configuration>
                   <appendAssemblyId>false</appendAssemblyId>
-                  <finalName>apache-drill-${project.version}-src</finalName>
+                  <finalName>${project.artifactId}-${project.version}-src</finalName>
                 </configuration>
               </execution>
             </executions>
