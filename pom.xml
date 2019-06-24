@@ -103,8 +103,8 @@
   </properties>
 
   <scm>
-    <connection>scm:git:https://git-wip-us.apache.org/repos/asf/drill.git</connection>
-    <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/drill.git</developerConnection>
+    <connection>scm:git:https://gitbox.apache.org/repos/asf/drill.git</connection>
+    <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/drill.git</developerConnection>
     <url>https://github.com/apache/drill</url>
     <tag>HEAD</tag>
   </scm>
@@ -167,31 +167,6 @@
     </repository>
 
     <repository>
-      <!-- Keep until we move back to released calcite versions. -->
-      <id>mapr-drill-optiq-snapshots</id>
-      <name>MapR Drill Optiq Snapshots</name>
-      <url>http://repository.mapr.com/nexus/content/repositories/drill-optiq/</url>
-      <releases>
-        <enabled>false</enabled>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
-
-    <repository>
-      <id>mapr-drill-thirdparty</id>
-      <name>MapR Drill Third Party Artifacts</name>
-      <url>http://repository.mapr.com/nexus/content/repositories/drill/</url>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </repository>
-
-    <repository>
       <id>sonatype-nexus-snapshots</id>
       <url>https://oss.sonatype.org/content/repositories/snapshots</url>
       <releases>
@@ -200,6 +175,11 @@
       <snapshots>
         <enabled>true</enabled>
       </snapshots>
+    </repository>
+
+    <repository>
+      <id>jitpack.io</id>
+      <url>https://jitpack.io</url>
     </repository>
   </repositories>
 
@@ -527,6 +507,7 @@
                     <exclude>jdk.tools:jdk.tools</exclude>
                     <exclude>org.json:json</exclude>
                     <exclude>org.beanshell:bsh</exclude>
+                    <exclude>org.apache.calcite:*</exclude>
                   </excludes>
                 </bannedDependencies>
               </rules>
@@ -1058,7 +1039,7 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
-        <groupId>org.apache.calcite</groupId>
+        <groupId>com.github.vvysotskyi.drill-calcite</groupId>
         <artifactId>calcite-core</artifactId>
         <version>${calcite.version}</version>
         <exclusions>

@@ -46,7 +46,7 @@
     </dependency>
 
     <dependency>
-      <groupId>org.apache.calcite</groupId>
+      <groupId>com.github.vvysotskyi.drill-calcite</groupId>
       <artifactId>calcite-core</artifactId>
     </dependency>
 

@@ -65,8 +65,8 @@
           <artifactId>calcite-core</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>org.apache.calcite</groupId>
-          <artifactId>calcite-avatica</artifactId>
+          <groupId>org.apache.calcite.avatica</groupId>
+          <artifactId>avatica</artifactId>
         </exclusion>
         <exclusion>
           <groupId>org.apache.calcite</groupId>
