@@ -96,7 +96,7 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>org.apache.calcite</groupId>
+      <groupId>com.github.vvysotskyi.drill-calcite</groupId>
       <artifactId>calcite-core</artifactId>
     </dependency>
     <dependency>
@@ -149,6 +149,18 @@
       <version>2.3.2</version>
       <scope>test</scope>
       <exclusions>
+        <exclusion>
+          <groupId>org.apache.calcite</groupId>
+          <artifactId>calcite-core</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.calcite</groupId>
+          <artifactId>calcite-linq4j</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.calcite</groupId>
+          <artifactId>calcite-druid</artifactId>
+        </exclusion>
         <exclusion>
           <groupId>commons-logging</groupId>
           <artifactId>commons-logging</artifactId>
