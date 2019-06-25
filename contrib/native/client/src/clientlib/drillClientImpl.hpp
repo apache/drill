@@ -473,6 +473,7 @@ class DrillClientImpl : public DrillClientImplBase{
 
         static bool clientNeedsAuthentication(const DrillUserProperties* userProperties);
 
+        bool handleComplexTypes(const DrillUserProperties* userProperties);
 
     private:
         friend class meta::DrillMetadata;

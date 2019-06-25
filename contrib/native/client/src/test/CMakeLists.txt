@@ -20,6 +20,7 @@
 set (TESTS_SRC_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/CollectionsTest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/UtilsTest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/DrillClientTest.cpp
     )
 
 find_package(CppUnit REQUIRED)
@@ -29,6 +30,7 @@ include_directories(${CPPUNIT_INCLUDE_DIR})
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${PROTOBUF_INCLUDE_DIR})
 include_directories(${Zookeeper_INCLUDE_DIRS})
+include_directories(${OPENSSL_INCLUDE_DIR})
 
 link_directories(/usr/local/lib)
 add_executable(unit-tests ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp ${TESTS_SRC_FILES} )

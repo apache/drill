@@ -186,6 +186,7 @@ typedef enum{
 #define USERPROP_SERVICE_NAME "service_name"
 #define USERPROP_SERVICE_HOST "service_host"
 #define USERPROP_SASL_ENCRYPT "sasl_encrypt"
+#define USERPROP_SUPPORT_COMPLEX_TYPES "support_complex_types"
 
 // Bitflags to describe user properties
 // Used in DrillUserProperties::USER_PROPERTIES
