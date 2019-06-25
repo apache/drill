@@ -23,13 +23,13 @@
 #include <boost/algorithm/string/join.hpp>
 #include "drill/drillc.hpp"
 
-int nOptions=25;
+int nOptions=27;
 
 struct Option{
     char name[32];
     char desc[128];
     bool required;
-}qsOptions[]= {
+} qsOptions[] = {
     {"plan", "Plan files separated by semicolons", false},
     {"query", "Query strings, separated by semicolons", false},
     {"type", "Query type [physical|logical|sql|server]", true},
@@ -54,9 +54,9 @@ struct Option{
     {"certFilePath", "Path to SSL certificate file", false},
     {"disableHostnameVerification", "disable host name verification", false},
     {"disableCertVerification", "disable certificate verification", false},
-    {"useSystemTrustStore", "[Windows only]. Use the system truststore.", false },
-    {"CustomSSLCtxOptions", "The custom SSL CTX Options", false}
-
+    {"useSystemTrustStore", "[Windows only]. Use the system truststore.", false},
+    {"CustomSSLCtxOptions", "The custom SSL CTX Options", false},
+    {"supportComplexTypes", "Toggle for supporting complex types", false}
 };
 
 std::map<std::string, std::string> qsOptionValues;
@@ -317,6 +317,7 @@ int main(int argc, char* argv[]) {
         std::string disableCertVerification=qsOptionValues["disableCertVerification"];
         std::string useSystemTrustStore = qsOptionValues["useSystemTrustStore"];
         std::string customSSLOptions = qsOptionValues["CustomSSLCtxOptions"];
+        std::string supportComplexTypes = qsOptionValues["supportComplexTypes"];
 
         Drill::QueryType type;
 
@@ -421,6 +422,9 @@ int main(int argc, char* argv[]) {
             if (customSSLOptions.length() > 0){
                 props.setProperty(USERPROP_CUSTOM_SSLCTXOPTIONS, customSSLOptions);
             }
+        }
+        if (supportComplexTypes.length() > 0){
+            props.setProperty(USERPROP_SUPPORT_COMPLEX_TYPES, supportComplexTypes);
         }
 
         if(client.connect(connectStr.c_str(), &props)!=Drill::CONN_SUCCESS){
