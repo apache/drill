@@ -32,6 +32,7 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.compile.sig.ConstantExpressionIdentifier;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.drill.exec.expr.fn.FunctionLookupContext;
 import org.apache.drill.exec.expr.stat.RowsMatch;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.ops.UdfUtilities;
@@ -73,6 +74,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -107,6 +109,8 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
   // whether all files, partitions or row groups of this group scan fully match the filter
   protected boolean matchAllMetadata = false;
 
+  protected boolean usedMetastore; // false by default
+
   protected AbstractGroupScanWithMetadata(String userName, List<SchemaPath> columns, LogicalExpression filter) {
     super(userName);
     this.columns = columns;
@@ -125,6 +129,7 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
     this.partitions = that.partitions;
     this.segments = that.segments;
     this.files = that.files;
+    this.usedMetastore = that.usedMetastore;
     this.nonInterestingColumnsMetadata = that.nonInterestingColumnsMetadata;
     this.fileSet = that.fileSet == null ? null : new HashSet<>(that.fileSet);
   }
@@ -266,10 +271,12 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
       return null;
     }
 
-    final Set<SchemaPath> schemaPathsInExpr =
-        filterExpr.accept(new FilterEvaluatorUtils.FieldReferenceFinder(), null);
-
-    GroupScanWithMetadataFilterer filteredMetadata = getFilterer().getFiltered(optionManager, filterPredicate, schemaPathsInExpr);
+    GroupScanWithMetadataFilterer filteredMetadata = getFilterer()
+        .filterExpression(filterExpr)
+        .schema(tableMetadata.getSchema())
+        .context(functionImplementationRegistry)
+        .udfUtilities(udfUtilities)
+        .getFiltered(optionManager, filterPredicate);
 
     if (isGroupScanFullyMatchesFilter(filteredMetadata)) {
       logger.debug("applyFilter() does not have any pruning since GroupScan fully matches filter");
@@ -343,10 +350,10 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
   protected abstract GroupScanWithMetadataFilterer getFilterer();
 
   public FilterPredicate getFilterPredicate(LogicalExpression filterExpr,
-                                                   UdfUtilities udfUtilities,
-                                                   FunctionImplementationRegistry functionImplementationRegistry,
-                                                   OptionManager optionManager,
-                                                   boolean omitUnsupportedExprs) {
+      UdfUtilities udfUtilities,
+      FunctionLookupContext functionImplementationRegistry,
+      OptionManager optionManager,
+      boolean omitUnsupportedExprs) {
     return getFilterPredicate(filterExpr, udfUtilities, functionImplementationRegistry, optionManager,
             omitUnsupportedExprs, supportsFileImplicitColumns(), getTableMetadata().getSchema());
   }
@@ -365,15 +372,15 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
    * @return parquet filter predicate
    */
   public static FilterPredicate getFilterPredicate(LogicalExpression filterExpr,
-                                            UdfUtilities udfUtilities,
-                                            FunctionImplementationRegistry functionImplementationRegistry,
-                                            OptionManager optionManager,
-                                            boolean omitUnsupportedExprs,
-                                            boolean supportsFileImplicitColumns,
-                                            TupleMetadata schema) {
+      UdfUtilities udfUtilities,
+      FunctionLookupContext functionImplementationRegistry,
+      OptionManager optionManager,
+      boolean omitUnsupportedExprs,
+      boolean supportsFileImplicitColumns,
+      TupleMetadata schema) {
     TupleMetadata types = schema.copy();
 
-    Set<SchemaPath> schemaPathsInExpr = filterExpr.accept(new FilterEvaluatorUtils.FieldReferenceFinder(), null);
+    Set<SchemaPath> schemaPathsInExpr = filterExpr.accept(FilterEvaluatorUtils.FieldReferenceFinder.INSTANCE, null);
 
     // adds implicit or partition columns if they weren't added before.
     if (supportsFileImplicitColumns) {
@@ -588,6 +595,11 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
     return segments;
   }
 
+  @Override
+  public boolean usedMetastore() {
+    return usedMetastore;
+  }
+
   @JsonIgnore
   public NonInterestingColumnsMetadata getNonInterestingColumnsMetadata() {
     if (nonInterestingColumnsMetadata == null) {
@@ -609,6 +621,11 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
     protected Map<Path, SegmentMetadata> segments = Collections.emptyMap();
     protected Map<Path, FileMetadata> files = Collections.emptyMap();
     protected NonInterestingColumnsMetadata nonInterestingColumnsMetadata;
+    // required for rebuilding filter expression for the case of schema change
+    protected LogicalExpression filterExpression;
+    protected TupleMetadata tableSchema;
+    protected UdfUtilities udfUtilities;
+    protected FunctionLookupContext context;
 
     // for the case when filtering is possible for partitions, but files count exceeds
     // PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD, new group scan with at least filtered partitions
@@ -661,6 +678,26 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
       return self();
     }
 
+    public B filterExpression(LogicalExpression filterExpression) {
+      this.filterExpression = filterExpression;
+      return self();
+    }
+
+    public B schema(TupleMetadata tableSchema) {
+      this.tableSchema = tableSchema;
+      return self();
+    }
+
+    public B udfUtilities(UdfUtilities udfUtilities) {
+      this.udfUtilities = udfUtilities;
+      return self();
+    }
+
+    public B context(FunctionLookupContext context) {
+      this.context = context;
+      return self();
+    }
+
     public boolean isMatchAllMetadata() {
       return matchAllMetadata;
     }
@@ -691,12 +728,18 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
      *
      * @param optionManager     option manager
      * @param filterPredicate   filter expression
-     * @param schemaPathsInExpr columns used in filter expression
      * @return this instance with filtered metadata
      */
     protected B getFiltered(OptionManager optionManager,
-                                                        FilterPredicate filterPredicate,
-                                                        Set<SchemaPath> schemaPathsInExpr) {
+        FilterPredicate filterPredicate) {
+      Objects.requireNonNull(filterExpression, "filterExpression was not set");
+      Objects.requireNonNull(tableSchema, "tableSchema was not set");
+      Objects.requireNonNull(udfUtilities, "udfUtilities were not set");
+      Objects.requireNonNull(context, "context was not set");
+
+      Set<SchemaPath> schemaPathsInExpr =
+          filterExpression.accept(FilterEvaluatorUtils.FieldReferenceFinder.INSTANCE, null);
+
       if (source.getTableMetadata() != null) {
         filterTableMetadata(filterPredicate, schemaPathsInExpr);
       }
@@ -902,13 +945,19 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
      * @param <T>               type of metadata to filter
      * @return filtered metadata
      */
-    public <T extends Metadata> List<T> filterAndGetMetadata(Set<SchemaPath> schemaPathsInExpr,
-                                                             Iterable<T> metadataList,
-                                                             FilterPredicate filterPredicate,
-                                                             OptionManager optionManager) {
+    public <T extends Metadata> List<T> filterAndGetMetadata(
+        Set<SchemaPath> schemaPathsInExpr,
+        Iterable<T> metadataList,
+        FilterPredicate filterPredicate,
+        OptionManager optionManager) {
       List<T> qualifiedFiles = new ArrayList<>();
 
       for (T metadata : metadataList) {
+        TupleMetadata schema = metadata.getSchema();
+        if (schema != null && !tableSchema.isEquivalent(schema)) {
+          filterPredicate = getFilterPredicate(filterExpression, udfUtilities,
+              context, optionManager, true, true, schema);
+        }
         Map<SchemaPath, ColumnStatistics> columnsStatistics = metadata.getColumnsStatistics();
 
         // adds partition (dir) column statistics if it may be used during filter evaluation
@@ -924,7 +973,7 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
         }
         RowsMatch match = FilterEvaluatorUtils.matches(filterPredicate,
             columnsStatistics, TableStatisticsKind.ROW_COUNT.getValue(metadata),
-            metadata.getSchema(), schemaPathsInExpr);
+            schema, schemaPathsInExpr);
         if (match == RowsMatch.NONE) {
           continue; // No file comply to the filter => drop the file
         }

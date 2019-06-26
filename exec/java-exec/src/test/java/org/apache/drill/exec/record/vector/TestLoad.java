@@ -23,6 +23,8 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import org.apache.drill.categories.VectorTest;
 import org.apache.drill.common.config.DrillConfig;
@@ -32,12 +34,19 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.RootAllocatorFactory;
+import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
+import org.apache.drill.exec.physical.resultSet.RowSetLoader;
+import org.apache.drill.exec.physical.resultSet.impl.OptionBuilder;
+import org.apache.drill.exec.physical.resultSet.impl.ResultSetLoaderImpl;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatchLoader;
+import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.BatchSchemaBuilder;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
 import org.junit.Test;
@@ -97,6 +106,54 @@ public class TestLoad extends ExecTest {
     // The allocator will verify that the frees were done correctly.
 
     allocator.close();
+  }
+
+  @Test
+  public void testLoadValueVectorEmptyVarCharArray() throws Exception {
+    try (BufferAllocator allocator = RootAllocatorFactory.newRoot(drillConfig)) {
+      TupleMetadata schema = new SchemaBuilder()
+          .addArray("chars", MinorType.VARCHAR)
+          .build();
+
+      ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
+          .setSchema(schema)
+          .build();
+
+      ResultSetLoader resultSetLoader = new ResultSetLoaderImpl(allocator, options);
+
+      resultSetLoader.startBatch();
+      RowSetLoader rowWriter = resultSetLoader.writer();
+
+      rowWriter.addRow(new Object[]{null});
+
+      VectorContainer harvest = resultSetLoader.harvest();
+
+      // Create vectors
+      List<ValueVector> vectors = StreamSupport.stream(harvest.spliterator(), false)
+          .map(VectorWrapper::getValueVector)
+          .collect(Collectors.toList());
+
+      // Writeable batch now owns vector buffers
+      WritableBatch writableBatch = WritableBatch.getBatchNoHV(1, vectors, false);
+
+      // Serialize the vectors
+      DrillBuf byteBuf = serializeBatch(allocator, writableBatch);
+
+      // Batch loader does NOT take ownership of the serialized buffer
+      RecordBatchLoader batchLoader = new RecordBatchLoader(allocator);
+      batchLoader.load(writableBatch.getDef(), byteBuf);
+
+      // Release the serialized buffer.
+      byteBuf.release();
+
+      assertEquals(1, batchLoader.getRecordCount());
+
+      // Free the original vectors
+      writableBatch.clear();
+
+      // Free the deserialized vectors
+      batchLoader.clear();
+    }
   }
 
   // TODO: Replace this low-level code with RowSet usage once

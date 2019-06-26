@@ -152,6 +152,7 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
       schema = builder.build();
       newVectors.buildSchema(BatchSchema.SelectionVectorMode.NONE);
       container = newVectors;
+      container.setRecordCount(valueCount);
     } catch (final Throwable cause) {
       // We have to clean up new vectors created here and pass over the actual cause. It is upper layer who should
       // adjudicate to call upper layer specific clean up logic.

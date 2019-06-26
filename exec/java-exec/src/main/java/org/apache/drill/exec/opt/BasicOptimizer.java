@@ -141,7 +141,7 @@ public class BasicOptimizer extends Optimizer {
         input = new Sort(input, orderDefs, false);
       }
 
-      return new StreamingAggregate(input, groupBy.getKeys(), groupBy.getExprs(), 1.0f);
+      return new StreamingAggregate(input, groupBy.getKeys(), groupBy.getExprs());
     }
 
     @Override

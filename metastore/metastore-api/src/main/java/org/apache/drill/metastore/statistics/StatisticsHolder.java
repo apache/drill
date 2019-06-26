@@ -27,6 +27,8 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
 import java.io.IOException;
+import java.util.Objects;
+import java.util.StringJoiner;
 
 /**
  * Class-holder for statistics kind and its value.
@@ -65,19 +67,45 @@ public class StatisticsHolder<T> {
     return statisticsKind;
   }
 
-  public static StatisticsHolder of(String serialized) {
-    try {
-      return OBJECT_READER.readValue(serialized);
-    } catch (IOException e) {
-      throw new IllegalArgumentException("Unable to convert statistics holder from json string" + serialized, e);
-    }
-  }
-
   public String jsonString() {
     try {
       return OBJECT_WRITER.writeValueAsString(this);
     } catch (JsonProcessingException e) {
       throw new IllegalStateException("Unable to convert statistics holder to json string", e);
+    }
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    StatisticsHolder<?> that = (StatisticsHolder<?>) o;
+    return Objects.equals(statisticsValue, that.statisticsValue)
+        && Objects.equals(statisticsKind, that.statisticsKind);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(statisticsValue, statisticsKind);
+  }
+
+  @Override
+  public String toString() {
+    return new StringJoiner(",\n", StatisticsHolder.class.getSimpleName() + "[\n", "]")
+        .add("statisticsValue=" + statisticsValue)
+        .add("statisticsKind=" + statisticsKind)
+        .toString();
+  }
+
+  public static StatisticsHolder of(String serialized) {
+    try {
+      return OBJECT_READER.readValue(serialized);
+    } catch (IOException e) {
+      throw new IllegalArgumentException("Unable to convert statistics holder from json string: " + serialized, e);
     }
   }
 }

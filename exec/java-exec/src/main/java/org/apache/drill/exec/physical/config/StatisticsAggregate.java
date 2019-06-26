@@ -37,7 +37,7 @@ public class StatisticsAggregate extends StreamingAggregate {
   public StatisticsAggregate(
       @JsonProperty("child") PhysicalOperator child,
       @JsonProperty("functions") List<String> functions) {
-    super(child, null, null, 0.f);
+    super(child, null, null);
     this.functions = ImmutableList.copyOf(functions);
   }
 

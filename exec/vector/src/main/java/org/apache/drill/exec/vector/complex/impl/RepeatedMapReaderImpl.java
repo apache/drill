@@ -18,6 +18,7 @@
 package org.apache.drill.exec.vector.complex.impl;
 
 import org.apache.drill.exec.expr.holders.RepeatedMapHolder;
+import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.complex.RepeatedMapVector;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
@@ -52,6 +53,11 @@ public class RepeatedMapReaderImpl extends AbstractRepeatedMapReaderImpl<Repeate
       maxOffset = singleOffset + 1;
       setChildrenPosition(singleOffset);
     }
+  }
+
+  @Override
+  public MaterializedField getField() {
+    return vector.getField();
   }
 
   @Override

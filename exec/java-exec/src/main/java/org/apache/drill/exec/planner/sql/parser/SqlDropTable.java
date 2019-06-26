@@ -42,8 +42,8 @@ public class SqlDropTable extends DrillSqlCall {
     }
   };
 
-  private SqlIdentifier tableName;
-  private boolean tableExistenceCheck;
+  private final SqlIdentifier tableName;
+  private final boolean tableExistenceCheck;
 
   public SqlDropTable(SqlParserPos pos, SqlIdentifier tableName, SqlLiteral tableExistenceCheck) {
     this(pos, tableName, tableExistenceCheck.booleanValue());

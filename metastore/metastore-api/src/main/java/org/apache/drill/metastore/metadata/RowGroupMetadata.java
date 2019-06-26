@@ -22,6 +22,7 @@ import org.apache.hadoop.fs.Path;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.StringJoiner;
 
 /**
  * Metadata which corresponds to the row group level of table.
@@ -67,11 +68,61 @@ public class RowGroupMetadata extends BaseMetadata implements LocationProvider {
   }
 
   @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    if (!super.equals(o)) {
+      return false;
+    }
+    RowGroupMetadata that = (RowGroupMetadata) o;
+    return rowGroupIndex == that.rowGroupIndex
+        && Objects.equals(hostAffinity, that.hostAffinity)
+        && Objects.equals(path, that.path);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(super.hashCode(), hostAffinity, rowGroupIndex, path);
+  }
+
+  @Override
+  public String toString() {
+    return new StringJoiner(",\n", RowGroupMetadata.class.getSimpleName() + "[\n", "]")
+        .add("hostAffinity=" + hostAffinity)
+        .add("rowGroupIndex=" + rowGroupIndex)
+        .add("path=" + path)
+        .add("tableInfo=" + tableInfo)
+        .add("metadataInfo=" + metadataInfo)
+        .add("schema=" + schema)
+        .add("columnsStatistics=" + columnsStatistics)
+        .add("metadataStatistics=" + metadataStatistics)
+        .add("lastModifiedTime=" + lastModifiedTime)
+        .toString();
+  }
+
+  @Override
   protected void toMetadataUnitBuilder(TableMetadataUnit.Builder builder) {
     builder.hostAffinity(hostAffinity);
     builder.rowGroupIndex(rowGroupIndex);
     builder.path(path.toUri().getPath());
     builder.location(getLocation().toUri().getPath());
+  }
+
+  public RowGroupMetadataBuilder toBuilder() {
+    return builder()
+        .tableInfo(tableInfo)
+        .metadataInfo(metadataInfo)
+        .schema(schema)
+        .columnsStatistics(columnsStatistics)
+        .metadataStatistics(metadataStatistics.values())
+        .lastModifiedTime(lastModifiedTime)
+        .hostAffinity(hostAffinity)
+        .rowGroupIndex(rowGroupIndex)
+        .path(path);
   }
 
   public static RowGroupMetadataBuilder builder() {

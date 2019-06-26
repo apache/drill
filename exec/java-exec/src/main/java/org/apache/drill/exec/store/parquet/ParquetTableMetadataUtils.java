@@ -19,6 +19,9 @@ package org.apache.drill.exec.store.parquet;
 
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.exec.planner.common.DrillStatsTable;
+import org.apache.drill.exec.record.SchemaUtil;
+import org.apache.drill.metastore.metadata.BaseTableMetadata;
 import org.apache.drill.metastore.statistics.BaseStatisticsKind;
 import org.apache.drill.metastore.metadata.MetadataInfo;
 import org.apache.drill.metastore.metadata.MetadataType;
@@ -68,9 +71,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
- * Utility class for converting parquet metadata classes to metastore metadata classes.
+ * Utility class for converting parquet metadata classes to Metastore metadata classes.
  */
 @SuppressWarnings("WeakerAccess")
 public class ParquetTableMetadataUtils {
@@ -133,7 +138,8 @@ public class ParquetTableMetadataUtils {
         } else {
           newIndex = index++;
         }
-        rowGroups.put(file.getPath(), getRowGroupMetadata(tableMetadata, rowGroupMetadata, newIndex, file.getPath()));
+        Path filePath = Path.getPathWithoutSchemeAndAuthority(file.getPath());
+        rowGroups.put(filePath, getRowGroupMetadata(tableMetadata, rowGroupMetadata, newIndex, filePath));
       }
     }
 
@@ -160,7 +166,7 @@ public class ParquetTableMetadataUtils {
     Map<SchemaPath, TypeProtos.MajorType> columns = getRowGroupFields(tableMetadata, rowGroupMetadata);
     Map<SchemaPath, TypeProtos.MajorType> intermediateColumns = getIntermediateFields(tableMetadata, rowGroupMetadata);
 
-    TupleSchema schema = new TupleSchema();
+    TupleMetadata schema = new TupleSchema();
     columns.forEach(
         (schemaPath, majorType) -> SchemaPathUtils.addColumnMetadata(schema, schemaPath, majorType, intermediateColumns)
     );
@@ -465,39 +471,62 @@ public class ParquetTableMetadataUtils {
   public static Map<SchemaPath, TypeProtos.MajorType> getRowGroupFields(
       MetadataBase.ParquetTableMetadataBase parquetTableMetadata, MetadataBase.RowGroupMetadata rowGroup) {
     Map<SchemaPath, TypeProtos.MajorType> columns = new LinkedHashMap<>();
+    if (new MetadataVersion(parquetTableMetadata.getMetadataVersion()).compareTo(new MetadataVersion(4, 0)) > 0
+        && !((Metadata_V4.ParquetTableMetadata_v4) parquetTableMetadata).isAllColumnsInteresting()) {
+      // adds non-interesting fields from table metadata
+      for (MetadataBase.ColumnTypeMetadata columnTypeMetadata : parquetTableMetadata.getColumnTypeInfoList()) {
+        Metadata_V4.ColumnTypeMetadata_v4 metadata = (Metadata_V4.ColumnTypeMetadata_v4) columnTypeMetadata;
+        if (!metadata.isInteresting) {
+          TypeProtos.MajorType columnType = getColumnType(metadata.name, metadata.primitiveType, metadata.originalType, parquetTableMetadata);
+          SchemaPath columnPath = SchemaPath.getCompoundPath(metadata.name);
+          putType(columns, columnPath, columnType);
+        }
+      }
+    }
     for (MetadataBase.ColumnMetadata column : rowGroup.getColumns()) {
 
-      PrimitiveType.PrimitiveTypeName primitiveType = getPrimitiveTypeName(parquetTableMetadata, column);
-      OriginalType originalType = getOriginalType(parquetTableMetadata, column);
-      int precision = 0;
-      int scale = 0;
-      int definitionLevel = 1;
-      int repetitionLevel = 0;
-      MetadataVersion metadataVersion = new MetadataVersion(parquetTableMetadata.getMetadataVersion());
-      // only ColumnTypeMetadata_v3 and ColumnTypeMetadata_v4 store information about scale, precision, repetition level and definition level
-      if (parquetTableMetadata.hasColumnMetadata() && (metadataVersion.compareTo(new MetadataVersion(3, 0)) >= 0)) {
-        scale = parquetTableMetadata.getScale(column.getName());
-        precision = parquetTableMetadata.getPrecision(column.getName());
-        repetitionLevel = parquetTableMetadata.getRepetitionLevel(column.getName());
-        definitionLevel = parquetTableMetadata.getDefinitionLevel(column.getName());
-      }
-      TypeProtos.DataMode mode;
-      if (repetitionLevel >= 1) {
-        mode = TypeProtos.DataMode.REPEATED;
-      } else if (repetitionLevel == 0 && definitionLevel == 0) {
-        mode = TypeProtos.DataMode.REQUIRED;
-      } else {
-        mode = TypeProtos.DataMode.OPTIONAL;
-      }
-      TypeProtos.MajorType columnType =
-          TypeProtos.MajorType.newBuilder(ParquetReaderUtility.getType(primitiveType, originalType, precision, scale))
-              .setMode(mode)
-              .build();
+      TypeProtos.MajorType columnType = getColumnType(parquetTableMetadata, column);
 
       SchemaPath columnPath = SchemaPath.getCompoundPath(column.getName());
       putType(columns, columnPath, columnType);
     }
     return columns;
+  }
+
+  private static TypeProtos.MajorType getColumnType(
+      MetadataBase.ParquetTableMetadataBase parquetTableMetadata,MetadataBase.ColumnMetadata column) {
+    PrimitiveType.PrimitiveTypeName primitiveType = getPrimitiveTypeName(parquetTableMetadata, column);
+    OriginalType originalType = getOriginalType(parquetTableMetadata, column);
+    String[] name = column.getName();
+    return getColumnType(name, primitiveType, originalType, parquetTableMetadata);
+  }
+
+  private static TypeProtos.MajorType getColumnType(String[] name,
+      PrimitiveType.PrimitiveTypeName primitiveType, OriginalType originalType,
+      MetadataBase.ParquetTableMetadataBase parquetTableMetadata) {
+    int precision = 0;
+    int scale = 0;
+    int definitionLevel = 1;
+    int repetitionLevel = 0;
+    MetadataVersion metadataVersion = new MetadataVersion(parquetTableMetadata.getMetadataVersion());
+    // only ColumnTypeMetadata_v3 and ColumnTypeMetadata_v4 store information about scale, precision, repetition level and definition level
+    if (parquetTableMetadata.hasColumnMetadata() && (metadataVersion.compareTo(new MetadataVersion(3, 0)) >= 0)) {
+      scale = parquetTableMetadata.getScale(name);
+      precision = parquetTableMetadata.getPrecision(name);
+      repetitionLevel = parquetTableMetadata.getRepetitionLevel(name);
+      definitionLevel = parquetTableMetadata.getDefinitionLevel(name);
+    }
+    TypeProtos.DataMode mode;
+    if (repetitionLevel >= 1) {
+      mode = TypeProtos.DataMode.REPEATED;
+    } else if (repetitionLevel == 0 && definitionLevel == 0) {
+      mode = TypeProtos.DataMode.REQUIRED;
+    } else {
+      mode = TypeProtos.DataMode.OPTIONAL;
+    }
+    return TypeProtos.MajorType.newBuilder(ParquetReaderUtility.getType(primitiveType, originalType, precision, scale))
+        .setMode(mode)
+        .build();
   }
 
   /**
@@ -608,5 +637,25 @@ public class ParquetTableMetadataUtils {
         columns.put(columnPath, type);
       }
     }
+  }
+
+  /**
+   * Returns map with schema path and {@link ColumnStatistics} obtained from specified {@link DrillStatsTable}
+   * for all columns from specified {@link BaseTableMetadata}.
+   *
+   * @param schema     source of column names
+   * @param statistics source of column statistics
+   * @return map with schema path and {@link ColumnStatistics}
+   */
+  public static Map<SchemaPath, ColumnStatistics> getColumnStatistics(TupleMetadata schema, DrillStatsTable statistics) {
+    List<SchemaPath> schemaPaths = SchemaUtil.getSchemaPaths(schema);
+
+    return schemaPaths.stream()
+        .collect(
+            Collectors.toMap(
+                Function.identity(),
+                schemaPath -> new ColumnStatistics<>(
+                    DrillStatsTable.getEstimatedColumnStats(statistics, schemaPath),
+                    SchemaPathUtils.getColumnMetadata(schemaPath, schema).type())));
   }
 }

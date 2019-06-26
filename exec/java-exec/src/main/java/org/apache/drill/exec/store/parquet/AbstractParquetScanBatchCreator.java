@@ -21,9 +21,9 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.ValueExpressions;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.FilterPredicate;
-import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.expr.stat.RowsMatch;
 import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
@@ -31,6 +31,7 @@ import org.apache.drill.exec.physical.base.AbstractGroupScanWithMetadata;
 import org.apache.drill.exec.physical.impl.ScanBatch;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.record.metadata.TupleSchema;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.ColumnExplorer;
 import org.apache.drill.exec.store.CommonParquetRecordReader;
@@ -41,6 +42,7 @@ import org.apache.drill.exec.store.parquet.metadata.MetadataBase;
 import org.apache.drill.exec.store.parquet.metadata.Metadata_V4;
 import org.apache.drill.exec.store.parquet2.DrillParquetReader;
 import org.apache.drill.metastore.statistics.ColumnStatistics;
+import org.apache.drill.metastore.util.SchemaPathUtils;
 import org.apache.drill.shaded.guava.com.google.common.base.Functions;
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
@@ -51,6 +53,8 @@ import org.apache.parquet.hadoop.CodecFactory;
 import org.apache.parquet.hadoop.ParquetFileReader;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
 import org.apache.parquet.hadoop.util.HadoopInputFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -65,7 +69,7 @@ import java.util.concurrent.TimeUnit;
 
 public abstract class AbstractParquetScanBatchCreator {
 
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractParquetScanBatchCreator.class);
+  private static final Logger logger = LoggerFactory.getLogger(AbstractParquetScanBatchCreator.class);
 
   protected ScanBatch getBatch(ExecutorFragmentContext context, AbstractParquetRowGroupScan rowGroupScan,
                                OperatorContext oContext) throws ExecutionSetupException {
@@ -87,7 +91,6 @@ public abstract class AbstractParquetScanBatchCreator {
     RowGroupReadEntry firstRowGroup = null; // to be scanned in case ALL row groups are pruned out
     ParquetMetadata firstFooter = null;
     long rowGroupsPruned = 0; // for stats
-    TupleMetadata schema = rowGroupScan.getSchema();
 
     try {
       LogicalExpression filterExpr = rowGroupScan.getFilter();
@@ -101,22 +104,20 @@ public abstract class AbstractParquetScanBatchCreator {
       Metadata_V4.ParquetFileAndRowCountMetadata fileMetadataV4 = null;
       FilterPredicate filterPredicate = null;
       Set<SchemaPath> schemaPathsInExpr = null;
-      Set<String> columnsInExpr = null;
+      Set<SchemaPath> columnsInExpr = null;
       // for debug/info logging
       long totalPruneTime = 0;
       long totalRowGroups = rowGroupScan.getRowGroupReadEntries().size();
       Stopwatch pruneTimer = Stopwatch.createUnstarted();
-      int countMatchClassCastExceptions = 0; // in case match() hits CCE, count and report these
-      String matchCastErrorMessage = ""; // report the error too (Java insists on initializing this ....)
 
       // If pruning - Prepare the predicate and the columns before the FOR LOOP
       if (doRuntimePruning) {
         filterPredicate = AbstractGroupScanWithMetadata.getFilterPredicate(filterExpr, context,
-          (FunctionImplementationRegistry) context.getFunctionRegistry(), context.getOptions(), true,
-          true /* supports file implicit columns */,
-          schema);
+            context.getFunctionRegistry(), context.getOptions(), true,
+            true /* supports file implicit columns */,
+            rowGroupScan.getSchema());
         // Extract only the relevant columns from the filter (sans implicit columns, if any)
-        schemaPathsInExpr = filterExpr.accept(new FilterEvaluatorUtils.FieldReferenceFinder(), null);
+        schemaPathsInExpr = filterExpr.accept(FilterEvaluatorUtils.FieldReferenceFinder.INSTANCE, null);
         columnsInExpr = new HashSet<>();
         String partitionColumnLabel = context.getOptions().getOption(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL).string_val;
         for (SchemaPath path : schemaPathsInExpr) {
@@ -124,7 +125,7 @@ public abstract class AbstractParquetScanBatchCreator {
             path.toString().matches(partitionColumnLabel+"\\d+")) {
             continue;  // skip implicit columns like dir0, dir1
           }
-          columnsInExpr.add(path.getRootSegmentPath());
+          columnsInExpr.add(SchemaPath.getSimplePath(path.getRootSegmentPath()));
         }
         doRuntimePruning = ! columnsInExpr.isEmpty(); // just in case: if no columns - cancel pruning
       }
@@ -192,17 +193,29 @@ public abstract class AbstractParquetScanBatchCreator {
             Map<SchemaPath, ColumnStatistics> columnsStatistics = ParquetTableMetadataUtils.getRowGroupColumnStatistics(tableMetadataV4, rowGroupMetadata);
 
             try {
+              Map<SchemaPath, TypeProtos.MajorType> intermediateColumns =
+                  ParquetTableMetadataUtils.getIntermediateFields(tableMetadataV4, rowGroupMetadata);
+              Map<SchemaPath, TypeProtos.MajorType> rowGroupFields =
+                  ParquetTableMetadataUtils.getRowGroupFields(tableMetadataV4, rowGroupMetadata);
+              TupleMetadata rowGroupSchema = new TupleSchema();
+              rowGroupFields.forEach(
+                  (schemaPath, majorType) -> SchemaPathUtils.addColumnMetadata(rowGroupSchema, schemaPath, majorType, intermediateColumns)
+              );
+              // updates filter predicate to add required casts for the case when row group schema differs from the table schema
+              if (!rowGroupSchema.isEquivalent(rowGroupScan.getSchema())) {
+                filterPredicate = AbstractGroupScanWithMetadata.getFilterPredicate(filterExpr, context,
+                    context.getFunctionRegistry(), context.getOptions(), true,
+                    true /* supports file implicit columns */,
+                    rowGroupSchema);
+              }
 
-              matchResult = FilterEvaluatorUtils.matches(filterPredicate, columnsStatistics, footerRowCount, rowGroupScan.getSchema(), schemaPathsInExpr);
+              matchResult = FilterEvaluatorUtils.matches(filterPredicate, columnsStatistics, footerRowCount, rowGroupSchema, schemaPathsInExpr);
 
               // collect logging info
               long timeToRead = pruneTimer.elapsed(TimeUnit.MICROSECONDS);
               totalPruneTime += timeToRead;
-              logger.trace("Run-time pruning: {} row-group {} (RG index: {} row count: {}), took {} usec", // trace each single rowgroup
+              logger.trace("Run-time pruning: {} row-group {} (RG index: {} row count: {}), took {} usec", // trace each single row group
                 matchResult == RowsMatch.NONE ? "Excluded" : "Included", rowGroup.getPath(), rowGroupIndex, footerRowCount, timeToRead);
-            } catch (ClassCastException cce) {
-              countMatchClassCastExceptions++; // one more CCE occured
-              matchCastErrorMessage = cce.getMessage(); // report the (last) error message
             } catch (Exception e) {
               // in case some unexpected exception is raised
               logger.warn("Run-time pruning check failed - {}. Skip pruning rowgroup - {}", e.getMessage(), rowGroup.getPath());
@@ -237,9 +250,6 @@ public abstract class AbstractParquetScanBatchCreator {
       if (totalPruneTime > 0)  {
         logger.info("Finished parquet_runtime_pruning in {} usec. Out of given {} rowgroups, {} were pruned. {}", totalPruneTime, totalRowGroups, rowGroupsPruned,
           totalRowGroups == rowGroupsPruned ? "ALL_PRUNED !!" : "");
-      }
-      if (countMatchClassCastExceptions > 0) {
-        logger.info("Run-time pruning skipped for {} out of {} rowgroups due to: {}",countMatchClassCastExceptions, totalRowGroups, matchCastErrorMessage);
       }
 
       // Update stats (same in every reader - the others would just overwrite the stats)
@@ -327,7 +337,9 @@ public abstract class AbstractParquetScanBatchCreator {
     readers.add(reader);
 
     List<String> partitionValues = rowGroupScan.getPartitionValues(rowGroup);
-    Map<String, String> implicitValues = columnExplorer.populateImplicitColumns(rowGroup.getPath(), partitionValues, rowGroupScan.supportsFileImplicitColumns());
+    Map<String, String> implicitValues =
+        columnExplorer.populateImplicitAndInternalColumns(rowGroup.getPath(), partitionValues,
+            rowGroupScan.supportsFileImplicitColumns(), fs, rowGroup.getRowGroupIndex(), rowGroup.getStart(), rowGroup.getLength());
     implicitColumns.add(implicitValues);
     if (implicitValues.size() > mapWithMaxColumns.size()) {
       mapWithMaxColumns = implicitValues;

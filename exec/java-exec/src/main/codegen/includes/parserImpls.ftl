@@ -698,46 +698,129 @@ Pair<SqlNodeList, SqlNodeList> ParenthesizedCompoundIdentifierList() :
 </#if>
 
 /**
- * Parses a analyze statement.
- * ANALYZE TABLE table_name {COMPUTE | ESTIMATE} | STATISTICS
- *      [(column1, column2, ...)] [ SAMPLE numeric PERCENT ]
+ * Parses a analyze statements:
+ * <ul>
+ * <li>ANALYZE TABLE [table_name] [COLUMNS (col1, col2, ...)] REFRESH METADATA [partition LEVEL] {COMPUTE | ESTIMATE} | STATISTICS [(column1, column2, ...)] [ SAMPLE numeric PERCENT ]
+ * <li>ANALYZE TABLE [table_name] DROP [METADATA|STATISTICS] [IF EXISTS]
+ * <li>ANALYZE TABLE [table_name] {COMPUTE | ESTIMATE} | STATISTICS [(column1, column2, ...)] [ SAMPLE numeric PERCENT ]
+ * </ul>
  */
 SqlNode SqlAnalyzeTable() :
 {
     SqlParserPos pos;
     SqlIdentifier tblName;
-    SqlLiteral estimate = null;
     SqlNodeList fieldList = null;
+    SqlNode level = null;
+    SqlLiteral estimate = null;
+    SqlLiteral dropMetadata = null;
+    SqlLiteral checkMetadataExistence = null;
     SqlNumericLiteral percent = null;
 }
 {
     <ANALYZE> { pos = getPos(); }
     <TABLE>
     tblName = CompoundIdentifier()
-    (
-        <COMPUTE> { estimate = SqlLiteral.createBoolean(false, pos); }
-        |
-        <ESTIMATE> { estimate = SqlLiteral.createBoolean(true, pos); }
-    )
-    <STATISTICS>
     [
-        (fieldList = ParseRequiredFieldList("Table"))
-    ]
-    [
-        <SAMPLE> percent = UnsignedNumericLiteral() <PERCENT>
-        {
-            BigDecimal rate = percent.bigDecimalValue();
-            if (rate.compareTo(BigDecimal.ZERO) <= 0 ||
-                rate.compareTo(BigDecimal.valueOf(100L)) > 0)
+        (
+            (
+                <COMPUTE> { estimate = SqlLiteral.createBoolean(false, pos); }
+                |
+                <ESTIMATE> {
+                  if (true) {
+                    throw new ParseException("ESTIMATE statistics collecting is not supported. See DRILL-7438.");
+                  }
+                  estimate = SqlLiteral.createBoolean(true, pos);
+                }
+            )
+            <STATISTICS>
+            [
+                (fieldList = ParseRequiredFieldList("Table"))
+            ]
+            [
+                <SAMPLE> percent = UnsignedNumericLiteral() <PERCENT>
+                {
+                    BigDecimal rate = percent.bigDecimalValue();
+                    if (rate.compareTo(BigDecimal.ZERO) <= 0 ||
+                        rate.compareTo(BigDecimal.valueOf(100L)) > 0)
+                    {
+                        throw new ParseException("Invalid percentage for ANALYZE TABLE");
+                    }
+                }
+            ]
             {
-                throw new ParseException("Invalid percentage for ANALYZE TABLE");
+                if (percent == null) { percent = SqlLiteral.createExactNumeric("100.0", pos); }
+                return new SqlAnalyzeTable(pos, tblName, estimate, fieldList, percent);
             }
-        }
+        )
+        |
+        (
+            [
+                <COLUMNS>
+                (
+                    fieldList = ParseRequiredFieldList("Table")
+                    |
+                    <NONE> {fieldList = SqlNodeList.EMPTY;}
+                )
+            ]
+            <REFRESH>
+            <METADATA>
+            [
+                level = StringLiteral()
+                <LEVEL>
+            ]
+            [
+                (
+                    <COMPUTE> { estimate = SqlLiteral.createBoolean(false, pos); }
+                    |
+                    <ESTIMATE> {
+                      if (true) {
+                        throw new ParseException("ESTIMATE statistics collecting is not supported. See DRILL-7438.");
+                      }
+                      estimate = SqlLiteral.createBoolean(true, pos);
+                    }
+                )
+                <STATISTICS>
+            ]
+            [
+                <SAMPLE> percent = UnsignedNumericLiteral() <PERCENT>
+                {
+                    BigDecimal rate = percent.bigDecimalValue();
+                    if (rate.compareTo(BigDecimal.ZERO) <= 0 ||
+                        rate.compareTo(BigDecimal.valueOf(100L)) > 0) {
+                      throw new ParseException("Invalid percentage for ANALYZE TABLE");
+                    }
+                }
+            ]
+            {
+                return new SqlMetastoreAnalyzeTable(pos, tblName, fieldList, level, estimate, percent);
+            }
+        )
+        |
+        (
+            <DROP>
+            [
+                <METADATA> { dropMetadata = SqlLiteral.createCharString("METADATA", pos); }
+                |
+                <STATISTICS> {
+                  if (true) {
+                    throw new ParseException("DROP STATISTICS is not supported.");
+                  }
+                  dropMetadata = SqlLiteral.createCharString("STATISTICS", pos);
+                }
+            ]
+            [
+                <IF>
+                <EXISTS> { checkMetadataExistence = SqlLiteral.createBoolean(false, pos); }
+            ]
+            {
+                if (checkMetadataExistence == null) {
+                  checkMetadataExistence = SqlLiteral.createBoolean(true, pos);
+                }
+                return new SqlDropTableMetadata(pos, tblName, dropMetadata, checkMetadataExistence);
+            }
+        )
     ]
-    {
-        if (percent == null) { percent = SqlLiteral.createExactNumeric("100.0", pos); }
-        return new SqlAnalyzeTable(pos, tblName, estimate, fieldList, percent);
-    }
+    { throw generateParseException(); }
 }
 
 

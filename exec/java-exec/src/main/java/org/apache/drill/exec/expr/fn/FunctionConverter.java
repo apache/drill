@@ -118,7 +118,8 @@ public class FunctionConverter {
         // Special processing for @Output ComplexWriter
         if (output != null && ComplexWriter.class.isAssignableFrom(fieldClass)) {
           if (outputField != null) {
-            return failure("You've declared more than one @Output field.  You must declare one and only @Output field per Function class.", func, field);
+            return failure("You've declared more than one @Output field.\n" +
+                "You must declare one and only @Output field per Function class.", func, field);
           } else {
             outputField = ValueReference.createComplexWriterRef(field.getName());
           }
@@ -127,7 +128,8 @@ public class FunctionConverter {
 
         // check that param and output are value holders.
         if (!ValueHolder.class.isAssignableFrom(fieldClass)) {
-          return failure(String.format("The field doesn't holds value of type %s which does not implement the ValueHolder interface.  All fields of type @Param or @Output must extend this interface..", fieldClass), func, field);
+          return failure(String.format("The field doesn't holds value of type %s which does not implement the ValueHolder or ComplexWriter interfaces.\n" +
+              "All fields of type @Param or @Output must extend this interface.", fieldClass), func, field);
         }
 
         // get the type field from the value holder.
@@ -171,7 +173,7 @@ public class FunctionConverter {
 
         //If the workspace var is of Holder type, get its MajorType and assign to WorkspaceReference.
         if (ValueHolder.class.isAssignableFrom(fieldClass)) {
-          MajorType majorType = null;
+          MajorType majorType;
           try {
             majorType = getStaticFieldValue("TYPE", fieldClass, MajorType.class);
           } catch (Exception e) {
@@ -190,8 +192,8 @@ public class FunctionConverter {
     FunctionInitializer initializer = new FunctionInitializer(func.getClassName(), classLoader);
     try {
       // return holder
-      ValueReference[] ps = params.toArray(new ValueReference[params.size()]);
-      WorkspaceReference[] works = workspaceFields.toArray(new WorkspaceReference[workspaceFields.size()]);
+      ValueReference[] ps = params.toArray(new ValueReference[0]);
+      WorkspaceReference[] works = workspaceFields.toArray(new WorkspaceReference[0]);
 
       FunctionAttributes functionAttributes = new FunctionAttributes(template, ps, outputField, works);
 

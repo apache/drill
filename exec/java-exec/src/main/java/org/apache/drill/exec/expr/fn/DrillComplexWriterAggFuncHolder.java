@@ -90,7 +90,7 @@ public class DrillComplexWriterAggFuncHolder extends DrillAggFuncHolder {
     if (classGenerator.getCodeGenerator().getDefinition() == StreamingAggTemplate.TEMPLATE_DEFINITION) {
       aggBatchClass = classGenerator.getModel().ref(StreamingAggBatch.class);
     }
-    assert aggBatchClass != null : "ComplexWriterAggFuncHolder should only be used with an Aggregate Operator";
+    assert aggBatchClass != null : "ComplexWriterAggFuncHolder should only be used with Streaming Aggregate Operator";
 
     JExpression aggBatch = JExpr.cast(aggBatchClass, classGenerator.getMappingSet().getOutgoing());
 

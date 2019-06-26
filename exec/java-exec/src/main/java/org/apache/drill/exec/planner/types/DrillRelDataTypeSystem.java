@@ -19,10 +19,25 @@ package org.apache.drill.exec.planner.types;
 
 import org.apache.calcite.rel.type.RelDataTypeSystem;
 import org.apache.calcite.rel.type.RelDataTypeSystemImpl;
+import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.drill.common.types.Types;
 
 public class DrillRelDataTypeSystem extends RelDataTypeSystemImpl {
 
   public static final RelDataTypeSystem DRILL_REL_DATATYPE_SYSTEM = new DrillRelDataTypeSystem();
+
+  @Override
+  public int getDefaultPrecision(SqlTypeName typeName) {
+    switch (typeName) {
+      case CHAR:
+      case BINARY:
+      case VARCHAR:
+      case VARBINARY:
+        return Types.MAX_VARCHAR_LENGTH;
+      default:
+        return super.getDefaultPrecision(typeName);
+    }
+  }
 
   @Override
   public int getMaxNumericScale() {
@@ -32,6 +47,12 @@ public class DrillRelDataTypeSystem extends RelDataTypeSystemImpl {
   @Override
   public int getMaxNumericPrecision() {
     return 38;
+  }
+
+  @Override
+  public boolean isSchemaCaseSensitive() {
+    // Drill uses case-insensitive policy
+    return false;
   }
 
 }

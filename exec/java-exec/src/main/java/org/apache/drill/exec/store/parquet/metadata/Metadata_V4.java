@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.databind.KeyDeserializer;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.util.DrillVersionInfo;
 import org.apache.hadoop.fs.Path;
 import org.apache.parquet.schema.OriginalType;
 import org.apache.parquet.schema.PrimitiveType;
@@ -46,7 +47,9 @@ public class Metadata_V4 {
     MetadataSummary metadataSummary = new MetadataSummary();
     FileMetadata fileMetadata = new FileMetadata();
 
-    public ParquetTableMetadata_v4() {}
+    public ParquetTableMetadata_v4() {
+      this.metadataSummary = new MetadataSummary(MetadataVersion.Constants.V4_1, DrillVersionInfo.getVersion(), false);
+    }
 
     public ParquetTableMetadata_v4(MetadataSummary metadataSummary) {
       this.metadataSummary = metadataSummary;

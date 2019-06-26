@@ -41,6 +41,7 @@ import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ProfileParser;
 import org.apache.drill.test.QueryBuilder;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.junit.Assert;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -702,7 +703,7 @@ public class TestParquetFilterPushDown extends PlanTestBase {
   }
 
   private MetadataBase.ParquetTableMetadataBase getParquetMetaData(File file) throws IOException {
-    return Metadata.getParquetTableMetadata(fs, file.toURI().getPath(), ParquetReaderConfig.getDefaultInstance());
+    return Metadata.getParquetTableMetadata(fs, new Path(file.toURI().getPath()), ParquetReaderConfig.getDefaultInstance());
   }
 
   // =========  runtime pruning  ==========

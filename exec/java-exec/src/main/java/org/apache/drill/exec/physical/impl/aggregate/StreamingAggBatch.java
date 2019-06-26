@@ -231,7 +231,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
       switch (lastKnownOutcome) {
         case NONE:
 
-          if (first && popConfig.getKeys().size() == 0) {
+          if (first && getKeyExpressions().size() == 0) {
             // if we have a straight aggregate and empty input batch, we need to handle it in a different way
             // Wewant to produce the special batch only if we got a NONE as the first outcome after
             // OK_NEW_SCHEMA. If we get a NONE immediately after we see an EMIT, then we have already handled
@@ -259,7 +259,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
         case EMIT:
           // if we get an EMIT with an empty batch as the first (and therefore only) batch
           // we have to do the special handling
-          if (firstBatchForDataSet && popConfig.getKeys().size() == 0 && incoming.getRecordCount() == 0) {
+          if (firstBatchForDataSet && getKeyExpressions().size() == 0 && incoming.getRecordCount() == 0) {
             constructSpecialBatch();
             // If outcome is NONE then we send the special batch in the first iteration and the NONE
             // outcome in the next iteration. If outcome is EMIT, we can send the special
@@ -311,7 +311,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
         return returnOutcome;
       case RETURN_AND_RESET:
         //WE could have got a string of batches, all empty, until we hit an emit
-        if (firstBatchForDataSet && popConfig.getKeys().size() == 0 && recordCount == 0) {
+        if (firstBatchForDataSet && getKeyExpressions().size() == 0 && recordCount == 0) {
           // if we have a straight aggregate and empty input batch, we need to handle it in a different way
           constructSpecialBatch();
           // If outcome is NONE then we send the special batch in the first iteration and the NONE
@@ -419,7 +419,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
            * buffer
            */
           throw new DrillRuntimeException("FixedWidth vectors is the expected output vector type. " +
-              "Corresponding expression: " + popConfig.getExprs().get(exprIndex).toString());
+              "Corresponding expression: " + getValueExpressions().get(exprIndex).toString());
         }
       }
       exprIndex++;
@@ -454,21 +454,21 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
     complexWriters.add(writer);
   }
 
-  protected StreamingAggregator createAggregatorInternal() throws SchemaChangeException, ClassTransformationException, IOException{
+  protected StreamingAggregator createAggregatorInternal() throws SchemaChangeException, ClassTransformationException, IOException {
     ClassGenerator<StreamingAggregator> cg = CodeGenerator.getRoot(StreamingAggTemplate.TEMPLATE_DEFINITION, context.getOptions());
     cg.getCodeGenerator().plainJavaCapable(true);
     // Uncomment out this line to debug the generated code.
     //cg.getCodeGenerator().saveCodeForDebugging(true);
     container.clear();
 
-    LogicalExpression[] keyExprs = new LogicalExpression[popConfig.getKeys().size()];
-    LogicalExpression[] valueExprs = new LogicalExpression[popConfig.getExprs().size()];
-    TypedFieldId[] keyOutputIds = new TypedFieldId[popConfig.getKeys().size()];
+    LogicalExpression[] keyExprs = new LogicalExpression[getKeyExpressions().size()];
+    LogicalExpression[] valueExprs = new LogicalExpression[getValueExpressions().size()];
+    TypedFieldId[] keyOutputIds = new TypedFieldId[getKeyExpressions().size()];
 
     ErrorCollector collector = new ErrorCollectorImpl();
 
     for (int i = 0; i < keyExprs.length; i++) {
-      NamedExpression ne = popConfig.getKeys().get(i);
+      NamedExpression ne = getKeyExpressions().get(i);
       LogicalExpression expr = ExpressionTreeMaterializer.materialize(ne.getExpr(), incoming, collector,context.getFunctionRegistry() );
       if (expr == null) {
         continue;
@@ -481,8 +481,8 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
     }
 
     for (int i = 0; i < valueExprs.length; i++) {
-      NamedExpression ne = popConfig.getExprs().get(i);
-      LogicalExpression expr = ExpressionTreeMaterializer.materialize(ne.getExpr(), incoming, collector, context.getFunctionRegistry());
+      NamedExpression ne = getValueExpressions().get(i);
+      LogicalExpression expr = ExpressionTreeMaterializer.materialize(ne.getExpr(), incoming, collector, context.getFunctionRegistry(), true, false);
       if (expr instanceof IfExpression) {
         throw UserException.unsupportedError(new UnsupportedOperationException("Union type not supported in aggregate functions")).build(logger);
       }
@@ -532,6 +532,14 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
     agg.setup(oContext, incoming, this, maxOutputRowCount);
     allocateComplexWriters();
     return agg;
+  }
+
+  protected List<NamedExpression> getValueExpressions() {
+    return popConfig.getExprs();
+  }
+
+  protected List<NamedExpression> getKeyExpressions() {
+    return popConfig.getKeys();
   }
 
   private final GeneratorMapping IS_SAME = GeneratorMapping.create("setupInterior", "isSame", null, null);

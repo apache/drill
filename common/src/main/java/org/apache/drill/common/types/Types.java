@@ -609,7 +609,7 @@ public class Types {
   }
 
   public static MajorType overrideMode(final MajorType originalMajorType, final DataMode overrideMode) {
-    return withPrecisionAndScale(originalMajorType.getMinorType(), overrideMode, originalMajorType.getPrecision(), originalMajorType.getScale());
+    return originalMajorType.toBuilder().setMode(overrideMode).build();
   }
 
   public static MajorType getMajorTypeFromName(final String typeName) {

@@ -176,9 +176,9 @@ public class DrillScanRel extends DrillScanRelBase implements DrillRel {
     return this.partitionFilterPushdown;
   }
 
-  private static List<SchemaPath> getProjectedColumns(final RelOptTable table, boolean isSelectStar) {
+  public static List<SchemaPath> getProjectedColumns(final RelOptTable table, boolean isSelectStar) {
     List<String> columnNames = table.getRowType().getFieldNames();
-    List<SchemaPath> projectedColumns = new ArrayList<SchemaPath>(columnNames.size());
+    List<SchemaPath> projectedColumns = new ArrayList<>(columnNames.size());
 
     for (String columnName : columnNames) {
        projectedColumns.add(SchemaPath.getSimplePath(columnName));

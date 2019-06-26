@@ -49,7 +49,7 @@ public class PrelUtil {
     final List<String> childFields = rowType.getFieldNames();
 
     for (RelFieldCollation fc : collation.getFieldCollations()) {
-      FieldReference fr = new FieldReference(childFields.get(fc.getFieldIndex()), ExpressionPosition.UNKNOWN, false);
+      FieldReference fr = new FieldReference(childFields.get(fc.getFieldIndex()), ExpressionPosition.UNKNOWN);
       orderExpr.add(new Ordering(fc.getDirection(), fr, fc.nullDirection));
     }
 

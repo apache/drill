@@ -40,7 +40,7 @@ import java.util.List;
  *
  * NB: Source code generated using FreeMarker template ${.template_name}
  */
-public abstract class JSONBaseStatisticsRecordWriter implements StatisticsRecordWriter {
+public abstract class JSONBaseStatisticsRecordWriter implements StatisticsRecordCollector {
 
   protected JsonOutput gen;
   protected boolean skipNullFields = true;

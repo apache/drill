@@ -31,6 +31,8 @@ import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.store.EventBasedRecordWriter.FieldConverter;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
@@ -39,9 +41,11 @@ import java.util.List;
  * This class is generated using freemarker and the ${.template_name} template.
  */
 
-/** Reads records from the RecordValueAccessor and writes into StatisticsRecordWriter. */
+/**
+ * Reads records from the RecordValueAccessor and writes into StatisticsRecordCollector.
+ */
 public class StatisticsRecordWriterImpl {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StatisticsRecordWriterImpl.class);
+  private static final Logger logger = LoggerFactory.getLogger(StatisticsRecordWriterImpl.class);
 
   private VectorAccessible batch;
   private StatisticsRecordWriter recordWriter;
@@ -97,7 +101,7 @@ public class StatisticsRecordWriterImpl {
     }
   }
 
-  public static FieldConverter getConverter(StatisticsRecordWriter recordWriter, int fieldId, String fieldName,
+  public static FieldConverter getConverter(StatisticsRecordCollector recordWriter, int fieldId, String fieldName,
       FieldReader reader) {
     switch (reader.getType().getMinorType()) {
       <#list vv.types as type>

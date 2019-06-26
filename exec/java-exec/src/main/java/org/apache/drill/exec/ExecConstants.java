@@ -489,6 +489,25 @@ public final class ExecConstants {
   public static final String IMPLICIT_FILEPATH_COLUMN_LABEL = "drill.exec.storage.implicit.filepath.column.label";
   public static final OptionValidator IMPLICIT_FILEPATH_COLUMN_LABEL_VALIDATOR = new StringValidator(IMPLICIT_FILEPATH_COLUMN_LABEL,
       new OptionDescription("Available as of Drill 1.10. Sets the implicit column name for the filepath column."));
+  public static final String IMPLICIT_ROW_GROUP_INDEX_COLUMN_LABEL = "drill.exec.storage.implicit.row_group_index.column.label";
+  public static final OptionValidator IMPLICIT_ROW_GROUP_INDEX_COLUMN_LABEL_VALIDATOR = new StringValidator(IMPLICIT_ROW_GROUP_INDEX_COLUMN_LABEL,
+      new OptionDescription("Available as of Drill 1.17. Sets the implicit column name for the row group index (rgi) column. " +
+          "For internal usage when producing Metastore analyze."));
+
+  public static final String IMPLICIT_ROW_GROUP_START_COLUMN_LABEL = "drill.exec.storage.implicit.row_group_start.column.label";
+  public static final OptionValidator IMPLICIT_ROW_GROUP_START_COLUMN_LABEL_VALIDATOR = new StringValidator(IMPLICIT_ROW_GROUP_START_COLUMN_LABEL,
+      new OptionDescription("Available as of Drill 1.17. Sets the implicit column name for the row group start (rgs) column. " +
+          "For internal usage when producing Metastore analyze."));
+
+  public static final String IMPLICIT_ROW_GROUP_LENGTH_COLUMN_LABEL = "drill.exec.storage.implicit.row_group_length.column.label";
+  public static final OptionValidator IMPLICIT_ROW_GROUP_LENGTH_COLUMN_LABEL_VALIDATOR = new StringValidator(IMPLICIT_ROW_GROUP_LENGTH_COLUMN_LABEL,
+      new OptionDescription("Available as of Drill 1.17. Sets the implicit column name for the row group length (rgl) column. " +
+          "For internal usage when producing Metastore analyze."));
+
+  public static final String IMPLICIT_LAST_MODIFIED_TIME_COLUMN_LABEL = "drill.exec.storage.implicit.last_modified_time.column.label";
+  public static final OptionValidator IMPLICIT_LAST_MODIFIED_TIME_COLUMN_LABEL_VALIDATOR = new StringValidator(IMPLICIT_LAST_MODIFIED_TIME_COLUMN_LABEL,
+      new OptionDescription("Available as of Drill 1.17. Sets the implicit column name for the lastModifiedTime column. " +
+          "For internal usage when producing Metastore analyze."));
 
   public static final String JSON_READ_NUMBERS_AS_DOUBLE = "store.json.read_numbers_as_double";
   public static final BooleanValidator JSON_READ_NUMBERS_AS_DOUBLE_VALIDATOR = new BooleanValidator(JSON_READ_NUMBERS_AS_DOUBLE,
@@ -1060,8 +1079,7 @@ public final class ExecConstants {
   public static final BooleanValidator METASTORE_ENABLED_VALIDATOR = new BooleanValidator(METASTORE_ENABLED,
       new OptionDescription("Enables Drill Metastore usage to be able to store table metadata " +
           "during ANALYZE TABLE commands execution and to be able to read table metadata during regular " +
-          "queries execution or when querying some INFORMATION_SCHEMA tables. " +
-          "This option is not active for now. Default is false. (Drill 1.17+)"));
+          "queries execution or when querying some INFORMATION_SCHEMA tables. Default is false. (Drill 1.17+)"));
 
   /**
    * Option for specifying maximum level depth for collecting metadata
@@ -1070,25 +1088,22 @@ public final class ExecConstants {
    */
   public static final String METASTORE_METADATA_STORE_DEPTH_LEVEL = "metastore.metadata.store.depth_level";
   public static final EnumeratedStringValidator METASTORE_METADATA_STORE_DEPTH_LEVEL_VALIDATOR = new EnumeratedStringValidator(METASTORE_METADATA_STORE_DEPTH_LEVEL,
-      new OptionDescription("Specifies maximum level depth for collecting metadata. " +
-          "This option is not active for now. Default is 'ROW_GROUP'. (Drill 1.17+)"),
-      "TABLE", "SEGMENT", "PARTITION", "FILE", "ROW_GROUP");
+      new OptionDescription("Specifies maximum level depth for collecting metadata. Default is 'ALL'. (Drill 1.17+)"),
+      "TABLE", "SEGMENT", "PARTITION", "FILE", "ROW_GROUP", "ALL");
 
   /**
    * Option for enabling schema usage, stored to the Metastore.
    */
   public static final String METASTORE_USE_SCHEMA_METADATA = "metastore.metadata.use_schema";
   public static final BooleanValidator METASTORE_USE_SCHEMA_METADATA_VALIDATOR = new BooleanValidator(METASTORE_USE_SCHEMA_METADATA,
-      new OptionDescription("Enables schema usage, stored to the Metastore. " +
-          "This option is not active for now. Default is false. (Drill 1.17+)"));
+      new OptionDescription("Enables schema usage, stored to the Metastore. Default is false. (Drill 1.17+)"));
 
   /**
    * Option for enabling statistics usage, stored in the Metastore, at the planning stage.
    */
   public static final String METASTORE_USE_STATISTICS_METADATA = "metastore.metadata.use_statistics";
   public static final BooleanValidator METASTORE_USE_STATISTICS_METADATA_VALIDATOR = new BooleanValidator(METASTORE_USE_STATISTICS_METADATA,
-      new OptionDescription("Enables statistics usage, stored in the Metastore, at the planning stage. " +
-          "This option is not active for now. Default is false. (Drill 1.17+)"));
+      new OptionDescription("Enables statistics usage, stored in the Metastore, at the planning stage. Default is false. (Drill 1.17+)"));
 
   /**
    * Option for collecting schema and / or column statistics for every table after CTAS and CTTAS execution.
@@ -1106,16 +1121,16 @@ public final class ExecConstants {
   public static final String METASTORE_FALLBACK_TO_FILE_METADATA = "metastore.metadata.fallback_to_file_metadata";
   public static final BooleanValidator METASTORE_FALLBACK_TO_FILE_METADATA_VALIDATOR = new BooleanValidator(METASTORE_FALLBACK_TO_FILE_METADATA,
       new OptionDescription("Allows using file metadata cache for the case when required metadata is absent in the Metastore. " +
-          "This option is not active for now. Default is true. (Drill 1.17+)"));
+          "Default is true. (Drill 1.17+)"));
 
   /**
    * Option for specifying the number of attempts for retrying query planning after detecting that query metadata is changed.
    */
-  public static final String METASTORE_RETRIVAL_RETRY_ATTEMPTS = "metastore.retrival.retry_attempts";
-  public static final IntegerValidator METASTORE_RETRIVAL_RETRY_ATTEMPTS_VALIDATOR = new IntegerValidator(METASTORE_RETRIVAL_RETRY_ATTEMPTS,
+  public static final String METASTORE_RETRIEVAL_RETRY_ATTEMPTS = "metastore.retrieval.retry_attempts";
+  public static final IntegerValidator METASTORE_RETRIEVAL_RETRY_ATTEMPTS_VALIDATOR = new IntegerValidator(METASTORE_RETRIEVAL_RETRY_ATTEMPTS,
       new OptionDescription("Specifies the number of attempts for retrying query planning after detecting that query metadata is changed. " +
           "If the number of retries was exceeded, query will be planned without metadata information from the Metastore. " +
-          "This option is not active for now. Default is 5. (Drill 1.17+)"));
+          "Default is 5. (Drill 1.17+)"));
 
   public static final String PARQUET_READER_ENABLE_MAP_SUPPORT = "store.parquet.reader.enable_map_support";
   public static final BooleanValidator PARQUET_READER_ENABLE_MAP_SUPPORT_VALIDATOR = new BooleanValidator(

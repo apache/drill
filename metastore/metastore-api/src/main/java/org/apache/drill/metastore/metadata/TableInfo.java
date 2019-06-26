@@ -17,6 +17,11 @@
  */
 package org.apache.drill.metastore.metadata;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.apache.drill.metastore.components.tables.TableMetadataUnit;
 import org.apache.drill.metastore.expressions.FilterExpression;
 
@@ -26,6 +31,8 @@ import java.util.StringJoiner;
 /**
  * General table information.
  */
+@JsonTypeName("tableInfo")
+@JsonDeserialize(builder = TableInfo.TableInfoBuilder.class)
 public class TableInfo {
   public static final String UNKNOWN = "UNKNOWN";
   public static final TableInfo UNKNOWN_TABLE_INFO = TableInfo.builder()
@@ -54,22 +61,27 @@ public class TableInfo {
     this.owner = builder.owner;
   }
 
+  @JsonProperty
   public String storagePlugin() {
     return storagePlugin;
   }
 
+  @JsonProperty
   public String workspace() {
     return workspace;
   }
 
+  @JsonProperty
   public String name() {
     return name;
   }
 
+  @JsonProperty
   public String type() {
     return type;
   }
 
+  @JsonProperty
   public String owner() {
     return owner;
   }
@@ -125,6 +137,7 @@ public class TableInfo {
     return new TableInfoBuilder();
   }
 
+  @JsonPOJOBuilder(withPrefix = "")
   public static class TableInfoBuilder {
     private String storagePlugin;
     private String workspace;

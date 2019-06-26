@@ -41,6 +41,8 @@ import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.metastore.statistics.ColumnStatistics;
 import org.apache.drill.exec.expr.FilterPredicate;
 import org.apache.drill.exec.expr.StatisticsProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -50,7 +52,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class FilterEvaluatorUtils {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FilterEvaluatorUtils.class);
+  private static final Logger logger = LoggerFactory.getLogger(FilterEvaluatorUtils.class);
 
   private FilterEvaluatorUtils() {
   }
@@ -60,7 +62,7 @@ public class FilterEvaluatorUtils {
                                      int rowGroupIndex, OptionManager options, FragmentContext fragmentContext) {
     // Specifies type arguments explicitly to avoid compilation error caused by JDK-8066974
     List<SchemaPath> schemaPathsInExpr = new ArrayList<>(
-            expr.<Set<SchemaPath>, Void, RuntimeException>accept(new FieldReferenceFinder(), null));
+            expr.<Set<SchemaPath>, Void, RuntimeException>accept(FilterEvaluatorUtils.FieldReferenceFinder.INSTANCE, null));
 
     RowGroupMetadata rowGroupMetadata = new ArrayList<>(ParquetTableMetadataUtils.getRowGroupsMetadata(footer).values()).get(rowGroupIndex);
     NonInterestingColumnsMetadata nonInterestingColumnsMetadata = ParquetTableMetadataUtils.getNonInterestingColumnsMeta(footer);
@@ -128,6 +130,9 @@ public class FilterEvaluatorUtils {
    * Search through a LogicalExpression, finding all internal schema path references and returning them in a set.
    */
   public static class FieldReferenceFinder extends AbstractExprVisitor<Set<SchemaPath>, Void, RuntimeException> {
+
+    public static final FieldReferenceFinder INSTANCE = new FieldReferenceFinder();
+
     @Override
     public Set<SchemaPath> visitSchemaPath(SchemaPath path, Void value) {
       Set<SchemaPath> set = new HashSet<>();

@@ -82,6 +82,8 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
       drillTable.getMetadataProviderManager().setSchemaProvider(schemaProvider);
     });
 
+  public static final String SCHEMA_SEPARATOR = ".";
+
   protected final List<String> schemaPath;
   protected final String name;
 
@@ -113,7 +115,7 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
   }
 
   public String getFullSchemaName() {
-    return Joiner.on(".").join(schemaPath);
+    return Joiner.on(SCHEMA_SEPARATOR).join(schemaPath);
   }
 
   public abstract String getTypeName();

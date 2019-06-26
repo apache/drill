@@ -46,8 +46,10 @@
      ]
     },
     {className: "Max", funcName: "max", types: [
+      {inputType: "Bit", outputType: "NullableBit", runningType: "Bit", major: "Numeric"},
       {inputType: "Int", outputType: "NullableInt", runningType: "Int", major: "Numeric"},
       {inputType: "BigInt", outputType: "NullableBigInt", runningType: "BigInt", major: "Numeric"},
+      {inputType: "NullableBit", outputType: "NullableBit", runningType: "Bit", major: "Numeric"},
       {inputType: "NullableInt", outputType: "NullableInt", runningType: "Int", major: "Numeric"},
       {inputType: "NullableBigInt", outputType: "NullableBigInt", runningType: "BigInt", major: "Numeric"},
       {inputType: "Float4", outputType: "NullableFloat4", runningType: "Float4", major: "Numeric"},

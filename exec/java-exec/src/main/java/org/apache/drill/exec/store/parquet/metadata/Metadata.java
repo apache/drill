@@ -109,7 +109,8 @@ public class Metadata {
    * @param allColumnsInteresting if set, store column metadata for all the columns
    * @param columnSet Set of columns for which column metadata has to be stored
    */
-  public static void createMeta(FileSystem fs, Path path, ParquetReaderConfig readerConfig, boolean allColumnsInteresting, Set<String> columnSet) throws IOException {
+  public static void createMeta(FileSystem fs, Path path, ParquetReaderConfig readerConfig,
+      boolean allColumnsInteresting, Set<SchemaPath> columnSet) throws IOException {
     Metadata metadata = new Metadata(readerConfig);
     metadata.createMetaFilesRecursivelyAsProcessUser(path, fs, allColumnsInteresting, columnSet, false );
   }
@@ -123,7 +124,7 @@ public class Metadata {
    *
    * @return parquet table metadata
    */
-  public static ParquetTableMetadata_v4 getParquetTableMetadata(FileSystem fs, String path, ParquetReaderConfig readerConfig) throws IOException {
+  public static ParquetTableMetadata_v4 getParquetTableMetadata(FileSystem fs, Path path, ParquetReaderConfig readerConfig) throws IOException {
     Metadata metadata = new Metadata(readerConfig);
     return metadata.getParquetTableMetadata(path, fs);
   }
@@ -219,8 +220,8 @@ public class Metadata {
    *         {@code path} directory).
    * @throws IOException if parquet metadata can't be serialized and written to the json file
    */
-  private Pair<ParquetTableMetadata_v4, ParquetTableMetadataDirs>
-  createMetaFilesRecursivelyAsProcessUser(final Path path, FileSystem fs, boolean allColumnsInteresting, Set<String> columnSet, boolean autoRefreshTriggered)
+  private Pair<ParquetTableMetadata_v4, ParquetTableMetadataDirs> createMetaFilesRecursivelyAsProcessUser(
+      Path path, FileSystem fs, boolean allColumnsInteresting, Set<SchemaPath> columnSet, boolean autoRefreshTriggered)
     throws IOException {
 
     final FileSystem processUserFileSystem = ImpersonationUtil.createFileSystem(ImpersonationUtil.getProcessUserName(),
@@ -251,7 +252,8 @@ public class Metadata {
    *         {@code path} directory).
    * @throws IOException if parquet metadata can't be serialized and written to the json file
    */
-  private Pair<ParquetTableMetadata_v4, ParquetTableMetadataDirs> createMetaFilesRecursively(final Path path, FileSystem fs, boolean allColumnsInteresting, Set<String> columnSet) throws IOException {
+  private Pair<ParquetTableMetadata_v4, ParquetTableMetadataDirs> createMetaFilesRecursively(
+      Path path, FileSystem fs, boolean allColumnsInteresting, Set<SchemaPath> columnSet) throws IOException {
     Stopwatch timer = logger.isDebugEnabled() ? Stopwatch.createStarted() : null;
     List<ParquetFileMetadata_v4> metaDataList = Lists.newArrayList();
     List<Path> directoryList = Lists.newArrayList();
@@ -363,15 +365,15 @@ public class Metadata {
    * @return metadata object for an entire parquet directory structure
    * @throws IOException in case of problems during accessing files
    */
-  private ParquetTableMetadata_v4 getParquetTableMetadata(String path, FileSystem fs) throws IOException {
-    Path p = new Path(path);
-    FileStatus fileStatus = fs.getFileStatus(p);
+  private ParquetTableMetadata_v4 getParquetTableMetadata(Path path, FileSystem fs) throws IOException {
+    FileStatus fileStatus = fs.getFileStatus(path);
     Stopwatch watch = logger.isDebugEnabled() ? Stopwatch.createStarted() : null;
     List<FileStatus> fileStatuses = new ArrayList<>();
     if (fileStatus.isFile()) {
       fileStatuses.add(fileStatus);
     } else {
-      fileStatuses.addAll(DrillFileSystemUtil.listFiles(fs, p, true));
+      // the thing we need!?
+      fileStatuses.addAll(DrillFileSystemUtil.listFiles(fs, path, true));
     }
     if (watch != null) {
       logger.debug("Took {} ms to get file statuses", watch.elapsed(TimeUnit.MILLISECONDS));
@@ -426,8 +428,9 @@ public class Metadata {
    * @return list of the parquet file metadata with absolute paths
    * @throws IOException is thrown in case of issues while executing the list of runnables
    */
-  private List<ParquetFileAndRowCountMetadata> getParquetFileMetadata_v4(ParquetTableMetadata_v4 parquetTableMetadata_v4, Map<FileStatus, FileSystem> fileStatusMap, boolean allColumnsInteresting, Set<String> columnSet) throws IOException {
-      return TimedCallable.run("Fetch parquet metadata", logger,
+  private List<ParquetFileAndRowCountMetadata> getParquetFileMetadata_v4(ParquetTableMetadata_v4 parquetTableMetadata_v4,
+      Map<FileStatus, FileSystem> fileStatusMap, boolean allColumnsInteresting, Set<SchemaPath> columnSet) throws IOException {
+    return TimedCallable.run("Fetch parquet metadata", logger,
         Collectors.toList(fileStatusMap,
             (fileStatus, fileSystem) -> new MetadataGatherer(parquetTableMetadata_v4, fileStatus, fileSystem, allColumnsInteresting, columnSet)),
         16
@@ -443,9 +446,10 @@ public class Metadata {
     private final FileStatus fileStatus;
     private final FileSystem fs;
     private final boolean allColumnsInteresting;
-    private final Set<String> columnSet;
+    private final Set<SchemaPath> columnSet;
 
-    MetadataGatherer(ParquetTableMetadata_v4 parquetTableMetadata, FileStatus fileStatus, FileSystem fs, boolean allColumnsInteresting, Set<String> columnSet) {
+    MetadataGatherer(ParquetTableMetadata_v4 parquetTableMetadata, FileStatus fileStatus, FileSystem fs,
+        boolean allColumnsInteresting, Set<SchemaPath> columnSet) {
       this.parquetTableMetadata = parquetTableMetadata;
       this.fileStatus = fileStatus;
       this.fs = fs;
@@ -465,11 +469,10 @@ public class Metadata {
 
   // A private version of the following static method, with no footer given
   private ParquetFileAndRowCountMetadata getParquetFileMetadata_v4(ParquetTableMetadata_v4 parquetTableMetadata,
-                                                           final FileStatus file, final FileSystem fs,
-                                                           boolean allColumnsInteresting, Set<String> columnSet,
-                                                           ParquetReaderConfig readerConfig)
-    throws IOException, InterruptedException {
-    return getParquetFileMetadata_v4(parquetTableMetadata, null /* no footer */, file, fs, allColumnsInteresting, false, columnSet, readerConfig);
+      FileStatus file, final FileSystem fs, boolean allColumnsInteresting, Set<SchemaPath> columnSet, ParquetReaderConfig readerConfig)
+      throws IOException, InterruptedException {
+    return getParquetFileMetadata_v4(parquetTableMetadata, null /* no footer */,
+        file, fs, allColumnsInteresting, false, columnSet, readerConfig);
   }
   /**
    * Get the file metadata for a single file
@@ -489,7 +492,7 @@ public class Metadata {
                                                                          FileSystem fs,
                                                                          boolean allColumnsInteresting,
                                                                          boolean skipNonInteresting,
-                                                                         Set<String> columnSet,
+                                                                         Set<SchemaPath> columnSet,
                                                                          ParquetReaderConfig readerConfig)
     throws IOException, InterruptedException {
     ParquetMetadata metadata = footer; // if a non-null footer is given, no need to read it again from the file
@@ -640,15 +643,15 @@ public class Metadata {
     }
   }
 
-  private Set<String> getInterestingColumns(FileSystem fs, Path metadataParentDir, boolean autoRefreshTriggered) {
+  private Set<SchemaPath> getInterestingColumns(FileSystem fs, Path metadataParentDir, boolean autoRefreshTriggered) {
     Metadata_V4.MetadataSummary metadataSummary = getSummary(fs, metadataParentDir, autoRefreshTriggered, null);
     if (metadataSummary == null) {
       return null;
     } else {
-      Set<String> interestingColumns = new HashSet<>();
+      Set<SchemaPath> interestingColumns = new HashSet<>();
       for (ColumnTypeMetadata_v4 columnTypeMetadata_v4: metadataSummary.columnTypeInfo.values()) {
         if (columnTypeMetadata_v4.isInteresting) {
-          interestingColumns.add(String.join("", columnTypeMetadata_v4.name));
+          interestingColumns.add(SchemaPath.getSimplePath(SchemaPath.getCompoundPath(columnTypeMetadata_v4.name).getRootSegmentPath()));
         }
       }
       return interestingColumns;

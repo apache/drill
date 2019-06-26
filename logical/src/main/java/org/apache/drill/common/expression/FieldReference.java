@@ -42,17 +42,19 @@ public class FieldReference extends SchemaPath {
 
   public FieldReference(SchemaPath sp) {
     super(sp);
-    checkData();
-  }
-
-  private void checkData() {
-    if (getRootSegment().getChild() != null) {
-      throw new UnsupportedOperationException("Field references must be singular names.");
-    }
   }
 
   public FieldReference(CharSequence value) {
     this(value, ExpressionPosition.UNKNOWN);
+  }
+
+  public FieldReference(CharSequence value, ExpressionPosition pos) {
+    super(new NameSegment(value), pos);
+  }
+
+  public FieldReference(String value, ExpressionPosition pos, MajorType dataType) {
+    this(value, pos);
+    this.overrideType = dataType;
   }
 
   /**
@@ -63,25 +65,8 @@ public class FieldReference extends SchemaPath {
    * @param safeString the unquoted field reference
    * @return the field reference expression
    */
-
   public static FieldReference getWithQuotedRef(CharSequence safeString) {
-    return new FieldReference(safeString, ExpressionPosition.UNKNOWN, false);
-  }
-
-  public FieldReference(CharSequence value, ExpressionPosition pos) {
-    this(value, pos, true);
-  }
-
-  public FieldReference(CharSequence value, ExpressionPosition pos, boolean check) {
-    super(new NameSegment(value), pos);
-    if (check) {
-      checkData();
-    }
-  }
-
-  public FieldReference(String value, ExpressionPosition pos, MajorType dataType) {
-    this(value, pos);
-    this.overrideType = dataType;
+    return new FieldReference(safeString, ExpressionPosition.UNKNOWN);
   }
 
   @Override
@@ -105,7 +90,7 @@ public class FieldReference extends SchemaPath {
         JsonProcessingException {
       String ref = this._parseString(jp, ctxt);
       ref = ref.replace("`", "");
-      return new FieldReference(ref, ExpressionPosition.UNKNOWN, true);
+      return new FieldReference(ref, ExpressionPosition.UNKNOWN);
     }
   }
 

@@ -24,6 +24,7 @@ import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.store.dfs.ReadEntryWithPath;
 import org.apache.hadoop.fs.Path;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -44,4 +45,7 @@ public interface ParquetFileTableMetadataProviderBuilder extends TableMetadataPr
   ParquetFileTableMetadataProviderBuilder withCorrectCorruptedDates(boolean autoCorrectCorruptedDates);
 
   ParquetFileTableMetadataProviderBuilder withSelection(FileSelection selection);
+
+  @Override
+  ParquetTableMetadataProvider build() throws IOException;
 }

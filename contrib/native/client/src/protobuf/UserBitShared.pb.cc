@@ -1034,7 +1034,7 @@ void AddDescriptorsImpl() {
       "ATEMENT\020\005*\207\001\n\rFragmentState\022\013\n\007SENDING\020\000"
       "\022\027\n\023AWAITING_ALLOCATION\020\001\022\013\n\007RUNNING\020\002\022\014"
       "\n\010FINISHED\020\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAILED\020\005\022"
-      "\032\n\026CANCELLATION_REQUESTED\020\006*\242\n\n\020CoreOper"
+      "\032\n\026CANCELLATION_REQUESTED\020\006*\321\n\n\020CoreOper"
       "atorType\022\021\n\rSINGLE_SENDER\020\000\022\024\n\020BROADCAST"
       "_SENDER\020\001\022\n\n\006FILTER\020\002\022\022\n\016HASH_AGGREGATE\020"
       "\003\022\r\n\tHASH_JOIN\020\004\022\016\n\nMERGE_JOIN\020\005\022\031\n\025HASH"
@@ -1067,14 +1067,15 @@ void AddDescriptorsImpl() {
       "\022\023\n\017SYSLOG_SUB_SCAN\020:\022\030\n\024STATISTICS_AGGR"
       "EGATE\020;\022\020\n\014UNPIVOT_MAPS\020<\022\024\n\020STATISTICS_"
       "MERGE\020=\022\021\n\rLTSV_SUB_SCAN\020>\022\022\n\016EXCEL_SUB_"
-      "SCAN\020@\022\020\n\014SHP_SUB_SCAN\020A*g\n\nSaslStatus\022\020"
-      "\n\014SASL_UNKNOWN\020\000\022\016\n\nSASL_START\020\001\022\024\n\020SASL"
-      "_IN_PROGRESS\020\002\022\020\n\014SASL_SUCCESS\020\003\022\017\n\013SASL"
-      "_FAILED\020\004B.\n\033org.apache.drill.exec.proto"
-      "B\rUserBitSharedH\001"
+      "SCAN\020@\022\020\n\014SHP_SUB_SCAN\020A\022\024\n\020METADATA_HAN"
+      "DLER\020B\022\027\n\023METADATA_CONTROLLER\020C*g\n\nSaslS"
+      "tatus\022\020\n\014SASL_UNKNOWN\020\000\022\016\n\nSASL_START\020\001\022"
+      "\024\n\020SASL_IN_PROGRESS\020\002\022\020\n\014SASL_SUCCESS\020\003\022"
+      "\017\n\013SASL_FAILED\020\004B.\n\033org.apache.drill.exe"
+      "c.protoB\rUserBitSharedH\001"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 5697);
+      descriptor, 5744);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "UserBitShared.proto", &protobuf_RegisterTypes);
   ::protobuf_Types_2eproto::AddDescriptors();
@@ -1318,6 +1319,8 @@ bool CoreOperatorType_IsValid(int value) {
     case 62:
     case 64:
     case 65:
+    case 66:
+    case 67:
       return true;
     default:
       return false;

@@ -18,6 +18,7 @@
 package org.apache.drill.metastore.statistics;
 
 import org.apache.drill.metastore.metadata.Metadata;
+import org.apache.drill.metastore.metadata.MetadataType;
 
 import java.util.Collection;
 
@@ -91,6 +92,29 @@ public class TableStatisticsKind<T> extends BaseStatisticsKind<T> implements Col
         @Override
         public Boolean getValue(Metadata metadata) {
           return Boolean.TRUE.equals(metadata.getStatistic(this));
+        }
+      };
+
+  /**
+   * Table statistics kind which represents metadata level for which analyze was produced.
+   */
+  public static final TableStatisticsKind<MetadataType> ANALYZE_METADATA_LEVEL =
+      new TableStatisticsKind<MetadataType>("analyzeMetadataLevel", false) {
+        @Override
+        public MetadataType mergeStatistics(Collection<? extends Metadata> statisticsList) {
+          MetadataType maxMetadataType = MetadataType.ALL;
+          for (Metadata statistics : statisticsList) {
+            MetadataType metadataType = statistics.getStatistic(this);
+            if (metadataType != null && metadataType.compareTo(maxMetadataType) < 0) {
+              maxMetadataType = metadataType;
+            }
+          }
+          return maxMetadataType;
+        }
+
+        @Override
+        public MetadataType getValue(Metadata metadata) {
+          return metadata.getStatistic(this);
         }
       };
 

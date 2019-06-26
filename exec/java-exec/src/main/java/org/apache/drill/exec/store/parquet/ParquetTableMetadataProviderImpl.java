@@ -172,7 +172,7 @@ public class ParquetTableMetadataProviderImpl extends BaseParquetMetadataProvide
           }
         }
         if (!usedMetadataCache) {
-          parquetTableMetadata = Metadata.getParquetTableMetadata(processUserFileSystem, p.toString(), readerConfig);
+          parquetTableMetadata = Metadata.getParquetTableMetadata(processUserFileSystem, p, readerConfig);
         }
       } else {
         Path p = Path.getPathWithoutSchemeAndAuthority(selectionRoot);

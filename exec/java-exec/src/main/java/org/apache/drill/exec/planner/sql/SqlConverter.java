@@ -35,6 +35,7 @@ import org.apache.drill.exec.planner.sql.parser.DrillParserUtil;
 import org.apache.drill.exec.planner.sql.parser.impl.DrillSqlParseException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.metastore.MetadataProviderManager;
+import org.apache.drill.exec.planner.types.DrillRelDataTypeSystem;
 import org.apache.drill.metastore.metadata.TableMetadataProvider;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.logical.LogicalProject;
@@ -60,7 +61,6 @@ import org.apache.calcite.rel.RelCollationTraitDef;
 import org.apache.calcite.rel.RelRoot;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
-import org.apache.calcite.rel.type.RelDataTypeSystemImpl;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
@@ -86,7 +86,6 @@ import org.apache.calcite.tools.RelBuilderFactory;
 import org.apache.calcite.util.Util;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.ops.QueryContext;
@@ -103,14 +102,14 @@ import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
 import org.apache.drill.exec.store.ColumnExplorer;
 import org.apache.drill.exec.util.DecimalUtility;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Class responsible for managing parsing, validation and toRel conversion for sql statements.
  */
 public class SqlConverter {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SqlConverter.class);
-
-  private static DrillTypeSystem DRILL_TYPE_SYSTEM = new DrillTypeSystem();
+  private static final Logger logger = LoggerFactory.getLogger(SqlConverter.class);
 
   private final JavaTypeFactory typeFactory;
   private final SqlParser.Config parserConfig;
@@ -153,7 +152,7 @@ public class SqlConverter {
     this.sqlToRelConverterConfig = new SqlToRelConverterConfig();
     this.isInnerQuery = false;
     this.isExpandedView = false;
-    this.typeFactory = new JavaTypeFactoryImpl(DRILL_TYPE_SYSTEM);
+    this.typeFactory = new JavaTypeFactoryImpl(DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM);
     this.defaultSchema = context.getNewDefaultSchema();
     this.rootSchema = rootSchema(defaultSchema);
     this.temporarySchema = context.getConfig().getString(ExecConstants.DEFAULT_TEMPORARY_WORKSPACE);
@@ -359,38 +358,6 @@ public class SqlConverter {
         }
         tempNode.setNames(temporaryTableNames, poses);
       }
-    }
-  }
-
-  private static class DrillTypeSystem extends RelDataTypeSystemImpl {
-
-    @Override
-    public int getDefaultPrecision(SqlTypeName typeName) {
-      switch (typeName) {
-      case CHAR:
-      case BINARY:
-      case VARCHAR:
-      case VARBINARY:
-        return Types.MAX_VARCHAR_LENGTH;
-      default:
-        return super.getDefaultPrecision(typeName);
-      }
-    }
-
-    @Override
-    public int getMaxNumericScale() {
-      return 38;
-    }
-
-    @Override
-    public int getMaxNumericPrecision() {
-      return 38;
-    }
-
-    @Override
-    public boolean isSchemaCaseSensitive() {
-      // Drill uses case-insensitive and case-preserve policy
-      return false;
     }
   }
 

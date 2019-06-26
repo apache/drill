@@ -93,7 +93,15 @@ public interface TableMetadataProvider {
 
   /**
    * Returns {@link NonInterestingColumnsMetadata} instance which provides metadata for non-interesting columns.
+   *
    * @return {@link NonInterestingColumnsMetadata} instance
    */
   NonInterestingColumnsMetadata getNonInterestingColumnsMetadata();
+
+  /**
+   * Whether metadata actuality should be checked.
+   *
+   * @return true if metadata actuality should be checked
+   */
+  boolean checkMetadataVersion();
 }

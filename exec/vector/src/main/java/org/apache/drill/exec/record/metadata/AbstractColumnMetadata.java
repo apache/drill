@@ -85,16 +85,16 @@ public abstract class AbstractColumnMetadata extends AbstractPropertied implemen
     this.name = name;
     type = majorType.getMinorType();
     mode = majorType.getMode();
-    precision = majorType.getPrecision();
-    scale = majorType.getScale();
+    precision = majorType.hasPrecision() ? majorType.getPrecision() : -1;
+    scale = majorType.hasScale() ? majorType.getScale() : -1;
   }
 
   public AbstractColumnMetadata(String name, MinorType type, DataMode mode) {
     this.name = name;
     this.type = type;
     this.mode = mode;
-    precision = 0;
-    scale = 0;
+    precision = -1;
+    scale = -1;
   }
 
   public AbstractColumnMetadata(AbstractColumnMetadata from) {
@@ -182,11 +182,23 @@ public abstract class AbstractColumnMetadata extends AbstractPropertied implemen
   @Override
   public void setExpectedWidth(int width) { }
 
+  /**
+   * Returns precision for current column. For the case when precision is not set
+   * or column type does not support precision, negative value will be returned.
+   *
+   * @return precision for current column
+   */
   @Override
-  public int precision() { return 0; }
+  public int precision() { return -1; }
 
+  /**
+   * Returns scale for current column. For the case when scale is not set
+   * or column type does not support scale, negative value will be returned.
+   *
+   * @return scale for current column
+   */
   @Override
-  public int scale() { return 0; }
+  public int scale() { return -1; }
 
   @Override
   public void setExpectedElementCount(int childCount) {

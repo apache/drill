@@ -58,7 +58,7 @@ public class FileMetadataCollector {
   private final FileSystem fs;
   private final boolean allColumnsInteresting;
   private final boolean skipNonInteresting;
-  private final Set<String> columnSet;
+  private final Set<SchemaPath> columnSet;
 
   private final MessageType schema;
   private final ParquetReaderUtility.DateCorruptionStatus containsCorruptDates;
@@ -74,7 +74,7 @@ public class FileMetadataCollector {
                                FileSystem fs,
                                boolean allColumnsInteresting,
                                boolean skipNonInteresting,
-                               Set<String> columnSet,
+                               Set<SchemaPath> columnSet,
                                ParquetReaderConfig readerConfig) throws IOException {
     this.metadata = metadata;
     this.file = file;
@@ -165,7 +165,8 @@ public class FileMetadataCollector {
                                  PrimitiveType.PrimitiveTypeName primitiveTypeName,
                                  List<Metadata_V4.ColumnMetadata_v4> columnMetadataList) {
     SchemaPath columnSchemaName = SchemaPath.getCompoundPath(columnName);
-    boolean thisColumnIsInteresting = allColumnsInteresting || columnSet == null || columnSet.contains(columnSchemaName.getRootSegmentPath());
+    boolean thisColumnIsInteresting = allColumnsInteresting || columnSet == null
+        || columnSet.contains(SchemaPath.getSimplePath(columnSchemaName.getRootSegmentPath()));
 
     if (skipNonInteresting && !thisColumnIsInteresting) {
       return;

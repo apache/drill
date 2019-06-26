@@ -161,6 +161,8 @@ public class ${aggrtype.className}Functions {
       value.value = Float.NaN;
       <#elseif type.runningType?starts_with("Float8")>
       value.value = Double.NaN;
+      <#elseif type.runningType?starts_with("Bit")>
+      value.value = 1;
       </#if>
     <#elseif aggrtype.funcName == "max">
       <#if type.runningType?starts_with("Int")>
@@ -171,6 +173,8 @@ public class ${aggrtype.className}Functions {
       value.value = -Float.MAX_VALUE;
       <#elseif type.runningType?starts_with("Float8")>
       value.value = -Double.MAX_VALUE;
+      <#elseif type.runningType?starts_with("Bit")>
+      value.value = 0;
       </#if>
     </#if>
     }

@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 /**
@@ -64,6 +65,43 @@ public class BaseTableMetadata extends BaseMetadata implements TableMetadata {
   }
 
   @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    if (!super.equals(o)) {
+      return false;
+    }
+    BaseTableMetadata that = (BaseTableMetadata) o;
+    return Objects.equals(location, that.location)
+        && Objects.equals(partitionKeys, that.partitionKeys)
+        && Objects.equals(interestingColumns, that.interestingColumns);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(super.hashCode(), location, partitionKeys, interestingColumns);
+  }
+
+  @Override
+  public String toString() {
+    return new StringJoiner(",\n", BaseTableMetadata.class.getSimpleName() + "[\n", "]")
+        .add("location=" + location)
+        .add("partitionKeys=" + partitionKeys)
+        .add("interestingColumns=" + interestingColumns)
+        .add("tableInfo=" + tableInfo)
+        .add("metadataInfo=" + metadataInfo)
+        .add("schema=" + schema)
+        .add("columnsStatistics=" + columnsStatistics)
+        .add("metadataStatistics=" + metadataStatistics)
+        .add("lastModifiedTime=" + lastModifiedTime)
+        .toString();
+  }
+
+  @Override
   @SuppressWarnings("unchecked")
   public BaseTableMetadata cloneWithStats(Map<SchemaPath, ColumnStatistics> columnStatistics, List<StatisticsHolder> tableStatistics) {
     Map<String, StatisticsHolder> mergedTableStatistics = new HashMap<>(this.metadataStatistics);
@@ -71,12 +109,18 @@ public class BaseTableMetadata extends BaseMetadata implements TableMetadata {
     // overrides statistics value for the case when new statistics is exact or existing one was estimated
     tableStatistics.stream()
         .filter(statisticsHolder -> statisticsHolder.getStatisticsKind().isExact()
+              || !this.metadataStatistics.containsKey(statisticsHolder.getStatisticsKind().getName())
               || !this.metadataStatistics.get(statisticsHolder.getStatisticsKind().getName()).getStatisticsKind().isExact())
         .forEach(statisticsHolder -> mergedTableStatistics.put(statisticsHolder.getStatisticsKind().getName(), statisticsHolder));
 
     Map<SchemaPath, ColumnStatistics> newColumnsStatistics = new HashMap<>(this.columnsStatistics);
     this.columnsStatistics.forEach(
-        (columnName, value) -> newColumnsStatistics.put(columnName, value.cloneWith(columnStatistics.get(columnName))));
+        (columnName, value) -> {
+          ColumnStatistics sourceStatistics = columnStatistics.get(columnName);
+          if (sourceStatistics != null) {
+            newColumnsStatistics.put(columnName, value.cloneWith(sourceStatistics));
+          }
+        });
 
     return BaseTableMetadata.builder()
         .tableInfo(tableInfo)
@@ -102,6 +146,19 @@ public class BaseTableMetadata extends BaseMetadata implements TableMetadata {
       .map(SchemaPath::toString)
       .collect(Collectors.toList()));
     }
+  }
+
+  public BaseTableMetadataBuilder toBuilder() {
+    return builder()
+        .tableInfo(tableInfo)
+        .metadataInfo(metadataInfo)
+        .location(location)
+        .schema(schema)
+        .columnsStatistics(columnsStatistics)
+        .metadataStatistics(metadataStatistics.values())
+        .lastModifiedTime(lastModifiedTime)
+        .partitionKeys(partitionKeys)
+        .interestingColumns(interestingColumns);
   }
 
   public static BaseTableMetadataBuilder builder() {

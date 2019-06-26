@@ -21,9 +21,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.logical.data.Values;
 import org.apache.drill.common.logical.data.Filter;
@@ -42,6 +40,7 @@ import org.apache.drill.common.logical.data.Store;
 import org.apache.drill.common.logical.data.Union;
 import org.apache.drill.common.logical.data.visitors.AbstractLogicalVisitor;
 
+import org.apache.drill.exec.store.parquet.FilterEvaluatorUtils.FieldReferenceFinder;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
@@ -51,11 +50,8 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
  * can then be used to update scan object to appear to be explicitly fielded for optimization purposes.
  */
 public class ScanFieldDeterminer extends AbstractLogicalVisitor<Void, ScanFieldDeterminer.FieldList, RuntimeException> {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScanFieldDeterminer.class);
 
-  private FieldReferenceFinder finder = new FieldReferenceFinder();
   private Map<Scan, FieldList> scanFields = Maps.newHashMap();
-
 
   public static Map<Scan, FieldList> getFieldLists(LogicalPlan plan){
     Collection<SinkOperator> ops = plan.getGraph().getRoots();
@@ -121,10 +117,10 @@ public class ScanFieldDeterminer extends AbstractLogicalVisitor<Void, ScanFieldD
   public Void visitGroupingAggregate(GroupingAggregate groupBy, FieldList value) {
     FieldList list = new FieldList();
     for (NamedExpression e : groupBy.getExprs()) {
-      list.addProjected(e.getExpr().accept(finder, null));
+      list.addProjected(e.getExpr().accept(FieldReferenceFinder.INSTANCE, null));
     }
     for (NamedExpression e : groupBy.getKeys()) {
-      list.addProjected(e.getExpr().accept(finder, null));
+      list.addProjected(e.getExpr().accept(FieldReferenceFinder.INSTANCE, null));
     }
     groupBy.getInput().accept(this, list);
     return null;
@@ -132,7 +128,7 @@ public class ScanFieldDeterminer extends AbstractLogicalVisitor<Void, ScanFieldD
 
   @Override
   public Void visitFilter(Filter filter, FieldList value) {
-    value.addReferenced(filter.getExpr().accept(finder, null));
+    value.addReferenced(filter.getExpr().accept(FieldReferenceFinder.INSTANCE, null));
     return null;
   }
 
@@ -140,7 +136,7 @@ public class ScanFieldDeterminer extends AbstractLogicalVisitor<Void, ScanFieldD
   public Void visitProject(Project project, FieldList value) {
     FieldList fl = new FieldList();
     for (NamedExpression e : project.getSelections()) {
-      fl.addProjected(e.getExpr().accept(finder, null));
+      fl.addProjected(e.getExpr().accept(FieldReferenceFinder.INSTANCE, null));
     }
     return null;
   }
@@ -153,7 +149,7 @@ public class ScanFieldDeterminer extends AbstractLogicalVisitor<Void, ScanFieldD
   @Override
   public Void visitOrder(Order order, FieldList fl) {
     for (Ordering o : order.getOrderings()) {
-      fl.addReferenced(o.getExpr().accept(finder, null));
+      fl.addReferenced(o.getExpr().accept(FieldReferenceFinder.INSTANCE, null));
     }
     return null;
   }
@@ -163,7 +159,7 @@ public class ScanFieldDeterminer extends AbstractLogicalVisitor<Void, ScanFieldD
     {
       FieldList leftList = fl.clone();
       for (JoinCondition c : join.getConditions()) {
-        leftList.addReferenced(c.getLeft().accept(finder, null));
+        leftList.addReferenced(c.getLeft().accept(FieldReferenceFinder.INSTANCE, null));
       }
       join.getLeft().accept(this, leftList);
     }
@@ -171,7 +167,7 @@ public class ScanFieldDeterminer extends AbstractLogicalVisitor<Void, ScanFieldD
     {
       FieldList rightList = fl.clone();
       for (JoinCondition c : join.getConditions()) {
-        rightList.addReferenced(c.getRight().accept(finder, null));
+        rightList.addReferenced(c.getRight().accept(FieldReferenceFinder.INSTANCE, null));
       }
       join.getLeft().accept(this, rightList);
     }
@@ -190,29 +186,5 @@ public class ScanFieldDeterminer extends AbstractLogicalVisitor<Void, ScanFieldD
       o.accept(this, value.clone());
     }
     return null;
-  }
-
-
-  /**
-   * Search through a LogicalExpression, finding all internal schema path references and returning them in a set.
-   */
-  private class FieldReferenceFinder extends AbstractExprVisitor<Set<SchemaPath>, Void, RuntimeException> {
-
-    @Override
-    public Set<SchemaPath> visitSchemaPath(SchemaPath path, Void value) {
-      Set<SchemaPath> set = Sets.newHashSet();
-      set.add(path);
-      return set;
-    }
-
-    @Override
-    public Set<SchemaPath> visitUnknown(LogicalExpression e, Void value) {
-      Set<SchemaPath> paths = Sets.newHashSet();
-      for (LogicalExpression ex : e) {
-        paths.addAll(ex.accept(this, null));
-      }
-      return paths;
-    }
-
   }
 }

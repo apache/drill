@@ -35,7 +35,7 @@ import org.apache.drill.exec.expr.holders.VarCharHolder;
  */
 public class AggregateErrorFunctions {
 
-  @FunctionTemplate(names = {"sum", "max", "avg", "stddev_pop", "stddev_samp", "stddev", "var_pop",
+  @FunctionTemplate(names = {"sum", "avg", "stddev_pop", "stddev_samp", "stddev", "var_pop",
       "var_samp", "variance"}, scope = FunctionTemplate.FunctionScope.POINT_AGGREGATE)
   public static class BitAggregateErrorFunctions implements DrillAggFunc {
 
@@ -65,7 +65,7 @@ public class AggregateErrorFunctions {
 
   }
 
-  @FunctionTemplate(names = {"sum", "max", "avg", "stddev_pop", "stddev_samp", "stddev", "var_pop",
+  @FunctionTemplate(names = {"sum", "avg", "stddev_pop", "stddev_samp", "stddev", "var_pop",
       "var_samp", "variance"}, scope = FunctionTemplate.FunctionScope.POINT_AGGREGATE)
   public static class NullableBitAggregateErrorFunctions implements DrillAggFunc {
 
