@@ -21,7 +21,6 @@ import javax.inject.Named;
 
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.physical.config.MergeJoinPOP;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.calcite.rel.core.JoinRelType;
 
@@ -41,7 +40,7 @@ public abstract class JoinTemplate implements JoinWorker {
    * @return  true of join succeeded; false if the worker needs to be regenerated
    */
   public final boolean doJoin(final JoinStatus status) {
-    final boolean isLeftJoin = (((MergeJoinPOP)status.outputBatch.getPopConfig()).getJoinType() == JoinRelType.LEFT);
+    final boolean isLeftJoin = status.outputBatch.getPopConfig().getJoinType() == JoinRelType.LEFT;
     status.setHasMoreData(false);
     while (!status.isOutgoingBatchFull()) {
       if (status.right.finished()) {

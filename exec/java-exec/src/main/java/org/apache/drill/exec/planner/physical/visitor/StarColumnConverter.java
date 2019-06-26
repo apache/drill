@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.calcite.rel.rules.ProjectRemoveRule;
 import org.apache.drill.exec.planner.StarColumnHelper;
+import org.apache.drill.exec.planner.physical.MetadataControllerPrel;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.ProjectAllowDupPrel;
 import org.apache.drill.exec.planner.physical.ProjectPrel;
@@ -154,7 +155,7 @@ public class StarColumnConverter extends BasePrelVisitor<Prel, Void, RuntimeExce
     // when the project expression is RexInPutRef, since we may insert a PAS which will
     // rename the projected fields.
 
-    RelNode child = ((Prel) prel.getInput(0)).accept(this, null);
+    Prel child = ((Prel) prel.getInput(0)).accept(this, null);
 
     List<String> fieldNames = Lists.newArrayList();
 
@@ -176,7 +177,7 @@ public class StarColumnConverter extends BasePrelVisitor<Prel, Void, RuntimeExce
     ProjectPrel newProj = (ProjectPrel) prel.copy(prel.getTraitSet(), child, prel.getProjects(), rowType);
 
     if (ProjectRemoveRule.isTrivial(newProj)) {
-      return (Prel) child;
+      return child;
     } else {
       return newProj;
     }
@@ -184,6 +185,10 @@ public class StarColumnConverter extends BasePrelVisitor<Prel, Void, RuntimeExce
 
   @Override
   public Prel visitPrel(Prel prel, Void value) throws RuntimeException {
+    if (prel instanceof MetadataControllerPrel) {
+      // disallow renaming projections for analyze command
+      return prel;
+    }
     // Require prefix rename : there exists other expression, in addition to a star column.
     if (!prefixedForStar  // not set yet.
         && StarColumnHelper.containsStarColumn(prel.getRowType())

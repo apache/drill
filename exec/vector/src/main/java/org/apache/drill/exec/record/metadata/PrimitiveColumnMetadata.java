@@ -166,26 +166,16 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
 
   @Override
   public MajorType majorType() {
-
-    // Set the precision for all types. Some (naive) code in Drill
-    // checks if precision is set as a way to determine if the precision
-    // is non-zero. (DRILL-7308)
-    //
-    // If we try to set the precision only if non-zero, then other code
-    // fails, such as the TPC-H SF1 customer table test in the Functional
-    // test suite.
-    //
-    // So, the protocol is: if a type might use precision (DECIMAL, VARCHAR),
-    // the precision should be set, even if zero. Code that wants to know if
-    // the precision is zero should check for the zero value, it should NOT
-    // check if the precision is set or not.
-
-    return MajorType.newBuilder()
+    MajorType.Builder builder = MajorType.newBuilder()
         .setMinorType(type)
-        .setMode(mode)
-        .setPrecision(precision)
-        .setScale(scale)
-        .build();
+        .setMode(mode);
+    if (precision >= 0) {
+      builder.setPrecision(precision);
+    }
+    if (scale >= 0) {
+      builder.setScale(scale);
+    }
+    return builder.build();
   }
 
   @Override
@@ -227,9 +217,9 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
         builder.append(type.name());
     }
 
-    if (precision() > 0) {
+    if (precision() >= 0) {
       builder.append("(").append(precision());
-      if (scale() > 0) {
+      if (scale() >= 0) {
         builder.append(", ").append(scale());
       }
       builder.append(")");

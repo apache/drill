@@ -312,7 +312,7 @@ public class FragmentExecutor implements Runnable {
       }
     } catch (InterruptedException e) {
       // Swallow interrupted exceptions since we intentionally interrupt the root when cancelling a query
-      logger.trace("Interruped root: {}", e);
+      logger.trace("Interrupted root: {}", root, e);
     } catch (Throwable t) {
       fail(t);
     } finally {

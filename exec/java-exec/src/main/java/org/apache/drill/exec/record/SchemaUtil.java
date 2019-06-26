@@ -17,9 +17,12 @@
  */
 package org.apache.drill.exec.record;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -29,6 +32,7 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.OperatorContext;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.metadata.TupleSchema;
@@ -186,5 +190,33 @@ public class SchemaUtil {
       tuple.add(MetadataUtils.fromView(field));
     }
     return tuple;
+  }
+
+  /**
+   * Returns list of {@link SchemaPath} for fields taken from specified schema.
+   *
+   * @param schema the source of fields to return
+   * @return list of {@link SchemaPath}
+   */
+  public static List<SchemaPath> getSchemaPaths(TupleMetadata schema) {
+    return SchemaUtil.getColumnPaths(schema, null).stream()
+        .map(stringList -> SchemaPath.getCompoundPath(stringList.toArray(new String[0])))
+        .collect(Collectors.toList());
+  }
+
+  private static List<List<String>> getColumnPaths(TupleMetadata schema, List<String> parentNames) {
+    List<List<String>> result = new ArrayList<>();
+    for (ColumnMetadata columnMetadata : schema) {
+      if (columnMetadata.isMap()) {
+        List<String> currentNames = parentNames == null
+            ? new ArrayList<>()
+            : new ArrayList<>(parentNames);
+        currentNames.add(columnMetadata.name());
+        result.addAll(getColumnPaths(columnMetadata.mapSchema(), currentNames));
+      } else {
+        result.add(Collections.singletonList(columnMetadata.name()));
+      }
+    }
+    return result;
   }
 }

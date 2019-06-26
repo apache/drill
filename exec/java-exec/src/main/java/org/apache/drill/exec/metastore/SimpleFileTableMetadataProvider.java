@@ -100,6 +100,11 @@ public class SimpleFileTableMetadataProvider implements TableMetadataProvider {
     return null;
   }
 
+  @Override
+  public boolean checkMetadataVersion() {
+    return false;
+  }
+
   public static class Builder implements SimpleFileTableMetadataProviderBuilder {
     private String tableName;
     private Path location;

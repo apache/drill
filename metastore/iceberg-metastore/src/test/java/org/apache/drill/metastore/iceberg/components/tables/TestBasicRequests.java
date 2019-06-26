@@ -178,6 +178,158 @@ public class TestBasicRequests extends IcebergBaseTest {
   }
 
   @Test
+  public void testSegmentMetadataByMetadataInfosAbsent() {
+    List<SegmentMetadata> segmentMetadata = basicRequests.segmentsMetadata(
+        nationTableInfo,
+        Collections.singletonList(MetadataInfo.builder()
+            .type(MetadataType.SEGMENT)
+            .key("part_int=4")
+            .identifier("part_int=4")
+            .build()));
+    assertTrue(segmentMetadata.isEmpty());
+  }
+
+  @Test
+  public void testSegmentMetadataByMetadataInfosExisting() {
+    List<SegmentMetadata> segmentMetadata = basicRequests.segmentsMetadata(
+        nationTableInfo,
+        Arrays.asList(
+            MetadataInfo.builder()
+                .type(MetadataType.SEGMENT)
+                .key("part_int=3")
+                .identifier("part_int=3/d3")
+                .build(),
+            MetadataInfo.builder()
+                .type(MetadataType.SEGMENT)
+                .key("part_int=3")
+                .identifier("part_int=3/d4")
+                .build())
+        );
+    assertEquals(2, segmentMetadata.size());
+  }
+
+  @Test
+  public void testMetadataUnitsByMetadataInfosAbsent() {
+    List<TableMetadataUnit> segmentMetadata = basicRequests.metadata(
+        nationTableInfo,
+        Collections.singletonList(MetadataInfo.builder()
+            .type(MetadataType.ROW_GROUP)
+            .key("part_int=4")
+            .identifier("part_int=4")
+            .build()));
+    assertTrue(segmentMetadata.isEmpty());
+  }
+
+  @Test
+  public void testMetadataUnitsByMetadataInfosExisting() {
+    List<TableMetadataUnit> segmentMetadata = basicRequests.metadata(
+        nationTableInfo,
+        Arrays.asList(
+            MetadataInfo.builder()
+                .type(MetadataType.SEGMENT)
+                .key("part_int=3")
+                .identifier("part_int=3/d3")
+                .build(),
+            MetadataInfo.builder()
+                .type(MetadataType.SEGMENT)
+                .key("part_int=3")
+                .identifier("part_int=3/d4")
+                .build(),
+            MetadataInfo.builder()
+                .type(MetadataType.PARTITION)
+                .key("part_int=3")
+                .identifier("part_int=4/d5")
+                .build())
+    );
+    assertEquals(2, segmentMetadata.size());
+  }
+
+  @Test
+  public void testFilesMetadataByMetadataInfosAbsent() {
+    List<FileMetadata> segmentMetadata = basicRequests.filesMetadata(
+        nationTableInfo,
+        Collections.singletonList(MetadataInfo.builder()
+            .type(MetadataType.FILE)
+            .key("part_int=4")
+            .identifier("part_int=4/part_varchar=g/0_0_3.parquet")
+            .build()));
+    assertTrue(segmentMetadata.isEmpty());
+  }
+
+  @Test
+  public void testFilesMetadataByMetadataInfosExisting() {
+    List<FileMetadata> segmentMetadata = basicRequests.filesMetadata(
+        nationTableInfo,
+        Arrays.asList(
+            MetadataInfo.builder()
+                .type(MetadataType.FILE)
+                .key("part_int=4")
+                .identifier("part_int=4/part_varchar=g/0_0_0.parquet")
+                .build(),
+            MetadataInfo.builder()
+                .type(MetadataType.FILE)
+                .key("part_int=3")
+                .identifier("part_int=3/part_varchar=g/0_0_1.parquet")
+                .build())
+    );
+    assertEquals(2, segmentMetadata.size());
+  }
+
+  @Test
+  public void testRowGroupsMetadataByMetadataKeysAndPathsAbsent() {
+    List<RowGroupMetadata> segmentMetadata = basicRequests.rowGroupsMetadata(
+        nationTableInfo,
+        Collections.singletonList("part_int=4"),
+        Collections.singletonList("/tmp/nation/part_int=4/part_varchar=g/0_0_3.parquet"));
+    assertTrue(segmentMetadata.isEmpty());
+  }
+
+  @Test
+  public void testRowGroupsByMetadataKeysAndPathsExisting() {
+    List<RowGroupMetadata> segmentMetadata = basicRequests.rowGroupsMetadata(
+        nationTableInfo,
+        Arrays.asList(
+            "part_int=4",
+            "part_int=3"),
+        Arrays.asList(
+            "/tmp/nation/part_int=4/part_varchar=g/0_0_0.parquet",
+            "/tmp/nation/part_int=3/part_varchar=g/0_0_1.parquet")
+    );
+    assertEquals(2, segmentMetadata.size());
+  }
+
+  @Test
+  public void testRowGroupsMetadataByMetadataInfosAbsent() {
+    List<RowGroupMetadata> segmentMetadata = basicRequests.rowGroupsMetadata(
+        nationTableInfo,
+        Collections.singletonList(MetadataInfo.builder()
+            .type(MetadataType.ROW_GROUP)
+            .key("part_int=4")
+            .identifier("part_int=4/part_varchar=g/0_0_3.parquet/1")
+            .build()));
+    assertTrue(segmentMetadata.isEmpty());
+  }
+
+  @Test
+  public void testRowGroupsMetadataByMetadataInfosExisting() {
+    List<RowGroupMetadata> segmentMetadata = basicRequests.rowGroupsMetadata(
+        nationTableInfo,
+        Arrays.asList(
+            MetadataInfo.builder()
+                .type(MetadataType.ROW_GROUP)
+                .key("part_int=4")
+                .identifier("part_int=4/part_varchar=g/0_0_0.parquet/1")
+                .build(),
+            MetadataInfo.builder()
+                .type(MetadataType.ROW_GROUP)
+                .key("part_int=3")
+                .identifier("part_int=3/part_varchar=g/0_0_1.parquet/1")
+                .build())
+    );
+    assertEquals(2, segmentMetadata.size());
+  }
+
+  @Test
   public void testPartitionsMetadataAbsent() {
     List<PartitionMetadata> partitionMetadata = basicRequests.partitionsMetadata(
       nationTableInfo,
@@ -340,6 +492,7 @@ public class TestBasicRequests extends IcebergBaseTest {
 
     TableMetadataUnit nationSegment1 = basicSegment.toBuilder()
       .metadataKey("part_int=3")
+      .metadataIdentifier("part_int=3/d3")
       .location("/tmp/nation/part_int=3/d3")
       .column("n_nation")
       .lastModifiedTime(1L)
@@ -347,6 +500,7 @@ public class TestBasicRequests extends IcebergBaseTest {
 
     TableMetadataUnit nationSegment2 = basicSegment.toBuilder()
       .metadataKey("part_int=3")
+      .metadataIdentifier("part_int=3/d4")
       .location("/tmp/nation/part_int=3/d4")
       .column("n_nation")
       .lastModifiedTime(2L)
@@ -354,6 +508,7 @@ public class TestBasicRequests extends IcebergBaseTest {
 
     TableMetadataUnit nationSegment3 = basicSegment.toBuilder()
       .metadataKey("part_int=4")
+      .metadataIdentifier("part_int=3/d5")
       .location("/tmp/nation/part_int=4/d5")
       .column("n_nation")
       .lastModifiedTime(3L)
@@ -369,18 +524,21 @@ public class TestBasicRequests extends IcebergBaseTest {
 
     TableMetadataUnit nationPartition1 = basicPartition.toBuilder()
       .metadataKey("part_int=3")
+      .metadataIdentifier("part_int=3/d5")
       .location("/tmp/nation/part_int=3/d5")
       .column("n_nation")
       .build();
 
     TableMetadataUnit nationPartition2 = basicPartition.toBuilder()
       .metadataKey("part_int=4")
+      .metadataIdentifier("part_int=4/d5")
       .location("/tmp/nation/part_int=4/d5")
       .column("n_nation")
       .build();
 
     TableMetadataUnit nationPartition3 = basicPartition.toBuilder()
       .metadataKey("part_int=4")
+      .metadataIdentifier("part_int=4/d6")
       .column("n_region")
       .location("/tmp/nation/part_int=4/d6")
       .build();
@@ -395,6 +553,7 @@ public class TestBasicRequests extends IcebergBaseTest {
 
     TableMetadataUnit nationFile1 = basicFile.toBuilder()
       .metadataKey("part_int=3")
+      .metadataIdentifier("part_int=3/part_varchar=g/0_0_0.parquet")
       .location("/tmp/nation/part_int=3/part_varchar=g")
       .path("/tmp/nation/part_int=3/part_varchar=g/0_0_0.parquet")
       .lastModifiedTime(1L)
@@ -402,6 +561,7 @@ public class TestBasicRequests extends IcebergBaseTest {
 
     TableMetadataUnit nationFile2 = basicFile.toBuilder()
       .metadataKey("part_int=3")
+      .metadataIdentifier("part_int=3/part_varchar=g/0_0_1.parquet")
       .location("/tmp/nation/part_int=3/part_varchar=g")
       .path("/tmp/nation/part_int=3/part_varchar=g/0_0_1.parquet")
       .lastModifiedTime(System.currentTimeMillis())
@@ -410,6 +570,7 @@ public class TestBasicRequests extends IcebergBaseTest {
 
     TableMetadataUnit nationFile3 = basicFile.toBuilder()
       .metadataKey("part_int=4")
+      .metadataIdentifier("part_int=4/part_varchar=g/0_0_0.parquet")
       .location("/tmp/nation/part_int=4/part_varchar=g")
       .path("/tmp/nation/part_int=4/part_varchar=g/0_0_0.parquet")
       .lastModifiedTime(3L)
@@ -425,6 +586,7 @@ public class TestBasicRequests extends IcebergBaseTest {
 
     TableMetadataUnit nationRowGroup1 = basicRowGroup.toBuilder()
       .metadataKey("part_int=3")
+      .metadataIdentifier("part_int=3/part_varchar=g/0_0_0.parquet/1")
       .location("/tmp/nation/part_int=3/part_varchar=g")
       .path("/tmp/nation/part_int=3/part_varchar=g/0_0_0.parquet")
       .rowGroupIndex(1)
@@ -432,6 +594,7 @@ public class TestBasicRequests extends IcebergBaseTest {
 
     TableMetadataUnit nationRowGroup2 = basicRowGroup.toBuilder()
       .metadataKey("part_int=3")
+      .metadataIdentifier("part_int=3/part_varchar=g/0_0_0.parquet/2")
       .location("/tmp/nation/part_int=3/part_varchar=g")
       .path("/tmp/nation/part_int=3/part_varchar=g/0_0_0.parquet")
       .rowGroupIndex(2)
@@ -439,6 +602,7 @@ public class TestBasicRequests extends IcebergBaseTest {
 
     TableMetadataUnit nationRowGroup3 = basicRowGroup.toBuilder()
       .metadataKey("part_int=4")
+      .metadataIdentifier("part_int=4/part_varchar=g/0_0_0.parquet/1")
       .location("/tmp/nation/part_int=4/part_varchar=g")
       .path("/tmp/nation/part_int=4/part_varchar=g/0_0_0.parquet")
       .rowGroupIndex(1)
@@ -446,6 +610,7 @@ public class TestBasicRequests extends IcebergBaseTest {
 
     TableMetadataUnit nationRowGroup4 = basicRowGroup.toBuilder()
       .metadataKey("part_int=4")
+      .metadataIdentifier("part_int=4/part_varchar=g/0_0_0.parquet/1")
       .location("/tmp/nation/part_int=4/part_varchar=g")
       .path("/tmp/nation/part_int=4/part_varchar=g/0_0_0.parquet")
       .rowGroupIndex(2)

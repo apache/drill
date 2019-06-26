@@ -234,10 +234,12 @@ public abstract class AbstractParquetGroupScan extends AbstractGroupScanWithMeta
       return null;
     }
 
-    Set<SchemaPath> schemaPathsInExpr =
-        filterExpr.accept(new FilterEvaluatorUtils.FieldReferenceFinder(), null);
-
-    RowGroupScanFilterer filteredMetadata = getFilterer().getFiltered(optionManager, filterPredicate, schemaPathsInExpr);
+    RowGroupScanFilterer filteredMetadata = getFilterer()
+        .filterExpression(filterExpr)
+        .schema(tableMetadata.getSchema())
+        .context(functionImplementationRegistry)
+        .udfUtilities(udfUtilities)
+        .getFiltered(optionManager, filterPredicate);
 
     // checks whether metadata for specific level was available and there was no reduction of metadata
     if (isGroupScanFullyMatchesFilter(filteredMetadata)) {
@@ -316,7 +318,7 @@ public abstract class AbstractParquetGroupScan extends AbstractGroupScanWithMeta
   }
 
   // narrows the return type
-  protected abstract RowGroupScanFilterer getFilterer();
+  protected abstract RowGroupScanFilterer<? extends RowGroupScanFilterer> getFilterer();
 
   protected Multimap<Path, RowGroupMetadata> pruneRowGroupsForFiles(Map<Path, FileMetadata> filteredFileMetadata) {
     Multimap<Path, RowGroupMetadata> prunedRowGroups = LinkedListMultimap.create();
@@ -538,11 +540,11 @@ public abstract class AbstractParquetGroupScan extends AbstractGroupScanWithMeta
     }
 
     @Override
-    protected B getFiltered(OptionManager optionManager, FilterPredicate filterPredicate, Set<SchemaPath> schemaPathsInExpr) {
-      super.getFiltered(optionManager, filterPredicate, schemaPathsInExpr);
+    protected B getFiltered(OptionManager optionManager, FilterPredicate filterPredicate) {
+      super.getFiltered(optionManager, filterPredicate);
 
       if (!((AbstractParquetGroupScan) source).getRowGroupsMetadata().isEmpty()) {
-        filterRowGroupMetadata(optionManager, filterPredicate, schemaPathsInExpr);
+        filterRowGroupMetadata(optionManager, filterPredicate);
       }
       return self();
     }
@@ -552,11 +554,12 @@ public abstract class AbstractParquetGroupScan extends AbstractGroupScanWithMeta
      *
      * @param optionManager     option manager
      * @param filterPredicate   filter expression
-     * @param schemaPathsInExpr columns used in filter expression
      */
     protected void filterRowGroupMetadata(OptionManager optionManager,
-                                          FilterPredicate filterPredicate,
-                                          Set<SchemaPath> schemaPathsInExpr) {
+                                          FilterPredicate filterPredicate) {
+      Set<SchemaPath> schemaPathsInExpr =
+          filterExpression.accept(FilterEvaluatorUtils.FieldReferenceFinder.INSTANCE, null);
+
       AbstractParquetGroupScan abstractParquetGroupScan = (AbstractParquetGroupScan) source;
       Multimap<Path, RowGroupMetadata> prunedRowGroups;
       if (!abstractParquetGroupScan.getFilesMetadata().isEmpty()

@@ -26,6 +26,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.metastore.util.TableMetadataUtils;
 
@@ -34,6 +35,8 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+import java.util.StringJoiner;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -63,8 +66,13 @@ import java.util.stream.Collectors;
 @JsonPropertyOrder({"statistics", "comparator"})
 public class ColumnStatistics<T> {
 
-  private static final ObjectWriter OBJECT_WRITER = new ObjectMapper().writerFor(ColumnStatistics.class);
-  private static final ObjectReader OBJECT_READER = new ObjectMapper().readerFor(ColumnStatistics.class);
+  private static final ObjectWriter OBJECT_WRITER = new ObjectMapper()
+      .registerModule(new JodaModule())
+      .writerFor(ColumnStatistics.class);
+
+  private static final ObjectReader OBJECT_READER = new ObjectMapper()
+      .registerModule(new JodaModule())
+      .readerFor(ColumnStatistics.class);
 
   private final Map<String, StatisticsHolder> statistics;
   private final Comparator<T> valueComparator;
@@ -146,12 +154,13 @@ public class ColumnStatistics<T> {
    */
   public ColumnStatistics<T> cloneWith(ColumnStatistics<T> sourceStatistics) {
     Map<String, StatisticsHolder> newStats = new HashMap<>(this.statistics);
-    statistics.values().forEach(statisticsHolder -> {
-      StatisticsKind currentStatisticsKind = statisticsHolder.getStatisticsKind();
-      StatisticsHolder statisticsToMerge = sourceStatistics.statistics.get(currentStatisticsKind.getName());
-      if (statisticsToMerge != null &&
-          (statisticsToMerge.getStatisticsKind().isExact() || !currentStatisticsKind.isExact())) {
-        newStats.put(currentStatisticsKind.getName(), statisticsToMerge);
+    sourceStatistics.statistics.values().forEach(statisticsHolder -> {
+      StatisticsKind statisticsKindToMerge = statisticsHolder.getStatisticsKind();
+      StatisticsHolder oldStatistics = statistics.get(statisticsKindToMerge.getName());
+      if (oldStatistics == null
+          || !oldStatistics.getStatisticsKind().isExact()
+          || statisticsKindToMerge.isExact()) {
+        newStats.put(statisticsKindToMerge.getName(), statisticsHolder);
       }
     });
 
@@ -175,6 +184,32 @@ public class ColumnStatistics<T> {
     } catch (JsonProcessingException e) {
       throw new IllegalStateException("Unable to convert column statistics to json string", e);
     }
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    ColumnStatistics<?> that = (ColumnStatistics<?>) o;
+    return Objects.equals(statistics, that.statistics)
+        && type == that.type;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(statistics, type);
+  }
+
+  @Override
+  public String toString() {
+    return new StringJoiner(", ", ColumnStatistics.class.getSimpleName() + "[", "]")
+        .add("statistics=" + statistics)
+        .add("type=" + type)
+        .toString();
   }
 
   public static ColumnStatistics of(String columnStatistics) {

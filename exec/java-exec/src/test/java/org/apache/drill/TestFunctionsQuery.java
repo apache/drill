@@ -1019,4 +1019,16 @@ public class TestFunctionsQuery extends BaseTestQuery {
     expectedException.expectMessage(containsString("Error from UDF"));
     test("select error_function()");
   }
+
+  @Test
+  public void testParentPathFunction() throws Exception {
+    testBuilder()
+        .sqlQuery("select parentPath('/a/b/cde/f') as col1," +
+            "parentPath('/a/b/cde/f/') as col2," +
+            "parentPath('/a') as col3")
+        .unOrdered()
+        .baselineColumns("col1", "col2", "col3")
+        .baselineValues("/a/b/cde", "/a/b/cde", "/")
+        .go();
+  }
 }

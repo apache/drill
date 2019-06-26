@@ -43,13 +43,8 @@ public final class PrintingUtils {
    * @param <T> The return type of the lambda function.
    * @return Data produced by the lambda function.
    */
-  public static <T> T print(final Supplier<T> supplier) {
-    return printAndThrow(new CheckedSupplier<T, RuntimeException>() {
-      @Override
-      public T get() throws RuntimeException {
-        return supplier.get();
-      }
-    });
+  public static <T> T print(Supplier<T> supplier) {
+    return printAndThrow(supplier::get);
   }
 
   /**

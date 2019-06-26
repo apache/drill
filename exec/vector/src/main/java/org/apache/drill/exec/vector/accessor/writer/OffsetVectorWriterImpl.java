@@ -313,7 +313,9 @@ public class OffsetVectorWriterImpl extends AbstractFixedWidthWriter implements 
     int offsetCount = valueCount + 1;
     mandatoryResize(offsetCount);
     fillEmpties(valueCount - lastWriteIndex - 1);
-    vector().getBuffer().writerIndex(offsetCount * VALUE_WIDTH);
+    if (valueCount > 0) {
+      vector().getBuffer().writerIndex(offsetCount * VALUE_WIDTH);
+    }
   }
 
   @Override

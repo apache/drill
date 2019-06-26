@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.drill.exec.metastore.analyze.AnalyzeInfoProvider;
 import org.apache.drill.metastore.metadata.TableMetadata;
 import org.apache.drill.metastore.metadata.TableMetadataProvider;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
@@ -205,6 +206,16 @@ public abstract class AbstractGroupScan extends AbstractBase implements GroupSca
 
   @Override
   public TableMetadata getTableMetadata() {
+    return null;
+  }
+
+  @Override
+  public boolean usedMetastore() {
+    return false;
+  }
+
+  @Override
+  public AnalyzeInfoProvider getAnalyzeInfoProvider() {
     return null;
   }
 }

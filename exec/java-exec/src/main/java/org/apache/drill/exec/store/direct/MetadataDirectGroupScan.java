@@ -43,18 +43,22 @@ public class MetadataDirectGroupScan extends DirectGroupScan {
   @JsonProperty
   private final int numFiles;
   @JsonProperty
-  private boolean usedMetadataSummaryFile;
+  private final boolean usedMetadataSummaryFile;
+  @JsonProperty
+  private final boolean usedMetastore;
 
   @JsonCreator
   public MetadataDirectGroupScan(@JsonProperty("reader") RecordReader reader,
-                                 @JsonProperty("selectionRoot") Path selectionRoot,
-                                 @JsonProperty("numFiles") int numFiles,
-                                 @JsonProperty("stats") ScanStats stats,
-                                 @JsonProperty("usedMetadataSummaryFile") boolean usedMetadataSummaryFile) {
+      @JsonProperty("selectionRoot") Path selectionRoot,
+      @JsonProperty("numFiles") int numFiles,
+      @JsonProperty("stats") ScanStats stats,
+      @JsonProperty("usedMetadataSummaryFile") boolean usedMetadataSummaryFile,
+      @JsonProperty("usedMetastore") boolean usedMetastore) {
     super(reader, stats);
     this.selectionRoot = selectionRoot;
     this.numFiles = numFiles;
     this.usedMetadataSummaryFile = usedMetadataSummaryFile;
+    this.usedMetastore = usedMetastore;
   }
 
   @Override
@@ -65,7 +69,7 @@ public class MetadataDirectGroupScan extends DirectGroupScan {
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
     assert children == null || children.isEmpty();
-    return new MetadataDirectGroupScan(reader, selectionRoot, numFiles, stats, usedMetadataSummaryFile);
+    return new MetadataDirectGroupScan(reader, selectionRoot, numFiles, stats, usedMetadataSummaryFile, usedMetastore);
   }
 
   @Override
@@ -81,7 +85,7 @@ public class MetadataDirectGroupScan extends DirectGroupScan {
    * </p>
    *
    * <p>
-   * Example: [selectionRoot = [/tmp/users], numFiles = 1, usedMetadataSummaryFile = false]
+   * Example: [selectionRoot = [/tmp/users], numFiles = 1, usedMetadataSummaryFile = false, usedMetastore = true]
    * </p>
    *
    * @return string representation of group scan data
@@ -94,6 +98,7 @@ public class MetadataDirectGroupScan extends DirectGroupScan {
     }
     builder.append("numFiles = ").append(numFiles).append(", ");
     builder.append("usedMetadataSummaryFile = ").append(usedMetadataSummaryFile).append(", ");
+    builder.append("usedMetastore = ").append(usedMetastore).append(", ");
     builder.append(super.getDigest());
     return builder.toString();
   }

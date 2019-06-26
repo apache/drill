@@ -308,8 +308,7 @@ public class PhysicalOpUnitTestBase extends ExecTest {
     }
 
     @Override
-    public RuntimeFilterWritable getRuntimeFilter(long rfIdentifier, long maxWaitTime, TimeUnit timeUnit)
-    {
+    public RuntimeFilterWritable getRuntimeFilter(long rfIdentifier, long maxWaitTime, TimeUnit timeUnit) {
       return null;
     }
   }

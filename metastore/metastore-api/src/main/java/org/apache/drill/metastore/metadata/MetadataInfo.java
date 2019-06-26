@@ -17,6 +17,10 @@
  */
 package org.apache.drill.metastore.metadata;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.apache.drill.metastore.components.tables.TableMetadataUnit;
 
 import java.util.Objects;
@@ -29,6 +33,8 @@ import java.util.StringJoiner;
  * For example, for table-level metadata, it will be
  * {@code MetadataInfo[MetadataType.TABLE, MetadataInfo.GENERAL_INFO_KEY, null]}.
  */
+@JsonTypeName("metadataInfo")
+@JsonDeserialize(builder = MetadataInfo.MetadataInfoBuilder.class)
 public class MetadataInfo {
 
   public static final String GENERAL_INFO_KEY = "GENERAL_INFO";
@@ -36,6 +42,7 @@ public class MetadataInfo {
   public static final String DEFAULT_COLUMN_PREFIX = "_$SEGMENT_";
   public static final String METADATA_TYPE = "metadataType";
   public static final String METADATA_KEY = "metadataKey";
+  public static final String METADATA_IDENTIFIER = "metadataIdentifier";
 
   private final MetadataType type;
   private final String key;
@@ -47,14 +54,17 @@ public class MetadataInfo {
     this.identifier = builder.identifier;
   }
 
+  @JsonProperty
   public MetadataType type() {
     return type;
   }
 
+  @JsonProperty
   public String key() {
     return key;
   }
 
+  @JsonProperty
   public String identifier() {
     return identifier;
   }
@@ -99,6 +109,7 @@ public class MetadataInfo {
     return new MetadataInfoBuilder();
   }
 
+  @JsonPOJOBuilder(withPrefix = "")
   public static class MetadataInfoBuilder {
     private MetadataType type;
     private String key;

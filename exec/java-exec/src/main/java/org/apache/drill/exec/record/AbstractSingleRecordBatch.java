@@ -21,13 +21,11 @@ import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 
-
 /**
- * Implements an AbstractUnaryRecordBatch where the inoming record batch is known at the time of creation
+ * Implements an AbstractUnaryRecordBatch where the incoming record batch is known at the time of creation
  * @param <T>
  */
 public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> extends AbstractUnaryRecordBatch<T> {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(new Object() {}.getClass().getEnclosingClass());
 
   protected final RecordBatch incoming;
 

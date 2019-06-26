@@ -18,14 +18,8 @@
 package org.apache.drill.exec.planner.sql.handlers;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.rel.type.RelDataTypeField;
-import org.apache.calcite.rex.RexBuilder;
-import org.apache.calcite.rex.RexNode;
-import org.apache.calcite.rex.RexUtil;
 import org.apache.calcite.schema.Table;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlNode;
@@ -42,7 +36,6 @@ import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.planner.common.DrillStatsTable;
 import org.apache.drill.exec.planner.logical.DrillAnalyzeRel;
-import org.apache.drill.exec.planner.logical.DrillProjectRel;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.planner.logical.DrillScreenRel;
@@ -61,7 +54,6 @@ import org.apache.drill.exec.store.parquet.ParquetFormatConfig;
 import org.apache.drill.exec.util.Pointer;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 
@@ -213,29 +205,6 @@ public class AnalyzeTableHandler extends DefaultSqlHandler {
       throw new UnsupportedOperationException();
     }
 
-    if (convertedRelNode instanceof DrillProjectRel) {
-      DrillProjectRel projectRel = (DrillProjectRel) convertedRelNode;
-      DrillScanRel scanRel = findScan(projectRel);
-      List<RelDataTypeField> fields = Lists.newArrayList();
-      RexBuilder b = projectRel.getCluster().getRexBuilder();
-      List<RexNode> projections = Lists.newArrayList();
-      // Get the original scan column names - after projection pushdown they should refer to the full col names
-      List<String> fieldNames = new ArrayList<>();
-      List<RelDataTypeField> fieldTypes = projectRel.getRowType().getFieldList();
-      for (SchemaPath colPath : scanRel.getGroupScan().getColumns()) {
-        fieldNames.add(colPath.toString());
-      }
-      for (int i =0; i < fieldTypes.size(); i++) {
-        projections.add(b.makeInputRef(projectRel, i));
-      }
-      // Get the projection row-types
-      RelDataType newRowType = RexUtil.createStructType(projectRel.getCluster().getTypeFactory(),
-              projections, fieldNames, null);
-      DrillProjectRel renamedProject = DrillProjectRel.create(convertedRelNode.getCluster(),
-              convertedRelNode.getTraitSet(), convertedRelNode, projections, newRowType);
-      convertedRelNode = renamedProject;
-    }
-
     final RelNode analyzeRel = new DrillAnalyzeRel(
         convertedRelNode.getCluster(), convertedRelNode.getTraitSet(), convertedRelNode, samplePercent);
 
@@ -249,12 +218,15 @@ public class AnalyzeTableHandler extends DefaultSqlHandler {
     return new DrillScreenRel(writerRel.getCluster(), writerRel.getTraitSet(), writerRel);
   }
 
-  private DrillScanRel findScan(RelNode rel) {
-    if (rel instanceof DrillScanRel) {
-      return (DrillScanRel) rel;
-    } else {
-      return findScan(rel.getInput(0));
+  public static DrillScanRel findScan(RelNode... rels) {
+    for (RelNode rel : rels) {
+      if (rel instanceof DrillScanRel) {
+        return (DrillScanRel) rel;
+      } else {
+        return findScan(rel.getInputs().toArray(new RelNode[0]));
+      }
     }
+    return null;
   }
   // Make sure no unsupported features in ANALYZE statement are used
   private static void verifyNoUnsupportedFunctions(final SqlAnalyzeTable analyzeTable) {

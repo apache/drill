@@ -24,6 +24,7 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.drill.exec.metastore.analyze.AnalyzeInfoProvider;
 import org.apache.drill.exec.ops.UdfUtilities;
 import org.apache.drill.exec.physical.PhysicalOperatorSetupException;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
@@ -171,4 +172,20 @@ public interface GroupScan extends Scan, HasAffinity {
 
   @JsonIgnore
   TableMetadata getTableMetadata();
+
+  /**
+   * Returns {@code true} if current group scan uses metadata obtained from the Metastore.
+   *
+   * @return {@code true} if current group scan uses metadata obtained from the Metastore, {@code false} otherwise.
+   */
+  @JsonIgnore
+  boolean usedMetastore();
+
+  /**
+   * Returns {@link AnalyzeInfoProvider} instance which will be used when running ANALYZE statement.
+   *
+   * @return {@link AnalyzeInfoProvider} instance
+   */
+  @JsonIgnore
+  AnalyzeInfoProvider getAnalyzeInfoProvider();
 }

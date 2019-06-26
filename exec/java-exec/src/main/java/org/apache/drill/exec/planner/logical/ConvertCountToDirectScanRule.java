@@ -170,7 +170,7 @@ public class ConvertCountToDirectScanRule extends RelOptRule {
         Collections.singletonList(new ArrayList<>(result.values())));
 
     final ScanStats scanStats = new ScanStats(ScanStats.GroupScanProperty.EXACT_ROW_COUNT, 1, 1, scanRowType.getFieldCount());
-    final MetadataDirectGroupScan directScan = new MetadataDirectGroupScan(reader, summaryFileName, 1, scanStats, true);
+    final MetadataDirectGroupScan directScan = new MetadataDirectGroupScan(reader, summaryFileName, 1, scanStats, true, false);
 
     final DrillDirectScanRel newScan = new DrillDirectScanRel(scan.getCluster(), scan.getTraitSet().plus(DrillRel.DRILL_LOGICAL),
       directScan, scanRowType);
@@ -214,7 +214,8 @@ public class ConvertCountToDirectScanRule extends RelOptRule {
 
     Metadata_V4.MetadataSummary metadataSummary = Metadata.getSummary(fs, selectionRoot, false, parquetReaderConfig);
 
-    return metadataSummary != null ? new ImmutablePair<>(true, metadataSummary) : new ImmutablePair<>(false, null);
+    return metadataSummary != null ? new ImmutablePair<>(true, metadataSummary) :
+        new ImmutablePair<>(false, null);
   }
 
   /**

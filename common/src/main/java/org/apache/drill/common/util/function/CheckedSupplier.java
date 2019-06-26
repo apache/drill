@@ -17,6 +17,10 @@
  */
 package org.apache.drill.common.util.function;
 
+import java.util.function.Supplier;
+
+import static org.apache.drill.common.exceptions.ErrorHelper.sneakyThrow;
+
 /**
  * The java standard library does not provide a lambda function interface for functions that take no arguments,
  * but that throw an exception. So, we have to define our own here.
@@ -24,6 +28,24 @@ package org.apache.drill.common.util.function;
  * @param <E> The type of exception thrown by the lambda function.
  */
 @FunctionalInterface
-public interface CheckedSupplier<T, E extends Exception> {
-  T get() throws E;
+public interface CheckedSupplier<T, E extends Exception> extends Supplier<T> {
+
+  @Override
+  default T get() {
+    try {
+      return getAndThrow();
+    } catch (Throwable e) {
+      sneakyThrow(e);
+    }
+    // should never happen
+    throw new RuntimeException();
+  }
+
+  /**
+   * Gets a result.
+   *
+   * @return a result
+   * @throws E exception in case of errors
+   */
+  T getAndThrow() throws E;
 }

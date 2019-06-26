@@ -100,7 +100,7 @@ public class ConvertCountToDirectScanPrule extends Prule {
   public void onMatch(RelOptRuleCall call) {
     final DrillAggregateRel agg = call.rel(0);
     final DrillScanRel scan = call.rel(call.rels.length - 1);
-    final DrillProjectRel project = call.rels.length == 3 ? (DrillProjectRel) call.rel(1) : null;
+    final DrillProjectRel project = call.rels.length == 3 ? call.rel(1) : null;
 
     final GroupScan oldGrpScan = scan.getGroupScan();
     final PlannerSettings settings = PrelUtil.getPlannerSettings(call.getPlanner());
@@ -130,7 +130,7 @@ public class ConvertCountToDirectScanPrule extends Prule {
 
     final ScanStats scanStats = new ScanStats(ScanStats.GroupScanProperty.EXACT_ROW_COUNT, 1, 1, scanRowType.getFieldCount());
     final int numFiles = oldGrpScan.hasFiles() ? oldGrpScan.getFiles().size() : -1;
-    final GroupScan directScan = new MetadataDirectGroupScan(reader, oldGrpScan.getSelectionRoot(), numFiles, scanStats, false);
+    final GroupScan directScan = new MetadataDirectGroupScan(reader, oldGrpScan.getSelectionRoot(), numFiles, scanStats, false, oldGrpScan.usedMetastore());
 
     final DirectScanPrel newScan = DirectScanPrel.create(scan, scan.getTraitSet().plus(Prel.DRILL_PHYSICAL)
         .plus(DrillDistributionTrait.SINGLETON), directScan, scanRowType);

@@ -53,6 +53,8 @@ import org.apache.drill.exec.dotdrill.DotDrillUtil;
 import org.apache.drill.exec.dotdrill.View;
 import org.apache.drill.exec.metastore.FileSystemMetadataProviderManager;
 import org.apache.drill.exec.metastore.MetadataProviderManager;
+import org.apache.drill.exec.metastore.MetastoreMetadataProviderManager;
+import org.apache.drill.exec.metastore.MetastoreMetadataProviderManager.MetastoreMetadataProviderConfig;
 import org.apache.drill.exec.planner.common.DrillStatsTable;
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
 import org.apache.drill.exec.planner.logical.DrillTable;
@@ -71,6 +73,10 @@ import org.apache.drill.exec.util.DrillFileSystemUtil;
 import org.apache.drill.exec.store.StorageStrategy;
 import org.apache.drill.exec.store.easy.json.JSONFormatPlugin;
 import org.apache.drill.exec.util.ImpersonationUtil;
+import org.apache.drill.metastore.MetastoreRegistry;
+import org.apache.drill.metastore.components.tables.MetastoreTableInfo;
+import org.apache.drill.metastore.exceptions.MetastoreException;
+import org.apache.drill.metastore.metadata.TableInfo;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
@@ -438,8 +444,34 @@ public class WorkspaceSchemaFactory {
       }
       final DrillTable table = tables.get(tableKey);
       if (table != null) {
-        MetadataProviderManager providerManager = FileSystemMetadataProviderManager.init();
+        MetadataProviderManager providerManager = null;
 
+        if (schemaConfig.getOption(ExecConstants.METASTORE_ENABLED).bool_val) {
+          try {
+            MetastoreRegistry metastoreRegistry = plugin.getContext().getMetastoreRegistry();
+            TableInfo tableInfo = TableInfo.builder()
+                .storagePlugin(plugin.getName())
+                .workspace(schemaName)
+                .name(tableName)
+                .build();
+
+            MetastoreTableInfo metastoreTableInfo = metastoreRegistry.get()
+                .tables()
+                .basicRequests()
+                .metastoreTableInfo(tableInfo);
+            if (metastoreTableInfo.isExists()) {
+              providerManager = new MetastoreMetadataProviderManager(metastoreRegistry, tableInfo,
+                  new MetastoreMetadataProviderConfig(schemaConfig.getOption(ExecConstants.METASTORE_USE_SCHEMA_METADATA).bool_val,
+                      schemaConfig.getOption(ExecConstants.METASTORE_USE_STATISTICS_METADATA).bool_val,
+                      schemaConfig.getOption(ExecConstants.METASTORE_FALLBACK_TO_FILE_METADATA).bool_val));
+            }
+          } catch (MetastoreException e) {
+            logger.warn("Exception happened during obtaining Metastore instance.", e);
+          }
+        }
+        if (providerManager == null) {
+          providerManager = FileSystemMetadataProviderManager.init();
+        }
         setMetadataTable(providerManager, table, tableName);
         setSchema(providerManager, tableName);
         table.setTableMetadataProviderManager(providerManager);

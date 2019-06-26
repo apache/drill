@@ -93,6 +93,15 @@ public class DrillStatsTable {
     this.table = table;
   }
 
+  public DrillStatsTable(TableStatistics statistics) {
+    this.statistics = statistics;
+    this.schemaName = null;
+    this.tableName = null;
+    this.tablePath = null;
+    this.fs = null;
+    materializeFromStatistics();
+  }
+
   public String getSchemaName() {
     return schemaName;
   }
@@ -201,28 +210,32 @@ public class DrillStatsTable {
       // Deserialize statistics from JSON
       this.statistics = readStatistics(table, tablePath);
       // Handle based on the statistics version read from the file
-      if (statistics instanceof Statistics_v0) {
-        // Do nothing
-      } else if (statistics instanceof Statistics_v1) {
-        for (DirectoryStatistics_v1 ds : ((Statistics_v1) statistics).getDirectoryStatistics()) {
-          for (ColumnStatistics_v1 cs : ds.getColumnStatistics()) {
-            ndv.put(cs.getName(), cs.getNdv());
-            nnRowCount.put(cs.getName(), (long) cs.getNonNullCount());
-            rowCount = Math.max(rowCount, cs.getCount());
-
-            // get the histogram for this column
-            Histogram hist = cs.getHistogram();
-            histogram.put(cs.getName(), hist);
-          }
-        }
-      }
-      if (statistics != null) { // See stats are available before setting materialized
-        materialized = true;
-      }
+      materializeFromStatistics();
     } catch (FileNotFoundException ex) {
       logger.debug(String.format("Did not find statistics file %s", tablePath.toString()), ex);
     } catch (IOException ex) {
       logger.debug(String.format("Error trying to read statistics table %s", tablePath.toString()), ex);
+    }
+  }
+
+  private void materializeFromStatistics() {
+    if (statistics instanceof Statistics_v0) {
+      // Do nothing
+    } else if (statistics instanceof Statistics_v1) {
+      for (DirectoryStatistics_v1 ds : ((Statistics_v1) statistics).getDirectoryStatistics()) {
+        for (ColumnStatistics_v1 cs : ds.getColumnStatistics()) {
+          ndv.put(cs.getName(), cs.getNdv());
+          nnRowCount.put(cs.getName(), (long) cs.getNonNullCount());
+          rowCount = Math.max(rowCount, cs.getCount());
+
+          // get the histogram for this column
+          Histogram hist = cs.getHistogram();
+          histogram.put(cs.getName(), hist);
+        }
+      }
+    }
+    if (statistics != null) { // See stats are available before setting materialized
+      materialized = true;
     }
   }
 

@@ -17,6 +17,8 @@
  */
 package org.apache.drill.metastore.components.tables;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.drill.metastore.metadata.TableInfo;
 
 import java.util.Objects;
@@ -33,7 +35,11 @@ public class MetastoreTableInfo {
   private final boolean exists;
   private final long metastoreVersion;
 
-  private MetastoreTableInfo(TableInfo tableInfo, Long lastModifiedTime, boolean exists, long metastoreVersion) {
+  @JsonCreator
+  public MetastoreTableInfo(@JsonProperty("tableInfo") TableInfo tableInfo,
+      @JsonProperty("lastModifiedTime") Long lastModifiedTime,
+      @JsonProperty("exists") boolean exists,
+      @JsonProperty("metastoreVersion") long metastoreVersion) {
     this.tableInfo = tableInfo;
     this.lastModifiedTime = lastModifiedTime;
     this.exists = exists;
@@ -46,18 +52,22 @@ public class MetastoreTableInfo {
     return new MetastoreTableInfo(tableInfo, lastModifiedTime, exists, metastoreVersion);
   }
 
+  @JsonProperty
   public TableInfo tableInfo() {
     return tableInfo;
   }
 
+  @JsonProperty
   public Long lastModifiedTime() {
     return lastModifiedTime;
   }
 
+  @JsonProperty
   public boolean isExists() {
     return exists;
   }
 
+  @JsonProperty
   public long metastoreVersion() {
     return metastoreVersion;
   }

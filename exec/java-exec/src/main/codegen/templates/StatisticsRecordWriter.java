@@ -33,7 +33,7 @@ import java.util.Map;
  */
 
 /** StatisticsRecordWriter interface. */
-public interface StatisticsRecordWriter {
+public interface StatisticsRecordWriter extends StatisticsRecordCollector {
 
   /**
    * Initialize the writer.
@@ -61,28 +61,6 @@ public interface StatisticsRecordWriter {
    */
   boolean isBlockingWriter();
 
-  /**
-   * Called before starting writing fields in a record.
-   * @throws IOException
-   */
-  void startStatisticsRecord() throws IOException;
-
-  <#list vv.types as type>
-  <#list type.minor as minor>
-  <#list vv.modes as mode>
-  /** Add the field value given in <code>valueHolder</code> at the given column number <code>fieldId</code>. */
-  public FieldConverter getNew${mode.prefix}${minor.class}Converter(int fieldId, String fieldName, FieldReader reader);
-
-  </#list>
-  </#list>
-  </#list>
-
-  /**
-   * Called after adding all fields in a particular statistics record are added using
-   * add{TypeHolder}(fieldId, TypeHolder) methods.
-   * @throws IOException
-   */
-  void endStatisticsRecord() throws IOException;
   /**
    * For a blocking writer, called after processing all the records to flush out the writes
    * @throws IOException

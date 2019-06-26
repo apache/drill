@@ -78,7 +78,7 @@ public class RefreshMetadataHandler extends DefaultSqlHandler {
 
       final String tableName = refreshTable.getName();
       final SqlNodeList columnList = getColumnList(refreshTable);
-      final Set<String> columnSet = getColumnRootSegments(columnList);
+      final Set<SchemaPath> columnSet = getColumnRootSegments(columnList);
       final SqlLiteral allColumns = refreshTable.getAllColumns();
 
       if (tableName.contains("*") || tableName.contains("?")) {
@@ -143,12 +143,12 @@ public class RefreshMetadataHandler extends DefaultSqlHandler {
     }
   }
 
-  private Set<String> getColumnRootSegments(SqlNodeList columnList) {
-    Set<String> columnSet = new HashSet<>();
+  private Set<SchemaPath> getColumnRootSegments(SqlNodeList columnList) {
+    Set<SchemaPath> columnSet = new HashSet<>();
     if (columnList != null) {
       for (SqlNode column : columnList.getList()) {
         // Add only the root segment. Collect metadata for all the columns under that root segment
-        columnSet.add(SchemaPath.parseFromString(column.toString()).getRootSegmentPath());
+        columnSet.add(SchemaPath.getSimplePath(SchemaPath.parseFromString(column.toString()).getRootSegmentPath()));
       }
     }
     return columnSet;

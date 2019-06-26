@@ -197,7 +197,7 @@ public class TestNullInputMiniPlan extends MiniPlanUnitTestBase{
 
   @Test
   public void testStreamingAggEmpty() throws Exception {
-    final PhysicalOperator hashAgg = new StreamingAggregate(null, parseExprs("a", "a"), parseExprs("sum(b)", "b_sum"), 1.0f);
+    final PhysicalOperator hashAgg = new StreamingAggregate(null, parseExprs("a", "a"), parseExprs("sum(b)", "b_sum"));
     testSingleInputNullBatchHandling(hashAgg);
   }
 

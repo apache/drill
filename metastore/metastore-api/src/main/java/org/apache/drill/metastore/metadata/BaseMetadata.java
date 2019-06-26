@@ -120,6 +120,30 @@ public abstract class BaseMetadata implements Metadata {
   }
 
   @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof BaseMetadata)) {
+      return false;
+    }
+    BaseMetadata that = (BaseMetadata) o;
+    return lastModifiedTime == that.lastModifiedTime
+        && Objects.equals(tableInfo, that.tableInfo)
+        && Objects.equals(metadataInfo, that.metadataInfo)
+        && Objects.equals(columnsStatistics, that.columnsStatistics)
+        && Objects.equals(metadataStatistics, that.metadataStatistics)
+        && (schema == that.schema
+            || (schema != null && schema.isEquivalent(that.schema)));
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(tableInfo, metadataInfo, schema,
+        columnsStatistics, metadataStatistics, lastModifiedTime);
+  }
+
+  @Override
   public TableMetadataUnit toMetadataUnit() {
     TableMetadataUnit.Builder builder = TableMetadataUnit.builder();
 
@@ -147,6 +171,8 @@ public abstract class BaseMetadata implements Metadata {
   }
 
   protected abstract void toMetadataUnitBuilder(TableMetadataUnit.Builder builder);
+
+  protected abstract BaseMetadataBuilder toBuilder();
 
   public static abstract class BaseMetadataBuilder<T extends BaseMetadataBuilder<T>> {
     protected TableInfo tableInfo;

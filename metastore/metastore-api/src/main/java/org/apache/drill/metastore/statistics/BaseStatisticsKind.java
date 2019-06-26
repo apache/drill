@@ -20,6 +20,9 @@ package org.apache.drill.metastore.statistics;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.Objects;
+import java.util.StringJoiner;
+
 /**
  * Implementation of {@link StatisticsKind} which contain base
  * table statistics kinds with implemented {@code mergeStatistics()} method.
@@ -44,5 +47,31 @@ public class BaseStatisticsKind<T> implements StatisticsKind<T> {
   @Override
   public boolean isExact() {
     return exact;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof BaseStatisticsKind)) {
+      return false;
+    }
+    BaseStatisticsKind<?> that = (BaseStatisticsKind<?>) o;
+    return exact == that.exact &&
+        Objects.equals(statisticKey, that.statisticKey);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(statisticKey, exact);
+  }
+
+  @Override
+  public String toString() {
+    return new StringJoiner(", ", BaseStatisticsKind.class.getSimpleName() + "[", "]")
+        .add("statisticKey='" + statisticKey + "'")
+        .add("exact=" + exact)
+        .toString();
   }
 }
