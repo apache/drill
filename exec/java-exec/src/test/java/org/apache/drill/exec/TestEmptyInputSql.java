@@ -18,6 +18,7 @@
 package org.apache.drill.exec;
 
 import org.apache.drill.PlanTestBase;
+import org.apache.drill.exec.record.BatchSchemaBuilder;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
@@ -55,9 +56,11 @@ public class TestEmptyInputSql extends BaseTestQuery {
    */
   @Test
   public void testQueryEmptyJson() throws Exception {
-    final BatchSchema expectedSchema = new SchemaBuilder()
-        .addNullable("key", TypeProtos.MinorType.INT)
-        .addNullable("key2", TypeProtos.MinorType.INT)
+    SchemaBuilder schemaBuilder = new SchemaBuilder()
+      .addNullable("key", TypeProtos.MinorType.INT)
+      .addNullable("key2", TypeProtos.MinorType.INT);
+    final BatchSchema expectedSchema = new BatchSchemaBuilder()
+        .withSchemaBuilder(schemaBuilder)
         .build();
 
     testBuilder()
@@ -73,7 +76,8 @@ public class TestEmptyInputSql extends BaseTestQuery {
    */
   @Test
   public void testQueryStarColEmptyJson() throws Exception {
-    final BatchSchema expectedSchema = new SchemaBuilder()
+    final BatchSchema expectedSchema = new BatchSchemaBuilder()
+        .withSchemaBuilder(new SchemaBuilder())
         .build();
 
     testBuilder()
@@ -113,10 +117,12 @@ public class TestEmptyInputSql extends BaseTestQuery {
 
   @Test
   public void testQueryMapArrayEmptyJson() throws Exception {
-    final BatchSchema expectedSchema = new SchemaBuilder()
+    SchemaBuilder schemaBuilder = new SchemaBuilder()
         .addNullable("col1", TypeProtos.MinorType.INT)
         .addNullable("col2", TypeProtos.MinorType.INT)
-        .addNullable("col3", TypeProtos.MinorType.INT)
+        .addNullable("col3", TypeProtos.MinorType.INT);
+    BatchSchema expectedSchema = new BatchSchemaBuilder()
+        .withSchemaBuilder(schemaBuilder)
         .build();
 
     testBuilder()
@@ -136,10 +142,12 @@ public class TestEmptyInputSql extends BaseTestQuery {
   public void testQueryConstExprEmptyJson() throws Exception {
     try {
       alterSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY, false);
-      BatchSchema expectedSchema = new SchemaBuilder()
+      SchemaBuilder schemaBuilder = new SchemaBuilder()
           .add("key", TypeProtos.MinorType.FLOAT8)
           .add("name", TypeProtos.MinorType.VARCHAR, 100)
-          .addNullable("name2", TypeProtos.MinorType.VARCHAR, 100)
+          .addNullable("name2", TypeProtos.MinorType.VARCHAR, 100);
+      BatchSchema expectedSchema = new BatchSchemaBuilder()
+          .withSchemaBuilder(schemaBuilder)
           .build();
 
       testBuilder()
@@ -152,7 +160,7 @@ public class TestEmptyInputSql extends BaseTestQuery {
           .run();
 
       alterSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY, true);
-      expectedSchema = new SchemaBuilder()
+      schemaBuilder = new SchemaBuilder()
           .add("key",
               TypeProtos.MajorType.newBuilder()
                   .setMinorType(TypeProtos.MinorType.VARDECIMAL)
@@ -161,7 +169,9 @@ public class TestEmptyInputSql extends BaseTestQuery {
                   .setScale(1)
                   .build())
           .add("name", TypeProtos.MinorType.VARCHAR, 100)
-          .addNullable("name2", TypeProtos.MinorType.VARCHAR, 100)
+          .addNullable("name2", TypeProtos.MinorType.VARCHAR, 100);
+      expectedSchema = new BatchSchemaBuilder()
+          .withSchemaBuilder(schemaBuilder)
           .build();
 
       testBuilder()
@@ -182,7 +192,8 @@ public class TestEmptyInputSql extends BaseTestQuery {
    */
   @Test
   public void testQueryEmptyCsvH() throws Exception {
-    final BatchSchema expectedSchema = new SchemaBuilder()
+    BatchSchema expectedSchema = new BatchSchemaBuilder()
+        .withSchemaBuilder(new SchemaBuilder())
         .build();
 
     testBuilder()
@@ -198,8 +209,10 @@ public class TestEmptyInputSql extends BaseTestQuery {
    */
   @Test
   public void testQueryEmptyCsv() throws Exception {
-    final BatchSchema expectedSchema = new SchemaBuilder()
-        .addArray("columns", TypeProtos.MinorType.VARCHAR)
+    SchemaBuilder schemaBuilder = new SchemaBuilder()
+      .addArray("columns", TypeProtos.MinorType.VARCHAR);
+    BatchSchema expectedSchema = new BatchSchemaBuilder()
+        .withSchemaBuilder(schemaBuilder)
         .build();
 
     testBuilder()
@@ -211,7 +224,9 @@ public class TestEmptyInputSql extends BaseTestQuery {
 
   @Test
   public void testEmptyDirectory() throws Exception {
-    final BatchSchema expectedSchema = new SchemaBuilder().build();
+    BatchSchema expectedSchema = new BatchSchemaBuilder()
+        .withSchemaBuilder(new SchemaBuilder())
+        .build();
 
     testBuilder()
         .sqlQuery("select * from dfs.tmp.`%s`", EMPTY_DIR_NAME)
@@ -222,8 +237,10 @@ public class TestEmptyInputSql extends BaseTestQuery {
 
   @Test
   public void testEmptyDirectoryAndFieldInQuery() throws Exception {
-    final BatchSchema expectedSchema = new SchemaBuilder()
-        .addNullable("key", TypeProtos.MinorType.INT)
+    SchemaBuilder schemaBuilder = new SchemaBuilder()
+        .addNullable("key", TypeProtos.MinorType.INT);
+    BatchSchema expectedSchema = new BatchSchemaBuilder()
+        .withSchemaBuilder(schemaBuilder)
         .build();
 
     testBuilder()
@@ -235,9 +252,11 @@ public class TestEmptyInputSql extends BaseTestQuery {
 
   @Test
   public void testRenameProjectEmptyDirectory() throws Exception {
-    final BatchSchema expectedSchema = new SchemaBuilder()
+    SchemaBuilder schemaBuilder = new SchemaBuilder()
         .addNullable("WeekId", TypeProtos.MinorType.INT)
-        .addNullable("ProductName", TypeProtos.MinorType.INT)
+        .addNullable("ProductName", TypeProtos.MinorType.INT);
+    BatchSchema expectedSchema = new BatchSchemaBuilder()
+        .withSchemaBuilder(schemaBuilder)
         .build();
 
     testBuilder()
@@ -250,9 +269,11 @@ public class TestEmptyInputSql extends BaseTestQuery {
 
   @Test
   public void testRenameProjectEmptyJson() throws Exception {
-    final BatchSchema expectedSchema = new SchemaBuilder()
+    SchemaBuilder schemaBuilder = new SchemaBuilder()
         .addNullable("WeekId", TypeProtos.MinorType.INT)
-        .addNullable("ProductName", TypeProtos.MinorType.INT)
+        .addNullable("ProductName", TypeProtos.MinorType.INT);
+    final BatchSchema expectedSchema = new BatchSchemaBuilder()
+        .withSchemaBuilder(schemaBuilder)
         .build();
 
     testBuilder()

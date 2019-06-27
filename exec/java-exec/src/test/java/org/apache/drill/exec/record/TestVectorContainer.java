@@ -19,6 +19,7 @@ package org.apache.drill.exec.record;
 
 import static org.junit.Assert.fail;
 
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.categories.VectorTest;
 import org.apache.drill.common.types.TypeProtos;
@@ -75,10 +76,10 @@ public class TestVectorContainer extends DrillTest {
 
     // Simulated data from a reader
 
-    BatchSchema leftSchema = new SchemaBuilder()
+    TupleMetadata leftSchema = new SchemaBuilder()
         .add("a", MinorType.INT)
         .addNullable("b", MinorType.VARCHAR)
-        .build();
+        .buildSchema();
     SingleRowSet left = fixture.rowSetBuilder(leftSchema)
         .addRow(10, "fred")
         .addRow(20, "barney")
@@ -87,10 +88,10 @@ public class TestVectorContainer extends DrillTest {
 
     // Simulated "implicit" columns: row number and file name
 
-    BatchSchema rightSchema = new SchemaBuilder()
+    TupleMetadata rightSchema = new SchemaBuilder()
         .add("x", MinorType.SMALLINT)
         .add("y", MinorType.VARCHAR)
-        .build();
+        .buildSchema();
     SingleRowSet right = fixture.rowSetBuilder(rightSchema)
         .addRow(1, "foo.txt")
         .addRow(2, "bar.txt")
@@ -99,12 +100,12 @@ public class TestVectorContainer extends DrillTest {
 
     // The merge batch we expect to see
 
-    BatchSchema expectedSchema = new SchemaBuilder()
+    TupleMetadata expectedSchema = new SchemaBuilder()
         .add("a", MinorType.INT)
         .addNullable("b", MinorType.VARCHAR)
         .add("x", MinorType.SMALLINT)
         .add("y", MinorType.VARCHAR)
-        .build();
+        .buildSchema();
     SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
         .addRow(10, "fred", 1, "foo.txt")
         .addRow(20, "barney", 2, "bar.txt")

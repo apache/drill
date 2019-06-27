@@ -26,7 +26,6 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.impl.scan.ScanTestUtils.ScanFixture;
 import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
 import org.apache.drill.exec.physical.rowSet.RowSetLoader;
-import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.test.rowSet.RowSetUtilities;
@@ -140,10 +139,10 @@ public class TestScanOperExecSmoothing extends BaseScanOperatorExecTest {
 
     // Second reader.
 
-    BatchSchema expectedSchema2 = new SchemaBuilder()
+    TupleMetadata expectedSchema2 = new SchemaBuilder()
         .add("a", MinorType.VARCHAR)
         .addNullable("b", MinorType.VARCHAR, 10)
-        .build();
+        .buildSchema();
 
     assertTrue(scan.next());
     assertEquals(2, scan.batchAccessor().schemaVersion());

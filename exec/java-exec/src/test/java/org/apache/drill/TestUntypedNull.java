@@ -22,6 +22,7 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.BatchSchemaBuilder;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterFixtureBuilder;
@@ -115,8 +116,10 @@ public class TestUntypedNull extends ClusterTest {
   @Test
   public void testCoalesceOnNotExistentColumns() throws Exception {
     String query = "select coalesce(unk1, unk2) as coal from cp.`tpch/nation.parquet` limit 5";
-    BatchSchema expectedSchema = new SchemaBuilder()
-        .add("coal", UNTYPED_NULL_TYPE)
+    SchemaBuilder schemaBuilder = new SchemaBuilder()
+        .add("coal", UNTYPED_NULL_TYPE);
+    BatchSchema expectedSchema = new BatchSchemaBuilder()
+        .withSchemaBuilder(schemaBuilder)
         .build();
 
     testBuilder()
@@ -135,8 +138,10 @@ public class TestUntypedNull extends ClusterTest {
   @Test
   public void testCoalesceOnNotExistentColumnsWithGroupBy() throws Exception {
     String query = "select coalesce(unk1, unk2) as coal from cp.`tpch/nation.parquet` group by 1";
-    BatchSchema expectedSchema = new SchemaBuilder()
-        .add("coal", UNTYPED_NULL_TYPE)
+    SchemaBuilder schemaBuilder = new SchemaBuilder()
+        .add("coal", UNTYPED_NULL_TYPE);
+    BatchSchema expectedSchema = new BatchSchemaBuilder()
+        .withSchemaBuilder(schemaBuilder)
         .build();
 
     testBuilder()
@@ -155,8 +160,10 @@ public class TestUntypedNull extends ClusterTest {
   @Test
   public void testCoalesceOnNotExistentColumnsWithOrderBy() throws Exception {
     String query = "select coalesce(unk1, unk2) as coal from cp.`tpch/nation.parquet` order by 1 limit 5";
-    BatchSchema expectedSchema = new SchemaBuilder()
-        .add("coal", UNTYPED_NULL_TYPE)
+    SchemaBuilder schemaBuilder = new SchemaBuilder()
+        .add("coal", UNTYPED_NULL_TYPE);
+    BatchSchema expectedSchema = new BatchSchemaBuilder()
+        .withSchemaBuilder(schemaBuilder)
         .build();
 
     testBuilder()

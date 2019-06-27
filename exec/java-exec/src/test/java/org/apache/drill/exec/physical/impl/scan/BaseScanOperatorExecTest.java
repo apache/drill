@@ -30,7 +30,6 @@ import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
 import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
 import org.apache.drill.exec.physical.rowSet.RowSetLoader;
-import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
@@ -128,10 +127,10 @@ public class BaseScanOperatorExecTest extends SubOperatorTest {
   }
 
   protected SingleRowSet makeExpected(int offset) {
-    BatchSchema expectedSchema = new SchemaBuilder()
+    TupleMetadata expectedSchema = new SchemaBuilder()
         .add("a", MinorType.INT)
         .addNullable("b", MinorType.VARCHAR, 10)
-        .build();
+        .buildSchema();
     SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
         .addRow(offset + 10, "fred")
         .addRow(offset + 20, "wilma")

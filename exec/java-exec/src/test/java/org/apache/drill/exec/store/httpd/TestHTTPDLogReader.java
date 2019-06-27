@@ -19,8 +19,8 @@ package org.apache.drill.exec.store.httpd;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.store.StoragePluginRegistry;
@@ -74,9 +74,9 @@ public class TestHTTPDLogReader extends ClusterTest {
     String sql = "SELECT `request_receive_time` FROM cp.`httpd/hackers-access-small.httpd` LIMIT 5";
     RowSet results = client.queryBuilder().sql(sql).rowSet();
 
-    BatchSchema expectedSchema = new SchemaBuilder()
+    TupleMetadata expectedSchema = new SchemaBuilder()
             .addNullable("request_receive_time", MinorType.TIMESTAMP)
-            .build();
+            .buildSchema();
     RowSet expected = client.rowSetBuilder(expectedSchema)
             .addRow(1445742685000L)
             .addRow(1445742686000L)

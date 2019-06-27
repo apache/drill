@@ -25,7 +25,6 @@ import org.apache.drill.metastore.metadata.MetadataType;
 import org.apache.drill.metastore.metadata.TableInfo;
 import org.apache.drill.metastore.statistics.TableStatisticsKind;
 import org.apache.drill.metastore.statistics.Statistic;
-import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.metadata.TupleSchema;
 import org.apache.drill.exec.resolver.TypeCastRules;
@@ -42,6 +41,7 @@ import org.apache.drill.metastore.metadata.NonInterestingColumnsMetadata;
 import org.apache.drill.metastore.metadata.PartitionMetadata;
 import org.apache.drill.metastore.metadata.RowGroupMetadata;
 import org.apache.drill.metastore.statistics.StatisticsHolder;
+import org.apache.drill.metastore.util.SchemaPathUtils;
 import org.apache.drill.metastore.util.TableMetadataUtils;
 import org.apache.drill.metastore.statistics.ExactStatisticsConstants;
 import org.apache.drill.exec.expr.StatisticsProvider;
@@ -149,7 +149,7 @@ public class ParquetTableMetadataUtils {
     Map<SchemaPath, TypeProtos.MajorType> columns = getRowGroupFields(tableMetadata, rowGroupMetadata);
 
     TupleSchema schema = new TupleSchema();
-    columns.forEach((schemaPath, majorType) -> MetadataUtils.addColumnMetadata(schema, schemaPath, majorType));
+    columns.forEach((schemaPath, majorType) -> SchemaPathUtils.addColumnMetadata(schema, schemaPath, majorType));
 
     MetadataInfo metadataInfo = new MetadataInfo(MetadataType.ROW_GROUP, MetadataInfo.GENERAL_INFO_KEY, null);
 

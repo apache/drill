@@ -33,6 +33,7 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.record.BatchSchemaBuilder;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
@@ -76,10 +77,12 @@ public class TestRepeatedListAccessors extends SubOperatorTest {
 
   @Test
   public void testSchemaIncompleteBatch() {
-    final BatchSchema schema = new SchemaBuilder()
+    SchemaBuilder schemaBuilder = new SchemaBuilder()
         .add("id", MinorType.INT)
-        .addRepeatedList("list2")
-          .resumeSchema()
+          .addRepeatedList("list2")
+          .resumeSchema();
+    BatchSchema schema = new BatchSchemaBuilder()
+        .withSchemaBuilder(schemaBuilder)
         .build();
 
     assertEquals(2, schema.getFieldCount());
@@ -113,11 +116,13 @@ public class TestRepeatedListAccessors extends SubOperatorTest {
 
   @Test
   public void testSchema2DBatch() {
-    final BatchSchema schema = new SchemaBuilder()
+    SchemaBuilder schemaBuilder = new SchemaBuilder()
         .add("id", MinorType.INT)
         .addRepeatedList("list2")
           .addArray(MinorType.VARCHAR)
-          .resumeSchema()
+          .resumeSchema();
+    BatchSchema schema = new BatchSchemaBuilder()
+        .withSchemaBuilder(schemaBuilder)
         .build();
 
     assertEquals(2, schema.getFieldCount());
@@ -172,13 +177,15 @@ public class TestRepeatedListAccessors extends SubOperatorTest {
 
   @Test
   public void testSchema3DBatch() {
-    final BatchSchema schema = new SchemaBuilder()
+    SchemaBuilder schemaBuilder = new SchemaBuilder()
         .add("id", MinorType.INT)
         .addRepeatedList("list2")
           .addDimension()
             .addArray(MinorType.VARCHAR)
             .resumeList()
-          .resumeSchema()
+            .resumeSchema();
+    BatchSchema schema = new BatchSchemaBuilder()
+        .withSchemaBuilder(schemaBuilder)
         .build();
 
     assertEquals(2, schema.getFieldCount());

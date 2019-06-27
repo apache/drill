@@ -33,6 +33,7 @@ import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.BatchSchemaBuilder;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.test.BaseTestQuery;
 import org.hamcrest.CoreMatchers;
@@ -998,8 +999,10 @@ public class TestFunctionsQuery extends BaseTestQuery {
         "isdate(employee_id)",
         "NOT (employee_id IS NULL)");
 
-    BatchSchema expectedSchema = new SchemaBuilder()
-        .add("col1", TypeProtos.MinorType.BIT)
+    SchemaBuilder schemaBuilder = new SchemaBuilder()
+        .add("col1", TypeProtos.MinorType.BIT);
+    BatchSchema expectedSchema = new BatchSchemaBuilder()
+        .withSchemaBuilder(schemaBuilder)
         .build();
 
     for (String condition : conditions) {

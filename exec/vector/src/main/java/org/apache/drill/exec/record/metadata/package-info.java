@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 /**
- * Provides a fluent schema builder for use in tests. Handles all
+ * Provides a fluent schema builder. Handles all
  * forms of Drill schemas, with emphasis on ease of use for the typical
  * cases (flat schema or nested maps.) Enables construction of unions,
  * union lists (AKA "list vector") repeated lists and combinations of

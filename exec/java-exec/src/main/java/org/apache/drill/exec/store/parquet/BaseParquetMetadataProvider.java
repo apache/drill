@@ -26,7 +26,6 @@ import org.apache.drill.metastore.metadata.TableInfo;
 import org.apache.drill.metastore.statistics.TableStatisticsKind;
 import org.apache.drill.metastore.statistics.Statistic;
 import org.apache.drill.exec.planner.common.DrillStatsTable;
-import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.metastore.metadata.BaseMetadata;
 import org.apache.drill.metastore.metadata.NonInterestingColumnsMetadata;
@@ -212,12 +211,12 @@ public abstract class BaseParquetMetadataProvider implements ParquetMetadataProv
 
       if (this.schema == null) {
         schema = new TupleSchema();
-        fields.forEach((schemaPath, majorType) -> MetadataUtils.addColumnMetadata(schema, schemaPath, majorType));
+        fields.forEach((schemaPath, majorType) -> SchemaPathUtils.addColumnMetadata(schema, schemaPath, majorType));
       } else {
         // merges specified schema with schema from table
         fields.forEach((schemaPath, majorType) -> {
           if (SchemaPathUtils.getColumnMetadata(schemaPath, schema) == null) {
-            MetadataUtils.addColumnMetadata(schema, schemaPath, majorType);
+            SchemaPathUtils.addColumnMetadata(schema, schemaPath, majorType);
           }
         });
       }

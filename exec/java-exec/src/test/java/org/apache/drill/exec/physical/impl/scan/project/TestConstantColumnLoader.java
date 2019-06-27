@@ -31,9 +31,9 @@ import org.apache.drill.exec.physical.impl.scan.file.FileMetadataColumnDefn;
 import org.apache.drill.exec.physical.impl.scan.file.PartitionColumn;
 import org.apache.drill.exec.physical.impl.scan.project.ConstantColumnLoader.ConstantColumnSpec;
 import org.apache.drill.exec.physical.rowSet.impl.ResultVectorCacheImpl;
-import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.ColumnExplorer.ImplicitFileColumns;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
@@ -108,10 +108,10 @@ public class TestConstantColumnLoader extends SubOperatorTest {
 
     // Verify
 
-    final BatchSchema expectedSchema = new SchemaBuilder()
+    final TupleMetadata expectedSchema = new SchemaBuilder()
         .add("a", aType)
         .add("b", bType)
-        .build();
+        .buildSchema();
     final SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
         .addRow("a-value", "b-value")
         .addRow("a-value", "b-value")
@@ -146,10 +146,10 @@ public class TestConstantColumnLoader extends SubOperatorTest {
 
     // Verify
 
-    BatchSchema expectedSchema = new SchemaBuilder()
+    TupleMetadata expectedSchema = new SchemaBuilder()
         .add(ScanTestUtils.SUFFIX_COL, MinorType.VARCHAR)
         .addNullable(partColName, MinorType.VARCHAR)
-        .build();
+        .buildSchema();
     SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
         .addRow("csv", "y")
         .addRow("csv", "y")

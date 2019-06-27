@@ -24,7 +24,6 @@ import org.apache.drill.exec.physical.config.StreamingAggregate;
 import org.apache.drill.exec.physical.impl.BaseTestOpBatchEmitOutcome;
 import org.apache.drill.exec.physical.impl.MockRecordBatch;
 import org.apache.drill.exec.physical.impl.aggregate.StreamingAggBatch;
-import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
@@ -1483,7 +1482,6 @@ public class TestStreamingAggEmitOutcome extends BaseTestOpBatchEmitOutcome {
       .add("id_left", TypeProtos.MinorType.INT)
       .add("cost_left", TypeProtos.MinorType.INT)
       .add("name_left", TypeProtos.MinorType.VARCHAR)
-      .withSVMode(BatchSchema.SelectionVectorMode.TWO_BYTE)
       .buildSchema();
 
     final RowSet.SingleRowSet emptyRowSet_Sv2 = operatorFixture.rowSetBuilder(inputSchema_sv2)

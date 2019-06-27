@@ -29,6 +29,9 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.OperatorContext;
+import org.apache.drill.exec.record.metadata.MetadataUtils;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.record.metadata.TupleSchema;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.UnionVector;
 
@@ -175,5 +178,13 @@ public class SchemaUtil {
     c.setRecordCount(recordCount);
     Preconditions.checkState(vectorMap.size() == 0, "Leftover vector from incoming batch");
     return c;
+  }
+
+  public static TupleMetadata fromBatchSchema(BatchSchema batchSchema) {
+    TupleSchema tuple = new TupleSchema();
+    for (MaterializedField field : batchSchema) {
+      tuple.add(MetadataUtils.fromView(field));
+    }
+    return tuple;
   }
 }

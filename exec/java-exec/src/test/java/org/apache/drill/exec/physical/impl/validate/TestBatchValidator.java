@@ -26,9 +26,9 @@ import java.util.List;
 
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.RepeatedVarCharVector;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
@@ -69,10 +69,10 @@ public class TestBatchValidator /* TODO: extends SubOperatorTest */ {
 
   @Test
   public void testValidFixed() {
-    BatchSchema schema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.INT)
         .addNullable("b", MinorType.INT)
-        .build();
+        .buildSchema();
 
     SingleRowSet batch = fixture.rowSetBuilder(schema)
         .addRow(10, 100)
@@ -89,10 +89,10 @@ public class TestBatchValidator /* TODO: extends SubOperatorTest */ {
 
   @Test
   public void testValidVariable() {
-    BatchSchema schema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.VARCHAR)
         .addNullable("b", MinorType.VARCHAR)
-        .build();
+        .buildSchema();
 
     SingleRowSet batch = fixture.rowSetBuilder(schema)
         .addRow("col1.1", "col1.2")
@@ -109,10 +109,10 @@ public class TestBatchValidator /* TODO: extends SubOperatorTest */ {
 
   @Test
   public void testValidRepeated() {
-    BatchSchema schema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.INT, DataMode.REPEATED)
         .add("b", MinorType.VARCHAR, DataMode.REPEATED)
-        .build();
+        .buildSchema();
 
     SingleRowSet batch = fixture.rowSetBuilder(schema)
         .addRow(intArray(), strArray())
@@ -128,9 +128,9 @@ public class TestBatchValidator /* TODO: extends SubOperatorTest */ {
 
   @Test
   public void testVariableMissingLast() {
-    BatchSchema schema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.VARCHAR)
-        .build();
+        .buildSchema();
 
     SingleRowSet batch = fixture.rowSetBuilder(schema)
         .addRow("x")
@@ -160,9 +160,9 @@ public class TestBatchValidator /* TODO: extends SubOperatorTest */ {
 
   @Test
   public void testVariableCorruptFirst() {
-    BatchSchema schema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.VARCHAR)
-        .build();
+        .buildSchema();
 
     SingleRowSet batch = fixture.rowSetBuilder(schema)
         .addRow("x")
@@ -196,9 +196,9 @@ public class TestBatchValidator /* TODO: extends SubOperatorTest */ {
 
   @Test
   public void testVariableCorruptMiddleLow() {
-    BatchSchema schema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.VARCHAR)
-        .build();
+        .buildSchema();
 
     SingleRowSet batch = fixture.rowSetBuilder(schema)
         .addRow("xx")
@@ -220,9 +220,9 @@ public class TestBatchValidator /* TODO: extends SubOperatorTest */ {
 
   @Test
   public void testVariableCorruptMiddleHigh() {
-    BatchSchema schema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.VARCHAR)
-        .build();
+        .buildSchema();
 
     SingleRowSet batch = fixture.rowSetBuilder(schema)
         .addRow("xx")
@@ -244,9 +244,9 @@ public class TestBatchValidator /* TODO: extends SubOperatorTest */ {
 
   @Test
   public void testVariableCorruptLastOutOfRange() {
-    BatchSchema schema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.VARCHAR)
-        .build();
+        .buildSchema();
 
     SingleRowSet batch = fixture.rowSetBuilder(schema)
         .addRow("xx")
@@ -268,9 +268,9 @@ public class TestBatchValidator /* TODO: extends SubOperatorTest */ {
 
   @Test
   public void testRepeatedBadArrayOffset() {
-    BatchSchema schema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.VARCHAR, DataMode.REPEATED)
-        .build();
+        .buildSchema();
 
     SingleRowSet batch = fixture.rowSetBuilder(schema)
         .addRow((Object) strArray())
@@ -294,9 +294,9 @@ public class TestBatchValidator /* TODO: extends SubOperatorTest */ {
 
   @Test
   public void testRepeatedBadValueOffset() {
-    BatchSchema schema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.VARCHAR, DataMode.REPEATED)
-        .build();
+        .buildSchema();
 
     SingleRowSet batch = fixture.rowSetBuilder(schema)
         .addRow((Object) strArray())

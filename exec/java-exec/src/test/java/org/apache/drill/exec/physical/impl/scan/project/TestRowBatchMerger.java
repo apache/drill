@@ -23,10 +23,10 @@ import org.apache.drill.exec.physical.impl.scan.project.NullColumnBuilder.NullBu
 import org.apache.drill.exec.physical.impl.scan.project.ResolvedTuple.ResolvedRow;
 import org.apache.drill.exec.physical.rowSet.ResultVectorCache;
 import org.apache.drill.exec.physical.rowSet.impl.NullResultVectorCacheImpl;
-import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSet;
@@ -96,10 +96,10 @@ public class TestRowBatchMerger extends SubOperatorTest {
   }
 
   private RowSetSource makeFirst() {
-    BatchSchema firstSchema = new SchemaBuilder()
+    TupleMetadata firstSchema = new SchemaBuilder()
         .add("d", MinorType.VARCHAR)
         .add("a", MinorType.INT)
-        .build();
+        .buildSchema();
     return new RowSetSource(
         fixture.rowSetBuilder(firstSchema)
           .addRow("barney", 10)
@@ -108,10 +108,10 @@ public class TestRowBatchMerger extends SubOperatorTest {
   }
 
   private RowSetSource makeSecond() {
-    BatchSchema secondSchema = new SchemaBuilder()
+    TupleMetadata secondSchema = new SchemaBuilder()
         .add("b", MinorType.INT)
         .add("c", MinorType.VARCHAR)
-        .build();
+        .buildSchema();
     return new RowSetSource(
         fixture.rowSetBuilder(secondSchema)
           .addRow(1, "foo.csv")
@@ -158,12 +158,12 @@ public class TestRowBatchMerger extends SubOperatorTest {
 
     // Verify
 
-    BatchSchema expectedSchema = new SchemaBuilder()
+    TupleMetadata expectedSchema = new SchemaBuilder()
         .add("a", MinorType.INT)
         .add("b", MinorType.INT)
         .add("c", MinorType.VARCHAR)
         .add("d", MinorType.VARCHAR)
-        .build();
+        .buildSchema();
     SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
         .addRow(10, 1, "foo.csv", "barney")
         .addRow(20, 2, "foo.csv", "wilma")
@@ -199,12 +199,12 @@ public class TestRowBatchMerger extends SubOperatorTest {
 
     // Verify
 
-    BatchSchema expectedSchema = new SchemaBuilder()
+    TupleMetadata expectedSchema = new SchemaBuilder()
         .add("a", MinorType.INT)
         .add("b", MinorType.INT)
         .add("c", MinorType.VARCHAR)
         .add("d", MinorType.VARCHAR)
-        .build();
+        .buildSchema();
     SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
         .addRow(10, 1, "foo.csv", "barney")
         .addRow(20, 2, "foo.csv", "wilma")
@@ -246,12 +246,12 @@ public class TestRowBatchMerger extends SubOperatorTest {
 
     // Verify
 
-    BatchSchema expectedSchema = new SchemaBuilder()
+    TupleMetadata expectedSchema = new SchemaBuilder()
         .add("a", MinorType.INT)
         .addNullable("null1", MinorType.INT)
         .addNullable("null2", MinorType.VARCHAR)
         .add("d", MinorType.VARCHAR)
-        .build();
+        .buildSchema();
     SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
         .addRow(10, null, null, "barney")
         .addRow(20, null, null, "wilma")
@@ -312,7 +312,7 @@ public class TestRowBatchMerger extends SubOperatorTest {
 
     // Verify
 
-    BatchSchema expectedSchema = new SchemaBuilder()
+    TupleMetadata expectedSchema = new SchemaBuilder()
         .add("a", MinorType.INT)
         .addMap("map1")
           .addNullable("null1", MinorType.INT)
@@ -322,7 +322,7 @@ public class TestRowBatchMerger extends SubOperatorTest {
             .resumeMap()
           .resumeSchema()
         .add("d", MinorType.VARCHAR)
-        .build();
+        .buildSchema();
     SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
         .addRow(10, mapValue(null, null, singleMap(null)), "barney")
         .addRow(20, mapValue(null, null, singleMap(null)), "wilma")
@@ -343,12 +343,12 @@ public class TestRowBatchMerger extends SubOperatorTest {
 
     // Create the first batch
 
-    BatchSchema inputSchema = new SchemaBuilder()
+    TupleMetadata inputSchema = new SchemaBuilder()
         .add("b", MinorType.VARCHAR)
         .addMap("a")
           .add("c", MinorType.INT)
           .resumeSchema()
-        .build();
+        .buildSchema();
     RowSetSource input = new RowSetSource(
         fixture.rowSetBuilder(inputSchema)
           .addRow("barney", singleMap(10))
@@ -362,7 +362,7 @@ public class TestRowBatchMerger extends SubOperatorTest {
 
     resolvedTuple.add(new TestProjection(resolvedTuple, 0));
     ResolvedMapColumn mapCol = new ResolvedMapColumn(resolvedTuple,
-        inputSchema.getColumn(1), 1);
+        inputSchema.column(1), 1);
     resolvedTuple.add(mapCol);
     ResolvedTuple map = mapCol.members();
     map.add(new TestProjection(map, 0));
@@ -386,13 +386,13 @@ public class TestRowBatchMerger extends SubOperatorTest {
 
     // Verify
 
-    BatchSchema expectedSchema = new SchemaBuilder()
+    TupleMetadata expectedSchema = new SchemaBuilder()
         .add("b", MinorType.VARCHAR)
         .addMap("a")
           .add("c", MinorType.INT)
           .addNullable("null1", MinorType.INT)
           .resumeSchema()
-        .build();
+        .buildSchema();
     RowSet expected = fixture.rowSetBuilder(expectedSchema)
         .addRow("barney", mapValue(10, null))
         .addRow("wilma", mapValue(20, null))
@@ -412,12 +412,12 @@ public class TestRowBatchMerger extends SubOperatorTest {
 
     // Create the first batch
 
-    BatchSchema inputSchema = new SchemaBuilder()
+    TupleMetadata inputSchema = new SchemaBuilder()
         .add("b", MinorType.VARCHAR)
         .addMapArray("a")
           .add("c", MinorType.INT)
           .resumeSchema()
-        .build();
+        .buildSchema();
     RowSetSource input = new RowSetSource(
         fixture.rowSetBuilder(inputSchema)
           .addRow("barney", mapArray(singleMap(10), singleMap(11), singleMap(12)))
@@ -431,7 +431,7 @@ public class TestRowBatchMerger extends SubOperatorTest {
 
     resolvedTuple.add(new TestProjection(resolvedTuple, 0));
     ResolvedMapColumn mapCol = new ResolvedMapColumn(resolvedTuple,
-        inputSchema.getColumn(1), 1);
+        inputSchema.column(1), 1);
     resolvedTuple.add(mapCol);
     ResolvedTuple map = mapCol.members();
     map.add(new TestProjection(map, 0));
@@ -455,13 +455,13 @@ public class TestRowBatchMerger extends SubOperatorTest {
 
     // Verify
 
-    BatchSchema expectedSchema = new SchemaBuilder()
+    TupleMetadata expectedSchema = new SchemaBuilder()
         .add("b", MinorType.VARCHAR)
         .addMapArray("a")
           .add("c", MinorType.INT)
           .addNullable("null1", MinorType.INT)
           .resumeSchema()
-        .build();
+        .buildSchema();
     RowSet expected = fixture.rowSetBuilder(expectedSchema)
         .addRow("barney", mapArray(
             mapValue(10, null), mapValue(11, null), mapValue(12, null)))

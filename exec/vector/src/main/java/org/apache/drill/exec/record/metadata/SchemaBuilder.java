@@ -20,8 +20,6 @@ package org.apache.drill.exec.record.metadata;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.record.BatchSchema;
-import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.MaterializedField;
 
 /**
@@ -74,20 +72,8 @@ public class SchemaBuilder implements SchemaContainer {
    */
 
   private TupleBuilder tupleBuilder = new TupleBuilder();
-  private SelectionVectorMode svMode = SelectionVectorMode.NONE;
 
   public SchemaBuilder() { }
-
-  /**
-   * Create a new schema starting with the base schema. Allows appending
-   * additional columns to an additional schema.
-   */
-
-  public SchemaBuilder(BatchSchema baseSchema) {
-    for (MaterializedField field : baseSchema) {
-      add(field);
-    }
-  }
 
   /**
    * Create a column schema using the "basic three" properties of name, type and
@@ -206,15 +192,6 @@ public class SchemaBuilder implements SchemaContainer {
 
   public RepeatedListBuilder addRepeatedList(String name) {
     return tupleBuilder.addRepeatedList(this, name);
-  }
-
-  public SchemaBuilder withSVMode(SelectionVectorMode svMode) {
-    this.svMode = svMode;
-    return this;
-  }
-
-  public BatchSchema build() {
-    return tupleBuilder.batchSchema(svMode);
   }
 
   public TupleMetadata buildSchema() {

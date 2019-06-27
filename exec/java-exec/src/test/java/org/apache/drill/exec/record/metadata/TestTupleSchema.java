@@ -528,7 +528,7 @@ public class TestTupleSchema extends SubOperatorTest {
 
     // And it is equivalent to the round trip to a batch schema.
 
-    BatchSchema batchSchema = root.toBatchSchema(SelectionVectorMode.NONE);
+    BatchSchema batchSchema = new BatchSchema(SelectionVectorMode.NONE, root.toFieldList());
     assertTrue(root.isEquivalent(MetadataUtils.fromFields(batchSchema)));
   }
 
@@ -709,7 +709,7 @@ public class TestTupleSchema extends SubOperatorTest {
     assertTrue(types.contains(MinorType.BIGINT));
     assertTrue(types.contains(MinorType.VARCHAR));
 
-    BatchSchema batchSchema = ((TupleSchema) schema).toBatchSchema(SelectionVectorMode.NONE);
+    BatchSchema batchSchema = new BatchSchema(SelectionVectorMode.NONE, schema.toFieldList());
 
     MaterializedField field = batchSchema.getColumn(0);
     assertEquals("u", field.getName());
@@ -759,7 +759,7 @@ public class TestTupleSchema extends SubOperatorTest {
     assertTrue(types.contains(MinorType.BIGINT));
     assertTrue(types.contains(MinorType.VARCHAR));
 
-    BatchSchema batchSchema = ((TupleSchema) schema).toBatchSchema(SelectionVectorMode.NONE);
+    BatchSchema batchSchema = new BatchSchema(SelectionVectorMode.NONE, schema.toFieldList());
 
     MaterializedField field = batchSchema.getColumn(0);
     assertEquals("list", field.getName());

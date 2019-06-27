@@ -24,8 +24,8 @@ import java.util.List;
 import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.server.Drillbit;
@@ -131,11 +131,11 @@ public class TestLogReader extends ClusterTest {
     String sql = "SELECT * FROM cp.`regex/simple.log1`";
     RowSet results = client.queryBuilder().sql(sql).rowSet();
 
-    BatchSchema expectedSchema = new SchemaBuilder()
+    TupleMetadata expectedSchema = new SchemaBuilder()
         .addNullable("year", MinorType.INT)
         .addNullable("month", MinorType.INT)
         .addNullable("day", MinorType.INT)
-        .build();
+        .buildSchema();
 
     RowSet expected = client.rowSetBuilder(expectedSchema)
         .addRow(2017, 12, 17)
@@ -161,10 +161,10 @@ public class TestLogReader extends ClusterTest {
     String sql = "SELECT `day`, `month` FROM cp.`regex/simple.log1`";
     RowSet results = client.queryBuilder().sql(sql).rowSet();
 
-    BatchSchema expectedSchema = new SchemaBuilder()
+    TupleMetadata expectedSchema = new SchemaBuilder()
         .addNullable("day", MinorType.INT)
         .addNullable("month", MinorType.INT)
-        .build();
+        .buildSchema();
 
     RowSet expected = client.rowSetBuilder(expectedSchema)
         .addRow(17, 12)
@@ -172,8 +172,6 @@ public class TestLogReader extends ClusterTest {
         .addRow(19, 12)
         .build();
 
-//    results.print();
-//    expected.print();
     RowSetUtilities.verify(expected, results);
   }
 
@@ -182,11 +180,11 @@ public class TestLogReader extends ClusterTest {
     String sql = "SELECT `day`, `missing`, `month` FROM cp.`regex/simple.log1`";
     RowSet results = client.queryBuilder().sql(sql).rowSet();
 
-    BatchSchema expectedSchema = new SchemaBuilder()
+    TupleMetadata expectedSchema = new SchemaBuilder()
         .addNullable("day", MinorType.INT)
         .addNullable("missing", MinorType.VARCHAR)
         .addNullable("month", MinorType.INT)
-        .build();
+        .buildSchema();
 
     RowSet expected = client.rowSetBuilder(expectedSchema)
         .addRow(17, null, 12)
@@ -194,8 +192,6 @@ public class TestLogReader extends ClusterTest {
         .addRow(19, null, 12)
         .build();
 
-//    results.print();
-//    expected.print();
     RowSetUtilities.verify(expected, results);
   }
 
@@ -204,9 +200,9 @@ public class TestLogReader extends ClusterTest {
     String sql = "SELECT `_raw` FROM cp.`regex/simple.log1`";
     RowSet results = client.queryBuilder().sql(sql).rowSet();
 
-    BatchSchema expectedSchema = new SchemaBuilder()
+    TupleMetadata expectedSchema = new SchemaBuilder()
         .addNullable("_raw", MinorType.VARCHAR)
-        .build();
+        .buildSchema();
 
     RowSet expected = client.rowSetBuilder(expectedSchema)
         .addRow("2017-12-17 10:52:41,820 [main] INFO  o.a.d.e.e.f.FunctionImplementationRegistry - Function registry loaded.  459 functions loaded in 1396 ms.")
@@ -221,9 +217,9 @@ public class TestLogReader extends ClusterTest {
     String sql = "SELECT TYPEOF(`entry_date`) AS entry_date FROM cp.`regex/simple.log2` LIMIT 1";
     RowSet results = client.queryBuilder().sql(sql).rowSet();
 
-    BatchSchema expectedSchema = new SchemaBuilder()
+    TupleMetadata expectedSchema = new SchemaBuilder()
         .add("entry_date", MinorType.VARCHAR)
-        .build();
+        .buildSchema();
 
     RowSet expected = client.rowSetBuilder(expectedSchema)
         .addRow("TIMESTAMP")
@@ -244,11 +240,11 @@ public class TestLogReader extends ClusterTest {
     String sql = "SELECT * FROM cp.`regex/simple.log1`";
     RowSet results = client.queryBuilder().sql(sql).rowSet();
 
-    BatchSchema expectedSchema = new SchemaBuilder()
+    TupleMetadata expectedSchema = new SchemaBuilder()
         .addNullable("year", MinorType.INT)
         .addNullable("month", MinorType.INT)
         .addNullable("day", MinorType.INT)
-        .build();
+        .buildSchema();
 
     RowSet expected = client.rowSetBuilder(expectedSchema)
         .addRow(2017, 12, 17)
@@ -265,13 +261,13 @@ public class TestLogReader extends ClusterTest {
     String sql = "SELECT * FROM cp.`regex/mysql.sqllog`";
     RowSet results = client.queryBuilder().sql(sql).rowSet();
 
-    BatchSchema expectedSchema = new SchemaBuilder()
+    TupleMetadata expectedSchema = new SchemaBuilder()
         .addNullable("field_0", MinorType.VARCHAR)
         .addNullable("field_1", MinorType.VARCHAR)
         .addNullable("field_2", MinorType.VARCHAR)
         .addNullable("field_3", MinorType.VARCHAR)
         .addNullable("field_4", MinorType.VARCHAR)
-        .build();
+        .buildSchema();
 
     RowSet expected = client.rowSetBuilder(expectedSchema)
         .addRow("070823", "21:00:32", "1", "Connect", "root@localhost on test1")
@@ -291,13 +287,13 @@ public class TestLogReader extends ClusterTest {
     String sql = "SELECT field_0, field_1, field_2, field_3, field_4 FROM cp.`regex/mysql.sqllog`";
     RowSet results = client.queryBuilder().sql(sql).rowSet();
 
-    BatchSchema expectedSchema = new SchemaBuilder()
+    TupleMetadata expectedSchema = new SchemaBuilder()
         .addNullable("field_0", MinorType.VARCHAR)
         .addNullable("field_1", MinorType.VARCHAR)
         .addNullable("field_2", MinorType.VARCHAR)
         .addNullable("field_3", MinorType.VARCHAR)
         .addNullable("field_4", MinorType.VARCHAR)
-        .build();
+        .buildSchema();
 
     RowSet expected = client.rowSetBuilder(expectedSchema)
         .addRow("070823", "21:00:32", "1", "Connect", "root@localhost on test1")
@@ -315,10 +311,10 @@ public class TestLogReader extends ClusterTest {
     String sql = "SELECT field_0, field_4 FROM cp.`regex/mysql.sqllog`";
     RowSet results = client.queryBuilder().sql(sql).rowSet();
 
-    BatchSchema expectedSchema = new SchemaBuilder()
+    TupleMetadata expectedSchema = new SchemaBuilder()
         .addNullable("field_0", MinorType.VARCHAR)
         .addNullable("field_4", MinorType.VARCHAR)
-        .build();
+        .buildSchema();
 
     RowSet expected = client.rowSetBuilder(expectedSchema)
         .addRow("070823", "root@localhost on test1")
@@ -336,9 +332,9 @@ public class TestLogReader extends ClusterTest {
     String sql = "SELECT _raw FROM cp.`regex/mysql.sqllog`";
     RowSet results = client.queryBuilder().sql(sql).rowSet();
 
-    BatchSchema expectedSchema = new SchemaBuilder()
+    TupleMetadata expectedSchema = new SchemaBuilder()
         .addNullable("_raw", MinorType.VARCHAR)
-        .build();
+        .buildSchema();
 
     RowSet expected = client.rowSetBuilder(expectedSchema)
         .addRow("070823 21:00:32       1 Connect     root@localhost on test1")
@@ -357,9 +353,9 @@ public class TestLogReader extends ClusterTest {
     RowSet results = client.queryBuilder().sql(sql).rowSet();
     results.print();
 
-    BatchSchema expectedSchema = new SchemaBuilder()
+    TupleMetadata expectedSchema = new SchemaBuilder()
         .addNullable("_unmatched_rows", MinorType.VARCHAR)
-        .build();
+        .buildSchema();
 
     RowSet expected = client.rowSetBuilder(expectedSchema)
         .addRow("dfadkfjaldkjafsdfjlksdjflksjdlkfjsldkfjslkjl")
@@ -373,10 +369,10 @@ public class TestLogReader extends ClusterTest {
     String sql = "SELECT _raw, _unmatched_rows FROM cp.`regex/mysql.sqllog`";
     RowSet results = client.queryBuilder().sql(sql).rowSet();
 
-    BatchSchema expectedSchema = new SchemaBuilder()
+    TupleMetadata expectedSchema = new SchemaBuilder()
         .addNullable("_raw", MinorType.VARCHAR)
         .addNullable("_unmatched_rows", MinorType.VARCHAR)
-        .build();
+        .buildSchema();
 
     RowSet expected = client.rowSetBuilder(expectedSchema)
         .addRow("070823 21:00:32       1 Connect     root@localhost on test1", null)

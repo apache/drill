@@ -23,6 +23,7 @@ import org.apache.drill.PlanTestBase;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.BatchSchemaBuilder;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.store.parquet.metadata.Metadata;
 import org.apache.drill.exec.store.parquet.metadata.MetadataVersion;
@@ -874,7 +875,9 @@ public class TestParquetMetadataCache extends PlanTestBase {
         Paths.get("parquet", "metadata_files_with_old_versions", "v3_1", "metadata_table.requires_replace.txt"),
         Paths.get(emptyDirNameWithMetadataFile, Metadata.OLD_METADATA_FILENAME));
 
-    final BatchSchema expectedSchema = new SchemaBuilder().build();
+    final BatchSchema expectedSchema = new BatchSchemaBuilder()
+        .withSchemaBuilder(new SchemaBuilder())
+        .build();
 
     testBuilder()
         .sqlQuery("select * from dfs.tmp.`%s`", emptyDirNameWithMetadataFile)
@@ -893,7 +896,9 @@ public class TestParquetMetadataCache extends PlanTestBase {
             Paths.get("parquet", "metadata_files_with_old_versions", "v3_1", "metadata_directories.requires_replace.txt"),
             Paths.get(emptyDirNameWithMetadataFile, Metadata.METADATA_DIRECTORIES_FILENAME));
 
-    final BatchSchema expectedSchema = new SchemaBuilder().build();
+    final BatchSchema expectedSchema = new BatchSchemaBuilder()
+        .withSchemaBuilder(new SchemaBuilder())
+        .build();
 
     testBuilder()
             .sqlQuery("select * from dfs.tmp.`%s`", emptyDirNameWithMetadataFile)

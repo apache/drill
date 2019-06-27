@@ -119,8 +119,8 @@ public class ColumnBuilder {
    * a vector, a writer, and the column state which binds the two together
    * and manages the column.
    *
-   * @param columnSchema schema of the new primitive column
-   * @param projType implied projection type for the column
+   * @param parent schema of the new primitive column
+   * @param colProj implied projection type for the column
    * @return column state for the new column
    */
 
@@ -179,7 +179,8 @@ public class ColumnBuilder {
    * here, instead we create a tuple state to hold the columns, and defer the
    * map vector (or vector container) until harvest time.
    *
-   * @param columnSchema description of the map column
+   * @param parent description of the map column
+   * @param colProj implied projection type for the column
    * @return column state for the map column
    */
 
@@ -295,7 +296,7 @@ public class ColumnBuilder {
    * does so. Unions are fully tested in the row set writer mechanism.
    *
    * @param parent container
-   * @param columnSchema column schema
+   * @param colProj column schema
    * @return column
    */
   private ColumnState buildUnion(ContainerState parent, ColumnReadProjection colProj) {
@@ -362,7 +363,7 @@ public class ColumnBuilder {
    * not support the <tt>ListVector</tt> type.
    *
    * @param parent the parent (tuple, union or list) that holds this list
-   * @param columnSchema metadata description of the list which must contain
+   * @param colProj metadata description of the list which must contain
    * exactly one subtype
    * @return the column state for the list
    */
@@ -421,7 +422,7 @@ public class ColumnBuilder {
    * not support the <tt>ListVector</tt> type.
    *
    * @param parent the parent (tuple, union or list) that holds this list
-   * @param columnSchema metadata description of the list (must be empty of
+   * @param colProj metadata description of the list (must be empty of
    * subtypes)
    * @return the column state for the list
    */

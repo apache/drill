@@ -42,10 +42,12 @@ import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
+import org.apache.drill.exec.record.BatchSchemaBuilder;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.exec.vector.VarCharVector;
 import org.apache.drill.test.SubOperatorTest;
@@ -114,10 +116,10 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
         return false;
       }
       if (nextCount == schemaChangeAt) {
-        BatchSchema newSchema = new SchemaBuilder(batchAccessor.getSchema())
-            .add("b", MinorType.VARCHAR)
-            .build();
-        VectorContainer newContainer = new VectorContainer(fixture.allocator(), newSchema);
+        BatchSchemaBuilder newSchema = new BatchSchemaBuilder(batchAccessor.getSchema());
+        newSchema.schemaBuilder()
+            .add("b", MinorType.VARCHAR);
+        VectorContainer newContainer = new VectorContainer(fixture.allocator(), newSchema.build());
         batchAccessor.setContainer(newContainer);
       }
       return true;
@@ -134,8 +136,10 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
   }
 
   private static VectorContainer mockBatch() {
-    VectorContainer container = new VectorContainer(fixture.allocator(), new SchemaBuilder()
-        .add("a", MinorType.INT)
+    SchemaBuilder schemaBuilder = new SchemaBuilder()
+      .add("a", MinorType.INT);
+    VectorContainer container = new VectorContainer(fixture.allocator(), new BatchSchemaBuilder()
+        .withSchemaBuilder(schemaBuilder)
         .build());
     container.buildSchema(SelectionVectorMode.NONE);
     return container;
@@ -349,9 +353,11 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
 
   @Test
   public void testBatchAccessor() {
-    BatchSchema schema = new SchemaBuilder()
-        .add("a", MinorType.INT)
-        .add("b", MinorType.VARCHAR)
+    SchemaBuilder schemaBuilder = new SchemaBuilder()
+      .add("a", MinorType.INT)
+      .add("b", MinorType.VARCHAR);
+    BatchSchema schema = new BatchSchemaBuilder()
+        .withSchemaBuilder(schemaBuilder)
         .build();
     SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addRow(10, "fred")
@@ -419,10 +425,10 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
 
   @Test
   public void testSchemaChange() {
-    BatchSchema schema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.INT)
         .add("b", MinorType.VARCHAR)
-        .build();
+        .buildSchema();
     SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addRow(10, "fred")
         .addRow(20, "wilma")
@@ -508,10 +514,10 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
 
   @Test
   public void testSv2() {
-    BatchSchema schema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.INT)
         .add("b", MinorType.VARCHAR)
-        .build();
+        .buildSchema();
     SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addRow(10, "fred")
         .addRow(20, "wilma")

@@ -21,7 +21,7 @@ import org.apache.drill.common.types.BooleanType;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.expr.TypeHelper;
+import org.apache.drill.exec.expr.BasicTypeHelper;
 import org.apache.drill.exec.record.MaterializedField;
 import org.joda.time.Instant;
 import org.joda.time.LocalDate;
@@ -79,10 +79,10 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
       } else {
         // TypeHelper includes the offset vector width
 
-        return TypeHelper.getSize(majorType) - 4;
+        return BasicTypeHelper.getSize(majorType) - 4;
       }
     } else {
-      return TypeHelper.getSize(majorType);
+      return BasicTypeHelper.getSize(majorType);
     }
   }
 

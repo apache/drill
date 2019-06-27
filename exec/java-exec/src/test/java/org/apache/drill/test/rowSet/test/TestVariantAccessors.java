@@ -29,7 +29,6 @@ import java.util.List;
 import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
@@ -991,9 +990,9 @@ public class TestVariantAccessors extends SubOperatorTest {
 
   @Test
   public void testAddTypes() {
-    final BatchSchema batchSchema = new SchemaBuilder()
+    final TupleMetadata batchSchema = new SchemaBuilder()
         .addNullable("v", MinorType.UNION)
-        .build();
+        .buildSchema();
 
     final ExtendableRowSet rs = fixture.rowSet(batchSchema);
     final RowSetWriter writer = rs.writer();
