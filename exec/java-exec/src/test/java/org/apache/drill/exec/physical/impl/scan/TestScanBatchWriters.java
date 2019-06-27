@@ -24,10 +24,10 @@ import org.apache.drill.exec.physical.base.AbstractSubScan;
 import org.apache.drill.exec.physical.base.Scan;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.physical.impl.ScanBatch;
-import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
@@ -105,11 +105,11 @@ public class TestScanBatchWriters extends SubOperatorTest {
 
         // Expected
 
-        BatchSchema schema = new SchemaBuilder()
+        TupleMetadata schema = new SchemaBuilder()
             .addNullable("a", MinorType.INT)
             .addNullable("b", MinorType.VARCHAR)
             .addArray("c", MinorType.INT)
-            .build();
+            .buildSchema();
         RowSet expected = fixture.rowSetBuilder(schema)
             .addRow(10, "Fred", new int[] { 100, 110, 120 } )
             .addRow(20, "Wilma", null)

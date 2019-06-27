@@ -72,6 +72,10 @@
       <artifactId>hppc</artifactId>
       <version>0.7.1</version>
     </dependency>
+    <dependency>
+      <groupId>org.antlr</groupId>
+      <artifactId>antlr4-runtime</artifactId>
+    </dependency>
   </dependencies>
 
   <build>
@@ -119,6 +123,23 @@
               <output>${project.build.directory}/generated-sources</output>
               <templates>${project.build.directory}/codegen/templates</templates>
             </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.antlr</groupId>
+        <artifactId>antlr4-maven-plugin</artifactId>
+        <version>${antlr.version}</version>
+        <configuration>
+          <listener>false</listener>
+          <visitor>true</visitor>
+          <outputDirectory>${project.build.directory}/generated-sources</outputDirectory>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>antlr4</goal>
+            </goals>
           </execution>
         </executions>
       </plugin>

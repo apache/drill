@@ -24,12 +24,12 @@ import static org.junit.Assert.assertTrue;
 
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.RecordBatchSizer;
 import org.apache.drill.exec.record.RecordBatchSizer.ColumnSize;
 import org.apache.drill.exec.record.VectorInitializer;
 import org.apache.drill.exec.record.VectorInitializer.AllocationHint;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.exec.vector.RepeatedIntVector;
 import org.apache.drill.exec.vector.ValueVector;
@@ -57,10 +57,10 @@ public class TestShortArrays extends SubOperatorTest {
     // Create a row set with less than one item, on
     // average, per array.
 
-    BatchSchema schema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.INT)
         .addArray("b", MinorType.INT)
-        .build();
+        .buildSchema();
     RowSetBuilder builder = fixture.rowSetBuilder(schema)
         .addRow(1, intArray(10));
     for (int i = 2; i <= 10; i++) {

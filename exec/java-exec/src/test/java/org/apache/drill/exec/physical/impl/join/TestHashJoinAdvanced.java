@@ -24,6 +24,7 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.RecordBatchLoader;
+import org.apache.drill.exec.record.BatchSchemaBuilder;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.test.BaseTestQuery;
@@ -232,10 +233,12 @@ public class TestHashJoinAdvanced extends JoinTestBase {
       batchLoader.load(queryDataBatch.getHeader().getDef(), queryDataBatch.getData());
 
       final BatchSchema actualSchema = batchLoader.getSchema();
-      final BatchSchema expectedSchema = new SchemaBuilder()
+      SchemaBuilder schemaBuilder = new SchemaBuilder()
         .add("l_quantity", TypeProtos.MinorType.FLOAT8, TypeProtos.DataMode.REQUIRED)
         .add("l_shipdate", TypeProtos.MinorType.DATE, TypeProtos.DataMode.REQUIRED)
-        .add("o_custkey", TypeProtos.MinorType.INT, TypeProtos.DataMode.REQUIRED)
+        .add("o_custkey", TypeProtos.MinorType.INT, TypeProtos.DataMode.REQUIRED);
+      final BatchSchema expectedSchema = new BatchSchemaBuilder()
+        .withSchemaBuilder(schemaBuilder)
         .build();
 
       Assert.assertTrue(expectedSchema.isEquivalent(actualSchema));

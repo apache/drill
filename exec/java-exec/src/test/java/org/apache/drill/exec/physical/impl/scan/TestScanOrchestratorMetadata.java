@@ -35,7 +35,6 @@ import org.apache.drill.exec.physical.impl.scan.project.ScanSchemaOrchestrator;
 import org.apache.drill.exec.physical.impl.scan.project.ScanSchemaOrchestrator.ScanOrchestratorBuilder;
 import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
 import org.apache.drill.exec.physical.rowSet.impl.RowSetTestUtils;
-import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.test.SubOperatorTest;
@@ -164,9 +163,9 @@ public class TestScanOrchestratorMetadata extends SubOperatorTest {
 
     ResultSetLoader loader = reader.makeTableLoader(tableSchema);
 
-    BatchSchema expectedSchema = new SchemaBuilder()
+    TupleMetadata expectedSchema = new SchemaBuilder()
         .addNullable("c", MinorType.INT)
-        .build();
+        .buildSchema();
 
     // Create a batch of data.
 
@@ -236,12 +235,12 @@ public class TestScanOrchestratorMetadata extends SubOperatorTest {
     // Verify empty batch.
 
     reader.defineSchema();
-    BatchSchema expectedSchema = new SchemaBuilder()
+    TupleMetadata expectedSchema = new SchemaBuilder()
         .add("a", MinorType.INT)
         .add("b", MinorType.VARCHAR)
         .addNullable("dir0", MinorType.VARCHAR)
         .add("suffix", MinorType.VARCHAR)
-        .build();
+        .buildSchema();
     {
       SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
          .build();
@@ -309,12 +308,12 @@ public class TestScanOrchestratorMetadata extends SubOperatorTest {
 
     ResultSetLoader loader = reader.makeTableLoader(tableSchema);
 
-    BatchSchema expectedSchema = new SchemaBuilder()
+    TupleMetadata expectedSchema = new SchemaBuilder()
         .addNullable("dir0", MinorType.VARCHAR)
         .add("b", MinorType.VARCHAR)
         .add("suffix", MinorType.VARCHAR)
         .addNullable("c", MinorType.INT)
-        .build();
+        .buildSchema();
 
     // Create a batch of data.
 
@@ -368,12 +367,12 @@ public class TestScanOrchestratorMetadata extends SubOperatorTest {
         .add("a", MinorType.INT)
         .addNullable("b", MinorType.VARCHAR, 10)
         .buildSchema();
-    BatchSchema expectedSchema = new SchemaBuilder()
+    TupleMetadata expectedSchema = new SchemaBuilder()
         .addNullable(ScanTestUtils.partitionColName(0), MinorType.VARCHAR)
         .addNullable(ScanTestUtils.partitionColName(1), MinorType.VARCHAR)
         .add(ScanTestUtils.FILE_NAME_COL, MinorType.VARCHAR)
         .addNullable("b", MinorType.VARCHAR, 10)
-        .build();
+        .buildSchema();
 
     SchemaTracker tracker = new SchemaTracker();
     int schemaVersion;

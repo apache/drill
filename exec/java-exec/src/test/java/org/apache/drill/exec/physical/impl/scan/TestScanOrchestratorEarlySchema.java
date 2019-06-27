@@ -35,6 +35,7 @@ import org.apache.drill.exec.physical.rowSet.impl.RowSetTestUtils;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.record.BatchSchemaBuilder;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.test.SubOperatorTest;
@@ -226,10 +227,10 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
 
     ResultSetLoader loader = reader.makeTableLoader(tableSchema);
 
-    BatchSchema expectedSchema = new SchemaBuilder()
+    TupleMetadata expectedSchema = new SchemaBuilder()
         .add("b", MinorType.VARCHAR)
         .add("a", MinorType.INT)
-        .build();
+        .buildSchema();
 
     // Create a batch of data.
 
@@ -281,11 +282,11 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
 
     ResultSetLoader loader = reader.makeTableLoader(tableSchema);
 
-    BatchSchema expectedSchema = new SchemaBuilder()
+    TupleMetadata expectedSchema = new SchemaBuilder()
         .add("a", MinorType.INT)
         .add("b", MinorType.VARCHAR)
         .addNullable("c", MinorType.INT)
-        .build();
+        .buildSchema();
 
    // Create a batch of data.
 
@@ -345,11 +346,11 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
 
     ResultSetLoader loader = reader.makeTableLoader(tableSchema);
 
-    BatchSchema expectedSchema = new SchemaBuilder()
+    TupleMetadata expectedSchema = new SchemaBuilder()
         .add("a", MinorType.INT)
         .add("b", MinorType.VARCHAR)
         .addNullable("c", MinorType.VARCHAR)
-        .build();
+        .buildSchema();
 
     // Create a batch of data.
 
@@ -405,9 +406,9 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
 
     assertFalse(loader.writer().column("b").isProjected());
 
-    BatchSchema expectedSchema = new SchemaBuilder()
+    TupleMetadata expectedSchema = new SchemaBuilder()
         .add("a", MinorType.INT)
-        .build();
+        .buildSchema();
 
     // Create a batch of data.
 
@@ -468,7 +469,8 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
 
     // Verify empty batch.
 
-    BatchSchema expectedSchema = new SchemaBuilder()
+    BatchSchema expectedSchema = new BatchSchemaBuilder()
+        .withSchemaBuilder(new SchemaBuilder())
         .build();
 
     // Create a batch of data.
@@ -584,9 +586,9 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
 
     reader.makeTableLoader(tableSchema);
 
-    BatchSchema expectedSchema = new SchemaBuilder()
+    TupleMetadata expectedSchema = new SchemaBuilder()
         .addNullable("a", MinorType.INT)
-        .build();
+        .buildSchema();
 
     // Create a batch of data. Because there are no columns, it does
     // not make sense to ready any rows.

@@ -38,7 +38,6 @@ import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
 import org.apache.drill.exec.physical.rowSet.RowSetLoader;
 import org.apache.drill.exec.physical.rowSet.impl.ResultSetLoaderImpl.ResultSetOptions;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType;
-import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
@@ -135,10 +134,10 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
     // columns, only if defined by the loader, in the order
     // of definition.
 
-    BatchSchema expectedSchema = new SchemaBuilder()
+    TupleMetadata expectedSchema = new SchemaBuilder()
         .add("b", MinorType.INT)
         .add("c", MinorType.INT)
-        .build();
+        .buildSchema();
     SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
         .addRow(1, 10)
         .addRow(2, 20)
@@ -259,7 +258,7 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
 
     // Verify. Only the projected columns appear in the result set.
 
-    BatchSchema expectedSchema = new SchemaBuilder()
+    TupleMetadata expectedSchema = new SchemaBuilder()
       .addMap("m1")
         .add("a", MinorType.INT)
         .add("b", MinorType.INT)
@@ -267,7 +266,7 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
       .addMap("m2")
         .add("d", MinorType.INT)
         .resumeSchema()
-      .build();
+      .buildSchema();
     SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
       .addRow(mapValue( 1,  2), mapValue( 4))
       .addRow(mapValue(11, 12), mapValue(14))
@@ -373,7 +372,7 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
 
     // Verify. Only the projected columns appear in the result set.
 
-    BatchSchema expectedSchema = new SchemaBuilder()
+    TupleMetadata expectedSchema = new SchemaBuilder()
       .addMapArray("m1")
         .add("a", MinorType.INT)
         .add("b", MinorType.INT)
@@ -381,7 +380,7 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
       .addMapArray("m2")
         .add("d", MinorType.INT)
         .resumeSchema()
-      .build();
+      .buildSchema();
     SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
       .addRow(
           objArray(objArray(10, 20), objArray(11, 21)),

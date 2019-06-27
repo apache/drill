@@ -33,7 +33,6 @@ import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.exec.record.metadata.TupleSchema;
 import org.apache.drill.test.OperatorFixture;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSet.ExtendableRowSet;
@@ -69,7 +68,7 @@ public class TestCopier extends SubOperatorTest {
       // code. Only nuisance is that we don't have the required metadata
       // readily at hand here...
 
-      copier.startMerge(TupleSchema.toBatchSchema(schema),
+      copier.startMerge(new BatchSchema(BatchSchema.SelectionVectorMode.NONE, schema.toFieldList()),
           batches, dest, 10, null);
       fail();
     } catch (AssertionError e) {
@@ -343,7 +342,7 @@ public class TestCopier extends SubOperatorTest {
   }
 
   public void testMapType(OperatorFixture fixture) throws Exception {
-    BatchSchema schema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .add("key", MinorType.INT)
         .addMap("m1")
           .add("b", MinorType.INT)
@@ -351,7 +350,7 @@ public class TestCopier extends SubOperatorTest {
             .add("c", MinorType.INT)
             .resumeMap()
           .resumeSchema()
-        .build();
+        .buildSchema();
 
     CopierTester tester = new CopierTester(fixture);
     tester.addInput(fixture.rowSetBuilder(schema)

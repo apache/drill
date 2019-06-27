@@ -17,6 +17,7 @@
  */
 package org.apache.drill;
 
+import org.apache.drill.exec.record.BatchSchemaBuilder;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 import org.apache.commons.io.FileUtils;
@@ -826,8 +827,10 @@ public class TestUnionDistinct extends BaseTestQuery {
 
   @Test
   public void testUnionBothEmptyDirs() throws Exception {
-    final BatchSchema expectedSchema = new SchemaBuilder()
-        .addNullable("key", TypeProtos.MinorType.INT)
+    SchemaBuilder schemaBuilder = new SchemaBuilder()
+        .addNullable("key", TypeProtos.MinorType.INT);
+    final BatchSchema expectedSchema = new BatchSchemaBuilder()
+        .withSchemaBuilder(schemaBuilder)
         .build();
 
     testBuilder()

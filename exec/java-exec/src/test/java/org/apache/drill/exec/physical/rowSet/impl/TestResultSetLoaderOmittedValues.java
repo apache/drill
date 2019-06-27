@@ -27,7 +27,6 @@ import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
 import org.apache.drill.exec.physical.rowSet.RowSetLoader;
-import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.ValueVector;
@@ -140,14 +139,14 @@ public class TestResultSetLoaderOmittedValues extends SubOperatorTest {
     RowSet actual = fixture.wrap(rsLoader.harvest());
 //    actual.print();
 
-    BatchSchema expectedSchema = new SchemaBuilder()
+    TupleMetadata expectedSchema = new SchemaBuilder()
         .add("a", MinorType.INT)
         .add("b", MinorType.VARCHAR)
         .addNullable("c", MinorType.VARCHAR)
         .add("d", MinorType.INT)
         .addNullable("e", MinorType.INT)
         .addArray("f", MinorType.VARCHAR)
-        .build();
+        .buildSchema();
     SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
         .addRow(  1, "b_1", "c_1",  10,  100, strArray("f_1-1",  "f_1-2"))
         .addRow(  2, "b_2", "c_2",  20,  200, strArray("f_2-1",  "f_2-2"))

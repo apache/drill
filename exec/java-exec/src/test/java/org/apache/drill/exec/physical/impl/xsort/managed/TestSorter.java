@@ -31,7 +31,6 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.config.Sort;
-import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.test.BaseDirTestWatcher;
@@ -357,10 +356,10 @@ public class TestSorter extends DrillTest {
     }
 
     public void test(MinorType type) throws SchemaChangeException {
-      BatchSchema schema = new SchemaBuilder()
+      TupleMetadata schema = new SchemaBuilder()
           .add("key", type)
-          .build();
-      SingleRowSet input = makeInputData(fixture.allocator(), schema);
+          .buildSchema();
+      SingleRowSet input = makeInputData(schema);
       input = input.toIndirect();
       sorter.sortBatch(input.container(), input.getSv2());
       sorter.close();
@@ -368,8 +367,7 @@ public class TestSorter extends DrillTest {
       input.clear();
     }
 
-    protected SingleRowSet makeInputData(BufferAllocator allocator,
-        BatchSchema schema) {
+    protected SingleRowSet makeInputData(TupleMetadata schema) {
       RowSetBuilder builder = fixture.rowSetBuilder(schema);
       int rowCount = 100;
       Random rand = new Random();
@@ -636,12 +634,12 @@ public class TestSorter extends DrillTest {
   @Test
   @Ignore("DRILL-5384")
   public void testMapKey() throws Exception {
-    BatchSchema schema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .addMap("map")
           .add("key", MinorType.INT)
           .add("value", MinorType.VARCHAR)
           .resumeSchema()
-        .build();
+        .buildSchema();
 
     SingleRowSet input = fixture.rowSetBuilder(schema)
         .addRow(3, "third")

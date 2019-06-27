@@ -85,11 +85,11 @@ public class TestHashJoinOutcome extends PhysicalOpUnitTestBase {
     inputSchemaRight = (TupleSchema) new SchemaBuilder()
       .add("rightcol", TypeProtos.MinorType.INT)
       .buildSchema();
-    batchSchemaRight = inputSchemaRight.toBatchSchema(BatchSchema.SelectionVectorMode.NONE);
+    batchSchemaRight = new BatchSchema(BatchSchema.SelectionVectorMode.NONE, inputSchemaRight.toFieldList());
     inputSchemaLeft = (TupleSchema) new SchemaBuilder()
       .add("leftcol", TypeProtos.MinorType.INT)
       .buildSchema();
-    batchSchemaLeft = inputSchemaLeft.toBatchSchema(BatchSchema.SelectionVectorMode.NONE);
+    batchSchemaLeft = new BatchSchema(BatchSchema.SelectionVectorMode.NONE, inputSchemaLeft.toFieldList());
   }
 
   private void prepareUninitContainers(List<VectorContainer> emptyInputContainers,

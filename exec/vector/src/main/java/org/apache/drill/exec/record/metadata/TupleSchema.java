@@ -22,8 +22,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import org.apache.drill.exec.record.BatchSchema;
-import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.MaterializedField;
 
 import java.util.ArrayList;
@@ -172,14 +170,6 @@ public class TupleSchema extends AbstractPropertied implements TupleMetadata {
   @Override
   public List<ColumnMetadata> toMetadataList() {
     return new ArrayList<>(nameSpace.entries());
-  }
-
-  public BatchSchema toBatchSchema(SelectionVectorMode svMode) {
-    return new BatchSchema(svMode, toFieldList());
-  }
-
-  public static BatchSchema toBatchSchema(TupleMetadata schema) {
-    return ((TupleSchema) schema).toBatchSchema(SelectionVectorMode.NONE);
   }
 
   @Override

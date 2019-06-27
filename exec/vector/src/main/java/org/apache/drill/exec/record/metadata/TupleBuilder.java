@@ -20,8 +20,6 @@ package org.apache.drill.exec.record.metadata;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.record.BatchSchema;
-import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.MaterializedField;
 
 /**
@@ -144,10 +142,6 @@ public class TupleBuilder implements SchemaContainer {
 
   public RepeatedListBuilder addRepeatedList(SchemaContainer parent, String name) {
     return new RepeatedListBuilder(parent, name);
-  }
-
-  public BatchSchema batchSchema(SelectionVectorMode svMode) {
-    return schema.toBatchSchema(svMode);
   }
 
   public TupleSchema schema() {

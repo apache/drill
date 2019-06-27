@@ -41,6 +41,7 @@ import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
 import org.apache.drill.exec.physical.rowSet.RowSetLoader;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.BatchSchemaBuilder;
 import org.apache.drill.exec.record.metadata.ColumnBuilder;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
@@ -357,18 +358,20 @@ public class TestFileScanFramework extends SubOperatorTest {
     // Select table and implicit columns.
 
     FileScanFixtureBuilder builder = new FileScanFixtureBuilder();
-    builder.setProjection(new String[] {"a", "b", "filename", "suffix"});
+    builder.setProjection("a", "b", "filename", "suffix");
     builder.addReader(reader);
     ScanFixture scanFixture = builder.build();
     ScanOperatorExec scan = scanFixture.scanOp;
 
     // Expect data and implicit columns
 
-    BatchSchema expectedSchema = new SchemaBuilder()
+    SchemaBuilder schemaBuilder = new SchemaBuilder()
         .add("a", MinorType.INT)
         .addNullable("b", MinorType.VARCHAR, 10)
         .add("filename", MinorType.VARCHAR)
-        .add("suffix", MinorType.VARCHAR)
+        .add("suffix", MinorType.VARCHAR);
+    BatchSchema expectedSchema = new BatchSchemaBuilder()
+        .withSchemaBuilder(schemaBuilder)
         .build();
     SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
         .addRow(10, "fred", MOCK_FILE_NAME, MOCK_SUFFIX)
@@ -411,19 +414,21 @@ public class TestFileScanFramework extends SubOperatorTest {
     // Select table and implicit columns.
 
     FileScanFixtureBuilder builder = new FileScanFixtureBuilder();
-    builder.setProjection(new String[] {"dir0", "b", "filename", "c", "suffix"});
+    builder.setProjection("dir0", "b", "filename", "c", "suffix");
     builder.addReader(reader);
     ScanFixture scanFixture = builder.build();
     ScanOperatorExec scan = scanFixture.scanOp;
 
     // Expect data and implicit columns
 
-    BatchSchema expectedSchema = new SchemaBuilder()
+    SchemaBuilder schemaBuilder = new SchemaBuilder()
         .addNullable("dir0", MinorType.VARCHAR)
         .addNullable("b", MinorType.VARCHAR, 10)
         .add("filename", MinorType.VARCHAR)
         .addNullable("c", MinorType.INT)
-        .add("suffix", MinorType.VARCHAR)
+        .add("suffix", MinorType.VARCHAR);
+    BatchSchema expectedSchema = new BatchSchemaBuilder()
+        .withSchemaBuilder(schemaBuilder)
         .build();
     SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
         .addRow(MOCK_DIR0, "fred", MOCK_FILE_NAME, null, MOCK_SUFFIX)
@@ -458,14 +463,15 @@ public class TestFileScanFramework extends SubOperatorTest {
     // Select no columns
 
     FileScanFixtureBuilder builder = new FileScanFixtureBuilder();
-    builder.setProjection(new String[] {});
+    builder.setProjection();
     builder.addReader(reader);
     ScanFixture scanFixture = builder.build();
     ScanOperatorExec scan = scanFixture.scanOp;
 
     // Expect data and implicit columns
 
-    BatchSchema expectedSchema = new SchemaBuilder()
+    BatchSchema expectedSchema = new BatchSchemaBuilder()
+        .withSchemaBuilder(new SchemaBuilder())
         .build();
     SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
         .addRow()
@@ -528,17 +534,19 @@ public class TestFileScanFramework extends SubOperatorTest {
     // Select one of the two map columns
 
     FileScanFixtureBuilder builder = new FileScanFixtureBuilder();
-    builder.setProjection(new String[] {"m1.a"});
+    builder.setProjection("m1.a");
     builder.addReader(reader);
     ScanFixture scanFixture = builder.build();
     ScanOperatorExec scan = scanFixture.scanOp;
 
     // Expect data and implicit columns
 
-    BatchSchema expectedSchema = new SchemaBuilder()
+    SchemaBuilder schemaBuilder = new SchemaBuilder()
         .addMap("m1")
           .add("a", MinorType.INT)
-          .resumeSchema()
+          .resumeSchema();
+    BatchSchema expectedSchema = new BatchSchemaBuilder()
+        .withSchemaBuilder(schemaBuilder)
         .build();
     SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
         .addSingleCol(new Object[] {10})

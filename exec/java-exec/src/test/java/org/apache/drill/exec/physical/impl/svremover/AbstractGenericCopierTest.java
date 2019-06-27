@@ -26,6 +26,7 @@ import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.record.BatchSchemaBuilder;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.vector.SchemaChangeCallBack;
 import org.apache.drill.test.BaseDirTestWatcher;
@@ -153,10 +154,12 @@ public abstract class AbstractGenericCopierTest {
     MaterializedField colC = MaterializedField.create("colC", Types.repeated(TypeProtos.MinorType.FLOAT4));
     MaterializedField colD = MaterializedField.create("colD", Types.repeated(TypeProtos.MinorType.VARCHAR));
 
-    return new SchemaBuilder().add(colA)
+    SchemaBuilder schemaBuilder = new SchemaBuilder().add(colA)
       .add(colB)
       .add(colC)
-      .add(colD)
+      .add(colD);
+    return new BatchSchemaBuilder()
+      .withSchemaBuilder(schemaBuilder)
       .withSVMode(mode)
       .build();
   }

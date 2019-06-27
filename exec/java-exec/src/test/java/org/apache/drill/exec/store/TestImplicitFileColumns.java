@@ -23,6 +23,7 @@ import java.nio.file.Paths;
 
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.BatchSchemaBuilder;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.util.JsonStringArrayList;
 import org.apache.drill.exec.util.Text;
@@ -160,10 +161,12 @@ public class TestImplicitFileColumns extends BaseTestQuery {
 
   @Test
   public void testStarColumnJson() throws Exception {
-    final BatchSchema expectedSchema = new SchemaBuilder()
+    SchemaBuilder schemaBuilder = new SchemaBuilder()
         .addNullable("dir0", TypeProtos.MinorType.VARCHAR)
         .addNullable("id", TypeProtos.MinorType.BIGINT)
-        .addNullable("name", TypeProtos.MinorType.VARCHAR)
+        .addNullable("name", TypeProtos.MinorType.VARCHAR);
+    final BatchSchema expectedSchema = new BatchSchemaBuilder()
+        .withSchemaBuilder(schemaBuilder)
         .build();
 
     testBuilder()
@@ -175,7 +178,7 @@ public class TestImplicitFileColumns extends BaseTestQuery {
 
   @Test
   public void testStarColumnParquet() throws Exception {
-    final BatchSchema expectedSchema = new SchemaBuilder()
+    SchemaBuilder schemaBuilder = new SchemaBuilder()
         .addNullable("dir0", TypeProtos.MinorType.VARCHAR)
         .addNullable("dir1", TypeProtos.MinorType.VARCHAR)
         .add("o_orderkey", TypeProtos.MinorType.INT)
@@ -186,7 +189,9 @@ public class TestImplicitFileColumns extends BaseTestQuery {
         .add("o_orderpriority", TypeProtos.MinorType.VARCHAR)
         .add("o_clerk", TypeProtos.MinorType.VARCHAR)
         .add("o_shippriority", TypeProtos.MinorType.INT)
-        .add("o_comment", TypeProtos.MinorType.VARCHAR)
+        .add("o_comment", TypeProtos.MinorType.VARCHAR);
+    final BatchSchema expectedSchema = new BatchSchemaBuilder()
+        .withSchemaBuilder(schemaBuilder)
         .build();
 
     testBuilder()
@@ -198,10 +203,12 @@ public class TestImplicitFileColumns extends BaseTestQuery {
 
   @Test
   public void testStarColumnCsv() throws Exception {
-    final BatchSchema expectedSchema = new SchemaBuilder()
+    SchemaBuilder schemaBuilder = new SchemaBuilder()
         .addArray("columns", TypeProtos.MinorType.VARCHAR)
         .addNullable("dir0", TypeProtos.MinorType.VARCHAR)
-        .addNullable("dir1", TypeProtos.MinorType.VARCHAR)
+        .addNullable("dir1", TypeProtos.MinorType.VARCHAR);
+    final BatchSchema expectedSchema = new BatchSchemaBuilder()
+        .withSchemaBuilder(schemaBuilder)
         .build();
 
     testBuilder()

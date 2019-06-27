@@ -35,6 +35,7 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.BatchSchemaBuilder;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.vector.IntervalDayVector;
 import org.apache.drill.exec.vector.IntervalYearVector;
@@ -797,8 +798,10 @@ public class TestCastFunctions extends ClusterTest {
       String q = String.format(query, entry.getKey());
 
       MaterializedField field = MaterializedField.create("coal", entry.getValue());
-      BatchSchema expectedSchema = new SchemaBuilder()
-          .add(field)
+      SchemaBuilder schemaBuilder = new SchemaBuilder()
+          .add(field);
+      BatchSchema expectedSchema = new BatchSchemaBuilder()
+          .withSchemaBuilder(schemaBuilder)
           .build();
 
       // Validate schema

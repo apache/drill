@@ -31,9 +31,9 @@ import java.nio.file.StandardOpenOption;
 
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.cache.VectorSerializer.Reader;
-import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.DirTestWatcher;
@@ -56,7 +56,7 @@ public class TestBatchSerialization extends DrillTest {
   public static OperatorFixture fixture;
 
   @BeforeClass
-  public static void setUpBeforeClass() throws Exception {
+  public static void setUpBeforeClass() {
     fixture = OperatorFixture.builder(dirTestWatcher).build();
   }
 
@@ -65,7 +65,7 @@ public class TestBatchSerialization extends DrillTest {
     fixture.close();
   }
 
-  public SingleRowSet makeRowSet(BatchSchema schema, int rowCount) {
+  public SingleRowSet makeRowSet(TupleMetadata schema, int rowCount) {
     ExtendableRowSet rowSet = fixture.rowSet(schema);
     RowSetWriter writer = rowSet.writer(rowCount);
     for (int i = 0; i < rowCount; i++) {
@@ -76,7 +76,7 @@ public class TestBatchSerialization extends DrillTest {
     return rowSet;
   }
 
-  public SingleRowSet makeNullableRowSet(BatchSchema schema, int rowCount) {
+  public SingleRowSet makeNullableRowSet(TupleMetadata schema, int rowCount) {
     ExtendableRowSet rowSet = fixture.rowSet(schema);
     RowSetWriter writer = rowSet.writer(rowCount);
     for (int i = 0; i < rowCount; i++) {
@@ -97,18 +97,18 @@ public class TestBatchSerialization extends DrillTest {
   }
 
   public void testNonNullType(MinorType type) throws IOException {
-    BatchSchema schema = new SchemaBuilder( )
+    TupleMetadata schema = new SchemaBuilder()
         .add("col", type)
-        .build();
+        .buildSchema();
     int rowCount = 20;
     verifySerialize(makeRowSet(schema, rowCount),
                     makeRowSet(schema, rowCount));
   }
 
   public void testNullableType(MinorType type) throws IOException {
-    BatchSchema schema = new SchemaBuilder( )
+    TupleMetadata schema = new SchemaBuilder()
         .addNullable("col", type)
-        .build();
+        .buildSchema();
     int rowCount = 20;
     verifySerialize(makeNullableRowSet(schema, rowCount),
                     makeNullableRowSet(schema, rowCount));
@@ -179,7 +179,7 @@ public class TestBatchSerialization extends DrillTest {
     testType(MinorType.INTERVALDAY);
   }
 
-  private SingleRowSet buildMapSet(BatchSchema schema) {
+  private SingleRowSet buildMapSet(TupleMetadata schema) {
     return fixture.rowSetBuilder(schema)
         .addRow(1, objArray(100, "first"))
         .addRow(2, objArray(200, "second"))
@@ -187,7 +187,7 @@ public class TestBatchSerialization extends DrillTest {
         .build();
   }
 
-  private SingleRowSet buildArraySet(BatchSchema schema) {
+  private SingleRowSet buildArraySet(TupleMetadata schema) {
     return fixture.rowSetBuilder(schema)
         .addRow(1, strArray("first, second, third"))
         .addRow(2, null)
@@ -197,19 +197,16 @@ public class TestBatchSerialization extends DrillTest {
 
   /**
    * Tests a map type and an SV2.
-   *
-   * @throws IOException
    */
-
   @Test
   public void testMap() throws IOException {
-    BatchSchema schema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .add("top", MinorType.INT)
         .addMap("map")
           .add("key", MinorType.INT)
           .add("value", MinorType.VARCHAR)
           .resumeSchema()
-        .build();
+        .buildSchema();
 
     verifySerialize(buildMapSet(schema).toIndirect(),
                     buildMapSet(schema));
@@ -217,10 +214,10 @@ public class TestBatchSerialization extends DrillTest {
 
   @Test
   public void testArray() throws IOException {
-    BatchSchema schema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .add("top", MinorType.INT)
         .addArray("arr", MinorType.VARCHAR)
-        .build();
+        .buildSchema();
 
     verifySerialize(buildArraySet(schema).toIndirect(),
                     buildArraySet(schema));

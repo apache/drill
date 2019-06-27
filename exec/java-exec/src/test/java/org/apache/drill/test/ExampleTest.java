@@ -31,8 +31,8 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.memory.RootAllocator;
 import org.apache.drill.exec.physical.impl.xsort.managed.ExternalSortBatch;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
-import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.test.LogFixture.LogFixtureBuilder;
 import org.apache.drill.test.QueryBuilder.QuerySummary;
 import org.apache.drill.test.rowSet.RowSet;
@@ -119,10 +119,10 @@ public class ExampleTest {
         .resolve("employee.json")
         .toFile();
 
-      final BatchSchema schema = new SchemaBuilder()
+      final TupleMetadata schema = new SchemaBuilder()
         .add("id", Types.required(TypeProtos.MinorType.VARCHAR))
         .add("name", Types.required(TypeProtos.MinorType.VARCHAR))
-        .build();
+        .buildSchema();
 
       final RowSet rowSet = new RowSetBuilder(allocator, schema)
         .addRow("1", "kiwi")

@@ -25,8 +25,8 @@ import org.apache.drill.categories.SlowTest;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.test.TestBuilder;
 import org.apache.drill.test.rowSet.RowSet;
@@ -66,9 +66,9 @@ public class TestExternalSort extends BaseTestQuery {
     final String tableDirName = "numericTypes";
 
     {
-      final BatchSchema schema = new SchemaBuilder()
+      TupleMetadata schema = new SchemaBuilder()
         .add("a", Types.required(TypeProtos.MinorType.INT))
-        .build();
+        .buildSchema();
       final RowSetBuilder rowSetBuilder = new RowSetBuilder(allocator, schema);
 
       for (int i = 0; i <= record_count; i += 2) {
@@ -82,9 +82,9 @@ public class TestExternalSort extends BaseTestQuery {
     }
 
     {
-      final BatchSchema schema = new SchemaBuilder()
+      final TupleMetadata schema = new SchemaBuilder()
         .add("a", Types.required(TypeProtos.MinorType.FLOAT4))
-        .build();
+        .buildSchema();
       final RowSetBuilder rowSetBuilder = new RowSetBuilder(allocator, schema);
 
       for (int i = 1; i <= record_count; i += 2) {
@@ -138,9 +138,9 @@ public class TestExternalSort extends BaseTestQuery {
     final String tableDirName = "numericAndStringTypes";
 
     {
-      final BatchSchema schema = new SchemaBuilder()
+      final TupleMetadata schema = new SchemaBuilder()
         .add("a", Types.required(TypeProtos.MinorType.INT))
-        .build();
+        .buildSchema();
       final RowSetBuilder rowSetBuilder = new RowSetBuilder(allocator, schema);
 
       for (int i = 0; i <= record_count; i += 2) {
@@ -154,9 +154,9 @@ public class TestExternalSort extends BaseTestQuery {
     }
 
     {
-      final BatchSchema schema = new SchemaBuilder()
+      final TupleMetadata schema = new SchemaBuilder()
         .add("a", Types.required(TypeProtos.MinorType.INT))
-        .build();
+        .buildSchema();
       final RowSetBuilder rowSetBuilder = new RowSetBuilder(allocator, schema);
 
       for (int i = 1; i <= record_count; i += 2) {
@@ -205,10 +205,10 @@ public class TestExternalSort extends BaseTestQuery {
     final String tableDirName = "newColumns";
 
     {
-      final BatchSchema schema = new SchemaBuilder()
+      final TupleMetadata schema = new SchemaBuilder()
         .add("a", TypeProtos.MinorType.INT)
         .add("b", TypeProtos.MinorType.INT)
-        .build();
+        .buildSchema();
       final RowSetBuilder rowSetBuilder = new RowSetBuilder(allocator, schema);
 
       for (int i = 0; i <= record_count; i += 2) {
@@ -222,10 +222,10 @@ public class TestExternalSort extends BaseTestQuery {
     }
 
     {
-      final BatchSchema schema = new SchemaBuilder()
+      final TupleMetadata schema = new SchemaBuilder()
         .add("a", TypeProtos.MinorType.INT)
         .add("c", TypeProtos.MinorType.INT)
-        .build();
+        .buildSchema();
       final RowSetBuilder rowSetBuilder = new RowSetBuilder(allocator, schema);
 
       for (int i = 1; i <= record_count; i += 2) {

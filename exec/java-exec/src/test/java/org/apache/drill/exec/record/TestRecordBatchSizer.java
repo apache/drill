@@ -20,6 +20,7 @@ package org.apache.drill.exec.record;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.RecordBatchSizer.ColumnSize;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.NullableVector;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
@@ -68,7 +69,10 @@ public class TestRecordBatchSizer extends SubOperatorTest {
 
   @Test
   public void testSizerFixedWidth() {
-    BatchSchema schema = new SchemaBuilder().add("a", MinorType.BIGINT).add("b", MinorType.FLOAT8).build();
+    TupleMetadata schema = new SchemaBuilder()
+        .add("a", MinorType.BIGINT)
+        .add("b", MinorType.FLOAT8)
+        .buildSchema();
     RowSetBuilder builder = fixture.rowSetBuilder(schema);
 
     for (long i = 0; i < 10; i++) {
@@ -127,7 +131,10 @@ public class TestRecordBatchSizer extends SubOperatorTest {
 
   @Test
   public void testSizerRepeatedFixedWidth() {
-    BatchSchema schema = new SchemaBuilder().addArray("a", MinorType.BIGINT).addArray("b", MinorType.FLOAT8).build();
+    TupleMetadata schema = new SchemaBuilder()
+        .addArray("a", MinorType.BIGINT)
+        .addArray("b", MinorType.FLOAT8)
+        .buildSchema();
     RowSetBuilder builder = fixture.rowSetBuilder(schema);
 
     for (long i = 0; i < 10; i++) {
@@ -200,7 +207,10 @@ public class TestRecordBatchSizer extends SubOperatorTest {
 
   @Test
   public void testSizerNullableFixedWidth() {
-    BatchSchema schema = new SchemaBuilder().addNullable("a", MinorType.BIGINT).addNullable("b", MinorType.FLOAT8).build();
+    TupleMetadata schema = new SchemaBuilder()
+        .addNullable("a", MinorType.BIGINT)
+        .addNullable("b", MinorType.FLOAT8)
+        .buildSchema();
     RowSetBuilder builder = fixture.rowSetBuilder(schema);
 
     for (long i = 0; i < 10; i++) {
@@ -275,7 +285,9 @@ public class TestRecordBatchSizer extends SubOperatorTest {
 
   @Test
   public void testSizerVariableWidth() {
-    BatchSchema schema = new SchemaBuilder().add("a", MinorType.VARCHAR).build();
+    TupleMetadata schema = new SchemaBuilder()
+        .add("a", MinorType.VARCHAR)
+        .buildSchema();
     RowSetBuilder builder = fixture.rowSetBuilder(schema);
 
     StringBuilder stringBuilder = new StringBuilder();
@@ -347,7 +359,9 @@ public class TestRecordBatchSizer extends SubOperatorTest {
 
   @Test
   public void testSizerRepeatedVariableWidth() {
-    BatchSchema schema = new SchemaBuilder().addArray("b", MinorType.VARCHAR).build();
+    TupleMetadata schema = new SchemaBuilder()
+        .addArray("b", MinorType.VARCHAR)
+        .buildSchema();
     RowSetBuilder builder = fixture.rowSetBuilder(schema);
 
     // size = (5*6)/2 = 15
@@ -426,7 +440,9 @@ public class TestRecordBatchSizer extends SubOperatorTest {
 
   @Test
   public void testSizerNullableVariableWidth() {
-    BatchSchema schema = new SchemaBuilder().addNullable("b", MinorType.VARCHAR).build();
+    TupleMetadata schema = new SchemaBuilder()
+        .addNullable("b", MinorType.VARCHAR)
+        .buildSchema();
     RowSetBuilder builder = fixture.rowSetBuilder(schema);
 
     StringBuilder stringBuilder = new StringBuilder();
@@ -506,12 +522,12 @@ public class TestRecordBatchSizer extends SubOperatorTest {
 
   @Test
   public void testSizerMap() {
-    BatchSchema schema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
       .addMap("map")
         .add("key", MinorType.INT)
         .add("value", MinorType.VARCHAR)
       .resumeSchema()
-      .build();
+      .buildSchema();
 
     RowSetBuilder builder = fixture.rowSetBuilder(schema);
 
@@ -590,10 +606,12 @@ public class TestRecordBatchSizer extends SubOperatorTest {
 
   @Test
   public void testSizerRepeatedMap() {
-    BatchSchema schema = new SchemaBuilder().addMapArray("map").
-      add("key", MinorType.INT).
-      add("value", MinorType.VARCHAR).
-      resumeSchema().build();
+    TupleMetadata schema = new SchemaBuilder()
+      .addMapArray("map")
+        .add("key", MinorType.INT)
+        .add("value", MinorType.VARCHAR)
+        .resumeSchema()
+      .buildSchema();
 
     RowSetBuilder builder = fixture.rowSetBuilder(schema);
 
@@ -691,7 +709,7 @@ public class TestRecordBatchSizer extends SubOperatorTest {
 
   @Test
   public void testSizerNestedMap() {
-    BatchSchema schema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
       .addMap("map")
         .add("key", MinorType.INT)
         .add("value", MinorType.VARCHAR)
@@ -700,7 +718,7 @@ public class TestRecordBatchSizer extends SubOperatorTest {
           .add("childValue", MinorType.VARCHAR)
           .resumeMap()
        .resumeSchema()
-      .build();
+      .buildSchema();
 
     RowSetBuilder builder = fixture.rowSetBuilder(schema);
 
@@ -809,7 +827,10 @@ public class TestRecordBatchSizer extends SubOperatorTest {
 
   @Test
   public void testEmptyBatchFixedWidth() {
-    BatchSchema schema = new SchemaBuilder().add("a", MinorType.BIGINT).add("b", MinorType.FLOAT8).build();
+    TupleMetadata schema = new SchemaBuilder()
+        .add("a", MinorType.BIGINT)
+        .add("b", MinorType.FLOAT8)
+        .buildSchema();
     RowSetBuilder builder = fixture.rowSetBuilder(schema);
     RowSet rows = builder.build();
 
@@ -865,7 +886,10 @@ public class TestRecordBatchSizer extends SubOperatorTest {
 
   @Test
   public void testEmptyBatchRepeatedFixedWidth() {
-    BatchSchema schema = new SchemaBuilder().addArray("a", MinorType.BIGINT).addArray("b", MinorType.FLOAT8).build();
+    TupleMetadata schema = new SchemaBuilder()
+        .addArray("a", MinorType.BIGINT)
+        .addArray("b", MinorType.FLOAT8)
+        .buildSchema();
     RowSetBuilder builder = fixture.rowSetBuilder(schema);
     RowSet rows = builder.build();
 
@@ -933,7 +957,10 @@ public class TestRecordBatchSizer extends SubOperatorTest {
 
   @Test
   public void testEmptyBatchNullableFixedWidth() {
-    BatchSchema schema = new SchemaBuilder().addNullable("a", MinorType.BIGINT).addNullable("b", MinorType.FLOAT8).build();
+    TupleMetadata schema = new SchemaBuilder()
+        .addNullable("a", MinorType.BIGINT)
+        .addNullable("b", MinorType.FLOAT8)
+        .buildSchema();
     RowSetBuilder builder = fixture.rowSetBuilder(schema);
     RowSet rows = builder.build();
 
@@ -1003,7 +1030,9 @@ public class TestRecordBatchSizer extends SubOperatorTest {
 
   @Test
   public void testEmptyBatchVariableWidth() {
-    BatchSchema schema = new SchemaBuilder().add("a", MinorType.VARCHAR).build();
+    TupleMetadata schema = new SchemaBuilder()
+        .add("a", MinorType.VARCHAR)
+        .buildSchema();
     RowSetBuilder builder = fixture.rowSetBuilder(schema);
     RowSet rows = builder.build();
 
@@ -1066,7 +1095,9 @@ public class TestRecordBatchSizer extends SubOperatorTest {
 
   @Test
   public void testEmptyBatchRepeatedVariableWidth() {
-    BatchSchema schema = new SchemaBuilder().addArray("b", MinorType.VARCHAR).build();
+    TupleMetadata schema = new SchemaBuilder()
+        .addArray("b", MinorType.VARCHAR)
+        .buildSchema();
     RowSetBuilder builder = fixture.rowSetBuilder(schema);
     RowSet rows = builder.build();
 
@@ -1138,7 +1169,9 @@ public class TestRecordBatchSizer extends SubOperatorTest {
 
   @Test
   public void testEmptyBatchNullableVariableWidth() {
-    BatchSchema schema = new SchemaBuilder().addNullable("b", MinorType.VARCHAR).build();
+    TupleMetadata schema = new SchemaBuilder()
+        .addNullable("b", MinorType.VARCHAR)
+        .buildSchema();
     RowSetBuilder builder = fixture.rowSetBuilder(schema);
     RowSet rows = builder.build();
 
@@ -1210,12 +1243,12 @@ public class TestRecordBatchSizer extends SubOperatorTest {
 
   @Test
   public void testEmptyBatchMap() {
-    BatchSchema schema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
       .addMap("map")
       .add("key", MinorType.INT)
       .add("value", MinorType.VARCHAR)
       .resumeSchema()
-      .build();
+      .buildSchema();
 
     RowSetBuilder builder = fixture.rowSetBuilder(schema);
     RowSet rows = builder.build();
@@ -1291,10 +1324,12 @@ public class TestRecordBatchSizer extends SubOperatorTest {
 
   @Test
   public void testEmptyBatchRepeatedMap() {
-    BatchSchema schema = new SchemaBuilder().addMapArray("map").
-      add("key", MinorType.INT).
-      add("value", MinorType.VARCHAR).
-      resumeSchema().build();
+    TupleMetadata schema = new SchemaBuilder()
+        .addMapArray("map")
+        .add("key", MinorType.INT)
+        .add("value", MinorType.VARCHAR)
+        .resumeSchema()
+        .buildSchema();
 
     RowSetBuilder builder = fixture.rowSetBuilder(schema);
     RowSet rows = builder.build();
@@ -1387,7 +1422,7 @@ public class TestRecordBatchSizer extends SubOperatorTest {
 
   @Test
   public void testEmptyBatchNestedMap() {
-    BatchSchema schema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
       .addMap("map")
       .add("key", MinorType.INT)
       .add("value", MinorType.VARCHAR)
@@ -1396,7 +1431,7 @@ public class TestRecordBatchSizer extends SubOperatorTest {
       .add("childValue", MinorType.VARCHAR)
       .resumeMap()
       .resumeSchema()
-      .build();
+      .buildSchema();
 
     RowSetBuilder builder = fixture.rowSetBuilder(schema);
     RowSet rows = builder.build();
@@ -1507,10 +1542,10 @@ public class TestRecordBatchSizer extends SubOperatorTest {
    */
   @Test
   public void testEmptyVariableWidthVector() {
-    final BatchSchema schema = new SchemaBuilder()
+    final TupleMetadata schema = new SchemaBuilder()
       .add("key", MinorType.INT)
       .add("value", MinorType.VARCHAR)
-      .build();
+      .buildSchema();
 
     final RowSetBuilder builder = fixture.rowSetBuilder(schema);
     final RowSet rows = builder.build();
