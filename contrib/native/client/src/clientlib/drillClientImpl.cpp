@@ -823,7 +823,7 @@ DrillClientQueryResult* DrillClientImpl::SubmitQuery(::exec::shared::QueryType t
     query.set_type(t);
     query.set_plan(plan);
 
-    boost::function<DrillClientQueryResult*(int32_t)> factory = boost::bind(
+    boost::function<DrillClientQueryResult*(int32_t&)> factory = boost::bind(
             boost::factory<DrillClientQueryResult*>(),
             boost::ref(*this),
             _1,
@@ -839,7 +839,7 @@ DrillClientPrepareHandle* DrillClientImpl::PrepareQuery(const std::string& plan,
     exec::user::CreatePreparedStatementReq query;
     query.set_sql_query(plan);
 
-    boost::function<DrillClientPrepareHandle*(int32_t)> factory = boost::bind(
+    boost::function<DrillClientPrepareHandle*(int32_t&)> factory = boost::bind(
             boost::factory<DrillClientPrepareHandle*>(),
             boost::ref(*this),
             _1,
@@ -859,7 +859,7 @@ DrillClientQueryResult* DrillClientImpl::ExecuteQuery(const PreparedStatement& p
     query.set_type(::exec::shared::PREPARED_STATEMENT);
     query.set_allocated_prepared_statement_handle(new ::exec::user::PreparedStatementHandle(handle.m_preparedStatementHandle));
 
-    boost::function<DrillClientQueryResult*(int32_t)> factory = boost::bind(
+    boost::function<DrillClientQueryResult*(int32_t&)> factory = boost::bind(
             boost::factory<DrillClientQueryResult*>(),
             boost::ref(*this),
             _1,
@@ -882,12 +882,13 @@ DrillClientCatalogResult* DrillClientImpl::getCatalogs(const std::string& catalo
     exec::user::GetCatalogsReq query;
     updateLikeFilter(*query.mutable_catalog_name_filter(), catalogPattern, searchEscapeString);
 
-    boost::function<DrillClientCatalogResult*(int32_t)> factory = boost::bind(
-            boost::factory<DrillClientCatalogResult*>(),
-            boost::ref(*this),
-            _1,
-            listener,
-            listenerCtx);
+	boost::function<DrillClientCatalogResult*(int32_t&)> factory = boost::bind(
+		boost::factory<DrillClientCatalogResult*>(),
+		boost::ref(*this),
+		_1,
+		listener,
+		listenerCtx);
+
     return sendMsg(factory, ::exec::user::GET_CATALOGS, query);
 }
 
@@ -900,7 +901,7 @@ DrillClientSchemaResult* DrillClientImpl::getSchemas(const std::string& catalogP
     updateLikeFilter(*query.mutable_catalog_name_filter(), catalogPattern, searchEscapeString);
     updateLikeFilter(*query.mutable_schema_name_filter(), schemaPattern, searchEscapeString);
 
-    boost::function<DrillClientSchemaResult*(int32_t)> factory = boost::bind(
+    boost::function<DrillClientSchemaResult*(int32_t&)> factory = boost::bind(
             boost::factory<DrillClientSchemaResult*>(),
             boost::ref(*this),
             _1,
@@ -926,7 +927,7 @@ DrillClientTableResult* DrillClientImpl::getTables(const std::string& catalogPat
     			google::protobuf::RepeatedFieldBackInserter(query.mutable_table_type_filter()));
     }
 
-    boost::function<DrillClientTableResult*(int32_t)> factory = boost::bind(
+    boost::function<DrillClientTableResult*(int32_t&)> factory = boost::bind(
             boost::factory<DrillClientTableResult*>(),
             boost::ref(*this),
             _1,
@@ -948,7 +949,7 @@ DrillClientColumnResult* DrillClientImpl::getColumns(const std::string& catalogP
     updateLikeFilter(*query.mutable_table_name_filter(), tablePattern, searchEscapeString);
     updateLikeFilter(*query.mutable_column_name_filter(), columnsPattern, searchEscapeString);
 
-    boost::function<DrillClientColumnResult*(int32_t)> factory = boost::bind(
+    boost::function<DrillClientColumnResult*(int32_t&)> factory = boost::bind(
             boost::factory<DrillClientColumnResult*>(),
             boost::ref(*this),
             _1,
@@ -958,7 +959,7 @@ DrillClientColumnResult* DrillClientImpl::getColumns(const std::string& catalogP
 }
 
 template<typename Handle>
-Handle* DrillClientImpl::sendMsg(boost::function<Handle*(int32_t)> handleFactory, ::exec::user::RpcType type, const ::google::protobuf::Message& message) {
+Handle* DrillClientImpl::sendMsg(boost::function<Handle*(int32_t&)> handleFactory, ::exec::user::RpcType type, const ::google::protobuf::Message& message) {
     int32_t coordId;
     Handle* phandle=NULL;
     connectionStatus_t cStatus=CONN_SUCCESS;
@@ -2377,7 +2378,7 @@ meta::DrillMetadata* DrillClientImpl::getMetadata() {
 	DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "Server metadata supported." << std::endl;)
 	exec::user::GetServerMetaReq req;
 	ServerMetaContext ctx;
-	boost::function<DrillClientServerMetaHandle*(int32_t)> factory = boost::bind(
+	boost::function<DrillClientServerMetaHandle*(int32_t&)> factory = boost::bind(
 	            boost::factory<DrillClientServerMetaHandle*>(),
 	            boost::ref(*this),
 	            _1,

@@ -100,7 +100,7 @@ else()
     #    set(Boost_NAMESPACE drill_boost)
 endif()
 
-find_package(Boost 1.53.0 REQUIRED COMPONENTS regex system date_time chrono thread random)
+find_package(Boost 1.65.0 REQUIRED COMPONENTS regex system date_time chrono thread random)
 include_directories(${Boost_INCLUDE_DIRS})
 
 

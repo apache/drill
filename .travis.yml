@@ -31,7 +31,7 @@ before_install:
   # Install libraries required for protobuf generation
   - |
     if [ $PHASE = "build_checkstyle_protobuf" ]; then \
-      sudo apt-get install -y libboost-all-dev libzookeeper-mt-dev libsasl2-dev cmake libcppunit-dev checkinstall && \
+      sudo apt-get install -y libboost1.65-all-dev libzookeeper-mt-dev libsasl2-dev cmake libcppunit-dev checkinstall && \
       pushd .. && \
       if [ -f $HOME/protobuf/protobuf_3.6.1* ]; then \
         sudo dpkg -i $HOME/protobuf/protobuf_3.6.1*; \

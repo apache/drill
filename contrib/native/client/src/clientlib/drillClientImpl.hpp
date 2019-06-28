@@ -550,7 +550,7 @@ class DrillClientImpl : public DrillClientImplBase{
         void sendCancel(const exec::shared::QueryId* pQueryId);
 
         template<typename Handle>
-        Handle* sendMsg(boost::function<Handle*(int32_t)> handleFactory, ::exec::user::RpcType type, const ::google::protobuf::Message& msg);
+        Handle* sendMsg(boost::function<Handle*(int32_t&)> handleFactory, ::exec::user::RpcType type, const ::google::protobuf::Message& msg);
 
         // metadata requests
         DrillClientCatalogResult* getCatalogs(const std::string& catalogPattern, const std::string& searchEscapeString, Metadata::pfnCatalogMetadataListener listener, void* listenerCtx);
