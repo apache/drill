@@ -19,6 +19,8 @@ package org.apache.drill.exec.physical.impl.scan;
 
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.vector.accessor.InvalidConversionError;
+import org.apache.drill.exec.vector.accessor.UnsupportedConversionError;
 
 /**
  * Manages a row batch reader through its lifecycle. Created when the reader
@@ -223,6 +225,17 @@ class ReaderState {
       // Throw user exceptions as-is
 
       throw e;
+    } catch (UnsupportedConversionError e) {
+
+      // Occurs if the provided schema asks to convert a reader-provided
+      // schema in a way that Drill (or the reader) cannot support.
+      // Example: implicit conversion of a float to an INTERVAL
+      // In such a case, there are no "natural" rules, a reader would have
+      // to provide ad-hoc rules or no conversion is possible.
+
+      throw UserException.validationError(e)
+        .message("Invalid runtime type conversion")
+        .build(logger);
     } catch (Throwable t) {
 
       // Wrap all others in a user exception.
@@ -238,8 +251,11 @@ class ReaderState {
 
   /**
    * Prepare the schema for this reader. Called for the first reader within a
-   * scan batch, if the reader returns <tt>true</tt> from <tt>open()</tt>. If
-   * this is an early-schema reader, then the result set loader already has
+   * scan batch, if the reader returns <tt>true</tt> from <tt>open()</tt>.
+   * Asks the reader if it can provide a schema-only empty batch by calling
+   * the reader's <tt>defineSchema()</tt> method. If this is an early-schema
+   * reader, and it can provide a schema, then it should create an empty
+   * batch so that the the result set loader already has
    * the proper value vectors set up. If this is a late-schema reader, we must
    * read one batch to get the schema, then set aside the data for the next
    * call to <tt>next()</tt>.
@@ -255,9 +271,10 @@ class ReaderState {
    * <li>If if turned out that the file was
    * empty when trying to read the schema, <tt>open()</tt> returned false
    * and this method should never be called.</tt>
-   * <li>Otherwise, if a schema was available, then the schema is already
-   * set up in the result set loader as the result of schema negotiation, and
-   * this method simply returns <tt>true</tt>.
+   * <li>Otherwise, the reader does not know if it is the first reader or
+   * not. The call to <tt>defineSchema()</tt> notifies the reader that it
+   * is the first one. The reader should set up in the result set loader
+   * with an empty batch.
    * </ul>
    * <p>
    * Semantics for late-schema readers:
@@ -280,14 +297,12 @@ class ReaderState {
 
   protected boolean buildSchema() {
 
-    VectorContainer container = reader.output();
-
-    if (container != null) {
+    if (reader.defineSchema()) {
 
       // Bind the output container to the output of the scan operator.
       // This returns an empty batch with the schema filled in.
 
-      scanOp.containerAccessor.setContainer(container);
+      scanOp.containerAccessor.setContainer(reader.output());
       schemaVersion = reader.schemaVersion();
       return true;
     }
@@ -297,7 +312,8 @@ class ReaderState {
     if (! next()) {
       return false;
     }
-    container = reader.output();
+    VectorContainer container = reader.output();
+    schemaVersion = reader.schemaVersion();
     if (container.getRecordCount() == 0) {
       return true;
     }
@@ -374,8 +390,7 @@ class ReaderState {
 
   private boolean readBatch() {
 
-    // Try to read a batch. This may fail. If so, clean up the
-    // mess.
+    // Try to read a batch. This may fail. If so, clean up the mess.
 
     boolean more;
     try {
@@ -385,6 +400,16 @@ class ReaderState {
       }
     } catch (UserException e) {
       throw e;
+    } catch (InvalidConversionError e) {
+
+      // Occurs when a specific data value to be converted to another type
+      // is not valid for that conversion. For example, providing the value
+      // "foo" to a string-to-int conversion.
+
+      throw UserException.unsupportedError(e)
+        .message("Invalid data value for automatic type conversion")
+        .addContext("Read failed for reader", reader.name())
+        .build(logger);
     } catch (Throwable t) {
       throw UserException.executionError(t)
         .addContext("Read failed for reader", reader.name())

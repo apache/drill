@@ -20,15 +20,13 @@ package org.apache.drill.exec.physical.impl.scan.project;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.physical.impl.scan.project.ResolvedTuple.ResolvedRow;
+import org.apache.drill.exec.physical.impl.scan.project.ReaderLevelProjection.ReaderProjectionResolver;
 import org.apache.drill.exec.physical.impl.scan.project.ScanLevelProjection.ScanProjectionParser;
-import org.apache.drill.exec.physical.impl.scan.project.SchemaLevelProjection.SchemaProjectionResolver;
-import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
-import org.apache.drill.exec.physical.rowSet.impl.OptionBuilder;
-import org.apache.drill.exec.physical.rowSet.impl.ResultSetLoaderImpl;
+import org.apache.drill.exec.physical.impl.scan.project.projSet.TypeConverter;
 import org.apache.drill.exec.physical.rowSet.impl.ResultVectorCacheImpl;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
@@ -154,242 +152,170 @@ public class ScanSchemaOrchestrator {
   public static final int DEFAULT_BATCH_BYTE_COUNT = ValueVector.MAX_BUFFER_SIZE;
   public static final int MAX_BATCH_ROW_COUNT = ValueVector.MAX_ROW_COUNT;
 
-  /**
-   * Orchestrates projection tasks for a single reader with the set that the
-   * scan operator manages. Vectors are reused across readers, but via a vector
-   * cache. All other state is distinct between readers.
-   */
+  public static class ScanOrchestratorBuilder {
 
-  public class ReaderSchemaOrchestrator implements VectorSource {
-
-    private int readerBatchSize;
-    private ResultSetLoaderImpl tableLoader;
-    private int prevTableSchemaVersion = -1;
+    private MajorType nullType;
+    private MetadataManager metadataManager;
+    private int scanBatchRecordLimit = DEFAULT_BATCH_ROW_COUNT;
+    private int scanBatchByteLimit = DEFAULT_BATCH_BYTE_COUNT;
+    private List<ScanProjectionParser> parsers = new ArrayList<>();
+    private List<ReaderProjectionResolver> schemaResolvers = new ArrayList<>();
+    private boolean useSchemaSmoothing;
+    private boolean allowRequiredNullColumns;
+    private List<SchemaPath> projection;
+    private TypeConverter.Builder typeConverterBuilder = TypeConverter.builder();
 
     /**
-     * Assembles the table, metadata and null columns into the final output
-     * batch to be sent downstream. The key goal of this class is to "smooth"
-     * schema changes in this output batch by absorbing trivial schema changes
-     * that occur across readers.
+     * Context for error messages.
      */
-
-    private ResolvedRow rootTuple;
-    private VectorContainer tableContainer;
-
-    public ReaderSchemaOrchestrator() {
-      readerBatchSize = scanBatchRecordLimit;
-    }
-
-    public void setBatchSize(int size) {
-      if (size > 0) {
-        readerBatchSize = Math.min(size, scanBatchRecordLimit);
-      }
-    }
-
-    public ResultSetLoader makeTableLoader(TupleMetadata tableSchema) {
-      OptionBuilder options = new OptionBuilder();
-      options.setRowCountLimit(readerBatchSize);
-      options.setVectorCache(vectorCache);
-      options.setBatchSizeLimit(scanBatchByteLimit);
-
-      // Set up a selection list if available and is a subset of
-      // table columns. (Only needed for non-wildcard queries.)
-      // The projection list includes all candidate table columns
-      // whether or not they exist in the up-front schema. Handles
-      // the odd case where the reader claims a fixed schema, but
-      // adds a column later.
-
-      if (! scanProj.projectAll()) {
-        options.setProjectionSet(scanProj.rootProjection());
-      }
-      options.setSchema(tableSchema);
-
-      // Create the table loader
-
-      tableLoader = new ResultSetLoaderImpl(allocator, options.build());
-
-      // If a schema is given, create a zero-row batch to announce the
-      // schema downstream in the form of an empty batch.
-
-      if (tableSchema != null) {
-        tableLoader.startEmptyBatch();
-        endBatch();
-      }
-
-      return tableLoader;
-    }
-
-    public boolean hasSchema() {
-      return prevTableSchemaVersion >= 0;
-    }
-
-    public void startBatch() {
-      tableLoader.startBatch();
-    }
+    private CustomErrorContext errorContext;
 
     /**
-     * Build the final output batch by projecting columns from the three input sources
-     * to the output batch. First, build the metadata and/or null columns for the
-     * table row count. Then, merge the sources.
-     */
-
-    public void endBatch() {
-
-      // Get the batch results in a container.
-
-      tableContainer = tableLoader.harvest();
-
-      // If the schema changed, set up the final projection based on
-      // the new (or first) schema.
-
-      if (prevTableSchemaVersion < tableLoader.schemaVersion()) {
-        reviseOutputProjection();
-      } else {
-
-        // Fill in the null and metadata columns.
-
-        populateNonDataColumns();
-      }
-      rootTuple.setRowCount(tableContainer.getRecordCount());
-    }
-
-    private void populateNonDataColumns() {
-      int rowCount = tableContainer.getRecordCount();
-      metadataManager.load(rowCount);
-      rootTuple.loadNulls(rowCount);
-    }
-
-    /**
-     * Create the list of null columns by comparing the SELECT list against the
-     * columns available in the batch schema. Create null columns for those that
-     * are missing. This is done for the first batch, and any time the schema
-     * changes. (For early-schema, the projection occurs once as the schema is set
-     * up-front and does not change.) For a SELECT *, the null column check
-     * only need be done if null columns were created when mapping from a prior
-     * schema.
-     */
-
-    private void reviseOutputProjection() {
-
-      // Do the table-schema level projection; the final matching
-      // of projected columns to available columns.
-
-      TupleMetadata tableSchema = tableLoader.harvestSchema();
-      if (schemaSmoother != null) {
-        doSmoothedProjection(tableSchema);
-      } else if (scanProj.hasWildcard()) {
-        doWildcardProjection(tableSchema);
-      } else {
-        doExplicitProjection(tableSchema);
-      }
-
-      // Combine metadata, nulls and batch data to form the final
-      // output container. Columns are created by the metadata and null
-      // loaders only in response to a batch, so create the first batch.
-
-      rootTuple.buildNulls(vectorCache);
-      metadataManager.define();
-      populateNonDataColumns();
-      rootTuple.project(tableContainer, outputContainer);
-      prevTableSchemaVersion = tableLoader.schemaVersion();
-    }
-
-    private void doSmoothedProjection(TupleMetadata tableSchema) {
-      rootTuple = new ResolvedRow(
-          new NullColumnBuilder(nullType, allowRequiredNullColumns));
-      schemaSmoother.resolve(tableSchema, rootTuple);
-    }
-
-    /**
-     * Query contains a wildcard. The schema-level projection includes
-     * all columns provided by the reader.
-     */
-
-    private void doWildcardProjection(TupleMetadata tableSchema) {
-      rootTuple = new ResolvedRow(null);
-      new WildcardSchemaProjection(scanProj,
-          tableSchema, rootTuple, schemaResolvers);
-    }
-
-    /**
-     * Explicit projection: include only those columns actually
-     * requested by the query, which may mean filling in null
-     * columns for projected columns that don't actually exist
-     * in the table.
+     * Specify an optional metadata manager. Metadata is a set of constant
+     * columns with per-reader values. For file-based sources, this is usually
+     * the implicit and partition columns; but it could be other items for other
+     * data sources.
      *
-     * @param tableSchema newly arrived schema
+     * @param metadataMgr the application-specific metadata manager to use
+     * for this scan
      */
 
-    private void doExplicitProjection(TupleMetadata tableSchema) {
-      rootTuple = new ResolvedRow(
-          new NullColumnBuilder(nullType, allowRequiredNullColumns));
-      new ExplicitSchemaProjection(scanProj,
-              tableSchema, rootTuple,
-              schemaResolvers);
+    public void withMetadata(MetadataManager metadataMgr) {
+      metadataManager = metadataMgr;
+      schemaResolvers.add(metadataManager.resolver());
     }
 
-    @Override
-    public ValueVector vector(int index) {
-      return tableContainer.getValueVector(index).getValueVector();
+    /**
+     * Specify a custom batch record count. This is the maximum number of records
+     * per batch for this scan. Readers can adjust this, but the adjustment is capped
+     * at the value specified here
+     *
+     * @param scanBatchSize maximum records per batch
+     */
+
+    public void setBatchRecordLimit(int batchRecordLimit) {
+      scanBatchRecordLimit = Math.max(1,
+          Math.min(batchRecordLimit, ValueVector.MAX_ROW_COUNT));
     }
 
-    public void close() {
-      RuntimeException ex = null;
-      try {
-        if (tableLoader != null) {
-          tableLoader.close();
-          tableLoader = null;
-        }
-      }
-      catch (RuntimeException e) {
-        ex = e;
-      }
-      try {
-        if (rootTuple != null) {
-          rootTuple.close();
-          rootTuple = null;
-        }
-      }
-      catch (RuntimeException e) {
-        ex = ex == null ? e : ex;
-      }
-      metadataManager.endFile();
-      if (ex != null) {
-        throw ex;
-      }
+    public void setBatchByteLimit(int byteLimit) {
+      scanBatchByteLimit = Math.max(MIN_BATCH_BYTE_SIZE,
+          Math.min(byteLimit, MAX_BATCH_BYTE_SIZE));
+    }
+
+    /**
+     * Specify the type to use for null columns in place of the standard
+     * nullable int. This type is used for all missing columns. (Readers
+     * that need per-column control need a different mechanism.)
+     *
+     * @param nullType
+     */
+
+    public void setNullType(MajorType nullType) {
+      this.nullType = nullType;
+    }
+
+    /**
+     * Enable schema smoothing: introduces an addition level of schema
+     * resolution each time a schema changes from a reader.
+     *
+     * @param flag true to enable schema smoothing, false to disable
+     */
+
+    public void enableSchemaSmoothing(boolean flag) {
+      useSchemaSmoothing = flag;
+   }
+
+    public void allowRequiredNullColumns(boolean flag) {
+      allowRequiredNullColumns = flag;
+    }
+
+    public void addParser(ScanProjectionParser parser) {
+      parsers.add(parser);
+    }
+
+    public void addResolver(ReaderProjectionResolver resolver) {
+      schemaResolvers.add(resolver);
+    }
+
+    public void setProjection(List<SchemaPath> projection) {
+      this.projection = projection;
+    }
+
+    public TypeConverter.Builder typeConverterBuilder() {
+      return typeConverterBuilder;
+    }
+
+    public void setContext(CustomErrorContext context) {
+      this.errorContext = context;
+    }
+
+    public CustomErrorContext errorContext() {
+      return errorContext;
+    }
+  }
+
+  public static class ScanSchemaOptions {
+
+    /**
+     * Custom null type, if provided by the operator. If
+     * not set, the null type is the Drill default.
+     */
+
+    public final MajorType nullType;
+    public final int scanBatchRecordLimit;
+    public final int scanBatchByteLimit;
+    public final List<ScanProjectionParser> parsers;
+
+    /**
+     * List of resolvers used to resolve projection columns for each
+     * new schema. Allows operators to introduce custom functionality
+     * as a plug-in rather than by copying code or subclassing this
+     * mechanism.
+     */
+
+    public final List<ReaderProjectionResolver> schemaResolvers;
+
+    public final List<SchemaPath> projection;
+    public final boolean useSchemaSmoothing;
+    public final boolean allowRequiredNullColumns;
+    public final TypeConverter typeConverter;
+
+    /**
+     * Context for error messages.
+     */
+    public final CustomErrorContext context;
+
+    protected ScanSchemaOptions(ScanOrchestratorBuilder builder) {
+      nullType = builder.nullType;
+      scanBatchRecordLimit = builder.scanBatchRecordLimit;
+      scanBatchByteLimit = builder.scanBatchByteLimit;
+      parsers = builder.parsers;
+      schemaResolvers = builder.schemaResolvers;
+      projection = builder.projection;
+      useSchemaSmoothing = builder.useSchemaSmoothing;
+      context = builder.errorContext;
+      typeConverter = builder.typeConverterBuilder
+        .errorContext(builder.errorContext)
+        .build();
+      allowRequiredNullColumns = builder.allowRequiredNullColumns;
+    }
+
+    protected TupleMetadata outputSchema() {
+      return typeConverter == null ? null : typeConverter.providedSchema();
     }
   }
 
   // Configuration
 
-  /**
-   * Custom null type, if provided by the operator. If
-   * not set, the null type is the Drill default.
-   */
-
-  private MajorType nullType;
+  protected final BufferAllocator allocator;
+  protected final ScanSchemaOptions options;
 
   /**
    * Creates the metadata (file and directory) columns, if needed.
    */
 
-  private MetadataManager metadataManager;
-  private final BufferAllocator allocator;
-  private int scanBatchRecordLimit = DEFAULT_BATCH_ROW_COUNT;
-  private int scanBatchByteLimit = DEFAULT_BATCH_BYTE_COUNT;
-  private final List<ScanProjectionParser> parsers = new ArrayList<>();
-
-  /**
-   * List of resolvers used to resolve projection columns for each
-   * new schema. Allows operators to introduce custom functionality
-   * as a plug-in rather than by copying code or subclassing this
-   * mechanism.
-   */
-
-  List<SchemaProjectionResolver> schemaResolvers = new ArrayList<>();
-
-  private boolean useSchemaSmoothing;
-  private boolean allowRequiredNullColumns;
+  public final MetadataManager metadataManager;
 
   // Internal state
 
@@ -402,87 +328,28 @@ public class ScanSchemaOrchestrator {
    * vectors rather than vector instances, this cache can be deprecated.
    */
 
-  private ResultVectorCacheImpl vectorCache;
-  private ScanLevelProjection scanProj;
+  protected final ResultVectorCacheImpl vectorCache;
+  protected final ScanLevelProjection scanProj;
   private ReaderSchemaOrchestrator currentReader;
-  private SchemaSmoother schemaSmoother;
+  protected final SchemaSmoother schemaSmoother;
 
   // Output
 
-  private VectorContainer outputContainer;
+  protected VectorContainer outputContainer;
 
-  public ScanSchemaOrchestrator(BufferAllocator allocator) {
+  public ScanSchemaOrchestrator(BufferAllocator allocator, ScanOrchestratorBuilder builder) {
     this.allocator = allocator;
-  }
+    this.options = new ScanSchemaOptions(builder);
 
-  /**
-   * Specify an optional metadata manager. Metadata is a set of constant
-   * columns with per-reader values. For file-based sources, this is usually
-   * the implicit and partition columns; but it could be other items for other
-   * data sources.
-   *
-   * @param metadataMgr the application-specific metadata manager to use
-   * for this scan
-   */
-
-  public void withMetadata(MetadataManager metadataMgr) {
-    metadataManager = metadataMgr;
-    schemaResolvers.add(metadataManager.resolver());
-  }
-
-  /**
-   * Specify a custom batch record count. This is the maximum number of records
-   * per batch for this scan. Readers can adjust this, but the adjustment is capped
-   * at the value specified here
-   *
-   * @param scanBatchSize maximum records per batch
-   */
-
-  public void setBatchRecordLimit(int batchRecordLimit) {
-    scanBatchRecordLimit = Math.max(1,
-        Math.min(batchRecordLimit, ValueVector.MAX_ROW_COUNT));
-  }
-
-  public void setBatchByteLimit(int byteLimit) {
-    scanBatchByteLimit = Math.max(MIN_BATCH_BYTE_SIZE,
-        Math.min(byteLimit, MAX_BATCH_BYTE_SIZE));
-  }
-
-  /**
-   * Specify the type to use for null columns in place of the standard
-   * nullable int. This type is used for all missing columns. (Readers
-   * that need per-column control need a different mechanism.)
-   *
-   * @param nullType
-   */
-
-  public void setNullType(MajorType nullType) {
-    this.nullType = nullType;
-  }
-
-  /**
-   * Enable schema smoothing: introduces an addition level of schema
-   * resolution each time a schema changes from a reader.
-   *
-   * @param flag true to enable schema smoothing, false to disable
-   */
-
-  public void enableSchemaSmoothing(boolean flag) {
-    useSchemaSmoothing = flag;
-  }
-
-  public void allowRequiredNullColumns(boolean flag) {
-    allowRequiredNullColumns = flag;
-  }
-
-  public void build(List<SchemaPath> projection) {
-    vectorCache = new ResultVectorCacheImpl(allocator, useSchemaSmoothing);
+    vectorCache = new ResultVectorCacheImpl(allocator, options.useSchemaSmoothing);
 
     // If no metadata manager was provided, create a mock
     // version just to keep code simple.
 
-    if (metadataManager == null) {
+    if (builder.metadataManager == null) {
       metadataManager = new NoOpMetadataManager();
+    } else {
+      metadataManager = builder.metadataManager;
     }
     metadataManager.bind(vectorCache);
 
@@ -493,22 +360,23 @@ public class ScanSchemaOrchestrator {
 
     ScanProjectionParser parser = metadataManager.projectionParser();
     if (parser != null) {
-
-      // For compatibility with Drill 1.12, insert the file metadata
-      // parser before others so that, in a wildcard query, metadata
-      // columns appear before others (such as the `columns` column.)
-      // This is temporary and should be removed once the test framework
-      // is restored to Drill 1.11 functionality.
-
-      parsers.add(parser);
+      // Insert in first position so that it is ensured to see
+      // any wildcard that exists
+      options.parsers.add(0, parser);
     }
 
     // Parse the projection list.
 
-    scanProj = new ScanLevelProjection(projection, parsers);
-
-    if (scanProj.hasWildcard() && useSchemaSmoothing) {
-      schemaSmoother = new SchemaSmoother(scanProj, schemaResolvers);
+    scanProj = ScanLevelProjection.builder()
+        .projection(options.projection)
+        .parsers(options.parsers)
+        .outputSchema(options.outputSchema())
+        .context(builder.errorContext())
+        .build();
+    if (scanProj.projectAll() && options.useSchemaSmoothing) {
+      schemaSmoother = new SchemaSmoother(scanProj, options.schemaResolvers);
+    } else {
+      schemaSmoother = null;
     }
 
     // Build the output container.
@@ -516,22 +384,14 @@ public class ScanSchemaOrchestrator {
     outputContainer = new VectorContainer(allocator);
   }
 
-  public void addParser(ScanProjectionParser parser) {
-    parsers.add(parser);
-  }
-
-  public void addResolver(SchemaProjectionResolver resolver) {
-    schemaResolvers.add(resolver);
-  }
-
   public ReaderSchemaOrchestrator startReader() {
     closeReader();
-    currentReader = new ReaderSchemaOrchestrator();
+    currentReader = new ReaderSchemaOrchestrator(this);
     return currentReader;
   }
 
   public boolean isProjectNone() {
-    return scanProj.projectNone();
+    return scanProj.isEmptyProjection();
   }
 
   public boolean hasSchema() {

@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -54,14 +55,30 @@ public class ColumnExplorer {
    */
   public ColumnExplorer(OptionManager optionManager, List<SchemaPath> columns) {
     this.partitionDesignator = optionManager.getString(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL);
-    this.columns = columns;
-    this.isStarQuery = columns != null && Utilities.isStarQuery(columns);
     this.selectedPartitionColumns = Lists.newArrayList();
     this.tableColumns = Lists.newArrayList();
     this.allImplicitColumns = initImplicitFileColumns(optionManager);
     this.selectedImplicitColumns = CaseInsensitiveMap.newHashMap();
+    if (columns == null) {
+      isStarQuery = false;
+      this.columns = null;
+    } else {
+      this.columns = columns;
+      this.isStarQuery = Utilities.isStarQuery(columns);
+      init();
+    }
+  }
 
-    init();
+  /**
+   * Constructor for using the column explorer to probe existing columns in the
+   * {@link org.apache.drill.exec.physical.impl.project.ProjectRecordBatch}.
+   */
+  // TODO: This is awkward. This class is being used for two distinct things:
+  // 1. The definition of the metadata columns, and
+  // 2. The projection of metadata columns in a particular query.
+  // Would be better to separate these two concepts.
+  public ColumnExplorer(OptionManager optionManager) {
+    this(optionManager, null);
   }
 
   /**
@@ -122,6 +139,15 @@ public class ColumnExplorer {
     return matcher.matches();
   }
 
+  public boolean isImplicitColumn(String name) {
+    return isPartitionColumn(partitionDesignator, name) ||
+           isImplicitFileColumn(name);
+  }
+
+  public boolean isImplicitFileColumn(String name) {
+    return allImplicitColumns.get(name) != null;
+  }
+
   /**
    * Returns list with partition column names.
    * For the case when table has several levels of nesting, max level is chosen.
@@ -131,28 +157,34 @@ public class ColumnExplorer {
    * @return list with partition column names.
    */
   public static List<String> getPartitionColumnNames(FileSelection selection, SchemaConfig schemaConfig) {
-    int partitionsCount = 0;
-    // a depth of table root path
-    int rootDepth = new Path(selection.getSelectionRoot()).depth();
+    int partitionsCount = getPartitionDepth(selection);
 
-    for (String file : selection.getFiles()) {
-      // Calculates partitions count for the concrete file:
-      // depth of file path - depth of table root path - 1.
-      // The depth of file path includes file itself,
-      // so we should subtract 1 to consider only directories.
-      int currentPartitionsCount = new Path(file).depth() - rootDepth - 1;
-      // max depth of files path should be used to handle all partitions
-      partitionsCount = Math.max(partitionsCount, currentPartitionsCount);
-    }
-
-    String partitionColumnLabel = schemaConfig.getOption(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL).string_val;
-    List<String> partitions = Lists.newArrayList();
+    String partitionColumnLabel = schemaConfig.getOption(
+        ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL).string_val;
+    List<String> partitions = new ArrayList<>();
 
     // generates partition column names: dir0, dir1 etc.
     for (int i = 0; i < partitionsCount; i++) {
       partitions.add(partitionColumnLabel + i);
     }
     return partitions;
+  }
+
+  public static int getPartitionDepth(FileSelection selection) {
+    // a depth of table root path
+    int rootDepth = selection.getSelectionRoot().depth();
+
+    int partitionsCount = 0;
+    for (Path file : selection.getFiles()) {
+      // Calculates partitions count for the concrete file:
+      // depth of file path - depth of table root path - 1.
+      // The depth of file path includes file itself,
+      // so we should subtract 1 to consider only directories.
+      int currentPartitionsCount = file.depth() - rootDepth - 1;
+      // max depth of files path should be used to handle all partitions
+      partitionsCount = Math.max(partitionsCount, currentPartitionsCount);
+    }
+    return partitionsCount;
   }
 
   /**
@@ -165,7 +197,7 @@ public class ColumnExplorer {
    * @param includeFileImplicitColumns if file implicit columns should be included into the result
    * @return implicit columns map
    */
-  public Map<String, String> populateImplicitColumns(String filePath,
+  public Map<String, String> populateImplicitColumns(Path filePath,
                                                      List<String> partitionValues,
                                                      boolean includeFileImplicitColumns) {
     Map<String, String> implicitValues = new LinkedHashMap<>();
@@ -177,7 +209,7 @@ public class ColumnExplorer {
     }
 
     if (includeFileImplicitColumns) {
-      Path path = Path.getPathWithoutSchemeAndAuthority(new Path(filePath));
+      Path path = Path.getPathWithoutSchemeAndAuthority(filePath);
       for (Map.Entry<String, ImplicitFileColumns> entry : selectedImplicitColumns.entrySet()) {
         implicitValues.put(entry.getKey(), entry.getValue().getValue(path));
       }
@@ -189,15 +221,16 @@ public class ColumnExplorer {
   /**
    * Compares root and file path to determine directories
    * that are present in the file path but absent in root.
-   * Example: root - a/b/c, filePath - a/b/c/d/e/0_0_0.parquet, result - d/e.
+   * Example: root - a/b/c, file - a/b/c/d/e/0_0_0.parquet, result - d/e.
    * Stores different directory names in the list in successive order.
    *
-   * @param filePath file path
+   * @param file file path
    * @param root root directory
+   * @param hasDirsOnly whether it is file or directory
    * @return list of directory names
    */
-  public static List<String> listPartitionValues(String filePath, String root) {
-    String[] dirs = parsePartitions(filePath, root);
+  public static List<String> listPartitionValues(Path file, Path root, boolean hasDirsOnly) {
+    String[] dirs = parsePartitions(file, root, hasDirsOnly);
     if (dirs == null) {
       return Collections.emptyList();
     }
@@ -208,21 +241,23 @@ public class ColumnExplorer {
    * Low-level parse of partitions, returned as a string array. Returns a
    * null array for invalid values.
    *
-   * @param filePath file path
+   * @param file file path
    * @param root root directory
+   * @param hasDirsOnly whether it is file or directory
    * @return array of directory names, or null if the arguments are invalid
    */
-  public static String[] parsePartitions(String filePath, String root) {
-    if (filePath == null || root == null) {
+  public static String[] parsePartitions(Path file, Path root, boolean hasDirsOnly) {
+    if (file == null || root == null) {
       return null;
     }
 
-    int rootDepth = new Path(root).depth();
-    Path path = new Path(filePath);
-    int parentDepth = path.getParent().depth();
+    if (!hasDirsOnly) {
+      file = file.getParent();
+    }
 
-    int diffCount = parentDepth - rootDepth;
-
+    int rootDepth = root.depth();
+    int fileDepth = file.depth();
+    int diffCount = fileDepth - rootDepth;
     if (diffCount < 0) {
       return null;
     }
@@ -230,10 +265,10 @@ public class ColumnExplorer {
     String[] diffDirectoryNames = new String[diffCount];
 
     // start filling in array from the end
-    for (int i = rootDepth; parentDepth > i; i++) {
-      path = path.getParent();
+    for (int i = rootDepth; fileDepth > i; i++) {
       // place in the end of array
-      diffDirectoryNames[parentDepth - i - 1] = path.getName();
+      diffDirectoryNames[fileDepth - i - 1] = file.getName();
+      file = file.getParent();
     }
 
     return diffDirectoryNames;

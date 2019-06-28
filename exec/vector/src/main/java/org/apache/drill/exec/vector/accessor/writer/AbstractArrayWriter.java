@@ -144,7 +144,12 @@ public abstract class AbstractArrayWriter implements ArrayWriter, WriterEvents {
     @Override
     public void nextElement() { }
 
-    public void next() { elementIndex++; }
+    @Override
+    public void prevElement() { }
+
+    protected void next() { elementIndex++; }
+
+    protected void prev() { elementIndex--; }
 
     public int valueStartOffset() { return offsetsWriter.nextOffset(); }
 
@@ -257,13 +262,14 @@ public abstract class AbstractArrayWriter implements ArrayWriter, WriterEvents {
     }
   }
 
-  protected final ColumnMetadata schema;
+  private final ColumnMetadata schema;
   protected AbstractObjectWriter elementObjWriter;
   protected final OffsetVectorWriter offsetsWriter;
   protected ColumnWriterIndex outerIndex;
   protected ArrayElementWriterIndex elementIndex;
 
-  public AbstractArrayWriter(ColumnMetadata schema, AbstractObjectWriter elementObjWriter, OffsetVectorWriter offsetVectorWriter) {
+  public AbstractArrayWriter(ColumnMetadata schema, AbstractObjectWriter elementObjWriter,
+      OffsetVectorWriter offsetVectorWriter) {
     this.schema = schema;
     this.elementObjWriter = elementObjWriter;
     this.offsetsWriter = offsetVectorWriter;
@@ -316,6 +322,9 @@ public abstract class AbstractArrayWriter implements ArrayWriter, WriterEvents {
   public boolean nullable() { return false; }
 
   @Override
+  public boolean isProjected() { return true; }
+
+  @Override
   public void setNull() {
     throw new IllegalStateException("Not nullable");
   }
@@ -337,7 +346,7 @@ public abstract class AbstractArrayWriter implements ArrayWriter, WriterEvents {
 
   @Override
   public void setNull(boolean isNull) {
-    if (isNull == true) {
+    if (isNull) {
       throw new UnsupportedOperationException();
     }
   }
@@ -357,7 +366,7 @@ public abstract class AbstractArrayWriter implements ArrayWriter, WriterEvents {
     format
       .startObject(this)
       .attribute("elementObjWriter");
-      elementObjWriter.dump(format);
+    elementObjWriter.dump(format);
     format.endObject();
   }
 }

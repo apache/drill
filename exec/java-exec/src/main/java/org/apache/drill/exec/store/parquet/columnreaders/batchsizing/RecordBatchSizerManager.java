@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.parquet.columnreaders.batchsizing;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
 import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.ExecConstants;
@@ -34,6 +35,7 @@ import org.apache.drill.exec.util.record.RecordBatchStats;
 import org.apache.drill.exec.util.record.RecordBatchStats.RecordBatchStatsContext;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 /**
  * This class is tasked with managing all aspects of flat Parquet reader record batch sizing logic.
@@ -56,11 +58,11 @@ public final class RecordBatchSizerManager {
   /** Configured Parquet records per batch */
   private final int configRecordsPerBatch;
   /** Configured Parquet memory size per batch */
-  private final int configMemorySizePerBatch;
+  private final long configMemorySizePerBatch;
   /** An upper bound on the Parquet records per batch based on the configured value and schema */
   private int maxRecordsPerBatch;
   /** An upper bound on the Parquet memory size per batch based on the configured value and schema  */
-  private int maxMemorySizePerBatch;
+  private long maxMemorySizePerBatch;
   /** The current number of records per batch as it can be dynamically optimized */
   private int recordsPerBatch;
 
@@ -162,7 +164,8 @@ public final class RecordBatchSizerManager {
         ColumnMemoryInfo columnMemoryInfo = columnMemoryInfoMap.get(v.getField().getName());
 
         if (columnMemoryInfo != null) {
-          AllocationHelper.allocate(v, recordsPerBatch, columnMemoryInfo.columnPrecision, 0);
+          Preconditions.checkState(columnMemoryInfo.columnPrecision <= Integer.MAX_VALUE, "Column precision cannot exceed 2GB");
+          AllocationHelper.allocate(v, recordsPerBatch, (int) columnMemoryInfo.columnPrecision, 0);
         } else {
           // This column was found in another Parquet file but not the current one; so we inject
           // a null value. At this time, we do not account for such columns. Why? the right design is
@@ -219,7 +222,7 @@ public final class RecordBatchSizerManager {
   /**
    * @return current total memory per batch (may change across batches)
    */
-  public int getCurrentMemorySizePerBatch() {
+  public long getCurrentMemorySizePerBatch() {
     return maxMemorySizePerBatch; // Current logic doesn't mutate the max-memory after it has been set
   }
 
@@ -233,7 +236,7 @@ public final class RecordBatchSizerManager {
   /**
    * @return configured memory size per batch (may be different from the enforced one)
    */
-  public int getConfigMemorySizePerBatch() {
+  public long getConfigMemorySizePerBatch() {
     return configMemorySizePerBatch;
   }
 
@@ -265,13 +268,13 @@ public final class RecordBatchSizerManager {
 // Internal implementation logic
 // ----------------------------------------------------------------------------
 
-  private int getConfiguredMaxBatchMemory(OptionManager options) {
+  private long getConfiguredMaxBatchMemory(OptionManager options) {
     // Use the parquet specific configuration if set
-    int maxMemory = (int) options.getLong(ExecConstants.PARQUET_FLAT_BATCH_MEMORY_SIZE);
+    long maxMemory = options.getLong(ExecConstants.PARQUET_FLAT_BATCH_MEMORY_SIZE);
 
     // Otherwise, use the common property
     if (maxMemory <= 0) {
-      maxMemory = (int) options.getLong(ExecConstants.OUTPUT_BATCH_SIZE);
+      maxMemory = options.getLong(ExecConstants.OUTPUT_BATCH_SIZE);
     }
     return maxMemory;
   }
@@ -304,8 +307,8 @@ public final class RecordBatchSizerManager {
     return normalizedNumRecords;
   }
 
-  private int normalizeMemorySizePerBatch() {
-    int normalizedMemorySize = configMemorySizePerBatch;
+  private long normalizeMemorySizePerBatch() {
+    long normalizedMemorySize = configMemorySizePerBatch;
 
     if (normalizedMemorySize <= 0) {
       final String message = String.format("Invalid Parquet memory per batch [%d] byte(s)",
@@ -321,10 +324,10 @@ public final class RecordBatchSizerManager {
       return normalizedMemorySize; // NOOP
     }
 
-    final int memorySizePerColumn = normalizedMemorySize / numColumns;
+    final long memorySizePerColumn = normalizedMemorySize / numColumns;
 
     if (memorySizePerColumn < MIN_COLUMN_MEMORY_SZ) {
-      final int prevValue   = normalizedMemorySize;
+      final long prevValue   = normalizedMemorySize;
       normalizedMemorySize  = MIN_COLUMN_MEMORY_SZ * numColumns;
 
       final String message = String.format("The Parquet memory per batch [%d] byte(s) is too low for this query ; using [%d] bytes",
@@ -333,8 +336,7 @@ public final class RecordBatchSizerManager {
     }
 
     if (batchStatsContext.isEnableBatchSzLogging()) {
-      final String message = String.format("The Parquet reader batch memory has been set to [%d] byte(s)", normalizedMemorySize);
-      RecordBatchStats.logRecordBatchStats(message, batchStatsContext);
+      RecordBatchStats.printConfiguredBatchSize(batchStatsContext, (int) normalizedMemorySize);
     }
 
     return normalizedMemorySize;
@@ -369,7 +371,8 @@ public final class RecordBatchSizerManager {
 
   private void assignColumnsBatchMemory() {
 
-    if (getNumColumns() == 0) {
+    if (getNumColumns() == 0 ||
+        maxRecordsPerBatch == 0) { // Happens when all row-groups are pruned, and only one is returned empty (TODO: currently not empty)
       return;
     }
 
@@ -444,9 +447,9 @@ public final class RecordBatchSizerManager {
       return; // we're done
     }
 
-    final int totalMemoryNeeded = requiredMemory.fixedLenRequiredMemory + requiredMemory.variableLenRequiredMemory;
-    final int extraMemorySpace = maxMemorySizePerBatch - totalMemoryNeeded;
-    final int perColumnExtraSpace = extraMemorySpace / numVariableLengthColumns;
+    final long totalMemoryNeeded = requiredMemory.fixedLenRequiredMemory + requiredMemory.variableLenRequiredMemory;
+    final long extraMemorySpace = maxMemorySizePerBatch - totalMemoryNeeded;
+    final long perColumnExtraSpace = extraMemorySpace / numVariableLengthColumns;
 
     if (perColumnExtraSpace == 0) {
       return;
@@ -481,7 +484,7 @@ public final class RecordBatchSizerManager {
     return remove;
   }
 
-  private int computeVectorMemory(ColumnMemoryInfo columnInfo, int numValues) {
+  private long computeVectorMemory(ColumnMemoryInfo columnInfo, int numValues) {
     if (columnInfo.columnMeta.isFixedLength()) {
       return BatchSizingMemoryUtil.computeFixedLengthVectorMemory(columnInfo.columnMeta, numValues);
     }
@@ -506,7 +509,7 @@ public final class RecordBatchSizerManager {
       requiredMemory.variableLenRequiredMemory   += columnInfo.columnMemoryQuota.maxMemoryUsage;
     }
 
-    final int totalMemoryNeeded = requiredMemory.fixedLenRequiredMemory + requiredMemory.variableLenRequiredMemory;
+    final long totalMemoryNeeded = requiredMemory.fixedLenRequiredMemory + requiredMemory.variableLenRequiredMemory;
     assert totalMemoryNeeded > 0;
 
     double neededMemoryRatio = ((double) maxMemorySizePerBatch) / totalMemoryNeeded;
@@ -612,7 +615,7 @@ public final class RecordBatchSizerManager {
   /** Field memory quota */
   public static final class ColumnMemoryQuota {
     /** Maximum cumulative memory that could be used */
-    private int maxMemoryUsage;
+    private long maxMemoryUsage;
     /** Maximum number of values that could be inserted */
     private int maxNumValues;
 
@@ -622,14 +625,14 @@ public final class RecordBatchSizerManager {
     /**
      * @param maxMemoryUsage maximum cumulative memory that could be used
      */
-    public ColumnMemoryQuota(int maxMemoryUsage) {
+    public ColumnMemoryQuota(long maxMemoryUsage) {
       this.maxMemoryUsage = maxMemoryUsage;
     }
 
     /**
      * @return the maxMemoryUsage
      */
-    public int getMaxMemoryUsage() {
+    public long getMaxMemoryUsage() {
       return maxMemoryUsage;
     }
 
@@ -651,7 +654,7 @@ public final class RecordBatchSizerManager {
     /** Column metadata */
     ParquetColumnMetadata columnMeta;
     /** Column value precision (maximum length for VL columns) */
-    int columnPrecision;
+    long columnPrecision;
     /** Column current memory quota within a batch */
     final ColumnMemoryQuota columnMemoryQuota = new ColumnMemoryQuota();
   }
@@ -659,9 +662,9 @@ public final class RecordBatchSizerManager {
   /** Memory requirements container */
   static final class MemoryRequirementContainer {
     /** Memory needed for the fixed length columns given a specific record size */
-    private int fixedLenRequiredMemory;
+    private long fixedLenRequiredMemory;
     /** Memory needed for the fixed length columns given a specific record size */
-    private int variableLenRequiredMemory;
+    private long variableLenRequiredMemory;
 
     private void reset() {
       this.fixedLenRequiredMemory    = 0;

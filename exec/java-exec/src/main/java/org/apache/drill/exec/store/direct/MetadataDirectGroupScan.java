@@ -18,12 +18,12 @@
 package org.apache.drill.exec.store.direct;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.store.RecordReader;
+import org.apache.hadoop.fs.Path;
 
 import java.util.Collection;
 import java.util.List;
@@ -37,22 +37,20 @@ import java.util.List;
 @JsonTypeName("metadata-direct-scan")
 public class MetadataDirectGroupScan extends DirectGroupScan {
 
-  private final Collection<String> files;
+  private final Collection<Path> files;
+  private boolean usedMetadataSummaryFile = false;
 
-  public MetadataDirectGroupScan(RecordReader reader, Collection<String> files) {
-    super(reader);
-    this.files = files;
-  }
-
-  public MetadataDirectGroupScan(RecordReader reader, Collection<String> files, ScanStats stats) {
+  public MetadataDirectGroupScan(RecordReader reader, Collection<Path> files, ScanStats stats,
+                                 boolean usedMetadataSummaryFile) {
     super(reader, stats);
     this.files = files;
+    this.usedMetadataSummaryFile = usedMetadataSummaryFile;
   }
 
   @Override
-  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
+  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
     assert children == null || children.isEmpty();
-    return new MetadataDirectGroupScan(reader, files, stats);
+    return new MetadataDirectGroupScan(reader, files, stats, usedMetadataSummaryFile);
   }
 
   @Override
@@ -78,6 +76,7 @@ public class MetadataDirectGroupScan extends DirectGroupScan {
       StringBuilder builder = new StringBuilder();
       builder.append("files = ").append(files).append(", ");
       builder.append("numFiles = ").append(files.size()).append(", ");
+      builder.append("usedMetadataSummaryFile = ").append(usedMetadataSummaryFile).append(", ");
       return builder.append(super.getDigest()).toString();
     }
     return super.getDigest();

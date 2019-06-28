@@ -172,8 +172,8 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
     int configuredBatchSize = (int) context.getOptions().getOption(ExecConstants.OUTPUT_BATCH_SIZE_VALIDATOR);
     flattenMemoryManager = new FlattenMemoryManager(configuredBatchSize);
 
-      RecordBatchStats.logRecordBatchStats(getRecordBatchStatsContext(),
-        "configured output batch size: %d", configuredBatchSize);
+    RecordBatchStats.printConfiguredBatchSize(getRecordBatchStatsContext(),
+      configuredBatchSize);
   }
 
   @Override
@@ -204,7 +204,6 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
     return this.container;
   }
 
-  @SuppressWarnings("resource")
   private void setFlattenVector() {
     final TypedFieldId typedFieldId = incoming.getValueVectorId(popConfig.getColumn());
     final MaterializedField field = incoming.getSchema().getColumn(typedFieldId.getFieldIds()[0]);
@@ -359,7 +358,6 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
    * the end of one of the other vectors while we are copying the data of the other vectors alongside each new flattened
    * value coming out of the repeated field.)
    */
-  @SuppressWarnings("resource")
   private TransferPair getFlattenFieldTransferPair(FieldReference reference) {
     final TypedFieldId fieldId = incoming.getValueVectorId(popConfig.getColumn());
     final Class<?> vectorClass = incoming.getSchema().getColumn(fieldId.getFieldIds()[0]).getValueClass();
@@ -456,7 +454,6 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
         final MaterializedField outputField;
         if (expr instanceof ValueVectorReadExpression) {
           final TypedFieldId id = ValueVectorReadExpression.class.cast(expr).getFieldId();
-          @SuppressWarnings("resource")
           final ValueVector incomingVector = incoming.getValueAccessorById(id.getIntermediateClass(), id.getFieldIds()).getValueVector();
           // outputField is taken from the incoming schema to avoid the loss of nested fields
           // when the first batch will be empty.
@@ -468,7 +465,6 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
         } else {
           outputField = MaterializedField.create(outputName, expr.getMajorType());
         }
-        @SuppressWarnings("resource")
         final ValueVector vector = TypeHelper.getNewVector(outputField, oContext.getAllocator());
         allocationVectors.add(vector);
         TypedFieldId fid = container.add(vector);

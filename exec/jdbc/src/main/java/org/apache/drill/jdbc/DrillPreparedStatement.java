@@ -31,5 +31,4 @@ import java.sql.PreparedStatement;
  * @see #unwrap
  */
 public interface DrillPreparedStatement extends PreparedStatement {
-
 }

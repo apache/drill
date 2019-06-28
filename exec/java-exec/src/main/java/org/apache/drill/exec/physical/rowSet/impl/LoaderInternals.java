@@ -43,6 +43,14 @@ interface LoaderInternals {
   int bumpVersion();
 
   /**
+   * Reports the current schema version. Used when adding an unprojected
+   * column which should not affect the output schema.
+   *
+   * @return the current schema version
+   */
+  int activeSchemaVersion();
+
+  /**
    * Accumulate the initial vector allocation sizes.
    *
    * @param allocationBytes number of bytes allocated to a vector
@@ -108,4 +116,6 @@ interface LoaderInternals {
    */
 
   boolean writeable();
+
+  ColumnBuilder columnBuilder();
 }

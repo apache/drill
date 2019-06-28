@@ -61,7 +61,6 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
   public void init(int limit, BufferAllocator allocator,  boolean hasSv2) throws SchemaChangeException {
     this.limit = limit;
     this.allocator = allocator;
-    @SuppressWarnings("resource")
     // It's allocating memory to store (limit+1) indexes. When first limit number of record indexes are stored then all
     // the other record indexes are kept at (limit+1) and evaluated with the root element of heap to determine if
     // this new element will reside in heap or not.
@@ -85,7 +84,6 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
     cleanup();
     hyperBatch = new ExpandableHyperContainer(newContainer);
     batchCount = hyperBatch.iterator().next().getValueVectors().length;
-    @SuppressWarnings("resource")
     final DrillBuf drillBuf = allocator.buffer(4 * (limit + 1));
     heapSv4 = new SelectionVector4(drillBuf, limit, Character.MAX_VALUE);
     // Reset queue size (most likely to be set to limit).
@@ -98,7 +96,6 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
     doSetup(hyperBatch, null);
   }
 
-  @SuppressWarnings("resource")
   @Override
   public void add(RecordBatchData batch) throws SchemaChangeException{
     Stopwatch watch = Stopwatch.createStarted();
@@ -143,7 +140,6 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
   @Override
   public void generate() throws SchemaChangeException {
     Stopwatch watch = Stopwatch.createStarted();
-    @SuppressWarnings("resource")
     final DrillBuf drillBuf = allocator.buffer(4 * queueSize);
     finalSv4 = new SelectionVector4(drillBuf, queueSize, 4000);
     for (int i = queueSize - 1; i >= 0; i--) {
@@ -190,6 +186,7 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
    * @return - true - queue is still initialized
    *           false - queue is not yet initialized and before using queue init should be called
    */
+  @Override
   public boolean isInitialized() {
     return (heapSv4 != null);
   }

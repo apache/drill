@@ -22,6 +22,7 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.vector.accessor.convert.ColumnConversionFactory;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
 
 import java.util.Set;
@@ -52,16 +53,26 @@ public final class RowSetBuilder {
    */
   @Deprecated
   public RowSetBuilder(BufferAllocator allocator, BatchSchema schema) {
-    this(allocator, MetadataUtils.fromFields(schema), 10);
+    this(allocator, MetadataUtils.fromFields(schema), 10, null);
   }
 
   public RowSetBuilder(BufferAllocator allocator, TupleMetadata schema) {
-    this(allocator, schema, 10);
+    this(allocator, schema, 10, null);
+  }
+
+  public RowSetBuilder(BufferAllocator allocator, TupleMetadata schema,
+      ColumnConversionFactory conversionFactory) {
+    this(allocator, schema, 10, conversionFactory);
   }
 
   public RowSetBuilder(BufferAllocator allocator, TupleMetadata schema, int capacity) {
+    this(allocator, schema, capacity, null);
+  }
+
+  public RowSetBuilder(BufferAllocator allocator, TupleMetadata schema,
+      int capacity, ColumnConversionFactory conversionFactory) {
     rowSet = DirectRowSet.fromSchema(allocator, schema);
-    writer = rowSet.writer(capacity);
+    writer = rowSet.writer(capacity, conversionFactory);
   }
 
   public RowSetWriter writer() { return writer; }
@@ -72,6 +83,7 @@ public final class RowSetBuilder {
    * set as <br><tt>add(10, "foo");</tt><br> Values of arrays can be expressed as a Java
    * array. A schema of (a:int, b:int[]) can be set as<br>
    * <tt>add(10, new int[] {100, 200});</tt><br>
+   *
    * @param values column values in column index order
    * @return this builder
    * @throws IllegalStateException if the batch, or any vector in the batch,

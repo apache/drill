@@ -32,7 +32,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.drill.common.config.CommonConstants;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.scanner.persistence.AnnotationDescriptor;
@@ -304,12 +303,12 @@ public final class ClassPathScanner {
   /**
    * @return paths that have a drill config file in them
    */
-  static Set<URL> getMarkedPaths() {
-    return forResource(CommonConstants.DRILL_JAR_MARKER_FILE_RESOURCE_PATHNAME, true);
+  static Set<URL> getMarkedPaths(String resourcePathName) {
+    return forResource(resourcePathName, true);
   }
 
-  public static Collection<URL> getConfigURLs() {
-    return forResource(CommonConstants.DRILL_JAR_MARKER_FILE_RESOURCE_PATHNAME, false);
+  public static Collection<URL> getConfigURLs(String resourcePathName) {
+    return forResource(resourcePathName, false);
   }
 
   /**

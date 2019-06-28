@@ -17,9 +17,11 @@
  */
 package org.apache.drill.exec.physical.rowSet;
 
+import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.BaseValueVector;
+import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 
 /**
  * Builds a result set (series of zero or more row sets) based on a defined
@@ -40,6 +42,12 @@ import org.apache.drill.exec.vector.BaseValueVector;
 public interface ResultSetLoader {
 
   public static final int DEFAULT_ROW_COUNT = BaseValueVector.INITIAL_VALUE_ALLOCATION;
+
+  /**
+   * Context for error messages.
+   */
+
+  CustomErrorContext context();
 
   /**
    * Current schema version. The version increments by one each time

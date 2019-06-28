@@ -17,19 +17,8 @@
  */
 package org.apache.drill.exec.physical.impl.scan.columns;
 
-import java.util.List;
-
-import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.physical.impl.scan.file.BaseFileScanFramework;
-import org.apache.drill.exec.physical.impl.scan.file.BaseFileScanFramework.FileSchemaNegotiator;
-import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiatorImpl;
-import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
-import org.apache.drill.exec.physical.impl.scan.framework.ShimBatchReader;
-import org.apache.drill.exec.store.dfs.DrillFileSystem;
-import org.apache.drill.exec.store.dfs.easy.FileWork;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.mapred.FileSplit;
+import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework;
+import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiatorImpl;
 
 /**
  * Scan framework for a file that supports the special "columns" column.
@@ -44,22 +33,19 @@ import org.apache.hadoop.mapred.FileSplit;
  * identifier, the use of the columns identifier when it is not allowed, etc.
  */
 
-public class ColumnsScanFramework extends BaseFileScanFramework<ColumnsScanFramework.ColumnsSchemaNegotiator> {
+public class ColumnsScanFramework extends FileScanFramework {
 
-  public interface FileReaderCreator {
-    ManagedReader<ColumnsSchemaNegotiator> makeBatchReader(
-        DrillFileSystem dfs,
-        FileSplit split) throws ExecutionSetupException;
-  }
+  public static class ColumnsScanBuilder extends FileScanBuilder {
+    protected boolean requireColumnsArray;
 
-  /**
-   * Schema negotiator that supports the file scan options plus access
-   * to the specific selected columns indexes.
-   */
+    public void requireColumnsArray(boolean flag) {
+      requireColumnsArray = flag;
+    }
 
-  public interface ColumnsSchemaNegotiator extends FileSchemaNegotiator {
-    boolean columnsArrayProjected();
-    boolean[] projectedIndexes();
+    @Override
+    public FileScanFramework buildFileFramework() {
+      return new ColumnsScanFramework(this);
+    }
   }
 
   /**
@@ -69,13 +55,12 @@ public class ColumnsScanFramework extends BaseFileScanFramework<ColumnsScanFrame
   public static class ColumnsSchemaNegotiatorImpl extends FileSchemaNegotiatorImpl
           implements ColumnsSchemaNegotiator {
 
-    public ColumnsSchemaNegotiatorImpl(ColumnsScanFramework framework,
-        ShimBatchReader<ColumnsSchemaNegotiator> shim) {
-      super(framework, shim);
+    public ColumnsSchemaNegotiatorImpl(ColumnsScanFramework framework) {
+      super(framework);
     }
 
     private ColumnsScanFramework framework() {
-      return (ColumnsScanFramework) basicFramework;
+      return (ColumnsScanFramework) framework;
     }
 
     @Override
@@ -89,46 +74,23 @@ public class ColumnsScanFramework extends BaseFileScanFramework<ColumnsScanFrame
     }
   }
 
-  /**
-   * Creates (or iterates over) the readers for this scan.
-   */
-  private final FileReaderCreator readerCreator;
-  private boolean requireColumnsArray;
   protected ColumnsArrayManager columnsArrayManager;
 
-  public ColumnsScanFramework(List<SchemaPath> projection,
-      List<? extends FileWork> files,
-      Configuration fsConf,
-      FileReaderCreator readerCreator) {
-    super(projection, files, fsConf);
-    this.readerCreator = readerCreator;
-  }
-
-  public void requireColumnsArray(boolean flag) {
-    requireColumnsArray = flag;
+  public ColumnsScanFramework(ColumnsScanBuilder builder) {
+    super(builder);
   }
 
   @Override
   protected void configure() {
     super.configure();
-    columnsArrayManager = new ColumnsArrayManager(requireColumnsArray);
-    scanOrchestrator.addParser(columnsArrayManager.projectionParser());
-    scanOrchestrator.addResolver(columnsArrayManager.resolver());
-
-    // This framework is (at present) used only for the text readers
-    // which use required Varchar columns to represent null columns.
-
-    scanOrchestrator.allowRequiredNullColumns(true);
+    columnsArrayManager = new ColumnsArrayManager(
+       ((ColumnsScanBuilder) builder).requireColumnsArray);
+    builder.addParser(columnsArrayManager.projectionParser());
+    builder.addResolver(columnsArrayManager.resolver());
   }
 
   @Override
-  protected ManagedReader<ColumnsSchemaNegotiator> newReader(FileSplit split) throws ExecutionSetupException {
-    return readerCreator.makeBatchReader(dfs, split);
-  }
-
-  @Override
-  public boolean openReader(ShimBatchReader<ColumnsSchemaNegotiator> shim, ManagedReader<ColumnsSchemaNegotiator> reader) {
-    return reader.open(
-        new ColumnsSchemaNegotiatorImpl(this, shim));
+  protected SchemaNegotiatorImpl newNegotiator() {
+    return new ColumnsSchemaNegotiatorImpl(this);
   }
 }

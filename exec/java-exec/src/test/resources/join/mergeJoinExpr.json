@@ -33,7 +33,10 @@
     },
     "columns" : [ "`n_nationkey`", "`n_regionkey`" ],
     "selectionRoot" : "/tpch/nation.parquet",
-    "cost" : 25.0
+    "cost" : {
+      "memoryCost" : 0,
+      "outputRowCount" : 25.0
+    }
   }, {
     "pop" : "project",
     "@id" : 8,
@@ -47,7 +50,10 @@
     "child" : 9,
     "initialAllocation" : 1000000,
     "maxAllocation" : 10000000000,
-    "cost" : 25.0
+    "cost" : {
+      "memoryCost" : 0,
+      "outputRowCount" : 25.0
+    }
   }, {
     "pop" : "external-sort",
     "@id" : 6,
@@ -60,14 +66,20 @@
     "reverse" : false,
     "initialAllocation" : 1000000,
     "maxAllocation" : 10000000000,
-    "cost" : 25.0
+    "cost" : {
+      "memoryCost" : 0,
+      "outputRowCount" : 25.0
+    }
   }, {
     "pop" : "selection-vector-remover",
     "@id" : 4,
     "child" : 6,
     "initialAllocation" : 1000000,
     "maxAllocation" : 10000000000,
-    "cost" : 25.0
+    "cost" : {
+      "memoryCost" : 0,
+      "outputRowCount" : 25.0
+    }
   }, {
     "pop" : "parquet-scan",
     "@id" : 7,
@@ -86,7 +98,10 @@
     },
     "columns" : [ "`r_regionkey`" ],
     "selectionRoot" : "/tpch/region.parquet",
-    "cost" : 5.0
+    "cost" : {
+      "memoryCost" : 0,
+      "outputRowCount" : 25.0
+    }
   }, {
     "pop" : "external-sort",
     "@id" : 5,
@@ -99,14 +114,20 @@
     "reverse" : false,
     "initialAllocation" : 1000000,
     "maxAllocation" : 10000000000,
-    "cost" : 5.0
+    "cost" : {
+      "memoryCost" : 0,
+      "outputRowCount" : 25.0
+    }
   }, {
     "pop" : "selection-vector-remover",
     "@id" : 3,
     "child" : 5,
     "initialAllocation" : 1000000,
     "maxAllocation" : 10000000000,
-    "cost" : 5.0
+    "cost" : {
+      "memoryCost" : 0,
+      "outputRowCount" : 25.0
+    }
   }, {
     "pop" : "merge-join",
     "@id" : 2,
@@ -120,7 +141,10 @@
     "joinType" : "INNER",
     "initialAllocation" : 1000000,
     "maxAllocation" : 10000000000,
-    "cost" : 25.0
+    "cost" : {
+      "memoryCost" : 0,
+      "outputRowCount" : 25.0
+    }
   }, {
     "pop" : "project",
     "@id" : 1,
@@ -131,13 +155,19 @@
     "child" : 2,
     "initialAllocation" : 1000000,
     "maxAllocation" : 10000000000,
-    "cost" : 25.0
+    "cost" : {
+      "memoryCost" : 0,
+      "outputRowCount" : 25.0
+    }
   }, {
     "pop" : "screen",
     "@id" : 0,
     "child" : 1,
     "initialAllocation" : 1000000,
     "maxAllocation" : 10000000000,
-    "cost" : 25.0
+    "cost" : {
+      "memoryCost" : 0,
+      "outputRowCount" : 25.0
+    }
   } ]
 }

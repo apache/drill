@@ -117,7 +117,7 @@ public class WebUiPageTree extends PageTree {
         final HttpSession session = request.getSession(true);
         final URI destURI = UriBuilder
             .fromUri(URLDecoder.decode(redirect, "UTF-8")).build();
-        session.setAttribute(FormAuthenticator.__J_URI, destURI.toString());
+        session.setAttribute(FormAuthenticator.__J_URI, destURI.getPath());
       }
 
       return new Viewable("/drill-am/login.ftl", toModel(sc, (Object) null));

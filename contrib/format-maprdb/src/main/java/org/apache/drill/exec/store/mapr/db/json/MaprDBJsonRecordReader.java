@@ -64,7 +64,8 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Iterables;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 
 import java.time.Instant;
-import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -307,7 +308,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
           @Override
           protected void writeTimeStamp(MapOrListWriterImpl writer, String fieldName, DocumentReader reader) {
             String formattedTimestamp = Instant.ofEpochMilli(reader.getTimestampLong())
-                .atOffset(OffsetDateTime.now().getOffset()).format(DateUtility.UTC_FORMATTER);
+                .atZone(ZoneId.systemDefault()).format(DateUtility.UTC_FORMATTER);
             writeString(writer, fieldName, formattedTimestamp);
           }
         };
@@ -357,8 +358,11 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
    * @param reader    document reader
    */
   private void writeTimestampWithLocalZoneOffset(MapOrListWriterImpl writer, String fieldName, DocumentReader reader) {
-    long timestamp = reader.getTimestampLong() + DateUtility.TIMEZONE_OFFSET_MILLIS;
-    writer.timeStamp(fieldName).writeTimeStamp(timestamp);
+    Instant utcInstant = Instant.ofEpochMilli(reader.getTimestampLong());
+    ZonedDateTime localZonedDateTime = utcInstant.atZone(ZoneId.systemDefault());
+    ZonedDateTime convertedZonedDateTime = localZonedDateTime.withZoneSameLocal(ZoneId.of("UTC"));
+    long timeStamp = convertedZonedDateTime.toInstant().toEpochMilli();
+    writer.timeStamp(fieldName).writeTimeStamp(timeStamp);
   }
 
   @Override

@@ -17,15 +17,15 @@
  */
 package org.apache.drill.exec.physical.rowSet.impl;
 
+import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.physical.impl.scan.project.projSet.ProjectionSetFactory;
+import org.apache.drill.exec.physical.rowSet.ProjectionSet;
 import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
 import org.apache.drill.exec.physical.rowSet.ResultVectorCache;
 import org.apache.drill.exec.physical.rowSet.RowSetLoader;
 import org.apache.drill.exec.physical.rowSet.impl.TupleState.RowState;
-import org.apache.drill.exec.physical.rowSet.project.ImpliedTupleRequest;
-import org.apache.drill.exec.physical.rowSet.project.RequestedTuple;
-import org.apache.drill.exec.physical.rowSet.project.RequestedTupleImpl;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.ValueVector;
@@ -45,20 +45,26 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
    */
 
   public static class ResultSetOptions {
-    public final int vectorSizeLimit;
-    public final int rowCountLimit;
-    public final ResultVectorCache vectorCache;
-    public final RequestedTuple projectionSet;
-    public final TupleMetadata schema;
-    public final long maxBatchSize;
+    protected final int vectorSizeLimit;
+    protected final int rowCountLimit;
+    protected final ResultVectorCache vectorCache;
+    protected final ProjectionSet projectionSet;
+    protected final TupleMetadata schema;
+    protected final long maxBatchSize;
+
+    /**
+     * Context for error messages.
+     */
+    protected final CustomErrorContext errorContext;
 
     public ResultSetOptions() {
       vectorSizeLimit = ValueVector.MAX_BUFFER_SIZE;
       rowCountLimit = DEFAULT_ROW_COUNT;
-      projectionSet = new ImpliedTupleRequest(true);
+      projectionSet = ProjectionSetFactory.projectAll();
       vectorCache = null;
       schema = null;
       maxBatchSize = -1;
+      errorContext = null;
     }
 
     public ResultSetOptions(OptionBuilder builder) {
@@ -67,16 +73,10 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
       vectorCache = builder.vectorCache;
       schema = builder.schema;
       maxBatchSize = builder.maxBatchSize;
-
-      // If projection, build the projection map.
-      // The caller might have already built the map. If so,
-      // use it.
-
-      if (builder.projectionSet != null) {
-        projectionSet = builder.projectionSet;
-      } else {
-        projectionSet = RequestedTupleImpl.parse(builder.projection);
-      }
+      errorContext = builder.errorContext;
+      projectionSet = builder.projectionSet == null ?
+          ProjectionSetFactory.projectAll() :
+          builder.projectionSet;
     }
 
     public void dump(HierarchicalFormatter format) {
@@ -84,7 +84,6 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
         .startObject(this)
         .attribute("vectorSizeLimit", vectorSizeLimit)
         .attribute("rowCountLimit", rowCountLimit)
-//        .attribute("projection", projection)
         .endObject();
     }
   }
@@ -164,7 +163,7 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
     CLOSED
   }
 
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ResultSetLoaderImpl.class);
+  protected static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ResultSetLoaderImpl.class);
 
   /**
    * Options provided to this loader.
@@ -176,14 +175,20 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
    * Allocator for vectors created by this loader.
    */
 
-  final BufferAllocator allocator;
+  private final BufferAllocator allocator;
+
+  /**
+   * Builds columns (vector, writer, state).
+   */
+
+  private final ColumnBuilder columnBuilder;
 
   /**
    * Internal structure used to work with the vectors (real or dummy) used
    * by this loader.
    */
 
-  final RowState rootState;
+  private final RowState rootState;
 
   /**
    * Top-level writer index that steps through the rows as they are written.
@@ -268,13 +273,14 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
 
   protected int accumulatedBatchSize;
 
-  protected final RequestedTuple projectionSet;
+  protected final ProjectionSet projectionSet;
 
   public ResultSetLoaderImpl(BufferAllocator allocator, ResultSetOptions options) {
     this.allocator = allocator;
     this.options = options;
     targetRowCount = options.rowCountLimit;
     writerIndex = new WriterIndexImpl(this);
+    columnBuilder = new ColumnBuilder();
 
     // Set the projections
 
@@ -341,6 +347,9 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
     }
     return activeSchemaVersion;
   }
+
+  @Override
+  public int activeSchemaVersion( ) { return activeSchemaVersion; }
 
   @Override
   public int schemaVersion() {
@@ -829,4 +838,10 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
   public int rowIndex() {
     return writerIndex().vectorIndex();
   }
+
+  @Override
+  public ColumnBuilder columnBuilder() { return columnBuilder; }
+
+  @Override
+  public CustomErrorContext context() { return options.errorContext; }
 }

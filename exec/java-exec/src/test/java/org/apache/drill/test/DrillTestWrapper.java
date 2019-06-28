@@ -17,6 +17,8 @@
  */
 package org.apache.drill.test;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -108,6 +110,10 @@ public class DrillTestWrapper {
   // queries to run before the baseline or test queries, can be used to set options
   private String baselineOptionSettingQueries;
   private String testOptionSettingQueries;
+  // allow approximate equality tests for number types
+  private boolean approximateEquality;
+  // tolerance for approximate equality tests defined as |Expected - Actual|/|Expected| <= Tolerance
+  private double tolerance;
   // two different methods are available for comparing ordered results, the default reads all of the records
   // into giant lists of objects, like one giant on-heap batch of 'vectors'
   // this flag enables the other approach which iterates through a hyper batch for the test query results and baseline
@@ -125,7 +131,8 @@ public class DrillTestWrapper {
 
   public DrillTestWrapper(TestBuilder testBuilder, TestServices services, Object query, QueryType queryType,
       String baselineOptionSettingQueries, String testOptionSettingQueries,
-      QueryType baselineQueryType, boolean ordered, boolean highPerformanceComparison,
+      QueryType baselineQueryType, boolean ordered, boolean approximateEquality, double tolerance,
+      boolean highPerformanceComparison,
       String[] baselineColumns, List<Map<String, Object>> baselineRecords, int expectedNumBatches,
       int expectedNumRecords) {
     this.testBuilder = testBuilder;
@@ -134,6 +141,8 @@ public class DrillTestWrapper {
     this.queryType = queryType;
     this.baselineQueryType = baselineQueryType;
     this.ordered = ordered;
+    this.approximateEquality = approximateEquality;
+    this.tolerance = tolerance;
     this.baselineOptionSettingQueries = baselineOptionSettingQueries;
     this.testOptionSettingQueries = testOptionSettingQueries;
     this.highPerformanceComparison = highPerformanceComparison;
@@ -781,6 +790,11 @@ public class DrillTestWrapper {
   }
 
   public static boolean compareValues(Object expected, Object actual, int counter, String column) throws Exception {
+    return compareValues(expected, actual, counter, column, false, 0);
+  }
+
+  public static boolean compareValues(Object expected, Object actual, int counter, String column,
+    boolean approximateEquality, double tolerance) throws Exception {
     if (expected == null) {
       if (actual == null) {
         if (VERBOSE_DEBUG) {
@@ -805,6 +819,24 @@ public class DrillTestWrapper {
       }
     }
     if (!expected.equals(actual)) {
+      if (approximateEquality && expected instanceof Number && actual instanceof Number) {
+        if (expected instanceof BigDecimal && actual instanceof BigDecimal) {
+          if (((((BigDecimal) expected).subtract((BigDecimal) actual)).abs().divide((BigDecimal) expected).abs()).compareTo(BigDecimal.valueOf(tolerance)) <= 0) {
+            return true;
+          }
+        } else if (expected instanceof BigInteger && actual instanceof BigInteger) {
+          BigDecimal expBD = new BigDecimal((BigInteger)expected);
+          BigDecimal actBD = new BigDecimal((BigInteger)actual);
+          if ((expBD.subtract(actBD)).abs().divide(expBD.abs()).compareTo(BigDecimal.valueOf(tolerance)) <= 0) {
+            return true;
+          }
+        } else if (!(expected instanceof BigDecimal || expected instanceof BigInteger) && !(actual instanceof BigDecimal || actual instanceof BigInteger)) {
+          // For all other types cast to double and compare
+          if (Math.abs((double) expected - (double) actual) / Math.abs((double) expected) <= tolerance) {
+            return true;
+          }
+        }
+      }
       return false;
     } else {
       if (VERBOSE_DEBUG) {
@@ -830,14 +862,18 @@ public class DrillTestWrapper {
     for (Map<String, Object> expectedRecord : expectedRecords) {
       i = 0;
       found = false;
+      StringBuilder mismatchHistory = new StringBuilder();
       findMatch:
       for (Map<String, Object> actualRecord : actualRecords) {
         for (String s : actualRecord.keySet()) {
           if (!expectedRecord.containsKey(s)) {
             throw new Exception("Unexpected column '" + s + "' returned by query.");
           }
-          if (! compareValues(expectedRecord.get(s), actualRecord.get(s), counter, s)) {
+          if (! compareValues(expectedRecord.get(s), actualRecord.get(s), counter, s, approximateEquality, tolerance)) {
             i++;
+            mismatchHistory.append("column: ").append(s)
+                .append(" exp: |").append(expectedRecord.get(s))
+                .append("| act: |").append(actualRecord.get(s)).append("|\n");
             continue findMatch;
           }
         }
@@ -863,6 +899,7 @@ public class DrillTestWrapper {
         }
         String actualRecordExamples = sb.toString();
         throw new Exception(String.format("After matching %d records, did not find expected record in result set:\n %s\n\n" +
+                "Mismatch column: \n" + mismatchHistory + "\n" +
             "Some examples of expected records:\n%s\n\n Some examples of records returned by the test query:\n%s",
             counter, printRecord(expectedRecord), expectedRecordExamples, actualRecordExamples));
       } else {
@@ -884,11 +921,10 @@ public class DrillTestWrapper {
   }
 
   private String printRecord(Map<String, ?> record) {
-    String ret = "";
-    for (String s : record.keySet()) {
-      ret += s + " : "  + record.get(s) + ", ";
-    }
-    return ret + "\n";
+    StringBuilder sb = new StringBuilder();
+    record.keySet().stream().sorted()
+        .forEach(key -> sb.append(key).append(" : ").append(record.get(key)).append(", "));
+    return sb.append(System.lineSeparator()).toString();
   }
 
   private void test(String query) throws Exception {

@@ -106,7 +106,7 @@ SqlNode SqlShowSchemas() :
 
 /**
  * Parses statement
- *   { DESCRIBE | DESC } tblname [col_name | wildcard ]
+ *   { DESCRIBE | DESC } [TABLE] tblname [col_name | wildcard ]
  */
 SqlNode SqlDescribeTable() :
 {
@@ -117,6 +117,7 @@ SqlNode SqlDescribeTable() :
 }
 {
     (<DESCRIBE> | <DESC>) { pos = getPos(); }
+    (<TABLE>)?
     table = CompoundIdentifier()
     (
         column = CompoundIdentifier()
@@ -179,7 +180,7 @@ SqlNodeList ParseRequiredFieldList(String relType) :
 }
 
 /**
-* Rarses CREATE [OR REPLACE] command for VIEW, TABLE or SCHEMA.
+* Parses CREATE [OR REPLACE] command for VIEW, TABLE or SCHEMA.
 */
 SqlNode SqlCreateOrReplace() :
 {
@@ -374,11 +375,11 @@ void addProperty(SqlNodeList properties) :
 <SCH> TOKEN : {
     < LOAD: "LOAD" > { popState(); }
   | < NUM: <DIGIT> (" " | "\t" | "\n" | "\r")* >
-    // once schema is found, swich back to initial lexical state
+    // once schema is found, switch back to initial lexical state
     // must be enclosed in the parentheses
-    // inside may have left parenthesis only if number precededs (covers cases with varchar(10)),
+    // inside may have left parenthesis only if number precedes (covers cases with varchar(10)),
     // if left parenthesis is present in column name, it must be escaped with backslash
-  | < PAREN_STRING: <LPAREN> ((~[")"]) | (<NUM> ")") | ("\\)"))+ <RPAREN> > { popState(); }
+  | < PAREN_STRING: <LPAREN> ((~[")"]) | (<NUM> ")") | ("\\)"))* <RPAREN> > { popState(); }
 }
 
 /**
@@ -464,40 +465,73 @@ SqlNode SqlDropSchema(SqlParserPos pos) :
 
 /**
  * Parse refresh table metadata statement.
- * REFRESH TABLE METADATA tblname
+ * REFRESH TABLE METADATA [COLUMNS ((field1, field2,..) | NONE)] tblname
  */
 SqlNode SqlRefreshMetadata() :
 {
     SqlParserPos pos;
     SqlIdentifier tblName;
-    SqlNodeList fieldList;
+    SqlNodeList fieldList = null;
     SqlNode query;
+    boolean allColumnsInteresting = true;
 }
 {
     <REFRESH> { pos = getPos(); }
     <TABLE>
     <METADATA>
+    [
+        <COLUMNS> { allColumnsInteresting = false; }
+        (   fieldList = ParseRequiredFieldList("Table")
+            |
+            <NONE>
+        )
+    ]
     tblName = CompoundIdentifier()
     {
-        return new SqlRefreshMetadata(pos, tblName);
+        return new SqlRefreshMetadata(pos, tblName, SqlLiteral.createBoolean(allColumnsInteresting, getPos()), fieldList);
     }
 }
 
 /**
 * Parses statement
 *   DESCRIBE { SCHEMA | DATABASE } name
+*   DESCRIBE SCHEMA FOR TABLE dfs.my_table [AS (JSON | STATEMENT)]
 */
 SqlNode SqlDescribeSchema() :
 {
    SqlParserPos pos;
-   SqlIdentifier schema;
+   SqlIdentifier table;
+   String format = "JSON";
 }
 {
    <DESCRIBE> { pos = getPos(); }
-   (<SCHEMA> | <DATABASE>) { schema = CompoundIdentifier(); }
-   {
-        return new SqlDescribeSchema(pos, schema);
-   }
+   (
+       <SCHEMA>
+         (
+              <FOR> <TABLE> { table = CompoundIdentifier(); }
+              [
+                  <AS>
+                  (
+                       <JSON> { format = "JSON"; }
+                  |
+                       <STATEMENT> { format = "STATEMENT"; }
+                  )
+              ]
+              {
+                   return new SqlSchema.Describe(pos, table, SqlLiteral.createCharString(format, getPos()));
+              }
+
+         |
+             {
+                  return new SqlDescribeSchema(pos, CompoundIdentifier());
+             }
+         )
+   |
+       <DATABASE>
+            {
+                 return new SqlDescribeSchema(pos, CompoundIdentifier());
+            }
+   )
 }
 
 /**
@@ -550,11 +584,116 @@ Pair<SqlNodeList, SqlNodeList> ParenthesizedCompoundIdentifierList() :
     SqlIdentifier id;
 }
 {
-    id = SimpleIdentifier() {list.add(id);}
+    id = CompoundIdentifier() {list.add(id);}
     (
-   <COMMA> id = SimpleIdentifier() {list.add(id);}) *
+   <COMMA> id = CompoundIdentifier() {list.add(id);}) *
     {
        return Pair.of(new SqlNodeList(list, getPos()), null);
     }
 }
 </#if>
+/**
+ * Parses a analyze statement.
+ * ANALYZE TABLE tblname {COMPUTE | ESTIMATE} | STATISTICS
+ *      [(column1, column2, ...)] [ SAMPLE numeric PERCENT ]
+ */
+SqlNode SqlAnalyzeTable() :
+{
+    SqlParserPos pos;
+    SqlIdentifier tblName;
+    SqlLiteral estimate = null;
+    SqlNodeList fieldList = null;
+    SqlNumericLiteral percent = null;
+}
+{
+    <ANALYZE> { pos = getPos(); }
+    <TABLE>
+    tblName = CompoundIdentifier()
+    (
+        <COMPUTE> { estimate = SqlLiteral.createBoolean(false, pos); }
+        |
+        <ESTIMATE> { estimate = SqlLiteral.createBoolean(true, pos); }
+    )
+    <STATISTICS>
+    [
+        (fieldList = ParseRequiredFieldList("Table"))
+    ]
+    [
+        <SAMPLE> percent = UnsignedNumericLiteral() <PERCENT>
+        {
+            BigDecimal rate = percent.bigDecimalValue();
+            if (rate.compareTo(BigDecimal.ZERO) <= 0 ||
+                rate.compareTo(BigDecimal.valueOf(100L)) > 0)
+            {
+                throw new ParseException("Invalid percentage for ANALYZE TABLE");
+            }
+        }
+    ]
+    {
+        if (percent == null) { percent = SqlLiteral.createExactNumeric("100.0", pos); }
+        return new SqlAnalyzeTable(pos, tblName, estimate, fieldList, percent);
+    }
+}
+
+
+/**
+ * Parses a SET statement without a leading "ALTER <SCOPE>":
+ *
+ * SET &lt;NAME&gt; [ = VALUE ]
+ * <p>
+ * Statement handles in: {@link SetAndResetOptionHandler}
+ */
+DrillSqlSetOption DrillSqlSetOption(Span s, String scope) :
+{
+    SqlParserPos pos;
+    SqlIdentifier name;
+    SqlNode val = null;
+}
+{
+    <SET> {
+        s.add(this);
+    }
+    name = CompoundIdentifier()
+    (
+        <EQ>
+        (
+            val = Literal()
+        |
+            val = SimpleIdentifier()
+        )
+    )?
+    {
+      pos = (val == null) ? s.end(name) : s.end(val);
+
+      return new DrillSqlSetOption(pos, scope, name, val);
+    }
+}
+
+/**
+ * Parses a RESET statement without a leading "ALTER <SCOPE>":
+ *
+ *  RESET { <NAME> | ALL }
+ * <p>
+ * Statement handles in: {@link SetAndResetOptionHandler}
+ */
+DrillSqlResetOption DrillSqlResetOption(Span s, String scope) :
+{
+    SqlIdentifier name;
+}
+{
+    <RESET> {
+        s.add(this);
+    }
+    (
+        name = CompoundIdentifier()
+    |
+        <ALL> {
+            name = new SqlIdentifier(token.image.toUpperCase(Locale.ROOT), getPos());
+        }
+    )
+    {
+        return new DrillSqlResetOption(s.end(name), scope, name);
+    }
+}
+
+

@@ -22,7 +22,6 @@ import java.io.IOException;
 import org.apache.drill.exec.store.dfs.FileSelection;
 
 public abstract class AbstractFileGroupScan extends AbstractGroupScan implements FileGroupScan {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractFileGroupScan.class);
 
   public AbstractFileGroupScan(String userName) {
     super(userName);
@@ -46,5 +45,4 @@ public abstract class AbstractFileGroupScan extends AbstractGroupScan implements
   public boolean supportsPartitionFilterPushdown() {
     return true;
   }
-
 }

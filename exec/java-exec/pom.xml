@@ -23,7 +23,7 @@
   <parent>
     <artifactId>exec-parent</artifactId>
     <groupId>org.apache.drill.exec</groupId>
-    <version>1.16.0-SNAPSHOT</version>
+    <version>1.17.0-SNAPSHOT</version>
   </parent>
   <artifactId>drill-java-exec</artifactId>
   <name>exec/Java Execution Engine</name>
@@ -126,17 +126,14 @@
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-server</artifactId>
-      <version>9.1.5.v20140505</version>
     </dependency>
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-servlet</artifactId>
-      <version>9.1.5.v20140505</version>
     </dependency>
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-servlets</artifactId>
-      <version>9.1.5.v20140505</version>
       <exclusions>
         <exclusion>
           <artifactId>jetty-continuation</artifactId>
@@ -171,17 +168,14 @@
     <dependency>
       <groupId>org.glassfish.jersey.containers</groupId>
       <artifactId>jersey-container-jetty-servlet</artifactId>
-      <version>2.8</version>
     </dependency>
     <dependency>
       <groupId>org.glassfish.jersey.media</groupId>
       <artifactId>jersey-media-multipart</artifactId>
-      <version>2.8</version>
     </dependency>
     <dependency>
       <groupId>org.glassfish.jersey.media</groupId>
       <artifactId>jersey-media-json-jackson</artifactId>
-      <version>2.8</version>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.jaxrs</groupId>
@@ -205,7 +199,6 @@
     <dependency>
       <groupId>org.glassfish.jersey.ext</groupId>
       <artifactId>jersey-mvc-freemarker</artifactId>
-      <version>2.8</version>
       <exclusions>
           <exclusion>
             <artifactId>servlet-api</artifactId>
@@ -293,11 +286,11 @@
       <artifactId>vector</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <!-- <dependency> -->
-    <!-- <groupId>org.apache.drill.exec</groupId> -->
-    <!-- <version>${project.version}</version> -->
-    <!-- <artifactId>drill-buffers</artifactId> -->
-    <!-- </dependency> -->
+    <dependency>
+      <groupId>org.apache.drill.metastore</groupId>
+      <artifactId>drill-metastore-api</artifactId>
+      <version>${project.version}</version>
+    </dependency>
     <dependency>
       <groupId>com.beust</groupId>
       <artifactId>jcommander</artifactId>
@@ -331,7 +324,6 @@
     <dependency>
       <groupId>com.google.protobuf</groupId>
       <artifactId>protobuf-java</artifactId>
-      <version>2.5.0</version>
     </dependency>
     <dependency>
       <groupId>org.mortbay.jetty</groupId>
@@ -352,6 +344,16 @@
       <artifactId>commons-compiler</artifactId>
     </dependency>
     <dependency>
+      <groupId>com.clearspring.analytics</groupId>
+      <artifactId>stream</artifactId>
+      <version>2.7.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.tdunning</groupId>
+      <artifactId>t-digest</artifactId>
+      <version>3.2</version>
+    </dependency>
+    <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-common</artifactId>
       <exclusions>
@@ -360,12 +362,12 @@
           <artifactId>commons-codec</artifactId>
         </exclusion>
         <exclusion>
-            <groupId>io.netty</groupId>
-            <artifactId>netty</artifactId>
+          <groupId>io.netty</groupId>
+          <artifactId>netty</artifactId>
         </exclusion>
         <exclusion>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-all</artifactId>
+          <groupId>io.netty</groupId>
+          <artifactId>netty-all</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -459,7 +461,7 @@
     <dependency>
       <groupId>nl.basjes.parse.httpdlog</groupId>
       <artifactId>httpdlog-parser</artifactId>
-      <version>2.4</version>
+      <version>5.2</version>
       <exclusions>
         <exclusion>
           <groupId>commons-codec</groupId>

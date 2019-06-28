@@ -99,10 +99,10 @@ public class ImageRecordReader extends AbstractRecordReader {
   private DrillBuf managedBuffer;
   private boolean finish;
 
-  public ImageRecordReader(FragmentContext context, DrillFileSystem fs, String inputPath,
+  public ImageRecordReader(FragmentContext context, DrillFileSystem fs, Path inputPath,
                            boolean fileSystemMetadata, boolean descriptive, String timeZone) {
     this.fs = fs;
-    hadoopPath = fs.makeQualified(new Path(inputPath));
+    hadoopPath = fs.makeQualified(inputPath);
     this.fileSystemMetadata = fileSystemMetadata;
     this.descriptive = descriptive;
     this.timeZone = (timeZone != null) ? TimeZone.getTimeZone(timeZone) : TimeZone.getDefault();

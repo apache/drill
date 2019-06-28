@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.parquet.metadata;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import org.apache.hadoop.fs.Path;
 import org.apache.parquet.schema.OriginalType;
 import org.apache.parquet.schema.PrimitiveType;
 
@@ -32,6 +33,7 @@ import static org.apache.drill.exec.store.parquet.metadata.MetadataVersion.Const
 import static org.apache.drill.exec.store.parquet.metadata.MetadataVersion.Constants.V3_1;
 import static org.apache.drill.exec.store.parquet.metadata.MetadataVersion.Constants.V3_2;
 import static org.apache.drill.exec.store.parquet.metadata.MetadataVersion.Constants.V3_3;
+import static org.apache.drill.exec.store.parquet.metadata.MetadataVersion.Constants.V4;
 
 public class MetadataBase {
 
@@ -52,12 +54,14 @@ public class MetadataBase {
       @JsonSubTypes.Type(value = Metadata_V3.ParquetTableMetadata_v3.class, name = V3),
       @JsonSubTypes.Type(value = Metadata_V3.ParquetTableMetadata_v3.class, name = V3_1),
       @JsonSubTypes.Type(value = Metadata_V3.ParquetTableMetadata_v3.class, name = V3_2),
-      @JsonSubTypes.Type(value = Metadata_V3.ParquetTableMetadata_v3.class, name = V3_3)
+      @JsonSubTypes.Type(value = Metadata_V3.ParquetTableMetadata_v3.class, name = V3_3),
+      @JsonSubTypes.Type(value = Metadata_V4.ParquetTableMetadata_v4.class, name = V4),
+
   })
   public static abstract class ParquetTableMetadataBase {
 
     @JsonIgnore
-    public abstract List<String> getDirectories();
+    public abstract List<Path> getDirectories();
 
     @JsonIgnore public abstract List<? extends ParquetFileMetadata> getFiles();
 
@@ -73,6 +77,10 @@ public class MetadataBase {
 
     @JsonIgnore public abstract Integer getDefinitionLevel(String[] columnName);
 
+    @JsonIgnore public abstract Integer getScale(String[] columnName);
+
+    @JsonIgnore public abstract Integer getPrecision(String[] columnName);
+
     @JsonIgnore public abstract boolean isRowGroupPrunable();
 
     @JsonIgnore public abstract ParquetTableMetadataBase clone();
@@ -80,10 +88,12 @@ public class MetadataBase {
     @JsonIgnore public abstract String getDrillVersion();
 
     @JsonIgnore public abstract String getMetadataVersion();
+
+    @JsonIgnore  public abstract List<? extends ColumnTypeMetadata> getColumnTypeInfoList();
   }
 
   public static abstract class ParquetFileMetadata {
-    @JsonIgnore public abstract String getPath();
+    @JsonIgnore public abstract Path getPath();
 
     @JsonIgnore public abstract Long getLength();
 
@@ -102,7 +112,6 @@ public class MetadataBase {
 
     @JsonIgnore public abstract List<? extends ColumnMetadata> getColumns();
   }
-
 
   public static abstract class ColumnMetadata {
 
@@ -146,6 +155,14 @@ public class MetadataBase {
     public abstract PrimitiveType.PrimitiveTypeName getPrimitiveType();
 
     public abstract OriginalType getOriginalType();
+
   }
 
+  public static abstract class ColumnTypeMetadata {
+
+    public abstract PrimitiveType.PrimitiveTypeName getPrimitiveType();
+
+    public abstract String[] getName();
+
+  }
 }

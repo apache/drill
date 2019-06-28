@@ -133,6 +133,10 @@ public class SchemaBuilder implements SchemaContainer {
     return this;
   }
 
+  public SchemaBuilder add(String name, MinorType type, int precision, int scale) {
+    return addDecimal(name, type, DataMode.REQUIRED, precision, scale);
+  }
+
   public SchemaBuilder addNullable(String name, MinorType type) {
     tupleBuilder.addNullable(name,  type);
     return this;
@@ -143,9 +147,17 @@ public class SchemaBuilder implements SchemaContainer {
     return this;
   }
 
+  public SchemaBuilder addNullable(String name, MinorType type, int precision, int scale) {
+    return addDecimal(name, type, DataMode.OPTIONAL, precision, scale);
+  }
+
   public SchemaBuilder addArray(String name, MinorType type) {
     tupleBuilder.addArray(name, type);
     return this;
+  }
+
+  public SchemaBuilder addArray(String name, MinorType type, int precision, int scale) {
+    return addDecimal(name, type, DataMode.REPEATED, precision, scale);
   }
 
   public SchemaBuilder addDecimal(String name, MinorType type, DataMode mode, int precision, int scale) {

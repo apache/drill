@@ -115,6 +115,7 @@ public class LateralJoinBatch extends AbstractBinaryRecordBatch<LateralJoinPOP> 
     Preconditions.checkNotNull(left);
     Preconditions.checkNotNull(right);
     final int configOutputBatchSize = (int) context.getOptions().getOption(ExecConstants.OUTPUT_BATCH_SIZE_VALIDATOR);
+    RecordBatchStats.printConfiguredBatchSize(getRecordBatchStatsContext(), configOutputBatchSize);
     implicitColumn = popConfig.getImplicitRIDColumn();
 
     populateExcludedField(popConfig);
@@ -232,6 +233,14 @@ public class LateralJoinBatch extends AbstractBinaryRecordBatch<LateralJoinPOP> 
     // vectors and throws NPE. The actual checks are done in updateMemoryManager
     updateMemoryManager(RIGHT_INDEX);
 
+    if (outputIndex > 0) {
+      // this means batch is already allocated but because of new incoming the width and output row count might have
+      // changed. So update the maxOutputRowCount with new value
+      if (useMemoryManager) {
+        setMaxOutputRowCount(batchMemoryManager.getCurrentOutgoingMaxRowCount());
+      }
+    }
+    // if output is not allocated then maxRowCount will be set correctly below
     // allocate space for the outgoing batch
     allocateVectors();
 
@@ -700,6 +709,12 @@ public class LateralJoinBatch extends AbstractBinaryRecordBatch<LateralJoinPOP> 
           }
           // Since schema has change so we have new empty vectors in output container hence allocateMemory for them
           allocateVectors();
+        } else {
+          // means we are using already allocated output batch so row count may have changed based on new incoming
+          // batch hence update it
+          if (useMemoryManager) {
+            setMaxOutputRowCount(batchMemoryManager.getCurrentOutgoingMaxRowCount());
+          }
         }
       }
     } // output batch is full to its max capacity
@@ -882,9 +897,17 @@ public class LateralJoinBatch extends AbstractBinaryRecordBatch<LateralJoinPOP> 
    * Simple method to allocate space for all the vectors in the container.
    */
   private void allocateVectors() {
+    // This check is here and will be true only in case of left join where the pending rows from previous left batch is
+    // copied to the new output batch. Then same output batch is used to fill remaining memory using new left & right
+    // batches.
     if (outputIndex > 0) {
       logger.trace("Allocation is already done for output container vectors since it already holds some record");
       return;
+    }
+
+    // Set this as max output rows to be filled in output batch since memory for that many rows are allocated
+    if (useMemoryManager) {
+      setMaxOutputRowCount(batchMemoryManager.getOutputRowCount());
     }
 
     for (VectorWrapper w : container) {
@@ -1153,6 +1176,10 @@ public class LateralJoinBatch extends AbstractBinaryRecordBatch<LateralJoinPOP> 
    */
   @VisibleForTesting
   public void setMaxOutputRowCount(int outputRowCount) {
+    if (isRecordBatchStatsLoggingEnabled()) {
+      RecordBatchStats.logRecordBatchStats(getRecordBatchStatsContext(),
+        "Previous OutputRowCount: %d, New OutputRowCount: %d", maxOutputRowCount, outputRowCount);
+    }
     maxOutputRowCount = outputRowCount;
   }
 
@@ -1182,17 +1209,12 @@ public class LateralJoinBatch extends AbstractBinaryRecordBatch<LateralJoinPOP> 
 
     // For cases where all the previous input were consumed and send with previous output batch. But now we are building
     // a new output batch with new incoming then it will not cause any problem since outputIndex will be 0
-    final int newOutputRowCount = batchMemoryManager.update(inputIndex, outputIndex);
+    batchMemoryManager.update(inputIndex, outputIndex);
 
     if (isRecordBatchStatsLoggingEnabled()) {
       RecordBatchIOType type = inputIndex == LEFT_INDEX ? RecordBatchIOType.INPUT_LEFT : RecordBatchIOType.INPUT_RIGHT;
-      RecordBatchStats.logRecordBatchStats(type, batchMemoryManager.getRecordBatchSizer(inputIndex), getRecordBatchStatsContext());
-      RecordBatchStats.logRecordBatchStats(getRecordBatchStatsContext(),
-        "Previous OutputRowCount: %d, New OutputRowCount: %d", maxOutputRowCount, newOutputRowCount);
-    }
-
-    if (useMemoryManager) {
-      maxOutputRowCount = newOutputRowCount;
+      RecordBatchStats.logRecordBatchStats(type, batchMemoryManager.getRecordBatchSizer(inputIndex),
+        getRecordBatchStatsContext());
     }
   }
 

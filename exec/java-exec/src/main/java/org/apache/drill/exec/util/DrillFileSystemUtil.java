@@ -18,6 +18,7 @@
 package org.apache.drill.exec.util;
 
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
+import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -131,6 +132,16 @@ public class DrillFileSystemUtil {
    */
   public static List<FileStatus> listAllSafe(FileSystem fs, Path path, boolean recursive, PathFilter... filters) {
     return FileSystemUtil.listAllSafe(fs, path, recursive, FileSystemUtil.mergeFilters(DRILL_SYSTEM_FILTER, filters));
+  }
+
+  /**
+   * Safely creates Hadoop Path for null and empty String paths
+   *
+   * @param path String path, which can be null or empty
+   * @return Hadoop Path. Root - for empty or null path
+   */
+  public static Path createPathSafe(String path) {
+    return Strings.isNullOrEmpty(path) ? new Path("/") : new Path(path);
   }
 
 }

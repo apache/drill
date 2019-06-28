@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
-import org.apache.drill.exec.record.metadata.ProjectionType;
 import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 import org.apache.drill.exec.vector.accessor.writer.AbstractArrayWriter.ArrayObjectWriter;
 import org.apache.drill.exec.vector.accessor.writer.dummy.DummyArrayWriter;
@@ -51,6 +50,7 @@ public abstract class MapWriter extends AbstractTupleWriter {
     @Override public int rowStartIndex() { return baseIndex.rowStartIndex(); }
     @Override public int vectorIndex() { return baseIndex.vectorIndex(); }
     @Override public void nextElement() { }
+    @Override public void prevElement() { }
     @Override public void rollover() { }
 
     @Override public ColumnWriterIndex outerIndex() {
@@ -105,6 +105,9 @@ public abstract class MapWriter extends AbstractTupleWriter {
       super.preRollover();
       mapVector.setMapValueCount(vectorIndex.rowStartIndex());
     }
+
+    @Override
+    public boolean isProjected() { return true; }
   }
 
   /**
@@ -132,6 +135,9 @@ public abstract class MapWriter extends AbstractTupleWriter {
 
       bindIndex(index, new MemberWriterIndex(index));
     }
+
+    @Override
+    public boolean isProjected() { return true; }
   }
 
   protected static class DummyMapWriter extends MapWriter {
@@ -142,7 +148,7 @@ public abstract class MapWriter extends AbstractTupleWriter {
     }
 
     @Override
-    public ProjectionType projectionType(String columnName) { return ProjectionType.UNPROJECTED; }
+    public boolean isProjected() { return false; }
   }
 
   protected static class DummyArrayMapWriter extends MapWriter {
@@ -153,7 +159,7 @@ public abstract class MapWriter extends AbstractTupleWriter {
     }
 
     @Override
-    public ProjectionType projectionType(String columnName) { return ProjectionType.UNPROJECTED; }
+    public boolean isProjected() { return false; }
   }
 
   protected final ColumnMetadata mapColumnSchema;
@@ -166,14 +172,13 @@ public abstract class MapWriter extends AbstractTupleWriter {
   public static TupleObjectWriter buildMap(ColumnMetadata schema, MapVector vector,
       List<AbstractObjectWriter> writers) {
     MapWriter mapWriter;
-    if (schema.isProjected()) {
+    if (vector != null) {
 
       // Vector is not required for a map writer; the map's columns
       // are written, but not the (non-array) map.
 
       mapWriter = new SingleMapWriter(schema, vector, writers);
     } else {
-      assert vector == null;
       mapWriter = new DummyMapWriter(schema, writers);
     }
     return new TupleObjectWriter(mapWriter);
@@ -183,16 +188,14 @@ public abstract class MapWriter extends AbstractTupleWriter {
       RepeatedMapVector mapVector,
       List<AbstractObjectWriter> writers) {
     MapWriter mapWriter;
-    if (schema.isProjected()) {
-      assert mapVector != null;
+    if (mapVector != null) {
       mapWriter = new ArrayMapWriter(schema, writers);
     } else {
-      assert mapVector == null;
       mapWriter = new DummyArrayMapWriter(schema, writers);
     }
     TupleObjectWriter mapArray = new TupleObjectWriter(mapWriter);
     AbstractArrayWriter arrayWriter;
-    if (schema.isProjected()) {
+    if (mapVector != null) {
       arrayWriter = new ObjectArrayWriter(schema,
           mapVector.getOffsetVector(),
           mapArray);

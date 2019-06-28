@@ -18,13 +18,13 @@
 package org.apache.drill.exec.physical.impl.scan.columns;
 
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.physical.impl.scan.project.AbstractUnresolvedColumn.UnresolvedColumn;
 import org.apache.drill.exec.physical.impl.scan.project.ColumnProjection;
 import org.apache.drill.exec.physical.impl.scan.project.ScanLevelProjection;
 import org.apache.drill.exec.physical.impl.scan.project.ScanLevelProjection.ScanProjectionParser;
-import org.apache.drill.exec.physical.impl.scan.project.UnresolvedColumn;
 import org.apache.drill.exec.physical.rowSet.project.RequestedColumnImpl;
 import org.apache.drill.exec.physical.rowSet.project.RequestedTuple.RequestedColumn;
-import org.apache.drill.exec.store.easy.text.compliant.RepeatedVarCharOutput;
+import org.apache.drill.exec.store.easy.text.reader.TextReader;
 
 /**
  * Parses the `columns` array. Doing so is surprisingly complex.
@@ -35,13 +35,23 @@ import org.apache.drill.exec.store.easy.text.compliant.RepeatedVarCharOutput;
  * expands to `columns`.</li>
  * <li>If the columns array appears, then no other table columns
  * can appear.</li>
- * <li>If the columns array appears, then the wildcard cannot also
- * appear, unless that wildcard expanded to be `columns` as
- * described above.</li>
+ * <li>Both 'columns' and the wildcard can appear for queries such
+ * as:<code><pre>
+ * select * from dfs.`multilevel/csv`
+ * where columns[1] < 1000</pre>
+ * </code></li>
  * <li>The query can select specific elements such as `columns`[2].
  * In this case, only array elements can appear, not the unindexed
  * `columns` column.</li>
+ * <li>If is possible for `columns` to appear twice. In this case,
+ * the project operator will make a copy.</li>
  * </ul>
+ * <p>
+ * To handle these cases, the general rule is: allow any number
+ * of wildcard or `columns` appearances in the input projection, but
+ * collapse them all down to a single occurrence of `columns` in the
+ * output projection. (Upstream code will prevent `columns` from
+ * appearing twice in its non-indexed form.)
  * <p>
  * It falls to this parser to detect a not-uncommon user error, a
  * query such as the following:<pre><code>
@@ -82,8 +92,26 @@ public class ColumnsArrayParser implements ScanProjectionParser {
 
   @Override
   public boolean parse(RequestedColumn inCol) {
-    if (requireColumnsArray && inCol.isWildcard()) {
-      expandWildcard();
+    if (! requireColumnsArray) {
+
+      // If we do not require the columns array, then we presume that
+      // the reader does not provide arrays, so any use of the columns[x]
+      // column is likely an error. We rely on the plugin's own error
+      // context to fill in information that would explain the issue
+      // in the context of that plugin.
+
+      if (inCol.isArray()) {
+        throw UserException
+            .validationError()
+            .message("Unexpected `columns`[x]; columns array not enabled")
+            .addContext(builder.context())
+            .build(logger);
+      }
+      return false;
+    }
+    if (inCol.isWildcard()) {
+      createColumnsCol(
+          new RequestedColumnImpl(builder.rootProjection(), ColumnsArrayManager.COLUMNS_COL));
       return true;
     }
     if (! inCol.nameEquals(ColumnsArrayManager.COLUMNS_COL)) {
@@ -96,73 +124,61 @@ public class ColumnsArrayParser implements ScanProjectionParser {
     if (inCol.isTuple()) {
       throw UserException
         .validationError()
-        .message("{} has map elements, but cannot be a map", inCol.name())
+        .message("Column `%s` has map elements, but must be an array", inCol.name())
+        .addContext(builder.context())
         .build(logger);
     }
 
     if (inCol.isArray()) {
       int maxIndex = inCol.maxIndex();
-      if (maxIndex > RepeatedVarCharOutput.MAXIMUM_NUMBER_COLUMNS) {
+      if (maxIndex > TextReader.MAXIMUM_NUMBER_COLUMNS) {
         throw UserException
           .validationError()
-          .message(String.format(
-              "`columns`[%d] index out of bounds, max supported size is %d",
-              maxIndex, RepeatedVarCharOutput.MAXIMUM_NUMBER_COLUMNS))
-          .addContext("Column", inCol.name())
-          .addContext("Maximum index", RepeatedVarCharOutput.MAXIMUM_NUMBER_COLUMNS)
+          .message("`columns`[%d] index out of bounds, max supported size is %d",
+              maxIndex, TextReader.MAXIMUM_NUMBER_COLUMNS)
+          .addContext("Column:", inCol.name())
+          .addContext("Maximum index:", TextReader.MAXIMUM_NUMBER_COLUMNS)
+          .addContext("Actual index:", maxIndex)
+          .addContext(builder.context())
           .build(logger);
       }
     }
-
-    // Special `columns` array column.
-
-    columnsArrayCol = new UnresolvedColumnsArrayColumn(inCol);
-    builder.addTableColumn(columnsArrayCol);
+    createColumnsCol(inCol);
     return true;
   }
 
-  /**
-   * Query contained SELECT *, and we know that the reader supports only
-   * the `columns` array; go ahead and expand the wildcard to the only
-   * possible column.
-   */
+  private void createColumnsCol(RequestedColumn inCol) {
 
-  private void expandWildcard() {
+    // Special `columns` array column. Allow multiple, but
+    // project only one.
+
     if (columnsArrayCol != null) {
-      throw UserException
-        .validationError()
-        .message("Cannot select columns[] and `*` together")
-        .build(logger);
+      return;
     }
-    columnsArrayCol = new UnresolvedColumnsArrayColumn(
-        new RequestedColumnImpl(builder.rootProjection(), ColumnsArrayManager.COLUMNS_COL));
+    columnsArrayCol = new UnresolvedColumnsArrayColumn(inCol);
     builder.addTableColumn(columnsArrayCol);
   }
 
   @Override
-  public void validate() {
-    if (builder.hasWildcard() && columnsArrayCol != null) {
-      throw UserException
-        .validationError()
-        .message("Cannot select `columns` and `*` together")
-        .build(logger);
-    }
-  }
+  public void validate() { }
 
   @Override
   public void validateColumn(ColumnProjection col) {
-    if (col.nodeType() == UnresolvedColumn.UNRESOLVED) {
+    if (col instanceof UnresolvedColumn) {
       if (columnsArrayCol != null) {
         throw UserException
           .validationError()
-          .message("Cannot select columns[] and other table columns. Column alias incorrectly used in the WHERE clause?")
+          .message("Cannot select columns[] and other table columns. "+
+              "Column alias incorrectly used in the WHERE clause?")
           .addContext("Column name", col.name())
+          .addContext(builder.context())
           .build(logger);
       }
       if (requireColumnsArray) {
         throw UserException
           .validationError()
           .message("Only `columns` column is allowed. Found: " + col.name())
+          .addContext(builder.context())
           .build(logger);
       }
     }

@@ -37,48 +37,52 @@ public interface DbGroupScan extends GroupScan {
 
 
   @JsonIgnore
-  public boolean supportsSecondaryIndex();
+  boolean supportsSecondaryIndex();
 
   /**
    * Get the index collection associated with this table if any
    */
   @JsonIgnore
-  public IndexCollection getSecondaryIndexCollection(RelNode scan);
+  IndexCollection getSecondaryIndexCollection(RelNode scan);
 
   /**
    * Set the artificial row count after applying the {@link RexNode} condition
-   * @param condition
-   * @param count
-   * @param capRowCount
+   *
+   * @param condition row expression
+   * @param count right index row count
+   * @param capRowCount row count limit
    */
   @JsonIgnore
-  public void setRowCount(RexNode condition, double count, double capRowCount);
+  void setRowCount(RexNode condition, double count, double capRowCount);
 
   /**
    * Get the row count after applying the {@link RexNode} condition
+   *
    * @param condition, filter to apply
    * @param scanRel, the current scan rel
    * @return row count post filtering
    */
   @JsonIgnore
-  public double getRowCount(RexNode condition, RelNode scanRel);
+  double getRowCount(RexNode condition, RelNode scanRel);
 
   /**
    * Get the statistics for this {@link DbGroupScan}
+   *
    * @return the {@link Statistics} for this Scan
    */
   @JsonIgnore
-  public Statistics getStatistics();
+  Statistics getStatistics();
 
-  public List<SchemaPath> getColumns();
+  List<SchemaPath> getColumns();
 
-  public void setCostFactor(double sel);
+  void setCostFactor(double sel);
 
   @JsonIgnore
   boolean isIndexScan();
 
   /**
    * Whether this DbGroupScan supports creating a restricted (skip) scan
+   *
    * @return true if restricted scan is supported, false otherwise
    */
   @JsonIgnore
@@ -86,6 +90,7 @@ public interface DbGroupScan extends GroupScan {
 
   /**
    * Whether this DbGroupScan is itself a restricted scan
+   *
    * @return true if this DbGroupScan is itself a restricted scan, false otherwise
    */
   @JsonIgnore
@@ -93,7 +98,8 @@ public interface DbGroupScan extends GroupScan {
 
   /**
    * If this DbGroupScan supports restricted scan, create a restricted scan from this DbGroupScan.
-   * @param columns
+   *
+   * @param columns list of column paths
    * @return a non-null DbGroupScan if restricted scan is supported, null otherwise
    */
   @JsonIgnore
@@ -110,6 +116,7 @@ public interface DbGroupScan extends GroupScan {
 
   /**
    * Get a partition function instance for range based partitioning
+   *
    * @param refList a list of FieldReference exprs that are participating in the range partitioning
    * @return instance of a partitioning function
    */
@@ -118,7 +125,8 @@ public interface DbGroupScan extends GroupScan {
 
   /**
    * Get the format plugin cost model. The cost model will provide cost factors such as seq. scan cost,
-   * random scan cost, block size.
+   * random scan cost, block size
+   *
    * @return a PluginCost cost model
    */
   @JsonIgnore

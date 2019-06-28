@@ -24,8 +24,7 @@ import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.physical.impl.ScanBatch;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.store.hive.readers.initilializers.AbstractReadersInitializer;
-import org.apache.drill.exec.store.hive.readers.initilializers.ReadersInitializer;
+import org.apache.drill.exec.store.hive.readers.ReadersInitializer;
 
 @SuppressWarnings("unused")
 public class HiveScanBatchCreator implements BatchCreator<HiveSubScan> {
@@ -34,7 +33,6 @@ public class HiveScanBatchCreator implements BatchCreator<HiveSubScan> {
   @Override
   public ScanBatch getBatch(ExecutorFragmentContext context, HiveSubScan config, List<RecordBatch> children)
       throws ExecutionSetupException {
-    AbstractReadersInitializer readersInitializer = ReadersInitializer.getInitializer(context, config);
-    return new ScanBatch(config, context, readersInitializer.init());
+    return new ScanBatch(config, context, ReadersInitializer.init(context, config));
   }
 }

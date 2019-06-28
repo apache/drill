@@ -22,7 +22,6 @@ import static org.apache.drill.test.TestBuilder.mapOf;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.BufferedWriter;
@@ -31,26 +30,23 @@ import java.io.FileWriter;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.compile.ClassTransformer.ScalarReplacementOption;
+import org.apache.drill.exec.compile.ClassCompilerSelector;
+import org.apache.drill.exec.compile.ClassTransformer;
 import org.apache.drill.exec.compile.CodeCompiler;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.record.RecordBatchLoader;
-import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
-import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.util.ByteBufUtil.HadoopWritables;
-import org.apache.drill.exec.util.VectorUtil;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarCharVector;
 import org.apache.drill.test.BaseTestQuery;
-import org.apache.drill.test.QueryTestUtil;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -73,10 +69,10 @@ public class TestConvertFunctions extends BaseTestQuery {
   private static LocalTime time = LocalTime.parse("01:23:45.678", DateUtility.getTimeFormatter());
   private static LocalDate date = LocalDate.parse("1980-01-01", DateUtility.getDateTimeFormatter());
 
-  String textFileContent;
+  private String textFileContent;
 
   @BeforeClass
-  public static void setup( ) {
+  public static void setup() {
     // Tests here rely on the byte-code merge approach to code
     // generation and will fail if using plain-old Java.
     // Actually, some queries succeed with plain-old Java that
@@ -94,31 +90,26 @@ public class TestConvertFunctions extends BaseTestQuery {
 
   @Test // DRILL-3854
   public void testConvertFromConvertToInt() throws Exception {
-    final OptionValue srOption = QueryTestUtil.setupScalarReplacementOption(bits[0], ScalarReplacementOption.OFF);
+    String newTblName = "testConvertFromConvertToInt_tbl";
     try {
-      final String newTblName = "testConvertFromConvertToInt_tbl";
+      setSessionOption(ExecConstants.SLICE_TARGET, 1);
 
-      test("alter session set `planner.slice_target` = 1");
       test("CREATE TABLE dfs.%s as \n" +
         "SELECT convert_to(r_regionkey, 'INT') as ct \n" +
         "FROM cp.`tpch/region.parquet`", newTblName);
+
       testBuilder()
           .sqlQuery("SELECT convert_from(ct, 'INT') as cf \n" +
             "FROM dfs.%s \n" +
             "ORDER BY ct", newTblName)
-          .ordered()
+          .unOrdered()
           .baselineColumns("cf")
-          .baselineValues(0)
-          .baselineValues(1)
-          .baselineValues(2)
-          .baselineValues(3)
-          .baselineValues(4)
+          .baselineValuesForSingleColumn(0, 1, 2, 3, 4)
           .build()
           .run();
     } finally {
-      // restore the system option
-      QueryTestUtil.restoreScalarReplacementOption(bits[0], srOption.string_val);
-      test("alter session set `planner.slice_target` = " + ExecConstants.SLICE_TARGET_DEFAULT);
+      resetSessionOption(ExecConstants.SLICE_TARGET);
+      test("drop table if exists dfs.%s", newTblName);
     }
   }
 
@@ -536,68 +527,25 @@ public class TestConvertFunctions extends BaseTestQuery {
     verifyPhysicalPlan("convert_to('apache_drill', 'UTF8')", new byte[] {'a', 'p', 'a', 'c', 'h', 'e', '_', 'd', 'r', 'i', 'l', 'l'});
   }
 
-  @Ignore // TODO(DRILL-2326) remove this when we get rid of the scalar replacement option test cases below
-  @Test
+  @Test // DRILL-2326
   public void testBigIntVarCharReturnTripConvertLogical() throws Exception {
-    final String logicalPlan = Resources.toString(
+    String logicalPlan = Resources.toString(
         Resources.getResource(CONVERSION_TEST_LOGICAL_PLAN), Charsets.UTF_8);
-    final List<QueryDataBatch> results =  testLogicalWithResults(logicalPlan);
-    int count = 0;
-    final RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
-    for (QueryDataBatch result : results) {
-      count += result.getHeader().getRowCount();
-      loader.load(result.getHeader().getDef(), result.getData());
-      if (loader.getRecordCount() > 0) {
-        VectorUtil.logVectorAccessibleContent(loader);
+
+    List<String> compilers = Arrays.asList(ClassCompilerSelector.CompilerPolicy.JANINO.name(),
+      ClassCompilerSelector.CompilerPolicy.JDK.name());
+
+    try {
+      setSessionOption(ExecConstants.SCALAR_REPLACEMENT_OPTION, ClassTransformer.ScalarReplacementOption.ON.name());
+      for (String compilerName : compilers) {
+        setSessionOption(ClassCompilerSelector.JAVA_COMPILER_OPTION, compilerName);
+
+        int count = testRunAndPrint(QueryType.LOGICAL, logicalPlan);
+        assertEquals(10, count);
       }
-      loader.clear();
-      result.release();
-    }
-    assertTrue(count == 10);
-  }
-
-
-  @Test // TODO(DRILL-2326) temporary until we fix the scalar replacement bug for this case
-  public void testBigIntVarCharReturnTripConvertLogical_ScalarReplaceTRY() throws Exception {
-    final OptionValue srOption = QueryTestUtil.setupScalarReplacementOption(bits[0], ScalarReplacementOption.TRY);
-    try {
-      // this should work fine
-      testBigIntVarCharReturnTripConvertLogical();
     } finally {
-      // restore the system option
-      QueryTestUtil.restoreScalarReplacementOption(bits[0], srOption.string_val);
-    }
-  }
-
-  @Test // TODO(DRILL-2326) temporary until we fix the scalar replacement bug for this case
-  @Ignore // Because this test sometimes fails, sometimes succeeds
-  public void testBigIntVarCharReturnTripConvertLogical_ScalarReplaceON() throws Exception {
-    final OptionValue srOption = QueryTestUtil.setupScalarReplacementOption(bits[0], ScalarReplacementOption.ON);
-    boolean caughtException = false;
-    try {
-      // this used to fail (with a JUnit assertion) until we fix the SR bug
-      // Something in DRILL-5116 seemed to fix this problem, so the test now
-      // succeeds - sometimes.
-      testBigIntVarCharReturnTripConvertLogical();
-    } catch(RpcException e) {
-      caughtException = true;
-    } finally {
-      QueryTestUtil.restoreScalarReplacementOption(bits[0], srOption.string_val);
-    }
-
-    // Yes: sometimes this works, sometimes it does not...
-    assertTrue(!caughtException || caughtException);
-  }
-
-  @Test // TODO(DRILL-2326) temporary until we fix the scalar replacement bug for this case
-  public void testBigIntVarCharReturnTripConvertLogical_ScalarReplaceOFF() throws Exception {
-    final OptionValue srOption = QueryTestUtil.setupScalarReplacementOption(bits[0], ScalarReplacementOption.OFF);
-    try {
-      // this should work fine
-      testBigIntVarCharReturnTripConvertLogical();
-    } finally {
-      // restore the system option
-      QueryTestUtil.restoreScalarReplacementOption(bits[0], srOption.string_val);
+      resetSessionOption(ExecConstants.SCALAR_REPLACEMENT_OPTION);
+      resetSessionOption(ClassCompilerSelector.JAVA_COMPILER_OPTION);
     }
   }
 
@@ -605,7 +553,6 @@ public class TestConvertFunctions extends BaseTestQuery {
   public void testHadooopVInt() throws Exception {
     final int _0 = 0;
     final int _9 = 9;
-    @SuppressWarnings("resource")
     final DrillBuf buffer = getAllocator().buffer(_9);
 
     long longVal = 0;
@@ -642,33 +589,31 @@ public class TestConvertFunctions extends BaseTestQuery {
     buffer.release();
   }
 
-  @Test // DRILL-4862
+  @Test // DRILL-4862 & DRILL-2326
   public void testBinaryString() throws Exception {
-    // TODO(DRILL-2326) temporary until we fix the scalar replacement bug for this case
-    final OptionValue srOption = QueryTestUtil.setupScalarReplacementOption(bits[0], ScalarReplacementOption.TRY);
+    String query =
+        "SELECT convert_from(binary_string(key), 'INT_BE') as intkey \n" +
+        "FROM cp.`functions/conv/conv.json`";
+
+    List<String> compilers = Arrays.asList(ClassCompilerSelector.CompilerPolicy.JANINO.name(),
+        ClassCompilerSelector.CompilerPolicy.JDK.name());
 
     try {
-      final String[] queries = {
-          "SELECT convert_from(binary_string(key), 'INT_BE') as intkey \n" +
-              "FROM cp.`functions/conv/conv.json`"
-      };
+      setSessionOption(ExecConstants.SCALAR_REPLACEMENT_OPTION, ClassTransformer.ScalarReplacementOption.ON.name());
+      for (String compilerName : compilers) {
+        setSessionOption(ClassCompilerSelector.JAVA_COMPILER_OPTION, compilerName);
 
-      for (String query: queries) {
         testBuilder()
             .sqlQuery(query)
-            .ordered()
+            .unOrdered()
             .baselineColumns("intkey")
-            .baselineValues(1244739896)
-            .baselineValues(new Object[] { null })
-            .baselineValues(1313814865)
-            .baselineValues(1852782897)
+            .baselineValuesForSingleColumn(1244739896, null, 1313814865, 1852782897)
             .build()
             .run();
       }
-
     } finally {
-      // restore the system option
-      QueryTestUtil.restoreScalarReplacementOption(bits[0], srOption.string_val);
+      resetSessionOption(ExecConstants.SCALAR_REPLACEMENT_OPTION);
+      resetSessionOption(ClassCompilerSelector.JAVA_COMPILER_OPTION);
     }
   }
 
@@ -695,7 +640,6 @@ public class TestConvertFunctions extends BaseTestQuery {
     for(QueryDataBatch result : resultList) {
       if (result.getData() != null) {
         loader.load(result.getHeader().getDef(), result.getData());
-        @SuppressWarnings("resource")
         ValueVector v = loader.iterator().next().getValueVector();
         for (int j = 0; j < v.getAccessor().getValueCount(); j++) {
           if  (v instanceof VarCharVector) {

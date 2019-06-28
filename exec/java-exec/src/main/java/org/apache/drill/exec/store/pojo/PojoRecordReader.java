@@ -17,14 +17,16 @@
  */
 package org.apache.drill.exec.store.pojo;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.List;
+import java.util.ArrayList;
+
+import com.fasterxml.jackson.annotation.JsonTypeName;
+
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.physical.impl.OutputMutator;
-
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Reads values from the given list of pojo instances.
@@ -32,6 +34,7 @@ import java.util.List;
  *
  * @param <T> pojo class type
  */
+@JsonTypeName("PojoRecordReader")
 public class PojoRecordReader<T> extends AbstractPojoRecordReader<T> {
 
   private final Class<T> pojoClass;

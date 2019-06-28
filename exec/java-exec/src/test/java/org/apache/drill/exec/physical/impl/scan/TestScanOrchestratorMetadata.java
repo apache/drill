@@ -20,14 +20,19 @@ package org.apache.drill.exec.physical.impl.scan;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import java.util.List;
+
+import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.impl.protocol.SchemaTracker;
 import org.apache.drill.exec.physical.impl.scan.file.FileMetadataManager;
+import org.apache.drill.exec.physical.impl.scan.file.FileMetadataManager.FileMetadataOptions;
+import org.apache.drill.exec.physical.impl.scan.project.ReaderSchemaOrchestrator;
 import org.apache.drill.exec.physical.impl.scan.project.ScanSchemaOrchestrator;
-import org.apache.drill.exec.physical.impl.scan.project.ScanSchemaOrchestrator.ReaderSchemaOrchestrator;
+import org.apache.drill.exec.physical.impl.scan.project.ScanSchemaOrchestrator.ScanOrchestratorBuilder;
 import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
 import org.apache.drill.exec.physical.rowSet.impl.RowSetTestUtils;
 import org.apache.drill.exec.record.BatchSchema;
@@ -35,10 +40,10 @@ import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
-import org.apache.drill.test.rowSet.RowSetComparison;
+import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.apache.hadoop.fs.Path;
 import org.junit.Test;
-
+import org.junit.experimental.categories.Category;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 /**
@@ -46,7 +51,20 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
  * with implicit file columns provided by the file metadata manager.
  */
 
+@Category(RowSetTests.class)
 public class TestScanOrchestratorMetadata extends SubOperatorTest {
+
+  private FileMetadataOptions standardOptions(Path filePath) {
+    return standardOptions(Lists.newArrayList(filePath));
+  }
+
+  private FileMetadataOptions standardOptions(List<Path> files) {
+    FileMetadataOptions options = new FileMetadataOptions();
+    options.useLegacyWildcardExpansion(false); // Don't expand partition columns for wildcard
+    options.setSelectionRoot(new Path("hdfs:///w"));
+    options.setFiles(files);
+    return options;
+  }
 
   /**
    * Resolve a selection list using SELECT *.
@@ -57,15 +75,14 @@ public class TestScanOrchestratorMetadata extends SubOperatorTest {
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
         fixture.getOptionManager(),
-        new Path("hdfs:///w"),
-        Lists.newArrayList(filePath));
+        standardOptions(filePath));
 
-    ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator());
-    scanner.withMetadata(metadataManager);
+    ScanOrchestratorBuilder builder = new ScanOrchestratorBuilder();
+    builder.withMetadata(metadataManager);
 
     // SELECT *, filename, suffix ...
 
-    scanner.build(RowSetTestUtils.projectList(
+    builder.setProjection(RowSetTestUtils.projectList(
         SchemaPath.DYNAMIC_STAR,
         ScanTestUtils.FULLY_QUALIFIED_NAME_COL,
         ScanTestUtils.FILE_PATH_COL,
@@ -73,6 +90,7 @@ public class TestScanOrchestratorMetadata extends SubOperatorTest {
         ScanTestUtils.SUFFIX_COL,
         ScanTestUtils.partitionColName(0),
         ScanTestUtils.partitionColName(1)));
+    ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator(), builder);
 
     // ... FROM file
 
@@ -104,8 +122,8 @@ public class TestScanOrchestratorMetadata extends SubOperatorTest {
         .addRow(2, "wilma", "/w/x/y/z.csv", "/w/x/y", "z.csv", "csv", "x", "y")
         .build();
 
-    new RowSetComparison(expected)
-        .verifyAndClearAll(fixture.wrap(scanner.output()));
+    RowSetUtilities.verify(expected,
+        fixture.wrap(scanner.output()));
 
     scanner.close();
   }
@@ -118,17 +136,17 @@ public class TestScanOrchestratorMetadata extends SubOperatorTest {
 
   @Test
   public void testSelectNone() {
-    ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator());
+    ScanOrchestratorBuilder builder = new ScanOrchestratorBuilder();
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
         fixture.getOptionManager(),
-        new Path("hdfs:///w"),
-        Lists.newArrayList(filePath));
-    scanner.withMetadata(metadataManager);
+        standardOptions(filePath));
+    builder.withMetadata(metadataManager);
 
     // SELECT c ...
 
-    scanner.build(RowSetTestUtils.projectList("c"));
+    builder.setProjection(RowSetTestUtils.projectList("c"));
+    ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator(), builder);
 
     // ... FROM file
 
@@ -146,19 +164,9 @@ public class TestScanOrchestratorMetadata extends SubOperatorTest {
 
     ResultSetLoader loader = reader.makeTableLoader(tableSchema);
 
-    // Verify empty batch.
-
     BatchSchema expectedSchema = new SchemaBuilder()
         .addNullable("c", MinorType.INT)
         .build();
-    {
-      SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
-         .build();
-
-      assertNotNull(scanner.output());
-      new RowSetComparison(expected)
-         .verifyAndClearAll(fixture.wrap(scanner.output()));
-    }
 
     // Create a batch of data.
 
@@ -170,15 +178,13 @@ public class TestScanOrchestratorMetadata extends SubOperatorTest {
 
     // Verify
 
-    {
-      SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
-        .addSingleCol(null)
-        .addSingleCol(null)
-        .build();
+    SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
+      .addSingleCol(null)
+      .addSingleCol(null)
+      .build();
 
-      new RowSetComparison(expected)
-          .verifyAndClearAll(fixture.wrap(scanner.output()));
-    }
+    RowSetUtilities.verify(expected,
+        fixture.wrap(scanner.output()));
 
     scanner.close();
   }
@@ -198,18 +204,18 @@ public class TestScanOrchestratorMetadata extends SubOperatorTest {
         .setMode(DataMode.OPTIONAL)
         .build();
 
-    ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator());
-    scanner.setNullType(nullType);
+    ScanOrchestratorBuilder builder = new ScanOrchestratorBuilder();
+    builder.setNullType(nullType);
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
         fixture.getOptionManager(),
-        new Path("hdfs:///w"),
-        Lists.newArrayList(filePath));
-    scanner.withMetadata(metadataManager);
+        standardOptions(filePath));
+    builder.withMetadata(metadataManager);
 
     // SELECT a, b, dir0, suffix ...
 
-    scanner.build(RowSetTestUtils.projectList("a", "b", "dir0", "suffix"));
+    builder.setProjection(RowSetTestUtils.projectList("a", "b", "dir0", "suffix"));
+    ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator(), builder);
 
     // ... FROM file
 
@@ -229,6 +235,7 @@ public class TestScanOrchestratorMetadata extends SubOperatorTest {
 
     // Verify empty batch.
 
+    reader.defineSchema();
     BatchSchema expectedSchema = new SchemaBuilder()
         .add("a", MinorType.INT)
         .add("b", MinorType.VARCHAR)
@@ -240,8 +247,8 @@ public class TestScanOrchestratorMetadata extends SubOperatorTest {
          .build();
 
       assertNotNull(scanner.output());
-      new RowSetComparison(expected)
-         .verifyAndClearAll(fixture.wrap(scanner.output()));
+      RowSetUtilities.verify(expected,
+          fixture.wrap(scanner.output()));
     }
 
     // Create a batch of data.
@@ -260,8 +267,8 @@ public class TestScanOrchestratorMetadata extends SubOperatorTest {
         .addRow(2, "wilma", "x", "csv")
         .build();
 
-      new RowSetComparison(expected)
-          .verifyAndClearAll(fixture.wrap(scanner.output()));
+      RowSetUtilities.verify(expected,
+          fixture.wrap(scanner.output()));
     }
 
     scanner.close();
@@ -274,17 +281,17 @@ public class TestScanOrchestratorMetadata extends SubOperatorTest {
 
   @Test
   public void testMixture() {
-    ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator());
+    ScanOrchestratorBuilder builder = new ScanOrchestratorBuilder();
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
         fixture.getOptionManager(),
-        new Path("hdfs:///w"),
-        Lists.newArrayList(filePath));
-    scanner.withMetadata(metadataManager);
+        standardOptions(filePath));
+    builder.withMetadata(metadataManager);
 
     // SELECT dir0, b, suffix, c ...
 
-    scanner.build(RowSetTestUtils.projectList("dir0", "b", "suffix", "c"));
+    builder.setProjection(RowSetTestUtils.projectList("dir0", "b", "suffix", "c"));
+    ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator(), builder);
 
     // ... FROM file
 
@@ -302,22 +309,12 @@ public class TestScanOrchestratorMetadata extends SubOperatorTest {
 
     ResultSetLoader loader = reader.makeTableLoader(tableSchema);
 
-    // Verify empty batch.
-
     BatchSchema expectedSchema = new SchemaBuilder()
         .addNullable("dir0", MinorType.VARCHAR)
         .add("b", MinorType.VARCHAR)
         .add("suffix", MinorType.VARCHAR)
         .addNullable("c", MinorType.INT)
         .build();
-    {
-      SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
-         .build();
-
-      assertNotNull(scanner.output());
-      new RowSetComparison(expected)
-         .verifyAndClearAll(fixture.wrap(scanner.output()));
-    }
 
     // Create a batch of data.
 
@@ -329,15 +326,13 @@ public class TestScanOrchestratorMetadata extends SubOperatorTest {
 
     // Verify
 
-    {
-      SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
-        .addRow("x", "fred", "csv", null)
-        .addRow("x", "wilma", "csv", null)
-        .build();
+    SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
+      .addRow("x", "fred", "csv", null)
+      .addRow("x", "wilma", "csv", null)
+      .build();
 
-      new RowSetComparison(expected)
-          .verifyAndClearAll(fixture.wrap(scanner.output()));
-    }
+    RowSetUtilities.verify(expected,
+        fixture.wrap(scanner.output()));
 
     scanner.close();
   }
@@ -350,22 +345,22 @@ public class TestScanOrchestratorMetadata extends SubOperatorTest {
 
   @Test
   public void testMetadataMulti() {
-    ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator());
+    ScanOrchestratorBuilder builder = new ScanOrchestratorBuilder();
     Path filePathA = new Path("hdfs:///w/x/y/a.csv");
     Path filePathB = new Path("hdfs:///w/x/b.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
         fixture.getOptionManager(),
-        new Path("hdfs:///w"),
-        Lists.newArrayList(filePathA, filePathB));
-    scanner.withMetadata(metadataManager);
+        standardOptions(Lists.newArrayList(filePathA, filePathB)));
+    builder.withMetadata(metadataManager);
 
     // SELECT dir0, dir1, filename, b ...
 
-    scanner.build(RowSetTestUtils.projectList(
+    builder.setProjection(RowSetTestUtils.projectList(
         ScanTestUtils.partitionColName(0),
         ScanTestUtils.partitionColName(1),
         ScanTestUtils.FILE_NAME_COL,
         "b"));
+    ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator(), builder);
 
     // file schema (a, b)
 
@@ -403,8 +398,8 @@ public class TestScanOrchestratorMetadata extends SubOperatorTest {
           .addRow("x", "y", "a.csv", "fred")
           .addRow("x", "y", "a.csv", "wilma")
           .build();
-      new RowSetComparison(expected)
-        .verifyAndClearAll(fixture.wrap(scanner.output()));
+      RowSetUtilities.verify(expected,
+          fixture.wrap(scanner.output()));
 
       // Do explicit close (as in real code) to avoid an implicit
       // close which will blow away the current file info...
@@ -431,8 +426,8 @@ public class TestScanOrchestratorMetadata extends SubOperatorTest {
           .addRow("x", null, "b.csv", "bambam")
           .addRow("x", null, "b.csv", "betty")
           .build();
-      new RowSetComparison(expected)
-        .verifyAndClearAll(fixture.wrap(scanner.output()));
+      RowSetUtilities.verify(expected,
+          fixture.wrap(scanner.output()));
 
       scanner.closeReader();
     }

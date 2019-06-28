@@ -48,6 +48,7 @@ public class JsonRecordWriter extends JSONOutputRecordWriter implements RecordWr
 
   private Path cleanUpLocation;
   private String location;
+  private boolean append;
   private String prefix;
 
   private String fieldDelimiter;

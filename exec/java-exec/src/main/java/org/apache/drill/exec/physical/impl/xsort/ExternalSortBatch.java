@@ -240,7 +240,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
           mSorter.clear();
         }
         for(Iterator<Path> iter = this.currSpillDirs.iterator(); iter.hasNext(); iter.remove()) {
-            Path path = (Path)iter.next();
+            Path path = iter.next();
             try {
                 if (fs != null && path != null && fs.exists(path)) {
                     if (fs.delete(path, true)) {
@@ -266,7 +266,6 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
       case OK:
       case OK_NEW_SCHEMA:
         for (VectorWrapper<?> w : incoming) {
-          @SuppressWarnings("resource")
           ValueVector v = container.addOrGet(w.getField());
           if (v instanceof AbstractContainerVector) {
             w.getValueVector().makeTransferPair(v); // Can we remove this hack?
@@ -291,7 +290,6 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     }
   }
 
-  @SuppressWarnings("resource")
   @Override
   public IterOutcome innerNext() {
     if (schema != null) {
@@ -553,7 +551,6 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
       if (batchGroups.size() == 0) {
         break;
       }
-      @SuppressWarnings("resource")
       BatchGroup batch = batchGroups.pollLast();
       assert batch != null : "Encountered a null batch during merge and spill operation";
       batchGroupList.add(batch);
@@ -629,7 +626,6 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     SelectionVector2 sv2 = new SelectionVector2(oAllocator);
     if (!sv2.allocateNewSafe(incoming.getRecordCount())) {
       try {
-        @SuppressWarnings("resource")
         final BatchGroup merged = mergeAndSpill(batchGroups);
         if (merged != null) {
           spilledBatchGroups.add(merged);
@@ -800,10 +796,8 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
         copier.close();
       }
 
-      @SuppressWarnings("resource")
       BufferAllocator allocator = spilling ? copierAllocator : oAllocator;
       for (VectorWrapper<?> i : batch) {
-        @SuppressWarnings("resource")
         ValueVector v = TypeHelper.getNewVector(i.getField(), allocator);
         outputContainer.add(v);
       }

@@ -21,22 +21,36 @@ import java.io.IOException;
 
 import org.apache.calcite.sql.SqlDescribeSchema;
 import org.apache.calcite.sql.SqlKind;
+import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.SqlNodeList;
+import org.apache.calcite.sql.SqlNumericLiteral;
+import org.apache.calcite.sql.SqlOrderBy;
+import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.tools.RelConversionException;
 import org.apache.calcite.tools.ValidationException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.QueryContext;
+import org.apache.drill.exec.ops.QueryContext.SqlStatementType;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
+import org.apache.drill.exec.planner.sql.handlers.AnalyzeTableHandler;
 import org.apache.drill.exec.planner.sql.handlers.DefaultSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.DescribeSchemaHandler;
 import org.apache.drill.exec.planner.sql.handlers.DescribeTableHandler;
 import org.apache.drill.exec.planner.sql.handlers.ExplainHandler;
+import org.apache.drill.exec.planner.sql.handlers.RefreshMetadataHandler;
+import org.apache.drill.exec.planner.sql.handlers.ResetOptionHandler;
+import org.apache.drill.exec.planner.sql.handlers.SchemaHandler;
 import org.apache.drill.exec.planner.sql.handlers.SetOptionHandler;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;
 import org.apache.drill.exec.planner.sql.parser.DrillSqlCall;
 import org.apache.drill.exec.planner.sql.parser.DrillSqlDescribeTable;
+import org.apache.drill.exec.planner.sql.parser.DrillSqlResetOption;
+import org.apache.drill.exec.planner.sql.parser.DrillSqlSetOption;
+import org.apache.drill.exec.planner.sql.parser.SqlCreateTable;
+import org.apache.drill.exec.planner.sql.parser.SqlSchema;
 import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ControlsInjectorFactory;
 import org.apache.drill.exec.util.Pointer;
@@ -135,25 +149,41 @@ public class DrillSqlWorker {
 
     final SqlConverter parser = new SqlConverter(context);
     injector.injectChecked(context.getExecutionControls(), "sql-parsing", ForemanSetupException.class);
-    final SqlNode sqlNode = parser.parse(sql);
+    final SqlNode sqlNode = checkAndApplyAutoLimit(parser, context, sql);
     final AbstractSqlHandler handler;
     final SqlHandlerConfig config = new SqlHandlerConfig(context, parser);
 
-    switch(sqlNode.getKind()) {
+    switch (sqlNode.getKind()) {
       case EXPLAIN:
         handler = new ExplainHandler(config, textPlan);
+        context.setSQLStatementType(SqlStatementType.EXPLAIN);
         break;
       case SET_OPTION:
-        handler = new SetOptionHandler(context);
-        break;
+        if (sqlNode instanceof DrillSqlSetOption) {
+          handler = new SetOptionHandler(context);
+          context.setSQLStatementType(SqlStatementType.SETOPTION);
+          break;
+        }
+        if (sqlNode instanceof DrillSqlResetOption) {
+          handler = new ResetOptionHandler(context);
+          context.setSQLStatementType(SqlStatementType.SETOPTION);
+          break;
+        }
       case DESCRIBE_TABLE:
         if (sqlNode instanceof DrillSqlDescribeTable) {
           handler = new DescribeTableHandler(config);
+          context.setSQLStatementType(SqlStatementType.DESCRIBE_TABLE);
           break;
         }
       case DESCRIBE_SCHEMA:
         if (sqlNode instanceof SqlDescribeSchema) {
           handler = new DescribeSchemaHandler(config);
+          context.setSQLStatementType(SqlStatementType.DESCRIBE_SCHEMA);
+          break;
+        }
+        if (sqlNode instanceof SqlSchema.Describe) {
+          handler = new SchemaHandler.Describe(config);
+          context.setSQLStatementType(SqlStatementType.DESCRIBE_SCHEMA);
           break;
         }
       case CREATE_TABLE:
@@ -164,13 +194,25 @@ public class DrillSqlWorker {
       case DROP_VIEW:
       case OTHER_DDL:
       case OTHER:
+        if (sqlNode instanceof SqlCreateTable) {
+          handler = ((DrillSqlCall) sqlNode).getSqlHandler(config, textPlan);
+          context.setSQLStatementType(SqlStatementType.CTAS);
+          break;
+        }
+
         if (sqlNode instanceof DrillSqlCall) {
           handler = ((DrillSqlCall) sqlNode).getSqlHandler(config);
+          if (handler instanceof AnalyzeTableHandler) {
+            context.setSQLStatementType(SqlStatementType.ANALYZE);
+          } else if (handler instanceof RefreshMetadataHandler) {
+            context.setSQLStatementType(SqlStatementType.REFRESH);
+          }
           break;
         }
         // fallthrough
       default:
         handler = new DefaultSqlHandler(config, textPlan);
+        context.setSQLStatementType(SqlStatementType.OTHER);
     }
 
     // Determines whether result set should be returned for the query based on return result set option and sql node kind.
@@ -182,5 +224,37 @@ public class DrillSqlWorker {
     }
 
     return handler.getPlan(sqlNode);
+  }
+
+  private static boolean isAutoLimitShouldBeApplied(SqlNode sqlNode, int queryMaxRows) {
+    return (queryMaxRows > 0) && sqlNode.getKind().belongsTo(SqlKind.QUERY)
+        && (sqlNode.getKind() != SqlKind.ORDER_BY || isAutoLimitLessThanOrderByFetch((SqlOrderBy) sqlNode, queryMaxRows));
+  }
+
+  private static SqlNode checkAndApplyAutoLimit(SqlConverter parser, QueryContext context, String sql) {
+    SqlNode sqlNode = parser.parse(sql);
+    int queryMaxRows = context.getOptions().getOption(ExecConstants.QUERY_MAX_ROWS).num_val.intValue();
+    if (isAutoLimitShouldBeApplied(sqlNode, queryMaxRows)) {
+      sqlNode = wrapWithAutoLimit(sqlNode, queryMaxRows);
+    } else {
+      //Force setting to zero IFF autoLimit was intended to be set originally but is inapplicable
+      if (queryMaxRows > 0) {
+        context.getOptions().setLocalOption(ExecConstants.QUERY_MAX_ROWS, 0);
+      }
+    }
+    return sqlNode;
+  }
+
+  private static boolean isAutoLimitLessThanOrderByFetch(SqlOrderBy orderBy, int queryMaxRows) {
+    return orderBy.fetch == null || Integer.parseInt(orderBy.fetch.toString()) > queryMaxRows;
+  }
+
+  private static SqlNode wrapWithAutoLimit(SqlNode sqlNode, int queryMaxRows) {
+    SqlNumericLiteral autoLimitLiteral = SqlLiteral.createExactNumeric(String.valueOf(queryMaxRows), SqlParserPos.ZERO);
+    if (sqlNode.getKind() == SqlKind.ORDER_BY) {
+      SqlOrderBy orderBy = (SqlOrderBy) sqlNode;
+      return new SqlOrderBy(orderBy.getParserPosition(), orderBy.query, orderBy.orderList, orderBy.offset, autoLimitLiteral);
+    }
+    return new SqlOrderBy(SqlParserPos.ZERO, sqlNode, SqlNodeList.EMPTY, null, autoLimitLiteral);
   }
 }

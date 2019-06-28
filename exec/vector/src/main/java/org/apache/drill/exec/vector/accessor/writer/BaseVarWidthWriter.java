@@ -33,6 +33,13 @@ import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
  * vector.
  * <p>
  * Most and value events are forwarded to the offset vector.
+ * <p>
+ * This class handles filling empty values with a default value.
+ * Doing so is trick as we must coordinate both this vector and
+ * the offset vector; checking for resize and overflow on each step.
+ * Also, when filling empties, we cannot use the normal "set" functions
+ * as they are what trigger the empty filling. Instead, we have to
+ * write to the "last write" position, not the current row positon.
  */
 
 public abstract class BaseVarWidthWriter extends BaseScalarWriter {
@@ -60,14 +67,29 @@ public abstract class BaseVarWidthWriter extends BaseScalarWriter {
   protected final int prepareWrite(final int width) {
 
     // This is performance critical code; every operation counts.
-    // Please be thoughtful when changing the code.
+    // Please be thoughtful when making changes.
 
-    int writeOffset = offsetsWriter.nextOffset();
+    fillEmpties();
+    return writeOffset(width);
+  }
+
+  private final int writeOffset(final int width) {
+    final int writeOffset = offsetsWriter.nextOffset;
     if (writeOffset + width < capacity) {
       return writeOffset;
     }
     resize(writeOffset + width);
-    return offsetsWriter.nextOffset();
+
+    // Offset will change if overflow occurred on resize.
+
+    return offsetsWriter.nextOffset;
+  }
+
+  protected final int prepareAppend(final int width) {
+    // No fill empties needed: must have been done
+    // on previous setBytes() call.
+
+    return writeOffset(width);
   }
 
   @Override
@@ -128,6 +150,31 @@ public abstract class BaseVarWidthWriter extends BaseScalarWriter {
   @Override
   public int lastWriteIndex() { return offsetsWriter.lastWriteIndex(); }
 
+  /**
+   * Fill an empty slot with the default value set via a call to
+   * {@link #setDefaultValue(Object)}. This is an implementation of the
+   * {@link EmptyValueFiller} interface and is registered with the offset
+   * writer when setting the default value. The offset vector writer calls
+   * this method for each value that is to be filled. Note that the value
+   * being filled is <b>earlier</b> in the vector than the current row
+   * position: that is the very nature of empty filling.
+   */
+  private void fillEmpties() {
+    if (emptyValue == null) {
+      return;
+    }
+    final int fillCount = offsetsWriter.prepareFill() - offsetsWriter.lastWriteIndex - 1;
+    if (fillCount == 0) {
+      return;
+    }
+    final int len = emptyValue.length;
+    for (int i = 0; i < fillCount; i++) {
+      final int writeOffset = writeOffset(len);
+      drillBuf.setBytes(writeOffset, emptyValue, 0, len);
+      offsetsWriter.fillOffset(writeOffset + len);
+    }
+  }
+
   @Override
   public final void preRollover() {
     vector().getBuffer().writerIndex(offsetsWriter.rowStartOffset());
@@ -142,6 +189,7 @@ public abstract class BaseVarWidthWriter extends BaseScalarWriter {
 
   @Override
   public final void endWrite() {
+    fillEmpties();
     vector().getBuffer().writerIndex(offsetsWriter.nextOffset());
     offsetsWriter.endWrite();
   }

@@ -29,8 +29,6 @@ import org.apache.drill.exec.physical.impl.scan.project.VectorSource;
 
 public class PartitionColumn extends MetadataColumn {
 
-  public static final int ID = 16;
-
   protected final int partition;
 
   public PartitionColumn(String name, int partition) {
@@ -45,9 +43,6 @@ public class PartitionColumn extends MetadataColumn {
   }
 
   public int partition() { return partition; }
-
-  @Override
-  public int nodeType() { return ID; }
 
   @Override
   public MetadataColumn resolve(FileMetadata fileInfo, VectorSource source, int sourceIndex) {

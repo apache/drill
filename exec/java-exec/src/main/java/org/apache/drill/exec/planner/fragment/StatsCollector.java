@@ -71,6 +71,7 @@ public class StatsCollector extends AbstractOpWrapperVisitor<Void, RuntimeExcept
 
     for(ExchangeFragmentPair pair : receivingExchangePairs) {
       if (pair.getExchange() == exchange) {
+        //This is the child fragment which is sending data to this fragment.
         Wrapper sendingFragment = planningSet.get(pair.getNode());
         if (sendingFragment.isEndpointsAssignmentDone()) {
           sendingEndpoints.addAll(sendingFragment.getAssignedEndpoints());
@@ -105,7 +106,7 @@ public class StatsCollector extends AbstractOpWrapperVisitor<Void, RuntimeExcept
       stats.addEndpointAffinities(hasAffinity.getOperatorAffinity());
       stats.setDistributionAffinity(hasAffinity.getDistributionAffinity());
     }
-    stats.addCost(op.getCost());
+    stats.addCost(op.getCost().getOutputRowCount());
     for (PhysicalOperator child : op) {
       child.accept(this, wrapper);
     }

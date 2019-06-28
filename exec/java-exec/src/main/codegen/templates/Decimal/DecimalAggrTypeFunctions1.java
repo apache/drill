@@ -127,37 +127,7 @@ public class Decimal${aggrtype.className}Functions {
       nonNullCount.value = 0;
     }
   }
-  <#elseif aggrtype.funcName.contains("any_value") && type.inputType?starts_with("Repeated")>
-  @FunctionTemplate(name = "${aggrtype.funcName}",
-                    scope = FunctionTemplate.FunctionScope.POINT_AGGREGATE,
-                    returnType = FunctionTemplate.ReturnType.DECIMAL_AGGREGATE)
-  public static class ${type.inputType}${aggrtype.className} implements DrillAggFunc {
-    @Param ${type.inputType}Holder in;
-    @Output ComplexWriter writer;
-    @Workspace BigIntHolder nonNullCount;
-
-    public void setup() {
-      nonNullCount = new BigIntHolder();
-    }
-
-    @Override
-    public void add() {
-      if (nonNullCount.value == 0) {
-        org.apache.drill.exec.expr.fn.impl.MappifyUtility.createList(in.reader, writer, "any_value");
-      }
-      nonNullCount.value = 1;
-    }
-
-    @Override
-    public void output() {
-    }
-
-    @Override
-    public void reset() {
-      nonNullCount.value = 0;
-    }
-  }
-  <#elseif aggrtype.funcName.contains("any_value")>
+  <#elseif aggrtype.funcName.contains("any_value") || aggrtype.funcName.contains("single_value")>
   @FunctionTemplate(name = "${aggrtype.funcName}",
                     scope = FunctionTemplate.FunctionScope.POINT_AGGREGATE,
                     returnType = FunctionTemplate.ReturnType.DECIMAL_AGGREGATE)
@@ -190,6 +160,12 @@ public class Decimal${aggrtype.className}Functions {
             .getBigDecimalFromDrillBuf(in.buffer,in.start,in.end-in.start,in.scale);
         scale.value = in.scale;
         precision.value = in.precision;
+      <#if aggrtype.funcName.contains("single_value")>
+      } else {
+        throw org.apache.drill.common.exceptions.UserException.functionError()
+            .message("Input for single_value function has more than one row")
+            .build();
+      </#if>
       }
       nonNullCount.value = 1;
       <#if type.inputType?starts_with("Nullable")>

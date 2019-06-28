@@ -83,7 +83,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
-import java.net.BindException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -129,21 +128,6 @@ public class WebServer implements AutoCloseable {
 
   private File tmpJavaScriptDir;
 
-  public File getTmpJavaScriptDir() {
-    if (tmpJavaScriptDir == null) {
-      tmpJavaScriptDir = org.apache.drill.shaded.guava.com.google.common.io.Files.createTempDir();
-      tmpJavaScriptDir.deleteOnExit();
-      //Perform All auto generated files at this point
-      try {
-        generateOptionsDescriptionJSFile();
-        generateFunctionJS();
-      } catch (IOException e) {
-        logger.error("Unable to create temp dir for JavaScripts. {}", e);
-      }
-    }
-    return tmpJavaScriptDir;
-  }
-
   /**
    * Create Jetty based web server.
    *
@@ -172,7 +156,6 @@ public class WebServer implements AutoCloseable {
   /**
    * Start the web server including setup.
    */
-  @SuppressWarnings("resource")
   public void start() throws Exception {
     if (!config.getBoolean(ExecConstants.HTTP_ENABLE)) {
       return;
@@ -203,7 +186,7 @@ public class WebServer implements AutoCloseable {
       try {
         embeddedJetty.start();
         return;
-      } catch (BindException e) {
+      } catch (IOException e) {
         if (portHunt) {
           logger.info("Failed to start on port {}, trying port {}", port, ++port, e);
         } else {
@@ -246,8 +229,8 @@ public class WebServer implements AutoCloseable {
     //Add Local path resource (This will allow access to dynamically created files like JavaScript)
     final ServletHolder dynamicHolder = new ServletHolder("dynamic", DefaultServlet.class);
     //Skip if unable to get a temp directory (e.g. during Unit tests)
-    if (getTmpJavaScriptDir() != null) {
-      dynamicHolder.setInitParameter("resourceBase", getTmpJavaScriptDir().getAbsolutePath());
+    if (getOrCreateTmpJavaScriptDir() != null) {
+      dynamicHolder.setInitParameter("resourceBase", getOrCreateTmpJavaScriptDir().getAbsolutePath());
       dynamicHolder.setInitParameter("dirAllowed", "true");
       dynamicHolder.setInitParameter("pathInfoOnly", "true");
       servletContextHandler.addServlet(dynamicHolder, "/dynamic/*");
@@ -285,7 +268,10 @@ public class WebServer implements AutoCloseable {
   }
 
   /**
-   * @return A {@link SessionHandler} which contains a {@link HashSessionManager}
+   * It creates A {@link SessionHandler} which contains a {@link HashSessionManager}
+   *
+   * @param securityHandler Set of initparameters that are used by the Authentication
+   * @return session handler
    */
   private SessionHandler createSessionHandler(final SecurityHandler securityHandler) {
     SessionManager sessionManager = new HashSessionManager();
@@ -313,7 +299,6 @@ public class WebServer implements AutoCloseable {
         }
 
         // Clear all the resources allocated for this session
-        @SuppressWarnings("resource")
         final WebSessionResources webSessionResources =
             (WebSessionResources) session.getAttribute(WebSessionResources.class.getSimpleName());
 
@@ -467,43 +452,61 @@ public class WebServer implements AutoCloseable {
     if (embeddedJetty != null) {
       embeddedJetty.stop();
     }
-    //Deleting temp directory
-    FileUtils.deleteDirectory(getTmpJavaScriptDir());
+    // Deleting temp directory
+    FileUtils.deleteQuietly(tmpJavaScriptDir);
   }
+
+  /**
+   * Creates if not exists, and returns File for temporary Javascript directory
+   * @return File handle
+   */
+  public File getOrCreateTmpJavaScriptDir() {
+    if (tmpJavaScriptDir == null && this.drillbit.getContext() != null) {
+      tmpJavaScriptDir = org.apache.drill.shaded.guava.com.google.common.io.Files.createTempDir();
+      // Perform All auto generated files at this point
+      try {
+        generateOptionsDescriptionJSFile();
+        generateFunctionJS();
+      } catch (IOException e) {
+        logger.error("Unable to create temp dir for JavaScripts. {}", e);
+      }
+    }
+    return tmpJavaScriptDir;
+  }
+
 
   /**
    * Generate Options Description JavaScript to serve http://drillhost/options ACE library search features
    * @throws IOException
    */
   private void generateOptionsDescriptionJSFile() throws IOException {
-    //Obtain list of Options & their descriptions
+    // Obtain list of Options & their descriptions
     OptionManager optionManager = this.drillbit.getContext().getOptionManager();
     OptionList publicOptions = optionManager.getPublicOptionList();
     List<OptionValue> options = new ArrayList<>(publicOptions);
-    //Add internal options
+    // Add internal options
     OptionList internalOptions = optionManager.getInternalOptionList();
     options.addAll(internalOptions);
     Collections.sort(options);
     int numLeftToWrite = options.size();
 
-    //Template source Javascript file
+    // Template source Javascript file
     InputStream optionsDescripTemplateStream = Resource.newClassPathResource(OPTIONS_DESCRIBE_TEMPLATE_JS).getInputStream();
-    //Generated file
-    File optionsDescriptionFile = new File(getTmpJavaScriptDir(), OPTIONS_DESCRIBE_JS);
+    // Generated file
+    File optionsDescriptionFile = new File(getOrCreateTmpJavaScriptDir(), OPTIONS_DESCRIBE_JS);
     final String file_content_footer = "};";
-    optionsDescriptionFile.deleteOnExit();
-    //Create a copy of a template and write with that!
+    // Create a copy of a template and write with that!
     java.nio.file.Files.copy(optionsDescripTemplateStream, optionsDescriptionFile.toPath());
     logger.info("Will write {} descriptions to {}", numLeftToWrite, optionsDescriptionFile.getAbsolutePath());
 
     try (BufferedWriter writer = new BufferedWriter(new FileWriter(optionsDescriptionFile, true))) {
-      //Iterate through options
+      // Iterate through options
       for (OptionValue option : options) {
         numLeftToWrite--;
         String optionName = option.getName();
         OptionDescription optionDescription = optionManager.getOptionDefinition(optionName).getValidator().getOptionDescription();
         if (optionDescription != null) {
-          //Note: We don't need to worry about short descriptions for WebUI, since they will never be explicitly accessed from the map
+          // Note: We don't need to worry about short descriptions for WebUI, since they will never be explicitly accessed from the map
           writer.append("  \"").append(optionName).append("\" : \"")
           .append(StringEscapeUtils.escapeEcmaScript(optionDescription.getDescription()))
           .append( numLeftToWrite > 0 ? "\"," : "\"");
@@ -521,14 +524,14 @@ public class WebServer implements AutoCloseable {
    * @throws IOException
    */
   private void generateFunctionJS() throws IOException {
-    //Naturally ordered set of function names
+    // Naturally ordered set of function names
     TreeSet<String> functionSet = new TreeSet<>();
-    //Extracting ONLY builtIn functions (i.e those already available)
+    // Extracting ONLY builtIn functions (i.e those already available)
     List<FunctionHolder> builtInFuncHolderList = this.drillbit.getContext().getFunctionImplementationRegistry().getLocalFunctionRegistry()
         .getAllJarsWithFunctionsHolders().get(LocalFunctionRegistry.BUILT_IN);
 
-    //Build List of 'usable' functions (i.e. functions that start with an alphabet and can be autocompleted by the ACE library)
-    //Example of 'unusable' functions would be operators like '<', '!'
+    // Build List of 'usable' functions (i.e. functions that start with an alphabet and can be autocompleted by the ACE library)
+    // Example of 'unusable' functions would be operators like '<', '!'
     int skipCount = 0;
     for (FunctionHolder builtInFunctionHolder : builtInFuncHolderList) {
       String name = builtInFunctionHolder.getName();
@@ -541,22 +544,21 @@ public class WebServer implements AutoCloseable {
     }
     logger.debug("{} functions will not be available in WebUI", skipCount);
 
-    //Generated file
-    File functionsListFile = new File(getTmpJavaScriptDir(), ACE_MODE_SQL_JS);
-    functionsListFile.deleteOnExit();
-    //Template source Javascript file
+    // Generated file
+    File functionsListFile = new File(getOrCreateTmpJavaScriptDir(), ACE_MODE_SQL_JS);
+    // Template source Javascript file
     try (InputStream aceModeSqlTemplateStream = Resource.newClassPathResource(ACE_MODE_SQL_TEMPLATE_JS).getInputStream()) {
-      //Create a copy of a template and write with that!
+      // Create a copy of a template and write with that!
       java.nio.file.Files.copy(aceModeSqlTemplateStream, functionsListFile.toPath());
     }
 
-    //Construct String
+    // Construct String
     String funcListString = String.join("|", functionSet);
 
     Path path = Paths.get(functionsListFile.getPath());
     try (Stream<String> lines = Files.lines(path)) {
       List <String> replaced =
-          lines //Replacing first occurrence
+          lines // Replacing first occurrence
             .map(line -> line.replaceFirst(DRILL_FUNCTIONS_PLACEHOLDER, funcListString))
             .collect(Collectors.toList());
       Files.write(path, replaced);

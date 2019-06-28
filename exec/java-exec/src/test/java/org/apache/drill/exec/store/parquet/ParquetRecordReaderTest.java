@@ -610,13 +610,13 @@ public class ParquetRecordReaderTest extends BaseTestQuery {
     final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
     final FragmentContextImpl context = new FragmentContextImpl(bitContext, BitControl.PlanFragment.getDefaultInstance(), connection, registry);
 
-    final String fileName = "/tmp/parquet_test_performance.parquet";
+    final Path fileName = new Path("/tmp/parquet_test_performance.parquet");
     final HashMap<String, FieldInfo> fields = new HashMap<>();
     final ParquetTestProperties props = new ParquetTestProperties(1, 20 * 1000 * 1000, DEFAULT_BYTES_PER_PAGE, fields);
     populateFieldInfoMap(props);
 
     final Configuration dfsConfig = new Configuration();
-    final List<Footer> footers = ParquetFileReader.readFooters(dfsConfig, new Path(fileName));
+    final List<Footer> footers = ParquetFileReader.readFooters(dfsConfig, fileName);
     final Footer f = footers.iterator().next();
 
     final List<SchemaPath> columns = Lists.newArrayList();

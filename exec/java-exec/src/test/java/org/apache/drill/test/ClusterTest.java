@@ -118,7 +118,7 @@ public class ClusterTest extends DrillTest {
   }
 
   public static void run(String query, Object... args) throws Exception {
-    client.queryBuilder().sql(query, args).run( );
+    client.queryBuilder().sql(query, args).run();
   }
 
   public QueryBuilder queryBuilder( ) {

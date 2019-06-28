@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.server.rest;
 
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.util.ValueVectorElementFormatter;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
@@ -67,6 +68,8 @@ public class WebUserConnection extends AbstractDisposableUserClientConnection im
   public final Set<String> columns = Sets.newLinkedHashSet();
 
   public final List<String> metadata = new ArrayList<>();
+
+  private int autoLimitRowCount;
 
   WebUserConnection(WebSessionResources webSessionResources) {
     this.webSessionResources = webSessionResources;
@@ -151,7 +154,11 @@ public class WebUserConnection extends AbstractDisposableUserClientConnection im
         loader.clear();
       }
     } catch (Exception e) {
-      exception = UserException.systemError(e).build(logger);
+      boolean verbose = webSessionResources.getSession().getOptions().getBoolean(ExecConstants.ENABLE_VERBOSE_ERRORS_KEY);
+      // Wrapping the exception into UserException and then into DrillPBError.
+      // It will be thrown as exception in QueryWrapper class.
+      // It's verbosity depends on system option "exec.errors.verbose".
+      error = UserException.systemError(e).build(logger).getOrCreatePBError(verbose);
     } finally {
       // Notify the listener with ACK.OK both in error/success case because data was send successfully from Drillbit.
       bufferWithData.release();
@@ -195,5 +202,21 @@ public class WebUserConnection extends AbstractDisposableUserClientConnection im
     public void cleanupSession() {
       webSessionResources.close();
     }
+  }
+
+  /**
+   * Sets an autolimit on the size of records to be sent back on the connection
+   * @param autoLimitRowCount Max number of records to be sent back to WebServer
+   */
+  void setAutoLimitRowCount(int autoLimitRowCount) {
+    this.autoLimitRowCount = autoLimitRowCount;
+  }
+
+  /**
+   * Gets the max size of records to be sent back by the query
+   * @return Max number of records to be sent back to WebServer
+   */
+  public int getAutoLimitRowCount() {
+    return this.autoLimitRowCount;
   }
 }

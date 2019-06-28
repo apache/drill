@@ -19,6 +19,9 @@ package org.apache.drill.exec.vector.accessor;
 
 import java.math.BigDecimal;
 
+import org.joda.time.Instant;
+import org.joda.time.LocalDate;
+import org.joda.time.LocalTime;
 import org.joda.time.Period;
 
 /**
@@ -40,6 +43,17 @@ import org.joda.time.Period;
  * for the target type. Maps and arrays are structured types and
  * require another level of reader abstraction to access each value
  * in the structure.
+ *
+ * <h4>Date/Time and the Joda Classes</h4>
+ *
+ * Note that the date/time columns here use the old Joda classes.
+ * As it turns out, JSR-310, the specification on which the Java 8 date/time
+ * classes are based, does not include the equivalent of the old Joda
+ * Interval class: a single object which can hold years, months, days,
+ * hours, minutes and seconds. Instead, JSR-310 has a Duration (for time)
+ * and a Period (for dates). Drill may have to create its own class
+ * to model the Drill INTERVAL type in JSR-310. Until then, we are stuck
+ * with the Joda classes.
  * <p>
  * See {@link ScalarWriter}
  */
@@ -54,11 +68,29 @@ public interface ScalarReader extends ColumnReader {
    */
 
   ValueType valueType();
+
+  /**
+   * The extended type of the value, describes the secondary type
+   * for DATE, TIME and TIMESTAMP for which the value type is
+   * int or long.
+   */
+
+  ValueType extendedType();
+
   int getInt();
+  boolean getBoolean();
   long getLong();
   double getDouble();
   String getString();
   byte[] getBytes();
   BigDecimal getDecimal();
   Period getPeriod();
+  LocalDate getDate();
+  LocalTime getTime();
+  Instant getTimestamp();
+
+  /**
+   * Return the value of the object using the extended type.
+   */
+  Object getValue();
 }

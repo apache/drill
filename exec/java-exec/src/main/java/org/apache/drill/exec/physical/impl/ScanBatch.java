@@ -72,7 +72,7 @@ public class ScanBatch implements CloseableRecordBatch {
   private int recordCount;
   private final FragmentContext context;
   private final OperatorContext oContext;
-  private Iterator<RecordReader> readers;
+  private Iterator<? extends RecordReader> readers;
   private RecordReader currentReader;
   private BatchSchema schema;
   private final Mutator mutator;
@@ -100,7 +100,7 @@ public class ScanBatch implements CloseableRecordBatch {
    *                        columns, or there is a one-to-one mapping between reader and implicitColumns.
    */
   public ScanBatch(FragmentContext context,
-                   OperatorContext oContext, List<RecordReader> readerList,
+                   OperatorContext oContext, List<? extends RecordReader> readerList,
                    List<Map<String, String>> implicitColumnList) {
     this.context = context;
     this.readers = readerList.iterator();
@@ -367,6 +367,7 @@ public class ScanBatch implements CloseableRecordBatch {
     return container.getValueAccessorById(clazz, ids);
   }
 
+  @SuppressWarnings("unused")
   private void logRecordBatchStats() {
     final int MAX_FQN_LENGTH = 50;
 
@@ -499,7 +500,6 @@ public class ScanBatch implements CloseableRecordBatch {
       schemaChanged = false;
     }
 
-    @SuppressWarnings("resource")
     private <T extends ValueVector> T addField(MaterializedField field,
         Class<T> clazz, boolean isImplicitField) throws SchemaChangeException {
       Map<String, ValueVector> fieldVectorMap;
@@ -553,7 +553,6 @@ public class ScanBatch implements CloseableRecordBatch {
     private void populateImplicitVectors(Map<String, String> implicitValues, int recordCount) {
       if (implicitValues != null) {
         for (Map.Entry<String, String> entry : implicitValues.entrySet()) {
-          @SuppressWarnings("resource")
           final NullableVarCharVector v = (NullableVarCharVector) implicitFieldVectorMap.get(entry.getKey());
           String val;
           if ((val = entry.getValue()) != null) {

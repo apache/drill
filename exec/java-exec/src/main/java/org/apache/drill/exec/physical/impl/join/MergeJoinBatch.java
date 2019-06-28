@@ -124,7 +124,8 @@ public class MergeJoinBatch extends AbstractBinaryRecordBatch<MergeJoinPOP> {
      */
     @Override
     public void update(int inputIndex) {
-      status.setTargetOutputRowCount(super.update(inputIndex, status.getOutPosition()));
+      super.update(inputIndex, status.getOutPosition());
+      status.setTargetOutputRowCount(super.getCurrentOutgoingMaxRowCount()); // calculated by update()
       RecordBatchIOType type = inputIndex == 0 ? RecordBatchIOType.INPUT_LEFT : RecordBatchIOType.INPUT_RIGHT;
       RecordBatchStats.logRecordBatchStats(type, getRecordBatchSizer(inputIndex), getRecordBatchStatsContext());
     }
@@ -137,8 +138,8 @@ public class MergeJoinBatch extends AbstractBinaryRecordBatch<MergeJoinPOP> {
     final int configuredBatchSize = (int) context.getOptions().getOption(ExecConstants.OUTPUT_BATCH_SIZE_VALIDATOR);
     batchMemoryManager = new MergeJoinMemoryManager(configuredBatchSize, left, right);
 
-    RecordBatchStats.logRecordBatchStats(getRecordBatchStatsContext(),
-      "configured output batch size: %d", configuredBatchSize);
+    RecordBatchStats.printConfiguredBatchSize(getRecordBatchStatsContext(),
+      configuredBatchSize);
 
     if (popConfig.getConditions().size() == 0) {
       throw new UnsupportedOperationException("Merge Join currently does not support cartesian join.  This join operator was configured with 0 conditions");
@@ -184,15 +185,13 @@ public class MergeJoinBatch extends AbstractBinaryRecordBatch<MergeJoinPOP> {
     status.prepare();
     // loop so we can start over again if we find a new batch was created.
     while (true) {
+      boolean isNewSchema = false;
       // Check result of last iteration.
       switch (status.getOutcome()) {
-        case BATCH_RETURNED:
-          allocateBatch(false);
-          status.resetOutputPos();
-          status.setTargetOutputRowCount(batchMemoryManager.getOutputRowCount());
-          break;
         case SCHEMA_CHANGED:
-          allocateBatch(true);
+          isNewSchema = true;
+        case BATCH_RETURNED:
+          allocateBatch(isNewSchema);
           status.resetOutputPos();
           status.setTargetOutputRowCount(batchMemoryManager.getOutputRowCount());
           break;

@@ -59,7 +59,7 @@ public class UnionVectorShim implements UnionShim {
 
       final ValueVector memberVector = shim.vector.getMember(type);
       final ColumnMetadata memberSchema = shim.writer.variantSchema().addType(type);
-      return ColumnWriterFactory.buildColumnWriter(memberSchema, memberVector);
+      return ColumnWriterFactory.buildColumnWriter(memberSchema, null, memberVector);
     }
 
     @Override

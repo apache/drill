@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.ops;
 
+import io.netty.buffer.DrillBuf;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +41,7 @@ import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.expr.holders.ValueHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.ops.QueryContext.SqlStatementType;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.impl.OperatorCreatorRegistry;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
@@ -48,6 +50,7 @@ import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
+import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
@@ -65,13 +68,11 @@ import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.testing.ExecutionControls;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.exec.work.batch.IncomingBuffers;
+import org.apache.drill.exec.work.filter.RuntimeFilterWritable;
 import org.apache.drill.shaded.guava.com.google.common.base.Function;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
-
-import io.netty.buffer.DrillBuf;
-import org.apache.drill.exec.work.filter.RuntimeFilterWritable;
 
 /**
  * <p>
@@ -513,6 +514,12 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
   }
 
   @Override
+  public QueryId getQueryId() { return fragment.getHandle().getQueryId();}
+
+  @Override
+  public String getQueryIdString() { return QueryIdHelper.getQueryId(getQueryId()); }
+
+  @Override
   public boolean isImpersonationEnabled() {
     // TODO(DRILL-2097): Until SimpleRootExec tests are removed, we need to consider impersonation disabled if there is
     // no config
@@ -605,5 +612,12 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
         runtimeFilterWritable.close();
       }
     }
+  }
+
+  @Override
+  public SqlStatementType getSQLStatementType() {
+    Preconditions.checkNotNull(queryContext, "Statement type is only valid for root fragment."
+            + " Calling from non-root fragment");
+    return queryContext.getSQLStatementType();
   }
 }

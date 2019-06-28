@@ -53,8 +53,6 @@ import org.apache.drill.exec.vector.ValueVector;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.hadoop.fs.Path;
-import org.apache.parquet.io.api.Binary;
-import org.joda.time.DateTimeConstants;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -89,7 +87,7 @@ public class ParquetPartitionDescriptor extends AbstractPartitionDescriptor {
 
   @Override
   public boolean isPartitionName(String name) {
-    return partitionColumns.contains(name);
+    return partitionColumns.contains(SchemaPath.getSimplePath(name));
   }
 
   @Override
@@ -134,17 +132,17 @@ public class ParquetPartitionDescriptor extends AbstractPartitionDescriptor {
   }
 
   @Override
-  public String getBaseTableLocation() {
+  public Path getBaseTableLocation() {
     final FormatSelection origSelection = (FormatSelection) scanRel.getDrillTable().getSelection();
     return origSelection.getSelection().selectionRoot;
   }
 
   @Override
   public TableScan createTableScan(List<PartitionLocation> newPartitionLocation,
-                                   String cacheFileRoot,
+                                   Path cacheFileRoot,
                                    boolean wasAllPartitionsPruned,
                                    MetadataContext metaContext) throws Exception {
-    List<String> newFiles = new ArrayList<>();
+    List<Path> newFiles = new ArrayList<>();
     for (final PartitionLocation location : newPartitionLocation) {
       newFiles.add(location.getEntirePartitionLocation());
     }
@@ -172,17 +170,17 @@ public class ParquetPartitionDescriptor extends AbstractPartitionDescriptor {
 
   @Override
   protected void createPartitionSublists() {
-    Set<String> fileLocations = groupScan.getFileSet();
+    Set<Path> fileLocations = groupScan.getFileSet();
     List<PartitionLocation> locations = new LinkedList<>();
-    for (String file : fileLocations) {
+    for (Path file : fileLocations) {
       locations.add(new ParquetPartitionLocation(file));
     }
     locationSuperList = Lists.partition(locations, PartitionDescriptor.PARTITION_BATCH_SIZE);
     sublistsCreated = true;
   }
 
-  private GroupScan createNewGroupScan(List<String> newFiles,
-                                       String cacheFileRoot,
+  private GroupScan createNewGroupScan(List<Path> newFiles,
+                                       Path cacheFileRoot,
                                        boolean wasAllPartitionsPruned,
                                        MetadataContext metaContext) throws IOException {
 
@@ -194,8 +192,8 @@ public class ParquetPartitionDescriptor extends AbstractPartitionDescriptor {
     return groupScan.clone(newSelection);
   }
 
-  private void populatePruningVector(ValueVector v, int index, SchemaPath column, String file) {
-    String path = Path.getPathWithoutSchemeAndAuthority(new Path(file)).toString();
+  private void populatePruningVector(ValueVector v, int index, SchemaPath column, Path file) {
+    Path path = Path.getPathWithoutSchemeAndAuthority(file);
     TypeProtos.MajorType majorType = getVectorType(column, null);
     TypeProtos.MinorType type = majorType.getMinorType();
     switch (type) {
@@ -331,11 +329,11 @@ public class ParquetPartitionDescriptor extends AbstractPartitionDescriptor {
       }
       case DATE: {
         NullableDateVector dateVector = (NullableDateVector) v;
-        Integer value = groupScan.getPartitionValue(path, column, Integer.class);
+        Long value = groupScan.getPartitionValue(path, column, Long.class);
         if (value == null) {
           dateVector.getMutator().setNull(index);
         } else {
-          dateVector.getMutator().setSafe(index, value * (long) DateTimeConstants.MILLIS_PER_DAY);
+          dateVector.getMutator().setSafe(index, value);
         }
         return;
       }
@@ -402,8 +400,8 @@ public class ParquetPartitionDescriptor extends AbstractPartitionDescriptor {
    */
   private byte[] getBytes(TypeProtos.MinorType type, Object source) {
     byte[] bytes;
-    if (source instanceof Binary) {
-      bytes = ((Binary) source).getBytes();
+    if (source instanceof String) {
+      bytes = ((String) source).getBytes();
     } else if (source instanceof byte[]) {
       bytes = (byte[]) source;
     } else {

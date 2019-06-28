@@ -34,7 +34,7 @@
 <#macro page_body>
   <div class="page-header">
   </div>
-  <div id="message" class="alert alert-info alert-dismissable" style="font-family: Courier;">
+  <div id="message" class="alert alert-info alert-dismissable" style="font-family: courier,monospace;">
     <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
     Sample SQL query: <strong>SELECT * FROM cp.`employee.json` LIMIT 20</strong>
   </div>
@@ -76,13 +76,13 @@
       <div style="display: inline-block"><label for="query">Query</label></div>
       <div style="display: inline-block; float:right; padding-right:5%"><b>Hint: </b>Use <div id="keyboardHint" style="display:inline-block; font-style:italic"></div> to submit</div>
       <div id="query-editor-format"></div>
-      <input class="form-control" type="hidden" id="query" name="query"/>
+      <input class="form-control" type="hidden" id="query" name="query" autofocus/>
     </div>
 
     <button class="btn btn-default" type="button" onclick="<#if model.isOnlyImpersonationEnabled()>doSubmitQueryWithUserName()<#else>doSubmitQueryWithAutoLimit()</#if>">
       Submit
     </button>
-    <input type="checkbox" name="forceLimit" value="limit" <#if model.isAutoLimitEnabled()>checked</#if>> Limit results to <input type="text" id="queryLimit" min="0" value="${model.getDefaultRowsAutoLimited()}" size="6" pattern="[0-9]*"> rows <span class="glyphicon glyphicon-info-sign" onclick="alert('Limits the number of records retrieved in the query')" style="cursor:pointer"></span>
+    <input type="checkbox" name="forceLimit" value="limit" <#if model.isAutoLimitEnabled()>checked</#if>> Limit results to <input type="text" id="autoLimit" name="autoLimit" min="0" value="${model.getDefaultRowsAutoLimited()?c}" size="6" pattern="[0-9]*"> rows <span class="glyphicon glyphicon-info-sign" title="Limits the number of records retrieved in the query. Ignored if query has a limit already" style="cursor:pointer"></span>
   </form>
 
   <script>
@@ -104,6 +104,7 @@
     editor.getSession().setUseSoftTabs(true);
     editor.setTheme("ace/theme/sqlserver");
     editor.$blockScrolling = "Infinity";
+    editor.focus();
     //CSS Formatting
     document.getElementById('query-editor-format').style.fontSize='13px';
     document.getElementById('query-editor-format').style.fontFamily='courier,monospace';

@@ -22,6 +22,8 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.drill.metastore.metadata.TableMetadata;
+import org.apache.drill.metastore.metadata.TableMetadataProvider;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 import org.apache.drill.common.expression.LogicalExpression;
@@ -34,6 +36,7 @@ import org.apache.drill.exec.planner.physical.PlannerSettings;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.hadoop.fs.Path;
 
 public abstract class AbstractGroupScan extends AbstractBase implements GroupScan {
 
@@ -73,7 +76,7 @@ public abstract class AbstractGroupScan extends AbstractBase implements GroupSca
   @Override
   @JsonIgnore
   public boolean isDistributed() {
-    return getMaxParallelizationWidth() > 1 ? true : false;
+    return getMaxParallelizationWidth() > 1;
   }
 
   @Override
@@ -137,6 +140,11 @@ public abstract class AbstractGroupScan extends AbstractBase implements GroupSca
   }
 
   @Override
+  public List<SchemaPath> getColumns() {
+    return GroupScan.ALL_COLUMNS;
+  }
+
+  @Override
   public List<SchemaPath> getPartitionColumns() {
     return Lists.newArrayList();
   }
@@ -166,7 +174,7 @@ public abstract class AbstractGroupScan extends AbstractBase implements GroupSca
   }
 
   @Override
-  public Collection<String> getFiles() {
+  public Collection<Path> getFiles() {
     return null;
   }
 
@@ -182,6 +190,16 @@ public abstract class AbstractGroupScan extends AbstractBase implements GroupSca
 
   @Override
   public GroupScan applyFilter(LogicalExpression filterExpr, UdfUtilities udfUtilities, FunctionImplementationRegistry functionImplementationRegistry, OptionManager optionManager) {
+    return null;
+  }
+
+  @Override
+  public TableMetadataProvider getMetadataProvider() {
+    return null;
+  }
+
+  @Override
+  public TableMetadata getTableMetadata() {
     return null;
   }
 }

@@ -20,6 +20,7 @@ package org.apache.drill.exec.physical.base;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.drill.common.graph.GraphVisitor;
 import org.apache.drill.exec.ops.QueryContext;
+import org.apache.drill.exec.planner.cost.PrelCostEstimates;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
@@ -35,7 +36,7 @@ public abstract class AbstractBase implements PhysicalOperator {
 
   private final String userName;
   private int id;
-  private double cost;
+  private PrelCostEstimates cost = PrelCostEstimates.ZERO_COST;
 
   public AbstractBase() {
     userName = null;
@@ -89,12 +90,12 @@ public abstract class AbstractBase implements PhysicalOperator {
   }
 
   @Override
-  public double getCost() {
+  public PrelCostEstimates getCost() {
     return cost;
   }
 
   @Override
-  public void setCost(double cost) {
+  public void setCost(PrelCostEstimates cost) {
     this.cost = cost;
   }
 

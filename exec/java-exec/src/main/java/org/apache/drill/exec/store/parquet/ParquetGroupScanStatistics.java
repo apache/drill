@@ -20,28 +20,33 @@ package org.apache.drill.exec.store.parquet;
 import org.apache.commons.lang3.mutable.MutableLong;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.exec.physical.base.GroupScan;
-import org.apache.parquet.schema.OriginalType;
-import org.apache.parquet.schema.PrimitiveType;
+import org.apache.drill.metastore.statistics.TableStatisticsKind;
+import org.apache.drill.metastore.statistics.Statistic;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
+import org.apache.drill.metastore.util.SchemaPathUtils;
+import org.apache.drill.metastore.metadata.BaseMetadata;
+import org.apache.hadoop.fs.Path;
+import org.apache.drill.metastore.statistics.ColumnStatistics;
+import org.apache.drill.metastore.statistics.ColumnStatisticsKind;
+import org.apache.drill.metastore.metadata.LocationProvider;
+import org.apache.drill.shaded.guava.com.google.common.collect.HashBasedTable;
+import org.apache.drill.shaded.guava.com.google.common.collect.Table;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static org.apache.drill.exec.store.parquet.metadata.MetadataBase.ColumnMetadata;
-import static org.apache.drill.exec.store.parquet.metadata.MetadataBase.ParquetTableMetadataBase;
-import static org.apache.drill.exec.store.parquet.metadata.Metadata_V3.ColumnTypeMetadata_v3;
-import static org.apache.drill.exec.store.parquet.metadata.Metadata_V3.ParquetTableMetadata_v3;
+import java.util.Objects;
 
 /**
  * Holds common statistics about data in parquet group scan,
  * including information about total row count, columns counts, partition columns.
  */
-public class ParquetGroupScanStatistics {
+public class ParquetGroupScanStatistics<T extends BaseMetadata & LocationProvider> {
 
   // map from file names to maps of column name to partition value mappings
-  private Map<String, Map<SchemaPath, Object>> partitionValueMap;
+  private Table<Path, SchemaPath, Object> partitionValueMap;
   // only for partition columns : value is unique for each partition
   private Map<SchemaPath, TypeProtos.MajorType> partitionColTypeMap;
   // total number of non-null value for each column in parquet files
@@ -50,12 +55,13 @@ public class ParquetGroupScanStatistics {
   private long rowCount;
 
 
-  public ParquetGroupScanStatistics(List<RowGroupInfo> rowGroupInfos, ParquetTableMetadataBase parquetTableMetadata) {
-    collect(rowGroupInfos, parquetTableMetadata);
+  public ParquetGroupScanStatistics(Collection<T> rowGroupInfos) {
+    collect(rowGroupInfos);
   }
 
+  @SuppressWarnings("unchecked")
   public ParquetGroupScanStatistics(ParquetGroupScanStatistics that) {
-    this.partitionValueMap = new HashMap<>(that.partitionValueMap);
+    this.partitionValueMap = HashBasedTable.create(that.partitionValueMap);
     this.partitionColTypeMap = new HashMap<>(that.partitionColTypeMap);
     this.columnValueCounts = new HashMap<>(that.columnValueCounts);
     this.rowCount = that.rowCount;
@@ -78,50 +84,61 @@ public class ParquetGroupScanStatistics {
     return rowCount;
   }
 
-  public Object getPartitionValue(String path, SchemaPath column) {
-    return partitionValueMap.get(path).get(column);
+  public Object getPartitionValue(Path path, SchemaPath column) {
+    Object partitionValue = partitionValueMap.get(path, column);
+    if (partitionValue == BaseParquetMetadataProvider.NULL_VALUE) {
+      return null;
+    }
+    return partitionValue;
   }
 
-  public void collect(List<RowGroupInfo> rowGroupInfos, ParquetTableMetadataBase parquetTableMetadata) {
+  public Map<Path, Object> getPartitionPaths(SchemaPath column) {
+    return partitionValueMap.column(column);
+  }
+
+  public void collect(Collection<T> metadataList) {
     resetHolders();
     boolean first = true;
-    for (RowGroupInfo rowGroup : rowGroupInfos) {
-      long rowCount = rowGroup.getRowCount();
-      for (ColumnMetadata column : rowGroup.getColumns()) {
-        SchemaPath schemaPath = SchemaPath.getCompoundPath(column.getName());
+    for (T metadata : metadataList) {
+      long localRowCount = TableStatisticsKind.ROW_COUNT.getValue(metadata);
+      for (Map.Entry<SchemaPath, ColumnStatistics> columnsStatistics : metadata.getColumnsStatistics().entrySet()) {
+        SchemaPath schemaPath = columnsStatistics.getKey();
+        ColumnStatistics statistics = columnsStatistics.getValue();
         MutableLong emptyCount = new MutableLong();
         MutableLong previousCount = columnValueCounts.putIfAbsent(schemaPath, emptyCount);
         if (previousCount == null) {
           previousCount = emptyCount;
         }
-        if (previousCount.longValue() != GroupScan.NO_COLUMN_STATS && column.isNumNullsSet()) {
-          previousCount.add(rowCount - column.getNulls());
+        Long nullsNum = ColumnStatisticsKind.NULLS_COUNT.getFrom(statistics);
+        if (previousCount.longValue() != Statistic.NO_COLUMN_STATS && nullsNum != null && nullsNum != Statistic.NO_COLUMN_STATS) {
+          previousCount.add(localRowCount - nullsNum);
         } else {
-          previousCount.setValue(GroupScan.NO_COLUMN_STATS);
+          previousCount.setValue(Statistic.NO_COLUMN_STATS);
         }
-        boolean partitionColumn = checkForPartitionColumn(column, first, rowCount, parquetTableMetadata);
+        ColumnMetadata columnMetadata = SchemaPathUtils.getColumnMetadata(schemaPath, metadata.getSchema());
+        TypeProtos.MajorType majorType = columnMetadata != null ? columnMetadata.majorType() : null;
+        boolean partitionColumn = checkForPartitionColumn(statistics, first, localRowCount, majorType, schemaPath);
         if (partitionColumn) {
-          Map<SchemaPath, Object> map = partitionValueMap.computeIfAbsent(rowGroup.getPath(), key -> new HashMap<>());
-          Object value = map.get(schemaPath);
-          Object currentValue = column.getMaxValue();
-          if (value != null) {
+          Object value = partitionValueMap.get(metadata.getPath(), schemaPath);
+          Object currentValue = ColumnStatisticsKind.MAX_VALUE.getFrom(statistics);
+          if (value != null && value != BaseParquetMetadataProvider.NULL_VALUE) {
             if (value != currentValue) {
               partitionColTypeMap.remove(schemaPath);
             }
           } else {
             // the value of a column with primitive type can not be null,
             // so checks that there are really null value and puts it to the map
-            if (rowCount == column.getNulls()) {
-              map.put(schemaPath, null);
+            if (localRowCount == ColumnStatisticsKind.NULLS_COUNT.getFrom(statistics)) {
+              partitionValueMap.put(metadata.getPath(), schemaPath, BaseParquetMetadataProvider.NULL_VALUE);
             } else {
-              map.put(schemaPath, currentValue);
+              partitionValueMap.put(metadata.getPath(), schemaPath, currentValue);
             }
           }
         } else {
           partitionColTypeMap.remove(schemaPath);
         }
       }
-      this.rowCount += rowGroup.getRowCount();
+      this.rowCount += localRowCount;
       first = false;
     }
   }
@@ -130,7 +147,7 @@ public class ParquetGroupScanStatistics {
    * Re-init holders eigther during first instance creation or statistics update based on updated list of row groups.
    */
   private void resetHolders() {
-    this.partitionValueMap = new HashMap<>();
+    this.partitionValueMap = HashBasedTable.create();
     this.partitionColTypeMap = new HashMap<>();
     this.columnValueCounts = new HashMap<>();
     this.rowCount = 0;
@@ -142,39 +159,19 @@ public class ParquetGroupScanStatistics {
    * remaining footers, we will not find any new partition columns, but we may discover that what was previously a
    * potential partition column now no longer qualifies, so it needs to be removed from the list.
    *
-   * @param columnMetadata column metadata
-   * @param first if columns first appears in row group
-   * @param rowCount row count
-   * @param parquetTableMetadata parquet table metadata
-   *
+   * @param columnStatistics column metadata
+   * @param first            if columns first appears in row group
+   * @param rowCount         row count
    * @return whether column is a potential partition column
    */
-  private boolean checkForPartitionColumn(ColumnMetadata columnMetadata,
+  private boolean checkForPartitionColumn(ColumnStatistics columnStatistics,
                                           boolean first,
                                           long rowCount,
-                                          ParquetTableMetadataBase parquetTableMetadata) {
-    SchemaPath schemaPath = SchemaPath.getCompoundPath(columnMetadata.getName());
-    final PrimitiveType.PrimitiveTypeName primitiveType;
-    final OriginalType originalType;
-    int precision = 0;
-    int scale = 0;
-    if (parquetTableMetadata.hasColumnMetadata()) {
-      // only ColumnTypeMetadata_v3 stores information about scale and precision
-      if (parquetTableMetadata instanceof ParquetTableMetadata_v3) {
-        ColumnTypeMetadata_v3 columnTypeInfo = ((ParquetTableMetadata_v3) parquetTableMetadata)
-            .getColumnTypeInfo(columnMetadata.getName());
-        scale = columnTypeInfo.scale;
-        precision = columnTypeInfo.precision;
-      }
-      primitiveType = parquetTableMetadata.getPrimitiveType(columnMetadata.getName());
-      originalType = parquetTableMetadata.getOriginalType(columnMetadata.getName());
-    } else {
-      primitiveType = columnMetadata.getPrimitiveType();
-      originalType = columnMetadata.getOriginalType();
-    }
+                                          TypeProtos.MajorType type,
+                                          SchemaPath schemaPath) {
     if (first) {
-      if (hasSingleValue(columnMetadata, rowCount)) {
-        partitionColTypeMap.put(schemaPath, ParquetReaderUtility.getType(primitiveType, originalType, scale, precision));
+      if (hasSingleValue(columnStatistics, rowCount)) {
+        partitionColTypeMap.put(schemaPath, type);
         return true;
       } else {
         return false;
@@ -183,11 +180,11 @@ public class ParquetGroupScanStatistics {
       if (!partitionColTypeMap.keySet().contains(schemaPath)) {
         return false;
       } else {
-        if (!hasSingleValue(columnMetadata, rowCount)) {
+        if (!hasSingleValue(columnStatistics, rowCount)) {
           partitionColTypeMap.remove(schemaPath);
           return false;
         }
-        if (!ParquetReaderUtility.getType(primitiveType, originalType, scale, precision).equals(partitionColTypeMap.get(schemaPath))) {
+        if (!partitionColTypeMap.get(schemaPath).equals(type)) {
           partitionColTypeMap.remove(schemaPath);
           return false;
         }
@@ -201,13 +198,26 @@ public class ParquetGroupScanStatistics {
    * ColumnMetadata will have a non-null value iff the minValue and
    * the maxValue for the rowgroup are the same.
    *
-   * @param columnChunkMetaData metadata to check
-   * @param rowCount rows count in column chunk
-   *
+   * @param columnStatistics metadata to check
+   * @param rowCount         rows count in column chunk
    * @return true if column has single value
    */
-  private boolean hasSingleValue(ColumnMetadata columnChunkMetaData, long rowCount) {
-    return (columnChunkMetaData != null) && (columnChunkMetaData.hasSingleValue(rowCount));
+  private boolean hasSingleValue(ColumnStatistics columnStatistics, long rowCount) {
+    return columnStatistics != null && isSingleVal(columnStatistics, rowCount);
+  }
+
+  private boolean isSingleVal(ColumnStatistics columnStatistics, long rowCount) {
+    Long numNulls = ColumnStatisticsKind.NULLS_COUNT.getFrom(columnStatistics);
+    if (numNulls != null && numNulls != Statistic.NO_COLUMN_STATS) {
+      Object min = columnStatistics.get(ColumnStatisticsKind.MIN_VALUE);
+      Object max = columnStatistics.get(ColumnStatisticsKind.MAX_VALUE);
+      if (min != null) {
+        return (numNulls == 0 || numNulls == rowCount) && Objects.deepEquals(min, max);
+      } else {
+        return numNulls == rowCount && max == null;
+      }
+    }
+    return false;
   }
 
 }

@@ -34,8 +34,8 @@ import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 import org.apache.drill.exec.vector.accessor.writer.AbstractArrayWriter.ArrayObjectWriter;
 import org.apache.drill.exec.vector.accessor.writer.NullableScalarWriter;
 import org.apache.drill.exec.vector.accessor.writer.ScalarArrayWriter;
-import org.apache.drill.test.OperatorFixture;
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
+import org.apache.drill.test.OperatorFixture;
 
 /**
  * Tests the performance of the writers compared to using the value
@@ -180,6 +180,9 @@ public class PerformanceTool {
     public final void nextElement() { index++; }
 
     @Override
+    public final void prevElement() { }
+
+    @Override
     public void rollover() { }
 
     @Override
@@ -251,7 +254,7 @@ public class PerformanceTool {
         vector.allocateNew(ROW_COUNT, 5 * ROW_COUNT);
         IntColumnWriter colWriter = new IntColumnWriter(vector.getDataVector());
         ColumnMetadata colSchema = MetadataUtils.fromField(vector.getField());
-        ArrayObjectWriter arrayWriter = ScalarArrayWriter.build(colSchema, vector, colWriter);
+        ArrayObjectWriter arrayWriter = ScalarArrayWriter.build(colSchema, vector, colWriter, null);
         TestWriterIndex index = new TestWriterIndex();
         arrayWriter.events().bindIndex(index);
         arrayWriter.events().startWrite();

@@ -25,6 +25,7 @@ import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.parser.SqlAbstractParserImpl;
 import org.apache.calcite.sql.parser.SqlParserImplFactory;
 import org.apache.calcite.sql.util.SqlVisitor;
+import org.apache.drill.exec.planner.sql.parser.SqlAnalyzeTable;
 
 public class DrillParserWithCompoundIdConverter extends DrillParserImpl {
 
@@ -45,7 +46,11 @@ public class DrillParserWithCompoundIdConverter extends DrillParserImpl {
   }
 
   protected SqlVisitor<SqlNode> createConverter() {
-    return new CompoundIdentifierConverter();
+    return createConverter(false);
+  }
+
+  private SqlVisitor<SqlNode> createConverter(boolean allowNoTableRefCompoundIdentifier) {
+    return new CompoundIdentifierConverter(allowNoTableRefCompoundIdentifier);
   }
 
   @Override
@@ -57,6 +62,6 @@ public class DrillParserWithCompoundIdConverter extends DrillParserImpl {
   @Override
   public SqlNode parseSqlStmtEof() throws Exception {
     SqlNode originalSqlNode = super.parseSqlStmtEof();
-    return originalSqlNode.accept(createConverter());
+    return originalSqlNode.accept(createConverter(originalSqlNode instanceof SqlAnalyzeTable));
   }
 }

@@ -19,6 +19,7 @@ package org.apache.drill.exec.physical.impl.aggregate;
 
 import java.util.Iterator;
 
+import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.RecordBatch;
@@ -31,6 +32,7 @@ public class InternalBatch implements Iterable<VectorWrapper<?>>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(InternalBatch.class);
 
   private final VectorContainer container;
+  private final FragmentContext context;
   private final BatchSchema schema;
   private final SelectionVector2 sv2;
   private final SelectionVector4 sv4;
@@ -54,6 +56,7 @@ public class InternalBatch implements Iterable<VectorWrapper<?>>{
       this.sv2 = null;
     }
     this.schema = incoming.getSchema();
+    this.context = incoming.getContext();
     this.container = VectorContainer.getTransferClone(incoming, ignoreWrappers, oContext);
   }
 
@@ -88,4 +91,7 @@ public class InternalBatch implements Iterable<VectorWrapper<?>>{
     return container.getValueAccessorById(clazz, fieldIds);
   }
 
+  public FragmentContext getContext() {
+    return context;
+  }
 }

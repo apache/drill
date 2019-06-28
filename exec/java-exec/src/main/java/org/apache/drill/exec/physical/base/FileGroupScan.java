@@ -21,10 +21,13 @@ import java.io.IOException;
 
 import org.apache.drill.exec.store.dfs.FileSelection;
 
+/**
+ * FileGroupScan operator represents all data which will be scanned from FileSystem by a given physical plan.
+ */
 public interface FileGroupScan extends GroupScan {
 
-  public void modifyFileSelection(FileSelection selection);
+  void modifyFileSelection(FileSelection selection);
 
-  public FileGroupScan clone(FileSelection selection) throws IOException;
+  FileGroupScan clone(FileSelection selection) throws IOException;
 
 }

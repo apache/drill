@@ -19,7 +19,6 @@ package org.apache.drill.exec.vector.accessor;
 
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
-import org.apache.drill.exec.record.metadata.ProjectionType;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 
 /**
@@ -68,20 +67,6 @@ public interface TupleWriter extends ColumnWriter {
       super("Undefined column: " + colName);
     }
   }
-
-  /**
-   * Allows a client to "sniff" the projection set to determine if a
-   * field is projected. Some clients can omit steps if they know that
-   * a field is not needed. Others will simply create the column, allowing
-   * the implementation to create a dummy writer if the column is not
-   * projected.
-   *
-   * @param columnName name of an existing or new column
-   * @return whether the column is projected, and, if so, the implied
-   * type of the projected column
-   */
-
-  ProjectionType projectionType(String columnName);
 
   /**
    * Add a column to the tuple (row or map) that backs this writer. Support for

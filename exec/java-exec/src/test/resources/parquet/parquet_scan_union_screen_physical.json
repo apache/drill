@@ -1,32 +1,28 @@
 {
-  head : {
-    type : "APACHE_DRILL_PHYSICAL",
-    version : 1,
-    generator : {
-      type : "manual"
+  "head" : {
+    "type" : "APACHE_DRILL_PHYSICAL",
+    "version" : 1,
+    "generator" : {
+      "type" : "manual"
     }
   },
-  graph : [ {
-    pop : "parquet-scan",
-    @id : 1,
-    entries : [
-    {
-        path : "/tmp/parquet_test_file_many_types"
+  "graph" : [ {
+    "pop" : "parquet-scan",
+    "@id" : 1,
+    "entries" : [ {
+      "path" : "/tmp/parquet_test_file_many_types"
+    } ],
+    "storage" : {
+      "type" : "file",
+      "connection" : "file:///"
     }
-    ],
-    storage:{
-                         "type":"file",
-                         "connection" : "file:///"
-                   }
-  },
-  {
-     "@id": 2,
-     "child": 1,
-     "pop": "union-exchange"
-  },
-  {
-    pop : "screen",
-    @id : 3,
-    child : 2
+  }, {
+    "@id" : 2,
+    "child" : 1,
+    "pop" : "union-exchange"
+  }, {
+    "pop" : "screen",
+    "@id" : 3,
+    "child" : 2
   } ]
 }

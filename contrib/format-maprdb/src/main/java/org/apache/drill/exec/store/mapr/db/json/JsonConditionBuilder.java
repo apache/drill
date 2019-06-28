@@ -212,11 +212,15 @@ public class JsonConditionBuilder extends AbstractExprVisitor<JsonScanSpec, Void
       break;
 
     case "isnull":
-      cond = MapRDBImpl.newCondition().notExists(fieldPath);
+      // 'field is null' should be transformed to 'field not exists OR typeof(field) = NULL'
+      QueryCondition orCond = MapRDBImpl.newCondition().or();
+      cond = orCond.notExists(fieldPath).typeOf(fieldPath, Value.Type.NULL).close();
       break;
 
     case "isnotnull":
-      cond = MapRDBImpl.newCondition().exists(fieldPath);
+      // 'field is not null should be transformed to 'field exists AND typeof(field) != NULL'
+      QueryCondition andCond = MapRDBImpl.newCondition().and();
+      cond = andCond.exists(fieldPath).notTypeOf(fieldPath, Value.Type.NULL).close();
       break;
 
     case "istrue":

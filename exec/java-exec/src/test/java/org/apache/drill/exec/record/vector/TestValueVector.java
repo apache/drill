@@ -393,9 +393,7 @@ the interface to load has changed
 
     // Combine into a single buffer so we can load it into a new vector.
     final DrillBuf[] buffers1 = vector1.getBuffers(false);
-    @SuppressWarnings("resource")
     final DrillBuf buffer1 = combineBuffers(allocator, buffers1);
-    @SuppressWarnings("resource")
     final NullableVarCharVector vector2 = new NullableVarCharVector(field, allocator);
     vector2.load(vector1.getMetadata(), buffer1);
 
@@ -802,11 +800,11 @@ the interface to load has changed
     });
   }
 
-  @SuppressWarnings("resource")
   @Test
   public void testListVectorShouldNotThrowOversizedAllocationException() throws Exception {
     final MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH,
             Types.optional(TypeProtos.MinorType.LIST));
+    @SuppressWarnings("resource")
     ListVector vector = new ListVector(field, allocator, null);
     ListVector vectorFrom = new ListVector(field, allocator, null);
     vectorFrom.allocateNew();
@@ -830,6 +828,7 @@ the interface to load has changed
   public void testVarLengthVector_SetCountZeroAfterClear() throws Exception {
     try {
       final MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, VarCharHolder.TYPE);
+      @SuppressWarnings("resource")
       VariableWidthVector vector = new VarCharVector(field, allocator);
       vector.allocateNew();
       vector.clear();
@@ -848,6 +847,7 @@ the interface to load has changed
   @Test
   public void testVarLengthVector_SetOOBCount() throws Exception {
     final MaterializedField field = MaterializedField.create(EMPTY_SCHEMA_PATH, VarCharHolder.TYPE);
+    @SuppressWarnings("resource")
     VariableWidthVector vector = new VarCharVector(field, allocator);
     try {
       vector.allocateNew(10, 1);

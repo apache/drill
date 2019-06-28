@@ -25,17 +25,19 @@ options {
  */
 }
 
-schema: (columns | LEFT_PAREN columns RIGHT_PAREN) EOF;
+schema: (columns | LEFT_PAREN columns? RIGHT_PAREN) property_values? EOF;
 
-columns: column (COMMA column)*;
+columns: column_def (COMMA column_def)*;
 
-column: (primitive_column | map_column | simple_array_column | complex_array_column);
+column_def: column property_values?;
 
-primitive_column: column_id simple_type nullability?;
+column: (primitive_column | struct_column | simple_array_column | complex_array_column);
+
+primitive_column: column_id simple_type nullability? format_value? default_value?;
 
 simple_array_column: column_id simple_array_type nullability?;
 
-map_column: column_id map_type nullability?;
+struct_column: column_id struct_type nullability?;
 
 complex_array_column: column_id complex_array_type nullability?;
 
@@ -63,10 +65,20 @@ simple_type
 
 complex_type: (simple_array_type | complex_array_type);
 
-simple_array_type: ARRAY LEFT_ANGLE_BRACKET (simple_type | map_type) RIGHT_ANGLE_BRACKET;
+simple_array_type: ARRAY LEFT_ANGLE_BRACKET (simple_type | struct_type) RIGHT_ANGLE_BRACKET;
 
 complex_array_type: ARRAY LEFT_ANGLE_BRACKET complex_type RIGHT_ANGLE_BRACKET;
 
-map_type: MAP LEFT_ANGLE_BRACKET columns RIGHT_ANGLE_BRACKET;
+struct_type: STRUCT LEFT_ANGLE_BRACKET columns RIGHT_ANGLE_BRACKET;
 
 nullability: NOT NULL;
+
+format_value: FORMAT string_value;
+
+default_value: DEFAULT string_value;
+
+property_values: PROPERTIES LEFT_BRACE property_pair (COMMA property_pair)* RIGHT_BRACE;
+
+property_pair: string_value EQUALS_SIGN string_value;
+
+string_value: (QUOTED_ID | SINGLE_QUOTED_STRING | DOUBLE_QUOTED_STRING);

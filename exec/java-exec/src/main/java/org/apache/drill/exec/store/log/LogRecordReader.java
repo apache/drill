@@ -41,9 +41,6 @@ import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.NullableTimeStampVector;
 import org.apache.drill.exec.vector.NullableTimeVector;
 
-
-import org.apache.hadoop.fs.Path;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -110,7 +107,8 @@ public class LogRecordReader extends AbstractRecordReader {
 
     @Override
     public void load(int rowIndex, String value) {
-      mutator.set(rowIndex, value.getBytes());
+      byte[] bytes = value.getBytes();
+      mutator.setSafe(rowIndex, bytes, 0, bytes.length);
     }
   }
 
@@ -132,7 +130,7 @@ public class LogRecordReader extends AbstractRecordReader {
     @Override
     public void load(int rowIndex, String value) {
       try {
-        mutator.set(rowIndex, Long.parseLong(value));
+        mutator.setSafe(rowIndex, Long.parseLong(value));
       } catch (NumberFormatException e) {
         throw UserException
             .dataReadError(e)
@@ -163,7 +161,7 @@ public class LogRecordReader extends AbstractRecordReader {
     @Override
     public void load(int rowIndex, String value) {
       try {
-        mutator.set(rowIndex, Short.parseShort(value));
+        mutator.setSafe(rowIndex, Short.parseShort(value));
       } catch (NumberFormatException e) {
         throw UserException
             .dataReadError(e)
@@ -194,7 +192,7 @@ public class LogRecordReader extends AbstractRecordReader {
     @Override
     public void load(int rowIndex, String value) {
       try {
-        mutator.set(rowIndex, Integer.parseInt(value));
+        mutator.setSafe(rowIndex, Integer.parseInt(value));
       } catch (NumberFormatException e) {
         throw UserException
             .dataReadError(e)
@@ -225,7 +223,7 @@ public class LogRecordReader extends AbstractRecordReader {
     @Override
     public void load(int rowIndex, String value) {
       try {
-        mutator.set(rowIndex, Float.parseFloat(value));
+        mutator.setSafe(rowIndex, Float.parseFloat(value));
       } catch (NumberFormatException e) {
         throw UserException
             .dataReadError(e)
@@ -256,7 +254,7 @@ public class LogRecordReader extends AbstractRecordReader {
     @Override
     public void load(int rowIndex, String value) {
       try {
-        mutator.set(rowIndex, Double.parseDouble(value));
+        mutator.setSafe(rowIndex, Double.parseDouble(value));
       } catch (NumberFormatException e) {
         throw UserException
             .dataReadError(e)
@@ -303,7 +301,7 @@ public class LogRecordReader extends AbstractRecordReader {
       try {
         Date d = df.parse(value);
         long milliseconds = d.getTime();
-        mutator.set(rowIndex, milliseconds);
+        mutator.setSafe(rowIndex, milliseconds);
       } catch (NumberFormatException e) {
         throw UserException
             .dataReadError(e)
@@ -359,7 +357,7 @@ public class LogRecordReader extends AbstractRecordReader {
       try {
         Date d = df.parse(value);
         int milliseconds = (int) d.getTime();
-        mutator.set(rowIndex, milliseconds);
+        mutator.setSafe(rowIndex, milliseconds);
       } catch (NumberFormatException e) {
         throw UserException
             .dataReadError(e)
@@ -415,7 +413,7 @@ public class LogRecordReader extends AbstractRecordReader {
       try {
         Date d = df.parse(value);
         long milliseconds = d.getTime();
-        mutator.set(rowIndex, milliseconds);
+        mutator.setSafe(rowIndex, milliseconds);
       } catch (NumberFormatException e) {
         throw UserException
             .dataReadError(e)
@@ -522,7 +520,7 @@ public class LogRecordReader extends AbstractRecordReader {
   private void openFile() {
     InputStream in;
     try {
-      in = dfs.open(new Path(fileWork.getPath()));
+      in = dfs.open(fileWork.getPath());
     } catch (Exception e) {
       throw UserException
           .dataReadError(e)

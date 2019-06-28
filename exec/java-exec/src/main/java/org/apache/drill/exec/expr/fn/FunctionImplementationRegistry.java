@@ -39,7 +39,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 import org.apache.drill.shaded.guava.com.google.common.io.Files;
 import com.typesafe.config.ConfigFactory;
 import org.apache.commons.io.FileUtils;
-import org.apache.drill.common.config.CommonConstants;
+import org.apache.drill.common.config.ConfigConstants;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.FunctionCall;
@@ -347,7 +347,6 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
    * @param version remote function registry local function registry was based on
    * @return true if remote and local function registries were synchronized after given version
    */
-  @SuppressWarnings("resource")
   public boolean syncWithRemoteRegistry(int version) {
     // Do the version check only if a remote registry exists. It does
     // not exist for some JMockit-based unit tests.
@@ -445,7 +444,7 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
   */
   private ScanResult scan(ClassLoader classLoader, Path path, URL[] urls) throws IOException {
     Enumeration<URL> markerFileEnumeration = classLoader.getResources(
-        CommonConstants.DRILL_JAR_MARKER_FILE_RESOURCE_PATHNAME);
+        ConfigConstants.DRILL_JAR_MARKER_FILE_RESOURCE_PATHNAME);
     while (markerFileEnumeration.hasMoreElements()) {
       URL markerFile = markerFileEnumeration.nextElement();
       if (markerFile.getPath().contains(path.toUri().getPath())) {
@@ -462,7 +461,7 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
       }
     }
     throw new JarValidationException(String.format("Marker file %s is missing in %s",
-        CommonConstants.DRILL_JAR_MARKER_FILE_RESOURCE_PATHNAME, path.getName()));
+        ConfigConstants.DRILL_JAR_MARKER_FILE_RESOURCE_PATHNAME, path.getName()));
   }
 
   /**
@@ -561,7 +560,6 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
    * @return local path to jar that was copied
    * @throws IOException in case of problems during jar coping process
    */
-  @SuppressWarnings("resource")
   private Path copyJarToLocal(String jarName, RemoteFunctionRegistry remoteFunctionRegistry) throws IOException {
     Path registryArea = remoteFunctionRegistry.getRegistryArea();
     FileSystem fs = remoteFunctionRegistry.getFs();

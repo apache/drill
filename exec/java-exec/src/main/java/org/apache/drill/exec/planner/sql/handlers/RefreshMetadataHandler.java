@@ -17,11 +17,14 @@
  */
 package org.apache.drill.exec.planner.sql.handlers;
 
-import static org.apache.drill.exec.planner.sql.SchemaUtilites.findSchema;
-
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
+import org.apache.calcite.sql.SqlIdentifier;
+import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.SqlNodeList;
+import org.apache.calcite.sql.parser.SqlParserPos;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.logical.DrillTable;
@@ -30,14 +33,19 @@ import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.planner.sql.parser.SqlRefreshMetadata;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.FileSelection;
-import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.FormatSelection;
 import org.apache.drill.exec.store.dfs.NamedFormatPluginConfig;
+import org.apache.drill.exec.store.parquet.ParquetFormatConfig;
 import org.apache.drill.exec.store.parquet.ParquetReaderConfig;
 import org.apache.drill.exec.store.parquet.metadata.Metadata;
-import org.apache.drill.exec.store.parquet.ParquetFormatConfig;
+import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.apache.hadoop.fs.Path;
+
+import java.util.HashSet;
+import java.util.Set;
+
+import static org.apache.drill.exec.planner.sql.SchemaUtilites.findSchema;
 
 public class RefreshMetadataHandler extends DefaultSqlHandler {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RefreshMetadataHandler.class);
@@ -69,6 +77,9 @@ public class RefreshMetadataHandler extends DefaultSqlHandler {
       }
 
       final String tableName = refreshTable.getName();
+      final SqlNodeList columnList = getColumnList(refreshTable);
+      final Set<String> columnSet = getColumnRootSegments(columnList);
+      final SqlLiteral allColumns = refreshTable.getAllColumns();
 
       if (tableName.contains("*") || tableName.contains("?")) {
         return direct(false, "Glob path %s not supported for metadata refresh", tableName);
@@ -97,19 +108,21 @@ public class RefreshMetadataHandler extends DefaultSqlHandler {
         return notSupported(tableName);
       }
 
-      FormatSelection formatSelection = (FormatSelection) selection;
+      final FormatSelection formatSelection = (FormatSelection) selection;
 
       FormatPluginConfig formatConfig = formatSelection.getFormat();
       if (!((formatConfig instanceof ParquetFormatConfig) ||
-          ((formatConfig instanceof NamedFormatPluginConfig) && ((NamedFormatPluginConfig) formatConfig).name.equals("parquet")))) {
+          ((formatConfig instanceof NamedFormatPluginConfig) &&
+            ((NamedFormatPluginConfig) formatConfig).name.equals("parquet")))) {
         return notSupported(tableName);
       }
 
-      FileSystemPlugin plugin = (FileSystemPlugin) drillTable.getPlugin();
-      DrillFileSystem fs = new DrillFileSystem(plugin.getFormatPlugin(formatSelection.getFormat()).getFsConf());
+      // Always create filesystem object using process user, since it owns the metadata file
+      final DrillFileSystem fs = ImpersonationUtil.createFileSystem(ImpersonationUtil.getProcessUserName(),
+        drillTable.getPlugin().getFormatPlugin(formatConfig).getFsConf());
 
-      String selectionRoot = formatSelection.getSelection().selectionRoot;
-      if (!fs.getFileStatus(new Path(selectionRoot)).isDirectory()) {
+      final Path selectionRoot = formatSelection.getSelection().getSelectionRoot();
+      if (!fs.getFileStatus(selectionRoot).isDirectory()) {
         return notSupported(tableName);
       }
 
@@ -117,11 +130,11 @@ public class RefreshMetadataHandler extends DefaultSqlHandler {
         formatConfig = new ParquetFormatConfig();
       }
 
-      ParquetReaderConfig readerConfig = ParquetReaderConfig.builder()
+      final ParquetReaderConfig readerConfig = ParquetReaderConfig.builder()
         .withFormatConfig((ParquetFormatConfig) formatConfig)
         .withOptions(context.getOptions())
         .build();
-      Metadata.createMeta(fs, selectionRoot, readerConfig);
+      Metadata.createMeta(fs, selectionRoot, readerConfig, allColumns.booleanValue(), columnSet);
       return direct(true, "Successfully updated metadata for table %s.", tableName);
 
     } catch(Exception e) {
@@ -130,5 +143,29 @@ public class RefreshMetadataHandler extends DefaultSqlHandler {
     }
   }
 
+  private Set<String> getColumnRootSegments(SqlNodeList columnList) {
+    Set<String> columnSet = new HashSet<>();
+    if (columnList != null) {
+      for (SqlNode column : columnList.getList()) {
+        // Add only the root segment. Collect metadata for all the columns under that root segment
+        columnSet.add(SchemaPath.parseFromString(column.toString()).getRootSegmentPath());
+      }
+    }
+    return columnSet;
+  }
+
+  /**
+   * Generates the column list specified in the Refresh statement
+   * @param sqlrefreshMetadata sql parse node representing refresh statement
+   * @return list of columns specified in the refresh command
+   */
+  private SqlNodeList getColumnList(final SqlRefreshMetadata sqlrefreshMetadata) {
+    SqlNodeList columnList = sqlrefreshMetadata.getFieldList();
+    if (SqlNodeList.isEmptyList(columnList)) {
+      columnList = new SqlNodeList(SqlParserPos.ZERO);
+      columnList.add(new SqlIdentifier(SchemaPath.STAR_COLUMN.rootName(), SqlParserPos.ZERO));
+    }
+    return columnList;
+  }
 
 }

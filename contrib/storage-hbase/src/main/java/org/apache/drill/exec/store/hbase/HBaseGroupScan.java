@@ -388,6 +388,7 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
     return this.storagePluginConfig;
   }
 
+  @Override
   @JsonProperty
   public List<SchemaPath> getColumns() {
     return columns;

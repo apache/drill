@@ -22,6 +22,7 @@ import java.util.List;
 import org.apache.drill.categories.PlannerTest;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.planner.PhysicalPlanReaderTestFactory;
+import org.apache.drill.exec.planner.fragment.DefaultQueryParallelizer;
 import org.apache.drill.exec.planner.fragment.Fragment;
 import org.apache.drill.exec.planner.fragment.SimpleParallelizer;
 import org.apache.drill.exec.proto.BitControl.QueryContextInformation;
@@ -52,7 +53,7 @@ public class TestFragmentChecker extends PopUnitTestBase{
   private void print(String fragmentFile, int bitCount, int expectedFragmentCount) throws Exception {
     PhysicalPlanReader ppr = PhysicalPlanReaderTestFactory.defaultPhysicalPlanReader(CONFIG);
     Fragment fragmentRoot = getRootFragment(ppr, fragmentFile);
-    SimpleParallelizer par = new SimpleParallelizer(1000*1000, 5, 10, 1.2);
+    SimpleParallelizer par = new DefaultQueryParallelizer(true, 1000*1000, 5, 10, 1.2);
     List<DrillbitEndpoint> endpoints = Lists.newArrayList();
     DrillbitEndpoint localBit = null;
     for(int i =0; i < bitCount; i++) {
@@ -64,7 +65,7 @@ public class TestFragmentChecker extends PopUnitTestBase{
     }
 
     final QueryContextInformation queryContextInfo = Utilities.createQueryContextInfo("dummySchemaName", "938ea2d9-7cb9-4baf-9414-a5a0b7777e8e");
-    QueryWorkUnit qwu = par.getFragments(new OptionList(), localBit, QueryId.getDefaultInstance(), endpoints, fragmentRoot,
+    QueryWorkUnit qwu = par.generateWorkUnit(new OptionList(), localBit, QueryId.getDefaultInstance(), endpoints, fragmentRoot,
         UserSession.Builder.newBuilder().withCredentials(UserBitShared.UserCredentials.newBuilder().setUserName("foo").build()).build(),
         queryContextInfo);
     qwu.applyPlan(ppr);

@@ -41,6 +41,7 @@ import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.QueryProfileStoreContext;
 import org.apache.drill.exec.server.options.OptionValue;
+import org.apache.drill.exec.server.options.OptionValue.OptionScope;
 import org.apache.drill.exec.server.options.QueryOptionManager;
 import org.apache.drill.exec.store.PartitionExplorer;
 import org.apache.drill.exec.store.PartitionExplorerImpl;
@@ -60,6 +61,8 @@ import io.netty.buffer.DrillBuf;
 // TODO - consider re-name to PlanningContext, as the query execution context actually appears
 // in fragment contexts
 public class QueryContext implements AutoCloseable, OptimizerRulesContext, SchemaConfigInfoProvider {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryContext.class);
+  public enum SqlStatementType {OTHER, ANALYZE, CTAS, EXPLAIN, DESCRIBE_TABLE, DESCRIBE_SCHEMA, REFRESH, SELECT, SETOPTION};
 
   private final DrillbitContext drillbitContext;
   private final UserSession session;
@@ -74,8 +77,10 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
   private final QueryContextInformation queryContextInfo;
   private final ViewExpansionContext viewExpansionContext;
   private final SchemaTreeProvider schemaTreeProvider;
+  private boolean skipProfileWrite;
   /** Stores constants and their holders by type */
   private final Map<String, Map<MinorType, ValueHolder>> constantValueHolderCache;
+  private SqlStatementType stmtType;
 
   /*
    * Flag to indicate if close has been called, after calling close the first
@@ -88,6 +93,7 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
     this.drillbitContext = drillbitContext;
     this.session = session;
     this.queryId = queryId;
+    this.skipProfileWrite = false;
     queryOptions = new QueryOptionManager(session.getOptions());
     executionControls = new ExecutionControls(queryOptions, drillbitContext.getEndpoint());
     plannerSettings = new PlannerSettings(queryOptions, getFunctionRegistry());
@@ -101,7 +107,25 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
       this.table = drillbitContext.getOperatorTable();
     }
 
+    // Checking for limit on ResultSet rowcount and if user attempting to override the system value
+    int sessionMaxRowCount = queryOptions.getOption(ExecConstants.QUERY_MAX_ROWS).num_val.intValue();
+    int defaultMaxRowCount = queryOptions.getOptionManager(OptionScope.SYSTEM).getOption(ExecConstants.QUERY_MAX_ROWS).num_val.intValue();
+    int autoLimitRowCount = 0;
+    if (sessionMaxRowCount > 0 && defaultMaxRowCount > 0) {
+      autoLimitRowCount = Math.min(sessionMaxRowCount, defaultMaxRowCount);
+    } else {
+      autoLimitRowCount = Math.max(sessionMaxRowCount, defaultMaxRowCount);
+    }
+    if (autoLimitRowCount == defaultMaxRowCount && defaultMaxRowCount != sessionMaxRowCount) {
+      // Required to indicate via OptionScope=QueryLevel that session limit is overridden by system limit
+      queryOptions.setLocalOption(ExecConstants.QUERY_MAX_ROWS, autoLimitRowCount);
+    }
+    if (autoLimitRowCount > 0) {
+      logger.debug("ResultSet size is auto-limited to {} rows [Session: {} / Default: {}]", autoLimitRowCount, sessionMaxRowCount, defaultMaxRowCount);
+    }
+
     queryContextInfo = Utilities.createQueryContextInfo(session.getDefaultSchemaPath(), session.getSessionId());
+
     contextInformation = new ContextInformation(session.getCredentials(), queryContextInfo);
 
     allocator = drillbitContext.getAllocator().newChildAllocator(
@@ -112,6 +136,7 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
     viewExpansionContext = new ViewExpansionContext(this);
     schemaTreeProvider = new SchemaTreeProvider(drillbitContext);
     constantValueHolderCache = Maps.newHashMap();
+    stmtType = null;
   }
 
   @Override
@@ -260,6 +285,8 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
    * Re-creates drill operator table to refresh functions list from local function registry.
    */
   public void reloadDrillOperatorTable() {
+    // This is re-trying the query plan on failure so qualifies to reset the SQL statement.
+    clearSQLStatementType();
     table = new DrillOperatorTable(
         drillbitContext.getFunctionImplementationRegistry(),
         drillbitContext.getOptionManager());
@@ -320,5 +347,46 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
     } finally {
       closed = true;
     }
+  }
+
+  /**
+  * @param stmtType : Sets the type {@link SqlStatementType} of the statement e.g. CTAS, ANALYZE
+  */
+  public void setSQLStatementType(SqlStatementType stmtType) {
+    if (this.stmtType == null) {
+      this.stmtType = stmtType;
+    } else {
+      throw new IllegalStateException(String.format("SQL Statement type is already set to %s", this.stmtType));
+    }
+  }
+
+  /*
+   * Clears the type {@link SqlStatementType} of the statement. Ideally we should not clear the statement type
+   * so this should never be exposed outside the QueryContext
+   */
+  private void clearSQLStatementType() {
+    this.stmtType = null;
+  }
+
+  /**
+   * @return Get the type {@link SqlStatementType} of the statement e.g. CTAS, ANALYZE
+   */
+  public SqlStatementType getSQLStatementType() {
+    return stmtType;
+  }
+
+  /**
+   * Skip writing profile
+   * @param skipWriting
+   */
+  public void skipWritingProfile(boolean skipWriting) {
+    this.skipProfileWrite = skipWriting;
+  }
+
+  /**
+   * @return Check if to skip writing
+   */
+  public boolean isSkipProfileWrite() {
+    return skipProfileWrite;
   }
 }

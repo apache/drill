@@ -305,14 +305,12 @@ public class SpillSet {
       dir.deleteOnExit();
     }
 
-    @SuppressWarnings("resource")
     @Override
     public WritableByteChannel createForWrite(String fileName) throws IOException {
       return FileChannel.open(new File(baseDir, fileName).toPath(), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
     }
 
-    @SuppressWarnings("resource")
-    @Override
+     @Override
     public InputStream openForInput(String fileName) throws IOException {
       return new CountingInputStream(
                 new BufferedInputStream(

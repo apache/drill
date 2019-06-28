@@ -156,7 +156,7 @@ public class RowSetComparison {
   private void compareSchemasAndCounts(RowSet actual) {
     assertTrue("Schemas don't match.\n" +
       "Expected: " + expected.schema().toString() +
-      "\nActual: " + actual.schema(), expected.schema().isEquivalent(actual.schema()));
+      "\nActual:   " + actual.schema(), expected.schema().isEquivalent(actual.schema()));
     int testLength = getTestLength();
     int dataLength = offset + testLength;
     assertTrue("Missing expected rows", expected.rowCount() >= dataLength);
@@ -345,9 +345,8 @@ public class RowSetComparison {
     switch (scalarReader.valueType()) {
       case BYTES:
         return ByteBuffer.wrap(scalarReader.getBytes());
-      case DOUBLE: {
+      case DOUBLE:
         return new BigDecimal(scalarReader.getDouble(), this.scale).stripTrailingZeros();
-      }
       default:
         return scalarReader.getObject();
     }

@@ -42,7 +42,7 @@ package org.apache.drill.exec.physical.impl.scan.framework;
  * result set loader obtained above. The scanner framework handles details of
  * tracking version changes, handling overflow, limiting record counts, and
  * so on. Return <tt>true</tt> to indicate a batch is available, <tt>false</tt>
- * to indicate EOF. The first call to <tt>next()</tt> can return <t>false</tt>
+ * to indicate EOF. The first call to <tt>next()</tt> can return <tt>false</tt>
  * if the data source has no rows.</li>
  * <li>{@link #close()}: called to release resources. May be called before
  * <tt>next()</tt> returns </tt>false</tt>.</li>

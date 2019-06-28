@@ -24,6 +24,9 @@ import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 import org.apache.drill.exec.vector.accessor.ValueType;
 import org.apache.drill.exec.vector.accessor.writer.AbstractScalarWriterImpl;
+import org.joda.time.Instant;
+import org.joda.time.LocalDate;
+import org.joda.time.LocalTime;
 import org.joda.time.Period;
 
 /**
@@ -51,6 +54,9 @@ public class DummyScalarWriter extends AbstractScalarWriterImpl {
   public void setNull() { }
 
   @Override
+  public void setBoolean(boolean value) { }
+
+  @Override
   public void setInt(int value) { }
 
   @Override
@@ -64,6 +70,9 @@ public class DummyScalarWriter extends AbstractScalarWriterImpl {
 
   @Override
   public void setBytes(byte[] value, int len) { }
+
+  @Override
+  public void appendBytes(byte[] value, int len) { }
 
   @Override
   public void setDecimal(BigDecimal value) { }
@@ -94,4 +103,22 @@ public class DummyScalarWriter extends AbstractScalarWriterImpl {
 
   @Override
   public int rowStartIndex() { return 0; }
+
+  @Override
+  public void setDate(LocalDate value) { }
+
+  @Override
+  public void setTime(LocalTime value) { }
+
+  @Override
+  public void setTimestamp(Instant value) { }
+
+  @Override
+  public void setValue(Object value) { }
+
+  @Override
+  public void setDefaultValue(Object value) { }
+
+  @Override
+  public boolean isProjected() { return false; }
 }

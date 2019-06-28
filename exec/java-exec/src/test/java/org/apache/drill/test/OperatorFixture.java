@@ -254,7 +254,6 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
       return allocator;
     }
 
-    @SuppressWarnings("resource")
     @Override
     public OperatorContext newOperatorContext(PhysicalOperator popConfig,
                                               OperatorStats stats) throws OutOfMemoryException {
@@ -477,7 +476,6 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
     }
   }
 
-  @SuppressWarnings("resource")
   public OperatorContext newOperatorContext(PhysicalOperator popConfig) {
     BufferAllocator childAllocator = allocator.newChildAllocator(
       "test:" + popConfig.getClass().getSimpleName(),

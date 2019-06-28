@@ -21,7 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
 import org.apache.drill.shaded.guava.com.google.common.io.Resources;
 import com.jasonclawson.jackson.dataformat.hocon.HoconFactory;
-import org.apache.drill.common.config.CommonConstants;
+import org.apache.drill.common.config.ConfigConstants;
 import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.logical.StoragePluginConfig;
@@ -45,10 +45,10 @@ import static org.apache.drill.exec.store.StoragePluginRegistry.ACTION_ON_STORAG
 
 /**
  * Drill plugins handler, which allows to update storage plugins configs from the
- * {@link CommonConstants#STORAGE_PLUGINS_OVERRIDE_CONF} conf file
+ * {@link ConfigConstants#STORAGE_PLUGINS_OVERRIDE_CONF} conf file
  *
  * TODO: DRILL-6564: It can be improved with configs versioning and service of creating
- * {@link CommonConstants#STORAGE_PLUGINS_OVERRIDE_CONF}
+ * {@link ConfigConstants#STORAGE_PLUGINS_OVERRIDE_CONF}
  */
 public class StoragePluginsHandlerService implements StoragePluginsHandler {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StoragePluginsHandlerService.class);
@@ -124,17 +124,17 @@ public class StoragePluginsHandlerService implements StoragePluginsHandler {
   }
 
   /**
-   * Get the new storage plugins from the {@link CommonConstants#STORAGE_PLUGINS_OVERRIDE_CONF} file if it exists,
+   * Get the new storage plugins from the {@link ConfigConstants#STORAGE_PLUGINS_OVERRIDE_CONF} file if it exists,
    * null otherwise
    *
    * @return storage plugins
    */
   private StoragePlugins getNewStoragePlugins() {
-    Set<URL> urlSet = ClassPathScanner.forResource(CommonConstants.STORAGE_PLUGINS_OVERRIDE_CONF, false);
+    Set<URL> urlSet = ClassPathScanner.forResource(ConfigConstants.STORAGE_PLUGINS_OVERRIDE_CONF, false);
     if (!urlSet.isEmpty()) {
       if (urlSet.size() != 1) {
         DrillRuntimeException.format("More than one %s file is placed in Drill's classpath: %s",
-            CommonConstants.STORAGE_PLUGINS_OVERRIDE_CONF, urlSet);
+            ConfigConstants.STORAGE_PLUGINS_OVERRIDE_CONF, urlSet);
       }
       pluginsOverrideFileUrl = urlSet.iterator().next();
       try {
@@ -142,11 +142,11 @@ public class StoragePluginsHandlerService implements StoragePluginsHandler {
         return lpPersistence.getMapper().readValue(newPluginsData, StoragePlugins.class);
       } catch (IOException e) {
         logger.error("Failures are obtained while loading %s file. Proceed without update",
-            CommonConstants.STORAGE_PLUGINS_OVERRIDE_CONF, e);
+            ConfigConstants.STORAGE_PLUGINS_OVERRIDE_CONF, e);
       }
     }
     logger.trace("The {} file is absent. Proceed without updating of the storage plugins configs",
-        CommonConstants.STORAGE_PLUGINS_OVERRIDE_CONF);
+        ConfigConstants.STORAGE_PLUGINS_OVERRIDE_CONF);
     return null;
   }
 }

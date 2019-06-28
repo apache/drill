@@ -379,4 +379,47 @@ public class TestResultSetLoaderOmittedValues extends SubOperatorTest {
 
     rsLoader.close();
   }
+
+  /**
+   * Verify that a default value set on the schema is used to fill missing
+   * required columns.
+   */
+  @Test
+  public void testDefaultValues() {
+    TupleMetadata schema = new SchemaBuilder()
+        .add("a", MinorType.INT)
+        .add("b", MinorType.VARCHAR)
+        .buildSchema();
+    schema.metadata("b").setDefaultValue("Foo");
+    ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
+        .setRowCountLimit(ValueVector.MAX_ROW_COUNT)
+        .setSchema(schema)
+        .build();
+    ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
+    RowSetLoader rootWriter = rsLoader.writer();
+
+    rsLoader.startBatch();
+    for (int i = 0; i < 7; i++) {
+      rootWriter.start();
+      rootWriter.scalar(0).setInt(i + 1);
+      if (i % 3 != 0) {
+        rootWriter.scalar(1).setString("b-" + (i + 1));
+      }
+      rootWriter.save();
+    }
+
+    RowSet result = fixture.wrap(rsLoader.harvest());
+    SingleRowSet expected = fixture.rowSetBuilder(result.batchSchema())
+        .addRow( 1, "Foo")
+        .addRow( 2, "b-2")
+        .addRow( 3, "b-3")
+        .addRow( 4, "Foo")
+        .addRow( 5, "b-5")
+        .addRow( 6, "b-6")
+        .addRow( 7, "Foo")
+        .build();
+    RowSetUtilities.verify(expected, result);
+
+    rsLoader.close();
+  }
 }

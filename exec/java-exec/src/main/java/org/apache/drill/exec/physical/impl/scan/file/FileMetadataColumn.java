@@ -21,13 +21,11 @@ import org.apache.drill.exec.physical.impl.scan.project.VectorSource;
 
 /**
  * Represents projection column which resolved to a file metadata
- * (AKA "implicit") column sch as "filename", "fqn", etc. These
+ * (AKA "implicit") column such as "filename", "fqn", etc. These
  * columns are "synthetic" added by the scan framework itself
  * rather than "organic" coming from the scanned table.
  */
 public class FileMetadataColumn extends MetadataColumn {
-
-  public static final int ID = 15;
 
   private final FileMetadataColumnDefn defn;
 
@@ -62,9 +60,6 @@ public class FileMetadataColumn extends MetadataColumn {
     super(name, defn.dataType(), null, null, 0);
     this.defn = defn;
   }
-
-  @Override
-  public int nodeType() { return ID; }
 
   public FileMetadataColumnDefn defn() { return defn; }
 

@@ -24,8 +24,9 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.ResultVectorCache;
 import org.apache.drill.exec.physical.rowSet.RowSetLoader;
-import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
+import org.apache.drill.exec.record.metadata.MetadataUtils;
 
 /**
  * Create and populate null columns for the case in which a SELECT statement
@@ -62,6 +63,8 @@ public class NullColumnLoader extends StaticColumnLoader {
     String name();
     MajorType type();
     void setType(MajorType type);
+    String defaultValue();
+    ColumnMetadata metadata();
   }
 
   public static final MajorType DEFAULT_NULL_TYPE = MajorType.newBuilder()
@@ -71,7 +74,6 @@ public class NullColumnLoader extends StaticColumnLoader {
 
   private final MajorType nullType;
   private final boolean allowRequired;
-  private final boolean isArray[];
 
   public NullColumnLoader(ResultVectorCache vectorCache, List<? extends NullColumnSpec> defns,
       MajorType nullType, boolean allowRequired) {
@@ -98,11 +100,14 @@ public class NullColumnLoader extends StaticColumnLoader {
     // Populate the loader schema from that provided
 
     RowSetLoader schema = loader.writer();
-    isArray = new boolean[defns.size()];
     for (int i = 0; i < defns.size(); i++) {
       NullColumnSpec defn = defns.get(i);
-      MaterializedField colSchema = selectType(defn);
-      isArray[i] = colSchema.getDataMode() == DataMode.REPEATED;
+      ColumnMetadata colSchema = selectType(defn);
+      if (defn.metadata() != null) {
+        colSchema.setProperties(defn.metadata().properties());
+      } else if (defn.defaultValue() != null) {
+        colSchema.setDefaultValue(defn.defaultValue());
+      }
       schema.addColumn(colSchema);
     }
   }
@@ -114,7 +119,7 @@ public class NullColumnLoader extends StaticColumnLoader {
    * @return type of the empty column that implements the definition
    */
 
-  private MaterializedField selectType(NullColumnSpec defn) {
+  private ColumnMetadata selectType(NullColumnSpec defn) {
 
     // Prefer the type of any previous occurrence of
     // this column.
@@ -126,7 +131,7 @@ public class NullColumnLoader extends StaticColumnLoader {
     if (type == null) {
       type = defn.type();
     }
-    if (type != null && ! allowRequired && type.getMode() == DataMode.REQUIRED) {
+    if (type != null && ! allowRequired && type.getMode() == DataMode.REQUIRED && defn.defaultValue() == null) {
 
       // Type was found in the vector cache and the type is required.
       // The client determines whether to map required types to optional.
@@ -154,7 +159,7 @@ public class NullColumnLoader extends StaticColumnLoader {
       type = nullType;
     }
     defn.setType(type);
-    return MaterializedField.create(defn.name(), type);
+    return MetadataUtils.newScalar(defn.name(), type);
   }
 
   public VectorContainer output() {

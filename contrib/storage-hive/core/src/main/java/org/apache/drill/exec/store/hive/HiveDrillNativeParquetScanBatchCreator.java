@@ -28,6 +28,7 @@ import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.parquet.AbstractParquetScanBatchCreator;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -54,7 +55,7 @@ public class HiveDrillNativeParquetScanBatchCreator extends AbstractParquetScanB
    */
   private class HiveDrillNativeParquetDrillFileSystemManager extends AbstractDrillFileSystemManager {
 
-    private final Map<String, DrillFileSystem> fileSystems;
+    private final Map<Path, DrillFileSystem> fileSystems;
 
     HiveDrillNativeParquetDrillFileSystemManager(OperatorContext operatorContext) {
       super(operatorContext);
@@ -62,7 +63,7 @@ public class HiveDrillNativeParquetScanBatchCreator extends AbstractParquetScanB
     }
 
     @Override
-    protected DrillFileSystem get(Configuration config, String path) throws ExecutionSetupException {
+    protected DrillFileSystem get(Configuration config, Path path) throws ExecutionSetupException {
       DrillFileSystem fs = fileSystems.get(path);
       if (fs == null) {
         try {

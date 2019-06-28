@@ -19,7 +19,8 @@ package org.apache.drill.exec.physical.impl.scan.framework;
 
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.physical.impl.scan.RowBatchReader;
-import org.apache.drill.exec.physical.impl.scan.project.ScanSchemaOrchestrator.ReaderSchemaOrchestrator;
+import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiatorImpl.NegotiatorListener;
+import org.apache.drill.exec.physical.impl.scan.project.ReaderSchemaOrchestrator;
 import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
 import org.apache.drill.exec.record.VectorContainer;
 
@@ -37,13 +38,14 @@ import org.apache.drill.exec.record.VectorContainer;
  * of solutions as needed for different readers.
  */
 
-public class ShimBatchReader<T extends SchemaNegotiator> implements RowBatchReader {
+public class ShimBatchReader implements RowBatchReader, NegotiatorListener {
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ShimBatchReader.class);
 
-  protected final AbstractScanFramework<T> manager;
-  protected final ManagedReader<T> reader;
+  protected final ManagedScanFramework framework;
+  protected final ManagedReader<? extends SchemaNegotiator> reader;
   protected final ReaderSchemaOrchestrator readerOrchestrator;
+  protected SchemaNegotiatorImpl schemaNegotiator;
   protected ResultSetLoader tableLoader;
 
   /**
@@ -53,8 +55,8 @@ public class ShimBatchReader<T extends SchemaNegotiator> implements RowBatchRead
 
   private boolean eof;
 
-  public ShimBatchReader(AbstractScanFramework<T> manager, ManagedReader<T> reader) {
-    this.manager = manager;
+  public ShimBatchReader(ManagedScanFramework manager, ManagedReader<? extends SchemaNegotiator> reader) {
+    this.framework = manager;
     this.reader = reader;
     readerOrchestrator = manager.scanOrchestrator().startReader();
   }
@@ -64,12 +66,14 @@ public class ShimBatchReader<T extends SchemaNegotiator> implements RowBatchRead
     return reader.getClass().getSimpleName();
   }
 
+  public ManagedReader<? extends SchemaNegotiator> reader() { return reader; }
+
   @Override
   public boolean open() {
 
     // Build and return the result set loader to be used by the reader.
 
-    if (! manager.openReader(this, reader)) {
+    if (! framework.open(this)) {
 
       // If we had a soft failure, then there should be no schema.
       // The reader should not have negotiated one. Not a huge
@@ -96,10 +100,19 @@ public class ShimBatchReader<T extends SchemaNegotiator> implements RowBatchRead
   }
 
   @Override
+  public boolean defineSchema() {
+    if (schemaNegotiator.isSchemaComplete()) {
+      readerOrchestrator.defineSchema();
+      return true;
+    }
+    return false;
+  }
+
+  @Override
   public boolean next() {
 
     // The reader may report EOF, but the result set loader might
-    // have a lookhead row.
+    // have a lookahead row.
 
     if (eof && ! tableLoader.hasRows()) {
       return false;
@@ -139,8 +152,8 @@ public class ShimBatchReader<T extends SchemaNegotiator> implements RowBatchRead
     // Output should be defined only if vector schema has
     // been defined.
 
-    if (manager.scanOrchestrator().hasSchema()) {
-      return manager.scanOrchestrator().output();
+    if (framework.scanOrchestrator().hasSchema()) {
+      return framework.scanOrchestrator().output();
     } else {
       return null;
     }
@@ -166,7 +179,7 @@ public class ShimBatchReader<T extends SchemaNegotiator> implements RowBatchRead
     // closes the table loader, so we don't close the table loader
     // here.
 
-    manager.scanOrchestrator().closeReader();
+    framework.scanOrchestrator().closeReader();
 
     // Throw any exceptions.
 
@@ -180,9 +193,12 @@ public class ShimBatchReader<T extends SchemaNegotiator> implements RowBatchRead
     return tableLoader.schemaVersion();
   }
 
+  @Override
   public ResultSetLoader build(SchemaNegotiatorImpl schemaNegotiator) {
+    this.schemaNegotiator = schemaNegotiator;
     readerOrchestrator.setBatchSize(schemaNegotiator.batchSize);
-    tableLoader = readerOrchestrator.makeTableLoader(schemaNegotiator.tableSchema);
+    tableLoader = readerOrchestrator.makeTableLoader(schemaNegotiator.errorContext(),
+        schemaNegotiator.tableSchema);
     return tableLoader;
   }
 }

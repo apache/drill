@@ -23,9 +23,13 @@ import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.util.DrillVersionInfo;
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.jline.reader.impl.completer.StringsCompleter;
+import org.jline.utils.AttributedString;
+import org.jline.utils.AttributedStringBuilder;
 import sqlline.Application;
 import sqlline.CommandHandler;
+import sqlline.ConnectionMetadata;
 import sqlline.OutputFormat;
+import sqlline.PromptHandler;
 import sqlline.ReflectiveCommandHandler;
 import sqlline.SqlLine;
 import sqlline.SqlLineOpts;
@@ -61,6 +65,7 @@ public class DrillSqlLineApplication extends Application {
   private static final String CONNECTION_URL_EXAMPLES_CONF = "drill.sqlline.connection_url_examples";
   private static final String COMMANDS_TO_EXCLUDE_CONF = "drill.sqlline.commands.exclude";
   private static final String OPTS_CONF = "drill.sqlline.opts";
+  private static final String PROMPT_WITH_SCHEMA = "drill.sqlline.prompt.with_schema";
 
   private final Config config;
 
@@ -100,11 +105,11 @@ public class DrillSqlLineApplication extends Application {
   }
 
   @Override
-  public Collection<String> initDrivers() {
+  public List<String> allowedDrivers() {
     if (config.hasPath(DRIVERS_CONF)) {
       return config.getStringList(DRIVERS_CONF);
     }
-    return super.initDrivers();
+    return super.allowedDrivers();
   }
 
   @Override
@@ -167,6 +172,29 @@ public class DrillSqlLineApplication extends Application {
       );
     }
     return opts;
+  }
+
+  @Override
+  public PromptHandler getPromptHandler(SqlLine sqlLine) {
+    if (config.hasPath(PROMPT_WITH_SCHEMA) && config.getBoolean(PROMPT_WITH_SCHEMA)) {
+      return new PromptHandler(sqlLine) {
+        @Override
+        protected AttributedString getDefaultPrompt(int connectionIndex, String url, String defaultPrompt) {
+          AttributedStringBuilder builder = new AttributedStringBuilder();
+          builder.style(resolveStyle("f:y"));
+          builder.append("apache drill");
+
+          ConnectionMetadata meta = sqlLine.getConnectionMetadata();
+
+          String currentSchema = meta.getCurrentSchema();
+          if (currentSchema != null) {
+            builder.append(" (").append(currentSchema).append(")");
+          }
+          return builder.style(resolveStyle("default")).append("> ").toAttributedString();
+        }
+      };
+    }
+    return super.getPromptHandler(sqlLine);
   }
 
   private Config loadConfig(String configName) {

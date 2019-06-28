@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.hive.readers.inspectors;
 
-import org.apache.drill.exec.store.hive.readers.HiveAbstractReader;
+import org.apache.drill.exec.store.hive.readers.HiveDefaultRecordReader;
 
 /**
  * Parent class for records inspectors which responsible for counting of processed records
@@ -33,7 +33,7 @@ public abstract class AbstractRecordsInspector {
    * @return true if reached max number of records in batch
    */
   public boolean isBatchFull() {
-    return processedRecordCount >= HiveAbstractReader.TARGET_RECORD_COUNT;
+    return processedRecordCount >= HiveDefaultRecordReader.TARGET_RECORD_COUNT;
   }
 
   /**

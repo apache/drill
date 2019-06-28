@@ -20,7 +20,6 @@ package org.apache.drill.exec.physical.rowSet.project;
 import java.util.List;
 
 import org.apache.drill.common.expression.PathSegment;
-import org.apache.drill.exec.record.metadata.ProjectionType;
 
 /**
  * Represents the set of columns projected for a tuple (row or map.)
@@ -30,11 +29,11 @@ import org.apache.drill.exec.record.metadata.ProjectionType;
  * <p>
  * Three variations exist:
  * <ul>
- * <li>Project all ({@link ImpliedTupleRequest#ALL_MEMBERS}): used for a tuple when
- * all columns are projected. Example: the root tuple (the row) in
+ * <li>Project all ({@link ImpliedTupleRequest#ALL_MEMBERS}): used for a tuple
+ * when all columns are projected. Example: the root tuple (the row) in
  * a <tt>SELECT *</tt> query.</li>
- * <li>Project none  (also {@link ImpliedTupleRequest#NO_MEMBERS}): used when no
- * columns are projected from a tuple, such as when a map itself is
+ * <li>Project none (also {@link ImpliedTupleRequest#NO_MEMBERS}): used when
+ * no columns are projected from a tuple, such as when a map itself is
  * not projected, so none of its member columns are projected.</li>
  * <li>Project some ({@link RequestedTupleImpl}: used in the
  * <tt>SELECT a, c, e</tt> case in which the query identifies which
@@ -86,6 +85,11 @@ public interface RequestedTuple {
     String summary();
   }
 
+  public enum TupleProjectionType {
+    ALL, NONE, SOME
+  }
+
+  TupleProjectionType type();
   void parseSegment(PathSegment child);
   RequestedColumn get(String colName);
   ProjectionType projectionType(String colName);

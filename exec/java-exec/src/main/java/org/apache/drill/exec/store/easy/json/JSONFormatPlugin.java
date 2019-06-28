@@ -17,36 +17,46 @@
  */
 package org.apache.drill.exec.store.easy.json;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
-import java.util.HashMap;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
-
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.QueryContext.SqlStatementType;
+import org.apache.drill.exec.planner.common.DrillStatsTable;
+import org.apache.drill.exec.planner.common.DrillStatsTable.TableStatistics;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.RecordWriter;
+import org.apache.drill.exec.store.StatisticsRecordWriter;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
 import org.apache.drill.exec.store.dfs.easy.EasyWriter;
 import org.apache.drill.exec.store.dfs.easy.FileWork;
 import org.apache.drill.exec.store.easy.json.JSONFormatPlugin.JSONFormatConfig;
-import org.apache.hadoop.conf.Configuration;
-
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 
 public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JSONFormatPlugin.class);
+  public static final String DEFAULT_NAME = "json";
 
   private static final boolean IS_COMPRESSIBLE = true;
-  public static final String DEFAULT_NAME = "json";
 
   public JSONFormatPlugin(String name, DrillbitContext context, Configuration fsConf, StoragePluginConfig storageConfig) {
     this(name, context, fsConf, storageConfig, new JSONFormatConfig());
@@ -66,10 +76,41 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
   }
 
   @Override
-  public RecordWriter getRecordWriter(FragmentContext context, EasyWriter writer) throws IOException {
-    Map<String, String> options = new HashMap<>();
+  public boolean isStatisticsRecordWriter(FragmentContext context, EasyWriter writer) {
+    if (context.getSQLStatementType() == SqlStatementType.ANALYZE) {
+      return true;
+    } else {
+      return false;
+    }
+  }
 
+  @Override
+  public StatisticsRecordWriter getStatisticsRecordWriter(FragmentContext context, EasyWriter writer)
+      throws IOException {
+    StatisticsRecordWriter recordWriter;
+    //ANALYZE statement requires the special statistics writer
+    if (!isStatisticsRecordWriter(context, writer)) {
+      return null;
+    }
+    Map<String, String> options = setupOptions(context, writer, true);
+    recordWriter = new JsonStatisticsRecordWriter(getFsConf(), this);
+    recordWriter.init(options);
+    return recordWriter;
+  }
+
+  @Override
+  public RecordWriter getRecordWriter(FragmentContext context, EasyWriter writer) throws IOException {
+    RecordWriter recordWriter;
+    Map<String, String> options = setupOptions(context, writer, true);
+    recordWriter = new JsonRecordWriter(writer.getStorageStrategy(), getFsConf());
+    recordWriter.init(options);
+    return recordWriter;
+  }
+
+  private Map<String, String> setupOptions(FragmentContext context, EasyWriter writer, boolean statsOptions) {
+    Map<String, String> options = Maps.newHashMap();
     options.put("location", writer.getLocation());
+
     FragmentHandle handle = context.getHandle();
     String fragmentId = String.format("%d_%d", handle.getMajorFragmentId(), handle.getMinorFragmentId());
     options.put("prefix", fragmentId);
@@ -79,11 +120,48 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
     options.put("uglify", Boolean.toString(context.getOptions().getOption(ExecConstants.JSON_WRITER_UGLIFY)));
     options.put("skipnulls", Boolean.toString(context.getOptions().getOption(ExecConstants.JSON_WRITER_SKIPNULLFIELDS)));
     options.put("enableNanInf", Boolean.toString(context.getOptions().getOption(ExecConstants.JSON_WRITER_NAN_INF_NUMBERS_VALIDATOR)));
+    if (statsOptions) {
+      options.put("queryid", context.getQueryIdString());
+    }
+    return options;
+  }
 
-    RecordWriter recordWriter = new JsonRecordWriter(writer.getStorageStrategy(), getFsConf());
-    recordWriter.init(options);
+  @Override
+  public boolean supportsStatistics() {
+    return true;
+  }
 
-    return recordWriter;
+  @Override
+  public TableStatistics readStatistics(FileSystem fs, Path statsTablePath) throws IOException {
+    throw new UnsupportedOperationException("unimplemented");
+  }
+
+  @Override
+  public void writeStatistics(TableStatistics statistics, FileSystem fs, Path statsTablePath) throws IOException {
+    FSDataOutputStream stream = null;
+    JsonGenerator generator = null;
+    try {
+      JsonFactory factory = new JsonFactory();
+      stream = fs.create(statsTablePath);
+      ObjectMapper mapper = DrillStatsTable.getMapper();
+      generator = factory.createGenerator((OutputStream) stream).useDefaultPrettyPrinter().setCodec(mapper);
+      mapper.writeValue(generator, statistics);
+    } catch (com.fasterxml.jackson.core.JsonGenerationException ex) {
+      logger.error("Unable to create file (JSON generation error): " + statsTablePath.getName(), ex);
+      throw ex;
+    } catch (com.fasterxml.jackson.databind.JsonMappingException ex) {
+      logger.error("Unable to create file (JSON mapping error): " + statsTablePath.getName(), ex);
+      throw ex;
+    } catch (IOException ex) {
+      logger.error("Unable to create file " + statsTablePath.getName(), ex);
+    } finally {
+      if (generator != null) {
+        generator.flush();
+      }
+      if (stream != null) {
+        stream.close();
+      }
+    }
   }
 
   @JsonTypeName("json")

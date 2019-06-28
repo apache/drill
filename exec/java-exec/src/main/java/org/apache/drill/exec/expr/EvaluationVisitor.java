@@ -237,13 +237,17 @@ public class EvaluationVisitor {
 
       generator.unNestEvalBlock();
 
+      List<String> holderFields = ValueHolderHelper.getHolderParams(output.getMajorType());
       if (thenExpr.isOptional()) {
         JConditional newCond = jc._then()._if(thenExpr.getIsSet().ne(JExpr.lit(0)));
         JBlock b = newCond._then();
-        b.assign(output.getHolder(), thenExpr.getHolder());
-        //b.assign(output.getIsSet(), thenExpr.getIsSet());
+        for (String holderField : holderFields) {
+          b.assign(output.f(holderField), thenExpr.f(holderField));
+        }
       } else {
-        jc._then().assign(output.getHolder(), thenExpr.getHolder());
+        for (String holderField : holderFields) {
+          jc._then().assign(output.f(holderField), thenExpr.f(holderField));
+        }
       }
 
       generator.nestEvalBlock(jc._else());
@@ -255,10 +259,13 @@ public class EvaluationVisitor {
       if (elseExpr.isOptional()) {
         JConditional newCond = jc._else()._if(elseExpr.getIsSet().ne(JExpr.lit(0)));
         JBlock b = newCond._then();
-        b.assign(output.getHolder(), elseExpr.getHolder());
-        //b.assign(output.getIsSet(), elseExpr.getIsSet());
+        for (String holderField : holderFields) {
+          b.assign(output.f(holderField), elseExpr.f(holderField));
+        }
       } else {
-        jc._else().assign(output.getHolder(), elseExpr.getHolder());
+        for (String holderField : holderFields) {
+          jc._else().assign(output.f(holderField), elseExpr.f(holderField));
+        }
       }
       local.add(conditionalBlock);
       return output;
@@ -479,6 +486,14 @@ public class EvaluationVisitor {
 
       if (!hasReadPath && !complex) {
         JBlock eval = new JBlock();
+
+        if (repeated) {
+          JExpression expr = vv1.invoke("getReader");
+          // Set correct position to the reader
+          eval.add(expr.invoke("reset"));
+          eval.add(expr.invoke("setPosition").arg(recordIndex));
+        }
+
         GetSetVectorHelper.read(e.getMajorType(),  vv1, eval, out, generator.getModel(), recordIndex);
         generator.getEvalBlock().add(eval);
 
@@ -1428,7 +1443,13 @@ public class EvaluationVisitor {
      */
     private HoldingContainer renderConstantExpression(ClassGenerator<?> generator, HoldingContainer input) {
       JVar fieldValue = generator.declareClassField("constant", generator.getHolderType(input.getMajorType()));
-      generator.getEvalBlock().assign(fieldValue, input.getHolder());
+      // Creates a new vector for class field and assigns to its fields values from output field
+      // to allow scalar replacement for source objects
+      generator.getEvalBlock().assign(fieldValue, JExpr._new(generator.getHolderType(input.getMajorType())));
+      List<String> holderFields = ValueHolderHelper.getHolderParams(input.getMajorType());
+      for (String holderField : holderFields) {
+        generator.getEvalBlock().assign(fieldValue.ref(holderField), input.getHolder().ref(holderField));
+      }
       generator.getMappingSet().exitConstant();
       return new HoldingContainer(input.getMajorType(), fieldValue, fieldValue.ref("value"), fieldValue.ref("isSet"))
           .setConstant(true);

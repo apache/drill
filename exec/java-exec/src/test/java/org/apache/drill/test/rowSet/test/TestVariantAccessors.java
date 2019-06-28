@@ -279,7 +279,6 @@ public class TestVariantAccessors extends SubOperatorTest {
   }
 
 
-  @SuppressWarnings("resource")
   @Test
   public void testBuildRowSetScalarList() {
     final TupleMetadata schema = new SchemaBuilder()
@@ -306,7 +305,6 @@ public class TestVariantAccessors extends SubOperatorTest {
     rowSet.clear();
   }
 
-  @SuppressWarnings("resource")
   @Test
   public void testBuildRowSetUnionArray() {
     final TupleMetadata schema = new SchemaBuilder()

@@ -23,6 +23,7 @@ import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
+import org.apache.drill.exec.planner.common.DrillStatsTable.TableStatistics;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.RecordWriter;
@@ -33,6 +34,7 @@ import org.apache.drill.exec.store.dfs.easy.EasyGroupScan;
 import org.apache.drill.exec.store.dfs.easy.EasyWriter;
 import org.apache.drill.exec.store.dfs.easy.FileWork;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.FileSplit;
 
@@ -61,7 +63,22 @@ public class SequenceFileFormatPlugin extends EasyFormatPlugin<SequenceFileForma
   @Override
   public AbstractGroupScan getGroupScan(String userName, FileSelection selection, List<SchemaPath> columns)
     throws IOException {
-    return new EasyGroupScan(userName, selection, this, columns, selection.selectionRoot);
+    return new EasyGroupScan(userName, selection, this, columns, selection.selectionRoot, null);
+  }
+
+  @Override
+  public boolean supportsStatistics() {
+    return false;
+  }
+
+  @Override
+  public TableStatistics readStatistics(FileSystem fs, Path statsTablePath) throws IOException {
+    throw new UnsupportedOperationException("unimplemented");
+  }
+
+  @Override
+  public void writeStatistics(TableStatistics statistics, FileSystem fs, Path statsTablePath) throws IOException {
+    throw new UnsupportedOperationException("unimplemented");
   }
 
   @Override
@@ -70,7 +87,7 @@ public class SequenceFileFormatPlugin extends EasyFormatPlugin<SequenceFileForma
                                       FileWork fileWork,
                                       List<SchemaPath> columns,
                                       String userName) throws ExecutionSetupException {
-    final Path path = dfs.makeQualified(new Path(fileWork.getPath()));
+    final Path path = dfs.makeQualified(fileWork.getPath());
     final FileSplit split = new FileSplit(path, fileWork.getStart(), fileWork.getLength(), new String[]{""});
     return new SequenceFileRecordReader(split, dfs, context.getQueryUserName(), userName);
   }

@@ -25,7 +25,11 @@ import org.apache.drill.exec.vector.NullableVector;
 import org.apache.drill.exec.vector.accessor.ColumnAccessors.UInt1ColumnWriter;
 import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 import org.apache.drill.exec.vector.accessor.ValueType;
+import org.apache.drill.exec.vector.accessor.convert.ColumnConversionFactory;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
+import org.joda.time.Instant;
+import org.joda.time.LocalDate;
+import org.joda.time.LocalTime;
 import org.joda.time.Period;
 
 public class NullableScalarWriter extends AbstractScalarWriterImpl {
@@ -56,6 +60,9 @@ public class NullableScalarWriter extends AbstractScalarWriterImpl {
     }
 
     @Override
+    public void prevElement() { }
+
+    @Override
     public void rollover() {
       parentIndex.rollover();
     }
@@ -66,20 +73,24 @@ public class NullableScalarWriter extends AbstractScalarWriterImpl {
     }
   }
 
+  private final NullableVector nullableVector;
   private final UInt1ColumnWriter isSetWriter;
   private final BaseScalarWriter baseWriter;
   private ColumnWriterIndex writerIndex;
 
   public NullableScalarWriter(ColumnMetadata schema, NullableVector nullableVector, BaseScalarWriter baseWriter) {
     this.schema = schema;
+    this.nullableVector = nullableVector;
     isSetWriter = new UInt1ColumnWriter(nullableVector.getBitsVector());
     this.baseWriter = baseWriter;
   }
 
   public static ScalarObjectWriter build(ColumnMetadata schema,
-      NullableVector nullableVector, BaseScalarWriter baseWriter) {
+      NullableVector nullableVector, BaseScalarWriter baseWriter,
+      ColumnConversionFactory conversionFactory) {
     return new ScalarObjectWriter(
-        new NullableScalarWriter(schema, nullableVector, baseWriter));
+        new NullableScalarWriter(schema, nullableVector, baseWriter),
+        conversionFactory);
   }
 
   public BaseScalarWriter bitsWriter() { return isSetWriter; }
@@ -125,6 +136,13 @@ public class NullableScalarWriter extends AbstractScalarWriterImpl {
   }
 
   @Override
+  public void setBoolean(boolean value) {
+    baseWriter.setBoolean(value);
+    isSetWriter.setInt(1);
+    writerIndex.nextElement();
+  }
+
+  @Override
   public void setInt(int value) {
     baseWriter.setInt(value);
     isSetWriter.setInt(1);
@@ -165,6 +183,11 @@ public class NullableScalarWriter extends AbstractScalarWriterImpl {
   }
 
   @Override
+  public void appendBytes(byte[] value, int len) {
+    baseWriter.appendBytes(value, len);
+  }
+
+  @Override
   public void setDecimal(BigDecimal value) {
     baseWriter.setDecimal(value);
     isSetWriter.setInt(1);
@@ -176,6 +199,38 @@ public class NullableScalarWriter extends AbstractScalarWriterImpl {
     baseWriter.setPeriod(value);
     isSetWriter.setInt(1);
     writerIndex.nextElement();
+  }
+
+  @Override
+  public void setDate(LocalDate value) {
+    baseWriter.setDate(value);
+    isSetWriter.setInt(1);
+    writerIndex.nextElement();
+  }
+
+  @Override
+  public void setTime(LocalTime value) {
+    baseWriter.setTime(value);
+    isSetWriter.setInt(1);
+    writerIndex.nextElement();
+  }
+
+  @Override
+  public void setTimestamp(Instant value) {
+    baseWriter.setTimestamp(value);
+    isSetWriter.setInt(1);
+    writerIndex.nextElement();
+  }
+
+  @Override
+  public void setValue(Object value) {
+    if (value == null) {
+      setNull();
+    } else {
+      baseWriter.setValue(value);
+      isSetWriter.setInt(1);
+      writerIndex.nextElement();
+    }
   }
 
   @Override
@@ -228,6 +283,7 @@ public class NullableScalarWriter extends AbstractScalarWriterImpl {
     // Avoid back-filling null values.
     baseWriter.skipNulls();
     baseWriter.endWrite();
+    nullableVector.finalizeLastSet(writerIndex.vectorIndex());
   }
 
   @Override
@@ -239,5 +295,11 @@ public class NullableScalarWriter extends AbstractScalarWriterImpl {
     format.attribute("baseWriter");
     baseWriter.dump(format);
     format.endObject();
+  }
+
+  @Override
+  public void setDefaultValue(Object value) {
+    throw new UnsupportedOperationException(
+        "Default values not supported for nullable types:" + value);
   }
 }

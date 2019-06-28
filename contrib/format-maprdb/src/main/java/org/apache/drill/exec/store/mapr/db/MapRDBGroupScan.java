@@ -279,6 +279,7 @@ public abstract class MapRDBGroupScan extends AbstractDbGroupScan {
     return storagePlugin;
   }
 
+  @Override
   @JsonProperty
   public List<SchemaPath> getColumns() {
     return columns;

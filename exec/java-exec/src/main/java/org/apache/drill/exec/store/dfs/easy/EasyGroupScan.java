@@ -18,7 +18,6 @@
 package org.apache.drill.exec.store.dfs.easy;
 
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -27,12 +26,18 @@ import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.physical.base.AbstractFileGroupScan;
+import org.apache.drill.metastore.FileSystemMetadataProviderManager;
 import org.apache.drill.exec.physical.base.FileGroupScan;
 import org.apache.drill.exec.physical.base.GroupScan;
+import org.apache.drill.metastore.MetadataProviderManager;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.ScanStats;
+import org.apache.drill.metastore.metadata.TableMetadataProvider;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.record.metadata.TupleSchema;
+import org.apache.drill.exec.store.ColumnExplorer;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.FileSelection;
@@ -48,70 +53,103 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.apache.drill.metastore.metadata.TableMetadata;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Iterators;
 import org.apache.drill.shaded.guava.com.google.common.collect.ListMultimap;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.apache.hadoop.fs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @JsonTypeName("fs-scan")
 public class EasyGroupScan extends AbstractFileGroupScan {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EasyGroupScan.class);
+  private static final Logger logger = LoggerFactory.getLogger(EasyGroupScan.class);
 
-  private FileSelection selection;
+  protected TableMetadataProvider metadataProvider;
+
   private final EasyFormatPlugin<?> formatPlugin;
+  private FileSelection selection;
+  private int partitionDepth;
   private int maxWidth;
+  private int minWidth = 1;
   private List<SchemaPath> columns;
 
   private ListMultimap<Integer, CompleteFileWork> mappings;
   private List<CompleteFileWork> chunks;
   private List<EndpointAffinity> endpointAffinities;
-  private String selectionRoot;
+  private Path selectionRoot;
+  private TableMetadata tableMetadata;
 
   @JsonCreator
   public EasyGroupScan(
       @JsonProperty("userName") String userName,
-      @JsonProperty("files") List<String> files, //
-      @JsonProperty("storage") StoragePluginConfig storageConfig, //
-      @JsonProperty("format") FormatPluginConfig formatConfig, //
-      @JacksonInject StoragePluginRegistry engineRegistry, //
+      @JsonProperty("files") List<Path> files,
+      @JsonProperty("storage") StoragePluginConfig storageConfig,
+      @JsonProperty("format") FormatPluginConfig formatConfig,
+      @JacksonInject StoragePluginRegistry engineRegistry,
       @JsonProperty("columns") List<SchemaPath> columns,
-      @JsonProperty("selectionRoot") String selectionRoot
+      @JsonProperty("selectionRoot") Path selectionRoot,
+      @JsonProperty("schema") TupleSchema schema
       ) throws IOException, ExecutionSetupException {
-        this(ImpersonationUtil.resolveUserName(userName),
-            FileSelection.create(null, files, selectionRoot),
-            (EasyFormatPlugin<?>)engineRegistry.getFormatPlugin(storageConfig, formatConfig),
-            columns,
-            selectionRoot);
-  }
+    super(ImpersonationUtil.resolveUserName(userName));
+    this.selection = FileSelection.create(null, files, selectionRoot);
+    this.formatPlugin = Preconditions.checkNotNull((EasyFormatPlugin<?>) engineRegistry.getFormatPlugin(storageConfig, formatConfig),
+        "Unable to load format plugin for provided format config.");
+    this.columns = columns == null ? ALL_COLUMNS : columns;
+    this.selectionRoot = selectionRoot;
+    SimpleFileTableMetadataProviderBuilder builder =
+        (SimpleFileTableMetadataProviderBuilder) new FileSystemMetadataProviderManager().builder(MetadataProviderManager.MetadataProviderKind.SCHEMA_STATS_ONLY);
 
-  public EasyGroupScan(String userName, FileSelection selection, EasyFormatPlugin<?> formatPlugin, String selectionRoot)
-      throws IOException {
-    this(userName, selection, formatPlugin, ALL_COLUMNS, selectionRoot);
+    this.metadataProvider = builder.withLocation(selection.getSelectionRoot())
+        .withSchema(schema)
+        .build();
+    initFromSelection(selection, formatPlugin);
   }
 
   public EasyGroupScan(
       String userName,
-      FileSelection selection, //
-      EasyFormatPlugin<?> formatPlugin, //
+      FileSelection selection,
+      EasyFormatPlugin<?> formatPlugin,
       List<SchemaPath> columns,
-      String selectionRoot
-      ) throws IOException{
+      Path selectionRoot,
+      MetadataProviderManager metadataProviderManager
+      ) throws IOException {
     super(userName);
     this.selection = Preconditions.checkNotNull(selection);
     this.formatPlugin = Preconditions.checkNotNull(formatPlugin, "Unable to load format plugin for provided format config.");
     this.columns = columns == null ? ALL_COLUMNS : columns;
     this.selectionRoot = selectionRoot;
+    if (metadataProviderManager == null) {
+      // use file system metadata provider without specified schema and statistics
+      metadataProviderManager = new FileSystemMetadataProviderManager();
+    }
+    SimpleFileTableMetadataProviderBuilder builder =
+        (SimpleFileTableMetadataProviderBuilder) metadataProviderManager.builder(MetadataProviderManager.MetadataProviderKind.SCHEMA_STATS_ONLY);
+
+    this.metadataProvider = builder.withLocation(selection.getSelectionRoot())
+        .build();
     initFromSelection(selection, formatPlugin);
   }
 
-  @JsonIgnore
-  public Iterable<CompleteFileWork> getWorkIterable() {
-    return new Iterable<CompleteFileWork>() {
-      @Override
-      public Iterator<CompleteFileWork> iterator() {
-        return Iterators.unmodifiableIterator(chunks.iterator());
-      }
-    };
+  public EasyGroupScan(
+      String userName,
+      FileSelection selection,
+      EasyFormatPlugin<?> formatPlugin,
+      List<SchemaPath> columns,
+      Path selectionRoot,
+      int minWidth,
+      MetadataProviderManager metadataProvider
+      ) throws IOException {
+    this(userName, selection, formatPlugin, columns, selectionRoot, metadataProvider);
+
+    // Set the minimum width of this reader. Primarily used for testing
+    // to force parallelism even for small test files.
+    // See ExecConstants.MIN_READER_WIDTH
+    this.minWidth = Math.max(1, Math.min(minWidth, maxWidth));
+
+    // Compute the maximum partition depth across all files.
+    partitionDepth = ColumnExplorer.getPartitionDepth(selection);
   }
 
   private EasyGroupScan(final EasyGroupScan that) {
@@ -123,28 +161,40 @@ public class EasyGroupScan extends AbstractFileGroupScan {
     chunks = that.chunks;
     endpointAffinities = that.endpointAffinities;
     maxWidth = that.maxWidth;
+    minWidth = that.minWidth;
     mappings = that.mappings;
+    partitionDepth = that.partitionDepth;
+    metadataProvider = that.metadataProvider;
+  }
+
+  @JsonIgnore
+  public Iterable<CompleteFileWork> getWorkIterable() {
+    return () -> Iterators.unmodifiableIterator(chunks.iterator());
   }
 
   private void initFromSelection(FileSelection selection, EasyFormatPlugin<?> formatPlugin) throws IOException {
-    @SuppressWarnings("resource")
     final DrillFileSystem dfs = ImpersonationUtil.createFileSystem(getUserName(), formatPlugin.getFsConf());
     this.selection = selection;
     BlockMapBuilder b = new BlockMapBuilder(dfs, formatPlugin.getContext().getBits());
-    this.chunks = b.generateFileWork(selection.getStatuses(dfs), formatPlugin.isBlockSplittable());
-    this.maxWidth = chunks.size();
-    this.endpointAffinities = AffinityCreator.getAffinityMap(chunks);
+    chunks = b.generateFileWork(selection.getStatuses(dfs), formatPlugin.isBlockSplittable());
+    maxWidth = chunks.size();
+    endpointAffinities = AffinityCreator.getAffinityMap(chunks);
   }
 
-  public String getSelectionRoot() {
+  public Path getSelectionRoot() {
     return selectionRoot;
+  }
+
+  @Override
+  @JsonIgnore
+  public int getMinParallelizationWidth() {
+    return minWidth;
   }
 
   @Override
   public int getMaxParallelizationWidth() {
     return maxWidth;
   }
-
 
   @Override
   public ScanStats getScanStats(final PlannerSettings settings) {
@@ -158,15 +208,15 @@ public class EasyGroupScan extends AbstractFileGroupScan {
 
   @JsonProperty("files")
   @Override
-  public List<String> getFiles() {
+  public List<Path> getFiles() {
     return selection.getFiles();
   }
 
+  @Override
   @JsonProperty("columns")
   public List<SchemaPath> getColumns() {
     return columns;
   }
-
 
   @JsonIgnore
   public FileSelection getFileSelection() {
@@ -179,16 +229,15 @@ public class EasyGroupScan extends AbstractFileGroupScan {
   }
 
   @Override
-  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
+  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
     assert children == null || children.isEmpty();
     return new EasyGroupScan(this);
   }
 
-
   @Override
   public List<EndpointAffinity> getOperatorAffinity() {
     if (endpointAffinities == null) {
-        logger.debug("chunks: {}", chunks.size());
+        logger.debug("Chunks size: {}", chunks.size());
         endpointAffinities = AffinityCreator.getAffinityMap(chunks);
     }
     return endpointAffinities;
@@ -221,7 +270,8 @@ public class EasyGroupScan extends AbstractFileGroupScan {
     Preconditions.checkArgument(!filesForMinor.isEmpty(),
         String.format("MinorFragmentId %d has no read entries assigned", minorFragmentId));
 
-    EasySubScan subScan = new EasySubScan(getUserName(), convert(filesForMinor), formatPlugin, columns, selectionRoot);
+    EasySubScan subScan = new EasySubScan(getUserName(), convert(filesForMinor), formatPlugin,
+        columns, selectionRoot, partitionDepth, getTableMetadata().getSchema());
     subScan.setOperatorId(this.getOperatorId());
     return subScan;
   }
@@ -246,8 +296,8 @@ public class EasyGroupScan extends AbstractFileGroupScan {
 
   @Override
   public String toString() {
-    final String pattern = "EasyGroupScan [selectionRoot=%s, numFiles=%s, columns=%s, files=%s]";
-    return String.format(pattern, selectionRoot, getFiles().size(), columns, getFiles());
+    String pattern = "EasyGroupScan [selectionRoot=%s, numFiles=%s, columns=%s, files=%s, schema=%s]";
+    return String.format(pattern, selectionRoot, getFiles().size(), columns, getFiles(), getTableMetadata().getSchema());
   }
 
   @Override
@@ -258,7 +308,7 @@ public class EasyGroupScan extends AbstractFileGroupScan {
   @Override
   public GroupScan clone(List<SchemaPath> columns) {
     if (!formatPlugin.supportsPushDown()) {
-      throw new IllegalStateException(String.format("%s doesn't support pushdown.", this.getClass().getSimpleName()));
+      throw new IllegalStateException(String.format("%s doesn't support push down.", this.getClass().getSimpleName()));
     }
     EasyGroupScan newScan = new EasyGroupScan(this);
     newScan.columns = columns;
@@ -280,4 +330,22 @@ public class EasyGroupScan extends AbstractFileGroupScan {
     return formatPlugin.supportsPushDown();
   }
 
+  @JsonProperty
+  public TupleMetadata getSchema() {
+    return getTableMetadata().getSchema();
+  }
+
+  @Override
+  @JsonIgnore
+  public TableMetadata getTableMetadata() {
+    if (tableMetadata == null) {
+      tableMetadata = metadataProvider.getTableMetadata();
+    }
+    return tableMetadata;
+  }
+
+  @Override
+  public TableMetadataProvider getMetadataProvider() {
+    return metadataProvider;
+  }
 }

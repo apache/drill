@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.jdbc;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
@@ -38,14 +39,14 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 public class JdbcGroupScan extends AbstractGroupScan {
 
   private final String sql;
-  private final List<String> columns;
+  private final List<SchemaPath> columns;
   private final JdbcStoragePlugin plugin;
   private final double rows;
 
   @JsonCreator
   public JdbcGroupScan(
       @JsonProperty("sql") String sql,
-      @JsonProperty("columns") List<String> columns,
+      @JsonProperty("columns") List<SchemaPath> columns,
       @JsonProperty("config") StoragePluginConfig config,
       @JsonProperty("rows") double rows,
       @JacksonInject StoragePluginRegistry plugins) throws ExecutionSetupException {
@@ -56,7 +57,7 @@ public class JdbcGroupScan extends AbstractGroupScan {
     this.rows = rows;
   }
 
-  JdbcGroupScan(String sql, List<String> columns, JdbcStoragePlugin plugin, double rows) {
+  JdbcGroupScan(String sql, List<SchemaPath> columns, JdbcStoragePlugin plugin, double rows) {
     super("");
     this.sql = sql;
     this.columns = columns;
@@ -91,7 +92,7 @@ public class JdbcGroupScan extends AbstractGroupScan {
     return sql;
   }
 
-  public List<String> getColumns() {
+  public List<SchemaPath> getColumns() {
     return columns;
   }
 

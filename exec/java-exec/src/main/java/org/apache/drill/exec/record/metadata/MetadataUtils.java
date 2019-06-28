@@ -19,8 +19,14 @@ package org.apache.drill.exec.record.metadata;
 
 import java.util.List;
 
+import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.expression.PathSegment;
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.DataMode;
+import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
 
@@ -45,7 +51,8 @@ public class MetadataUtils {
    */
 
   public static ColumnMetadata fromField(MaterializedField field) {
-    MinorType type = field.getType().getMinorType();
+    MajorType majorType = field.getType();
+    MinorType type = majorType.getMinorType();
     switch (type) {
     case MAP:
       return MetadataUtils.newMap(field);
@@ -54,6 +61,10 @@ public class MetadataUtils {
         throw new UnsupportedOperationException(type.name() + " type must be nullable");
       }
       return new VariantColumnMetadata(field);
+    case VARDECIMAL:
+      int precision = majorType.hasPrecision() ? majorType.getPrecision() : Types.maxPrecision(type);
+      int scale = majorType.hasScale() ? majorType.getScale() : 0;
+      return MetadataUtils.newDecimal(field.getName(), type, majorType.getMode(), precision, scale);
     case LIST:
       switch (field.getType().getMode()) {
       case OPTIONAL:
@@ -161,5 +172,72 @@ public class MetadataUtils {
       DataMode mode) {
     assert type != MinorType.MAP && type != MinorType.UNION && type != MinorType.LIST;
     return new PrimitiveColumnMetadata(name, type, mode);
+  }
+
+  public static PrimitiveColumnMetadata newScalar(String name, MajorType type) {
+    MinorType minorType = type.getMinorType();
+    assert minorType != MinorType.MAP && minorType != MinorType.UNION && minorType != MinorType.LIST;
+    return new PrimitiveColumnMetadata(name, type);
+  }
+
+  private static ColumnMetadata newDecimal(String name, MinorType type, DataMode mode,
+      int precision, int scale) {
+    if (precision < 0 ) {
+      throw new IllegalArgumentException("Precision cannot be negative : " +
+          precision);
+    }
+    if (scale < 0 ) {
+      throw new IllegalArgumentException("Scale cannot be negative : " +
+          scale);
+    }
+    int maxPrecision = Types.maxPrecision(type);
+    if (precision > maxPrecision) {
+      throw new IllegalArgumentException(String.format(
+          "%s(%d, %d) exceeds maximum suppored precision of %d",
+          type.toString(), precision, scale, maxPrecision));
+    }
+    if (scale > precision) {
+      throw new IllegalArgumentException(String.format(
+          "%s(%d, %d) scale exceeds precision",
+          type.toString(), precision, scale));
+    }
+    MaterializedField field = new ColumnBuilder(name, type)
+        .setMode(mode)
+        .setPrecisionAndScale(precision, scale)
+        .build();
+    return new PrimitiveColumnMetadata(field);
+  }
+
+  /**
+   * Adds column with specified schema path and type into specified {@code TupleMetadata schema}.
+   *
+   * @param schema     tuple schema where column should be added
+   * @param schemaPath schema path of the column which should be added
+   * @param type       type of the column which should be added
+   */
+  public static void addColumnMetadata(TupleMetadata schema, SchemaPath schemaPath, TypeProtos.MajorType type) {
+    PathSegment.NameSegment colPath = schemaPath.getUnIndexed().getRootSegment();
+    ColumnMetadata colMetadata;
+
+    while (!colPath.isLastPath()) {
+      colMetadata = schema.metadata(colPath.getPath());
+      if (colMetadata == null) {
+        colMetadata = MetadataUtils.newMap(colPath.getPath(), null);
+        schema.addColumn(colMetadata);
+      }
+      if (!colMetadata.isMap()) {
+        throw new DrillRuntimeException(String.format("Expected map, but was %s", colMetadata.majorType()));
+      }
+
+      schema = colMetadata.mapSchema();
+      colPath = (PathSegment.NameSegment) colPath.getChild();
+    }
+
+    colMetadata = schema.metadata(colPath.getPath());
+    if (colMetadata == null) {
+      schema.addColumn(new PrimitiveColumnMetadata(MaterializedField.create(colPath.getPath(), type)));
+    } else if (!colMetadata.majorType().equals(type)) {
+      throw new DrillRuntimeException(String.format("Types mismatch: existing type: %s, new type: %s", colMetadata.majorType(), type));
+    }
   }
 }

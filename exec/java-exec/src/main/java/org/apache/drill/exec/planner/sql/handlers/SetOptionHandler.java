@@ -20,103 +20,68 @@ package org.apache.drill.exec.planner.sql.handlers;
 import java.math.BigDecimal;
 
 import org.apache.calcite.sql.type.SqlTypeName;
-import org.apache.calcite.tools.ValidationException;
-
 import org.apache.calcite.util.NlsString;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.sql.DirectPlan;
+import org.apache.drill.exec.planner.sql.parser.DrillSqlSetOption;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.server.options.OptionValue.OptionScope;
-import org.apache.drill.exec.server.options.QueryOptionManager;
-import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlSetOption;
 
 /**
- * Converts a {@link SqlNode} representing "ALTER .. SET option = value" and "ALTER ... RESET ..." statements to a
- * {@link PhysicalPlan}. See {@link SqlSetOption}. These statements have side effects i.e. the options within the
- * system context or the session context are modified. The resulting {@link DirectPlan} returns to the client a string
- * that is the name of the option that was updated.
+ * Converts a {@link SqlNode} representing: "ALTER .. SET option = value" or "ALTER ... SET option"
+ * statement to a {@link PhysicalPlan}. See {@link DrillSqlSetOption}
+ * <p>
+ * These statements have side effects i.e. the options within the system context or the session context are modified.
+ * The resulting {@link DirectPlan} returns to the client a string that is the name of the option that was updated
+ * or a value of the property
  */
-public class SetOptionHandler extends AbstractSqlHandler {
+public class SetOptionHandler extends AbstractSqlSetHandler {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SetOptionHandler.class);
 
-  private final QueryContext context;
-
   public SetOptionHandler(QueryContext context) {
-    this.context = context;
+    super(context);
   }
 
+  /**
+   * Handles {@link DrillSqlSetOption} query
+   */
   @Override
-  public PhysicalPlan getPlan(SqlNode sqlNode) throws ValidationException, ForemanSetupException {
-    final SqlSetOption option = unwrap(sqlNode, SqlSetOption.class);
-    final SqlNode value = option.getValue();
-    if (value != null && !(value instanceof SqlLiteral)) {
-      throw UserException.validationError()
-          .message("Drill does not support assigning non-literal values in SET statements.")
-          .build(logger);
-    }
+  public final PhysicalPlan getPlan(SqlNode sqlNode) throws ForemanSetupException {
+    // sqlNode could contain DrillSqlResetOption or DrillSqlSetOption, depends on parsed statement
+    SqlSetOption statement = unwrap(sqlNode, SqlSetOption.class);
+    OptionScope optionScope = getScope(statement, context.getOptions());
+    OptionManager optionManager = context.getOptions().getOptionManager(optionScope);
 
-    final String scope = option.getScope();
-    final OptionValue.OptionScope optionScope;
-    if (scope == null) { // No scope mentioned assumed SESSION
-      optionScope = OptionScope.SESSION;
+    String optionName = statement.getName().toString();
+    SqlNode optionValue = statement.getValue();
+
+    if (optionValue == null) {
+      String value = String.valueOf(optionManager.getOption(optionName).getValue());
+
+      return DirectPlan.createDirectPlan(context, new SetOptionViewResult(optionName, value));
     } else {
-      switch (scope.toLowerCase()) {
-      case "session":
-        optionScope = OptionScope.SESSION;
-        break;
-      case "system":
-        optionScope = OptionScope.SYSTEM;
-        break;
-      default:
+      if (optionScope == OptionValue.OptionScope.SYSTEM) {
+        checkAdminPrivileges(context.getOptions());
+      }
+      if (!(optionValue instanceof SqlLiteral)) {
         throw UserException.validationError()
-            .message("Invalid OPTION scope %s. Scope must be SESSION or SYSTEM.", scope)
+            .message("Drill does not support assigning non-literal values in SET statements.")
             .build(logger);
       }
+      optionManager.setLocalOption(optionName, sqlLiteralToObject((SqlLiteral) optionValue));
+
+      return DirectPlan.createDirectPlan(context, true, String.format("%s updated.", optionName));
     }
-
-    final QueryOptionManager options = context.getOptions();
-    if (optionScope == OptionScope.SYSTEM) {
-      // If the user authentication is enabled, make sure the user who is trying to change the system option has
-      // administrative privileges.
-      if (context.isUserAuthenticationEnabled() &&
-          !ImpersonationUtil.hasAdminPrivileges(
-            context.getQueryUserName(),
-            ExecConstants.ADMIN_USERS_VALIDATOR.getAdminUsers(options),
-            ExecConstants.ADMIN_USER_GROUPS_VALIDATOR.getAdminUserGroups(options))) {
-        throw UserException.permissionError()
-            .message("Not authorized to change SYSTEM options.")
-            .build(logger);
-      }
-    }
-
-    final String optionName = option.getName().toString();
-
-    // Currently, we convert multi-part identifier to a string.
-    final OptionManager chosenOptions = options.getOptionManager(optionScope);
-
-    if (value != null) { // SET option
-      final Object literalObj = sqlLiteralToObject((SqlLiteral) value);
-      chosenOptions.setLocalOption(optionName, literalObj);
-    } else { // RESET option
-      if ("ALL".equalsIgnoreCase(optionName)) {
-        chosenOptions.deleteAllLocalOptions();
-      } else {
-        chosenOptions.deleteLocalOption(optionName);
-      }
-    }
-
-    return DirectPlan.createDirectPlan(context, true, String.format("%s updated.", optionName));
   }
 
-  private static Object sqlLiteralToObject(final SqlLiteral literal) {
+  private static Object sqlLiteralToObject(SqlLiteral literal) {
     final Object object = literal.getValue();
     final SqlTypeName typeName = literal.getTypeName();
     switch (typeName) {
@@ -142,7 +107,7 @@ public class SetOptionHandler extends AbstractSqlHandler {
     case VARBINARY:
     case VARCHAR:
     case CHAR:
-      return ((NlsString) object).getValue().toString();
+      return ((NlsString) object).getValue();
 
     case BOOLEAN:
       return object;
@@ -151,6 +116,19 @@ public class SetOptionHandler extends AbstractSqlHandler {
       throw UserException.validationError()
         .message("Drill doesn't support assigning literals of type %s in SET statements.", typeName)
         .build(logger);
+    }
+  }
+
+  /**
+   * Representation of "SET property.name" query result.
+   */
+  public static class SetOptionViewResult {
+    public String name;
+    public String value;
+
+    SetOptionViewResult(String name, String value) {
+      this.name = name;
+      this.value = value;
     }
   }
 }

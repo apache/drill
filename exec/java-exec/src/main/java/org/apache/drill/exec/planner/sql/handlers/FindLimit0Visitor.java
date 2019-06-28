@@ -19,6 +19,9 @@ package org.apache.drill.exec.planner.sql.handlers;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttle;
@@ -299,12 +302,15 @@ public class FindLimit0Visitor extends RelShuttleImpl {
   /**
    * Reader for column names and types.
    */
+  @JsonTypeName("RelDataTypeRecordReader")
   public static class RelDataTypeReader extends AbstractRecordReader {
 
     public final List<String> columnNames;
     public final List<TypeProtos.MajorType> columnTypes;
 
-    public RelDataTypeReader(List<String> columnNames, List<TypeProtos.MajorType> columnTypes) {
+    @JsonCreator
+    public RelDataTypeReader(@JsonProperty("columnNames") List<String> columnNames,
+                             @JsonProperty("columnTypes") List<TypeProtos.MajorType> columnTypes) {
       Preconditions.checkArgument(columnNames.size() == columnTypes.size(), "Number of columns and their types should match");
       this.columnNames = columnNames;
       this.columnTypes = columnTypes;

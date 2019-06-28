@@ -63,7 +63,6 @@ public class TestSimpleFunctions extends ExecTest {
 
   @Test
   public void testHashFunctionResolution() throws JClassAlreadyExistsException, IOException {
-    @SuppressWarnings("resource")
     final FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
     // test required vs nullable Int input
     resolveHash(new TypedNullConstant(Types.optional(TypeProtos.MinorType.INT)),

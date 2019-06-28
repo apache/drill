@@ -54,8 +54,8 @@ public class AvroDrillTable extends DrillTable {
                        SchemaConfig schemaConfig,
                        FormatSelection selection) {
     super(storageEngineName, plugin, schemaConfig.getUserName(), selection);
-    List<String> asFiles = selection.getAsFiles();
-    Path path = new Path(asFiles.get(0));
+    List<Path> asFiles = selection.getAsFiles();
+    Path path = asFiles.get(0);
     this.schemaConfig = schemaConfig;
     try {
       reader = new DataFileReader<>(new FsInput(path, plugin.getFsConf()), new GenericDatumReader<GenericContainer>());

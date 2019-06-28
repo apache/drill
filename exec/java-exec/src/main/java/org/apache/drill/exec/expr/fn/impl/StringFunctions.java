@@ -1662,12 +1662,12 @@ public class StringFunctions{
     @Override
     public void eval() {
       byte[] buf = org.apache.drill.common.util.DrillStringUtils.toBinaryString(in.buffer, in.start, in.end).getBytes(charset);
-      buffer.setBytes(0, buf);
-      buffer.setIndex(0, buf.length);
+      out.buffer = buffer.reallocIfNeeded(buf.length);
+      out.buffer.setBytes(0, buf);
+      out.buffer.setIndex(0, buf.length);
 
       out.start = 0;
       out.end = buf.length;
-      out.buffer = buffer;
     }
   }
 

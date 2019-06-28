@@ -21,7 +21,11 @@ import java.math.BigDecimal;
 
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.UnsupportedConversionError;
+import org.apache.drill.exec.vector.accessor.ValueType;
 import org.apache.drill.exec.vector.accessor.writer.WriterEvents.ColumnWriterListener;
+import org.joda.time.Instant;
+import org.joda.time.LocalDate;
+import org.joda.time.LocalTime;
 import org.joda.time.Period;
 
 /**
@@ -30,6 +34,9 @@ import org.joda.time.Period;
  */
 
 public abstract class AbstractScalarWriter implements ScalarWriter {
+
+  @Override
+  public ValueType extendedType() { return valueType(); }
 
   @Override
   public void setObject(Object value) {
@@ -41,10 +48,20 @@ public abstract class AbstractScalarWriter implements ScalarWriter {
       setLong((Long) value);
     } else if (value instanceof String) {
       setString((String) value);
+    } else if (value instanceof Double) {
+      setDouble((Double) value);
+    } else if (value instanceof Float) {
+      setDouble((Float) value);
     } else if (value instanceof BigDecimal) {
       setDecimal((BigDecimal) value);
     } else if (value instanceof Period) {
       setPeriod((Period) value);
+    } else if (value instanceof LocalTime) {
+      setTime((LocalTime) value);
+    } else if (value instanceof LocalDate) {
+      setDate((LocalDate) value);
+    } else if (value instanceof Instant) {
+      setTimestamp((Instant) value);
     } else if (value instanceof byte[]) {
       final byte[] bytes = (byte[]) value;
       setBytes(bytes, bytes.length);
@@ -52,10 +69,8 @@ public abstract class AbstractScalarWriter implements ScalarWriter {
       setInt((Byte) value);
     } else if (value instanceof Short) {
       setInt((Short) value);
-    } else if (value instanceof Double) {
-      setDouble((Double) value);
-    } else if (value instanceof Float) {
-      setDouble((Float) value);
+    } else if (value instanceof Boolean) {
+      setBoolean((boolean) value);
     } else {
       throw conversionError(value.getClass().getSimpleName());
     }

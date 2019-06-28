@@ -59,7 +59,6 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
  */
 public class OrderedPartitionSenderCreator implements RootCreator<OrderedPartitionSender> {
 
-  @SuppressWarnings("resource")
   @Override
   public RootExec getRoot(ExecutorFragmentContext context, OrderedPartitionSender config,
       List<RecordBatch> children) throws ExecutionSetupException {

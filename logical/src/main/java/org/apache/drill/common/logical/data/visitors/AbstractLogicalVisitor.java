@@ -19,6 +19,7 @@ package org.apache.drill.common.logical.data.visitors;
 
 import org.apache.drill.common.logical.data.LateralJoin;
 import org.apache.drill.common.logical.data.Unnest;
+import org.apache.drill.common.logical.data.Analyze;
 import org.apache.drill.common.logical.data.Values;
 import org.apache.drill.common.logical.data.Filter;
 import org.apache.drill.common.logical.data.Flatten;
@@ -43,6 +44,11 @@ public abstract class AbstractLogicalVisitor<T, X, E extends Throwable> implemen
         throw new UnsupportedOperationException(String.format(
                 "The LogicalVisitor of type %s does not currently support visiting the PhysicalOperator type %s.", this
                 .getClass().getCanonicalName(), op.getClass().getCanonicalName()));
+    }
+
+    @Override
+    public T visitAnalyze(Analyze analyze, X value) throws E {
+      return visitOp(analyze, value);
     }
 
     @Override

@@ -18,20 +18,18 @@
 package org.apache.drill.exec.planner.physical;
 
 import java.util.List;
-
+import org.apache.calcite.plan.RelOptRule;
+import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.calcite.plan.RelOptRuleOperand;
+import org.apache.calcite.rel.InvalidRelException;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.JoinRelType;
+import org.apache.calcite.util.trace.CalciteTrace;
 import org.apache.drill.exec.physical.impl.join.JoinUtils;
 import org.apache.drill.exec.physical.impl.join.JoinUtils.JoinCategory;
 import org.apache.drill.exec.planner.logical.DrillJoin;
 import org.apache.drill.exec.planner.logical.DrillJoinRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
-import org.apache.calcite.rel.InvalidRelException;
-import org.apache.calcite.rel.core.JoinRelType;
-import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.plan.RelOptRule;
-import org.apache.calcite.plan.RelOptRuleCall;
-import org.apache.calcite.plan.RelOptRuleOperand;
-import org.apache.calcite.util.trace.CalciteTrace;
-
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.slf4j.Logger;
 
@@ -81,8 +79,8 @@ public class NestedLoopJoinPrule extends JoinPruleBase {
     if (!settings.isNestedLoopJoinEnabled()) {
       return;
     }
-
-    final DrillJoinRel join = call.rel(0);
+    int[] joinFields = new int[2];
+    DrillJoinRel join = (DrillJoinRel) call.rel(0);
     final RelNode left = join.getLeft();
     final RelNode right = join.getRight();
 

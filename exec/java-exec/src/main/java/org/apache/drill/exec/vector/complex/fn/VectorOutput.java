@@ -301,7 +301,6 @@ abstract class VectorOutput {
       return innerRun();
     }
 
-    @SuppressWarnings("resource")
     @Override
     public void writeBinary(boolean isNull) throws IOException {
       VarBinaryWriter bin = writer.varBinary(fieldName);
@@ -334,7 +333,6 @@ abstract class VectorOutput {
 
     @Override
     public void writeTime(boolean isNull) throws IOException {
-      @SuppressWarnings("resource")
       TimeWriter t = writer.time(fieldName);
       if(!isNull){
         LocalTime localTime = OffsetTime.parse(parser.getValueAsString(), DateUtility.isoFormatTime).toLocalTime();
@@ -342,7 +340,6 @@ abstract class VectorOutput {
       }
     }
 
-    @SuppressWarnings("resource")
     @Override
     public void writeTimestamp(boolean isNull) throws IOException {
       TimeStampWriter ts = writer.timeStamp(fieldName);
@@ -379,7 +376,6 @@ abstract class VectorOutput {
 
     @Override
     public void writeInteger(boolean isNull) throws IOException {
-      @SuppressWarnings("resource")
       BigIntWriter intWriter = writer.bigInt(fieldName);
       if(!isNull){
         intWriter.writeBigInt(Long.parseLong(parser.getValueAsString()));

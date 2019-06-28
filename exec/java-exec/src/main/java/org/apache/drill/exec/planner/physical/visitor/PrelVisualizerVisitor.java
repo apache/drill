@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.physical.visitor;
 
+import org.apache.drill.exec.planner.physical.DirectScanPrel;
 import org.apache.drill.exec.planner.physical.ExchangePrel;
 import org.apache.drill.exec.planner.physical.JoinPrel;
 import org.apache.drill.exec.planner.physical.Prel;
@@ -199,6 +200,13 @@ public class PrelVisualizerVisitor
   @Override
   public Void visitScan(ScanPrel prel, VisualizationState value)
       throws Exception {
+    visitBasePrel(prel, value);
+    endNode(prel, value);
+    return null;
+  }
+
+  @Override
+  public Void visitScan(DirectScanPrel prel, VisualizationState value) throws Exception {
     visitBasePrel(prel, value);
     endNode(prel, value);
     return null;

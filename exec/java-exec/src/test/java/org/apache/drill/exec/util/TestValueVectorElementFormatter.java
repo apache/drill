@@ -25,6 +25,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -141,5 +142,15 @@ public class TestValueVectorElementFormatter {
     assertEquals("2012-11-05 13:00:30.12", formattedTimestamp);
     assertEquals("Mon, Nov 5, 2012", formattedDate);
     assertEquals("1:00:30 PM", formattedTime);
+  }
+
+  @Test // DRILL-7049
+  public void testFormatValueVectorElementBinary() {
+    ValueVectorElementFormatter formatter = new ValueVectorElementFormatter(options);
+    String testString = "Fred";
+    String formattedValue = formatter.format(
+            testString.getBytes(StandardCharsets.UTF_8),
+            TypeProtos.MinorType.VARBINARY);
+    assertEquals("Wrong Varbinary value formatting", testString, formattedValue);
   }
 }

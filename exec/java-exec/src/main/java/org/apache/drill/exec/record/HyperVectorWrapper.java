@@ -83,7 +83,6 @@ public class HyperVectorWrapper<T extends ValueVector> implements VectorWrapper<
     }
   }
 
-  @SuppressWarnings("resource")
   @Override
   public VectorWrapper<?> getChildWrapper(int[] ids) {
     if (ids.length == 1) {

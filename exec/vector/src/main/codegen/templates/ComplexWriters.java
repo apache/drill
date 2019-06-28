@@ -103,6 +103,13 @@ public class ${eName}WriterImpl extends AbstractFieldWriter {
   }
   </#if>
 
+  <#if minor.class?contains("VarDecimal")>
+  public void writeVarDecimal(BigDecimal value) {
+    mutator.addSafe(idx(), value.unscaledValue().toByteArray());
+    vector.getMutator().setValueCount(idx() + 1);
+  }
+  </#if>
+
   public void setPosition(int idx) {
     super.setPosition(idx);
     mutator.startNewValue(idx);

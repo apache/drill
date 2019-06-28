@@ -678,4 +678,9 @@ message RunQuery {
    * to state on server side which is returned in response to CreatePreparedStatementReq.
    */
   optional PreparedStatementHandle prepared_statement_handle = 5;
+
+  /*
+   * Input for indicating the limit on a query's result set.
+   */
+  optional int32 autolimit_rowcount = 6;
 }

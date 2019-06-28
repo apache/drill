@@ -56,6 +56,7 @@ import org.apache.drill.exec.work.ExecErrorConstants;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
+import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.hive.ql.exec.Utilities;
@@ -516,7 +517,7 @@ public class HiveUtilities {
         .append("Unsupported Hive data type ").append(unsupportedType).append(". ")
         .append(System.lineSeparator())
         .append("Following Hive data types are supported in Drill for querying: ")
-        .append("BOOLEAN, TINYINT, SMALLINT, INT, BIGINT, FLOAT, DOUBLE, DATE, TIMESTAMP, BINARY, DECIMAL, STRING, VARCHAR and CHAR");
+        .append("BOOLEAN, TINYINT, SMALLINT, INT, BIGINT, FLOAT, DOUBLE, DATE, TIMESTAMP, BINARY, DECIMAL, STRING, VARCHAR, CHAR, ARRAY.");
 
     throw UserException.unsupportedError()
         .message(errMsg.toString())
@@ -705,8 +706,7 @@ public class HiveUtilities {
       final Category category = TypeInfoUtils.getTypeInfoFromTypeString(hiveField.getType()).getCategory();
       if (category == Category.MAP ||
           category == Category.STRUCT ||
-          category == Category.UNION ||
-          category == Category.LIST) {
+          category == Category.UNION) {
         logger.debug("Hive table contains unsupported data type: {}", category);
         return true;
       }
@@ -741,6 +741,21 @@ public class HiveUtilities {
     changedProperties.stringPropertyNames()
         .forEach(name -> newHiveConf.set(name, changedProperties.getProperty(name)));
     return newHiveConf;
+  }
+
+  /**
+   * Helper method which stores partition columns in table columnListCache. If table columnListCache has exactly the
+   * same columns as partition, in partition stores columns index that corresponds to identical column list.
+   * If table columnListCache hasn't such column list, the column list adds to table columnListCache and in partition
+   * stores columns index that corresponds to column list.
+   *
+   * @param table     hive table instance
+   * @param partition partition instance
+   * @return hive partition wrapper
+   */
+  public static HiveTableWrapper.HivePartitionWrapper createPartitionWithSpecColumns(HiveTableWithColumnCache table, Partition partition) {
+    int listIndex = table.getColumnListsCache().addOrGet(partition.getSd().getCols());
+    return new HiveTableWrapper.HivePartitionWrapper(new HivePartition(partition, listIndex));
   }
 
 }

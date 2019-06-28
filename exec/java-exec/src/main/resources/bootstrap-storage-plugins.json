@@ -1,178 +1,166 @@
 {
-  "storage":{
-    dfs: {
-      type: "file",
-      connection: "file:///",
-      workspaces: {
+  "storage" : {
+    "dfs" : {
+      "type" : "file",
+      "connection" : "file:///",
+      "workspaces" : {
         "root" : {
-          location: "/",
-          writable: false,
-          allowAccessOutsideWorkspace: false
+          "location" : "/",
+          "writable" : false,
+          "allowAccessOutsideWorkspace" : false
         },
         "tmp" : {
-          location: "/tmp",
-          writable: true,
-          allowAccessOutsideWorkspace: false
+          "location" : "/tmp",
+          "writable" : true,
+          "allowAccessOutsideWorkspace" : false
         }
       },
-      formats: {
+      "formats" : {
         "psv" : {
-          type: "text",
-          extensions: [ "tbl" ],
-          delimiter: "|"
+          "type" : "text",
+          "extensions" : [ "tbl" ],
+          "delimiter" : "|"
         },
         "csv" : {
-          type: "text",
-          extensions: [ "csv" ],
-          delimiter: ","
+          "type" : "text",
+          "extensions" : [ "csv" ],
+          "delimiter" : ","
         },
         "tsv" : {
-          type: "text",
-          extensions: [ "tsv" ],
-          delimiter: "\t"
+          "type" : "text",
+          "extensions" : [ "tsv" ],
+          "delimiter" : "\t"
         },
         "httpd" : {
-          type: "httpd",
-          logFormat: "%h %t \"%r\" %>s %b \"%{Referer}i\""
-          /* timestampFormat: "dd/MMM/yyyy:HH:mm:ss ZZ" */
+          "type" : "httpd",
+          "logFormat" : "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\"",
+          "timestampFormat" : "dd/MMM/yyyy:HH:mm:ss ZZ"
         },
         "parquet" : {
-          type: "parquet"
+          "type" : "parquet"
         },
         "json" : {
-          type: "json",
-          extensions: [ "json" ]
+          "type" : "json",
+          "extensions" : [ "json" ]
         },
         "pcap" : {
-          type: "pcap"
+          "type" : "pcap"
         },
         "pcapng" : {
-          type: "pcapng"
+          "type" : "pcapng"
         },
         "avro" : {
-          type: "avro"
+          "type" : "avro"
         },
-        "sequencefile": {
-          type : "sequencefile",
-          extensions: [ "seq" ]
+        "sequencefile" : {
+          "type" : "sequencefile",
+          "extensions" : [ "seq" ]
         },
         "csvh" : {
-          type: "text",
-          extensions: [ "csvh" ],
-          delimiter: ",",
-          extractHeader: true
+          "type" : "text",
+          "extensions" : [ "csvh" ],
+          "delimiter" : ",",
+          "extractHeader" : true
         },
         "image" : {
-          type: "image",
-          extensions: [
-            "jpg", "jpeg", "jpe", "tif", "tiff", "dng", "psd", "png", "bmp", "gif",
-            "ico", "pcx", "wav", "wave", "avi", "webp", "mov", "mp4", "m4a", "m4p",
-            "m4b", "m4r", "m4v", "3gp", "3g2", "eps", "epsf", "epsi", "ai", "arw",
-            "crw", "cr2", "nef", "orf", "raf", "rw2", "rwl", "srw", "x3f"
-          ]
+          "type" : "image",
+          "extensions" : [ "jpg", "jpeg", "jpe", "tif", "tiff", "dng", "psd", "png", "bmp", "gif", "ico", "pcx", "wav", "wave", "avi", "webp", "mov", "mp4", "m4a", "m4p", "m4b", "m4r", "m4v", "3gp", "3g2", "eps", "epsf", "epsi", "ai", "arw", "crw", "cr2", "nef", "orf", "raf", "rw2", "rwl", "srw", "x3f" ]
         }
       },
-      enabled : true
+      "enabled" : true
     },
-
-    s3: {
-      type: "file",
-      connection: "s3a://my.bucket.location.com",
-      config : {
-        "fs.s3a.access.key": "ID",
-        "fs.s3a.secret.key": "SECRET"
+    "s3" : {
+      "type" : "file",
+      "connection" : "s3a://my.bucket.location.com",
+      "config" : {
+        "fs.s3a.access.key" : "ID",
+        "fs.s3a.secret.key" : "SECRET"
       },
-      workspaces: {
+      "workspaces" : {
         "root" : {
-          location: "/",
-          writable: false
+          "location" : "/",
+          "writable" : false
         },
         "tmp" : {
-          location: "/tmp",
-          writable: true
+          "location" : "/tmp",
+          "writable" : true
         }
       },
-      formats: {
+      "formats" : {
         "psv" : {
-          type: "text",
-          extensions: [ "tbl" ],
-          delimiter: "|"
+          "type" : "text",
+          "extensions" : [ "tbl" ],
+          "delimiter" : "|"
         },
         "csv" : {
-          type: "text",
-          extensions: [ "csv" ],
-          delimiter: ","
+          "type" : "text",
+          "extensions" : [ "csv" ],
+          "delimiter" : ","
         },
         "tsv" : {
-          type: "text",
-          extensions: [ "tsv" ],
-          delimiter: "\t"
+          "type" : "text",
+          "extensions" : [ "tsv" ],
+          "delimiter" : "\t"
         },
         "parquet" : {
-          type: "parquet"
+          "type" : "parquet"
         },
         "json" : {
-          type: "json",
-          extensions: [ "json" ]
+          "type" : "json",
+          "extensions" : [ "json" ]
         },
         "avro" : {
-          type: "avro"
+          "type" : "avro"
         },
-        "sequencefile": {
-          type : "sequencefile",
-          extensions: [ "seq" ]
+        "sequencefile" : {
+          "type" : "sequencefile",
+          "extensions" : [ "seq" ]
         },
         "csvh" : {
-          type: "text",
-          extensions: [ "csvh" ],
-          delimiter: ",",
-          extractHeader: true
+          "type" : "text",
+          "extensions" : [ "csvh" ],
+          "delimiter" : ",",
+          "extractHeader" : true
         }
       },
-      enabled : false
+      "enabled" : false
     },
-
-    cp: {
-      type: "file",
-      connection: "classpath:///",
-      formats: {
+    "cp" : {
+      "type" : "file",
+      "connection" : "classpath:///",
+      "formats" : {
         "csv" : {
-          type: "text",
-          extensions: [ "csv" ],
-          delimiter: ","
+          "type" : "text",
+          "extensions" : [ "csv" ],
+          "delimiter" : ","
         },
         "tsv" : {
-                  type: "text",
-                  extensions: [ "tsv" ],
-                  delimiter: "\t"
+          "type" : "text",
+          "extensions" : [ "tsv" ],
+          "delimiter" : "\t"
         },
         "json" : {
-          type: "json",
-          extensions: [ "json" ]
+          "type" : "json",
+          "extensions" : [ "json" ]
         },
         "parquet" : {
-          type: "parquet"
+          "type" : "parquet"
         },
         "avro" : {
-          type: "avro"
+          "type" : "avro"
         },
         "csvh" : {
-          type: "text",
-          extensions: [ "csvh" ],
-          delimiter: ",",
-          extractHeader: true
+          "type" : "text",
+          "extensions" : [ "csvh" ],
+          "delimiter" : ",",
+          "extractHeader" : true
         },
         "image" : {
-          type: "image",
-          extensions: [
-            "jpg", "jpeg", "jpe", "tif", "tiff", "dng", "psd", "png", "bmp", "gif",
-            "ico", "pcx", "wav", "wave", "avi", "webp", "mov", "mp4", "m4a", "m4p",
-            "m4b", "m4r", "m4v", "3gp", "3g2", "eps", "epsf", "epsi", "ai", "arw",
-            "crw", "cr2", "nef", "orf", "raf", "rw2", "rwl", "srw", "x3f"
-          ]
+          "type" : "image",
+          "extensions" : [ "jpg", "jpeg", "jpe", "tif", "tiff", "dng", "psd", "png", "bmp", "gif", "ico", "pcx", "wav", "wave", "avi", "webp", "mov", "mp4", "m4a", "m4p", "m4b", "m4r", "m4v", "3gp", "3g2", "eps", "epsf", "epsi", "ai", "arw", "crw", "cr2", "nef", "orf", "raf", "rw2", "rwl", "srw", "x3f" ]
         }
       },
-      enabled : true
+      "enabled" : true
     }
   }
 }

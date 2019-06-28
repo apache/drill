@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.planner;
 
-import org.apache.drill.exec.planner.logical.DrillSemiJoinRule;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet.Builder;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
@@ -60,7 +59,9 @@ import org.apache.drill.exec.planner.logical.DrillValuesRule;
 import org.apache.drill.exec.planner.logical.DrillWindowRule;
 import org.apache.drill.exec.planner.logical.partition.ParquetPruneScanRule;
 import org.apache.drill.exec.planner.logical.partition.PruneScanRule;
-import org.apache.drill.exec.planner.physical.ConvertCountToDirectScan;
+import org.apache.drill.exec.planner.logical.ConvertCountToDirectScanRule;
+import org.apache.drill.exec.planner.physical.AnalyzePrule;
+import org.apache.drill.exec.planner.physical.ConvertCountToDirectScanPrule;
 import org.apache.drill.exec.planner.physical.LateralJoinPrule;
 import org.apache.drill.exec.planner.physical.DirectScanPrule;
 import org.apache.drill.exec.planner.physical.FilterPrule;
@@ -164,14 +165,6 @@ public enum PlannerPhase {
       return PlannerPhase.mergedRuleSets(
           RuleSets.ofList(rules),
           getStorageRules(context, plugins, this)
-      );
-    }
-  },
-
-  SEMIJOIN_CONVERSION("Pushing down semi joins") {
-    public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
-      return PlannerPhase.mergedRuleSets(
-              RuleSets.ofList(DrillSemiJoinRule.JOIN)
       );
     }
   },
@@ -388,6 +381,10 @@ public enum PlannerPhase {
             DrillMergeProjectRule.getInstance(true, RelFactories.DEFAULT_PROJECT_FACTORY,
                 optimizerRulesContext.getFunctionRegistry())
             );
+    if (optimizerRulesContext.getPlannerSettings().isHashJoinEnabled() &&
+        optimizerRulesContext.getPlannerSettings().isSemiJoinEnabled()) {
+      basicRules.add(RuleInstance.SEMI_JOIN_PROJECT_RULE);
+    }
 
     return RuleSets.ofList(basicRules.build());
   }
@@ -405,7 +402,8 @@ public enum PlannerPhase {
             ParquetPruneScanRule.getFilterOnScanParquet(optimizerRulesContext),
             // Include LIMIT_ON_PROJECT since LIMIT_ON_SCAN may not work without it
             DrillPushLimitToScanRule.LIMIT_ON_PROJECT,
-            DrillPushLimitToScanRule.LIMIT_ON_SCAN
+            DrillPushLimitToScanRule.LIMIT_ON_SCAN,
+            PruneScanRule.getConvertAggScanToValuesRule(optimizerRulesContext)
         )
         .build();
 
@@ -471,8 +469,11 @@ public enum PlannerPhase {
         .addAll(getItemStarRules())
         .add(
             PruneScanRule.getDirFilterOnProject(optimizerRulesContext),
-            PruneScanRule.getDirFilterOnScan(optimizerRulesContext)
-        )
+            PruneScanRule.getDirFilterOnScan(optimizerRulesContext),
+            PruneScanRule.getConvertAggScanToValuesRule(optimizerRulesContext),
+            ConvertCountToDirectScanRule.AGG_ON_PROJ_ON_SCAN,
+            ConvertCountToDirectScanRule.AGG_ON_SCAN
+          )
         .build();
 
     return RuleSets.ofList(pruneRules);
@@ -498,8 +499,8 @@ public enum PlannerPhase {
   static RuleSet getPhysicalRules(OptimizerRulesContext optimizerRulesContext) {
     final List<RelOptRule> ruleList = new ArrayList<>();
     final PlannerSettings ps = optimizerRulesContext.getPlannerSettings();
-    ruleList.add(ConvertCountToDirectScan.AGG_ON_PROJ_ON_SCAN);
-    ruleList.add(ConvertCountToDirectScan.AGG_ON_SCAN);
+    ruleList.add(ConvertCountToDirectScanPrule.AGG_ON_PROJ_ON_SCAN);
+    ruleList.add(ConvertCountToDirectScanPrule.AGG_ON_SCAN);
     ruleList.add(SortConvertPrule.INSTANCE);
     ruleList.add(SortPrule.INSTANCE);
     ruleList.add(ProjectPrule.INSTANCE);
@@ -516,6 +517,7 @@ public enum PlannerPhase {
     ruleList.add(ValuesPrule.INSTANCE);
     ruleList.add(DirectScanPrule.INSTANCE);
     ruleList.add(RowKeyJoinPrule.INSTANCE);
+    ruleList.add(AnalyzePrule.INSTANCE);
 
     ruleList.add(UnnestPrule.INSTANCE);
     ruleList.add(LateralJoinPrule.INSTANCE);

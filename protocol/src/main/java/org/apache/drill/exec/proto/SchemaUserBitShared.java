@@ -31,9 +31,9 @@ public final class SchemaUserBitShared
         public static final org.apache.drill.exec.proto.SchemaUserBitShared.UserCredentials.BuilderSchema MERGE =
             new org.apache.drill.exec.proto.SchemaUserBitShared.UserCredentials.BuilderSchema();
         
-        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.UserCredentials>
+        public static class MessageSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.UserCredentials>
         {
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.UserCredentials message) throws java.io.IOException
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.UserCredentials message) throws java.io.IOException
             {
                 if(message.hasUserName())
                     output.writeString(1, message.getUserName(), false);
@@ -63,12 +63,12 @@ public final class SchemaUserBitShared
                 return org.apache.drill.exec.proto.UserBitShared.UserCredentials.class.getName();
             }
             //unused
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.UserCredentials message) throws java.io.IOException {}
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.UserCredentials message) throws java.io.IOException {}
             public org.apache.drill.exec.proto.UserBitShared.UserCredentials newMessage() { return null; }
         }
-        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.UserCredentials.Builder>
+        public static class BuilderSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.UserCredentials.Builder>
         {
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.UserCredentials.Builder builder) throws java.io.IOException
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.UserCredentials.Builder builder) throws java.io.IOException
             {
                 for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
                 {
@@ -113,7 +113,7 @@ public final class SchemaUserBitShared
                 return org.apache.drill.exec.proto.UserBitShared.UserCredentials.class.getName();
             }
             //unused
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.UserCredentials.Builder builder) throws java.io.IOException {}
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.UserCredentials.Builder builder) throws java.io.IOException {}
         }
         public static java.lang.String getFieldName(int number)
         {
@@ -142,9 +142,9 @@ public final class SchemaUserBitShared
         public static final org.apache.drill.exec.proto.SchemaUserBitShared.QueryId.BuilderSchema MERGE =
             new org.apache.drill.exec.proto.SchemaUserBitShared.QueryId.BuilderSchema();
         
-        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.QueryId>
+        public static class MessageSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.QueryId>
         {
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.QueryId message) throws java.io.IOException
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.QueryId message) throws java.io.IOException
             {
                 if(message.hasPart1())
                     output.writeSFixed64(1, message.getPart1(), false);
@@ -176,12 +176,12 @@ public final class SchemaUserBitShared
                 return org.apache.drill.exec.proto.UserBitShared.QueryId.class.getName();
             }
             //unused
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.QueryId message) throws java.io.IOException {}
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.QueryId message) throws java.io.IOException {}
             public org.apache.drill.exec.proto.UserBitShared.QueryId newMessage() { return null; }
         }
-        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.QueryId.Builder>
+        public static class BuilderSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.QueryId.Builder>
         {
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.QueryId.Builder builder) throws java.io.IOException
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.QueryId.Builder builder) throws java.io.IOException
             {
                 for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
                 {
@@ -229,7 +229,7 @@ public final class SchemaUserBitShared
                 return org.apache.drill.exec.proto.UserBitShared.QueryId.class.getName();
             }
             //unused
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.QueryId.Builder builder) throws java.io.IOException {}
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.QueryId.Builder builder) throws java.io.IOException {}
         }
         public static java.lang.String getFieldName(int number)
         {
@@ -260,9 +260,9 @@ public final class SchemaUserBitShared
         public static final org.apache.drill.exec.proto.SchemaUserBitShared.DrillPBError.BuilderSchema MERGE =
             new org.apache.drill.exec.proto.SchemaUserBitShared.DrillPBError.BuilderSchema();
         
-        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.DrillPBError>
+        public static class MessageSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.DrillPBError>
         {
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.DrillPBError message) throws java.io.IOException
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.DrillPBError message) throws java.io.IOException
             {
                 if(message.hasErrorId())
                     output.writeString(1, message.getErrorId(), false);
@@ -305,12 +305,12 @@ public final class SchemaUserBitShared
                 return org.apache.drill.exec.proto.UserBitShared.DrillPBError.class.getName();
             }
             //unused
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.DrillPBError message) throws java.io.IOException {}
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.DrillPBError message) throws java.io.IOException {}
             public org.apache.drill.exec.proto.UserBitShared.DrillPBError newMessage() { return null; }
         }
-        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder>
+        public static class BuilderSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder>
         {
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder builder) throws java.io.IOException
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder builder) throws java.io.IOException
             {
                 for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
                 {
@@ -373,7 +373,7 @@ public final class SchemaUserBitShared
                 return org.apache.drill.exec.proto.UserBitShared.DrillPBError.class.getName();
             }
             //unused
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder builder) throws java.io.IOException {}
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.DrillPBError.Builder builder) throws java.io.IOException {}
         }
         public static java.lang.String getFieldName(int number)
         {
@@ -412,9 +412,9 @@ public final class SchemaUserBitShared
         public static final org.apache.drill.exec.proto.SchemaUserBitShared.ExceptionWrapper.BuilderSchema MERGE =
             new org.apache.drill.exec.proto.SchemaUserBitShared.ExceptionWrapper.BuilderSchema();
         
-        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper>
+        public static class MessageSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper>
         {
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper message) throws java.io.IOException
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper message) throws java.io.IOException
             {
                 if(message.hasExceptionClass())
                     output.writeString(1, message.getExceptionClass(), false);
@@ -452,12 +452,12 @@ public final class SchemaUserBitShared
                 return org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.class.getName();
             }
             //unused
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper message) throws java.io.IOException {}
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper message) throws java.io.IOException {}
             public org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper newMessage() { return null; }
         }
-        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.Builder>
+        public static class BuilderSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.Builder>
         {
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.Builder builder) throws java.io.IOException
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.Builder builder) throws java.io.IOException
             {
                 for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
                 {
@@ -513,7 +513,7 @@ public final class SchemaUserBitShared
                 return org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.class.getName();
             }
             //unused
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.Builder builder) throws java.io.IOException {}
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.ExceptionWrapper.Builder builder) throws java.io.IOException {}
         }
         public static java.lang.String getFieldName(int number)
         {
@@ -548,9 +548,9 @@ public final class SchemaUserBitShared
         public static final org.apache.drill.exec.proto.SchemaUserBitShared.StackTraceElementWrapper.BuilderSchema MERGE =
             new org.apache.drill.exec.proto.SchemaUserBitShared.StackTraceElementWrapper.BuilderSchema();
         
-        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper>
+        public static class MessageSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper>
         {
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper message) throws java.io.IOException
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper message) throws java.io.IOException
             {
                 if(message.hasClassName())
                     output.writeString(1, message.getClassName(), false);
@@ -588,12 +588,12 @@ public final class SchemaUserBitShared
                 return org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.class.getName();
             }
             //unused
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper message) throws java.io.IOException {}
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper message) throws java.io.IOException {}
             public org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper newMessage() { return null; }
         }
-        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.Builder>
+        public static class BuilderSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.Builder>
         {
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.Builder builder) throws java.io.IOException
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.Builder builder) throws java.io.IOException
             {
                 for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
                 {
@@ -650,7 +650,7 @@ public final class SchemaUserBitShared
                 return org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.class.getName();
             }
             //unused
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.Builder builder) throws java.io.IOException {}
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.StackTraceElementWrapper.Builder builder) throws java.io.IOException {}
         }
         public static java.lang.String getFieldName(int number)
         {
@@ -687,9 +687,9 @@ public final class SchemaUserBitShared
         public static final org.apache.drill.exec.proto.SchemaUserBitShared.ParsingError.BuilderSchema MERGE =
             new org.apache.drill.exec.proto.SchemaUserBitShared.ParsingError.BuilderSchema();
         
-        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.ParsingError>
+        public static class MessageSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.ParsingError>
         {
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.ParsingError message) throws java.io.IOException
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.ParsingError message) throws java.io.IOException
             {
                 if(message.hasStartColumn())
                     output.writeInt32(2, message.getStartColumn(), false);
@@ -725,12 +725,12 @@ public final class SchemaUserBitShared
                 return org.apache.drill.exec.proto.UserBitShared.ParsingError.class.getName();
             }
             //unused
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.ParsingError message) throws java.io.IOException {}
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.ParsingError message) throws java.io.IOException {}
             public org.apache.drill.exec.proto.UserBitShared.ParsingError newMessage() { return null; }
         }
-        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.ParsingError.Builder>
+        public static class BuilderSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.ParsingError.Builder>
         {
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.ParsingError.Builder builder) throws java.io.IOException
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.ParsingError.Builder builder) throws java.io.IOException
             {
                 for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
                 {
@@ -784,7 +784,7 @@ public final class SchemaUserBitShared
                 return org.apache.drill.exec.proto.UserBitShared.ParsingError.class.getName();
             }
             //unused
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.ParsingError.Builder builder) throws java.io.IOException {}
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.ParsingError.Builder builder) throws java.io.IOException {}
         }
         public static java.lang.String getFieldName(int number)
         {
@@ -819,9 +819,9 @@ public final class SchemaUserBitShared
         public static final org.apache.drill.exec.proto.SchemaUserBitShared.RecordBatchDef.BuilderSchema MERGE =
             new org.apache.drill.exec.proto.SchemaUserBitShared.RecordBatchDef.BuilderSchema();
         
-        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.RecordBatchDef>
+        public static class MessageSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.RecordBatchDef>
         {
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.RecordBatchDef message) throws java.io.IOException
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.RecordBatchDef message) throws java.io.IOException
             {
                 if(message.hasRecordCount())
                     output.writeInt32(1, message.getRecordCount(), false);
@@ -858,12 +858,12 @@ public final class SchemaUserBitShared
                 return org.apache.drill.exec.proto.UserBitShared.RecordBatchDef.class.getName();
             }
             //unused
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.RecordBatchDef message) throws java.io.IOException {}
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.RecordBatchDef message) throws java.io.IOException {}
             public org.apache.drill.exec.proto.UserBitShared.RecordBatchDef newMessage() { return null; }
         }
-        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.RecordBatchDef.Builder>
+        public static class BuilderSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.RecordBatchDef.Builder>
         {
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.RecordBatchDef.Builder builder) throws java.io.IOException
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.RecordBatchDef.Builder builder) throws java.io.IOException
             {
                 for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
                 {
@@ -918,7 +918,7 @@ public final class SchemaUserBitShared
                 return org.apache.drill.exec.proto.UserBitShared.RecordBatchDef.class.getName();
             }
             //unused
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.RecordBatchDef.Builder builder) throws java.io.IOException {}
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.RecordBatchDef.Builder builder) throws java.io.IOException {}
         }
         public static java.lang.String getFieldName(int number)
         {
@@ -953,9 +953,9 @@ public final class SchemaUserBitShared
         public static final org.apache.drill.exec.proto.SchemaUserBitShared.NamePart.BuilderSchema MERGE =
             new org.apache.drill.exec.proto.SchemaUserBitShared.NamePart.BuilderSchema();
         
-        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.NamePart>
+        public static class MessageSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.NamePart>
         {
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.NamePart message) throws java.io.IOException
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.NamePart message) throws java.io.IOException
             {
                 if(message.hasType())
                     output.writeEnum(1, message.getType().getNumber(), false);
@@ -990,12 +990,12 @@ public final class SchemaUserBitShared
                 return org.apache.drill.exec.proto.UserBitShared.NamePart.class.getName();
             }
             //unused
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.NamePart message) throws java.io.IOException {}
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.NamePart message) throws java.io.IOException {}
             public org.apache.drill.exec.proto.UserBitShared.NamePart newMessage() { return null; }
         }
-        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.NamePart.Builder>
+        public static class BuilderSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.NamePart.Builder>
         {
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.NamePart.Builder builder) throws java.io.IOException
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.NamePart.Builder builder) throws java.io.IOException
             {
                 for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
                 {
@@ -1047,7 +1047,7 @@ public final class SchemaUserBitShared
                 return org.apache.drill.exec.proto.UserBitShared.NamePart.class.getName();
             }
             //unused
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.NamePart.Builder builder) throws java.io.IOException {}
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.NamePart.Builder builder) throws java.io.IOException {}
         }
         public static java.lang.String getFieldName(int number)
         {
@@ -1080,9 +1080,9 @@ public final class SchemaUserBitShared
         public static final org.apache.drill.exec.proto.SchemaUserBitShared.SerializedField.BuilderSchema MERGE =
             new org.apache.drill.exec.proto.SchemaUserBitShared.SerializedField.BuilderSchema();
         
-        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.SerializedField>
+        public static class MessageSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.SerializedField>
         {
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.SerializedField message) throws java.io.IOException
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.SerializedField message) throws java.io.IOException
             {
                 if(message.hasMajorType())
                     output.writeObject(1, message.getMajorType(), org.apache.drill.common.types.SchemaTypeProtos.MajorType.WRITE, false);
@@ -1125,12 +1125,12 @@ public final class SchemaUserBitShared
                 return org.apache.drill.exec.proto.UserBitShared.SerializedField.class.getName();
             }
             //unused
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.SerializedField message) throws java.io.IOException {}
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.SerializedField message) throws java.io.IOException {}
             public org.apache.drill.exec.proto.UserBitShared.SerializedField newMessage() { return null; }
         }
-        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.SerializedField.Builder>
+        public static class BuilderSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.SerializedField.Builder>
         {
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.SerializedField.Builder builder) throws java.io.IOException
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.SerializedField.Builder builder) throws java.io.IOException
             {
                 for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
                 {
@@ -1193,7 +1193,7 @@ public final class SchemaUserBitShared
                 return org.apache.drill.exec.proto.UserBitShared.SerializedField.class.getName();
             }
             //unused
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.SerializedField.Builder builder) throws java.io.IOException {}
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.SerializedField.Builder builder) throws java.io.IOException {}
         }
         public static java.lang.String getFieldName(int number)
         {
@@ -1232,9 +1232,9 @@ public final class SchemaUserBitShared
         public static final org.apache.drill.exec.proto.SchemaUserBitShared.NodeStatus.BuilderSchema MERGE =
             new org.apache.drill.exec.proto.SchemaUserBitShared.NodeStatus.BuilderSchema();
         
-        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.NodeStatus>
+        public static class MessageSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.NodeStatus>
         {
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.NodeStatus message) throws java.io.IOException
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.NodeStatus message) throws java.io.IOException
             {
                 if(message.hasNodeId())
                     output.writeInt32(1, message.getNodeId(), false);
@@ -1266,12 +1266,12 @@ public final class SchemaUserBitShared
                 return org.apache.drill.exec.proto.UserBitShared.NodeStatus.class.getName();
             }
             //unused
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.NodeStatus message) throws java.io.IOException {}
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.NodeStatus message) throws java.io.IOException {}
             public org.apache.drill.exec.proto.UserBitShared.NodeStatus newMessage() { return null; }
         }
-        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.NodeStatus.Builder>
+        public static class BuilderSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.NodeStatus.Builder>
         {
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.NodeStatus.Builder builder) throws java.io.IOException
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.NodeStatus.Builder builder) throws java.io.IOException
             {
                 for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
                 {
@@ -1319,7 +1319,7 @@ public final class SchemaUserBitShared
                 return org.apache.drill.exec.proto.UserBitShared.NodeStatus.class.getName();
             }
             //unused
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.NodeStatus.Builder builder) throws java.io.IOException {}
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.NodeStatus.Builder builder) throws java.io.IOException {}
         }
         public static java.lang.String getFieldName(int number)
         {
@@ -1350,9 +1350,9 @@ public final class SchemaUserBitShared
         public static final org.apache.drill.exec.proto.SchemaUserBitShared.QueryResult.BuilderSchema MERGE =
             new org.apache.drill.exec.proto.SchemaUserBitShared.QueryResult.BuilderSchema();
         
-        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.QueryResult>
+        public static class MessageSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.QueryResult>
         {
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.QueryResult message) throws java.io.IOException
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.QueryResult message) throws java.io.IOException
             {
                 if(message.hasQueryState())
                     output.writeEnum(1, message.getQueryState().getNumber(), false);
@@ -1388,12 +1388,12 @@ public final class SchemaUserBitShared
                 return org.apache.drill.exec.proto.UserBitShared.QueryResult.class.getName();
             }
             //unused
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.QueryResult message) throws java.io.IOException {}
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.QueryResult message) throws java.io.IOException {}
             public org.apache.drill.exec.proto.UserBitShared.QueryResult newMessage() { return null; }
         }
-        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.QueryResult.Builder>
+        public static class BuilderSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.QueryResult.Builder>
         {
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.QueryResult.Builder builder) throws java.io.IOException
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.QueryResult.Builder builder) throws java.io.IOException
             {
                 for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
                 {
@@ -1446,7 +1446,7 @@ public final class SchemaUserBitShared
                 return org.apache.drill.exec.proto.UserBitShared.QueryResult.class.getName();
             }
             //unused
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.QueryResult.Builder builder) throws java.io.IOException {}
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.QueryResult.Builder builder) throws java.io.IOException {}
         }
         public static java.lang.String getFieldName(int number)
         {
@@ -1479,9 +1479,9 @@ public final class SchemaUserBitShared
         public static final org.apache.drill.exec.proto.SchemaUserBitShared.QueryData.BuilderSchema MERGE =
             new org.apache.drill.exec.proto.SchemaUserBitShared.QueryData.BuilderSchema();
         
-        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.QueryData>
+        public static class MessageSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.QueryData>
         {
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.QueryData message) throws java.io.IOException
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.QueryData message) throws java.io.IOException
             {
                 if(message.hasQueryId())
                     output.writeObject(1, message.getQueryId(), org.apache.drill.exec.proto.SchemaUserBitShared.QueryId.WRITE, false);
@@ -1519,12 +1519,12 @@ public final class SchemaUserBitShared
                 return org.apache.drill.exec.proto.UserBitShared.QueryData.class.getName();
             }
             //unused
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.QueryData message) throws java.io.IOException {}
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.QueryData message) throws java.io.IOException {}
             public org.apache.drill.exec.proto.UserBitShared.QueryData newMessage() { return null; }
         }
-        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.QueryData.Builder>
+        public static class BuilderSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.QueryData.Builder>
         {
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.QueryData.Builder builder) throws java.io.IOException
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.QueryData.Builder builder) throws java.io.IOException
             {
                 for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
                 {
@@ -1580,7 +1580,7 @@ public final class SchemaUserBitShared
                 return org.apache.drill.exec.proto.UserBitShared.QueryData.class.getName();
             }
             //unused
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.QueryData.Builder builder) throws java.io.IOException {}
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.QueryData.Builder builder) throws java.io.IOException {}
         }
         public static java.lang.String getFieldName(int number)
         {
@@ -1615,9 +1615,9 @@ public final class SchemaUserBitShared
         public static final org.apache.drill.exec.proto.SchemaUserBitShared.QueryInfo.BuilderSchema MERGE =
             new org.apache.drill.exec.proto.SchemaUserBitShared.QueryInfo.BuilderSchema();
         
-        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.QueryInfo>
+        public static class MessageSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.QueryInfo>
         {
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.QueryInfo message) throws java.io.IOException
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.QueryInfo message) throws java.io.IOException
             {
                 if(message.hasQuery())
                     output.writeString(1, message.getQuery(), false);
@@ -1662,12 +1662,12 @@ public final class SchemaUserBitShared
                 return org.apache.drill.exec.proto.UserBitShared.QueryInfo.class.getName();
             }
             //unused
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.QueryInfo message) throws java.io.IOException {}
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.QueryInfo message) throws java.io.IOException {}
             public org.apache.drill.exec.proto.UserBitShared.QueryInfo newMessage() { return null; }
         }
-        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.QueryInfo.Builder>
+        public static class BuilderSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.QueryInfo.Builder>
         {
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.QueryInfo.Builder builder) throws java.io.IOException
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.QueryInfo.Builder builder) throws java.io.IOException
             {
                 for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
                 {
@@ -1734,7 +1734,7 @@ public final class SchemaUserBitShared
                 return org.apache.drill.exec.proto.UserBitShared.QueryInfo.class.getName();
             }
             //unused
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.QueryInfo.Builder builder) throws java.io.IOException {}
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.QueryInfo.Builder builder) throws java.io.IOException {}
         }
         public static java.lang.String getFieldName(int number)
         {
@@ -1777,9 +1777,9 @@ public final class SchemaUserBitShared
         public static final org.apache.drill.exec.proto.SchemaUserBitShared.QueryProfile.BuilderSchema MERGE =
             new org.apache.drill.exec.proto.SchemaUserBitShared.QueryProfile.BuilderSchema();
         
-        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.QueryProfile>
+        public static class MessageSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.QueryProfile>
         {
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.QueryProfile message) throws java.io.IOException
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.QueryProfile message) throws java.io.IOException
             {
                 if(message.hasId())
                     output.writeObject(1, message.getId(), org.apache.drill.exec.proto.SchemaUserBitShared.QueryId.WRITE, false);
@@ -1828,6 +1828,8 @@ public final class SchemaUserBitShared
                     output.writeString(21, message.getQueueName(), false);
                 if(message.hasQueryId())
                     output.writeString(22, message.getQueryId(), false);
+                if(message.hasAutoLimit())
+                    output.writeInt32(23, message.getAutoLimit(), false);
             }
             public boolean isInitialized(org.apache.drill.exec.proto.UserBitShared.QueryProfile message)
             {
@@ -1854,12 +1856,12 @@ public final class SchemaUserBitShared
                 return org.apache.drill.exec.proto.UserBitShared.QueryProfile.class.getName();
             }
             //unused
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.QueryProfile message) throws java.io.IOException {}
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.QueryProfile message) throws java.io.IOException {}
             public org.apache.drill.exec.proto.UserBitShared.QueryProfile newMessage() { return null; }
         }
-        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.QueryProfile.Builder>
+        public static class BuilderSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.QueryProfile.Builder>
         {
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.QueryProfile.Builder builder) throws java.io.IOException
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.QueryProfile.Builder builder) throws java.io.IOException
             {
                 for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
                 {
@@ -1936,6 +1938,9 @@ public final class SchemaUserBitShared
                         case 22:
                             builder.setQueryId(input.readString());
                             break;
+                        case 23:
+                            builder.setAutoLimit(input.readInt32());
+                            break;
                         default:
                             input.handleUnknownField(number, this);
                     }
@@ -1970,7 +1975,7 @@ public final class SchemaUserBitShared
                 return org.apache.drill.exec.proto.UserBitShared.QueryProfile.class.getName();
             }
             //unused
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.QueryProfile.Builder builder) throws java.io.IOException {}
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.QueryProfile.Builder builder) throws java.io.IOException {}
         }
         public static java.lang.String getFieldName(int number)
         {
@@ -1998,6 +2003,7 @@ public final class SchemaUserBitShared
                 case 20: return "totalCost";
                 case 21: return "queueName";
                 case 22: return "queryId";
+                case 23: return "autoLimit";
                 default: return null;
             }
         }
@@ -2031,6 +2037,7 @@ public final class SchemaUserBitShared
             fieldMap.put("totalCost", 20);
             fieldMap.put("queueName", 21);
             fieldMap.put("queryId", 22);
+            fieldMap.put("autoLimit", 23);
         }
     }
 
@@ -2041,9 +2048,9 @@ public final class SchemaUserBitShared
         public static final org.apache.drill.exec.proto.SchemaUserBitShared.MajorFragmentProfile.BuilderSchema MERGE =
             new org.apache.drill.exec.proto.SchemaUserBitShared.MajorFragmentProfile.BuilderSchema();
         
-        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile>
+        public static class MessageSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile>
         {
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile message) throws java.io.IOException
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile message) throws java.io.IOException
             {
                 if(message.hasMajorFragmentId())
                     output.writeInt32(1, message.getMajorFragmentId(), false);
@@ -2076,12 +2083,12 @@ public final class SchemaUserBitShared
                 return org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile.class.getName();
             }
             //unused
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile message) throws java.io.IOException {}
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile message) throws java.io.IOException {}
             public org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile newMessage() { return null; }
         }
-        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile.Builder>
+        public static class BuilderSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile.Builder>
         {
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile.Builder builder) throws java.io.IOException
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile.Builder builder) throws java.io.IOException
             {
                 for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
                 {
@@ -2130,7 +2137,7 @@ public final class SchemaUserBitShared
                 return org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile.class.getName();
             }
             //unused
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile.Builder builder) throws java.io.IOException {}
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile.Builder builder) throws java.io.IOException {}
         }
         public static java.lang.String getFieldName(int number)
         {
@@ -2161,9 +2168,9 @@ public final class SchemaUserBitShared
         public static final org.apache.drill.exec.proto.SchemaUserBitShared.MinorFragmentProfile.BuilderSchema MERGE =
             new org.apache.drill.exec.proto.SchemaUserBitShared.MinorFragmentProfile.BuilderSchema();
         
-        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile>
+        public static class MessageSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile>
         {
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile message) throws java.io.IOException
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile message) throws java.io.IOException
             {
                 if(message.hasState())
                     output.writeEnum(1, message.getState().getNumber(), false);
@@ -2216,12 +2223,12 @@ public final class SchemaUserBitShared
                 return org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile.class.getName();
             }
             //unused
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile message) throws java.io.IOException {}
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile message) throws java.io.IOException {}
             public org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile newMessage() { return null; }
         }
-        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile.Builder>
+        public static class BuilderSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile.Builder>
         {
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile.Builder builder) throws java.io.IOException
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile.Builder builder) throws java.io.IOException
             {
                 for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
                 {
@@ -2299,7 +2306,7 @@ public final class SchemaUserBitShared
                 return org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile.class.getName();
             }
             //unused
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile.Builder builder) throws java.io.IOException {}
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile.Builder builder) throws java.io.IOException {}
         }
         public static java.lang.String getFieldName(int number)
         {
@@ -2348,9 +2355,9 @@ public final class SchemaUserBitShared
         public static final org.apache.drill.exec.proto.SchemaUserBitShared.OperatorProfile.BuilderSchema MERGE =
             new org.apache.drill.exec.proto.SchemaUserBitShared.OperatorProfile.BuilderSchema();
         
-        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.OperatorProfile>
+        public static class MessageSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.OperatorProfile>
         {
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.OperatorProfile message) throws java.io.IOException
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.OperatorProfile message) throws java.io.IOException
             {
                 for(org.apache.drill.exec.proto.UserBitShared.StreamProfile inputProfile : message.getInputProfileList())
                     output.writeObject(1, inputProfile, org.apache.drill.exec.proto.SchemaUserBitShared.StreamProfile.WRITE, true);
@@ -2396,12 +2403,12 @@ public final class SchemaUserBitShared
                 return org.apache.drill.exec.proto.UserBitShared.OperatorProfile.class.getName();
             }
             //unused
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.OperatorProfile message) throws java.io.IOException {}
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.OperatorProfile message) throws java.io.IOException {}
             public org.apache.drill.exec.proto.UserBitShared.OperatorProfile newMessage() { return null; }
         }
-        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.OperatorProfile.Builder>
+        public static class BuilderSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.OperatorProfile.Builder>
         {
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.OperatorProfile.Builder builder) throws java.io.IOException
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.OperatorProfile.Builder builder) throws java.io.IOException
             {
                 for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
                 {
@@ -2469,7 +2476,7 @@ public final class SchemaUserBitShared
                 return org.apache.drill.exec.proto.UserBitShared.OperatorProfile.class.getName();
             }
             //unused
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.OperatorProfile.Builder builder) throws java.io.IOException {}
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.OperatorProfile.Builder builder) throws java.io.IOException {}
         }
         public static java.lang.String getFieldName(int number)
         {
@@ -2512,9 +2519,9 @@ public final class SchemaUserBitShared
         public static final org.apache.drill.exec.proto.SchemaUserBitShared.StreamProfile.BuilderSchema MERGE =
             new org.apache.drill.exec.proto.SchemaUserBitShared.StreamProfile.BuilderSchema();
         
-        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.StreamProfile>
+        public static class MessageSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.StreamProfile>
         {
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.StreamProfile message) throws java.io.IOException
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.StreamProfile message) throws java.io.IOException
             {
                 if(message.hasRecords())
                     output.writeInt64(1, message.getRecords(), false);
@@ -2548,12 +2555,12 @@ public final class SchemaUserBitShared
                 return org.apache.drill.exec.proto.UserBitShared.StreamProfile.class.getName();
             }
             //unused
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.StreamProfile message) throws java.io.IOException {}
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.StreamProfile message) throws java.io.IOException {}
             public org.apache.drill.exec.proto.UserBitShared.StreamProfile newMessage() { return null; }
         }
-        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.StreamProfile.Builder>
+        public static class BuilderSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.StreamProfile.Builder>
         {
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.StreamProfile.Builder builder) throws java.io.IOException
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.StreamProfile.Builder builder) throws java.io.IOException
             {
                 for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
                 {
@@ -2604,7 +2611,7 @@ public final class SchemaUserBitShared
                 return org.apache.drill.exec.proto.UserBitShared.StreamProfile.class.getName();
             }
             //unused
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.StreamProfile.Builder builder) throws java.io.IOException {}
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.StreamProfile.Builder builder) throws java.io.IOException {}
         }
         public static java.lang.String getFieldName(int number)
         {
@@ -2637,9 +2644,9 @@ public final class SchemaUserBitShared
         public static final org.apache.drill.exec.proto.SchemaUserBitShared.MetricValue.BuilderSchema MERGE =
             new org.apache.drill.exec.proto.SchemaUserBitShared.MetricValue.BuilderSchema();
         
-        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.MetricValue>
+        public static class MessageSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.MetricValue>
         {
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.MetricValue message) throws java.io.IOException
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.MetricValue message) throws java.io.IOException
             {
                 if(message.hasMetricId())
                     output.writeInt32(1, message.getMetricId(), false);
@@ -2673,12 +2680,12 @@ public final class SchemaUserBitShared
                 return org.apache.drill.exec.proto.UserBitShared.MetricValue.class.getName();
             }
             //unused
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.MetricValue message) throws java.io.IOException {}
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.MetricValue message) throws java.io.IOException {}
             public org.apache.drill.exec.proto.UserBitShared.MetricValue newMessage() { return null; }
         }
-        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.MetricValue.Builder>
+        public static class BuilderSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.MetricValue.Builder>
         {
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.MetricValue.Builder builder) throws java.io.IOException
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.MetricValue.Builder builder) throws java.io.IOException
             {
                 for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
                 {
@@ -2729,7 +2736,7 @@ public final class SchemaUserBitShared
                 return org.apache.drill.exec.proto.UserBitShared.MetricValue.class.getName();
             }
             //unused
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.MetricValue.Builder builder) throws java.io.IOException {}
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.MetricValue.Builder builder) throws java.io.IOException {}
         }
         public static java.lang.String getFieldName(int number)
         {
@@ -2762,9 +2769,9 @@ public final class SchemaUserBitShared
         public static final org.apache.drill.exec.proto.SchemaUserBitShared.Registry.BuilderSchema MERGE =
             new org.apache.drill.exec.proto.SchemaUserBitShared.Registry.BuilderSchema();
         
-        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.Registry>
+        public static class MessageSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.Registry>
         {
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.Registry message) throws java.io.IOException
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.Registry message) throws java.io.IOException
             {
                 for(org.apache.drill.exec.proto.UserBitShared.Jar jar : message.getJarList())
                     output.writeObject(1, jar, org.apache.drill.exec.proto.SchemaUserBitShared.Jar.WRITE, true);
@@ -2795,12 +2802,12 @@ public final class SchemaUserBitShared
                 return org.apache.drill.exec.proto.UserBitShared.Registry.class.getName();
             }
             //unused
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.Registry message) throws java.io.IOException {}
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.Registry message) throws java.io.IOException {}
             public org.apache.drill.exec.proto.UserBitShared.Registry newMessage() { return null; }
         }
-        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.Registry.Builder>
+        public static class BuilderSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.Registry.Builder>
         {
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.Registry.Builder builder) throws java.io.IOException
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.Registry.Builder builder) throws java.io.IOException
             {
                 for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
                 {
@@ -2846,7 +2853,7 @@ public final class SchemaUserBitShared
                 return org.apache.drill.exec.proto.UserBitShared.Registry.class.getName();
             }
             //unused
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.Registry.Builder builder) throws java.io.IOException {}
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.Registry.Builder builder) throws java.io.IOException {}
         }
         public static java.lang.String getFieldName(int number)
         {
@@ -2875,9 +2882,9 @@ public final class SchemaUserBitShared
         public static final org.apache.drill.exec.proto.SchemaUserBitShared.Jar.BuilderSchema MERGE =
             new org.apache.drill.exec.proto.SchemaUserBitShared.Jar.BuilderSchema();
         
-        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.Jar>
+        public static class MessageSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.Jar>
         {
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.Jar message) throws java.io.IOException
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.Jar message) throws java.io.IOException
             {
                 if(message.hasName())
                     output.writeString(1, message.getName(), false);
@@ -2909,12 +2916,12 @@ public final class SchemaUserBitShared
                 return org.apache.drill.exec.proto.UserBitShared.Jar.class.getName();
             }
             //unused
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.Jar message) throws java.io.IOException {}
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.Jar message) throws java.io.IOException {}
             public org.apache.drill.exec.proto.UserBitShared.Jar newMessage() { return null; }
         }
-        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.Jar.Builder>
+        public static class BuilderSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.Jar.Builder>
         {
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.Jar.Builder builder) throws java.io.IOException
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.Jar.Builder builder) throws java.io.IOException
             {
                 for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
                 {
@@ -2962,7 +2969,7 @@ public final class SchemaUserBitShared
                 return org.apache.drill.exec.proto.UserBitShared.Jar.class.getName();
             }
             //unused
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.Jar.Builder builder) throws java.io.IOException {}
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.Jar.Builder builder) throws java.io.IOException {}
         }
         public static java.lang.String getFieldName(int number)
         {
@@ -2993,9 +3000,9 @@ public final class SchemaUserBitShared
         public static final org.apache.drill.exec.proto.SchemaUserBitShared.SaslMessage.BuilderSchema MERGE =
             new org.apache.drill.exec.proto.SchemaUserBitShared.SaslMessage.BuilderSchema();
         
-        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.SaslMessage>
+        public static class MessageSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.SaslMessage>
         {
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.SaslMessage message) throws java.io.IOException
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.SaslMessage message) throws java.io.IOException
             {
                 if(message.hasMechanism())
                     output.writeString(1, message.getMechanism(), false);
@@ -3030,12 +3037,12 @@ public final class SchemaUserBitShared
                 return org.apache.drill.exec.proto.UserBitShared.SaslMessage.class.getName();
             }
             //unused
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.SaslMessage message) throws java.io.IOException {}
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.SaslMessage message) throws java.io.IOException {}
             public org.apache.drill.exec.proto.UserBitShared.SaslMessage newMessage() { return null; }
         }
-        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.SaslMessage.Builder>
+        public static class BuilderSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.SaslMessage.Builder>
         {
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.SaslMessage.Builder builder) throws java.io.IOException
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.SaslMessage.Builder builder) throws java.io.IOException
             {
                 for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
                 {
@@ -3086,7 +3093,7 @@ public final class SchemaUserBitShared
                 return org.apache.drill.exec.proto.UserBitShared.SaslMessage.class.getName();
             }
             //unused
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.SaslMessage.Builder builder) throws java.io.IOException {}
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.SaslMessage.Builder builder) throws java.io.IOException {}
         }
         public static java.lang.String getFieldName(int number)
         {

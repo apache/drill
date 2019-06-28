@@ -217,7 +217,6 @@ public class ClassTransformer {
     }
   }
 
-  @SuppressWarnings("resource")
   public Class<?> getImplementationClass(CodeGenerator<?> cg) throws ClassTransformationException {
     final QueryClassLoader loader = new QueryClassLoader(config, optionManager);
     return getImplementationClass(loader, cg.getDefinition(),

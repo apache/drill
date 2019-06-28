@@ -39,7 +39,11 @@
    {className: "AnyValue", funcName: "any_value", types: [
        {inputType: "VarDecimal", outputType: "NullableVarDecimal"},
        {inputType: "NullableVarDecimal", outputType: "NullableVarDecimal"}
-       {inputType: "RepeatedVarDecimal", outputType: "RepeatedVarDecimal"}
+      ]
+   },
+   {className: "SingleValue", funcName: "single_value", types: [
+       {inputType: "VarDecimal", outputType: "NullableVarDecimal"},
+       {inputType: "NullableVarDecimal", outputType: "NullableVarDecimal"}
       ]
    }
   ]

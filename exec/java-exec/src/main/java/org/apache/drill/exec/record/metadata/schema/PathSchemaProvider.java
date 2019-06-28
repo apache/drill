@@ -45,12 +45,12 @@ public class PathSchemaProvider implements SchemaProvider {
    * Reader used to read JSON schema from file into into {@link SchemaContainer}.
    * Allows comment inside the JSON file.
    */
-  private static final ObjectReader READER;
+  public static final ObjectReader READER;
 
   /**
    * Writer used to write content from {@link SchemaContainer} into JSON file.
    */
-  private static final ObjectWriter WRITER;
+  public static final ObjectWriter WRITER;
 
   static {
     ObjectMapper mapper = new ObjectMapper().enable(INDENT_OUTPUT).configure(JsonParser.Feature.ALLOW_COMMENTS, true);
@@ -124,7 +124,7 @@ public class PathSchemaProvider implements SchemaProvider {
     return fs.exists(path);
   }
 
-  protected SchemaContainer createTableSchema(String schema, Map<String, String> properties) {
+  protected SchemaContainer createTableSchema(String schema, Map<String, String> properties) throws IOException {
     return new SchemaContainer(null, schema, properties);
   }
 

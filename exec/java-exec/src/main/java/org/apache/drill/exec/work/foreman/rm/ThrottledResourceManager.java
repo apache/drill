@@ -28,6 +28,8 @@ import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.AbstractPhysicalVisitor;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.planner.fragment.QueryParallelizer;
+import org.apache.drill.exec.planner.fragment.QueueQueryParallelizer;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.work.QueryWorkUnit;
@@ -114,6 +116,10 @@ public class ThrottledResourceManager extends AbstractResourceManager {
       for (Entry<String, Collection<PhysicalOperator>> entry : nodeMap.entrySet()) {
         planNodeMemory(entry.getKey(), entry.getValue(), width);
       }
+    }
+
+    public QueryContext getQueryContext() {
+      return queryContext;
     }
 
     private int countBufferingOperators(
@@ -284,6 +290,12 @@ public class ThrottledResourceManager extends AbstractResourceManager {
     @Override
     public void setCost(double cost) {
       this.queryCost = cost;
+    }
+
+    @Override
+    public QueryParallelizer getParallelizer(boolean planHasMemory) {
+      // currently memory planning is disabled. Enable it once the RM functionality is fully implemented.
+      return new QueueQueryParallelizer(true || planHasMemory, this.getQueryContext());
     }
 
     @Override

@@ -53,6 +53,16 @@ public interface ColumnWriter {
   boolean nullable();
 
   /**
+   * Whether this writer is projected (is backed by a materialized vector),
+   * or is unprojected (is just a dummy writer.) In most cases, clients can
+   * ignore whether the column is projected and just write to the writer.
+   * This flag handles those special cases where it is helpful to know if
+   * the column is projected or not.
+   */
+
+  boolean isProjected();
+
+  /**
    * Returns the schema of the column associated with this writer.
    *
    * @return schema for this writer's column

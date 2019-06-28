@@ -162,18 +162,21 @@ int SaslAuthenticatorImpl::init(const std::vector<std::string>& mechanisms, exec
 
     const std::string saslMechanismToUse = it->second;
 
-    // setup callbacks and parameters
-    const sasl_callback_t callbacks[] = {
-        { SASL_CB_USER, (sasl_callback_proc_t) &userNameCallback, static_cast<void *>(&m_username) },
-        { SASL_CB_AUTHNAME, (sasl_callback_proc_t) &userNameCallback, static_cast<void *>(&m_username) },
-        { SASL_CB_PASS, (sasl_callback_proc_t) &passwordCallback, static_cast<void *>(this) },
-        { SASL_CB_LIST_END, NULL, NULL }
-    };
+    // setup callbacks and parameter
+    sasl_callback_t user = { SASL_CB_USER, (sasl_callback_proc_t) &userNameCallback, static_cast<void *>(&m_username) };
+    sasl_callback_t authname = { SASL_CB_AUTHNAME, (sasl_callback_proc_t)&userNameCallback, static_cast<void *>(&m_username) };
+    sasl_callback_t pass = { SASL_CB_PASS, (sasl_callback_proc_t)&passwordCallback, static_cast<void *>(this) };
+    sasl_callback_t list_end = { SASL_CB_LIST_END, NULL, NULL };
+    m_callbacks.push_back(user);
+    m_callbacks.push_back(authname);
+    m_callbacks.push_back(pass);
+    m_callbacks.push_back(list_end);
+
     if (serviceName.empty()) serviceName = DEFAULT_SERVICE_NAME;
 
     // create SASL client
     int saslResult = sasl_client_new(serviceName.c_str(), serviceHost.c_str(), NULL /** iplocalport */,
-                                     NULL /** ipremoteport */, callbacks, 0 /** sec flags */, &m_pConnection);
+                                     NULL /** ipremoteport */, &m_callbacks[0], 0 /** sec flags */, &m_pConnection);
     DRILL_MT_LOG(DRILL_LOG(LOG_TRACE) << "SaslAuthenticatorImpl::init: sasl_client_new code: "
                                       << saslResult << std::endl;)
     if (saslResult != SASL_OK) return saslResult;

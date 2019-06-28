@@ -27,8 +27,12 @@ import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.RepeatedListBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.metadata.TupleSchema;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Visits schema and stores metadata about its columns into {@link TupleMetadata} class.
@@ -37,17 +41,40 @@ public class SchemaVisitor extends SchemaParserBaseVisitor<TupleMetadata> {
 
   @Override
   public TupleMetadata visitSchema(SchemaParser.SchemaContext ctx) {
-    return visitColumns(ctx.columns());
+    TupleMetadata schema = ctx.columns() == null ? new TupleSchema() : visitColumns(ctx.columns());
+    if (ctx.property_values() != null) {
+      PropertiesVisitor propertiesVisitor = new PropertiesVisitor();
+      schema.setProperties(ctx.property_values().accept(propertiesVisitor));
+    }
+    return schema;
   }
 
   @Override
   public TupleMetadata visitColumns(SchemaParser.ColumnsContext ctx) {
     TupleMetadata schema = new TupleSchema();
-    ColumnVisitor columnVisitor = new ColumnVisitor();
-    ctx.column().forEach(
-      c -> schema.addColumn(c.accept(columnVisitor))
+    ColumnDefVisitor columnDefVisitor = new ColumnDefVisitor();
+    ctx.column_def().forEach(
+      columnDef -> schema.addColumn(columnDef.accept(columnDefVisitor))
     );
     return schema;
+  }
+
+  /**
+   * Visits column definition, adds column properties to {@link ColumnMetadata} if present.
+   */
+  public static class ColumnDefVisitor extends SchemaParserBaseVisitor<ColumnMetadata> {
+
+    @Override
+    public ColumnMetadata visitColumn_def(SchemaParser.Column_defContext ctx) {
+      ColumnVisitor columnVisitor = new ColumnVisitor();
+      ColumnMetadata columnMetadata = ctx.column().accept(columnVisitor);
+      if (ctx.property_values() != null) {
+        PropertiesVisitor propertiesVisitor = new PropertiesVisitor();
+        columnMetadata.setProperties(ctx.property_values().accept(propertiesVisitor));
+      }
+      return columnMetadata;
+    }
+
   }
 
   /**
@@ -60,7 +87,15 @@ public class SchemaVisitor extends SchemaParserBaseVisitor<TupleMetadata> {
     public ColumnMetadata visitPrimitive_column(SchemaParser.Primitive_columnContext ctx) {
       String name = ctx.column_id().accept(new IdVisitor());
       TypeProtos.DataMode mode = ctx.nullability() == null ? TypeProtos.DataMode.OPTIONAL : TypeProtos.DataMode.REQUIRED;
-      return ctx.simple_type().accept(new TypeVisitor(name, mode));
+      ColumnMetadata columnMetadata = ctx.simple_type().accept(new TypeVisitor(name, mode));
+      StringValueVisitor stringValueVisitor = new StringValueVisitor();
+      if (ctx.format_value() != null) {
+        columnMetadata.setFormat(stringValueVisitor.visit(ctx.format_value().string_value()));
+      }
+      if (ctx.default_value() != null) {
+        columnMetadata.setDefaultValue(stringValueVisitor.visit(ctx.default_value().string_value()));
+      }
+      return columnMetadata;
     }
 
     @Override
@@ -70,10 +105,10 @@ public class SchemaVisitor extends SchemaParserBaseVisitor<TupleMetadata> {
     }
 
     @Override
-    public ColumnMetadata visitMap_column(SchemaParser.Map_columnContext ctx) {
+    public ColumnMetadata visitStruct_column(SchemaParser.Struct_columnContext ctx) {
       String name = ctx.column_id().accept(new IdVisitor());
-      // Drill does not distinguish between nullable and not null map, by default they are not null
-      return ctx.map_type().accept(new TypeVisitor(name, TypeProtos.DataMode.REQUIRED));
+      // Drill does not distinguish between nullable and not null structs, by default they are not null
+      return ctx.struct_type().accept(new TypeVisitor(name, TypeProtos.DataMode.REQUIRED));
     }
 
     @Override
@@ -85,6 +120,20 @@ public class SchemaVisitor extends SchemaParserBaseVisitor<TupleMetadata> {
       return builder.buildColumn();
     }
 
+  }
+
+  /**
+   * Visits quoted string, strips backticks, single quotes or double quotes and returns bare string value.
+   */
+  private static class StringValueVisitor extends SchemaParserBaseVisitor<String> {
+
+    @Override
+    public String visitString_value(SchemaParser.String_valueContext ctx) {
+      String text = ctx.getText();
+      // first substring first and last symbols (backticks, single quotes, double quotes)
+      // then find all chars that are preceding with the backslash and remove the backslash
+      return text.substring(1, text.length() -1).replaceAll("\\\\(.)", "$1");
+    }
   }
 
   /**
@@ -223,10 +272,12 @@ public class SchemaVisitor extends SchemaParserBaseVisitor<TupleMetadata> {
     }
 
     @Override
-    public ColumnMetadata visitMap_type(SchemaParser.Map_typeContext ctx) {
+    public ColumnMetadata visitStruct_type(SchemaParser.Struct_typeContext ctx) {
+      // internally Drill refers to structs as maps and currently does not have true map notion
+      // Drill maps will be renamed to structs in future
       MapBuilder builder = new MapBuilder(null, name, mode);
-      ColumnVisitor visitor = new ColumnVisitor();
-      ctx.columns().column().forEach(
+      ColumnDefVisitor visitor = new ColumnDefVisitor();
+      ctx.columns().column_def().forEach(
         c -> builder.addColumn(c.accept(visitor))
       );
       return builder.buildColumn();
@@ -254,7 +305,7 @@ public class SchemaVisitor extends SchemaParserBaseVisitor<TupleMetadata> {
     @Override
     public ColumnMetadata visitSimple_array_type(SchemaParser.Simple_array_typeContext ctx) {
       TypeVisitor visitor = new TypeVisitor(name, TypeProtos.DataMode.REPEATED);
-      return ctx.map_type() == null ? ctx.simple_type().accept(visitor) : ctx.map_type().accept(visitor);
+      return ctx.struct_type() == null ? ctx.simple_type().accept(visitor) : ctx.struct_type().accept(visitor);
     }
 
     @Override
@@ -266,4 +317,28 @@ public class SchemaVisitor extends SchemaParserBaseVisitor<TupleMetadata> {
     }
   }
 
+  /**
+   * Visits schema or column properties.
+   * Properties must be identified as key values pairs separated by equals sign.
+   * Properties pairs must be separated by comma.
+   * Property name and value must be enclosed into backticks, single quotes or double quotes.
+   */
+  public static class PropertiesVisitor extends SchemaParserBaseVisitor<Map<String, String>> {
+
+    @Override
+    public Map<String, String> visitProperty_values(SchemaParser.Property_valuesContext ctx) {
+      StringValueVisitor stringValueVisitor = new StringValueVisitor();
+      Map<String, String> properties = new LinkedHashMap<>();
+      ctx.property_pair().forEach(
+        pair -> {
+          List<String> pairValues = pair.string_value().stream()
+            .map(stringValueVisitor::visit)
+            .collect(Collectors.toList());
+          Preconditions.checkState(pairValues.size() == 2);
+          properties.put(pairValues.get(0), pairValues.get(1));
+        }
+      );
+      return properties;
+    }
+  }
 }

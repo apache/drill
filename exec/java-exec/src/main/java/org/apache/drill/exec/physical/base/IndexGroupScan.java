@@ -34,10 +34,10 @@ public interface IndexGroupScan extends GroupScan {
 
   /**
    * Get the column ordinal of the rowkey column from the output schema of the IndexGroupScan
-   * @return
+   * @return column ordinal number
    */
   @JsonIgnore
-  public int getRowKeyOrdinal();
+  int getRowKeyOrdinal();
 
   /**
    * Set the artificial row count after applying the {@link RexNode} condition
@@ -47,7 +47,7 @@ public interface IndexGroupScan extends GroupScan {
    * @param capRowCount
    */
   @JsonIgnore
-  public void setRowCount(RexNode condition, double count, double capRowCount);
+  void setRowCount(RexNode condition, double count, double capRowCount);
 
   /**
    * Get the row count after applying the {@link RexNode} condition
@@ -55,21 +55,21 @@ public interface IndexGroupScan extends GroupScan {
    * @return row count post filtering
    */
   @JsonIgnore
-  public double getRowCount(RexNode condition, RelNode scanRel);
+  double getRowCount(RexNode condition, RelNode scanRel);
 
   /**
    * Set the statistics for {@link IndexGroupScan}
-   * @param statistics
+   * @param statistics which is necessary for index planning
    */
   @JsonIgnore
-  public void setStatistics(Statistics statistics);
+  void setStatistics(Statistics statistics);
 
   @JsonIgnore
-  public void setColumns(List<SchemaPath> columns);
+  void setColumns(List<SchemaPath> columns);
 
   @JsonIgnore
-  public List<SchemaPath> getColumns();
+  List<SchemaPath> getColumns();
 
   @JsonIgnore
-  public void setParallelizationWidth(int width);
+  void setParallelizationWidth(int width);
 }

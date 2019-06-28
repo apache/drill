@@ -26,29 +26,33 @@ import static org.junit.Assert.fail;
 
 import java.util.List;
 
+import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.impl.scan.file.FileMetadata;
 import org.apache.drill.exec.physical.impl.scan.file.FileMetadataColumn;
 import org.apache.drill.exec.physical.impl.scan.file.FileMetadataManager;
+import org.apache.drill.exec.physical.impl.scan.file.FileMetadataManager.FileMetadataOptions;
 import org.apache.drill.exec.physical.impl.scan.file.MetadataColumn;
 import org.apache.drill.exec.physical.impl.scan.file.PartitionColumn;
+import org.apache.drill.exec.physical.impl.scan.project.AbstractUnresolvedColumn.UnresolvedColumn;
 import org.apache.drill.exec.physical.impl.scan.project.ColumnProjection;
 import org.apache.drill.exec.physical.impl.scan.project.ExplicitSchemaProjection;
 import org.apache.drill.exec.physical.impl.scan.project.NullColumnBuilder;
+import org.apache.drill.exec.physical.impl.scan.project.NullColumnBuilder.NullBuilderBuilder;
 import org.apache.drill.exec.physical.impl.scan.project.ResolvedColumn;
 import org.apache.drill.exec.physical.impl.scan.project.ResolvedTuple.ResolvedRow;
 import org.apache.drill.exec.physical.impl.scan.project.ScanLevelProjection;
-import org.apache.drill.exec.physical.impl.scan.project.UnresolvedColumn;
 import org.apache.drill.exec.physical.rowSet.impl.RowSetTestUtils;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.hadoop.fs.Path;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-
+@Category(RowSetTests.class)
 public class TestFileMetadataProjection extends SubOperatorTest {
 
   @Test
@@ -152,6 +156,18 @@ public class TestFileMetadataProjection extends SubOperatorTest {
     }
   }
 
+  private FileMetadataOptions standardOptions(Path filePath) {
+    return standardOptions(Lists.newArrayList(filePath));
+  }
+
+  private FileMetadataOptions standardOptions(List<Path> files) {
+    FileMetadataOptions options = new FileMetadataOptions();
+    options.useLegacyWildcardExpansion(false); // Don't expand partition columns for wildcard
+    options.setSelectionRoot(new Path("hdfs:///w"));
+    options.setFiles(files);
+    return options;
+  }
+
   /**
    * Test the file projection planner with metadata.
    */
@@ -161,10 +177,9 @@ public class TestFileMetadataProjection extends SubOperatorTest {
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
         fixture.getOptionManager(),
-        new Path("hdfs:///w"),
-        Lists.newArrayList(filePath));
+        standardOptions(filePath));
 
-    ScanLevelProjection scanProj = new ScanLevelProjection(
+    ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectList(
             ScanTestUtils.FILE_NAME_COL,
             "a",
@@ -177,18 +192,18 @@ public class TestFileMetadataProjection extends SubOperatorTest {
     {
       assertTrue(scanProj.columns().get(0) instanceof FileMetadataColumn);
       FileMetadataColumn col0 = (FileMetadataColumn) scanProj.columns().get(0);
-      assertEquals(FileMetadataColumn.ID, col0.nodeType());
+      assertTrue(col0 instanceof FileMetadataColumn);
       assertEquals(ScanTestUtils.FILE_NAME_COL, col0.name());
       assertEquals(MinorType.VARCHAR, col0.schema().getType().getMinorType());
       assertEquals(DataMode.REQUIRED, col0.schema().getType().getMode());
 
       ColumnProjection col1 = scanProj.columns().get(1);
-      assertEquals(UnresolvedColumn.UNRESOLVED, col1.nodeType());
+      assertTrue(col1 instanceof UnresolvedColumn);
       assertEquals("a", col1.name());
 
       assertTrue(scanProj.columns().get(2) instanceof PartitionColumn);
       PartitionColumn col2 = (PartitionColumn) scanProj.columns().get(2);
-      assertEquals(PartitionColumn.ID, col2.nodeType());
+      assertTrue(col2 instanceof PartitionColumn);
       assertEquals(ScanTestUtils.partitionColName(0), col2.name());
       assertEquals(MinorType.VARCHAR, col2.schema().getType().getMinorType());
       assertEquals(DataMode.OPTIONAL, col2.schema().getType().getMode());
@@ -201,7 +216,7 @@ public class TestFileMetadataProjection extends SubOperatorTest {
         .buildSchema();
 
     metadataManager.startFile(filePath);
-    NullColumnBuilder builder = new NullColumnBuilder(null, false);
+    NullColumnBuilder builder = new NullBuilderBuilder().build();
     ResolvedRow rootTuple = new ResolvedRow(builder);
     new ExplicitSchemaProjection(
         scanProj, tableSchema, rootTuple,
@@ -213,7 +228,7 @@ public class TestFileMetadataProjection extends SubOperatorTest {
     {
       assertTrue(columns.get(0) instanceof FileMetadataColumn);
       FileMetadataColumn col0 = (FileMetadataColumn) columns.get(0);
-      assertEquals(FileMetadataColumn.ID, col0.nodeType());
+      assertTrue(col0 instanceof FileMetadataColumn);
       assertEquals(ScanTestUtils.FILE_NAME_COL, col0.name());
       assertEquals("z.csv", col0.value());
       assertEquals(MinorType.VARCHAR, col0.schema().getType().getMinorType());
@@ -224,7 +239,7 @@ public class TestFileMetadataProjection extends SubOperatorTest {
 
       assertTrue(columns.get(2) instanceof PartitionColumn);
       PartitionColumn col2 = (PartitionColumn) columns.get(2);
-      assertEquals(PartitionColumn.ID, col2.nodeType());
+      assertTrue(col2 instanceof PartitionColumn);
       assertEquals(ScanTestUtils.partitionColName(0), col2.name());
       assertEquals("x", col2.value());
       assertEquals(MinorType.VARCHAR, col2.schema().getType().getMinorType());
@@ -247,10 +262,9 @@ public class TestFileMetadataProjection extends SubOperatorTest {
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
         fixture.getOptionManager(),
-        new Path("hdfs:///w"),
-        Lists.newArrayList(filePath));
+        standardOptions(filePath));
 
-    ScanLevelProjection scanProj = new ScanLevelProjection(
+    ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectList(
           "a",
           ScanTestUtils.FULLY_QUALIFIED_NAME_COL,
@@ -272,7 +286,7 @@ public class TestFileMetadataProjection extends SubOperatorTest {
         .buildSchema();
 
     metadataManager.startFile(filePath);
-    NullColumnBuilder builder = new NullColumnBuilder(null, false);
+    NullColumnBuilder builder = new NullBuilderBuilder().build();
     ResolvedRow rootTuple = new ResolvedRow(builder);
     new ExplicitSchemaProjection(
         scanProj, tableSchema, rootTuple,
@@ -298,10 +312,9 @@ public class TestFileMetadataProjection extends SubOperatorTest {
     Path filePath = new Path("hdfs:///x/0/1/2/3/4/5/6/7/8/9/10/d11/z.csv");
     FileMetadataManager metadataManager = new FileMetadataManager(
         fixture.getOptionManager(),
-        new Path("hdfs:///x"),
-        Lists.newArrayList(filePath));
+        standardOptions(filePath));
 
-    ScanLevelProjection scanProj = new ScanLevelProjection(
+    ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectList("dir11"),
         ScanTestUtils.parsers(metadataManager.projectionParser()));
 
@@ -310,7 +323,7 @@ public class TestFileMetadataProjection extends SubOperatorTest {
         .buildSchema();
 
     metadataManager.startFile(filePath);
-    NullColumnBuilder builder = new NullColumnBuilder(null, false);
+    NullColumnBuilder builder = new NullBuilderBuilder().build();
     ResolvedRow rootTuple = new ResolvedRow(builder);
     new ExplicitSchemaProjection(
         scanProj, tableSchema, rootTuple,

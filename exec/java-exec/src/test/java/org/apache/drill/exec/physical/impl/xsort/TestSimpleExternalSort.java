@@ -112,20 +112,15 @@ public class TestSimpleExternalSort extends DrillTest {
   private void validateResults(BufferAllocator allocator, List<QueryDataBatch> results) throws SchemaChangeException {
     long previousBigInt = Long.MAX_VALUE;
 
-    int recordCount = 0;
-    int batchCount = 0;
-
     for (QueryDataBatch b : results) {
       RecordBatchLoader loader = new RecordBatchLoader(allocator);
       if (b.getHeader().getRowCount() > 0) {
-        batchCount++;
         loader.load(b.getHeader().getDef(),b.getData());
-        @SuppressWarnings({ "deprecation", "resource" })
+        @SuppressWarnings("deprecation")
         BigIntVector c1 = (BigIntVector) loader.getValueAccessorById(BigIntVector.class, loader.getValueVectorId(new SchemaPath("blue", ExpressionPosition.UNKNOWN)).getFieldIds()).getValueVector();
         BigIntVector.Accessor a1 = c1.getAccessor();
 
         for (int i = 0; i < c1.getAccessor().getValueCount(); i++) {
-          recordCount++;
           assertTrue(String.format("%d > %d", previousBigInt, a1.get(i)), previousBigInt >= a1.get(i));
           previousBigInt = a1.get(i);
         }
@@ -186,20 +181,14 @@ public class TestSimpleExternalSort extends DrillTest {
 
       long previousBigInt = Long.MAX_VALUE;
 
-      int recordCount = 0;
-      int batchCount = 0;
-
       for (QueryDataBatch b : results) {
         RecordBatchLoader loader = new RecordBatchLoader(client.allocator());
         if (b.getHeader().getRowCount() > 0) {
-          batchCount++;
           loader.load(b.getHeader().getDef(),b.getData());
-          @SuppressWarnings("resource")
           BigIntVector c1 = (BigIntVector) loader.getValueAccessorById(BigIntVector.class, loader.getValueVectorId(new SchemaPath("blue", ExpressionPosition.UNKNOWN)).getFieldIds()).getValueVector();
           BigIntVector.Accessor a1 = c1.getAccessor();
 
           for (int i = 0; i < c1.getAccessor().getValueCount(); i++) {
-            recordCount++;
             assertTrue(String.format("%d < %d", previousBigInt, a1.get(i)), previousBigInt >= a1.get(i));
             previousBigInt = a1.get(i);
           }

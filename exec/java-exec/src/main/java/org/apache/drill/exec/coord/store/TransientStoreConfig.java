@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.coord.store;
 
-import com.dyuproject.protostuff.Schema;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.protostuff.Schema;
 import org.apache.drill.shaded.guava.com.google.common.base.Objects;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.base.Strings;

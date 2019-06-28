@@ -25,7 +25,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.drill.common.config.CommonConstants;
+import org.apache.drill.common.config.ConfigConstants;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.scanner.ClassPathScanner;
 import org.apache.drill.common.scanner.persistence.ScanResult;
@@ -283,7 +283,7 @@ public class DrillOnYarnConfig {
 
   private static Config loadDrillConfig() {
     drillConfig = DrillConfig
-        .create(CommonConstants.CONFIG_OVERRIDE_RESOURCE_PATHNAME);
+        .create(ConfigConstants.CONFIG_OVERRIDE_RESOURCE_PATHNAME);
     return drillConfig.resolve();
   }
 
@@ -394,10 +394,10 @@ public class DrillOnYarnConfig {
         classLoader = DrillOnYarnConfig.class.getClassLoader();
       }
 
-      URL url = classLoader.getResource(CommonConstants.CONFIG_OVERRIDE_RESOURCE_PATHNAME);
+      URL url = classLoader.getResource(ConfigConstants.CONFIG_OVERRIDE_RESOURCE_PATHNAME);
       if (url == null) {
         throw new DoyConfigException(
-            "Drill configuration file is missing: " + CommonConstants.CONFIG_OVERRIDE_RESOURCE_PATHNAME);
+            "Drill configuration file is missing: " + ConfigConstants.CONFIG_OVERRIDE_RESOURCE_PATHNAME);
       }
       File confFile;
       try {

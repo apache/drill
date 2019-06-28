@@ -129,7 +129,6 @@ public class ClassBuilder {
    * @throws ClassTransformationException generic "something is wrong" error from
    * Drill class compilation code.
    */
-  @SuppressWarnings("resource")
   private Class<?> compileClass(CodeGenerator<?> cg) throws IOException, CompileException, ClassNotFoundException, ClassTransformationException {
     final long t1 = System.nanoTime();
 

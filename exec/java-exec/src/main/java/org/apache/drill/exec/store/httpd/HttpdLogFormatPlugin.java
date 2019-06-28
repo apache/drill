@@ -18,9 +18,9 @@
 package org.apache.drill.exec.store.httpd;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import nl.basjes.parse.core.exceptions.DissectionFailure;
 import nl.basjes.parse.core.exceptions.InvalidDissectorException;
 import nl.basjes.parse.core.exceptions.MissingDissectorsException;
@@ -28,13 +28,13 @@ import nl.basjes.parse.core.exceptions.MissingDissectorsException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
+import org.apache.drill.exec.planner.common.DrillStatsTable.TableStatistics;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.RecordWriter;
@@ -45,6 +45,7 @@ import org.apache.drill.exec.store.dfs.easy.FileWork;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
@@ -53,75 +54,38 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.LineRecordReader;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.TextInputFormat;
-
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import java.util.Collections;
 import java.util.Map;
 import org.apache.drill.exec.store.RecordReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class HttpdLogFormatPlugin extends EasyFormatPlugin<HttpdLogFormatPlugin.HttpdLogFormatConfig> {
+public class HttpdLogFormatPlugin extends EasyFormatPlugin<HttpdLogFormatConfig> {
 
   private static final Logger LOG = LoggerFactory.getLogger(HttpdLogFormatPlugin.class);
   private static final String PLUGIN_EXTENSION = "httpd";
   private static final int VECTOR_MEMORY_ALLOCATION = 4095;
 
   public HttpdLogFormatPlugin(final String name, final DrillbitContext context, final Configuration fsConf,
-      final StoragePluginConfig storageConfig, final HttpdLogFormatConfig formatConfig) {
+                              final StoragePluginConfig storageConfig, final HttpdLogFormatConfig formatConfig) {
 
     super(name, context, fsConf, storageConfig, formatConfig, true, false, true, true,
-        Lists.newArrayList(PLUGIN_EXTENSION), PLUGIN_EXTENSION);
+            Collections.singletonList(PLUGIN_EXTENSION), PLUGIN_EXTENSION);
   }
 
-  /**
-   * This class is a POJO to hold the configuration for the HttpdLogFormat Parser. This is automatically
-   * serialized/deserialized from JSON format.
-   */
-  @JsonTypeName(PLUGIN_EXTENSION) @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-  public static class HttpdLogFormatConfig implements FormatPluginConfig {
+  @Override
+  public boolean supportsStatistics() {
+    return false;
+  }
 
-    public String logFormat;
-    public String timestampFormat;
+  @Override
+  public TableStatistics readStatistics(FileSystem fs, Path statsTablePath) throws IOException {
+    throw new UnsupportedOperationException("unimplemented");
+  }
 
-    /**
-     * @return the logFormat
-     */
-    public String getLogFormat() {
-      return logFormat;
-    }
-
-    /**
-     * @return the timestampFormat
-     */
-    public String getTimestampFormat() {
-      return timestampFormat;
-    }
-
-    @Override
-    public int hashCode() {
-      int result = logFormat != null ? logFormat.hashCode() : 0;
-      result = 31 * result + (timestampFormat != null ? timestampFormat.hashCode() : 0);
-      return result;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-
-      HttpdLogFormatConfig that = (HttpdLogFormatConfig) o;
-
-      if (logFormat != null ? !logFormat.equals(that.logFormat) : that.logFormat != null) {
-        return false;
-      }
-      return timestampFormat != null ? timestampFormat.equals(that.timestampFormat) : that.timestampFormat == null;
-    }
+  @Override
+  public void writeStatistics(TableStatistics statistics, FileSystem fs, Path statsTablePath) throws IOException {
+    throw new UnsupportedOperationException("unimplemented");
   }
 
   /**
@@ -152,11 +116,15 @@ public class HttpdLogFormatPlugin extends EasyFormatPlugin<HttpdLogFormatPlugin.
      * @return Map with Drill field names as a key and Parser Field names as a value
      */
     private Map<String, String> makeParserFields() {
-      final Map<String, String> fieldMapping = Maps.newHashMap();
+      Map<String, String> fieldMapping = new HashMap<>();
       for (final SchemaPath sp : getColumns()) {
-        final String drillField = sp.getRootSegment().getPath();
-        final String parserField = HttpdParser.parserFormattedFieldName(drillField);
-        fieldMapping.put(drillField, parserField);
+        String drillField = sp.getRootSegment().getPath();
+        try {
+          String parserField = HttpdParser.parserFormattedFieldName(drillField);
+          fieldMapping.put(drillField, parserField);
+        } catch (Exception e) {
+          LOG.info("Putting field: " + drillField + " into map", e);
+        }
       }
       return fieldMapping;
     }
@@ -170,12 +138,13 @@ public class HttpdLogFormatPlugin extends EasyFormatPlugin<HttpdLogFormatPlugin.
          */
         final Map<String, String> fieldMapping = !isStarQuery() ? makeParserFields() : null;
         writer = new VectorContainerWriter(output);
-        parser = new HttpdParser(writer.rootAsMap(), context.getManagedBuffer(),
-            HttpdLogFormatPlugin.this.getConfig().getLogFormat(),
-            HttpdLogFormatPlugin.this.getConfig().getTimestampFormat(),
-            fieldMapping);
 
-        final Path path = fs.makeQualified(new Path(work.getPath()));
+        parser = new HttpdParser(writer.rootAsMap(), context.getManagedBuffer(),
+                HttpdLogFormatPlugin.this.getConfig().getLogFormat(),
+                HttpdLogFormatPlugin.this.getConfig().getTimestampFormat(),
+                fieldMapping);
+
+        final Path path = fs.makeQualified(work.getPath());
         FileSplit split = new FileSplit(path, work.getStart(), work.getLength(), new String[]{""});
         TextInputFormat inputFormat = new TextInputFormat();
         JobConf job = new JobConf(fs.getConf());
@@ -183,23 +152,21 @@ public class HttpdLogFormatPlugin extends EasyFormatPlugin<HttpdLogFormatPlugin.
         job.setInputFormat(inputFormat.getClass());
         lineReader = (LineRecordReader) inputFormat.getRecordReader(split, job, Reporter.NULL);
         lineNumber = lineReader.createKey();
-      }
-      catch (NoSuchMethodException | MissingDissectorsException | InvalidDissectorException e) {
+      } catch (NoSuchMethodException | MissingDissectorsException | InvalidDissectorException e) {
         throw handleAndGenerate("Failure creating HttpdParser", e);
-      }
-      catch (IOException e) {
+      } catch (IOException e) {
         throw handleAndGenerate("Failure creating HttpdRecordReader", e);
       }
     }
 
     private RuntimeException handleAndGenerate(final String s, final Exception e) {
       throw UserException.dataReadError(e)
-          .message(s + "\n%s", e.getMessage())
-          .addContext("Path", work.getPath())
-          .addContext("Split Start", work.getStart())
-          .addContext("Split Length", work.getLength())
-          .addContext("Local Line Number", lineNumber.get())
-          .build(LOG);
+              .message(s + "\n%s", e.getMessage())
+              .addContext("Path", work.getPath())
+              .addContext("Split Start", work.getStart())
+              .addContext("Split Length", work.getLength())
+              .addContext("Local Line Number", lineNumber.get())
+              .build(LOG);
     }
 
     /**
@@ -224,8 +191,7 @@ public class HttpdLogFormatPlugin extends EasyFormatPlugin<HttpdLogFormatPlugin.
         writer.setValueCount(recordCount);
 
         return recordCount;
-      }
-      catch (DissectionFailure | InvalidDissectorException | MissingDissectorsException | IOException e) {
+      } catch (DissectionFailure | InvalidDissectorException | MissingDissectorsException | IOException e) {
         throw handleAndGenerate("Failure while parsing log record.", e);
       }
     }
@@ -236,8 +202,7 @@ public class HttpdLogFormatPlugin extends EasyFormatPlugin<HttpdLogFormatPlugin.
         if (lineReader != null) {
           lineReader.close();
         }
-      }
-      catch (IOException e) {
+      } catch (IOException e) {
         LOG.warn("Failure while closing Httpd reader.", e);
       }
     }
@@ -245,10 +210,10 @@ public class HttpdLogFormatPlugin extends EasyFormatPlugin<HttpdLogFormatPlugin.
     @Override
     public String toString() {
       return "HttpdLogRecordReader[Path=" + work.getPath()
-          + ", Start=" + work.getStart()
-          + ", Length=" + work.getLength()
-          + ", Line=" + lineNumber.get()
-          + "]";
+              + ", Start=" + work.getStart()
+              + ", Length=" + work.getLength()
+              + ", Line=" + lineNumber.get()
+              + "]";
     }
   }
 

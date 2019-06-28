@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.drill.common.config.ConfigConstants;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.scanner.persistence.ScanResult;
@@ -42,7 +43,7 @@ public class RunTimeScan {
    * @return getMarkedPaths() sans getPrescannedPaths()
    */
   static Collection<URL> getNonPrescannedMarkedPaths() {
-    Collection<URL> markedPaths = ClassPathScanner.getMarkedPaths();
+    Collection<URL> markedPaths = ClassPathScanner.getMarkedPaths(ConfigConstants.DRILL_JAR_MARKER_FILE_RESOURCE_PATHNAME);
     markedPaths.removeAll(BuildTimeScan.getPrescannedPaths());
     return markedPaths;
   }
@@ -69,7 +70,7 @@ public class RunTimeScan {
     } else {
       // scan everything
       return ClassPathScanner.scan(
-          ClassPathScanner.getMarkedPaths(),
+          ClassPathScanner.getMarkedPaths(ConfigConstants.DRILL_JAR_MARKER_FILE_RESOURCE_PATHNAME),
           packagePrefixes,
           scannedBaseClasses,
           scannedAnnotations,

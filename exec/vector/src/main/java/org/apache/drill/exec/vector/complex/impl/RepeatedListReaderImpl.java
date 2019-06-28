@@ -34,6 +34,8 @@ public class RepeatedListReaderImpl extends AbstractFieldReader{
   private final String name;
   private final RepeatedListVector container;
   private FieldReader reader;
+  private int currentOffset;
+  private int maxOffset;
 
   public RepeatedListReaderImpl(String name, RepeatedListVector container) {
     super();
@@ -48,7 +50,7 @@ public class RepeatedListReaderImpl extends AbstractFieldReader{
 
   @Override
   public void copyAsValue(ListWriter writer) {
-    if (currentOffset == NO_VALUES) {
+    if (isEmpty()) {
       return;
     }
     RepeatedListWriter impl = (RepeatedListWriter) writer;
@@ -57,15 +59,12 @@ public class RepeatedListReaderImpl extends AbstractFieldReader{
 
   @Override
   public void copyAsField(String name, MapWriter writer) {
-    if (currentOffset == NO_VALUES) {
+    if (isEmpty()) {
       return;
     }
     RepeatedListWriter impl = (RepeatedListWriter) writer.list(name);
     impl.container.copyFromSafe(idx(), impl.idx(), container);
   }
-
-  private int currentOffset;
-  private int maxOffset;
 
   @Override
   public void reset() {
@@ -80,7 +79,7 @@ public class RepeatedListReaderImpl extends AbstractFieldReader{
 
   @Override
   public int size() {
-    return maxOffset - currentOffset;
+    return isEmpty() ? 0 : maxOffset - currentOffset;
   }
 
   @Override
@@ -96,9 +95,9 @@ public class RepeatedListReaderImpl extends AbstractFieldReader{
     if (h.start == h.end) {
       currentOffset = NO_VALUES;
     } else {
-      currentOffset = h.start-1;
-      maxOffset = h.end;
-      if(reader != null) {
+      currentOffset = h.start - 1;
+      maxOffset = h.end - 1;
+      if (reader != null) {
         reader.setPosition(currentOffset);
       }
     }
@@ -106,7 +105,7 @@ public class RepeatedListReaderImpl extends AbstractFieldReader{
 
   @Override
   public boolean next() {
-    if (currentOffset +1 < maxOffset) {
+    if (currentOffset < maxOffset) {
       currentOffset++;
       if (reader != null) {
         reader.setPosition(currentOffset);
@@ -137,8 +136,11 @@ public class RepeatedListReaderImpl extends AbstractFieldReader{
     return reader;
   }
 
+  public boolean isEmpty() {
+    return currentOffset == NO_VALUES;
+  }
+
   public boolean isSet() {
     return true;
   }
-
 }

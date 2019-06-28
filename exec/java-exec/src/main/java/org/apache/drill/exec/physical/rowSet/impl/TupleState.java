@@ -22,9 +22,9 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.physical.rowSet.ProjectionSet;
 import org.apache.drill.exec.physical.rowSet.ResultVectorCache;
 import org.apache.drill.exec.physical.rowSet.impl.ColumnState.BaseContainerColumnState;
-import org.apache.drill.exec.physical.rowSet.project.RequestedTuple;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.VectorContainer;
@@ -231,7 +231,7 @@ public abstract class TupleState extends ContainerState
 
     @Override
     public void dump(HierarchicalFormatter format) {
-      // TODO Auto-generated method stub
+      // TODO
     }
   }
 
@@ -316,7 +316,7 @@ public abstract class TupleState extends ContainerState
 
     public MapState(LoaderInternals events,
         ResultVectorCache vectorCache,
-        RequestedTuple projectionSet) {
+        ProjectionSet projectionSet) {
       super(events, vectorCache, projectionSet);
     }
 
@@ -388,9 +388,9 @@ public abstract class TupleState extends ContainerState
 
     public SingleMapState(LoaderInternals events,
         ResultVectorCache vectorCache,
-        RequestedTuple projectionSet) {
+        ProjectionSet projectionSet) {
       super(events, vectorCache, projectionSet);
-     }
+    }
 
     /**
      * Return the tuple writer for the map. If this is a single
@@ -408,7 +408,7 @@ public abstract class TupleState extends ContainerState
 
     public MapArrayState(LoaderInternals events,
         ResultVectorCache vectorCache,
-        RequestedTuple projectionSet) {
+        ProjectionSet projectionSet) {
       super(events, vectorCache, projectionSet);
     }
 
@@ -459,7 +459,7 @@ public abstract class TupleState extends ContainerState
 
   protected TupleState(LoaderInternals events,
       ResultVectorCache vectorCache,
-      RequestedTuple projectionSet) {
+      ProjectionSet projectionSet) {
     super(events, vectorCache, projectionSet);
   }
 
@@ -533,20 +533,19 @@ public abstract class TupleState extends ContainerState
 
       // Ignore unprojected columns
 
-      if (! colState.schema().isProjected()) {
+      if (! colState.writer().isProjected()) {
         continue;
       }
 
-      // If this is a new column added since the last
-      // output, then we may have to add the column to this output.
-      // For the row itself, and for maps outside of unions, If the column was
-      // added after the output schema version cutoff, skip that column for now.
-      // But, if this tuple is within a union,
-      // then we always add all columns because union semantics are too
-      // muddy to play the deferred column game. Further, all columns in
-      // a map within a union must be nullable, so we know we can fill
-      // the column with nulls. (Something that is not true for normal
-      // maps.)
+      // If this is a new column added since the lastoutput, then we may have
+      // to add the column to this output. For the row itself, and for maps
+      // outside of unions, If the column wasadded after the output schema
+      // version cutoff, skip that column for now. But, if this tuple is
+      // within a union, then we always add all columns because union
+      // semantics are too muddy to play the deferred column game. Further,
+      // all columns in a map within a union must be nullable, so we know we
+      // can fill the column with nulls. (Something that is not true for
+      // normal maps.)
 
       if (i > prevHarvestIndex && (! isVersioned() || colState.addVersion <= curSchemaVersion)) {
         colState.buildOutput(this);

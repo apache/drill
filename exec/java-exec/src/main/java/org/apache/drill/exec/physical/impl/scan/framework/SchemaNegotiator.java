@@ -17,8 +17,10 @@
  */
 package org.apache.drill.exec.physical.impl.scan.framework;
 
+import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
+import org.apache.drill.exec.physical.rowSet.RowSetLoader;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 
 /**
@@ -59,15 +61,32 @@ public interface SchemaNegotiator {
   OperatorContext context();
 
   /**
+   * Specify an advanced error context which allows the reader to
+   * fill in custom context values.
+   */
+
+  void setErrorContext(CustomErrorContext context);
+
+  /*
+   * The name of the user running the query.
+   */
+
+  String userName();
+
+  /**
    * Specify the table schema if this is an early-schema reader. Need
    * not be called for a late-schema readers. The schema provided here,
    * if any, is a base schema: the reader is free to discover additional
    * columns during the read.
    *
    * @param schema the table schema if known at open time
+   * @param isComplete true if the schema is complete: if it can be used
+   * to define an empty schema-only batch for the first reader. Set to
+   * false if the schema is partial: if the reader must read rows to
+   * determine the full schema
    */
 
-  void setTableSchema(TupleMetadata schema);
+  void setTableSchema(TupleMetadata schema, boolean isComplete);
 
   /**
    * Set the preferred batch size (which may be overridden by the
@@ -106,4 +125,12 @@ public interface SchemaNegotiator {
    */
 
   boolean isProjectionEmpty();
+
+  /**
+   * The context to use as a parent when creating a custom context.
+   * <p>
+   * (Obtain the error context for this reader from the
+   * {@link ResultSetLoader}.
+   */
+  CustomErrorContext parentErrorContext();
 }

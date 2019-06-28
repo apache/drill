@@ -56,7 +56,7 @@ public class ScalarReplacementNode extends MethodNode {
 
     final LinkedList<ReplacingBasicValue> valueList = new LinkedList<>();
     final MethodAnalyzer<BasicValue> analyzer =
-        new MethodAnalyzer<BasicValue>(new ReplacingInterpreter(className, valueList));
+        new MethodAnalyzer<>(new ReplacingInterpreter(className, valueList));
     Frame<BasicValue>[] frames;
     try {
       frames = analyzer.analyze(className, this);

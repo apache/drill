@@ -85,7 +85,11 @@ public interface RecordWriter {
    * @throws IOException
    */
   void endRecord() throws IOException;
-
+  /**
+   * Called after adding all the records to perform any post processing related tasks
+   * @throws IOException
+   */
+  void postProcessing() throws IOException;
   void abort() throws IOException;
   void cleanup() throws IOException;
 }

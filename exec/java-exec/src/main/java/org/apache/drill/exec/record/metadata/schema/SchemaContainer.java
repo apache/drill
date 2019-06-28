@@ -21,46 +21,38 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.record.metadata.TupleSchema;
 import org.apache.drill.exec.record.metadata.schema.parser.SchemaExprParser;
-
-import java.util.LinkedHashMap;
-import java.util.List;
+import java.io.IOException;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
- * Holder class that contains table name, schema definition
- * and properties passed in schema file or using table function.
+ * Holder class that contains table name, schema definition and current schema container version.
  */
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class SchemaContainer {
 
   private final String table;
   private final TupleMetadata schema;
-  // preserve properties order
-  private final Map<String, String> properties = new LinkedHashMap<>();
   private final Version version;
 
   @JsonCreator
   public SchemaContainer(@JsonProperty("table") String table,
-                         @JsonProperty("schema") List<String> schema,
-                         @JsonProperty("properties") LinkedHashMap<String, String> properties,
+                         @JsonProperty("schema") TupleSchema schema,
                          @JsonProperty("version") Integer version) {
-    this(table, schema == null ? null : String.join(", ", schema), properties, version);
+    this.table = table;
+    this.schema = schema;
+    this.version = new Version(version);
   }
 
-  public SchemaContainer(String table, String schema, Map<String, String> properties) {
+  public SchemaContainer(String table, String schema, Map<String, String> properties) throws IOException {
     this(table, schema, properties, Version.VERSION_1); //current default version
   }
 
-  public SchemaContainer(String table, String schema, Map<String, String> properties, Integer version) {
+  public SchemaContainer(String table, String schema, Map<String, String> properties, Integer version) throws IOException {
     this.table = table;
-    this.schema = schema == null ? null : convert(schema);
-    if (properties != null) {
-      this.properties.putAll(properties);
-    }
+    this.schema = schema == null ? null : convert(schema, properties);
     this.version = new Version(version);
   }
 
@@ -70,15 +62,8 @@ public class SchemaContainer {
   }
 
   @JsonProperty("schema")
-  public List<String> getSchemaList() {
-    return schema == null ? null : schema.toMetadataList().stream()
-      .map(ColumnMetadata::columnString)
-      .collect(Collectors.toList());
-  }
-
-  @JsonProperty("properties")
-  public Map<String, String> getProperties() {
-    return properties;
+  public TupleMetadata getSchema() {
+    return schema;
   }
 
   @JsonProperty("version")
@@ -87,23 +72,21 @@ public class SchemaContainer {
   }
 
   @JsonIgnore
-  public TupleMetadata getSchema() {
-    return schema;
-  }
-
-  @JsonIgnore
   public Version getVersion() {
     return version;
   }
 
-  private TupleMetadata convert(String schema) {
-    return SchemaExprParser.parseSchema(schema);
+  private TupleMetadata convert(String schemaString, Map<String, String> properties) throws IOException {
+    TupleMetadata schema = SchemaExprParser.parseSchema(schemaString);
+    if (properties != null) {
+      schema.setProperties(properties);
+    }
+    return schema;
   }
 
   @Override
   public String toString() {
-    return "SchemaContainer{" + "table='" + table + '\'' + ", schema=" + schema +
-      ", properties=" + properties + ", version=" + version + '}';
+    return "SchemaContainer{" + "table='" + table + '\'' + ", schema=" + schema + ", version=" + version + '}';
   }
 
   /**
@@ -114,6 +97,7 @@ public class SchemaContainer {
   public static class Version {
 
     public static final int UNDEFINED_VERSION = -1;
+
     public static final int VERSION_1 = 1;
 
     // is used for testing

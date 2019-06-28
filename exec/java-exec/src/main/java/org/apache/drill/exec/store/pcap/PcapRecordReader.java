@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.pcap;
 
+import org.apache.drill.exec.vector.NullableBitVector;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -85,18 +86,19 @@ public class PcapRecordReader extends AbstractRecordReader {
 
   static {
     TYPES = ImmutableMap.<PcapTypes, TypeProtos.MinorType>builder()
-        .put(PcapTypes.STRING, MinorType.VARCHAR)
-        .put(PcapTypes.INTEGER, MinorType.INT)
-        .put(PcapTypes.LONG, MinorType.BIGINT)
-        .put(PcapTypes.TIMESTAMP, MinorType.TIMESTAMP)
-        .build();
+            .put(PcapTypes.STRING, MinorType.VARCHAR)
+            .put(PcapTypes.INTEGER, MinorType.INT)
+            .put(PcapTypes.LONG, MinorType.BIGINT)
+            .put(PcapTypes.TIMESTAMP, MinorType.TIMESTAMP)
+            .put(PcapTypes.BOOLEAN, MinorType.BIT)
+            .build();
   }
 
-  public PcapRecordReader(final String pathToFile,
+  public PcapRecordReader(final Path pathToFile,
                           final FileSystem fileSystem,
                           final List<SchemaPath> projectedColumns) {
     this.fs = fileSystem;
-    this.pathToFile = fs.makeQualified(new Path(pathToFile));
+    this.pathToFile = fs.makeQualified(pathToFile);
     this.projectedColumns = projectedColumns;
   }
 
@@ -112,8 +114,8 @@ public class PcapRecordReader extends AbstractRecordReader {
       setColumns(projectedColumns);
     } catch (IOException io) {
       throw UserException.dataReadError(io)
-          .addContext("File name:", pathToFile.toUri().getPath())
-          .build(logger);
+              .addContext("File name:", pathToFile.toUri().getPath())
+              .build(logger);
     }
   }
 
@@ -123,8 +125,8 @@ public class PcapRecordReader extends AbstractRecordReader {
       return parsePcapFilesAndPutItToTable();
     } catch (IOException io) {
       throw UserException.dataReadError(io)
-          .addContext("Trouble with reading packets in file!")
-          .build(logger);
+              .addContext("Trouble with reading packets in file!")
+              .build(logger);
     }
   }
 
@@ -160,10 +162,10 @@ public class PcapRecordReader extends AbstractRecordReader {
     TypeProtos.MajorType majorType = getMajorType(minorType);
 
     MaterializedField field =
-        MaterializedField.create(name, majorType);
+            MaterializedField.create(name, majorType);
 
     ValueVector vector =
-        getValueVector(minorType, majorType, field);
+            getValueVector(minorType, majorType, field);
 
     return getProjectedColumnInfo(column, vector);
   }
@@ -185,7 +187,7 @@ public class PcapRecordReader extends AbstractRecordReader {
     try {
 
       final Class<? extends ValueVector> clazz = TypeHelper.getValueVectorClass(
-          minorType, majorType.getMode());
+              minorType, majorType.getMode());
       ValueVector vector = output.addField(field, clazz);
       vector.allocateNew();
       return vector;
@@ -223,6 +225,7 @@ public class PcapRecordReader extends AbstractRecordReader {
       int old = offset;
       offset = decoder.decodePacket(buffer, offset, packet, decoder.getMaxLength(), validBytes);
       if (offset > validBytes) {
+        //Start here...
         logger.error("Invalid packet at offset {}", old);
       }
 
@@ -241,6 +244,9 @@ public class PcapRecordReader extends AbstractRecordReader {
           break;
         case "timestamp":
           setTimestampColumnValue(packet.getTimestamp(), pci, count);
+          break;
+        case "timestamp_micro":
+          setLongColumnValue(packet.getTimestampMicro(), pci, count);
           break;
         case "network":
           setIntegerColumnValue(networkType, pci, count);
@@ -283,7 +289,7 @@ public class PcapRecordReader extends AbstractRecordReader {
           break;
         case "tcp_ack":
           if (packet.isTcpPacket()) {
-            setIntegerColumnValue(packet.getAckNumber(), pci, count);
+            setBooleanColumnValue(packet.getAckNumber(), pci, count);
           }
           break;
         case "tcp_flags":
@@ -354,6 +360,9 @@ public class PcapRecordReader extends AbstractRecordReader {
         case "packet_length":
           setIntegerColumnValue(packet.getPacketLength(), pci, count);
           break;
+        case "is_corrupt":
+          setBooleanColumnValue(packet.isCorrupt(), pci, count);
+          break;
         case "data":
           if (packet.getData() != null) {
             setStringColumnValue(parseBytesToASCII(packet.getData()), pci, count);
@@ -368,32 +377,37 @@ public class PcapRecordReader extends AbstractRecordReader {
 
   private void setLongColumnValue(long data, ProjectedColumnInfo pci, final int count) {
     ((NullableBigIntVector.Mutator) pci.vv.getMutator())
-        .setSafe(count, data);
+            .setSafe(count, data);
   }
 
   private void setIntegerColumnValue(final int data, final ProjectedColumnInfo pci, final int count) {
     ((NullableIntVector.Mutator) pci.vv.getMutator())
-        .setSafe(count, data);
+            .setSafe(count, data);
   }
 
   private void setBooleanColumnValue(final boolean data, final ProjectedColumnInfo pci, final int count) {
-    ((NullableIntVector.Mutator) pci.vv.getMutator())
-        .setSafe(count, data ? 1 : 0);
+    ((NullableBitVector.Mutator) pci.vv.getMutator())
+            .setSafe(count, data ? 1 : 0);
+  }
+
+  private void setBooleanColumnValue(final int data, final ProjectedColumnInfo pci, final int count) {
+    ((NullableBitVector.Mutator) pci.vv.getMutator())
+            .setSafe(count, data);
   }
 
   private void setTimestampColumnValue(final long data, final ProjectedColumnInfo pci, final int count) {
     ((NullableTimeStampVector.Mutator) pci.vv.getMutator())
-        .setSafe(count, data);
+            .setSafe(count, data);
   }
 
   private void setStringColumnValue(final String data, final ProjectedColumnInfo pci, final int count) {
     if (data == null) {
       ((NullableVarCharVector.Mutator) pci.vv.getMutator())
-          .setNull(count);
+              .setNull(count);
     } else {
       ByteBuffer value = ByteBuffer.wrap(data.getBytes(UTF_8));
       ((NullableVarCharVector.Mutator) pci.vv.getMutator())
-          .setSafe(count, value, 0, value.remaining());
+              .setSafe(count, value, 0, value.remaining());
     }
   }
 

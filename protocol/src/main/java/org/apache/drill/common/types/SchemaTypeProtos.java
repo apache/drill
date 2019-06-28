@@ -31,9 +31,9 @@ public final class SchemaTypeProtos
         public static final org.apache.drill.common.types.SchemaTypeProtos.MajorType.BuilderSchema MERGE =
             new org.apache.drill.common.types.SchemaTypeProtos.MajorType.BuilderSchema();
         
-        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.common.types.TypeProtos.MajorType>
+        public static class MessageSchema implements io.protostuff.Schema<org.apache.drill.common.types.TypeProtos.MajorType>
         {
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.common.types.TypeProtos.MajorType message) throws java.io.IOException
+            public void writeTo(io.protostuff.Output output, org.apache.drill.common.types.TypeProtos.MajorType message) throws java.io.IOException
             {
                 if(message.hasMinorType())
                     output.writeEnum(1, message.getMinorType().getNumber(), false);
@@ -75,12 +75,12 @@ public final class SchemaTypeProtos
                 return org.apache.drill.common.types.TypeProtos.MajorType.class.getName();
             }
             //unused
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.common.types.TypeProtos.MajorType message) throws java.io.IOException {}
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.common.types.TypeProtos.MajorType message) throws java.io.IOException {}
             public org.apache.drill.common.types.TypeProtos.MajorType newMessage() { return null; }
         }
-        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.common.types.TypeProtos.MajorType.Builder>
+        public static class BuilderSchema implements io.protostuff.Schema<org.apache.drill.common.types.TypeProtos.MajorType.Builder>
         {
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.common.types.TypeProtos.MajorType.Builder builder) throws java.io.IOException
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.common.types.TypeProtos.MajorType.Builder builder) throws java.io.IOException
             {
                 for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
                 {
@@ -143,7 +143,7 @@ public final class SchemaTypeProtos
                 return org.apache.drill.common.types.TypeProtos.MajorType.class.getName();
             }
             //unused
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.common.types.TypeProtos.MajorType.Builder builder) throws java.io.IOException {}
+            public void writeTo(io.protostuff.Output output, org.apache.drill.common.types.TypeProtos.MajorType.Builder builder) throws java.io.IOException {}
         }
         public static java.lang.String getFieldName(int number)
         {

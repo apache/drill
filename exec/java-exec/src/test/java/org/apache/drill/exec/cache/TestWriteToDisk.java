@@ -85,7 +85,6 @@ public class TestWriteToDisk extends ExecTest {
         VectorContainer container = new VectorContainer();
         container.addCollection(vectorList);
         container.setRecordCount(4);
-        @SuppressWarnings("resource")
         WritableBatch batch = WritableBatch.getBatchNoHVWrap(
             container.getRecordCount(), container, false);
         VectorAccessibleSerializable wrap = new VectorAccessibleSerializable(

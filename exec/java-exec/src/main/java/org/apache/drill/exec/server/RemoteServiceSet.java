@@ -40,7 +40,6 @@ public class RemoteServiceSet implements AutoCloseable {
     coordinator.close();
   }
 
-  @SuppressWarnings("resource")
   public static RemoteServiceSet getLocalServiceSet() {
     return new RemoteServiceSet(new LocalClusterCoordinator());
   }

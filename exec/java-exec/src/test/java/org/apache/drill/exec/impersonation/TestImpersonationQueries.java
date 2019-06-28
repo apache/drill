@@ -291,8 +291,22 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
     }
   }
 
+  @Test // DRILL-7250
+  public void testCTEWithImpersonation() throws Exception {
+    // Table lineitem is owned by "user0_1:group0_1" with permissions 750. "user2_1" doesn't have access to it,
+    // but query uses CTE with the same name as the table, so query shouldn't look for lineitem table
+    updateClient(org1Users[2]);
+    test("use %s", getWSSchema(org1Users[0]));
+    testBuilder()
+        .sqlQuery("with lineitem as (SELECT 1 as a) select * from lineitem")
+        .unOrdered()
+        .baselineColumns("a")
+        .baselineValues(1)
+        .go();
+  }
+
   @AfterClass
-  public static void removeMiniDfsBasedStorage() throws Exception {
+  public static void removeMiniDfsBasedStorage() {
     getDrillbitContext().getStorage().deletePlugin(MINI_DFS_STORAGE_PLUGIN_NAME);
     stopMiniDfsCluster();
   }

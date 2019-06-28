@@ -17,31 +17,49 @@
  */
 package org.apache.drill.test.rowSet.test;
 
+import static org.apache.drill.test.rowSet.RowSetUtilities.dec;
+import static org.apache.drill.test.rowSet.RowSetUtilities.strArray;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
 
 import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.SimpleVectorWrapper;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.DateUtilities;
+import org.apache.drill.exec.vector.NullableVarCharVector;
+import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.ArrayReader;
+import org.apache.drill.exec.vector.accessor.ArrayWriter;
 import org.apache.drill.exec.vector.accessor.ScalarReader;
+import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.ValueType;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.test.SubOperatorTest;
-import org.apache.drill.test.rowSet.RowSetReader;
-import org.joda.time.Period;
+import org.apache.drill.test.rowSet.DirectRowSet;
+import org.apache.drill.test.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
+import org.apache.drill.test.rowSet.RowSetBuilder;
+import org.apache.drill.test.rowSet.RowSetReader;
+import org.apache.drill.test.rowSet.RowSetUtilities;
+import org.apache.drill.test.rowSet.RowSetWriter;
+import org.joda.time.DateTimeZone;
+import org.joda.time.Instant;
+import org.joda.time.LocalDate;
+import org.joda.time.LocalTime;
+import org.joda.time.Period;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 /**
  * Verify that simple scalar (non-repeated) column readers
@@ -52,18 +70,16 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 // The following types are not fully supported in Drill
 // TODO: Var16Char
 // TODO: Bit
-// TODO: Decimal28Sparse
-// TODO: Decimal38Sparse
 
 @Category(RowSetTests.class)
 public class TestScalarAccessors extends SubOperatorTest {
 
   @Test
   public void testUInt1RW() {
-    BatchSchema batchSchema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .add("col", MinorType.UINT1)
-        .build();
-    SingleRowSet rs = fixture.rowSetBuilder(batchSchema)
+        .buildSchema();
+    SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addRow(0)
         .addRow(0x7F)
         .addRow(0xFF)
@@ -92,10 +108,10 @@ public class TestScalarAccessors extends SubOperatorTest {
 
   @Test
   public void testUInt2RW() {
-    BatchSchema batchSchema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .add("col", MinorType.UINT2)
-        .build();
-    SingleRowSet rs = fixture.rowSetBuilder(batchSchema)
+        .buildSchema();
+    SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addRow(0)
         .addRow(0x7FFF)
         .addRow(0xFFFF)
@@ -124,10 +140,10 @@ public class TestScalarAccessors extends SubOperatorTest {
 
   @Test
   public void testTinyIntRW() {
-    BatchSchema batchSchema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .add("col", MinorType.TINYINT)
-        .build();
-    SingleRowSet rs = fixture.rowSetBuilder(batchSchema)
+        .buildSchema();
+    SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addRow(0)
         .addRow(Byte.MAX_VALUE)
         .addRow(Byte.MIN_VALUE)
@@ -155,10 +171,10 @@ public class TestScalarAccessors extends SubOperatorTest {
   }
 
   private void nullableIntTester(MinorType type) {
-    BatchSchema batchSchema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .addNullable("col", type)
-        .build();
-    SingleRowSet rs = fixture.rowSetBuilder(batchSchema)
+        .buildSchema();
+    SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addRow(10)
         .addSingleCol(null)
         .addRow(30)
@@ -191,10 +207,10 @@ public class TestScalarAccessors extends SubOperatorTest {
   }
 
   private void intArrayTester(MinorType type) {
-    BatchSchema batchSchema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .addArray("col", type)
-        .build();
-    SingleRowSet rs = fixture.rowSetBuilder(batchSchema)
+        .buildSchema();
+    SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addSingleCol(new int[] {})
         .addSingleCol(new int[] {0, 20, 30})
         .build();
@@ -244,10 +260,10 @@ public class TestScalarAccessors extends SubOperatorTest {
 
   @Test
   public void testSmallIntRW() {
-    BatchSchema batchSchema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .add("col", MinorType.SMALLINT)
-        .build();
-    SingleRowSet rs = fixture.rowSetBuilder(batchSchema)
+        .buildSchema();
+    SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addRow(0)
         .addRow(Short.MAX_VALUE)
         .addRow(Short.MIN_VALUE)
@@ -286,10 +302,10 @@ public class TestScalarAccessors extends SubOperatorTest {
 
   @Test
   public void testIntRW() {
-    BatchSchema batchSchema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .add("col", MinorType.INT)
-        .build();
-    SingleRowSet rs = fixture.rowSetBuilder(batchSchema)
+        .buildSchema();
+    SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addRow(0)
         .addRow(Integer.MAX_VALUE)
         .addRow(Integer.MIN_VALUE)
@@ -327,10 +343,10 @@ public class TestScalarAccessors extends SubOperatorTest {
   }
 
   private void longRWTester(MinorType type) {
-    BatchSchema batchSchema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .add("col", type)
-        .build();
-    SingleRowSet rs = fixture.rowSetBuilder(batchSchema)
+        .buildSchema();
+    SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addRow(0L)
         .addRow(Long.MAX_VALUE)
         .addRow(Long.MIN_VALUE)
@@ -347,8 +363,10 @@ public class TestScalarAccessors extends SubOperatorTest {
 
     assertTrue(reader.next());
     assertEquals(Long.MAX_VALUE, colReader.getLong());
-    assertEquals(Long.MAX_VALUE, colReader.getObject());
-    assertEquals(Long.toString(Long.MAX_VALUE), colReader.getAsString());
+    if (colReader.extendedType() == ValueType.LONG) {
+      assertEquals(Long.MAX_VALUE, colReader.getObject());
+      assertEquals(Long.toString(Long.MAX_VALUE), colReader.getAsString());
+    }
 
     assertTrue(reader.next());
     assertEquals(Long.MIN_VALUE, colReader.getLong());
@@ -363,10 +381,10 @@ public class TestScalarAccessors extends SubOperatorTest {
   }
 
   private void nullableLongTester(MinorType type) {
-    BatchSchema batchSchema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .addNullable("col", type)
-        .build();
-    SingleRowSet rs = fixture.rowSetBuilder(batchSchema)
+        .buildSchema();
+    SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addRow(10L)
         .addSingleCol(null)
         .addRow(30L)
@@ -399,10 +417,10 @@ public class TestScalarAccessors extends SubOperatorTest {
   }
 
   private void longArrayTester(MinorType type) {
-    BatchSchema batchSchema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .addArray("col", type)
-        .build();
-    SingleRowSet rs = fixture.rowSetBuilder(batchSchema)
+        .buildSchema();
+    SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addSingleCol(new long[] {})
         .addSingleCol(new long[] {0, 20, 30})
         .build();
@@ -421,23 +439,31 @@ public class TestScalarAccessors extends SubOperatorTest {
 
     assertTrue(arrayReader.next());
     assertEquals(0, colReader.getLong());
-    assertEquals(0L, colReader.getObject());
-    assertEquals("0", colReader.getAsString());
+    if (colReader.extendedType() == ValueType.LONG) {
+      assertEquals(0L, colReader.getObject());
+      assertEquals("0", colReader.getAsString());
+    }
 
     assertTrue(arrayReader.next());
     assertEquals(20, colReader.getLong());
-    assertEquals(20L, colReader.getObject());
-    assertEquals("20", colReader.getAsString());
+    if (colReader.extendedType() == ValueType.LONG) {
+      assertEquals(20L, colReader.getObject());
+      assertEquals("20", colReader.getAsString());
+    }
 
     assertTrue(arrayReader.next());
     assertEquals(30, colReader.getLong());
-    assertEquals(30L, colReader.getObject());
-    assertEquals("30", colReader.getAsString());
+    if (colReader.extendedType() == ValueType.LONG) {
+      assertEquals(30L, colReader.getObject());
+      assertEquals("30", colReader.getAsString());
+    }
 
     assertFalse(arrayReader.next());
 
-    assertEquals("[0, 20, 30]", arrayReader.getAsString());
-    assertEquals(Lists.newArrayList(0L, 20L, 30L), arrayReader.getObject());
+    if (colReader.extendedType() == ValueType.LONG) {
+      assertEquals("[0, 20, 30]", arrayReader.getAsString());
+      assertEquals(Lists.newArrayList(0L, 20L, 30L), arrayReader.getObject());
+    }
 
     assertFalse(reader.next());
     rs.clear();
@@ -450,10 +476,10 @@ public class TestScalarAccessors extends SubOperatorTest {
 
   @Test
   public void testFloatRW() {
-    BatchSchema batchSchema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .add("col", MinorType.FLOAT4)
-        .build();
-    SingleRowSet rs = fixture.rowSetBuilder(batchSchema)
+        .buildSchema();
+    SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addRow(0F)
         .addRow(Float.MAX_VALUE)
         .addRow(Float.MIN_VALUE)
@@ -485,10 +511,10 @@ public class TestScalarAccessors extends SubOperatorTest {
   }
 
   private void nullableDoubleTester(MinorType type) {
-    BatchSchema batchSchema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .addNullable("col", type)
-        .build();
-    SingleRowSet rs = fixture.rowSetBuilder(batchSchema)
+        .buildSchema();
+    SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addRow(10F)
         .addSingleCol(null)
         .addRow(30F)
@@ -521,10 +547,10 @@ public class TestScalarAccessors extends SubOperatorTest {
   }
 
   private void doubleArrayTester(MinorType type) {
-    BatchSchema batchSchema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .addArray("col", type)
-        .build();
-    SingleRowSet rs = fixture.rowSetBuilder(batchSchema)
+        .buildSchema();
+    SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addSingleCol(new double[] {})
         .addSingleCol(new double[] {0, 20.5, 30.0})
         .build();
@@ -571,10 +597,10 @@ public class TestScalarAccessors extends SubOperatorTest {
 
   @Test
   public void testDoubleRW() {
-    BatchSchema batchSchema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .add("col", MinorType.FLOAT8)
-        .build();
-    SingleRowSet rs = fixture.rowSetBuilder(batchSchema)
+        .buildSchema();
+    SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addRow(0D)
         .addRow(Double.MAX_VALUE)
         .addRow(Double.MIN_VALUE)
@@ -617,10 +643,10 @@ public class TestScalarAccessors extends SubOperatorTest {
 
   @Test
   public void testVarcharRW() {
-    BatchSchema batchSchema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .add("col", MinorType.VARCHAR)
-        .build();
-    SingleRowSet rs = fixture.rowSetBuilder(batchSchema)
+        .buildSchema();
+    SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addRow("")
         .addRow("fred")
         .addRow("barney")
@@ -651,15 +677,18 @@ public class TestScalarAccessors extends SubOperatorTest {
 
   @Test
   public void testNullableVarchar() {
-    BatchSchema batchSchema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .addNullable("col", MinorType.VARCHAR)
-        .build();
-    SingleRowSet rs = fixture.rowSetBuilder(batchSchema)
+        .buildSchema();
+    SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addRow("")
         .addSingleCol(null)
         .addRow("abcd")
         .build();
     assertEquals(3, rs.rowCount());
+    SimpleVectorWrapper<?> vw = (SimpleVectorWrapper<?>) rs.container().getValueVector(0);
+    NullableVarCharVector v = (NullableVarCharVector) vw.getValueVector();
+    assertEquals(3, v.getMutator().getLastSet());
 
     RowSetReader reader = rs.reader();
     ScalarReader colReader = reader.scalar(0);
@@ -684,10 +713,10 @@ public class TestScalarAccessors extends SubOperatorTest {
 
   @Test
   public void testVarcharArray() {
-    BatchSchema batchSchema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .addArray("col", MinorType.VARCHAR)
-        .build();
-    SingleRowSet rs = fixture.rowSetBuilder(batchSchema)
+        .buildSchema();
+    SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addSingleCol(new String[] {})
         .addSingleCol(new String[] {"fred", "", "wilma"})
         .build();
@@ -761,15 +790,15 @@ public class TestScalarAccessors extends SubOperatorTest {
 
   @Test
   public void testIntervalYearRW() {
-    BatchSchema batchSchema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .add("col", MinorType.INTERVALYEAR)
-        .build();
+        .buildSchema();
 
     Period p1 = Period.years(0);
     Period p2 = Period.years(2).plusMonths(3);
     Period p3 = Period.years(1234).plusMonths(11);
 
-    SingleRowSet rs = fixture.rowSetBuilder(batchSchema)
+    SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addRow(p1)
         .addRow(p2)
         .addRow(p3)
@@ -798,14 +827,14 @@ public class TestScalarAccessors extends SubOperatorTest {
 
   @Test
   public void testNullableIntervalYear() {
-    BatchSchema batchSchema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .addNullable("col", MinorType.INTERVALYEAR)
-        .build();
+        .buildSchema();
 
     Period p1 = Period.years(0);
     Period p2 = Period.years(2).plusMonths(3);
 
-    SingleRowSet rs = fixture.rowSetBuilder(batchSchema)
+    SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addRow(p1)
         .addSingleCol(null)
         .addRow(p2)
@@ -834,15 +863,15 @@ public class TestScalarAccessors extends SubOperatorTest {
 
   @Test
   public void testIntervalYearArray() {
-    BatchSchema batchSchema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .addArray("col", MinorType.INTERVALYEAR)
-        .build();
+        .buildSchema();
 
     Period p1 = Period.years(0);
     Period p2 = Period.years(2).plusMonths(3);
     Period p3 = Period.years(1234).plusMonths(11);
 
-    SingleRowSet rs = fixture.rowSetBuilder(batchSchema)
+    SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addSingleCol(new Period[] {})
         .addSingleCol(new Period[] {p1, p2, p3})
         .build();
@@ -909,15 +938,15 @@ public class TestScalarAccessors extends SubOperatorTest {
 
   @Test
   public void testIntervalDayRW() {
-    BatchSchema batchSchema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .add("col", MinorType.INTERVALDAY)
-        .build();
+        .buildSchema();
 
     Period p1 = Period.days(0);
     Period p2 = Period.days(3).plusHours(4).plusMinutes(5).plusSeconds(23);
     Period p3 = Period.days(999).plusHours(23).plusMinutes(59).plusSeconds(59);
 
-    SingleRowSet rs = fixture.rowSetBuilder(batchSchema)
+    SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addRow(p1)
         .addRow(p2)
         .addRow(p3)
@@ -947,14 +976,14 @@ public class TestScalarAccessors extends SubOperatorTest {
 
   @Test
   public void testNullableIntervalDay() {
-    BatchSchema batchSchema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .addNullable("col", MinorType.INTERVALDAY)
-        .build();
+        .buildSchema();
 
     Period p1 = Period.years(0);
     Period p2 = Period.days(3).plusHours(4).plusMinutes(5).plusSeconds(23);
 
-    SingleRowSet rs = fixture.rowSetBuilder(batchSchema)
+    SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addRow(p1)
         .addSingleCol(null)
         .addRow(p2)
@@ -983,15 +1012,15 @@ public class TestScalarAccessors extends SubOperatorTest {
 
   @Test
   public void testIntervalDayArray() {
-    BatchSchema batchSchema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .addArray("col", MinorType.INTERVALDAY)
-        .build();
+        .buildSchema();
 
     Period p1 = Period.days(0);
     Period p2 = Period.days(3).plusHours(4).plusMinutes(5).plusSeconds(23);
     Period p3 = Period.days(999).plusHours(23).plusMinutes(59).plusSeconds(59);
 
-    SingleRowSet rs = fixture.rowSetBuilder(batchSchema)
+    SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addSingleCol(new Period[] {})
         .addSingleCol(new Period[] {p1, p2, p3})
         .build();
@@ -1073,9 +1102,9 @@ public class TestScalarAccessors extends SubOperatorTest {
 
   @Test
   public void testIntervalRW() {
-    BatchSchema batchSchema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .add("col", MinorType.INTERVAL)
-        .build();
+        .buildSchema();
 
     Period p1 = Period.days(0);
     Period p2 = Period.years(7).plusMonths(8)
@@ -1085,7 +1114,7 @@ public class TestScalarAccessors extends SubOperatorTest {
                       .plusDays(365).plusHours(23)
                       .plusMinutes(59).plusSeconds(59);
 
-    SingleRowSet rs = fixture.rowSetBuilder(batchSchema)
+    SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addRow(p1)
         .addRow(p2)
         .addRow(p3)
@@ -1115,16 +1144,16 @@ public class TestScalarAccessors extends SubOperatorTest {
 
   @Test
   public void testNullableInterval() {
-    BatchSchema batchSchema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .addNullable("col", MinorType.INTERVAL)
-        .build();
+        .buildSchema();
 
     Period p1 = Period.years(0);
     Period p2 = Period.years(7).plusMonths(8)
                       .plusDays(3).plusHours(4)
                       .plusMinutes(5).plusSeconds(23);
 
-    SingleRowSet rs = fixture.rowSetBuilder(batchSchema)
+    SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addRow(p1)
         .addSingleCol(null)
         .addRow(p2)
@@ -1153,9 +1182,9 @@ public class TestScalarAccessors extends SubOperatorTest {
 
   @Test
   public void testIntervalArray() {
-    BatchSchema batchSchema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .addArray("col", MinorType.INTERVAL)
-        .build();
+        .buildSchema();
 
     Period p1 = Period.days(0);
     Period p2 = Period.years(7).plusMonths(8)
@@ -1165,7 +1194,7 @@ public class TestScalarAccessors extends SubOperatorTest {
                       .plusDays(365).plusHours(23)
                       .plusMinutes(59).plusSeconds(59);
 
-    SingleRowSet rs = fixture.rowSetBuilder(batchSchema)
+    SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addSingleCol(new Period[] {})
         .addSingleCol(new Period[] {p1, p2, p3})
         .build();
@@ -1207,15 +1236,15 @@ public class TestScalarAccessors extends SubOperatorTest {
         .setPrecision(9)
         .setMode(DataMode.REQUIRED)
         .build();
-    BatchSchema batchSchema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .add("col", type)
-        .build();
+        .buildSchema();
 
     BigDecimal v1 = BigDecimal.ZERO;
     BigDecimal v2 = BigDecimal.valueOf(123_456_789, 3);
     BigDecimal v3 = BigDecimal.valueOf(999_999_999, 3);
 
-    SingleRowSet rs = fixture.rowSetBuilder(batchSchema)
+    SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addRow(v1)
         .addRow(v2)
         .addRow(v3)
@@ -1249,14 +1278,14 @@ public class TestScalarAccessors extends SubOperatorTest {
         .setPrecision(precision)
         .setMode(DataMode.OPTIONAL)
         .build();
-    BatchSchema batchSchema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .add("col", majorType)
-        .build();
+        .buildSchema();
 
     BigDecimal v1 = BigDecimal.ZERO;
     BigDecimal v2 = BigDecimal.valueOf(123_456_789, 3);
 
-    SingleRowSet rs = fixture.rowSetBuilder(batchSchema)
+    SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addRow(v1)
         .addSingleCol(null)
         .addRow(v2)
@@ -1295,15 +1324,15 @@ public class TestScalarAccessors extends SubOperatorTest {
         .setPrecision(precision)
         .setMode(DataMode.REPEATED)
         .build();
-    BatchSchema batchSchema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .add("col", majorType)
-        .build();
+        .buildSchema();
 
     BigDecimal v1 = BigDecimal.ZERO;
     BigDecimal v2 = BigDecimal.valueOf(123_456_789, 3);
     BigDecimal v3 = BigDecimal.TEN;
 
-    SingleRowSet rs = fixture.rowSetBuilder(batchSchema)
+    SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addSingleCol(new BigDecimal[] {})
         .addSingleCol(new BigDecimal[] {v1, v2, v3})
         .build();
@@ -1350,15 +1379,15 @@ public class TestScalarAccessors extends SubOperatorTest {
         .setPrecision(9)
         .setMode(DataMode.REQUIRED)
         .build();
-    BatchSchema batchSchema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .add("col", type)
-        .build();
+        .buildSchema();
 
     BigDecimal v1 = BigDecimal.ZERO;
     BigDecimal v2 = BigDecimal.valueOf(123_456_789_123_456_789L, 3);
     BigDecimal v3 = BigDecimal.valueOf(999_999_999_999_999_999L, 3);
 
-    SingleRowSet rs = fixture.rowSetBuilder(batchSchema)
+    SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addRow(v1)
         .addRow(v2)
         .addRow(v3)
@@ -1431,14 +1460,14 @@ public class TestScalarAccessors extends SubOperatorTest {
 
   @Test
   public void testVarBinaryRW() {
-    BatchSchema batchSchema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .add("col", MinorType.VARBINARY)
-        .build();
+        .buildSchema();
 
     byte v1[] = new byte[] {};
     byte v2[] = new byte[] { (byte) 0x00, (byte) 0x7f, (byte) 0x80, (byte) 0xFF};
 
-    SingleRowSet rs = fixture.rowSetBuilder(batchSchema)
+    SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addRow(v1)
         .addRow(v2)
         .build();
@@ -1463,14 +1492,14 @@ public class TestScalarAccessors extends SubOperatorTest {
 
   @Test
   public void testNullableVarBinary() {
-    BatchSchema batchSchema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .addNullable("col", MinorType.VARBINARY)
-        .build();
+        .buildSchema();
 
     byte v1[] = new byte[] {};
     byte v2[] = new byte[] { (byte) 0x00, (byte) 0x7f, (byte) 0x80, (byte) 0xFF};
 
-    SingleRowSet rs = fixture.rowSetBuilder(batchSchema)
+    SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addRow(v1)
         .addSingleCol(null)
         .addRow(v2)
@@ -1499,15 +1528,15 @@ public class TestScalarAccessors extends SubOperatorTest {
 
   @Test
   public void testVarBinaryArray() {
-    BatchSchema batchSchema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .addArray("col", MinorType.VARBINARY)
-        .build();
+        .buildSchema();
 
     byte v1[] = new byte[] {};
     byte v2[] = new byte[] { (byte) 0x00, (byte) 0x7f, (byte) 0x80, (byte) 0xFF};
     byte v3[] = new byte[] { (byte) 0xDE, (byte) 0xAD, (byte) 0xBE, (byte) 0xAF};
 
-    SingleRowSet rs = fixture.rowSetBuilder(batchSchema)
+    SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addSingleCol(new byte[][] {})
         .addSingleCol(new byte[][] {v1, v2, v3})
         .build();
@@ -1539,5 +1568,299 @@ public class TestScalarAccessors extends SubOperatorTest {
 
     assertFalse(reader.next());
     rs.clear();
+  }
+
+  // Test the convenience objects for DATE, TIME and TIMESTAMP
+
+  @Test
+  public void testDateObjectRW() {
+    TupleMetadata schema = new SchemaBuilder()
+        .add("col", MinorType.DATE)
+        .buildSchema();
+
+    LocalDate v1 = new LocalDate(2019, 3, 24);
+
+    SingleRowSet rs = fixture.rowSetBuilder(schema)
+        .addSingleCol(v1)
+        .build();
+    assertEquals(1, rs.rowCount());
+
+    RowSetReader reader = rs.reader();
+    ScalarReader colReader = reader.scalar(0);
+    assertEquals(ValueType.DATE, colReader.extendedType());
+
+    assertTrue(reader.next());
+    assertEquals(v1, colReader.getDate());
+
+    assertFalse(reader.next());
+    rs.clear();
+  }
+
+  @Test
+  public void testTimeObjectRW() {
+    TupleMetadata schema = new SchemaBuilder()
+        .add("col", MinorType.TIME)
+        .buildSchema();
+
+    LocalTime v1 = new LocalTime(12, 13, 14);
+
+    SingleRowSet rs = fixture.rowSetBuilder(schema)
+        .addSingleCol(v1)
+        .build();
+    assertEquals(1, rs.rowCount());
+
+    RowSetReader reader = rs.reader();
+    ScalarReader colReader = reader.scalar(0);
+    assertEquals(ValueType.TIME, colReader.extendedType());
+
+    assertTrue(reader.next());
+    assertEquals(v1, colReader.getTime());
+
+    assertFalse(reader.next());
+    rs.clear();
+  }
+
+  @Test
+  public void testTimeStampObjectRW() {
+    TupleMetadata schema = new SchemaBuilder()
+        .add("col", MinorType.TIMESTAMP)
+        .buildSchema();
+
+    LocalDate dt = new LocalDate(2019, 3, 24);
+    LocalTime lt = new LocalTime(12, 13, 14);
+    Instant v1 = dt.toDateTime(lt, DateTimeZone.UTC).toInstant();
+
+    SingleRowSet rs = fixture.rowSetBuilder(schema)
+        .addSingleCol(v1)
+        .build();
+    assertEquals(1, rs.rowCount());
+
+    RowSetReader reader = rs.reader();
+    ScalarReader colReader = reader.scalar(0);
+    assertEquals(ValueType.TIMESTAMP, colReader.extendedType());
+
+    assertTrue(reader.next());
+    assertEquals(v1, colReader.getTimestamp());
+
+    assertFalse(reader.next());
+    rs.clear();
+  }
+
+  @Test
+  public void testBitRW() {
+
+    TupleMetadata schema = new SchemaBuilder()
+        .add("col", MinorType.BIT)
+        .buildSchema();
+
+    SingleRowSet rs = fixture.rowSetBuilder(schema)
+        .addSingleCol(true)
+        .addSingleCol(false)
+        .addSingleCol(0)
+        .addSingleCol(1)
+        .addSingleCol(2)
+        .addSingleCol(3)
+        .build();
+    assertEquals(6, rs.rowCount());
+
+    RowSetReader reader = rs.reader();
+    ScalarReader colReader = reader.scalar(0);
+
+    assertTrue(reader.next());
+    assertEquals(true, colReader.getBoolean());
+    assertEquals(1, colReader.getInt());
+    assertTrue(reader.next());
+    assertEquals(false, colReader.getBoolean());
+    assertEquals(0, colReader.getInt());
+    assertTrue(reader.next());
+    assertEquals(false, colReader.getBoolean());
+    assertEquals(0, colReader.getInt());
+    assertTrue(reader.next());
+    assertEquals(true, colReader.getBoolean());
+    assertEquals(1, colReader.getInt());
+    assertTrue(reader.next());
+    assertEquals(true, colReader.getBoolean());
+    assertEquals(1, colReader.getInt());
+    assertTrue(reader.next());
+    assertEquals(true, colReader.getBoolean());
+    assertEquals(1, colReader.getInt());
+
+    assertFalse(reader.next());
+    rs.clear();
+  }
+
+  /**
+   * The bit reader/writer are special and use the BitVector directly.
+   * Ensure that resize works in this special case.
+   */
+
+  @Test
+  public void testBitResize() {
+    TupleMetadata schema = new SchemaBuilder()
+        .add("col", MinorType.BIT)
+        .buildSchema();
+
+    RowSetBuilder rsb = new RowSetBuilder(fixture.allocator(), schema, 100);
+    ScalarWriter bitWriter = rsb.writer().scalar(0);
+    for (int i = 0; i < ValueVector.MAX_ROW_COUNT; i++) {
+      bitWriter.setBoolean((i % 5) == 0);
+      rsb.writer().save();
+    }
+
+    SingleRowSet rs = rsb.build();
+    RowSetReader reader = rs.reader();
+    ScalarReader bitReader = reader.scalar(0);
+    for (int i = 0; i < ValueVector.MAX_ROW_COUNT; i++) {
+      reader.next();
+      assertEquals((i % 5) == 0, bitReader.getBoolean());
+    }
+    rs.clear();
+  }
+
+  private static String repeat(String str, int n) {
+    StringBuilder buf = new StringBuilder();
+    for (int i = 0; i < n; i++) {
+      buf.append(str);
+    }
+    return str.toString();
+  }
+
+  @Test
+  public void testVarDecimalRange() {
+    TupleMetadata schema = new SchemaBuilder()
+        .add("col", MinorType.VARDECIMAL, 38, 4)
+        .buildSchema();
+
+    String big = repeat("9", 34) + ".9999";
+    SingleRowSet rs = new RowSetBuilder(fixture.allocator(), schema)
+        .addSingleCol(dec("0"))
+        .addSingleCol(dec("-0.0000"))
+        .addSingleCol(dec("0.0001"))
+        .addSingleCol(dec("-0.0001"))
+        .addSingleCol(dec(big))
+        .addSingleCol(dec("-" + big))
+        .addSingleCol(dec("1234.56789"))
+        .build();
+
+    RowSetReader reader = rs.reader();
+    ScalarReader decReader = reader.scalar(0);
+    assertTrue(reader.next());
+    assertEquals(dec("0.0000"), decReader.getDecimal());
+    assertTrue(reader.next());
+    assertEquals(dec("0.0000"), decReader.getDecimal());
+    assertTrue(reader.next());
+    assertEquals(dec("0.0001"), decReader.getDecimal());
+    assertTrue(reader.next());
+    assertEquals(dec("-0.0001"), decReader.getDecimal());
+    assertTrue(reader.next());
+    assertEquals(dec(big), decReader.getDecimal());
+    assertTrue(reader.next());
+    assertEquals(dec("-" + big), decReader.getDecimal());
+    assertTrue(reader.next());
+    assertEquals(dec("1234.5679"), decReader.getDecimal());
+    assertFalse(reader.next());
+    rs.clear();
+  }
+
+  @Test
+  public void testVarDecimalOverflow() {
+    TupleMetadata schema = new SchemaBuilder()
+        .add("col", MinorType.VARDECIMAL, 8, 4)
+        .buildSchema();
+
+    RowSetBuilder rsb = new RowSetBuilder(fixture.allocator(), schema, 100);
+    try {
+
+      // With rounding due to scale, value exceeds allowed precision.
+
+      rsb.addSingleCol(dec("9999.99999"));
+      fail();
+    } catch (UserException e) {
+      // Expected
+    }
+    rsb.build().clear();
+  }
+
+  /**
+   * Test the ability to append bytes to a VarChar column. Should work for
+   * Var16Char, but that type is not yet supported in Drill.
+   */
+
+  @Test
+  public void testAppend() {
+    doTestAppend(new SchemaBuilder()
+        .add("col", MinorType.VARCHAR)
+        .buildSchema());
+    doTestAppend(new SchemaBuilder()
+        .addNullable("col", MinorType.VARCHAR)
+        .buildSchema());
+  }
+
+  private void doTestAppend(TupleMetadata schema) {
+    DirectRowSet rs = DirectRowSet.fromSchema(fixture.allocator(), schema);
+    RowSetWriter writer = rs.writer(100);
+    ScalarWriter colWriter = writer.scalar("col");
+
+    byte first[] = "abc".getBytes();
+    byte second[] = "12345".getBytes();
+    colWriter.setBytes(first, first.length);
+    colWriter.appendBytes(second, second.length);
+    writer.save();
+    colWriter.setBytes(second, second.length);
+    colWriter.appendBytes(first, first.length);
+    writer.save();
+    colWriter.setBytes(first, first.length);
+    colWriter.appendBytes(second, second.length);
+    writer.save();
+    RowSet actual = writer.done();
+
+    RowSet expected = new RowSetBuilder(fixture.allocator(), schema)
+        .addSingleCol("abc12345")
+        .addSingleCol("12345abc")
+        .addSingleCol("abc12345")
+        .build();
+
+    RowSetUtilities.verify(expected, actual);
+  }
+
+  /**
+   * Test the ability to append bytes to a VarChar column. Should work for
+   * Var16Char, but that type is not yet supported in Drill.
+   */
+
+  @Test
+  public void testAppendWithArray() {
+    TupleMetadata schema = new SchemaBuilder()
+        .addArray("col", MinorType.VARCHAR)
+        .buildSchema();
+
+    DirectRowSet rs = DirectRowSet.fromSchema(fixture.allocator(), schema);
+    RowSetWriter writer = rs.writer(100);
+    ArrayWriter arrayWriter = writer.array("col");
+    ScalarWriter colWriter = arrayWriter.scalar();
+
+    byte first[] = "abc".getBytes();
+    byte second[] = "12345".getBytes();
+    for (int i = 0; i < 3; i++) {
+      colWriter.setBytes(first, first.length);
+      colWriter.appendBytes(second, second.length);
+      arrayWriter.save();
+      colWriter.setBytes(second, second.length);
+      colWriter.appendBytes(first, first.length);
+      arrayWriter.save();
+      colWriter.setBytes(first, first.length);
+      colWriter.appendBytes(second, second.length);
+      arrayWriter.save();
+      writer.save();
+    }
+    RowSet actual = writer.done();
+
+    RowSet expected = new RowSetBuilder(fixture.allocator(), schema)
+        .addSingleCol(strArray("abc12345", "12345abc", "abc12345"))
+        .addSingleCol(strArray("abc12345", "12345abc", "abc12345"))
+        .addSingleCol(strArray("abc12345", "12345abc", "abc12345"))
+        .build();
+
+    RowSetUtilities.verify(expected, actual);
   }
 }

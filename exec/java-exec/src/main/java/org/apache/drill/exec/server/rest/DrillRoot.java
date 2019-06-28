@@ -80,7 +80,6 @@ public class DrillRoot {
   }
 
 
-  @SuppressWarnings("resource")
   @GET
   @Path("/state")
   @Produces(MediaType.APPLICATION_JSON)
@@ -93,7 +92,6 @@ public class DrillRoot {
     return setResponse(drillStatusMap);
   }
 
-  @SuppressWarnings("resource")
   @GET
   @Path("/gracePeriod")
   @Produces(MediaType.APPLICATION_JSON)
@@ -105,7 +103,6 @@ public class DrillRoot {
     return gracePeriodMap;
   }
 
-  @SuppressWarnings("resource")
   @GET
   @Path("/portNum")
   @Produces(MediaType.APPLICATION_JSON)
@@ -118,7 +115,6 @@ public class DrillRoot {
     return portMap;
   }
 
-  @SuppressWarnings("resource")
   @GET
   @Path("/queriesCount")
   @Produces(MediaType.APPLICATION_JSON)
@@ -127,7 +123,6 @@ public class DrillRoot {
     return setResponse(queriesInfo);
   }
 
-  @SuppressWarnings("resource")
   @POST
   @Path("/gracefulShutdown")
   @Produces(MediaType.APPLICATION_JSON)
@@ -137,7 +132,6 @@ public class DrillRoot {
     return shutdown(resp);
   }
 
-  @SuppressWarnings("resource")
   @POST
   @Path("/shutdown")
   @Produces(MediaType.APPLICATION_JSON)
@@ -148,7 +142,6 @@ public class DrillRoot {
     return shutdown(resp);
   }
 
-  @SuppressWarnings("resource")
   @POST
   @Path("/quiescent")
   @Produces(MediaType.APPLICATION_JSON)
@@ -159,7 +152,6 @@ public class DrillRoot {
     return shutdown(resp);
   }
 
-  @SuppressWarnings("resource")
   @GET
   @Path("/cluster.json")
   @Produces(MediaType.APPLICATION_JSON)

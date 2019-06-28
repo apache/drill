@@ -33,7 +33,6 @@ import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.FeatureContext;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import java.io.IOException;
 import java.net.URI;
 import java.net.URLEncoder;
 
@@ -83,13 +82,12 @@ public class AuthDynamicFeature implements DynamicFeature {
     private static AuthCheckFilter INSTANCE = new AuthCheckFilter();
 
     @Override
-    public void filter(ContainerRequestContext requestContext)
-        throws IOException {
+    public void filter(ContainerRequestContext requestContext) {
       final SecurityContext sc = requestContext.getSecurityContext();
       if (!isUserLoggedIn(sc)) {
         try {
           final String destResource = URLEncoder.encode(
-              requestContext.getUriInfo().getRequestUri().toString(), "UTF-8");
+              requestContext.getUriInfo().getRequestUri().getPath(), "UTF-8");
           final URI loginURI = requestContext.getUriInfo().getBaseUriBuilder()
               .path(LogInLogOutPages.LOGIN_RESOURCE)
               .queryParam(LogInLogOutPages.REDIRECT_QUERY_PARM, destResource)

@@ -18,13 +18,14 @@
 package org.apache.drill.exec.physical.rowSet.project;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.PathSegment.ArraySegment;
 import org.apache.drill.common.expression.PathSegment.NameSegment;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.record.metadata.ProjectionType;
 import org.apache.drill.exec.record.metadata.TupleNameSpace;
 
 /**
@@ -73,7 +74,8 @@ import org.apache.drill.exec.record.metadata.TupleNameSpace;
 
 public class RequestedTupleImpl implements RequestedTuple {
 
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RequestedTupleImpl.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RequestedTupleImpl.class);
+  private static final Collection<SchemaPath> PROJECT_ALL = Collections.singletonList(SchemaPath.STAR_COLUMN);
 
   private final RequestedColumnImpl parent;
   private final TupleNameSpace<RequestedColumn> projection = new TupleNameSpace<>();
@@ -84,6 +86,13 @@ public class RequestedTupleImpl implements RequestedTuple {
 
   public RequestedTupleImpl(RequestedColumnImpl parent) {
     this.parent = parent;
+  }
+
+  public RequestedTupleImpl(List<RequestedColumn> cols) {
+    parent = null;
+    for (RequestedColumn col : cols) {
+      projection.add(col.name(), col);
+    }
   }
 
   @Override
@@ -119,10 +128,43 @@ public class RequestedTupleImpl implements RequestedTuple {
   }
 
   /**
+   * Create a requested tuple projection from a rewritten top-level
+   * projection list. The columns within the list have already been parsed to
+   * pick out arrays, maps and scalars. The list must not include the
+   * wildcard: a wildcard list must be passed in as a null list. An
+   * empty list means project nothing. Null list means project all, else
+   * project only the columns in the list.
+   *
+   * @param projList top-level, parsed columns
+   * @return the tuple projection for the top-leel row
+   */
+
+  public static RequestedTuple build(List<RequestedColumn> projList) {
+    if (projList == null) {
+      return new ImpliedTupleRequest(true);
+    }
+    if (projList.isEmpty()) {
+      return ImpliedTupleRequest.NO_MEMBERS;
+    }
+    return new RequestedTupleImpl(projList);
+  }
+
+  /**
    * Parse a projection list. The list should consist of a list of column names;
-   * any wildcards should have been processed by the caller. An empty list means
+   * or wildcards. An empty list means
    * nothing is projected. A null list means everything is projected (that is, a
    * null list here is equivalent to a wildcard in the SELECT statement.)
+   * <p>
+   * The projection list may include both a wildcard and column names (as in
+   * the case of implicit columns.) This results in a final list that both
+   * says that everything is projected, and provides the list of columns.
+   * <p>
+   * Parsing is used at two different times. First, to parse the list from
+   * the physical operator. This has the case above: an explicit wildcard
+   * and/or additional columns. Then, this class is used again to prepare the
+   * physical projection used when reading. In this case, wildcards should
+   * be removed, implicit columns pulled out, and just the list of read-level
+   * columns should remain.
    *
    * @param projList
    *          the list of projected columns, or null if no projection is to be
@@ -132,10 +174,10 @@ public class RequestedTupleImpl implements RequestedTuple {
 
   public static RequestedTuple parse(Collection<SchemaPath> projList) {
     if (projList == null) {
-      return new ImpliedTupleRequest(true);
+      projList = PROJECT_ALL;
     }
-    if (projList.isEmpty()) {
-      return new ImpliedTupleRequest(false);
+    else if (projList.isEmpty()) {
+      return ImpliedTupleRequest.NO_MEMBERS;
     }
     RequestedTupleImpl projSet = new RequestedTupleImpl();
     for (SchemaPath col : projList) {
@@ -217,9 +259,10 @@ public class RequestedTupleImpl implements RequestedTuple {
     map.parseSegment(nameSeg.getChild());
   }
 
-  private void parseArray(NameSegment arraySeg) {
-    String name = arraySeg.getPath();
-    int index = ((ArraySegment) arraySeg.getChild()).getIndex();
+  private void parseArray(NameSegment nameSeg) {
+    String name = nameSeg.getPath();
+    ArraySegment arraySeg = ((ArraySegment) nameSeg.getChild());
+    int index = arraySeg.getIndex();
     RequestedColumnImpl member = getImpl(name);
     if (member == null) {
       member = new RequestedColumnImpl(this, name);
@@ -239,6 +282,14 @@ public class RequestedTupleImpl implements RequestedTuple {
         .build(logger);
     }
     member.addIndex(index);
+
+    // Drills SQL parser does not support map arrays: a[0].c
+    // But, the SchemaPath does support them, so no harm in
+    // parsing them here.
+
+    if (! arraySeg.isLastPath()) {
+      parseInternal(nameSeg);
+    }
   }
 
   @Override
@@ -251,5 +302,23 @@ public class RequestedTupleImpl implements RequestedTuple {
     if (parent != null) {
       parent.buildName(buf);
     }
+  }
+
+  /**
+   * Tuple projection type. This is a rough approximation. A scan-level projection
+   * may include both a wildcard and implicit columns. This form is best used
+   * in testing where such ambiguities do not apply.
+   */
+  @Override
+  public TupleProjectionType type() {
+    if (projection.isEmpty()) {
+      return TupleProjectionType.NONE;
+    }
+    for (RequestedColumn col : projection) {
+      if (col.isWildcard()) {
+        return TupleProjectionType.ALL;
+      }
+    }
+    return TupleProjectionType.SOME;
   }
 }

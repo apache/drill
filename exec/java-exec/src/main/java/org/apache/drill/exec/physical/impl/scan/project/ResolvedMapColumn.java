@@ -33,8 +33,6 @@ import org.apache.drill.exec.record.MaterializedField;
 
 public class ResolvedMapColumn extends ResolvedColumn {
 
-  public static final int ID = 17;
-
   private final MaterializedField schema;
   private final ResolvedTuple parent;
   private final ResolvedMap members;
@@ -72,9 +70,6 @@ public class ResolvedMapColumn extends ResolvedColumn {
 
   @Override
   public String name() { return schema.getName(); }
-
-  @Override
-  public int nodeType() { return ID; }
 
   public ResolvedTuple members() { return members; }
 

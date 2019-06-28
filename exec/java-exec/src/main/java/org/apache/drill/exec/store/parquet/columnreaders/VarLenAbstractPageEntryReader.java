@@ -78,13 +78,13 @@ abstract class VarLenAbstractPageEntryReader extends VarLenAbstractEntryReader {
     int bufferCapacity = buffer.capacity() - VarLenBulkPageReader.PADDING;
     int toCopy = remaining > bufferCapacity ? bufferCapacity : remaining;
 
+    buffer.limit(toCopy); // Update the limit regardless to indicate the number of bytes available for reading
+
     if (toCopy == 0) {
       return false;
     }
 
     pageInfo.pageData.getBytes(pageInfo.pageDataOff, buffer.array(), buffer.position(), toCopy);
-
-    buffer.limit(toCopy);
 
     // At this point the buffer position is 0 and its limit set to the number of bytes copied.
 
@@ -99,7 +99,7 @@ abstract class VarLenAbstractPageEntryReader extends VarLenAbstractEntryReader {
   }
 
   /**
-   * Fixed length readers calculate upfront the maximum number of entries to process as entry length
+   * Fixed length readers calculate up front the maximum number of entries to process as entry length
    * are known.
    * @param valuesToRead requested number of values to read
    * @param entrySz sizeof(integer) + column's precision
@@ -110,8 +110,10 @@ abstract class VarLenAbstractPageEntryReader extends VarLenAbstractEntryReader {
     // Let's start with bulk's entry and requested values-to-read constraints
     int numEntriesToRead = Math.min(entry.getMaxEntries(), valuesToRead);
 
-    // Now include the size of the fixed entry (since they are fixed)
-    numEntriesToRead = Math.min(numEntriesToRead, buffer.limit() / entrySz);
+    // The goal is to ensure that a) we're not returning more than what is requested and
+    // b) ensure that we don't overflow while accessing the buffer
+    final int bufferCapacity = buffer.capacity() - VarLenBulkPageReader.PADDING;
+    numEntriesToRead = Math.min(numEntriesToRead, bufferCapacity / entrySz);
 
     return numEntriesToRead;
   }

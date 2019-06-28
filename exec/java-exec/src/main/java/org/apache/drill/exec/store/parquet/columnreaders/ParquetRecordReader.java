@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.parquet.columnreaders;
 
+import org.apache.drill.exec.store.CommonParquetRecordReader;
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import java.util.List;
@@ -28,11 +29,8 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.ops.MetricDef;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
-import org.apache.drill.exec.store.AbstractRecordReader;
-import org.apache.drill.exec.store.parquet.ParquetReaderStats;
 import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
 import org.apache.drill.exec.store.parquet.columnreaders.batchsizing.RecordBatchSizerManager;
 import org.apache.drill.exec.util.record.RecordBatchStats.RecordBatchStatsContext;
@@ -42,7 +40,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.parquet.hadoop.CodecFactory;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
 
-public class ParquetRecordReader extends AbstractRecordReader {
+public class ParquetRecordReader extends CommonParquetRecordReader {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetRecordReader.class);
 
   /** Set when caller wants to read all the rows contained within the Parquet file */
@@ -60,21 +58,19 @@ public class ParquetRecordReader extends AbstractRecordReader {
   // used for clearing the first n bits of a byte
   public static final byte[] startBitMasks = {127, 63, 31, 15, 7, 3, 1};
 
-  private OperatorContext operatorContext;
+  /** Parquet Schema */
+  ParquetSchema schema;
 
   private FileSystem fileSystem;
   private final long numRecordsToRead; // number of records to read
 
   Path hadoopPath;
-  private ParquetMetadata footer;
 
   private final CodecFactory codecFactory;
   int rowGroupIndex;
-  private final FragmentContext fragmentContext;
+
   ParquetReaderUtility.DateCorruptionStatus dateCorruptionStatus;
 
-  /** Parquet Schema */
-  ParquetSchema schema;
   /** Container object for holding Parquet columnar readers state */
   ReadState readState;
   /** Responsible for managing record batch size constraints */
@@ -90,83 +86,52 @@ public class ParquetRecordReader extends AbstractRecordReader {
   public boolean useBulkReader;
 
   @SuppressWarnings("unused")
-  private String name;
+  private Path name;
 
-  public ParquetReaderStats parquetReaderStats = new ParquetReaderStats();
   private BatchReader batchReader;
 
-  public enum Metric implements MetricDef {
-    NUM_DICT_PAGE_LOADS,         // Number of dictionary pages read
-    NUM_DATA_PAGE_lOADS,         // Number of data pages read
-    NUM_DATA_PAGES_DECODED,      // Number of data pages decoded
-    NUM_DICT_PAGES_DECOMPRESSED, // Number of dictionary pages decompressed
-    NUM_DATA_PAGES_DECOMPRESSED, // Number of data pages decompressed
-    TOTAL_DICT_PAGE_READ_BYTES,  // Total bytes read from disk for dictionary pages
-    TOTAL_DATA_PAGE_READ_BYTES,  // Total bytes read from disk for data pages
-    TOTAL_DICT_DECOMPRESSED_BYTES, // Total bytes decompressed for dictionary pages (same as compressed bytes on disk)
-    TOTAL_DATA_DECOMPRESSED_BYTES, // Total bytes decompressed for data pages (same as compressed bytes on disk)
-    TIME_DICT_PAGE_LOADS,          // Time in nanos in reading dictionary pages from disk
-    TIME_DATA_PAGE_LOADS,          // Time in nanos in reading data pages from disk
-    TIME_DATA_PAGE_DECODE,         // Time in nanos in decoding data pages
-    TIME_DICT_PAGE_DECODE,         // Time in nanos in decoding dictionary pages
-    TIME_DICT_PAGES_DECOMPRESSED,  // Time in nanos in decompressing dictionary pages
-    TIME_DATA_PAGES_DECOMPRESSED,  // Time in nanos in decompressing data pages
-    TIME_DISK_SCAN_WAIT,           // Time in nanos spent in waiting for an async disk read to complete
-    TIME_DISK_SCAN,                // Time in nanos spent in reading data from disk.
-    TIME_FIXEDCOLUMN_READ,         // Time in nanos spent in converting fixed width data to value vectors
-    TIME_VARCOLUMN_READ,           // Time in nanos spent in converting varwidth data to value vectors
-    TIME_PROCESS;                  // Time in nanos spent in processing
-
-    @Override public int metricId() {
-      return ordinal();
-    }
-  }
-
   public ParquetRecordReader(FragmentContext fragmentContext,
-      String path,
+      Path path,
       int rowGroupIndex,
       long numRecordsToRead,
       FileSystem fs,
       CodecFactory codecFactory,
       ParquetMetadata footer,
       List<SchemaPath> columns,
-      ParquetReaderUtility.DateCorruptionStatus dateCorruptionStatus) throws ExecutionSetupException {
-    this(fragmentContext, numRecordsToRead,
-         path, rowGroupIndex, fs, codecFactory, footer, columns, dateCorruptionStatus);
+      ParquetReaderUtility.DateCorruptionStatus dateCorruptionStatus) {
+    this(fragmentContext, numRecordsToRead, path, rowGroupIndex, fs, codecFactory, footer, columns, dateCorruptionStatus);
   }
 
   public ParquetRecordReader(FragmentContext fragmentContext,
-      String path,
+      Path path,
       int rowGroupIndex,
       FileSystem fs,
       CodecFactory codecFactory,
       ParquetMetadata footer,
       List<SchemaPath> columns,
-      ParquetReaderUtility.DateCorruptionStatus dateCorruptionStatus)
-      throws ExecutionSetupException {
-      this(fragmentContext, footer.getBlocks().get(rowGroupIndex).getRowCount(),
-           path, rowGroupIndex, fs, codecFactory, footer, columns, dateCorruptionStatus);
+      ParquetReaderUtility.DateCorruptionStatus dateCorruptionStatus) {
+    this(fragmentContext, footer.getBlocks().get(rowGroupIndex).getRowCount(), path, rowGroupIndex, fs, codecFactory,
+        footer, columns, dateCorruptionStatus);
   }
 
   public ParquetRecordReader(
       FragmentContext fragmentContext,
       long numRecordsToRead,
-      String path,
+      Path path,
       int rowGroupIndex,
       FileSystem fs,
       CodecFactory codecFactory,
       ParquetMetadata footer,
       List<SchemaPath> columns,
-      ParquetReaderUtility.DateCorruptionStatus dateCorruptionStatus) throws ExecutionSetupException {
+      ParquetReaderUtility.DateCorruptionStatus dateCorruptionStatus) {
+    super(footer, fragmentContext);
 
     this.name = path;
-    this.hadoopPath = new Path(path);
+    this.hadoopPath = path;
     this.fileSystem = fs;
     this.codecFactory = codecFactory;
     this.rowGroupIndex = rowGroupIndex;
-    this.footer = footer;
     this.dateCorruptionStatus = dateCorruptionStatus;
-    this.fragmentContext = fragmentContext;
     this.numRecordsToRead = initNumRecordsToRead(numRecordsToRead, rowGroupIndex, footer);
     this.useAsyncColReader = fragmentContext.getOptions().getOption(ExecConstants.PARQUET_COLUMNREADER_ASYNC).bool_val;
     this.useAsyncPageReader = fragmentContext.getOptions().getOption(ExecConstants.PARQUET_PAGEREADER_ASYNC).bool_val;
@@ -323,15 +288,7 @@ public class ParquetRecordReader extends AbstractRecordReader {
 
     codecFactory.release();
 
-    if (parquetReaderStats != null) {
-      updateStats();
-      parquetReaderStats.logStats(logger, hadoopPath);
-      parquetReaderStats = null;
-    }
-  }
-
-  private void updateStats() {
-    parquetReaderStats.update(operatorContext.getStats());
+    closeStats(logger, hadoopPath);
   }
 
   @Override
@@ -340,13 +297,14 @@ public class ParquetRecordReader extends AbstractRecordReader {
   }
 
   private int initNumRecordsToRead(long numRecordsToRead, int rowGroupIndex, ParquetMetadata footer) {
+    if ( numRecordsToRead == 0 ) { return 0; } // runtime pruning sometimes prunes everything, needs one empty RG for the schema
+    int numRowsInRowgroup = (int) footer.getBlocks().get(rowGroupIndex).getRowCount();
     // Callers can pass -1 if they want to read all rows.
     if (numRecordsToRead == NUM_RECORDS_TO_READ_NOT_SPECIFIED) {
-      return (int) footer.getBlocks().get(rowGroupIndex).getRowCount();
-    } else {
-      assert (numRecordsToRead >= 0);
-      return (int) Math.min(numRecordsToRead, footer.getBlocks().get(rowGroupIndex).getRowCount());
+      return numRowsInRowgroup;
     }
+    assert (numRecordsToRead > 0);
+    return (int) Math.min(numRecordsToRead, numRowsInRowgroup);
   }
 
   @Override

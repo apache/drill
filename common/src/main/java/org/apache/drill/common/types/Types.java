@@ -30,7 +30,6 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 
 import com.google.protobuf.TextFormat;
 
-@SuppressWarnings("WeakerAccess")
 public class Types {
 
   public static final int MAX_VARCHAR_LENGTH = 65535;
@@ -64,8 +63,11 @@ public class Types {
     if (type.getMode() == REPEATED) {
       return false;
     }
+    return isNumericType(type.getMinorType());
+  }
 
-    switch(type.getMinorType()) {
+  public static boolean isNumericType(final MinorType type) {
+    switch (type) {
     case BIGINT:
     case VARDECIMAL:
     case DECIMAL38SPARSE:
@@ -185,7 +187,7 @@ public class Types {
       // Composite types and other types that are not atomic types (SQL standard
       // or not) except ARRAY types (handled above):
 
-      case MAP:             return "MAP";
+      case MAP:             return "STRUCT"; // Drill map represents struct and in future will be renamed
       case LATE:            return "ANY";
       case NULL:            return "NULL";
       case UNION:           return "UNION";
@@ -267,7 +269,7 @@ public class Types {
       case "INTERVAL":                      return java.sql.Types.OTHER;  // JDBC (4.1) has nothing for INTERVAL
       case "INTERVAL YEAR TO MONTH":        return java.sql.Types.OTHER;
       case "INTERVAL DAY TO SECOND":        return java.sql.Types.OTHER;
-      case "MAP":                           return java.sql.Types.OTHER; // Drill doesn't support java.sql.Struct
+      case "STRUCT":                        return java.sql.Types.OTHER; // Drill doesn't support java.sql.Struct
       case "NATIONAL CHARACTER VARYING":    return java.sql.Types.NVARCHAR;
       case "NATIONAL CHARACTER":            return java.sql.Types.NCHAR;
       case "NULL":                          return java.sql.Types.NULL;
@@ -463,22 +465,28 @@ public class Types {
     default:
       return true;
     }
-
   }
 
   public static boolean isFixedWidthType(final MajorType type) {
-    switch(type.getMinorType()) {
+    return isFixedWidthType(type.getMinorType());
+  }
+
+  public static boolean isFixedWidthType(final MinorType type) {
+    return ! isVarWidthType(type);
+  }
+
+  public static boolean isVarWidthType(final MinorType type) {
+    switch (type) {
     case VARBINARY:
     case VAR16CHAR:
     case VARCHAR:
     case UNION:
     case VARDECIMAL:
-      return false;
-    default:
       return true;
+    default:
+      return false;
     }
   }
-
 
   /**
    * Checks if given major type is string scalar type.
@@ -490,7 +498,7 @@ public class Types {
     if (type.getMode() == REPEATED) {
       return false;
     }
-    switch(type.getMinorType()) {
+    switch (type.getMinorType()) {
     case FIXEDCHAR:
     case FIXED16CHAR:
     case VARCHAR:
@@ -736,8 +744,8 @@ public class Types {
    */
   public static MajorType.Builder calculateTypePrecisionAndScale(MajorType leftType, MajorType rightType, MajorType.Builder typeBuilder) {
     if (leftType.getMinorType().equals(rightType.getMinorType())) {
-      boolean isScalarString = Types.isScalarStringType(leftType) && Types.isScalarStringType(rightType);
-      boolean isDecimal = isDecimalType(leftType);
+      final boolean isScalarString = Types.isScalarStringType(leftType) && Types.isScalarStringType(rightType);
+      final boolean isDecimal = isDecimalType(leftType);
 
       if ((isScalarString || isDecimal) && leftType.hasPrecision() && rightType.hasPrecision()) {
         typeBuilder.setPrecision(Math.max(leftType.getPrecision(), rightType.getPrecision()));
@@ -769,8 +777,8 @@ public class Types {
       return true;
     }
 
-    List<MinorType> subtypes1 = type1.getSubTypeList();
-    List<MinorType> subtypes2 = type2.getSubTypeList();
+    final List<MinorType> subtypes1 = type1.getSubTypeList();
+    final List<MinorType> subtypes2 = type2.getSubTypeList();
     if (subtypes1 == subtypes2) { // Only occurs if both are null
       return true;
     }
@@ -783,8 +791,8 @@ public class Types {
 
     // Now it gets slow because subtype lists are not ordered.
 
-    List<MinorType> copy1 = new ArrayList<>(subtypes1);
-    List<MinorType> copy2 = new ArrayList<>(subtypes2);
+    final List<MinorType> copy1 = new ArrayList<>(subtypes1);
+    final List<MinorType> copy2 = new ArrayList<>(subtypes2);
     Collections.sort(copy1);
     Collections.sort(copy2);
     return copy1.equals(copy2);
@@ -802,5 +810,24 @@ public class Types {
 
   public static String typeKey(MinorType type) {
     return type.name().toLowerCase();
+  }
+
+  public static int maxPrecision(MinorType type) {
+    switch (type) {
+    case DECIMAL18:
+      return 18;
+    case DECIMAL28DENSE:
+    case DECIMAL28SPARSE:
+      return 28;
+    case DECIMAL38DENSE:
+    case DECIMAL38SPARSE:
+      return 38;
+    case DECIMAL9:
+      return 9;
+    case VARDECIMAL:
+      return 38;
+    default:
+      return 0;
+    }
   }
 }

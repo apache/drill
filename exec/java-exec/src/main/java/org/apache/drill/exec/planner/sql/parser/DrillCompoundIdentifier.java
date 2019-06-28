@@ -74,7 +74,7 @@ public class DrillCompoundIdentifier extends SqlIdentifier {
     }
   }
 
-  public SqlNode getAsSqlNode() {
+  public SqlNode getAsSqlNode(boolean allowNoTableRefCompoundIdentifier) {
     if (ids.size() == 1) {
       return new SqlIdentifier(Collections.singletonList(ids.get(0).value), ids.get(0).parserPos);
     }
@@ -91,13 +91,24 @@ public class DrillCompoundIdentifier extends SqlIdentifier {
           ids.get(0).parserPos,
           ImmutableList.of(ids.get(0).parserPos));
     } else {
-      // handle everything post two index as item operator.
-      startIndex = 2;
-      node = new SqlIdentifier(
-          // Replaces star by empty string. See SqlIdentifier#isStar()
-          ImmutableList.of(ids.get(0).value, STAR_TO_EMPTY.apply(ids.get(1).value)), null,
-          ids.get(0).parserPos,
-          ImmutableList.of(ids.get(0).parserPos, ids.get(1).parserPos));
+      if (allowNoTableRefCompoundIdentifier) {
+        // For certain statements e.g. ANALYZE which only reference one table, compound column names may be referenced
+        // without the table reference. For such cases, handle everything post one index as item operator.
+        startIndex = 1;
+        node = new SqlIdentifier(
+            // Replaces star by empty string. See SqlIdentifier#isStar()
+            ImmutableList.of(STAR_TO_EMPTY.apply(ids.get(0).value)), null,
+            ids.get(0).parserPos,
+            ImmutableList.of(ids.get(0).parserPos));
+      } else {
+        // handle everything post two index as item operator.
+        startIndex = 2;
+        node = new SqlIdentifier(
+            // Replaces star by empty string. See SqlIdentifier#isStar()
+            ImmutableList.of(ids.get(0).value, STAR_TO_EMPTY.apply(ids.get(1).value)), null,
+            ids.get(0).parserPos,
+            ImmutableList.of(ids.get(0).parserPos, ids.get(1).parserPos));
+      }
     }
     for (int i = startIndex; i < ids.size(); i++) {
       node = ids.get(i).getNode(node);

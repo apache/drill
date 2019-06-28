@@ -20,20 +20,27 @@ package org.apache.drill.exec.store.parquet;
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
-import org.apache.drill.exec.expr.stat.ParquetFilterPredicate.RowsMatch;
-import org.apache.drill.exec.expr.stat.ParquetIsPredicate;
-import org.apache.drill.exec.expr.stat.RangeExprEvaluator;
+import org.apache.drill.exec.expr.stat.RowsMatch;
 import org.apache.drill.exec.ops.FragmentContextImpl;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.proto.BitControl;
-import org.apache.hadoop.conf.Configuration;
+import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.exec.store.parquet.columnreaders.ParquetRecordReader;
+import org.apache.drill.exec.store.parquet.metadata.Metadata;
+import org.apache.drill.exec.store.parquet.metadata.MetadataBase;
+import org.apache.drill.metastore.statistics.ColumnStatistics;
+import org.apache.drill.metastore.statistics.ColumnStatisticsKind;
+import org.apache.drill.exec.expr.IsPredicate;
+import org.apache.drill.exec.expr.StatisticsProvider;
+import org.apache.drill.test.BaseDirTestWatcher;
+import org.apache.drill.test.ClientFixture;
+import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.ClusterFixtureBuilder;
+import org.apache.drill.test.ProfileParser;
+import org.apache.drill.test.QueryBuilder;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.parquet.column.statistics.BooleanStatistics;
-import org.apache.parquet.format.converter.ParquetMetadataConverter;
-import org.apache.parquet.hadoop.ParquetFileReader;
-import org.apache.parquet.hadoop.metadata.ParquetMetadata;
 import org.junit.Assert;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -47,8 +54,11 @@ import org.mockito.Mockito;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.Comparator;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class TestParquetFilterPushDown extends PlanTestBase {
   private static final String CTAS_TABLE = "order_ctas";
@@ -105,7 +115,7 @@ public class TestParquetFilterPushDown extends PlanTestBase {
       .toPath()
       .resolve(Paths.get("parquetFilterPush", "intTbl", "intTbl.parquet"))
       .toFile();
-    ParquetMetadata footer = getParquetMetaData(file);
+    MetadataBase.ParquetTableMetadataBase footer = getParquetMetaData(file);
 
     testParquetRowGroupFilterEval(footer, "intCol = 100", RowsMatch.SOME);
     testParquetRowGroupFilterEval(footer, "intCol = 0", RowsMatch.SOME);
@@ -139,18 +149,22 @@ public class TestParquetFilterPushDown extends PlanTestBase {
     testParquetRowGroupFilterEval(footer, "intCol = 50 or intCol = 160", RowsMatch.SOME);
 
     //"nonExistCol" does not exist in the table. "AND" with a filter on exist column
+
     testParquetRowGroupFilterEval(footer, "intCol > 100 and nonExistCol = 100", RowsMatch.NONE);
     testParquetRowGroupFilterEval(footer, "intCol > 50 and nonExistCol = 100", RowsMatch.NONE); // since nonExistCol = 100 -> Unknown -> could drop.
     testParquetRowGroupFilterEval(footer, "nonExistCol = 100 and intCol > 50", RowsMatch.NONE); // since nonExistCol = 100 -> Unknown -> could drop.
     testParquetRowGroupFilterEval(footer, "intCol > 100 and nonExistCol < 'abc'", RowsMatch.NONE);
     testParquetRowGroupFilterEval(footer, "nonExistCol < 'abc' and intCol > 100", RowsMatch.NONE); // nonExistCol < 'abc' hit NumberException and is ignored, but intCol >100 will
+
     // say "drop".
     testParquetRowGroupFilterEval(footer, "intCol > 50 and nonExistCol < 'abc'", RowsMatch.SOME); // because nonExistCol < 'abc' hit NumberException and
     // is ignored.
 
     //"nonExistCol" does not exist in the table. "OR" with a filter on exist column
+
     testParquetRowGroupFilterEval(footer, "intCol > 100 or nonExistCol = 100", RowsMatch.NONE); // nonExistCol = 100 -> could drop.
     testParquetRowGroupFilterEval(footer, "nonExistCol = 100 or intCol > 100", RowsMatch.NONE); // nonExistCol = 100 -> could drop.
+
     testParquetRowGroupFilterEval(footer, "intCol > 50 or nonExistCol < 100", RowsMatch.SOME);
     testParquetRowGroupFilterEval(footer, "nonExistCol < 100 or intCol > 50", RowsMatch.SOME);
 
@@ -186,7 +200,7 @@ public class TestParquetFilterPushDown extends PlanTestBase {
       .toPath()
       .resolve(Paths.get("parquetFilterPush", "intTbl", "intAllNull.parquet"))
       .toFile();
-    ParquetMetadata footer = getParquetMetaData(file);
+    MetadataBase.ParquetTableMetadataBase footer = getParquetMetaData(file);
 
     testParquetRowGroupFilterEval(footer, "intCol = 100", RowsMatch.NONE);
     testParquetRowGroupFilterEval(footer, "intCol = 0", RowsMatch.NONE);
@@ -208,7 +222,7 @@ public class TestParquetFilterPushDown extends PlanTestBase {
       .toPath()
       .resolve(Paths.get("parquetFilterPush", "dateTblCorrupted", "t1", "0_0_0.parquet"))
       .toFile();
-    ParquetMetadata footer = getParquetMetaData(file);
+    MetadataBase.ParquetTableMetadataBase footer = getParquetMetaData(file);
 
     testDatePredicateAgainstDrillCTASHelper(footer);
   }
@@ -222,12 +236,12 @@ public class TestParquetFilterPushDown extends PlanTestBase {
       .toPath()
       .resolve(Paths.get("parquetFilterPush", "dateTbl1_9", "t1", "0_0_0.parquet"))
       .toFile();
-    ParquetMetadata footer = getParquetMetaData(file);
+    MetadataBase.ParquetTableMetadataBase footer = getParquetMetaData(file);
 
     testDatePredicateAgainstDrillCTASHelper(footer);
   }
 
-  private void testDatePredicateAgainstDrillCTASHelper(ParquetMetadata footer) throws Exception{
+  private void testDatePredicateAgainstDrillCTASHelper(MetadataBase.ParquetTableMetadataBase footer) {
     testParquetRowGroupFilterEval(footer, "o_orderdate = cast('1992-01-01' as date)", RowsMatch.SOME);
     testParquetRowGroupFilterEval(footer, "o_orderdate = cast('1991-12-31' as date)", RowsMatch.NONE);
 
@@ -253,7 +267,7 @@ public class TestParquetFilterPushDown extends PlanTestBase {
       .toPath()
       .resolve(Paths.get("parquetFilterPush", "tsTbl", "t1", "0_0_0.parquet"))
       .toFile();
-    ParquetMetadata footer = getParquetMetaData(file);
+    MetadataBase.ParquetTableMetadataBase footer = getParquetMetaData(file);
 
     testParquetRowGroupFilterEval(footer, "o_ordertimestamp = cast('1992-01-01 10:20:30' as timestamp)", RowsMatch.SOME);
     testParquetRowGroupFilterEval(footer, "o_ordertimestamp = cast('1992-01-01 10:20:29' as timestamp)", RowsMatch.NONE);
@@ -353,7 +367,7 @@ public class TestParquetFilterPushDown extends PlanTestBase {
 
   @Test
   // Test against parquet files from Drill CTAS post 1.8.0 release.
-  public void testDatePredicateAgaistDrillCTASPost1_8() throws  Exception {
+  public void testDatePredicateAgainstDrillCTASPost1_8() throws Exception {
     test("use dfs.tmp");
     test("create table `%s/t1` as select cast(o_orderdate as date) as o_orderdate from cp.`tpch/orders.parquet` where o_orderdate between date '1992-01-01' and " +
       "date '1992-01-03'", CTAS_TABLE);
@@ -581,71 +595,70 @@ public class TestParquetFilterPushDown extends PlanTestBase {
   }
 
   @Test // testing min=false, max=true, min/max set, no nulls
-  public void testMinFalseMaxTrue() throws Exception {
+  @SuppressWarnings("unchecked")
+  public void testMinFalseMaxTrue() {
     LogicalExpression le = Mockito.mock(LogicalExpression.class);
-    BooleanStatistics booleanStatistics = Mockito.mock(BooleanStatistics.class);
+    ColumnStatistics<Boolean> booleanStatistics = Mockito.mock(ColumnStatistics.class);
     Mockito.doReturn(booleanStatistics).when(le).accept(ArgumentMatchers.any(), ArgumentMatchers.any());
-    RangeExprEvaluator<Boolean> re = Mockito.mock(RangeExprEvaluator.class);
-    Mockito.when(re.getRowCount()).thenReturn(Long.valueOf(2)); // 2 rows
-    Mockito.when(booleanStatistics.isEmpty()).thenReturn(false); // stat is not empty
-    Mockito.when(booleanStatistics.isNumNullsSet()).thenReturn(true); // num_nulls set
-    Mockito. when(booleanStatistics.getNumNulls()).thenReturn(Long.valueOf(0)); // no nulls
-    Mockito. when(booleanStatistics.hasNonNullValue()).thenReturn(true); // min/max set
-    Mockito.when(booleanStatistics.getMin()).thenReturn(false); // min false
-    Mockito.when(booleanStatistics.getMax()).thenReturn(true); // max true
-    ParquetIsPredicate isTrue = (ParquetIsPredicate) ParquetIsPredicate.createIsPredicate(FunctionGenerationHelper.IS_TRUE, le);
+    StatisticsProvider<Boolean> re = Mockito.mock(StatisticsProvider.class);
+    Mockito.when(re.getRowCount()).thenReturn(2L); // 2 rows
+    Mockito.when(booleanStatistics.contains(ArgumentMatchers.any())).thenReturn(true); // stat is not empty
+    Mockito.when(booleanStatistics.get(ColumnStatisticsKind.NULLS_COUNT)).thenReturn(0L); // no nulls
+    Mockito.when(booleanStatistics.get(ColumnStatisticsKind.MIN_VALUE)).thenReturn(false); // min false
+    Mockito.when(booleanStatistics.get(ColumnStatisticsKind.MAX_VALUE)).thenReturn(true); // max true
+    Mockito.when(booleanStatistics.getValueComparator()).thenReturn(Comparator.nullsFirst(Comparator.naturalOrder())); // comparator
+    IsPredicate isTrue = (IsPredicate) IsPredicate.createIsPredicate(FunctionGenerationHelper.IS_TRUE, le);
     assertEquals(RowsMatch.SOME, isTrue.matches(re));
-    ParquetIsPredicate isFalse = (ParquetIsPredicate)  ParquetIsPredicate.createIsPredicate(FunctionGenerationHelper.IS_FALSE, le);
+    IsPredicate isFalse = (IsPredicate)  IsPredicate.createIsPredicate(FunctionGenerationHelper.IS_FALSE, le);
     assertEquals(RowsMatch.SOME, isFalse.matches(re));
-    ParquetIsPredicate isNotTrue = (ParquetIsPredicate)  ParquetIsPredicate.createIsPredicate(FunctionGenerationHelper.IS_NOT_TRUE, le);
+    IsPredicate isNotTrue = (IsPredicate)  IsPredicate.createIsPredicate(FunctionGenerationHelper.IS_NOT_TRUE, le);
     assertEquals(RowsMatch.SOME, isNotTrue.matches(re));
-    ParquetIsPredicate isNotFalse = (ParquetIsPredicate)  ParquetIsPredicate.createIsPredicate(FunctionGenerationHelper.IS_NOT_FALSE, le);
+    IsPredicate isNotFalse = (IsPredicate)  IsPredicate.createIsPredicate(FunctionGenerationHelper.IS_NOT_FALSE, le);
     assertEquals(RowsMatch.SOME, isNotFalse.matches(re));
   }
 
   @Test // testing min=false, max=false, min/max set, no nulls
-  public void testMinFalseMaxFalse() throws Exception {
+  @SuppressWarnings("unchecked")
+  public void testMinFalseMaxFalse() {
     LogicalExpression le = Mockito.mock(LogicalExpression.class);
-    BooleanStatistics booleanStatistics = Mockito.mock(BooleanStatistics.class);
+    ColumnStatistics<Boolean> booleanStatistics = Mockito.mock(ColumnStatistics.class);
     Mockito.doReturn(booleanStatistics).when(le).accept(ArgumentMatchers.any(), ArgumentMatchers.any());
-    RangeExprEvaluator<Boolean> re = Mockito.mock(RangeExprEvaluator.class);
-    Mockito.when(re.getRowCount()).thenReturn(Long.valueOf(2)); // 2 rows
-    Mockito.when(booleanStatistics.isEmpty()).thenReturn(false); // stat is not empty
-    Mockito.when(booleanStatistics.isNumNullsSet()).thenReturn(true); // num_nulls set
-    Mockito. when(booleanStatistics.getNumNulls()).thenReturn(Long.valueOf(0)); // no nulls
-    Mockito. when(booleanStatistics.hasNonNullValue()).thenReturn(true); // min/max set
-    Mockito.when(booleanStatistics.getMin()).thenReturn(false); // min false
-    Mockito.when(booleanStatistics.getMax()).thenReturn(false); // max false
-    ParquetIsPredicate isTrue = (ParquetIsPredicate) ParquetIsPredicate.createIsPredicate(FunctionGenerationHelper.IS_TRUE, le);
+    StatisticsProvider<Boolean> re = Mockito.mock(StatisticsProvider.class);
+    Mockito.when(re.getRowCount()).thenReturn(2L); // 2 rows
+    Mockito.when(booleanStatistics.contains(ArgumentMatchers.any())).thenReturn(true); // stat is not empty
+    Mockito.when(booleanStatistics.get(ColumnStatisticsKind.NULLS_COUNT)).thenReturn(0L); // no nulls
+    Mockito.when(booleanStatistics.get(ColumnStatisticsKind.MIN_VALUE)).thenReturn(false); // min false
+    Mockito.when(booleanStatistics.get(ColumnStatisticsKind.MAX_VALUE)).thenReturn(false); // max false
+    Mockito.when(booleanStatistics.getValueComparator()).thenReturn(Comparator.nullsFirst(Comparator.naturalOrder())); // comparator
+    IsPredicate isTrue = (IsPredicate) IsPredicate.createIsPredicate(FunctionGenerationHelper.IS_TRUE, le);
     assertEquals(RowsMatch.NONE, isTrue.matches(re));
-    ParquetIsPredicate isFalse = (ParquetIsPredicate)  ParquetIsPredicate.createIsPredicate(FunctionGenerationHelper.IS_FALSE, le);
+    IsPredicate isFalse = (IsPredicate)  IsPredicate.createIsPredicate(FunctionGenerationHelper.IS_FALSE, le);
     assertEquals(RowsMatch.ALL, isFalse.matches(re));
-    ParquetIsPredicate isNotTrue = (ParquetIsPredicate)  ParquetIsPredicate.createIsPredicate(FunctionGenerationHelper.IS_NOT_TRUE, le);
+    IsPredicate isNotTrue = (IsPredicate)  IsPredicate.createIsPredicate(FunctionGenerationHelper.IS_NOT_TRUE, le);
     assertEquals(RowsMatch.ALL, isNotTrue.matches(re));
-    ParquetIsPredicate isNotFalse = (ParquetIsPredicate)  ParquetIsPredicate.createIsPredicate(FunctionGenerationHelper.IS_NOT_FALSE, le);
+    IsPredicate isNotFalse = (IsPredicate)  IsPredicate.createIsPredicate(FunctionGenerationHelper.IS_NOT_FALSE, le);
     assertEquals(RowsMatch.NONE, isNotFalse.matches(re));
   }
 
   @Test // testing min=true, max=true, min/max set, no nulls
-  public void testMinTrueMaxTrue() throws Exception {
+  @SuppressWarnings("unchecked")
+  public void testMinTrueMaxTrue() {
     LogicalExpression le = Mockito.mock(LogicalExpression.class);
-    BooleanStatistics booleanStatistics = Mockito.mock(BooleanStatistics.class);
+    ColumnStatistics<Boolean> booleanStatistics = Mockito.mock(ColumnStatistics.class);
     Mockito.doReturn(booleanStatistics).when(le).accept(ArgumentMatchers.any(), ArgumentMatchers.any());
-    RangeExprEvaluator<Boolean> re = Mockito.mock(RangeExprEvaluator.class);
+    StatisticsProvider<Boolean> re = Mockito.mock(StatisticsProvider.class);
     Mockito.when(re.getRowCount()).thenReturn(Long.valueOf(2)); // 2 rows
-    Mockito.when(booleanStatistics.isEmpty()).thenReturn(false); // stat is not empty
-    Mockito.when(booleanStatistics.isNumNullsSet()).thenReturn(true); // num_nulls set
-    Mockito. when(booleanStatistics.getNumNulls()).thenReturn(Long.valueOf(0)); // no nulls
-    Mockito. when(booleanStatistics.hasNonNullValue()).thenReturn(true); // min/max set
-    Mockito.when(booleanStatistics.getMin()).thenReturn(true); // min false
-    Mockito.when(booleanStatistics.getMax()).thenReturn(true); // max true
-    ParquetIsPredicate isTrue = (ParquetIsPredicate) ParquetIsPredicate.createIsPredicate(FunctionGenerationHelper.IS_TRUE, le);
+    Mockito.when(booleanStatistics.contains(ArgumentMatchers.any())).thenReturn(true); // stat is not empty
+    Mockito.when(booleanStatistics.get(ColumnStatisticsKind.NULLS_COUNT)).thenReturn(0L); // no nulls
+    Mockito.when(booleanStatistics.get(ColumnStatisticsKind.MIN_VALUE)).thenReturn(true); // min false
+    Mockito.when(booleanStatistics.get(ColumnStatisticsKind.MAX_VALUE)).thenReturn(true); // max false
+    IsPredicate isTrue = (IsPredicate) IsPredicate.createIsPredicate(FunctionGenerationHelper.IS_TRUE, le);
     assertEquals(RowsMatch.ALL, isTrue.matches(re));
-    ParquetIsPredicate isFalse = (ParquetIsPredicate)  ParquetIsPredicate.createIsPredicate(FunctionGenerationHelper.IS_FALSE, le);
+    IsPredicate isFalse = (IsPredicate)  IsPredicate.createIsPredicate(FunctionGenerationHelper.IS_FALSE, le);
     assertEquals(RowsMatch.NONE, isFalse.matches(re));
-    ParquetIsPredicate isNotTrue = (ParquetIsPredicate)  ParquetIsPredicate.createIsPredicate(FunctionGenerationHelper.IS_NOT_TRUE, le);
+    IsPredicate isNotTrue = (IsPredicate)  IsPredicate.createIsPredicate(FunctionGenerationHelper.IS_NOT_TRUE, le);
     assertEquals(RowsMatch.NONE, isNotTrue.matches(re));
-    ParquetIsPredicate isNotFalse = (ParquetIsPredicate)  ParquetIsPredicate.createIsPredicate(FunctionGenerationHelper.IS_NOT_FALSE, le);
+    IsPredicate isNotFalse = (IsPredicate)  IsPredicate.createIsPredicate(FunctionGenerationHelper.IS_NOT_FALSE, le);
     assertEquals(RowsMatch.ALL, isNotFalse.matches(re));
   }
 
@@ -662,14 +675,14 @@ public class TestParquetFilterPushDown extends PlanTestBase {
   // Some test helper functions.
   //////////////////////////////////////////////////////////////////////////////////////////////////
 
-  private void testParquetFilterPruning(final String query, int expectedRowCount, int expectedRowgroups, String[] excludedPattern) throws Exception{
+  private void testParquetFilterPruning(final String query, int expectedRowCount, int expectedRowgroups, String[] excludedPattern) throws Exception {
     int actualRowCount = testSql(query);
     assertEquals(expectedRowCount, actualRowCount);
     String numRowGroupPattern = "numRowGroups=" + expectedRowgroups;
     testPlanMatchingPatterns(query, new String[]{numRowGroupPattern}, excludedPattern);
   }
 
-  private void testParquetFilterPD(final String query, int expectedRowCount, int expectedNumFiles, boolean usedMetadataFile) throws Exception{
+  private void testParquetFilterPD(final String query, int expectedRowCount, int expectedNumFiles, boolean usedMetadataFile) throws Exception {
     int actualRowCount = testSql(query);
     assertEquals(expectedRowCount, actualRowCount);
     String numFilesPattern = "numFiles=" + expectedNumFiles;
@@ -678,17 +691,70 @@ public class TestParquetFilterPushDown extends PlanTestBase {
     testPlanMatchingPatterns(query, new String[]{numFilesPattern, usedMetaPattern});
   }
 
-  private void testParquetRowGroupFilterEval(final ParquetMetadata footer, final String exprStr, RowsMatch canDropExpected) throws Exception{
+  private void testParquetRowGroupFilterEval(MetadataBase.ParquetTableMetadataBase footer, final String exprStr, RowsMatch canDropExpected) {
     final LogicalExpression filterExpr = parseExpr(exprStr);
     testParquetRowGroupFilterEval(footer, 0, filterExpr, canDropExpected);
   }
 
-  private void testParquetRowGroupFilterEval(final ParquetMetadata footer, final int rowGroupIndex, final LogicalExpression filterExpr, RowsMatch canDropExpected) {
-    RowsMatch canDrop = ParquetRGFilterEvaluator.evalFilter(filterExpr, footer, rowGroupIndex, fragContext.getOptions(), fragContext);
+  private void testParquetRowGroupFilterEval(MetadataBase.ParquetTableMetadataBase footer, final int rowGroupIndex, final LogicalExpression filterExpr, RowsMatch canDropExpected) {
+    RowsMatch canDrop = FilterEvaluatorUtils.evalFilter(filterExpr, footer, rowGroupIndex, fragContext.getOptions(), fragContext);
     Assert.assertEquals(canDropExpected, canDrop);
   }
 
-  private ParquetMetadata getParquetMetaData(File file) throws IOException{
-    return ParquetFileReader.readFooter(new Configuration(fs.getConf()), new Path(file.toURI()), ParquetMetadataConverter.NO_FILTER);
+  private MetadataBase.ParquetTableMetadataBase getParquetMetaData(File file) throws IOException {
+    return Metadata.getParquetTableMetadata(fs, file.toURI().getPath(), ParquetReaderConfig.getDefaultInstance());
   }
+
+  // =========  runtime pruning  ==========
+  @Rule
+  public final BaseDirTestWatcher baseDirTestWatcher = new BaseDirTestWatcher();
+
+  /**
+   *
+   * @throws Exception
+   */
+  private void genericTestRuntimePruning(int maxParallel, String sql, long expectedRows, int numPartitions, int numPruned) throws Exception {
+    ClusterFixtureBuilder builder = ClusterFixture.builder(baseDirTestWatcher)
+      .sessionOption(ExecConstants.SKIP_RUNTIME_ROWGROUP_PRUNING_KEY,false)
+      .sessionOption(PlannerSettings.PARQUET_ROWGROUP_FILTER_PUSHDOWN_PLANNING_THRESHOLD_KEY,0)
+      .maxParallelization(maxParallel)
+      .saveProfiles();
+
+    try (ClusterFixture cluster = builder.build();
+         ClientFixture client = cluster.clientFixture()) {
+      runAndCheckResults(client, sql, expectedRows, numPartitions, numPruned);
+    }
+  }
+  /**
+   * Test runtime pruning
+   *
+   * @throws Exception
+   */
+  @Test
+  public void testRuntimePruning() throws Exception {
+    // 's' is the partitioning key (values are: 3,4,5,6 ) -- prune out 2 out of 4 rowgroups
+    genericTestRuntimePruning( 2, "select a from cp.`parquet/multirowgroupwithNulls.parquet` where s > 4", 20, 4,2 );
+    // prune out all rowgroups
+    genericTestRuntimePruning( 2, "select a from cp.`parquet/multirowgroupwithNulls.parquet` where s > 8", 0, 4,4 );
+  }
+
+  private void runAndCheckResults(ClientFixture client, String sql, long expectedRows, long numPartitions, long numPruned) throws Exception {
+    QueryBuilder.QuerySummary summary = client.queryBuilder().sql(sql).run();
+
+    if (expectedRows > 0) {
+      assertEquals(expectedRows, summary.recordCount());
+    }
+
+    ProfileParser profile = client.parseProfile(summary.queryIdString());
+    List<ProfileParser.OperatorProfile> ops = profile.getOpsOfType(UserBitShared.CoreOperatorType.PARQUET_ROW_GROUP_SCAN_VALUE);
+
+    assertTrue(!ops.isEmpty());
+    // check for the first op only
+    ProfileParser.OperatorProfile parquestScan0 = ops.get(0);
+    long resultNumRowgroups = parquestScan0.getMetric(ParquetRecordReader.Metric.NUM_ROWGROUPS.ordinal());
+    assertEquals(numPartitions, resultNumRowgroups);
+    long resultNumPruned = parquestScan0.getMetric(ParquetRecordReader.Metric.ROWGROUPS_PRUNED.ordinal());
+    assertEquals(numPruned,resultNumPruned);
+  }
+
 }

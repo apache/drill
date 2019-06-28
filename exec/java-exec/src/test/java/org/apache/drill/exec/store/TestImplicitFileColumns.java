@@ -17,20 +17,20 @@
  */
 package org.apache.drill.exec.store;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
-import org.apache.drill.shaded.guava.com.google.common.io.Files;
-import org.apache.drill.test.BaseTestQuery;
+import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.util.JsonStringArrayList;
 import org.apache.drill.exec.util.Text;
+import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
+import org.apache.drill.shaded.guava.com.google.common.io.Files;
+import org.apache.drill.test.BaseTestQuery;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import java.io.File;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class TestImplicitFileColumns extends BaseTestQuery {
   public static final String CSV = "csv";
@@ -199,9 +199,9 @@ public class TestImplicitFileColumns extends BaseTestQuery {
   @Test
   public void testStarColumnCsv() throws Exception {
     final BatchSchema expectedSchema = new SchemaBuilder()
+        .addArray("columns", TypeProtos.MinorType.VARCHAR)
         .addNullable("dir0", TypeProtos.MinorType.VARCHAR)
         .addNullable("dir1", TypeProtos.MinorType.VARCHAR)
-        .addArray("columns", TypeProtos.MinorType.VARCHAR)
         .build();
 
     testBuilder()

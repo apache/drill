@@ -23,8 +23,12 @@ import java.util.Collections;
 import java.util.Deque;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Queue;
 
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
+import org.apache.drill.metastore.util.SchemaPathUtils;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
@@ -82,12 +86,8 @@ import org.apache.drill.exec.resolver.FunctionResolver;
 import org.apache.drill.exec.resolver.FunctionResolverFactory;
 import org.apache.drill.exec.resolver.TypeCastRules;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Optional;
-import org.apache.drill.shaded.guava.com.google.common.base.Predicate;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
-import org.apache.drill.shaded.guava.com.google.common.collect.Iterables;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import org.apache.drill.exec.store.parquet.stat.ColumnStatistics;
 import org.apache.drill.exec.util.DecimalUtility;
 
 public class ExpressionTreeMaterializer {
@@ -115,7 +115,7 @@ public class ExpressionTreeMaterializer {
     return materialize(expr, batch, errorCollector, functionLookupContext, allowComplexWriterExpr, false);
   }
 
-  public static LogicalExpression materializeFilterExpr(LogicalExpression expr, Map<SchemaPath, ColumnStatistics> fieldTypes, ErrorCollector errorCollector, FunctionLookupContext functionLookupContext) {
+  public static LogicalExpression materializeFilterExpr(LogicalExpression expr, TupleMetadata fieldTypes, ErrorCollector errorCollector, FunctionLookupContext functionLookupContext) {
     final FilterMaterializeVisitor filterMaterializeVisitor = new FilterMaterializeVisitor(fieldTypes, errorCollector);
     return expr.accept(filterMaterializeVisitor, functionLookupContext);
   }
@@ -299,19 +299,25 @@ public class ExpressionTreeMaterializer {
   }
 
   private static class FilterMaterializeVisitor extends AbstractMaterializeVisitor {
-    private final Map<SchemaPath, ColumnStatistics> stats;
+    private final TupleMetadata types;
 
-    public FilterMaterializeVisitor(Map<SchemaPath, ColumnStatistics> stats, ErrorCollector errorCollector) {
+    public FilterMaterializeVisitor(TupleMetadata types, ErrorCollector errorCollector) {
       super(errorCollector, false, false);
-      this.stats = stats;
+      this.types = types;
     }
 
     @Override
     public LogicalExpression visitSchemaPath(SchemaPath path, FunctionLookupContext functionLookupContext) {
       MajorType type = null;
 
-      if (stats.containsKey(path)) {
-        type = stats.get(path).getMajorType();
+      ColumnMetadata columnMetadata = SchemaPathUtils.getColumnMetadata(path.getUnIndexed(), types);
+
+      if (columnMetadata != null) {
+        type = columnMetadata.majorType();
+        // for the case when specified path refers to array element, makes its type optional
+        if (path.isArray()) {
+          type = type.toBuilder().setMode(DataMode.OPTIONAL).build();
+        }
       }
 
       if (type != null) {
@@ -323,7 +329,7 @@ public class ExpressionTreeMaterializer {
     }
   }
 
-  private static abstract class AbstractMaterializeVisitor extends AbstractExprVisitor<LogicalExpression, FunctionLookupContext, RuntimeException> {
+  private abstract static class AbstractMaterializeVisitor extends AbstractExprVisitor<LogicalExpression, FunctionLookupContext, RuntimeException> {
     private ExpressionValidator validator = new ExpressionValidator();
     private ErrorCollector errorCollector;
     private Deque<ErrorCollector> errorCollectors = new ArrayDeque<>();
@@ -345,16 +351,15 @@ public class ExpressionTreeMaterializer {
       return newExpr;
     }
 
-    abstract public LogicalExpression visitSchemaPath(SchemaPath path, FunctionLookupContext functionLookupContext);
+    public abstract LogicalExpression visitSchemaPath(SchemaPath path, FunctionLookupContext functionLookupContext);
 
     @Override
-    public LogicalExpression visitUnknown(LogicalExpression e, FunctionLookupContext functionLookupContext)
-      throws RuntimeException {
+    public LogicalExpression visitUnknown(LogicalExpression e, FunctionLookupContext functionLookupContext) {
       return e;
     }
 
     @Override
-    public LogicalExpression visitFunctionHolderExpression(FunctionHolderExpression holder, FunctionLookupContext functionLookupContext) throws RuntimeException {
+    public LogicalExpression visitFunctionHolderExpression(FunctionHolderExpression holder, FunctionLookupContext functionLookupContext) {
       // a function holder is already materialized, no need to rematerialize.  generally this won't be used unless we materialize a partial tree and rematerialize the whole tree.
       return holder;
     }
@@ -660,27 +665,16 @@ public class ExpressionTreeMaterializer {
       allExpressions.add(conditions.expression);
       allExpressions.add(newElseExpr);
 
-      boolean containsNullExpr = Iterables.any(allExpressions, new Predicate<LogicalExpression>() {
-        @Override
-        public boolean apply(LogicalExpression input) {
-          return input instanceof NullExpression;
-        }
-      });
+      boolean containsNullType = allExpressions.stream()
+          .anyMatch(expression -> expression.getMajorType().getMinorType() == MinorType.NULL);
+      if (containsNullType) {
+        Optional<LogicalExpression> nonNullExpr = allExpressions.stream()
+            .filter(expression -> expression.getMajorType().getMinorType() != MinorType.NULL)
+            .findAny();
 
-      if (containsNullExpr) {
-        Optional<LogicalExpression> nonNullExpr = Iterables.tryFind(allExpressions,
-          new Predicate<LogicalExpression>() {
-            @Override
-            public boolean apply(LogicalExpression input) {
-              return !input.getMajorType().getMinorType().equals(TypeProtos.MinorType.NULL);
-            }
-          }
-        );
-
-        if(nonNullExpr.isPresent()) {
+        if (nonNullExpr.isPresent()) {
           MajorType type = nonNullExpr.get().getMajorType();
           conditions = new IfExpression.IfCondition(conditions.condition, rewriteNullExpression(conditions.expression, type));
-
           newElseExpr = rewriteNullExpression(newElseExpr, type);
         }
       }
@@ -730,9 +724,22 @@ public class ExpressionTreeMaterializer {
     private LogicalExpression rewriteNullExpression(LogicalExpression expr, MajorType type) {
       if(expr instanceof NullExpression) {
         return new TypedNullConstant(type);
+      } else if (expr instanceof IfExpression) {
+        return rewriteIfWithNullExpression((IfExpression) expr, type);
       } else {
         return expr;
       }
+    }
+
+    private LogicalExpression rewriteIfWithNullExpression(IfExpression expr, MajorType type) {
+      IfCondition condition = new IfExpression.IfCondition(expr.ifCondition.condition, rewriteNullExpression(expr.ifCondition.expression, type));
+      LogicalExpression elseExpression = rewriteNullExpression(expr.elseExpression, type);
+      return new IfExpression.Builder()
+          .setPosition(expr.getPosition())
+          .setOutputType(expr.outputType)
+          .setIfCondition(condition)
+          .setElse(elseExpression)
+          .build();
     }
 
     @Override

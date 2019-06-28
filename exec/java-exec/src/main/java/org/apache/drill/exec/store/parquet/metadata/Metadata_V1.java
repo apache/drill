@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.hadoop.fs.Path;
 import org.apache.parquet.io.api.Binary;
 import org.apache.parquet.schema.OriginalType;
 import org.apache.parquet.schema.PrimitiveType;
@@ -43,27 +44,29 @@ public class Metadata_V1 {
     @JsonProperty(value = "metadata_version", access = JsonProperty.Access.WRITE_ONLY) private String metadataVersion;
     @JsonProperty
     List<ParquetFileMetadata_v1> files;
-    @JsonProperty List<String> directories;
+    @JsonProperty List<Path> directories;
 
     public ParquetTableMetadata_v1() {
     }
 
-    public ParquetTableMetadata_v1(String metadataVersion, List<ParquetFileMetadata_v1> files, List<String> directories) {
+    public ParquetTableMetadata_v1(String metadataVersion, List<ParquetFileMetadata_v1> files, List<Path> directories) {
       this.metadataVersion = metadataVersion;
       this.files = files;
       this.directories = directories;
     }
 
     @JsonIgnore
-    @Override public List<String> getDirectories() {
+    @Override public List<Path> getDirectories() {
       return directories;
     }
 
-    @JsonIgnore @Override public List<? extends ParquetFileMetadata> getFiles() {
+    @JsonIgnore
+    @Override public List<? extends ParquetFileMetadata> getFiles() {
       return files;
     }
 
-    @JsonIgnore @Override public void assignFiles(List<? extends ParquetFileMetadata> newFiles) {
+    @JsonIgnore
+    @Override public void assignFiles(List<? extends ParquetFileMetadata> newFiles) {
       this.files = (List<ParquetFileMetadata_v1>) newFiles;
     }
 
@@ -71,40 +74,66 @@ public class Metadata_V1 {
       return false;
     }
 
-    @JsonIgnore @Override public PrimitiveType.PrimitiveTypeName getPrimitiveType(String[] columnName) {
+    @JsonIgnore
+    @Override public PrimitiveType.PrimitiveTypeName getPrimitiveType(String[] columnName) {
       return null;
     }
 
-    @JsonIgnore @Override public OriginalType getOriginalType(String[] columnName) {
+    @JsonIgnore
+    @Override public OriginalType getOriginalType(String[] columnName) {
       return null;
     }
 
-    @JsonIgnore @Override
+    @JsonIgnore
+    @Override
     public Integer getRepetitionLevel(String[] columnName) {
       return null;
     }
 
-    @JsonIgnore @Override
+    @JsonIgnore
+    @Override
     public Integer getDefinitionLevel(String[] columnName) {
       return null;
     }
 
-    @JsonIgnore @Override
+    @JsonIgnore
+    @Override
+    public Integer getScale(String[] columnName) {
+      return null;
+    }
+
+    @JsonIgnore
+    @Override
+    public Integer getPrecision(String[] columnName) {
+      return null;
+    }
+
+    @JsonIgnore
+    @Override
     public boolean isRowGroupPrunable() {
       return false;
     }
 
-    @JsonIgnore @Override public MetadataBase.ParquetTableMetadataBase clone() {
+    @JsonIgnore
+    @Override public MetadataBase.ParquetTableMetadataBase clone() {
       return new ParquetTableMetadata_v1(metadataVersion, files, directories);
     }
 
-    @JsonIgnore @Override
+    @JsonIgnore
+    @Override
     public String getDrillVersion() {
       return null;
     }
 
-    @JsonIgnore @Override public String getMetadataVersion() {
+    @JsonIgnore
+    @Override public String getMetadataVersion() {
       return metadataVersion;
+    }
+
+    @JsonIgnore
+    @Override
+    public List<? extends MetadataBase.ColumnTypeMetadata> getColumnTypeInfoList() {
+      return null;
     }
   }
 
@@ -114,7 +143,7 @@ public class Metadata_V1 {
    */
   public static class ParquetFileMetadata_v1 extends ParquetFileMetadata {
     @JsonProperty
-    public String path;
+    public Path path;
     @JsonProperty
     public Long length;
     @JsonProperty
@@ -123,7 +152,7 @@ public class Metadata_V1 {
     public ParquetFileMetadata_v1() {
     }
 
-    public ParquetFileMetadata_v1(String path, Long length, List<RowGroupMetadata_v1> rowGroups) {
+    public ParquetFileMetadata_v1(Path path, Long length, List<RowGroupMetadata_v1> rowGroups) {
       this.path = path;
       this.length = length;
       this.rowGroups = rowGroups;
@@ -134,15 +163,18 @@ public class Metadata_V1 {
       return String.format("path: %s rowGroups: %s", path, rowGroups);
     }
 
-    @JsonIgnore @Override public String getPath() {
+    @JsonIgnore
+    @Override public Path getPath() {
       return path;
     }
 
-    @JsonIgnore @Override public Long getLength() {
+    @JsonIgnore
+    @Override public Long getLength() {
       return length;
     }
 
-    @JsonIgnore @Override public List<? extends RowGroupMetadata> getRowGroups() {
+    @JsonIgnore
+    @Override public List<? extends RowGroupMetadata> getRowGroups() {
       return rowGroups;
     }
   }

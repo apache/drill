@@ -41,16 +41,16 @@ import org.apache.hadoop.util.Progressable;
 public class CachedSingleFileSystem extends FileSystem {
 
   private ByteBuf file;
-  private String path;
+  private Path path;
 
-  public CachedSingleFileSystem(String path) throws IOException {
+  public CachedSingleFileSystem(Path path) throws IOException {
     this.path = path;
-    File f = new File(path);
+    File f = new File(path.toUri().getPath());
     long length = f.length();
     if (length > Integer.MAX_VALUE) {
       throw new UnsupportedOperationException("Cached file system only supports files of less than 2GB.");
     }
-    try (InputStream is = new BufferedInputStream(new FileInputStream(path))) {
+    try (InputStream is = new BufferedInputStream(new FileInputStream(path.toUri().getPath()))) {
       byte[] buffer = new byte[64*1024];
       this.file = UnpooledByteBufAllocator.DEFAULT.directBuffer((int) length);
       int read;

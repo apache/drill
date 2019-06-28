@@ -17,31 +17,36 @@
  */
 package org.apache.drill.exec.planner.sql.parser;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.parser.SqlParserUtil;
-import org.apache.calcite.util.Util;
-
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 /**
  * Helper methods or constants used in parsing a SQL query.
  */
 public class DrillParserUtil {
 
-  public static final String CHARSET = Util.getDefaultCharset().name();
+  private static final int CONDITION_LIST_CAPACITY = 3;
+
+  /**
+   * System-depended end of line character
+   */
+  public static final String EOL = System.lineSeparator();
 
   public static SqlNode createCondition(SqlNode left, SqlOperator op, SqlNode right) {
 
     // if one of the operands is null, return the other
-    if (left == null || right == null) {
-      return left != null ? left : right;
+    if (left == null) {
+      return right;
+    } else if (right == null) {
+      return left;
     }
 
-    List<Object> listCondition = Lists.newArrayList();
+    List<Object> listCondition = new ArrayList<>(CONDITION_LIST_CAPACITY);
     listCondition.add(left);
     listCondition.add(new SqlParserUtil.ToTreeListItem(op, SqlParserPos.ZERO));
     listCondition.add(right);

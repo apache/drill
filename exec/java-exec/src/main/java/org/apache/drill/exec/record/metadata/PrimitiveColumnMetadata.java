@@ -17,13 +17,21 @@
  */
 package org.apache.drill.exec.record.metadata;
 
+import org.apache.drill.common.types.BooleanType;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.vector.accessor.ColumnConversionFactory;
+import org.joda.time.Instant;
+import org.joda.time.LocalDate;
+import org.joda.time.LocalTime;
+import org.joda.time.Period;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
+
+import java.math.BigDecimal;
 
 /**
  * Primitive (non-map) column. Describes non-nullable, nullable and array types
@@ -42,41 +50,18 @@ import org.apache.drill.exec.vector.accessor.ColumnConversionFactory;
 
 public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
 
-  /**
-   * Expected (average) width for variable-width columns.
-   */
-
-  private int expectedWidth;
-
-  /**
-   * Default value to use for filling a vector when no real data is
-   * available, such as for columns added in new files but which does not
-   * exist in existing files. The ultimate default value is the SQL null
-   * value, which works only for nullable columns.
-   */
-
-  private Object defaultValue;
-
-  /**
-   * Factory for an optional shim writer that translates from the type of
-   * data available to the code that creates the vectors on the one hand,
-   * and the actual type of the column on the other. For example, a shim
-   * might parse a string form of a date into the form stored in vectors.
-   * <p>
-   * The default is to use the "natural" type: that is, to insert no
-   * conversion shim.
-   */
-
-  private ColumnConversionFactory shimFactory;
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PrimitiveColumnMetadata.class);
 
   public PrimitiveColumnMetadata(MaterializedField schema) {
     super(schema);
-    expectedWidth = estimateWidth(schema.getType());
+  }
+
+  public PrimitiveColumnMetadata(String name, MajorType type) {
+    super(name, type);
   }
 
   public PrimitiveColumnMetadata(String name, MinorType type, DataMode mode) {
     super(name, type, mode);
-    expectedWidth = estimateWidth(Types.withMode(type, mode));
   }
 
   private int estimateWidth(MajorType majorType) {
@@ -103,7 +88,6 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
 
   public PrimitiveColumnMetadata(PrimitiveColumnMetadata from) {
     super(from);
-    expectedWidth = from.expectedWidth;
   }
 
   @Override
@@ -115,7 +99,16 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
   public ColumnMetadata.StructureType structureType() { return ColumnMetadata.StructureType.PRIMITIVE; }
 
   @Override
-  public int expectedWidth() { return expectedWidth; }
+  public int expectedWidth() {
+
+    // If the property is not set, estimate width from the type.
+
+    int width = PropertyAccessor.getInt(this, EXPECTED_WIDTH_PROP);
+    if (width == 0) {
+      width = estimateWidth(majorType());
+    }
+    return width;
+  }
 
   @Override
   public int precision() { return precision; }
@@ -130,25 +123,34 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
     // makes an error.
 
     if (isVariableWidth()) {
-      expectedWidth = Math.max(1, width);
+      PropertyAccessor.set(this, EXPECTED_WIDTH_PROP, Math.max(1, width));
     }
   }
 
   @Override
-  public void setDefaultValue(Object value) {
-    defaultValue = value;
+  public DateTimeFormatter dateTimeFormatter() {
+    String formatValue = format();
+    try {
+      switch (type) {
+        case TIME:
+          return formatValue == null
+            ? ISODateTimeFormat.localTimeParser() : DateTimeFormat.forPattern(formatValue);
+        case DATE:
+          formatValue = format();
+          return formatValue == null
+            ? ISODateTimeFormat.localDateParser() : DateTimeFormat.forPattern(formatValue);
+        case TIMESTAMP:
+          formatValue = format();
+          return formatValue == null
+            ? ISODateTimeFormat.dateTimeNoMillis() : DateTimeFormat.forPattern(formatValue);
+        default:
+          throw new IllegalArgumentException("Column is not a date/time type: " + type.toString());
+      }
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(String.format("The format \"%s\" is not valid for type %s",
+          formatValue, type), e);
+    }
   }
-
-  @Override
-  public Object defaultValue() { return defaultValue; }
-
-  @Override
-  public void setTypeConverter(ColumnConversionFactory factory) {
-    shimFactory = factory;
-  }
-
-  @Override
-  public ColumnConversionFactory typeConverter() { return shimFactory; }
 
   @Override
   public ColumnMetadata cloneEmpty() {
@@ -157,9 +159,8 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
 
   public ColumnMetadata mergeWith(MaterializedField field) {
     PrimitiveColumnMetadata merged = new PrimitiveColumnMetadata(field);
-    merged.setExpectedElementCount(expectedElementCount);
-    merged.setExpectedWidth(Math.max(expectedWidth, field.getPrecision()));
-    merged.setProjected(projected);
+    merged.setExpectedWidth(Math.max(expectedWidth(), field.getPrecision()));
+    merged.setProperties(properties());
     return merged;
   }
 
@@ -226,4 +227,75 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
     return builder.toString();
   }
 
+  /**
+   * Converts value in string literal form into Object instance based on {@link MinorType} value.
+   * Returns null in case of error during parsing or unsupported type.
+   *
+   * @param value value in string literal form
+   * @return Object instance
+   */
+  @Override
+  public Object valueFromString(String value) {
+    if (value == null) {
+      return null;
+    }
+    try {
+      switch (type) {
+        case INT:
+          return Integer.parseInt(value);
+        case BIGINT:
+          return Long.parseLong(value);
+        case FLOAT4:
+          return (double) Float.parseFloat(value);
+        case FLOAT8:
+          return Double.parseDouble(value);
+        case VARDECIMAL:
+          return new BigDecimal(value);
+        case BIT:
+          return BooleanType.fromString(value);
+        case VARCHAR:
+        case VARBINARY:
+          return value;
+        case TIME:
+          return LocalTime.parse(value, dateTimeFormatter());
+        case DATE:
+          return LocalDate.parse(value, dateTimeFormatter());
+        case TIMESTAMP:
+          return Instant.parse(value, dateTimeFormatter());
+        case INTERVAL:
+        case INTERVALDAY:
+        case INTERVALYEAR:
+          return Period.parse(value);
+        default:
+          throw new IllegalArgumentException("Unsupported conversion: " + type.toString());
+      }
+    } catch (IllegalArgumentException e) {
+      logger.warn("Error while parsing type {} default value {}", type, value, e);
+      throw new IllegalArgumentException(String.format("The string \"%s\" is not valid for type %s",
+          value, type), e);
+    }
+  }
+
+  /**
+   * Converts given value instance into String literal representation based on column metadata type.
+   *
+   * @param value value instance
+   * @return value in string literal representation
+   */
+  @Override
+  public String valueToString(Object value) {
+    if (value == null) {
+      return null;
+    }
+    switch (type) {
+      case TIME:
+        return dateTimeFormatter().print((LocalTime) value);
+      case DATE:
+        return dateTimeFormatter().print((LocalDate) value);
+      case TIMESTAMP:
+        return dateTimeFormatter().print((Instant) value);
+      default:
+       return value.toString();
+    }
+  }
 }

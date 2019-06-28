@@ -78,8 +78,8 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
     int configuredBatchSize = (int) context.getOptions().getOption(ExecConstants.OUTPUT_BATCH_SIZE_VALIDATOR);
     batchMemoryManager = new RecordBatchMemoryManager(numInputs, configuredBatchSize);
 
-    RecordBatchStats.logRecordBatchStats(getRecordBatchStatsContext(),
-      "configured output batch size: %d", configuredBatchSize);
+    RecordBatchStats.printConfiguredBatchSize(getRecordBatchStatsContext(),
+      configuredBatchSize);
   }
 
   @Override
@@ -88,6 +88,7 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
     right.kill(sendUpstream);
   }
 
+  @Override
   protected void buildSchema() throws SchemaChangeException {
     if (! prefetchFirstBatchFromBothSides()) {
       state = BatchState.DONE;
@@ -153,7 +154,6 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
   }
 
 
-  @SuppressWarnings("resource")
   private IterOutcome doWork(BatchStatusWrappper batchStatus, boolean newSchema) throws ClassTransformationException, IOException, SchemaChangeException {
     Preconditions.checkArgument(batchStatus.batch.getSchema().getFieldCount() == container.getSchema().getFieldCount(),
         "Input batch and output batch have different field counthas!");

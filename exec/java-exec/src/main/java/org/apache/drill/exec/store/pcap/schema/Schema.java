@@ -35,6 +35,7 @@ public class Schema {
     columns.add(new ColumnDto("type", PcapTypes.STRING));
     columns.add(new ColumnDto("network", PcapTypes.INTEGER));
     columns.add(new ColumnDto("timestamp", PcapTypes.TIMESTAMP));
+    columns.add(new ColumnDto("timestamp_micro", PcapTypes.LONG));
     columns.add(new ColumnDto("src_ip", PcapTypes.STRING));
     columns.add(new ColumnDto("dst_ip", PcapTypes.STRING));
     columns.add(new ColumnDto("src_port", PcapTypes.INTEGER));
@@ -42,21 +43,22 @@ public class Schema {
     columns.add(new ColumnDto("src_mac_address", PcapTypes.STRING));
     columns.add(new ColumnDto("dst_mac_address", PcapTypes.STRING));
     columns.add(new ColumnDto("tcp_session", PcapTypes.LONG));
-    columns.add(new ColumnDto("tcp_ack", PcapTypes.INTEGER));
+    columns.add(new ColumnDto("tcp_ack", PcapTypes.BOOLEAN));
     columns.add(new ColumnDto("tcp_flags", PcapTypes.INTEGER));
-    columns.add(new ColumnDto("tcp_flags_ns", PcapTypes.INTEGER));
-    columns.add(new ColumnDto("tcp_flags_cwr", PcapTypes.INTEGER));
-    columns.add(new ColumnDto("tcp_flags_ece ", PcapTypes.INTEGER ));
-    columns.add(new ColumnDto("tcp_flags_ece_ecn_capable", PcapTypes.INTEGER ));
-    columns.add(new ColumnDto("tcp_flags_ece_congestion_experienced", PcapTypes.INTEGER ));
-    columns.add(new ColumnDto("tcp_flags_urg", PcapTypes.INTEGER ));
-    columns.add(new ColumnDto("tcp_flags_ack", PcapTypes.INTEGER ));
-    columns.add(new ColumnDto("tcp_flags_psh", PcapTypes.INTEGER ));
-    columns.add(new ColumnDto("tcp_flags_rst", PcapTypes.INTEGER ));
-    columns.add(new ColumnDto("tcp_flags_syn", PcapTypes.INTEGER ));
-    columns.add(new ColumnDto("tcp_flags_fin", PcapTypes.INTEGER ));
+    columns.add(new ColumnDto("tcp_flags_ns", PcapTypes.BOOLEAN));
+    columns.add(new ColumnDto("tcp_flags_cwr", PcapTypes.BOOLEAN));
+    columns.add(new ColumnDto("tcp_flags_ece ", PcapTypes.BOOLEAN ));
+    columns.add(new ColumnDto("tcp_flags_ece_ecn_capable", PcapTypes.BOOLEAN ));
+    columns.add(new ColumnDto("tcp_flags_ece_congestion_experienced", PcapTypes.BOOLEAN ));
+    columns.add(new ColumnDto("tcp_flags_urg", PcapTypes.BOOLEAN ));
+    columns.add(new ColumnDto("tcp_flags_ack", PcapTypes.BOOLEAN ));
+    columns.add(new ColumnDto("tcp_flags_psh", PcapTypes.BOOLEAN ));
+    columns.add(new ColumnDto("tcp_flags_rst", PcapTypes.BOOLEAN ));
+    columns.add(new ColumnDto("tcp_flags_syn", PcapTypes.BOOLEAN ));
+    columns.add(new ColumnDto("tcp_flags_fin", PcapTypes.BOOLEAN ));
     columns.add(new ColumnDto("tcp_parsed_flags", PcapTypes.STRING));
     columns.add(new ColumnDto("packet_length", PcapTypes.INTEGER));
+    columns.add(new ColumnDto("is_corrupt", PcapTypes.BOOLEAN));
     columns.add(new ColumnDto("data", PcapTypes.STRING));
   }
 

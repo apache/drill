@@ -43,7 +43,9 @@ import org.apache.drill.exec.record.MaterializedField;
  * In the future, this structure will also gather metadata useful
  * for vector processing such as expected widths and so on.
  */
-public interface TupleMetadata extends Iterable<ColumnMetadata> {
+public interface TupleMetadata extends Propertied, Iterable<ColumnMetadata> {
+
+  public static final String IS_STRICT_SCHEMA_PROP = DRILL_PROP_PREFIX + "strict";
 
   /**
    * Add a new column to the schema.
@@ -93,12 +95,4 @@ public interface TupleMetadata extends Iterable<ColumnMetadata> {
 
   String fullName(ColumnMetadata column);
   String fullName(int index);
-
-  /**
-   * Converts schema metadata into string representation
-   * accepted by the table schema parser.
-   *
-   * @return schema metadata string representation
-   */
-  String schemaString();
 }

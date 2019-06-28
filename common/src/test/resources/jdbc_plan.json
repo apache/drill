@@ -4,8 +4,8 @@
         "generator":{"type":"manual","info":"na"}
     },
     "storage":{
-        "donuts-json":{"type":"classpath"},
-        "queue":{"type":"queue"}
+        "donuts-json":{"type":"classpath", "enabled":  true},
+        "queue":{"type":"queue", "enabled":  true}
     },
     "query":[
         {"op":"sequence",

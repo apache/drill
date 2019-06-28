@@ -21,25 +21,32 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.store.easy.text.reader.HeaderBuilder;
 import org.apache.drill.test.DrillTest;
+import org.apache.hadoop.fs.Path;
 import org.junit.Test;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
+
+/**
+ * Test the mechanism that builds column names from a set of CSV
+ * headers. The mechanism provides reasonable defaults for missing
+ * or invalid headers.
+ */
 
 public class TestHeaderBuilder extends DrillTest {
 
   @Test
   public void testEmptyHeader() {
-    HeaderBuilder hb = new HeaderBuilder();
-    hb.startBatch();
+    Path dummyPath = new Path("file:/dummy.csv");
+    HeaderBuilder hb = new HeaderBuilder(dummyPath);
     try {
       hb.finishRecord();
     } catch (UserException e) {
       assertTrue(e.getMessage().contains("must define at least one header"));
     }
 
-    hb = new HeaderBuilder();
-    hb.startBatch();
+    hb = new HeaderBuilder(dummyPath);
     parse(hb,"");
     try {
       hb.finishRecord();
@@ -47,127 +54,107 @@ public class TestHeaderBuilder extends DrillTest {
       assertTrue(e.getMessage().contains("must define at least one header"));
     }
 
-    hb = new HeaderBuilder();
-    hb.startBatch();
+    hb = new HeaderBuilder(dummyPath);
     parse(hb,"   ");
     validateHeader(hb, new String[] {"column_1"});
 
-    hb = new HeaderBuilder();
-    hb.startBatch();
+    hb = new HeaderBuilder(dummyPath);
     parse(hb,",");
     validateHeader(hb, new String[] {"column_1", "column_2"});
 
-    hb = new HeaderBuilder();
-    hb.startBatch();
+    hb = new HeaderBuilder(dummyPath);
     parse(hb," , ");
     validateHeader(hb, new String[] {"column_1", "column_2"});
 
-    hb = new HeaderBuilder();
-    hb.startBatch();
+    hb = new HeaderBuilder(dummyPath);
     parse(hb,"a,   ");
     validateHeader(hb, new String[] {"a", "column_2"});
   }
 
   @Test
   public void testWhiteSpace() {
-    HeaderBuilder hb = new HeaderBuilder();
-    hb.startBatch();
+    Path dummyPath = new Path("file:/dummy.csv");
+    HeaderBuilder hb = new HeaderBuilder(dummyPath);
     parse(hb,"a");
     validateHeader(hb, new String[] {"a"});
 
-    hb = new HeaderBuilder();
-    hb.startBatch();
+    hb = new HeaderBuilder(dummyPath);
     parse(hb," a ");
     validateHeader(hb, new String[] {"a"});
 
-    hb = new HeaderBuilder();
-    hb.startBatch();
+    hb = new HeaderBuilder(dummyPath);
     parse(hb,"    a    ");
     validateHeader(hb, new String[] {"a"});
 
-    hb = new HeaderBuilder();
-    hb.startBatch();
+    hb = new HeaderBuilder(dummyPath);
     parse(hb,"a,b,c");
     validateHeader(hb, new String[] {"a","b","c"});
 
-    hb = new HeaderBuilder();
-    hb.startBatch();
+    hb = new HeaderBuilder(dummyPath);
     parse(hb," a , b ,  c ");
     validateHeader(hb, new String[] {"a","b","c"});
   }
 
   @Test
   public void testSyntax() {
-    HeaderBuilder hb = new HeaderBuilder();
-    hb.startBatch();
+    Path dummyPath = new Path("file:/dummy.csv");
+    HeaderBuilder hb = new HeaderBuilder(dummyPath);
     parse(hb,"a_123");
     validateHeader(hb, new String[] {"a_123"});
 
-    hb = new HeaderBuilder();
-    hb.startBatch();
+    hb = new HeaderBuilder(dummyPath);
     parse(hb,"a_123_");
     validateHeader(hb, new String[] {"a_123_"});
 
-    hb = new HeaderBuilder();
-    hb.startBatch();
+    hb = new HeaderBuilder(dummyPath);
     parse(hb,"az09_");
     validateHeader(hb, new String[] {"az09_"});
 
-    hb = new HeaderBuilder();
-    hb.startBatch();
+    hb = new HeaderBuilder(dummyPath);
     parse(hb,"+");
     validateHeader(hb, new String[] {"column_1"});
 
-    hb = new HeaderBuilder();
-    hb.startBatch();
+    hb = new HeaderBuilder(dummyPath);
     parse(hb,"+,-");
     validateHeader(hb, new String[] {"column_1", "column_2"});
 
-    hb = new HeaderBuilder();
-    hb.startBatch();
+    hb = new HeaderBuilder(dummyPath);
     parse(hb,"+9a");
     validateHeader(hb, new String[] {"col_9a"});
 
-    hb = new HeaderBuilder();
-    hb.startBatch();
+    hb = new HeaderBuilder(dummyPath);
     parse(hb,"9a");
     validateHeader(hb, new String[] {"col_9a"});
 
-    hb = new HeaderBuilder();
-    hb.startBatch();
+    hb = new HeaderBuilder(dummyPath);
     parse(hb,"a+b");
     validateHeader(hb, new String[] {"a_b"});
 
-    hb = new HeaderBuilder();
-    hb.startBatch();
+    hb = new HeaderBuilder(dummyPath);
     parse(hb,"a_b");
     validateHeader(hb, new String[] {"a_b"});
 
-    hb = new HeaderBuilder();
-    hb.startBatch();
+    hb = new HeaderBuilder(dummyPath);
     parse(hb,"EXPR$0");
     validateHeader(hb, new String[] {"EXPR_0"});
 
-    hb = new HeaderBuilder();
-    hb.startBatch();
+    hb = new HeaderBuilder(dummyPath);
     parse(hb,"(_-^-_)");
     validateHeader(hb, new String[] {"col_______"});
   }
 
   @Test
   public void testUnicode() {
-    HeaderBuilder hb = new HeaderBuilder();
-    hb.startBatch();
+    Path dummyPath = new Path("file:/dummy.csv");
+    HeaderBuilder hb = new HeaderBuilder(dummyPath);
     parse(hb,"Αθήνα");
     validateHeader(hb, new String[] {"Αθήνα"});
 
-    hb = new HeaderBuilder();
-    hb.startBatch();
+    hb = new HeaderBuilder(dummyPath);
     parse(hb,"Москва");
     validateHeader(hb, new String[] {"Москва"});
 
-    hb = new HeaderBuilder();
-    hb.startBatch();
+    hb = new HeaderBuilder(dummyPath);
     parse(hb,"Paris,Αθήνα,Москва");
     validateHeader(hb, new String[] {"Paris","Αθήνα","Москва"});
   }
@@ -183,8 +170,8 @@ public class TestHeaderBuilder extends DrillTest {
   }
 
   private void testParser(String input, String[] expected) {
-    HeaderBuilder hb = new HeaderBuilder();
-    hb.startBatch();
+    Path dummyPath = new Path("file:/dummy.csv");
+    HeaderBuilder hb = new HeaderBuilder(dummyPath);
     parse(hb,input);
     hb.finishRecord();
     validateHeader(hb, expected);

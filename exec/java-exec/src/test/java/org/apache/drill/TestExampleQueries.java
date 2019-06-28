@@ -1198,4 +1198,19 @@ public class TestExampleQueries extends BaseTestQuery {
         .baselineValues("Nowmer", "ARGENTINA")
         .go();
   }
+
+  @Test
+  public void testSubQueryInProjectWithVarChar() throws Exception {
+    String query = "select n_name," +
+        "(select r.r_name from cp.`tpch/region.parquet` r where r.r_regionkey = n.n_regionkey) as r_name\n" +
+        "from cp.`tpch/nation.parquet` n order by n.n_name limit 1";
+    PlanTestBase.testPlanMatchingPatterns(query, "agg.*SINGLE_VALUE");
+
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("n_name", "r_name")
+        .baselineValues("ALGERIA", "AFRICA")
+        .go();
+  }
 }

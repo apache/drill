@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.vector;
 
+import java.time.LocalTime;
+
 import org.joda.time.Period;
 
 /**
@@ -105,7 +107,7 @@ public class DateUtilities {
     final int seconds = millis / (secondsToMillis);
     millis %= (secondsToMillis);
 
-    StringBuilder buf = new StringBuilder()
+    final StringBuilder buf = new StringBuilder()
             .append(days)
             .append(pluralify("day", days))
             .append(" ")
@@ -152,7 +154,7 @@ public class DateUtilities {
     final int seconds = millis / secondsToMillis;
     millis %= secondsToMillis;
 
-    StringBuilder buf = new StringBuilder()
+    final StringBuilder buf = new StringBuilder()
            .append(years)
            .append(pluralify("year", years))
            .append(" ")
@@ -186,5 +188,14 @@ public class DateUtilities {
              minutes) * 60 +
             seconds) * 1000 +
            millis;
+  }
+
+  /**
+   * Convert from Java LocalTime to the ms-since-midnight format which Drill uses
+   * @param localTime Java local time
+   * @return Drill form of the time
+   */
+  public static int toTime(LocalTime localTime) {
+    return (int) ((localTime.toNanoOfDay() + 500_000L) / 1_000_000L); // round to milliseconds
   }
 }

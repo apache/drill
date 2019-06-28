@@ -30,6 +30,7 @@ import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
 import org.apache.hadoop.fs.Path;
+import org.joda.time.LocalDate;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -273,7 +274,7 @@ public class TestSchemaCommands extends ClusterTest {
   }
 
   @Test
-  public void testCreateWithProperties() throws Exception {
+  public void testCreateWithSchemaProperties() throws Exception {
     File tmpDir = dirTestWatcher.getTmpDir();
     File schemaFile = new File(tmpDir, "schema_for_create_with_properties.schema");
     assertFalse(schemaFile.exists());
@@ -292,16 +293,16 @@ public class TestSchemaCommands extends ClusterTest {
       SchemaContainer schemaContainer = schemaProvider.read();
 
       assertNull(schemaContainer.getTable());
-      assertNotNull(schemaContainer.getSchema());
-      assertNotNull(schemaContainer.getProperties());
+      TupleMetadata schema = schemaContainer.getSchema();
+      assertNotNull(schema);
 
       Map<String, String> properties = new LinkedHashMap<>();
       properties.put("k1", "v1");
       properties.put("k2", "v2");
       properties.put("k3", "v3");
 
-      assertEquals(properties.size(), schemaContainer.getProperties().size());
-      assertEquals(properties, schemaContainer.getProperties());
+      assertEquals(properties.size(), schema.properties().size());
+      assertEquals(properties, schema.properties());
 
     } finally {
       if (schemaFile.exists()) {
@@ -311,7 +312,7 @@ public class TestSchemaCommands extends ClusterTest {
   }
 
   @Test
-  public void testCreateWithoutProperties() throws Exception {
+  public void testCreateWithoutSchemaProperties() throws Exception {
     File tmpDir = dirTestWatcher.getTmpDir();
     File schemaFile = new File(tmpDir, "schema_for_create_without_properties.schema");
     assertFalse(schemaFile.exists());
@@ -329,9 +330,98 @@ public class TestSchemaCommands extends ClusterTest {
       SchemaContainer schemaContainer = schemaProvider.read();
 
       assertNull(schemaContainer.getTable());
-      assertNotNull(schemaContainer.getSchema());
-      assertNotNull(schemaContainer.getProperties());
-      assertEquals(0, schemaContainer.getProperties().size());
+      TupleMetadata schema = schemaContainer.getSchema();
+      assertNotNull(schema);
+      assertNotNull(schema.properties());
+      assertEquals(0, schema.properties().size());
+    } finally {
+      if (schemaFile.exists()) {
+        assertTrue(schemaFile.delete());
+      }
+    }
+  }
+
+  @Test
+  public void testCreateWithVariousColumnProperties() throws Exception {
+    File tmpDir = dirTestWatcher.getTmpDir();
+    File schemaFile = new File(tmpDir, "schema_for_create_with_various_column_properties.schema");
+    assertFalse(schemaFile.exists());
+    try {
+      testBuilder()
+        .sqlQuery("create schema ( " +
+            "a int not null default '10', " +
+            "b date format 'yyyy-MM-dd' default '2017-01-31', " +
+            "c varchar properties {'k1' = 'v1', 'k2' = 'v2'}) " +
+            "path '%s'",
+          schemaFile.getPath())
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(true, String.format("Created schema for [%s]", schemaFile.getPath()))
+        .go();
+
+      SchemaProvider schemaProvider = new PathSchemaProvider(new Path(schemaFile.getPath()));
+      assertTrue(schemaProvider.exists());
+
+      SchemaContainer schemaContainer = schemaProvider.read();
+
+      assertNull(schemaContainer.getTable());
+      TupleMetadata schema = schemaContainer.getSchema();
+      assertNotNull(schema);
+
+      assertEquals(3, schema.size());
+
+      ColumnMetadata a = schema.metadata("a");
+      assertTrue(a.decodeDefaultValue() instanceof Integer);
+      assertEquals(10, a.decodeDefaultValue());
+      assertEquals("10", a.defaultValue());
+
+      ColumnMetadata b = schema.metadata("b");
+      assertTrue(b.decodeDefaultValue() instanceof LocalDate);
+      assertEquals("yyyy-MM-dd", b.format());
+      assertEquals(LocalDate.parse("2017-01-31"), b.decodeDefaultValue());
+      assertEquals("2017-01-31", b.defaultValue());
+
+      ColumnMetadata c = schema.metadata("c");
+      Map<String, String> properties = new LinkedHashMap<>();
+      properties.put("k1", "v1");
+      properties.put("k2", "v2");
+      assertEquals(properties, c.properties());
+
+      assertEquals(0, schema.properties().size());
+    } finally {
+      if (schemaFile.exists()) {
+        assertTrue(schemaFile.delete());
+      }
+    }
+  }
+
+  @Test
+  public void testCreateWithoutColumns() throws Exception {
+    File tmpDir = dirTestWatcher.getTmpDir();
+    File schemaFile = new File(tmpDir, "schema_for_create_without_columns.schema");
+    assertFalse(schemaFile.exists());
+    try {
+      testBuilder()
+        .sqlQuery("create schema () " +
+            "path '%s' " +
+            "properties ('prop' = 'val')",
+          schemaFile.getPath())
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(true, String.format("Created schema for [%s]", schemaFile.getPath()))
+        .go();
+
+      SchemaProvider schemaProvider = new PathSchemaProvider(new Path(schemaFile.getPath()));
+      assertTrue(schemaProvider.exists());
+
+      SchemaContainer schemaContainer = schemaProvider.read();
+
+      assertNull(schemaContainer.getTable());
+      TupleMetadata schema = schemaContainer.getSchema();
+      assertNotNull(schema);
+
+      assertTrue(schema.isEmpty());
+      assertEquals("val", schema.property("prop"));
     } finally {
       if (schemaFile.exists()) {
         assertTrue(schemaFile.delete());
@@ -382,8 +472,7 @@ public class TestSchemaCommands extends ClusterTest {
       assertEquals(TypeProtos.MinorType.INT, schema.metadata("i").type());
       assertEquals(TypeProtos.MinorType.VARCHAR, schema.metadata("v").type());
 
-      assertNotNull(schemaContainer.getProperties());
-      assertEquals(2, schemaContainer.getProperties().size());
+      assertEquals(2, schema.properties().size());
     } finally {
       if (rawSchema.exists()) {
         assertTrue(rawSchema.delete());
@@ -498,4 +587,144 @@ public class TestSchemaCommands extends ClusterTest {
     }
   }
 
+  @Test
+  public void testDescribeForMissingTable() throws Exception {
+    thrown.expect(UserException.class);
+    thrown.expectMessage("VALIDATION ERROR: Table [t] was not found");
+
+    run("describe schema for table dfs.t");
+  }
+
+  @Test
+  public void testDescribeForMissingSchema() throws Exception {
+    String table = "dfs.tmp.table_describe_with_missing_schema";
+    try {
+      run("create table %s as select 'a' as c from (values(1))", table);
+
+      testBuilder()
+        .sqlQuery("describe schema for table %s", table)
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(false, String.format("Schema for table [%s] is absent", table))
+        .go();
+
+    } finally {
+      run("drop table if exists %s", table);
+    }
+  }
+
+  @Test
+  public void testDescribeDefault() throws Exception {
+    String tableName = "table_describe_default";
+    String table = String.format("dfs.tmp.%s", tableName);
+    try {
+      run("create table %s as select 'a' as c from (values(1))", table);
+      run("create schema (col int) for table %s", table);
+
+      File schemaFile = Paths.get(dirTestWatcher.getDfsTestTmpDir().getPath(),
+        tableName, SchemaProvider.DEFAULT_SCHEMA_NAME).toFile();
+
+      SchemaProvider schemaProvider = new PathSchemaProvider(new Path(schemaFile.getPath()));
+      SchemaContainer schemaContainer = schemaProvider.read();
+      String schema = PathSchemaProvider.WRITER.writeValueAsString(schemaContainer);
+
+      testBuilder()
+        .sqlQuery("describe schema for table %s", table)
+        .unOrdered()
+        .baselineColumns("schema")
+        .baselineValues(schema)
+        .go();
+
+    } finally {
+      run("drop table if exists %s", table);
+    }
+  }
+
+  @Test
+  public void testDescribeJson() throws Exception {
+    String tableName = "table_describe_json";
+    String table = String.format("dfs.tmp.%s", tableName);
+    try {
+      run("create table %s as select 'a' as c from (values(1))", table);
+      run("create schema (col int) for table %s", table);
+
+      File schemaFile = Paths.get(dirTestWatcher.getDfsTestTmpDir().getPath(),
+        tableName, SchemaProvider.DEFAULT_SCHEMA_NAME).toFile();
+
+      SchemaProvider schemaProvider = new PathSchemaProvider(new Path(schemaFile.getPath()));
+      SchemaContainer schemaContainer = schemaProvider.read();
+      String schema = PathSchemaProvider.WRITER.writeValueAsString(schemaContainer);
+
+      testBuilder()
+        .sqlQuery("describe schema for table %s as json", table)
+        .unOrdered()
+        .baselineColumns("schema")
+        .baselineValues(schema)
+        .go();
+
+    } finally {
+      run("drop table if exists %s", table);
+    }
+  }
+
+  @Test
+  public void testDescribeStatement() throws Exception {
+    String tableName = "table_describe_statement";
+    String table = String.format("dfs.tmp.%s", tableName);
+    try {
+      run("create table %s as select 'a' as c from (values(1))", table);
+
+      String statement = "CREATE OR REPLACE SCHEMA \n"
+        + "(\n"
+        + "`col1` DATE FORMAT 'yyyy-MM-dd' DEFAULT '-1', \n"
+        + "`col2` INT NOT NULL FORMAT 'yyyy-MM-dd' PROPERTIES { 'drill.strict' = 'true', 'some_column_prop' = 'some_column_val' }\n"
+        + ") \n"
+        + "FOR TABLE dfs.tmp.`table_describe_statement` \n"
+        + "PROPERTIES (\n"
+        + "'drill.strict' = 'false', \n"
+        + "'some_schema_prop' = 'some_schema_val'\n"
+        + ")";
+
+      run(statement);
+
+      testBuilder()
+        .sqlQuery("describe schema for table %s as statement", table)
+        .unOrdered()
+        .baselineColumns("schema")
+        .baselineValues(statement)
+        .go();
+
+    } finally {
+      run("drop table if exists %s", table);
+    }
+  }
+
+  @Test
+  public void testDescribeWithoutColumns() throws Exception {
+    String tableName = "table_describe_statement_without_columns";
+    String table = String.format("dfs.tmp.%s", tableName);
+    try {
+      run("create table %s as select 'a' as c from (values(1))", table);
+
+      String statement = "CREATE OR REPLACE SCHEMA \n"
+        + "() \n"
+        + "FOR TABLE dfs.tmp.`table_describe_statement_without_columns` \n"
+        + "PROPERTIES (\n"
+        + "'drill.strict' = 'false', \n"
+        + "'some_schema_prop' = 'some_schema_val'\n"
+        + ")";
+
+      run(statement);
+
+      testBuilder()
+        .sqlQuery("describe schema for table %s as statement", table)
+        .unOrdered()
+        .baselineColumns("schema")
+        .baselineValues(statement)
+        .go();
+
+    } finally {
+      run("drop table if exists %s", table);
+    }
+  }
 }

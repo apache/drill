@@ -74,7 +74,6 @@ import static org.apache.drill.exec.record.RecordBatch.IterOutcome.EMIT;
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.NONE;
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK;
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK_NEW_SCHEMA;
-import static org.apache.drill.exec.record.RecordBatch.IterOutcome.STOP;
 
 /**
  * Operator Batch which implements the TopN functionality. It is more efficient than (sort + limit) since unlike sort
@@ -143,7 +142,6 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
       case OK:
       case OK_NEW_SCHEMA:
         for (VectorWrapper<?> w : incoming) {
-          @SuppressWarnings("resource")
           ValueVector v = container.addOrGet(w.getField());
           if (v instanceof AbstractContainerVector) {
             w.getValueVector().makeTransferPair(v);
@@ -344,7 +342,6 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
     // Simple VectorConatiner which stores limit number of records only. The records whose indexes are stored inside
     // selectionVector4 below are only copied from Hyper container to this simple container.
     VectorContainer newContainer = new VectorContainer(oContext);
-    @SuppressWarnings("resource")
     // SV4 storing the limit number of indexes
     SelectionVector4 selectionVector4 = priorityQueue.getSv4();
     SimpleSV4RecordBatch batch = new SimpleSV4RecordBatch(c, selectionVector4, context);
@@ -353,13 +350,11 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
     } else {
       for (VectorWrapper<?> i : batch) {
 
-        @SuppressWarnings("resource")
         ValueVector v = TypeHelper.getNewVector(i.getField(), oContext.getAllocator());
         newContainer.add(v);
       }
       copier.setup(batch, newContainer);
     }
-    @SuppressWarnings("resource")
     SortRecordBatchBuilder builder = new SortRecordBatchBuilder(oContext.getAllocator());
     try {
       // Purge all the existing batches to a new batch which only holds the selected records
@@ -455,11 +450,9 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
     final Stopwatch watch = Stopwatch.createStarted();
     final VectorContainer c = priorityQueue.getHyperBatch();
     final VectorContainer newContainer = new VectorContainer(oContext);
-    @SuppressWarnings("resource")
     final SelectionVector4 selectionVector4 = priorityQueue.getSv4();
     final SimpleSV4RecordBatch batch = new SimpleSV4RecordBatch(c, selectionVector4, context);
     copier = GenericCopierFactory.createAndSetupCopier(batch, newContainer, null);
-    @SuppressWarnings("resource")
     SortRecordBatchBuilder builder = new SortRecordBatchBuilder(oContext.getAllocator());
     try {
       // Purge all the existing batches to a new batch which only holds the selected records

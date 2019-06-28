@@ -110,6 +110,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
   }
 
   private class HashAggMemoryManager extends RecordBatchMemoryManager {
+    @SuppressWarnings("unused")
     private int valuesRowWidth = 0;
 
     HashAggMemoryManager(int outputBatchSize) {
@@ -207,8 +208,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
 
     hashAggMemoryManager = new HashAggMemoryManager(configuredBatchSize);
 
-      RecordBatchStats.logRecordBatchStats(getRecordBatchStatsContext(),
-        "configured output batch size: %d", configuredBatchSize);
+    RecordBatchStats.printConfiguredBatchSize(getRecordBatchStatsContext(), configuredBatchSize);
 
     columnMapping = CaseInsensitiveMap.newHashMap();
   }
@@ -221,6 +221,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
     return aggregator.getOutputCount();
   }
 
+  @SuppressWarnings("incomplete-switch")
   @Override
   public void buildSchema() throws SchemaChangeException {
     IterOutcome outcome = next(incoming);
@@ -369,7 +370,6 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
       }
 
       final MaterializedField outputField = MaterializedField.create(ne.getRef().getAsNamePart().getName(), expr.getMajorType());
-      @SuppressWarnings("resource")
       ValueVector vv = TypeHelper.getNewVector(outputField, oContext.getAllocator());
 
       // add this group-by vector to the output container
@@ -395,7 +395,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
       }
 
       final MaterializedField outputField = MaterializedField.create(ne.getRef().getAsNamePart().getName(), expr.getMajorType());
-      @SuppressWarnings("resource") ValueVector vv = TypeHelper.getNewVector(outputField, oContext.getAllocator());
+      ValueVector vv = TypeHelper.getNewVector(outputField, oContext.getAllocator());
       aggrOutFieldIds[i] = container.add(vv);
 
       aggrExprs[i] = new ValueVectorWriteExpression(aggrOutFieldIds[i], expr, true);

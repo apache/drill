@@ -18,7 +18,7 @@
 package org.apache.drill.exec.physical.impl.scan.project;
 
 import org.apache.drill.exec.physical.impl.scan.project.ScanLevelProjection.ScanProjectionParser;
-import org.apache.drill.exec.physical.impl.scan.project.SchemaLevelProjection.SchemaProjectionResolver;
+import org.apache.drill.exec.physical.impl.scan.project.ReaderLevelProjection.ReaderProjectionResolver;
 import org.apache.drill.exec.physical.rowSet.ResultVectorCache;
 
 /**
@@ -36,7 +36,7 @@ public class NoOpMetadataManager implements MetadataManager {
   public ScanProjectionParser projectionParser() { return null; }
 
   @Override
-  public SchemaProjectionResolver resolver() {
+  public ReaderProjectionResolver resolver() {
     // The resolver is requested only for user-defined metadata
     // managers, not for this default, no-op version. If this
     // method is called, something is amiss with the default

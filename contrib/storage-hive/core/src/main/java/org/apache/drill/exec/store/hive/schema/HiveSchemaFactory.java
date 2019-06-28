@@ -34,10 +34,11 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.AbstractSchemaFactory;
 import org.apache.drill.exec.store.SchemaConfig;
-import org.apache.drill.exec.store.hive.DrillHiveMetaStoreClient;
 import org.apache.drill.exec.store.hive.HiveReadEntry;
 import org.apache.drill.exec.store.hive.HiveStoragePlugin;
 import org.apache.drill.exec.store.hive.HiveStoragePluginConfig;
+import org.apache.drill.exec.store.hive.client.DrillHiveMetaStoreClient;
+import org.apache.drill.exec.store.hive.client.DrillHiveMetaStoreClientFactory;
 import org.apache.drill.shaded.guava.com.google.common.cache.CacheBuilder;
 import org.apache.drill.shaded.guava.com.google.common.cache.CacheLoader;
 import org.apache.drill.shaded.guava.com.google.common.cache.LoadingCache;
@@ -71,9 +72,8 @@ public class HiveSchemaFactory extends AbstractSchemaFactory {
     isDrillImpersonationEnabled = plugin.getContext().getConfig().getBoolean(ExecConstants.IMPERSONATION_ENABLED);
 
     try {
-      // TODO: DRILL-6412. Clients for plugin should be instantiated only for the case, when plugin is enabled
       processUserMetastoreClient =
-          DrillHiveMetaStoreClient.createCloseableClientWithCaching(hiveConf);
+          DrillHiveMetaStoreClientFactory.createCloseableClientWithCaching(hiveConf);
     } catch (MetaException e) {
       throw new ExecutionSetupException("Failure setting up Hive metastore client.", e);
     }
@@ -88,8 +88,8 @@ public class HiveSchemaFactory extends AbstractSchemaFactory {
         })
         .build(new CacheLoader<String, DrillHiveMetaStoreClient>() {
           @Override
-          public DrillHiveMetaStoreClient load(String userName) throws Exception {
-            return DrillHiveMetaStoreClient.createClientWithAuthz(processUserMetastoreClient, hiveConf, userName);
+          public DrillHiveMetaStoreClient load(String userName) {
+            return DrillHiveMetaStoreClientFactory.createClientWithAuthz(processUserMetastoreClient, hiveConf, userName);
           }
         });
   }

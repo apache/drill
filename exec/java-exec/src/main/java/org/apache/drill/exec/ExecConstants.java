@@ -22,11 +22,13 @@ import org.apache.drill.exec.physical.impl.common.HashTable;
 import org.apache.drill.exec.rpc.user.InboundImpersonationManager;
 import org.apache.drill.exec.server.options.OptionValidator;
 import org.apache.drill.exec.server.options.OptionValidator.OptionDescription;
-import org.apache.drill.exec.server.options.TypeValidators.DateTimeFormatValidator;
-import org.apache.drill.exec.server.options.TypeValidators.IntegerValidator;
+import org.apache.drill.exec.server.options.TypeValidators.AdminUserGroupsValidator;
+import org.apache.drill.exec.server.options.TypeValidators.AdminUsersValidator;
 import org.apache.drill.exec.server.options.TypeValidators.BooleanValidator;
+import org.apache.drill.exec.server.options.TypeValidators.DateTimeFormatValidator;
 import org.apache.drill.exec.server.options.TypeValidators.DoubleValidator;
 import org.apache.drill.exec.server.options.TypeValidators.EnumeratedStringValidator;
+import org.apache.drill.exec.server.options.TypeValidators.IntegerValidator;
 import org.apache.drill.exec.server.options.TypeValidators.LongValidator;
 import org.apache.drill.exec.server.options.TypeValidators.MaxWidthValidator;
 import org.apache.drill.exec.server.options.TypeValidators.PositiveLongValidator;
@@ -34,8 +36,6 @@ import org.apache.drill.exec.server.options.TypeValidators.PowerOfTwoLongValidat
 import org.apache.drill.exec.server.options.TypeValidators.RangeDoubleValidator;
 import org.apache.drill.exec.server.options.TypeValidators.RangeLongValidator;
 import org.apache.drill.exec.server.options.TypeValidators.StringValidator;
-import org.apache.drill.exec.server.options.TypeValidators.AdminUsersValidator;
-import org.apache.drill.exec.server.options.TypeValidators.AdminUserGroupsValidator;
 import org.apache.drill.exec.testing.ExecutionControls;
 import org.apache.drill.exec.vector.ValueVector;
 
@@ -442,6 +442,18 @@ public final class ExecConstants {
   public static final String JSON_READER_NAN_INF_NUMBERS = "store.json.reader.allow_nan_inf";
   public static final BooleanValidator JSON_READER_NAN_INF_NUMBERS_VALIDATOR = new BooleanValidator(JSON_READER_NAN_INF_NUMBERS,
       new OptionDescription("Enables the JSON record reader in Drill to read `NaN` and `Infinity` tokens in JSON data as numbers. Default is true. (Drill 1.13+)"));
+
+  /**
+   * Json reader option that enables parser to escape any characters
+   */
+  public static final String JSON_READER_ESCAPE_ANY_CHAR = "store.json.reader.allow_escape_any_char";
+  public static final BooleanValidator JSON_READER_ESCAPE_ANY_CHAR_VALIDATOR = new BooleanValidator(JSON_READER_ESCAPE_ANY_CHAR,
+    new OptionDescription("Enables the JSON record reader in Drill to escape any character. Default is false. (Drill 1.16+)"));
+
+  public static final String STORE_TABLE_USE_SCHEMA_FILE = "store.table.use_schema_file";
+  public static final BooleanValidator STORE_TABLE_USE_SCHEMA_FILE_VALIDATOR = new BooleanValidator(STORE_TABLE_USE_SCHEMA_FILE,
+    new OptionDescription("Controls if schema file stored in table root directory will be used during query execution. (Drill 1.16+)"));
+
   /**
    * The column label (for directory levels) in results when querying files in a directory
    * E.g.  labels: dir0   dir1<pre>
@@ -658,6 +670,7 @@ public final class ExecConstants {
   public static final String ORDERED_MUX_EXCHANGE = "planner.enable_ordered_mux_exchange";
 
   // Resource management boot-time options.
+  public static final String RM_ENABLED = "drill.exec.rm.enabled";
   public static final String MAX_MEMORY_PER_NODE = "drill.exec.rm.memory_per_node";
   public static final String MAX_CPUS_PER_NODE = "drill.exec.rm.cpus_per_node";
 
@@ -677,6 +690,16 @@ public final class ExecConstants {
   public static final LongValidator QUEUE_TIMEOUT = new PositiveLongValidator("exec.queue.timeout_millis", Long.MAX_VALUE,
       new OptionDescription("Indicates how long a query can wait in queue before the query fails. Range: 0-9223372036854775807"));
 
+  // New Smart RM boot time configs
+  public static final String RM_QUERY_TAGS_KEY = "exec.rm.queryTags";
+  public static final StringValidator RM_QUERY_TAGS_VALIDATOR = new StringValidator(RM_QUERY_TAGS_KEY,
+    new OptionDescription("Allows user to set coma separated list of tags for all the queries submitted over a session"));
+
+  public static final String RM_QUEUES_WAIT_FOR_PREFERRED_NODES_KEY = "exec.rm.queues.wait_for_preferred_nodes";
+  public static final BooleanValidator RM_QUEUES_WAIT_FOR_PREFERRED_NODES_VALIDATOR = new BooleanValidator
+    (RM_QUEUES_WAIT_FOR_PREFERRED_NODES_KEY, new OptionDescription("Allows user to enable/disable " +
+      "wait_for_preferred_nodes configuration across rm queues for all the queries submitted over a session"));
+
   // Ratio of memory for small queries vs. large queries.
   // Each small query gets 1 unit, each large query gets QUEUE_MEMORY_RATIO units.
   // A lower limit of 1 enforces the intuition that a large query should never get
@@ -690,11 +713,39 @@ public final class ExecConstants {
   public static final OptionValidator ENABLE_VERBOSE_ERRORS = new BooleanValidator(ENABLE_VERBOSE_ERRORS_KEY,
       new OptionDescription("Toggles verbose output of executable error messages"));
 
+  /**
+   * Key used in earlier versions to use the original ("V1") text reader. Since at least Drill 1.8
+   * users have used the ("compliant") ("V2") version. Deprecated in Drill 1.17; the "V3" reader
+   * with schema support is always used. Retained for backward compatibility, but does
+   * nothing.
+   */
+  @Deprecated
   public static final String ENABLE_NEW_TEXT_READER_KEY = "exec.storage.enable_new_text_reader";
+  @Deprecated
   public static final OptionValidator ENABLE_NEW_TEXT_READER = new BooleanValidator(ENABLE_NEW_TEXT_READER_KEY,
-      new OptionDescription("Enables the text reader that complies with the RFC 4180 standard for text/csv files."));
+      new OptionDescription("Deprecated. Drill's text reader complies with the RFC 4180 standard for text/csv files."));
+
+  /**
+   * Flag used in Drill 1.16 to select the row-set based ("V3") or the original
+   * "compliant" ("V2") text reader. In Drill 1.17, the "V3" version is always
+   * used. Retained for backward compatibility, but does nothing.
+   */
+  @Deprecated
+  public static final String ENABLE_V3_TEXT_READER_KEY = "exec.storage.enable_v3_text_reader";
+  @Deprecated
+  public static final OptionValidator ENABLE_V3_TEXT_READER = new BooleanValidator(ENABLE_V3_TEXT_READER_KEY,
+      new OptionDescription("Deprecated. The \"V3\" text reader is always used."));
+
+  public static final String MIN_READER_WIDTH_KEY = "exec.storage.min_width";
+  public static final OptionValidator MIN_READER_WIDTH = new LongValidator(MIN_READER_WIDTH_KEY,
+      new OptionDescription("Min width for text readers, mostly for testing."));
 
   public static final String BOOTSTRAP_STORAGE_PLUGINS_FILE = "bootstrap-storage-plugins.json";
+  public static final String BOOTSTRAP_FORMAT_PLUGINS_FILE = "bootstrap-format-plugins.json";
+
+  public static final String SKIP_RUNTIME_ROWGROUP_PRUNING_KEY = "exec.storage.skip_runtime_rowgroup_pruning";
+  public static final OptionValidator SKIP_RUNTIME_ROWGROUP_PRUNING = new BooleanValidator(SKIP_RUNTIME_ROWGROUP_PRUNING_KEY,
+    new OptionDescription("Enables skipping the runtime pruning of the rowgroups"));
 
   public static final String DRILL_SYS_FILE_SUFFIX = ".sys.drill";
 
@@ -713,16 +764,38 @@ public final class ExecConstants {
   public static final BooleanValidator CTAS_PARTITIONING_HASH_DISTRIBUTE_VALIDATOR = new BooleanValidator(CTAS_PARTITIONING_HASH_DISTRIBUTE,
       new OptionDescription("Uses a hash algorithm to distribute data on partition keys in a CTAS partitioning operation. An alpha option--for experimental use at this stage. Do not use in production systems."));
 
-  public static final String ENABLE_BULK_LOAD_TABLE_LIST_KEY = "exec.enable_bulk_load_table_list";
-  public static final BooleanValidator ENABLE_BULK_LOAD_TABLE_LIST = new BooleanValidator(ENABLE_BULK_LOAD_TABLE_LIST_KEY, null);
 
   /**
-   * When getting Hive Table information with exec.enable_bulk_load_table_list set to true,
-   * use the exec.bulk_load_table_list.bulk_size to determine how many tables to fetch from HiveMetaStore
-   * at a time. (The number of tables can get to be quite large.)
+   * @deprecated option. It will not take any effect.
+   * The option added as part of DRILL-4577, was used to mark that hive tables should be loaded
+   * for all table names at once. Then as part of DRILL-4826 was added option to regulate bulk size,
+   * because big amount of views was causing performance degradation. After last improvements for
+   * DRILL-7115 both options ({@link ExecConstants#ENABLE_BULK_LOAD_TABLE_LIST_KEY}
+   * and {@link ExecConstants#BULK_LOAD_TABLE_LIST_BULK_SIZE_KEY}) became obsolete and may be removed
+   * in future releases.
    */
+  @Deprecated
+  public static final String ENABLE_BULK_LOAD_TABLE_LIST_KEY = "exec.enable_bulk_load_table_list";
+
+  /**
+   * @see ExecConstants#ENABLE_BULK_LOAD_TABLE_LIST_KEY
+   */
+  @Deprecated
+  public static final BooleanValidator ENABLE_BULK_LOAD_TABLE_LIST = new BooleanValidator(ENABLE_BULK_LOAD_TABLE_LIST_KEY,
+      new OptionDescription("Deprecated after DRILL-7115 improvement."));
+
+  /**
+   * @see ExecConstants#ENABLE_BULK_LOAD_TABLE_LIST_KEY
+   */
+  @Deprecated
   public static final String BULK_LOAD_TABLE_LIST_BULK_SIZE_KEY = "exec.bulk_load_table_list.bulk_size";
-  public static final PositiveLongValidator BULK_LOAD_TABLE_LIST_BULK_SIZE = new PositiveLongValidator(BULK_LOAD_TABLE_LIST_BULK_SIZE_KEY, Integer.MAX_VALUE, null);
+
+  /**
+   * @see ExecConstants#ENABLE_BULK_LOAD_TABLE_LIST_KEY
+   */
+  @Deprecated
+  public static final PositiveLongValidator BULK_LOAD_TABLE_LIST_BULK_SIZE = new PositiveLongValidator(BULK_LOAD_TABLE_LIST_BULK_SIZE_KEY, Integer.MAX_VALUE,
+      new OptionDescription("Deprecated after DRILL-7115 improvement."));
 
   /**
    * Option whose value is a comma separated list of admin usernames. Admin users are users who have special privileges
@@ -811,7 +884,10 @@ public final class ExecConstants {
    * for any query.
    */
   public static final String ENABLE_QUERY_PROFILE_OPTION = "exec.query_profile.save";
-  public static final BooleanValidator ENABLE_QUERY_PROFILE_VALIDATOR = new BooleanValidator(ENABLE_QUERY_PROFILE_OPTION, null);
+  public static final BooleanValidator ENABLE_QUERY_PROFILE_VALIDATOR = new BooleanValidator(ENABLE_QUERY_PROFILE_OPTION, new OptionDescription("Save completed profiles to the persistent store"));
+  //Allow to skip writing Alter Session profiles
+  public static final String SKIP_ALTER_SESSION_QUERY_PROFILE = "exec.query_profile.alter_session.skip";
+  public static final BooleanValidator SKIP_SESSION_QUERY_PROFILE_VALIDATOR = new BooleanValidator(SKIP_ALTER_SESSION_QUERY_PROFILE, new OptionDescription("Skip saving ALTER SESSION profiles"));
 
   /**
    * Profiles are normally written after the last client message to reduce latency.
@@ -911,4 +987,54 @@ public final class ExecConstants {
       new OptionDescription("Controls whether to return result set for CREATE TABLE / VIEW / FUNCTION, DROP TABLE / VIEW / FUNCTION, " +
           "SET, USE, REFRESH METADATA TABLE queries. If set to false affected rows count will be returned instead and result set will be null. " +
           "Affects JDBC connections only. Default is true. (Drill 1.15+)"));
+
+  /**
+   * Option whose value is a long value representing the number of bits required for computing ndv (using HLL).
+   * Controls the trade-off between accuracy and memory requirements. The number of bits correlates positively with accuracy
+   */
+  public static final String HLL_ACCURACY = "exec.statistics.ndv_accuracy";
+  public static final LongValidator HLL_ACCURACY_VALIDATOR = new PositiveLongValidator(HLL_ACCURACY, 30,
+      new OptionDescription("Controls trade-off between NDV statistic computation memory cost and accuracy"));
+
+  /**
+   * Option whose value is a boolean value representing whether to perform deterministic sampling. It translates to using
+   * the same (pre-defined) seed for the underlying pseudo-random number generator.
+   */
+  public static final String DETERMINISTIC_SAMPLING = "exec.statistics.deterministic_sampling";
+  public static final BooleanValidator DETERMINISTIC_SAMPLING_VALIDATOR = new BooleanValidator(DETERMINISTIC_SAMPLING,
+      new OptionDescription("Deterministic sampling"));
+
+  /**
+   * Option whose value is a long value representing the expected number of elements in the bloom filter. The bloom filter
+   * computes the number of duplicates which is used for extrapolating the NDV when using sampling. Controls the trade-off
+   * between accuracy and memory requirements. The number of elements correlates positively with accuracy.
+   */
+  public static final String NDV_BLOOM_FILTER_ELEMENTS = "exec.statistics.ndv_extrapolation_bf_elements";
+  public static final LongValidator NDV_BLOOM_FILTER_ELEMENTS_VALIDATOR = new PositiveLongValidator(NDV_BLOOM_FILTER_ELEMENTS, Integer.MAX_VALUE,
+          new OptionDescription("Controls trade-off between NDV statistic computation memory cost and sampling extrapolation accuracy"));
+
+  /**
+   * Option whose value is a double value representing the desired max false positive probability in the bloom filter. The bloom filter
+   * computes the number of duplicates which is used for extrapolating the NDV when using sampling. Controls the trade-off
+   * between accuracy and memory requirements. The probability correlates negatively with the accuracy.
+   */
+  public static final String NDV_BLOOM_FILTER_FPOS_PROB = "exec.statistics.ndv_extrapolation_bf_fpprobability";
+  public static final LongValidator NDV_BLOOM_FILTER_FPOS_PROB_VALIDATOR = new PositiveLongValidator(NDV_BLOOM_FILTER_FPOS_PROB,
+          100, new OptionDescription("Controls trade-off between NDV statistic computation memory cost and sampling extrapolation accuracy"));
+
+  /**
+   * Controls the 'compression' factor for the TDigest algorithm.
+   */
+  public static final String TDIGEST_COMPRESSION = "exec.statistics.tdigest_compression";
+  public static final LongValidator TDIGEST_COMPRESSION_VALIDATOR = new PositiveLongValidator(TDIGEST_COMPRESSION, 10000,
+    new OptionDescription("Controls trade-off between t-digest quantile statistic storage cost and accuracy. " +
+      "Higher values use more groups (clusters) for the t-digest and improve accuracy at the expense of extra storage. "));
+
+  /**
+   * Options that have a JDBC Statement implementation already in place
+   */
+  public static final String QUERY_MAX_ROWS = "exec.query.max_rows";
+  public static final RangeLongValidator QUERY_MAX_ROWS_VALIDATOR = new RangeLongValidator(QUERY_MAX_ROWS, 0, Integer.MAX_VALUE,
+      new OptionDescription("The maximum number of rows that the query will return. This can be only set at a SYSTEM level by an admin. (Drill 1.16+)"));
+
 }

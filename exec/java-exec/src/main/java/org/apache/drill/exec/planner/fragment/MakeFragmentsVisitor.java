@@ -26,7 +26,6 @@ import org.apache.drill.exec.work.foreman.ForemanSetupException;
  * Responsible for breaking a plan into its constituent Fragments.
  */
 public class MakeFragmentsVisitor extends AbstractPhysicalVisitor<Fragment, Fragment, ForemanSetupException> {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MakeFragmentsVisitor.class);
 
   public final static MakeFragmentsVisitor INSTANCE = new MakeFragmentsVisitor();
 
@@ -34,21 +33,20 @@ public class MakeFragmentsVisitor extends AbstractPhysicalVisitor<Fragment, Frag
   }
 
   @Override
-  public Fragment visitExchange(Exchange exchange, Fragment value) throws ForemanSetupException {
-//    logger.debug("Visiting Exchange {}", exchange);
-    if (value == null) {
-      throw new ForemanSetupException("The simple fragmenter was called without a FragmentBuilder value.  This will only happen if the initial call to SimpleFragmenter is by a Exchange node.  This should never happen since an Exchange node should never be the root node of a plan.");
+  public Fragment visitExchange(Exchange exchange, Fragment receivingFragment) throws ForemanSetupException {
+    if (receivingFragment == null) {
+      throw new ForemanSetupException("The simple fragmenter was called without a FragmentBuilder value. This will only happen if the initial call to SimpleFragmenter is by a" +
+        " Exchange node.  This should never happen since an Exchange node should never be the root node of a plan.");
     }
-    Fragment next = getNextBuilder();
-    value.addReceiveExchange(exchange, next);
-    next.addSendExchange(exchange, value);
-    exchange.getChild().accept(this, next);
-    return value;
+    Fragment sendingFragment= getNextFragment();
+    receivingFragment.addReceiveExchange(exchange, sendingFragment);
+    sendingFragment.addSendExchange(exchange, receivingFragment);
+    exchange.getChild().accept(this, sendingFragment);
+    return sendingFragment;
   }
 
   @Override
   public Fragment visitOp(PhysicalOperator op, Fragment value)  throws ForemanSetupException{
-//    logger.debug("Visiting Other {}", op);
     value = ensureBuilder(value);
     value.addOperator(op);
     for (PhysicalOperator child : op) {
@@ -57,15 +55,15 @@ public class MakeFragmentsVisitor extends AbstractPhysicalVisitor<Fragment, Frag
     return value;
   }
 
-  private Fragment ensureBuilder(Fragment value) throws ForemanSetupException{
-    if (value != null) {
-      return value;
+  private Fragment ensureBuilder(Fragment currentFragment) throws ForemanSetupException{
+    if (currentFragment != null) {
+      return currentFragment;
     } else {
-      return getNextBuilder();
+      return getNextFragment();
     }
   }
 
-  public Fragment getNextBuilder() {
+  public Fragment getNextFragment() {
     return new Fragment();
   }
 

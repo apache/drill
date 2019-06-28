@@ -31,9 +31,9 @@ public final class SchemaExecProtos
         public static final org.apache.drill.exec.proto.SchemaExecProtos.FragmentHandle.BuilderSchema MERGE =
             new org.apache.drill.exec.proto.SchemaExecProtos.FragmentHandle.BuilderSchema();
         
-        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.ExecProtos.FragmentHandle>
+        public static class MessageSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.ExecProtos.FragmentHandle>
         {
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.ExecProtos.FragmentHandle message) throws java.io.IOException
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.ExecProtos.FragmentHandle message) throws java.io.IOException
             {
                 if(message.hasQueryId())
                     output.writeObject(1, message.getQueryId(), org.apache.drill.exec.proto.SchemaUserBitShared.QueryId.WRITE, false);
@@ -71,12 +71,12 @@ public final class SchemaExecProtos
                 return org.apache.drill.exec.proto.ExecProtos.FragmentHandle.class.getName();
             }
             //unused
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.ExecProtos.FragmentHandle message) throws java.io.IOException {}
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.ExecProtos.FragmentHandle message) throws java.io.IOException {}
             public org.apache.drill.exec.proto.ExecProtos.FragmentHandle newMessage() { return null; }
         }
-        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.ExecProtos.FragmentHandle.Builder>
+        public static class BuilderSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.ExecProtos.FragmentHandle.Builder>
         {
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.ExecProtos.FragmentHandle.Builder builder) throws java.io.IOException
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.ExecProtos.FragmentHandle.Builder builder) throws java.io.IOException
             {
                 for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
                 {
@@ -132,7 +132,7 @@ public final class SchemaExecProtos
                 return org.apache.drill.exec.proto.ExecProtos.FragmentHandle.class.getName();
             }
             //unused
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.ExecProtos.FragmentHandle.Builder builder) throws java.io.IOException {}
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.ExecProtos.FragmentHandle.Builder builder) throws java.io.IOException {}
         }
         public static java.lang.String getFieldName(int number)
         {
@@ -167,9 +167,9 @@ public final class SchemaExecProtos
         public static final org.apache.drill.exec.proto.SchemaExecProtos.ServerPreparedStatementState.BuilderSchema MERGE =
             new org.apache.drill.exec.proto.SchemaExecProtos.ServerPreparedStatementState.BuilderSchema();
         
-        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState>
+        public static class MessageSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState>
         {
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState message) throws java.io.IOException
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState message) throws java.io.IOException
             {
                 if(message.hasSqlQuery())
                     output.writeString(1, message.getSqlQuery(), false);
@@ -199,12 +199,12 @@ public final class SchemaExecProtos
                 return org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState.class.getName();
             }
             //unused
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState message) throws java.io.IOException {}
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState message) throws java.io.IOException {}
             public org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState newMessage() { return null; }
         }
-        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState.Builder>
+        public static class BuilderSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState.Builder>
         {
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState.Builder builder) throws java.io.IOException
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState.Builder builder) throws java.io.IOException
             {
                 for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
                 {
@@ -249,7 +249,7 @@ public final class SchemaExecProtos
                 return org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState.class.getName();
             }
             //unused
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState.Builder builder) throws java.io.IOException {}
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.ExecProtos.ServerPreparedStatementState.Builder builder) throws java.io.IOException {}
         }
         public static java.lang.String getFieldName(int number)
         {

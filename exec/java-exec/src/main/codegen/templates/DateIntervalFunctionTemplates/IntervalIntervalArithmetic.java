@@ -65,7 +65,15 @@ public class ${intervaltype}Functions {
             out.value = left.value + right.value;
             <#elseif intervaltype == "IntervalDay">
             out.days = left.days + right.days;
-            out.milliseconds = left.milliseconds + right.milliseconds;
+            long millis = (long) left.milliseconds + right.milliseconds;
+
+            if (millis >= org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis) {
+              int daysFromMillis = (int) (millis / org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis);
+
+              millis -= daysFromMillis * org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis;
+              out.days += daysFromMillis;
+            }
+            out.milliseconds = (int) millis;
             </#if>
         }
     }
@@ -90,6 +98,18 @@ public class ${intervaltype}Functions {
             <#elseif intervaltype == "IntervalDay">
             out.days = left.days - right.days;
             out.milliseconds = left.milliseconds - right.milliseconds;
+
+            int daysFromMillis = out.milliseconds/org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis;
+            if (daysFromMillis != 0) {
+              out.milliseconds -= org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis*daysFromMillis;
+              out.days -= Math.abs(daysFromMillis);
+            }
+
+            // if milliseconds are bellow zero, substract them from the days
+            if (out.milliseconds < 0 && out.days > 0) {
+              out.days  -= 1;
+              out.milliseconds =  org.apache.drill.exec.vector.DateUtilities.daysToStandardMillis + out.milliseconds;
+            }
             </#if>
         }
     }

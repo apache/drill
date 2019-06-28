@@ -17,16 +17,15 @@
  */
 package org.apache.drill.exec.ops;
 
+import io.netty.buffer.DrillBuf;
 import java.io.IOException;
 import java.util.List;
-
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.physical.impl.common.CodeGenMemberInjector;
-
-import io.netty.buffer.DrillBuf;
+import org.apache.drill.exec.proto.UserBitShared;
 
 /**
  * Common implementation for both the test and production versions
@@ -88,4 +87,23 @@ public abstract class BaseFragmentContext implements FragmentContext {
     return getBufferManager().getManagedBuffer(size);
   }
 
+  @Override
+  public String getQueryUserName() {
+    return null;
+  }
+
+  @Override
+  public UserBitShared.QueryId getQueryId() {
+    return null;
+  }
+
+  @Override
+  public String getQueryIdString() {
+    return null;
+  }
+
+  @Override
+  public QueryContext.SqlStatementType getSQLStatementType() {
+    return null;
+  }
 }

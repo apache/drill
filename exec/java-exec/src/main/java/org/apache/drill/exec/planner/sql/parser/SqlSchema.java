@@ -41,16 +41,18 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Parent class for CREATE and DROP SCHEMA commands.
- * Holds logic common command property: table.
+ * Parent class for CREATE, DROP, DESCRIBE SCHEMA commands.
+ * Holds logic common command property: table, path.
  */
 public abstract class SqlSchema extends DrillSqlCall {
 
   protected final SqlIdentifier table;
+  protected final SqlNode path;
 
-  protected SqlSchema(SqlParserPos pos, SqlIdentifier table) {
+  protected SqlSchema(SqlParserPos pos, SqlIdentifier table, SqlNode path) {
     super(pos);
     this.table = table;
+    this.path = path;
   }
 
   @Override
@@ -84,6 +86,10 @@ public abstract class SqlSchema extends DrillSqlCall {
     return null;
   }
 
+  public String getPath() {
+    return path == null ? null : path.accept(LiteralVisitor.INSTANCE);
+  }
+
   /**
    * Visits literal and returns bare value (i.e. single quotes).
    */
@@ -105,7 +111,6 @@ public abstract class SqlSchema extends DrillSqlCall {
 
     private final SqlCharStringLiteral schema;
     private final SqlNode load;
-    private final SqlNode path;
     private final SqlNodeList properties;
     private final SqlLiteral createType;
 
@@ -124,10 +129,9 @@ public abstract class SqlSchema extends DrillSqlCall {
                   SqlNode path,
                   SqlNodeList properties,
                   SqlLiteral createType) {
-      super(pos, table);
+      super(pos, table, path);
       this.schema = schema;
       this.load = load;
-      this.path = path;
       this.properties = properties;
       this.createType = createType;
     }
@@ -200,10 +204,6 @@ public abstract class SqlSchema extends DrillSqlCall {
       return load == null ? null : load.accept(LiteralVisitor.INSTANCE);
     }
 
-    public String getPath() {
-      return path == null ? null : path.accept(LiteralVisitor.INSTANCE);
-    }
-
     public Map<String, String> getProperties() {
       if (properties == null) {
         return null;
@@ -239,7 +239,7 @@ public abstract class SqlSchema extends DrillSqlCall {
     };
 
     public Drop(SqlParserPos pos, SqlIdentifier table, SqlLiteral existenceCheck) {
-      super(pos, table);
+      super(pos, table, null);
       this.existenceCheck = existenceCheck;
     }
 
@@ -275,6 +275,68 @@ public abstract class SqlSchema extends DrillSqlCall {
       return existenceCheck.booleanValue();
     }
 
+  }
+
+  /**
+   * DESCRIBE SCHEMA FOR TABLE sql call.
+   */
+  public static class Describe extends SqlSchema {
+
+    private final SqlLiteral format;
+
+    public static final SqlSpecialOperator OPERATOR = new SqlSpecialOperator(SqlKind.DESCRIBE_SCHEMA.name(), SqlKind.DESCRIBE_SCHEMA) {
+      @Override
+      public SqlCall createCall(SqlLiteral functionQualifier, SqlParserPos pos, SqlNode... operands) {
+        return new Describe(pos, (SqlIdentifier) operands[0], (SqlLiteral) operands[1]);
+      }
+    };
+
+    public Describe(SqlParserPos pos, SqlIdentifier table, SqlLiteral format) {
+      super(pos, table, null);
+      this.format = format;
+    }
+
+    @Override
+    public SqlOperator getOperator() {
+      return OPERATOR;
+    }
+
+    @Override
+    public List<SqlNode> getOperandList() {
+      return Arrays.asList(table, format);
+    }
+
+    @Override
+    public void unparse(SqlWriter writer, int leftPrec, int rightPrec) {
+      writer.keyword("DESCRIBE");
+      writer.keyword("SCHEMA");
+
+      super.unparse(writer, leftPrec, rightPrec);
+
+      writer.keyword("AS");
+      writer.keyword(getFormat().name());
+    }
+
+    public Describe.Format getFormat() {
+      return Format.valueOf(format.toValue());
+    }
+
+    /**
+     * Enum which specifies format of DESCRIBE SCHEMA FOR table output.
+     */
+    public enum Format {
+
+      /**
+       * Schema will be output in JSON format used to store schema
+       * in {@link org.apache.drill.exec.record.metadata.schema.SchemaProvider#DEFAULT_SCHEMA_NAME} file.
+       */
+      JSON,
+
+      /**
+       * Schema will be output in CREATE SCHEMA command syntax.
+       */
+      STATEMENT
+    }
   }
 
 }

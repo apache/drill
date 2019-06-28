@@ -17,11 +17,13 @@
  */
 package org.apache.drill.test;
 
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.server.Drillbit;
+import org.apache.drill.exec.server.rest.WebServer;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -30,17 +32,21 @@ import org.junit.experimental.categories.Category;
 import org.junit.rules.TestRule;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.lang.reflect.Field;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.Collection;
 
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 @Category({SlowTest.class})
@@ -134,7 +140,7 @@ public class TestGracefulShutdown extends BaseTestQuery {
         Thread.sleep(100L);
       }
 
-      if (waitAndAssertDrillbitCount(cluster, zkRefresh)) {
+      if (waitAndAssertDrillbitCount(cluster, zkRefresh, drillbits.length)) {
         return;
       }
       Assert.fail("Timed out");
@@ -172,7 +178,7 @@ public class TestGracefulShutdown extends BaseTestQuery {
         throw new RuntimeException("Failed : HTTP error code : "
                 + conn.getResponseCode());
       }
-      if (waitAndAssertDrillbitCount(cluster, zkRefresh)) {
+      if (waitAndAssertDrillbitCount(cluster, zkRefresh, drillbits.length)) {
         return;
       }
       Assert.fail("Timed out");
@@ -205,17 +211,52 @@ public class TestGracefulShutdown extends BaseTestQuery {
     }
   }
 
-  private static boolean waitAndAssertDrillbitCount(ClusterFixture cluster, int zkRefresh) throws InterruptedException {
+  @Test // DRILL-7056
+  public void testDrillbitTempDir() throws Exception {
+    File originalDrillbitTempDir = null;
+    ClusterFixtureBuilder fixtureBuilder = ClusterFixture.bareBuilder(dirTestWatcher).withLocalZk()
+        .configProperty(ExecConstants.ALLOW_LOOPBACK_ADDRESS_BINDING, true)
+        .configProperty(ExecConstants.INITIAL_USER_PORT, QueryTestUtil.getFreePortNumber(31170, 300))
+        .configProperty(ExecConstants.INITIAL_BIT_PORT, QueryTestUtil.getFreePortNumber(31180, 300));
+
+    try (ClusterFixture fixture = fixtureBuilder.build();
+        Drillbit twinDrillbitOnSamePort = new Drillbit(fixture.config(),
+            fixtureBuilder.configBuilder().getDefinitions(), fixture.serviceSet())) {
+      // Assert preconditions :
+      //      1. First drillbit instance should be started normally
+      //      2. Second instance startup should fail, because ports are occupied by the first one
+      Drillbit originalDrillbit = fixture.drillbit();
+      assertNotNull("First drillbit instance should be initialized", originalDrillbit);
+      originalDrillbitTempDir = getWebServerTempDirPath(originalDrillbit);
+      assertTrue("First drillbit instance should have a temporary Javascript dir initialized", originalDrillbitTempDir.exists());
+      try {
+        twinDrillbitOnSamePort.run();
+        fail("Invocation of 'twinDrillbitOnSamePort.run()' should throw UserException");
+      } catch (UserException userEx) {
+        assertThat(userEx.getMessage(), containsString("RESOURCE ERROR: Drillbit could not bind to port"));
+      }
+    }
+    // Verify deletion
+    assertFalse("First drillbit instance should have a temporary Javascript dir deleted", originalDrillbitTempDir.exists());
+  }
+
+  private File getWebServerTempDirPath(Drillbit drillbit) throws IllegalAccessException {
+    Field webServerField = FieldUtils.getField(drillbit.getClass(), "webServer", true);
+    WebServer webServerHandle = (WebServer) FieldUtils.readField(webServerField, drillbit, true);
+    return webServerHandle.getOrCreateTmpJavaScriptDir();
+  }
+
+  private boolean waitAndAssertDrillbitCount(ClusterFixture cluster, int zkRefresh, int bitsNum)
+      throws InterruptedException {
 
     while (true) {
       Collection<DrillbitEndpoint> drillbitEndpoints = cluster.drillbit()
               .getContext()
               .getClusterCoordinator()
               .getAvailableEndpoints();
-      if (drillbitEndpoints.size() == 2) {
+      if (drillbitEndpoints.size() == bitsNum - 1) {
         return true;
       }
-
       Thread.sleep(zkRefresh);
     }
   }

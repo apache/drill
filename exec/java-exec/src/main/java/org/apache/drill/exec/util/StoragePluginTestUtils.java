@@ -66,7 +66,6 @@ public class StoragePluginTestUtils {
                                           final StoragePluginRegistry pluginRegistry,
                                           final File tmpDirPath,
                                           String... schemas) throws ExecutionSetupException {
-    @SuppressWarnings("resource")
     final FileSystemPlugin plugin = (FileSystemPlugin) pluginRegistry.getPlugin(pluginName);
     final FileSystemConfig pluginConfig = (FileSystemConfig) plugin.getConfig();
 

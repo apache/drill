@@ -261,7 +261,6 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
     // Create the dfs name space
     builder.dirTestWatcher.newDfsTestTmpDir();
 
-    @SuppressWarnings("resource")
     final StoragePluginRegistry pluginRegistry = bit.getContext().getStorage();
     StoragePluginTestUtils.configureFormatPlugins(pluginRegistry);
 
@@ -272,7 +271,6 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
     // Create the mock data plugin
 
     MockStorageEngineConfig config = MockStorageEngineConfig.INSTANCE;
-    @SuppressWarnings("resource")
     MockStorageEngine plugin = new MockStorageEngine(
         MockStorageEngineConfig.INSTANCE, bit.getContext(),
         MockStorageEngineConfig.NAME);
@@ -492,9 +490,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
   public static void defineWorkspace(Drillbit drillbit, String pluginName,
       String schemaName, String path, String defaultFormat, FormatPluginConfig format)
       throws ExecutionSetupException {
-    @SuppressWarnings("resource")
     final StoragePluginRegistry pluginRegistry = drillbit.getContext().getStorage();
-    @SuppressWarnings("resource")
     final FileSystemPlugin plugin = (FileSystemPlugin) pluginRegistry.getPlugin(pluginName);
     final FileSystemConfig pluginConfig = (FileSystemConfig) plugin.getConfig();
     final WorkspaceConfig newTmpWSConfig = new WorkspaceConfig(path, true, defaultFormat, false);
@@ -525,7 +521,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
   public static final String EXPLAIN_PLAN_JSON = "json";
 
   public static ClusterFixtureBuilder builder(BaseDirTestWatcher dirTestWatcher) {
-      ClusterFixtureBuilder builder = new ClusterFixtureBuilder(dirTestWatcher)
+    ClusterFixtureBuilder builder = new ClusterFixtureBuilder(dirTestWatcher)
          .sessionOption(ExecConstants.MAX_WIDTH_PER_NODE_KEY, MAX_WIDTH_PER_NODE);
     Properties props = new Properties();
     props.putAll(ClusterFixture.TEST_CONFIGURATIONS);

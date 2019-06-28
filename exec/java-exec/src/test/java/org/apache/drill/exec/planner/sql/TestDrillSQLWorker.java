@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 
 import org.apache.calcite.avatica.util.Quoting;
 import org.apache.calcite.sql.parser.SqlParserPos;
+import org.apache.drill.exec.planner.sql.parser.impl.DrillSqlParseException;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.SqlTest;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
@@ -31,28 +32,30 @@ import org.junit.experimental.categories.Category;
 public class TestDrillSQLWorker extends BaseTestQuery {
 
   private void validateFormattedIs(String sql, SqlParserPos pos, String expected) {
-    String formatted = SqlConverter.formatSQLParsingError(sql, pos);
+    DrillSqlParseException ex = new DrillSqlParseException(null, pos, null, null, null);
+    String formatted = SqlConverter.formatSQLParsingError(sql, ex);
     assertEquals(expected, formatted);
   }
 
   @Test
-  public void testErrorFormating() {
-    String sql = "Select * from Foo\nwhere tadadidada;\n";
+  public void testErrorFormatting() {
+    String sql = "Select * from Foo\n"
+        + "where tadadidada;\n";
     validateFormattedIs(sql, new SqlParserPos(1, 2),
-        "Select * from Foo\n"
-      + " ^\n"
-      + "where tadadidada;\n");
+        "SQL Query: Select * from Foo\n"
+            + "            ^\n"
+            + "where tadadidada;");
     validateFormattedIs(sql, new SqlParserPos(2, 2),
-        "Select * from Foo\n"
-      + "where tadadidada;\n"
-      + " ^\n" );
+        "SQL Query: Select * from Foo\n"
+            + "where tadadidada;\n"
+            + " ^" );
     validateFormattedIs(sql, new SqlParserPos(1, 10),
-        "Select * from Foo\n"
-      + "         ^\n"
-      + "where tadadidada;\n");
-    validateFormattedIs(sql, new SqlParserPos(-11, -10), sql);
-    validateFormattedIs(sql, new SqlParserPos(0, 10), sql);
-    validateFormattedIs(sql, new SqlParserPos(100, 10), sql);
+        "SQL Query: Select * from Foo\n"
+            + "                    ^\n"
+            + "where tadadidada;");
+    validateFormattedIs(sql, new SqlParserPos(-11, -10), "SQL Query: Select * from Foo\nwhere tadadidada;");
+    validateFormattedIs(sql, new SqlParserPos(0, 10), "SQL Query: Select * from Foo\nwhere tadadidada;");
+    validateFormattedIs(sql, new SqlParserPos(100, 10), "SQL Query: Select * from Foo\nwhere tadadidada;");
   }
 
   @Test

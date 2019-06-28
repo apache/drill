@@ -26,6 +26,7 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
+import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.Float8Holder;
 import org.apache.drill.exec.expr.holders.NullableFloat8Holder;
 import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
@@ -61,7 +62,34 @@ public class MathFunctions{
     public void eval(){
       out.value = java.lang.Math.random();
     }
+  }
 
+  @FunctionTemplate(name = "rand", isRandom = true,
+          scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  public static class RandomWithoutSeed implements DrillSimpleFunc{
+    @Output  Float8Holder out;
+
+    public void setup(){}
+
+    public void eval(){
+      out.value = java.lang.Math.random();
+    }
+  }
+
+  @FunctionTemplate(name = "rand", isRandom = true,
+          scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  public static class RandomWithSeed implements DrillSimpleFunc{
+    @Param BigIntHolder seed;
+    @Workspace java.util.Random rand;
+    @Output  Float8Holder out;
+
+    public void setup(){
+      rand = new java.util.Random(seed.value);
+    }
+
+    public void eval(){
+      out.value = rand.nextDouble();
+    }
   }
 
   @FunctionTemplate(name = "to_number", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)

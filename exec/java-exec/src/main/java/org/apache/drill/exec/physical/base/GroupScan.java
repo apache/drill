@@ -17,9 +17,9 @@
  */
 package org.apache.drill.exec.physical.base;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.Collection;
 import java.util.List;
-
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
@@ -28,16 +28,17 @@ import org.apache.drill.exec.ops.UdfUtilities;
 import org.apache.drill.exec.physical.PhysicalOperatorSetupException;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.metastore.metadata.TableMetadata;
+import org.apache.drill.metastore.metadata.TableMetadataProvider;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import org.apache.hadoop.fs.Path;
 
 /**
  * A GroupScan operator represents all data which will be scanned by a given physical
  * plan.  It is the superset of all SubScans for the plan.
  */
-public interface GroupScan extends Scan, HasAffinity{
+public interface GroupScan extends Scan, HasAffinity {
 
   /**
    * columns list in GroupScan : 1) empty_column is for skipAll query.
@@ -45,8 +46,6 @@ public interface GroupScan extends Scan, HasAffinity{
    *  How to handle skipAll query is up to each storage plugin, with different policy in corresponding RecordReader.
    */
   List<SchemaPath> ALL_COLUMNS = ImmutableList.of(SchemaPath.STAR_COLUMN);
-
-  long NO_COLUMN_STATS = -1;
 
   void applyAssignments(List<DrillbitEndpoint> endpoints) throws PhysicalOperatorSetupException;
 
@@ -110,6 +109,12 @@ public interface GroupScan extends Scan, HasAffinity{
   boolean supportsPartitionFilterPushdown();
 
   /**
+   * Returns a list of columns scanned by this group scan
+   *
+   */
+  List<SchemaPath> getColumns();
+
+  /**
    * Returns a list of columns that can be used for partition pruning
    *
    */
@@ -138,8 +143,10 @@ public interface GroupScan extends Scan, HasAffinity{
   /**
    * Returns a collection of file names associated with this GroupScan. This should be called after checking
    * hasFiles().  If this GroupScan cannot provide file names, it returns null.
+   *
+   * @return collection of files paths
    */
-  Collection<String> getFiles();
+  Collection<Path> getFiles();
 
   @JsonIgnore
   LogicalExpression getFilter();
@@ -147,4 +154,14 @@ public interface GroupScan extends Scan, HasAffinity{
   GroupScan applyFilter(LogicalExpression filterExpr, UdfUtilities udfUtilities,
                         FunctionImplementationRegistry functionImplementationRegistry, OptionManager optionManager);
 
+  /**
+   * Returns {@link TableMetadataProvider} instance which is used for providing metadata for current {@link GroupScan}.
+   *
+   * @return {@link TableMetadataProvider} instance the source of metadata
+   */
+  @JsonIgnore
+  TableMetadataProvider getMetadataProvider();
+
+  @JsonIgnore
+  TableMetadata getTableMetadata();
 }

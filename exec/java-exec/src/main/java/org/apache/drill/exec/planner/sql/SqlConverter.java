@@ -22,10 +22,21 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Strings;
+import org.apache.calcite.jdbc.CalciteSchema;
+import org.apache.calcite.util.Static;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.drill.exec.planner.sql.parser.DrillParserUtil;
+import org.apache.drill.exec.planner.sql.parser.impl.DrillSqlParseException;
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.metastore.MetadataProviderManager;
+import org.apache.drill.metastore.metadata.TableMetadataProvider;
+import org.apache.drill.shaded.guava.com.google.common.cache.CacheBuilder;
+import org.apache.drill.shaded.guava.com.google.common.cache.CacheLoader;
+import org.apache.drill.shaded.guava.com.google.common.cache.LoadingCache;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.calcite.adapter.java.JavaTypeFactory;
@@ -52,6 +63,7 @@ import org.apache.calcite.runtime.Hook;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlIdentifier;
+import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlOperatorTable;
 import org.apache.calcite.sql.parser.SqlParseException;
@@ -67,7 +79,6 @@ import org.apache.calcite.sql.validate.SqlValidatorUtil;
 import org.apache.calcite.sql2rel.SqlToRelConverter;
 import org.apache.calcite.tools.RelBuilderFactory;
 import org.apache.calcite.util.Util;
-import org.apache.commons.collections.ListUtils;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.Types;
@@ -83,7 +94,6 @@ import org.apache.drill.exec.planner.physical.DrillDistributionTraitDef;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.store.dfs.FileSelection;
-import static org.apache.calcite.util.Static.RESOURCE;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
 import org.apache.drill.exec.store.ColumnExplorer;
@@ -99,6 +109,7 @@ public class SqlConverter {
 
   private final JavaTypeFactory typeFactory;
   private final SqlParser.Config parserConfig;
+
   // Allow the default config to be modified using immutable configs
   private SqlToRelConverter.Config sqlToRelConverterConfig;
   private final DrillCalciteCatalogReader catalog;
@@ -136,7 +147,7 @@ public class SqlConverter {
     this.sqlToRelConverterConfig = new SqlToRelConverterConfig();
     this.isInnerQuery = false;
     this.typeFactory = new JavaTypeFactoryImpl(DRILL_TYPE_SYSTEM);
-    this.defaultSchema =  context.getNewDefaultSchema();
+    this.defaultSchema = context.getNewDefaultSchema();
     this.rootSchema = rootSchema(defaultSchema);
     this.temporarySchema = context.getConfig().getString(ExecConstants.DEFAULT_TEMPORARY_WORKSPACE);
     this.session = context.getSession();
@@ -184,15 +195,15 @@ public class SqlConverter {
       SqlParser parser = SqlParser.create(sql, parserConfig);
       return parser.parseStmt();
     } catch (SqlParseException e) {
+      DrillSqlParseException dex = new DrillSqlParseException(e);
       UserException.Builder builder = UserException
-          .parseError(e)
-          .addContext("SQL Query", formatSQLParsingError(sql, e.getPos()));
+          .parseError(dex)
+          .addContext(formatSQLParsingError(sql, dex));
       if (isInnerQuery) {
         builder.message("Failure parsing a view your query is dependent upon.");
       }
       throw builder.build(logger);
     }
-
   }
 
   public SqlNode validate(final SqlNode parsedNode) {
@@ -258,26 +269,24 @@ public class SqlConverter {
         SqlNode node,
         RelDataType targetRowType,
         SqlValidatorScope scope) {
-      switch (node.getKind()) {
-        case AS:
-          SqlNode sqlNode = ((SqlCall) node).operand(0);
-          switch (sqlNode.getKind()) {
-            case IDENTIFIER:
-              SqlIdentifier tempNode = (SqlIdentifier) sqlNode;
-              DrillCalciteCatalogReader catalogReader = (SqlConverter.DrillCalciteCatalogReader) getCatalogReader();
+      if (node.getKind() == SqlKind.AS) {
+        SqlCall sqlCall = (SqlCall) node;
+        SqlNode sqlNode = sqlCall.operand(0);
+        switch (sqlNode.getKind()) {
+          case IDENTIFIER:
+            SqlIdentifier tempNode = (SqlIdentifier) sqlNode;
+            DrillCalciteCatalogReader catalogReader = (DrillCalciteCatalogReader) getCatalogReader();
 
-              changeNamesIfTableIsTemporary(tempNode);
+            changeNamesIfTableIsTemporary(tempNode);
 
-              // Check the schema and throw a valid SchemaNotFound exception instead of TableNotFound exception.
-              if (catalogReader.getTable(tempNode.names) == null) {
-                catalogReader.isValidSchema(tempNode.names);
-              }
-              break;
-            case UNNEST:
-              if (((SqlCall) node).operandCount() < 3) {
-                throw RESOURCE.validationError("Alias table and column name are required for UNNEST").ex();
-              }
-          }
+            // Check the schema and throw a valid SchemaNotFound exception instead of TableNotFound exception.
+            catalogReader.isValidSchema(tempNode.names);
+            break;
+          case UNNEST:
+            if (sqlCall.operandCount() < 3) {
+              throw Static.RESOURCE.validationError("Alias table and column name are required for UNNEST").ex();
+            }
+        }
       }
       super.validateFrom(node, targetRowType, scope);
     }
@@ -317,6 +326,19 @@ public class SqlConverter {
           .containsKey(SqlValidatorUtil.getAlias(exp, -1))) {
         super.addToSelectList(list, aliases, fieldList, exp, scope, includeSystemVars);
       }
+    }
+
+    @Override
+    protected void inferUnknownTypes(
+        RelDataType inferredType,
+        SqlValidatorScope scope,
+        SqlNode node) {
+      // calls validateQuery() for SqlSelect to be sure that temporary table name will be changed
+      // for the case when it is used in sub-select
+      if (node.getKind() == SqlKind.SELECT) {
+        validateQuery(node, scope, inferredType);
+      }
+      super.inferUnknownTypes(inferredType, scope, node);
     }
 
     private void changeNamesIfTableIsTemporary(SqlIdentifier tempNode) {
@@ -486,30 +508,44 @@ public class SqlConverter {
   }
 
   /**
+   * Formats sql exception with context name included and with
+   * graphical representation for the {@link DrillSqlParseException}
    *
-   * @param sql
-   *          the SQL sent to the server
-   * @param pos
-   *          the position of the error
+   * @param sql     the SQL sent to the server
+   * @param ex      exception object
    * @return The sql with a ^ character under the error
    */
-  static String formatSQLParsingError(String sql, SqlParserPos pos) {
-    if (pos == null) {
-      return sql;
-    }
-    StringBuilder sb = new StringBuilder();
-    String[] lines = sql.split("\n");
-    for (int i = 0; i < lines.length; i++) {
-      String line = lines[i];
-      sb.append(line).append("\n");
-      if (i == (pos.getLineNum() - 1)) {
-        for (int j = 0; j < pos.getColumnNum() - 1; j++) {
-          sb.append(" ");
+  static String formatSQLParsingError(String sql, DrillSqlParseException ex) {
+    final String sqlErrorMessageHeader = "SQL Query: ";
+    final SqlParserPos pos = ex.getPos();
+
+    if (pos != null) {
+      int issueLineNumber = pos.getLineNum() - 1;  // recalculates to base 0
+      int issueColumnNumber = pos.getColumnNum() - 1;  // recalculates to base 0
+      int messageHeaderLength = sqlErrorMessageHeader.length();
+
+      // If the issue happens on the first line, header width should be calculated alongside with the sql query
+      int shiftLength = (issueLineNumber == 0) ? issueColumnNumber + messageHeaderLength : issueColumnNumber;
+
+      StringBuilder sb = new StringBuilder();
+      String[] lines = sql.split(DrillParserUtil.EOL);
+
+      for (int i = 0; i < lines.length; i++) {
+        sb.append(lines[i]);
+
+        if (i == issueLineNumber) {
+          sb
+              .append(DrillParserUtil.EOL)
+              .append(StringUtils.repeat(' ', shiftLength))
+              .append("^");
         }
-        sb.append("^\n");
+        if (i < lines.length - 1) {
+          sb.append(DrillParserUtil.EOL);
+        }
       }
+      sql = sb.toString();
     }
-    return sb.toString();
+    return sqlErrorMessageHeader + sql;
   }
 
   private static SchemaPlus rootSchema(SchemaPlus schema) {
@@ -591,6 +627,38 @@ public class SqlConverter {
   }
 
   /**
+   * Key for storing / obtaining {@link TableMetadataProvider} instance from {@link LoadingCache}.
+   */
+  private static class DrillTableKey {
+    private final SchemaPath key;
+    private final DrillTable drillTable;
+
+    public DrillTableKey(SchemaPath key, DrillTable drillTable) {
+      this.key = key;
+      this.drillTable = drillTable;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj) {
+        return true;
+      }
+      if (obj == null || getClass() != obj.getClass()) {
+        return false;
+      }
+
+      DrillTableKey that = (DrillTableKey) obj;
+
+      return Objects.equals(key, that.key);
+    }
+
+    @Override
+    public int hashCode() {
+      return key != null ? key.hashCode() : 0;
+    }
+  }
+
+  /**
    * Extension of {@link CalciteCatalogReader} to add ability to check for temporary tables first
    * if schema is not indicated near table name during query parsing
    * or indicated workspace is default temporary workspace.
@@ -600,8 +668,8 @@ public class SqlConverter {
     private final DrillConfig drillConfig;
     private final UserSession session;
     private boolean allowTemporaryTables;
-    private final SchemaPlus rootSchema;
 
+    private final LoadingCache<DrillTableKey, MetadataProviderManager> tableCache;
 
     DrillCalciteCatalogReader(SchemaPlus rootSchema,
                               boolean caseSensitive,
@@ -614,7 +682,14 @@ public class SqlConverter {
       this.drillConfig = drillConfig;
       this.session = session;
       this.allowTemporaryTables = true;
-      this.rootSchema = rootSchema;
+      this.tableCache =
+          CacheBuilder.newBuilder()
+            .build(new CacheLoader<DrillTableKey, MetadataProviderManager>() {
+              @Override
+              public MetadataProviderManager load(DrillTableKey key) {
+                return key.drillTable.getMetadataProviderManager();
+              }
+            });
     }
 
     /**
@@ -648,7 +723,7 @@ public class SqlConverter {
      * @throws UserException if temporary tables usage is disallowed
      */
     @Override
-    public Prepare.PreparingTable getTable(final List<String> names) {
+    public Prepare.PreparingTable getTable(List<String> names) {
       String originalTableName = session.getOriginalTableNameFromTemporaryTable(names.get(names.size() - 1));
       if (originalTableName != null) {
         if (!allowTemporaryTables) {
@@ -660,10 +735,13 @@ public class SqlConverter {
       }
 
       Prepare.PreparingTable table = super.getTable(names);
-      DrillTable unwrap;
+      DrillTable drillTable;
       // add session options if found table is Drill table
-      if (table != null && (unwrap = table.unwrap(DrillTable.class)) != null) {
-        unwrap.setOptions(session.getOptions());
+      if (table != null && (drillTable = table.unwrap(DrillTable.class)) != null) {
+        drillTable.setOptions(session.getOptions());
+
+        drillTable.setTableMetadataProviderManager(tableCache.getUnchecked(
+            new DrillTableKey(SchemaPath.getCompoundPath(names.toArray(new String[0])), drillTable)));
       }
       return table;
     }
@@ -677,27 +755,26 @@ public class SqlConverter {
     }
 
     /**
-     * check if the schema provided is a valid schema:
+     * Checks if the schema provided is a valid schema:
      * <li>schema is not indicated (only one element in the names list)<li/>
      *
      * @param names list of schema and table names, table name is always the last element
      * @throws UserException if the schema is not valid.
      */
-    private void isValidSchema(final List<String> names) throws UserException {
-      SchemaPlus defaultSchema = session.getDefaultSchema(this.rootSchema);
-      String defaultSchemaCombinedPath = SchemaUtilites.getSchemaPath(defaultSchema);
+    private void isValidSchema(List<String> names) throws UserException {
       List<String> schemaPath = Util.skipLast(names);
-      String schemaPathCombined = SchemaUtilites.getSchemaPath(schemaPath);
-      String commonPrefix = SchemaUtilites.getPrefixSchemaPath(defaultSchemaCombinedPath,
-              schemaPathCombined,
-              parserConfig.caseSensitive());
-      boolean isPrefixDefaultPath = commonPrefix.length() == defaultSchemaCombinedPath.length();
-      List<String> fullSchemaPath = Strings.isNullOrEmpty(defaultSchemaCombinedPath) ? schemaPath :
-              isPrefixDefaultPath ? schemaPath : ListUtils.union(SchemaUtilites.getSchemaPathAsList(defaultSchema), schemaPath);
-      if (names.size() > 1 && (SchemaUtilites.findSchema(this.rootSchema, fullSchemaPath) == null &&
-              SchemaUtilites.findSchema(this.rootSchema, schemaPath) == null)) {
-        SchemaUtilites.throwSchemaNotFoundException(defaultSchema, schemaPath);
+
+      for (List<String> currentSchema : getSchemaPaths()) {
+        List<String> fullSchemaPath = new ArrayList<>(currentSchema);
+        fullSchemaPath.addAll(schemaPath);
+        CalciteSchema schema = SqlValidatorUtil.getSchema(getRootSchema(),
+            fullSchemaPath, nameMatcher());
+
+        if (schema != null) {
+         return;
+        }
       }
+      SchemaUtilites.throwSchemaNotFoundException(defaultSchema, schemaPath);
     }
 
     /**

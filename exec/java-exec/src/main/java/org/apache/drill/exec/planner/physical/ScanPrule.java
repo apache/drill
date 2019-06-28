@@ -30,8 +30,8 @@ public class ScanPrule extends Prule{
 
   public ScanPrule() {
     super(RelOptHelper.any(DrillScanRel.class), "Prel.ScanPrule");
-
   }
+
   @Override
   public void onMatch(RelOptRuleCall call) {
     final DrillScanRel scan = (DrillScanRel) call.rel(0);
@@ -48,5 +48,4 @@ public class ScanPrule extends Prule{
 
     call.transformTo(newScan);
   }
-
 }

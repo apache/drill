@@ -159,13 +159,13 @@ public class ExcessiveExchangeIdentifier extends BasePrelVisitor<Prel, Excessive
 
   class MajorFragmentStat {
     private DistributionAffinity distributionAffinity = DistributionAffinity.NONE;
-    private double maxRows = 0d;
+    private double maxRows;
     private int maxWidth = Integer.MAX_VALUE;
-    private boolean isMultiSubScan = false;
-    private boolean rightSideOfLateral = false;
+    private boolean isMultiSubScan;
+    private boolean rightSideOfLateral;
     //This flag if true signifies that all the Rels thus far
     //are simple rels with no distribution requirement.
-    private boolean isSimpleRel = false;
+    private boolean isSimpleRel;
 
     public void add(Prel prel) {
       maxRows = Math.max(prel.estimateRowCount(prel.getCluster().getMetadataQuery()), maxRows);
@@ -196,7 +196,7 @@ public class ExcessiveExchangeIdentifier extends BasePrelVisitor<Prel, Excessive
         return false;
       }
 
-      int suggestedWidth = (int) Math.ceil((maxRows+1)/targetSliceSize);
+      int suggestedWidth = (int) Math.ceil((maxRows + 1) / targetSliceSize);
 
       int w = Math.min(maxWidth, suggestedWidth);
       if (w < 1) {

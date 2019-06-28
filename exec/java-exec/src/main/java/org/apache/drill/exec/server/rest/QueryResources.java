@@ -83,10 +83,11 @@ public class QueryResources {
   @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   @Produces(MediaType.TEXT_HTML)
   public Viewable submitQuery(@FormParam("query") String query,
-                              @FormParam("queryType") String queryType) throws Exception {
+                              @FormParam("queryType") String queryType,
+                              @FormParam("autoLimit") String autoLimit) throws Exception {
     try {
       final String trimmedQueryString = CharMatcher.is(';').trimTrailingFrom(query.trim());
-      final QueryResult result = submitQueryJSON(new QueryWrapper(trimmedQueryString, queryType));
+      final QueryResult result = submitQueryJSON(new QueryWrapper(trimmedQueryString, queryType, autoLimit));
       List<Integer> rowsPerPageValues = work.getContext().getConfig().getIntList(ExecConstants.HTTP_WEB_CLIENT_RESULTSET_ROWS_PER_PAGE_VALUES);
       Collections.sort(rowsPerPageValues);
       final String rowsPerPageValuesAsStr = Joiner.on(",").join(rowsPerPageValues);
@@ -135,6 +136,7 @@ public class QueryResources {
     private final String queryId;
     private final String rowsPerPageValues;
     private final String queryState;
+    private final int autoLimitedRowCount;
 
     public TabularResult(QueryResult result, String rowsPerPageValuesAsStr) {
       rowsPerPageValues = rowsPerPageValuesAsStr;
@@ -151,6 +153,7 @@ public class QueryResources {
       this.columns = ImmutableList.copyOf(result.columns);
       this.rows = rows;
       this.queryState = result.queryState;
+      this.autoLimitedRowCount = result.attemptedAutoLimit;
     }
 
     public boolean isEmpty() {
@@ -169,13 +172,23 @@ public class QueryResources {
       return rows;
     }
 
-    //Used by results.ftl to render default number of pages per row
+    // Used by results.ftl to render default number of pages per row
     public String getRowsPerPageValues() {
       return rowsPerPageValues;
     }
 
     public String getQueryState() {
       return queryState;
+    }
+
+    // Used by results.ftl to indicate autoLimited resultset
+    public boolean isResultSetAutoLimited() {
+      return autoLimitedRowCount > 0 && rows.size() == autoLimitedRowCount;
+    }
+
+    // Used by results.ftl to indicate autoLimited resultset size
+    public int getAutoLimitedRowCount() {
+      return autoLimitedRowCount;
     }
   }
 

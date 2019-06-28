@@ -21,13 +21,57 @@ import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.vector.accessor.ColumnConversionFactory;
+import org.apache.drill.exec.vector.accessor.ColumnWriter;
+import org.joda.time.format.DateTimeFormatter;
 
 /**
  * Metadata description of a column including names, types and structure
  * information.
  */
-public interface ColumnMetadata {
+public interface ColumnMetadata extends Propertied {
+
+  /**
+   * Predicted number of elements per array entry. Default is
+   * taken from the often hard-coded value of 10.
+   */
+  String EXPECTED_CARDINALITY_PROP = DRILL_PROP_PREFIX + "cardinality";
+
+  /**
+   * Default value represented as a string.
+   */
+  String DEFAULT_VALUE_PROP = DRILL_PROP_PREFIX + "default";
+
+  /**
+   * Expected (average) width for variable-width columns.
+   */
+  String EXPECTED_WIDTH_PROP = DRILL_PROP_PREFIX + "width";
+
+  /**
+   * Optional format to use when converting to/from string values.
+   */
+  String FORMAT_PROP = DRILL_PROP_PREFIX + "format";
+
+  /**
+   * Indicates how to handle blanks. Must be one of the valid values defined
+   * in AbstractConvertFromString. Normally set on the converter by the plugin
+   * rather than by the user in the schema.
+   */
+  String BLANK_AS_PROP = DRILL_PROP_PREFIX + "blank-as";
+
+  /**
+   * Indicates whether to project the column in a wildcard (*) query.
+   * Special columns may be excluded from projection. Certain "special"
+   * columns may be available only when explicitly requested. For example,
+   * the log reader has a "_raw" column which includes the entire input
+   * line before parsing. This column can be requested explicitly:<br>
+   * <tt>SELECT foo, bar, _raw FROM ...</tt><br>
+   * but the column will <i>not</i> be included when using the wildcard:<br>
+   * <tt>SELECT * FROM ...</tt>
+   * <p>
+   * Marking a column (either in the provided schema or the reader schema)
+   * will prevent that column from appearing in a wildcard expansion.
+   */
+  String EXCLUDE_FROM_WILDCARD = DRILL_PROP_PREFIX + "special";
 
   /**
    * Rough characterization of Drill types into metadata categories.
@@ -182,44 +226,46 @@ public interface ColumnMetadata {
 
   int expectedElementCount();
 
-  /**
-   * Set the default value to use for filling a vector when no real data is
-   * available, such as for columns added in new files but which does not
-   * exist in existing files. The "default default" is null, which works
-   * only for nullable columns.
-   *
-   * @param value column value, represented as a Java object, acceptable
-   * to the {@link ColumnWriter#setObject()} method for this column's writer.
-   */
-  void setDefaultValue(Object value);
+  void setFormat(String value);
+
+  String format();
 
   /**
-   * Returns the default value for this column.
+   * Returns the formatter to use for date/time values. Only valid for
+   * date/time columns.
    *
-   * @return the default value, or null if no default value has been set
+   * @return
    */
-  Object defaultValue();
+  DateTimeFormatter dateTimeFormatter();
 
   /**
-   * Set the factory for an optional shim writer that translates from the type of
-   * data available to the code that creates the vectors on the one hand,
-   * and the actual type of the column on the other. For example, a shim
-   * might parse a string form of a date into the form stored in vectors.
-   * <p>
-   * The shim must write to the base vector for this column using one of
-   * the supported base writer "set" methods.
-   * <p>
-   * The default is to use the "natural" type: that is, to insert no
-   * conversion shim.
+   * Sets the default value property using the string-encoded form of the value.
+   * The default value is used for filling a vector when no real data is available.
+   *
+   * @param value the default value in String representation
    */
-  void setTypeConverter(ColumnConversionFactory factory);
+  void setDefaultValue(String value);
 
   /**
-   * Returns the type conversion shim for this column.
+   * Returns the default value for this column in String literal representation.
    *
-   * @return the type conversion factory, or null if none is set
+   * @return the default value in String literal representation, or null if no
+   * default value has been set
    */
-  ColumnConversionFactory typeConverter();
+  String defaultValue();
+
+  /**
+   * Returns the default value decoded into object form. This is the same as:
+   * <pre><code>decodeValue(defaultValue());
+   * </code></pre>
+   *
+   * @return the default value decode as an object that can be passed to
+   * the {@link ColumnWriter#setObject()} method.
+   */
+  Object decodeDefaultValue();
+
+  String valueToString(Object value);
+  Object valueFromString(String value);
 
   /**
    * Create an empty version of this column. If the column is a scalar,
@@ -230,15 +276,6 @@ public interface ColumnMetadata {
    */
 
   ColumnMetadata cloneEmpty();
-
-  /**
-   * Reports whether, in this context, the column is projected outside
-   * of the context. (That is, whether the column is backed by an actual
-   * value vector.)
-   */
-
-  boolean isProjected();
-  void setProjected(boolean projected);
 
   int precision();
   int scale();
@@ -262,5 +299,4 @@ public interface ColumnMetadata {
    * @return column metadata string representation
    */
   String columnString();
-
 }

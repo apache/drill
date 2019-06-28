@@ -9,8 +9,9 @@
   },
   "storage" : {
       "mock-engine": {
-        type : "mock",
-        url : "http://www.apache.org/"
+        "type" : "mock",
+        "url" : "http://www.apache.org/",
+        "enabled": true
       }
   },
   "query" : [

@@ -29,6 +29,12 @@ package org.apache.drill.exec.vector.accessor;
 public enum ValueType {
 
   /**
+   * The value is set from a boolean: BIT.
+   */
+
+  BOOLEAN,
+
+  /**
    * The value is set from an integer: TINYINT,
    * SMALLINT, INT, UINT1, and UINT2.
    */
@@ -76,6 +82,27 @@ public enum ValueType {
    */
 
   PERIOD,
+
+  /**
+   * The value is set from a Joda LocalDate. (Should upgrade to
+   * Java 8 LocalDate.) Native type is an int.
+   */
+
+  DATE,
+
+  /**
+   * The value is set from a Joda LocalTime. (Should upgrade to
+   * Java 8 LocalTime.) Native type is an int.
+   */
+
+  TIME,
+
+  /**
+   * The value is set from a Joda Instant. (Should upgrade to
+   * Java 8 Instant.) Native type is a long.
+   */
+
+  TIMESTAMP,
 
   /**
    * The value has no type. This is typically a dummy writer used

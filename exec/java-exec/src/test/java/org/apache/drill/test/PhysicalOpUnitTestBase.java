@@ -56,6 +56,7 @@ import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.rpc.NamedThreadFactory;
+import org.apache.hadoop.fs.Path;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -399,9 +400,9 @@ public class PhysicalOpUnitTestBase extends ExecTest {
    * @param columnsToRead
    * @return The {@link org.apache.drill.exec.store.easy.json.JSONRecordReader} corresponding to each given input path.
    */
-  public static Iterator<RecordReader> getJsonReadersFromInputFiles(DrillFileSystem fs, List<String> inputPaths, FragmentContext fragContext, List<SchemaPath> columnsToRead) {
+  public static Iterator<RecordReader> getJsonReadersFromInputFiles(DrillFileSystem fs, List<Path> inputPaths, FragmentContext fragContext, List<SchemaPath> columnsToRead) {
     List<RecordReader> readers = new ArrayList<>();
-    for (String inputPath : inputPaths) {
+    for (Path inputPath : inputPaths) {
       readers.add(new JSONRecordReader(fragContext, inputPath, fs, columnsToRead));
     }
     return readers.iterator();

@@ -37,7 +37,13 @@
     "METADATA",
     "IF",
     "JAR",
-    "PROPERTIES"
+    "PROPERTIES",
+    "ANALYZE",
+    "COMPUTE",
+    "ESTIMATE",
+    "STATISTICS",
+    "SAMPLE",
+    "COLUMNS"
   ]
 
   # List of methods for parsing custom SQL statements.
@@ -52,7 +58,10 @@
     "SqlShowFiles()",
     "SqlRefreshMetadata()",
     "SqlCreateFunction()",
-    "SqlDropFunction()"
+    "SqlDropFunction()",
+    "SqlAnalyzeTable()",
+    "DrillSqlSetOption(Span.of(), null)",
+    "DrillSqlResetOption(Span.of(), null)"
   ]
 
   # List of methods for parsing custom literals.
@@ -80,6 +89,8 @@
   # List of methods for parsing extensions to "ALTER <scope>" calls.
   # Each must accept arguments "(SqlParserPos pos, String scope)".
   alterStatementParserMethods: [
+    "DrillSqlSetOption",
+    "DrillSqlResetOption"
   ]
 
   # List of methods for parsing extensions to "DROP" calls.
@@ -848,6 +859,7 @@
         "YEAR",
         # "YEARS", # not a keyword in Calcite
         "ZONE",
+        "COLUMNS"
       ]
 
   # List of additional join types. Each is a method with no arguments.

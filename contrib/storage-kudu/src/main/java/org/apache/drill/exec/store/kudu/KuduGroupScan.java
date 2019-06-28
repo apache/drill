@@ -246,6 +246,7 @@ public class KuduGroupScan extends AbstractGroupScan {
     return kuduStoragePlugin.getConfig();
   }
 
+  @Override
   @JsonProperty
   public List<SchemaPath> getColumns() {
     return columns;

@@ -1,32 +1,33 @@
 {
-  head : {
-    type : "APACHE_DRILL_PHYSICAL",
-    version : 1,
-    generator : {
-      type : "manual"
+  "head" : {
+    "type" : "APACHE_DRILL_PHYSICAL",
+    "version" : 1,
+    "generator" : {
+      "type" : "manual"
     }
   },
-  graph : [ {
-    pop : "hbase-scan",
-    @id : 1,
-    hbaseScanSpec : {
-      tableName : "[TABLE_NAME]"
+  "graph" : [ {
+    "pop" : "hbase-scan",
+    "@id" : 1,
+    "hbaseScanSpec" : {
+      "tableName" : "[TABLE_NAME]"
     },
-    storage:
+    "storage":
     {
       "type":"hbase",
-      config : {
+      "enabled": true,
+      "config" : {
         "hbase.zookeeper.quorum" : "localhost",
         "hbase.zookeeper.property.clientPort" : 2181
       }
     },
-    columns: [
+    "columns": [
       "f2"
     ]
   },
   {
-    pop : "screen",
-    @id : 2,
-    child : 1
+    "pop" : "screen",
+    "@id" : 2,
+    "child" : 1
   } ]
 }

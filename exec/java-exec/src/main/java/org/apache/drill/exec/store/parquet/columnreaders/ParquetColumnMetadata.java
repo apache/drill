@@ -142,7 +142,6 @@ public class ParquetColumnMetadata {
         column, columnChunkMetaData, vector, se);
   }
 
-  @SuppressWarnings("resource")
   FixedWidthRepeatedReader makeRepeatedFixedWidthReader(ParquetRecordReader reader) throws Exception {
     final RepeatedValueVector repeatedVector = RepeatedValueVector.class.cast(vector);
     ColumnReader<?> dataReader = ColumnReaderFactory.createFixedColumnReader(reader, true,

@@ -27,4 +27,5 @@ public interface NullableVector extends ValueVector {
 
   ValueVector getBitsVector();
   ValueVector getValuesVector();
+  void finalizeLastSet(int count);
 }

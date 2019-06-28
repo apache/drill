@@ -230,7 +230,6 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     }
 
     try {
-
       // HEP for rules, which are failed at the LOGICAL_PLANNING stage for Volcano planner
       final RelNode setOpTransposeNode = transform(PlannerType.HEP, PlannerPhase.PRE_LOGICAL_PLANNING, relNode);
 
@@ -238,7 +237,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
       final RelNode pruned = transform(PlannerType.HEP_BOTTOM_UP, PlannerPhase.DIRECTORY_PRUNING, setOpTransposeNode);
       final RelTraitSet logicalTraits = pruned.getTraitSet().plus(DrillRel.DRILL_LOGICAL);
 
-      RelNode convertedRelNode;
+      final RelNode convertedRelNode;
       if (!context.getPlannerSettings().isHepOptEnabled()) {
         // hep is disabled, use volcano
         convertedRelNode = transform(PlannerType.VOLCANO, PlannerPhase.LOGICAL_PRUNE_AND_JOIN, pruned, logicalTraits);
@@ -277,14 +276,6 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
         }
       }
 
-      /* Ideally this conversion can be handled during logical planning phase itself
-         but currently the join ordering algorithm in calcite is not considering the
-         semi-joins. This can lead to sub optimal plans. Hence converting the joins
-         to semi-joins post join planning (refer CALCITE-2813). */
-      if (context.getPlannerSettings().isSemiJoinEnabled() &&
-          context.getPlannerSettings().isHashJoinEnabled()) {
-        convertedRelNode = transform(PlannerType.HEP_BOTTOM_UP, PlannerPhase.SEMIJOIN_CONVERSION, convertedRelNode);
-      }
       // Convert SUM to $SUM0
       final RelNode convertedRelNodeWithSum0 = transform(PlannerType.HEP_BOTTOM_UP, PlannerPhase.SUM_CONVERSION, convertedRelNode);
 
@@ -569,7 +560,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     /*
      * 4.)
      * If two fragments are both estimated to be parallelization one, remove the exchange
-     * separating them
+     * separating them.
      */
     phyRelNode = ExcessiveExchangeIdentifier.removeExcessiveEchanges(phyRelNode, targetSliceSize);
 

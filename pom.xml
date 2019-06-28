@@ -30,7 +30,7 @@
 
   <groupId>org.apache.drill</groupId>
   <artifactId>drill-root</artifactId>
-  <version>1.16.0-SNAPSHOT</version>
+  <version>1.17.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Apache Drill Root POM</name>
@@ -50,10 +50,10 @@
     <guava.version>19.0</guava.version>
     <forkCount>2</forkCount>
     <parquet.version>1.10.0</parquet.version>
-    <calcite.version>1.18.0-drill-r0</calcite.version>
+    <calcite.version>1.18.0-drill-r2</calcite.version>
     <avatica.version>1.13.0</avatica.version>
     <janino.version>3.0.11</janino.version>
-    <sqlline.version>1.6.0</sqlline.version>
+    <sqlline.version>1.8.0</sqlline.version>
     <jackson.version>2.9.5</jackson.version>
     <jackson.databind.version>2.9.5</jackson.databind.version>
     <zookeeper.version>3.4.12</zookeeper.version>
@@ -79,12 +79,14 @@
     <hadoop.version>2.7.4</hadoop.version>
     <hbase.version>2.1.1</hbase.version>
     <fmpp.version>1.0</fmpp.version>
-    <freemarker.version>2.3.26-incubating</freemarker.version>
+    <freemarker.version>2.3.28</freemarker.version>
     <javassist.version>3.24.0-GA</javassist.version>
     <msgpack.version>0.6.6</msgpack.version>
     <reflections.version>0.9.10</reflections.version>
-    <avro.version>1.8.2</avro.version>
+    <avro.version>1.9.0</avro.version>
     <metrics.version>4.0.2</metrics.version>
+    <jetty.version>9.3.25.v20180904</jetty.version>
+    <jersey.version>2.25.1</jersey.version>
     <asm.version>7.0</asm.version>
     <excludedGroups />
     <memoryMb>4096</memoryMb>
@@ -97,6 +99,7 @@
     <commons.net.version>3.6</commons.net.version>
     <commons.validator.version>1.6</commons.validator.version>
     <commons.text.version>1.6</commons.text.version>
+    <protobuf.version>3.6.1</protobuf.version>
   </properties>
 
   <scm>
@@ -333,7 +336,6 @@
           </execution>
         </executions>
         <configuration>
-          <excludeSubprojects>false</excludeSubprojects>
           <excludes>
             <!-- Types log1, log2, sqllog and sqllog2 are used to test he logRegex format plugin. -->
             <exclude>**/*.log1</exclude>
@@ -342,6 +344,7 @@
             <exclude>**/*.sqllog2</exclude>
             <exclude>**/*.syslog</exclude>
             <exclude>**/*.syslog1</exclude>
+            <exclude>**/*.ltsv</exclude>
             <exclude>**/*.log</exclude>
             <exclude>**/*.css</exclude>
             <exclude>**/*.js</exclude>
@@ -670,6 +673,7 @@
               <exclude>**/*.log2</exclude>
               <exclude>**/*.sqllog</exclude>
               <exclude>**/*.sqllog2</exclude>
+              <exclude>**/*.ltsv</exclude>
               <exclude>**/*.wav</exclude>
               <exclude>**/control</exclude>
               <!-- TODO DRILL-4336: try to avoid the need to add this -->
@@ -746,7 +750,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
-          <version>3.0.0-M2</version>
+          <version>3.0.0-M3</version>
           <executions>
             <execution>
               <id>default-test</id>
@@ -758,7 +762,7 @@
             <dependency>
               <groupId>org.apache.maven.surefire</groupId>
               <artifactId>surefire-junit47</artifactId>
-              <version>3.0.0-M2</version>
+              <version>3.0.0-M3</version>
             </dependency>
           </dependencies>
           <configuration>
@@ -1766,6 +1770,11 @@
         <artifactId>commons-text</artifactId>
         <version>${commons.text.version}</version>
       </dependency>
+      <dependency>
+        <groupId>com.google.protobuf</groupId>
+        <artifactId>protobuf-java</artifactId>
+        <version>${protobuf.version}</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -1783,7 +1792,7 @@
               <execution>
                 <id>source-release-checksum</id>
                 <goals>
-                  <goal>artifacts</goal>
+                  <goal>files</goal>
                 </goals>
               </execution>
             </executions>
@@ -1791,6 +1800,17 @@
               <algorithms>
                 <algorithm>SHA-512</algorithm>
               </algorithms>
+              <fileSets>
+                <!--Override fileSet from the Apache Parent POM-->
+                <fileSet>
+                  <directory>${project.build.directory}</directory>
+                  <includes>
+                    <include>apache-drill-${project.version}.tar.gz</include>
+                    <include>apache-drill-${project.version}-src.tar.gz</include>
+                    <include>apache-drill-${project.version}-src.zip</include>
+                  </includes>
+                </fileSet>
+              </fileSets>
             </configuration>
           </plugin>
 
@@ -2444,6 +2464,82 @@
             <version>1.60</version>
           </dependency>
 
+          <!--Eclipse Jetty dependecies-->
+          <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-server</artifactId>
+            <version>${jetty.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-servlet</artifactId>
+            <version>${jetty.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-servlets</artifactId>
+            <version>${jetty.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-security</artifactId>
+            <version>${jetty.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-util</artifactId>
+            <version>${jetty.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-io</artifactId>
+            <version>${jetty.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-webapp</artifactId>
+            <version>${jetty.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-xml</artifactId>
+            <version>${jetty.version}</version>
+          </dependency>
+          <!--Eclipse Jetty dependecies-->
+
+          <!--GlassFish Jersey dependecies-->
+          <dependency>
+            <groupId>org.glassfish.jersey.ext</groupId>
+            <artifactId>jersey-mvc-freemarker</artifactId>
+            <version>${jersey.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-multipart</artifactId>
+            <version>${jersey.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-json-jackson</artifactId>
+            <version>${jersey.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.glassfish.jersey.containers</groupId>
+            <artifactId>jersey-container-jetty-servlet</artifactId>
+            <version>${jersey.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.glassfish.jersey.containers</groupId>
+            <artifactId>jersey-container-servlet-core</artifactId>
+            <version>${jersey.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.glassfish.jersey.containers</groupId>
+            <artifactId>jersey-container-servlet</artifactId>
+            <version>${jersey.version}</version>
+          </dependency>
+          <!--/GlassFish Jersey dependecies-->
+
           <!-- Test Dependencies -->
           <dependency>
             <groupId>org.apache.hadoop</groupId>
@@ -2468,8 +2564,8 @@
                 <artifactId>netty-all</artifactId>
               </exclusion>
               <exclusion>
-                  <groupId>io.netty</groupId>
-                  <artifactId>netty</artifactId>
+                <groupId>io.netty</groupId>
+                <artifactId>netty</artifactId>
               </exclusion>
             </exclusions>
           </dependency>
@@ -2518,7 +2614,6 @@
       <id>mapr</id>
       <properties>
         <alt-hadoop>mapr</alt-hadoop>
-        <rat.excludeSubprojects>true</rat.excludeSubprojects>
         <hive.version>2.3.3-mapr-1808</hive.version>
         <hbase.version>1.1.1-mapr-1602-m7-5.2.0</hbase.version>
         <hadoop.version>2.7.0-mapr-1808</hadoop.version>
@@ -3491,5 +3586,6 @@
     <module>exec</module>
     <module>drill-yarn</module>
     <module>distribution</module>
+    <module>metastore</module>
   </modules>
 </project>

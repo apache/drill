@@ -31,9 +31,9 @@ public final class SchemaCoordinationProtos
         public static final org.apache.drill.exec.proto.SchemaCoordinationProtos.DrillbitEndpoint.BuilderSchema MERGE =
             new org.apache.drill.exec.proto.SchemaCoordinationProtos.DrillbitEndpoint.BuilderSchema();
         
-        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint>
+        public static class MessageSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint>
         {
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint message) throws java.io.IOException
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint message) throws java.io.IOException
             {
                 if(message.hasAddress())
                     output.writeString(1, message.getAddress(), false);
@@ -78,12 +78,12 @@ public final class SchemaCoordinationProtos
                 return org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.class.getName();
             }
             //unused
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint message) throws java.io.IOException {}
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint message) throws java.io.IOException {}
             public org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint newMessage() { return null; }
         }
-        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.Builder>
+        public static class BuilderSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.Builder>
         {
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.Builder builder) throws java.io.IOException
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.Builder builder) throws java.io.IOException
             {
                 for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
                 {
@@ -150,7 +150,7 @@ public final class SchemaCoordinationProtos
                 return org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.class.getName();
             }
             //unused
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.Builder builder) throws java.io.IOException {}
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.Builder builder) throws java.io.IOException {}
         }
         public static java.lang.String getFieldName(int number)
         {
@@ -193,9 +193,9 @@ public final class SchemaCoordinationProtos
         public static final org.apache.drill.exec.proto.SchemaCoordinationProtos.DrillServiceInstance.BuilderSchema MERGE =
             new org.apache.drill.exec.proto.SchemaCoordinationProtos.DrillServiceInstance.BuilderSchema();
         
-        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.CoordinationProtos.DrillServiceInstance>
+        public static class MessageSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.CoordinationProtos.DrillServiceInstance>
         {
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.CoordinationProtos.DrillServiceInstance message) throws java.io.IOException
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.CoordinationProtos.DrillServiceInstance message) throws java.io.IOException
             {
                 if(message.hasId())
                     output.writeString(1, message.getId(), false);
@@ -230,12 +230,12 @@ public final class SchemaCoordinationProtos
                 return org.apache.drill.exec.proto.CoordinationProtos.DrillServiceInstance.class.getName();
             }
             //unused
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.CoordinationProtos.DrillServiceInstance message) throws java.io.IOException {}
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.CoordinationProtos.DrillServiceInstance message) throws java.io.IOException {}
             public org.apache.drill.exec.proto.CoordinationProtos.DrillServiceInstance newMessage() { return null; }
         }
-        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.CoordinationProtos.DrillServiceInstance.Builder>
+        public static class BuilderSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.CoordinationProtos.DrillServiceInstance.Builder>
         {
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.CoordinationProtos.DrillServiceInstance.Builder builder) throws java.io.IOException
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.CoordinationProtos.DrillServiceInstance.Builder builder) throws java.io.IOException
             {
                 for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
                 {
@@ -287,7 +287,7 @@ public final class SchemaCoordinationProtos
                 return org.apache.drill.exec.proto.CoordinationProtos.DrillServiceInstance.class.getName();
             }
             //unused
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.CoordinationProtos.DrillServiceInstance.Builder builder) throws java.io.IOException {}
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.CoordinationProtos.DrillServiceInstance.Builder builder) throws java.io.IOException {}
         }
         public static java.lang.String getFieldName(int number)
         {
@@ -320,9 +320,9 @@ public final class SchemaCoordinationProtos
         public static final org.apache.drill.exec.proto.SchemaCoordinationProtos.Roles.BuilderSchema MERGE =
             new org.apache.drill.exec.proto.SchemaCoordinationProtos.Roles.BuilderSchema();
         
-        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.CoordinationProtos.Roles>
+        public static class MessageSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.CoordinationProtos.Roles>
         {
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.CoordinationProtos.Roles message) throws java.io.IOException
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.CoordinationProtos.Roles message) throws java.io.IOException
             {
                 if(message.hasSqlQuery())
                     output.writeBool(1, message.getSqlQuery(), false);
@@ -360,12 +360,12 @@ public final class SchemaCoordinationProtos
                 return org.apache.drill.exec.proto.CoordinationProtos.Roles.class.getName();
             }
             //unused
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.CoordinationProtos.Roles message) throws java.io.IOException {}
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.CoordinationProtos.Roles message) throws java.io.IOException {}
             public org.apache.drill.exec.proto.CoordinationProtos.Roles newMessage() { return null; }
         }
-        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.CoordinationProtos.Roles.Builder>
+        public static class BuilderSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.CoordinationProtos.Roles.Builder>
         {
-            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.CoordinationProtos.Roles.Builder builder) throws java.io.IOException
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.CoordinationProtos.Roles.Builder builder) throws java.io.IOException
             {
                 for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
                 {
@@ -422,7 +422,7 @@ public final class SchemaCoordinationProtos
                 return org.apache.drill.exec.proto.CoordinationProtos.Roles.class.getName();
             }
             //unused
-            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.CoordinationProtos.Roles.Builder builder) throws java.io.IOException {}
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.CoordinationProtos.Roles.Builder builder) throws java.io.IOException {}
         }
         public static java.lang.String getFieldName(int number)
         {

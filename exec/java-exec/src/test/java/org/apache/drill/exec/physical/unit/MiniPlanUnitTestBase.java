@@ -32,6 +32,7 @@ import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.parquet.ParquetDirectByteBufferAllocator;
 import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
 import org.apache.drill.exec.store.parquet.columnreaders.ParquetRecordReader;
+import org.apache.drill.test.LegacyOperatorTestBuilder;
 import org.apache.drill.test.PhysicalOpUnitTestBase;
 import org.apache.hadoop.fs.Path;
 import org.apache.parquet.hadoop.CodecFactory;
@@ -299,7 +300,6 @@ public class MiniPlanUnitTestBase extends PhysicalOpUnitTestBase {
       return this;
     }
 
-    @SuppressWarnings("resource")
     public PopBuilder buildAddAsInput() throws Exception {
       mockOpContext(popConfig, initReservation, maxAllocation);
       @SuppressWarnings("unchecked")
@@ -358,7 +358,7 @@ public class MiniPlanUnitTestBase extends PhysicalOpUnitTestBase {
    */
   public class JsonScanBuilder extends ScanPopBuider<JsonScanBuilder> {
     List<String> jsonBatches = null;
-    List<String> inputPaths = Collections.emptyList();
+    List<Path> inputPaths = Collections.emptyList();
 
     public JsonScanBuilder(PopBuilder parent) {
       super(parent);
@@ -373,7 +373,7 @@ public class MiniPlanUnitTestBase extends PhysicalOpUnitTestBase {
       return this;
     }
 
-    public JsonScanBuilder inputPaths(List<String> inputPaths) {
+    public JsonScanBuilder inputPaths(List<Path> inputPaths) {
       this.inputPaths = inputPaths;
       return this;
     }
@@ -412,7 +412,7 @@ public class MiniPlanUnitTestBase extends PhysicalOpUnitTestBase {
    * Builder for parquet Scan RecordBatch.
    */
   public class ParquetScanBuilder extends ScanPopBuider<ParquetScanBuilder> {
-    List<String> inputPaths = Collections.emptyList();
+    List<Path> inputPaths = Collections.emptyList();
 
     public ParquetScanBuilder() {
       super();
@@ -422,7 +422,7 @@ public class MiniPlanUnitTestBase extends PhysicalOpUnitTestBase {
       super(parent);
     }
 
-    public ParquetScanBuilder inputPaths(List<String> inputPaths) {
+    public ParquetScanBuilder inputPaths(List<Path> inputPaths) {
       this.inputPaths = inputPaths;
       return this;
     }
@@ -443,8 +443,8 @@ public class MiniPlanUnitTestBase extends PhysicalOpUnitTestBase {
     private RecordBatch getScanBatch() throws Exception {
       List<RecordReader> readers = new LinkedList<>();
 
-      for (String path : inputPaths) {
-        ParquetMetadata footer = ParquetFileReader.readFooter(fs.getConf(), new Path(path));
+      for (Path path : inputPaths) {
+        ParquetMetadata footer = ParquetFileReader.readFooter(fs.getConf(), path);
 
         for (int i = 0; i < footer.getBlocks().size(); i++) {
           readers.add(new ParquetRecordReader(fragContext,

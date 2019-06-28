@@ -23,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.hadoop.fs.Path;
 
 import java.util.List;
 
@@ -32,11 +33,17 @@ import java.util.List;
 @JsonTypeName("schemaless-scan")
 public class SchemalessScan extends AbstractFileGroupScan implements SubScan {
 
-  private final String selectionRoot;
+  private final Path selectionRoot;
 
   @JsonCreator
   public SchemalessScan(@JsonProperty("userName") String userName,
-                        @JsonProperty("selectionRoot") String selectionRoot) {
+                        @JsonProperty("selectionRoot") Path selectionRoot,
+                        @JsonProperty("columns") List<SchemaPath> columns) {
+    this(userName, selectionRoot);
+  }
+
+  public SchemalessScan(@JsonProperty("userName") String userName,
+                        @JsonProperty("selectionRoot") Path selectionRoot) {
     super(userName);
     this.selectionRoot = selectionRoot;
   }
@@ -47,7 +54,7 @@ public class SchemalessScan extends AbstractFileGroupScan implements SubScan {
   }
 
   @JsonProperty
-  public String getSelectionRoot() {
+  public Path getSelectionRoot() {
     return selectionRoot;
   }
 

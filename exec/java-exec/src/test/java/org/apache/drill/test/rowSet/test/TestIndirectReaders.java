@@ -73,7 +73,6 @@ public class TestIndirectReaders extends SubOperatorTest {
 
     // Use the SV2 to reverse the row order.
 
-    @SuppressWarnings("resource")
     SelectionVector2 sv2 = result.getSv2();
     for (int i = 0; i < 10; i++) {
       sv2.setIndex(i, 9 - i);
@@ -131,7 +130,6 @@ public class TestIndirectReaders extends SubOperatorTest {
 
     SingleRowSet result = writer.done().toIndirect();
 
-    @SuppressWarnings("resource")
     SelectionVector2 sv2 = result.getSv2();
     for (int i = 0; i < 10; i++) {
       sv2.setIndex(i, 9 - i);

@@ -18,7 +18,6 @@
 package org.apache.drill.exec.store.mongo;
 
 import java.io.IOException;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -69,28 +68,22 @@ import de.flapdoodle.embed.process.runtime.Network;
 @Category({SlowTest.class, MongoStorageTest.class})
 public class MongoTestSuit implements MongoTestConstants {
 
-  private static final Logger logger = LoggerFactory
-      .getLogger(MongoTestSuit.class);
-
+  private static final Logger logger = LoggerFactory.getLogger(MongoTestSuit.class);
   protected static MongoClient mongoClient;
 
-  private static boolean distMode = System.getProperty(
-      "drill.mongo.tests.shardMode", "true").equalsIgnoreCase("true");
-  private static boolean authEnabled = System.getProperty(
-      "drill.mongo.tests.authEnabled", "false").equalsIgnoreCase("true");
-
+  private static boolean distMode = Boolean.valueOf(System.getProperty("drill.mongo.tests.shardMode", "false"));
+  private static boolean authEnabled = Boolean.valueOf(System.getProperty("drill.mongo.tests.authEnabled", "false"));
+  private static volatile String connectionURL = null;
   private static volatile AtomicInteger initCount = new AtomicInteger(0);
 
-  private static volatile boolean runningSuite = false;
-
-  public static boolean isRunningSuite() {
-    return runningSuite;
+  public static String getConnectionURL() {
+    return connectionURL;
   }
 
   private static class DistributedMode {
     private static MongosSystemForTestFactory mongosTestFactory;
 
-    private static void setup() throws Exception {
+    private static String setup() throws Exception {
       // creating configServers
       List<IMongodConfig> configServers = new ArrayList<>(1);
       configServers.add(crateConfigServerConfig(CONFIG_SERVER_1_PORT));
@@ -102,42 +95,39 @@ public class MongoTestSuit implements MongoTestConstants {
       Map<String, List<IMongodConfig>> replicaSets = new LinkedHashMap<>();
 
       List<IMongodConfig> replicaSet1 = new ArrayList<>();
-      replicaSet1.add(crateIMongodConfig(MONGOD_1_PORT, false,
-          REPLICA_SET_1_NAME));
-      replicaSet1.add(crateIMongodConfig(MONGOD_2_PORT, false,
-          REPLICA_SET_1_NAME));
-      replicaSet1.add(crateIMongodConfig(MONGOD_3_PORT, false,
-          REPLICA_SET_1_NAME));
+      replicaSet1.add(crateIMongodConfig(MONGOD_1_PORT, false, REPLICA_SET_1_NAME));
+      replicaSet1.add(crateIMongodConfig(MONGOD_2_PORT, false, REPLICA_SET_1_NAME));
+      replicaSet1.add(crateIMongodConfig(MONGOD_3_PORT, false, REPLICA_SET_1_NAME));
+
       List<IMongodConfig> replicaSet2 = new ArrayList<>();
-      replicaSet2.add(crateIMongodConfig(MONGOD_4_PORT, false,
-          REPLICA_SET_2_NAME));
-      replicaSet2.add(crateIMongodConfig(MONGOD_5_PORT, false,
-          REPLICA_SET_2_NAME));
-      replicaSet2.add(crateIMongodConfig(MONGOD_6_PORT, false,
-          REPLICA_SET_2_NAME));
+      replicaSet2.add(crateIMongodConfig(MONGOD_4_PORT, false, REPLICA_SET_2_NAME));
+      replicaSet2.add(crateIMongodConfig(MONGOD_5_PORT, false, REPLICA_SET_2_NAME));
+      replicaSet2.add(crateIMongodConfig(MONGOD_6_PORT, false, REPLICA_SET_2_NAME));
 
       replicaSets.put(CONFIG_REPLICA_SET, configServers);
       replicaSets.put(REPLICA_SET_1_NAME, replicaSet1);
       replicaSets.put(REPLICA_SET_2_NAME, replicaSet2);
 
-      // create mongos
+      // create mongo shards
       IMongosConfig mongosConfig = createIMongosConfig();
-      mongosTestFactory = new MongosSystemForTestFactory(mongosConfig,
-          replicaSets, Lists.newArrayList(), EMPLOYEE_DB, EMPINFO_COLLECTION,
-          "employee_id");
+      mongosTestFactory = new MongosSystemForTestFactory(mongosConfig, replicaSets, Lists.newArrayList(),
+          EMPLOYEE_DB, EMPINFO_COLLECTION,"employee_id");
       try {
         mongosTestFactory.start();
         mongoClient = (MongoClient) mongosTestFactory.getMongo();
       } catch (Throwable e) {
-        logger.error(" Error while starting shrded cluster. ", e);
-        throw new Exception(" Error while starting shrded cluster. ", e);
+        logger.error(" Error while starting sharded cluster. ", e);
+        throw new Exception(" Error while starting sharded cluster. ", e);
       }
       createDbAndCollections(DONUTS_DB, DONUTS_COLLECTION, "id");
       createDbAndCollections(EMPLOYEE_DB, EMPTY_COLLECTION, "field_2");
       createDbAndCollections(DATATYPE_DB, DATATYPE_COLLECTION, "_id");
+
+      // the way how it work: client -> router(mongos) -> Shard1 ... ShardN
+      return String.format("mongodb://%s:%s", LOCALHOST, MONGOS_PORT);
     }
 
-    private static IMongodConfig crateConfigServerConfig(int configServerPort) throws UnknownHostException, IOException {
+    private static IMongodConfig crateConfigServerConfig(int configServerPort) throws IOException {
       IMongoCmdOptions cmdOptions = new MongoCmdOptionsBuilder()
         .useNoPrealloc(false)
         .useSmallFiles(false)
@@ -157,9 +147,8 @@ public class MongoTestSuit implements MongoTestConstants {
       return mongodConfig;
     }
 
-    private static IMongodConfig crateIMongodConfig(int mongodPort,
-        boolean flag, String replicaName) throws UnknownHostException,
-        IOException {
+    private static IMongodConfig crateIMongodConfig(int mongodPort, boolean flag, String replicaName)
+        throws IOException {
       IMongoCmdOptions cmdOptions = new MongoCmdOptionsBuilder()
         .useNoPrealloc(false)
         .useSmallFiles(false)
@@ -179,8 +168,7 @@ public class MongoTestSuit implements MongoTestConstants {
       return mongodConfig;
     }
 
-    private static IMongosConfig createIMongosConfig()
-        throws UnknownHostException, IOException {
+    private static IMongosConfig createIMongosConfig() throws IOException {
       IMongoCmdOptions cmdOptions = new MongoCmdOptionsBuilder()
         .useNoPrealloc(false)
         .useSmallFiles(false)
@@ -208,7 +196,6 @@ public class MongoTestSuit implements MongoTestConstants {
           }
       }
     }
-
   }
 
   private static class SingleMode {
@@ -216,7 +203,7 @@ public class MongoTestSuit implements MongoTestConstants {
     private static MongodExecutable mongodExecutable;
     private static MongodProcess mongod;
 
-    private static void setup() throws UnknownHostException, IOException {
+    private static String setup() throws IOException {
       IMongoCmdOptions cmdOptions = new MongoCmdOptionsBuilder().verbose(false)
           .enableAuth(authEnabled).build();
 
@@ -235,6 +222,8 @@ public class MongoTestSuit implements MongoTestConstants {
       createDbAndCollections(EMPLOYEE_DB, SCHEMA_CHANGE_COLLECTION, "field_2");
       createDbAndCollections(EMPLOYEE_DB, EMPTY_COLLECTION, "field_2");
       createDbAndCollections(DATATYPE_DB, DATATYPE_COLLECTION, "_id");
+
+      return String.format("mongodb://%s:%s", LOCALHOST, MONGOS_PORT);
     }
 
     private static void cleanup() {
@@ -253,26 +242,25 @@ public class MongoTestSuit implements MongoTestConstants {
       if (initCount.get() == 0) {
         if (distMode) {
           logger.info("Executing tests in distributed mode");
-          DistributedMode.setup();
+          connectionURL = DistributedMode.setup();
         } else {
           logger.info("Executing tests in single mode");
-          SingleMode.setup();
+          connectionURL = SingleMode.setup();
         }
+        // ToDo DRILL-7269: fix the way how data are imported for the sharded mongo cluster
         TestTableGenerator.importData(EMPLOYEE_DB, EMPINFO_COLLECTION, EMP_DATA);
         TestTableGenerator.importData(EMPLOYEE_DB, SCHEMA_CHANGE_COLLECTION, SCHEMA_CHANGE_DATA);
         TestTableGenerator.importData(DONUTS_DB, DONUTS_COLLECTION, DONUTS_DATA);
         TestTableGenerator.importData(DATATYPE_DB, DATATYPE_COLLECTION, DATATYPE_DATA);
       }
       initCount.incrementAndGet();
-      runningSuite = true;
     }
   }
 
   private static void createDbAndCollections(String dbName,
       String collectionName, String indexFieldName) {
     MongoDatabase db = mongoClient.getDatabase(dbName);
-    MongoCollection<Document> mongoCollection = db
-        .getCollection(collectionName);
+    MongoCollection<Document> mongoCollection = db.getCollection(collectionName);
     if (mongoCollection == null) {
       db.createCollection(collectionName);
       mongoCollection = db.getCollection(collectionName);
@@ -298,9 +286,7 @@ public class MongoTestSuit implements MongoTestConstants {
             mongoClient.dropDatabase(DATATYPE_DB);
             mongoClient.dropDatabase(DONUTS_DB);
           }
-        }
-        finally {
-          runningSuite = false;
+        } finally {
           if (mongoClient != null) {
             mongoClient.close();
           }

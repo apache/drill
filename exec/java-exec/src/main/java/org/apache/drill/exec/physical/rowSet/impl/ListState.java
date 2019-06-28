@@ -26,7 +26,6 @@ import org.apache.drill.exec.physical.rowSet.ResultVectorCache;
 import org.apache.drill.exec.physical.rowSet.impl.SingleVectorState.IsSetVectorState;
 import org.apache.drill.exec.physical.rowSet.impl.SingleVectorState.OffsetVectorState;
 import org.apache.drill.exec.physical.rowSet.impl.UnionState.UnionVectorState;
-import org.apache.drill.exec.physical.rowSet.project.RequestedTuple;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.VariantMetadata;
 import org.apache.drill.exec.record.metadata.VariantSchema;
@@ -40,6 +39,7 @@ import org.apache.drill.exec.vector.accessor.writer.UnionWriterImpl;
 import org.apache.drill.exec.vector.accessor.writer.WriterEvents;
 import org.apache.drill.exec.vector.complex.ListVector;
 import org.apache.drill.exec.vector.complex.UnionVector;
+import org.apache.drill.exec.vector.complex.impl.UnionWriter;
 
 /**
  * Represents the contents of a list vector. A list vector is an odd creature.
@@ -202,9 +202,8 @@ public class ListState extends ContainerState
 
   private final Map<MinorType, ColumnState> columns = new HashMap<>();
 
-  public ListState(LoaderInternals loader, ResultVectorCache vectorCache,
-      RequestedTuple projectionSet) {
-    super(loader, vectorCache, projectionSet);
+  public ListState(LoaderInternals loader, ResultVectorCache vectorCache) {
+    super(loader, vectorCache);
   }
 
   public VariantMetadata variantSchema() {

@@ -240,7 +240,6 @@ public class DistributedQueryQueue implements QueryQueue {
    * queue
    */
 
-  @SuppressWarnings("resource")
   @Override
   public QueueLease enqueue(QueryId queryId, double cost) throws QueryQueueException, QueueTimeoutException {
     final String queueName;

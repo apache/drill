@@ -136,6 +136,7 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
     pop.addUnnestBatch(this);
     // get the output batch size from config.
     int configuredBatchSize = (int) context.getOptions().getOption(ExecConstants.OUTPUT_BATCH_SIZE_VALIDATOR);
+    RecordBatchStats.printConfiguredBatchSize(getRecordBatchStatsContext(), configuredBatchSize);
     memoryManager = new UnnestMemoryManager(configuredBatchSize);
     rowIdColumnName = pop.getImplicitColumn();
   }
@@ -145,6 +146,7 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
     return recordCount;
   }
 
+  @Override
   protected void killIncoming(boolean sendUpstream) {
     //
     // In some cases we need to return a predetermined state from a call to next. These are:
@@ -246,7 +248,6 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
     return this.container;
   }
 
-  @SuppressWarnings("resource")
   private void setUnnestVector() {
     final MaterializedField field = incoming.getSchema().getColumn(unnestTypedFieldId.getFieldIds()[0]);
     final RepeatedValueVector vector;
@@ -268,6 +269,7 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
     unnest.setUnnestField(vector);
   }
 
+  @Override
   protected IterOutcome doWork() {
     Preconditions.checkNotNull(lateral);
     unnest.setOutputCount(memoryManager.getOutputRowCount());
@@ -319,7 +321,6 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
    * the end of one of the other vectors while we are copying the data of the other vectors alongside each new unnested
    * value coming out of the repeated field.)
    */
-  @SuppressWarnings("resource")
   private TransferPair getUnnestFieldTransferPair(FieldReference reference) {
     final int[] typeFieldIds = unnestTypedFieldId.getFieldIds();
     final Class<?> vectorClass = incoming.getSchema().getColumn(typeFieldIds[0]).getValueClass();

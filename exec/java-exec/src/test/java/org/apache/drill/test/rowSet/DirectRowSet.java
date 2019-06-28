@@ -32,6 +32,7 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.selection.SelectionVector2;
+import org.apache.drill.exec.vector.accessor.convert.ColumnConversionFactory;
 import org.apache.drill.test.rowSet.RowSet.ExtendableRowSet;
 import org.apache.drill.test.rowSet.RowSetWriterImpl.WriterIndexImpl;
 
@@ -45,6 +46,10 @@ import java.util.Set;
 public class DirectRowSet extends AbstractSingleRowSet implements ExtendableRowSet {
 
   public static class RowSetWriterBuilder extends BaseWriterBuilder {
+
+    public RowSetWriterBuilder(ColumnConversionFactory conversionFactory) {
+      super(conversionFactory);
+    }
 
     public RowSetWriter buildWriter(DirectRowSet rowSet) {
       WriterIndexImpl index = new WriterIndexImpl();
@@ -100,11 +105,15 @@ public class DirectRowSet extends AbstractSingleRowSet implements ExtendableRowS
 
   @Override
   public RowSetWriter writer(int initialRowCount) {
+    return writer(initialRowCount, null);
+  }
+
+  public RowSetWriter writer(int initialRowCount, ColumnConversionFactory conversionFactory) {
     if (container().hasRecordCount()) {
       throw new IllegalStateException("Row set already contains data");
     }
     allocate(initialRowCount);
-    return new RowSetWriterBuilder().buildWriter(this);
+    return new RowSetWriterBuilder(conversionFactory).buildWriter(this);
   }
 
   @Override

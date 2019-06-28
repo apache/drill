@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.join;
 
-import avro.shaded.com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.drill.categories.OperatorTest;
 import org.apache.drill.common.exceptions.DrillRuntimeException;

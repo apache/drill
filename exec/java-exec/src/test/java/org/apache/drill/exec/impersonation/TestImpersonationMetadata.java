@@ -17,30 +17,30 @@
  */
 package org.apache.drill.exec.impersonation;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import java.util.Map;
 import org.apache.drill.categories.SecurityTest;
+import org.apache.drill.categories.SlowTest;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserRemoteException;
+import org.apache.drill.exec.dotdrill.DotDrillType;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
-import org.apache.drill.categories.SlowTest;
+import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.security.UserGroupInformation;
+import static org.hamcrest.core.StringContains.containsString;
 import org.junit.AfterClass;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
-
-import java.util.Map;
-
-import static org.hamcrest.core.StringContains.containsString;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Tests impersonation on metadata related queries as SHOW FILES, SHOW TABLES, CREATE VIEW, CREATE TABLE and DROP TABLE
@@ -375,6 +375,31 @@ public class TestImpersonationMetadata extends BaseTestImpersonation {
 
     test("SELECT * from " + tableName + ";");
 
+  }
+
+  @Test
+  public void testAnalyzeTable() throws Exception {
+    final String tableName = "nation1_stats";
+    final String tableWS = "drill_test_grp_1_700";
+
+    updateClient(user1);
+    test("USE " + Joiner.on(".").join(MINI_DFS_STORAGE_PLUGIN_NAME, tableWS));
+    test("ALTER SESSION SET `store.format` = 'parquet'");
+    test("CREATE TABLE " + tableName + " AS SELECT * FROM cp.`tpch/nation.parquet`;");
+    test("ANALYZE TABLE " + tableName + " COMPUTE STATISTICS;");
+    test("SELECT * FROM " + tableName + ";");
+
+    final Path statsFilePath = new Path(Path.SEPARATOR + tableWS + Path.SEPARATOR + tableName
+        + Path.SEPARATOR + DotDrillType.STATS.getEnding());
+    assertTrue (fs.exists(statsFilePath) && fs.isDirectory(statsFilePath));
+    FileStatus status = fs.getFileStatus(statsFilePath);
+    // Verify process user is the directory owner
+    assert(processUser.equalsIgnoreCase(status.getOwner()));
+
+    fs.mkdirs(new Path(statsFilePath, "tmp5"));
+
+    test("SELECT * from " + tableName + ";");
+    test("DROP TABLE " + tableName);
   }
 
   @AfterClass

@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.scan.framework;
 
+import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
@@ -50,29 +51,58 @@ import org.apache.drill.exec.vector.ValueVector;
 
 public class SchemaNegotiatorImpl implements SchemaNegotiator {
 
-  protected final AbstractScanFramework<?> basicFramework;
-  private final ShimBatchReader<? extends SchemaNegotiator> shim;
+  public interface NegotiatorListener {
+    ResultSetLoader build(SchemaNegotiatorImpl schemaNegotiator);
+  }
+
+  protected final ManagedScanFramework framework;
+  private NegotiatorListener listener;
+  protected CustomErrorContext context;
   protected TupleMetadata tableSchema;
+  protected boolean isSchemaComplete;
   protected int batchSize = ValueVector.MAX_ROW_COUNT;
 
-  public SchemaNegotiatorImpl(AbstractScanFramework<?> framework, ShimBatchReader<? extends SchemaNegotiator> shim) {
-    basicFramework = framework;
-    this.shim = shim;
+  public SchemaNegotiatorImpl(ManagedScanFramework framework) {
+    this.framework = framework;
+  }
+
+  public void bind(NegotiatorListener listener) {
+    this.listener = listener;
   }
 
   @Override
   public OperatorContext context() {
-    return basicFramework.context();
+    return framework.context();
   }
 
   @Override
-  public void setTableSchema(TupleMetadata schema) {
+  public CustomErrorContext parentErrorContext() {
+    return framework.errorContext();
+  }
+
+  public CustomErrorContext errorContext() {
+    return context;
+  }
+
+  @Override
+  public void setErrorContext(CustomErrorContext context) {
+    this.context = context;
+  }
+
+  @Override
+  public void setTableSchema(TupleMetadata schema, boolean isComplete) {
     tableSchema = schema;
+    this.isSchemaComplete = schema != null && isComplete;
   }
 
   @Override
   public void setBatchSize(int maxRecordsPerBatch) {
     batchSize = maxRecordsPerBatch;
+  }
+
+  @Override
+  public String userName() {
+    return framework.builder.userName;
   }
 
   /**
@@ -90,11 +120,13 @@ public class SchemaNegotiatorImpl implements SchemaNegotiator {
 
     // Build and return the result set loader to be used by the reader.
 
-    return shim.build(this);
+    return listener.build(this);
   }
 
   @Override
   public boolean isProjectionEmpty() {
-    return basicFramework.scanOrchestrator().isProjectNone();
+    return framework.scanOrchestrator().isProjectNone();
   }
+
+  public boolean isSchemaComplete() { return isSchemaComplete; }
 }

@@ -33,8 +33,8 @@
       <!-- Modal content-->
       <div class="modal-content">
         <div class="modal-header modalHeaderAlert">
-          <button type="button" class="close closeX" data-dismiss="modal" style="color:red;font-size:200%">×</button>
-          <h4 class="modal-title"><span class="glyphicon glyphicon-alert" style="font-size:125%"></span><span id="modalHeader" style="font-family:Helvetica Neue,Helvetica,Arial,sans-serif;white-space:pre">~ErrorMessage~ Title</span></h4>
+          <button type="button" class="close closeX" data-dismiss="modal"><span class="glyphicon glyphicon-remove" style="color:red;font-size:125%"></span></button>
+          <h4 class="modal-title"><span class="glyphicon glyphicon-alert" style="font-size:125%">&#xe209;</span><span id="modalHeader" style="font-family:Helvetica Neue,Helvetica,Arial,sans-serif;white-space:pre">~ErrorMessage~ Title</span></h4>
         </div>
         <div class="modal-body" id="modalBody" style="line-height:3">
         ~ErrorMessage Details~
@@ -62,12 +62,21 @@
         var inputValuesKeys = Object.keys(inputValues);
         for (i=0; i<inputValuesKeys.length; ++i) {
             let currKey=inputValuesKeys[i];
-            updatedHtml=updatedHtml.replace(currKey, inputValues[currKey]);
+            updatedHtml=updatedHtml.replace(currKey, escapeHtml(inputValues[currKey]));
         }
         modalBody.innerHTML=updatedHtml;
       }
       //Show Alert
       $('#errorModal').modal('show');
+    }
+
+    function escapeHtml(str) {
+        return str.replace(/&/g,'&amp;')
+            .replace(/</g,'&lt;')
+            .replace(/>/g,'&gt;')
+            .replace(/"/g,'&quot;')
+            .replace(/'/g,'&#x27;')
+            .replace(/\//g,'&#x2F;');
     }
 
     //Map of error messages to populate the alert modal

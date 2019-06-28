@@ -18,6 +18,7 @@
 package org.apache.drill.exec.physical.impl.scan.project;
 
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
 
 /**
  * Column that matches one provided by the table. Provides the data type
@@ -30,10 +31,8 @@ import org.apache.drill.exec.record.MaterializedField;
 
 public class ResolvedTableColumn extends ResolvedColumn {
 
-  public static final int ID = 3;
-
-  public final String projectedName;
-  public final MaterializedField schema;
+  private final String projectedName;
+  private final MaterializedField schema;
 
   public ResolvedTableColumn(String projectedName,
       MaterializedField schema,
@@ -43,14 +42,18 @@ public class ResolvedTableColumn extends ResolvedColumn {
     this.schema = schema;
   }
 
+  public ResolvedTableColumn(ColumnMetadata outputCol,
+      VectorSource source, int sourceIndex) {
+    super(outputCol, source, sourceIndex);
+    this.projectedName = outputCol.name();
+    this.schema = outputCol.schema();
+  }
+
   @Override
   public String name() { return projectedName; }
 
   @Override
   public MaterializedField schema() { return schema; }
-
-  @Override
-  public int nodeType() { return ID; }
 
   @Override
   public String toString() {

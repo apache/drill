@@ -17,30 +17,32 @@
  */
 package org.apache.drill.exec.planner.common;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-
-import org.apache.calcite.rel.core.CorrelationId;
-import org.apache.calcite.rel.metadata.RelMetadataQuery;
-import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.expr.holders.IntHolder;
-import org.apache.drill.exec.planner.cost.DrillCostBase;
-import org.apache.drill.exec.physical.impl.join.JoinUtils;
-import org.apache.drill.exec.physical.impl.join.JoinUtils.JoinCategory;
-import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
-import org.apache.drill.exec.planner.logical.DrillJoin;
-import org.apache.drill.exec.planner.physical.PrelUtil;
-import org.apache.calcite.rel.core.Join;
-import org.apache.calcite.rel.core.JoinRelType;
-import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptCost;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.CorrelationId;
+import org.apache.calcite.rel.core.Join;
+import org.apache.calcite.rel.core.JoinRelType;
+import org.apache.calcite.rel.logical.LogicalJoin;
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexNode;
-
+import org.apache.calcite.util.ImmutableBitSet;
+import org.apache.calcite.util.Pair;
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.expr.holders.IntHolder;
+import org.apache.drill.exec.physical.impl.join.JoinUtils;
+import org.apache.drill.exec.physical.impl.join.JoinUtils.JoinCategory;
+import org.apache.drill.exec.planner.cost.DrillCostBase;
+import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
+import org.apache.drill.exec.planner.logical.DrillJoin;
+import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 /**
@@ -100,9 +102,40 @@ public abstract class DrillJoinRelBase extends Join implements DrillJoin {
   public double estimateRowCount(RelMetadataQuery mq) {
     if (this.condition.isAlwaysTrue()) {
       return joinRowFactor * this.getLeft().estimateRowCount(mq) * this.getRight().estimateRowCount(mq);
-    } else {
-      return joinRowFactor * Math.max(this.getLeft().estimateRowCount(mq), this.getRight().estimateRowCount(mq));
     }
+
+    LogicalJoin jr = LogicalJoin.create(this.getLeft(), this.getRight(), this.getCondition(),
+            this.getVariablesSet(), this.getJoinType());
+
+    if (!DrillRelOptUtil.guessRows(this)         //Statistics present for left and right side of the join
+        && jr.getJoinType() == JoinRelType.INNER) {
+      List<Pair<Integer, Integer>> joinConditions = DrillRelOptUtil.analyzeSimpleEquiJoin((Join)jr);
+      if (joinConditions.size() > 0) {
+        List<Integer> leftSide =  new ArrayList<>();
+        List<Integer> rightSide = new ArrayList<>();
+        for (Pair<Integer, Integer> condition : joinConditions) {
+          leftSide.add(condition.left);
+          rightSide.add(condition.right);
+        }
+        ImmutableBitSet leq = ImmutableBitSet.of(leftSide);
+        ImmutableBitSet req = ImmutableBitSet.of(rightSide);
+
+        Double ldrc = mq.getDistinctRowCount(this.getLeft(), leq, null);
+        Double rdrc = mq.getDistinctRowCount(this.getRight(), req, null);
+
+        Double lrc = mq.getRowCount(this.getLeft());
+        Double rrc = mq.getRowCount(this.getRight());
+
+        if (ldrc != null && rdrc != null && lrc != null && rrc != null) {
+          // Join cardinality = (lrc * rrc) / Math.max(ldrc, rdrc). Avoid overflow by dividing earlier
+          return (lrc / Math.max(ldrc, rdrc)) * rrc;
+        }
+      }
+    }
+
+    return joinRowFactor * Math.max(
+        mq.getRowCount(this.getLeft()),
+        mq.getRowCount(this.getRight()));
   }
 
   /**

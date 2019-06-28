@@ -25,6 +25,8 @@ import org.apache.drill.exec.vector.accessor.ObjectWriter;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
 import org.apache.drill.exec.vector.accessor.VariantWriter;
+import org.apache.drill.exec.vector.accessor.convert.AbstractWriteConverter;
+import org.apache.drill.exec.vector.accessor.convert.ColumnConversionFactory;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
 
 /**
@@ -58,6 +60,7 @@ public abstract class AbstractObjectWriter implements ObjectWriter {
   }
 
   public abstract ColumnWriter writer();
+
   @Override
   public abstract WriterEvents events();
 
@@ -76,5 +79,18 @@ public abstract class AbstractObjectWriter implements ObjectWriter {
   @Override
   public void setObject(Object value) { writer().setObject(value); }
 
+  @Override
+  public boolean isProjected() { return writer().isProjected(); }
+
   public abstract void dump(HierarchicalFormatter format);
+
+  protected static ScalarWriter convertWriter(
+      ColumnConversionFactory conversionFactory,
+      ScalarWriter baseWriter) {
+    if (conversionFactory == null) {
+      return baseWriter;
+    }
+    final AbstractWriteConverter shim = conversionFactory.newWriter(baseWriter);
+    return shim == null ? baseWriter : shim;
+  }
 }

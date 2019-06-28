@@ -1,9 +1,9 @@
 {
   "storage":{
-    mongo : {
-      type:"mongo",
-      connection:"mongodb://localhost:27017/",
-      enabled: false
+    "mongo" : {
+      "type":"mongo",
+      "connection":"mongodb://localhost:27017/",
+      "enabled": false
     }
   }
 }

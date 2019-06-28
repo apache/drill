@@ -162,7 +162,6 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
   }
 
 
-  @SuppressWarnings("resource")
   private boolean saveSamples() throws SchemaChangeException, ClassTransformationException, IOException {
     recordsSampled = 0;
     IterOutcome upstream;
@@ -340,7 +339,6 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
 
     // Get all samples from distributed map
 
-    @SuppressWarnings("resource")
     SortRecordBatchBuilder containerBuilder = new SortRecordBatchBuilder(context.getAllocator());
     final VectorContainer allSamplesContainer = new VectorContainer();
     final VectorContainer candidatePartitionTable = new VectorContainer();
@@ -359,7 +357,6 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
       }
 
       // sort the data incoming samples.
-      @SuppressWarnings("resource")
       SelectionVector4 newSv4 = containerBuilder.getSv4();
       Sorter sorter = SortBatch.createNewSorter(context, orderDefs, allSamplesContainer);
       sorter.setup(context, newSv4, allSamplesContainer);
@@ -388,7 +385,6 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
         }
       }
       candidatePartitionTable.setRecordCount(copier.getOutputRecords());
-      @SuppressWarnings("resource")
       WritableBatch batch = WritableBatch.getBatchNoHVWrap(candidatePartitionTable.getRecordCount(), candidatePartitionTable, false);
       wrap = new CachedVectorContainer(batch, context.getAllocator());
       tableMap.putIfAbsent(mapKey + "final", wrap, 1, TimeUnit.MINUTES);
@@ -439,7 +435,6 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
             "Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
       }
 
-      @SuppressWarnings("resource")
       ValueVector vector = TypeHelper.getNewVector(outputField, oContext.getAllocator());
       localAllocationVectors.add(vector);
       TypedFieldId fid = outgoing.add(vector);

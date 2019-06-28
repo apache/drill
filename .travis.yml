@@ -25,15 +25,26 @@ jdk:
 cache:
   directories:
   - "$HOME/.m2"
+  - "$HOME/protobuf"
 before_install:
   - git fetch --unshallow
   # Install libraries required for protobuf generation
   - |
     if [ $PHASE = "build_checkstyle_protobuf" ]; then \
-      sudo apt-get install -y libboost-all-dev libzookeeper-mt-dev libsasl2-dev cmake libcppunit-dev && \
-      pushd .. && wget https://github.com/google/protobuf/releases/download/v2.5.0/protobuf-2.5.0.tar.gz && \
-      tar -xzvf protobuf-2.5.0.tar.gz && \
-      pushd protobuf-2.5.0 && ./configure --prefix=/usr && make && sudo make install && popd && popd; \
+      sudo apt-get install -y libboost-all-dev libzookeeper-mt-dev libsasl2-dev cmake libcppunit-dev checkinstall && \
+      pushd .. && \
+      if [ -f $HOME/protobuf/protobuf_3.6.1* ]; then \
+        sudo dpkg -i $HOME/protobuf/protobuf_3.6.1*; \
+      else \
+        wget https://github.com/protocolbuffers/protobuf/releases/download/v3.6.1/protobuf-java-3.6.1.zip && \
+        unzip protobuf-java-3.6.1.zip && pushd protobuf-3.6.1 && \
+        ./configure && sudo make && sudo checkinstall -y && \
+        if [ ! -d $HOME/protobuf ]; then \
+          mkdir -p $HOME/protobuf; \
+        fi && \
+        mv protobuf_3.6.1* $HOME/protobuf/ && popd; \
+      fi && \
+      sudo ldconfig && popd; \
     fi
 install:
   # For tests phase runs unit tests
@@ -42,7 +53,7 @@ install:
     if [ $PHASE = "tests" ]; then \
       mvn install --batch-mode -DexcludedGroups="org.apache.drill.categories.SlowTest,org.apache.drill.categories.UnlikelyTest,org.apache.drill.categories.SecurityTest" -DforkCount=1 -DmemoryMb=2560 -DdirectMemoryMb=4608 -Ptravis; \
     elif [ $PHASE = "build_checkstyle_protobuf" ]; then \
-      MAVEN_OPTS="-Xms1G -Xmx1G" mvn install --batch-mode -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn -DskipTests=true -Dmaven.javadoc.skip=true -Dmaven.source.skip=true && \
+      MAVEN_OPTS="-Xms1G -Xmx1G" mvn install -Drat.skip=false -Dlicense.skip=false --batch-mode -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn -DskipTests=true -Dmaven.javadoc.skip=true -Dmaven.source.skip=true && \
       pushd protocol && mvn process-sources -P proto-compile && popd && \
       mkdir contrib/native/client/build && pushd contrib/native/client/build && cmake -G "Unix Makefiles" .. && make cpProtobufs && popd; \
     fi

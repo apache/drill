@@ -22,25 +22,94 @@ import static org.junit.Assert.fail;
 
 import java.util.List;
 
+import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.impl.scan.columns.ColumnsArrayManager;
 import org.apache.drill.exec.physical.impl.scan.file.FileMetadataManager;
+import org.apache.drill.exec.physical.impl.scan.file.FileMetadataManager.FileMetadataOptions;
+import org.apache.drill.exec.physical.impl.scan.project.ReaderSchemaOrchestrator;
 import org.apache.drill.exec.physical.impl.scan.project.ScanSchemaOrchestrator;
-import org.apache.drill.exec.physical.impl.scan.project.ScanSchemaOrchestrator.ReaderSchemaOrchestrator;
+import org.apache.drill.exec.physical.impl.scan.project.ScanSchemaOrchestrator.ScanOrchestratorBuilder;
 import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
 import org.apache.drill.exec.physical.rowSet.impl.RowSetTestUtils;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
-import org.apache.drill.test.rowSet.RowSetComparison;
+import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.apache.hadoop.fs.Path;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+/**
+ * Test the "columns" array mechanism integrated with the scan schema
+ * orchestrator including simulating reading data.
+ */
 
+@Category(RowSetTests.class)
 public class TestColumnsArray extends SubOperatorTest {
+
+  private static class MockScanner {
+    ScanSchemaOrchestrator scanner;
+    ReaderSchemaOrchestrator reader;
+    ResultSetLoader loader;
+  }
+
+  private FileMetadataOptions standardOptions(Path filePath) {
+    FileMetadataOptions options = new FileMetadataOptions();
+    options.useLegacyWildcardExpansion(false); // Don't expand partition columns for wildcard
+    options.setSelectionRoot(new Path("hdfs:///w"));
+    options.setFiles(Lists.newArrayList(filePath));
+    return options;
+  }
+
+  private MockScanner buildScanner(List<SchemaPath> projList) {
+
+    MockScanner mock = new MockScanner();
+
+    // Set up the file metadata manager
+
+    Path filePath = new Path("hdfs:///w/x/y/z.csv");
+    FileMetadataManager metadataManager = new FileMetadataManager(
+        fixture.getOptionManager(),
+        standardOptions(filePath));
+
+    // ...and the columns array manager
+
+    ColumnsArrayManager colsManager = new ColumnsArrayManager(false);
+
+    // Configure the schema orchestrator
+
+    ScanOrchestratorBuilder builder = new ScanOrchestratorBuilder();
+    builder.withMetadata(metadataManager);
+    builder.addParser(colsManager.projectionParser());
+    builder.addResolver(colsManager.resolver());
+
+    // SELECT <proj list> ...
+
+    builder.setProjection(projList);
+    mock.scanner = new ScanSchemaOrchestrator(fixture.allocator(), builder);
+
+    // FROM z.csv
+
+    metadataManager.startFile(filePath);
+    mock.reader = mock.scanner.startReader();
+
+    // Table schema (columns: VARCHAR[])
+
+    TupleMetadata tableSchema = new SchemaBuilder()
+        .addArray(ColumnsArrayManager.COLUMNS_COL, MinorType.VARCHAR)
+        .buildSchema();
+
+    mock.loader = mock.reader.makeTableLoader(tableSchema);
+
+    // First empty batch
+
+    mock.reader.defineSchema();
+    return mock;
+  }
 
   /**
    * Test columns array. The table must be able to support it by having a
@@ -50,43 +119,9 @@ public class TestColumnsArray extends SubOperatorTest {
   @Test
   public void testColumnsArray() {
 
-    // Set up the file metadata manager
-
-    Path filePath = new Path("hdfs:///w/x/y/z.csv");
-    FileMetadataManager metadataManager = new FileMetadataManager(
-        fixture.getOptionManager(),
-        new Path("hdfs:///w"),
-        Lists.newArrayList(filePath));
-
-    // ...and the columns array manager
-
-    ColumnsArrayManager colsManager = new ColumnsArrayManager(false);
-
-    // Configure the schema orchestrator
-
-    ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator());
-    scanner.withMetadata(metadataManager);
-    scanner.addParser(colsManager.projectionParser());
-    scanner.addResolver(colsManager.resolver());
-
-    // SELECT filename, columns, dir0 ...
-
-    scanner.build(RowSetTestUtils.projectList(ScanTestUtils.FILE_NAME_COL,
+    MockScanner mock = buildScanner(RowSetTestUtils.projectList(ScanTestUtils.FILE_NAME_COL,
         ColumnsArrayManager.COLUMNS_COL,
         ScanTestUtils.partitionColName(0)));
-
-    // FROM z.csv
-
-    metadataManager.startFile(filePath);
-    ReaderSchemaOrchestrator reader = scanner.startReader();
-
-    // Table schema (columns: VARCHAR[])
-
-    TupleMetadata tableSchema = new SchemaBuilder()
-        .addArray(ColumnsArrayManager.COLUMNS_COL, MinorType.VARCHAR)
-        .buildSchema();
-
-    ResultSetLoader loader = reader.makeTableLoader(tableSchema);
 
     // Verify empty batch.
 
@@ -99,18 +134,18 @@ public class TestColumnsArray extends SubOperatorTest {
       SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
          .build();
 
-      assertNotNull(scanner.output());
-      new RowSetComparison(expected)
-         .verifyAndClearAll(fixture.wrap(scanner.output()));
+      assertNotNull(mock.scanner.output());
+      RowSetUtilities.verify(expected,
+         fixture.wrap(mock.scanner.output()));
     }
 
     // Create a batch of data.
 
-    reader.startBatch();
-    loader.writer()
+    mock.reader.startBatch();
+    mock.loader.writer()
       .addRow(new Object[] {new String[] {"fred", "flintstone"}})
       .addRow(new Object[] {new String[] {"barney", "rubble"}});
-    reader.endBatch();
+    mock. reader.endBatch();
 
     // Verify
 
@@ -120,27 +155,115 @@ public class TestColumnsArray extends SubOperatorTest {
         .addRow("z.csv", new String[] {"barney", "rubble"}, "x")
         .build();
 
-      new RowSetComparison(expected)
-          .verifyAndClearAll(fixture.wrap(scanner.output()));
+      RowSetUtilities.verify(expected,
+          fixture.wrap(mock.scanner.output()));
     }
 
-    scanner.close();
+    mock.scanner.close();
   }
 
-  private ScanSchemaOrchestrator buildScan(List<SchemaPath> cols) {
+  @Test
+  public void testWildcard() {
+
+    MockScanner mock = buildScanner(RowSetTestUtils.projectAll());
+
+    // Verify empty batch.
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .addArray("columns", MinorType.VARCHAR)
+        .buildSchema();
+    {
+      SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
+         .build();
+
+      assertNotNull(mock.scanner.output());
+      RowSetUtilities.verify(expected,
+         fixture.wrap(mock.scanner.output()));
+    }
+
+    // Create a batch of data.
+
+    mock.reader.startBatch();
+    mock.loader.writer()
+      .addRow(new Object[] {new String[] {"fred", "flintstone"}})
+      .addRow(new Object[] {new String[] {"barney", "rubble"}});
+    mock. reader.endBatch();
+
+    // Verify
+
+    {
+      SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
+        .addSingleCol(new String[] {"fred", "flintstone"})
+        .addSingleCol(new String[] {"barney", "rubble"})
+        .build();
+
+      RowSetUtilities.verify(expected,
+          fixture.wrap(mock.scanner.output()));
+    }
+
+    mock.scanner.close();
+  }
+
+  @Test
+  public void testWildcardAndFileMetadata() {
+
+    MockScanner mock = buildScanner(RowSetTestUtils.projectList(
+        ScanTestUtils.FILE_NAME_COL,
+        SchemaPath.DYNAMIC_STAR,
+        ScanTestUtils.partitionColName(0)));
+
+    // Verify empty batch.
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("filename", MinorType.VARCHAR)
+        .addArray("columns", MinorType.VARCHAR)
+        .addNullable("dir0", MinorType.VARCHAR)
+        .buildSchema();
+    {
+      SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
+         .build();
+
+      assertNotNull(mock.scanner.output());
+      RowSetUtilities.verify(expected,
+         fixture.wrap(mock.scanner.output()));
+    }
+
+    // Create a batch of data.
+
+    mock.reader.startBatch();
+    mock.loader.writer()
+      .addRow(new Object[] {new String[] {"fred", "flintstone"}})
+      .addRow(new Object[] {new String[] {"barney", "rubble"}});
+    mock. reader.endBatch();
+
+    // Verify
+
+    {
+      SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
+        .addRow("z.csv", new String[] {"fred", "flintstone"}, "x")
+        .addRow("z.csv", new String[] {"barney", "rubble"}, "x")
+        .build();
+
+      RowSetUtilities.verify(expected,
+          fixture.wrap(mock.scanner.output()));
+    }
+
+    mock.scanner.close();
+  }
+
+  private ScanSchemaOrchestrator buildScan(boolean requireColumns, List<SchemaPath> cols) {
 
     // Set up the columns array manager
 
-    ColumnsArrayManager colsManager = new ColumnsArrayManager(false);
+    ColumnsArrayManager colsManager = new ColumnsArrayManager(requireColumns);
 
     // Configure the schema orchestrator
 
-    ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator());
-    scanner.addParser(colsManager.projectionParser());
-    scanner.addResolver(colsManager.resolver());
-
-    scanner.build(cols);
-    return scanner;
+    ScanOrchestratorBuilder builder = new ScanOrchestratorBuilder();
+    builder.addParser(colsManager.projectionParser());
+    builder.addResolver(colsManager.resolver());
+    builder.setProjection(cols);
+    return new ScanSchemaOrchestrator(fixture.allocator(), builder);
   }
 
   /**
@@ -150,7 +273,7 @@ public class TestColumnsArray extends SubOperatorTest {
 
   @Test
   public void testMissingColumnsColumn() {
-    ScanSchemaOrchestrator scanner = buildScan(
+    ScanSchemaOrchestrator scanner = buildScan(true,
         RowSetTestUtils.projectList(ColumnsArrayManager.COLUMNS_COL));
 
     TupleMetadata tableSchema = new SchemaBuilder()
@@ -160,6 +283,7 @@ public class TestColumnsArray extends SubOperatorTest {
     try {
       ReaderSchemaOrchestrator reader = scanner.startReader();
       reader.makeTableLoader(tableSchema);
+      reader.defineSchema();
       fail();
     } catch (IllegalStateException e) {
       // Expected
@@ -170,7 +294,7 @@ public class TestColumnsArray extends SubOperatorTest {
 
   @Test
   public void testNotRepeated() {
-    ScanSchemaOrchestrator scanner = buildScan(
+    ScanSchemaOrchestrator scanner = buildScan(true,
         RowSetTestUtils.projectList(ColumnsArrayManager.COLUMNS_COL));
 
     TupleMetadata tableSchema = new SchemaBuilder()
@@ -180,11 +304,43 @@ public class TestColumnsArray extends SubOperatorTest {
     try {
       ReaderSchemaOrchestrator reader = scanner.startReader();
       reader.makeTableLoader(tableSchema);
+      reader.defineSchema();
       fail();
     } catch (IllegalStateException e) {
       // Expected
     }
 
+    scanner.close();
+  }
+
+  /**
+   * Verify that if the columns column is not required, that `columns`
+   * is treated like any other column.
+   */
+  @Test
+  public void testReqularCol() {
+    ScanSchemaOrchestrator scanner = buildScan(false,
+        RowSetTestUtils.projectList(ColumnsArrayManager.COLUMNS_COL));
+
+    TupleMetadata tableSchema = new SchemaBuilder()
+        .add(ColumnsArrayManager.COLUMNS_COL, MinorType.VARCHAR)
+        .buildSchema();
+
+    ReaderSchemaOrchestrator reader = scanner.startReader();
+    ResultSetLoader rsLoader = reader.makeTableLoader(tableSchema);
+    reader.defineSchema();
+
+    reader.startBatch();
+    rsLoader.writer()
+      .addRow("fred");
+    reader.endBatch();
+
+    SingleRowSet expected = fixture.rowSetBuilder(tableSchema)
+      .addRow("fred")
+      .build();
+
+    RowSetUtilities.verify(expected,
+        fixture.wrap(scanner.output()));
     scanner.close();
   }
 }

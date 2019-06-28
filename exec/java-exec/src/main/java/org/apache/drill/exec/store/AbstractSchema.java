@@ -23,8 +23,18 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
+import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.exec.planner.logical.DrillTable;
+import org.apache.drill.exec.record.metadata.schema.SchemaProvider;
+import org.apache.drill.exec.record.metadata.schema.SchemaProviderFactory;
+import org.apache.drill.exec.store.table.function.TableParamDef;
+import org.apache.drill.exec.store.table.function.TableSignature;
+import org.apache.drill.exec.store.table.function.WithOptionsTableMacro;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.apache.calcite.linq4j.tree.DefaultExpression;
 import org.apache.calcite.linq4j.tree.Expression;
@@ -38,16 +48,42 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.dotdrill.View;
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
-
 import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer, AutoCloseable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractSchema.class);
 
+  private static final Expression EXPRESSION = new DefaultExpression(Object.class);
+
+  private static final String SCHEMA_PARAMETER_NAME = "schema";
+
+  /**
+   * Schema parameter for table function which creates schema provider based on given parameter value.
+   */
+  private static final TableParamDef SCHEMA_PARAMETER = TableParamDef.optional(
+    SCHEMA_PARAMETER_NAME, String.class, (drillTable, value) -> {
+      if (value == null) {
+        return;
+      }
+
+      SchemaProvider schemaProvider;
+      try {
+        schemaProvider = SchemaProviderFactory.create(String.valueOf(value));
+        // since we path schema here as table parameter
+        // read schema to ensure that schema is valid before query execution
+        schemaProvider.read();
+      } catch (IOException | IllegalArgumentException e) {
+        throw UserException.validationError(e)
+          .message(e.getMessage())
+          .addContext("Schema parameter value [%s]", value)
+          .build(logger);
+      }
+
+      drillTable.getMetadataProviderManager().setSchemaProvider(schemaProvider);
+    });
+
   protected final List<String> schemaPath;
   protected final String name;
-  private static final Expression EXPRESSION = new DefaultExpression(Object.class);
 
   public AbstractSchema(List<String> parentSchemaPath, String name) {
     name = name == null ? null : name.toLowerCase();
@@ -149,6 +185,40 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
   }
 
   /**
+   * Create stats table entry for given <i>tableName</i>.
+   * @param tableName table name
+   * @return instance of create table entry
+   */
+  public CreateTableEntry createStatsTable(String tableName) {
+    throw UserException.unsupportedError()
+        .message("Statistics tables are not supported in schema [%s]", getSchemaPath())
+        .build(logger);
+  }
+
+  /**
+   * Create an append statistics table entry for given <i>tableName</i>. If there is not existing
+   * statistics table, a new one is created.
+   * @param tableName table name
+   * @return instance of create table entry
+   */
+  public CreateTableEntry appendToStatsTable(String tableName) {
+    throw UserException.unsupportedError()
+        .message("Statistics tables are not supported in schema [%s]", getSchemaPath())
+        .build(logger);
+  }
+
+  /**
+   * Get the statistics table for given <i>tableName</i>
+   * @param tableName table name
+   * @return instance of statistics table
+   */
+  public Table getStatsTable(String tableName) {
+    throw UserException.unsupportedError()
+        .message("Statistics tables are not supported in schema [%s]", getSchemaPath())
+        .build(logger);
+  }
+
+  /**
    * Reports whether to show items from this schema in INFORMATION_SCHEMA
    * tables.
    * (Controls ... TODO:  Doc.:  Mention what this typically controls or
@@ -161,9 +231,51 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
     return true;
   }
 
+  /**
+   * For the given table names returns list of acceptable table functions
+   * which are common for all Drill schemas. When overriding this method,
+   * parent functions must be included first to be evaluated first.
+   * If not included, parent functions won't be taken into account when creating table instance.
+   *
+   * @param name table name
+   * @return list of table functions
+   */
   @Override
   public Collection<Function> getFunctions(String name) {
-    return Collections.emptyList();
+    List<TableParamDef> parameters = getFunctionParameters();
+    TableSignature signature = TableSignature.of(name, parameters);
+    WithOptionsTableMacro function = new WithOptionsTableMacro(signature, arguments -> {
+      Table table = getTable(name);
+      if (table instanceof DrillTable) {
+        return applyFunctionParameters((DrillTable) table, parameters, arguments);
+      }
+      throw new DrillRuntimeException(String.format("Table [%s] is not of Drill table instance. " +
+        "Given instance is of [%s].", name, table.getClass().getName()));
+    });
+    return Collections.singletonList(function);
+  }
+
+  /**
+   * Returns of common table function parameters that can be used all Drill schema implementations.
+   *
+   * @return list of table function parameters
+   */
+  public List<TableParamDef> getFunctionParameters() {
+    return Collections.singletonList(SCHEMA_PARAMETER);
+  }
+
+  /**
+   * For the given list of parameters definitions executes action for the corresponding value.
+   *
+   * @param drillTable Drill table instance
+   * @param paramDefs parameter definitions
+   * @param values parameter values
+   * @return updated Drill table instance
+   */
+  public DrillTable applyFunctionParameters(DrillTable drillTable, List<TableParamDef> paramDefs, List<Object> values) {
+    IntStream.range(0, paramDefs.size())
+      .forEach(i -> paramDefs.get(i).apply(drillTable, values.get(i)));
+    return drillTable;
   }
 
   /**
@@ -242,54 +354,29 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
   }
 
   /**
-   * Get the collection of {@link Table} tables specified in the tableNames with bulk-load (if the underlying storage
-   * plugin supports).
-   * It is not guaranteed that the retrieved tables would have RowType and Statistic being fully populated.
-   *
-   * Specifically, calling {@link Table#getRowType(org.apache.calcite.rel.type.RelDataTypeFactory)} or {@link Table#getStatistic()} might incur
-   * {@link UnsupportedOperationException} being thrown.
-   *
-   * @param  tableNames the requested tables, specified by the table names
-   * @return the collection of requested tables
-   */
-  public List<Pair<String, ? extends Table>> getTablesByNamesByBulkLoad(final List<String> tableNames, int bulkSize) {
-    return getTablesByNames(tableNames);
-  }
-
-  /**
    * Get the collection of {@link Table} tables specified in the tableNames.
    *
    * @param  tableNames the requested tables, specified by the table names
    * @return the collection of requested tables
    */
-  public List<Pair<String, ? extends Table>> getTablesByNames(final List<String> tableNames) {
-    final List<Pair<String, ? extends Table>> tables = Lists.newArrayList();
-    for (String tableName : tableNames) {
-      final Table table = getTable(tableName);
-      if (table == null) {
-        // Schema may return NULL for table if the query user doesn't have permissions to load the table. Ignore such
-        // tables as INFO SCHEMA is about showing tables which the use has access to query.
-        continue;
-      }
-      tables.add(Pair.of(tableName, table));
-    }
-    return tables;
+  public List<Pair<String, ? extends Table>> getTablesByNames(final Set<String> tableNames) {
+    return tableNames.stream()
+        .map(tableName -> Pair.of(tableName, getTable(tableName)))
+        .filter(pair -> Objects.nonNull(pair.getValue())) // Schema may return NULL for table if user doesn't have permissions to load the table.
+        .collect(Collectors.toList());
   }
 
-  public List<Pair<String, Schema.TableType>> getTableNamesAndTypes(boolean bulkLoad, int bulkSize) {
-    final List<String> tableNames = Lists.newArrayList(getTableNames());
-    final List<Pair<String, Schema.TableType>> tableNamesAndTypes = Lists.newArrayList();
-    final List<Pair<String, ? extends Table>> tables;
-    if (bulkLoad) {
-      tables = getTablesByNamesByBulkLoad(tableNames, bulkSize);
-    } else {
-      tables = getTablesByNames(tableNames);
-    }
-    for (Pair<String, ? extends Table> table : tables) {
-      tableNamesAndTypes.add(Pair.of(table.getKey(), table.getValue().getJdbcTableType()));
-    }
-
-    return tableNamesAndTypes;
+  /**
+   * Used by {@link org.apache.drill.exec.store.ischema.InfoSchemaRecordGenerator.Tables}
+   * for getting all table objects along with type for every requested schema. It's desired
+   * for this method to work fast because it impacts SHOW TABLES query.
+   *
+   * @return collection of table names and types
+   */
+  public Collection<Map.Entry<String, TableType>> getTableNamesAndTypes() {
+    return getTablesByNames(getTableNames()).stream()
+        .map(nameAndTable -> Pair.of(nameAndTable.getKey(), nameAndTable.getValue().getJdbcTableType()))
+        .collect(Collectors.toList());
   }
 
   /**

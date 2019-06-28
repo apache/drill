@@ -21,26 +21,25 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelOptCost;
+import org.apache.calcite.plan.RelOptPlanner;
+import org.apache.calcite.plan.RelOptTable;
+import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
+import org.apache.calcite.rel.type.RelDataType;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.ScanStats;
+import org.apache.drill.exec.planner.common.DrillScanRelBase;
 import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.apache.drill.exec.planner.fragment.DistributionAffinity;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
-import org.apache.drill.exec.planner.common.DrillScanRelBase;
-import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.RelWriter;
-import org.apache.calcite.plan.RelOptCluster;
-import org.apache.calcite.plan.RelOptCost;
-import org.apache.calcite.plan.RelOptPlanner;
-import org.apache.calcite.plan.RelTraitSet;
-import org.apache.calcite.plan.RelOptTable;
-import org.apache.calcite.rel.type.RelDataType;
 
 public class ScanPrel extends DrillScanRelBase implements Prel, HasDistributionAffinity {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory
@@ -80,6 +79,12 @@ public class ScanPrel extends DrillScanRelBase implements Prel, HasDistributionA
     return creator.addMetadata(this, this.getGroupScan());
   }
 
+  public static ScanPrel create(RelNode old, RelTraitSet traitSets,
+      GroupScan scan, RelDataType rowType) {
+    return new ScanPrel(old.getCluster(), traitSets,
+        getCopy(scan), rowType, old.getTable());
+  }
+
   @Override
   public RelWriter explainTerms(RelWriter pw) {
     return super.explainTerms(pw).item("groupscan", this.getGroupScan().getDigest());
@@ -106,12 +111,12 @@ public class ScanPrel extends DrillScanRelBase implements Prel, HasDistributionA
     final ScanStats stats = this.getGroupScan().getScanStats(settings);
     final int columnCount = this.getRowType().getFieldCount();
 
-    if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
+    if (PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
       return planner.getCostFactory().makeCost(stats.getRecordCount() * columnCount, stats.getCpuCost(), stats.getDiskCost());
     }
 
-    // double rowCount = RelMetadataQuery.getRowCount(this);
-    double rowCount = stats.getRecordCount();
+    double rowCount = mq.getRowCount(this);
+    //double rowCount = stats.getRecordCount();
 
     // As DRILL-4083 points out, when columnCount == 0, cpuCost becomes zero,
     // which makes the costs of HiveScan and HiveDrillNativeParquetScan the same

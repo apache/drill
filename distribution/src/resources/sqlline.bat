@@ -208,7 +208,7 @@ if errorlevel 1 (
   set DRILL_SHELL_JAVA_OPTS=%DRILL_SHELL_JAVA_OPTS% --illegal-access=permit
 )
 
-set SQLLINE_CALL=sqlline.SqlLine -ac org.apache.drill.exec.client.DrillSqlLineApplication -d org.apache.drill.jdbc.Driver
+set SQLLINE_CALL=sqlline.SqlLine -ac org.apache.drill.exec.client.DrillSqlLineApplication
 if NOT "test%QUERY%"=="test" (
   "%JAVA_CMD%" %DRILL_SHELL_JAVA_OPTS% %DRILL_JAVA_OPTS% -cp "%DRILL_CP%" %SQLLINE_CALL% %DRILL_ARGS% -e "%QUERY%"
 ) else (

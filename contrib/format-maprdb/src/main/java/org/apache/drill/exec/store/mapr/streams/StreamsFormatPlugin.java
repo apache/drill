@@ -26,14 +26,17 @@ import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.AbstractWriter;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.planner.common.DrillStatsTable;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.store.dfs.FormatMatcher;
 import org.apache.drill.exec.store.mapr.TableFormatPlugin;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 
 public class StreamsFormatPlugin extends TableFormatPlugin {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StreamsFormatPlugin.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StreamsFormatPlugin.class);
   private StreamsFormatMatcher matcher;
 
   public StreamsFormatPlugin(String name, DrillbitContext context, Configuration fsConf,
@@ -69,12 +72,25 @@ public class StreamsFormatPlugin extends TableFormatPlugin {
   }
 
   @Override
-  public AbstractGroupScan getGroupScan(String userName, FileSelection selection,
-      List<SchemaPath> columns) throws IOException {
-    List<String> files = selection.getFiles();
+  public AbstractGroupScan getGroupScan(String userName, FileSelection selection, List<SchemaPath> columns) {
+    List<Path> files = selection.getFiles();
     assert (files.size() == 1);
     //TableProperties props = getMaprFS().getTableProperties(new Path(files.get(0)));
     throw UserException.unsupportedError().message("MapR streams can not be querried at this time.").build(logger);
   }
 
+  @Override
+  public boolean supportsStatistics() {
+    return false;
+  }
+
+  @Override
+  public DrillStatsTable.TableStatistics readStatistics(FileSystem fs, Path statsTablePath) {
+    throw new UnsupportedOperationException("unimplemented");
+  }
+
+  @Override
+  public void writeStatistics(DrillStatsTable.TableStatistics statistics, FileSystem fs, Path statsTablePath) {
+    throw new UnsupportedOperationException("unimplemented");
+  }
 }

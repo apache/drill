@@ -20,9 +20,9 @@ package org.apache.drill.exec.physical.rowSet.project;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.drill.common.expression.PathSegment.NameSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.rowSet.project.RequestedTuple.RequestedColumn;
-import org.apache.drill.exec.record.metadata.ProjectionType;
 
 /**
  * Represents one name element. Like a {@link NameSegment}, except that this
@@ -52,6 +52,12 @@ public class RequestedColumnImpl implements RequestedColumn {
     setType();
   }
 
+  public RequestedColumnImpl(RequestedTuple parent, String name, ProjectionType type) {
+    this.parent = parent;
+    this.name = name;
+    this.type = type;
+  }
+
   @Override
   public String name() { return name; }
   @Override
@@ -59,17 +65,13 @@ public class RequestedColumnImpl implements RequestedColumn {
   @Override
   public boolean isWildcard() { return type == ProjectionType.WILDCARD; }
   @Override
-  public boolean isSimple() { return type == ProjectionType.UNSPECIFIED; }
+  public boolean isSimple() { return type == ProjectionType.GENERAL; }
 
   @Override
-  public boolean isArray() {
-    return type == ProjectionType.ARRAY || type == ProjectionType.TUPLE_ARRAY;
-  }
+  public boolean isArray() { return type.isArray(); }
 
   @Override
-  public boolean isTuple() {
-    return type == ProjectionType.TUPLE || type == ProjectionType.TUPLE_ARRAY;
-  }
+  public boolean isTuple() { return type.isTuple(); }
 
   public RequestedTuple asTuple() {
     if (members == null) {
@@ -155,7 +157,7 @@ public class RequestedColumnImpl implements RequestedColumn {
     } else if (members != null) {
       type = ProjectionType.TUPLE;
     } else {
-      type = ProjectionType.UNSPECIFIED;
+      type = ProjectionType.GENERAL;
     }
   }
 
@@ -188,6 +190,24 @@ public class RequestedColumnImpl implements RequestedColumn {
   }
 
   @Override
+  public RequestedTuple mapProjection() {
+    switch (type) {
+    case ARRAY:
+    case GENERAL:
+      // Don't know if the target is a tuple or not.
+
+      return ImpliedTupleRequest.ALL_MEMBERS;
+    case TUPLE:
+    case TUPLE_ARRAY:
+      return members == null ? ImpliedTupleRequest.ALL_MEMBERS : members;
+    case UNPROJECTED:
+      return ImpliedTupleRequest.NO_MEMBERS;
+    default:
+      return null;
+    }
+  }
+
+  @Override
   public String toString() {
     final StringBuilder buf = new StringBuilder();
     buf
@@ -210,7 +230,4 @@ public class RequestedColumnImpl implements RequestedColumn {
     buf.append("]");
     return buf.toString();
   }
-
-  @Override
-  public RequestedTuple mapProjection() { return members; }
 }

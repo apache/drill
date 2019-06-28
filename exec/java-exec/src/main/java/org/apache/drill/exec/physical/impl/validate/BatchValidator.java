@@ -124,14 +124,13 @@ public class BatchValidator {
     if (vector instanceof RepeatedVarCharVector) {
       dataLength = ((RepeatedVarCharVector) vector).getOffsetVector().getValueCapacity();
     } else if (vector instanceof RepeatedFixedWidthVectorLike) {
-      dataLength = ((BaseDataValueVector) ((BaseRepeatedValueVector) vector).getDataVector()).getBuffer().capacity();
+      dataLength = ((BaseDataValueVector) vector.getDataVector()).getBuffer().capacity();
     }
     int itemCount = validateOffsetVector(name + "-offsets", vector.getOffsetVector(), rowCount, dataLength);
 
     // Special handling of repeated VarChar vectors
     // The nested data vectors are not quite exactly like top-level vectors.
 
-    @SuppressWarnings("resource")
     ValueVector dataVector = vector.getDataVector();
     if (dataVector instanceof VariableWidthVector) {
       validateVariableWidthVector(name + "-data", (VariableWidthVector) dataVector, itemCount);
@@ -187,7 +186,6 @@ public class BatchValidator {
     // Validate a VarChar vector because it is common.
 
     if (vector instanceof NullableVarCharVector) {
-      @SuppressWarnings("resource")
       VarCharVector values = ((NullableVarCharVector) vector).getValuesVector();
       validateVarCharVector(name + "-values", values, rowCount);
     }

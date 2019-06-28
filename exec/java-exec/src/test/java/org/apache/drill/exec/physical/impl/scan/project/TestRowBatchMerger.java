@@ -19,6 +19,7 @@ package org.apache.drill.exec.physical.impl.scan.project;
 
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.physical.impl.scan.project.NullColumnBuilder.NullBuilderBuilder;
 import org.apache.drill.exec.physical.impl.scan.project.ResolvedTuple.ResolvedRow;
 import org.apache.drill.exec.physical.rowSet.ResultVectorCache;
 import org.apache.drill.exec.physical.rowSet.impl.NullResultVectorCacheImpl;
@@ -128,9 +129,6 @@ public class TestRowBatchMerger extends SubOperatorTest {
     public String name() { return null; }
 
     @Override
-    public int nodeType() { return -1; }
-
-    @Override
     public MaterializedField schema() { return null; }
   }
 
@@ -225,7 +223,7 @@ public class TestRowBatchMerger extends SubOperatorTest {
 
     // Create null columns
 
-    NullColumnBuilder builder = new NullColumnBuilder(null, false);
+    NullColumnBuilder builder = new NullBuilderBuilder().build();
 
     ResolvedRow resolvedTuple = new ResolvedRow(builder);
     resolvedTuple.add(new TestProjection(resolvedTuple, 1));
@@ -279,7 +277,7 @@ public class TestRowBatchMerger extends SubOperatorTest {
 
     // Create null columns
 
-    NullColumnBuilder builder = new NullColumnBuilder(null, false);
+    NullColumnBuilder builder = new NullBuilderBuilder().build();
     ResolvedRow resolvedTuple = new ResolvedRow(builder);
     resolvedTuple.add(new TestProjection(resolvedTuple, 1));
 
@@ -359,7 +357,7 @@ public class TestRowBatchMerger extends SubOperatorTest {
 
     // Create mappings
 
-    NullColumnBuilder builder = new NullColumnBuilder(null, false);
+    NullColumnBuilder builder = new NullBuilderBuilder().build();
     ResolvedRow resolvedTuple = new ResolvedRow(builder);
 
     resolvedTuple.add(new TestProjection(resolvedTuple, 0));
@@ -428,7 +426,7 @@ public class TestRowBatchMerger extends SubOperatorTest {
 
     // Create mappings
 
-    NullColumnBuilder builder = new NullColumnBuilder(null, false);
+    NullColumnBuilder builder = new NullBuilderBuilder().build();
     ResolvedRow resolvedTuple = new ResolvedRow(builder);
 
     resolvedTuple.add(new TestProjection(resolvedTuple, 0));

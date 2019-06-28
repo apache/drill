@@ -268,6 +268,9 @@ public class UnionWriterImpl implements VariantWriter, WriterEvents {
   }
 
   @Override
+  public boolean isProjected() { return true; }
+
+  @Override
   public void startWrite() {
     assert state == State.IDLE;
     state = State.IN_WRITE;
