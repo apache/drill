@@ -86,7 +86,8 @@ public class MapRDBFormatMatcher extends TableFormatMatcher {
     dt.setGroupScan(fp.getGroupScan(userName,
         selection,
         null /* columns */,
-        (IndexDesc) ((MapRDBIndexDescriptor) secondaryIndexDesc).getOriginalDesc()));
+        (IndexDesc) ((MapRDBIndexDescriptor) secondaryIndexDesc).getOriginalDesc(),
+        null /* metadataProviderManager */));
 
     return dt;
   }

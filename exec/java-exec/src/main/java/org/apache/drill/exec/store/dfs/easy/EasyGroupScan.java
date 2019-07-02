@@ -90,6 +90,7 @@ public class EasyGroupScan extends AbstractFileGroupScan {
       @JacksonInject StoragePluginRegistry engineRegistry,
       @JsonProperty("columns") List<SchemaPath> columns,
       @JsonProperty("selectionRoot") Path selectionRoot,
+      // TODO: DRILL-7314 - replace TupleSchema with TupleMetadata
       @JsonProperty("schema") TupleSchema schema
       ) throws IOException, ExecutionSetupException {
     super(ImpersonationUtil.resolveUserName(userName));
@@ -271,7 +272,7 @@ public class EasyGroupScan extends AbstractFileGroupScan {
         String.format("MinorFragmentId %d has no read entries assigned", minorFragmentId));
 
     EasySubScan subScan = new EasySubScan(getUserName(), convert(filesForMinor), formatPlugin,
-        columns, selectionRoot, partitionDepth, getTableMetadata().getSchema());
+        columns, selectionRoot, partitionDepth, getSchema());
     subScan.setOperatorId(this.getOperatorId());
     return subScan;
   }
@@ -297,7 +298,7 @@ public class EasyGroupScan extends AbstractFileGroupScan {
   @Override
   public String toString() {
     String pattern = "EasyGroupScan [selectionRoot=%s, numFiles=%s, columns=%s, files=%s, schema=%s]";
-    return String.format(pattern, selectionRoot, getFiles().size(), columns, getFiles(), getTableMetadata().getSchema());
+    return String.format(pattern, selectionRoot, getFiles().size(), columns, getFiles(), getSchema());
   }
 
   @Override

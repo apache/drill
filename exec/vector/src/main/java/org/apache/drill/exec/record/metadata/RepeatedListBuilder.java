@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.record.metadata;
 
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 
@@ -64,6 +65,35 @@ public class RepeatedListBuilder implements SchemaContainer {
     // the vector within the list.
 
     addColumn(MetadataUtils.newScalar(name, type, DataMode.REPEATED));
+    return this;
+  }
+
+  public RepeatedListBuilder addArray(MinorType type, int width) {
+    // Existing code uses the repeated list name as the name of
+    // the vector within the list.
+
+    TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
+        .setMinorType(type)
+        .setMode(DataMode.REPEATED)
+        .setPrecision(width)
+        .build();
+
+    addColumn(MetadataUtils.newScalar(name, majorType));
+    return this;
+  }
+
+  public RepeatedListBuilder addArray(MinorType type, int precision, int scale) {
+    // Existing code uses the repeated list name as the name of
+    // the vector within the list.
+
+    TypeProtos.MajorType majorType = TypeProtos.MajorType.newBuilder()
+        .setMinorType(type)
+        .setMode(DataMode.REPEATED)
+        .setPrecision(precision)
+        .setScale(scale)
+        .build();
+
+    addColumn(MetadataUtils.newScalar(name, majorType));
     return this;
   }
 

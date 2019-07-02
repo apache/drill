@@ -70,45 +70,44 @@ public class HiveToRelDataTypeConverter {
    */
   public RelDataType convertToNullableRelDataType(FieldSchema field) {
     TypeInfo fieldTypeInfo = TypeInfoUtils.getTypeInfoFromTypeString(field.getType());
-    RelDataType relDataType = convertToRelDataType(fieldTypeInfo);
-    return typeFactory.createTypeWithNullability(relDataType, true);
+    return convertToRelDataType(fieldTypeInfo, true);
   }
 
-  private RelDataType convertToRelDataType(TypeInfo typeInfo) {
+  private RelDataType convertToRelDataType(TypeInfo typeInfo, boolean nullable) {
     final Category typeCategory = typeInfo.getCategory();
     switch (typeCategory) {
       case PRIMITIVE:
-        return getRelDataType((PrimitiveTypeInfo) typeInfo);
+        return typeFactory.createTypeWithNullability(getRelDataType((PrimitiveTypeInfo) typeInfo), nullable);
       case LIST:
-        return getRelDataType((ListTypeInfo) typeInfo);
+        return typeFactory.createTypeWithNullability(getRelDataType((ListTypeInfo) typeInfo, nullable), nullable);
       case MAP:
-        return getRelDataType((MapTypeInfo) typeInfo);
+        return typeFactory.createTypeWithNullability(getRelDataType((MapTypeInfo) typeInfo, nullable), nullable);
       case STRUCT:
-        return getRelDataType((StructTypeInfo) typeInfo);
+        return typeFactory.createTypeWithNullability(getRelDataType((StructTypeInfo) typeInfo, nullable), nullable);
       case UNION:
         logger.warn("There is no UNION data type in SQL. Converting it to Sql type OTHER to avoid " +
             "breaking INFORMATION_SCHEMA queries");
-        return typeFactory.createSqlType(SqlTypeName.OTHER);
+        return typeFactory.createTypeWithNullability(typeFactory.createSqlType(SqlTypeName.OTHER), nullable);
     }
     throw new RuntimeException(String.format(UNSUPPORTED_HIVE_DATA_TYPE_ERROR_MSG, typeCategory));
   }
 
-  private RelDataType getRelDataType(StructTypeInfo structTypeInfo) {
+  private RelDataType getRelDataType(StructTypeInfo structTypeInfo, boolean nullable) {
     final List<String> fieldNames = structTypeInfo.getAllStructFieldNames();
     final List<RelDataType> relDataTypes = structTypeInfo.getAllStructFieldTypeInfos().stream()
-        .map(this::convertToRelDataType)
+        .map(typeInfo -> convertToRelDataType(typeInfo, nullable))
         .collect(Collectors.toList());
     return typeFactory.createStructType(relDataTypes, fieldNames);
   }
 
-  private RelDataType getRelDataType(MapTypeInfo mapTypeInfo) {
-    RelDataType keyType = convertToRelDataType(mapTypeInfo.getMapKeyTypeInfo());
-    RelDataType valueType = convertToRelDataType(mapTypeInfo.getMapValueTypeInfo());
+  private RelDataType getRelDataType(MapTypeInfo mapTypeInfo, boolean nullable) {
+    RelDataType keyType = convertToRelDataType(mapTypeInfo.getMapKeyTypeInfo(), nullable);
+    RelDataType valueType = convertToRelDataType(mapTypeInfo.getMapValueTypeInfo(), nullable);
     return typeFactory.createMapType(keyType, valueType);
   }
 
-  private RelDataType getRelDataType(ListTypeInfo listTypeInfo) {
-    RelDataType listElemTypeInfo = convertToRelDataType(listTypeInfo.getListElementTypeInfo());
+  private RelDataType getRelDataType(ListTypeInfo listTypeInfo, boolean nullable) {
+    RelDataType listElemTypeInfo = convertToRelDataType(listTypeInfo.getListElementTypeInfo(), nullable);
     return typeFactory.createArrayType(listElemTypeInfo, -1);
   }
 

@@ -21,13 +21,16 @@ import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
-import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.planner.index.MapRDBStatistics;
 import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.physical.PrelUtil;
+import org.apache.drill.exec.planner.types.HiveToRelDataTypeConverter;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.record.metadata.TupleSchema;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.apache.drill.exec.store.hive.HiveMetadataProvider;
 import org.apache.drill.exec.store.hive.HiveReadEntry;
@@ -37,9 +40,11 @@ import org.apache.drill.exec.store.mapr.db.MapRDBFormatPlugin;
 import org.apache.drill.exec.store.mapr.db.MapRDBFormatPluginConfig;
 import org.apache.drill.exec.store.mapr.db.json.JsonScanSpec;
 import org.apache.drill.exec.store.mapr.db.json.JsonTableGroupScan;
+import org.apache.drill.metastore.FileSystemMetadataProviderManager;
 import org.apache.hadoop.hive.maprdb.json.input.HiveMapRDBJsonInputFormat;
 import org.ojai.DocumentConstants;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -105,7 +110,7 @@ public class ConvertHiveMapRDBJsonScanToDrillMapRDBJsonScan extends StoragePlugi
         To ensure Drill MapR-DB Json scan will be chosen, reduce Hive scan importance to 0.
        */
       call.getPlanner().setImportance(hiveScanRel, 0.0);
-    } catch (DrillRuntimeException e) {
+    } catch (Exception e) {
       // TODO: Improve error handling after allowing to throw IOException from StoragePlugin.getFormatPlugin()
       logger.warn("Failed to convert HiveScan to JsonScanSpec. Fallback to HiveMapR-DB connector.", e);
     }
@@ -114,27 +119,42 @@ public class ConvertHiveMapRDBJsonScanToDrillMapRDBJsonScan extends StoragePlugi
   /**
    * Helper method which creates a DrillScanRel with native Drill HiveScan.
    */
-  private DrillScanRel createNativeScanRel(DrillScanRel hiveScanRel, PlannerSettings settings) {
+  private DrillScanRel createNativeScanRel(DrillScanRel hiveScanRel, PlannerSettings settings) throws IOException {
     RelDataTypeFactory typeFactory = hiveScanRel.getCluster().getTypeFactory();
     HiveScan hiveScan = (HiveScan) hiveScanRel.getGroupScan();
-    Map<String, String> parameters = hiveScan.getHiveReadEntry().getHiveTableWrapper().getParameters();
+    HiveReadEntry hiveReadEntry = hiveScan.getHiveReadEntry();
+    Map<String, String> parameters = hiveReadEntry.getHiveTableWrapper().getParameters();
 
     JsonScanSpec scanSpec = new JsonScanSpec(parameters.get(MAPRDB_TABLE_NAME), null, null);
     List<SchemaPath> hiveScanCols = hiveScanRel.getColumns().stream()
         .map(colNameSchemaPath -> replaceOverriddenSchemaPath(parameters, colNameSchemaPath))
         .collect(Collectors.toList());
+
+    // creates TupleMetadata based on Hive's schema (with optional data modes) to be used in the reader
+    // for the case when column type wasn't discovered
+    HiveToRelDataTypeConverter dataTypeConverter = new HiveToRelDataTypeConverter(typeFactory);
+    TupleMetadata schema = new TupleSchema();
+    hiveReadEntry.getTable().getColumnListsCache().getTableSchemaColumns()
+        .forEach(column -> schema.addColumn(HiveUtilities.getColumnMetadata(dataTypeConverter, column)));
+
+    MapRDBFormatPluginConfig formatConfig = new MapRDBFormatPluginConfig();
+
+    formatConfig.readTimestampWithZoneOffset =
+        settings.getOptions().getBoolean(ExecConstants.HIVE_READ_MAPRDB_JSON_TIMESTAMP_WITH_TIMEZONE_OFFSET);
+
+    formatConfig.allTextMode = settings.getOptions().getBoolean(ExecConstants.HIVE_MAPRDB_JSON_ALL_TEXT_MODE);
+
     JsonTableGroupScan nativeMapRDBScan =
         new JsonTableGroupScan(
             hiveScan.getUserName(),
             hiveScan.getStoragePlugin(),
             // TODO: We should use Hive format plugins here, once it will be implemented. DRILL-6621
-            (MapRDBFormatPlugin) hiveScan.getStoragePlugin().getFormatPlugin(new MapRDBFormatPluginConfig()),
+            (MapRDBFormatPlugin) hiveScan.getStoragePlugin().getFormatPlugin(formatConfig),
             scanSpec,
-            hiveScanCols
+            hiveScanCols,
+            new MapRDBStatistics(),
+            FileSystemMetadataProviderManager.getMetadataProviderForSchema(schema)
         );
-
-    nativeMapRDBScan.getFormatPlugin().getConfig().readTimestampWithZoneOffset =
-        settings.getOptions().getBoolean(ExecConstants.HIVE_READ_MAPRDB_JSON_TIMESTAMP_WITH_TIMEZONE_OFFSET);
 
     List<String> nativeScanColNames = hiveScanRel.getRowType().getFieldList().stream()
         .map(field -> replaceOverriddenColumnId(parameters, field.getName()))

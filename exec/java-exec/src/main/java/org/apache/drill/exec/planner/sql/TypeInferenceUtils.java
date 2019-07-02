@@ -226,6 +226,39 @@ public class TypeInferenceUtils {
   }
 
   /**
+   * Returns {@link TypeProtos.MajorType} instance which corresponds to specified {@code RelDataType relDataType}
+   * with its nullability, scale and precision if it is available.
+   *
+   * @param relDataType RelDataType to convert
+   * @return {@link TypeProtos.MajorType} instance
+   */
+  public static TypeProtos.MajorType getDrillMajorTypeFromCalciteType(RelDataType relDataType) {
+    final SqlTypeName sqlTypeName = relDataType.getSqlTypeName();
+
+    TypeProtos.MinorType minorType = getDrillTypeFromCalciteType(sqlTypeName);
+    TypeProtos.MajorType.Builder typeBuilder = TypeProtos.MajorType.newBuilder().setMinorType(minorType);
+    switch (minorType) {
+      case VAR16CHAR:
+      case VARCHAR:
+      case VARBINARY:
+      case TIMESTAMP:
+        if (relDataType.getPrecision() > 0) {
+          typeBuilder.setPrecision(relDataType.getPrecision());
+        }
+        break;
+      case VARDECIMAL:
+        typeBuilder.setPrecision(relDataType.getPrecision());
+        typeBuilder.setScale(relDataType.getScale());
+    }
+    if (relDataType.isNullable()) {
+      typeBuilder.setMode(TypeProtos.DataMode.OPTIONAL);
+    } else {
+      typeBuilder.setMode(TypeProtos.DataMode.REQUIRED);
+    }
+    return typeBuilder.build();
+  }
+
+  /**
    * Given a Calcite's SqlTypeName, return a Drill's corresponding TypeProtos.MinorType
    */
   public static TypeProtos.MinorType getDrillTypeFromCalciteType(final SqlTypeName sqlTypeName) {

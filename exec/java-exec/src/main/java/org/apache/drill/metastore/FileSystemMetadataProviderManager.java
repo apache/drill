@@ -18,10 +18,13 @@
 package org.apache.drill.metastore;
 
 import org.apache.drill.exec.planner.common.DrillStatsTable;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.metadata.schema.SchemaProvider;
 import org.apache.drill.exec.store.parquet.ParquetTableMetadataProviderImpl;
 import org.apache.drill.metastore.metadata.TableMetadataProvider;
 import org.apache.drill.metastore.metadata.TableMetadataProviderBuilder;
+
+import java.io.IOException;
 
 /**
  * Implementation of {@link MetadataProviderManager} which uses file system providers and returns
@@ -36,6 +39,34 @@ public class FileSystemMetadataProviderManager implements MetadataProviderManage
 
   public static MetadataProviderManager init() {
     return new FileSystemMetadataProviderManager();
+  }
+
+  /**
+   * Returns {@link TableMetadataProvider} which provides specified schema.
+   *
+   * @param schema table schema which should be provided
+   * @return {@link TableMetadataProvider} which provides specified schema
+   * @throws IOException if exception has happened during {@link TableMetadataProvider} construction
+   */
+  public static TableMetadataProvider getMetadataProviderForSchema(TupleMetadata schema) throws IOException {
+    return new FileSystemMetadataProviderManager().builder(MetadataProviderKind.SCHEMA_STATS_ONLY)
+        .withSchema(schema)
+        .build();
+  }
+
+  /**
+   * Checks whether specified {@link MetadataProviderManager} is not null and returns {@link TableMetadataProvider}
+   * obtained from specified {@link MetadataProviderManager}.
+   * Otherwise {@link FileSystemMetadataProviderManager} is used to construct {@link TableMetadataProvider}.
+   *
+   * @param providerManager metadata provider manager
+   * @return {@link MetadataProviderManager} instance
+   * @throws IOException if exception has happened during {@link TableMetadataProvider} construction
+   */
+  public static TableMetadataProvider getMetadataProvider(MetadataProviderManager providerManager) throws IOException {
+    return providerManager == null
+        ? new FileSystemMetadataProviderManager().builder(MetadataProviderKind.SCHEMA_STATS_ONLY).build()
+        : providerManager.getTableMetadataProvider();
   }
 
   @Override

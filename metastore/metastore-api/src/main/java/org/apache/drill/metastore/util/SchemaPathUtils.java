@@ -57,6 +57,8 @@ public class SchemaPathUtils {
 
   /**
    * Adds column with specified schema path and type into specified {@code TupleMetadata schema}.
+   * For the case when specified {@link SchemaPath} has children, corresponding maps will be created
+   * in the {@code TupleMetadata schema} and the last child of the map will have specified type.
    *
    * @param schema     tuple schema where column should be added
    * @param schemaPath schema path of the column which should be added
