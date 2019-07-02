@@ -17,11 +17,16 @@
  */
 package org.apache.drill.exec.vector.complex.fn;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.vector.complex.impl.ComplexCopier;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collection;
 import java.util.List;
@@ -33,25 +38,51 @@ public class JsonReaderUtils {
                                     boolean allTextMode,
                                     List<BaseWriter.ListWriter> emptyArrayWriters) {
 
-    List<BaseWriter.MapWriter> writerList = Lists.newArrayList();
-    List<PathSegment> fieldPathList = Lists.newArrayList();
+    ensureAtLeastOneField(writer, columns, null /* schema */, allTextMode, emptyArrayWriters);
+  }
+
+  public static void ensureAtLeastOneField(BaseWriter.ComplexWriter writer,
+                                           Collection<SchemaPath> columns,
+                                           TupleMetadata schema,
+                                           boolean allTextMode,
+                                           List<BaseWriter.ListWriter> emptyArrayWriters) {
+
+    List<BaseWriter.MapWriter> writerList = new ArrayList<>();
+    List<PathSegment> fieldPathList = new ArrayList<>();
+    List<TypeProtos.MajorType> types = new ArrayList<>();
     BitSet emptyStatus = new BitSet(columns.size());
-    int i = 0;
+    int fieldIndex = 0;
 
     // first pass: collect which fields are empty
-    for (SchemaPath sp : columns) {
-      PathSegment fieldPath = sp.getRootSegment();
+    for (SchemaPath schemaPath : columns) {
+      PathSegment fieldPath = schemaPath.getRootSegment();
       BaseWriter.MapWriter fieldWriter = writer.rootAsMap();
+      TupleMetadata columnMetadata = schema;
       while (fieldPath.getChild() != null && !fieldPath.getChild().isArray()) {
-        fieldWriter = fieldWriter.map(fieldPath.getNameSegment().getPath());
+        String name = fieldPath.getNameSegment().getPath();
+        if (columnMetadata != null) {
+          ColumnMetadata metadata = columnMetadata.metadata(name);
+          columnMetadata = metadata != null ? metadata.mapSchema() : null;
+        }
+        fieldWriter = fieldWriter.map(name);
         fieldPath = fieldPath.getChild();
       }
       writerList.add(fieldWriter);
       fieldPathList.add(fieldPath);
-      if (fieldWriter.isEmptyMap()) {
-        emptyStatus.set(i, true);
+      // for the case when field is absent in the schema, use VARCHAR type
+      // if allTextMode is enabled or INT type if it is disabled
+      TypeProtos.MajorType majorType = allTextMode
+          ? Types.optional(TypeProtos.MinorType.VARCHAR)
+          : Types.optional(TypeProtos.MinorType.INT);
+      if (columnMetadata != null) {
+        ColumnMetadata metadata = columnMetadata.metadata(fieldPath.getNameSegment().getPath());
+        majorType = metadata != null ? metadata.majorType() : majorType;
       }
-      if (i == 0 && !allTextMode) {
+      types.add(majorType);
+      if (fieldWriter.isEmptyMap()) {
+        emptyStatus.set(fieldIndex, true);
+      }
+      if (fieldIndex == 0 && !allTextMode && schema == null) {
         // when allTextMode is false, there is not much benefit to producing all
         // the empty fields; just produce 1 field. The reason is that the type of the
         // fields is unknown, so if we produce multiple Integer fields by default, a
@@ -61,7 +92,7 @@ public class JsonReaderUtils {
         // is necessary in order to avoid schema change exceptions by downstream operators.
         break;
       }
-      i++;
+      fieldIndex++;
     }
 
     // second pass: create default typed vectors corresponding to empty fields
@@ -72,11 +103,7 @@ public class JsonReaderUtils {
       BaseWriter.MapWriter fieldWriter = writerList.get(j);
       PathSegment fieldPath = fieldPathList.get(j);
       if (emptyStatus.get(j)) {
-        if (allTextMode) {
-          fieldWriter.varChar(fieldPath.getNameSegment().getPath());
-        } else {
-          fieldWriter.integer(fieldPath.getNameSegment().getPath());
-        }
+        ComplexCopier.getMapWriterForType(types.get(j), fieldWriter, fieldPath.getNameSegment().getPath());
       }
     }
 

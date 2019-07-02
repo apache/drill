@@ -43,10 +43,13 @@ import org.apache.drill.exec.planner.index.IndexDiscover;
 import org.apache.drill.exec.planner.index.IndexDiscoverFactory;
 import org.apache.drill.exec.planner.index.MapRDBIndexDiscover;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.drill.metastore.metadata.TableMetadata;
+import org.apache.drill.metastore.metadata.TableMetadataProvider;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
@@ -55,6 +58,9 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 
 public abstract class MapRDBGroupScan extends AbstractDbGroupScan {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MapRDBGroupScan.class);
+
+  private static final Comparator<List<MapRDBSubScanSpec>> LIST_SIZE_COMPARATOR = Comparator.comparingInt(List::size);
+  private static final Comparator<List<MapRDBSubScanSpec>> LIST_SIZE_COMPARATOR_REV = Collections.reverseOrder(LIST_SIZE_COMPARATOR);
 
   protected AbstractStoragePlugin storagePlugin;
 
@@ -74,14 +80,9 @@ public abstract class MapRDBGroupScan extends AbstractDbGroupScan {
 
   private Stopwatch watch = Stopwatch.createUnstarted();
 
-  private static final Comparator<List<MapRDBSubScanSpec>> LIST_SIZE_COMPARATOR = new Comparator<List<MapRDBSubScanSpec>>() {
-    @Override
-    public int compare(List<MapRDBSubScanSpec> list1, List<MapRDBSubScanSpec> list2) {
-      return list1.size() - list2.size();
-    }
-  };
+  private TableMetadataProvider metadataProvider;
 
-  private static final Comparator<List<MapRDBSubScanSpec>> LIST_SIZE_COMPARATOR_REV = Collections.reverseOrder(LIST_SIZE_COMPARATOR);
+  private TableMetadata tableMetadata;
 
   public MapRDBGroupScan(MapRDBGroupScan that) {
     super(that);
@@ -96,27 +97,30 @@ public abstract class MapRDBGroupScan extends AbstractDbGroupScan {
      * during the copy-constructor
      */
     this.doNotAccessRegionsToScan = that.doNotAccessRegionsToScan;
+    this.metadataProvider = that.metadataProvider;
   }
 
   public MapRDBGroupScan(AbstractStoragePlugin storagePlugin,
-      MapRDBFormatPlugin formatPlugin, List<SchemaPath> columns, String userName) {
+      MapRDBFormatPlugin formatPlugin, List<SchemaPath> columns, String userName,
+      TableMetadataProvider metadataProvider) {
     super(userName);
     this.storagePlugin = storagePlugin;
     this.formatPlugin = formatPlugin;
-    this.formatPluginConfig = (MapRDBFormatPluginConfig)formatPlugin.getConfig();
+    this.formatPluginConfig = formatPlugin.getConfig();
     this.columns = columns;
+    this.metadataProvider = metadataProvider;
   }
 
   @Override
   public List<EndpointAffinity> getOperatorAffinity() {
     watch.reset();
     watch.start();
-    Map<String, DrillbitEndpoint> endpointMap = new HashMap<String, DrillbitEndpoint>();
+    Map<String, DrillbitEndpoint> endpointMap = new HashMap<>();
     for (DrillbitEndpoint ep : formatPlugin.getContext().getBits()) {
       endpointMap.put(ep.getAddress(), ep);
     }
 
-    final Map<DrillbitEndpoint, EndpointAffinity> affinityMap = new HashMap<DrillbitEndpoint, EndpointAffinity>();
+    final Map<DrillbitEndpoint, EndpointAffinity> affinityMap = new HashMap<>();
     for (String serverName : getRegionsToScan().values()) {
       DrillbitEndpoint ep = endpointMap.get(serverName);
       if (ep != null) {
@@ -230,9 +234,9 @@ public abstract class MapRDBGroupScan extends AbstractDbGroupScan {
      * While there are slots with lesser than 'minPerEndpointSlot' unit work, balance from those with more.
      */
     while(minHeap.peek() != null && minHeap.peek().size() < minPerEndpointSlot) {
-      List<MapRDBSubScanSpec> smallestList = (List<MapRDBSubScanSpec>) minHeap.poll();
-      List<MapRDBSubScanSpec> largestList = (List<MapRDBSubScanSpec>) maxHeap.poll();
-      smallestList.add(largestList.remove(largestList.size()-1));
+      List<MapRDBSubScanSpec> smallestList = minHeap.poll();
+      List<MapRDBSubScanSpec> largestList = maxHeap.poll();
+      smallestList.add(largestList.remove(largestList.size() - 1));
       if (largestList.size() > minPerEndpointSlot) {
         maxHeap.offer(largestList);
       }
@@ -344,4 +348,25 @@ public abstract class MapRDBGroupScan extends AbstractDbGroupScan {
   public PluginCost getPluginCostModel() {
     return formatPlugin.getPluginCostModel();
   }
+
+  @JsonProperty
+  public TupleMetadata getSchema() {
+    return getTableMetadata().getSchema();
+  }
+
+  @Override
+  @JsonIgnore
+  public TableMetadataProvider getMetadataProvider() {
+    return metadataProvider;
+  }
+
+  @Override
+  @JsonIgnore
+  public TableMetadata getTableMetadata() {
+    if (tableMetadata == null) {
+      tableMetadata = metadataProvider.getTableMetadata();
+    }
+    return tableMetadata;
+  }
+
 }

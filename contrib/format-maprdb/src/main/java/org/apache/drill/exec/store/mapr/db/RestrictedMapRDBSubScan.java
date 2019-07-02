@@ -29,6 +29,8 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.impl.join.RowKeyJoin;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.record.metadata.TupleSchema;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 
 /**
@@ -47,15 +49,18 @@ public class RestrictedMapRDBSubScan extends MapRDBSubScan {
                        @JsonProperty("regionScanSpecList") List<RestrictedMapRDBSubScanSpec> regionScanSpecList,
                        @JsonProperty("columns") List<SchemaPath> columns,
                        @JsonProperty("maxRecordsToRead") int maxRecordsToRead,
-                       @JsonProperty("tableType") String tableType) throws ExecutionSetupException {
+                       @JsonProperty("tableType") String tableType,
+                       // TODO: DRILL-7314 - replace TupleSchema with TupleMetadata
+                       @JsonProperty("schema") TupleSchema schema) throws ExecutionSetupException {
     this(userName,
         (MapRDBFormatPlugin) engineRegistry.getFormatPlugin(storageConfig, formatPluginConfig),
-        regionScanSpecList, columns, maxRecordsToRead, tableType);
+        regionScanSpecList, columns, maxRecordsToRead, tableType, schema);
   }
 
   public RestrictedMapRDBSubScan(String userName, MapRDBFormatPlugin formatPlugin,
-      List<RestrictedMapRDBSubScanSpec> maprDbSubScanSpecs, List<SchemaPath> columns, int maxRecordsToRead, String tableType) {
-    super(userName, formatPlugin, new ArrayList<MapRDBSubScanSpec>(), columns, maxRecordsToRead, tableType);
+      List<RestrictedMapRDBSubScanSpec> maprDbSubScanSpecs,
+      List<SchemaPath> columns, int maxRecordsToRead, String tableType, TupleMetadata schema) {
+    super(userName, formatPlugin, new ArrayList<>(), columns, maxRecordsToRead, tableType, schema);
 
     for(RestrictedMapRDBSubScanSpec restrictedSpec : maprDbSubScanSpecs) {
       getRegionScanSpecList().add(restrictedSpec);

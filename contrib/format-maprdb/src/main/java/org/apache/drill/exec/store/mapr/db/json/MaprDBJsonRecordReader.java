@@ -38,6 +38,7 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.impl.OutputMutator;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.mapr.db.MapRDBFormatPlugin;
 import org.apache.drill.exec.store.mapr.db.MapRDBSubScanSpec;
@@ -122,6 +123,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
   private final boolean ignoreSchemaChange;
   private final boolean disableCountOptimization;
   private final boolean nonExistentColumnsProjection;
+  private final TupleMetadata schema;
 
   protected final MapRDBSubScanSpec subScanSpec;
   protected final MapRDBFormatPlugin formatPlugin;
@@ -133,8 +135,8 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
   protected Document lastDocument;
 
   public MaprDBJsonRecordReader(MapRDBSubScanSpec subScanSpec, MapRDBFormatPlugin formatPlugin,
-                                List<SchemaPath> projectedColumns, FragmentContext context, int maxRecords) {
-    this(subScanSpec, formatPlugin, projectedColumns, context);
+                                List<SchemaPath> projectedColumns, FragmentContext context, int maxRecords, TupleMetadata schema) {
+    this(subScanSpec, formatPlugin, projectedColumns, context, schema);
     this.maxRecordsToRead = maxRecords;
     this.lastDocumentReader = null;
     this.lastDocument = null;
@@ -142,12 +144,13 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
   }
 
   protected MaprDBJsonRecordReader(MapRDBSubScanSpec subScanSpec, MapRDBFormatPlugin formatPlugin,
-                                List<SchemaPath> projectedColumns, FragmentContext context) {
+                                List<SchemaPath> projectedColumns, FragmentContext context, TupleMetadata schema) {
     buffer = context.getManagedBuffer();
     final Path tablePath = new Path(Preconditions.checkNotNull(subScanSpec,
       "MapRDB reader needs a sub-scan spec").getTableName());
     this.subScanSpec = subScanSpec;
     this.formatPlugin = formatPlugin;
+    this.schema = schema;
     final IndexDesc indexDesc = subScanSpec.getIndexDesc();
     byte[] serializedFilter = subScanSpec.getSerializedFilter();
     condition = null;
@@ -445,7 +448,7 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
     }
 
     if (nonExistentColumnsProjection && recordCount > 0) {
-      JsonReaderUtils.ensureAtLeastOneField(vectorWriter, getColumns(), allTextMode, Collections.emptyList());
+      JsonReaderUtils.ensureAtLeastOneField(vectorWriter, getColumns(), schema, allTextMode, Collections.emptyList());
     }
     vectorWriter.setValueCount(recordCount);
     if (maxRecordsToRead > 0) {

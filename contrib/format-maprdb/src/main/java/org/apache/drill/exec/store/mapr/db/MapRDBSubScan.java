@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.mapr.db;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -28,6 +29,8 @@ import org.apache.drill.exec.physical.base.AbstractDbSubScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.record.metadata.TupleSchema;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
@@ -35,19 +38,18 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 
 // Class containing information for reading a single HBase region
 @JsonTypeName("maprdb-sub-scan")
 
 public class MapRDBSubScan extends AbstractDbSubScan {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MapRDBSubScan.class);
 
   private final MapRDBFormatPlugin formatPlugin;
   private final List<MapRDBSubScanSpec> regionScanSpecList;
   private final List<SchemaPath> columns;
   private final int maxRecordsToRead;
   private final String tableType;
+  private final TupleMetadata schema;
 
   @JsonCreator
   public MapRDBSubScan(@JacksonInject StoragePluginRegistry engineRegistry,
@@ -57,34 +59,38 @@ public class MapRDBSubScan extends AbstractDbSubScan {
                        @JsonProperty("regionScanSpecList") List<MapRDBSubScanSpec> regionScanSpecList,
                        @JsonProperty("columns") List<SchemaPath> columns,
                        @JsonProperty("maxRecordsToRead") int maxRecordsToRead,
-                       @JsonProperty("tableType") String tableType) throws ExecutionSetupException {
+                       @JsonProperty("tableType") String tableType,
+                       // TODO: DRILL-7314 - replace TupleSchema with TupleMetadata
+                       @JsonProperty("schema") TupleSchema schema) throws ExecutionSetupException {
     this(userName,
         (MapRDBFormatPlugin) engineRegistry.getFormatPlugin(storageConfig, formatPluginConfig),
         regionScanSpecList,
         columns,
         maxRecordsToRead,
-        tableType);
+        tableType,
+        schema);
   }
 
   public MapRDBSubScan(String userName, MapRDBFormatPlugin formatPlugin,
-      List<MapRDBSubScanSpec> maprSubScanSpecs, List<SchemaPath> columns, String tableType) {
-    this(userName, formatPlugin, maprSubScanSpecs, columns, -1, tableType);
+      List<MapRDBSubScanSpec> maprSubScanSpecs, List<SchemaPath> columns, String tableType, TupleMetadata schema) {
+    this(userName, formatPlugin, maprSubScanSpecs, columns, -1, tableType, schema);
   }
 
   public MapRDBSubScan(String userName, MapRDBFormatPlugin formatPlugin,
-                       List<MapRDBSubScanSpec> maprSubScanSpecs, List<SchemaPath> columns, int maxRecordsToRead, String tableType) {
+                       List<MapRDBSubScanSpec> maprSubScanSpecs, List<SchemaPath> columns, int maxRecordsToRead, String tableType, TupleMetadata schema) {
     super(userName);
     this.formatPlugin = formatPlugin;
     this.regionScanSpecList = maprSubScanSpecs;
     this.columns = columns;
     this.maxRecordsToRead = maxRecordsToRead;
     this.tableType = tableType;
+    this.schema = schema;
   }
 
 
   @JsonProperty("formatPluginConfig")
   public MapRDBFormatPluginConfig getFormatPluginConfig() {
-    return (MapRDBFormatPluginConfig) formatPlugin.getConfig();
+    return formatPlugin.getConfig();
   }
 
   @JsonProperty("storageConfig")
@@ -112,6 +118,11 @@ public class MapRDBSubScan extends AbstractDbSubScan {
     return tableType;
   }
 
+  @JsonProperty("schema")
+  public TupleMetadata getSchema() {
+    return schema;
+  }
+
   @Override
   public boolean isExecutable() {
     return false;
@@ -125,12 +136,12 @@ public class MapRDBSubScan extends AbstractDbSubScan {
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
     Preconditions.checkArgument(children.isEmpty());
-    return new MapRDBSubScan(getUserName(), formatPlugin, regionScanSpecList, columns, tableType);
+    return new MapRDBSubScan(getUserName(), formatPlugin, regionScanSpecList, columns, tableType, schema);
   }
 
   @Override
   public Iterator<PhysicalOperator> iterator() {
-    return ImmutableSet.<PhysicalOperator>of().iterator();
+    return Collections.emptyIterator();
   }
 
   @Override

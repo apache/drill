@@ -171,7 +171,7 @@ public abstract class MapRDBPushLimitIntoScan extends StoragePluginOptimizerRule
           oldScanSpec.getStopRow(), oldScanSpec.getFilter());
       return new BinaryTableGroupScan(binaryTableGroupScan.getUserName(), binaryTableGroupScan.getStoragePlugin(),
           binaryTableGroupScan.getFormatPlugin(), newScanSpec, binaryTableGroupScan.getColumns(),
-          binaryTableGroupScan.getTableStats()).applyLimit(offset + fetch);
+          binaryTableGroupScan.getTableStats(), binaryTableGroupScan.getMetadataProvider()).applyLimit(offset + fetch);
     }
     return null;
   }

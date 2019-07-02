@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.mapr.db.json;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.NavigableMap;
 
@@ -24,6 +25,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.apache.drill.exec.record.metadata.TupleSchema;
+import org.apache.drill.metastore.FileSystemMetadataProviderManager;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
@@ -53,12 +56,15 @@ public class RestrictedJsonTableGroupScan extends JsonTableGroupScan {
 
   @JsonCreator
   public RestrictedJsonTableGroupScan(@JsonProperty("userName") String userName,
-                            @JsonProperty("storage") FileSystemPlugin storagePlugin,
-                            @JsonProperty("format") MapRDBFormatPlugin formatPlugin,
-                            @JsonProperty("scanSpec") JsonScanSpec scanSpec, /* scan spec of the original table */
-                            @JsonProperty("columns") List<SchemaPath> columns,
-                            @JsonProperty("") MapRDBStatistics statistics) {
-    super(userName, storagePlugin, formatPlugin, scanSpec, columns, statistics);
+                                      @JsonProperty("storage") FileSystemPlugin storagePlugin,
+                                      @JsonProperty("format") MapRDBFormatPlugin formatPlugin,
+                                      @JsonProperty("scanSpec") JsonScanSpec scanSpec, /* scan spec of the original table */
+                                      @JsonProperty("columns") List<SchemaPath> columns,
+                                      @JsonProperty("") MapRDBStatistics statistics,
+                                      // TODO: DRILL-7314 - replace TupleSchema with TupleMetadata
+                                      @JsonProperty("schema") TupleSchema schema) throws IOException {
+    super(userName, storagePlugin, formatPlugin, scanSpec, columns,
+        statistics, FileSystemMetadataProviderManager.getMetadataProviderForSchema(schema));
   }
 
   // TODO:  this method needs to be fully implemented
@@ -82,7 +88,7 @@ public class RestrictedJsonTableGroupScan extends JsonTableGroupScan {
         minorFragmentId);
     RestrictedMapRDBSubScan subscan =
         new RestrictedMapRDBSubScan(getUserName(), formatPlugin,
-        getEndPointFragmentMapping(minorFragmentId), columns, maxRecordsToRead, TABLE_JSON);
+        getEndPointFragmentMapping(minorFragmentId), columns, maxRecordsToRead, TABLE_JSON, getSchema());
 
     return subscan;
   }

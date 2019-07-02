@@ -41,7 +41,6 @@ import org.apache.drill.exec.store.mapr.db.json.JsonTableGroupScan;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 
 public abstract class MapRDBPushFilterIntoScan extends StoragePluginOptimizerRule {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MapRDBPushFilterIntoScan.class);
 
   private MapRDBPushFilterIntoScan(RelOptRuleOperand operand, String description) {
     super(operand, description);
@@ -100,7 +99,7 @@ public abstract class MapRDBPushFilterIntoScan extends StoragePluginOptimizerRul
 
     @Override
     public boolean matches(RelOptRuleCall call) {
-      final ScanPrel scan = (ScanPrel) call.rel(2);
+      final ScanPrel scan = call.rel(2);
       if (scan.getGroupScan() instanceof BinaryTableGroupScan ||
           scan.getGroupScan() instanceof JsonTableGroupScan) {
         return super.matches(call);
@@ -124,7 +123,7 @@ public abstract class MapRDBPushFilterIntoScan extends StoragePluginOptimizerRul
       return;
     }
 
-    LogicalExpression conditionExp = null;
+    LogicalExpression conditionExp;
     try {
       conditionExp = DrillOptiq.toDrill(new DrillParseContext(PrelUtil.getPlannerSettings(call.getPlanner())), scan, condition);
     } catch (ClassCastException e) {
@@ -182,9 +181,10 @@ public abstract class MapRDBPushFilterIntoScan extends StoragePluginOptimizerRul
     }
 
     // Pass tableStats from old groupScan so we do not go and fetch stats (an expensive operation) again from MapR DB client.
-    final BinaryTableGroupScan newGroupsScan = new BinaryTableGroupScan(groupScan.getUserName(), groupScan.getStoragePlugin(),
-                                                                        groupScan.getFormatPlugin(), newScanSpec, groupScan.getColumns(),
-                                                                        groupScan.getTableStats());
+    final BinaryTableGroupScan newGroupsScan =
+        new BinaryTableGroupScan(groupScan.getUserName(), groupScan.getStoragePlugin(),
+            groupScan.getFormatPlugin(), newScanSpec, groupScan.getColumns(),
+            groupScan.getTableStats(), groupScan.getMetadataProvider());
     newGroupsScan.setFilterPushedDown(true);
 
     final ScanPrel newScanPrel = new ScanPrel(scan.getCluster(), filter.getTraitSet(), newGroupsScan, scan.getRowType(), scan.getTable());

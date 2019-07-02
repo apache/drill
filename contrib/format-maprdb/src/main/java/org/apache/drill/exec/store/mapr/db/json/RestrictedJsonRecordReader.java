@@ -37,6 +37,7 @@ import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.physical.impl.join.RowKeyJoin;
 import org.apache.drill.exec.record.AbstractRecordBatch;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.mapr.db.MapRDBFormatPlugin;
 import org.apache.drill.exec.store.mapr.db.MapRDBSubScanSpec;
 import org.apache.drill.exec.store.mapr.db.RestrictedMapRDBSubScanSpec;
@@ -61,9 +62,10 @@ public class RestrictedJsonRecordReader extends MaprDBJsonRecordReader {
                                     MapRDBFormatPlugin formatPlugin,
                                     List<SchemaPath> projectedColumns,
                                     FragmentContext context,
-                                    int maxRecordsToRead) {
+                                    int maxRecordsToRead,
+                                    TupleMetadata schema) {
 
-    super(subScanSpec, formatPlugin, projectedColumns, context, maxRecordsToRead);
+    super(subScanSpec, formatPlugin, projectedColumns, context, maxRecordsToRead, schema);
     batchSize = (int)context.getOptions().getOption(ExecConstants.QUERY_ROWKEYJOIN_BATCHSIZE);
     int idx = 0;
     FieldPath[] scannedFields = this.getScannedFields();
