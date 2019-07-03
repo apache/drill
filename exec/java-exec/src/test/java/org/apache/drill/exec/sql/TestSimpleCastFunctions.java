@@ -26,6 +26,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import javax.annotation.Nullable;
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 
@@ -158,6 +159,39 @@ public class TestSimpleCastFunctions extends BaseTestQuery {
       assertThat(e.getMessage(), containsString("Invalid value for boolean: 123"));
       throw e;
     }
+  }
+
+  @Test
+  public void testDecimalConstantCast() throws Exception {
+    testBuilder()
+        .sqlQuery("select casthigh(cast(1025.0 as decimal(28,8))) a")
+        .unOrdered()
+        .baselineColumns("a")
+        .baselineValues(BigDecimal.valueOf(102500000000L, 8))
+        .go();
+  }
+
+  @Test
+  public void testNullableDecimalConstantCast() throws Exception {
+    testBuilder()
+        .sqlQuery("select casthigh(case when true then cast(1025.0 as decimal(28,8)) else null end) a")
+        .unOrdered()
+        .baselineColumns("a")
+        .baselineValues(BigDecimal.valueOf(102500000000L, 8))
+        .go();
+
+  }
+
+  @Test
+  public void testDecimalCastAsVariable() throws Exception {
+    testBuilder()
+        .sqlQuery("select casthigh(cast(a as decimal(28,8))) a from (VALUES (1.0), (2.0), (3.0)) as t1(a)")
+        .unOrdered()
+        .baselineColumns("a")
+        .baselineValues(BigDecimal.valueOf(100000000, 8))
+        .baselineValues(BigDecimal.valueOf(200000000, 8))
+        .baselineValues(BigDecimal.valueOf(300000000, 8))
+        .go();
   }
 
 }

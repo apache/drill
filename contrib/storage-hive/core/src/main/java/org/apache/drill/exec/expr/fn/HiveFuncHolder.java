@@ -145,7 +145,7 @@ public class HiveFuncHolder extends AbstractFuncHolder {
 
   @Override
   public HoldingContainer renderEnd(ClassGenerator<?> classGenerator, HoldingContainer[] inputVariables,
-                                    JVar[] workspaceJVars, FieldReference fieldReference) {
+                                    JVar[] workspaceJVars, FunctionHolderExpression holderExpr) {
     generateSetup(classGenerator, workspaceJVars);
     return generateEval(classGenerator, inputVariables, workspaceJVars);
   }

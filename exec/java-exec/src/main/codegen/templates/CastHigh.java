@@ -60,11 +60,17 @@ public class CastHighFunctions {
     public void setup() {}
 
     public void eval() {
-      <#if type.value>
+    <#if type.from.contains("VarDecimal")>
+      out.buffer = (DrillBuf) in.buffer;
+      out.start = (int) in.start;
+      out.scale = (int) in.scale;
+      out.precision = (int) in.precision;
+      out.end = (int) in.end;
+    <#elseif type.value>
       out.value = (double) in.value;
       <#else>
       out = in;
-      </#if>
+    </#if>
     }
   }
 </#list>

@@ -18,6 +18,7 @@
 package org.apache.drill.exec.expr.fn;
 
 import org.apache.drill.common.expression.FieldReference;
+import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
@@ -47,8 +48,9 @@ public class DrillComplexWriterFuncHolder extends DrillSimpleFuncHolder {
 
   @Override
   protected HoldingContainer generateEvalBody(ClassGenerator<?> classGenerator, HoldingContainer[] inputVariables, String body,
-                                              JVar[] workspaceJVars, FieldReference fieldReference) {
+                                              JVar[] workspaceJVars, FunctionHolderExpression holderExpr) {
 
+    FieldReference fieldReference = holderExpr.getFieldReference();
     classGenerator.getEvalBlock().directStatement(String.format("//---- start of eval portion of %s function. ----//", getRegisteredNames()[0]));
 
     JBlock sub = new JBlock(true, true);

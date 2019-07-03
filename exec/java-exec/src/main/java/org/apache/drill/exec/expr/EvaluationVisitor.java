@@ -65,6 +65,7 @@ import org.apache.drill.exec.compile.sig.ConstantExpressionIdentifier;
 import org.apache.drill.exec.compile.sig.GeneratorMapping;
 import org.apache.drill.exec.compile.sig.MappingSet;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
+import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.fn.AbstractFuncHolder;
 import org.apache.drill.exec.expr.holders.ValueHolder;
 import org.apache.drill.exec.physical.impl.filter.ReturnValueExpression;
@@ -103,6 +104,13 @@ public class EvaluationVisitor {
       constantBoundaries = ConstantExpressionIdentifier.getConstantExpressionSet(e);
     }
     return e.accept(new CSEFilter(constantBoundaries), generator);
+  }
+
+  /**
+   * Callback function for the expression visitor
+   */
+  private interface VisitorCallback {
+    HoldingContainer getHolder();
   }
 
   private class ExpressionHolder {
@@ -203,7 +211,7 @@ public class EvaluationVisitor {
         generator.getMappingSet().exitChild();
       }
 
-      return holder.renderEnd(generator, args, workspaceVars, holderExpr.getFieldReference());
+      return holder.renderEnd(generator, args, workspaceVars, holderExpr);
     }
 
     @Override
@@ -1111,6 +1119,8 @@ public class EvaluationVisitor {
     }
   }
 
+
+
   private class ConstantFilter extends EvalVisitor {
 
     private Set<LogicalExpression> constantBoundaries;
@@ -1126,327 +1136,157 @@ public class EvaluationVisitor {
           + "It should have been converted to FunctionHolderExpression in materialization");
     }
 
+    private HoldingContainer visitExpression(LogicalExpression e, ClassGenerator<?> generator,
+                                             VisitorCallback visitorCallback) throws RuntimeException {
+      if (constantBoundaries.contains(e)) {
+        generator.getMappingSet().enterConstant();
+        HoldingContainer c = visitorCallback.getHolder();
+
+        return renderConstantExpression(generator, c, e);
+      } else if (generator.getMappingSet().isWithinConstant()) {
+        return visitorCallback.getHolder().setConstant(true);
+      } else {
+        return visitorCallback.getHolder();
+      }
+    }
+
     @Override
     public HoldingContainer visitFunctionHolderExpression(FunctionHolderExpression e, ClassGenerator<?> generator)
         throws RuntimeException {
-      if (constantBoundaries.contains(e)) {
-        generator.getMappingSet().enterConstant();
-        HoldingContainer c = super.visitFunctionHolderExpression(e, generator);
-        // generator.getMappingSet().exitConstant();
-        // return c;
-        return renderConstantExpression(generator, c);
-      } else if (generator.getMappingSet().isWithinConstant()) {
-        return super.visitFunctionHolderExpression(e, generator).setConstant(true);
-      } else {
-        return super.visitFunctionHolderExpression(e, generator);
-      }
+     return visitExpression(e, generator, () -> super.visitFunctionHolderExpression(e, generator));
     }
 
     @Override
     public HoldingContainer visitBooleanOperator(BooleanOperator e, ClassGenerator<?> generator)
         throws RuntimeException {
-      if (constantBoundaries.contains(e)) {
-        generator.getMappingSet().enterConstant();
-        HoldingContainer c = super.visitBooleanOperator(e, generator);
-        return renderConstantExpression(generator, c);
-      } else if (generator.getMappingSet().isWithinConstant()) {
-        return super.visitBooleanOperator(e, generator).setConstant(true);
-      } else {
-        return super.visitBooleanOperator(e, generator);
-      }
+      return visitExpression(e, generator, () -> super.visitBooleanOperator(e, generator));
     }
     @Override
     public HoldingContainer visitIfExpression(IfExpression e, ClassGenerator<?> generator) throws RuntimeException {
-      if (constantBoundaries.contains(e)) {
-        generator.getMappingSet().enterConstant();
-        HoldingContainer c = super.visitIfExpression(e, generator);
-        // generator.getMappingSet().exitConstant();
-        // return c;
-        return renderConstantExpression(generator, c);
-      } else if (generator.getMappingSet().isWithinConstant()) {
-        return super.visitIfExpression(e, generator).setConstant(true);
-      } else {
-        return super.visitIfExpression(e, generator);
-      }
+      return visitExpression(e, generator, () -> super.visitIfExpression(e, generator));
     }
 
     @Override
     public HoldingContainer visitSchemaPath(SchemaPath e, ClassGenerator<?> generator) throws RuntimeException {
-      if (constantBoundaries.contains(e)) {
-        generator.getMappingSet().enterConstant();
-        HoldingContainer c = super.visitSchemaPath(e, generator);
-        // generator.getMappingSet().exitConstant();
-        // return c;
-        return renderConstantExpression(generator, c);
-      } else if (generator.getMappingSet().isWithinConstant()) {
-        return super.visitSchemaPath(e, generator).setConstant(true);
-      } else {
-        return super.visitSchemaPath(e, generator);
-      }
+      return visitExpression(e, generator, () -> super.visitSchemaPath(e, generator));
     }
 
     @Override
     public HoldingContainer visitLongConstant(LongExpression e, ClassGenerator<?> generator) throws RuntimeException {
-      if (constantBoundaries.contains(e)) {
-        generator.getMappingSet().enterConstant();
-        HoldingContainer c = super.visitLongConstant(e, generator);
-        // generator.getMappingSet().exitConstant();
-        // return c;
-        return renderConstantExpression(generator, c);
-      } else if (generator.getMappingSet().isWithinConstant()) {
-        return super.visitLongConstant(e, generator).setConstant(true);
-      } else {
-        return super.visitLongConstant(e, generator);
-      }
+      return visitExpression(e, generator, () -> super.visitLongConstant(e, generator));
     }
 
     @Override
     public HoldingContainer visitDecimal9Constant(Decimal9Expression e, ClassGenerator<?> generator)
         throws RuntimeException {
-      if (constantBoundaries.contains(e)) {
-        generator.getMappingSet().enterConstant();
-        HoldingContainer c = super.visitDecimal9Constant(e, generator);
-        return renderConstantExpression(generator, c);
-      } else if (generator.getMappingSet().isWithinConstant()) {
-        return super.visitDecimal9Constant(e, generator).setConstant(true);
-      } else {
-        return super.visitDecimal9Constant(e, generator);
-      }
+      return visitExpression(e, generator, () -> super.visitDecimal9Constant(e, generator));
     }
 
     @Override
     public HoldingContainer visitDecimal18Constant(Decimal18Expression e, ClassGenerator<?> generator)
         throws RuntimeException {
-      if (constantBoundaries.contains(e)) {
-        generator.getMappingSet().enterConstant();
-        HoldingContainer c = super.visitDecimal18Constant(e, generator);
-        return renderConstantExpression(generator, c);
-      } else if (generator.getMappingSet().isWithinConstant()) {
-        return super.visitDecimal18Constant(e, generator).setConstant(true);
-      } else {
-        return super.visitDecimal18Constant(e, generator);
-      }
+      return visitExpression(e, generator, () -> super.visitDecimal18Constant(e, generator));
     }
 
     @Override
     public HoldingContainer visitDecimal28Constant(Decimal28Expression e, ClassGenerator<?> generator)
         throws RuntimeException {
-      if (constantBoundaries.contains(e)) {
-        generator.getMappingSet().enterConstant();
-        HoldingContainer c = super.visitDecimal28Constant(e, generator);
-        return renderConstantExpression(generator, c);
-      } else if (generator.getMappingSet().isWithinConstant()) {
-        return super.visitDecimal28Constant(e, generator).setConstant(true);
-      } else {
-        return super.visitDecimal28Constant(e, generator);
-      }
+      return visitExpression(e, generator, () -> super.visitDecimal28Constant(e, generator));
     }
 
     @Override
     public HoldingContainer visitDecimal38Constant(Decimal38Expression e, ClassGenerator<?> generator)
         throws RuntimeException {
-      if (constantBoundaries.contains(e)) {
-        generator.getMappingSet().enterConstant();
-        HoldingContainer c = super.visitDecimal38Constant(e, generator);
-        return renderConstantExpression(generator, c);
-      } else if (generator.getMappingSet().isWithinConstant()) {
-        return super.visitDecimal38Constant(e, generator).setConstant(true);
-      } else {
-        return super.visitDecimal38Constant(e, generator);
-      }
+      return visitExpression(e, generator, () -> super.visitDecimal38Constant(e, generator));
     }
 
     @Override
     public HoldingContainer visitVarDecimalConstant(VarDecimalExpression e, ClassGenerator<?> generator)
         throws RuntimeException {
-      if (constantBoundaries.contains(e)) {
-        generator.getMappingSet().enterConstant();
-        HoldingContainer c = super.visitVarDecimalConstant(e, generator);
-        return renderConstantExpression(generator, c);
-      } else if (generator.getMappingSet().isWithinConstant()) {
-        return super.visitVarDecimalConstant(e, generator).setConstant(true);
-      } else {
-        return super.visitVarDecimalConstant(e, generator);
-      }
+      return visitExpression(e, generator, () -> super.visitVarDecimalConstant(e, generator));
     }
 
     @Override
     public HoldingContainer visitIntConstant(IntExpression e, ClassGenerator<?> generator) throws RuntimeException {
-      if (constantBoundaries.contains(e)) {
-        generator.getMappingSet().enterConstant();
-        HoldingContainer c = super.visitIntConstant(e, generator);
-        // generator.getMappingSet().exitConstant();
-        // return c;
-        return renderConstantExpression(generator, c);
-      } else if (generator.getMappingSet().isWithinConstant()) {
-        return super.visitIntConstant(e, generator).setConstant(true);
-      } else {
-        return super.visitIntConstant(e, generator);
-      }
+      return visitExpression(e, generator, () -> super.visitIntConstant(e, generator));
     }
 
     @Override
     public HoldingContainer visitDateConstant(DateExpression e, ClassGenerator<?> generator) throws RuntimeException {
-      if (constantBoundaries.contains(e)) {
-        generator.getMappingSet().enterConstant();
-        HoldingContainer c = super.visitDateConstant(e, generator);
-
-        return renderConstantExpression(generator, c);
-      } else if (generator.getMappingSet().isWithinConstant()) {
-        return super.visitDateConstant(e, generator).setConstant(true);
-      } else {
-        return super.visitDateConstant(e, generator);
-      }
+      return visitExpression(e, generator, () -> super.visitDateConstant(e, generator));
     }
 
     @Override
     public HoldingContainer visitTimeConstant(TimeExpression e, ClassGenerator<?> generator) throws RuntimeException {
-      if (constantBoundaries.contains(e)) {
-        generator.getMappingSet().enterConstant();
-        HoldingContainer c = super.visitTimeConstant(e, generator);
-
-        return renderConstantExpression(generator, c);
-      } else if (generator.getMappingSet().isWithinConstant()) {
-        return super.visitTimeConstant(e, generator).setConstant(true);
-      } else {
-        return super.visitTimeConstant(e, generator);
-      }
+      return visitExpression(e, generator, () -> super.visitTimeConstant(e, generator));
     }
 
     @Override
     public HoldingContainer visitIntervalYearConstant(IntervalYearExpression e, ClassGenerator<?> generator)
         throws RuntimeException {
-      if (constantBoundaries.contains(e)) {
-        generator.getMappingSet().enterConstant();
-        HoldingContainer c = super.visitIntervalYearConstant(e, generator);
-
-        return renderConstantExpression(generator, c);
-      } else if (generator.getMappingSet().isWithinConstant()) {
-        return super.visitIntervalYearConstant(e, generator).setConstant(true);
-      } else {
-        return super.visitIntervalYearConstant(e, generator);
-      }
+      return visitExpression(e, generator, () -> super.visitIntervalYearConstant(e, generator));
     }
 
     @Override
     public HoldingContainer visitTimeStampConstant(TimeStampExpression e, ClassGenerator<?> generator)
         throws RuntimeException {
-      if (constantBoundaries.contains(e)) {
-        generator.getMappingSet().enterConstant();
-        HoldingContainer c = super.visitTimeStampConstant(e, generator);
-
-        return renderConstantExpression(generator, c);
-      } else if (generator.getMappingSet().isWithinConstant()) {
-        return super.visitTimeStampConstant(e, generator).setConstant(true);
-      } else {
-        return super.visitTimeStampConstant(e, generator);
-      }
+      return visitExpression(e, generator, () -> super.visitTimeStampConstant(e, generator));
     }
 
     @Override
     public HoldingContainer visitFloatConstant(FloatExpression e, ClassGenerator<?> generator)
         throws RuntimeException {
-      if (constantBoundaries.contains(e)) {
-        generator.getMappingSet().enterConstant();
-        HoldingContainer c = super.visitFloatConstant(e, generator);
-        // generator.getMappingSet().exitConstant();
-        // return c;
-        return renderConstantExpression(generator, c);
-      } else if (generator.getMappingSet().isWithinConstant()) {
-        return super.visitFloatConstant(e, generator).setConstant(true);
-      } else {
-        return super.visitFloatConstant(e, generator);
-      }
+      return visitExpression(e, generator, () -> super.visitFloatConstant(e, generator));
     }
 
     @Override
     public HoldingContainer visitDoubleConstant(DoubleExpression e, ClassGenerator<?> generator)
         throws RuntimeException {
-      if (constantBoundaries.contains(e)) {
-        generator.getMappingSet().enterConstant();
-        HoldingContainer c = super.visitDoubleConstant(e, generator);
-        // generator.getMappingSet().exitConstant();
-        // return c;
-        return renderConstantExpression(generator, c);
-      } else if (generator.getMappingSet().isWithinConstant()) {
-        return super.visitDoubleConstant(e, generator).setConstant(true);
-      } else {
-        return super.visitDoubleConstant(e, generator);
-      }
+      return visitExpression(e, generator, () -> super.visitDoubleConstant(e, generator));
     }
 
     @Override
     public HoldingContainer visitBooleanConstant(BooleanExpression e, ClassGenerator<?> generator)
         throws RuntimeException {
-      if (constantBoundaries.contains(e)) {
-        generator.getMappingSet().enterConstant();
-        HoldingContainer c = super.visitBooleanConstant(e, generator);
-        // generator.getMappingSet().exitConstant();
-        // return c;
-        return renderConstantExpression(generator, c);
-      } else if (generator.getMappingSet().isWithinConstant()) {
-        return super.visitBooleanConstant(e, generator).setConstant(true);
-      } else {
-        return super.visitBooleanConstant(e, generator);
-      }
+      return visitExpression(e, generator, () -> super.visitBooleanConstant(e, generator));
     }
 
     @Override
     public HoldingContainer visitUnknown(LogicalExpression e, ClassGenerator<?> generator) throws RuntimeException {
-      if (constantBoundaries.contains(e)) {
-        generator.getMappingSet().enterConstant();
-        HoldingContainer c = super.visitUnknown(e, generator);
-        // generator.getMappingSet().exitConstant();
-        // return c;
-        return renderConstantExpression(generator, c);
-      } else if (generator.getMappingSet().isWithinConstant()) {
-        return super.visitUnknown(e, generator).setConstant(true);
-      } else {
-        return super.visitUnknown(e, generator);
-      }
+      return visitExpression(e, generator, () -> super.visitUnknown(e, generator));
     }
 
     @Override
     public HoldingContainer visitQuotedStringConstant(QuotedString e, ClassGenerator<?> generator)
         throws RuntimeException {
-      if (constantBoundaries.contains(e)) {
-        generator.getMappingSet().enterConstant();
-        HoldingContainer c = super.visitQuotedStringConstant(e, generator);
-        // generator.getMappingSet().exitConstant();
-        // return c;
-        return renderConstantExpression(generator, c);
-      } else if (generator.getMappingSet().isWithinConstant()) {
-        return super.visitQuotedStringConstant(e, generator).setConstant(true);
-      } else {
-        return super.visitQuotedStringConstant(e, generator);
-      }
+      return visitExpression(e, generator, () -> super.visitQuotedStringConstant(e, generator));
     }
 
     @Override
     public HoldingContainer visitIntervalDayConstant(IntervalDayExpression e, ClassGenerator<?> generator)
         throws RuntimeException {
-      if (constantBoundaries.contains(e)) {
-        generator.getMappingSet().enterConstant();
-        HoldingContainer c = super.visitIntervalDayConstant(e, generator);
-
-        return renderConstantExpression(generator, c);
-      } else if (generator.getMappingSet().isWithinConstant()) {
-        return super.visitIntervalDayConstant(e, generator).setConstant(true);
-      } else {
-        return super.visitIntervalDayConstant(e, generator);
-      }
+      return visitExpression(e, generator, () -> super.visitIntervalDayConstant(e, generator));
     }
 
     /*
      * Get a HoldingContainer for a constant expression. The returned
-     * HoldingContainder will indicate it's for a constant expression.
+     * HoldingContainer will indicate it's for a constant expression.
      */
-    private HoldingContainer renderConstantExpression(ClassGenerator<?> generator, HoldingContainer input) {
-      JVar fieldValue = generator.declareClassField("constant", generator.getHolderType(input.getMajorType()));
+    private HoldingContainer renderConstantExpression(ClassGenerator<?> generator, HoldingContainer input,
+                                                      LogicalExpression expr) {
+      MajorType.Builder newTypeBuilder = MajorType.newBuilder(input.getMajorType());
+
+      if (expr instanceof DrillFuncHolderExpr &&
+          ((DrillFuncHolderExpr) expr).getHolder().getNullHandling() == FunctionTemplate.NullHandling.NULL_IF_NULL) {
+        newTypeBuilder.setMode(expr.getMajorType().getMode());
+      }
+      MajorType newType = newTypeBuilder.build();
+      JVar fieldValue = generator.declareClassField("constant", generator.getHolderType(newType));
+
       // Creates a new vector for class field and assigns to its fields values from output field
       // to allow scalar replacement for source objects
-      generator.getEvalBlock().assign(fieldValue, JExpr._new(generator.getHolderType(input.getMajorType())));
-      List<String> holderFields = ValueHolderHelper.getHolderParams(input.getMajorType());
+      generator.getEvalBlock().assign(fieldValue, JExpr._new(generator.getHolderType(newType)));
+      List<String> holderFields = ValueHolderHelper.getHolderParams(newType);
       for (String holderField : holderFields) {
         generator.getEvalBlock().assign(fieldValue.ref(holderField), input.getHolder().ref(holderField));
       }

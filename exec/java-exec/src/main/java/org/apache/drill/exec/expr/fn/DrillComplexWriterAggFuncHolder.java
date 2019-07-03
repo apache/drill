@@ -19,6 +19,7 @@
 package org.apache.drill.exec.expr.fn;
 
 import org.apache.drill.common.expression.FieldReference;
+import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
@@ -111,7 +112,7 @@ public class DrillComplexWriterAggFuncHolder extends DrillAggFuncHolder {
 
   @Override
   public HoldingContainer renderEnd(ClassGenerator<?> classGenerator, HoldingContainer[] inputVariables,
-                                    JVar[] workspaceJVars, FieldReference fieldReference) {
+                                    JVar[] workspaceJVars, FunctionHolderExpression holderExpr) {
     HoldingContainer out = null;
     JVar internalOutput = null;
     if (getReturnType().getMinorType() != TypeProtos.MinorType.LATE) {
