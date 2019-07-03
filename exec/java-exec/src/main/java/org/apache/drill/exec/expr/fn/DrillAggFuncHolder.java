@@ -21,6 +21,7 @@ import static org.apache.drill.shaded.guava.com.google.common.base.Preconditions
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.FieldReference;
+import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
@@ -127,7 +128,7 @@ class DrillAggFuncHolder extends DrillFuncHolder {
 
   @Override
   public HoldingContainer renderEnd(ClassGenerator<?> classGenerator, HoldingContainer[] inputVariables,
-                                    JVar[] workspaceJVars, FieldReference fieldReference) {
+                                    JVar[] workspaceJVars, FunctionHolderExpression holderExpr) {
     HoldingContainer out = null;
     JVar internalOutput = null;
     if (getReturnType().getMinorType() != TypeProtos.MinorType.LATE) {

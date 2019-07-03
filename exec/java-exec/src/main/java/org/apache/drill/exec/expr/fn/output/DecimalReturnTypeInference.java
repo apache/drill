@@ -88,6 +88,7 @@ public class DecimalReturnTypeInference {
     public TypeProtos.MajorType getType(List<LogicalExpression> logicalExpressions, FunctionAttributes attributes) {
       int scale = 0;
       int precision = 0;
+      TypeProtos.DataMode mode = FunctionUtils.getReturnTypeDataMode(logicalExpressions, attributes);
 
       // Get the max scale and precision from the inputs
       for (LogicalExpression e : logicalExpressions) {
@@ -99,7 +100,7 @@ public class DecimalReturnTypeInference {
           .setMinorType(attributes.getReturnValue().getType().getMinorType())
           .setScale(scale)
           .setPrecision(precision)
-          .setMode(TypeProtos.DataMode.OPTIONAL)
+          .setMode(mode)
           .build();
     }
   }
@@ -295,6 +296,7 @@ public class DecimalReturnTypeInference {
     @Override
     public TypeProtos.MajorType getType(List<LogicalExpression> logicalExpressions, FunctionAttributes attributes) {
       int scale = 0;
+      TypeProtos.DataMode mode = FunctionUtils.getReturnTypeDataMode(logicalExpressions, attributes);
 
       // Get the max scale and precision from the inputs
       for (LogicalExpression e : logicalExpressions) {
@@ -305,7 +307,7 @@ public class DecimalReturnTypeInference {
           .setMinorType(TypeProtos.MinorType.VARDECIMAL)
           .setScale(scale)
           .setPrecision(DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision())
-          .setMode(TypeProtos.DataMode.OPTIONAL)
+          .setMode(mode)
           .build();
     }
   }
@@ -323,6 +325,7 @@ public class DecimalReturnTypeInference {
     @Override
     public TypeProtos.MajorType getType(List<LogicalExpression> logicalExpressions, FunctionAttributes attributes) {
       int scale = 0;
+      TypeProtos.DataMode mode = FunctionUtils.getReturnTypeDataMode(logicalExpressions, attributes);
 
       // Get the max scale and precision from the inputs
       for (LogicalExpression e : logicalExpressions) {
@@ -334,7 +337,7 @@ public class DecimalReturnTypeInference {
           .setScale(Math.min(Math.max(6, scale),
               DRILL_REL_DATATYPE_SYSTEM.getMaxNumericScale()))
           .setPrecision(DRILL_REL_DATATYPE_SYSTEM.getMaxNumericPrecision())
-          .setMode(TypeProtos.DataMode.OPTIONAL)
+          .setMode(mode)
           .build();
     }
   }

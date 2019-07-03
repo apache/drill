@@ -44,11 +44,11 @@ public abstract class AbstractFuncHolder implements FuncHolder {
    * @param classGenerator the class responsible for code generation
    * @param inputVariables the source of the vector holders
    * @param workspaceJVars class fields
-   * @param fieldReference reference of the output field
+   * @param holderExpr holder for the function expression
    * @return HoldingContainer for return value
    */
   public abstract HoldingContainer renderEnd(ClassGenerator<?> classGenerator, HoldingContainer[] inputVariables,
-                                             JVar[] workspaceJVars, FieldReference fieldReference);
+                                             JVar[] workspaceJVars, FunctionHolderExpression holderExpr);
 
   public boolean isNested() {
     return false;
