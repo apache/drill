@@ -36,7 +36,6 @@ import org.apache.drill.metastore.metadata.TableMetadataProvider;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.exec.record.metadata.TupleSchema;
 import org.apache.drill.exec.store.ColumnExplorer;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
@@ -90,8 +89,7 @@ public class EasyGroupScan extends AbstractFileGroupScan {
       @JacksonInject StoragePluginRegistry engineRegistry,
       @JsonProperty("columns") List<SchemaPath> columns,
       @JsonProperty("selectionRoot") Path selectionRoot,
-      // TODO: DRILL-7314 - replace TupleSchema with TupleMetadata
-      @JsonProperty("schema") TupleSchema schema
+      @JsonProperty("schema") TupleMetadata schema
       ) throws IOException, ExecutionSetupException {
     super(ImpersonationUtil.resolveUserName(userName));
     this.selection = FileSelection.create(null, files, selectionRoot);

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.drill.exec.util;
+package org.apache.drill.common.util;
 
 import javassist.CannotCompileException;
 import javassist.ClassPool;
@@ -26,12 +26,14 @@ import javassist.CtNewConstructor;
 import javassist.CtNewMethod;
 import javassist.Modifier;
 import javassist.NotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ProtobufPatcher {
 
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProtobufPatcher.class);
+  private static final Logger logger = LoggerFactory.getLogger(ProtobufPatcher.class);
 
-  private static volatile boolean patchingAttempted = false;
+  private static boolean patchingAttempted = false;
 
   /**
    * Makes protobuf version 3.6+ compatible to libraries that still use protobuf 2.5.0.

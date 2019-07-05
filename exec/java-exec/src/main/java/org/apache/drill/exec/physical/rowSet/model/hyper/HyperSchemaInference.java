@@ -40,7 +40,7 @@ import org.apache.drill.exec.vector.ValueVector;
 public class HyperSchemaInference {
 
   public TupleMetadata infer(VectorContainer container) throws SchemaChangeException {
-    TupleSchema schema = new TupleSchema();
+    TupleMetadata schema = new TupleSchema();
     for (int i = 0; i < container.getNumberOfColumns(); i++) {
       VectorWrapper<?> vw = container.getValueVector(i);
       schema.addColumn(buildColumn(vw));

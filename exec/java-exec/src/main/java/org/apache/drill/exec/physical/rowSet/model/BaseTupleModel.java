@@ -62,7 +62,7 @@ public abstract class BaseTupleModel implements TupleModel {
    * {@link org.apache.drill.exec.record.VectorContainer}, this abstraction keeps the schema in sync
    * with vectors as columns are added.
    */
-  protected final TupleSchema schema;
+  protected final TupleMetadata schema;
 
   public BaseTupleModel() {
 
@@ -74,7 +74,7 @@ public abstract class BaseTupleModel implements TupleModel {
     columns = new ArrayList<>();
   }
 
-  public BaseTupleModel(TupleSchema schema, List<ColumnModel> columns) {
+  public BaseTupleModel(TupleMetadata schema, List<ColumnModel> columns) {
     this.schema = schema;
     this.columns = columns;
     assert schema.size() == columns.size();
@@ -105,7 +105,7 @@ public abstract class BaseTupleModel implements TupleModel {
    * @param column column implementation to add
    */
   protected void addBaseColumn(BaseColumnModel column) {
-    schema.add(column.schema());
+    schema.addColumn(column.schema());
     columns.add(column);
     assert columns.size() == schema.size();
   }

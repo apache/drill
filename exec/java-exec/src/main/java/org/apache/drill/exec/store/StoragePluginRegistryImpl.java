@@ -473,7 +473,7 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
       }
       if (i == 0) {
         logger.debug("Skipping registration of StoragePlugin {} as it doesn't have a constructor with the parameters "
-            + "of (StorangePluginConfig, Config)", plugin.getCanonicalName());
+            + "of (StoragePluginConfig, Config)", plugin.getCanonicalName());
       }
     }
     return availablePlugins;

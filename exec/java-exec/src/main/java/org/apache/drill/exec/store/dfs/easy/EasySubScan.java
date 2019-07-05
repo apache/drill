@@ -25,7 +25,6 @@ import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.AbstractSubScan;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.exec.record.metadata.TupleSchema;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.schedule.CompleteFileWork.FileWorkImpl;
 
@@ -57,7 +56,7 @@ public class EasySubScan extends AbstractSubScan {
     @JsonProperty("columns") List<SchemaPath> columns,
     @JsonProperty("selectionRoot") Path selectionRoot,
     @JsonProperty("partitionDepth") int partitionDepth,
-    @JsonProperty("schema") TupleSchema schema
+    @JsonProperty("schema") TupleMetadata schema
     ) throws ExecutionSetupException {
     super(userName);
     this.formatPlugin = (EasyFormatPlugin<?>) engineRegistry.getFormatPlugin(storageConfig, formatConfig);

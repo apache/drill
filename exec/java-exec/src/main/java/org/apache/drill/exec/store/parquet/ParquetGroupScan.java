@@ -22,10 +22,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.metastore.FileSystemMetadataProviderManager;
 import org.apache.drill.metastore.MetadataProviderManager;
 import org.apache.drill.metastore.ParquetTableMetadataProvider;
-import org.apache.drill.exec.record.metadata.TupleSchema;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.metastore.metadata.LocationProvider;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -73,7 +73,7 @@ public class ParquetGroupScan extends AbstractParquetGroupScan {
                           @JsonProperty("cacheFileRoot") Path cacheFileRoot,
                           @JsonProperty("readerConfig") ParquetReaderConfig readerConfig,
                           @JsonProperty("filter") LogicalExpression filter,
-                          @JsonProperty("schema") TupleSchema schema) throws IOException, ExecutionSetupException {
+                          @JsonProperty("schema") TupleMetadata schema) throws IOException, ExecutionSetupException {
     super(ImpersonationUtil.resolveUserName(userName), columns, entries, readerConfig, filter);
     Preconditions.checkNotNull(storageConfig);
     Preconditions.checkNotNull(formatConfig);
@@ -199,7 +199,7 @@ public class ParquetGroupScan extends AbstractParquetGroupScan {
   @JsonProperty
   @JsonIgnore(value = false)
   @Override
-  public TupleSchema getSchema() {
+  public TupleMetadata getSchema() {
     return super.getSchema();
   }
   // getters for serialization / deserialization end
@@ -207,7 +207,7 @@ public class ParquetGroupScan extends AbstractParquetGroupScan {
   @Override
   public ParquetRowGroupScan getSpecificScan(int minorFragmentId) {
     return new ParquetRowGroupScan(getUserName(), formatPlugin, getReadEntries(minorFragmentId), columns, readerConfig, selectionRoot, filter,
-      tableMetadata == null ? null : (TupleSchema) tableMetadata.getSchema());
+      tableMetadata == null ? null : tableMetadata.getSchema());
   }
 
   @Override
@@ -302,7 +302,7 @@ public class ParquetGroupScan extends AbstractParquetGroupScan {
    */
   private class ParquetGroupScanFilterer extends RowGroupScanFilterer<ParquetGroupScanFilterer> {
 
-    public ParquetGroupScanFilterer(ParquetGroupScan source) {
+    ParquetGroupScanFilterer(ParquetGroupScan source) {
       super(source);
     }
 

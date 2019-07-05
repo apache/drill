@@ -32,7 +32,6 @@ import org.apache.drill.exec.work.foreman.DrillbitStatusListener;
  * as well as understand other node's existence and capabilities.
  **/
 public abstract class ClusterCoordinator implements AutoCloseable {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ClusterCoordinator.class);
 
   protected ConcurrentHashMap<DrillbitStatusListener, DrillbitStatusListener> listeners = new ConcurrentHashMap<>(
       16, 0.75f, 16);
@@ -44,7 +43,7 @@ public abstract class ClusterCoordinator implements AutoCloseable {
    *          The maximum time to wait before throwing an exception if the
    *          cluster coordination service has not successfully started. Use 0
    *          to wait indefinitely.
-   * @throws Exception
+   * @throws Exception in case when unable to start coordinator
    */
   public abstract void start(long millisToWait) throws Exception;
 
@@ -77,9 +76,9 @@ public abstract class ClusterCoordinator implements AutoCloseable {
      * Get the drillbit endpoint associated with the registration handle
      * @return drillbit endpoint
      */
-    public abstract DrillbitEndpoint getEndPoint();
+    DrillbitEndpoint getEndPoint();
 
-    public abstract void setEndPoint(DrillbitEndpoint endpoint);
+    void setEndPoint(DrillbitEndpoint endpoint);
   }
 
   public abstract DistributedSemaphore getSemaphore(String name, int maximumLeases);
@@ -96,7 +95,8 @@ public abstract class ClusterCoordinator implements AutoCloseable {
 
   /**
    * Actions to take when there are a set of new de-active drillbits.
-   * @param unregisteredBits
+   *
+   * @param unregisteredBits set of drillbits to unregister
    */
   protected void drillbitUnregistered(Set<DrillbitEndpoint> unregisteredBits) {
     for (DrillbitStatusListener listener : listeners.keySet()) {
@@ -113,7 +113,8 @@ public abstract class ClusterCoordinator implements AutoCloseable {
   /**
    * Register a DrillbitStatusListener.
    * Note : the listeners are not guaranteed to be called in the order in which they call this method, since all the listeners are in a ConcurrentHashMap.
-   * @param listener
+   *
+   * @param listener status listener
    */
   public void addDrillbitStatusListener(DrillbitStatusListener listener) {
     listeners.putIfAbsent(listener, listener);
@@ -121,7 +122,8 @@ public abstract class ClusterCoordinator implements AutoCloseable {
 
   /**
    * Unregister a DrillbitStatusListener.
-   * @param listener
+   *
+   * @param listener status listener
    */
   public void removeDrillbitStatusListener(DrillbitStatusListener listener) {
     listeners.remove(listener);

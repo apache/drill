@@ -43,7 +43,7 @@ import org.apache.drill.exec.physical.base.IndexGroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.physical.base.ScanStats.GroupScanProperty;
-import org.apache.drill.exec.record.metadata.TupleSchema;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.planner.index.IndexDescriptor;
 import org.apache.drill.exec.planner.index.MapRDBIndexDescriptor;
@@ -123,8 +123,7 @@ public class JsonTableGroupScan extends MapRDBGroupScan implements IndexGroupSca
                             @JsonProperty("storage") FileSystemConfig storagePluginConfig,
                             @JsonProperty("format") MapRDBFormatPluginConfig formatPluginConfig,
                             @JsonProperty("columns") List<SchemaPath> columns,
-                            // TODO: DRILL-7314 - replace TupleSchema with TupleMetadata
-                            @JsonProperty("schema") TupleSchema schema,
+                            @JsonProperty("schema") TupleMetadata schema,
                             @JacksonInject StoragePluginRegistry pluginRegistry) throws ExecutionSetupException, IOException {
     this(userName, (AbstractStoragePlugin) pluginRegistry.getPlugin(storagePluginConfig),
         (MapRDBFormatPlugin) pluginRegistry.getFormatPlugin(storagePluginConfig, formatPluginConfig),
@@ -476,13 +475,12 @@ public class JsonTableGroupScan extends MapRDBGroupScan implements IndexGroupSca
   public RestrictedJsonTableGroupScan getRestrictedScan(List<SchemaPath> columns) {
     try {
       RestrictedJsonTableGroupScan newScan = new RestrictedJsonTableGroupScan(this.getUserName(),
-            (FileSystemPlugin) this.getStoragePlugin(),
-            this.getFormatPlugin(),
-            this.getScanSpec(),
-            this.getColumns(),
-            this.getStatistics(),
-            // TODO: DRILL-7314 - replace TupleSchema with TupleMetadata
-            (TupleSchema) this.getSchema());
+        (FileSystemPlugin) this.getStoragePlugin(),
+        this.getFormatPlugin(),
+        this.getScanSpec(),
+        this.getColumns(),
+        this.getStatistics(),
+        this.getSchema());
 
       newScan.columns = columns;
       return newScan;
@@ -670,7 +668,7 @@ public class JsonTableGroupScan extends MapRDBGroupScan implements IndexGroupSca
     double fullTableSize;
 
     if (useNumRegions) {
-      return getMaxParallelizationWidth() > 1 ? true: false;
+      return getMaxParallelizationWidth() > 1;
     }
 
     // This function gets called multiple times during planning. To avoid performance
@@ -695,7 +693,7 @@ public class JsonTableGroupScan extends MapRDBGroupScan implements IndexGroupSca
       fullTableSize = rowCount * rowSize;
     }
 
-    return (long) fullTableSize / scanRangeSize > 1 ? true : false;
+    return (long) fullTableSize / scanRangeSize > 1;
   }
 
   @Override
@@ -738,8 +736,9 @@ public class JsonTableGroupScan extends MapRDBGroupScan implements IndexGroupSca
   }
 
   /**
-   * Json table reader support limit
-   * @return
+   * Checks if Json table reader supports limit push down.
+   *
+   * @return true if limit push down is supported, false otherwise
    */
   @Override
   public boolean supportsLimitPushdown() {

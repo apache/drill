@@ -116,13 +116,7 @@ public class WorkManager implements AutoCloseable {
     dContext = new DrillbitContext(endpoint, bContext, coord, controller, data, workBus, provider, profilesProvider);
     statusThread.start();
 
-    DrillMetrics.register("drill.fragments.running",
-        new Gauge<Integer>() {
-          @Override
-          public Integer getValue() {
-            return runningFragments.size();
-          }
-        });
+    DrillMetrics.register("drill.fragments.running", (Gauge<Integer>) runningFragments::size);
   }
 
   public Executor getExecutor() {
@@ -239,7 +233,7 @@ public class WorkManager implements AutoCloseable {
    *  shutdown request is triggered.
    */
   public synchronized Map<String, Integer> getRemainingQueries() {
-        Map<String, Integer> queriesInfo = new HashMap<String, Integer>();
+        Map<String, Integer> queriesInfo = new HashMap<>();
         queriesInfo.put("queriesCount", queries.size());
         queriesInfo.put("fragmentsCount", runningFragments.size());
         return queriesInfo;
@@ -258,7 +252,8 @@ public class WorkManager implements AutoCloseable {
 
     /**
      * Add a self contained runnable work to executor service.
-     * @param runnable
+     *
+     * @param runnable runnable to execute
      */
     public void addNewWork(final Runnable runnable) {
       executor.execute(runnable);
@@ -280,22 +275,17 @@ public class WorkManager implements AutoCloseable {
             .build(logger);
       }
 
-      executor.execute(new Runnable()
-      {
-        @Override
-        public void run()
-        {
-          final Thread currentThread = Thread.currentThread();
-          final String originalName = currentThread.getName();
-          try {
-            currentThread.setName(queryIdString + ":foreman:cancel");
-            logger.debug("Canceling foreman");
-            foreman.cancel();
-          } catch (Throwable t) {
-            logger.warn("Exception while canceling foreman", t);
-          } finally {
-            currentThread.setName(originalName);
-          }
+      executor.execute(() -> {
+        final Thread currentThread = Thread.currentThread();
+        final String originalName = currentThread.getName();
+        try {
+          currentThread.setName(queryIdString + ":foreman:cancel");
+          logger.debug("Canceling foreman");
+          foreman.cancel();
+        } catch (Throwable t) {
+          logger.warn("Exception while canceling foreman", t);
+        } finally {
+          currentThread.setName(originalName);
         }
       });
       return true;
@@ -381,7 +371,7 @@ public class WorkManager implements AutoCloseable {
 
     /**
      * receive the RuntimeFilter thorough the wire
-     * @param runtimeFilter
+     * @param runtimeFilter runtime filter
      */
     public void receiveRuntimeFilter(final RuntimeFilterWritable runtimeFilter) {
       BitData.RuntimeFilterBDef runtimeFilterDef = runtimeFilter.getRuntimeFilterBDef();
@@ -393,20 +383,17 @@ public class WorkManager implements AutoCloseable {
       if (toForeman) {
         Foreman foreman = queries.get(queryId);
         if (foreman != null) {
-          executor.execute(new Runnable() {
-            @Override
-            public void run() {
-              final Thread currentThread = Thread.currentThread();
-              final String originalName = currentThread.getName();
-              currentThread.setName(queryIdStr + ":foreman:routeRuntimeFilter");
-              try {
-                foreman.getRuntimeFilterRouter().register(runtimeFilter);
-              } catch (Exception e) {
-                logger.warn("Exception while registering the RuntimeFilter", e);
-              } finally {
-                currentThread.setName(originalName);
-                runtimeFilter.close();
-              }
+          executor.execute(() -> {
+            final Thread currentThread = Thread.currentThread();
+            final String originalName = currentThread.getName();
+            currentThread.setName(queryIdStr + ":foreman:routeRuntimeFilter");
+            try {
+              foreman.getRuntimeFilterRouter().register(runtimeFilter);
+            } catch (Exception e) {
+              logger.warn("Exception while registering the RuntimeFilter", e);
+            } finally {
+              currentThread.setName(originalName);
+              runtimeFilter.close();
             }
           });
         }
@@ -426,7 +413,7 @@ public class WorkManager implements AutoCloseable {
   }
 
   /**
-   * Periodically gather current statistics. {@link QueryManager} uses a FragmentStatusListener to
+   * Periodically gather current statistics. {@link org.apache.drill.exec.work.foreman.QueryManager} uses a FragmentStatusListener to
    * maintain changes to state, and should be current. However, we want to collect current statistics
    * about RUNNING queries, such as current memory consumption, number of rows processed, and so on.
    * The FragmentStatusListener only tracks changes to state, so the statistics kept there will be
@@ -436,7 +423,7 @@ public class WorkManager implements AutoCloseable {
    * Tunnel, whereas for remote Foreman it is sent over the Control Tunnel.
    */
   private class StatusThread extends Thread {
-    public StatusThread() {
+    StatusThread() {
       // assume this thread is created by a non-daemon thread
       setName("WorkManager.StatusThread");
     }

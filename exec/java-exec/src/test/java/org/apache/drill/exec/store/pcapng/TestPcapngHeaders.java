@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.pcapng;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.metadata.TupleSchema;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
@@ -44,7 +45,7 @@ public class TestPcapngHeaders extends ClusterTest {
     String query = "select * from dfs.`store/pcapng/sniff.pcapng`";
     RowSet actual = client.queryBuilder().sql(query).rowSet();
 
-    TupleSchema expectedSchema = new TupleSchema();
+    TupleMetadata expectedSchema = new TupleSchema();
 
     expectedSchema.add(MaterializedField.create("tcp_flags_ece_ecn_capable", Types.optional(TypeProtos.MinorType.INT)));
     expectedSchema.add(MaterializedField.create("tcp_flags_ece_congestion_experienced", Types.optional(TypeProtos.MinorType.INT)));
@@ -83,7 +84,7 @@ public class TestPcapngHeaders extends ClusterTest {
     String query = "select sRc_ip, dst_IP, dst_mAc_address, src_Port, tcp_session, `Timestamp`  from dfs.`store/pcapng/sniff.pcapng`";
     RowSet actual = client.queryBuilder().sql(query).rowSet();
 
-    TupleSchema expectedSchema = new TupleSchema();
+    TupleMetadata expectedSchema = new TupleSchema();
 
     expectedSchema.add(MaterializedField.create("sRc_ip", Types.optional(TypeProtos.MinorType.VARCHAR)));
     expectedSchema.add(MaterializedField.create("dst_IP", Types.optional(TypeProtos.MinorType.VARCHAR)));
@@ -103,7 +104,7 @@ public class TestPcapngHeaders extends ClusterTest {
     String query = "select `timestamp`, `name`, `color` from dfs.`store/pcapng/sniff.pcapng`";
     RowSet actual = client.queryBuilder().sql(query).rowSet();
 
-    TupleSchema expectedSchema = new TupleSchema();
+    TupleMetadata expectedSchema = new TupleSchema();
 
     expectedSchema.add(MaterializedField.create("timestamp", Types.required(TypeProtos.MinorType.TIMESTAMP)));
     expectedSchema.add(MaterializedField.create("name", Types.optional(TypeProtos.MinorType.INT)));
@@ -120,7 +121,7 @@ public class TestPcapngHeaders extends ClusterTest {
     String query = "select src_ip, dst_ip, dst_mac_address, src_port, tcp_session, `timestamp`  from dfs.`store/pcapng/sniff.pcapng`";
     RowSet actual = client.queryBuilder().sql(query).rowSet();
 
-    TupleSchema expectedSchema = new TupleSchema();
+    TupleMetadata expectedSchema = new TupleSchema();
 
     expectedSchema.add(MaterializedField.create("sRc_ip", Types.optional(TypeProtos.MinorType.VARCHAR)));
     expectedSchema.add(MaterializedField.create("dst_IP", Types.optional(TypeProtos.MinorType.VARCHAR)));
@@ -158,7 +159,7 @@ public class TestPcapngHeaders extends ClusterTest {
     String query = "select arr[3] as arr from dfs.`store/pcapng/sniff.pcapng`";
     RowSet actual = client.queryBuilder().sql(query).rowSet();
 
-    TupleSchema expectedSchema = new TupleSchema();
+    TupleMetadata expectedSchema = new TupleSchema();
 
     expectedSchema.add(MaterializedField.create("arr", Types.optional(TypeProtos.MinorType.INT)));
 
@@ -187,7 +188,7 @@ public class TestPcapngHeaders extends ClusterTest {
     String query = "select top['nested'] as nested from dfs.`store/pcapng/sniff.pcapng`";
     RowSet actual = client.queryBuilder().sql(query).rowSet();
 
-    TupleSchema expectedSchema = new TupleSchema();
+    TupleMetadata expectedSchema = new TupleSchema();
 
     expectedSchema.add(MaterializedField.create("nested", Types.optional(TypeProtos.MinorType.INT)));
 

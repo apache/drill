@@ -55,7 +55,7 @@
       <!-- add as provided scope so that we can compile TestTools.  Should only be ever used in a test scenario where someone else is bringing JUnit in. -->
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>${dep.junit.version}</version>
+      <version>${junit.version}</version>
     </dependency>
 
     <dependency>

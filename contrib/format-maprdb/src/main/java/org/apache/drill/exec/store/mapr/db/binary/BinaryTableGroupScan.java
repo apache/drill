@@ -32,7 +32,7 @@ import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.physical.base.ScanStats.GroupScanProperty;
-import org.apache.drill.exec.record.metadata.TupleSchema;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.planner.index.Statistics;
 import org.apache.drill.exec.store.StoragePluginRegistry;
@@ -85,8 +85,7 @@ public class BinaryTableGroupScan extends MapRDBGroupScan implements DrillHBaseC
                               @JsonProperty("storage") FileSystemConfig storagePluginConfig,
                               @JsonProperty("format") MapRDBFormatPluginConfig formatPluginConfig,
                               @JsonProperty("columns") List<SchemaPath> columns,
-                              // TODO: DRILL-7314 - replace TupleSchema with TupleMetadata
-                              @JsonProperty("schema") TupleSchema schema,
+                              @JsonProperty("schema") TupleMetadata schema,
                               @JacksonInject StoragePluginRegistry pluginRegistry) throws ExecutionSetupException, IOException {
     this(userName, (AbstractStoragePlugin) pluginRegistry.getPlugin(storagePluginConfig),
         (MapRDBFormatPlugin) pluginRegistry.getFormatPlugin(storagePluginConfig, formatPluginConfig),
@@ -140,7 +139,7 @@ public class BinaryTableGroupScan extends MapRDBGroupScan implements DrillHBaseC
         tableStats = new MapRDBTableStats(getHBaseConf(), hbaseScanSpec.getTableName());
       }
       boolean foundStartRegion = false;
-      final TreeMap<TabletFragmentInfo, String> regionsToScan = new TreeMap<TabletFragmentInfo, String>();
+      final TreeMap<TabletFragmentInfo, String> regionsToScan = new TreeMap<>();
       List<HRegionLocation> regionLocations = locator.getAllRegionLocations();
       for (HRegionLocation regionLocation : regionLocations) {
         HRegionInfo regionInfo = regionLocation.getRegionInfo();
@@ -163,7 +162,7 @@ public class BinaryTableGroupScan extends MapRDBGroupScan implements DrillHBaseC
 
   protected MapRDBSubScanSpec getSubScanSpec(TabletFragmentInfo tfi) {
     HBaseScanSpec spec = hbaseScanSpec;
-    MapRDBSubScanSpec subScanSpec = new MapRDBSubScanSpec(
+    return new MapRDBSubScanSpec(
         spec.getTableName(),
         null /* indexFid */,
         getRegionsToScan().get(tfi),
@@ -172,7 +171,6 @@ public class BinaryTableGroupScan extends MapRDBGroupScan implements DrillHBaseC
         spec.getSerializedFilter(),
         null,
         getUserName());
-    return subScanSpec;
   }
 
   @Override

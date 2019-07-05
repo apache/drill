@@ -46,8 +46,8 @@ import org.apache.drill.exec.store.sys.PersistentStoreRegistry;
 import org.apache.drill.exec.store.sys.store.provider.CachingPersistentStoreProvider;
 import org.apache.drill.exec.store.sys.store.provider.InMemoryStoreProvider;
 import org.apache.drill.exec.store.sys.store.provider.LocalPersistentStoreProvider;
-import org.apache.drill.exec.util.GuavaPatcher;
-import org.apache.drill.exec.util.ProtobufPatcher;
+import org.apache.drill.common.util.GuavaPatcher;
+import org.apache.drill.common.util.ProtobufPatcher;
 import org.apache.drill.exec.work.WorkManager;
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
@@ -92,8 +92,6 @@ public class Drillbit implements AutoCloseable {
   }
 
   public final static String SYSTEM_OPTIONS_NAME = "org.apache.drill.exec.server.Drillbit.system_options";
-
-  private boolean isClosed = false;
 
   private final ClusterCoordinator coord;
   private final ServiceEngine engine;
@@ -179,7 +177,7 @@ public class Drillbit implements AutoCloseable {
       String drillClusterPath = "/" + zkRoot + "/" +  clusterId;
       ACLProvider aclProvider = ZKACLProviderFactory.getACLProvider(config, drillClusterPath, context);
       coord = new ZKClusterCoordinator(config, aclProvider);
-      storeProvider = new PersistentStoreRegistry<ClusterCoordinator>(this.coord, config).newPStoreProvider();
+      storeProvider = new PersistentStoreRegistry<>(this.coord, config).newPStoreProvider();
     }
 
     //Check if InMemory Profile Store, else use Default Store Provider
@@ -289,7 +287,7 @@ public class Drillbit implements AutoCloseable {
     //safe to exit
     updateState(State.OFFLINE);
     stateManager.setState(DrillbitState.OFFLINE);
-    if(quiescentMode == true) {
+    if(quiescentMode) {
       return;
     }
     if (coord != null && registrationHandle != null) {
@@ -342,9 +340,9 @@ public class Drillbit implements AutoCloseable {
     final SystemOptionManager optionManager = getContext().getOptionManager();
 
     // parse out the properties, validate, and then set them
-    final String systemProps[] = allSystemProps.split(",");
+    final String[] systemProps = allSystemProps.split(",");
     for (final String systemProp : systemProps) {
-      final String keyValue[] = systemProp.split("=");
+      final String[] keyValue = systemProp.split("=");
       if (keyValue.length != 2) {
         throwInvalidSystemOption(systemProp, "does not contain a key=value assignment");
       }
@@ -379,7 +377,7 @@ public class Drillbit implements AutoCloseable {
 
     private final Drillbit drillbit;
     private final StackTrace stackTrace;
-    public GracefulShutdownThread(final Drillbit drillbit, final StackTrace stackTrace) {
+    GracefulShutdownThread(final Drillbit drillbit, final StackTrace stackTrace) {
       this.drillbit = drillbit;
       this.stackTrace = stackTrace;
     }
@@ -453,7 +451,7 @@ public class Drillbit implements AutoCloseable {
      * @param stackTrace the stack trace from where the Drillbit was started;
      *   use new StackTrace() to generate this
      */
-    public ShutdownThread(final Drillbit drillbit, final StackTrace stackTrace) {
+    ShutdownThread(final Drillbit drillbit, final StackTrace stackTrace) {
       this.drillbit = drillbit;
       this.stackTrace = stackTrace;
       /*

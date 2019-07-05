@@ -348,7 +348,7 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
                                                    OptionManager optionManager,
                                                    boolean omitUnsupportedExprs) {
     return getFilterPredicate(filterExpr, udfUtilities, functionImplementationRegistry, optionManager,
-            omitUnsupportedExprs, supportsFileImplicitColumns(), (TupleSchema) getTableMetadata().getSchema());
+            omitUnsupportedExprs, supportsFileImplicitColumns(), getTableMetadata().getSchema());
   }
 
   /**
@@ -361,7 +361,7 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
    * @param omitUnsupportedExprs           whether expressions which cannot be converted
    *                                       may be omitted from the resulting expression
    * @param supportsFileImplicitColumns    whether implicit columns are supported
-   * @param tupleSchema                    schema
+   * @param schema                         schema
    * @return parquet filter predicate
    */
   public static FilterPredicate getFilterPredicate(LogicalExpression filterExpr,
@@ -370,8 +370,8 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
                                             OptionManager optionManager,
                                             boolean omitUnsupportedExprs,
                                             boolean supportsFileImplicitColumns,
-                                            TupleSchema tupleSchema) {
-    TupleMetadata types = tupleSchema.copy();
+                                            TupleMetadata schema) {
+    TupleMetadata types = schema.copy();
 
     Set<SchemaPath> schemaPathsInExpr = filterExpr.accept(new FilterEvaluatorUtils.FieldReferenceFinder(), null);
 
@@ -402,9 +402,9 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
   }
 
   @JsonIgnore
-  public TupleSchema getSchema() {
+  public TupleMetadata getSchema() {
     // creates a copy of TupleMetadata from tableMetadata
-    TupleSchema tuple = new TupleSchema();
+    TupleMetadata tuple = new TupleSchema();
     for (ColumnMetadata md : getTableMetadata().getSchema()) {
       tuple.addColumn(md.copy());
     }
