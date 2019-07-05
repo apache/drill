@@ -17,53 +17,68 @@
  */
 package org.apache.drill.exec.rpc.user.security;
 
-import com.typesafe.config.ConfigValueFactory;
-import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.SecurityTest;
 import org.apache.drill.common.config.DrillProperties;
-import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl;
+import org.apache.drill.test.ClientFixture;
+import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.ClusterFixtureBuilder;
+import org.apache.drill.test.ClusterTest;
+import org.apache.drill.test.QueryTestUtil;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.rules.ExpectedException;
 
-import java.util.Properties;
+import java.util.Arrays;
+import java.util.List;
 
 import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_1;
 import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_1_PASSWORD;
 import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_2;
 import static org.apache.drill.exec.rpc.user.security.testing.UserAuthenticatorTestImpl.TEST_USER_2_PASSWORD;
+import static org.hamcrest.CoreMatchers.isA;
 import static org.hamcrest.core.StringContains.containsString;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
 
 @Category(SecurityTest.class)
-public class TestCustomUserAuthenticator extends BaseTestQuery {
+public class TestCustomUserAuthenticator extends ClusterTest {
+
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
 
   @BeforeClass
   public static void setupCluster() {
-    // Create a new DrillConfig which has user authentication enabled and authenticator set to
-    // UserAuthenticatorTestImpl.
-    final Properties props = cloneDefaultTestConfigProperties();
-    final DrillConfig newConfig = new DrillConfig(DrillConfig.create(props)
-            .withValue(ExecConstants.USER_AUTHENTICATION_ENABLED,
-                ConfigValueFactory.fromAnyRef("true"))
-            .withValue(ExecConstants.USER_AUTHENTICATOR_IMPL,
-                ConfigValueFactory.fromAnyRef(UserAuthenticatorTestImpl.TYPE)));
-
-    final Properties connectionProps = new Properties();
-    connectionProps.setProperty(DrillProperties.USER, "anonymous");
-    connectionProps.setProperty(DrillProperties.PASSWORD, "anything works!");
-    updateTestCluster(3, newConfig, connectionProps);
+    cluster = ClusterFixture.bareBuilder(dirTestWatcher)
+        .clusterSize(3)
+        .configProperty(ExecConstants.ALLOW_LOOPBACK_ADDRESS_BINDING, true)
+        .configProperty(ExecConstants.USER_AUTHENTICATION_ENABLED, true)
+        .configProperty(ExecConstants.USER_AUTHENTICATOR_IMPL, UserAuthenticatorTestImpl.TYPE)
+        .build();
   }
 
   @Test
   public void positiveUserAuth() throws Exception {
     runTest(TEST_USER_1, TEST_USER_1_PASSWORD);
     runTest(TEST_USER_2, TEST_USER_2_PASSWORD);
+  }
+
+  @Test
+  public void positiveAuthDisabled() throws Exception {
+    // Setup a separate cluster
+    ClusterFixtureBuilder builder = ClusterFixture.bareBuilder(dirTestWatcher)
+        .configProperty(ExecConstants.ALLOW_LOOPBACK_ADDRESS_BINDING, true)
+        .configProperty(ExecConstants.INITIAL_USER_PORT, QueryTestUtil.getFreePortNumber(31170, 300))
+        .configProperty(ExecConstants.INITIAL_BIT_PORT, QueryTestUtil.getFreePortNumber(31180, 300));
+
+    // Setup specific auth settings
+    ClusterFixture cluster = builder.configProperty(ExecConstants.USER_AUTHENTICATION_ENABLED, false)
+        .configProperty(ExecConstants.USER_AUTHENTICATOR_IMPL, "NonExistingImpl")
+        .build();
+
+    runTest(TEST_USER_1, TEST_USER_1_PASSWORD, cluster);
   }
 
   @Test
@@ -75,15 +90,9 @@ public class TestCustomUserAuthenticator extends BaseTestQuery {
 
   @Test
   public void emptyPassword() throws Exception {
-    try {
-      runTest(TEST_USER_2, "");
-      fail("Expected an exception.");
-    } catch (RpcException e) {
-      final String exMsg = e.getMessage();
-      assertThat(exMsg, containsString("Insufficient credentials"));
-    } catch (Exception e) {
-      fail("Expected an RpcException.");
-    }
+    thrown.expectCause(isA(RpcException.class));
+    thrown.expectMessage(containsString("Insufficient credentials"));
+    runTest(TEST_USER_2, "");
   }
 
   @Test
@@ -92,33 +101,33 @@ public class TestCustomUserAuthenticator extends BaseTestQuery {
     runTest(TEST_USER_2, TEST_USER_2_PASSWORD);
   }
 
-  private static void negativeAuthHelper(final String user, final String password) throws Exception {
-    RpcException negativeAuthEx = null;
-    try {
-      runTest(user, password);
-    } catch (RpcException e) {
-      negativeAuthEx = e;
-    }
-
-    assertNotNull("Expected RpcException.", negativeAuthEx);
-    final String exMsg = negativeAuthEx.getMessage();
-    assertThat(exMsg, containsString("Authentication failed"));
-    assertThat(exMsg, containsString("Incorrect credentials"));
+  private void negativeAuthHelper(final String user, final String password) throws Exception {
+    thrown.expectCause(isA(RpcException.class));
+    thrown.expectMessage(containsString("Authentication failed"));
+    thrown.expectMessage(containsString("Incorrect credentials"));
+    runTest(user, password);
   }
 
-  private static void runTest(final String user, final String password) throws Exception {
-    final Properties connectionProps = new Properties();
+  private static void runTest(String user, String password) throws Exception {
+    runTest(user, password, cluster);
+  }
 
-    connectionProps.setProperty(DrillProperties.USER, user);
-    connectionProps.setProperty(DrillProperties.PASSWORD, password);
-
-    updateClient(connectionProps);
+  private static void runTest(String user, String password, ClusterFixture cluster) throws Exception {
+    ClientFixture client = cluster.clientBuilder()
+        .property(DrillProperties.USER, user)
+        .property(DrillProperties.PASSWORD, password)
+        .build();
 
     // Run few queries using the new client
-    test("SHOW SCHEMAS");
-    test("USE INFORMATION_SCHEMA");
-    test("SHOW TABLES");
-    test("SELECT * FROM INFORMATION_SCHEMA.`TABLES` WHERE TABLE_NAME LIKE 'COLUMNS'");
-    test("SELECT * FROM cp.`region.json` LIMIT 5");
+    List<String> queries = Arrays.asList(
+        "SHOW SCHEMAS",
+        "USE INFORMATION_SCHEMA",
+        "SHOW TABLES",
+        "SELECT * FROM INFORMATION_SCHEMA.`TABLES` WHERE TABLE_NAME LIKE 'COLUMNS'",
+        "SELECT * FROM cp.`region.json` LIMIT 5");
+
+    for (String query : queries) {
+      client.queryBuilder().sql(query).run();
+    }
   }
 }
