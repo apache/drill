@@ -455,7 +455,7 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
           return RunTimeScan.dynamicPackageScan(drillConfig, Sets.newHashSet(urls));
         } finally {
           if (markerFileConnection instanceof JarURLConnection) {
-            ((JarURLConnection) markerFile.openConnection()).getJarFile().close();
+            ((JarURLConnection) markerFileConnection).getJarFile().close();
           }
         }
       }
@@ -592,6 +592,7 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
    */
   @Override
   public void close() {
+    localFunctionRegistry.close();
     if (deleteTmpDir) {
       FileUtils.deleteQuietly(tmpDir);
     } else {

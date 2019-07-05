@@ -29,6 +29,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -83,7 +85,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * <li><b>function holder for upper(VARCHAR-REQUIRED)</b> is {@link DrillFuncHolder} initiated for each function.</li>
  *
  */
-public class FunctionRegistryHolder {
+public class FunctionRegistryHolder implements AutoCloseable {
 
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FunctionRegistryHolder.class);
 
@@ -376,28 +378,73 @@ public class FunctionRegistryHolder {
       return;
     }
 
+    boolean isClosed  = false;
     for (Map.Entry<String, Queue<String>> functionEntry : jar.entrySet()) {
       final String function = functionEntry.getKey();
       Map<String, DrillFuncHolder> functionHolders = functions.get(function);
       Queue<String> functionSignatures = functionEntry.getValue();
-      for (Map.Entry<String, DrillFuncHolder> entry : functionHolders.entrySet()) {
-        if (functionSignatures.contains(entry.getKey())) {
-          ClassLoader classLoader = entry.getValue().getClassLoader();
-          if (classLoader instanceof AutoCloseable) {
-            try {
-              ((AutoCloseable) classLoader).close();
-            } catch (Exception e) {
-              logger.warn("Problem during closing class loader", e);
-            }
-          }
-          break;
-        }
-      }
+      // closes class loader only one time
+      isClosed = !isClosed && closeClassLoader(function, functionSignatures);
       functionHolders.keySet().removeAll(functionSignatures);
 
       if (functionHolders.isEmpty()) {
         functions.remove(function);
       }
     }
+  }
+
+  @Override
+  public void close() {
+    try (@SuppressWarnings("unused") Closeable lock = writeLock.open()) {
+      jars.forEach((jarName, jar) -> {
+        if (!LocalFunctionRegistry.BUILT_IN.equals(jarName)) {
+          for (Map.Entry<String, Queue<String>> functionEntry : jar.entrySet()) {
+            if (closeClassLoader(functionEntry.getKey(), functionEntry.getValue())) {
+              // class loader is closed, iterates to another jar
+              break;
+            }
+          }
+        }
+      });
+    }
+  }
+
+  /**
+   * Produces search of {@link DrillFuncHolder} which corresponds to specified {@code String functionName}
+   * with signature from {@code Queue<String> functionSignatures},
+   * closes its class loader if {@link DrillFuncHolder} is found and returns true. Otherwise false is returned.
+   *
+   * @param functionName       name of the function
+   * @param functionSignatures function signatures
+   * @return {@code true} if {@link DrillFuncHolder} was found and attempted to close class loader disregarding the result
+   */
+  private boolean closeClassLoader(String functionName, Queue<String> functionSignatures) {
+    return getDrillFuncHolder(functionName, functionSignatures)
+        .map(drillFuncHolder -> {
+          ClassLoader classLoader = drillFuncHolder.getClassLoader();
+          try {
+            ((AutoCloseable) classLoader).close();
+          } catch (Exception e) {
+            logger.warn("Problem during closing class loader", e);
+          }
+          return true;
+        })
+        .orElse(false);
+  }
+
+  /**
+   * Produces search of {@link DrillFuncHolder} which corresponds to specified {@code String functionName}
+   * with signature from {@code Queue<String> functionSignatures} and returns first found instance.
+   *
+   * @param functionName       name of the function
+   * @param functionSignatures function signatures
+   * @return {@link Optional} with first found {@link DrillFuncHolder} instance
+   */
+  private Optional<DrillFuncHolder> getDrillFuncHolder(String functionName, Queue<String> functionSignatures) {
+    Map<String, DrillFuncHolder> functionHolders = functions.get(functionName);
+    return functionSignatures.stream()
+        .map(functionHolders::get)
+        .filter(Objects::nonNull)
+        .findAny();
   }
 }
