@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.util;
+package org.apache.drill.common.util;
 
 import java.lang.reflect.Modifier;
 
@@ -24,9 +24,11 @@ import javassist.CtClass;
 import javassist.CtConstructor;
 import javassist.CtMethod;
 import javassist.CtNewMethod;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class GuavaPatcher {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(GuavaPatcher.class);
+  private static final Logger logger = LoggerFactory.getLogger(GuavaPatcher.class);
 
   private static boolean patched;
 
@@ -58,9 +60,9 @@ public class GuavaPatcher {
     }
 
     // Add back the Stopwatch.elapsedMillis() method for old consumers.
-    CtMethod newmethod = CtNewMethod.make(
+    CtMethod newMethod = CtNewMethod.make(
         "public long elapsedMillis() { return elapsed(java.util.concurrent.TimeUnit.MILLISECONDS); }", cc);
-    cc.addMethod(newmethod);
+    cc.addMethod(newMethod);
 
     // Load the modified class instead of the original.
     cc.toClass();
@@ -75,10 +77,10 @@ public class GuavaPatcher {
 
 
     // Add back the Closeables.closeQuietly() method for old consumers.
-    CtMethod newmethod = CtNewMethod.make(
+    CtMethod newMethod = CtNewMethod.make(
         "public static void closeQuietly(java.io.Closeable closeable) { try{closeable.close();}catch(Exception e){} }",
         cc);
-    cc.addMethod(newmethod);
+    cc.addMethod(newMethod);
 
     // Load the modified class instead of the original.
     cc.toClass();

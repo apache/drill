@@ -437,7 +437,7 @@ public abstract class TupleState extends ContainerState
    * Internal writer schema that matches the column list.
    */
 
-  protected final TupleSchema schema = new TupleSchema();
+  protected final TupleMetadata schema = new TupleSchema();
 
   /**
    * Metadata description of the output container (for the row) or map

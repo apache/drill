@@ -24,7 +24,7 @@ import org.apache.drill.exec.expr.FilterPredicate;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.expr.stat.RowsMatch;
 import org.apache.drill.exec.physical.base.AbstractGroupScanWithMetadata;
-import org.apache.drill.exec.record.metadata.TupleSchema;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.CommonParquetRecordReader;
 import org.apache.drill.exec.store.parquet.metadata.Metadata;
 import org.apache.drill.exec.store.parquet.metadata.MetadataBase;
@@ -86,8 +86,8 @@ public abstract class AbstractParquetScanBatchCreator {
     ParquetReaderConfig readerConfig = rowGroupScan.getReaderConfig();
     RowGroupReadEntry firstRowGroup = null; // to be scanned in case ALL row groups are pruned out
     ParquetMetadata firstFooter = null;
-    long rowgroupsPruned = 0; // for stats
-    TupleSchema tupleSchema = rowGroupScan.getTupleSchema();
+    long rowGroupsPruned = 0; // for stats
+    TupleMetadata schema = rowGroupScan.getSchema();
 
     try {
 
@@ -105,7 +105,7 @@ public abstract class AbstractParquetScanBatchCreator {
       Set<String> columnsInExpr = null;
       // for debug/info logging
       long totalPruneTime = 0;
-      long totalRowgroups = rowGroupScan.getRowGroupReadEntries().size();
+      long totalRowGroups = rowGroupScan.getRowGroupReadEntries().size();
       Stopwatch pruneTimer = Stopwatch.createUnstarted();
       int countMatchClassCastExceptions = 0; // in case match() hits CCE, count and report these
       String matchCastErrorMessage = ""; // report the error too (Java insists on initializing this ....)
@@ -115,7 +115,7 @@ public abstract class AbstractParquetScanBatchCreator {
         filterPredicate = AbstractGroupScanWithMetadata.getFilterPredicate(filterExpr, context,
           (FunctionImplementationRegistry) context.getFunctionRegistry(), context.getOptions(), true,
           true /* supports file implicit columns */,
-          tupleSchema);
+          schema);
         // Extract only the relevant columns from the filter (sans implicit columns, if any)
         schemaPathsInExpr = filterExpr.accept(new FilterEvaluatorUtils.FieldReferenceFinder(), null);
         columnsInExpr = new HashSet<>();
@@ -207,7 +207,7 @@ public abstract class AbstractParquetScanBatchCreator {
 
           // If this rowgroup failed the match - skip it (i.e., no reader for this rowgroup)
           if (matchResult == RowsMatch.NONE) {
-            rowgroupsPruned++; // one more RG was pruned
+            rowGroupsPruned++; // one more RG was pruned
             if (firstRowGroup == null) {  // keep the first RG, to be used in case all row groups are pruned
               firstRowGroup = rowGroup;
               firstFooter = footer;
@@ -227,16 +227,16 @@ public abstract class AbstractParquetScanBatchCreator {
       }
       // do some logging, if relevant
       if ( totalPruneTime > 0 ) {
-        logger.info("Finished parquet_runtime_pruning in {} usec. Out of given {} rowgroups, {} were pruned. {}", totalPruneTime, totalRowgroups, rowgroupsPruned,
-          totalRowgroups == rowgroupsPruned ? "ALL_PRUNED !!" : "");
+        logger.info("Finished parquet_runtime_pruning in {} usec. Out of given {} rowgroups, {} were pruned. {}", totalPruneTime, totalRowGroups, rowGroupsPruned,
+          totalRowGroups == rowGroupsPruned ? "ALL_PRUNED !!" : "");
       }
       if ( countMatchClassCastExceptions > 0 ) {
-        logger.info("Run-time pruning skipped for {} out of {} rowgroups due to: {}",countMatchClassCastExceptions, totalRowgroups, matchCastErrorMessage);
+        logger.info("Run-time pruning skipped for {} out of {} rowgroups due to: {}",countMatchClassCastExceptions, totalRowGroups, matchCastErrorMessage);
       }
 
       // Update stats (same in every reader - the others would just overwrite the stats)
       for (CommonParquetRecordReader rr : readers ) {
-          rr.updateRowgroupsStats(totalRowgroups, rowgroupsPruned);
+          rr.updateRowgroupsStats(totalRowGroups, rowGroupsPruned);
       }
 
     } catch (IOException|InterruptedException e) {

@@ -46,6 +46,8 @@ import java.util.stream.Collectors;
 @JsonPropertyOrder({"columns", "properties"})
 public class TupleSchema extends AbstractPropertied implements TupleMetadata {
 
+  public static final String TYPE = "tuple_schema";
+
   private MapColumnMetadata parentMap;
   private final TupleNameSpace<ColumnMetadata> nameSpace = new TupleNameSpace<>();
 

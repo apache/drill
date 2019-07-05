@@ -25,7 +25,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.apache.drill.exec.record.metadata.TupleSchema;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.metastore.FileSystemMetadataProviderManager;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
@@ -61,8 +61,7 @@ public class RestrictedJsonTableGroupScan extends JsonTableGroupScan {
                                       @JsonProperty("scanSpec") JsonScanSpec scanSpec, /* scan spec of the original table */
                                       @JsonProperty("columns") List<SchemaPath> columns,
                                       @JsonProperty("") MapRDBStatistics statistics,
-                                      // TODO: DRILL-7314 - replace TupleSchema with TupleMetadata
-                                      @JsonProperty("schema") TupleSchema schema) throws IOException {
+                                      @JsonProperty("schema") TupleMetadata schema) throws IOException {
     super(userName, storagePlugin, formatPlugin, scanSpec, columns,
         statistics, FileSystemMetadataProviderManager.getMetadataProviderForSchema(schema));
   }

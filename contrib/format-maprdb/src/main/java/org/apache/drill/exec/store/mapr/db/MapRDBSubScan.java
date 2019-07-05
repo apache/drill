@@ -30,7 +30,6 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.exec.record.metadata.TupleSchema;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
@@ -60,8 +59,7 @@ public class MapRDBSubScan extends AbstractDbSubScan {
                        @JsonProperty("columns") List<SchemaPath> columns,
                        @JsonProperty("maxRecordsToRead") int maxRecordsToRead,
                        @JsonProperty("tableType") String tableType,
-                       // TODO: DRILL-7314 - replace TupleSchema with TupleMetadata
-                       @JsonProperty("schema") TupleSchema schema) throws ExecutionSetupException {
+                       @JsonProperty("schema") TupleMetadata schema) throws ExecutionSetupException {
     this(userName,
         (MapRDBFormatPlugin) engineRegistry.getFormatPlugin(storageConfig, formatPluginConfig),
         regionScanSpecList,

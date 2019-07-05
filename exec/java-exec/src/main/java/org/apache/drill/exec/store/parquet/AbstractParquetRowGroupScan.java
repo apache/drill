@@ -27,7 +27,7 @@ import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.SubScan;
-import org.apache.drill.exec.record.metadata.TupleSchema;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 
@@ -43,22 +43,22 @@ public abstract class AbstractParquetRowGroupScan extends AbstractBase implement
   protected final ParquetReaderConfig readerConfig;
   protected final LogicalExpression filter;
   protected final Path selectionRoot;
-  protected final TupleSchema tupleSchema;
+  protected final TupleMetadata schema;
 
   protected AbstractParquetRowGroupScan(String userName,
-                                     List<RowGroupReadEntry> rowGroupReadEntries,
-                                     List<SchemaPath> columns,
-                                     ParquetReaderConfig readerConfig,
-                                     LogicalExpression filter,
-                                     Path selectionRoot,
-                                     TupleSchema tupleSchema) {
+                                        List<RowGroupReadEntry> rowGroupReadEntries,
+                                        List<SchemaPath> columns,
+                                        ParquetReaderConfig readerConfig,
+                                        LogicalExpression filter,
+                                        Path selectionRoot,
+                                        TupleMetadata schema) {
     super(userName);
     this.rowGroupReadEntries = rowGroupReadEntries;
     this.columns = columns == null ? GroupScan.ALL_COLUMNS : columns;
     this.readerConfig = readerConfig == null ? ParquetReaderConfig.getDefaultInstance() : readerConfig;
     this.filter = filter;
     this.selectionRoot = selectionRoot;
-    this.tupleSchema = tupleSchema;
+    this.schema = schema;
   }
 
   @JsonProperty
@@ -109,7 +109,7 @@ public abstract class AbstractParquetRowGroupScan extends AbstractBase implement
   }
 
   @JsonProperty
-  public TupleSchema getTupleSchema() { return tupleSchema; }
+  public TupleMetadata getSchema() { return schema; }
 
   public abstract AbstractParquetRowGroupScan copy(List<SchemaPath> columns);
   @JsonIgnore

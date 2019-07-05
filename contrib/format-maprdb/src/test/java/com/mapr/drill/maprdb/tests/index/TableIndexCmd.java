@@ -20,7 +20,7 @@ package com.mapr.drill.maprdb.tests.index;
 
 import com.mapr.db.Admin;
 import com.mapr.db.MapRDB;
-import org.apache.drill.exec.util.GuavaPatcher;
+import org.apache.drill.common.util.GuavaPatcher;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -22,8 +22,8 @@ import java.lang.management.ManagementFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.drill.exec.ZookeeperTestUtil;
-import org.apache.drill.exec.util.GuavaPatcher;
-import org.apache.drill.exec.util.ProtobufPatcher;
+import org.apache.drill.common.util.GuavaPatcher;
+import org.apache.drill.common.util.ProtobufPatcher;
 import org.apache.drill.hbase.test.Drill2130StorageHBaseHamcrestConfigurationTest;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;

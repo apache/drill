@@ -147,6 +147,7 @@ public class TestSchemaProvider {
 
     String expectedContent = "{\n"
       + "  \"schema\" : {\n"
+      + "    \"type\" : \"tuple_schema\",\n"
       + "    \"columns\" : [\n"
       + "      {\n"
       + "        \"name\" : \"i\",\n"

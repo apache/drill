@@ -22,7 +22,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.exec.record.metadata.TupleSchema;
 import org.apache.drill.exec.record.metadata.schema.parser.SchemaExprParser;
 import java.io.IOException;
 import java.util.Map;
@@ -39,7 +38,7 @@ public class SchemaContainer {
 
   @JsonCreator
   public SchemaContainer(@JsonProperty("table") String table,
-                         @JsonProperty("schema") TupleSchema schema,
+                         @JsonProperty("schema") TupleMetadata schema,
                          @JsonProperty("version") Integer version) {
     this.table = table;
     this.schema = schema;

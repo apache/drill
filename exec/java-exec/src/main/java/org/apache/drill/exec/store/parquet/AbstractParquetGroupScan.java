@@ -618,7 +618,6 @@ public abstract class AbstractParquetGroupScan extends AbstractGroupScanWithMeta
           }
         }
       }
-
       return prunedFiles;
     }
   }
