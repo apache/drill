@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.dfs.easy;
 
-import org.apache.drill.metastore.SimpleFileTableMetadataProvider;
+import org.apache.drill.exec.metastore.SimpleFileTableMetadataProvider;
 import org.apache.drill.metastore.metadata.TableMetadataProviderBuilder;
 import org.apache.hadoop.fs.Path;
 

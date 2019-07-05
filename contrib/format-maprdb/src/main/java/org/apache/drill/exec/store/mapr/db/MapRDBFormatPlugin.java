@@ -35,7 +35,7 @@ import org.apache.drill.exec.store.mapr.TableFormatPlugin;
 import org.apache.drill.exec.store.mapr.db.binary.BinaryTableGroupScan;
 import org.apache.drill.exec.store.mapr.db.json.JsonScanSpec;
 import org.apache.drill.exec.store.mapr.db.json.JsonTableGroupScan;
-import org.apache.drill.metastore.MetadataProviderManager;
+import org.apache.drill.exec.metastore.MetadataProviderManager;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;

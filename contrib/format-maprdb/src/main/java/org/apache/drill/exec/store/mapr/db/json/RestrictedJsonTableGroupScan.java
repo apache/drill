@@ -26,7 +26,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.metastore.FileSystemMetadataProviderManager;
+import org.apache.drill.exec.metastore.FileSystemMetadataProviderManager;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
