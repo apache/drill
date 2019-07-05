@@ -26,7 +26,7 @@ import org.apache.drill.exec.physical.base.AbstractGroupScanWithMetadata;
 import org.apache.drill.metastore.metadata.SegmentMetadata;
 import org.apache.drill.metastore.statistics.TableStatisticsKind;
 import org.apache.drill.metastore.metadata.MetadataType;
-import org.apache.drill.metastore.ParquetMetadataProvider;
+import org.apache.drill.exec.metastore.ParquetMetadataProvider;
 import org.apache.drill.metastore.statistics.Statistic;
 import org.apache.drill.metastore.metadata.BaseMetadata;
 import org.apache.drill.metastore.metadata.LocationProvider;

@@ -23,9 +23,9 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.metastore.FileSystemMetadataProviderManager;
-import org.apache.drill.metastore.MetadataProviderManager;
-import org.apache.drill.metastore.ParquetTableMetadataProvider;
+import org.apache.drill.exec.metastore.FileSystemMetadataProviderManager;
+import org.apache.drill.exec.metastore.MetadataProviderManager;
+import org.apache.drill.exec.metastore.ParquetTableMetadataProvider;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.metastore.metadata.LocationProvider;
 import org.apache.drill.common.exceptions.ExecutionSetupException;

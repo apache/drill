@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.metastore;
+package org.apache.drill.exec.metastore;
 
 import org.apache.drill.exec.store.dfs.ReadEntryWithPath;
 import org.apache.drill.metastore.metadata.RowGroupMetadata;

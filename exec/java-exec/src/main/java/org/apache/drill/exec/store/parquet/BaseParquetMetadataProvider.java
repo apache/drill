@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.parquet;
 
-import org.apache.drill.metastore.ParquetMetadataProvider;
+import org.apache.drill.exec.metastore.ParquetMetadataProvider;
 import org.apache.drill.metastore.metadata.LocationProvider;
 import org.apache.drill.metastore.metadata.MetadataInfo;
 import org.apache.drill.metastore.metadata.MetadataType;
