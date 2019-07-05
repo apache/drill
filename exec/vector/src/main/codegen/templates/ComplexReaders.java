@@ -50,9 +50,9 @@ package org.apache.drill.exec.vector.complex.impl;
  */
 @SuppressWarnings("unused")
 public class ${nullMode}${name}ReaderImpl extends AbstractFieldReader {
-  
+
   private final ${nullMode}${name}Vector vector;
-  
+
   public ${nullMode}${name}ReaderImpl(${nullMode}${name}Vector vector) {
     super();
     this.vector = vector;
@@ -65,7 +65,7 @@ public class ${nullMode}${name}ReaderImpl extends AbstractFieldReader {
   public MaterializedField getField() {
     return vector.getField();
   }
-  
+
   public boolean isSet() {
     <#if nullMode == "Nullable">
     return !vector.getAccessor().isNull(idx());
@@ -82,16 +82,16 @@ public class ${nullMode}${name}ReaderImpl extends AbstractFieldReader {
   }
 
   <#if minor.class == "VarDecimal">
-  public void copyAsField(String name, MapWriter writer, int scale, int precision) {
+  public void copyAsField(String name, MapWriter writer, int precision, int scale) {
     Repeated${minor.class?cap_first}WriterImpl impl
-        = (Repeated${minor.class?cap_first}WriterImpl) writer.list(name).${lowerName}(scale, precision);
+        = (Repeated${minor.class?cap_first}WriterImpl) writer.list(name).${lowerName}(precision, scale);
   <#else>
   public void copyAsField(String name, MapWriter writer) {
     Repeated${minor.class?cap_first}WriterImpl impl = (Repeated${minor.class?cap_first}WriterImpl) writer.list(name).${lowerName}();
   </#if>
     impl.vector.copyFromSafe(idx(), impl.idx(), vector);
   }
-  
+
   public int size() {
     return vector.getAccessor().getInnerValueCountAt(idx());
   }
@@ -103,27 +103,26 @@ public class ${nullMode}${name}ReaderImpl extends AbstractFieldReader {
   public void read(int arrayIndex, Nullable${minor.class?cap_first}Holder h) {
     vector.getAccessor().get(idx(), arrayIndex, h);
   }
-  
+
   public ${friendlyType} read${safeType}(int arrayIndex) {
     return vector.getAccessor().getSingleObject(idx(), arrayIndex);
   }
 
-  
   public List<Object> readObject() {
     return (List<Object>) (Object) vector.getAccessor().getObject(idx());
   }
-  
+
   <#else>
-  
+
   public void copyAsValue(${minor.class?cap_first}Writer writer) {
     ${nullMode}${minor.class?cap_first}WriterImpl impl = (${nullMode}${minor.class?cap_first}WriterImpl) writer;
     impl.vector.copyFromSafe(idx(), impl.idx(), vector);
   }
 
   <#if minor.class == "VarDecimal">
-  public void copyAsField(String name, MapWriter writer, int scale, int precision) {
+  public void copyAsField(String name, MapWriter writer, int precision, int scale) {
     ${nullMode}${minor.class?cap_first}WriterImpl impl
-        = (${nullMode}${minor.class?cap_first}WriterImpl) writer.${lowerName}(name, scale, precision);
+        = (${nullMode}${minor.class?cap_first}WriterImpl) writer.${lowerName}(name, precision, scale);
 <#else>
   public void copyAsField(String name, MapWriter writer) {
     ${nullMode}${minor.class?cap_first}WriterImpl impl = (${nullMode}${minor.class?cap_first}WriterImpl) writer.${lowerName}(name);
@@ -140,15 +139,14 @@ public class ${nullMode}${name}ReaderImpl extends AbstractFieldReader {
   public void read(Nullable${minor.class?cap_first}Holder h) {
     vector.getAccessor().get(idx(), h);
   }
-  
+
   public ${friendlyType} read${safeType}() {
     return vector.getAccessor().getObject(idx());
   }
-  
+
   public void copyValue(FieldWriter w) {
-    
   }
-  
+
   public Object readObject() {
     return vector.getAccessor().getObject(idx());
   }
@@ -165,7 +163,7 @@ package org.apache.drill.exec.vector.complex.reader;
 <#include "/@includes/vv_imports.ftl" />
 @SuppressWarnings("unused")
 public interface ${name}Reader extends BaseReader {
-  
+
   <#if mode == "Repeated">
   public int size();
   public void read(int arrayIndex, ${minor.class?cap_first}Holder h);
@@ -181,16 +179,12 @@ public interface ${name}Reader extends BaseReader {
   public boolean isSet();
   public void copyAsValue(${minor.class}Writer writer);
   <#if minor.class == "VarDecimal">
-  public void copyAsField(String name, ${minor.class}Writer writer, int scale, int precision);
+  public void copyAsField(String name, ${minor.class}Writer writer, int precision, int scale);
   <#else>
   public void copyAsField(String name, ${minor.class}Writer writer);
   </#if>
 }
 
-
-
 </#list>
 </#list>
 </#list>
-
-

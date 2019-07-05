@@ -593,10 +593,10 @@ public class ParquetReaderUtility {
    * @param precision    type precision (used for DECIMAL type)
    * @return major type
    */
-  public static TypeProtos.MajorType getType(PrimitiveTypeName type, OriginalType originalType, int scale, int precision) {
+  public static TypeProtos.MajorType getType(PrimitiveTypeName type, OriginalType originalType, int precision, int scale) {
     TypeProtos.MinorType minorType = getMinorType(type, originalType);
     if (originalType == OriginalType.DECIMAL) {
-      return Types.withScaleAndPrecision(minorType, TypeProtos.DataMode.OPTIONAL, scale, precision);
+      return Types.withPrecisionAndScale(minorType, TypeProtos.DataMode.OPTIONAL, precision, scale);
     }
 
     return Types.optional(minorType);

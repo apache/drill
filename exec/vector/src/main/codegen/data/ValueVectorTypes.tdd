@@ -71,8 +71,9 @@
         { class: "Time", javaType: "int", friendlyType: "LocalTime", accessorType: "int" },
         { class: "IntervalYear", javaType: "int", friendlyType: "Period" }
         { class: "Decimal9", maxPrecisionDigits: 9, friendlyType: "BigDecimal",
-          fields: [{name:"value", type:"int"}, {name: "scale", type: "int", include: false},
-                   {name: "precision", type: "int", include: false}] },
+          fields: [{name:"value", type:"int"},
+                   {name: "precision", type: "int", include: false},
+                   {name: "scale", type: "int", include: false}] },
       ]
     },
     {
@@ -88,8 +89,9 @@
         { class: "Date", javaType: "long", friendlyType: "LocalDate", accessorType: "long" },
         { class: "TimeStamp", javaType: "long", friendlyType: "LocalDateTime", accessorType: "long" }
         { class: "Decimal18", maxPrecisionDigits: 18, friendlyType: "BigDecimal",
-          fields: [{name:"value", type:"long"}, {name: "scale", type: "int", include: false},
-                   {name: "precision", type: "int", include: false}] },
+          fields: [{name:"value", type:"long"},
+                   {name: "precision", type: "int", include: false},
+                   {name: "scale", type: "int", include: false}] },
         <#--
         { class: "Money", maxPrecisionDigits: 2, scale: 1, },
         -->
@@ -128,7 +130,8 @@
         -->
         { class: "Decimal28Dense", maxPrecisionDigits: 28, nDecimalDigits: 3, friendlyType: "BigDecimal",
           fields: [{name: "start", type: "int"}, {name: "buffer", type: "DrillBuf"},
-                   {name: "scale", type: "int", include: false}, {name: "precision", type: "int", include: false}] }
+                   {name: "precision", type: "int", include: false},
+                   {name: "scale", type: "int", include: false}] }
       ]
     },
     {
@@ -140,7 +143,8 @@
       minor: [
         { class: "Decimal38Dense", maxPrecisionDigits: 38, nDecimalDigits: 4,friendlyType: "BigDecimal",
           fields: [{name: "start", type: "int"}, {name: "buffer", type: "DrillBuf"},
-                   {name: "scale", type: "int", include: false}, {name: "precision", type: "int", include: false}] }
+                   {name: "precision", type: "int", include: false},
+                   {name: "scale", type: "int", include: false}] }
       ]
     },
     {
@@ -151,7 +155,8 @@
       minor: [
         { class: "Decimal38Sparse", maxPrecisionDigits: 38, nDecimalDigits: 6, friendlyType: "BigDecimal",
           fields: [{name: "start", type: "int"}, {name: "buffer", type: "DrillBuf"},
-                   {name: "scale", type: "int", include: false}, {name: "precision", type: "int", include: false}] }
+                   {name: "precision", type: "int", include: false},
+                   {name: "scale", type: "int", include: false}] }
       ]
     },
     {
@@ -162,7 +167,8 @@
       minor: [
         { class: "Decimal28Sparse", maxPrecisionDigits: 28, nDecimalDigits: 5, friendlyType: "BigDecimal",
           fields: [{name: "start", type: "int"}, {name: "buffer", type: "DrillBuf"},
-                   {name: "scale", type: "int", include: false}, {name: "precision", type: "int", include: false}] }
+                   {name: "precision", type: "int", include: false},
+                   {name: "scale", type: "int", include: false}] }
       ]
     },
     {
@@ -185,7 +191,8 @@
       minor: [
         { class: "VarDecimal", friendlyType: "BigDecimal", fields: [{name: "start", type: "int"},
             {name: "end", type: "int"}, {name: "buffer", type: "DrillBuf"},
-            {name: "scale", type: "int", include: false}, {name: "precision", type: "int", include: false}] }
+            {name: "precision", type: "int", include: false},
+            {name: "scale", type: "int", include: false}] }
       ]
     },
     {

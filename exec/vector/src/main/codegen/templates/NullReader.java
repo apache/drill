@@ -72,7 +72,7 @@ public class NullReader extends AbstractBaseReader implements FieldReader {
   
   public void copyAsValue(${minor.class}Writer writer) {}
   <#if minor.class == "VarDecimal">
-  public void copyAsField(String name, ${minor.class}Writer writer, int scale, int precision) {}
+  public void copyAsField(String name, ${minor.class}Writer writer, int precision, int scale) {}
   <#else>
   public void copyAsField(String name, ${minor.class}Writer writer) {}
   </#if>

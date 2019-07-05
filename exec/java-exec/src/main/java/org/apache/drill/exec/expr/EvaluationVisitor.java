@@ -651,7 +651,7 @@ public class EvaluationVisitor {
       return getHoldingContainer(
         generator,
         e.getMajorType(),
-        buffer -> ValueHolderHelper.getDecimal9Holder(e.getIntFromDecimal(), e.getScale(), e.getPrecision()));
+        buffer -> ValueHolderHelper.getDecimal9Holder(e.getIntFromDecimal(), e.getPrecision(), e.getScale()));
     }
 
     @Override
@@ -660,7 +660,7 @@ public class EvaluationVisitor {
       return getHoldingContainer(
         generator,
         e.getMajorType(),
-        buffer -> ValueHolderHelper.getDecimal18Holder(e.getLongFromDecimal(), e.getScale(), e.getPrecision()));
+        buffer -> ValueHolderHelper.getDecimal18Holder(e.getLongFromDecimal(), e.getPrecision(), e.getScale()));
     }
 
     @Override

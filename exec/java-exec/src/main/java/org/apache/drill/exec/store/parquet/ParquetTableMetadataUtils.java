@@ -500,7 +500,7 @@ public class ParquetTableMetadataUtils {
         mode = TypeProtos.DataMode.OPTIONAL;
       }
       TypeProtos.MajorType columnType =
-          TypeProtos.MajorType.newBuilder(ParquetReaderUtility.getType(primitiveType, originalType, scale, precision))
+          TypeProtos.MajorType.newBuilder(ParquetReaderUtility.getType(primitiveType, originalType, precision, scale))
               .setMode(mode)
               .build();
 

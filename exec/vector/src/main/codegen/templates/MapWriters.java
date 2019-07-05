@@ -207,8 +207,8 @@ public class ${mode}MapWriter extends AbstractFieldWriter {
   }
 
   @Override
-  public ${minor.class}Writer ${lowerName}(String name, int scale, int precision) {
-    final MajorType ${upperName}_TYPE = Types.withScaleAndPrecision(MinorType.${upperName}, DataMode.OPTIONAL, scale, precision);
+  public ${minor.class}Writer ${lowerName}(String name, int precision, int scale) {
+    final MajorType ${upperName}_TYPE = Types.withPrecisionAndScale(MinorType.${upperName}, DataMode.OPTIONAL, precision, scale);
   <#else>
   private static final MajorType ${upperName}_TYPE = Types.optional(MinorType.${upperName});
   @Override

@@ -549,7 +549,7 @@ public class Types {
     return MajorType.newBuilder().setMinorType(type).setMode(mode).setPrecision(precision).build();
   }
 
-  public static MajorType withScaleAndPrecision(final MinorType type, final DataMode mode, final int scale, final int precision) {
+  public static MajorType withPrecisionAndScale(MinorType type, DataMode mode, int precision, int scale) {
     return MajorType.newBuilder().setMinorType(type).setMode(mode).setScale(scale).setPrecision(precision).build();
   }
 
@@ -566,7 +566,7 @@ public class Types {
   }
 
   public static MajorType overrideMode(final MajorType originalMajorType, final DataMode overrideMode) {
-    return withScaleAndPrecision(originalMajorType.getMinorType(), overrideMode, originalMajorType.getScale(), originalMajorType.getPrecision());
+    return withPrecisionAndScale(originalMajorType.getMinorType(), overrideMode, originalMajorType.getPrecision(), originalMajorType.getScale());
   }
 
   public static MajorType getMajorTypeFromName(final String typeName) {

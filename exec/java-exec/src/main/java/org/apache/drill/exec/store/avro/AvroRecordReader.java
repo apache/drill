@@ -326,8 +326,8 @@ public class AvroRecordReader extends AbstractRecordReader {
           case "decimal":
             ParquetReaderUtility.checkDecimalTypeEnabled(optionManager);
             LogicalTypes.Decimal decimalType = (LogicalTypes.Decimal) logicalType;
-            writer.varDecimal(fieldName, decimalType.getScale(), decimalType.getPrecision())
-                .writeVarDecimal(0, length, buffer, decimalType.getScale(), decimalType.getPrecision());
+            writer.varDecimal(fieldName, decimalType.getPrecision(), decimalType.getScale())
+                .writeVarDecimal(0, length, buffer, decimalType.getPrecision(), decimalType.getScale());
             break;
           default:
             writer.binary(fieldName).writeVarBinary(0, length, buffer);
@@ -354,7 +354,7 @@ public class AvroRecordReader extends AbstractRecordReader {
           case "decimal":
             ParquetReaderUtility.checkDecimalTypeEnabled(optionManager);
             LogicalTypes.Decimal decimalType = (LogicalTypes.Decimal) logicalType;
-            writer.varDecimal(fieldName, decimalType.getScale(), decimalType.getPrecision())
+            writer.varDecimal(fieldName, decimalType.getPrecision(), decimalType.getScale())
                 .writeVarDecimal(new BigDecimal(new BigInteger(genericFixed.bytes()), decimalType.getScale()));
             break;
           default:

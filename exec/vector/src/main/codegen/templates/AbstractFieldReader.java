@@ -95,7 +95,7 @@ public abstract class AbstractFieldReader extends AbstractBaseReader implements 
   }
 
   <#if minor.class == "VarDecimal">
-  public void copyAsField(String name, ${name}Writer writer, int scale, int precision) {
+  public void copyAsField(String name, ${name}Writer writer, int precision, int scale) {
   <#else>
   public void copyAsField(String name, ${name}Writer writer) {
   </#if>

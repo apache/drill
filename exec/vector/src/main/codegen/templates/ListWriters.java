@@ -170,8 +170,8 @@ public class ${mode}ListWriter extends AbstractFieldWriter {
   }
 
   @Override
-  public ${capName}Writer ${lowerName}(int scale, int precision) {
-    final MajorType ${upperName}_TYPE = Types.withScaleAndPrecision(MinorType.${upperName}, DataMode.REPEATED, scale, precision);
+  public ${capName}Writer ${lowerName}(int precision, int scale) {
+    final MajorType ${upperName}_TYPE = Types.withPrecisionAndScale(MinorType.${upperName}, DataMode.REPEATED, precision, scale);
   <#else>
   private static final MajorType ${upperName}_TYPE = Types.repeated(MinorType.${upperName});
 

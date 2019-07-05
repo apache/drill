@@ -58,9 +58,10 @@ public final class Repeated${minor.class}Vector extends BaseRepeatedValueVector 
   public Repeated${minor.class}Vector(MaterializedField field, BufferAllocator allocator) {
     super(field, allocator);
     MajorType majorType = field.getType();
-    addOrGetVector(VectorDescriptor.create(Types.withScaleAndPrecision(
+    addOrGetVector(VectorDescriptor.create(Types.withPrecisionAndScale(
         majorType.getMinorType(), DataMode.REQUIRED,
-        majorType.getScale(), majorType.getPrecision())));
+        majorType.getPrecision(),
+        majorType.getScale())));
   }
 
   @Override

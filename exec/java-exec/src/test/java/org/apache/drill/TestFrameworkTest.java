@@ -144,7 +144,7 @@ public class TestFrameworkTest extends BaseTestQuery {
           .sqlQuery("select cast(dec_col as decimal(38,2)) dec_col from cp.`testframework/decimal_test.json`")
           .unOrdered()
           .csvBaselineFile("testframework/decimal_test.tsv")
-          .baselineTypes(Types.withScaleAndPrecision(TypeProtos.MinorType.VARDECIMAL, TypeProtos.DataMode.REQUIRED, 2, 38))
+          .baselineTypes(Types.withPrecisionAndScale(TypeProtos.MinorType.VARDECIMAL, TypeProtos.DataMode.REQUIRED, 38, 2))
           .baselineColumns("dec_col")
           .build().run();
 

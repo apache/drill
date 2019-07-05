@@ -642,11 +642,12 @@ public class DrillOptiq {
             .getBoolean(ENABLE_DECIMAL_DATA_TYPE.getOptionName())) {
           if (isLiteralNull(literal)) {
             return new TypedNullConstant(
-                Types.withScaleAndPrecision(
+                Types.withPrecisionAndScale(
                     MinorType.VARDECIMAL,
                     TypeProtos.DataMode.OPTIONAL,
-                    literal.getType().getScale(),
-                    literal.getType().getPrecision()));
+                    literal.getType().getPrecision(),
+                    literal.getType().getScale()
+                ));
           }
           return ValueExpressions.getVarDecimal((BigDecimal) literal.getValue(),
               literal.getType().getPrecision(),

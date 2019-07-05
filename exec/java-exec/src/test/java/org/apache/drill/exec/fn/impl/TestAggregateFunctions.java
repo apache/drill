@@ -391,21 +391,21 @@ public class TestAggregateFunctions extends BaseTestQuery {
     final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema =
         ImmutableList.of(
             Pair.of(SchemaPath.getSimplePath("sum_col"),
-                Types.withScaleAndPrecision(TypeProtos.MinorType.VARDECIMAL, TypeProtos.DataMode.OPTIONAL, 3, 38)),
+                Types.withPrecisionAndScale(TypeProtos.MinorType.VARDECIMAL, TypeProtos.DataMode.OPTIONAL, 38, 3)),
             Pair.of(SchemaPath.getSimplePath("avg_col"),
-                Types.withScaleAndPrecision(TypeProtos.MinorType.VARDECIMAL, TypeProtos.DataMode.OPTIONAL, 6, 38)),
+                Types.withPrecisionAndScale(TypeProtos.MinorType.VARDECIMAL, TypeProtos.DataMode.OPTIONAL, 38, 6)),
             Pair.of(SchemaPath.getSimplePath("stddev_pop_col"),
-                Types.withScaleAndPrecision(TypeProtos.MinorType.VARDECIMAL, TypeProtos.DataMode.OPTIONAL, 6, 38)),
+                Types.withPrecisionAndScale(TypeProtos.MinorType.VARDECIMAL, TypeProtos.DataMode.OPTIONAL, 38, 6)),
             Pair.of(SchemaPath.getSimplePath("stddev_samp_col"),
-                Types.withScaleAndPrecision(TypeProtos.MinorType.VARDECIMAL, TypeProtos.DataMode.OPTIONAL, 6, 38)),
+                Types.withPrecisionAndScale(TypeProtos.MinorType.VARDECIMAL, TypeProtos.DataMode.OPTIONAL, 38, 6)),
             Pair.of(SchemaPath.getSimplePath("var_pop_col"),
-                Types.withScaleAndPrecision(TypeProtos.MinorType.VARDECIMAL, TypeProtos.DataMode.OPTIONAL, 6, 38)),
+                Types.withPrecisionAndScale(TypeProtos.MinorType.VARDECIMAL, TypeProtos.DataMode.OPTIONAL, 38, 6)),
             Pair.of(SchemaPath.getSimplePath("var_samp_col"),
-                Types.withScaleAndPrecision(TypeProtos.MinorType.VARDECIMAL, TypeProtos.DataMode.OPTIONAL, 6, 38)),
+                Types.withPrecisionAndScale(TypeProtos.MinorType.VARDECIMAL, TypeProtos.DataMode.OPTIONAL, 38, 6)),
             Pair.of(SchemaPath.getSimplePath("max_col"),
-                Types.withScaleAndPrecision(TypeProtos.MinorType.VARDECIMAL, TypeProtos.DataMode.OPTIONAL, 3, 9)),
+                Types.withPrecisionAndScale(TypeProtos.MinorType.VARDECIMAL, TypeProtos.DataMode.OPTIONAL, 9, 3)),
             Pair.of(SchemaPath.getSimplePath("min_col"),
-                Types.withScaleAndPrecision(TypeProtos.MinorType.VARDECIMAL, TypeProtos.DataMode.OPTIONAL, 3, 9)));
+                Types.withPrecisionAndScale(TypeProtos.MinorType.VARDECIMAL, TypeProtos.DataMode.OPTIONAL, 9, 3)));
 
     String query =
         "select\n" +
