@@ -127,13 +127,13 @@ abstract class AbstractPromotableFieldWriter extends AbstractFieldWriter {
   <#if minor.class?contains("Decimal")>
 
   @Override
-  public ${capName}Writer ${lowerName}(String name, int scale, int precision) {
-    return getWriter(MinorType.MAP).${lowerName}(name, scale, precision);
+  public ${capName}Writer ${lowerName}(String name, int precision, int scale) {
+    return getWriter(MinorType.MAP).${lowerName}(name, precision, scale);
   }
 
   @Override
-  public ${capName}Writer ${lowerName}(int scale, int precision) {
-    return getWriter(MinorType.LIST).${lowerName}(scale, precision);
+  public ${capName}Writer ${lowerName}(int precision, int scale) {
+    return getWriter(MinorType.LIST).${lowerName}(precision, scale);
   }
 
   <#else>

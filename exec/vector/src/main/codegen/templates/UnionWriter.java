@@ -183,17 +183,17 @@ public class UnionWriter extends AbstractFieldWriter implements FieldWriter {
   <#assign capName = minor.class?cap_first />
   <#if minor.class == "VarDecimal">
   @Override
-  public ${capName}Writer ${lowerName}(String name, int scale, int precision) {
+  public ${capName}Writer ${lowerName}(String name, int precision, int scale) {
     data.getMutator().setType(idx(), MinorType.MAP);
     getMapWriter().setPosition(idx());
-    return getMapWriter().${lowerName}(name, scale, precision);
+    return getMapWriter().${lowerName}(name, precision, scale);
   }
 
   @Override
-  public ${capName}Writer ${lowerName}(int scale, int precision) {
+  public ${capName}Writer ${lowerName}(int precision, int scale) {
     data.getMutator().setType(idx(), MinorType.LIST);
     getListWriter().setPosition(idx());
-    return getListWriter().${lowerName}(scale, precision);
+    return getListWriter().${lowerName}(precision, scale);
   }
   <#else>
   @Override

@@ -223,12 +223,12 @@ public class InterpreterEvaluator {
 
     @Override
     public ValueHolder visitDecimal9Constant(ValueExpressions.Decimal9Expression decExpr,Integer value) throws RuntimeException {
-      return ValueHolderHelper.getDecimal9Holder(decExpr.getIntFromDecimal(), decExpr.getScale(), decExpr.getPrecision());
+      return ValueHolderHelper.getDecimal9Holder(decExpr.getIntFromDecimal(), decExpr.getPrecision(), decExpr.getScale());
     }
 
     @Override
     public ValueHolder visitDecimal18Constant(ValueExpressions.Decimal18Expression decExpr,Integer value) throws RuntimeException {
-      return ValueHolderHelper.getDecimal18Holder(decExpr.getLongFromDecimal(), decExpr.getScale(), decExpr.getPrecision());
+      return ValueHolderHelper.getDecimal18Holder(decExpr.getLongFromDecimal(), decExpr.getPrecision(), decExpr.getScale());
     }
 
     @Override

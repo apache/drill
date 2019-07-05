@@ -198,8 +198,8 @@ public final class HiveValueWriterFactory {
         int scale = decimalType.getScale();
         int precision = decimalType.getPrecision();
         VarDecimalWriter writer = extractWriter(name, parentWriter,
-            (mapWriter, key) -> mapWriter.varDecimal(key, scale, precision),
-            listWriter -> listWriter.varDecimal(scale, precision));
+            (mapWriter, key) -> mapWriter.varDecimal(key, precision, scale),
+            listWriter -> listWriter.varDecimal(precision, scale));
         return new HiveDecimalWriter((HiveDecimalObjectInspector) inspector, writer, scale);
       }
       default:

@@ -389,12 +389,12 @@ public class DrillParquetGroupConverter extends GroupConverter {
   }
 
   private PrimitiveConverter getVarDecimalConverter(String name, PrimitiveType type) {
-    int s = type.getDecimalMetadata().getScale();
-    int p = type.getDecimalMetadata().getPrecision();
+    int scale = type.getDecimalMetadata().getScale();
+    int precision = type.getDecimalMetadata().getPrecision();
     VarDecimalWriter writer = type.isRepetition(Repetition.REPEATED)
-        ? getWriter(name, (m, f) -> m.list(f).varDecimal(s, p), l -> l.list().varDecimal(s, p))
-        : getWriter(name, (m, f) -> m.varDecimal(f, s, p), l -> l.varDecimal(s, p));
-    return new DrillVarDecimalConverter(writer, p, s, mutator.getManagedBuffer());
+        ? getWriter(name, (m, f) -> m.list(f).varDecimal(precision, scale), l -> l.list().varDecimal(precision, scale))
+        : getWriter(name, (m, f) -> m.varDecimal(f, precision, scale), l -> l.varDecimal(precision, scale));
+    return new DrillVarDecimalConverter(writer, precision, scale, mutator.getManagedBuffer());
   }
 
   @Override

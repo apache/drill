@@ -633,7 +633,7 @@ public class SqlConverter {
         if (type.getScale() > type.getPrecision()) {
           throw UserException.validationError()
               .message("Expected scale less than or equal to precision, " +
-                  "but was scale %s and precision %s.", type.getScale(), type.getPrecision())
+                  "but was precision %s and scale %s.", type.getPrecision(), type.getScale())
               .build(logger);
         }
         RexLiteral literal = (RexLiteral) exp;

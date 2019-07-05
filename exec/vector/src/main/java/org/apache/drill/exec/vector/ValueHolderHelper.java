@@ -150,7 +150,7 @@ public class ValueHolderHelper {
       return dch;
   }
 
-  public static Decimal9Holder getDecimal9Holder(int decimal, int scale, int precision) {
+  public static Decimal9Holder getDecimal9Holder(int decimal, int precision, int scale) {
     Decimal9Holder dch = new Decimal9Holder();
 
     dch.scale = scale;
@@ -160,7 +160,7 @@ public class ValueHolderHelper {
     return dch;
   }
 
-  public static Decimal18Holder getDecimal18Holder(long decimal, int scale, int precision) {
+  public static Decimal18Holder getDecimal18Holder(long decimal, int precision, int scale) {
     Decimal18Holder dch = new Decimal18Holder();
 
     dch.scale = scale;

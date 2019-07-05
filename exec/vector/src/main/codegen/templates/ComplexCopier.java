@@ -103,7 +103,7 @@ public class ComplexCopier {
       return (FieldWriter) writer.<#if name == "Int">integer<#else>${uncappedName}</#if>(name);
     <#elseif minor.class?contains("VarDecimal")>
     case ${name?upper_case}:
-      return (FieldWriter) writer.${uncappedName}(name, type.getScale(), type.getPrecision());
+      return (FieldWriter) writer.${uncappedName}(name, type.getPrecision(), type.getScale());
     </#if>
     </#list></#list>
     case MAP:
@@ -125,7 +125,7 @@ public class ComplexCopier {
       return (FieldWriter) writer.<#if name == "Int">integer<#else>${uncappedName}</#if>();
     <#elseif minor.class?contains("VarDecimal")>
     case ${name?upper_case}:
-      return (FieldWriter) writer.${uncappedName}(reader.getType().getScale(), reader.getType().getPrecision());
+      return (FieldWriter) writer.${uncappedName}(reader.getType().getPrecision(), reader.getType().getScale());
     </#if>
     </#list></#list>
     case MAP:

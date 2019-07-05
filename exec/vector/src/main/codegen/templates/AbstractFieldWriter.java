@@ -119,13 +119,13 @@ abstract class AbstractFieldWriter extends AbstractBaseWriter implements FieldWr
   <#assign capName = minor.class?cap_first />
   <#if minor.class?contains("Decimal") >
   @Override
-  public ${capName}Writer ${lowerName}(String name, int scale, int precision) {
+  public ${capName}Writer ${lowerName}(String name, int precision, int scale) {
     fail("${capName}");
     return null;
   }
 
   @Override
-  public ${capName}Writer ${lowerName}(int scale, int precision) {
+  public ${capName}Writer ${lowerName}(int precision, int scale) {
     fail("${capName}");
     return null;
   }

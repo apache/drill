@@ -229,8 +229,8 @@ public class MapOrListWriterImpl implements MapOrListWriter {
   }
 
   @Override
-  public VarDecimalWriter varDecimal(String name, int scale, int precision) {
-    return (map != null) ? map.varDecimal(name, scale, precision) : list.varDecimal(scale, precision);
+  public VarDecimalWriter varDecimal(String name, int precision, int scale) {
+    return (map != null) ? map.varDecimal(name, precision, scale) : list.varDecimal(precision, scale);
   }
 
   @Override
