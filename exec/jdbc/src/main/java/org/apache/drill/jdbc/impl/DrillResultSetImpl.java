@@ -78,11 +78,11 @@ public class DrillResultSetImpl extends AvaticaResultSet implements DrillResultS
    * Throws AlreadyClosedSqlException or QueryCanceledSqlException if this
    * ResultSet is closed.
    *
-   * @throws  ExecutionCanceledSqlException  if ResultSet is closed because of
-   *          cancelation and no QueryCanceledSqlException has been thrown yet
-   *          for this ResultSet
-   * @throws  AlreadyClosedSqlException  if ResultSet is closed
-   * @throws  SQLException  if error in calling {@link #isClosed()}
+   * @throws ExecutionCanceledSqlException if ResultSet is closed because of
+   *         cancellation and no QueryCanceledSqlException has been thrown yet
+   *         for this ResultSet
+   * @throws AlreadyClosedSqlException if ResultSet is closed
+   * @throws SQLException if error in calling {@link #isClosed()}
    */
   @Override
   protected void checkOpen() throws SQLException {
@@ -168,7 +168,7 @@ public class DrillResultSetImpl extends AvaticaResultSet implements DrillResultS
   }
 
   @Override
-  public Object getObject( int columnIndex ) throws SQLException {
+  public Object getObject(int columnIndex) throws SQLException {
     checkOpen();
 
     Cursor.Accessor accessor;
@@ -180,7 +180,7 @@ public class DrillResultSetImpl extends AvaticaResultSet implements DrillResultS
     ColumnMetaData metaData = columnMetaDataList.get(columnIndex - 1);
     // Drill returns a float (4bytes) for a SQL Float whereas Calcite would return a double (8bytes)
     int typeId = (metaData.type.id != Types.FLOAT) ? metaData.type.id : Types.REAL;
-    return AvaticaSite.get(accessor, typeId, localCalendar);
+    return typeId != Types.NULL ? AvaticaSite.get(accessor, typeId, localCalendar) : null;
   }
 
   //--------------------------JDBC 2.0-----------------------------------
@@ -249,10 +249,10 @@ public class DrillResultSetImpl extends AvaticaResultSet implements DrillResultS
   }
 
   @Override
-  public boolean relative( int rows ) throws SQLException {
+  public boolean relative(int rows) throws SQLException {
     checkOpen();
     try {
-      return super.relative( rows );
+      return super.relative(rows);
     } catch (UnsupportedOperationException e) {
       throw new SQLFeatureNotSupportedException(e.getMessage(), e);
     }
@@ -275,7 +275,7 @@ public class DrillResultSetImpl extends AvaticaResultSet implements DrillResultS
   public void updateNull(int columnIndex) throws SQLException {
     checkOpen();
     try {
-      super.updateNull( columnIndex );
+      super.updateNull(columnIndex);
     } catch (UnsupportedOperationException e) {
       throw new SQLFeatureNotSupportedException(e.getMessage(), e);
     }
@@ -295,7 +295,7 @@ public class DrillResultSetImpl extends AvaticaResultSet implements DrillResultS
   public void updateByte(int columnIndex, byte x) throws SQLException {
     checkOpen();
     try {
-      super.updateByte( columnIndex, x );
+      super.updateByte(columnIndex, x);
     } catch (UnsupportedOperationException e) {
       throw new SQLFeatureNotSupportedException(e.getMessage(), e);
     }
@@ -1260,7 +1260,7 @@ public class DrillResultSetImpl extends AvaticaResultSet implements DrillResultS
   ////////////////////////////////////////
 
   @Override
-  protected DrillResultSetImpl execute() throws SQLException{
+  protected DrillResultSetImpl execute() throws SQLException {
     connection.getDriver().handler.onStatementExecute(statement, null);
 
     if (signature.cursorFactory != null) {
