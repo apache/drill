@@ -74,6 +74,12 @@ public class KafkaQueriesTest extends KafkaTestBase {
         .baselineValues(endOffsetsMap.get(new TopicPartition(TestQueryConstants.JSON_TOPIC, 0))-1).go();
   }
 
+  @Test
+  public void testInformationSchema() throws Exception {
+    String query = "select * from information_schema.`views`";
+    runSQL(query);
+  }
+
   private Map<TopicPartition, Long> fetchOffsets(int flag) {
     KafkaConsumer<byte[], byte[]> kafkaConsumer = new KafkaConsumer<>(storagePluginConfig.getKafkaConsumerProps(),
         new ByteArrayDeserializer(), new ByteArrayDeserializer());

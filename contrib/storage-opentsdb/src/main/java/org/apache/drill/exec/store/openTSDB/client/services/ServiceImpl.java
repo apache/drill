@@ -33,6 +33,7 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -101,10 +102,9 @@ public class ServiceImpl implements Service {
     try {
       return client.getAllTablesName().execute().body();
     } catch (IOException e) {
-      throw UserException.connectionError(e)
-              .message("Cannot connect to the db. " +
-                      "Maybe you have incorrect connection params or db unavailable now")
-              .build(log);
+      log.warn("Cannot connect to the db. " +
+          "Maybe you have incorrect connection params or db unavailable now: {}", e.getMessage(), e.getCause());
+      return Collections.emptySet();
     }
   }
 

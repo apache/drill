@@ -18,12 +18,13 @@
 package org.apache.drill.store.openTSDB;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import org.apache.drill.PlanTestBase;
 import org.apache.drill.common.exceptions.UserRemoteException;
+import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.openTSDB.OpenTSDBStoragePluginConfig;
+import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.QueryTestUtil;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -48,8 +49,9 @@ import static org.apache.drill.store.openTSDB.TestDataHolder.SAMPLE_DATA_FOR_POS
 import static org.apache.drill.store.openTSDB.TestDataHolder.SAMPLE_DATA_FOR_POST_END_REQUEST_WITHOUT_TAGS;
 import static org.apache.drill.store.openTSDB.TestDataHolder.SAMPLE_DATA_FOR_POST_END_REQUEST_WITH_TAGS;
 import static org.apache.drill.store.openTSDB.TestDataHolder.SAMPLE_DATA_FOR_POST_REQUEST_WITH_TAGS;
+import static org.junit.Assert.assertEquals;
 
-public class TestOpenTSDBPlugin extends PlanTestBase {
+public class TestOpenTSDBPlugin extends ClusterTest {
 
   private static int portNumber;
 
@@ -58,8 +60,9 @@ public class TestOpenTSDBPlugin extends PlanTestBase {
 
   @BeforeClass
   public static void setup() throws Exception {
+    startCluster(ClusterFixture.builder(dirTestWatcher));
     portNumber = QueryTestUtil.getFreePortNumber(10_000, 200);
-    final StoragePluginRegistry pluginRegistry = getDrillbitContext().getStorage();
+    final StoragePluginRegistry pluginRegistry = cluster.drillbit().getContext().getStorage();
     OpenTSDBStoragePluginConfig storagePluginConfig =
         new OpenTSDBStoragePluginConfig(String.format("http://localhost:%s", portNumber));
     storagePluginConfig.setEnabled(true);
@@ -109,11 +112,11 @@ public class TestOpenTSDBPlugin extends PlanTestBase {
             .withBody(SAMPLE_DATA_FOR_POST_DOWNSAMPLE_REQUEST_WITHOUT_TAGS)));
 
     wireMockRule.stubFor(post(urlEqualTo("/api/query"))
-            .withRequestBody(equalToJson(END_PARAM_REQUEST_WTIHOUT_TAGS))
-            .willReturn(aResponse()
-                    .withStatus(200)
-                    .withHeader("Content-Type", "application/json")
-                    .withBody(SAMPLE_DATA_FOR_POST_END_REQUEST_WITHOUT_TAGS)));
+        .withRequestBody(equalToJson(END_PARAM_REQUEST_WTIHOUT_TAGS))
+        .willReturn(aResponse()
+            .withStatus(200)
+            .withHeader("Content-Type", "application/json")
+            .withBody(SAMPLE_DATA_FOR_POST_END_REQUEST_WITHOUT_TAGS)));
 
     wireMockRule.stubFor(post(urlEqualTo("/api/query"))
         .withRequestBody(equalToJson(DOWNSAMPLE_REQUEST_WITH_TAGS))
@@ -123,11 +126,11 @@ public class TestOpenTSDBPlugin extends PlanTestBase {
             .withBody(SAMPLE_DATA_FOR_POST_DOWNSAMPLE_REQUEST_WITH_TAGS)));
 
     wireMockRule.stubFor(post(urlEqualTo("/api/query"))
-            .withRequestBody(equalToJson(END_PARAM_REQUEST_WITH_TAGS))
-            .willReturn(aResponse()
-                    .withStatus(200)
-                    .withHeader("Content-Type", "application/json")
-                    .withBody(SAMPLE_DATA_FOR_POST_END_REQUEST_WITH_TAGS)));
+        .withRequestBody(equalToJson(END_PARAM_REQUEST_WITH_TAGS))
+        .willReturn(aResponse()
+            .withStatus(200)
+            .withHeader("Content-Type", "application/json")
+            .withBody(SAMPLE_DATA_FOR_POST_END_REQUEST_WITH_TAGS)));
 
     wireMockRule.stubFor(post(urlEqualTo("/api/query"))
         .withRequestBody(equalToJson(REQUEST_TO_NONEXISTENT_METRIC))
@@ -141,48 +144,77 @@ public class TestOpenTSDBPlugin extends PlanTestBase {
   public void testBasicQueryFromWithRequiredParams() throws Exception {
     String query =
             "select * from openTSDB.`(metric=warp.speed.test, start=47y-ago, aggregator=sum)`";
-    Assert.assertEquals(18, testSql(query));
+    assertEquals(18, runQuery(query));
   }
 
   @Test
   public void testBasicQueryGroupBy() throws Exception {
     String query =
             "select `timestamp`, sum(`aggregated value`) from openTSDB.`(metric=warp.speed.test, aggregator=sum, start=47y-ago)` group by `timestamp`";
-    Assert.assertEquals(15, testSql(query));
+    assertEquals(15, runQuery(query));
   }
 
   @Test
   public void testBasicQueryFromWithInterpolationParam() throws Exception {
     String query = "select * from openTSDB.`(metric=warp.speed.test, aggregator=sum, start=47y-ago, downsample=5y-avg)`";
-    Assert.assertEquals(4, testSql(query));
+    assertEquals(4, runQuery(query));
   }
 
   @Test
   public void testBasicQueryFromWithEndParam() throws Exception {
     String query = "select * from openTSDB.`(metric=warp.speed.test, aggregator=sum, start=47y-ago, end=1407165403000))`";
-    Assert.assertEquals(5, testSql(query));
+    assertEquals(5, runQuery(query));
   }
 
   @Test(expected = UserRemoteException.class)
   public void testBasicQueryWithoutTableName() throws Exception {
-    test("select * from openTSDB.``;");
+    runQuery("select * from openTSDB.``;");
   }
 
   @Test(expected = UserRemoteException.class)
   public void testBasicQueryWithNonExistentTableName() throws Exception {
-    test("select * from openTSDB.`warp.spee`");
+    runQuery("select * from openTSDB.`warp.spee`");
   }
 
   @Test
   public void testPhysicalPlanSubmission() throws Exception {
     String query = "select * from openTSDB.`(metric=warp.speed.test, start=47y-ago, aggregator=sum)`";
-    testPhysicalPlanExecutionBasedOnQuery(query);
+    String plan = queryBuilder()
+        .sql(query)
+        .explainJson();
+    queryBuilder()
+        .query(QueryType.PHYSICAL, plan)
+        .run();
   }
 
   @Test
   public void testDescribe() throws Exception {
-    test("use openTSDB");
-    test("describe `warp.speed.test`");
-    Assert.assertEquals(1, testSql("show tables"));
+    runQuery("use openTSDB");
+    runQuery("describe `warp.speed.test`");
+    assertEquals(1, runQuery("show tables"));
+  }
+
+  @Test
+  public void testInformationSchemaWrongPluginConfig() throws Exception {
+    ClusterFixture cluster = ClusterFixture.bareBuilder(dirTestWatcher)
+        .build();
+    int portNumber = QueryTestUtil.getFreePortNumber(10_000, 200);
+    final StoragePluginRegistry pluginRegistry = cluster.drillbit().getContext().getStorage();
+    OpenTSDBStoragePluginConfig storagePluginConfig =
+        new OpenTSDBStoragePluginConfig(String.format("http://localhost:%s/", portNumber));
+    storagePluginConfig.setEnabled(true);
+    pluginRegistry.createOrUpdate(OpenTSDBStoragePluginConfig.NAME, storagePluginConfig, true);
+    String query = "select * from information_schema.`views`";
+    cluster.clientFixture()
+        .queryBuilder()
+        .sql(query)
+        .run();
+  }
+
+  private long runQuery(String query) throws Exception {
+    return queryBuilder()
+        .sql(query)
+        .run()
+        .recordCount();
   }
 }

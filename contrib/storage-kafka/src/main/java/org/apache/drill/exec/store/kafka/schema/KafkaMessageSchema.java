@@ -17,12 +17,12 @@
  */
 package org.apache.drill.exec.store.kafka.schema;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
-import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.store.AbstractSchema;
@@ -30,7 +30,6 @@ import org.apache.drill.exec.store.kafka.KafkaScanSpec;
 import org.apache.drill.exec.store.kafka.KafkaStoragePlugin;
 import org.apache.drill.exec.store.kafka.KafkaStoragePluginConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.common.KafkaException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +44,7 @@ public class KafkaMessageSchema extends AbstractSchema {
   private Set<String> tableNames;
 
   public KafkaMessageSchema(final KafkaStoragePlugin plugin, final String name) {
-    super(ImmutableList.<String> of(), name);
+    super(ImmutableList.of(), name);
     this.plugin = plugin;
   }
 
@@ -76,9 +75,9 @@ public class KafkaMessageSchema extends AbstractSchema {
     if (tableNames == null) {
       try (KafkaConsumer<?, ?> kafkaConsumer = new KafkaConsumer<>(plugin.getConfig().getKafkaConsumerProps())) {
         tableNames = kafkaConsumer.listTopics().keySet();
-      } catch(KafkaException e) {
-        throw UserException.dataReadError(e).message("Failed to get tables information").addContext(e.getMessage())
-            .build(logger);
+      } catch (Exception e) {
+        logger.warn("Failure while loading table names for database '{}': {}", getName(), e.getMessage(), e.getCause());
+        return Collections.emptySet();
       }
     }
     return tableNames;

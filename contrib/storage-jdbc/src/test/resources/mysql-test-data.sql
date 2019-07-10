@@ -91,3 +91,5 @@ insert into person (first_name, last_name, address, city, state, zip, bigint_fie
             'ZZZ');
 
 insert into person (person_id) values (5);
+
+create view person_view as select * from person;

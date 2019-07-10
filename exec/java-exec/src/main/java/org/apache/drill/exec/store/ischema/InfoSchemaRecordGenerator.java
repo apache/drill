@@ -378,8 +378,9 @@ public abstract class InfoSchemaRecordGenerator<S> {
     @Override
     public boolean visitTable(String schemaName, String tableName, Table table) {
       if (table.getJdbcTableType() == TableType.VIEW) {
+        // View's SQL may not be available for some non-Drill views, for example, JDBC view
         records.add(new Records.View(IS_CATALOG_NAME, schemaName, tableName,
-                    ((DrillViewInfoProvider) table).getViewSql()));
+            table instanceof DrillViewInfoProvider ? ((DrillViewInfoProvider) table).getViewSql() : ""));
       }
       return false;
     }
