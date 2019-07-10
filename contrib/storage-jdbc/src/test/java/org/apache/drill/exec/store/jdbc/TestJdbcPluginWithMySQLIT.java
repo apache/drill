@@ -323,4 +323,10 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
         .baselineValuesForSingleColumn(1, 2, 3, 5)
         .go();
   }
+
+  @Test
+  public void testInformationSchemaViews() throws Exception {
+    String query = "select * from information_schema.`views`";
+    run(query);
+  }
 }
