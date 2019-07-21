@@ -45,6 +45,8 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import static org.apache.drill.test.rowSet.RowSetUtilities.strArray;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -83,7 +85,7 @@ public class TestLogReader extends ClusterTest {
     sampleConfig.setExtension("log1");
     sampleConfig.setRegex(DATE_ONLY_PATTERN);
 
-    sampleConfig.setSchema();
+    sampleConfig.initSchema();
     sampleConfig.getSchema().add( new LogFormatField("year", "INT"));
     sampleConfig.getSchema().add( new LogFormatField("month", "INT"));
     sampleConfig.getSchema().add( new LogFormatField("day", "INT"));
@@ -96,24 +98,24 @@ public class TestLogReader extends ClusterTest {
         "(\\d\\d):(\\d\\d):(\\d\\d),\\d+ " +
         "\\[([^]]*)] (\\w+)\\s+(\\S+) - (.*)");
 
-    logConfig.setSchema();
-    logConfig.getSchema().add( new LogFormatField("year", "INT"));
-    logConfig.getSchema().add( new LogFormatField("month", "INT"));
-    logConfig.getSchema().add( new LogFormatField("day", "INT"));
-    logConfig.getSchema().add( new LogFormatField("hour", "INT"));
-    logConfig.getSchema().add( new LogFormatField("minute", "INT"));
-    logConfig.getSchema().add( new LogFormatField("second", "INT"));
-    logConfig.getSchema().add( new LogFormatField("thread"));
-    logConfig.getSchema().add( new LogFormatField("level"));
-    logConfig.getSchema().add( new LogFormatField("module"));
-    logConfig.getSchema().add( new LogFormatField("message"));
+    logConfig.initSchema();
+    logConfig.getSchema().add(new LogFormatField("year", "INT"));
+    logConfig.getSchema().add(new LogFormatField("month", "INT"));
+    logConfig.getSchema().add(new LogFormatField("day", "INT"));
+    logConfig.getSchema().add(new LogFormatField("hour", "INT"));
+    logConfig.getSchema().add(new LogFormatField("minute", "INT"));
+    logConfig.getSchema().add(new LogFormatField("second", "INT"));
+    logConfig.getSchema().add(new LogFormatField("thread"));
+    logConfig.getSchema().add(new LogFormatField("level"));
+    logConfig.getSchema().add(new LogFormatField("module"));
+    logConfig.getSchema().add(new LogFormatField("message"));
 
     //Set up additional configs to check the time/date formats
     LogFormatConfig logDateConfig = new LogFormatConfig();
     logDateConfig.setExtension("log2");
     logDateConfig.setRegex("(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}),(\\d+)\\s\\[(\\w+)\\]\\s([A-Z]+)\\s(.+)");
 
-    logDateConfig.setSchema();
+    logDateConfig.initSchema();
     logDateConfig.getSchema().add( new LogFormatField( "entry_date", "TIMESTAMP", "yy-MM-dd hh:mm:ss"));
     logDateConfig.getSchema().add( new LogFormatField( "pid", "INT"));
     logDateConfig.getSchema().add( new LogFormatField( "location"));
@@ -126,6 +128,19 @@ public class TestLogReader extends ClusterTest {
     mysqlLogConfig.setExtension("sqllog");
     mysqlLogConfig.setRegex("(\\d{6})\\s(\\d{2}:\\d{2}:\\d{2})\\s+(\\d+)\\s(\\w+)\\s+(.+)");
 
+    // Firewall log file that requires date parsing
+
+    LogFormatConfig firewallConfig = new LogFormatConfig();
+    firewallConfig.setRegex("(\\w{3}\\s\\d{1,2}\\s\\d{4}\\s\\d{2}:\\d{2}:\\d{2})\\s+(\\w+)" +
+            "\\[(\\d+)\\]:\\s(.*?(\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}).*?)");
+    firewallConfig.setExtension("ssdlog");
+    firewallConfig.initSchema();
+    firewallConfig.getSchema().add(new LogFormatField("eventDate", "TIMESTAMP", "MMM dd yyyy HH:mm:ss"));
+    firewallConfig.getSchema().add(new LogFormatField("process_name"));
+    firewallConfig.getSchema().add(new LogFormatField("pid", "INT"));
+    firewallConfig.getSchema().add(new LogFormatField("message"));
+    firewallConfig.getSchema().add(new LogFormatField("src_ip"));
+
     // Define a temporary format plugin for the "cp" storage plugin.
     Drillbit drillbit = cluster.drillbit();
     final StoragePluginRegistry pluginRegistry = drillbit.getContext().getStorage();
@@ -134,7 +149,8 @@ public class TestLogReader extends ClusterTest {
     pluginConfig.getFormats().put("sample", sampleConfig);
     pluginConfig.getFormats().put("drill-log", logConfig);
     pluginConfig.getFormats().put("date-log",logDateConfig);
-    pluginConfig.getFormats().put( "mysql-log", mysqlLogConfig);
+    pluginConfig.getFormats().put("mysql-log", mysqlLogConfig);
+    pluginConfig.getFormats().put("ssdlog", firewallConfig);
     pluginRegistry.createOrUpdate("cp", pluginConfig, false);
 
     // Config similar to the above, but with no type info. Types
@@ -146,7 +162,7 @@ public class TestLogReader extends ClusterTest {
     untypedConfig.setExtension("logu");
     untypedConfig.setRegex(DATE_ONLY_PATTERN);
 
-    untypedConfig.setSchema();
+    untypedConfig.initSchema();
     untypedConfig.getSchema().add( new LogFormatField("year"));
     untypedConfig.getSchema().add( new LogFormatField("month"));
     untypedConfig.getSchema().add( new LogFormatField("day"));
@@ -736,4 +752,38 @@ public class TestLogReader extends ClusterTest {
     }
   }
 
+  /**
+   * The config classes for this plugin have been trick to get right.
+   * The following ensures that the plugin config works correctly
+   * to serialize/deserialize values.
+   */
+
+  @Test
+  public void testPluginSerialization() throws IOException {
+    ObjectMapper mapper = new ObjectMapper();
+    assertTrue(mapper.canSerialize(LogFormatPlugin.class));
+
+    LogFormatConfig sampleConfig = new LogFormatConfig();
+    sampleConfig.setExtension("log1");
+    sampleConfig.setRegex(DATE_ONLY_PATTERN);
+
+    sampleConfig.initSchema();
+    sampleConfig.getSchema().add( new LogFormatField("year", "INT"));
+    sampleConfig.getSchema().add( new LogFormatField("month", "INT"));
+    sampleConfig.getSchema().add( new LogFormatField("day", "INT"));
+    String json = mapper.writeValueAsString(sampleConfig);
+    LogFormatConfig result = mapper.readValue(json, LogFormatConfig.class);
+
+    assertEquals(sampleConfig.getRegex(), result.getRegex());
+    assertEquals(sampleConfig.getMaxErrors(), result.getMaxErrors());
+    assertEquals(sampleConfig.getSchema(), result.getSchema());
+  }
+
+  @Test
+  public void testFirewallSchema() throws RpcException {
+    String sql = "SELECT * FROM cp.`regex/firewall.ssdlog`";
+    RowSet result = client.queryBuilder().sql(sql).rowSet();
+    result.print();
+    result.clear();
+  }
 }

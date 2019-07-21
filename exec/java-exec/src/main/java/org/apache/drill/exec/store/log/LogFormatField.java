@@ -18,6 +18,8 @@
 
 package org.apache.drill.exec.store.log;
 
+import java.util.Objects;
+
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -42,9 +44,14 @@ public class LogFormatField {
   private final String fieldType;
   private final String format;
 
+  // Required to keep Jackson happy
+  public LogFormatField() {
+    this("");
+  }
+
   @VisibleForTesting
   public LogFormatField(String fieldName) {
-    this(fieldName, null, null);
+    this(fieldName, "VARCHAR", null);
   }
 
   public LogFormatField(String fieldName, String fieldType) {
@@ -62,4 +69,15 @@ public class LogFormatField {
   public String getFieldType() { return fieldType; }
 
   public String getFormat() { return format; }
+
+  @Override
+  public boolean equals(Object o) {
+    if (o == null || ! (o instanceof LogFormatField)) {
+      return false;
+    }
+    LogFormatField other = (LogFormatField) o;
+    return fieldName.equals(other.fieldName) &&
+           Objects.equals(fieldType, other.fieldType) &&
+           Objects.equals(format, other.format);
+  }
 }
