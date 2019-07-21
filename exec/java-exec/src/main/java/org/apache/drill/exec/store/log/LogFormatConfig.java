@@ -37,6 +37,9 @@ public class LogFormatConfig implements FormatPluginConfig {
   public int maxErrors = 10;
   public List<LogFormatField> schema;
 
+  // Required to keep Jackson happy
+  public LogFormatConfig() { }
+
   public String getRegex() {
     return regex;
   }
@@ -53,7 +56,6 @@ public class LogFormatConfig implements FormatPluginConfig {
     return schema;
   }
 
-  //Setters
   public void setExtension(String ext) {
     extension = ext;
   }
@@ -66,7 +68,11 @@ public class LogFormatConfig implements FormatPluginConfig {
     this.regex = regex;
   }
 
-  public void setSchema() {
+  public void setSchema(List<LogFormatField> schema) {
+    this.schema = schema;
+  }
+
+  public void initSchema() {
     schema = new ArrayList<LogFormatField>();
   }
 

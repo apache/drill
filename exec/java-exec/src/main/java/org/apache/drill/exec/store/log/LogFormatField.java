@@ -23,6 +23,8 @@ import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTes
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
+import jersey.repackaged.com.google.common.base.Objects;
+
 
 /**
  * The three configuration options for a field are:
@@ -42,9 +44,14 @@ public class LogFormatField {
   private final String fieldType;
   private final String format;
 
+  // Required to keep Jackson happy
+  public LogFormatField() {
+    this("");
+  }
+
   @VisibleForTesting
   public LogFormatField(String fieldName) {
-    this(fieldName, null, null);
+    this(fieldName, "VARCHAR", null);
   }
 
   public LogFormatField(String fieldName, String fieldType) {
@@ -62,4 +69,15 @@ public class LogFormatField {
   public String getFieldType() { return fieldType; }
 
   public String getFormat() { return format; }
+
+  @Override
+  public boolean equals(Object o) {
+    if (o == null || ! (o instanceof LogFormatField)) {
+      return false;
+    }
+    LogFormatField other = (LogFormatField) o;
+    return fieldName.equals(other.fieldName) &&
+           Objects.equal(fieldType, other.fieldType) &&
+           Objects.equal(format, other.format);
+  }
 }
