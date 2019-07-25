@@ -32,7 +32,7 @@ import java.lang.invoke.MethodType;
  * Metastore initialization is delayed until {@link #get()} method is called.
  * Metastore implementation must have constructor which accepts {@link DrillConfig}.
  */
-public class MetastoreRegistry {
+public class MetastoreRegistry implements AutoCloseable {
 
   private DrillConfig config;
   private volatile Metastore metastore;
@@ -103,5 +103,12 @@ public class MetastoreRegistry {
    */
   private DrillConfig createMetastoreConfig(DrillConfig config) {
     return DrillConfig.create(null, null, true, new MetastoreConfigFileInfo(), config.root());
+  }
+
+  @Override
+  public void close() throws Exception {
+    if (metastore != null) {
+      metastore.close();
+    }
   }
 }

@@ -48,7 +48,7 @@ public class TestTableKey extends IcebergBaseTest {
     TableKey tableKey = new TableKey("dfs", "tmp", "nation");
 
     String expected = new Path(
-      Paths.get("/metastore", "dfs", "tmp", "nation").toUri().getPath())
+      Paths.get("/metastore", "dfs", "tmp", "nation").toFile().getPath())
       .toUri().getPath();
 
     assertEquals(expected, tableKey.toLocation("/metastore"));

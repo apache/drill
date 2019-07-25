@@ -25,6 +25,7 @@ import org.apache.drill.metastore.components.views.Views;
 import org.apache.drill.metastore.iceberg.components.tables.IcebergTables;
 import org.apache.drill.metastore.iceberg.config.IcebergConfigConstants;
 import org.apache.drill.metastore.iceberg.exceptions.IcebergMetastoreException;
+import org.apache.drill.metastore.iceberg.operate.ExpirationHandler;
 import org.apache.drill.metastore.iceberg.schema.IcebergTableSchema;
 import org.apache.drill.shaded.guava.com.google.common.collect.MapDifference;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
@@ -58,6 +59,7 @@ public class IcebergMetastore implements Metastore {
   private final org.apache.iceberg.Tables tables;
   private final String baseLocation;
   private final Map<String, String> commonProperties;
+  private final ExpirationHandler expirationHandler;
 
   /**
    * Table properties for each Iceberg table should be updated only once,
@@ -71,10 +73,11 @@ public class IcebergMetastore implements Metastore {
 
   public IcebergMetastore(DrillConfig config) {
     this.config = config;
-    Configuration configuration = configuration(config);
+    Configuration configuration = configuration();
     this.tables = new HadoopTables(new Configuration(configuration));
-    this.baseLocation = baseLocation(config, new Configuration(configuration));
-    this.commonProperties = properties(config, IcebergConfigConstants.COMPONENTS_COMMON_PROPERTIES);
+    this.baseLocation = baseLocation(new Configuration(configuration));
+    this.commonProperties = properties(IcebergConfigConstants.COMPONENTS_COMMON_PROPERTIES);
+    this.expirationHandler = new ExpirationHandler(config, new Configuration(configuration));
   }
 
   @Override
@@ -82,7 +85,7 @@ public class IcebergMetastore implements Metastore {
     Table table = loadTable(IcebergConfigConstants.COMPONENTS_TABLES_LOCATION,
       IcebergConfigConstants.COMPONENTS_TABLES_PROPERTIES,
       IcebergTables.SCHEMA, Tables.class);
-    return new IcebergTables(table);
+    return new IcebergTables(table, expirationHandler);
   }
 
   @Override
@@ -94,10 +97,9 @@ public class IcebergMetastore implements Metastore {
    * Initializes {@link Configuration} based on config properties.
    * if config properties are not indicated, returns default instance.
    *
-   * @param config Drill config
    * @return {@link Configuration} instance
    */
-  private Configuration configuration(DrillConfig config) {
+  private Configuration configuration() {
     Configuration configuration = new Configuration();
     if (config.hasPath(IcebergConfigConstants.CONFIG_PROPERTIES)) {
       Config configProperties = config.getConfig(IcebergConfigConstants.CONFIG_PROPERTIES);
@@ -113,13 +115,12 @@ public class IcebergMetastore implements Metastore {
    * If {@link IcebergConfigConstants#BASE_PATH} is not set, user home directory is used.
    * {@link IcebergConfigConstants#RELATIVE_PATH} must be set.
    *
-   * @param config Drill config
    * @param configuration Hadoop configuration
    * @return Iceberg table base location
    * @throws IcebergMetastoreException if unable to init file system
    *         or Iceberg Metastore relative path is not indicated
    */
-  private String baseLocation(DrillConfig config, Configuration configuration) {
+  private String baseLocation(Configuration configuration) {
     FileSystem fs;
     try {
       fs = FileSystem.get(configuration);
@@ -145,14 +146,13 @@ public class IcebergMetastore implements Metastore {
   }
 
   /**
-   * Collects properties name and values into map if they are present in the given config,
+   * Collects properties name and values into map if they are present in the config,
    * returns empty map otherwise.
    *
-   * @param config Drill config
    * @param propertiesPath path to properties in the config
    * @return map with properties names and their values
    */
-  private Map<String, String> properties(DrillConfig config, String propertiesPath) {
+  private Map<String, String> properties(String propertiesPath) {
     return config.hasPath(propertiesPath)
       ? config.getConfig(propertiesPath).entrySet().stream()
       .collect(Collectors.toMap(
@@ -230,7 +230,7 @@ public class IcebergMetastore implements Metastore {
    */
   private Map<String, String> tableProperties(String componentPropertiesConfig) {
     Map<String, String> properties = new HashMap<>(commonProperties);
-    properties.putAll(properties(config, componentPropertiesConfig));
+    properties.putAll(properties(componentPropertiesConfig));
     return properties;
   }
 
@@ -269,5 +269,10 @@ public class IcebergMetastore implements Metastore {
     difference.entriesOnlyOnRight().keySet().forEach(updateProperties::remove);
 
     updateProperties.commit();
+  }
+
+  @Override
+  public void close() {
+    expirationHandler.close();
   }
 }

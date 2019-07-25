@@ -18,6 +18,7 @@
 package org.apache.drill.metastore.iceberg.components.tables;
 
 import org.apache.drill.metastore.components.tables.Tables;
+import org.apache.drill.metastore.iceberg.operate.ExpirationHandler;
 import org.apache.drill.metastore.operate.Metadata;
 import org.apache.drill.metastore.operate.Modify;
 import org.apache.drill.metastore.operate.Read;
@@ -55,9 +56,11 @@ public class IcebergTables implements Tables, MetastoreContext<TableMetadataUnit
   public static IcebergTableSchema SCHEMA = IcebergTableSchema.of(TableMetadataUnit.class, PARTITION_KEYS);
 
   private final Table table;
+  private final ExpirationHandler expirationHandler;
 
-  public IcebergTables(Table table) {
+  public IcebergTables(Table table, ExpirationHandler expirationHandler) {
     this.table = table;
+    this.expirationHandler = expirationHandler;
   }
 
   public MetastoreContext<TableMetadataUnit> context() {
@@ -92,5 +95,10 @@ public class IcebergTables implements Tables, MetastoreContext<TableMetadataUnit
   @Override
   public Transformer<TableMetadataUnit> transformer() {
     return new TablesTransformer(context());
+  }
+
+  @Override
+  public ExpirationHandler expirationHandler() {
+    return expirationHandler;
   }
 }

@@ -52,6 +52,11 @@ public interface IcebergConfigConstants {
   String RELATIVE_PATH = LOCATION_NAMESPACE + "relative_path";
 
   /**
+   * Defines config which provides expiration period value.
+   */
+  String EXPIRATION_PERIOD = BASE + "expiration.period";
+
+  /**
    * Drill Iceberg Metastore components configuration properties namespace.
    */
   String COMPONENTS = BASE + "components.";
