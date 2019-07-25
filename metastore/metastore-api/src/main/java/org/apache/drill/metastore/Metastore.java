@@ -29,7 +29,7 @@ import org.apache.drill.metastore.components.views.Views;
  * Besides implementing {@link Metastore}, Metastore implementation must have constructor
  * which accepts {@link org.apache.drill.common.config.DrillConfig}.
  */
-public interface Metastore {
+public interface Metastore extends AutoCloseable {
 
   /**
    * @return Metastore Tables component implementation

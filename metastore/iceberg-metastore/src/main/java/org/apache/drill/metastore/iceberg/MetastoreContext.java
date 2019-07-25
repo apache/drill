@@ -17,6 +17,7 @@
  */
 package org.apache.drill.metastore.iceberg;
 
+import org.apache.drill.metastore.iceberg.operate.ExpirationHandler;
 import org.apache.drill.metastore.iceberg.transform.Transformer;
 import org.apache.drill.metastore.iceberg.write.FileWriter;
 import org.apache.iceberg.Table;
@@ -50,4 +51,11 @@ public interface MetastoreContext<T> {
    * @return transformer instance
    */
   Transformer<T> transformer();
+
+  /**
+   * Returns expiration handler that expires Iceberg table metadata.
+   *
+   * @return expiration handler instance
+   */
+  ExpirationHandler expirationHandler();
 }

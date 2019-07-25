@@ -15,6 +15,10 @@ can be overwritten in `drill-metastore-distrib.conf` or  `drill-metastore-overri
 `drill.metastore.iceberg.location.base_path` and `drill.metastore.iceberg.location.relative_path` -
 indicate Iceberg Metastore base location.
 
+`drill.metastore.iceberg.expiration.period` - allows to specify period after which Iceberg table outdated
+metadata will be expired. Unit names must correspond to `java.time.temporal.ChronoUnit` enum values
+that do not have estimated duration (millis, seconds, minutes, hours, days).
+
 `drill.metastore.iceberg.components` - provides configuration for specific Metastore components:
 `drill.metastore.iceberg.components.tables`, `drill.metastore.iceberg.components.views`.
 
@@ -162,7 +166,7 @@ To delete data from Iceberg table, caller provides filter by which data will be 
 Filter expression must be based on component partition keys.
 
 Delete operation removes partitions from Iceberg table, it does not remove data files to which
-these partitions were pointing.
+these partitions were pointing. Outdated data files will be deleted during expiration process.
 
 If delete operation was successful, Iceberg table generates new snapshot and updates
 its own metadata.
@@ -170,9 +174,16 @@ its own metadata.
 ### Purge
 
 Allows to delete all data from Iceberg table. During this operation Iceberg table
-is not deleted, history of all operations and data files are preserved.
+is not deleted, history of all operations and data files are preserved until
+expiration process is launched.
 
-## Data cleanup
+## Iceberg metadata expiration
 
-Iceberg table provides ability to remove outdated data files and snapshots 
-when they are no longer needed. Such support in Iceberg Metastore will be added later.
+Iceberg table generates metadata for each modification operation:
+snapshot, manifest file, table metadata file. Also when performing delete operation,
+previously stored data files are not deleted. These files with the time
+can occupy lots of space. `ExpirationHandler` allows to expire outdated metadata and
+data files after configured time period (`drill.metastore.iceberg.expiration.period`).
+If expiration period is not indicated, zero or negative, expiration won't be performed.
+`ExpirationHandler` is called after each modification operation, it checks if expiration period
+has elapsed and submits expiration process in a separate thread.

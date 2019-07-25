@@ -79,5 +79,8 @@ public class IcebergModify<T> implements Modify<T> {
     Transaction transaction = context.table().newTransaction();
     operations.forEach(op -> op.add(transaction));
     transaction.commitTransaction();
+
+    // check if Iceberg table metadata needs to be expired after each modification operation
+    context.expirationHandler().expire(context.table());
   }
 }

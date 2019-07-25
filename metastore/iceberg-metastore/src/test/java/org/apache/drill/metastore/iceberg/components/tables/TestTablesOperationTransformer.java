@@ -70,9 +70,10 @@ public class TestTablesOperationTransformer extends IcebergBaseTest {
 
     assertEquals(expression.toString(), operation.filter().toString());
 
-    File file = new File(new Path(String.valueOf(operation.dataFile().path())).toUri().getPath());
+    Path path = new Path(String.valueOf(operation.dataFile().path()));
+    File file = new File(path.toUri().getPath());
     assertTrue(file.exists());
-    assertEquals(location, file.getParent());
+    assertEquals(location, path.getParent().toUri().getPath());
   }
 
   @Test
