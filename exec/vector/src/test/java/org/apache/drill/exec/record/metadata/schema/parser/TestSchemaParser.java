@@ -311,9 +311,17 @@ public class TestSchemaParser {
 
   @Test
   public void testEmptySchema() throws Exception {
-    String value = "()";
-    TupleMetadata schema = SchemaExprParser.parseSchema(value);
-    assertEquals(0, schema.size());
+    assertEquals(0, SchemaExprParser.parseSchema("").size());
+    assertEquals(0, SchemaExprParser.parseSchema("  ").size());
+    assertEquals(0, SchemaExprParser.parseSchema("\n").size());
+    assertEquals(0, SchemaExprParser.parseSchema("  \n").size());
+  }
+
+  @Test
+  public void testEmptySchemaWithParentheses() throws Exception {
+    assertEquals(0, SchemaExprParser.parseSchema("()").size());
+    assertEquals(0, SchemaExprParser.parseSchema("(  )").size());
+    assertEquals(0, SchemaExprParser.parseSchema("(\n)\n").size());
   }
 
   @Test

@@ -17,6 +17,7 @@
  */
 package org.apache.drill;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.drill.categories.SqlTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserRemoteException;
@@ -143,7 +144,7 @@ public class TestSchemaCommands extends ClusterTest {
     try {
       run("create schema (col1 int, col2 int) for table %s.`%s`", "dfs.tmp", table);
     } finally {
-      assertTrue(tablePath.delete());
+      FileUtils.deleteQuietly(tablePath);
     }
   }
 
@@ -159,7 +160,7 @@ public class TestSchemaCommands extends ClusterTest {
     try {
       run("create schema (col1 int, col2 int) path '%s'", schema.getPath());
     } finally {
-      assertTrue(schema.delete());
+      FileUtils.deleteQuietly(schema);
     }
   }
 
@@ -213,9 +214,7 @@ public class TestSchemaCommands extends ClusterTest {
       assertTrue(varcharColumn.isNullable());
       assertEquals(TypeProtos.MinorType.VARCHAR, varcharColumn.type());
     } finally {
-      if (schemaFile.exists()) {
-        assertTrue(schemaFile.delete());
-      }
+      FileUtils.deleteQuietly(schemaFile);
     }
   }
 
@@ -267,7 +266,6 @@ public class TestSchemaCommands extends ClusterTest {
       ColumnMetadata updatedColumn = updatedSchemaContainer.getSchema().metadata("c");
       assertTrue(updatedColumn.isNullable());
       assertEquals(TypeProtos.MinorType.VARCHAR, updatedColumn.type());
-
     } finally {
       run("drop table if exists %s", table);
     }
@@ -305,9 +303,7 @@ public class TestSchemaCommands extends ClusterTest {
       assertEquals(properties, schema.properties());
 
     } finally {
-      if (schemaFile.exists()) {
-        assertTrue(schemaFile.delete());
-      }
+      FileUtils.deleteQuietly(schemaFile);
     }
   }
 
@@ -335,9 +331,7 @@ public class TestSchemaCommands extends ClusterTest {
       assertNotNull(schema.properties());
       assertEquals(0, schema.properties().size());
     } finally {
-      if (schemaFile.exists()) {
-        assertTrue(schemaFile.delete());
-      }
+      FileUtils.deleteQuietly(schemaFile);
     }
   }
 
@@ -389,9 +383,7 @@ public class TestSchemaCommands extends ClusterTest {
 
       assertEquals(0, schema.properties().size());
     } finally {
-      if (schemaFile.exists()) {
-        assertTrue(schemaFile.delete());
-      }
+      FileUtils.deleteQuietly(schemaFile);
     }
   }
 
@@ -423,9 +415,7 @@ public class TestSchemaCommands extends ClusterTest {
       assertTrue(schema.isEmpty());
       assertEquals("val", schema.property("prop"));
     } finally {
-      if (schemaFile.exists()) {
-        assertTrue(schemaFile.delete());
-      }
+      FileUtils.deleteQuietly(schemaFile);
     }
   }
 
@@ -474,9 +464,43 @@ public class TestSchemaCommands extends ClusterTest {
 
       assertEquals(2, schema.properties().size());
     } finally {
-      if (rawSchema.exists()) {
-        assertTrue(rawSchema.delete());
-      }
+      FileUtils.deleteQuietly(rawSchema);
+      FileUtils.deleteQuietly(schemaFile);
+    }
+  }
+
+  @Test
+  public void testCreateUsingLoadEmptyFile() throws Exception {
+    File tmpDir = dirTestWatcher.getTmpDir();
+    File rawSchema = new File(tmpDir, "raw_empty.schema");
+    File schemaFile = new File(tmpDir, "schema_for_create_using_load_empty_file.schema");
+
+    try {
+      assertTrue(rawSchema.createNewFile());
+
+      testBuilder()
+        .sqlQuery("create schema load '%s' path '%s' properties ('k1'='v1', 'k2' = 'v2')",
+          rawSchema.getPath(), schemaFile.getPath())
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(true, String.format("Created schema for [%s]", schemaFile.getPath()))
+        .go();
+
+      SchemaProvider schemaProvider = new PathSchemaProvider(new Path(schemaFile.getPath()));
+      assertTrue(schemaFile.exists());
+
+      SchemaContainer schemaContainer = schemaProvider.read();
+
+      assertNull(schemaContainer.getTable());
+
+      TupleMetadata schema = schemaContainer.getSchema();
+      assertNotNull(schema);
+
+      assertEquals(0, schema.size());
+      assertEquals(2, schema.properties().size());
+    } finally {
+      FileUtils.deleteQuietly(rawSchema);
+      FileUtils.deleteQuietly(schemaFile);
     }
   }
 
