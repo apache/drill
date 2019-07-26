@@ -25,7 +25,7 @@ options {
  */
 }
 
-schema: (columns | LEFT_PAREN columns? RIGHT_PAREN) property_values? EOF;
+schema: (columns | LEFT_PAREN columns? RIGHT_PAREN | /* empty input */) property_values? EOF;
 
 columns: column_def (COMMA column_def)*;
 
