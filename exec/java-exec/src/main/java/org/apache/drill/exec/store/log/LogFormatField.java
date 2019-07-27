@@ -18,12 +18,12 @@
 
 package org.apache.drill.exec.store.log;
 
+import java.util.Objects;
+
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-
-import jersey.repackaged.com.google.common.base.Objects;
 
 
 /**
@@ -77,7 +77,7 @@ public class LogFormatField {
     }
     LogFormatField other = (LogFormatField) o;
     return fieldName.equals(other.fieldName) &&
-           Objects.equal(fieldType, other.fieldType) &&
-           Objects.equal(format, other.format);
+           Objects.equals(fieldType, other.fieldType) &&
+           Objects.equals(format, other.format);
   }
 }
