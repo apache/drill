@@ -1009,11 +1009,7 @@ public abstract class HashAggTemplate implements HashAggregator {
       this.htables[part].outputKeys(currOutBatchIndex, this.outContainer, numOutputRecords);
 
       // set the value count for outgoing batch value vectors
-      for (VectorWrapper<?> v : outgoing) {
-        v.getValueVector().getMutator().setValueCount(numOutputRecords);
-      }
-
-      outContainer.setRecordCount(numOutputRecords);
+      outContainer.setValueCount(numOutputRecords);
       WritableBatch batch = WritableBatch.getBatchNoHVWrap(numOutputRecords, outContainer, false);
       try {
         writers[part].write(batch, null);
@@ -1067,10 +1063,8 @@ public abstract class HashAggTemplate implements HashAggregator {
     if ( handleEmit && ( batchHolders == null || batchHolders[0].size() == 0 ) ) {
       lastBatchOutputCount = 0; // empty
       allocateOutgoing(0);
-      for (VectorWrapper<?> v : outgoing) {
-        v.getValueVector().getMutator().setValueCount(0);
-      }
-      outgoing.getContainer().setRecordCount(0);
+      outgoing.getContainer().setValueCount(0);
+
       // When returning the last outgoing batch (following an incoming EMIT), then replace OK with EMIT
       this.outcome = IterOutcome.EMIT;
       handleEmit = false; // finish handling EMIT
@@ -1184,9 +1178,7 @@ public abstract class HashAggTemplate implements HashAggregator {
     this.htables[partitionToReturn].outputKeys(currOutBatchIndex, this.outContainer, numPendingOutput);
 
     // set the value count for outgoing batch value vectors
-    for (VectorWrapper<?> v : outgoing) {
-      v.getValueVector().getMutator().setValueCount(numOutputRecords);
-    }
+    outgoing.getContainer().setValueCount(numOutputRecords);
 
     outgoing.getRecordBatchMemoryManager().updateOutgoingStats(numOutputRecords);
     RecordBatchStats.logRecordBatchStats(RecordBatchIOType.OUTPUT, outgoing, outgoing.getRecordBatchStatsContext());

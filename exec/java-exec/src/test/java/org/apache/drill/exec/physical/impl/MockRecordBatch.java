@@ -17,7 +17,15 @@
  */
 package org.apache.drill.exec.physical.impl;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
+import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
+
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -30,20 +38,12 @@ import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.test.rowSet.DirectRowSet;
 import org.apache.drill.test.rowSet.IndirectRowSet;
 import org.apache.drill.test.rowSet.RowSet;
 
-import javax.annotation.Nullable;
-import javax.validation.constraints.NotNull;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-
 public class MockRecordBatch implements CloseableRecordBatch {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MockRecordBatch.class);
 
   // These resources are owned by this RecordBatch
   protected VectorContainer container;
@@ -77,9 +77,6 @@ public class MockRecordBatch implements CloseableRecordBatch {
     this.allocator = context.getAllocator();
     this.container = new VectorContainer(allocator, schema);
     this.allOutcomes = iterOutcomes;
-    this.currentContainerIndex = 0;
-    this.currentOutcomeIndex = 0;
-    this.isDone = false;
   }
 
   @Deprecated
@@ -193,7 +190,7 @@ public class MockRecordBatch implements CloseableRecordBatch {
   @Override
   public IterOutcome next() {
 
-    if(isDone) {
+    if (isDone) {
       return IterOutcome.NONE;
     }
 
@@ -213,16 +210,18 @@ public class MockRecordBatch implements CloseableRecordBatch {
       switch (rowSet.indirectionType()) {
         case NONE:
         case TWO_BYTE:
-          container.transferIn(input);
-          if ( input.hasRecordCount() ) { // in case special test of uninitialized input container
-            container.setRecordCount(input.getRecordCount());
+          if (input.hasRecordCount()) { // in case special test of uninitialized input container
+            container.transferIn(input);
+          } else {
+            // Not normally a valid condition, supported here just for testing
+            container.rawTransferIn(input);
           }
           final SelectionVector2 inputSv2 = ((RowSet.SingleRowSet) rowSet).getSv2();
 
           if (sv2 != null) {
             // Operators assume that new values for an Sv2 are transferred in.
             sv2.allocateNewSafe(inputSv2.getCount());
-            for (int i=0; i<inputSv2.getCount(); ++i) {
+            for (int i=0; i < inputSv2.getCount(); ++i) {
               sv2.setIndex(i, inputSv2.getIndex(i));
             }
             sv2.setRecordCount(inputSv2.getCount());

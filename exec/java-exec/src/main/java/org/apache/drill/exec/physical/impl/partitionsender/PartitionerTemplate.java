@@ -332,11 +332,7 @@ public abstract class PartitionerTemplate implements Partitioner {
         return;
       }
 
-      if (recordCount != 0) {
-        for (VectorWrapper<?> w : vectorContainer) {
-          w.getValueVector().getMutator().setValueCount(recordCount);
-        }
-      }
+      vectorContainer.setValueCount(recordCount);
 
       FragmentWritableBatch writableBatch = new FragmentWritableBatch(isLastBatch,
           handle.getQueryId(),

@@ -181,10 +181,7 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
       tp.transfer();
     }
 
-    container.setRecordCount(recordCount);
-    for (VectorWrapper<?> v : container) {
-      v.getValueVector().getMutator().setValueCount(recordCount);
-    }
+    container.setValueCount(recordCount);
 
     // we can safely free the current batch
     current.clear();

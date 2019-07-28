@@ -17,8 +17,9 @@
  */
 package org.apache.drill.exec.physical.impl.join;
 
-import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.drill.categories.OperatorTest;
@@ -29,21 +30,20 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.HashJoinPOP;
 import org.apache.drill.exec.physical.impl.MockRecordBatch;
-import org.apache.drill.test.PhysicalOpUnitTestBase;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.mock.MockStorePOP;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.apache.drill.test.PhysicalOpUnitTestBase;
 import org.apache.drill.test.rowSet.RowSet;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.junit.Assert.assertSame;
 
@@ -161,10 +161,10 @@ public class TestHashJoinOutcome extends PhysicalOpUnitTestBase {
                                     RecordBatch.IterOutcome expectedOutcome) {
 
     inputOutcomesLeft.add(RecordBatch.IterOutcome.OK_NEW_SCHEMA);
-    inputOutcomesLeft.add( uninitializedSide.isRight ? RecordBatch.IterOutcome.OK : specialOutcome);
+    inputOutcomesLeft.add(uninitializedSide.isRight ? RecordBatch.IterOutcome.OK : specialOutcome);
 
     inputOutcomesRight.add(RecordBatch.IterOutcome.OK_NEW_SCHEMA);
-    inputOutcomesRight.add( uninitializedSide.isRight ? specialOutcome : RecordBatch.IterOutcome.OK);
+    inputOutcomesRight.add(uninitializedSide.isRight ? specialOutcome : RecordBatch.IterOutcome.OK);
 
     final MockRecordBatch mockInputBatchRight = new MockRecordBatch(operatorFixture.getFragmentContext(), opContext,
       uninitializedSide.isRight ? uninitialized2ndInputContainersRight : inputContainerRight,
@@ -175,7 +175,7 @@ public class TestHashJoinOutcome extends PhysicalOpUnitTestBase {
 
     List<JoinCondition> conditions = Lists.newArrayList();
 
-    conditions.add(new JoinCondition( SqlKind.EQUALS.toString(),
+    conditions.add(new JoinCondition(SqlKind.EQUALS.toString(),
       FieldReference.getWithQuotedRef("leftcol"),
       FieldReference.getWithQuotedRef("rightcol")));
 

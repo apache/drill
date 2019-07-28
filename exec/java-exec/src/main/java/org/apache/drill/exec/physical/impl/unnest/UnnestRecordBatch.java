@@ -57,11 +57,11 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
   private IntVector rowIdVector; // vector to keep the implicit rowId column in
 
   private Unnest unnest = new UnnestImpl();
-  private boolean hasRemainder = false; // set to true if there is data left over for the current row AND if we want
+  private boolean hasRemainder;         // set to true if there is data left over for the current row AND if we want
                                         // to keep processing it. Kill may be called by a limit in a subquery that
                                         // requires us to stop processing thecurrent row, but not stop processing
                                         // the data.
-  private int remainderIndex = 0;
+  private int remainderIndex;
   private int recordCount;
   private MaterializedField unnestFieldMetadata;
   // Reference of TypedFieldId for Unnest column. It's always set in schemaChanged method and later used by others
@@ -83,7 +83,6 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
       return ordinal();
     }
   }
-
 
   /**
    * Memory manager for Unnest. Estimates the batch size exactly like we do for Flatten.
@@ -127,9 +126,7 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
 
       updateIncomingStats();
     }
-
   }
-
 
   public UnnestRecordBatch(UnnestPOP pop, FragmentContext context) throws OutOfMemoryException {
     super(pop, context);
@@ -298,8 +295,9 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
       remainderIndex = 0;
       logger.debug("IterOutcome: EMIT.");
     }
-    this.recordCount = outputRecords;
-    this.rowIdVector.getMutator().setValueCount(outputRecords);
+    recordCount = outputRecords;
+    rowIdVector.getMutator().setValueCount(outputRecords);
+    container.setRecordCount(recordCount);
 
     memoryManager.updateOutgoingStats(outputRecords);
     // If the current incoming record has spilled into two batches, we return
@@ -376,6 +374,7 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
     final TransferPair tp = resetUnnestTransferPair();
     container.add(TypeHelper.getNewVector(tp.getTo().getField(), oContext.getAllocator()));
     container.buildSchema(SelectionVectorMode.NONE);
+    container.setRecordCount(0);
     return true;
   }
 

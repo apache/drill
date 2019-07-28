@@ -64,7 +64,13 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
   @Override
   protected IterOutcome doWork() {
     try {
-      copier.copyRecords(0, incoming.getRecordCount());
+      int rowCount = incoming.getRecordCount();
+      if (rowCount == 0) {
+        container.zeroVectors();
+        container.setRecordCount(0);
+      } else {
+        copier.copyRecords(0, rowCount);
+      }
     } catch (Exception e) {
       throw new IllegalStateException(e);
     } finally {

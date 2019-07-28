@@ -355,9 +355,7 @@ public class HashPartition implements HashJoinMemoryCalculator.PartitionStat {
       int numRecords = vc.getRecordCount();
 
       // set the value count for outgoing batch value vectors
-      for (VectorWrapper<?> v : vc) {
-        v.getValueVector().getMutator().setValueCount(numRecords);
-      }
+      vc.setValueCount(numRecords);
 
       WritableBatch wBatch = WritableBatch.getBatchNoHVWrap(numRecords, vc, false);
       try {

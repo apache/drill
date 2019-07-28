@@ -84,16 +84,16 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
   private List<ValueVector> allocationVectors;
   private List<ComplexWriter> complexWriters;
   private List<FieldReference> complexFieldReferencesList;
-  private boolean hasRemainder = false;
+  private boolean hasRemainder;
   private int remainderIndex;
   private int recordCount;
   private ProjectMemoryManager memoryManager;
   private boolean first = true;
-  private boolean wasNone = false; // whether a NONE iter outcome was already seen
+  private boolean wasNone; // whether a NONE iter outcome was already seen
   private ColumnExplorer columnExplorer;
 
   private class ClassifierResult {
-    public boolean isStar = false;
+    public boolean isStar;
     public List<String> outputNames;
     public String prefix = "";
     public HashMap<String, Integer> prefixMap = Maps.newHashMap();
@@ -226,7 +226,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
       return IterOutcome.OUT_OF_MEMORY;
     }
     long projectStartTime = System.currentTimeMillis();
-    final int outputRecords = projector.projectRecords(this.incoming,0, maxOuputRecordCount, 0);
+    final int outputRecords = projector.projectRecords(incoming, 0, maxOuputRecordCount, 0);
     long projectEndTime = System.currentTimeMillis();
     logger.trace("doWork(): projection: records {}, time {} ms", outputRecords, (projectEndTime - projectStartTime));
 
@@ -234,13 +234,13 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
       setValueCount(outputRecords);
       hasRemainder = true;
       remainderIndex = outputRecords;
-      this.recordCount = remainderIndex;
+      recordCount = remainderIndex;
     } else {
       setValueCount(incomingRecordCount);
       for (final VectorWrapper<?> v: incoming) {
         v.clear();
       }
-      this.recordCount = outputRecords;
+      recordCount = outputRecords;
     }
     // In case of complex writer expression, vectors would be added to batch run-time.
     // We have to re-build the schema.
@@ -304,7 +304,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
 
   private boolean doAlloc(int recordCount) {
     //Allocate vv in the allocationVectors.
-    for (final ValueVector v : this.allocationVectors) {
+    for (final ValueVector v : allocationVectors) {
       AllocationHelper.allocateNew(v, recordCount);
     }
 
@@ -322,8 +322,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
 
   private void setValueCount(final int count) {
     for (final ValueVector v : allocationVectors) {
-      final ValueVector.Mutator m = v.getMutator();
-      m.setValueCount(count);
+      v.getMutator().setValueCount(count);
     }
 
     container.setRecordCount(count);
@@ -891,6 +890,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
 
     doAlloc(0);
     container.buildSchema(SelectionVectorMode.NONE);
+    setValueCount(0);
     wasNone = true;
     return IterOutcome.OK_NEW_SCHEMA;
   }

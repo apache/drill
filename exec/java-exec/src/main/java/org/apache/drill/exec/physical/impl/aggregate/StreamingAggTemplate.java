@@ -432,11 +432,9 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
     } else {
       outcomeToReturn = OK;
     }
-    this.outcome = outcomeToReturn;
+    outcome = outcomeToReturn;
 
-    for (VectorWrapper<?> v : outgoing) {
-      v.getValueVector().getMutator().setValueCount(outputCount);
-    }
+    outgoing.getContainer().setValueCount(outputCount);
     return (seenOutcome == EMIT) ? AggOutcome.RETURN_AND_RESET : AggOutcome.RETURN_OUTCOME;
   }
 
@@ -455,11 +453,9 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
     } else {
       outcomeToReturn = EMIT;
     }
-    this.outcome = outcomeToReturn;
+    outcome = outcomeToReturn;
 
-    for (VectorWrapper<?> v : outgoing) {
-      v.getValueVector().getMutator().setValueCount(outputCount);
-    }
+    outgoing.getContainer().setValueCount(outputCount);
     return AggOutcome.RETURN_AND_RESET;
   }
 

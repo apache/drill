@@ -75,12 +75,12 @@ import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK_NEW_SCHEMA
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.STOP;
 
 public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StreamingAggBatch.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StreamingAggBatch.class);
 
   protected StreamingAggregator aggregator;
   protected final RecordBatch incoming;
   private List<BaseWriter.ComplexWriter> complexWriters;
-  //
+
   // Streaming agg can be in (a) a normal pipeline or (b) it may be in a pipeline that is part of a subquery involving
   // lateral and unnest. In case(a), the aggregator proceeds normally until it sees a group change or a NONE. If a
   // group has changed, the aggregated data is sent downstream and the aggregation continues with the next group. If
@@ -100,17 +100,17 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
   //   Schema change within a Data Set is not supported.
   //
   //   We will define some states for internal management
-  //
-  private boolean done = false;  // END of all data
+
+  private boolean done;          // END of all data
   private boolean first = true;  // Beginning of new data set. True during the build schema phase. False once the first
                                  // call to inner next is made.
-  private boolean sendEmit = false; // In the case where we see an OK_NEW_SCHEMA along with the end of a data set
-                                    // we send out a batch with OK_NEW_SCHEMA first, then in the next iteration,
-                                    // we send out an empty batch with EMIT.
+  private boolean sendEmit;      // In the case where we see an OK_NEW_SCHEMA along with the end of a data set
+                                 // we send out a batch with OK_NEW_SCHEMA first, then in the next iteration,
+                                 // we send out an empty batch with EMIT.
   private IterOutcome lastKnownOutcome = OK; // keep track of the outcome from the previous call to incoming.next
   private boolean firstBatchForSchema = true; // true if the current batch came in with an OK_NEW_SCHEMA
   private boolean firstBatchForDataSet = true; // true if the current batch is the first batch in a data set
-  private int recordCount = 0;  // number of records output in the current data set
+  private int recordCount;         // number of records output in the current data set
 
   private BatchSchema incomingSchema;
 
@@ -126,7 +126,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
    *
    * We maintain some state to remember that we have done such special handling.
    */
-  private boolean specialBatchSent = false;
+  private boolean specialBatchSent;
   private static final int SPECIAL_BATCH_COUNT = 1;
 
   // TODO: Needs to adapt to batch sizing rather than hardcoded constant value
@@ -177,7 +177,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
         break;
     }
 
-    this.incomingSchema = incoming.getSchema();
+    incomingSchema = incoming.getSchema();
     if (!createAggregator()) {
       state = BatchState.DONE;
     }
@@ -188,6 +188,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
     if (complexWriters != null) {
       container.buildSchema(SelectionVectorMode.NONE);
     }
+    container.setRecordCount(0);
   }
 
   @Override
@@ -207,6 +208,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
       firstBatchForDataSet = true;
       firstBatchForSchema = false;
       recordCount = 0;
+      container.setRecordCount(0);
       specialBatchSent = false;
       return EMIT;
     }

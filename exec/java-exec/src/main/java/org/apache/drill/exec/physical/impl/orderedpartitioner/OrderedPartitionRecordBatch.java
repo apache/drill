@@ -223,10 +223,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
           allocationSize *= 2;
         }
       }
-      for (VectorWrapper<?> vw : containerToCache) {
-        vw.getValueVector().getMutator().setValueCount(copier.getOutputRecords());
-      }
-      containerToCache.setRecordCount(copier.getOutputRecords());
+      containerToCache.setValueCount(copier.getOutputRecords());
 
       // Get a distributed multimap handle from the distributed cache, and put the vectors from the new vector container
       // into a serializable wrapper object, and then add to distributed map
@@ -375,9 +372,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
         int skipRecords = containerBuilder.getSv4().getTotalCount() / partitions;
         if (copier.copyRecords(skipRecords, skipRecords, partitions - 1)) {
           assert copier.getOutputRecords() == partitions - 1 : String.format("output records: %d partitions: %d", copier.getOutputRecords(), partitions);
-          for (VectorWrapper<?> vw : candidatePartitionTable) {
-            vw.getValueVector().getMutator().setValueCount(copier.getOutputRecords());
-          }
+          candidatePartitionTable.setValueCount(copier.getOutputRecords());
           break;
         } else {
           candidatePartitionTable.zeroVectors();
@@ -567,10 +562,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
     int recordCount = batch.getRecordCount();
     AllocationHelper.allocate(partitionKeyVector, recordCount, 50);
     projector.projectRecords(recordCount, 0);
-    for (VectorWrapper<?> v : container) {
-      ValueVector.Mutator m = v.getValueVector().getMutator();
-      m.setValueCount(recordCount);
-    }
+    container.setValueCount(recordCount);
   }
 
   /**

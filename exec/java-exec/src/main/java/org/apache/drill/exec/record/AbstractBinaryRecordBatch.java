@@ -23,8 +23,6 @@ import org.apache.drill.exec.ops.MetricDef;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 
 public abstract class AbstractBinaryRecordBatch<T extends PhysicalOperator> extends  AbstractRecordBatch<T> {
-  private static final org.slf4j.Logger logger =
-    org.slf4j.LoggerFactory.getLogger(new Object() {}.getClass().getEnclosingClass());
 
   protected final RecordBatch left;
   protected final RecordBatch right;

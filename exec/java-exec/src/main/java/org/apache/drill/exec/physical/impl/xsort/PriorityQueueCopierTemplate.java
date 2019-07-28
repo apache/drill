@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.physical.impl.xsort;
 
-import io.netty.buffer.DrillBuf;
-
 import java.io.IOException;
 import java.util.List;
 
@@ -28,9 +26,12 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.VectorAccessible;
+import org.apache.drill.exec.record.VectorAccessibleUtilities;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.AllocationHelper;
+
+import io.netty.buffer.DrillBuf;
 
 public abstract class PriorityQueueCopierTemplate implements PriorityQueueCopier {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PriorityQueueCopierTemplate.class);
@@ -90,9 +91,7 @@ public abstract class PriorityQueueCopierTemplate implements PriorityQueueCopier
   }
 
   private void setValueCount(int count) {
-    for (VectorWrapper w: outgoing) {
-      w.getValueVector().getMutator().setValueCount(count);
-    }
+    VectorAccessibleUtilities.setValueCount(outgoing, count);
   }
 
   @Override

@@ -246,10 +246,7 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
 
   @Override
   public WritableBatch getWritableBatch() {
-//    logger.debug("Getting writable batch.");
-    final WritableBatch batch = WritableBatch.get(this);
-    return batch;
-
+    return WritableBatch.get(this);
   }
 
   @Override
@@ -259,7 +256,7 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
 
   @Override
   public VectorContainer getContainer() {
-    return  container;
+    return container;
   }
 
   @Override

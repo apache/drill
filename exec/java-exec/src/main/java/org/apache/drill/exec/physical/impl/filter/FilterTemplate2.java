@@ -62,6 +62,8 @@ public abstract class FilterTemplate2 implements Filterer {
   public void filterBatch(int recordCount) throws SchemaChangeException{
     if (recordCount == 0) {
       outgoingSelectionVector.setRecordCount(0);
+      outgoingSelectionVector.setBatchActualRecordCount(0);
+      doTransfers();
       return;
     }
     if (! outgoingSelectionVector.allocateNewSafe(recordCount)) {

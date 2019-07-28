@@ -34,11 +34,11 @@ public abstract class ProjectorTemplate implements Projector {
 
   private ImmutableList<TransferPair> transfers;
   private SelectionVector2 vector2;
+  @SuppressWarnings("unused")
   private SelectionVector4 vector4;
   private SelectionVectorMode svMode;
 
-  public ProjectorTemplate() {
-  }
+  public ProjectorTemplate() { }
 
   @Override
   public final int projectRecords(RecordBatch incomingRecordBatch, int startIndex, final int recordCount,
@@ -97,6 +97,10 @@ public abstract class ProjectorTemplate implements Projector {
     case TWO_BYTE:
       this.vector2 = incoming.getSelectionVector2();
       break;
+    case NONE:
+      break;
+    default:
+      throw new UnsupportedOperationException();
     }
     this.transfers = ImmutableList.copyOf(transfers);
     doSetup(context, incoming, outgoing);

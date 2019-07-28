@@ -233,6 +233,7 @@ public class ScanBatch implements CloseableRecordBatch {
         // so we use toContinueIter to mark the decision whether we should continue the iteration
         toContinueIter = shouldContinueAfterNoRecords();
       }
+      container.setRecordCount(recordCount);
 
       if (isNewSchema) {
         // Even when recordCount = 0, we should return return OK_NEW_SCHEMA if current reader presents a new schema.
@@ -602,6 +603,7 @@ public class ScanBatch implements CloseableRecordBatch {
   public VectorContainer getContainer() {
     return container;
   }
+
   /**
    * Verify list of implicit column values is valid input:
    *   - Either implicit column list is empty;

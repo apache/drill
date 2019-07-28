@@ -96,24 +96,27 @@ import static org.apache.drill.exec.record.RecordBatch.IterOutcome.NONE;
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK_NEW_SCHEMA;
 
 /**
- *   This class implements the runtime execution for the Hash-Join operator
- *   supporting INNER, LEFT OUTER, RIGHT OUTER, and FULL OUTER joins
- *
- *   This implementation splits the incoming Build side rows into multiple Partitions, thus allowing spilling of
- *   some of these partitions to disk if memory gets tight. Each partition is implemented as a {@link HashPartition}.
- *   After the build phase is over, in the most general case, some of the partitions were spilled, and the others
- *   are in memory. Each of the partitions in memory would get a {@link HashTable} built.
- *      Next the Probe side is read, and each row is key matched with a Build partition. If that partition is in
- *   memory, then the key is used to probe and perform the join, and the results are added to the outgoing batch.
- *   But if that build side partition was spilled, then the matching Probe size partition is spilled as well.
- *      After all the Probe side was processed, we are left with pairs of spilled partitions. Then each pair is
- *   processed individually (that Build partition should be smaller than the original, hence likely fit whole into
- *   memory to allow probing; if not -- see below).
- *      Processing of each spilled pair is EXACTLY like processing the original Build/Probe incomings. (As a fact,
- *   the {@link #innerNext()} method calls itself recursively !!). Thus the spilled build partition is
- *   read and divided into new partitions, which in turn may spill again (and again...).
- *   The code tracks these spilling "cycles". Normally any such "again" (i.e. cycle of 2 or greater) is a waste,
- *   indicating that the number of partitions chosen was too small.
+ * This class implements the runtime execution for the Hash-Join operator
+ * supporting INNER, LEFT OUTER, RIGHT OUTER, and FULL OUTER joins
+ * <p>
+ * This implementation splits the incoming Build side rows into multiple Partitions, thus allowing spilling of
+ * some of these partitions to disk if memory gets tight. Each partition is implemented as a {@link HashPartition}.
+ * After the build phase is over, in the most general case, some of the partitions were spilled, and the others
+ * are in memory. Each of the partitions in memory would get a {@link HashTable} built.
+ * <p>
+ * Next the Probe side is read, and each row is key matched with a Build partition. If that partition is in
+ * memory, then the key is used to probe and perform the join, and the results are added to the outgoing batch.
+ * But if that build side partition was spilled, then the matching Probe size partition is spilled as well.
+ * <p>
+ * After all the Probe side was processed, we are left with pairs of spilled partitions. Then each pair is
+ * processed individually (that Build partition should be smaller than the original, hence likely fit whole into
+ * memory to allow probing; if not -- see below).
+ * <p>
+ *  Processing of each spilled pair is EXACTLY like processing the original Build/Probe incomings. (As a fact,
+ * the {@link #innerNext()} method calls itself recursively !!). Thus the spilled build partition is
+ * read and divided into new partitions, which in turn may spill again (and again...).
+ * The code tracks these spilling "cycles". Normally any such "again" (i.e. cycle of 2 or greater) is a waste,
+ * indicating that the number of partitions chosen was too small.
  */
 public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implements RowKeyJoin {
   protected static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HashJoinBatch.class);
@@ -147,7 +150,8 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
 
   // Fields used for partitioning
   /**
-   * The number of {@link HashPartition}s. This is configured via a system option and set in {@link #partitionNumTuning(int, HashJoinMemoryCalculator.BuildSidePartitioning)}.
+   * The number of {@link HashPartition}s. This is configured via a system
+   * option and set in {@link #partitionNumTuning(int, HashJoinMemoryCalculator.BuildSidePartitioning)}.
    */
   private int numPartitions = 1; // must be 2 to the power of bitsInMask
 
@@ -213,7 +217,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
   private Map<BloomFilter, Integer> bloomFilter2buildId = new HashMap<>();
   private Map<BloomFilterDef, Integer> bloomFilterDef2buildId = new HashMap<>();
   private List<BloomFilter> bloomFilters = new ArrayList<>();
-  private boolean bloomFiltersGenerated = false;
+  private boolean bloomFiltersGenerated;
 
   /**
    * This holds information about the spilled partitions for the build and probe side.
@@ -223,7 +227,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
     private final String innerSpillFile;
     private int outerSpilledBatches;
     private String outerSpillFile;
-    private boolean updatedOuter = false;
+    private boolean updatedOuter;
 
     public HashJoinSpilledPartition(final int cycle,
                                     final int originPartition,
@@ -349,9 +353,11 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
 
       if (rightUpstream == OK_NEW_SCHEMA) {
         buildSchema = right.getSchema();
-        // position of the new "column" for keeping the hash values (after the real columns)
+        // position of the new "column" for keeping the hash values
+        // (after the real columns)
         rightHVColPosition = right.getContainer().getNumberOfColumns();
-        // In special cases, when the probe side is empty, and inner/left join - no need for Hash Table
+        // In special cases, when the probe side is empty, and
+        // inner/left join - no need for Hash Table
         skipHashTableBuild = leftUpstream == IterOutcome.NONE && ! joinIsRightOrFull;
         // We only need the hash tables if we have data on the build side.
         setupHashTable();
@@ -364,10 +370,12 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
       }
     }
 
-    // If we have a valid schema, this will build a valid container. If we were unable to obtain a valid schema,
+    // If we have a valid schema, this will build a valid container.
+    // If we were unable to obtain a valid schema,
     // we still need to build a dummy schema. This code handles both cases for us.
     setupOutputContainerSchema();
     container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
+    container.setRecordCount(0);
   }
 
   /**
@@ -381,7 +389,9 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
       buildBatch,
       () -> {
         batchMemoryManager.update(RIGHT_INDEX, 0, true);
-        RecordBatchStats.logRecordBatchStats(RecordBatchIOType.INPUT_RIGHT, batchMemoryManager.getRecordBatchSizer(RIGHT_INDEX), getRecordBatchStatsContext());
+        RecordBatchStats.logRecordBatchStats(RecordBatchIOType.INPUT_RIGHT,
+            batchMemoryManager.getRecordBatchSizer(RIGHT_INDEX),
+            getRecordBatchStatsContext());
       });
   }
 
@@ -396,18 +406,22 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
       probeBatch,
       () -> {
         batchMemoryManager.update(LEFT_INDEX, 0);
-        RecordBatchStats.logRecordBatchStats(RecordBatchIOType.INPUT_LEFT, batchMemoryManager.getRecordBatchSizer(LEFT_INDEX), getRecordBatchStatsContext());
+        RecordBatchStats.logRecordBatchStats(RecordBatchIOType.INPUT_LEFT,
+            batchMemoryManager.getRecordBatchSizer(LEFT_INDEX),
+            getRecordBatchStatsContext());
       });
   }
 
   /**
    * Used to fetch the first data holding batch from either the build or probe side.
    * @param outcome The current upstream outcome for either the build or probe side.
-   * @param prefetched A flag indicating if we have already done a prefetch of the first data holding batch for the probe or build side.
+   * @param prefetched A flag indicating if we have already done a prefetch of the
+   * first data holding batch for the probe or build side.
    * @param isEmpty A flag indicating if the probe or build side is empty.
    * @param index The upstream index of the probe or build batch.
    * @param batch The probe or build batch itself.
-   * @param memoryManagerUpdate A lambda function to execute the memory manager update for the probe or build batch.
+   * @param memoryManagerUpdate A lambda function to execute the memory manager update
+   * for the probe or build batch.
    * @return The current {@link org.apache.drill.exec.record.RecordBatch.IterOutcome}.
    */
   private IterOutcome prefetchFirstBatch(IterOutcome outcome,
@@ -429,7 +443,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
       outcome = sniffNonEmptyBatch(outcome, index, batch);
     }
 
-    isEmpty.setValue(outcome == IterOutcome.NONE); // If we recieved NONE there is no data.
+    isEmpty.setValue(outcome == IterOutcome.NONE); // If we received NONE there is no data.
 
     if (outcome == IterOutcome.OUT_OF_MEMORY) {
       // We reached a termination state
@@ -502,7 +516,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
   @Override
   public IterOutcome innerNext() {
     if (wasKilled) {
-      // We have recieved a kill signal. We need to stop processing.
+      // We have received a kill signal. We need to stop processing.
       this.cleanup();
       super.close();
       return IterOutcome.NONE;
@@ -591,10 +605,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
 
           outputRecords = hashJoinProbe.probeAndProject();
 
-          for (final VectorWrapper<?> v : container) {
-            v.getValueVector().getMutator().setValueCount(outputRecords);
-          }
-          container.setRecordCount(outputRecords);
+          container.setValueCount(outputRecords);
 
           batchMemoryManager.updateOutgoingStats(outputRecords);
           RecordBatchStats.logRecordBatchStats(RecordBatchIOType.OUTPUT, this, getRecordBatchStatsContext());
@@ -1048,6 +1059,8 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
           read_right_HV_vector = null;
         }
         break;
+      default:
+        throw new IllegalStateException(rightUpstream.name());
       }
       // Get the next incoming record batch
       rightUpstream = next(HashJoinHelper.RIGHT_INPUT, buildBatch);
@@ -1250,8 +1263,10 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
     partitions = new HashPartition[0];
 
     // get the output batch size from config.
-    final int configuredBatchSize = (int) context.getOptions().getOption(ExecConstants.OUTPUT_BATCH_SIZE_VALIDATOR);
-    final double avail_mem_factor = (double) context.getOptions().getOption(ExecConstants.OUTPUT_BATCH_SIZE_AVAIL_MEM_FACTOR_VALIDATOR);
+    final int configuredBatchSize = (int) context.getOptions().getOption(
+        ExecConstants.OUTPUT_BATCH_SIZE_VALIDATOR);
+    final double avail_mem_factor = context.getOptions().getOption(
+        ExecConstants.OUTPUT_BATCH_SIZE_AVAIL_MEM_FACTOR_VALIDATOR);
     int outputBatchSize = Math.min(configuredBatchSize, Integer.highestOneBit((int)(allocator.getLimit() * avail_mem_factor)));
 
     RecordBatchStats.logRecordBatchStats(getRecordBatchStatsContext(),
@@ -1264,11 +1279,13 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
     RecordBatchStats.printConfiguredBatchSize(getRecordBatchStatsContext(),
       configuredBatchSize);
 
-    enableRuntimeFilter = context.getOptions().getOption(ExecConstants.HASHJOIN_ENABLE_RUNTIME_FILTER) && popConfig.getRuntimeFilterDef() != null;
+    enableRuntimeFilter = context.getOptions().getOption(
+        ExecConstants.HASHJOIN_ENABLE_RUNTIME_FILTER) && popConfig.getRuntimeFilterDef() != null;
   }
 
   /**
-   * This method is called when {@link HashJoinBatch} closes. It cleans up left over spilled files that are in the spill queue, and closes the
+   * This method is called when {@link HashJoinBatch} closes. It cleans up left
+   * over spilled files that are in the spill queue, and closes the
    * spillSet.
    */
   private void cleanup() {
@@ -1317,9 +1334,11 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
   }
 
   /**
-   * Updates the {@link HashTable} and spilling stats after the original build side is processed.
+   * Updates the {@link HashTable} and spilling stats after the original
+   * build side is processed.
    *
-   * Note: this does not update all the stats. The cycleNum is updated dynamically in {@link #innerNext()} and the total bytes
+   * Note: this does not update all the stats. The cycleNum is updated
+   * dynamically in {@link #innerNext()} and the total bytes
    * written is updated at close time in {@link #cleanup()}.
    */
   private void updateStats() {

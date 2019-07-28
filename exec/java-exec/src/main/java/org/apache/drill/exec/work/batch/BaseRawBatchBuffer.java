@@ -239,7 +239,6 @@ public abstract class BaseRawBatchBuffer<T> implements RawBatchBuffer {
 
     assertAckSent(b);
     return b;
-
   }
 
   private void assertAckSent(RawFragmentBatch batch) {

@@ -217,6 +217,7 @@ public class RecordIterator implements VectorAccessible {
               container.addOrGet(w.getField());
             }
             container.buildSchema(rbd.getContainer().getSchema().getSelectionVectorMode());
+            container.setRecordCount(0);
             initialized = true;
           }
           if (innerRecordCount > 0) {

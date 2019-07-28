@@ -34,9 +34,9 @@ import org.apache.drill.exec.vector.SchemaChangeCallBack;
  * @param <T>
  */
 public abstract class AbstractUnaryRecordBatch<T extends PhysicalOperator> extends AbstractRecordBatch<T> {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(new Object() {}.getClass().getEnclosingClass());
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractUnaryRecordBatch.class);
 
-  protected boolean outOfMemory = false;
+  protected boolean outOfMemory;
   protected SchemaChangeCallBack callBack = new SchemaChangeCallBack();
   private IterOutcome lastKnownOutcome;
 

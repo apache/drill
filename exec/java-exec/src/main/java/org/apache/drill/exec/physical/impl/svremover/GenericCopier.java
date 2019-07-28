@@ -42,7 +42,7 @@ public class GenericCopier implements Copier {
     {
       int index = 0;
 
-      for (VectorWrapper vectorWrapper: incoming) {
+      for (VectorWrapper<?> vectorWrapper: incoming) {
         vvIn[index] = vectorWrapper.getValueVector();
         index++;
       }

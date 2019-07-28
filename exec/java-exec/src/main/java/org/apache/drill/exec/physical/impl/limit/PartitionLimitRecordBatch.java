@@ -17,7 +17,8 @@
  */
 package org.apache.drill.exec.physical.impl.limit;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import java.util.List;
+
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -29,8 +30,7 @@ import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.vector.IntVector;
-
-import java.util.List;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.EMIT;
 
@@ -139,8 +139,8 @@ public class PartitionLimitRecordBatch extends AbstractSingleRecordBatch<Partiti
   protected IterOutcome doWork() {
     final int inputRecordCount = incoming.getRecordCount();
     if (inputRecordCount == 0) {
-      setOutgoingRecordCount(0);
-      for (VectorWrapper vw : incoming) {
+      setOutgoingRecordCount(0, 0);
+      for (VectorWrapper<?> vw : incoming) {
         vw.clear();
       }
       // Release buffer for sv2 (if any)
@@ -206,7 +206,7 @@ public class PartitionLimitRecordBatch extends AbstractSingleRecordBatch<Partiti
       }
     }
 
-    setOutgoingRecordCount(svIndex);
+    setOutgoingRecordCount(inputRecordCount, svIndex);
   }
 
   private void updateOutputSV2(int svIndex, int incomingIndex) {
@@ -225,9 +225,10 @@ public class PartitionLimitRecordBatch extends AbstractSingleRecordBatch<Partiti
     }
   }
 
-  private void setOutgoingRecordCount(int outputCount) {
+  private void setOutgoingRecordCount(int inputRecordCount, int outputCount) {
     outgoingSv.setRecordCount(outputCount);
-    container.setRecordCount(outputCount);
+    outgoingSv.setBatchActualRecordCount(inputRecordCount);
+    container.setRecordCount(inputRecordCount);
   }
 
   /**

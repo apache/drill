@@ -73,16 +73,16 @@ public class NestedLoopJoinBatch extends AbstractBinaryRecordBatch<NestedLoopJoi
   protected static final int RIGHT_INPUT = 1;
 
   // Schema on the left side
-  private BatchSchema leftSchema = null;
+  private BatchSchema leftSchema;
 
   // Schema on the right side
-  private BatchSchema rightSchema = null;
+  private BatchSchema rightSchema;
 
   // Runtime generated class implementing the NestedLoopJoin interface
   private NestedLoopJoin nljWorker = null;
 
   // Number of output records in the current outgoing batch
-  private int outputRecords = 0;
+  private int outputRecords;
 
   // We accumulate all the batches on the right side in a hyper container.
   private ExpandableHyperContainer rightContainer = new ExpandableHyperContainer();
@@ -198,12 +198,7 @@ public class NestedLoopJoinBatch extends AbstractBinaryRecordBatch<NestedLoopJoi
     outputRecords = nljWorker.outputRecords(popConfig.getJoinType());
 
     // Set the record count
-    for (final VectorWrapper<?> vw : container) {
-      vw.getValueVector().getMutator().setValueCount(outputRecords);
-    }
-
-    // Set the record count in the container
-    container.setRecordCount(outputRecords);
+    container.setValueCount(outputRecords);
     container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
 
     RecordBatchStats.logRecordBatchStats(RecordBatchIOType.OUTPUT, this, getRecordBatchStatsContext());
@@ -401,6 +396,7 @@ public class NestedLoopJoinBatch extends AbstractBinaryRecordBatch<NestedLoopJoi
         batchMemoryManager.getRecordBatchSizer(LEFT_INDEX), getRecordBatchStatsContext());
 
       container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
+      container.setRecordCount(0);
 
     } catch (ClassTransformationException | IOException e) {
       throw new SchemaChangeException(e);

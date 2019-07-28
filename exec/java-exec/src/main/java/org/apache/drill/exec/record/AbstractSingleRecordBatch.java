@@ -27,7 +27,6 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
  * @param <T>
  */
 public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> extends AbstractUnaryRecordBatch<T> {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(new Object() {}.getClass().getEnclosingClass());
 
   protected final RecordBatch incoming;
 

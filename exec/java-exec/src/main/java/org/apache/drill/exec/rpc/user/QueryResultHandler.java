@@ -98,7 +98,7 @@ public class QueryResultHandler {
     final boolean isFailureResult = QueryState.FAILED == queryState;
     // CANCELED queries are handled the same way as COMPLETED
     final boolean isTerminalResult;
-    switch ( queryState ) {
+    switch (queryState) {
       case FAILED:
       case CANCELED:
       case COMPLETED:
@@ -134,12 +134,12 @@ public class QueryResultHandler {
         logger.warn("queryState {} was ignored", queryState);
       }
     } finally {
-      if ( isTerminalResult ) {
+      if (isTerminalResult) {
         // TODO:  What exactly are we checking for?  How should we really check
         // for it?
-        if ( (! ( resultsListener instanceof BufferingResultsListener )
-          || ((BufferingResultsListener) resultsListener).output != null ) ) {
-          queryIdToResultsListenersMap.remove( queryId, resultsListener );
+        if ( (! (resultsListener instanceof BufferingResultsListener)
+          || ((BufferingResultsListener) resultsListener).output != null)) {
+          queryIdToResultsListenersMap.remove(queryId, resultsListener);
         }
       }
     }
@@ -151,10 +151,10 @@ public class QueryResultHandler {
    */
   public void batchArrived( ConnectionThrottle throttle,
                             ByteBuf pBody, ByteBuf dBody ) throws RpcException {
-    final QueryData queryData = RpcBus.get( pBody, QueryData.PARSER );
+    final QueryData queryData = RpcBus.get(pBody, QueryData.PARSER);
     // Current batch coming in.
     final DrillBuf drillBuf = (DrillBuf) dBody;
-    final QueryDataBatch batch = new QueryDataBatch( queryData, drillBuf );
+    final QueryDataBatch batch = new QueryDataBatch(queryData, drillBuf);
 
     final QueryId queryId = queryData.getQueryId();
 
@@ -169,7 +169,7 @@ public class QueryResultHandler {
     try {
       resultsListener.dataArrived(batch, throttle);
       // That releases batch if successful.
-    } catch ( Exception e ) {
+    } catch (Exception e) {
       batch.release();
       resultsListener.submissionFailed(UserException.systemError(e).build(logger));
     }
@@ -184,7 +184,7 @@ public class QueryResultHandler {
   private UserResultsListener newUserResultsListener(QueryId queryId) {
     UserResultsListener resultsListener = queryIdToResultsListenersMap.get( queryId );
     logger.trace( "For QueryId [{}], retrieved results listener {}", queryId, resultsListener );
-    if ( null == resultsListener ) {
+    if (null == resultsListener) {
       // WHO?? didn't get query ID response and set submission listener yet,
       // so install a buffering listener for now
 
@@ -192,7 +192,7 @@ public class QueryResultHandler {
       resultsListener = queryIdToResultsListenersMap.putIfAbsent( queryId, bl );
       // If we had a successful insertion, use that reference.  Otherwise, just
       // throw away the new buffering listener.
-      if ( null == resultsListener ) {
+      if (null == resultsListener) {
         resultsListener = bl;
       }
     }
