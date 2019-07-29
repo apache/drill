@@ -35,8 +35,6 @@ import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.vector.IntVector;
-import org.apache.drill.exec.vector.ValueVector;
-
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 /**
@@ -45,7 +43,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
  * partitioning columns).
  */
 public class RangePartitionRecordBatch extends AbstractSingleRecordBatch<RangePartitionSender> {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RangePartitionRecordBatch.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RangePartitionRecordBatch.class);
 
   private int numPartitions;
   private int recordCount;

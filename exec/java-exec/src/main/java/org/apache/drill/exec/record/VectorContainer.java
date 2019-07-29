@@ -128,7 +128,7 @@ public class VectorContainer implements VectorAccessible {
     rawTransferIn(containerIn);
     setRecordCount(containerIn.getRecordCount());
   }
-  
+
   @VisibleForTesting
   public void rawTransferIn(VectorContainer containerIn) {
     Preconditions.checkArgument(wrappers.size() == containerIn.wrappers.size());

@@ -23,6 +23,8 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.vector.SchemaChangeCallBack;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The base class for operators that have a single input. The concrete implementations provide the
@@ -34,7 +36,7 @@ import org.apache.drill.exec.vector.SchemaChangeCallBack;
  * @param <T>
  */
 public abstract class AbstractUnaryRecordBatch<T extends PhysicalOperator> extends AbstractRecordBatch<T> {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractUnaryRecordBatch.class);
+  private static final Logger logger = LoggerFactory.getLogger(AbstractUnaryRecordBatch.class);
 
   protected boolean outOfMemory;
   protected SchemaChangeCallBack callBack = new SchemaChangeCallBack();

@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.physical.impl.unorderedreceiver;
 
-import io.netty.buffer.ByteBuf;
-
 import java.io.IOException;
 import java.util.Iterator;
 
@@ -51,6 +49,8 @@ import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
 import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ControlsInjectorFactory;
+
+import io.netty.buffer.ByteBuf;
 
 public class UnorderedReceiverBatch implements CloseableRecordBatch {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UnorderedReceiverBatch.class);
@@ -231,7 +231,7 @@ public class UnorderedReceiverBatch implements CloseableRecordBatch {
   @Override
   public VectorContainer getOutgoingContainer() {
     throw new UnsupportedOperationException(
-        String.format("You should not call getOutgoingContainer() for class %s",
+        String.format("getOutgoingContainer() not supported for class %s",
             getClass().getCanonicalName()));
   }
 

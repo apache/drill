@@ -17,7 +17,10 @@
  */
 package org.apache.drill.exec.physical.impl.project;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import java.util.List;
+
+import javax.inject.Named;
+
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
@@ -25,9 +28,7 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
-
-import javax.inject.Named;
-import java.util.List;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 
 public abstract class ProjectorTemplate implements Projector {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProjectorTemplate.class);
@@ -82,7 +83,7 @@ public abstract class ProjectorTemplate implements Projector {
       return recordCount;
 
     default:
-      throw new UnsupportedOperationException();
+      throw new UnsupportedOperationException("Unexpected SV mode: " + svMode.name());
     }
   }
 
