@@ -23,6 +23,7 @@ import org.apache.iceberg.FileFormat;
 import org.apache.iceberg.Table;
 import org.apache.iceberg.data.Record;
 import org.apache.iceberg.data.parquet.GenericParquetWriter;
+import org.apache.iceberg.exceptions.RuntimeIOException;
 import org.apache.iceberg.io.FileAppender;
 import org.apache.iceberg.io.OutputFile;
 import org.apache.iceberg.parquet.Parquet;
@@ -35,7 +36,7 @@ import java.util.Objects;
 /**
  * Parquet File Writer implementation. Creates Parquet file in given location and name
  * and '.parquet' extension and writes given data into it.
- * Note: if file already exists, it will be overwritten.
+ * Note: if file already exists, write operation will fail.
  */
 public class ParquetFileWriter implements FileWriter {
 
@@ -83,7 +84,7 @@ public class ParquetFileWriter implements FileWriter {
       fileAppender.close();
       // metrics are available only when file was written (i.e. close method was executed)
       return new File(outputFile, fileAppender.metrics());
-    } catch (IOException | ClassCastException e) {
+    } catch (IOException | ClassCastException | RuntimeIOException e) {
       if (fileAppender != null) {
         try {
           fileAppender.close();
@@ -91,7 +92,7 @@ public class ParquetFileWriter implements FileWriter {
           // write has failed anyway, ignore closing exception if any and throw initial one
         }
       }
-      throw new IcebergMetastoreException("Unable to write data into parquet file", e);
+      throw new IcebergMetastoreException(String.format("Unable to write data into parquet file [%s]", outputFile.location()), e);
     }
   }
 }
