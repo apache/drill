@@ -33,7 +33,7 @@
   <name>metastore/Drill Iceberg Metastore</name>
 
   <properties>
-    <iceberg.version>cfd2737</iceberg.version>
+    <iceberg.version>08e0873</iceberg.version>
     <caffeine.version>2.7.0</caffeine.version>
   </properties>
 

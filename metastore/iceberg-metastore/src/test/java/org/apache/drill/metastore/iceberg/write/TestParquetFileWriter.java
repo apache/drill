@@ -261,15 +261,13 @@ public class TestParquetFileWriter extends IcebergBaseTest {
     java.nio.file.Path file = Paths.get(new File(location, FileFormat.PARQUET.addExtension(fileName)).getPath());
     Files.write(file, Collections.singletonList("abc"));
 
-    org.apache.drill.metastore.iceberg.write.File result = new ParquetFileWriter(table)
+    thrown.expect(IcebergMetastoreException.class);
+
+    new ParquetFileWriter(table)
       .records(Collections.singletonList(record))
       .location(location)
       .name(fileName)
       .write();
-
-    List<Record> rows = readData(result.input(), schema);
-    assertEquals(1, rows.size());
-    assertEquals(1, rows.get(0).getField("int_field"));
   }
 
   private List<Record> readData(InputFile inputFile, Schema schema) throws IOException {
