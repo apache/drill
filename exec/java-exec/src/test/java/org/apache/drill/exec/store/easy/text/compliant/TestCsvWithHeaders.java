@@ -23,7 +23,10 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Iterator;
 
 import org.apache.drill.categories.RowSetTests;
@@ -55,34 +58,34 @@ import org.junit.experimental.categories.Category;
  * the first batch either contains data, or that the first batch is empty
  * only if there is no data at all to be read.
  *
- * @see {@link TestHeaderBuilder}
+ * @see TestHeaderBuilder
  */
 
 @Category(RowSetTests.class)
 public class TestCsvWithHeaders extends BaseCsvTest {
 
   private static final String TEST_FILE_NAME = "basic.csv";
+  private static final String COLUMNS_FILE_NAME = "columns.csv";
+  private static final String EMPTY_HEADERS_FILE = "noHeaders.csv";
 
-  private static String invalidHeaders[] = {
+  private static String[] invalidHeaders = {
       "$,,9b,c,c,c_2",
       "10,foo,bar,fourth,fifth,sixth"
   };
 
-  private static String emptyHeaders[] = {
+  private static String[] emptyHeaders = {
       "",
       "10,foo,bar"
   };
 
-  private static String raggedRows[] = {
+  private static String[] raggedRows = {
       "a,b,c",
       "10,dino",
       "20,foo,bar",
       "30"
   };
 
-  public static final String COLUMNS_FILE_NAME = "columns.csv";
-
-  private static String columnsCol[] = {
+  private static String[] columnsCol = {
       "author,columns",
       "fred,\"Rocks Today,Dino Wrangling\"",
       "barney,Bowlarama"
@@ -109,7 +112,7 @@ public class TestCsvWithHeaders extends BaseCsvTest {
    * <br><tt>SELECT * FROM VALUES ();</tt><br>
    * The implementation tested here follows that pattern.
    *
-   * @see {@link TestCsvWithoutHeaders#testEmptyFile()}
+   * @see TestCsvWithoutHeaders#testEmptyFile()
    */
   @Test
   public void testEmptyFile() throws IOException {
@@ -117,8 +120,6 @@ public class TestCsvWithHeaders extends BaseCsvTest {
     RowSet rowSet = client.queryBuilder().sql(makeStatement(EMPTY_FILE)).rowSet();
     assertNull(rowSet);
   }
-
-  private static final String EMPTY_HEADERS_FILE = "noheaders.csv";
 
   /**
    * Trivial case: empty header. This case should fail.
@@ -186,10 +187,6 @@ public class TestCsvWithHeaders extends BaseCsvTest {
         .addRow("10", "foo", "bar")
         .build();
     RowSetUtilities.verify(expected, actual);
-  }
-
-  private String makeStatement(String fileName) {
-    return "SELECT * FROM `dfs.data`.`" + fileName + "`";
   }
 
   /**
@@ -352,9 +349,8 @@ public class TestCsvWithHeaders extends BaseCsvTest {
    * files are nested to another level.)
    */
   @Test
-  public void testPartitionExpansion() throws IOException {
-    String sql = "SELECT * FROM `dfs.data`.`%s`";
-    Iterator<DirectRowSet> iter = client.queryBuilder().sql(sql, PART_DIR).rowSetIterator();
+  public void testPartitionExpansion() {
+    Iterator<DirectRowSet> iter = client.queryBuilder().sql(makeStatement(PART_DIR)).rowSetIterator();
 
     TupleMetadata expectedSchema = new SchemaBuilder()
         .add("a", MinorType.VARCHAR)
@@ -407,7 +403,7 @@ public class TestCsvWithHeaders extends BaseCsvTest {
    * partition column moves after data columns.
    */
   @Test
-  public void testWilcardAndPartitionsMultiFiles() throws IOException {
+  public void testWildcardAndPartitionsMultiFiles() {
     String sql = "SELECT *, dir0, dir1 FROM `dfs.data`.`%s`";
     Iterator<DirectRowSet> iter = client.queryBuilder().sql(sql, PART_DIR).rowSetIterator();
 
@@ -464,7 +460,7 @@ public class TestCsvWithHeaders extends BaseCsvTest {
    * are consistent even when used across multiple scans.
    */
   @Test
-  public void doTestExplicitPartitionsMultiFiles() throws IOException {
+  public void doTestExplicitPartitionsMultiFiles() {
     String sql = "SELECT a, b, c, dir0, dir1 FROM `dfs.data`.`%s`";
     Iterator<DirectRowSet> iter = client.queryBuilder().sql(sql, PART_DIR).rowSetIterator();
 
@@ -537,7 +533,6 @@ public class TestCsvWithHeaders extends BaseCsvTest {
    * The column name `columns` is treated as a plain old
    * column when using column headers. If used with an index,
    * validation will fail because the VarChar column is not an array
-   * @throws Exception
    */
   @Test
   public void testColumnsIndex() throws Exception {
@@ -572,7 +567,6 @@ public class TestCsvWithHeaders extends BaseCsvTest {
   /**
    * If columns[x] is used, then this can't possibly match a valid
    * text reader column, so raise an error instead.
-   * @throws Exception
    */
   @Test
   public void testColumnsIndexMissing() throws Exception {
@@ -594,8 +588,7 @@ public class TestCsvWithHeaders extends BaseCsvTest {
   @Test
   public void testHugeColumn() throws IOException {
     String fileName = buildBigColFile(true);
-    String sql = "SELECT * FROM `dfs.data`.`%s`";
-    RowSet actual = client.queryBuilder().sql(sql, fileName).rowSet();
+    RowSet actual = client.queryBuilder().sql(makeStatement(fileName)).rowSet();
     assertEquals(10, actual.rowCount());
     RowSetReader reader = actual.reader();
     while (reader.next()) {
@@ -609,5 +602,28 @@ public class TestCsvWithHeaders extends BaseCsvTest {
       assertEquals(Integer.toString((i + 1) * 10), reader.scalar(2).getString());
     }
     actual.clear();
+  }
+
+  @Test
+  public void testHeadersOnly() throws Exception {
+    String fileName = "headersOnly.csv";
+    try (PrintWriter out = new PrintWriter(new FileWriter(new File(testDir, fileName)))) {
+      out.print("a,b,c"); // note: no \n in the end
+    }
+
+    RowSet actual = client.queryBuilder().sql(makeStatement(fileName)).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .add("a", MinorType.VARCHAR)
+      .add("b", MinorType.VARCHAR)
+      .add("c", MinorType.VARCHAR)
+      .buildSchema();
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .build();
+    RowSetUtilities.verify(expected, actual);
+  }
+
+  private String makeStatement(String fileName) {
+    return "SELECT * FROM `dfs.data`.`" + fileName + "`";
   }
 }

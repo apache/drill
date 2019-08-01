@@ -86,9 +86,9 @@ final class TextInput {
   /**
    * Creates a new instance with the mandatory characters for handling newlines
    * transparently. lineSeparator the sequence of characters that represent a
-   * newline, as defined in {@link Format#getLineSeparator()}
+   * newline, as defined in {@link TextParsingSettings#getNewLineDelimiter()}
    * normalizedLineSeparator the normalized newline character (as defined in
-   * {@link Format#getNormalizedNewline()}) that is used to replace any
+   * {@link TextParsingSettings#getNormalizedNewLine()}) that is used to replace any
    * lineSeparator sequence found in the input.
    */
   public TextInput(TextParsingSettings settings, InputStream input, DrillBuf readBuffer, long startPos, long endPos) {
@@ -142,7 +142,11 @@ final class TextInput {
       if (startPos > 0 || settings.isSkipFirstLine()) {
 
         // move to next full record.
-        skipLines(1);
+        try {
+          skipLines(1);
+        } catch (StreamFinishedPseudoException e) {
+          // file does not have any more lines, ignore
+        }
       }
     }
   }
