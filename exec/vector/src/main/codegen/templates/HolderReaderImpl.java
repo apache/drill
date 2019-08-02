@@ -298,11 +298,41 @@ public class ${holderMode}${name}HolderReaderImpl extends AbstractFieldReader {
       return value;
 </#if>
   }
+<#if holderMode == "Repeated">
 
-<#if holderMode != "Repeated" && nullMode != "Nullable">
-  public void copyAsValue(${minor.class?cap_first}Writer writer){
-    writer.write(holder);
+  public void copyAsValue(${minor.class?cap_first}Writer writer) {
+    Repeated${minor.class?cap_first}WriterImpl impl = (Repeated${minor.class?cap_first}WriterImpl) writer;
+    impl.vector.getMutator().setSafe(impl.idx(), repeatedHolder);
   }
+
+<#if minor.class == "VarDecimal">
+  public void copyAsField(String name, MapWriter writer, int precision, int scale) {
+    Repeated${minor.class?cap_first}WriterImpl impl
+        = (Repeated${minor.class?cap_first}WriterImpl) writer.list(name).${lowerName}(precision, scale);
+<#else>
+public void copyAsField(String name, MapWriter writer) {
+    Repeated${minor.class?cap_first}WriterImpl impl = (Repeated${minor.class?cap_first}WriterImpl) writer.list(name).${lowerName}();
+</#if>
+    impl.vector.getMutator().setSafe(impl.idx(), repeatedHolder);
+  }
+
+<#else>
+  <#if !(minor.class == "Decimal9" || minor.class == "Decimal18")>
+  public void copyAsValue(${minor.class?cap_first}Writer writer) {
+    writer.write${minor.class}(<#list fields as field>holder.${field.name}<#if field_has_next>, </#if></#list>);
+  }
+
+    <#if minor.class == "VarDecimal">
+  public void copyAsField(String name, MapWriter writer, int precision, int scale) {
+    ${minor.class?cap_first}Writer impl = writer.${lowerName}(name, precision, scale);
+    <#else>
+  public void copyAsField(String name, MapWriter writer) {
+    ${minor.class?cap_first}Writer impl = writer.${lowerName}(name);
+    </#if>
+    impl.write${minor.class}(<#list fields as field>holder.${field.name}<#if field_has_next>, </#if></#list>);
+  }
+
+  </#if>
 </#if>
 }
 

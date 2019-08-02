@@ -96,6 +96,11 @@ public @interface FunctionTemplate {
   boolean isInternal() default false;
 
   /**
+   * Defines if a function accepts variable arguments count
+   */
+  boolean isVarArg() default false;
+
+  /**
    * This enum will be used to estimate the average size of the output
    * produced by a function that produces variable length output
    */

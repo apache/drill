@@ -146,6 +146,42 @@ public class TestClassTransformation extends BaseTestQuery {
     }
   }
 
+  @Test
+  public void testScalarReplacementWithArrayAssignment() throws Exception {
+    ClassTransformer.ClassNames classNames = new ClassTransformer.ClassNames("org.apache.drill.CompileClassWithArraysAssignment");
+    String entireClass = DrillFileUtils.getResourceAsString(DrillFileUtils.SEPARATOR + classNames.slash + ".java");
+
+    sessionOptions.setLocalOption(ClassCompilerSelector.JAVA_COMPILER_DEBUG_OPTION, false);
+
+    List<String> compilers = Arrays.asList(ClassCompilerSelector.CompilerPolicy.JANINO.name(),
+        ClassCompilerSelector.CompilerPolicy.JDK.name());
+    for (String compilerName : compilers) {
+      sessionOptions.setLocalOption(ClassCompilerSelector.JAVA_COMPILER_OPTION, compilerName);
+
+      QueryClassLoader queryClassLoader = new QueryClassLoader(config, sessionOptions);
+
+      byte[][] implementationClasses = queryClassLoader.getClassByteCode(classNames, entireClass);
+
+      ClassNode originalClass = AsmUtil.classFromBytes(implementationClasses[0], ClassReader.EXPAND_FRAMES);
+
+      ClassNode transformedClass = new ClassNode();
+      DrillCheckClassAdapter mergeGenerator = new DrillCheckClassAdapter(CompilationConfig.ASM_API_VERSION,
+          new CheckClassVisitorFsm(CompilationConfig.ASM_API_VERSION, transformedClass), true);
+      originalClass.accept(new ValueHolderReplacementVisitor(mergeGenerator, true));
+
+      if (!AsmUtil.isClassOk(logger, classNames.dot, transformedClass)) {
+        throw new IllegalStateException(String.format("Problem found after transforming %s", classNames.dot));
+      }
+      ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
+      transformedClass.accept(writer);
+      byte[] outputClass = writer.toByteArray();
+
+      queryClassLoader.injectByteCode(classNames.dot, outputClass);
+      Class<?> transformedClazz = queryClassLoader.findClass(classNames.dot);
+      transformedClazz.getMethod("doSomething").invoke(null);
+    }
+  }
+
   @Test // DRILL-5683
   public void testCaseWithColumnExprsOnView() throws Exception {
     String sqlCreate =

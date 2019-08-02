@@ -41,14 +41,16 @@ import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Converts FunctionCalls to Java Expressions.
  */
 public class FunctionConverter {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FunctionConverter.class);
+  private static final Logger logger = LoggerFactory.getLogger(FunctionConverter.class);
 
-  public <T extends DrillFunc> DrillFuncHolder getHolder(AnnotatedClassDescriptor func, ClassLoader classLoader) {
+  public DrillFuncHolder getHolder(AnnotatedClassDescriptor func, ClassLoader classLoader) {
     FunctionTemplate template = func.getAnnotationProxy(FunctionTemplate.class);
     if (template == null) {
       return failure("Class does not declare FunctionTemplate annotation.", func);
@@ -70,6 +72,7 @@ public class FunctionConverter {
     List<WorkspaceReference> workspaceFields = Lists.newArrayList();
 
     ValueReference outputField = null;
+    int varArgsCount = 0;
 
     for (FieldDescriptor field : func.getFields()) {
       Param param = field.getAnnotationProxy(Param.class);
@@ -93,10 +96,22 @@ public class FunctionConverter {
       // TODO(Julien): verify there are a few of those and we can load them
       Class<?> fieldClass = field.getFieldClass();
       if (param != null || output != null) {
+        if (Object[].class.isAssignableFrom(fieldClass)) {
+          fieldClass = fieldClass.getComponentType();
+          varArgsCount++;
+        } else if (varArgsCount > 0 && param != null) {
+          return failure("Vararg should be the last argument in the function.", func, field);
+        }
+
+        if (varArgsCount > 1) {
+          return failure("Function should contain single vararg argument", func, field);
+        }
 
         // Special processing for @Param FieldReader
         if (param != null && FieldReader.class.isAssignableFrom(fieldClass)) {
-          params.add(ValueReference.createFieldReaderRef(field.getName()));
+          ValueReference fieldReaderRef = ValueReference.createFieldReaderRef(field.getName());
+          fieldReaderRef.setVarArg(varArgsCount > 0);
+          params.add(fieldReaderRef);
           continue;
         }
 
@@ -104,7 +119,7 @@ public class FunctionConverter {
         if (output != null && ComplexWriter.class.isAssignableFrom(fieldClass)) {
           if (outputField != null) {
             return failure("You've declared more than one @Output field.  You must declare one and only @Output field per Function class.", func, field);
-          }else{
+          } else {
             outputField = ValueReference.createComplexWriterRef(field.getName());
           }
           continue;
@@ -116,7 +131,7 @@ public class FunctionConverter {
         }
 
         // get the type field from the value holder.
-        MajorType type = null;
+        MajorType type;
         try {
           type = getStaticFieldValue("TYPE", fieldClass, MajorType.class);
         } catch (Exception e) {
@@ -126,6 +141,7 @@ public class FunctionConverter {
         ValueReference p = new ValueReference(type, field.getName());
         if (param != null) {
           p.setConstant(param.constant());
+          p.setVarArg(varArgsCount > 0);
           params.add(p);
         } else {
           if (outputField != null) {

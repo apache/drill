@@ -17,7 +17,8 @@
  */
 package org.apache.drill.exec.planner.sql;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.apache.calcite.sql.type.SqlOperandTypeChecker;
+import org.apache.calcite.util.Optionality;
 import org.apache.calcite.sql.SqlAggFunction;
 import org.apache.calcite.sql.SqlFunctionCategory;
 import org.apache.calcite.sql.SqlIdentifier;
@@ -26,34 +27,25 @@ import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlReturnTypeInference;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 public class DrillSqlAggOperator extends SqlAggFunction {
-  // private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillSqlAggOperator.class);
   private final List<DrillFuncHolder> functions;
 
-  protected DrillSqlAggOperator(String name, List<DrillFuncHolder> functions, int argCountMin, int argCountMax, SqlReturnTypeInference sqlReturnTypeInference) {
+  protected DrillSqlAggOperator(String name, List<DrillFuncHolder> functions, SqlOperandTypeChecker operandTypeChecker, SqlReturnTypeInference sqlReturnTypeInference) {
     super(name,
         new SqlIdentifier(name, SqlParserPos.ZERO),
         SqlKind.OTHER_FUNCTION,
         sqlReturnTypeInference,
         null,
-        Checker.getChecker(argCountMin, argCountMax),
+        operandTypeChecker,
         SqlFunctionCategory.USER_DEFINED_FUNCTION,
         false,
-        false);
+        false,
+        Optionality.FORBIDDEN);
     this.functions = functions;
-  }
-
-  private DrillSqlAggOperator(String name, List<DrillFuncHolder> functions, int argCountMin, int argCountMax) {
-    this(name,
-        functions,
-        argCountMin,
-        argCountMax,
-        TypeInferenceUtils.getDrillSqlReturnTypeInference(
-            name,
-            functions));
   }
 
   public List<DrillFuncHolder> getFunctions() {
@@ -62,7 +54,7 @@ public class DrillSqlAggOperator extends SqlAggFunction {
 
   public static class DrillSqlAggOperatorBuilder {
     private String name = null;
-    private final List<DrillFuncHolder> functions = Lists.newArrayList();
+    private final List<DrillFuncHolder> functions = new ArrayList<>();
     private int argCountMin = Integer.MAX_VALUE;
     private int argCountMax = Integer.MIN_VALUE;
 
@@ -83,14 +75,25 @@ public class DrillSqlAggOperator extends SqlAggFunction {
     }
 
     public DrillSqlAggOperator build() {
-      if(name == null || functions.isEmpty()) {
+      if (name == null || functions.isEmpty()) {
         throw new AssertionError("The fields, name and functions, need to be set before build DrillSqlAggOperator");
       }
+
+      boolean isVarArg = false;
+      for (DrillFuncHolder function : functions) {
+        if (function.isVarArg()) {
+          isVarArg = true;
+        }
+      }
+
       return new DrillSqlAggOperator(
           name,
           functions,
-          argCountMin,
-          argCountMax);
+          isVarArg ? VarArgOperandTypeChecker.INSTANCE : Checker.getChecker(argCountMin, argCountMax),
+          TypeInferenceUtils.getDrillSqlReturnTypeInference(
+              name,
+              functions));
+
     }
   }
 }

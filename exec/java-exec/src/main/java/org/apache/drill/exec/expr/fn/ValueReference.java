@@ -29,6 +29,7 @@ public class ValueReference {
   private boolean isFieldReader = false;
   private boolean isComplexWriter = false;
   private boolean isInternal = false;
+  private boolean isVarArg = false;
 
   public ValueReference(MajorType type, String name) {
     Preconditions.checkNotNull(type);
@@ -39,6 +40,10 @@ public class ValueReference {
 
   public void setConstant(boolean isConstant) {
     this.isConstant = isConstant;
+  }
+
+  public void setVarArg(boolean isVarArg) {
+    this.isVarArg = isVarArg;
   }
 
   public MajorType getType() {
@@ -67,6 +72,10 @@ public class ValueReference {
 
   public boolean isComplexWriter() {
     return isComplexWriter;
+  }
+
+  public boolean isVarArg() {
+    return isVarArg;
   }
 
   @Override

@@ -17,21 +17,16 @@
  */
 package org.apache.drill.exec.planner.sql;
 
-import org.apache.calcite.sql.SqlCallBinding;
 import org.apache.calcite.sql.SqlFunction;
 import org.apache.calcite.sql.SqlFunctionCategory;
 import org.apache.calcite.sql.SqlIdentifier;
-import org.apache.calcite.sql.SqlOperandCountRange;
-import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.parser.SqlParserPos;
-import org.apache.calcite.sql.type.SqlOperandCountRanges;
-import org.apache.calcite.sql.type.SqlOperandTypeChecker;
 import org.apache.calcite.sql.type.SqlReturnTypeInference;
 
 public class HiveUDFOperator extends SqlFunction {
   public HiveUDFOperator(String name, SqlReturnTypeInference sqlReturnTypeInference) {
-    super(new SqlIdentifier(name, SqlParserPos.ZERO), sqlReturnTypeInference, null, ArgChecker.INSTANCE, null,
-        SqlFunctionCategory.USER_DEFINED_FUNCTION);
+    super(new SqlIdentifier(name, SqlParserPos.ZERO), sqlReturnTypeInference, null,
+        VarArgOperandTypeChecker.INSTANCE, null, SqlFunctionCategory.USER_DEFINED_FUNCTION);
   }
 
   // Consider Hive functions to be non-deterministic so they are not folded at
@@ -40,38 +35,5 @@ public class HiveUDFOperator extends SqlFunction {
   @Override
   public boolean isDeterministic() {
     return false;
-  }
-
-  /** Argument Checker for variable number of arguments */
-  public static class ArgChecker implements SqlOperandTypeChecker {
-
-    public static ArgChecker INSTANCE = new ArgChecker();
-
-    private SqlOperandCountRange range = SqlOperandCountRanges.any();
-
-    @Override
-    public boolean checkOperandTypes(SqlCallBinding callBinding, boolean throwOnFailure) {
-      return true;
-    }
-
-    @Override
-    public Consistency getConsistency() {
-      return Consistency.NONE;
-    }
-
-    @Override
-    public SqlOperandCountRange getOperandCountRange() {
-      return range;
-    }
-
-    @Override
-    public String getAllowedSignatures(SqlOperator op, String opName) {
-      return opName + "(HiveUDF - Opaque)";
-    }
-
-    @Override
-    public boolean isOptional(int arg) {
-      return false;
-    }
   }
 }

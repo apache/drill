@@ -897,7 +897,11 @@ public class TypeInferenceUtils {
     if (func == null) {
       StringBuilder operandTypes = new StringBuilder();
       for (int i = 0; i < opBinding.getOperandCount(); ++i) {
-        operandTypes.append(opBinding.getOperandType(i).getSqlTypeName());
+        RelDataType operandType = opBinding.getOperandType(i);
+        operandTypes.append(operandType.getSqlTypeName());
+        if (operandType.isNullable()) {
+          operandTypes.append(":OPTIONAL");
+        }
         if (i < opBinding.getOperandCount() - 1) {
           operandTypes.append(",");
         }

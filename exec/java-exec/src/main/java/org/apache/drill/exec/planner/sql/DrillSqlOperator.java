@@ -21,19 +21,18 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.calcite.sql.type.SqlOperandTypeChecker;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.SqlFunction;
 import org.apache.calcite.sql.SqlFunctionCategory;
 import org.apache.calcite.sql.SqlIdentifier;
-import org.apache.calcite.sql.SqlOperatorBinding;
 import org.apache.calcite.sql.SqlSyntax;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlReturnTypeInference;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 
 public class DrillSqlOperator extends SqlFunction {
-  // static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillSqlOperator.class);
   private final boolean isDeterministic;
   private final boolean isNiladic;
   private final List<DrillFuncHolder> functions;
@@ -63,9 +62,8 @@ public class DrillSqlOperator extends SqlFunction {
   public DrillSqlOperator(final String name, final int argCount, final boolean isDeterministic,
       final SqlReturnTypeInference sqlReturnTypeInference, final boolean isNiladic) {
     this(name,
-        new ArrayList<DrillFuncHolder>(),
-        argCount,
-        argCount,
+        new ArrayList<>(),
+        Checker.getChecker(argCount, argCount),
         isDeterministic,
         sqlReturnTypeInference,
         isNiladic);
@@ -80,23 +78,18 @@ public class DrillSqlOperator extends SqlFunction {
   @Deprecated
   public DrillSqlOperator(final String name, final int argCount, final boolean isDeterministic, final RelDataType type, final boolean isNiladic) {
     this(name,
-        new ArrayList<DrillFuncHolder>(),
-        argCount,
-        argCount,
-        isDeterministic, new SqlReturnTypeInference() {
-          @Override
-          public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
-            return type;
-          }
-        }, isNiladic);
+        new ArrayList<>(),
+        Checker.getChecker(argCount, argCount),
+        isDeterministic, opBinding -> type, isNiladic);
   }
 
-  protected DrillSqlOperator(String name, List<DrillFuncHolder> functions, int argCountMin, int argCountMax, boolean isDeterministic,
+  protected DrillSqlOperator(String name, List<DrillFuncHolder> functions,
+      SqlOperandTypeChecker operandTypeChecker, boolean isDeterministic,
       SqlReturnTypeInference sqlReturnTypeInference, boolean isNiladic) {
     super(new SqlIdentifier(name, SqlParserPos.ZERO),
         sqlReturnTypeInference,
         null,
-        Checker.getChecker(argCountMin, argCountMax),
+        operandTypeChecker,
         null,
         SqlFunctionCategory.USER_DEFINED_FUNCTION);
     this.functions = functions;
@@ -117,6 +110,7 @@ public class DrillSqlOperator extends SqlFunction {
     return functions;
   }
 
+  @Override
   public SqlSyntax getSyntax() {
     if(isNiladic) {
       return SqlSyntax.FUNCTION_ID;
@@ -131,6 +125,7 @@ public class DrillSqlOperator extends SqlFunction {
     private int argCountMax = Integer.MIN_VALUE;
     private boolean isDeterministic = true;
     private boolean isNiladic = false;
+    private boolean isVarArg = false;
 
     public DrillSqlOperatorBuilder setName(final String name) {
       this.name = name;
@@ -145,6 +140,11 @@ public class DrillSqlOperator extends SqlFunction {
     public DrillSqlOperatorBuilder setArgumentCount(final int argCountMin, final int argCountMax) {
       this.argCountMin = Math.min(this.argCountMin, argCountMin);
       this.argCountMax = Math.max(this.argCountMax, argCountMax);
+      return this;
+    }
+
+    public DrillSqlOperatorBuilder setVarArg(boolean isVarArg) {
+      this.isVarArg = isVarArg;
       return this;
     }
 
@@ -190,8 +190,7 @@ public class DrillSqlOperator extends SqlFunction {
       return new DrillSqlOperator(
           name,
           functions,
-          argCountMin,
-          argCountMax,
+          isVarArg ? VarArgOperandTypeChecker.INSTANCE : Checker.getChecker(argCountMin, argCountMax),
           isDeterministic,
           TypeInferenceUtils.getDrillSqlReturnTypeInference(
               name,
