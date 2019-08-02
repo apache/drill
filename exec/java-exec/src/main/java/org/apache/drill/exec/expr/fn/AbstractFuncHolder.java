@@ -17,14 +17,9 @@
  */
 package org.apache.drill.exec.expr.fn;
 
-import java.util.List;
-
-import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.FunctionHolderExpression;
-import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.fn.FuncHolder;
-import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 
@@ -50,22 +45,12 @@ public abstract class AbstractFuncHolder implements FuncHolder {
   public abstract HoldingContainer renderEnd(ClassGenerator<?> classGenerator, HoldingContainer[] inputVariables,
                                              JVar[] workspaceJVars, FunctionHolderExpression holderExpr);
 
+  @Override
   public boolean isNested() {
     return false;
   }
 
-  public abstract FunctionHolderExpression getExpr(String name, List<LogicalExpression> args, ExpressionPosition pos);
-
-  public abstract MajorType getParmMajorType(int i);
-
-  public abstract int getParamCount();
-
-  /**
-   * Checks that the current function holder stores output value
-   * using field writer instead of vector holder.
-   *
-   * @return true if current function holder uses field writer to store the output value
-   */
+  @Override
   public boolean isComplexWriterFuncHolder() {
     return false;
   }

@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.expr.fn.interpreter;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Objects;
@@ -113,10 +114,17 @@ public class InterpreterEvaluator {
         // if this is annotated as a parameter to the function
         if (f.getAnnotation(Param.class) != null) {
           f.setAccessible(true);
-          if (currParameterIndex < args.length) {
+          if (f.getType().getComponentType() != null) {
+            Object array = Array.newInstance(f.getType().getComponentType(), args.length - currParameterIndex);
+            for (int i = 0; i < args.length - currParameterIndex; i++) {
+              Array.set(array, i, args[currParameterIndex + i]);
+            }
+            currParameterIndex = args.length;
+            f.set(interpreter, array);
+          } else if (currParameterIndex < args.length) {
             f.set(interpreter, args[currParameterIndex]);
+            currParameterIndex++;
           }
-          currParameterIndex++;
         } else if (f.getAnnotation(Output.class) != null) {
           f.setAccessible(true);
           outField = f;
@@ -324,7 +332,7 @@ public class InterpreterEvaluator {
         ValueHolder valueHolder = holderExpr.args.get(i).accept(this, inIndex);
         Object resultArg = valueHolder;
         TypeProtos.MajorType argType = TypeHelper.getValueHolderType(valueHolder);
-        TypeProtos.MajorType holderParamType = holder.getParameters()[i].getType();
+        TypeProtos.MajorType holderParamType = holder.getParamMajorType(i);
         // In case function use "NULL_IF_NULL" policy.
         if (holder.getNullHandling() == FunctionTemplate.NullHandling.NULL_IF_NULL) {
           // Case 1: parameter is non-nullable, argument is nullable.
@@ -343,7 +351,7 @@ public class InterpreterEvaluator {
             resultArg = TypeHelper.nullify(valueHolder);
           }
         }
-        if (holder.getParameters()[i].isFieldReader()) {
+        if (holder.getAttributeParameter(i).isFieldReader()) {
           resultArg = BasicTypeHelper.getHolderReaderImpl(argType, valueHolder);
         }
         args[i] = resultArg;

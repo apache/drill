@@ -441,11 +441,6 @@ public class MapUtility {
     try {
       MajorType valueMajorType = fieldReader.getType();
       MinorType valueMinorType = valueMajorType.getMinorType();
-      boolean repeated = false;
-
-      if (valueMajorType.getMode() == TypeProtos.DataMode.REPEATED) {
-        repeated = true;
-      }
 
       switch (valueMinorType) {
         case TINYINT:

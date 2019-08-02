@@ -17,6 +17,12 @@
  */
 package org.apache.drill.exec.expr.fn;
 
+import com.sun.codemodel.JAssignmentTarget;
+import com.sun.codemodel.JCodeModel;
+import com.sun.codemodel.JExpression;
+import com.sun.codemodel.JInvocation;
+import org.apache.drill.exec.expr.holders.RepeatedListHolder;
+import org.apache.drill.exec.expr.holders.ValueHolder;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 import com.sun.codemodel.JBlock;
@@ -119,9 +125,12 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
     return attributes.isNiladic();
   }
 
-
   public boolean isInternal() {
     return attributes.isInternal();
+  }
+
+  public boolean isVarArg() {
+    return attributes.isVarArg();
   }
 
   /**
@@ -134,13 +143,15 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
    */
   public String getInputParameters() {
     StringBuilder builder = new StringBuilder();
-    builder.append("");
     for (ValueReference ref : attributes.getParameters()) {
-      final MajorType type = ref.getType();
+      MajorType type = ref.getType();
       builder.append(",");
       builder.append(type.getMinorType().toString());
       builder.append("-");
       builder.append(type.getMode().toString());
+    }
+    if (isVarArg() && getParamCount() > 0) {
+      builder.append("...");
     }
     return builder.length() == 0 ? builder.toString() : builder.substring(1);
   }
@@ -202,43 +213,35 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
   protected void addProtectedBlock(ClassGenerator<?> g, JBlock sub, String body, HoldingContainer[] inputVariables,
       JVar[] workspaceJVars, boolean decConstInputOnly) {
     if (inputVariables != null) {
+      if (isVarArg()) {
+        declareVarArgArray(g.getModel(), sub, inputVariables);
+      }
       for (int i = 0; i < inputVariables.length; i++) {
         if (decConstInputOnly && !inputVariables[i].isConstant()) {
           continue;
         }
 
-        ValueReference parameter = attributes.getParameters()[i];
+        ValueReference parameter = getAttributeParameter(i);
         HoldingContainer inputVariable = inputVariables[i];
         if (parameter.isFieldReader() && ! inputVariable.isReader()
             && ! Types.isComplex(inputVariable.getMajorType()) && inputVariable.getMinorType() != MinorType.UNION) {
           JType singularReaderClass = g.getModel()._ref(TypeHelper.getHolderReaderImpl(inputVariable.getMajorType().getMinorType(),
               inputVariable.getMajorType().getMode()));
-          JType fieldReadClass = g.getModel()._ref(FieldReader.class);
-          sub.decl(fieldReadClass, parameter.getName(), JExpr._new(singularReaderClass).arg(inputVariable.getHolder()));
+          JType fieldReadClass = getParamClass(g.getModel(), parameter, inputVariable.getHolder().type());
+          JInvocation reader = JExpr._new(singularReaderClass).arg(inputVariable.getHolder());
+          declare(sub, parameter, fieldReadClass, reader, i);
         } else if (!parameter.isFieldReader() && inputVariable.isReader() && Types.isComplex(parameter.getType())) {
           // For complex data-types (repeated maps/lists) the input to the aggregate will be a FieldReader. However, aggregate
           // functions like ANY_VALUE, will assume the input to be a RepeatedMapHolder etc. Generate boilerplate code, to map
           // from FieldReader to respective Holder.
-          if (parameter.getType().getMinorType() == MinorType.MAP) {
-            JType holderClass;
-            if (parameter.getType().getMode() == TypeProtos.DataMode.REPEATED) {
-              holderClass = g.getModel()._ref(RepeatedMapHolder.class);
-              JVar holderVar = sub.decl(holderClass, parameter.getName(), JExpr._new(holderClass));
-              sub.assign(holderVar.ref("reader"), inputVariable.getHolder());
-            } else {
-              holderClass = g.getModel()._ref(MapHolder.class);
-              JVar holderVar = sub.decl(holderClass, parameter.getName(), JExpr._new(holderClass));
-              sub.assign(holderVar.ref("reader"), inputVariable.getHolder());
-            }
-          } else if (parameter.getType().getMinorType() == MinorType.LIST) {
-            //TODO: Add support for REPEATED LISTs
-            JType holderClass = g.getModel()._ref(ListHolder.class);
-            JVar holderVar = sub.decl(holderClass, parameter.getName(), JExpr._new(holderClass));
+          if (parameter.getType().getMinorType() == MinorType.MAP
+              || parameter.getType().getMinorType() == MinorType.LIST) {
+            JType holderClass = getParamClass(g.getModel(), parameter, inputVariable.getHolder().type());
+            JAssignmentTarget holderVar = declare(sub, parameter, holderClass, JExpr._new(holderClass), i);
             sub.assign(holderVar.ref("reader"), inputVariable.getHolder());
           }
-        }
-        else {
-          sub.decl(inputVariable.getHolder().type(), parameter.getName(), inputVariable.getHolder());
+        } else {
+          declare(sub, parameter, inputVariable.getHolder().type(), inputVariable.getHolder(), i);
         }
       }
     }
@@ -262,6 +265,76 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
     }
   }
 
+  /**
+   * Declares array for storing vararg function arguments.
+   *
+   * @param model          code model to generate the code
+   * @param jBlock         block of code to be populated
+   * @param inputVariables array of input variables for current function
+   */
+  protected void declareVarArgArray(JCodeModel model, JBlock jBlock, HoldingContainer[] inputVariables) {
+    ValueReference parameter = getAttributeParameter(getParamCount() - 1);
+    JType defaultType;
+    if (inputVariables.length >= getParamCount()) {
+      defaultType = inputVariables[inputVariables.length - 1].getHolder().type();
+    } else if (parameter.getType().getMinorType() == MinorType.LATE) {
+      defaultType = model._ref(ValueHolder.class);
+    } else {
+      defaultType = TypeHelper.getHolderType(model, parameter.getType().getMinorType(), parameter.getType().getMode());
+    }
+    JType paramClass = getParamClass(model, parameter, defaultType);
+    jBlock.decl(paramClass.array(), parameter.getName(), JExpr.newArray(paramClass, inputVariables.length - getParamCount() + 1));
+  }
+
+  /**
+   * Returns {@link JType} instance which corresponds to the parameter of the function.
+   *
+   * @param model       code model to generate the code
+   * @param parameter   function parameter which determines resulting type
+   * @param defaultType type to be returned for the case when parameter does not hold specific type
+   * @return {@link JType} instance which corresponds to the parameter of the function
+   */
+  private JType getParamClass(JCodeModel model, ValueReference parameter, JType defaultType) {
+    if (parameter.isFieldReader()) {
+      return model._ref(FieldReader.class);
+    } else if (parameter.getType().getMinorType() == MinorType.MAP) {
+      if (parameter.getType().getMode() == TypeProtos.DataMode.REPEATED) {
+        return model._ref(RepeatedMapHolder.class);
+      } else {
+        return model._ref(MapHolder.class);
+      }
+    } else if (parameter.getType().getMinorType() == MinorType.LIST) {
+      if (parameter.getType().getMode() == TypeProtos.DataMode.REPEATED) {
+        return model._ref(RepeatedListHolder.class);
+      } else {
+        return model._ref(ListHolder.class);
+      }
+    }
+    return defaultType;
+  }
+
+  /**
+   * Declares specified {@code paramExpression} in specified {@code jBlock}
+   * and assigns it to the array component if required and / or returns declared expression.
+   *
+   * @param jBlock          target block where declaration is added
+   * @param parameter       function parameter which should be declared
+   * @param paramClass      type of the declared variable
+   * @param paramExpression expression to be declared
+   * @param currentIndex    index of current parameter
+   * @return declared expression
+   */
+  protected JAssignmentTarget declare(JBlock jBlock, ValueReference parameter,
+      JType paramClass, JExpression paramExpression, int currentIndex) {
+    if (parameter.isVarArg()) {
+      JAssignmentTarget arrayComponent = JExpr.ref(parameter.getName()).component(JExpr.lit(currentIndex - getParamCount() + 1));
+      jBlock.assign(arrayComponent, paramExpression);
+      return arrayComponent;
+    } else {
+      return jBlock.decl(paramClass, parameter.getName(), paramExpression);
+    }
+  }
+
   public boolean matches(MajorType returnType, List<MajorType> argTypes) {
 
     if (!softCompare(returnType, attributes.getReturnValue().getType())) {
@@ -277,7 +350,7 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
     }
 
     for (int i = 0; i < attributes.getParameters().length; i++) {
-      if (!softCompare(attributes.getParameters()[i].getType(), argTypes.get(i))) {
+      if (!softCompare(getAttributeParameter(i).getType(), argTypes.get(i))) {
         // logger.debug(String.format("Call [%s] didn't match as the argument [%s] didn't match the expected type [%s]. ",
         // call.getDefinition().getName(), arg.getMajorType(), param.type));
         return false;
@@ -288,8 +361,8 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
   }
 
   @Override
-  public MajorType getParmMajorType(int i) {
-    return attributes.getParameters()[i].getType();
+  public MajorType getParamMajorType(int i) {
+    return getAttributeParameter(i).getType();
   }
 
   @Override
@@ -298,11 +371,26 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
   }
 
   public boolean isConstant(int i) {
-    return attributes.getParameters()[i].isConstant();
+    return getAttributeParameter(i).isConstant();
+  }
+
+  /**
+   * Returns i-th function attribute parameter.
+   * For the case when current function is vararg and specified index
+   * is greater than or equals to the attributes count, the last function attribute parameter  is returnedd.
+   *
+   * @param i index of function attribute parameter to  be returned
+   * @return i-th function attribute parameter
+   */
+  public ValueReference getAttributeParameter(int i) {
+    if (i >= getParamCount() && attributes.isVarArg()) {
+      return attributes.getParameters()[getParamCount() - 1];
+    }
+    return attributes.getParameters()[i];
   }
 
   public boolean isFieldReader(int i) {
-    return attributes.getParameters()[i].isFieldReader();
+    return getAttributeParameter(i).isFieldReader();
   }
 
   public MajorType getReturnType(final List<LogicalExpression> logicalExpressions) {

@@ -103,6 +103,10 @@ public class FunctionAttributes {
     return template.isNiladic();
   }
 
+  public boolean isVarArg() {
+    return template.isVarArg();
+  }
+
   public boolean isInternal() {
     return template.isInternal();
   }

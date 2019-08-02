@@ -264,11 +264,15 @@ public class HiveFunctionRegistry implements PluggableFunctionRegistry {
 
       final FunctionCall functionCall = TypeInferenceUtils.convertSqlOperatorBindingToFunctionCall(opBinding);
       final HiveFuncHolder hiveFuncHolder = getFunction(functionCall);
-      if(hiveFuncHolder == null) {
+      if (hiveFuncHolder == null) {
         final StringBuilder operandTypes = new StringBuilder();
-        for(int j = 0; j < opBinding.getOperandCount(); ++j) {
-          operandTypes.append(opBinding.getOperandType(j).getSqlTypeName());
-          if(j < opBinding.getOperandCount() - 1) {
+        for (int j = 0; j < opBinding.getOperandCount(); ++j) {
+          RelDataType operandType = opBinding.getOperandType(j);
+          operandTypes.append(operandType.getSqlTypeName());
+          if (operandType.isNullable()) {
+            operandTypes.append(":OPTIONAL");
+          }
+          if (j < opBinding.getOperandCount() - 1) {
             operandTypes.append(",");
           }
         }

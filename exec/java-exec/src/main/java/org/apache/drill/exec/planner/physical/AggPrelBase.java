@@ -200,8 +200,7 @@ public abstract class AggPrelBase extends DrillAggregateRelBase implements Prel 
       args.add(FieldReference.getWithQuotedRef(fn.get(i)));
     }
 
-    // for count(1).
-    if (args.isEmpty()) {
+    if (SqlKind.COUNT.name().equals(call.getAggregation().getName()) && args.isEmpty()) {
       args.add(new ValueExpressions.LongExpression(1L));
     }
     return new FunctionCall(call.getAggregation().getName().toLowerCase(), args, ExpressionPosition.UNKNOWN);

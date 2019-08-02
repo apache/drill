@@ -82,8 +82,8 @@ public class DrillSimpleFuncHolder extends DrillFuncHolder {
     //If the function's annotation specifies a parameter has to be constant expression, but the HoldingContainer
     //for the argument is not, then raise exception.
     for (int i = 0; i < inputVariables.length; i++) {
-      if (getParameters()[i].isConstant() && !inputVariables[i].isConstant()) {
-        throw new DrillRuntimeException(String.format("The argument '%s' of Function '%s' has to be constant!", getParameters()[i].getName(), this.getRegisteredNames()[0]));
+      if (getAttributeParameter(i).isConstant() && !inputVariables[i].isConstant()) {
+        throw new DrillRuntimeException(String.format("The argument '%s' of Function '%s' has to be constant!", getAttributeParameter(i).getName(), this.getRegisteredNames()[0]));
       }
     }
     generateBody(classGenerator, BlockType.SETUP, setupBody(), inputVariables, workspaceJVars, true);

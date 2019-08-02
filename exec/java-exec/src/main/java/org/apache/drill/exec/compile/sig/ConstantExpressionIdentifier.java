@@ -53,49 +53,48 @@ import org.apache.drill.common.expression.visitors.ExprVisitor;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
-public class ConstantExpressionIdentifier implements ExprVisitor<Boolean, IdentityHashMap<LogicalExpression, Object>, RuntimeException>{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ConstantExpressionIdentifier.class);
+public class ConstantExpressionIdentifier implements ExprVisitor<Boolean, IdentityHashMap<LogicalExpression, Object>, RuntimeException> {
 
-  private ConstantExpressionIdentifier(){}
+  private ConstantExpressionIdentifier() {}
 
   /**
    * Get a list of expressions that mark boundaries into a constant space.
-   * @param e
-   * @return
+   *
+   * @param e expression to check for constants
+   * @return list of expressions that mark boundaries into a constant space
    */
-  public static Set<LogicalExpression> getConstantExpressionSet(LogicalExpression e){
+  public static Set<LogicalExpression> getConstantExpressionSet(LogicalExpression e) {
     IdentityHashMap<LogicalExpression, Object> map = new IdentityHashMap<>();
     ConstantExpressionIdentifier visitor = new ConstantExpressionIdentifier();
 
-
-    if(e.accept(visitor, map) && map.isEmpty()){
+    if (e.accept(visitor, map) && map.isEmpty()) {
       // if we receive a constant value here but the map is empty, this means the entire tree is a constant.
       // note, we can't use a singleton collection here because we need an identity set.
       map.put(e, true);
       return map.keySet();
-    }else if(map.isEmpty()){
+    } else if (map.isEmpty()) {
       // so we don't continue to carry around a map, we let it go here and simply return an empty set.
       return Collections.emptySet();
-    }else{
+    } else {
       return map.keySet();
     }
   }
 
-  private boolean checkChildren(LogicalExpression e, IdentityHashMap<LogicalExpression, Object> value, boolean transmitsConstant){
+  private boolean checkChildren(LogicalExpression e, IdentityHashMap<LogicalExpression, Object> value, boolean transmitsConstant) {
     List<LogicalExpression> constants = Lists.newLinkedList();
     boolean constant = true;
 
-    for(LogicalExpression child : e){
-      if(child.accept(this, value)){
+    for (LogicalExpression child : e) {
+      if (child.accept(this, value)) {
         constants.add(child);
-      }else{
+      } else {
         constant = false;
       }
     }
 
     // if one or more clauses isn't constant, this isn't constant.  this also isn't a constant if it operates on a set.
-    if(!constant || !transmitsConstant){
-      for(LogicalExpression c: constants){
+    if (!constant || !transmitsConstant) {
+      for (LogicalExpression c : constants) {
         value.put(c, true);
       }
     }
@@ -103,28 +102,29 @@ public class ConstantExpressionIdentifier implements ExprVisitor<Boolean, Identi
   }
 
   @Override
-  public Boolean visitFunctionCall(FunctionCall call, IdentityHashMap<LogicalExpression, Object> value){
-    throw new UnsupportedOperationException("FunctionCall is not expected here. "+
+  public Boolean visitFunctionCall(FunctionCall call, IdentityHashMap<LogicalExpression, Object> value) {
+    throw new UnsupportedOperationException("FunctionCall is not expected here. " +
       "It should have been converted to FunctionHolderExpression in materialization");
   }
 
   @Override
   public Boolean visitFunctionHolderExpression(FunctionHolderExpression holder, IdentityHashMap<LogicalExpression, Object> value) throws RuntimeException {
-    return checkChildren(holder, value, !holder.isAggregating() && !holder.isRandom());
-   }
+    // constant evaluation is not supported for aggregate, random or complex functions
+    return checkChildren(holder, value, !holder.isAggregating() && !holder.isRandom() && !holder.getHolder().isComplexWriterFuncHolder());
+  }
 
   @Override
   public Boolean visitBooleanOperator(BooleanOperator op, IdentityHashMap<LogicalExpression, Object> value) throws RuntimeException {
     return checkChildren(op, value, true);
-   }
+  }
 
   @Override
-  public Boolean visitIfExpression(IfExpression ifExpr, IdentityHashMap<LogicalExpression, Object> value){
+  public Boolean visitIfExpression(IfExpression ifExpr, IdentityHashMap<LogicalExpression, Object> value) {
     return checkChildren(ifExpr, value, true);
   }
 
   @Override
-  public Boolean visitSchemaPath(SchemaPath path, IdentityHashMap<LogicalExpression, Object> value){
+  public Boolean visitSchemaPath(SchemaPath path, IdentityHashMap<LogicalExpression, Object> value) {
     return false;
   }
 
@@ -139,52 +139,52 @@ public class ConstantExpressionIdentifier implements ExprVisitor<Boolean, Identi
   }
 
   @Override
-  public Boolean visitLongConstant(LongExpression intExpr, IdentityHashMap<LogicalExpression, Object> value){
+  public Boolean visitLongConstant(LongExpression intExpr, IdentityHashMap<LogicalExpression, Object> value) {
     return true;
   }
 
   @Override
-  public Boolean visitDateConstant(DateExpression intExpr, IdentityHashMap<LogicalExpression, Object> value){
+  public Boolean visitDateConstant(DateExpression intExpr, IdentityHashMap<LogicalExpression, Object> value) {
     return true;
   }
 
   @Override
-  public Boolean visitDecimal9Constant(Decimal9Expression decExpr, IdentityHashMap<LogicalExpression, Object> value){
+  public Boolean visitDecimal9Constant(Decimal9Expression decExpr, IdentityHashMap<LogicalExpression, Object> value) {
     return true;
   }
 
   @Override
-  public Boolean visitTimeConstant(TimeExpression intExpr, IdentityHashMap<LogicalExpression, Object> value){
+  public Boolean visitTimeConstant(TimeExpression intExpr, IdentityHashMap<LogicalExpression, Object> value) {
     return true;
   }
 
   @Override
-  public Boolean visitDecimal18Constant(Decimal18Expression decExpr, IdentityHashMap<LogicalExpression, Object> value){
+  public Boolean visitDecimal18Constant(Decimal18Expression decExpr, IdentityHashMap<LogicalExpression, Object> value) {
     return true;
   }
 
   @Override
-  public Boolean visitIntervalYearConstant(IntervalYearExpression intExpr, IdentityHashMap<LogicalExpression, Object> value){
+  public Boolean visitIntervalYearConstant(IntervalYearExpression intExpr, IdentityHashMap<LogicalExpression, Object> value) {
     return true;
   }
 
   @Override
-  public Boolean visitDecimal28Constant(Decimal28Expression decExpr, IdentityHashMap<LogicalExpression, Object> value){
+  public Boolean visitDecimal28Constant(Decimal28Expression decExpr, IdentityHashMap<LogicalExpression, Object> value) {
     return true;
   }
 
   @Override
-  public Boolean visitIntervalDayConstant(IntervalDayExpression intExpr, IdentityHashMap<LogicalExpression, Object> value){
+  public Boolean visitIntervalDayConstant(IntervalDayExpression intExpr, IdentityHashMap<LogicalExpression, Object> value) {
     return true;
   }
 
   @Override
-  public Boolean visitTimeStampConstant(TimeStampExpression intExpr, IdentityHashMap<LogicalExpression, Object> value){
+  public Boolean visitTimeStampConstant(TimeStampExpression intExpr, IdentityHashMap<LogicalExpression, Object> value) {
     return true;
   }
 
   @Override
-  public Boolean visitDecimal38Constant(Decimal38Expression decExpr, IdentityHashMap<LogicalExpression, Object> value){
+  public Boolean visitDecimal38Constant(Decimal38Expression decExpr, IdentityHashMap<LogicalExpression, Object> value) {
     return true;
   }
 
@@ -194,17 +194,17 @@ public class ConstantExpressionIdentifier implements ExprVisitor<Boolean, Identi
   }
 
   @Override
-  public Boolean visitDoubleConstant(DoubleExpression dExpr, IdentityHashMap<LogicalExpression, Object> value){
+  public Boolean visitDoubleConstant(DoubleExpression dExpr, IdentityHashMap<LogicalExpression, Object> value) {
     return true;
   }
 
   @Override
-  public Boolean visitBooleanConstant(BooleanExpression e, IdentityHashMap<LogicalExpression, Object> value){
+  public Boolean visitBooleanConstant(BooleanExpression e, IdentityHashMap<LogicalExpression, Object> value) {
     return true;
   }
 
   @Override
-  public Boolean visitQuotedStringConstant(QuotedString e, IdentityHashMap<LogicalExpression, Object> value){
+  public Boolean visitQuotedStringConstant(QuotedString e, IdentityHashMap<LogicalExpression, Object> value) {
     return true;
   }
 
@@ -215,7 +215,7 @@ public class ConstantExpressionIdentifier implements ExprVisitor<Boolean, Identi
   }
 
   @Override
-  public Boolean visitUnknown(LogicalExpression e, IdentityHashMap<LogicalExpression, Object> value){
+  public Boolean visitUnknown(LogicalExpression e, IdentityHashMap<LogicalExpression, Object> value) {
     return checkChildren(e, value, false);
   }
 
@@ -237,7 +237,7 @@ public class ConstantExpressionIdentifier implements ExprVisitor<Boolean, Identi
 
   @Override
   public Boolean visitAnyValueExpression(AnyValueExpression e,
-                                        IdentityHashMap<LogicalExpression, Object> value) throws RuntimeException {
+                                         IdentityHashMap<LogicalExpression, Object> value) throws RuntimeException {
     return e.getInput().accept(this, value);
   }
 

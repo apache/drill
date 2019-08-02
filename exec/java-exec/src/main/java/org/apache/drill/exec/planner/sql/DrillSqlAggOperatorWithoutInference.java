@@ -23,13 +23,15 @@ import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.validate.SqlValidator;
 import org.apache.calcite.sql.validate.SqlValidatorScope;
-import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 
 import java.util.ArrayList;
 
 public class DrillSqlAggOperatorWithoutInference extends DrillSqlAggOperator {
-  public DrillSqlAggOperatorWithoutInference(String name, int argCount) {
-    super(name, new ArrayList<DrillFuncHolder>(), argCount, argCount, DynamicReturnType.INSTANCE);
+  public DrillSqlAggOperatorWithoutInference(String name, int argCount, boolean isVarArg) {
+    super(name,
+        new ArrayList<>(),
+        isVarArg ? VarArgOperandTypeChecker.INSTANCE : Checker.getChecker(argCount, argCount),
+        DynamicReturnType.INSTANCE);
   }
 
   @Override

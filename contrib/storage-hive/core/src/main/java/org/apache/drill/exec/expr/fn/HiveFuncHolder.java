@@ -116,7 +116,7 @@ public class HiveFuncHolder extends AbstractFuncHolder {
   }
 
   @Override
-  public MajorType getParmMajorType(int i) {
+  public MajorType getParamMajorType(int i) {
     return argTypes[i];
   }
 

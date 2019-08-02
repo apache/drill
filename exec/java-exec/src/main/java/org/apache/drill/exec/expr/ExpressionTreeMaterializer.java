@@ -404,28 +404,28 @@ public class ExpressionTreeMaterializer {
       //new arg lists, possible with implicit cast inserted.
       List<LogicalExpression> argsWithCast = Lists.newArrayList();
 
-      if (matchedFuncHolder!=null) {
-        //Compare parm type against arg type. Insert cast on top of arg, whenever necessary.
+      if (matchedFuncHolder != null) {
+        // Compare param type against arg type. Insert cast on top of arg, whenever necessary.
         for (int i = 0; i < call.args.size(); ++i) {
 
           LogicalExpression currentArg = call.args.get(i);
 
-          TypeProtos.MajorType parmType = matchedFuncHolder.getParmMajorType(i);
+          TypeProtos.MajorType parmType = matchedFuncHolder.getParamMajorType(i);
 
-          //Case 1: If  1) the argument is NullExpression
-          //            2) the minor type of parameter of matchedFuncHolder is not LATE (the type of null expression is still unknown)
-          //            3) the parameter of matchedFuncHolder allows null input, or func's null_handling is NULL_IF_NULL (means null and non-null are exchangeable).
-          //        then replace NullExpression with a TypedNullConstant
+          // Case 1: If  1) the argument is NullExpression
+          //             2) the minor type of parameter of matchedFuncHolder is not LATE (the type of null expression is still unknown)
+          //             3) the parameter of matchedFuncHolder allows null input, or func's null_handling is NULL_IF_NULL (means null and non-null are exchangeable).
+          //         then replace NullExpression with a TypedNullConstant
           if (currentArg.equals(NullExpression.INSTANCE) && !MinorType.LATE.equals(parmType.getMinorType()) &&
               (TypeProtos.DataMode.OPTIONAL.equals(parmType.getMode()) ||
               matchedFuncHolder.getNullHandling() == FunctionTemplate.NullHandling.NULL_IF_NULL)) {
             argsWithCast.add(new TypedNullConstant(parmType));
           } else if (Types.softEquals(parmType, currentArg.getMajorType(), matchedFuncHolder.getNullHandling() == FunctionTemplate.NullHandling.NULL_IF_NULL) ||
                      matchedFuncHolder.isFieldReader(i)) {
-            //Case 2: argument and parameter matches, or parameter is FieldReader.  Do nothing.
+            // Case 2: argument and parameter matches, or parameter is FieldReader.  Do nothing.
             argsWithCast.add(currentArg);
           } else {
-            //Case 3: insert cast if param type is different from arg type.
+            // Case 3: insert cast if param type is different from arg type.
             if (Types.isDecimalType(parmType)) {
               // We are implicitly promoting a decimal type, set the required scale and precision
               parmType = MajorType.newBuilder().setMinorType(parmType.getMinorType()).setMode(parmType.getMode()).
@@ -458,18 +458,18 @@ public class ExpressionTreeMaterializer {
 
         for (int i = 0; i < call.args.size(); ++i) {
           LogicalExpression currentArg = call.args.get(i);
-          TypeProtos.MajorType parmType = matchedNonDrillFuncHolder.getParmMajorType(i);
+          TypeProtos.MajorType paramType = matchedNonDrillFuncHolder.getParamMajorType(i);
 
-          if (Types.softEquals(parmType, currentArg.getMajorType(), true)) {
+          if (Types.softEquals(paramType, currentArg.getMajorType(), true)) {
             extArgsWithCast.add(currentArg);
           } else {
             // Insert cast if param type is different from arg type.
-            if (Types.isDecimalType(parmType)) {
+            if (Types.isDecimalType(paramType)) {
               // We are implicitly promoting a decimal type, set the required scale and precision
-              parmType = MajorType.newBuilder().setMinorType(parmType.getMinorType()).setMode(parmType.getMode()).
+              paramType = MajorType.newBuilder().setMinorType(paramType.getMinorType()).setMode(paramType.getMode()).
                   setScale(currentArg.getMajorType().getScale()).setPrecision(computePrecision(currentArg)).build();
             }
-            extArgsWithCast.add(addCastExpression(call.args.get(i), parmType, functionLookupContext, errorCollector));
+            extArgsWithCast.add(addCastExpression(call.args.get(i), paramType, functionLookupContext, errorCollector));
           }
         }
 

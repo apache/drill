@@ -166,6 +166,16 @@ public class ReplacingInterpreter extends BasicInterpreter {
     return super.naryOperation(insn,  values);
   }
 
+  @Override
+  public BasicValue ternaryOperation(AbstractInsnNode insn, BasicValue value1, BasicValue value2, BasicValue value3) throws AnalyzerException {
+    // prevents scalar replacement for the case when a holder is stored to the array element
+    if (insn.getOpcode() == AASTORE && value3 instanceof ReplacingBasicValue) {
+      ReplacingBasicValue argument = (ReplacingBasicValue) value3;
+      argument.setAssignedToMember();
+    }
+    return super.ternaryOperation(insn, value1, value2, value3);
+  }
+
   private static String desc(Class<?> c) {
     final Type t = Type.getType(c);
     return t.getDescriptor();
