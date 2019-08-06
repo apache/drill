@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.store.parquet;
 
+import org.apache.drill.categories.ParquetTest;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
@@ -24,8 +26,10 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /** Tests the Parquet bulk reader */
+@Category({ParquetTest.class, UnlikelyTest.class})
 public class TestParquetBulkReader extends ClusterTest {
 
 

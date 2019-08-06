@@ -18,18 +18,22 @@
 package org.apache.drill.exec.store.parquet;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.drill.categories.ParquetTest;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.parquet.ParquetReadOptions;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+@Category({ParquetTest.class, UnlikelyTest.class})
 public class TestParquetReaderConfig {
 
   @Test

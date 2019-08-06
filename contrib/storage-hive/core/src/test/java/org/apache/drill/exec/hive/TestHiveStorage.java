@@ -441,6 +441,26 @@ public class TestHiveStorage extends HiveTestBase {
     test("select * from Hive.`Default`.Kv");
   }
 
+  @Test
+  public void testTableWithEmptyParquet() throws Exception {
+    testBuilder()
+      .sqlQuery("select * from hive.`table_with_empty_parquet`")
+      .expectsEmptyResultSet()
+      .go();
+
+    testBuilder()
+      .sqlQuery("select count(1) as cnt from hive.`table_with_empty_parquet`")
+      .unOrdered()
+      .baselineColumns("cnt")
+      .baselineValues(0L)
+      .go();
+
+    testBuilder()
+      .sqlQuery("select name from hive.`table_with_empty_parquet` where id = 1")
+      .expectsEmptyResultSet()
+      .go();
+  }
+
   private void verifyColumnsMetadata(List<UserProtos.ResultColumnMetadata> columnsList, Map<String, Integer> expectedResult) {
     for (UserProtos.ResultColumnMetadata columnMetadata : columnsList) {
       assertTrue("Column should be present in result set", expectedResult.containsKey(columnMetadata.getColumnName()));

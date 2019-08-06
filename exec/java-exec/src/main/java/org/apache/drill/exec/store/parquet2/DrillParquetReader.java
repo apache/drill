@@ -17,17 +17,7 @@
  */
 package org.apache.drill.exec.store.parquet2;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
@@ -39,15 +29,15 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.store.CommonParquetRecordReader;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.parquet.ParquetDirectByteBufferAllocator;
 import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
 import org.apache.drill.exec.store.parquet.RowGroupReadEntry;
-import org.apache.drill.exec.store.CommonParquetRecordReader;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.NullableIntVector;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.hadoop.fs.Path;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.parquet.column.ColumnDescriptor;
 import org.apache.parquet.hadoop.CodecFactory;
 import org.apache.parquet.hadoop.ColumnChunkIncReadStore;
@@ -60,18 +50,25 @@ import org.apache.parquet.io.MessageColumnIO;
 import org.apache.parquet.io.RecordReader;
 import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.Type;
-
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 import org.apache.parquet.schema.Types;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.StringJoiner;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class DrillParquetReader extends CommonParquetRecordReader {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillParquetReader.class);
-
-  // same as the DEFAULT_RECORDS_TO_READ_IF_NOT_FIXED_WIDTH in ParquetRecordReader
-
-  private static final char DEFAULT_RECORDS_TO_READ = 32*1024;
+  private static final Logger logger = LoggerFactory.getLogger(DrillParquetReader.class);
 
   private MessageType schema;
   private DrillFileSystem drillFileSystem;
@@ -79,7 +76,6 @@ public class DrillParquetReader extends CommonParquetRecordReader {
   private ColumnChunkIncReadStore pageReadStore;
   private RecordReader<Void> recordReader;
   private DrillParquetRecordMaterializer recordMaterializer;
-  private int recordCount;
   /** Configured Parquet records per batch */
   private final int recordsPerBatch;
 
@@ -90,20 +86,28 @@ public class DrillParquetReader extends CommonParquetRecordReader {
   // Keeps track of the number of records returned in the case where only columns outside of the file were selected.
   // No actual data needs to be read out of the file, we only need to return batches until we have 'read' the number of
   // records specified in the row group metadata
-  long mockRecordsRead=0;
+  private long totalRead = 0;
   private List<SchemaPath> columnsNotFound;
-  boolean noColumnsFound; // true if none of the columns in the projection list is found in the schema
+  private boolean noColumnsFound; // true if none of the columns in the projection list is found in the schema
 
   // See DRILL-4203
   private final ParquetReaderUtility.DateCorruptionStatus containsCorruptedDates;
+  private final long numRecordsToRead;
 
-  public DrillParquetReader(FragmentContext fragmentContext, ParquetMetadata footer, RowGroupReadEntry entry, List<SchemaPath> columns, DrillFileSystem fileSystem, ParquetReaderUtility.DateCorruptionStatus containsCorruptedDates) {
+  public DrillParquetReader(FragmentContext fragmentContext,
+                            ParquetMetadata footer,
+                            RowGroupReadEntry entry,
+                            List<SchemaPath> columns,
+                            DrillFileSystem fileSystem,
+                            ParquetReaderUtility.DateCorruptionStatus containsCorruptedDates,
+                            long recordsToRead) {
     super(footer, fragmentContext);
     this.containsCorruptedDates = containsCorruptedDates;
     this.drillFileSystem = fileSystem;
     this.entry = entry;
     setColumns(columns);
     this.recordsPerBatch = (int) fragmentContext.getOptions().getLong(ExecConstants.PARQUET_COMPLEX_BATCH_NUM_RECORDS);
+    this.numRecordsToRead = initNumRecordsToRead(recordsToRead, entry.getRowGroupIndex(), footer);
   }
 
   private static MessageType getProjection(MessageType schema,
@@ -116,13 +120,13 @@ public class DrillParquetReader extends CommonParquetRecordReader {
     // parquet type.union() seems to lose ConvertedType info when merging two columns that are the same type. This can
     // happen when selecting two elements from an array. So to work around this, we use set of SchemaPath to avoid duplicates
     // and then merge the types at the end
-    Set<SchemaPath> selectedSchemaPaths = Sets.newLinkedHashSet();
+    Set<SchemaPath> selectedSchemaPaths = new LinkedHashSet<>();
 
     // get a list of modified columns which have the array elements removed from the schema path since parquet schema doesn't include array elements
-    List<SchemaPath> modifiedColumns = Lists.newLinkedList();
+    List<SchemaPath> modifiedColumns = new LinkedList<>();
     for (SchemaPath path : columns) {
 
-      List<String> segments = Lists.newArrayList();
+      List<String> segments = new ArrayList<>();
       for (PathSegment seg = path.getRootSegment(); seg != null; seg = seg.getChild()) {
         if (seg.isNamed()) {
           segments.add(seg.getNameSegment().getPath());
@@ -134,7 +138,7 @@ public class DrillParquetReader extends CommonParquetRecordReader {
 
     // convert the columns in the parquet schema to a list of SchemaPath columns so that they can be compared in case insensitive manner
     // to the projection columns
-    List<SchemaPath> schemaPaths = Lists.newLinkedList();
+    List<SchemaPath> schemaPaths = new LinkedList<>();
     for (ColumnDescriptor columnDescriptor : schemaColumns) {
       String[] schemaColDesc = Arrays.copyOf(columnDescriptor.getPath(), columnDescriptor.getPath().length);
       SchemaPath schemaPath = SchemaPath.getCompoundPath(schemaColDesc);
@@ -157,7 +161,7 @@ public class DrillParquetReader extends CommonParquetRecordReader {
 
     // convert SchemaPaths from selectedSchemaPaths and convert to parquet type, and merge into projection schema
     for (SchemaPath schemaPath : selectedSchemaPaths) {
-      List<String> segments = Lists.newArrayList();
+      List<String> segments = new ArrayList<>();
       PathSegment seg = schemaPath.getRootSegment();
       do {
         segments.add(seg.getNameSegment().getPath());
@@ -188,7 +192,6 @@ public class DrillParquetReader extends CommonParquetRecordReader {
 
   @Override
   public void setup(OperatorContext context, OutputMutator output) throws ExecutionSetupException {
-
     try {
       this.operatorContext = context;
       schema = footer.getFileMetaData().getSchema();
@@ -200,7 +203,7 @@ public class DrillParquetReader extends CommonParquetRecordReader {
         columnsNotFound = new ArrayList<>();
         projection = getProjection(schema, getColumns(), columnsNotFound);
         if (projection == null) {
-            projection = schema;
+          projection = schema;
         }
         if (columnsNotFound != null && columnsNotFound.size() > 0) {
           nullFilledVectors = new ArrayList<>();
@@ -220,23 +223,32 @@ public class DrillParquetReader extends CommonParquetRecordReader {
 
       logger.debug("Requesting schema {}", projection);
 
-      ColumnIOFactory factory = new ColumnIOFactory(false);
-      MessageColumnIO columnIO = factory.getColumnIO(projection, schema);
-      Map<ColumnPath, ColumnChunkMetaData> paths = new HashMap<>();
-
-      for (ColumnChunkMetaData md : footer.getBlocks().get(entry.getRowGroupIndex()).getColumns()) {
-        paths.put(md.getPath(), md);
+      if (!noColumnsFound) {
+        // Discard the columns not found in the schema when create DrillParquetRecordMaterializer, since they have been added to output already.
+        @SuppressWarnings("unchecked")
+        Collection<SchemaPath> columns = columnsNotFound == null || columnsNotFound.size() == 0 ? getColumns(): CollectionUtils.subtract(getColumns(), columnsNotFound);
+        recordMaterializer = new DrillParquetRecordMaterializer(output, projection, columns, fragmentContext.getOptions(), containsCorruptedDates);
       }
 
-      Path filePath = entry.getPath();
+      if (numRecordsToRead == 0 || noColumnsFound) {
+        // no need to init readers
+        return;
+      }
 
+      ColumnIOFactory factory = new ColumnIOFactory(false);
+      MessageColumnIO columnIO = factory.getColumnIO(projection, schema);
       BlockMetaData blockMetaData = footer.getBlocks().get(entry.getRowGroupIndex());
 
-      recordCount = (int) blockMetaData.getRowCount();
+      Map<ColumnPath, ColumnChunkMetaData> paths = blockMetaData.getColumns().stream()
+        .collect(Collectors.toMap(
+          ColumnChunkMetaData::getPath,
+          Function.identity(),
+          (o, n) -> n));
 
-      pageReadStore = new ColumnChunkIncReadStore(recordCount,
-          CodecFactory.createDirectCodecFactory(drillFileSystem.getConf(),
-              new ParquetDirectByteBufferAllocator(operatorContext.getAllocator()), 0), operatorContext.getAllocator(), drillFileSystem, filePath);
+      pageReadStore = new ColumnChunkIncReadStore(numRecordsToRead,
+        CodecFactory.createDirectCodecFactory(drillFileSystem.getConf(),
+          new ParquetDirectByteBufferAllocator(operatorContext.getAllocator()), 0),
+        operatorContext.getAllocator(), drillFileSystem, entry.getPath());
 
       for (String[] path : schema.getPaths()) {
         Type type = schema.getType(path);
@@ -245,24 +257,10 @@ public class DrillParquetReader extends CommonParquetRecordReader {
           pageReadStore.addColumn(schema.getColumnDescription(path), md);
         }
       }
-
-      if (!noColumnsFound) {
-        // Discard the columns not found in the schema when create DrillParquetRecordMaterializer, since they have been added to output already.
-        @SuppressWarnings("unchecked")
-        final Collection<SchemaPath> columns = columnsNotFound == null || columnsNotFound.size() == 0 ? getColumns(): CollectionUtils.subtract(getColumns(), columnsNotFound);
-        recordMaterializer = new DrillParquetRecordMaterializer(output, projection, columns, fragmentContext.getOptions(), containsCorruptedDates);
-        recordReader = columnIO.getRecordReader(pageReadStore, recordMaterializer);
-      }
+      recordReader = columnIO.getRecordReader(pageReadStore, recordMaterializer);
     } catch (Exception e) {
-      handleAndRaise("Failure in setting up reader", e);
+      throw handleAndRaise("Failure in setting up reader", e);
     }
-  }
-
-  protected void handleAndRaise(String s, Exception e) {
-    close();
-    String message = "Error in drill parquet reader (complex).\nMessage: " + s +
-      "\nParquet Metadata: " + footer;
-    throw new DrillRuntimeException(message, e);
   }
 
   private static Type getType(String[] pathSegments, int depth, MessageType schema) {
@@ -279,27 +277,22 @@ public class DrillParquetReader extends CommonParquetRecordReader {
     }
   }
 
-  private long totalRead = 0;
-
   @Override
   public int next() {
-    int count = 0;
-
     // No columns found in the file were selected, simply return a full batch of null records for each column requested
     if (noColumnsFound) {
-      if (mockRecordsRead == footer.getBlocks().get(entry.getRowGroupIndex()).getRowCount()) {
+      if (totalRead == numRecordsToRead) {
         return 0;
       }
-      long recordsToRead = 0;
-      recordsToRead = Math.min(DEFAULT_RECORDS_TO_READ, footer.getBlocks().get(entry.getRowGroupIndex()).getRowCount() - mockRecordsRead);
-      for (ValueVector vv : nullFilledVectors ) {
-        vv.getMutator().setValueCount( (int) recordsToRead);
+      for (ValueVector vv : nullFilledVectors) {
+        vv.getMutator().setValueCount((int) numRecordsToRead);
       }
-      mockRecordsRead += recordsToRead;
-      return (int) recordsToRead;
+      totalRead = numRecordsToRead;
+      return (int) numRecordsToRead;
     }
 
-    while (count < recordsPerBatch && totalRead < recordCount) {
+    int count = 0;
+    while (count < recordsPerBatch && totalRead < numRecordsToRead) {
       recordMaterializer.setPosition(count);
       recordReader.read();
       count++;
@@ -309,7 +302,7 @@ public class DrillParquetReader extends CommonParquetRecordReader {
     // if we have requested columns that were not found in the file fill their vectors with null
     // (by simply setting the value counts inside of them, as they start null filled)
     if (nullFilledVectors != null) {
-      for (final ValueVector vv : nullFilledVectors) {
+      for (ValueVector vv : nullFilledVectors) {
         vv.getMutator().setValueCount(count);
       }
     }
@@ -338,6 +331,12 @@ public class DrillParquetReader extends CommonParquetRecordReader {
 
   @Override
   public String toString() {
-    return "DrillParquetReader[pageReadStore=" + pageReadStore + "]";
+    StringJoiner stringJoiner = new StringJoiner(", ", DrillParquetReader.class.getSimpleName() + "[", "]")
+      .add("schema=" + schema)
+      .add("numRecordsToRead=" + numRecordsToRead);
+      if (pageReadStore != null) {
+        stringJoiner.add("pageReadStore=" + pageReadStore);
+      }
+      return stringJoiner.toString();
   }
 }

@@ -49,4 +49,9 @@ public class RowGroupReadEntry extends ReadEntryFromHDFS {
   }
 
   public long getNumRecordsToRead() { return numRecordsToRead; }
+
+  @JsonIgnore
+  public boolean isEmpty() {
+    return rowGroupIndex == -1 || numRecordsToRead == 0;
+  }
 }

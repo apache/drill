@@ -17,33 +17,33 @@
  */
 package org.apache.drill.exec.store.parquet;
 
+import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.ValueExpressions;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.FilterPredicate;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.expr.stat.RowsMatch;
+import org.apache.drill.exec.ops.ExecutorFragmentContext;
+import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScanWithMetadata;
+import org.apache.drill.exec.physical.impl.ScanBatch;
+import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.store.ColumnExplorer;
 import org.apache.drill.exec.store.CommonParquetRecordReader;
+import org.apache.drill.exec.store.dfs.DrillFileSystem;
+import org.apache.drill.exec.store.parquet.columnreaders.ParquetRecordReader;
 import org.apache.drill.exec.store.parquet.metadata.Metadata;
 import org.apache.drill.exec.store.parquet.metadata.MetadataBase;
 import org.apache.drill.exec.store.parquet.metadata.Metadata_V4;
+import org.apache.drill.exec.store.parquet2.DrillParquetReader;
 import org.apache.drill.metastore.statistics.ColumnStatistics;
 import org.apache.drill.shaded.guava.com.google.common.base.Functions;
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
-import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.ops.ExecutorFragmentContext;
-import org.apache.drill.exec.ops.OperatorContext;
-import org.apache.drill.exec.physical.impl.ScanBatch;
-import org.apache.drill.exec.proto.helper.QueryIdHelper;
-import org.apache.drill.exec.server.options.OptionManager;
-import org.apache.drill.exec.store.ColumnExplorer;
-import org.apache.drill.exec.store.dfs.DrillFileSystem;
-import org.apache.drill.exec.store.parquet.columnreaders.ParquetRecordReader;
-import org.apache.drill.exec.store.parquet2.DrillParquetReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
@@ -90,7 +90,6 @@ public abstract class AbstractParquetScanBatchCreator {
     TupleMetadata schema = rowGroupScan.getSchema();
 
     try {
-
       LogicalExpression filterExpr = rowGroupScan.getFilter();
       boolean doRuntimePruning = filterExpr != null && // was a filter given ?   And it is not just a "TRUE" predicate
         ! ((filterExpr instanceof ValueExpressions.BooleanExpression) && ((ValueExpressions.BooleanExpression) filterExpr).getBoolean() );
@@ -111,7 +110,7 @@ public abstract class AbstractParquetScanBatchCreator {
       String matchCastErrorMessage = ""; // report the error too (Java insists on initializing this ....)
 
       // If pruning - Prepare the predicate and the columns before the FOR LOOP
-      if ( doRuntimePruning ) {
+      if (doRuntimePruning) {
         filterPredicate = AbstractGroupScanWithMetadata.getFilterPredicate(filterExpr, context,
           (FunctionImplementationRegistry) context.getFunctionRegistry(), context.getOptions(), true,
           true /* supports file implicit columns */,
@@ -162,50 +161,59 @@ public abstract class AbstractParquetScanBatchCreator {
 
           pruneTimer.start();
 
-          int rowGroupIndex = rowGroup.getRowGroupIndex();
-          long footerRowCount = footer.getBlocks().get(rowGroupIndex).getRowCount();
+          //
+          // Perform the Run-Time Pruning - i.e. Skip/prune this row group if the match fails
+          //
+          RowsMatch matchResult = RowsMatch.ALL; // default (in case of exception) - do not prune this row group
 
-          // When starting a new file, or at the first time - Initialize the path specific metadata
-          if (!rowGroup.getPath().equals(prevRowGroupPath)) {
-            // Create a table metadata (V4)
-            tableMetadataV4 = new Metadata_V4.ParquetTableMetadata_v4();
+          if (rowGroup.isEmpty()) {
+            matchResult = RowsMatch.NONE;
+          } else {
 
-            // The file status for this file
-            FileStatus fileStatus = fs.getFileStatus(rowGroup.getPath());
+            int rowGroupIndex = rowGroup.getRowGroupIndex();
+            long footerRowCount = footer.getBlocks().get(rowGroupIndex).getRowCount();
 
-            // The file metadata (only for the columns used in the filter)
-            fileMetadataV4 = Metadata.getParquetFileMetadata_v4(tableMetadataV4, footer, fileStatus, fs, false, true, columnsInExpr, readerConfig);
+            // When starting a new file, or at the first time - Initialize the path specific metadata
+            if (!rowGroup.getPath().equals(prevRowGroupPath)) {
+              // Create a table metadata (V4)
+              tableMetadataV4 = new Metadata_V4.ParquetTableMetadata_v4();
 
-            prevRowGroupPath = rowGroup.getPath(); // for next time
+              // The file status for this file
+              FileStatus fileStatus = fs.getFileStatus(rowGroup.getPath());
+
+              // The file metadata (only for the columns used in the filter)
+              fileMetadataV4 = Metadata.getParquetFileMetadata_v4(tableMetadataV4, footer, fileStatus, fs, false, true, columnsInExpr, readerConfig);
+
+              prevRowGroupPath = rowGroup.getPath(); // for next time
+            }
+
+            MetadataBase.RowGroupMetadata rowGroupMetadata = fileMetadataV4.getFileMetadata().getRowGroups().get(rowGroup.getRowGroupIndex());
+
+            Map<SchemaPath, ColumnStatistics> columnsStatistics = ParquetTableMetadataUtils.getRowGroupColumnStatistics(tableMetadataV4, rowGroupMetadata);
+
+            try {
+
+              matchResult = FilterEvaluatorUtils.matches(filterPredicate, columnsStatistics, footerRowCount, rowGroupScan.getSchema(), schemaPathsInExpr);
+
+              // collect logging info
+              long timeToRead = pruneTimer.elapsed(TimeUnit.MICROSECONDS);
+              totalPruneTime += timeToRead;
+              logger.trace("Run-time pruning: {} row-group {} (RG index: {} row count: {}), took {} usec", // trace each single rowgroup
+                matchResult == RowsMatch.NONE ? "Excluded" : "Included", rowGroup.getPath(), rowGroupIndex, footerRowCount, timeToRead);
+            } catch (ClassCastException cce) {
+              countMatchClassCastExceptions++; // one more CCE occured
+              matchCastErrorMessage = cce.getMessage(); // report the (last) error message
+            } catch (Exception e) {
+              // in case some unexpected exception is raised
+              logger.warn("Run-time pruning check failed - {}. Skip pruning rowgroup - {}", e.getMessage(), rowGroup.getPath());
+              logger.debug("Failure during run-time pruning: {}", e.getMessage(), e);
+            }
           }
 
-          MetadataBase.RowGroupMetadata rowGroupMetadata = fileMetadataV4.getFileMetadata().getRowGroups().get(rowGroup.getRowGroupIndex());
-
-          Map<SchemaPath, ColumnStatistics> columnsStatistics = ParquetTableMetadataUtils.getRowGroupColumnStatistics(tableMetadataV4, rowGroupMetadata);
-
-          //
-          // Perform the Run-Time Pruning - i.e. Skip/prune this rowgroup if the match fails
-          //
-          RowsMatch matchResult = RowsMatch.ALL; // default (in case of exception) - do not prune this rowgroup
-          try {
-            matchResult = FilterEvaluatorUtils.matches(filterPredicate, columnsStatistics, footerRowCount);
-
-            // collect logging info
-            long timeToRead = pruneTimer.elapsed(TimeUnit.MICROSECONDS);
-            totalPruneTime += timeToRead;
-            logger.trace("Run-time pruning: {} row-group {} (RG index: {} row count: {}), took {} usec", // trace each single rowgroup
-              matchResult == RowsMatch.NONE ? "Excluded" : "Included", rowGroup.getPath(), rowGroupIndex, footerRowCount, timeToRead);
-          } catch (ClassCastException cce) {
-            countMatchClassCastExceptions++; // one more CCE occured
-            matchCastErrorMessage = cce.getMessage(); // report the (last) error message
-          } catch (Exception e) {
-            // in case some unexpected exception is raised
-            logger.warn("Run-time pruning check failed - {}. Skip pruning rowgroup - {}", e.getMessage(), rowGroup.getPath());
-          }
           pruneTimer.stop();
           pruneTimer.reset();
 
-          // If this rowgroup failed the match - skip it (i.e., no reader for this rowgroup)
+          // If this row group failed the match - skip it (i.e., no reader for this rowgroup)
           if (matchResult == RowsMatch.NONE) {
             rowGroupsPruned++; // one more RG was pruned
             if (firstRowGroup == null) {  // keep the first RG, to be used in case all row groups are pruned
@@ -220,26 +228,26 @@ public abstract class AbstractParquetScanBatchCreator {
       }
 
       // in case all row groups were pruned out - create a single reader for the first one (so that the schema could be returned)
-      if ( readers.size() == 0 && firstRowGroup != null ) {
+      if (readers.isEmpty() && firstRowGroup != null) {
         DrillFileSystem fs = fsManager.get(rowGroupScan.getFsConf(firstRowGroup), firstRowGroup.getPath());
         mapWithMaxColumns = createReaderAndImplicitColumns(context, rowGroupScan, oContext, columnExplorer, readers, implicitColumns, mapWithMaxColumns, firstRowGroup, fs,
           firstFooter, true);
       }
       // do some logging, if relevant
-      if ( totalPruneTime > 0 ) {
+      if (totalPruneTime > 0)  {
         logger.info("Finished parquet_runtime_pruning in {} usec. Out of given {} rowgroups, {} were pruned. {}", totalPruneTime, totalRowGroups, rowGroupsPruned,
           totalRowGroups == rowGroupsPruned ? "ALL_PRUNED !!" : "");
       }
-      if ( countMatchClassCastExceptions > 0 ) {
+      if (countMatchClassCastExceptions > 0) {
         logger.info("Run-time pruning skipped for {} out of {} rowgroups due to: {}",countMatchClassCastExceptions, totalRowGroups, matchCastErrorMessage);
       }
 
       // Update stats (same in every reader - the others would just overwrite the stats)
       for (CommonParquetRecordReader rr : readers ) {
-          rr.updateRowgroupsStats(totalRowGroups, rowGroupsPruned);
+          rr.updateRowGroupsStats(totalRowGroups, rowGroupsPruned);
       }
 
-    } catch (IOException|InterruptedException e) {
+    } catch (IOException | InterruptedException e) {
       throw new ExecutionSetupException(e);
     }
 
@@ -278,8 +286,7 @@ public abstract class AbstractParquetScanBatchCreator {
                                                              RowGroupReadEntry rowGroup,
                                                              DrillFileSystem fs,
                                                              ParquetMetadata footer,
-                                                             boolean readSchemaOnly
-  ) {
+                                                             boolean readSchemaOnly) {
     ParquetReaderConfig readerConfig = rowGroupScan.getReaderConfig();
     ParquetReaderUtility.DateCorruptionStatus containsCorruptDates = ParquetReaderUtility.detectCorruptDates(footer,
       rowGroupScan.getColumns(), readerConfig.autoCorrectCorruptedDates());
@@ -289,25 +296,29 @@ public abstract class AbstractParquetScanBatchCreator {
     boolean containsComplexColumn = ParquetReaderUtility.containsComplexColumn(footer, rowGroupScan.getColumns());
     logger.debug("PARQUET_NEW_RECORD_READER is {}. Complex columns {}.", useNewReader ? "enabled" : "disabled",
         containsComplexColumn ? "found." : "not found.");
-    CommonParquetRecordReader reader;
 
+    // if readSchemaOnly - then set to zero rows to read
+    long recordsToRead = readSchemaOnly ? 0 : rowGroup.getNumRecordsToRead();
+
+    CommonParquetRecordReader reader;
     if (useNewReader || containsComplexColumn) {
       reader = new DrillParquetReader(context,
-          footer,
-          rowGroup,
-          columnExplorer.getTableColumns(),
-          fs,
-          containsCorruptDates); // TODO: if readSchemaOnly - then set to zero rows to read (currently fails)
+        footer,
+        rowGroup,
+        columnExplorer.getTableColumns(),
+        fs,
+        containsCorruptDates,
+        recordsToRead);
     } else {
       reader = new ParquetRecordReader(context,
-          rowGroup.getPath(),
-          rowGroup.getRowGroupIndex(),
-          readSchemaOnly ? 0 : rowGroup.getNumRecordsToRead(), // if readSchemaOnly - then set to zero rows to read
-          fs,
-          CodecFactory.createDirectCodecFactory(fs.getConf(), new ParquetDirectByteBufferAllocator(oContext.getAllocator()), 0),
-          footer,
-          rowGroupScan.getColumns(),
-          containsCorruptDates);
+        rowGroup.getPath(),
+        rowGroup.getRowGroupIndex(),
+        recordsToRead,
+        fs,
+        CodecFactory.createDirectCodecFactory(fs.getConf(), new ParquetDirectByteBufferAllocator(oContext.getAllocator()), 0),
+        footer,
+        rowGroupScan.getColumns(),
+        containsCorruptDates);
     }
 
     logger.debug("Query {} uses {}",

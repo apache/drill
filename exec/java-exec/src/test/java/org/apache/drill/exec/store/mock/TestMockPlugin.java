@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
@@ -44,7 +45,7 @@ import org.junit.experimental.categories.Category;
  * tested, where needed in unit tests.
  */
 
-@Category(RowSetTests.class)
+@Category({RowSetTests.class, UnlikelyTest.class})
 public class TestMockPlugin extends ClusterTest {
 
   @BeforeClass

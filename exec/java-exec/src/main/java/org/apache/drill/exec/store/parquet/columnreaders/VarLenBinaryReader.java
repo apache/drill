@@ -63,9 +63,8 @@ public class VarLenBinaryReader {
    * Reads as many variable length values as possible.
    *
    * @param recordsToReadInThisPass - the number of records recommended for reading form the reader
-   * @param firstColumnStatus - a reference to the first column status in the Parquet file to grab metatdata from
    * @return - the number of fixed length fields that will fit in the batch
-   * @throws IOException
+
    */
   public long readFields(long recordsToReadInThisPass) throws IOException {
 
@@ -93,7 +92,7 @@ public class VarLenBinaryReader {
     }
 
     // Publish this information
-    parentReader.readState.setValuesReadInCurrentPass((int) recordsReadInCurrentPass);
+    parentReader.getReadState().setValuesReadInCurrentPass((int) recordsReadInCurrentPass);
 
     // Update the stats
     parentReader.parquetReaderStats.timeVarColumnRead.addAndGet(timer.elapsed(TimeUnit.NANOSECONDS));
@@ -182,7 +181,7 @@ public class VarLenBinaryReader {
 
     // Register batch overflow data with the record batch sizer manager (if any)
     if (builder != null) {
-      Map<String, FieldOverflowStateContainer> overflowContainerMap = parentReader.batchSizerMgr.getFieldOverflowMap();
+      Map<String, FieldOverflowStateContainer> overflowContainerMap = parentReader.getBatchSizesMgr().getFieldOverflowMap();
       Map<String, FieldOverflowDefinition> overflowDefMap = builder.build().getRecordOverflowDefinition().getFieldOverflowDefs();
 
       for (Map.Entry<String, FieldOverflowDefinition> entry : overflowDefMap.entrySet()) {
@@ -219,14 +218,14 @@ public class VarLenBinaryReader {
   }
 
   private boolean fieldHasAlreadyOverflowData(String field) {
-    FieldOverflowStateContainer container = parentReader.batchSizerMgr.getFieldOverflowContainer(field);
+    FieldOverflowStateContainer container = parentReader.getBatchSizesMgr().getFieldOverflowContainer(field);
 
     if (container == null) {
       return false;
     }
 
     if (container.overflowState == null || container.overflowState.isOverflowDataFullyConsumed()) {
-      parentReader.batchSizerMgr.releaseFieldOverflowContainer(field);
+      parentReader.getBatchSizesMgr().releaseFieldOverflowContainer(field);
       return false;
     }
     return true;
@@ -236,7 +235,7 @@ public class VarLenBinaryReader {
     // First, let us inform the variable columns of the number of records returned by this batch; this
     // is for managing overflow data state.
     Map<String, FieldOverflowStateContainer> overflowMap =
-      parentReader.batchSizerMgr.getFieldOverflowMap();
+      parentReader.getBatchSizesMgr().getFieldOverflowMap();
 
     for (FieldOverflowStateContainer container : overflowMap.values()) {
       FieldOverflowState overflowState = container.overflowState;
@@ -247,7 +246,7 @@ public class VarLenBinaryReader {
     }
 
     // Now publish the same to the record batch sizer manager
-    parentReader.batchSizerMgr.onEndOfBatch(batchNumRecords, stats);
+    parentReader.getBatchSizesMgr().onEndOfBatch(batchNumRecords, stats);
   }
 
   private long determineSizesSerial(long recordsToReadInThisPass) throws IOException {

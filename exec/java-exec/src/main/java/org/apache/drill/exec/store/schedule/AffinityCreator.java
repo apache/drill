@@ -17,45 +17,48 @@
  */
 package org.apache.drill.exec.store.schedule;
 
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-import org.apache.drill.exec.physical.EndpointAffinity;
-import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
-
 import com.carrotsearch.hppc.ObjectFloatHashMap;
 import com.carrotsearch.hppc.cursors.ObjectFloatCursor;
 import com.carrotsearch.hppc.cursors.ObjectLongCursor;
+import org.apache.drill.exec.physical.EndpointAffinity;
+import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class AffinityCreator {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AffinityCreator.class);
+
+  private static final Logger logger = LoggerFactory.getLogger(AffinityCreator.class);
 
   public static <T extends CompleteWork> List<EndpointAffinity> getAffinityMap(List<T> work){
-    Stopwatch watch = Stopwatch.createStarted();
+    Stopwatch watch = logger.isDebugEnabled() ? Stopwatch.createStarted() : null;
 
-    long totalBytes = 0;
-    for (CompleteWork entry : work) {
-      totalBytes += entry.getTotalBytes();
-    }
+    long totalBytes = work.stream()
+      .mapToLong(CompleteWork::getTotalBytes)
+      .sum();
 
-    ObjectFloatHashMap<DrillbitEndpoint> affinities = new ObjectFloatHashMap<DrillbitEndpoint>();
+    ObjectFloatHashMap<DrillbitEndpoint> affinities = new ObjectFloatHashMap<>();
     for (CompleteWork entry : work) {
       for (ObjectLongCursor<DrillbitEndpoint> cursor : entry.getByteMap()) {
         long bytes = cursor.value;
-        float affinity = (float)bytes / (float)totalBytes;
+        float affinity = totalBytes == 0 ? 0.0F : (float) bytes / (float) totalBytes;
         affinities.putOrAdd(cursor.key, affinity, affinity);
       }
     }
 
-    List<EndpointAffinity> affinityList = Lists.newLinkedList();
+    List<EndpointAffinity> affinityList = new LinkedList<>();
     for (ObjectFloatCursor<DrillbitEndpoint> d : affinities) {
       logger.debug("Endpoint {} has affinity {}", d.key.getAddress(), d.value);
       affinityList.add(new EndpointAffinity(d.key, d.value));
     }
 
-    logger.debug("Took {} ms to get operator affinity", watch.elapsed(TimeUnit.MILLISECONDS));
+    if (watch != null) {
+      logger.debug("Took {} ms to get operator affinity", watch.elapsed(TimeUnit.MILLISECONDS));
+    }
     return affinityList;
   }
 }
