@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store;
 
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.MetricDef;
 import org.apache.drill.exec.ops.OperatorContext;
@@ -26,6 +27,10 @@ import org.apache.parquet.hadoop.metadata.ParquetMetadata;
 import org.slf4j.Logger;
 
 public abstract class CommonParquetRecordReader extends AbstractRecordReader {
+
+  /** Set when caller wants to read all the rows contained within the Parquet file */
+  public static final int NUM_RECORDS_TO_READ_NOT_SPECIFIED = -1;
+
   protected final FragmentContext fragmentContext;
 
   public ParquetReaderStats parquetReaderStats = new ParquetReaderStats();
@@ -39,9 +44,9 @@ public abstract class CommonParquetRecordReader extends AbstractRecordReader {
     this.fragmentContext = fragmentContext;
   }
 
-  public void updateRowgroupsStats(long numRowgroups, long rowgroupsPruned) {
-    parquetReaderStats.numRowgroups.set(numRowgroups);
-    parquetReaderStats.rowgroupsPruned.set(rowgroupsPruned);
+  public void updateRowGroupsStats(long numRowGroups, long rowGroupsPruned) {
+    parquetReaderStats.numRowgroups.set(numRowGroups);
+    parquetReaderStats.rowgroupsPruned.set(rowGroupsPruned);
   }
 
   public enum Metric implements MetricDef {
@@ -81,5 +86,27 @@ public abstract class CommonParquetRecordReader extends AbstractRecordReader {
       parquetReaderStats.logStats(logger, hadoopPath);
       parquetReaderStats = null;
     }
+  }
+
+  protected int initNumRecordsToRead(long numRecordsToRead, int rowGroupIndex, ParquetMetadata footer) {
+    if (numRecordsToRead == 0) {
+      return 0;
+    }
+
+    int numRowsInRowGroup = (int) footer.getBlocks().get(rowGroupIndex).getRowCount();
+    return numRecordsToRead == NUM_RECORDS_TO_READ_NOT_SPECIFIED
+      ? numRowsInRowGroup
+      : (int) Math.min(numRecordsToRead, numRowsInRowGroup);
+  }
+
+  protected RuntimeException handleAndRaise(String message, Exception e) {
+    try {
+      close();
+    } catch (Exception ex) {
+      // ignore exception during close, throw given exception
+    }
+    String errorMessage = "Error in drill parquet reader (complex).\nMessage: " + message +
+      "\nParquet Metadata: " + footer;
+    return new DrillRuntimeException(errorMessage, e);
   }
 }

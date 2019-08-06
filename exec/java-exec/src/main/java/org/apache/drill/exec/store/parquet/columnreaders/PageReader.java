@@ -272,7 +272,7 @@ class PageReader {
       long pageHeaderBytes=dataReader.getPos()-start;
       this.updateStats(pageHeader, "Page Header", start, timeToRead, pageHeaderBytes, pageHeaderBytes);
       logger.trace("ParquetTrace,{},{},{},{},{},{},{},{}","Page Header Read","",
-          this.parentColumnReader.parentReader.hadoopPath,
+          this.parentColumnReader.parentReader.getHadoopPath(),
           this.parentColumnReader.columnDescriptor.toString(), start, 0, 0, timeToRead);
       timer.reset();
       if (pageHeader.getType() == PageType.DICTIONARY_PAGE) {
@@ -391,7 +391,7 @@ class PageReader {
       pageType = "Dictionary Page";
     }
     logger.trace("ParquetTrace,{},{},{},{},{},{},{},{}", op, pageType,
-        this.parentColumnReader.parentReader.hadoopPath,
+        this.parentColumnReader.parentReader.getHadoopPath(),
         this.parentColumnReader.columnDescriptor.toString(), start, bytesin, bytesout, time);
 
     if (pageHeader.type != PageType.DICTIONARY_PAGE) {

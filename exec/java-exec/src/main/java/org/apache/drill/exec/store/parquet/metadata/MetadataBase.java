@@ -111,6 +111,11 @@ public class MetadataBase {
     @JsonIgnore public abstract Map<String, Float> getHostAffinity();
 
     @JsonIgnore public abstract List<? extends ColumnMetadata> getColumns();
+
+    @JsonIgnore public boolean isEmpty() {
+      Long rowCount = getRowCount();
+      return rowCount != null && rowCount == 0;
+    }
   }
 
   public static abstract class ColumnMetadata {

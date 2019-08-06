@@ -25,15 +25,19 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Arrays;
 
+import org.apache.drill.categories.ParquetTest;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.test.BaseTestQuery;
 import org.joda.time.Period;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Test Parquet logical type handling with default Parquet reader.
  * Tests are executed on data files with dictionary encoding enabled and disabled.
  * parquet_logical_types* files are generated with ParquetSimpleTestFileGenerator class.
  */
+@Category({ParquetTest.class, UnlikelyTest.class})
 public class TestParquetLogicalTypes extends BaseTestQuery {
 
   @Test //DRILL-5971

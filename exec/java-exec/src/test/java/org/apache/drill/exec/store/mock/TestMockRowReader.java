@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -51,7 +52,7 @@ import org.junit.experimental.categories.Category;
  * scan operator, without the rest of Drill.
  */
 
-@Category(RowSetTests.class)
+@Category({RowSetTests.class, UnlikelyTest.class})
 public class TestMockRowReader extends SubOperatorTest {
 
   private static ScanFixture buildScan(MockSubScanPOP config, List<ManagedReader<SchemaNegotiator>> readers) {

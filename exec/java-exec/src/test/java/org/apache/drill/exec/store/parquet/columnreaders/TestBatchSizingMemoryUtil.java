@@ -18,6 +18,8 @@
 package org.apache.drill.exec.store.parquet.columnreaders;
 
 import java.math.BigDecimal;
+
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
@@ -31,7 +33,9 @@ import org.apache.drill.test.rowSet.RowSetBuilder;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+@Category(UnlikelyTest.class)
 public class TestBatchSizingMemoryUtil extends PhysicalOpUnitTestBase {
 
   // Batch schema

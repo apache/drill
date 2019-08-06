@@ -430,6 +430,7 @@ public class TestParquetMetadataCache extends PlanTestBase {
   }
 
   @Test // DRILL-3867
+  @Category(UnlikelyTest.class)
   public void testMoveCache() throws Exception {
     final String tableName = "nation_move";
     final String newTableName = "nation_moved";
@@ -451,6 +452,7 @@ public class TestParquetMetadataCache extends PlanTestBase {
   }
 
   @Test
+  @Category(UnlikelyTest.class)
   public void testOldMetadataVersions() throws Exception {
     final Path tablePath = Paths.get("absolute_paths_metadata");
     final Path rootMetadataPath = Paths.get("parquet", "metadata_files_with_old_versions");
@@ -513,6 +515,7 @@ public class TestParquetMetadataCache extends PlanTestBase {
   }
 
   @Test
+  @Category(UnlikelyTest.class)
   public void testSpacesInMetadataCachePath() throws Exception {
     final String pathWithSpaces = "path with spaces";
     try {
@@ -539,6 +542,7 @@ public class TestParquetMetadataCache extends PlanTestBase {
   }
 
   @Test
+  @Category(UnlikelyTest.class)
   public void testFutureUnsupportedMetadataVersion() throws Exception {
     final String unsupportedMetadataVersion = "unsupported_metadata_version";
     try {

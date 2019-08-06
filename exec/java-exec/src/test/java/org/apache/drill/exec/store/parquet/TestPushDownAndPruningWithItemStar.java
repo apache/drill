@@ -197,25 +197,24 @@ public class TestPushDownAndPruningWithItemStar extends PlanTestBase {
         .build();
   }
 
-    @Test
-    public void testDirectoryPruningWithNestedStarSubQueryAndAdditionalColumns() throws Exception {
-      String subQuery = String.format("select * from `%s`.`%s`", DFS_TMP_SCHEMA, TABLE_NAME);
-      String query = String.format("select * from (select * from (select *, `o_orderdate` from (%s))) where dir0 = 't1'", subQuery);
+  @Test
+  public void testDirectoryPruningWithNestedStarSubQueryAndAdditionalColumns() throws Exception {
+    String subQuery = String.format("select * from `%s`.`%s`", DFS_TMP_SCHEMA, TABLE_NAME);
+    String query = String.format("select * from (select * from (select *, `o_orderdate` from (%s))) where dir0 = 't1'", subQuery);
 
-      String[] expectedPlan = {"numFiles=1, numRowGroups=1, usedMetadataFile=false, columns=\\[`\\*\\*`, `o_orderdate`, `dir0`\\]"};
-      String[] excludedPlan = {};
+    String[] expectedPlan = {"numFiles=1, numRowGroups=1, usedMetadataFile=false, columns=\\[`\\*\\*`, `o_orderdate`, `dir0`\\]"};
+    String[] excludedPlan = {};
 
-      PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
+    PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
 
-      testBuilder()
-         .sqlQuery(query)
-         .unOrdered()
-         .sqlBaselineQuery("select * from `%s`.`%s` where dir0 = 't1'", DFS_TMP_SCHEMA, TABLE_NAME)
-         .build();
-    }
+    testBuilder()
+      .sqlQuery(query)
+      .unOrdered()
+      .sqlBaselineQuery("select * from `%s`.`%s` where dir0 = 't1'", DFS_TMP_SCHEMA, TABLE_NAME)
+      .build();
+  }
 
-
-    @Test
+  @Test
   public void testFilterPushDownSingleCondition() throws Exception {
     String query = String.format("select * from (select * from `%s`.`%s`) where o_orderdate = date '1992-01-01'", DFS_TMP_SCHEMA, TABLE_NAME);
 
@@ -285,5 +284,4 @@ public class TestPushDownAndPruningWithItemStar extends PlanTestBase {
         .sqlBaselineQuery("select *, o_custkey from `%s`.`%s` where o_orderdate = date '1992-01-01'", DFS_TMP_SCHEMA, TABLE_NAME)
         .build();
   }
-
 }

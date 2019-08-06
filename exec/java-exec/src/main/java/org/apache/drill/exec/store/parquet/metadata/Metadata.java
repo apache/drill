@@ -24,7 +24,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
-import java.util.HashSet;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.collections.Collectors;
@@ -34,37 +33,27 @@ import org.apache.drill.exec.serialization.PathSerDe;
 import org.apache.drill.exec.store.TimedCallable;
 import org.apache.drill.exec.store.dfs.MetadataContext;
 import org.apache.drill.exec.store.parquet.ParquetReaderConfig;
-import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
 import org.apache.drill.exec.util.DrillFileSystemUtil;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.parquet.column.statistics.Statistics;
 import org.apache.parquet.hadoop.ParquetFileReader;
-import org.apache.parquet.hadoop.metadata.BlockMetaData;
-import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
 import org.apache.parquet.hadoop.util.HadoopInputFile;
-import org.apache.parquet.schema.GroupType;
-import org.apache.parquet.schema.MessageType;
-import org.apache.parquet.schema.OriginalType;
-import org.apache.parquet.schema.PrimitiveType;
-import org.apache.parquet.schema.Type;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -80,12 +69,11 @@ import static org.apache.drill.exec.store.parquet.metadata.MetadataBase.RowGroup
 import static org.apache.drill.exec.store.parquet.metadata.MetadataVersion.Constants.SUPPORTED_VERSIONS;
 import static org.apache.drill.exec.store.parquet.metadata.Metadata_V4.ColumnMetadata_v4;
 import static org.apache.drill.exec.store.parquet.metadata.Metadata_V4.ColumnTypeMetadata_v4;
+import static org.apache.drill.exec.store.parquet.metadata.Metadata_V4.FileMetadata;
+import static org.apache.drill.exec.store.parquet.metadata.Metadata_V4.MetadataSummary;
+import static org.apache.drill.exec.store.parquet.metadata.Metadata_V4.ParquetFileAndRowCountMetadata;
 import static org.apache.drill.exec.store.parquet.metadata.Metadata_V4.ParquetFileMetadata_v4;
 import static org.apache.drill.exec.store.parquet.metadata.Metadata_V4.ParquetTableMetadata_v4;
-import static org.apache.drill.exec.store.parquet.metadata.Metadata_V4.RowGroupMetadata_v4;
-import static org.apache.drill.exec.store.parquet.metadata.Metadata_V4.MetadataSummary;
-import static org.apache.drill.exec.store.parquet.metadata.Metadata_V4.FileMetadata;
-import static org.apache.drill.exec.store.parquet.metadata.Metadata_V4.ParquetFileAndRowCountMetadata;
 
 /**
  * This is an utility class, holder for Parquet Table Metadata and {@link ParquetReaderConfig}. All the creation of
@@ -93,7 +81,7 @@ import static org.apache.drill.exec.store.parquet.metadata.Metadata_V4.ParquetFi
  * write permission for the cache file
  */
 public class Metadata {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Metadata.class);
+  private static final Logger logger = LoggerFactory.getLogger(Metadata.class);
 
   public static final String[] OLD_METADATA_FILENAMES = {".drill.parquet_metadata", ".drill.parquet_metadata.v2"};
   public static final String OLD_METADATA_FILENAME = ".drill.parquet_metadata";
@@ -101,8 +89,8 @@ public class Metadata {
   public static final String METADATA_FILENAME = ".drill.parquet_file_metadata.v4";
   public static final String METADATA_SUMMARY_FILENAME = ".drill.parquet_summary_metadata.v4";
   public static final String[] CURRENT_METADATA_FILENAMES = {METADATA_SUMMARY_FILENAME, METADATA_FILENAME};
-  public static final Long DEFAULT_NULL_COUNT = (long) 0;
-  public static final Long NULL_COUNT_NOT_EXISTS = (long) -1;
+  public static final Long DEFAULT_NULL_COUNT = 0L;
+  public static final Long NULL_COUNT_NOT_EXISTS = -1L;
 
   private final ParquetReaderConfig readerConfig;
 
@@ -162,7 +150,7 @@ public class Metadata {
    * @param readerConfig parquet reader configuration
    * @return parquet table metadata. Null if metadata cache is missing, unsupported or corrupted
    */
-  public static @Nullable ParquetTableMetadataBase readBlockMeta(FileSystem fs,
+  public static ParquetTableMetadataBase readBlockMeta(FileSystem fs,
                                                                  List<Path> paths,
                                                                  MetadataContext metaContext,
                                                                  ParquetReaderConfig readerConfig) {
@@ -190,7 +178,7 @@ public class Metadata {
    * @param readerConfig parquet reader configuration
    * @return parquet metadata for a directory. Null if metadata cache is missing, unsupported or corrupted
    */
-  public static @Nullable ParquetTableMetadataDirs readMetadataDirs(FileSystem fs,
+  public static ParquetTableMetadataDirs readMetadataDirs(FileSystem fs,
                                                                     Path path,
                                                                     MetadataContext metaContext,
                                                                     ParquetReaderConfig readerConfig) {
@@ -240,7 +228,7 @@ public class Metadata {
 
     // Get the allColumnsInteresting flag and columnSet from the existing summary if the auto refresh is triggered.
     if (autoRefreshTriggered) {
-      allColumnsInteresting = getallColumnsInteresting(fs, path, true);
+      allColumnsInteresting = isAllColumnsInteresting(fs, path, true);
       columnSet = null;
       if (!allColumnsInteresting) {
         columnSet = getInterestingColumns(fs, path, true);
@@ -307,7 +295,8 @@ public class Metadata {
         childFiles.put(file, fs);
       }
     }
-    Metadata_V4.MetadataSummary metadataSummary = new Metadata_V4.MetadataSummary(SUPPORTED_VERSIONS.last().toString(), DrillVersionInfo.getVersion());
+    Metadata_V4.MetadataSummary metadataSummary = new Metadata_V4.MetadataSummary(SUPPORTED_VERSIONS.last().toString(),
+      DrillVersionInfo.getVersion(), allColumnsInteresting || columnSet == null);
     ParquetTableMetadata_v4 parquetTableMetadata = new ParquetTableMetadata_v4(metadataSummary);
     if (childFiles.size() > 0) {
       List<ParquetFileAndRowCountMetadata> childFileAndRowCountMetadata = getParquetFileMetadata_v4(parquetTableMetadata, childFiles, allColumnsInteresting, columnSet);
@@ -415,7 +404,7 @@ public class Metadata {
    */
   private ParquetTableMetadata_v4 getParquetTableMetadata(Map<FileStatus, FileSystem> fileStatusMap)
       throws IOException {
-    Metadata_V4.MetadataSummary tableMetadataSummary = new Metadata_V4.MetadataSummary(SUPPORTED_VERSIONS.last().toString(), DrillVersionInfo.getVersion(), new ArrayList<>());
+    Metadata_V4.MetadataSummary tableMetadataSummary = new Metadata_V4.MetadataSummary(SUPPORTED_VERSIONS.last().toString(), DrillVersionInfo.getVersion(), new ArrayList<>(), true);
     ParquetTableMetadata_v4 tableMetadata = new ParquetTableMetadata_v4(tableMetadataSummary);
     List<ParquetFileAndRowCountMetadata> parquetFileAndRowCountMetadata = getParquetFileMetadata_v4(tableMetadata, fileStatusMap, true, null);
     List<ParquetFileMetadata_v4> parquetFileMetadata = new ArrayList<>();
@@ -474,41 +463,6 @@ public class Metadata {
     }
   }
 
-  private static ColTypeInfo getColTypeInfo(MessageType schema, Type type, String[] path, int depth) {
-    if (type.isPrimitive()) {
-      PrimitiveType primitiveType = (PrimitiveType) type;
-      int precision = 0;
-      int scale = 0;
-      if (primitiveType.getDecimalMetadata() != null) {
-        precision = primitiveType.getDecimalMetadata().getPrecision();
-        scale = primitiveType.getDecimalMetadata().getScale();
-      }
-
-      int repetitionLevel = schema.getMaxRepetitionLevel(path);
-      int definitionLevel = schema.getMaxDefinitionLevel(path);
-
-      return new ColTypeInfo(type.getOriginalType(), precision, scale, repetitionLevel, definitionLevel);
-    }
-    Type t = ((GroupType) type).getType(path[depth]);
-    return getColTypeInfo(schema, t, path, depth + 1);
-  }
-
-  private static class ColTypeInfo {
-    public OriginalType originalType;
-    public int precision;
-    public int scale;
-    public int repetitionLevel;
-    public int definitionLevel;
-
-    ColTypeInfo(OriginalType originalType, int precision, int scale, int repetitionLevel, int definitionLevel) {
-      this.originalType = originalType;
-      this.precision = precision;
-      this.scale = scale;
-      this.repetitionLevel = repetitionLevel;
-      this.definitionLevel = definitionLevel;
-    }
-  }
-
   // A private version of the following static method, with no footer given
   private ParquetFileAndRowCountMetadata getParquetFileMetadata_v4(ParquetTableMetadata_v4 parquetTableMetadata,
                                                            final FileStatus file, final FileSystem fs,
@@ -531,19 +485,17 @@ public class Metadata {
    */
   public static ParquetFileAndRowCountMetadata getParquetFileMetadata_v4(ParquetTableMetadata_v4 parquetTableMetadata,
                                                                          ParquetMetadata footer,
-                                                                         final FileStatus file,
-                                                                         final FileSystem fs,
+                                                                         FileStatus file,
+                                                                         FileSystem fs,
                                                                          boolean allColumnsInteresting,
                                                                          boolean skipNonInteresting,
                                                                          Set<String> columnSet,
                                                                          ParquetReaderConfig readerConfig)
     throws IOException, InterruptedException {
-    Map<ColumnTypeMetadata_v4.Key, Long> totalNullCountMap = new HashMap<>();
-    long totalRowCount = 0;
     ParquetMetadata metadata = footer; // if a non-null footer is given, no need to read it again from the file
     if (metadata == null) {
-      final UserGroupInformation processUserUgi = ImpersonationUtil.getProcessUserUGI();
-      final Configuration conf = new Configuration(fs.getConf());
+      UserGroupInformation processUserUgi = ImpersonationUtil.getProcessUserUGI();
+      Configuration conf = new Configuration(fs.getConf());
       try {
         metadata = processUserUgi.doAs((PrivilegedExceptionAction<ParquetMetadata>) () -> {
           try (ParquetFileReader parquetFileReader = ParquetFileReader.open(HadoopInputFile.fromStatus(file, conf), readerConfig.toReadOptions())) {
@@ -551,126 +503,17 @@ public class Metadata {
           }
         });
       } catch (Exception e) {
-        logger.error("Exception while reading footer of parquet file [Details - path: {}, owner: {}] as process user {}", file.getPath(), file.getOwner(), processUserUgi.getShortUserName(), e);
+        logger.error("Exception while reading footer of parquet file [Details - path: {}, owner: {}] as process user {}",
+          file.getPath(), file.getOwner(), processUserUgi.getShortUserName(), e);
         throw e;
       }
     }
-    MessageType schema = metadata.getFileMetaData().getSchema();
 
-    Map<SchemaPath, ColTypeInfo> colTypeInfoMap = new HashMap<>();
-    schema.getPaths();
-    for (String[] path : schema.getPaths()) {
-      colTypeInfoMap.put(SchemaPath.getCompoundPath(path), getColTypeInfo(schema, schema, path, 0));
-    }
+    FileMetadataCollector metadataCollector = new FileMetadataCollector(metadata, file, fs, allColumnsInteresting,
+      skipNonInteresting, columnSet, readerConfig);
 
-    List<RowGroupMetadata_v4> rowGroupMetadataList = Lists.newArrayList();
-
-    ArrayList<SchemaPath> ALL_COLS = new ArrayList<>();
-    ALL_COLS.add(SchemaPath.STAR_COLUMN);
-    ParquetReaderUtility.DateCorruptionStatus containsCorruptDates = ParquetReaderUtility.detectCorruptDates(metadata, ALL_COLS,
-      readerConfig.autoCorrectCorruptedDates());
-    logger.debug("Contains corrupt dates: {}.", containsCorruptDates);
-    for (BlockMetaData rowGroup : metadata.getBlocks()) {
-      List<ColumnMetadata_v4> columnMetadataList = new ArrayList<>();
-      long length = 0;
-      totalRowCount = totalRowCount + rowGroup.getRowCount();
-      if (allColumnsInteresting || columnSet == null) {
-        parquetTableMetadata.setAllColumnsInteresting(true);
-      }
-      for (ColumnChunkMetaData col : rowGroup.getColumns()) {
-        String[] columnName = col.getPath().toArray();
-        SchemaPath columnSchemaName = SchemaPath.getCompoundPath(columnName);
-        boolean thisColumnIsInteresting = allColumnsInteresting || columnSet == null || columnSet.contains(columnSchemaName.getRootSegmentPath());
-        if ( skipNonInteresting && ! thisColumnIsInteresting ) { continue; }
-        ColTypeInfo colTypeInfo = colTypeInfoMap.get(columnSchemaName);
-        Statistics<?> stats = col.getStatistics();
-        long totalNullCount = stats.getNumNulls();
-        ColumnTypeMetadata_v4 columnTypeMetadata =
-            new ColumnTypeMetadata_v4(columnName, col.getPrimitiveType().getPrimitiveTypeName(), colTypeInfo.originalType,
-                colTypeInfo.precision, colTypeInfo.scale, colTypeInfo.repetitionLevel, colTypeInfo.definitionLevel, 0, false);
-        if (parquetTableMetadata.getSummary().columnTypeInfo == null) {
-          parquetTableMetadata.metadataSummary.columnTypeInfo = new ConcurrentHashMap<>();
-        }
-        ColumnTypeMetadata_v4.Key columnTypeMetadataKey = new ColumnTypeMetadata_v4.Key(columnTypeMetadata.name);
-        //Update the total null count from each row group
-        totalNullCountMap.putIfAbsent(columnTypeMetadataKey, DEFAULT_NULL_COUNT);
-        if (totalNullCountMap.get(columnTypeMetadataKey) < 0 || totalNullCount < 0) {
-          totalNullCountMap.put(columnTypeMetadataKey, NULL_COUNT_NOT_EXISTS);
-        } else {
-          long nullCount = totalNullCountMap.get(columnTypeMetadataKey) + totalNullCount;
-          totalNullCountMap.put(columnTypeMetadataKey, nullCount);
-        }
-        if ( thisColumnIsInteresting ) {
-          // Save the column schema info. We'll merge it into one list
-          Object minValue = null;
-          Object maxValue = null;
-          long numNulls = -1;
-          boolean statsAvailable = stats != null && !stats.isEmpty();
-          if (statsAvailable) {
-            if (stats.hasNonNullValue()) {
-              minValue = stats.genericGetMin();
-              maxValue = stats.genericGetMax();
-              if (containsCorruptDates == ParquetReaderUtility.DateCorruptionStatus.META_SHOWS_CORRUPTION && columnTypeMetadata.originalType == OriginalType.DATE) {
-                minValue = ParquetReaderUtility.autoCorrectCorruptedDate((Integer) minValue);
-                maxValue = ParquetReaderUtility.autoCorrectCorruptedDate((Integer) maxValue);
-              }
-            }
-          }
-          numNulls = stats.getNumNulls();
-          ColumnMetadata_v4 columnMetadata = new ColumnMetadata_v4(columnTypeMetadata.name, col.getPrimitiveType().getPrimitiveTypeName(), minValue, maxValue, numNulls);
-          columnMetadataList.add(columnMetadata);
-          columnTypeMetadata.isInteresting = true;
-        }
-        length += col.getTotalSize();
-        parquetTableMetadata.metadataSummary.columnTypeInfo.put(columnTypeMetadataKey, columnTypeMetadata);
-      }
-
-      // DRILL-5009: Skip the RowGroup if it is empty
-      // Note we still read the schema even if there are no values in the RowGroup
-      if (rowGroup.getRowCount() == 0) {
-        continue;
-      }
-      RowGroupMetadata_v4 rowGroupMeta =
-          new RowGroupMetadata_v4(rowGroup.getStartingPos(), length, rowGroup.getRowCount(),
-              getHostAffinity(file, fs, rowGroup.getStartingPos(), length), columnMetadataList);
-
-      rowGroupMetadataList.add(rowGroupMeta);
-    }
-    Path path = Path.getPathWithoutSchemeAndAuthority(file.getPath());
-
-    ParquetFileMetadata_v4 parquetFileMetadata_v4 = new ParquetFileMetadata_v4(path, file.getLen(), rowGroupMetadataList);
-    ParquetFileAndRowCountMetadata parquetFileAndRowCountMetadata = new ParquetFileAndRowCountMetadata(parquetFileMetadata_v4, totalNullCountMap, totalRowCount);
-    return parquetFileAndRowCountMetadata;
-  }
-
-  /**
-   * Get the host affinity for a row group.
-   *
-   * @param fileStatus the parquet file
-   * @param start      the start of the row group
-   * @param length     the length of the row group
-   * @return host affinity for the row group
-   */
-  private static Map<String, Float> getHostAffinity(FileStatus fileStatus, FileSystem fs, long start, long length)
-      throws IOException {
-    BlockLocation[] blockLocations = fs.getFileBlockLocations(fileStatus, start, length);
-    Map<String, Float> hostAffinityMap = Maps.newHashMap();
-    for (BlockLocation blockLocation : blockLocations) {
-      for (String host : blockLocation.getHosts()) {
-        Float currentAffinity = hostAffinityMap.get(host);
-        float blockStart = blockLocation.getOffset();
-        float blockEnd = blockStart + blockLocation.getLength();
-        float rowGroupEnd = start + length;
-        Float newAffinity = (blockLocation.getLength() - (blockStart < start ? start - blockStart : 0) -
-            (blockEnd > rowGroupEnd ? blockEnd - rowGroupEnd : 0)) / length;
-        if (currentAffinity != null) {
-          hostAffinityMap.put(host, currentAffinity + newAffinity);
-        } else {
-          hostAffinityMap.put(host, newAffinity);
-        }
-      }
-    }
-    return hostAffinityMap;
+    parquetTableMetadata.metadataSummary.columnTypeInfo.putAll(metadataCollector.getColumnTypeInfo());
+    return metadataCollector.getFileMetadata();
   }
 
   /**
@@ -757,8 +600,7 @@ public class Metadata {
           }
         } else if (isSummaryFile) {
           MetadataSummary metadataSummary = mapper.readValue(is, Metadata_V4.MetadataSummary.class);
-          ParquetTableMetadata_v4 parquetTableMetadata_v4 = new ParquetTableMetadata_v4(metadataSummary);
-          parquetTableMetadata = (ParquetTableMetadataBase) parquetTableMetadata_v4;
+          parquetTableMetadata = new ParquetTableMetadata_v4(metadataSummary);
         } else {
           parquetTableMetadata = mapper.readValue(is, ParquetTableMetadataBase.class);
           if (new MetadataVersion(parquetTableMetadata.getMetadataVersion()).compareTo(new MetadataVersion(3, 0)) >= 0) {
@@ -775,11 +617,14 @@ public class Metadata {
           timer.stop();
         }
         if (!isSummaryFile) {
-          // DRILL-5009: Remove the RowGroup if it is empty
           List<? extends ParquetFileMetadata> files = parquetTableMetadata.getFiles();
           if (files != null) {
             for (ParquetFileMetadata file : files) {
+              // DRILL-5009: Remove empty row groups unless it is the only row group
               List<? extends RowGroupMetadata> rowGroups = file.getRowGroups();
+              if (rowGroups.size() == 1) {
+                continue;
+              }
               rowGroups.removeIf(r -> r.getRowCount() == 0);
             }
           }
@@ -800,7 +645,7 @@ public class Metadata {
     if (metadataSummary == null) {
       return null;
     } else {
-      Set<String> interestingColumns = new HashSet<String>();
+      Set<String> interestingColumns = new HashSet<>();
       for (ColumnTypeMetadata_v4 columnTypeMetadata_v4: metadataSummary.columnTypeInfo.values()) {
         if (columnTypeMetadata_v4.isInteresting) {
           interestingColumns.add(String.join("", columnTypeMetadata_v4.name));
@@ -810,7 +655,7 @@ public class Metadata {
     }
   }
 
-  private boolean getallColumnsInteresting(FileSystem fs, Path metadataParentDir, boolean autoRefreshTriggered) {
+  private boolean isAllColumnsInteresting(FileSystem fs, Path metadataParentDir, boolean autoRefreshTriggered) {
     Metadata_V4.MetadataSummary metadataSummary = getSummary(fs, metadataParentDir, autoRefreshTriggered, null);
     if (metadataSummary == null) {
       return true;
@@ -819,26 +664,23 @@ public class Metadata {
   }
 
   public static Path getSummaryFileName(Path metadataParentDir) {
-    Path summaryFile = new Path(metadataParentDir, METADATA_SUMMARY_FILENAME);
-    return summaryFile;
+    return new Path(metadataParentDir, METADATA_SUMMARY_FILENAME);
   }
 
   public static Path getDirFileName(Path metadataParentDir) {
-    Path metadataDirFile = new Path(metadataParentDir, METADATA_DIRECTORIES_FILENAME);
-    return metadataDirFile;
+    return new Path(metadataParentDir, METADATA_DIRECTORIES_FILENAME);
   }
 
   private static Path getFileMetadataFileName(Path metadataParentDir) {
-    Path fileMetadataFile = new Path(metadataParentDir, METADATA_FILENAME);
-    return fileMetadataFile;
+    return new Path(metadataParentDir, METADATA_FILENAME);
   }
 
   /**
    * Returns if metadata exists or not in that directory
-   * @param fs filesystem
-   * @param metadataParentDir parent directory that holds metadata files.
+   * @param fs file system
+   * @param metadataParentDir parent directory that holds metadata files
    * @return true if metadata exists in that directory
-   * @throws IOException
+   * @throws IOException when unable to check metadata exists status
    */
   private static boolean metadataExists(FileSystem fs, Path metadataParentDir) throws IOException {
     Path summaryFile = new Path(metadataParentDir, METADATA_SUMMARY_FILENAME);
@@ -852,10 +694,10 @@ public class Metadata {
 
   /**
    * Reads the summary from the metadata cache file, if the cache file is stale recreates the metadata
-   * @param fs
-   * @param metadataParentDir
+   * @param fs file system
+   * @param metadataParentDir parent directory that holds metadata files
    * @param autoRefreshTriggered true if the auto-refresh is already triggered
-   * @param readerConfig
+   * @param readerConfig Parquet reader config
    * @return returns metadata summary
    */
   public static Metadata_V4.MetadataSummary getSummary(FileSystem fs, Path metadataParentDir, boolean autoRefreshTriggered, ParquetReaderConfig readerConfig) {
@@ -894,8 +736,7 @@ public class Metadata {
         mapper.registerModule(module);
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         InputStream is = fs.open(summaryFile);
-        Metadata_V4.MetadataSummary metadataSummary = mapper.readValue(is, Metadata_V4.MetadataSummary.class);
-        return metadataSummary;
+        return mapper.readValue(is, Metadata_V4.MetadataSummary.class);
         }
     } catch (IOException e) {
       logger.debug("Failed to read '{}' summary metadata file", summaryFile, e);

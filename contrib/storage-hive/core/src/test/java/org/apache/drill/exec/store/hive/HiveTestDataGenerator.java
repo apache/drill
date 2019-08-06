@@ -446,6 +446,8 @@ public class HiveTestDataGenerator {
     executeQuery(hiveDriver, "CREATE OR REPLACE VIEW view_over_hive_view AS SELECT * FROM hive_view WHERE key BETWEEN 2 AND 3");
     executeQuery(hiveDriver, "CREATE OR REPLACE VIEW db1.two_table_view AS SELECT COUNT(dk.key) dk_key_count FROM db1.avro dk " +
         "INNER JOIN kv ON kv.key = dk.key");
+
+    createTableWithEmptyParquet(hiveDriver);
   }
 
   private void createTestDataForDrillNativeParquetReaderTests(Driver hiveDriver) {
@@ -508,6 +510,17 @@ public class HiveTestDataGenerator {
     executeQuery(hiveDriver, tableDDL);
   }
 
+  private void createTableWithEmptyParquet(Driver hiveDriver) {
+    String location = dirTestWatcher.makeSubDir(Paths.get("table_with_empty_parquet")).toURI().getPath();
+    String emptyParquet = "empty.parquet";
+    dirTestWatcher.copyResourceToRoot(Paths.get(Resources.getResource(emptyParquet).getPath()),
+      Paths.get(location, emptyParquet));
+
+    String tableDDL = String.format("create external table table_with_empty_parquet (id bigint, name string) " +
+      "stored as parquet location '%s'", location);
+    executeQuery(hiveDriver, tableDDL);
+  }
+
   private File getTempFile() throws Exception {
     return java.nio.file.Files.createTempFile("drill-hive-test", ".txt").toFile();
   }
@@ -525,7 +538,7 @@ public class HiveTestDataGenerator {
   private String generateTestDataFileForPartitionInput() throws Exception {
     File file = getTempFile();
     try (PrintWriter printWriter = new PrintWriter(file)) {
-      String partValues[] = {"1", "2", "null"};
+      String[] partValues = {"1", "2", "null"};
       for (String partValue : partValues) {
         for (String partValue1 : partValues) {
           for (String partValue2 : partValues) {
@@ -594,5 +607,4 @@ public class HiveTestDataGenerator {
 
     return sb.toString();
   }
-
 }

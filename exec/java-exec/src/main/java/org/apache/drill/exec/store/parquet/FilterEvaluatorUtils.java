@@ -73,11 +73,12 @@ public class FilterEvaluatorUtils {
         schemaPathsInExpr, Collections.emptyList(), options, rowGroupMetadata.getPath(), true);
 
     return matches(expr, columnsStatistics, rowGroupMetadata.getSchema(), TableStatisticsKind.ROW_COUNT.getValue(rowGroupMetadata),
-        fragmentContext, fragmentContext.getFunctionRegistry());
+        fragmentContext, fragmentContext.getFunctionRegistry(), new HashSet<>(schemaPathsInExpr));
   }
 
-  public static RowsMatch matches(LogicalExpression expr, Map<SchemaPath, ColumnStatistics> columnsStatistics,
-      TupleMetadata schema, long rowCount, UdfUtilities udfUtilities, FunctionLookupContext functionImplementationRegistry) {
+  public static RowsMatch matches(LogicalExpression expr, Map<SchemaPath, ColumnStatistics> columnsStatistics, TupleMetadata schema,
+                                  long rowCount, UdfUtilities udfUtilities, FunctionLookupContext functionImplementationRegistry,
+                                  Set<SchemaPath> schemaPathsInExpr) {
     ErrorCollector errorCollector = new ErrorCollectorImpl();
 
     LogicalExpression materializedFilter = ExpressionTreeMaterializer.materializeFilterExpr(
@@ -95,23 +96,21 @@ public class FilterEvaluatorUtils {
     FilterPredicate parquetPredicate = FilterBuilder.buildFilterPredicate(
         materializedFilter, constantBoundaries, udfUtilities, true);
 
-    return matches(parquetPredicate, columnsStatistics, rowCount);
-  }
-
-  public static RowsMatch matches(FilterPredicate parquetPredicate,
-                                  Map<SchemaPath, ColumnStatistics> columnsStatistics,
-                                  long rowCount, TupleMetadata fileMetadata, Set<SchemaPath> schemaPathsInExpr) {
-    RowsMatch temp = matches(parquetPredicate, columnsStatistics, rowCount);
-    return temp == RowsMatch.ALL && isRepeated(schemaPathsInExpr, fileMetadata) ? RowsMatch.SOME : temp;
+    return matches(parquetPredicate, columnsStatistics, rowCount, schema, schemaPathsInExpr);
   }
 
   @SuppressWarnings("unchecked")
-  public static RowsMatch matches(FilterPredicate predicate, Map<SchemaPath, ColumnStatistics> columnsStatistics, long rowCount) {
-    if (predicate != null) {
+  public static RowsMatch matches(FilterPredicate parquetPredicate,
+                                  Map<SchemaPath, ColumnStatistics> columnsStatistics,
+                                  long rowCount,
+                                  TupleMetadata fileMetadata,
+                                  Set<SchemaPath> schemaPathsInExpr) {
+    RowsMatch rowsMatch = RowsMatch.SOME;
+    if (parquetPredicate != null) {
       StatisticsProvider rangeExprEvaluator = new StatisticsProvider(columnsStatistics, rowCount);
-      return predicate.matches(rangeExprEvaluator);
+      rowsMatch = parquetPredicate.matches(rangeExprEvaluator);
     }
-    return RowsMatch.SOME;
+    return rowsMatch == RowsMatch.ALL && isRepeated(schemaPathsInExpr, fileMetadata) ? RowsMatch.SOME : rowsMatch;
   }
 
   private static boolean isRepeated(Set<SchemaPath> fields, TupleMetadata fileMetadata) {

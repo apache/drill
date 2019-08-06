@@ -18,15 +18,19 @@
 package org.apache.drill.exec.store.parquet;
 
 import org.apache.drill.PlanTestBase;
+import org.apache.drill.categories.ParquetTest;
+import org.apache.drill.categories.SlowTest;
 import org.apache.drill.exec.util.StoragePluginTestUtils;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.nio.file.Paths;
 
 import static org.junit.Assert.assertEquals;
 
+@Category({ParquetTest.class, SlowTest.class})
 public class TestParquetFilterPushdownWithTransitivePredicates extends PlanTestBase {
 
   private static final String TABLE_PATH = "parquetFilterPush/transitiveClosure";

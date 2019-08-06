@@ -82,7 +82,7 @@ public final class VarLenColumnBulkInput<V extends ValueVector> implements VarLe
     int recordsToRead, BulkReaderState bulkReaderState) throws IOException {
 
     this.parentInst = parentInst;
-    this.batchSizerMgr = this.parentInst.parentReader.batchSizerMgr;
+    this.batchSizerMgr = this.parentInst.parentReader.getBatchSizesMgr();
     this.recordsToRead = recordsToRead;
     this.callback = new VarLenColumnBulkInputCallback(this);
     this.columnPrecInfo = bulkReaderState.columnPrecInfo;

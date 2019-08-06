@@ -26,6 +26,8 @@ import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 
+import org.apache.drill.categories.ParquetTest;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.util.Text;
@@ -34,11 +36,13 @@ import org.joda.time.Period;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.drill.exec.expr.fn.impl.DateUtility.parseLocalDate;
 
+@Category({ParquetTest.class, UnlikelyTest.class})
 public class TestDrillParquetReader extends BaseTestQuery {
   // enable decimal data type and make sure DrillParquetReader is used to handle test queries
   @BeforeClass

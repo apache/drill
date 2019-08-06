@@ -69,69 +69,58 @@ public class ReadState {
   private boolean useAsyncColReader;
 
   public ReadState(ParquetSchema schema,
-    RecordBatchSizerManager batchSizerMgr, ParquetReaderStats parquetReaderStats, long numRecordsToRead,
-    boolean useAsyncColReader) {
-
+                   RecordBatchSizerManager batchSizerMgr,
+                   ParquetReaderStats parquetReaderStats,
+                   long numRecordsToRead,
+                   boolean useAsyncColReader) {
     this.schema = schema;
     this.batchSizerMgr = batchSizerMgr;
     this.parquetReaderStats = parquetReaderStats;
     this.useAsyncColReader = useAsyncColReader;
-    if (! schema.isStarQuery()) {
-      nullFilledVectors = new ArrayList<>();
+    if (!schema.isStarQuery()) {
+      this.nullFilledVectors = new ArrayList<>();
     }
-
-    // In the case where runtime pruning prunes out all the rowgroups, then just a single rowgroup
-    // with zero rows is read (in order to get the schema, no need for the rows)
-    if ( numRecordsToRead == 0 ) {
-      this.totalNumRecordsToRead = 0;
-      return;
-    }
-
-    // Because of JIRA DRILL-6528, the Parquet reader is sometimes getting the wrong
-    // number of rows to read. For now, returning all a file data (till
-    // downstream operator stop consuming).
-    numRecordsToRead = -1;
-
-    // Callers can pass -1 if they want to read all rows.
-    if (numRecordsToRead == ParquetRecordReader.NUM_RECORDS_TO_READ_NOT_SPECIFIED) {
-      this.totalNumRecordsToRead = schema.getGroupRecordCount();
-    } else {
-      assert (numRecordsToRead >= 0);
-      this.totalNumRecordsToRead = Math.min(numRecordsToRead, schema.getGroupRecordCount());
-    }
+    this.totalNumRecordsToRead = numRecordsToRead;
   }
 
   /**
    * Create the readers needed to read columns: fixed-length or variable length.
    *
-   * @param reader
-   * @param output
-   * @throws Exception
+   * @param reader parquet record reader
+   * @param output output mutator
    */
-
   @SuppressWarnings("unchecked")
   public void buildReader(ParquetRecordReader reader, OutputMutator output) throws Exception {
-    final ArrayList<VarLengthColumn<? extends ValueVector>> varLengthColumns = new ArrayList<>();
-    // initialize all of the column read status objects
-    BlockMetaData rowGroupMetadata = schema.getRowGroupMetadata();
-    Map<String, Integer> columnChunkMetadataPositionsInList = schema.buildChunkMap(rowGroupMetadata);
-    for (ParquetColumnMetadata columnMetadata : schema.getColumnMetadata()) {
-      ColumnDescriptor column = columnMetadata.column;
-      columnMetadata.columnChunkMetaData = rowGroupMetadata.getColumns().get(
-                      columnChunkMetadataPositionsInList.get(Arrays.toString(column.getPath())));
-      columnMetadata.buildVector(output);
-      if (! columnMetadata.isFixedLength( )) {
-        // create a reader and add it to the appropriate list
-        varLengthColumns.add(columnMetadata.makeVariableWidthReader(reader));
-      } else if (columnMetadata.isRepeated()) {
-        varLengthColumns.add(columnMetadata.makeRepeatedFixedWidthReader(reader));
+    if (totalNumRecordsToRead == 0) {
+      // there is no need to spend resources to init readers, when schema will be output
+      for (ParquetColumnMetadata columnMetadata : schema.getColumnMetadata()) {
+        columnMetadata.buildVector(output);
       }
-      else {
-        fixedLenColumnReaders.add(columnMetadata.makeFixedWidthReader(reader));
+    } else {
+      List<VarLengthColumn<? extends ValueVector>> varLengthColumns = new ArrayList<>();
+      // initialize all of the column read status objects
+      BlockMetaData rowGroupMetadata = schema.getRowGroupMetadata();
+      if (rowGroupMetadata != null) {
+        Map<String, Integer> columnChunkMetadataPositionsInList = schema.buildChunkMap(rowGroupMetadata);
+        for (ParquetColumnMetadata columnMetadata : schema.getColumnMetadata()) {
+          ColumnDescriptor column = columnMetadata.column;
+          columnMetadata.columnChunkMetaData = rowGroupMetadata.getColumns().get(
+            columnChunkMetadataPositionsInList.get(Arrays.toString(column.getPath())));
+          columnMetadata.buildVector(output);
+          if (!columnMetadata.isFixedLength()) {
+            // create a reader and add it to the appropriate list
+            varLengthColumns.add(columnMetadata.makeVariableWidthReader(reader));
+          } else if (columnMetadata.isRepeated()) {
+            varLengthColumns.add(columnMetadata.makeRepeatedFixedWidthReader(reader));
+          } else {
+            fixedLenColumnReaders.add(columnMetadata.makeFixedWidthReader(reader));
+          }
+        }
+        varLengthReader = new VarLenBinaryReader(reader, varLengthColumns);
       }
     }
-    varLengthReader = new VarLenBinaryReader(reader, varLengthColumns);
-    if (! schema.isStarQuery()) {
+
+    if (!schema.isStarQuery()) {
       schema.createNonExistentColumns(output, nullFilledVectors);
     }
   }
@@ -147,7 +136,7 @@ public class ReadState {
     if (fixedLenColumnReaders.size() > 0) {
       return fixedLenColumnReaders.get(0);
     }
-    else if (varLengthReader.columns.size() > 0) {
+    else if (varLengthReader != null && varLengthReader.columns.size() > 0) {
       return varLengthReader.columns.get(0);
     } else {
       return null;
@@ -158,8 +147,10 @@ public class ReadState {
     for (final ColumnReader<?> column : fixedLenColumnReaders) {
       column.valuesReadInCurrentPass = 0;
     }
-    for (final VarLengthColumn<?> r : varLengthReader.columns) {
-      r.valuesReadInCurrentPass = 0;
+    if (varLengthReader != null) {
+      for (final VarLengthColumn<?> r : varLengthReader.columns) {
+        r.valuesReadInCurrentPass = 0;
+      }
     }
     setValuesReadInCurrentPass(0);
   }

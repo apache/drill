@@ -106,12 +106,10 @@ public final class ParquetSchema {
   /**
    * Build the schema for this read as a combination of the schema specified in
    * the Parquet footer and the list of columns selected in the query.
-   *
-   * @throws Exception if anything goes wrong
    */
-
-  public void buildSchema() throws Exception {
-    groupRecordCount = footer.getBlocks().get(rowGroupIndex).getRowCount();
+  public void buildSchema() {
+    BlockMetaData rowGroupMetadata = getRowGroupMetadata();
+    groupRecordCount = rowGroupMetadata == null ? 0 : rowGroupMetadata.getRowCount();
     loadParquetSchema();
     computeFixedPart();
   }
@@ -130,7 +128,7 @@ public final class ParquetSchema {
     for (ColumnDescriptor column : footer.getFileMetaData().getSchema().getColumns()) {
       ParquetColumnMetadata columnMetadata = new ParquetColumnMetadata(column);
       columnMetadata.resolveDrillType(schemaElements, options);
-      if (! columnSelected(column)) {
+      if (!columnSelected(column)) {
         continue;
       }
       selectedColumnMetadata.add(columnMetadata);
@@ -170,6 +168,9 @@ public final class ParquetSchema {
   public long getGroupRecordCount() { return groupRecordCount; }
 
   public BlockMetaData getRowGroupMetadata() {
+    if (rowGroupIndex == -1) {
+      return null;
+    }
     return footer.getBlocks().get(rowGroupIndex);
   }
 
