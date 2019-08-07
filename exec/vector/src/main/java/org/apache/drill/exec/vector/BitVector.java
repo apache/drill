@@ -179,7 +179,14 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
    * Allocate new buffer with double capacity, and copy data into the new buffer. Replace vector's buffer with new buffer, and release old one
    */
   public void reAlloc() {
-    final long newAllocationSize = allocationSizeInBytes * 2L;
+    long newAllocationSize = allocationSizeInBytes * 2L;
+
+    // Some operations, such as Value Vector#exchange, can be change DrillBuf data field without corresponding allocation size changes.
+    // Check that the size of the allocation is sufficient to copy the old buffer.
+    while (newAllocationSize < data.capacity()) {
+      newAllocationSize *= 2L;
+    }
+
     if (newAllocationSize > MAX_ALLOCATION_SIZE) {
       throw new OversizedAllocationException("Requested amount of memory is more than max allowed allocation size");
     }
