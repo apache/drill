@@ -89,6 +89,30 @@ public class VariableLengthVectorTest
     }
   }
 
+  @Test
+  public void testDRILL7341() {
+    try (RootAllocator allocator = new RootAllocator(10_000_000)) {
+      final MaterializedField field = MaterializedField.create("stringCol", Types.optional(TypeProtos.MinorType.VARCHAR));
+      final NullableVarCharVector sourceVector = new NullableVarCharVector(field, allocator);
+      final NullableVarCharVector targetVector = new NullableVarCharVector(field, allocator);
+
+      sourceVector.allocateNew();
+      targetVector.allocateNew();
+
+      try {
+        final NullableVarCharVector.Mutator sourceMutator = sourceVector.getMutator();
+        sourceMutator.setValueCount(sourceVector.getValueCapacity() * 4);
+
+        targetVector.exchange(sourceVector);
+        final NullableVarCharVector.Mutator targetMutator = targetVector.getMutator();
+        targetMutator.setValueCount(targetVector.getValueCapacity() * 2);
+      } finally {
+        sourceVector.clear();
+        targetVector.clear();
+      }
+    }
+  }
+
   /**
    * Set 10000 values. Then go back and set new values starting at the 1001 the record.
    */

@@ -210,9 +210,16 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     // a zero-length buffer. Instead, just allocate a 256 byte
     // buffer if we start at 0.
 
-    final long newAllocationSize = allocationSizeInBytes == 0
+    long newAllocationSize = allocationSizeInBytes == 0
         ? 256
         : allocationSizeInBytes * 2L;
+
+    final int currentCapacity = data.capacity();
+    // Some operations, such as Value Vector#exchange, can be change DrillBuf data field without corresponding allocation size changes.
+    // Check that the size of the allocation is sufficient to copy the old buffer.
+    while (newAllocationSize < currentCapacity) {
+      newAllocationSize *= 2L;
+    }
 
     // TODO: Replace this with MAX_BUFFER_SIZE once all
     // code is aware of the maximum vector size.
@@ -222,8 +229,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     }
 
     reallocRaw((int) newAllocationSize);
-    final int halfNewCapacity = data.capacity() / 2;
-    data.setZero(halfNewCapacity, halfNewCapacity);
+    data.setZero(currentCapacity, data.capacity() - currentCapacity);
   }
 
   @Override
