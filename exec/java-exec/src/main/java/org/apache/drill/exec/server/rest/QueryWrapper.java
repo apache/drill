@@ -43,8 +43,6 @@ import java.util.concurrent.TimeUnit;
 @XmlRootElement
 public class QueryWrapper {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryWrapper.class);
-  // Heap usage threshold/trigger to provide resiliency on web server for queries submitted via HTTP
-  private static final double HEAP_MEMORY_FAILURE_THRESHOLD = 0.85;
 
   private final String query;
   private final String queryType;
@@ -87,6 +85,9 @@ public class QueryWrapper {
     }
     webUserConnection.setAutoLimitRowCount(maxRows);
 
+    // Heap usage threshold/trigger to provide resiliency on web server for queries submitted via HTTP
+    double memoryFailureThreshold = workManager.getContext().getConfig().getDouble(ExecConstants.HTTP_MEMORY_HEAP_FAILURE_THRESHOLD);
+
     // Submit user query to Drillbit work queue.
     final QueryId queryId = workManager.getUserWorker().submitWork(webUserConnection, runQuery);
 
@@ -101,7 +102,7 @@ public class QueryWrapper {
         isComplete = webUserConnection.await(TimeUnit.SECONDS.toMillis(1)); //periodically timeout 1 sec to check heap
       } catch (InterruptedException e) {}
       usagePercent = getHeapUsage();
-      if (usagePercent >  HEAP_MEMORY_FAILURE_THRESHOLD) {
+      if (memoryFailureThreshold > 0 && usagePercent > memoryFailureThreshold) {
         nearlyOutOfHeapSpace = true;
       }
     } while (!isComplete && !nearlyOutOfHeapSpace);
