@@ -55,12 +55,7 @@ public class GeoIPFunctions {
     com.maxmind.geoip2.DatabaseReader reader;
 
     public void setup() {
-      java.io.InputStream db = getClass().getClassLoader().getResourceAsStream("GeoLite2-Country.mmdb");
-      try {
-        reader = new com.maxmind.geoip2.DatabaseReader.Builder(db).withCache(new com.maxmind.db.CHMCache()).build();
-      } catch (java.io.IOException e) {
-        System.out.print("IOException encountered:  Could not read MaxMind DB");
-      }
+      reader = org.apache.drill.exec.udfs.SecurityHelperFunctions.getCountryDatabaseReader();
     }
 
     public void eval() {
@@ -102,13 +97,7 @@ public class GeoIPFunctions {
     com.maxmind.geoip2.DatabaseReader reader;
 
     public void setup() {
-
-      java.io.InputStream db = getClass().getClassLoader().getResourceAsStream("GeoLite2-Country.mmdb");
-      try {
-        reader = new com.maxmind.geoip2.DatabaseReader.Builder(db).withCache(new com.maxmind.db.CHMCache()).build();
-      } catch (java.io.IOException e) {
-        System.out.print("IOException encountered:  Could not read MaxMind DB");
-      }
+      reader = org.apache.drill.exec.udfs.SecurityHelperFunctions.getCountryDatabaseReader();
     }
 
     public void eval() {
@@ -149,13 +138,7 @@ public class GeoIPFunctions {
     com.maxmind.geoip2.DatabaseReader reader;
 
     public void setup() {
-
-      java.io.InputStream db = getClass().getClassLoader().getResourceAsStream("GeoLite2-Country.mmdb");
-      try {
-        reader = new com.maxmind.geoip2.DatabaseReader.Builder(db).withCache(new com.maxmind.db.CHMCache()).build();
-      } catch (java.io.IOException e) {
-        System.out.print("IOException encountered:  Could not read MaxMind DB");
-      }
+      reader = org.apache.drill.exec.udfs.SecurityHelperFunctions.getCountryDatabaseReader();
     }
 
     public void eval() {
@@ -191,14 +174,7 @@ public class GeoIPFunctions {
     com.maxmind.geoip2.DatabaseReader reader;
 
     public void setup() {
-
-      java.io.InputStream db = getClass().getClassLoader().getResourceAsStream("GeoLite2-City.mmdb");
-
-      try {
-        reader = new com.maxmind.geoip2.DatabaseReader.Builder(db).withCache(new com.maxmind.db.CHMCache()).build();
-      } catch (java.io.IOException e) {
-        System.out.print("IOException encountered:  Could not read MaxMind DB");
-      }
+      reader = org.apache.drill.exec.udfs.SecurityHelperFunctions.getCityDatabaseReader();
     }
 
     public void eval() {
@@ -238,14 +214,7 @@ public class GeoIPFunctions {
     com.maxmind.geoip2.DatabaseReader reader;
 
     public void setup() {
-
-      java.io.InputStream db = getClass().getClassLoader().getResourceAsStream("GeoLite2-City.mmdb");
-
-      try {
-        reader = new com.maxmind.geoip2.DatabaseReader.Builder(db).withCache(new com.maxmind.db.CHMCache()).build();
-      } catch (java.io.IOException e) {
-        System.out.print("IOException encountered:  Could not read MaxMind DB");
-      }
+      reader = org.apache.drill.exec.udfs.SecurityHelperFunctions.getCityDatabaseReader();
     }
 
     public void eval() {
@@ -278,12 +247,7 @@ public class GeoIPFunctions {
     com.maxmind.geoip2.DatabaseReader reader;
 
     public void setup() {
-      java.io.InputStream db = getClass().getClassLoader().getResourceAsStream("GeoLite2-City.mmdb");
-      try {
-        reader = new com.maxmind.geoip2.DatabaseReader.Builder(db).withCache(new com.maxmind.db.CHMCache()).build();
-      } catch (java.io.IOException e) {
-        System.out.print("IOException encountered:  Could not read MaxMind DB");
-      }
+      reader = org.apache.drill.exec.udfs.SecurityHelperFunctions.getCityDatabaseReader();
     }
 
 
@@ -321,12 +285,7 @@ public class GeoIPFunctions {
     java.io.File database;
 
     public void setup() {
-      java.io.InputStream db = getClass().getClassLoader().getResourceAsStream("GeoLite2-City.mmdb");
-      try {
-        reader = new com.maxmind.geoip2.DatabaseReader.Builder(db).withCache(new com.maxmind.db.CHMCache()).build();
-      } catch (java.io.IOException e) {
-        System.out.print("IOException encountered:  Could not read MaxMind DB");
-      }
+      reader = org.apache.drill.exec.udfs.SecurityHelperFunctions.getCityDatabaseReader();
     }
 
 
@@ -367,12 +326,7 @@ public class GeoIPFunctions {
     java.io.File database;
 
     public void setup() {
-      java.io.InputStream db = getClass().getClassLoader().getResourceAsStream("GeoLite2-City.mmdb");
-      try {
-        reader = new com.maxmind.geoip2.DatabaseReader.Builder(db).withCache(new com.maxmind.db.CHMCache()).build();
-      } catch (java.io.IOException e) {
-        System.out.print("IOException encountered:  Could not read MaxMind DB");
-      }
+      reader = org.apache.drill.exec.udfs.SecurityHelperFunctions.getCityDatabaseReader();
     }
 
     public void eval() {
@@ -415,12 +369,7 @@ public class GeoIPFunctions {
     java.io.File database;
 
     public void setup() {
-      java.io.InputStream db = getClass().getClassLoader().getResourceAsStream("GeoLite2-City.mmdb");
-      try {
-        reader = new com.maxmind.geoip2.DatabaseReader.Builder(db).withCache(new com.maxmind.db.CHMCache()).build();
-      } catch (java.io.IOException e) {
-        System.out.print("IOException encountered:  Could not read MaxMind DB");
-      }
+      reader = org.apache.drill.exec.udfs.SecurityHelperFunctions.getCityDatabaseReader();
     }
 
     public void eval() {
@@ -455,12 +404,7 @@ public class GeoIPFunctions {
     java.io.File database;
 
     public void setup() {
-      java.io.InputStream db = getClass().getClassLoader().getResourceAsStream("GeoLite2-City.mmdb");
-      try {
-        reader = new com.maxmind.geoip2.DatabaseReader.Builder(db).withCache(new com.maxmind.db.CHMCache()).build();
-      } catch (java.io.IOException e) {
-        System.out.print("IOException encountered:  Could not read MaxMind DB");
-      }
+      reader = org.apache.drill.exec.udfs.SecurityHelperFunctions.getCityDatabaseReader();
     }
 
     public void eval() {
@@ -495,12 +439,7 @@ public class GeoIPFunctions {
     java.io.File database;
 
     public void setup() {
-      java.io.InputStream db = getClass().getClassLoader().getResourceAsStream("GeoLite2-City.mmdb");
-      try {
-        reader = new com.maxmind.geoip2.DatabaseReader.Builder(db).withCache(new com.maxmind.db.CHMCache()).build();
-      } catch (java.io.IOException e) {
-        System.out.print("IOException encountered:  Could not read MaxMind DB");
-      }
+      reader = org.apache.drill.exec.udfs.SecurityHelperFunctions.getCityDatabaseReader();
     }
 
     public void eval() {
@@ -532,12 +471,7 @@ public class GeoIPFunctions {
     com.maxmind.geoip2.DatabaseReader reader;
 
     public void setup() {
-      java.io.InputStream db = getClass().getClassLoader().getResourceAsStream("GeoLite2-City.mmdb");
-      try {
-        reader = new com.maxmind.geoip2.DatabaseReader.Builder(db).withCache(new com.maxmind.db.CHMCache()).build();
-      } catch (java.io.IOException e) {
-        System.out.print("IOException encountered:  Could not read MaxMind DB");
-      }
+      reader = org.apache.drill.exec.udfs.SecurityHelperFunctions.getCityDatabaseReader();
     }
 
     public void eval() {
@@ -569,12 +503,7 @@ public class GeoIPFunctions {
     com.maxmind.geoip2.DatabaseReader reader;
 
     public void setup() {
-      java.io.InputStream db = getClass().getClassLoader().getResourceAsStream("GeoLite2-Country.mmdb");
-      try {
-        reader = new com.maxmind.geoip2.DatabaseReader.Builder(db).withCache(new com.maxmind.db.CHMCache()).build();
-      } catch (java.io.IOException e) {
-        System.out.print("IOException encountered:  Could not read MaxMind DB");
-      }
+      reader = org.apache.drill.exec.udfs.SecurityHelperFunctions.getCountryDatabaseReader();
     }
 
     public void eval() {
@@ -612,13 +541,7 @@ public class GeoIPFunctions {
 
 
     public void setup() {
-
-      java.io.InputStream db = getClass().getClassLoader().getResourceAsStream("GeoLite2-City.mmdb");
-      try {
-        reader = new com.maxmind.geoip2.DatabaseReader.Builder(db).withCache(new com.maxmind.db.CHMCache()).build();
-      } catch (java.io.IOException e) {
-        System.out.print("IOException encountered:  Could not read MaxMind DB");
-      }
+      reader = org.apache.drill.exec.udfs.SecurityHelperFunctions.getCityDatabaseReader();
     }
 
 
@@ -662,13 +585,7 @@ public class GeoIPFunctions {
 
 
     public void setup() {
-      java.io.InputStream db = getClass().getClassLoader().getResourceAsStream("GeoLite2-City.mmdb");
-
-      try {
-        reader = new com.maxmind.geoip2.DatabaseReader.Builder(db).withCache(new com.maxmind.db.CHMCache()).build();
-      } catch (java.io.IOException e) {
-        System.out.print("IOException encountered:  Could not read MaxMind DB");
-      }
+      reader = org.apache.drill.exec.udfs.SecurityHelperFunctions.getCityDatabaseReader();
     }
 
 
@@ -711,13 +628,7 @@ public class GeoIPFunctions {
     com.maxmind.geoip2.DatabaseReader reader;
 
     public void setup() {
-      java.io.InputStream db = getClass().getClassLoader().getResourceAsStream("GeoLite2-ASN.mmdb");
-
-      try {
-        reader = new com.maxmind.geoip2.DatabaseReader.Builder(db).withCache(new com.maxmind.db.CHMCache()).build();
-      } catch (java.io.IOException e) {
-        System.out.print("IOException encountered:  Could not read MaxMind DB");
-      }
+      reader = org.apache.drill.exec.udfs.SecurityHelperFunctions.getASNDatabaseReader();
     }
 
     public void eval() {
@@ -749,13 +660,7 @@ public class GeoIPFunctions {
     com.maxmind.geoip2.DatabaseReader reader;
 
     public void setup() {
-      java.io.InputStream db = getClass().getClassLoader().getResourceAsStream("GeoLite2-ASN.mmdb");
-
-      try {
-        reader = new com.maxmind.geoip2.DatabaseReader.Builder(db).withCache(new com.maxmind.db.CHMCache()).build();
-      } catch (java.io.IOException e) {
-        System.out.print("IOException encountered:  Could not read MaxMind DB");
-      }
+      reader = org.apache.drill.exec.udfs.SecurityHelperFunctions.getASNDatabaseReader();
     }
 
     public void eval() {
@@ -787,12 +692,7 @@ public class GeoIPFunctions {
     com.maxmind.geoip2.DatabaseReader reader;
 
     public void setup() {
-      java.io.InputStream db = getClass().getClassLoader().getResourceAsStream("GeoLite2-City.mmdb");
-      try {
-        reader = new com.maxmind.geoip2.DatabaseReader.Builder(db).withCache(new com.maxmind.db.CHMCache()).build();
-      } catch (java.io.IOException e) {
-        System.out.print("IOException encountered:  Could not read MaxMind DB");
-      }
+      reader = org.apache.drill.exec.udfs.SecurityHelperFunctions.getCityDatabaseReader();
     }
 
     public void eval() {
@@ -826,12 +726,7 @@ public class GeoIPFunctions {
     com.maxmind.geoip2.DatabaseReader reader;
 
     public void setup() {
-      java.io.InputStream db = getClass().getClassLoader().getResourceAsStream("GeoLite2-City.mmdb");
-      try {
-        reader = new com.maxmind.geoip2.DatabaseReader.Builder(db).withCache(new com.maxmind.db.CHMCache()).build();
-      } catch (java.io.IOException e) {
-        System.out.print("IOException encountered:  Could not read MaxMind DB");
-      }
+      reader = org.apache.drill.exec.udfs.SecurityHelperFunctions.getCityDatabaseReader();
     }
 
     public void eval() {
@@ -865,12 +760,7 @@ public class GeoIPFunctions {
     com.maxmind.geoip2.DatabaseReader reader;
 
     public void setup() {
-      java.io.InputStream db = getClass().getClassLoader().getResourceAsStream("GeoLite2-City.mmdb");
-      try {
-        reader = new com.maxmind.geoip2.DatabaseReader.Builder(db).withCache(new com.maxmind.db.CHMCache()).build();
-      } catch (java.io.IOException e) {
-        System.out.print("IOException encountered:  Could not read MaxMind DB");
-      }
+      reader = org.apache.drill.exec.udfs.SecurityHelperFunctions.getCityDatabaseReader();
     }
 
     public void eval() {
@@ -904,12 +794,7 @@ public class GeoIPFunctions {
     com.maxmind.geoip2.DatabaseReader reader;
 
     public void setup() {
-      java.io.InputStream db = getClass().getClassLoader().getResourceAsStream("GeoLite2-City.mmdb");
-      try {
-        reader = new com.maxmind.geoip2.DatabaseReader.Builder(db).withCache(new com.maxmind.db.CHMCache()).build();
-      } catch (java.io.IOException e) {
-        System.out.print("IOException encountered:  Could not read MaxMind DB");
-      }
+      reader = org.apache.drill.exec.udfs.SecurityHelperFunctions.getCityDatabaseReader();
     }
 
     public void eval() {
@@ -943,12 +828,7 @@ public class GeoIPFunctions {
     com.maxmind.geoip2.DatabaseReader reader;
 
     public void setup() {
-      java.io.InputStream db = getClass().getClassLoader().getResourceAsStream("GeoLite2-City.mmdb");
-      try {
-        reader = new com.maxmind.geoip2.DatabaseReader.Builder(db).withCache(new com.maxmind.db.CHMCache()).build();
-      } catch (java.io.IOException e) {
-        System.out.print("IOException encountered:  Could not read MaxMind DB");
-      }
+      reader = org.apache.drill.exec.udfs.SecurityHelperFunctions.getCityDatabaseReader();
     }
 
     public void eval() {

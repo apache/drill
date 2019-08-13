@@ -34,7 +34,7 @@ public class ProtocolFunctions {
   private ProtocolFunctions() {
   }
 
-  /* This function takes a port number and protocol and returns the associated service name, and "Unknown if there is an error */
+  /* This function takes a port number and protocol and returns the associated service name, and Unknown if there is an error */
 
   @FunctionTemplate(name = "get_service_name", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
 
@@ -57,39 +57,7 @@ public class ProtocolFunctions {
 
     @Override
     public void setup() {
-      java.io.InputStream serviceFile = getClass().getClassLoader().getResourceAsStream("service-names-port-numbers.csv");
-      serviceInfo = new java.util.HashMap<String, String>();
-
-      String line = "";
-      String key = "";
-      String linePattern = "^\\w*,\\d+,";
-      try {
-        java.io.BufferedReader br = new java.io.BufferedReader(new java.io.InputStreamReader(serviceFile));
-        while ((line = br.readLine()) != null) {
-
-          // Create a Pattern object
-          java.util.regex.Pattern r = java.util.regex.Pattern.compile(linePattern);
-
-          // Now create matcher object.
-          java.util.regex.Matcher m = r.matcher(line);
-          int pos;
-          String description;
-          if (m.find()) {
-            String[] values = line.split(",");
-            pos = Integer.parseInt(values[1]);
-            if (values.length == 3) {
-              description = "";
-            } else {
-              description = values[3];
-            }
-            key = values[1] + ":" + values[2];
-            serviceInfo.put(key, description);
-          }
-        }
-      } catch (Exception e) {
-        System.out.println(line);
-        e.printStackTrace();
-      }
+      serviceInfo = org.apache.drill.exec.udfs.SecurityHelperFunctions.getPortHashMap();
     }
 
     @Override
@@ -117,9 +85,9 @@ public class ProtocolFunctions {
 
   /**
    * This function accepts a port number that is a string and returns the service naem
+   *
    * @Param portNumber
    * @Param protocol (Should be TCP or UDP)
-   *
    */
   @FunctionTemplate(name = "get_service_name", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
 
@@ -142,39 +110,7 @@ public class ProtocolFunctions {
 
     @Override
     public void setup() {
-      java.io.InputStream serviceFile = getClass().getClassLoader().getResourceAsStream("service-names-port-numbers.csv");
-      serviceInfo = new java.util.HashMap<String, String>();
-
-      String line = "";
-      String key = "";
-      String linePattern = "^\\w*,\\d+,";
-      try {
-        java.io.BufferedReader br = new java.io.BufferedReader(new java.io.InputStreamReader(serviceFile));
-        while ((line = br.readLine()) != null) {
-
-          // Create a Pattern object
-          java.util.regex.Pattern r = java.util.regex.Pattern.compile(linePattern);
-
-          // Now create matcher object.
-          java.util.regex.Matcher m = r.matcher(line);
-          int pos;
-          String description;
-          if (m.find()) {
-            String[] values = line.split(",");
-            pos = Integer.parseInt(values[1]);
-            if (values.length == 3) {
-              description = "";
-            } else {
-              description = values[3];
-            }
-            key = values[1] + ":" + values[2];
-            serviceInfo.put(key, description);
-          }
-        }
-      } catch (Exception e) {
-        System.out.println(line);
-        e.printStackTrace();
-      }
+      serviceInfo = org.apache.drill.exec.udfs.SecurityHelperFunctions.getPortHashMap();
     }
 
     @Override
@@ -226,39 +162,7 @@ public class ProtocolFunctions {
 
     @Override
     public void setup() {
-      java.io.InputStream serviceFile = getClass().getClassLoader().getResourceAsStream("service-names-port-numbers.csv");
-      serviceInfo = new java.util.HashMap<String, String>();
-
-      String line = "";
-      String key = "";
-      String linePattern = "^\\w*,\\d+,";
-      try {
-        java.io.BufferedReader br = new java.io.BufferedReader(new java.io.InputStreamReader(serviceFile));
-        while ((line = br.readLine()) != null) {
-
-          // Create a Pattern object
-          java.util.regex.Pattern r = java.util.regex.Pattern.compile(linePattern);
-
-          // Now create matcher object.
-          java.util.regex.Matcher m = r.matcher(line);
-          int pos;
-          String description;
-          if (m.find()) {
-            String[] values = line.split(",");
-            pos = Integer.parseInt(values[1]);
-            if (values.length == 3) {
-              description = "";
-            } else {
-              description = values[0];
-            }
-            key = values[1] + ":" + values[2];
-            serviceInfo.put(key, description);
-          }
-        }
-      } catch (Exception e) {
-        System.out.println(line);
-        e.printStackTrace();
-      }
+      serviceInfo = org.apache.drill.exec.udfs.SecurityHelperFunctions.getPortHashMap();
     }
 
     @Override
@@ -307,39 +211,7 @@ public class ProtocolFunctions {
 
     @Override
     public void setup() {
-      java.io.InputStream serviceFile = getClass().getClassLoader().getResourceAsStream("service-names-port-numbers.csv");
-      serviceInfo = new java.util.HashMap<String, String>();
-
-      String line = "";
-      String key = "";
-      String linePattern = "^\\w*,\\d+,";
-      try {
-        java.io.BufferedReader br = new java.io.BufferedReader(new java.io.InputStreamReader(serviceFile));
-        while ((line = br.readLine()) != null) {
-
-          // Create a Pattern object
-          java.util.regex.Pattern r = java.util.regex.Pattern.compile(linePattern);
-
-          // Now create matcher object.
-          java.util.regex.Matcher m = r.matcher(line);
-          int pos;
-          String description;
-          if (m.find()) {
-            String[] values = line.split(",");
-            pos = Integer.parseInt(values[1]);
-            if (values.length == 3) {
-              description = "";
-            } else {
-              description = values[0];
-            }
-            key = values[1] + ":" + values[2];
-            serviceInfo.put(key, description);
-          }
-        }
-      } catch (Exception e) {
-        System.out.println(line);
-        e.printStackTrace();
-      }
+      serviceInfo = org.apache.drill.exec.udfs.SecurityHelperFunctions.getPortHashMap();
     }
 
     @Override
