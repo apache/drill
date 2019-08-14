@@ -17,6 +17,7 @@
  */
 package org.apache.drill.metastore.metadata;
 
+import org.apache.drill.categories.MetastoreTest;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.metastore.statistics.BaseStatisticsKind;
 import org.apache.drill.metastore.statistics.ColumnStatistics;
@@ -24,6 +25,7 @@ import org.apache.drill.metastore.statistics.ColumnStatisticsKind;
 import org.apache.drill.metastore.statistics.StatisticsHolder;
 import org.apache.drill.metastore.statistics.TableStatisticsKind;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -33,6 +35,7 @@ import java.util.Objects;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+@Category(MetastoreTest.class)
 public class MetadataSerDeTest {
 
   @Test

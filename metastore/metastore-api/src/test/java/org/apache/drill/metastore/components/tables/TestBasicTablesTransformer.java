@@ -17,6 +17,7 @@
  */
 package org.apache.drill.metastore.components.tables;
 
+import org.apache.drill.categories.MetastoreTest;
 import org.apache.drill.metastore.metadata.BaseTableMetadata;
 import org.apache.drill.metastore.metadata.FileMetadata;
 import org.apache.drill.metastore.metadata.MetadataInfo;
@@ -25,6 +26,7 @@ import org.apache.drill.metastore.metadata.PartitionMetadata;
 import org.apache.drill.metastore.metadata.RowGroupMetadata;
 import org.apache.drill.metastore.metadata.SegmentMetadata;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -33,6 +35,7 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+@Category(MetastoreTest.class)
 public class TestBasicTablesTransformer {
 
   @Test

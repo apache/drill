@@ -17,8 +17,10 @@
  */
 package org.apache.drill.metastore.components.tables;
 
+import org.apache.drill.categories.MetastoreTest;
 import org.apache.drill.metastore.expressions.FilterExpression;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -28,6 +30,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+@Category(MetastoreTest.class)
 public class TestBasicTablesRequests {
 
   @Test
