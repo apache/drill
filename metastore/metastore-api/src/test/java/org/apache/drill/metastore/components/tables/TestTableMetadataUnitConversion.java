@@ -17,6 +17,7 @@
  */
 package org.apache.drill.metastore.components.tables;
 
+import org.apache.drill.categories.MetastoreTest;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
@@ -36,6 +37,7 @@ import org.apache.drill.metastore.statistics.StatisticsHolder;
 import org.apache.hadoop.fs.Path;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -50,6 +52,7 @@ import java.util.stream.Collectors;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+@Category(MetastoreTest.class)
 public class TestTableMetadataUnitConversion {
 
   private static Data data;

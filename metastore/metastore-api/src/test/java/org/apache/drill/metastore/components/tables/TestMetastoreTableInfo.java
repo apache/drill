@@ -17,12 +17,15 @@
  */
 package org.apache.drill.metastore.components.tables;
 
+import org.apache.drill.categories.MetastoreTest;
 import org.apache.drill.metastore.metadata.TableInfo;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+@Category(MetastoreTest.class)
 public class TestMetastoreTableInfo {
 
   @Test

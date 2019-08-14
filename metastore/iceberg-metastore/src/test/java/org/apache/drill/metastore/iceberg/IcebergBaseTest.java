@@ -19,6 +19,7 @@ package org.apache.drill.metastore.iceberg;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigValueFactory;
+import org.apache.drill.categories.MetastoreTest;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.GuavaPatcher;
 import org.apache.drill.metastore.iceberg.config.IcebergConfigConstants;
@@ -28,11 +29,13 @@ import org.apache.hadoop.fs.Path;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 
+@Category(MetastoreTest.class)
 public abstract class IcebergBaseTest {
 
   @ClassRule
