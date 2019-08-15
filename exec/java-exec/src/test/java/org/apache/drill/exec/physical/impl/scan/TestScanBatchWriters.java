@@ -32,7 +32,7 @@ import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.test.SubOperatorTest;
-import org.apache.drill.test.rowSet.RowSet;
+import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

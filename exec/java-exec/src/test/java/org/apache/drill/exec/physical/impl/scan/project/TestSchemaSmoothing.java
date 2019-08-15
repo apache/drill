@@ -36,13 +36,13 @@ import org.apache.drill.exec.physical.impl.scan.project.NullColumnBuilder.NullBu
 import org.apache.drill.exec.physical.impl.scan.project.ResolvedTuple.ResolvedRow;
 import org.apache.drill.exec.physical.impl.scan.project.ScanSchemaOrchestrator.ScanOrchestratorBuilder;
 import org.apache.drill.exec.physical.impl.scan.project.SchemaSmoother.IncompatibleSchemaException;
-import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
-import org.apache.drill.exec.physical.rowSet.impl.RowSetTestUtils;
+import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
+import org.apache.drill.exec.physical.resultSet.impl.RowSetTestUtils;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.test.SubOperatorTest;
-import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
+import org.apache.drill.exec.physical.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.apache.hadoop.fs.Path;
 import org.junit.Test;

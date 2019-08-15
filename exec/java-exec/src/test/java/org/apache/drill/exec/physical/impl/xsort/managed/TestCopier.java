@@ -35,10 +35,10 @@ import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.test.OperatorFixture;
 import org.apache.drill.test.SubOperatorTest;
-import org.apache.drill.test.rowSet.RowSet.ExtendableRowSet;
-import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
+import org.apache.drill.exec.physical.rowSet.RowSet.ExtendableRowSet;
+import org.apache.drill.exec.physical.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetUtilities;
-import org.apache.drill.test.rowSet.RowSetWriter;
+import org.apache.drill.exec.physical.rowSet.RowSetWriter;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

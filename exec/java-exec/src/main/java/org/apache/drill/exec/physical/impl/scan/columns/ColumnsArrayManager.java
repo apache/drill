@@ -23,7 +23,7 @@ import org.apache.drill.exec.physical.impl.scan.project.ReaderLevelProjection.Re
 import org.apache.drill.exec.physical.impl.scan.project.ResolvedTuple;
 import org.apache.drill.exec.physical.impl.scan.project.ScanLevelProjection.ScanProjectionParser;
 import org.apache.drill.exec.physical.impl.scan.project.ScanSchemaOrchestrator;
-import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
+import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;

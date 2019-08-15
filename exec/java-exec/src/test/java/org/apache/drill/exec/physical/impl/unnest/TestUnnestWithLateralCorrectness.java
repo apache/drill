@@ -47,8 +47,8 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarCharVector;
 import org.apache.drill.exec.vector.complex.MapVector;
 import org.apache.drill.test.SubOperatorTest;
-import org.apache.drill.test.rowSet.RowSet;
-import org.apache.drill.test.rowSet.RowSetBuilder;
+import org.apache.drill.exec.physical.rowSet.RowSet;
+import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -716,7 +716,7 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
    *    ]
    *  }
    *
-   * @see org.apache.drill.exec.physical.rowSet.impl.TestResultSetLoaderMapArray TestResultSetLoaderMapArray for
+   * @see org.apache.drill.exec.physical.resultSet.impl.TestResultSetLoaderMapArray TestResultSetLoaderMapArray for
    * similar schema and data
    * @return TupleMetadata corresponding to the schema
    */

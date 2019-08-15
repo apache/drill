@@ -19,8 +19,8 @@ package org.apache.drill.exec.physical.impl.scan.framework;
 
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.exec.ops.OperatorContext;
-import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
-import org.apache.drill.exec.physical.rowSet.RowSetLoader;
+import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
+import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 
 /**

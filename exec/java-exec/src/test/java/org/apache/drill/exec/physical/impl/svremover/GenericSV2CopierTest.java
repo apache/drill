@@ -19,8 +19,8 @@ package org.apache.drill.exec.physical.impl.svremover;
 
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.record.BatchSchema;
-import org.apache.drill.test.rowSet.RowSet;
-import org.apache.drill.test.rowSet.RowSetBuilder;
+import org.apache.drill.exec.physical.rowSet.RowSet;
+import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
 
 public class GenericSV2CopierTest extends AbstractGenericCopierTest {
 

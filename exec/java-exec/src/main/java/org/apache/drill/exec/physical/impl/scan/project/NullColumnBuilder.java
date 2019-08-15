@@ -22,7 +22,7 @@ import java.util.List;
 
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.physical.impl.scan.project.NullColumnLoader.NullColumnSpec;
-import org.apache.drill.exec.physical.rowSet.ResultVectorCache;
+import org.apache.drill.exec.physical.resultSet.ResultVectorCache;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;

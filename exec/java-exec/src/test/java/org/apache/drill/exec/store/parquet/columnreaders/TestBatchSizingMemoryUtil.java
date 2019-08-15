@@ -28,8 +28,8 @@ import org.apache.drill.exec.store.parquet.columnreaders.batchsizing.BatchSizing
 import org.apache.drill.exec.store.parquet.columnreaders.batchsizing.BatchSizingMemoryUtil.ColumnMemoryUsageInfo;
 import org.apache.drill.exec.store.parquet.columnreaders.batchsizing.RecordBatchSizerManager.ColumnMemoryQuota;
 import org.apache.drill.test.PhysicalOpUnitTestBase;
-import org.apache.drill.test.rowSet.RowSet;
-import org.apache.drill.test.rowSet.RowSetBuilder;
+import org.apache.drill.exec.physical.rowSet.RowSet;
+import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -49,7 +49,7 @@ public class TestBatchSizingMemoryUtil extends PhysicalOpUnitTestBase {
   private final ColumnMemoryUsageInfo[] columnMemoryInfo = new ColumnMemoryUsageInfo[3];
 
   @BeforeClass
-  public static void setUpBeforeClass() throws Exception {
+  public static void setUpBeforeClass() {
     schema = new SchemaBuilder()
       .add("name_vchar", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.REQUIRED)
       .add("name_vbinary", TypeProtos.MinorType.VARBINARY, TypeProtos.DataMode.REQUIRED)

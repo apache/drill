@@ -56,9 +56,9 @@ import org.apache.drill.exec.vector.accessor.ScalarReader;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.test.BufferingQueryEventListener.QueryEvent;
 import org.apache.drill.test.ClientFixture.StatementParser;
-import org.apache.drill.test.rowSet.DirectRowSet;
-import org.apache.drill.test.rowSet.RowSet;
-import org.apache.drill.test.rowSet.RowSetReader;
+import org.apache.drill.exec.physical.rowSet.DirectRowSet;
+import org.apache.drill.exec.physical.rowSet.RowSet;
+import org.apache.drill.exec.physical.rowSet.RowSetReader;
 import org.joda.time.Period;
 
 /**

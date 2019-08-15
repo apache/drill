@@ -337,7 +337,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
   }
 
   /**
-   * Revised scanner based on the revised {@link org.apache.drill.exec.physical.rowSet.ResultSetLoader}
+   * Revised scanner based on the revised {@link org.apache.drill.exec.physical.resultSet.ResultSetLoader}
    * and {@link org.apache.drill.exec.physical.impl.scan.RowBatchReader} classes.
    * Handles most projection tasks automatically. Able to limit
    * vector and batch sizes. Use this for new format plugins.

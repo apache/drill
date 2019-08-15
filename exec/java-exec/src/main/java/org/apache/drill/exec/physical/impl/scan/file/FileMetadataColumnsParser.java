@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
 import org.apache.drill.exec.physical.impl.scan.project.ColumnProjection;
 import org.apache.drill.exec.physical.impl.scan.project.ScanLevelProjection;
 import org.apache.drill.exec.physical.impl.scan.project.ScanLevelProjection.ScanProjectionParser;
-import org.apache.drill.exec.physical.rowSet.project.RequestedTuple.RequestedColumn;
+import org.apache.drill.exec.physical.resultSet.project.RequestedTuple.RequestedColumn;
 
 /**
  * Parses the implicit file metadata columns out of a project list,

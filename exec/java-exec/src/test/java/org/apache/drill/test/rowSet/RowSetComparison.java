@@ -18,6 +18,7 @@
 package org.apache.drill.test.rowSet;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.math.BigDecimal;
@@ -27,6 +28,8 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+import org.apache.drill.exec.physical.rowSet.RowSet;
+import org.apache.drill.exec.physical.rowSet.RowSetReader;
 import org.apache.drill.shaded.guava.com.google.common.base.Optional;
 import org.apache.drill.shaded.guava.com.google.common.collect.HashMultiset;
 import org.apache.drill.shaded.guava.com.google.common.collect.Multiset;
@@ -66,7 +69,7 @@ public class RowSetComparison {
    * mask is provided, then only those columns with a <tt>true</tt>
    * will be verified.
    */
-  private boolean mask[];
+  private boolean[] mask;
   /**
    * Floats and doubles do not compare exactly. This MathContext is used
    * to construct BigDecimals of the desired precision.
@@ -84,9 +87,7 @@ public class RowSetComparison {
     // TODO: The mask only works at the top level presently
 
     mask = new boolean[expected.schema().size()];
-    for (int i = 0; i < mask.length; i++) {
-      mask[i] = true;
-    }
+    java.util.Arrays.fill(mask, true);
   }
 
   /**
@@ -130,7 +131,7 @@ public class RowSetComparison {
 
   /**
    * Specify an offset into the row sets to start the comparison.
-   * Usually combined with {@link #span()}.
+   * Usually combined with {@link #span(int)}.
    *
    * @param offset offset into the row set to start the comparison
    * @return this builder
@@ -142,7 +143,7 @@ public class RowSetComparison {
 
   /**
    * Specify a subset of rows to compare. Usually combined
-   * with {@link #offset()}.
+   * with {@link #offset(int)}.
    *
    * @param span the number of rows to compare
    * @return this builder
@@ -321,14 +322,14 @@ public class RowSetComparison {
       assertTrue(label + " - column not null", ac.isNull());
       return;
     }
-    if (! ec.isNull()) {
-      assertTrue(label + " - column is null", ! ac.isNull());
+    if (!ec.isNull()) {
+      assertFalse(label + " - column is null", ac.isNull());
     }
 
     switch (ec.valueType()) {
       case BYTES:
-        byte expected[] = ac.getBytes();
-        byte actual[] = ac.getBytes();
+        byte[] expected = ac.getBytes();
+        byte[] actual = ac.getBytes();
         assertEquals(label + " - byte lengths differ", expected.length, actual.length);
         assertTrue(label, Arrays.areEqual(expected, actual));
         break;

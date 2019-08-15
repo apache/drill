@@ -27,7 +27,7 @@ import org.apache.drill.shaded.guava.com.google.common.io.Resources;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
-import org.apache.drill.test.rowSet.RowSet;
+import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.junit.After;
 import org.junit.BeforeClass;

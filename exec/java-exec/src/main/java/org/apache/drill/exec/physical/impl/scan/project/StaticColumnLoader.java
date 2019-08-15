@@ -17,10 +17,10 @@
  */
 package org.apache.drill.exec.physical.impl.scan.project;
 
-import org.apache.drill.exec.physical.rowSet.ResultSetLoader;
-import org.apache.drill.exec.physical.rowSet.ResultVectorCache;
-import org.apache.drill.exec.physical.rowSet.impl.OptionBuilder;
-import org.apache.drill.exec.physical.rowSet.impl.ResultSetLoaderImpl;
+import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
+import org.apache.drill.exec.physical.resultSet.ResultVectorCache;
+import org.apache.drill.exec.physical.resultSet.impl.OptionBuilder;
+import org.apache.drill.exec.physical.resultSet.impl.ResultSetLoaderImpl;
 import org.apache.drill.exec.record.VectorContainer;
 
 /**

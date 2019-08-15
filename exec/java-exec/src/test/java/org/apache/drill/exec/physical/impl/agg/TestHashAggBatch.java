@@ -32,8 +32,8 @@ import org.apache.drill.exec.planner.physical.AggPrelBase;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.test.PhysicalOpUnitTestBase;
-import org.apache.drill.test.rowSet.RowSet;
-import org.apache.drill.test.rowSet.RowSetBuilder;
+import org.apache.drill.exec.physical.rowSet.RowSet;
+import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
 import org.junit.Before;
 import org.junit.Test;
 

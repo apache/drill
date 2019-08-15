@@ -32,8 +32,8 @@ import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.vector.FixedWidthVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VariableWidthVector;
-import org.apache.drill.test.rowSet.DirectRowSet;
-import org.apache.drill.test.rowSet.RowSet;
+import org.apache.drill.exec.physical.rowSet.DirectRowSet;
+import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.junit.Assert;
 

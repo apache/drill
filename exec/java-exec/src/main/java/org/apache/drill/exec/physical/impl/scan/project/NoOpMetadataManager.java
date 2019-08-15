@@ -19,7 +19,7 @@ package org.apache.drill.exec.physical.impl.scan.project;
 
 import org.apache.drill.exec.physical.impl.scan.project.ScanLevelProjection.ScanProjectionParser;
 import org.apache.drill.exec.physical.impl.scan.project.ReaderLevelProjection.ReaderProjectionResolver;
-import org.apache.drill.exec.physical.rowSet.ResultVectorCache;
+import org.apache.drill.exec.physical.resultSet.ResultVectorCache;
 
 /**
  * Do-nothing implementation of the metadata manager. Allows the
