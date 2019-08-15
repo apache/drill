@@ -19,11 +19,11 @@ package org.apache.drill.exec.physical.impl.scan.project.projSet;
 
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.physical.rowSet.ProjectionSet;
-import org.apache.drill.exec.physical.rowSet.project.ProjectionType;
-import org.apache.drill.exec.physical.rowSet.project.RequestedTuple;
-import org.apache.drill.exec.physical.rowSet.project.RequestedTuple.RequestedColumn;
-import org.apache.drill.exec.physical.rowSet.project.RequestedTuple.TupleProjectionType;
+import org.apache.drill.exec.physical.resultSet.ProjectionSet;
+import org.apache.drill.exec.physical.resultSet.project.ProjectionType;
+import org.apache.drill.exec.physical.resultSet.project.RequestedTuple;
+import org.apache.drill.exec.physical.resultSet.project.RequestedTuple.RequestedColumn;
+import org.apache.drill.exec.physical.resultSet.project.RequestedTuple.TupleProjectionType;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.vector.accessor.convert.ColumnConversionFactory;
 

@@ -36,7 +36,7 @@ import org.apache.drill.exec.vector.VarCharVector;
 import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.LogFixture;
 import org.apache.drill.test.OperatorFixture;
-import org.apache.drill.test.rowSet.RowSet.SingleRowSet;
+import org.apache.drill.exec.physical.rowSet.RowSet.SingleRowSet;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;

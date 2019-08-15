@@ -26,7 +26,7 @@ import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.store.mock.MockStorePOP;
-import org.apache.drill.test.rowSet.RowSet;
+import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;

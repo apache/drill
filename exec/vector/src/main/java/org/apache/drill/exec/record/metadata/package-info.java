@@ -21,6 +21,13 @@
  * cases (flat schema or nested maps.) Enables construction of unions,
  * union lists (AKA "list vector") repeated lists and combinations of
  * the above structures.
+ * <dt>SchemaBuilder</dt>
+ * <dd>Drill normally writes data to vectors, then "discovers" the row set schema based on the
+ * data written. It is usually far easier to simply declare a schema, then
+ * read and write data according to that schema. The schema builder provides a simple,
+ * fluent tool to create a row set schema. That schema then drives the row set readers
+ * and writers, the row set printer and the row set comparison.</dd>
+ * </dl>
  */
 
 package org.apache.drill.exec.record.metadata;

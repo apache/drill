@@ -18,7 +18,7 @@
 package org.apache.drill.exec.store.easy.text.reader;
 
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.exec.physical.rowSet.RowSetLoader;
+import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.vector.accessor.ArrayWriter;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 

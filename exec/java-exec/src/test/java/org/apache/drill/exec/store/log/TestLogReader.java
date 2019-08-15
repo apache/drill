@@ -37,7 +37,7 @@ import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.QueryRowSetIterator;
-import org.apache.drill.test.rowSet.RowSet;
+import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -381,7 +381,6 @@ public class TestLogReader extends ClusterTest {
   public void testUMNoSchema() throws RpcException {
     String sql = "SELECT _unmatched_rows FROM cp.`regex/mysql.sqllog`";
     RowSet results = client.queryBuilder().sql(sql).rowSet();
-    results.print();
 
     TupleMetadata expectedSchema = new SchemaBuilder()
         .addNullable("_unmatched_rows", MinorType.VARCHAR)
@@ -781,9 +780,19 @@ public class TestLogReader extends ClusterTest {
 
   @Test
   public void testFirewallSchema() throws RpcException {
-    String sql = "SELECT * FROM cp.`regex/firewall.ssdlog`";
+    String sql = "SELECT * FROM cp.`regex/firewall.ssdlog` limit 0";
     RowSet result = client.queryBuilder().sql(sql).rowSet();
-    result.print();
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .addNullable("eventDate", MinorType.TIMESTAMP)
+        .addNullable("process_name", MinorType.VARCHAR)
+        .addNullable("pid", MinorType.INT)
+        .addNullable("message", MinorType.VARCHAR)
+        .addNullable("src_ip", MinorType.VARCHAR)
+        .buildSchema();
+
+    RowSet.SingleRowSet expected = client.rowSetBuilder(expectedSchema).build();
+
+    RowSetUtilities.verify(expected, result);
     result.clear();
   }
 }

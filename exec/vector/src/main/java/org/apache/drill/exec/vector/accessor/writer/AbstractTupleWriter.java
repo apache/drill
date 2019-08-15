@@ -342,7 +342,7 @@ public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
 
   @Override
   public void setObject(Object value) {
-    final Object values[] = (Object[]) value;
+    final Object[] values = (Object[]) value;
     if (values.length != tupleSchema.size()) {
       if (schema() == null) {
         throw new IllegalArgumentException(

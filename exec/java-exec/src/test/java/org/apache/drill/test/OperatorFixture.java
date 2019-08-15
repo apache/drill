@@ -64,12 +64,12 @@ import org.apache.drill.exec.store.sys.store.provider.LocalPersistentStoreProvid
 import org.apache.drill.exec.testing.ExecutionControls;
 import org.apache.drill.exec.work.filter.RuntimeFilterWritable;
 import org.apache.drill.test.ClusterFixtureBuilder.RuntimeOption;
-import org.apache.drill.test.rowSet.DirectRowSet;
-import org.apache.drill.test.rowSet.HyperRowSetImpl;
-import org.apache.drill.test.rowSet.IndirectRowSet;
-import org.apache.drill.test.rowSet.RowSet;
-import org.apache.drill.test.rowSet.RowSet.ExtendableRowSet;
-import org.apache.drill.test.rowSet.RowSetBuilder;
+import org.apache.drill.exec.physical.rowSet.DirectRowSet;
+import org.apache.drill.exec.physical.rowSet.HyperRowSetImpl;
+import org.apache.drill.exec.physical.rowSet.IndirectRowSet;
+import org.apache.drill.exec.physical.rowSet.RowSet;
+import org.apache.drill.exec.physical.rowSet.RowSet.ExtendableRowSet;
+import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
 import org.apache.hadoop.security.UserGroupInformation;
 import java.util.concurrent.TimeUnit;
 

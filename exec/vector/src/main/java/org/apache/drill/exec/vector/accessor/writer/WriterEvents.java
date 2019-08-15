@@ -145,7 +145,7 @@ public interface WriterEvents extends WriterPosition {
   void startRow();
 
   /**
-   * End a value. Similar to {@link saveRow()}, but the save of a value
+   * End a value. Similar to {@link #saveRow()}, but the save of a value
    * is conditional on saving the row. This version is primarily of use
    * in tuples nested inside arrays: it saves each tuple within the array,
    * advancing to a new position in the array. The update of the array's
