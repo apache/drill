@@ -440,6 +440,16 @@ public final class ${className} extends BaseDataValueVector implements <#if type
   }
 
   @Override
+  public int hash32(int index) {
+    boolean isNull = accessor.isNull(index);
+    if (isNull) {
+      return 0;
+    } else {
+      return values.hash32(index);
+    }
+  }
+
+  @Override
   public void exchange(ValueVector other) {
     ${className} target = (${className}) other;
     bits.exchange(target.bits);

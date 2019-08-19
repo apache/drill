@@ -215,6 +215,10 @@ public class RepeatedListVector extends AbstractContainerVector
     public void copyEntry(int toIndex, ValueVector from, int fromIndex) {
       copyFromSafe(fromIndex, toIndex, (DelegateRepeatedVector) from);
     }
+
+    public int hash32(int index) {
+      throw new UnsupportedOperationException("does not support this");
+    }
   }
 
   protected class RepeatedListTransferPair implements TransferPair {
@@ -442,6 +446,11 @@ public class RepeatedListVector extends AbstractContainerVector
   @Override
   public void copyEntry(int toIndex, ValueVector from, int fromIndex) {
     copyFromSafe(fromIndex, toIndex, (RepeatedListVector) from);
+  }
+
+  @Override
+  public int hash32(int index) {
+    throw new UnsupportedOperationException("RepeatedListVector does not support this");
   }
 
   @Override

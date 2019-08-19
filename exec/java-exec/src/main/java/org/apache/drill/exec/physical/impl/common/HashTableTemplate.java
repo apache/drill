@@ -19,12 +19,16 @@ package org.apache.drill.exec.physical.impl.common;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import javax.inject.Named;
 
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -118,6 +122,8 @@ public abstract class HashTableTemplate implements HashTable {
   private int resizingTime = 0;
 
   private Iterator<BatchHolder> htIter = null;
+
+  private List<Integer> buildVVIds = new ArrayList<>();
 
   // This class encapsulates the links, keys and values for up to BATCH_SIZE
   // *unique* records. Thus, suppose there are N incoming record batches, each
@@ -515,6 +521,14 @@ public abstract class HashTableTemplate implements HashTable {
     prevIndexSize = 0;
     currentIndexSize = 0;
     totalIndexSize = 0;
+
+    List<NamedExpression> buildKeys = htConfig.getKeyExprsBuild();
+    for (NamedExpression namedExpression : buildKeys) {
+      SchemaPath schemaPath = (SchemaPath) namedExpression.getExpr();
+      TypedFieldId typedFieldId = incomingBuild.getValueVectorId(schemaPath);
+      int fieldId = typedFieldId.getFieldIds()[0];
+      buildVVIds.add(fieldId);
+    }
 
     try {
       doSetup(incomingBuild, incomingProbe);

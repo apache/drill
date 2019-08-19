@@ -163,6 +163,11 @@ public class ZeroVector implements ValueVector {
   public void copyEntry(int toIndex, ValueVector from, int fromIndex) { }
 
   @Override
+  public int hash32(int index) {
+    return 0;
+  }
+
+  @Override
   public void exchange(ValueVector other) { }
 
   @Override

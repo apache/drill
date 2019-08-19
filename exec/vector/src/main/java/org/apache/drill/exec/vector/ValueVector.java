@@ -265,6 +265,8 @@ public interface ValueVector extends Closeable, Iterable<ValueVector> {
 
   void toNullable(ValueVector nullableVector);
 
+  int hash32(int index);
+
   /**
    * An abstraction that is used to read from this vector instance.
    */
