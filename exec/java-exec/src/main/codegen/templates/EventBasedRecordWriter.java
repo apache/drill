@@ -118,6 +118,19 @@ public class EventBasedRecordWriter {
     }
 
     public abstract void writeField() throws IOException;
+
+    /**
+     * Used by repeated converters for writing Parquet logical lists.
+     *
+     * @throws IOException may be thrown by subsequent invocation of {{@link #writeField()}}
+     *         in overriden methods
+     * @see <a href="https://github.com/apache/parquet-format/blob/master/LogicalTypes.md#lists">Lists</a>
+     */
+    public void writeListField() throws IOException {
+      throw new UnsupportedOperationException(String.format(
+          "Converter '%s' doesn't support writing list fields.",
+          getClass().getSimpleName()));
+    }
   }
 
   public static FieldConverter getConverter(RecordWriter recordWriter, int fieldId, String fieldName, FieldReader reader) {

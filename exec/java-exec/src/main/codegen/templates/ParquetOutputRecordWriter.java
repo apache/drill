@@ -71,6 +71,10 @@ import java.util.Map;
  */
 public abstract class ParquetOutputRecordWriter extends AbstractRecordWriter implements RecordWriter {
 
+  protected static final String LIST = "list";
+  protected static final String ELEMENT = "element";
+  protected static final int ZERO_IDX = 0;
+
   private RecordConsumer consumer;
   private MessageType schema;
 
@@ -206,9 +210,9 @@ public abstract class ParquetOutputRecordWriter extends AbstractRecordWriter imp
               holder.buffer, holder.start, ${minor.class}Holder.nDecimalDigits, holder.scale).unscaledValue().toByteArray();
       byte[] output = new byte[ParquetTypeHelper.getLengthForMinorType(MinorType.${minor.class?upper_case})];
       if (holder.getSign(holder.start, holder.buffer)) {
-        Arrays.fill(output, 0, output.length - bytes.length, (byte)0xFF);
+        Arrays.fill(output, 0, output.length - bytes.length, (byte) -1);
       } else {
-        Arrays.fill(output, 0, output.length - bytes.length, (byte)0x0);
+        Arrays.fill(output, 0, output.length - bytes.length, (byte) 0);
       }
       System.arraycopy(bytes, 0, output, output.length - bytes.length, bytes.length);
       consumer.addBinary(Binary.fromByteArray(output));
@@ -268,10 +272,109 @@ public abstract class ParquetOutputRecordWriter extends AbstractRecordWriter imp
     consumer.endField(fieldName, fieldId);
   </#if>
     }
+
+    <#if mode.prefix == "Repeated">
+     @Override
+     public void writeListField() {
+      if (reader.size() == 0) {
+        return;
+      }
+      consumer.startField(LIST, ZERO_IDX);
+      for (int i = 0; i < reader.size(); i++) {
+        consumer.startGroup();
+        consumer.startField(ELEMENT, ZERO_IDX);
+
+  <#if minor.class == "TinyInt" ||
+       minor.class == "UInt1" ||
+       minor.class == "UInt2" ||
+       minor.class == "SmallInt" ||
+       minor.class == "Int" ||
+       minor.class == "Time" ||
+       minor.class == "Decimal9" ||
+       minor.class == "UInt4">
+        reader.read(i, holder);
+        consumer.addInteger(holder.value);
+  <#elseif minor.class == "Float4">
+        reader.read(i, holder);
+        consumer.addFloat(holder.value);
+  <#elseif minor.class == "BigInt" ||
+            minor.class == "Decimal18" ||
+            minor.class == "TimeStamp" ||
+            minor.class == "UInt8">
+        reader.read(i, holder);
+        consumer.addLong(holder.value);
+  <#elseif minor.class == "Date">
+        reader.read(i, holder);
+        consumer.addInteger((int) (holder.value / DateTimeConstants.MILLIS_PER_DAY));
+  <#elseif minor.class == "Float8">
+        reader.read(i, holder);
+        consumer.addDouble(holder.value);
+  <#elseif minor.class == "Bit">
+        reader.read(i, holder);
+        consumer.addBoolean(holder.value == 1);
+  <#elseif minor.class == "Decimal28Sparse" ||
+            minor.class == "Decimal38Sparse">
+      <#if mode.prefix == "Repeated" >
+      <#else>
+        consumer.startField(fieldName, fieldId);
+        reader.read(holder);
+        byte[] bytes = DecimalUtility.getBigDecimalFromSparse(
+            holder.buffer, holder.start, ${minor.class}Holder.nDecimalDigits, holder.scale).unscaledValue().toByteArray();
+        byte[] output = new byte[ParquetTypeHelper.getLengthForMinorType(MinorType.${minor.class?upper_case})];
+        if (holder.getSign(holder.start, holder.buffer)) {
+          Arrays.fill(output, 0, output.length - bytes.length, (byte) -1);
+        } else {
+          Arrays.fill(output, 0, output.length - bytes.length, (byte) 0);
+        }
+        System.arraycopy(bytes, 0, output, output.length - bytes.length, bytes.length);
+        consumer.addBinary(Binary.fromByteArray(output));
+        consumer.endField(fieldName, fieldId);
+      </#if>
+  <#elseif minor.class?contains("Interval")>
+        consumer.startField(fieldName, fieldId);
+        reader.read(holder);
+      <#if minor.class == "IntervalDay">
+        Arrays.fill(output, 0, 4, (byte) 0);
+        IntervalUtility.intToLEByteArray(holder.days, output, 4);
+        IntervalUtility.intToLEByteArray(holder.milliseconds, output, 8);
+      <#elseif minor.class == "IntervalYear">
+        IntervalUtility.intToLEByteArray(holder.value, output, 0);
+        Arrays.fill(output, 4, 8, (byte) 0);
+        Arrays.fill(output, 8, 12, (byte) 0);
+      <#elseif minor.class == "Interval">
+        IntervalUtility.intToLEByteArray(holder.months, output, 0);
+        IntervalUtility.intToLEByteArray(holder.days, output, 4);
+        IntervalUtility.intToLEByteArray(holder.milliseconds, output, 8);
+      </#if>
+        consumer.addBinary(Binary.fromByteArray(output));
+        consumer.endField(fieldName, fieldId);
+
+  <#elseif
+        minor.class == "TimeTZ" ||
+            minor.class == "Decimal28Dense" ||
+            minor.class == "Decimal38Dense">
+  <#elseif minor.class == "VarChar" || minor.class == "Var16Char"
+            || minor.class == "VarBinary" || minor.class == "VarDecimal">
+        reader.read(i, holder);
+      <#if minor.class == "VarDecimal">
+        decimalValueWriter.writeValue(consumer, holder.buffer, holder.start, holder.end,
+            reader.getField().getPrecision());
+      <#else>
+        consumer.addBinary(Binary.fromByteBuffer(holder.buffer.nioBuffer(holder.start, holder.end - holder.start)));
+      </#if>
+  </#if>
+
+        consumer.endField(ELEMENT, ZERO_IDX);
+        consumer.endGroup();
+      }
+      consumer.endField(LIST, ZERO_IDX);
+     }
+    </#if>
   }
     </#list>
   </#list>
 </#list>
+
   private static class IntervalUtility {
     private static void intToLEByteArray(final int value, final byte[] output, final int outputIndex) {
       int shiftOrder = 0;
