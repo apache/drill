@@ -17,9 +17,16 @@
  */
 package org.apache.drill.jdbc;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
@@ -32,11 +39,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Vector;
 import java.util.concurrent.Semaphore;
+import java.util.stream.Collectors;
 
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.rules.TestWatcher;
-import org.junit.runner.Description;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public class ITTestShadedJar {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ITTestShadedJar.class);
@@ -164,6 +170,18 @@ public class ITTestShadedJar {
       throw ex;
     }
 
+  }
+
+  @Test
+  public void serviceFileContainsCorrectDriver() throws IOException {
+    URLClassLoader loader = URLClassLoader.newInstance(new URL[]{getJdbcUrl()});
+    try (InputStream resourceStream = loader.getResourceAsStream("META-INF/services/java.sql.Driver")) {
+      assertNotNull("java.sql.Driver is not present in the jdbc jar", resourceStream);
+      try (BufferedReader reader = new BufferedReader(new InputStreamReader(resourceStream))) {
+        String driverClass = reader.lines().collect(Collectors.joining(System.lineSeparator()));
+        assertEquals("org.apache.drill.jdbc.Driver", driverClass);
+      }
+    }
   }
 
   private static void printQuery(Connection c, String query) throws SQLException {
