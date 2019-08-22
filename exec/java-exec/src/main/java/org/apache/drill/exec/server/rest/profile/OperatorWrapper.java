@@ -143,7 +143,7 @@ public class OperatorWrapper {
       OverviewTblTxt.AVG_SETUP_TIME, OverviewTblTxt.MAX_SETUP_TIME,
       OverviewTblTxt.AVG_PROCESS_TIME, OverviewTblTxt.MAX_PROCESS_TIME,
       OverviewTblTxt.MIN_WAIT_TIME, OverviewTblTxt.AVG_WAIT_TIME, OverviewTblTxt.MAX_WAIT_TIME,
-      OverviewTblTxt.PERCENT_FRAGMENT_TIME, OverviewTblTxt.PERCENT_QUERY_TIME, OverviewTblTxt.ROWS,
+      OverviewTblTxt.PERCENT_FRAGMENT_TIME, OverviewTblTxt.PERCENT_QUERY_TIME, OverviewTblTxt.ROWS.concat(OverviewTblTxt.ESTIMATED_ROWS),
       OverviewTblTxt.AVG_PEAK_MEMORY, OverviewTblTxt.MAX_PEAK_MEMORY
   };
 
@@ -269,7 +269,10 @@ public class OperatorWrapper {
     tb.appendPercent(processSum / majorBusyNanos);
     tb.appendPercent(processSum / majorFragmentBusyTallyTotal);
 
-    tb.appendFormattedInteger(recordSum);
+    Map<String, String> estRowcountMap = new HashMap<>();
+    estRowcountMap.put(HtmlAttribute.CLASS, HtmlAttribute.CLASS_VALUE_EST_ROWS_ANCHOR);
+    estRowcountMap.put(HtmlAttribute.KEY, path.replaceAll("-xx-", "-"));
+    tb.appendFormattedInteger(recordSum, estRowcountMap);
 
     final ImmutablePair<OperatorProfile, Integer> peakMem = Collections.max(opList, Comparators.operatorPeakMemory);
 
@@ -419,6 +422,7 @@ public class OperatorWrapper {
     static final String PERCENT_FRAGMENT_TIME = "% Fragment Time";
     static final String PERCENT_QUERY_TIME = "% Query Time";
     static final String ROWS = "Rows";
+    static final String ESTIMATED_ROWS = "<div class='estRows' title='Estimated'>(Estimated)</div>";
     static final String AVG_PEAK_MEMORY = "Avg Peak Memory";
     static final String MAX_PEAK_MEMORY = "Max Peak Memory";
   }

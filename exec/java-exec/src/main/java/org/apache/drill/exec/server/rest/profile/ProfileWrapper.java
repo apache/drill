@@ -65,6 +65,7 @@ public class ProfileWrapper {
   private Map<String, String> physicalOperatorMap;
   private final String noProgressWarningThreshold;
   private final int defaultAutoLimit;
+  private boolean showEstimatedRows;
 
   public ProfileWrapper(final QueryProfile profile, DrillConfig drillConfig) {
     this.profile = profile;
@@ -134,6 +135,7 @@ public class ProfileWrapper {
 
     this.onlyImpersonationEnabled = WebServer.isOnlyImpersonationEnabled(drillConfig);
     this.noProgressWarningThreshold = String.valueOf(drillConfig.getInt(ExecConstants.PROFILE_WARNING_PROGRESS_THRESHOLD));
+    this.showEstimatedRows = drillConfig.getBoolean(ExecConstants.PROFILE_STATISTICS_ESTIMATED_ROWS_SHOW);
   }
 
   private long tallyMajorFragmentCost(List<MajorFragmentProfile> majorFragments) {
@@ -389,5 +391,9 @@ public class ProfileWrapper {
       String extractedOperatorName = CaseFormat.UPPER_CAMEL.to(CaseFormat.UPPER_UNDERSCORE, lineToken[1].split("\\(", 2)[0].trim());
       physicalOperatorMap.put(operatorPath, extractedOperatorName);
     }
+  }
+
+  public boolean showEstimatedRows() {
+    return showEstimatedRows;
   }
 }

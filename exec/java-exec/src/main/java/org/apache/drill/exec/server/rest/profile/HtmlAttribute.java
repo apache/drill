@@ -23,6 +23,7 @@ package org.apache.drill.exec.server.rest.profile;
 public class HtmlAttribute {
   //Attributes
   public static final String CLASS = "class";
+  public static final String KEY = "key";
   public static final String DATA_ORDER = "data-order";
   public static final String TITLE = "title";
   public static final String SPILLS = "spills";
@@ -33,5 +34,6 @@ public class HtmlAttribute {
   public static final String CLASS_VALUE_NO_PROGRESS_TAG = "no-progress-tag";
   public static final String CLASS_VALUE_TIME_SKEW_TAG = "time-skew-tag";
   public static final String CLASS_VALUE_SCAN_WAIT_TAG = "scan-wait-tag";
+  public static final String CLASS_VALUE_EST_ROWS_ANCHOR = "estRowsAnchor";
   public static final String STYLE_VALUE_CURSOR_HELP = "cursor:help;";
 }
