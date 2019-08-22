@@ -1044,4 +1044,67 @@ public final class ExecConstants {
   public static final RangeLongValidator QUERY_MAX_ROWS_VALIDATOR = new RangeLongValidator(QUERY_MAX_ROWS, 0, Integer.MAX_VALUE,
       new OptionDescription("The maximum number of rows that the query will return. This can be only set at a SYSTEM level by an admin. (Drill 1.16+)"));
 
+  /**
+   * Option that enables Drill Metastore usage.
+   */
+  public static final String METASTORE_ENABLED = "metastore.enabled";
+  public static final BooleanValidator METASTORE_ENABLED_VALIDATOR = new BooleanValidator(METASTORE_ENABLED,
+      new OptionDescription("Enables Drill Metastore usage to be able to store table metadata " +
+          "during ANALYZE TABLE commands execution and to be able to read table metadata during regular " +
+          "queries execution or when querying some INFORMATION_SCHEMA tables. " +
+          "This option is not active for now. Default is false. (Drill 1.17+)"));
+
+  /**
+   * Option for specifying maximum level depth for collecting metadata
+   * which will be stored in the Drill Metastore. For example, when {@code FILE} level value
+   * is set, {@code ROW_GROUP} level metadata won't be collected and stored into the Metastore.
+   */
+  public static final String METASTORE_METADATA_STORE_DEPTH_LEVEL = "metastore.metadata.store.depth_level";
+  public static final EnumeratedStringValidator METASTORE_METADATA_STORE_DEPTH_LEVEL_VALIDATOR = new EnumeratedStringValidator(METASTORE_METADATA_STORE_DEPTH_LEVEL,
+      new OptionDescription("Specifies maximum level depth for collecting metadata. " +
+          "This option is not active for now. Default is 'ROW_GROUP'. (Drill 1.17+)"),
+      "TABLE", "SEGMENT", "PARTITION", "FILE", "ROW_GROUP");
+
+  /**
+   * Option for enabling schema usage, stored to the Metastore.
+   */
+  public static final String METASTORE_USE_SCHEMA_METADATA = "metastore.metadata.use_schema";
+  public static final BooleanValidator METASTORE_USE_SCHEMA_METADATA_VALIDATOR = new BooleanValidator(METASTORE_USE_SCHEMA_METADATA,
+      new OptionDescription("Enables schema usage, stored to the Metastore. " +
+          "This option is not active for now. Default is false. (Drill 1.17+)"));
+
+  /**
+   * Option for enabling statistics usage, stored in the Metastore, at the planning stage.
+   */
+  public static final String METASTORE_USE_STATISTICS_METADATA = "metastore.metadata.use_statistics";
+  public static final BooleanValidator METASTORE_USE_STATISTICS_METADATA_VALIDATOR = new BooleanValidator(METASTORE_USE_STATISTICS_METADATA,
+      new OptionDescription("Enables statistics usage, stored in the Metastore, at the planning stage. " +
+          "This option is not active for now. Default is false. (Drill 1.17+)"));
+
+  /**
+   * Option for collecting schema and / or column statistics for every table after CTAS and CTTAS execution.
+   */
+  public static final String METASTORE_CTAS_AUTO_COLLECT_METADATA = "metastore.metadata.ctas.auto-collect";
+  public static final EnumeratedStringValidator METASTORE_CTAS_AUTO_COLLECT_METADATA_VALIDATOR = new EnumeratedStringValidator(METASTORE_CTAS_AUTO_COLLECT_METADATA,
+      new OptionDescription("Specifies whether schema and / or column statistics will be " +
+          "automatically collected for every table after CTAS and CTTAS. " +
+          "This option is not active for now. Default is 'NONE'. (Drill 1.17+)"),
+      "NONE", "ALL", "SCHEMA");
+
+  /**
+   * Option for allowing using file metadata cache if required metadata is absent in the Metastore.
+   */
+  public static final String METASTORE_FALLBACK_TO_FILE_METADATA = "metastore.metadata.fallback_to_file_metadata";
+  public static final BooleanValidator METASTORE_FALLBACK_TO_FILE_METADATA_VALIDATOR = new BooleanValidator(METASTORE_FALLBACK_TO_FILE_METADATA,
+      new OptionDescription("Allows using file metadata cache for the case when required metadata is absent in the Metastore. " +
+          "This option is not active for now. Default is true. (Drill 1.17+)"));
+
+  /**
+   * Option for specifying the number of attempts for retrying query planning after detecting that query metadata is changed.
+   */
+  public static final String METASTORE_RETRIVAL_RETRY_ATTEMPTS = "metastore.retrival.retry_attempts";
+  public static final IntegerValidator METASTORE_RETRIVAL_RETRY_ATTEMPTS_VALIDATOR = new IntegerValidator(METASTORE_RETRIVAL_RETRY_ATTEMPTS,
+      new OptionDescription("Specifies the number of attempts for retrying query planning after detecting that query metadata is changed. " +
+          "If the number of retries was exceeded, query will be planned without metadata information from the Metastore. " +
+          "This option is not active for now. Default is 5. (Drill 1.17+)"));
 }
