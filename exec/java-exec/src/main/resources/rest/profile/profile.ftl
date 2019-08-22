@@ -42,7 +42,7 @@
     };
 
     $(document).ready(function() {
-      $(".sortable").DataTable( {
+      $(".sortable").DataTable({
         "searching": false,
         "lengthChange": false,
         "paging": false,
@@ -84,6 +84,29 @@
         document.getElementById(warningElemId).style.display="none";
     }
 
+    //Injects Estimated Rows
+    function injectEstimatedRows() {
+      Object.keys(opRowCountMap).forEach(key => {
+        var tgtElem = $("td.estRowsAnchor[key='" + key + "']"); 
+        var status = tgtElem.append("<div class='estRows' title='Estimated'>(" + opRowCountMap[key] + ")</div>");
+      });
+    }
+
+    //Toggle Estimates' visibility
+    function toggleEstimates(tgtColumn) {
+      var colClass = '.est' + tgtColumn;
+      var estimates = $(colClass);
+      if (estimates.filter(":visible").length > 0) {
+        $(colClass).each(function () {
+          $(this).attr("style", "display:none");
+        });
+      } else {
+        $(colClass).each(function () {
+          $(this).attr("style", "display:block");
+        });
+      }
+    }
+
     //Close the cancellation status popup
     function refreshStatus() {
       //Close PopUp Modal
@@ -94,7 +117,7 @@
     //Cancel query & show cancellation status
     function cancelQuery() {
       document.getElementById("cancelTitle").innerHTML = "Drillbit on " + location.hostname + " says";
-      $.get("/profiles/cancel/"+globalconfig.queryid, function(data, status){/*Not Tracking Response*/});
+      $.get("/profiles/cancel/" + globalconfig.queryid, function(data, status){/*Not Tracking Response*/});
       //Show PopUp Modal
       $("#queryCancelModal").modal("show");
     };
@@ -389,8 +412,17 @@
   </div>
 
   <div class="page-header"></div>
-  <h3>Operator Profiles</h3>
+  <h3>Operator Profiles
+ <button onclick="toggleEstimates('Rows')" class="btn" style="font-size:60%; float:right">Show/Hide Estimated Rows</button></h3>
 
+ <style>
+  .estRows {
+    color:navy;
+    font-style:italic;
+    font-size: 80%;
+    display:<#if model.showEstimatedRows()>block<#else>none</#if>;
+  }
+</style>
   <div class="panel-group" id="operator-accordion">
     <div class="panel panel-default">
       <div class="panel-heading">
@@ -476,6 +508,9 @@
       injectIconByClass("spill-tag","glyphicon-download-alt");
       injectIconByClass("time-skew-tag","glyphicon-time");
       injectSlowScanIcon();
+      //Building RowCount
+      buildRowCountMap();
+      injectEstimatedRows();
     });
 
     //Inject Glyphicon by Class tag
@@ -485,7 +520,7 @@
         var i;
         for (i = 0; i < tagElemList.length; i++) {
             var content = tagElemList[i].innerHTML;
-            tagElemList[i].innerHTML = "<span class=\"glyphicon "+tagIcon+"\">&nbsp;</span>"+content;
+            tagElemList[i].innerHTML = "<span class=\"glyphicon " + tagIcon + "\">&nbsp;</span>" + content;
         }
     }
 
@@ -496,7 +531,7 @@
         var i;
         for (i = 0; i < tagElemList.length; i++) {
             var content = tagElemList[i].innerHTML;
-            tagElemList[i].innerHTML = "<img src='/static/img/turtle.png' alt='slow'> "+content;
+            tagElemList[i].innerHTML = "<img src='/static/img/turtle.png' alt='slow'> " + content;
         }
     }
 
@@ -567,7 +602,7 @@
     var popUpAndPrintPlan = function() {
       var srcSvg = $('#query-visual-canvas');
       var screenRatio=0.9;
-      let printWindow = window.open('', 'PlanPrint', 'width=' + (screenRatio*screen.width) + ',height=' + (screenRatio*screen.height) );
+      let printWindow = window.open('', 'PlanPrint', 'width=' + (screenRatio*screen.width) + ',height=' + (screenRatio*screen.height));
       printWindow.document.writeln($(srcSvg).parent().html());
       printWindow.print();
     };
@@ -587,6 +622,21 @@
       if (e.target.form) 
         <#if model.isOnlyImpersonationEnabled()>doSubmitQueryWithUserName()<#else>doSubmitQueryWithAutoLimit()</#if>;
     });
+
+    // Extract estimated rowcount map
+    var opRowCountMap = {};
+    // Get OpId-Rowocunt Map
+    function buildRowCountMap() {
+      var phyText = $('#query-physical').find('pre').text();
+      var opLines = phyText.split("\n");
+      opLines.forEach(line => {
+        if (line.trim().length > 0) {
+          var opId = line.match(/\d+-\d+/g)[0];
+          var opRowCount = line.match(/rowcount = ([^,]+)/)[1];
+          opRowCountMap[opId] = Number(opRowCount).toLocaleString('en');
+        }
+      });
+    }
     </script>
 
 </#macro>

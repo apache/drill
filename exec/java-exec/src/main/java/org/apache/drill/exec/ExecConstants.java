@@ -875,6 +875,8 @@ public final class ExecConstants {
   public static final BooleanValidator DYNAMIC_UDF_SUPPORT_ENABLED_VALIDATOR = new BooleanValidator(DYNAMIC_UDF_SUPPORT_ENABLED,
       new OptionDescription("Enables users to dynamically upload UDFs. Users must upload their UDF (source and binary) JAR files to a staging directory in the distributed file system before issuing the CREATE FUNCTION USING JAR command to register a UDF. Default is true. (Drill 1.9+)"));
 
+  //Display estimated rows in operator overview by default
+  public static final String PROFILE_STATISTICS_ESTIMATED_ROWS_SHOW = "drill.exec.http.profile.statistics.estimated_rows.show";
   //Trigger warning in UX if fragments appear to be doing no work (units are in seconds).
   public static final String PROFILE_WARNING_PROGRESS_THRESHOLD = "drill.exec.http.profile.warning.progress.threshold";
   //Trigger warning in UX if slowest fragment operator crosses min threshold and exceeds ratio with average (units are in seconds).
