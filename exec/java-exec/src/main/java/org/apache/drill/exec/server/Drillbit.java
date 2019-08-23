@@ -52,10 +52,13 @@ import org.apache.drill.exec.work.WorkManager;
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 import org.apache.zookeeper.Environment;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import javax.tools.ToolProvider;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -63,6 +66,7 @@ import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -70,7 +74,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Starts, tracks and stops all the required services for a Drillbit daemon to work.
  */
 public class Drillbit implements AutoCloseable {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Drillbit.class);
+
+  private static final Logger logger = LoggerFactory.getLogger(Drillbit.class);
 
   static {
     /*
@@ -101,11 +106,12 @@ public class Drillbit implements AutoCloseable {
   private final WebServer webServer;
   private final int gracePeriod;
   private DrillbitStateManager stateManager;
-  private boolean quiescentMode;
-  private boolean forcefulShutdown = false;
   private GracefulShutdownThread gracefulShutdownThread;
   private Thread shutdownHook;
-  private boolean interruptPollShutdown = true;
+
+  private volatile boolean quiescentMode;
+  private volatile boolean forcefulShutdown;
+  private volatile boolean interruptPollShutdown = true;
 
   public void setQuiescentMode(boolean quiescentMode) {
     this.quiescentMode = quiescentMode;
@@ -239,13 +245,13 @@ public class Drillbit implements AutoCloseable {
   /*
     Wait uninterruptibly
    */
-  public void waitForGracePeriod() {
+  private void waitForGracePeriod() {
     ExtendedLatch exitLatch = new ExtendedLatch();
     exitLatch.awaitUninterruptibly(gracePeriod);
   }
 
   private void updateState(State state) {
-    if ( registrationHandle != null) {
+    if (registrationHandle != null) {
       coord.update(registrationHandle, state);
     }
   }
@@ -262,7 +268,7 @@ public class Drillbit implements AutoCloseable {
   */
   @Override
   public synchronized void close() {
-    if ( !stateManager.getState().equals(DrillbitState.ONLINE)) {
+    if (!stateManager.getState().equals(DrillbitState.ONLINE)) {
       return;
     }
     final Stopwatch w = Stopwatch.createStarted();
@@ -287,7 +293,7 @@ public class Drillbit implements AutoCloseable {
     //safe to exit
     updateState(State.OFFLINE);
     stateManager.setState(DrillbitState.OFFLINE);
-    if(quiescentMode) {
+    if (quiescentMode) {
       return;
     }
     if (coord != null && registrationHandle != null) {
@@ -371,67 +377,109 @@ public class Drillbit implements AutoCloseable {
     }
   }
 
-
-  // Polls for graceful file to check if graceful shutdown is triggered from the script.
+  /**
+   * Polls for graceful file to check if graceful shutdown is triggered from the script.
+   */
   private static class GracefulShutdownThread extends Thread {
+
+    private static final String DRILL_HOME = "DRILL_HOME";
+    private static final String GRACEFUL_SIGFILE = "GRACEFUL_SIGFILE";
+    private static final String NOT_SUPPORTED_MESSAGE = "Graceful shutdown from command line will not be supported.";
 
     private final Drillbit drillbit;
     private final StackTrace stackTrace;
-    GracefulShutdownThread(final Drillbit drillbit, final StackTrace stackTrace) {
+
+    GracefulShutdownThread(Drillbit drillbit, StackTrace stackTrace) {
       this.drillbit = drillbit;
       this.stackTrace = stackTrace;
+
+      setName("Drillbit-Graceful-Shutdown#" + getName());
     }
 
     @Override
     public void run () {
       try {
-        pollShutdown(drillbit);
-      } catch (InterruptedException  e) {
-        logger.debug("Interrupted GracefulShutdownThread");
+        pollShutdown();
+      } catch (InterruptedException e) {
+        drillbit.interruptPollShutdown = false;
+        logger.debug("Graceful Shutdown thread was interrupted", e);
       } catch (IOException e) {
-        throw new RuntimeException("Caught exception while polling for gracefulshutdown\n" + stackTrace, e);
+        throw new RuntimeException("Exception while polling for graceful shutdown\n" + stackTrace, e);
       }
     }
 
-    /*
-     * Poll for the graceful file, if the file is found cloase the drillbit. In case if the DRILL_HOME path is not
-     * set, graceful shutdown will not be supported from the command line.
+    /**
+     * Poll for the graceful file, if the file is found or modified, close the Drillbit.
+     * In case if the {@link #DRILL_HOME} or {@link #GRACEFUL_SIGFILE} environment variables are not set,
+     * graceful shutdown will not be supported from the command line.
      */
-    private void pollShutdown(Drillbit drillbit) throws IOException, InterruptedException {
-      final String drillHome = System.getenv("DRILL_HOME");
-      final String gracefulFile = System.getenv("GRACEFUL_SIGFILE");
-      final Path drillHomePath;
-      if (drillHome == null || gracefulFile == null) {
-        logger.warn("Cannot access graceful file. Graceful shutdown from command line will not be supported.");
+    private void pollShutdown() throws IOException, InterruptedException {
+      Path drillHomePath = getDrillHomePath();
+      String gracefulFile = System.getenv(GRACEFUL_SIGFILE);
+
+      if (!areShutdownArgsValid(drillHomePath, gracefulFile)) {
         return;
       }
-      try {
-        drillHomePath = Paths.get(drillHome);
-      } catch (InvalidPathException e) {
-        logger.warn("Cannot access graceful file. Graceful shutdown from command line will not be supported.");
-        return;
-      }
-      boolean triggered_shutdown = false;
-      WatchKey wk = null;
-      try (final WatchService watchService = drillHomePath.getFileSystem().newWatchService()) {
-        drillHomePath.register(watchService, StandardWatchEventKinds.ENTRY_MODIFY, StandardWatchEventKinds.ENTRY_CREATE);
-        while (!triggered_shutdown) {
-          wk = watchService.take();
-          for (WatchEvent<?> event : wk.pollEvents()) {
-            final Path changed = (Path) event.context();
-            if (changed != null && changed.endsWith(gracefulFile)) {
-              drillbit.interruptPollShutdown = false;
-              triggered_shutdown = true;
-              drillbit.close();
+
+      while (true) {
+        try (WatchService watchService = Objects.requireNonNull(drillHomePath).getFileSystem().newWatchService()) {
+          drillHomePath.register(watchService, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY);
+          while (true) {
+            WatchKey watchKey = watchService.take();
+            for (WatchEvent<?> event : watchKey.pollEvents()) {
+              if (StandardWatchEventKinds.OVERFLOW != event.kind()) {
+                Path changedPath = (Path) event.context();
+                if (changedPath != null && changedPath.endsWith(gracefulFile)) {
+                  drillbit.interruptPollShutdown = false;
+                  drillbit.close();
+                  return;
+                }
+              }
+            }
+
+            if (!watchKey.reset()) {
+              logger.debug("Watch key is no longer valid, attempting to re-register Drill home path in Watch Service");
               break;
             }
           }
         }
-      } finally {
-        if (wk != null) {
-          wk.cancel();
+      }
+    }
+
+    private Path getDrillHomePath() {
+      String drillHome = System.getenv(DRILL_HOME);
+      try {
+        return drillHome == null ? null : Paths.get(drillHome);
+      } catch (InvalidPathException e) {
+        logger.warn("Unable to construct {} path [{}]: {}.", DRILL_HOME, drillHome, e.getMessage());
+        logger.debug("Invalid {} path", DRILL_HOME, e);
+        return null;
+      }
+    }
+
+    private boolean areShutdownArgsValid(Path drillHomePath, String gracefulFile) {
+      StringBuilder builder = new StringBuilder();
+      if (drillHomePath == null) {
+        builder.append(DRILL_HOME).append(" is unset or invalid.");
+      } else {
+        if (!Files.exists(drillHomePath)) {
+          builder.append(DRILL_HOME).append("path [").append(drillHomePath).append("] does not exist.");
         }
       }
+
+      if (gracefulFile == null) {
+        if (builder.length() != 0) {
+          builder.append(" ");
+        }
+        builder.append(GRACEFUL_SIGFILE).append(" is unset.");
+      }
+
+      if (builder.length() != 0) {
+        logger.warn("{}. {}", NOT_SUPPORTED_MESSAGE, builder.toString());
+        return false;
+      }
+
+      return true;
     }
   }
 
