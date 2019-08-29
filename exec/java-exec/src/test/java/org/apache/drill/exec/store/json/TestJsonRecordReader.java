@@ -261,4 +261,17 @@ public class TestJsonRecordReader extends BaseTestQuery {
     }
     throw new Exception("testNotCountingQueryNotSkippingInvalidJSONRecords");
   }
+
+  @Test
+  @Category(UnlikelyTest.class)
+  // See DRILL-7362
+  /* Test for CountingJSONReader */
+  public void testContainingArrayCount() throws Exception {
+    testBuilder()
+      .sqlQuery("select count(*) as cnt from cp.`store/json/listdoc.json`")
+      .unOrdered()
+      .baselineColumns("cnt")
+      .baselineValues(2L)
+      .go();
+  }
 }
