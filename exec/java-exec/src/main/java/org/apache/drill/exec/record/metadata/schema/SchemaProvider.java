@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.record.metadata.schema;
 
-import org.apache.drill.exec.store.StorageStrategy;
-
 import java.io.IOException;
 import java.util.Map;
 
@@ -40,13 +38,12 @@ public interface SchemaProvider {
 
   /**
    * Stores given schema definition and properties.
-   * If schema is stored in a file, will apply certain permission using {@link StorageStrategy}.
    *
    * @param schema schema definition
    * @param properties map of properties
-   * @param storageStrategy storage strategy
+   * @param storageProperties storage properties
    */
-  void store(String schema, Map<String, String> properties, StorageStrategy storageStrategy) throws IOException;
+  void store(String schema, Map<String, String> properties, StorageProperties storageProperties) throws IOException;
 
   /**
    * Reads schema into {@link SchemaContainer}. Depending on implementation, can read from a file
@@ -62,5 +59,4 @@ public interface SchemaProvider {
    * @return true if schema exists, false otherwise
    */
   boolean exists() throws IOException;
-
 }

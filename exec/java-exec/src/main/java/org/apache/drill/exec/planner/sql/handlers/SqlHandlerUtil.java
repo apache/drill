@@ -272,4 +272,26 @@ public class SqlHandlerUtil {
     }
   }
 
+  /**
+   * Unparses given {@link SqlNodeList} into key / values pairs: (k1 = v1, k2 = v2).
+   *
+   * @param writer sql writer
+   * @param leftPrec left precedence
+   * @param rightPrec right precedence
+   * @param list sql node list
+   */
+  public static void unparseKeyValuePairs(SqlWriter writer, int leftPrec, int rightPrec, SqlNodeList list) {
+    writer.keyword("(");
+
+    for (int i = 1; i < list.size(); i += 2) {
+      if (i != 1) {
+        writer.keyword(",");
+      }
+      list.get(i - 1).unparse(writer, leftPrec, rightPrec);
+      writer.keyword("=");
+      list.get(i).unparse(writer, leftPrec, rightPrec);
+    }
+
+    writer.keyword(")");
+  }
 }

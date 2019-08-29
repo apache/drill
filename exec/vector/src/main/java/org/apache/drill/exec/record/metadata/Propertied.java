@@ -28,9 +28,9 @@ public interface Propertied {
   /**
    * Base name for properties which Drill itself defines. Provides a
    * separate "name space" from user-defined properties which should
-   * have some other perfix.
+   * have some other prefix.
    */
-  public static final String DRILL_PROP_PREFIX = "drill.";
+  String DRILL_PROP_PREFIX = "drill.";
 
   /**
    * Sets schema properties if not null.
@@ -50,6 +50,8 @@ public interface Propertied {
   int intProperty(String key);
   int intProperty(String key, int defaultValue);
   void setIntProperty(String key, int value);
+  void removeProperty(String key);
+
 
   /**
    * Drill-wide properties are of the form:<br><tt>
@@ -65,7 +67,7 @@ public interface Propertied {
    * @return the "drill.<plugin name>." prefix
    */
 
-  public static String pluginPrefix(String pluginName) {
+  static String pluginPrefix(String pluginName) {
     return DRILL_PROP_PREFIX + pluginName + ".";
   }
 }

@@ -104,6 +104,7 @@ public abstract class AbstractColumnMetadata extends AbstractPropertied implemen
     mode = from.mode;
     precision = from.precision;
     scale = from.scale;
+    setProperties(from.properties());
   }
 
   @Override

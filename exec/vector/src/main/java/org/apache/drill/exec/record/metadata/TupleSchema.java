@@ -71,6 +71,7 @@ public class TupleSchema extends AbstractPropertied implements TupleMetadata {
     for (ColumnMetadata md : this) {
       tuple.addColumn(md.copy());
     }
+    tuple.setProperties(properties());
     return tuple;
   }
 

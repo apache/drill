@@ -31,10 +31,13 @@ import org.apache.drill.exec.planner.sql.parser.SqlCreateType;
 import org.apache.drill.exec.planner.sql.parser.SqlSchema;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.record.metadata.TupleSchema;
+import org.apache.drill.exec.record.metadata.schema.InlineSchemaProvider;
 import org.apache.drill.exec.record.metadata.schema.PathSchemaProvider;
 import org.apache.drill.exec.record.metadata.schema.SchemaContainer;
 import org.apache.drill.exec.record.metadata.schema.SchemaProvider;
 import org.apache.drill.exec.record.metadata.schema.SchemaProviderFactory;
+import org.apache.drill.exec.record.metadata.schema.StorageProperties;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.StorageStrategy;
 import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory;
@@ -43,20 +46,25 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
- * Parent class for CREATE / DROP / DESCRIBE SCHEMA handlers.
+ * Parent class for CREATE / DROP / DESCRIBE / ALTER SCHEMA handlers.
  * Contains common logic on how extract workspace, output error result.
  */
 public abstract class SchemaHandler extends DefaultSqlHandler {
 
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SchemaHandler.class);
+  static final Logger logger = LoggerFactory.getLogger(SchemaHandler.class);
 
   SchemaHandler(SqlHandlerConfig config) {
     super(config);
@@ -94,6 +102,17 @@ public abstract class SchemaHandler extends DefaultSqlHandler {
   }
 
   /**
+   * Provides storage strategy which will create schema file
+   * with same permission as used for persistent tables.
+   *
+   * @return storage strategy
+   */
+  StorageStrategy getStorageStrategy() {
+    return new StorageStrategy(context.getOption(
+      ExecConstants.PERSISTENT_TABLE_UMASK).string_val, false);
+  }
+
+  /**
    * CREATE SCHEMA command handler.
    */
   public static class Create extends SchemaHandler {
@@ -120,10 +139,13 @@ public abstract class SchemaHandler extends DefaultSqlHandler {
           }
         }
 
-        // schema file will be created with same permission as used for persistent tables
-        StorageStrategy storageStrategy = new StorageStrategy(context.getOption(
-          ExecConstants.PERSISTENT_TABLE_UMASK).string_val, false);
-        schemaProvider.store(schemaString, sqlCall.getProperties(), storageStrategy);
+        StorageProperties storageProperties = StorageProperties.builder()
+          .storageStrategy(getStorageStrategy())
+          .overwrite(false)
+          .build();
+
+        schemaProvider.store(schemaString, sqlCall.getProperties(), storageProperties);
+
         return DirectPlan.createDirectPlan(context, true, String.format("Created schema for [%s]", schemaSource));
       } catch (IOException e) {
         throw UserException.resourceError(e)
@@ -294,7 +316,155 @@ public abstract class SchemaHandler extends DefaultSqlHandler {
         this.schema = schema;
       }
     }
-
   }
 
+  /**
+   * ALTER SCHEMA ADD command handler.
+   */
+  public static class Add extends SchemaHandler {
+
+    public Add(SqlHandlerConfig config) {
+      super(config);
+    }
+
+    @Override
+    public PhysicalPlan getPlan(SqlNode sqlNode) {
+      SqlSchema.Add addCall = ((SqlSchema.Add) sqlNode);
+      String schemaSource = addCall.hasTable() ? addCall.getTable().toString() : addCall.getPath();
+
+      try {
+        SchemaProvider schemaProvider = SchemaProviderFactory.create(addCall, this);
+
+        if (!schemaProvider.exists()) {
+          throw UserException.resourceError()
+            .message("Schema does not exist for [%s]", schemaSource)
+            .addContext("Command: ALTER SCHEMA ADD")
+            .build(logger);
+        }
+
+        TupleMetadata currentSchema = schemaProvider.read().getSchema();
+        TupleMetadata newSchema = new TupleSchema();
+
+        if (addCall.hasSchema()) {
+          InlineSchemaProvider inlineSchemaProvider = new InlineSchemaProvider(addCall.getSchema());
+          TupleMetadata providedSchema = inlineSchemaProvider.read().getSchema();
+
+          if (addCall.isReplace()) {
+            Map<String, ColumnMetadata> columnsMap = Stream.concat(currentSchema.toMetadataList().stream(), providedSchema.toMetadataList().stream())
+              .collect(Collectors.toMap(
+                ColumnMetadata::name,
+                Function.identity(),
+                (o, n) -> n, // replace existing columns
+                LinkedHashMap::new)); // preserve initial order of the columns
+            columnsMap.values().forEach(newSchema::addColumn);
+          } else {
+            Stream.concat(currentSchema.toMetadataList().stream(), providedSchema.toMetadataList().stream())
+              .forEach(newSchema::addColumn);
+          }
+        } else {
+          currentSchema.toMetadataList().forEach(newSchema::addColumn);
+        }
+
+        if (addCall.hasProperties()) {
+          if (addCall.isReplace()) {
+            newSchema.setProperties(currentSchema.properties());
+            newSchema.setProperties(addCall.getProperties());
+          } else {
+            Map<String, String> newProperties = Stream.concat(currentSchema.properties().entrySet().stream(), addCall.getProperties().entrySet().stream())
+              .collect(Collectors.toMap(
+                Map.Entry::getKey,
+                Map.Entry::getValue)); // no merge strategy is provided to fail on duplicate
+            newSchema.setProperties(newProperties);
+          }
+        } else {
+          newSchema.setProperties(currentSchema.properties());
+        }
+
+        String schemaString = newSchema.toMetadataList().stream()
+          .map(ColumnMetadata::columnString)
+          .collect(Collectors.joining(", "));
+
+        StorageProperties storageProperties = StorageProperties.builder()
+          .storageStrategy(getStorageStrategy())
+          .overwrite()
+          .build();
+
+        schemaProvider.store(schemaString, newSchema.properties(), storageProperties);
+        return DirectPlan.createDirectPlan(context, true, String.format("Schema for [%s] was updated", schemaSource));
+
+      } catch (IOException e) {
+        throw UserException.resourceError(e)
+          .message("Error while accessing / modifying schema for [%s]: %s", schemaSource, e.getMessage())
+          .build(logger);
+      } catch (IllegalArgumentException | IllegalStateException e) {
+        throw UserException.validationError(e)
+          .message(e.getMessage())
+          .addContext("Error while preparing / creating schema for [%s]", schemaSource)
+          .build(logger);
+      }
+    }
+  }
+
+  /**
+   * ALTER SCHEMA REMOVE command handler.
+   */
+  public static class Remove extends SchemaHandler {
+
+    public Remove(SqlHandlerConfig config) {
+      super(config);
+    }
+
+    @Override
+    public PhysicalPlan getPlan(SqlNode sqlNode) {
+      SqlSchema.Remove removeCall = ((SqlSchema.Remove) sqlNode);
+      String schemaSource = removeCall.hasTable() ? removeCall.getTable().toString() : removeCall.getPath();
+
+      try {
+        SchemaProvider schemaProvider = SchemaProviderFactory.create(removeCall, this);
+
+        if (!schemaProvider.exists()) {
+          throw UserException.resourceError()
+            .message("Schema does not exist for [%s]", schemaSource)
+            .addContext("Command: ALTER SCHEMA REMOVE")
+            .build(logger);
+        }
+
+        TupleMetadata currentSchema = schemaProvider.read().getSchema();
+        TupleMetadata newSchema = new TupleSchema();
+
+        List<String> columns = removeCall.getColumns();
+
+        currentSchema.toMetadataList().stream()
+          .filter(column -> columns == null || !columns.contains(column.name()))
+          .forEach(newSchema::addColumn);
+
+        newSchema.setProperties(currentSchema.properties());
+        if (removeCall.hasProperties()) {
+          removeCall.getProperties().forEach(newSchema::removeProperty);
+        }
+
+        StorageProperties storageProperties = StorageProperties.builder()
+          .storageStrategy(getStorageStrategy())
+          .overwrite()
+          .build();
+
+        String schemaString = newSchema.toMetadataList().stream()
+          .map(ColumnMetadata::columnString)
+          .collect(Collectors.joining(", "));
+
+        schemaProvider.store(schemaString, newSchema.properties(), storageProperties);
+        return DirectPlan.createDirectPlan(context, true, String.format("Schema for [%s] was updated", schemaSource));
+
+      } catch (IOException e) {
+        throw UserException.resourceError(e)
+          .message("Error while accessing / modifying schema for [%s]: %s", schemaSource, e.getMessage())
+          .build(logger);
+      } catch (IllegalArgumentException e) {
+        throw UserException.validationError(e)
+          .message(e.getMessage())
+          .addContext("Error while preparing / creating schema for [%s]", schemaSource)
+          .build(logger);
+      }
+    }
+  }
 }
