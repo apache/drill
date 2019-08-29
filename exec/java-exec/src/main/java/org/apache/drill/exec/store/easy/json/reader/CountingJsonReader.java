@@ -23,50 +23,29 @@ import com.fasterxml.jackson.core.JsonToken;
 
 import io.netty.buffer.DrillBuf;
 
-import org.apache.drill.exec.vector.complex.writer.BaseWriter;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 
-public class CountingJsonReader extends BaseJsonProcessor {
+public class CountingJsonReader extends BaseJsonReader {
 
   public CountingJsonReader(DrillBuf workBuf, boolean enableNanInf, boolean enableEscapeAnyChar) {
-    super(workBuf, enableNanInf, enableEscapeAnyChar);
+    super(workBuf, enableNanInf, enableEscapeAnyChar, true);
   }
 
   @Override
-  public ReadState write(BaseWriter.ComplexWriter writer) throws IOException {
-    try {
-      JsonToken token = lastSeenJsonToken;
-      if (token == null || token == JsonToken.END_OBJECT){
-        token = parser.nextToken();
-      }
-      lastSeenJsonToken = null;
-      if (token == JsonToken.FIELD_NAME) {
-        currentFieldName = parser.getText();
-      }
-      if (!parser.hasCurrentToken()) {
-        return ReadState.END_OF_STREAM;
-      } else if (token != JsonToken.START_OBJECT) {
-        throw new com.fasterxml.jackson.core.JsonParseException(
-            parser, String.format("Cannot read from the middle of a record. Current token was %s ", token));
-      }
-      writer.rootAsMap().bit("count").writeBit(1);
-      parser.skipChildren();
-    } catch (com.fasterxml.jackson.core.JsonParseException ex) {
-      if (ignoreJSONParseError()) {
-        if (processJSONException() == JsonExceptionProcessingState.END_OF_STREAM){
-          return ReadState.JSON_RECORD_PARSE_EOF_ERROR;
-        }
-        else{
-          return ReadState.JSON_RECORD_PARSE_ERROR;
-        }
-      } else {
-        throw ex;
-      }
+  protected void writeDocument(ComplexWriter writer, JsonToken t) throws IOException {
+    switch (t) {
+      case START_OBJECT:
+      case START_ARRAY:
+        writer.rootAsMap().bit("count").writeBit(1);
+        parser.skipChildren();
+        break;
+      default:
+        throw createDocumentTopLevelException();
     }
-    return ReadState.WRITE_SUCCEED;
   }
 
   @Override
-  public void ensureAtLeastOneField(BaseWriter.ComplexWriter writer) {
+  public void ensureAtLeastOneField(ComplexWriter writer) {
 
   }
 }

@@ -26,7 +26,7 @@ import java.util.List;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.base.GroupScan;
-import org.apache.drill.exec.store.easy.json.reader.BaseJsonProcessor;
+import org.apache.drill.exec.store.easy.json.reader.BaseJsonReader;
 import org.apache.drill.exec.vector.complex.fn.VectorOutput.ListVectorOutput;
 import org.apache.drill.exec.vector.complex.fn.VectorOutput.MapVectorOutput;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
@@ -40,7 +40,7 @@ import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
-public class JsonReader extends BaseJsonProcessor {
+public class JsonReader extends BaseJsonReader {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory
       .getLogger(JsonReader.class);
   public final static int MAX_RECORD_SIZE = 128 * 1024;
@@ -59,25 +59,12 @@ public class JsonReader extends BaseJsonProcessor {
    */
   private final List<ListWriter> emptyArrayWriters = Lists.newArrayList();
 
-  /**
-   * Describes whether or not this reader can unwrap a single root array record
-   * and treat it like a set of distinct records.
-   */
-  private final boolean skipOuterList;
-
-  /**
-   * Whether the reader is currently in a situation where we are unwrapping an
-   * outer list.
-   */
-  private boolean inOuterList;
-
   private FieldSelection selection;
 
   private JsonReader(Builder builder) {
-    super(builder.managedBuf, builder.enableNanInf, builder.enableEscapeAnyChar);
+    super(builder.managedBuf, builder.enableNanInf, builder.enableEscapeAnyChar, builder.skipOuterList);
     selection = FieldSelection.getFieldSelection(builder.columns);
     workingBuffer = builder.workingBuffer;
-    skipOuterList = builder.skipOuterList;
     allTextMode = builder.allTextMode;
     columns = builder.columns;
     mapOutput = builder.mapOutput;
@@ -184,110 +171,17 @@ public class JsonReader extends BaseJsonProcessor {
   }
 
   @Override
-  public ReadState write(ComplexWriter writer) throws IOException {
-
-    ReadState readState = null;
-    try {
-      JsonToken t = lastSeenJsonToken;
-      if (t == null || t == JsonToken.END_OBJECT) {
-        t = parser.nextToken();
-      }
-      while (!parser.hasCurrentToken() && !parser.isClosed()) {
-        t = parser.nextToken();
-      }
-      lastSeenJsonToken = null;
-
-      if (parser.isClosed()) {
-        return ReadState.END_OF_STREAM;
-      }
-
-      readState = writeToVector(writer, t);
-
-      switch (readState) {
-      case END_OF_STREAM:
+  protected void writeDocument(ComplexWriter writer, JsonToken t) throws IOException {
+    switch (t) {
+      case START_OBJECT:
+        writeDataSwitch(writer.rootAsMap());
         break;
-      case WRITE_SUCCEED:
+      case START_ARRAY:
+        writeDataSwitch(writer.rootAsList());
         break;
       default:
-        throw getExceptionWithContext(UserException.dataReadError(), null).message(
-            "Failure while reading JSON. (Got an invalid read state %s )", readState.toString())
-            .build(logger);
-      }
-    } catch (com.fasterxml.jackson.core.JsonParseException ex) {
-      if (ignoreJSONParseError()) {
-        if (processJSONException() == JsonExceptionProcessingState.END_OF_STREAM) {
-          return ReadState.JSON_RECORD_PARSE_EOF_ERROR;
-        } else {
-          return ReadState.JSON_RECORD_PARSE_ERROR;
-        }
-      } else {
-        throw ex;
-      }
+        throw createDocumentTopLevelException();
     }
-    return readState;
-  }
-
-  private void confirmLast() throws IOException {
-    parser.nextToken();
-    if (!parser.isClosed()) {
-      String message = "Drill attempted to unwrap a toplevel list in your document. "
-          + "However, it appears that there is trailing content after this top level list.  Drill only "
-          + "supports querying a set of distinct maps or a single json array with multiple inner maps.";
-      throw getExceptionWithContext(UserException.dataReadError(), message).build(logger);
-    }
-  }
-
-  private ReadState writeToVector(ComplexWriter writer, JsonToken t)
-      throws IOException {
-
-    switch (t) {
-    case START_OBJECT:
-      writeDataSwitch(writer.rootAsMap());
-      break;
-    case START_ARRAY:
-      if (inOuterList) {
-        String message = "The top level of your document must either be a single array of maps or a set "
-            + "of white space delimited maps.";
-        throw getExceptionWithContext(UserException.dataReadError(), message).build(logger);
-      }
-
-      if (skipOuterList) {
-        t = parser.nextToken();
-        if (t == JsonToken.START_OBJECT) {
-          inOuterList = true;
-          writeDataSwitch(writer.rootAsMap());
-        } else {
-          String message = "The top level of your document must either be a single array of maps or a set "
-              + "of white space delimited maps.";
-          throw getExceptionWithContext(UserException.dataReadError(), message).build(logger);
-        }
-
-      } else {
-        writeDataSwitch(writer.rootAsList());
-      }
-      break;
-    case END_ARRAY:
-
-      if (inOuterList) {
-        confirmLast();
-        return ReadState.END_OF_STREAM;
-      } else {
-        throw getExceptionWithContext(UserException.dataReadError(), null).message(
-            "Failure while parsing JSON.  Ran across unexpected %s.", JsonToken.END_ARRAY).build(logger);
-      }
-
-    case NOT_AVAILABLE:
-      return ReadState.END_OF_STREAM;
-    default:
-      throw getExceptionWithContext(UserException.dataReadError(), null)
-          .message(
-              "Failure while parsing JSON.  Found token of [%s].  Drill currently only supports parsing "
-                  + "json strings that contain either lists or maps.  The root object cannot be a scalar.",
-              t).build(logger);
-    }
-
-    return ReadState.WRITE_SUCCEED;
-
   }
 
   private void writeDataSwitch(MapWriter w) throws IOException {
