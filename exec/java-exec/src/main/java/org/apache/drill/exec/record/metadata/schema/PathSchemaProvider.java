@@ -23,7 +23,6 @@ import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import org.apache.drill.exec.store.StorageStrategy;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -103,13 +102,13 @@ public class PathSchemaProvider implements SchemaProvider {
   }
 
   @Override
-  public void store(String schema, Map<String, String> properties, StorageStrategy storageStrategy) throws IOException {
+  public void store(String schema, Map<String, String> properties, StorageProperties storageProperties) throws IOException {
     SchemaContainer tableSchema = createTableSchema(schema, properties);
 
-    try (OutputStream stream = fs.create(path, false)) {
+    try (OutputStream stream = fs.create(path, storageProperties.isOverwrite())) {
       WRITER.writeValue(stream, tableSchema);
     }
-    storageStrategy.applyToFile(fs, path);
+    storageProperties.getStorageStrategy().applyToFile(fs, path);
   }
 
   @Override

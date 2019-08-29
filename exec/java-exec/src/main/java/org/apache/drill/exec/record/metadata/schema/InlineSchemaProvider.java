@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.record.metadata.schema;
 
-import org.apache.drill.exec.store.StorageStrategy;
-
 import java.io.IOException;
 import java.util.Map;
 
@@ -39,7 +37,7 @@ public class InlineSchemaProvider implements SchemaProvider {
   }
 
   @Override
-  public void store(String schema, Map<String, String> properties, StorageStrategy storageStrategy) {
+  public void store(String schema, Map<String, String> properties, StorageProperties storageProperties) {
     throw new UnsupportedOperationException("Schema storage is not supported");
   }
 

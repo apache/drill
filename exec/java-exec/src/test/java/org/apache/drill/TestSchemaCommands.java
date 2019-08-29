@@ -19,6 +19,7 @@ package org.apache.drill;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.categories.SqlTest;
+import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.types.TypeProtos;
@@ -42,6 +43,7 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -51,7 +53,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-@Category(SqlTest.class)
+@Category({SqlTest.class, UnlikelyTest.class})
 public class TestSchemaCommands extends ClusterTest {
 
   @Rule
@@ -746,6 +748,417 @@ public class TestSchemaCommands extends ClusterTest {
         .baselineColumns("schema")
         .baselineValues(statement)
         .go();
+
+    } finally {
+      run("drop table if exists %s", table);
+    }
+  }
+
+  @Test
+  public void testAlterAddAbsentKeywords() throws Exception {
+    thrown.expect(UserException.class);
+    thrown.expectMessage("PARSE ERROR");
+    run("alter schema for table abc add");
+  }
+
+  @Test
+  public void testAlterAddAbsentSchemaForTable() throws Exception {
+    String tableName = "table_alter_schema_add_absent_schema";
+    String table = String.format("dfs.tmp.%s", tableName);
+    try {
+      run("create table %s as select 'a' as c from (values(1))", table);
+
+      thrown.expect(UserException.class);
+      thrown.expectMessage("RESOURCE ERROR: Schema does not exist");
+
+      run("alter schema for table %s add columns (col int)", table);
+    } finally {
+      run("drop table if exists %s", table);
+    }
+  }
+
+  @Test
+  public void testAlterAddAbsentSchemaPath() throws Exception {
+    thrown.expect(UserException.class);
+    thrown.expectMessage("RESOURCE ERROR: Schema does not exist");
+
+    run("alter schema path '%s' add columns (col int)",
+      new File(dirTestWatcher.getTmpDir(), "absent.schema").getPath());
+  }
+
+  @Test
+  public void testAlterAddDuplicateColumn() throws Exception {
+    File tmpDir = dirTestWatcher.getTmpDir();
+    File schemaFile = new File(tmpDir, "schema_for_duplicate_column.schema");
+    assertFalse(schemaFile.exists());
+    try {
+      run("create schema (col int) path '%s'", schemaFile.getPath());
+
+      thrown.expect(UserException.class);
+      thrown.expectMessage("VALIDATION ERROR");
+
+      run("alter schema path '%s' add columns (col varchar)", schemaFile.getPath());
+
+    } finally {
+      FileUtils.deleteQuietly(schemaFile);
+    }
+  }
+
+  @Test
+  public void testAlterAddDuplicateProperty() throws Exception {
+    File tmpDir = dirTestWatcher.getTmpDir();
+    File schemaFile = new File(tmpDir, "schema_for_duplicate_property.schema");
+    assertFalse(schemaFile.exists());
+    try {
+      run("create schema (col int) path '%s' properties ('prop' = 'a')", schemaFile.getPath());
+
+      thrown.expect(UserException.class);
+      thrown.expectMessage("VALIDATION ERROR");
+
+      run("alter schema path '%s' add properties ('prop' = 'b')", schemaFile.getPath());
+
+    } finally {
+      FileUtils.deleteQuietly(schemaFile);
+    }
+  }
+
+  @Test
+  public void testAlterAddColumns() throws Exception {
+    File tmpDir = dirTestWatcher.getTmpDir();
+    File schemaFile = new File(tmpDir, "alter_schema_add_columns.schema");
+    assertFalse(schemaFile.exists());
+    try {
+      run("create schema (col1 int) path '%s' properties ('prop1' = 'a')", schemaFile.getPath());
+
+      testBuilder()
+        .sqlQuery("alter schema path '%s' add " +
+          "columns (col2 varchar) ", schemaFile.getPath())
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(true, String.format("Schema for [%s] was updated", schemaFile.getPath()))
+        .go();
+
+      SchemaProvider schemaProvider = new PathSchemaProvider(new Path(schemaFile.getPath()));
+      TupleMetadata schema = schemaProvider.read().getSchema();
+
+      assertEquals(2, schema.size());
+
+      assertEquals("col1", schema.fullName(0));
+      assertEquals("col2", schema.fullName(1));
+
+      assertEquals(1, schema.properties().size());
+
+    } finally {
+      FileUtils.deleteQuietly(schemaFile);
+    }
+  }
+
+  @Test
+  public void testAlterAddProperties() throws Exception {
+    File tmpDir = dirTestWatcher.getTmpDir();
+    File schemaFile = new File(tmpDir, "alter_schema_add_properties.schema");
+    assertFalse(schemaFile.exists());
+    try {
+      run("create schema (col1 int) path '%s' properties ('prop1' = 'a')", schemaFile.getPath());
+
+      testBuilder()
+        .sqlQuery("alter schema path '%s' add " +
+          "properties ('prop2' = 'b', 'prop3' = 'c')", schemaFile.getPath())
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(true, String.format("Schema for [%s] was updated", schemaFile.getPath()))
+        .go();
+
+      SchemaProvider schemaProvider = new PathSchemaProvider(new Path(schemaFile.getPath()));
+      TupleMetadata schema = schemaProvider.read().getSchema();
+
+      assertEquals(1, schema.size());
+
+      Map<String, String> expectedProperties = new HashMap<>();
+      expectedProperties.put("prop1", "a");
+      expectedProperties.put("prop2", "b");
+      expectedProperties.put("prop3", "c");
+
+      assertEquals(expectedProperties, schema.properties());
+
+    } finally {
+      FileUtils.deleteQuietly(schemaFile);
+    }
+  }
+
+  @Test
+  public void testAlterAddSuccess() throws Exception {
+    File tmpDir = dirTestWatcher.getTmpDir();
+    File schemaFile = new File(tmpDir, "alter_schema_add_success.schema");
+    assertFalse(schemaFile.exists());
+    try {
+      run("create schema (col1 int) path '%s' properties ('prop1' = 'a')", schemaFile.getPath());
+
+      testBuilder()
+        .sqlQuery("alter schema path '%s' add " +
+          "columns (col2 varchar, col3 boolean) " +
+          "properties ('prop2' = 'b', 'prop3' = 'c')", schemaFile.getPath())
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(true, String.format("Schema for [%s] was updated", schemaFile.getPath()))
+        .go();
+
+      SchemaProvider schemaProvider = new PathSchemaProvider(new Path(schemaFile.getPath()));
+      TupleMetadata schema = schemaProvider.read().getSchema();
+
+      assertEquals(3, schema.size());
+
+      assertEquals("col1", schema.fullName(0));
+      assertEquals("col2", schema.fullName(1));
+      assertEquals("col3", schema.fullName(2));
+
+      Map<String, String> expectedProperties = new HashMap<>();
+      expectedProperties.put("prop1", "a");
+      expectedProperties.put("prop2", "b");
+      expectedProperties.put("prop3", "c");
+
+      assertEquals(expectedProperties, schema.properties());
+
+    } finally {
+      FileUtils.deleteQuietly(schemaFile);
+    }
+  }
+
+  @Test
+  public void testAlterAddForTable() throws Exception {
+    String tableName = "table_for_alter_add";
+    String table = String.format("dfs.tmp.%s", tableName);
+    try {
+      run("create table %s as select 'a' as c from (values(1))", table);
+
+      File schemaPath = Paths.get(dirTestWatcher.getDfsTestTmpDir().getPath(),
+        tableName, SchemaProvider.DEFAULT_SCHEMA_NAME).toFile();
+
+      run("create schema (col int) for table %s properties ('prop1' = 'a')", table);
+
+      testBuilder()
+        .sqlQuery("alter schema for table %s add or replace " +
+          "columns (col2 varchar, col3 boolean) " +
+          "properties ('prop2' = 'd', 'prop3' = 'c')", table)
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(true, String.format("Schema for [%s] was updated", table))
+        .go();
+
+      SchemaProvider schemaProvider = new PathSchemaProvider(new Path(schemaPath.getPath()));
+      assertTrue(schemaProvider.exists());
+
+      TupleMetadata schema = schemaProvider.read().getSchema();
+      assertEquals(3, schema.size());
+      assertEquals(3, schema.properties().size());
+
+    } finally {
+      run("drop table if exists %s", table);
+    }
+  }
+
+  @Test
+  public void testAlterReplace() throws Exception {
+    File tmpDir = dirTestWatcher.getTmpDir();
+    File schemaFile = new File(tmpDir, "alter_schema_replace_success.schema");
+    assertFalse(schemaFile.exists());
+    try {
+      run("create schema (col1 int, col2 int) path '%s' " +
+        "properties ('prop1' = 'a', 'prop2' = 'b')", schemaFile.getPath());
+
+      testBuilder()
+        .sqlQuery("alter schema path '%s' add or replace " +
+          "columns (col2 varchar, col3 boolean) " +
+          "properties ('prop2' = 'd', 'prop3' = 'c')", schemaFile.getPath())
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(true, String.format("Schema for [%s] was updated", schemaFile.getPath()))
+        .go();
+
+      SchemaProvider schemaProvider = new PathSchemaProvider(new Path(schemaFile.getPath()));
+      TupleMetadata schema = schemaProvider.read().getSchema();
+
+      assertEquals(3, schema.size());
+
+      assertEquals("col1", schema.fullName(0));
+      assertEquals("col2", schema.fullName(1));
+      assertEquals(TypeProtos.MinorType.VARCHAR, schema.metadata("col2").type());
+      assertEquals("col3", schema.fullName(2));
+
+      Map<String, String> expectedProperties = new HashMap<>();
+      expectedProperties.put("prop1", "a");
+      expectedProperties.put("prop2", "d");
+      expectedProperties.put("prop3", "c");
+
+      assertEquals(expectedProperties, schema.properties());
+
+    } finally {
+      FileUtils.deleteQuietly(schemaFile);
+    }
+  }
+
+  @Test
+  public void testAlterRemoveAbsentKeywords() throws Exception {
+    thrown.expect(UserException.class);
+    thrown.expectMessage("PARSE ERROR");
+    run("alter schema for table abc remove");
+  }
+
+  @Test
+  public void testAlterRemoveAbsentSchemaForTable() throws Exception {
+    String tableName = "table_alter_schema_remove_absent_schema";
+    String table = String.format("dfs.tmp.%s", tableName);
+    try {
+      run("create table %s as select 'a' as c from (values(1))", table);
+
+      thrown.expect(UserException.class);
+      thrown.expectMessage("RESOURCE ERROR: Schema does not exist");
+
+      run("alter schema for table %s remove columns (col)", table);
+    } finally {
+      run("drop table if exists %s", table);
+    }
+  }
+
+  @Test
+  public void testAlterRemoveAbsentSchemaPath() throws Exception {
+    thrown.expect(UserException.class);
+    thrown.expectMessage("RESOURCE ERROR: Schema does not exist");
+
+    run("alter schema path '%s' remove columns (col)",
+      new File(dirTestWatcher.getTmpDir(), "absent.schema").getPath());
+  }
+
+  @Test
+  public void testAlterRemoveColumns() throws Exception {
+    File tmpDir = dirTestWatcher.getTmpDir();
+    File schemaFile = new File(tmpDir, "alter_schema_remove_columns.schema");
+    assertFalse(schemaFile.exists());
+    try {
+      run("create schema (col1 int, col2 varchar, col3 boolean, col4 int) path '%s' " +
+        "properties ('prop1' = 'a', 'prop2' = 'b', 'prop3' = 'c', 'prop4' = 'd')", schemaFile.getPath());
+
+      testBuilder()
+        .sqlQuery("alter schema path '%s' remove " +
+          "columns (col2, col4) ", schemaFile.getPath())
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(true, String.format("Schema for [%s] was updated", schemaFile.getPath()))
+        .go();
+
+      SchemaProvider schemaProvider = new PathSchemaProvider(new Path(schemaFile.getPath()));
+      TupleMetadata schema = schemaProvider.read().getSchema();
+
+      assertEquals(2, schema.size());
+
+      assertEquals("col1", schema.fullName(0));
+      assertEquals("col3", schema.fullName(1));
+
+      assertEquals(4, schema.properties().size());
+
+    } finally {
+      FileUtils.deleteQuietly(schemaFile);
+    }
+  }
+
+  @Test
+  public void testAlterRemoveProperties() throws Exception {
+    File tmpDir = dirTestWatcher.getTmpDir();
+    File schemaFile = new File(tmpDir, "alter_schema_remove_success.schema");
+    assertFalse(schemaFile.exists());
+    try {
+      run("create schema (col1 int, col2 varchar, col3 boolean, col4 int) path '%s' " +
+        "properties ('prop1' = 'a', 'prop2' = 'b', 'prop3' = 'c', 'prop4' = 'd')", schemaFile.getPath());
+
+      testBuilder()
+        .sqlQuery("alter schema path '%s' remove " +
+          "properties ('prop2', 'prop4')", schemaFile.getPath())
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(true, String.format("Schema for [%s] was updated", schemaFile.getPath()))
+        .go();
+
+      SchemaProvider schemaProvider = new PathSchemaProvider(new Path(schemaFile.getPath()));
+      TupleMetadata schema = schemaProvider.read().getSchema();
+
+      assertEquals(4, schema.size());
+
+      Map<String, String> expectedProperties = new HashMap<>();
+      expectedProperties.put("prop1", "a");
+      expectedProperties.put("prop3", "c");
+
+      assertEquals(expectedProperties, schema.properties());
+
+    } finally {
+      FileUtils.deleteQuietly(schemaFile);
+    }
+  }
+
+  @Test
+  public void testAlterRemoveSuccess() throws Exception {
+    File tmpDir = dirTestWatcher.getTmpDir();
+    File schemaFile = new File(tmpDir, "alter_schema_remove_success.schema");
+    assertFalse(schemaFile.exists());
+    try {
+      run("create schema (col1 int, col2 varchar, col3 boolean, col4 int) path '%s' " +
+        "properties ('prop1' = 'a', 'prop2' = 'b', 'prop3' = 'c', 'prop4' = 'd')", schemaFile.getPath());
+
+      testBuilder()
+        .sqlQuery("alter schema path '%s' remove " +
+          "columns (col2, col4) " +
+          "properties ('prop2', 'prop4')", schemaFile.getPath())
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(true, String.format("Schema for [%s] was updated", schemaFile.getPath()))
+        .go();
+
+      SchemaProvider schemaProvider = new PathSchemaProvider(new Path(schemaFile.getPath()));
+      TupleMetadata schema = schemaProvider.read().getSchema();
+
+      assertEquals(2, schema.size());
+
+      assertEquals("col1", schema.fullName(0));
+      assertEquals("col3", schema.fullName(1));
+
+      Map<String, String> expectedProperties = new HashMap<>();
+      expectedProperties.put("prop1", "a");
+      expectedProperties.put("prop3", "c");
+
+      assertEquals(expectedProperties, schema.properties());
+
+    } finally {
+      FileUtils.deleteQuietly(schemaFile);
+    }
+  }
+
+  @Test
+  public void testAlterRemoveForTable() throws Exception {
+    String tableName = "table_for_alter_add";
+    String table = String.format("dfs.tmp.%s", tableName);
+    try {
+      run("create table %s as select 'a' as c from (values(1))", table);
+
+      File schemaPath = Paths.get(dirTestWatcher.getDfsTestTmpDir().getPath(),
+        tableName, SchemaProvider.DEFAULT_SCHEMA_NAME).toFile();
+
+      run("create schema (col1 int, col2 varchar, col3 boolean, col4 int) for table %s " +
+        "properties ('prop1' = 'a', 'prop2' = 'b', 'prop3' = 'c', 'prop4' = 'd')", table);
+
+      testBuilder()
+        .sqlQuery("alter schema for table %s remove " +
+          "columns (col2, col4) " +
+          "properties ('prop2', 'prop4')", table)
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(true, String.format("Schema for [%s] was updated", table))
+        .go();
+
+      SchemaProvider schemaProvider = new PathSchemaProvider(new Path(schemaPath.getPath()));
+      assertTrue(schemaProvider.exists());
+
+      TupleMetadata schema = schemaProvider.read().getSchema();
+      assertEquals(2, schema.size());
+      assertEquals(2, schema.properties().size());
 
     } finally {
       run("drop table if exists %s", table);

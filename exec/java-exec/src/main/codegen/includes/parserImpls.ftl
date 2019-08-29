@@ -314,12 +314,12 @@ SqlNode SqlCreateSchema(SqlParserPos pos, String createType) :
             token_source.SwitchTo(SCH);
     }
     (
-        <LOAD>
+        <SCH_LOAD>
         {
             load = StringLiteral();
         }
     |
-        <PAREN_STRING>
+        <SCH_PAREN_STRING>
         {
             schema = SqlLiteral.createCharString(token.image, getPos());
         }
@@ -373,13 +373,13 @@ void addProperty(SqlNodeList properties) :
 }
 
 <SCH> TOKEN : {
-    < LOAD: "LOAD" > { popState(); }
-  | < NUM: <DIGIT> (" " | "\t" | "\n" | "\r")* >
+    < SCH_LOAD: "LOAD" > { popState(); }
+  | < SCH_NUM: <DIGIT> (" " | "\t" | "\n" | "\r")* >
     // once schema is found, switch back to initial lexical state
     // must be enclosed in the parentheses
     // inside may have left parenthesis only if number precedes (covers cases with varchar(10)),
     // if left parenthesis is present in column name, it must be escaped with backslash
-  | < PAREN_STRING: <LPAREN> ((~[")"]) | (<NUM> ")") | ("\\)"))* <RPAREN> > { popState(); }
+  | < SCH_PAREN_STRING: <LPAREN> ((~[")"]) | (<SCH_NUM> ")") | ("\\)"))* <RPAREN> > { popState(); }
 }
 
 /**
@@ -465,7 +465,7 @@ SqlNode SqlDropSchema(SqlParserPos pos) :
 
 /**
  * Parse refresh table metadata statement.
- * REFRESH TABLE METADATA [COLUMNS ((field1, field2,..) | NONE)] tblname
+ * REFRESH TABLE METADATA [COLUMNS ((field1, field2,..) | NONE)] table_name
  */
 SqlNode SqlRefreshMetadata() :
 {
@@ -535,6 +535,110 @@ SqlNode SqlDescribeSchema() :
 }
 
 /**
+* Parses ALTER SCHEMA statements:
+*
+* ALTER SCHEMA
+* (FOR TABLE dfs.tmp.nation | PATH '/tmp/schema.json')
+* ADD [OR REPLACE]
+* [COLUMNS (col1 int, col2 varchar)]
+* [PROPERTIES ('prop1'='val1', 'prop2'='val2')]
+*
+* ALTER SCHEMA
+* (FOR TABLE dfs.tmp.nation | PATH '/tmp/schema.json')
+* REMOVE
+* [COLUMNS (`col1`, `col2`)]
+* [PROPERTIES ('prop1', 'prop2')]
+*/
+SqlNode SqlAlterSchema() :
+{
+   SqlParserPos pos;
+   SqlIdentifier table = null;
+   SqlNode path = null;
+}
+{
+   <ALTER> { pos = getPos(); }
+   <SCHEMA>
+    (
+        <FOR> <TABLE> { table = CompoundIdentifier(); }
+        |
+        <PATH> { path = StringLiteral(); }
+    )
+    (
+        <ADD> { return SqlAlterSchemaAdd(pos, table, path); }
+        |
+        <REMOVE> { return SqlAlterSchemaRemove(pos, table, path); }
+    )
+}
+
+SqlNode SqlAlterSchemaAdd(SqlParserPos pos, SqlIdentifier table, SqlNode path) :
+{
+   boolean replace = false;
+   SqlCharStringLiteral schema = null;
+   SqlNodeList properties = null;
+}
+{
+   [ <OR> <REPLACE> { replace = true; } ]
+   [ <COLUMNS> { schema = ParseSchema(); } ]
+   [
+       <PROPERTIES> <LPAREN>
+        {
+             properties = new SqlNodeList(getPos());
+             addProperty(properties);
+        }
+        (
+             <COMMA> { addProperty(properties); }
+        )*
+        <RPAREN>
+   ]
+   {
+        if (schema == null && properties == null) {
+             throw new ParseException("ALTER SCHEMA ADD command must have at least <COLUMNS> or <PROPERTIES> keyword indicated.");
+        }
+        return new SqlSchema.Add(pos, table, path, SqlLiteral.createBoolean(replace, getPos()), schema, properties);
+   }
+}
+
+SqlCharStringLiteral ParseSchema() :
+{}
+{
+   {
+        token_source.pushState();
+        token_source.SwitchTo(SCH);
+   }
+    <SCH_PAREN_STRING>
+   {
+        return SqlLiteral.createCharString(token.image, getPos());
+   }
+}
+
+SqlNode SqlAlterSchemaRemove(SqlParserPos pos, SqlIdentifier table, SqlNode path) :
+{
+   SqlNodeList columns = null;
+   SqlNodeList properties = null;
+}
+{
+    [ <COLUMNS> { columns = ParseRequiredFieldList("Schema"); } ]
+    [
+        <PROPERTIES> <LPAREN>
+        {
+            properties = new SqlNodeList(getPos());
+            properties.add(StringLiteral());
+        }
+        (
+            <COMMA>
+            { properties.add(StringLiteral()); }
+        )*
+        <RPAREN>
+    ]
+    {
+         if (columns == null && properties == null) {
+             throw new ParseException("ALTER SCHEMA REMOVE command must have at least <COLUMNS> or <PROPERTIES> keyword indicated.");
+         }
+         return new SqlSchema.Remove(pos, table, path, columns, properties);
+    }
+}
+
+/**
 * Parse create UDF statement
 * CREATE FUNCTION USING JAR 'jar_name'
 */
@@ -592,9 +696,10 @@ Pair<SqlNodeList, SqlNodeList> ParenthesizedCompoundIdentifierList() :
     }
 }
 </#if>
+
 /**
  * Parses a analyze statement.
- * ANALYZE TABLE tblname {COMPUTE | ESTIMATE} | STATISTICS
+ * ANALYZE TABLE table_name {COMPUTE | ESTIMATE} | STATISTICS
  *      [(column1, column2, ...)] [ SAMPLE numeric PERCENT ]
  */
 SqlNode SqlAnalyzeTable() :
@@ -695,5 +800,3 @@ DrillSqlResetOption DrillSqlResetOption(Span s, String scope) :
         return new DrillSqlResetOption(s.end(name), scope, name);
     }
 }
-
-

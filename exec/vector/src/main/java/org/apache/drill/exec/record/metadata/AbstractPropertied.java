@@ -111,4 +111,9 @@ public class AbstractPropertied implements Propertied {
   public void setIntProperty(String key, int value) {
     setProperty(key, Integer.toString(value));
   }
+
+  @Override
+  public void removeProperty(String key) {
+    setProperty(key, null);
+  }
 }

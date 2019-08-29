@@ -20,7 +20,6 @@ package org.apache.drill.exec.record.metadata.schema;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.exec.store.StorageStrategy;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -69,7 +68,7 @@ public class TestSchemaProvider {
     SchemaProvider provider = new InlineSchemaProvider("(i int)");
     thrown.expect(UnsupportedOperationException.class);
     thrown.expectMessage("Schema storage is not supported");
-    provider.store("i int", null, StorageStrategy.DEFAULT);
+    provider.store("i int", null, StorageProperties.builder().build());
   }
 
   @Test
@@ -142,7 +141,7 @@ public class TestSchemaProvider {
     properties.put("k2", "v2");
 
     assertFalse(provider.exists());
-    provider.store("i int, v varchar(10), s struct<s1 int, s2 varchar>", properties, StorageStrategy.DEFAULT);
+    provider.store("i int, v varchar(10), s struct<s1 int, s2 varchar>", properties, StorageProperties.builder().build());
     assertTrue(provider.exists());
 
     String expectedContent = "{\n"
@@ -186,7 +185,23 @@ public class TestSchemaProvider {
     thrown.expect(IOException.class);
     thrown.expectMessage("File already exists");
 
-    provider.store("i int", null, StorageStrategy.DEFAULT);
+    provider.store("i int", null, StorageProperties.builder().build());
+  }
+
+  @Test
+  public void testPathProviderStoreInExistingFileOverwrite() throws Exception {
+    File schemaFile = folder.newFile("schema");
+    org.apache.hadoop.fs.Path schema = new org.apache.hadoop.fs.Path(schemaFile.getPath());
+    SchemaProvider provider = new PathSchemaProvider(schema);
+    assertTrue(provider.exists());
+
+    StorageProperties storageProperties = StorageProperties.builder()
+      .overwrite()
+      .build();
+    provider.store("i int", null, storageProperties);
+
+    TupleMetadata metadata = provider.read().getSchema();
+    assertEquals(1, metadata.size());
   }
 
   @Test

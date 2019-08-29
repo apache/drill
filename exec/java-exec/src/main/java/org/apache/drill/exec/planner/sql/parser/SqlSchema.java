@@ -32,6 +32,7 @@ import org.apache.calcite.sql.util.SqlBasicVisitor;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;
 import org.apache.drill.exec.planner.sql.handlers.SchemaHandler;
+import org.apache.drill.exec.planner.sql.handlers.SqlHandlerUtil;
 import org.apache.drill.exec.store.dfs.FileSelection;
 
 import java.util.Arrays;
@@ -39,9 +40,10 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
- * Parent class for CREATE, DROP, DESCRIBE SCHEMA commands.
+ * Parent class for CREATE, DROP, DESCRIBE, ALTER SCHEMA commands.
  * Holds logic common command property: table, path.
  */
 public abstract class SqlSchema extends DrillSqlCall {
@@ -60,6 +62,11 @@ public abstract class SqlSchema extends DrillSqlCall {
     if (table != null) {
       writer.keyword("FOR TABLE");
       table.unparse(writer, leftPrec, rightPrec);
+    }
+
+    if (path != null) {
+      writer.keyword("PATH");
+      path.unparse(writer, leftPrec, rightPrec);
     }
   }
 
@@ -88,6 +95,20 @@ public abstract class SqlSchema extends DrillSqlCall {
 
   public String getPath() {
     return path == null ? null : path.accept(LiteralVisitor.INSTANCE);
+  }
+
+  protected Map<String, String> getProperties(SqlNodeList properties) {
+    if (properties == null) {
+      return null;
+    }
+
+    // preserve properties order
+    Map<String, String> map = new LinkedHashMap<>();
+    for (int i = 1; i < properties.size(); i += 2) {
+      map.put(properties.get(i - 1).accept(LiteralVisitor.INSTANCE),
+        properties.get(i).accept(LiteralVisitor.INSTANCE));
+    }
+    return map;
   }
 
   /**
@@ -155,35 +176,21 @@ public abstract class SqlSchema extends DrillSqlCall {
         writer.keyword("REPLACE");
       }
 
-      writer.keyword("SCHEMA");
-      writer.literal(getSchema());
-
-      super.unparse(writer, leftPrec, rightPrec);
+      if (schema != null) {
+        writer.keyword("SCHEMA");
+        writer.literal(getSchema());
+      }
 
       if (load != null) {
         writer.keyword("LOAD");
         load.unparse(writer, leftPrec, rightPrec);
       }
 
-      if (path != null) {
-        writer.keyword("PATH");
-        path.unparse(writer, leftPrec, rightPrec);
-      }
+      super.unparse(writer, leftPrec, rightPrec);
 
       if (properties != null) {
         writer.keyword("PROPERTIES");
-        writer.keyword("(");
-
-        for (int i = 1; i < properties.size(); i += 2) {
-          if (i != 1) {
-            writer.keyword(",");
-          }
-          properties.get(i - 1).unparse(writer, leftPrec, rightPrec);
-          writer.keyword("=");
-          properties.get(i).unparse(writer, leftPrec, rightPrec);
-        }
-
-        writer.keyword(")");
+        SqlHandlerUtil.unparseKeyValuePairs(writer, leftPrec, rightPrec, properties);
       }
     }
 
@@ -205,23 +212,12 @@ public abstract class SqlSchema extends DrillSqlCall {
     }
 
     public Map<String, String> getProperties() {
-      if (properties == null) {
-        return null;
-      }
-
-      // preserve properties order
-      Map<String, String> map = new LinkedHashMap<>();
-      for (int i = 1; i < properties.size(); i += 2) {
-        map.put(properties.get(i - 1).accept(LiteralVisitor.INSTANCE),
-          properties.get(i).accept(LiteralVisitor.INSTANCE));
-      }
-      return map;
+      return getProperties(properties);
     }
 
     public SqlCreateType getSqlCreateType() {
       return SqlCreateType.valueOf(createType.toValue());
     }
-
   }
 
   /**
@@ -274,7 +270,6 @@ public abstract class SqlSchema extends DrillSqlCall {
     public boolean ifExists() {
       return existenceCheck.booleanValue();
     }
-
   }
 
   /**
@@ -339,4 +334,169 @@ public abstract class SqlSchema extends DrillSqlCall {
     }
   }
 
+  public static class Add extends SqlSchema {
+
+    private final SqlLiteral replace;
+    private final SqlCharStringLiteral schema;
+    private final SqlNodeList properties;
+
+    public static final SqlSpecialOperator OPERATOR = new SqlSpecialOperator("ALTER_SCHEMA_ADD", SqlKind.OTHER_DDL) {
+      @Override
+      public SqlCall createCall(SqlLiteral functionQualifier, SqlParserPos pos, SqlNode... operands) {
+        return new Add(pos, (SqlIdentifier) operands[0], operands[1], (SqlLiteral) operands[2],
+          (SqlCharStringLiteral) operands[3], (SqlNodeList) operands[4]);
+      }
+    };
+
+    public Add(SqlParserPos pos,
+               SqlIdentifier table,
+               SqlNode path,
+               SqlLiteral replace,
+               SqlCharStringLiteral schema,
+               SqlNodeList properties) {
+      super(pos, table, path);
+      this.replace = replace;
+      this.schema = schema;
+      this.properties = properties;
+    }
+
+    @Override
+    public SqlOperator getOperator() {
+      return OPERATOR;
+    }
+
+    @Override
+    public List<SqlNode> getOperandList() {
+      return Arrays.asList(table, path, replace, schema, properties);
+    }
+
+    @Override
+    public void unparse(SqlWriter writer, int leftPrec, int rightPrec) {
+      writer.keyword("ALTER");
+      writer.keyword("SCHEMA");
+      writer.keyword("ADD");
+
+      if (replace.booleanValue()) {
+        writer.keyword("OR");
+        writer.keyword("REPLACE");
+      }
+
+      super.unparse(writer, leftPrec, rightPrec);
+
+      if (schema != null) {
+        writer.keyword("COLUMNS");
+        writer.literal(getSchema());
+      }
+
+      if (properties != null) {
+        writer.keyword("PROPERTIES");
+        SqlHandlerUtil.unparseKeyValuePairs(writer, leftPrec, rightPrec, properties);
+      }
+    }
+
+    @Override
+    public AbstractSqlHandler getSqlHandler(SqlHandlerConfig config) {
+      return new SchemaHandler.Add(config);
+    }
+
+    public boolean isReplace() {
+      return replace.booleanValue();
+    }
+
+    public boolean hasSchema() {
+      return schema != null;
+    }
+
+    public String getSchema() {
+      return hasSchema() ? schema.toValue() : null;
+    }
+
+    public boolean hasProperties() {
+      return properties != null;
+    }
+
+    public Map<String, String> getProperties() {
+      return getProperties(properties);
+    }
+  }
+
+  public static class Remove extends SqlSchema {
+
+    private final SqlNodeList columns;
+    private final SqlNodeList properties;
+
+    public static final SqlSpecialOperator OPERATOR = new SqlSpecialOperator("ALTER_SCHEMA_REMOVE", SqlKind.OTHER_DDL) {
+      @Override
+      public SqlCall createCall(SqlLiteral functionQualifier, SqlParserPos pos, SqlNode... operands) {
+        return new Remove(pos, (SqlIdentifier) operands[0], operands[1],
+          (SqlNodeList) operands[2], (SqlNodeList) operands[3]);
+      }
+    };
+
+    public Remove(SqlParserPos pos,
+                  SqlIdentifier table,
+                  SqlNode path,
+                  SqlNodeList columns,
+                  SqlNodeList properties) {
+      super(pos, table, path);
+      this.columns = columns;
+      this.properties = properties;
+    }
+
+    @Override
+    public SqlOperator getOperator() {
+      return OPERATOR;
+    }
+
+    @Override
+    public List<SqlNode> getOperandList() {
+      return Arrays.asList(table, path, columns, properties);
+    }
+
+    @Override
+    public void unparse(SqlWriter writer, int leftPrec, int rightPrec) {
+      writer.keyword("ALTER");
+      writer.keyword("SCHEMA");
+      writer.keyword("REMOVE");
+
+      super.unparse(writer, leftPrec, rightPrec);
+
+      if (columns != null) {
+        writer.keyword("COLUMNS");
+        SqlHandlerUtil.unparseSqlNodeList(writer, leftPrec, rightPrec, columns);
+      }
+
+      if (properties != null) {
+        writer.keyword("PROPERTIES");
+        SqlHandlerUtil.unparseSqlNodeList(writer, leftPrec, rightPrec, properties);
+      }
+    }
+
+    @Override
+    public AbstractSqlHandler getSqlHandler(SqlHandlerConfig config) {
+      return new SchemaHandler.Remove(config);
+    }
+
+    public List<String> getColumns() {
+      if (columns == null) {
+        return null;
+      }
+      return columns.getList().stream()
+        .map(SqlNode::toString)
+        .collect(Collectors.toList());
+    }
+
+    public boolean hasProperties() {
+      return properties != null;
+    }
+
+    public List<String> getProperties() {
+      if (properties == null) {
+        return null;
+      }
+      return properties.getList().stream()
+        .map(property -> property.accept(LiteralVisitor.INSTANCE))
+        .collect(Collectors.toList());
+    }
+  }
 }

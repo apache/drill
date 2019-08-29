@@ -43,7 +43,8 @@
     "ESTIMATE",
     "STATISTICS",
     "SAMPLE",
-    "COLUMNS"
+    "COLUMNS",
+    "REMOVE"
   ]
 
   # List of methods for parsing custom SQL statements.
@@ -61,7 +62,8 @@
     "SqlDropFunction()",
     "SqlAnalyzeTable()",
     "DrillSqlSetOption(Span.of(), null)",
-    "DrillSqlResetOption(Span.of(), null)"
+    "DrillSqlResetOption(Span.of(), null)",
+    "SqlAlterSchema()"
   ]
 
   # List of methods for parsing custom literals.
@@ -859,7 +861,8 @@
         "YEAR",
         # "YEARS", # not a keyword in Calcite
         "ZONE",
-        "COLUMNS"
+        "COLUMNS",
+        "REMOVE"
       ]
 
   # List of additional join types. Each is a method with no arguments.

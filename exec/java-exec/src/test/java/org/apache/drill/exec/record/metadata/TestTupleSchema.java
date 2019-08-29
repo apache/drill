@@ -869,4 +869,68 @@ public class TestTupleSchema extends SubOperatorTest {
     assertNull(TupleMetadata.of(""));
     assertNull(TupleMetadata.of("   "));
   }
+
+  @Test
+  public void testCopy() {
+    TupleMetadata schema = new SchemaBuilder()
+      .add("a", MinorType.BIGINT)
+      .build();
+
+    schema.setIntProperty("int_prop", 1);
+    schema.setProperty("string_prop", "A");
+
+    TupleMetadata copy = schema.copy();
+
+    assertTrue(schema.isEquivalent(copy));
+    assertEquals(schema.properties(), copy.properties());
+  }
+
+  @Test
+  public void testAddNewColumn() {
+    TupleMetadata schema = new SchemaBuilder()
+      .add("a", MinorType.BIGINT)
+      .build();
+
+    int index = schema.addColumn(
+      MetadataUtils.newScalar("b",
+        MajorType.newBuilder()
+          .setMinorType(MinorType.VARCHAR)
+          .setMode(DataMode.OPTIONAL).build()));
+
+    assertEquals(1, index);
+    assertEquals(2, schema.size());
+  }
+
+  @Test
+  public void testAddNewProperty() {
+    TupleMetadata schema = new SchemaBuilder()
+      .add("a", MinorType.BIGINT)
+      .build();
+
+    assertTrue(schema.properties().isEmpty());
+
+    schema.setIntProperty("int_prop", 1);
+    schema.setProperty("string_prop", "A");
+
+    assertEquals(2, schema.properties().size());
+  }
+
+  @Test
+  public void testRemoveProperty() {
+    TupleMetadata schema = new SchemaBuilder()
+      .add("a", MinorType.BIGINT)
+      .build();
+
+    schema.setIntProperty("int_prop", 1);
+    schema.setProperty("string_prop", "A");
+    assertEquals(2, schema.properties().size());
+
+    schema.removeProperty("int_prop");
+    assertEquals(1, schema.properties().size());
+    assertNull(schema.property("int_prop"));
+    assertEquals("A", schema.property("string_prop"));
+
+    schema.removeProperty("missing_prop");
+    assertEquals(1, schema.properties().size());
+  }
 }
