@@ -57,7 +57,9 @@
     "List"
     "RepeatedList",
     "Map"
-    "RepeatedMap"
+    "RepeatedMap",
+    "Dict"
+    "RepeatedDict"
   ]
 }
 

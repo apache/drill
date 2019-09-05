@@ -59,7 +59,7 @@ import org.slf4j.LoggerFactory;
  */
 public final class DictVector extends AbstractRepeatedMapVector {
 
-  public final static MajorType TYPE = Types.optional(MinorType.DICT);
+  public final static MajorType TYPE = Types.required(MinorType.DICT);
 
   public static final String FIELD_KEY_NAME = "key";
   public static final String FIELD_VALUE_NAME = "value";

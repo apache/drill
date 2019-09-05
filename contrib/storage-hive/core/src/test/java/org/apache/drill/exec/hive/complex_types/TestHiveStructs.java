@@ -30,7 +30,6 @@ import org.apache.drill.exec.util.StoragePluginTestUtils;
 import org.apache.drill.exec.util.Text;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
-import org.apache.drill.test.TestBuilder;
 import org.apache.hadoop.hive.ql.Driver;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -40,41 +39,42 @@ import org.junit.experimental.categories.Category;
 import static java.util.Arrays.asList;
 import static org.apache.drill.exec.expr.fn.impl.DateUtility.parseBest;
 import static org.apache.drill.exec.expr.fn.impl.DateUtility.parseLocalDate;
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.junit.Assert.assertThat;
+import static org.apache.drill.exec.hive.HiveTestUtilities.assertNativeScanUsed;
+import static org.apache.drill.test.TestBuilder.mapOf;
+import static org.apache.drill.test.TestBuilder.mapOfObject;
 
 @Category({SlowTest.class, HiveStorageTest.class})
 public class TestHiveStructs extends ClusterTest {
 
-  private static final JsonStringHashMap<String, Object> STR_N0_ROW_1 = TestBuilder.mapOf(
+  private static final JsonStringHashMap<String, Object> STR_N0_ROW_1 = mapOf(
       "f_int", -3000, "f_string", new Text("AbbBBa"), "f_varchar", new Text("-c54g"), "f_char", new Text("Th"),
       "f_tinyint", -128, "f_smallint", -32768, "f_decimal", new BigDecimal("375098.406"), "f_boolean", true,
       "f_bigint", -9223372036854775808L, "f_float", -32.058f, "f_double", -13.241563769628,
       "f_date", parseLocalDate("2018-10-21"),
       "f_timestamp", parseBest("2018-10-21 04:51:36"));
 
-  private static final JsonStringHashMap<String, Object> STR_N0_ROW_2 = TestBuilder.mapOf(
+  private static final JsonStringHashMap<String, Object> STR_N0_ROW_2 = mapOf(
       "f_int", 33000, "f_string", new Text("ZzZzZz"), "f_varchar", new Text("-+-+1"), "f_char", new Text("hh"),
       "f_tinyint", 127, "f_smallint", 32767, "f_decimal", new BigDecimal("500.500"), "f_boolean", true,
       "f_bigint", 798798798798798799L, "f_float", 102.058f, "f_double", 111.241563769628,
       "f_date", parseLocalDate("2019-10-21"),
       "f_timestamp", parseBest("2019-10-21 05:51:31"));
 
-  private static final JsonStringHashMap<String, Object> STR_N0_ROW_3 = TestBuilder.mapOf(
+  private static final JsonStringHashMap<String, Object> STR_N0_ROW_3 = mapOf(
       "f_int", 9199, "f_string", new Text("z x cz"), "f_varchar", new Text(")(*1`"), "f_char", new Text("za"),
       "f_tinyint", 57, "f_smallint", 1010, "f_decimal", new BigDecimal("2.302"), "f_boolean", false,
       "f_bigint", 101010L, "f_float", 12.2001f, "f_double", 1.000000000001,
       "f_date", parseLocalDate("2010-01-01"),
       "f_timestamp", parseBest("2000-02-02 01:10:09"));
 
-  private static final JsonStringHashMap<String, Object> STR_N2_ROW_1 = TestBuilder.mapOf("a",
-      TestBuilder.mapOf("b", TestBuilder.mapOf("c", 1000, "k", "Z")));
+  private static final JsonStringHashMap<String, Object> STR_N2_ROW_1 = mapOf(
+      "a", mapOf("b", mapOf("c", 1000, "k", "Z")));
 
-  private static final JsonStringHashMap<String, Object> STR_N2_ROW_2 = TestBuilder.mapOf(
-      "a", TestBuilder.mapOf("b", TestBuilder.mapOf("c", 2000, "k", "X")));
+  private static final JsonStringHashMap<String, Object> STR_N2_ROW_2 = mapOf(
+      "a", mapOf("b", mapOf("c", 2000, "k", "X")));
 
-  private static final JsonStringHashMap<String, Object> STR_N2_ROW_3 = TestBuilder.mapOf(
-      "a", TestBuilder.mapOf("b", TestBuilder.mapOf("c", 3000, "k", "C")));
+  private static final JsonStringHashMap<String, Object> STR_N2_ROW_3 = mapOf(
+      "a", mapOf("b", mapOf("c", 3000, "k", "C")));
 
   private static HiveTestFixture hiveTestFixture;
 
@@ -102,7 +102,8 @@ public class TestHiveStructs extends ClusterTest {
         "f_bigint:BIGINT,f_float:FLOAT,f_double:DOUBLE,f_date:DATE,f_timestamp:TIMESTAMP>, " +
         "str_n1 STRUCT<sid:INT,coord:STRUCT<x:TINYINT,y:CHAR(1)>>, " +
         "str_n2 STRUCT<a:STRUCT<b:STRUCT<c:INT,k:CHAR(1)>>>, " +
-        "str_wa STRUCT<t:INT,a:ARRAY<INT>,a2:ARRAY<ARRAY<INT>>>" +
+        "str_wa STRUCT<t:INT,a:ARRAY<INT>,a2:ARRAY<ARRAY<INT>>>, " +
+        "str_map STRUCT<i:INT, m:MAP<INT, INT>>" +
         ") " +
         "ROW FORMAT SERDE 'org.apache.hive.hcatalog.data.JsonSerDe' STORED AS TEXTFILE";
     HiveTestUtilities.executeQuery(d, structDdl);
@@ -115,7 +116,8 @@ public class TestHiveStructs extends ClusterTest {
         "f_bigint:BIGINT,f_float:FLOAT,f_double:DOUBLE,f_date:DATE,f_timestamp:TIMESTAMP>, " +
         "str_n1 STRUCT<sid:INT,coord:STRUCT<x:TINYINT,y:CHAR(1)>>, " +
         "str_n2 STRUCT<a:STRUCT<b:STRUCT<c:INT,k:CHAR(1)>>>, " +
-        "str_wa STRUCT<t:INT,a:ARRAY<INT>,a2:ARRAY<ARRAY<INT>>>" +
+        "str_wa STRUCT<t:INT,a:ARRAY<INT>,a2:ARRAY<ARRAY<INT>>>, " +
+        "str_map STRUCT<i:INT, m:MAP<INT, INT>>" +
         ") " +
         "STORED AS PARQUET";
     HiveTestUtilities.executeQuery(d, structDdlP);
@@ -133,18 +135,9 @@ public class TestHiveStructs extends ClusterTest {
         .sqlQuery("SELECT str_n1 FROM hive.struct_tbl ORDER BY rid")
         .ordered()
         .baselineColumns("str_n1")
-        .baselineValues(TestBuilder.mapOf(
-            "sid", 1,
-            "coord", TestBuilder.mapOf("x", 1, "y", "A")
-        ))
-        .baselineValues(TestBuilder.mapOf(
-            "sid", 2,
-            "coord", TestBuilder.mapOf("x", 2, "y", "B")
-        ))
-        .baselineValues(TestBuilder.mapOf(
-            "sid", 3,
-            "coord", TestBuilder.mapOf("x", 3, "y", "C")
-        ))
+        .baselineValues(mapOf("sid", 1, "coord", mapOf("x", 1, "y", "A")))
+        .baselineValues(mapOf("sid", 2, "coord", mapOf("x", 2, "y", "B")))
+        .baselineValues(mapOf("sid", 3, "coord", mapOf("x", 3, "y", "C")))
         .go();
   }
 
@@ -180,9 +173,9 @@ public class TestHiveStructs extends ClusterTest {
             "FROM hive.struct_tbl ns")
         .unOrdered()
         .baselineColumns("ab")
-        .baselineValues(TestBuilder.mapOf("c", 1000, "k", "Z"))
-        .baselineValues(TestBuilder.mapOf("c", 2000, "k", "X"))
-        .baselineValues(TestBuilder.mapOf("c", 3000, "k", "C"))
+        .baselineValues(mapOf("c", 1000, "k", "Z"))
+        .baselineValues(mapOf("c", 2000, "k", "X"))
+        .baselineValues(mapOf("c", 3000, "k", "C"))
         .go();
   }
 
@@ -247,13 +240,13 @@ public class TestHiveStructs extends ClusterTest {
         .ordered()
         .baselineColumns("rid", "str_wa")
         .baselineValues(1,
-            TestBuilder.mapOf("t", 1, "a", asList(-1, 1, -2, 2), "a2", asList(asList(1, 2, 3, 4), asList(0, -1, -2)))
+            mapOf("t", 1, "a", asList(-1, 1, -2, 2), "a2", asList(asList(1, 2, 3, 4), asList(0, -1, -2)))
         )
         .baselineValues(2,
-            TestBuilder.mapOf("t", 2, "a", asList(-11, 11, -12, 12), "a2", asList(asList(1, 2), asList(-1), asList(1, 1, 1)))
+            mapOf("t", 2, "a", asList(-11, 11, -12, 12), "a2", asList(asList(1, 2), asList(-1), asList(1, 1, 1)))
         )
         .baselineValues(3,
-            TestBuilder.mapOf("t", 3, "a", asList(0, 0, 0), "a2", asList(asList(0, 0), asList(0, 0, 0, 0, 0, 0)))
+            mapOf("t", 3, "a", asList(0, 0, 0), "a2", asList(asList(0, 0), asList(0, 0, 0, 0, 0, 0)))
         )
         .go();
   }
@@ -285,7 +278,7 @@ public class TestHiveStructs extends ClusterTest {
 
   @Test
   public void primitiveStructParquet() throws Exception {
-    checkNativeScanUsed("struct_tbl_p");
+    assertNativeScanUsed(queryBuilder(), "struct_tbl_p");
     testBuilder()
         .sqlQuery("SELECT str_n0 FROM hive.struct_tbl_p")
         .optionSettingQueriesForTestQuery("alter session set `" + ExecConstants.PARQUET_READER_INT96_AS_TIMESTAMP + "` = true")
@@ -325,8 +318,8 @@ public class TestHiveStructs extends ClusterTest {
         .sqlQuery("SELECT * FROM hive.struct_tbl_vw")
         .unOrdered()
         .baselineColumns("fint", "cord", "wizarr")
-        .baselineValues(-3000, TestBuilder.mapOf("x", 1, "y", "A"),
-            TestBuilder.mapOf("t", 1, "a", asList(-1, 1, -2, 2), "a2", asList(asList(1, 2, 3, 4), asList(0, -1, -2))))
+        .baselineValues(-3000, mapOf("x", 1, "y", "A"),
+            mapOf("t", 1, "a", asList(-1, 1, -2, 2), "a2", asList(asList(1, 2, 3, 4), asList(0, -1, -2))))
         .go();
   }
 
@@ -341,14 +334,21 @@ public class TestHiveStructs extends ClusterTest {
         .sqlQuery("SELECT * FROM dfs.tmp.`str_vw`")
         .unOrdered()
         .baselineColumns("fint", "cord", "wizarr")
-        .baselineValues(-3000, TestBuilder.mapOf("x", 1, "y", "A"),
-            TestBuilder.mapOf("t", 1, "a", asList(-1, 1, -2, 2), "a2", asList(asList(1, 2, 3, 4), asList(0, -1, -2))))
+        .baselineValues(-3000, mapOf("x", 1, "y", "A"),
+            mapOf("t", 1, "a", asList(-1, 1, -2, 2), "a2", asList(asList(1, 2, 3, 4), asList(0, -1, -2))))
         .go();
   }
 
-  private void checkNativeScanUsed(String table) throws Exception {
-    String plan = queryBuilder().sql("SELECT * FROM hive.`%s`", table).explainText();
-    assertThat(plan, containsString("HiveDrillNativeParquetScan"));
+  @Test
+  public void structWithMap() throws Exception {
+    testBuilder()
+        .sqlQuery("SELECT rid, str_map FROM hive.struct_tbl")
+        .unOrdered()
+        .baselineColumns("rid", "str_map")
+        .baselineValues(1, mapOf("i", 1, "m", mapOfObject(1, 0, 0, 1)))
+        .baselineValues(2, mapOf("i", 2, "m", mapOfObject(1, 3, 2, 2)))
+        .baselineValues(3, mapOf("i", 3, "m", mapOfObject(1, 4, 2, 3, 0, 5)))
+        .go();
   }
 
 }

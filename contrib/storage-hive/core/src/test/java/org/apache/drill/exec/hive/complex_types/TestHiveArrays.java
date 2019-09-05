@@ -45,8 +45,8 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.drill.exec.expr.fn.impl.DateUtility.parseBest;
 import static org.apache.drill.exec.expr.fn.impl.DateUtility.parseLocalDate;
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.junit.Assert.assertThat;
+import static org.apache.drill.exec.hive.HiveTestUtilities.assertNativeScanUsed;
+import static org.apache.drill.test.TestBuilder.mapOfObject;
 
 @Category({SlowTest.class, HiveStorageTest.class})
 public class TestHiveArrays extends ClusterTest {
@@ -151,6 +151,17 @@ public class TestHiveArrays extends ClusterTest {
             "ROW FORMAT SERDE 'org.apache.hive.hcatalog.data.JsonSerDe' STORED AS TEXTFILE"
     );
     HiveTestUtilities.loadData(d, "struct_array", Paths.get("complex_types/array/struct_array.json"));
+
+    HiveTestUtilities.executeQuery(d,
+        "CREATE TABLE map_array(rid INT, " +
+            "arr_n_0 ARRAY<MAP<INT,BOOLEAN>>," +
+            "arr_n_1 ARRAY<ARRAY<MAP<CHAR(2),INT>>>, " +
+            "arr_n_2 ARRAY<ARRAY<ARRAY<MAP<INT,DATE>>>>" +
+            ") " +
+            "ROW FORMAT SERDE 'org.apache.hive.hcatalog.data.JsonSerDe' STORED AS TEXTFILE"
+    );
+    HiveTestUtilities.loadData(d, "map_array", Paths.get("complex_types/array/map_array.json"));
+
   }
 
   private static void createJsonTable(Driver d, String type) {
@@ -186,13 +197,8 @@ public class TestHiveArrays extends ClusterTest {
 
   @Test
   public void intArrayParquet() throws Exception {
-    checkNativeScanUsed("int_array_p");
+    assertNativeScanUsed(queryBuilder(), "int_array_p");
     checkIntArrayInTable("int_array_p");
-  }
-
-  private void checkNativeScanUsed(String table) throws Exception {
-    String plan = queryBuilder().sql("SELECT rid FROM hive.`%s`", table).explainText();
-    assertThat(plan, containsString("HiveDrillNativeParquetScan"));
   }
 
   private void checkIntArrayInTable(String tableName) throws Exception {
@@ -379,7 +385,7 @@ public class TestHiveArrays extends ClusterTest {
 
   @Test
   public void stringArrayParquet() throws Exception {
-    checkNativeScanUsed("string_array_p");
+    assertNativeScanUsed(queryBuilder(), "string_array_p");
     checkStringArrayInTable("string_array_p");
   }
 
@@ -511,7 +517,7 @@ public class TestHiveArrays extends ClusterTest {
 
   @Test
   public void charArrayParquet() throws Exception {
-    checkNativeScanUsed("char_array_p");
+    assertNativeScanUsed(queryBuilder(), "char_array_p");
     checkCharArrayInTable("char_array_p");
   }
 
@@ -576,7 +582,7 @@ public class TestHiveArrays extends ClusterTest {
 
   @Test
   public void tinyintArrayParquet() throws Exception {
-    checkNativeScanUsed("tinyint_array_p");
+    assertNativeScanUsed(queryBuilder(), "tinyint_array_p");
     checkTinyintArrayInTable("tinyint_array_p");
   }
 
@@ -645,7 +651,7 @@ public class TestHiveArrays extends ClusterTest {
 
   @Test
   public void smallintArrayParquet() throws Exception {
-    checkNativeScanUsed("smallint_array_p");
+    assertNativeScanUsed(queryBuilder(), "smallint_array_p");
     checkSmallintArrayInTable("smallint_array_p");
   }
 
@@ -703,7 +709,7 @@ public class TestHiveArrays extends ClusterTest {
 
   @Test
   public void decimalArrayParquet() throws Exception {
-    checkNativeScanUsed("decimal_array_p");
+    assertNativeScanUsed(queryBuilder(), "decimal_array_p");
     checkDecimalArrayInTable("decimal_array_p");
   }
 
@@ -784,7 +790,7 @@ public class TestHiveArrays extends ClusterTest {
 
   @Test
   public void booleanArrayParquet() throws Exception {
-    checkNativeScanUsed("boolean_array_p");
+    assertNativeScanUsed(queryBuilder(), "boolean_array_p");
     checkBooleanArrayInTable("boolean_array_p");
   }
 
@@ -842,7 +848,7 @@ public class TestHiveArrays extends ClusterTest {
 
   @Test
   public void bigintArrayParquet() throws Exception {
-    checkNativeScanUsed("bigint_array_p");
+    assertNativeScanUsed(queryBuilder(), "bigint_array_p");
     checkBigintArrayInTable("bigint_array_p");
   }
 
@@ -915,7 +921,7 @@ public class TestHiveArrays extends ClusterTest {
 
   @Test
   public void floatArrayParquet() throws Exception {
-    checkNativeScanUsed("float_array_p");
+    assertNativeScanUsed(queryBuilder(), "float_array_p");
     checkFloatArrayInTable("float_array_p");
   }
 
@@ -972,7 +978,7 @@ public class TestHiveArrays extends ClusterTest {
 
   @Test
   public void doubleArrayParquet() throws Exception {
-    checkNativeScanUsed("double_array_p");
+    assertNativeScanUsed(queryBuilder(), "double_array_p");
     checkDoubleArrayInTable("double_array_p");
   }
 
@@ -1064,7 +1070,7 @@ public class TestHiveArrays extends ClusterTest {
 
   @Test
   public void dateArrayParquet() throws Exception {
-    checkNativeScanUsed("date_array_p");
+    assertNativeScanUsed(queryBuilder(), "date_array_p");
     checkDateArrayInTable("date_array_p");
   }
 
@@ -1155,7 +1161,7 @@ public class TestHiveArrays extends ClusterTest {
 
   @Test
   public void timestampArrayParquet() throws Exception {
-    checkNativeScanUsed("timestamp_array_p");
+    assertNativeScanUsed(queryBuilder(), "timestamp_array_p");
     checkTimestampArrayInTable("timestamp_array_p");
   }
 
@@ -1431,7 +1437,7 @@ public class TestHiveArrays extends ClusterTest {
   }
 
   @Test
-  public void arrayOfStructs() throws Exception {
+  public void structArrayN0() throws Exception {
     testBuilder()
         .sqlQuery("SELECT arr_n_0 FROM hive.struct_array")
         .unOrdered()
@@ -1446,7 +1452,7 @@ public class TestHiveArrays extends ClusterTest {
   }
 
   @Test
-  public void arrayOfStructsAccessByIndex() throws Exception {
+  public void structArrayN0AccessByIndex() throws Exception {
     testBuilder()
         .sqlQuery("SELECT rid,arr_n_0[2] FROM hive.struct_array")
         .unOrdered()
@@ -1457,7 +1463,7 @@ public class TestHiveArrays extends ClusterTest {
   }
 
   @Test
-  public void nestedArrayOfStructs() throws Exception {
+  public void structArrayN1() throws Exception {
     testBuilder()
         .sqlQuery("SELECT arr_n_1 FROM hive.struct_array")
         .unOrdered()
@@ -1481,7 +1487,7 @@ public class TestHiveArrays extends ClusterTest {
   }
 
   @Test
-  public void doublyNestedArrayOfStructs() throws Exception {
+  public void structArrayN2() throws Exception {
     testBuilder()
         .sqlQuery("SELECT arr_n_2 FROM hive.struct_array ORDER BY rid")
         .ordered()
@@ -1533,15 +1539,92 @@ public class TestHiveArrays extends ClusterTest {
         .go();
   }
 
-
   @Test
-  public void doublyNestedArrayOfStructsPrimitiveFieldAccess() throws Exception {
+  public void structArrayN2PrimitiveFieldAccess() throws Exception {
     testBuilder()
         .sqlQuery("SELECT sa.arr_n_2[0][0][1].d FROM hive.struct_array sa ORDER BY rid")
         .ordered()
         .baselineColumns("EXPR$0")
         .baselineValues(parseLocalDate("2017-07-11"))
         .baselineValues(parseLocalDate("1939-10-23"))
+        .go();
+  }
+
+  @Test
+  public void mapArrayN0() throws Exception {
+    testBuilder()
+        .sqlQuery("SELECT rid, arr_n_0 FROM hive.map_array")
+        .unOrdered()
+        .baselineColumns("rid", "arr_n_0")
+        .baselineValues(1, asList(mapOfObject(0, true, 1, false), mapOfObject(0, false), mapOfObject(1, true)))
+        .baselineValues(2, asList(mapOfObject(0, false, 1, true), mapOfObject(0, true)))
+        .baselineValues(3, asList(mapOfObject(0, true, 1, false)))
+        .go();
+  }
+
+  @Test
+  public void mapArrayN1() throws Exception {
+    testBuilder()
+        .sqlQuery("SELECT rid, arr_n_1 FROM hive.map_array")
+        .unOrdered()
+        .baselineColumns("rid", "arr_n_1")
+        .baselineValues(1, asList(
+            asList(mapOfObject(true, "zz", 1, "cx", 2), mapOfObject(true, "oo", 7, "nn", 9), mapOfObject(true, "nb", 3)),
+            asList(mapOfObject(true, "is", 12, "ie", 7, "po", 2), mapOfObject(true, "ka", 11)),
+            asList(mapOfObject(true, "tr", 3), mapOfObject(true, "xz", 4))
+        ))
+        .baselineValues(2, asList(
+            asList(mapOfObject(true, "vv", 0, "zz", 2), mapOfObject(true, "ui", 8)),
+            asList(mapOfObject(true, "iy", 7, "yi", 5), mapOfObject(true, "nb", 4, "nr", 2, "nm", 2), mapOfObject(true, "qw", 12, "qq", 17)),
+            asList(mapOfObject(true, "aa", 0, "az", 0), mapOfObject(true, "tt", 25))
+        ))
+        .baselineValues(3, asList(
+            asList(mapOfObject(true, "ix", 40)),
+            asList(mapOfObject(true, "cx", 30)),
+            asList(mapOfObject(true, "we", 20), mapOfObject(true, "ex", 70))
+        ))
+        .go();
+  }
+
+  @Test
+  public void mapArrayN2() throws Exception {
+    testBuilder()
+        .sqlQuery("SELECT rid, arr_n_2 FROM hive.map_array")
+        .unOrdered()
+        .baselineColumns("rid", "arr_n_2")
+        .baselineValues(1, asList(
+            asList(
+                asList(mapOfObject(1, parseLocalDate("2019-09-12"), 2, parseLocalDate("2019-09-13")), mapOfObject(1, parseLocalDate("2019-09-13"))),
+                asList(mapOfObject(3, parseLocalDate("2019-09-27")), mapOfObject(5, parseLocalDate("2019-09-17")))
+            ),
+            asList(
+                asList(mapOfObject(7, parseLocalDate("2019-07-07"))),
+                asList(mapOfObject(12, parseLocalDate("2019-09-15"))),
+                asList(mapOfObject(9, parseLocalDate("2019-09-15")))
+            )
+        ))
+        .baselineValues(2, asList(
+            asList(
+                asList(mapOfObject(1, parseLocalDate("2020-01-01"), 3, parseLocalDate("2017-03-15"))),
+                asList(mapOfObject(5, parseLocalDate("2020-01-05"), 7, parseLocalDate("2017-03-17")), mapOfObject(0, parseLocalDate("2000-12-01")))
+            ),
+            asList(
+                asList(mapOfObject(9, parseLocalDate("2019-05-09")), mapOfObject(0, parseLocalDate("2019-09-01"))),
+                asList(mapOfObject(3, parseLocalDate("2019-09-03")), mapOfObject(7, parseLocalDate("2007-08-07")), mapOfObject(4, parseLocalDate("2004-04-04"))),
+                asList(mapOfObject(3, parseLocalDate("2003-03-03")), mapOfObject(1, parseLocalDate("2001-01-11")))
+            )
+        ))
+        .baselineValues(3, asList(
+            asList(
+                asList(mapOfObject(8, parseLocalDate("2019-10-19"))),
+                asList(mapOfObject(6, parseLocalDate("2019-11-06")))
+            ),
+            asList(
+                asList(mapOfObject(9, parseLocalDate("2019-11-09"))),
+                asList(mapOfObject(6, parseLocalDate("2019-11-06"))),
+                asList(mapOfObject(6, parseLocalDate("2019-11-06")))
+            )
+        ))
         .go();
   }
 

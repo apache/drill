@@ -17,6 +17,9 @@
  */
 package org.apache.drill.exec.vector.complex;
 
+import java.util.function.BiFunction;
+import java.util.function.Function;
+
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -25,419 +28,126 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.expr.fn.impl.MappifyUtility;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
+import org.apache.drill.exec.vector.complex.writer.Decimal18Writer;
+import org.apache.drill.exec.vector.complex.writer.Decimal28SparseWriter;
+import org.apache.drill.exec.vector.complex.writer.Decimal38SparseWriter;
+import org.apache.drill.exec.vector.complex.writer.Decimal9Writer;
+import org.apache.drill.exec.vector.complex.writer.VarDecimalWriter;
 
 public class MapUtility {
-  private final static String TYPE_MISMATCH_ERROR = " does not support heterogeneous value types. All values in the input map must be of the same type. The field [%s] has a differing type [%s].";
+  private final static String TYPE_MISMATCH_ERROR = "%s does not support heterogeneous value types. " +
+      "All values in the input map must be of the same type. The field [%s] has a differing type [%s].";
 
   /*
    * Function to read a value from the field reader, detect the type, construct the appropriate value holder
    * and use the value holder to write to the Map.
    */
-  // TODO : This should be templatized and generated using freemarker
-  public static void writeToMapFromReader(FieldReader fieldReader, BaseWriter.MapWriter mapWriter, String caller) {
-    try {
-      MajorType valueMajorType = fieldReader.getType();
-      MinorType valueMinorType = valueMajorType.getMinorType();
-      boolean repeated = false;
-
-      if (valueMajorType.getMode() == TypeProtos.DataMode.REPEATED) {
-        repeated = true;
-      }
-
-      switch (valueMinorType) {
-        case TINYINT:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).tinyInt());
-          } else {
-            fieldReader.copyAsValue(mapWriter.tinyInt(MappifyUtility.fieldValue));
-          }
-          break;
-        case SMALLINT:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).smallInt());
-          } else {
-            fieldReader.copyAsValue(mapWriter.smallInt(MappifyUtility.fieldValue));
-          }
-          break;
-        case BIGINT:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).bigInt());
-          } else {
-            fieldReader.copyAsValue(mapWriter.bigInt(MappifyUtility.fieldValue));
-          }
-          break;
-        case INT:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).integer());
-          } else {
-            fieldReader.copyAsValue(mapWriter.integer(MappifyUtility.fieldValue));
-          }
-          break;
-        case UINT1:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).uInt1());
-          } else {
-            fieldReader.copyAsValue(mapWriter.uInt1(MappifyUtility.fieldValue));
-          }
-          break;
-        case UINT2:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).uInt2());
-          } else {
-            fieldReader.copyAsValue(mapWriter.uInt2(MappifyUtility.fieldValue));
-          }
-          break;
-        case UINT4:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).uInt4());
-          } else {
-            fieldReader.copyAsValue(mapWriter.uInt4(MappifyUtility.fieldValue));
-          }
-          break;
-        case UINT8:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).uInt8());
-          } else {
-            fieldReader.copyAsValue(mapWriter.uInt8(MappifyUtility.fieldValue));
-          }
-          break;
-        case DECIMAL9:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).decimal9());
-          } else {
-            fieldReader.copyAsValue(mapWriter.decimal9(MappifyUtility.fieldValue));
-          }
-          break;
-        case DECIMAL18:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).decimal18());
-          } else {
-            fieldReader.copyAsValue(mapWriter.decimal18(MappifyUtility.fieldValue));
-          }
-          break;
-        case DECIMAL28SPARSE:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).decimal28Sparse());
-          } else {
-            fieldReader.copyAsValue(mapWriter.decimal28Sparse(MappifyUtility.fieldValue));
-          }
-          break;
-        case DECIMAL38SPARSE:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).decimal38Sparse());
-          } else {
-            fieldReader.copyAsValue(mapWriter.decimal38Sparse(MappifyUtility.fieldValue));
-          }
-          break;
-        case VARDECIMAL:
-          if (repeated) {
-            fieldReader.copyAsValue(
-                mapWriter.list(MappifyUtility.fieldValue)
-                    .varDecimal(valueMajorType.getPrecision(), valueMajorType.getScale()));
-          } else {
-            fieldReader.copyAsValue(
-                mapWriter.varDecimal(MappifyUtility.fieldValue, valueMajorType.getPrecision(), valueMajorType.getScale()));
-          }
-          break;
-        case DATE:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).date());
-          } else {
-            fieldReader.copyAsValue(mapWriter.date(MappifyUtility.fieldValue));
-          }
-          break;
-        case TIME:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).time());
-          } else {
-            fieldReader.copyAsValue(mapWriter.time(MappifyUtility.fieldValue));
-          }
-          break;
-        case TIMESTAMP:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).timeStamp());
-          } else {
-            fieldReader.copyAsValue(mapWriter.timeStamp(MappifyUtility.fieldValue));
-          }
-          break;
-        case INTERVAL:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).interval());
-          } else {
-            fieldReader.copyAsValue(mapWriter.interval(MappifyUtility.fieldValue));
-          }
-          break;
-        case INTERVALDAY:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).intervalDay());
-          } else {
-            fieldReader.copyAsValue(mapWriter.intervalDay(MappifyUtility.fieldValue));
-          }
-          break;
-        case INTERVALYEAR:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).intervalYear());
-          } else {
-            fieldReader.copyAsValue(mapWriter.intervalYear(MappifyUtility.fieldValue));
-          }
-          break;
-        case FLOAT4:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).float4());
-          } else {
-            fieldReader.copyAsValue(mapWriter.float4(MappifyUtility.fieldValue));
-          }
-          break;
-        case FLOAT8:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).float8());
-          } else {
-            fieldReader.copyAsValue(mapWriter.float8(MappifyUtility.fieldValue));
-          }
-          break;
-        case BIT:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).bit());
-          } else {
-            fieldReader.copyAsValue(mapWriter.bit(MappifyUtility.fieldValue));
-          }
-          break;
-        case VARCHAR:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).varChar());
-          } else {
-            fieldReader.copyAsValue(mapWriter.varChar(MappifyUtility.fieldValue));
-          }
-          break;
-        case VARBINARY:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).varBinary());
-          } else {
-            fieldReader.copyAsValue(mapWriter.varBinary(MappifyUtility.fieldValue));
-          }
-          break;
-        case MAP:
-          if (valueMajorType.getMode() == TypeProtos.DataMode.REPEATED) {
-            fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).map());
-          } else {
-            fieldReader.copyAsValue(mapWriter.map(MappifyUtility.fieldValue));
-          }
-          break;
-        case LIST:
-          fieldReader.copyAsValue(mapWriter.list(MappifyUtility.fieldValue).list());
-          break;
-        default:
-          throw new DrillRuntimeException(String.format(caller
-              + " does not support input of type: %s", valueMinorType));
-      }
-    } catch (ClassCastException e) {
-      final MaterializedField field = fieldReader.getField();
-      throw new DrillRuntimeException(String.format(caller + TYPE_MISMATCH_ERROR, field.getName(), field.getType()));
-    }
+  public static void writeToMapFromReader(FieldReader fieldReader, MapWriter mapWriter, String caller) {
+    writeToMapFromReader(fieldReader, mapWriter, MappifyUtility.fieldValue, caller);
   }
 
-  public static void writeToMapFromReader(FieldReader fieldReader, BaseWriter.MapWriter mapWriter,
-      String fieldName, String caller) {
+  public static void writeToMapFromReader(FieldReader fieldReader, MapWriter mapWriter,
+                                          String fieldName, String caller) {
     try {
       MajorType valueMajorType = fieldReader.getType();
       MinorType valueMinorType = valueMajorType.getMinorType();
-      boolean repeated = false;
-
-      if (valueMajorType.getMode() == TypeProtos.DataMode.REPEATED) {
-        repeated = true;
-      }
-
+      WriterExtractor extractor = new WriterExtractor(fieldName, valueMajorType, mapWriter);
       switch (valueMinorType) {
         case TINYINT:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(fieldName).tinyInt());
-          } else {
-            fieldReader.copyAsValue(mapWriter.tinyInt(fieldName));
-          }
+          fieldReader.copyAsValue(extractor.get(ListWriter::tinyInt, MapWriter::tinyInt));
           break;
         case SMALLINT:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(fieldName).smallInt());
-          } else {
-            fieldReader.copyAsValue(mapWriter.smallInt(fieldName));
-          }
+          fieldReader.copyAsValue(extractor.get(ListWriter::smallInt, MapWriter::smallInt));
           break;
         case BIGINT:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(fieldName).bigInt());
-          } else {
-            fieldReader.copyAsValue(mapWriter.bigInt(fieldName));
-          }
+          fieldReader.copyAsValue(extractor.get(ListWriter::bigInt, MapWriter::bigInt));
           break;
         case INT:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(fieldName).integer());
-          } else {
-            fieldReader.copyAsValue(mapWriter.integer(fieldName));
-          }
+          fieldReader.copyAsValue(extractor.get(ListWriter::integer, MapWriter::integer));
           break;
         case UINT1:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(fieldName).uInt1());
-          } else {
-            fieldReader.copyAsValue(mapWriter.uInt1(fieldName));
-          }
+          fieldReader.copyAsValue(extractor.get(ListWriter::uInt1, MapWriter::uInt1));
           break;
         case UINT2:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(fieldName).uInt2());
-          } else {
-            fieldReader.copyAsValue(mapWriter.uInt2(fieldName));
-          }
+          fieldReader.copyAsValue(extractor.get(ListWriter::uInt2, MapWriter::uInt2));
           break;
         case UINT4:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(fieldName).uInt4());
-          } else {
-            fieldReader.copyAsValue(mapWriter.uInt4(fieldName));
-          }
+          fieldReader.copyAsValue(extractor.get(ListWriter::uInt4, MapWriter::uInt4));
           break;
         case UINT8:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(fieldName).uInt8());
-          } else {
-            fieldReader.copyAsValue(mapWriter.uInt8(fieldName));
-          }
+          fieldReader.copyAsValue(extractor.get(ListWriter::uInt8, MapWriter::uInt8));
           break;
         case DECIMAL9:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(fieldName).decimal9());
-          } else {
-            fieldReader.copyAsValue(mapWriter.decimal9(fieldName));
-          }
+          fieldReader.copyAsValue((Decimal9Writer) extractor.get(ListWriter::decimal9, MapWriter::decimal9));
           break;
         case DECIMAL18:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(fieldName).decimal18());
-          } else {
-            fieldReader.copyAsValue(mapWriter.decimal18(fieldName));
-          }
+          fieldReader.copyAsValue((Decimal18Writer) extractor.get(ListWriter::decimal18, MapWriter::decimal18));
           break;
         case DECIMAL28SPARSE:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(fieldName).decimal28Sparse());
-          } else {
-            fieldReader.copyAsValue(mapWriter.decimal28Sparse(fieldName));
-          }
+          fieldReader.copyAsValue((Decimal28SparseWriter) extractor.get(ListWriter::decimal28Sparse, MapWriter::decimal28Sparse));
           break;
         case DECIMAL38SPARSE:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(fieldName).decimal38Sparse());
-          } else {
-            fieldReader.copyAsValue(mapWriter.decimal38Sparse(fieldName));
-          }
+          fieldReader.copyAsValue((Decimal38SparseWriter) extractor.get(ListWriter::decimal38Sparse, MapWriter::decimal38Sparse));
           break;
         case VARDECIMAL:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(fieldName).varDecimal(valueMajorType.getPrecision(), valueMajorType.getScale()));
-          } else {
-            fieldReader.copyAsValue(mapWriter.varDecimal(fieldName, valueMajorType.getPrecision(), valueMajorType.getScale()));
-          }
+          fieldReader.copyAsValue((VarDecimalWriter) extractor.get(
+              lw -> lw.varDecimal(valueMajorType.getPrecision(), valueMajorType.getScale()),
+              (mw, fn) -> mw.varDecimal(fn, valueMajorType.getPrecision(), valueMajorType.getScale())));
           break;
         case DATE:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(fieldName).date());
-          } else {
-            fieldReader.copyAsValue(mapWriter.date(fieldName));
-          }
+          fieldReader.copyAsValue(extractor.get(ListWriter::date, MapWriter::date));
           break;
         case TIME:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(fieldName).time());
-          } else {
-            fieldReader.copyAsValue(mapWriter.time(fieldName));
-          }
+          fieldReader.copyAsValue(extractor.get(ListWriter::time, MapWriter::time));
           break;
         case TIMESTAMP:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(fieldName).timeStamp());
-          } else {
-            fieldReader.copyAsValue(mapWriter.timeStamp(fieldName));
-          }
+          fieldReader.copyAsValue(extractor.get(ListWriter::timeStamp, MapWriter::timeStamp));
           break;
         case INTERVAL:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(fieldName).interval());
-          } else {
-            fieldReader.copyAsValue(mapWriter.interval(fieldName));
-          }
+          fieldReader.copyAsValue(extractor.get(ListWriter::interval, MapWriter::interval));
           break;
         case INTERVALDAY:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(fieldName).intervalDay());
-          } else {
-            fieldReader.copyAsValue(mapWriter.intervalDay(fieldName));
-          }
+          fieldReader.copyAsValue(extractor.get(ListWriter::intervalDay, MapWriter::intervalDay));
           break;
         case INTERVALYEAR:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(fieldName).intervalYear());
-          } else {
-            fieldReader.copyAsValue(mapWriter.intervalYear(fieldName));
-          }
+          fieldReader.copyAsValue(extractor.get(ListWriter::intervalYear, MapWriter::intervalYear));
           break;
         case FLOAT4:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(fieldName).float4());
-          } else {
-            fieldReader.copyAsValue(mapWriter.float4(fieldName));
-          }
+          fieldReader.copyAsValue(extractor.get(ListWriter::float4, MapWriter::float4));
           break;
         case FLOAT8:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(fieldName).float8());
-          } else {
-            fieldReader.copyAsValue(mapWriter.float8(fieldName));
-          }
+          fieldReader.copyAsValue(extractor.get(ListWriter::float8, MapWriter::float8));
           break;
         case BIT:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(fieldName).bit());
-          } else {
-            fieldReader.copyAsValue(mapWriter.bit(fieldName));
-          }
+          fieldReader.copyAsValue(extractor.get(ListWriter::bit, MapWriter::bit));
           break;
         case VARCHAR:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(fieldName).varChar());
-          } else {
-            fieldReader.copyAsValue(mapWriter.varChar(fieldName));
-          }
+          fieldReader.copyAsValue(extractor.get(ListWriter::varChar, MapWriter::varChar));
           break;
         case VARBINARY:
-          if (repeated) {
-            fieldReader.copyAsValue(mapWriter.list(fieldName).varBinary());
-          } else {
-            fieldReader.copyAsValue(mapWriter.varBinary(fieldName));
-          }
+          fieldReader.copyAsValue(extractor.get(ListWriter::varBinary, MapWriter::varBinary));
           break;
         case MAP:
-          if (valueMajorType.getMode() == TypeProtos.DataMode.REPEATED) {
-            fieldReader.copyAsValue(mapWriter.list(fieldName).map());
-          } else {
-            fieldReader.copyAsValue(mapWriter.map(fieldName));
-          }
+          fieldReader.copyAsValue(extractor.get(ListWriter::map, MapWriter::map));
           break;
         case LIST:
           fieldReader.copyAsValue(mapWriter.list(fieldName).list());
           break;
+        case DICT:
+          fieldReader.copyAsValue(extractor.get(ListWriter::dict, MapWriter::dict));
+          break;
         default:
-          throw new DrillRuntimeException(String.format(caller
-              + " does not support input of type: %s", valueMinorType));
+          throw new DrillRuntimeException(String.format("%s does not support input of type: %s", caller, valueMinorType));
       }
     } catch (ClassCastException e) {
       final MaterializedField field = fieldReader.getField();
-      throw new DrillRuntimeException(String.format(caller + TYPE_MISMATCH_ERROR, field.getName(), field.getType()));
+      throw new DrillRuntimeException(String.format(TYPE_MISMATCH_ERROR, caller, field.getName(), field.getType()));
     }
   }
 
-  public static void writeToListFromReader(FieldReader fieldReader, BaseWriter.ListWriter listWriter, String caller) {
+  public static void writeToListFromReader(FieldReader fieldReader, ListWriter listWriter, String caller) {
     try {
       MajorType valueMajorType = fieldReader.getType();
       MinorType valueMinorType = valueMajorType.getMinorType();
@@ -528,6 +238,22 @@ public class MapUtility {
     } catch (ClassCastException e) {
       final MaterializedField field = fieldReader.getField();
       throw new DrillRuntimeException(String.format(caller + TYPE_MISMATCH_ERROR, field.getName(), field.getType()));
+    }
+  }
+
+  private static class WriterExtractor {
+    private final String fieldName;
+    private final boolean repeated;
+    private final MapWriter mapWriter;
+
+    private WriterExtractor(String fieldName, MajorType majorType, MapWriter mapWriter) {
+      this.fieldName = fieldName;
+      this.repeated = majorType.getMode() == TypeProtos.DataMode.REPEATED;
+      this.mapWriter = mapWriter;
+    }
+
+    private <W> W get(Function<ListWriter, W> listFunc, BiFunction<MapWriter, String, W> mapFunc) {
+      return repeated ? listFunc.apply(mapWriter.list(fieldName)) : mapFunc.apply(mapWriter, fieldName);
     }
   }
 }
