@@ -63,6 +63,11 @@
       <artifactId>proj4j</artifactId>
       <version>0.1.0</version>
     </dependency>
+    <dependency>
+      <groupId>nl.basjes.parse.useragent</groupId>
+      <artifactId>yauaa</artifactId>
+      <version>5.11</version>
+    </dependency>
 
     <!-- Test dependencies -->
     <dependency>
