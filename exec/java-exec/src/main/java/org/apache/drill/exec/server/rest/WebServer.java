@@ -101,7 +101,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Wrapper class around jetty based webserver.
+ * Wrapper class around jetty based web server.
  */
 public class WebServer implements AutoCloseable {
   private static final String ACE_MODE_SQL_TEMPLATE_JS = "ace.mode-sql.template.js";
@@ -270,7 +270,7 @@ public class WebServer implements AutoCloseable {
   /**
    * It creates A {@link SessionHandler} which contains a {@link HashSessionManager}
    *
-   * @param securityHandler Set of initparameters that are used by the Authentication
+   * @param securityHandler Set of init parameters that are used by the Authentication
    * @return session handler
    */
   private SessionHandler createSessionHandler(final SecurityHandler securityHandler) {
@@ -354,7 +354,7 @@ public class WebServer implements AutoCloseable {
         .initializeSSLContext(false)
         .validateKeyStore(true)
         .build();
-    if(ssl.isSslValid()){
+    if (ssl.isSslValid()) {
       logger.info("Using configured SSL settings for web server");
 
       sslContextFactory.setKeyStorePath(ssl.getKeyStorePath());
@@ -419,7 +419,7 @@ public class WebServer implements AutoCloseable {
       sslContextFactory.setKeyStorePassword(keyStorePasswd);
     }
 
-    final HttpConfiguration httpsConfig = new HttpConfiguration();
+    final HttpConfiguration httpsConfig = baseHttpConfig();
     httpsConfig.addCustomizer(new SecureRequestCustomizer());
 
     // SSL Connector
@@ -439,12 +439,17 @@ public class WebServer implements AutoCloseable {
    */
   private ServerConnector createHttpConnector(int port, int acceptors, int selectors) {
     logger.info("Setting up HTTP connector for web server");
-    final HttpConfiguration httpConfig = new HttpConfiguration();
     final ServerConnector httpConnector =
-        new ServerConnector(embeddedJetty, null, null, null, acceptors, selectors, new HttpConnectionFactory(httpConfig));
+        new ServerConnector(embeddedJetty, null, null, null, acceptors, selectors, new HttpConnectionFactory(baseHttpConfig()));
     httpConnector.setPort(port);
 
     return httpConnector;
+  }
+
+  private HttpConfiguration baseHttpConfig() {
+    HttpConfiguration httpConfig = new HttpConfiguration();
+    httpConfig.setSendServerVersion(false);
+    return httpConfig;
   }
 
   @Override
@@ -458,7 +463,7 @@ public class WebServer implements AutoCloseable {
 
   /**
    * Creates if not exists, and returns File for temporary Javascript directory
-   * @return File handle
+   * @return file handle
    */
   public File getOrCreateTmpJavaScriptDir() {
     if (tmpJavaScriptDir == null && this.drillbit.getContext() != null) {
@@ -468,7 +473,7 @@ public class WebServer implements AutoCloseable {
         generateOptionsDescriptionJSFile();
         generateFunctionJS();
       } catch (IOException e) {
-        logger.error("Unable to create temp dir for JavaScripts. {}", e);
+        logger.error("Unable to create temp dir for JavaScripts: {}", tmpJavaScriptDir.getPath(), e);
       }
     }
     return tmpJavaScriptDir;
@@ -477,7 +482,7 @@ public class WebServer implements AutoCloseable {
 
   /**
    * Generate Options Description JavaScript to serve http://drillhost/options ACE library search features
-   * @throws IOException
+   * @throws IOException when unable to generate functions JS file
    */
   private void generateOptionsDescriptionJSFile() throws IOException {
     // Obtain list of Options & their descriptions
@@ -491,12 +496,12 @@ public class WebServer implements AutoCloseable {
     int numLeftToWrite = options.size();
 
     // Template source Javascript file
-    InputStream optionsDescripTemplateStream = Resource.newClassPathResource(OPTIONS_DESCRIBE_TEMPLATE_JS).getInputStream();
+    InputStream optionsDescribeTemplateStream = Resource.newClassPathResource(OPTIONS_DESCRIBE_TEMPLATE_JS).getInputStream();
     // Generated file
     File optionsDescriptionFile = new File(getOrCreateTmpJavaScriptDir(), OPTIONS_DESCRIBE_JS);
     final String file_content_footer = "};";
     // Create a copy of a template and write with that!
-    java.nio.file.Files.copy(optionsDescripTemplateStream, optionsDescriptionFile.toPath());
+    java.nio.file.Files.copy(optionsDescribeTemplateStream, optionsDescriptionFile.toPath());
     logger.info("Will write {} descriptions to {}", numLeftToWrite, optionsDescriptionFile.getAbsolutePath());
 
     try (BufferedWriter writer = new BufferedWriter(new FileWriter(optionsDescriptionFile, true))) {
@@ -521,7 +526,7 @@ public class WebServer implements AutoCloseable {
 
   /**
    * Generates ACE library javascript populated with list of available SQL functions
-   * @throws IOException
+   * @throws IOException when unable to generate JS file with functions
    */
   private void generateFunctionJS() throws IOException {
     // Naturally ordered set of function names
@@ -530,7 +535,7 @@ public class WebServer implements AutoCloseable {
     List<FunctionHolder> builtInFuncHolderList = this.drillbit.getContext().getFunctionImplementationRegistry().getLocalFunctionRegistry()
         .getAllJarsWithFunctionsHolders().get(LocalFunctionRegistry.BUILT_IN);
 
-    // Build List of 'usable' functions (i.e. functions that start with an alphabet and can be autocompleted by the ACE library)
+    // Build List of 'usable' functions (i.e. functions that start with an alphabet and can be auto-completed by the ACE library)
     // Example of 'unusable' functions would be operators like '<', '!'
     int skipCount = 0;
     for (FunctionHolder builtInFunctionHolder : builtInFuncHolderList) {
