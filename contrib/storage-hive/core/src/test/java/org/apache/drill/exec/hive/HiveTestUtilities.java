@@ -25,10 +25,14 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.util.EnumSet;
 import java.util.Set;
 
+import org.apache.drill.test.QueryBuilder;
 import org.apache.drill.test.TestTools;
 import org.apache.hadoop.hive.ql.CommandNeedRetryException;
 import org.apache.hadoop.hive.ql.Driver;
 import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
+
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.junit.Assert.assertThat;
 
 public class HiveTestUtilities {
 
@@ -109,6 +113,19 @@ public class HiveTestUtilities {
         "INSERT OVERWRITE TABLE %s SELECT * FROM %s",
         destTable, srcTable
     ));
+  }
+
+  /**
+   * Helper method used to ensure that native parquet scan will be used
+   * for table selection.
+   *
+   * @param queryBuilder test query builder
+   * @param table table to check
+   * @throws Exception may be thrown while getting query plan
+   */
+  public static void assertNativeScanUsed(QueryBuilder queryBuilder, String table) throws Exception {
+    String plan = queryBuilder.sql("SELECT * FROM hive.`%s`", table).explainText();
+    assertThat(plan, containsString("HiveDrillNativeParquetScan"));
   }
 
 }

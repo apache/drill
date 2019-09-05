@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.store.hive.writers.complex;
 
+import java.util.List;
+
 import org.apache.drill.exec.store.hive.writers.HiveValueWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 import org.apache.hadoop.hive.serde2.objectinspector.ListObjectInspector;
@@ -38,8 +40,12 @@ public class HiveListWriter implements HiveValueWriter {
 
   @Override
   public void write(Object value) {
+    List<?> list = listInspector.getList(value);
+    if (list == null) {
+      throw new UnsupportedOperationException("Null array is not supported in Hive.");
+    }
     listWriter.startList();
-    for (final Object element : listInspector.getList(value)) {
+    for (final Object element : list) {
       if (element == null) {
         throw new UnsupportedOperationException("Null is not supported in Hive array!");
       } else {

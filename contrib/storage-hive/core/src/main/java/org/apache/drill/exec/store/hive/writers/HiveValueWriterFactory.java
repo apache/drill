@@ -23,6 +23,7 @@ import java.util.function.Function;
 import io.netty.buffer.DrillBuf;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.store.hive.writers.complex.HiveListWriter;
+import org.apache.drill.exec.store.hive.writers.complex.HiveMapWriter;
 import org.apache.drill.exec.store.hive.writers.complex.HiveStructWriter;
 import org.apache.drill.exec.store.hive.writers.primitive.HiveBinaryWriter;
 import org.apache.drill.exec.store.hive.writers.primitive.HiveBooleanWriter;
@@ -38,6 +39,7 @@ import org.apache.drill.exec.store.hive.writers.primitive.HiveShortWriter;
 import org.apache.drill.exec.store.hive.writers.primitive.HiveStringWriter;
 import org.apache.drill.exec.store.hive.writers.primitive.HiveTimestampWriter;
 import org.apache.drill.exec.store.hive.writers.primitive.HiveVarCharWriter;
+import org.apache.drill.exec.vector.complex.DictVector;
 import org.apache.drill.exec.vector.complex.impl.SingleMapWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
@@ -53,6 +55,7 @@ import org.apache.drill.exec.vector.complex.writer.VarBinaryWriter;
 import org.apache.drill.exec.vector.complex.writer.VarCharWriter;
 import org.apache.drill.exec.vector.complex.writer.VarDecimalWriter;
 import org.apache.hadoop.hive.serde2.objectinspector.ListObjectInspector;
+import org.apache.hadoop.hive.serde2.objectinspector.MapObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.StructField;
 import org.apache.hadoop.hive.serde2.objectinspector.StructObjectInspector;
@@ -72,6 +75,7 @@ import org.apache.hadoop.hive.serde2.objectinspector.primitive.StringObjectInspe
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.TimestampObjectInspector;
 import org.apache.hadoop.hive.serde2.typeinfo.DecimalTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.ListTypeInfo;
+import org.apache.hadoop.hive.serde2.typeinfo.MapTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.PrimitiveTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
@@ -119,27 +123,39 @@ public final class HiveValueWriterFactory {
   private HiveValueWriter createHiveValueWriter(String columnName, TypeInfo typeInfo, ObjectInspector objectInspector, BaseWriter parentWriter) {
     switch (typeInfo.getCategory()) {
       case PRIMITIVE:
-        return createPrimitiveHiveValueWriter(columnName, objectInspector, (PrimitiveTypeInfo) typeInfo, parentWriter);
+        return createPrimitiveHiveValueWriter(columnName, (PrimitiveTypeInfo) typeInfo, objectInspector, parentWriter);
       case LIST: {
-        ListWriter listWriter = extractWriter(columnName, parentWriter, MapWriter::list, ListWriter::list);
-        ListObjectInspector listObjectInspector = (ListObjectInspector) objectInspector;
         TypeInfo elemTypeInfo = ((ListTypeInfo) typeInfo).getListElementTypeInfo();
-        ObjectInspector elementInspector = listObjectInspector.getListElementObjectInspector();
+        ListObjectInspector listInspector = (ListObjectInspector) objectInspector;
+        ObjectInspector elementInspector = listInspector.getListElementObjectInspector();
+        ListWriter listWriter = extractWriter(columnName, parentWriter, MapWriter::list, ListWriter::list);
         HiveValueWriter elementValueWriter = createHiveValueWriter(null, elemTypeInfo, elementInspector, listWriter);
-        return new HiveListWriter(listObjectInspector, listWriter, elementValueWriter);
+        return new HiveListWriter(listInspector, listWriter, elementValueWriter);
       }
       case STRUCT: {
-        StructObjectInspector structObjectInspector = (StructObjectInspector) objectInspector;
-        StructField[] structFields = structObjectInspector.getAllStructFieldRefs().toArray(new StructField[0]);
-        HiveValueWriter[] structFieldWriters = new HiveValueWriter[structFields.length];
+        StructObjectInspector structInspector = (StructObjectInspector) objectInspector;
+        StructField[] structFields = structInspector.getAllStructFieldRefs().toArray(new StructField[0]);
         MapWriter structWriter = extractWriter(columnName, parentWriter, MapWriter::map, ListWriter::map);
+        HiveValueWriter[] structFieldWriters = new HiveValueWriter[structFields.length];
         for (int fieldIdx = 0; fieldIdx < structFields.length; fieldIdx++) {
           StructField field = structFields[fieldIdx];
           ObjectInspector fieldObjectInspector = field.getFieldObjectInspector();
           TypeInfo fieldTypeInfo = TypeInfoUtils.getTypeInfoFromTypeString(fieldObjectInspector.getTypeName());
           structFieldWriters[fieldIdx] = createHiveValueWriter(field.getFieldName(), fieldTypeInfo, fieldObjectInspector, structWriter);
         }
-        return new HiveStructWriter(structObjectInspector, structFields, structFieldWriters, structWriter);
+        return new HiveStructWriter(structInspector, structFields, structFieldWriters, structWriter);
+      }
+      case MAP: {
+        MapTypeInfo mapTypeInfo = (MapTypeInfo) typeInfo;
+        PrimitiveTypeInfo keyTypeInfo = (PrimitiveTypeInfo) mapTypeInfo.getMapKeyTypeInfo();
+        TypeInfo valueTypeInfo = mapTypeInfo.getMapValueTypeInfo();
+        MapObjectInspector mapObjectInspector = (MapObjectInspector) objectInspector;
+        ObjectInspector keyInspector = mapObjectInspector.getMapKeyObjectInspector();
+        ObjectInspector valueInspector = mapObjectInspector.getMapValueObjectInspector();
+        BaseWriter.DictWriter dictWriter = extractWriter(columnName, parentWriter, MapWriter::dict, ListWriter::dict);
+        HiveValueWriter mapKeyWriter = createPrimitiveHiveValueWriter(DictVector.FIELD_KEY_NAME, keyTypeInfo, keyInspector, dictWriter);
+        HiveValueWriter mapValueWriter = createHiveValueWriter(DictVector.FIELD_VALUE_NAME, valueTypeInfo, valueInspector, dictWriter);
+        return new HiveMapWriter(mapObjectInspector, dictWriter, mapKeyWriter, mapValueWriter);
       }
     }
     throwUnsupportedHiveDataTypeError(typeInfo.getCategory().toString());
@@ -149,12 +165,13 @@ public final class HiveValueWriterFactory {
   /**
    * Creates writer for primitive type value.
    *
-   * @param name      column name or null if nested
-   * @param inspector inspector of column values
-   * @param typeInfo  column type used to distinguish returned writers
+   * @param name         column name or null if nested
+   * @param typeInfo     column type used to distinguish returned writers
+   * @param inspector    inspector of column values
+   * @param parentWriter parent writer used to extract writer for primitive
    * @return appropriate instance of HiveValueWriter for column containing primitive scalar
    */
-  private HiveValueWriter createPrimitiveHiveValueWriter(String name, ObjectInspector inspector, PrimitiveTypeInfo typeInfo, BaseWriter parentWriter) {
+  private HiveValueWriter createPrimitiveHiveValueWriter(String name, PrimitiveTypeInfo typeInfo, ObjectInspector inspector, BaseWriter parentWriter) {
     switch (typeInfo.getPrimitiveCategory()) {
       case BINARY: {
         VarBinaryWriter writer = extractWriter(name, parentWriter, MapWriter::varBinary, ListWriter::varBinary);
@@ -219,7 +236,7 @@ public final class HiveValueWriterFactory {
       }
       default:
         throw UserException.unsupportedError()
-            .message("Unsupported primitive data type %s")
+            .message("Unsupported primitive data type '%s'", typeInfo.getPrimitiveCategory())
             .build(logger);
     }
   }

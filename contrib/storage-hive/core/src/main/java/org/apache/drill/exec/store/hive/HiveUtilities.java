@@ -713,10 +713,10 @@ public class HiveUtilities {
    * @param hiveTable Thrift table from Hive Metastore
    * @return true if table contains unsupported data types, false otherwise
    */
-  public static boolean containsUnsupportedDataTypes(final Table hiveTable) {
+  private static boolean containsUnsupportedDataTypes(final Table hiveTable) {
     for (FieldSchema hiveField : hiveTable.getSd().getCols()) {
       final Category category = TypeInfoUtils.getTypeInfoFromTypeString(hiveField.getType()).getCategory();
-      if (category == Category.MAP || category == Category.UNION) {
+      if (category == Category.UNION) {
         logger.debug("Hive table contains unsupported data type: {}", category);
         return true;
       }

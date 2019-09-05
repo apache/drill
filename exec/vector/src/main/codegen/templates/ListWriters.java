@@ -253,6 +253,9 @@ public class ${mode}ListWriter extends AbstractFieldWriter {
     currentChildIndex = container.getMutator().add(idx());
     if(writer != null) {
       writer.setPosition(currentChildIndex);
+      if (mode == Mode.IN_DICT) {
+        writer.startList();
+      }
     }
   }
 

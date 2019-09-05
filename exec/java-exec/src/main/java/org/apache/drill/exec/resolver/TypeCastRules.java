@@ -680,6 +680,7 @@ public class TypeCastRules {
     rules.put(MinorType.MAP, Sets.newHashSet(MinorType.MAP));
     rules.put(MinorType.LIST, Sets.newHashSet(MinorType.LIST));
     rules.put(MinorType.UNION, Sets.newHashSet(MinorType.UNION));
+    rules.put(MinorType.DICT, Sets.newHashSet(MinorType.DICT));
   }
 
   public static boolean isCastableWithNullHandling(MajorType from, MajorType to, NullHandling nullHandling) {
