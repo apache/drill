@@ -48,7 +48,6 @@ import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.eclipse.jetty.http.HttpVersion;
-import org.eclipse.jetty.security.ConstraintMapping;
 import org.eclipse.jetty.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.security.DefaultIdentityService;
 import org.eclipse.jetty.security.DefaultUserIdentity;
@@ -109,7 +108,7 @@ public class WebServer implements AutoCloseable {
   /**
    * Start the web server including setup.
    *
-   * @throws Exception
+   * @throws Exception in case of error during start
    */
   public void start() throws Exception {
     if (jettyServer == null) {
@@ -223,7 +222,7 @@ public class WebServer implements AutoCloseable {
   }
 
   public static class AMUserPrincipal implements Principal {
-    public final String userName;
+    private final String userName;
 
     public AMUserPrincipal(String userName) {
       this.userName = userName;
@@ -236,7 +235,7 @@ public class WebServer implements AutoCloseable {
   }
 
   public static class AmLoginService implements LoginService {
-    private AMSecurityManager securityMgr;
+    private final AMSecurityManager securityMgr;
     protected IdentityService identityService = new DefaultIdentityService();
 
     public AmLoginService(AMSecurityManager securityMgr) {
@@ -274,18 +273,6 @@ public class WebServer implements AutoCloseable {
     @Override
     public void logout(UserIdentity user) {
     }
-
-    // @Override
-    // protected UserIdentity loadUser(String username) {
-    // // TODO Auto-generated method stub
-    // return null;
-    // }
-    //
-    // @Override
-    // protected void loadUsers() throws IOException {
-    // putUser( "fred", new Password( "wilma" ), new String[] { ADMIN_ROLE } );
-    // }
-
   }
 
   /**
@@ -298,8 +285,7 @@ public class WebServer implements AutoCloseable {
     ConstraintSecurityHandler security = new ConstraintSecurityHandler();
 
     Set<String> knownRoles = ImmutableSet.of(ADMIN_ROLE);
-    security.setConstraintMappings(Collections.<ConstraintMapping> emptyList(),
-        knownRoles);
+    security.setConstraintMappings(Collections.emptyList(), knownRoles);
 
     security.setAuthenticator(new FormAuthenticator("/login", "/login", true));
     security
@@ -350,13 +336,11 @@ public class WebServer implements AutoCloseable {
    * Create HTTP connector.
    *
    * @return Initialized {@link ServerConnector} instance for HTTP connections.
-   * @throws Exception
    */
-  private ServerConnector createHttpConnector(Config config) throws Exception {
+  private ServerConnector createHttpConnector(Config config) {
     LOG.info("Setting up HTTP connector for web server");
-    final HttpConfiguration httpConfig = new HttpConfiguration();
     final ServerConnector httpConnector = new ServerConnector(jettyServer,
-        new HttpConnectionFactory(httpConfig));
+        new HttpConnectionFactory(baseHttpConfig()));
     httpConnector.setPort(config.getInt(DrillOnYarnConfig.HTTP_PORT));
 
     return httpConnector;
@@ -368,12 +352,12 @@ public class WebServer implements AutoCloseable {
    * certificate is generated and used.
    * <p>
    * This is a shameless copy of
-   * {@link org.apache.drill.exec.server.rest.WebServer#createHttpsConnector(int, int, int)}.
+   * org.apache.drill.exec.server.rest.WebServer#createHttpsConnector(int, int, int).
    * The two should be merged at some point. The primary issue is that the Drill
    * version is tightly coupled to Drillbit configuration.
    *
    * @return Initialized {@link ServerConnector} for HTTPS connections.
-   * @throws Exception
+   * @throws Exception when unable to create HTTPS connector
    */
   private ServerConnector createHttpsConnector(Config config) throws Exception {
     LOG.info("Setting up HTTPS connector for web server");
@@ -446,7 +430,7 @@ public class WebServer implements AutoCloseable {
     sslContextFactory.setKeyStorePassword(keyStorePasswd);
     // }
 
-    final HttpConfiguration httpsConfig = new HttpConfiguration();
+    final HttpConfiguration httpsConfig = baseHttpConfig();
     httpsConfig.addCustomizer(new SecureRequestCustomizer());
 
     // SSL Connector
@@ -457,6 +441,12 @@ public class WebServer implements AutoCloseable {
     sslConnector.setPort(config.getInt(DrillOnYarnConfig.HTTP_PORT));
 
     return sslConnector;
+  }
+
+  private HttpConfiguration baseHttpConfig() {
+    HttpConfiguration httpConfig = new HttpConfiguration();
+    httpConfig.setSendServerVersion(false);
+    return httpConfig;
   }
 
   @Override
