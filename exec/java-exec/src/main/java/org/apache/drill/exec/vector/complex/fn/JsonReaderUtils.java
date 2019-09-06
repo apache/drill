@@ -74,12 +74,14 @@ public class JsonReaderUtils {
       TypeProtos.MajorType majorType = allTextMode
           ? Types.optional(TypeProtos.MinorType.VARCHAR)
           : Types.optional(TypeProtos.MinorType.INT);
+      ColumnMetadata metadata = null;
       if (columnMetadata != null) {
-        ColumnMetadata metadata = columnMetadata.metadata(fieldPath.getNameSegment().getPath());
+        metadata = columnMetadata.metadata(fieldPath.getNameSegment().getPath());
         majorType = metadata != null ? metadata.majorType() : majorType;
       }
       types.add(majorType);
-      if (fieldWriter.isEmptyMap()) {
+      // for the case if metadata is specified, ensures that required fields are created
+      if (fieldWriter.isEmptyMap() || metadata != null) {
         emptyStatus.set(fieldIndex, true);
       }
       if (fieldIndex == 0 && !allTextMode && schema == null) {
