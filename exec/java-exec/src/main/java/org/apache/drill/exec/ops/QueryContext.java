@@ -52,7 +52,6 @@ import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.testing.ExecutionControls;
 import org.apache.drill.exec.util.Utilities;
 
-import org.apache.drill.metastore.Metastore;
 import org.apache.drill.shaded.guava.com.google.common.base.Function;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
@@ -389,9 +388,5 @@ public class QueryContext implements AutoCloseable, OptimizerRulesContext, Schem
    */
   public boolean isSkipProfileWrite() {
     return skipProfileWrite;
-  }
-
-  public Metastore getMetastore() {
-    return drillbitContext.getMetastore();
   }
 }

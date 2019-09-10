@@ -44,7 +44,6 @@ import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 import org.apache.drill.exec.work.foreman.rm.ResourceManager;
 import org.apache.drill.exec.work.foreman.rm.ResourceManagerBuilder;
-import org.apache.drill.metastore.Metastore;
 import org.apache.drill.metastore.MetastoreRegistry;
 
 import java.util.Collection;
@@ -300,14 +299,14 @@ public class DrillbitContext implements AutoCloseable {
     getFunctionImplementationRegistry().close();
     getRemoteFunctionRegistry().close();
     getCompiler().close();
-    metastoreRegistry.close();
+    getMetastoreRegistry().close();
   }
 
   public ResourceManager getResourceManager() {
     return resourceManager;
   }
 
-  public Metastore getMetastore() {
-    return metastoreRegistry.get();
+  public MetastoreRegistry getMetastoreRegistry() {
+    return metastoreRegistry;
   }
 }

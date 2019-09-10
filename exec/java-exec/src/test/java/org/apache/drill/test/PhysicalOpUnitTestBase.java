@@ -250,7 +250,7 @@ public class PhysicalOpUnitTestBase extends ExecTest {
     }
 
     @Override
-    public WorkEventBus getWorkEventbus() {
+    public WorkEventBus getWorkEventBus() {
       return null;
     }
 

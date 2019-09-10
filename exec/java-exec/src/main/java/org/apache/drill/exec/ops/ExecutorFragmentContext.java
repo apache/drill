@@ -36,8 +36,10 @@ import java.util.Set;
  * {@link org.apache.drill.exec.work.fragment.FragmentExecutor}.
  */
 public interface ExecutorFragmentContext extends RootFragmentContext {
+
   /**
    * Returns the root allocator for the Drillbit.
+   *
    * @return The root allocator for the Drillbit.
    */
   BufferAllocator getRootAllocator();
@@ -58,7 +60,7 @@ public interface ExecutorFragmentContext extends RootFragmentContext {
 
   QueryProfileStoreContext getProfileStoreContext();
 
-  WorkEventBus getWorkEventbus();
+  WorkEventBus getWorkEventBus();
 
   Set<Map.Entry<UserServer.BitToUserConnection, UserServer.BitToUserConnectionConfig>> getUserConnections();
 

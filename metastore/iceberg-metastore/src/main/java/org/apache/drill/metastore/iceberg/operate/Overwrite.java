@@ -47,7 +47,7 @@ public class Overwrite implements IcebergOperation {
     transaction.newOverwrite()
       .overwriteByRowFilter(filter)
       .addFile(dataFile)
-      .validateAddedFiles()
+      .validateAddedFilesMatchOverwriteFilter()
       .commit();
   }
 }
