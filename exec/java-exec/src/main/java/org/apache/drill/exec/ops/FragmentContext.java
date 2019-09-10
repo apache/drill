@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+
+import org.apache.drill.metastore.MetastoreRegistry;
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.config.DrillConfig;
@@ -96,9 +98,10 @@ public interface FragmentContext extends UdfUtilities, AutoCloseable {
 
   /**
    * Returns the statement type (e.g. SELECT, CTAS, ANALYZE) from the query context.
+   *
    * @return query statement type {@link SqlStatementType}, if known.
    */
-  public SqlStatementType getSQLStatementType();
+  SqlStatementType getSQLStatementType();
 
   /**
    * Get this node's identity.
@@ -145,12 +148,12 @@ public interface FragmentContext extends UdfUtilities, AutoCloseable {
   /**
    * @return ID {@link java.util.UUID} of the current query
    */
-  public QueryId getQueryId();
+  QueryId getQueryId();
 
   /**
    * @return The string representation of the ID {@link java.util.UUID} of the current query
    */
-  public String getQueryIdString();
+  String getQueryIdString();
 
   OperatorContext newOperatorContext(PhysicalOperator popConfig);
 
@@ -171,22 +174,32 @@ public interface FragmentContext extends UdfUtilities, AutoCloseable {
 
   @Override
   void close();
+
   /**
-   * add a RuntimeFilter when the RuntimeFilter receiver belongs to the same MinorFragment
-   * @param runtimeFilter
+   * Add a RuntimeFilter when the RuntimeFilter receiver belongs to the same MinorFragment.
+   *
+   * @param runtimeFilter runtime filter
    */
-  public void addRuntimeFilter(RuntimeFilterWritable runtimeFilter);
+  void addRuntimeFilter(RuntimeFilterWritable runtimeFilter);
 
-  public RuntimeFilterWritable getRuntimeFilter(long rfIdentifier);
+  RuntimeFilterWritable getRuntimeFilter(long rfIdentifier);
 
   /**
-   * get the RuntimeFilter with a blocking wait, if the waiting option is enabled
-   * @param rfIdentifier
-   * @param maxWaitTime
-   * @param timeUnit
+   * Get the RuntimeFilter with a blocking wait, if the waiting option is enabled.
+   *
+   * @param rfIdentifier runtime filter identifier
+   * @param maxWaitTime max wait time
+   * @param timeUnit time unit
    * @return the RFW or null
    */
-  public RuntimeFilterWritable getRuntimeFilter(long rfIdentifier, long maxWaitTime, TimeUnit timeUnit);
+  RuntimeFilterWritable getRuntimeFilter(long rfIdentifier, long maxWaitTime, TimeUnit timeUnit);
+
+  /**
+   * Get instance of Metastore registry to obtain Metastore instance if needed.
+   *
+   * @return Metastore registry
+   */
+  MetastoreRegistry getMetastoreRegistry();
 
   interface ExecutorState {
     /**

@@ -17,6 +17,7 @@
  */
 package org.apache.drill.test;
 
+import org.apache.drill.metastore.MetastoreRegistry;
 import org.apache.drill.shaded.guava.com.google.common.base.Function;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
@@ -332,6 +333,11 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
 
     @Override
     public ValueHolder getConstantValueHolder(String value, TypeProtos.MinorType type, Function<DrillBuf, ValueHolder> holderInitializer) {
+      return null;
+    }
+
+    @Override
+    public MetastoreRegistry getMetastoreRegistry() {
       return null;
     }
   }

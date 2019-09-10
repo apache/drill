@@ -19,6 +19,8 @@ package org.apache.drill.exec.ops;
 
 import io.netty.buffer.DrillBuf;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -69,10 +71,9 @@ import org.apache.drill.exec.testing.ExecutionControls;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.exec.work.batch.IncomingBuffers;
 import org.apache.drill.exec.work.filter.RuntimeFilterWritable;
+import org.apache.drill.metastore.MetastoreRegistry;
 import org.apache.drill.shaded.guava.com.google.common.base.Function;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 
 /**
  * <p>
@@ -104,8 +105,8 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 public class FragmentContextImpl extends BaseFragmentContext implements ExecutorFragmentContext {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentContextImpl.class);
 
-  private final Map<DrillbitEndpoint, AccountingDataTunnel> tunnels = Maps.newHashMap();
-  private final List<OperatorContextImpl> contexts = Lists.newLinkedList();
+  private final Map<DrillbitEndpoint, AccountingDataTunnel> tunnels = new HashMap<>();
+  private final List<OperatorContextImpl> contexts = new LinkedList<>();
 
   private final DrillbitContext context;
   private final UserClientConnection connection; // is null if this context is for non-root fragment
@@ -150,10 +151,10 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
   /**
    * Create a FragmentContext instance for non-root fragment.
    *
-   * @param dbContext DrillbitContext.
-   * @param fragment Fragment implementation.
-   * @param funcRegistry FunctionImplementationRegistry.
-   * @throws ExecutionSetupException
+   * @param dbContext DrillbitContext
+   * @param fragment Fragment implementation
+   * @param funcRegistry FunctionImplementationRegistry
+   * @throws ExecutionSetupException when unable to init fragment context
    */
   public FragmentContextImpl(final DrillbitContext dbContext, final PlanFragment fragment,
                              final FunctionImplementationRegistry funcRegistry) throws ExecutionSetupException {
@@ -163,12 +164,12 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
   /**
    * Create a FragmentContext instance for root fragment.
    *
-   * @param dbContext DrillbitContext.
-   * @param fragment Fragment implementation.
-   * @param queryContext QueryContext.
-   * @param connection UserClientConnection.
-   * @param funcRegistry FunctionImplementationRegistry.
-   * @throws ExecutionSetupException
+   * @param dbContext DrillbitContext
+   * @param fragment Fragment implementation
+   * @param queryContext QueryContext
+   * @param connection UserClientConnection
+   * @param funcRegistry FunctionImplementationRegistry
+   * @throws ExecutionSetupException when unable to init fragment context
    */
   public FragmentContextImpl(final DrillbitContext dbContext, final PlanFragment fragment, final QueryContext queryContext,
                              final UserClientConnection connection, final FunctionImplementationRegistry funcRegistry)
@@ -216,7 +217,7 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
 
     stats = new FragmentStats(allocator, fragment.getAssignment());
     bufferManager = new BufferManagerImpl(this.allocator);
-    constantValueHolderCache = Maps.newHashMap();
+    constantValueHolderCache = new HashMap<>();
     enableRuntimeFilter = this.getOptions().getOption(ExecConstants.HASHJOIN_ENABLE_RUNTIME_FILTER_KEY).bool_val;
     enableRFWaiting = this.getOptions().getOption(ExecConstants.HASHJOIN_RUNTIME_FILTER_WAITING_ENABLE_KEY).bool_val && enableRuntimeFilter;
     if (enableRFWaiting) {
@@ -354,8 +355,7 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
   @Override
   public String getFragIdString() {
     final FragmentHandle handle = getHandle();
-    final String frag = handle != null ? handle.getMajorFragmentId() + ":" + handle.getMinorFragmentId() : "0:0";
-    return frag;
+    return handle != null ? handle.getMajorFragmentId() + ":" + handle.getMinorFragmentId() : "0:0";
   }
 
   @Override
@@ -566,7 +566,7 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
   @Override
   public ValueHolder getConstantValueHolder(String value, MinorType type, Function<DrillBuf, ValueHolder> holderInitializer) {
     if (!constantValueHolderCache.containsKey(value)) {
-      constantValueHolderCache.put(value, Maps.<MinorType, ValueHolder>newHashMap());
+      constantValueHolderCache.put(value, new HashMap<>());
     }
 
     Map<MinorType, ValueHolder> holdersByType = constantValueHolderCache.get(value);
@@ -589,7 +589,7 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
   }
 
   @Override
-  public WorkEventBus getWorkEventbus() {
+  public WorkEventBus getWorkEventBus() {
     return context.getWorkBus();
   }
 
@@ -619,5 +619,10 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
     Preconditions.checkNotNull(queryContext, "Statement type is only valid for root fragment."
             + " Calling from non-root fragment");
     return queryContext.getSQLStatementType();
+  }
+
+  @Override
+  public MetastoreRegistry getMetastoreRegistry() {
+    return context.getMetastoreRegistry();
   }
 }

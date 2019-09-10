@@ -18,10 +18,10 @@
 package org.apache.drill.metastore.iceberg.components.tables;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.metastore.components.tables.BasicTablesTransformer;
 import org.apache.drill.metastore.components.tables.BasicTablesRequests;
-import org.apache.drill.metastore.components.tables.TableMetadataUnit;
+import org.apache.drill.metastore.components.tables.BasicTablesTransformer;
 import org.apache.drill.metastore.components.tables.MetastoreTableInfo;
+import org.apache.drill.metastore.components.tables.TableMetadataUnit;
 import org.apache.drill.metastore.components.tables.Tables;
 import org.apache.drill.metastore.expressions.FilterExpression;
 import org.apache.drill.metastore.iceberg.IcebergBaseTest;
@@ -317,69 +317,90 @@ public class TestBasicRequests extends IcebergBaseTest {
    * @param tables Drill Metastore Tables instance
    */
   private static void prepareData(Tables tables) {
-    nationTable = basicUnit().toBuilder()
-      .tableName("nation")
-      .metadataType(MetadataType.TABLE.name())
-      .metadataKey(MetadataInfo.GENERAL_INFO_KEY)
-      .build();
+    TableMetadataUnit basicUnit = basicUnit();
+
+    nationTable = BaseTableMetadata.builder()
+      .metadataUnit(basicUnit.toBuilder()
+        .tableName("nation")
+        .metadataType(MetadataType.TABLE.name())
+        .metadataKey(MetadataInfo.GENERAL_INFO_KEY)
+        .build())
+      .build()
+      .toMetadataUnit();
 
     nationTableInfo = TableInfo.builder().metadataUnit(nationTable).build();
 
-    TableMetadataUnit nationSegment1 = nationTable.toBuilder()
-      .metadataType(MetadataType.SEGMENT.name())
+    TableMetadataUnit basicSegment = SegmentMetadata.builder()
+      .metadataUnit(basicUnit.toBuilder()
+        .tableName(nationTableInfo.name())
+        .metadataType(MetadataType.SEGMENT.name())
+        .build())
+      .build()
+      .toMetadataUnit();
+
+    TableMetadataUnit nationSegment1 = basicSegment.toBuilder()
       .metadataKey("part_int=3")
       .location("/tmp/nation/part_int=3/d3")
       .column("n_nation")
       .lastModifiedTime(1L)
       .build();
 
-    TableMetadataUnit nationSegment2 = nationTable.toBuilder()
-      .metadataType(MetadataType.SEGMENT.name())
+    TableMetadataUnit nationSegment2 = basicSegment.toBuilder()
       .metadataKey("part_int=3")
       .location("/tmp/nation/part_int=3/d4")
       .column("n_nation")
       .lastModifiedTime(2L)
       .build();
 
-    TableMetadataUnit nationSegment3 = nationTable.toBuilder()
-      .metadataType(MetadataType.SEGMENT.name())
+    TableMetadataUnit nationSegment3 = basicSegment.toBuilder()
       .metadataKey("part_int=4")
       .location("/tmp/nation/part_int=4/d5")
       .column("n_nation")
       .lastModifiedTime(3L)
       .build();
 
-    TableMetadataUnit nationPartition1 = nationTable.toBuilder()
-      .metadataType(MetadataType.PARTITION.name())
+    TableMetadataUnit basicPartition = PartitionMetadata.builder()
+      .metadataUnit(basicUnit.toBuilder()
+        .tableName(nationTableInfo.name())
+        .metadataType(MetadataType.PARTITION.name())
+        .build())
+      .build()
+      .toMetadataUnit();
+
+    TableMetadataUnit nationPartition1 = basicPartition.toBuilder()
       .metadataKey("part_int=3")
       .location("/tmp/nation/part_int=3/d5")
       .column("n_nation")
       .build();
 
-    TableMetadataUnit nationPartition2 = nationTable.toBuilder()
-      .metadataType(MetadataType.PARTITION.name())
+    TableMetadataUnit nationPartition2 = basicPartition.toBuilder()
       .metadataKey("part_int=4")
       .location("/tmp/nation/part_int=4/d5")
       .column("n_nation")
       .build();
 
-    TableMetadataUnit nationPartition3 = nationTable.toBuilder()
-      .metadataType(MetadataType.PARTITION.name())
+    TableMetadataUnit nationPartition3 = basicPartition.toBuilder()
       .metadataKey("part_int=4")
       .column("n_region")
       .location("/tmp/nation/part_int=4/d6")
       .build();
 
-    TableMetadataUnit nationFile1 = nationTable.toBuilder()
-      .metadataType(MetadataType.FILE.name())
+    TableMetadataUnit basicFile = FileMetadata.builder()
+      .metadataUnit(basicUnit.toBuilder()
+        .tableName(nationTableInfo.name())
+        .metadataType(MetadataType.FILE.name())
+        .build())
+      .build()
+      .toMetadataUnit();
+
+    TableMetadataUnit nationFile1 = basicFile.toBuilder()
       .metadataKey("part_int=3")
       .location("/tmp/nation/part_int=3/part_varchar=g")
       .path("/tmp/nation/part_int=3/part_varchar=g/0_0_0.parquet")
       .lastModifiedTime(1L)
       .build();
 
-    TableMetadataUnit nationFile2 = nationTable.toBuilder()
-      .metadataType(MetadataType.FILE.name())
+    TableMetadataUnit nationFile2 = basicFile.toBuilder()
       .metadataKey("part_int=3")
       .location("/tmp/nation/part_int=3/part_varchar=g")
       .path("/tmp/nation/part_int=3/part_varchar=g/0_0_1.parquet")
@@ -387,51 +408,57 @@ public class TestBasicRequests extends IcebergBaseTest {
       .lastModifiedTime(2L)
       .build();
 
-    TableMetadataUnit nationFile3 = nationTable.toBuilder()
-      .metadataType(MetadataType.FILE.name())
+    TableMetadataUnit nationFile3 = basicFile.toBuilder()
       .metadataKey("part_int=4")
       .location("/tmp/nation/part_int=4/part_varchar=g")
       .path("/tmp/nation/part_int=4/part_varchar=g/0_0_0.parquet")
       .lastModifiedTime(3L)
       .build();
 
-    TableMetadataUnit nationRowGroup1 = nationTable.toBuilder()
-      .metadataType(MetadataType.ROW_GROUP.name())
+    TableMetadataUnit basicRowGroup = RowGroupMetadata.builder()
+      .metadataUnit(basicUnit.toBuilder()
+        .tableName(nationTableInfo.name())
+        .metadataType(MetadataType.ROW_GROUP.name())
+        .build())
+      .build()
+      .toMetadataUnit();
+
+    TableMetadataUnit nationRowGroup1 = basicRowGroup.toBuilder()
       .metadataKey("part_int=3")
       .location("/tmp/nation/part_int=3/part_varchar=g")
       .path("/tmp/nation/part_int=3/part_varchar=g/0_0_0.parquet")
       .rowGroupIndex(1)
       .build();
 
-    TableMetadataUnit nationRowGroup2 = nationTable.toBuilder()
-      .metadataType(MetadataType.ROW_GROUP.name())
+    TableMetadataUnit nationRowGroup2 = basicRowGroup.toBuilder()
       .metadataKey("part_int=3")
       .location("/tmp/nation/part_int=3/part_varchar=g")
       .path("/tmp/nation/part_int=3/part_varchar=g/0_0_0.parquet")
       .rowGroupIndex(2)
       .build();
 
-    TableMetadataUnit nationRowGroup3 = nationTable.toBuilder()
-      .metadataType(MetadataType.ROW_GROUP.name())
+    TableMetadataUnit nationRowGroup3 = basicRowGroup.toBuilder()
       .metadataKey("part_int=4")
       .location("/tmp/nation/part_int=4/part_varchar=g")
       .path("/tmp/nation/part_int=4/part_varchar=g/0_0_0.parquet")
       .rowGroupIndex(1)
       .build();
 
-    TableMetadataUnit nationRowGroup4 = nationTable.toBuilder()
-      .metadataType(MetadataType.ROW_GROUP.name())
+    TableMetadataUnit nationRowGroup4 = basicRowGroup.toBuilder()
       .metadataKey("part_int=4")
       .location("/tmp/nation/part_int=4/part_varchar=g")
       .path("/tmp/nation/part_int=4/part_varchar=g/0_0_0.parquet")
       .rowGroupIndex(2)
       .build();
 
-    TableMetadataUnit regionTable = basicUnit().toBuilder()
-      .tableName("region")
-      .metadataType(MetadataType.TABLE.name())
-      .metadataKey(MetadataInfo.GENERAL_INFO_KEY)
-      .build();
+    TableMetadataUnit regionTable = BaseTableMetadata.builder()
+      .metadataUnit(basicUnit.toBuilder()
+        .tableName("region")
+        .metadataType(MetadataType.TABLE.name())
+        .metadataKey(MetadataInfo.GENERAL_INFO_KEY)
+        .build())
+      .build()
+      .toMetadataUnit();
 
     tables.modify()
       .overwrite(nationTable,
@@ -471,7 +498,7 @@ public class TestBasicRequests extends IcebergBaseTest {
         "\"statisticsKind\":{\"name\":\"approx_count_distinct\"}}"))
       .lastModifiedTime(System.currentTimeMillis())
       .partitionKeys(Collections.singletonMap("dir0", "2018"))
-      .additionalMetadata("test table metadata")
+      .additionalMetadata("additional test metadata")
       .metadataIdentifier("part_int=3/part_varchar=g/0_0_0.parquet")
       .column("`id`")
       .locations(Arrays.asList("/tmp/nation/1", "/tmp/nation/2"))
