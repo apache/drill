@@ -135,7 +135,10 @@ public class ConvertHiveMapRDBJsonScanToDrillMapRDBJsonScan extends StoragePlugi
     HiveToRelDataTypeConverter dataTypeConverter = new HiveToRelDataTypeConverter(typeFactory);
     TupleMetadata schema = new TupleSchema();
     hiveReadEntry.getTable().getColumnListsCache().getTableSchemaColumns()
-        .forEach(column -> schema.addColumn(HiveUtilities.getColumnMetadata(dataTypeConverter, column)));
+        .forEach(column ->
+            schema.addColumn(HiveUtilities.getColumnMetadata(
+                replaceOverriddenColumnId(parameters, column.getName()),
+                dataTypeConverter.convertToNullableRelDataType(column))));
 
     MapRDBFormatPluginConfig formatConfig = new MapRDBFormatPluginConfig();
 
