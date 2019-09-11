@@ -448,7 +448,11 @@ public class MaprDBJsonRecordReader extends AbstractRecordReader {
     }
 
     if (nonExistentColumnsProjection && recordCount > 0) {
-      JsonReaderUtils.ensureAtLeastOneField(vectorWriter, getColumns(), schema, allTextMode, Collections.emptyList());
+      if (schema == null || schema.isEmpty()) {
+        JsonReaderUtils.ensureAtLeastOneField(vectorWriter, getColumns(), allTextMode, Collections.emptyList());
+      } else {
+        JsonReaderUtils.writeColumnsUsingSchema(vectorWriter, getColumns(), schema, allTextMode);
+      }
     }
     vectorWriter.setValueCount(recordCount);
     if (maxRecordsToRead > 0) {
