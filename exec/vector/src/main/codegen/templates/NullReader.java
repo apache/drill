@@ -155,11 +155,20 @@ public class NullReader extends AbstractBaseReader implements FieldReader {
   }
 
   @Override
+  public int find(Object key) {
+    return -1;
+  }
+
+  @Override
   public void read(String key, ValueHolder holder) {
   }
 
   @Override
   public void read(int key, ValueHolder holder) {
+  }
+
+  @Override
+  public void read(Object key, ValueHolder holder) {
   }
 }
 

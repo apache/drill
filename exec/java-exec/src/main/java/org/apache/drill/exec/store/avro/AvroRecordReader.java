@@ -244,7 +244,7 @@ public class AvroRecordReader extends AbstractRecordReader {
         for (Entry<Object, Object> entry : map.entrySet()) {
           dictWriter.startKeyValuePair();
           processPrimitive(entry.getKey(), keySchema, DictVector.FIELD_KEY_NAME, writer);
-          process(entry.getValue(), valueSchema, DictVector.FIELD_VALUE_NAME, writer, fieldSelection.getChild(entry.getKey().toString()));
+          process(entry.getValue(), valueSchema, DictVector.FIELD_VALUE_NAME, writer, FieldSelection.ALL_VALID);
           dictWriter.endKeyValuePair();
         }
         dictWriter.end();

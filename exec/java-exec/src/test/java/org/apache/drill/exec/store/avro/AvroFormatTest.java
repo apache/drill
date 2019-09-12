@@ -637,6 +637,22 @@ public class AvroFormatTest extends BaseTestQuery {
   }
 
   @Test
+  public void testMapSchemaGetByNotExistingKey() throws Exception {
+    String sql = "select map_field['notExists'] as map_field from dfs.`%s`";
+
+    TestBuilder testBuilder = testBuilder()
+        .sqlQuery(sql, mapTableName)
+        .unOrdered()
+        .baselineColumns("map_field");
+
+    Object[] nullValue = new Object[] {null};
+    for (long i = 0; i < RECORD_COUNT; i++) {
+      testBuilder.baselineValues(nullValue);
+    }
+    testBuilder.go();
+  }
+
+  @Test
   public void testMapSchemaGetByKeyUsingDotNotation() throws Exception {
     String sql = "select t.map_field.key1 val1, t.map_field.key2 val2 from dfs.`%s` t";
 

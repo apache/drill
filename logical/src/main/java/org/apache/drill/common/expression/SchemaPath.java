@@ -25,6 +25,7 @@ import org.apache.drill.common.expression.PathSegment.ArraySegment;
 import org.apache.drill.common.expression.PathSegment.NameSegment;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.parser.LogicalExpressionParser;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.proto.UserBitShared.NamePart;
@@ -301,8 +302,18 @@ public class SchemaPath extends LogicalExpressionBase {
     return new SchemaPath(newRoot);
   }
 
+  public SchemaPath getChild(String childPath, Object originalValue, TypeProtos.MajorType valueType) {
+    NameSegment newRoot = rootSegment.cloneWithNewChild(new NameSegment(childPath, originalValue, valueType));
+    return new SchemaPath(newRoot);
+  }
+
   public SchemaPath getChild(int index) {
     NameSegment newRoot = rootSegment.cloneWithNewChild(new ArraySegment(index));
+    return new SchemaPath(newRoot);
+  }
+
+  public SchemaPath getChild(int index, Object originalValue, TypeProtos.MajorType valueType) {
+    NameSegment newRoot = rootSegment.cloneWithNewChild(new ArraySegment(index, originalValue, valueType));
     return new SchemaPath(newRoot);
   }
 

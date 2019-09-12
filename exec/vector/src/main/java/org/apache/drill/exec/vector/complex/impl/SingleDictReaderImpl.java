@@ -18,6 +18,7 @@
 package org.apache.drill.exec.vector.complex.impl;
 
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import org.apache.drill.exec.expr.holders.ValueHolder;
 import org.apache.drill.exec.util.Text;
 import org.apache.drill.exec.vector.ValueVector;
@@ -29,10 +30,11 @@ import org.apache.drill.exec.vector.complex.writer.BaseWriter.DictWriter;
 import org.apache.drill.exec.vector.complex.writer.FieldWriter;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 public class SingleDictReaderImpl extends AbstractRepeatedMapReaderImpl<DictVector> implements DictReader {
 
-  private static final int NOT_FOUND = -1;
+  public static final int NOT_FOUND = -1;
 
   public SingleDictReaderImpl(DictVector vector) {
     super(vector);
@@ -56,7 +58,8 @@ public class SingleDictReaderImpl extends AbstractRepeatedMapReaderImpl<DictVect
     return find(typifiedKey);
   }
 
-  private int find(Object key) {
+  @Override
+  public int find(Object key) {
     int start = vector.getOffsetVector().getAccessor().get(idx());
     int end = vector.getOffsetVector().getAccessor().get(idx() + 1);
     int index = NOT_FOUND;
@@ -88,9 +91,13 @@ public class SingleDictReaderImpl extends AbstractRepeatedMapReaderImpl<DictVect
       case FLOAT8:
         return (double) key;
       case VARDECIMAL:
-        return BigDecimal.valueOf(key);
+        return BigDecimal.valueOf(key)
+            .setScale(keyType.getScale(), RoundingMode.HALF_UP);
       case BIT:
         return key != 0;
+      case VARCHAR:
+      case VARBINARY:
+        return new Text(String.valueOf(key));
       default:
         String message = String.format("Unknown value %d for key of type %s", key, keyType.getMinorType().toString());
         throw new IllegalArgumentException(message);
@@ -115,6 +122,15 @@ public class SingleDictReaderImpl extends AbstractRepeatedMapReaderImpl<DictVect
         return Float.valueOf(key);
       case FLOAT8:
         return Double.valueOf(key);
+      case VARDECIMAL:
+        return BigDecimal.valueOf(Double.valueOf(key))
+            .setScale(keyType.getScale(), RoundingMode.HALF_UP);
+      case TIMESTAMP:
+        return DateUtility.parseBest(key);
+      case DATE:
+        return DateUtility.parseLocalDate(key);
+      case TIME:
+        return DateUtility.parseLocalTime(key);
       default:
         String message = String.format("Unknown value %s for key of type %s", key, keyType.getMinorType().toString());
         throw new IllegalArgumentException(message);
@@ -133,7 +149,8 @@ public class SingleDictReaderImpl extends AbstractRepeatedMapReaderImpl<DictVect
     read(typifiedKey, holder);
   }
 
-  private void read(Object key, ValueHolder holder) {
+  @Override
+  public void read(Object key, ValueHolder holder) {
     if (isEmpty()) {
       return;
     }

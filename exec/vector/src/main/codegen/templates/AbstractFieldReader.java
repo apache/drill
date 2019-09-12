@@ -141,12 +141,21 @@ public abstract class AbstractFieldReader extends AbstractBaseReader implements 
     return -1;
   }
 
+  public int find(Object key){
+    fail("find(Object key)");
+    return -1;
+  }
+
   public void read(String key, ValueHolder holder) {
     fail("read(String key, ValueHolder holder)");
   }
 
   public void read(int key, ValueHolder holder) {
     fail("read(int key, ValueHolder holder)");
+  }
+
+  public void read(Object key, ValueHolder holder) {
+    fail("read(Object key, ValueHolder holder)");
   }
 
   private void fail(String name) {
