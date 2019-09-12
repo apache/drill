@@ -84,6 +84,20 @@ public interface BaseReader extends Positionable{
     int find(int key);
 
     /**
+     * Obtain the index for given key in current row used to find a corresponding value with.
+     * Used in generated code when retrieving value from Dict using {@link org.apache.drill.common.expression.PathSegment}
+     * with provided {@link org.apache.drill.common.expression.PathSegment#getOriginalValue()}
+     * in cases when {@link org.apache.drill.exec.vector.complex.DictVector#getValueType()} is complex.
+     *
+     * <p>The {@code key} is assumed to be of actual type, is not converted and used as is.
+     *
+     * @param key key value
+     * @return index for the given key
+     * @see org.apache.drill.exec.vector.complex.DictVector
+     */
+    int find(Object key);
+
+    /**
      * Reads a value corresponding to a {@code key} into the {@code holder}.
      * If there is no entry in the row with the given {@code key}, value is set to null.
      *
@@ -116,6 +130,22 @@ public interface BaseReader extends Positionable{
      * @see org.apache.drill.exec.vector.complex.DictVector
      */
     void read(int key, ValueHolder holder);
+
+    /**
+     * Reads a value corresponding to a {@code key} into the {@code holder}.
+     * If there is no entry in the row with the given {@code key}, value is set to null.
+     *
+     * <p>Used in generated code when retrieving value from Dict using {@link org.apache.drill.common.expression.PathSegment}
+     * with provided {@link org.apache.drill.common.expression.PathSegment#getOriginalValue()}
+     * in cases when {@link org.apache.drill.exec.vector.complex.DictVector#getValueType()} is primitive.
+     *
+     * <p>The {@code key} is assumed to be of actual type, is not converted and used as is.
+     *
+     * @param key key value
+     * @param holder a holder to write value's value into
+     * @see org.apache.drill.exec.vector.complex.DictVector
+     */
+    void read(Object key, ValueHolder holder);
   }
   
   public interface ListReader extends BaseReader{

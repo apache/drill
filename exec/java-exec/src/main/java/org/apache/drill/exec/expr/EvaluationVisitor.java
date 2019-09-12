@@ -17,6 +17,10 @@
  */
 package org.apache.drill.exec.expr;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -515,10 +519,11 @@ public class EvaluationVisitor {
         eval.add(expr.invoke("setPosition").arg(recordIndex));
         int listNum = 0;
 
-        JVar valueIndex = eval.decl(generator.getModel().INT, "valueIndex", JExpr.lit(-1));
+        // variable used to store index of key in dict (if there is one)
+        // if entry for the key is not found, will be assigned a value of SingleDictReaderImpl#NOT_FOUND.
+        JVar valueIndex = eval.decl(generator.getModel().INT, "valueIndex", JExpr.lit(-2));
 
         int depth = 0;
-        boolean isDict = e.getFieldId().isDict(depth);
 
         while (seg != null) {
           if (seg.isArray()) {
@@ -529,15 +534,10 @@ public class EvaluationVisitor {
               break;
             }
 
-            depth++;
-
-            if (isDict) {
-              JExpression keyExpr = JExpr.lit(seg.getArraySegment().getIndex());
-
-              expr = getDictReaderReadByKeyExpression(generator, eval, expr, keyExpr, valueIndex, isNull);
-
+            if (e.getFieldId().isDict(depth)) {
+              expr = getDictReaderReadByKeyExpression(generator, eval, expr, seg, valueIndex, isNull);
               seg = seg.getChild();
-              isDict = e.getFieldId().isDict(depth);
+              depth++;
               continue;
             }
 
@@ -569,20 +569,17 @@ public class EvaluationVisitor {
           } else {
 
             if (e.getFieldId().isDict(depth)) {
-              depth++;
-              JExpression keyExpr = JExpr.lit(seg.getNameSegment().getPath());
-
               MajorType finalType = e.getFieldId().getFinalType();
               if (seg.getChild() == null && !(Types.isComplex(finalType) || Types.isRepeated(finalType))) {
                 // This is the last segment:
-                eval.add(expr.invoke("read").arg(keyExpr).arg(out.getHolder()));
+                eval.add(expr.invoke("read").arg(getKeyExpression(seg, generator)).arg(out.getHolder()));
                 return out;
               }
 
-              expr = getDictReaderReadByKeyExpression(generator, eval, expr, keyExpr, valueIndex, isNull);
+              expr = getDictReaderReadByKeyExpression(generator, eval, expr, seg, valueIndex, isNull);
 
               seg = seg.getChild();
-              isDict = e.getFieldId().isDict(depth);
+              depth++;
               continue;
             }
 
@@ -590,11 +587,12 @@ public class EvaluationVisitor {
             expr = expr.invoke("reader").arg(fieldName);
           }
           seg = seg.getChild();
+          depth++;
         }
 
         if (complex || repeated) {
 
-          if (isDict) {
+          if (e.getFieldId().isDict(depth)) {
             JVar dictReader = generator.declareClassField("dictReader", generator.getModel()._ref(FieldReader.class));
             eval.assign(dictReader, expr);
 
@@ -625,10 +623,16 @@ public class EvaluationVisitor {
         } else {
           if (seg != null) {
             JExpression holderExpr = out.getHolder();
+            JExpression argExpr;
             if (e.getFieldId().isDict(depth)) {
               holderExpr = JExpr.cast(generator.getModel()._ref(ValueHolder.class), holderExpr);
+              argExpr = getKeyExpression(seg, generator);
+            } else {
+              argExpr = JExpr.lit(seg.getArraySegment().getIndex());
             }
-            eval.add(expr.invoke("read").arg(JExpr.lit(seg.getArraySegment().getIndex())).arg(holderExpr));
+            JClass dictReaderClass = generator.getModel().ref(org.apache.drill.exec.vector.complex.impl.SingleDictReaderImpl.class);
+            JConditional jc = eval._if(valueIndex.ne(dictReaderClass.staticRef("NOT_FOUND")));
+            jc._then().add(expr.invoke("read").arg(argExpr).arg(holderExpr));
           } else {
             eval.add(expr.invoke("read").arg(out.getHolder()));
           }
@@ -667,7 +671,7 @@ public class EvaluationVisitor {
      * @param generator current class generator
      * @param eval evaluation block the code will be added to
      * @param expr DICT reader to read values from
-     * @param keyExpr key literal
+     * @param segment segment containing original key value
      * @param valueIndex current value index (will be reassigned in the method)
      * @param isNull variable to indicate whether entry with the key exists in the DICT.
      *               Will be set to {@literal 1} if the key is not present
@@ -675,9 +679,12 @@ public class EvaluationVisitor {
      *         reader with its position set to index corresponding to the key
      */
     private JExpression getDictReaderReadByKeyExpression(ClassGenerator generator, JBlock eval, JExpression expr,
-                                                         JExpression keyExpr, JVar valueIndex, JVar isNull) {
+                                                         PathSegment segment, JVar valueIndex, JVar isNull) {
       JVar dictReader = generator.declareClassField("dictReader", generator.getModel()._ref(FieldReader.class));
       eval.assign(dictReader, expr);
+
+      JExpression keyExpr = getKeyExpression(segment, generator);
+
       eval.assign(valueIndex, expr.invoke("find").arg(keyExpr));
 
       JConditional conditional = eval._if(valueIndex.gt(JExpr.lit(-1)));
@@ -686,10 +693,100 @@ public class EvaluationVisitor {
       ifFound.add(expr.invoke("setPosition").arg(valueIndex));
 
       JBlock elseBlock = conditional._else().block();
-      elseBlock.add(dictReader.invoke("setPosition").arg(valueIndex));
-      elseBlock.assign(isNull, JExpr.lit(1));
+
+      JClass nrClass = generator.getModel().ref(org.apache.drill.exec.vector.complex.impl.NullReader.class);
+      JExpression nullReader = nrClass.staticRef("EMPTY_MAP_INSTANCE");
+
+      elseBlock.assign(dictReader, nullReader);
+      if (isNull != null) {
+        elseBlock.assign(isNull, JExpr.lit(1));
+      }
 
       return expr;
+    }
+
+    /**
+     * Transforms a segment to appropriate Java Object representation of key ({@link org.apache.drill.exec.vector.complex.DictVector#FIELD_KEY_NAME})
+     * which is used when retrieving values from dict with key. In case if key vector's Java equivalent is primitive,
+     * i.e. {@code boolean}, {@code int}, {@code double} etc., then primitive type is used.
+     * Otherwise, an {@code Object} instance is created (i.e, {@code BigDecimal} for {@link org.apache.drill.common.types.TypeProtos.MinorType#VARDECIMAL},
+     * {@code LocalDateTime} for {@link org.apache.drill.common.types.TypeProtos.MinorType#TIMESTAMP} etc.).
+     *
+     * @param segment a path segment providing the value
+     * @param generator current class generator
+     * @return Java Object representation of key wrapped into {@link JVar}
+     */
+    private JExpression getKeyExpression(PathSegment segment, ClassGenerator generator) {
+      MajorType valueType = segment.getOriginalValueType();
+      JType keyType;
+      JExpression newKeyObject;
+      JVar dictKey;
+      if (segment.isArray()) {
+        if (valueType == null) {
+          return JExpr.lit(segment.getArraySegment().getIndex());
+        }
+        switch(valueType.getMinorType()) {
+          case INT:
+            return JExpr.cast(generator.getModel().ref(Object.class), JExpr.lit(segment.getArraySegment().getIndex()));
+          case SMALLINT:
+            return JExpr.lit((short) segment.getOriginalValue());
+          case TINYINT:
+            return JExpr.lit((byte) segment.getOriginalValue());
+          default:
+            throw new IllegalArgumentException("ArraySegment!");
+        }
+      } else { // named
+        if (valueType == null) {
+          return JExpr.lit(segment.getNameSegment().getPath());
+        }
+        switch (valueType.getMinorType()) {
+          case VARCHAR:
+            String vcValue = (String) segment.getOriginalValue();
+            keyType = generator.getModel()._ref(org.apache.drill.exec.util.Text.class);
+            newKeyObject = JExpr._new(keyType).arg(vcValue);
+            dictKey = generator.declareClassField("dictKey", keyType);
+            generator.getSetupBlock().assign(dictKey, newKeyObject);
+            return dictKey;
+          case VARDECIMAL:
+            BigDecimal bdValue = (BigDecimal) segment.getOriginalValue();
+            keyType = generator.getModel()._ref(java.math.BigDecimal.class);
+
+            JClass rmClass = generator.getModel().ref(java.math.RoundingMode.class);
+            newKeyObject = JExpr._new(keyType).arg(JExpr.lit(bdValue.doubleValue())).invoke("setScale")
+                .arg(JExpr.lit(bdValue.scale()))
+                .arg(rmClass.staticRef("HALF_UP"));
+            dictKey = generator.declareClassField("dictKey", keyType);
+            generator.getSetupBlock().assign(dictKey, newKeyObject);
+            return dictKey;
+          case BIGINT:
+            return JExpr.lit((long) segment.getOriginalValue());
+          case FLOAT4:
+            return JExpr.lit((float) segment.getOriginalValue());
+          case FLOAT8:
+            return JExpr.lit((double) segment.getOriginalValue());
+          case BIT:
+            return JExpr.lit((boolean) segment.getOriginalValue());
+          case TIMESTAMP:
+            return getDateTimeKey(segment, generator, LocalDateTime.class, "parseBest");
+          case DATE:
+            return getDateTimeKey(segment, generator, LocalDate.class, "parseLocalDate");
+          case TIME:
+            return getDateTimeKey(segment, generator, LocalTime.class, "parseLocalTime");
+          default:
+            throw new IllegalArgumentException("NamedSegment!");
+        }
+      }
+    }
+
+    private JVar getDateTimeKey(PathSegment segment, ClassGenerator generator, Class<?> javaClass, String methodName) {
+      String strValue = (String) segment.getOriginalValue();
+
+      JClass dateUtilityClass = generator.getModel().ref(org.apache.drill.exec.expr.fn.impl.DateUtility.class);
+      JExpression newKeyObject = dateUtilityClass.staticInvoke(methodName).arg(JExpr.lit(strValue));
+      JType keyType = generator.getModel()._ref(javaClass);
+      JVar dictKey = generator.declareClassField("dictKey", keyType);
+      generator.getSetupBlock().assign(dictKey, newKeyObject);
+      return dictKey;
     }
 
     private HoldingContainer visitReturnValueExpression(ReturnValueExpression e, ClassGenerator<?> generator) {

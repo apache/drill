@@ -17,13 +17,29 @@
  */
 package org.apache.drill.common.expression;
 
+import org.apache.drill.common.types.TypeProtos;
+
 public abstract class PathSegment {
+
+  /**
+   * Holds original value associated with the path segment.
+   * Used when reading data from DICT.
+   */
+  protected final Object originalValue;
+
+  /**
+   * Indicates the type of original value.
+   * @see #originalValue
+   */
+  protected final TypeProtos.MajorType originalValueType;
 
   private PathSegment child;
 
   private int hash;
 
-  public PathSegment(PathSegment child) {
+  public PathSegment(PathSegment child, Object originalValue, TypeProtos.MajorType originalValueType) {
+    this.originalValue = originalValue;
+    this.originalValueType = originalValueType;
     this.child = child;
   }
 
@@ -31,6 +47,14 @@ public abstract class PathSegment {
 
   @Override
   public abstract PathSegment clone();
+
+  public Object getOriginalValue() {
+    return originalValue;
+  }
+
+  public TypeProtos.MajorType getOriginalValueType() {
+    return originalValueType;
+  }
 
   public static final class ArraySegment extends PathSegment {
     private final int index;
@@ -44,26 +68,30 @@ public abstract class PathSegment {
     }
 
     public ArraySegment(int index, PathSegment child) {
-      super(child);
+      super(child, index, null);
       this.index = index;
       assert index >= 0;
     }
 
     public ArraySegment(PathSegment child) {
-      super(child);
+      super(child, -1, null);
       this.index = -1;
+    }
+
+    public ArraySegment(int index) {
+      this(index, null);
+      if (index < 0 ) {
+        throw new IllegalArgumentException();
+      }
+    }
+
+    public ArraySegment(int index, Object originalValue, TypeProtos.MajorType valueType) {
+      super(null, originalValue, valueType);
+      this.index = index;
     }
 
     public boolean hasIndex() {
       return index != -1;
-    }
-
-    public ArraySegment(int index) {
-      super(null);
-      if (index < 0 ) {
-        throw new IllegalArgumentException();
-      }
-      this.index = index;
     }
 
     public int getIndex() {
@@ -109,7 +137,8 @@ public abstract class PathSegment {
 
     @Override
     public PathSegment clone() {
-      PathSegment seg = index < 0 ? new ArraySegment((PathSegment) null) : new ArraySegment(index);
+      int index = this.index < 0 ? -1 : this.index;
+      PathSegment seg = new ArraySegment(index, originalValue, originalValueType);
       if (getChild() != null) {
         seg.setChild(getChild().clone());
       }
@@ -118,7 +147,8 @@ public abstract class PathSegment {
 
     @Override
     public ArraySegment cloneWithNewChild(PathSegment newChild) {
-      ArraySegment seg = index < 0 ? new ArraySegment((PathSegment) null) : new ArraySegment(index);
+      int index = this.index < 0 ? -1 : this.index;
+      ArraySegment seg = new ArraySegment(index, originalValue, originalValueType);
       if (getChild() != null) {
         seg.setChild(getChild().cloneWithNewChild(newChild));
       } else {
@@ -131,14 +161,18 @@ public abstract class PathSegment {
   public static final class NameSegment extends PathSegment {
     private final String path;
 
+    public NameSegment(CharSequence n, Object originalValue, TypeProtos.MajorType valueType) {
+      super(null, originalValue, valueType);
+      this.path = n.toString();
+    }
+
     public NameSegment(CharSequence n, PathSegment child) {
-      super(child);
+      super(child, n.toString(), null);
       this.path = n.toString();
     }
 
     public NameSegment(CharSequence n) {
-      super(null);
-      this.path = n.toString();
+      this(n, null);
     }
 
     public String getPath() { return path; }
@@ -186,7 +220,7 @@ public abstract class PathSegment {
 
     @Override
     public NameSegment clone() {
-      NameSegment s = new NameSegment(this.path);
+      NameSegment s = new NameSegment(this.path, originalValue, originalValueType);
       if (getChild() != null) {
         s.setChild(getChild().clone());
       }
@@ -195,7 +229,7 @@ public abstract class PathSegment {
 
     @Override
     public NameSegment cloneWithNewChild(PathSegment newChild) {
-      NameSegment s = new NameSegment(this.path);
+      NameSegment s = new NameSegment(this.path, originalValue, originalValueType);
       if (getChild() != null) {
         s.setChild(getChild().cloneWithNewChild(newChild));
       } else {
