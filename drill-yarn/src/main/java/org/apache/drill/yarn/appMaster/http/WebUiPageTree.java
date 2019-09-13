@@ -244,6 +244,9 @@ public class WebUiPageTree extends PageTree {
     @Inject
     private SecurityContext sc;
 
+    @Inject
+    private HttpServletRequest request;
+
     @QueryParam("id")
     private int id;
 
@@ -257,7 +260,7 @@ public class WebUiPageTree extends PageTree {
         confirm = new ConfirmShrink(ConfirmShrink.Mode.CANCEL);
       }
       confirm.id = id;
-      return new Viewable("/drill-am/shrink-warning.ftl", toModel(sc, confirm));
+      return new Viewable("/drill-am/shrink-warning.ftl", toModel(sc, confirm, request));
     }
 
     @POST
@@ -309,12 +312,15 @@ public class WebUiPageTree extends PageTree {
     @Inject
     SecurityContext sc;
 
+    @Inject
+    HttpServletRequest request;
+
     @GET
     @Produces(MediaType.TEXT_HTML)
     public Viewable getRoot() {
       ControllerModel model = new ControllerModel();
       dispatcher.getController().visit(model);
-      return new Viewable("/drill-am/manage.ftl", toModel(sc, model));
+      return new Viewable("/drill-am/manage.ftl", toModel(sc, model, request));
     }
   }
 
@@ -406,6 +412,9 @@ public class WebUiPageTree extends PageTree {
     @Inject
     SecurityContext sc;
 
+    @Inject
+    HttpServletRequest request;
+
     @FormParam("n")
     int n;
     @FormParam("type")
@@ -453,7 +462,7 @@ public class WebUiPageTree extends PageTree {
         ConfirmShrink confirm = new ConfirmShrink(ConfirmShrink.Mode.SHRINK);
         confirm.value = curSize - newSize;
         return new Viewable("/drill-am/shrink-warning.ftl",
-            toModel(sc, confirm));
+            toModel(sc, confirm, request));
       }
     }
   }
@@ -472,11 +481,14 @@ public class WebUiPageTree extends PageTree {
     @Inject
     SecurityContext sc;
 
+    @Inject
+    HttpServletRequest request;
+
     @GET
     @Produces(MediaType.TEXT_HTML)
     public Viewable requestStop() {
       ConfirmShrink confirm = new ConfirmShrink(ConfirmShrink.Mode.STOP);
-      return new Viewable("/drill-am/shrink-warning.ftl", toModel(sc, confirm));
+      return new Viewable("/drill-am/shrink-warning.ftl", toModel(sc, confirm, request));
     }
 
     @POST

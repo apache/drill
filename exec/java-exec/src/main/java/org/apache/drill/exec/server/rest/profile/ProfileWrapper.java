@@ -41,9 +41,12 @@ import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.server.options.OptionList;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.server.rest.WebServer;
+import org.apache.drill.exec.server.rest.WebUtils;
 import org.apache.drill.shaded.guava.com.google.common.base.CaseFormat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * Wrapper class for a {@link #profile query profile}, so it to be presented through web UI.
@@ -66,14 +69,16 @@ public class ProfileWrapper {
   private final String noProgressWarningThreshold;
   private final int defaultAutoLimit;
   private boolean showEstimatedRows;
+  private final String csrfToken;
 
-  public ProfileWrapper(final QueryProfile profile, DrillConfig drillConfig) {
+  public ProfileWrapper(final QueryProfile profile, DrillConfig drillConfig, HttpServletRequest request) {
     this.profile = profile;
     this.id = profile.hasQueryId() ? profile.getQueryId() : QueryIdHelper.getQueryId(profile.getId());
     this.defaultAutoLimit = drillConfig.getInt(ExecConstants.HTTP_WEB_CLIENT_RESULTSET_AUTOLIMIT_ROWS);
     //Generating Operator Name map (DRILL-6140)
     String profileTextPlan = profile.hasPlan()? profile.getPlan(): "";
     generateOpMap(profileTextPlan);
+    csrfToken = WebUtils.getCsrfTokenFromHttpRequest(request);
 
     final List<FragmentWrapper> fragmentProfiles = new ArrayList<>();
 
@@ -280,10 +285,10 @@ public class ProfileWrapper {
   }
 
   //Threshold to be used by WebServer in issuing warning
+
   public String getNoProgressWarningThreshold() {
     return this.noProgressWarningThreshold;
   }
-
   public List<FragmentWrapper> getFragmentProfiles() {
     return fragmentProfiles;
   }
@@ -373,6 +378,7 @@ public class ProfileWrapper {
   }
 
   //Generates operator names inferred from physical plan
+
   private void generateOpMap(String plan) {
     this.physicalOperatorMap = new HashMap<>();
     if (plan.isEmpty()) {
@@ -392,8 +398,11 @@ public class ProfileWrapper {
       physicalOperatorMap.put(operatorPath, extractedOperatorName);
     }
   }
-
   public boolean showEstimatedRows() {
     return showEstimatedRows;
+  }
+
+  public String getCsrfToken() {
+    return csrfToken;
   }
 }

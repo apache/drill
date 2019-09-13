@@ -242,6 +242,12 @@ public class WebServer implements AutoCloseable {
       servletContextHandler.setSessionHandler(createSessionHandler(servletContextHandler.getSecurityHandler()));
     }
 
+    // Applying filters for CSRF protection.
+    servletContextHandler.addFilter(CsrfTokenInjectFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
+    for (String path : new String[]{"/query", "/storage/create_update", "/option/*"}) {
+      servletContextHandler.addFilter(CsrfTokenValidateFilter.class, path, EnumSet.of(DispatcherType.REQUEST));
+    }
+
     if (isOnlyImpersonationEnabled(workManager.getContext().getConfig())) {
       for (String path : new String[]{"/query", "/query.json"}) {
         servletContextHandler.addFilter(UserNameFilter.class, path, EnumSet.of(DispatcherType.REQUEST));

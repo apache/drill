@@ -33,7 +33,12 @@
         } else { //Apply filter for updated field
             redirectHref = redirectHref + "?filter=" + optionName;
         }
-        $.post("/option/"+optionName, {kind: optionKind, name: optionName, value: optionValue}, function () {
+        $.post("/option/"+optionName, {
+          kind: optionKind,
+          name: optionName,
+          value: optionValue,
+          csrfToken: "${model.getCsrfToken()}"
+        }, function () {
             //Remove existing filters
             location.href=redirectHref;
         });

@@ -26,6 +26,7 @@ import java.util.List;
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -70,9 +71,17 @@ public class StatusResources {
   //Used to access current filter state in WebUI
   private static final String CURRENT_FILTER_PARAM = "filter";
 
-  @Inject UserAuthEnabled authEnabled;
-  @Inject WorkManager work;
-  @Inject SecurityContext sc;
+  @Inject
+  UserAuthEnabled authEnabled;
+
+  @Inject
+  WorkManager work;
+
+  @Inject
+  SecurityContext sc;
+
+  @Inject
+  HttpServletRequest request;
 
   @GET
   @Path(StatusResources.PATH_STATUS_JSON)
@@ -135,7 +144,7 @@ public class StatusResources {
     return ViewableWithPermissions.create(authEnabled.get(),
       "/rest/options.ftl",
       sc,
-      new OptionsListing(options, fltrList, currFilter));
+      new OptionsListing(options, fltrList, currFilter, request));
   }
 
   @GET
@@ -185,21 +194,29 @@ public class StatusResources {
     private final List<OptionWrapper> options;
     private final List<String> filters;
     private final String dynamicFilter;
+    private final String csrfToken;
 
-    public OptionsListing(List<OptionWrapper> optList, List<String> fltrList, String currFilter) {
+    public OptionsListing(List<OptionWrapper> optList, List<String> fltrList, String currFilter, HttpServletRequest request) {
       this.options = optList;
       this.filters = fltrList;
       this.dynamicFilter = currFilter;
+      csrfToken = WebUtils.getCsrfTokenFromHttpRequest(request);
     }
 
     public List<OptionWrapper> getOptions() {
       return options;
     }
+
     public List<String> getFilters() {
       return filters;
     }
+
     public String getDynamicFilter() {
       return dynamicFilter;
+    }
+
+    public String getCsrfToken() {
+      return csrfToken;
     }
   }
 

@@ -27,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -65,10 +66,20 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 public class ProfileResources {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProfileResources.class);
 
-  @Inject UserAuthEnabled authEnabled;
-  @Inject WorkManager work;
-  @Inject DrillUserPrincipal principal;
-  @Inject SecurityContext sc;
+  @Inject
+  UserAuthEnabled authEnabled;
+
+  @Inject
+  WorkManager work;
+
+  @Inject
+  DrillUserPrincipal principal;
+
+  @Inject
+  SecurityContext sc;
+
+  @Inject
+  HttpServletRequest request;
 
   public static class ProfileInfo implements Comparable<ProfileInfo> {
     private static final int QUERY_SNIPPET_MAX_CHAR = 150;
@@ -375,7 +386,7 @@ public class ProfileResources {
   @Produces(MediaType.TEXT_HTML)
   public Viewable getProfile(@PathParam("queryid") String queryId){
     try {
-      ProfileWrapper wrapper = new ProfileWrapper(getQueryProfile(queryId), work.getContext().getConfig());
+      ProfileWrapper wrapper = new ProfileWrapper(getQueryProfile(queryId), work.getContext().getConfig(), request);
       return ViewableWithPermissions.create(authEnabled.get(), "/rest/profile/profile.ftl", sc, wrapper);
     } catch (Exception | Error e) {
       logger.error("Exception was thrown when fetching profile {} :\n{}", queryId, e);

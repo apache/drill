@@ -69,6 +69,7 @@
           drillbits.
           <button type="submit" class="btn btn-primary" style="margin: 0 1em;">Go</button>
         </div>
+        <input type="hidden" name="csrfToken" value="${csrfToken}">
       </form>
     </td></tr>
     <tr><td>

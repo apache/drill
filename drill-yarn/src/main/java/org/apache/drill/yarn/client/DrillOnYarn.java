@@ -18,6 +18,8 @@
 package org.apache.drill.yarn.client;
 
 
+import org.apache.drill.common.util.GuavaPatcher;
+import org.apache.drill.common.util.ProtobufPatcher;
 import org.apache.drill.yarn.core.DoyConfigException;
 import org.apache.drill.yarn.core.DrillOnYarnConfig;
 import org.apache.log4j.BasicConfigurator;
@@ -73,6 +75,22 @@ import org.apache.log4j.BasicConfigurator;
  */
 
 public class DrillOnYarn {
+
+  static {
+    /*
+     * Drill-on-YARN uses Hadoop dependencies that use older version of protobuf,
+     * and override some methods that became final in recent protobuf versions.
+     * This code removes these final modifiers.
+     */
+    ProtobufPatcher.patch();
+    /*
+     * HBase client uses older version of Guava's Stopwatch API,
+     * while Drill ships with 18.x which has changes the scope of
+     * these API to 'package', this code make them accessible.
+     */
+    GuavaPatcher.patch();
+  }
+
   public static void main(String argv[]) {
     BasicConfigurator.configure();
     ClientContext.init();
@@ -107,35 +125,35 @@ public class DrillOnYarn {
 
     ClientCommand cmd;
     switch (opts.getCommand()) {
-    case UPLOAD:
-      cmd = new StartCommand(true, false);
-      break;
-    case START:
-      cmd = new StartCommand(true, true);
-      break;
-    // Removed at QA request. QA wants a "real" restart. Also, upload of the
-    // archive is fast enough that a "start without upload" option is not really
-    // needed.
+      case UPLOAD:
+        cmd = new StartCommand(true, false);
+        break;
+      case START:
+        cmd = new StartCommand(true, true);
+        break;
+      // Removed at QA request. QA wants a "real" restart. Also, upload of the
+      // archive is fast enough that a "start without upload" option is not really
+      // needed.
 //    case RESTART:
 //      cmd = new StartCommand(false, true);
 //      break;
-    case DESCRIBE:
-      cmd = new PrintConfigCommand();
-      break;
-    case STATUS:
-      cmd = new StatusCommand();
-      break;
-    case STOP:
-      cmd = new StopCommand();
-      break;
-    case CLEAN:
-      cmd = new CleanCommand();
-      break;
-    case RESIZE:
-      cmd = new ResizeCommand();
-      break;
-    default:
-      cmd = new HelpCommand();
+      case DESCRIBE:
+        cmd = new PrintConfigCommand();
+        break;
+      case STATUS:
+        cmd = new StatusCommand();
+        break;
+      case STOP:
+        cmd = new StopCommand();
+        break;
+      case CLEAN:
+        cmd = new CleanCommand();
+        break;
+      case RESIZE:
+        cmd = new ResizeCommand();
+        break;
+      default:
+        cmd = new HelpCommand();
     }
 
     // Run the command.
