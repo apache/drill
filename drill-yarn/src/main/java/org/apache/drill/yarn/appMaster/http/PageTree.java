@@ -20,6 +20,7 @@ package org.apache.drill.yarn.appMaster.http;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.SecurityContext;
 
 import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
@@ -58,8 +59,15 @@ public class PageTree extends ResourceConfig {
    */
 
   public static Map<String, Object> toModel(SecurityContext sc, Object base) {
+    return toModel(sc, base, null);
+  }
+
+  public static Map<String, Object> toModel(SecurityContext sc, Object base, HttpServletRequest request) {
     Map<String, Object> model = new HashMap<>();
     model.put("model", base);
+    if (request != null) {
+      model.put(WebConstants.CSRF_TOKEN, WebUtils.getCsrfTokenFromHttpRequest(request));
+    }
     return toMapModel(sc, model);
   }
 

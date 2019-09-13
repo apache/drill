@@ -42,4 +42,7 @@ public final class WebServerConstants {
   // Logout page
   public static final String LOGOUT_RESOURCE_NAME = "logout";
   public static final String LOGOUT_RESOURCE_PATH = WEBSERVER_ROOT_PATH + LOGOUT_RESOURCE_NAME;
+
+  // Name of the CSRF protection token attribute
+  public static final String CSRF_TOKEN = "csrfToken";
 }

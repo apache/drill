@@ -28,8 +28,10 @@ import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.util.Collections;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.Set;
 
+import javax.servlet.DispatcherType;
 import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpSessionEvent;
@@ -38,6 +40,8 @@ import javax.servlet.http.HttpSessionListener;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.drill.exec.server.rest.CsrfTokenInjectFilter;
+import org.apache.drill.exec.server.rest.CsrfTokenValidateFilter;
 import org.apache.drill.yarn.appMaster.Dispatcher;
 import org.apache.drill.yarn.core.DrillOnYarnConfig;
 import org.bouncycastle.asn1.x500.X500NameBuilder;
@@ -166,6 +170,13 @@ public class WebServer implements AutoCloseable {
         new ServletContainer(new AmRestApi(dispatcher)));
     restHolder.setInitOrder(2);
     servletContextHandler.addServlet(restHolder, "/rest/*");
+
+    // Applying filters for CSRF protection.
+
+    servletContextHandler.addFilter(CsrfTokenInjectFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
+    for (String path : new String[]{"/resize", "/stop", "/cancel"}) {
+      servletContextHandler.addFilter(CsrfTokenValidateFilter.class, path, EnumSet.of(DispatcherType.REQUEST));
+    }
 
     // Static resources (CSS, images, etc.)
 

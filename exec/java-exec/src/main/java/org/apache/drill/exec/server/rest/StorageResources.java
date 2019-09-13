@@ -30,6 +30,7 @@ import java.util.stream.StreamSupport;
 
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
@@ -56,18 +57,30 @@ import org.glassfish.jersey.server.mvc.Viewable;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.apache.drill.exec.server.rest.auth.DrillUserPrincipal.ADMIN_ROLE;
 
 @Path("/")
 @RolesAllowed(ADMIN_ROLE)
 public class StorageResources {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StorageResources.class);
+  private static final Logger logger = LoggerFactory.getLogger(StorageResources.class);
 
-  @Inject UserAuthEnabled authEnabled;
-  @Inject StoragePluginRegistry storage;
-  @Inject ObjectMapper mapper;
-  @Inject SecurityContext sc;
+  @Inject
+  UserAuthEnabled authEnabled;
+
+  @Inject
+  StoragePluginRegistry storage;
+
+  @Inject
+  ObjectMapper mapper;
+
+  @Inject
+  SecurityContext sc;
+
+  @Inject
+  HttpServletRequest request;
 
   private static final String JSON_FORMAT = "json";
   private static final String HOCON_FORMAT = "conf";
@@ -112,8 +125,14 @@ public class StorageResources {
   @Path("/storage")
   @Produces(MediaType.TEXT_HTML)
   public Viewable getPlugins() {
-    List<PluginConfigWrapper> list = getPluginsJSON();
-    return ViewableWithPermissions.create(authEnabled.get(), "/rest/storage/list.ftl", sc, list);
+    List<StoragePluginModel> model = getPluginsJSON().stream()
+        .map(plugin -> new StoragePluginModel(plugin, request))
+        .collect(Collectors.toList());
+    // Creating an empty model with CSRF token, if there are no storage plugins
+    if (model.size() == 0) {
+      model.add(new StoragePluginModel(null, request));
+    }
+    return ViewableWithPermissions.create(authEnabled.get(), "/rest/storage/list.ftl", sc, model);
   }
 
   @GET
@@ -135,8 +154,9 @@ public class StorageResources {
   @Path("/storage/{name}")
   @Produces(MediaType.TEXT_HTML)
   public Viewable getPlugin(@PathParam("name") String name) {
+    StoragePluginModel model = new StoragePluginModel(getPluginConfig(name), request);
     return ViewableWithPermissions.create(authEnabled.get(), "/rest/storage/update.ftl", sc,
-        getPluginConfig(name));
+        model);
   }
 
   @GET
@@ -300,5 +320,27 @@ public class StorageResources {
       return result;
     }
 
+  }
+
+  /**
+   * Model class for Storage Plugin page.
+   * It contains a storage plugin as well as the CSRK token for the page.
+   */
+  public static class StoragePluginModel {
+    private final PluginConfigWrapper plugin;
+    private final String csrfToken;
+
+    public StoragePluginModel(PluginConfigWrapper plugin, HttpServletRequest request) {
+      this.plugin = plugin;
+      csrfToken = WebUtils.getCsrfTokenFromHttpRequest(request);
+    }
+
+    public PluginConfigWrapper getPlugin() {
+      return plugin;
+    }
+
+    public String getCsrfToken() {
+      return csrfToken;
+    }
   }
 }

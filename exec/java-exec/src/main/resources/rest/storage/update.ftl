@@ -32,7 +32,7 @@
   </div>
   <h3>Configuration</h3>
   <form id="updateForm" role="form" action="/storage/create_update" method="POST">
-    <input type="hidden" name="name" value="${model.getName()}" />
+    <input type="hidden" name="name" value="${model.getPlugin().getName()}" />
     <div class="form-group">
       <div id="editor" class="form-control"></div>
       <textarea class="form-control" id="config" name="config" data-editor="json" style="display: none;" >
@@ -40,16 +40,17 @@
     </div>
     <a class="btn btn-default" href="/storage">Back</a>
     <button class="btn btn-default" type="submit" onclick="doUpdate();">Update</button>
-    <#if model.enabled()>
+    <#if model.getPlugin().enabled()>
       <a id="enabled" class="btn btn-default">Disable</a>
     <#else>
       <a id="enabled" class="btn btn-primary">Enable</a>
     </#if>
-    <button type="button" class="btn btn-default export" name="${model.getName()}" data-toggle="modal"
+    <button type="button" class="btn btn-default export" name="${model.getPlugin().getName()}" data-toggle="modal"
             data-target="#pluginsModal">
       Export
     </button>
     <a id="del" class="btn btn-danger" onclick="deleteFunction()">Delete</a>
+    <input type="hidden" name="csrfToken" value="${model.getCsrfToken()}">
   </form>
   <br>
   <div id="message" class="hidden alert alert-info">
@@ -108,21 +109,21 @@
       textarea.val(editor.getSession().getValue());
     });
 
-    $.get("/storage/" + encodeURIComponent("${model.getName()}") + ".json", function(data) {
+    $.get("/storage/" + encodeURIComponent("${model.getPlugin().getName()}") + ".json", function(data) {
       $("#config").val(JSON.stringify(data.config, null, 2));
       editor.getSession().setValue( JSON.stringify(data.config, null, 2) );
     });
 
 
     $("#enabled").click(function() {
-      const enabled = ${model.enabled()?c};
+      const enabled = ${model.getPlugin().enabled()?c};
       if (enabled) {
-        showConfirmationDialog('"${model.getName()}"' + ' plugin will be disabled. Proceed?', proceed);
+        showConfirmationDialog('"${model.getPlugin().getName()}"' + ' plugin will be disabled. Proceed?', proceed);
       } else {
         proceed();
       }
       function proceed() {
-        $.get("/storage/" + encodeURIComponent("${model.getName()}") + "/enable/<#if model.enabled()>false<#else>true</#if>", function(data) {
+        $.get("/storage/" + encodeURIComponent("${model.getPlugin().getName()}") + "/enable/<#if model.getPlugin().enabled()>false<#else>true</#if>", function(data) {
           $("#message").removeClass("hidden").text(data.result).alert();
           setTimeout(function() { location.reload(); }, 800);
         });
@@ -137,8 +138,8 @@
     }
 
     function deleteFunction() {
-      showConfirmationDialog('"${model.getName()}"' + ' plugin will be deleted. Proceed?', function() {
-        $.get("/storage/" + encodeURIComponent("${model.getName()}") + "/delete", serverMessage);
+      showConfirmationDialog('"${model.getPlugin().getName()}"' + ' plugin will be deleted. Proceed?', function() {
+        $.get("/storage/" + encodeURIComponent("${model.getPlugin().getName()}") + "/delete", serverMessage);
       });
     }
 

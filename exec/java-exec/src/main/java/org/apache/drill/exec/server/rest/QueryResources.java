@@ -28,9 +28,12 @@ import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
 import org.apache.drill.exec.server.rest.QueryWrapper.QueryResult;
 import org.apache.drill.exec.work.WorkManager;
 import org.glassfish.jersey.server.mvc.Viewable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -47,13 +50,22 @@ import java.util.Map;
 @Path("/")
 @RolesAllowed(DrillUserPrincipal.AUTHENTICATED_ROLE)
 public class QueryResources {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryResources.class);
+   private static final Logger logger = LoggerFactory.getLogger(QueryResources.class);
 
-  @Inject UserAuthEnabled authEnabled;
-  @Inject WorkManager work;
-  @Inject SecurityContext sc;
-  @Inject WebUserConnection webUserConnection;
+  @Inject
+  UserAuthEnabled authEnabled;
 
+  @Inject
+  WorkManager work;
+
+  @Inject
+  SecurityContext sc;
+
+  @Inject
+  WebUserConnection webUserConnection;
+
+  @Inject
+  HttpServletRequest request;
 
   @GET
   @Path("/query")
@@ -61,7 +73,7 @@ public class QueryResources {
   public Viewable getQuery() {
     return ViewableWithPermissions.create(
         authEnabled.get(), "/rest/query/query.ftl",
-        sc, new QueryPage(work));
+        sc, new QueryPage(work, request));
   }
 
   @POST
@@ -105,13 +117,15 @@ public class QueryResources {
     private final boolean onlyImpersonationEnabled;
     private final boolean autoLimitEnabled;
     private final int defaultRowsAutoLimited;
+    private final String csrfToken;
 
-    public QueryPage(WorkManager work) {
+    public QueryPage(WorkManager work, HttpServletRequest request) {
       DrillConfig config = work.getContext().getConfig();
       //if impersonation is enabled without authentication, will provide mechanism to add user name to request header from Web UI
       onlyImpersonationEnabled = WebServer.isOnlyImpersonationEnabled(config);
       autoLimitEnabled = config.getBoolean(ExecConstants.HTTP_WEB_CLIENT_RESULTSET_AUTOLIMIT_CHECKED);
       defaultRowsAutoLimited = config.getInt(ExecConstants.HTTP_WEB_CLIENT_RESULTSET_AUTOLIMIT_ROWS);
+      csrfToken = WebUtils.getCsrfTokenFromHttpRequest(request);
     }
 
     public boolean isOnlyImpersonationEnabled() {
@@ -124,6 +138,10 @@ public class QueryResources {
 
     public int getDefaultRowsAutoLimited() {
       return defaultRowsAutoLimited;
+    }
+
+    public String getCsrfToken() {
+      return csrfToken;
     }
   }
 

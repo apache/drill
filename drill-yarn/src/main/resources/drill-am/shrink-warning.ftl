@@ -60,6 +60,7 @@
   </#if>
   <input type="submit" value="Confirm"> or
   <a href="/">Cancel</a>.
+      <input type="hidden" name="csrfToken" value="${csrfToken}">
   </form>
 </#macro>
 
