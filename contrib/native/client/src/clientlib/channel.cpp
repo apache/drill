@@ -308,7 +308,7 @@ connectionStatus_t Channel::connectInternal() {
     const char *port = m_pEndpoint->getPort().c_str();
     try {
         tcp::resolver resolver(m_ioService);
-        tcp::resolver::query query(tcp::v4(), host, port);
+        tcp::resolver::query query(host, port);
         tcp::resolver::iterator iter = resolver.resolve(query);
         tcp::resolver::iterator end;
         while (iter != end) {
