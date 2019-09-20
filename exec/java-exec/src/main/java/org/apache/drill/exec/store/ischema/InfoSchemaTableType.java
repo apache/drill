@@ -20,17 +20,25 @@ package org.apache.drill.exec.store.ischema;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.schema.SchemaPlus;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.ischema.InfoSchemaTable.Catalogs;
 import org.apache.drill.exec.store.ischema.InfoSchemaTable.Columns;
 import org.apache.drill.exec.store.ischema.InfoSchemaTable.Files;
+import org.apache.drill.exec.store.ischema.InfoSchemaTable.Partitions;
 import org.apache.drill.exec.store.ischema.InfoSchemaTable.Schemata;
 import org.apache.drill.exec.store.ischema.InfoSchemaTable.Tables;
 import org.apache.drill.exec.store.ischema.InfoSchemaTable.Views;
 import org.apache.drill.exec.store.pojo.PojoRecordReader;
+import org.apache.drill.metastore.Metastore;
+import org.apache.drill.metastore.MetastoreRegistry;
+import org.apache.drill.metastore.exceptions.MetastoreException;
+import org.slf4j.Logger;
+
+import static org.slf4j.LoggerFactory.getLogger;
 
 /**
- * The set of tables/views in INFORMATION_SCHEMA.
+ * The set of tables / views in INFORMATION_SCHEMA.
  */
 public enum InfoSchemaTableType {
 
@@ -39,22 +47,43 @@ public enum InfoSchemaTableType {
   VIEWS(new Views()),
   COLUMNS(new Columns()),
   TABLES(new Tables()),
+  PARTITIONS(new Partitions()),
   FILES(new Files());
+
+  private static final Logger logger = getLogger(InfoSchemaTableType.class);
 
   private final InfoSchemaTable<?> tableDef;
 
   /**
-   * ...
+   * Constructor to init {@link InfoSchemaTableType} class.
+   *
    * @param  tableDef  the definition (columns and data generator) of the table
    */
   InfoSchemaTableType(InfoSchemaTable<?> tableDef) {
     this.tableDef = tableDef;
   }
 
-  public <S> PojoRecordReader<S> getRecordReader(SchemaPlus rootSchema, InfoSchemaFilter filter, OptionManager optionManager) {
-    @SuppressWarnings("unchecked")
-    InfoSchemaRecordGenerator<S> recordGenerator = (InfoSchemaRecordGenerator<S>) tableDef.getRecordGenerator(optionManager);
-    recordGenerator.setInfoSchemaFilter(filter);
+  public <S> PojoRecordReader<S> getRecordReader(SchemaPlus rootSchema,
+                                                 InfoSchemaFilter filter,
+                                                 OptionManager optionManager,
+                                                 MetastoreRegistry metastoreRegistry) {
+    FilterEvaluator filterEvaluator = filter == null
+      ? FilterEvaluator.NoFilterEvaluator.INSTANCE
+      : new FilterEvaluator.InfoSchemaFilterEvaluator(filter);
+
+    @SuppressWarnings("unchecked") InfoSchemaRecordGenerator<S> recordGenerator = (InfoSchemaRecordGenerator<S>) tableDef.getRecordGenerator(filterEvaluator);
+
+    recordGenerator.registerRecordCollector(new RecordCollector.BasicRecordCollector(filterEvaluator, optionManager));
+
+    if (optionManager.getBoolean(ExecConstants.METASTORE_ENABLED)) {
+      try {
+        Metastore metastore = metastoreRegistry.get();
+        recordGenerator.registerRecordCollector(new RecordCollector.MetastoreRecordCollector(metastore, filterEvaluator));
+      } catch (MetastoreException e) {
+        logger.warn("Unable to init Drill Metastore: {}", e.getMessage(), e);
+      }
+    }
+
     recordGenerator.scanSchema(rootSchema);
     return recordGenerator.getRecordReader();
   }

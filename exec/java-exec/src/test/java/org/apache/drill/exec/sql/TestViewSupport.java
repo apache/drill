@@ -428,7 +428,8 @@ public class TestViewSupport extends TestBaseViewSupport {
 
       // Test record in INFORMATION_SCHEMA.TABLES
       testBuilder()
-          .sqlQuery("SELECT * FROM INFORMATION_SCHEMA.`TABLES` WHERE TABLE_NAME = '%s'", viewName)
+          .sqlQuery("SELECT TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME, TABLE_TYPE" +
+            " FROM INFORMATION_SCHEMA.`TABLES` WHERE TABLE_NAME = '%s'", viewName)
           .unOrdered()
           .baselineColumns("TABLE_CATALOG", "TABLE_SCHEMA", "TABLE_NAME", "TABLE_TYPE")
           .baselineValues("DRILL", DFS_TMP_SCHEMA, viewName, "VIEW")

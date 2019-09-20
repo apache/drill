@@ -286,14 +286,14 @@
       <activation>
         <property><name>!tests</name></property>
       </activation>
+      <properties>
+        <excludedGroups>com.mapr.tests.annotations.ClusterTest</excludedGroups>
+      </properties>
       <build>
         <plugins>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
-            <configuration>
-              <excludedGroups>com.mapr.tests.annotations.ClusterTest</excludedGroups>
-            </configuration>
           </plugin>
         </plugins>
       </build>
@@ -304,14 +304,14 @@
       <activation>
         <property><name>tests</name><value>simple</value></property>
       </activation>
+      <properties>
+        <excludedGroups>com.mapr.tests.annotations.ClusterTest</excludedGroups>
+      </properties>
       <build>
         <plugins>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
-            <configuration>
-              <excludedGroups>com.mapr.tests.annotations.ClusterTest</excludedGroups>
-            </configuration>
           </plugin>
         </plugins>
       </build>
@@ -322,14 +322,14 @@
       <activation>
         <property><name>tests</name><value>cluster</value></property>
       </activation>
+      <properties>
+        <excludedGroups>com.mapr.tests.annotations.StressTest</excludedGroups>
+      </properties>
       <build>
         <plugins>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
-            <configuration>
-              <excludedGroups>com.mapr.tests.annotations.StressTest</excludedGroups>
-            </configuration>
           </plugin>
         </plugins>
       </build>
@@ -340,14 +340,14 @@
       <activation>
         <property><name>tests</name><value>stress</value></property>
       </activation>
+      <properties>
+        <excludedGroups>com.mapr.tests.annotations.IntegrationTest</excludedGroups>
+      </properties>
       <build>
         <plugins>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
-            <configuration>
-              <excludedGroups>com.mapr.tests.annotations.IntegrationTest</excludedGroups>
-            </configuration>
           </plugin>
         </plugins>
       </build>
@@ -376,14 +376,14 @@
              This must be the last profile to override the surefire configuration. -->
         <property><name>test</name></property>
       </activation>
+      <properties>
+        <excludedGroups>com.mapr.tests.annotations.AlwaysExclude</excludedGroups>
+      </properties>
       <build>
         <plugins>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
-            <configuration>
-              <excludedGroups>com.mapr.tests.annotations.AlwaysExclude</excludedGroups>
-            </configuration>
           </plugin>
         </plugins>
       </build>

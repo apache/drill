@@ -23,6 +23,7 @@ import java.lang.management.MemoryMXBean;
 import java.util.List;
 
 import org.apache.drill.common.util.DrillStringUtils;
+import org.apache.drill.common.util.GuavaPatcher;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -39,7 +40,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class DrillTest {
 
   protected static final ObjectMapper objectMapper;
+
   static {
+    GuavaPatcher.patch();
     System.setProperty("line.separator", "\n");
     objectMapper = new ObjectMapper();
   }
@@ -65,12 +68,12 @@ public class DrillTest {
   @Rule public final ExpectedException thrownException = ExpectedException.none();
 
   @BeforeClass
-  public static void initDrillTest() throws Exception {
+  public static void initDrillTest() {
     memWatcher = new MemWatcher();
   }
 
   @AfterClass
-  public static void finiDrillTest() throws InterruptedException{
+  public static void finishDrillTest() {
     testReporter.info(String.format("Test Class done (%s): %s.", memWatcher.getMemString(true), className));
     // Clear interrupts for next test
     Thread.interrupted();

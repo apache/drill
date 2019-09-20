@@ -19,6 +19,7 @@ package org.apache.drill.metastore.components.tables;
 
 import org.apache.drill.categories.MetastoreTest;
 import org.apache.drill.metastore.expressions.FilterExpression;
+import org.apache.drill.metastore.metadata.MetadataInfo;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -109,7 +110,7 @@ public class TestBasicTablesRequests {
 
     FilterExpression expected = FilterExpression.and(
       FilterExpression.in(BasicTablesRequests.LOCATION, locations),
-      FilterExpression.in(BasicTablesRequests.METADATA_KEY, metadataKeys));
+      FilterExpression.in(MetadataInfo.METADATA_KEY, metadataKeys));
 
     assertEquals(expected.toString(), requestMetadata.filter().toString());
   }
@@ -128,7 +129,7 @@ public class TestBasicTablesRequests {
 
     FilterExpression expected = FilterExpression.and(
       FilterExpression.equal(BasicTablesRequests.COLUMN, column),
-      FilterExpression.in(BasicTablesRequests.METADATA_KEY, metadataKeys),
+      FilterExpression.in(MetadataInfo.METADATA_KEY, metadataKeys),
       customFilter);
 
     assertEquals(expected.toString(), requestMetadata.filter().toString());

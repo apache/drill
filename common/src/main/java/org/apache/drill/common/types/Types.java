@@ -93,6 +93,44 @@ public class Types {
     }
   }
 
+  public static boolean isDateTimeType(MajorType type) {
+    if (type.getMode() == REPEATED) {
+      return false;
+    }
+    return isDateTimeType(type.getMinorType());
+  }
+
+  public static boolean isDateTimeType(MinorType type) {
+    switch (type) {
+      case TIME:
+      case TIMETZ:
+      case DATE:
+      case TIMESTAMP:
+      case TIMESTAMPTZ:
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  public static boolean isIntervalType(MajorType type) {
+    if (type.getMode() == REPEATED) {
+      return false;
+    }
+    return isIntervalType(type.getMinorType());
+  }
+
+  public static boolean isIntervalType(MinorType type) {
+    switch (type) {
+      case INTERVAL:
+      case INTERVALDAY:
+      case INTERVALYEAR:
+        return true;
+      default:
+        return false;
+    }
+  }
+
   /**
    * Returns true if specified type is decimal data type.
    *

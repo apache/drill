@@ -17,6 +17,10 @@
  */
 package org.apache.drill.exec.store.ischema;
 
+import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.calcite.plan.RelOptRuleOperand;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rex.RexNode;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.planner.logical.DrillOptiq;
@@ -27,11 +31,6 @@ import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.planner.physical.ProjectPrel;
 import org.apache.drill.exec.planner.physical.ScanPrel;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
-import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.plan.RelOptRuleCall;
-import org.apache.calcite.plan.RelOptRuleOperand;
-import org.apache.calcite.rex.RexNode;
-
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 
 public abstract class InfoSchemaPushFilterIntoRecordGenerator extends StoragePluginOptimizerRule {
@@ -43,15 +42,15 @@ public abstract class InfoSchemaPushFilterIntoRecordGenerator extends StoragePlu
 
         @Override
         public boolean matches(RelOptRuleCall call) {
-          final ScanPrel scan = (ScanPrel) call.rel(2);
+          final ScanPrel scan = call.rel(2);
           GroupScan groupScan = scan.getGroupScan();
           return groupScan instanceof InfoSchemaGroupScan;
         }
 
         @Override
         public void onMatch(RelOptRuleCall call) {
-          final FilterPrel filterRel = (FilterPrel) call.rel(0);
-          final ProjectPrel projectRel = (ProjectPrel) call.rel(1);
+          final FilterPrel filterRel = call.rel(0);
+          final ProjectPrel projectRel = call.rel(1);
           final ScanPrel scanRel = call.rel(2);
           doMatch(call, scanRel, projectRel, filterRel);
         }
@@ -63,15 +62,15 @@ public abstract class InfoSchemaPushFilterIntoRecordGenerator extends StoragePlu
 
         @Override
         public boolean matches(RelOptRuleCall call) {
-          final ScanPrel scan = (ScanPrel) call.rel(1);
+          final ScanPrel scan = call.rel(1);
           GroupScan groupScan = scan.getGroupScan();
           return groupScan instanceof InfoSchemaGroupScan;
         }
 
         @Override
         public void onMatch(RelOptRuleCall call) {
-          final FilterPrel filterRel = (FilterPrel) call.rel(0);
-          final ScanPrel scanRel = (ScanPrel) call.rel(1);
+          final FilterPrel filterRel = call.rel(0);
+          final ScanPrel scanRel = call.rel(1);
           doMatch(call, scanRel, null, filterRel);
         }
       };
@@ -83,7 +82,7 @@ public abstract class InfoSchemaPushFilterIntoRecordGenerator extends StoragePlu
   protected void doMatch(RelOptRuleCall call, ScanPrel scan, ProjectPrel project, FilterPrel filter) {
     final RexNode condition = filter.getCondition();
 
-    InfoSchemaGroupScan groupScan = (InfoSchemaGroupScan)scan.getGroupScan();
+    InfoSchemaGroupScan groupScan = (InfoSchemaGroupScan) scan.getGroupScan();
     if (groupScan.isFilterPushedDown()) {
       return;
     }
@@ -93,7 +92,7 @@ public abstract class InfoSchemaPushFilterIntoRecordGenerator extends StoragePlu
     InfoSchemaFilterBuilder filterBuilder = new InfoSchemaFilterBuilder(conditionExp);
     InfoSchemaFilter infoSchemaFilter = filterBuilder.build();
     if (infoSchemaFilter == null) {
-      return; //no filter pushdown ==> No transformation.
+      return; //no filter push down ==> No transformation.
     }
 
     final InfoSchemaGroupScan newGroupsScan = new InfoSchemaGroupScan(groupScan.getTable(), infoSchemaFilter);

@@ -238,7 +238,7 @@ public class TestInfoSchemaOnHiveStorage extends HiveTestBase {
 
   @Test // DRILL-4577
   public void showInfoSchema() throws Exception {
-    final String query = "select * \n" +
+    final String query = "select TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME, TABLE_TYPE \n" +
         "from INFORMATION_SCHEMA.`TABLES` \n" +
         "where TABLE_SCHEMA like 'hive%'";
 

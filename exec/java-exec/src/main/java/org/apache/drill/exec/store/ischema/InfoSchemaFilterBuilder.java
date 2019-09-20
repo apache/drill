@@ -17,16 +17,6 @@
  */
 package org.apache.drill.exec.store.ischema;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.CATS_COL_CATALOG_NAME;
-import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.COLS_COL_COLUMN_NAME;
-import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.FILES_COL_ROOT_SCHEMA_NAME;
-import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.FILES_COL_WORKSPACE_NAME;
-import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SCHS_COL_SCHEMA_NAME;
-import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SHRD_COL_TABLE_NAME;
-import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SHRD_COL_TABLE_SCHEMA;
-
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.FieldReference;
@@ -39,8 +29,18 @@ import org.apache.drill.exec.store.ischema.InfoSchemaFilter.ConstantExprNode;
 import org.apache.drill.exec.store.ischema.InfoSchemaFilter.ExprNode;
 import org.apache.drill.exec.store.ischema.InfoSchemaFilter.FieldExprNode;
 import org.apache.drill.exec.store.ischema.InfoSchemaFilter.FunctionExprNode;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 import java.util.List;
+
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.CATS_COL_CATALOG_NAME;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.COLS_COL_COLUMN_NAME;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.FILES_COL_ROOT_SCHEMA_NAME;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.FILES_COL_WORKSPACE_NAME;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SCHS_COL_SCHEMA_NAME;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SHRD_COL_TABLE_NAME;
+import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.SHRD_COL_TABLE_SCHEMA;
 
 /**
  * Builds a InfoSchemaFilter out of the Filter condition. Currently we look only for certain conditions. Mainly
@@ -48,8 +48,8 @@ import java.util.List;
  * functions EQUAL, NOT EQUAL, LIKE, OR and AND.
  */
 public class InfoSchemaFilterBuilder extends AbstractExprVisitor<ExprNode, Void, RuntimeException> {
-  private final LogicalExpression filter;
 
+  private final LogicalExpression filter;
   private boolean isAllExpressionsConverted = true;
 
   public InfoSchemaFilterBuilder(LogicalExpression filter) {
@@ -72,7 +72,7 @@ public class InfoSchemaFilterBuilder extends AbstractExprVisitor<ExprNode, Void,
   @Override
   public ExprNode visitFunctionCall(FunctionCall call, Void value) throws RuntimeException {
     final String funcName = call.getName().toLowerCase();
-    switch(funcName) {
+    switch (funcName) {
       case "equal":
       case "not equal":
       case "notequal":
@@ -103,7 +103,7 @@ public class InfoSchemaFilterBuilder extends AbstractExprVisitor<ExprNode, Void,
         List<ExprNode> args = Lists.newArrayList();
         for(LogicalExpression arg : call.args) {
           ExprNode exprNode = arg.accept(this, value);
-          if (exprNode != null && exprNode instanceof FunctionExprNode) {
+          if (exprNode instanceof FunctionExprNode) {
             args.add(exprNode);
           }
         }
@@ -118,7 +118,7 @@ public class InfoSchemaFilterBuilder extends AbstractExprVisitor<ExprNode, Void,
         List<ExprNode> args = Lists.newArrayList();
         for(LogicalExpression arg : call.args) {
           ExprNode exprNode = arg.accept(this, value);
-          if (exprNode != null && exprNode instanceof FunctionExprNode) {
+          if (exprNode instanceof FunctionExprNode) {
             args.add(exprNode);
           } else {
             return visitUnknown(call, value);
