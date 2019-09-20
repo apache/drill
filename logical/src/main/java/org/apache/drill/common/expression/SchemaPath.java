@@ -48,13 +48,20 @@ public class SchemaPath extends LogicalExpressionBase {
   private final NameSegment rootSegment;
 
   public SchemaPath(SchemaPath path) {
-    super(path.getPosition());
-    this.rootSegment = path.rootSegment;
+    this(path.rootSegment, path.getPosition());
   }
 
   public SchemaPath(NameSegment rootSegment) {
-    super(ExpressionPosition.UNKNOWN);
-    this.rootSegment = rootSegment;
+    this(rootSegment, ExpressionPosition.UNKNOWN);
+  }
+
+  /**
+   * @deprecated Use {@link #SchemaPath(NameSegment)}
+   * or {@link #SchemaPath(NameSegment, ExpressionPosition)} instead
+   */
+  @Deprecated
+  public SchemaPath(String simpleName, ExpressionPosition pos) {
+    this(new NameSegment(simpleName), pos);
   }
 
   public SchemaPath(NameSegment rootSegment, ExpressionPosition pos) {
@@ -96,12 +103,6 @@ public class SchemaPath extends LogicalExpressionBase {
       s = s.getChild();
     }
     return s;
-  }
-
-  @Deprecated
-  public SchemaPath(String simpleName, ExpressionPosition pos) {
-    super(pos);
-    this.rootSegment = new NameSegment(simpleName);
   }
 
   public NamePart getAsNamePart() {
