@@ -19,6 +19,14 @@ package org.apache.drill.common.expression;
 
 import org.apache.drill.common.types.TypeProtos;
 
+/**
+ * Used to represent path to nested field within schema as a chain of path segments.
+ * Where each segment in the chain may be either named or array segment.
+ *
+ * @see NameSegment
+ * @see ArraySegment
+ * @see SchemaPath
+ */
 public abstract class PathSegment {
 
   /**
@@ -43,7 +51,13 @@ public abstract class PathSegment {
     this.child = child;
   }
 
-  public abstract PathSegment cloneWithNewChild(PathSegment segment);
+  /**
+   * Makes copy of segment chain with {@code newChild} added at the end.
+   *
+   * @param newChild new child to add
+   * @return full copy of segment chain with new child added at the end of chain
+   */
+  public abstract PathSegment cloneWithNewChild(PathSegment newChild);
 
   @Override
   public abstract PathSegment clone();

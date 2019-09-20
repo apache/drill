@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.calcite.plan.RelOptPlanner;
+import org.apache.calcite.rex.RexFieldAccess;
 import org.apache.drill.metastore.statistics.TableStatisticsKind;
 import org.apache.drill.metastore.metadata.TableMetadata;
 import org.apache.calcite.plan.RelOptUtil;
@@ -550,6 +551,13 @@ public abstract class DrillRelOptUtil {
         }
       }
       return null;
+    }
+
+    @Override
+    public PathSegment visitFieldAccess(RexFieldAccess fieldAccess) {
+      PathSegment refPath = fieldAccess.getReferenceExpr().accept(this);
+      PathSegment.NameSegment fieldPath = new PathSegment.NameSegment(fieldAccess.getField().getName());
+      return refPath.cloneWithNewChild(fieldPath);
     }
 
     private void addDesiredField(String name, RelDataType type, RexNode originalNode) {

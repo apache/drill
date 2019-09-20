@@ -103,7 +103,8 @@ public class TestHiveStructs extends ClusterTest {
         "str_n1 STRUCT<sid:INT,coord:STRUCT<x:TINYINT,y:CHAR(1)>>, " +
         "str_n2 STRUCT<a:STRUCT<b:STRUCT<c:INT,k:CHAR(1)>>>, " +
         "str_wa STRUCT<t:INT,a:ARRAY<INT>,a2:ARRAY<ARRAY<INT>>>, " +
-        "str_map STRUCT<i:INT, m:MAP<INT, INT>>" +
+        "str_map STRUCT<i:INT, m:MAP<INT, INT>, sm:MAP<STRING,INT>>, " +
+        "str_wa_2 STRUCT<fn:INT,fa:ARRAY<STRUCT<sn:INT,sa:ARRAY<STRUCT<tn:INT,ts:STRING>>>>>" +
         ") " +
         "ROW FORMAT SERDE 'org.apache.hive.hcatalog.data.JsonSerDe' STORED AS TEXTFILE";
     HiveTestUtilities.executeQuery(d, structDdl);
@@ -117,7 +118,8 @@ public class TestHiveStructs extends ClusterTest {
         "str_n1 STRUCT<sid:INT,coord:STRUCT<x:TINYINT,y:CHAR(1)>>, " +
         "str_n2 STRUCT<a:STRUCT<b:STRUCT<c:INT,k:CHAR(1)>>>, " +
         "str_wa STRUCT<t:INT,a:ARRAY<INT>,a2:ARRAY<ARRAY<INT>>>, " +
-        "str_map STRUCT<i:INT, m:MAP<INT, INT>>" +
+        "str_map STRUCT<i:INT, m:MAP<INT, INT>, sm:MAP<STRING,INT>>, " +
+        "str_wa_2 STRUCT<fn:INT,fa:ARRAY<STRUCT<sn:INT,sa:ARRAY<STRUCT<tn:INT,ts:STRING>>>>>" +
         ") " +
         "STORED AS PARQUET";
     HiveTestUtilities.executeQuery(d, structDdlP);
@@ -266,15 +268,27 @@ public class TestHiveStructs extends ClusterTest {
   @Test
   public void structWithArrFieldAccessByIdx() throws Exception {
     testBuilder()
-        .sqlQuery("SELECT rid, st.str_wa.a[2] FROM hive.struct_tbl st ORDER BY rid")
+        .sqlQuery("SELECT rid, st.str_wa.a[2] p0 FROM hive.struct_tbl st ORDER BY rid")
         .ordered()
-        .baselineColumns("rid", "EXPR$1")
+        .baselineColumns("rid", "p0")
         .baselineValues(1, -2)
         .baselineValues(2, -12)
         .baselineValues(3, 0)
         .go();
   }
 
+  @Test
+  public void structWithArrParquetFieldAccessByIdx() throws Exception {
+    HiveTestUtilities.assertNativeScanUsed(queryBuilder(), "struct_tbl_p");
+    testBuilder()
+        .sqlQuery("SELECT rid, st.str_wa.a[2] p0 FROM hive.struct_tbl_p st ORDER BY rid")
+        .ordered()
+        .baselineColumns("rid", "p0")
+        .baselineValues(1, -2)
+        .baselineValues(2, -12)
+        .baselineValues(3, 0)
+        .go();
+  }
 
   @Test
   public void primitiveStructParquet() throws Exception {
@@ -345,10 +359,87 @@ public class TestHiveStructs extends ClusterTest {
         .sqlQuery("SELECT rid, str_map FROM hive.struct_tbl")
         .unOrdered()
         .baselineColumns("rid", "str_map")
-        .baselineValues(1, mapOf("i", 1, "m", mapOfObject(1, 0, 0, 1)))
-        .baselineValues(2, mapOf("i", 2, "m", mapOfObject(1, 3, 2, 2)))
-        .baselineValues(3, mapOf("i", 3, "m", mapOfObject(1, 4, 2, 3, 0, 5)))
+        .baselineValues(1, mapOf("i", 1, "m", mapOfObject(1, 0, 0, 1), "sm", mapOfObject("a", 0)))
+        .baselineValues(2, mapOf("i", 2, "m", mapOfObject(1, 3, 2, 2), "sm", mapOfObject("a", -1)))
+        .baselineValues(3, mapOf("i", 3, "m", mapOfObject(1, 4, 2, 3, 0, 5), "sm", mapOfObject("a", -2)))
         .go();
   }
 
+  @Test
+  public void strWithArr2ByIdxP0() throws Exception {
+    HiveTestUtilities.assertNativeScanUsed(queryBuilder(), "struct_tbl_p");
+    testBuilder()
+        .sqlQuery("SELECT rid, t.str_wa_2.fa[0].sa p0 FROM hive.struct_tbl_p t")
+        .unOrdered()
+        .baselineColumns("rid", "p0")
+        .baselineValues(1, asList(mapOf("tn", 1000, "ts", "s1"), mapOf("tn", 2000, "ts", "s2"), mapOf("tn", 3000, "ts", "s3")))
+        .baselineValues(2, asList(mapOf("tn", 7000, "ts", "s7"), mapOf("tn", 8000, "ts", "s8")))
+        .baselineValues(3, asList(mapOf("tn", 10000, "ts", "s10")))
+        .go();
+  }
+
+  @Test
+  public void strWithArr2ByIdxP1() throws Exception {
+    HiveTestUtilities.assertNativeScanUsed(queryBuilder(), "struct_tbl_p");
+    testBuilder()
+        .sqlQuery("SELECT t.rid, t.str_wa_2.fa[0].sa[0] p1 FROM hive.struct_tbl_p t")
+        .unOrdered()
+        .baselineColumns("rid", "p1")
+        .baselineValues(1, mapOf("tn", 1000, "ts", "s1"))
+        .baselineValues(2, mapOf("tn", 7000, "ts", "s7"))
+        .baselineValues(3, mapOf("tn", 10000, "ts", "s10"))
+        .go();
+  }
+
+  @Test
+  public void strWithArr2ByIdxP2() throws Exception {
+    HiveTestUtilities.assertNativeScanUsed(queryBuilder(), "struct_tbl_p");
+    testBuilder()
+        .sqlQuery("SELECT rid, t.str_wa_2.fa[0].sa[0].ts p2 FROM hive.struct_tbl_p t")
+        .unOrdered()
+        .baselineColumns("rid", "p2")
+        .baselineValues(1, "s1")
+        .baselineValues(2, "s7")
+        .baselineValues(3, "s10")
+        .go();
+  }
+
+  @Test
+  public void strWithArr2ByIdxP3() throws Exception {
+    HiveTestUtilities.assertNativeScanUsed(queryBuilder(), "struct_tbl_p");
+    testBuilder()
+        .sqlQuery("SELECT rid, t.str_wa_2.fa[2].sn p3 FROM hive.struct_tbl_p t")
+        .unOrdered()
+        .baselineColumns("rid", "p3")
+        .baselineValues(1, 30)
+        .baselineValues(2, null)
+        .baselineValues(3, null)
+        .go();
+  }
+
+  @Test
+  public void strWithArr2ByIdxP4() throws Exception {
+    HiveTestUtilities.assertNativeScanUsed(queryBuilder(), "struct_tbl_p");
+    testBuilder()
+        .sqlQuery("SELECT rid, t.str_wa_2.fa[1].sa[0].tn p4 FROM hive.struct_tbl_p t")
+        .unOrdered()
+        .baselineColumns("rid", "p4")
+        .baselineValues(1, 4000)
+        .baselineValues(2, 9000)
+        .baselineValues(3, null)
+        .go();
+  }
+
+  @Test // DRILL-7381
+  public void structWithMapParquetByKey() throws Exception {
+    HiveTestUtilities.assertNativeScanUsed(queryBuilder(), "struct_tbl_p");
+    testBuilder()
+        .sqlQuery("SELECT rid, t.str_map.sm.a a FROM hive.struct_tbl_p t")
+        .unOrdered()
+        .baselineColumns("rid", "a")
+        .baselineValues(1, 0)
+        .baselineValues(2, -1)
+        .baselineValues(3, -2)
+        .go();
+  }
 }

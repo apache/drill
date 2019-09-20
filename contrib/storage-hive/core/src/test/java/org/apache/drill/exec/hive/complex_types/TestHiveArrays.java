@@ -153,13 +153,21 @@ public class TestHiveArrays extends ClusterTest {
     HiveTestUtilities.loadData(d, "struct_array", Paths.get("complex_types/array/struct_array.json"));
 
     HiveTestUtilities.executeQuery(d,
+        "CREATE TABLE struct_array_p(rid INT, " +
+            "arr_n_0 ARRAY<STRUCT<a:INT,b:BOOLEAN,c:STRING>>," +
+            "arr_n_1 ARRAY<ARRAY<STRUCT<x:DOUBLE,y:DOUBLE>>>, " +
+            "arr_n_2 ARRAY<ARRAY<ARRAY<STRUCT<t:INT,d:DATE>>>>" +
+            ") " +
+            "STORED AS PARQUET");
+    HiveTestUtilities.insertData(d, "struct_array", "struct_array_p");
+
+    HiveTestUtilities.executeQuery(d,
         "CREATE TABLE map_array(rid INT, " +
             "arr_n_0 ARRAY<MAP<INT,BOOLEAN>>," +
             "arr_n_1 ARRAY<ARRAY<MAP<CHAR(2),INT>>>, " +
             "arr_n_2 ARRAY<ARRAY<ARRAY<MAP<INT,DATE>>>>" +
             ") " +
-            "ROW FORMAT SERDE 'org.apache.hive.hcatalog.data.JsonSerDe' STORED AS TEXTFILE"
-    );
+            "ROW FORMAT SERDE 'org.apache.hive.hcatalog.data.JsonSerDe' STORED AS TEXTFILE");
     HiveTestUtilities.loadData(d, "map_array", Paths.get("complex_types/array/map_array.json"));
 
   }
@@ -1452,11 +1460,35 @@ public class TestHiveArrays extends ClusterTest {
   }
 
   @Test
-  public void structArrayN0AccessByIndex() throws Exception {
+  public void structArrayN0ByIdxP1() throws Exception {
+    HiveTestUtilities.assertNativeScanUsed(queryBuilder(), "struct_array_p");
     testBuilder()
-        .sqlQuery("SELECT rid,arr_n_0[2] FROM hive.struct_array")
+        .sqlQuery("SELECT rid, arr_n_0[1].c p1 FROM hive.struct_array_p")
         .unOrdered()
-        .baselineColumns("rid", "EXPR$1")
+        .baselineColumns("rid", "p1")
+        .baselineValues(1, "xP>vcx _2p3 >.mm,//")
+        .baselineValues(2, null)
+        .go();
+  }
+
+  @Test
+  public void structArrayN0ByIdxP2() throws Exception {
+    HiveTestUtilities.assertNativeScanUsed(queryBuilder(), "struct_array_p");
+    testBuilder()
+        .sqlQuery("SELECT rid, arr_n_0[2] p2 FROM hive.struct_array_p")
+        .unOrdered()
+        .baselineColumns("rid", "p2")
+        .baselineValues(1, TestBuilder.mapOf("a", 902, "b", false, "c", "*-//------*"))
+        .baselineValues(2, TestBuilder.mapOf())
+        .go();
+  }
+
+  @Test
+  public void structArrayN0ByIdxP3() throws Exception {
+    testBuilder()
+        .sqlQuery("SELECT rid,arr_n_0[2] p3 FROM hive.struct_array")
+        .unOrdered()
+        .baselineColumns("rid", "p3")
         .baselineValues(1, TestBuilder.mapOf("a", 902, "b", false, "c", "*-//------*"))
         .baselineValues(2, TestBuilder.mapOf())
         .go();
