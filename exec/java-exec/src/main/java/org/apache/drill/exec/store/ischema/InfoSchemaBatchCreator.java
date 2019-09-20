@@ -17,9 +17,6 @@
  */
 package org.apache.drill.exec.store.ischema;
 
-import java.util.Collections;
-import java.util.List;
-
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.physical.impl.BatchCreator;
@@ -27,11 +24,16 @@ import org.apache.drill.exec.physical.impl.ScanBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.store.RecordReader;
 
+import java.util.Collections;
+import java.util.List;
+
 public class InfoSchemaBatchCreator implements BatchCreator<InfoSchemaSubScan> {
+
   @Override
   public ScanBatch getBatch(ExecutorFragmentContext context, InfoSchemaSubScan config, List<RecordBatch> children)
       throws ExecutionSetupException {
-    RecordReader rr = config.getTable().getRecordReader(context.getFullRootSchema(), config.getFilter(), context.getOptions());
+    RecordReader rr = config.getTable().getRecordReader(context.getFullRootSchema(), config.getFilter(),
+      context.getOptions(), context.getMetastoreRegistry());
     return new ScanBatch(config, context, Collections.singletonList(rr));
   }
 }

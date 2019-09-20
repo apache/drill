@@ -73,6 +73,7 @@ import org.apache.drill.exec.store.ischema.Records.Schema;
 import org.apache.drill.exec.store.ischema.Records.Table;
 import org.apache.drill.exec.store.pojo.PojoRecordReader;
 
+import org.apache.drill.metastore.MetastoreRegistry;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.ComparisonChain;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
@@ -153,6 +154,10 @@ public class MetadataProvider {
     public DrillConfig getConfig() {
       return dContext.getConfig();
     }
+
+    public MetastoreRegistry getMetastoreRegistry() {
+      return dContext.getMetastoreRegistry();
+    }
   }
 
   /**
@@ -182,7 +187,7 @@ public class MetadataProvider {
 
       try {
         final PojoRecordReader<Catalog> records =
-            getPojoRecordReader(CATALOGS, filter, getConfig(), schemaProvider, session);
+            getPojoRecordReader(CATALOGS, filter, getConfig(), schemaProvider, session, getMetastoreRegistry());
 
         List<CatalogMetadata> metadata = new ArrayList<>();
         for(Catalog c : records) {
@@ -238,7 +243,7 @@ public class MetadataProvider {
 
       try {
         final PojoRecordReader<Schema> records =
-            getPojoRecordReader(SCHEMATA, filter, getConfig(), schemaProvider, session);
+            getPojoRecordReader(SCHEMATA, filter, getConfig(), schemaProvider, session, getMetastoreRegistry());
 
         List<SchemaMetadata> metadata = new ArrayList<>();
         for(Schema s : records) {
@@ -298,7 +303,7 @@ public class MetadataProvider {
 
       try {
         final PojoRecordReader<Table> records =
-            getPojoRecordReader(TABLES, filter, getConfig(), schemaProvider, session);
+            getPojoRecordReader(TABLES, filter, getConfig(), schemaProvider, session, getMetastoreRegistry());
 
         List<TableMetadata> metadata = new ArrayList<>();
         for(Table t : records) {
@@ -359,7 +364,7 @@ public class MetadataProvider {
 
       try {
         final PojoRecordReader<Column> records =
-            getPojoRecordReader(COLUMNS, filter, getConfig(), schemaProvider, session);
+            getPojoRecordReader(COLUMNS, filter, getConfig(), schemaProvider, session, getMetastoreRegistry());
 
         List<ColumnMetadata> metadata = new ArrayList<>();
         for(Column c : records) {
@@ -559,10 +564,10 @@ public class MetadataProvider {
    * @return
    */
   private static <S> PojoRecordReader<S> getPojoRecordReader(final InfoSchemaTableType tableType, final InfoSchemaFilter filter, final DrillConfig config,
-      final SchemaTreeProvider provider, final UserSession userSession) {
+      final SchemaTreeProvider provider, final UserSession userSession, final MetastoreRegistry metastoreRegistry) {
     final SchemaPlus rootSchema =
         provider.createFullRootSchema(userSession.getCredentials().getUserName(), newSchemaConfigInfoProvider(config, userSession, provider));
-    return tableType.getRecordReader(rootSchema, filter, userSession.getOptions());
+    return tableType.getRecordReader(rootSchema, filter, userSession.getOptions(), metastoreRegistry);
   }
 
   /**

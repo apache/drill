@@ -34,6 +34,8 @@ public class MetadataInfo {
   public static final String GENERAL_INFO_KEY = "GENERAL_INFO";
   public static final String DEFAULT_SEGMENT_KEY = "DEFAULT_SEGMENT";
   public static final String DEFAULT_COLUMN_PREFIX = "_$SEGMENT_";
+  public static final String METADATA_TYPE = "metadataType";
+  public static final String METADATA_KEY = "metadataKey";
 
   private final MetadataType type;
   private final String key;

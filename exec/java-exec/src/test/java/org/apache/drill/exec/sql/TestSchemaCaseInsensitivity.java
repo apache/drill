@@ -17,16 +17,19 @@
  */
 package org.apache.drill.exec.sql;
 
+import org.apache.drill.categories.SqlTest;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.QueryBuilder;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+@Category(SqlTest.class)
 public class TestSchemaCaseInsensitivity extends ClusterTest {
 
   @BeforeClass
@@ -57,7 +60,7 @@ public class TestSchemaCaseInsensitivity extends ClusterTest {
 
   @Test
   public void testDescribeTable() throws Exception {
-    checkRecordCount(4, "describe Information_Schema.`Tables`");
+    checkRecordCount(8, "describe Information_Schema.`Tables`");
     checkRecordCount(1, "describe Information_Schema.`Tables` Table_Catalog");
     checkRecordCount(1, "describe Information_Schema.`Tables` '%Catalog'");
     checkRecordCount(6, "describe SyS.Version");

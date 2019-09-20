@@ -25,7 +25,6 @@ import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.util.ImpersonationUtil;
 
 public class InfoSchemaDrillTable extends DrillTable {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(InfoSchemaDrillTable.class);
 
   private final InfoSchemaTableType table;
 
@@ -38,5 +37,4 @@ public class InfoSchemaDrillTable extends DrillTable {
   public RelDataType getRowType(RelDataTypeFactory typeFactory) {
     return table.getRowType(typeFactory);
   }
-
 }

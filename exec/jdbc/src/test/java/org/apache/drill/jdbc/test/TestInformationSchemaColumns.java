@@ -406,7 +406,7 @@ public class TestInformationSchemaColumns extends JdbcTestBase {
 
   @Test
   public void testMetadataHasInterimNumberOfColumns() throws SQLException {
-    assertThat( "column count", rowsMetadata.getColumnCount(), equalTo( 16 ) );
+    assertThat( "column count", rowsMetadata.getColumnCount(), equalTo( 24 ) );
   }
 
 

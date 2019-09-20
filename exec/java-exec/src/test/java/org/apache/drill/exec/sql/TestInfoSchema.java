@@ -52,7 +52,7 @@ import static org.junit.Assert.assertTrue;
  */
 @Category(SqlTest.class)
 public class TestInfoSchema extends BaseTestQuery {
-  public static final String TEST_SUB_DIR = "testSubDir";
+  private static final String TEST_SUB_DIR = "testSubDir";
   private static final ObjectMapper mapper = new ObjectMapper().enable(INDENT_OUTPUT);
 
   @BeforeClass
@@ -69,6 +69,7 @@ public class TestInfoSchema extends BaseTestQuery {
     test("select * from INFORMATION_SCHEMA.`TABLES`");
     test("select * from INFORMATION_SCHEMA.COLUMNS");
     test("select * from INFORMATION_SCHEMA.`FILES`");
+    test("select * from INFORMATION_SCHEMA.`PARTITIONS`");
   }
 
   @Test
@@ -83,28 +84,29 @@ public class TestInfoSchema extends BaseTestQuery {
 
   @Test
   public void showTablesFromDb() throws Exception{
-    final List<String[]> expected = Arrays.asList(
+    List<String[]> expected = Arrays.asList(
         new String[]{"information_schema", "VIEWS"},
         new String[]{"information_schema", "COLUMNS"},
         new String[]{"information_schema", "TABLES"},
         new String[]{"information_schema", "CATALOGS"},
         new String[]{"information_schema", "SCHEMATA"},
-        new String[]{"information_schema", "FILES"});
+        new String[]{"information_schema", "FILES"},
+        new String[]{"information_schema", "PARTITIONS"});
 
-    final TestBuilder t1 = testBuilder()
+    TestBuilder t1 = testBuilder()
         .sqlQuery("SHOW TABLES FROM INFORMATION_SCHEMA")
         .unOrdered()
         .baselineColumns("TABLE_SCHEMA", "TABLE_NAME");
-    for(String[] expectedRow : expected) {
+    for (String[] expectedRow : expected) {
       t1.baselineValues(expectedRow);
     }
     t1.go();
 
-    final TestBuilder t2 = testBuilder()
+    TestBuilder t2 = testBuilder()
         .sqlQuery("SHOW TABLES IN INFORMATION_SCHEMA")
         .unOrdered()
         .baselineColumns("TABLE_SCHEMA", "TABLE_NAME");
-    for(String[] expectedRow : expected) {
+    for (String[] expectedRow : expected) {
       t2.baselineValues(expectedRow);
     }
     t2.go();
@@ -203,6 +205,10 @@ public class TestInfoSchema extends BaseTestQuery {
         .baselineValues("TABLE_SCHEMA", "CHARACTER VARYING", "NO")
         .baselineValues("TABLE_NAME", "CHARACTER VARYING", "NO")
         .baselineValues("TABLE_TYPE", "CHARACTER VARYING", "NO")
+        .baselineValues("TABLE_SOURCE", "CHARACTER VARYING", "NO")
+        .baselineValues("LOCATION", "CHARACTER VARYING", "NO")
+        .baselineValues("NUM_ROWS", "BIGINT", "NO")
+        .baselineValues("LAST_MODIFIED_TIME", "TIMESTAMP", "NO")
         .go();
   }
 
@@ -237,6 +243,10 @@ public class TestInfoSchema extends BaseTestQuery {
           .baselineValues("TABLE_SCHEMA", "CHARACTER VARYING", "NO")
           .baselineValues("TABLE_NAME", "CHARACTER VARYING", "NO")
           .baselineValues("TABLE_TYPE", "CHARACTER VARYING", "NO")
+          .baselineValues("TABLE_SOURCE", "CHARACTER VARYING", "NO")
+          .baselineValues("LOCATION", "CHARACTER VARYING", "NO")
+          .baselineValues("NUM_ROWS", "BIGINT", "NO")
+          .baselineValues("LAST_MODIFIED_TIME", "TIMESTAMP", "NO")
           .go();
     } finally {
       test("DROP VIEW IF EXISTS dfs.tmp.`TABLES`");

@@ -34,5 +34,4 @@ public class InfoSchemaConfig extends StoragePluginConfig {
   public boolean equals(Object o){
     return o instanceof InfoSchemaConfig;
   }
-
 }

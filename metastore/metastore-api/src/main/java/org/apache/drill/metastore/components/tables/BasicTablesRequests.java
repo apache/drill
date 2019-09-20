@@ -42,10 +42,8 @@ public class BasicTablesRequests {
 
   public static final String LAST_MODIFIED_TIME = "lastModifiedTime";
   public static final String PATH = "path";
-  public static final String METADATA_KEY = "metadataKey";
   public static final String LOCATION = "location";
   public static final String COLUMN = "column";
-  public static final String METADATA_TYPE = "metadataType";
   public static final String INTERESTING_COLUMNS = "interestingColumns";
   public static final String PARTITION_KEYS = "partitionKeys";
 
@@ -415,7 +413,7 @@ public class BasicTablesRequests {
       .tableInfo(tableInfo)
       .locations(locations)
       .metadataType(MetadataType.SEGMENT.name())
-      .requestColumns(METADATA_KEY, LAST_MODIFIED_TIME)
+      .requestColumns(MetadataInfo.METADATA_KEY, LAST_MODIFIED_TIME)
       .build();
 
     return request(requestMetadata).stream()
@@ -604,10 +602,10 @@ public class BasicTablesRequests {
         addFilter(LOCATION, location, filters);
         addFilter(LOCATION, locations, filters);
         addFilter(COLUMN, column, filters);
-        addFilter(METADATA_TYPE, metadataType, filters);
-        addFilter(METADATA_TYPE, metadataTypes, filters);
-        addFilter(METADATA_KEY, metadataKey, filters);
-        addFilter(METADATA_KEY, metadataKeys, filters);
+        addFilter(MetadataInfo.METADATA_TYPE, metadataType, filters);
+        addFilter(MetadataInfo.METADATA_TYPE, metadataTypes, filters);
+        addFilter(MetadataInfo.METADATA_KEY, metadataKey, filters);
+        addFilter(MetadataInfo.METADATA_KEY, metadataKeys, filters);
         addFilter(PATH, path, filters);
         addFilter(PATH, paths, filters);
         if (customFilter != null) {

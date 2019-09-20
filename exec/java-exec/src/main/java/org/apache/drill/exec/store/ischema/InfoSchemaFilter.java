@@ -17,19 +17,18 @@
  */
 package org.apache.drill.exec.store.ischema;
 
-import static org.apache.drill.exec.expr.fn.impl.RegexpUtil.sqlToRegexLike;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.apache.drill.exec.store.ischema.InfoSchemaFilter.ExprNode.Type;
+import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
 
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import org.apache.drill.exec.store.ischema.InfoSchemaFilter.ExprNode.Type;
-
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
+import static org.apache.drill.exec.expr.fn.impl.RegexpUtil.sqlToRegexLike;
 
 @JsonTypeName("info-schema-filter")
 public class InfoSchemaFilter {
@@ -121,13 +120,14 @@ public class InfoSchemaFilter {
   public enum Result {
     TRUE,
     FALSE,
-    INCONCLUSIVE;
+    INCONCLUSIVE
   }
 
   /**
    * Evaluate the filter for given <COLUMN NAME, VALUE> pairs.
-   * @param recordValues
-   * @return
+   *
+   * @param recordValues map of field names and their values
+   * @return evaluation result
    */
   @JsonIgnore
   public Result evaluate(Map<String, String> recordValues) {
@@ -144,12 +144,12 @@ public class InfoSchemaFilter {
   }
 
   private Result evaluateHelperFunction(Map<String, String> recordValues, FunctionExprNode exprNode) {
-    switch(exprNode.function) {
+    switch (exprNode.function) {
       case "like": {
         FieldExprNode col = (FieldExprNode) exprNode.args.get(0);
         ConstantExprNode pattern = (ConstantExprNode) exprNode.args.get(1);
         ConstantExprNode escape = exprNode.args.size() > 2 ? (ConstantExprNode) exprNode.args.get(2) : null;
-        final String fieldValue = recordValues.get(col.field.toString());
+        final String fieldValue = recordValues.get(col.field);
         if (fieldValue != null) {
           if (escape == null) {
             return Pattern.matches(sqlToRegexLike(pattern.value).getJavaPatternString(), fieldValue) ?
@@ -169,7 +169,7 @@ public class InfoSchemaFilter {
         FieldExprNode arg0 = (FieldExprNode) exprNode.args.get(0);
         ConstantExprNode arg1 = (ConstantExprNode) exprNode.args.get(1);
 
-        final String value = recordValues.get(arg0.field.toString());
+        final String value = recordValues.get(arg0.field);
         if (value != null) {
           if (exprNode.function.equals("equal")) {
             return arg1.value.equals(value) ? Result.TRUE : Result.FALSE;
@@ -220,7 +220,7 @@ public class InfoSchemaFilter {
       case "in": {
         FieldExprNode col = (FieldExprNode) exprNode.args.get(0);
         List<ExprNode> args = exprNode.args.subList(1, exprNode.args.size());
-        final String fieldValue = recordValues.get(col.field.toString());
+        final String fieldValue = recordValues.get(col.field);
         if (fieldValue != null) {
           for(ExprNode arg: args) {
             if (fieldValue.equals(((ConstantExprNode) arg).value)) {
