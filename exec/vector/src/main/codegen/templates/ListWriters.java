@@ -43,7 +43,7 @@ public class ${mode}ListWriter extends AbstractFieldWriter {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(${mode}ListWriter.class);
 
   enum Mode {
-    INIT, IN_MAP, IN_LIST, IN_DICT
+    INIT, IN_MAP, IN_LIST, IN_DICT, IN_UNION
     <#list vv.types as type><#list type.minor as minor>,
     IN_${minor.class?upper_case}</#list></#list> }
 
@@ -180,6 +180,33 @@ public class ${mode}ListWriter extends AbstractFieldWriter {
     }
   }
 
+  @Override
+  public UnionVectorWriter union() {
+    switch (mode) {
+      case INIT:
+        final ValueVector oldVector = container.getChild(name);
+        final ListVector vector = container.addOrGet(name, Types.optional(MinorType.LIST), ListVector.class);
+        innerVector = vector;
+
+        writer = new UnionVectorListWriter(vector, this);
+
+        // oldVector will be null if it's first batch being created and it might not be same as newly added vector
+        // if new batch has schema change
+        if (oldVector == null || oldVector != vector) {
+          writer.allocate();
+        }
+        writer.setPosition(idx());
+        mode = Mode.IN_UNION;
+        return (UnionVectorWriter) writer;
+      case IN_UNION:
+        return (UnionVectorWriter) writer;
+      default:
+        throw UserException.unsupportedError()
+              .message(getUnsupportedErrorMsg("UNION", mode.name()))
+              .build(logger);
+    }
+  }
+
   <#list vv.types as type><#list type.minor as minor>
   <#assign lowerName = minor.class?uncap_first />
   <#assign upperName = minor.class?upper_case />
@@ -275,8 +302,13 @@ public class ${mode}ListWriter extends AbstractFieldWriter {
 
   @Override
   public void startList() {
-    if (mode == Mode.IN_DICT) {
-      writer.startList();
+    switch (mode) {
+      case IN_DICT:
+        writer.startList();
+        break;
+      case IN_UNION:
+        innerVector.getMutator().startNewValue(idx());
+        break;
     }
   }
 

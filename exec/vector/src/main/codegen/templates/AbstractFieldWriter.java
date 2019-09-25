@@ -146,6 +146,18 @@ abstract class AbstractFieldWriter extends AbstractBaseWriter implements FieldWr
     return null;
   }
 
+  @Override
+  public UnionVectorWriter union(String name) {
+    fail("Union");
+    return null;
+  }
+
+  @Override
+  public UnionVectorWriter union() {
+    fail("Union");
+    return null;
+  }
+
   <#list vv.types as type><#list type.minor as minor>
   <#assign lowerName = minor.class?uncap_first />
   <#if lowerName == "int" ><#assign lowerName = "integer" /></#if>

@@ -129,6 +129,17 @@ public class TestHiveStructs extends ClusterTest {
         "AS SELECT str_n0.f_int AS fint, str_n1.coord AS cord, str_wa AS wizarr " +
         "FROM struct_tbl WHERE rid=1";
     HiveTestUtilities.executeQuery(d, hiveViewDdl);
+
+    String structUnionDdl = "CREATE TABLE " +
+        "struct_union_tbl(rid INT, str_u STRUCT<n:INT,u:UNIONTYPE<INT,STRING>>) " +
+        "ROW FORMAT DELIMITED" +
+        " FIELDS TERMINATED BY ','" +
+        " COLLECTION ITEMS TERMINATED BY '&'" +
+        " MAP KEYS TERMINATED BY '#'" +
+        " LINES TERMINATED BY '\\n'" +
+        " STORED AS TEXTFILE";
+    HiveTestUtilities.executeQuery(d, structUnionDdl);
+    HiveTestUtilities.loadData(d, "struct_union_tbl", Paths.get("complex_types/struct/struct_union_tbl.txt"));
   }
 
   @Test
@@ -452,6 +463,17 @@ public class TestHiveStructs extends ClusterTest {
         .baselineValues(1, 0)
         .baselineValues(2, 3)
         .baselineValues(3, 4)
+        .go();
+  }
+
+  @Test
+  public void strWithUnionField() throws Exception {
+    testBuilder()
+        .sqlQuery("SELECT rid, str_u FROM hive.struct_union_tbl t")
+        .unOrdered()
+        .baselineColumns("rid", "str_u")
+        .baselineValues(1, mapOf("n", -3, "u", 1000))
+        .baselineValues(2, mapOf("n", 5, "u", "Text"))
         .go();
   }
 }

@@ -62,6 +62,7 @@ package org.apache.drill.exec.vector.complex.writer;
     void copyReaderToField(String name, FieldReader reader);
     MapWriter map(String name);
     ListWriter list(String name);
+    UnionVectorWriter union(String name);
     void start();
     void end();
     DictWriter dict(String name);
@@ -89,6 +90,7 @@ package org.apache.drill.exec.vector.complex.writer;
     MapWriter map();
     DictWriter dict();
     ListWriter list();
+    UnionVectorWriter union();
     void copyReader(FieldReader reader);
 
     <#list vv.types as type><#list type.minor as minor>

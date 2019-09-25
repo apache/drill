@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.hive.writers;
 
+import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -25,6 +26,7 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.store.hive.writers.complex.HiveListWriter;
 import org.apache.drill.exec.store.hive.writers.complex.HiveMapWriter;
 import org.apache.drill.exec.store.hive.writers.complex.HiveStructWriter;
+import org.apache.drill.exec.store.hive.writers.complex.HiveUnionWriter;
 import org.apache.drill.exec.store.hive.writers.primitive.HiveBinaryWriter;
 import org.apache.drill.exec.store.hive.writers.primitive.HiveBooleanWriter;
 import org.apache.drill.exec.store.hive.writers.primitive.HiveByteWriter;
@@ -41,6 +43,7 @@ import org.apache.drill.exec.store.hive.writers.primitive.HiveTimestampWriter;
 import org.apache.drill.exec.store.hive.writers.primitive.HiveVarCharWriter;
 import org.apache.drill.exec.vector.complex.DictVector;
 import org.apache.drill.exec.vector.complex.impl.SingleMapWriter;
+import org.apache.drill.exec.vector.complex.impl.UnionVectorWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
@@ -59,6 +62,7 @@ import org.apache.hadoop.hive.serde2.objectinspector.MapObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.StructField;
 import org.apache.hadoop.hive.serde2.objectinspector.StructObjectInspector;
+import org.apache.hadoop.hive.serde2.objectinspector.UnionObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.BinaryObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.BooleanObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.ByteObjectInspector;
@@ -79,6 +83,7 @@ import org.apache.hadoop.hive.serde2.typeinfo.MapTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.PrimitiveTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
+import org.apache.hadoop.hive.serde2.typeinfo.UnionTypeInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -128,14 +133,16 @@ public final class HiveValueWriterFactory {
         TypeInfo elemTypeInfo = ((ListTypeInfo) typeInfo).getListElementTypeInfo();
         ListObjectInspector listInspector = (ListObjectInspector) objectInspector;
         ObjectInspector elementInspector = listInspector.getListElementObjectInspector();
-        ListWriter listWriter = extractWriter(columnName, parentWriter, MapWriter::list, ListWriter::list);
+        ListWriter listWriter = extractWriter(columnName, parentWriter,
+            MapWriter::list, ListWriter::list, UnionVectorWriter::list);
         HiveValueWriter elementValueWriter = createHiveValueWriter(null, elemTypeInfo, elementInspector, listWriter);
         return new HiveListWriter(listInspector, listWriter, elementValueWriter);
       }
       case STRUCT: {
         StructObjectInspector structInspector = (StructObjectInspector) objectInspector;
         StructField[] structFields = structInspector.getAllStructFieldRefs().toArray(new StructField[0]);
-        MapWriter structWriter = extractWriter(columnName, parentWriter, MapWriter::map, ListWriter::map);
+        MapWriter structWriter = extractWriter(columnName, parentWriter,
+            MapWriter::map, ListWriter::map, UnionVectorWriter::map);
         HiveValueWriter[] structFieldWriters = new HiveValueWriter[structFields.length];
         for (int fieldIdx = 0; fieldIdx < structFields.length; fieldIdx++) {
           StructField field = structFields[fieldIdx];
@@ -152,10 +159,27 @@ public final class HiveValueWriterFactory {
         MapObjectInspector mapObjectInspector = (MapObjectInspector) objectInspector;
         ObjectInspector keyInspector = mapObjectInspector.getMapKeyObjectInspector();
         ObjectInspector valueInspector = mapObjectInspector.getMapValueObjectInspector();
-        BaseWriter.DictWriter dictWriter = extractWriter(columnName, parentWriter, MapWriter::dict, ListWriter::dict);
+        BaseWriter.DictWriter dictWriter = extractWriter(columnName, parentWriter,
+            MapWriter::dict, ListWriter::dict, UnionVectorWriter::dict);
         HiveValueWriter mapKeyWriter = createPrimitiveHiveValueWriter(DictVector.FIELD_KEY_NAME, keyTypeInfo, keyInspector, dictWriter);
         HiveValueWriter mapValueWriter = createHiveValueWriter(DictVector.FIELD_VALUE_NAME, valueTypeInfo, valueInspector, dictWriter);
         return new HiveMapWriter(mapObjectInspector, dictWriter, mapKeyWriter, mapValueWriter);
+      }
+      case UNION: {
+        UnionObjectInspector unionObjectInspector = (UnionObjectInspector) objectInspector;
+        UnionTypeInfo unionTypeInfo = (UnionTypeInfo) typeInfo;
+        List<TypeInfo> unionFieldsTypeInfo = unionTypeInfo.getAllUnionObjectTypeInfos();
+        List<ObjectInspector> objectInspectors = unionObjectInspector.getObjectInspectors();
+        UnionVectorWriter unionWriter = extractWriter(columnName, parentWriter,
+            MapWriter::union, ListWriter::union, UnionVectorWriter::union);
+        HiveValueWriter[] unionFieldWriters = new HiveValueWriter[unionFieldsTypeInfo.size()];
+        for (int tag = 0; tag < unionFieldsTypeInfo.size(); tag++) {
+          ObjectInspector unionFieldInspector = objectInspectors.get(tag);
+          TypeInfo unionFieldTypeInfo = unionFieldsTypeInfo.get(tag);
+          HiveValueWriter unionValueWriter = createHiveValueWriter(null, unionFieldTypeInfo, unionFieldInspector, unionWriter);
+          unionFieldWriters[tag] = unionValueWriter;
+        }
+        return new HiveUnionWriter(unionFieldWriters, unionObjectInspector);
       }
     }
     throwUnsupportedHiveDataTypeError(typeInfo.getCategory().toString());
@@ -174,55 +198,68 @@ public final class HiveValueWriterFactory {
   private HiveValueWriter createPrimitiveHiveValueWriter(String name, PrimitiveTypeInfo typeInfo, ObjectInspector inspector, BaseWriter parentWriter) {
     switch (typeInfo.getPrimitiveCategory()) {
       case BINARY: {
-        VarBinaryWriter writer = extractWriter(name, parentWriter, MapWriter::varBinary, ListWriter::varBinary);
+        VarBinaryWriter writer = extractWriter(name, parentWriter,
+            MapWriter::varBinary, ListWriter::varBinary, UnionVectorWriter::varBinary);
         return new HiveBinaryWriter((BinaryObjectInspector) inspector, writer, drillBuf);
       }
       case BOOLEAN: {
-        BitWriter writer = extractWriter(name, parentWriter, MapWriter::bit, ListWriter::bit);
+        BitWriter writer = extractWriter(name, parentWriter,
+            MapWriter::bit, ListWriter::bit, UnionVectorWriter::bit);
         return new HiveBooleanWriter((BooleanObjectInspector) inspector, writer);
       }
       case BYTE: {
-        IntWriter writer = extractWriter(name, parentWriter, MapWriter::integer, ListWriter::integer);
+        IntWriter writer = extractWriter(name, parentWriter,
+            MapWriter::integer, ListWriter::integer, UnionVectorWriter::integer);
         return new HiveByteWriter((ByteObjectInspector) inspector, writer);
       }
       case DOUBLE: {
-        Float8Writer writer = extractWriter(name, parentWriter, MapWriter::float8, ListWriter::float8);
+        Float8Writer writer = extractWriter(name, parentWriter,
+            MapWriter::float8, ListWriter::float8, UnionVectorWriter::float8);
         return new HiveDoubleWriter((DoubleObjectInspector) inspector, writer);
       }
       case FLOAT: {
-        Float4Writer writer = extractWriter(name, parentWriter, MapWriter::float4, ListWriter::float4);
+        Float4Writer writer = extractWriter(name, parentWriter,
+            MapWriter::float4, ListWriter::float4, UnionVectorWriter::float4);
         return new HiveFloatWriter((FloatObjectInspector) inspector, writer);
       }
       case INT: {
-        IntWriter writer = extractWriter(name, parentWriter, MapWriter::integer, ListWriter::integer);
+        IntWriter writer = extractWriter(name, parentWriter,
+            MapWriter::integer, ListWriter::integer, UnionVectorWriter::integer);
         return new HiveIntWriter((IntObjectInspector) inspector, writer);
       }
       case LONG: {
-        BigIntWriter writer = extractWriter(name, parentWriter, MapWriter::bigInt, ListWriter::bigInt);
+        BigIntWriter writer = extractWriter(name, parentWriter,
+            MapWriter::bigInt, ListWriter::bigInt, UnionVectorWriter::bigInt);
         return new HiveLongWriter((LongObjectInspector) inspector, writer);
       }
       case SHORT: {
-        IntWriter writer = extractWriter(name, parentWriter, MapWriter::integer, ListWriter::integer);
+        IntWriter writer = extractWriter(name, parentWriter,
+            MapWriter::integer, ListWriter::integer, UnionVectorWriter::integer);
         return new HiveShortWriter((ShortObjectInspector) inspector, writer);
       }
       case STRING: {
-        VarCharWriter writer = extractWriter(name, parentWriter, MapWriter::varChar, ListWriter::varChar);
+        VarCharWriter writer = extractWriter(name, parentWriter,
+            MapWriter::varChar, ListWriter::varChar, UnionVectorWriter::varChar);
         return new HiveStringWriter((StringObjectInspector) inspector, writer, drillBuf);
       }
       case VARCHAR: {
-        VarCharWriter writer = extractWriter(name, parentWriter, MapWriter::varChar, ListWriter::varChar);
+        VarCharWriter writer = extractWriter(name, parentWriter,
+            MapWriter::varChar, ListWriter::varChar, UnionVectorWriter::varChar);
         return new HiveVarCharWriter((HiveVarcharObjectInspector) inspector, writer, drillBuf);
       }
       case TIMESTAMP: {
-        TimeStampWriter writer = extractWriter(name, parentWriter, MapWriter::timeStamp, ListWriter::timeStamp);
+        TimeStampWriter writer = extractWriter(name, parentWriter,
+            MapWriter::timeStamp, ListWriter::timeStamp, UnionVectorWriter::timeStamp);
         return new HiveTimestampWriter((TimestampObjectInspector) inspector, writer);
       }
       case DATE: {
-        DateWriter writer = extractWriter(name, parentWriter, MapWriter::date, ListWriter::date);
+        DateWriter writer = extractWriter(name, parentWriter,
+            MapWriter::date, ListWriter::date, UnionVectorWriter::date);
         return new HiveDateWriter((DateObjectInspector) inspector, writer);
       }
       case CHAR: {
-        VarCharWriter writer = extractWriter(name, parentWriter, MapWriter::varChar, ListWriter::varChar);
+        VarCharWriter writer = extractWriter(name, parentWriter,
+            MapWriter::varChar, ListWriter::varChar, UnionVectorWriter::varChar);
         return new HiveCharWriter((HiveCharObjectInspector) inspector, writer, drillBuf);
       }
       case DECIMAL: {
@@ -231,7 +268,8 @@ public final class HiveValueWriterFactory {
         int precision = decimalType.getPrecision();
         VarDecimalWriter writer = extractWriter(name, parentWriter,
             (mapWriter, key) -> mapWriter.varDecimal(key, precision, scale),
-            listWriter -> listWriter.varDecimal(precision, scale));
+            listWriter -> listWriter.varDecimal(precision, scale),
+            unionWriter -> unionWriter.varDecimal(precision, scale));
         return new HiveDecimalWriter((HiveDecimalObjectInspector) inspector, writer, scale);
       }
       default:
@@ -249,14 +287,18 @@ public final class HiveValueWriterFactory {
    * @param parentWriter parent writer used for getting child writer
    * @param fromMap      function for extracting writer from map parent writer
    * @param fromList     function for extracting writer from list parent writer
+   * @param fromUnion    function for extracting writer from union parent writer
    * @param <T>          type of extracted writer
    * @return writer extracted using either fromMap or fromList function
    */
   private static <T> T extractWriter(String name, BaseWriter parentWriter,
                                      BiFunction<MapWriter, String, T> fromMap,
-                                     Function<ListWriter, T> fromList) {
+                                     Function<ListWriter, T> fromList,
+                                     Function<UnionVectorWriter, T> fromUnion) {
     if (parentWriter instanceof MapWriter && name != null) {
       return fromMap.apply((MapWriter) parentWriter, name);
+    } else if (parentWriter instanceof UnionVectorWriter) {
+      return fromUnion.apply((UnionVectorWriter) parentWriter);
     } else if (parentWriter instanceof ListWriter) {
       return fromList.apply((ListWriter) parentWriter);
     } else {

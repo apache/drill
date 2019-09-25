@@ -33,9 +33,9 @@ package org.apache.drill.exec.vector.complex.impl;
 
 public class UnionListWriter extends AbstractFieldWriter {
 
+  protected PromotableWriter writer;
   private ListVector vector;
   private UInt4Vector offsets;
-  private PromotableWriter writer;
   private boolean inMap = false;
 
   public UnionListWriter(ListVector vector) {
