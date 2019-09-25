@@ -442,4 +442,16 @@ public class TestHiveStructs extends ClusterTest {
         .baselineValues(3, -2)
         .go();
   }
+
+  @Test // DRILL-7387
+  public void structWithMapByIntKey() throws Exception {
+    testBuilder()
+        .sqlQuery("SELECT rid, t.str_map.m[1] bk FROM hive.struct_tbl_p t")
+        .unOrdered()
+        .baselineColumns("rid", "bk")
+        .baselineValues(1, 0)
+        .baselineValues(2, 3)
+        .baselineValues(3, 4)
+        .go();
+  }
 }

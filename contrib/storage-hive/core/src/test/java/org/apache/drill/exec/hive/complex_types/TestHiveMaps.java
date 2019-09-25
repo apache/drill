@@ -769,6 +769,18 @@ public class TestHiveMaps extends ClusterTest {
   }
 
   @Test
+  public void getByKeyP22() throws Exception {
+    testBuilder()
+        .sqlQuery("SELECT rid, mc.map_struct_map.z.m[3] p22 FROM hive.map_complex_tbl mc")
+        .unOrdered()
+        .baselineColumns("rid", "p22")
+        .baselineValues(1, 2)
+        .baselineValues(2, null)
+        .baselineValues(3, 3)
+        .go();
+  }
+
+  @Test
   public void countMapColumn() throws Exception {
     testBuilder()
         .sqlQuery("SELECT COUNT(int_string) AS cnt FROM hive.map_tbl")

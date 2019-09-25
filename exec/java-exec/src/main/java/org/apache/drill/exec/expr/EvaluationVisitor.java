@@ -590,6 +590,9 @@ public class EvaluationVisitor {
           depth++;
         }
 
+        // expected that after loop depth at least equal to last id index
+        depth = Math.max(depth, e.getFieldId().getFieldIds().length - 1);
+
         if (complex || repeated) {
 
           if (e.getFieldId().isDict(depth)) {
