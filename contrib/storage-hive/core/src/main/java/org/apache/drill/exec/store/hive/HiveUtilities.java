@@ -637,7 +637,7 @@ public class HiveUtilities {
     final HiveConf hiveConf = hiveScan.getHiveConf();
     final HiveTableWithColumnCache hiveTable = hiveScan.getHiveReadEntry().getTable();
 
-    if (HiveUtilities.containsUnsupportedDataTypes(hiveTable)) {
+    if (HiveUtilities.isParquetTableContainsUnsupportedType(hiveTable)) {
       return false;
     }
 
@@ -705,15 +705,13 @@ public class HiveUtilities {
   }
 
   /**
-   * This method allows to check whether the Hive Table contains
-   * <a href="https://cwiki.apache.org/confluence/display/Hive/LanguageManual+Types#LanguageManualTypes-ComplexTypes">
-   * Hive Complex Types</a><p>
-   * TODO: Need to implement it, DRILL-3290. Appropriate (new or existed) Drill types should be selected.
+   * Hive doesn't support union type for parquet tables yet.
+   * See <a href="https://github.com/apache/hive/blob/master/ql/src/java/org/apache/hadoop/hive/ql/io/parquet/convert/HiveSchemaConverter.java#L117">HiveSchemaConverter.java<a/>
    *
    * @param hiveTable Thrift table from Hive Metastore
    * @return true if table contains unsupported data types, false otherwise
    */
-  private static boolean containsUnsupportedDataTypes(final Table hiveTable) {
+  private static boolean isParquetTableContainsUnsupportedType(final Table hiveTable) {
     for (FieldSchema hiveField : hiveTable.getSd().getCols()) {
       final Category category = TypeInfoUtils.getTypeInfoFromTypeString(hiveField.getType()).getCategory();
       if (category == Category.UNION) {

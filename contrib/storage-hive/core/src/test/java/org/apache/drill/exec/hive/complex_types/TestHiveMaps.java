@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.hive.complex_types;
 
+import java.io.File;
 import java.math.BigDecimal;
 import java.nio.file.Paths;
 
@@ -109,6 +110,19 @@ public class TestHiveMaps extends ClusterTest {
     HiveTestUtilities.insertData(d, "map_tbl", "map_tbl_p");
 
     HiveTestUtilities.executeQuery(d, "CREATE VIEW map_tbl_vw AS SELECT int_string FROM map_tbl WHERE rid=1");
+
+
+    HiveTestUtilities.executeQuery(d, "CREATE TABLE dummy(d INT) STORED AS TEXTFILE");
+    HiveTestUtilities.executeQuery(d, "INSERT INTO TABLE dummy VALUES (1)");
+
+
+    File copy = dirTestWatcher.copyResourceToRoot(Paths.get("complex_types/map/map_union_tbl.avro"));
+    String location = copy.getParentFile().toURI().getPath();
+
+    String mapUnionDdl = String.format("CREATE EXTERNAL TABLE " +
+        "map_union_tbl(rid INT, map_u MAP<STRING,UNIONTYPE<INT,STRING,BOOLEAN>>) " +
+        " STORED AS AVRO LOCATION '%s'", location);
+    HiveTestUtilities.executeQuery(d, mapUnionDdl);
   }
 
   @Test
@@ -801,4 +815,16 @@ public class TestHiveMaps extends ClusterTest {
         .go();
   }
 
+
+  @Test
+  public void mapStringToUnion() throws Exception {
+    testBuilder()
+        .sqlQuery("SELECT rid, map_u FROM hive.map_union_tbl")
+        .unOrdered()
+        .baselineColumns("rid", "map_u")
+        .baselineValues(1, mapOfObject("10", "TextTextText", "15", true, "20", 100100))
+        .baselineValues(2, mapOfObject("20", false, "25", "TextTextText", "30", true))
+        .baselineValues(3, mapOfObject("30", "TextTextText", "35", 200200, "10", true))
+        .go();
+  }
 }

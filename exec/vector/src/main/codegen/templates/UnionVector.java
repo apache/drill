@@ -68,6 +68,7 @@ public class UnionVector implements ValueVector {
   static {
     MAJOR_TYPES[MinorType.MAP.ordinal()] = Types.optional(MinorType.MAP);
     MAJOR_TYPES[MinorType.LIST.ordinal()] = Types.optional(MinorType.LIST);
+    MAJOR_TYPES[MinorType.DICT.ordinal()] = Types.optional(MinorType.DICT);
     <#list vv.types as type>
       <#list type.minor as minor>
         <#assign name = minor.class?cap_first />
@@ -265,6 +266,8 @@ public class UnionVector implements ValueVector {
       return getMap();
     case LIST:
       return getList();
+    case DICT:
+      return getDict();
   <#-- This awkard switch statement and call to type-specific method logic
        can be generalized as described above. -->
   <#list vv.types as type>
@@ -561,6 +564,8 @@ public class UnionVector implements ValueVector {
         return getMap().getAccessor().getObject(index);
       case MinorType.LIST_VALUE:
         return getList().getAccessor().getObject(index);
+      case MinorType.DICT_VALUE:
+        return getDict().getAccessor().getObject(index);
       default:
         throw new UnsupportedOperationException("Cannot support type: " + MinorType.valueOf(type));
       }

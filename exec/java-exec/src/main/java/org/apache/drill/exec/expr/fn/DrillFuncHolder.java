@@ -241,7 +241,11 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
             sub.assign(holderVar.ref("reader"), inputVariable.getHolder());
           }
         } else {
-          declare(sub, parameter, inputVariable.getHolder().type(), inputVariable.getHolder(), i);
+          JExpression exprToAssign = inputVariable.getHolder();
+          if (parameter.isVarArg() && parameter.isFieldReader() && Types.isUnion(inputVariable.getMajorType())) {
+            exprToAssign = exprToAssign.ref("reader");
+          }
+          declare(sub, parameter, inputVariable.getHolder().type(), exprToAssign, i);
         }
       }
     }

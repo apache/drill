@@ -27,6 +27,8 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 
 import org.apache.drill.exec.expr.fn.impl.MappifyUtility;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.vector.complex.impl.UnionReader;
+import org.apache.drill.exec.vector.complex.impl.UnionVectorWriter;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
@@ -53,90 +55,95 @@ public class MapUtility {
     try {
       MajorType valueMajorType = fieldReader.getType();
       MinorType valueMinorType = valueMajorType.getMinorType();
-      WriterExtractor extractor = new WriterExtractor(fieldName, valueMajorType, mapWriter);
+      WriterExtractor extractor = new WriterExtractor(fieldName, valueMajorType, mapWriter, fieldReader instanceof UnionReader);
       switch (valueMinorType) {
         case TINYINT:
-          fieldReader.copyAsValue(extractor.get(ListWriter::tinyInt, MapWriter::tinyInt));
+          fieldReader.copyAsValue(extractor.get(ListWriter::tinyInt, MapWriter::tinyInt, UnionVectorWriter::tinyInt));
           break;
         case SMALLINT:
-          fieldReader.copyAsValue(extractor.get(ListWriter::smallInt, MapWriter::smallInt));
+          fieldReader.copyAsValue(extractor.get(ListWriter::smallInt, MapWriter::smallInt, UnionVectorWriter::smallInt));
           break;
         case BIGINT:
-          fieldReader.copyAsValue(extractor.get(ListWriter::bigInt, MapWriter::bigInt));
+          fieldReader.copyAsValue(extractor.get(ListWriter::bigInt, MapWriter::bigInt, UnionVectorWriter::bigInt));
           break;
         case INT:
-          fieldReader.copyAsValue(extractor.get(ListWriter::integer, MapWriter::integer));
+          fieldReader.copyAsValue(extractor.get(ListWriter::integer, MapWriter::integer, UnionVectorWriter::integer));
           break;
         case UINT1:
-          fieldReader.copyAsValue(extractor.get(ListWriter::uInt1, MapWriter::uInt1));
+          fieldReader.copyAsValue(extractor.get(ListWriter::uInt1, MapWriter::uInt1, UnionVectorWriter::uInt1));
           break;
         case UINT2:
-          fieldReader.copyAsValue(extractor.get(ListWriter::uInt2, MapWriter::uInt2));
+          fieldReader.copyAsValue(extractor.get(ListWriter::uInt2, MapWriter::uInt2, UnionVectorWriter::uInt2));
           break;
         case UINT4:
-          fieldReader.copyAsValue(extractor.get(ListWriter::uInt4, MapWriter::uInt4));
+          fieldReader.copyAsValue(extractor.get(ListWriter::uInt4, MapWriter::uInt4, UnionVectorWriter::uInt4));
           break;
         case UINT8:
-          fieldReader.copyAsValue(extractor.get(ListWriter::uInt8, MapWriter::uInt8));
+          fieldReader.copyAsValue(extractor.get(ListWriter::uInt8, MapWriter::uInt8, UnionVectorWriter::uInt8));
           break;
         case DECIMAL9:
-          fieldReader.copyAsValue((Decimal9Writer) extractor.get(ListWriter::decimal9, MapWriter::decimal9));
+          fieldReader.copyAsValue((Decimal9Writer)
+              extractor.get(ListWriter::decimal9, MapWriter::decimal9, UnionVectorWriter::decimal9));
           break;
         case DECIMAL18:
-          fieldReader.copyAsValue((Decimal18Writer) extractor.get(ListWriter::decimal18, MapWriter::decimal18));
+          fieldReader.copyAsValue((Decimal18Writer)
+              extractor.get(ListWriter::decimal18, MapWriter::decimal18, UnionVectorWriter::decimal18));
           break;
         case DECIMAL28SPARSE:
-          fieldReader.copyAsValue((Decimal28SparseWriter) extractor.get(ListWriter::decimal28Sparse, MapWriter::decimal28Sparse));
+          fieldReader.copyAsValue((Decimal28SparseWriter)
+              extractor.get(ListWriter::decimal28Sparse, MapWriter::decimal28Sparse, UnionVectorWriter::decimal28Sparse));
           break;
         case DECIMAL38SPARSE:
-          fieldReader.copyAsValue((Decimal38SparseWriter) extractor.get(ListWriter::decimal38Sparse, MapWriter::decimal38Sparse));
+          fieldReader.copyAsValue((Decimal38SparseWriter)
+              extractor.get(ListWriter::decimal38Sparse, MapWriter::decimal38Sparse, UnionVectorWriter::decimal38Sparse));
           break;
         case VARDECIMAL:
           fieldReader.copyAsValue((VarDecimalWriter) extractor.get(
               lw -> lw.varDecimal(valueMajorType.getPrecision(), valueMajorType.getScale()),
-              (mw, fn) -> mw.varDecimal(fn, valueMajorType.getPrecision(), valueMajorType.getScale())));
+              (mw, fn) -> mw.varDecimal(fn, valueMajorType.getPrecision(), valueMajorType.getScale()),
+              uw -> uw.varDecimal(valueMajorType.getPrecision(), valueMajorType.getScale())));
           break;
         case DATE:
-          fieldReader.copyAsValue(extractor.get(ListWriter::date, MapWriter::date));
+          fieldReader.copyAsValue(extractor.get(ListWriter::date, MapWriter::date, UnionVectorWriter::date));
           break;
         case TIME:
-          fieldReader.copyAsValue(extractor.get(ListWriter::time, MapWriter::time));
+          fieldReader.copyAsValue(extractor.get(ListWriter::time, MapWriter::time, UnionVectorWriter::time));
           break;
         case TIMESTAMP:
-          fieldReader.copyAsValue(extractor.get(ListWriter::timeStamp, MapWriter::timeStamp));
+          fieldReader.copyAsValue(extractor.get(ListWriter::timeStamp, MapWriter::timeStamp, UnionVectorWriter::timeStamp));
           break;
         case INTERVAL:
-          fieldReader.copyAsValue(extractor.get(ListWriter::interval, MapWriter::interval));
+          fieldReader.copyAsValue(extractor.get(ListWriter::interval, MapWriter::interval, UnionVectorWriter::interval));
           break;
         case INTERVALDAY:
-          fieldReader.copyAsValue(extractor.get(ListWriter::intervalDay, MapWriter::intervalDay));
+          fieldReader.copyAsValue(extractor.get(ListWriter::intervalDay, MapWriter::intervalDay, UnionVectorWriter::intervalDay));
           break;
         case INTERVALYEAR:
-          fieldReader.copyAsValue(extractor.get(ListWriter::intervalYear, MapWriter::intervalYear));
+          fieldReader.copyAsValue(extractor.get(ListWriter::intervalYear, MapWriter::intervalYear, UnionVectorWriter::intervalYear));
           break;
         case FLOAT4:
-          fieldReader.copyAsValue(extractor.get(ListWriter::float4, MapWriter::float4));
+          fieldReader.copyAsValue(extractor.get(ListWriter::float4, MapWriter::float4, UnionVectorWriter::float4));
           break;
         case FLOAT8:
-          fieldReader.copyAsValue(extractor.get(ListWriter::float8, MapWriter::float8));
+          fieldReader.copyAsValue(extractor.get(ListWriter::float8, MapWriter::float8, UnionVectorWriter::float8));
           break;
         case BIT:
-          fieldReader.copyAsValue(extractor.get(ListWriter::bit, MapWriter::bit));
+          fieldReader.copyAsValue(extractor.get(ListWriter::bit, MapWriter::bit,  UnionVectorWriter::bit));
           break;
         case VARCHAR:
-          fieldReader.copyAsValue(extractor.get(ListWriter::varChar, MapWriter::varChar));
+          fieldReader.copyAsValue(extractor.get(ListWriter::varChar, MapWriter::varChar, UnionVectorWriter::varChar));
           break;
         case VARBINARY:
-          fieldReader.copyAsValue(extractor.get(ListWriter::varBinary, MapWriter::varBinary));
+          fieldReader.copyAsValue(extractor.get(ListWriter::varBinary, MapWriter::varBinary, UnionVectorWriter::varBinary));
           break;
         case MAP:
-          fieldReader.copyAsValue(extractor.get(ListWriter::map, MapWriter::map));
+          fieldReader.copyAsValue(extractor.get(ListWriter::map, MapWriter::map, UnionVectorWriter::map));
           break;
         case LIST:
           fieldReader.copyAsValue(mapWriter.list(fieldName).list());
           break;
         case DICT:
-          fieldReader.copyAsValue(extractor.get(ListWriter::dict, MapWriter::dict));
+          fieldReader.copyAsValue(extractor.get(ListWriter::dict, MapWriter::dict, UnionVectorWriter::dict));
           break;
         default:
           throw new DrillRuntimeException(String.format("%s does not support input of type: %s", caller, valueMinorType));
@@ -245,15 +252,32 @@ public class MapUtility {
     private final String fieldName;
     private final boolean repeated;
     private final MapWriter mapWriter;
+    private final boolean isUnionField;
 
-    private WriterExtractor(String fieldName, MajorType majorType, MapWriter mapWriter) {
+    private WriterExtractor(String fieldName, MajorType majorType, MapWriter mapWriter, boolean isUnionField) {
       this.fieldName = fieldName;
       this.repeated = majorType.getMode() == TypeProtos.DataMode.REPEATED;
       this.mapWriter = mapWriter;
+      this.isUnionField = isUnionField;
     }
 
-    private <W> W get(Function<ListWriter, W> listFunc, BiFunction<MapWriter, String, W> mapFunc) {
-      return repeated ? listFunc.apply(mapWriter.list(fieldName)) : mapFunc.apply(mapWriter, fieldName);
+    private <W> W get(Function<ListWriter, W> listFunc,
+                      BiFunction<MapWriter, String, W> mapFunc,
+                      Function<UnionVectorWriter, W> unionFunc) {
+      if (repeated) {
+        ListWriter listWriter = mapWriter.list(fieldName);
+        if (isUnionField) {
+          return unionFunc.apply(listWriter.union());
+        } else {
+          return listFunc.apply(listWriter);
+        }
+      } else {
+        if (isUnionField) {
+          return unionFunc.apply(mapWriter.union(fieldName));
+        } else {
+          return mapFunc.apply(mapWriter, fieldName);
+        }
+      }
     }
   }
 }

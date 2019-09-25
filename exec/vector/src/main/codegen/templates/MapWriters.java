@@ -109,6 +109,22 @@ public class ${className} extends AbstractFieldWriter {
   }
 
   @Override
+  public UnionVectorWriter union(String name) {
+    FieldWriter writer = fields.get(name.toLowerCase());
+    if (writer == null) {
+      int vectorCount = container.size();
+      UnionVector vector = container.addOrGet(name, Types.optional(MinorType.UNION), UnionVector.class);
+      writer = new UnionVectorWriter(vector, this);
+      if(vectorCount != container.size()) {
+        writer.allocate();
+      }
+      writer.setPosition(${index});
+      fields.put(name.toLowerCase(), writer);
+    }
+    return (UnionVectorWriter) writer;
+  }
+
+  @Override
   public DictWriter dict(String name) {
     FieldWriter writer = fields.get(name.toLowerCase());
     if (writer == null) {

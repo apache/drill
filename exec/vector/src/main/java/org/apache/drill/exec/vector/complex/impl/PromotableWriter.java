@@ -135,7 +135,7 @@ public class PromotableWriter extends AbstractPromotableFieldWriter {
       writer.setPosition(position);
     }
     if (type != this.type) {
-      return promoteToUnion();
+      return promoteToUnion(type);
     }
     return writer;
   }
@@ -150,7 +150,7 @@ public class PromotableWriter extends AbstractPromotableFieldWriter {
     return getWriter(type);
   }
 
-  private FieldWriter promoteToUnion() {
+  private FieldWriter promoteToUnion(MinorType newType) {
     String name = vector.getField().getName();
     TransferPair tp = vector.getTransferPair(vector.getField().getType().getMinorType().name().toLowerCase(), vector.getAllocator());
     tp.transfer();
@@ -159,6 +159,8 @@ public class PromotableWriter extends AbstractPromotableFieldWriter {
     } else if (listVector != null) {
       unionVector = listVector.promoteToUnion();
     }
+    // fix early init issue with different type lists in one union vector
+    unionVector.addSubType(newType);
     unionVector.addVector(tp.getTo());
     writer = new UnionWriter(unionVector);
     writer.setPosition(idx());

@@ -46,6 +46,7 @@ import static java.util.Collections.emptyList;
 import static org.apache.drill.exec.expr.fn.impl.DateUtility.parseBest;
 import static org.apache.drill.exec.expr.fn.impl.DateUtility.parseLocalDate;
 import static org.apache.drill.exec.hive.HiveTestUtilities.assertNativeScanUsed;
+import static org.apache.drill.test.TestBuilder.listOf;
 import static org.apache.drill.test.TestBuilder.mapOfObject;
 
 @Category({SlowTest.class, HiveStorageTest.class})
@@ -169,6 +170,17 @@ public class TestHiveArrays extends ClusterTest {
             ") " +
             "ROW FORMAT SERDE 'org.apache.hive.hcatalog.data.JsonSerDe' STORED AS TEXTFILE");
     HiveTestUtilities.loadData(d, "map_array", Paths.get("complex_types/array/map_array.json"));
+
+    String arrayUnionDdl = "CREATE TABLE " +
+        "union_array(rid INT, un_arr ARRAY<UNIONTYPE<INT, STRING, BOOLEAN, FLOAT>>) " +
+        "ROW FORMAT DELIMITED" +
+        " FIELDS TERMINATED BY ','" +
+        " COLLECTION ITEMS TERMINATED BY '&'" +
+        " MAP KEYS TERMINATED BY '#'" +
+        " LINES TERMINATED BY '\\n'" +
+        " STORED AS TEXTFILE";
+    HiveTestUtilities.executeQuery(d, arrayUnionDdl);
+    HiveTestUtilities.loadData(d,"union_array", Paths.get("complex_types/array/union_array.txt"));
 
   }
 
@@ -1660,6 +1672,18 @@ public class TestHiveArrays extends ClusterTest {
         .go();
   }
 
+  @Test
+  public void unionArray() throws Exception {
+    testBuilder()
+        .sqlQuery("SELECT rid, un_arr FROM hive.union_array")
+        .unOrdered()
+        .baselineColumns("rid", "un_arr")
+        .baselineValues(1, listOf(new Text("S0m3 tExTy 4arZ"), 128, true, 7.7775f))
+        .baselineValues(2, listOf(true, 7.7775f))
+        .baselineValues(3, listOf(new Text("S0m3 tExTy 4arZ"), 128, 7.7775f))
+        .go();
+  }
+
   /**
    * Workaround {@link StringBytes#equals(Object)} implementation
    * used to compare binary array elements.
@@ -1686,7 +1710,6 @@ public class TestHiveArrays extends ClusterTest {
     public String toString() {
       return new String(bytes);
     }
-
   }
 
   private static List<Text> asTextList(String... strings) {
