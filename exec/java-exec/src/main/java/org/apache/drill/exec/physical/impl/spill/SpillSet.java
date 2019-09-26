@@ -324,8 +324,11 @@ public class SpillSet {
 
     @Override
     public void deleteDir(String fragmentSpillDir) throws IOException {
-      boolean deleted = new File(baseDir, fragmentSpillDir).delete();
-      if ( ! deleted ) { throw new IOException("Failed to delete: " + fragmentSpillDir);}
+      File spillDir = new File(baseDir, fragmentSpillDir);
+      for (File spillFile : spillDir.listFiles()) {
+        spillFile.delete(); // IO exception if file delete fails
+      }
+      spillDir.delete();// IO exception if dir delete fails
     }
 
     @Override
