@@ -459,7 +459,11 @@ public abstract class HashTableTemplate implements HashTable {
         size += ledger.getAccountedSize();
       }
 
-      size += new RecordBatchSizer(htContainer).getActualSize();
+      // In some rare cases (e.g., making a detailed debug msg after an OOM) the container
+      // was not initialized; ignore such cases
+      if ( htContainer.hasRecordCount() ) {
+        size += new RecordBatchSizer(htContainer).getActualSize();
+      }
       return size;
     }
   }
