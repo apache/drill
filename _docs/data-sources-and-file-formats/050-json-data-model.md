@@ -96,7 +96,7 @@ Drill reads tuples defined in single objects, having no comma between objects. A
 
 To read and [analyze complex JSON]({{ site.baseurl }}/docs/json-data-model/#analyzing-json) files, use the FLATTEN and KVGEN functions. For example, you need to flatten the data to read all the names in this JSON file:
 
-     {"Fruits: [{"name":"Apples", "quantity":115},
+     {"Fruits": [{"name":"Apples", "quantity":115},
                 {"name":"Oranges","quantity":199},
                 {"name":"Peaches", "quantity":116}
                ]
