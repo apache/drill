@@ -17,10 +17,7 @@
  */
 package org.apache.drill.exec.store.parquet.columnreaders;
 
-import java.nio.ByteBuffer;
-
-import org.apache.drill.shaded.guava.com.google.common.primitives.Ints;
-import org.apache.drill.shaded.guava.com.google.common.primitives.Longs;
+import io.netty.buffer.DrillBuf;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.expr.holders.NullableTimeStampHolder;
 import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
@@ -32,16 +29,21 @@ import org.apache.drill.exec.vector.NullableIntVector;
 import org.apache.drill.exec.vector.NullableIntervalVector;
 import org.apache.drill.exec.vector.NullableTimeStampVector;
 import org.apache.drill.exec.vector.NullableTimeVector;
+import org.apache.drill.exec.vector.NullableUInt4Vector;
+import org.apache.drill.exec.vector.NullableUInt8Vector;
 import org.apache.drill.exec.vector.NullableVarBinaryVector;
 import org.apache.drill.exec.vector.NullableVarDecimalVector;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.shaded.guava.com.google.common.primitives.Ints;
+import org.apache.drill.shaded.guava.com.google.common.primitives.Longs;
 import org.apache.parquet.column.ColumnDescriptor;
 import org.apache.parquet.format.SchemaElement;
 import org.apache.parquet.hadoop.metadata.ColumnChunkMetaData;
 import org.apache.parquet.io.api.Binary;
 import org.joda.time.DateTimeConstants;
 
-import io.netty.buffer.DrillBuf;
+import java.nio.ByteBuffer;
+
 import static org.apache.drill.exec.store.parquet.ParquetReaderUtility.NanoTimeUtils.getDateTimeValueFromBinary;
 
 public class NullableFixedByteAlignedReaders {
@@ -159,6 +161,31 @@ public class NullableFixedByteAlignedReaders {
     }
   }
 
+  static class NullableDictionaryUInt4Reader extends NullableColumnReader<NullableUInt4Vector> {
+
+    NullableDictionaryUInt4Reader(ParquetRecordReader parentReader, ColumnDescriptor descriptor,
+                                  ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, NullableUInt4Vector v,
+                                  SchemaElement schemaElement) throws ExecutionSetupException {
+      super(parentReader, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+    }
+
+    // this method is called by its superclass during a read loop
+    @Override
+    protected void readField(long recordsToReadInThisPass) {
+      if (usingDictionary) {
+        for (int i = 0; i < recordsToReadInThisPass; i++) {
+          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.dictionaryValueReader.readInteger());
+        }
+        int writerIndex = castedBaseVector.getBuffer().writerIndex();
+        castedBaseVector.getBuffer().setIndex(0, writerIndex + (int) readLength);
+      } else {
+        for (int i = 0; i < recordsToReadInThisPass; i++) {
+          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.valueReader.readInteger());
+        }
+      }
+    }
+  }
+
   static class NullableDictionaryTimeReader extends NullableColumnReader<NullableTimeVector> {
 
     NullableDictionaryTimeReader(ParquetRecordReader parentReader, ColumnDescriptor descriptor,
@@ -199,6 +226,31 @@ public class NullableFixedByteAlignedReaders {
         }
       } else {
         for (int i = 0; i < recordsToReadInThisPass; i++){
+          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.valueReader.readLong());
+        }
+      }
+    }
+  }
+
+  static class NullableDictionaryUInt8Reader extends NullableColumnReader<NullableUInt8Vector> {
+
+    NullableDictionaryUInt8Reader(ParquetRecordReader parentReader, ColumnDescriptor descriptor,
+                                  ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, NullableUInt8Vector v,
+                                  SchemaElement schemaElement) throws ExecutionSetupException {
+      super(parentReader, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+    }
+
+    // this method is called by its superclass during a read loop
+    @Override
+    protected void readField(long recordsToReadInThisPass) {
+      if (usingDictionary) {
+        for (int i = 0; i < recordsToReadInThisPass; i++) {
+          valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.dictionaryValueReader.readLong());
+        }
+        int writerIndex = castedBaseVector.getBuffer().writerIndex();
+        castedBaseVector.getBuffer().setIndex(0, writerIndex + (int) readLength);
+      } else {
+        for (int i = 0; i < recordsToReadInThisPass; i++) {
           valueVec.getMutator().setSafe(valuesReadInCurrentPass + i, pageReader.valueReader.readLong());
         }
       }
@@ -463,4 +515,3 @@ public class NullableFixedByteAlignedReaders {
     }
   }
 }
-
