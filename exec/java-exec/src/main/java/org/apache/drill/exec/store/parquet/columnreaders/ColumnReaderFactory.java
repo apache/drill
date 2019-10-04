@@ -19,8 +19,6 @@ package org.apache.drill.exec.store.parquet.columnreaders;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.vector.VarDecimalVector;
-import org.apache.drill.exec.vector.NullableVarDecimalVector;
 import org.apache.drill.exec.vector.BigIntVector;
 import org.apache.drill.exec.vector.BitVector;
 import org.apache.drill.exec.vector.DateVector;
@@ -37,8 +35,11 @@ import org.apache.drill.exec.vector.NullableIntVector;
 import org.apache.drill.exec.vector.NullableIntervalVector;
 import org.apache.drill.exec.vector.NullableTimeStampVector;
 import org.apache.drill.exec.vector.NullableTimeVector;
+import org.apache.drill.exec.vector.NullableUInt4Vector;
+import org.apache.drill.exec.vector.NullableUInt8Vector;
 import org.apache.drill.exec.vector.NullableVarBinaryVector;
 import org.apache.drill.exec.vector.NullableVarCharVector;
+import org.apache.drill.exec.vector.NullableVarDecimalVector;
 import org.apache.drill.exec.vector.TimeStampVector;
 import org.apache.drill.exec.vector.TimeVector;
 import org.apache.drill.exec.vector.UInt4Vector;
@@ -46,6 +47,7 @@ import org.apache.drill.exec.vector.UInt8Vector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarBinaryVector;
 import org.apache.drill.exec.vector.VarCharVector;
+import org.apache.drill.exec.vector.VarDecimalVector;
 import org.apache.drill.exec.vector.VariableWidthVector;
 import org.apache.parquet.column.ColumnDescriptor;
 import org.apache.parquet.column.Encoding;
@@ -57,21 +59,22 @@ import org.apache.parquet.schema.PrimitiveType;
 public class ColumnReaderFactory {
 
   /**
-   * @param fixedLength
-   * @param descriptor
-   * @param columnChunkMetaData
+   * Creates fixed column reader for the given column based on its metadata.
+   *
+   * @param fixedLength if fixed length reader should be used
+   * @param descriptor column descriptor
+   * @param columnChunkMetaData column metadata
+   *
    * @return ColumnReader object instance
-   * @throws SchemaChangeException
    */
   static ColumnReader<?> createFixedColumnReader(ParquetRecordReader recordReader, boolean fixedLength, ColumnDescriptor descriptor,
-                                               ColumnChunkMetaData columnChunkMetaData, ValueVector v,
-                                               SchemaElement schemaElement)
-      throws Exception {
+                                                 ColumnChunkMetaData columnChunkMetaData, ValueVector v,
+                                                 SchemaElement schemaElement) throws Exception {
     ConvertedType convertedType = schemaElement.getConverted_type();
     // if the column is required, or repeated (in which case we just want to use this to generate our appropriate
     // ColumnReader for actually transferring data into the data vector inside of our repeated vector
     if (descriptor.getMaxDefinitionLevel() == 0 || descriptor.getMaxRepetitionLevel() > 0) {
-      if (columnChunkMetaData.getType() == PrimitiveType.PrimitiveTypeName.BOOLEAN){
+      if (columnChunkMetaData.getType() == PrimitiveType.PrimitiveTypeName.BOOLEAN) {
         return new BitReader(recordReader, descriptor, columnChunkMetaData,
             fixedLength, (BitVector) v, schemaElement);
       } else if (!columnChunkMetaData.getEncodings().contains(Encoding.PLAIN_DICTIONARY) && (
@@ -279,6 +282,16 @@ public class ColumnReaderFactory {
             return new NullableFixedByteAlignedReaders.NullableDictionaryIntReader(parentReader, columnDescriptor, columnChunkMetaData, fixedLength, (NullableIntVector) valueVec, schemaElement);
           }
           switch (convertedType) {
+            case INT_8:
+            case INT_16:
+            case INT_32:
+              return new NullableFixedByteAlignedReaders.NullableDictionaryIntReader(parentReader,
+                columnDescriptor, columnChunkMetaData, fixedLength, (NullableIntVector) valueVec, schemaElement);
+            case UINT_8:
+            case UINT_16:
+            case UINT_32:
+              return new NullableFixedByteAlignedReaders.NullableDictionaryUInt4Reader(parentReader,
+                columnDescriptor, columnChunkMetaData, fixedLength, (NullableUInt4Vector) valueVec, schemaElement);
             case DECIMAL:
               return new NullableFixedByteAlignedReaders.NullableDictionaryVarDecimalReader(parentReader,
                   columnDescriptor, columnChunkMetaData, fixedLength, (NullableVarDecimalVector) valueVec, schemaElement);
@@ -292,6 +305,9 @@ public class ColumnReaderFactory {
             return new NullableFixedByteAlignedReaders.NullableDictionaryBigIntReader(parentReader, columnDescriptor, columnChunkMetaData, fixedLength, (NullableBigIntVector)valueVec, schemaElement);
           }
           switch (convertedType) {
+            case UINT_64:
+              return new NullableFixedByteAlignedReaders.NullableDictionaryUInt8Reader(parentReader, columnDescriptor,
+                columnChunkMetaData, fixedLength, (NullableUInt8Vector) valueVec, schemaElement);
             case DECIMAL:
               return new NullableFixedByteAlignedReaders.NullableDictionaryVarDecimalReader(parentReader,
                   columnDescriptor, columnChunkMetaData, fixedLength, (NullableVarDecimalVector) valueVec, schemaElement);
