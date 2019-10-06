@@ -154,7 +154,7 @@ public abstract class BaseFieldOutput extends TextOutput {
     }
     ScalarWriter colWriter = columnWriter();
     if (fieldWriteCount == 0) {
-       colWriter.setBytes(fieldBytes, currentDataPointer);
+      colWriter.setBytes(fieldBytes, currentDataPointer);
     } else {
       colWriter.appendBytes(fieldBytes, currentDataPointer);
     }

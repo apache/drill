@@ -26,6 +26,8 @@ import org.apache.drill.exec.physical.resultSet.project.RequestedTuple.Requested
 import org.apache.drill.exec.physical.resultSet.project.RequestedTuple.TupleProjectionType;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.vector.accessor.convert.ColumnConversionFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Projection set based on an explicit set of columns provided
@@ -34,7 +36,7 @@ import org.apache.drill.exec.vector.accessor.convert.ColumnConversionFactory;
  */
 
 public class ExplicitProjectionSet extends AbstractProjectionSet {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExplicitProjectionSet.class);
+  private static final Logger logger = LoggerFactory.getLogger(ExplicitProjectionSet.class);
 
   private final RequestedTuple requestedProj;
 
@@ -106,4 +108,7 @@ public class ExplicitProjectionSet extends AbstractProjectionSet {
       .addContext(errorContext)
       .build(logger);
   }
+
+  @Override
+  public boolean isEmpty() { return requestedProj.projections().isEmpty(); }
 }

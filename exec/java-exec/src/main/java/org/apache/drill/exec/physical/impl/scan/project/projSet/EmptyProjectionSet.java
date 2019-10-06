@@ -37,4 +37,7 @@ public class EmptyProjectionSet implements ProjectionSet {
 
   @Override
   public void setErrorContext(CustomErrorContext errorContext) { }
+
+  @Override
+  public boolean isEmpty() { return true; }
 }

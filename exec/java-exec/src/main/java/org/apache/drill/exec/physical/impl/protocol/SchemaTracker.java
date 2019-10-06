@@ -65,7 +65,7 @@ public class SchemaTracker {
   private List<ValueVector> currentVectors = new ArrayList<>();
 
   public void trackSchema(VectorContainer newBatch) {
-    if (! isSameSchema(newBatch)) {
+    if (schemaVersion == 0 || ! isSameSchema(newBatch)) {
       schemaVersion++;
       captureSchema(newBatch);
     }
