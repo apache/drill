@@ -193,8 +193,7 @@ public abstract class ColumnState {
     this.vectorState = vectorState;
     addVersion = writer.isProjected() ?
         loader.bumpVersion() : loader.activeSchemaVersion();
-    state = loader.hasOverflow() ?
-        State.NEW_LOOK_AHEAD : State.NORMAL;
+    state = loader.hasOverflow() ? State.NEW_LOOK_AHEAD : State.NORMAL;
     this.writer = writer;
   }
 

@@ -52,4 +52,11 @@ public class WildcardProjectionSet extends AbstractProjectionSet {
       return new ProjectedReadColumn(col, null, outputSchema, conv);
     }
   }
+
+  // Wildcard means use whatever schema is provided by the reader,
+  // so the projection itself is non-empty even if the reader has no
+  // columns.
+
+  @Override
+  public boolean isEmpty() { return false; }
 }

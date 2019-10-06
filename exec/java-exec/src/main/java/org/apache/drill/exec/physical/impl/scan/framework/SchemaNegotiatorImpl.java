@@ -92,7 +92,7 @@ public class SchemaNegotiatorImpl implements SchemaNegotiator {
   @Override
   public void setTableSchema(TupleMetadata schema, boolean isComplete) {
     tableSchema = schema;
-    this.isSchemaComplete = schema != null && isComplete;
+    isSchemaComplete = schema != null && isComplete;
   }
 
   @Override

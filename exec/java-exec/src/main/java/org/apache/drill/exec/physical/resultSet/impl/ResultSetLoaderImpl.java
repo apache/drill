@@ -312,6 +312,17 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
       logger.debug("Schema: " + options.schema.toString());
       new BuildFromSchema().buildTuple(rootWriter, options.schema);
     }
+
+    // If we want to project nothing, then we do, in fact, have a
+    // valid schema, it just happens to be an empty schema. Bump the
+    // schema version so we know we have that empty schema.
+    //
+    // This accomplishes a result similar to the "legacy" readers
+    // achieve by adding a dummy column.
+
+    if (projectionSet.isEmpty()) {
+      bumpVersion();
+    }
   }
 
   private void updateCardinality() {

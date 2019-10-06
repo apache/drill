@@ -17,12 +17,6 @@
  */
 package org.apache.drill.exec.store.easy.text.compliant;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -32,16 +26,22 @@ import java.util.Iterator;
 import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.record.metadata.SchemaBuilder;
-import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.physical.rowSet.DirectRowSet;
 import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
 import org.apache.drill.exec.physical.rowSet.RowSetReader;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Sanity test of CSV files with headers.
@@ -67,6 +67,8 @@ public class TestCsvWithHeaders extends BaseCsvTest {
   private static final String TEST_FILE_NAME = "basic.csv";
   private static final String COLUMNS_FILE_NAME = "columns.csv";
   private static final String EMPTY_HEADERS_FILE = "noHeaders.csv";
+  private static final String EMPTY_BODY_FILE = "noData.csv";
+  private static final String COUNT_STAR = "SELECT COUNT(*) FROM `dfs.data`.`%s`";
 
   private static String[] invalidHeaders = {
       "$,,9b,c,c,c_2",
@@ -76,6 +78,10 @@ public class TestCsvWithHeaders extends BaseCsvTest {
   private static String[] emptyHeaders = {
       "",
       "10,foo,bar"
+  };
+
+  private static String[] emptyBody = {
+      "a,b,c",
   };
 
   private static String[] raggedRows = {
@@ -97,6 +103,7 @@ public class TestCsvWithHeaders extends BaseCsvTest {
     buildFile(TEST_FILE_NAME, validHeaders);
     buildNestedTable();
     buildFile(COLUMNS_FILE_NAME, columnsCol);
+    buildFile(EMPTY_BODY_FILE, emptyBody);
   }
 
   /**
@@ -119,6 +126,11 @@ public class TestCsvWithHeaders extends BaseCsvTest {
     buildFile(EMPTY_FILE, new String[] {});
     RowSet rowSet = client.queryBuilder().sql(makeStatement(EMPTY_FILE)).rowSet();
     assertNull(rowSet);
+
+    // Try again with COUNT(*)
+
+    long count = client.queryBuilder().sql(COUNT_STAR, EMPTY_FILE).singletonLong();
+    assertEquals(0, count);
   }
 
   /**
@@ -134,6 +146,49 @@ public class TestCsvWithHeaders extends BaseCsvTest {
     } catch (Exception e) {
       assertTrue(e.getMessage().contains("must define at least one header"));
     }
+  }
+
+  @Test
+  public void testHeadersNoNewline() throws IOException {
+    String fileName = "headerNoNewline.csv";
+    try (PrintWriter out = new PrintWriter(new FileWriter(new File(testDir, fileName)))) {
+      out.print("a,b,c"); // note: no \n in the end
+    }
+    RowSet rowSet = client.queryBuilder().sql(makeStatement(EMPTY_BODY_FILE)).rowSet();
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("a", MinorType.VARCHAR)
+        .add("b", MinorType.VARCHAR)
+        .add("c", MinorType.VARCHAR)
+        .buildSchema();
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .build();
+    RowSetUtilities.verify(expected, rowSet);
+  }
+
+  /**
+   * A file with a header has a schema, but has no rows. This is different than
+   * the empty file case because we do, in fact, know the schema.
+   */
+  @Test
+  public void testEmptyBody() throws IOException {
+    buildFile(EMPTY_BODY_FILE, emptyBody);
+
+    // SELECT * query: expect schema-only result.
+
+    RowSet rowSet = client.queryBuilder().sql(makeStatement(EMPTY_BODY_FILE)).rowSet();
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("a", MinorType.VARCHAR)
+        .add("b", MinorType.VARCHAR)
+        .add("c", MinorType.VARCHAR)
+        .buildSchema();
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .build();
+    RowSetUtilities.verify(expected, rowSet);
+
+    // Try again with COUNT(*)
+
+    long count = client.queryBuilder().sql(COUNT_STAR, EMPTY_BODY_FILE).singletonLong();
+    assertEquals(0, count);
   }
 
   @Test
@@ -208,6 +263,25 @@ public class TestCsvWithHeaders extends BaseCsvTest {
         .addRow("10", "foo", "bar")
         .build();
     RowSetUtilities.verify(expected, actual);
+  }
+
+  @Test
+  public void testDataNoNewline() throws IOException {
+    String fileName = "dataNoNewline.csv";
+    try (PrintWriter out = new PrintWriter(new FileWriter(new File(testDir, fileName)))) {
+      out.println("a,b,c");
+      out.print("fred,barney,wilma"); // note: no \n in the end
+    }
+    RowSet rowSet = client.queryBuilder().sql(makeStatement(fileName)).rowSet();
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .add("a", MinorType.VARCHAR)
+        .add("b", MinorType.VARCHAR)
+        .add("c", MinorType.VARCHAR)
+        .buildSchema();
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addRow("fred", "barney", "wilma")
+        .build();
+    RowSetUtilities.verify(expected, rowSet);
   }
 
   /**
