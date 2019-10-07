@@ -78,7 +78,13 @@ import org.apache.drill.exec.vector.complex.UnionVector;
  * projected (not in the list), then creates a dummy writer. Issues an error if
  * the column is projected, but the implied projection type is incompatible with
  * the actual type. (Such as trying to project an INT as x[0].)
+ * <p>
+ * This class builds the internal structure of a vector. If building a "container"
+ * vector (map, list, repeated list or union), this class expects the container
+ * to be added empty, then the members to be added one by one. See
+ * {@link BuildFromSchema} for the class that builds up a compound structure.
  */
+
 public class ColumnBuilder {
 
   /**
