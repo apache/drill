@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.physical.resultSet.ProjectionSet;
 import org.apache.drill.exec.physical.resultSet.ResultVectorCache;
 import org.apache.drill.exec.physical.resultSet.impl.ColumnState.BaseContainerColumnState;
@@ -490,19 +489,7 @@ public abstract class TupleState extends ContainerState
 
   @Override
   public ObjectWriter addColumn(TupleWriter tupleWriter, ColumnMetadata columnSchema) {
-
-    // Verify name is not a (possibly case insensitive) duplicate.
-
-    final TupleMetadata tupleSchema = schema();
-    final String colName = columnSchema.name();
-    if (tupleSchema.column(colName) != null) {
-      throw UserException
-        .validationError()
-        .message("Duplicate column name: ", colName)
-        .build(ResultSetLoaderImpl.logger);
-    }
-
-    return addColumn(columnSchema).writer();
+    return BuildFromSchema.instance().buildColumn(this, columnSchema);
   }
 
   @Override

@@ -20,6 +20,7 @@ package org.apache.drill.exec.vector.accessor.writer;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
@@ -32,6 +33,8 @@ import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
 import org.apache.drill.exec.vector.accessor.VariantWriter;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Implementation for a writer for a tuple (a row or a map.) Provides access to each
@@ -143,6 +146,8 @@ public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
     ObjectWriter addColumn(TupleWriter tuple, MaterializedField field);
   }
 
+  protected static final Logger logger = LoggerFactory.getLogger(AbstractTupleWriter.class);
+
   protected final TupleMetadata tupleSchema;
   protected final List<AbstractObjectWriter> writers;
   protected ColumnWriterIndex vectorIndex;
@@ -205,20 +210,29 @@ public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
 
   @Override
   public int addColumn(ColumnMetadata column) {
-    if (listener == null) {
-      throw new UnsupportedOperationException("addColumn");
-    }
+    verifyAddColumn(column.name());
     final AbstractObjectWriter colWriter = (AbstractObjectWriter) listener.addColumn(this, column);
     return addColumnWriter(colWriter);
   }
 
   @Override
   public int addColumn(MaterializedField field) {
+    verifyAddColumn(field.getName());
+    final AbstractObjectWriter colWriter = (AbstractObjectWriter) listener.addColumn(this, field);
+    return addColumnWriter(colWriter);
+  }
+
+  private void verifyAddColumn(String colName) {
     if (listener == null) {
       throw new UnsupportedOperationException("addColumn");
     }
-    final AbstractObjectWriter colWriter = (AbstractObjectWriter) listener.addColumn(this, field);
-    return addColumnWriter(colWriter);
+
+    if (tupleSchema().column(colName) != null) {
+      throw UserException
+        .validationError()
+        .message("Duplicate column name: ", colName)
+        .build(logger);
+    }
   }
 
   @Override
@@ -428,6 +442,8 @@ public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
   public void bindListener(TupleWriterListener listener) {
     this.listener = listener;
   }
+
+  public TupleWriterListener listener() { return listener; }
 
   @Override
   public void bindListener(ColumnWriterListener listener) { }

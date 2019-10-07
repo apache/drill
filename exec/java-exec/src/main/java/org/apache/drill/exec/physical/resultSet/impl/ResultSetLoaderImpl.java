@@ -310,7 +310,7 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
       // won't be if known up front.
 
       logger.debug("Schema: " + options.schema.toString());
-      new BuildFromSchema().buildTuple(rootWriter, options.schema);
+      BuildFromSchema.instance().buildTuple(rootWriter, options.schema);
     }
   }
 

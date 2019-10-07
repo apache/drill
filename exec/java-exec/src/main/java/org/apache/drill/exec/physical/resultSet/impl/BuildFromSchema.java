@@ -32,6 +32,21 @@ import org.apache.drill.exec.vector.accessor.writer.RepeatedListWriter;
  * <p>
  * Recursion is much easier if we can go bottom-up. But, writers
  * require top-down construction.
+ * <p>
+ * This particular class builds a column and all its contents.
+ * For example, given a map, which contains a repeated list which
+ * contains a repeated INT, this class first builds the map,
+ * then adds the repeated list, then adds the INT array. To do
+ * so, it will create a copy of the structured metadata.
+ * <p>
+ * A drawback of this approach is that the metadata objects used
+ * in the "parent" writers will be copies of, not the same as, those
+ * in the schema from which we are building the writers. At present,
+ * this is not an issue, but it is something to be aware of as uses
+ * become more sophisticated.
+ * <p>
+ * This class contrasts with the @{link ColumnBuilder} class which
+ * builds the structure within a single vector and writer.
  */
 
 public class BuildFromSchema {
@@ -49,6 +64,11 @@ public class BuildFromSchema {
     ObjectWriter add(ColumnMetadata colSchema);
   }
 
+  /**
+   * Shim used for adding a column to a tuple directly.
+   * This method will recursively invoke this builder
+   * to expand any nested content.
+   */
   private static class TupleShim implements ParentShim {
     private final TupleWriter writer;
 
@@ -60,6 +80,24 @@ public class BuildFromSchema {
     public ObjectWriter add(ColumnMetadata colSchema) {
       final int index = writer.addColumn(colSchema);
       return writer.column(index);
+    }
+  }
+
+  /**
+   * Shim used when implementing the add of a column to
+   * a tuple in the result set loader. Directly calls the
+   * internal method to add a column to the "tuple state."
+   */
+  private static class TupleStateShim implements ParentShim {
+    private final TupleState state;
+
+    public TupleStateShim(TupleState state) {
+      this.state = state;
+    }
+
+    @Override
+    public ObjectWriter add(ColumnMetadata colSchema) {
+      return state.addColumn(colSchema).writer();
     }
   }
 
@@ -89,6 +127,12 @@ public class BuildFromSchema {
     }
   }
 
+  private static BuildFromSchema instance = new BuildFromSchema();
+
+  private BuildFromSchema() { }
+
+  public static BuildFromSchema instance() { return instance; }
+
   /**
    * When creating a schema up front, provide the schema of the desired tuple,
    * then build vectors and writers to match. Allows up-front schema definition
@@ -105,17 +149,36 @@ public class BuildFromSchema {
     }
   }
 
-  private void buildColumn(ParentShim parent, ColumnMetadata colSchema) {
+  /**
+   * Build a column recursively. Called internally when adding a column
+   * via the addColumn() method on the tuple writer.
+   */
+
+  public ObjectWriter buildColumn(TupleState state, ColumnMetadata colSchema) {
+    return buildColumn(new TupleStateShim(state), colSchema);
+  }
+
+  /**
+   * Build the column writer, and any nested content, returning the built
+   * column writer as a generic object writer.
+   *
+   * @param parent the shim that implements the logic to add a column
+   * to a tuple, list, repeated list, or union.
+   * @param colSchema the schema of the column to add
+   * @return the object writer for the added column
+   */
+
+  private ObjectWriter buildColumn(ParentShim parent, ColumnMetadata colSchema) {
     if (colSchema.isMultiList()) {
-      buildRepeatedList(parent, colSchema);
+      return buildRepeatedList(parent, colSchema);
     } else if (colSchema.isMap()) {
-      buildMap(parent, colSchema);
+      return buildMap(parent, colSchema);
     } else if (isSingleList(colSchema)) {
-      buildSingleList(parent, colSchema);
+      return buildSingleList(parent, colSchema);
     } else if (colSchema.isVariant()) {
-      buildVariant(parent, colSchema);
+      return buildVariant(parent, colSchema);
     } else {
-      buildPrimitive(parent, colSchema);
+      return buildPrimitive(parent, colSchema);
     }
   }
 
@@ -133,13 +196,14 @@ public class BuildFromSchema {
     return colSchema.isVariant() && colSchema.isArray() && colSchema.variantSchema().isSingleType();
   }
 
-  private void buildPrimitive(ParentShim parent, ColumnMetadata colSchema) {
-    parent.add(colSchema);
+  private ObjectWriter buildPrimitive(ParentShim parent, ColumnMetadata colSchema) {
+    return parent.add(colSchema);
   }
 
-  private void buildMap(ParentShim parent, ColumnMetadata colSchema) {
+  private ObjectWriter buildMap(ParentShim parent, ColumnMetadata colSchema) {
     final ObjectWriter colWriter = parent.add(colSchema.cloneEmpty());
     expandMap(colWriter, colSchema);
+    return colWriter;
   }
 
   private void expandMap(ObjectWriter colWriter, ColumnMetadata colSchema) {
@@ -162,9 +226,10 @@ public class BuildFromSchema {
    * @param colSchema the schema of the variant (LIST or UNION) column
    */
 
-  private void buildVariant(ParentShim parent, ColumnMetadata colSchema) {
+  private ObjectWriter buildVariant(ParentShim parent, ColumnMetadata colSchema) {
     final ObjectWriter colWriter = parent.add(colSchema.cloneEmpty());
     expandVariant(colWriter, colSchema);
+    return colWriter;
   }
 
   private void expandVariant(ObjectWriter colWriter, ColumnMetadata colSchema) {
@@ -182,13 +247,14 @@ public class BuildFromSchema {
     }
   }
 
-  private void buildSingleList(ParentShim parent, ColumnMetadata colSchema) {
+  private ObjectWriter buildSingleList(ParentShim parent, ColumnMetadata colSchema) {
     final ColumnMetadata seed = colSchema.cloneEmpty();
     final ColumnMetadata subtype = colSchema.variantSchema().listSubtype();
     seed.variantSchema().addType(subtype.cloneEmpty());
     seed.variantSchema().becomeSimple();
     final ObjectWriter listWriter = parent.add(seed);
     expandColumn(listWriter, subtype);
+    return listWriter;
   }
 
   /**
@@ -200,14 +266,16 @@ public class BuildFromSchema {
    * @param colSchema schema definition of the array
    */
 
-  private void buildRepeatedList(ParentShim parent, ColumnMetadata colSchema) {
+  private ObjectWriter buildRepeatedList(ParentShim parent, ColumnMetadata colSchema) {
     final ColumnMetadata seed = colSchema.cloneEmpty();
-    final RepeatedListWriter listWriter = (RepeatedListWriter) parent.add(seed).array();
+    final ObjectWriter objWriter = parent.add(seed);
+    final RepeatedListWriter listWriter = (RepeatedListWriter) objWriter.array();
     final ColumnMetadata elements = colSchema.childSchema();
     if (elements != null) {
       final RepeatedListShim listShim = new RepeatedListShim(listWriter);
       buildColumn(listShim, elements);
     }
+    return objWriter;
   }
 
   /**

@@ -17,22 +17,17 @@
  */
 package org.apache.drill.exec.physical.resultSet.impl;
 
-import static org.apache.drill.test.rowSet.RowSetUtilities.objArray;
-import static org.apache.drill.test.rowSet.RowSetUtilities.singleObjArray;
-import static org.apache.drill.test.rowSet.RowSetUtilities.strArray;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 import java.util.Arrays;
 
+import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
+import org.apache.drill.exec.physical.rowSet.RowSet;
+import org.apache.drill.exec.physical.rowSet.RowSet.SingleRowSet;
+import org.apache.drill.exec.physical.rowSet.RowSetReader;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.ColumnMetadata.StructureType;
@@ -48,14 +43,19 @@ import org.apache.drill.exec.vector.accessor.ScalarReader;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.ValueType;
 import org.apache.drill.exec.vector.accessor.writer.RepeatedListWriter;
+import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
 import org.apache.drill.test.SubOperatorTest;
-import org.apache.drill.exec.physical.rowSet.RowSet;
-import org.apache.drill.exec.physical.rowSet.RowSetReader;
 import org.apache.drill.test.rowSet.RowSetUtilities;
-import org.apache.drill.exec.physical.rowSet.RowSet.SingleRowSet;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
+
+import static org.apache.drill.test.rowSet.RowSetUtilities.objArray;
+import static org.apache.drill.test.rowSet.RowSetUtilities.singleObjArray;
+import static org.apache.drill.test.rowSet.RowSetUtilities.strArray;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests repeated list support. Repeated lists add another layer of dimensionality
@@ -173,6 +173,9 @@ public class TestResultSetLoaderRepeatedList extends SubOperatorTest {
   public void test2DLateSchemaIncremental() {
     final TupleMetadata schema = new SchemaBuilder()
         .add("id", MinorType.INT)
+        .addRepeatedList("list1")
+          .addArray(MinorType.VARCHAR)
+          .resumeSchema()
         .addRepeatedList("list2")
           .addArray(MinorType.VARCHAR)
           .resumeSchema()
@@ -199,7 +202,7 @@ public class TestResultSetLoaderRepeatedList extends SubOperatorTest {
     // Sanity check of writer structure
 
     assertEquals(2, writer.size());
-    final ObjectWriter listObj = writer.column("list2");
+    final ObjectWriter listObj = writer.column("list1");
     assertEquals(ObjectType.ARRAY, listObj.type());
     final ArrayWriter listWriter = listObj.array();
 
@@ -221,7 +224,7 @@ public class TestResultSetLoaderRepeatedList extends SubOperatorTest {
     // Define the inner type.
 
     final RepeatedListWriter listWriterImpl = (RepeatedListWriter) listWriter;
-    listWriterImpl.defineElement(MaterializedField.create("list2", Types.repeated(MinorType.VARCHAR)));
+    listWriterImpl.defineElement(MaterializedField.create("list1", Types.repeated(MinorType.VARCHAR)));
 
     // Sanity check of completed structure
 
@@ -234,17 +237,45 @@ public class TestResultSetLoaderRepeatedList extends SubOperatorTest {
     // Write values
 
     writer
-        .addRow(5, objArray(strArray("a", "b"), strArray("c", "d")));
+        .addRow(5, objArray(strArray("a1", "b1"), strArray("c1", "d1")));
+
+    // Add the second list, with a complete type
+
+    writer.addColumn(schema.metadata(2));
+
+    // Sanity check of writer structure
+
+    assertEquals(3, writer.size());
+    final ObjectWriter list2Obj = writer.column("list2");
+    assertEquals(ObjectType.ARRAY, list2Obj.type());
+    final ArrayWriter list2Writer = list2Obj.array();
+    assertEquals(ObjectType.ARRAY, list2Writer.entryType());
+    final ArrayWriter inner2Writer = list2Writer.array();
+    assertEquals(ObjectType.SCALAR, inner2Writer.entryType());
+    final ScalarWriter str2Writer = inner2Writer.scalar();
+    assertEquals(ValueType.STRING, str2Writer.valueType());
+
+    // Write values
+
+    writer
+        .addRow(6,
+            objArray(strArray("a2", "b2"), strArray("c2", "d2")),
+            objArray(strArray("w2", "x2"), strArray("y2", "z2")));
+
+    // Add the second list, with a complete type
 
     // Verify the values.
     // (Relies on the row set level repeated list tests having passed.)
 
     final RowSet expected = fixture.rowSetBuilder(schema)
-        .addRow(1, objArray())
-        .addRow(2, objArray())
-        .addRow(3, objArray())
-        .addRow(4, objArray(objArray(), null))
-        .addRow(5, objArray(strArray("a", "b"), strArray("c", "d")))
+        .addRow(1, objArray(), objArray())
+        .addRow(2, objArray(), objArray())
+        .addRow(3, objArray(), objArray())
+        .addRow(4, objArray(objArray(), null), objArray())
+        .addRow(5, objArray(strArray("a1", "b1"), strArray("c1", "d1")), objArray())
+        .addRow(6,
+            objArray(strArray("a2", "b2"), strArray("c2", "d2")),
+            objArray(strArray("w2", "x2"), strArray("y2", "z2")))
         .build();
 
     RowSetUtilities.verify(expected, fixture.wrap(rsLoader.harvest()));
