@@ -182,6 +182,14 @@ public class SchemaBuilder implements SchemaContainer {
     return tupleBuilder.addMapArray(this, name);
   }
 
+  public DictBuilder addDict(String name) {
+    return tupleBuilder.addDict(this, name);
+  }
+
+  public DictBuilder addDictArray(String name) {
+    return tupleBuilder.addDictArray(this, name);
+  }
+
   public UnionBuilder addUnion(String name) {
     return tupleBuilder.addUnion(this, name);
   }

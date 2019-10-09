@@ -281,6 +281,41 @@ public class TestSchemaBuilder extends DrillTest {
   }
 
   /**
+   * Tests creating a dict within a row.
+   * Also the basic dict add key and value columns methods.
+   */
+  @Test
+  public void testDictInRow() {
+    TupleMetadata schema = new SchemaBuilder()
+            .addDict("d")
+            .addKey(MinorType.VARCHAR)
+            .addValue(MinorType.FLOAT8, DataMode.OPTIONAL)
+            .resumeSchema()
+            .buildSchema();
+
+    assertEquals(1, schema.size());
+
+    ColumnMetadata d = schema.metadata(0);
+    assertEquals("d", d.name());
+    assertTrue(d.isDict());
+    assertEquals(DataMode.REQUIRED, d.mode());
+
+    TupleMetadata dictSchema = d.mapSchema();
+    assertNotNull(dictSchema);
+    assertEquals(2, dictSchema.size());
+
+    ColumnMetadata keyMetadata = dictSchema.metadata(0);
+    assertEquals("key", keyMetadata.name());
+    assertEquals(MinorType.VARCHAR, keyMetadata.type());
+    assertEquals(DataMode.REQUIRED, keyMetadata.mode());
+
+    ColumnMetadata valueMetadata = dictSchema.metadata(1);
+    assertEquals("value", valueMetadata.name());
+    assertEquals(MinorType.FLOAT8, valueMetadata.type());
+    assertEquals(DataMode.OPTIONAL, valueMetadata.mode());
+  }
+
+  /**
    * Test methods to provide a width (precision) for VarChar
    * columns. The schema builder does not provide shortcuts for
    * VarChar in lists, unions or repeated lists because these

@@ -32,12 +32,15 @@ import org.apache.drill.exec.vector.accessor.writer.AbstractObjectWriter;
 import org.apache.drill.exec.vector.accessor.writer.ColumnWriterFactory;
 import org.apache.drill.exec.vector.accessor.writer.ListWriterImpl;
 import org.apache.drill.exec.vector.accessor.writer.MapWriter;
+import org.apache.drill.exec.vector.accessor.writer.ObjectDictWriter;
 import org.apache.drill.exec.vector.accessor.writer.RepeatedListWriter;
 import org.apache.drill.exec.vector.accessor.writer.UnionWriterImpl;
 import org.apache.drill.exec.vector.accessor.writer.AbstractArrayWriter.ArrayObjectWriter;
 import org.apache.drill.exec.vector.accessor.writer.UnionWriterImpl.VariantObjectWriter;
 import org.apache.drill.exec.vector.complex.AbstractMapVector;
+import org.apache.drill.exec.vector.complex.DictVector;
 import org.apache.drill.exec.vector.complex.ListVector;
+import org.apache.drill.exec.vector.complex.RepeatedDictVector;
 import org.apache.drill.exec.vector.complex.RepeatedListVector;
 import org.apache.drill.exec.vector.complex.UnionVector;
 
@@ -75,20 +78,44 @@ public abstract class BaseWriterBuilder {
   private AbstractObjectWriter buildVectorWriter(ValueVector vector, VectorDescrip descrip) {
     final MajorType type = vector.getField().getType();
     switch (type.getMinorType()) {
-    case MAP:
-      return MapWriter.buildMapWriter(descrip.metadata,
-          (AbstractMapVector) vector,
-          buildMap((AbstractMapVector) vector, descrip));
+      case DICT:
+        return buildDict(vector, descrip);
+      case MAP:
+        return MapWriter.buildMapWriter(descrip.metadata,
+            (AbstractMapVector) vector,
+            buildMap((AbstractMapVector) vector, descrip));
 
-    case UNION:
-      return buildUnion((UnionVector) vector, descrip);
+      case UNION:
+        return buildUnion((UnionVector) vector, descrip);
 
-    case LIST:
-      return buildList(vector, descrip);
+      case LIST:
+        return buildList(vector, descrip);
 
-    default:
-      return ColumnWriterFactory.buildColumnWriter(descrip.metadata, conversionFactory, vector);
+      default:
+        return ColumnWriterFactory.buildColumnWriter(descrip.metadata, conversionFactory, vector);
     }
+  }
+
+  private AbstractObjectWriter buildDict(ValueVector vector, VectorDescrip descrip) {
+    if (vector.getField().getType().getMode() == DataMode.REPEATED) {
+      return buildDictArray((RepeatedDictVector) vector, descrip);
+    } else {
+      List<AbstractObjectWriter> writers = buildMap((AbstractMapVector) vector, descrip);
+      return buildDict(descrip, (DictVector) vector, writers);
+    }
+  }
+
+  private ArrayObjectWriter buildDict(VectorDescrip descrip, DictVector vector, List<AbstractObjectWriter> writers) {
+    ObjectDictWriter objectDictWriter = ObjectDictWriter.build(descrip.metadata, writers, vector);
+    return new ObjectDictWriter.DictObjectWriter(objectDictWriter);
+  }
+
+  private ArrayObjectWriter buildDictArray(RepeatedDictVector vector, VectorDescrip descrip) {
+    final DictVector dataVector = (DictVector) vector.getDataVector();
+    List<AbstractObjectWriter> writers = buildMap(dataVector, descrip);
+    ObjectDictWriter dictWriter = ObjectDictWriter.build(descrip.metadata, writers, dataVector);
+    ObjectDictWriter.DictObjectWriter objectWriter = new ObjectDictWriter.DictObjectWriter(dictWriter);
+    return MapWriter.buildDictArray(descrip.metadata, objectWriter, vector);
   }
 
   private List<AbstractObjectWriter> buildMap(AbstractMapVector vector, VectorDescrip descrip) {

@@ -176,4 +176,9 @@ public class MapBuilder implements SchemaContainer {
     build();
     return (UnionBuilder) parent;
   }
+
+  public DictBuilder resumeDict() {
+    build();
+    return (DictBuilder) parent;
+  }
 }

@@ -27,6 +27,7 @@ import org.apache.drill.exec.vector.accessor.writer.AbstractArrayWriter.ArrayObj
 import org.apache.drill.exec.vector.accessor.writer.dummy.DummyArrayWriter;
 import org.apache.drill.exec.vector.complex.AbstractMapVector;
 import org.apache.drill.exec.vector.complex.MapVector;
+import org.apache.drill.exec.vector.complex.RepeatedDictVector;
 import org.apache.drill.exec.vector.complex.RepeatedMapVector;
 
 /**
@@ -169,6 +170,31 @@ public abstract class MapWriter extends AbstractTupleWriter {
     public void copy(ColumnReader from) { }
   }
 
+  // This is effectively a map array, but represented by the class to separate these two types
+  protected static class DictTupleWriter extends MapWriter {
+
+    public DictTupleWriter(ColumnMetadata schema, List<AbstractObjectWriter> writers) {
+      super(schema, writers);
+    }
+
+    @Override
+    public void bindIndex(ColumnWriterIndex index) {
+
+      // This is effectively a repeated map, so the provided index is an array element
+      // index. Convert this to an index that will not increment the element
+      // index on each write so that a dict with key and value members won't
+      // increment the index for each member. Rather, the index must be
+      // incremented at the array level.
+
+      bindIndex(index, new MemberWriterIndex(index));
+    }
+
+    @Override
+    public boolean isProjected() {
+      return true;
+    }
+  }
+
   protected final ColumnMetadata mapColumnSchema;
 
   protected MapWriter(ColumnMetadata schema, List<AbstractObjectWriter> writers) {
@@ -226,6 +252,17 @@ public abstract class MapWriter extends AbstractTupleWriter {
   public static AbstractObjectWriter buildMapWriter(ColumnMetadata schema, AbstractMapVector vector) {
     assert schema.mapSchema().size() == 0;
     return buildMapWriter(schema, vector, new ArrayList<AbstractObjectWriter>());
+  }
+
+  public static TupleObjectWriter buildDictTupleWriter(ColumnMetadata schema, List<AbstractObjectWriter> writers) {
+    MapWriter dictWriter = new DictTupleWriter(schema, writers);
+    return new AbstractTupleWriter.TupleObjectWriter(dictWriter);
+  }
+
+  public static ArrayObjectWriter buildDictArray(ColumnMetadata schema, ObjectDictWriter.DictObjectWriter dictWriter,
+                                                 RepeatedDictVector vector) {
+    AbstractArrayWriter arrayWriter = new ObjectArrayWriter(schema, vector.getOffsetVector(), dictWriter);
+    return new ArrayObjectWriter(arrayWriter);
   }
 
   @Override

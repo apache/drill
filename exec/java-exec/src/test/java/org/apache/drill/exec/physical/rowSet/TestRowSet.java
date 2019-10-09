@@ -21,12 +21,16 @@ import static org.apache.drill.test.rowSet.RowSetUtilities.intArray;
 import static org.apache.drill.test.rowSet.RowSetUtilities.objArray;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -38,13 +42,18 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VectorOverflowException;
 import org.apache.drill.exec.vector.accessor.ArrayReader;
 import org.apache.drill.exec.vector.accessor.ArrayWriter;
+import org.apache.drill.exec.vector.accessor.DictWriter;
 import org.apache.drill.exec.vector.accessor.ObjectType;
 import org.apache.drill.exec.vector.accessor.ScalarReader;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.TupleReader;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
 import org.apache.drill.exec.vector.accessor.ValueType;
+import org.apache.drill.exec.vector.accessor.reader.AbstractObjectReader;
+import org.apache.drill.exec.vector.accessor.writer.DictReader;
+import org.apache.drill.exec.vector.complex.DictVector;
 import org.apache.drill.exec.vector.complex.MapVector;
+import org.apache.drill.exec.vector.complex.RepeatedDictVector;
 import org.apache.drill.exec.vector.complex.RepeatedMapVector;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSetUtilities;
@@ -582,6 +591,450 @@ public class TestRowSet extends SubOperatorTest {
         .addRow(30, objArray(objArray(301, 302), objArray(311, 312)))
         .build();
     RowSetUtilities.verify(expected, actual);
+  }
+
+  @Test
+  public void testDictStructure() {
+    final String dictName = "d";
+
+    final TupleMetadata schema = new SchemaBuilder()
+        .addDict(dictName)
+        .addKey(MinorType.INT)
+        .addValue(MinorType.VARCHAR)
+        .resumeSchema()
+        .buildSchema();
+    final ExtendableRowSet rowSet = fixture.rowSet(schema);
+    final RowSetWriter writer = rowSet.writer();
+
+    // Dict
+    // Pick out components and lightly test. (Assumes structure
+    // tested earlier is still valid, so no need to exhaustively
+    // test again.)
+
+    assertEquals(ObjectType.ARRAY, writer.column(dictName).type());
+    assertTrue(writer.column(dictName).schema().isDict());
+
+    final DictWriter dictWriter = (DictWriter) writer.column(0).array();
+    assertEquals(ObjectType.TUPLE, dictWriter.entryType());
+
+    assertEquals(ValueType.INTEGER, dictWriter.keyType());
+    assertEquals(ObjectType.SCALAR, dictWriter.valueType());
+
+    final ScalarWriter keyWriter = dictWriter.keyWriter();
+    final ScalarWriter valueWriter = dictWriter.valueWriter().scalar();
+
+    assertEquals(ValueType.INTEGER, keyWriter.valueType());
+    assertEquals(ValueType.STRING, valueWriter.valueType());
+
+    // Write data
+
+    keyWriter.setInt(11);
+    valueWriter.setString("a");
+    dictWriter.save(); // Advance to next entry position
+    keyWriter.setInt(12);
+    valueWriter.setString("b");
+    dictWriter.save();
+    writer.save();
+
+    keyWriter.setInt(21);
+    valueWriter.setString("c");
+    dictWriter.save();
+    writer.save();
+
+    keyWriter.setInt(31);
+    valueWriter.setString("d");
+    dictWriter.save();
+    keyWriter.setInt(32);
+    valueWriter.setString("e");
+    dictWriter.save();
+    writer.save();
+
+    // Finish the row set and get a reader.
+
+    final SingleRowSet actual = writer.done();
+    final RowSetReader reader = actual.reader();
+
+    // Verify reader structure
+
+    assertEquals(ObjectType.ARRAY, reader.column(dictName).type());
+
+    final DictReader dictReader = (DictReader) ((AbstractObjectReader) reader.column(0)).reader();
+    assertEquals(ObjectType.ARRAY, dictReader.type());
+
+    assertEquals(ValueType.INTEGER, dictReader.keyType());
+    assertEquals(ObjectType.SCALAR, dictReader.valueType());
+
+    // Row 1: get value reader with its position set to entry corresponding to a key
+
+    assertTrue(reader.next());
+    assertFalse(dictReader.isNull()); // dict itself is not null
+
+    dictReader.getAsString();
+    assertEquals("b", dictReader.getValueReader(12).scalar().getString());
+    assertEquals("a", dictReader.getValueReader(11).scalar().getString());
+
+    // compare entire dict
+    Map<Object, Object> map = map(11, "a", 12, "b");
+    assertEquals(map, dictReader.getObject());
+
+    // Row 2: get Object representation of value directly
+
+    assertTrue(reader.next());
+    assertEquals("c", dictReader.get(21));
+    assertTrue(dictReader.getValueReader(22).isNull()); // the dict does not contain an entry with the key
+
+    map = map(21, "c");
+    assertEquals(map, dictReader.getObject());
+
+    // Row 3
+
+    assertTrue(reader.next());
+
+    assertEquals("d", dictReader.get(31));
+    assertEquals("e", dictReader.get(32));
+
+    map = map(31, "d", 32, "e");
+    assertEquals(map, dictReader.getObject());
+
+    assertFalse(reader.next());
+
+    // Verify that the dict accessor's value count was set.
+
+    final DictVector dictVector = (DictVector) actual.container().getValueVector(0).getValueVector();
+    assertEquals(3, dictVector.getAccessor().getValueCount());
+
+    // release buffers
+    actual.clear();
+  }
+
+  /**
+   * Utility method to bootstrap a map object easily.
+   *
+   * @param entry key-value sequence
+   * @return map containing key-value pairs from passed sequence
+   */
+  private Map<Object, Object> map(Object... entry) {
+    if (entry.length % 2 == 1) {
+      throw new IllegalArgumentException("Array length should be even.");
+    }
+
+    Map<Object, Object> map = new HashMap<>();
+    for (int i = 0; i < entry.length; i += 2) {
+      map.put(entry[i], entry[i + 1]);
+    }
+    return map;
+  }
+
+  @Test
+  public void testDictStructureMapValue() {
+    final String dictName = "d";
+    final int bScale = 1;
+
+    final TupleMetadata schema = new SchemaBuilder()
+        .addDict(dictName)
+        .addKey(MinorType.INT)
+        .addMapValue()
+          .add("a", MinorType.INT)
+          .add("b", MinorType.VARDECIMAL, 8, bScale)
+          .resumeDict()
+        .resumeSchema()
+        .buildSchema();
+    final ExtendableRowSet rowSet = fixture.rowSet(schema);
+    final RowSetWriter writer = rowSet.writer();
+
+    // Dict with Map value
+
+    assertEquals(ObjectType.ARRAY, writer.column(dictName).type());
+
+    final DictWriter dictWriter = (DictWriter) writer.column(0).array();
+    assertEquals(ObjectType.TUPLE, dictWriter.entryType());
+
+    assertEquals(ValueType.INTEGER, dictWriter.keyType());
+    assertEquals(ObjectType.TUPLE, dictWriter.valueType());
+
+    final ScalarWriter keyWriter = dictWriter.keyWriter();
+    final TupleWriter valueWriter = dictWriter.valueWriter().tuple();
+
+    assertEquals(ValueType.INTEGER, keyWriter.valueType());
+
+    ScalarWriter aWriter = valueWriter.scalar("a");
+    ScalarWriter bWriter = valueWriter.scalar("b");
+    assertEquals(ValueType.INTEGER, aWriter.valueType());
+    assertEquals(ValueType.DECIMAL, bWriter.valueType());
+
+    // Write data
+
+    keyWriter.setInt(11);
+    aWriter.setInt(10);
+    bWriter.setDecimal(BigDecimal.valueOf(1));
+    dictWriter.save(); // advance to next entry position
+
+    keyWriter.setInt(12);
+    aWriter.setInt(11);
+    bWriter.setDecimal(BigDecimal.valueOf(2));
+    dictWriter.save();
+
+    writer.save();
+
+    keyWriter.setInt(21);
+    aWriter.setInt(20);
+    bWriter.setDecimal(BigDecimal.valueOf(3));
+    dictWriter.save();
+
+    writer.save();
+
+    keyWriter.setInt(31);
+    aWriter.setInt(30);
+    bWriter.setDecimal(BigDecimal.valueOf(4));
+    dictWriter.save();
+
+    keyWriter.setInt(32);
+    aWriter.setInt(31);
+    bWriter.setDecimal(BigDecimal.valueOf(5));
+    dictWriter.save();
+
+    keyWriter.setInt(33);
+    aWriter.setInt(32);
+    bWriter.setDecimal(BigDecimal.valueOf(6));
+    dictWriter.save();
+
+    writer.save();
+
+    // Finish the row set and get a reader.
+
+    final SingleRowSet actual = writer.done();
+    final RowSetReader reader = actual.reader();
+
+    // Verify reader structure
+
+    assertEquals(ObjectType.ARRAY, reader.column(dictName).type());
+
+    final DictReader dictReader = (DictReader) ((AbstractObjectReader) reader.column(0)).reader();
+    assertEquals(ObjectType.ARRAY, dictReader.type()); // todo: should this be an array? todo: is TUPLE oK?
+
+    assertEquals(ValueType.INTEGER, dictReader.keyType());
+    assertEquals(ObjectType.TUPLE, dictReader.valueType());
+
+    // Row 1: get value reader with its position set to entry corresponding to a key
+
+    assertTrue(reader.next());
+    assertFalse(dictReader.isNull()); // dict itself is not null
+
+    TupleReader valueReader = dictReader.getValueReader(12).tuple();
+    assertEquals(11, valueReader.scalar("a").getInt());
+    assertEquals(BigDecimal.valueOf(2.0), valueReader.scalar("b").getDecimal());
+
+    // MapReader#getObject() returns a List containing values for each column
+    // rather than mapping of column name to it's value, hence List is expected for Dict's value.
+    Map<Object, Object> map = map(
+        11, Arrays.asList(10, BigDecimal.valueOf(1.0)),
+        12, Arrays.asList(11, BigDecimal.valueOf(2.0))
+    );
+    assertEquals(map, dictReader.getObject());
+
+    // Row 2: get value by key directly
+
+    assertTrue(reader.next());
+    assertEquals(Arrays.asList(20, BigDecimal.valueOf(3.0)), dictReader.get(21));
+    assertTrue(dictReader.getValueReader(22).isNull());
+
+    map = map(21, Arrays.asList(20, BigDecimal.valueOf(3.0)));
+    assertEquals(map, dictReader.getObject());
+
+    // Row 3
+
+    assertTrue(reader.next());
+
+    valueReader = dictReader.getValueReader(32).tuple();
+    assertFalse(valueReader.isNull());
+    assertEquals(31, valueReader.scalar("a").getInt());
+    assertEquals(BigDecimal.valueOf(5.0), valueReader.scalar("b").getDecimal());
+
+    valueReader = dictReader.getValueReader(31).tuple();
+    assertEquals(30, valueReader.scalar("a").getInt());
+    assertEquals(BigDecimal.valueOf(4.0), valueReader.scalar("b").getDecimal());
+
+    valueReader = dictReader.getValueReader(404).tuple();
+    assertTrue(valueReader.isNull());
+
+    map = map(
+        31, Arrays.asList(30, BigDecimal.valueOf(4.0)),
+        32, Arrays.asList(31, BigDecimal.valueOf(5.0)),
+        33, Arrays.asList(32, BigDecimal.valueOf(6.0))
+    );
+    assertEquals(map, dictReader.getObject());
+
+    assertFalse(reader.next());
+
+    // Verify that the dict accessor's value count was set.
+
+    final DictVector dictVector = (DictVector) actual.container().getValueVector(0).getValueVector();
+    assertEquals(3, dictVector.getAccessor().getValueCount());
+
+    // release buffers
+    actual.clear();
+  }
+
+  @Test
+  public void testRepeatedDictStructure() {
+    final String dictName = "d";
+    final TupleMetadata schema = new SchemaBuilder()
+        .addDictArray(dictName)
+        .addKey(MinorType.INT)
+        .addValue(MinorType.VARCHAR)
+        .resumeSchema()
+        .buildSchema();
+    final ExtendableRowSet rowSet = fixture.rowSet(schema);
+    final RowSetWriter writer = rowSet.writer();
+
+    // Repeated dict
+
+    assertEquals(ObjectType.ARRAY, writer.column(dictName).type());
+
+    final ArrayWriter dictArrayWriter = writer.column(0).array();
+    assertEquals(ObjectType.ARRAY, dictArrayWriter.entryType());
+
+    DictWriter dictWriter = (DictWriter) dictArrayWriter.array();
+
+    assertEquals(ValueType.INTEGER, dictWriter.keyType());
+    assertEquals(ObjectType.SCALAR, dictWriter.valueType());
+
+    final ScalarWriter keyWriter = dictWriter.keyWriter();
+    final ScalarWriter valueWriter = dictWriter.valueWriter().scalar();
+    assertEquals(ValueType.INTEGER, keyWriter.valueType());
+    assertEquals(ValueType.STRING, valueWriter.valueType());
+
+    // Write data
+
+    keyWriter.setInt(1);
+    valueWriter.setString("a");
+    dictWriter.save(); // advance to next entry position
+    keyWriter.setInt(2);
+    valueWriter.setString("b");
+    dictWriter.save();
+    dictArrayWriter.save(); // advance to next array position
+
+    keyWriter.setInt(3);
+    valueWriter.setString("c");
+    dictWriter.save();
+    dictArrayWriter.save();
+
+    writer.save(); // advance to next row
+
+    keyWriter.setInt(11);
+    valueWriter.setString("d");
+    dictWriter.save();
+    keyWriter.setInt(12);
+    valueWriter.setString("e");
+    dictWriter.save();
+    dictArrayWriter.save();
+
+    writer.save();
+
+    keyWriter.setInt(21);
+    valueWriter.setString("f");
+    dictWriter.save();
+    keyWriter.setInt(22);
+    valueWriter.setString("g");
+    dictWriter.save();
+    keyWriter.setInt(23);
+    valueWriter.setString("h");
+    dictWriter.save();
+    dictArrayWriter.save();
+
+    keyWriter.setInt(24);
+    valueWriter.setString("i");
+    dictWriter.save();
+    keyWriter.setInt(25);
+    valueWriter.setString("j");
+    dictWriter.save();
+    keyWriter.setInt(26);
+    valueWriter.setString("k");
+    dictWriter.save();
+    keyWriter.setInt(27);
+    valueWriter.setString("l");
+    dictWriter.save();
+    keyWriter.setInt(28);
+    valueWriter.setString("m");
+    dictWriter.save();
+    dictArrayWriter.save();
+
+    writer.save();
+
+    // Finish the row set and get a reader.
+
+    final SingleRowSet actual = writer.done();
+    final RowSetReader reader = actual.reader();
+
+    // Verify reader structure
+
+    assertEquals(ObjectType.ARRAY, reader.column(dictName).type());
+
+    final ArrayReader dictArrayReader = reader.column(0).array();
+    assertEquals(ObjectType.ARRAY, dictArrayReader.entryType());
+
+    final DictReader dictReader = (DictReader) ((AbstractObjectReader) dictArrayReader.entry()).reader();
+    assertEquals(ValueType.INTEGER, dictReader.keyType());
+    assertEquals(ObjectType.SCALAR, dictReader.valueType());
+
+    // Row 1
+
+    assertTrue(reader.next());
+    assertFalse(dictArrayReader.isNull()); // array is not null
+
+    assertTrue(dictArrayReader.next());
+    assertFalse(dictArrayReader.isNull()); // first dict is not null
+    assertEquals("b", dictReader.getValueReader(2).getObject());
+    assertEquals("a", dictReader.getValueReader(1).getObject());
+    assertTrue(dictReader.getValueReader(404).isNull()); // no entry for given key
+
+    assertTrue(dictArrayReader.next());
+    assertEquals("c", dictReader.getValueReader(3).getObject());
+    assertTrue(dictReader.getValueReader(1).isNull());
+
+    assertEquals(Arrays.asList(map(1, "a", 2, "b"), map(3, "c")), dictArrayReader.getObject());
+
+    // Row 2
+
+    assertTrue(reader.next());
+
+    assertTrue(dictArrayReader.next());
+    assertEquals("d", dictReader.getValueReader(11).scalar().getString());
+    assertTrue(dictReader.getValueReader(1).scalar().isNull());
+    assertEquals("e", dictReader.getValueReader(12).scalar().getString());
+
+    // Row 3: use explicit positioning
+
+    assertTrue(reader.next());
+    dictArrayReader.setPosn(1);
+    assertEquals("i", dictReader.get(24));
+    assertEquals("k", dictReader.get(26));
+    assertEquals("m", dictReader.get(28));
+    assertNull(dictReader.get(35));
+    assertEquals("l", dictReader.get(27));
+
+    Map<Object, Object> element1 = map(24, "i", 25, "j", 26, "k", 27, "l", 28, "m");
+    assertEquals(element1, dictReader.getObject());
+
+    dictArrayReader.setPosn(0);
+    assertEquals("h", dictReader.getValueReader(23).getObject());
+    assertEquals("f", dictReader.getValueReader(21).getObject());
+    assertNull(dictReader.getValueReader(24).getObject());
+
+    Map<Object, Object> element0 = map(21, "f", 22, "g", 23, "h");
+    assertEquals(element0, dictReader.getObject());
+
+    assertEquals(Arrays.asList(element0, element1), dictArrayReader.getObject());
+
+    assertFalse(reader.next());
+
+    // Verify that the dict accessor's value count was set.
+
+    final RepeatedDictVector vector = (RepeatedDictVector) actual.container().getValueVector(0).getValueVector();
+    assertEquals(3, vector.getAccessor().getValueCount());
+
+    // release buffers
+    actual.clear();
   }
 
   /**

@@ -99,7 +99,7 @@ public abstract class AbstractArrayWriter implements ArrayWriter, WriterEvents {
 
   public static class ArrayObjectWriter extends AbstractObjectWriter {
 
-    private final AbstractArrayWriter arrayWriter;
+    protected final AbstractArrayWriter arrayWriter;
 
     public ArrayObjectWriter(AbstractArrayWriter arrayWriter) {
       this.arrayWriter = arrayWriter;
