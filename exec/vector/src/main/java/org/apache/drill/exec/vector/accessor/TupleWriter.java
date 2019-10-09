@@ -113,6 +113,10 @@ public interface TupleWriter extends ColumnWriter {
 
   VariantWriter variant(String colName);
 
+  DictWriter dict(int colIndex);
+
+  DictWriter dict(String colName);
+
   ObjectType type(int colIndex);
 
   ObjectType type(String colName);

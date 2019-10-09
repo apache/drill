@@ -50,7 +50,7 @@ public class SchemaPathUtils {
     while (!colPath.isLastPath() && colMetadata != null) {
       if (colMetadata.isDict()) {
         // get dict's value field metadata
-        colMetadata = colMetadata.mapSchema().metadata(0).mapSchema().metadata(1);
+        colMetadata = colMetadata.tupleSchema().metadata(0).tupleSchema().metadata(1);
         break;
       }
       if (!colMetadata.isMap()) {
@@ -58,7 +58,7 @@ public class SchemaPathUtils {
         break;
       }
       colPath = (PathSegment.NameSegment) colPath.getChild();
-      colMetadata = colMetadata.mapSchema().metadata(colPath.getPath());
+      colMetadata = colMetadata.tupleSchema().metadata(colPath.getPath());
     }
     return colMetadata;
   }
@@ -94,7 +94,7 @@ public class SchemaPathUtils {
         throw new DrillRuntimeException(String.format("Expected map or dict, but was %s", colMetadata.majorType()));
       }
 
-      schema = colMetadata.mapSchema();
+      schema = colMetadata.tupleSchema();
       colPath = (PathSegment.NameSegment) colPath.getChild();
     }
 

@@ -28,7 +28,9 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.metadata.VariantMetadata;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractMapVector;
+import org.apache.drill.exec.vector.complex.DictVector;
 import org.apache.drill.exec.vector.complex.ListVector;
+import org.apache.drill.exec.vector.complex.RepeatedDictVector;
 import org.apache.drill.exec.vector.complex.RepeatedListVector;
 import org.apache.drill.exec.vector.complex.UnionVector;
 
@@ -68,6 +70,8 @@ public class BuildVectorsFromMetadata {
 
   private ValueVector buildVector(ColumnMetadata metadata) {
     switch (metadata.structureType()) {
+    case DICT:
+      return buildDict(metadata);
     case TUPLE:
       return buildMap(metadata);
     case VARIANT:
@@ -107,7 +111,7 @@ public class BuildVectorsFromMetadata {
     // without children so we can add the children as we add vectors.
 
     final AbstractMapVector mapVector = (AbstractMapVector) TypeHelper.getNewVector(schema.emptySchema(), allocator, null);
-    populateMap(mapVector, schema.mapSchema(), false);
+    populateMap(mapVector, schema.tupleSchema(), false);
     return mapVector;
   }
 
@@ -155,7 +159,7 @@ public class BuildVectorsFromMetadata {
         // for now.
 
         populateMap((AbstractMapVector) childVector,
-            variantSchema.member(MinorType.MAP).mapSchema(),
+            variantSchema.member(MinorType.MAP).tupleSchema(),
             true);
         break;
       default:
@@ -179,6 +183,33 @@ public class BuildVectorsFromMetadata {
       vector.setChildVector(childVector);
     } else {
       populateUnion(vector.fullPromoteToUnion(), variantSchema);
+    }
+  }
+
+  private ValueVector buildDict(ColumnMetadata metadata) {
+    if (metadata.isArray()) {
+      return buildRepeatedDict(metadata);
+    } else {
+      return buildMap(metadata);
+    }
+  }
+
+  private RepeatedDictVector buildRepeatedDict(ColumnMetadata schema) {
+
+    // Creating the repeated dict vector will create its contained vectors if we
+    // give it a materialized field with children. So, instead pass a clone
+    // without children so we can add the children as we add vectors.
+
+    final RepeatedDictVector repeatedDictVector = (RepeatedDictVector) TypeHelper.getNewVector(schema.emptySchema(), allocator, null);
+    populateDict(repeatedDictVector, schema.tupleSchema());
+    return repeatedDictVector;
+  }
+
+  private void populateDict(RepeatedDictVector vector, TupleMetadata dictMetadata) {
+    for (int i = 0; i < dictMetadata.size(); i++) {
+      final ColumnMetadata childSchema = dictMetadata.metadata(i);
+      DictVector dataVector = (DictVector) vector.getDataVector();
+      dataVector.putChild(childSchema.name(), buildVector(childSchema));
     }
   }
 }

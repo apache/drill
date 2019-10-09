@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
@@ -44,6 +45,7 @@ import org.slf4j.LoggerFactory;
  * it may have 2 children only, named {@link #FIELD_KEY_NAME} and {@link #FIELD_VALUE_NAME}.
  * The {@link #FIELD_KEY_NAME} can be of primitive type only and its values should not be {@code null},
  * while the other, {@link #FIELD_VALUE_NAME}, field can be either of primitive or complex type.
+ * Value field can hold {@code null} values.
  *
  * <p>This vector has it's own {@link org.apache.drill.exec.vector.complex.reader.FieldReader} and
  * {@link org.apache.drill.exec.vector.complex.writer.FieldWriter} to ensure data is read and written correctly.
@@ -255,7 +257,12 @@ public final class DictVector extends AbstractRepeatedMapVector {
 
   @Override
   MajorType getLastPathType() {
-    return valueType;
+    if (Types.isRepeated(valueType)) {
+      return valueType;
+    }
+    return valueType.toBuilder()
+        .setMode(TypeProtos.DataMode.OPTIONAL)
+        .build();
   }
 
   @Override

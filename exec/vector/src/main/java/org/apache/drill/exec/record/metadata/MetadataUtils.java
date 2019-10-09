@@ -17,13 +17,16 @@
  */
 package org.apache.drill.exec.record.metadata;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.vector.complex.DictVector;
 
 public class MetadataUtils {
 
@@ -38,7 +41,7 @@ public class MetadataUtils {
   /**
    * Create a column metadata object that holds the given
    * {@link MaterializedField}. The type of the object will be either a
-   * primitive or map column, depending on the field's type. The logic
+   * primitive, map or dict column, depending on the field's type. The logic
    * here mimics the code as written, which is very messy in some places.
    *
    * @param field the materialized field to wrap
@@ -90,6 +93,8 @@ public class MetadataUtils {
   public static ColumnMetadata fromView(MaterializedField field) {
     if (field.getType().getMinorType() == MinorType.MAP) {
       return new MapColumnMetadata(field, null);
+    } else if (field.getType().getMinorType() == MinorType.DICT) {
+      return newDict(field);
     } else {
       return new PrimitiveColumnMetadata(field);
     }
@@ -138,8 +143,25 @@ public class MetadataUtils {
     return new DictColumnMetadata(field, fromFields(field.getChildren()));
   }
 
+  public static DictColumnMetadata newDict(MaterializedField field, TupleSchema schema) {
+    validateDictChildren(schema.toFieldList());
+    return new DictColumnMetadata(field.getName(), field.getDataMode(), schema);
+  }
+
+  private static void validateDictChildren(List<MaterializedField> entryFields) {
+    Collection<String> children = entryFields.stream()
+        .map(MaterializedField::getName)
+        .collect(Collectors.toList());
+    String message = "DICT does not contain %s.";
+    if (!children.contains(DictVector.FIELD_KEY_NAME)) {
+      throw new IllegalStateException(String.format(message, DictVector.FIELD_KEY_NAME));
+    } else if (!children.contains(DictVector.FIELD_VALUE_NAME)) {
+      throw new IllegalStateException(String.format(message, DictVector.FIELD_VALUE_NAME));
+    }
+  }
+
   public static DictColumnMetadata newDict(String name, TupleMetadata schema) {
-    return new DictColumnMetadata(name, DataMode.OPTIONAL, (TupleSchema) schema);
+    return new DictColumnMetadata(name, DataMode.REQUIRED, (TupleSchema) schema);
   }
 
   public static VariantColumnMetadata newVariant(MaterializedField field, VariantSchema schema) {
@@ -167,13 +189,13 @@ public class MetadataUtils {
 
   public static PrimitiveColumnMetadata newScalar(String name, MinorType type,
       DataMode mode) {
-    assert type != MinorType.MAP && type != MinorType.UNION && type != MinorType.LIST;
+    assert isScalar(type);
     return new PrimitiveColumnMetadata(name, type, mode);
   }
 
   public static PrimitiveColumnMetadata newScalar(String name, MajorType type) {
     MinorType minorType = type.getMinorType();
-    assert minorType != MinorType.MAP && minorType != MinorType.UNION && minorType != MinorType.LIST;
+    assert isScalar(minorType);
     return new PrimitiveColumnMetadata(name, type);
   }
 
@@ -205,4 +227,10 @@ public class MetadataUtils {
     return new PrimitiveColumnMetadata(field);
   }
 
+  private static boolean isScalar(MinorType type) {
+    return !(type == MinorType.MAP
+        || type == MinorType.UNION
+        || type == MinorType.LIST
+        || type == MinorType.DICT);
+  }
 }

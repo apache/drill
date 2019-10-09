@@ -813,7 +813,7 @@ public class HiveUtilities {
       default:
         if (componentType.isStruct()) {
           // for the case when nested type is struct, it should be placed into repeated map
-          return MetadataUtils.newMapArray(name, childColumnMetadata.mapSchema());
+          return MetadataUtils.newMapArray(name, childColumnMetadata.tupleSchema());
         } else {
           // otherwise creates column metadata with repeated data mode
           return new PrimitiveColumnMetadata(

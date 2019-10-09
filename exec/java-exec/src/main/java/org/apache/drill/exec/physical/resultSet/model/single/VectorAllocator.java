@@ -29,6 +29,7 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractMapVector;
+import org.apache.drill.exec.vector.complex.RepeatedDictVector;
 import org.apache.drill.exec.vector.complex.RepeatedMapVector;
 
 /**
@@ -78,6 +79,12 @@ public class VectorAllocator {
       } else {
         allocateMap((AbstractMapVector) vector, metadata, valueCount, mdProvider);
       }
+    } else if (type.getMinorType() == MinorType.DICT) {
+      if (type.getMode() == DataMode.REPEATED) {
+        allocateDictArray((RepeatedDictVector) vector, metadata, valueCount, mdProvider);
+      } else {
+        allocateMap((AbstractMapVector) vector, metadata, valueCount, mdProvider);
+      }
     } else {
       allocatePrimitive(vector, metadata, valueCount);
     }
@@ -98,9 +105,16 @@ public class VectorAllocator {
     allocateMap(vector, metadata, expectedValueCount, mdProvider);
   }
 
+  private void allocateDictArray(RepeatedDictVector vector, ColumnMetadata metadata,
+                                 int valueCount, MetadataProvider mdProvider) {
+    vector.getOffsetVector().allocateNew(valueCount);
+    final int expectedValueCount = valueCount * metadata.expectedElementCount();
+    allocateMap((AbstractMapVector) vector.getDataVector(), metadata, expectedValueCount, mdProvider);
+  }
+
   private void allocateMap(AbstractMapVector vector, ColumnMetadata metadata, int valueCount, MetadataProvider mdProvider) {
     final MetadataProvider mapProvider = mdProvider.childProvider(metadata);
-    final TupleMetadata mapSchema = metadata.mapSchema();
+    final TupleMetadata mapSchema = metadata.tupleSchema();
     assert mapSchema != null;
     int i = 0;
     for (final ValueVector child : vector) {

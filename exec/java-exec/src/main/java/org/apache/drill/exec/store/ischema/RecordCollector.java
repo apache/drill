@@ -339,7 +339,7 @@ public interface RecordCollector {
           // if column is a map / struct, recursively scan nested columns
           if (column.isMap()) {
             List<Records.Column> mapRecords =
-              columns(schemaPath, table, column.mapSchema(), columnName, currentIndex, true);
+              columns(schemaPath, table, column.tupleSchema(), columnName, currentIndex, true);
             records.addAll(mapRecords);
           }
 

@@ -132,7 +132,7 @@ public class JsonReaderUtils {
     PathSegment child = column.getChild();
     if (child != null && child.isNamed()) {
       String name = column.getNameSegment().getPath();
-      ColumnMetadata childMetadata = columnMetadata.mapSchema().metadata(name);
+      ColumnMetadata childMetadata = columnMetadata.tupleSchema().metadata(name);
       writeColumnToMapWriter(writer.map(name), child, childMetadata, allTextMode);
     } else {
       writeSingleOrArrayColumn(columnMetadata, writer, allTextMode);
@@ -181,9 +181,13 @@ public class JsonReaderUtils {
   private static void writeColumn(ColumnMetadata columnMetadata,
       BaseWriter.MapWriter fieldWriter, boolean allTextMode) {
     switch (columnMetadata.structureType()) {
+      case DICT:
+        writeSchemaColumns(
+            columnMetadata.tupleSchema(), fieldWriter.dict(columnMetadata.name()), allTextMode);
+        break;
       case TUPLE:
         writeSchemaColumns(
-            columnMetadata.mapSchema(), fieldWriter.map(columnMetadata.name()), allTextMode);
+            columnMetadata.tupleSchema(), fieldWriter.map(columnMetadata.name()), allTextMode);
         break;
       case MULTI_ARRAY:
         writeArrayColumn(columnMetadata.childSchema(), fieldWriter.list(columnMetadata.name()), allTextMode);
@@ -213,8 +217,11 @@ public class JsonReaderUtils {
   private static void writeArrayColumn(ColumnMetadata columnMetadata,
       BaseWriter.ListWriter fieldWriter, boolean allTextMode) {
     switch (columnMetadata.structureType()) {
+      case DICT:
+        writeSchemaColumns(columnMetadata.tupleSchema(), fieldWriter.dict(), allTextMode);
+        break;
       case TUPLE:
-        writeSchemaColumns(columnMetadata.mapSchema(), fieldWriter.map(), allTextMode);
+        writeSchemaColumns(columnMetadata.tupleSchema(), fieldWriter.map(), allTextMode);
         break;
       case MULTI_ARRAY:
         writeArrayColumn(columnMetadata.childSchema(), fieldWriter.list(), allTextMode);

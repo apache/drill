@@ -83,6 +83,11 @@ public class UnionBuilder implements SchemaContainer {
     return new RepeatedListBuilder(this, Types.typeKey(MinorType.LIST));
   }
 
+  public DictBuilder addDict() {
+    checkType(MinorType.DICT);
+    return new DictBuilder(this, Types.typeKey(MinorType.DICT), DataMode.OPTIONAL);
+  }
+
   public VariantColumnMetadata buildColumn() {
     return new VariantColumnMetadata(name, type, union);
   }
@@ -106,5 +111,10 @@ public class UnionBuilder implements SchemaContainer {
   public UnionBuilder resumeUnion() {
     build();
     return (UnionBuilder) parent;
+  }
+
+  public DictBuilder resumeDict() {
+    build();
+    return (DictBuilder) parent;
   }
 }

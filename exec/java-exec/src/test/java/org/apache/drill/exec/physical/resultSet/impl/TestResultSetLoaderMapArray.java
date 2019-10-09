@@ -85,11 +85,11 @@ public class TestResultSetLoaderMapArray extends SubOperatorTest {
     assertEquals(2, actualSchema.size());
     assertTrue(actualSchema.metadata(1).isArray());
     assertTrue(actualSchema.metadata(1).isMap());
-    assertEquals(2, actualSchema.metadata("m").mapSchema().size());
+    assertEquals(2, actualSchema.metadata("m").tupleSchema().size());
     assertEquals(2, actualSchema.column("m").getChildren().size());
     TupleWriter mapWriter = rootWriter.array("m").tuple();
-    assertSame(actualSchema.metadata("m").mapSchema(), mapWriter.schema().mapSchema());
-    assertSame(mapWriter.tupleSchema(), mapWriter.schema().mapSchema());
+    assertSame(actualSchema.metadata("m").tupleSchema(), mapWriter.schema().tupleSchema());
+    assertSame(mapWriter.tupleSchema(), mapWriter.schema().tupleSchema());
     assertSame(mapWriter.tupleSchema().metadata(0), mapWriter.scalar(0).schema());
     assertSame(mapWriter.tupleSchema().metadata(1), mapWriter.scalar(1).schema());
 

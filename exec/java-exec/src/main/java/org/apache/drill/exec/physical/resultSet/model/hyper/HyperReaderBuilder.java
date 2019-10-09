@@ -37,11 +37,13 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.ColumnReaderIndex;
 import org.apache.drill.exec.vector.accessor.reader.AbstractObjectReader;
 import org.apache.drill.exec.vector.accessor.reader.ArrayReaderImpl;
+import org.apache.drill.exec.vector.accessor.reader.DictReaderImpl;
 import org.apache.drill.exec.vector.accessor.reader.MapReader;
 import org.apache.drill.exec.vector.accessor.reader.UnionReaderImpl;
 import org.apache.drill.exec.vector.accessor.reader.VectorAccessor;
 import org.apache.drill.exec.vector.accessor.reader.VectorAccessors;
 import org.apache.drill.exec.vector.accessor.reader.VectorAccessors.BaseHyperVectorAccessor;
+import org.apache.drill.exec.vector.complex.RepeatedValueVector;
 
 /**
  * Base reader builder for a hyper-batch. The semantics of hyper-batches are
@@ -151,6 +153,8 @@ public class HyperReaderBuilder extends ReaderBuilder {
 
   protected AbstractObjectReader buildVectorReader(VectorAccessor va, ColumnMetadata metadata) {
     switch(metadata.type()) {
+    case DICT:
+      return buildDict(va, metadata);
     case MAP:
       return buildMap(va, metadata.mode(), metadata);
     case UNION:
@@ -162,6 +166,28 @@ public class HyperReaderBuilder extends ReaderBuilder {
     }
   }
 
+  private AbstractObjectReader buildDict(VectorAccessor va, ColumnMetadata metadata) {
+    boolean isArray = metadata.isArray();
+
+    ValueVector vector = va.vector();
+    VectorAccessor dictAccessor;
+    if (isArray) {
+      ValueVector dictVector = ((RepeatedValueVector) vector).getDataVector();
+      dictAccessor = new VectorAccessors.SingleVectorAccessor(dictVector);
+    } else {
+      dictAccessor = va;
+    }
+
+    List<AbstractObjectReader> readers = buildMapMembers(dictAccessor, metadata.tupleSchema());
+    AbstractObjectReader reader = DictReaderImpl.build(metadata, dictAccessor, readers);
+
+    if (!isArray) {
+      return reader;
+    }
+
+    return ArrayReaderImpl.buildTuple(metadata, va, reader);
+  }
+
   private AbstractObjectReader buildMap(VectorAccessor va, DataMode mode, ColumnMetadata metadata) {
 
     boolean isArray = mode == DataMode.REPEATED;
@@ -171,7 +197,7 @@ public class HyperReaderBuilder extends ReaderBuilder {
     AbstractObjectReader mapReader = MapReader.build(
         metadata,
         isArray ? null : va,
-        buildMapMembers(va, metadata.mapSchema()));
+        buildMapMembers(va, metadata.tupleSchema()));
 
     // Single map
 

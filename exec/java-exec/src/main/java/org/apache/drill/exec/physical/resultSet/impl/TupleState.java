@@ -38,6 +38,8 @@ import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
 import org.apache.drill.exec.vector.accessor.writer.AbstractObjectWriter;
 import org.apache.drill.exec.vector.accessor.writer.AbstractTupleWriter;
 import org.apache.drill.exec.vector.complex.AbstractMapVector;
+import org.apache.drill.exec.vector.complex.DictVector;
+import org.apache.drill.exec.vector.complex.RepeatedDictVector;
 
 /**
  * Represents the loader state for a tuple: a row or a map. This is "state" in
@@ -142,7 +144,7 @@ public abstract class TupleState extends ContainerState
       } else {
         outputSchema = schema();
       }
-      mapState.bindOutputSchema(outputSchema.mapSchema());
+      mapState.bindOutputSchema(outputSchema.tupleSchema());
     }
 
     public MapState mapState() { return mapState; }
@@ -230,7 +232,9 @@ public abstract class TupleState extends ContainerState
 
     @Override
     public void dump(HierarchicalFormatter format) {
-      // TODO
+      format.startObject(this)
+          .attribute("field", mapVector != null ? mapVector.getField() : "null")
+          .endObject();
     }
   }
 
@@ -539,7 +543,7 @@ public abstract class TupleState extends ContainerState
         prevHarvestIndex = i;
       }
 
-      // If the column is a map, then we have to recurse into the map
+      // If the column is a map or a dict, then we have to recurse into it
       // itself. If the map is inside a union, then the map's vectors
       // already appear in the map vector, but we still must update the
       // output schema.
@@ -547,6 +551,9 @@ public abstract class TupleState extends ContainerState
       if (colState.schema().isMap()) {
         final MapState childMap = ((MapColumnState) colState).mapState();
         childMap.updateOutput(curSchemaVersion);
+      } else if (colState.schema().isDict()) {
+        final DictState child = ((DictColumnState) colState).dictState();
+        child.updateOutput(curSchemaVersion);
       }
     }
   }
@@ -566,5 +573,225 @@ public abstract class TupleState extends ContainerState
     format
       .endArray()
       .endObject();
+  }
+
+  public static class DictColumnState extends BaseContainerColumnState {
+    protected final DictState dictState;
+    protected boolean isVersioned;
+    protected final ColumnMetadata outputSchema;
+
+    public DictColumnState(DictState dictState,
+                          AbstractObjectWriter writer,
+                          VectorState vectorState,
+                          boolean isVersioned) {
+      super(dictState.loader(), writer, vectorState);
+      this.dictState = dictState;
+      dictState.bindColumnState(this);
+      this.isVersioned = isVersioned;
+      if (isVersioned) {
+        outputSchema = schema().cloneEmpty();
+      } else {
+        outputSchema = schema();
+      }
+      dictState.bindOutputSchema(outputSchema.tupleSchema());
+    }
+
+    @Override
+    public void buildOutput(TupleState tupleState) {
+      outputIndex = tupleState.addOutputColumn(vector(), outputSchema());
+    }
+
+    public DictState dictState() {
+      return dictState;
+    }
+
+    @Override
+    public ContainerState container() {
+      return dictState;
+    }
+
+    @Override
+    public boolean isProjected() {
+      return dictState.hasProjections();
+    }
+
+    public boolean isVersioned() {
+      return isVersioned;
+    }
+
+    @Override
+    public ColumnMetadata outputSchema() { return outputSchema; }
+  }
+
+  public static abstract class DictState extends MapState {
+
+    public DictState(LoaderInternals events,
+                    ResultVectorCache vectorCache,
+                    ProjectionSet projectionSet) {
+      super(events, vectorCache, projectionSet);
+    }
+
+    public void bindColumnState(ColumnState colState) {
+      super.bindColumnState(colState);
+      writer().bindListener(this);
+    }
+
+    @Override
+    protected boolean isVersioned() {
+      return ((DictColumnState) parentColumn).isVersioned();
+    }
+
+    @Override
+    public void dump(HierarchicalFormatter format) {
+      format.startObject(this)
+          .attribute("column", parentColumn.schema().name())
+          .attribute("cardinality", innerCardinality())
+          .endObject();
+    }
+  }
+
+  public static class SingleDictState extends DictState {
+
+    public SingleDictState(LoaderInternals events,
+                          ResultVectorCache vectorCache,
+                          ProjectionSet projectionSet) {
+      super(events, vectorCache, projectionSet);
+    }
+
+    @Override
+    public AbstractTupleWriter writer() {
+      return (AbstractTupleWriter) parentColumn.writer().dict().tuple();
+    }
+  }
+
+  public static class DictArrayState extends DictState {
+
+    public DictArrayState(LoaderInternals events,
+                         ResultVectorCache vectorCache,
+                         ProjectionSet projectionSet) {
+      super(events, vectorCache, projectionSet);
+    }
+
+    @Override
+    public int addOutputColumn(ValueVector vector, ColumnMetadata colSchema) {
+      final RepeatedDictVector repeatedDictVector = parentColumn.vector();
+      DictVector dictVector = (DictVector) repeatedDictVector.getDataVector();
+      if (isVersioned()) {
+        dictVector.putChild(colSchema.name(), vector);
+      }
+      final int index = outputSchema.addColumn(colSchema);
+      assert dictVector.size() == outputSchema.size();
+      assert dictVector.getField().getChildren().size() == outputSchema.size();
+      return index;
+    }
+
+    @Override
+    public AbstractTupleWriter writer() {
+      return (AbstractTupleWriter) parentColumn.writer().array().dict().tuple();
+    }
+  }
+
+  public static abstract class DictVectorState<T extends ValueVector> implements VectorState {
+
+    protected final T vector;
+    protected final VectorState offsets;
+
+    public DictVectorState(T vector, VectorState offsets) {
+      this.vector = vector;
+      this.offsets = offsets;
+    }
+
+    @Override
+    public T vector() {
+      return vector;
+    }
+
+    @Override
+    public int allocate(int cardinality) {
+      return offsets.allocate(cardinality);
+    }
+
+    @Override
+    public void rollover(int cardinality) {
+      offsets.rollover(cardinality);
+    }
+
+    @Override
+    public void harvestWithLookAhead() {
+      offsets.harvestWithLookAhead();
+    }
+
+    @Override
+    public void startBatchWithLookAhead() {
+      offsets.harvestWithLookAhead();
+    }
+
+    @Override
+    public void close() {
+      offsets.close();
+    }
+
+    public VectorState offsetVectorState() {
+      return offsets;
+    }
+
+    @Override
+    public boolean isProjected() {
+      return offsets.isProjected();
+    }
+
+    @Override
+    public void dump(HierarchicalFormatter format) {
+      format.startObject(this)
+          .attribute("field", vector != null ? vector.getField() : "null")
+          .endObject();
+    }
+  }
+
+  public static class SingleDictVectorState extends DictVectorState<DictVector> {
+
+    public SingleDictVectorState(DictVector vector, VectorState offsets) {
+      super(vector, offsets);
+    }
+  }
+
+  public static class DictArrayVectorState extends DictVectorState<RepeatedDictVector> {
+
+    // offsets for the data vector
+    private final VectorState dictOffsets;
+
+    public DictArrayVectorState(RepeatedDictVector vector, VectorState offsets, VectorState dictOffsets) {
+      super(vector, offsets);
+      this.dictOffsets = dictOffsets;
+    }
+
+    @Override
+    public int allocate(int cardinality) {
+      return offsets.allocate(cardinality);
+    }
+
+    @Override
+    public void rollover(int cardinality) {
+      super.rollover(cardinality);
+      dictOffsets.rollover(cardinality);
+    }
+
+    @Override
+    public void harvestWithLookAhead() {
+      super.harvestWithLookAhead();
+      dictOffsets.harvestWithLookAhead();
+    }
+
+    @Override
+    public void startBatchWithLookAhead() {
+      super.startBatchWithLookAhead();
+      dictOffsets.harvestWithLookAhead();
+    }
+
+    @Override
+    public void close() {
+      super.close();
+      dictOffsets.close();
+    }
   }
 }

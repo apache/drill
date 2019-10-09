@@ -31,7 +31,9 @@ import org.apache.drill.exec.record.metadata.TupleSchema;
 import org.apache.drill.exec.record.metadata.VariantSchema;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractMapVector;
+import org.apache.drill.exec.vector.complex.DictVector;
 import org.apache.drill.exec.vector.complex.ListVector;
+import org.apache.drill.exec.vector.complex.RepeatedDictVector;
 import org.apache.drill.exec.vector.complex.RepeatedListVector;
 import org.apache.drill.exec.vector.complex.UnionVector;
 
@@ -67,6 +69,8 @@ public class SingleSchemaInference {
   private ColumnMetadata inferVector(ValueVector vector) {
     final MaterializedField field = vector.getField();
     switch (field.getType().getMinorType()) {
+    case DICT:
+      return MetadataUtils.newDict(field, inferDictSchema(vector));
     case MAP:
       return MetadataUtils.newMap(field, inferMapSchema((AbstractMapVector) vector));
     case LIST:
@@ -81,6 +85,20 @@ public class SingleSchemaInference {
     default:
       return MetadataUtils.fromField(field);
     }
+  }
+
+  private TupleSchema inferDictSchema(ValueVector vector) {
+    final List<ColumnMetadata> columns = new ArrayList<>();
+    DictVector dictVector;
+    if (vector.getField().getType().getMode() == DataMode.REPEATED) {
+      dictVector = (DictVector) ((RepeatedDictVector) vector).getDataVector();
+    } else {
+      dictVector = (DictVector) vector;
+    }
+    for (int i = 0; i < dictVector.size(); i++) {
+      columns.add(inferVector(dictVector.getChildByOrdinal(i)));
+    }
+    return MetadataUtils.fromColumns(columns);
   }
 
   private TupleSchema inferMapSchema(AbstractMapVector vector) {

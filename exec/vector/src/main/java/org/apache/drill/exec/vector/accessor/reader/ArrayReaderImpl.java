@@ -130,7 +130,6 @@ public class ArrayReaderImpl implements ArrayReader, ReaderEvents {
      * Given a 0-based index relative to the current array, return an absolute offset
      * vector location for the array value.
      *
-     * @param index 0-based index into the current array
      * @return absolute offset vector location for the array value
      */
 
@@ -169,12 +168,12 @@ public class ArrayReaderImpl implements ArrayReader, ReaderEvents {
     public int logicalIndex() { return position; }
   }
 
+  protected final AbstractObjectReader elementReader;
+  protected ElementReaderIndex elementIndex;
+  protected NullStateReader nullStateReader;
   private final ColumnMetadata schema;
   private final VectorAccessor arrayAccessor;
   private final OffsetVectorReader offsetReader;
-  private final AbstractObjectReader elementReader;
-  protected ElementReaderIndex elementIndex;
-  protected NullStateReader nullStateReader;
 
   public ArrayReaderImpl(ColumnMetadata schema, VectorAccessor va,
       AbstractObjectReader elementReader) {

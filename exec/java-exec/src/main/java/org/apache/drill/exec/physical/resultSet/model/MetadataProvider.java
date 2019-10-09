@@ -85,8 +85,9 @@ public interface MetadataProvider {
         return new ArraySchemaCreator((RepeatedListColumnMetadata) colMetadata);
       case VARIANT:
         return new VariantSchemaCreator((VariantSchema) colMetadata.variantSchema());
+      case DICT:
       case TUPLE:
-        return new MetadataCreator((TupleSchema) colMetadata.mapSchema());
+        return new MetadataCreator((TupleSchema) colMetadata.tupleSchema());
       default:
         throw new UnsupportedOperationException();
       }
@@ -187,8 +188,9 @@ public interface MetadataProvider {
         return new ArraySchemaRetrieval(colMetadata);
       case VARIANT:
         return new VariantSchemaRetrieval((VariantSchema) colMetadata.variantSchema());
+      case DICT:
       case TUPLE:
-        return new MetadataRetrieval(colMetadata.mapSchema());
+        return new MetadataRetrieval(colMetadata.tupleSchema());
       default:
         throw new UnsupportedOperationException();
       }

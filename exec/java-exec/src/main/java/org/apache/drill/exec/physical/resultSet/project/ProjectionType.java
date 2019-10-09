@@ -17,9 +17,9 @@
  */
 package org.apache.drill.exec.physical.resultSet.project;
 
-import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.Types;
 
 /**
  * Specifies the type of projection obtained by parsing the
@@ -79,14 +79,22 @@ public enum ProjectionType {
    * Combination of array and map hints.
    */
 
-  TUPLE_ARRAY;  // x[0].y
+  TUPLE_ARRAY,  // x[0].y
+
+  DICT, // x[0] or x['key'] (depends on key type)
+
+  DICT_ARRAY; // x[0][42] or x[0]['key'] (depends on key type)
 
   public boolean isTuple() {
     return this == ProjectionType.TUPLE || this == ProjectionType.TUPLE_ARRAY;
   }
 
   public boolean isArray() {
-    return this == ProjectionType.ARRAY || this == ProjectionType.TUPLE_ARRAY;
+    return this == ProjectionType.ARRAY || this == ProjectionType.TUPLE_ARRAY || this == DICT_ARRAY;
+  }
+
+  public boolean isDict() {
+    return this == DICT || this == DICT_ARRAY;
   }
 
   /**
@@ -99,17 +107,12 @@ public enum ProjectionType {
   }
 
   public static ProjectionType typeFor(MajorType majorType) {
+    boolean repeated = Types.isRepeated(majorType);
     if (majorType.getMinorType() == MinorType.MAP) {
-      if (majorType.getMode() == DataMode.REPEATED) {
-        return TUPLE_ARRAY;
-      } else {
-        return TUPLE;
-      }
-    }
-    if (majorType.getMode() == DataMode.REPEATED) {
-      return ARRAY;
-    }
-    if (majorType.getMinorType() == MinorType.LIST) {
+      return repeated ? TUPLE_ARRAY : TUPLE;
+    } else if (majorType.getMinorType() == MinorType.DICT) {
+      return repeated ? DICT_ARRAY : DICT;
+    } else if (repeated || majorType.getMinorType() == MinorType.LIST) {
       return ARRAY;
     }
     return SCALAR;
@@ -143,13 +146,17 @@ public enum ProjectionType {
 
     switch (this) {
     case ARRAY:
-      return readType == ARRAY || readType == TUPLE_ARRAY;
+      return readType == ARRAY || readType == TUPLE_ARRAY
+          || readType == DICT // the actual key type should be validated later
+          || readType == DICT_ARRAY;
     case TUPLE_ARRAY:
-      return readType == TUPLE_ARRAY;
+      return readType == TUPLE_ARRAY || readType == DICT_ARRAY;
     case SCALAR:
       return readType == SCALAR;
     case TUPLE:
-      return readType == TUPLE || readType == TUPLE_ARRAY;
+      return readType == TUPLE || readType == TUPLE_ARRAY || readType == DICT || readType == DICT_ARRAY;
+    case DICT:
+      return readType == DICT || readType == DICT_ARRAY;
     case UNPROJECTED:
     case GENERAL:
     case WILDCARD:
@@ -169,6 +176,8 @@ public enum ProjectionType {
       return "tuple (a.x)";
     case TUPLE_ARRAY:
       return "tuple array (a[n].x)";
+    case DICT:
+      return "dict (a['key'])";
     case WILDCARD:
       return "wildcard (*)";
     default:

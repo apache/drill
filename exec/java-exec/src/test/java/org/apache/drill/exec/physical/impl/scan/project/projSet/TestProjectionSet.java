@@ -91,7 +91,7 @@ public class TestProjectionSet extends BaseTest {
     assertFalse(mCol.isProjected());
 
     ColumnReadProjection bCol = mCol.mapProjection().readProjection(
-        readSchema.metadata("m").mapSchema().metadata("b"));
+        readSchema.metadata("m").tupleSchema().metadata("b"));
     assertFalse(bCol.isProjected());
   }
 
@@ -135,7 +135,7 @@ public class TestProjectionSet extends BaseTest {
     assertTrue(mCol.isProjected());
 
     ColumnReadProjection bCol = mCol.mapProjection().readProjection(
-        readSchema.metadata("m").mapSchema().metadata("b"));
+        readSchema.metadata("m").tupleSchema().metadata("b"));
     assertTrue(bCol.isProjected());
   }
 
@@ -209,7 +209,7 @@ public class TestProjectionSet extends BaseTest {
           .add("h", MinorType.VARCHAR)
           .resumeSchema()
         .buildSchema();
-    TupleMetadata mReadSchema = readSchema.metadata("m").mapSchema();
+    TupleMetadata mReadSchema = readSchema.metadata("m").tupleSchema();
     mReadSchema.metadata("f").setBooleanProperty(ColumnMetadata.EXCLUDE_FROM_WILDCARD, true);
 
     TupleMetadata outputSchema = new SchemaBuilder()
@@ -219,7 +219,7 @@ public class TestProjectionSet extends BaseTest {
           .add("g", MinorType.VARCHAR)
           .resumeSchema()
         .buildSchema();
-    TupleMetadata mOutputSchema = outputSchema.metadata("m").mapSchema();
+    TupleMetadata mOutputSchema = outputSchema.metadata("m").tupleSchema();
     mOutputSchema.metadata("g").setBooleanProperty(ColumnMetadata.EXCLUDE_FROM_WILDCARD, true);
 
     TypeConverter converter = TypeConverter.builder()
@@ -315,8 +315,8 @@ public class TestProjectionSet extends BaseTest {
           .add("e", MinorType.INT)
           .resumeSchema()
         .buildSchema();
-    TupleMetadata mReadSchema = readSchema.metadata("m").mapSchema();
-    TupleMetadata m2ReadSchema = readSchema.metadata("m2").mapSchema();
+    TupleMetadata mReadSchema = readSchema.metadata("m").tupleSchema();
+    TupleMetadata m2ReadSchema = readSchema.metadata("m2").tupleSchema();
 
     TupleMetadata outputSchema = new SchemaBuilder()
         .addMap("m")
@@ -324,7 +324,7 @@ public class TestProjectionSet extends BaseTest {
           .resumeSchema()
         .buildSchema();
     outputSchema.setBooleanProperty(TupleMetadata.IS_STRICT_SCHEMA_PROP, true);
-    TupleMetadata mOutputSchema = outputSchema.metadata("m").mapSchema();
+    TupleMetadata mOutputSchema = outputSchema.metadata("m").tupleSchema();
 
     TypeConverter converter = TypeConverter.builder()
         .providedSchema(outputSchema)
@@ -415,9 +415,9 @@ public class TestProjectionSet extends BaseTest {
     ColumnMetadata m1Schema = readSchema.metadata("m1");
     ColumnMetadata m2Schema = readSchema.metadata("m2");
     ColumnMetadata m3Schema = readSchema.metadata("m3");
-    TupleMetadata m1ReadSchema = m1Schema.mapSchema();
-    TupleMetadata m2ReadSchema = m2Schema.mapSchema();
-    TupleMetadata m3ReadSchema = m3Schema.mapSchema();
+    TupleMetadata m1ReadSchema = m1Schema.tupleSchema();
+    TupleMetadata m2ReadSchema = m2Schema.tupleSchema();
+    TupleMetadata m3ReadSchema = m3Schema.tupleSchema();
 
     // Project one member of map m1, all of m2, none of m3
 
@@ -476,7 +476,7 @@ public class TestProjectionSet extends BaseTest {
         .buildSchema();
 
     ColumnMetadata m1Schema = readSchema.metadata("m1");
-    TupleMetadata m1ReadSchema = m1Schema.mapSchema();
+    TupleMetadata m1ReadSchema = m1Schema.tupleSchema();
 
     // Project one member of map1, all of map2, none of map3
 
@@ -515,7 +515,7 @@ public class TestProjectionSet extends BaseTest {
         .buildSchema();
 
     ColumnMetadata mSchema = readSchema.metadata("m");
-    TupleMetadata mReadSchema = mSchema.mapSchema();
+    TupleMetadata mReadSchema = mSchema.tupleSchema();
 
     TupleMetadata outputSchema = new SchemaBuilder()
         .addMap("m")

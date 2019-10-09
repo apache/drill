@@ -95,7 +95,7 @@ public class NullColumnBuilder implements VectorSource {
     if (outputSchema != null) {
       ColumnMetadata colSchema = outputSchema.metadata(mapName);
       if (colSchema != null) {
-        builder.setOutputSchema(colSchema.mapSchema());
+        builder.setOutputSchema(colSchema.tupleSchema());
       }
     }
     return builder.build();

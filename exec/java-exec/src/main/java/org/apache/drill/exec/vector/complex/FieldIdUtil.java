@@ -136,6 +136,7 @@ public class FieldIdUtil {
     }
 
     ValueVector v;
+    MajorType finalType = null;
     if (vector instanceof DictVector) {
       v = ((DictVector) vector).getValues();
       if (addToBreadCrumb) {
@@ -147,6 +148,7 @@ public class FieldIdUtil {
         depth = 0;
         builder.setDict(depth);
       }
+      finalType = ((DictVector) vector).getLastPathType();
     } else if (vector instanceof AbstractContainerVector) {
       String fieldName = null;
       if (seg.isNamed()) {
@@ -176,7 +178,7 @@ public class FieldIdUtil {
         if(addToBreadCrumb) {
           builder.intermediateType(v.getField().getType());
         }
-        builder.finalType(v.getField().getType());
+        builder.finalType(finalType != null ? finalType : v.getField().getType());
       } else {
         builder.finalType(v.getField().getType().toBuilder().setMode(DataMode.OPTIONAL).build());
       }

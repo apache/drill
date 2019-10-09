@@ -39,13 +39,16 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.reader.AbstractObjectReader;
 import org.apache.drill.exec.vector.accessor.reader.AbstractScalarReader;
 import org.apache.drill.exec.vector.accessor.reader.ArrayReaderImpl;
+import org.apache.drill.exec.vector.accessor.reader.DictReaderImpl;
 import org.apache.drill.exec.vector.accessor.reader.MapReader;
 import org.apache.drill.exec.vector.accessor.reader.UnionReaderImpl;
 import org.apache.drill.exec.vector.accessor.reader.VectorAccessor;
 import org.apache.drill.exec.vector.accessor.reader.VectorAccessors.SingleVectorAccessor;
 import org.apache.drill.exec.vector.complex.AbstractMapVector;
+import org.apache.drill.exec.vector.complex.DictVector;
 import org.apache.drill.exec.vector.complex.ListVector;
 import org.apache.drill.exec.vector.complex.RepeatedListVector;
+import org.apache.drill.exec.vector.complex.RepeatedValueVector;
 import org.apache.drill.exec.vector.complex.UnionVector;
 
 /**
@@ -119,20 +122,46 @@ public class SimpleReaderBuilder extends ReaderBuilder {
     final MajorType type = va.type();
 
     switch(type.getMinorType()) {
-    case MAP:
-      return buildMap((AbstractMapVector) vector, va, type.getMode(), descrip);
-    case UNION:
-      return buildUnion((UnionVector) vector, va, descrip);
-    case LIST:
-      return buildList(vector, va, descrip);
-    case LATE:
+      case DICT:
+        return buildDict(vector, va, descrip);
+      case MAP:
+        return buildMap((AbstractMapVector) vector, va, type.getMode(), descrip);
+      case UNION:
+        return buildUnion((UnionVector) vector, va, descrip);
+      case LIST:
+        return buildList(vector, va, descrip);
+      case LATE:
 
-      // Occurs for a list with no type: a list of nulls.
+        // Occurs for a list with no type: a list of nulls.
 
-      return AbstractScalarReader.nullReader(descrip.metadata);
-    default:
-      return buildScalarReader(va, descrip.metadata);
+        return AbstractScalarReader.nullReader(descrip.metadata);
+      default:
+        return buildScalarReader(va, descrip.metadata);
     }
+  }
+
+  private AbstractObjectReader buildDict(ValueVector vector, VectorAccessor va, VectorDescrip descrip) {
+
+    boolean isArray = descrip.metadata.isArray();
+
+    DictVector dictVector;
+    VectorAccessor dictAccessor;
+    if (isArray) {
+      dictVector = (DictVector) ((RepeatedValueVector) vector).getDataVector();
+      dictAccessor = new SingleVectorAccessor(dictVector);
+    } else {
+      dictVector = (DictVector) vector;
+      dictAccessor = va;
+    }
+
+    List<AbstractObjectReader> readers = buildMapMembers(dictVector, descrip.childProvider());
+    AbstractObjectReader reader = DictReaderImpl.build(descrip.metadata, dictAccessor, readers);
+
+    if (!isArray) {
+      return reader;
+    }
+
+    return ArrayReaderImpl.buildTuple(descrip.metadata, va, reader);
   }
 
   private AbstractObjectReader buildMap(AbstractMapVector vector, VectorAccessor va, DataMode mode, VectorDescrip descrip) {

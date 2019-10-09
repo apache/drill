@@ -40,12 +40,12 @@ public class MapReader extends AbstractTupleReader {
 
   private final VectorAccessor mapAccessor;
 
-  protected MapReader(ColumnMetadata schema, AbstractObjectReader readers[]) {
+  protected MapReader(ColumnMetadata schema, AbstractObjectReader[] readers) {
     this(schema, null, readers);
   }
 
   protected MapReader(ColumnMetadata schema,
-      VectorAccessor mapAccessor, AbstractObjectReader readers[]) {
+      VectorAccessor mapAccessor, AbstractObjectReader[] readers) {
     super(readers);
     this.schema = schema;
     this.mapAccessor = mapAccessor;
@@ -53,7 +53,7 @@ public class MapReader extends AbstractTupleReader {
 
   public static TupleObjectReader build(ColumnMetadata schema,
       VectorAccessor mapAccessor,
-      AbstractObjectReader readers[]) {
+      AbstractObjectReader[] readers) {
     MapReader mapReader = new MapReader(schema, mapAccessor, readers);
     mapReader.bindNullState(NullStateReaders.REQUIRED_STATE_READER);
     return new TupleObjectReader(mapReader);
@@ -62,7 +62,7 @@ public class MapReader extends AbstractTupleReader {
   public static AbstractObjectReader build(ColumnMetadata schema,
       VectorAccessor mapAccessor,
       List<AbstractObjectReader> readers) {
-    AbstractObjectReader readerArray[] = new AbstractObjectReader[readers.size()];
+    AbstractObjectReader[] readerArray = new AbstractObjectReader[readers.size()];
     return build(schema, mapAccessor, readers.toArray(readerArray));
   }
 
@@ -78,5 +78,5 @@ public class MapReader extends AbstractTupleReader {
   public ColumnMetadata schema() { return schema; }
 
   @Override
-  public TupleMetadata tupleSchema() { return schema.mapSchema(); }
+  public TupleMetadata tupleSchema() { return schema.tupleSchema(); }
 }
