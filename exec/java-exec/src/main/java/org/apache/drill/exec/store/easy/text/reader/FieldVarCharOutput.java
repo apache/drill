@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.easy.text.reader;
 
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.store.easy.text.TextFormatPlugin;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 
 /**
@@ -31,20 +32,18 @@ class FieldVarCharOutput extends BaseFieldOutput {
   /**
    * We initialize and add the varchar vector for each incoming field in this
    * constructor.
-   * @param outputMutator  Used to create/modify schema
-   * @param fieldNames Incoming field names
-   * @param columns  List of columns selected in the query
-   * @param isStarQuery  boolean to indicate if all fields are selected or not
+   *
+   * @param writer row set writer
    */
-  public FieldVarCharOutput(RowSetLoader writer) {
+  FieldVarCharOutput(RowSetLoader writer) {
     super(writer,
-        TextReader.MAXIMUM_NUMBER_COLUMNS,
+        TextFormatPlugin.MAXIMUM_NUMBER_COLUMNS,
         makeMask(writer));
   }
 
   private static boolean[] makeMask(RowSetLoader writer) {
     final TupleMetadata schema = writer.tupleSchema();
-    final boolean projectionMask[] = new boolean[schema.size()];
+    final boolean[] projectionMask = new boolean[schema.size()];
     for (int i = 0; i < schema.size(); i++) {
       projectionMask[i] = writer.column(i).isProjected();
     }

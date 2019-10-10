@@ -17,24 +17,25 @@
  */
 package org.apache.drill.exec.store.easy.text.compliant;
 
-import static org.apache.drill.test.rowSet.RowSetUtilities.strArray;
+import org.apache.drill.TestSelectWithOption;
+import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.physical.rowSet.RowSet;
+import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.store.easy.text.TextFormatPlugin;
+import org.apache.drill.test.rowSet.RowSetUtilities;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 
-import org.apache.drill.TestSelectWithOption;
-import org.apache.drill.categories.RowSetTests;
-import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.record.metadata.SchemaBuilder;
-import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.exec.store.easy.text.TextFormatPlugin;
-import org.apache.drill.exec.physical.rowSet.RowSet;
-import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
-import org.apache.drill.test.rowSet.RowSetUtilities;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import static org.apache.drill.test.rowSet.RowSetUtilities.strArray;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test table properties with the compliant text reader. The
@@ -49,7 +50,7 @@ import org.junit.experimental.categories.Category;
  * using that schema rather than using the "columns" array
  * column.
  *
- * @see {@link TestSelectWithOption} for similar tests using table
+ * @see TestSelectWithOption for similar tests using table
  * properties within SQL
  */
 
@@ -89,9 +90,9 @@ public class TestCsvTableProperties extends BaseCsvTest {
         .build();
   }
 
-  public static String SELECT_ALL = "SELECT * FROM %s";
+  private static final String SELECT_ALL = "SELECT * FROM %s";
 
-  private static String noHeaders[] = {
+  private static final String[] noHeaders = {
       "10,fred",
       "20,wilma"
   };
@@ -122,7 +123,7 @@ public class TestCsvTableProperties extends BaseCsvTest {
     }
   }
 
-  private static String extraCols[] = {
+  private static final String[] extraCols = {
       "10,fred,23.45",
       "20,wilma,1234.56,vip"
   };
@@ -148,7 +149,7 @@ public class TestCsvTableProperties extends BaseCsvTest {
     }
   }
 
-  private static String skipHeaders[] = {
+  private static final String[] skipHeaders = {
       "ignore,me",
       "10,fred",
       "20,wilma"
@@ -180,7 +181,7 @@ public class TestCsvTableProperties extends BaseCsvTest {
     }
   }
 
-  private static String withHeaders[] = {
+  private static final String[] withHeaders = {
       "id, name",
       "10,fred",
       "20,wilma"
@@ -220,7 +221,7 @@ public class TestCsvTableProperties extends BaseCsvTest {
     }
   }
 
-  private static String barDelim[] = {
+  private static final String[] barDelim = {
       "10|fred",
       "20|wilma"
   };
@@ -241,7 +242,7 @@ public class TestCsvTableProperties extends BaseCsvTest {
     }
   }
 
-  private static String customCommentChar[] = {
+  private static final String[] customCommentChar = {
       "@Comment",
       "#10,fred",
       "#20,wilma"
@@ -273,7 +274,7 @@ public class TestCsvTableProperties extends BaseCsvTest {
     }
   }
 
-  private static String noCommentChar[] = {
+  private static final String[] noCommentChar = {
       "#10,fred",
       "#20,wilma"
   };
@@ -301,7 +302,7 @@ public class TestCsvTableProperties extends BaseCsvTest {
     }
   }
 
-  private static String quotesData[] = {
+  private static final String[] quotesData = {
     "1,@foo@",
     "2,@foo~@bar@",
 
@@ -342,7 +343,7 @@ public class TestCsvTableProperties extends BaseCsvTest {
     }
   }
 
-  private static String doubleQuotesData[] = {
+  private static final String[] doubleQuotesData = {
       "1,@foo@",
       "2,@foo@@bar@",
     };
@@ -380,7 +381,38 @@ public class TestCsvTableProperties extends BaseCsvTest {
     }
   }
 
-  private static String specialCharsData[] = {
+  private static final String[] quotesAndCustomNewLineData = {
+    "1,@foo@!2,@foo@@bar@!",
+  };
+
+  @Test
+  public void testQuotesAndCustomNewLine() throws Exception {
+    try {
+      enableSchemaSupport();
+      String tablePath = buildTable("quotesAndCustomNewLine", quotesAndCustomNewLineData);
+      String sql = "create schema () " +
+        "for table " + tablePath + " PROPERTIES ('" +
+        TextFormatPlugin.HAS_HEADERS_PROP + "'='false', '" +
+        TextFormatPlugin.SKIP_FIRST_LINE_PROP + "'='false', '" +
+        TextFormatPlugin.LINE_DELIM_PROP + "'='!', '" +
+        TextFormatPlugin.QUOTE_PROP + "'='@', '" +
+        TextFormatPlugin.QUOTE_ESCAPE_PROP + "'='@')";
+      run(sql);
+      RowSet actual = client.queryBuilder().sql(SELECT_ALL, tablePath).rowSet();
+      TupleMetadata expectedSchema = new SchemaBuilder()
+        .addArray("columns", MinorType.VARCHAR)
+        .buildSchema();
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+        .addSingleCol(strArray("1", "foo"))
+        .addSingleCol(strArray("2", "foo@bar"))
+        .build();
+      RowSetUtilities.verify(expected, actual);
+    } finally {
+      resetSchemaSupport();
+    }
+  }
+
+  private static final String[] specialCharsData = {
       "10\u0001'fred'",
       "20\u0001'wilma'"
     };
@@ -428,7 +460,7 @@ public class TestCsvTableProperties extends BaseCsvTest {
       enableSchemaSupport();
       String tableName = "newline";
       File rootDir = new File(testDir, tableName);
-      rootDir.mkdir();
+      assertTrue(rootDir.mkdir());
       try(PrintWriter out = new PrintWriter(new FileWriter(new File(rootDir, ROOT_FILE)))) {
         out.print("1,fred\r2,wilma\r");
       }
@@ -453,7 +485,7 @@ public class TestCsvTableProperties extends BaseCsvTest {
     }
   }
 
-  private static String messyQuotesData[] = {
+  private static final String[] messyQuotesData = {
       "first\"field\"here,another \"field",
       "end quote\",another\"",
       "many\"\"\"\",more\"\"",

@@ -74,12 +74,12 @@ final class TextInput {
   /**
    * The current position in the buffer.
    */
-  public int bufferPtr;
+  private int bufferPtr;
 
   /**
    * The quantity of valid data in the buffer.
    */
-  public int length = -1;
+  private int length = -1;
 
   private boolean endFound = false;
 
@@ -91,7 +91,7 @@ final class TextInput {
    * {@link TextParsingSettings#getNormalizedNewLine()}) that is used to replace any
    * lineSeparator sequence found in the input.
    */
-  public TextInput(TextParsingSettings settings, InputStream input, DrillBuf readBuffer, long startPos, long endPos) {
+  TextInput(TextParsingSettings settings, InputStream input, DrillBuf readBuffer, long startPos, long endPos) {
     this.lineSeparator = settings.getNewLineDelimiter();
     byte normalizedLineSeparator = settings.getNormalizedNewLine();
     Preconditions.checkArgument(input instanceof Seekable, "Text input only supports an InputStream that supports Seekable.");
@@ -156,9 +156,8 @@ final class TextInput {
    * May get an incomplete string since we don't support stream rewind.  Returns empty string for now.
    *
    * @return String of last few bytes.
-   * @throws IOException for input file read errors
    */
-  public String getStringSinceMarkForError() throws IOException {
+  public String getStringSinceMarkForError() {
     return " ";
   }
 
@@ -357,10 +356,6 @@ final class TextInput {
 
   public final long charCount() {
     return charCount + bufferPtr;
-  }
-
-  public long getLineCount() {
-    return lineCount;
   }
 
   public void close() throws IOException{

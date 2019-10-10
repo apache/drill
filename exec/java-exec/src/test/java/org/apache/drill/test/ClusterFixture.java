@@ -17,6 +17,35 @@
  */
 package org.apache.drill.test;
 
+import org.apache.drill.common.config.DrillProperties;
+import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.logical.FormatPluginConfig;
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.ZookeeperHelper;
+import org.apache.drill.exec.client.DrillClient;
+import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.RootAllocatorFactory;
+import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.proto.UserBitShared.QueryType;
+import org.apache.drill.exec.rpc.user.QueryDataBatch;
+import org.apache.drill.exec.server.Drillbit;
+import org.apache.drill.exec.server.RemoteServiceSet;
+import org.apache.drill.exec.store.SchemaFactory;
+import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.exec.store.StoragePluginRegistryImpl;
+import org.apache.drill.exec.store.dfs.FileSystemConfig;
+import org.apache.drill.exec.store.dfs.FileSystemPlugin;
+import org.apache.drill.exec.store.dfs.WorkspaceConfig;
+import org.apache.drill.exec.store.mock.MockStorageEngine;
+import org.apache.drill.exec.store.mock.MockStorageEngineConfig;
+import org.apache.drill.exec.store.sys.store.provider.ZookeeperPersistentStoreProvider;
+import org.apache.drill.exec.util.StoragePluginTestUtils;
+import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
+import org.apache.drill.shaded.guava.com.google.common.io.Resources;
+import org.apache.drill.test.DrillTestWrapper.TestServices;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -32,35 +61,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
-
-import org.apache.drill.exec.store.SchemaFactory;
-import org.apache.drill.test.DrillTestWrapper.TestServices;
-import org.apache.drill.common.config.DrillProperties;
-import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.common.logical.FormatPluginConfig;
-import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.ZookeeperHelper;
-import org.apache.drill.exec.client.DrillClient;
-import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.RootAllocatorFactory;
-import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
-import org.apache.drill.exec.proto.UserBitShared.QueryType;
-import org.apache.drill.exec.rpc.user.QueryDataBatch;
-import org.apache.drill.exec.server.Drillbit;
-import org.apache.drill.exec.server.RemoteServiceSet;
-import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.exec.store.StoragePluginRegistryImpl;
-import org.apache.drill.exec.store.dfs.FileSystemConfig;
-import org.apache.drill.exec.store.dfs.FileSystemPlugin;
-import org.apache.drill.exec.store.dfs.WorkspaceConfig;
-import org.apache.drill.exec.store.mock.MockStorageEngine;
-import org.apache.drill.exec.store.mock.MockStorageEngineConfig;
-import org.apache.drill.exec.store.sys.store.provider.ZookeeperPersistentStoreProvider;
-import org.apache.drill.exec.util.StoragePluginTestUtils;
-
-import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.apache.drill.shaded.guava.com.google.common.io.Resources;
 
 import static org.apache.drill.exec.util.StoragePluginTestUtils.DFS_TMP_SCHEMA;
 import static org.apache.drill.exec.util.StoragePluginTestUtils.ROOT_SCHEMA;
@@ -416,6 +416,10 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
       }
     }
     zkHelper = null;
+
+    if (ex != null) {
+      throw ex;
+    }
   }
 
   /**
@@ -487,7 +491,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
     }
   }
 
-  public static void defineWorkspace(Drillbit drillbit, String pluginName,
+  private void defineWorkspace(Drillbit drillbit, String pluginName,
       String schemaName, String path, String defaultFormat, FormatPluginConfig format)
       throws ExecutionSetupException {
     final StoragePluginRegistry pluginRegistry = drillbit.getContext().getStorage();
@@ -500,19 +504,55 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
       .ifPresent(newWorkspaces::putAll);
     newWorkspaces.put(schemaName, newTmpWSConfig);
 
-    Map<String, FormatPluginConfig> newFormats = new HashMap<>(pluginConfig.getFormats());
+    Map<String, FormatPluginConfig> newFormats = new HashMap<>();
     Optional.ofNullable(pluginConfig.getFormats())
       .ifPresent(newFormats::putAll);
     Optional.ofNullable(format)
       .ifPresent(f -> newFormats.put(defaultFormat, f));
 
-    FileSystemConfig newPluginConfig = new FileSystemConfig(
-        pluginConfig.getConnection(),
-        pluginConfig.getConfig(),
-        newWorkspaces,
-        newFormats);
-    newPluginConfig.setEnabled(pluginConfig.isEnabled());
+    updatePlugin(pluginRegistry, pluginName, pluginConfig, newWorkspaces, newFormats);
+  }
 
+  public void defineFormat(String pluginName, String name, FormatPluginConfig config) {
+    defineFormats(pluginName, ImmutableMap.of(name, config));
+  }
+
+  public void defineFormats(String pluginName, Map<String, FormatPluginConfig> formats) {
+    for (Drillbit bit : drillbits()) {
+      try {
+        defineFormats(bit, pluginName, formats);
+      } catch (ExecutionSetupException e) {
+        throw new IllegalStateException(e);
+      }
+    }
+  }
+
+  private void defineFormats(Drillbit drillbit,
+                             String pluginName,
+                             Map<String, FormatPluginConfig> formats) throws ExecutionSetupException {
+    StoragePluginRegistry pluginRegistry = drillbit.getContext().getStorage();
+    FileSystemPlugin plugin = (FileSystemPlugin) pluginRegistry.getPlugin(pluginName);
+    FileSystemConfig pluginConfig = (FileSystemConfig) plugin.getConfig();
+
+    Map<String, FormatPluginConfig> newFormats = new HashMap<>();
+    Optional.ofNullable(pluginConfig.getFormats())
+      .ifPresent(newFormats::putAll);
+    newFormats.putAll(formats);
+
+    updatePlugin(pluginRegistry, pluginName, pluginConfig, null, newFormats);
+  }
+
+  private void updatePlugin(StoragePluginRegistry pluginRegistry,
+                            String pluginName,
+                            FileSystemConfig pluginConfig,
+                            Map<String, WorkspaceConfig> newWorkspaces,
+                            Map<String, FormatPluginConfig> newFormats) throws ExecutionSetupException {
+    FileSystemConfig newPluginConfig = new FileSystemConfig(
+      pluginConfig.getConnection(),
+      pluginConfig.getConfig(),
+      newWorkspaces == null ? pluginConfig.getWorkspaces() : newWorkspaces,
+      newFormats == null ? pluginConfig.getFormats() : newFormats);
+    newPluginConfig.setEnabled(pluginConfig.isEnabled());
 
     pluginRegistry.createOrUpdate(pluginName, newPluginConfig, true);
   }
@@ -580,8 +620,8 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
    * Return a cluster fixture built with standard options. This is a short-cut
    * for simple tests that don't need special setup.
    *
+   * @param dirTestWatcher directory test watcher
    * @return a cluster fixture with standard options
-   * @throws Exception if something goes wrong
    */
   public static ClusterFixture standardCluster(BaseDirTestWatcher dirTestWatcher) {
     return builder(dirTestWatcher).build();

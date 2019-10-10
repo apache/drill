@@ -17,44 +17,49 @@
  */
 package org.apache.drill.exec.store.easy.text.writer;
 
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.util.List;
-import java.util.Map;
-
+import com.univocity.parsers.csv.CsvFormat;
+import com.univocity.parsers.csv.CsvWriter;
+import com.univocity.parsers.csv.CsvWriterSettings;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.store.EventBasedRecordWriter.FieldConverter;
 import org.apache.drill.exec.store.StorageStrategy;
 import org.apache.drill.exec.store.StringOutputRecordWriter;
+import org.apache.drill.exec.store.easy.text.TextFormatPlugin;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
-import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 public class TextRecordWriter extends StringOutputRecordWriter {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TextRecordWriter.class);
+
+  private static final Logger logger = LoggerFactory.getLogger(TextRecordWriter.class);
 
   private final StorageStrategy storageStrategy;
+  private final Configuration fsConf;
 
+  private FileSystem fs;
   private Path cleanUpLocation;
-
   private String location;
   private String prefix;
-
-  private String fieldDelimiter;
   private String extension;
+  // indicates number of a file created by this writer: 0_0_{fileNumberIndex}.csv (ex: 0_0_0.csv)
+  private int fileNumberIndex;
 
-  private int index;
-  private PrintStream stream = null;
-  private FileSystem fs = null;
+  private CsvWriterSettings writerSettings;
+  private CsvWriter writer;
 
-  // Record write status
-  private boolean fRecordStarted = false; // true once the startRecord() is called until endRecord() is called
-  private StringBuilder currentRecord; // contains the current record separated by field delimiter
-
-  private Configuration fsConf;
+  // record write status: true once the startRecord() is called until endRecord() is called
+  private boolean fRecordStarted = false;
 
   public TextRecordWriter(BufferAllocator allocator, StorageStrategy storageStrategy, Configuration fsConf) {
     super(allocator);
@@ -66,24 +71,38 @@ public class TextRecordWriter extends StringOutputRecordWriter {
   public void init(Map<String, String> writerOptions) throws IOException {
     this.location = writerOptions.get("location");
     this.prefix = writerOptions.get("prefix");
-    this.fieldDelimiter = writerOptions.get("separator");
-    this.extension = writerOptions.get("extension");
 
     this.fs = FileSystem.get(fsConf);
+    String extension = writerOptions.get("extension");
+    this.extension = extension == null ? "" : "." + extension;
+    this.fileNumberIndex = 0;
 
-    this.currentRecord = new StringBuilder();
-    this.index = 0;
+    CsvWriterSettings writerSettings = new CsvWriterSettings();
+    writerSettings.setMaxColumns(TextFormatPlugin.MAXIMUM_NUMBER_COLUMNS);
+    writerSettings.setMaxCharsPerColumn(TextFormatPlugin.MAX_CHARS_PER_COLUMN);
+    writerSettings.setHeaderWritingEnabled(Boolean.parseBoolean(writerOptions.get("addHeader")));
+    writerSettings.setQuoteAllFields(Boolean.parseBoolean(writerOptions.get("forceQuotes")));
+    CsvFormat format = writerSettings.getFormat();
+    format.setLineSeparator(writerOptions.get("lineSeparator"));
+    format.setDelimiter(writerOptions.get("fieldDelimiter"));
+    format.setQuote(writerOptions.get("quote").charAt(0));
+    format.setQuoteEscape(writerOptions.get("escape").charAt(0));
+    format.setCharToEscapeQuoteEscaping(TextFormatPlugin.NULL_CHAR); // do not escape "escape" char
+
+    this.writerSettings = writerSettings;
+
+    logger.trace("Text writer settings: {}", this.writerSettings);
   }
 
   @Override
-  public void startNewSchema(List<String> columnNames) throws IOException {
+  public void startNewSchema(BatchSchema schema) throws IOException {
     // wrap up the current file
     cleanup();
 
     // open a new file for writing data with new schema
-    Path fileName = new Path(location, prefix + "_" + index + "." + extension);
+    Path fileName = new Path(location, String.format("%s_%s%s", prefix, fileNumberIndex, extension));
     try {
-      // drill text writer does not support partitions, so only one file can be created
+      // Drill text writer does not support partitions, so only one file can be created
       // and thus only one location should be deleted in case of abort
       // to ensure that our writer was the first to create output file,
       // we create empty output file first and fail if file exists
@@ -93,21 +112,26 @@ public class TextRecordWriter extends StringOutputRecordWriter {
       // we need to re-apply file permission
       DataOutputStream fos = fs.create(fileName);
       storageStrategy.applyToFile(fs, fileName);
+      logger.debug("Created file: {}.", fileName);
 
-      stream = new PrintStream(fos);
-      logger.debug("Created file: {}", fileName);
-    } catch (IOException ex) {
-      logger.error("Unable to create file: " + fileName, ex);
-      throw ex;
+      // increment file number index
+      fileNumberIndex++;
+
+      this.writer = new CsvWriter(fos, writerSettings);
+    } catch (IOException e) {
+      throw new IOException(String.format("Unable to create file: %s.", fileName), e);
     }
-    index++;
 
-    stream.println(Joiner.on(fieldDelimiter).join(columnNames));
+    if (writerSettings.isHeaderWritingEnabled()) {
+      writer.writeHeaders(StreamSupport.stream(schema.spliterator(), false)
+        .map(MaterializedField::getName)
+        .collect(Collectors.toList()));
+    }
   }
 
   @Override
-  public void addField(int fieldId, String value) throws IOException {
-    currentRecord.append(value + fieldDelimiter);
+  public void addField(int fieldId, String value) {
+    writer.addValue(value);
   }
 
   @Override
@@ -115,7 +139,6 @@ public class TextRecordWriter extends StringOutputRecordWriter {
     if (fRecordStarted) {
       throw new IOException("Previous record is not written completely");
     }
-
     fRecordStarted = true;
   }
 
@@ -125,13 +148,7 @@ public class TextRecordWriter extends StringOutputRecordWriter {
       throw new IOException("No record is in writing");
     }
 
-    // remove the extra delimiter at the end
-    currentRecord.deleteCharAt(currentRecord.length()-fieldDelimiter.length());
-
-    stream.println(currentRecord.toString());
-
-    // reset current record status
-    currentRecord.delete(0, currentRecord.length());
+    writer.writeValuesToRow();
     fRecordStarted = false;
   }
 
@@ -164,11 +181,16 @@ public class TextRecordWriter extends StringOutputRecordWriter {
 
   @Override
   public void cleanup() throws IOException {
-    super.cleanup();
-    if (stream != null) {
-      stream.close();
-      stream = null;
-      logger.debug("closing file");
+    fRecordStarted = false;
+    if (writer != null) {
+      try {
+        writer.close();
+        writer = null;
+        logger.debug("Closed text writer for file: {}.", cleanUpLocation);
+      } catch (IllegalStateException e) {
+        throw new IOException(String.format("Unable to close text writer for file %s: %s",
+          cleanUpLocation, e.getMessage()), e);
+      }
     }
   }
 
@@ -180,5 +202,4 @@ public class TextRecordWriter extends StringOutputRecordWriter {
           cleanUpLocation.toUri().getPath(), fs.getUri());
     }
   }
-
 }

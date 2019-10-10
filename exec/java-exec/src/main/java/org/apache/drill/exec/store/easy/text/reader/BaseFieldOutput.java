@@ -20,7 +20,7 @@ package org.apache.drill.exec.store.easy.text.reader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 
-public abstract class BaseFieldOutput extends TextOutput {
+public abstract class BaseFieldOutput implements TextOutput {
 
   /**
    * Width of the per-field data buffer. Fields can be larger.

@@ -17,101 +17,130 @@
  */
 package org.apache.drill.exec.store.easy.text.reader;
 
-import java.io.IOException;
-
 import com.univocity.parsers.common.ParsingContext;
+import com.univocity.parsers.common.record.Record;
+import com.univocity.parsers.common.record.RecordMetaData;
+
+import java.util.Collections;
+import java.util.Map;
 
 class TextParsingContext implements ParsingContext {
 
   private final TextInput input;
   private final TextOutput output;
-  protected boolean stopped;
 
-  private int[] extractedIndexes;
+  private boolean stopped;
 
-  public TextParsingContext(TextInput input, TextOutput output) {
+  TextParsingContext(TextInput input, TextOutput output) {
     this.input = input;
     this.output = output;
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  public boolean isFull() {
+    return output.isFull();
+  }
+
+  public void stop(boolean stopped) {
+    this.stopped = stopped;
+  }
+
   @Override
   public void stop() {
     stopped = true;
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public boolean isStopped() {
     return stopped;
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  @Override
+  public int errorContentLength() {
+    return -1;
+  }
+
+  @Override
+  public Record toRecord(String[] row) {
+    return null;
+  }
+
+  @Override
+  public RecordMetaData recordMetaData() {
+    return null;
+  }
+
   @Override
   public long currentLine() {
     return input.lineCount();
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public long currentChar() {
     return input.charCount();
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  @Override
+  public void skipLines(long lines) {
+  }
+
+  @Override
+  public String[] parsedHeaders() {
+    return new String[0];
+  }
+
   @Override
   public int currentColumn() {
     return -1;
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public String[] headers() {
-    return new String[]{};
+    return new String[0];
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  @Override
+  public String[] selectedHeaders() {
+    return new String[0];
+  }
+
   @Override
   public int[] extractedFieldIndexes() {
-    return extractedIndexes;
+    return new int[0];
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public long currentRecord() {
     return output.getRecordCount();
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public String currentParsedContent() {
-    try {
-      return input.getStringSinceMarkForError();
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    return input.getStringSinceMarkForError();
   }
 
   @Override
-  public void skipLines(int lines) {
+  public int currentParsedContentLength() {
+    return input.getStringSinceMarkForError().toCharArray().length;
+  }
+
+  @Override
+  public String fieldContentOnError() {
+    return null;
+  }
+
+  @Override
+  public Map<Long, String> comments() {
+    return Collections.emptyMap();
+  }
+
+  @Override
+  public String lastComment() {
+    return null;
+  }
+
+  @Override
+  public char[] lineSeparator() {
+    return new char[0];
   }
 
   @Override
@@ -119,8 +148,14 @@ class TextParsingContext implements ParsingContext {
     return false;
   }
 
-  public boolean isFull() {
-    return output.isFull();
+  @Override
+  public int indexOf(String header) {
+    return -1;
+  }
+
+  @Override
+  public int indexOf(Enum<?> header) {
+    return -1;
   }
 }
 
