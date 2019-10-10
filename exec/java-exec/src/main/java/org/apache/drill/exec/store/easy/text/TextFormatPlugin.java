@@ -17,11 +17,11 @@
  */
 package org.apache.drill.exec.store.easy.text;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.common.exceptions.ChildErrorContext;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
@@ -31,9 +31,9 @@ import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.metastore.MetadataProviderManager;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
-import org.apache.drill.exec.metastore.MetadataProviderManager;
 import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.physical.base.ScanStats.GroupScanProperty;
 import org.apache.drill.exec.physical.impl.scan.columns.ColumnsScanFramework.ColumnsScanBuilder;
@@ -58,14 +58,13 @@ import org.apache.drill.exec.store.easy.text.reader.TextParsingSettings;
 import org.apache.drill.exec.store.easy.text.writer.TextRecordWriter;
 import org.apache.drill.exec.store.schedule.CompleteFileWork;
 import org.apache.drill.exec.vector.accessor.convert.AbstractConvertFromString;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.hadoop.conf.Configuration;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Text format plugin for CSV and other delimited text formats.
@@ -82,6 +81,12 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 
 public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextFormatConfig> {
   private final static String PLUGIN_NAME = "text";
+
+  public static final int MAXIMUM_NUMBER_COLUMNS = 64 * 1024;
+
+  public static final int MAX_CHARS_PER_COLUMN = Character.MAX_VALUE;
+
+  public static final char NULL_CHAR = '\0';
 
   // Provided schema table properties unique to this plugin. If specified
   // in the provided schema, they override the corresponding property in
@@ -103,7 +108,7 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
   @JsonInclude(Include.NON_DEFAULT)
   public static class TextFormatConfig implements FormatPluginConfig {
 
-    public List<String> extensions = ImmutableList.of();
+    public List<String> extensions = Collections.emptyList();
     public String lineDelimiter = "\n";
     public char fieldDelimiter = '\n';
     public char quote = '"';
@@ -124,11 +129,6 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
 
     @JsonIgnore
     public boolean isHeaderExtractionEnabled() { return extractHeader; }
-
-    @JsonIgnore
-    public String getFieldDelimiterAsString(){
-      return new String(new char[]{fieldDelimiter});
-    }
 
     @Deprecated
     @JsonProperty("delimiter")
@@ -312,14 +312,25 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
 
   @Override
   public RecordWriter getRecordWriter(final FragmentContext context, final EasyWriter writer) throws IOException {
-    final Map<String, String> options = new HashMap<>();
+    Map<String, String> options = new HashMap<>();
 
     options.put("location", writer.getLocation());
+
+    TextFormatConfig config = getConfig();
+    List<String> extensions = config.getExtensions();
+    options.put("extension", extensions == null || extensions.isEmpty() ? null : extensions.get(0));
+
     FragmentHandle handle = context.getHandle();
     String fragmentId = String.format("%d_%d", handle.getMajorFragmentId(), handle.getMinorFragmentId());
     options.put("prefix", fragmentId);
-    options.put("separator", getConfig().getFieldDelimiterAsString());
-    options.put("extension", getConfig().getExtensions().get(0));
+
+    options.put("addHeader", Boolean.toString(context.getOptions().getBoolean(ExecConstants.TEXT_WRITER_ADD_HEADER)));
+    options.put("forceQuotes", Boolean.toString(context.getOptions().getBoolean(ExecConstants.TEXT_WRITER_FORCE_QUOTES)));
+
+    options.put("lineSeparator", config.getLineDelimiter());
+    options.put("fieldDelimiter", String.valueOf(config.getFieldDelimiter()));
+    options.put("quote", String.valueOf(config.getQuote()));
+    options.put("escape", String.valueOf(config.getEscape()));
 
     RecordWriter recordWriter = new TextRecordWriter(
         context.getAllocator(), writer.getStorageStrategy(), writer.getFormatPlugin().getFsConf());

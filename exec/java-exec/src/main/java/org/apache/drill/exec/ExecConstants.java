@@ -431,6 +431,13 @@ public final class ExecConstants {
   public static final DoubleValidator TEXT_ESTIMATED_ROW_SIZE = new RangeDoubleValidator("store.text.estimated_row_size_bytes", 1, Long.MAX_VALUE,
       new OptionDescription("Estimate of the row size in a delimited text file, such as csv. The closer to actual, the better the query plan. Used for all csv files in the system/session where the value is set. Impacts the decision to plan a broadcast join or not."));
 
+  public static final String TEXT_WRITER_ADD_HEADER = "store.text.writer.add_header";
+  public static final BooleanValidator TEXT_WRITER_ADD_HEADER_VALIDATOR = new BooleanValidator(TEXT_WRITER_ADD_HEADER,
+    new OptionDescription("Enables the TEXT writer to write header in newly created file. Default is true. (Drill 1.17+)"));
+
+  public static final String TEXT_WRITER_FORCE_QUOTES = "store.text.writer.force_quotes";
+  public static final BooleanValidator TEXT_WRITER_FORCE_QUOTES_VALIDATOR = new BooleanValidator(TEXT_WRITER_FORCE_QUOTES,
+    new OptionDescription("Enables the TEXT writer to enclose in quotes all fields. Default is false. (Drill 1.17+)"));
 
   /**
    * Json writer option for writing `NaN` and `Infinity` tokens as numbers (not enclosed with double quotes)

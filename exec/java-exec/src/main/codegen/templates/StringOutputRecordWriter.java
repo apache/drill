@@ -43,7 +43,7 @@ import java.util.Map;
 
 /**
  * Abstract implementation of RecordWriter interface which exposes interface:
- *    {@link #writeHeader(List)}
+ *    {@link #startNewSchema(BatchSchema)}
  *    {@link #addField(int,String)}
  * to output the data in string format instead of implementing addField for each type holder.
  *
@@ -60,13 +60,7 @@ public abstract class StringOutputRecordWriter extends AbstractRecordWriter {
 
   @Override
   public void updateSchema(VectorAccessible batch) throws IOException {
-    BatchSchema schema = batch.getSchema();
-    List<String> columnNames = Lists.newArrayList();
-    for (int i=0; i < schema.getFieldCount(); i++) {
-      columnNames.add(schema.getColumn(i).getName());
-    }
-
-    startNewSchema(columnNames);
+    startNewSchema(batch.getSchema());
   }
 
   @Override
@@ -160,6 +154,6 @@ public abstract class StringOutputRecordWriter extends AbstractRecordWriter {
   public void cleanup() throws IOException {
   }
 
-  public abstract void startNewSchema(List<String> columnNames) throws IOException;
+  public abstract void startNewSchema(BatchSchema schema) throws IOException;
   public abstract void addField(int fieldId, String value) throws IOException;
 }

@@ -33,7 +33,7 @@ public class TextParsingSettings {
   private final byte delimiter;
   private final byte comment;
 
-  private final long maxCharsPerColumn = Character.MAX_VALUE;
+  private final long maxCharsPerColumn = TextFormatPlugin.MAX_CHARS_PER_COLUMN;
   private final byte normalizedNewLine = b('\n');
   private final byte[] newLineDelimiter;
   private final boolean ignoreLeadingWhitespaces = false;

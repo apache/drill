@@ -17,13 +17,14 @@
  */
 package org.apache.drill.exec.store.easy.text.reader;
 
-import java.io.IOException;
-
-import org.apache.drill.common.exceptions.UserException;
-
 import com.univocity.parsers.common.TextParsingException;
-
 import io.netty.buffer.DrillBuf;
+import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.store.easy.text.TextFormatPlugin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
 
 /*******************************************************************************
  * Portions Copyright 2014 uniVocity Software Pty Ltd
@@ -34,11 +35,10 @@ import io.netty.buffer.DrillBuf;
  * DrillBuf support.
  */
 public final class TextReader {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TextReader.class);
 
-  private static final byte NULL_BYTE = (byte) '\0';
+  private static final Logger logger = LoggerFactory.getLogger(TextReader.class);
 
-  public static final int MAXIMUM_NUMBER_COLUMNS = 64 * 1024;
+  private static final byte NULL_BYTE = (byte) TextFormatPlugin.NULL_CHAR;
 
   private final TextParsingContext context;
 
@@ -102,7 +102,7 @@ public final class TextReader {
    * any ASCII <= ' ' is considered a white space. However since byte in JAVA is signed
    * we have an additional check to make sure its not negative
    */
-  static final boolean isWhite(byte b){
+  static boolean isWhite(byte b){
     return b <= ' ' && b > -1;
   }
 
@@ -252,12 +252,15 @@ public final class TextReader {
           prev = NULL_BYTE;
         } else {
           prev = ch;
+          // read next char taking into account it can be new line indicator
+          // to ensure that custom new line will be replaced with normalized one
+          ch = input.nextChar();
+          continue;
         }
       } else {
         if (prev == quoteEscape) {
           output.append(prev);
-        }
-        else if (prev == quote) { // unescaped quote detected
+        } else if (prev == quote) { // unescaped quote detected
           if (parseUnescapedQuotes) {
             output.append(prev);
             break;
@@ -326,7 +329,7 @@ public final class TextReader {
    * @return true if more rows can be read, false if not
    * @throws IOException for input file read errors
    */
-  private final boolean parseField() throws IOException {
+  private boolean parseField() throws IOException {
 
     output.startField(fieldIndex++);
 
@@ -375,7 +378,7 @@ public final class TextReader {
    * @throws IOException for input file read errors
    */
   public final void start() throws IOException {
-    context.stopped = false;
+    context.stop(false);
     input.start();
   }
 
@@ -386,7 +389,7 @@ public final class TextReader {
    */
   public final boolean parseNext() throws IOException {
     try {
-      while (! context.stopped) {
+      while (!context.isStopped()) {
         ch = input.nextChar();
         if (ch == comment) {
           input.skipLines(1);

@@ -24,8 +24,10 @@ import org.apache.drill.exec.physical.impl.scan.project.ScanLevelProjection;
 import org.apache.drill.exec.physical.impl.scan.project.ScanLevelProjection.ScanProjectionParser;
 import org.apache.drill.exec.physical.resultSet.project.RequestedColumnImpl;
 import org.apache.drill.exec.physical.resultSet.project.RequestedTuple.RequestedColumn;
-import org.apache.drill.exec.store.easy.text.reader.TextReader;
+import org.apache.drill.exec.store.easy.text.TextFormatPlugin;
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Parses the `columns` array. Doing so is surprisingly complex.
@@ -68,7 +70,8 @@ import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTes
  */
 
 public class ColumnsArrayParser implements ScanProjectionParser {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ColumnsArrayParser.class);
+
+  private static final Logger logger = LoggerFactory.getLogger(ColumnsArrayParser.class);
 
   // Config
 
@@ -151,13 +154,13 @@ public class ColumnsArrayParser implements ScanProjectionParser {
 
     if (inCol.isArray()) {
       int maxIndex = inCol.maxIndex();
-      if (maxIndex > TextReader.MAXIMUM_NUMBER_COLUMNS) {
+      if (maxIndex > TextFormatPlugin.MAXIMUM_NUMBER_COLUMNS) {
         throw UserException
           .validationError()
           .message("`columns`[%d] index out of bounds, max supported size is %d",
-              maxIndex, TextReader.MAXIMUM_NUMBER_COLUMNS)
+              maxIndex, TextFormatPlugin.MAXIMUM_NUMBER_COLUMNS)
           .addContext("Column:", inCol.name())
-          .addContext("Maximum index:", TextReader.MAXIMUM_NUMBER_COLUMNS)
+          .addContext("Maximum index:", TextFormatPlugin.MAXIMUM_NUMBER_COLUMNS)
           .addContext("Actual index:", maxIndex)
           .addContext(builder.context())
           .build(logger);

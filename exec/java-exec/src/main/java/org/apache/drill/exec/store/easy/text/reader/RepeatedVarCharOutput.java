@@ -19,8 +19,11 @@ package org.apache.drill.exec.store.easy.text.reader;
 
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
+import org.apache.drill.exec.store.easy.text.TextFormatPlugin;
 import org.apache.drill.exec.vector.accessor.ArrayWriter;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Class is responsible for generating record batches for text file inputs. We generate
@@ -28,23 +31,23 @@ import org.apache.drill.exec.vector.accessor.ScalarWriter;
  * value within the vector containing all the fields in the record as individual array elements.
  */
 public class RepeatedVarCharOutput extends BaseFieldOutput {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseFieldOutput.class);
+
+  private static final Logger logger = LoggerFactory.getLogger(BaseFieldOutput.class);
 
   private final ScalarWriter columnWriter;
-  private final ArrayWriter arrayWriter;
 
   /**
    * Provide the row set loader (which must have just one repeated Varchar
    * column) and an optional array projection mask.
-   * @param projectionMask
-   * @param tupleLoader
+   *
+   * @param loader row set loader
+   * @param projectionMask array projection mask
    */
-
   public RepeatedVarCharOutput(RowSetLoader loader, boolean[] projectionMask) {
     super(loader,
         maxField(loader, projectionMask),
         projectionMask);
-    arrayWriter = writer.array(0);
+    ArrayWriter arrayWriter = writer.array(0);
     columnWriter = arrayWriter.scalar();
   }
 
@@ -61,7 +64,7 @@ public class RepeatedVarCharOutput extends BaseFieldOutput {
     // possible fields.
 
     if (projectionMask == null) {
-      return TextReader.MAXIMUM_NUMBER_COLUMNS;
+      return TextFormatPlugin.MAXIMUM_NUMBER_COLUMNS;
     }
 
     // Else, this is a SELECT columns[x], columns[y], ... query.
@@ -110,11 +113,11 @@ public class RepeatedVarCharOutput extends BaseFieldOutput {
       // this only if all fields are selected; the same query will succeed if
       // the user does a COUNT(*) or SELECT columns[x], columns[y], ...
 
-      if (currentFieldIndex > TextReader.MAXIMUM_NUMBER_COLUMNS) {
+      if (currentFieldIndex > TextFormatPlugin.MAXIMUM_NUMBER_COLUMNS) {
         throw UserException
           .unsupportedError()
           .message("Text file contains too many fields")
-          .addContext("Limit", TextReader.MAXIMUM_NUMBER_COLUMNS)
+          .addContext("Limit", TextFormatPlugin.MAXIMUM_NUMBER_COLUMNS)
           .build(logger);
       }
 

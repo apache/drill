@@ -186,6 +186,8 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
       new OptionDefinition(ExecConstants.STORE_TABLE_USE_SCHEMA_FILE_VALIDATOR),
       new OptionDefinition(ExecConstants.ENABLE_UNION_TYPE),
       new OptionDefinition(ExecConstants.TEXT_ESTIMATED_ROW_SIZE),
+      new OptionDefinition(ExecConstants.TEXT_WRITER_ADD_HEADER_VALIDATOR),
+      new OptionDefinition(ExecConstants.TEXT_WRITER_FORCE_QUOTES_VALIDATOR),
       new OptionDefinition(ExecConstants.JSON_EXTENDED_TYPES),
       new OptionDefinition(ExecConstants.JSON_WRITER_UGLIFY),
       new OptionDefinition(ExecConstants.JSON_WRITER_SKIPNULLFIELDS),

@@ -17,17 +17,18 @@
  */
 package org.apache.drill.exec.store.easy.text.reader;
 
+import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
+import org.apache.hadoop.fs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import org.apache.drill.common.exceptions.UserException;
-import org.apache.hadoop.fs.Path;
-
-import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
 
 /**
  * Text output that implements a header reader/parser.
@@ -45,8 +46,9 @@ import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
 // and read a single row, there is no good reason to try to use
 // value vectors and direct memory for this task.
 
-public class HeaderBuilder extends TextOutput {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HeaderBuilder.class);
+public class HeaderBuilder implements TextOutput {
+
+  private static final Logger logger = LoggerFactory.getLogger(HeaderBuilder.class);
 
   /**
    * Maximum Drill symbol length, as enforced for headers.
@@ -71,9 +73,9 @@ public class HeaderBuilder extends TextOutput {
 
   public static final String ANONYMOUS_COLUMN_PREFIX = "column_";
 
-  public final Path filePath;
-  public final List<String> headers = new ArrayList<>();
-  public final ByteBuffer currentField = ByteBuffer.allocate(MAX_HEADER_LEN);
+  private final Path filePath;
+  private final List<String> headers = new ArrayList<>();
+  private final ByteBuffer currentField = ByteBuffer.allocate(MAX_HEADER_LEN);
 
   public HeaderBuilder(Path filePath) {
     this.filePath = filePath;
@@ -214,7 +216,7 @@ public class HeaderBuilder extends TextOutput {
 
     // Force headers to be unique.
 
-    final Set<String> idents = new HashSet<String>();
+    final Set<String> idents = new HashSet<>();
     for (int i = 0; i < headers.size(); i++) {
       String header = headers.get(i);
       String key = header.toLowerCase();
@@ -254,7 +256,7 @@ public class HeaderBuilder extends TextOutput {
     // Just return the headers: any needed checks were done in
     // finishRecord()
 
-    final String array[] = new String[headers.size()];
+    final String[] array = new String[headers.size()];
     return headers.toArray(array);
   }
 
