@@ -219,6 +219,10 @@ public class Packet {
     return formatFlags(getFlags());
   }
 
+  public void setIsCorrupt(boolean value) {
+    isCorrupt = value;
+  }
+
   public static String formatFlags(int flags) {
     int mask = 0x100;
     StringBuilder r = new StringBuilder();

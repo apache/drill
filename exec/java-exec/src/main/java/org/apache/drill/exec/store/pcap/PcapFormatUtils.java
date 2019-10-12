@@ -22,6 +22,7 @@ import org.apache.drill.shaded.guava.com.google.common.primitives.Shorts;
 
 public class PcapFormatUtils {
 
+  private static final String EMPTY_PACKET_PLACEHOLDER = "[]";
   /**
    *
    * @param byteOrder true for forward file order, false fore revers file order
@@ -74,6 +75,10 @@ public class PcapFormatUtils {
   }
 
   public static String parseBytesToASCII(byte[] data) {
+    if (data == null) {
+      return EMPTY_PACKET_PLACEHOLDER;
+    }
+
     return new String(data).trim()
         .replaceAll("\\P{Print}", ".");
   }

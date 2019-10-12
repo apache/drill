@@ -17,19 +17,41 @@
  */
 package org.apache.drill.exec.store.pcap;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.common.logical.FormatPluginConfig;
+import org.apache.drill.shaded.guava.com.google.common.base.Objects;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 
-@JsonTypeName("pcap")
+import java.util.Arrays;
+import java.util.List;
+
+@JsonTypeName(PcapFormatPlugin.PLUGIN_NAME)
 public class PcapFormatConfig implements FormatPluginConfig {
+
+  private static final List<String> DEFAULT_EXTS = ImmutableList.of(PcapFormatPlugin.PLUGIN_NAME);
+
+  public List<String> extensions;
+
+  @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+  public List<String> getExtensions() {
+    return extensions == null ? DEFAULT_EXTS : extensions;
+  }
 
   @Override
   public int hashCode() {
-    return 0;
+    return Arrays.hashCode(new Object[]{extensions});
   }
 
   @Override
   public boolean equals(Object obj) {
-    return obj instanceof PcapFormatConfig;
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    PcapFormatConfig other = (PcapFormatConfig) obj;
+    return Objects.equal(extensions, other.extensions);
   }
 }

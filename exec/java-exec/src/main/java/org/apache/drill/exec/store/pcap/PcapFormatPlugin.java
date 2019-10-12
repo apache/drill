@@ -17,112 +17,70 @@
  */
 package org.apache.drill.exec.store.pcap;
 
-import org.apache.drill.exec.planner.common.DrillStatsTable;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
+import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileReaderFactory;
+import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileScanBuilder;
+import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
+import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.store.dfs.easy.EasySubScan;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
-import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.store.RecordReader;
-import org.apache.drill.exec.store.RecordWriter;
-import org.apache.drill.exec.store.SchemaConfig;
-import org.apache.drill.exec.store.dfs.BasicFormatMatcher;
-import org.apache.drill.exec.store.dfs.DrillFileSystem;
-import org.apache.drill.exec.store.dfs.FileSelection;
-import org.apache.drill.exec.store.dfs.FileSystemPlugin;
-import org.apache.drill.exec.store.dfs.FormatMatcher;
-import org.apache.drill.exec.store.dfs.FormatSelection;
-import org.apache.drill.exec.store.dfs.MagicString;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
-import org.apache.drill.exec.store.dfs.easy.EasyWriter;
-import org.apache.drill.exec.store.dfs.easy.FileWork;
 import org.apache.hadoop.conf.Configuration;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.regex.Pattern;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
+import org.apache.drill.exec.store.pcap.PcapBatchReader.PcapReaderConfig;
 
 public class PcapFormatPlugin extends EasyFormatPlugin<PcapFormatConfig> {
+  public static final String PLUGIN_NAME = "pcap";
 
-  private final PcapFormatMatcher matcher;
+  private static class PcapReaderFactory extends FileReaderFactory {
+    private final PcapReaderConfig readerConfig;
 
-  public PcapFormatPlugin(String name, DrillbitContext context, Configuration fsConf,
-                          StoragePluginConfig storagePluginConfig) {
-    this(name, context, fsConf, storagePluginConfig, new PcapFormatConfig());
-  }
-
-  public PcapFormatPlugin(String name, DrillbitContext context, Configuration fsConf, StoragePluginConfig config, PcapFormatConfig formatPluginConfig) {
-    super(name, context, fsConf, config, formatPluginConfig, true, false, true, false, Lists.newArrayList("pcap"), "pcap");
-    this.matcher = new PcapFormatMatcher(this);
-  }
-
-  @Override
-  public boolean supportsPushDown() {
-    return true;
-  }
-
-  @Override
-  public RecordReader getRecordReader(FragmentContext context, DrillFileSystem dfs, FileWork fileWork, List<SchemaPath> columns, String userName) throws ExecutionSetupException {
-    return new PcapRecordReader(fileWork.getPath(), dfs, columns);
-  }
-
-  @Override
-  public RecordWriter getRecordWriter(FragmentContext context, EasyWriter writer) throws IOException {
-    throw new UnsupportedOperationException("unimplemented");
-  }
-
-  @Override
-  public int getReaderOperatorType() {
-    return UserBitShared.CoreOperatorType.PCAP_SUB_SCAN_VALUE;
-  }
-
-  @Override
-  public int getWriterOperatorType() {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public FormatMatcher getMatcher() {
-    return this.matcher;
-  }
-
-  @Override
-  public boolean supportsStatistics() {
-    return false;
-  }
-
-  @Override
-  public DrillStatsTable.TableStatistics readStatistics(FileSystem fs, Path statsTablePath) throws IOException {
-    return null;
-  }
-
-  @Override
-  public void writeStatistics(DrillStatsTable.TableStatistics statistics, FileSystem fs, Path statsTablePath) throws IOException {
-
-  }
-
-  private static class PcapFormatMatcher extends BasicFormatMatcher {
-
-    public PcapFormatMatcher(PcapFormatPlugin plugin) {
-      super(plugin, ImmutableList.of(Pattern.compile(".*\\.pcap$")), ImmutableList.<MagicString>of());
+    public PcapReaderFactory(PcapReaderConfig config) {
+      readerConfig = config;
     }
 
     @Override
-    public DrillTable isReadable(DrillFileSystem fs,
-                                 FileSelection selection, FileSystemPlugin fsPlugin,
-                                 String storageEngineName, SchemaConfig schemaConfig) throws IOException {
-      if (isFileReadable(fs, selection.getFirstPath(fs))) {
-        return new PcapDrillTable(storageEngineName, fsPlugin, schemaConfig.getUserName(),
-            new FormatSelection(plugin.getConfig(), selection));
-      }
-      return null;
+    public ManagedReader<? extends FileSchemaNegotiator> newReader() {
+      return new PcapBatchReader(readerConfig);
     }
   }
+  public PcapFormatPlugin(String name, DrillbitContext context,
+                           Configuration fsConf, StoragePluginConfig storageConfig,
+                           PcapFormatConfig formatConfig) {
+    super(name, easyConfig(fsConf, formatConfig), context, storageConfig, formatConfig);
+  }
 
+  private static EasyFormatConfig easyConfig(Configuration fsConf, PcapFormatConfig pluginConfig) {
+    EasyFormatConfig config = new EasyFormatConfig();
+    config.readable = true;
+    config.writable = false;
+    config.blockSplittable = true;
+    config.compressible = true;
+    config.supportsProjectPushdown = true;
+    config.extensions = pluginConfig.getExtensions();
+    config.fsConf = fsConf;
+    config.defaultName = PLUGIN_NAME;
+    config.readerOperatorType = UserBitShared.CoreOperatorType.PCAP_SUB_SCAN_VALUE;
+    config.useEnhancedScan = true;
+    return config;
+  }
+
+  @Override
+  public ManagedReader<? extends FileSchemaNegotiator> newBatchReader(
+    EasySubScan scan, OptionManager options) throws ExecutionSetupException {
+    return new PcapBatchReader(new PcapReaderConfig(this));
+  }
+
+  @Override
+  protected FileScanBuilder frameworkBuilder(OptionManager options, EasySubScan scan) throws ExecutionSetupException {
+    FileScanBuilder builder = new FileScanBuilder();
+    builder.setReaderFactory(new PcapReaderFactory(new PcapReaderConfig(this)));
+    initScanBuilder(builder, scan);
+    builder.setNullType(Types.optional(TypeProtos.MinorType.VARCHAR));
+    return builder;
+  }
 }
