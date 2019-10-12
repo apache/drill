@@ -17,7 +17,10 @@
  */
 package org.apache.drill.exec.store.pcap.schema;
 
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.pcap.dto.ColumnDto;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,15 +29,22 @@ import java.util.List;
 public class Schema {
 
   private final List<ColumnDto> columns = new ArrayList<>();
+  private final MinorType typeMap[] = new MinorType[PcapTypes.values().length];
 
   public Schema() {
     setupStructure();
   }
 
   private void setupStructure() {
+    typeMap[PcapTypes.BOOLEAN.ordinal()] = MinorType.BIT;
+    typeMap[PcapTypes.INTEGER.ordinal()] = MinorType.INT;
+    typeMap[PcapTypes.STRING.ordinal()] = MinorType.VARCHAR;
+    typeMap[PcapTypes.LONG.ordinal()] = MinorType.BIGINT;
+    typeMap[PcapTypes.TIMESTAMP.ordinal()] = MinorType.TIMESTAMP;
+
     columns.add(new ColumnDto("type", PcapTypes.STRING));
     columns.add(new ColumnDto("network", PcapTypes.INTEGER));
-    columns.add(new ColumnDto("timestamp", PcapTypes.TIMESTAMP));
+    columns.add(new ColumnDto("packet_timestamp", PcapTypes.TIMESTAMP));
     columns.add(new ColumnDto("timestamp_micro", PcapTypes.LONG));
     columns.add(new ColumnDto("src_ip", PcapTypes.STRING));
     columns.add(new ColumnDto("dst_ip", PcapTypes.STRING));
@@ -43,11 +53,12 @@ public class Schema {
     columns.add(new ColumnDto("src_mac_address", PcapTypes.STRING));
     columns.add(new ColumnDto("dst_mac_address", PcapTypes.STRING));
     columns.add(new ColumnDto("tcp_session", PcapTypes.LONG));
+    columns.add(new ColumnDto("tcp_sequence", PcapTypes.INTEGER));
     columns.add(new ColumnDto("tcp_ack", PcapTypes.BOOLEAN));
     columns.add(new ColumnDto("tcp_flags", PcapTypes.INTEGER));
     columns.add(new ColumnDto("tcp_flags_ns", PcapTypes.BOOLEAN));
     columns.add(new ColumnDto("tcp_flags_cwr", PcapTypes.BOOLEAN));
-    columns.add(new ColumnDto("tcp_flags_ece ", PcapTypes.BOOLEAN ));
+    columns.add(new ColumnDto("tcp_flags_ece", PcapTypes.BOOLEAN ));
     columns.add(new ColumnDto("tcp_flags_ece_ecn_capable", PcapTypes.BOOLEAN ));
     columns.add(new ColumnDto("tcp_flags_ece_congestion_experienced", PcapTypes.BOOLEAN ));
     columns.add(new ColumnDto("tcp_flags_urg", PcapTypes.BOOLEAN ));
@@ -77,5 +88,13 @@ public class Schema {
 
   public int getNumberOfColumns() {
     return columns.size();
+  }
+
+  public TupleMetadata buildSchema(SchemaBuilder builder) {
+    for (ColumnDto column : columns) {
+      builder.addNullable(column.getColumnName(), typeMap[column.getColumnType().ordinal()]);
+    }
+
+    return builder.buildSchema();
   }
 }
