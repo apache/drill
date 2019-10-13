@@ -19,13 +19,17 @@ package org.apache.drill.exec.physical.impl.validate;
 
 import static org.apache.drill.test.rowSet.RowSetUtilities.intArray;
 import static org.apache.drill.test.rowSet.RowSetUtilities.strArray;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.physical.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
@@ -33,38 +37,37 @@ import org.apache.drill.exec.vector.RepeatedVarCharVector;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarCharVector;
-import org.apache.drill.test.BaseDirTestWatcher;
-import org.apache.drill.test.LogFixture;
-import org.apache.drill.test.OperatorFixture;
-import org.apache.drill.exec.physical.rowSet.RowSet.SingleRowSet;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
+import org.apache.drill.test.SubOperatorTest;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-import ch.qos.logback.classic.Level;
+@Category(RowSetTests.class)
+public class TestBatchValidator extends SubOperatorTest {
 
-public class TestBatchValidator /* TODO: extends SubOperatorTest */ {
+  public static class CapturingReporter implements BatchValidator.ErrorReporter {
 
-  protected static OperatorFixture fixture;
-  protected static LogFixture logFixture;
+    public List<String> errors = new ArrayList<>();
 
-  @ClassRule
-  public static final BaseDirTestWatcher dirTestWatcher = new BaseDirTestWatcher();
+    @Override
+    public void error(String name, ValueVector vector, String msg) {
+      error(String.format("%s (%s): %s",
+          name, vector.getClass().getSimpleName(), msg));
+    }
 
-  @BeforeClass
-  public static void setUpBeforeClass() throws Exception {
-    logFixture = LogFixture.builder()
-        .toConsole()
-        .logger(BatchValidator.class, Level.TRACE)
-        .build();
-    fixture = OperatorFixture.standardFixture(dirTestWatcher);
-  }
+    @Override
+    public void warn(String name, ValueVector vector, String msg) {
+      error(name, vector, msg);
+    }
 
-  @AfterClass
-  public static void tearDownAfterClass() throws Exception {
-    fixture.close();
-    logFixture.close();
+    @Override
+    public void error(String msg) {
+      errors.add(msg);
+    }
+
+    @Override
+    public int errorCount() {
+      return errors.size();
+    }
   }
 
   @Test
@@ -81,9 +84,6 @@ public class TestBatchValidator /* TODO: extends SubOperatorTest */ {
         .addRow(40, 140)
         .build();
 
-    BatchValidator validator = new BatchValidator(batch.vectorAccessible(), true);
-    validator.validate();
-    assertTrue(validator.errors().isEmpty());
     batch.clear();
   }
 
@@ -101,9 +101,6 @@ public class TestBatchValidator /* TODO: extends SubOperatorTest */ {
         .addRow("col4.1", "col4.2")
         .build();
 
-    BatchValidator validator = new BatchValidator(batch.vectorAccessible(), true);
-    validator.validate();
-    assertTrue(validator.errors().isEmpty());
     batch.clear();
   }
 
@@ -120,9 +117,7 @@ public class TestBatchValidator /* TODO: extends SubOperatorTest */ {
         .addRow(intArray(4), strArray("dino"))
         .build();
 
-    BatchValidator validator = new BatchValidator(batch.vectorAccessible(), true);
-    validator.validate();
-    assertTrue(validator.errors().isEmpty());
+    assertTrue(BatchValidator.validate(batch.vectorAccessible()));
     batch.clear();
   }
 
@@ -150,12 +145,17 @@ public class TestBatchValidator /* TODO: extends SubOperatorTest */ {
 
     // Validator should catch the error.
 
-    BatchValidator validator = new BatchValidator(batch.vectorAccessible(), true);
-    validator.validate();
-    List<String> errors = validator.errors();
-    assertEquals(1, errors.size());
-    assertTrue(errors.get(0).contains("Decreasing offsets"));
+    checkForError(batch, BAD_OFFSETS);
     batch.clear();
+  }
+
+  private static void checkForError(SingleRowSet batch, String expectedError) {
+    CapturingReporter cr = new CapturingReporter();
+    new BatchValidator(cr).validateBatch(batch.vectorAccessible(), batch.rowCount());
+    assertTrue(cr.errors.size() > 0);
+    Pattern p = Pattern.compile(expectedError);
+    Matcher m = p.matcher(cr.errors.get(0));
+    assertTrue(m.find());
   }
 
   @Test
@@ -174,11 +174,7 @@ public class TestBatchValidator /* TODO: extends SubOperatorTest */ {
 
     // Validator should catch the error.
 
-    BatchValidator validator = new BatchValidator(batch.vectorAccessible(), true);
-    validator.validate();
-    List<String> errors = validator.errors();
-    assertEquals(1, errors.size());
-    assertTrue(errors.get(0).contains("Offset (0) must be 0"));
+    checkForError(batch, "Offset \\(0\\) must be 0");
     batch.clear();
   }
 
@@ -210,11 +206,7 @@ public class TestBatchValidator /* TODO: extends SubOperatorTest */ {
 
     // Validator should catch the error.
 
-    BatchValidator validator = new BatchValidator(batch.vectorAccessible(), true);
-    validator.validate();
-    List<String> errors = validator.errors();
-    assertEquals(1, errors.size());
-    assertTrue(errors.get(0).contains("Decreasing offsets"));
+    checkForError(batch, BAD_OFFSETS);
     batch.clear();
   }
 
@@ -234,11 +226,7 @@ public class TestBatchValidator /* TODO: extends SubOperatorTest */ {
 
     // Validator should catch the error.
 
-    BatchValidator validator = new BatchValidator(batch.vectorAccessible(), true);
-    validator.validate();
-    List<String> errors = validator.errors();
-    assertEquals(1, errors.size());
-    assertTrue(errors.get(0).contains("Decreasing offsets"));
+    checkForError(batch, "Invalid offset");
     batch.clear();
   }
 
@@ -258,13 +246,11 @@ public class TestBatchValidator /* TODO: extends SubOperatorTest */ {
 
     // Validator should catch the error.
 
-    BatchValidator validator = new BatchValidator(batch.vectorAccessible(), true);
-    validator.validate();
-    List<String> errors = validator.errors();
-    assertEquals(1, errors.size());
-    assertTrue(errors.get(0).contains("Invalid offset"));
+    checkForError(batch, "Invalid offset");
     batch.clear();
   }
+
+  private static final String BAD_OFFSETS = "Offset vector .* contained \\d+, expected >= \\d+";
 
   @Test
   public void testRepeatedBadArrayOffset() {
@@ -284,11 +270,7 @@ public class TestBatchValidator /* TODO: extends SubOperatorTest */ {
     UInt4Vector ov = vc.getOffsetVector();
     ov.getMutator().set(3, 1);
 
-    BatchValidator validator = new BatchValidator(batch.vectorAccessible(), true);
-    validator.validate();
-    List<String> errors = validator.errors();
-    assertEquals(1, errors.size());
-    assertTrue(errors.get(0).contains("Decreasing offsets"));
+    checkForError(batch, BAD_OFFSETS);
     batch.clear();
   }
 
@@ -311,11 +293,7 @@ public class TestBatchValidator /* TODO: extends SubOperatorTest */ {
     UInt4Vector ov = vc.getOffsetVector();
     ov.getMutator().set(4, 100_000);
 
-    BatchValidator validator = new BatchValidator(batch.vectorAccessible(), true);
-    validator.validate();
-    List<String> errors = validator.errors();
-    assertEquals(1, errors.size());
-    assertTrue(errors.get(0).contains("Invalid offset"));
+    checkForError(batch, "Invalid offset");
     batch.clear();
   }
 }

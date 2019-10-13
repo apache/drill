@@ -36,21 +36,23 @@ import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.VectorValidator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class IteratorValidatorBatchIterator implements CloseableRecordBatch {
-  private static final org.slf4j.Logger logger =
-      org.slf4j.LoggerFactory.getLogger(IteratorValidatorBatchIterator.class);
+  private static final Logger logger =
+      LoggerFactory.getLogger(IteratorValidatorBatchIterator.class);
 
-  static final boolean VALIDATE_VECTORS = false;
+  static final boolean VALIDATE_VECTORS = true;
 
-  /** For logging/debuggability only. */
+  /** For logging/debugability only. */
   private static volatile int instanceCount;
 
   /** @see org.apache.drill.exec.physical.config.IteratorValidator */
   private final boolean isRepeatable;
 
-  /** For logging/debuggability only. */
+  /** For logging/debugability only. */
   private final int instNum;
   {
     instNum = ++instanceCount;
@@ -62,24 +64,24 @@ public class IteratorValidatorBatchIterator implements CloseableRecordBatch {
    */
   private final RecordBatch incoming;
 
-  /** Incoming batch's type (simple class name); for logging/debuggability
+  /** Incoming batch's type (simple class name); for logging/debugability
    *  only. */
   private final String batchTypeName;
 
   /** Exception state of incoming batch; last value thrown by its next()
    *  method. */
-  private Throwable exceptionState = null;
+  private Throwable exceptionState;
 
   /** Main state of incoming batch; last value returned by its next() method. */
-  private IterOutcome batchState = null;
+  private IterOutcome batchState;
 
   /** Last schema retrieved after OK_NEW_SCHEMA or OK from next().  Null if none
-   *  yet. Currently for logging/debuggability only. */
-  private BatchSchema lastSchema = null;
+   *  yet. Currently for logging/debugability only. */
+  private BatchSchema lastSchema;
 
   /** Last schema retrieved after OK_NEW_SCHEMA from next().  Null if none yet.
-   *  Currently for logging/debuggability only. */
-  private BatchSchema lastNewSchema = null;
+   *  Currently for logging/debugability only. */
+  private BatchSchema lastNewSchema;
 
   /**
    * {@link IterOutcome} return value sequence validation state.
@@ -342,8 +344,16 @@ public class IteratorValidatorBatchIterator implements CloseableRecordBatch {
   }
 
   private void validateBatch() {
-    if (validateBatches) {
-      new BatchValidator(incoming).validate();
+    if (validateBatches || VALIDATE_VECTORS) {
+      if (! BatchValidator.validate(incoming)) {
+        throw new IllegalStateException(
+            "Batch validation failed. Source operator: " +
+            incoming.getClass().getSimpleName());
+      }
+      // The following validation currently calculates, and discards
+      // a hash code. Since it requires manual checking, it is
+      // disabled by default.
+      // VectorValidator.validate(incoming);
     }
   }
 
