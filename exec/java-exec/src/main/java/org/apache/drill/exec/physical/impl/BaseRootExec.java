@@ -36,9 +36,10 @@ import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 public abstract class BaseRootExec implements RootExec {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseRootExec.class);
 
-  protected OperatorStats stats = null;
-  protected OperatorContext oContext = null;
-  protected RootFragmentContext fragmentContext = null;
+  public static final String ENABLE_BATCH_DUMP_CONFIG = "drill.exec.debug.dump_batches";
+  protected OperatorStats stats;
+  protected OperatorContext oContext;
+  protected RootFragmentContext fragmentContext;
   private List<CloseableRecordBatch> operators;
 
   public BaseRootExec(final RootFragmentContext fragmentContext, final PhysicalOperator config) throws OutOfMemoryException {
@@ -113,6 +114,7 @@ public abstract class BaseRootExec implements RootExec {
       case OK:
         stats.batchReceived(0, b.getRecordCount(), false);
         break;
+      default:
     }
     return next;
   }
@@ -127,6 +129,9 @@ public abstract class BaseRootExec implements RootExec {
   @Override
   public void dumpBatches() {
     if (operators == null) {
+      return;
+    }
+    if (!fragmentContext.getConfig().getBoolean(ENABLE_BATCH_DUMP_CONFIG)) {
       return;
     }
 

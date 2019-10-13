@@ -21,6 +21,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.ConsoleAppender;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
+import org.apache.drill.exec.physical.impl.BaseRootExec;
 import org.apache.drill.exec.physical.impl.ScanBatch;
 import org.apache.drill.exec.physical.impl.xsort.managed.ExternalSortBatch;
 import org.apache.drill.exec.testing.Controls;
@@ -64,6 +65,7 @@ public class TestOperatorDump extends ClusterTest {
     logFixture = LogFixture.builder()
         .toConsole(appender, LogFixture.DEFAULT_CONSOLE_FORMAT)
         .build();
+    builder.configBuilder().put(BaseRootExec.ENABLE_BATCH_DUMP_CONFIG, "true");
     startCluster(builder);
   }
 
