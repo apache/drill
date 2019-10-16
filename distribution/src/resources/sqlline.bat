@@ -117,7 +117,6 @@ echo.
 goto error
 
 :initDrillEnv
-echo DRILL_ARGS - "%DRILL_ARGS%"
 
 rem ----
 rem Deal with Drill variables
@@ -131,7 +130,7 @@ if "test%DRILL_LOG_DIR%" == "test" (
   set DRILL_LOG_DIR=%DRILL_HOME%\log
 )
 
-@rem Drill temporary directory is used as base for temporary storage of Dynamic UDF jars.
+rem Drill temporary directory is used as base for temporary storage of Dynamic UDF jars
 if "test%DRILL_TMP_DIR%" == "test" (
   set DRILL_TMP_DIR=%TEMP%
 )
@@ -141,11 +140,11 @@ rem Deal with Hadoop JARs, if HADOOP_HOME was specified
 rem ----
 
 if "test%HADOOP_HOME%" == "test" (
-  echo HADOOP_HOME not detected...
+  rem HADOOP_HOME not detected...
   set USE_HADOOP_CP=0
   set HADOOP_HOME=%DRILL_HOME%\winutils
 ) else (
-  echo Calculating HADOOP_CLASSPATH ...
+  rem Calculating HADOOP_CLASSPATH ...
   for %%i in (%HADOOP_HOME%\lib\*.jar) do (
     set IGNOREJAR=0
     for /F "tokens=*" %%A in (%DRILL_BIN_DIR%\hadoop-excludes.txt) do (
@@ -163,10 +162,10 @@ rem Deal with HBase JARs, if HBASE_HOME was specified
 rem ----
 
 if "test%HBASE_HOME%" == "test" (
-  echo HBASE_HOME not detected...
+  rem HBASE_HOME not detected...
   set USE_HBASE_CP=0
 ) else (
-  echo Calculating HBASE_CLASSPATH ...
+  rem Calculating HBASE_CLASSPATH ...
   for %%i in (%HBASE_HOME%\lib\*.jar) do (
     set IGNOREJAR=0
     for /F "tokens=*" %%A in (%DRILL_BIN_DIR%\hadoop-excludes.txt) do (
@@ -179,7 +178,7 @@ if "test%HBASE_HOME%" == "test" (
   set USE_HBASE_CP=1
 )
 
-echo Calculating Drill classpath...
+rem Calculating Drill classpath...
 
 set DRILL_CP=%DRILL_CONF_DIR%
 if NOT "test%DRILL_CLASSPATH_PREFIX%"=="test" set DRILL_CP=!DRILL_CP!;%DRILL_CLASSPATH_PREFIX%
