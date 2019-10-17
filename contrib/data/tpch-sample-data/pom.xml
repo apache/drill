@@ -18,7 +18,8 @@
     limitations under the License.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <artifactId>drill-contrib-data-parent</artifactId>
@@ -35,21 +36,23 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>com.googlecode.maven-download-plugin</groupId>
-        <artifactId>download-maven-plugin</artifactId>
-        <version>1.2.0</version>
+        <artifactId>maven-resources-plugin</artifactId>
         <executions>
           <execution>
-            <id>install-tgz</id>
-            <phase>prepare-package</phase>
+            <id>copy-tpch-data</id>
+            <phase>process-resources</phase>
             <goals>
-              <goal>wget</goal>
+              <goal>copy-resources</goal>
             </goals>
             <configuration>
-              <url>http://apache-drill.s3.amazonaws.com/files/sf-0.01_tpc-h_parquet_typed.tgz</url>
-              <outputFileName>tpch.tgz</outputFileName>
-              <unpack>true</unpack>
-              <outputDirectory>${project.build.directory}/classes/tpch</outputDirectory>
+              <outputDirectory>${basedir}/target/classes/tpch
+              </outputDirectory>
+              <resources>
+                <resource>
+                  <directory>parquet</directory>
+                  <filtering>false</filtering>
+                </resource>
+              </resources>
             </configuration>
           </execution>
         </executions>
