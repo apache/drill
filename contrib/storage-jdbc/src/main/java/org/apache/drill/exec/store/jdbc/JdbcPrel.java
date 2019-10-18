@@ -40,7 +40,6 @@ import org.apache.drill.exec.planner.physical.PhysicalPlanCreator;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
-import org.apache.drill.exec.store.jdbc.JdbcStoragePlugin.DrillJdbcConvention;
 
 /**
  * Represents a JDBC Plan once the children nodes have been rewritten into SQL.

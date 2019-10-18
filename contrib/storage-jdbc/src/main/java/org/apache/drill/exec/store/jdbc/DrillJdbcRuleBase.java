@@ -59,7 +59,7 @@ abstract class DrillJdbcRuleBase extends ConverterRule {
   static class DrillJdbcProjectRule extends DrillJdbcRuleBase {
 
     public DrillJdbcProjectRule(JdbcConvention out) {
-      super(LogicalProject.class, Convention.NONE, out, "JdbcProjectRule");
+      super(LogicalProject.class, Convention.NONE, out, "DrillJdbcProjectRule");
     }
 
     public RelNode convert(RelNode rel) {

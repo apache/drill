@@ -476,4 +476,25 @@ public class TestHiveStructs extends HiveClusterTest {
         .baselineValues(2, mapOf("n", 5, "u", "Text"))
         .go();
   }
+
+  @Test // DRILL-7386
+  public void countStructColumn() throws Exception {
+    testBuilder()
+        .sqlQuery("SELECT COUNT(str_n0) cnt FROM hive.struct_tbl")
+        .unOrdered()
+        .baselineColumns("cnt")
+        .baselineValues(3L)
+        .go();
+  }
+
+  @Test // DRILL-7386
+  public void typeOfFunctions() throws Exception {
+    testBuilder()
+        .sqlQuery("SELECT sqlTypeOf(%1$s) sto, typeOf(%1$s) to, modeOf(%1$s) mo, drillTypeOf(%1$s) dto " +
+            "FROM hive.struct_tbl LIMIT 1", "str_n0")
+        .unOrdered()
+        .baselineColumns("sto", "to", "mo", "dto")
+        .baselineValues("STRUCT", "MAP", "NOT NULL", "MAP")
+        .go();
+  }
 }

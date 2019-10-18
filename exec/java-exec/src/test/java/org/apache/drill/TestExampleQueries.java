@@ -1226,4 +1226,17 @@ public class TestExampleQueries extends BaseTestQuery {
         new String[]{"Project.*columns"});
 
   }
+
+  @Test // DRILL-6905
+  public void testCombineFilterWithNumericAndVarcharLiteral() throws Exception {
+    String query = "select n_nationkey from cp.`tpch/nation.parquet` where n_nationkey < 2 or n_nationkey = '10'";
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("n_nationkey")
+        .baselineValues(0)
+        .baselineValues(1)
+        .baselineValues(10)
+        .go();
+  }
 }

@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.planner;
 
+import java.util.Collections;
+
 import org.apache.calcite.plan.Context;
 import org.apache.calcite.plan.Contexts;
 import org.apache.calcite.plan.RelOptCluster;
@@ -47,7 +49,8 @@ public class DrillRelBuilder extends RelBuilder {
     RelNode relNode = build();
 
     // creates filter with false in the predicate
-    final RelNode filter = filterFactory.createFilter(relNode, cluster.getRexBuilder().makeLiteral(false));
+    final RelNode filter = filterFactory.createFilter(relNode,
+        cluster.getRexBuilder().makeLiteral(false), Collections.emptySet());
     push(filter);
 
     return this;
@@ -56,11 +59,7 @@ public class DrillRelBuilder extends RelBuilder {
   /** Creates a {@link RelBuilderFactory}, a partially-created DrillRelBuilder.
    * Just add a {@link RelOptCluster} and a {@link RelOptSchema} */
   public static RelBuilderFactory proto(final Context context) {
-    return new RelBuilderFactory() {
-      public RelBuilder create(RelOptCluster cluster, RelOptSchema schema) {
-        return new DrillRelBuilder(context, cluster, schema);
-      }
-    };
+    return (cluster, schema) -> new DrillRelBuilder(context, cluster, schema);
   }
 
   /** Creates a {@link RelBuilderFactory} that uses a given set of factories. */

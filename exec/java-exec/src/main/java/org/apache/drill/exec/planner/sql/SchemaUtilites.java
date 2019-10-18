@@ -41,29 +41,18 @@ public class SchemaUtilites {
    *
    * @param defaultSchema Reference to the default schema in complete schema tree.
    * @param schemaPath Schema path to search.
-   * @return SchemaPlus object.
+   * @return SchemaPlus object from default or root schema, or null if not found.
    */
   public static SchemaPlus findSchema(final SchemaPlus defaultSchema, final List<String> schemaPath) {
     if (schemaPath.size() == 0) {
       return defaultSchema;
     }
-
-    SchemaPlus schema;
-    if ((schema = searchSchemaTree(defaultSchema, schemaPath)) != null) {
-      return schema;
+    SchemaPlus schema = searchSchemaTree(defaultSchema, schemaPath);
+    SchemaPlus rootSchema;
+    if (schema == null && (rootSchema = rootSchema(defaultSchema)) != defaultSchema) {
+      schema = searchSchemaTree(rootSchema, schemaPath);
     }
-
-    SchemaPlus rootSchema = defaultSchema;
-    while(rootSchema.getParentSchema() != null) {
-      rootSchema = rootSchema.getParentSchema();
-    }
-
-    if (rootSchema != defaultSchema &&
-        (schema = searchSchemaTree(rootSchema, schemaPath)) != null) {
-      return schema;
-    }
-
-    return null;
+    return schema;
   }
 
   /**
@@ -325,6 +314,18 @@ public class SchemaUtilites {
     } else {
       return SchemaUtilites.resolveToMutableDrillSchema(defaultSchema, tableSchema);
     }
+  }
+
+  /**
+   * Finds root of given schema.
+   * @param schema current schema
+   * @return root schema
+   */
+  public static SchemaPlus rootSchema(SchemaPlus schema) {
+    while (!isRootSchema(schema)) {
+      schema = schema.getParentSchema();
+    }
+    return schema;
   }
 
 }

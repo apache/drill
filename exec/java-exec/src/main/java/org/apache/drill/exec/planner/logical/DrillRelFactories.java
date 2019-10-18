@@ -111,7 +111,7 @@ public class DrillRelFactories {
    */
   private static class DrillFilterFactoryImpl implements RelFactories.FilterFactory {
     @Override
-    public RelNode createFilter(RelNode child, RexNode condition) {
+    public RelNode createFilter(RelNode child, RexNode condition, Set<CorrelationId> variablesSet) {
       return DrillFilterRel.create(child, condition);
     }
   }

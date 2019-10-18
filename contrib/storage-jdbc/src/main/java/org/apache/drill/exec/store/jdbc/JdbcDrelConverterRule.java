@@ -15,32 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.planner.sql;
+package org.apache.drill.exec.store.jdbc;
 
-import org.apache.calcite.sql.SqlOperandCountRange;
+import java.util.function.Predicate;
 
-class FixedRange implements SqlOperandCountRange{
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.convert.ConverterRule;
+import org.apache.drill.exec.planner.logical.DrillRel;
+import org.apache.drill.exec.planner.logical.DrillRelFactories;
 
-  private final int size;
+class JdbcDrelConverterRule extends ConverterRule {
 
-  public FixedRange(int size) {
-    super();
-    this.size = size;
+  JdbcDrelConverterRule(DrillJdbcConvention in) {
+    super(RelNode.class, (Predicate<RelNode>) input -> true, in, DrillRel.DRILL_LOGICAL,
+        DrillRelFactories.LOGICAL_BUILDER, "JDBC_DREL_Converter" + in.getName());
   }
 
   @Override
-  public boolean isValidCount(int count) {
-    return count == size;
+  public RelNode convert(RelNode in) {
+    return new JdbcDrel(in.getCluster(), in.getTraitSet().replace(DrillRel.DRILL_LOGICAL),
+        convert(in, in.getTraitSet().replace(this.getInTrait()).simplify()));
   }
-
-  @Override
-  public int getMin() {
-    return size;
-  }
-
-  @Override
-  public int getMax() {
-    return size;
-  }
-
 }

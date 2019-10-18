@@ -1018,7 +1018,7 @@ public class TypeInferenceUtils {
       args.add(new MajorTypeInLogicalExpression(builder.build()));
     }
 
-    final String drillFuncName = FunctionCallFactory.replaceOpWithFuncName(opBinding.getOperator().getName());
+    final String drillFuncName = FunctionCallFactory.convertToDrillFunctionName(opBinding.getOperator().getName());
     return new FunctionCall(
         drillFuncName,
         args,

@@ -25,7 +25,7 @@ import org.apache.drill.exec.store.StoragePluginRegistry;
 
 /**
  * Unlike SimpleCalciteSchema, DynamicSchema could have an empty or partial schemaMap, but it could maintain a map of
- * name->SchemaFactory, and only register schema when the corresponsdent name is requested.
+ * name->SchemaFactory, and only register schema when the correspondent name is requested.
  */
 public class DynamicSchema extends SimpleCalciteSchema {
 
@@ -44,14 +44,8 @@ public class DynamicSchema extends SimpleCalciteSchema {
     return ret;
   }
 
-  @Override
-  public SchemaPlus plus() {
-    return super.plus();
-  }
-
   public static SchemaPlus createRootSchema(StoragePluginRegistry storages, SchemaConfig schemaConfig) {
     DynamicRootSchema rootSchema = new DynamicRootSchema(storages, schemaConfig);
     return rootSchema.plus();
   }
-
 }

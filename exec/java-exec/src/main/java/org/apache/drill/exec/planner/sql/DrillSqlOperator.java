@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.calcite.sql.type.OperandTypes;
 import org.apache.calcite.sql.type.SqlOperandTypeChecker;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.calcite.rel.type.RelDataType;
@@ -190,7 +191,7 @@ public class DrillSqlOperator extends SqlFunction {
       return new DrillSqlOperator(
           name,
           functions,
-          isVarArg ? VarArgOperandTypeChecker.INSTANCE : Checker.getChecker(argCountMin, argCountMax),
+          isVarArg ? OperandTypes.VARIADIC : Checker.getChecker(argCountMin, argCountMax),
           isDeterministic,
           TypeInferenceUtils.getDrillSqlReturnTypeInference(
               name,

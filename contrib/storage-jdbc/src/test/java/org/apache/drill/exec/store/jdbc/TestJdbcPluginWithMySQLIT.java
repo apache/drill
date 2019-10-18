@@ -24,7 +24,6 @@ import com.wix.mysql.config.SchemaConfig;
 import com.wix.mysql.distribution.Version;
 import org.apache.drill.categories.JdbcStorageTest;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
-import org.apache.drill.exec.store.StoragePluginRegistryImpl;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.QueryTestUtil;
@@ -50,7 +49,7 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
 
   @BeforeClass
   public static void initMysql() throws Exception {
-    String mysqlPluginName = "mysql";
+    startCluster(ClusterFixture.builder(dirTestWatcher));
     String mysqlDBName = "drill_mysql_test";
     int mysqlPort = QueryTestUtil.getFreePortNumber(2215, 300);
 
@@ -68,40 +67,22 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
       schemaConfig.withScripts(ScriptResolver.classPathScript("mysql-test-data-linux.sql"));
     }
 
-    mysqld = EmbeddedMysql.anEmbeddedMysql(config)
-        .addSchema(schemaConfig.build())
-        .start();
+    mysqld = EmbeddedMysql.anEmbeddedMysql(config).addSchema(schemaConfig.build()).start();
 
-    startCluster(ClusterFixture.builder(dirTestWatcher));
-
-    StoragePluginRegistryImpl pluginRegistry = (StoragePluginRegistryImpl) cluster.drillbit().getContext().getStorage();
-
-    JdbcStorageConfig jdbcStorageConfig = new JdbcStorageConfig(
-        "com.mysql.cj.jdbc.Driver",
+    JdbcStorageConfig jdbcStorageConfig = new JdbcStorageConfig("com.mysql.cj.jdbc.Driver",
         String.format("jdbc:mysql://localhost:%s/%s?useJDBCCompliantTimezoneShift=true", mysqlPort, mysqlDBName),
-        "mysqlUser",
-        "mysqlPass",
-        false);
+        "mysqlUser", "mysqlPass", false);
     jdbcStorageConfig.setEnabled(true);
 
-    JdbcStoragePlugin jdbcStoragePlugin = new JdbcStoragePlugin(jdbcStorageConfig,
-        cluster.drillbit().getContext(), mysqlPluginName);
-    pluginRegistry.addPluginToPersistentStoreIfAbsent(mysqlPluginName, jdbcStorageConfig, jdbcStoragePlugin);
+    cluster.defineStoragePlugin(ctx -> new JdbcStoragePlugin(jdbcStorageConfig, ctx, "mysql"));
 
     if (osName.startsWith("linux")) {
       // adds storage plugin with case insensitive table names
-      String mysqlCaseSensitivePluginName = "mysqlCaseInsensitive";
-      JdbcStorageConfig jdbcCaseSensitiveStorageConfig = new JdbcStorageConfig(
-          "com.mysql.cj.jdbc.Driver",
+      JdbcStorageConfig jdbcCaseSensitiveStorageConfig = new JdbcStorageConfig("com.mysql.cj.jdbc.Driver",
           String.format("jdbc:mysql://localhost:%s/%s?useJDBCCompliantTimezoneShift=true", mysqlPort, mysqlDBName),
-          "mysqlUser",
-          "mysqlPass",
-          true);
+          "mysqlUser", "mysqlPass", true);
       jdbcCaseSensitiveStorageConfig.setEnabled(true);
-
-      JdbcStoragePlugin jdbcCaseSensitiveStoragePlugin = new JdbcStoragePlugin(jdbcCaseSensitiveStorageConfig,
-          cluster.drillbit().getContext(), mysqlCaseSensitivePluginName);
-      pluginRegistry.addPluginToPersistentStoreIfAbsent(mysqlCaseSensitivePluginName, jdbcCaseSensitiveStorageConfig, jdbcCaseSensitiveStoragePlugin);
+      cluster.defineStoragePlugin(ctx -> new JdbcStoragePlugin(jdbcCaseSensitiveStorageConfig, ctx, "mysqlCaseInsensitive"));
     }
   }
 
