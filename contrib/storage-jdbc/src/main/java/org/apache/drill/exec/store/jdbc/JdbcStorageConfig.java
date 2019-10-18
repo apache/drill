@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.store.jdbc;
 
+import java.util.Objects;
+
 import com.fasterxml.jackson.annotation.JsonFilter;
 import org.apache.drill.common.logical.StoragePluginConfig;
 
@@ -88,45 +90,14 @@ public class JdbcStorageConfig extends StoragePluginConfig {
   public boolean equals(Object obj) {
     if (this == obj) {
       return true;
-    }
-    if (obj == null) {
+    } else if (obj == null || getClass() != obj.getClass()) {
       return false;
     }
-    if (getClass() != obj.getClass()) {
-      return false;
-    }
-    JdbcStorageConfig other = (JdbcStorageConfig) obj;
-    if (caseInsensitiveTableNames != other.caseInsensitiveTableNames) {
-      return false;
-    }
-    if (driver == null) {
-      if (other.driver != null) {
-        return false;
-      }
-    } else if (!driver.equals(other.driver)) {
-      return false;
-    }
-    if (password == null) {
-      if (other.password != null) {
-        return false;
-      }
-    } else if (!password.equals(other.password)) {
-      return false;
-    }
-    if (url == null) {
-      if (other.url != null) {
-        return false;
-      }
-    } else if (!url.equals(other.url)) {
-      return false;
-    }
-    if (username == null) {
-      if (other.username != null) {
-        return false;
-      }
-    } else if (!username.equals(other.username)) {
-      return false;
-    }
-    return true;
+    JdbcStorageConfig conf = (JdbcStorageConfig) obj;
+    return caseInsensitiveTableNames == conf.caseInsensitiveTableNames
+        && Objects.equals(driver, conf.driver)
+        && Objects.equals(password, conf.password)
+        && Objects.equals(url, conf.url)
+        && Objects.equals(username, conf.username);
   }
 }

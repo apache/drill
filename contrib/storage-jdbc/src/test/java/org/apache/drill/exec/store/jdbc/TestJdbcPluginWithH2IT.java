@@ -21,13 +21,10 @@ import org.apache.drill.categories.JdbcStorageTest;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
 
-import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.store.StoragePluginRegistryImpl;
 import org.apache.drill.exec.util.StoragePluginTestUtils;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.h2.tools.RunScript;
-import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -42,6 +39,7 @@ import java.sql.DriverManager;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
 /**
@@ -54,48 +52,28 @@ public class TestJdbcPluginWithH2IT extends ClusterTest {
   private static final String TABLE_NAME = String.format("%s.`%s`", StoragePluginTestUtils.DFS_PLUGIN_NAME, TABLE_PATH);
 
   @BeforeClass
-  public static void initH2() throws Exception {
-    Class.forName("org.h2.Driver");
-    String connString = String.format(
-        "jdbc:h2:%s", dirTestWatcher.getTmpDir().getCanonicalPath());
-
-    try (Connection connection = DriverManager.getConnection(connString, "root", "root")) {
-      URL scriptFile = TestJdbcPluginWithH2IT.class.getClassLoader().getResource("h2-test-data.sql");
-      Assert.assertNotNull("Script for test tables generation 'h2-test-data.sql' " +
-          "cannot be found in test resources", scriptFile);
-      try (FileReader fileReader = new FileReader(scriptFile.getFile())) {
-        RunScript.execute(connection, fileReader);
-      }
-    }
-
+  public static void init() throws Exception {
     startCluster(ClusterFixture.builder(dirTestWatcher));
-
-    JdbcStorageConfig jdbcStorageConfig = new JdbcStorageConfig(
-        "org.h2.Driver",
-        connString,
-        "root",
-        "root",
-        true);
-    jdbcStorageConfig.setEnabled(true);
-
-    String pluginName = "h2";
-    DrillbitContext context = cluster.drillbit().getContext();
-    JdbcStoragePlugin jdbcStoragePlugin = new JdbcStoragePlugin(jdbcStorageConfig,
-        context, pluginName);
-    StoragePluginRegistryImpl pluginRegistry = (StoragePluginRegistryImpl) context.getStorage();
-    pluginRegistry.addPluginToPersistentStoreIfAbsent(pluginName, jdbcStorageConfig, jdbcStoragePlugin);
-  }
-
-  @BeforeClass
-  public static void copyData() {
     dirTestWatcher.copyResourceToRoot(Paths.get(TABLE_PATH));
+    Class.forName("org.h2.Driver");
+    String connString = "jdbc:h2:" + dirTestWatcher.getTmpDir().getCanonicalPath();
+    URL scriptFile = TestJdbcPluginWithH2IT.class.getClassLoader().getResource("h2-test-data.sql");
+    assertNotNull("Script for test tables generation 'h2-test-data.sql' cannot be found in test resources", scriptFile);
+    try (Connection connection = DriverManager.getConnection(connString, "root", "root");
+         FileReader fileReader = new FileReader(scriptFile.getFile())) {
+      RunScript.execute(connection, fileReader);
+    }
+    JdbcStorageConfig jdbcStorageConfig = new JdbcStorageConfig("org.h2.Driver", connString, "root", "root", true);
+    jdbcStorageConfig.setEnabled(true);
+    cluster.defineStoragePlugin(ctx -> new JdbcStoragePlugin(jdbcStorageConfig, ctx, "h2"));
+    cluster.defineStoragePlugin(ctx -> new JdbcStoragePlugin(jdbcStorageConfig, ctx, "h2o"));
   }
 
   @Test
   public void testCrossSourceMultiFragmentJoin() throws Exception {
     try {
       client.alterSession(ExecConstants.SLICE_TARGET, 1);
-      run("select x.person_id, y.salary from h2.drill_h2_test.person x "
+      run("select x.person_id, y.salary from h2.tmp.drill_h2_test.person x "
               + "join %s y on x.person_id = y.person_id ", TABLE_NAME);
     } finally {
       client.resetSession(ExecConstants.SLICE_TARGET);
@@ -109,7 +87,7 @@ public class TestJdbcPluginWithH2IT extends ClusterTest {
         .sqlQuery(
             "select person_id, first_name, last_name, address, city, state, zip, json, bigint_field, smallint_field, " +
                 "numeric_field, boolean_field, double_field, float_field, real_field, time_field, timestamp_field, " +
-                "date_field, clob_field from h2.`drill_h2_test`.person")
+                "date_field, clob_field from h2.tmp.`drill_h2_test`.person")
         .ordered()
         .baselineColumns("person_id", "first_name", "last_name", "address", "city", "state", "zip", "json",
             "bigint_field", "smallint_field", "numeric_field", "boolean_field", "double_field", "float_field",
@@ -135,9 +113,8 @@ public class TestJdbcPluginWithH2IT extends ClusterTest {
 
   @Test
   public void pushdownJoin() throws Exception {
-    run("use h2");
-    String query = "select x.person_id from (select person_id from h2.drill_h2_test.person) x "
-            + "join (select person_id from h2.drill_h2_test.person) y on x.person_id = y.person_id ";
+    String query = "select x.person_id from (select person_id from h2.tmp.drill_h2_test.person) x "
+            + "join (select person_id from h2.tmp.drill_h2_test.person) y on x.person_id = y.person_id ";
 
     String plan = queryBuilder().sql(query).explainText();
 
@@ -148,9 +125,9 @@ public class TestJdbcPluginWithH2IT extends ClusterTest {
   @Test
   public void pushdownJoinAndFilterPushDown() throws Exception {
     String query = "select * from \n" +
-        "h2.drill_h2_test.person e\n" +
+        "h2.tmp.drill_h2_test.person e\n" +
         "INNER JOIN \n" +
-        "h2.drill_h2_test.person s\n" +
+        "h2.tmp.drill_h2_test.person s\n" +
         "ON e.FIRST_NAME = s.FIRST_NAME\n" +
         "WHERE e.LAST_NAME > 'hello'";
 
@@ -164,7 +141,7 @@ public class TestJdbcPluginWithH2IT extends ClusterTest {
 
   @Test
   public void pushdownAggregation() throws Exception {
-    String query = "select count(*) from h2.drill_h2_test.person";
+    String query = "select count(*) from h2.tmp.drill_h2_test.person";
     String plan = queryBuilder().sql(query).explainText();
 
     assertThat("Query plan shouldn't contain Aggregate operator",
@@ -174,12 +151,12 @@ public class TestJdbcPluginWithH2IT extends ClusterTest {
   @Test
   public void pushdownDoubleJoinAndFilter() throws Exception {
     String query = "select * from \n" +
-        "h2.drill_h2_test.person e\n" +
+        "h2.tmp.drill_h2_test.person e\n" +
         "INNER JOIN \n" +
-        "h2.drill_h2_test.person s\n" +
+        "h2.tmp.drill_h2_test.person s\n" +
         "ON e.person_ID = s.person_ID\n" +
         "INNER JOIN \n" +
-        "h2.drill_h2_test.person ed\n" +
+        "h2.tmp.drill_h2_test.person ed\n" +
         "ON e.person_ID = ed.person_ID\n" +
         "WHERE s.first_name > 'abc' and ed.first_name > 'efg'";
 
@@ -191,9 +168,23 @@ public class TestJdbcPluginWithH2IT extends ClusterTest {
         plan, not(containsString("Filter")));
   }
 
+  @Test // DRILL-7340
+  public void twoPluginsPredicatesPushdown() throws Exception {
+    String query = "SELECT * " +
+        "FROM h2.tmp.drill_h2_test.person l " +
+        "INNER JOIN h2o.tmp.drill_h2_test.person r " +
+        "ON l.person_id = r.person_id " +
+        "WHERE l.first_name = 'first_name_1' AND r.last_name = 'last_name_1'";
+    queryBuilder()
+        .sql(query)
+        .planMatcher()
+        .exclude("Filter")
+        .match();
+  }
+
   @Test
   public void showTablesDefaultSchema() throws Exception {
-    run("use h2.drill_h2_test");
+    run("use h2.tmp.drill_h2_test");
     assertEquals(1, queryBuilder().sql("show tables like 'PERSON'").run().recordCount());
 
     // check table names case insensitivity
@@ -202,7 +193,7 @@ public class TestJdbcPluginWithH2IT extends ClusterTest {
 
   @Test
   public void describe() throws Exception {
-    run("use h2.drill_h2_test");
+    run("use h2.tmp.drill_h2_test");
     assertEquals(19, queryBuilder().sql("describe PERSON").run().recordCount());
 
     // check table names case insensitivity
@@ -213,12 +204,12 @@ public class TestJdbcPluginWithH2IT extends ClusterTest {
   public void ensureDrillFunctionsAreNotPushedDown() throws Exception {
     // This should verify that we're not trying to push CONVERT_FROM into the JDBC storage plugin. If were pushing
     // this function down, the SQL query would fail.
-    run("select CONVERT_FROM(JSON, 'JSON') from h2.drill_h2_test.person where person_ID = 4");
+    run("select CONVERT_FROM(JSON, 'JSON') from h2.tmp.drill_h2_test.person where person_ID = 4");
   }
 
   @Test
   public void pushdownFilter() throws Exception {
-    String query = "select * from h2.drill_h2_test.person where person_ID = 1";
+    String query = "select * from h2.tmp.drill_h2_test.person where person_ID = 1";
     String plan = queryBuilder().sql(query).explainText();
 
     assertThat("Query plan shouldn't contain Filter operator",
@@ -227,17 +218,43 @@ public class TestJdbcPluginWithH2IT extends ClusterTest {
 
   @Test
   public void testCaseInsensitiveTableNames() throws Exception {
-    assertEquals(5, queryBuilder().sql("select * from h2.drill_h2_test.PeRsOn").run().recordCount());
-    assertEquals(5, queryBuilder().sql("select * from h2.drill_h2_test.PERSON").run().recordCount());
-    assertEquals(5, queryBuilder().sql("select * from h2.drill_h2_test.person").run().recordCount());
+    assertEquals(5, queryBuilder().sql("select * from h2.tmp.drill_h2_test.PeRsOn").run().recordCount());
+    assertEquals(5, queryBuilder().sql("select * from h2.tmp.drill_h2_test.PERSON").run().recordCount());
+    assertEquals(5, queryBuilder().sql("select * from h2.tmp.drill_h2_test.person").run().recordCount());
   }
 
   @Test
   public void testJdbcStoragePluginSerDe() throws Exception {
-    String query = "select * from h2.drill_h2_test.PeRsOn";
+    String query = "select * from h2.tmp.drill_h2_test.PeRsOn";
 
     String plan = queryBuilder().sql(query).explainJson();
     assertEquals(5, queryBuilder().physical(plan).run().recordCount());
+  }
+
+  @Test // DRILL-7415
+  public void showTablesForPluginDefaultSchema() throws Exception {
+    run("USE h2");
+    String sql = "SHOW TABLES";
+    testBuilder()
+        .sqlQuery(sql)
+        .unOrdered()
+        .baselineColumns("TABLE_SCHEMA", "TABLE_NAME")
+        .baselineValues("h2.tmp.drill_h2_test_1", "PERSON")
+        .go();
+  }
+
+  @Test // DRILL-7415
+  public void showTablesForInformationSchema() throws Exception {
+    run("USE h2.tmp.`INFORMATION_SCHEMA`");
+    String sql = "SHOW TABLES";
+    queryBuilder().sql(sql).printCsv();
+    testBuilder()
+        .sqlQuery(sql)
+        .unOrdered()
+        .expectsNumRecords(33)
+        .csvBaselineFile("h2_information_schema_tables.csv")
+        .baselineColumns("TABLE_SCHEMA", "TABLE_NAME")
+        .go();
   }
 
   @Test

@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.sql;
 
+import org.apache.calcite.sql.type.OperandTypes;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
@@ -36,7 +37,7 @@ public class DrillSqlOperatorWithoutInference extends DrillSqlOperator {
   public DrillSqlOperatorWithoutInference(String name, int argCount, TypeProtos.MajorType returnType, boolean isDeterminisitic, boolean isNiladic, boolean isVarArg) {
     super(name,
         new ArrayList<>(),
-        isVarArg ? VarArgOperandTypeChecker.INSTANCE : Checker.getChecker(argCount, argCount),
+        isVarArg ? OperandTypes.VARIADIC : Checker.getChecker(argCount, argCount),
         isDeterminisitic,
         DynamicReturnType.INSTANCE,
         isNiladic);

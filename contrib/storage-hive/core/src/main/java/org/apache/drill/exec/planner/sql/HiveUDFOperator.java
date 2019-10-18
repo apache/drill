@@ -21,12 +21,13 @@ import org.apache.calcite.sql.SqlFunction;
 import org.apache.calcite.sql.SqlFunctionCategory;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.parser.SqlParserPos;
+import org.apache.calcite.sql.type.OperandTypes;
 import org.apache.calcite.sql.type.SqlReturnTypeInference;
 
 public class HiveUDFOperator extends SqlFunction {
   public HiveUDFOperator(String name, SqlReturnTypeInference sqlReturnTypeInference) {
     super(new SqlIdentifier(name, SqlParserPos.ZERO), sqlReturnTypeInference, null,
-        VarArgOperandTypeChecker.INSTANCE, null, SqlFunctionCategory.USER_DEFINED_FUNCTION);
+        OperandTypes.VARIADIC, null, SqlFunctionCategory.USER_DEFINED_FUNCTION);
   }
 
   // Consider Hive functions to be non-deterministic so they are not folded at

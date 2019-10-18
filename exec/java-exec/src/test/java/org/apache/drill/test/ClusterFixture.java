@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.function.Function;
 
 import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -49,8 +50,10 @@ import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.server.Drillbit;
+import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.store.SchemaFactory;
+import org.apache.drill.exec.store.StoragePlugin;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.StoragePluginRegistryImpl;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
@@ -467,6 +470,14 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
       ex = ex == null ? e : ex;
     }
     return ex;
+  }
+
+  public void defineStoragePlugin(Function<DrillbitContext, StoragePlugin> pluginFactory) {
+    for (Drillbit drillbit : drillbits()) {
+      StoragePluginRegistryImpl registry = (StoragePluginRegistryImpl) drillbit.getContext().getStorage();
+      StoragePlugin plugin = pluginFactory.apply(drillbit.getContext());
+      registry.addPluginToPersistentStoreIfAbsent(plugin.getName(), plugin.getConfig(), plugin);
+    }
   }
 
   /**

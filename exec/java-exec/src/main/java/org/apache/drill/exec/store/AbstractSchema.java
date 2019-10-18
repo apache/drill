@@ -118,6 +118,17 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
     return Joiner.on(SCHEMA_SEPARATOR).join(schemaPath);
   }
 
+  @Override
+  public final String toString() {
+    return getFullSchemaName();
+  }
+
+  /**
+   * Returns string describing schema type which shows where the schema came from.
+   * Good practice here is to return json type name of storage plugin's config.
+   *
+   * @return schema type name
+   */
   public abstract String getTypeName();
 
   /**
