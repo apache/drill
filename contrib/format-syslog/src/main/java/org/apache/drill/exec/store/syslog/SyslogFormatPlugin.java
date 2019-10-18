@@ -17,13 +17,12 @@
  */
 
 package org.apache.drill.exec.store.syslog;
-import java.io.IOException;
-import org.apache.drill.exec.planner.common.DrillStatsTable.TableStatistics;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import org.apache.drill.common.exceptions.ExecutionSetupException;
+
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.planner.common.DrillStatsTable.TableStatistics;
+import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.RecordWriter;
@@ -31,13 +30,12 @@ import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
 import org.apache.drill.exec.store.dfs.easy.EasyWriter;
 import org.apache.drill.exec.store.dfs.easy.FileWork;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
-
-
-import java.util.List;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+
+import java.util.List;
 
 public class SyslogFormatPlugin extends EasyFormatPlugin<SyslogFormatConfig> {
 
@@ -59,7 +57,7 @@ public class SyslogFormatPlugin extends EasyFormatPlugin<SyslogFormatConfig> {
 
   @Override
   public RecordReader getRecordReader(FragmentContext context, DrillFileSystem dfs, FileWork fileWork,
-                                      List<SchemaPath> columns, String userName) throws ExecutionSetupException {
+                                      List<SchemaPath> columns, String userName) {
     return new SyslogRecordReader(context, dfs, fileWork, columns, userName, formatConfig);
   }
 
@@ -90,12 +88,12 @@ public class SyslogFormatPlugin extends EasyFormatPlugin<SyslogFormatConfig> {
   }
 
   @Override
-  public TableStatistics readStatistics(FileSystem fs, Path statsTablePath) throws IOException {
+  public TableStatistics readStatistics(FileSystem fs, Path statsTablePath) {
     throw new UnsupportedOperationException("unimplemented");
   }
 
   @Override
-  public void writeStatistics(TableStatistics statistics, FileSystem fs, Path statsTablePath) throws IOException {
+  public void writeStatistics(TableStatistics statistics, FileSystem fs, Path statsTablePath) {
     throw new UnsupportedOperationException("unimplemented");
   }
 }

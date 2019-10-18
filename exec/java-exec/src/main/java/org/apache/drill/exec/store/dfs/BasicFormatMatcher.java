@@ -22,34 +22,30 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.store.SchemaConfig;
+import org.apache.drill.shaded.guava.com.google.common.collect.Range;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.io.compress.CompressionCodecFactory;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import org.apache.drill.shaded.guava.com.google.common.collect.Range;
-
 public class BasicFormatMatcher extends FormatMatcher {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BasicFormatMatcher.class);
 
   protected final FormatPlugin plugin;
-  protected final boolean compressible;
-  protected final CompressionCodecFactory codecFactory;
 
+  private final boolean compressible;
+  private final CompressionCodecFactory codecFactory;
   private final List<Pattern> patterns;
   private final MagicStringMatcher matcher;
 
   public BasicFormatMatcher(FormatPlugin plugin, List<Pattern> patterns, List<MagicString> magicStrings) {
-    super();
-    this.patterns = ImmutableList.copyOf(patterns);
+    this.patterns = new ArrayList<>(patterns);
     this.matcher = new MagicStringMatcher(magicStrings);
     this.plugin = plugin;
     this.compressible = false;
@@ -57,12 +53,10 @@ public class BasicFormatMatcher extends FormatMatcher {
   }
 
   public BasicFormatMatcher(FormatPlugin plugin, Configuration fsConf, List<String> extensions, boolean compressible) {
-    List<Pattern> patterns = Lists.newArrayList();
-    for (String extension : extensions) {
-      patterns.add(Pattern.compile(".*\\." + extension));
-    }
-    this.patterns = patterns;
-    this.matcher = new MagicStringMatcher(new ArrayList<MagicString>());
+    this.patterns = extensions.stream()
+      .map(extension -> Pattern.compile(".*\\." + extension))
+      .collect(Collectors.toList());
+    this.matcher = new MagicStringMatcher(new ArrayList<>());
     this.plugin = plugin;
     this.compressible = compressible;
     this.codecFactory = new CompressionCodecFactory(fsConf);
@@ -84,8 +78,12 @@ public class BasicFormatMatcher extends FormatMatcher {
     return null;
   }
 
-  /*
-   * Function returns true if the file extension matches the pattern
+  /**
+   * Function returns true if the file extension matches the pattern.
+   *
+   * @param fs     file system
+   * @param status file status
+   * @return true if file is readable, false otherwise
    */
   @Override
   public boolean isFileReadable(DrillFileSystem fs, FileStatus status) throws IOException {
@@ -109,10 +107,7 @@ public class BasicFormatMatcher extends FormatMatcher {
       }
     }
 
-    if (matcher.matches(fs, status)) {
-      return true;
-    }
-    return false;
+    return matcher.matches(fs, status);
   }
 
   @Override
@@ -121,16 +116,14 @@ public class BasicFormatMatcher extends FormatMatcher {
     return plugin;
   }
 
+  private static class MagicStringMatcher {
 
-  private class MagicStringMatcher {
+    private final List<RangeMagics> ranges;
 
-    private List<RangeMagics> ranges;
-
-    public MagicStringMatcher(List<MagicString> magicStrings) {
-      ranges = Lists.newArrayList();
-      for(MagicString ms : magicStrings) {
-        ranges.add(new RangeMagics(ms));
-      }
+    MagicStringMatcher(List<MagicString> magicStrings) {
+      this.ranges = magicStrings.stream()
+        .map(RangeMagics::new)
+        .collect(Collectors.toList());
     }
 
     public boolean matches(DrillFileSystem fs, FileStatus status) throws IOException{
@@ -168,15 +161,15 @@ public class BasicFormatMatcher extends FormatMatcher {
       return false;
     }
 
-    private class RangeMagics{
-      Range<Long> range;
-      byte[][] magics;
+    private static class RangeMagics {
 
-      public RangeMagics(MagicString ms) {
-        this.range = Range.closedOpen( ms.getOffset(), (long) ms.getBytes().length);
+      private final Range<Long> range;
+      private final byte[][] magics;
+
+      RangeMagics(MagicString ms) {
+        this.range = Range.closedOpen(ms.getOffset(), (long) ms.getBytes().length);
         this.magics = new byte[][]{ms.getBytes()};
       }
     }
   }
-
 }

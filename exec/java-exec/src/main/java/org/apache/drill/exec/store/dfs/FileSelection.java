@@ -17,6 +17,16 @@
  */
 package org.apache.drill.exec.store.dfs;
 
+import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.exec.util.DrillFileSystemUtil;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
@@ -26,20 +36,12 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-
-import org.apache.drill.common.exceptions.DrillRuntimeException;
-import org.apache.drill.exec.util.DrillFileSystemUtil;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.Path;
-
 /**
  * Jackson serializable description of a file selection.
  */
 public class FileSelection {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FileSelection.class);
+
+  private static final Logger logger = LoggerFactory.getLogger(FileSelection.class);
   private static final String WILD_CARD = "*";
 
   private List<FileStatus> statuses;
@@ -73,10 +75,10 @@ public class FileSelection {
   }
 
   private StatusType dirStatus;
-  // whether this selection previously had a wildcard
-  private boolean hadWildcard = false;
-  // whether all partitions were previously pruned for this selection
-  private boolean wasAllPartitionsPruned = false;
+  // whether this selection previously had a wildcard, false by default
+  private boolean hadWildcard;
+  // whether all partitions were previously pruned for this selection, false by default
+  private boolean wasAllPartitionsPruned;
 
   /**
    * Creates a {@link FileSelection selection} out of given file statuses/files and selection root.
@@ -108,7 +110,7 @@ public class FileSelection {
    * Copy constructor for convenience.
    */
   protected FileSelection(FileSelection selection) {
-    Preconditions.checkNotNull(selection, "selection cannot be null");
+    Preconditions.checkNotNull(selection, "File selection cannot be null");
     this.statuses = selection.statuses;
     this.files = selection.files;
     this.selectionRoot = selection.selectionRoot;
@@ -117,6 +119,7 @@ public class FileSelection {
     this.metaContext = selection.metaContext;
     this.hadWildcard = selection.hadWildcard;
     this.wasAllPartitionsPruned = selection.wasAllPartitionsPruned;
+    this.emptyDirectory = selection.emptyDirectory;
   }
 
   public Path getSelectionRoot() {
@@ -127,8 +130,8 @@ public class FileSelection {
     Stopwatch timer = logger.isDebugEnabled() ? Stopwatch.createStarted() : null;
 
     if (statuses == null)  {
-      List<FileStatus> newStatuses = Lists.newArrayList();
-      for (Path pathStr : files) {
+      List<FileStatus> newStatuses = new ArrayList<>();
+      for (Path pathStr : Objects.requireNonNull(files, "Files can not be null if statuses are null")) {
         newStatuses.add(fs.getFileStatus(pathStr));
       }
       statuses = newStatuses;
@@ -144,11 +147,9 @@ public class FileSelection {
 
   public List<Path> getFiles() {
     if (files == null) {
-      List<Path> newFiles = Lists.newArrayList();
-      for (FileStatus status:statuses) {
-        newFiles.add(status.getPath());
-      }
-      files = newFiles;
+      files = Objects.requireNonNull(statuses, "Statuses can not be null if files are null").stream()
+        .map(FileStatus::getPath)
+        .collect(Collectors.toList());
     }
     return files;
   }
@@ -386,9 +387,8 @@ public class FileSelection {
     Preconditions.checkArgument(!combinedPath.isEmpty(), "Empty path (" + combinedPath + "( in file selection path.");
 
     if (!combinedPath.startsWith(parent)) {
-      StringBuilder msg = new StringBuilder();
-      msg.append("Invalid path : ").append(subpath).append(" takes you outside the workspace.");
-      throw new IllegalArgumentException(msg.toString());
+      throw new IllegalArgumentException(
+        String.format("Invalid path [%s] takes you outside the workspace.", subpath));
     }
   }
 
@@ -396,7 +396,7 @@ public class FileSelection {
     return statuses;
   }
 
-  public boolean supportDirPrunig() {
+  public boolean supportsDirPruning() {
     if (isExpandedFully() || isExpandedPartial()) {
       if (!wasAllPartitionsPruned) {
         return true;
@@ -440,26 +440,15 @@ public class FileSelection {
     this.emptyDirectory = true;
   }
 
-
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("root=").append(this.selectionRoot);
-
+    sb.append("root=").append(selectionRoot);
     sb.append("files=[");
-    boolean isFirst = true;
-    for (Path file : this.files) {
-      if (isFirst) {
-        isFirst = false;
-        sb.append(file);
-      } else {
-        sb.append(",");
-        sb.append(file);
-      }
-    }
+    sb.append(getFiles().stream()
+      .map(Path::toString)
+      .collect(Collectors.joining(", ")));
     sb.append("]");
-
     return sb.toString();
   }
-
 }

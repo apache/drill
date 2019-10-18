@@ -178,7 +178,7 @@ public class LogBatchReader implements ManagedReader<FileSchemaNegotiator> {
   private void openFile(FileSchemaNegotiator negotiator) {
     InputStream in;
     try {
-      in = negotiator.fileSystem().open(split.getPath());
+      in = negotiator.fileSystem().openPossiblyCompressedStream(split.getPath());
     } catch (Exception e) {
       throw UserException
           .dataReadError(e)

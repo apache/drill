@@ -17,18 +17,15 @@
  */
 package org.apache.drill.exec.store.dfs;
 
-import java.util.List;
-
-import org.apache.drill.common.logical.FormatPluginConfig;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.hadoop.fs.Path;
 
+import java.util.List;
 
 public class FormatSelection {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FormatSelection.class);
 
   private FormatPluginConfig format;
   private FileSelection selection;
@@ -62,7 +59,7 @@ public class FormatSelection {
   }
 
   @JsonIgnore
-  public boolean supportDirPruning() {
-    return selection.supportDirPrunig();
+  public boolean supportsDirPruning() {
+    return selection.supportsDirPruning();
   }
 }
