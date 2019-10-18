@@ -19,7 +19,6 @@ package org.apache.drill.exec.store.ltsv;
 
 import io.netty.buffer.DrillBuf;
 import org.apache.drill.common.AutoCloseables;
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.exception.OutOfMemoryException;
@@ -30,11 +29,13 @@ import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
-import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
@@ -46,13 +47,13 @@ import java.util.Set;
 
 public class LTSVRecordReader extends AbstractRecordReader {
 
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LTSVRecordReader.class);
+  private static final Logger logger = LoggerFactory.getLogger(LTSVRecordReader.class);
 
   private static final int MAX_RECORDS_PER_BATCH = 8096;
 
   private final String inputPath;
 
-  private final FSDataInputStream fsStream;
+  private final InputStream fsStream;
 
   private final BufferedReader reader;
 
@@ -64,14 +65,14 @@ public class LTSVRecordReader extends AbstractRecordReader {
                           List<SchemaPath> columns) throws OutOfMemoryException {
     this.inputPath = path.toUri().getPath();
     try {
-      this.fsStream = fileSystem.open(path);
-      this.reader = new BufferedReader(new InputStreamReader(fsStream.getWrappedStream(), StandardCharsets.UTF_8));
+      this.fsStream = fileSystem.openPossiblyCompressedStream(path);
+      this.reader = new BufferedReader(new InputStreamReader(fsStream, StandardCharsets.UTF_8));
       this.buffer = fragmentContext.getManagedBuffer();
       setColumns(columns);
-
     } catch (IOException e) {
-      String msg = String.format("Failed to open input file: %s", inputPath);
-      throw UserException.dataReadError(e).message(msg).build(logger);
+      throw UserException.dataReadError(e)
+        .message(String.format("Failed to open input file: %s", inputPath))
+        .build(logger);
     }
   }
 
@@ -79,16 +80,14 @@ public class LTSVRecordReader extends AbstractRecordReader {
   protected Collection<SchemaPath> transformColumns(Collection<SchemaPath> projected) {
     Set<SchemaPath> transformed = new LinkedHashSet<>();
     if (!isStarQuery()) {
-      for (SchemaPath column : projected) {
-        transformed.add(column);
-      }
+      transformed.addAll(projected);
     } else {
       transformed.add(SchemaPath.STAR_COLUMN);
     }
     return transformed;
   }
 
-  public void setup(final OperatorContext context, final OutputMutator output) throws ExecutionSetupException {
+  public void setup(final OperatorContext context, final OutputMutator output) {
     this.writer = new VectorContainerWriter(output);
   }
 
@@ -100,7 +99,7 @@ public class LTSVRecordReader extends AbstractRecordReader {
 
     try {
       BaseWriter.MapWriter map = this.writer.rootAsMap();
-      String line = null;
+      String line;
 
       while (recordCount < MAX_RECORDS_PER_BATCH && (line = this.reader.readLine()) != null) {
         // Skip empty lines
@@ -145,7 +144,9 @@ public class LTSVRecordReader extends AbstractRecordReader {
 
     } catch (final Exception e) {
       String msg = String.format("Failure while reading messages from %s. Record reader was at record: %d", inputPath, recordCount + 1);
-      throw UserException.dataReadError(e).message(msg).build(logger);
+      throw UserException.dataReadError(e)
+        .message(msg)
+        .build(logger);
     }
   }
 
@@ -161,5 +162,4 @@ public class LTSVRecordReader extends AbstractRecordReader {
   public void close() throws Exception {
     AutoCloseables.close(reader, fsStream);
   }
-
 }

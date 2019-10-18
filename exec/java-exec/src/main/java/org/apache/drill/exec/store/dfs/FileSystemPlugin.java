@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.dfs;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,9 +34,9 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.exec.metastore.MetadataProviderManager;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
-import org.apache.drill.exec.metastore.MetadataProviderManager;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.SessionOptionManager;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
@@ -43,11 +44,14 @@ import org.apache.drill.exec.store.ClassPathFileSystem;
 import org.apache.drill.exec.store.LocalSyncableFileSystem;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-
+import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet.Builder;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.CommonConfigurationKeys;
+import org.apache.hadoop.fs.FileSystem;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A Storage engine associated with a Hadoop FileSystem Implementation. Examples include HDFS, MapRFS, QuantacastFileSystem,
@@ -57,7 +61,14 @@ import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet.Buil
  */
 public class FileSystemPlugin extends AbstractStoragePlugin {
 
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FileSystemPlugin.class);
+  private static final Logger logger = LoggerFactory.getLogger(FileSystemPlugin.class);
+
+  /**
+   * org.apache.hadoop.io.compress library supports such codecs as Gzip and Bzip2 out of box.
+   * This list stores only codecs that are missing in Hadoop library.
+   */
+  private static final List<String> ADDITIONAL_CODECS = Collections.singletonList(
+    ZipCodec.class.getCanonicalName());
 
   private final FileSystemSchemaFactory schemaFactory;
   private final FormatCreator formatCreator;
@@ -79,6 +90,8 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
       fsConf.set(FileSystem.FS_DEFAULT_NAME_KEY, config.getConnection());
       fsConf.set("fs.classpath.impl", ClassPathFileSystem.class.getName());
       fsConf.set("fs.drill-local.impl", LocalSyncableFileSystem.class.getName());
+
+      addCodecs(fsConf);
 
       if (isS3Connection(fsConf)) {
         handleS3Credentials(fsConf);
@@ -111,6 +124,24 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
     }
   }
 
+  /**
+   * Merges codecs from configuration with the {@link #ADDITIONAL_CODECS}
+   * and updates configuration property.
+   * Drill built-in codecs are added at the beginning of the codecs string
+   * so config codecs can override Drill ones.
+   *
+   * @param conf Hadoop configuration
+   */
+  private void addCodecs(Configuration conf) {
+    String confCodecs = conf.get(CommonConfigurationKeys.IO_COMPRESSION_CODECS_KEY);
+    String builtInCodecs = String.join(",", ADDITIONAL_CODECS);
+    String newCodecs = Strings.isNullOrEmpty(confCodecs)
+      ? builtInCodecs
+      : builtInCodecs + ", " + confCodecs;
+    logger.trace("Codecs: {}", newCodecs);
+    conf.set(CommonConfigurationKeys.IO_COMPRESSION_CODECS_KEY, newCodecs);
+  }
+
   private boolean isS3Connection(Configuration conf) {
     URI uri = FileSystem.getDefaultUri(conf);
     return uri.getScheme().equals("s3a");
@@ -131,7 +162,7 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
     for (String key : credentialKeys) {
       char[] credentialChars = conf.getPassword(key);
       if (credentialChars == null) {
-        logger.warn(String.format("Property '%s' is absent.", key));
+        logger.warn("Property '{}' is absent.", key);
       } else {
         conf.set(key, String.valueOf(credentialChars));
       }

@@ -25,7 +25,6 @@ import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileScanB
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.dfs.easy.EasySubScan;
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.server.DrillbitContext;
@@ -34,9 +33,11 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.drill.exec.store.pcap.PcapBatchReader.PcapReaderConfig;
 
 public class PcapFormatPlugin extends EasyFormatPlugin<PcapFormatConfig> {
+
   public static final String PLUGIN_NAME = "pcap";
 
   private static class PcapReaderFactory extends FileReaderFactory {
+
     private final PcapReaderConfig readerConfig;
 
     public PcapReaderFactory(PcapReaderConfig config) {
@@ -48,6 +49,7 @@ public class PcapFormatPlugin extends EasyFormatPlugin<PcapFormatConfig> {
       return new PcapBatchReader(readerConfig);
     }
   }
+
   public PcapFormatPlugin(String name, DrillbitContext context,
                            Configuration fsConf, StoragePluginConfig storageConfig,
                            PcapFormatConfig formatConfig) {
@@ -58,7 +60,7 @@ public class PcapFormatPlugin extends EasyFormatPlugin<PcapFormatConfig> {
     EasyFormatConfig config = new EasyFormatConfig();
     config.readable = true;
     config.writable = false;
-    config.blockSplittable = true;
+    config.blockSplittable = false;
     config.compressible = true;
     config.supportsProjectPushdown = true;
     config.extensions = pluginConfig.getExtensions();
@@ -70,13 +72,12 @@ public class PcapFormatPlugin extends EasyFormatPlugin<PcapFormatConfig> {
   }
 
   @Override
-  public ManagedReader<? extends FileSchemaNegotiator> newBatchReader(
-    EasySubScan scan, OptionManager options) throws ExecutionSetupException {
+  public ManagedReader<? extends FileSchemaNegotiator> newBatchReader(EasySubScan scan, OptionManager options) {
     return new PcapBatchReader(new PcapReaderConfig(this));
   }
 
   @Override
-  protected FileScanBuilder frameworkBuilder(OptionManager options, EasySubScan scan) throws ExecutionSetupException {
+  protected FileScanBuilder frameworkBuilder(OptionManager options, EasySubScan scan) {
     FileScanBuilder builder = new FileScanBuilder();
     builder.setReaderFactory(new PcapReaderFactory(new PcapReaderConfig(this)));
     initScanBuilder(builder, scan);

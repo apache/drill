@@ -31,18 +31,18 @@ import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.store.AbstractRecordReader;
+import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.pcapng.schema.Column;
 import org.apache.drill.exec.store.pcapng.schema.DummyArrayImpl;
 import org.apache.drill.exec.store.pcapng.schema.DummyImpl;
 import org.apache.drill.exec.store.pcapng.schema.Schema;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -59,14 +59,14 @@ public class PcapngRecordReader extends AbstractRecordReader {
   private final Path pathToFile;
   private OutputMutator output;
   private List<ProjectedColumnInfo> projectedCols;
-  private FileSystem fs;
-  private FSDataInputStream in;
+  private DrillFileSystem fs;
+  private InputStream in;
   private List<SchemaPath> columns;
 
   private Iterator<IPcapngType> it;
 
   public PcapngRecordReader(final Path pathToFile,
-                            final FileSystem fileSystem,
+                            final DrillFileSystem fileSystem,
                             final List<SchemaPath> columns) {
     this.fs = fileSystem;
     this.pathToFile = fs.makeQualified(pathToFile);
@@ -79,7 +79,7 @@ public class PcapngRecordReader extends AbstractRecordReader {
     try {
 
       this.output = output;
-      this.in = fs.open(pathToFile);
+      this.in = fs.openPossiblyCompressedStream(pathToFile);
       PcapDecoder decoder = new PcapDecoder(IOUtils.toByteArray(in));
       decoder.decode();
       this.it = decoder.getSectionList().iterator();

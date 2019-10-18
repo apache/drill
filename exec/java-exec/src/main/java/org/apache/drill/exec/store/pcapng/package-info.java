@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 /**
- * For comments on realization of this format plugin look at :
+ * For comments on implementation of this format plugin see:
  *
  * @see <a href="https://issues.apache.org/jira/browse/DRILL-6179"> Jira</a>
  */

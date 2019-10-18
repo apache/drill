@@ -47,7 +47,7 @@ public class PcapngFormatPlugin extends EasyFormatPlugin<PcapngFormatConfig> {
 
   public PcapngFormatPlugin(String name, DrillbitContext context, Configuration fsConf, StoragePluginConfig config, PcapngFormatConfig formatPluginConfig) {
     super(name, context, fsConf, config, formatPluginConfig, true,
-        false, true, false,
+        false, false, true,
         formatPluginConfig.getExtensions(), DEFAULT_NAME);
   }
 

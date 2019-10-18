@@ -19,7 +19,6 @@
 package org.apache.drill.exec.store.syslog;
 
 import io.netty.buffer.DrillBuf;
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.exception.OutOfMemoryException;
@@ -34,18 +33,20 @@ import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 import org.realityforge.jsyslog.message.StructuredDataParameter;
 import org.realityforge.jsyslog.message.SyslogMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Map;
-import java.util.Iterator;
 
 public class SyslogRecordReader extends AbstractRecordReader {
 
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SyslogRecordReader.class);
+  private static final Logger logger = LoggerFactory.getLogger(SyslogRecordReader.class);
   private static final int MAX_RECORDS_PER_BATCH = 4096;
 
   private final DrillFileSystem fileSystem;
@@ -54,15 +55,12 @@ public class SyslogRecordReader extends AbstractRecordReader {
   private BufferedReader reader;
   private DrillBuf buffer;
   private VectorContainerWriter writer;
-  private SyslogFormatConfig config;
-  private int maxErrors;
-  private boolean flattenStructuredData;
+  private final int maxErrors;
+  private final boolean flattenStructuredData;
   private int errorCount;
   private int lineCount;
-  private List<SchemaPath> projectedColumns;
+  private final List<SchemaPath> projectedColumns;
   private String line;
-
-  private SimpleDateFormat df;
 
   public SyslogRecordReader(FragmentContext context,
                             DrillFileSystem fileSystem,
@@ -74,9 +72,7 @@ public class SyslogRecordReader extends AbstractRecordReader {
     this.fileSystem = fileSystem;
     this.fileWork = fileWork;
     this.userName = userName;
-    this.config = config;
     this.maxErrors = config.getMaxErrors();
-    this.df = getValidDateObject("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
     this.errorCount = 0;
     this.buffer = context.getManagedBuffer().reallocIfNeeded(4096);
     this.projectedColumns = columns;
@@ -86,7 +82,7 @@ public class SyslogRecordReader extends AbstractRecordReader {
   }
 
   @Override
-  public void setup(final OperatorContext context, final OutputMutator output) throws ExecutionSetupException {
+  public void setup(final OperatorContext context, final OutputMutator output) {
     openFile();
     this.writer = new VectorContainerWriter(output);
   }
@@ -94,7 +90,7 @@ public class SyslogRecordReader extends AbstractRecordReader {
   private void openFile() {
     InputStream in;
     try {
-      in = fileSystem.open(fileWork.getPath());
+      in = fileSystem.openPossiblyCompressedStream(fileWork.getPath());
     } catch (Exception e) {
       throw UserException
               .dataReadError(e)
@@ -115,7 +111,7 @@ public class SyslogRecordReader extends AbstractRecordReader {
 
     try {
       BaseWriter.MapWriter map = this.writer.rootAsMap();
-      String line = null;
+      String line;
 
       while (recordCount < MAX_RECORDS_PER_BATCH && (line = this.reader.readLine()) != null) {
         lineCount++;
@@ -288,7 +284,7 @@ public class SyslogRecordReader extends AbstractRecordReader {
       return;
     }
     try {
-      byte[] bytes = value.getBytes("UTF-8");
+      byte[] bytes = value.getBytes(StandardCharsets.UTF_8);
       int stringLength = bytes.length;
       this.buffer = buffer.reallocIfNeeded(stringLength);
       this.buffer.setBytes(0, bytes, 0, stringLength);
@@ -304,18 +300,10 @@ public class SyslogRecordReader extends AbstractRecordReader {
 
   //Helper function to flatten structured data
   private void mapFlattenedStructuredData(Map<String, List<StructuredDataParameter>> data, BaseWriter.MapWriter map) {
-    Iterator<Map.Entry<String, List<StructuredDataParameter>>> entries = data.entrySet().iterator();
-    while (entries.hasNext()) {
-      Map.Entry<String, List<StructuredDataParameter>> entry = entries.next();
-
-      List<StructuredDataParameter> dataParameters = entry.getValue();
-      String fieldName;
-      String fieldValue;
-
-      for (StructuredDataParameter parameter : dataParameters) {
-        fieldName = "structured_data_" + parameter.getName();
-        fieldValue = parameter.getValue();
-
+    for (Map.Entry<String, List<StructuredDataParameter>> entry : data.entrySet()) {
+      for (StructuredDataParameter parameter : entry.getValue()) {
+        String fieldName = "structured_data_" + parameter.getName();
+        String fieldValue = parameter.getValue();
         mapStringField(fieldName, fieldValue, map);
       }
     }
@@ -323,28 +311,19 @@ public class SyslogRecordReader extends AbstractRecordReader {
 
   //Gets field from the Structured Data Construct
   private String getFieldFromStructuredData(String fieldName, SyslogMessage parsedMessage) {
-    String result = null;
-    Map<String, List<StructuredDataParameter>> structuredData = parsedMessage.getStructuredData();
-    Iterator<Map.Entry<String, List<StructuredDataParameter>>> entries = parsedMessage.getStructuredData().entrySet().iterator();
-    while (entries.hasNext()) {
-      Map.Entry<String, List<StructuredDataParameter>> entry = entries.next();
-      List<StructuredDataParameter> dataParameters = entry.getValue();
-
-      for (StructuredDataParameter d : dataParameters) {
+    for (Map.Entry<String, List<StructuredDataParameter>> entry : parsedMessage.getStructuredData().entrySet()) {
+      for (StructuredDataParameter d : entry.getValue()) {
         if (d.getName().equals(fieldName)) {
           return d.getValue();
         }
       }
     }
-    return result;
+    return null;
   }
 
   //Helper function to map arrays
   private void mapComplexField(String mapName, Map<String, List<StructuredDataParameter>> data, BaseWriter.MapWriter map) {
-    Iterator<Map.Entry<String, List<StructuredDataParameter>>> entries = data.entrySet().iterator();
-    while (entries.hasNext()) {
-      Map.Entry<String, List<StructuredDataParameter>> entry = entries.next();
-
+    for (Map.Entry<String, List<StructuredDataParameter>> entry : data.entrySet()) {
       List<StructuredDataParameter> dataParameters = entry.getValue();
       String fieldName;
       String fieldValue;

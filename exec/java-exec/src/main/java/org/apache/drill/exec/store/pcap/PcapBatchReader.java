@@ -28,15 +28,13 @@ import org.apache.drill.exec.store.pcap.decoder.Packet;
 import org.apache.drill.exec.store.pcap.decoder.PacketDecoder;
 import org.apache.drill.exec.store.pcap.schema.Schema;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
-import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.mapred.FileSplit;
 import org.joda.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-
-import org.apache.hadoop.fs.Path;
+import java.io.InputStream;
 
 import static org.apache.drill.exec.store.pcap.PcapFormatUtils.parseBytesToASCII;
 
@@ -48,15 +46,9 @@ public class PcapBatchReader implements ManagedReader<FileSchemaNegotiator> {
 
   private FileSplit split;
 
-  private PcapReaderConfig readerConfig;
-
   private PacketDecoder decoder;
 
-  private ResultSetLoader loader;
-
-  private FSDataInputStream fsStream;
-
-  private Schema pcapSchema;
+  private InputStream fsStream;
 
   private RowSetLoader rowWriter;
 
@@ -135,7 +127,6 @@ public class PcapBatchReader implements ManagedReader<FileSchemaNegotiator> {
   }
 
   public PcapBatchReader(PcapReaderConfig readerConfig) {
-    this.readerConfig = readerConfig;
   }
 
   @Override
@@ -143,10 +134,10 @@ public class PcapBatchReader implements ManagedReader<FileSchemaNegotiator> {
     split = negotiator.split();
     openFile(negotiator);
     SchemaBuilder builder = new SchemaBuilder();
-    pcapSchema = new Schema();
+    Schema pcapSchema = new Schema();
     TupleMetadata schema = pcapSchema.buildSchema(builder);
     negotiator.setTableSchema(schema, false);
-    loader = negotiator.build();
+    ResultSetLoader loader = negotiator.build();
 
     // Creates writers for all fields (Since schema is known)
     rowWriter = loader.writer();
@@ -208,14 +199,13 @@ public class PcapBatchReader implements ManagedReader<FileSchemaNegotiator> {
         .build(logger);
     }
     fsStream = null;
-    this.buffer = null;
-    this.decoder = null;
+    buffer = null;
+    decoder = null;
   }
 
   private void openFile(FileSchemaNegotiator negotiator) {
     try {
-      String filePath = split.getPath().toString();
-      fsStream = negotiator.fileSystem().open(new Path(filePath));
+      fsStream = negotiator.fileSystem().openPossiblyCompressedStream(split.getPath());
       decoder = new PacketDecoder(fsStream);
       buffer = new byte[BUFFER_SIZE + decoder.getMaxLength()];
       validBytes = fsStream.read(buffer);
@@ -237,9 +227,6 @@ public class PcapBatchReader implements ManagedReader<FileSchemaNegotiator> {
       getNextPacket(rowWriter);
     }
 
-    if (packet == null) {
-      return false;
-    }
     int old = offset;
     offset = decoder.decodePacket(buffer, offset, packet, decoder.getMaxLength(), validBytes);
     if (offset > validBytes) {

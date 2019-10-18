@@ -544,7 +544,7 @@ public abstract class PruneScanRule extends StoragePluginOptimizerRule {
     if (scan instanceof EnumerableTableScan) {
       final Object selection = DrillRelOptUtil.getDrillTable(scan).getSelection();
       if (selection instanceof FormatSelection
-          && ((FormatSelection)selection).supportDirPruning()) {
+          && ((FormatSelection)selection).supportsDirPruning()) {
         return true;  // Do directory-based pruning in Calcite logical
       } else {
         return false; // Do not do directory-based pruning in Calcite logical
