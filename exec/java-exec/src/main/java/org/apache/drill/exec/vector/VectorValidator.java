@@ -28,7 +28,7 @@ public class VectorValidator {
     SelectionVectorMode mode = batch.getSchema().getSelectionVectorMode();
     switch(mode) {
       case NONE: {
-        for (VectorWrapper w : batch) {
+        for (VectorWrapper<?> w : batch) {
           ValueVector v = w.getValueVector();
           for (int i = 0; i < count; i++) {
             Object obj = v.getAccessor().getObject(i);
@@ -40,7 +40,7 @@ public class VectorValidator {
         break;
       }
       case TWO_BYTE: {
-        for (VectorWrapper w : batch) {
+        for (VectorWrapper<?> w : batch) {
           ValueVector v = w.getValueVector();
           for (int i = 0; i < count; i++) {
             int index = batch.getSelectionVector2().getIndex(i);
@@ -53,7 +53,7 @@ public class VectorValidator {
         break;
       }
       case FOUR_BYTE: {
-        for (VectorWrapper w : batch) {
+        for (VectorWrapper<?> w : batch) {
           ValueVector[] vv = w.getValueVectors();
           for (int i = 0; i < count; i++) {
             int index = batch.getSelectionVector4().get(i);

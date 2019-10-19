@@ -350,7 +350,10 @@ public class IteratorValidatorBatchIterator implements CloseableRecordBatch {
             "Batch validation failed. Source operator: " +
             incoming.getClass().getSimpleName());
       }
-      //VectorValidator.validate(incoming);
+      // The following validation currently calculates, and discards
+      // a hash code. Since it requires manual checking, it is
+      // disabled by default.
+      // VectorValidator.validate(incoming);
     }
   }
 
