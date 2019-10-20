@@ -21,6 +21,7 @@ import java.lang.reflect.Method;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
+import org.apache.drill.exec.physical.impl.protocol.OperatorRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.SimpleVectorWrapper;
 import org.apache.drill.exec.record.VectorAccessible;
@@ -155,7 +156,7 @@ public class BatchValidator {
    */
   private static Map<Class<? extends RecordBatch>, CheckMode> buildRules() {
     final Map<Class<? extends RecordBatch>, CheckMode> rules = new IdentityHashMap<>();
-    //rules.put(OperatorRecordBatch.class, CheckMode.ALL);
+    rules.put(OperatorRecordBatch.class, CheckMode.ALL);
     return rules;
   }
 

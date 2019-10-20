@@ -290,7 +290,7 @@ public class OffsetVectorWriterImpl extends AbstractFixedWidthWriter implements 
     // rows. But, this being an offset vector, we add one to account
     // for the extra 0 value at the start.
 
-    setValueCount(vectorIndex.rowStartIndex() + 1);
+    setValueCount(vectorIndex.rowStartIndex());
   }
 
   @Override

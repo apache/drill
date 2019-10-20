@@ -94,7 +94,7 @@ public abstract class SingleVectorState implements VectorState {
 
     @Override
     public int allocateVector(ValueVector vector, int cardinality) {
-      int size = super.allocateVector(vector, cardinality);
+      final int size = super.allocateVector(vector, cardinality);
 
       // IsSet ("bit") vectors rely on values being initialized to zero (unset.)
 
