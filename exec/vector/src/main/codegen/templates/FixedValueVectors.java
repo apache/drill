@@ -816,7 +816,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     @Override
     public void setValueCount(int valueCount) {
       final int currentValueCapacity = getValueCapacity();
-      final int idx = (VALUE_WIDTH * valueCount);
+      final int idx = VALUE_WIDTH * valueCount;
       while(valueCount > getValueCapacity()) {
         reAlloc();
       }
@@ -825,12 +825,11 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
       } else if (allocationMonitor > 0) {
         allocationMonitor = 0;
       }
-      VectorTrimmer.trim(data, idx);
-      data.writerIndex(valueCount * VALUE_WIDTH);
+      data.writerIndex(idx);
     }
   }
-
   <#if minor.class == "Int" || minor.class == "UInt4" || minor.class == "UInt1">
+
   /**
    * Helper class to buffer container mutation as a means to optimize native memory copy operations.
    *
@@ -867,8 +866,8 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
       this.currentIdx = startIdx;
       this.parent = parent;
     }
-
     <#if minor.class == "Int" || minor.class == "UInt4">
+
     public void setSafe(int value) {
       if (buffer.remaining() < 4) {
         flush();
@@ -909,8 +908,8 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
       DrillBuf.putInt(buffer, pos, val);
     }
     </#if> <#-- minor.class -->
-
     <#if minor.class == "UInt1">
+
     public void setSafe(byte value) {
       if (buffer.remaining() < 1) {
         flush();

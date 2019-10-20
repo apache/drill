@@ -56,7 +56,7 @@
         <appender-ref ref="SOCKET"/>
       </then>
     </if>
-    <appender-ref ref="STDOUT"/>
+    <!-- <appender-ref ref="STDOUT"/> -->
   </root>
 
 </configuration>

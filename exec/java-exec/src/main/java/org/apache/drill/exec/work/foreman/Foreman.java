@@ -180,7 +180,6 @@ public class Foreman implements Runnable {
     return queryText;
   }
 
-
   /**
    * Get the QueryContext created for the query.
    *
@@ -873,7 +872,6 @@ public class Foreman implements Runnable {
       logger.warn("Interrupted while waiting for RPC outcome of sending final query result to initiating client.");
     }
   }
-
 
   public RuntimeFilterRouter getRuntimeFilterRouter() {
     return runtimeFilterRouter;

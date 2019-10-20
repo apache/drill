@@ -21,6 +21,7 @@ import java.util.Iterator;
 
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.physical.rowSet.DirectRowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetFormatter;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
@@ -29,7 +30,6 @@ import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.test.BufferingQueryEventListener.QueryEvent;
-import org.apache.drill.exec.physical.rowSet.DirectRowSet;
 
 public class QueryRowSetIterator implements Iterator<DirectRowSet>, Iterable<DirectRowSet> {
   private final BufferingQueryEventListener listener;
@@ -57,8 +57,7 @@ public class QueryRowSetIterator implements Iterator<DirectRowSet>, Iterable<Dir
       QueryEvent event = listener.get();
       state = event.state;
       batch = null;
-      switch (event.type)
-      {
+      switch (event.type) {
       case BATCH:
         batchCount++;
         recordCount += event.batch.getHeader().getRowCount();
