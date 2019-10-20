@@ -585,6 +585,7 @@ public class UserException extends DrillRuntimeException {
       return this;
     }
 
+    private static final File SPIN_FILE =  new File("/tmp/drill/spin");
     /**
      * builds a user exception or returns the wrapped one. If the error is a system error, the error message is logged
      * to the given {@link Logger}.
@@ -596,14 +597,13 @@ public class UserException extends DrillRuntimeException {
 
       // To allow for debugging:
       //
-      //   A spinner code to make the execution stop here while the file '/tmp/drill/spin' exists
+      // A spinner code to make the execution stop here while the file '/tmp/drill/spin' exists
       // Can be used to attach a debugger, use jstack, etc
       // (do "clush -a touch /tmp/drill/spin" to turn this on across all the cluster nodes, and to
-      //  release the spinning threads do "clush -a rm /tmp/drill/spin")
+      // release the spinning threads do "clush -a rm /tmp/drill/spin")
       // The processID of the spinning thread (along with the error message) should then be found
       // in a file like  /tmp/drill/spin4148663301172491613.tmp
-      final File spinFile = new File("/tmp/drill/spin");
-      if ( spinFile.exists() ) {
+      if (SPIN_FILE.exists()) {
         final File tmpDir = new File("/tmp/drill");
         File outErr = null;
         try {
@@ -617,7 +617,7 @@ public class UserException extends DrillRuntimeException {
         } catch (final Exception ex) {
           logger.warn("Failed creating a spinner tmp message file: {}", ex);
         }
-        while (spinFile.exists()) {
+        while (SPIN_FILE.exists()) {
           try { sleep(1_000); } catch (final Exception ex) { /* ignore interruptions */ }
         }
         try { outErr.delete(); } catch (final Exception ex) { } // cleanup - remove err msg file

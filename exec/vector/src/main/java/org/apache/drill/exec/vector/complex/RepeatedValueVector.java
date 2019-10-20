@@ -21,25 +21,27 @@ import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
 
 /**
- * An abstraction representing repeated value vectors.
- *
- * A repeated vector contains values that may either be flat or nested. A value consists of zero or more cells(inner values).
- * Current design maintains data and offsets vectors. Each cell is stored in the data vector. Repeated vector
- * uses the offset vector to determine the sequence of cells pertaining to an individual value.
- *
+ * Represents repeated (AKA "array") value vectors.
+ * <p>
+ * A repeated vector contains values that may either be flat or nested. A value
+ * consists of zero or more cells(inner values). Current design maintains data
+ * and offsets vectors. Each cell is stored in the data vector. Repeated vector
+ * uses the offset vector to determine the sequence of cells pertaining to an
+ * individual value.
  */
+
 public interface RepeatedValueVector extends ValueVector, ContainerVectorLike {
 
   int DEFAULT_REPEAT_PER_RECORD = 5;
 
   /**
-   * Returns the underlying offset vector or null if none exists.
+   * @return the underlying offset vector or null if none exists.
    */
 
   UInt4Vector getOffsetVector();
 
   /**
-   * Returns the underlying data vector or null if none exists.
+   * @return the underlying data vector or null if none exists.
    */
   ValueVector getDataVector();
 
@@ -51,22 +53,19 @@ public interface RepeatedValueVector extends ValueVector, ContainerVectorLike {
 
   interface RepeatedAccessor extends ValueVector.Accessor {
     /**
-     * Returns total number of cells that vector contains.
-     *
+     * @return total number of cells that vector contains.
      * The result includes empty, null valued cells.
      */
     int getInnerValueCount();
 
-
     /**
-     * Returns number of cells that the value at the given index contains.
+     * @return number of cells that the value at the given index contains.
      */
     int getInnerValueCountAt(int index);
 
     /**
-     * Returns true if the value at the given index is empty, false otherwise.
-     *
      * @param index  value index
+     * @return true if the value at the given index is empty, false otherwise.
      */
     boolean isEmpty(int index);
   }
@@ -78,7 +77,5 @@ public interface RepeatedValueVector extends ValueVector, ContainerVectorLike {
      * @param index  index of new value to start
      */
     void startNewValue(int index);
-
-
   }
 }

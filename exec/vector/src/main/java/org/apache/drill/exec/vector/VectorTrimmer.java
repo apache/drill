@@ -18,16 +18,10 @@
 package org.apache.drill.exec.vector;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.DrillBuf;
 
 public class VectorTrimmer {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VectorTrimmer.class);
 
   public static void trim(ByteBuf data, int idx) {
     data.writerIndex(idx);
-    if (data instanceof DrillBuf) {
-      // data.capacity(idx);
-      data.writerIndex(idx);
-    }
   }
 }

@@ -17,13 +17,14 @@
  */
 package org.apache.drill.exec.work.foreman;
 
-import com.codahale.metrics.Counter;
 import org.apache.drill.common.EventProcessor;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.work.foreman.Foreman.ForemanResult;
+
+import com.codahale.metrics.Counter;
 
 /**
  * Is responsible for query transition from one state to another,
@@ -217,6 +218,8 @@ public class QueryStateProcessor implements AutoCloseable {
       case CANCELLATION_REQUESTED:
         wrapUpCancellation();
         return;
+    default:
+      break;
     }
     checkCommonStates(newState, exception);
   }
@@ -231,6 +234,8 @@ public class QueryStateProcessor implements AutoCloseable {
       case CANCELLATION_REQUESTED:
         wrapUpCancellation();
         return;
+    default:
+      break;
     }
     checkCommonStates(newState, exception);
   }
@@ -324,6 +329,8 @@ public class QueryStateProcessor implements AutoCloseable {
         foremanResult.setFailed(exception);
         foremanResult.close();
         return;
+    default:
+      break;
     }
 
     throw new IllegalStateException(String.format("Failure trying to change states: %s --> %s", state.name(), newState.name()));

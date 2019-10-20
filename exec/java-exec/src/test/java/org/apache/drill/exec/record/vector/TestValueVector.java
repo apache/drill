@@ -63,13 +63,12 @@ import org.apache.drill.exec.vector.complex.ListVector;
 import org.apache.drill.exec.vector.complex.MapVector;
 import org.apache.drill.exec.vector.complex.RepeatedListVector;
 import org.apache.drill.exec.vector.complex.RepeatedMapVector;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 
 import io.netty.buffer.DrillBuf;
 
@@ -142,7 +141,7 @@ public class TestValueVector extends ExecTest {
     // common: value count < MAX_VALUE_ALLOCATION
     try {
       vector.allocateNew(expectedValueCapacity);
-      for (int i=0; i<3;i++) {
+      for (int i = 0; i < 3; i++) {
         vector.reAlloc(); // expand buffer size
       }
       assertEquals(Integer.MAX_VALUE, vector.getValueCapacity());

@@ -20,16 +20,16 @@ package org.apache.drill.exec.vector;
 import java.io.Closeable;
 import java.util.Set;
 
-import io.netty.buffer.DrillBuf;
-
 import org.apache.drill.exec.exception.OutOfMemoryException;
-import org.apache.drill.exec.memory.AllocationManager.BufferLedger;
 import org.apache.drill.exec.memory.AllocationManager;
+import org.apache.drill.exec.memory.AllocationManager.BufferLedger;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
+
+import io.netty.buffer.DrillBuf;
 
 /**
  * An abstraction that is used to store a sequence of values in an individual
@@ -266,7 +266,7 @@ public interface ValueVector extends Closeable, Iterable<ValueVector> {
   void toNullable(ValueVector nullableVector);
 
   /**
-   * An abstraction that is used to read from this vector instance.
+   * Reads from this vector instance.
    */
   interface Accessor {
     /**
@@ -289,7 +289,7 @@ public interface ValueVector extends Closeable, Iterable<ValueVector> {
   }
 
   /**
-   * An abstraction that is used to write into this vector instance.
+   * Writes into this vector instance.
    */
   interface Mutator {
     /**

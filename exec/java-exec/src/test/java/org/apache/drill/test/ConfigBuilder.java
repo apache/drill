@@ -17,20 +17,20 @@
  */
 package org.apache.drill.test;
 
-import java.util.Collection;
-import java.util.Map.Entry;
-import java.util.Properties;
-
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigValue;
+import com.typesafe.config.ConfigValueFactory;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.memory.BoundsChecking;
 import org.apache.drill.exec.physical.impl.BaseRootExec;
 import org.apache.drill.exec.server.options.OptionDefinition;
 import org.apache.drill.exec.server.options.SystemOptionManager;
 
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigValue;
-import com.typesafe.config.ConfigValueFactory;
+import java.util.Collection;
+import java.util.Map.Entry;
+import java.util.Properties;
 
 /**
  * Builds a {@link DrillConfig} for use in tests. Use this when a config
@@ -46,7 +46,7 @@ public class ConfigBuilder {
    * Use the given configuration properties as overrides.
    * @param configProps a collection of config properties
    * @return this builder
-   * @see {@link #put(String, Object)}
+   * @see #put(String, Object)
    */
   public ConfigBuilder configProps(Properties configProps) {
     if (hasResource()) {
@@ -87,7 +87,7 @@ public class ConfigBuilder {
    * @param configResource path to the file that contains the
    * config file to be read
    * @return this builder
-   * @see {@link #put(String, Object)}
+   * @see #put(String, Object)
    */
 
   public ConfigBuilder resource(String configResource) {
@@ -134,7 +134,7 @@ public class ConfigBuilder {
     properties.put(ExecConstants.USE_DYNAMIC_UDFS_KEY, "false");
     properties.put(ExecConstants.SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE, "false");
     properties.put(BaseRootExec.ENABLE_BATCH_DUMP_CONFIG, "false");
-
+    properties.put(BoundsChecking.ENABLE_UNSAFE_BOUNDS_CHECK_PROPERTY, "true");
     return properties;
   }
 

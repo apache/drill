@@ -21,10 +21,8 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 
 public class ForemanException extends ExecutionSetupException {
   private static final long serialVersionUID = -6943409010231014085L;
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ForemanException.class);
 
-  public ForemanException() {
-  }
+  public ForemanException() { }
 
   public ForemanException(final String message, final Throwable cause, final boolean enableSuppression,
       final boolean writableStackTrace) {

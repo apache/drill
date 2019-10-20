@@ -59,7 +59,7 @@ public class TestEphemeralStore {
     }
   }
 
-
+  @SuppressWarnings("unchecked")
   @Before
   public void setUp() throws Exception {
     ZookeeperTestUtil.setZookeeperSaslTestConfigProps();
@@ -106,6 +106,7 @@ public class TestEphemeralStore {
    */
   @Test
   public void testStoreRegistersDispatcherAndStartsItsClient() throws Exception {
+    @SuppressWarnings("resource")
     final StoreWithMockClient<String> store = new StoreWithMockClient<>(config, curator);
 
     final PathChildrenCache cache = Mockito.mock(PathChildrenCache.class);
@@ -114,6 +115,7 @@ public class TestEphemeralStore {
         .when(client.getCache())
         .thenReturn(cache);
 
+    @SuppressWarnings("unchecked")
     final ListenerContainer<PathChildrenCacheListener> container = Mockito.mock(ListenerContainer.class);
     Mockito
         .when(cache.getListenable())
@@ -143,5 +145,4 @@ public class TestEphemeralStore {
     final String actual = store.get(path);
     Assert.assertEquals("value mismatch", value, actual);
   }
-
 }
