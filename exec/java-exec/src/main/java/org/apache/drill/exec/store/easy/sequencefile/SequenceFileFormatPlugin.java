@@ -17,13 +17,16 @@
  */
 package org.apache.drill.exec.store.easy.sequencefile;
 
+import java.io.IOException;
+import java.util.List;
+
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.planner.common.DrillStatsTable.TableStatistics;
+import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.RecordWriter;
@@ -37,9 +40,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.FileSplit;
-
-import java.io.IOException;
-import java.util.List;
 
 public class SequenceFileFormatPlugin extends EasyFormatPlugin<SequenceFileFormatConfig> {
   public SequenceFileFormatPlugin(String name, DrillbitContext context, Configuration fsConf,
@@ -58,7 +58,6 @@ public class SequenceFileFormatPlugin extends EasyFormatPlugin<SequenceFileForma
   public boolean supportsPushDown() {
     return true;
   }
-
 
   @Override
   public AbstractGroupScan getGroupScan(String userName, FileSelection selection, List<SchemaPath> columns)

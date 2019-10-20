@@ -17,9 +17,11 @@
  */
 package org.apache.drill.exec.physical.impl;
 
-import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import io.netty.buffer.DrillBuf;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -54,10 +56,10 @@ import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.SchemaChangeCallBack;
 import org.apache.drill.exec.vector.ValueVector;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+
+import io.netty.buffer.DrillBuf;
 
 /**
  * Record batch used for a particular scan. Operators against one or more
@@ -155,6 +157,8 @@ public class ScanBatch implements CloseableRecordBatch {
     return context;
   }
 
+  public OperatorContext getOperatorContext() { return oContext; }
+
   @Override
   public BatchSchema getSchema() {
     return schema;
@@ -224,7 +228,8 @@ public class ScanBatch implements CloseableRecordBatch {
       logger.trace("currentReader.next return recordCount={}", recordCount);
       Preconditions.checkArgument(recordCount >= 0, "recordCount from RecordReader.next() should not be negative");
       boolean isNewSchema = mutator.isNewSchema();
-      populateImplicitVectorsAndSetCount();
+      populateImplicitVectors();
+      mutator.container.setValueCount(recordCount);
       oContext.getStats().batchReceived(0, recordCount, isNewSchema);
 
       boolean toContinueIter = true;
@@ -339,12 +344,8 @@ public class ScanBatch implements CloseableRecordBatch {
     }
   }
 
-  private void populateImplicitVectorsAndSetCount() {
+  private void populateImplicitVectors() {
     mutator.populateImplicitVectors(implicitValues, recordCount);
-    for (Map.Entry<String, ValueVector> entry: mutator.fieldVectorMap().entrySet()) {
-      logger.debug("set record count {} for vv {}", recordCount, entry.getKey());
-      entry.getValue().getMutator().setValueCount(recordCount);
-    }
   }
 
   @Override
@@ -602,6 +603,7 @@ public class ScanBatch implements CloseableRecordBatch {
   public VectorContainer getContainer() {
     return container;
   }
+
   /**
    * Verify list of implicit column values is valid input:
    *   - Either implicit column list is empty;
