@@ -108,5 +108,5 @@
     "VARBINARY_col" : false,
     "VARCHAR_col" : [ "a string", "asdf", ""],
     "VAR16CHAR_col" : false,
-    "BIT_col" : [ true, true,  true]
+    "BIT_col" : [ true, true, true]
 }

@@ -448,6 +448,11 @@ public class VectorContainer implements VectorAccessible {
     return true;
   }
 
+  public void setValueCount(int valueCount) {
+    VectorAccessibleUtilities.setValueCount(this, valueCount);
+    setRecordCount(valueCount);
+  }
+
   /**
    * Merge two batches to create a single, combined, batch. Vectors
    * appear in the order defined by {@link BatchSchema#merge(BatchSchema)}.

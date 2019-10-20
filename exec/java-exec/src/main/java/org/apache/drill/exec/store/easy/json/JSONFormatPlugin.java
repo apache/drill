@@ -17,15 +17,11 @@
  */
 package org.apache.drill.exec.store.easy.json;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
+
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
@@ -51,9 +47,17 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JSONFormatPlugin.class);
+  private static final Logger logger = LoggerFactory.getLogger(JSONFormatPlugin.class);
   public static final String DEFAULT_NAME = "json";
 
   private static final boolean IS_COMPRESSIBLE = true;
@@ -77,11 +81,7 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
 
   @Override
   public boolean isStatisticsRecordWriter(FragmentContext context, EasyWriter writer) {
-    if (context.getSQLStatementType() == SqlStatementType.ANALYZE) {
-      return true;
-    } else {
-      return false;
-    }
+    return context.getSQLStatementType() == SqlStatementType.ANALYZE;
   }
 
   @Override
@@ -181,7 +181,7 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
 
     @Override
     public int hashCode() {
-      final int prime = 31;
+      int prime = 31;
       int result = 1;
       result = prime * result + ((extensions == null) ? 0 : extensions.hashCode());
       return result;
