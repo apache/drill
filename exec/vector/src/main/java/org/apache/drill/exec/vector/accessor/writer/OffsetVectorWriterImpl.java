@@ -288,9 +288,12 @@ public class OffsetVectorWriterImpl extends AbstractFixedWidthWriter implements 
     // Rollover is occurring. This means the current row is not complete.
     // We want to keep 0..(row index - 1) which gives us (row index)
     // rows. But, this being an offset vector, we add one to account
-    // for the extra 0 value at the start.
+    // for the extra 0 value at the start. That is, we want to set
+    // the value count to the current row start index, which already
+    // is set to one past the index of the last zero-based index.
+    // (Offset vector indexes are confusing.)
 
-    setValueCount(vectorIndex.rowStartIndex() + 1);
+    setValueCount(vectorIndex.rowStartIndex());
   }
 
   @Override

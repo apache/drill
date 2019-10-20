@@ -47,7 +47,7 @@ public class RepeatedVectorState implements VectorState {
     // vector, and the scalar (value) portion of the array writer.
 
     arrayWriter = (AbstractArrayWriter) writer;
-    AbstractScalarWriterImpl colWriter = (AbstractScalarWriterImpl) writer.entry().events();
+    final AbstractScalarWriterImpl colWriter = (AbstractScalarWriterImpl) writer.entry().events();
     valuesState = SimpleVectorState.vectorState(writer.schema(), colWriter, vector.getDataVector());
 
     // Create the offsets state with the offset vector portion of the repeated
@@ -116,19 +116,19 @@ public class RepeatedVectorState implements VectorState {
    * after the values copied during roll-over.</li>
    * </ul>
    *
-   * @param cardinality the number of outer elements to create in the look-ahead
+   * @param newCardinality the number of outer elements to create in the look-ahead
    * vector
    */
 
   @Override
-  public void rollover(int cardinality) {
+  public void rollover(int newCardinality) {
 
     // Swap out the two vectors. The index presented to the caller
     // is that of the data vector: the next position in the data
     // vector to be set into the data vector writer index.
 
-    valuesState.rollover(childCardinality(cardinality));
-    offsetsState.rollover(cardinality);
+    valuesState.rollover(childCardinality(newCardinality));
+    offsetsState.rollover(newCardinality);
   }
 
   @Override

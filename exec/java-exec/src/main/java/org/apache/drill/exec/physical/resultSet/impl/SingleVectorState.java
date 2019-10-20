@@ -123,7 +123,7 @@ public abstract class SingleVectorState implements VectorState {
 
       // Cap the allocated size to the maximum.
 
-      final int size = (int) Math.min(ValueVector.MAX_BUFFER_SIZE, (long) cardinality * schema.expectedWidth());
+      int size = (int) Math.min(ValueVector.MAX_BUFFER_SIZE, (long) cardinality * schema.expectedWidth());
       ((VariableWidthVector) vector).allocateNew(size, cardinality);
       return vector.getAllocatedSize();
     }
@@ -199,9 +199,9 @@ public abstract class SingleVectorState implements VectorState {
       // for the current row. We must subtract that offset from each copied
       // value to adjust the offset for the destination.
 
-      final UInt4Vector.Accessor sourceAccessor = ((UInt4Vector) backupVector).getAccessor();
-      final UInt4Vector.Mutator destMutator = ((UInt4Vector) mainVector).getMutator();
-      final int offset = childWriter.rowStartIndex();
+      UInt4Vector.Accessor sourceAccessor = ((UInt4Vector) backupVector).getAccessor();
+      UInt4Vector.Mutator destMutator = ((UInt4Vector) mainVector).getMutator();
+      int offset = childWriter.rowStartIndex();
       int newIndex = 1;
       ResultSetLoaderImpl.logger.trace("Offset vector: copy {} values from {} to {} with offset {}",
           Math.max(0, sourceEndIndex - sourceStartIndex + 1),
@@ -261,13 +261,13 @@ public abstract class SingleVectorState implements VectorState {
   @Override
   public void rollover(int cardinality) {
 
-    final int sourceStartIndex = writer.rowStartIndex();
+    int sourceStartIndex = writer.rowStartIndex();
 
     // Remember the last write index for the original vector.
     // This tells us the end of the set of values to move, while the
     // sourceStartIndex above tells us the start.
 
-    final int sourceEndIndex = writer.lastWriteIndex();
+    int sourceEndIndex = writer.lastWriteIndex();
 
     // Switch buffers between the backup vector and the writer's output
     // vector. Done this way because writers are bound to vectors and
@@ -306,7 +306,7 @@ public abstract class SingleVectorState implements VectorState {
    */
 
   protected static MajorType parseVectorType(ValueVector vector) {
-    final MajorType purportedType = vector.getField().getType();
+    MajorType purportedType = vector.getField().getType();
     if (purportedType.getMode() != DataMode.OPTIONAL) {
       return purportedType;
     }
