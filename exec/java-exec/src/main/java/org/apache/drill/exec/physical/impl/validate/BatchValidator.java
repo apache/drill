@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.physical.impl.validate;
 
-import java.lang.reflect.Method;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
@@ -155,13 +154,13 @@ public class BatchValidator {
    * unnecessary.
    */
   private static Map<Class<? extends RecordBatch>, CheckMode> buildRules() {
-    final Map<Class<? extends RecordBatch>, CheckMode> rules = new IdentityHashMap<>();
+    Map<Class<? extends RecordBatch>, CheckMode> rules = new IdentityHashMap<>();
     rules.put(OperatorRecordBatch.class, CheckMode.ALL);
     return rules;
   }
 
   public static boolean validate(RecordBatch batch) {
-    final CheckMode checkMode = checkRules.get(batch.getClass());
+    CheckMode checkMode = checkRules.get(batch.getClass());
 
     // If no rule, don't check this batch.
 
@@ -175,10 +174,10 @@ public class BatchValidator {
 
     // All batches that do any checks will at least check counts.
 
-    final ErrorReporter reporter = errorReporter(batch);
-    final int rowCount = batch.getRecordCount();
+    ErrorReporter reporter = errorReporter(batch);
+    int rowCount = batch.getRecordCount();
     int valueCount = rowCount;
-    final VectorContainer container = batch.getContainer();
+    VectorContainer container = batch.getContainer();
     if (!container.hasRecordCount()) {
       reporter.error(String.format(
           "%s: Container record count not set",
@@ -187,11 +186,11 @@ public class BatchValidator {
       // Row count will = container count for most operators.
       // Row count <= container count for the filter operator.
 
-      final int containerRowCount = container.getRecordCount();
+      int containerRowCount = container.getRecordCount();
       valueCount = containerRowCount;
       switch (batch.getSchema().getSelectionVectorMode()) {
       case FOUR_BYTE:
-        final int sv4Count = batch.getSelectionVector4().getCount();
+        int sv4Count = batch.getSelectionVector4().getCount();
         if (sv4Count != rowCount) {
           reporter.error(String.format(
               "Mismatch between %s record count = %d, SV4 record count = %d",
@@ -201,7 +200,7 @@ public class BatchValidator {
         // TODO: Don't know how to check SV4 batches
         return true;
       case TWO_BYTE:
-        final int sv2Count = batch.getSelectionVector2().getCount();
+        int sv2Count = batch.getSelectionVector2().getCount();
         if (sv2Count != rowCount) {
           reporter.error(String.format(
               "Mismatch between %s record count = %d, SV2 record count = %d",
@@ -214,7 +213,7 @@ public class BatchValidator {
               batch.getClass().getSimpleName(),
               containerRowCount, sv2Count));
         }
-        final int svTotalCount = batch.getSelectionVector2().getBatchActualRecordCount();
+        int svTotalCount = batch.getSelectionVector2().getBatchActualRecordCount();
         if (svTotalCount != containerRowCount) {
           reporter.error(String.format(
               "Mismatch between %s container count = %d, SV2 total count = %d",
@@ -239,13 +238,13 @@ public class BatchValidator {
   }
 
   public static boolean validate(VectorAccessible batch) {
-    final ErrorReporter reporter = errorReporter(batch);
+    ErrorReporter reporter = errorReporter(batch);
     new BatchValidator(reporter).validateBatch(batch, batch.getRecordCount());
     return reporter.errorCount() == 0;
   }
 
   private static ErrorReporter errorReporter(VectorAccessible batch) {
-    final String opName = batch.getClass().getSimpleName();
+    String opName = batch.getClass().getSimpleName();
     if (LOG_TO_STDOUT) {
       return new StdOutReporter(opName);
     } else {
@@ -254,7 +253,7 @@ public class BatchValidator {
   }
 
   public void validateBatch(VectorAccessible batch, int rowCount) {
-    for (final VectorWrapper<? extends ValueVector> w : batch) {
+    for (VectorWrapper<? extends ValueVector> w : batch) {
       validateWrapper(rowCount, w);
     }
   }
@@ -266,7 +265,7 @@ public class BatchValidator {
   }
 
   private void validateVector(int expectedCount, ValueVector vector) {
-    final int valueCount = vector.getAccessor().getValueCount();
+    int valueCount = vector.getAccessor().getValueCount();
     if (valueCount != expectedCount) {
       error(vector.getField().getName(), vector,
           String.format("Row count = %d, but value count = %d",
@@ -295,9 +294,9 @@ public class BatchValidator {
   }
 
   private void validateNullableVector(String name, NullableVector vector) {
-    final int outerCount = vector.getAccessor().getValueCount();
-    final ValueVector valuesVector = vector.getValuesVector();
-    final int valueCount = valuesVector.getAccessor().getValueCount();
+    int outerCount = vector.getAccessor().getValueCount();
+    ValueVector valuesVector = vector.getValuesVector();
+    int valueCount = valuesVector.getAccessor().getValueCount();
     if (valueCount != outerCount) {
       error(name, vector, String.format(
           "Outer value count = %d, but inner value count = %d",
@@ -320,7 +319,7 @@ public class BatchValidator {
   }
 
   private void validateVarCharVector(String name, VarCharVector vector) {
-    final int valueCount = vector.getAccessor().getValueCount();
+    int valueCount = vector.getAccessor().getValueCount();
 
     // Disabled because a large number of operators
     // set up offset vectors wrongly.
@@ -328,27 +327,15 @@ public class BatchValidator {
       return;
     }
 
-    final int dataLength = vector.getBuffer().writerIndex();
+    int dataLength = vector.getBuffer().writerIndex();
     validateOffsetVector(name + "-offsets", vector.getOffsetVector(), false, valueCount, dataLength);
   }
 
-//  private void validateRepeatedBitVector(String name, BaseRepeatedValueVector vector) {
-//    int dataLength = ((BaseDataValueVector) vector.getDataVector()).getBuffer().writerIndex();
-//    int valueCount = vector.getAccessor().getValueCount();
-//    int itemCount = validateOffsetVector(name + "-offsets", vector.getOffsetVector(), true, valueCount * 8, dataLength);
-//    ValueVector dataVector = vector.getDataVector();
-//    if (dataVector.getAccessor().getValueCount() != itemCount) {
-//      error(name, vector, String.format(
-//          "Bit vector has %d values, but offset vector labels %d values",
-//          valueCount, itemCount));
-//    }
-//  }
-
   private void validateRepeatedVector(String name, BaseRepeatedValueVector vector) {
-    final ValueVector dataVector = vector.getDataVector();
-    final int dataLength = dataVector.getAccessor().getValueCount();
-    final int valueCount = vector.getAccessor().getValueCount();
-    final int itemCount = validateOffsetVector(name + "-offsets", vector.getOffsetVector(),
+    ValueVector dataVector = vector.getDataVector();
+    int dataLength = dataVector.getAccessor().getValueCount();
+    int valueCount = vector.getAccessor().getValueCount();
+    int itemCount = validateOffsetVector(name + "-offsets", vector.getOffsetVector(),
         true, valueCount, dataLength);
 
     if (dataLength != itemCount) {
@@ -366,11 +353,11 @@ public class BatchValidator {
   }
 
   private void validateRepeatedBitVector(String name, RepeatedBitVector vector) {
-    final int valueCount = vector.getAccessor().getValueCount();
-    final int maxBitCount = valueCount * 8;
-    final int elementCount = validateOffsetVector(name + "-offsets",
+    int valueCount = vector.getAccessor().getValueCount();
+    int maxBitCount = valueCount * 8;
+    int elementCount = validateOffsetVector(name + "-offsets",
         vector.getOffsetVector(), true, valueCount, maxBitCount);
-    final BitVector dataVector = vector.getDataVector();
+    BitVector dataVector = vector.getDataVector();
     if (dataVector.getAccessor().getValueCount() != elementCount) {
       error(name, vector, String.format(
           "Bit vector has %d values, but offset vector labels %d values",
@@ -386,10 +373,10 @@ public class BatchValidator {
   }
 
   private void validateBitVector(String name, BitVector vector) {
-    final BitVector.Accessor accessor = vector.getAccessor();
-    final int valueCount = accessor.getValueCount();
-    final int dataLength = vector.getBuffer().writerIndex();
-    final int expectedLength = BitVector.getSizeFromCount(valueCount);
+    BitVector.Accessor accessor = vector.getAccessor();
+    int valueCount = accessor.getValueCount();
+    int dataLength = vector.getBuffer().writerIndex();
+    int expectedLength = BitVector.getSizeFromCount(valueCount);
     if (dataLength != expectedLength) {
       error(name, vector, String.format(
           "Bit vector has %d values, buffer has length %d, expected %d",
@@ -399,8 +386,8 @@ public class BatchValidator {
 
   private int validateOffsetVector(String name, UInt4Vector offsetVector,
       boolean repeated, int valueCount, int maxOffset) {
-    final UInt4Vector.Accessor accessor = offsetVector.getAccessor();
-    final int offsetCount = accessor.getValueCount();
+    UInt4Vector.Accessor accessor = offsetVector.getAccessor();
+    int offsetCount = accessor.getValueCount();
     // TODO: Disabled because a large number of operators
     // set up offset vectors incorrectly.
 //    if (!repeated && offsetCount == 0) {
@@ -426,7 +413,7 @@ public class BatchValidator {
     }
 
     for (int i = 1; i < offsetCount; i++) {
-      final int offset = accessor.get(i);
+      int offset = accessor.get(i);
       if (offset < prevOffset) {
         error(name, offsetVector, String.format(
             "Offset vector [%d] contained %d, expected >= %d",
@@ -446,42 +433,24 @@ public class BatchValidator {
   }
 
   private void verifyIsSetVector(ValueVector parent, UInt1Vector bv) {
-    final String name = String.format("%s (%s)-bits",
+    String name = String.format("%s (%s)-bits",
         parent.getField().getName(),
         parent.getClass().getSimpleName());
-    final int rowCount = parent.getAccessor().getValueCount();
-    final int bitCount = bv.getAccessor().getValueCount();
+    int rowCount = parent.getAccessor().getValueCount();
+    int bitCount = bv.getAccessor().getValueCount();
     if (bitCount != rowCount) {
       error(name, bv, String.format(
           "Value count = %d, but bit count = %d",
           rowCount, bitCount));
     }
-    final UInt1Vector.Accessor ba = bv.getAccessor();
+    UInt1Vector.Accessor ba = bv.getAccessor();
     for (int i = 0; i < bitCount; i++) {
-      final int value = ba.get(i);
+      int value = ba.get(i);
       if (value != 0 && value != 1) {
         error(name, bv, String.format(
             "%s %s: bit vector[%d] = %d, expected 0 or 1",
             i, value));
       }
-    }
-  }
-
-  /**
-   * Print a record batch. Uses code only available in a test build.
-   * Classes are not visible to the compiler; must load dynamically.
-   * Does nothing if the class is not available.
-   */
-
-  public static void print(RecordBatch batch) {
-    try {
-      final Class<?> helper = Class.forName("org.apache.drill.test.rowSet.RowSetUtilities");
-      final Method print = helper.getMethod("print", VectorContainer.class);
-      System.out.println(batch.getClass().getSimpleName());
-      print.invoke(null, batch.getContainer());
-    } catch (final Exception e) {
-      System.out.println(e.getMessage());
-      // Ignore
     }
   }
 }

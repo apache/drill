@@ -61,24 +61,24 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
 
   @Test
   public void testVectorSizeLimit() {
-    final TupleMetadata schema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .add("s", MinorType.VARCHAR)
         .buildSchema();
-    final ResultSetOptions options = new OptionBuilder()
+    ResultSetOptions options = new OptionBuilder()
         .setRowCountLimit(ValueVector.MAX_ROW_COUNT)
         .setSchema(schema)
         .build();
-    final ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
-    final RowSetLoader rootWriter = rsLoader.writer();
+    ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
+    RowSetLoader rootWriter = rsLoader.writer();
 
     rsLoader.startBatch();
-    final byte[] value = new byte[512];
+    byte[] value = new byte[512];
     Arrays.fill(value, (byte) 'X');
 
     // Number of rows should be driven by vector size.
     // Our row count should include the overflow row
 
-    final int expectedCount = ValueVector.MAX_BUFFER_SIZE / value.length;
+    int expectedCount = ValueVector.MAX_BUFFER_SIZE / value.length;
     {
       int count = 0;
       while (! rootWriter.isFull()) {
@@ -100,9 +100,9 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
 
       // Result should exclude the overflow row
 
-      final VectorContainer container = rsLoader.harvest();
+      VectorContainer container = rsLoader.harvest();
       BatchValidator.validate(container);
-      final RowSet result = fixture.wrap(container);
+      RowSet result = fixture.wrap(container);
       assertEquals(expectedCount, result.rowCount());
       result.clear();
     }
@@ -113,9 +113,9 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
       rsLoader.startBatch();
       assertEquals(1, rootWriter.rowCount());
       assertEquals(expectedCount + 1, rsLoader.totalRowCount());
-      final VectorContainer container = rsLoader.harvest();
+      VectorContainer container = rsLoader.harvest();
       BatchValidator.validate(container);
-      final RowSet result = fixture.wrap(container);
+      RowSet result = fixture.wrap(container);
       assertEquals(1, result.rowCount());
       result.clear();
     }
@@ -130,26 +130,26 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
 
   @Test
   public void testBatchSizeLimit() {
-    final TupleMetadata schema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .add("s", MinorType.VARCHAR)
         .buildSchema();
-    final ResultSetOptions options = new OptionBuilder()
+    ResultSetOptions options = new OptionBuilder()
         .setRowCountLimit(ValueVector.MAX_ROW_COUNT)
         .setSchema(schema)
         .setBatchSizeLimit(
             8 * 1024 * 1024 + // Data
             2 * ValueVector.MAX_ROW_COUNT * 4) // Offsets, doubled because of +1
         .build();
-    final ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
-    final RowSetLoader rootWriter = rsLoader.writer();
+    ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
+    RowSetLoader rootWriter = rsLoader.writer();
 
     rsLoader.startBatch();
-    final byte[] value = new byte[512];
+    byte[] value = new byte[512];
     Arrays.fill(value, (byte) 'X');
 
     // Our row count should include the overflow row
 
-    final int expectedCount = 8 * 1024 * 1024 / value.length;
+    int expectedCount = 8 * 1024 * 1024 / value.length;
 
     // First batch, with overflow
 
@@ -173,9 +173,9 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
 
       // Result should exclude the overflow row
 
-      final VectorContainer container = rsLoader.harvest();
+      VectorContainer container = rsLoader.harvest();
       BatchValidator.validate(container);
-      final RowSet result = fixture.wrap(container);
+      RowSet result = fixture.wrap(container);
       assertEquals(expectedCount, result.rowCount());
       result.clear();
     }
@@ -186,9 +186,9 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
       rsLoader.startBatch();
       assertEquals(1, rootWriter.rowCount());
       assertEquals(expectedCount + 1, rsLoader.totalRowCount());
-      final VectorContainer container = rsLoader.harvest();
+      VectorContainer container = rsLoader.harvest();
       BatchValidator.validate(container);
-      final RowSet result = fixture.wrap(container);
+      RowSet result = fixture.wrap(container);
       assertEquals(1, result.rowCount());
       result.clear();
     }
@@ -204,18 +204,18 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
 
   @Test
   public void testCloseWithOverflow() {
-    final TupleMetadata schema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .add("s", MinorType.VARCHAR)
         .buildSchema();
-    final ResultSetOptions options = new OptionBuilder()
+    ResultSetOptions options = new OptionBuilder()
         .setRowCountLimit(ValueVector.MAX_ROW_COUNT)
         .setSchema(schema)
         .build();
-    final ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
-    final RowSetLoader rootWriter = rsLoader.writer();
+    ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
+    RowSetLoader rootWriter = rsLoader.writer();
 
     rsLoader.startBatch();
-    final byte[] value = new byte[512];
+    byte[] value = new byte[512];
     Arrays.fill(value, (byte) 'X');
     int count = 0;
     while (! rootWriter.isFull()) {
@@ -229,9 +229,9 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
 
     // Harvest the full batch
 
-    final VectorContainer container = rsLoader.harvest();
+    VectorContainer container = rsLoader.harvest();
     BatchValidator.validate(container);
-    final RowSet result = fixture.wrap(container);
+    RowSet result = fixture.wrap(container);
     result.clear();
 
     // Close without harvesting the overflow batch.
@@ -247,30 +247,30 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
 
   @Test
   public void testOversizeArray() {
-    final TupleMetadata schema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .addArray("s", MinorType.VARCHAR)
         .buildSchema();
-    final ResultSetOptions options = new OptionBuilder()
+    ResultSetOptions options = new OptionBuilder()
         .setRowCountLimit(ValueVector.MAX_ROW_COUNT)
         .setSchema(schema)
         .build();
-    final ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
-    final RowSetLoader rootWriter = rsLoader.writer();
+    ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
+    RowSetLoader rootWriter = rsLoader.writer();
 
     // Create a single array as the column value in the first row. When
     // this overflows, an exception is thrown since overflow is not possible.
 
     rsLoader.startBatch();
-    final byte[] value = new byte[473];
+    byte[] value = new byte[473];
     Arrays.fill(value, (byte) 'X');
     rootWriter.start();
-    final ScalarWriter array = rootWriter.array(0).scalar();
+    ScalarWriter array = rootWriter.array(0).scalar();
     try {
       for (int i = 0; i < ValueVector.MAX_ROW_COUNT; i++) {
         array.setBytes(value, value.length);
       }
       fail();
-    } catch (final UserException e) {
+    } catch (UserException e) {
       assertTrue(e.getMessage().contains("column value is larger than the maximum"));
     }
     rsLoader.close();
@@ -285,25 +285,25 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
 
   @Test
   public void testSizeLimitOnArray() {
-    final TupleMetadata schema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .addArray("s", MinorType.VARCHAR)
         .buildSchema();
-    final ResultSetOptions options = new OptionBuilder()
+    ResultSetOptions options = new OptionBuilder()
         .setRowCountLimit(ValueVector.MAX_ROW_COUNT)
         .setSchema(schema)
         .build();
-    final ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
-    final RowSetLoader rootWriter = rsLoader.writer();
+    ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
+    RowSetLoader rootWriter = rsLoader.writer();
 
     // Fill batch with rows of with a single array, three values each. Tack on
     // a suffix to each so we can be sure the proper data is written and moved
     // to the overflow batch.
 
     rsLoader.startBatch();
-    final byte[] value = new byte[473];
+    byte[] value = new byte[473];
     Arrays.fill(value, (byte) 'X');
-    final String strValue = new String(value, Charsets.UTF_8);
-    final int valuesPerArray = 13;
+    String strValue = new String(value, Charsets.UTF_8);
+    int valuesPerArray = 13;
     int count = 0;
 
     {
@@ -312,9 +312,9 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
       while (rootWriter.start()) {
         totalSize += rowSize;
         rowSize = 0;
-        final ScalarWriter array = rootWriter.array(0).scalar();
+        ScalarWriter array = rootWriter.array(0).scalar();
         for (int i = 0; i < valuesPerArray; i++) {
-          final String cellValue = strValue + (count + 1) + "." + i;
+          String cellValue = strValue + (count + 1) + "." + i;
           array.setString(cellValue);
           rowSize += cellValue.length();
         }
@@ -324,7 +324,7 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
 
       // Row count should include the overflow row.
 
-      final int expectedCount = count - 1;
+      int expectedCount = count - 1;
 
       // Size without overflow row should fit in the vector, size
       // with overflow should not.
@@ -335,18 +335,18 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
       // Result should exclude the overflow row. Last row
       // should hold the last full array.
 
-      final VectorContainer container = rsLoader.harvest();
+      VectorContainer container = rsLoader.harvest();
       BatchValidator.validate(container);
-      final RowSet result = fixture.wrap(container);
+      RowSet result = fixture.wrap(container);
       assertEquals(expectedCount, result.rowCount());
-      final RowSetReader reader = result.reader();
+      RowSetReader reader = result.reader();
       reader.setPosition(expectedCount - 1);
-      final ArrayReader arrayReader = reader.array(0);
-      final ScalarReader strReader = arrayReader.scalar();
+      ArrayReader arrayReader = reader.array(0);
+      ScalarReader strReader = arrayReader.scalar();
       assertEquals(valuesPerArray, arrayReader.size());
       for (int i = 0; i < valuesPerArray; i++) {
         assertTrue(arrayReader.next());
-        final String cellValue = strValue + (count - 1) + "." + i;
+        String cellValue = strValue + (count - 1) + "." + i;
         assertEquals(cellValue, strReader.getString());
       }
       result.clear();
@@ -360,18 +360,18 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
       rsLoader.startBatch();
       assertEquals(1, rootWriter.rowCount());
       assertEquals(count, rsLoader.totalRowCount());
-      final VectorContainer container = rsLoader.harvest();
+      VectorContainer container = rsLoader.harvest();
       BatchValidator.validate(container);
-      final RowSet result = fixture.wrap(container);
+      RowSet result = fixture.wrap(container);
       assertEquals(1, result.rowCount());
-      final RowSetReader reader = result.reader();
+      RowSetReader reader = result.reader();
       reader.next();
-      final ArrayReader arrayReader = reader.array(0);
-      final ScalarReader strReader = arrayReader.scalar();
+      ArrayReader arrayReader = reader.array(0);
+      ScalarReader strReader = arrayReader.scalar();
       assertEquals(valuesPerArray, arrayReader.size());
       for (int i = 0; i < valuesPerArray; i++) {
         assertTrue(arrayReader.next());
-        final String cellValue = strValue + count + "." + i;
+        String cellValue = strValue + count + "." + i;
         assertEquals(cellValue, strReader.getString());
       }
       result.clear();
@@ -396,38 +396,38 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
 
   @Test
   public void testArrayOverflowWithOtherArrays() {
-    final TupleMetadata schema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .addArray("a", MinorType.INT)
         .addArray("b", MinorType.VARCHAR)
         .addArray("c", MinorType.INT)
         .addArray("d", MinorType.INT)
         .buildSchema();
-    final ResultSetOptions options = new OptionBuilder()
+    ResultSetOptions options = new OptionBuilder()
         .setRowCountLimit(ValueVector.MAX_ROW_COUNT)
         .setSchema(schema)
         .build();
-    final ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
-    final RowSetLoader rootWriter = rsLoader.writer();
+    ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
+    RowSetLoader rootWriter = rsLoader.writer();
 
     // Fill batch with rows of with a single array, three values each. Tack on
     // a suffix to each so we can be sure the proper data is written and moved
     // to the overflow batch.
 
-    final byte[] value = new byte[512];
+    byte[] value = new byte[512];
     Arrays.fill(value, (byte) 'X');
-    final String strValue = new String(value, Charsets.UTF_8);
+    String strValue = new String(value, Charsets.UTF_8);
 
-    final int aCount = 3;
-    final int bCount = 11;
-    final int cCount = 5;
-    final int dCount = 7;
+    int aCount = 3;
+    int bCount = 11;
+    int cCount = 5;
+    int dCount = 7;
 
-    final int cCutoff = ValueVector.MAX_BUFFER_SIZE / value.length / bCount / 2;
+    int cCutoff = ValueVector.MAX_BUFFER_SIZE / value.length / bCount / 2;
 
-    final ScalarWriter aWriter = rootWriter.array("a").scalar();
-    final ScalarWriter bWriter = rootWriter.array("b").scalar();
-    final ScalarWriter cWriter = rootWriter.array("c").scalar();
-    final ScalarWriter dWriter = rootWriter.array("d").scalar();
+    ScalarWriter aWriter = rootWriter.array("a").scalar();
+    ScalarWriter bWriter = rootWriter.array("b").scalar();
+    ScalarWriter cWriter = rootWriter.array("c").scalar();
+    ScalarWriter dWriter = rootWriter.array("d").scalar();
 
     int count = 0;
     rsLoader.startBatch();
@@ -436,7 +436,7 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
         aWriter.setInt(count * aCount + i);
       }
       for (int i = 0; i < bCount; i++) {
-        final String cellValue = strValue + (count * bCount + i);
+        String cellValue = strValue + (count * bCount + i);
         bWriter.setString(cellValue);
       }
       if (count < cCutoff) {
@@ -460,22 +460,22 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
     // Verify
 
     {
-      final VectorContainer container = rsLoader.harvest();
+      VectorContainer container = rsLoader.harvest();
       BatchValidator.validate(container);
-      final RowSet result = fixture.wrap(container);
+      RowSet result = fixture.wrap(container);
       assertEquals(count - 1, result.rowCount());
-      final RowSetReader reader = result.reader();
-      final ArrayReader aArray = reader.array("a");
-      final ScalarReader aReader = aArray.scalar();
-      final ArrayReader bArray = reader.array("b");
-      final ScalarReader bReader = bArray.scalar();
-      final ArrayReader cArray = reader.array("c");
-      final ScalarReader cReader = cArray.scalar();
-      final ArrayReader dArray = reader.array("d");
-      final ScalarReader dReader = dArray.scalar();
+      RowSetReader reader = result.reader();
+      ArrayReader aArray = reader.array("a");
+      ScalarReader aReader = aArray.scalar();
+      ArrayReader bArray = reader.array("b");
+      ScalarReader bReader = bArray.scalar();
+      ArrayReader cArray = reader.array("c");
+      ScalarReader cReader = cArray.scalar();
+      ArrayReader dArray = reader.array("d");
+      ScalarReader dReader = dArray.scalar();
 
       while (reader.next()) {
-        final int rowId = reader.offset();
+        int rowId = reader.offset();
         assertEquals(aCount, aArray.size());
         for (int i = 0; i < aCount; i++) {
           assertTrue(aArray.next());
@@ -484,7 +484,7 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
         assertEquals(bCount, bArray.size());
         for (int i = 0; i < bCount; i++) {
           assertTrue(bArray.next());
-          final String cellValue = strValue + (rowId * bCount + i);
+          String cellValue = strValue + (rowId * bCount + i);
           assertEquals(cellValue, bReader.getString());
         }
         if (rowId < cCutoff) {
@@ -505,7 +505,7 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
       }
       result.clear();
     }
-    final int firstCount = count - 1;
+    int firstCount = count - 1;
 
     // One row is in the batch. Write more, skipping over the
     // initial few values for columns c and d. Column d has a
@@ -518,7 +518,7 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
         aWriter.setInt(count * aCount + i);
       }
       for (int i = 0; i < bCount; i++) {
-        final String cellValue = strValue + (count * bCount + i);
+        String cellValue = strValue + (count * bCount + i);
         bWriter.setString(cellValue);
       }
       if (j > 3) {
@@ -534,23 +534,23 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
     }
 
     {
-      final VectorContainer container = rsLoader.harvest();
+      VectorContainer container = rsLoader.harvest();
       BatchValidator.validate(container);
-      final RowSet result = fixture.wrap(container);
+      RowSet result = fixture.wrap(container);
       assertEquals(6, result.rowCount());
-      final RowSetReader reader = result.reader();
-      final ArrayReader aArray = reader.array("a");
-      final ScalarReader aReader = aArray.scalar();
-      final ArrayReader bArray = reader.array("b");
-      final ScalarReader bReader = bArray.scalar();
-      final ArrayReader cArray = reader.array("c");
-      final ScalarReader cReader = cArray.scalar();
-      final ArrayReader dArray = reader.array("d");
-      final ScalarReader dReader = dArray.scalar();
+      RowSetReader reader = result.reader();
+      ArrayReader aArray = reader.array("a");
+      ScalarReader aReader = aArray.scalar();
+      ArrayReader bArray = reader.array("b");
+      ScalarReader bReader = bArray.scalar();
+      ArrayReader cArray = reader.array("c");
+      ScalarReader cReader = cArray.scalar();
+      ArrayReader dArray = reader.array("d");
+      ScalarReader dReader = dArray.scalar();
 
       int j = 0;
       while (reader.next()) {
-        final int rowId = firstCount + reader.offset();
+        int rowId = firstCount + reader.offset();
         assertEquals(aCount, aArray.size());
         for (int i = 0; i < aCount; i++) {
           assertTrue(aArray.next());
@@ -559,7 +559,7 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
         assertEquals(bCount, bArray.size());
         for (int i = 0; i < bCount; i++) {
           assertTrue(bArray.next());
-          final String cellValue = strValue + (rowId * bCount + i);
+          String cellValue = strValue + (rowId * bCount + i);
           assertEquals(cellValue, bReader.getString());
         }
         if (j > 4) {
@@ -596,9 +596,9 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
 
   @Test
   public void testLargeArray() {
-    final ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator());
-    final RowSetLoader rootWriter = rsLoader.writer();
-    final MaterializedField field = SchemaBuilder.columnSchema("a", MinorType.INT, DataMode.REPEATED);
+    ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator());
+    RowSetLoader rootWriter = rsLoader.writer();
+    MaterializedField field = SchemaBuilder.columnSchema("a", MinorType.INT, DataMode.REPEATED);
     rootWriter.addColumn(field);
 
     // Create a single array as the column value in the first row. When
@@ -606,13 +606,13 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
 
     rsLoader.startBatch();
     rootWriter.start();
-    final ScalarWriter array = rootWriter.array(0).scalar();
+    ScalarWriter array = rootWriter.array(0).scalar();
     try {
       for (int i = 0; i < Integer.MAX_VALUE; i++) {
         array.setInt(i+1);
       }
       fail();
-    } catch (final UserException e) {
+    } catch (UserException e) {
       // Expected
     }
     rsLoader.close();
@@ -624,23 +624,23 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
 
   @Test
   public void testMissingArrayValues() {
-    final TupleMetadata schema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .add("a", MinorType.INT)
         .add("b", MinorType.VARCHAR)
         .addArray("c", MinorType.INT)
         .buildSchema();
-    final ResultSetOptions options = new OptionBuilder()
+    ResultSetOptions options = new OptionBuilder()
         .setRowCountLimit(ValueVector.MAX_ROW_COUNT)
         .setSchema(schema)
         .build();
-    final ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
-    final RowSetLoader rootWriter = rsLoader.writer();
+    ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
+    RowSetLoader rootWriter = rsLoader.writer();
 
-    final byte[] value = new byte[512];
+    byte[] value = new byte[512];
     Arrays.fill(value, (byte) 'X');
 
-    final int blankAfter = ValueVector.MAX_BUFFER_SIZE / 512 * 2 / 3;
-    final ScalarWriter cWriter = rootWriter.array("c").scalar();
+    int blankAfter = ValueVector.MAX_BUFFER_SIZE / 512 * 2 / 3;
+    ScalarWriter cWriter = rootWriter.array("c").scalar();
 
     rsLoader.startBatch();
     int rowId = 0;
@@ -656,13 +656,13 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
       rowId++;
     }
 
-    final VectorContainer container = rsLoader.harvest();
+    VectorContainer container = rsLoader.harvest();
     BatchValidator.validate(container);
-    final RowSet result = fixture.wrap(container);
+    RowSet result = fixture.wrap(container);
     assertEquals(rowId - 1, result.rowCount());
-    final RowSetReader reader = result.reader();
-    final ArrayReader cArray = reader.array("c");
-    final ScalarReader cReader = cArray.scalar();
+    RowSetReader reader = result.reader();
+    ArrayReader cArray = reader.array("c");
+    ScalarReader cReader = cArray.scalar();
     while (reader.next()) {
       assertEquals(reader.offset(), reader.scalar("a").getInt());
       assertArrayEquals(value, reader.scalar("b").getBytes());
@@ -682,21 +682,21 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
 
   @Test
   public void testOverflowWithNullables() {
-    final TupleMetadata schema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .add("n", MinorType.INT)
         .addNullable("a", MinorType.VARCHAR)
         .addNullable("b", MinorType.VARCHAR)
         .addNullable("c", MinorType.VARCHAR)
         .buildSchema();
-    final ResultSetOptions options = new OptionBuilder()
+    ResultSetOptions options = new OptionBuilder()
         .setRowCountLimit(ValueVector.MAX_ROW_COUNT)
         .setSchema(schema)
         .build();
-    final ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
-    final RowSetLoader rootWriter = rsLoader.writer();
+    ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
+    RowSetLoader rootWriter = rsLoader.writer();
 
     rsLoader.startBatch();
-    final byte[] value = new byte[512];
+    byte[] value = new byte[512];
     Arrays.fill(value, (byte) 'X');
     int count = 0;
     while (! rootWriter.isFull()) {
@@ -712,12 +712,12 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
     // Result should exclude the overflow row
 
     {
-      final VectorContainer container = rsLoader.harvest();
+      VectorContainer container = rsLoader.harvest();
       BatchValidator.validate(container);
-      final RowSet result = fixture.wrap(container);
+      RowSet result = fixture.wrap(container);
       assertEquals(count - 1, result.rowCount());
 
-      final RowSetReader reader = result.reader();
+      RowSetReader reader = result.reader();
       while (reader.next()) {
         assertEquals(reader.offset(), reader.scalar(0).getInt());
         assertTrue(reader.scalar(1).isNull());
@@ -731,10 +731,10 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
 
     rsLoader.startBatch();
     {
-      final VectorContainer container = rsLoader.harvest();
+      VectorContainer container = rsLoader.harvest();
       BatchValidator.validate(container);
-      final RowSet result = fixture.wrap(container);
-      final RowSetReader reader = result.reader();
+      RowSet result = fixture.wrap(container);
+      RowSetReader reader = result.reader();
       assertEquals(1, result.rowCount());
       assertTrue(reader.next());
       assertEquals(count - 1, reader.scalar(0).getInt());
@@ -749,19 +749,19 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
 
   @Test
   public void testVectorSizeLimitWithAppend() {
-    final TupleMetadata schema = new SchemaBuilder()
+    TupleMetadata schema = new SchemaBuilder()
         .add("s", MinorType.VARCHAR)
         .buildSchema();
-    final ResultSetOptions options = new OptionBuilder()
+    ResultSetOptions options = new OptionBuilder()
         .setRowCountLimit(ValueVector.MAX_ROW_COUNT)
         .setSchema(schema)
         .build();
-    final ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
-    final RowSetLoader rootWriter = rsLoader.writer();
+    ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
+    RowSetLoader rootWriter = rsLoader.writer();
 
     rsLoader.startBatch();
-    final byte[] head = "abc".getBytes();
-    final byte[] tail = new byte[523];
+    byte[] head = "abc".getBytes();
+    byte[] tail = new byte[523];
     Arrays.fill(tail, (byte) 'X');
 
     String expected = new String(head, Charsets.UTF_8);
@@ -769,7 +769,7 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
     expected += new String(tail, Charsets.UTF_8);
 
     int count = 0;
-    final ScalarWriter colWriter = rootWriter.scalar(0);
+    ScalarWriter colWriter = rootWriter.scalar(0);
     while (! rootWriter.isFull()) {
       rootWriter.start();
       colWriter.setBytes(head, head.length);
@@ -782,8 +782,8 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
     // Number of rows should be driven by vector size.
     // Our row count should include the overflow row
 
-    final int valueLength = head.length + 2 * tail.length;
-    final int expectedCount = ValueVector.MAX_BUFFER_SIZE / valueLength;
+    int valueLength = head.length + 2 * tail.length;
+    int expectedCount = ValueVector.MAX_BUFFER_SIZE / valueLength;
     assertEquals(expectedCount + 1, count);
 
     // Loader's row count should include only "visible" rows
@@ -797,14 +797,14 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
     // Result should exclude the overflow row
 
     {
-      final VectorContainer container = rsLoader.harvest();
+      VectorContainer container = rsLoader.harvest();
       BatchValidator.validate(container);
-      final RowSet result = fixture.wrap(container);
+      RowSet result = fixture.wrap(container);
       assertEquals(expectedCount, result.rowCount());
 
       // Verify that the values were, in fact, appended.
 
-      final RowSetReader reader = result.reader();
+      RowSetReader reader = result.reader();
       while (reader.next()) {
         assertEquals(expected, reader.scalar(0).getString());
       }
@@ -817,11 +817,11 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
     assertEquals(1, rootWriter.rowCount());
     assertEquals(expectedCount + 1, rsLoader.totalRowCount());
     {
-      final VectorContainer container = rsLoader.harvest();
+      VectorContainer container = rsLoader.harvest();
       BatchValidator.validate(container);
-      final RowSet result = fixture.wrap(container);
+      RowSet result = fixture.wrap(container);
       assertEquals(1, result.rowCount());
-      final RowSetReader reader = result.reader();
+      RowSetReader reader = result.reader();
       while (reader.next()) {
         assertEquals(expected, reader.scalar(0).getString());
       }
