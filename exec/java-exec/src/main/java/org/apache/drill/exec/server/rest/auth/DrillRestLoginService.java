@@ -78,7 +78,7 @@ public class DrillRestLoginService implements LoginService {
       // Authenticate the user with configured Authenticator
       userAuthenticator.authenticate(username, credentials.toString());
 
-      logger.debug("WebUser {} is successfully authenticated", username);
+      logger.info("WebUser {} logged in from {}:{}", username, request.getRemoteHost(), request.getRemotePort());
 
       final SystemOptionManager sysOptions = drillbitContext.getOptionManager();
 

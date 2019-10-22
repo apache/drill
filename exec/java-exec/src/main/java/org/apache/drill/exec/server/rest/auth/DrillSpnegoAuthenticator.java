@@ -75,11 +75,10 @@ public class DrillSpnegoAuthenticator extends SpnegoAuthenticator {
     // If the Request URI is for /spnegoLogin then perform login
     final boolean mandatory = mandatoryAuth || uri.equals(WebServerConstants.SPENGO_LOGIN_RESOURCE_PATH);
 
-    // For logout remove the attribute from the session that holds UserIdentity
+    // For logout the attribute from the session that holds UserIdentity will be removed when session is getting
+    // invalidated
     if (authentication != null) {
       if (uri.equals(WebServerConstants.LOGOUT_RESOURCE_PATH)) {
-        logger.debug("Logging out user {}", req.getRemoteAddr());
-        session.removeAttribute(SessionAuthentication.__J_AUTHENTICATED);
         return null;
       }
 

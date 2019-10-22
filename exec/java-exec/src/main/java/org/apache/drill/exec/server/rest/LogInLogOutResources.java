@@ -17,16 +17,19 @@
  */
 package org.apache.drill.exec.server.rest;
 
-import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.server.rest.auth.AuthDynamicFeature;
 import org.apache.drill.exec.server.rest.auth.DrillHttpSecurityHandlerProvider;
 import org.apache.drill.exec.work.WorkManager;
+import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.eclipse.jetty.security.authentication.FormAuthenticator;
+import org.eclipse.jetty.security.authentication.SessionAuthentication;
 import org.eclipse.jetty.util.security.Constraint;
 import org.glassfish.jersey.server.mvc.Viewable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.security.PermitAll;
 import javax.inject.Inject;
@@ -50,6 +53,8 @@ import java.util.Set;
 @Path(WebServerConstants.WEBSERVER_ROOT_PATH)
 @PermitAll
 public class LogInLogOutResources {
+
+  private static final Logger logger = LoggerFactory.getLogger(LogInLogOutResources.class);
 
   @Inject
   WorkManager workManager;
@@ -120,6 +125,12 @@ public class LogInLogOutResources {
   public void logout(@Context HttpServletRequest req, @Context HttpServletResponse resp) throws Exception {
     final HttpSession session = req.getSession();
     if (session != null) {
+      final Object authCreds = session.getAttribute(SessionAuthentication.__J_AUTHENTICATED);
+      if (authCreds != null) {
+        final SessionAuthentication sessionAuth = (SessionAuthentication) authCreds;
+        logger.info("WebUser {} logged out from {}:{}", sessionAuth.getUserIdentity().getUserPrincipal().getName(), req
+          .getRemoteHost(), req.getRemotePort());
+      }
       session.invalidate();
     }
 

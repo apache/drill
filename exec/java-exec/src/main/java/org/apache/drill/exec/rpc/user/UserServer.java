@@ -205,6 +205,7 @@ public class UserServer extends BasicServer<RpcType, BitToUserConnection> {
 
     private UserSession session;
     private UserToBitHandshake inbound;
+    private String authenticatedUser;
 
     BitToUserConnection(SocketChannel channel) {
       super(channel, config, !config.isAuthEnabled()
@@ -230,8 +231,8 @@ public class UserServer extends BasicServer<RpcType, BitToUserConnection> {
     public void finalizeSaslSession() throws IOException {
       final String authorizationID = getSaslServer().getAuthorizationID();
       final String userName = new HadoopKerberosName(authorizationID).getShortName();
-      logger.debug("Created session for {}", userName);
       finalizeSession(userName);
+      logger.info("User {} logged in from {}", authenticatedUser, getRemoteAddress());
     }
 
     /**
@@ -251,6 +252,7 @@ public class UserServer extends BasicServer<RpcType, BitToUserConnection> {
           .setSupportComplexTypes(inbound.getSupportComplexTypes())
           .build();
 
+      this.authenticatedUser = userName;
       // if inbound impersonation is enabled and a target is mentioned
       final String targetName = session.getTargetUserName();
       if (config.getImpersonationManager() != null && targetName != null) {
@@ -294,6 +296,15 @@ public class UserServer extends BasicServer<RpcType, BitToUserConnection> {
     @Override
     public SocketAddress getRemoteAddress() {
       return getChannel().remoteAddress();
+    }
+
+    @Override
+    public void channelClosed(RpcException ex) {
+      // log the logged out event only when authentication is enabled
+      if (config.isAuthEnabled()) {
+        logger.info("User {} logged out from {}", authenticatedUser, getRemoteAddress());
+      }
+      super.channelClosed(ex);
     }
 
     private void cleanup() {
@@ -429,10 +440,8 @@ public class UserServer extends BasicServer<RpcType, BitToUserConnection> {
               connection.changeHandlerTo(config.getMessageHandler());
               connection.finalizeSession(userName);
               respBuilder.setStatus(HandshakeStatus.SUCCESS);
-              if (logger.isTraceEnabled()) {
-                logger.trace("Authenticated {} successfully using PLAIN from {}", userName,
-                    connection.getRemoteAddress());
-              }
+              logger.info("Authenticated {} from {} successfully using PLAIN", userName,
+                connection.getRemoteAddress());
               return respBuilder.build();
             } catch (UserAuthenticationException ex) {
               return handleFailure(respBuilder, HandshakeStatus.AUTH_FAILED, ex.getMessage(), ex);
