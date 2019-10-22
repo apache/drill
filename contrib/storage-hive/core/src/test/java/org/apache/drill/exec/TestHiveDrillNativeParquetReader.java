@@ -64,8 +64,7 @@ public class TestHiveDrillNativeParquetReader extends HiveTestBase {
     int actualRowCount = testSql(query);
     assertEquals("Expected and actual row count should match", 2, actualRowCount);
 
-    testPlanMatchingPatterns(query,
-        new String[]{"HiveDrillNativeParquetScan", "numFiles=1"}, null);
+    testPlanMatchingPatterns(query, "HiveDrillNativeParquetScan", "numFiles=1");
   }
 
   @Test
@@ -75,8 +74,7 @@ public class TestHiveDrillNativeParquetReader extends HiveTestBase {
     int actualRowCount = testSql(query);
     assertEquals("Expected and actual row count should match", 1, actualRowCount);
 
-    testPlanMatchingPatterns(query,
-        new String[]{"HiveDrillNativeParquetScan", "numFiles=1"}, null);
+    testPlanMatchingPatterns(query, "HiveDrillNativeParquetScan", "numFiles=1");
   }
 
   @Test
@@ -114,15 +112,14 @@ public class TestHiveDrillNativeParquetReader extends HiveTestBase {
     int actualRowCount = testSql(query);
     assertEquals("Expected and actual row count should match", 2, actualRowCount);
 
-    testPlanMatchingPatterns(query,
-        new String[]{"HiveDrillNativeParquetScan", "numFiles=1"}, null);
+    testPlanMatchingPatterns(query, "HiveDrillNativeParquetScan", "numFiles=1");
   }
 
   @Test
   public void testPartitionedExternalTable() throws Exception {
     String query = "select * from hive.kv_native_ext";
 
-    testPlanMatchingPatterns(query, new String[]{"HiveDrillNativeParquetScan", "numFiles=2"}, null);
+    testPlanMatchingPatterns(query, "HiveDrillNativeParquetScan", "numFiles=2");
 
     testBuilder()
         .sqlQuery(query)
@@ -185,14 +182,16 @@ public class TestHiveDrillNativeParquetReader extends HiveTestBase {
     int actualRowCount = testSql(query);
     assertEquals("Expected and actual row count should match", 2, actualRowCount);
 
-    testPlanMatchingPatterns(query, new String[]{"HiveDrillNativeParquetScan", "numFiles=1"}, null);
+    testPlanMatchingPatterns(query, "HiveDrillNativeParquetScan", "numFiles=1");
   }
 
   @Test
   public void testConvertCountToDirectScanOptimization() throws Exception {
     String query = "select count(1) as cnt from hive.kv_native";
 
-    testPlanMatchingPatterns(query, new String[]{"DynamicPojoRecordReader"}, null);
+    testPlanMatchingPatterns(query, "DynamicPojoRecordReader");
+
+    testPhysicalPlanExecutionBasedOnQuery(query);
 
     testBuilder()
       .sqlQuery(query)
@@ -224,7 +223,7 @@ public class TestHiveDrillNativeParquetReader extends HiveTestBase {
   public void testReadAllSupportedHiveDataTypesNativeParquet() throws Exception {
     String query = "select * from hive.readtest_parquet";
 
-    testPlanMatchingPatterns(query, new String[] {"HiveDrillNativeParquetScan"}, null);
+    testPlanMatchingPatterns(query, "HiveDrillNativeParquetScan");
 
     testBuilder()
         .sqlQuery(query)

@@ -273,8 +273,8 @@ public abstract class AbstractParquetScanBatchCreator {
    * @param rowGroup create a reader for this specific row group
    * @param fs file system
    * @param footer this file's footer
-   * // @param readSchemaOnly - if true sets the number of rows to read to be zero
-   * @return the (possibly modified) input  mapWithMaxColumns
+   * @param readSchemaOnly if true sets the number of rows to read to be zero
+   * @return the (possibly modified) input mapWithMaxColumns
    */
   private Map<String, String> createReaderAndImplicitColumns(ExecutorFragmentContext context,
                                                              AbstractParquetRowGroupScan rowGroupScan,
@@ -347,7 +347,7 @@ public abstract class AbstractParquetScanBatchCreator {
   /**
    * Helper class responsible for creating and managing DrillFileSystem.
    */
-  protected abstract class AbstractDrillFileSystemManager {
+  protected static abstract class AbstractDrillFileSystemManager {
 
     protected final OperatorContext operatorContext;
 

@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import java.util.List;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -44,6 +43,8 @@ import org.apache.drill.exec.store.ColumnExplorer;
 import org.apache.drill.exec.store.direct.MetadataDirectGroupScan;
 import org.apache.drill.exec.store.pojo.DynamicPojoRecordReader;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>
@@ -89,9 +90,9 @@ public class ConvertCountToDirectScanPrule extends Prule {
       RelOptHelper.some(DrillAggregateRel.class,
                             RelOptHelper.any(DrillScanRel.class)), "Agg_on_scan");
 
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ConvertCountToDirectScanPrule.class);
+  private static final Logger logger = LoggerFactory.getLogger(ConvertCountToDirectScanPrule.class);
 
-  protected ConvertCountToDirectScanPrule(RelOptRuleOperand rule, String id) {
+  private ConvertCountToDirectScanPrule(RelOptRuleOperand rule, String id) {
     super(rule, "ConvertCountToDirectScanPrule:" + id);
   }
 
@@ -125,10 +126,11 @@ public class ConvertCountToDirectScanPrule extends Prule {
 
     final DynamicPojoRecordReader<Long> reader = new DynamicPojoRecordReader<>(
         CountToDirectScanUtils.buildSchema(scanRowType.getFieldNames()),
-        Collections.singletonList((List<Long>) new ArrayList<>(result.values())));
+        Collections.singletonList(new ArrayList<>(result.values())));
 
     final ScanStats scanStats = new ScanStats(ScanStats.GroupScanProperty.EXACT_ROW_COUNT, 1, 1, scanRowType.getFieldCount());
-    final GroupScan directScan = new MetadataDirectGroupScan(reader, oldGrpScan.getFiles(), scanStats, false);
+    final int numFiles = oldGrpScan.hasFiles() ? oldGrpScan.getFiles().size() : -1;
+    final GroupScan directScan = new MetadataDirectGroupScan(reader, oldGrpScan.getSelectionRoot(), numFiles, scanStats, false);
 
     final DirectScanPrel newScan = DirectScanPrel.create(scan, scan.getTraitSet().plus(Prel.DRILL_PHYSICAL)
         .plus(DrillDistributionTrait.SINGLETON), directScan, scanRowType);
@@ -145,7 +147,7 @@ public class ConvertCountToDirectScanPrule extends Prule {
    *
    * For each aggregate call will determine if count can be calculated. Collects counts only for COUNT function.
    * For star, not null expressions and implicit columns sets count to total record number.
-   * For other cases obtains counts from group scan operator. Also count can not be calculated for parition columns.
+   * For other cases obtains counts from group scan operator. Also count can not be calculated for partition columns.
    *
    * @param agg aggregate relational expression
    * @param scan scan relational expression
@@ -155,7 +157,7 @@ public class ConvertCountToDirectScanPrule extends Prule {
   private Map<String, Long> collectCounts(PlannerSettings settings, DrillAggregateRel agg, DrillScanRel scan, DrillProjectRel project) {
     final Set<String> implicitColumnsNames = ColumnExplorer.initImplicitFileColumns(settings.getOptions()).keySet();
     final GroupScan oldGrpScan = scan.getGroupScan();
-    final long totalRecordCount = (long)oldGrpScan.getScanStats(settings).getRecordCount();
+    final long totalRecordCount = (long) oldGrpScan.getScanStats(settings).getRecordCount();
     final LinkedHashMap<String, Long> result = new LinkedHashMap<>();
 
     for (int i = 0; i < agg.getAggCallList().size(); i++) {
@@ -218,5 +220,4 @@ public class ConvertCountToDirectScanPrule extends Prule {
 
     return ImmutableMap.copyOf(result);
   }
-
 }

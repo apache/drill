@@ -17,10 +17,11 @@
  */
 package org.apache.drill.exec.store.direct;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.physical.PhysicalOperatorSetupException;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
@@ -34,26 +35,30 @@ import java.util.List;
 @JsonTypeName("direct-scan")
 public class DirectGroupScan extends AbstractGroupScan {
 
+  @JsonProperty
   protected final RecordReader reader;
+  @JsonProperty
   protected final ScanStats stats;
 
   public DirectGroupScan(RecordReader reader) {
     this(reader, ScanStats.TRIVIAL_TABLE);
   }
 
-  public DirectGroupScan(RecordReader reader, ScanStats stats) {
+  @JsonCreator
+  public DirectGroupScan(@JsonProperty("reader") RecordReader reader,
+                         @JsonProperty("stats") ScanStats stats) {
     super((String) null);
     this.reader = reader;
     this.stats = stats;
   }
 
   @Override
-  public void applyAssignments(List<DrillbitEndpoint> endpoints) throws PhysicalOperatorSetupException {
+  public void applyAssignments(List<DrillbitEndpoint> endpoints) {
     assert endpoints.size() == 1;
   }
 
   @Override
-  public SubScan getSpecificScan(int minorFragmentId) throws ExecutionSetupException {
+  public SubScan getSpecificScan(int minorFragmentId) {
     assert minorFragmentId == 0;
     return new DirectSubScan(reader);
   }
@@ -68,8 +73,14 @@ public class DirectGroupScan extends AbstractGroupScan {
     return stats;
   }
 
+  @JsonIgnore
   @Override
-  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
+  public List<SchemaPath> getColumns() {
+    return super.getColumns();
+  }
+
+  @Override
+  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
     assert children == null || children.isEmpty();
     return new DirectGroupScan(reader, stats);
   }
@@ -83,5 +94,4 @@ public class DirectGroupScan extends AbstractGroupScan {
   public GroupScan clone(List<SchemaPath> columns) {
     return this;
   }
-
 }

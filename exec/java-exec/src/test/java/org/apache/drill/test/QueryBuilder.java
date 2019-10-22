@@ -19,17 +19,17 @@ package org.apache.drill.test;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import org.apache.drill.PlanTestBase;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -61,6 +61,8 @@ import org.apache.drill.test.BufferingQueryEventListener.QueryEvent;
 import org.apache.drill.test.ClientFixture.StatementParser;
 import org.joda.time.Period;
 
+import static org.junit.Assert.assertEquals;
+
 /**
  * Builder for a Drill query. Provides all types of query formats,
  * and a variety of ways to run the query.
@@ -73,7 +75,7 @@ public class QueryBuilder {
    * using a {@link QuerySummaryFuture}.
    */
 
-  public class SummaryOnlyQueryEventListener implements UserResultsListener {
+  public static class SummaryOnlyQueryEventListener implements UserResultsListener {
 
     /**
      * The future to be notified. Created here and returned by the
@@ -123,7 +125,7 @@ public class QueryBuilder {
    * just the summary of the query.
    */
 
-  public class QuerySummaryFuture implements Future<QuerySummary> {
+  public static class QuerySummaryFuture implements Future<QuerySummary> {
 
     /**
      * Synchronizes the listener thread and the test thread that
@@ -153,7 +155,7 @@ public class QueryBuilder {
     public boolean isDone() { return summary != null; }
 
     @Override
-    public QuerySummary get() throws InterruptedException, ExecutionException {
+    public QuerySummary get() throws InterruptedException {
       lock.await();
       return summary;
     }
@@ -163,8 +165,7 @@ public class QueryBuilder {
      */
 
     @Override
-    public QuerySummary get(long timeout, TimeUnit unit)
-        throws InterruptedException, ExecutionException, TimeoutException {
+    public QuerySummary get(long timeout, TimeUnit unit) throws InterruptedException {
       return get();
     }
 
@@ -177,7 +178,6 @@ public class QueryBuilder {
   /**
    * Summary results of a query: records, batches, run time.
    */
-
   public static class QuerySummary {
     private final QueryId queryId;
     private final int records;
@@ -261,7 +261,6 @@ public class QueryBuilder {
    * @param planFragments fragments that make up the plan
    * @return this builder
    */
-
   public QueryBuilder plan(List<PlanFragment> planFragments) {
     queryType = QueryType.EXECUTION;
     this.planFragments = planFragments;
@@ -275,8 +274,7 @@ public class QueryBuilder {
    * optional ending semi-colon
    * @return this builder
    */
-
-  public QueryBuilder sql(File file) throws FileNotFoundException, IOException {
+  public QueryBuilder sql(File file) throws IOException {
     try (BufferedReader in = new BufferedReader(new FileReader(file))) {
       StatementParser parser = new StatementParser(in);
       String sql = parser.parseNext();
@@ -297,7 +295,6 @@ public class QueryBuilder {
    * @param resource Name of the resource
    * @return this builder
    */
-
   public QueryBuilder sqlResource(String resource) {
     sql(ClusterFixture.loadResource(resource));
     return this;
@@ -321,7 +318,6 @@ public class QueryBuilder {
    * @return the query summary
    * @throws Exception if anything goes wrong anywhere in the execution
    */
-
   public QuerySummary run() throws Exception {
     return produceSummary(withEventListener());
   }
@@ -330,9 +326,8 @@ public class QueryBuilder {
    * Run the query and return a list of the result batches. Use
    * if the batch count is small and you want to work with them.
    * @return a list of batches resulting from the query
-   * @throws RpcException
+   * @throws RpcException if anything goes wrong
    */
-
   public List<QueryDataBatch> results() throws RpcException {
     Preconditions.checkNotNull(queryType, "Query not provided.");
     Preconditions.checkNotNull(queryText, "Query not provided.");
@@ -345,13 +340,12 @@ public class QueryBuilder {
    * by the code using a {@link RowSetReader}.
    * <p>
    *
-   * @see {@link #rowSetIterator()} for a version that reads a series of
+   * @see #rowSetIterator() for a version that reads a series of
    * batches as row sets.
    * @return a row set that represents the first non-empty batch returned from
    * the query
    * @throws RpcException if anything goes wrong
    */
-
   public DirectRowSet rowSet() throws RpcException {
 
     // Ignore all but the first non-empty batch.
@@ -435,7 +429,6 @@ public class QueryBuilder {
    * @param <V> vector class
    * @param <T> return type
    * @return result produced by {@code reader} lambda or {@code null} if no records returned from the query
-   *
    */
   @SuppressWarnings("unchecked")
   public <T, V> T vectorValue(String columnName, Class<V> vectorClass, VectorQueryReader<T, V> reader)
@@ -543,7 +536,6 @@ public class QueryBuilder {
    * @return the value of the first column of the first row
    * @throws RpcException if anything goes wrong
    */
-
   public String singletonString() throws RpcException {
     return singletonGeneric(ScalarReader::getString);
   }
@@ -554,7 +546,6 @@ public class QueryBuilder {
    *
    * @param listener the Drill listener
    */
-
   public void withListener(UserResultsListener listener) {
     Preconditions.checkNotNull(queryType, "Query not provided.");
     if (planFragments != null) {
@@ -578,7 +569,6 @@ public class QueryBuilder {
    *
    * @return the query event listener
    */
-
   public BufferingQueryEventListener withEventListener() {
     BufferingQueryEventListener listener = new BufferingQueryEventListener();
     withListener(listener);
@@ -598,15 +588,12 @@ public class QueryBuilder {
   }
 
   /**
-   * <p>
-   *   Run a query and logs the output in TSV format.
-   *   Similar to {@link QueryTestUtil#testRunAndLog} with one query.
-   * </p>
+   * Run a query and logs the output in TSV format.
+   * Similar to {@link QueryTestUtil#testRunAndLog} with one query.
    *
    * @return The number of rows returned.
-   * @throws Exception If anything goes wrong with query execution.
    */
-  public long log() throws Exception {
+  public long log() {
     return log(Format.TSV, VectorUtil.DEFAULT_COLUMN_WIDTH);
   }
 
@@ -623,15 +610,12 @@ public class QueryBuilder {
   }
 
   /**
-   * <p>
-   *   Runs a query and prints the output to stdout in TSV format.
-   *   Similar to {@link QueryTestUtil#testRunAndLog} with one query.
-   * </p>
+   * Runs a query and prints the output to stdout in TSV format.
+   * Similar to {@link QueryTestUtil#testRunAndLog} with one query.
    *
    * @return The number of rows returned.
-   * @throws Exception If anything goes wrong with query execution.
    */
-  public long print() throws Exception {
+  public long print() {
     return print(Format.TSV, VectorUtil.DEFAULT_COLUMN_WIDTH);
   }
 
@@ -639,8 +623,9 @@ public class QueryBuilder {
    * Run the query asynchronously, returning a future to be used
    * to check for query completion, wait for completion, and obtain
    * the result summary.
+   *
+   * @return query summary future
    */
-
   public QuerySummaryFuture futureSummary() {
     QuerySummaryFuture future = new QuerySummaryFuture();
     withListener(new SummaryOnlyQueryEventListener(future));
@@ -663,9 +648,10 @@ public class QueryBuilder {
   /**
    * Submit an "EXPLAIN" statement, and return text form of the
    * plan.
+   *
+   * @return explain plan
    * @throws Exception if the query fails
    */
-
   public String explainText() throws Exception {
     return explain(ClusterFixture.EXPLAIN_PLAN_TEXT);
   }
@@ -673,9 +659,10 @@ public class QueryBuilder {
   /**
    * Submit an "EXPLAIN" statement, and return the JSON form of the
    * plan.
+   *
+   * @return explain plan
    * @throws Exception if the query fails
    */
-
   public String explainJson() throws Exception {
     return explain(ClusterFixture.EXPLAIN_PLAN_JSON);
   }
@@ -685,12 +672,24 @@ public class QueryBuilder {
     return queryPlan(format);
   }
 
+  /**
+   * Submits explain plan statement
+   * and creates plan matcher instance based on return query plan.
+   *
+   * @return plan matcher
+   * @throws Exception if the query fails
+   */
+  public PlanMatcher planMatcher() throws Exception {
+    String plan = explainText();
+    return new PlanMatcher(plan);
+  }
+
   private QuerySummary produceSummary(BufferingQueryEventListener listener) throws Exception {
     long start = System.currentTimeMillis();
     int recordCount = 0;
     int batchCount = 0;
     QueryId queryId = null;
-    QueryState state = null;
+    QueryState state;
     loop:
     for (;;) {
       QueryEvent event = listener.get();
@@ -727,11 +726,13 @@ public class QueryBuilder {
    * Submit an "EXPLAIN" statement, and return the column value which
    * contains the plan's string.
    * <p>
-   * Cribbed from {@link PlanTestBase#getPlanInString(String, String)}
-   * @throws Exception if anything goes wrogn in the query
+   * Cribbed from PlanTestBase#getPlanInString(String, String)
+   *
+   * @param columnName column name to extract from result
+   * @return query plan
+   * @throws Exception if anything goes wrong in the query
    */
-
-  protected String queryPlan(String columnName) throws Exception {
+  private String queryPlan(String columnName) throws Exception {
     Preconditions.checkArgument(queryType == QueryType.SQL, "Can only explain an SQL query.");
     final List<QueryDataBatch> results = results();
     final RecordBatchLoader loader = new RecordBatchLoader(client.allocator());
@@ -763,5 +764,70 @@ public class QueryBuilder {
     }
 
     return builder.toString();
+  }
+
+  /**
+   * Collects expected and non-expected query patterns.
+   * Upon {@link #match()} method call, matches given patterns to the query plan.
+   */
+  public static class PlanMatcher {
+
+    private static final String EXPECTED_NOT_FOUND = "Did not find expected pattern";
+    private static final String UNEXPECTED_FOUND = "Found unwanted pattern";
+
+    private final String plan;
+    private final List<String> included = new ArrayList<>();
+    private final List<String> excluded = new ArrayList<>();
+
+    public PlanMatcher(String plan) {
+      this.plan = plan;
+    }
+
+    public PlanMatcher include(String... patterns) {
+      included.addAll(Arrays.asList(patterns));
+      return this;
+    }
+
+    public PlanMatcher exclude(String... patterns) {
+      excluded.addAll(Arrays.asList(patterns));
+      return this;
+    }
+
+    /**
+     * Checks if stored patterns (string parts) are included or excluded in the given plan.
+     *
+     * <p/>
+     * Example: <br/>
+     * For the plan:
+     * <pre>
+     * 00-00    Screen
+     * 00-01      Project(cnt=[$0])
+     * 00-02        DirectScan(groupscan=[selectionRoot = classpath:/tpch/nation.parquet,
+     * numFiles = 1, usedMetadataSummaryFile = false, DynamicPojoRecordReader{records = [[25]]}])
+     * </pre>
+     *
+     * <ul>
+     *  <li>To check that number of files are 1 and DynamicPojoRecordReader is used:
+     *  <code>planMatcher.include("numFiles = 1", "DynamicPojoRecordReader")</code></li>
+     *  <li>To check that metadata summary file was not used:
+     *  <code>planMatcher.exclude("usedMetadataSummaryFile = true")</code></li>
+     * </ul>
+     *
+     *  Calling <code>planMatcher.match()</code> method would check that given patterns are present
+     *  or absent in the given plan. Method execution will fail with {@link AssertionError}
+     *  only if expected pattern was not matched or unexpected pattern was matched.
+     */
+    public void match() {
+      included.forEach(pattern -> match(pattern, true));
+      excluded.forEach(pattern -> match(pattern, false));
+    }
+
+    private void match(String patternString, boolean expectedResult) {
+      Pattern pattern = Pattern.compile(patternString);
+      Matcher matcher = pattern.matcher(plan);
+      String message = String.format("%s in plan: %s\n%s",
+        expectedResult ? EXPECTED_NOT_FOUND : UNEXPECTED_FOUND, patternString, plan);
+      assertEquals(message, expectedResult, matcher.find());
+    }
   }
 }

@@ -174,6 +174,11 @@ public abstract class AbstractGroupScan extends AbstractBase implements GroupSca
   }
 
   @Override
+  public Path getSelectionRoot() {
+    return null;
+  }
+
+  @Override
   public Collection<Path> getFiles() {
     return null;
   }

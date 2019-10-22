@@ -48,14 +48,14 @@ import org.apache.drill.exec.store.parquet.ParquetReaderConfig;
 import org.apache.drill.exec.store.parquet.metadata.Metadata;
 import org.apache.drill.exec.store.parquet.metadata.Metadata_V4;
 import org.apache.drill.exec.store.pojo.DynamicPojoRecordReader;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.apache.hadoop.fs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.LinkedHashMap;
 import java.util.Set;
@@ -99,9 +99,9 @@ public class ConvertCountToDirectScanRule extends RelOptRule {
       RelOptHelper.some(Aggregate.class,
                             RelOptHelper.any(TableScan.class)), "Agg_on_scan");
 
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ConvertCountToDirectScanRule.class);
+  private static final Logger logger = LoggerFactory.getLogger(ConvertCountToDirectScanRule.class);
 
-  protected ConvertCountToDirectScanRule(RelOptRuleOperand rule, String id) {
+  private ConvertCountToDirectScanRule(RelOptRuleOperand rule, String id) {
     super(rule, "ConvertCountToDirectScanRule:" + id);
   }
 
@@ -153,7 +153,7 @@ public class ConvertCountToDirectScanRule extends RelOptRule {
 
     Metadata_V4.MetadataSummary metadataSummary = status.getRight();
     Map<String, Long> result = collectCounts(settings, metadataSummary, agg, scan, project);
-    logger.trace("Calculated the following aggregate counts: ", result);
+    logger.trace("Calculated the following aggregate counts: {}", result);
 
     // if counts could not be determined, rule won't be applied
     if (result.isEmpty()) {
@@ -161,17 +161,16 @@ public class ConvertCountToDirectScanRule extends RelOptRule {
       return;
     }
 
-    List<Path> fileList =
-            ImmutableList.of(Metadata.getSummaryFileName(formatSelection.getSelection().getSelectionRoot()));
+    Path summaryFileName = Metadata.getSummaryFileName(formatSelection.getSelection().getSelectionRoot());
 
     final RelDataType scanRowType = CountToDirectScanUtils.constructDataType(agg, result.keySet());
 
     final DynamicPojoRecordReader<Long> reader = new DynamicPojoRecordReader<>(
         CountToDirectScanUtils.buildSchema(scanRowType.getFieldNames()),
-        Collections.singletonList((List<Long>) new ArrayList<>(result.values())));
+        Collections.singletonList(new ArrayList<>(result.values())));
 
     final ScanStats scanStats = new ScanStats(ScanStats.GroupScanProperty.EXACT_ROW_COUNT, 1, 1, scanRowType.getFieldCount());
-    final MetadataDirectGroupScan directScan = new MetadataDirectGroupScan(reader, fileList, scanStats, true);
+    final MetadataDirectGroupScan directScan = new MetadataDirectGroupScan(reader, summaryFileName, 1, scanStats, true);
 
     final DrillDirectScanRel newScan = new DrillDirectScanRel(scan.getCluster(), scan.getTraitSet().plus(DrillRel.DRILL_LOGICAL),
       directScan, scanRowType);
@@ -190,16 +189,16 @@ public class ConvertCountToDirectScanRule extends RelOptRule {
     if (!((formatConfig instanceof ParquetFormatConfig)
       || ((formatConfig instanceof NamedFormatPluginConfig)
       && ((NamedFormatPluginConfig) formatConfig).name.equals("parquet")))) {
-      return new ImmutablePair<Boolean, Metadata_V4.MetadataSummary>(false, null);
+      return new ImmutablePair<>(false, null);
     }
 
     FileSystemPlugin plugin = (FileSystemPlugin) drillTable.getPlugin();
-    DrillFileSystem fs = null;
+    DrillFileSystem fs;
     try {
        fs = new DrillFileSystem(plugin.getFormatPlugin(formatSelection.getFormat()).getFsConf());
     } catch (IOException e) {
       logger.warn("Unable to create the file system object for retrieving statistics from metadata cache file ", e);
-      return new ImmutablePair<Boolean, Metadata_V4.MetadataSummary>(false, null);
+      return new ImmutablePair<>(false, null);
     }
 
     // check if the cacheFileRoot has been set: this is needed because after directory pruning, the
@@ -215,8 +214,7 @@ public class ConvertCountToDirectScanRule extends RelOptRule {
 
     Metadata_V4.MetadataSummary metadataSummary = Metadata.getSummary(fs, selectionRoot, false, parquetReaderConfig);
 
-    return metadataSummary != null ? new ImmutablePair<Boolean, Metadata_V4.MetadataSummary>(true, metadataSummary) :
-      new ImmutablePair<Boolean, Metadata_V4.MetadataSummary>(false, null);
+    return metadataSummary != null ? new ImmutablePair<>(true, metadataSummary) : new ImmutablePair<>(false, null);
   }
 
   /**
@@ -311,5 +309,4 @@ public class ConvertCountToDirectScanRule extends RelOptRule {
 
     return ImmutableMap.copyOf(result);
   }
-
 }
