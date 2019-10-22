@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.store.direct;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.base.GroupScan;
@@ -25,7 +27,6 @@ import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.hadoop.fs.Path;
 
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -37,20 +38,34 @@ import java.util.List;
 @JsonTypeName("metadata-direct-scan")
 public class MetadataDirectGroupScan extends DirectGroupScan {
 
-  private final Collection<Path> files;
-  private boolean usedMetadataSummaryFile = false;
+  @JsonProperty
+  private final Path selectionRoot;
+  @JsonProperty
+  private final int numFiles;
+  @JsonProperty
+  private boolean usedMetadataSummaryFile;
 
-  public MetadataDirectGroupScan(RecordReader reader, Collection<Path> files, ScanStats stats,
-                                 boolean usedMetadataSummaryFile) {
+  @JsonCreator
+  public MetadataDirectGroupScan(@JsonProperty("reader") RecordReader reader,
+                                 @JsonProperty("selectionRoot") Path selectionRoot,
+                                 @JsonProperty("numFiles") int numFiles,
+                                 @JsonProperty("stats") ScanStats stats,
+                                 @JsonProperty("usedMetadataSummaryFile") boolean usedMetadataSummaryFile) {
     super(reader, stats);
-    this.files = files;
+    this.selectionRoot = selectionRoot;
+    this.numFiles = numFiles;
     this.usedMetadataSummaryFile = usedMetadataSummaryFile;
+  }
+
+  @Override
+  public Path getSelectionRoot() {
+    return selectionRoot;
   }
 
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
     assert children == null || children.isEmpty();
-    return new MetadataDirectGroupScan(reader, files, stats, usedMetadataSummaryFile);
+    return new MetadataDirectGroupScan(reader, selectionRoot, numFiles, stats, usedMetadataSummaryFile);
   }
 
   @Override
@@ -61,25 +76,25 @@ public class MetadataDirectGroupScan extends DirectGroupScan {
   /**
    * <p>
    * Returns string representation of group scan data.
-   * Includes list of files if present.
+   * Includes selection root, number of files, if metadata summary file was used,
+   * such data is present.
    * </p>
    *
    * <p>
-   * Example: [files = [/tmp/0_0_0.parquet], numFiles = 1]
+   * Example: [selectionRoot = [/tmp/users], numFiles = 1, usedMetadataSummaryFile = false]
    * </p>
    *
    * @return string representation of group scan data
    */
   @Override
   public String getDigest() {
-    if (files != null) {
-      StringBuilder builder = new StringBuilder();
-      builder.append("files = ").append(files).append(", ");
-      builder.append("numFiles = ").append(files.size()).append(", ");
-      builder.append("usedMetadataSummaryFile = ").append(usedMetadataSummaryFile).append(", ");
-      return builder.append(super.getDigest()).toString();
+    StringBuilder builder = new StringBuilder();
+    if (selectionRoot != null) {
+      builder.append("selectionRoot = ").append(selectionRoot).append(", ");
     }
-    return super.getDigest();
+    builder.append("numFiles = ").append(numFiles).append(", ");
+    builder.append("usedMetadataSummaryFile = ").append(usedMetadataSummaryFile).append(", ");
+    builder.append(super.getDigest());
+    return builder.toString();
   }
-
 }

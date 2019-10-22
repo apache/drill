@@ -17,22 +17,44 @@
  */
 package org.apache.drill.exec.physical.base;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class ScanStats {
 
   public static final ScanStats TRIVIAL_TABLE = new ScanStats(GroupScanProperty.NO_EXACT_ROW_COUNT, 20, 1, 1);
 
   public static final ScanStats ZERO_RECORD_TABLE = new ScanStats(GroupScanProperty.EXACT_ROW_COUNT, 0, 1, 1);
 
+  @JsonProperty
+  private final GroupScanProperty groupScanProperty;
+  @JsonProperty
   private final double recordCount;
+  @JsonProperty
   private final double cpuCost;
+  @JsonProperty
   private final double diskCost;
-  private final GroupScanProperty property;
 
-  public ScanStats(GroupScanProperty property, double recordCount, double cpuCost, double diskCost) {
+  @JsonCreator
+  public ScanStats(@JsonProperty("groupScanProperty") GroupScanProperty groupScanProperty,
+                   @JsonProperty("recordCount") double recordCount,
+                   @JsonProperty("cpuCost") double cpuCost,
+                   @JsonProperty("diskCost") double diskCost) {
+    this.groupScanProperty = groupScanProperty;
     this.recordCount = recordCount;
     this.cpuCost = cpuCost;
     this.diskCost = diskCost;
-    this.property = property;
+  }
+
+  /**
+   * Return if GroupScan knows the exact row count in the result of getSize() call.
+   * By default, group scan does not know the exact row count, before it scans every rows.
+   * Currently, parquet group scan will return the exact row count.
+   *
+   * @return group scan property
+   */
+  public GroupScanProperty getGroupScanProperty() {
+    return groupScanProperty;
   }
 
   public double getRecordCount() {
@@ -49,19 +71,13 @@ public class ScanStats {
 
   @Override
   public String toString() {
-    return "ScanStats{" + "recordCount=" + recordCount + ", cpuCost=" + cpuCost + ", diskCost=" + diskCost + ", property=" + property + '}';
+    return "ScanStats{" +
+      "recordCount=" + recordCount +
+      ", cpuCost=" + cpuCost +
+      ", diskCost=" + diskCost +
+      ", groupScanProperty=" + groupScanProperty +
+      '}';
   }
-
-  /**
-   * Return if GroupScan knows the exact row count in the result of getSize() call.
-   * By default, groupscan does not know the exact row count, before it scans every rows.
-   * Currently, parquet group scan will return the exact row count.
-   */
-  public GroupScanProperty getGroupScanProperty() {
-    return property;
-  }
-
-
 
   public enum GroupScanProperty {
     NO_EXACT_ROW_COUNT(false, false),

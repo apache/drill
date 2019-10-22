@@ -277,7 +277,7 @@ public class TestFunctionsWithTypeExpoQueries extends BaseTestQuery {
         "where concat(a, 'asdf') = 'asdf'";
 
     // Validate the plan
-    final String[] expectedPlan = {"Scan.*a.parquet.*numFiles = 1"};
+    final String[] expectedPlan = {"Scan.*metadata_caching.*numFiles = 1"};
     final String[] excludedPlan = {"Filter"};
     PlanTestBase.testPlanMatchingPatterns(query, expectedPlan, excludedPlan);
 

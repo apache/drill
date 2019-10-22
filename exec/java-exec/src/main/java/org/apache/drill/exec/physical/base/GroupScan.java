@@ -141,8 +141,15 @@ public interface GroupScan extends Scan, HasAffinity {
   boolean hasFiles();
 
   /**
+   * Returns path to the selection root. If this GroupScan cannot provide selection root, it returns null.
+   *
+   * @return path to the selection root
+   */
+  Path getSelectionRoot();
+
+  /**
    * Returns a collection of file names associated with this GroupScan. This should be called after checking
-   * hasFiles().  If this GroupScan cannot provide file names, it returns null.
+   * hasFiles(). If this GroupScan cannot provide file names, it returns null.
    *
    * @return collection of files paths
    */
