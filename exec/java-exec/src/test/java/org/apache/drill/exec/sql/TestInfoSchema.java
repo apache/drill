@@ -476,4 +476,11 @@ public class TestInfoSchema extends BaseTestQuery {
   public void describeSchemaInvalid() throws Exception {
     errorMsgTestHelper("describe schema invalid.schema", "Invalid schema name [invalid.schema]");
   }
+
+  @Test
+  public void testDescribeAlias() throws Exception {
+    test("desc schema dfs.tmp");
+    test("desc information_schema.`catalogs`");
+    test("desc table information_schema.`catalogs`");
+  }
 }
