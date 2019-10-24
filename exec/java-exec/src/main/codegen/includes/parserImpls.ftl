@@ -494,8 +494,8 @@ SqlNode SqlRefreshMetadata() :
 
 /**
 * Parses statement
-*   DESCRIBE { SCHEMA | DATABASE } name
-*   DESCRIBE SCHEMA FOR TABLE dfs.my_table [AS (JSON | STATEMENT)]
+*   { DESCRIBE | DESC } { SCHEMA | DATABASE } name
+*   { DESCRIBE | DESC } SCHEMA FOR TABLE dfs.my_table [AS (JSON | STATEMENT)]
 */
 SqlNode SqlDescribeSchema() :
 {
@@ -504,7 +504,7 @@ SqlNode SqlDescribeSchema() :
    String format = "JSON";
 }
 {
-   <DESCRIBE> { pos = getPos(); }
+   (<DESCRIBE> | <DESC>) { pos = getPos(); }
    (
        <SCHEMA>
          (

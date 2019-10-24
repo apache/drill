@@ -661,6 +661,12 @@ public class TestSchemaCommands extends ClusterTest {
         .baselineValues(schema)
         .go();
 
+      testBuilder()
+        .sqlQuery("describe schema for table %s", table)
+        .unOrdered()
+        .sqlBaselineQuery("desc schema for table %s", table)
+        .go();
+
     } finally {
       run("drop table if exists %s", table);
     }
