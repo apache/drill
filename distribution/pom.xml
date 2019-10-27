@@ -54,12 +54,12 @@
       <groupId>org.apache.drill.memory</groupId>
       <artifactId>drill-memory-base</artifactId>
       <version>${project.version}</version>
-    </dependency>    
+    </dependency>
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
       <artifactId>drill-rpc</artifactId>
       <version>${project.version}</version>
-    </dependency>    
+    </dependency>
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
       <artifactId>drill-java-exec</artifactId>
@@ -160,10 +160,10 @@
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-client</artifactId>
       <exclusions>
-       <exclusion>
-           <groupId>io.netty</groupId>
-           <artifactId>netty</artifactId>
-       </exclusion>
+        <exclusion>
+          <groupId>io.netty</groupId>
+          <artifactId>netty</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -327,7 +327,7 @@
           <artifactId>drill-storage-hive-core</artifactId>
           <version>${project.version}</version>
         </dependency>
-	      <dependency>
+        <dependency>
           <groupId>org.apache.drill.contrib</groupId>
           <artifactId>drill-storage-kafka</artifactId>
           <version>${project.version}</version>
@@ -376,6 +376,11 @@
         <dependency>
           <groupId>org.apache.drill.contrib</groupId>
           <artifactId>drill-format-excel</artifactId>
+          <version>${project.version}</version>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.drill.contrib</groupId>
+          <artifactId>drill-druid-storage</artifactId>
           <version>${project.version}</version>
         </dependency>
       </dependencies>
@@ -578,7 +583,7 @@
                   </sources>
                 </mapping>
                 <mapping>
-		<directory>/opt/drill/sample-data</directory>
+                  <directory>/opt/drill/sample-data</directory>
                   <sources>
                     <source>
                       <location>target/apache-drill-${project.version}/apache-drill-${project.version}/sample-data</location>
