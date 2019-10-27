@@ -19,6 +19,8 @@ package org.apache.drill;
 
 import static org.junit.Assert.assertEquals;
 
+import java.nio.file.Paths;
+
 import org.apache.drill.categories.PlannerTest;
 import org.apache.drill.categories.SqlTest;
 import org.apache.drill.categories.UnlikelyTest;
@@ -26,10 +28,9 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import java.nio.file.Paths;
-
 @Category({SqlTest.class, PlannerTest.class})
 public class TestPartitionFilter extends PlanTestBase {
+
   private static void testExcludeFilter(String query, int expectedNumFiles,
       String excludedFilterPattern, int expectedRowCount) throws Exception {
     int actualRowCount = testSql(query);
@@ -394,7 +395,6 @@ public class TestPartitionFilter extends PlanTestBase {
     test("alter session set `planner.in_subquery_threshold` = 10");
     testExcludeFilter(query, 4, "Filter\\(", 40);
   }
-
 
   @Test // DRILL-4825: querying same table with different filter in UNION ALL.
   public void testPruneSameTableInUnionAll() throws Exception {

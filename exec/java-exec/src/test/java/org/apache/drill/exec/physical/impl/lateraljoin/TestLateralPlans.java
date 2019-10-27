@@ -23,6 +23,10 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import java.nio.file.Paths;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.ExecConstants;
@@ -33,10 +37,6 @@ import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import java.nio.file.Paths;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class TestLateralPlans extends BaseTestQuery {
   private static final String regularTestFile_1 = "cust_order_10_1.json";
@@ -189,7 +189,6 @@ public class TestLateralPlans extends BaseTestQuery {
         .sqlQuery(sql)
         .sqlBaselineQuery(baselineQuery)
         .go();
-
   }
 
   @Test
@@ -289,7 +288,6 @@ public class TestLateralPlans extends BaseTestQuery {
         .sqlQuery(sql)
         .sqlBaselineQuery(baselineQuery)
         .go();
-
   }
 
   @Test
@@ -416,7 +414,6 @@ public class TestLateralPlans extends BaseTestQuery {
     }
   }
 
-
   @Test
   public void testNoExchangeWithLateralsDownStreamJoin() throws Exception {
     String sql = "select d1.totalprice from dfs.`lateraljoin/multipleFiles` t, dfs.`lateraljoin/multipleFiles` t2, " +
@@ -475,7 +472,6 @@ public class TestLateralPlans extends BaseTestQuery {
     String CorrelateUnnest = matcher.group(0);
     return CorrelateUnnest.substring(CorrelateUnnest.lastIndexOf("Scan"));
   }
-
 
   //The following test is for testing the explain plan contains relation between lateral and corresponding unnest.
   @Test

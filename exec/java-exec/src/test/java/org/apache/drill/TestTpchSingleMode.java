@@ -25,7 +25,6 @@ import org.junit.experimental.categories.Category;
 
 @Category({SlowTest.class})
 public class TestTpchSingleMode extends BaseTestQuery {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestTpchSingleMode.class);
 
   private static final String SINGLE_MODE = "ALTER SESSION SET `planner.disable_exchanges` = true;";
 

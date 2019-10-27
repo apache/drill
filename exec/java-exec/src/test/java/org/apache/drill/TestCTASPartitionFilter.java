@@ -17,15 +17,14 @@
  */
 package org.apache.drill;
 
-import org.junit.BeforeClass;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 import java.nio.file.Paths;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 public class TestCTASPartitionFilter extends PlanTestBase {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestCTASPartitionFilter.class);
 
   private static void testExcludeFilter(String query, int expectedNumFiles,
       String excludedFilterPattern, int expectedRowCount) throws Exception {

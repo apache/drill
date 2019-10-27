@@ -20,16 +20,15 @@ package org.apache.drill.exec.physical.impl.validate;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
-import org.apache.drill.exec.ops.OperatorContext;
-import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.impl.ScanBatch;
+import org.apache.drill.exec.physical.impl.project.ProjectRecordBatch;
+import org.apache.drill.exec.physical.impl.protocol.OperatorRecordBatch;
+import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.SimpleVectorWrapper;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.store.dfs.FormatPlugin;
-import org.apache.drill.exec.store.dfs.easy.EasySubScan;
 import org.apache.drill.exec.vector.BitVector;
 import org.apache.drill.exec.vector.FixedWidthVector;
 import org.apache.drill.exec.vector.NullableVector;
@@ -142,9 +141,9 @@ public class BatchValidator {
     }
   }
 
-  private enum CheckMode { COUNTS, ALL, NONE, SPECIAL };
+  private enum CheckMode { COUNTS, ALL, NONE };
 
-  private static final Map<Class<?>, CheckMode> checkRules = buildRules();
+  private static final Map<Class<? extends CloseableRecordBatch>, CheckMode> checkRules = buildRules();
 
   private final ErrorReporter errorReporter;
 
@@ -158,40 +157,21 @@ public class BatchValidator {
    * Over time, this table should include all operators, and thus become
    * unnecessary.
    */
-  private static Map<Class<?>, CheckMode> buildRules() {
-    final Map<Class<?>, CheckMode> rules = new IdentityHashMap<>();
-    // Operators
-    rules.put(ScanBatch.class, CheckMode.SPECIAL);
-    // Scan types
-    rules.put(EasySubScan.class, CheckMode.ALL);
+  private static Map<Class<? extends CloseableRecordBatch>, CheckMode> buildRules() {
+    Map<Class<? extends CloseableRecordBatch>, CheckMode> rules = new IdentityHashMap<>();
+    rules.put(OperatorRecordBatch.class, CheckMode.ALL);
+    rules.put(ScanBatch.class, CheckMode.ALL);
+    rules.put(ProjectRecordBatch.class, CheckMode.COUNTS);
     return rules;
   }
 
   private static CheckMode lookup(Object subject) {
-    final CheckMode checkMode = checkRules.get(subject.getClass());
+    CheckMode checkMode = checkRules.get(subject.getClass());
     return checkMode == null ? CheckMode.NONE : checkMode;
   }
 
-  private static CheckMode checkMode(RecordBatch batch) {
-    final CheckMode checkMode = lookup(batch);
-    if (checkMode != CheckMode.SPECIAL) {
-      return checkMode;
-    }
-    // For Scan, enable readers one-by-one.
-    final ScanBatch scan = (ScanBatch) batch;
-    final OperatorContext opContext = scan.getOperatorContext();
-    final PhysicalOperator opDefn = opContext.getOperatorDefn();
-    final CheckMode opCheckMode = lookup(opDefn);
-    if (opCheckMode != CheckMode.SPECIAL) {
-      return opCheckMode;
-    }
-    final EasySubScan easyScan = (EasySubScan) opDefn;
-    final FormatPlugin plugin = easyScan.getFormatPlugin();
-    return lookup(plugin);
-  }
-
   public static boolean validate(RecordBatch batch) {
-    final CheckMode checkMode = checkMode(batch);
+    CheckMode checkMode = lookup(batch);
 
     // If no rule, don't check this batch.
 
@@ -365,7 +345,7 @@ public class BatchValidator {
   }
 
   private void validateVarBinaryVector(String name, VarBinaryVector vector) {
-    final int valueCount = vector.getAccessor().getValueCount();
+    int valueCount = vector.getAccessor().getValueCount();
 
     // Disabled because a large number of operators
     // set up offset vectors wrongly.
@@ -373,7 +353,7 @@ public class BatchValidator {
       return;
     }
 
-    final int dataLength = vector.getBuffer().writerIndex();
+    int dataLength = vector.getBuffer().writerIndex();
     validateOffsetVector(name + "-offsets", vector.getOffsetVector(), false, valueCount, dataLength);
   }
 

@@ -17,13 +17,15 @@
  */
 package org.apache.drill.exec.expr.fn.impl;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
-import org.apache.drill.common.exceptions.UserException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CharsetEncoder;
-import static org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.logger;
+
+import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * To get good performance for most commonly used pattern matches
@@ -42,6 +44,8 @@ import static org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.logger;
  */
 
 public abstract class AbstractSqlPatternMatcher implements SqlPatternMatcher {
+  private static final Logger logger = LoggerFactory.getLogger(AbstractSqlPatternMatcher.class);
+
   protected final String patternString;
   protected final int patternLength;
   protected final ByteBuffer patternByteBuffer;
@@ -49,8 +53,8 @@ public abstract class AbstractSqlPatternMatcher implements SqlPatternMatcher {
   public AbstractSqlPatternMatcher(String patternString) {
     this.patternString = patternString;
 
-    final CharsetEncoder charsetEncoder = Charsets.UTF_8.newEncoder();
-    final CharBuffer patternCharBuffer = CharBuffer.wrap(patternString);
+    CharsetEncoder charsetEncoder = Charsets.UTF_8.newEncoder();
+    CharBuffer patternCharBuffer = CharBuffer.wrap(patternString);
 
     try {
       patternByteBuffer = charsetEncoder.encode(patternCharBuffer);
@@ -62,5 +66,4 @@ public abstract class AbstractSqlPatternMatcher implements SqlPatternMatcher {
     }
     patternLength = patternByteBuffer.limit();
   }
-
 }
