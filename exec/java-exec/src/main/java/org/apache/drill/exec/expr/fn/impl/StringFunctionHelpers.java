@@ -17,28 +17,26 @@
  */
 package org.apache.drill.exec.expr.fn.impl;
 
-import io.netty.buffer.DrillBuf;
-import io.netty.util.internal.PlatformDependent;
+import static org.apache.drill.exec.memory.BoundsChecking.rangeCheck;
 
 import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
+import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
 import org.joda.time.chrono.ISOChronology;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
-
-import static org.apache.drill.exec.memory.BoundsChecking.rangeCheck;
+import io.netty.buffer.DrillBuf;
+import io.netty.util.internal.PlatformDependent;
 
 public class StringFunctionHelpers {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StringFunctionHelpers.class);
 
   static final int RADIX = 10;
   static final long MAX_LONG = -Long.MAX_VALUE / RADIX;
   static final int MAX_INT = -Integer.MAX_VALUE / RADIX;
 
-  public static long varTypesToLong(final int start, final int end, DrillBuf buffer){
-    if ((end - start) ==0) {
+  public static long varTypesToLong(final int start, final int end, DrillBuf buffer) {
+    if ((end - start) == 0) {
       //empty, not a valid number
-      return nfeL(start, end, buffer);
+      throw nfeL(start, end, buffer);
     }
 
     int readIndex = start;
@@ -47,7 +45,7 @@ public class StringFunctionHelpers {
 
     if (negative && ++readIndex == end) {
       //only one single '-'
-      return nfeL(start, end, buffer);
+      throw nfeL(start, end, buffer);
     }
 
 
@@ -58,18 +56,18 @@ public class StringFunctionHelpers {
       digit = Character.digit(buffer.getByte(readIndex++),RADIX);
       //not valid digit.
       if (digit == -1) {
-        return nfeL(start, end, buffer);
+        throw nfeL(start, end, buffer);
       }
       //overflow
       if (MAX_LONG > result) {
-        return nfeL(start, end, buffer);
+        throw nfeL(start, end, buffer);
       }
 
       long next = result * RADIX - digit;
 
       //overflow
       if (next > result) {
-        return nfeL(start, end, buffer);
+        throw nfeL(start, end, buffer);
       }
       result = next;
     }
@@ -77,29 +75,29 @@ public class StringFunctionHelpers {
       result = -result;
       //overflow
       if (result < 0) {
-        return nfeL(start, end, buffer);
+        throw nfeL(start, end, buffer);
       }
     }
 
     return result;
   }
 
-  private static int nfeL(int start, int end, DrillBuf buffer){
+  private static NumberFormatException nfeL(int start, int end, DrillBuf buffer) {
     byte[] buf = new byte[end - start];
     buffer.getBytes(start, buf, 0, end - start);
-    throw new NumberFormatException(new String(buf, com.google.common.base.Charsets.UTF_8));
+    return new NumberFormatException(new String(buf, com.google.common.base.Charsets.UTF_8));
   }
 
-  private static int nfeI(int start, int end, DrillBuf buffer){
+  private static NumberFormatException nfeI(int start, int end, DrillBuf buffer) {
     byte[] buf = new byte[end - start];
     buffer.getBytes(start, buf, 0, end - start);
-    throw new NumberFormatException(new String(buf, com.google.common.base.Charsets.UTF_8));
+    return new NumberFormatException(new String(buf, com.google.common.base.Charsets.UTF_8));
   }
 
-  public static int varTypesToInt(final int start, final int end, DrillBuf buffer){
-    if ((end - start) ==0) {
-      //empty, not a valid number
-      return nfeI(start, end, buffer);
+  public static int varTypesToInt(final int start, final int end, DrillBuf buffer) {
+    if ((end - start) == 0) {
+      // empty, not a valid number
+      throw nfeI(start, end, buffer);
     }
 
     int readIndex = start;
@@ -107,8 +105,8 @@ public class StringFunctionHelpers {
     boolean negative = buffer.getByte(readIndex) == '-';
 
     if (negative && ++readIndex == end) {
-      //only one single '-'
-      return nfeI(start, end, buffer);
+      // only one single '-'
+      throw nfeI(start, end, buffer);
     }
 
     int result = 0;
@@ -116,20 +114,20 @@ public class StringFunctionHelpers {
 
     while (readIndex < end) {
       digit = Character.digit(buffer.getByte(readIndex++), RADIX);
-      //not valid digit.
+      // not valid digit.
       if (digit == -1) {
-        return nfeI(start, end, buffer);
+        throw nfeI(start, end, buffer);
       }
-      //overflow
+      // overflow
       if (MAX_INT > result) {
-        return nfeI(start, end, buffer);
+        throw nfeI(start, end, buffer);
       }
 
       int next = result * RADIX - digit;
 
-      //overflow
+      // overflow
       if (next > result) {
-        return nfeI(start, end, buffer);
+        throw nfeI(start, end, buffer);
       }
       result = next;
     }
@@ -137,7 +135,7 @@ public class StringFunctionHelpers {
       result = -result;
       //overflow
       if (result < 0) {
-        return nfeI(start, end, buffer);
+        throw nfeI(start, end, buffer);
       }
     }
 
@@ -169,12 +167,14 @@ public class StringFunctionHelpers {
   /**
    * Convert a VarCharHolder to a String.
    *
-   * VarCharHolders are designed specifically for object reuse and mutability, only use
-   * this method when absolutely necessary for interacting with interfaces that must take
-   * a String.
+   * VarCharHolders are designed specifically for object reuse and mutability,
+   * only use this method when absolutely necessary for interacting with
+   * interfaces that must take a String.
    *
-   * @param varCharHolder a mutable wrapper object that stores a variable length char array, always in UTF-8
-   * @return              String of the bytes interpreted as UTF-8
+   * @param varCharHolder
+   *          a mutable wrapper object that stores a variable length char array,
+   *          always in UTF-8
+   * @return String of the bytes interpreted as UTF-8
    */
   public static String getStringFromVarCharHolder(VarCharHolder varCharHolder) {
     return toStringFromUTF8(varCharHolder.start, varCharHolder.end, varCharHolder.buffer);
@@ -202,7 +202,7 @@ public class StringFunctionHelpers {
 
   private static final ISOChronology CHRONOLOGY = org.joda.time.chrono.ISOChronology.getInstanceUTC();
 
-  public static long getDate(DrillBuf buf, int start, int end){
+  public static long getDate(DrillBuf buf, int start, int end) {
     rangeCheck(buf, start, end);
     int[] dateFields = memGetDate(buf.memoryAddress(), start, end);
     return CHRONOLOGY.getDateTimeMillis(dateFields[0], dateFields[1], dateFields[2], 0);
@@ -217,7 +217,7 @@ public class StringFunctionHelpers {
    * @param end
    * @return true iff the string value can be read as a date
    */
-  public static boolean isReadableAsDate(DrillBuf buf, int start, int end){
+  public static boolean isReadableAsDate(DrillBuf buf, int start, int end) {
     // Tried looking for a method that would do this check without relying on
     // an exception in the failure case (for better performance). Joda does
     // not appear to provide such a function, so the try/catch block
@@ -232,7 +232,7 @@ public class StringFunctionHelpers {
     }
   }
 
-  private static int[] memGetDate(long memoryAddress, int start, int end){
+  private static int[] memGetDate(long memoryAddress, int start, int end) {
     long index = memoryAddress + start;
     final long endIndex = memoryAddress + end;
     int digit = 0;
