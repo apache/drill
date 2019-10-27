@@ -386,6 +386,7 @@
             <exclude>**/*.csvh-test</exclude>
             <exclude>**/*.tsv</exclude>
             <exclude>**/*.txt</exclude>
+            <exclude>**/*.yaml</exclude>
             <exclude>**/*.ssv</exclude>
             <exclude>**/.buildpath</exclude>
             <exclude>**/target/**</exclude>
@@ -685,6 +686,7 @@
               <exclude>**/*.md</exclude>
               <exclude>**/*.eps</exclude>
               <exclude>**/*.json</exclude>
+              <exclude>**/*.yaml</exclude>
               <exclude>**/*.seq</exclude>
               <exclude>**/*.parquet</exclude>
               <exclude>**/*.avro</exclude>
