@@ -596,6 +596,8 @@
               <exclude>**/*.ks</exclude>
               <exclude>**/*.pcap</exclude>
               <exclude>**/*.syslog</exclude>
+              <exclude>**/*.xls</exclude>
+              <exclude>**/*.xlsx</exclude>
               <exclude>**/*.syslog1</exclude>
               <exclude>**/*.props</exclude>
               <exclude>**/*.conf</exclude>

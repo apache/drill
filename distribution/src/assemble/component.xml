@@ -43,6 +43,7 @@
         <include>org.apache.drill.contrib:drill-format-mapr:jar</include>
         <include>org.apache.drill.contrib:drill-format-syslog:jar</include>
         <include>org.apache.drill.contrib:drill-format-ltsv:jar</include>
+        <include>org.apache.drill.contrib:drill-format-excel:jar</include>
         <include>org.apache.drill.contrib:drill-jdbc-storage:jar</include>
         <include>org.apache.drill.contrib:drill-kudu-storage:jar</include>
         <include>org.apache.drill.contrib:drill-storage-kafka:jar</include>

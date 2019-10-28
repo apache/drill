@@ -353,11 +353,12 @@ enum CoreOperatorType {
   STATISTICS_AGGREGATE = 59,
   UNPIVOT_MAPS = 60,
   STATISTICS_MERGE = 61,
-  LTSV_SUB_SCAN = 62
+  LTSV_SUB_SCAN = 62,
+  EXCEL_SUB_SCAN = 64
 };
 bool CoreOperatorType_IsValid(int value);
 const CoreOperatorType CoreOperatorType_MIN = SINGLE_SENDER;
-const CoreOperatorType CoreOperatorType_MAX = LTSV_SUB_SCAN;
+const CoreOperatorType CoreOperatorType_MAX = EXCEL_SUB_SCAN;
 const int CoreOperatorType_ARRAYSIZE = CoreOperatorType_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* CoreOperatorType_descriptor();
