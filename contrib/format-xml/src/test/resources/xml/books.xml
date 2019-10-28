@@ -1,0 +1,28 @@
+<books xmlns="http://example.com/books">
+  <book language="English">
+    <authors>
+      <author>Mark Twain</author>
+    </authors>
+    <title>The Adventures of Tom Sawyer</title>
+    <category>FICTION</category>
+    <year>1876</year>
+  </book>
+  <book language="English">
+    <authors>
+      <author>Niklaus Wirth</author>
+    </authors>
+    <title>The Programming Language Pascal</title>
+    <category>PASCAL</category>
+    <year>1971</year>
+  </book>
+  <book language="English">
+    <authors>
+      <author>O.-J. Dahl</author>
+      <author>E. W. Dijkstra</author>
+      <author>C. A. R. Hoare</author>
+    </authors>
+    <title>Structured Programming</title>
+    <category>PROGRAMMING</category>
+    <year>1972</year>
+  </book>
+</books>

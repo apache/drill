@@ -1,0 +1,23 @@
+<books>
+  <book>
+    <author>Mark Twain</author>
+    <title>The Adventures of Tom Sawyer</title>
+    <category>FICTION</category>
+    <year>1876</year>
+  </book>
+  <book>
+    <authors>
+        <author>Niklaus Wirth</author>
+        <author>Somebody else</author>
+    </authors>    
+    <title binding="paperback">The Programming Language Pascal</title>
+    <category >PASCAL</category>
+    <year>1971</year>
+  </book>
+  <book>
+    <author>O.-J. Dahl</author>
+    <title binding="hardcover" subcategory="non-fiction">Structured Programming</title>
+    <category>PROGRAMMING</category>
+    <year>1972</year>
+  </book>
+</books>
