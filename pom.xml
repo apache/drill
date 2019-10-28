@@ -381,6 +381,9 @@
             <exclude>**/.drill.parquet_metadata</exclude>
             <!-- TODO DRILL-4336: try to avoid the need to add this -->
             <exclude>dependency-reduced-pom.xml</exclude>
+            <exclude>**/*.prj</exclude>
+            <exclude>**/*.shp</exclude>
+            <exclude>**/*.dbf</exclude>
           </excludes>
         </configuration>
       </plugin>
