@@ -1213,4 +1213,16 @@ public class TestExampleQueries extends BaseTestQuery {
         .baselineValues("ALGERIA", "AFRICA")
         .go();
   }
+
+  @Test  // DRILL-7391
+  public void testItemPushdownPastLeftOuterJoin() throws Exception {
+    String query = "select t1.columns[0] as a, t2.columns[0] as b from cp.`store/text/data/regions.csv` t1 "
+        + " left outer join cp.`store/text/data/regions.csv` t2 on t1.columns[0] = t2.columns[0]";
+
+    PlanTestBase.testPlanMatchingPatterns(query,
+        new String[]{},
+        // exclude pattern where Project is projecting the 'columns' field
+        new String[]{"Project.*columns"});
+
+  }
 }
