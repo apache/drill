@@ -22,6 +22,7 @@ import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.metadata.VariantMetadata;
 import org.apache.drill.exec.vector.accessor.ArrayReader;
+import org.apache.drill.exec.vector.accessor.DictReader;
 import org.apache.drill.exec.vector.accessor.ObjectReader;
 import org.apache.drill.exec.vector.accessor.ObjectType;
 import org.apache.drill.exec.vector.accessor.ScalarReader;
@@ -38,7 +39,7 @@ import java.math.BigDecimal;
 /**
  * Dummy reader which returns {@code null} for scalar types and itself for complex types.
  */
-public class NullReader implements ScalarReader, ArrayReader, TupleReader, VariantReader, ObjectReader {
+public class NullReader implements ScalarReader, ArrayReader, TupleReader, VariantReader, ObjectReader, DictReader {
 
   private static final NullReader INSTANCE = new NullReader();
 
@@ -48,19 +49,19 @@ public class NullReader implements ScalarReader, ArrayReader, TupleReader, Varia
 
   @Override
   public int size() {
-    notSupported();
+    notSupported("size()");
     return 0;
   }
 
   @Override
   public ObjectType entryType() {
-    notSupported();
+    notSupported("entryType()");
     return null;
   }
 
   @Override
   public ObjectReader entry() {
-    notSupported();
+    notSupported("entry()");
     return null;
   }
 
@@ -85,13 +86,18 @@ public class NullReader implements ScalarReader, ArrayReader, TupleReader, Varia
   }
 
   @Override
+  public DictReader dict() {
+    return this;
+  }
+
+  @Override
   public void setPosn(int index) {
-    notSupported();
+    notSupported("setPosn(int)");
   }
 
   @Override
   public void rewind() {
-    notSupported();
+    notSupported("rewind()");
   }
 
   @Override
@@ -101,37 +107,37 @@ public class NullReader implements ScalarReader, ArrayReader, TupleReader, Varia
 
   @Override
   public ValueType valueType() {
-    notSupported();
+    notSupported("valueType()");
     return null;
   }
 
   @Override
   public ValueType extendedType() {
-    notSupported();
+    notSupported("extendedType()");
     return null;
   }
 
   @Override
   public int getInt() {
-    notSupported();
+    notSupported("getInt()");
     return 0;
   }
 
   @Override
   public boolean getBoolean() {
-    notSupported();
+    notSupported("getBoolean()");
     return false;
   }
 
   @Override
   public long getLong() {
-    notSupported();
+    notSupported("getLong()");
     return 0;
   }
 
   @Override
   public double getDouble() {
-    notSupported();
+    notSupported("getDouble()");
     return 0;
   }
 
@@ -182,127 +188,139 @@ public class NullReader implements ScalarReader, ArrayReader, TupleReader, Varia
 
   @Override
   public int columnCount() {
-    notSupported();
+    notSupported("columnCount()");
     return 0;
   }
 
   @Override
   public ObjectReader column(int colIndex) {
-    notSupported();
+    notSupported("column(int)");
     return null;
   }
 
   @Override
   public ObjectReader column(String colName) {
-    notSupported();
+    notSupported("column(String)");
     return null;
   }
 
   @Override
   public ObjectType type(int colIndex) {
-    notSupported();
+    notSupported("type(int)");
     return null;
   }
 
   @Override
   public ObjectType type(String colName) {
-    notSupported();
+    notSupported("type(String)");
     return null;
   }
 
   @Override
   public ScalarReader scalar(int colIndex) {
-    notSupported();
+    notSupported("scalar(int)");
     return null;
   }
 
   @Override
   public ScalarReader scalar(String colName) {
-    notSupported();
+    notSupported("scalar(String)");
     return null;
   }
 
   @Override
   public TupleReader tuple(int colIndex) {
-    notSupported();
+    notSupported("tuple(int)");
     return null;
   }
 
   @Override
   public TupleReader tuple(String colName) {
-    notSupported();
+    notSupported("tuple(String)");
     return null;
   }
 
   @Override
   public ArrayReader array(int colIndex) {
-    notSupported();
+    notSupported("array(int)");
     return null;
   }
 
   @Override
   public ArrayReader array(String colName) {
-    notSupported();
+    notSupported("array(String)");
     return null;
   }
 
   @Override
   public VariantReader variant(int colIndex) {
-    notSupported();
+    notSupported("variant(int)");
     return null;
   }
 
   @Override
   public VariantReader variant(String colName) {
-    notSupported();
+    notSupported("variant(String)");
+    return null;
+  }
+
+  @Override
+  public DictReader dict(int colIndex) {
+    notSupported("dict(int)");
+    return null;
+  }
+
+  @Override
+  public DictReader dict(String colName) {
+    notSupported("dict(String)");
     return null;
   }
 
   @Override
   public VariantMetadata variantSchema() {
-    notSupported();
+    notSupported("variantSchema()");
     return null;
   }
 
   @Override
   public boolean hasType(TypeProtos.MinorType type) {
-    notSupported();
+    notSupported("hasType(TypeProtos.MinorType)");
     return false;
   }
 
   @Override
   public ObjectReader member(TypeProtos.MinorType type) {
-    notSupported();
+    notSupported("member(TypeProtos.MinorType)");
     return null;
   }
 
   @Override
   public ScalarReader scalar(TypeProtos.MinorType type) {
-    notSupported();
+    notSupported("scalar(TypeProtos.MinorType)");
     return null;
   }
 
   @Override
   public TypeProtos.MinorType dataType() {
-    notSupported();
+    notSupported("dataType()");
     return null;
   }
 
   @Override
   public ObjectReader member() {
-    notSupported();
+    notSupported("member()");
     return null;
   }
 
   @Override
   public ColumnMetadata schema() {
-    notSupported();
+    notSupported("schema()");
     return null;
   }
 
   @Override
   public ObjectType type() {
-    notSupported();
+    notSupported("type()");
     return null;
   }
 
@@ -321,7 +339,31 @@ public class NullReader implements ScalarReader, ArrayReader, TupleReader, Varia
     return "null";
   }
 
-  private void notSupported() {
-    throw new UnsupportedOperationException();
+  @Override
+  public ObjectReader getValueReader(Object key) {
+    notSupported("getValueReader(Object)");
+    return null;
+  }
+
+  @Override
+  public Object get(Object key) {
+    notSupported("get(Object)");
+    return null;
+  }
+
+  @Override
+  public ValueType keyColumnType() {
+    notSupported("keyColumnType()");
+    return null;
+  }
+
+  @Override
+  public ObjectType valueColumnType() {
+    notSupported("valueColumnType()");
+    return null;
+  }
+
+  private void notSupported(String methodName) {
+    throw new UnsupportedOperationException(methodName + " is not supported in NullReader");
   }
 }

@@ -48,6 +48,7 @@ public interface ObjectWriter extends ColumnWriter {
   TupleWriter tuple();
   ArrayWriter array();
   VariantWriter variant();
+  DictWriter dict();
 
   /**
    * Generic version of the above, for dynamic handling of

@@ -18,156 +18,138 @@
 package org.apache.drill.exec.record.metadata;
 
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.vector.complex.DictVector;
 
+/**
+ * Internal structure for building a dict. Dict is an array of key-value pairs
+ * with defined types for key and value (key and value fields are defined within {@link TupleSchema}).
+ * Key can be {@link org.apache.drill.common.types.TypeProtos.DataMode#REQUIRED} primitive,
+ * while value can be primitive or complex.
+ * <p>Column is added to the parent container during creation
+ * and all <tt>resumeXXX</tt> methods return qualified parent container.</p>
+ *
+ * @see DictVector
+ */
 public class DictBuilder implements SchemaContainer {
 
+  /**
+   * Schema containing key and value fields' definition.
+   */
+  private final TupleSchema schema = new TupleSchema();
   private final SchemaContainer parent;
-  private final TupleBuilder tupleBuilder = new TupleBuilder();
-  private final String memberName;
+  private final String name;
   private final TypeProtos.DataMode mode;
 
-  public DictBuilder(String memberName, TypeProtos.DataMode mode) {
-    this(null, memberName, mode);
-  }
+  private TypeProtos.MajorType keyType;
+  private TypeProtos.MajorType valueType;
 
-  public DictBuilder(SchemaContainer parent, String memberName, TypeProtos.DataMode mode) {
+  public DictBuilder(SchemaContainer parent, String name, TypeProtos.DataMode mode) {
     this.parent = parent;
-    this.memberName = memberName;
+    this.name = name;
     this.mode = mode;
   }
 
   @Override
   public void addColumn(ColumnMetadata column) {
-    assert DictVector.fieldNames.contains(column.name());
-    tupleBuilder.addColumn(column);
+    assert DictVector.fieldNames.contains(column.name())
+        : String.format("Dict consists of two columns: %s and %s. Found: %s.",
+            DictVector.FIELD_KEY_NAME, DictVector.FIELD_VALUE_NAME, column.name());
+    assert schema.metadata(column.name()) == null
+        : String.format("Field %s is already defined in dict.", column.name());
+
+    TypeProtos.MajorType columnType = column.majorType();
+    if (DictVector.FIELD_KEY_NAME.equals(column.name())) {
+      assert isSupportedKeyType(columnType) : "Key in dict should be non-nullable primitive. Found: " + columnType;
+      keyType = columnType;
+    } else {
+      valueType = columnType;
+    }
+
+    schema.addColumn(column);
   }
 
-  public DictBuilder addKey(TypeProtos.MajorType type) {
-    return add(MaterializedField.create(DictVector.FIELD_KEY_NAME, type));
+  public DictBuilder key(TypeProtos.MinorType type) {
+    TypeProtos.MajorType keyType = Types.withMode(type, TypeProtos.DataMode.REQUIRED);
+    return key(keyType);
   }
 
-  public DictBuilder addValue(TypeProtos.MajorType type) {
-    return add(MaterializedField.create(DictVector.FIELD_VALUE_NAME, type));
+  public DictBuilder key(TypeProtos.MajorType type) {
+    if (keyType != null) {
+      throw new IllegalStateException("Key field is already defined.");
+    }
+
+    if (!isSupportedKeyType(type)) {
+      throw new IllegalArgumentException("Key in dict should be non-nullable primitive. Found: " + type);
+    }
+
+    keyType = type;
+    return field(DictVector.FIELD_KEY_NAME, keyType);
   }
 
-  public DictBuilder add(MaterializedField col) {
-    assert DictVector.fieldNames.contains(col.getName());
-    tupleBuilder.add(col);
+  public DictBuilder value(TypeProtos.MinorType type, TypeProtos.DataMode mode) {
+    TypeProtos.MajorType valueType = Types.withMode(type, mode);
+    return value(valueType);
+  }
+
+  public DictBuilder value(TypeProtos.MajorType type) {
+    if (valueType != null) {
+      throw new IllegalStateException("Value field is already defined.");
+    }
+
+    valueType = type;
+    return field(DictVector.FIELD_VALUE_NAME, valueType);
+  }
+
+  private DictBuilder field(String name, TypeProtos.MajorType type) {
+    ColumnBuilder builder = new ColumnBuilder(name, type.getMinorType())
+        .setMode(type.getMode());
+
+    if (type.hasScale()) {
+      builder.setPrecisionAndScale(type.getPrecision(), type.getScale());
+    } else if (type.hasPrecision()) {
+      builder.setPrecision(type.getPrecision());
+    }
+    if (type.hasWidth()) {
+      builder.setWidth(type.getWidth());
+    }
+
+    schema.add(builder.build());
     return this;
   }
 
-  public DictBuilder addKey(TypeProtos.MinorType type, TypeProtos.DataMode mode) {
-    tupleBuilder.add(DictVector.FIELD_KEY_NAME, type, mode);
-    return this;
+  public MapBuilder mapValue() {
+    return new MapBuilder(this, DictVector.FIELD_VALUE_NAME, TypeProtos.DataMode.REQUIRED);
   }
 
-  public DictBuilder addValue(TypeProtos.MinorType type, TypeProtos.DataMode mode) {
-    tupleBuilder.add(DictVector.FIELD_VALUE_NAME, type, mode);
-    return this;
+  public MapBuilder mapArrayValue() {
+    return new MapBuilder(this, DictVector.FIELD_VALUE_NAME, TypeProtos.DataMode.REPEATED);
   }
 
-  public DictBuilder addKey(TypeProtos.MinorType type) {
-    tupleBuilder.add(DictVector.FIELD_KEY_NAME, type);
-    return this;
+  public DictBuilder dictValue() {
+    return new DictBuilder(this, DictVector.FIELD_VALUE_NAME, TypeProtos.DataMode.REQUIRED);
   }
 
-  public DictBuilder addValue(TypeProtos.MinorType type) {
-    tupleBuilder.add(DictVector.FIELD_VALUE_NAME, type);
-    return this;
+  public DictBuilder dictArrayValue() {
+    return new DictBuilder(this, DictVector.FIELD_VALUE_NAME, TypeProtos.DataMode.REPEATED);
   }
 
-  public DictBuilder addKey(TypeProtos.MinorType type, int width) {
-    tupleBuilder.add(DictVector.FIELD_KEY_NAME, type, width);
-    return this;
+  public UnionBuilder unionValue() {
+    return new UnionBuilder(this, DictVector.FIELD_VALUE_NAME, TypeProtos.MinorType.UNION);
   }
 
-  public DictBuilder addValue(TypeProtos.MinorType type, int width) {
-    tupleBuilder.add(DictVector.FIELD_VALUE_NAME, type, width);
-    return this;
+  public UnionBuilder listValue() {
+    return new UnionBuilder(this, DictVector.FIELD_VALUE_NAME, TypeProtos.MinorType.LIST);
   }
 
-  public DictBuilder addKey(TypeProtos.MinorType type, int precision, int scale) {
-    return addDecimal(DictVector.FIELD_KEY_NAME, type, TypeProtos.DataMode.REQUIRED, precision, scale);
-  }
-
-  public DictBuilder addValue(TypeProtos.MinorType type, int precision, int scale) {
-    return addDecimal(DictVector.FIELD_VALUE_NAME, type, TypeProtos.DataMode.REQUIRED, precision, scale);
-  }
-
-  public DictBuilder addNullable(String name, TypeProtos.MinorType type) {
-    tupleBuilder.addNullable(name,  type);
-    return this;
-  }
-
-  public DictBuilder addNullable(String name, TypeProtos.MinorType type, int width) {
-    tupleBuilder.addNullable(name, type, width);
-    return this;
-  }
-
-  public DictBuilder addNullable(String name, TypeProtos.MinorType type, int precision, int scale) {
-    return addDecimal(name, type, TypeProtos.DataMode.OPTIONAL, precision, scale);
-  }
-
-  public DictBuilder addArrayValue(TypeProtos.MinorType type) {
-    tupleBuilder.addArray(DictVector.FIELD_VALUE_NAME, type);
-    return this;
-  }
-
-  public DictBuilder addArrayValue(TypeProtos.MinorType type, int dims) {
-    tupleBuilder.addArray(DictVector.FIELD_VALUE_NAME, type, dims);
-    return this;
-  }
-
-  public DictBuilder addArrayValue(TypeProtos.MinorType type, int precision, int scale) {
-    return addDecimal(DictVector.FIELD_VALUE_NAME, type, TypeProtos.DataMode.REPEATED, precision, scale);
-  }
-
-  public DictBuilder addDecimal(String name, TypeProtos.MinorType type,
-                               TypeProtos.DataMode mode, int precision, int scale) {
-    tupleBuilder.addDecimal(name, type, mode, precision, scale);
-    return this;
-  }
-
-  /**
-   * Add a map column as dict's value. The returned schema builder is for the nested
-   * map. Building that map, using {@link DictBuilder#resumeSchema()},
-   * will return the original schema builder.
-   *
-   * @return a builder for the map
-   */
-  public MapBuilder addMapValue() {
-    return tupleBuilder.addMap(this, DictVector.FIELD_VALUE_NAME);
-  }
-
-  public MapBuilder addMapArrayValue() {
-    return tupleBuilder.addMapArray(this, DictVector.FIELD_VALUE_NAME);
-  }
-
-  public DictBuilder addDictValue() {
-    return tupleBuilder.addDict(this, DictVector.FIELD_VALUE_NAME);
-  }
-
-  public UnionBuilder addUnionValue() {
-    return tupleBuilder.addUnion(this, DictVector.FIELD_VALUE_NAME);
-  }
-
-  public UnionBuilder addListValue() {
-    return tupleBuilder.addList(this, DictVector.FIELD_VALUE_NAME);
-  }
-
-  public RepeatedListBuilder addRepeatedListValue() {
-    return tupleBuilder.addRepeatedList(this, DictVector.FIELD_VALUE_NAME);
-  }
-
-  public DictColumnMetadata buildColumn() {
-    return new DictColumnMetadata(memberName, mode, tupleBuilder.schema());
+  public RepeatedListBuilder repeatedListValue() {
+    return new RepeatedListBuilder(this, DictVector.FIELD_VALUE_NAME);
   }
 
   public void build() {
     if (parent != null) {
-      parent.addColumn(buildColumn());
+      DictColumnMetadata columnMetadata = new DictColumnMetadata(name, mode, schema);
+      parent.addColumn(columnMetadata);
     }
   }
 
@@ -194,5 +176,11 @@ public class DictBuilder implements SchemaContainer {
   public DictBuilder resumeDict() {
     build();
     return (DictBuilder) parent;
+  }
+
+  private boolean isSupportedKeyType(TypeProtos.MajorType type) {
+    return !Types.isComplex(type)
+        && !Types.isUnion(type)
+        && type.getMode() == TypeProtos.DataMode.REQUIRED;
   }
 }

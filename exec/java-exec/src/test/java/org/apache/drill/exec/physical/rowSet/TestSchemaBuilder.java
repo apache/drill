@@ -288,8 +288,8 @@ public class TestSchemaBuilder extends DrillTest {
   public void testDictInRow() {
     TupleMetadata schema = new SchemaBuilder()
             .addDict("d")
-            .addKey(MinorType.VARCHAR)
-            .addValue(MinorType.FLOAT8, DataMode.OPTIONAL)
+            .key(MinorType.VARCHAR)
+            .value(MinorType.FLOAT8, DataMode.OPTIONAL)
             .resumeSchema()
             .buildSchema();
 

@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.RowSet.ExtendableRowSet;
 import org.apache.drill.exec.physical.rowSet.RowSet.SingleRowSet;
@@ -49,8 +50,7 @@ import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.TupleReader;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
 import org.apache.drill.exec.vector.accessor.ValueType;
-import org.apache.drill.exec.vector.accessor.reader.AbstractObjectReader;
-import org.apache.drill.exec.vector.accessor.writer.DictReader;
+import org.apache.drill.exec.vector.accessor.DictReader;
 import org.apache.drill.exec.vector.complex.DictVector;
 import org.apache.drill.exec.vector.complex.MapVector;
 import org.apache.drill.exec.vector.complex.RepeatedDictVector;
@@ -599,8 +599,8 @@ public class TestRowSet extends SubOperatorTest {
 
     final TupleMetadata schema = new SchemaBuilder()
         .addDict(dictName)
-        .addKey(MinorType.INT)
-        .addValue(MinorType.VARCHAR)
+        .key(MinorType.INT)
+        .value(MinorType.VARCHAR, TypeProtos.DataMode.REQUIRED)
         .resumeSchema()
         .buildSchema();
     final ExtendableRowSet rowSet = fixture.rowSet(schema);
@@ -614,7 +614,7 @@ public class TestRowSet extends SubOperatorTest {
     assertEquals(ObjectType.ARRAY, writer.column(dictName).type());
     assertTrue(writer.column(dictName).schema().isDict());
 
-    final DictWriter dictWriter = (DictWriter) writer.column(0).array();
+    final DictWriter dictWriter = writer.column(0).dict();
     assertEquals(ObjectType.TUPLE, dictWriter.entryType());
 
     assertEquals(ValueType.INTEGER, dictWriter.keyType());
@@ -658,11 +658,11 @@ public class TestRowSet extends SubOperatorTest {
 
     assertEquals(ObjectType.ARRAY, reader.column(dictName).type());
 
-    final DictReader dictReader = (DictReader) ((AbstractObjectReader) reader.column(0)).reader();
+    final DictReader dictReader = reader.dict(0);
     assertEquals(ObjectType.ARRAY, dictReader.type());
 
-    assertEquals(ValueType.INTEGER, dictReader.keyType());
-    assertEquals(ObjectType.SCALAR, dictReader.valueType());
+    assertEquals(ValueType.INTEGER, dictReader.keyColumnType());
+    assertEquals(ObjectType.SCALAR, dictReader.valueColumnType());
 
     // Row 1: get value reader with its position set to entry corresponding to a key
 
@@ -732,8 +732,8 @@ public class TestRowSet extends SubOperatorTest {
 
     final TupleMetadata schema = new SchemaBuilder()
         .addDict(dictName)
-        .addKey(MinorType.INT)
-        .addMapValue()
+        .key(MinorType.INT)
+        .mapValue()
           .add("a", MinorType.INT)
           .add("b", MinorType.VARDECIMAL, 8, bScale)
           .resumeDict()
@@ -746,7 +746,7 @@ public class TestRowSet extends SubOperatorTest {
 
     assertEquals(ObjectType.ARRAY, writer.column(dictName).type());
 
-    final DictWriter dictWriter = (DictWriter) writer.column(0).array();
+    final DictWriter dictWriter = writer.column(0).dict();
     assertEquals(ObjectType.TUPLE, dictWriter.entryType());
 
     assertEquals(ValueType.INTEGER, dictWriter.keyType());
@@ -809,11 +809,11 @@ public class TestRowSet extends SubOperatorTest {
 
     assertEquals(ObjectType.ARRAY, reader.column(dictName).type());
 
-    final DictReader dictReader = (DictReader) ((AbstractObjectReader) reader.column(0)).reader();
-    assertEquals(ObjectType.ARRAY, dictReader.type()); // todo: should this be an array? todo: is TUPLE oK?
+    final DictReader dictReader = reader.dict(0);
+    assertEquals(ObjectType.ARRAY, dictReader.type());
 
-    assertEquals(ValueType.INTEGER, dictReader.keyType());
-    assertEquals(ObjectType.TUPLE, dictReader.valueType());
+    assertEquals(ValueType.INTEGER, dictReader.keyColumnType());
+    assertEquals(ObjectType.TUPLE, dictReader.valueColumnType());
 
     // Row 1: get value reader with its position set to entry corresponding to a key
 
@@ -880,8 +880,8 @@ public class TestRowSet extends SubOperatorTest {
     final String dictName = "d";
     final TupleMetadata schema = new SchemaBuilder()
         .addDictArray(dictName)
-        .addKey(MinorType.INT)
-        .addValue(MinorType.VARCHAR)
+        .key(MinorType.INT)
+        .value(MinorType.VARCHAR, TypeProtos.DataMode.REQUIRED)
         .resumeSchema()
         .buildSchema();
     final ExtendableRowSet rowSet = fixture.rowSet(schema);
@@ -970,12 +970,12 @@ public class TestRowSet extends SubOperatorTest {
 
     assertEquals(ObjectType.ARRAY, reader.column(dictName).type());
 
-    final ArrayReader dictArrayReader = reader.column(0).array();
+    final ArrayReader dictArrayReader = reader.array(0);
     assertEquals(ObjectType.ARRAY, dictArrayReader.entryType());
 
-    final DictReader dictReader = (DictReader) ((AbstractObjectReader) dictArrayReader.entry()).reader();
-    assertEquals(ValueType.INTEGER, dictReader.keyType());
-    assertEquals(ObjectType.SCALAR, dictReader.valueType());
+    final DictReader dictReader = dictArrayReader.entry().dict();
+    assertEquals(ValueType.INTEGER, dictReader.keyColumnType());
+    assertEquals(ObjectType.SCALAR, dictReader.valueColumnType());
 
     // Row 1
 

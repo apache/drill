@@ -28,6 +28,7 @@ import org.apache.drill.exec.vector.accessor.ArrayWriter;
 import org.apache.drill.exec.vector.accessor.ColumnReader;
 import org.apache.drill.exec.vector.accessor.ColumnWriter;
 import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
+import org.apache.drill.exec.vector.accessor.DictWriter;
 import org.apache.drill.exec.vector.accessor.ObjectType;
 import org.apache.drill.exec.vector.accessor.ObjectWriter;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
@@ -428,6 +429,16 @@ public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
   @Override
   public VariantWriter variant(String colName) {
     return column(colName).variant();
+  }
+
+  @Override
+  public DictWriter dict(int colIndex) {
+    return column(colIndex).dict();
+  }
+
+  @Override
+  public DictWriter dict(String colName) {
+    return column(colName).dict();
   }
 
   @Override

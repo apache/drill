@@ -167,13 +167,13 @@ public class MetadataUtils {
 
   public static PrimitiveColumnMetadata newScalar(String name, MinorType type,
       DataMode mode) {
-    assert type != MinorType.MAP && type != MinorType.UNION && type != MinorType.LIST;
+    assert isScalar(type);
     return new PrimitiveColumnMetadata(name, type, mode);
   }
 
   public static PrimitiveColumnMetadata newScalar(String name, MajorType type) {
     MinorType minorType = type.getMinorType();
-    assert minorType != MinorType.MAP && minorType != MinorType.UNION && minorType != MinorType.LIST;
+    assert isScalar(minorType);
     return new PrimitiveColumnMetadata(name, type);
   }
 
@@ -205,4 +205,10 @@ public class MetadataUtils {
     return new PrimitiveColumnMetadata(field);
   }
 
+  private static boolean isScalar(MinorType type) {
+    return type != MinorType.MAP
+        && type != MinorType.UNION
+        && type != MinorType.LIST
+        && type != MinorType.DICT;
+  }
 }

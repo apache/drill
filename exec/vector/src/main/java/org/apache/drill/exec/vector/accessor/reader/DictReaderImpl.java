@@ -23,20 +23,25 @@ import org.apache.drill.exec.vector.accessor.ColumnReaderIndex;
 import org.apache.drill.exec.vector.accessor.ObjectReader;
 import org.apache.drill.exec.vector.accessor.ObjectType;
 import org.apache.drill.exec.vector.accessor.ValueType;
-import org.apache.drill.exec.vector.accessor.writer.DictReader;
+import org.apache.drill.exec.vector.accessor.DictReader;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class DictReaderImpl implements DictReader {
+public class DictReaderImpl implements DictReader, ReaderEvents {
 
   public static class DictObjectReader extends AbstractObjectReader {
 
-    private final DictReader dictReader;
+    private final DictReaderImpl dictReader;
 
-    public DictObjectReader(DictReader dictReader) {
+    public DictObjectReader(DictReaderImpl dictReader) {
       this.dictReader = dictReader;
+    }
+
+    @Override
+    public DictReader dict() {
+      return dictReader;
     }
 
     @Override
@@ -80,7 +85,7 @@ public class DictReaderImpl implements DictReader {
 
   public static DictObjectReader build(ColumnMetadata schema, VectorAccessor dictAccessor,
                                        List<AbstractObjectReader> readers) {
-    DictReader dictReader = new DictReaderImpl(schema, dictAccessor, readers);
+    DictReaderImpl dictReader = new DictReaderImpl(schema, dictAccessor, readers);
     dictReader.bindNullState(NullStateReaders.REQUIRED_STATE_READER);
     return new DictObjectReader(dictReader);
   }
@@ -118,12 +123,12 @@ public class DictReaderImpl implements DictReader {
   }
 
   @Override
-  public ValueType keyType() {
+  public ValueType keyColumnType() {
     return keyReader.scalar().valueType();
   }
 
   @Override
-  public ObjectType valueType() {
+  public ObjectType valueColumnType() {
     return valueReader.type();
   }
 

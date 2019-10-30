@@ -38,6 +38,11 @@ public class ObjectDictWriter extends ObjectArrayWriter implements DictWriter {
     }
 
     @Override
+    public DictWriter dict() {
+      return (DictWriter) arrayWriter;
+    }
+
+    @Override
     public void dump(HierarchicalFormatter format) {
       format.startObject(this)
           .attribute("dictWriter");

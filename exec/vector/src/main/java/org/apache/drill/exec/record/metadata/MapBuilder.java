@@ -144,6 +144,14 @@ public class MapBuilder implements SchemaContainer {
     return tupleBuilder.addRepeatedList(this, name);
   }
 
+  public DictBuilder addDict(String name) {
+    return tupleBuilder.addDict(this, name);
+  }
+
+  public DictBuilder addDictArray(String name) {
+    return tupleBuilder.addDictArray(this, name);
+  }
+
   public MapColumnMetadata buildColumn() {
     return new MapColumnMetadata(memberName, mode, tupleBuilder.schema());
   }

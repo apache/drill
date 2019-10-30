@@ -15,20 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.vector.accessor.writer;
-
-import org.apache.drill.exec.vector.accessor.ColumnReader;
-import org.apache.drill.exec.vector.accessor.ObjectReader;
-import org.apache.drill.exec.vector.accessor.ObjectType;
-import org.apache.drill.exec.vector.accessor.ValueType;
-import org.apache.drill.exec.vector.accessor.reader.ReaderEvents;
+package org.apache.drill.exec.vector.accessor;
 
 import java.util.Map;
 
-public interface DictReader extends ColumnReader, ReaderEvents {
-
-  @Override
-  Map<Object, Object> getObject();
+public interface DictReader extends ColumnReader {
 
   /**
    * Returns DICT's value {@link ObjectReader} with its position set to an entry associated with the key.
@@ -54,7 +45,7 @@ public interface DictReader extends ColumnReader, ReaderEvents {
    */
   int size();
 
-  ValueType keyType();
+  ValueType keyColumnType();
 
-  ObjectType valueType();
+  ObjectType valueColumnType();
 }
