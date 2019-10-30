@@ -28,9 +28,8 @@ import org.objectweb.asm.tree.analysis.Interpreter;
 import org.objectweb.asm.tree.analysis.Value;
 
 import java.util.ArrayDeque;
+import java.util.BitSet;
 import java.util.Deque;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * Analyzer that allows us to inject additional functionality into ASMs basic analysis.
@@ -95,10 +94,10 @@ public class MethodAnalyzer<V extends Value> extends Analyzer <V> {
   private static class AssignmentTrackingFrame<V extends Value> extends Frame<V> {
 
     // represents stack of variable sets declared inside current code block
-    private final Deque<Set<Integer>> localVariablesSet;
+    private Deque<BitSet> localVariablesSet;
 
     // stack of LabelNode instances which correspond to the end of conditional block
-    private final Deque<LabelNode> labelsStack;
+    private Deque<LabelNode> labelsStack;
 
     /**
      * Constructor.
@@ -109,7 +108,7 @@ public class MethodAnalyzer<V extends Value> extends Analyzer <V> {
     public AssignmentTrackingFrame(int nLocals, int nStack) {
       super(nLocals, nStack);
       localVariablesSet = new ArrayDeque<>();
-      localVariablesSet.push(new HashSet<>());
+      localVariablesSet.push(new BitSet());
       labelsStack = new ArrayDeque<>();
     }
 
@@ -118,15 +117,13 @@ public class MethodAnalyzer<V extends Value> extends Analyzer <V> {
      *
      * @param src the frame being copied
      */
-    @SuppressWarnings("unchecked")
     public AssignmentTrackingFrame(Frame<? extends V> src) {
       super(src);
-      AssignmentTrackingFrame trackingFrame = (AssignmentTrackingFrame) src;
+      // localVariablesSet and labelsStack aren't copied from the src frame
+      // since the branch-sensitive analysis was already done for src frame
       localVariablesSet = new ArrayDeque<>();
-      for (Set<Integer> integers : (Deque<Set<Integer>>) trackingFrame.localVariablesSet) {
-        localVariablesSet.addFirst(new HashSet<>(integers));
-      }
-      labelsStack = new ArrayDeque<>(trackingFrame.labelsStack);
+      localVariablesSet.push(new BitSet());
+      labelsStack = new ArrayDeque<>();
     }
 
     @Override
@@ -140,16 +137,16 @@ public class MethodAnalyzer<V extends Value> extends Analyzer <V> {
         ReplacingBasicValue replacingValue = (ReplacingBasicValue) value;
         replacingValue.setFrameSlot(i);
         V localValue = getLocal(i);
-        Set<Integer> currentLocalVars = localVariablesSet.element();
+        BitSet currentLocalVars = localVariablesSet.element();
         if (localValue instanceof ReplacingBasicValue) {
-          if (!currentLocalVars.contains(i)) {
+          if (!currentLocalVars.get(i)) {
             // value is assigned to object declared outside of conditional block
             replacingValue.setAssignedInConditionalBlock();
           }
           ReplacingBasicValue localReplacingValue = (ReplacingBasicValue) localValue;
           localReplacingValue.associate(replacingValue);
         } else {
-          currentLocalVars.add(i);
+          currentLocalVars.set(i);
         }
       }
 
@@ -174,14 +171,22 @@ public class MethodAnalyzer<V extends Value> extends Analyzer <V> {
           case IF_ICMPLE:
           case IF_ACMPEQ:
           case IF_ACMPNE:
+          case IFNULL:
           case IFNONNULL:
             // for the case when conditional block is handled, creates new variables set
             // to store local variables declared inside current conditional block and
             // stores its target LabelNode to restore previous variables set after conditional block is ended
-            localVariablesSet.push(new HashSet<>());
+            localVariablesSet.push(new BitSet());
             labelsStack.push(target);
         }
       }
+    }
+
+    @Override
+    public void clearStack() {
+      super.clearStack();
+      localVariablesSet = null;
+      labelsStack = null;
     }
   }
 }

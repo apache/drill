@@ -41,6 +41,8 @@ public class TestLargeFileCompilation extends BaseTestQuery {
 
   private static final String LARGE_QUERY_FILTER;
 
+  private static final String QUERY_FILTER;
+
   private static final String HUGE_STRING_CONST_QUERY;
 
   private static final String LARGE_QUERY_WRITER;
@@ -51,7 +53,7 @@ public class TestLargeFileCompilation extends BaseTestQuery {
 
   private static final String LARGE_TABLE_WRITER;
 
-  private static final int ITERATION_COUNT = Integer.valueOf(System.getProperty("TestLargeFileCompilation.iteration", "1"));
+  private static final int ITERATION_COUNT = Integer.parseInt(System.getProperty("TestLargeFileCompilation.iteration", "1"));
 
   private static final int NUM_PROJECT_COLUMNS = 2500;
 
@@ -62,6 +64,8 @@ public class TestLargeFileCompilation extends BaseTestQuery {
   private static final int NUM_GROUPBY_COLUMNS = 225;
 
   private static final int NUM_FILTER_COLUMNS = 150;
+
+  private static final int SMALL_NUM_FILTER_COLUMNS = 50;
 
   private static final int NUM_JOIN_TABLE_COLUMNS = 500;
 
@@ -111,6 +115,16 @@ public class TestLargeFileCompilation extends BaseTestQuery {
       sb.append(" employee_id+").append(i).append(" < employee_id ").append(i%2==0?"OR":"AND");
     }
     LARGE_QUERY_FILTER = sb.append(" true") .toString();
+  }
+
+  static {
+    StringBuilder sb = new StringBuilder("select *\n")
+        .append("from cp.`employee.json`\n")
+        .append("where");
+    for (int i = 0; i < SMALL_NUM_FILTER_COLUMNS; i++) {
+      sb.append(" employee_id+").append(i).append(" < employee_id ").append(i % 2 == 0 ? "OR" : "AND");
+    }
+    QUERY_FILTER = sb.append(" true").toString();
   }
 
   static {
@@ -183,6 +197,12 @@ public class TestLargeFileCompilation extends BaseTestQuery {
   public void testFILTER() throws Exception {
     testNoResult("alter session set `%s`='JDK'", ClassCompilerSelector.JAVA_COMPILER_OPTION);
     testNoResult(ITERATION_COUNT, LARGE_QUERY_FILTER);
+  }
+
+  @Test
+  public void testClassTransformationOOM() throws Exception {
+    testNoResult("alter session set `%s`='JDK'", ClassCompilerSelector.JAVA_COMPILER_OPTION);
+    testNoResult(ITERATION_COUNT, QUERY_FILTER);
   }
 
   @Test

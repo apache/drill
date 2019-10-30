@@ -44,7 +44,7 @@ import org.objectweb.asm.tree.ClassNode;
 public class TestClassTransformation extends BaseTestQuery {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestClassTransformation.class);
 
-  private static final int ITERATION_COUNT = Integer.valueOf(System.getProperty("TestClassTransformation.iteration", "1"));
+  private static final int ITERATION_COUNT = Integer.parseInt(System.getProperty("TestClassTransformation.iteration", "1"));
 
   private static SessionOptionManager sessionOptions;
 
