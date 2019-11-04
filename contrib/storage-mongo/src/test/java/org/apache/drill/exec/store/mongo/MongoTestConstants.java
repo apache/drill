@@ -77,6 +77,9 @@ public interface MongoTestConstants {
   String TEST_BOOLEAN_FILTER_QUERY_TEMPLATE4 = "select `employee_id` from mongo.%s.`%s` where (position_id = 16 and isFTE = true) or last_name = 'Yonce'";
 
   String TEST_STAR_QUERY_UNSHARDED_DB = "select * from mongo.%s.`%s`";
-  String TEST_STAR_QUERY_UNSHARDED_DB_PROJECT_FILTER = "select t.name as name,t.topping.type as type from mongo.%s.`%s` t where t.sales >= 150";
-  String TEST_STAR_QUERY_UNSHARDED_DB_GROUP_PROJECT_FILTER = "select t.topping.type as type,count(t.topping.type) as typeCount from mongo.%s.`%s` t group by t.topping.type order by typeCount";
+  // This query is invalid. See DRILL-7420. Topping is a repeated map.
+  // Drill should not allow projecting a repeated map to the top level; this should
+  // require a flatten or lateral query.
+  String TEST_STAR_QUERY_UNSHARDED_DB_PROJECT_FILTER = "select t.name as name, t.topping.type as type from mongo.%s.`%s` t where t.sales >= 150";
+  String TEST_STAR_QUERY_UNSHARDED_DB_GROUP_PROJECT_FILTER = "select t.topping.type as type, count(t.topping.type) as typeCount from mongo.%s.`%s` t group by t.topping.type order by typeCount";
 }

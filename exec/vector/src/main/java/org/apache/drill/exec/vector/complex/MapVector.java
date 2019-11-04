@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.vector.complex;
 
-import io.netty.buffer.DrillBuf;
-
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -43,10 +41,11 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.RepeatedMapVector.MapSingleCopier;
 import org.apache.drill.exec.vector.complex.impl.SingleMapReaderImpl;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
-
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Ordering;
 import org.apache.drill.shaded.guava.com.google.common.primitives.Ints;
+
+import io.netty.buffer.DrillBuf;
 
 public class MapVector extends AbstractMapVector {
 
@@ -99,7 +98,7 @@ public class MapVector extends AbstractMapVector {
 
   @Override
   public void setInitialCapacity(int numRecords) {
-    for (final ValueVector v : this) {
+    for (ValueVector v : this) {
       v.setInitialCapacity(numRecords);
     }
   }
@@ -110,7 +109,7 @@ public class MapVector extends AbstractMapVector {
       return 0;
     }
     long buffer = 0;
-    for (final ValueVector v : this) {
+    for (ValueVector v : this) {
       buffer += v.getBufferSize();
     }
 
@@ -120,20 +119,20 @@ public class MapVector extends AbstractMapVector {
   @Override
   public int getAllocatedSize() {
     int size = 0;
-    for (final ValueVector v : this) {
+    for (ValueVector v : this) {
       size += v.getAllocatedSize();
     }
     return size;
   }
 
   @Override
-  public int getBufferSizeFor(final int valueCount) {
+  public int getBufferSizeFor(int valueCount) {
     if (valueCount == 0) {
       return 0;
     }
 
     long bufferSize = 0;
-    for (final ValueVector v : this) {
+    for (ValueVector v : this) {
       bufferSize += v.getBufferSizeFor(valueCount);
     }
 
@@ -197,7 +196,7 @@ public class MapVector extends AbstractMapVector {
         // (This is similar to what happens in ScanBatch where the children cannot be added till they are
         // read). To take care of this, we ensure that the hashCode of the MaterializedField does not
         // include the hashCode of the children but is based only on MaterializedField$key.
-        final ValueVector newVector = to.addOrGet(child, vector.getField().getType(), vector.getClass());
+        ValueVector newVector = to.addOrGet(child, vector.getField().getType(), vector.getClass());
         if (allocate && to.size() != preSize) {
           newVector.allocateNew();
         }
@@ -207,7 +206,7 @@ public class MapVector extends AbstractMapVector {
 
     @Override
     public void transfer() {
-      for (final TransferPair p : pairs) {
+      for (TransferPair p : pairs) {
         p.transfer();
       }
       to.valueCount = from.valueCount;
@@ -241,7 +240,7 @@ public class MapVector extends AbstractMapVector {
       return 0;
     }
 
-    final Ordering<ValueVector> natural = new Ordering<ValueVector>() {
+    Ordering<ValueVector> natural = new Ordering<ValueVector>() {
       @Override
       public int compare(@Nullable ValueVector left, @Nullable ValueVector right) {
         return Ints.compare(
@@ -261,12 +260,12 @@ public class MapVector extends AbstractMapVector {
 
   @Override
   public void load(SerializedField metadata, DrillBuf buf) {
-    final List<SerializedField> fields = metadata.getChildList();
+    List<SerializedField> fields = metadata.getChildList();
     valueCount = metadata.getValueCount();
 
     int bufOffset = 0;
-    for (final SerializedField child : fields) {
-      final MaterializedField fieldDef = MaterializedField.create(child);
+    for (SerializedField child : fields) {
+      MaterializedField fieldDef = MaterializedField.create(child);
 
       ValueVector vector = getChild(fieldDef.getName());
       if (vector == null) {
@@ -362,7 +361,7 @@ public class MapVector extends AbstractMapVector {
 
     @Override
     public void setValueCount(int valueCount) {
-      for (final ValueVector v : getChildren()) {
+      for (ValueVector v : getChildren()) {
         v.getMutator().setValueCount(valueCount);
       }
       setMapValueCount(valueCount);
@@ -377,7 +376,7 @@ public class MapVector extends AbstractMapVector {
 
   @Override
   public void clear() {
-    for (final ValueVector v : getChildren()) {
+    for (ValueVector v : getChildren()) {
       v.clear();
     }
     valueCount = 0;
@@ -385,8 +384,8 @@ public class MapVector extends AbstractMapVector {
 
   @Override
   public void close() {
-    final Collection<ValueVector> vectors = getChildren();
-    for (final ValueVector v : vectors) {
+    Collection<ValueVector> vectors = getChildren();
+    for (ValueVector v : vectors) {
       v.close();
     }
     vectors.clear();

@@ -166,7 +166,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
         IterOutcome next = null;
         while (incomingRecordCount == 0) {
           if (getLastKnownOutcome() == EMIT) {
-            throw new UnsupportedOperationException("Currently functions producing complex types as output is not " +
+            throw new UnsupportedOperationException("Currently functions producing complex types as output are not " +
                     "supported in project list for subquery between LATERAL and UNNEST. Please re-write the query using this " +
                     "function in the projection list of outermost query.");
           }
@@ -227,15 +227,14 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     long projectEndTime = System.currentTimeMillis();
     logger.trace("doWork(): projection: records {}, time {} ms", outputRecords, (projectEndTime - projectStartTime));
 
+    setValueCount(outputRecords);
+    recordCount = outputRecords;
     if (outputRecords < incomingRecordCount) {
-      setValueCount(outputRecords);
       hasRemainder = true;
       remainderIndex = outputRecords;
-      recordCount = remainderIndex;
     } else {
-      setValueCount(incomingRecordCount);
+      assert outputRecords == incomingRecordCount;
       incoming.getContainer().zeroVectors();
-      recordCount = outputRecords;
     }
     // In case of complex writer expression, vectors would be added to batch run-time.
     // We have to re-build the schema.
@@ -306,11 +305,16 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
   }
 
   private void setValueCount(int count) {
+    if (count == 0) {
+      container.setEmpty();
+      return;
+    }
     for (ValueVector v : allocationVectors) {
-      final ValueVector.Mutator m = v.getMutator();
-      m.setValueCount(count);
+      v.getMutator().setValueCount(count);
     }
 
+    // Value counts for vectors should have been set via
+    // the transfer pairs or vector copies.
     container.setRecordCount(count);
 
     if (complexWriters == null) {
@@ -322,7 +326,8 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     }
   }
 
-  /** hack to make ref and full work together... need to figure out if this is still necessary. **/
+  // hack to make ref and full work together... need to figure out if this is
+  // still necessary.
   private FieldReference getRef(NamedExpression e) {
     return e.getRef();
   }
@@ -340,7 +345,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     if (!(ex.getExpr() instanceof SchemaPath)) {
       return false;
     }
-    NameSegment expr = ((SchemaPath)ex.getExpr()).getRootSegment();
+    NameSegment expr = ((SchemaPath) ex.getExpr()).getRootSegment();
     return expr.getPath().contains(SchemaPath.DYNAMIC_STAR);
   }
 
@@ -730,7 +735,8 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
           String incomingName = vvIn.getField().getName();
           // get the prefix of the name
           String[] nameComponents = incomingName.split(StarColumnHelper.PREFIX_DELIMITER, 2);
-          // if incoming valuevector does not have a prefix, ignore it since this expression is not referencing it
+          // if incoming value vector does not have a prefix, ignore it since
+          // this expression is not referencing it
           if (nameComponents.length <= 1) {
             k++;
             continue;

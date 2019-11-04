@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.mongo;
 
 import org.apache.drill.categories.MongoStorageTest;
 import org.apache.drill.categories.SlowTest;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -86,6 +87,7 @@ public class TestMongoQueries extends MongoTestBase {
   }
 
   @Test
+  @Ignore("DRILL-7428") // Query is invalid, Drill bug allows it.
   public void testUnShardedDBInShardedClusterWithProjectionAndFilter() throws Exception {
     testBuilder()
         .sqlQuery(String.format(TEST_STAR_QUERY_UNSHARDED_DB_PROJECT_FILTER, DONUTS_DB, DONUTS_COLLECTION))
@@ -95,6 +97,7 @@ public class TestMongoQueries extends MongoTestBase {
   }
 
   @Test
+  @Ignore("DRILL-7428") // Query is invalid, Drill bug allows it.
   public void testUnShardedDBInShardedClusterWithGroupByProjectionAndFilter() throws Exception {
     testBuilder()
         .sqlQuery(String.format(TEST_STAR_QUERY_UNSHARDED_DB_GROUP_PROJECT_FILTER, DONUTS_DB, DONUTS_COLLECTION))

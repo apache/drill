@@ -191,16 +191,19 @@ public class MaterializedField {
   }
 
   /**
-   * Equals method doesn't check for the children list of fields here. When a batch is sent over network then it is
-   * serialized along with the Materialized Field which also contains information about the internal vectors like
-   * offset and bits. While deserializing, these vectors are treated as children of parent vector. If a operator on
-   * receiver side like Sort receives a schema in buildSchema phase and then later on receives another batch, that
-   * will result in schema change and query will fail. This is because second batch schema will contain information
-   * about internal vectors like offset and bits which will not be present in first batch schema. For ref: See
-   * TestSort#testSortWithRepeatedMapWithExchanges
+   * Equals method doesn't check for the children list of fields here. When a
+   * batch is sent over network then it is serialized along with the
+   * Materialized Field which also contains information about the internal
+   * vectors like offset and bits. While deserializing, these vectors are
+   * treated as children of parent vector. If a operator on receiver side like
+   * Sort receives a schema in buildSchema phase and then later on receives
+   * another batch, that will result in schema change and query will fail. This
+   * is because second batch schema will contain information about internal
+   * vectors like offset and bits which will not be present in first batch
+   * schema. For ref: See TestSort#testSortWithRepeatedMapWithExchanges
    *
-   * @param obj
-   * @return
+   * @param obj the other materialized field
+   * @return true if the types are equal
    */
   @Override
   public boolean equals(Object obj) {
@@ -219,51 +222,59 @@ public class MaterializedField {
   }
 
   /**
-   * Determine if one column is logically equivalent to another. This is
-   * a tricky issue. The rules here:
+   * Determine if one column is logically equivalent to another. This is a
+   * tricky issue. The rules here:
    * <ul>
    * <li>The other schema is assumed to be non-null (unlike
    * <tt>equals()</tt>).</li>
-   * <li>Names must be identical, ignoring case. (Drill, like SQL, is
-   * case insensitive.)
+   * <li>Names must be identical, ignoring case. (Drill, like SQL, is case
+   * insensitive.)
    * <li>Type, mode, precision and scale must be identical.</li>
-   * <li>Child columns are ignored unless the type is a map. That is, the
-   * hidden "$bits" and "$offsets" vector columns are not compared, as
-   * one schema may be an "original" (without these hidden columns) while
-   * the other may come from a vector (which has the hidden columns added.
-   * The standard <tt>equals()</tt> comparison does consider hidden
-   * columns.</li>
+   * <li>Child columns are ignored unless the type is a map. That is, the hidden
+   * "$bits" and "$offsets" vector columns are not compared, as one schema may
+   * be an "original" (without these hidden columns) while the other may come
+   * from a vector (which has the hidden columns added. The standard
+   * <tt>equals()</tt> comparison does consider hidden columns.</li>
    * <li>For maps, the child columns are compared recursively. This version
-   * requires that the two sets of columns appear in the same order. (It
-   * assumes it is being used in a context where column indexes make
-   * sense.) Operators that want to reconcile two maps that differ only in
-   * column order need a different comparison.</li>
+   * requires that the two sets of columns appear in the same order. (It assumes
+   * it is being used in a context where column indexes make sense.) Operators
+   * that want to reconcile two maps that differ only in column order need a
+   * different comparison.</li>
    * </ul>
    * <ul>
-   * Note: Materialized Field and ValueVector has 1:1 mapping which means for each ValueVector there is a materialized
-   * field associated with it. So when we replace or add a ValueVector in a VectorContainer then we create new
-   * Materialized Field object for the new vector. This works fine for Primitive type ValueVectors but for ValueVector
-   * which are of type {@link org.apache.drill.exec.vector.complex.AbstractContainerVector} there is some differences on
-   * how Materialized field and ValueVector objects are updated inside the container which both ValueVector and
-   * Materialized Field object both mutable.
+   * Note: Materialized Field and ValueVector has 1:1 mapping which means for
+   * each ValueVector there is a materialized field associated with it. So when
+   * we replace or add a ValueVector in a VectorContainer then we create new
+   * Materialized Field object for the new vector. This works fine for Primitive
+   * type ValueVectors but for ValueVector which are of type
+   * {@link org.apache.drill.exec.vector.complex.AbstractContainerVector} there
+   * is some differences on how Materialized field and ValueVector objects are
+   * updated inside the container which both ValueVector and Materialized Field
+   * object both mutable.
    * <p>
-   * For example: For cases of MapVector it can so happen that only the children field type changed but
-   * the parent Map type and name remained same. In these cases we replace the children field ValueVector from parent
-   * MapVector inside main batch container, with new type of vector. Thus the reference of parent MaprVector inside
-   * batch container remains same but the reference of children field ValueVector stored inside MapVector get's updated.
-   * During this update it also replaces the Materialized field for that children field which is stored in childrens
-   * list of the parent MapVector Materialized Field.
-   * Since the children list of parent Materialized Field is updated, this make this class mutable. Hence there should
-   * not be any check for object reference equality here but instead there should be deep comparison which is what
-   * this method is now performing. Since if we have object reference check then in above cases it will return true for
-   * 2 Materialized Field object whose children field list is different which is not correct. Same holds true for
+   * For example: For cases of MapVector it can so happen that only the children
+   * field type changed but the parent Map type and name remained same. In these
+   * cases we replace the children field ValueVector from parent MapVector
+   * inside main batch container, with new type of vector. Thus the reference of
+   * parent MaprVector inside batch container remains same but the reference of
+   * children field ValueVector stored inside MapVector get's updated. During
+   * this update it also replaces the Materialized field for that children field
+   * which is stored in childrens list of the parent MapVector Materialized
+   * Field. Since the children list of parent Materialized Field is updated,
+   * this make this class mutable. Hence there should not be any check for
+   * object reference equality here but instead there should be deep comparison
+   * which is what this method is now performing. Since if we have object
+   * reference check then in above cases it will return true for 2 Materialized
+   * Field object whose children field list is different which is not correct.
+   * Same holds true for
    * {@link MaterializedField#isEquivalent(MaterializedField)} method.
    * </p>
    * </ul>
    *
-   * @param other another field
-   * @return <tt>true</tt> if the columns are identical according to the
-   * above rules, <tt>false</tt> if they differ
+   * @param other
+   *          another field
+   * @return <tt>true</tt> if the columns are identical according to the above
+   *         rules, <tt>false</tt> if they differ
    */
 
   public boolean isEquivalent(MaterializedField other) {

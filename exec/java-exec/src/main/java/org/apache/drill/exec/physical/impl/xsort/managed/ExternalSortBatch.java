@@ -17,6 +17,12 @@
  */
 package org.apache.drill.exec.physical.impl.xsort.managed;
 
+import static org.apache.drill.exec.record.RecordBatch.IterOutcome.EMIT;
+import static org.apache.drill.exec.record.RecordBatch.IterOutcome.NONE;
+import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK;
+import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK_NEW_SCHEMA;
+import static org.apache.drill.exec.record.RecordBatch.IterOutcome.STOP;
+
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.MetricDef;
@@ -38,12 +44,8 @@ import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ControlsInjectorFactory;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractContainerVector;
-
-import static org.apache.drill.exec.record.RecordBatch.IterOutcome.EMIT;
-import static org.apache.drill.exec.record.RecordBatch.IterOutcome.NONE;
-import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK;
-import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK_NEW_SCHEMA;
-import static org.apache.drill.exec.record.RecordBatch.IterOutcome.STOP;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * External sort batch: a sort batch which can spill to disk in
@@ -161,7 +163,7 @@ import static org.apache.drill.exec.record.RecordBatch.IterOutcome.STOP;
  */
 
 public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExternalSortBatch.class);
+  static final Logger logger = LoggerFactory.getLogger(ExternalSortBatch.class);
 
   // For backward compatibility, masquerade as the original
   // external sort. Else, some tests don't pass.
@@ -183,8 +185,6 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
 
   private BatchSchema schema;
 
-//  private SelectionVector4 sv4;
-
   /**
    * Iterates over the final, sorted results.
    */
@@ -193,7 +193,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
   private enum SortState { START, LOAD, DELIVER, DONE }
   private SortState sortState = SortState.START;
 
-  private SortConfig sortConfig;
+  private final SortConfig sortConfig;
 
   private SortImpl sortImpl;
 
@@ -201,9 +201,9 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
 
   private boolean firstBatchOfSchema;
 
-  private VectorContainer outputWrapperContainer;
+  private final VectorContainer outputWrapperContainer;
 
-  private SelectionVector4 outputSV4;
+  private final SelectionVector4 outputSV4;
 
   // WARNING: The enum here is used within this class. But, the members of
   // this enum MUST match those in the (unmanaged) ExternalSortBatch since
@@ -386,7 +386,8 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
       return STOP;
     }
 
-    // If we are here that means there is some data to be returned downstream. We have to prepare output container
+    // If we are here that means there is some data to be returned downstream.
+    // We have to prepare output container
     prepareOutputContainer(resultsIterator);
     return getFinalOutcome();
   }
@@ -630,14 +631,19 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
   }
 
   /**
-   * Based on first batch for this schema or not it either clears off the output container or just zero down the vectors
-   * Then calls {@link SortResults#updateOutputContainer(VectorContainer, SelectionVector4, IterOutcome, BatchSchema)}
-   * to populate the output container of sort with results data. It is done this way for the support of EMIT outcome
-   * where SORT will return results multiple time in same minor fragment so there needs a way to preserve the
-   * ValueVector references across output batches.
-   * However it currently only supports SortResults of type EmptyResults and MergeSortWrapper. We don't expect
-   * spilling to happen in EMIT outcome scenario hence it's not supported now.
-   * @param sortResults - Final sorted result which contains the container with data
+   * Based on first batch for this schema or not it either clears off the output
+   * container or just zero down the vectors Then calls
+   * {@link SortResults#updateOutputContainer(VectorContainer, SelectionVector4, IterOutcome, BatchSchema)}
+   * to populate the output container of sort with results data. It is done this
+   * way for the support of EMIT outcome where SORT will return results multiple
+   * time in same minor fragment so there needs a way to preserve the
+   * ValueVector references across output batches. However it currently only
+   * supports SortResults of type EmptyResults and MergeSortWrapper. We don't
+   * expect spilling to happen in EMIT outcome scenario hence it's not supported
+   * now.
+   *
+   * @param sortResults
+   *          - Final sorted result which contains the container with data
    */
   private void prepareOutputContainer(SortResults sortResults) {
     if (firstBatchOfSchema) {

@@ -36,15 +36,17 @@ import org.apache.drill.exec.store.easy.json.reader.CountingJsonReader;
 import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.complex.fn.JsonReader;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.hadoop.fs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonNode;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 
 public class JSONRecordReader extends AbstractRecordReader {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JSONRecordReader.class);
+  private static final Logger logger = LoggerFactory.getLogger(JSONRecordReader.class);
 
   public static final long DEFAULT_ROWS_PER_BATCH = BaseValueVector.INITIAL_VALUE_ALLOCATION;
 
@@ -57,7 +59,7 @@ public class JSONRecordReader extends AbstractRecordReader {
   private final DrillFileSystem fileSystem;
   private JsonProcessor jsonReader;
   private int recordCount;
-  private long runningRecordCount = 0;
+  private long runningRecordCount;
   private final FragmentContext fragmentContext;
   private final boolean enableAllTextMode;
   private final boolean enableNanInf;
@@ -67,7 +69,7 @@ public class JSONRecordReader extends AbstractRecordReader {
   private long parseErrorCount;
   private final boolean skipMalformedJSONRecords;
   private final boolean printSkippedMalformedJSONRecordLineNumber;
-  ReadState write = null;
+  private ReadState write;
 
   /**
    * Create a JSON Record Reader that uses a file based input stream.

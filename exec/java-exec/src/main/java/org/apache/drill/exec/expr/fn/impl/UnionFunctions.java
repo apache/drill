@@ -245,8 +245,8 @@ public class UnionFunctions {
     }
   }
 
-  @SuppressWarnings("unused")
-  @FunctionTemplate(names = {"castUNION", "castToUnion"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(names = {"castUNION", "castToUnion"},
+      scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL)
   public static class CastUnionToUnion implements DrillSimpleFunc{
 
     @Param FieldReader in;
@@ -263,8 +263,8 @@ public class UnionFunctions {
     }
   }
 
-  @SuppressWarnings("unused")
-  @FunctionTemplate(name = "ASSERT_LIST", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.INTERNAL)
+  @FunctionTemplate(name = "ASSERT_LIST", scope = FunctionTemplate.FunctionScope.SIMPLE,
+      nulls=NullHandling.INTERNAL)
   public static class CastUnionList implements DrillSimpleFunc {
 
     @Param UnionHolder in;
@@ -286,8 +286,8 @@ public class UnionFunctions {
     }
   }
 
-  @SuppressWarnings("unused")
-  @FunctionTemplate(name = "IS_LIST", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.INTERNAL)
+  @FunctionTemplate(name = "IS_LIST", scope = FunctionTemplate.FunctionScope.SIMPLE,
+      nulls=NullHandling.INTERNAL)
   public static class UnionIsList implements DrillSimpleFunc {
 
     @Param UnionHolder in;
@@ -306,8 +306,8 @@ public class UnionFunctions {
     }
   }
 
-  @SuppressWarnings("unused")
-  @FunctionTemplate(name = "ASSERT_MAP", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.INTERNAL)
+  @FunctionTemplate(name = "ASSERT_MAP", scope = FunctionTemplate.FunctionScope.SIMPLE,
+      nulls=NullHandling.INTERNAL)
   public static class CastUnionMap implements DrillSimpleFunc {
 
     @Param UnionHolder in;
@@ -329,8 +329,8 @@ public class UnionFunctions {
     }
   }
 
-  @SuppressWarnings("unused")
-  @FunctionTemplate(names = {"IS_MAP", "IS_STRUCT"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.INTERNAL)
+  @FunctionTemplate(names = {"IS_MAP", "IS_STRUCT"},
+      scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.INTERNAL)
   public static class UnionIsMap implements DrillSimpleFunc {
 
     @Param UnionHolder in;
@@ -349,7 +349,8 @@ public class UnionFunctions {
     }
   }
 
-  @FunctionTemplate(names = {"isnotnull", "is not null"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  @FunctionTemplate(names = {"isnotnull", "is not null"},
+      scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
   public static class IsNotNull implements DrillSimpleFunc {
 
     @Param UnionHolder input;
@@ -364,7 +365,9 @@ public class UnionFunctions {
     }
   }
 
-  @FunctionTemplate(names = {"isnull", "is null"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  @FunctionTemplate(names = {"isnull", "is null"},
+      scope = FunctionTemplate.FunctionScope.SIMPLE,
+      nulls = FunctionTemplate.NullHandling.INTERNAL)
   public static class IsNull implements DrillSimpleFunc {
 
     @Param UnionHolder input;
@@ -378,5 +381,4 @@ public class UnionFunctions {
       out.value = input.isSet == 1 ? 0 : 1;
     }
   }
-
 }

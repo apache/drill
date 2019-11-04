@@ -111,7 +111,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
 
   private class HashAggMemoryManager extends RecordBatchMemoryManager {
     @SuppressWarnings("unused")
-    private int valuesRowWidth = 0;
+    private int valuesRowWidth;
 
     HashAggMemoryManager(int outputBatchSize) {
       super(outputBatchSize);
@@ -221,7 +221,6 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
     return aggregator.getOutputCount();
   }
 
-  @SuppressWarnings("incomplete-switch")
   @Override
   public void buildSchema() throws SchemaChangeException {
     IterOutcome outcome = next(incoming);
@@ -236,15 +235,18 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
       case STOP:
         state = BatchState.STOP;
         return;
+      default:
+        break;
     }
 
-    this.incomingSchema = incoming.getSchema();
+    incomingSchema = incoming.getSchema();
     if (!createAggregator()) {
       state = BatchState.DONE;
     }
     for (VectorWrapper<?> w : container) {
       AllocationHelper.allocatePrecomputedChildCount(w.getValueVector(), 0, 0, 0);
     }
+    container.setValueCount(0);
     if (incoming.getRecordCount() > 0) {
       hashAggMemoryManager.update();
     }
@@ -321,10 +323,12 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
   }
 
   /**
-   * Creates a new Aggregator based on the current schema. If setup fails, this method is responsible for cleaning up
-   * and informing the context of the failure state, as well is informing the upstream operators.
+   * Creates a new Aggregator based on the current schema. If setup fails, this
+   * method is responsible for cleaning up and informing the context of the
+   * failure state, as well is informing the upstream operators.
    *
-   * @return true if the aggregator was setup successfully. false if there was a failure.
+   * @return true if the aggregator was setup successfully. false if there was a
+   *         failure.
    */
   private boolean createAggregator() {
     try {
@@ -359,9 +363,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
 
     ErrorCollector collector = new ErrorCollectorImpl();
 
-    int i;
-
-    for (i = 0; i < numGroupByExprs; i++) {
+    for (int i = 0; i < numGroupByExprs; i++) {
       NamedExpression ne = popConfig.getGroupByExprs().get(i);
       final LogicalExpression expr =
           ExpressionTreeMaterializer.materialize(ne.getExpr(), incoming, collector, context.getFunctionRegistry());
@@ -378,7 +380,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
     }
 
     int extraNonNullColumns = 0; // each of SUM, MAX and MIN gets an extra bigint column
-    for (i = 0; i < numAggrExprs; i++) {
+    for (int i = 0; i < numAggrExprs; i++) {
       NamedExpression ne = popConfig.getAggrExprs().get(i);
       final LogicalExpression expr = ExpressionTreeMaterializer.materialize(ne.getExpr(), incoming, collector, context.getFunctionRegistry());
 

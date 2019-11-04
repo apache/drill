@@ -17,6 +17,12 @@
  */
 package org.apache.drill.exec.expr.annotations;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.util.List;
+
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.expr.fn.FunctionAttributes;
@@ -29,12 +35,6 @@ import org.apache.drill.exec.expr.fn.output.PadReturnTypeInference;
 import org.apache.drill.exec.expr.fn.output.ReturnTypeInference;
 import org.apache.drill.exec.expr.fn.output.SameInOutLengthReturnTypeInference;
 import org.apache.drill.exec.expr.fn.output.StringCastReturnTypeInference;
-
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import java.util.List;
 
 
 @Retention(RetentionPolicy.RUNTIME)
@@ -76,16 +76,20 @@ public @interface FunctionTemplate {
   FunctionCostCategory costCategory() default FunctionCostCategory.SIMPLE;
 
   /**
-   * <p>Set Operand type-checking strategy for an operator which takes no operands and need to be invoked
-   * without parentheses. E.g.: session_id is a niladic function.</p>
+   * <p>Set Operand type-checking strategy for an operator which takes no operands
+   * and need to be invoked without parentheses. E.g.: session_id is a niladic
+   * function.</p>
    *
-   * <p>Niladic functions override columns that have names same as any niladic function. Such columns cannot be
-   * queried without the table qualification. Value of the niladic function is returned when table
-   * qualification is not used.</p>
+   * <p>Niladic functions override columns that have names same as any niladic
+   * function. Such columns cannot be queried without the table qualification.
+   * Value of the niladic function is returned when table qualification is not
+   * used.</p>
    *
    * <p>For e.g. in the case of session_id:<br/>
-   * select session_id from table -> returns the value of niladic function session_id<br/>
-   * select t1.session_id from table t1 -> returns session_id column value from table<p>
+   * select session_id from table -> returns the value of niladic function
+   * session_id<br/>
+   * select t1.session_id from table t1 -> returns session_id column value from
+   * table</p>
    */
   boolean isNiladic() default false;
   boolean checkPrecisionRange() default false;
@@ -101,7 +105,7 @@ public @interface FunctionTemplate {
   boolean isVarArg() default false;
 
   /**
-   * This enum will be used to estimate the average size of the output
+   * Estimates the average size of the output
    * produced by a function that produces variable length output
    */
   enum OutputWidthCalculatorType {
@@ -194,7 +198,6 @@ public @interface FunctionTemplate {
     public TypeProtos.MajorType getType(List<LogicalExpression> logicalExpressions, FunctionAttributes attributes) {
       return inference.getType(logicalExpressions, attributes);
     }
-
   }
 
   enum FunctionCostCategory {
@@ -213,6 +216,5 @@ public @interface FunctionTemplate {
     public static FunctionCostCategory getDefault() {
       return SIMPLE;
     }
-
   }
 }
