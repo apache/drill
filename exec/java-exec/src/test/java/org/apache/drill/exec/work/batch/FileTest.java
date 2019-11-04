@@ -43,7 +43,7 @@ public class FileTest {
     FSDataOutputStream out = fs.create(path);
     byte[] s = "hello world".getBytes();
     out.write(s);
-    out.hsync();
+    out.hflush();
     FSDataInputStream in = fs.open(path);
     byte[] bytes = new byte[s.length];
     in.read(bytes);
@@ -60,7 +60,7 @@ public class FileTest {
       bytes = new byte[256*1024];
       Stopwatch watch = Stopwatch.createStarted();
       out.write(bytes);
-      out.hsync();
+      out.hflush();
       long t = watch.elapsed(TimeUnit.MILLISECONDS);
       logger.info(String.format("Elapsed: %d. Rate %d.\n", t, (long) ((long) bytes.length * 1000L / t)));
     }

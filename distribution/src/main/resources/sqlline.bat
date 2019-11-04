@@ -156,6 +156,7 @@ if "test%HADOOP_HOME%" == "test" (
   set HADOOP_CLASSPATH=%HADOOP_HOME%\conf;!HADOOP_CLASSPATH!
   set USE_HADOOP_CP=1
 )
+set PATH=!HADOOP_HOME!\bin;!PATH!
 
 rem ----
 rem Deal with HBase JARs, if HBASE_HOME was specified

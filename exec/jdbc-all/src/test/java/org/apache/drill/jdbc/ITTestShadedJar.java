@@ -105,7 +105,6 @@ public class ITTestShadedJar extends BaseTest {
       super.failed(e, description);
       done();
       runMethod("failed", description);
-      logger.error("Check whether this test was running within 'integration-test' Maven phase");
     }
 
     private void done() {

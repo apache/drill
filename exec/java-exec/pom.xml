@@ -454,20 +454,6 @@
           <groupId>commons-codec</groupId>
           <artifactId>commons-codec</artifactId>
         </exclusion>
-<!---->
-        <!--<exclusion>-->
-          <!--<groupId>com.sun.jersey</groupId>-->
-          <!--<artifactId>jersey-core</artifactId>-->
-        <!--</exclusion>-->
-        <!--<exclusion>-->
-          <!--<groupId>com.sun.jersey</groupId>-->
-          <!--<artifactId>jersey-server</artifactId>-->
-        <!--</exclusion>-->
-        <!--<exclusion>-->
-          <!--<groupId>com.sun.jersey</groupId>-->
-          <!--<artifactId>jersey-json</artifactId>-->
-        <!--</exclusion>-->
-<!---->
       </exclusions>
     </dependency>
     <dependency>
@@ -487,7 +473,6 @@
           <groupId>commons-codec</groupId>
           <artifactId>commons-codec</artifactId>
         </exclusion>
-        <!---->
         <exclusion>
           <groupId>com.sun.jersey</groupId>
           <artifactId>jersey-core</artifactId>
@@ -500,7 +485,6 @@
           <groupId>com.sun.jersey</groupId>
           <artifactId>jersey-json</artifactId>
         </exclusion>
-        <!---->
         <exclusion>
           <groupId>log4j</groupId>
           <artifactId>log4j</artifactId>
@@ -536,6 +520,10 @@
         <exclusion>
           <groupId>commons-codec</groupId>
           <artifactId>commons-codec</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>commons-logging</groupId>
+          <artifactId>commons-logging</artifactId>
         </exclusion>
       </exclusions>
     </dependency>

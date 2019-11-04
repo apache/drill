@@ -135,14 +135,29 @@ public class GuavaPatcher {
               + "      throw new IllegalArgumentException(format(errorMessageTemplate, new Object[] { new Integer(arg1) }));\n"
               + "    }\n"
               + "  }",
+          "public static void checkArgument(boolean expression, String errorMessageTemplate, long arg1) {\n"
+              + "    if (!expression) {\n"
+              + "      throw new IllegalArgumentException(format(errorMessageTemplate, new Object[] { new Long(arg1) }));\n"
+              + "    }\n"
+              + "  }",
+          "public static void checkArgument(boolean expression, String errorMessageTemplate, long arg1, long arg2) {\n"
+              + "    if (!expression) {\n"
+              + "      throw new IllegalArgumentException(format(errorMessageTemplate, new Object[] { new Long(arg1), new Long(arg2)}));\n"
+              + "    }\n"
+              + "  }",
           "public static Object checkNotNull(Object reference, String errorMessageTemplate, int arg1) {\n"
               + "    if (reference == null) {\n"
               + "      throw new NullPointerException(format(errorMessageTemplate, new Object[] { new Integer(arg1) }));\n"
               + "    } else {\n"
               + "      return reference;\n"
               + "    }\n"
+              + "  }",
+          "public static void checkState(boolean expression, String errorMessageTemplate, int arg1) {\n"
+              + "    if (!expression) {\n"
+              + "      throw new IllegalStateException(format(errorMessageTemplate, new Object[] { new Integer(arg1) }));\n"
+              + "    }\n"
               + "  }"
-      );
+    );
 
       List<String> newMethods = IntStream.rangeClosed(startIndex, endIndex)
           .mapToObj(
