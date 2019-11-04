@@ -177,14 +177,21 @@ public class TypeValidators {
   }
 
   public static class IntegerValidator extends LongValidator {
+    private int iMin = Integer.MIN_VALUE;
+    private int iMax = Integer.MAX_VALUE;
     public IntegerValidator(String name, OptionDescription description) {
       super(name, description);
+    }
+    public IntegerValidator(String name, int min, int max, OptionDescription description) {
+      super(name, description);
+      iMin = min;
+      iMax = max;
     }
 
     @Override
     public void validate(final OptionValue v, final OptionMetaData metaData, final OptionSet manager) {
       super.validate(v, metaData, manager);
-      if (v.num_val > Integer.MAX_VALUE || v.num_val < Integer.MIN_VALUE) {
+      if (v.num_val > iMax || v.num_val < iMin) {
         throw UserException.validationError()
           .message(String.format("Option %s does not have a valid integer value", getOptionName()))
           .build(logger);

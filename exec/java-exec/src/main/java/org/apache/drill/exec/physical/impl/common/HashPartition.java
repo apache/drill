@@ -67,7 +67,7 @@ import static org.apache.drill.exec.physical.impl.common.HashTable.BATCH_SIZE;
  *    After all the build/inner data is read for this partition - if all its data is in memory, then
  *  a hash table and a helper are created, and later this data would be probed.
  *    If all this partition's build/inner data was spilled, then it begins to work as an outer
- *  partition (see the flag "processingOuter") -- reusing some of the fields (e.g., currentBatch,
+ *  partition (see the flag "processingOuter") -- reusing some of the fields (e.g., currentVectorContainer,
  *  currHVVector, writer, spillFile, partitionBatchesCount) for the outer.
  *  </p>
  */
@@ -95,8 +95,8 @@ public class HashPartition implements HashJoinMemoryCalculator.PartitionStat {
   // incoming batches, per each partition (these may be spilled at some point)
   private List<VectorContainer> tmpBatchesList;
   // A batch and HV vector to hold incoming rows - per each partition
-  private VectorContainer currentBatch; // The current (newest) batch
-  private IntVector currHVVector; // The HV vectors for the currentBatches
+  private VectorContainer currentVectorContainer; // The current (newest) container
+  private IntVector currHVVector; // The HV vectors for the currentVectorContainers
 
   /* Helper class
    * Maintains linked list of build side records with the same key
@@ -127,9 +127,10 @@ public class HashPartition implements HashJoinMemoryCalculator.PartitionStat {
   private long numInMemoryRecords;
   private boolean updatedRecordsPerBatch = false;
   private boolean semiJoin;
+  private boolean skipDuplicates; // only for semi
 
   public HashPartition(FragmentContext context, BufferAllocator allocator, ChainedHashTable baseHashTable,
-                       RecordBatch buildBatch, RecordBatch probeBatch, boolean semiJoin,
+                       RecordBatch buildBatch, RecordBatch probeBatch, boolean semiJoin, boolean skipDuplicates,
                        int recordsPerBatch, SpillSet spillSet, int partNum, int cycleNum, int numPartitions) {
     this.allocator = allocator;
     this.buildBatch = buildBatch;
@@ -140,6 +141,7 @@ public class HashPartition implements HashJoinMemoryCalculator.PartitionStat {
     this.cycleNum = cycleNum;
     this.numPartitions = numPartitions;
     this.semiJoin = semiJoin;
+    this.skipDuplicates = semiJoin && skipDuplicates;
 
     try {
       this.hashTable = baseHashTable.createAndSetupHashTable(null);
@@ -157,7 +159,7 @@ public class HashPartition implements HashJoinMemoryCalculator.PartitionStat {
     this.hjHelper = semiJoin ? null : new HashJoinHelper(context, allocator);
     tmpBatchesList = new ArrayList<>();
     if ( numPartitions > 1 ) {
-      allocateNewCurrentBatchAndHV();
+      allocateNewCurrentVectorContainerAndHV();
     }
   }
 
@@ -219,19 +221,52 @@ public class HashPartition implements HashJoinMemoryCalculator.PartitionStat {
   /**
    *  Allocate a new current Vector Container and current HV vector
    */
-  public void allocateNewCurrentBatchAndHV() {
+  public void allocateNewCurrentVectorContainerAndHV() {
     if (outerBatchAllocNotNeeded) { return; } // skip when the inner is whole in memory
-    currentBatch = allocateNewVectorContainer(processingOuter ? probeBatch : buildBatch);
+    currentVectorContainer = allocateNewVectorContainer(processingOuter ? probeBatch : buildBatch);
     currHVVector = new IntVector(MaterializedField.create(HASH_VALUE_COLUMN_NAME, HVtype), allocator);
     currHVVector.allocateNew(recordsPerBatch);
   }
 
   /**
+   *  This method is only used for semi-join, when trying to skip incoming key duplicate rows
+   *  It adds the given row's key to the hash table, is needed, and returns true only if that
+   *  key already existed in the hash table
+   *
+   * @param buildContainer The container with the current row
+   * @param ind The index of the current row in the container
+   * @param hashCode The hash code for the key of this row
+   * @return True iff that key already exists in the hash table
+   */
+  public boolean insertKeyIntoHashTable(VectorContainer buildContainer, int ind, int hashCode) throws SchemaChangeException {
+    hashTable.updateIncoming(buildContainer, probeBatch );
+    final IndexPointer htIndex = new IndexPointer();
+    HashTable.PutStatus status;
+
+    try {
+      status = hashTable.put(ind, htIndex, hashCode, BATCH_SIZE);
+    } catch (RetryAfterSpillException RE) {
+      if ( tmpBatchesList.size() == 0 && // extreme case of an empty partition trying to spill
+        currentVectorContainer.hasRecordCount() && currentVectorContainer.getRecordCount() == 0 ) {
+        String msg = "Too little memory; try to reduce number of partitions (currently " + numPartitions + ")";
+        throw new OutOfMemoryException(msg);
+      }
+      logger.trace("Semi join ran out of memory while put into hash-table; going to spill {} batches and retry",
+        tmpBatchesList.size() + 1); // plus the current batch
+      // Add the current batch to the list, spill and initialize
+      completeAnInnerBatch(true,true);
+      return false;
+    }
+
+    return status == HashTable.PutStatus.KEY_PRESENT;
+  }
+
+  /**
    *  Spills if needed
    */
-  public void appendInnerRow(VectorContainer buildContainer, int ind, int hashCode, HashJoinMemoryCalculator.BuildSidePartitioning calc) {
+  public void appendInnerRow(VectorContainer buildContainer, int ind, int hashCode, HashJoinMemoryCalculator.HashJoinSpillControl calc) {
 
-    int pos = currentBatch.appendRow(buildContainer,ind);
+    int pos = currentVectorContainer.appendRow(buildContainer,ind);
     currHVVector.getMutator().set(pos - 1, hashCode);   // store the hash value in the new column
     if ( pos == recordsPerBatch ) {
       boolean needsSpill = isSpilled || calc.shouldSpill();
@@ -244,7 +279,7 @@ public class HashPartition implements HashJoinMemoryCalculator.PartitionStat {
    *
    */
   public void appendOuterRow(int hashCode, int recordsProcessed) {
-    int pos = currentBatch.appendRow(probeBatch.getContainer(),recordsProcessed);
+    int pos = currentVectorContainer.appendRow(probeBatch.getContainer(),recordsProcessed);
     currHVVector.getMutator().set(pos - 1, hashCode);   // store the hash value in the new column
     if ( pos == recordsPerBatch ) {
       completeAnOuterBatch(true);
@@ -263,27 +298,27 @@ public class HashPartition implements HashJoinMemoryCalculator.PartitionStat {
    * (that is, more rows are coming) - initialize with a new current batch for that partition
    * */
   private void completeABatch(boolean toInitialize, boolean needsSpill) {
-    if ( currentBatch.hasRecordCount() && currentBatch.getRecordCount() > 0) {
-      currentBatch.add(currHVVector);
-      currentBatch.buildSchema(BatchSchema.SelectionVectorMode.NONE);
-      tmpBatchesList.add(currentBatch);
+    if ( currentVectorContainer.hasRecordCount() && currentVectorContainer.getRecordCount() > 0) {
+      currentVectorContainer.add(currHVVector);
+      currentVectorContainer.buildSchema(BatchSchema.SelectionVectorMode.NONE);
+      tmpBatchesList.add(currentVectorContainer);
       partitionBatchesCount++;
 
-      long batchSize = new RecordBatchSizer(currentBatch).getActualSize();
-      inMemoryBatchStats.add(new HashJoinMemoryCalculator.BatchStat(currentBatch.getRecordCount(), batchSize));
+      long batchSize = new RecordBatchSizer(currentVectorContainer).getActualSize();
+      inMemoryBatchStats.add(new HashJoinMemoryCalculator.BatchStat(currentVectorContainer.getRecordCount(), batchSize));
 
       partitionInMemorySize += batchSize;
-      numInMemoryRecords += currentBatch.getRecordCount();
+      numInMemoryRecords += currentVectorContainer.getRecordCount();
     } else {
-      freeCurrentBatchAndHVVector();
+      freeCurrentVectorContainerAndHVVector();
     }
     if ( needsSpill ) { // spill this batch/partition and free its memory
       spillThisPartition();
     }
     if ( toInitialize ) { // allocate a new batch and HV vector
-      allocateNewCurrentBatchAndHV();
+      allocateNewCurrentVectorContainerAndHV();
     } else {
-      currentBatch = null;
+      currentVectorContainer = null;
       currHVVector = null;
     }
   }
@@ -327,6 +362,10 @@ public class HashPartition implements HashJoinMemoryCalculator.PartitionStat {
   public void spillThisPartition() {
     if ( tmpBatchesList.size() == 0 ) { return; } // in case empty - nothing to spill
     logger.debug("HashJoin: Spilling partition {}, current cycle {}, part size {} batches", partitionNum, cycleNum, tmpBatchesList.size());
+
+    if ( skipDuplicates ) {
+      hashTable.reset();
+    } // deallocate and reinit the hash table in case of a semi skipping dupl
 
     // If this is the first spill for this partition, create an output stream
     if ( writer == null ) {
@@ -494,6 +533,31 @@ public class HashPartition implements HashJoinMemoryCalculator.PartitionStat {
   }
 
   /**
+   * Stop skipping duplicates (when there are too few of them)
+   * thus not maintaining the hash table as new rows arrive
+   */
+  public void stopSkippingDuplicates() {
+    assert skipDuplicates;
+    hashTable.reset();
+    skipDuplicates = false;
+  }
+
+  /**
+   * Builds the containers only, not the hash table nor the helper
+   * To be used in case of skipping duplicates (when the hash table already exists)
+   */
+  public void buildContainers() {
+    assert skipDuplicates;
+    if ( isSpilled ) { return; } // no building for spilled partitions
+    containers = new ArrayList<>();
+    for (int curr = 0; curr < partitionBatchesCount; curr++) {
+      VectorContainer nextBatch = tmpBatchesList.get(curr);
+      containers.add(nextBatch);
+    }
+    outerBatchAllocNotNeeded = true; // the inner is whole in memory, no need for an outer batch
+  }
+
+  /**
    * Creates the hash table and join helper for this partition.
    * This method should only be called after all the build side records
    * have been consumed.
@@ -515,7 +579,7 @@ public class HashPartition implements HashJoinMemoryCalculator.PartitionStat {
       assert nextBatch != null;
       assert probeBatch != null;
 
-      hashTable.updateIncoming(nextBatch, probeBatch );
+      hashTable.updateIncoming(nextBatch, probeBatch);
 
       IntVector HV_vector = (IntVector) nextBatch.getLast();
 
@@ -532,7 +596,6 @@ public class HashPartition implements HashJoinMemoryCalculator.PartitionStat {
          */
         if ( ! semiJoin ) { hjHelper.setCurrentIndex(htIndex.value, curr /* buildBatchIndex */, recInd); }
       }
-
       containers.add(nextBatch);
     }
     outerBatchAllocNotNeeded = true; // the inner is whole in memory, no need for an outer batch
@@ -556,10 +619,10 @@ public class HashPartition implements HashJoinMemoryCalculator.PartitionStat {
     }
   }
 
-  private void freeCurrentBatchAndHVVector() {
-    if ( currentBatch != null ) {
-      currentBatch.clear();
-      currentBatch = null;
+  private void freeCurrentVectorContainerAndHVVector() {
+    if ( currentVectorContainer != null ) {
+      currentVectorContainer.clear();
+      currentVectorContainer = null;
     }
     if ( currHVVector != null ) {
       currHVVector.clear();
@@ -572,7 +635,7 @@ public class HashPartition implements HashJoinMemoryCalculator.PartitionStat {
    * @param deleteFile - whether to delete the spill file or not
    */
   public void cleanup(boolean deleteFile) {
-    freeCurrentBatchAndHVVector();
+    freeCurrentVectorContainerAndHVVector();
     if (containers != null && !containers.isEmpty()) {
       for (VectorContainer vc : containers) {
         vc.clear();

@@ -153,7 +153,7 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
     // for those outer partitions that need spilling (cause their matching inners spilled)
     // initialize those partitions' current batches and hash-value vectors
     for ( HashPartition partn : this.partitions) {
-      partn.allocateNewCurrentBatchAndHV();
+      partn.allocateNewCurrentVectorContainerAndHV();
     }
 
     currRightPartition = 0; // In case it's a Right/Full outer join

@@ -215,6 +215,12 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
   private List<BloomFilter> bloomFilters = new ArrayList<>();
   private boolean bloomFiltersGenerated = false;
 
+  private long semiCountTotal;
+  private long semiCountDuplicates;
+  private long semiDupDecisionPoint; // The number of incoming at which to stop and make the "continue skip" decision
+  private boolean semiSkipDuplicates; // optional, for semi join
+  private int semiSkipDuplicatesMinPercentage;
+
   /**
    * This holds information about the spilled partitions for the build and probe side.
    */
@@ -321,7 +327,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
     AVG_OUTPUT_ROW_BYTES,
     OUTPUT_RECORD_COUNT;
 
-    // duplicate for hash ag
+    // duplicate for hash agg
 
     @Override
     public int metricId() { return ordinal(); }
@@ -720,7 +726,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
     }
 
     final HashTableConfig htConfig = new HashTableConfig((int) context.getOptions().getOption(ExecConstants.MIN_HASH_TABLE_SIZE),
-      true, HashTable.DEFAULT_LOAD_FACTOR, rightExpr, leftExpr, comparators, joinControl.asInt());
+      !semiSkipDuplicates, HashTable.DEFAULT_LOAD_FACTOR, rightExpr, leftExpr, comparators, joinControl.asInt());
 
     // Create the chained hash table
     baseHashTable =
@@ -790,18 +796,16 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
   }
 
   /**
-   *  Call only after num partitions is known
+   *  Call only after the final 'num partitions' is known (See partitionNumTuning())
    */
   private void delayedSetup() {
-    //
-    //  Find out the estimated max batch size, etc
-    //  and compute the max numPartitions possible
-    //  See partitionNumTuning()
-    //
-
     spilledState.initialize(numPartitions);
     // Create array for the partitions
     partitions = new HashPartition[numPartitions];
+    // Runtime stats for semi-join: Help decide early if seen too many duplicates (based on initial data, about 32K per partition)
+    semiCountTotal = semiCountDuplicates = 0;
+    semiDupDecisionPoint = // average each partition's hash table half full ( + 1 to avoid zero in case numPartitions == 1 )
+      ((numPartitions + 1) / 2) * context.getOptions().getLong(ExecConstants.MIN_HASH_TABLE_SIZE_KEY);
   }
 
   /**
@@ -811,8 +815,8 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
     baseHashTable.updateIncoming(buildBatch, probeBatch); // in case we process the spilled files
     // Recreate the partitions every time build is initialized
     for (int part = 0; part < numPartitions; part++ ) {
-      partitions[part] = new HashPartition(context, allocator, baseHashTable, buildBatch, probeBatch, semiJoin,
-        RECORDS_PER_BATCH, spillSet, part, spilledState.getCycle(), numPartitions);
+      partitions[part] = new HashPartition(context, allocator, baseHashTable, buildBatch, probeBatch, semiJoin, semiSkipDuplicates, RECORDS_PER_BATCH, spillSet, part, spilledState.getCycle(),
+        numPartitions);
     }
 
     spilledInners = new HashJoinSpilledPartition[numPartitions];
@@ -924,6 +928,11 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
     numPartitions = 1; // We are only using one partition
     canSpill = false; // We cannot spill
     allocator.setLimit(AbstractBase.MAX_ALLOCATION); // Violate framework and force unbounded memory
+
+    if ( semiSkipDuplicates ) {
+      logger.warn("Semi-join duplicate skipping is disabled due to num_partitions = 1");
+      semiSkipDuplicates = false; // can't skip duplicates if incoming rows are not copied
+    }
   }
 
   /**
@@ -945,16 +954,17 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
     }
 
     HashJoinMemoryCalculator.BuildSidePartitioning buildCalc;
+    HashJoinMemoryCalculator.BuildSidePartitioning currentCalc; // may be either a spill control calc, or buildCalc
 
     {
       // Initializing build calculator
       // Limit scope of these variables to this block
-      int maxBatchSize = spilledState.isFirstCycle()? RecordBatch.MAX_BATCH_ROW_COUNT: RECORDS_PER_BATCH;
+      int maxBatchRowCount = spilledState.isFirstCycle()? RecordBatch.MAX_BATCH_ROW_COUNT: RECORDS_PER_BATCH;
       boolean doMemoryCalculation = canSpill && !probeSideIsEmpty.booleanValue();
       HashJoinMemoryCalculator calc = getCalculatorImpl();
 
       calc.initialize(doMemoryCalculation);
-      buildCalc = calc.next();
+      currentCalc = buildCalc = calc.next();
 
       buildCalc.initialize(spilledState.isFirstCycle(), true, // TODO Fix after growing hash values bug fixed
         buildBatch,
@@ -965,14 +975,45 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
         numPartitions,
         RECORDS_PER_BATCH,
         RECORDS_PER_BATCH,
-        maxBatchSize,
-        maxBatchSize,
+        maxBatchRowCount,
+        maxBatchRowCount,
         batchMemoryManager.getOutputBatchSize(),
         HashTable.DEFAULT_LOAD_FACTOR);
 
       if (spilledState.isFirstCycle() && doMemoryCalculation) {
         // Do auto tuning
-        buildCalc = partitionNumTuning(maxBatchSize, buildCalc);
+        buildCalc = partitionNumTuning(maxBatchRowCount, buildCalc);
+      }
+      if ( semiSkipDuplicates ) {
+        // in case of a Semi Join skippinging duplicates, use a "spill control" calc
+        // (may revert back to the buildCalc if the code decides to stop skipping)
+        currentCalc = new HashJoinSpillControlImpl(allocator, RECORDS_PER_BATCH,
+          (int) context.getOptions().getOption(ExecConstants.HASHJOIN_MIN_BATCHES_IN_AVAILABLE_MEMORY_VALIDATOR),
+          batchMemoryManager, context);
+
+        // TODO: numPartitions was already calculated, but without considering the memory needed for a hash table
+        // for each partition; the code below is incomplete ..... (or the original code needs to be adopted to
+        // consider hash tables as well).
+
+        // calculates the max number of partitions possible
+        if ( false &&
+          spilledState.isFirstCycle() && doMemoryCalculation ) {
+          currentCalc.initialize(spilledState.isFirstCycle(), true, // TODO Fix after growing hash values bug fixed
+          buildBatch,
+          probeBatch,
+          buildJoinColumns,
+          probeSideIsEmpty.booleanValue(),
+          allocator.getLimit(),
+          numPartitions,
+          RECORDS_PER_BATCH,
+          RECORDS_PER_BATCH,
+          maxBatchRowCount,
+          maxBatchRowCount,
+          batchMemoryManager.getOutputBatchSize(),
+          HashTable.DEFAULT_LOAD_FACTOR);
+
+          numPartitions = currentCalc.getNumPartitions();
+        }
       }
     }
 
@@ -987,7 +1028,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
 
     // Make the calculator aware of our partitions
     final HashJoinMemoryCalculator.PartitionStatSet partitionStatSet = new HashJoinMemoryCalculator.PartitionStatSet(partitions);
-    buildCalc.setPartitionStatSet(partitionStatSet);
+    currentCalc.setPartitionStatSet(partitionStatSet);
 
     boolean moreData = true;
     while (moreData) {
@@ -1035,12 +1076,31 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
             : read_right_HV_vector.getAccessor().get(ind); // get the hash value from the HV column
           int currPart = hashCode & spilledState.getPartitionMask();
           hashCode >>>= spilledState.getBitsInMask();
-          // semi-join skips join-key-duplicate rows
-          if ( semiJoin ) {
-
+          // semi-join builds the hash-table, and skips join-key-duplicate rows
+          if (semiSkipDuplicates) {
+            semiCountTotal++;
+            boolean aDuplicate = partitions[currPart].insertKeyIntoHashTable(buildBatch.getContainer(), ind, hashCode);
+            // A heuristic: Make a decision once the threshold was met - either continue skipping duplicates, or stop
+            // (skipping duplicates carries a cost, so better avoid if duplicates are too few)
+            if ( semiCountTotal == semiDupDecisionPoint) {  // got enough incoming rows to decide ?
+              long threshold = semiCountTotal * semiSkipDuplicatesMinPercentage / 100;
+              if ( semiCountDuplicates < threshold ) { // when duplicates found were less than the percentage threshold, stop skipping
+                for (HashPartition partn : partitions) {
+                  partn.stopSkippingDuplicates();
+                }
+                semiSkipDuplicates = false;
+                currentCalc = buildCalc; // back to using the regular calc
+              }
+              logger.debug("Semi {} skipping duplicates after receiving {} rows with {} percent duplicates",
+                semiSkipDuplicates ? "to continue" : "stopped", semiCountTotal, (100 * semiCountDuplicates) / semiCountTotal);
+            }
+            if ( aDuplicate ) {
+              semiCountDuplicates++;
+              continue;
+            }
           }
           // Append the new inner row to the appropriate partition; spill (that partition) if needed
-          partitions[currPart].appendInnerRow(buildBatch.getContainer(), ind, hashCode, buildCalc); // may spill if needed
+          partitions[currPart].appendInnerRow(buildBatch.getContainer(), ind, hashCode, currentCalc); // may spill if needed
         }
 
         if ( read_right_HV_vector != null ) {
@@ -1060,12 +1120,15 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
       }
     }
 
+    int numPartitionsSpilled = 0;
+
     // Move the remaining current batches into their temp lists, or spill
     // them if the partition is spilled. Add the spilled partitions into
     // the spilled partitions list
     if ( numPartitions > 1 ) { // a single partition needs no completion
       for (HashPartition partn : partitions) {
         partn.completeAnInnerBatch(false, partn.isSpilled());
+        if ( partn.isSpilled() ) { numPartitionsSpilled++; }
       }
     }
 
@@ -1077,8 +1140,8 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
       return leftUpstream;
     }
 
-    HashJoinMemoryCalculator.PostBuildCalculations postBuildCalc = buildCalc.next();
-    postBuildCalc.initialize(probeSideIsEmpty.booleanValue()); // probeEmpty
+    HashJoinMemoryCalculator.PostBuildCalculations postBuildCalc = currentCalc.next();
+    postBuildCalc.initialize(probeSideIsEmpty.booleanValue());
 
     //
     //  Traverse all the in-memory partitions' incoming batches, and build their hash tables
@@ -1096,6 +1159,10 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
         if (postBuildCalc.shouldSpill()) {
           // Spill this partition if we need to make room
           partn.spillThisPartition();
+        } else if (semiSkipDuplicates) {
+          // All in memory, and already got the Hash Table - just build the containers
+          // (No additional memory is needed, hence no need for any new spill)
+          partn.buildContainers();
         } else {
           // Only build hash tables for partitions that are not spilled
           partn.buildContainersHashTableAndHelper();
@@ -1202,6 +1269,10 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
     this.probeBatch = left;
     joinType = popConfig.getJoinType();
     semiJoin = popConfig.isSemiJoin();
+    semiSkipDuplicatesMinPercentage = (int) context.getOptions().getOption(ExecConstants.HASHJOIN_SEMI_PERCENT_DUPLICATES_TO_SKIP_VALIDATOR);
+    semiSkipDuplicates = semiJoin &&
+      semiSkipDuplicatesMinPercentage < 100 && // can't have 100 percent, at least the first key is not a duplicate
+      context.getOptions().getBoolean(ExecConstants.HASHJOIN_SEMI_SKIP_DUPLICATES_KEY);
     joinIsLeftOrFull  = joinType == JoinRelType.LEFT  || joinType == JoinRelType.FULL;
     joinIsRightOrFull = joinType == JoinRelType.RIGHT || joinType == JoinRelType.FULL;
     conditions = popConfig.getConditions();
