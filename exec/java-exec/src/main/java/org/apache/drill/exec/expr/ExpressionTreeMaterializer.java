@@ -26,11 +26,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
 
-import org.apache.drill.exec.record.metadata.ColumnMetadata;
-import org.apache.drill.metastore.util.SchemaPathUtils;
-import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.CastExpression;
@@ -82,40 +77,52 @@ import org.apache.drill.exec.expr.fn.ExceptionFunction;
 import org.apache.drill.exec.expr.fn.FunctionLookupContext;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorAccessible;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.resolver.FunctionResolver;
 import org.apache.drill.exec.resolver.FunctionResolverFactory;
 import org.apache.drill.exec.resolver.TypeCastRules;
-
+import org.apache.drill.exec.util.DecimalUtility;
+import org.apache.drill.metastore.util.SchemaPathUtils;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import org.apache.drill.exec.util.DecimalUtility;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ExpressionTreeMaterializer {
 
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExpressionTreeMaterializer.class);
+  static final Logger logger = LoggerFactory.getLogger(ExpressionTreeMaterializer.class);
 
-  private ExpressionTreeMaterializer() {
-  }
+  private ExpressionTreeMaterializer() { }
 
-  public static LogicalExpression materialize(LogicalExpression expr, VectorAccessible batch, ErrorCollector errorCollector, FunctionLookupContext functionLookupContext) {
+  public static LogicalExpression materialize(LogicalExpression expr,
+      VectorAccessible batch, ErrorCollector errorCollector,
+      FunctionLookupContext functionLookupContext) {
     return ExpressionTreeMaterializer.materialize(expr, batch, errorCollector, functionLookupContext, false, false);
   }
 
-  public static LogicalExpression materializeAndCheckErrors(LogicalExpression expr, VectorAccessible batch, FunctionLookupContext functionLookupContext) throws SchemaChangeException {
+  public static LogicalExpression materializeAndCheckErrors(LogicalExpression expr,
+      VectorAccessible batch, FunctionLookupContext functionLookupContext)
+          throws SchemaChangeException {
     ErrorCollector collector = new ErrorCollectorImpl();
     LogicalExpression e = ExpressionTreeMaterializer.materialize(expr, batch, collector, functionLookupContext, false, false);
     if (collector.hasErrors()) {
-      throw new SchemaChangeException(String.format("Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
+      throw new SchemaChangeException(String.format(
+          "Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
     }
     return e;
   }
 
-  public static LogicalExpression materialize(LogicalExpression expr, VectorAccessible batch, ErrorCollector errorCollector, FunctionLookupContext functionLookupContext,
-                                              boolean allowComplexWriterExpr) {
+  public static LogicalExpression materialize(LogicalExpression expr,
+      VectorAccessible batch, ErrorCollector errorCollector, FunctionLookupContext functionLookupContext,
+      boolean allowComplexWriterExpr) {
     return materialize(expr, batch, errorCollector, functionLookupContext, allowComplexWriterExpr, false);
   }
 
-  public static LogicalExpression materializeFilterExpr(LogicalExpression expr, TupleMetadata fieldTypes, ErrorCollector errorCollector, FunctionLookupContext functionLookupContext) {
+  public static LogicalExpression materializeFilterExpr(LogicalExpression expr,
+      TupleMetadata fieldTypes, ErrorCollector errorCollector, FunctionLookupContext functionLookupContext) {
     final FilterMaterializeVisitor filterMaterializeVisitor = new FilterMaterializeVisitor(fieldTypes, errorCollector);
     return expr.accept(filterMaterializeVisitor, functionLookupContext);
   }
@@ -140,19 +147,27 @@ public class ExpressionTreeMaterializer {
                                               boolean unionTypeEnabled) {
     Map<VectorAccessible, BatchReference> batches = Maps.newHashMap();
     batches.put(batch, null);
-    return materialize(expr, batches, errorCollector, functionLookupContext, allowComplexWriterExpr, unionTypeEnabled);
+    return materialize(expr, batches, errorCollector, functionLookupContext,
+        allowComplexWriterExpr, unionTypeEnabled);
   }
 
   /**
-   * Materializes logical expression taking into account passed parameters.
-   * Is used to materialize logical expression that can contain several batches with or without custom batch reference.
+   * Materializes logical expression taking into account passed parameters. Is
+   * used to materialize logical expression that can contain several batches
+   * with or without custom batch reference.
    *
-   * @param expr logical expression to be materialized
-   * @param batches one or more batch instances used in expression
-   * @param errorCollector error collector
-   * @param functionLookupContext context to find drill function holder
-   * @param allowComplexWriterExpr true if complex expressions are allowed
-   * @param unionTypeEnabled true if union type is enabled
+   * @param expr
+   *          logical expression to be materialized
+   * @param batches
+   *          one or more batch instances used in expression
+   * @param errorCollector
+   *          error collector
+   * @param functionLookupContext
+   *          context to find drill function holder
+   * @param allowComplexWriterExpr
+   *          true if complex expressions are allowed
+   * @param unionTypeEnabled
+   *          true if union type is enabled
    * @return materialized logical expression
    */
   public static LogicalExpression materialize(LogicalExpression expr,
@@ -177,7 +192,8 @@ public class ExpressionTreeMaterializer {
     }
   }
 
-  public static LogicalExpression convertToNullableType(LogicalExpression fromExpr, MinorType toType, FunctionLookupContext functionLookupContext, ErrorCollector errorCollector) {
+  public static LogicalExpression convertToNullableType(LogicalExpression fromExpr,
+      MinorType toType, FunctionLookupContext functionLookupContext, ErrorCollector errorCollector) {
     String funcName = "convertToNullable" + toType.toString();
     List<LogicalExpression> args = Lists.newArrayList();
     args.add(fromExpr);
@@ -193,11 +209,13 @@ public class ExpressionTreeMaterializer {
     return matchedConvertToNullableFuncHolder.getExpr(funcName, args, ExpressionPosition.UNKNOWN);
   }
 
-  public static LogicalExpression addCastExpression(LogicalExpression fromExpr, MajorType toType, FunctionLookupContext functionLookupContext, ErrorCollector errorCollector) {
+  public static LogicalExpression addCastExpression(LogicalExpression fromExpr,
+      MajorType toType, FunctionLookupContext functionLookupContext, ErrorCollector errorCollector) {
     return addCastExpression(fromExpr, toType, functionLookupContext, errorCollector, true);
   }
 
-  public static LogicalExpression addCastExpression(LogicalExpression fromExpr, MajorType toType, FunctionLookupContext functionLookupContext, ErrorCollector errorCollector, boolean exactResolver) {
+  public static LogicalExpression addCastExpression(LogicalExpression fromExpr, MajorType toType,
+      FunctionLookupContext functionLookupContext, ErrorCollector errorCollector, boolean exactResolver) {
     String castFuncName = FunctionReplacementUtils.getCastFunc(toType.getMinorType());
     List<LogicalExpression> castArgs = Lists.newArrayList();
     castArgs.add(fromExpr);  //input_expr
@@ -330,9 +348,9 @@ public class ExpressionTreeMaterializer {
   }
 
   private abstract static class AbstractMaterializeVisitor extends AbstractExprVisitor<LogicalExpression, FunctionLookupContext, RuntimeException> {
-    private ExpressionValidator validator = new ExpressionValidator();
+    private final ExpressionValidator validator = new ExpressionValidator();
     private ErrorCollector errorCollector;
-    private Deque<ErrorCollector> errorCollectors = new ArrayDeque<>();
+    private final Deque<ErrorCollector> errorCollectors = new ArrayDeque<>();
     private final boolean allowComplexWriter;
     /**
      * If this is false, the materializer will not handle or create UnionTypes
@@ -351,6 +369,7 @@ public class ExpressionTreeMaterializer {
       return newExpr;
     }
 
+    @Override
     public abstract LogicalExpression visitSchemaPath(SchemaPath path, FunctionLookupContext functionLookupContext);
 
     @Override
@@ -359,8 +378,11 @@ public class ExpressionTreeMaterializer {
     }
 
     @Override
-    public LogicalExpression visitFunctionHolderExpression(FunctionHolderExpression holder, FunctionLookupContext functionLookupContext) {
-      // a function holder is already materialized, no need to rematerialize.  generally this won't be used unless we materialize a partial tree and rematerialize the whole tree.
+    public LogicalExpression visitFunctionHolderExpression(FunctionHolderExpression holder,
+        FunctionLookupContext functionLookupContext) {
+      // a function holder is already materialized, no need to rematerialize.
+      // generally this won't be used unless we materialize a partial tree and
+      // rematerialize the whole tree.
       return holder;
     }
 
@@ -398,7 +420,9 @@ public class ExpressionTreeMaterializer {
       DrillFuncHolder matchedFuncHolder = functionLookupContext.findDrillFunction(resolver, call);
 
       if (matchedFuncHolder instanceof DrillComplexWriterFuncHolder && ! allowComplexWriter) {
-        errorCollector.addGeneralError(call.getPosition(), "Only ProjectRecordBatch could have complex writer function. You are using complex writer function " + call.getName() + " in a non-project operation!");
+        errorCollector.addGeneralError(call.getPosition(),
+            "Only ProjectRecordBatch could have complex writer function. You are using complex writer function "
+                + call.getName() + " in a non-project operation!");
       }
 
       //new arg lists, possible with implicit cast inserted.
@@ -414,13 +438,15 @@ public class ExpressionTreeMaterializer {
 
           // Case 1: If  1) the argument is NullExpression
           //             2) the minor type of parameter of matchedFuncHolder is not LATE (the type of null expression is still unknown)
-          //             3) the parameter of matchedFuncHolder allows null input, or func's null_handling is NULL_IF_NULL (means null and non-null are exchangeable).
+          //             3) the parameter of matchedFuncHolder allows null input, or func's null_handling
+          //                is NULL_IF_NULL (means null and non-null are exchangeable).
           //         then replace NullExpression with a TypedNullConstant
           if (currentArg.equals(NullExpression.INSTANCE) && !MinorType.LATE.equals(parmType.getMinorType()) &&
               (TypeProtos.DataMode.OPTIONAL.equals(parmType.getMode()) ||
               matchedFuncHolder.getNullHandling() == FunctionTemplate.NullHandling.NULL_IF_NULL)) {
             argsWithCast.add(new TypedNullConstant(parmType));
-          } else if (Types.softEquals(parmType, currentArg.getMajorType(), matchedFuncHolder.getNullHandling() == FunctionTemplate.NullHandling.NULL_IF_NULL) ||
+          } else if (Types.softEquals(parmType, currentArg.getMajorType(),
+              matchedFuncHolder.getNullHandling() == FunctionTemplate.NullHandling.NULL_IF_NULL) ||
                      matchedFuncHolder.isFieldReader(i)) {
             // Case 2: argument and parameter matches, or parameter is FieldReader.  Do nothing.
             argsWithCast.add(currentArg);
@@ -494,12 +520,11 @@ public class ExpressionTreeMaterializer {
     }
 
     /**
-     * Converts a function call with a Union type input into a case statement, where each branch of the case corresponds to
-     * one of the subtypes of the Union type. The function call is materialized in each of the branches, with the union input cast
-     * to the specific type corresponding to the branch of the case statement
-     * @param call
-     * @param functionLookupContext
-     * @return
+     * Converts a function call with a Union type input into a case statement,
+     * where each branch of the case corresponds to one of the subtypes of the
+     * Union type. The function call is materialized in each of the branches,
+     * with the union input cast to the specific type corresponding to the
+     * branch of the case statement
      */
     private LogicalExpression rewriteUnionFunction(FunctionCall call, FunctionLookupContext functionLookupContext) {
       LogicalExpression[] args = new LogicalExpression[call.args.size()];
@@ -527,9 +552,12 @@ public class ExpressionTreeMaterializer {
             newArgs.add(e.accept(new CloneVisitor(), null));
           }
 
-          // When expanding the expression tree to handle the different subtypes, we will not throw an exception if one
-          // of the branches fails to find a function match, since it is possible that code path will never occur in execution
-          // So instead of failing to materialize, we generate code to throw the exception during execution if that code
+          // When expanding the expression tree to handle the different
+          // subtypes, we will not throw an exception if one
+          // of the branches fails to find a function match, since it is
+          // possible that code path will never occur in execution
+          // So instead of failing to materialize, we generate code to throw the
+          // exception during execution if that code
           // path is hit.
 
           errorCollectors.push(errorCollector);
@@ -602,6 +630,7 @@ public class ExpressionTreeMaterializer {
       return new FunctionCall(isFuncName, args, ExpressionPosition.UNKNOWN);
     }
 
+    @Override
     public LogicalExpression visitIfExpression(IfExpression ifExpr, FunctionLookupContext functionLookupContext) {
       IfExpression.IfCondition conditions = ifExpr.ifCondition;
       LogicalExpression newElseExpr = ifExpr.elseExpression.accept(this, functionLookupContext);

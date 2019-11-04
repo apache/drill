@@ -17,8 +17,10 @@
  */
 package org.apache.drill.exec.physical.impl.unnest;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK_NEW_SCHEMA;
+
+import java.util.List;
+
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.types.TypeProtos;
@@ -44,25 +46,24 @@ import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.RepeatedMapVector;
 import org.apache.drill.exec.vector.complex.RepeatedValueVector;
-
-import java.util.List;
-
-import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK_NEW_SCHEMA;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 // TODO - handle the case where a user tries to unnest a scalar, should just return the column as is
 public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPOP> {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UnnestRecordBatch.class);
+  private static final Logger logger = LoggerFactory.getLogger(UnnestRecordBatch.class);
 
   private final String rowIdColumnName; // name of the field holding the rowId implicit column
-  private IntVector rowIdVector; // vector to keep the implicit rowId column in
+  private IntVector rowIdVector;        // vector to keep the implicit rowId column in
 
   private Unnest unnest = new UnnestImpl();
-  private boolean hasRemainder = false; // set to true if there is data left over for the current row AND if we want
+  private boolean hasRemainder;         // set to true if there is data left over for the current row AND if we want
                                         // to keep processing it. Kill may be called by a limit in a subquery that
-                                        // requires us to stop processing thecurrent row, but not stop processing
+                                        // requires us to stop processing the current row, but not stop processing
                                         // the data.
-  private int remainderIndex = 0;
-  private int recordCount;
+  private int remainderIndex;
   private MaterializedField unnestFieldMetadata;
   // Reference of TypedFieldId for Unnest column. It's always set in schemaChanged method and later used by others
   private TypedFieldId unnestTypedFieldId;
@@ -84,7 +85,6 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
     }
   }
 
-
   /**
    * Memory manager for Unnest. Estimates the batch size exactly like we do for Flatten.
    */
@@ -102,19 +102,19 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
       // Get column size of unnest column.
       RecordBatchSizer.ColumnSize columnSize = getRecordBatchSizer().getColumn(unnestFieldMetadata.getName());
 
-      final int rowIdColumnSize = TypeHelper.getSize(rowIdVector.getField().getType());
+      int rowIdColumnSize = TypeHelper.getSize(rowIdVector.getField().getType());
 
       // Average rowWidth of single element in the unnest list.
       // subtract the offset vector size from column data size.
-      final int avgRowWidthSingleUnnestEntry = RecordBatchSizer
+      int avgRowWidthSingleUnnestEntry = RecordBatchSizer
           .safeDivide(columnSize.getTotalNetSize() - (getOffsetVectorWidth() * columnSize.getValueCount()), columnSize
               .getElementCount());
 
       // Average rowWidth of outgoing batch.
-      final int avgOutgoingRowWidth = avgRowWidthSingleUnnestEntry + rowIdColumnSize;
+      int avgOutgoingRowWidth = avgRowWidthSingleUnnestEntry + rowIdColumnSize;
 
       // Number of rows in outgoing batch
-      final int outputBatchSize = getOutputBatchSize();
+      int outputBatchSize = getOutputBatchSize();
       // Number of rows in outgoing batch
       setOutputRowCount(outputBatchSize, avgOutgoingRowWidth);
 
@@ -127,9 +127,7 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
 
       updateIncomingStats();
     }
-
   }
-
 
   public UnnestRecordBatch(UnnestPOP pop, FragmentContext context) throws OutOfMemoryException {
     super(pop, context);
@@ -143,7 +141,7 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
 
   @Override
   public int getRecordCount() {
-    return recordCount;
+    return container.getRecordCount();
   }
 
   @Override
@@ -162,7 +160,6 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
       "Neither the LateralOutcome is STOP nor executor state is failed");
       logger.debug("Kill received. Stopping all processing");
     state = BatchState.DONE;
-    recordCount = 0;
     hasRemainder = false; // whatever the case, we need to stop processing the current row.
   }
 
@@ -249,9 +246,9 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
   }
 
   private void setUnnestVector() {
-    final MaterializedField field = incoming.getSchema().getColumn(unnestTypedFieldId.getFieldIds()[0]);
-    final RepeatedValueVector vector;
-    final ValueVector inVV =
+    MaterializedField field = incoming.getSchema().getColumn(unnestTypedFieldId.getFieldIds()[0]);
+    RepeatedValueVector vector;
+    ValueVector inVV =
         incoming.getValueAccessorById(field.getValueClass(), unnestTypedFieldId.getFieldIds()).getValueVector();
 
     if (!(inVV instanceof RepeatedValueVector)) {
@@ -273,7 +270,7 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
   protected IterOutcome doWork() {
     Preconditions.checkNotNull(lateral);
     unnest.setOutputCount(memoryManager.getOutputRowCount());
-    final int incomingRecordCount = incoming.getRecordCount();
+    int incomingRecordCount = incoming.getRecordCount();
 
     int remainingRecordCount = unnest.getUnnestField().getAccessor().getInnerValueCount() - remainderIndex;
 
@@ -281,10 +278,10 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
     rowIdVector.allocateNew(Math.min(remainingRecordCount, memoryManager.getOutputRowCount()));
 
     //Expected output count is the num of values in the unnest column array
-    final int childCount = incomingRecordCount == 0 ? 0 : remainingRecordCount;
+    int childCount = incomingRecordCount == 0 ? 0 : remainingRecordCount;
 
     // Unnest the data
-    final int outputRecords = childCount == 0 ? 0 : unnest.unnestRecords(childCount);
+    int outputRecords = childCount == 0 ? 0 : unnest.unnestRecords(childCount);
 
     logger.debug("{} values out of {} were processed.", outputRecords, childCount);
     // Keep track of any spill over into another batch. Happens only if you artificially set the output batch
@@ -298,8 +295,7 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
       remainderIndex = 0;
       logger.debug("IterOutcome: EMIT.");
     }
-    this.recordCount = outputRecords;
-    this.rowIdVector.getMutator().setValueCount(outputRecords);
+    container.setValueCount(outputRecords);
 
     memoryManager.updateOutgoingStats(outputRecords);
     // If the current incoming record has spilled into two batches, we return
@@ -312,19 +308,22 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
   }
 
   /**
-   * The data layout is the same for the actual data within a repeated field, as it is in a scalar vector for
-   * the same sql type. For example, a repeated int vector has a vector of offsets into a regular int vector to
-   * represent the lists. As the data layout for the actual values in the same in the repeated vector as in the
-   * scalar vector of the same type, we can avoid making individual copies for the column being unnested, and just
-   * use vector copies between the inner vector of the repeated field to the resulting scalar vector from the unnest
-   * operation. This is completed after we determine how many records will fit (as we will hit either a batch end, or
-   * the end of one of the other vectors while we are copying the data of the other vectors alongside each new unnested
-   * value coming out of the repeated field.)
+   * The data layout is the same for the actual data within a repeated field, as
+   * it is in a scalar vector for the same sql type. For example, a repeated int
+   * vector has a vector of offsets into a regular int vector to represent the
+   * lists. As the data layout for the actual values in the same in the repeated
+   * vector as in the scalar vector of the same type, we can avoid making
+   * individual copies for the column being unnested, and just use vector copies
+   * between the inner vector of the repeated field to the resulting scalar
+   * vector from the unnest operation. This is completed after we determine how
+   * many records will fit (as we will hit either a batch end, or the end of one
+   * of the other vectors while we are copying the data of the other vectors
+   * alongside each new unnested value coming out of the repeated field.)
    */
   private TransferPair getUnnestFieldTransferPair(FieldReference reference) {
-    final int[] typeFieldIds = unnestTypedFieldId.getFieldIds();
-    final Class<?> vectorClass = incoming.getSchema().getColumn(typeFieldIds[0]).getValueClass();
-    final ValueVector unnestField = incoming.getValueAccessorById(vectorClass, typeFieldIds).getValueVector();
+    int[] typeFieldIds = unnestTypedFieldId.getFieldIds();
+    Class<?> vectorClass = incoming.getSchema().getColumn(typeFieldIds[0]).getValueClass();
+    ValueVector unnestField = incoming.getValueAccessorById(vectorClass, typeFieldIds).getValueVector();
 
     TransferPair tp = null;
     if (unnestField instanceof RepeatedMapVector) {
@@ -337,11 +336,11 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
       }
       logger.error("Cannot cast {} to RepeatedValueVector", unnestField);
       //when incoming recordCount is 0, don't throw exception since the type being seen here is not solid
-      final ValueVector vv = new RepeatedMapVector(unnestField.getField(), oContext.getAllocator(), null);
+      ValueVector vv = new RepeatedMapVector(unnestField.getField(), oContext.getAllocator(), null);
       tp = RepeatedValueVector.class.cast(vv)
           .getTransferPair(reference.getAsNamePart().getName(), oContext.getAllocator());
     } else {
-      final ValueVector vvIn = RepeatedValueVector.class.cast(unnestField).getDataVector();
+      ValueVector vvIn = RepeatedValueVector.class.cast(unnestField).getDataVector();
       // vvIn may be null because of fast schema return for repeated list vectors
       if (vvIn != null) {
         tp = vvIn.getTransferPair(reference.getAsNamePart().getName(), oContext.getAllocator());
@@ -351,9 +350,9 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
   }
 
   private TransferPair resetUnnestTransferPair() throws SchemaChangeException {
-    final List<TransferPair> transfers = Lists.newArrayList();
-    final FieldReference fieldReference = new FieldReference(popConfig.getColumn());
-    final TransferPair transferPair = getUnnestFieldTransferPair(fieldReference);
+    List<TransferPair> transfers = Lists.newArrayList();
+    FieldReference fieldReference = new FieldReference(popConfig.getColumn());
+    TransferPair transferPair = getUnnestFieldTransferPair(fieldReference);
     transfers.add(transferPair);
     logger.debug("Added transfer for unnest expression.");
     unnest.close();
@@ -366,16 +365,17 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
   protected boolean setupNewSchema() throws SchemaChangeException {
     Preconditions.checkNotNull(lateral);
     container.clear();
-    recordCount = 0;
-    final MaterializedField rowIdField = MaterializedField.create(rowIdColumnName, Types.required(TypeProtos
+    MaterializedField rowIdField = MaterializedField.create(rowIdColumnName, Types.required(TypeProtos
         .MinorType.INT));
     this.rowIdVector= (IntVector)TypeHelper.getNewVector(rowIdField, oContext.getAllocator());
     container.add(rowIdVector);
     unnest = new UnnestImpl();
     unnest.setRowIdVector(rowIdVector);
-    final TransferPair tp = resetUnnestTransferPair();
+    TransferPair tp = resetUnnestTransferPair();
     container.add(TypeHelper.getNewVector(tp.getTo().getField(), oContext.getAllocator()));
     container.buildSchema(SelectionVectorMode.NONE);
+    container.allocateNew();
+    container.setValueCount(0);
     return true;
   }
 
@@ -388,17 +388,18 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
    */
   private boolean schemaChanged() throws SchemaChangeException {
     unnestTypedFieldId = checkAndGetUnnestFieldId();
-    final MaterializedField thisField = incoming.getSchema().getColumn(unnestTypedFieldId.getFieldIds()[0]);
-    final MaterializedField prevField = unnestFieldMetadata;
+    MaterializedField thisField = incoming.getSchema().getColumn(unnestTypedFieldId.getFieldIds()[0]);
+    MaterializedField prevField = unnestFieldMetadata;
     Preconditions.checkNotNull(thisField);
 
-    // isEquivalent may return false if the order of the fields has changed. This usually does not
-    // happen but if it does we end up throwing a spurious schema change exeption
+    // isEquivalent may return false if the order of the fields has changed.
+    // This usually does not happen but if it does we end up throwing a spurious
+    // schema change exception
     if (prevField == null || !prevField.isEquivalent(thisField)) {
-      logger.debug("Schema changed");
-      // We should store the clone of MaterializedField for unnest column instead of reference. When the column is of
-      // type Map and there is change in any children field of the Map then that will update the reference variable and
-      // isEquivalent check will still return true.
+      // We should store the clone of MaterializedField for unnest column
+      // instead of reference. When the column is of type Map and there is
+      // change in any children field of the Map then that will update the
+      // reference variable and isEquivalent check will still return true.
       unnestFieldMetadata = thisField.clone();
       return true;
     }
@@ -430,7 +431,7 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
   }
 
   private TypedFieldId checkAndGetUnnestFieldId() throws SchemaChangeException {
-    final TypedFieldId fieldId = incoming.getValueVectorId(popConfig.getColumn());
+    TypedFieldId fieldId = incoming.getValueVectorId(popConfig.getColumn());
     if (fieldId == null) {
       throw new SchemaChangeException(String.format("Unnest column %s not found inside the incoming record batch. " +
           "This may happen if a wrong Unnest column name is used in the query. Please rerun query after fixing that.",

@@ -33,7 +33,7 @@ public abstract class AbstractCopier implements Copier {
   public void setup(VectorAccessible incoming, VectorContainer outgoing) {
     this.outgoing = outgoing;
 
-    final int count = outgoing.getNumberOfColumns();
+    int count = outgoing.getNumberOfColumns();
     vvOut = new ValueVector[count];
 
     for (int index = 0; index < count; index++) {
@@ -62,9 +62,9 @@ public abstract class AbstractCopier implements Copier {
   }
 
   private int insertRecords(int outgoingPosition, int index, int recordCount) {
-    final int endIndex = index + recordCount;
+    int endIndex = index + recordCount;
 
-    for(int svIndex = index; svIndex < endIndex; svIndex++, outgoingPosition++){
+    for (int svIndex = index; svIndex < endIndex; svIndex++, outgoingPosition++) {
       copyEntryIndirect(svIndex, outgoingPosition);
     }
 
@@ -73,11 +73,7 @@ public abstract class AbstractCopier implements Copier {
   }
 
   protected void updateCounts(int numRecords) {
-    outgoing.setRecordCount(numRecords);
-
-    for (int vectorIndex = 0; vectorIndex < vvOut.length; vectorIndex++) {
-      vvOut[vectorIndex].getMutator().setValueCount(numRecords);
-    }
+    outgoing.setValueCount(numRecords);
   }
 
   public abstract void copyEntryIndirect(int inIndex, int outIndex);
@@ -85,7 +81,7 @@ public abstract class AbstractCopier implements Copier {
   public abstract void copyEntry(int inIndex, int outIndex);
 
   public static void allocateOutgoing(VectorContainer outgoing, int recordCount) {
-    for(VectorWrapper<?> out : outgoing) {
+    for (VectorWrapper<?> out : outgoing) {
       TypeProtos.MajorType type = out.getField().getType();
 
       if (!Types.isFixedWidthType(type) || Types.isRepeated(type)) {

@@ -21,20 +21,16 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 
 public class IfExpression extends LogicalExpressionBase {
-  static final Logger logger = LoggerFactory.getLogger(IfExpression.class);
 
   public final IfCondition ifCondition;
   public final LogicalExpression elseExpression;
@@ -57,7 +53,6 @@ public class IfExpression extends LogicalExpressionBase {
       this.condition = condition;
       this.expression = expression;
     }
-
   }
 
   @Override
@@ -96,7 +91,6 @@ public class IfExpression extends LogicalExpressionBase {
       Preconditions.checkNotNull(conditions);
       return new IfExpression(pos, conditions, elseExpression, outputType);
     }
-
   }
 
   @Override
@@ -155,5 +149,4 @@ public class IfExpression extends LogicalExpressionBase {
 
     return cost / i;
   }
-
 }

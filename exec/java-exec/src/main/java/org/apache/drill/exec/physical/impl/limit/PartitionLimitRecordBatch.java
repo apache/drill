@@ -17,7 +17,10 @@
  */
 package org.apache.drill.exec.physical.impl.limit;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import static org.apache.drill.exec.record.RecordBatch.IterOutcome.EMIT;
+
+import java.util.List;
+
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -29,20 +32,20 @@ import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.vector.IntVector;
-
-import java.util.List;
-
-import static org.apache.drill.exec.record.RecordBatch.IterOutcome.EMIT;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * Helps to perform limit in a partition within a record batch. Currently only integer type of partition column is
- * supported. This is mainly used for Lateral/Unnest subquery where each output batch from Unnest will contain an
+ * Helps to perform limit in a partition within a record batch. Currently only
+ * integer type of partition column is supported. This is mainly used for
+ * Lateral/Unnest subquery where each output batch from Unnest will contain an
  * implicit column for rowId for each row.
  */
 public class PartitionLimitRecordBatch extends AbstractSingleRecordBatch<PartitionLimit> {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LimitRecordBatch.class);
+  private static final Logger logger = LoggerFactory.getLogger(LimitRecordBatch.class);
 
-  private SelectionVector2 outgoingSv;
+  private final SelectionVector2 outgoingSv;
   private SelectionVector2 incomingSv;
 
   // Start offset of the records
@@ -50,8 +53,8 @@ public class PartitionLimitRecordBatch extends AbstractSingleRecordBatch<Partiti
   private int numberOfRecords;
   private final List<TransferPair> transfers = Lists.newArrayList();
 
-  // Partition RowId which is currently being processed, this will help to handle cases when rows for a partition id
-  // flows across 2 batches
+  // Partition RowId which is currently being processed, this will help to
+  // handle cases when rows for a partition id flows across 2 batches
   private int partitionId;
   private IntVector partitionColumn;
 
@@ -84,20 +87,20 @@ public class PartitionLimitRecordBatch extends AbstractSingleRecordBatch<Partiti
     container.clear();
     transfers.clear();
 
-    for(final VectorWrapper<?> v : incoming) {
-      final TransferPair pair = v.getValueVector().makeTransferPair(
+    for(VectorWrapper<?> v : incoming) {
+      TransferPair pair = v.getValueVector().makeTransferPair(
         container.addOrGet(v.getField(), callBack));
       transfers.add(pair);
 
-      // Hold the transfer pair target vector for partitionColumn, since before applying limit it transfer all rows
-      // from incoming to outgoing batch
+      // Hold the transfer pair target vector for partitionColumn, since before
+      // applying limit it transfer all rows from incoming to outgoing batch
       String fieldName = v.getField().getName();
       if (fieldName.equals(popConfig.getPartitionColumn())) {
         partitionColumn = (IntVector) pair.getTo();
       }
     }
 
-    final BatchSchema.SelectionVectorMode svMode = incoming.getSchema().getSelectionVectorMode();
+    BatchSchema.SelectionVectorMode svMode = incoming.getSchema().getSelectionVectorMode();
 
     switch(svMode) {
       case NONE:
@@ -118,15 +121,17 @@ public class PartitionLimitRecordBatch extends AbstractSingleRecordBatch<Partiti
   }
 
   /**
-   * Gets the outcome to return from super implementation and then in case of EMIT outcome it refreshes the state of
-   * operator. Refresh is done to again apply limit on all the future incoming batches which will be part of next
+   * Gets the outcome to return from super implementation and then in case of
+   * EMIT outcome it refreshes the state of operator. Refresh is done to again
+   * apply limit on all the future incoming batches which will be part of next
    * record boundary.
+   *
    * @param hasRemainder
    * @return - IterOutcome to send downstream
    */
   @Override
   protected IterOutcome getFinalOutcome(boolean hasRemainder) {
-    final IterOutcome outcomeToReturn = super.getFinalOutcome(hasRemainder);
+    IterOutcome outcomeToReturn = super.getFinalOutcome(hasRemainder);
 
     // EMIT outcome means leaf operator is UNNEST, hence refresh the state no matter limit is reached or not.
     if (outcomeToReturn == EMIT) {
@@ -137,12 +142,15 @@ public class PartitionLimitRecordBatch extends AbstractSingleRecordBatch<Partiti
 
   @Override
   protected IterOutcome doWork() {
-    final int inputRecordCount = incoming.getRecordCount();
+    int inputRecordCount = incoming.getRecordCount();
     if (inputRecordCount == 0) {
-      setOutgoingRecordCount(0);
-      for (VectorWrapper vw : incoming) {
-        vw.clear();
-      }
+      incoming.getContainer().zeroVectors();
+      outgoingSv.setRecordCount(0);
+      outgoingSv.setBatchActualRecordCount(0);
+      // Must allocate vectors to allow for offset vectors which
+      // require a zero in the 0th position.
+      container.allocateNew();
+      container.setRecordCount(0);
       // Release buffer for sv2 (if any)
       if (incomingSv != null) {
         incomingSv.clear();
@@ -150,13 +158,20 @@ public class PartitionLimitRecordBatch extends AbstractSingleRecordBatch<Partiti
       return getFinalOutcome(false);
     }
 
-    for (final TransferPair tp : transfers) {
+    for (TransferPair tp : transfers) {
       tp.transfer();
     }
+
+    // Must report the actual value count as the record
+    // count. This is NOT the input record count when the input
+    // is an SV2.
+    int inputValueCount = incoming.getContainer().getRecordCount();
+    container.setRecordCount(inputValueCount);
 
     // Allocate SV2 vectors for the record count size since we transfer all the vectors buffer from input record
     // batch to output record batch and later an SV2Remover copies the needed records.
     outgoingSv.allocateNew(inputRecordCount);
+    outgoingSv.setBatchActualRecordCount(inputValueCount);
     limit(inputRecordCount);
 
     // Release memory for incoming sv (if any)
@@ -167,10 +182,13 @@ public class PartitionLimitRecordBatch extends AbstractSingleRecordBatch<Partiti
   }
 
   /**
-   * limit call when incoming batch has number of records more than the start offset such that it can produce some
-   * output records. After first call of this method recordStartOffset should be 0 since we have already skipped the
+   * limit call when incoming batch has number of records more than the start
+   * offset such that it can produce some output records. After first call of
+   * this method recordStartOffset should be 0 since we have already skipped the
    * required number of records as part of first incoming record batch.
-   * @param inputRecordCount - number of records in incoming batch
+   *
+   * @param inputRecordCount
+   *          - number of records in incoming batch
    */
   private void limit(int inputRecordCount) {
     boolean outputAllRecords = (numberOfRecords == Integer.MIN_VALUE);
@@ -179,7 +197,7 @@ public class PartitionLimitRecordBatch extends AbstractSingleRecordBatch<Partiti
     // If partitionId is not -1 that means it's set to previous batch last partitionId
     partitionId = (partitionId == -1) ? getCurrentRowId(0) : partitionId;
 
-    for (int i=0; i < inputRecordCount;) {
+    for (int i = 0; i < inputRecordCount;) {
       // Get rowId from current right row
       int currentRowId = getCurrentRowId(i);
 
@@ -191,8 +209,8 @@ public class PartitionLimitRecordBatch extends AbstractSingleRecordBatch<Partiti
           continue;
         }
 
-        // Once the start offset records are skipped then consider rows until numberOfRecords is reached for that
-        // partition
+        // Once the start offset records are skipped then consider rows until
+        // numberOfRecords is reached for that partition
         if (outputAllRecords) {
           updateOutputSV2(svIndex++, i);
         } else if (numberOfRecords > 0) {
@@ -206,7 +224,7 @@ public class PartitionLimitRecordBatch extends AbstractSingleRecordBatch<Partiti
       }
     }
 
-    setOutgoingRecordCount(svIndex);
+    outgoingSv.setRecordCount(svIndex);
   }
 
   private void updateOutputSV2(int svIndex, int incomingIndex) {
@@ -225,15 +243,12 @@ public class PartitionLimitRecordBatch extends AbstractSingleRecordBatch<Partiti
     }
   }
 
-  private void setOutgoingRecordCount(int outputCount) {
-    outgoingSv.setRecordCount(outputCount);
-    container.setRecordCount(outputCount);
-  }
-
   /**
-   * Reset the states for recordStartOffset, numberOfRecords and based on the {@link PartitionLimit} passed to the
-   * operator. It also resets the partitionId since after EMIT outcome there will be new partitionId to consider.
-   * This method is called for the each EMIT outcome received no matter if limit is reached or not.
+   * Reset the states for recordStartOffset, numberOfRecords and based on the
+   * {@link PartitionLimit} passed to the operator. It also resets the
+   * partitionId since after EMIT outcome there will be new partitionId to
+   * consider. This method is called for the each EMIT outcome received no
+   * matter if limit is reached or not.
    */
   private void refreshLimitState() {
     refreshConfigParameter();
@@ -241,8 +256,10 @@ public class PartitionLimitRecordBatch extends AbstractSingleRecordBatch<Partiti
   }
 
   /**
-   * Only resets the recordStartOffset and numberOfRecord based on {@link PartitionLimit} passed to the operator. It
-   * is explicitly called after the limit for each partitionId is met or partitionId changes within an EMIT boundary.
+   * Only resets the recordStartOffset and numberOfRecord based on
+   * {@link PartitionLimit} passed to the operator. It is explicitly called
+   * after the limit for each partitionId is met or partitionId changes within
+   * an EMIT boundary.
    */
   private void refreshConfigParameter() {
     // Make sure startOffset is non-negative

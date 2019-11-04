@@ -24,7 +24,6 @@ import org.apache.drill.exec.physical.config.SelectionVectorRemover;
 import org.apache.drill.exec.record.AbstractSingleRecordBatch;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.WritableBatch;
 
 public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVectorRemover>{
@@ -64,14 +63,17 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
   @Override
   protected IterOutcome doWork() {
     try {
-      copier.copyRecords(0, incoming.getRecordCount());
+      int rowCount = incoming.getRecordCount();
+      if (rowCount == 0) {
+        container.setEmpty();
+      } else {
+        copier.copyRecords(0, rowCount);
+      }
     } catch (Exception e) {
       throw new IllegalStateException(e);
     } finally {
       if (incoming.getSchema().getSelectionVectorMode() != SelectionVectorMode.FOUR_BYTE) {
-        for(VectorWrapper<?> v: incoming) {
-          v.clear();
-        }
+        incoming.getContainer().zeroVectors();
         if (incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.TWO_BYTE) {
           incoming.getSelectionVector2().clear();
         }

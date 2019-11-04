@@ -63,9 +63,7 @@ public abstract class AbstractUnaryRecordBatch<T extends PhysicalOperator> exten
     IterOutcome upstream = next(incoming);
     if (state != BatchState.FIRST && upstream == IterOutcome.OK && incoming.getRecordCount() == 0) {
       do {
-        for (final VectorWrapper<?> w : incoming) {
-          w.clear();
-        }
+        incoming.getContainer().zeroVectors();
       } while ((upstream = next(incoming)) == IterOutcome.OK && incoming.getRecordCount() == 0);
     }
     if (state == BatchState.FIRST) {

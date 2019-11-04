@@ -24,9 +24,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.categories.MongoStorageTest;
 import org.apache.drill.categories.SlowTest;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.junit.AfterClass;
@@ -44,6 +44,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Indexes;
+
 import de.flapdoodle.embed.mongo.Command;
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.MongodProcess;
@@ -212,8 +213,10 @@ public class MongoTestSuit implements MongoTestConstants {
           .net(new Net(LOCALHOST, MONGOS_PORT, Network.localhostIsIPv6()))
           .cmdOptions(cmdOptions).build();
 
-      IRuntimeConfig runtimeConfig = new RuntimeConfigBuilder().defaults(
-          Command.MongoD).build();
+      // Configure to write Mongo message to the log. Change this to
+      // defaults() if needed for debugging; will write to the console instead.
+      IRuntimeConfig runtimeConfig = new RuntimeConfigBuilder().defaultsWithLogger(
+          Command.MongoD, logger).build();
       mongodExecutable = MongodStarter.getInstance(runtimeConfig).prepare(
           mongodConfig);
       mongod = mongodExecutable.start();

@@ -17,15 +17,15 @@
  */
 package org.apache.drill.exec.expr.fn.output;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
+import java.util.List;
+import java.util.Set;
+
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.expr.fn.FunctionAttributes;
 import org.apache.drill.exec.expr.fn.FunctionUtils;
 import org.apache.drill.exec.expr.fn.ValueReference;
-
-import java.util.List;
-import java.util.Set;
+import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 
 /**
  * Return type calculation implementation for functions with return type set as
@@ -45,17 +45,21 @@ public class DefaultReturnTypeInference implements ReturnTypeInference {
   @Override
   public TypeProtos.MajorType getType(List<LogicalExpression> logicalExpressions, FunctionAttributes attributes) {
     if (attributes.getReturnValue().getType().getMinorType() == TypeProtos.MinorType.UNION) {
-      final Set<TypeProtos.MinorType> subTypes = Sets.newHashSet();
-      for (final ValueReference ref : attributes.getParameters()) {
+      Set<TypeProtos.MinorType> subTypes = Sets.newHashSet();
+      for (ValueReference ref : attributes.getParameters()) {
         subTypes.add(ref.getType().getMinorType());
       }
 
-      final TypeProtos.MajorType.Builder builder = TypeProtos.MajorType.newBuilder()
+      TypeProtos.MajorType.Builder builder = TypeProtos.MajorType.newBuilder()
           .setMinorType(TypeProtos.MinorType.UNION)
           .setMode(TypeProtos.DataMode.OPTIONAL);
 
-      for (final TypeProtos.MinorType subType : subTypes) {
-        builder.addSubType(subType);
+      for (TypeProtos.MinorType subType : subTypes) {
+        // LATE is not a valid concrete type; used only as a method
+        // annotation.
+        if (subType != TypeProtos.MinorType.LATE) {
+          builder.addSubType(subType);
+        }
       }
       return builder.build();
     }

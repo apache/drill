@@ -39,12 +39,13 @@ import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.ValueVector;
-
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter> {
 
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FilterRecordBatch.class);
+  private static final Logger logger = LoggerFactory.getLogger(FilterRecordBatch.class);
 
   private SelectionVector2 sv2;
   private SelectionVector4 sv4;
@@ -76,51 +77,56 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter> {
 
   @Override
   protected IterOutcome doWork() {
-    container.zeroVectors();
-    int recordCount = incoming.getRecordCount();
     try {
+      container.zeroVectors();
+      int recordCount = incoming.getRecordCount();
       filter.filterBatch(recordCount);
+      // The container needs the actual number of values in
+      // its contained vectors (not the filtered count)
+      // Not sure the SV4 case is actually supported...
+      container.setRecordCount(
+          sv2 != null ? sv2.getBatchActualRecordCount() : recordCount);
+      return getFinalOutcome(false);
     } catch (SchemaChangeException e) {
       throw new UnsupportedOperationException(e);
     }
-
-    return getFinalOutcome(false);
   }
 
   @Override
   public void close() {
+    clearSv();
+    super.close();
+  }
+
+  private void clearSv() {
     if (sv2 != null) {
       sv2.clear();
     }
     if (sv4 != null) {
       sv4.clear();
     }
-    super.close();
   }
 
   @Override
   protected boolean setupNewSchema() throws SchemaChangeException {
-    if (sv2 != null) {
-      sv2.clear();
-    }
+    clearSv();
 
     switch (incoming.getSchema().getSelectionVectorMode()) {
       case NONE:
         if (sv2 == null) {
           sv2 = new SelectionVector2(oContext.getAllocator());
         }
-        this.filter = generateSV2Filterer();
+        filter = generateSV2Filterer();
         break;
       case TWO_BYTE:
         sv2 = new SelectionVector2(oContext.getAllocator());
-        this.filter = generateSV2Filterer();
+        filter = generateSV2Filterer();
         break;
       case FOUR_BYTE:
         /*
          * Filter does not support SV4 handling. There are couple of minor issues in the
          * logic that handles SV4 + filter should always be pushed beyond sort so disabling
          * it in FilterPrel.
-         *
          */
       default:
         throw new UnsupportedOperationException();
@@ -164,15 +170,14 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter> {
     } catch (ClassTransformationException | IOException e) {
       throw new SchemaChangeException("Failure while attempting to load generated class", e);
     }
-
   }
 
   protected Filterer generateSV2Filterer() throws SchemaChangeException {
     final ErrorCollector collector = new ErrorCollectorImpl();
     final List<TransferPair> transfers = Lists.newArrayList();
     final ClassGenerator<Filterer> cg = CodeGenerator.getRoot(Filterer.TEMPLATE_DEFINITION2, context.getOptions());
-    // Uncomment below lines to enable saving generated code file for debugging
-    // cg.getCodeGenerator().plainJavaCapable(true);
+    cg.getCodeGenerator().plainJavaCapable(true);
+    // Uncomment the following line to enable saving generated code file for debugging
     // cg.getCodeGenerator().saveCodeForDebugging(true);
 
     final LogicalExpression expr = ExpressionTreeMaterializer.materialize(popConfig.getExpr(), incoming, collector,

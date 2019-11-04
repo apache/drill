@@ -530,4 +530,20 @@ public class VectorContainer implements VectorAccessible {
     sb.append("]");
     return sb.toString();
   }
+
+  /**
+   * Safely set this container to an empty batch. An empty batch is not
+   * fully empty: offset vectors must contain a single 0 entry in their
+   * first position.
+   */
+  public void setEmpty() {
+    // May not be needed; retaining for safety.
+    zeroVectors();
+    // Better to only allocate minimum-size offset vectors,
+    // but no good way to do that presently.
+    allocateNew();
+    // The "fill empties" logic will set the zero
+    // in the offset vectors that need it.
+    setValueCount(0);
+  }
 }

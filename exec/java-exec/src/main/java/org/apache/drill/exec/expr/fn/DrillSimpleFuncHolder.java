@@ -19,7 +19,8 @@ package org.apache.drill.exec.expr.fn;
 
 import static org.apache.drill.shaded.guava.com.google.common.base.Preconditions.checkNotNull;
 
-import com.sun.codemodel.JOp;
+import java.util.List;
+
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -29,16 +30,15 @@ import org.apache.drill.exec.expr.ClassGenerator.BlockType;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
+import org.apache.drill.exec.vector.ValueHolderHelper;
 
 import com.sun.codemodel.JBlock;
 import com.sun.codemodel.JConditional;
 import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JExpression;
 import com.sun.codemodel.JMod;
+import com.sun.codemodel.JOp;
 import com.sun.codemodel.JVar;
-import org.apache.drill.exec.vector.ValueHolderHelper;
-
-import java.util.List;
 
 public class DrillSimpleFuncHolder extends DrillFuncHolder {
 
@@ -56,12 +56,15 @@ public class DrillSimpleFuncHolder extends DrillFuncHolder {
   private String setupBody() {
     return meth("setup", false);
   }
+
   private String evalBody() {
     return meth("eval");
   }
+
   private String resetBody() {
     return meth("reset", false);
   }
+
   private String cleanupBody() {
     return meth("cleanup", false);
   }

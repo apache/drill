@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.vector.complex.fn;
 
-import io.netty.buffer.DrillBuf;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -32,17 +30,21 @@ import org.apache.drill.exec.vector.complex.fn.VectorOutput.MapVectorOutput;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
+import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.JsonNode;
-import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+
+import io.netty.buffer.DrillBuf;
 
 public class JsonReader extends BaseJsonReader {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory
-      .getLogger(JsonReader.class);
+  private static final Logger logger =
+      LoggerFactory.getLogger(JsonReader.class);
   public final static int MAX_RECORD_SIZE = 128 * 1024;
 
   private final WorkingBuffer workingBuffer;
@@ -59,7 +61,7 @@ public class JsonReader extends BaseJsonReader {
    */
   private final List<ListWriter> emptyArrayWriters = Lists.newArrayList();
 
-  private FieldSelection selection;
+  private final FieldSelection selection;
 
   private JsonReader(Builder builder) {
     super(builder.managedBuf, builder.enableNanInf, builder.enableEscapeAnyChar, builder.skipOuterList);
@@ -74,18 +76,17 @@ public class JsonReader extends BaseJsonReader {
   }
 
   public static class Builder {
-    private  DrillBuf managedBuf;
-    private  WorkingBuffer workingBuffer;
-    private  List<SchemaPath> columns;
-    private  MapVectorOutput mapOutput;
-    private  ListVectorOutput listOutput;
-    private  String currentFieldName = "<none>";
-    private  boolean readNumbersAsDouble;
-    private  boolean skipOuterList;
-    private  boolean allTextMode;
-    private  boolean enableNanInf;
-    private  boolean enableEscapeAnyChar;
-
+    private final DrillBuf managedBuf;
+    private final WorkingBuffer workingBuffer;
+    private List<SchemaPath> columns;
+    private final MapVectorOutput mapOutput;
+    private final ListVectorOutput listOutput;
+    private final String currentFieldName = "<none>";
+    private boolean readNumbersAsDouble;
+    private boolean skipOuterList;
+    private boolean allTextMode;
+    private boolean enableNanInf;
+    private boolean enableEscapeAnyChar;
 
     public Builder(DrillBuf managedBuf) {
       this.managedBuf = managedBuf;
@@ -225,7 +226,7 @@ public class JsonReader extends BaseJsonReader {
    */
   private void writeData(MapWriter map, FieldSelection selection,
       boolean moveForward) throws IOException {
-    //
+
     map.start();
     try {
       outside: while (true) {
@@ -256,28 +257,32 @@ public class JsonReader extends BaseJsonReader {
         case START_ARRAY:
           writeData(map.list(fieldName));
           break;
+
         case START_OBJECT:
           if (!writeMapDataIfTyped(map, fieldName)) {
             writeData(map.map(fieldName), childSelection, false);
           }
           break;
+
         case END_OBJECT:
           break outside;
 
-        case VALUE_FALSE: {
+        case VALUE_FALSE:
           map.bit(fieldName).writeBit(0);
           break;
-        }
-        case VALUE_TRUE: {
+
+        case VALUE_TRUE:
           map.bit(fieldName).writeBit(1);
           break;
-        }
+
         case VALUE_NULL:
           // do nothing as we don't have a type.
           break;
+
         case VALUE_NUMBER_FLOAT:
           map.float8(fieldName).writeFloat8(parser.getDoubleValue());
           break;
+
         case VALUE_NUMBER_INT:
           if (this.readNumbersAsDouble) {
             map.float8(fieldName).writeFloat8(parser.getDoubleValue());
@@ -285,6 +290,7 @@ public class JsonReader extends BaseJsonReader {
             map.bigInt(fieldName).writeBigInt(parser.getLongValue());
           }
           break;
+
         case VALUE_STRING:
           handleString(parser, map, fieldName);
           break;
@@ -299,12 +305,11 @@ public class JsonReader extends BaseJsonReader {
     } finally {
       map.end();
     }
-
   }
 
   private void writeDataAllText(MapWriter map, FieldSelection selection,
       boolean moveForward) throws IOException {
-    //
+
     map.start();
     outside: while (true) {
 
@@ -316,7 +321,7 @@ public class JsonReader extends BaseJsonReader {
         t = parser.getCurrentToken();
         moveForward = true;
       }
-       if (t == JsonToken.NOT_AVAILABLE || t == JsonToken.END_OBJECT) {
+      if (t == JsonToken.NOT_AVAILABLE || t == JsonToken.END_OBJECT) {
         return;
       }
 
@@ -335,11 +340,13 @@ public class JsonReader extends BaseJsonReader {
       case START_ARRAY:
         writeDataAllText(map.list(fieldName));
         break;
+
       case START_OBJECT:
         if (!writeMapDataIfTyped(map, fieldName)) {
           writeDataAllText(map.map(fieldName), childSelection, false);
         }
         break;
+
       case END_OBJECT:
         break outside;
 
@@ -351,6 +358,7 @@ public class JsonReader extends BaseJsonReader {
       case VALUE_STRING:
         handleString(parser, map, fieldName);
         break;
+
       case VALUE_NULL:
         // do nothing as we don't have a type.
         break;
@@ -361,7 +369,6 @@ public class JsonReader extends BaseJsonReader {
       }
     }
     map.end();
-
   }
 
   /**
@@ -427,20 +434,21 @@ public class JsonReader extends BaseJsonReader {
             writeData(list.map(), FieldSelection.ALL_VALID, false);
           }
           break;
+
         case END_ARRAY:
           addIfNotInitialized(list);
         case END_OBJECT:
           break outside;
 
         case VALUE_EMBEDDED_OBJECT:
-        case VALUE_FALSE: {
+        case VALUE_FALSE:
           list.bit().writeBit(0);
           break;
-        }
-        case VALUE_TRUE: {
+
+        case VALUE_TRUE:
           list.bit().writeBit(1);
           break;
-        }
+
         case VALUE_NULL:
           throw UserException
               .unsupportedError()
@@ -449,9 +457,11 @@ public class JsonReader extends BaseJsonReader {
                       + "Please set `store.json.all_text_mode` to true to read lists containing nulls. "
                       + "Be advised that this will treat JSON null values as a string containing the word 'null'.")
               .build(logger);
+
         case VALUE_NUMBER_FLOAT:
           list.float8().writeFloat8(parser.getDoubleValue());
           break;
+
         case VALUE_NUMBER_INT:
           if (this.readNumbersAsDouble) {
             list.float8().writeFloat8(parser.getDoubleValue());
@@ -459,9 +469,11 @@ public class JsonReader extends BaseJsonReader {
             list.bigInt().writeBigInt(parser.getLongValue());
           }
           break;
+
         case VALUE_STRING:
           handleString(parser, list);
           break;
+
         default:
           throw UserException.dataReadError()
               .message("Unexpected token %s", parser.getCurrentToken())
@@ -472,7 +484,6 @@ public class JsonReader extends BaseJsonReader {
       }
     }
     list.endList();
-
   }
 
   /**
@@ -493,11 +504,13 @@ public class JsonReader extends BaseJsonReader {
       case START_ARRAY:
         writeDataAllText(list.list());
         break;
+
       case START_OBJECT:
         if (!writeListDataIfTyped(list)) {
           writeDataAllText(list.map(), FieldSelection.ALL_VALID, false);
         }
         break;
+
       case END_ARRAY:
         addIfNotInitialized(list);
       case END_OBJECT:
@@ -512,17 +525,16 @@ public class JsonReader extends BaseJsonReader {
       case VALUE_STRING:
         handleString(parser, list);
         break;
+
       default:
         throw getExceptionWithContext(UserException.dataReadError(), null).message("Unexpected token %s",
             parser.getCurrentToken()).build(logger);
       }
     }
     list.endList();
-
   }
 
   public DrillBuf getWorkBuf() {
     return workingBuffer.getBuf();
   }
-
 }
