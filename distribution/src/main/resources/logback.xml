@@ -27,7 +27,7 @@
     <RemoteHosts>${LILITH_HOSTNAME:-localhost}</RemoteHosts>
   </appender>
    -->
-   
+
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
       <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n
@@ -50,8 +50,8 @@
         <pattern>%msg%n</pattern>
       </encoder>
     </appender>
-    
-    
+
+
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
       <file>${log.path}</file>
       <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
@@ -80,7 +80,7 @@
     <!--     <appender-ref ref="SOCKET" /> -->
   </logger>
 
-  <!-- 
+  <!--
   <logger name="org.apache.drill" additivity="false">
     <level value="debug" />
     <appender-ref ref="SOCKET" />

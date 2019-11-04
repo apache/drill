@@ -335,15 +335,30 @@
           <name>!alt-hadoop</name>
         </property>
       </activation>
-      <dependencies>
-        <dependency>
-          <groupId>org.apache.hadoop</groupId>
-          <artifactId>hadoop-winutils</artifactId>
-          <version>2.7.1</version>
-          <type>zip</type>
-        </dependency>
-      </dependencies>
       <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-resources-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>copy-winutils</id>
+                <phase>process-resources</phase>
+                <goals>
+                  <goal>copy-resources</goal>
+                </goals>
+                <configuration>
+                  <outputDirectory>${project.build.directory}/winutils</outputDirectory>
+                  <resources>
+                    <resource>
+                      <directory>src/main/resources/winutils</directory>
+                      <filtering>false</filtering>
+                    </resource>
+                  </resources>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
       </build>
     </profile>
     <profile>
@@ -359,12 +374,6 @@
               <artifactId>mapr-test-annotations</artifactId>
             </exclusion>
           </exclusions>
-        </dependency>
-        <dependency>
-          <groupId>org.apache.hadoop</groupId>
-          <artifactId>hadoop-winutils</artifactId>
-          <version>2.7.0-mapr-1506</version>
-          <type>zip</type>
         </dependency>
         <dependency>
           <groupId>org.apache.hbase</groupId>
@@ -392,6 +401,44 @@
         </dependency>
       </dependencies>
       <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-resources-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>copy-winutils</id>
+                <phase>none</phase>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-dependency-plugin</artifactId>
+            <version>3.1.1</version>
+            <executions>
+              <execution>
+                <id>unpack-winutils</id>
+                <goals>
+                  <goal>unpack</goal>
+                </goals>
+                <phase>process-resources</phase>
+                <configuration>
+                  <artifactItems>
+                    <artifactItem>
+                      <groupId>org.apache.hadoop</groupId>
+                      <artifactId>hadoop-winutils</artifactId>
+                      <version>2.7.0-mapr-1506</version>
+                      <type>zip</type>
+                      <overWrite>true</overWrite>
+                      <outputDirectory>${project.build.directory}/winutils</outputDirectory>
+                      <excludes>**/*.pdb,**/*.lib,**/*.exp</excludes>
+                    </artifactItem>
+                  </artifactItems>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
       </build>
     </profile>
     <profile>
@@ -494,7 +541,7 @@
                   <directory>/etc/init.d/</directory>
                   <sources>
                     <source>
-                      <location>src/resources/drillbit</location>
+                      <location>src/main/resources/drillbit</location>
                     </source>
                   </sources>
                   <directoryIncluded>false</directoryIncluded>
@@ -599,7 +646,7 @@
                       </mapper>
                     </data>
                     <data>
-                      <src>src/resources/drillbit</src>
+                      <src>src/main/resources/drillbit</src>
                       <dst>/etc/init.d/drillbit</dst>
                       <type>file</type>
                       <mapper>

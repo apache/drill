@@ -196,27 +196,16 @@
       </includes>
       <scope>test</scope>
     </dependencySet>
-    <dependencySet>
-      <outputDirectory>winutils/bin</outputDirectory>
-      <unpack>true</unpack>
-      <unpackOptions>
-        <excludes>
-          <exclude>**/*.pdb</exclude>
-          <exclude>**/*.lib</exclude>
-          <exclude>**/*.exp</exclude>
-        </excludes>
-      </unpackOptions>
-      <useProjectArtifact>false</useProjectArtifact>
-      <includes>
-        <include>org.apache.hadoop:hadoop-winutils</include>
-      </includes>
-    </dependencySet>
   </dependencySets>
 
   <fileSets>
     <fileSet>
       <directory>../sample-data</directory>
       <outputDirectory>sample-data</outputDirectory>
+    </fileSet>
+    <fileSet>
+      <directory>${project.build.directory}/winutils</directory>
+      <outputDirectory>winutils/bin</outputDirectory>
     </fileSet>
   </fileSets>
 
@@ -226,11 +215,11 @@
       <outputDirectory />
     </file>
     <file>
-      <source>src/resources/LICENSE</source>
+      <source>src/main/resources/LICENSE</source>
       <outputDirectory />
     </file>
     <file>
-      <source>src/resources/README.md</source>
+      <source>src/main/resources/README.md</source>
       <outputDirectory />
     </file>
     <file>
@@ -242,146 +231,146 @@
       <outputDirectory />
     </file>
     <file>
-      <source>src/resources/runbit</source>
+      <source>src/main/resources/runbit</source>
       <fileMode>0755</fileMode>
       <outputDirectory>bin</outputDirectory>
     </file>
     <file>
-      <source>src/resources/hadoop-excludes.txt</source>
+      <source>src/main/resources/hadoop-excludes.txt</source>
       <outputDirectory>bin</outputDirectory>
     </file>
     <file>
-      <source>src/resources/drillbit.sh</source>
+      <source>src/main/resources/drillbit.sh</source>
       <fileMode>0755</fileMode>
       <outputDirectory>bin</outputDirectory>
     </file>
     <file>
-      <source>src/resources/drill-conf</source>
+      <source>src/main/resources/drill-conf</source>
       <fileMode>0755</fileMode>
       <outputDirectory>bin</outputDirectory>
     </file>
     <file>
-      <source>src/resources/drill-embedded</source>
+      <source>src/main/resources/drill-embedded</source>
       <fileMode>0755</fileMode>
       <outputDirectory>bin</outputDirectory>
     </file>
     <file>
-      <source>src/resources/drill-embedded.bat</source>
+      <source>src/main/resources/drill-embedded.bat</source>
       <fileMode>0755</fileMode>
       <outputDirectory>bin</outputDirectory>
     </file>
     <file>
-      <source>src/resources/drill-localhost</source>
+      <source>src/main/resources/drill-localhost</source>
       <fileMode>0755</fileMode>
       <outputDirectory>bin</outputDirectory>
     </file>
     <file>
-      <source>src/resources/drill-config.sh</source>
+      <source>src/main/resources/drill-config.sh</source>
       <fileMode>0755</fileMode>
       <outputDirectory>bin</outputDirectory>
     </file>
     <file>
-      <source>src/resources/sqlline</source>
+      <source>src/main/resources/sqlline</source>
       <fileMode>0755</fileMode>
       <outputDirectory>bin</outputDirectory>
     </file>
     <file>
-      <source>src/resources/sqlline.bat</source>
+      <source>src/main/resources/sqlline.bat</source>
       <fileMode>0755</fileMode>
       <outputDirectory>bin</outputDirectory>
     </file>
     <file>
-      <source>src/resources/drill-on-yarn.sh</source>
+      <source>src/main/resources/drill-on-yarn.sh</source>
       <fileMode>0750</fileMode>
       <outputDirectory>bin</outputDirectory>
     </file>
     <file>
-      <source>src/resources/drill-am.sh</source>
+      <source>src/main/resources/drill-am.sh</source>
       <fileMode>0750</fileMode>
       <outputDirectory>bin</outputDirectory>
     </file>
     <file>
-      <source>src/resources/yarn-drillbit.sh</source>
+      <source>src/main/resources/yarn-drillbit.sh</source>
       <fileMode>0750</fileMode>
       <outputDirectory>bin</outputDirectory>
     </file>
     <file>
-      <source>src/resources/submit_plan</source>
+      <source>src/main/resources/submit_plan</source>
       <fileMode>0755</fileMode>
       <outputDirectory>bin</outputDirectory>
     </file>
     <file>
-      <source>src/resources/drill-override.conf</source>
+      <source>src/main/resources/drill-override.conf</source>
       <outputDirectory>conf</outputDirectory>
       <fileMode>0640</fileMode>
     </file>
     <file>
-      <source>src/resources/logback.xml</source>
+      <source>src/main/resources/logback.xml</source>
       <outputDirectory>conf</outputDirectory>
       <fileMode>0640</fileMode>
     </file>
     <file>
-      <source>src/resources/yarn-client-log.xml</source>
+      <source>src/main/resources/yarn-client-log.xml</source>
       <outputDirectory>conf</outputDirectory>
       <fileMode>0640</fileMode>
     </file>
     <file>
-      <source>src/resources/drill-am-log.xml</source>
+      <source>src/main/resources/drill-am-log.xml</source>
       <outputDirectory>conf</outputDirectory>
       <fileMode>0640</fileMode>
     </file>
     <file>
-      <source>src/resources/drill-env.sh</source>
+      <source>src/main/resources/drill-env.sh</source>
       <fileMode>0750</fileMode>
       <outputDirectory>conf</outputDirectory>
     </file>
     <file>
-      <source>src/resources/distrib-env.sh</source>
+      <source>src/main/resources/distrib-env.sh</source>
       <fileMode>0750</fileMode>
       <outputDirectory>conf</outputDirectory>
     </file>
     <file>
-      <source>src/resources/auto-setup.sh</source>
+      <source>src/main/resources/auto-setup.sh</source>
       <fileMode>0755</fileMode>
       <outputDirectory>bin</outputDirectory>
     </file>
     <file>
-      <source>src/resources/drill-setup.sh</source>
+      <source>src/main/resources/drill-setup.sh</source>
       <fileMode>0750</fileMode>
       <outputDirectory>conf</outputDirectory>
     </file>
     <file>
-      <source>src/resources/distrib-setup.sh</source>
+      <source>src/main/resources/distrib-setup.sh</source>
       <fileMode>0750</fileMode>
       <outputDirectory>conf</outputDirectory>
     </file>
     <file>
-      <source>src/resources/drill-override-example.conf</source>
+      <source>src/main/resources/drill-override-example.conf</source>
       <outputDirectory>conf</outputDirectory>
       <fileMode>0640</fileMode>
     </file>
     <file>
-      <source>src/resources/core-site-example.xml</source>
+      <source>src/main/resources/core-site-example.xml</source>
       <outputDirectory>conf</outputDirectory>
       <fileMode>0640</fileMode>
     </file>
     <file>
-      <source>src/resources/saffron.properties</source>
+      <source>src/main/resources/saffron.properties</source>
       <outputDirectory>conf</outputDirectory>
       <fileMode>0640</fileMode>
     </file>
     <file>
-      <source>src/resources/drill-on-yarn-example.conf</source>
+      <source>src/main/resources/drill-on-yarn-example.conf</source>
       <outputDirectory>conf</outputDirectory>
       <fileMode>0640</fileMode>
     </file>
     <file>
-      <source>src/resources/storage-plugins-override-example.conf</source>
+      <source>src/main/resources/storage-plugins-override-example.conf</source>
       <outputDirectory>conf</outputDirectory>
       <fileMode>0640</fileMode>
     </file>
     <file>
-      <source>src/resources/drill-sqlline-override-example.conf</source>
+      <source>src/main/resources/drill-sqlline-override-example.conf</source>
       <outputDirectory>conf</outputDirectory>
       <fileMode>0640</fileMode>
     </file>

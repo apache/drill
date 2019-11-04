@@ -33,9 +33,9 @@ public class DrillbitClassLoader extends URLClassLoader {
   private static final URL[] URLS;
 
   static {
-    ArrayList<URL> urlList = new ArrayList<>();
+    List<URL> urlList = new ArrayList<>();
     final String classPath = System.getProperty("app.class.path");
-    final String[] st = fracture(classPath);
+    final String[] st = classPath.split(File.pathSeparator);
     final int l = st.length;
     for (int i = 0; i < l; i++) {
       try {
@@ -47,42 +47,8 @@ public class DrillbitClassLoader extends URLClassLoader {
         assert false : e.toString();
       }
     }
-    urlList.toArray(new URL[urlList.size()]);
 
-    List<URL> urls = new ArrayList<>(urlList);
-    URLS = urls.toArray(new URL[urls.size()]);
-  }
-
-  /**
-   * Helper method to avoid StringTokenizer using.
-   *
-   * Taken from Apache Harmony
-   */
-  private static String[] fracture(String str) {
-    if (str.length() == 0) {
-      return new String[0];
-    }
-    ArrayList<String> res = new ArrayList<>();
-    int in = 0;
-    int curPos = 0;
-    int i = str.indexOf(File.pathSeparator);
-    int len = File.pathSeparator.length();
-    while (i != -1) {
-      String s = str.substring(curPos, i);
-      res.add(s);
-      in++;
-      curPos = i + len;
-      i = str.indexOf(File.pathSeparator, curPos);
-    }
-
-    len = str.length();
-    if (curPos <= len) {
-      String s = str.substring(curPos, len);
-      in++;
-      res.add(s);
-    }
-
-    return res.toArray(new String[in]);
+    URLS = urlList.toArray(new URL[0]);
   }
 
   @Override

@@ -82,8 +82,8 @@
       Apache Hive 2.3.2. If the version is changed, make sure the jars and their dependencies are updated.
     -->
     <hive.version>2.3.2</hive.version>
-    <hadoop.version>3.0.3</hadoop.version>
-    <hbase.version>2.1.4</hbase.version>
+    <hadoop.version>3.2.1</hadoop.version>
+    <hbase.version>2.2.2</hbase.version>
     <fmpp.version>1.0</fmpp.version>
     <freemarker.version>2.3.28</freemarker.version>
     <javassist.version>3.25.0-GA</javassist.version>
@@ -511,7 +511,7 @@
               <rules>
                 <bannedDependencies>
                   <excludes>
-                    <!--<exclude>commons-logging</exclude>-->
+                    <exclude>commons-logging</exclude>
                     <exclude>javax.servlet:servlet-api</exclude>
                     <exclude>org.mortbay.jetty:servlet-api</exclude>
                     <exclude>org.mortbay.jetty:servlet-api-2.5</exclude>
@@ -1083,22 +1083,22 @@
       <dependency>
           <groupId>org.slf4j</groupId>
           <artifactId>slf4j-api</artifactId>
-          <version>${dep.slf4j.version}</version>
+          <version>${slf4j.version}</version>
       </dependency>
       <dependency>
           <groupId>org.slf4j</groupId>
           <artifactId>jul-to-slf4j</artifactId>
-          <version>${dep.slf4j.version}</version>
+          <version>${slf4j.version}</version>
       </dependency>
       <dependency>
           <groupId>org.slf4j</groupId>
           <artifactId>jcl-over-slf4j</artifactId>
-          <version>${dep.slf4j.version}</version>
+          <version>${slf4j.version}</version>
       </dependency>
       <dependency>
           <groupId>org.slf4j</groupId>
           <artifactId>log4j-over-slf4j</artifactId>
-          <version>${dep.slf4j.version}</version>
+          <version>${slf4j.version}</version>
       </dependency>
       <dependency>
         <groupId>${calcite.groupId}</groupId>
@@ -1932,14 +1932,14 @@
                 <artifactId>mockito-all</artifactId>
                 <groupId>org.mockito</groupId>
               </exclusion>
-              <!--<exclusion>-->
-                <!--<artifactId>commons-logging-api</artifactId>-->
-                <!--<groupId>commons-logging</groupId>-->
-              <!--</exclusion>-->
-              <!--<exclusion>-->
-                <!--<artifactId>commons-logging</artifactId>-->
-                <!--<groupId>commons-logging</groupId>-->
-              <!--</exclusion>-->
+              <exclusion>
+                <artifactId>commons-logging-api</artifactId>
+                <groupId>commons-logging</groupId>
+              </exclusion>
+              <exclusion>
+                <artifactId>commons-logging</artifactId>
+                <groupId>commons-logging</groupId>
+              </exclusion>
               <exclusion>
                 <groupId>com.sun.jersey</groupId>
                 <artifactId>jersey-core</artifactId>
@@ -1982,7 +1982,56 @@
               </exclusion>
             </exclusions>
           </dependency>
-          <!-- Hadoop Test Dependencies -->
+          <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-auth</artifactId>
+            <version>${hadoop.version}</version>
+            <exclusions>
+              <exclusion>
+                <groupId>net.minidev</groupId>
+                <artifactId>json-smart</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>com.nimbusds</groupId>
+                <artifactId>nimbus-jose-jwt</artifactId>
+              </exclusion>
+            </exclusions>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-mapreduce-client-jobclient</artifactId>
+            <version>${hadoop.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-mapreduce-client-core</artifactId>
+            <version>${hadoop.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-archives</artifactId>
+            <version>${hadoop.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-yarn-server-resourcemanager</artifactId>
+            <version>${hadoop.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-yarn-registry</artifactId>
+            <version>${hadoop.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-distcp</artifactId>
+            <version>${hadoop.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-minicluster</artifactId>
+            <version>${hadoop.version}</version>
+          </dependency>
           <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>
@@ -2112,6 +2161,9 @@
               </exclusion>
             </exclusions>
           </dependency>
+
+          <!-- Hadoop Test Dependencies -->
+
           <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-hdfs</artifactId>
@@ -2149,7 +2201,7 @@
               </exclusion>
             </exclusions>
           </dependency>
-          <!-- Hadoop Test Dependencies -->
+
           <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-client</artifactId>
