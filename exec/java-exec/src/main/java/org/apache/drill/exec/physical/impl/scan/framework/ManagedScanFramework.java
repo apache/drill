@@ -23,6 +23,8 @@ import org.apache.drill.exec.physical.impl.scan.RowBatchReader;
 import org.apache.drill.exec.physical.impl.scan.ScanOperatorEvents;
 import org.apache.drill.exec.physical.impl.scan.project.ScanSchemaOrchestrator;
 import org.apache.drill.exec.physical.impl.scan.project.ScanSchemaOrchestrator.ScanOrchestratorBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Basic scan framework for a "managed" reader which uses the scan schema
@@ -112,7 +114,7 @@ import org.apache.drill.exec.physical.impl.scan.project.ScanSchemaOrchestrator.S
 
 public class ManagedScanFramework implements ScanOperatorEvents {
 
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ManagedScanFramework.class);
+  static final Logger logger = LoggerFactory.getLogger(ManagedScanFramework.class);
 
   /**
    * Creates a batch reader on demand. Unlike earlier versions of Drill,

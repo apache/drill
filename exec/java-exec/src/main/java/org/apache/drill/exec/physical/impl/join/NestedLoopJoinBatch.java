@@ -23,6 +23,8 @@ import java.util.LinkedList;
 import java.util.Map;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.ErrorCollector;
@@ -66,23 +68,23 @@ import org.apache.drill.exec.vector.complex.AbstractContainerVector;
  * RecordBatch implementation for the nested loop join operator
  */
 public class NestedLoopJoinBatch extends AbstractBinaryRecordBatch<NestedLoopJoinPOP> {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NestedLoopJoinBatch.class);
+  private static final Logger logger = LoggerFactory.getLogger(NestedLoopJoinBatch.class);
 
   // Input indexes to correctly update the stats
   protected static final int LEFT_INPUT = 0;
   protected static final int RIGHT_INPUT = 1;
 
   // Schema on the left side
-  private BatchSchema leftSchema = null;
+  private BatchSchema leftSchema;
 
   // Schema on the right side
-  private BatchSchema rightSchema = null;
+  private BatchSchema rightSchema;
 
   // Runtime generated class implementing the NestedLoopJoin interface
-  private NestedLoopJoin nljWorker = null;
+  private NestedLoopJoin nljWorker;
 
   // Number of output records in the current outgoing batch
-  private int outputRecords = 0;
+  private int outputRecords;
 
   // We accumulate all the batches on the right side in a hyper container.
   private ExpandableHyperContainer rightContainer = new ExpandableHyperContainer();
@@ -198,12 +200,7 @@ public class NestedLoopJoinBatch extends AbstractBinaryRecordBatch<NestedLoopJoi
     outputRecords = nljWorker.outputRecords(popConfig.getJoinType());
 
     // Set the record count
-    for (final VectorWrapper<?> vw : container) {
-      vw.getValueVector().getMutator().setValueCount(outputRecords);
-    }
-
-    // Set the record count in the container
-    container.setRecordCount(outputRecords);
+    container.setValueCount(outputRecords);
     container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
 
     RecordBatchStats.logRecordBatchStats(RecordBatchIOType.OUTPUT, this, getRecordBatchStatsContext());
@@ -413,6 +410,7 @@ public class NestedLoopJoinBatch extends AbstractBinaryRecordBatch<NestedLoopJoi
         batchMemoryManager.getRecordBatchSizer(LEFT_INDEX), getRecordBatchStatsContext());
 
       container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
+      container.setEmpty();
 
     } catch (ClassTransformationException | IOException e) {
       throw new SchemaChangeException(e);

@@ -21,6 +21,8 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.vector.accessor.InvalidConversionError;
 import org.apache.drill.exec.vector.accessor.UnsupportedConversionError;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Manages a row batch reader through its lifecycle. Created when the reader
@@ -128,7 +130,7 @@ import org.apache.drill.exec.vector.accessor.UnsupportedConversionError;
  */
 
 class ReaderState {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ReaderState.class);
+  static final Logger logger = LoggerFactory.getLogger(ReaderState.class);
 
   private enum State {
 

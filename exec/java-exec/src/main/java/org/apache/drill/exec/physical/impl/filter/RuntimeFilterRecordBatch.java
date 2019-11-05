@@ -17,6 +17,13 @@
  */
 package org.apache.drill.exec.physical.impl.filter;
 
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.LogicalExpression;
@@ -39,41 +46,39 @@ import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.work.filter.BloomFilter;
 import org.apache.drill.exec.work.filter.RuntimeFilterWritable;
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * A RuntimeFilterRecordBatch steps over the ScanBatch. If the ScanBatch participates
- * in the HashJoinBatch and can be applied by a RuntimeFilter, it will generate a filtered
- * SV2, otherwise will generate a same recordCount-originalRecordCount SV2 which will not affect
- * the Query's performance ,but just do a memory transfer by the later RemovingRecordBatch op.
+ * A RuntimeFilterRecordBatch steps over the ScanBatch. If the ScanBatch
+ * participates in the HashJoinBatch and can be applied by a RuntimeFilter, it
+ * will generate a filtered SV2, otherwise will generate a same
+ * recordCount-originalRecordCount SV2 which will not affect the Query's
+ * performance ,but just do a memory transfer by the later RemovingRecordBatch
+ * op.
  */
 public class RuntimeFilterRecordBatch extends AbstractSingleRecordBatch<RuntimeFilterPOP> {
-  private SelectionVector2 sv2;
+  private static final Logger logger = LoggerFactory.getLogger(RuntimeFilterRecordBatch.class);
 
+  private SelectionVector2 sv2;
   private ValueVectorHashHelper.Hash64 hash64;
-  private Map<String, Integer> field2id = new HashMap<>();
+  private final Map<String, Integer> field2id = new HashMap<>();
   private List<String> toFilterFields;
   private List<BloomFilter> bloomFilters;
   private RuntimeFilterWritable current;
   private int originalRecordCount;
-  private long filteredRows = 0l;
-  private long appliedTimes = 0l;
-  private int batchTimes = 0;
-  private boolean waited = false;
-  private boolean enableRFWaiting;
-  private long maxWaitingTime;
-  private long rfIdentifier;
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RuntimeFilterRecordBatch.class);
+  private long filteredRows;
+  private long appliedTimes;
+  private int batchTimes;
+  private boolean waited;
+  private final boolean enableRFWaiting;
+  private final long maxWaitingTime;
+  private final long rfIdentifier;
 
   public RuntimeFilterRecordBatch(RuntimeFilterPOP pop, RecordBatch incoming, FragmentContext context) throws OutOfMemoryException {
     super(pop, context, incoming);
-    enableRFWaiting = context.getOptions().getOption(ExecConstants.HASHJOIN_RUNTIME_FILTER_WAITING_ENABLE_KEY).bool_val;
-    maxWaitingTime = context.getOptions().getOption(ExecConstants.HASHJOIN_RUNTIME_FILTER_MAX_WAITING_TIME_KEY).num_val;
+    enableRFWaiting = context.getOptions().getBoolean(ExecConstants.HASHJOIN_RUNTIME_FILTER_WAITING_ENABLE_KEY);
+    maxWaitingTime = context.getOptions().getLong(ExecConstants.HASHJOIN_RUNTIME_FILTER_MAX_WAITING_TIME_KEY);
     this.rfIdentifier = pop.getIdentifier();
   }
 
@@ -107,6 +112,7 @@ public class RuntimeFilterRecordBatch extends AbstractSingleRecordBatch<RuntimeF
       throw new UnsupportedOperationException(e);
     }
     container.transferIn(incoming.getContainer());
+    container.setRecordCount(originalRecordCount);
     updateStats();
     return getFinalOutcome(false);
   }
@@ -257,7 +263,6 @@ public class RuntimeFilterRecordBatch extends AbstractSingleRecordBatch<RuntimeF
         }
       }
     }
-
 
     appliedTimes++;
     sv2.setRecordCount(svIndex);

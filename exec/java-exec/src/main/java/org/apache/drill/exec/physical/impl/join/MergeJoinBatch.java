@@ -17,8 +17,10 @@
  */
 package org.apache.drill.exec.physical.impl.join;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sun.codemodel.JClass;
 import com.sun.codemodel.JConditional;
 import com.sun.codemodel.JExpr;
@@ -74,7 +76,7 @@ import static org.apache.drill.exec.compile.sig.GeneratorMapping.GM;
  */
 public class MergeJoinBatch extends AbstractBinaryRecordBatch<MergeJoinPOP> {
 
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MergeJoinBatch.class);
+  private static final Logger logger = LoggerFactory.getLogger(MergeJoinBatch.class);
 
   private final MappingSet setupMapping =
     new MappingSet("null", "null",
@@ -177,6 +179,7 @@ public class MergeJoinBatch extends AbstractBinaryRecordBatch<MergeJoinPOP> {
     }
 
     allocateBatch(true);
+    container.setEmpty();
   }
 
   @Override
@@ -269,11 +272,7 @@ public class MergeJoinBatch extends AbstractBinaryRecordBatch<MergeJoinPOP> {
   }
 
   private void setRecordCountInContainer() {
-    for (VectorWrapper vw : container) {
-      Preconditions.checkArgument(!vw.isHyper());
-      vw.getValueVector().getMutator().setValueCount(getRecordCount());
-    }
-
+    container.setValueCount(getRecordCount());
     RecordBatchStats.logRecordBatchStats(RecordBatchIOType.OUTPUT, this, getRecordBatchStatsContext());
     batchMemoryManager.updateOutgoingStats(getRecordCount());
   }
@@ -487,7 +486,7 @@ public class MergeJoinBatch extends AbstractBinaryRecordBatch<MergeJoinPOP> {
     // Allocate memory for the vectors.
     // This will iteratively allocate memory for all nested columns underneath.
     int outputRowCount = batchMemoryManager.getOutputRowCount();
-    for (VectorWrapper w : container) {
+    for (VectorWrapper<?> w : container) {
       RecordBatchSizer.ColumnSize colSize = batchMemoryManager.getColumnSize(w.getField().getName());
       colSize.allocateVector(w.getValueVector(), outputRowCount);
     }

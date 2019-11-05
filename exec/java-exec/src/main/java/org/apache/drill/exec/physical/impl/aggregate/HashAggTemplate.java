@@ -17,6 +17,9 @@
  */
 package org.apache.drill.exec.physical.impl.aggregate;
 
+import static org.apache.drill.exec.physical.impl.common.HashTable.BATCH_MASK;
+import static org.apache.drill.exec.record.RecordBatch.MAX_BATCH_ROW_COUNT;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -31,7 +34,6 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.LogicalExpression;
-
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.cache.VectorSerializer.Writer;
 import org.apache.drill.exec.compile.sig.RuntimeOverridden;
@@ -40,7 +42,6 @@ import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.TypeHelper;
-
 import org.apache.drill.exec.memory.BaseAllocator;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -55,40 +56,30 @@ import org.apache.drill.exec.physical.impl.common.HashTable;
 import org.apache.drill.exec.physical.impl.common.HashTableConfig;
 import org.apache.drill.exec.physical.impl.common.HashTableStats;
 import org.apache.drill.exec.physical.impl.common.IndexPointer;
-
 import org.apache.drill.exec.physical.impl.common.SpilledState;
-import org.apache.drill.exec.record.RecordBatchSizer;
-
 import org.apache.drill.exec.physical.impl.spill.SpillSet;
 import org.apache.drill.exec.planner.physical.AggPrelBase;
-
-import org.apache.drill.exec.record.MaterializedField;
-
-import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
-
-import org.apache.drill.exec.record.VectorContainer;
-
-import org.apache.drill.exec.record.TypedFieldId;
-
+import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
+import org.apache.drill.exec.record.RecordBatchSizer;
+import org.apache.drill.exec.record.TypedFieldId;
+import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.util.record.RecordBatchStats;
 import org.apache.drill.exec.util.record.RecordBatchStats.RecordBatchIOType;
 import org.apache.drill.exec.vector.AllocationHelper;
-
 import org.apache.drill.exec.vector.FixedWidthVector;
 import org.apache.drill.exec.vector.ObjectVector;
 import org.apache.drill.exec.vector.ValueVector;
-
 import org.apache.drill.exec.vector.VariableWidthVector;
-
-import static org.apache.drill.exec.physical.impl.common.HashTable.BATCH_MASK;
-import static org.apache.drill.exec.record.RecordBatch.MAX_BATCH_ROW_COUNT;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class HashAggTemplate implements HashAggregator {
-  protected static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HashAggregator.class);
+  protected static final Logger logger = LoggerFactory.getLogger(HashAggregator.class);
 
   private static final int VARIABLE_MAX_WIDTH_VALUE_SIZE = 50;
   private static final int VARIABLE_MIN_WIDTH_VALUE_SIZE = 8;
@@ -98,40 +89,40 @@ public abstract class HashAggTemplate implements HashAggregator {
   private static final boolean EXTRA_DEBUG_SPILL = false;
 
   // Fields needed for partitioning (the groups into partitions)
-  private int nextPartitionToReturn = 0; // which partition to return the next batch from
+  private int nextPartitionToReturn; // which partition to return the next batch from
   // The following members are used for logging, metrics, etc.
-  private int rowsInPartition = 0; // counts #rows in each partition
-  private int rowsNotSpilled = 0;
-  private int rowsSpilled = 0;
-  private int rowsSpilledReturned = 0;
-  private int rowsReturnedEarly = 0;
+  private int rowsInPartition; // counts #rows in each partition
+  private int rowsNotSpilled;
+  private int rowsSpilled;
+  private int rowsSpilledReturned;
+  private int rowsReturnedEarly;
 
   private AggPrelBase.OperatorPhase phase;
   private boolean canSpill = true; // make it false in case can not spill/return-early
   private ChainedHashTable baseHashTable;
-  private boolean earlyOutput = false; // when 1st phase returns a partition due to no memory
-  private int earlyPartition = 0; // which partition to return early
-  private boolean retrySameIndex = false; // in case put failed during 1st phase - need to output early, then retry
-  private boolean useMemoryPrediction = false; // whether to use memory prediction to decide when to spill
-  private long estMaxBatchSize = 0; // used for adjusting #partitions and deciding when to spill
-  private long estRowWidth = 0; // the size of the internal "row" (keys + values + extra columns)
-  private long estValuesRowWidth = 0; // the size of the internal values ( values + extra )
-  private long estOutputRowWidth = 0; // the size of the output "row" (no extra columns)
-  private long estValuesBatchSize = 0; // used for "reserving" memory for the Values batch to overcome an OOM
-  private long estOutgoingAllocSize = 0; // used for "reserving" memory for the Outgoing Output Values to overcome an OOM
+  private boolean earlyOutput; // when 1st phase returns a partition due to no memory
+  private int earlyPartition; // which partition to return early
+  private boolean retrySameIndex; // in case put failed during 1st phase - need to output early, then retry
+  private boolean useMemoryPrediction; // whether to use memory prediction to decide when to spill
+  private long estMaxBatchSize; // used for adjusting #partitions and deciding when to spill
+  private long estRowWidth; // the size of the internal "row" (keys + values + extra columns)
+  private long estValuesRowWidth; // the size of the internal values ( values + extra )
+  private long estOutputRowWidth; // the size of the output "row" (no extra columns)
+  private long estValuesBatchSize; // used for "reserving" memory for the Values batch to overcome an OOM
+  private long estOutgoingAllocSize; // used for "reserving" memory for the Outgoing Output Values to overcome an OOM
   private long reserveValueBatchMemory; // keep "reserve memory" for Values Batch
   private long reserveOutgoingMemory; // keep "reserve memory" for the Outgoing (Values only) output
   private int maxColumnWidth = VARIABLE_MIN_WIDTH_VALUE_SIZE; // to control memory allocation for varchars
   private long minBatchesPerPartition; // for tuning - num partitions and spill decision
-  private long plannedBatches = 0; // account for planned, but not yet allocated batches
+  private long plannedBatches; // account for planned, but not yet allocated batches
 
-  private int underlyingIndex = 0;
-  private int currentIndex = 0;
+  private int underlyingIndex;
+  private int currentIndex;
   private IterOutcome outcome;
-  private int numGroupedRecords = 0;
-  private int currentBatchRecordCount = 0; // Performance: Avoid repeated calls to getRecordCount()
+  private int numGroupedRecords;
+  private int currentBatchRecordCount; // Performance: Avoid repeated calls to getRecordCount()
 
-  private int lastBatchOutputCount = 0;
+  private int lastBatchOutputCount;
   private RecordBatch incoming;
   private BatchSchema schema;
   private HashAggBatch outgoing;
@@ -148,7 +139,7 @@ public abstract class HashAggTemplate implements HashAggregator {
 
   // For handling spilling
   private HashAggUpdater updater;
-  private SpilledState<HashAggSpilledPartition> spilledState = new SpilledState<>();
+  private final SpilledState<HashAggSpilledPartition> spilledState = new SpilledState<>();
   private SpillSet spillSet;
   SpilledRecordbatch newIncoming; // when reading a spilled file - work like an "incoming"
   private Writer writers[]; // a vector writer for each spilled partition
@@ -157,17 +148,17 @@ public abstract class HashAggTemplate implements HashAggregator {
   private int originalPartition = -1; // the partition a secondary reads from
 
   private IndexPointer htIdxHolder; // holder for the Hashtable's internal index returned by put()
-  private int numGroupByOutFields = 0; // Note: this should be <= number of group-by fields
+  private int numGroupByOutFields; // Note: this should be <= number of group-by fields
   private TypedFieldId[] groupByOutFieldIds;
 
   private MaterializedField[] materializedValueFields;
-  private boolean allFlushed = false;
-  private boolean buildComplete = false;
-  private boolean handlingSpills = false; // True once starting to process spill files
-  private boolean handleEmit = false; // true after receiving an EMIT, till finish handling it
+  private boolean allFlushed;
+  private boolean buildComplete;
+  private boolean handlingSpills; // True once starting to process spill files
+  private boolean handleEmit; // true after receiving an EMIT, till finish handling it
 
-  private OperatorStats stats = null;
-  private HashTableStats htStats = new HashTableStats();
+  private OperatorStats stats;
+  private final HashTableStats htStats = new HashTableStats();
 
   public enum Metric implements MetricDef {
 
@@ -198,9 +189,9 @@ public abstract class HashAggTemplate implements HashAggregator {
   }
 
   public class BatchHolder {
-    private VectorContainer aggrValuesContainer; // container for aggr values (workspace variables)
+    private final VectorContainer aggrValuesContainer; // container for aggr values (workspace variables)
     private int maxOccupiedIdx = -1;
-    private int targetBatchRowCount = 0;
+    private int targetBatchRowCount;
 
     public int getTargetBatchRowCount() {
       return targetBatchRowCount;
@@ -1009,11 +1000,7 @@ public abstract class HashAggTemplate implements HashAggregator {
       this.htables[part].outputKeys(currOutBatchIndex, this.outContainer, numOutputRecords);
 
       // set the value count for outgoing batch value vectors
-      for (VectorWrapper<?> v : outgoing) {
-        v.getValueVector().getMutator().setValueCount(numOutputRecords);
-      }
-
-      outContainer.setRecordCount(numOutputRecords);
+      outContainer.setValueCount(numOutputRecords);
       WritableBatch batch = WritableBatch.getBatchNoHVWrap(numOutputRecords, outContainer, false);
       try {
         writers[part].write(batch, null);
@@ -1067,10 +1054,8 @@ public abstract class HashAggTemplate implements HashAggregator {
     if ( handleEmit && ( batchHolders == null || batchHolders[0].size() == 0 ) ) {
       lastBatchOutputCount = 0; // empty
       allocateOutgoing(0);
-      for (VectorWrapper<?> v : outgoing) {
-        v.getValueVector().getMutator().setValueCount(0);
-      }
-      outgoing.getContainer().setRecordCount(0);
+      outgoing.getContainer().setValueCount(0);
+
       // When returning the last outgoing batch (following an incoming EMIT), then replace OK with EMIT
       this.outcome = IterOutcome.EMIT;
       handleEmit = false; // finish handling EMIT
@@ -1184,9 +1169,7 @@ public abstract class HashAggTemplate implements HashAggregator {
     this.htables[partitionToReturn].outputKeys(currOutBatchIndex, this.outContainer, numPendingOutput);
 
     // set the value count for outgoing batch value vectors
-    for (VectorWrapper<?> v : outgoing) {
-      v.getValueVector().getMutator().setValueCount(numOutputRecords);
-    }
+    outgoing.getContainer().setValueCount(numOutputRecords);
 
     outgoing.getRecordBatchMemoryManager().updateOutgoingStats(numOutputRecords);
     RecordBatchStats.logRecordBatchStats(RecordBatchIOType.OUTPUT, outgoing, outgoing.getRecordBatchStatsContext());

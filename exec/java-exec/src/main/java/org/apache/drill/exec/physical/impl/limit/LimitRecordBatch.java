@@ -32,12 +32,14 @@ import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.EMIT;
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.NONE;
 
 public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LimitRecordBatch.class);
+  private static final Logger logger = LoggerFactory.getLogger(LimitRecordBatch.class);
 
   private SelectionVector2 outgoingSv;
   private SelectionVector2 incomingSv;
@@ -122,7 +124,7 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
     container.clear();
     transfers.clear();
 
-    for(final VectorWrapper<?> v : incoming) {
+    for (final VectorWrapper<?> v : incoming) {
       final TransferPair pair = v.getValueVector().makeTransferPair(
         container.addOrGet(v.getField(), callBack));
       transfers.add(pair);
@@ -130,7 +132,7 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
 
     final BatchSchema.SelectionVectorMode svMode = incoming.getSchema().getSelectionVectorMode();
 
-    switch(svMode) {
+    switch (svMode) {
       case NONE:
         break;
       case TWO_BYTE:
@@ -174,10 +176,11 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
     final int inputRecordCount = incoming.getRecordCount();
     if (inputRecordCount == 0) {
       setOutgoingRecordCount(0);
+      container.setEmpty();
       return getFinalOutcome(false);
     }
 
-    for(final TransferPair tp : transfers) {
+    for (final TransferPair tp : transfers) {
       tp.transfer();
     }
     // Check if current input record count is less than start offset. If yes then adjust the start offset since we
@@ -185,6 +188,7 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
     if (inputRecordCount <= recordStartOffset) {
       recordStartOffset -= inputRecordCount;
       setOutgoingRecordCount(0);
+      container.setEmpty();
     } else {
       // Allocate SV2 vectors for the record count size since we transfer all the vectors buffer from input record
       // batch to output record batch and later an SV2Remover copies the needed records.
@@ -194,7 +198,9 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
 
     // clear memory for incoming sv (if any)
     if (incomingSv != null) {
-      outgoingSv.setBatchActualRecordCount(incomingSv.getBatchActualRecordCount());
+      int incomingCount = incomingSv.getBatchActualRecordCount();
+      outgoingSv.setBatchActualRecordCount(incomingCount);
+      container.setRecordCount(incomingCount);
       incomingSv.clear();
     }
 
@@ -218,7 +224,7 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
     }
 
     int svIndex = 0;
-    for(int i = recordStartOffset; i < endRecordIndex; svIndex++, i++) {
+    for (int i = recordStartOffset; i < endRecordIndex; svIndex++, i++) {
       if (incomingSv != null) {
         outgoingSv.setIndex(svIndex, incomingSv.getIndex(i));
       } else {
@@ -226,12 +232,17 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
       }
     }
     outgoingSv.setRecordCount(svIndex);
+    outgoingSv.setBatchActualRecordCount(inputRecordCount);
+    // Actual number of values in the container; not the number in
+    // the SV.
+    container.setRecordCount(inputRecordCount);
     // Update the start offset
     recordStartOffset = 0;
   }
 
   private void setOutgoingRecordCount(int outputCount) {
     outgoingSv.setRecordCount(outputCount);
+    outgoingSv.setBatchActualRecordCount(outputCount);
   }
 
   /**
