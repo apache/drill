@@ -17,6 +17,11 @@
  */
 package org.apache.drill.exec.physical.impl.aggregate;
 
+import static org.apache.drill.exec.record.RecordBatch.IterOutcome.EMIT;
+import static org.apache.drill.exec.record.RecordBatch.IterOutcome.NONE;
+import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK;
+import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK_NEW_SCHEMA;
+
 import javax.inject.Named;
 
 import org.apache.drill.exec.exception.SchemaChangeException;
@@ -25,32 +30,29 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.vector.ValueVector;
-
-import static org.apache.drill.exec.record.RecordBatch.IterOutcome.EMIT;
-import static org.apache.drill.exec.record.RecordBatch.IterOutcome.NONE;
-import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK;
-import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK_NEW_SCHEMA;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class StreamingAggTemplate implements StreamingAggregator {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StreamingAggregator.class);
+  private static final Logger logger = LoggerFactory.getLogger(StreamingAggregator.class);
   private static final boolean EXTRA_DEBUG = false;
   private int maxOutputRows = ValueVector.MAX_ROW_COUNT;
 
   // lastOutcome is set ONLY if the lastOutcome was NONE or STOP
-  private IterOutcome lastOutcome = null;
+  private IterOutcome lastOutcome;
 
   // First batch after build schema phase
   private boolean first = true;
-  private boolean firstBatchForSchema = false; // true if the current batch came in with an OK_NEW_SCHEMA.
+  private boolean firstBatchForSchema; // true if the current batch came in with an OK_NEW_SCHEMA.
   private boolean firstBatchForDataSet = true; // true if the current batch is the first batch in a data set
 
-  private boolean newSchema = false;
+  private boolean newSchema;
 
   // End of all data
-  private boolean done = false;
+  private boolean done;
 
   // index in the incoming (sv4/sv2/vector)
-  private int underlyingIndex = 0;
+  private int underlyingIndex;
   // The indexes below refer to the actual record indexes in input batch
   // (i.e if a selection vector the sv4/sv2 entry has been dereferenced or if a vector then the record index itself)
   private int previousIndex = -1;  // the last index that has been processed. Initialized to -1 every time a new
@@ -59,18 +61,17 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
   /**
    * Number of records added to the current aggregation group.
    */
-  private long addedRecordCount = 0;
+  private long addedRecordCount;
   // There are two outcomes from the aggregator. One is the aggregator's outcome defined in
   // StreamingAggregator.AggOutcome. The other is the outcome from the last call to incoming.next
   private IterOutcome outcome;
   // Number of aggregation groups added into the output batch
-  private int outputCount = 0;
+  private int outputCount;
   private RecordBatch incoming;
   // the Streaming Agg Batch that this aggregator belongs to
   private StreamingAggBatch outgoing;
 
   private OperatorContext context;
-
 
   @Override
   public void setup(OperatorContext context, RecordBatch incoming,
@@ -165,7 +166,6 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
           }
         }
       }
-
 
       if (newSchema) {
         return AggOutcome.UPDATE_AGGREGATOR;
@@ -350,7 +350,6 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
         first = false;
       }
     }
-
   }
 
   @Override
@@ -432,11 +431,9 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
     } else {
       outcomeToReturn = OK;
     }
-    this.outcome = outcomeToReturn;
+    outcome = outcomeToReturn;
 
-    for (VectorWrapper<?> v : outgoing) {
-      v.getValueVector().getMutator().setValueCount(outputCount);
-    }
+    outgoing.getContainer().setValueCount(outputCount);
     return (seenOutcome == EMIT) ? AggOutcome.RETURN_AND_RESET : AggOutcome.RETURN_OUTCOME;
   }
 
@@ -455,11 +452,9 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
     } else {
       outcomeToReturn = EMIT;
     }
-    this.outcome = outcomeToReturn;
+    outcome = outcomeToReturn;
 
-    for (VectorWrapper<?> v : outgoing) {
-      v.getValueVector().getMutator().setValueCount(outputCount);
-    }
+    outgoing.getContainer().setValueCount(outputCount);
     return AggOutcome.RETURN_AND_RESET;
   }
 

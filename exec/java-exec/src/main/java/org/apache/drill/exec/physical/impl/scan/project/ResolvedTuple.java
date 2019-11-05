@@ -202,10 +202,10 @@ public abstract class ResolvedTuple implements VectorSource {
 
     public AbstractMapVector buildMap() {
       if (parentColumn.sourceIndex() != -1) {
-        final ResolvedTuple parentTuple = parentColumn.parent();
+        ResolvedTuple parentTuple = parentColumn.parent();
         inputMap = (AbstractMapVector) parentTuple.vector(parentColumn.sourceIndex());
       }
-      final MaterializedField colSchema = parentColumn.schema();
+      MaterializedField colSchema = parentColumn.schema();
       outputMap = createMap(inputMap,
           MaterializedField.create(
               colSchema.getName(), colSchema.getType()),
@@ -275,8 +275,8 @@ public abstract class ResolvedTuple implements VectorSource {
       // Create a new map array, reusing the offset vector from
       // the original input map.
 
-      final RepeatedMapVector source = (RepeatedMapVector) inputMap;
-      final UInt4Vector offsets = source.getOffsetVector();
+      RepeatedMapVector source = (RepeatedMapVector) inputMap;
+      UInt4Vector offsets = source.getOffsetVector();
       valueCount = offsets.getAccessor().getValueCount();
       return new RepeatedMapVector(schema,
           offsets, null);
@@ -342,7 +342,7 @@ public abstract class ResolvedTuple implements VectorSource {
       nullBuilder.build(vectorCache);
     }
     if (children != null) {
-      for (final ResolvedTuple child : children) {
+      for (ResolvedTuple child : children) {
         child.buildNulls(vectorCache.childCache(child.name()));
       }
     }
@@ -353,7 +353,7 @@ public abstract class ResolvedTuple implements VectorSource {
       nullBuilder.load(rowCount);
     }
     if (children != null) {
-      for (final ResolvedTuple child : children) {
+      for (ResolvedTuple child : children) {
         child.loadNulls(innerCardinality(rowCount));
       }
     }
@@ -402,7 +402,7 @@ public abstract class ResolvedTuple implements VectorSource {
     if (children == null) {
       return;
     }
-    for (final ResolvedTuple child : children) {
+    for (ResolvedTuple child : children) {
       child.setRowCount(rowCount);
     }
   }
@@ -426,7 +426,7 @@ public abstract class ResolvedTuple implements VectorSource {
       nullBuilder.close();
     }
     if (children != null) {
-      for (final ResolvedTuple child : children) {
+      for (ResolvedTuple child : children) {
         child.close();
       }
     }

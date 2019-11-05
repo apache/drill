@@ -18,11 +18,9 @@
 package org.apache.drill.exec.util;
 
 public class AssertionUtil {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AssertionUtil.class);
-
   public static final boolean ASSERT_ENABLED;
 
-  static{
+  static {
     boolean isAssertEnabled = false;
     assert isAssertEnabled = true;
     ASSERT_ENABLED = isAssertEnabled;
@@ -32,6 +30,5 @@ public class AssertionUtil {
     return ASSERT_ENABLED;
   }
 
-  private AssertionUtil() {
-  }
+  private AssertionUtil() { }
 }

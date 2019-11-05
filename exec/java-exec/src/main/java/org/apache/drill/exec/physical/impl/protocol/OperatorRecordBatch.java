@@ -32,6 +32,8 @@ import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Modular implementation of the standard Drill record batch iterator
@@ -51,7 +53,7 @@ import org.apache.drill.exec.record.selection.SelectionVector4;
  */
 
 public class OperatorRecordBatch implements CloseableRecordBatch {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OperatorRecordBatch.class);
+  static final Logger logger = LoggerFactory.getLogger(OperatorRecordBatch.class);
 
   private final OperatorDriver driver;
   private final BatchAccessor batchAccessor;

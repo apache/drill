@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.vector.complex;
 
-import io.netty.buffer.DrillBuf;
-
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
@@ -27,8 +25,8 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.exception.SchemaChangeRuntimeException;
 import org.apache.drill.exec.expr.BasicTypeHelper;
-import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.AllocationManager.BufferLedger;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
@@ -38,9 +36,10 @@ import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VectorDescriptor;
 import org.apache.drill.exec.vector.ZeroVector;
-
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.ObjectArrays;
+
+import io.netty.buffer.DrillBuf;
 
 public abstract class BaseRepeatedValueVector extends BaseValueVector implements RepeatedValueVector {
 
@@ -349,6 +348,12 @@ public abstract class BaseRepeatedValueVector extends BaseValueVector implements
     @Override
     public void setValueCount(int valueCount) {
       // TODO: populate offset end points
+      // Convention seems to be that if the "outer" value count
+      // is zero, then the offset vector can also be zero-length:
+      // the normal initial zero position is omitted. While this
+      // saves a bit of memory, it greatly complicates code that
+      // works with vectors because of the special case for zero-length
+      // vectors.
       offsets.getMutator().setValueCount(valueCount == 0 ? 0 : valueCount+1);
       final int childValueCount = valueCount == 0 ? 0 : offsets.getAccessor().get(valueCount);
       vector.getMutator().setValueCount(childValueCount);

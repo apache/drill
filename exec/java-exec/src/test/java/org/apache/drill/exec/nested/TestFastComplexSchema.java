@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.nested;
 
-import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.UnlikelyTest;
+import org.apache.drill.test.BaseTestQuery;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -26,7 +26,6 @@ public class TestFastComplexSchema extends BaseTestQuery {
 
   @Test
   public void test() throws Exception {
-//   test("select r.r_name, t1.f from cp.`tpch/region.parquet` r join (select flatten(x) as f from (select convert_from('[0, 1]', 'json') as x from cp.`tpch/region.parquet`)) t1 on t1.f = r.r_regionkey");
     test("SELECT r.r_name, \n" +
             "       t1.f \n" +
             "FROM   cp.`tpch/region.parquet` r \n" +
@@ -111,5 +110,4 @@ public class TestFastComplexSchema extends BaseTestQuery {
         "(select first_name from cp.`employee.json` where first_name='Sheri')",
         "Flatten does not support inputs of non-list values");
   }
-
 }

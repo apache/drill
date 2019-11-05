@@ -23,7 +23,13 @@ import java.util.Map;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.impl.ScanBatch;
 import org.apache.drill.exec.physical.impl.aggregate.HashAggBatch;
+import org.apache.drill.exec.physical.impl.aggregate.StreamingAggBatch;
 import org.apache.drill.exec.physical.impl.filter.FilterRecordBatch;
+import org.apache.drill.exec.physical.impl.filter.RuntimeFilterRecordBatch;
+import org.apache.drill.exec.physical.impl.flatten.FlattenRecordBatch;
+import org.apache.drill.exec.physical.impl.join.MergeJoinBatch;
+import org.apache.drill.exec.physical.impl.join.NestedLoopJoinBatch;
+import org.apache.drill.exec.physical.impl.limit.LimitRecordBatch;
 import org.apache.drill.exec.physical.impl.limit.PartitionLimitRecordBatch;
 import org.apache.drill.exec.physical.impl.project.ProjectRecordBatch;
 import org.apache.drill.exec.physical.impl.protocol.OperatorRecordBatch;
@@ -44,6 +50,8 @@ import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarBinaryVector;
 import org.apache.drill.exec.vector.VarCharVector;
+import org.apache.drill.exec.vector.VarDecimalVector;
+import org.apache.drill.exec.vector.VariableWidthVector;
 import org.apache.drill.exec.vector.ZeroVector;
 import org.apache.drill.exec.vector.complex.BaseRepeatedValueVector;
 import org.apache.drill.exec.vector.complex.DictVector;
@@ -184,14 +192,20 @@ public class BatchValidator {
    */
   private static Map<Class<? extends CloseableRecordBatch>, CheckMode> buildRules() {
     Map<Class<? extends CloseableRecordBatch>, CheckMode> rules = new IdentityHashMap<>();
-    rules.put(OperatorRecordBatch.class, CheckMode.VECTORS);
-    rules.put(ScanBatch.class, CheckMode.VECTORS);
+    rules.put(OperatorRecordBatch.class, CheckMode.ZERO_SIZE);
+    rules.put(ScanBatch.class, CheckMode.ZERO_SIZE);
     rules.put(ProjectRecordBatch.class, CheckMode.ZERO_SIZE);
     rules.put(FilterRecordBatch.class, CheckMode.VECTORS);
     rules.put(PartitionLimitRecordBatch.class, CheckMode.VECTORS);
     rules.put(UnnestRecordBatch.class, CheckMode.VECTORS);
     rules.put(HashAggBatch.class, CheckMode.VECTORS);
     rules.put(RemovingRecordBatch.class, CheckMode.ZERO_SIZE);
+    rules.put(StreamingAggBatch.class, CheckMode.ZERO_SIZE);
+    rules.put(RuntimeFilterRecordBatch.class, CheckMode.ZERO_SIZE);
+    rules.put(FlattenRecordBatch.class, CheckMode.ZERO_SIZE);
+    rules.put(MergeJoinBatch.class, CheckMode.ZERO_SIZE);
+    rules.put(NestedLoopJoinBatch.class, CheckMode.ZERO_SIZE);
+    rules.put(LimitRecordBatch.class, CheckMode.ZERO_SIZE);
     return rules;
   }
 
@@ -349,6 +363,8 @@ public class BatchValidator {
       validateDictVector(name, (DictVector) vector, topLevel);
     } else if (vector instanceof UnionVector) {
       validateUnionVector(name, (UnionVector) vector);
+    } else if (vector instanceof VarDecimalVector) {
+      validateVarDecimalVector(name, (VarDecimalVector) vector, topLevel);
     } else {
       logger.debug("Don't know how to validate vector: {}  of class {}",
           name, vector.getClass().getSimpleName());
@@ -369,20 +385,22 @@ public class BatchValidator {
   }
 
   private void validateVarCharVector(String name, VarCharVector vector, boolean topLevel) {
-    int valueCount = vector.getAccessor().getValueCount();
-
-    // Disabled because a large number of operators
-    // set up offset vectors incorrectly.
-    if (valueCount == 0 && (!topLevel || !checkZeroSize)) {
-      return;
-    }
-
     int dataLength = vector.getBuffer().writerIndex();
-    validateOffsetVector(name + "-offsets", vector.getOffsetVector(), false,
-        valueCount, dataLength, topLevel);
+    validateVarWidthVector(name, vector, dataLength, topLevel);
   }
 
   private void validateVarBinaryVector(String name, VarBinaryVector vector, boolean topLevel) {
+    int dataLength = vector.getBuffer().writerIndex();
+    validateVarWidthVector(name, vector, dataLength, topLevel);
+  }
+
+  private void validateVarDecimalVector(String name, VarDecimalVector vector,
+      boolean topLevel) {
+    int dataLength = vector.getBuffer().writerIndex();
+    validateVarWidthVector(name, vector, dataLength, topLevel);
+  }
+
+  private void validateVarWidthVector(String name, VariableWidthVector vector, int dataLength, boolean topLevel) {
     int valueCount = vector.getAccessor().getValueCount();
 
     // Disabled because a large number of operators
@@ -391,8 +409,7 @@ public class BatchValidator {
       return;
     }
 
-    int dataLength = vector.getBuffer().writerIndex();
-    validateOffsetVector(name + "-offsets", vector.getOffsetVector(), false,
+    validateOffsetVector(name + "-offsets", vector.getOffsetVector(),
         valueCount, dataLength, topLevel);
   }
 
@@ -401,7 +418,7 @@ public class BatchValidator {
     int dataLength = dataVector.getAccessor().getValueCount();
     int valueCount = vector.getAccessor().getValueCount();
     int itemCount = validateOffsetVector(name + "-offsets", vector.getOffsetVector(),
-        true, valueCount, dataLength, topLevel);
+        valueCount, dataLength, topLevel);
 
     if (dataLength != itemCount) {
       error(name, vector, String.format(
@@ -419,7 +436,7 @@ public class BatchValidator {
     int valueCount = vector.getAccessor().getValueCount();
     int maxBitCount = valueCount * 8;
     int elementCount = validateOffsetVector(name + "-offsets",
-        vector.getOffsetVector(), true, valueCount, maxBitCount, topLevel);
+        vector.getOffsetVector(), valueCount, maxBitCount, topLevel);
     BitVector dataVector = vector.getDataVector();
     if (dataVector.getAccessor().getValueCount() != elementCount) {
       error(name, vector, String.format(
@@ -452,7 +469,7 @@ public class BatchValidator {
       RepeatedMapVector vector, boolean topLevel) {
     int valueCount = vector.getAccessor().getValueCount();
     int elementCount = validateOffsetVector(name + "-offsets",
-        vector.getOffsetVector(), true, valueCount, Integer.MAX_VALUE, topLevel);
+        vector.getOffsetVector(), valueCount, Integer.MAX_VALUE, topLevel);
     for (ValueVector child: vector) {
       validateVector(elementCount, child, false);
     }
@@ -461,7 +478,7 @@ public class BatchValidator {
   private void validateDictVector(String name, DictVector vector, boolean topLevel) {
     int valueCount = vector.getAccessor().getValueCount();
     int elementCount = validateOffsetVector(name + "-offsets",
-        vector.getOffsetVector(), true, valueCount, Integer.MAX_VALUE, topLevel);
+        vector.getOffsetVector(), valueCount, Integer.MAX_VALUE, topLevel);
     validateVector(elementCount, vector.getKeys(), false);
     validateVector(elementCount, vector.getValues(), false);
   }
@@ -470,7 +487,7 @@ public class BatchValidator {
       RepeatedListVector vector, boolean topLevel) {
     int valueCount = vector.getAccessor().getValueCount();
     int elementCount = validateOffsetVector(name + "-offsets",
-        vector.getOffsetVector(), true, valueCount, Integer.MAX_VALUE, topLevel);
+        vector.getOffsetVector(), valueCount, Integer.MAX_VALUE, topLevel);
     validateVector(elementCount, vector.getDataVector(), false);
   }
 
@@ -500,16 +517,17 @@ public class BatchValidator {
   }
 
   private int validateOffsetVector(String name, UInt4Vector offsetVector,
-      boolean repeated, int valueCount, int maxOffset, boolean topLevel) {
+      int valueCount, int maxOffset, boolean topLevel) {
     UInt4Vector.Accessor accessor = offsetVector.getAccessor();
     int offsetCount = accessor.getValueCount();
     // TODO: Disabled because a large number of operators
-    // set up offset vectors incorrectly.
-//    if (!repeated && offsetCount == 0) {
-//      System.out.println(String.format(
-//          "Offset vector for %s: [0] has length 0, expected 1+",
-//          name));
-//      return false;
+    // set up offset vectors incorrectly. Either that, or semantics
+    // are ill-defined: some vectors assume an offset vector length
+    // of 0 if the "outer" value count is zero (which, while fiddly, is
+    // a workable definition.)
+//    if (checkZeroSize && topLevel && offsetCount == 0) {
+//      error(name, offsetVector,
+//          "Offset vector has length 0, expected 1+");
 //    }
     if (valueCount == 0 && offsetCount > 1 || valueCount > 0 && offsetCount != valueCount + 1) {
       error(name, offsetVector, String.format(
@@ -520,7 +538,8 @@ public class BatchValidator {
       return 0;
     }
 
-    // First value must be zero in current version.
+    // First value must be zero. (This is why offset vectors have one more
+    // value than the number of rows.)
 
     int prevOffset;
     try {

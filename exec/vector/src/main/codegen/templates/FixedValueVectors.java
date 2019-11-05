@@ -102,7 +102,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
   public FieldReader getReader() { return reader; }
 
   @Override
-  public int getBufferSizeFor(final int valueCount) {
+  public int getBufferSizeFor(int valueCount) {
     if (valueCount == 0) {
       return 0;
     }
@@ -121,8 +121,8 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
   public Mutator getMutator() { return mutator; }
 
   @Override
-  public void setInitialCapacity(final int valueCount) {
-    final long size = (long) valueCount * VALUE_WIDTH;
+  public void setInitialCapacity(int valueCount) {
+    long size = (long) valueCount * VALUE_WIDTH;
     // TODO: Replace this with MAX_BUFFER_SIZE once all
     // code is aware of the maximum vector size.
     if (size > MAX_ALLOCATION_SIZE) {
@@ -170,7 +170,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
    *           if it can't allocate the new buffer
    */
   @Override
-  public void allocateNew(final int valueCount) {
+  public void allocateNew(int valueCount) {
     allocateBytes(valueCount * VALUE_WIDTH);
   }
 
@@ -182,14 +182,14 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     super.reset();
   }
 
-  private void allocateBytes(final long size) {
+  private void allocateBytes(long size) {
     // TODO: Replace this with MAX_BUFFER_SIZE once all
     // code is aware of the maximum vector size.
     if (size > MAX_ALLOCATION_SIZE) {
       throw new OversizedAllocationException("Requested amount of memory is more than max allowed allocation size");
     }
 
-    final int curSize = (int)size;
+    int curSize = (int)size;
     clear();
     data = allocator.buffer(curSize);
     data.readerIndex(0);
@@ -214,7 +214,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
         ? 256
         : allocationSizeInBytes * 2L;
 
-    final int currentCapacity = data.capacity();
+    int currentCapacity = data.capacity();
     // Some operations, such as Value Vector#exchange, can be change DrillBuf data field without corresponding allocation size changes.
     // Check that the size of the allocation is sufficient to copy the old buffer.
     while (newAllocationSize < currentCapacity) {
@@ -238,7 +238,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     if (newAllocationSize == 0) {
       throw new IllegalStateException("Attempt to reAlloc a zero-sized vector");
     }
-    final DrillBuf newBuf = allocator.buffer(newAllocationSize);
+    DrillBuf newBuf = allocator.buffer(newAllocationSize);
     newBuf.setBytes(0, data, 0, data.capacity());
     newBuf.writerIndex(data.writerIndex());
     data.release(1);
@@ -259,9 +259,9 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
   public void load(SerializedField metadata, DrillBuf buffer) {
     Preconditions.checkArgument(this.field.getName().equals(metadata.getNamePart().getName()),
                                 "The field %s doesn't match the provided metadata %s.", this.field, metadata);
-    final int actualLength = metadata.getBufferLength();
-    final int valueCount = metadata.getValueCount();
-    final int expectedLength = valueCount * VALUE_WIDTH;
+    int actualLength = metadata.getBufferLength();
+    int valueCount = metadata.getValueCount();
+    int expectedLength = valueCount * VALUE_WIDTH;
     assert actualLength == expectedLength : String.format("Expected to load %d bytes but actually loaded %d bytes", expectedLength, actualLength);
 
     clear();
@@ -296,8 +296,8 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
   }
 
   public void splitAndTransferTo(int startIndex, int length, ${minor.class}Vector target) {
-    final int startPoint = startIndex * VALUE_WIDTH;
-    final int sliceLength = length * VALUE_WIDTH;
+    int startPoint = startIndex * VALUE_WIDTH;
+    int sliceLength = length * VALUE_WIDTH;
     target.clear();
     target.data = data.slice(startPoint, sliceLength).transferOwnership(target.allocator).buffer;
     target.data.writerIndex(sliceLength);
@@ -402,14 +402,14 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     <#if (minor.class == "Interval")>
 
     public void get(int index, ${minor.class}Holder holder) {
-      final int offsetIndex = index * VALUE_WIDTH;
+      int offsetIndex = index * VALUE_WIDTH;
       holder.months = data.getInt(offsetIndex);
       holder.days = data.getInt(offsetIndex + ${minor.daysOffset});
       holder.milliseconds = data.getInt(offsetIndex + ${minor.millisecondsOffset});
     }
 
     public void get(int index, Nullable${minor.class}Holder holder) {
-      final int offsetIndex = index * VALUE_WIDTH;
+      int offsetIndex = index * VALUE_WIDTH;
       holder.isSet = 1;
       holder.months = data.getInt(offsetIndex);
       holder.days = data.getInt(offsetIndex + ${minor.daysOffset});
@@ -418,30 +418,30 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
 
     @Override
     public ${friendlyType} getObject(int index) {
-      final int offsetIndex = index * VALUE_WIDTH;
-      final int months  = data.getInt(offsetIndex);
-      final int days    = data.getInt(offsetIndex + ${minor.daysOffset});
-      final int millis = data.getInt(offsetIndex + ${minor.millisecondsOffset});
+      int offsetIndex = index * VALUE_WIDTH;
+      int months  = data.getInt(offsetIndex);
+      int days    = data.getInt(offsetIndex + ${minor.daysOffset});
+      int millis = data.getInt(offsetIndex + ${minor.millisecondsOffset});
       return DateUtilities.fromInterval(months, days, millis);
     }
 
     public StringBuilder getAsStringBuilder(int index) {
-      final int offsetIndex = index * VALUE_WIDTH;
-      final int months = data.getInt(offsetIndex);
-      final int days   = data.getInt(offsetIndex + ${minor.daysOffset});
-      final int millis = data.getInt(offsetIndex + ${minor.millisecondsOffset});
+      int offsetIndex = index * VALUE_WIDTH;
+      int months = data.getInt(offsetIndex);
+      int days   = data.getInt(offsetIndex + ${minor.daysOffset});
+      int millis = data.getInt(offsetIndex + ${minor.millisecondsOffset});
       return DateUtilities.intervalStringBuilder(months, days, millis);
     }
     <#elseif (minor.class == "IntervalDay")>
 
     public void get(int index, ${minor.class}Holder holder) {
-      final int offsetIndex = index * VALUE_WIDTH;
+      int offsetIndex = index * VALUE_WIDTH;
       holder.days = data.getInt(offsetIndex);
       holder.milliseconds = data.getInt(offsetIndex + ${minor.millisecondsOffset});
     }
 
     public void get(int index, Nullable${minor.class}Holder holder) {
-      final int offsetIndex = index * VALUE_WIDTH;
+      int offsetIndex = index * VALUE_WIDTH;
       holder.isSet = 1;
       holder.days = data.getInt(offsetIndex);
       holder.milliseconds = data.getInt(offsetIndex + ${minor.millisecondsOffset});
@@ -449,16 +449,16 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
 
     @Override
     public ${friendlyType} getObject(int index) {
-      final int offsetIndex = index * VALUE_WIDTH;
-      final int days   = data.getInt(offsetIndex);
-      final int millis = data.getInt(offsetIndex + ${minor.millisecondsOffset});
+      int offsetIndex = index * VALUE_WIDTH;
+      int days   = data.getInt(offsetIndex);
+      int millis = data.getInt(offsetIndex + ${minor.millisecondsOffset});
       return DateUtilities.fromIntervalDay(days, millis);
     }
 
     public StringBuilder getAsStringBuilder(int index) {
-      final int offsetIndex = index * VALUE_WIDTH;
-      final int days   = data.getInt(offsetIndex);
-      final int millis = data.getInt(offsetIndex + ${minor.millisecondsOffset});
+      int offsetIndex = index * VALUE_WIDTH;
+      int days   = data.getInt(offsetIndex);
+      int millis = data.getInt(offsetIndex + ${minor.millisecondsOffset});
       return DateUtilities.intervalDayStringBuilder(days, millis);
     }
     <#elseif minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse" || minor.class == "Decimal28Dense" || minor.class == "Decimal38Dense">
@@ -551,7 +551,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
 
     @Override
     public ${friendlyType} getObject(int index) {
-      final BigInteger value = BigInteger.valueOf(((${type.boxedType})get(index)).${type.javaType}Value());
+      BigInteger value = BigInteger.valueOf(((${type.boxedType})get(index)).${type.javaType}Value());
       return new BigDecimal(value, getField().getScale());
     }
     <#else>

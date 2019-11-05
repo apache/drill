@@ -25,6 +25,8 @@ import org.apache.drill.exec.physical.impl.protocol.BatchAccessor;
 import org.apache.drill.exec.physical.impl.protocol.OperatorExec;
 import org.apache.drill.exec.physical.impl.protocol.VectorContainerAccessor;
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Implementation of the revised scan operator that uses a mutator aware of
@@ -155,7 +157,7 @@ public class ScanOperatorExec implements OperatorExec {
     CLOSED
   }
 
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScanOperatorExec.class);
+  static final Logger logger = LoggerFactory.getLogger(ScanOperatorExec.class);
 
   private final ScanOperatorEvents factory;
   private final boolean allowEmptyResult;
@@ -295,6 +297,13 @@ public class ScanOperatorExec implements OperatorExec {
     if (allowEmptyResult &&
         containerAccessor.batchCount() == 0 &&
         containerAccessor.schemaVersion() > 0) {
+
+      // We've exhausted all readers, none had data, but at least
+      // one had a schema. Any zero-sized batch produced by a reader
+      // was cleared when closing the reader. Recreate a valid empty
+      // batch here to return downstream.
+
+      containerAccessor.getOutgoingContainer().setEmpty();
       state = State.EMPTY;
     } else {
       state = State.END;
