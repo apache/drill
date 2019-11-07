@@ -26,7 +26,6 @@ import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
@@ -39,10 +38,6 @@ import org.apache.drill.exec.expr.DrillFuncHolderExpr;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.fn.output.OutputWidthCalculator;
-import org.apache.drill.exec.expr.holders.ListHolder;
-import org.apache.drill.exec.expr.holders.MapHolder;
-import org.apache.drill.exec.expr.holders.RepeatedListHolder;
-import org.apache.drill.exec.expr.holders.RepeatedMapHolder;
 import org.apache.drill.exec.expr.holders.ValueHolder;
 import org.apache.drill.exec.ops.UdfUtilities;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
@@ -234,11 +229,10 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
           JInvocation reader = JExpr._new(singularReaderClass).arg(inputVariable.getHolder());
           declare(sub, parameter, fieldReadClass, reader, i);
         } else if (!parameter.isFieldReader() && inputVariable.isReader() && Types.isComplex(parameter.getType())) {
-          // For complex data-types (repeated maps/lists) the input to the aggregate will be a FieldReader. However, aggregate
+          // For complex data-types (repeated maps/lists/dicts) the input to the aggregate will be a FieldReader. However, aggregate
           // functions like ANY_VALUE, will assume the input to be a RepeatedMapHolder etc. Generate boilerplate code, to map
           // from FieldReader to respective Holder.
-          if (parameter.getType().getMinorType() == MinorType.MAP
-              || parameter.getType().getMinorType() == MinorType.LIST) {
+          if (Types.isComplex(parameter.getType())) {
             JType holderClass = getParamClass(g.getModel(), parameter, inputVariable.getHolder().type());
             JAssignmentTarget holderVar = declare(sub, parameter, holderClass, JExpr._new(holderClass), i);
             sub.assign(holderVar.ref("reader"), inputVariable.getHolder());
@@ -304,19 +298,13 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
   private JType getParamClass(JCodeModel model, ValueReference parameter, JType defaultType) {
     if (parameter.isFieldReader()) {
       return model._ref(FieldReader.class);
-    } else if (parameter.getType().getMinorType() == MinorType.MAP) {
-      if (parameter.getType().getMode() == TypeProtos.DataMode.REPEATED) {
-        return model._ref(RepeatedMapHolder.class);
-      } else {
-        return model._ref(MapHolder.class);
-      }
-    } else if (parameter.getType().getMinorType() == MinorType.LIST) {
-      if (parameter.getType().getMode() == TypeProtos.DataMode.REPEATED) {
-        return model._ref(RepeatedListHolder.class);
-      } else {
-        return model._ref(ListHolder.class);
-      }
     }
+
+    if (Types.isComplex(parameter.getType())) {
+      MajorType type = parameter.getType();
+      return TypeHelper.getComplexHolderType(model, type.getMinorType(), type.getMode());
+    }
+
     return defaultType;
   }
 

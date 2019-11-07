@@ -1673,6 +1673,28 @@ public class TestHiveArrays extends ClusterTest {
   }
 
   @Test
+  public void mapArrayRepeatedCount() throws Exception {
+    testBuilder()
+        .sqlQuery("SELECT rid, REPEATED_COUNT(arr_n_0) rc FROM hive.map_array")
+        .unOrdered()
+        .baselineColumns("rid", "rc")
+        .baselineValues(1, 3)
+        .baselineValues(2, 2)
+        .baselineValues(3, 1)
+        .go();
+  }
+
+  @Test
+  public void mapArrayCount() throws Exception {
+    testBuilder()
+        .sqlQuery("SELECT COUNT(arr_n_0) cnt FROM hive.map_array")
+        .unOrdered()
+        .baselineColumns("cnt")
+        .baselineValues(3L)
+        .go();
+  }
+
+  @Test
   public void unionArray() throws Exception {
     testBuilder()
         .sqlQuery("SELECT rid, un_arr FROM hive.union_array")
