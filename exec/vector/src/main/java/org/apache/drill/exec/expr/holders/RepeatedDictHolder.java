@@ -18,11 +18,12 @@
 package org.apache.drill.exec.expr.holders;
 
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.vector.complex.RepeatedDictVector;
 
 public final class RepeatedDictHolder extends RepeatedValueHolder {
 
-  public TypeProtos.MajorType TYPE = RepeatedDictVector.TYPE;
+  public static final TypeProtos.MajorType TYPE = Types.repeated(TypeProtos.MinorType.DICT);
 
   public RepeatedDictVector vector;
 }

@@ -72,7 +72,13 @@ public class TypeHelper extends BasicTypeHelper {
     case UNION:
       return model._ref(UnionHolder.class);
     case DICT:
-      return model._ref(DictHolder.class);
+      switch (mode) {
+        case REQUIRED:
+        case OPTIONAL:
+          return model._ref(DictHolder.class);
+        case REPEATED:
+          return model._ref(RepeatedDictHolder.class);
+      }
     case MAP:
     case LIST:
       return model._ref(ComplexHolder.class);
@@ -100,4 +106,34 @@ public class TypeHelper extends BasicTypeHelper {
       throw new UnsupportedOperationException(buildErrorMessage("get holder type", type, mode));
   }
 
+  public static JType getComplexHolderType(JCodeModel model, MinorType type, DataMode mode) {
+    switch (type) {
+      case DICT:
+        switch (mode) {
+          case REQUIRED:
+          case OPTIONAL:
+            return model._ref(DictHolder.class);
+          case REPEATED:
+            return model._ref(RepeatedDictHolder.class);
+        }
+      case MAP:
+        switch (mode) {
+          case REQUIRED:
+          case OPTIONAL:
+            return model._ref(MapHolder.class);
+          case REPEATED:
+            return model._ref(RepeatedMapHolder.class);
+        }
+      case LIST:
+        switch (mode) {
+          case REQUIRED:
+          case OPTIONAL:
+            return model._ref(ListHolder.class);
+          case REPEATED:
+            return model._ref(RepeatedListHolder.class);
+        }
+      default:
+        throw new IllegalArgumentException("Complex type expected. Found: " + type);
+    }
+  }
 }
