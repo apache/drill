@@ -17,10 +17,17 @@
  */
 package org.apache.drill;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import static org.junit.Assert.fail;
+
+import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.test.BaseTestQuery;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -28,14 +35,8 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
 @Category(UnlikelyTest.class)
 public class TestBugFixes extends BaseTestQuery {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestBugFixes.class);
 
   @BeforeClass
   public static void setupTestFiles() {
@@ -111,21 +112,23 @@ public class TestBugFixes extends BaseTestQuery {
     }
   }
 
-  @Test (expected = UserException.class)
+  @Test
   // Should be "Failure while parsing sql. Node [rel#26:Subset#6.LOGICAL.ANY([]).[]] could not be implemented;".
   // Drill will hit CanNotPlan, until we add code fix to transform the local LHS filter in left outer join properly.
   public void testDRILL1337_LocalLeftFilterLeftOutJoin() throws Exception {
     try {
-      test("select count(*) from cp.`tpch/nation.parquet` n left outer join cp.`tpch/region.parquet` r on n.n_regionkey = r.r_regionkey and n.n_nationkey > 10;");
+      test("select count(*) from cp.`tpch/nation.parquet` n left outer join " +
+           "cp.`tpch/region.parquet` r on n.n_regionkey = r.r_regionkey and n.n_nationkey > 10;");
+      fail();
     } catch (UserException e) {
-      logger.info("***** Test resulted in expected failure: " + e.getMessage());
-      throw e;
+      // Expected;
     }
   }
 
   @Test
   public void testDRILL1337_LocalRightFilterLeftOutJoin() throws Exception {
-    test("select * from cp.`tpch/nation.parquet` n left outer join cp.`tpch/region.parquet` r on n.n_regionkey = r.r_regionkey and r.r_name not like '%ASIA' order by r.r_name;");
+    test("select * from cp.`tpch/nation.parquet` n left outer join " +
+         "cp.`tpch/region.parquet` r on n.n_regionkey = r.r_regionkey and r.r_name not like '%ASIA' order by r.r_name;");
   }
 
   @Test
@@ -297,8 +300,8 @@ public class TestBugFixes extends BaseTestQuery {
           "    SELECT count(1) `a_count` FROM cp.`tpch/nation.parquet`\n" +
           ") `t5` ON TRUE\n");
     } finally {
-      test("ALTER SESSION RESET `planner.enable_nljoin_for_scalar_only`");
-      test("ALTER SESSION RESET `planner.slice_target`");
+      resetSessionOption("planner.enable_nljoin_for_scalar_only");
+      resetSessionOption("planner.slice_target");
     }
   }
 

@@ -333,16 +333,8 @@ public abstract class BaseRepeatedValueVector extends BaseValueVector implements
       while (offsets.getValueCapacity() <= index) {
         offsets.reAlloc();
       }
-      offsets.getMutator().setSafe(index+1, offsets.getAccessor().get(index));
-      setValueCount(index+1);
-    }
-
-    public boolean startNewValueBounded(int index) {
-      if (index >= MAX_ROW_COUNT) {
-        return false;
-      }
-      startNewValue(index);
-      return true;
+      offsets.getMutator().setSafe(index + 1, offsets.getAccessor().get(index));
+      setValueCount(index + 1);
     }
 
     @Override
@@ -354,13 +346,13 @@ public abstract class BaseRepeatedValueVector extends BaseValueVector implements
       // saves a bit of memory, it greatly complicates code that
       // works with vectors because of the special case for zero-length
       // vectors.
-      offsets.getMutator().setValueCount(valueCount == 0 ? 0 : valueCount+1);
+      offsets.getMutator().setValueCount(valueCount == 0 ? 0 : valueCount + 1);
       final int childValueCount = valueCount == 0 ? 0 : offsets.getAccessor().get(valueCount);
       vector.getMutator().setValueCount(childValueCount);
     }
 
     public int getInnerValueCountAt(int index) {
-      return offsets.getAccessor().get(index+1) - offsets.getAccessor().get(index);
+      return offsets.getAccessor().get(index + 1) - offsets.getAccessor().get(index);
     }
   }
 }

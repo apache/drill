@@ -306,14 +306,22 @@ public class OffsetVectorWriterImpl extends AbstractFixedWidthWriter implements 
   @Override
   public void setValueCount(int valueCount) {
 
-    // Value count is in row positions, not index
-    // positions. (There are one more index positions
-    // than row positions.)
+    if (valueCount == 0) {
 
-    int offsetCount = valueCount + 1;
-    mandatoryResize(offsetCount);
-    fillEmpties(valueCount - lastWriteIndex - 1);
-    if (valueCount > 0) {
+      // Special case: if the total number of values is zero,
+      // then the offset vector should have 0 (not 1) values.
+      // Serialization code relies on this fact.
+
+      vector().getBuffer().writerIndex(0);
+    } else {
+
+      // Value count is in row positions, not index
+      // positions. (There are one more index positions
+      // than row positions.)
+
+      int offsetCount = valueCount + 1;
+      mandatoryResize(offsetCount);
+      fillEmpties(valueCount - lastWriteIndex - 1);
       vector().getBuffer().writerIndex(offsetCount * VALUE_WIDTH);
     }
   }

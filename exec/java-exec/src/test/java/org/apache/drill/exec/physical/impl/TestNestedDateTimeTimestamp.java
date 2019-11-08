@@ -129,8 +129,8 @@ public class TestNestedDateTimeTimestamp extends BaseTestQuery {
       testBuilder().sqlQuery(readQuery).ordered().jsonBaselineFile("baseline_nested_datetime.json").build().run();
     } finally {
       test("drop table " + testName + "_json");
-      test("alter session reset `store.format` ");
-      test("alter session reset store.json.extended_types ");
+      resetSessionOption("store.format");
+      resetSessionOption("store.json.extended_types");
     }
   }
 
@@ -152,8 +152,8 @@ public class TestNestedDateTimeTimestamp extends BaseTestQuery {
       testBuilder().sqlQuery(readQuery).ordered().jsonBaselineFile("datetime.parquet").build().run();
     } finally {
       test("drop table " + testName + "_json");
-      test("alter session reset `store.format` ");
-      test("alter session reset store.json.extended_types ");
+      resetSessionOption("store.format");
+      resetSessionOption("store.json.extended_types");
     }
   }
 
@@ -174,7 +174,7 @@ public class TestNestedDateTimeTimestamp extends BaseTestQuery {
       testBuilder().sqlQuery(readQuery).ordered().jsonBaselineFile("datetime.parquet").build().run();
     } finally {
       test("drop table " + testName + "_parquet");
-      test("alter session reset `store.format` ");
+      resetSessionOption("store.format");
     }
   }
 

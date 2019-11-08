@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.vector.complex;
 
-import io.netty.buffer.DrillBuf;
-
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -29,8 +27,8 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.expr.BasicTypeHelper;
 import org.apache.drill.exec.expr.holders.RepeatedValueHolder;
-import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.AllocationManager.BufferLedger;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
@@ -41,6 +39,8 @@ import org.apache.drill.exec.vector.SchemaChangeCallBack;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VectorDescriptor;
+
+import io.netty.buffer.DrillBuf;
 
 public abstract class AbstractRepeatedMapVector extends AbstractMapVector implements RepeatedValueVector {
 
@@ -318,11 +318,11 @@ public abstract class AbstractRepeatedMapVector extends AbstractMapVector implem
     }
   }
 
-  transient private AbstractRepeatedMapTransferPair ephPair;
+  transient private AbstractRepeatedMapTransferPair<?> ephPair;
 
   public void copyFromSafe(int fromIndex, int thisIndex, AbstractRepeatedMapVector from) {
     if (ephPair == null || ephPair.from != from) {
-      ephPair = (AbstractRepeatedMapTransferPair) from.makeTransferPair(this);
+      ephPair = (AbstractRepeatedMapTransferPair<?>) from.makeTransferPair(this);
     }
     ephPair.copyValueSafe(fromIndex, thisIndex);
   }
@@ -430,29 +430,32 @@ public abstract class AbstractRepeatedMapVector extends AbstractMapVector implem
   }
 
   public abstract class Mutator implements RepeatedMutator {
+
     @Override
     public void startNewValue(int index) {
       emptyPopulator.populate(index + 1);
-      offsets.getMutator().setSafe(index + 1, offsets.getAccessor().get(index));
     }
 
     @Override
     public void setValueCount(int topLevelValueCount) {
-      emptyPopulator.populate(topLevelValueCount);
-      offsets.getMutator().setValueCount(topLevelValueCount == 0 ? 0 : topLevelValueCount + 1);
-      int childValueCount = offsets.getAccessor().get(topLevelValueCount);
+      int childValueCount;
+      if (topLevelValueCount == 0) {
+        childValueCount = 0;
+        offsets.getMutator().setValueCount(0);
+      } else {
+        emptyPopulator.populate(topLevelValueCount);
+        childValueCount = offsets.getAccessor().get(topLevelValueCount);
+      }
       for (ValueVector v : getChildren()) {
         v.getMutator().setValueCount(childValueCount);
       }
     }
 
     @Override
-    public void reset() {
-    }
+    public void reset() { }
 
     @Override
-    public void generateTestData(int values) {
-    }
+    public void generateTestData(int values) { }
 
     public int add(int index) {
       int prevEnd = offsets.getAccessor().get(index + 1);
@@ -461,8 +464,7 @@ public abstract class AbstractRepeatedMapVector extends AbstractMapVector implem
     }
 
     @Override
-    public void exchange(ValueVector.Mutator other) {
-    }
+    public void exchange(ValueVector.Mutator other) { }
   }
 
   @Override

@@ -17,6 +17,11 @@
  */
 package org.apache.drill.exec.hive;
 
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.HashMap;
@@ -39,11 +44,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
-
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 
 @Category({SlowTest.class, HiveStorageTest.class})
@@ -397,7 +397,7 @@ public class TestHiveStorage extends HiveTestBase {
       verifyColumnsMetadata(client.createPreparedStatement(String.format("select * from (%s) t limit 0", query)).get()
           .getPreparedStatement().getColumnsList(), expectedResult);
     } finally {
-      test("alter session reset `%s`", ExecConstants.EARLY_LIMIT0_OPT_KEY);
+      resetSessionOption(ExecConstants.EARLY_LIMIT0_OPT_KEY);
     }
   }
 

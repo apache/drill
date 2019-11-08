@@ -59,7 +59,7 @@ public class ${className} extends AbstractFieldWriter {
 
   protected final ${containerClass} container;
   <#if mode == "Repeated">protected<#else>private</#if> final Map<String, FieldWriter> fields = new HashMap<>();
-  <#if mode == "Repeated">protected int currentChildIndex = 0;</#if>
+  <#if mode == "Repeated">protected int currentChildIndex;</#if>
 
   private final boolean unionEnabled;
 
@@ -91,15 +91,15 @@ public class ${className} extends AbstractFieldWriter {
   @Override
   public MapWriter map(String name) {
     FieldWriter writer = fields.get(name.toLowerCase());
-    if(writer == null){
-      int vectorCount=container.size();
+    if (writer == null) {
+      int vectorCount = container.size();
         MapVector vector = container.addOrGet(name, MapVector.TYPE, MapVector.class);
-      if(!unionEnabled){
+      if (!unionEnabled) {
         writer = new SingleMapWriter(vector, this);
       } else {
         writer = new PromotableWriter(vector, container);
       }
-      if(vectorCount != container.size()) {
+      if (vectorCount != container.size()) {
         writer.allocate();
       }
       writer.setPosition(${index});
@@ -115,7 +115,7 @@ public class ${className} extends AbstractFieldWriter {
       int vectorCount = container.size();
       UnionVector vector = container.addOrGet(name, Types.optional(MinorType.UNION), UnionVector.class);
       writer = new UnionVectorWriter(vector, this);
-      if(vectorCount != container.size()) {
+      if (vectorCount != container.size()) {
         writer.allocate();
       }
       writer.setPosition(${index});
@@ -134,7 +134,7 @@ public class ${className} extends AbstractFieldWriter {
       writer = new SingleDictWriter(vector, this);
 
       fields.put(name.toLowerCase(), writer);
-      if(vectorCount != container.size()) {
+      if (vectorCount != container.size()) {
         writer.allocate();
       }
       writer.setPosition(${index});
@@ -168,9 +168,9 @@ public class ${className} extends AbstractFieldWriter {
   public ListWriter list(String name) {
     FieldWriter writer = fields.get(name.toLowerCase());
     int vectorCount = container.size();
-    if(writer == null) {
-      if (!unionEnabled){
-        writer = new SingleListWriter(name,container,this);
+    if (writer == null) {
+      if (!unionEnabled) {
+        writer = new SingleListWriter(name, container, this);
       } else{
         writer = new PromotableWriter(container.addOrGet(name, Types.optional(MinorType.LIST), ListVector.class), container);
       }
@@ -231,10 +231,10 @@ public class ${className} extends AbstractFieldWriter {
   public ${minor.class}Writer ${lowerName}(String name) {
   </#if>
     FieldWriter writer = fields.get(name.toLowerCase());
-    if(writer == null) {
+    if (writer == null) {
       ValueVector vector;
       ValueVector currentVector = container.getChild(name);
-      if (unionEnabled){
+      if (unionEnabled) {
         ${vectName}Vector v = container.addOrGet(name, ${upperName}_TYPE, ${vectName}Vector.class);
         writer = new PromotableWriter(v, container);
         vector = v;

@@ -34,17 +34,19 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.test.TestBuilder;
 import org.hamcrest.CoreMatchers;
 import org.junit.Test;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+// TODO - update framework to remove any dependency on the Drill engine
+// for reading baseline result sets currently using it with the assumption
+// that the csv and json readers are well tested, and handling diverse
+// types in the test framework would require doing some redundant work
+// to enable casting outside of Drill or some better tooling to generate
+// parquet files that have all of the parquet types
 
-// TODO - update framework to remove any dependency on the Drill engine for reading baseline result sets
-// currently using it with the assumption that the csv and json readers are well tested, and handling diverse
-// types in the test framework would require doing some redundant work to enable casting outside of Drill or
-// some better tooling to generate parquet files that have all of the parquet types
 public class TestFrameworkTest extends BaseTestQuery {
 
   private static String CSV_COLS = " cast(columns[0] as bigint) employee_id, columns[1] as first_name, columns[2] as last_name ";

@@ -31,6 +31,7 @@ public class SubOperatorTest extends DrillTest {
   @BeforeClass
   public static void classSetup() throws Exception {
     fixture = OperatorFixture.standardFixture(dirTestWatcher);
+    fixture.dirtyMemory(10);
   }
 
   @AfterClass

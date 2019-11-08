@@ -17,18 +17,9 @@
  */
 package org.apache.drill.exec.sql;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.exec.store.dfs.FileSystemConfig;
-import org.apache.drill.exec.store.dfs.WorkspaceConfig;
-import org.apache.drill.test.BaseTestQuery;
-import org.apache.drill.categories.SqlTest;
-import org.apache.drill.common.exceptions.UserRemoteException;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.rules.ExpectedException;
+import static org.apache.drill.exec.util.StoragePluginTestUtils.DFS_PLUGIN_NAME;
+import static org.apache.drill.exec.util.StoragePluginTestUtils.DFS_TMP_SCHEMA;
+import static org.hamcrest.CoreMatchers.containsString;
 
 import java.io.File;
 import java.nio.file.Paths;
@@ -37,9 +28,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static org.apache.drill.exec.util.StoragePluginTestUtils.DFS_PLUGIN_NAME;
-import static org.apache.drill.exec.util.StoragePluginTestUtils.DFS_TMP_SCHEMA;
-import static org.hamcrest.CoreMatchers.containsString;
+import org.apache.drill.categories.SqlTest;
+import org.apache.drill.common.exceptions.UserRemoteException;
+import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.exec.store.dfs.FileSystemConfig;
+import org.apache.drill.exec.store.dfs.WorkspaceConfig;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.apache.drill.test.BaseTestQuery;
+import org.junit.BeforeClass;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.rules.ExpectedException;
 
 @Category(SqlTest.class)
 public class TestCTTAS extends BaseTestQuery {
@@ -100,7 +100,7 @@ public class TestCTTAS extends BaseTestQuery {
             .go();
       }
     } finally {
-      test("alter session reset `store.format`");
+      resetSessionOption("store.format");
     }
   }
 

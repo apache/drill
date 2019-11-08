@@ -45,8 +45,8 @@ public class TestCTASJson extends PlanTestBase {
           .run();
     } finally {
       test("drop table " + testName + "_json");
-      test("alter session reset `store.format` ");
-      test("alter session reset store.json.writer.skip_null_fields ");
+      resetSessionOption("store.format");
+      resetSessionOption("store.json.writer.skip_null_fields");
     }
   }
 
@@ -73,10 +73,9 @@ public class TestCTASJson extends PlanTestBase {
           .run();
     } finally{
       test("drop table " + testName + "_json" );
-      test("alter session reset `store.format` ");
-      test("alter session reset store.json.writer.skip_null_fields ");
+      resetSessionOption("store.format");
+      resetSessionOption("store.json.writer.skip_null_fields");
     }
-
   }
 
   @Test
@@ -103,10 +102,9 @@ public class TestCTASJson extends PlanTestBase {
           .run();
     }finally{
       test("drop table " + testName + "_json" );
-      test("alter session reset `store.format` ");
-      test("alter session reset store.json.writer.skip_null_fields ");
+      resetSessionOption("store.format");
+      resetSessionOption("store.json.writer.skip_null_fields");
     }
-
   }
 
   @Test
@@ -133,10 +131,8 @@ public class TestCTASJson extends PlanTestBase {
           .run();
     } finally {
       test("drop table " + testName + "_json" );
-      test("alter session reset `store.format` ");
-      test("alter session reset store.json.writer.skip_null_fields ");
+      resetSessionOption("store.format");
+      resetSessionOption("store.json.writer.skip_null_fields");
     }
-
   }
-
 }

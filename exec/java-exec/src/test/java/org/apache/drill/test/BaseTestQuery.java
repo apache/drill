@@ -70,6 +70,8 @@ import org.apache.drill.shaded.guava.com.google.common.io.Resources;
 import org.apache.drill.test.DrillTestWrapper.TestServices;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * deprecated Use {@link ClusterTest} instead.
@@ -78,7 +80,7 @@ import org.junit.BeforeClass;
  */
 //@Deprecated
 public class BaseTestQuery extends ExecTest {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseTestQuery.class);
+  private static final Logger logger = LoggerFactory.getLogger(BaseTestQuery.class);
 
   private static final int MAX_WIDTH_PER_NODE = 2;
 
@@ -138,7 +140,7 @@ public class BaseTestQuery extends ExecTest {
           config = newConfig;
         }
         openClient(properties);
-      } catch(Exception e) {
+      } catch (Exception e) {
         throw new RuntimeException("Failure while updating the test Drillbit cluster.", e);
       }
     }
@@ -155,9 +157,9 @@ public class BaseTestQuery extends ExecTest {
   }
 
   protected static Properties cloneDefaultTestConfigProperties() {
-    final Properties props = new Properties();
+    Properties props = new Properties();
 
-    for(String propName : TEST_CONFIGURATIONS.stringPropertyNames()) {
+    for (String propName : TEST_CONFIGURATIONS.stringPropertyNames()) {
       props.put(propName, TEST_CONFIGURATIONS.getProperty(propName));
     }
 
@@ -182,11 +184,11 @@ public class BaseTestQuery extends ExecTest {
     dirTestWatcher.newDfsTestTmpDir();
 
     bits = new Drillbit[drillbitCount];
-    for(int i = 0; i < drillbitCount; i++) {
+    for (int i = 0; i < drillbitCount; i++) {
       bits[i] = new Drillbit(config, serviceSet, classpathScan);
       bits[i].run();
 
-      final StoragePluginRegistry pluginRegistry = bits[i].getContext().getStorage();
+      StoragePluginRegistry pluginRegistry = bits[i].getContext().getStorage();
       StoragePluginTestUtils.configureFormatPlugins(pluginRegistry);
 
       StoragePluginTestUtils.updateSchemaLocation(StoragePluginTestUtils.DFS_PLUGIN_NAME, pluginRegistry,
@@ -237,8 +239,8 @@ public class BaseTestQuery extends ExecTest {
    * executed after this method call use the new <i>client</i>.
    * @param user
    */
-  public static void updateClient(final String user, final String password) throws Exception {
-    final Properties props = new Properties();
+  public static void updateClient(String user, String password) throws Exception {
+    Properties props = new Properties();
     props.setProperty(DrillProperties.USER, user);
     if (password != null) {
       props.setProperty(DrillProperties.PASSWORD, password);
@@ -271,7 +273,7 @@ public class BaseTestQuery extends ExecTest {
     }
 
     @Override
-    public List<QueryDataBatch> testRunAndReturn(final QueryType type, final Object query) throws Exception {
+    public List<QueryDataBatch> testRunAndReturn(QueryType type, Object query) throws Exception {
       return BaseTestQuery.testRunAndReturn(type, query);
     }
   }
@@ -288,7 +290,7 @@ public class BaseTestQuery extends ExecTest {
     }
 
     if (bits != null) {
-      for(final Drillbit bit : bits) {
+      for (Drillbit bit : bits) {
         if (bit != null) {
           bit.close();
         }
@@ -313,7 +315,7 @@ public class BaseTestQuery extends ExecTest {
   }
 
   protected static void runSQL(String sql) throws Exception {
-    final AwaitableUserResultsListener listener = new AwaitableUserResultsListener(new SilentListener());
+    AwaitableUserResultsListener listener = new AwaitableUserResultsListener(new SilentListener());
     testWithListener(QueryType.SQL, sql, listener);
     listener.await();
   }
@@ -346,7 +348,7 @@ public class BaseTestQuery extends ExecTest {
     return client.executePreparedStatement(handle);
   }
 
-  public static int testRunAndPrint(final QueryType type, final String query) throws Exception {
+  public static int testRunAndPrint(QueryType type, String query) throws Exception {
     return QueryTestUtil.testRunAndLog(client, type, query);
   }
 
@@ -362,7 +364,7 @@ public class BaseTestQuery extends ExecTest {
     String valueStr = ClusterFixture.stringify(value);
     try {
       test("ALTER SESSION SET `%s` = %s", option, valueStr);
-    } catch(final Exception e) {
+    } catch (Exception e) {
       fail(String.format("Failed to set session option `%s` = %s, Error: %s",
           option, valueStr, e.toString()));
     }
@@ -371,9 +373,17 @@ public class BaseTestQuery extends ExecTest {
   public static void resetSessionOption(String option) {
     try {
       test("ALTER SESSION RESET `%s`", option);
-    } catch(final Exception e) {
+    } catch (Exception e) {
       fail(String.format("Failed to reset session option `%s`, Error: %s",
           option, e.toString()));
+    }
+  }
+
+  public static void resetAllSessionOptions() {
+    try {
+      test("ALTER SESSION RESET ALL");
+    } catch (Exception e) {
+      fail("Failed to reset all session options");
     }
   }
 
@@ -381,8 +391,8 @@ public class BaseTestQuery extends ExecTest {
     query = String.format(query, args);
     logger.debug("Running query:\n--------------\n" + query);
     for (int i = 0; i < interation; i++) {
-      final List<QueryDataBatch> results = client.runQuery(QueryType.SQL, query);
-      for (final QueryDataBatch queryDataBatch : results) {
+      List<QueryDataBatch> results = client.runQuery(QueryType.SQL, query);
+      for (QueryDataBatch queryDataBatch : results) {
         queryDataBatch.release();
       }
     }
@@ -392,7 +402,7 @@ public class BaseTestQuery extends ExecTest {
     QueryTestUtil.testRunAndLog(client, String.format(query, args));
   }
 
-  public static void test(final String query) throws Exception {
+  public static void test(String query) throws Exception {
     QueryTestUtil.testRunAndLog(client, query);
   }
 
@@ -414,11 +424,11 @@ public class BaseTestQuery extends ExecTest {
    * @param testSqlQuery Test query
    * @param expectedErrorMsg Expected error message.
    */
-  protected static void errorMsgTestHelper(final String testSqlQuery, final String expectedErrorMsg) throws Exception {
+  protected static void errorMsgTestHelper(String testSqlQuery, String expectedErrorMsg) throws Exception {
     try {
       test(testSqlQuery);
       fail("Expected a UserException when running " + testSqlQuery);
-    } catch (final UserException actualException) {
+    } catch (UserException actualException) {
       try {
         assertThat("message of UserException when running " + testSqlQuery, actualException.getMessage(), containsString(expectedErrorMsg));
       } catch (AssertionError e) {
@@ -434,12 +444,12 @@ public class BaseTestQuery extends ExecTest {
    * the given message.
    * @param testSqlQuery Test query
    */
-  protected static void parseErrorHelper(final String testSqlQuery) throws Exception {
+  protected static void parseErrorHelper(String testSqlQuery) throws Exception {
     errorMsgTestHelper(testSqlQuery, UserBitShared.DrillPBError.ErrorType.PARSE.name());
   }
 
   public static String getFile(String resource) throws IOException{
-    final URL url = Resources.getResource(resource);
+    URL url = Resources.getResource(resource);
     if (url == null) {
       throw new IOException(String.format("Unable to find path %s.", resource));
     }
@@ -452,29 +462,29 @@ public class BaseTestQuery extends ExecTest {
    * @return the file path
    * @throws IOException
    */
-  public static String getPhysicalFileFromResource(final String resource) throws IOException {
-    final File file = File.createTempFile("tempfile", ".txt");
+  public static String getPhysicalFileFromResource(String resource) throws IOException {
+    File file = File.createTempFile("tempfile", ".txt");
     file.deleteOnExit();
-    final PrintWriter printWriter = new PrintWriter(file);
+    PrintWriter printWriter = new PrintWriter(file);
     printWriter.write(BaseTestQuery.getFile(resource));
     printWriter.close();
 
     return file.getPath();
   }
 
-  protected static void setSessionOption(final String option, final boolean value) {
+  protected static void setSessionOption(String option, boolean value) {
     alterSession(option, value);
   }
 
-  protected static void setSessionOption(final String option, final long value) {
+  protected static void setSessionOption(String option, long value) {
     alterSession(option, value);
   }
 
-  protected static void setSessionOption(final String option, final double value) {
+  protected static void setSessionOption(String option, double value) {
     alterSession(option, value);
   }
 
-  protected static void setSessionOption(final String option, final String value) {
+  protected static void setSessionOption(String option, String value) {
     alterSession(option, value);
   }
 
@@ -494,7 +504,7 @@ public class BaseTestQuery extends ExecTest {
 
     @Override
     public void dataArrived(QueryDataBatch result, ConnectionThrottle throttle) {
-      final int rows = result.getHeader().getRowCount();
+      int rows = result.getHeader().getRowCount();
       if (result.getData() != null) {
         count.addAndGet(rows);
       }
@@ -525,8 +535,8 @@ public class BaseTestQuery extends ExecTest {
 
   protected int logResult(List<QueryDataBatch> results) throws SchemaChangeException {
     int rowCount = 0;
-    final RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
-    for(final QueryDataBatch result : results) {
+    RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
+    for (QueryDataBatch result : results) {
       rowCount += result.getHeader().getRowCount();
       loader.load(result.getHeader().getDef(), result.getData());
       // TODO:  Clean:  DRILL-2933:  That load(...) no longer throws
@@ -538,17 +548,17 @@ public class BaseTestQuery extends ExecTest {
     return rowCount;
   }
 
-  protected int printResult(final List<QueryDataBatch> results) throws SchemaChangeException {
+  protected int printResult(List<QueryDataBatch> results) throws SchemaChangeException {
     int result = PrintingUtils.printAndThrow(() -> logResult(results));
     return result;
   }
 
   protected static String getResultString(List<QueryDataBatch> results, String delimiter)
       throws SchemaChangeException {
-    final StringBuilder formattedResults = new StringBuilder();
+    StringBuilder formattedResults = new StringBuilder();
     boolean includeHeader = true;
-    final RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
-    for(final QueryDataBatch result : results) {
+    RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
+    for (QueryDataBatch result : results) {
       loader.load(result.getHeader().getDef(), result.getData());
       if (loader.getRecordCount() <= 0) {
         continue;
@@ -587,23 +597,21 @@ public class BaseTestQuery extends ExecTest {
     }
 
     @Override public boolean equals(Object o) {
-      boolean result = false;
-
       if (this == o) {
-        result = true;
-      } else if (o instanceof TestResultSet) {
-        TestResultSet that = (TestResultSet) o;
-        assertEquals(this.size(), that.size());
-        for (int i = 0; i < this.rows.size(); i++) {
-          assertEquals(this.rows.get(i).size(), that.rows.get(i).size());
-          for (int j = 0; j < this.rows.get(i).size(); ++j) {
-            assertEquals(this.rows.get(i).get(j), that.rows.get(i).get(j));
-          }
-        }
-        result = true;
+        return true;
       }
-
-      return result;
+      if (! (o instanceof TestResultSet)) {
+        return false;
+      }
+      TestResultSet that = (TestResultSet) o;
+      assertEquals(this.size(), that.size());
+      for (int i = 0; i < this.rows.size(); i++) {
+        assertEquals(this.rows.get(i).size(), that.rows.get(i).size());
+        for (int j = 0; j < this.rows.get(i).size(); ++j) {
+          assertEquals(this.rows.get(i).get(j), that.rows.get(i).get(j));
+        }
+      }
+      return true;
     }
 
     private void convert(List<QueryDataBatch> batches) throws SchemaChangeException {
@@ -627,4 +635,4 @@ public class BaseTestQuery extends ExecTest {
       }
     }
   }
- }
+}

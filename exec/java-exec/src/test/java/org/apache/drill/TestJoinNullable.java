@@ -26,7 +26,6 @@ import org.junit.experimental.categories.Category;
 
 @Category(OperatorTest.class)
 public class TestJoinNullable extends BaseTestQuery {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestJoinNullable.class);
 
   private static void enableJoin(boolean hj, boolean mj) throws Exception {
     test("alter session set `planner.enable_hashjoin` = %s", hj);

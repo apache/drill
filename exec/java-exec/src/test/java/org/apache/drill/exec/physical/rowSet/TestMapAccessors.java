@@ -30,14 +30,17 @@ import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.ArrayReader;
 import org.apache.drill.exec.vector.accessor.ArrayWriter;
 import org.apache.drill.exec.vector.accessor.ScalarReader;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.TupleReader;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
+import org.apache.drill.exec.vector.complex.MapVector;
 import org.apache.drill.exec.vector.complex.RepeatedMapVector;
 import org.apache.drill.test.ClientFixture;
 import org.apache.drill.test.ClusterFixture;
@@ -98,10 +101,21 @@ public class TestMapAccessors extends SubOperatorTest {
 
     rootWriter.addRow(20, mapValue(210, "barney"), "bam-bam");
 
+    RowSet result = builder.build();
+    assertEquals(2, result.rowCount());
+
+    // Validate internal structure.
+
+    VectorContainer container = result.container();
+    assertEquals(3, container.getNumberOfColumns());
+    ValueVector v = container.getValueVector(1).getValueVector();
+    assertTrue(v instanceof MapVector);
+    MapVector mv = (MapVector) v;
+    assertEquals(2, mv.getAccessor().getValueCount());
+
     // Validate data. Do so using the readers to avoid verifying
     // using the very mechanisms we want to test.
 
-    RowSet result = builder.build();
     RowSetReader rootReader = result.reader();
     final ScalarReader aReader = rootReader.scalar("a");
     final TupleReader mReader = rootReader.tuple("m");

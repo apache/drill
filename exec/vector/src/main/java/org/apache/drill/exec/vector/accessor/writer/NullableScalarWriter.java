@@ -283,7 +283,8 @@ public class NullableScalarWriter extends AbstractScalarWriterImpl {
     // Avoid back-filling null values.
     baseWriter.skipNulls();
     baseWriter.endWrite();
-    nullableVector.finalizeLastSet(writerIndex.vectorIndex());
+    ((NullableVector.Mutator) nullableVector.getMutator())
+        .setSetCount(writerIndex.vectorIndex());
   }
 
   @Override
