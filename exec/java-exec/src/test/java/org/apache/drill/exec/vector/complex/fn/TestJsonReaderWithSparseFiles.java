@@ -21,12 +21,12 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
-import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.util.JsonStringArrayList;
 import org.apache.drill.exec.util.JsonStringHashMap;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.test.BaseTestQuery;
 import org.junit.Test;
 
 public class TestJsonReaderWithSparseFiles extends BaseTestQuery {
@@ -58,12 +58,12 @@ public class TestJsonReaderWithSparseFiles extends BaseTestQuery {
       assertEquals("invalid record count returned", count, loader.getRecordCount());
 
       for (int r = 0; r < values.length; r++) {
-        final Object[] row = values[r];
+        Object[] row = values[r];
         for (int c = 0; c<values[r].length; c++) {
-          final Object expected = row[c];
-          final Object unconverted = loader.getValueAccessorById(ValueVector.class, c)
+          Object expected = row[c];
+          Object unconverted = loader.getValueAccessorById(ValueVector.class, c)
               .getValueVector().getAccessor().getObject(r);
-          final Object actual = converter.convert(unconverted);
+          Object actual = converter.convert(unconverted);
           assertEquals(String.format("row:%d - col:%d - expected:%s[%s] - actual:%s[%s]",
                 r, c, expected,
                 expected == null ? "null" : expected.getClass().getSimpleName(),
@@ -75,16 +75,16 @@ public class TestJsonReaderWithSparseFiles extends BaseTestQuery {
     }
   }
 
-  protected void query(final String query, final Function<RecordBatchLoader> testBody) throws Exception {
-    final List<QueryDataBatch> batches = testSqlWithResults(query);
-    final RecordBatchLoader loader = new RecordBatchLoader(client.getAllocator());
+  protected void query(String query, Function<RecordBatchLoader> testBody) throws Exception {
+    List<QueryDataBatch> batches = testSqlWithResults(query);
+    RecordBatchLoader loader = new RecordBatchLoader(client.getAllocator());
     try {
       // first batch at index 0 is empty and used for fast schema return. Load the second one for the tests
-      final QueryDataBatch batch = batches.get(0);
+      QueryDataBatch batch = batches.get(0);
       loader.load(batch.getHeader().getDef(), batch.getData());
       testBody.apply(loader);
     } finally {
-      for (final QueryDataBatch batch:batches) {
+      for (QueryDataBatch batch:batches) {
         batch.release();
       }
       loader.clear();
@@ -92,10 +92,10 @@ public class TestJsonReaderWithSparseFiles extends BaseTestQuery {
   }
 
   @Test
-  public void testIfDrillCanReadSparseRecords() throws Exception {
-    final String sql = "select * from cp.`vector/complex/fn/sparse.json`";
-    //XXX: make sure value order matches vector order
-    final Object[][] values = new Object[][] {
+  public void testReadSparseRecords() throws Exception {
+    String sql = "select * from cp.`vector/complex/fn/sparse.json`";
+    // TODO: make sure value order matches vector order
+    Object[][] values = new Object[][] {
         {null, null},
         {1L, null},
         {null, 2L},
@@ -105,10 +105,10 @@ public class TestJsonReaderWithSparseFiles extends BaseTestQuery {
   }
 
   @Test
-  public void testIfDrillCanReadSparseNestedRecordsWithoutRaisingException() throws Exception {
-    final String sql = "select * from cp.`vector/complex/fn/nested-with-nulls.json`";
-    //XXX: make sure value order matches vector order
-    final Object[][] values = new Object[][] {
+  public void testReadSparseNestedRecords() throws Exception {
+    String sql = "select * from cp.`vector/complex/fn/nested-with-nulls.json`";
+    // TODO: make sure value order matches vector order
+    Object[][] values = new Object[][] {
         {"[{},{},{},{\"name\":\"doe\"},{}]"},
         {"[]"},
         {"[{\"name\":\"john\",\"id\":10}]"},
@@ -118,10 +118,10 @@ public class TestJsonReaderWithSparseFiles extends BaseTestQuery {
   }
 
   @Test
-  public void testIfDrillCanQuerySingleRecordWithEmpties() throws Exception {
-    final String sql = "select * from cp.`vector/complex/fn/single-record-with-empties.json`";
-    //XXX: make sure value order matches vector order
-    final Object[][] values = new Object[][] {
+  public void testSingleRecordWithEmpties() throws Exception {
+    String sql = "select * from cp.`vector/complex/fn/single-record-with-empties.json`";
+    // TODO: make sure value order matches vector order
+    Object[][] values = new Object[][] {
         {"[{},{}]"},
     };
     query(sql, new Verifier(1, values));

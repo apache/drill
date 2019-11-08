@@ -17,11 +17,11 @@
  */
 package org.apache.drill.exec.vector.complex;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.exec.vector.UInt4Vector;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 /**
- * A helper class that is used to track and populate empty values in repeated value vectors.
+ * Tracks and populate empty values in repeated value vectors.
  */
 public class EmptyValuePopulator {
   private final UInt4Vector offsets;
@@ -31,21 +31,33 @@ public class EmptyValuePopulator {
   }
 
   /**
-   * Marks all values since the last set as empty. The last set value is obtained from underlying offsets vector.
+   * Marks all values since the last set as empty. The last set value is
+   * obtained from underlying offsets vector.
    *
-   * @param lastIndex  the last index (inclusive) in the offsets vector until which empty population takes place
-   * @throws java.lang.IndexOutOfBoundsException  if lastIndex is negative or greater than offsets capacity.
+   * @param valueCount
+   *          the last index (inclusive) in the offsets vector until which empty
+   *          population takes place. Given in record (not offset) units
+   * @throws java.lang.IndexOutOfBoundsException
+   *           if lastIndex is negative or greater than offsets capacity.
    */
-  public void populate(int lastIndex) {
-    Preconditions.checkElementIndex(lastIndex, Integer.MAX_VALUE);
-    final UInt4Vector.Accessor accessor = offsets.getAccessor();
-    final UInt4Vector.Mutator mutator = offsets.getMutator();
-    final int lastSet = Math.max(accessor.getValueCount() - 1, 0);
-    final int previousEnd = accessor.get(lastSet);//0 ? 0 : accessor.get(lastSet);
-    for (int i = lastSet; i < lastIndex; i++) {
-      mutator.setSafe(i + 1, previousEnd);
-    }
-    mutator.setValueCount(lastIndex+1);
-  }
+  public void populate(int valueCount) {
+    Preconditions.checkElementIndex(valueCount, Integer.MAX_VALUE);
+    UInt4Vector.Accessor accessor = offsets.getAccessor();
+    // currentCount is offset counts
+    int currentCount = accessor.getValueCount();
+    UInt4Vector.Mutator mutator = offsets.getMutator();
+    if (currentCount == 0) {
+      // Fill in the implicit zero position.
 
+      mutator.setSafe(0, 0);
+      currentCount = 1;
+    }
+    int previousEnd = accessor.get(currentCount - 1);
+    int offsetCount = valueCount + 1;
+    // Indexes are in offset locations, 1 greater than record indexes
+    for (int i = currentCount; i < offsetCount; i++) {
+      mutator.setSafe(i, previousEnd);
+    }
+    mutator.setValueCount(offsetCount);
+  }
 }

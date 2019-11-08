@@ -110,7 +110,7 @@ public class TestJsonReader extends BaseTestQuery {
                   "inner_3", mapOf()))
           .go();
     } finally {
-      test("alter session set `store.json.all_text_mode` = false");
+      test("alter session reset `store.json.all_text_mode`");
     }
   }
 

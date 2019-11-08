@@ -356,7 +356,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
   }
 
   public void copyFromSafe(int fromIndex, int thisIndex, ${minor.class}Vector from) {
-    while(thisIndex >= getValueCapacity()) {
+    while (thisIndex >= getValueCapacity()) {
         reAlloc();
     }
     copyFrom(fromIndex, thisIndex, from);
@@ -616,7 +616,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     }
 
     public void setSafe(int index, <#if (type.width > 4)>${minor.javaType!type.javaType}<#else>int</#if> value) {
-      while(index >= getValueCapacity()) {
+      while (index >= getValueCapacity()) {
         reAlloc();
       }
       data.setBytes(index * VALUE_WIDTH, value, 0, VALUE_WIDTH);
@@ -631,7 +631,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     }
 
     public void setSafe(int index, int months, int days, int milliseconds) {
-      while(index >= getValueCapacity()) {
+      while (index >= getValueCapacity()) {
         reAlloc();
       }
       set(index, months, days, milliseconds);
@@ -661,7 +661,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     }
 
     public void setSafe(int index, int days, int milliseconds) {
-      while(index >= getValueCapacity()) {
+      while (index >= getValueCapacity()) {
         reAlloc();
       }
       set(index, days, milliseconds);
@@ -685,7 +685,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     <#elseif minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse" || minor.class == "Decimal28Dense" || minor.class == "Decimal38Dense">
 
     public void setSafe(int index, int start, DrillBuf buffer) {
-      while(index >= getValueCapacity()) {
+      while (index >= getValueCapacity()) {
         reAlloc();
       }
       set(index, start, buffer);
@@ -714,7 +714,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     }
 
     public void setSafe(int index, BigDecimal value) {
-      while(index >= getValueCapacity()) {
+      while (index >= getValueCapacity()) {
         reAlloc();
       }
       set(index, value);
@@ -757,7 +757,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
      * @param index item to write
      */
     public void setSafe(int index, <#if (type.width >= 4)>${minor.javaType!type.javaType}<#else>int</#if> value) {
-      while(index >= getValueCapacity()) {
+      while (index >= getValueCapacity()) {
         reAlloc();
       }
       set(index, value);
@@ -768,7 +768,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     }
 
     public void setSafe(int index, ${minor.class}Holder holder) {
-      while(index >= getValueCapacity()) {
+      while (index >= getValueCapacity()) {
         reAlloc();
       }
       set(index, holder);
@@ -779,7 +779,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     }
 
     public void setSafe(int index, Nullable${minor.class}Holder holder) {
-      while(index >= getValueCapacity()) {
+      while (index >= getValueCapacity()) {
         reAlloc();
       }
       set(index, holder);
@@ -817,7 +817,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     public void setValueCount(int valueCount) {
       final int currentValueCapacity = getValueCapacity();
       final int idx = VALUE_WIDTH * valueCount;
-      while(valueCount > getValueCapacity()) {
+      while (valueCount > getValueCapacity()) {
         reAlloc();
       }
       if (valueCount > 0 && currentValueCapacity > valueCount * 2) {
@@ -958,7 +958,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
         return; // NOOP
       }
 
-      while((currentIdx + numElements -1) >= parent.getValueCapacity()) {
+      while ((currentIdx + numElements -1) >= parent.getValueCapacity()) {
         parent.reAlloc();
       }
 

@@ -513,8 +513,9 @@ public class DrillTestWrapper {
   }
 
   /**
-   * Use this method only if necessary to validate one query against another. If you are just validating against a
-   * baseline file use one of the simpler interfaces that will write the validation query for you.
+   * Use this method only if necessary to validate one query against another. If
+   * you are just validating against a baseline file use one of the simpler
+   * interfaces that will write the validation query for you.
    *
    * @throws Exception
    */
@@ -544,7 +545,8 @@ public class DrillTestWrapper {
         checkColumnDef(loader.getSchema());
       }
 
-      // If baseline data was not provided to the test builder directly, we must run a query for the baseline, this includes
+      // If baseline data was not provided to the test builder directly, we must
+      // run a query for the baseline, this includes
       // the cases where the baseline is stored in a file.
       if (baselineRecords == null) {
         if (expectedNumRecords != DrillTestWrapper.EXPECTED_NUM_RECORDS_NOT_SET) {

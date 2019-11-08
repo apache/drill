@@ -429,6 +429,7 @@ public class JsonReader extends BaseJsonReader {
         case START_ARRAY:
           writeData(list.list());
           break;
+
         case START_OBJECT:
           if (!writeListDataIfTyped(list)) {
             writeData(list.map(), FieldSelection.ALL_VALID, false);

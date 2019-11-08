@@ -17,10 +17,6 @@
  */
 package org.apache.drill.exec.memory;
 
-import io.netty.buffer.ByteBufAllocator;
-import io.netty.buffer.DrillBuf;
-import io.netty.buffer.UnsafeDirectLittleEndian;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -35,11 +31,16 @@ import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.memory.AllocationManager.BufferLedger;
 import org.apache.drill.exec.ops.BufferManager;
 import org.apache.drill.exec.util.AssertionUtil;
-
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.netty.buffer.ByteBufAllocator;
+import io.netty.buffer.DrillBuf;
+import io.netty.buffer.UnsafeDirectLittleEndian;
 
 public abstract class BaseAllocator extends Accountant implements BufferAllocator {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseAllocator.class);
+  private static final Logger logger = LoggerFactory.getLogger(BaseAllocator.class);
 
   public static final String DEBUG_ALLOCATOR = "drill.memory.debug.allocator";
 
@@ -464,7 +465,6 @@ public abstract class BaseAllocator extends Accountant implements BufferAllocato
 
     return new Reservation();
   }
-
 
   @Override
   public synchronized void close() {

@@ -38,7 +38,6 @@ package org.apache.drill.exec.vector.complex.impl;
 /*
  * This class is generated using FreeMarker and the ${.template_name} template.
  */
-@SuppressWarnings("unused")
 public class ${mode}ListWriter extends AbstractFieldWriter {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(${mode}ListWriter.class);
 

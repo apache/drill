@@ -36,15 +36,16 @@ public class VariableLengthVectorTest
   public void testSettingSameValueCount()
   {
     try (RootAllocator allocator = new RootAllocator(10_000_000)) {
-      final MaterializedField field = MaterializedField.create("stringCol", Types.required(TypeProtos.MinorType.VARCHAR));
-      final VarCharVector vector = new VarCharVector(field, allocator);
+      MaterializedField field = MaterializedField.create("stringCol", Types.required(TypeProtos.MinorType.VARCHAR));
+      @SuppressWarnings("resource")
+      VarCharVector vector = new VarCharVector(field, allocator);
 
       vector.allocateNew();
 
       try {
-        final int size = 1000;
-        final VarCharVector.Mutator mutator = vector.getMutator();
-        final VarCharVector.Accessor accessor = vector.getAccessor();
+        int size = 1000;
+        VarCharVector.Mutator mutator = vector.getMutator();
+        VarCharVector.Accessor accessor = vector.getAccessor();
 
         setSafeIndexStrings("", 0, size, mutator);
 
@@ -64,16 +65,17 @@ public class VariableLengthVectorTest
   public void testTrunicateVectorSetValueCount()
   {
     try (RootAllocator allocator = new RootAllocator(10_000_000)) {
-      final MaterializedField field = MaterializedField.create("stringCol", Types.required(TypeProtos.MinorType.VARCHAR));
-      final VarCharVector vector = new VarCharVector(field, allocator);
+      MaterializedField field = MaterializedField.create("stringCol", Types.required(TypeProtos.MinorType.VARCHAR));
+      @SuppressWarnings("resource")
+      VarCharVector vector = new VarCharVector(field, allocator);
 
       vector.allocateNew();
 
       try {
-        final int size = 1000;
-        final int fluffSize = 10000;
-        final VarCharVector.Mutator mutator = vector.getMutator();
-        final VarCharVector.Accessor accessor = vector.getAccessor();
+        int size = 1000;
+        int fluffSize = 10000;
+        VarCharVector.Mutator mutator = vector.getMutator();
+        VarCharVector.Accessor accessor = vector.getAccessor();
 
         setSafeIndexStrings("", 0, size, mutator);
         setSafeIndexStrings("first cut ", size, fluffSize, mutator);
@@ -92,19 +94,20 @@ public class VariableLengthVectorTest
   @Test
   public void testDRILL7341() {
     try (RootAllocator allocator = new RootAllocator(10_000_000)) {
-      final MaterializedField field = MaterializedField.create("stringCol", Types.optional(TypeProtos.MinorType.VARCHAR));
-      final NullableVarCharVector sourceVector = new NullableVarCharVector(field, allocator);
-      final NullableVarCharVector targetVector = new NullableVarCharVector(field, allocator);
+      MaterializedField field = MaterializedField.create("stringCol", Types.optional(TypeProtos.MinorType.VARCHAR));
+      NullableVarCharVector sourceVector = new NullableVarCharVector(field, allocator);
+      @SuppressWarnings("resource")
+      NullableVarCharVector targetVector = new NullableVarCharVector(field, allocator);
 
       sourceVector.allocateNew();
       targetVector.allocateNew();
 
       try {
-        final NullableVarCharVector.Mutator sourceMutator = sourceVector.getMutator();
+        NullableVarCharVector.Mutator sourceMutator = sourceVector.getMutator();
         sourceMutator.setValueCount(sourceVector.getValueCapacity() * 4);
 
         targetVector.exchange(sourceVector);
-        final NullableVarCharVector.Mutator targetMutator = targetVector.getMutator();
+        NullableVarCharVector.Mutator targetMutator = targetVector.getMutator();
         targetMutator.setValueCount(targetVector.getValueCapacity() * 2);
       } finally {
         sourceVector.clear();
@@ -120,16 +123,17 @@ public class VariableLengthVectorTest
   public void testSetBackTracking()
   {
     try (RootAllocator allocator = new RootAllocator(10_000_000)) {
-      final MaterializedField field = MaterializedField.create("stringCol", Types.required(TypeProtos.MinorType.VARCHAR));
-      final VarCharVector vector = new VarCharVector(field, allocator);
+      MaterializedField field = MaterializedField.create("stringCol", Types.required(TypeProtos.MinorType.VARCHAR));
+      @SuppressWarnings("resource")
+      VarCharVector vector = new VarCharVector(field, allocator);
 
       vector.allocateNew();
 
       try {
-        final int size = 1000;
-        final int fluffSize = 10000;
-        final VarCharVector.Mutator mutator = vector.getMutator();
-        final VarCharVector.Accessor accessor = vector.getAccessor();
+        int size = 1000;
+        int fluffSize = 10000;
+        VarCharVector.Mutator mutator = vector.getMutator();
+        VarCharVector.Accessor accessor = vector.getAccessor();
 
         setSafeIndexStrings("", 0, size, mutator);
         setSafeIndexStrings("first cut ", size, fluffSize, mutator);
@@ -150,7 +154,7 @@ public class VariableLengthVectorTest
   public static void setSafeIndexStrings(String prefix, int offset, int size, VarCharVector.Mutator mutator)
   {
     for (int index = offset; index < size; index++) {
-      final String indexString = prefix + "String num " + index;
+      String indexString = prefix + "String num " + index;
       mutator.setSafe(index, indexString.getBytes());
     }
   }
@@ -158,7 +162,7 @@ public class VariableLengthVectorTest
   public static void checkIndexStrings(String prefix, int offset, int size, VarCharVector.Accessor accessor)
   {
     for (int index = offset; index < size; index++) {
-      final String indexString = prefix + "String num " + index;
+      String indexString = prefix + "String num " + index;
       Assert.assertArrayEquals(indexString.getBytes(), accessor.get(index));
     }
   }

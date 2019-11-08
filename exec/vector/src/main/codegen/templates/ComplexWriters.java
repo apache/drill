@@ -79,13 +79,7 @@ public class ${eName}WriterImpl extends AbstractFieldWriter {
     vector.clear();
   }
 
-  @Override
-  protected int idx() {
-    return super.idx();
-  }
-
   <#if mode == "Repeated">
-
   public void write(${minor.class?cap_first}Holder h) {
     mutator.addSafe(idx(), h);
     vector.getMutator().setValueCount(idx()+1);
@@ -101,8 +95,8 @@ public class ${eName}WriterImpl extends AbstractFieldWriter {
     mutator.addSafe(idx()<#list fields as field><#if field.include!true>, ${field.name}</#if></#list>);
     vector.getMutator().setValueCount(idx() + 1);
   }
+  
   </#if>
-
   <#if minor.class?contains("VarDecimal")>
   public void writeVarDecimal(BigDecimal value) {
     mutator.addSafe(idx(), value.unscaledValue().toByteArray());
@@ -114,10 +108,8 @@ public class ${eName}WriterImpl extends AbstractFieldWriter {
     super.setPosition(idx);
     mutator.startNewValue(idx);
   }
-
-
+  
   <#else>
-
   public void write(${minor.class}Holder h) {
     mutator.setSafe(idx(), h);
     vector.getMutator().setValueCount(idx()+1);
@@ -133,8 +125,8 @@ public class ${eName}WriterImpl extends AbstractFieldWriter {
     mutator.setNull(idx());
     vector.getMutator().setValueCount(idx() + 1);
   }
+  
   </#if>
-
   <#if !(minor.class == "Decimal9" || minor.class == "Decimal18")>
   public void write${minor.class}(<#list fields as field>${field.type} ${field.name}<#if field_has_next>, </#if></#list>) {
     mutator.setSafe(idx()<#if mode == "Nullable">, 1</#if><#list fields as field><#if field.include!true>, ${field.name}</#if></#list>);

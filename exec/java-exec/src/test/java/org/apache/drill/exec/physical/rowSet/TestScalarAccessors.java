@@ -33,18 +33,34 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.expr.BasicTypeHelper;
+import org.apache.drill.exec.physical.rowSet.DirectRowSet;
+import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.physical.rowSet.RowSet.SingleRowSet;
-import org.apache.drill.exec.record.SimpleVectorWrapper;
+import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
+import org.apache.drill.exec.physical.rowSet.RowSetReader;
+import org.apache.drill.exec.physical.rowSet.RowSetWriter;
+import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.vector.BaseDataValueVector;
+import org.apache.drill.exec.vector.BitVector;
 import org.apache.drill.exec.vector.DateUtilities;
+import org.apache.drill.exec.vector.NullableBitVector;
 import org.apache.drill.exec.vector.NullableVarCharVector;
+import org.apache.drill.exec.vector.NullableVector;
+import org.apache.drill.exec.vector.RepeatedVarCharVector;
+import org.apache.drill.exec.vector.UInt1Vector;
+import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.VarCharVector;
 import org.apache.drill.exec.vector.accessor.ArrayReader;
 import org.apache.drill.exec.vector.accessor.ArrayWriter;
 import org.apache.drill.exec.vector.accessor.ScalarReader;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.ValueType;
+import org.apache.drill.exec.vector.complex.RepeatedValueVector;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.test.rowSet.RowSetUtilities;
@@ -176,6 +192,23 @@ public class TestScalarAccessors extends SubOperatorTest {
         .build();
     assertEquals(3, rs.rowCount());
 
+    // Verify vector state
+
+    VectorContainer container = rs.container();
+    assertEquals(1, container.getNumberOfColumns());
+    ValueVector v = container.getValueVector(0).getValueVector();
+    assertTrue(v instanceof NullableVector);
+    NullableVector nv = (NullableVector) v;
+    assertEquals(3, nv.getAccessor().getValueCount());
+    assertEquals(3 * BasicTypeHelper.getSize(Types.required(type)),
+        ((BaseDataValueVector) v).getBuffer().writerIndex());
+
+    // Verify bits vector. (Assumes UInt1 implementation.)
+
+    UInt1Vector bv = (UInt1Vector) nv.getBitsVector();
+    assertEquals(3, bv.getAccessor().getValueCount());
+    assertEquals(3, bv.getBuffer().writerIndex());
+
     RowSetReader reader = rs.reader();
     ScalarReader colReader = reader.scalar(0);
 
@@ -210,6 +243,28 @@ public class TestScalarAccessors extends SubOperatorTest {
         .addSingleCol(new int[] {0, 20, 30})
         .build();
     assertEquals(2, rs.rowCount());
+
+    // Verify vector state
+
+    VectorContainer container = rs.container();
+    assertEquals(1, container.getNumberOfColumns());
+    ValueVector v = container.getValueVector(0).getValueVector();
+    assertTrue(v instanceof RepeatedValueVector);
+    RepeatedValueVector rv = (RepeatedValueVector) v;
+    assertEquals(2, rv.getAccessor().getValueCount());
+
+    // Data vector: 3 values written above.
+
+    ValueVector vv = rv.getDataVector();
+    assertEquals(3, vv.getAccessor().getValueCount());
+    assertEquals(3 * BasicTypeHelper.getSize(Types.required(type)),
+        ((BaseDataValueVector) vv).getBuffer().writerIndex());
+
+    // Offsets vector: one more than row count
+
+    UInt4Vector ov = rv.getOffsetVector();
+    assertEquals(3, ov.getAccessor().getValueCount());
+    assertEquals(3 * 4, ov.getBuffer().writerIndex());
 
     RowSetReader reader = rs.reader();
     ArrayReader arrayReader = reader.array(0);
@@ -681,9 +736,34 @@ public class TestScalarAccessors extends SubOperatorTest {
         .addRow("abcd")
         .build();
     assertEquals(3, rs.rowCount());
-    SimpleVectorWrapper<?> vw = (SimpleVectorWrapper<?>) rs.container().getValueVector(0);
-    NullableVarCharVector v = (NullableVarCharVector) vw.getValueVector();
-    assertEquals(3, v.getMutator().getLastSet());
+
+    // Verify vector state
+
+    VectorContainer container = rs.container();
+    assertEquals(1, container.getNumberOfColumns());
+    ValueVector v = container.getValueVector(0).getValueVector();
+    assertTrue(v instanceof NullableVarCharVector);
+    NullableVarCharVector nvcv = (NullableVarCharVector) v;
+    assertEquals(3, nvcv.getAccessor().getValueCount());
+    assertEquals(2, nvcv.getMutator().getLastSet());
+
+    // Data vector: 3 values written above.
+
+    VarCharVector vv = nvcv.getValuesVector();
+    assertEquals(3, vv.getAccessor().getValueCount());
+
+    // Offsets vector: one more than row count
+
+    UInt4Vector ov = vv.getOffsetVector();
+    assertEquals(4, ov.getAccessor().getValueCount());
+    assertEquals(4 * 4, ov.getBuffer().writerIndex());
+
+    // Last offset and bytes buf length must agree
+
+    int lastIndex = ov.getAccessor().get(3);
+    assertEquals(lastIndex, vv.getBuffer().writerIndex());
+
+    // Verify using the reader
 
     RowSetReader reader = rs.reader();
     ScalarReader colReader = reader.scalar(0);
@@ -712,8 +792,8 @@ public class TestScalarAccessors extends SubOperatorTest {
         .addArray("col", MinorType.VARCHAR)
         .buildSchema();
     SingleRowSet rs = fixture.rowSetBuilder(schema)
-        .addSingleCol(new String[] {})
-        .addSingleCol(new String[] {"fred", "", "wilma"})
+        .addSingleCol(strArray())
+        .addSingleCol(strArray("fred", "", "wilma"))
         .build();
     assertEquals(2, rs.rowCount());
 
@@ -749,6 +829,57 @@ public class TestScalarAccessors extends SubOperatorTest {
     assertEquals(Lists.newArrayList("fred", "", "wilma"), arrayReader.getObject());
 
     assertFalse(reader.next());
+    rs.clear();
+  }
+
+  /**
+   * Test for the special case for the "inner" offset vector
+   * as explained in the Javadoc for
+   * @{link org.apache.drill.exec.vector.accessor.writer.OffsetVectorWriterImpl}
+   */
+
+  @Test
+  public void testEmptyVarcharArray() {
+    TupleMetadata schema = new SchemaBuilder()
+        .addArray("col", MinorType.VARCHAR)
+        .add("b", MinorType.VARCHAR)
+        .buildSchema();
+    SingleRowSet rs = fixture.rowSetBuilder(schema)
+        .addRow(strArray(), "first")
+        .addRow(strArray(), "second")
+        .addRow(strArray(), "third")
+        .build();
+    assertEquals(3, rs.rowCount());
+
+    // Verify vector state
+
+    VectorContainer container = rs.container();
+    assertEquals(2, container.getNumberOfColumns());
+    ValueVector v = container.getValueVector(0).getValueVector();
+    assertTrue(v instanceof RepeatedVarCharVector);
+    RepeatedVarCharVector rvc = (RepeatedVarCharVector) v;
+    assertEquals(3, rvc.getAccessor().getValueCount());
+
+    // Verify outer offsets vector
+
+    UInt4Vector oov = rvc.getOffsetVector();
+    assertEquals(4, oov.getAccessor().getValueCount());
+    assertEquals(4 * 4, oov.getBuffer().writerIndex());
+
+    // Inner vector
+
+    VarCharVector iv = rvc.getDataVector();
+    assertEquals(0, iv.getAccessor().getValueCount());
+    assertEquals(0, iv.getBuffer().writerIndex());
+
+    // Inner offset vector. Has 0 entries, not 1 as would be
+    // expected according to the general rule:
+    // offset vector length = value length + 1
+
+    UInt4Vector iov = iv.getOffsetVector();
+    assertEquals(0, iov.getAccessor().getValueCount());
+    assertEquals(0, iov.getBuffer().writerIndex());
+
     rs.clear();
   }
 
@@ -1658,6 +1789,19 @@ public class TestScalarAccessors extends SubOperatorTest {
         .build();
     assertEquals(6, rs.rowCount());
 
+    // Verify vector state
+
+    VectorContainer container = rs.container();
+    assertEquals(1, container.getNumberOfColumns());
+    ValueVector v = container.getValueVector(0).getValueVector();
+    assertTrue(v instanceof BitVector);
+    BitVector bv = (BitVector) v;
+    assertEquals(6, bv.getAccessor().getValueCount());
+    assertEquals(1,
+        ((BaseDataValueVector) v).getBuffer().writerIndex());
+
+    // Verify using a reader
+
     RowSetReader reader = rs.reader();
     ScalarReader colReader = reader.scalar(0);
 
@@ -1679,6 +1823,72 @@ public class TestScalarAccessors extends SubOperatorTest {
     assertTrue(reader.next());
     assertEquals(true, colReader.getBoolean());
     assertEquals(1, colReader.getInt());
+
+    assertFalse(reader.next());
+    rs.clear();
+  }
+
+  @Test
+  public void testNullableBitRW() {
+
+    TupleMetadata schema = new SchemaBuilder()
+        .addNullable("col", MinorType.BIT)
+        .buildSchema();
+
+    SingleRowSet rs = fixture.rowSetBuilder(schema)
+        .addSingleCol(true)
+        .addSingleCol(false)
+        .addSingleCol(null)
+        .addSingleCol(1)
+        .addSingleCol(2)
+        .addSingleCol(null)
+        .build();
+    assertEquals(6, rs.rowCount());
+
+    // Verify vector state
+
+    VectorContainer container = rs.container();
+    assertEquals(1, container.getNumberOfColumns());
+    ValueVector v = container.getValueVector(0).getValueVector();
+    assertTrue(v instanceof NullableBitVector);
+    NullableBitVector nv = (NullableBitVector) v;
+    assertEquals(6, nv.getAccessor().getValueCount());
+
+    BitVector dv = nv.getValuesVector();
+    assertEquals(6, dv.getAccessor().getValueCount());
+    assertEquals(1, dv.getBuffer().writerIndex());
+
+    // Verify bits vector. (Assumes UInt1 implementation.)
+
+    UInt1Vector bv = nv.getBitsVector();
+    assertEquals(6, bv.getAccessor().getValueCount());
+    assertEquals(6, bv.getBuffer().writerIndex());
+
+    // Verify using a reader
+
+    RowSetReader reader = rs.reader();
+    ScalarReader colReader = reader.scalar(0);
+
+    assertTrue(reader.next());
+    assertEquals(true, colReader.getBoolean());
+    assertEquals(1, colReader.getInt());
+    assertFalse(colReader.isNull());
+    assertTrue(reader.next());
+    assertEquals(false, colReader.getBoolean());
+    assertEquals(0, colReader.getInt());
+    assertFalse(colReader.isNull());
+    assertTrue(reader.next());
+    assertTrue(colReader.isNull());
+    assertTrue(reader.next());
+    assertEquals(true, colReader.getBoolean());
+    assertEquals(1, colReader.getInt());
+    assertTrue(reader.next());
+    assertFalse(colReader.isNull());
+    assertEquals(true, colReader.getBoolean());
+    assertEquals(1, colReader.getInt());
+    assertFalse(colReader.isNull());
+    assertTrue(reader.next());
+    assertTrue(colReader.isNull());
 
     assertFalse(reader.next());
     rs.clear();

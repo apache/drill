@@ -22,8 +22,10 @@ import java.io.File;
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.memory.BufferAllocator;
-
+import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.shaded.guava.com.google.common.io.Files;
+
+import io.netty.buffer.DrillBuf;
 
 /**
  * Base class for "fixtures." Provides the basics such as the Drill
@@ -58,4 +60,27 @@ public class BaseFixture {
 
   public BufferAllocator allocator() { return allocator; }
   public DrillConfig config() { return config; }
+
+  /**
+   * Party over enough memory that the uninitialized nature of
+   * vectors under the new writers will cause test to fail if
+   * the writer's don't correctly fill in all values.
+   */
+
+  public void dirtyMemory(int blockCount) {
+    dirtyMemory(allocator, blockCount);
+  }
+
+  public static void dirtyMemory(BufferAllocator allocator, int blockCount) {
+    DrillBuf bufs[] = new DrillBuf[blockCount];
+    for (int i = 0; i < bufs.length; i++) {
+      bufs[i] = allocator.buffer(ValueVector.MAX_BUFFER_SIZE);
+      for (int j = 0; j < ValueVector.MAX_BUFFER_SIZE / 4; j++) {
+        bufs[i].setInt(j * 4, 0xdeadbeef);
+      }
+    }
+    for (int i = 0; i < bufs.length; i++) {
+      bufs[i].close();
+    }
+  }
 }

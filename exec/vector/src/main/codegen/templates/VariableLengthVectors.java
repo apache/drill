@@ -96,12 +96,12 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   }
 
   @Override
-  public int getBufferSizeFor(final int valueCount) {
+  public int getBufferSizeFor(int valueCount) {
     if (valueCount == 0) {
       return 0;
     }
 
-    final int idx = offsetVector.getAccessor().get(valueCount);
+    int idx = offsetVector.getAccessor().get(valueCount);
     return offsetVector.getBufferSizeFor(valueCount + 1) + idx;
   }
 
@@ -131,7 +131,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
    * @return
    */
   public int getVarByteLength(){
-    final int valueCount = getAccessor().getValueCount();
+    int valueCount = getAccessor().getValueCount();
     if(valueCount == 0) {
       return 0;
     }
@@ -150,11 +150,11 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   @Override
   public void load(SerializedField metadata, DrillBuf buffer) {
     // the bits vector is the first child (the order in which the children are added in getMetadataBuilder is significant)
-    final SerializedField offsetField = metadata.getChild(0);
+    SerializedField offsetField = metadata.getChild(0);
     offsetVector.load(offsetField, buffer);
 
-    final int capacity = buffer.capacity();
-    final int offsetsLength = offsetField.getBufferLength();
+    int capacity = buffer.capacity();
+    int offsetsLength = offsetField.getBufferLength();
     data = buffer.slice(offsetsLength, capacity - offsetsLength);
     data.retain();
   }
@@ -167,10 +167,10 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
 
   @Override
   public DrillBuf[] getBuffers(boolean clear) {
-    final DrillBuf[] buffers = ObjectArrays.concat(offsetVector.getBuffers(false), super.getBuffers(false), DrillBuf.class);
+    DrillBuf[] buffers = ObjectArrays.concat(offsetVector.getBuffers(false), super.getBuffers(false), DrillBuf.class);
     if (clear) {
       // does not make much sense but we have to retain buffers even when clear is set. refactor this interface.
-      for (final DrillBuf buffer:buffers) {
+      for (DrillBuf buffer:buffers) {
         buffer.retain(1);
       }
       clear();
@@ -212,12 +212,12 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
 
   public void splitAndTransferTo(int startIndex, int length, ${minor.class}Vector target) {
     UInt${type.width}Vector.Accessor offsetVectorAccessor = this.offsetVector.getAccessor();
-    final int startPoint = offsetVectorAccessor.get(startIndex);
-    final int sliceLength = offsetVectorAccessor.get(startIndex + length) - startPoint;
+    int startPoint = offsetVectorAccessor.get(startIndex);
+    int sliceLength = offsetVectorAccessor.get(startIndex + length) - startPoint;
     target.clear();
     target.offsetVector.allocateNew(length + 1);
     offsetVectorAccessor = this.offsetVector.getAccessor();
-    final UInt4Vector.Mutator targetOffsetVectorMutator = target.offsetVector.getMutator();
+    UInt4Vector.Mutator targetOffsetVectorMutator = target.offsetVector.getMutator();
     for (int i = 0; i < length + 1; i++) {
       targetOffsetVectorMutator.set(i, offsetVectorAccessor.get(startIndex + i) - startPoint);
     }
@@ -226,30 +226,29 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
 }
 
   protected void copyFrom(int fromIndex, int thisIndex, ${minor.class}Vector from){
-    final UInt4Vector.Accessor fromOffsetVectorAccessor = from.offsetVector.getAccessor();
-    final int start = fromOffsetVectorAccessor.get(fromIndex);
-    final int end = fromOffsetVectorAccessor.get(fromIndex + 1);
-    final int len = end - start;
+    UInt4Vector.Accessor fromOffsetVectorAccessor = from.offsetVector.getAccessor();
+    int start = fromOffsetVectorAccessor.get(fromIndex);
+    int end = fromOffsetVectorAccessor.get(fromIndex + 1);
+    int len = end - start;
 
-    final int outputStart = offsetVector.data.get${(minor.javaType!type.javaType)?cap_first}(thisIndex * ${type.width});
+    int outputStart = offsetVector.data.get${(minor.javaType!type.javaType)?cap_first}(thisIndex * ${type.width});
     from.data.getBytes(start, data, outputStart, len);
     offsetVector.data.set${(minor.javaType!type.javaType)?cap_first}( (thisIndex+1) * ${type.width}, outputStart + len);
   }
 
-  public boolean copyFromSafe(int fromIndex, int thisIndex, ${minor.class}Vector from){
-    final UInt${type.width}Vector.Accessor fromOffsetVectorAccessor = from.offsetVector.getAccessor();
-    final int start = fromOffsetVectorAccessor.get(fromIndex);
-    final int end =   fromOffsetVectorAccessor.get(fromIndex + 1);
-    final int len = end - start;
-    final int outputStart = offsetVector.data.get${(minor.javaType!type.javaType)?cap_first}(thisIndex * ${type.width});
+  public void copyFromSafe(int fromIndex, int thisIndex, ${minor.class}Vector from){
+    UInt${type.width}Vector.Accessor fromOffsetVectorAccessor = from.offsetVector.getAccessor();
+    int start = fromOffsetVectorAccessor.get(fromIndex);
+    int end =   fromOffsetVectorAccessor.get(fromIndex + 1);
+    int len = end - start;
+    int outputStart = offsetVector.getAccessor().get(thisIndex);
 
     while(data.capacity() < outputStart + len) {
-        reAlloc();
+      reAlloc();
     }
 
     offsetVector.getMutator().setSafe(thisIndex + 1, outputStart + len);
     from.data.getBytes(start, data, outputStart, len);
-    return true;
   }
 
   @Override
@@ -313,8 +312,8 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   }
 
   @Override
-  public void setInitialCapacity(final int valueCount) {
-    final long size = 1L * valueCount * ${type.width};
+  public void setInitialCapacity(int valueCount) {
+    long size = 1L * valueCount * ${type.width};
     if (size > MAX_ALLOCATION_SIZE) {
       throw new OversizedAllocationException("Requested amount of memory is more than max allowed allocation size");
     }
@@ -351,7 +350,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
      * clear all the memory that we allocated
      */
     try {
-      final int requestedSize = (int)curAllocationSize;
+      int requestedSize = (int)curAllocationSize;
       data = allocator.buffer(requestedSize);
       allocationSizeInBytes = requestedSize;
       offsetVector.allocateNew();
@@ -407,7 +406,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
 
   @Override
   public DrillBuf reallocRaw(int newAllocationSize) {
-    final DrillBuf newBuf = allocator.buffer(newAllocationSize);
+    DrillBuf newBuf = allocator.buffer(newAllocationSize);
     newBuf.setBytes(0, data, 0, data.capacity());
     data.release();
     data = newBuf;
@@ -458,17 +457,17 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
 
     public byte[] get(int index) {
       assert index >= 0;
-      final int startIdx = oAccessor.get(index);
-      final int length = oAccessor.get(index + 1) - startIdx;
+      int startIdx = oAccessor.get(index);
+      int length = oAccessor.get(index + 1) - startIdx;
       assert length >= 0;
-      final byte[] dst = new byte[length];
+      byte[] dst = new byte[length];
       data.getBytes(startIdx, dst, 0, length);
       return dst;
     }
 
     @Override
     public int getValueLength(int index) {
-      final UInt${type.width}Vector.Accessor offsetVectorAccessor = offsetVector.getAccessor();
+      UInt${type.width}Vector.Accessor offsetVectorAccessor = offsetVector.getAccessor();
       return offsetVectorAccessor.get(index + 1) - offsetVectorAccessor.get(index);
     }
 
@@ -601,7 +600,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
      */
     protected void set(int index, byte[] bytes) {
       assert index >= 0;
-      final int currentOffset = offsetVector.getAccessor().get(index);
+      int currentOffset = offsetVector.getAccessor().get(index);
       offsetVector.getMutator().set(index + 1, currentOffset + bytes.length);
       data.setBytes(currentOffset, bytes, 0, bytes.length);
     }
@@ -609,7 +608,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     public void setSafe(int index, byte[] bytes) {
       assert index >= 0;
 
-      final int currentOffset = offsetVector.getAccessor().get(index);
+      int currentOffset = offsetVector.getAccessor().get(index);
       while (data.capacity() < currentOffset + bytes.length) {
         reAlloc();
       }
@@ -673,7 +672,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
      */
     protected void set(int index, byte[] bytes, int start, int length) {
       assert index >= 0;
-      final int currentOffset = offsetVector.getAccessor().get(index);
+      int currentOffset = offsetVector.getAccessor().get(index);
       offsetVector.getMutator().set(index + 1, currentOffset + length);
       data.setBytes(currentOffset, bytes, start, length);
     }
@@ -681,7 +680,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     public void setSafe(int index, ByteBuffer bytes, int start, int length) {
       assert index >= 0;
 
-      final int currentOffset = offsetVector.getAccessor().get(index);
+      int currentOffset = offsetVector.getAccessor().get(index);
 
       while (data.capacity() < currentOffset + length) {
         reAlloc();
@@ -693,7 +692,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     public void setSafe(int index, byte[] bytes, int start, int length) {
       assert index >= 0;
 
-      final int currentOffset = offsetVector.getAccessor().get(index);
+      int currentOffset = offsetVector.getAccessor().get(index);
 
       while (data.capacity() < currentOffset + length) {
         reAlloc();
@@ -704,7 +703,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
 
     @Override
     public void setValueLengthSafe(int index, int length) {
-      final int offset = offsetVector.getAccessor().get(index);
+      int offset = offsetVector.getAccessor().get(index);
       while(data.capacity() < offset + length ) {
         reAlloc();
       }
@@ -712,8 +711,8 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     }
 
     public void setSafe(int index, int start, int end, DrillBuf buffer) {
-      final int len = end - start;
-      final int outputStart = offsetVector.data.get${(minor.javaType!type.javaType)?cap_first}(index * ${type.width});
+      int len = end - start;
+      int outputStart = offsetVector.data.get${(minor.javaType!type.javaType)?cap_first}(index * ${type.width});
 
       while (data.capacity() < outputStart + len) {
         reAlloc();
@@ -725,11 +724,11 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     public void setSafe(int index, Nullable${minor.class}Holder holder) {
       assert holder.isSet == 1;
 
-      final int start = holder.start;
-      final int end =   holder.end;
-      final int len = end - start;
+      int start = holder.start;
+      int end =   holder.end;
+      int len = end - start;
 
-      final int outputStart = offsetVector.data.get${(minor.javaType!type.javaType)?cap_first}(index * ${type.width});
+      int outputStart = offsetVector.data.get${(minor.javaType!type.javaType)?cap_first}(index * ${type.width});
 
       while (data.capacity() < outputStart + len) {
         reAlloc();
@@ -751,10 +750,10 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     </#if>
 
     public void setSafe(int index, ${minor.class}Holder holder) {
-      final int start = holder.start;
-      final int end =   holder.end;
-      final int len = end - start;
-      final int outputStart = offsetVector.data.get${(minor.javaType!type.javaType)?cap_first}(index * ${type.width});
+      int start = holder.start;
+      int end =   holder.end;
+      int len = end - start;
+      int outputStart = offsetVector.data.get${(minor.javaType!type.javaType)?cap_first}(index * ${type.width});
 
       while(data.capacity() < outputStart + len) {
         reAlloc();
@@ -764,46 +763,59 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     }
 
     /**
-     * Backfill missing offsets from the given last written position to the
-     * given current write position. Used by the "new" size-safe column
-     * writers to allow skipping values. The <tt>set()</tt> and <tt>setSafe()</tt>
-     * <b>do not</b> fill empties. See DRILL-5529.
-     * @param lastWrite the position of the last valid write: the offset
-     * to be copied forward
-     * @param index the current write position filling occurs up to,
-     * but not including, this position
+     * Backfill missing offsets from the given last written position up to, but
+     * not including the given current write position. Used by nullable
+     * vectors to allow skipping values. The <tt>set()</tt> and
+     * <tt>setSafe()</tt> <b>do not</b> fill empties. See DRILL-5529.
+     * 
+     * @param lastWrite
+     *          the position of the last valid write: the offset to be copied
+     *          forward
+     * @param index
+     *          the current write position filling occurs up to, but not
+     *          including, this position
      */
 
     public void fillEmpties(int lastWrite, int index) {
+
       // If last write was 2, offsets are [0, 3, 6]
       // If next write is 4, offsets must be: [0, 3, 6, 6, 6]
       // Remember the offsets are one more than row count.
 
-      final int fillOffset = offsetVector.getAccessor().get(lastWrite+1);
-      final UInt4Vector.Mutator offsetMutator = offsetVector.getMutator();
-      for (int i = lastWrite; i < index; i++) {
-        offsetMutator.setSafe(i + 1, fillOffset);
+      int startWrite = lastWrite + 1;
+      if (startWrite < index) {
+
+        // Don't access the offset vector if nothing to fill.
+        // This handles the special case of a zero-size batch
+        // in which the 0th position of the offset vector does
+        // not even exist.
+
+        int fillOffset = offsetVector.getAccessor().get(startWrite);
+        UInt4Vector.Mutator offsetMutator = offsetVector.getMutator();
+        for (int i = startWrite; i < index; i++) {
+          offsetMutator.setSafe(i + 1, fillOffset);
+        }
       }
     }
 
     protected void set(int index, int start, int length, DrillBuf buffer){
       assert index >= 0;
-      final int currentOffset = offsetVector.getAccessor().get(index);
+      int currentOffset = offsetVector.getAccessor().get(index);
       offsetVector.getMutator().set(index + 1, currentOffset + length);
-      final DrillBuf bb = buffer.slice(start, length);
+      DrillBuf bb = buffer.slice(start, length);
       data.setBytes(currentOffset, bb);
     }
 
     protected void set(int index, Nullable${minor.class}Holder holder){
-      final int length = holder.end - holder.start;
-      final int currentOffset = offsetVector.getAccessor().get(index);
+      int length = holder.end - holder.start;
+      int currentOffset = offsetVector.getAccessor().get(index);
       offsetVector.getMutator().set(index + 1, currentOffset + length);
       data.setBytes(currentOffset, holder.buffer, holder.start, length);
     }
 
     protected void set(int index, ${minor.class}Holder holder){
-      final int length = holder.end - holder.start;
-      final int currentOffset = offsetVector.getAccessor().get(index);
+      int length = holder.end - holder.start;
+      int currentOffset = offsetVector.getAccessor().get(index);
       offsetVector.getMutator().set(index + 1, currentOffset + length);
       data.setBytes(currentOffset, holder.buffer, holder.start, length);
     }
@@ -811,28 +823,35 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     /**
      * <h4>Notes on Usage</h4>
      * <p>
-     * For {@link VariableWidthVector}s this method can be used in the following cases:
+     * For {@link VariableWidthVector}s this method can be used in the following
+     * cases:
      * <ul>
-     *   <li>Setting the actual number of elements currently contained in the vector.</li>
-     *   <li>Trimming the vector to have fewer elements than it current does.</li>
+     * <li>Setting the actual number of elements currently contained in the
+     * vector.</li>
+     * <li>Trimming the vector to have fewer elements than it current does.</li>
      * </ul>
      * </p>
      * <h4>Caveats</h4>
      * <p>
-     *   It is important to note that for {@link org.apache.drill.exec.vector.FixedWidthVector}s this method can also be used to expand the vector.
-     *   However, {@link VariableWidthVector} do not support this usage and this method will throw an {@link IndexOutOfBoundsException} if you attempt
-     *   to use it in this way. Expansion of valueCounts is not supported mainly because there is no benefit, since you would still have to rely on the setSafe
-     *   methods to appropriatly expand the data buffer and populate the vector anyway (since by definition we do not know the width of elements). See DRILL-6234 for details.
+     * It is important to note that for
+     * {@link org.apache.drill.exec.vector.FixedWidthVector}s this method can
+     * also be used to expand the vector. However, {@link VariableWidthVector}
+     * do not support this usage and this method will throw an
+     * {@link IndexOutOfBoundsException} if you attempt to use it in this way.
+     * Expansion of valueCounts is not supported mainly because there is no
+     * benefit, since you would still have to rely on the setSafe methods to
+     * appropriately expand the data buffer and populate the vector anyway
+     * (since by definition we do not know the width of elements). See
+     * DRILL-6234 for details.
      * </p>
-     * <h4>Method Documentation</h4>
-     * {@inheritDoc}
+     * <h4>Method Documentation</h4> {@inheritDoc}
      */
     @Override
     public void setValueCount(int valueCount) {
-      final int currentByteCapacity = getByteCapacity();
+      int currentByteCapacity = getByteCapacity();
       // Check if valueCount to be set is zero and current capacity is also zero. If yes then
       // we should not call get to read start index from offset vector at that value count.
-      final int idx = (valueCount == 0 && currentByteCapacity == 0)
+      int idx = (valueCount == 0 && currentByteCapacity == 0)
         ? 0
         : offsetVector.getAccessor().get(valueCount);
       data.writerIndex(idx);
@@ -841,7 +860,6 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       } else if (allocationMonitor > 0) {
         allocationMonitor = 0;
       }
-      VectorTrimmer.trim(data, idx);
       offsetVector.getMutator().setValueCount(valueCount == 0 ? 0 : valueCount+1);
     }
 
@@ -850,14 +868,14 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       boolean even = true;
       <#switch minor.class>
       <#case "Var16Char">
-      final java.nio.charset.Charset charset = Charsets.UTF_16;
+      java.nio.charset.Charset charset = Charsets.UTF_16;
       <#break>
       <#case "VarChar">
       <#default>
-      final java.nio.charset.Charset charset = Charsets.UTF_8;
+      java.nio.charset.Charset charset = Charsets.UTF_8;
       </#switch>
-      final byte[] evenValue = new String("aaaaa").getBytes(charset);
-      final byte[] oddValue = new String("bbbbbbbbbb").getBytes(charset);
+      byte[] evenValue = new String("aaaaa").getBytes(charset);
+      byte[] oddValue = new String("bbbbbbbbbb").getBytes(charset);
       for(int i =0; i < size; i++, even = !even){
         set(i, even ? evenValue : oddValue);
         }
@@ -991,8 +1009,8 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
 
     private void setOffsets(int[] lengths, int numValues, boolean hasNulls) {
       // We need to compute source offsets using the current larget offset and the value length array.
-      final ByteBuffer offByteBuff = offsetsMutator.getByteBuffer();
-      final byte[] bufferArray = offByteBuff.array();
+      ByteBuffer offByteBuff = offsetsMutator.getByteBuffer();
+      byte[] bufferArray = offByteBuff.array();
       int remaining = numValues;
       int srcPos = 0;
 
@@ -1001,7 +1019,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
           offsetsMutator.flush();
         }
 
-        final int toCopy  = Math.min(remaining, offByteBuff.remaining() / 4);
+        int toCopy  = Math.min(remaining, offByteBuff.remaining() / 4);
         int tgtPos       = offByteBuff.position();
 
         if (!hasNulls) {
@@ -1011,7 +1029,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
           }
         } else {
           for (int idx = 0; idx < toCopy; idx++, tgtPos += 4, srcPos++) {
-            final int curr_len = lengths[srcPos];
+            int curr_len = lengths[srcPos];
             totalDataLen    += (curr_len >= 0) ? curr_len : 0;
             UInt4Vector.BufferedMutator.writeInt(totalDataLen, bufferArray, tgtPos);
           }
