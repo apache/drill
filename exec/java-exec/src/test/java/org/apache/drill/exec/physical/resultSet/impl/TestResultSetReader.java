@@ -57,6 +57,7 @@ public class TestResultSetReader extends SubOperatorTest {
           .build();
       ResultSetOptions options = new OptionBuilder()
           .setSchema(schema1)
+          .setVectorCache(new ResultVectorCacheImpl(fixture.allocator()))
           .build();
       rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
       state = State.SCHEMA1;
@@ -185,18 +186,6 @@ public class TestResultSetReader extends SubOperatorTest {
     assertEquals(ResultSetReaderImpl.State.CLOSED, rsReader.state());
 
     // Second close OK
-
-    rsReader.close();
-  }
-
-  @Test
-  public void testAutoRelease() {
-    BatchGenerator gen = new BatchGenerator();
-    ResultSetReader rsReader = new ResultSetReaderImpl(gen.batchAccessor());
-    gen.batch1(1, 10);
-    rsReader.start();
-
-    // If the test fails with open allocators, then the following failed.
 
     rsReader.close();
   }

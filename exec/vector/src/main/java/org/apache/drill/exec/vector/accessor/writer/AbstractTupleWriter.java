@@ -25,6 +25,7 @@ import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.accessor.ArrayWriter;
+import org.apache.drill.exec.vector.accessor.ColumnReader;
 import org.apache.drill.exec.vector.accessor.ColumnWriter;
 import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 import org.apache.drill.exec.vector.accessor.ObjectType;
@@ -33,6 +34,7 @@ import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
 import org.apache.drill.exec.vector.accessor.VariantWriter;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
+import org.apache.drill.exec.vector.accessor.reader.MapReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -321,18 +323,30 @@ public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
     // Rollover can only happen while a row is in progress.
 
     assert state == State.IN_ROW;
-    for (int i = 0; i < writers.size(); i++) {
-      writers.get(i).events().postRollover();
+    for (AbstractObjectWriter writer : writers) {
+      writer.events().postRollover();
     }
   }
 
   @Override
   public void endWrite() {
     assert state != State.IDLE;
-    for (int i = 0; i < writers.size(); i++) {
-      writers.get(i).events().endWrite();
+    for (AbstractObjectWriter writer : writers) {
+      writer.events().endWrite();
     }
     state = State.IDLE;
+  }
+
+  @Override
+  public void copy(ColumnReader from) {
+    MapReader source = (MapReader) from;
+    // Assumes a 1:1 correspondence between source and
+    // destination tuples. That is, does not handle the
+    // case of projection: more columns on one side vs.
+    // the other. That must be handled outside this class.
+    for (int i = 0; i < writers.size(); i++) {
+      writers.get(i).writer().copy(source.column(i).reader());
+    }
   }
 
   @Override

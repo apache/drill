@@ -19,6 +19,7 @@ package org.apache.drill.exec.vector.accessor.writer;
 
 import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.UInt4Vector;
+import org.apache.drill.exec.vector.accessor.ColumnReader;
 import org.apache.drill.exec.vector.accessor.InvalidConversionError;
 import org.apache.drill.exec.vector.accessor.ValueType;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
@@ -331,5 +332,10 @@ public class OffsetVectorWriterImpl extends AbstractFixedWidthWriter implements 
   @Override
   public void setDefaultValue(Object value) {
     throw new UnsupportedOperationException("Encoding not supported for offset vectors");
+  }
+
+  @Override
+  public void copy(ColumnReader from) {
+    throw new UnsupportedOperationException("Copying of offset vectors not supported");
   }
 }

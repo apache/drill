@@ -20,6 +20,8 @@ package org.apache.drill.exec.vector.accessor.writer;
 import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.BitVector;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.accessor.ColumnReader;
+import org.apache.drill.exec.vector.accessor.ScalarReader;
 import org.apache.drill.exec.vector.accessor.ValueType;
 
 /**
@@ -117,5 +119,11 @@ public class BitColumnWriter extends AbstractFixedWidthWriter {
   @Override
   public final void setDefaultValue(final Object value) {
     defaultValue = ((Boolean) value) ? 1 : 0;
+  }
+
+  @Override
+  public void copy(ColumnReader from) {
+    ScalarReader source = (ScalarReader) from;
+    setInt(source.getInt());
   }
 }

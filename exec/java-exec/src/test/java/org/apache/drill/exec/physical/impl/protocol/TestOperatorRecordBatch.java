@@ -36,22 +36,22 @@ import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.Limit;
-import org.apache.drill.exec.physical.impl.protocol.VectorContainerAccessor.ContainerAndSv2Accessor;
+import org.apache.drill.exec.physical.impl.protocol.VectorContainerAccessor.ExtendedContainerAccessor;
+import org.apache.drill.exec.physical.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.exec.proto.UserBitShared.NamePart;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
+import org.apache.drill.exec.record.BatchSchemaBuilder;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
-import org.apache.drill.exec.record.BatchSchemaBuilder;
-import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.exec.vector.VarCharVector;
 import org.apache.drill.test.SubOperatorTest;
-import org.apache.drill.exec.physical.rowSet.RowSet.SingleRowSet;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -524,7 +524,7 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
         .withSv2()
         .build();
 
-    ContainerAndSv2Accessor accessor = new ContainerAndSv2Accessor();
+    ExtendedContainerAccessor accessor = new ExtendedContainerAccessor();
     accessor.addBatch(rs.container());
     accessor.setSelectionVector(rs.getSv2());
 

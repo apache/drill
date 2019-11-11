@@ -77,8 +77,8 @@ public abstract class AbstractTupleReader implements TupleReader, ReaderEvents {
 
   @Override
   public void bindIndex(ColumnReaderIndex index) {
-    for (int i = 0; i < readers.length; i++) {
-      readers[i].events().bindIndex(index);
+    for (AbstractObjectReader reader : readers) {
+      reader.events().bindIndex(index);
     }
   }
 
@@ -89,8 +89,8 @@ public abstract class AbstractTupleReader implements TupleReader, ReaderEvents {
 
   @Override
   public void bindBuffer() {
-    for (int i = 0; i < readers.length; i++) {
-      readers[i].events().bindBuffer();
+    for (AbstractObjectReader reader : readers) {
+      reader.events().bindBuffer();
     }
   }
 
@@ -168,16 +168,16 @@ public abstract class AbstractTupleReader implements TupleReader, ReaderEvents {
 
   @Override
   public void reposition() {
-    for (int i = 0; i < columnCount(); i++) {
-      readers[i].events().reposition();
+    for (AbstractObjectReader reader : readers) {
+      reader.events().reposition();
     }
   }
 
   @Override
   public Object getObject() {
     List<Object> elements = new ArrayList<>();
-    for (int i = 0; i < columnCount(); i++) {
-      elements.add(readers[i].getObject());
+    for (AbstractObjectReader reader : readers) {
+      elements.add(reader.getObject());
     }
     return elements;
   }

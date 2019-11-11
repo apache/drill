@@ -23,12 +23,14 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.VariantMetadata;
 import org.apache.drill.exec.vector.accessor.ArrayWriter;
+import org.apache.drill.exec.vector.accessor.ColumnReader;
 import org.apache.drill.exec.vector.accessor.ColumnWriter;
 import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 import org.apache.drill.exec.vector.accessor.ObjectType;
 import org.apache.drill.exec.vector.accessor.ObjectWriter;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
+import org.apache.drill.exec.vector.accessor.VariantReader;
 import org.apache.drill.exec.vector.accessor.VariantWriter;
 import org.apache.drill.exec.vector.accessor.WriterPosition;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
@@ -333,6 +335,14 @@ public class UnionWriterImpl implements VariantWriter, WriterEvents {
   }
 
   @Override
+  public void copy(ColumnReader from) {
+    if (! from.isNull()) {
+      VariantReader source = (VariantReader) from;
+      member(source.dataType()).copy(source.member());
+    }
+  }
+
+  @Override
   public void setObject(Object value) {
     if (value == null) {
       setNull();
@@ -379,6 +389,5 @@ public class UnionWriterImpl implements VariantWriter, WriterEvents {
   @Override
   public void dump(HierarchicalFormatter format) {
     // TODO Auto-generated method stub
-
   }
 }

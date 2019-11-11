@@ -371,7 +371,6 @@ public class ArrayReaderImpl implements ArrayReader, ReaderEvents {
     elementIndex.rewind();
   }
 
-
   @Override
   public void bindBuffer() {
     elementReader.events().bindBuffer();

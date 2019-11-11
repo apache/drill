@@ -35,6 +35,8 @@ import io.netty.buffer.DrillBuf;
 
 public class SelectionVector2 implements AutoCloseable {
 
+  public static final int RECORD_SIZE = 2;
+
   private final BufferAllocator allocator;
   // Indicates number of indexes stored in the SV2 buffer which may be less than actual number of rows stored in
   // RecordBatch container owning this SV2 instance
@@ -42,8 +44,6 @@ public class SelectionVector2 implements AutoCloseable {
   // Indicates actual number of rows in the RecordBatch container which owns this SV2 instance
   private int batchActualRecordCount = -1;
   private DrillBuf buffer = DeadBuf.DEAD_BUFFER;
-
-  public static final int RECORD_SIZE = 2;
 
   public SelectionVector2(BufferAllocator allocator) {
     this.allocator = allocator;
@@ -79,7 +79,7 @@ public class SelectionVector2 implements AutoCloseable {
   }
 
   public DrillBuf getBuffer(boolean clear) {
-    DrillBuf bufferHandle = this.buffer;
+    DrillBuf bufferHandle = buffer;
 
     if (clear) {
       /* Increment the ref count for this buffer */
@@ -98,16 +98,12 @@ public class SelectionVector2 implements AutoCloseable {
     /* clear the existing buffer */
     clear();
 
-    this.buffer = bufferHandle;
+    buffer = bufferHandle;
     buffer.retain(1);
   }
 
   public char getIndex(int index) {
     return buffer.getChar(index * RECORD_SIZE);
-  }
-
-  public void setIndex(int index, char value) {
-    buffer.setChar(index * RECORD_SIZE, value);
   }
 
   public long getDataAddr() {
@@ -158,7 +154,6 @@ public class SelectionVector2 implements AutoCloseable {
   }
 
   public void setRecordCount(int recordCount){
-//    logger.debug("Setting record count to {}", recordCount);
     this.recordCount = recordCount;
   }
 

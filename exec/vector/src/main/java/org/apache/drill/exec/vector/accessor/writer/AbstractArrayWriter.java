@@ -19,9 +19,12 @@ package org.apache.drill.exec.vector.accessor.writer;
 
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.vector.UInt4Vector;
+import org.apache.drill.exec.vector.accessor.ArrayReader;
 import org.apache.drill.exec.vector.accessor.ArrayWriter;
+import org.apache.drill.exec.vector.accessor.ColumnReader;
 import org.apache.drill.exec.vector.accessor.ColumnWriter;
 import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
+import org.apache.drill.exec.vector.accessor.ObjectReader;
 import org.apache.drill.exec.vector.accessor.ObjectType;
 import org.apache.drill.exec.vector.accessor.ObjectWriter;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
@@ -348,6 +351,17 @@ public abstract class AbstractArrayWriter implements ArrayWriter, WriterEvents {
   public void setNull(boolean isNull) {
     if (isNull) {
       throw new UnsupportedOperationException();
+    }
+  }
+
+  @Override
+  public void copy(ColumnReader from) {
+    ArrayReader source = (ArrayReader) from;
+    // Inefficient initial implementation
+    ObjectReader entryReader = source.entry();
+    while (source.next()) {
+      elementObjWriter.writer().copy(entryReader.reader());
+      save();
     }
   }
 

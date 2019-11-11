@@ -35,6 +35,10 @@ public abstract class BaseScalarReader extends AbstractScalarReader {
   public abstract static class BaseFixedWidthReader extends BaseScalarReader {
 
     public abstract int width();
+
+    public final int offsetIndex() {
+      return vectorIndex.offset();
+    }
   }
 
   public abstract static class BaseVarWidthReader extends BaseScalarReader {
@@ -58,6 +62,10 @@ public abstract class BaseScalarReader extends AbstractScalarReader {
     public void bindBuffer() {
       super.bindBuffer();
       offsetsReader.bindBuffer();
+    }
+
+    public final long getEntry( ) {
+      return offsetsReader.getEntry();
     }
   }
 
@@ -169,5 +177,9 @@ public abstract class BaseScalarReader extends AbstractScalarReader {
   @Override
   public void bindBuffer() {
     bufferAccessor.rebind();
+  }
+
+  public final DrillBuf buffer() {
+    return bufferAccessor.buffer();
   }
 }

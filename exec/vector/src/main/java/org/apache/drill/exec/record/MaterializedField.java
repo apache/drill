@@ -164,6 +164,7 @@ public class MaterializedField {
   public int getPrecision() { return type.getPrecision(); }
   public boolean isNullable() { return type.getMode() == DataMode.OPTIONAL; }
   public DataMode getDataMode() { return type.getMode(); }
+  public int getChildCount() { return children.size(); }
 
   public MaterializedField getOtherNullableVersion() {
     final MajorType mt = type;

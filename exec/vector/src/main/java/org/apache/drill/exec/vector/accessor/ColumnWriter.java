@@ -80,6 +80,15 @@ public interface ColumnWriter {
   void setNull();
 
   /**
+   * Copy a single value from the given reader, which must be of the
+   * same type as this writer.
+   *
+   * @param from reader to provide the data
+   */
+
+  void copy(ColumnReader from);
+
+  /**
    * Generic technique to write data as a generic Java object. The
    * type of the object must match the target writer.
    * Primarily for testing.

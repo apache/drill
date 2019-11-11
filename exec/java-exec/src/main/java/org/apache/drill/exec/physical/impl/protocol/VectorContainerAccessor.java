@@ -22,41 +22,83 @@ import java.util.Iterator;
 
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 public class VectorContainerAccessor implements BatchAccessor {
 
-  public static class ContainerAndSv2Accessor extends VectorContainerAccessor {
+  public static class ExtendedContainerAccessor extends VectorContainerAccessor {
 
     private SelectionVector2 sv2;
+    private SelectionVector4 sv4;
+
+    public void setBatch(RecordBatch batch) {
+      addBatch(batch.getContainer());
+      switch (container.getSchema().getSelectionVectorMode()) {
+      case TWO_BYTE:
+         setSelectionVector(batch.getSelectionVector2());
+         break;
+      case FOUR_BYTE:
+         setSelectionVector(batch.getSelectionVector4());
+         break;
+       default:
+         break;
+      }
+    }
 
     public void setSelectionVector(SelectionVector2 sv2) {
+      Preconditions.checkState(sv4 == null);
       this.sv2 = sv2;
+    }
+
+    public void setSelectionVector(SelectionVector4 sv4) {
+      Preconditions.checkState(sv2 == null);
+      this.sv4 = sv4;
     }
 
     @Override
     public SelectionVector2 selectionVector2() {
       return sv2;
     }
-  }
-
-  public static class ContainerAndSv4Accessor extends VectorContainerAccessor {
-
-    private SelectionVector4 sv4;
 
     @Override
     public SelectionVector4 selectionVector4() {
       return sv4;
     }
+
+    @Override
+    public int rowCount() {
+      if (sv2 != null) {
+        return sv2.getCount();
+      } else if (sv4 != null) {
+        return sv4.getCount();
+      } else {
+        return super.rowCount();
+      }
+    }
+
+    @Override
+    public void release() {
+      super.release();
+      if (sv2 != null) {
+        sv2.clear();
+        sv2 = null;
+      }
+      if (sv4 != null) {
+        sv4.clear();
+        sv4 = null;
+      }
+    }
   }
 
-  private VectorContainer container;
-  private SchemaTracker schemaTracker = new SchemaTracker();
+  protected VectorContainer container;
+  private final SchemaTracker schemaTracker = new SchemaTracker();
   private int batchCount;
 
   /**
@@ -146,5 +188,9 @@ public class VectorContainerAccessor implements BatchAccessor {
   }
 
   @Override
-  public void release() { container.zeroVectors(); }
+  public void release() {
+    if (container != null) {
+      container.zeroVectors();
+    }
+  }
 }

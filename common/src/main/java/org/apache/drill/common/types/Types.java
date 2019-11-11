@@ -806,16 +806,20 @@ public class Types {
     return typeBuilder;
   }
 
+  public static boolean isSameType(MajorType type1, MajorType type2) {
+    return type1.getMinorType() == type2.getMinorType() &&
+           type1.getMode() == type2.getMode() &&
+           type1.getScale() == type2.getScale() &&
+           type1.getPrecision() == type2.getPrecision();
+  }
+
   public static boolean isEquivalent(MajorType type1, MajorType type2) {
 
     // Requires full type equality, including fields such as precision and scale.
     // But, unset fields are equivalent to 0. Can't use the protobuf-provided
     // isEquals() which treats set and unset fields as different.
 
-    if (type1.getMinorType() != type2.getMinorType() ||
-        type1.getMode() != type2.getMode() ||
-        type1.getScale() != type2.getScale() ||
-        type1.getPrecision() != type2.getPrecision()) {
+    if (! isSameType(type1, type2)) {
       return false;
     }
 

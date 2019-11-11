@@ -89,4 +89,11 @@ public interface ResultSetReader {
    * you want to preserve the batch memory.
    */
   void close();
+
+  /**
+   * Convenience method to access the input batch.
+   * @return the batch bound to the reader at construction
+   * time
+   */
+  BatchAccessor inputBatch();
 }

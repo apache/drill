@@ -17,6 +17,26 @@
  */
 package org.apache.drill.test;
 
+import static org.apache.drill.exec.util.StoragePluginTestUtils.DFS_TMP_SCHEMA;
+import static org.apache.drill.exec.util.StoragePluginTestUtils.ROOT_SCHEMA;
+import static org.apache.drill.exec.util.StoragePluginTestUtils.TMP_SCHEMA;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URL;
+import java.nio.file.Paths;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Properties;
+
 import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.FormatPluginConfig;
@@ -45,26 +65,6 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.apache.drill.shaded.guava.com.google.common.io.Resources;
 import org.apache.drill.test.DrillTestWrapper.TestServices;
-
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URL;
-import java.nio.file.Paths;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Properties;
-
-import static org.apache.drill.exec.util.StoragePluginTestUtils.DFS_TMP_SCHEMA;
-import static org.apache.drill.exec.util.StoragePluginTestUtils.ROOT_SCHEMA;
-import static org.apache.drill.exec.util.StoragePluginTestUtils.TMP_SCHEMA;
 
 /**
  * Test fixture to start a Drillbit with provide options, create a client, and
@@ -124,7 +124,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
 
   public static final String DEFAULT_BIT_NAME = "drillbit";
 
-  private Map<String, Drillbit> bits = new HashMap<>();
+  private final Map<String, Drillbit> bits = new HashMap<>();
   private Drillbit defaultDrillbit;
   private boolean ownsZK;
   private ZookeeperHelper zkHelper;
@@ -264,9 +264,15 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
     final StoragePluginRegistry pluginRegistry = bit.getContext().getStorage();
     StoragePluginTestUtils.configureFormatPlugins(pluginRegistry);
 
-    StoragePluginTestUtils.updateSchemaLocation(StoragePluginTestUtils.DFS_PLUGIN_NAME, pluginRegistry, builder.dirTestWatcher.getDfsTestTmpDir(), TMP_SCHEMA);
-    StoragePluginTestUtils.updateSchemaLocation(StoragePluginTestUtils.DFS_PLUGIN_NAME, pluginRegistry, builder.dirTestWatcher.getRootDir(), ROOT_SCHEMA);
-    StoragePluginTestUtils.updateSchemaLocation(StoragePluginTestUtils.DFS_PLUGIN_NAME, pluginRegistry, builder.dirTestWatcher.getRootDir(), SchemaFactory.DEFAULT_WS_NAME);
+    StoragePluginTestUtils.updateSchemaLocation(
+        StoragePluginTestUtils.DFS_PLUGIN_NAME, pluginRegistry,
+        builder.dirTestWatcher.getDfsTestTmpDir(), TMP_SCHEMA);
+    StoragePluginTestUtils.updateSchemaLocation(
+        StoragePluginTestUtils.DFS_PLUGIN_NAME,
+        pluginRegistry, builder.dirTestWatcher.getRootDir(), ROOT_SCHEMA);
+    StoragePluginTestUtils.updateSchemaLocation(
+        StoragePluginTestUtils.DFS_PLUGIN_NAME, pluginRegistry,
+        builder.dirTestWatcher.getRootDir(), SchemaFactory.DEFAULT_WS_NAME);
 
     // Create the mock data plugin
 
@@ -275,7 +281,8 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
         MockStorageEngineConfig.INSTANCE, bit.getContext(),
         MockStorageEngineConfig.NAME);
     config.setEnabled(true);
-    ((StoragePluginRegistryImpl) pluginRegistry).addPluginToPersistentStoreIfAbsent(MockStorageEngineConfig.NAME, config, plugin);
+    ((StoragePluginRegistryImpl) pluginRegistry).addPluginToPersistentStoreIfAbsent(
+        MockStorageEngineConfig.NAME, config, plugin);
   }
 
   private void applyOptions() throws Exception {
@@ -593,7 +600,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
 
   public static class FixtureTestServices implements TestServices {
 
-    private ClientFixture client;
+    private final ClientFixture client;
 
     public FixtureTestServices(ClientFixture client) {
       this.client = client;
