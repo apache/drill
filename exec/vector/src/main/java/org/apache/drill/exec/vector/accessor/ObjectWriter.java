@@ -45,12 +45,17 @@ import org.apache.drill.exec.vector.accessor.writer.WriterEvents;
 public interface ObjectWriter extends ColumnWriter {
 
   ScalarWriter scalar();
-
   TupleWriter tuple();
-
   ArrayWriter array();
-
   VariantWriter variant();
+
+  /**
+   * Generic version of the above, for dynamic handling of
+   * writers.
+   * @return the generic form of the column writer
+   */
+
+  ColumnWriter writer();
 
   /**
    * The internal state behind this writer. To be used only by the

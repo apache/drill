@@ -100,4 +100,7 @@ public class ResultSetReaderImpl implements ResultSetReader {
 
   @VisibleForTesting
   protected State state() { return state; }
+
+  @Override
+  public BatchAccessor inputBatch() { return batch; }
 }

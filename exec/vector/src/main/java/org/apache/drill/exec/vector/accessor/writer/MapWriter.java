@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
+import org.apache.drill.exec.vector.accessor.ColumnReader;
 import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 import org.apache.drill.exec.vector.accessor.writer.AbstractArrayWriter.ArrayObjectWriter;
 import org.apache.drill.exec.vector.accessor.writer.dummy.DummyArrayWriter;
@@ -41,7 +42,7 @@ public abstract class MapWriter extends AbstractTupleWriter {
    */
 
   private static class MemberWriterIndex implements ColumnWriterIndex {
-    private ColumnWriterIndex baseIndex;
+    private final ColumnWriterIndex baseIndex;
 
     private MemberWriterIndex(ColumnWriterIndex baseIndex) {
       this.baseIndex = baseIndex;
@@ -149,6 +150,9 @@ public abstract class MapWriter extends AbstractTupleWriter {
 
     @Override
     public boolean isProjected() { return false; }
+
+    @Override
+    public void copy(ColumnReader from) { }
   }
 
   protected static class DummyArrayMapWriter extends MapWriter {
@@ -160,6 +164,9 @@ public abstract class MapWriter extends AbstractTupleWriter {
 
     @Override
     public boolean isProjected() { return false; }
+
+    @Override
+    public void copy(ColumnReader from) { }
   }
 
   protected final ColumnMetadata mapColumnSchema;

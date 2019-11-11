@@ -22,6 +22,7 @@ import java.util.Iterator;
 
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
@@ -29,34 +30,16 @@ import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 
+/**
+ * Wraps a vector container and optional selection vector in an interface
+ * simpler than the entire {@link RecordBatch}. This implementation hosts
+ * a container only.
+ */
+
 public class VectorContainerAccessor implements BatchAccessor {
 
-  public static class ContainerAndSv2Accessor extends VectorContainerAccessor {
-
-    private SelectionVector2 sv2;
-
-    public void setSelectionVector(SelectionVector2 sv2) {
-      this.sv2 = sv2;
-    }
-
-    @Override
-    public SelectionVector2 selectionVector2() {
-      return sv2;
-    }
-  }
-
-  public static class ContainerAndSv4Accessor extends VectorContainerAccessor {
-
-    private SelectionVector4 sv4;
-
-    @Override
-    public SelectionVector4 selectionVector4() {
-      return sv4;
-    }
-  }
-
-  private VectorContainer container;
-  private SchemaTracker schemaTracker = new SchemaTracker();
+  protected VectorContainer container;
+  private final SchemaTracker schemaTracker = new SchemaTracker();
   private int batchCount;
 
   /**
@@ -146,5 +129,9 @@ public class VectorContainerAccessor implements BatchAccessor {
   }
 
   @Override
-  public void release() { container.zeroVectors(); }
+  public void release() {
+    if (container != null) {
+      container.zeroVectors();
+    }
+  }
 }

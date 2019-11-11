@@ -48,6 +48,7 @@ public abstract class AbstractObjectReader implements ObjectReader {
 
   public abstract ReaderEvents events();
 
+  @Override
   public abstract ColumnReader reader();
 
   @Override

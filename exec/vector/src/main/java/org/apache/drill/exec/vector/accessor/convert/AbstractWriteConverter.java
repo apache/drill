@@ -20,6 +20,7 @@ package org.apache.drill.exec.vector.accessor.convert;
 import java.math.BigDecimal;
 
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
+import org.apache.drill.exec.vector.accessor.ColumnReader;
 import org.apache.drill.exec.vector.accessor.ObjectType;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.ValueType;
@@ -142,5 +143,10 @@ public abstract class AbstractWriteConverter extends AbstractScalarWriter {
   @Override
   public void setTimestamp(Instant value) {
     baseWriter.setTimestamp(value);
+  }
+
+  @Override
+  public final void copy(ColumnReader from) {
+    throw new UnsupportedOperationException("Cannot copy values through a type converter");
   }
 }

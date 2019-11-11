@@ -455,6 +455,7 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
     switch (state) {
     case ACTIVE:
     case HARVESTED:
+    case FULL_BATCH:
       return rootWriter.rowCount() > 0;
     case LOOK_AHEAD:
       return true;

@@ -17,14 +17,14 @@
  */
 package org.apache.drill.test;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
-import org.apache.commons.io.FileUtils;
-import org.junit.runner.Description;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
+import org.junit.runner.Description;
 
 /**
  * <h4>Overview</h4>
@@ -87,6 +87,10 @@ public class BaseDirTestWatcher extends DirTestWatcher {
    */
   public BaseDirTestWatcher(boolean deleteDirAtEnd) {
     super(deleteDirAtEnd);
+  }
+
+  public void start(Class<?> suite) {
+    starting(Description.createSuiteDescription(suite));
   }
 
   @Override

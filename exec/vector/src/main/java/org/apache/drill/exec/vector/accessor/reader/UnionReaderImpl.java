@@ -175,18 +175,18 @@ public class UnionReaderImpl implements VariantReader, ReaderEvents {
 
   @Override
   public void reposition() {
-    for (int i = 0; i < variants.length; i++) {
-      if (variants[i] != null) {
-        variants[i].events().reposition();
+    for (AbstractObjectReader variantReader : variants) {
+      if (variantReader != null) {
+        variantReader.events().reposition();
       }
     }
   }
 
   @Override
   public void bindBuffer() {
-    for (int i = 0; i < variants.length; i++) {
-      if (variants[i] != null) {
-        variants[i].events().bindBuffer();
+    for (AbstractObjectReader variantReader : variants) {
+      if (variantReader != null) {
+        variantReader.events().bindBuffer();
       }
     }
   }

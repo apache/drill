@@ -23,6 +23,7 @@ import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.NullableVector;
 import org.apache.drill.exec.vector.accessor.ColumnAccessors.UInt1ColumnWriter;
+import org.apache.drill.exec.vector.accessor.ColumnReader;
 import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 import org.apache.drill.exec.vector.accessor.ValueType;
 import org.apache.drill.exec.vector.accessor.convert.ColumnConversionFactory;
@@ -230,6 +231,14 @@ public class NullableScalarWriter extends AbstractScalarWriterImpl {
       baseWriter.setValue(value);
       isSetWriter.setInt(1);
       writerIndex.nextElement();
+    }
+  }
+
+  @Override
+  public void copy(ColumnReader from) {
+    if (!from.isNull()) {
+      isSetWriter.setInt(1);
+      baseWriter.copy(from);
     }
   }
 

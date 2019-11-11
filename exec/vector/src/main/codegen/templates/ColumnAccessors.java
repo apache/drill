@@ -415,7 +415,7 @@ public class ColumnAccessors {
       buf.writerIndex(VALUE_WIDTH);
     }
     </#if>
-    
+
     <#if drillType == "VarChar" || drillType == "Var16Char" || drillType == "VarBinary">
     @Override
     public final void appendBytes(final byte[] value, final int len) {
@@ -591,6 +591,25 @@ public class ColumnAccessors {
         buf.getBytes(0, emptyValue);
       }
     </#if>
+    }
+
+    @Override
+    public final void copy(ColumnReader from) {
+      ${drillType}ColumnReader source = (${drillType}ColumnReader) from;
+      final DrillBuf sourceBuf = source.buffer();
+    <#if varWidth>
+      final long entry = source.getEntry();
+      final int sourceOffset = (int) (entry >> 32);
+      final int len = (int) (entry & 0xFFFF_FFFF);
+      final int destOffset = prepareWrite(len);
+      drillBuf.setBytes(destOffset, sourceBuf, sourceOffset, len);
+      offsetsWriter.setNextOffset(destOffset + len);
+    <#else>
+      final int sourceOffset = source.offsetIndex() * VALUE_WIDTH;
+      final int destOffset = prepareWrite() * VALUE_WIDTH;
+      drillBuf.setBytes(destOffset, sourceBuf, sourceOffset, VALUE_WIDTH);
+    </#if>
+      vectorIndex.nextElement();
     }
   }
 

@@ -65,15 +65,15 @@ public abstract class BaseVarWidthWriter extends BaseScalarWriter {
   public void startRow() { offsetsWriter.startRow(); }
 
   protected final int prepareWrite(final int width) {
-
-    // This is performance critical code; every operation counts.
-    // Please be thoughtful when making changes.
-
     fillEmpties();
     return writeOffset(width);
   }
 
   private final int writeOffset(final int width) {
+
+    // This is performance critical code; every operation counts.
+    // Please be thoughtful when making changes.
+
     final int writeOffset = offsetsWriter.nextOffset;
     if (writeOffset + width < capacity) {
       return writeOffset;
