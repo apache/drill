@@ -40,7 +40,7 @@ public class VectorContainerAccessor implements BatchAccessor {
     }
 
     @Override
-    public SelectionVector2 getSelectionVector2() {
+    public SelectionVector2 selectionVector2() {
       return sv2;
     }
   }
@@ -50,7 +50,7 @@ public class VectorContainerAccessor implements BatchAccessor {
     private SelectionVector4 sv4;
 
     @Override
-    public SelectionVector4 getSelectionVector4() {
+    public SelectionVector4 selectionVector4() {
       return sv4;
     }
   }
@@ -92,7 +92,7 @@ public class VectorContainerAccessor implements BatchAccessor {
   public int batchCount() { return batchCount; }
 
   @Override
-  public BatchSchema getSchema() {
+  public BatchSchema schema() {
     return container == null ? null : container.getSchema();
   }
 
@@ -100,12 +100,12 @@ public class VectorContainerAccessor implements BatchAccessor {
   public int schemaVersion() { return schemaTracker.schemaVersion(); }
 
   @Override
-  public int getRowCount() {
+  public int rowCount() {
     return container == null ? 0 : container.getRecordCount();
   }
 
   @Override
-  public VectorContainer getOutgoingContainer() { return container; }
+  public VectorContainer container() { return container; }
 
   @Override
   public TypedFieldId getValueVectorId(SchemaPath path) {
@@ -118,19 +118,19 @@ public class VectorContainerAccessor implements BatchAccessor {
   }
 
   @Override
-  public WritableBatch getWritableBatch() {
+  public WritableBatch writableBatch() {
     return WritableBatch.get(container);
   }
 
   @Override
-  public SelectionVector2 getSelectionVector2() {
+  public SelectionVector2 selectionVector2() {
     // Throws an exception by default because containers
     // do not support selection vectors.
     return container.getSelectionVector2();
   }
 
   @Override
-  public SelectionVector4 getSelectionVector4() {
+  public SelectionVector4 selectionVector4() {
     // Throws an exception by default because containers
     // do not support selection vectors.
      return container.getSelectionVector4();

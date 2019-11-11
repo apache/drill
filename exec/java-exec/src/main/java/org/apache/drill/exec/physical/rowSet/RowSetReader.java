@@ -34,6 +34,7 @@ public interface RowSetReader extends TupleReader {
   boolean next();
   int logicalIndex();
   void setPosition(int index);
+  void rewind();
 
   /**
    * Batch index: 0 for a single batch, batch for the current
@@ -49,4 +50,13 @@ public interface RowSetReader extends TupleReader {
    * @return index of the underlying row
    */
   int offset();
+
+  /**
+   * Bind the reader to a new batch of data. The vectors are
+   * unchanged, but the buffers are different. Assumes the schema
+   * has not changed: the columns and selection vector mode remain
+   * unchanged; only the buffers changed. If the schema changes,
+   * discard this reader and rebuild a new one.
+   */
+  void newBatch();
 }

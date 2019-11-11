@@ -88,6 +88,13 @@ public abstract class AbstractTupleReader implements TupleReader, ReaderEvents {
   }
 
   @Override
+  public void rebind() {
+    for (int i = 0; i < readers.length; i++) {
+      readers[i].events().rebind();
+    }
+  }
+
+  @Override
   public NullStateReader nullStateReader() { return nullStateReader; }
 
   @Override

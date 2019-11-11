@@ -65,6 +65,11 @@ public abstract class AbstractRowSet implements RowSet {
   }
 
   @Override
+  public void print() {
+    new RowSetPrinter(this).print();
+  }
+
+  @Override
   public long size() {
     throw new UnsupportedOperationException("Current row set implementation does not support providing size information");
   }

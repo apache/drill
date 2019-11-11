@@ -51,7 +51,7 @@ public class UnionReaderImpl implements VariantReader, ReaderEvents {
 
   public static class UnionObjectReader extends AbstractObjectReader {
 
-    private UnionReaderImpl reader;
+    private final UnionReaderImpl reader;
 
     public UnionObjectReader(UnionReaderImpl reader) {
       this.reader = reader;
@@ -183,6 +183,15 @@ public class UnionReaderImpl implements VariantReader, ReaderEvents {
   }
 
   @Override
+  public void rebind() {
+    for (int i = 0; i < variants.length; i++) {
+      if (variants[i] != null) {
+        variants[i].events().rebind();
+      }
+    }
+  }
+
+  @Override
   public boolean isNull() {
     return nullStateReader.isNull();
   }
@@ -193,7 +202,7 @@ public class UnionReaderImpl implements VariantReader, ReaderEvents {
     if (typeCode == UnionVector.NULL_MARKER) {
       return null;
     }
-    return MinorType.valueOf(typeCode);
+    return MinorType.forNumber(typeCode);
   }
 
   @Override

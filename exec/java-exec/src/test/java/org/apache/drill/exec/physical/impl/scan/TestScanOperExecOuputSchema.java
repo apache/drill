@@ -130,7 +130,7 @@ public class TestScanOperExecOuputSchema extends BaseScanOperatorExecTest {
       SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
            .build();
       RowSetUtilities.verify(expected,
-          fixture.wrap(scan.batchAccessor().getOutgoingContainer()));
+          fixture.wrap(scan.batchAccessor().container()));
     }
 
     // Batch with defaults and null types
@@ -141,7 +141,7 @@ public class TestScanOperExecOuputSchema extends BaseScanOperatorExecTest {
           .addRow(10, "foo", 20L, null)
           .build();
       RowSetUtilities.verify(expected,
-          fixture.wrap(scan.batchAccessor().getOutgoingContainer()));
+          fixture.wrap(scan.batchAccessor().container()));
     }
 
     assertFalse(scan.next());
@@ -186,7 +186,7 @@ public class TestScanOperExecOuputSchema extends BaseScanOperatorExecTest {
       SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
            .build();
       RowSetUtilities.verify(expected,
-          fixture.wrap(scan.batchAccessor().getOutgoingContainer()));
+          fixture.wrap(scan.batchAccessor().container()));
     }
 
     // Batch with defaults and null types
@@ -197,7 +197,7 @@ public class TestScanOperExecOuputSchema extends BaseScanOperatorExecTest {
           .addRow(10, 20L, 30L, "foo", "bar")
           .build();
       RowSetUtilities.verify(expected,
-          fixture.wrap(scan.batchAccessor().getOutgoingContainer()));
+          fixture.wrap(scan.batchAccessor().container()));
     }
 
     assertFalse(scan.next());
@@ -237,7 +237,7 @@ public class TestScanOperExecOuputSchema extends BaseScanOperatorExecTest {
       SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
            .build();
       RowSetUtilities.verify(expected,
-          fixture.wrap(scan.batchAccessor().getOutgoingContainer()));
+          fixture.wrap(scan.batchAccessor().container()));
     }
 
     // Batch with defaults and null types
@@ -248,7 +248,7 @@ public class TestScanOperExecOuputSchema extends BaseScanOperatorExecTest {
           .addRow(10, 20L, 30L)
           .build();
       RowSetUtilities.verify(expected,
-          fixture.wrap(scan.batchAccessor().getOutgoingContainer()));
+          fixture.wrap(scan.batchAccessor().container()));
     }
 
     assertFalse(scan.next());
@@ -288,7 +288,7 @@ public class TestScanOperExecOuputSchema extends BaseScanOperatorExecTest {
       SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
            .build();
       RowSetUtilities.verify(expected,
-          fixture.wrap(scan.batchAccessor().getOutgoingContainer()));
+          fixture.wrap(scan.batchAccessor().container()));
     }
 
     // Batch with defaults and null types
@@ -299,7 +299,7 @@ public class TestScanOperExecOuputSchema extends BaseScanOperatorExecTest {
           .addRow(20L, 30L)
           .build();
       RowSetUtilities.verify(expected,
-          fixture.wrap(scan.batchAccessor().getOutgoingContainer()));
+          fixture.wrap(scan.batchAccessor().container()));
     }
 
     assertFalse(scan.next());

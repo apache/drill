@@ -83,6 +83,9 @@ public abstract class AbstractScalarReader implements ScalarReader, ReaderEvents
 
     @Override
     public ColumnMetadata schema() { return schema; }
+
+    @Override
+    public void rebind() { }
   }
 
   protected ColumnReaderIndex vectorIndex;
