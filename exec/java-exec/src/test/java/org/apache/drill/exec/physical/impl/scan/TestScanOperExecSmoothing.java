@@ -171,7 +171,7 @@ public class TestScanOperExecSmoothing extends BaseScanOperatorExecTest {
         .addRow("20", "wilma")
         .build();
     RowSetUtilities.verify(expected,
-      fixture.wrap(scan.batchAccessor().getOutgoingContainer()));
+      fixture.wrap(scan.batchAccessor().container()));
 
     // Second batch from second reader.
 
@@ -182,13 +182,13 @@ public class TestScanOperExecSmoothing extends BaseScanOperatorExecTest {
         .addRow("40", "wilma")
         .build();
     RowSetUtilities.verify(expected,
-      fixture.wrap(scan.batchAccessor().getOutgoingContainer()));
+      fixture.wrap(scan.batchAccessor().container()));
 
     // EOF
 
     assertFalse(scan.next());
     assertTrue(reader2.closeCalled);
-    assertEquals(0, scan.batchAccessor().getRowCount());
+    assertEquals(0, scan.batchAccessor().rowCount());
 
     scanFixture.close();
   }
@@ -244,7 +244,7 @@ public class TestScanOperExecSmoothing extends BaseScanOperatorExecTest {
 
     assertTrue(scan.next());
     assertEquals(1, scan.batchAccessor().schemaVersion());
-    verifyBatch(0, scan.batchAccessor().getOutgoingContainer());
+    verifyBatch(0, scan.batchAccessor().container());
 
     // Batch from (a) reader 2
     // Due to schema smoothing, b vector type is left unchanged,
@@ -253,19 +253,19 @@ public class TestScanOperExecSmoothing extends BaseScanOperatorExecTest {
     assertTrue(scan.next());
     assertEquals(1, scan.batchAccessor().schemaVersion());
 
-    SingleRowSet expected = fixture.rowSetBuilder(scan.batchAccessor().getSchema())
+    SingleRowSet expected = fixture.rowSetBuilder(scan.batchAccessor().schema())
         .addRow(111, null)
         .addRow(121, null)
         .build();
     RowSetUtilities.verify(expected,
-        fixture.wrap(scan.batchAccessor().getOutgoingContainer()));
+        fixture.wrap(scan.batchAccessor().container()));
 
     // Batch from (a, b) reader 3
     // Recycles b again, back to being a table column.
 
     assertTrue(scan.next());
     assertEquals(1, scan.batchAccessor().schemaVersion());
-    verifyBatch(200, scan.batchAccessor().getOutgoingContainer());
+    verifyBatch(200, scan.batchAccessor().container());
 
     assertFalse(scan.next());
     scanFixture.close();

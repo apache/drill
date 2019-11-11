@@ -112,6 +112,13 @@ public interface ColumnReaderIndex {
   boolean next();
 
   /**
+   * Reports if the index has another item.
+   * @return <true> if more rows remain. That is, if a
+   * call to {@link #next()} would return <tt>true</tt>.
+   */
+  boolean hasNext();
+
+  /**
    * Return the number of items that this index indexes: top-level record
    * count for the root index; total element count for nested arrays.
    *

@@ -335,9 +335,9 @@ class ReaderState {
     // in a dummy container.
 
     assert lookahead == null;
-    lookahead = new VectorContainer(scanOp.context.getAllocator(), scanOp.containerAccessor.getSchema());
+    lookahead = new VectorContainer(scanOp.context.getAllocator(), scanOp.containerAccessor.schema());
     lookahead.setRecordCount(0);
-    lookahead.exchange(scanOp.containerAccessor.getOutgoingContainer());
+    lookahead.exchange(scanOp.containerAccessor.container());
     state = state == State.EOF ? State.LOOK_AHEAD_WITH_EOF : State.LOOK_AHEAD;
     return true;
   }
@@ -357,7 +357,7 @@ class ReaderState {
     case LOOK_AHEAD_WITH_EOF:
       // Use batch previously read.
       assert lookahead != null;
-      lookahead.exchange(scanOp.containerAccessor.getOutgoingContainer());
+      lookahead.exchange(scanOp.containerAccessor.container());
       assert lookahead.getRecordCount() == 0;
       lookahead = null;
       if (state == State.LOOK_AHEAD_WITH_EOF) {

@@ -25,12 +25,14 @@ import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.ValueVector;
-
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 /**
- * This is a tool for printing the content of record batches to screen. Used for debugging.
+ * Tool for printing the content of record batches to screen. Used for debugging.
+ *
+ * @See {@link org.apache.drill.exec.physical.rowSet.RowSetFormatter RowSetFormatter}
  */
+
 public class BatchPrinter {
   public static void printHyperBatch(VectorAccessible batch, SelectionVector4 sv4) {
     List<String> columns = Lists.newArrayList();

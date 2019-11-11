@@ -178,7 +178,7 @@ public class OperatorDriver {
 
       // Report schema change.
 
-      batchAccessor.getOutgoingContainer().schemaChanged();
+      batchAccessor.container().schemaChanged();
       state = State.RUN;
       return IterOutcome.OK_NEW_SCHEMA;
     } else {
@@ -207,7 +207,7 @@ public class OperatorDriver {
     // trivial changes within this operator.
 
     if (schemaChanged) {
-      batchAccessor.getOutgoingContainer().schemaChanged();
+      batchAccessor.container().schemaChanged();
     }
     if (state == State.STARTING || schemaChanged) {
       schemaVersion = newVersion;

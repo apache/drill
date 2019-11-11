@@ -35,7 +35,6 @@ import org.apache.drill.exec.memory.BaseAllocator.Verbosity;
 import org.apache.drill.exec.memory.BoundsChecking;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.BufferManager;
-
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 import io.netty.util.internal.PlatformDependent;
@@ -460,8 +459,7 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
   @Override
   public long getLong(int index) {
     chk(index, 8);
-    final long v = PlatformDependent.getLong(addr(index));
-    return v;
+    return PlatformDependent.getLong(addr(index));
   }
 
   @Override
@@ -487,8 +485,7 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
   @Override
   public int getInt(int index) {
     chk(index, 4);
-    final int v = PlatformDependent.getInt(addr(index));
-    return v;
+    return PlatformDependent.getInt(addr(index));
   }
 
   @Override
@@ -499,8 +496,7 @@ public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
   @Override
   public short getShort(int index) {
     chk(index, 2);
-    short v = PlatformDependent.getShort(addr(index));
-    return v;
+    return PlatformDependent.getShort(addr(index));
   }
 
   @Override

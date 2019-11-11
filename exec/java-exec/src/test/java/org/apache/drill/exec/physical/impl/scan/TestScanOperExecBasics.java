@@ -97,7 +97,7 @@ public class TestScanOperExecBasics extends BaseScanOperatorExecTest {
     }
     assertTrue(reader.openCalled);
 
-    assertEquals(0, scan.batchAccessor().getRowCount());
+    assertEquals(0, scan.batchAccessor().rowCount());
     scanFixture.close();
     assertTrue(reader.closeCalled);
   }
@@ -132,7 +132,7 @@ public class TestScanOperExecBasics extends BaseScanOperatorExecTest {
     }
     assertTrue(reader.openCalled);
 
-    assertEquals(0, scan.batchAccessor().getRowCount());
+    assertEquals(0, scan.batchAccessor().rowCount());
     scanFixture.close();
     assertTrue(reader.closeCalled);
   }
@@ -162,7 +162,7 @@ public class TestScanOperExecBasics extends BaseScanOperatorExecTest {
     }
     assertTrue(reader.openCalled);
 
-    assertEquals(0, scan.batchAccessor().getRowCount());
+    assertEquals(0, scan.batchAccessor().rowCount());
     scanFixture.close();
     assertTrue(reader.closeCalled);
   }
@@ -196,7 +196,7 @@ public class TestScanOperExecBasics extends BaseScanOperatorExecTest {
     }
     assertTrue(reader.openCalled);
 
-    assertEquals(0, scan.batchAccessor().getRowCount());
+    assertEquals(0, scan.batchAccessor().rowCount());
     scanFixture.close();
     assertTrue(reader.closeCalled);
   }
@@ -393,13 +393,13 @@ public class TestScanOperExecBasics extends BaseScanOperatorExecTest {
 
     assertTrue(scan.buildSchema());
     assertTrue(scan.next());
-    VectorContainer container = scan.batchAccessor().getOutgoingContainer();
+    VectorContainer container = scan.batchAccessor().container();
     assertEquals(0, container.getRecordCount());
     assertEquals(2, container.getNumberOfColumns());
 
     assertTrue(reader1.closeCalled);
     assertTrue(reader2.closeCalled);
-    assertEquals(0, scan.batchAccessor().getRowCount());
+    assertEquals(0, scan.batchAccessor().rowCount());
     assertFalse(scan.next());
 
     scanFixture.close();

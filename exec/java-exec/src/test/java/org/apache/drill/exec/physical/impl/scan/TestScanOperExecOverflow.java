@@ -147,7 +147,7 @@ public class TestScanOperExecOverflow extends BaseScanOperatorExecTest {
     assertTrue(scan.next());
     assertEquals(1, reader1.batchCount);
     assertEquals(1, scan.batchAccessor().schemaVersion());
-    int prevRowCount = scan.batchAccessor().getRowCount();
+    int prevRowCount = scan.batchAccessor().rowCount();
     assertEquals(reader1.rowCount - 1, prevRowCount);
     scan.batchAccessor().release();
 
@@ -158,7 +158,7 @@ public class TestScanOperExecOverflow extends BaseScanOperatorExecTest {
     assertTrue(scan.next());
     assertEquals(2, reader1.batchCount);
     assertEquals(1, scan.batchAccessor().schemaVersion());
-    assertEquals(reader1.rowCount - prevRowCount - 1, scan.batchAccessor().getRowCount());
+    assertEquals(reader1.rowCount - prevRowCount - 1, scan.batchAccessor().rowCount());
     scan.batchAccessor().release();
     int prevReaderRowCount = reader1.rowCount;
 
@@ -168,7 +168,7 @@ public class TestScanOperExecOverflow extends BaseScanOperatorExecTest {
     assertTrue(scan.next());
     assertEquals(eofWithData ? 2 : 3, reader1.batchCount);
     assertEquals(1, scan.batchAccessor().schemaVersion());
-    assertEquals(1, scan.batchAccessor().getRowCount());
+    assertEquals(1, scan.batchAccessor().rowCount());
     assertEquals(prevReaderRowCount, reader1.rowCount);
     scan.batchAccessor().release();
 
@@ -188,7 +188,7 @@ public class TestScanOperExecOverflow extends BaseScanOperatorExecTest {
     // EOF
 
     assertFalse(scan.next());
-    assertEquals(0, scan.batchAccessor().getRowCount());
+    assertEquals(0, scan.batchAccessor().rowCount());
     scanFixture.close();
   }
 

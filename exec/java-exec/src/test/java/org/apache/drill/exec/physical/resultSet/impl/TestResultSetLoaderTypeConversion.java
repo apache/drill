@@ -34,10 +34,10 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.exec.physical.rowSet.RowSet;
+import org.apache.drill.exec.physical.rowSet.TestColumnConverter;
 import org.apache.drill.exec.physical.rowSet.RowSet.SingleRowSet;
+import org.apache.drill.exec.physical.rowSet.TestColumnConverter.ConverterFactory;
 import org.apache.drill.test.rowSet.RowSetUtilities;
-import org.apache.drill.test.rowSet.test.TestColumnConverter;
-import org.apache.drill.test.rowSet.test.TestColumnConverter.ConverterFactory;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

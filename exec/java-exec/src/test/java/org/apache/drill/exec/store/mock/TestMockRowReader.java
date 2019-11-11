@@ -95,15 +95,15 @@ public class TestMockRowReader extends SubOperatorTest {
         .add("b", MinorType.VARCHAR, 10) // Width is reflected in meta-data
         .buildSchema();
     BatchSchema expectedBatchSchema = new BatchSchema(SelectionVectorMode.NONE, expectedSchema.toFieldList());
-    assertTrue(expectedBatchSchema.isEquivalent(scan.batchAccessor().getSchema()));
-    assertEquals(0, scan.batchAccessor().getRowCount());
+    assertTrue(expectedBatchSchema.isEquivalent(scan.batchAccessor().schema()));
+    assertEquals(0, scan.batchAccessor().rowCount());
     scan.batchAccessor().release();
 
     // Next call, return with data.
 
     assertTrue(scan.next());
-    assertTrue(expectedBatchSchema.isEquivalent(scan.batchAccessor().getSchema()));
-    assertEquals(rowCount, scan.batchAccessor().getRowCount());
+    assertTrue(expectedBatchSchema.isEquivalent(scan.batchAccessor().schema()));
+    assertEquals(rowCount, scan.batchAccessor().rowCount());
     scan.batchAccessor().release();
 
     // EOF
@@ -146,14 +146,14 @@ public class TestMockRowReader extends SubOperatorTest {
         .addNullable("b", MinorType.VARCHAR, 10)
         .build();
     BatchSchema expectedBatchSchema = new BatchSchema(SelectionVectorMode.NONE, expectedSchema.toFieldList());
-    assertTrue(expectedBatchSchema.isEquivalent(scan.batchAccessor().getSchema()));
-    assertEquals(0, scan.batchAccessor().getRowCount());
+    assertTrue(expectedBatchSchema.isEquivalent(scan.batchAccessor().schema()));
+    assertEquals(0, scan.batchAccessor().rowCount());
 
     // Next call, return with data.
 
     assertTrue(scan.next());
-    assertTrue(expectedBatchSchema.isEquivalent(scan.batchAccessor().getSchema()));
-    assertEquals(rowCount, scan.batchAccessor().getRowCount());
+    assertTrue(expectedBatchSchema.isEquivalent(scan.batchAccessor().schema()));
+    assertEquals(rowCount, scan.batchAccessor().rowCount());
     scan.batchAccessor().release();
 
     // EOF
@@ -195,14 +195,14 @@ public class TestMockRowReader extends SubOperatorTest {
         .add("b", MinorType.VARCHAR, 10)
         .build();
     BatchSchema expectedBatchSchema = new BatchSchema(SelectionVectorMode.NONE, expectedSchema.toFieldList());
-    assertTrue(expectedBatchSchema.isEquivalent(scan.batchAccessor().getSchema()));
-    assertEquals(0, scan.batchAccessor().getRowCount());
+    assertTrue(expectedBatchSchema.isEquivalent(scan.batchAccessor().schema()));
+    assertEquals(0, scan.batchAccessor().rowCount());
 
     // Next call, return with data.
 
     assertTrue(scan.next());
-    assertTrue(expectedBatchSchema.isEquivalent(scan.batchAccessor().getSchema()));
-    assertEquals(rowCount, scan.batchAccessor().getRowCount());
+    assertTrue(expectedBatchSchema.isEquivalent(scan.batchAccessor().schema()));
+    assertEquals(rowCount, scan.batchAccessor().rowCount());
     scan.batchAccessor().release();
 
     // EOF
@@ -238,16 +238,16 @@ public class TestMockRowReader extends SubOperatorTest {
     // empty first batch.
 
     assertTrue(scan.buildSchema());
-    assertEquals(0, scan.batchAccessor().getRowCount());
+    assertEquals(0, scan.batchAccessor().rowCount());
 
     // Next call, return with data, limited by batch size.
 
     assertTrue(scan.next());
-    assertEquals(batchSize, scan.batchAccessor().getRowCount());
+    assertEquals(batchSize, scan.batchAccessor().rowCount());
     scan.batchAccessor().release();
 
     assertTrue(scan.next());
-    assertEquals(batchSize, scan.batchAccessor().getRowCount());
+    assertEquals(batchSize, scan.batchAccessor().rowCount());
     scan.batchAccessor().release();
 
     // EOF
@@ -283,16 +283,16 @@ public class TestMockRowReader extends SubOperatorTest {
     // empty first batch.
 
     assertTrue(scan.buildSchema());
-    assertEquals(0, scan.batchAccessor().getRowCount());
+    assertEquals(0, scan.batchAccessor().rowCount());
 
     // Next call, return with data, limited by batch size.
 
     int totalRowCount = 0;
     int batchCount = 0;
     while(scan.next()) {
-      assertTrue(scan.batchAccessor().getRowCount() < ValueVector.MAX_ROW_COUNT);
+      assertTrue(scan.batchAccessor().rowCount() < ValueVector.MAX_ROW_COUNT);
       BatchAccessor batchAccessor = scan.batchAccessor();
-      totalRowCount += batchAccessor.getRowCount();
+      totalRowCount += batchAccessor.rowCount();
       batchCount++;
       batchAccessor.release();
     }

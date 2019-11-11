@@ -116,7 +116,7 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
         return false;
       }
       if (nextCount == schemaChangeAt) {
-        BatchSchemaBuilder newSchema = new BatchSchemaBuilder(batchAccessor.getSchema());
+        BatchSchemaBuilder newSchema = new BatchSchemaBuilder(batchAccessor.schema());
         newSchema.schemaBuilder()
             .add("b", MinorType.VARCHAR);
         VectorContainer newContainer = new VectorContainer(fixture.allocator(), newSchema.build());
@@ -130,7 +130,7 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
 
     @Override
     public void close() {
-      batchAccessor().getOutgoingContainer().clear();
+      batchAccessor().container().clear();
       closeCalled = true;
     }
   }

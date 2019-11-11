@@ -305,7 +305,7 @@ public class TestFileScanFramework extends SubOperatorTest {
     assertTrue(scan.buildSchema());
     assertTrue(reader.openCalled);
     assertEquals(1, reader.batchCount);
-    assertEquals(0, scan.batchAccessor().getRowCount());
+    assertEquals(0, scan.batchAccessor().rowCount());
 
     // Create the expected result.
 
@@ -324,19 +324,19 @@ public class TestFileScanFramework extends SubOperatorTest {
         .addRow(30, "fred", MOCK_FILE_FQN, MOCK_FILE_PATH, MOCK_FILE_NAME, MOCK_SUFFIX, MOCK_DIR0, MOCK_DIR1, null)
         .addRow(40, "wilma", MOCK_FILE_FQN, MOCK_FILE_PATH, MOCK_FILE_NAME, MOCK_SUFFIX, MOCK_DIR0, MOCK_DIR1, null)
         .build();
-    assertEquals(expected.batchSchema(), scan.batchAccessor().getSchema());
+    assertEquals(expected.batchSchema(), scan.batchAccessor().schema());
 
     // Next call, return with data.
 
     assertTrue(scan.next());
     RowSetUtilities.verify(expected,
-        fixture.wrap(scan.batchAccessor().getOutgoingContainer()));
+        fixture.wrap(scan.batchAccessor().container()));
 
     // EOF
 
     assertFalse(scan.next());
     assertTrue(reader.closeCalled);
-    assertEquals(0, scan.batchAccessor().getRowCount());
+    assertEquals(0, scan.batchAccessor().rowCount());
 
     scanFixture.close();
   }
@@ -379,19 +379,19 @@ public class TestFileScanFramework extends SubOperatorTest {
     // Schema should include implicit columns.
 
     assertTrue(scan.buildSchema());
-    assertEquals(expectedSchema, scan.batchAccessor().getSchema());
+    assertEquals(expectedSchema, scan.batchAccessor().schema());
     scan.batchAccessor().release();
 
     // Read one batch, should contain implicit columns
 
     assertTrue(scan.next());
     RowSetUtilities.verify(expected,
-        fixture.wrap(scan.batchAccessor().getOutgoingContainer()));
+        fixture.wrap(scan.batchAccessor().container()));
 
     // EOF
 
     assertFalse(scan.next());
-    assertEquals(0, scan.batchAccessor().getRowCount());
+    assertEquals(0, scan.batchAccessor().rowCount());
     scanFixture.close();
   }
 
@@ -436,19 +436,19 @@ public class TestFileScanFramework extends SubOperatorTest {
     // Schema should include implicit columns.
 
     assertTrue(scan.buildSchema());
-    assertEquals(expectedSchema, scan.batchAccessor().getSchema());
+    assertEquals(expectedSchema, scan.batchAccessor().schema());
     scan.batchAccessor().release();
 
     // Read one batch, should contain implicit columns
 
     assertTrue(scan.next());
     RowSetUtilities.verify(expected,
-        fixture.wrap(scan.batchAccessor().getOutgoingContainer()));
+        fixture.wrap(scan.batchAccessor().container()));
 
     // EOF
 
     assertFalse(scan.next());
-    assertEquals(0, scan.batchAccessor().getRowCount());
+    assertEquals(0, scan.batchAccessor().rowCount());
     scanFixture.close();
   }
 
@@ -479,19 +479,19 @@ public class TestFileScanFramework extends SubOperatorTest {
     // Schema should include implicit columns.
 
     assertTrue(scan.buildSchema());
-    assertEquals(expectedSchema, scan.batchAccessor().getSchema());
+    assertEquals(expectedSchema, scan.batchAccessor().schema());
     scan.batchAccessor().release();
 
     // Read one batch, should contain implicit columns
 
     assertTrue(scan.next());
     RowSetUtilities.verify(expected,
-        fixture.wrap(scan.batchAccessor().getOutgoingContainer()));
+        fixture.wrap(scan.batchAccessor().container()));
 
     // EOF
 
     assertFalse(scan.next());
-    assertEquals(0, scan.batchAccessor().getRowCount());
+    assertEquals(0, scan.batchAccessor().rowCount());
     scanFixture.close();
   }
 
@@ -551,17 +551,17 @@ public class TestFileScanFramework extends SubOperatorTest {
         .addSingleCol(new Object[] {20})
         .build();
     assertTrue(scan.buildSchema());
-    assertEquals(expectedSchema, scan.batchAccessor().getSchema());
+    assertEquals(expectedSchema, scan.batchAccessor().schema());
     scan.batchAccessor().release();
 
     assertTrue(scan.next());
     RowSetUtilities.verify(expected,
-         fixture.wrap(scan.batchAccessor().getOutgoingContainer()));
+         fixture.wrap(scan.batchAccessor().container()));
 
     // EOF
 
     assertFalse(scan.next());
-    assertEquals(0, scan.batchAccessor().getRowCount());
+    assertEquals(0, scan.batchAccessor().rowCount());
     scanFixture.close();
   }
 }

@@ -31,7 +31,6 @@ import org.apache.drill.exec.vector.accessor.ObjectType;
 import org.apache.drill.exec.vector.accessor.ScalarReader;
 import org.apache.drill.exec.vector.accessor.TupleReader;
 import org.apache.drill.exec.vector.accessor.VariantReader;
-
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 /**
@@ -49,7 +48,7 @@ public class ArrayReaderImpl implements ArrayReader, ReaderEvents {
 
   public static class ArrayObjectReader extends AbstractObjectReader {
 
-    private ArrayReaderImpl arrayReader;
+    private final ArrayReaderImpl arrayReader;
 
     public ArrayObjectReader(ArrayReaderImpl arrayReader) {
        this.arrayReader = arrayReader;
@@ -148,6 +147,11 @@ public class ArrayReaderImpl implements ArrayReader, ReaderEvents {
       }
       position = length;
       return false;
+    }
+
+    @Override
+    public boolean hasNext() {
+      return position + 1 < length;
     }
 
     /**
@@ -365,6 +369,12 @@ public class ArrayReaderImpl implements ArrayReader, ReaderEvents {
   @Override
   public void rewind() {
     elementIndex.rewind();
+  }
+
+
+  @Override
+  public void bindBuffer() {
+    elementReader.events().bindBuffer();
   }
 
   @Override

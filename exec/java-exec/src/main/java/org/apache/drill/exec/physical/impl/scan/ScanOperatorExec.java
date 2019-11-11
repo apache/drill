@@ -303,7 +303,7 @@ public class ScanOperatorExec implements OperatorExec {
       // was cleared when closing the reader. Recreate a valid empty
       // batch here to return downstream.
 
-      containerAccessor.getOutgoingContainer().setEmpty();
+      containerAccessor.container().setEmpty();
       state = State.EMPTY;
     } else {
       state = State.END;

@@ -36,15 +36,15 @@ import org.apache.drill.exec.record.selection.SelectionVector4;
  */
 
 public interface BatchAccessor {
-  BatchSchema getSchema();
+  BatchSchema schema();
   int schemaVersion();
-  int getRowCount();
-  VectorContainer getOutgoingContainer();
+  int rowCount();
+  VectorContainer container();
   TypedFieldId getValueVectorId(SchemaPath path);
   VectorWrapper<?> getValueAccessorById(Class<?> clazz, int... ids);
-  WritableBatch getWritableBatch();
-  SelectionVector2 getSelectionVector2();
-  SelectionVector4 getSelectionVector4();
+  WritableBatch writableBatch();
+  SelectionVector2 selectionVector2();
+  SelectionVector4 selectionVector4();
   Iterator<VectorWrapper<?>> iterator();
   void release();
 }

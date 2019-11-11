@@ -28,4 +28,5 @@ public interface ReaderEvents {
   void bindNullState(NullStateReader nullStateReader);
   NullStateReader nullStateReader();
   void reposition();
+  void bindBuffer();
 }

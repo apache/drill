@@ -119,24 +119,24 @@ public class TestScanOperExecLateSchema extends BaseScanOperatorExecTest {
     assertTrue(scan.buildSchema());
     assertTrue(reader.openCalled);
     assertEquals(1, reader.batchCount);
-    assertEquals(0, scan.batchAccessor().getRowCount());
+    assertEquals(0, scan.batchAccessor().rowCount());
 
     // Create the expected result.
 
     SingleRowSet expected = makeExpected(20);
     RowSetComparison verifier = new RowSetComparison(expected);
-    assertEquals(expected.batchSchema(), scan.batchAccessor().getSchema());
+    assertEquals(expected.batchSchema(), scan.batchAccessor().schema());
 
     // Next call, return with data.
 
     assertTrue(scan.next());
-    verifier.verifyAndClearAll(fixture.wrap(scan.batchAccessor().getOutgoingContainer()));
+    verifier.verifyAndClearAll(fixture.wrap(scan.batchAccessor().container()));
 
     // EOF
 
     assertFalse(scan.next());
     assertTrue(reader.closeCalled);
-    assertEquals(0, scan.batchAccessor().getRowCount());
+    assertEquals(0, scan.batchAccessor().rowCount());
 
     scanFixture.close();
   }
@@ -167,19 +167,19 @@ public class TestScanOperExecLateSchema extends BaseScanOperatorExecTest {
 
     assertTrue(scan.next());
     RowSetUtilities.verify(makeExpected(0),
-        fixture.wrap(scan.batchAccessor().getOutgoingContainer()));
+        fixture.wrap(scan.batchAccessor().container()));
 
     // Second batch.
 
     assertTrue(scan.next());
     RowSetUtilities.verify(makeExpected(20),
-        fixture.wrap(scan.batchAccessor().getOutgoingContainer()));
+        fixture.wrap(scan.batchAccessor().container()));
 
      // EOF
 
     assertFalse(scan.next());
     assertTrue(reader.closeCalled);
-    assertEquals(0, scan.batchAccessor().getRowCount());
+    assertEquals(0, scan.batchAccessor().rowCount());
 
     scanFixture.close();
   }
@@ -299,24 +299,24 @@ public class TestScanOperExecLateSchema extends BaseScanOperatorExecTest {
     assertTrue(scan.buildSchema());
     assertTrue(reader.openCalled);
     assertEquals(1, reader.batchCount);
-    assertEquals(0, scan.batchAccessor().getRowCount());
+    assertEquals(0, scan.batchAccessor().rowCount());
 
     // Create the expected result.
 
     SingleRowSet expected = makeExpected(20);
     RowSetComparison verifier = new RowSetComparison(expected);
-    assertEquals(expected.batchSchema(), scan.batchAccessor().getSchema());
+    assertEquals(expected.batchSchema(), scan.batchAccessor().schema());
 
     // Next call, return with data.
 
     assertTrue(scan.next());
-    verifier.verifyAndClearAll(fixture.wrap(scan.batchAccessor().getOutgoingContainer()));
+    verifier.verifyAndClearAll(fixture.wrap(scan.batchAccessor().container()));
 
     // EOF
 
     assertFalse(scan.next());
     assertTrue(reader.closeCalled);
-    assertEquals(0, scan.batchAccessor().getRowCount());
+    assertEquals(0, scan.batchAccessor().rowCount());
 
     scanFixture.close();
   }
@@ -371,22 +371,22 @@ public class TestScanOperExecLateSchema extends BaseScanOperatorExecTest {
     assertTrue(scan.buildSchema());
     assertTrue(reader.openCalled);
     assertEquals(1, reader.batchCount);
-    assertEquals(0, scan.batchAccessor().getRowCount());
+    assertEquals(0, scan.batchAccessor().rowCount());
 
     SingleRowSet expected = makeExpected();
     RowSetComparison verifier = new RowSetComparison(expected);
-    assertEquals(expected.batchSchema(), scan.batchAccessor().getSchema());
+    assertEquals(expected.batchSchema(), scan.batchAccessor().schema());
 
     // Next call, return with data.
 
     assertTrue(scan.next());
-    verifier.verifyAndClearAll(fixture.wrap(scan.batchAccessor().getOutgoingContainer()));
+    verifier.verifyAndClearAll(fixture.wrap(scan.batchAccessor().container()));
 
     // EOF
 
     assertFalse(scan.next());
     assertTrue(reader.closeCalled);
-    assertEquals(0, scan.batchAccessor().getRowCount());
+    assertEquals(0, scan.batchAccessor().rowCount());
 
     scanFixture.close();
   }
@@ -414,8 +414,8 @@ public class TestScanOperExecLateSchema extends BaseScanOperatorExecTest {
 
    assertTrue(scan.buildSchema());
    assertEquals(1, reader.batchCount);
-   assertEquals(expected.batchSchema(), scan.batchAccessor().getSchema());
-   assertEquals(0, scan.batchAccessor().getRowCount());
+   assertEquals(expected.batchSchema(), scan.batchAccessor().schema());
+   assertEquals(0, scan.batchAccessor().rowCount());
    scan.batchAccessor().release();
 
    // Second batch. Returns the "look-ahead" batch returned by
@@ -424,20 +424,20 @@ public class TestScanOperExecLateSchema extends BaseScanOperatorExecTest {
    assertTrue(scan.next());
    assertEquals(1, reader.batchCount);
    RowSetUtilities.verify(expected,
-     fixture.wrap(scan.batchAccessor().getOutgoingContainer()));
+     fixture.wrap(scan.batchAccessor().container()));
 
    // Third batch, normal case.
 
    assertTrue(scan.next());
    assertEquals(2, reader.batchCount);
    RowSetUtilities.verify(makeExpected(20),
-     fixture.wrap(scan.batchAccessor().getOutgoingContainer()));
+     fixture.wrap(scan.batchAccessor().container()));
 
    // EOF
 
    assertFalse(scan.next());
    assertTrue(reader.closeCalled);
-   assertEquals(0, scan.batchAccessor().getRowCount());
+   assertEquals(0, scan.batchAccessor().rowCount());
 
    scanFixture.close();
  }

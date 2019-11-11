@@ -59,6 +59,11 @@ public class RowSetReaderImpl extends AbstractTupleReader implements RowSetReade
   }
 
   @Override
+  public boolean hasNext() {
+    return readerIndex.hasNext();
+  }
+
+  @Override
   public int logicalIndex() { return readerIndex.logicalIndex(); }
 
   @Override
@@ -72,7 +77,7 @@ public class RowSetReaderImpl extends AbstractTupleReader implements RowSetReade
 
   @Override
   public void setPosition(int index) {
-    this.readerIndex.set(index);
+    readerIndex.set(index);
     reposition();
   }
 
@@ -81,4 +86,13 @@ public class RowSetReaderImpl extends AbstractTupleReader implements RowSetReade
 
   @Override
   public TupleMetadata tupleSchema() { return schema; }
+
+  @Override
+  public void rewind() { setPosition(-1); }
+
+  @Override
+  public void newBatch() {
+    bindBuffer();
+    rewind();
+  }
 }
