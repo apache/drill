@@ -36,10 +36,9 @@ import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.test.SubOperatorTest;
 import org.junit.Test;
-
-import jersey.repackaged.com.google.common.base.Preconditions;
 
 public class TestResultSetReader extends SubOperatorTest {
 
