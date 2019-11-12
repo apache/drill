@@ -86,7 +86,7 @@ public interface MetadataProvider {
       case VARIANT:
         return new VariantSchemaCreator((VariantSchema) colMetadata.variantSchema());
       case TUPLE:
-        return new MetadataCreator((TupleSchema) colMetadata.mapSchema());
+        return new MetadataCreator((TupleSchema) colMetadata.tupleSchema());
       default:
         throw new UnsupportedOperationException();
       }
@@ -188,7 +188,7 @@ public interface MetadataProvider {
       case VARIANT:
         return new VariantSchemaRetrieval((VariantSchema) colMetadata.variantSchema());
       case TUPLE:
-        return new MetadataRetrieval(colMetadata.mapSchema());
+        return new MetadataRetrieval(colMetadata.tupleSchema());
       default:
         throw new UnsupportedOperationException();
       }

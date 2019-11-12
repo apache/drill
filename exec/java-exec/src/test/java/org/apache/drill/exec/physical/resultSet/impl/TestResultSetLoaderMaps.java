@@ -83,7 +83,7 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
     final TupleMetadata actualSchema = rootWriter.tupleSchema();
     assertEquals(3, actualSchema.size());
     assertTrue(actualSchema.metadata(1).isMap());
-    assertEquals(2, actualSchema.metadata("m").mapSchema().size());
+    assertEquals(2, actualSchema.metadata("m").tupleSchema().size());
     assertEquals(2, actualSchema.column("m").getChildren().size());
 
     rsLoader.startBatch();
@@ -246,7 +246,7 @@ public class TestResultSetLoaderMaps extends SubOperatorTest {
     // Ensure metadata was added
 
     assertTrue(mapWriter.tupleSchema().size() == 1);
-    assertSame(mapWriter.tupleSchema(), mapWriter.schema().mapSchema());
+    assertSame(mapWriter.tupleSchema(), mapWriter.schema().tupleSchema());
     assertSame(mapWriter.tupleSchema().metadata(colIndex), mapWriter.scalar(colIndex).schema());
 
     rootWriter

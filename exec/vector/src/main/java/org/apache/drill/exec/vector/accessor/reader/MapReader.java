@@ -78,5 +78,5 @@ public class MapReader extends AbstractTupleReader {
   public ColumnMetadata schema() { return schema; }
 
   @Override
-  public TupleMetadata tupleSchema() { return schema.mapSchema(); }
+  public TupleMetadata tupleSchema() { return schema.tupleSchema(); }
 }

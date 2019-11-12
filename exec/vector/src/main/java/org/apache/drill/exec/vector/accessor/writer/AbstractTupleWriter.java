@@ -110,7 +110,7 @@ public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
 
   public static class TupleObjectWriter extends AbstractObjectWriter {
 
-    private final AbstractTupleWriter tupleWriter;
+    protected final AbstractTupleWriter tupleWriter;
 
     public TupleObjectWriter(AbstractTupleWriter tupleWriter) {
       this.tupleWriter = tupleWriter;
@@ -147,6 +147,35 @@ public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
     ObjectWriter addColumn(TupleWriter tuple, ColumnMetadata column);
 
     ObjectWriter addColumn(TupleWriter tuple, MaterializedField field);
+  }
+
+  /**
+   * Wrap the outer index to avoid incrementing the array index
+   * on the call to <tt>nextElement().</tt> The increment
+   * is done at the tuple level, not the column level.
+   */
+
+  static class MemberWriterIndex implements ColumnWriterIndex {
+    private ColumnWriterIndex baseIndex;
+
+    MemberWriterIndex(ColumnWriterIndex baseIndex) {
+      this.baseIndex = baseIndex;
+    }
+
+    @Override public int rowStartIndex() { return baseIndex.rowStartIndex(); }
+    @Override public int vectorIndex() { return baseIndex.vectorIndex(); }
+    @Override public void nextElement() { }
+    @Override public void prevElement() { }
+    @Override public void rollover() { }
+
+    @Override public ColumnWriterIndex outerIndex() {
+      return baseIndex.outerIndex();
+    }
+
+    @Override
+    public String toString() {
+      return "[" + getClass().getSimpleName() + " baseIndex = " + baseIndex.toString() + "]";
+    }
   }
 
   protected static final Logger logger = LoggerFactory.getLogger(AbstractTupleWriter.class);

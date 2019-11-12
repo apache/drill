@@ -36,10 +36,10 @@ public class DictColumnMetadata extends AbstractMapColumnMetadata {
    * the children) of the materialized field provided.
    *
    * @param schema the schema to use
-   * @param mapSchema parent schema
+   * @param tupleSchema parent schema
    */
-  DictColumnMetadata(MaterializedField schema, TupleSchema mapSchema) {
-    super(schema, mapSchema);
+  DictColumnMetadata(MaterializedField schema, TupleSchema tupleSchema) {
+    super(schema, tupleSchema);
   }
 
   public DictColumnMetadata(DictColumnMetadata from) {
@@ -57,7 +57,7 @@ public class DictColumnMetadata extends AbstractMapColumnMetadata {
 
   @Override
   public ColumnMetadata cloneEmpty() {
-    return new DictColumnMetadata(name, mode, new TupleSchema());
+    return new DictColumnMetadata(name, mode, schema.copy());
   }
 
   @Override

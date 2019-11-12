@@ -44,6 +44,7 @@ import org.slf4j.LoggerFactory;
  * it may have 2 children only, named {@link #FIELD_KEY_NAME} and {@link #FIELD_VALUE_NAME}.
  * The {@link #FIELD_KEY_NAME} can be of primitive type only and its values should not be {@code null},
  * while the other, {@link #FIELD_VALUE_NAME}, field can be either of primitive or complex type.
+ * Value field can hold {@code null} values.
  *
  * <p>This vector has it's own {@link org.apache.drill.exec.vector.complex.reader.FieldReader} and
  * {@link org.apache.drill.exec.vector.complex.writer.FieldWriter} to ensure data is read and written correctly.

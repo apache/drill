@@ -198,7 +198,7 @@ public class ColumnBuilder {
     // calls.
 
     assert columnSchema.isMap();
-    assert columnSchema.mapSchema().size() == 0;
+    assert columnSchema.tupleSchema().size() == 0;
 
     // Create the vector, vector state and writer.
 
@@ -223,7 +223,7 @@ public class ColumnBuilder {
       // have content that varies from batch to batch. Only the leaf
       // vectors can be cached.
 
-      assert columnSchema.mapSchema().isEmpty();
+      assert columnSchema.tupleSchema().isEmpty();
       vector = new MapVector(columnSchema.schema(), parent.loader().allocator(), null);
       vectorState = new MapVectorState(vector, new NullVectorState());
     }
@@ -256,7 +256,7 @@ public class ColumnBuilder {
       // have content that varies from batch to batch. Only the leaf
       // vectors can be cached.
 
-      assert columnSchema.mapSchema().isEmpty();
+      assert columnSchema.tupleSchema().isEmpty();
       mapVector = new RepeatedMapVector(mapColSchema.schema(),
           parent.loader().allocator(), null);
       offsetVector = mapVector.getOffsetVector();

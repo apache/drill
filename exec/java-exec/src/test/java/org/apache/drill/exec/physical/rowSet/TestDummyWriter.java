@@ -137,7 +137,7 @@ public class TestDummyWriter extends SubOperatorTest {
     // Create the writers
 
     {
-      TupleMetadata mapSchema = schema.metadata("m1").mapSchema();
+      TupleMetadata mapSchema = schema.metadata("m1").tupleSchema();
       List<AbstractObjectWriter> members = new ArrayList<>();
       members.add(ColumnWriterFactory.buildColumnWriter(mapSchema.metadata("a"), null, null));
       members.add(ColumnWriterFactory.buildColumnWriter(mapSchema.metadata("b"), null, null));
@@ -145,7 +145,7 @@ public class TestDummyWriter extends SubOperatorTest {
     }
 
     {
-      TupleMetadata mapSchema = schema.metadata("m2").mapSchema();
+      TupleMetadata mapSchema = schema.metadata("m2").tupleSchema();
       List<AbstractObjectWriter> members = new ArrayList<>();
       members.add(ColumnWriterFactory.buildColumnWriter(mapSchema.metadata("c"), null, null));
       writers.add(MapWriter.buildMapWriter(schema.metadata("m2"), null, members));

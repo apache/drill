@@ -18,8 +18,6 @@
 package org.apache.drill.exec.vector.accessor.reader;
 
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
-import org.apache.drill.exec.vector.accessor.ColumnReader;
-import org.apache.drill.exec.vector.accessor.ColumnReaderIndex;
 import org.apache.drill.exec.vector.accessor.ObjectReader;
 import org.apache.drill.exec.vector.accessor.ObjectType;
 import org.apache.drill.exec.vector.accessor.ValueType;
@@ -29,63 +27,34 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class DictReaderImpl implements DictReader, ReaderEvents {
+public class DictReaderImpl extends ArrayReaderImpl implements DictReader, ReaderEvents {
 
-  public static class DictObjectReader extends AbstractObjectReader {
-
-    private final DictReaderImpl dictReader;
+  public static class DictObjectReader extends ArrayObjectReader {
 
     public DictObjectReader(DictReaderImpl dictReader) {
-      this.dictReader = dictReader;
+      super(dictReader);
     }
 
     @Override
     public DictReader dict() {
-      return dictReader;
-    }
-
-    @Override
-    public Object getObject() {
-      return dictReader.getObject();
-    }
-
-    @Override
-    public String getAsString() {
-      return dictReader.getAsString();
-    }
-
-    @Override
-    public ReaderEvents events() {
-      return dictReader;
-    }
-
-    @Override
-    public ColumnReader reader() {
-      return dictReader;
+      return (DictReader) array();
     }
   }
 
-  private final ColumnMetadata metadata;
-  private final VectorAccessor accessor;
-
   private final AbstractObjectReader keyReader;
   private final AbstractObjectReader valueReader;
-  private NullStateReader nullStateReader;
 
-  private ArrayReaderImpl.ElementReaderIndex elementIndex;
-  private final OffsetVectorReader offsetReader;
-
-  public DictReaderImpl(ColumnMetadata metadata, VectorAccessor va, List<AbstractObjectReader> readers) {
-    this.metadata = metadata;
-    this.accessor = va;
-    this.keyReader = readers.get(0);
-    this.valueReader = readers.get(1);
-    this.offsetReader = new OffsetVectorReader(VectorAccessors.arrayOffsetVectorAccessor(va));
+  public DictReaderImpl(ColumnMetadata metadata, VectorAccessor va, AbstractTupleReader.TupleObjectReader entryObjectReader) {
+    super(metadata, va, entryObjectReader);
+    DictEntryReader reader = (DictEntryReader) entryObjectReader.reader();
+    this.keyReader = reader.keyReader();
+    this.valueReader = reader.valueReader();
   }
 
   public static DictObjectReader build(ColumnMetadata schema, VectorAccessor dictAccessor,
                                        List<AbstractObjectReader> readers) {
-    DictReaderImpl dictReader = new DictReaderImpl(schema, dictAccessor, readers);
+    AbstractTupleReader.TupleObjectReader entryReader = DictEntryReader.build(schema, dictAccessor, readers);
+    DictReaderImpl dictReader = new DictReaderImpl(schema, dictAccessor, entryReader);
     dictReader.bindNullState(NullStateReaders.REQUIRED_STATE_READER);
     return new DictObjectReader(dictReader);
   }
@@ -118,11 +87,6 @@ public class DictReaderImpl implements DictReader, ReaderEvents {
   }
 
   @Override
-  public int size() {
-    return offsetReader.vectorIndex.size();
-  }
-
-  @Override
   public ValueType keyColumnType() {
     return keyReader.scalar().valueType();
   }
@@ -132,35 +96,11 @@ public class DictReaderImpl implements DictReader, ReaderEvents {
     return valueReader.type();
   }
 
-  private boolean next() {
-    if (!elementIndex.next()) {
-      return false;
-    }
-    keyReader.events().reposition();
-    valueReader.events().reposition();
-    return true;
-  }
-
   /**
    * Reset entry position
    */
   private void resetPosition() {
-    elementIndex.rewind();
-  }
-
-  @Override
-  public ColumnMetadata schema() {
-    return metadata;
-  }
-
-  @Override
-  public ObjectType type() {
-    return ObjectType.ARRAY;
-  }
-
-  @Override
-  public boolean isNull() {
-    return false;
+    rewind();
   }
 
   @Override
@@ -190,32 +130,5 @@ public class DictReaderImpl implements DictReader, ReaderEvents {
     }
     buf.append("}");
     return buf.toString();
-  }
-
-  @Override
-  public void bindIndex(ColumnReaderIndex index) {
-    accessor.bind(index);
-    offsetReader.bindIndex(index);
-    nullStateReader.bindIndex(index);
-
-    elementIndex = new ArrayReaderImpl.ElementReaderIndex(index);
-    keyReader.events().bindIndex(elementIndex);
-    valueReader.events().bindIndex(elementIndex);
-  }
-
-  @Override
-  public void bindNullState(NullStateReader nullStateReader) {
-    this.nullStateReader = nullStateReader;
-  }
-
-  @Override
-  public NullStateReader nullStateReader() {
-    return nullStateReader;
-  }
-
-  @Override
-  public void reposition() {
-    long entry = offsetReader.getEntry();
-    elementIndex.reset((int) (entry >> 32), (int) (entry));
   }
 }

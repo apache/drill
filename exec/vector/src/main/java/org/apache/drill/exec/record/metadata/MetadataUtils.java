@@ -38,7 +38,7 @@ public class MetadataUtils {
   /**
    * Create a column metadata object that holds the given
    * {@link MaterializedField}. The type of the object will be either a
-   * primitive or map column, depending on the field's type. The logic
+   * primitive, map or dict column, depending on the field's type. The logic
    * here mimics the code as written, which is very messy in some places.
    *
    * @param field the materialized field to wrap
@@ -90,6 +90,8 @@ public class MetadataUtils {
   public static ColumnMetadata fromView(MaterializedField field) {
     if (field.getType().getMinorType() == MinorType.MAP) {
       return new MapColumnMetadata(field, null);
+    } else if (field.getType().getMinorType() == MinorType.DICT) {
+      return newDict(field);
     } else {
       return new PrimitiveColumnMetadata(field);
     }
@@ -139,7 +141,7 @@ public class MetadataUtils {
   }
 
   public static DictColumnMetadata newDict(String name, TupleMetadata schema) {
-    return new DictColumnMetadata(name, DataMode.OPTIONAL, (TupleSchema) schema);
+    return new DictColumnMetadata(name, DataMode.REQUIRED, (TupleSchema) schema);
   }
 
   public static VariantColumnMetadata newVariant(MaterializedField field, VariantSchema schema) {
@@ -206,9 +208,9 @@ public class MetadataUtils {
   }
 
   private static boolean isScalar(MinorType type) {
-    return type != MinorType.MAP
-        && type != MinorType.UNION
-        && type != MinorType.LIST
-        && type != MinorType.DICT;
+    return !(type == MinorType.MAP
+        || type == MinorType.UNION
+        || type == MinorType.LIST
+        || type == MinorType.DICT);
   }
 }

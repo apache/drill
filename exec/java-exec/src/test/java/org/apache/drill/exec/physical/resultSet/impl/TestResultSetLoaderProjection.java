@@ -228,7 +228,7 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
     TupleWriter m1Writer = rootWriter.tuple("m1");
     assertTrue(m1Md.isMap());
     assertTrue(m1Writer.isProjected());
-    assertEquals(2, m1Md.mapSchema().size());
+    assertEquals(2, m1Md.tupleSchema().size());
     assertTrue(m1Writer.column("a").isProjected());
     assertTrue(m1Writer.column("b").isProjected());
 
@@ -236,7 +236,7 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
     TupleWriter m2Writer = rootWriter.tuple("m2");
     assertTrue(m2Md.isMap());
     assertTrue(m2Writer.isProjected());
-    assertEquals(2, m2Md.mapSchema().size());
+    assertEquals(2, m2Md.tupleSchema().size());
     assertFalse(m2Writer.column("c").isProjected());
     assertTrue(m2Writer.column("d").isProjected());
 
@@ -244,7 +244,7 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
     TupleWriter m3Writer = rootWriter.tuple("m3");
     assertTrue(m3Md.isMap());
     assertFalse(m3Writer.isProjected());
-    assertEquals(2, m3Md.mapSchema().size());
+    assertEquals(2, m3Md.tupleSchema().size());
     assertFalse(m3Writer.column("e").isProjected());
     assertFalse(m3Writer.column("f").isProjected());
 
@@ -305,7 +305,7 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
     TupleWriter m1Writer = rootWriter.tuple("m1");
     assertTrue(m1Md.isMap());
     assertTrue(m1Writer.isProjected());
-    assertEquals(2, m1Md.mapSchema().size());
+    assertEquals(2, m1Md.tupleSchema().size());
     assertTrue(m1Writer.column("a").isProjected());
     assertTrue(m1Writer.column("b").isProjected());
 

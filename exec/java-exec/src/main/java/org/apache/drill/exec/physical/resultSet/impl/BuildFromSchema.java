@@ -208,9 +208,9 @@ public class BuildFromSchema {
 
   private void expandMap(ObjectWriter colWriter, ColumnMetadata colSchema) {
     if (colSchema.isArray()) {
-      buildTuple(colWriter.array().tuple(), colSchema.mapSchema());
+      buildTuple(colWriter.array().tuple(), colSchema.tupleSchema());
     } else {
-      buildTuple(colWriter.tuple(), colSchema.mapSchema());
+      buildTuple(colWriter.tuple(), colSchema.tupleSchema());
     }
   }
 

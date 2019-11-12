@@ -37,7 +37,14 @@ import org.joda.time.Period;
 import java.math.BigDecimal;
 
 /**
- * Dummy reader which returns {@code null} for scalar types and itself for complex types.
+ * Dummy reader which returns {@code null} on access to getters for scalar types
+ * ({@link #getString()}, {@link #getBytes()} etc.) and itself on access to reader types
+ * ({@link #scalar()}, {@link #tuple()} etc.). Used when accessing {@link DictReader} by non-existent key.
+ * {@link #isNull()} returns {@code true}.
+ *
+ * Does not preserve metadata structure. Other methods throw {@link UnsupportedOperationException}. todo:
+ *
+ * @see DictReader
  */
 public class NullReader implements ScalarReader, ArrayReader, TupleReader, VariantReader, ObjectReader, DictReader {
 
@@ -183,6 +190,7 @@ public class NullReader implements ScalarReader, ArrayReader, TupleReader, Varia
 
   @Override
   public TupleMetadata tupleSchema() {
+    notSupported("tupleSchema()");
     return null;
   }
 

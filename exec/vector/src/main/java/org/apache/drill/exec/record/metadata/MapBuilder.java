@@ -144,12 +144,20 @@ public class MapBuilder implements SchemaContainer {
     return tupleBuilder.addRepeatedList(this, name);
   }
 
-  public DictBuilder addDict(String name) {
-    return tupleBuilder.addDict(this, name);
+  public DictBuilder addDict(String name, MinorType keyType) {
+    return tupleBuilder.addDict(this, name).key(keyType);
   }
 
-  public DictBuilder addDictArray(String name) {
-    return tupleBuilder.addDictArray(this, name);
+  public DictBuilder addDict(String name, MajorType keyType) {
+    return tupleBuilder.addDict(this, name).key(keyType);
+  }
+
+  public DictBuilder addDictArray(String name, MinorType keyType) {
+    return tupleBuilder.addDictArray(this, name).key(keyType);
+  }
+
+  public DictBuilder addDictArray(String name, MajorType keyType) {
+    return tupleBuilder.addDictArray(this, name).key(keyType);
   }
 
   public MapColumnMetadata buildColumn() {

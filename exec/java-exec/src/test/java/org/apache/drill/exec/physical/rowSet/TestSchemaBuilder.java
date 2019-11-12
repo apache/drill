@@ -135,7 +135,7 @@ public class TestSchemaBuilder extends DrillTest {
     assertTrue(m.isMap());
     assertEquals(DataMode.REQUIRED, m.mode());
 
-    TupleMetadata mapSchema = m.mapSchema();
+    TupleMetadata mapSchema = m.tupleSchema();
     assertNotNull(mapSchema);
     assertEquals(4, mapSchema.size());
 
@@ -287,9 +287,8 @@ public class TestSchemaBuilder extends DrillTest {
   @Test
   public void testDictInRow() {
     TupleMetadata schema = new SchemaBuilder()
-            .addDict("d")
-            .key(MinorType.VARCHAR)
-            .value(MinorType.FLOAT8, DataMode.OPTIONAL)
+            .addDict("d", MinorType.VARCHAR)
+            .nullableValue(MinorType.FLOAT8)
             .resumeSchema()
             .buildSchema();
 
@@ -300,7 +299,7 @@ public class TestSchemaBuilder extends DrillTest {
     assertTrue(d.isDict());
     assertEquals(DataMode.REQUIRED, d.mode());
 
-    TupleMetadata dictSchema = d.mapSchema();
+    TupleMetadata dictSchema = d.tupleSchema();
     assertNotNull(dictSchema);
     assertEquals(2, dictSchema.size());
 
@@ -339,7 +338,7 @@ public class TestSchemaBuilder extends DrillTest {
 
     assertEquals(21, schema.metadata("a").precision());
     assertEquals(22, schema.metadata("b").precision());
-    TupleMetadata mapSchema = schema.metadata("m").mapSchema();
+    TupleMetadata mapSchema = schema.metadata("m").tupleSchema();
     assertEquals(23, mapSchema.metadata("c").precision());
     assertEquals(24, mapSchema.metadata("d").precision());
   }
@@ -378,7 +377,7 @@ public class TestSchemaBuilder extends DrillTest {
     assertEquals(7, c.precision());
     assertEquals(4, c.scale());
 
-    ColumnMetadata d = schema.metadata("m").mapSchema().metadata("d");
+    ColumnMetadata d = schema.metadata("m").tupleSchema().metadata("d");
     assertEquals(DataMode.OPTIONAL, d.mode());
     assertEquals(8, d.precision());
     assertEquals(1, d.scale());
@@ -430,13 +429,13 @@ public class TestSchemaBuilder extends DrillTest {
     assertEquals(38, g.precision());
     assertEquals(4, g.scale());
 
-    ColumnMetadata d = schema.metadata("m").mapSchema().metadata("d");
+    ColumnMetadata d = schema.metadata("m").tupleSchema().metadata("d");
     assertEquals(MinorType.VARDECIMAL, d.type());
     assertEquals(DataMode.OPTIONAL, d.mode());
     assertEquals(8, d.precision());
     assertEquals(1, d.scale());
 
-    ColumnMetadata f = schema.metadata("m").mapSchema().metadata("f");
+    ColumnMetadata f = schema.metadata("m").tupleSchema().metadata("f");
     assertEquals(MinorType.VARDECIMAL, f.type());
     assertEquals(DataMode.REQUIRED, f.mode());
     assertEquals(38, f.precision());
@@ -498,8 +497,8 @@ public class TestSchemaBuilder extends DrillTest {
           .resumeSchema()
         .buildSchema();
 
-    TupleMetadata m1Schema = schema.metadata("m1").mapSchema();
-    TupleMetadata m2Schema = m1Schema.metadata("m2").mapSchema();
+    TupleMetadata m1Schema = schema.metadata("m1").tupleSchema();
+    TupleMetadata m2Schema = m1Schema.metadata("m2").tupleSchema();
 
     ColumnMetadata a = m2Schema.metadata(0);
     assertEquals("a", a.name());
@@ -525,7 +524,7 @@ public class TestSchemaBuilder extends DrillTest {
           .resumeSchema()
         .buildSchema();
 
-    TupleMetadata m1Schema = schema.metadata("m1").mapSchema();
+    TupleMetadata m1Schema = schema.metadata("m1").tupleSchema();
     VariantMetadata uSchema = m1Schema.metadata("u").variantSchema();
 
     assertTrue(uSchema.hasType(MinorType.INT));
@@ -551,7 +550,7 @@ public class TestSchemaBuilder extends DrillTest {
           .resumeSchema()
         .buildSchema();
 
-    TupleMetadata m1Schema = schema.metadata("m1").mapSchema();
+    TupleMetadata m1Schema = schema.metadata("m1").tupleSchema();
 
     ColumnMetadata r = m1Schema.metadata(0);
     assertEquals("r", r.name());
@@ -585,7 +584,7 @@ public class TestSchemaBuilder extends DrillTest {
     ColumnMetadata mapType = variant.member(MinorType.MAP);
     assertNotNull(mapType);
 
-    TupleMetadata mapSchema = mapType.mapSchema();
+    TupleMetadata mapSchema = mapType.tupleSchema();
     assertEquals(2, mapSchema.size());
 
     assertTrue(variant.hasType(MinorType.FLOAT8));
@@ -661,7 +660,7 @@ public class TestSchemaBuilder extends DrillTest {
     ColumnMetadata list = schema.metadata("x");
     ColumnMetadata mapCol = list.childSchema();
     assertTrue(mapCol.isMap());
-    TupleMetadata mapSchema = mapCol.mapSchema();
+    TupleMetadata mapSchema = mapCol.tupleSchema();
 
     ColumnMetadata a = mapSchema.metadata("a");
     assertEquals(MinorType.INT, a.type());
@@ -750,7 +749,7 @@ public class TestSchemaBuilder extends DrillTest {
     assertTrue(columnMetadata.isNullable());
     assertEquals("m1", columnMetadata.name());
 
-    TupleMetadata schema = columnMetadata.mapSchema();
+    TupleMetadata schema = columnMetadata.tupleSchema();
 
     ColumnMetadata col0 = schema.metadata(0);
     assertEquals("b", col0.name());
@@ -762,7 +761,7 @@ public class TestSchemaBuilder extends DrillTest {
     assertTrue(col1.isMap());
     assertFalse(col1.isNullable());
 
-    ColumnMetadata child = col1.mapSchema().metadata(0);
+    ColumnMetadata child = col1.tupleSchema().metadata(0);
     assertEquals("v", child.name());
     assertEquals(MinorType.VARCHAR, child.type());
     assertTrue(child.isNullable());
@@ -786,7 +785,7 @@ public class TestSchemaBuilder extends DrillTest {
     assertTrue(child.isArray());
     assertTrue(child.isMap());
 
-    TupleMetadata mapSchema = child.mapSchema();
+    TupleMetadata mapSchema = child.tupleSchema();
 
     ColumnMetadata col0 = mapSchema.metadata(0);
     assertEquals("v", col0.name());

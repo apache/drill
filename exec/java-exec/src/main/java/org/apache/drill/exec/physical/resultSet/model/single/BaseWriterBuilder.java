@@ -98,24 +98,13 @@ public abstract class BaseWriterBuilder {
 
   private AbstractObjectWriter buildDict(ValueVector vector, VectorDescrip descrip) {
     if (vector.getField().getType().getMode() == DataMode.REPEATED) {
-      return buildDictArray((RepeatedDictVector) vector, descrip);
+      ValueVector dataVector = ((RepeatedDictVector) vector).getDataVector();
+      List<AbstractObjectWriter> writers = buildMap((AbstractMapVector) dataVector, descrip);
+      return ObjectDictWriter.buildDictArray((RepeatedDictVector) vector, descrip.metadata, writers);
     } else {
       List<AbstractObjectWriter> writers = buildMap((AbstractMapVector) vector, descrip);
-      return buildDict(descrip, (DictVector) vector, writers);
+      return ObjectDictWriter.buildDict(descrip.metadata, (DictVector) vector, writers);
     }
-  }
-
-  private ArrayObjectWriter buildDict(VectorDescrip descrip, DictVector vector, List<AbstractObjectWriter> writers) {
-    ObjectDictWriter objectDictWriter = ObjectDictWriter.build(descrip.metadata, writers, vector);
-    return new ObjectDictWriter.DictObjectWriter(objectDictWriter);
-  }
-
-  private ArrayObjectWriter buildDictArray(RepeatedDictVector vector, VectorDescrip descrip) {
-    final DictVector dataVector = (DictVector) vector.getDataVector();
-    List<AbstractObjectWriter> writers = buildMap(dataVector, descrip);
-    ObjectDictWriter dictWriter = ObjectDictWriter.build(descrip.metadata, writers, dataVector);
-    ObjectDictWriter.DictObjectWriter objectWriter = new ObjectDictWriter.DictObjectWriter(dictWriter);
-    return MapWriter.buildDictArray(descrip.metadata, objectWriter, vector);
   }
 
   private List<AbstractObjectWriter> buildMap(AbstractMapVector vector, VectorDescrip descrip) {

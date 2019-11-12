@@ -143,7 +143,7 @@ public class SimpleReaderBuilder extends ReaderBuilder {
 
   private AbstractObjectReader buildDict(ValueVector vector, VectorAccessor va, VectorDescrip descrip) {
 
-    boolean isArray = vector.getField().getType().getMode() == DataMode.REPEATED;
+    boolean isArray = descrip.metadata.isArray();
 
     DictVector dictVector;
     VectorAccessor dictAccessor;

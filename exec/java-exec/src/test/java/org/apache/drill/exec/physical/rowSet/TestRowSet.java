@@ -19,6 +19,7 @@ package org.apache.drill.exec.physical.rowSet;
 
 import static org.apache.drill.test.rowSet.RowSetUtilities.intArray;
 import static org.apache.drill.test.rowSet.RowSetUtilities.objArray;
+import static org.apache.drill.test.rowSet.RowSetUtilities.singleObjArray;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -33,7 +34,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.drill.categories.RowSetTests;
-import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.RowSet.ExtendableRowSet;
 import org.apache.drill.exec.physical.rowSet.RowSet.SingleRowSet;
@@ -598,9 +598,9 @@ public class TestRowSet extends SubOperatorTest {
     final String dictName = "d";
 
     final TupleMetadata schema = new SchemaBuilder()
-        .addDict(dictName)
-        .key(MinorType.INT)
-        .value(MinorType.VARCHAR, TypeProtos.DataMode.REQUIRED)
+        .add("id", MinorType.INT)
+        .addDict(dictName, MinorType.INT)
+        .value(MinorType.VARCHAR) // required int
         .resumeSchema()
         .buildSchema();
     final ExtendableRowSet rowSet = fixture.rowSet(schema);
@@ -614,8 +614,8 @@ public class TestRowSet extends SubOperatorTest {
     assertEquals(ObjectType.ARRAY, writer.column(dictName).type());
     assertTrue(writer.column(dictName).schema().isDict());
 
-    final DictWriter dictWriter = writer.column(0).dict();
-    assertEquals(ObjectType.TUPLE, dictWriter.entryType());
+    final ScalarWriter idWriter = writer.column(0).scalar();
+    final DictWriter dictWriter = writer.column(1).dict();
 
     assertEquals(ValueType.INTEGER, dictWriter.keyType());
     assertEquals(ObjectType.SCALAR, dictWriter.valueType());
@@ -627,6 +627,7 @@ public class TestRowSet extends SubOperatorTest {
     assertEquals(ValueType.STRING, valueWriter.valueType());
 
     // Write data
+    idWriter.setInt(1);
 
     keyWriter.setInt(11);
     valueWriter.setString("a");
@@ -636,10 +637,14 @@ public class TestRowSet extends SubOperatorTest {
     dictWriter.save();
     writer.save();
 
+    idWriter.setInt(2);
+
     keyWriter.setInt(21);
     valueWriter.setString("c");
     dictWriter.save();
     writer.save();
+
+    idWriter.setInt(3);
 
     keyWriter.setInt(31);
     valueWriter.setString("d");
@@ -658,7 +663,7 @@ public class TestRowSet extends SubOperatorTest {
 
     assertEquals(ObjectType.ARRAY, reader.column(dictName).type());
 
-    final DictReader dictReader = reader.dict(0);
+    final DictReader dictReader = reader.dict(1);
     assertEquals(ObjectType.ARRAY, dictReader.type());
 
     assertEquals(ValueType.INTEGER, dictReader.keyColumnType());
@@ -700,11 +705,15 @@ public class TestRowSet extends SubOperatorTest {
 
     // Verify that the dict accessor's value count was set.
 
-    final DictVector dictVector = (DictVector) actual.container().getValueVector(0).getValueVector();
+    final DictVector dictVector = (DictVector) actual.container().getValueVector(1).getValueVector();
     assertEquals(3, dictVector.getAccessor().getValueCount());
 
-    // release buffers
-    actual.clear();
+    final SingleRowSet expected = fixture.rowSetBuilder(schema)
+        .addRow(1, objArray(11, "a", 12, "b"))
+        .addRow(2, objArray(21, "c"))
+        .addRow(3, objArray(31, "d", 32, "e"))
+        .build();
+    RowSetUtilities.verify(expected, actual);
   }
 
   /**
@@ -731,8 +740,8 @@ public class TestRowSet extends SubOperatorTest {
     final int bScale = 1;
 
     final TupleMetadata schema = new SchemaBuilder()
-        .addDict(dictName)
-        .key(MinorType.INT)
+        .add("id", MinorType.INT)
+        .addDict(dictName, MinorType.INT)
         .mapValue()
           .add("a", MinorType.INT)
           .add("b", MinorType.VARDECIMAL, 8, bScale)
@@ -746,8 +755,8 @@ public class TestRowSet extends SubOperatorTest {
 
     assertEquals(ObjectType.ARRAY, writer.column(dictName).type());
 
-    final DictWriter dictWriter = writer.column(0).dict();
-    assertEquals(ObjectType.TUPLE, dictWriter.entryType());
+    final ScalarWriter idWriter = writer.scalar(0);
+    final DictWriter dictWriter = writer.column(1).dict();
 
     assertEquals(ValueType.INTEGER, dictWriter.keyType());
     assertEquals(ObjectType.TUPLE, dictWriter.valueType());
@@ -764,6 +773,8 @@ public class TestRowSet extends SubOperatorTest {
 
     // Write data
 
+    idWriter.setInt(1);
+
     keyWriter.setInt(11);
     aWriter.setInt(10);
     bWriter.setDecimal(BigDecimal.valueOf(1));
@@ -776,12 +787,16 @@ public class TestRowSet extends SubOperatorTest {
 
     writer.save();
 
+    idWriter.setInt(2);
+
     keyWriter.setInt(21);
     aWriter.setInt(20);
     bWriter.setDecimal(BigDecimal.valueOf(3));
     dictWriter.save();
 
     writer.save();
+
+    idWriter.setInt(3);
 
     keyWriter.setInt(31);
     aWriter.setInt(30);
@@ -809,7 +824,7 @@ public class TestRowSet extends SubOperatorTest {
 
     assertEquals(ObjectType.ARRAY, reader.column(dictName).type());
 
-    final DictReader dictReader = reader.dict(0);
+    final DictReader dictReader = reader.dict(1);
     assertEquals(ObjectType.ARRAY, dictReader.type());
 
     assertEquals(ValueType.INTEGER, dictReader.keyColumnType());
@@ -868,20 +883,31 @@ public class TestRowSet extends SubOperatorTest {
 
     // Verify that the dict accessor's value count was set.
 
-    final DictVector dictVector = (DictVector) actual.container().getValueVector(0).getValueVector();
+    final DictVector dictVector = (DictVector) actual.container().getValueVector(1).getValueVector();
     assertEquals(3, dictVector.getAccessor().getValueCount());
 
-    // release buffers
-    actual.clear();
+    final SingleRowSet expected = fixture.rowSetBuilder(schema)
+        .addRow(1, objArray(
+            11, objArray(10, BigDecimal.valueOf(1.0)),
+            12, objArray(11, BigDecimal.valueOf(2.0))
+        ))
+        .addRow(2, objArray(21, objArray(20, BigDecimal.valueOf(3.0))))
+        .addRow(3, objArray(
+            31, objArray(30, BigDecimal.valueOf(4.0)),
+            32, objArray(31, BigDecimal.valueOf(5.0)),
+            33, objArray(32, BigDecimal.valueOf(6.0))
+        ))
+        .build();
+    RowSetUtilities.verify(expected, actual);
   }
 
   @Test
   public void testRepeatedDictStructure() {
     final String dictName = "d";
     final TupleMetadata schema = new SchemaBuilder()
-        .addDictArray(dictName)
-        .key(MinorType.INT)
-        .value(MinorType.VARCHAR, TypeProtos.DataMode.REQUIRED)
+        .add("id", MinorType.INT)
+        .addDictArray(dictName, MinorType.INT)
+        .value(MinorType.VARCHAR)
         .resumeSchema()
         .buildSchema();
     final ExtendableRowSet rowSet = fixture.rowSet(schema);
@@ -891,7 +917,9 @@ public class TestRowSet extends SubOperatorTest {
 
     assertEquals(ObjectType.ARRAY, writer.column(dictName).type());
 
-    final ArrayWriter dictArrayWriter = writer.column(0).array();
+    final ScalarWriter idWriter = writer.scalar(0);
+
+    final ArrayWriter dictArrayWriter = writer.column(1).array();
     assertEquals(ObjectType.ARRAY, dictArrayWriter.entryType());
 
     DictWriter dictWriter = (DictWriter) dictArrayWriter.array();
@@ -905,6 +933,8 @@ public class TestRowSet extends SubOperatorTest {
     assertEquals(ValueType.STRING, valueWriter.valueType());
 
     // Write data
+
+    idWriter.setInt(1);
 
     keyWriter.setInt(1);
     valueWriter.setString("a");
@@ -921,6 +951,8 @@ public class TestRowSet extends SubOperatorTest {
 
     writer.save(); // advance to next row
 
+    idWriter.setInt(2);
+
     keyWriter.setInt(11);
     valueWriter.setString("d");
     dictWriter.save();
@@ -930,6 +962,8 @@ public class TestRowSet extends SubOperatorTest {
     dictArrayWriter.save();
 
     writer.save();
+
+    idWriter.setInt(3);
 
     keyWriter.setInt(21);
     valueWriter.setString("f");
@@ -970,7 +1004,7 @@ public class TestRowSet extends SubOperatorTest {
 
     assertEquals(ObjectType.ARRAY, reader.column(dictName).type());
 
-    final ArrayReader dictArrayReader = reader.array(0);
+    final ArrayReader dictArrayReader = reader.array(1);
     assertEquals(ObjectType.ARRAY, dictArrayReader.entryType());
 
     final DictReader dictReader = dictArrayReader.entry().dict();
@@ -1030,11 +1064,17 @@ public class TestRowSet extends SubOperatorTest {
 
     // Verify that the dict accessor's value count was set.
 
-    final RepeatedDictVector vector = (RepeatedDictVector) actual.container().getValueVector(0).getValueVector();
+    final RepeatedDictVector vector = (RepeatedDictVector) actual.container().getValueVector(1).getValueVector();
     assertEquals(3, vector.getAccessor().getValueCount());
 
-    // release buffers
-    actual.clear();
+    final SingleRowSet expected = fixture.rowSetBuilder(schema)
+        .addRow(1, objArray(objArray(1, "a", 2, "b"), objArray(3, "c")))
+        .addRow(2, objArray(singleObjArray(objArray(11, "d", 12, "e"))))
+        .addRow(3, objArray(
+            objArray(21, "f", 22, "g", 23, "h"),
+            objArray(24, "i", 25, "j", 26, "k", 27, "l", 28, "m")))
+        .build();
+    RowSetUtilities.verify(expected, actual);
   }
 
   /**

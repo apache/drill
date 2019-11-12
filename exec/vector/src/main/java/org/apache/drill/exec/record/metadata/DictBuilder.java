@@ -41,9 +41,6 @@ public class DictBuilder implements SchemaContainer {
   private final String name;
   private final TypeProtos.DataMode mode;
 
-  private TypeProtos.MajorType keyType;
-  private TypeProtos.MajorType valueType;
-
   public DictBuilder(SchemaContainer parent, String name, TypeProtos.DataMode mode) {
     this.parent = parent;
     this.name = name;
@@ -52,56 +49,117 @@ public class DictBuilder implements SchemaContainer {
 
   @Override
   public void addColumn(ColumnMetadata column) {
-    assert DictVector.fieldNames.contains(column.name())
-        : String.format("Dict consists of two columns: %s and %s. Found: %s.",
-            DictVector.FIELD_KEY_NAME, DictVector.FIELD_VALUE_NAME, column.name());
-    assert schema.metadata(column.name()) == null
-        : String.format("Field %s is already defined in dict.", column.name());
+    // As dict does not support complex key, this method is used to
+    // nest a complex value only
+    if (!DictVector.FIELD_VALUE_NAME.equals(column.name())) {
+      String message = String.format(
+          "Dict supports nesting of complex '%s' only. Found: '%s'.", DictVector.FIELD_VALUE_NAME, column.name());
+      throw new IllegalArgumentException(message);
+    }
 
-    TypeProtos.MajorType columnType = column.majorType();
-    if (DictVector.FIELD_KEY_NAME.equals(column.name())) {
-      assert isSupportedKeyType(columnType) : "Key in dict should be non-nullable primitive. Found: " + columnType;
-      keyType = columnType;
-    } else {
-      valueType = columnType;
+    if (isFieldSet(column.name())) {
+      String message = String.format("Field '%s' is already defined in dict.", column.name());
+      throw new IllegalArgumentException(message);
     }
 
     schema.addColumn(column);
   }
 
-  public DictBuilder key(TypeProtos.MinorType type) {
+  DictBuilder key(TypeProtos.MinorType type) {
     TypeProtos.MajorType keyType = Types.withMode(type, TypeProtos.DataMode.REQUIRED);
     return key(keyType);
   }
 
-  public DictBuilder key(TypeProtos.MajorType type) {
-    if (keyType != null) {
-      throw new IllegalStateException("Key field is already defined.");
+  /**
+   * Use this method to set types with width or scale and precision,
+   * e.g. {@link org.apache.drill.common.types.TypeProtos.MinorType#VARDECIMAL} with scale and precision or
+   * {@link org.apache.drill.common.types.TypeProtos.MinorType#VARCHAR} etc.
+   *
+   * @param type desired type for key
+   * @return {@code this} builder
+   * @throws IllegalStateException if key field is already set
+   * @throws IllegalArgumentException if {@code type} is not supported (either complex or nullable)
+   */
+  DictBuilder key(TypeProtos.MajorType type) {
+    final String fieldName = DictVector.FIELD_KEY_NAME;
+    if (isFieldSet(fieldName)) {
+      throw new IllegalStateException(String.format("Filed '%s' is already defined.", fieldName));
     }
 
     if (!isSupportedKeyType(type)) {
-      throw new IllegalArgumentException("Key in dict should be non-nullable primitive. Found: " + type);
+      throw new IllegalArgumentException(
+          String.format("'%s' in dict should be non-nullable primitive. Found: %s", fieldName, type));
     }
 
-    keyType = type;
-    return field(DictVector.FIELD_KEY_NAME, keyType);
+    addField(fieldName, type);
+    return this;
   }
 
-  public DictBuilder value(TypeProtos.MinorType type, TypeProtos.DataMode mode) {
+  /**
+   * Checks if the field identified by name was already set.
+   *
+   * @param name name of the field
+   * @return {@code true} if the schema contains field with the {@code name}; {@code false} otherwise.
+   */
+  private boolean isFieldSet(String name) {
+    return schema.index(name) != -1;
+  }
+
+  public DictBuilder value(TypeProtos.MinorType type) {
+    return value(type, TypeProtos.DataMode.REQUIRED);
+  }
+
+  public DictBuilder nullableValue(TypeProtos.MinorType type) {
+    return value(type, TypeProtos.DataMode.OPTIONAL);
+  }
+
+  public DictBuilder repeatedValue(TypeProtos.MinorType type) {
+    return value(type, TypeProtos.DataMode.REPEATED);
+  }
+
+  private DictBuilder value(TypeProtos.MinorType type, TypeProtos.DataMode mode) {
     TypeProtos.MajorType valueType = Types.withMode(type, mode);
     return value(valueType);
   }
 
+  /**
+   * Define non-complex value type. For complex types use {@link #mapValue()}, {@link #mapArrayValue()} etc.
+   *
+   * @param type desired non-complex type for value.
+   * @return {@code this} builder
+   * @throws IllegalStateException if value is already set
+   * @throws IllegalArgumentException if {@code type} is either {@code MAP},
+   *                                  {@code LIST}, {@code DICT} or {@code UNION}.
+   * @see #mapValue() method to define value as {@code MAP}
+   * @see #mapArrayValue() method to define value as {@code REPEATED MAP}
+   * @see #listValue() method to define value as {@code LIST}
+   * @see #unionValue() method to define value as {@code UNION}
+   * @see #dictValue() method to define value as {@code DICT}
+   * @see #dictArrayValue() method to define value as {@code REPEATED DICT}
+   */
   public DictBuilder value(TypeProtos.MajorType type) {
-    if (valueType != null) {
-      throw new IllegalStateException("Value field is already defined.");
+    final String fieldName = DictVector.FIELD_VALUE_NAME;
+    if (isFieldSet(fieldName)) {
+      throw new IllegalStateException(String.format("Field '%s' is already defined.", fieldName));
     }
 
-    valueType = type;
-    return field(DictVector.FIELD_VALUE_NAME, valueType);
+    if (Types.isComplex(type) || Types.isUnion(type)) {
+      String msg = String.format("Complex type found %s when defining '%s'. " +
+          "Use mapValue(), listValue() etc. in case of complex value type.", fieldName, type);
+      throw new IllegalArgumentException(msg);
+    }
+
+    addField(fieldName, type);
+    return this;
   }
 
-  private DictBuilder field(String name, TypeProtos.MajorType type) {
+  /**
+   * Adds field (either key or value) after validation to the schema.
+   *
+   * @param name name of the field
+   * @param type type of the field
+   */
+  private void addField(String name, TypeProtos.MajorType type) {
     ColumnBuilder builder = new ColumnBuilder(name, type.getMinorType())
         .setMode(type.getMode());
 
@@ -115,7 +173,6 @@ public class DictBuilder implements SchemaContainer {
     }
 
     schema.add(builder.build());
-    return this;
   }
 
   public MapBuilder mapValue() {

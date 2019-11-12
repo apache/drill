@@ -113,7 +113,7 @@ public class BuildVectorsFromMetadata {
     // without children so we can add the children as we add vectors.
 
     final AbstractMapVector mapVector = (AbstractMapVector) TypeHelper.getNewVector(schema.emptySchema(), allocator, null);
-    populateMap(mapVector, schema.mapSchema(), false);
+    populateMap(mapVector, schema.tupleSchema(), false);
     return mapVector;
   }
 
@@ -161,7 +161,7 @@ public class BuildVectorsFromMetadata {
         // for now.
 
         populateMap((AbstractMapVector) childVector,
-            variantSchema.member(MinorType.MAP).mapSchema(),
+            variantSchema.member(MinorType.MAP).tupleSchema(),
             true);
         break;
       default:
@@ -203,7 +203,7 @@ public class BuildVectorsFromMetadata {
     // without children so we can add the children as we add vectors.
 
     final RepeatedDictVector repeatedDictVector = (RepeatedDictVector) TypeHelper.getNewVector(schema.emptySchema(), allocator, null);
-    populateDict(repeatedDictVector, schema.mapSchema());
+    populateDict(repeatedDictVector, schema.tupleSchema());
     return repeatedDictVector;
   }
 

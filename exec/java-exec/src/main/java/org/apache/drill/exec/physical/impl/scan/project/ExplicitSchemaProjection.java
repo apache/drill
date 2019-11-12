@@ -132,7 +132,7 @@ public class ExplicitSchemaProjection extends ReaderLevelProjection {
     ResolvedMapColumn mapCol = new ResolvedMapColumn(outputTuple,
         column.schema(), sourceIndex);
     resolveTuple(mapCol.members(), requestedCol.mapProjection(),
-        column.mapSchema());
+        column.tupleSchema());
 
     // If the projection is simple, then just project the map column
     // as is. A projection is simple if all map columns from the table

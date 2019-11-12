@@ -114,7 +114,7 @@ public class VectorAllocator {
 
   private void allocateMap(AbstractMapVector vector, ColumnMetadata metadata, int valueCount, MetadataProvider mdProvider) {
     final MetadataProvider mapProvider = mdProvider.childProvider(metadata);
-    final TupleMetadata mapSchema = metadata.mapSchema();
+    final TupleMetadata mapSchema = metadata.tupleSchema();
     assert mapSchema != null;
     int i = 0;
     for (final ValueVector child : vector) {

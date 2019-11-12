@@ -84,7 +84,7 @@ public abstract class AbstractMapColumnMetadata extends AbstractColumnMetadata {
   }
 
   @Override
-  public TupleMetadata mapSchema() {
+  public TupleMetadata tupleSchema() {
     return schema;
   }
 
@@ -123,7 +123,7 @@ public abstract class AbstractMapColumnMetadata extends AbstractColumnMetadata {
     }
     builder.append(getStringType())
         .append("<").append(
-            mapSchema().toMetadataList().stream()
+            tupleSchema().toMetadataList().stream()
               .map(ColumnMetadata::columnString)
               .collect(Collectors.joining(", "))
         )

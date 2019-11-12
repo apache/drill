@@ -19,12 +19,13 @@ package org.apache.drill.exec.vector.accessor;
 
 import java.util.Map;
 
-public interface DictReader extends ColumnReader {
+public interface DictReader extends ArrayReader {
 
   /**
    * Returns DICT's value {@link ObjectReader} with its position set to an entry associated with the key.
    * If the DICT does not contain the entry, {@link org.apache.drill.exec.vector.accessor.reader.NullReader}
-   * is returned instead.
+   * is returned instead. To check if this is the case, use {@link ObjectReader#isNull()} on the returned value reader.
+   *
    * @param key key identifying an entry
    * @return value reader with its position set accordingly or {@link org.apache.drill.exec.vector.accessor.reader.NullReader}
    * if there is no such entry
@@ -43,6 +44,7 @@ public interface DictReader extends ColumnReader {
    * Number of entries in the dict.
    * @return the number of entries
    */
+  @Override
   int size();
 
   ValueType keyColumnType();

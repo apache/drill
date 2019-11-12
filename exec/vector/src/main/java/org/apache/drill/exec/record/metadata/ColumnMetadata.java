@@ -131,7 +131,7 @@ public interface ColumnMetadata extends Propertied {
    * @return the tuple schema
    */
 
-  TupleMetadata mapSchema();
+  TupleMetadata tupleSchema();
 
   /**
    * Schema for <tt>VARIANT</tt> columns.

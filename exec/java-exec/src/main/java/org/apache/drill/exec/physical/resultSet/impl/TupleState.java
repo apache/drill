@@ -142,7 +142,7 @@ public abstract class TupleState extends ContainerState
       } else {
         outputSchema = schema();
       }
-      mapState.bindOutputSchema(outputSchema.mapSchema());
+      mapState.bindOutputSchema(outputSchema.tupleSchema());
     }
 
     public MapState mapState() { return mapState; }

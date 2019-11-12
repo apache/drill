@@ -73,7 +73,7 @@ public abstract class AbstractProjectionSet implements ProjectionSet {
   }
 
   protected TypeConverter childConverter(ColumnMetadata outputSchema) {
-    TupleMetadata childSchema = outputSchema == null ? null : outputSchema.mapSchema();
+    TupleMetadata childSchema = outputSchema == null ? null : outputSchema.tupleSchema();
     return typeConverter == null ? null :
       typeConverter.childConverter(childSchema);
   }

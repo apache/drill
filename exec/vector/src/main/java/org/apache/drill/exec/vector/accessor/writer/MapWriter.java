@@ -27,7 +27,6 @@ import org.apache.drill.exec.vector.accessor.writer.AbstractArrayWriter.ArrayObj
 import org.apache.drill.exec.vector.accessor.writer.dummy.DummyArrayWriter;
 import org.apache.drill.exec.vector.complex.AbstractMapVector;
 import org.apache.drill.exec.vector.complex.MapVector;
-import org.apache.drill.exec.vector.complex.RepeatedDictVector;
 import org.apache.drill.exec.vector.complex.RepeatedMapVector;
 
 /**
@@ -35,41 +34,6 @@ import org.apache.drill.exec.vector.complex.RepeatedMapVector;
  */
 
 public abstract class MapWriter extends AbstractTupleWriter {
-
-  /**
-   * Wrap the outer index to avoid incrementing the array index
-   * on the call to <tt>nextElement().</tt> For maps, the increment
-   * is done at the map level, not the column level.
-   */
-
-  private static class MemberWriterIndex implements ColumnWriterIndex {
-    private final ColumnWriterIndex baseIndex;
-
-    private MemberWriterIndex(ColumnWriterIndex baseIndex) {
-      this.baseIndex = baseIndex;
-    }
-
-    @Override public int rowStartIndex() { return baseIndex.rowStartIndex(); }
-    @Override public int vectorIndex() { return baseIndex.vectorIndex(); }
-    @Override public void nextElement() { }
-    @Override public void prevElement() { }
-    @Override public void rollover() { }
-
-    @Override public ColumnWriterIndex outerIndex() {
-      return baseIndex.outerIndex();
-    }
-
-    @Override
-    public String toString() {
-      return new StringBuilder()
-        .append("[")
-        .append(getClass().getSimpleName())
-        .append(" baseIndex = ")
-        .append(baseIndex.toString())
-        .append("]")
-        .toString();
-    }
-  }
 
   /**
    * Writer for a single (non-array) map. Clients don't really "write" maps;
@@ -170,35 +134,10 @@ public abstract class MapWriter extends AbstractTupleWriter {
     public void copy(ColumnReader from) { }
   }
 
-  // This is effectively a map array, but represented by the class to separate these two types
-  protected static class DictTupleWriter extends MapWriter {
-
-    public DictTupleWriter(ColumnMetadata schema, List<AbstractObjectWriter> writers) {
-      super(schema, writers);
-    }
-
-    @Override
-    public void bindIndex(ColumnWriterIndex index) {
-
-      // This is effectively a repeated map, so the provided index is an array element
-      // index. Convert this to an index that will not increment the element
-      // index on each write so that a dict with key and value members won't
-      // increment the index for each member. Rather, the index must be
-      // incremented at the array level.
-
-      bindIndex(index, new MemberWriterIndex(index));
-    }
-
-    @Override
-    public boolean isProjected() {
-      return true;
-    }
-  }
-
   protected final ColumnMetadata mapColumnSchema;
 
   protected MapWriter(ColumnMetadata schema, List<AbstractObjectWriter> writers) {
-    super(schema.mapSchema(), writers);
+    super(schema.tupleSchema(), writers);
     mapColumnSchema = schema;
   }
 
@@ -250,19 +189,8 @@ public abstract class MapWriter extends AbstractTupleWriter {
   }
 
   public static AbstractObjectWriter buildMapWriter(ColumnMetadata schema, AbstractMapVector vector) {
-    assert schema.mapSchema().size() == 0;
+    assert schema.tupleSchema().size() == 0;
     return buildMapWriter(schema, vector, new ArrayList<AbstractObjectWriter>());
-  }
-
-  public static TupleObjectWriter buildDictTupleWriter(ColumnMetadata schema, List<AbstractObjectWriter> writers) {
-    MapWriter dictWriter = new DictTupleWriter(schema, writers);
-    return new AbstractTupleWriter.TupleObjectWriter(dictWriter);
-  }
-
-  public static ArrayObjectWriter buildDictArray(ColumnMetadata schema, ObjectDictWriter.DictObjectWriter dictWriter,
-                                                 RepeatedDictVector vector) {
-    AbstractArrayWriter arrayWriter = new ObjectArrayWriter(schema, vector.getOffsetVector(), dictWriter);
-    return new ArrayObjectWriter(arrayWriter);
   }
 
   @Override
