@@ -62,7 +62,7 @@ public class TestResultSetReader extends SubOperatorTest {
       state = State.SCHEMA1;
     }
 
-    public BatchAccessor batch1(int start, int end) {
+    public void batch1(int start, int end) {
       Preconditions.checkState(state == State.SCHEMA1);
       rsLoader.startBatch();
       RowSetLoader writer = rsLoader.writer();
@@ -73,10 +73,9 @@ public class TestResultSetReader extends SubOperatorTest {
         writer.save();
       }
       batch.addBatch(rsLoader.harvest());
-      return batch;
     }
 
-    public BatchAccessor batch2(int start, int end) {
+    public void batch2(int start, int end) {
       RowSetLoader writer = rsLoader.writer();
       if (state == State.SCHEMA1) {
         ColumnMetadata balCol = MetadataUtils.newScalar("amount", MinorType.INT, DataMode.REQUIRED);
@@ -92,6 +91,9 @@ public class TestResultSetReader extends SubOperatorTest {
         writer.save();
       }
       batch.addBatch(rsLoader.harvest());
+    }
+
+    public BatchAccessor batchAccessor() {
       return batch;
     }
 
@@ -102,7 +104,8 @@ public class TestResultSetReader extends SubOperatorTest {
 
   @Test
   public void testBasics() {
-    ResultSetReader rsReader = new ResultSetReaderImpl();
+    BatchGenerator gen = new BatchGenerator();
+    ResultSetReader rsReader = new ResultSetReaderImpl(gen.batchAccessor());
 
     // Start state
 
@@ -112,25 +115,17 @@ public class TestResultSetReader extends SubOperatorTest {
     } catch (IllegalStateException e) {
       // Expected
     }
-    try {
-      rsReader.detach();
-      fail();
-    } catch (IllegalStateException e) {
-      // Expected
-    }
-    try {
-      rsReader.release();
-      fail();
-    } catch (IllegalStateException e) {
-      // Expected
-    }
+
+    // OK to detach with no input
+    rsReader.detach();
+    rsReader.release();
 
     // Make a batch. Verify reader is attached.
     // (Don't need to do a full reader test, that is already done
     // elsewhere.)
 
-    BatchGenerator gen = new BatchGenerator();
-    rsReader.start(gen.batch1(1, 10));
+    gen.batch1(1, 10);
+    rsReader.start();
     RowSetReader reader1;
     {
       RowSetReader reader = rsReader.reader();
@@ -149,7 +144,8 @@ public class TestResultSetReader extends SubOperatorTest {
 
     // Another batch of same schema
 
-    rsReader.start(gen.batch1(11, 20));
+    gen.batch1(11, 20);
+    rsReader.start();
     {
       RowSetReader reader = rsReader.reader();
       assertSame(reader1, reader);
@@ -162,7 +158,8 @@ public class TestResultSetReader extends SubOperatorTest {
 
     // Batch with new schema
 
-    rsReader.start(gen.batch2(21, 30));
+    gen.batch2(21, 30);
+    rsReader.start();
     {
       RowSetReader reader = rsReader.reader();
       assertNotSame(reader1, reader);
@@ -179,7 +176,8 @@ public class TestResultSetReader extends SubOperatorTest {
 
   @Test
   public void testCloseAtStart() {
-    ResultSetReaderImpl rsReader = new ResultSetReaderImpl();
+    BatchGenerator gen = new BatchGenerator();
+    ResultSetReaderImpl rsReader = new ResultSetReaderImpl(gen.batchAccessor());
 
     // Close OK in start state
 
@@ -193,9 +191,10 @@ public class TestResultSetReader extends SubOperatorTest {
 
   @Test
   public void testAutoRelease() {
-    ResultSetReader rsReader = new ResultSetReaderImpl(true);
     BatchGenerator gen = new BatchGenerator();
-    rsReader.start(gen.batch1(1, 10));
+    ResultSetReader rsReader = new ResultSetReaderImpl(gen.batchAccessor());
+    gen.batch1(1, 10);
+    rsReader.start();
 
     // If the test fails with open allocators, then the following failed.
 

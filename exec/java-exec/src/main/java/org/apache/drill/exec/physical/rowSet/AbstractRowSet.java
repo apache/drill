@@ -66,7 +66,7 @@ public abstract class AbstractRowSet implements RowSet {
 
   @Override
   public void print() {
-    new RowSetPrinter(this).print();
+    RowSetFormatter.print(this);
   }
 
   @Override

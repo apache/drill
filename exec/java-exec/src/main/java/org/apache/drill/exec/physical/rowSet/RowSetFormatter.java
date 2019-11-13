@@ -17,10 +17,12 @@
  */
 package org.apache.drill.exec.physical.rowSet;
 
+import org.apache.drill.exec.physical.impl.protocol.BatchAccessor;
 import org.apache.commons.io.output.StringBuilderWriter;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.record.VectorContainer;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -48,6 +50,14 @@ public class RowSetFormatter {
 
   public static void print(RowSet rowSet) {
     new RowSetFormatter(rowSet, new OutputStreamWriter(System.out)).write();
+  }
+
+  public static void print(VectorContainer container) {
+    RowSets.wrap(container).print();
+  }
+
+  public static void print(BatchAccessor batch) {
+    RowSets.wrap(batch).print();
   }
 
   public static String toString(RowSet rowSet) {
@@ -86,6 +96,8 @@ public class RowSetFormatter {
       case TWO_BYTE:
         writer.write(" (row #)");
         break;
+      default:
+        break;
     }
     writer.write(": ");
     TupleMetadata schema = reader.tupleSchema();
@@ -103,19 +115,21 @@ public class RowSetFormatter {
   }
 
   private void writeHeader(Writer writer, RowSetReader reader, SelectionVectorMode selectionMode) throws IOException {
-    writer.write(reader.logicalIndex());
+    writer.write(Integer.toString(reader.logicalIndex()));
     switch (selectionMode) {
       case FOUR_BYTE:
         writer.write(" (");
         writer.write(reader.hyperVectorIndex());
         writer.write(", ");
-        writer.write(reader.offset());
+        writer.write(Integer.toString(reader.offset()));
         writer.write(")");
         break;
       case TWO_BYTE:
         writer.write(" (");
-        writer.write(reader.offset());
+        writer.write(Integer.toString(reader.offset()));
         writer.write(")");
+        break;
+      default:
         break;
     }
     writer.write(": ");

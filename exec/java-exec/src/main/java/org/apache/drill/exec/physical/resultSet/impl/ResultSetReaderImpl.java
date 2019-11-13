@@ -34,23 +34,17 @@ public class ResultSetReaderImpl implements ResultSetReader {
       CLOSED
   }
 
-  private final boolean autoRelease;
   private State state = State.START;
   private int priorSchemaVersion;
-  private BatchAccessor batch;
+  private final BatchAccessor batch;
   private RowSetReader rowSetReader;
 
-  public ResultSetReaderImpl(boolean autoRelease) {
-    this.autoRelease = autoRelease;
-  }
-
-  public ResultSetReaderImpl() {
-    this(false);
+  public ResultSetReaderImpl(BatchAccessor batch) {
+    this.batch = batch;
   }
 
   @Override
-  public void start(BatchAccessor batch) {
-    autoRelease();
+  public void start() {
     Preconditions.checkState(state != State.CLOSED, "Reader is closed");
     Preconditions.checkState(state != State.BATCH,
         "Call detach/release before starting another batch");
@@ -58,7 +52,6 @@ public class ResultSetReaderImpl implements ResultSetReader {
         priorSchemaVersion <= batch.schemaVersion());
     boolean newSchema = state == State.START ||
         priorSchemaVersion != batch.schemaVersion();
-    this.batch = batch;
     state = State.BATCH;
 
     // If new schema, discard the old reader (if any, and create
@@ -83,13 +76,15 @@ public class ResultSetReaderImpl implements ResultSetReader {
 
   @Override
   public void detach() {
-    Preconditions.checkState(state == State.BATCH || state == State.DETACHED);
-    state = State.DETACHED;
+    if (state != State.START) {
+      Preconditions.checkState(state == State.BATCH || state == State.DETACHED);
+      state = State.DETACHED;
+    }
   }
 
   @Override
   public void release() {
-    if (state != State.DETACHED) {
+    if (state != State.START && state != State.DETACHED) {
       detach();
       batch.release();
     }
@@ -97,13 +92,9 @@ public class ResultSetReaderImpl implements ResultSetReader {
 
   @Override
   public void close() {
-    autoRelease();
-    state = State.CLOSED;
-  }
-
-  private void autoRelease() {
-    if (autoRelease && state == State.BATCH) {
+    if (state != State.CLOSED) {
       release();
+      state = State.CLOSED;
     }
   }
 

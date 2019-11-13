@@ -24,12 +24,22 @@ import org.apache.drill.exec.physical.rowSet.RowSetReader;
  * Iterates over the set of batches in a result set, providing
  * a row set reader to iterate over the rows within each batch.
  * Handles schema changes between batches.
+ * <p>
+ * Designed to handle batches arriving from a single upstream
+ * operator. Uses Drill's strict form of schema identity: that
+ * not only must the column definitions match; the vectors must
+ * be identical from one batch to the next. If the vectors differ,
+ * then this class assumes a new schema has occurred, and will
+ * rebuild all the underlying readers, which can be costly.
+ *
  * <h4>Protocol</h4>
  * <ol>
- * <li>Create an instance.</li>
+ * <li>Create an instance, passing in a
+ *     {@link BatchAccessor} to hold the batch and optional
+ *     selection vector.</li>
  * <li>For each incoming batch:
  *   <ol>
- *   <li>Call {@link #start()} to attach the batch. The provided
+ *   <li>Call {@link #start()} to attach the batch. The associated
  *       {@link BatchAccessor} reports if the schema has changed.</li>
  *   <li>Call {@link #reader()} to obtain a reader.</li>
  *   <li>Iterate over the batch using the reader.</li>
@@ -42,9 +52,41 @@ import org.apache.drill.exec.physical.rowSet.RowSetReader;
  */
 public interface ResultSetReader {
 
-  void start(BatchAccessor batch);
+  /**
+   * Start tracking a new batch in the associated
+   * vector container.
+   */
+  void start();
+
+  /**
+   * Get the row reader for this batch. The row reader is
+   * guaranteed to remain the same for the life of the
+   * result set reader.
+   *
+   * @return the row reader to read rows for the current
+   * batch
+   */
   RowSetReader reader();
+
+  /**
+   * Detach the batch of data from this reader. Does not
+   * release the memory for that batch.
+   */
   void detach();
+
+  /**
+   * Detach the batch of data from this reader and release
+   * the memory for that batch. Call this method before
+   * loading the underlying vector container with more
+   * data, then call {@link #start()} after new data is
+   * available.
+   */
   void release();
+
+  /**
+   * Close this reader. Releases any memory still assigned
+   * to any attached batch. Call {@link #detach()} first if
+   * you want to preserve the batch memory.
+   */
   void close();
 }

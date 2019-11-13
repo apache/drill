@@ -28,6 +28,7 @@ import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
+import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 
 /**
  * A row set is a collection of rows stored as value vectors. Elsewhere in
@@ -98,6 +99,7 @@ public interface RowSet {
 
   SelectionVectorMode indirectionType();
 
+  @VisibleForTesting
   void print();
 
   /**
