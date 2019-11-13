@@ -99,6 +99,10 @@ public interface RowSet {
 
   SelectionVectorMode indirectionType();
 
+  /**
+   * Debug-only tool to visualize a row set for inspection.
+   * <b>Do not</b> use this in production code.
+   */
   @VisibleForTesting
   void print();
 

@@ -183,10 +183,10 @@ public class UnionReaderImpl implements VariantReader, ReaderEvents {
   }
 
   @Override
-  public void rebind() {
+  public void bindBuffer() {
     for (int i = 0; i < variants.length; i++) {
       if (variants[i] != null) {
-        variants[i].events().rebind();
+        variants[i].events().bindBuffer();
       }
     }
   }

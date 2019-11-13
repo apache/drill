@@ -20,7 +20,10 @@ package org.apache.drill.exec.physical.rowSet;
 import org.apache.drill.exec.vector.accessor.TupleReader;
 
 /**
- * Reader for all types of row sets.
+ * Reader for all types of row sets: those with or without
+ * a selection vector. Iterates over "bare" row sets in row
+ * order. Iterates over selection-vector based row sets in
+ * selection vector order.
  */
 
 public interface RowSetReader extends TupleReader {
@@ -31,9 +34,50 @@ public interface RowSetReader extends TupleReader {
    */
   int rowCount();
 
+  /**
+   * Convenience method which whether the next call to {@link #next()}
+   * will succeed. Purely optional.
+   *
+   * @return <tt>true</tt> if there is another record to read,
+   * <tt>false</tt> if not
+   */
+  boolean hasNext();
+
+  /**
+   * Advance to the next position. If the underlying row set has
+   * a selection vector, then moves one position in the selection
+   * vector, and to whichever data record is indexed.
+   *
+   * @return <tt>true</tt> if another row is available,
+   * <tt>false</tt> if all rows have been read
+   */
   boolean next();
+
+  /**
+   * Gets the read position within the row set. If the row set has
+   * a selection vector, this is the position in that vector; the
+   * actual record location will likely differ. Use
+   * {@link #offset()} to get the actual row index.
+   *
+   * @return current iteration position
+   */
   int logicalIndex();
+
+  /**
+   * Sets the iteration position. If the row set has a selection
+   * vector, this sets the index within that vector. The index must
+   * be from -1 to the {@link #rowCount()} - 1. Set the value to one
+   * less than the position to be read in the next call to
+   * {@link #next()}. An index of -1 means before the first row.
+   *
+   * @param index the desired index position
+   */
   void setPosition(int index);
+
+  /**
+   * Reset the position to before the first row. Convenient method
+   * which is the same as <tt>setPosition(-1)</tt>.
+   */
   void rewind();
 
   /**

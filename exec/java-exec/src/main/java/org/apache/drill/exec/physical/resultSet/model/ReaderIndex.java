@@ -54,4 +54,9 @@ public abstract class ReaderIndex implements ColumnReaderIndex {
     position = rowCount;
     return false;
   }
+
+  @Override
+  public boolean hasNext() {
+    return position + 1 < rowCount;
+  }
 }

@@ -28,10 +28,9 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 /**
- * Tool for printing the content of record batches to screen. Used for
- * debugging.
+ * Tool for printing the content of record batches to screen. Used for debugging.
  *
- * @See RowSetPrinter
+ * @See {@link org.apache.drill.exec.physical.rowSet.RowSetFormatter RowSetFormatter}
  */
 
 public class BatchPrinter {

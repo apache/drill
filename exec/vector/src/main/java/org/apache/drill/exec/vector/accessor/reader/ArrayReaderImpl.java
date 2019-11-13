@@ -149,6 +149,11 @@ public class ArrayReaderImpl implements ArrayReader, ReaderEvents {
       return false;
     }
 
+    @Override
+    public boolean hasNext() {
+      return position + 1 < length;
+    }
+
     /**
      * Set the current iterator location to the given index offset.
      *
@@ -368,8 +373,8 @@ public class ArrayReaderImpl implements ArrayReader, ReaderEvents {
 
 
   @Override
-  public void rebind() {
-    elementReader.events().rebind();
+  public void bindBuffer() {
+    elementReader.events().bindBuffer();
   }
 
   @Override

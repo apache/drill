@@ -55,9 +55,9 @@ public abstract class BaseScalarReader extends AbstractScalarReader {
     }
 
     @Override
-    public void rebind() {
-      super.rebind();
-      offsetsReader.rebind();
+    public void bindBuffer() {
+      super.bindBuffer();
+      offsetsReader.bindBuffer();
     }
   }
 
@@ -167,7 +167,7 @@ public abstract class BaseScalarReader extends AbstractScalarReader {
   public ColumnMetadata schema() { return schema; }
 
   @Override
-  public void rebind() {
+  public void bindBuffer() {
     bufferAccessor.rebind();
   }
 }
