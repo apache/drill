@@ -17,23 +17,23 @@
  */
 package org.apache.drill.exec.sql;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
-import org.apache.drill.test.BaseTestQuery;
+import static org.apache.drill.exec.util.StoragePluginTestUtils.DFS_TMP_SCHEMA;
+import static org.junit.Assert.assertEquals;
+
+import java.util.Map;
+
 import org.apache.drill.categories.SqlTest;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.store.StorageStrategy;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import org.apache.drill.test.BaseTestQuery;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.util.Map;
-
-import static org.apache.drill.exec.util.StoragePluginTestUtils.DFS_TMP_SCHEMA;
-import static org.junit.Assert.assertEquals;
 
 @Category(SqlTest.class)
 public class TestCTAS extends BaseTestQuery {
@@ -250,7 +250,7 @@ public class TestCTAS extends BaseTestQuery {
       assertEquals("File permission should match",
           storageStrategy.getFilePermission(), fs.listLocatedStatus(tableLocation).next().getPermission());
     } finally {
-      test("alter session reset `%s`", ExecConstants.PERSISTENT_TABLE_UMASK);
+      resetSessionOption(ExecConstants.PERSISTENT_TABLE_UMASK);
       test("drop table if exists %s", tableName);
     }
   }

@@ -70,6 +70,8 @@ import org.apache.drill.shaded.guava.com.google.common.io.Resources;
 import org.apache.drill.test.DrillTestWrapper.TestServices;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * deprecated Use {@link ClusterTest} instead.
@@ -78,7 +80,7 @@ import org.junit.BeforeClass;
  */
 //@Deprecated
 public class BaseTestQuery extends ExecTest {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseTestQuery.class);
+  private static final Logger logger = LoggerFactory.getLogger(BaseTestQuery.class);
 
   private static final int MAX_WIDTH_PER_NODE = 2;
 
@@ -374,6 +376,14 @@ public class BaseTestQuery extends ExecTest {
     } catch(final Exception e) {
       fail(String.format("Failed to reset session option `%s`, Error: %s",
           option, e.toString()));
+    }
+  }
+
+  public static void resetAllSessionOptions() {
+    try {
+      test("ALTER SESSION RESET ALL");
+    } catch(final Exception e) {
+      fail("Failed to reset all session option");
     }
   }
 

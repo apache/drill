@@ -438,9 +438,6 @@ public abstract class AbstractRepeatedMapVector extends AbstractMapVector implem
 
     @Override
     public void setValueCount(int topLevelValueCount) {
-      if (topLevelValueCount == 0) {
-        return;
-      }
       int childValueCount;
       if (topLevelValueCount == 0) {
         childValueCount = 0;

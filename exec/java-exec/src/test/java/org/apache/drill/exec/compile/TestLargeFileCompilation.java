@@ -20,9 +20,9 @@ package org.apache.drill.exec.compile;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.drill.categories.SlowTest;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.test.TestTools;
-import org.apache.drill.exec.ExecConstants;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -223,9 +223,9 @@ public class TestLargeFileCompilation extends BaseTestQuery {
       testNoResult(LARGE_TABLE_WRITER, tableName);
       testNoResult(QUERY_WITH_JOIN, tableName);
     } finally {
-      testNoResult("alter session reset `planner.enable_mergejoin`");
-      testNoResult("alter session reset `planner.enable_nestedloopjoin`");
-      testNoResult("alter session reset `%s`", ClassCompilerSelector.JAVA_COMPILER_OPTION);
+      resetSessionOption("planner.enable_mergejoin");
+      resetSessionOption("planner.enable_nestedloopjoin");
+      resetSessionOption(ClassCompilerSelector.JAVA_COMPILER_OPTION);
       testNoResult("drop table if exists %s", tableName);
     }
   }
@@ -241,9 +241,9 @@ public class TestLargeFileCompilation extends BaseTestQuery {
       testNoResult(LARGE_TABLE_WRITER, tableName);
       testNoResult(QUERY_WITH_JOIN, tableName);
     } finally {
-      testNoResult("alter session reset `planner.enable_hashjoin`");
-      testNoResult("alter session reset `planner.enable_nestedloopjoin`");
-      testNoResult("alter session reset `%s`", ClassCompilerSelector.JAVA_COMPILER_OPTION);
+      resetSessionOption("planner.enable_hashjoin");
+      resetSessionOption("planner.enable_nestedloopjoin");
+      resetSessionOption(ClassCompilerSelector.JAVA_COMPILER_OPTION);
       testNoResult("drop table if exists %s", tableName);
     }
   }
@@ -260,10 +260,10 @@ public class TestLargeFileCompilation extends BaseTestQuery {
       testNoResult(LARGE_TABLE_WRITER, tableName);
       testNoResult(QUERY_WITH_JOIN, tableName);
     } finally {
-      testNoResult("alter session reset `planner.enable_nljoin_for_scalar_only`");
-      testNoResult("alter session reset `planner.enable_hashjoin`");
-      testNoResult("alter session reset `planner.enable_mergejoin`");
-      testNoResult("alter session reset `%s`", ClassCompilerSelector.JAVA_COMPILER_OPTION);
+      resetSessionOption("planner.enable_nljoin_for_scalar_only");
+      resetSessionOption("planner.enable_hashjoin");
+      resetSessionOption("planner.enable_mergejoin");
+      resetSessionOption(ClassCompilerSelector.JAVA_COMPILER_OPTION);
       testNoResult("drop table if exists %s", tableName);
     }
   }

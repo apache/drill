@@ -17,13 +17,13 @@
  */
 package org.apache.drill.exec.work.prepare;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import java.util.List;
+
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.junit.Test;
-
-import java.util.List;
 
 public class TestLimit0VsRegularQueriesMetadata extends PreparedStatementTestBase {
 
@@ -64,7 +64,7 @@ public class TestLimit0VsRegularQueriesMetadata extends PreparedStatementTestBas
 
       verifyResults(query, expectedMetadata);
     } finally {
-      test("alter session reset `planner.enable_decimal_data_type`");
+      resetSessionOption("planner.enable_decimal_data_type");
     }
   }
 
@@ -308,7 +308,7 @@ public class TestLimit0VsRegularQueriesMetadata extends PreparedStatementTestBas
       verifyMetadata(expectedMetadata, createPrepareStmt(String.format("select * from (%s) t limit 0", query), false, null)
           .getColumnsList());
     } finally {
-      test("alter session reset `%s`", ExecConstants.EARLY_LIMIT0_OPT_KEY);
+      resetSessionOption(ExecConstants.EARLY_LIMIT0_OPT_KEY);
     }
   }
 

@@ -21,10 +21,10 @@ import static org.junit.Assert.assertEquals;
 
 import org.apache.calcite.avatica.util.Quoting;
 import org.apache.calcite.sql.parser.SqlParserPos;
-import org.apache.drill.exec.planner.sql.parser.impl.DrillSqlParseException;
-import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.categories.SqlTest;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.planner.sql.parser.impl.DrillSqlParseException;
+import org.apache.drill.test.BaseTestQuery;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -76,6 +76,8 @@ public class TestDrillSQLWorker extends BaseTestQuery {
       // Mix of different quotes in the one SQL statement is not acceptable
       errorMsgTestHelper("select \"employee_id\", \"full_name\" from cp.`employee.json` limit 1", "Encountered: \"`\"");
     } finally {
+      // Note: can't use the resetSessionOption(), it assumes
+      // default back-ticks which are not in effect here.
       test("ALTER SESSION RESET %s", PlannerSettings.QUOTING_IDENTIFIERS_KEY);
     }
   }
@@ -92,6 +94,8 @@ public class TestDrillSQLWorker extends BaseTestQuery {
           .baselineValues(1L, "Sheri Nowmer")
           .go();
     } finally {
+      // Note: can't use the resetSessionOption(), it assumes
+      // default back-ticks which are not in effect here.
       test("ALTER SESSION RESET %s", PlannerSettings.QUOTING_IDENTIFIERS_KEY);
     }
   }

@@ -19,22 +19,22 @@ package org.apache.drill.exec.physical.impl.writer;
 
 import static java.lang.String.format;
 
-import org.apache.drill.categories.ParquetTest;
-import org.apache.drill.PlanTestBase;
-import org.apache.drill.test.TestBuilder;
-import org.apache.drill.categories.UnlikelyTest;
-import org.apache.drill.common.exceptions.UserRemoteException;
-import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.store.parquet.metadata.Metadata;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
+
+import org.apache.drill.PlanTestBase;
+import org.apache.drill.categories.ParquetTest;
+import org.apache.drill.categories.UnlikelyTest;
+import org.apache.drill.common.exceptions.UserRemoteException;
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.store.parquet.metadata.Metadata;
+import org.apache.drill.test.TestBuilder;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Tests for compatibility reading old parquet files after date corruption
@@ -148,7 +148,7 @@ public class TestCorruptParquetDateCorrection extends PlanTestBase {
             .go();
       }
     } finally {
-      test("alter session reset all");
+      resetAllSessionOptions();
     }
   }
 
@@ -211,7 +211,7 @@ public class TestCorruptParquetDateCorrection extends PlanTestBase {
           .contains("Year out of range"));
       throw e;
     } finally {
-      test("alter session reset all");
+      resetAllSessionOptions();
     }
   }
 
@@ -243,7 +243,7 @@ public class TestCorruptParquetDateCorrection extends PlanTestBase {
         }
       }
     } finally {
-      test("alter session reset all");
+      resetAllSessionOptions();
     }
   }
 
@@ -284,9 +284,8 @@ public class TestCorruptParquetDateCorrection extends PlanTestBase {
       // read all of the types with the complex reader
       readFilesWithUserDisabledAutoCorrection();
     } finally {
-      test("alter session reset all");
+      resetAllSessionOptions();
     }
-
   }
 
   /**

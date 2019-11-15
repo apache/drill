@@ -37,6 +37,7 @@ import java.util.zip.GZIPOutputStream;
 
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.util.DrillFileUtils;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.record.RecordBatchLoader;
@@ -110,7 +111,7 @@ public class TestJsonReader extends BaseTestQuery {
                   "inner_3", mapOf()))
           .go();
     } finally {
-      test("alter session reset `store.json.all_text_mode`");
+      resetSessionOption(ExecConstants.JSON_ALL_TEXT_MODE);
     }
   }
 
@@ -655,7 +656,7 @@ public class TestJsonReader extends BaseTestQuery {
         .go();
 
     } finally {
-      testNoResult("alter session reset `store.json.all_text_mode`");
+      resetSessionOption(ExecConstants.JSON_ALL_TEXT_MODE);
     }
   }
 
@@ -684,8 +685,8 @@ public class TestJsonReader extends BaseTestQuery {
         .go();
 
     } finally {
-      testNoResult("alter session reset `store.json.all_text_mode`");
-      testNoResult("alter session reset `exec.enable_union_type`");
+      resetSessionOption(ExecConstants.JSON_ALL_TEXT_MODE);
+      resetSessionOption(ExecConstants.ENABLE_UNION_TYPE_KEY);
     }
   }
 
@@ -743,7 +744,7 @@ public class TestJsonReader extends BaseTestQuery {
         .go();
 
     } finally {
-      testNoResult("alter session reset `exec.enable_union_type`");
+      resetSessionOption(ExecConstants.ENABLE_UNION_TYPE_KEY);
     }
   }
 }

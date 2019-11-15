@@ -300,8 +300,8 @@ public class TestBugFixes extends BaseTestQuery {
           "    SELECT count(1) `a_count` FROM cp.`tpch/nation.parquet`\n" +
           ") `t5` ON TRUE\n");
     } finally {
-      test("ALTER SESSION RESET `planner.enable_nljoin_for_scalar_only`");
-      test("ALTER SESSION RESET `planner.slice_target`");
+      resetSessionOption("planner.enable_nljoin_for_scalar_only");
+      resetSessionOption("planner.slice_target");
     }
   }
 

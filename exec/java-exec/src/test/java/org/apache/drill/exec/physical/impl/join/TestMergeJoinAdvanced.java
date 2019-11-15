@@ -17,29 +17,29 @@
  */
 package org.apache.drill.exec.physical.impl.join;
 
-import org.apache.drill.categories.UnlikelyTest;
-import org.apache.drill.common.exceptions.UserRemoteException;
-import org.apache.drill.test.TestTools;
-import org.apache.drill.categories.OperatorTest;
-import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.planner.physical.PlannerSettings;
-import org.hamcrest.CoreMatchers;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.Ignore;
-import org.junit.experimental.categories.Category;
-import org.junit.rules.ExpectedException;
-import org.junit.rules.TestRule;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Random;
+
+import org.apache.drill.categories.OperatorTest;
+import org.apache.drill.categories.UnlikelyTest;
+import org.apache.drill.common.exceptions.UserRemoteException;
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.test.TestTools;
+import org.hamcrest.CoreMatchers;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.rules.ExpectedException;
+import org.junit.rules.TestRule;
 
 @Category(OperatorTest.class)
 public class TestMergeJoinAdvanced extends JoinTestBase {
@@ -123,7 +123,7 @@ public class TestMergeJoinAdvanced extends JoinTestBase {
     try {
       test("select * from dfs.`join/j1` j1 left outer join dfs.`join/j2` j2 on (j1.c_varchar = j2.c_varchar)");
     } finally {
-      test("ALTER SESSION RESET ALL");
+      resetAllSessionOptions();
     }
   }
 

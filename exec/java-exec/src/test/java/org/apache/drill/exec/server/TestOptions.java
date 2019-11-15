@@ -17,16 +17,16 @@
  */
 package org.apache.drill.exec.server;
 
-import org.apache.drill.test.BaseTestQuery;
-import org.apache.drill.categories.OptionsTest;
-import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.test.UserExceptionMatcher;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
 import static org.apache.drill.exec.ExecConstants.ENABLE_VERBOSE_ERRORS_KEY;
 import static org.apache.drill.exec.ExecConstants.SLICE_TARGET;
 import static org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType.VALIDATION;
+
+import org.apache.drill.categories.OptionsTest;
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.test.UserExceptionMatcher;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 @Category(OptionsTest.class)
 public class TestOptions extends BaseTestQuery {
@@ -135,7 +135,7 @@ public class TestOptions extends BaseTestQuery {
   }
 
   @Test
-  public void resetAllSessionOptions() throws Exception {
+  public void testResetAllSessionOptions() throws Exception {
     // change options
     test("SET `%s` = %b;", ENABLE_VERBOSE_ERRORS_KEY, true);
     // check changed
