@@ -539,6 +539,16 @@ public final class ExecConstants {
   public static final String KAFKA_POLL_TIMEOUT = "store.kafka.poll.timeout";
   public static final PositiveLongValidator KAFKA_POLL_TIMEOUT_VALIDATOR = new PositiveLongValidator(KAFKA_POLL_TIMEOUT, Long.MAX_VALUE,
       new OptionDescription("Amount of time in milliseconds allotted to the Kafka client to fetch messages from the Kafka cluster; default value is 200."));
+  public static final String KAFKA_READER_SKIP_INVALID_RECORDS = "store.kafka.reader.skip_invalid_records";
+  public static final BooleanValidator KAFKA_SKIP_MALFORMED_RECORDS_VALIDATOR = new BooleanValidator(KAFKA_READER_SKIP_INVALID_RECORDS,
+    new OptionDescription("Allows queries to progress when the JSON record reader skips bad records in JSON files. Default is false. (Drill 1.17+)"));
+  public static final String KAFKA_READER_NAN_INF_NUMBERS = "store.kafka.reader.allow_nan_inf";
+  public static final BooleanValidator KAFKA_READER_NAN_INF_NUMBERS_VALIDATOR = new BooleanValidator(KAFKA_READER_NAN_INF_NUMBERS,
+    new OptionDescription("Enables the Kafka JSON record reader in Drill to read `NaN` and `Infinity` tokens in JSON data as numbers. Default is true. (Drill 1.17+)"));
+  public static final String KAFKA_READER_ESCAPE_ANY_CHAR = "store.kafka.reader.allow_escape_any_char";
+  public static final BooleanValidator KAFKA_READER_ESCAPE_ANY_CHAR_VALIDATOR = new BooleanValidator(KAFKA_READER_ESCAPE_ANY_CHAR,
+    new OptionDescription("Enables the Kafka JSON record reader in Drill to escape any character. Default is false. (Drill 1.17+)"));
+
 
   // TODO: We need to add a feature that enables storage plugins to add their own options. Currently we have to declare
   // in core which is not right. Move this option and above two mongo plugin related options once we have the feature.

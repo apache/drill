@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.store.kafka.KafkaStoragePlugin;
+import org.apache.drill.exec.store.kafka.ReadOptions;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -34,12 +35,11 @@ import io.netty.buffer.DrillBuf;
  */
 public interface MessageReader extends Closeable {
 
-  public void init(DrillBuf buf, List<SchemaPath> columns, VectorContainerWriter writer, boolean allTextMode,
-      boolean readNumbersAsDouble);
+  void init(DrillBuf buf, List<SchemaPath> columns, VectorContainerWriter writer, ReadOptions readOptions);
 
-  public void readMessage(ConsumerRecord<?, ?> message);
+  boolean readMessage(ConsumerRecord<?, ?> message);
 
-  public void ensureAtLeastOneField();
+  void ensureAtLeastOneField();
 
-  public KafkaConsumer<byte[], byte[]> getConsumer(KafkaStoragePlugin plugin);
+  KafkaConsumer<byte[], byte[]> getConsumer(KafkaStoragePlugin plugin);
 }

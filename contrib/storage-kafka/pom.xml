@@ -31,7 +31,7 @@
   <name>contrib/kafka-storage-plugin</name>
 
   <properties>
-    <kafka.version>0.11.0.1</kafka.version>
+    <kafka.version>2.3.1</kafka.version>
     <kafka.TestSuite>**/TestKafkaSuit.class</kafka.TestSuite>
   </properties>
 
@@ -64,7 +64,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.kafka</groupId>
-      <artifactId>kafka_2.11</artifactId>
+      <artifactId>kafka_2.12</artifactId>
       <version>${kafka.version}</version>
       <exclusions>
         <exclusion>
@@ -78,7 +78,7 @@
       </exclusions>
     </dependency>
 
-    <!-- Test dependencie -->
+    <!-- Test dependencies -->
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
       <artifactId>drill-java-exec</artifactId>

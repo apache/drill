@@ -30,10 +30,14 @@ import org.apache.drill.exec.planner.physical.FilterPrel;
 import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.planner.physical.ScanPrel;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.List;
 
 public class KafkaPushDownFilterIntoScan extends StoragePluginOptimizerRule {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(KafkaPushDownFilterIntoScan.class);
+
+  private static final Logger logger = LoggerFactory.getLogger(KafkaPushDownFilterIntoScan.class);
 
   public static final StoragePluginOptimizerRule INSTANCE =
       new KafkaPushDownFilterIntoScan(RelOptHelper.some(FilterPrel.class, RelOptHelper.any(ScanPrel.class)),
@@ -53,18 +57,21 @@ public class KafkaPushDownFilterIntoScan extends StoragePluginOptimizerRule {
         DrillOptiq.toDrill(new DrillParseContext(PrelUtil.getPlannerSettings(call.getPlanner())), scan, condition);
 
     KafkaGroupScan groupScan = (KafkaGroupScan) scan.getGroupScan();
-    logger.info("Partitions ScanSpec before pushdown: " + groupScan.getPartitionScanSpecList());
-    KafkaPartitionScanSpecBuilder builder = new KafkaPartitionScanSpecBuilder(groupScan, conditionExp);
-    List<KafkaPartitionScanSpec> newScanSpec = null;
-    newScanSpec = builder.parseTree();
-    builder.close(); //Close consumer
+    if (logger.isDebugEnabled()) {
+      logger.debug("Partitions ScanSpec before push down: {}", groupScan.getPartitionScanSpecList());
+    }
+
+    List<KafkaPartitionScanSpec> newScanSpec;
+    try (KafkaPartitionScanSpecBuilder builder = new KafkaPartitionScanSpecBuilder(groupScan, conditionExp)) {
+      newScanSpec = builder.parseTree();
+    }
 
     //No pushdown
-    if(newScanSpec == null) {
+    if (newScanSpec == null) {
       return;
     }
 
-    logger.info("Partitions ScanSpec after pushdown: " + newScanSpec);
+    logger.debug("Partitions ScanSpec after pushdown: {}", newScanSpec);
     GroupScan newGroupScan = groupScan.cloneWithNewSpec(newScanSpec);
     final ScanPrel newScanPrel =
       new ScanPrel(scan.getCluster(), filter.getTraitSet(), newGroupScan, scan.getRowType(), scan.getTable());
@@ -73,7 +80,7 @@ public class KafkaPushDownFilterIntoScan extends StoragePluginOptimizerRule {
 
   @Override
   public boolean matches(RelOptRuleCall call) {
-    final ScanPrel scan = (ScanPrel) call.rel(1);
+    final ScanPrel scan = call.rel(1);
     if (scan.getGroupScan() instanceof KafkaGroupScan) {
       return super.matches(call);
     }

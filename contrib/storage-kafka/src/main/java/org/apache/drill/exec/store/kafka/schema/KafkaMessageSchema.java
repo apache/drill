@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.kafka.schema;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -33,18 +34,15 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
-
 public class KafkaMessageSchema extends AbstractSchema {
 
   private static final Logger logger = LoggerFactory.getLogger(KafkaMessageSchema.class);
   private final KafkaStoragePlugin plugin;
-  private final Map<String, DrillTable> drillTables = Maps.newHashMap();
+  private final Map<String, DrillTable> drillTables = new HashMap<>();
   private Set<String> tableNames;
 
   public KafkaMessageSchema(final KafkaStoragePlugin plugin, final String name) {
-    super(ImmutableList.of(), name);
+    super(Collections.emptyList(), name);
     this.plugin = plugin;
   }
 
@@ -73,11 +71,15 @@ public class KafkaMessageSchema extends AbstractSchema {
   @Override
   public Set<String> getTableNames() {
     if (tableNames == null) {
-      try (KafkaConsumer<?, ?> kafkaConsumer = new KafkaConsumer<>(plugin.getConfig().getKafkaConsumerProps())) {
+      KafkaConsumer<?, ?> kafkaConsumer = null;
+      try {
+        kafkaConsumer = new KafkaConsumer<>(plugin.getConfig().getKafkaConsumerProps());
         tableNames = kafkaConsumer.listTopics().keySet();
       } catch (Exception e) {
         logger.warn("Failure while loading table names for database '{}': {}", getName(), e.getMessage(), e.getCause());
         return Collections.emptySet();
+      } finally {
+        plugin.registerToClose(kafkaConsumer);
       }
     }
     return tableNames;

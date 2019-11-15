@@ -25,10 +25,8 @@ import java.util.List;
 import java.util.Properties;
 
 import org.apache.drill.exec.ZookeeperHelper;
-import org.apache.drill.exec.store.kafka.KafkaStoragePluginConfig;
+import org.apache.drill.exec.store.kafka.KafkaAsyncCloser;
 import org.apache.drill.exec.store.kafka.TestQueryConstants;
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,9 +34,11 @@ import kafka.server.KafkaConfig;
 import kafka.server.KafkaServerStartable;
 
 public class EmbeddedKafkaCluster implements TestQueryConstants {
+
   private static final Logger logger = LoggerFactory.getLogger(EmbeddedKafkaCluster.class);
   private List<KafkaServerStartable> brokers;
-  private final ZookeeperHelper zkHelper;
+  private ZookeeperHelper zkHelper;
+  private KafkaAsyncCloser closer;
   private final Properties props;
 
   public EmbeddedKafkaCluster() throws IOException {
@@ -49,9 +49,9 @@ public class EmbeddedKafkaCluster implements TestQueryConstants {
     this(props, 1);
   }
 
-  public EmbeddedKafkaCluster(Properties basePorps, int numberOfBrokers) throws IOException {
+  public EmbeddedKafkaCluster(Properties baseProps, int numberOfBrokers) throws IOException {
     this.props = new Properties();
-    props.putAll(basePorps);
+    props.putAll(baseProps);
     this.zkHelper = new ZookeeperHelper();
     zkHelper.startZookeeper(1);
     this.brokers = new ArrayList<>(numberOfBrokers);
@@ -62,13 +62,14 @@ public class EmbeddedKafkaCluster implements TestQueryConstants {
         sb.append(BROKER_DELIM);
       }
       int ephemeralBrokerPort = getEphemeralPort();
-      sb.append(LOCAL_HOST + ":" + ephemeralBrokerPort);
+      sb.append(LOCAL_HOST).append(":").append(ephemeralBrokerPort);
       addBroker(props, i, ephemeralBrokerPort);
     }
 
     this.props.put("metadata.broker.list", sb.toString());
     this.props.put(KafkaConfig.ZkConnectProp(), this.zkHelper.getConnectionString());
     logger.info("Initialized Kafka Server");
+    this.closer = new KafkaAsyncCloser();
   }
 
   private void addBroker(Properties props, int brokerID, int ephemeralBrokerPort) {
@@ -79,13 +80,14 @@ public class EmbeddedKafkaCluster implements TestQueryConstants {
     properties.put(KafkaConfig.OffsetsTopicReplicationFactorProp(), String.valueOf(1));
     properties.put(KafkaConfig.DefaultReplicationFactorProp(), String.valueOf(1));
     properties.put(KafkaConfig.GroupMinSessionTimeoutMsProp(), String.valueOf(100));
-    properties.put(KafkaConfig.AutoCreateTopicsEnableProp(), Boolean.TRUE);
+    properties.put(KafkaConfig.AutoCreateTopicsEnableProp(), Boolean.FALSE);
     properties.put(KafkaConfig.ZkConnectProp(), zkHelper.getConnectionString());
     properties.put(KafkaConfig.BrokerIdProp(), String.valueOf(brokerID + 1));
-    properties.put(KafkaConfig.HostNameProp(), String.valueOf(LOCAL_HOST));
-    properties.put(KafkaConfig.AdvertisedHostNameProp(), String.valueOf(LOCAL_HOST));
+    properties.put(KafkaConfig.HostNameProp(), LOCAL_HOST);
+    properties.put(KafkaConfig.AdvertisedHostNameProp(), LOCAL_HOST);
     properties.put(KafkaConfig.PortProp(), String.valueOf(ephemeralBrokerPort));
-    properties.put(KafkaConfig.DeleteTopicEnableProp(), Boolean.FALSE);
+    properties.put(KafkaConfig.AdvertisedPortProp(), String.valueOf(ephemeralBrokerPort));
+    properties.put(KafkaConfig.DeleteTopicEnableProp(), Boolean.TRUE);
     properties.put(KafkaConfig.LogDirsProp(), getTemporaryDir().getAbsolutePath());
     properties.put(KafkaConfig.LogFlushIntervalMessagesProp(), String.valueOf(1));
     brokers.add(getBroker(properties));
@@ -97,23 +99,25 @@ public class EmbeddedKafkaCluster implements TestQueryConstants {
     return broker;
   }
 
-  public void shutDownCluster() throws IOException {
-    // set Kafka log level to ERROR
-    Level level = LogManager.getLogger(KafkaStoragePluginConfig.NAME).getLevel();
-    LogManager.getLogger(KafkaStoragePluginConfig.NAME).setLevel(Level.ERROR);
+  public void shutDownCluster() {
+    closer.close();
+    closer = null;
 
-    for (KafkaServerStartable broker : brokers) {
-      broker.shutdown();
+    if (brokers != null) {
+      for (KafkaServerStartable broker : brokers) {
+        broker.shutdown();
+      }
+      brokers = null;
     }
-
-    // revert back the level
-    LogManager.getLogger(KafkaStoragePluginConfig.NAME).setLevel(level);
-    zkHelper.stopZookeeper();
+    if (zkHelper != null) {
+      zkHelper.stopZookeeper();
+      zkHelper = null;
+    }
   }
 
   public void shutDownBroker(int brokerId) {
     for (KafkaServerStartable broker : brokers) {
-      if (Integer.valueOf(broker.serverConfig().getString(KafkaConfig.BrokerIdProp())) == brokerId) {
+      if (Integer.parseInt(broker.staticServerConfig().getString(KafkaConfig.BrokerIdProp())) == brokerId) {
         broker.shutdown();
         return;
       }
@@ -141,11 +145,15 @@ public class EmbeddedKafkaCluster implements TestQueryConstants {
   public String getKafkaBrokerList() {
     StringBuilder sb = new StringBuilder();
     for (KafkaServerStartable broker : brokers) {
-      KafkaConfig serverConfig = broker.serverConfig();
-      sb.append(serverConfig.hostName() + ":" + serverConfig.port());
+      KafkaConfig serverConfig = broker.staticServerConfig();
+      sb.append(serverConfig.hostName()).append(":").append(serverConfig.port());
       sb.append(",");
     }
     return sb.toString().substring(0, sb.toString().length() - 1);
+  }
+
+  public void registerToClose(AutoCloseable autoCloseable) {
+    closer.close(autoCloseable);
   }
 
   private int getEphemeralPort() throws IOException {
@@ -162,5 +170,4 @@ public class EmbeddedKafkaCluster implements TestQueryConstants {
     }
     return file;
   }
-
 }

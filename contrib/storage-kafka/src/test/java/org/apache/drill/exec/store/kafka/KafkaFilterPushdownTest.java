@@ -27,7 +27,7 @@ import org.junit.experimental.categories.Category;
 
 import static org.apache.drill.exec.store.kafka.TestKafkaSuit.NUM_JSON_MSG;
 import static org.apache.drill.exec.store.kafka.TestKafkaSuit.embeddedKafkaCluster;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 
 @Category({KafkaStorageTest.class, SlowTest.class})
 public class KafkaFilterPushdownTest extends KafkaTestBase {
@@ -43,13 +43,11 @@ public class KafkaFilterPushdownTest extends KafkaTestBase {
     generator.populateJsonMsgWithTimestamps(TestQueryConstants.JSON_PUSHDOWN_TOPIC, NUM_JSON_MSG);
     String query = String.format(TestQueryConstants.MSG_SELECT_QUERY, TestQueryConstants.JSON_PUSHDOWN_TOPIC);
     //Ensure messages are present
-    assertTrue("Kafka server does not have expected number of messages",
-        testSql(query) == NUM_PARTITIONS * NUM_JSON_MSG);
+    assertEquals("Kafka server does not have expected number of messages", testSql(query), NUM_PARTITIONS * NUM_JSON_MSG);
   }
 
   /**
    * Test filter pushdown with condition on kafkaMsgOffset.
-   * @throws Exception
    */
   @Test
   public void testPushdownOnOffset() throws Exception {
@@ -67,7 +65,6 @@ public class KafkaFilterPushdownTest extends KafkaTestBase {
 
   /**
    * Test filter pushdown with condition on kafkaPartitionId.
-   * @throws Exception
    */
   @Test
   public void testPushdownOnPartition() throws Exception {
@@ -84,7 +81,6 @@ public class KafkaFilterPushdownTest extends KafkaTestBase {
 
   /**
    * Test filter pushdown with condition on kafkaPartitionId.
-   * @throws Exception
    */
   @Test
   public void testPushdownOnTimestamp() throws Exception {
@@ -101,7 +97,6 @@ public class KafkaFilterPushdownTest extends KafkaTestBase {
 
   /**
    * Test filter pushdown when timestamp is not ordered.
-   * @throws Exception
    */
   @Test
   public void testPushdownUnorderedTimestamp() throws Exception {
@@ -119,7 +114,6 @@ public class KafkaFilterPushdownTest extends KafkaTestBase {
 
   /**
    * Test filter pushdown when timestamp value specified does not exist.
-   * @throws Exception
    */
   @Test
   public void testPushdownWhenTimestampDoesNotExist() throws Exception {
@@ -136,7 +130,6 @@ public class KafkaFilterPushdownTest extends KafkaTestBase {
 
   /**
    * Test filter pushdown when partition value specified does not exist.
-   * @throws Exception
    */
   @Test
   public void testPushdownWhenPartitionDoesNotExist() throws Exception {
@@ -153,7 +146,6 @@ public class KafkaFilterPushdownTest extends KafkaTestBase {
 
   /**
    * Test filter pushdown when timestamp exist but partition does not exist.
-   * @throws Exception
    */
   @Test
   public void testPushdownForEmptyScanSpec() throws Exception {
@@ -172,7 +164,6 @@ public class KafkaFilterPushdownTest extends KafkaTestBase {
   /**
    * Test filter pushdown on kafkaMsgOffset with boundary conditions.
    * In every case, the number of records returned is 0.
-   * @throws Exception
    */
   @Test
   public void testPushdownOffsetNoRecordsReturnedWithBoundaryConditions() throws Exception {
@@ -230,7 +221,6 @@ public class KafkaFilterPushdownTest extends KafkaTestBase {
   /**
    * Test filter pushdown on kafkaMsgOffset with boundary conditions.
    * In every case, the number of records returned is 5 (1 per topic-partition).
-   * @throws Exception
    */
   @Test
   public void testPushdownOffsetOneRecordReturnedWithBoundaryConditions() throws Exception {
@@ -264,7 +254,6 @@ public class KafkaFilterPushdownTest extends KafkaTestBase {
   /**
    * Test filter pushdown with OR.
    * Pushdown is possible if all the predicates are on metadata fields.
-   * @throws Exception
    */
   @Test
   public void testPushdownWithOr() throws Exception {
@@ -282,7 +271,6 @@ public class KafkaFilterPushdownTest extends KafkaTestBase {
 
   /**
    * Test filter pushdown with OR on kafkaMsgTimestamp and kafkaMsgOffset.
-   * @throws Exception
    */
   @Test
   public void testPushdownWithOr1() throws Exception {
@@ -301,8 +289,6 @@ public class KafkaFilterPushdownTest extends KafkaTestBase {
 
   /**
    * Test pushdown for a combination of AND and OR.
-   *
-   * @throws Exception
    */
   @Test
   public void testPushdownWithAndOrCombo() throws Exception {
@@ -321,7 +307,6 @@ public class KafkaFilterPushdownTest extends KafkaTestBase {
 
   /**
    * Test pushdown for a combination of AND and OR.
-   * @throws Exception
    */
   @Test
   public void testPushdownWithAndOrCombo2() throws Exception {
@@ -343,7 +328,6 @@ public class KafkaFilterPushdownTest extends KafkaTestBase {
   /**
    * Test pushdown for predicate1 AND predicate2.
    * Where predicate1 is on metadata field and and predicate2 is on user fields.
-   * @throws Exception
    */
   @Test
   public void testPushdownTimestampWithNonMetaField() throws Exception {
@@ -363,7 +347,6 @@ public class KafkaFilterPushdownTest extends KafkaTestBase {
   /**
    * Tests that pushdown does not happen for predicates such as
    * non-metadata-field = val1 OR (kafkaMsgTimestamp > val2 AND kafkaMsgTimestamp < val4)
-   * @throws Exception
    */
   @Test
   public void testNoPushdownOfOffsetWithNonMetadataField() throws Exception {
@@ -380,5 +363,4 @@ public class KafkaFilterPushdownTest extends KafkaTestBase {
     PlanTestBase.testPlanMatchingPatterns(queryString, JSON_FORMAT,
         new String[] {String.format(EXPECTED_PATTERN, expectedRowCountInPlan)}, null);
   }
-
 }

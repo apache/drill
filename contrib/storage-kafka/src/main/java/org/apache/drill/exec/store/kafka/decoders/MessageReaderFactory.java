@@ -26,7 +26,7 @@ public class MessageReaderFactory {
   private static final Logger logger = LoggerFactory.getLogger(MessageReaderFactory.class);
 
   /**
-   * Initialize kafka message reader beased on store.kafka.record.reader session
+   * Initialize kafka message reader based on store.kafka.record.reader session
    * property
    *
    * @param messageReaderKlass
@@ -47,7 +47,7 @@ public class MessageReaderFactory {
       Class<?> klass = Class.forName(messageReaderKlass);
       if (MessageReader.class.isAssignableFrom(klass)) {
         messageReader = (MessageReader) klass.newInstance();
-        logger.info("Initialized Message Reader : {}", messageReader);
+        logger.debug("Initialized Message Reader : {}", messageReader);
       }
     } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
       throw UserException.validationError().message("Failed to initialize message reader : %s", messageReaderKlass)

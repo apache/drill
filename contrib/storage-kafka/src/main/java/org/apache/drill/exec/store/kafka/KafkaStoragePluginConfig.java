@@ -18,7 +18,9 @@
 package org.apache.drill.exec.store.kafka;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
+import java.util.StringJoiner;
 
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.slf4j.Logger;
@@ -33,7 +35,8 @@ public class KafkaStoragePluginConfig extends StoragePluginConfig {
 
   private static final Logger logger = LoggerFactory.getLogger(KafkaStoragePluginConfig.class);
   public static final String NAME = "kafka";
-  private Properties kafkaConsumerProps;
+
+  private final Properties kafkaConsumerProps;
 
   @JsonCreator
   public KafkaStoragePluginConfig(@JsonProperty("kafkaConsumerProps") Map<String, String> kafkaConsumerProps) {
@@ -48,31 +51,25 @@ public class KafkaStoragePluginConfig extends StoragePluginConfig {
 
   @Override
   public int hashCode() {
-    final int prime = 31;
-    int result = 1;
-    result = prime * result + ((kafkaConsumerProps == null) ? 0 : kafkaConsumerProps.hashCode());
-    return result;
+    return Objects.hash(kafkaConsumerProps);
   }
 
   @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
+  public boolean equals(Object o) {
+    if (this == o) {
       return true;
     }
-    if (obj == null) {
+    if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    if (getClass() != obj.getClass()) {
-      return false;
-    }
-    KafkaStoragePluginConfig other = (KafkaStoragePluginConfig) obj;
-    if (kafkaConsumerProps == null && other.kafkaConsumerProps == null) {
-      return true;
-    }
-    if (kafkaConsumerProps == null || other.kafkaConsumerProps == null) {
-      return false;
-    }
-    return kafkaConsumerProps.equals(other.kafkaConsumerProps);
+    KafkaStoragePluginConfig that = (KafkaStoragePluginConfig) o;
+    return kafkaConsumerProps.equals(that.kafkaConsumerProps);
   }
 
+  @Override
+  public String toString() {
+    return new StringJoiner(", ", KafkaStoragePluginConfig.class.getSimpleName() + "[", "]")
+      .add("kafkaConsumerProps=" + kafkaConsumerProps)
+      .toString();
+  }
 }

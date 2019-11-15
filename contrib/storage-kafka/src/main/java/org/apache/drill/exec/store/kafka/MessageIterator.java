@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.kafka;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -31,11 +32,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 import kafka.common.KafkaException;
 
-public class MessageIterator implements Iterator<ConsumerRecord<byte[], byte[]>> {
+public class MessageIterator implements Iterator<ConsumerRecord<byte[], byte[]>>, AutoCloseable {
 
   private static final Logger logger = LoggerFactory.getLogger(MessageIterator.class);
   private final KafkaConsumer<byte[], byte[]> kafkaConsumer;
@@ -50,11 +50,11 @@ public class MessageIterator implements Iterator<ConsumerRecord<byte[], byte[]>>
     this.kafkaConsumer = kafkaConsumer;
     this.kafkaPollTimeOut = kafkaPollTimeOut;
 
-    List<TopicPartition> partitions = Lists.newArrayListWithCapacity(1);
+    List<TopicPartition> partitions = new ArrayList<>(1);
     topicPartition = new TopicPartition(subScanSpec.getTopicName(), subScanSpec.getPartitionId());
     partitions.add(topicPartition);
     this.kafkaConsumer.assign(partitions);
-    logger.info("Start offset of {}:{} is - {}", subScanSpec.getTopicName(), subScanSpec.getPartitionId(),
+    logger.debug("Start offset of {}:{} is - {}", subScanSpec.getTopicName(), subScanSpec.getPartitionId(),
         subScanSpec.getStartOffset());
     this.kafkaConsumer.seek(topicPartition, subScanSpec.getStartOffset());
     this.endOffset = subScanSpec.getEndOffset();
@@ -76,38 +76,54 @@ public class MessageIterator implements Iterator<ConsumerRecord<byte[], byte[]>>
       return false;
     }
 
-    ConsumerRecords<byte[], byte[]> consumerRecords = null;
-    Stopwatch stopwatch = Stopwatch.createStarted();
+    ConsumerRecords<byte[], byte[]> consumerRecords;
+    Stopwatch stopwatch = logger.isDebugEnabled() ? Stopwatch.createStarted() : null;
     try {
       consumerRecords = kafkaConsumer.poll(kafkaPollTimeOut);
     } catch (KafkaException ke) {
-      logger.error(ke.getMessage(), ke);
       throw UserException.dataReadError(ke).message(ke.getMessage()).build(logger);
+    } finally {
+      if (stopwatch != null) {
+        stopwatch.stop();
+      }
     }
-    stopwatch.stop();
 
     if (consumerRecords.isEmpty()) {
-      String errorMsg = new StringBuilder().append("Failed to fetch messages within ").append(kafkaPollTimeOut)
-          .append(" milliseconds. Consider increasing the value of the property : ")
-          .append(ExecConstants.KAFKA_POLL_TIMEOUT).toString();
-      throw UserException.dataReadError().message(errorMsg).build(logger);
+      throw UserException.dataReadError()
+        .message("Failed to fetch messages within %s milliseconds. " +
+          "Consider increasing the value of the property: %s",
+          kafkaPollTimeOut, ExecConstants.KAFKA_POLL_TIMEOUT)
+        .build(logger);
     }
 
-    long lastFetchTime = stopwatch.elapsed(TimeUnit.MILLISECONDS);
-    logger.debug("Total number of messages fetched : {}", consumerRecords.count());
-    logger.debug("Time taken to fetch : {} milliseconds", lastFetchTime);
-    totalFetchTime += lastFetchTime;
+    if (stopwatch != null) {
+      long lastFetchTime = stopwatch.elapsed(TimeUnit.MILLISECONDS);
+      logger.debug("Time taken to fetch : {} milliseconds", lastFetchTime);
+      totalFetchTime += lastFetchTime;
+      logger.debug("Total number of messages fetched : {}", consumerRecords.count());
+    }
 
     recordIter = consumerRecords.iterator();
     return recordIter.hasNext();
   }
 
+  /**
+   * Returns total fetch time of the messages from topic.
+   * Only applicable if debug log level is enabled.
+   *
+   * @return calculated total fetch time if debug log level is enabled, 0 otherwise
+   */
   public long getTotalFetchTime() {
-    return this.totalFetchTime;
+    return totalFetchTime;
   }
 
   @Override
   public ConsumerRecord<byte[], byte[]> next() {
     return recordIter.next();
+  }
+
+  @Override
+  public void close() {
+    kafkaConsumer.close();
   }
 }

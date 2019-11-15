@@ -17,44 +17,44 @@
  */
 package org.apache.drill.exec.store.kafka;
 
+import org.apache.drill.common.expression.BooleanOperator;
+import org.apache.drill.common.expression.FunctionCall;
+import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
-import org.apache.drill.common.expression.BooleanOperator;
-import org.apache.drill.common.expression.FunctionCall;
-import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetAndTimestamp;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
-public class KafkaPartitionScanSpecBuilder extends
-    AbstractExprVisitor<List<KafkaPartitionScanSpec>,Void,RuntimeException> {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(KafkaPartitionScanSpecBuilder.class);
+public class KafkaPartitionScanSpecBuilder
+  extends AbstractExprVisitor<List<KafkaPartitionScanSpec>, Void, RuntimeException>
+  implements AutoCloseable {
+
   private final LogicalExpression le;
   private final KafkaGroupScan groupScan;
   private final KafkaConsumer<?, ?> kafkaConsumer;
   private ImmutableMap<TopicPartition, KafkaPartitionScanSpec> fullScanSpec;
-  private static final long CLOSE_TIMEOUT_MS = 200;
 
   public KafkaPartitionScanSpecBuilder(KafkaGroupScan groupScan, LogicalExpression conditionExp) {
     this.groupScan = groupScan;
-    kafkaConsumer = new KafkaConsumer<>(groupScan.getKafkaStoragePluginConfig().getKafkaConsumerProps(),
+    this.kafkaConsumer = new KafkaConsumer<>(groupScan.getKafkaStoragePluginConfig().getKafkaConsumerProps(),
         new ByteArrayDeserializer(), new ByteArrayDeserializer());
-    le = conditionExp;
+    this.le = conditionExp;
   }
 
   public List<KafkaPartitionScanSpec> parseTree() {
     ImmutableMap.Builder<TopicPartition, KafkaPartitionScanSpec> builder = ImmutableMap.builder();
-    for(KafkaPartitionScanSpec scanSpec : groupScan.getPartitionScanSpecList()) {
+    for (KafkaPartitionScanSpec scanSpec : groupScan.getPartitionScanSpecList()) {
       builder.put(new TopicPartition(scanSpec.getTopicName(), scanSpec.getPartitionId()), scanSpec);
     }
     fullScanSpec = builder.build();
@@ -65,7 +65,7 @@ public class KafkaPartitionScanSpecBuilder extends
     This results in a "ScanBatch" with no reader. DRILL currently requires
     at least one reader to be present in a scan batch.
      */
-    if(pushdownSpec != null && pushdownSpec.isEmpty()) {
+    if (pushdownSpec != null && pushdownSpec.isEmpty()) {
       TopicPartition firstPartition = new TopicPartition(groupScan.getKafkaScanSpec().getTopicName(), 0);
       KafkaPartitionScanSpec emptySpec =
           new KafkaPartitionScanSpec(firstPartition.topic(),firstPartition.partition(),
@@ -76,29 +76,26 @@ public class KafkaPartitionScanSpecBuilder extends
   }
 
   @Override
-  public List<KafkaPartitionScanSpec> visitUnknown(LogicalExpression e, Void value)
-      throws RuntimeException {
+  public List<KafkaPartitionScanSpec> visitUnknown(LogicalExpression e, Void value) {
     return null;
   }
 
   @Override
-  public List<KafkaPartitionScanSpec> visitBooleanOperator(BooleanOperator op, Void value)
-      throws RuntimeException {
-
+  public List<KafkaPartitionScanSpec> visitBooleanOperator(BooleanOperator op, Void value) {
     Map<TopicPartition, KafkaPartitionScanSpec> specMap = Maps.newHashMap();
     ImmutableList<LogicalExpression> args = op.args;
-    if(op.getName().equals("booleanOr")) {
+    if (op.getName().equals("booleanOr")) {
 
-      for(LogicalExpression expr : args) {
+      for (LogicalExpression expr : args) {
         List<KafkaPartitionScanSpec> parsedSpec = expr.accept(this, null);
         //parsedSpec is null if expression cannot be pushed down
-        if(parsedSpec != null) {
+        if (parsedSpec != null) {
           for(KafkaPartitionScanSpec newSpec : parsedSpec) {
             TopicPartition tp = new TopicPartition(newSpec.getTopicName(), newSpec.getPartitionId());
             KafkaPartitionScanSpec existingSpec = specMap.get(tp);
 
             //If existing spec does not contain topic-partition
-            if(existingSpec == null) {
+            if (existingSpec == null) {
               specMap.put(tp, newSpec); //Add topic-partition to spec for OR
             } else {
               existingSpec.mergeScanSpec(op.getName(), newSpec);
@@ -111,11 +108,11 @@ public class KafkaPartitionScanSpecBuilder extends
       }
     } else { //booleanAnd
       specMap.putAll(fullScanSpec);
-      for(LogicalExpression expr : args) {
+      for (LogicalExpression expr : args) {
         List<KafkaPartitionScanSpec> parsedSpec = expr.accept(this, null);
 
         //parsedSpec is null if expression cannot be pushed down
-        if(parsedSpec != null) {
+        if (parsedSpec != null) {
           Set<TopicPartition> partitionsInNewSpec = Sets.newHashSet(); //Store topic-partitions returned from new spec.
 
           for (KafkaPartitionScanSpec newSpec : parsedSpec) {
@@ -143,14 +140,12 @@ public class KafkaPartitionScanSpecBuilder extends
   }
 
   @Override
-  public List<KafkaPartitionScanSpec> visitFunctionCall(FunctionCall call, Void value)
-      throws RuntimeException {
-
+  public List<KafkaPartitionScanSpec> visitFunctionCall(FunctionCall call, Void value) {
     String functionName = call.getName();
-    if(KafkaNodeProcessor.isPushdownFunction(functionName)) {
+    if (KafkaNodeProcessor.isPushdownFunction(functionName)) {
 
       KafkaNodeProcessor kafkaNodeProcessor = KafkaNodeProcessor.process(call);
-      if(kafkaNodeProcessor.isSuccess()) {
+      if (kafkaNodeProcessor.isSuccess()) {
         switch (kafkaNodeProcessor.getPath()) {
           case "kafkaMsgTimestamp":
             return createScanSpecForTimestamp(kafkaNodeProcessor.getFunctionName(),
@@ -168,22 +163,21 @@ public class KafkaPartitionScanSpecBuilder extends
   }
 
 
-  private List<KafkaPartitionScanSpec> createScanSpecForTimestamp(String functionName,
-                                                                  Long fieldValue) {
+  private List<KafkaPartitionScanSpec> createScanSpecForTimestamp(String functionName, Long fieldValue) {
     List<KafkaPartitionScanSpec> scanSpec = Lists.newArrayList();
     Map<TopicPartition, Long> timesValMap = Maps.newHashMap();
     ImmutableSet<TopicPartition> topicPartitions = fullScanSpec.keySet();
 
-    for(TopicPartition partitions : topicPartitions) {
+    for (TopicPartition partitions : topicPartitions) {
       timesValMap.put(partitions, functionName.equals("greater_than") ? fieldValue+1 : fieldValue);
     }
 
     Map<TopicPartition, OffsetAndTimestamp> offsetAndTimestamp = kafkaConsumer.offsetsForTimes(timesValMap);
 
-    for(TopicPartition tp : topicPartitions) {
+    for (TopicPartition tp : topicPartitions) {
       OffsetAndTimestamp value = offsetAndTimestamp.get(tp);
       //OffsetAndTimestamp is null if there is no offset greater or equal to requested timestamp
-      if(value == null) {
+      if (value == null) {
         scanSpec.add(
             new KafkaPartitionScanSpec(tp.topic(), tp.partition(),
                 fullScanSpec.get(tp).getEndOffset(), fullScanSpec.get(tp).getEndOffset()));
@@ -197,8 +191,7 @@ public class KafkaPartitionScanSpecBuilder extends
     return scanSpec;
   }
 
-  private List<KafkaPartitionScanSpec> createScanSpecForOffset(String functionName,
-                                                               Long fieldValue) {
+  private List<KafkaPartitionScanSpec> createScanSpecForOffset(String functionName, Long fieldValue) {
     List<KafkaPartitionScanSpec> scanSpec = Lists.newArrayList();
     ImmutableSet<TopicPartition> topicPartitions = fullScanSpec.keySet();
 
@@ -210,8 +203,8 @@ public class KafkaPartitionScanSpecBuilder extends
 
     switch (functionName) {
       case "equal":
-        for(TopicPartition tp : topicPartitions) {
-          if(fieldValue < fullScanSpec.get(tp).getStartOffset()) {
+        for (TopicPartition tp : topicPartitions) {
+          if (fieldValue < fullScanSpec.get(tp).getStartOffset()) {
             //Offset does not exist
             scanSpec.add(
                 new KafkaPartitionScanSpec(tp.topic(), tp.partition(),
@@ -224,7 +217,7 @@ public class KafkaPartitionScanSpecBuilder extends
         }
         break;
       case "greater_than_or_equal_to":
-        for(TopicPartition tp : topicPartitions) {
+        for (TopicPartition tp : topicPartitions) {
           //Ensure scan range is between startOffset and endOffset,
           long val = bindOffsetToRange(tp, fieldValue);
           scanSpec.add(
@@ -233,16 +226,16 @@ public class KafkaPartitionScanSpecBuilder extends
         }
         break;
       case "greater_than":
-        for(TopicPartition tp : topicPartitions) {
+        for (TopicPartition tp : topicPartitions) {
           //Ensure scan range is between startOffset and endOffset,
-          long val = bindOffsetToRange(tp, fieldValue+1);
+          long val = bindOffsetToRange(tp, fieldValue + 1);
           scanSpec.add(
               new KafkaPartitionScanSpec(tp.topic(), tp.partition(),
                   val, fullScanSpec.get(tp).getEndOffset()));
         }
         break;
       case "less_than_or_equal_to":
-        for(TopicPartition tp : topicPartitions) {
+        for (TopicPartition tp : topicPartitions) {
           //Ensure scan range is between startOffset and endOffset,
           long val = bindOffsetToRange(tp, fieldValue+1);
 
@@ -252,7 +245,7 @@ public class KafkaPartitionScanSpecBuilder extends
         }
         break;
       case "less_than":
-        for(TopicPartition tp : topicPartitions) {
+        for (TopicPartition tp : topicPartitions) {
           //Ensure scan range is between startOffset and endOffset,
           long val = bindOffsetToRange(tp, fieldValue);
 
@@ -265,15 +258,14 @@ public class KafkaPartitionScanSpecBuilder extends
     return scanSpec;
   }
 
-  private List<KafkaPartitionScanSpec> createScanSpecForPartition(String functionName,
-                                                                  Long fieldValue) {
+  private List<KafkaPartitionScanSpec> createScanSpecForPartition(String functionName, Long fieldValue) {
     List<KafkaPartitionScanSpec> scanSpecList = Lists.newArrayList();
     ImmutableSet<TopicPartition> topicPartitions = fullScanSpec.keySet();
 
     switch (functionName) {
       case "equal":
-        for(TopicPartition tp : topicPartitions) {
-          if(tp.partition() == fieldValue) {
+        for (TopicPartition tp : topicPartitions) {
+          if (tp.partition() == fieldValue) {
             scanSpecList.add(
                 new KafkaPartitionScanSpec(tp.topic(), tp.partition(),
                     fullScanSpec.get(tp).getStartOffset(),
@@ -282,8 +274,8 @@ public class KafkaPartitionScanSpecBuilder extends
         }
         break;
       case "not_equal":
-        for(TopicPartition tp : topicPartitions) {
-          if(tp.partition() != fieldValue) {
+        for (TopicPartition tp : topicPartitions) {
+          if (tp.partition() != fieldValue) {
             scanSpecList.add(
                 new KafkaPartitionScanSpec(tp.topic(), tp.partition(),
                     fullScanSpec.get(tp).getStartOffset(),
@@ -292,8 +284,8 @@ public class KafkaPartitionScanSpecBuilder extends
         }
         break;
       case "greater_than_or_equal_to":
-        for(TopicPartition tp : topicPartitions) {
-          if(tp.partition() >= fieldValue) {
+        for (TopicPartition tp : topicPartitions) {
+          if (tp.partition() >= fieldValue) {
             scanSpecList.add(
                 new KafkaPartitionScanSpec(tp.topic(), tp.partition(),
                     fullScanSpec.get(tp).getStartOffset(),
@@ -302,8 +294,8 @@ public class KafkaPartitionScanSpecBuilder extends
         }
         break;
       case "greater_than":
-        for(TopicPartition tp : topicPartitions) {
-          if(tp.partition() > fieldValue) {
+        for (TopicPartition tp : topicPartitions) {
+          if (tp.partition() > fieldValue) {
             scanSpecList.add(
                 new KafkaPartitionScanSpec(tp.topic(), tp.partition(),
                     fullScanSpec.get(tp).getStartOffset(),
@@ -312,8 +304,8 @@ public class KafkaPartitionScanSpecBuilder extends
         }
         break;
       case "less_than_or_equal_to":
-        for(TopicPartition tp : topicPartitions) {
-          if(tp.partition() <= fieldValue) {
+        for (TopicPartition tp : topicPartitions) {
+          if (tp.partition() <= fieldValue) {
             scanSpecList.add(
                 new KafkaPartitionScanSpec(tp.topic(), tp.partition(),
                     fullScanSpec.get(tp).getStartOffset(),
@@ -322,8 +314,8 @@ public class KafkaPartitionScanSpecBuilder extends
         }
         break;
       case "less_than":
-        for(TopicPartition tp : topicPartitions) {
-          if(tp.partition() < fieldValue) {
+        for (TopicPartition tp : topicPartitions) {
+          if (tp.partition() < fieldValue) {
             scanSpecList.add(
                 new KafkaPartitionScanSpec(tp.topic(), tp.partition(),
                     fullScanSpec.get(tp).getStartOffset(),
@@ -335,8 +327,9 @@ public class KafkaPartitionScanSpecBuilder extends
     return scanSpecList;
   }
 
-  void close() {
-    kafkaConsumer.close(CLOSE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+  @Override
+  public void close() {
+    groupScan.getStoragePlugin().registerToClose(kafkaConsumer);
   }
 
   private long bindOffsetToRange(TopicPartition tp, long offset) {

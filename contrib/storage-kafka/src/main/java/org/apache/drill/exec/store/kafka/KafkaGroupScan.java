@@ -17,12 +17,14 @@
  */
 package org.apache.drill.exec.store.kafka;
 
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 import org.apache.commons.lang3.StringUtils;
@@ -155,25 +157,28 @@ public class KafkaGroupScan extends AbstractGroupScan {
   private void init() {
     partitionWorkMap = Maps.newHashMap();
     Collection<DrillbitEndpoint> endpoints = kafkaStoragePlugin.getContext().getBits();
-    Map<String, DrillbitEndpoint> endpointMap = Maps.newHashMap();
-    for (DrillbitEndpoint endpoint : endpoints) {
-      endpointMap.put(endpoint.getAddress(), endpoint);
-    }
+    Map<String, DrillbitEndpoint> endpointMap = endpoints.stream()
+      .collect(Collectors.toMap(
+        DrillbitEndpoint::getAddress,
+        Function.identity(),
+        (o, n) -> n));
 
     Map<TopicPartition, Long> startOffsetsMap = Maps.newHashMap();
     Map<TopicPartition, Long> endOffsetsMap = Maps.newHashMap();
-    List<PartitionInfo> topicPartitions = null;
+    List<PartitionInfo> topicPartitions;
     String topicName = kafkaScanSpec.getTopicName();
 
-    try (KafkaConsumer<?, ?> kafkaConsumer = new KafkaConsumer<>(kafkaStoragePlugin.getConfig().getKafkaConsumerProps(),
-        new ByteArrayDeserializer(), new ByteArrayDeserializer())) {
-      if (!kafkaConsumer.listTopics().keySet().contains(topicName)) {
+    KafkaConsumer<?, ?> kafkaConsumer = null;
+    try {
+      kafkaConsumer = new KafkaConsumer<>(kafkaStoragePlugin.getConfig().getKafkaConsumerProps(),
+        new ByteArrayDeserializer(), new ByteArrayDeserializer());
+      if (!kafkaConsumer.listTopics().containsKey(topicName)) {
         throw UserException.dataReadError()
             .message("Table '%s' does not exist", topicName)
             .build(logger);
       }
 
-      kafkaConsumer.subscribe(Arrays.asList(topicName));
+      kafkaConsumer.subscribe(Collections.singletonList(topicName));
       // based on KafkaConsumer JavaDoc, seekToBeginning/seekToEnd functions
       // evaluates lazily, seeking to the first/last offset in all partitions only
       // when poll(long) or
@@ -194,8 +199,12 @@ public class KafkaGroupScan extends AbstractGroupScan {
         endOffsetsMap.put(topicPartition, kafkaConsumer.position(topicPartition));
       }
     } catch (Exception e) {
-      throw UserException.dataReadError(e).message("Failed to fetch start/end offsets of the topic  %s", topicName)
-          .addContext(e.getMessage()).build(logger);
+      throw UserException.dataReadError(e)
+        .message("Failed to fetch start/end offsets of the topic %s", topicName)
+        .addContext(e.getMessage())
+        .build(logger);
+    } finally {
+      kafkaStoragePlugin.registerToClose(kafkaConsumer);
     }
 
     // computes work for each end point
@@ -227,11 +236,10 @@ public class KafkaGroupScan extends AbstractGroupScan {
   @Override
   public KafkaSubScan getSpecificScan(int minorFragmentId) {
     List<PartitionScanWork> workList = assignments.get(minorFragmentId);
-    List<KafkaPartitionScanSpec> scanSpecList = Lists.newArrayList();
 
-    for (PartitionScanWork work : workList) {
-      scanSpecList.add(work.partitionScanSpec);
-    }
+    List<KafkaPartitionScanSpec> scanSpecList = workList.stream()
+      .map(PartitionScanWork::getPartitionScanSpec)
+      .collect(Collectors.toList());
 
     return new KafkaSubScan(getUserName(), kafkaStoragePlugin, columns, scanSpecList);
   }
@@ -256,7 +264,7 @@ public class KafkaGroupScan extends AbstractGroupScan {
   }
 
   @Override
-  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
+  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
     Preconditions.checkArgument(children.isEmpty());
     return new KafkaGroupScan(this);
   }
@@ -286,7 +294,7 @@ public class KafkaGroupScan extends AbstractGroupScan {
     KafkaGroupScan clone = new KafkaGroupScan(this);
     HashSet<TopicPartition> partitionsInSpec = Sets.newHashSet();
 
-    for(KafkaPartitionScanSpec scanSpec : partitionScanSpecList) {
+    for (KafkaPartitionScanSpec scanSpec : partitionScanSpecList) {
       TopicPartition tp = new TopicPartition(scanSpec.getTopicName(), scanSpec.getPartitionId());
       partitionsInSpec.add(tp);
 
@@ -327,10 +335,8 @@ public class KafkaGroupScan extends AbstractGroupScan {
 
   @JsonIgnore
   public List<KafkaPartitionScanSpec> getPartitionScanSpecList() {
-    List<KafkaPartitionScanSpec> partitionScanSpecList = Lists.newArrayList();
-    for (PartitionScanWork work : partitionWorkMap.values()) {
-      partitionScanSpecList.add(work.partitionScanSpec.clone());
-    }
-    return partitionScanSpecList;
+    return partitionWorkMap.values().stream()
+      .map(work -> work.partitionScanSpec.clone())
+      .collect(Collectors.toList());
   }
 }
