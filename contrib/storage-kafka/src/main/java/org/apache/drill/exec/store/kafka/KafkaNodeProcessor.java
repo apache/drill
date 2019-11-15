@@ -180,7 +180,6 @@ class KafkaNodeProcessor extends AbstractExprVisitor<Boolean, LogicalExpression,
                                           .put("less_than", "greater_than")
                                           .build();
   }
-
 }
 
 

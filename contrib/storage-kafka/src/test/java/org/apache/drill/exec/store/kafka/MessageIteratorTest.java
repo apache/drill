@@ -55,6 +55,7 @@ public class MessageIteratorTest extends KafkaTestBase {
   public void cleanUp() {
     if (kafkaConsumer != null) {
       kafkaConsumer.close();
+      kafkaConsumer = null;
     }
   }
 
@@ -67,7 +68,7 @@ public class MessageIteratorTest extends KafkaTestBase {
     } catch (UserException ue) {
       Assert.assertEquals(ErrorType.DATA_READ, ue.getErrorType());
       Assert.assertTrue(ue.getMessage().contains(
-          "DATA_READ ERROR: Failed to fetch messages within 1 milliseconds. Consider increasing the value of the property : store.kafka.poll.timeout"));
+          "DATA_READ ERROR: Failed to fetch messages within 1 milliseconds. Consider increasing the value of the property: store.kafka.poll.timeout"));
     }
   }
 
@@ -89,7 +90,7 @@ public class MessageIteratorTest extends KafkaTestBase {
     Assert.assertNotNull(iterator.next());
     try {
       iterator.next();
-      Assert.fail("Kafak fetched more messages than configured.");
+      Assert.fail("Kafka fetched more messages than configured.");
     } catch (NoSuchElementException nse) {
       // Expected
     }

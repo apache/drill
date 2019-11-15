@@ -211,18 +211,22 @@ Note:
 
 - store.kafka.record.reader system option can be used for setting record reader and default is org.apache.drill.exec.store.kafka.decoders.JsonMessageReader
 - Default store.kafka.poll.timeout is set to 200, user has to set this accordingly
-- Custom record reader can be implemented by extending org.apache.drill.exec.store.kafka.decoders.MessageReader and setting store.kafka.record.reader accordinlgy
+- Custom record reader can be implemented by extending org.apache.drill.exec.store.kafka.decoders.MessageReader and setting store.kafka.record.reader accordingly
 
 
-In case of JSON message format, following system options can be used accordingly. More details can be found in [Drill Json Model](https://drill.apache.org/docs/json-data-model/) and in [Drill system options configurations](https://drill.apache.org/docs/configuration-options-introduction/)
+In case of JSON message format, following system / session options can be used accordingly. More details can be found in [Drill Json Model](https://drill.apache.org/docs/json-data
+-model/) and in [Drill system options configurations](https://drill.apache.org/docs/configuration-options-introduction/)
 
-<ui>
+<ul>
   <li>ALTER SESSION SET `store.kafka.record.reader` = 'org.apache.drill.exec.store.kafka.decoders.JsonMessageReader';</li>
   <li>ALTER SESSION SET `store.kafka.poll.timeout` = 200;</li>
   <li>ALTER SESSION SET `exec.enable_union_type` = true; </li>
   <li>ALTER SESSION SET `store.kafka.all_text_mode` = true;</li>
   <li>ALTER SESSION SET `store.kafka.read_numbers_as_double` = true;</li>
-</ui>
+  <li>ALTER SESSION SET `store.kafka.skip_invalid_records` = true;</li>
+  <li>ALTER SESSION SET `store.kafka.allow_nan_inf` = true;</li>
+  <li>ALTER SESSION SET `store.kafka.allow_escape_any_char` = true;</li>
+</ul>
 
 <h4 id="RoadMap">RoadMap</h4>
  <ul>

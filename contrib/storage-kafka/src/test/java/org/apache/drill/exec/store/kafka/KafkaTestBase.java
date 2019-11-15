@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.store.kafka;
 
-import static org.junit.Assert.assertEquals;
-
 import java.util.List;
 import java.util.Map;
 
@@ -77,18 +75,10 @@ public class KafkaTestBase extends PlanTestBase {
     }
   }
 
-  public void testHelper(String query, String expectedExprInPlan, int expectedRecordCount) throws Exception {
-    testPhysicalPlan(query, expectedExprInPlan);
-    int actualRecordCount = testSql(query);
-    assertEquals(String.format("Received unexpected number of rows in output: expected=%d, received=%s",
-        expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
-  }
-
   @AfterClass
-  public static void tearDownKafkaTestBase() throws Exception {
+  public static void tearDownKafkaTestBase() {
     if (TestKafkaSuit.isRunningSuite()) {
       TestKafkaSuit.tearDownCluster();
     }
   }
-
 }

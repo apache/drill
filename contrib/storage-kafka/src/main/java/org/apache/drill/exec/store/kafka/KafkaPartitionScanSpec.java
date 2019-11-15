@@ -57,21 +57,21 @@ public class KafkaPartitionScanSpec {
     switch (functionName) {
       case "booleanAnd":
         //Reduce the scan range
-        if(startOffset < scanSpec.startOffset) {
+        if (startOffset < scanSpec.startOffset) {
           startOffset = scanSpec.startOffset;
         }
 
-        if(endOffset > scanSpec.endOffset) {
+        if (endOffset > scanSpec.endOffset) {
           endOffset = scanSpec.endOffset;
         }
         break;
       case "booleanOr":
         //Increase the scan range
-        if(scanSpec.startOffset < startOffset) {
+        if (scanSpec.startOffset < startOffset) {
           startOffset = scanSpec.startOffset;
         }
 
-        if(scanSpec.endOffset > endOffset) {
+        if (scanSpec.endOffset > endOffset) {
           endOffset = scanSpec.endOffset;
         }
         break;
@@ -80,7 +80,7 @@ public class KafkaPartitionScanSpec {
 
   @Override
   public boolean equals(Object obj) {
-    if(obj instanceof KafkaPartitionScanSpec) {
+    if (obj instanceof KafkaPartitionScanSpec) {
       KafkaPartitionScanSpec that = ((KafkaPartitionScanSpec)obj);
       return this.topicName.equals(that.topicName) && this.partitionId == that.partitionId
                  && this.startOffset == that.startOffset && this.endOffset == that.endOffset;

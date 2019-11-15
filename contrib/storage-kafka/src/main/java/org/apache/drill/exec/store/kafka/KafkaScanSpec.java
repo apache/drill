@@ -21,7 +21,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class KafkaScanSpec {
-  private String topicName;
+  private final String topicName;
 
   @JsonCreator
   public KafkaScanSpec(@JsonProperty("topicName") String topicName) {
@@ -36,5 +36,4 @@ public class KafkaScanSpec {
   public String toString() {
     return "KafkaScanSpec [topicName=" + topicName + "]";
   }
-
 }

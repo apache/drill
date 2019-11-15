@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.store.kafka.schema;
 
-import java.io.IOException;
-
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.exec.store.AbstractSchemaFactory;
 import org.apache.drill.exec.store.SchemaConfig;
@@ -34,10 +32,9 @@ public class KafkaSchemaFactory extends AbstractSchemaFactory {
   }
 
   @Override
-  public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws IOException {
+  public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) {
     KafkaMessageSchema schema = new KafkaMessageSchema(plugin, getName());
     SchemaPlus hPlus = parent.add(getName(), schema);
     schema.setHolder(hPlus);
   }
-
 }

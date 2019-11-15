@@ -22,12 +22,16 @@ package org.apache.drill.exec.store.kafka;
  * It is expected that one should not modify the fieldName of each constant as it breaks the compatibility.
  */
 public enum MetaDataField {
-  KAFKA_TOPIC("kafkaTopic"), KAFKA_PARTITION_ID("kafkaPartitionId"), KAFKA_OFFSET("kafkaMsgOffset"), KAFKA_TIMESTAMP(
-      "kafkaMsgTimestamp"), KAFKA_MSG_KEY("kafkaMsgKey");
+
+  KAFKA_TOPIC("kafkaTopic"),
+  KAFKA_PARTITION_ID("kafkaPartitionId"),
+  KAFKA_OFFSET("kafkaMsgOffset"),
+  KAFKA_TIMESTAMP("kafkaMsgTimestamp"),
+  KAFKA_MSG_KEY("kafkaMsgKey");
 
   private final String fieldName;
 
-  private MetaDataField(final String fieldName) {
+  MetaDataField(final String fieldName) {
     this.fieldName = fieldName;
   }
 

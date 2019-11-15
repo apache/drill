@@ -17,21 +17,27 @@
  */
 package org.apache.drill.exec.store.kafka;
 
-import java.util.Collections;
-import java.util.Map;
-import java.util.Set;
-
 import org.apache.drill.categories.KafkaStorageTest;
 import org.apache.drill.categories.SlowTest;
+import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.rpc.RpcException;
+import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
+import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.Assert;
 import org.junit.Test;
-
-import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.junit.experimental.categories.Category;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
+import static org.apache.drill.exec.store.kafka.TestKafkaSuit.embeddedKafkaCluster;
+import static org.junit.Assert.fail;
 
 @Category({KafkaStorageTest.class, SlowTest.class})
 public class KafkaQueriesTest extends KafkaTestBase {
@@ -40,9 +46,12 @@ public class KafkaQueriesTest extends KafkaTestBase {
   public void testSqlQueryOnInvalidTopic() throws Exception {
     String queryString = String.format(TestQueryConstants.MSG_SELECT_QUERY, TestQueryConstants.INVALID_TOPIC);
     try {
-      testBuilder().sqlQuery(queryString).unOrdered().baselineRecords(Collections.<Map<String, Object>> emptyList())
-          .build().run();
-      Assert.fail("Test passed though topic does not exist.");
+      testBuilder()
+        .sqlQuery(queryString)
+        .unOrdered()
+        .baselineRecords(Collections.emptyList())
+        .go();
+      fail("Test passed though topic does not exist.");
     } catch (RpcException re) {
       Assert.assertTrue(re.getMessage().contains("DATA_READ ERROR: Table 'invalid-topic' does not exist"));
     }
@@ -60,8 +69,12 @@ public class KafkaQueriesTest extends KafkaTestBase {
     Map<TopicPartition, Long> startOffsetsMap = fetchOffsets(-2);
 
     String queryString = String.format(TestQueryConstants.MIN_OFFSET_QUERY, TestQueryConstants.JSON_TOPIC);
-    testBuilder().sqlQuery(queryString).unOrdered().baselineColumns("minOffset")
-        .baselineValues(startOffsetsMap.get(new TopicPartition(TestQueryConstants.JSON_TOPIC, 0))).go();
+    testBuilder()
+      .sqlQuery(queryString)
+      .unOrdered()
+      .baselineColumns("minOffset")
+      .baselineValues(startOffsetsMap.get(new TopicPartition(TestQueryConstants.JSON_TOPIC, 0)))
+      .go();
   }
 
   @Test
@@ -70,8 +83,12 @@ public class KafkaQueriesTest extends KafkaTestBase {
     Map<TopicPartition, Long> endOffsetsMap = fetchOffsets(-1);
 
     String queryString = String.format(TestQueryConstants.MAX_OFFSET_QUERY, TestQueryConstants.JSON_TOPIC);
-    testBuilder().sqlQuery(queryString).unOrdered().baselineColumns("maxOffset")
-        .baselineValues(endOffsetsMap.get(new TopicPartition(TestQueryConstants.JSON_TOPIC, 0))-1).go();
+    testBuilder()
+      .sqlQuery(queryString)
+      .unOrdered()
+      .baselineColumns("maxOffset")
+      .baselineValues(endOffsetsMap.get(new TopicPartition(TestQueryConstants.JSON_TOPIC, 0)) - 1)
+      .go();
   }
 
   @Test
@@ -81,19 +98,20 @@ public class KafkaQueriesTest extends KafkaTestBase {
   }
 
   private Map<TopicPartition, Long> fetchOffsets(int flag) {
-    KafkaConsumer<byte[], byte[]> kafkaConsumer = new KafkaConsumer<>(storagePluginConfig.getKafkaConsumerProps(),
+    Consumer<byte[], byte[]> kafkaConsumer = null;
+    try {
+     kafkaConsumer = new KafkaConsumer<>(storagePluginConfig.getKafkaConsumerProps(),
         new ByteArrayDeserializer(), new ByteArrayDeserializer());
 
-    Map<TopicPartition, Long> offsetsMap = Maps.newHashMap();
-    kafkaConsumer.subscribe(Collections.singletonList(TestQueryConstants.JSON_TOPIC));
-    // based on KafkaConsumer JavaDoc, seekToBeginning/seekToEnd functions
-    // evaluates lazily, seeking to the
-    // first/last offset in all partitions only when poll(long) or
-    // position(TopicPartition) are called
-    kafkaConsumer.poll(0);
-    Set<TopicPartition> assignments = kafkaConsumer.assignment();
+      Map<TopicPartition, Long> offsetsMap = new HashMap<>();
+      kafkaConsumer.subscribe(Collections.singletonList(TestQueryConstants.JSON_TOPIC));
+      // based on KafkaConsumer JavaDoc, seekToBeginning/seekToEnd functions
+      // evaluates lazily, seeking to the
+      // first/last offset in all partitions only when poll(long) or
+      // position(TopicPartition) are called
+      kafkaConsumer.poll(0);
+      Set<TopicPartition> assignments = kafkaConsumer.assignment();
 
-    try {
       if (flag == -2) {
         // fetch start offsets for each topicPartition
         kafkaConsumer.seekToBeginning(assignments);
@@ -109,10 +127,10 @@ public class KafkaQueriesTest extends KafkaTestBase {
       } else {
         throw new RuntimeException(String.format("Unsupported flag %d", flag));
       }
+      return offsetsMap;
     } finally {
-      kafkaConsumer.close();
+      embeddedKafkaCluster.registerToClose(kafkaConsumer);
     }
-    return offsetsMap;
   }
 
   @Test
@@ -121,4 +139,109 @@ public class KafkaQueriesTest extends KafkaTestBase {
     testPhysicalPlanExecutionBasedOnQuery(query);
   }
 
+  @Test
+  public void testOneMessageTopic() throws Exception {
+    String topicName = "topicWithOneMessage";
+    TestKafkaSuit.createTopicHelper(topicName, 1);
+    KafkaMessageGenerator generator = new KafkaMessageGenerator(embeddedKafkaCluster.getKafkaBrokerList(), StringSerializer.class);
+    generator.populateMessages(topicName, "{\"index\": 1}");
+
+    testBuilder()
+      .sqlQuery("select index from kafka.`%s`", topicName)
+      .unOrdered()
+      .baselineColumns("index")
+      .baselineValues(1L)
+      .go();
+  }
+
+  @Test
+  public void testMalformedRecords() throws Exception {
+    String topicName = "topicWithMalFormedMessages";
+    TestKafkaSuit.createTopicHelper(topicName, 1);
+    try {
+      KafkaMessageGenerator generator = new KafkaMessageGenerator(embeddedKafkaCluster.getKafkaBrokerList(), StringSerializer.class);
+      generator.populateMessages(topicName, "Test");
+
+      alterSession(ExecConstants.KAFKA_READER_SKIP_INVALID_RECORDS, false);
+      try {
+        test("select * from kafka.`%s`", topicName);
+        fail();
+      } catch (UserException e) {
+        // expected
+      }
+
+      alterSession(ExecConstants.KAFKA_READER_SKIP_INVALID_RECORDS, true);
+      testBuilder()
+        .sqlQuery("select * from kafka.`%s`", topicName)
+        .expectsEmptyResultSet();
+
+      generator.populateMessages(topicName, "{\"index\": 1}", "", "   ", "{Invalid}", "{\"index\": 2}");
+
+      testBuilder()
+        .sqlQuery("select index from kafka.`%s`", topicName)
+        .unOrdered()
+        .baselineColumns("index")
+        .baselineValues(1L)
+        .baselineValues(2L)
+        .go();
+    } finally {
+      resetSessionOption(ExecConstants.KAFKA_READER_SKIP_INVALID_RECORDS);
+    }
+  }
+
+  @Test
+  public void testNanInf() throws Exception {
+    String topicName = "topicWithNanInf";
+    TestKafkaSuit.createTopicHelper(topicName, 1);
+    try {
+      KafkaMessageGenerator generator = new KafkaMessageGenerator(embeddedKafkaCluster.getKafkaBrokerList(), StringSerializer.class);
+      generator.populateMessages(topicName, "{\"nan_col\":NaN, \"inf_col\":Infinity}");
+
+      alterSession(ExecConstants.KAFKA_READER_NAN_INF_NUMBERS, false);
+      try {
+        test("select nan_col, inf_col from kafka.`%s`", topicName);
+        fail();
+      } catch (UserException e) {
+        // expected
+      }
+
+      alterSession(ExecConstants.KAFKA_READER_NAN_INF_NUMBERS, true);
+      testBuilder()
+        .sqlQuery("select nan_col, inf_col from kafka.`%s`", topicName)
+        .unOrdered()
+        .baselineColumns("nan_col", "inf_col")
+        .baselineValues(Double.NaN, Double.POSITIVE_INFINITY)
+        .go();
+    } finally {
+      resetSessionOption(ExecConstants.KAFKA_READER_NAN_INF_NUMBERS);
+    }
+  }
+
+  @Test
+  public void testEscapeAnyChar() throws Exception {
+    String topicName = "topicWithEscapeAnyChar";
+    TestKafkaSuit.createTopicHelper(topicName, 1);
+    try {
+      KafkaMessageGenerator generator = new KafkaMessageGenerator(embeddedKafkaCluster.getKafkaBrokerList(), StringSerializer.class);
+      generator.populateMessages(topicName, "{\"name\": \"AB\\\"\\C\"}");
+
+      alterSession(ExecConstants.KAFKA_READER_ESCAPE_ANY_CHAR, false);
+      try {
+        test("select name from kafka.`%s`", topicName);
+        fail();
+      } catch (UserException e) {
+        // expected
+      }
+
+      alterSession(ExecConstants.KAFKA_READER_ESCAPE_ANY_CHAR, true);
+      testBuilder()
+        .sqlQuery("select name from kafka.`%s`", topicName)
+        .unOrdered()
+        .baselineColumns("name")
+        .baselineValues("AB\"C")
+        .go();
+    } finally {
+      resetSessionOption(ExecConstants.KAFKA_READER_ESCAPE_ANY_CHAR);
+    }
+  }
 }
