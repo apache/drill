@@ -500,7 +500,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
           complexWriters.clear();
         }
         // The reference name will be passed to ComplexWriter, used as the name of the output vector from the writer.
-        ((DrillFuncHolderExpr) expr).getFieldReference(ne.getRef());
+        ((DrillFuncHolderExpr) expr).setFieldReference(ne.getRef());
         MaterializedField field = MaterializedField.create(ne.getRef().getAsNamePart().getName(), UntypedNullHolder.TYPE);
         container.add(new UntypedNullVector(field, container.getAllocator()));
         valueExprs[i] = expr;

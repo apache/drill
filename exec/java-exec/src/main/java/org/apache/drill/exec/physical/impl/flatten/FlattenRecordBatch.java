@@ -440,7 +440,7 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
         }
 
         // The reference name will be passed to ComplexWriter, used as the name of the output vector from the writer.
-        ((DrillFuncHolderExpr) expr).getFieldReference(namedExpression.getRef());
+        ((DrillFuncHolderExpr) expr).setFieldReference(namedExpression.getRef());
         cg.addExpr(expr);
       } else {
         // need to do evaluation.

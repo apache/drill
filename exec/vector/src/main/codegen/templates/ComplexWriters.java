@@ -106,7 +106,11 @@ public class ${eName}WriterImpl extends AbstractFieldWriter {
 
   public void setPosition(int idx) {
     super.setPosition(idx);
-    mutator.startNewValue(idx);
+    // calls startNewValue only for the case
+    // when it wouldn't override existing data
+    if (idx >= vector.getAccessor().getValueCount()) {
+      mutator.startNewValue(idx);
+    }
   }
   
   <#else>

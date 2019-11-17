@@ -516,7 +516,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
         }
 
         // The reference name will be passed to ComplexWriter, used as the name of the output vector from the writer.
-        ((DrillFuncHolderExpr) expr).getFieldReference(namedExpression.getRef());
+        ((DrillFuncHolderExpr) expr).setFieldReference(namedExpression.getRef());
         cg.addExpr(expr, ClassGenerator.BlkCreateMode.TRUE_IF_BOUND);
         if (complexFieldReferencesList == null) {
           complexFieldReferencesList = Lists.newArrayList();

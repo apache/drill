@@ -95,7 +95,7 @@ public abstract class FunctionHolderExpression extends LogicalExpressionBase {
    *
    * @param fieldReference FieldReference to set.
    */
-  public void getFieldReference(FieldReference fieldReference) {
+  public void setFieldReference(FieldReference fieldReference) {
     this.fieldReference = fieldReference;
   }
 }

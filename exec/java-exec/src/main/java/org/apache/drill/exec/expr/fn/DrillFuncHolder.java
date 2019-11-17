@@ -218,43 +218,21 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
         if (decConstInputOnly && !inputVariables[i].isConstant()) {
           continue;
         }
-
-        ValueReference parameter = getAttributeParameter(i);
-        HoldingContainer inputVariable = inputVariables[i];
-        if (parameter.isFieldReader() && ! inputVariable.isReader()
-            && ! Types.isComplex(inputVariable.getMajorType()) && inputVariable.getMinorType() != MinorType.UNION) {
-          JType singularReaderClass = g.getModel()._ref(TypeHelper.getHolderReaderImpl(inputVariable.getMajorType().getMinorType(),
-              inputVariable.getMajorType().getMode()));
-          JType fieldReadClass = getParamClass(g.getModel(), parameter, inputVariable.getHolder().type());
-          JInvocation reader = JExpr._new(singularReaderClass).arg(inputVariable.getHolder());
-          declare(sub, parameter, fieldReadClass, reader, i);
-        } else if (!parameter.isFieldReader() && inputVariable.isReader() && Types.isComplex(parameter.getType())) {
-          // For complex data-types (repeated maps/lists/dicts) the input to the aggregate will be a FieldReader. However, aggregate
-          // functions like ANY_VALUE, will assume the input to be a RepeatedMapHolder etc. Generate boilerplate code, to map
-          // from FieldReader to respective Holder.
-          if (Types.isComplex(parameter.getType())) {
-            JType holderClass = getParamClass(g.getModel(), parameter, inputVariable.getHolder().type());
-            JAssignmentTarget holderVar = declare(sub, parameter, holderClass, JExpr._new(holderClass), i);
-            sub.assign(holderVar.ref("reader"), inputVariable.getHolder());
-          }
-        } else {
-          JExpression exprToAssign = inputVariable.getHolder();
-          if (parameter.isVarArg() && parameter.isFieldReader() && Types.isUnion(inputVariable.getMajorType())) {
-            exprToAssign = exprToAssign.ref("reader");
-          }
-          declare(sub, parameter, inputVariable.getHolder().type(), exprToAssign, i);
-        }
+        declare(g.getModel(), sub, inputVariables[i], i);
       }
     }
 
     JVar[] internalVars = new JVar[workspaceJVars.length];
     for (int i = 0; i < workspaceJVars.length; i++) {
       if (decConstInputOnly) {
-        internalVars[i] = sub.decl(g.getModel()._ref(attributes.getWorkspaceVars()[i].getType()), attributes.getWorkspaceVars()[i].getName(), workspaceJVars[i]);
+        internalVars[i] = sub.decl(
+            g.getModel()._ref(attributes.getWorkspaceVars()[i].getType()),
+            attributes.getWorkspaceVars()[i].getName(), workspaceJVars[i]);
       } else {
-        internalVars[i] = sub.decl(g.getModel()._ref(attributes.getWorkspaceVars()[i].getType()), attributes.getWorkspaceVars()[i].getName(), workspaceJVars[i]);
+        internalVars[i] = sub.decl(
+            g.getModel()._ref(attributes.getWorkspaceVars()[i].getType()),
+            attributes.getWorkspaceVars()[i].getName(), workspaceJVars[i]);
       }
-
     }
 
     Preconditions.checkNotNull(body);
@@ -263,6 +241,48 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
     // reassign workspace variables back to global space.
     for (int i = 0; i < workspaceJVars.length; i++) {
       sub.assign(workspaceJVars[i], internalVars[i]);
+    }
+  }
+
+  /**
+   * Declares attribute parameter which corresponds to specified {@code currentIndex}
+   * in specified {@code jBlock} considering its type.
+   *
+   * @param model         code model to generate the code
+   * @param jBlock        block of code to be populated
+   * @param inputVariable input variable for current function
+   * @param currentIndex  index of current parameter
+   */
+  protected void declare(JCodeModel model, JBlock jBlock,
+      HoldingContainer inputVariable, int currentIndex) {
+    ValueReference parameter = getAttributeParameter(currentIndex);
+    if (parameter.isFieldReader()
+        && !inputVariable.isReader()
+        && !Types.isComplex(inputVariable.getMajorType())
+        && inputVariable.getMinorType() != MinorType.UNION) {
+      JType singularReaderClass = model._ref(
+          TypeHelper.getHolderReaderImpl(inputVariable.getMajorType().getMinorType(),
+          inputVariable.getMajorType().getMode()));
+      JType fieldReadClass = getParamClass(model, parameter, inputVariable.getHolder().type());
+      JInvocation reader = JExpr._new(singularReaderClass).arg(inputVariable.getHolder());
+      declare(jBlock, parameter, fieldReadClass, reader, currentIndex);
+    } else if (!parameter.isFieldReader()
+        && inputVariable.isReader()
+        && Types.isComplex(parameter.getType())) {
+      // For complex data-types (repeated maps/lists/dicts) the input to the aggregate will be a FieldReader. However, aggregate
+      // functions like ANY_VALUE, will assume the input to be a RepeatedMapHolder etc. Generate boilerplate code, to map
+      // from FieldReader to respective Holder.
+      if (Types.isComplex(parameter.getType())) {
+        JType holderClass = getParamClass(model, parameter, inputVariable.getHolder().type());
+        JAssignmentTarget holderVar = declare(jBlock, parameter, holderClass, JExpr._new(holderClass), currentIndex);
+        jBlock.assign(holderVar.ref("reader"), inputVariable.getHolder());
+      }
+    } else {
+      JExpression exprToAssign = inputVariable.getHolder();
+      if (parameter.isVarArg() && parameter.isFieldReader() && Types.isUnion(inputVariable.getMajorType())) {
+        exprToAssign = exprToAssign.ref("reader");
+      }
+      declare(jBlock, parameter, inputVariable.getHolder().type(), exprToAssign, currentIndex);
     }
   }
 
