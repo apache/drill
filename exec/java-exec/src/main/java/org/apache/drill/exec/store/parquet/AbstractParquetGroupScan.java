@@ -17,47 +17,6 @@
  */
 package org.apache.drill.exec.store.parquet;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.drill.common.expression.ExpressionStringBuilder;
-import org.apache.drill.exec.physical.base.AbstractGroupScanWithMetadata;
-import org.apache.drill.metastore.metadata.SegmentMetadata;
-import org.apache.drill.metastore.statistics.TableStatisticsKind;
-import org.apache.drill.metastore.metadata.MetadataType;
-import org.apache.drill.exec.metastore.ParquetMetadataProvider;
-import org.apache.drill.metastore.statistics.Statistic;
-import org.apache.drill.metastore.metadata.BaseMetadata;
-import org.apache.drill.metastore.metadata.LocationProvider;
-import org.apache.drill.metastore.metadata.PartitionMetadata;
-import org.apache.drill.metastore.util.TableMetadataUtils;
-import org.apache.drill.metastore.statistics.ExactStatisticsConstants;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.apache.drill.shaded.guava.com.google.common.collect.ArrayListMultimap;
-import org.apache.drill.shaded.guava.com.google.common.collect.LinkedListMultimap;
-import org.apache.drill.shaded.guava.com.google.common.collect.ListMultimap;
-import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.ops.UdfUtilities;
-import org.apache.drill.exec.physical.EndpointAffinity;
-import org.apache.drill.exec.physical.base.GroupScan;
-import org.apache.drill.exec.planner.physical.PlannerSettings;
-import org.apache.drill.exec.proto.CoordinationProtos;
-import org.apache.drill.exec.server.options.OptionManager;
-import org.apache.drill.exec.store.dfs.FileSelection;
-import org.apache.drill.exec.store.dfs.ReadEntryWithPath;
-import org.apache.drill.exec.store.schedule.AffinityCreator;
-import org.apache.drill.exec.store.schedule.AssignmentCreator;
-import org.apache.drill.exec.store.schedule.EndpointByteMap;
-import org.apache.drill.exec.store.schedule.EndpointByteMapImpl;
-import org.apache.drill.metastore.metadata.FileMetadata;
-import org.apache.drill.metastore.metadata.RowGroupMetadata;
-import org.apache.drill.exec.expr.FilterPredicate;
-import org.apache.drill.shaded.guava.com.google.common.collect.Multimap;
-import org.apache.hadoop.fs.Path;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -70,6 +29,48 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.drill.common.expression.ExpressionStringBuilder;
+import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.expr.FilterPredicate;
+import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.drill.exec.metastore.ParquetMetadataProvider;
+import org.apache.drill.exec.ops.UdfUtilities;
+import org.apache.drill.exec.physical.EndpointAffinity;
+import org.apache.drill.exec.physical.base.AbstractGroupScanWithMetadata;
+import org.apache.drill.exec.physical.base.GroupScan;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.proto.CoordinationProtos;
+import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.store.dfs.FileSelection;
+import org.apache.drill.exec.store.dfs.ReadEntryWithPath;
+import org.apache.drill.exec.store.schedule.AffinityCreator;
+import org.apache.drill.exec.store.schedule.AssignmentCreator;
+import org.apache.drill.exec.store.schedule.EndpointByteMap;
+import org.apache.drill.exec.store.schedule.EndpointByteMapImpl;
+import org.apache.drill.metastore.metadata.BaseMetadata;
+import org.apache.drill.metastore.metadata.FileMetadata;
+import org.apache.drill.metastore.metadata.LocationProvider;
+import org.apache.drill.metastore.metadata.MetadataType;
+import org.apache.drill.metastore.metadata.PartitionMetadata;
+import org.apache.drill.metastore.metadata.RowGroupMetadata;
+import org.apache.drill.metastore.metadata.SegmentMetadata;
+import org.apache.drill.metastore.statistics.ExactStatisticsConstants;
+import org.apache.drill.metastore.statistics.Statistic;
+import org.apache.drill.metastore.statistics.TableStatisticsKind;
+import org.apache.drill.metastore.util.TableMetadataUtils;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.collect.ArrayListMultimap;
+import org.apache.drill.shaded.guava.com.google.common.collect.LinkedListMultimap;
+import org.apache.drill.shaded.guava.com.google.common.collect.ListMultimap;
+import org.apache.drill.shaded.guava.com.google.common.collect.Multimap;
+import org.apache.hadoop.fs.Path;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public abstract class AbstractParquetGroupScan extends AbstractGroupScanWithMetadata {
 
@@ -184,12 +185,10 @@ public abstract class AbstractParquetGroupScan extends AbstractGroupScanWithMeta
   public int getMaxParallelizationWidth() {
     if (!getRowGroupsMetadata().isEmpty()) {
       return getRowGroupsMetadata().size();
+    } else if (!getFilesMetadata().isEmpty()) {
+      return getFilesMetadata().size();
     } else {
-      if (!getFilesMetadata().isEmpty()) {
-        return getFilesMetadata().size();
-      } else {
-        return !getPartitionsMetadata().isEmpty() ? getPartitionsMetadata().size() : 1;
-      }
+      return !getPartitionsMetadata().isEmpty() ? getPartitionsMetadata().size() : 1;
     }
   }
 
@@ -228,13 +227,13 @@ public abstract class AbstractParquetGroupScan extends AbstractGroupScanWithMeta
   public AbstractGroupScanWithMetadata applyFilter(LogicalExpression filterExpr, UdfUtilities udfUtilities,
       FunctionImplementationRegistry functionImplementationRegistry, OptionManager optionManager) {
     // Builds filter for pruning. If filter cannot be built, null should be returned.
-    FilterPredicate filterPredicate = getFilterPredicate(filterExpr, udfUtilities, functionImplementationRegistry, optionManager, true);
+    FilterPredicate<?> filterPredicate = getFilterPredicate(filterExpr, udfUtilities, functionImplementationRegistry, optionManager, true);
     if (filterPredicate == null) {
       logger.debug("FilterPredicate cannot be built.");
       return null;
     }
 
-    RowGroupScanFilterer filteredMetadata = getFilterer()
+    RowGroupScanFilterer<?> filteredMetadata = getFilterer()
         .filterExpression(filterExpr)
         .schema(tableMetadata.getSchema())
         .context(functionImplementationRegistry)
@@ -302,14 +301,14 @@ public abstract class AbstractParquetGroupScan extends AbstractGroupScanWithMeta
     return filteredMetadata.build();
   }
 
-  private boolean isAllDataPruned(RowGroupScanFilterer filteredMetadata) {
+  private boolean isAllDataPruned(RowGroupScanFilterer<?> filteredMetadata) {
     return !filteredMetadata.isMatchAllMetadata()
         && (super.isAllDataPruned(filteredMetadata)
             // all row groups are pruned if row group metadata is available
             || filteredMetadata.getRowGroups().isEmpty() && !getRowGroupsMetadata().isEmpty());
   }
 
-  private boolean isGroupScanFullyMatchesFilter(RowGroupScanFilterer filteredMetadata) {
+  private boolean isGroupScanFullyMatchesFilter(RowGroupScanFilterer<?> filteredMetadata) {
     if (!getRowGroupsMetadata().isEmpty()) {
       return getRowGroupsMetadata().size() == filteredMetadata.getRowGroups().size();
     } else {
@@ -318,7 +317,8 @@ public abstract class AbstractParquetGroupScan extends AbstractGroupScanWithMeta
   }
 
   // narrows the return type
-  protected abstract RowGroupScanFilterer<? extends RowGroupScanFilterer> getFilterer();
+  @Override
+  protected abstract RowGroupScanFilterer<? extends RowGroupScanFilterer<?>> getFilterer();
 
   protected Multimap<Path, RowGroupMetadata> pruneRowGroupsForFiles(Map<Path, FileMetadata> filteredFileMetadata) {
     Multimap<Path, RowGroupMetadata> prunedRowGroups = LinkedListMultimap.create();
@@ -540,7 +540,7 @@ public abstract class AbstractParquetGroupScan extends AbstractGroupScanWithMeta
     }
 
     @Override
-    protected B getFiltered(OptionManager optionManager, FilterPredicate filterPredicate) {
+    protected B getFiltered(OptionManager optionManager, FilterPredicate<?> filterPredicate) {
       super.getFiltered(optionManager, filterPredicate);
 
       if (!((AbstractParquetGroupScan) source).getRowGroupsMetadata().isEmpty()) {
@@ -556,7 +556,7 @@ public abstract class AbstractParquetGroupScan extends AbstractGroupScanWithMeta
      * @param filterPredicate   filter expression
      */
     protected void filterRowGroupMetadata(OptionManager optionManager,
-                                          FilterPredicate filterPredicate) {
+                                          FilterPredicate<?> filterPredicate) {
       Set<SchemaPath> schemaPathsInExpr =
           filterExpression.accept(FilterEvaluatorUtils.FieldReferenceFinder.INSTANCE, null);
 
@@ -624,5 +624,4 @@ public abstract class AbstractParquetGroupScan extends AbstractGroupScanWithMeta
       return prunedFiles;
     }
   }
-
 }

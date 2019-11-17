@@ -17,53 +17,7 @@
  */
 package org.apache.drill.exec.physical.base;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.MapUtils;
-import org.apache.drill.common.types.Types;
-import org.apache.drill.common.expression.ErrorCollector;
-import org.apache.drill.common.expression.ErrorCollectorImpl;
-import org.apache.drill.common.expression.ExpressionStringBuilder;
-import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.expression.ValueExpressions;
-import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.exec.compile.sig.ConstantExpressionIdentifier;
-import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
-import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.expr.fn.FunctionLookupContext;
-import org.apache.drill.exec.expr.stat.RowsMatch;
-import org.apache.drill.exec.ops.OptimizerRulesContext;
-import org.apache.drill.exec.ops.UdfUtilities;
-import org.apache.drill.metastore.metadata.Metadata;
-import org.apache.drill.metastore.metadata.SegmentMetadata;
-import org.apache.drill.metastore.statistics.TableStatisticsKind;
-import org.apache.drill.metastore.statistics.Statistic;
-import org.apache.drill.exec.planner.physical.PlannerSettings;
-import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.record.metadata.ColumnMetadata;
-import org.apache.drill.metastore.util.SchemaPathUtils;
-import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.exec.record.metadata.TupleSchema;
-import org.apache.drill.exec.server.options.OptionManager;
-import org.apache.drill.exec.store.ColumnExplorer;
-import org.apache.drill.exec.store.dfs.FileSelection;
-import org.apache.drill.exec.store.parquet.FilterEvaluatorUtils;
-import org.apache.drill.exec.store.parquet.ParquetTableMetadataUtils;
-import org.apache.drill.metastore.metadata.BaseMetadata;
-import org.apache.drill.metastore.statistics.ColumnStatistics;
-import org.apache.drill.metastore.statistics.ColumnStatisticsKind;
-import org.apache.drill.metastore.metadata.FileMetadata;
-import org.apache.drill.metastore.metadata.LocationProvider;
-import org.apache.drill.metastore.metadata.MetadataType;
-import org.apache.drill.metastore.metadata.NonInterestingColumnsMetadata;
-import org.apache.drill.metastore.metadata.PartitionMetadata;
-import org.apache.drill.metastore.metadata.TableMetadata;
-import org.apache.drill.metastore.metadata.TableMetadataProvider;
-import org.apache.drill.exec.expr.FilterBuilder;
-import org.apache.drill.exec.expr.FilterPredicate;
-import org.apache.hadoop.fs.Path;
+import static org.apache.drill.exec.ExecConstants.SKIP_RUNTIME_ROWGROUP_PRUNING_KEY;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -79,7 +33,54 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static org.apache.drill.exec.ExecConstants.SKIP_RUNTIME_ROWGROUP_PRUNING_KEY;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
+import org.apache.drill.common.expression.ErrorCollector;
+import org.apache.drill.common.expression.ErrorCollectorImpl;
+import org.apache.drill.common.expression.ExpressionStringBuilder;
+import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.expression.ValueExpressions;
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.compile.sig.ConstantExpressionIdentifier;
+import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
+import org.apache.drill.exec.expr.FilterBuilder;
+import org.apache.drill.exec.expr.FilterPredicate;
+import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.drill.exec.expr.fn.FunctionLookupContext;
+import org.apache.drill.exec.expr.stat.RowsMatch;
+import org.apache.drill.exec.ops.OptimizerRulesContext;
+import org.apache.drill.exec.ops.UdfUtilities;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.record.metadata.TupleSchema;
+import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.store.ColumnExplorer;
+import org.apache.drill.exec.store.dfs.FileSelection;
+import org.apache.drill.exec.store.parquet.FilterEvaluatorUtils;
+import org.apache.drill.exec.store.parquet.ParquetTableMetadataUtils;
+import org.apache.drill.metastore.metadata.BaseMetadata;
+import org.apache.drill.metastore.metadata.FileMetadata;
+import org.apache.drill.metastore.metadata.LocationProvider;
+import org.apache.drill.metastore.metadata.Metadata;
+import org.apache.drill.metastore.metadata.MetadataType;
+import org.apache.drill.metastore.metadata.NonInterestingColumnsMetadata;
+import org.apache.drill.metastore.metadata.PartitionMetadata;
+import org.apache.drill.metastore.metadata.SegmentMetadata;
+import org.apache.drill.metastore.metadata.TableMetadata;
+import org.apache.drill.metastore.metadata.TableMetadataProvider;
+import org.apache.drill.metastore.statistics.ColumnStatistics;
+import org.apache.drill.metastore.statistics.ColumnStatisticsKind;
+import org.apache.drill.metastore.statistics.Statistic;
+import org.apache.drill.metastore.statistics.TableStatisticsKind;
+import org.apache.drill.metastore.util.SchemaPathUtils;
+import org.apache.hadoop.fs.Path;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * Represents table group scan with metadata usage.
@@ -168,8 +169,8 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
   public long getColumnValueCount(SchemaPath column) {
     long tableRowCount, colNulls;
     Long nulls;
-    ColumnStatistics columnStats = getTableMetadata().getColumnStatistics(column);
-    ColumnStatistics nonInterestingColStats = null;
+    ColumnStatistics<?> columnStats = getTableMetadata().getColumnStatistics(column);
+    ColumnStatistics<?> nonInterestingColStats = null;
     if (columnStats == null) {
       nonInterestingColStats = getNonInterestingColumnsMetadata().getColumnStatistics(column);
     }
@@ -264,14 +265,14 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
       FunctionImplementationRegistry functionImplementationRegistry, OptionManager optionManager) {
 
     // Builds filter for pruning. If filter cannot be built, null should be returned.
-    FilterPredicate filterPredicate =
+    FilterPredicate<?> filterPredicate =
             getFilterPredicate(filterExpr, udfUtilities, functionImplementationRegistry, optionManager, true);
     if (filterPredicate == null) {
       logger.debug("FilterPredicate cannot be built.");
       return null;
     }
 
-    GroupScanWithMetadataFilterer filteredMetadata = getFilterer()
+    GroupScanWithMetadataFilterer<?> filteredMetadata = getFilterer()
         .filterExpression(filterExpr)
         .schema(tableMetadata.getSchema())
         .context(functionImplementationRegistry)
@@ -308,7 +309,7 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
     return filteredMetadata.build();
   }
 
-  protected boolean isAllDataPruned(GroupScanWithMetadataFilterer filteredMetadata) {
+  protected boolean isAllDataPruned(GroupScanWithMetadataFilterer<?> filteredMetadata) {
     return !filteredMetadata.isMatchAllMetadata()
         // filter returns empty result using table metadata
         && (filteredMetadata.getTableMetadata() == null && getTableMetadata() != null)
@@ -320,7 +321,7 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
             || filteredMetadata.getFiles().isEmpty() && !getFilesMetadata().isEmpty();
   }
 
-  protected boolean isGroupScanFullyMatchesFilter(GroupScanWithMetadataFilterer filteredMetadata) {
+  protected boolean isGroupScanFullyMatchesFilter(GroupScanWithMetadataFilterer<?> filteredMetadata) {
     if (MapUtils.isNotEmpty(getFilesMetadata())) {
       return getFilesMetadata().size() == filteredMetadata.getFiles().size();
     } else if (CollectionUtils.isNotEmpty(getPartitionsMetadata())) {
@@ -347,9 +348,9 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
    * Returns holder for metadata values which provides API to filter metadata
    * and build new group scan instance using filtered metadata.
    */
-  protected abstract GroupScanWithMetadataFilterer getFilterer();
+  protected abstract GroupScanWithMetadataFilterer<?> getFilterer();
 
-  public FilterPredicate getFilterPredicate(LogicalExpression filterExpr,
+  public FilterPredicate<?> getFilterPredicate(LogicalExpression filterExpr,
       UdfUtilities udfUtilities,
       FunctionLookupContext functionImplementationRegistry,
       OptionManager optionManager,
@@ -371,7 +372,7 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
    * @param schema                         schema
    * @return parquet filter predicate
    */
-  public static FilterPredicate getFilterPredicate(LogicalExpression filterExpr,
+  public static FilterPredicate<?> getFilterPredicate(LogicalExpression filterExpr,
       UdfUtilities udfUtilities,
       FunctionLookupContext functionImplementationRegistry,
       OptionManager optionManager,
@@ -427,7 +428,7 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
   @Override
   public GroupScan applyLimit(int maxRecords) {
     maxRecords = Math.max(maxRecords, 1); // Make sure it request at least 1 row -> 1 file.
-    GroupScanWithMetadataFilterer prunedMetadata = getFilterer();
+    GroupScanWithMetadataFilterer<?> prunedMetadata = getFilterer();
     if (getTableMetadata() != null) {
       long tableRowCount = TableStatisticsKind.ROW_COUNT.getValue(getTableMetadata());
       if (tableRowCount == Statistic.NO_COLUMN_STATS || tableRowCount <= maxRecords) {
@@ -524,6 +525,7 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
     return columnMetadata != null ? columnMetadata.majorType() : null;
   }
 
+  @SuppressWarnings("unchecked")
   @JsonIgnore
   public <T> T getPartitionValue(Path path, SchemaPath column, Class<T> clazz) {
     return getPartitionsMetadata().stream()
@@ -731,7 +733,7 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
      * @return this instance with filtered metadata
      */
     protected B getFiltered(OptionManager optionManager,
-        FilterPredicate filterPredicate) {
+        FilterPredicate<?> filterPredicate) {
       Objects.requireNonNull(filterExpression, "filterExpression was not set");
       Objects.requireNonNull(tableSchema, "tableSchema was not set");
       Objects.requireNonNull(udfUtilities, "udfUtilities were not set");
@@ -764,7 +766,7 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
      * @param filterPredicate   filter expression
      * @param schemaPathsInExpr columns used in filter expression
      */
-    protected void filterTableMetadata(FilterPredicate filterPredicate, Set<SchemaPath> schemaPathsInExpr) {
+    protected void filterTableMetadata(FilterPredicate<?> filterPredicate, Set<SchemaPath> schemaPathsInExpr) {
       // Filters table metadata. If resulting list is empty, should be used single minimum entity of metadata.
       // If table matches fully, nothing is pruned and pruning of underlying metadata is stopped.
       matchAllMetadata = true;
@@ -783,7 +785,7 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
      * @param schemaPathsInExpr columns used in filter expression
      */
     protected void filterSegmentMetadata(OptionManager optionManager,
-                                         FilterPredicate filterPredicate,
+                                         FilterPredicate<?> filterPredicate,
                                          Set<SchemaPath> schemaPathsInExpr) {
       if (!matchAllMetadata) {
         if (!source.getSegmentsMetadata().isEmpty()) {
@@ -815,7 +817,7 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
      * @param schemaPathsInExpr columns used in filter expression
      */
     protected void filterPartitionMetadata(OptionManager optionManager,
-                                           FilterPredicate filterPredicate,
+                                           FilterPredicate<?> filterPredicate,
                                            Set<SchemaPath> schemaPathsInExpr) {
       List<PartitionMetadata> prunedPartitions;
       if (!source.getSegmentsMetadata().isEmpty()
@@ -850,7 +852,7 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
      * @param schemaPathsInExpr columns used in filter expression
      */
     protected void filterFileMetadata(OptionManager optionManager,
-                                      FilterPredicate filterPredicate,
+                                      FilterPredicate<?> filterPredicate,
                                       Set<SchemaPath> schemaPathsInExpr) {
       Map<Path, FileMetadata> prunedFiles;
       if (!source.getPartitionsMetadata().isEmpty()
@@ -948,7 +950,7 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
     public <T extends Metadata> List<T> filterAndGetMetadata(
         Set<SchemaPath> schemaPathsInExpr,
         Iterable<T> metadataList,
-        FilterPredicate filterPredicate,
+        FilterPredicate<?> filterPredicate,
         OptionManager optionManager) {
       List<T> qualifiedFiles = new ArrayList<>();
 
@@ -958,6 +960,7 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
           filterPredicate = getFilterPredicate(filterExpression, udfUtilities,
               context, optionManager, true, true, schema);
         }
+        @SuppressWarnings("rawtypes")
         Map<SchemaPath, ColumnStatistics> columnsStatistics = metadata.getColumnsStatistics();
 
         // adds partition (dir) column statistics if it may be used during filter evaluation
