@@ -20,26 +20,26 @@
 -->
 <configuration>
 
-  <if condition='property("drill.lilith.enable").equalsIgnoreCase("true")'>
-    <then>
-      <appender name="SOCKET" class="de.huxhorn.lilith.logback.appender.ClassicMultiplexSocketAppender">
-        <Compressing>true</Compressing>
-        <ReconnectionDelay>10000</ReconnectionDelay>
-        <IncludeCallerData>true</IncludeCallerData>
-        <RemoteHosts>${LILITH_HOSTNAME:-localhost}</RemoteHosts>
-      </appender>
+  <!-- Uncomment the lines below (and <appender-ref ref="SOCKET"/> inside <root>)
+       to be able to use Lilith for viewing log events -->
+  <!--
+  <appender name="SOCKET" class="de.huxhorn.lilith.logback.appender.ClassicMultiplexSocketAppender">
+    <Compressing>true</Compressing>
+    <ReconnectionDelay>10000</ReconnectionDelay>
+    <IncludeCallerData>true</IncludeCallerData>
+    <RemoteHosts>${LILITH_HOSTNAME:-localhost}</RemoteHosts>
+  </appender>
 
-      <logger name="org.apache.drill" additivity="false">
-        <level value="debug"/>
-        <appender-ref ref="SOCKET"/>
-      </logger>
+  <logger name="org.apache.drill" additivity="false">
+    <level value="debug"/>
+    <appender-ref ref="SOCKET"/>
+  </logger>
 
-      <logger name="query.logger" additivity="false">
-        <level value="info"/>
-        <appender-ref ref="SOCKET"/>
-      </logger>
-    </then>
-  </if>
+  <logger name="query.logger" additivity="false">
+    <level value="info"/>
+    <appender-ref ref="SOCKET"/>
+  </logger>
+  -->
 
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <!-- encoders are assigned the type
@@ -51,11 +51,8 @@
 
   <root>
     <level value="error"/>
-    <if condition='property("drill.lilith.enable").equalsIgnoreCase("true")'>
-      <then>
-        <appender-ref ref="SOCKET"/>
-      </then>
-    </if>
+    <!-- Uncomment the next line (and the lines above) to be able to use Lilith for viewing log events -->
+    <!-- <appender-ref ref="SOCKET"/>-->
     <!-- <appender-ref ref="STDOUT"/> -->
   </root>
 
