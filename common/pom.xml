@@ -102,14 +102,6 @@
         <version>2.9</version>
     </dependency>
 
-    <!-- Conditional processing in logback configuration files requires the Janino library
-         (see logback-test.xml, DRILL-7397, http://logback.qos.ch/setup.html#janino) -->
-    <dependency>
-      <groupId>org.codehaus.janino</groupId>
-      <artifactId>janino</artifactId>
-      <scope>test</scope>
-    </dependency>
-
   </dependencies>
 
   <build>
