@@ -25,8 +25,8 @@ import static org.junit.Assert.fail;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.impl.protocol.BatchAccessor;
+import org.apache.drill.exec.physical.impl.protocol.IndirectContainerAccessor;
 import org.apache.drill.exec.physical.impl.protocol.VectorContainerAccessor;
-import org.apache.drill.exec.physical.impl.protocol.VectorContainerAccessor.ExtendedContainerAccessor;
 import org.apache.drill.exec.physical.resultSet.ResultSetCopier;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
@@ -249,7 +249,7 @@ public class TestResultSetCopier extends SubOperatorTest {
     // Nothing should work yet
 
     try {
-      copier.copyAll();
+      copier.copyAllRows();
       fail();
     } catch (IllegalStateException e) {
       // Expected
@@ -264,32 +264,32 @@ public class TestResultSetCopier extends SubOperatorTest {
     // Predicates should work
 
     assertFalse(copier.isCopyPending());
-    assertFalse(copier.hasRows());
-    assertFalse(copier.isFull());
+    assertFalse(copier.hasOutputRows());
+    assertFalse(copier.isOutputFull());
 
     // Define a schema and start an output batch.
 
-    copier.startBatch();
+    copier.startOutputBatch();
     assertFalse(copier.isCopyPending());
-    assertFalse(copier.hasRows());
-    assertFalse(copier.isFull());
+    assertFalse(copier.hasOutputRows());
+    assertFalse(copier.isOutputFull());
 
     // Provide an input row
 
     dataGen.makeBatch(1, 3);
-    copier.startInput();
+    copier.startInputBatch();
     assertFalse(copier.isCopyPending());
-    assertFalse(copier.hasRows());
-    assertFalse(copier.isFull());
+    assertFalse(copier.hasOutputRows());
+    assertFalse(copier.isOutputFull());
 
     // Now can do some actual copying
 
-    while (copier.copyNext()) {
+    while (copier.copyNextRow()) {
       // empty
     }
     assertFalse(copier.isCopyPending());
-    assertTrue(copier.hasRows());
-    assertFalse(copier.isFull());
+    assertTrue(copier.hasOutputRows());
+    assertFalse(copier.isOutputFull());
 
     // Get and verify the output batch
     // (Does not free the input batch, we reuse it
@@ -329,7 +329,7 @@ public class TestResultSetCopier extends SubOperatorTest {
 
     // Start batch, no data yet.
 
-    copier.startBatch();
+    copier.startOutputBatch();
 
     // Close OK before things data arrives
 
@@ -349,10 +349,10 @@ public class TestResultSetCopier extends SubOperatorTest {
 
     // Start batch, with data.
 
-    copier.startBatch();
+    copier.startOutputBatch();
     dataGen.makeBatch(1, 3);
-    copier.startInput();
-    copier.copyNext();
+    copier.startInputBatch();
+    copier.copyNextRow();
 
     // Close OK with input and output batch allocated.
 
@@ -377,16 +377,16 @@ public class TestResultSetCopier extends SubOperatorTest {
     DataGen dataGen = new DataGen();
     ResultSetCopier copier = new ResultSetCopierImpl(
         fixture.allocator(), dataGen.batchAccessor());
-    copier.startBatch();
+    copier.startOutputBatch();
 
     for (int i = 0; i < 5; i++) {
       int start = i * 3 + 1;
       dataGen.makeBatch(start, start + 2);
-      copier.startInput();
-      assertFalse(copier.isFull());
-      copier.copyAll();
-      copier.freeInput();
-      assertFalse(copier.isFull());
+      copier.startInputBatch();
+      assertFalse(copier.isOutputFull());
+      copier.copyAllRows();
+      copier.releaseInputBatch();
+      assertFalse(copier.isOutputFull());
       assertFalse(copier.isCopyPending());
     }
     RowSet result = fixture.wrap(copier.harvest());
@@ -416,16 +416,16 @@ public class TestResultSetCopier extends SubOperatorTest {
 
       // Equivalent of operator next() method
 
-      copier.startBatch();
-      while (! copier.isFull()) {
-        copier.freeInput();
+      copier.startOutputBatch();
+      while (! copier.isOutputFull()) {
+        copier.releaseInputBatch();
         if (! dataGen.next()) {
           break;
         }
-        copier.startInput();
-        copier.copyAll();
+        copier.startInputBatch();
+        copier.copyAllRows();
       }
-      if (! copier.hasRows()) {
+      if (! copier.hasOutputRows()) {
         break;
       }
 
@@ -457,21 +457,21 @@ public class TestResultSetCopier extends SubOperatorTest {
     DataGen dataGen = new DataGen();
     ResultSetCopier copier = new ResultSetCopierImpl(
         fixture.allocator(), dataGen.batchAccessor());
-    copier.startBatch();
+    copier.startOutputBatch();
 
     dataGen.makeBatch(1, 3);
-    copier.startInput();
-    copier.copyRecord(2);
-    copier.copyRecord(0);
-    copier.copyRecord(1);
-    copier.freeInput();
+    copier.startInputBatch();
+    copier.copyRow(2);
+    copier.copyRow(0);
+    copier.copyRow(1);
+    copier.releaseInputBatch();
 
     dataGen.makeBatch(4, 6);
-    copier.startInput();
-    copier.copyRecord(1);
-    copier.copyRecord(0);
-    copier.copyRecord(2);
-    copier.freeInput();
+    copier.startInputBatch();
+    copier.copyRow(1);
+    copier.copyRow(0);
+    copier.copyRow(2);
+    copier.releaseInputBatch();
 
     RowSet expected = new RowSetBuilder(fixture.allocator(), dataGen.schema())
         .addRow(3, "Row 3")
@@ -496,27 +496,27 @@ public class TestResultSetCopier extends SubOperatorTest {
 
     // Copy first batch with first schema
 
-    copier.startBatch();
+    copier.startOutputBatch();
     dataGen.nextBatch();
-    copier.startInput();
-    copier.copyAll();
-    assertFalse(copier.isFull());
+    copier.startInputBatch();
+    copier.copyAllRows();
+    assertFalse(copier.isOutputFull());
 
     // Second, same schema
 
-    copier.freeInput();
+    copier.releaseInputBatch();
     dataGen.nextBatch();
-    copier.startInput();
-    copier.copyAll();
-    assertFalse(copier.isFull());
+    copier.startInputBatch();
+    copier.copyAllRows();
+    assertFalse(copier.isOutputFull());
 
     // Plenty of room. But, change the schema.
 
-    copier.freeInput();
+    copier.releaseInputBatch();
     dataGen.evolveSchema();
     dataGen.nextBatch();
-    copier.startInput();
-    assertTrue(copier.isFull());
+    copier.startInputBatch();
+    assertTrue(copier.isOutputFull());
 
     // Must harvest partial output
 
@@ -527,16 +527,16 @@ public class TestResultSetCopier extends SubOperatorTest {
 
     // Start a new batch, implicitly complete pending copy
 
-    copier.startBatch();
-    copier.copyAll();
+    copier.startOutputBatch();
+    copier.copyAllRows();
 
     // Add one more of second schema
 
-    copier.freeInput();
+    copier.releaseInputBatch();
     dataGen.nextBatch();
-    copier.startInput();
-    copier.copyAll();
-    assertFalse(copier.isFull());
+    copier.startInputBatch();
+    copier.copyAllRows();
+    assertFalse(copier.isOutputFull());
 
     result = fixture.wrap(copier.harvest());
     verifierGen.evolveSchema();
@@ -554,11 +554,11 @@ public class TestResultSetCopier extends SubOperatorTest {
   @Test
   public void testSV2() {
     DataGen dataGen = new DataGen();
-    ExtendedContainerAccessor filtered = new ExtendedContainerAccessor();
+    IndirectContainerAccessor filtered = new IndirectContainerAccessor();
     ResultSetCopier copier = new ResultSetCopierImpl(
         fixture.allocator(), filtered);
 
-    copier.startBatch();
+    copier.startOutputBatch();
     dataGen.makeBatch(1, 10);
 
     // Pick out every other record, in descending
@@ -575,9 +575,9 @@ public class TestResultSetCopier extends SubOperatorTest {
     filtered.setSelectionVector(sv2Builder.harvest(container));
     assertEquals(5, filtered.rowCount());
 
-    copier.startInput();
-    copier.copyAll();
-    copier.freeInput();
+    copier.startInputBatch();
+    copier.copyAllRows();
+    copier.releaseInputBatch();
 
     RowSet expected = new RowSetBuilder(fixture.allocator(), TEST_SCHEMA)
         .addRow(10, "Row 10")
@@ -602,11 +602,11 @@ public class TestResultSetCopier extends SubOperatorTest {
     NullableGen dataGen = new NullableGen();
     ResultSetCopier copier = new ResultSetCopierImpl(
         fixture.allocator(), dataGen.batchAccessor());
-    copier.startBatch();
+    copier.startOutputBatch();
 
     dataGen.makeBatch(1, 10);
-    copier.startInput();
-    copier.copyAll();
+    copier.startInputBatch();
+    copier.copyAllRows();
 
     RowSet result = fixture.wrap(copier.harvest());
     RowSet expected = RowSets.wrap(dataGen.batchAccessor());
@@ -620,11 +620,11 @@ public class TestResultSetCopier extends SubOperatorTest {
     ArrayGen dataGen = new ArrayGen();
     ResultSetCopier copier = new ResultSetCopierImpl(
         fixture.allocator(), dataGen.batchAccessor());
-    copier.startBatch();
+    copier.startOutputBatch();
 
     dataGen.makeBatch(1, 5);
-    copier.startInput();
-    copier.copyAll();
+    copier.startInputBatch();
+    copier.copyAllRows();
 
     RowSet result = fixture.wrap(copier.harvest());
     RowSet expected = RowSets.wrap(dataGen.batchAccessor());
@@ -638,11 +638,11 @@ public class TestResultSetCopier extends SubOperatorTest {
     MapGen dataGen = new MapGen();
     ResultSetCopier copier = new ResultSetCopierImpl(
         fixture.allocator(), dataGen.batchAccessor());
-    copier.startBatch();
+    copier.startOutputBatch();
 
     dataGen.makeBatch(1, 5);
-    copier.startInput();
-    copier.copyAll();
+    copier.startInputBatch();
+    copier.copyAllRows();
 
     RowSet result = fixture.wrap(copier.harvest());
     RowSet expected = RowSets.wrap(dataGen.batchAccessor());

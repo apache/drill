@@ -597,13 +597,6 @@ public class ColumnAccessors {
     public final void copy(ColumnReader from) {
       ${drillType}ColumnReader source = (${drillType}ColumnReader) from;
       final DrillBuf sourceBuf = source.buffer();
-      <#-- First cut, copy materialized value.
-    <#if varWidth>
-      byte[] bytes = source.getBytes();
-      setBytes(bytes, bytes.length);
-    <#else>
-      set${label}(source.get${label}());
-    </#if> -->
     <#if varWidth>
       final long entry = source.getEntry();
       final int sourceOffset = (int) (entry >> 32);

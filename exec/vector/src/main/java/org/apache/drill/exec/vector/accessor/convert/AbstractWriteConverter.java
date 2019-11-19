@@ -146,7 +146,7 @@ public abstract class AbstractWriteConverter extends AbstractScalarWriter {
   }
 
   @Override
-  public void copy(ColumnReader from) {
+  public final void copy(ColumnReader from) {
     throw new UnsupportedOperationException("Cannot copy values through a type converter");
   }
 }

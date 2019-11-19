@@ -36,7 +36,6 @@ import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.Limit;
-import org.apache.drill.exec.physical.impl.protocol.VectorContainerAccessor.ExtendedContainerAccessor;
 import org.apache.drill.exec.physical.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.exec.proto.UserBitShared.NamePart;
 import org.apache.drill.exec.record.BatchSchema;
@@ -524,7 +523,7 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
         .withSv2()
         .build();
 
-    ExtendedContainerAccessor accessor = new ExtendedContainerAccessor();
+    IndirectContainerAccessor accessor = new IndirectContainerAccessor();
     accessor.addBatch(rs.container());
     accessor.setSelectionVector(rs.getSv2());
 

@@ -56,13 +56,13 @@ import org.apache.drill.exec.record.VectorContainer;
  *
  * <pre><code>
  * public IterOutcome next() {
- *   copier.startBatch();
+ *   copier.startOutputBatch();
  *   while (! copier.isFull() {
  *     copier.freeInput();
  *     IterOutcome innerResult = inner.next();
  *     if (innerResult == DONE) { break; }
- *     copier.startInput();
- *     copier.copyAll();
+ *     copier.startInputBatch();
+ *     copier.copyAllRows();
  *   }
  *   if (copier.hasRows()) {
  *     outputContainer = copier.harvest();
@@ -98,13 +98,13 @@ public interface ResultSetCopier {
   /**
    * Start the next output batch.
    */
-  void startBatch();
+  void startOutputBatch();
 
   /**
    * Start the next input batch. The input batch must be held
    * by the VectorAccessor passed into the constructor.
    */
-  void startInput();
+  void startInputBatch();
 
   /**
    * If copying rows one by one, copy the next row from the
@@ -113,7 +113,7 @@ public interface ResultSetCopier {
    * @return true if more rows remain on the input, false
    * if all rows are exhausted
    */
-  boolean copyNext();
+  boolean copyNextRow();
 
   /**
    * Copy a row at the given position. For those cases in
@@ -122,23 +122,23 @@ public interface ResultSetCopier {
    * of the need to reset indexes for every row. Better to
    * use a selection vector, then copy sequentially.
    *
-   * @param posn the input row position. If a selection vector
+   * @param inputRowIndex the input row position. If a selection vector
    * is attached, then this is the selection vector position
    */
-  void copyRecord(int posn);
+  void copyRow(int inputRowIndex);
 
   /**
    * Copy all (remaining) input rows to the output.
    * If insufficient space exists in the output, does a partial
    * copy, and {@link #isCopyPending()} will return true.
    */
-  void copyAll();
+  void copyAllRows();
 
   /**
    * Release the input. Must be called (explicitly, or via
    * {@link #copyInput()} before loading another input batch.
    */
-  void freeInput();
+  void releaseInputBatch();
 
   /**
    * Reports if the output batch has rows. Useful after the end
@@ -146,12 +146,12 @@ public interface ResultSetCopier {
    * send downstream.
    * @return true if the output batch has one or more rows
    */
-  boolean hasRows();
+  boolean hasOutputRows();
 
   /**
    * Reports if the output batch is full and must be sent
    * downstream. The output batch can be full in the middle
-   * of a copy, in which case {@lik #isCopyPending()} will
+   * of a copy, in which case {@link #isCopyPending()} will
    * also return true.
    * <p>
    * This function also returns true if a schema change
@@ -162,7 +162,7 @@ public interface ResultSetCopier {
    * @return true if the output is full and must be harvested
    * and sent downstream
    */
-  boolean isFull();
+  boolean isOutputFull();
 
   /**
    * Helper method to determine if a copy is pending: more rows

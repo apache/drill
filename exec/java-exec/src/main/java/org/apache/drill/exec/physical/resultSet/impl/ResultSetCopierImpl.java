@@ -43,21 +43,14 @@ public class ResultSetCopierImpl implements ResultSetCopier {
     CLOSED
   }
 
-  private interface BlockCopy {
-    void copy();
-    boolean hasMore();
-  }
+  private class CopyAll {
 
-  private class CopyAll implements BlockCopy {
-
-    @Override
-    public void copy() {
+     public void copy() {
       while (!rowWriter.isFull() && rowReader.next()) {
-        project();
+        copyColumns();
       }
     }
 
-    @Override
     public boolean hasMore() {
       return rowReader.hasNext();
     }
@@ -90,7 +83,7 @@ public class ResultSetCopierImpl implements ResultSetCopier {
 
   private State state;
   private CopyPair[] projection;
-  private BlockCopy activeCopy;
+  private CopyAll activeCopy;
 
   public ResultSetCopierImpl(BufferAllocator allocator, BatchAccessor inputBatch) {
     this(allocator, inputBatch, new OptionBuilder());
@@ -106,7 +99,7 @@ public class ResultSetCopierImpl implements ResultSetCopier {
   }
 
   @Override
-  public void startBatch() {
+  public void startOutputBatch() {
     if (state == State.START) {
 
       // No schema yet. Defer real batch start until we see an input
@@ -120,7 +113,7 @@ public class ResultSetCopierImpl implements ResultSetCopier {
 
       // We have a pending new schema. Create new writers to match.
 
-      createMapping();
+      createProjection();
     }
     resultSetWriter.startBatch();
     state = State.BATCH_ACTIVE;
@@ -133,7 +126,7 @@ public class ResultSetCopierImpl implements ResultSetCopier {
   }
 
   @Override
-  public void startInput() {
+  public void startInputBatch() {
     Preconditions.checkState(state == State.NO_SCHEMA || state == State.NEW_SCHEMA ||
                              state == State.BATCH_ACTIVE,
         "Can only start input while in an output batch");
@@ -152,7 +145,7 @@ public class ResultSetCopierImpl implements ResultSetCopier {
 
       // The schema has changed. Handle it now or later.
 
-      if (hasRows()) {
+      if (hasOutputRows()) {
 
         // Output batch has rows. Can't switch and bind inputs
         // until current batch is sent downstream.
@@ -173,7 +166,7 @@ public class ResultSetCopierImpl implements ResultSetCopier {
 
       harvest().zeroVectors();
     }
-    createMapping();
+    createProjection();
     resultSetWriter.startBatch();
 
     // Stay in the current state.
@@ -185,12 +178,12 @@ public class ResultSetCopierImpl implements ResultSetCopier {
   }
 
   @Override
-  public void freeInput() {
+  public void releaseInputBatch() {
     Preconditions.checkState(state != State.CLOSED);
     resultSetReader.release();
   }
 
-  private void createMapping() {
+  private void createProjection() {
     if (resultSetWriter != null) {
 
       // Need to build a new writer. Close this one. Doing so
@@ -216,7 +209,7 @@ public class ResultSetCopierImpl implements ResultSetCopier {
   }
 
   @Override
-  public boolean hasRows() {
+  public boolean hasOutputRows() {
     switch (state) {
     case BATCH_ACTIVE:
     case NEW_SCHEMA:
@@ -227,7 +220,7 @@ public class ResultSetCopierImpl implements ResultSetCopier {
   }
 
   @Override
-  public boolean isFull() {
+  public boolean isOutputFull() {
     switch (state) {
     case BATCH_ACTIVE:
       return rowWriter.isFull();
@@ -250,33 +243,32 @@ public class ResultSetCopierImpl implements ResultSetCopier {
   }
 
   @Override
-  public boolean copyNext() {
+  public boolean copyNextRow() {
     verifyWritable();
     if (!rowReader.next()) {
       return false;
     }
-    project();
+    copyColumns();
     return true;
   }
 
   @Override
-  public void copyRecord(int posn) {
+  public void copyRow(int posn) {
     verifyWritable();
     rowReader.setPosition(posn);
-    project();
+    copyColumns();
   }
 
-  private final void project() {
+  private final void copyColumns() {
     rowWriter.start();
-    for (int i = 0; i < projection.length; i++) {
-      CopyPair pair = projection[i];
+    for (CopyPair pair : projection) {
       pair.writer.copy(pair.reader);
     }
     rowWriter.save();
   }
 
   @Override
-  public void copyAll() {
+  public void copyAllRows() {
     verifyWritable();
     activeCopy = new CopyAll();
     copyBlock();

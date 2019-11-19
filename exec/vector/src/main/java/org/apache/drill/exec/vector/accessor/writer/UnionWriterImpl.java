@@ -242,7 +242,7 @@ public class UnionWriterImpl implements VariantWriter, WriterEvents {
     // schema, do so now. (Unfortunately, the default listener
     // does add the schema, while the row set loader does not.)
 
-    if (! variantSchema().hasType(type)) {
+    if (!variantSchema().hasType(type)) {
       variantSchema().addType(writer.schema());
     }
     writer.events().bindIndex(index);
@@ -336,7 +336,7 @@ public class UnionWriterImpl implements VariantWriter, WriterEvents {
 
   @Override
   public void copy(ColumnReader from) {
-    if (! from.isNull()) {
+    if (!from.isNull()) {
       VariantReader source = (VariantReader) from;
       member(source.dataType()).copy(source.member());
     }
