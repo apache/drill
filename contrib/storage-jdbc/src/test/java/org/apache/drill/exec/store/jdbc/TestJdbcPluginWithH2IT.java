@@ -239,4 +239,15 @@ public class TestJdbcPluginWithH2IT extends ClusterTest {
     String plan = queryBuilder().sql(query).explainJson();
     assertEquals(5, queryBuilder().physical(plan).run().recordCount());
   }
+
+  @Test
+  public void testJdbcTableTypes() throws Exception {
+    String query = "select distinct table_type from information_schema.`tables`";
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("table_type")
+        .baselineValuesForSingleColumn("SYSTEM TABLE", "TABLE")
+        .go();
+  }
 }

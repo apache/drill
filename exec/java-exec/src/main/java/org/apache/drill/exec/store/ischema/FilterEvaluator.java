@@ -179,7 +179,7 @@ public interface FilterEvaluator {
         SHRD_COL_TABLE_SCHEMA, schemaName,
         SCHS_COL_SCHEMA_NAME, schemaName,
         SHRD_COL_TABLE_NAME, tableName,
-        TBLS_COL_TABLE_TYPE, tableType.toString());
+        TBLS_COL_TABLE_TYPE, tableType.jdbcName);
 
       return filter.evaluate(recordValues) != InfoSchemaFilter.Result.FALSE;
     }

@@ -179,7 +179,7 @@ public class TestMetadataProvider extends BaseTestQuery {
   public void tablesWithSystemTableFilter() throws Exception {
     // test("SELECT * FROM INFORMATION_SCHEMA.`TABLES` WHERE TABLE_TYPE IN ('SYSTEM_TABLE')"); // SQL equivalent
 
-    GetTablesResp resp = client.getTables(null, null, null, Collections.singletonList("SYSTEM_TABLE")).get();
+    GetTablesResp resp = client.getTables(null, null, null, Collections.singletonList("SYSTEM TABLE")).get();
 
     assertEquals(RequestStatus.OK, resp.getStatus());
     List<TableMetadata> tables = resp.getTablesList();

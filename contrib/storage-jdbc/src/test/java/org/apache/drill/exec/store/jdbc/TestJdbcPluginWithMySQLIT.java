@@ -329,4 +329,16 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
     String query = "select * from information_schema.`views`";
     run(query);
   }
+
+  @Test
+  public void testJdbcTableTypes() throws Exception {
+    String query = "select distinct table_type from information_schema.`tables` " +
+        "where table_schema like 'mysql%'";
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("table_type")
+        .baselineValuesForSingleColumn("SYSTEM VIEW", "TABLE", "VIEW")
+        .go();
+  }
 }
