@@ -158,7 +158,7 @@ public interface RecordCollector {
 
       return drillSchema.getTableNamesAndTypes().stream()
         .filter(entry -> filterEvaluator.shouldVisitTable(schemaPath, entry.getKey(), entry.getValue()))
-        .map(entry -> new Records.Table(IS_CATALOG_NAME, schemaPath, entry.getKey(), entry.getValue().toString()))
+        .map(entry -> new Records.Table(IS_CATALOG_NAME, schemaPath, entry.getKey(), entry.getValue().jdbcName))
         .collect(Collectors.toList());
     }
 
