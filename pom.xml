@@ -107,6 +107,7 @@
     <commons.text.version>1.6</commons.text.version>
     <protobuf.version>3.6.1</protobuf.version>
     <codemodel.version>2.6</codemodel.version>
+    <joda.version>2.10.5</joda.version>
   </properties>
 
   <scm>
@@ -1789,6 +1790,11 @@
         <groupId>com.google.protobuf</groupId>
         <artifactId>protobuf-java</artifactId>
         <version>${protobuf.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>joda-time</groupId>
+        <artifactId>joda-time</artifactId>
+        <version>${joda.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
