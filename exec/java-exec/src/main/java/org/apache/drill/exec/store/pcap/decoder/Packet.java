@@ -33,7 +33,7 @@ import static org.apache.drill.exec.store.pcap.PcapFormatUtils.getByte;
 import static org.apache.drill.exec.store.pcap.PcapFormatUtils.getIntFileOrder;
 import static org.apache.drill.exec.store.pcap.PcapFormatUtils.getShort;
 
-public class Packet {
+public class Packet implements Comparable<Packet> {
   // pcap header
   //        typedef struct pcaprec_hdr_s {
   //            guint32 ts_sec;         // timestamp seconds
@@ -221,6 +221,42 @@ public class Packet {
 
   public void setIsCorrupt(boolean value) {
     isCorrupt = value;
+  }
+
+  public boolean getUrgFlag() {
+    return (getFlags() & 0x20) != 0;
+  }
+
+  public boolean getPshFlag() {
+    return (getFlags() & 0x8) != 0;
+  }
+
+  public boolean getEceFlag() {
+    return (getFlags() & 0x40) != 0;
+  }
+
+  public boolean getSynFlag() {
+    return (getFlags() & 0x2) != 0;
+  }
+
+  public boolean getAckFlag() {
+    return (getFlags() & 0x10) != 0;
+  }
+
+  public boolean getRstFlag() {
+    return (getFlags() & 0x4) != 0;
+  }
+
+  public boolean getFinFlag() {
+    return (getFlags() & 0x1) != 0;
+  }
+
+  public boolean getNSFlag() {
+    return (getFlags() & 0x100) != 0;
+  }
+
+  public boolean getCwrFlag() {
+    return (getFlags() & 0x80) != 0;
   }
 
   public static String formatFlags(int flags) {
@@ -490,5 +526,16 @@ public class Packet {
   private int getPort(int offset) {
     int dstPortOffset = ipOffset + getIPHeaderLength() + offset;
     return convertShort(raw, dstPortOffset);
+  }
+
+  /**
+   * This function is here so that packets can be sorted for re-sessionization. Packets in TCP streams
+   * are ordered by the sequence number, so being able to order the packets is necessary to reassemble the
+   * TCP session.
+   * @param o The packet to which the current packet is compared to.
+   * @return Returns the difference in sequence number.
+   */
+  public int compareTo(Packet o) {
+    return this.getSequenceNumber() - (o).getSequenceNumber();
   }
 }

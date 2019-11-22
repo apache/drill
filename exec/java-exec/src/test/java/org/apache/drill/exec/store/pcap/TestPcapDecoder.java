@@ -22,6 +22,8 @@ import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.exec.store.pcap.decoder.Packet;
 import org.apache.drill.exec.store.pcap.decoder.PacketDecoder;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedInputStream;
 import java.io.DataOutputStream;
@@ -35,7 +37,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class TestPcapDecoder extends BaseTestQuery {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestPcapDecoder.class);
+  private static final Logger logger = LoggerFactory.getLogger(TestPcapDecoder.class);
 
   private static File bigFile;
 
@@ -61,7 +63,7 @@ public class TestPcapDecoder extends BaseTestQuery {
     int offset = 0;
 
 
-    byte[] buffer = new byte[PcapRecordReader.BUFFER_SIZE + pd.getMaxLength()];
+    byte[] buffer = new byte[PcapBatchReader.BUFFER_SIZE + pd.getMaxLength()];
     int validBytes = in.read(buffer);
     assertTrue(validBytes > 50);
 
@@ -168,7 +170,7 @@ public class TestPcapDecoder extends BaseTestQuery {
     PacketDecoder pd = new PacketDecoder(in);
     Packet p = pd.packet();
 
-    byte[] buffer = new byte[PcapRecordReader.BUFFER_SIZE + pd.getMaxLength()];
+    byte[] buffer = new byte[PcapBatchReader.BUFFER_SIZE + pd.getMaxLength()];
     int validBytes = in.read(buffer);
 
     int offset = 0;
