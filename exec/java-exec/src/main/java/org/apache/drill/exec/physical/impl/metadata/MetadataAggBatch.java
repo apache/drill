@@ -37,10 +37,12 @@ import org.apache.drill.exec.physical.config.MetadataAggPOP;
 import org.apache.drill.exec.physical.impl.aggregate.StreamingAggBatch;
 import org.apache.drill.exec.physical.impl.aggregate.StreamingAggregator;
 import org.apache.drill.exec.metastore.analyze.AnalyzeColumnUtils;
+import org.apache.drill.exec.planner.physical.AggPrelBase.OperatorPhase;
 import org.apache.drill.exec.planner.types.DrillRelDataTypeSystem;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.metastore.metadata.MetadataType;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 import java.io.IOException;
@@ -90,14 +92,31 @@ public class MetadataAggBatch extends StreamingAggBatch {
           fieldsList.add(FieldReference.getWithQuotedRef(filedName));
         });
 
-    if (popConfig.getContext().createNewAggregations()) {
+    if (createNewAggregations(popConfig)) {
       addMetadataAggregateCalls();
       // infer schema from incoming data
       addSchemaCall(fieldsList);
-      addNewMetadataAggregations();
+      // adds any_value(`location`) call for SEGMENT level
+      if (popConfig.getContext().metadataLevel() == MetadataType.SEGMENT) {
+        addLocationAggCall(context.getOptions().getString(ExecConstants.IMPLICIT_FQN_COLUMN_LABEL));
+      }
     } else {
-      addCollectListCall(fieldsList);
+      if (!popConfig.getContext().createNewAggregations()) {
+        // collects incoming metadata
+        addCollectListCall(fieldsList);
+      }
       addMergeSchemaCall();
+      String locationField = MetastoreAnalyzeConstants.LOCATION_FIELD;
+
+      if (popConfig.getContext().createNewAggregations()) {
+        locationField = context.getOptions().getString(ExecConstants.IMPLICIT_FQN_COLUMN_LABEL);
+      }
+
+      if (popConfig.getContext().metadataLevel() == MetadataType.SEGMENT) {
+        addParentLocationAggCall();
+      } else {
+        addLocationAggCall(locationField);
+      }
     }
 
     for (SchemaPath excludedColumn : excludedColumns) {
@@ -113,20 +132,72 @@ public class MetadataAggBatch extends StreamingAggBatch {
       }
     }
 
-    addMaxLastModifiedCall();
+    addLastModifiedCall();
 
     return super.createAggregatorInternal();
   }
 
   /**
+   * Adds any_value(parentPath(`location`)) aggregate call to the value expressions list.
+   */
+  private void addParentLocationAggCall() {
+    valueExpressions.add(
+        new NamedExpression(
+            new FunctionCall(
+                "any_value",
+                Collections.singletonList(
+                    new FunctionCall(
+                        "parentPath",
+                        Collections.singletonList(SchemaPath.getSimplePath(MetastoreAnalyzeConstants.LOCATION_FIELD)),
+                        ExpressionPosition.UNKNOWN)),
+                ExpressionPosition.UNKNOWN),
+            FieldReference.getWithQuotedRef(MetastoreAnalyzeConstants.LOCATION_FIELD)));
+  }
+
+  /**
+   * Adds any_value(`location`) aggregate call to the value expressions list.
+   *
+   * @param locationField name of the location field
+   */
+  private void addLocationAggCall(String locationField) {
+    valueExpressions.add(
+        new NamedExpression(
+            new FunctionCall(
+                "any_value",
+                Collections.singletonList(SchemaPath.getSimplePath(locationField)),
+                ExpressionPosition.UNKNOWN),
+            FieldReference.getWithQuotedRef(MetastoreAnalyzeConstants.LOCATION_FIELD)));
+  }
+
+  /**
+   * Checks whether incoming data is not grouped, so corresponding aggregate calls should be created.
+   *
+   * @param popConfig metadata aggregate physical operator configs
+   * @return {@code true} if incoming data is not grouped, {@code false} otherwise.
+   */
+  private boolean createNewAggregations(MetadataAggPOP popConfig) {
+    return popConfig.getContext().createNewAggregations()
+        && (popConfig.getPhase() == OperatorPhase.PHASE_1of2
+        || popConfig.getPhase() == OperatorPhase.PHASE_1of1);
+  }
+
+  /**
    * Adds {@code max(`lastModifiedTime`)} function call to the value expressions list.
    */
-  private void addMaxLastModifiedCall() {
+  private void addLastModifiedCall() {
     String lastModifiedColumn = context.getOptions().getString(ExecConstants.IMPLICIT_LAST_MODIFIED_TIME_COLUMN_LABEL);
-    LogicalExpression lastModifiedTime = new FunctionCall("max",
-        Collections.singletonList(
-            FieldReference.getWithQuotedRef(lastModifiedColumn)),
-        ExpressionPosition.UNKNOWN);
+    LogicalExpression lastModifiedTime;
+    if (createNewAggregations((MetadataAggPOP) popConfig)) {
+      lastModifiedTime = new FunctionCall("any_value",
+          Collections.singletonList(
+              FieldReference.getWithQuotedRef(lastModifiedColumn)),
+          ExpressionPosition.UNKNOWN);
+    } else {
+      lastModifiedTime = new FunctionCall("max",
+          Collections.singletonList(
+              FieldReference.getWithQuotedRef(lastModifiedColumn)),
+          ExpressionPosition.UNKNOWN);
+    }
 
     valueExpressions.add(new NamedExpression(lastModifiedTime,
         FieldReference.getWithQuotedRef(lastModifiedColumn)));
@@ -167,17 +238,6 @@ public class MetadataAggBatch extends StreamingAggBatch {
         ExpressionPosition.UNKNOWN);
 
     valueExpressions.add(new NamedExpression(schemaExpr, FieldReference.getWithQuotedRef(MetastoreAnalyzeConstants.SCHEMA_FIELD)));
-  }
-
-  /**
-   * Adds {@code collect_to_list_varchar(`fqn`)} call to collect file paths into the list.
-   */
-  private void addNewMetadataAggregations() {
-    LogicalExpression locationsExpr = new FunctionCall("collect_to_list_varchar",
-        Collections.singletonList(SchemaPath.getSimplePath(context.getOptions().getString(ExecConstants.IMPLICIT_FQN_COLUMN_LABEL))),
-        ExpressionPosition.UNKNOWN);
-
-    valueExpressions.add(new NamedExpression(locationsExpr, FieldReference.getWithQuotedRef(MetastoreAnalyzeConstants.LOCATIONS_FIELD)));
   }
 
   /**
@@ -231,12 +291,12 @@ public class MetadataAggBatch extends StreamingAggBatch {
             currentPath = new ArrayList<>(parentFields);
             currentPath.add(field.getName());
           }
-          if (field.getType().getMinorType() == TypeProtos.MinorType.MAP && popConfig.getContext().createNewAggregations()) {
+          if (field.getType().getMinorType() == TypeProtos.MinorType.MAP && createNewAggregations(popConfig)) {
             fieldNameRefMap.putAll(getUnflattenedFileds(field.getChildren(), currentPath));
           } else {
             SchemaPath schemaPath = SchemaPath.getCompoundPath(currentPath.toArray(new String[0]));
             // adds backticks for popConfig.createNewAggregations() to ensure that field will be parsed correctly
-            String name = popConfig.getContext().createNewAggregations() ? schemaPath.toExpr() : schemaPath.getRootSegmentPath();
+            String name = createNewAggregations(popConfig) ? schemaPath.toExpr() : schemaPath.getRootSegmentPath();
             fieldNameRefMap.put(name, new FieldReference(schemaPath));
           }
         }
@@ -256,7 +316,7 @@ public class MetadataAggBatch extends StreamingAggBatch {
   private void addColumnAggregateCalls(FieldReference fieldRef, String fieldName) {
     MetadataAggPOP popConfig = (MetadataAggPOP) this.popConfig;
     List<SchemaPath> interestingColumns = popConfig.getContext().interestingColumns();
-    if (popConfig.getContext().createNewAggregations()) {
+    if (createNewAggregations(popConfig)) {
       if (interestingColumns == null || interestingColumns.contains(fieldRef)) {
         // collect statistics for all or only interesting columns if they are specified
         AnalyzeColumnUtils.COLUMN_STATISTICS_FUNCTIONS.forEach((statisticsKind, sqlKind) -> {

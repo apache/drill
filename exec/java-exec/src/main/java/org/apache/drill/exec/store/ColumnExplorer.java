@@ -156,7 +156,7 @@ public class ColumnExplorer {
    * @param path column path
    * @return true if given column is partition, false otherwise
    */
-  public static boolean isPartitionColumn(String partitionDesignator, String path){
+  public static boolean isPartitionColumn(String partitionDesignator, String path) {
     Pattern pattern = Pattern.compile(String.format("%s[0-9]+", partitionDesignator));
     Matcher matcher = pattern.matcher(path);
     return matcher.matches();
@@ -164,7 +164,18 @@ public class ColumnExplorer {
 
   public boolean isImplicitColumn(String name) {
     return isPartitionColumn(partitionDesignator, name) ||
-           isImplicitFileColumn(name);
+        isImplicitOrInternalFileColumn(name);
+  }
+
+  /**
+   * Checks whether given column is implicit or internal.
+   *
+   * @param name name of the column to check
+   * @return {@code true} if given column is implicit or internal, {@code false} otherwise
+   */
+  public boolean isImplicitOrInternalFileColumn(String name) {
+    return allImplicitColumns.get(name) != null
+        || allInternalColumns.get(name) != null;
   }
 
   public boolean isImplicitFileColumn(String name) {

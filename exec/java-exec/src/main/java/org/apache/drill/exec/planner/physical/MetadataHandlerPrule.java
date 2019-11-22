@@ -36,7 +36,7 @@ public class MetadataHandlerPrule extends Prule {
   public void onMatch(RelOptRuleCall call) {
     MetadataHandlerRel relNode = call.rel(0);
     RelNode input = relNode.getInput();
-    RelTraitSet traits = input.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(DrillDistributionTrait.DEFAULT);
+    RelTraitSet traits = input.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(DrillDistributionTrait.SINGLETON);
     RelNode convertedInput = convert(input, traits);
     call.transformTo(new MetadataHandlerPrel(relNode.getCluster(), traits,
         convertedInput,

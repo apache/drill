@@ -18,8 +18,6 @@
 package org.apache.drill.exec.metastore.analyze;
 
 import org.apache.calcite.rel.core.TableScan;
-import org.apache.calcite.sql.SqlIdentifier;
-import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.FunctionCall;
@@ -37,7 +35,7 @@ import org.apache.drill.metastore.metadata.MetadataType;
 import org.apache.drill.metastore.metadata.TableInfo;
 
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
@@ -63,10 +61,11 @@ public abstract class AnalyzeFileInfoProvider implements AnalyzeInfoProvider {
   }
 
   @Override
-  public List<SqlIdentifier> getProjectionFields(MetadataType metadataLevel, OptionManager options) {
-    return Arrays.asList(
-        new SqlIdentifier(options.getString(ExecConstants.IMPLICIT_FQN_COLUMN_LABEL), SqlParserPos.ZERO),
-        new SqlIdentifier(options.getString(ExecConstants.IMPLICIT_LAST_MODIFIED_TIME_COLUMN_LABEL), SqlParserPos.ZERO));
+  public List<SchemaPath> getProjectionFields(DrillTable table, MetadataType metadataLevel, OptionManager options) throws IOException {
+    List<SchemaPath> projectionList = new ArrayList<>(getSegmentColumns(table, options));
+    projectionList.add(SchemaPath.getSimplePath(options.getString(ExecConstants.IMPLICIT_FQN_COLUMN_LABEL)));
+    projectionList.add(SchemaPath.getSimplePath(options.getString(ExecConstants.IMPLICIT_LAST_MODIFIED_TIME_COLUMN_LABEL)));
+    return Collections.unmodifiableList(projectionList);
   }
 
   @Override

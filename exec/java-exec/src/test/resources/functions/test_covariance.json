@@ -64,10 +64,10 @@
       "ref" : "`EXPR$7`",
       "expr" : "corr(`A`, `B`) "
     }, {
-      "ref" : "`EXPR$7`",
+      "ref" : "`EXPR$8`",
       "expr" : "corr(`A`, `C`) "
     }, {
-      "ref" : "`EXPR$8`",
+      "ref" : "`EXPR$9`",
       "expr" : "corr(`C`, `D`) "
     } ]
   }, {

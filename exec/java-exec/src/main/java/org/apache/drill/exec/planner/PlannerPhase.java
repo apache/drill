@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner;
 
+import org.apache.drill.exec.planner.logical.ConvertMetadataAggregateToDirectScanRule;
 import org.apache.drill.exec.planner.physical.MetadataAggPrule;
 import org.apache.drill.exec.planner.physical.MetadataControllerPrule;
 import org.apache.drill.exec.planner.physical.MetadataHandlerPrule;
@@ -525,6 +526,7 @@ public enum PlannerPhase {
     ruleList.add(MetadataControllerPrule.INSTANCE);
     ruleList.add(MetadataHandlerPrule.INSTANCE);
     ruleList.add(MetadataAggPrule.INSTANCE);
+    ruleList.add(ConvertMetadataAggregateToDirectScanRule.INSTANCE);
 
     ruleList.add(UnnestPrule.INSTANCE);
     ruleList.add(LateralJoinPrule.INSTANCE);

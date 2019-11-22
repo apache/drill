@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.data.NamedExpression;
+import org.apache.drill.metastore.metadata.MetadataType;
 
 import java.util.List;
 import java.util.Objects;
@@ -36,12 +37,14 @@ public class MetadataAggregateContext {
   private final List<SchemaPath> interestingColumns;
   private final List<SchemaPath> excludedColumns;
   private final boolean createNewAggregations;
+  private final MetadataType metadataLevel;
 
   public MetadataAggregateContext(MetadataAggregateContextBuilder builder) {
     this.groupByExpressions = builder.groupByExpressions;
     this.interestingColumns = builder.interestingColumns;
     this.createNewAggregations = builder.createNewAggregations;
     this.excludedColumns = builder.excludedColumns;
+    this.metadataLevel = builder.metadataLevel;
   }
 
   @JsonProperty
@@ -64,6 +67,11 @@ public class MetadataAggregateContext {
     return excludedColumns;
   }
 
+  @JsonProperty
+  public MetadataType metadataLevel() {
+    return metadataLevel;
+  }
+
   @Override
   public String toString() {
     return new StringJoiner(",\n", MetadataAggregateContext.class.getSimpleName() + "[", "]")
@@ -78,15 +86,30 @@ public class MetadataAggregateContext {
     return new MetadataAggregateContextBuilder();
   }
 
+  public MetadataAggregateContextBuilder toBuilder() {
+    return new MetadataAggregateContextBuilder()
+        .groupByExpressions(groupByExpressions)
+        .interestingColumns(interestingColumns)
+        .createNewAggregations(createNewAggregations)
+        .excludedColumns(excludedColumns)
+        .metadataLevel(metadataLevel);
+  }
+
   @JsonPOJOBuilder(withPrefix = "")
   public static class MetadataAggregateContextBuilder {
     private List<NamedExpression> groupByExpressions;
     private List<SchemaPath> interestingColumns;
     private Boolean createNewAggregations;
+    private MetadataType metadataLevel;
     private List<SchemaPath> excludedColumns;
 
     public MetadataAggregateContextBuilder groupByExpressions(List<NamedExpression> groupByExpressions) {
       this.groupByExpressions = groupByExpressions;
+      return this;
+    }
+
+    public MetadataAggregateContextBuilder metadataLevel(MetadataType metadataLevel) {
+      this.metadataLevel = metadataLevel;
       return this;
     }
 
@@ -109,6 +132,7 @@ public class MetadataAggregateContext {
       Objects.requireNonNull(groupByExpressions, "groupByExpressions were not set");
       Objects.requireNonNull(createNewAggregations, "createNewAggregations was not set");
       Objects.requireNonNull(excludedColumns, "excludedColumns were not set");
+      Objects.requireNonNull(metadataLevel, "metadataLevel was not set");
       return new MetadataAggregateContext(this);
     }
   }

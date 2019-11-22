@@ -29,7 +29,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.util.StdConverter;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -93,7 +92,7 @@ public class DynamicPojoRecordReader<T> extends AbstractPojoRecordReader<List<T>
    * An utility class that converts from {@link com.fasterxml.jackson.databind.JsonNode}
    * to DynamicPojoRecordReader during physical plan fragment deserialization.
    */
-  public static class Converter extends StdConverter<JsonNode, DynamicPojoRecordReader> {
+  public static class Converter<T> extends StdConverter<JsonNode, DynamicPojoRecordReader<T>> {
     private static final TypeReference<LinkedHashMap<String, Class<?>>> schemaType =
         new TypeReference<LinkedHashMap<String, Class<?>>>() {};
 
@@ -105,16 +104,22 @@ public class DynamicPojoRecordReader<T> extends AbstractPojoRecordReader<List<T>
     }
 
     @Override
-    public DynamicPojoRecordReader convert(JsonNode value) {
-      LinkedHashMap<String, Class<?>> schema = mapper.convertValue(value.get("schema"), schemaType);
+    public DynamicPojoRecordReader<T> convert(JsonNode value) {
+      LinkedHashMap<String, Class<T>> schema = mapper.convertValue(value.get("schema"), schemaType);
+      List<List<T>> records = new ArrayList<>();
 
-      ArrayList records = new ArrayList(schema.size());
-      final Iterator<JsonNode> recordsIterator = value.get("records").get(0).elements();
-      for (Class<?> fieldType : schema.values()) {
-        records.add(mapper.convertValue(recordsIterator.next(), fieldType));
+      JsonNode serializedRecords = value.get("records");
+      for (JsonNode serializedRecord : serializedRecords) {
+        List<T> record = new ArrayList<>(schema.size());
+        Iterator<JsonNode> recordsIterator = serializedRecord.elements();
+        for (Class<T> fieldType : schema.values()) {
+          record.add(mapper.convertValue(recordsIterator.next(), fieldType));
+        }
+        records.add(record);
       }
+
       int maxRecordsToRead = value.get("recordsPerBatch").asInt();
-      return new DynamicPojoRecordReader(schema, Collections.singletonList(records), maxRecordsToRead);
+      return new DynamicPojoRecordReader(schema, records, maxRecordsToRead);
     }
   }
 }

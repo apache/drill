@@ -224,7 +224,12 @@ public class TestMetastoreCommands extends ClusterTest {
       run("create table dfs.tmp.`%s` as\n" +
           "select * from cp.`tpch/region.parquet`", tableName);
 
-      run("analyze table dfs.tmp.`%s` columns none REFRESH METADATA", tableName);
+      testBuilder()
+          .sqlQuery("analyze table dfs.tmp.`%s` columns none REFRESH METADATA", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.tmp.%s]", tableName))
+          .go();
 
       String query = "select mykey from dfs.tmp.`%s` where mykey is null";
 
@@ -361,7 +366,12 @@ public class TestMetastoreCommands extends ClusterTest {
         .build();
 
     try {
-      run("ANALYZE TABLE dfs.`%s` REFRESH METADATA", tableName);
+      testBuilder()
+          .sqlQuery("ANALYZE TABLE dfs.`%s` REFRESH METADATA", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.default.%s]", tableName))
+          .go();
 
       BaseTableMetadata actualTableMetadata = cluster.drillbit().getContext()
           .getMetastoreRegistry()
@@ -500,7 +510,12 @@ public class TestMetastoreCommands extends ClusterTest {
           .build();
 
       try {
-        run("ANALYZE TABLE dfs.tmp.`%s` REFRESH METADATA '%s' level", tableName, analyzeLevel.name());
+        testBuilder()
+            .sqlQuery("ANALYZE TABLE dfs.tmp.`%s` REFRESH METADATA '%s' level", tableName, analyzeLevel.name())
+            .unOrdered()
+            .baselineColumns("ok", "summary")
+            .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.tmp.%s]", tableName))
+            .go();
 
         BaseTableMetadata actualTableMetadata = cluster.drillbit().getContext()
             .getMetastoreRegistry()
@@ -530,7 +545,12 @@ public class TestMetastoreCommands extends ClusterTest {
 
     for (MetadataType analyzeLevel : analyzeLevels) {
       try {
-        run("ANALYZE TABLE dfs.tmp.`%s` REFRESH METADATA '%s' level", tableName, analyzeLevel.name());
+        testBuilder()
+            .sqlQuery("ANALYZE TABLE dfs.tmp.`%s` REFRESH METADATA '%s' level", tableName, analyzeLevel.name())
+            .unOrdered()
+            .baselineColumns("ok", "summary")
+            .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.tmp.%s]", tableName))
+            .go();
 
         List<String> emptyMetadataLevels = Arrays.stream(MetadataType.values())
             .filter(metadataType -> metadataType.compareTo(analyzeLevel) > 0
@@ -594,7 +614,12 @@ public class TestMetastoreCommands extends ClusterTest {
         .build();
 
     try {
-      run("ANALYZE TABLE dfs.tmp.`%s` columns(o_orderstatus) REFRESH METADATA 'row_group' LEVEL", tableName);
+      testBuilder()
+          .sqlQuery("ANALYZE TABLE dfs.tmp.`%s` columns(o_orderstatus) REFRESH METADATA 'row_group' LEVEL", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.tmp.%s]", tableName))
+          .go();
 
       BaseTableMetadata actualTableMetadata = cluster.drillbit().getContext()
           .getMetastoreRegistry()
@@ -639,7 +664,12 @@ public class TestMetastoreCommands extends ClusterTest {
         .build();
 
     try {
-      run("ANALYZE TABLE dfs.tmp.`%s` columns NONE REFRESH METADATA 'row_group' LEVEL", tableName);
+      testBuilder()
+          .sqlQuery("ANALYZE TABLE dfs.tmp.`%s` columns NONE REFRESH METADATA 'row_group' LEVEL", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.tmp.%s]", tableName))
+          .go();
 
       BaseTableMetadata actualTableMetadata = cluster.drillbit().getContext()
           .getMetastoreRegistry()
@@ -688,7 +718,12 @@ public class TestMetastoreCommands extends ClusterTest {
         .build();
 
     try {
-      run("ANALYZE TABLE dfs.tmp.`%s` columns(o_orderstatus, o_orderdate) REFRESH METADATA 'row_group' LEVEL", tableName);
+      testBuilder()
+          .sqlQuery("ANALYZE TABLE dfs.tmp.`%s` columns(o_orderstatus, o_orderdate) REFRESH METADATA 'row_group' LEVEL", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.tmp.%s]", tableName))
+          .go();
 
       BaseTableMetadata actualTableMetadata = cluster.drillbit().getContext()
           .getMetastoreRegistry()
@@ -753,7 +788,12 @@ public class TestMetastoreCommands extends ClusterTest {
         .build();
 
     try {
-      run("ANALYZE TABLE dfs.tmp.`%s` columns(o_orderstatus) REFRESH METADATA 'row_group' LEVEL", tableName);
+      testBuilder()
+          .sqlQuery("ANALYZE TABLE dfs.tmp.`%s` columns(o_orderstatus) REFRESH METADATA 'row_group' LEVEL", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.tmp.%s]", tableName))
+          .go();
 
       BaseTableMetadata actualTableMetadata = cluster.drillbit().getContext()
           .getMetastoreRegistry()
@@ -826,7 +866,12 @@ public class TestMetastoreCommands extends ClusterTest {
         .build();
 
     try {
-      run("ANALYZE TABLE dfs.tmp.`%s` columns(o_orderstatus, o_orderdate) REFRESH METADATA 'row_group' LEVEL", tableName);
+      testBuilder()
+          .sqlQuery("ANALYZE TABLE dfs.tmp.`%s` columns(o_orderstatus, o_orderdate) REFRESH METADATA 'row_group' LEVEL", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.tmp.%s]", tableName))
+          .go();
 
       BaseTableMetadata actualTableMetadata = cluster.drillbit().getContext()
           .getMetastoreRegistry()
@@ -1658,7 +1703,12 @@ public class TestMetastoreCommands extends ClusterTest {
         .build();
 
     try {
-      run("ANALYZE TABLE dfs.tmp.`%s` REFRESH METADATA 'file' LEVEL", tableName);
+      testBuilder()
+          .sqlQuery("ANALYZE TABLE dfs.tmp.`%s` REFRESH METADATA 'file' LEVEL", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.tmp.%s]", tableName))
+          .go();
 
       BaseTableMetadata actualTableMetadata = cluster.drillbit().getContext()
           .getMetastoreRegistry()
@@ -1795,7 +1845,12 @@ public class TestMetastoreCommands extends ClusterTest {
         .build();
 
     try {
-      run("ANALYZE TABLE dfs.`%s` REFRESH METADATA", tableName);
+      testBuilder()
+          .sqlQuery("ANALYZE TABLE dfs.`%s` REFRESH METADATA", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.default.%s]", tableName))
+          .go();
 
       BaseTableMetadata actualTableMetadata = cluster.drillbit().getContext()
           .getMetastoreRegistry()
@@ -1883,7 +1938,12 @@ public class TestMetastoreCommands extends ClusterTest {
         .build();
 
     try {
-      run("analyze table dfs.tmp.`%s` REFRESH METADATA", tableName);
+      testBuilder()
+          .sqlQuery("analyze table dfs.tmp.`%s` REFRESH METADATA", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.tmp.%s]", tableName))
+          .go();
 
       BaseTableMetadata actualTableMetadata = cluster.drillbit().getContext()
           .getMetastoreRegistry()
@@ -1905,7 +1965,12 @@ public class TestMetastoreCommands extends ClusterTest {
     dirTestWatcher.copyResourceToTestTmp(Paths.get("multilevel/parquet"), Paths.get(tableName));
 
     try {
-      run("analyze table dfs.tmp.`%s` REFRESH METADATA", tableName);
+      testBuilder()
+          .sqlQuery("analyze table dfs.tmp.`%s` REFRESH METADATA", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.tmp.%s]", tableName))
+          .go();
 
       String query =
           "select dir0, dir1, o_custkey, o_orderdate from dfs.tmp.`%s`\n" +
@@ -1936,7 +2001,12 @@ public class TestMetastoreCommands extends ClusterTest {
     dirTestWatcher.copyResourceToRoot(Paths.get("multilevel/parquet"), Paths.get(tableName));
 
     try {
-      run("analyze table dfs.`%s` REFRESH METADATA", tableName);
+      testBuilder()
+          .sqlQuery("analyze table dfs.`%s` REFRESH METADATA", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.default.%s]", tableName))
+          .go();
 
       String query =
           "select dir0, dir1, o_custkey, o_orderdate from dfs.`%s`\n" +
@@ -1968,7 +2038,12 @@ public class TestMetastoreCommands extends ClusterTest {
       run("create table dfs.%s (o_orderdate, o_orderpriority) partition by (o_orderpriority)\n"
           + "as select o_orderdate, o_orderpriority from dfs.`multilevel/parquet/1994/Q1`", tableName);
 
-      run("analyze table dfs.`%s` REFRESH METADATA", tableName);
+      testBuilder()
+          .sqlQuery("ANALYZE TABLE dfs.`%s` REFRESH METADATA", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.default.%s]", tableName))
+          .go();
 
       String query = "select * from dfs.%s where o_orderpriority = '1-URGENT'";
       long expectedRowCount = 3;
@@ -1999,7 +2074,13 @@ public class TestMetastoreCommands extends ClusterTest {
           + "as select o_orderdate, convert_to(o_orderpriority, 'UTF8') as o_orderpriority\n"
           + "from dfs.`multilevel/parquet/1994/Q1`", tableName);
 
-      run("analyze table dfs.`%s` REFRESH METADATA", tableName);
+      testBuilder()
+          .sqlQuery("analyze table dfs.`%s` REFRESH METADATA", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.default.%s]", tableName))
+          .go();
+
       String query = String.format("select * from dfs.%s where o_orderpriority = '1-URGENT'", tableName);
       long expectedRowCount = 3;
       int expectedNumFiles = 1;
@@ -2028,7 +2109,12 @@ public class TestMetastoreCommands extends ClusterTest {
     dirTestWatcher.copyResourceToRoot(Paths.get("multilevel/parquet2"), Paths.get(tableName));
 
     try {
-      run("analyze table dfs.`%s` REFRESH METADATA", tableName);
+      testBuilder()
+          .sqlQuery("analyze table dfs.`%s` REFRESH METADATA", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.default.%s]", tableName))
+          .go();
 
       String query =
           "select dir0, dir1, o_custkey, o_orderdate from dfs.`%s`\n" +
@@ -2058,7 +2144,12 @@ public class TestMetastoreCommands extends ClusterTest {
     dirTestWatcher.copyResourceToRoot(Paths.get("multilevel/parquet2"), Paths.get(tableName));
 
     try {
-      run("analyze table dfs.`%s` REFRESH METADATA", tableName);
+      testBuilder()
+          .sqlQuery("analyze table dfs.`%s` REFRESH METADATA", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.default.%s]", tableName))
+          .go();
 
       String query =
           "select dir0, dir1, o_custkey, o_orderdate from dfs.`%s`\n" +
@@ -2089,7 +2180,12 @@ public class TestMetastoreCommands extends ClusterTest {
     dirTestWatcher.copyResourceToRoot(Paths.get("multilevel/parquet2"), Paths.get(tableName));
 
     try {
-      run("analyze table dfs.`%s` REFRESH METADATA", tableName);
+      testBuilder()
+          .sqlQuery("analyze table dfs.`%s` REFRESH METADATA", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.default.%s]", tableName))
+          .go();
 
       String query =
           "select dir0, dir1, o_custkey, o_orderdate from dfs.`%s`\n" +
@@ -2118,7 +2214,12 @@ public class TestMetastoreCommands extends ClusterTest {
     dirTestWatcher.copyResourceToRoot(Paths.get("multilevel/parquet2"), Paths.get(tableName));
 
     try {
-      run("analyze table dfs.`%s` REFRESH METADATA", tableName);
+      testBuilder()
+          .sqlQuery("analyze table dfs.`%s` REFRESH METADATA", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.default.%s]", tableName))
+          .go();
 
       String query =
           "select dir0, dir1, o_custkey, o_orderdate from dfs.`%s`\n" +
@@ -2150,7 +2251,12 @@ public class TestMetastoreCommands extends ClusterTest {
       run("create table dfs.`%s` as select * from cp.`tpch/nation.parquet`", tableName);
       run("create table dfs.`%1$s/%1$s` as select * from cp.`tpch/nation.parquet`", tableName);
 
-      run("analyze table dfs.`%s` REFRESH METADATA", tableName);
+      testBuilder()
+          .sqlQuery("analyze table dfs.`%s` REFRESH METADATA", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.default.%s]", tableName))
+          .go();
 
       String query = "select * from  dfs.`%s`";
       long expectedRowCount = 50;
@@ -2174,7 +2280,7 @@ public class TestMetastoreCommands extends ClusterTest {
 
   @Test
   public void testFieldWithDots() throws Exception {
-    String tableName = "dfs.tmp.`complex_table`";
+    String tableName = "dfs.tmp.complex_table";
     try {
       run("create table %s as\n" +
           "select cast(1 as int) as `column.with.dots`, t.`column`.`with.dots`\n" +
@@ -2191,7 +2297,12 @@ public class TestMetastoreCommands extends ClusterTest {
           .include("usedMetastore=false")
           .match();
 
-      run("analyze table %s REFRESH METADATA", tableName);
+      testBuilder()
+          .sqlQuery("analyze table %s REFRESH METADATA", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [%s]", tableName))
+          .go();
 
       actualRowCount = queryBuilder().sql(query, tableName).run().recordCount();
 
@@ -2208,13 +2319,18 @@ public class TestMetastoreCommands extends ClusterTest {
 
   @Test
   public void testBooleanPartitionPruning() throws Exception {
-    String tableName = "dfs.tmp.`interval_bool_partition`";
+    String tableName = "dfs.tmp.interval_bool_partition";
 
     try {
       run("create table %s partition by (col_bln) as\n" +
           "select * from cp.`parquet/alltypes_required.parquet`", tableName);
 
-      run("analyze table %s REFRESH METADATA", tableName);
+      testBuilder()
+          .sqlQuery("analyze table %s REFRESH METADATA", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [%s]", tableName))
+          .go();
 
       String query = "select * from %s where col_bln = true";
       int expectedRowCount = 2;
@@ -2249,7 +2365,12 @@ public class TestMetastoreCommands extends ClusterTest {
           "union all\n" +
           "select col_notexist from cp.`tpch/region.parquet`", tableName);
 
-      run("analyze table dfs.tmp.`%s` REFRESH METADATA", tableName);
+      testBuilder()
+          .sqlQuery("analyze table dfs.tmp.`%s` REFRESH METADATA", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.tmp.%s]", tableName))
+          .go();
 
       String query = "select mykey from dfs.tmp.`t5` where mykey = 100";
       long actualRowCount = queryBuilder().sql(query, tableName).run().recordCount();
@@ -2278,7 +2399,12 @@ public class TestMetastoreCommands extends ClusterTest {
       run("create table dfs.tmp.`%s/b` as\n" +
           "select case when true then 100 else null end as mykey from cp.`tpch/region.parquet`", tableName);
 
-      run("analyze table dfs.tmp.`%s` REFRESH METADATA", tableName);
+      testBuilder()
+          .sqlQuery("analyze table dfs.tmp.`%s` REFRESH METADATA", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.tmp.%s]", tableName))
+          .go();
 
       String query = "select mykey from dfs.tmp.`%s` where mykey is null";
 
@@ -2308,7 +2434,12 @@ public class TestMetastoreCommands extends ClusterTest {
       run("create table dfs.tmp.`%s/b` as\n" +
           "select  case when true then 100 else null end as mykey from cp.`tpch/region.parquet`", tableName);
 
-      run("analyze table dfs.tmp.`%s` REFRESH METADATA", tableName);
+      testBuilder()
+          .sqlQuery("analyze table dfs.tmp.`%s` REFRESH METADATA", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.tmp.%s]", tableName))
+          .go();
 
       String query = "select mykey from dfs.tmp.`%s` where mykey is null";
 
@@ -2338,7 +2469,12 @@ public class TestMetastoreCommands extends ClusterTest {
       run("create table dfs.tmp.`%s/b` as\n" +
           "select case when true then 100 else null end as mykey from cp.`tpch/region.parquet`", tableName);
 
-      run("analyze table dfs.tmp.`%s` columns none REFRESH METADATA", tableName);
+      testBuilder()
+          .sqlQuery("analyze table dfs.tmp.`%s` columns none REFRESH METADATA", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.tmp.%s]", tableName))
+          .go();
 
       String query = "select mykey from dfs.tmp.`%s` where mykey is null";
 
@@ -2364,7 +2500,12 @@ public class TestMetastoreCommands extends ClusterTest {
     dirTestWatcher.copyResourceToRoot(Paths.get("multilevel/parquet"), Paths.get(tableName));
 
     try {
-      run("analyze table dfs.`%s` REFRESH METADATA 'file' level", tableName);
+      testBuilder()
+          .sqlQuery("analyze table dfs.`%s` REFRESH METADATA 'file' level", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.default.%s]", tableName))
+          .go();
 
       String query = "select * from dfs.`%s`";
       long expectedRowCount = 120;
@@ -2387,13 +2528,18 @@ public class TestMetastoreCommands extends ClusterTest {
   }
 
   @Test
-  public void testAnalyzeWithFallbackError() throws Exception {
+  public void testAnalyzeWithDisabledFallback() throws Exception {
     String tableName = "parquetAnalyzeWithFallback";
 
     dirTestWatcher.copyResourceToRoot(Paths.get("multilevel/parquet"), Paths.get(tableName));
 
     try {
-      run("analyze table dfs.`%s` REFRESH METADATA 'file' level", tableName);
+      testBuilder()
+          .sqlQuery("analyze table dfs.`%s` REFRESH METADATA 'file' level", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.default.%s]", tableName))
+          .go();
       client.alterSession(ExecConstants.METASTORE_FALLBACK_TO_FILE_METADATA, false);
 
       queryBuilder()
@@ -2414,7 +2560,12 @@ public class TestMetastoreCommands extends ClusterTest {
     dirTestWatcher.copyResourceToRoot(Paths.get("multilevel/parquet"), Paths.get(tableName));
 
     try {
-      run("analyze table dfs.`%s` REFRESH METADATA", tableName);
+      testBuilder()
+          .sqlQuery("analyze table dfs.`%s` REFRESH METADATA", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.default.%s]", tableName))
+          .go();
       client.alterSession(ExecConstants.METASTORE_USE_SCHEMA_METADATA, false);
 
       queryBuilder()
@@ -2438,7 +2589,12 @@ public class TestMetastoreCommands extends ClusterTest {
       client.alterSession(ExecConstants.METASTORE_USE_SCHEMA_METADATA, false);
       client.alterSession(ExecConstants.STORE_TABLE_USE_SCHEMA_FILE, true);
       run("create table %s as select 'a' as c from (values(1))", table);
-      run("analyze table %s REFRESH METADATA", table);
+      testBuilder()
+          .sqlQuery("analyze table %s REFRESH METADATA", table)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [%s]", table))
+          .go();
 
       run("create schema (o_orderstatus varchar) for table %s", table);
 
@@ -2460,7 +2616,12 @@ public class TestMetastoreCommands extends ClusterTest {
 
       client.alterSession(PlannerSettings.STATISTICS_USE.getOptionName(), true);
 
-      run("analyze table %s REFRESH METADATA", tableName);
+      testBuilder()
+          .sqlQuery("analyze table %s REFRESH METADATA", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [%s]", tableName))
+          .go();
 
       String query = " select employee_id from %s where department_id = 2";
 
@@ -2487,7 +2648,12 @@ public class TestMetastoreCommands extends ClusterTest {
 
       client.alterSession(PlannerSettings.STATISTICS_USE.getOptionName(), false);
 
-      run("analyze table %s REFRESH METADATA", tableName);
+      testBuilder()
+          .sqlQuery("analyze table %s REFRESH METADATA", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [%s]", tableName))
+          .go();
 
       String query = "select employee_id from %s where department_id = 2";
 
@@ -2515,7 +2681,12 @@ public class TestMetastoreCommands extends ClusterTest {
 
       client.alterSession(PlannerSettings.STATISTICS_USE.getOptionName(), false);
 
-      run("analyze table %s REFRESH METADATA", tableName);
+      testBuilder()
+          .sqlQuery("analyze table %s REFRESH METADATA", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [%s]", tableName))
+          .go();
 
       client.alterSession(PlannerSettings.STATISTICS_USE.getOptionName(), true);
 
@@ -2546,7 +2717,12 @@ public class TestMetastoreCommands extends ClusterTest {
 
       client.alterSession(PlannerSettings.STATISTICS_USE.getOptionName(), true);
 
-      run("ANALYZE TABLE %s COLUMNS(department_id) REFRESH METADATA COMPUTE STATISTICS SAMPLE 95 PERCENT", tableName);
+      testBuilder()
+          .sqlQuery("ANALYZE TABLE %s COLUMNS(department_id) REFRESH METADATA COMPUTE STATISTICS SAMPLE 95 PERCENT", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [%s]", tableName))
+          .go();
 
       String query = "select employee_id from %s where department_id = 2";
 
@@ -2572,7 +2748,12 @@ public class TestMetastoreCommands extends ClusterTest {
       run("create table dfs.tmp.`%s` as\n" +
           "select * from cp.`tpch/region.parquet`", tableName);
 
-      run("analyze table dfs.tmp.`%s` REFRESH METADATA", tableName);
+      testBuilder()
+          .sqlQuery("analyze table dfs.tmp.`%s` REFRESH METADATA", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.tmp.%s]", tableName))
+          .go();
 
       MetastoreTableInfo metastoreTableInfo = cluster.drillbit().getContext()
           .getMetastoreRegistry()
@@ -2712,7 +2893,12 @@ public class TestMetastoreCommands extends ClusterTest {
     File table = dirTestWatcher.copyResourceToTestTmp(Paths.get("multilevel/parquet"), Paths.get(tableName));
 
     try {
-      run("analyze table dfs.tmp.`%s` REFRESH METADATA", tableName);
+      testBuilder()
+          .sqlQuery("analyze table dfs.tmp.`%s` REFRESH METADATA", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.tmp.%s]", tableName))
+          .go();
 
       File fileToUpdate = new File(new File(new File(table, "1994"), "Q4"), "orders_94_q4.parquet");
       long lastModified = fileToUpdate.lastModified();
@@ -2756,7 +2942,12 @@ public class TestMetastoreCommands extends ClusterTest {
     File table = dirTestWatcher.copyResourceToTestTmp(Paths.get("multilevel/parquet"), Paths.get(tableName));
 
     try {
-      run("analyze table dfs.tmp.`%s` REFRESH METADATA", tableName);
+      testBuilder()
+          .sqlQuery("analyze table dfs.tmp.`%s` REFRESH METADATA", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.tmp.%s]", tableName))
+          .go();
 
       dirTestWatcher.copyResourceToTestTmp(
           Paths.get("multilevel", "parquet", "1994", "Q1", "orders_94_q1.parquet"),

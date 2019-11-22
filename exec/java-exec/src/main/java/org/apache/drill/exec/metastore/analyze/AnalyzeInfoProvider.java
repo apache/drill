@@ -18,7 +18,6 @@
 package org.apache.drill.exec.metastore.analyze;
 
 import org.apache.calcite.rel.core.TableScan;
-import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.exec.physical.base.GroupScan;
@@ -51,11 +50,12 @@ public interface AnalyzeInfoProvider {
   /**
    * Returns list of fields required for ANALYZE.
    *
+   * @param table         drill table
    * @param metadataLevel metadata level for analyze
    * @param options       option manager
    * @return list of fields required for ANALYZE
    */
-  List<SqlIdentifier> getProjectionFields(MetadataType metadataLevel, OptionManager options);
+  List<SchemaPath> getProjectionFields(DrillTable table, MetadataType metadataLevel, OptionManager options) throws IOException;
 
   /**
    * Returns {@link MetadataInfoCollector} instance for obtaining information about segments, files, etc.

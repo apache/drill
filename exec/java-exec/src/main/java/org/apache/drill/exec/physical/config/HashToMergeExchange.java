@@ -32,8 +32,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName("hash-to-merge-exchange")
-public class HashToMergeExchange extends AbstractExchange{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HashToMergeExchange.class);
+public class HashToMergeExchange extends AbstractExchange {
 
   private final LogicalExpression distExpr;
   private final List<Ordering> orderExprs;

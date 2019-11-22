@@ -101,7 +101,7 @@ public class MetadataHandlerBatch extends AbstractSingleRecordBatch<MetadataHand
     // 2. For the case when incoming operator returned nothing - no updated underlying metadata was found.
     // 3. Fetches metadata which should be handled but wasn't returned by incoming batch from the Metastore
 
-    IterOutcome outcome = next(incoming);
+    IterOutcome outcome = incoming.getRecordCount() == 0 ? next(incoming) : getLastKnownOutcome();
 
     switch (outcome) {
       case NONE:
@@ -117,8 +117,7 @@ public class MetadataHandlerBatch extends AbstractSingleRecordBatch<MetadataHand
             outcome = IterOutcome.OK;
           }
         }
-        doWorkInternal();
-        return outcome;
+        // fall thru
       case OK:
         assert !firstBatch : "First batch should be OK_NEW_SCHEMA";
         doWorkInternal();
@@ -416,9 +415,9 @@ public class MetadataHandlerBatch extends AbstractSingleRecordBatch<MetadataHand
     container.clear();
     StreamSupport.stream(populatedContainer.spliterator(), false)
         .map(VectorWrapper::getField)
-        .filter(field -> field.getType().getMinorType() != MinorType.NULL)
         .forEach(container::addOrGet);
     container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
+    container.setRecordCount(0);
   }
 
   protected boolean setupNewSchema() {
