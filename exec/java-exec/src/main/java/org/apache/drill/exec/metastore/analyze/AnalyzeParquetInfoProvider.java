@@ -17,14 +17,14 @@
  */
 package org.apache.drill.exec.metastore.analyze;
 
-import org.apache.calcite.sql.SqlIdentifier;
-import org.apache.calcite.sql.parser.SqlParserPos;
-import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.metastore.ColumnNamesOptions;
 import org.apache.drill.exec.physical.base.GroupScan;
-import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.store.parquet.ParquetGroupScan;
 import org.apache.drill.metastore.metadata.MetadataType;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -38,12 +38,12 @@ public class AnalyzeParquetInfoProvider extends AnalyzeFileInfoProvider {
   public static final String TABLE_TYPE_NAME = "PARQUET";
 
   @Override
-  public List<SqlIdentifier> getProjectionFields(MetadataType metadataLevel, OptionManager options) {
-    List<SqlIdentifier> columnList = new ArrayList<>(super.getProjectionFields(metadataLevel, options));
+  public List<SchemaPath> getProjectionFields(DrillTable table, MetadataType metadataLevel, ColumnNamesOptions columnNamesOptions) throws IOException {
+    List<SchemaPath> columnList = new ArrayList<>(super.getProjectionFields(table, metadataLevel, columnNamesOptions));
     if (metadataLevel.includes(MetadataType.ROW_GROUP)) {
-      columnList.add(new SqlIdentifier(options.getString(ExecConstants.IMPLICIT_ROW_GROUP_INDEX_COLUMN_LABEL), SqlParserPos.ZERO));
-      columnList.add(new SqlIdentifier(options.getString(ExecConstants.IMPLICIT_ROW_GROUP_START_COLUMN_LABEL), SqlParserPos.ZERO));
-      columnList.add(new SqlIdentifier(options.getString(ExecConstants.IMPLICIT_ROW_GROUP_LENGTH_COLUMN_LABEL), SqlParserPos.ZERO));
+      columnList.add(SchemaPath.getSimplePath(columnNamesOptions.rowGroupIndex()));
+      columnList.add(SchemaPath.getSimplePath(columnNamesOptions.rowGroupStart()));
+      columnList.add(SchemaPath.getSimplePath(columnNamesOptions.rowGroupLength()));
     }
     return Collections.unmodifiableList(columnList);
   }

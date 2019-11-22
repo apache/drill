@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelOptRuleCall;
@@ -37,21 +35,32 @@ import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Function;
 
 public class PrelUtil {
 
   public static List<Ordering> getOrdering(RelCollation collation, RelDataType rowType) {
-    List<Ordering> orderExpr = Lists.newArrayList();
+    List<Ordering> orderExpr = new ArrayList<>();
 
-    final List<String> childFields = rowType.getFieldNames();
-
-    for (RelFieldCollation fc : collation.getFieldCollations()) {
-      FieldReference fr = new FieldReference(childFields.get(fc.getFieldIndex()), ExpressionPosition.UNKNOWN);
-      orderExpr.add(new Ordering(fc.getDirection(), fr, fc.nullDirection));
+    List<String> childFields = rowType.getFieldNames();
+    Function<RelFieldCollation, String> fieldNameProvider;
+    if (collation instanceof MetadataAggPrule.NamedRelCollation) {
+      fieldNameProvider = fieldCollation -> {
+        MetadataAggPrule.NamedRelCollation namedCollation = (MetadataAggPrule.NamedRelCollation) collation;
+        return namedCollation.getName(fieldCollation.getFieldIndex());
+      };
+    } else {
+      fieldNameProvider = fieldCollation -> childFields.get(fieldCollation.getFieldIndex());
     }
+
+    collation.getFieldCollations().forEach(fieldCollation -> {
+      FieldReference fieldReference = new FieldReference(fieldNameProvider.apply(fieldCollation), ExpressionPosition.UNKNOWN);
+      orderExpr.add(new Ordering(fieldCollation.getDirection(), fieldReference, fieldCollation.nullDirection));
+    });
 
     return orderExpr;
   }

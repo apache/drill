@@ -18,11 +18,20 @@
 package org.apache.drill.exec.physical.impl.aggregate;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.expr.DrillFuncHolderExpr;
 import org.apache.drill.exec.planner.physical.AggPrelBase;
+import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.vector.UntypedNullHolder;
+import org.apache.drill.exec.vector.UntypedNullVector;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ErrorCollector;
@@ -69,20 +78,25 @@ import org.apache.drill.exec.vector.ValueVector;
 
 import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JVar;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HashAggBatch.class);
+  static final Logger logger = LoggerFactory.getLogger(HashAggBatch.class);
 
   private HashAggregator aggregator;
-  private RecordBatch incoming;
+  protected RecordBatch incoming;
   private LogicalExpression[] aggrExprs;
   private TypedFieldId[] groupByOutFieldIds;
   private TypedFieldId[] aggrOutFieldIds;      // field ids for the outgoing batch
   private final List<Comparator> comparators;
   private BatchSchema incomingSchema;
   private boolean wasKilled;
+  private List<BaseWriter.ComplexWriter> complexWriters;
 
-  private int numGroupByExprs, numAggrExprs;
+  private int numGroupByExprs;
+  private int numAggrExprs;
+  private boolean firstBatch = true;
 
   // This map saves the mapping between outgoing column and incoming column.
   private Map<String, String> columnMapping;
@@ -136,13 +150,17 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
             valuesRowWidth += ((FixedWidthVector) w.getValueVector()).getValueWidth();
           }
         } else {
-          int columnWidth;
+          int columnWidth = 0;
+          TypeProtos.MajorType type = w.getField().getType();
           if (columnMapping.get(w.getValueVector().getField().getName()) == null) {
-             columnWidth = TypeHelper.getSize(w.getField().getType());
+            if (!Types.isComplex(type)) {
+              columnWidth = TypeHelper.getSize(type);
+            }
           } else {
-            RecordBatchSizer.ColumnSize columnSize = getRecordBatchSizer().getColumn(columnMapping.get(w.getValueVector().getField().getName()));
+            RecordBatchSizer.ColumnSize columnSize = getRecordBatchSizer()
+                .getColumn(columnMapping.get(w.getValueVector().getField().getName()));
             if (columnSize == null) {
-              columnWidth = TypeHelper.getSize(w.getField().getType());
+              columnWidth = TypeHelper.getSize(type);
             } else {
               columnWidth = columnSize.getAllocSizePerEntry();
             }
@@ -214,6 +232,11 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
   }
 
   @Override
+  public VectorContainer getOutgoingContainer() {
+    return container;
+  }
+
+  @Override
   public int getRecordCount() {
     if (state == BatchState.DONE) {
       return 0;
@@ -222,7 +245,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
   }
 
   @Override
-  public void buildSchema() throws SchemaChangeException {
+  public void buildSchema() {
     IterOutcome outcome = next(incoming);
     switch (outcome) {
       case NONE:
@@ -305,7 +328,23 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
       state = BatchState.DONE;
       // fall through
     case RETURN_OUTCOME:
-      return aggregator.getOutcome();
+      // rebuilds the schema in the case of complex writer expressions,
+      // since vectors would be added to batch run-time
+      IterOutcome outcome = aggregator.getOutcome();
+      switch (outcome) {
+        case OK:
+        case OK_NEW_SCHEMA:
+          if (firstBatch) {
+            if (CollectionUtils.isNotEmpty(complexWriters)) {
+              container.buildSchema(SelectionVectorMode.NONE);
+              outcome = IterOutcome.OK_NEW_SCHEMA;
+            }
+            firstBatch = false;
+          }
+          // fall thru
+        default:
+          return outcome;
+      }
 
     case UPDATE_AGGREGATOR:
       context.getExecutorState().fail(UserException.unsupportedError()
@@ -316,6 +355,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
           .build(logger));
       close();
       killIncoming(false);
+      firstBatch = false;
       return IterOutcome.STOP;
     default:
       throw new IllegalStateException(String.format("Unknown state %s.", out));
@@ -345,7 +385,12 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
     }
   }
 
-  private HashAggregator createAggregatorInternal() throws SchemaChangeException, ClassTransformationException,
+  @SuppressWarnings("unused") // used in generated code
+  public void addComplexWriter(final BaseWriter.ComplexWriter writer) {
+    complexWriters.add(writer);
+  }
+
+  protected HashAggregator createAggregatorInternal() throws SchemaChangeException, ClassTransformationException,
       IOException {
     CodeGenerator<HashAggregator> top = CodeGenerator.get(HashAggregator.TEMPLATE_DEFINITION, context.getOptions());
     ClassGenerator<HashAggregator> cg = top.getRoot();
@@ -355,8 +400,8 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
     // top.saveCodeForDebugging(true);
     container.clear();
 
-    numGroupByExprs = (popConfig.getGroupByExprs() != null) ? popConfig.getGroupByExprs().size() : 0;
-    numAggrExprs = (popConfig.getAggrExprs() != null) ? popConfig.getAggrExprs().size() : 0;
+    numGroupByExprs = (getKeyExpressions() != null) ? getKeyExpressions().size() : 0;
+    numAggrExprs = (getValueExpressions() != null) ? getValueExpressions().size() : 0;
     aggrExprs = new LogicalExpression[numAggrExprs];
     groupByOutFieldIds = new TypedFieldId[numGroupByExprs];
     aggrOutFieldIds = new TypedFieldId[numAggrExprs];
@@ -364,7 +409,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
     ErrorCollector collector = new ErrorCollectorImpl();
 
     for (int i = 0; i < numGroupByExprs; i++) {
-      NamedExpression ne = popConfig.getGroupByExprs().get(i);
+      NamedExpression ne = getKeyExpressions().get(i);
       final LogicalExpression expr =
           ExpressionTreeMaterializer.materialize(ne.getExpr(), incoming, collector, context.getFunctionRegistry());
       if (expr == null) {
@@ -381,7 +426,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
 
     int extraNonNullColumns = 0; // each of SUM, MAX and MIN gets an extra bigint column
     for (int i = 0; i < numAggrExprs; i++) {
-      NamedExpression ne = popConfig.getAggrExprs().get(i);
+      NamedExpression ne = getValueExpressions().get(i);
       final LogicalExpression expr = ExpressionTreeMaterializer.materialize(ne.getExpr(), incoming, collector, context.getFunctionRegistry());
 
       if (expr instanceof IfExpression) {
@@ -396,30 +441,45 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
         continue;
       }
 
-      final MaterializedField outputField = MaterializedField.create(ne.getRef().getAsNamePart().getName(), expr.getMajorType());
-      ValueVector vv = TypeHelper.getNewVector(outputField, oContext.getAllocator());
-      aggrOutFieldIds[i] = container.add(vv);
-
-      aggrExprs[i] = new ValueVectorWriteExpression(aggrOutFieldIds[i], expr, true);
-
-      if (expr instanceof FunctionHolderExpression) {
-        String funcName = ((FunctionHolderExpression) expr).getName();
-        if (funcName.equals("sum") || funcName.equals("max") || funcName.equals("min")) {
-          extraNonNullColumns++;
+      // Populate the complex writers for complex exprs
+      if (expr instanceof DrillFuncHolderExpr &&
+          ((DrillFuncHolderExpr) expr).getHolder().isComplexWriterFuncHolder()) {
+        if (complexWriters == null) {
+          complexWriters = new ArrayList<>();
+        } else {
+          complexWriters.clear();
         }
-        List<LogicalExpression> args = ((FunctionCall) ne.getExpr()).args;
-        if (!args.isEmpty()) {
-          if (args.get(0) instanceof SchemaPath) {
-            columnMapping.put(outputField.getName(), ((SchemaPath) args.get(0)).getAsNamePart().getName());
-          } else if (args.get(0) instanceof FunctionCall) {
-            FunctionCall functionCall = (FunctionCall) args.get(0);
-            if (functionCall.args.get(0) instanceof SchemaPath) {
-              columnMapping.put(outputField.getName(), ((SchemaPath) functionCall.args.get(0)).getAsNamePart().getName());
+        // The reference name will be passed to ComplexWriter, used as the name of the output vector from the writer.
+        ((DrillFuncHolderExpr) expr).setFieldReference(ne.getRef());
+        MaterializedField field = MaterializedField.create(ne.getRef().getAsNamePart().getName(), UntypedNullHolder.TYPE);
+        container.add(new UntypedNullVector(field, container.getAllocator()));
+        aggrExprs[i] = expr;
+      } else {
+        MaterializedField outputField = MaterializedField.create(ne.getRef().getAsNamePart().getName(), expr.getMajorType());
+        ValueVector vv = TypeHelper.getNewVector(outputField, oContext.getAllocator());
+        aggrOutFieldIds[i] = container.add(vv);
+
+        aggrExprs[i] = new ValueVectorWriteExpression(aggrOutFieldIds[i], expr, true);
+
+        if (expr instanceof FunctionHolderExpression) {
+          String funcName = ((FunctionHolderExpression) expr).getName();
+          if (funcName.equals("sum") || funcName.equals("max") || funcName.equals("min")) {
+            extraNonNullColumns++;
+          }
+          List<LogicalExpression> args = ((FunctionCall) ne.getExpr()).args;
+          if (!args.isEmpty()) {
+            if (args.get(0) instanceof SchemaPath) {
+              columnMapping.put(outputField.getName(), ((SchemaPath) args.get(0)).getAsNamePart().getName());
+            } else if (args.get(0) instanceof FunctionCall) {
+              FunctionCall functionCall = (FunctionCall) args.get(0);
+              if (functionCall.args.get(0) instanceof SchemaPath) {
+                columnMapping.put(outputField.getName(), ((SchemaPath) functionCall.args.get(0)).getAsNamePart().getName());
+              }
             }
           }
+        } else {
+          columnMapping.put(outputField.getName(), ne.getRef().getAsNamePart().getName());
         }
-      } else {
-        columnMapping.put(outputField.getName(), ne.getRef().getAsNamePart().getName());
       }
     }
 
@@ -433,7 +493,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
     HashTableConfig htConfig =
         // TODO - fix the validator on this option
         new HashTableConfig((int)context.getOptions().getOption(ExecConstants.MIN_HASH_TABLE_SIZE),
-            HashTable.DEFAULT_LOAD_FACTOR, popConfig.getGroupByExprs(), null /* no probe exprs */, comparators);
+            HashTable.DEFAULT_LOAD_FACTOR, getKeyExpressions(), null /* no probe exprs */, comparators);
 
     agg.setup(popConfig, htConfig, context, oContext, incoming, this,
         aggrExprs,
@@ -443,6 +503,14 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
         this.container, extraNonNullColumns * 8 /* sizeof(BigInt) */);
 
     return agg;
+  }
+
+  protected List<NamedExpression> getKeyExpressions() {
+    return popConfig.getGroupByExprs();
+  }
+
+  protected List<NamedExpression> getValueExpressions() {
+    return popConfig.getAggrExprs();
   }
 
   private void setupUpdateAggrValues(ClassGenerator<HashAggregator> cg) {

@@ -71,7 +71,7 @@ public class IsPredicate<C extends Comparable<C>> extends LogicalExpressionBase 
    * @param stat statistics object
    * @return <tt>true</tt> if the input stat object is null or has invalid statistics; false otherwise
    */
-  static boolean isNullOrEmpty(ColumnStatistics stat) {
+  public static boolean isNullOrEmpty(ColumnStatistics stat) {
     return stat == null
         || !stat.contains(ColumnStatisticsKind.MIN_VALUE)
         || !stat.contains(ColumnStatisticsKind.MAX_VALUE)

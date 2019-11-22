@@ -18,13 +18,12 @@
 package org.apache.drill.exec.metastore.analyze;
 
 import org.apache.calcite.rel.core.TableScan;
-import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.data.NamedExpression;
+import org.apache.drill.exec.metastore.ColumnNamesOptions;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
-import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.dfs.FormatSelection;
 import org.apache.drill.metastore.components.tables.BasicTablesRequests;
 import org.apache.drill.metastore.metadata.MetadataType;
@@ -42,20 +41,21 @@ public interface AnalyzeInfoProvider {
   /**
    * Returns list of segment column names for specified {@link DrillTable} table.
    *
-   * @param table   table for which should be returned segment column names
-   * @param options option manager
+   * @param table              table for which should be returned segment column names
+   * @param columnNamesOptions column names option values
    * @return list of segment column names
    */
-  List<SchemaPath> getSegmentColumns(DrillTable table, OptionManager options) throws IOException;
+  List<SchemaPath> getSegmentColumns(DrillTable table, ColumnNamesOptions columnNamesOptions) throws IOException;
 
   /**
    * Returns list of fields required for ANALYZE.
    *
-   * @param metadataLevel metadata level for analyze
-   * @param options       option manager
+   * @param table              drill table
+   * @param metadataLevel      metadata level for analyze
+   * @param columnNamesOptions column names option values
    * @return list of fields required for ANALYZE
    */
-  List<SqlIdentifier> getProjectionFields(MetadataType metadataLevel, OptionManager options);
+  List<SchemaPath> getProjectionFields(DrillTable table, MetadataType metadataLevel, ColumnNamesOptions columnNamesOptions) throws IOException;
 
   /**
    * Returns {@link MetadataInfoCollector} instance for obtaining information about segments, files, etc.
@@ -79,10 +79,10 @@ public interface AnalyzeInfoProvider {
    * Provides schema path to field which will be used as a location for specific table data,
    * for example, for file-based tables, it may be `fqn`.
    *
-   * @param optionManager option manager
+   * @param columnNamesOptions column names option values
    * @return location field
    */
-  SchemaPath getLocationField(OptionManager optionManager);
+  SchemaPath getLocationField(ColumnNamesOptions columnNamesOptions);
 
   /**
    * Returns expression which may be used to determine parent location for specific table data,

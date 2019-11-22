@@ -21,11 +21,11 @@ import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelTrait;
 import org.apache.calcite.plan.RelTraitDef;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 
 public class DrillDistributionTrait implements RelTrait {
-  public static enum DistributionType {SINGLETON, HASH_DISTRIBUTED, RANGE_DISTRIBUTED, RANDOM_DISTRIBUTED,
-                                       ROUND_ROBIN_DISTRIBUTED, BROADCAST_DISTRIBUTED, ANY};
 
   public static DrillDistributionTrait SINGLETON = new DrillDistributionTrait(DistributionType.SINGLETON);
   public static DrillDistributionTrait RANDOM_DISTRIBUTED = new DrillDistributionTrait(DistributionType.RANDOM_DISTRIBUTED);
@@ -33,24 +33,24 @@ public class DrillDistributionTrait implements RelTrait {
 
   public static DrillDistributionTrait DEFAULT = ANY;
 
-  private DistributionType type;
-  private final ImmutableList<DistributionField> fields;
+  private final DistributionType type;
+  private final List<DistributionField> fields;
   private PartitionFunction partitionFunction = null;
 
   public DrillDistributionTrait(DistributionType type) {
     assert (type == DistributionType.SINGLETON || type == DistributionType.RANDOM_DISTRIBUTED || type == DistributionType.ANY
             || type == DistributionType.ROUND_ROBIN_DISTRIBUTED || type == DistributionType.BROADCAST_DISTRIBUTED);
     this.type = type;
-    this.fields = ImmutableList.<DistributionField>of();
+    this.fields = Collections.emptyList();
   }
 
-  public DrillDistributionTrait(DistributionType type, ImmutableList<DistributionField> fields) {
+  public DrillDistributionTrait(DistributionType type, List<DistributionField> fields) {
     assert (type == DistributionType.HASH_DISTRIBUTED || type == DistributionType.RANGE_DISTRIBUTED);
     this.type = type;
     this.fields = fields;
   }
 
-  public DrillDistributionTrait(DistributionType type, ImmutableList<DistributionField> fields,
+  public DrillDistributionTrait(DistributionType type, List<DistributionField> fields,
       PartitionFunction partitionFunction) {
     assert (type == DistributionType.HASH_DISTRIBUTED || type == DistributionType.RANGE_DISTRIBUTED);
     this.type = type;
@@ -105,7 +105,7 @@ public class DrillDistributionTrait implements RelTrait {
     return this.type;
   }
 
-  public ImmutableList<DistributionField> getFields() {
+  public List<DistributionField> getFields() {
     return fields;
   }
 
@@ -114,12 +114,7 @@ public class DrillDistributionTrait implements RelTrait {
   }
 
   private boolean arePartitionFunctionsSame(PartitionFunction f1, PartitionFunction f2) {
-    if (f1 != null && f2 != null) {
-      return f1.equals(f2);
-    } else if (f2 == null && f2 == null) {
-      return true;
-    }
-    return false;
+    return Objects.equals(f1, f2);
   }
 
   @Override
@@ -145,6 +140,15 @@ public class DrillDistributionTrait implements RelTrait {
     return fields == null ? this.type.toString() : this.type.toString() + "(" + fields + ")";
   }
 
+  public enum DistributionType {
+    SINGLETON,
+    HASH_DISTRIBUTED,
+    RANGE_DISTRIBUTED,
+    RANDOM_DISTRIBUTED,
+    ROUND_ROBIN_DISTRIBUTED,
+    BROADCAST_DISTRIBUTED,
+    ANY
+  }
 
   public static class DistributionField {
     /**
@@ -180,4 +184,51 @@ public class DrillDistributionTrait implements RelTrait {
     }
   }
 
+  /**
+   * Stores distribution field index and field name to be used in exchange operators.
+   * Field name is required for the case of dynamic schema discovering
+   * when field is not present in rel data type at planning time.
+   */
+  public static class NamedDistributionField extends DistributionField {
+    /**
+     * Name of the field being DISTRIBUTED.
+     */
+    private final String fieldName;
+
+    public NamedDistributionField(int fieldId, String fieldName) {
+      super(fieldId);
+      this.fieldName = fieldName;
+    }
+
+    public String getFieldName() {
+      return fieldName;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      if (!super.equals(o)) {
+        return false;
+      }
+
+      NamedDistributionField that = (NamedDistributionField) o;
+
+      return Objects.equals(fieldName, that.fieldName);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(super.hashCode(), fieldName);
+    }
+
+    @Override
+    public String toString() {
+      return String.format("%s(%s)", fieldName, getFieldId());
+    }
+  }
 }

@@ -36,6 +36,10 @@ import org.apache.drill.exec.physical.impl.limit.LimitRecordBatch;
 import org.apache.drill.exec.physical.impl.limit.PartitionLimitRecordBatch;
 import org.apache.drill.exec.physical.impl.mergereceiver.MergingRecordBatch;
 import org.apache.drill.exec.physical.impl.orderedpartitioner.OrderedPartitionRecordBatch;
+import org.apache.drill.exec.physical.impl.metadata.MetadataHashAggBatch;
+import org.apache.drill.exec.physical.impl.metadata.MetadataStreamAggBatch;
+import org.apache.drill.exec.physical.impl.metadata.MetadataControllerBatch;
+import org.apache.drill.exec.physical.impl.metadata.MetadataHandlerBatch;
 import org.apache.drill.exec.physical.impl.project.ProjectRecordBatch;
 import org.apache.drill.exec.physical.impl.protocol.OperatorRecordBatch;
 import org.apache.drill.exec.physical.impl.rangepartitioner.RangePartitionRecordBatch;
@@ -247,6 +251,10 @@ public class BatchValidator {
     rules.put(HashJoinBatch.class, CheckMode.VECTORS);
     rules.put(ExternalSortBatch.class, CheckMode.VECTORS);
     rules.put(WriterRecordBatch.class, CheckMode.VECTORS);
+    rules.put(MetadataStreamAggBatch.class, CheckMode.VECTORS);
+    rules.put(MetadataHashAggBatch.class, CheckMode.VECTORS);
+    rules.put(MetadataHandlerBatch.class, CheckMode.VECTORS);
+    rules.put(MetadataControllerBatch.class, CheckMode.VECTORS);
     return rules;
   }
 

@@ -18,7 +18,6 @@
 package org.apache.drill.exec.planner.physical;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.drill.exec.planner.logical.DrillAggregateRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
@@ -59,8 +58,7 @@ public class HashAggPrule extends AggPruleBase {
     final DrillAggregateRel aggregate = call.rel(0);
     final RelNode input = call.rel(1);
 
-    if (aggregate.containsDistinctCall() || aggregate.getGroupCount() == 0
-        || requiresStreamingAgg(aggregate)) {
+    if (aggregate.containsDistinctCall() || aggregate.getGroupCount() == 0) {
       // currently, don't use HashAggregate if any of the logical aggrs contains DISTINCT or
       // if there are no grouping keys
       return;
@@ -101,16 +99,6 @@ public class HashAggPrule extends AggPruleBase {
     } catch (InvalidRelException e) {
       tracer.warn(e.toString());
     }
-  }
-
-  private boolean requiresStreamingAgg(DrillAggregateRel aggregate) {
-    //If contains ANY_VALUE aggregate, using HashAgg would not work
-    for (AggregateCall agg : aggregate.getAggCallList()) {
-      if (agg.getAggregation().getName().equalsIgnoreCase("any_value")) {
-        return true;
-      }
-    }
-    return false;
   }
 
   private class TwoPhaseSubset extends SubsetTransformer<DrillAggregateRel, InvalidRelException> {

@@ -94,24 +94,63 @@ Analyze command specific operators:
  - `MetadataControllerBatch` - responsible for converting obtained metadata, fetching absent metadata from the Metastore
   and storing resulting metadata into the Metastore.
 
-`MetastoreAnalyzeTableHandler` forms plan  depending on segments count in the following form:
+`MetastoreAnalyzeTableHandler` forms plan depending on segments count in the following form:
 
 ```
-MetadataControllerBatch
+MetadataControllerRel
   ...
-    MetadataHandlerBatch
-      MetadataAggBatch(dir0, ...)
-        MetadataHandlerBatch
-          MetadataAggBatch(dir0, dir1, ...)
-            MetadataHandlerBatch
-              MetadataAggBatch(dir0, dir1, fqn, ...)
-                Scan(DYNAMIC_STAR **, ANY fqn, ...)
+    MetadataHandlerRel
+      MetadataAggRel(dir0, ...)
+        MetadataHandlerRel
+          MetadataAggRel(dir0, dir1, ...)
+            MetadataHandlerRel
+              MetadataAggRel(dir0, dir1, fqn, ...)
+                DrillScanRel(DYNAMIC_STAR **, ANY fqn, ...)
 ```
 
-The lowest `MetadataAggBatch` creates required aggregate calls for every (or interesting only) table columns
+For the case when `ANALYZE` uses columns for which statistics is present in parquet metadata,
+`ConvertMetadataAggregateToDirectScanRule` rule will be applied to the 
+
+```
+MetadataAggRel(dir0, dir1, fqn, ...)
+  DrillScanRel(DYNAMIC_STAR **, ANY fqn, ...)
+```
+
+plan part and convert it to the `DrillDirectScanRel` populated with row group metadata for the case when `ANALYZE`
+was done for `ROW_GROUP` metadata level.
+For the case when metadata level in `ANALYZE` is not `ROW_GROUP`, the plan above will be converted into the following plan:
+
+```
+MetadataAggRel(metadataLevel=FILE (or another non-ROW_GROUP value), createNewAggregations=false)
+  DrillDirectScanRel
+```
+
+When it is converted into the physical plan, two-phase aggregation may be used for the case when incoming row
+count is greater than `planner.slice_target` option value. In this case, the lowest aggregation will be hash
+aggregation and it will be executed on the same minor fragments where the scan is produced. `Sort` operator will be
+placed above hash aggregation. `HashToMergeExchange` operator above `Sort` will send aggregated sorted data to the
+stream aggregate above.
+
+Example of the resulting plan:
+
+```
+MetadataControllerPrel
+  ...
+    MetadataStreamAggPrel(PHASE_1of1)
+      SortPrel
+        MetadataHandlerPrel
+          MetadataStreamAggPrel(PHASE_2of2)
+            HashToMergeExchangePrel
+              SortPrel
+                MetadataHashAggPrel(PHASE_1of2)
+                  ScanPrel
+```
+
+The lowest `MetadataStreamAggBatch` (or `MetadataHashAggBatch` for the case of two-phase aggregation with
+`MetadataStreamAggBatch` above) creates required aggregate calls for every (or interesting only) table columns
 and produces aggregations with grouping by segment columns that correspond to specific table level.
 `MetadataHandlerBatch` above it populates batch with additional information about metadata type and other info.
-`MetadataAggBatch` above merges metadata calculated before to obtain metadata for parent metadata levels and also stores incoming data to populate it to the Metastore later.
+`MetadataStreamAggBatch` above merges metadata calculated before to obtain metadata for parent metadata levels and also stores incoming data to populate it to the Metastore later.
 
 `MetadataControllerBatch` obtains all calculated metadata, converts it to the suitable form and sends it to the Metastore.
 

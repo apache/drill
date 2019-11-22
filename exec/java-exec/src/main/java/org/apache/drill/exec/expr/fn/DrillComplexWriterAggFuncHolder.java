@@ -23,6 +23,8 @@ import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
+import org.apache.drill.exec.physical.impl.aggregate.HashAggBatch;
+import org.apache.drill.exec.physical.impl.aggregate.HashAggTemplate;
 import org.apache.drill.exec.physical.impl.aggregate.StreamingAggBatch;
 import org.apache.drill.exec.physical.impl.aggregate.StreamingAggTemplate;
 import org.apache.drill.exec.record.VectorAccessibleComplexWriter;
@@ -56,10 +58,18 @@ public class DrillComplexWriterAggFuncHolder extends DrillAggFuncHolder {
 
   @Override
   public JVar[] renderStart(ClassGenerator<?> classGenerator, HoldingContainer[] inputVariables, FieldReference fieldReference) {
-    if (!classGenerator.getMappingSet().isHashAggMapping()) {  //Declare workspace vars for non-hash-aggregation.
-      JInvocation container = classGenerator.getMappingSet().getOutgoing().invoke("getOutgoingContainer");
+    JInvocation container = classGenerator.getMappingSet().getOutgoing().invoke("getOutgoingContainer");
 
-      complexWriter = classGenerator.declareClassField("complexWriter", classGenerator.getModel()._ref(ComplexWriter.class));
+    complexWriter = classGenerator.declareClassField("complexWriter", classGenerator.getModel()._ref(ComplexWriter.class));
+
+    if (classGenerator.getMappingSet().isHashAggMapping()) {
+      // Default name is "col", if not passed in a reference name for the output vector.
+      String refName = fieldReference == null ? "col" : fieldReference.getRootSegment().getPath();
+      JClass cwClass = classGenerator.getModel().ref(VectorAccessibleComplexWriter.class);
+      classGenerator.getSetupBlock().assign(complexWriter, cwClass.staticInvoke("getWriter").arg(refName).arg(container));
+
+      return super.renderStart(classGenerator, inputVariables, fieldReference);
+    } else {  //Declare workspace vars for non-hash-aggregation.
       writerIdx = classGenerator.declareClassField("writerIdx", classGenerator.getModel()._ref(int.class));
       lastWriterIdx = classGenerator.declareClassField("lastWriterIdx", classGenerator.getModel()._ref(int.class));
       //Default name is "col", if not passed in a reference name for the output vector.
@@ -72,8 +82,6 @@ public class DrillComplexWriterAggFuncHolder extends DrillAggFuncHolder {
       JVar[] workspaceJVars = declareWorkspaceVariables(classGenerator);
       generateBody(classGenerator, ClassGenerator.BlockType.SETUP, setup(), null, workspaceJVars, true);
       return workspaceJVars;
-    } else {
-      return super.renderStart(classGenerator, inputVariables, fieldReference);
     }
   }
 
@@ -84,26 +92,33 @@ public class DrillComplexWriterAggFuncHolder extends DrillAggFuncHolder {
         getRegisteredNames()[0]));
 
     JBlock sub = new JBlock(true, true);
-    JBlock topSub = sub;
     JClass aggBatchClass = null;
 
     if (classGenerator.getCodeGenerator().getDefinition() == StreamingAggTemplate.TEMPLATE_DEFINITION) {
       aggBatchClass = classGenerator.getModel().ref(StreamingAggBatch.class);
+    } else if (classGenerator.getCodeGenerator().getDefinition() == HashAggTemplate.TEMPLATE_DEFINITION) {
+      aggBatchClass = classGenerator.getModel().ref(HashAggBatch.class);
     }
-    assert aggBatchClass != null : "ComplexWriterAggFuncHolder should only be used with Streaming Aggregate Operator";
 
     JExpression aggBatch = JExpr.cast(aggBatchClass, classGenerator.getMappingSet().getOutgoing());
 
     classGenerator.getSetupBlock().add(aggBatch.invoke("addComplexWriter").arg(complexWriter));
     // Only set the writer if there is a position change. Calling setPosition may cause underlying writers to allocate
     // new vectors, thereby, losing the previously stored values
-    JBlock condAssignCW = classGenerator.getEvalBlock()._if(lastWriterIdx.ne(writerIdx))._then();
-    condAssignCW.add(complexWriter.invoke("setPosition").arg(writerIdx));
-    condAssignCW.assign(lastWriterIdx, writerIdx);
+    if (classGenerator.getMappingSet().isHashAggMapping()) {
+      classGenerator.getEvalBlock().add(
+          complexWriter
+              .invoke("setPosition")
+              .arg(classGenerator.getMappingSet().getWorkspaceIndex()));
+    } else {
+      JBlock condAssignCW = classGenerator.getEvalBlock()._if(lastWriterIdx.ne(writerIdx))._then();
+      condAssignCW.add(complexWriter.invoke("setPosition").arg(writerIdx));
+      condAssignCW.assign(lastWriterIdx, writerIdx);
+    }
     sub.decl(classGenerator.getModel()._ref(ComplexWriter.class), getReturnValue().getName(), complexWriter);
 
     // add the subblock after the out declaration.
-    classGenerator.getEvalBlock().add(topSub);
+    classGenerator.getEvalBlock().add(sub);
 
     addProtectedBlock(classGenerator, sub, add(), inputVariables, workspaceJVars, false);
     classGenerator.getEvalBlock().directStatement(String.format("//---- end of eval portion of %s function. ----//",
@@ -124,7 +139,8 @@ public class DrillComplexWriterAggFuncHolder extends DrillAggFuncHolder {
           JExpr._new(classGenerator.getHolderType(getReturnType())));
     }
     classGenerator.getEvalBlock().add(sub);
-    if (getReturnType().getMinorType() == TypeProtos.MinorType.LATE) {
+    if (getReturnType().getMinorType() == TypeProtos.MinorType.LATE
+        && !classGenerator.getMappingSet().isHashAggMapping()) {
       sub.assignPlus(writerIdx, JExpr.lit(1));
     }
     addProtectedBlock(classGenerator, sub, output(), null, workspaceJVars, false);

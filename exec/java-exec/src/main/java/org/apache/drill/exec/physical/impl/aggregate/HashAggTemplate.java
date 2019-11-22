@@ -34,6 +34,8 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.cache.VectorSerializer.Writer;
 import org.apache.drill.exec.compile.sig.RuntimeOverridden;
@@ -779,12 +781,19 @@ public abstract class HashAggTemplate implements HashAggregator {
     while (outgoingIter.hasNext()) {
       ValueVector vv = outgoingIter.next().getValueVector();
 
-      AllocationHelper.allocatePrecomputedChildCount(vv, records, maxColumnWidth, 0);
+      // Prevent allocating complex vectors here to avoid losing their content
+      // since their writers will still be used in generated code
+      TypeProtos.MajorType majorType = vv.getField().getType();
+      if (!Types.isComplex(majorType)
+          && !Types.isUnion(majorType)
+          && !Types.isRepeated(majorType)) {
+        AllocationHelper.allocatePrecomputedChildCount(vv, records, maxColumnWidth, 0);
+      }
     }
 
     long memAdded = allocator.getAllocatedMemory() - allocatedBefore;
-    if ( memAdded > estOutgoingAllocSize ) {
-      logger.trace("Output values allocated {} but the estimate was only {}. Adjusting ...",memAdded,estOutgoingAllocSize);
+    if (memAdded > estOutgoingAllocSize) {
+      logger.trace("Output values allocated {} but the estimate was only {}. Adjusting ...", memAdded, estOutgoingAllocSize);
       estOutgoingAllocSize = memAdded;
     }
     outContainer.setRecordCount(records);

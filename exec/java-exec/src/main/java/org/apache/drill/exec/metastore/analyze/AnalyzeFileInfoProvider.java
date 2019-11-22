@@ -18,17 +18,14 @@
 package org.apache.drill.exec.metastore.analyze;
 
 import org.apache.calcite.rel.core.TableScan;
-import org.apache.calcite.sql.SqlIdentifier;
-import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.data.NamedExpression;
-import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.metastore.ColumnNamesOptions;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
-import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.ColumnExplorer;
 import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.store.dfs.FormatSelection;
@@ -37,7 +34,7 @@ import org.apache.drill.metastore.metadata.MetadataType;
 import org.apache.drill.metastore.metadata.TableInfo;
 
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
@@ -49,7 +46,7 @@ import java.util.stream.Collectors;
 public abstract class AnalyzeFileInfoProvider implements AnalyzeInfoProvider {
 
   @Override
-  public List<SchemaPath> getSegmentColumns(DrillTable table, OptionManager options) throws IOException {
+  public List<SchemaPath> getSegmentColumns(DrillTable table, ColumnNamesOptions columnNamesOptions) throws IOException {
     FormatSelection selection = (FormatSelection) table.getSelection();
 
     FileSelection fileSelection = selection.getSelection();
@@ -57,16 +54,17 @@ public abstract class AnalyzeFileInfoProvider implements AnalyzeInfoProvider {
       fileSelection = FileMetadataInfoCollector.getExpandedFileSelection(fileSelection);
     }
 
-    return ColumnExplorer.getPartitionColumnNames(fileSelection, options).stream()
+    return ColumnExplorer.getPartitionColumnNames(fileSelection, columnNamesOptions).stream()
         .map(SchemaPath::getSimplePath)
         .collect(Collectors.toList());
   }
 
   @Override
-  public List<SqlIdentifier> getProjectionFields(MetadataType metadataLevel, OptionManager options) {
-    return Arrays.asList(
-        new SqlIdentifier(options.getString(ExecConstants.IMPLICIT_FQN_COLUMN_LABEL), SqlParserPos.ZERO),
-        new SqlIdentifier(options.getString(ExecConstants.IMPLICIT_LAST_MODIFIED_TIME_COLUMN_LABEL), SqlParserPos.ZERO));
+  public List<SchemaPath> getProjectionFields(DrillTable table, MetadataType metadataLevel, ColumnNamesOptions columnNamesOptions) throws IOException {
+    List<SchemaPath> projectionList = new ArrayList<>(getSegmentColumns(table, columnNamesOptions));
+    projectionList.add(SchemaPath.getSimplePath(columnNamesOptions.fullyQualifiedName()));
+    projectionList.add(SchemaPath.getSimplePath(columnNamesOptions.lastModifiedTime()));
+    return Collections.unmodifiableList(projectionList);
   }
 
   @Override
@@ -78,8 +76,8 @@ public abstract class AnalyzeFileInfoProvider implements AnalyzeInfoProvider {
   }
 
   @Override
-  public SchemaPath getLocationField(OptionManager optionManager) {
-    return SchemaPath.getSimplePath(optionManager.getString(ExecConstants.IMPLICIT_FQN_COLUMN_LABEL));
+  public SchemaPath getLocationField(ColumnNamesOptions columnNamesOptions) {
+    return SchemaPath.getSimplePath(columnNamesOptions.fullyQualifiedName());
   }
 
   @Override

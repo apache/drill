@@ -20,8 +20,8 @@ package org.apache.drill.exec.physical.impl.metadata;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.OutOfMemoryException;
+import org.apache.drill.exec.metastore.ColumnNamesOptions;
 import org.apache.drill.exec.metastore.analyze.MetastoreAnalyzeConstants;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.MetadataHandlerPOP;
@@ -81,6 +81,7 @@ public class MetadataHandlerBatch extends AbstractSingleRecordBatch<MetadataHand
   private final Tables tables;
   private final MetadataType metadataType;
   private final Map<String, MetadataInfo> metadataToHandle;
+  private final ColumnNamesOptions columnNamesOptions;
 
   private boolean firstBatch = true;
 
@@ -89,6 +90,7 @@ public class MetadataHandlerBatch extends AbstractSingleRecordBatch<MetadataHand
     super(popConfig, context, incoming);
     this.tables = context.getMetastoreRegistry().get().tables();
     this.metadataType = popConfig.getContext().metadataType();
+    this.columnNamesOptions = new ColumnNamesOptions(context.getOptions());
     this.metadataToHandle = popConfig.getContext().metadataToHandle() != null
         ? popConfig.getContext().metadataToHandle().stream()
             .collect(Collectors.toMap(MetadataInfo::identifier, Function.identity()))
@@ -101,7 +103,7 @@ public class MetadataHandlerBatch extends AbstractSingleRecordBatch<MetadataHand
     // 2. For the case when incoming operator returned nothing - no updated underlying metadata was found.
     // 3. Fetches metadata which should be handled but wasn't returned by incoming batch from the Metastore
 
-    IterOutcome outcome = next(incoming);
+    IterOutcome outcome = incoming.getRecordCount() == 0 ? next(incoming) : getLastKnownOutcome();
 
     switch (outcome) {
       case NONE:
@@ -117,8 +119,7 @@ public class MetadataHandlerBatch extends AbstractSingleRecordBatch<MetadataHand
             outcome = IterOutcome.OK;
           }
         }
-        doWorkInternal();
-        return outcome;
+        // fall thru
       case OK:
         assert !firstBatch : "First batch should be OK_NEW_SCHEMA";
         doWorkInternal();
@@ -286,14 +287,14 @@ public class MetadataHandlerBatch extends AbstractSingleRecordBatch<MetadataHand
     }
 
     if (metadataType == MetadataType.ROW_GROUP) {
-      schemaBuilder.addNullable(context.getOptions().getString(ExecConstants.IMPLICIT_ROW_GROUP_INDEX_COLUMN_LABEL), MinorType.VARCHAR);
-      schemaBuilder.addNullable(context.getOptions().getString(ExecConstants.IMPLICIT_ROW_GROUP_START_COLUMN_LABEL), MinorType.VARCHAR);
-      schemaBuilder.addNullable(context.getOptions().getString(ExecConstants.IMPLICIT_ROW_GROUP_LENGTH_COLUMN_LABEL), MinorType.VARCHAR);
+      schemaBuilder.addNullable(columnNamesOptions.rowGroupIndex(), MinorType.VARCHAR);
+      schemaBuilder.addNullable(columnNamesOptions.rowGroupStart(), MinorType.VARCHAR);
+      schemaBuilder.addNullable(columnNamesOptions.rowGroupLength(), MinorType.VARCHAR);
     }
 
     schemaBuilder
         .addNullable(MetastoreAnalyzeConstants.SCHEMA_FIELD, MinorType.VARCHAR)
-        .addNullable(context.getOptions().getString(ExecConstants.IMPLICIT_LAST_MODIFIED_TIME_COLUMN_LABEL), MinorType.VARCHAR)
+        .addNullable(columnNamesOptions.lastModifiedTime(), MinorType.VARCHAR)
         .add(MetastoreAnalyzeConstants.METADATA_TYPE, MinorType.VARCHAR);
 
     ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
@@ -306,11 +307,6 @@ public class MetadataHandlerBatch extends AbstractSingleRecordBatch<MetadataHand
   @SuppressWarnings("unchecked")
   private <T extends BaseMetadata & LocationProvider> VectorContainer writeMetadataUsingBatchSchema(List<T> metadataList) {
     Preconditions.checkArgument(!metadataList.isEmpty(), "Metadata list shouldn't be empty.");
-
-    String lastModifiedTimeField = context.getOptions().getString(ExecConstants.IMPLICIT_LAST_MODIFIED_TIME_COLUMN_LABEL);
-    String rgiField = context.getOptions().getString(ExecConstants.IMPLICIT_ROW_GROUP_INDEX_COLUMN_LABEL);
-    String rgsField = context.getOptions().getString(ExecConstants.IMPLICIT_ROW_GROUP_START_COLUMN_LABEL);
-    String rglField = context.getOptions().getString(ExecConstants.IMPLICIT_ROW_GROUP_LENGTH_COLUMN_LABEL);
 
     ResultSetLoader resultSetLoader = getResultSetLoaderWithBatchSchema();
     resultSetLoader.startBatch();
@@ -352,13 +348,13 @@ public class MetadataHandlerBatch extends AbstractSingleRecordBatch<MetadataHand
           arguments.add(new Object[]{});
         } else if (fieldName.equals(MetastoreAnalyzeConstants.SCHEMA_FIELD)) {
           arguments.add(metadata.getSchema().jsonString());
-        } else if (fieldName.equals(lastModifiedTimeField)) {
+        } else if (fieldName.equals(columnNamesOptions.lastModifiedTime())) {
           arguments.add(String.valueOf(metadata.getLastModifiedTime()));
-        } else if (fieldName.equals(rgiField)) {
+        } else if (fieldName.equals(columnNamesOptions.rowGroupIndex())) {
           arguments.add(String.valueOf(((RowGroupMetadata) metadata).getRowGroupIndex()));
-        } else if (fieldName.equals(rgsField)) {
+        } else if (fieldName.equals(columnNamesOptions.rowGroupStart())) {
           arguments.add(Long.toString(metadata.getStatistic(() -> ExactStatisticsConstants.START)));
-        } else if (fieldName.equals(rglField)) {
+        } else if (fieldName.equals(columnNamesOptions.rowGroupLength())) {
           arguments.add(Long.toString(metadata.getStatistic(() -> ExactStatisticsConstants.LENGTH)));
         } else if (fieldName.equals(MetastoreAnalyzeConstants.METADATA_TYPE)) {
           arguments.add(metadataType.name());
@@ -374,10 +370,6 @@ public class MetadataHandlerBatch extends AbstractSingleRecordBatch<MetadataHand
   }
 
   private ResultSetLoader getResultSetLoaderWithBatchSchema() {
-    String lastModifiedTimeField = context.getOptions().getString(ExecConstants.IMPLICIT_LAST_MODIFIED_TIME_COLUMN_LABEL);
-    String rgiField = context.getOptions().getString(ExecConstants.IMPLICIT_ROW_GROUP_INDEX_COLUMN_LABEL);
-    String rgsField = context.getOptions().getString(ExecConstants.IMPLICIT_ROW_GROUP_START_COLUMN_LABEL);
-    String rglField = context.getOptions().getString(ExecConstants.IMPLICIT_ROW_GROUP_LENGTH_COLUMN_LABEL);
     SchemaBuilder schemaBuilder = new SchemaBuilder();
     // adds fields to the schema preserving their order to avoid issues in outcoming batches
     for (VectorWrapper<?> vectorWrapper : container) {
@@ -385,10 +377,10 @@ public class MetadataHandlerBatch extends AbstractSingleRecordBatch<MetadataHand
       String fieldName = field.getName();
       if (fieldName.equals(MetastoreAnalyzeConstants.LOCATION_FIELD)
           || fieldName.equals(MetastoreAnalyzeConstants.SCHEMA_FIELD)
-          || fieldName.equals(lastModifiedTimeField)
-          || fieldName.equals(rgiField)
-          || fieldName.equals(rgsField)
-          || fieldName.equals(rglField)
+          || fieldName.equals(columnNamesOptions.lastModifiedTime())
+          || fieldName.equals(columnNamesOptions.rowGroupIndex())
+          || fieldName.equals(columnNamesOptions.rowGroupStart())
+          || fieldName.equals(columnNamesOptions.rowGroupLength())
           || fieldName.equals(MetastoreAnalyzeConstants.METADATA_TYPE)
           || popConfig.getContext().segmentColumns().contains(fieldName)) {
         schemaBuilder.add(fieldName, field.getType().getMinorType(), field.getDataMode());
@@ -416,9 +408,9 @@ public class MetadataHandlerBatch extends AbstractSingleRecordBatch<MetadataHand
     container.clear();
     StreamSupport.stream(populatedContainer.spliterator(), false)
         .map(VectorWrapper::getField)
-        .filter(field -> field.getType().getMinorType() != MinorType.NULL)
         .forEach(container::addOrGet);
     container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
+    container.setEmpty();
   }
 
   protected boolean setupNewSchema() {
@@ -445,18 +437,17 @@ public class MetadataHandlerBatch extends AbstractSingleRecordBatch<MetadataHand
   }
 
   private void updateMetadataToHandle() {
-    RowSetReader reader = DirectRowSet.fromContainer(container).reader();
     // updates metadataToHandle to be able to fetch required data which wasn't returned by incoming batch
     if (metadataToHandle != null && !metadataToHandle.isEmpty()) {
+      RowSetReader reader = DirectRowSet.fromContainer(container).reader();
       switch (metadataType) {
         case ROW_GROUP: {
-          String rgiColumnName = context.getOptions().getString(ExecConstants.IMPLICIT_ROW_GROUP_INDEX_COLUMN_LABEL);
           while (reader.next() && !metadataToHandle.isEmpty()) {
             List<String> partitionValues = popConfig.getContext().segmentColumns().stream()
                 .map(columnName -> reader.column(columnName).scalar().getString())
                 .collect(Collectors.toList());
             Path location = new Path(reader.column(MetastoreAnalyzeConstants.LOCATION_FIELD).scalar().getString());
-            int rgi = Integer.parseInt(reader.column(rgiColumnName).scalar().getString());
+            int rgi = Integer.parseInt(reader.column(columnNamesOptions.rowGroupIndex()).scalar().getString());
             metadataToHandle.remove(MetadataIdentifierUtils.getRowGroupMetadataIdentifier(partitionValues, location, rgi));
           }
           break;

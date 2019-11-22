@@ -85,9 +85,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  * Represents table group scan with metadata usage.
  */
-public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupScan {
+public abstract class AbstractGroupScanWithMetadata<P extends TableMetadataProvider> extends AbstractFileGroupScan {
 
-  protected TableMetadataProvider metadataProvider;
+  protected P metadataProvider;
 
   // table metadata info
   protected TableMetadata tableMetadata;
@@ -118,7 +118,7 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
     this.filter = filter;
   }
 
-  protected AbstractGroupScanWithMetadata(AbstractGroupScanWithMetadata that) {
+  protected AbstractGroupScanWithMetadata(AbstractGroupScanWithMetadata<P> that) {
     super(that.getUserName());
     this.columns = that.columns;
     this.filter = that.filter;
@@ -215,7 +215,7 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
   }
 
   @Override
-  public TableMetadataProvider getMetadataProvider() {
+  public P getMetadataProvider() {
     return metadataProvider;
   }
 
@@ -516,7 +516,13 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
   // partition pruning methods start
   @Override
   public List<SchemaPath> getPartitionColumns() {
-    return partitionColumns != null ? partitionColumns : new ArrayList<>();
+    if (partitionColumns == null) {
+      partitionColumns = metadataProvider.getPartitionColumns();
+      if (partitionColumns == null) {
+        partitionColumns = new ArrayList<>();
+      }
+    }
+    return partitionColumns;
   }
 
   @JsonIgnore
@@ -567,8 +573,8 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
     return ColumnExplorer.isPartitionColumn(optionManager, schemaPath) || implicitColNames.contains(schemaPath.getRootSegmentPath());
   }
 
-  // protected methods for internal usage
-  protected Map<Path, FileMetadata> getFilesMetadata() {
+  @JsonIgnore
+  public Map<Path, FileMetadata> getFilesMetadata() {
     if (files == null) {
       files = metadataProvider.getFilesMetadataMap();
     }
@@ -583,14 +589,16 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
     return tableMetadata;
   }
 
-  protected List<PartitionMetadata> getPartitionsMetadata() {
+  @JsonIgnore
+  public List<PartitionMetadata> getPartitionsMetadata() {
     if (partitions == null) {
       partitions = metadataProvider.getPartitionsMetadata();
     }
     return partitions;
   }
 
-  protected Map<Path, SegmentMetadata> getSegmentsMetadata() {
+  @JsonIgnore
+  public Map<Path, SegmentMetadata> getSegmentsMetadata() {
     if (segments == null) {
       segments = metadataProvider.getSegmentsMetadataMap();
     }
@@ -614,7 +622,7 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
    * This class is responsible for filtering different metadata levels.
    */
   protected abstract static class GroupScanWithMetadataFilterer<B extends GroupScanWithMetadataFilterer<B>> {
-    protected final AbstractGroupScanWithMetadata source;
+    protected final AbstractGroupScanWithMetadata<? extends TableMetadataProvider> source;
 
     protected boolean matchAllMetadata = false;
 
@@ -952,7 +960,7 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
         Iterable<T> metadataList,
         FilterPredicate<?> filterPredicate,
         OptionManager optionManager) {
-      List<T> qualifiedFiles = new ArrayList<>();
+      List<T> qualifiedMetadata = new ArrayList<>();
 
       for (T metadata : metadataList) {
         TupleMetadata schema = metadata.getSchema();
@@ -983,12 +991,12 @@ public abstract class AbstractGroupScanWithMetadata extends AbstractFileGroupSca
         if (matchAllMetadata) {
           matchAllMetadata = match == RowsMatch.ALL;
         }
-        qualifiedFiles.add(metadata);
+        qualifiedMetadata.add(metadata);
       }
-      if (qualifiedFiles.isEmpty()) {
+      if (qualifiedMetadata.isEmpty()) {
         matchAllMetadata = false;
       }
-      return qualifiedFiles;
+      return qualifiedMetadata;
     }
 
     protected abstract B self();

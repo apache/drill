@@ -31,6 +31,7 @@ import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.metastore.ColumnNamesOptions;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.store.dfs.FileSelection;
@@ -156,7 +157,7 @@ public class ColumnExplorer {
    * @param path column path
    * @return true if given column is partition, false otherwise
    */
-  public static boolean isPartitionColumn(String partitionDesignator, String path){
+  public static boolean isPartitionColumn(String partitionDesignator, String path) {
     Pattern pattern = Pattern.compile(String.format("%s[0-9]+", partitionDesignator));
     Matcher matcher = pattern.matcher(path);
     return matcher.matches();
@@ -164,7 +165,18 @@ public class ColumnExplorer {
 
   public boolean isImplicitColumn(String name) {
     return isPartitionColumn(partitionDesignator, name) ||
-           isImplicitFileColumn(name);
+        isImplicitOrInternalFileColumn(name);
+  }
+
+  /**
+   * Checks whether given column is implicit or internal.
+   *
+   * @param name name of the column to check
+   * @return {@code true} if given column is implicit or internal, {@code false} otherwise
+   */
+  public boolean isImplicitOrInternalFileColumn(String name) {
+    return allImplicitColumns.get(name) != null
+        || allInternalColumns.get(name) != null;
   }
 
   public boolean isImplicitFileColumn(String name) {
@@ -191,14 +203,13 @@ public class ColumnExplorer {
    * Returns list with partition column names.
    * For the case when table has several levels of nesting, max level is chosen.
    *
-   * @param selection     the source of file paths
-   * @param optionManager the source of session option value for partition column label
+   * @param selection          the source of file paths
+   * @param columnNamesOptions the source of session option value for partition column label
    * @return list with partition column names.
    */
-  public static List<String> getPartitionColumnNames(FileSelection selection, OptionManager optionManager) {
+  public static List<String> getPartitionColumnNames(FileSelection selection, ColumnNamesOptions columnNamesOptions) {
 
-    String partitionColumnLabel = optionManager.getString(
-        ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL);
+    String partitionColumnLabel = columnNamesOptions.partitionColumnNameLabel();
 
     return getPartitionColumnNames(selection, partitionColumnLabel);
   }

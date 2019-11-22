@@ -102,7 +102,7 @@ public class ConvertCountToDirectScanRule extends RelOptRule {
   private static final Logger logger = LoggerFactory.getLogger(ConvertCountToDirectScanRule.class);
 
   private ConvertCountToDirectScanRule(RelOptRuleOperand rule, String id) {
-    super(rule, "ConvertCountToDirectScanRule:" + id);
+    super(rule, DrillRelFactories.LOGICAL_BUILDER, "ConvertCountToDirectScanRule:" + id);
   }
 
   @Override

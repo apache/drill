@@ -213,9 +213,7 @@ class DrillAggFuncHolder extends DrillFuncHolder {
         declareVarArgArray(g.getModel(), sub, inputVariables);
       }
       for (int i = 0; i < inputVariables.length; i++) {
-        ValueReference parameter = getAttributeParameter(i);
-        HoldingContainer inputVariable = inputVariables[i];
-        declare(sub, parameter, inputVariable.getHolder().type(), inputVariable.getHolder(), i);
+        declare(g.getModel(), sub, inputVariables[i], i);
       }
     }
 

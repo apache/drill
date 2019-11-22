@@ -1056,66 +1056,172 @@ public class TestAggregateFunctions extends ClusterTest {
   }
 
   @Test
-  public void testCollectList() throws Exception {
-    testBuilder()
-        .sqlQuery("select collect_list('n_nationkey', n_nationkey, " +
-            "'n_name', n_name, 'n_regionkey', n_regionkey, 'n_comment', n_comment) as l from (select * from cp.`tpch/nation.parquet` limit 2)")
-        .unOrdered()
-        .baselineColumns("l")
-        .baselineValues(listOf(
-            mapOf("n_nationkey", 0, "n_name", "ALGERIA",
-                "n_regionkey", 0, "n_comment", " haggle. carefully final deposits detect slyly agai"),
-            mapOf("n_nationkey", 1, "n_name", "ARGENTINA", "n_regionkey", 1,
-                "n_comment", "al foxes promise slyly according to the regular accounts. bold requests alon")))
-        .go();
+  public void testCollectListStreamAgg() throws Exception {
+    try {
+      client.alterSession(PlannerSettings.HASHAGG.getOptionName(), false);
+      testBuilder()
+          .sqlQuery("select collect_list('n_nationkey', n_nationkey, " +
+              "'n_name', n_name, 'n_regionkey', n_regionkey, 'n_comment', n_comment) as l " +
+              "from (select * from cp.`tpch/nation.parquet` limit 2)")
+          .unOrdered()
+          .baselineColumns("l")
+          .baselineValues(listOf(
+              mapOf("n_nationkey", 0, "n_name", "ALGERIA",
+                  "n_regionkey", 0, "n_comment", " haggle. carefully final deposits detect slyly agai"),
+              mapOf("n_nationkey", 1, "n_name", "ARGENTINA", "n_regionkey", 1,
+                  "n_comment", "al foxes promise slyly according to the regular accounts. bold requests alon")))
+          .go();
+    } finally {
+      client.resetSession(PlannerSettings.HASHAGG.getOptionName());
+    }
   }
 
   @Test
-  public void testCollectToListVarchar() throws Exception {
-    testBuilder()
-        .sqlQuery("select collect_to_list_varchar(`date`) as l from " +
-            "(select * from cp.`store/json/clicks.json` limit 2)")
-        .unOrdered()
-        .baselineColumns("l")
-        .baselineValues(listOf("2014-04-26", "2014-04-20"))
-        .go();
+  public void testCollectListHashAgg() throws Exception {
+    try {
+      client.alterSession(PlannerSettings.STREAMAGG.getOptionName(), false);
+      testBuilder()
+          .sqlQuery("select collect_list('n_nationkey', n_nationkey, " +
+              "'n_name', n_name, 'n_regionkey', n_regionkey, 'n_comment', n_comment) as l " +
+              "from (select * from cp.`tpch/nation.parquet` limit 2) group by 'a'")
+          .unOrdered()
+          .baselineColumns("l")
+          .baselineValues(listOf(
+              mapOf("n_nationkey", 0, "n_name", "ALGERIA",
+                  "n_regionkey", 0, "n_comment", " haggle. carefully final deposits detect slyly agai"),
+              mapOf("n_nationkey", 1, "n_name", "ARGENTINA", "n_regionkey", 1,
+                  "n_comment", "al foxes promise slyly according to the regular accounts. bold requests alon")))
+          .go();
+    } finally {
+      client.resetSession(PlannerSettings.STREAMAGG.getOptionName());
+    }
   }
 
   @Test
-  public void testSchemaFunction() throws Exception {
-    TupleMetadata schema = new SchemaBuilder()
-        .add("n_nationkey", TypeProtos.MinorType.INT)
-        .add("n_name", TypeProtos.MinorType.VARCHAR)
-        .add("n_regionkey", TypeProtos.MinorType.INT)
-        .add("n_comment", TypeProtos.MinorType.VARCHAR)
-        .build();
-
-    testBuilder()
-        .sqlQuery("select schema('n_nationkey', n_nationkey, " +
-            "'n_name', n_name, 'n_regionkey', n_regionkey, 'n_comment', n_comment) as l from " +
-            "(select * from cp.`tpch/nation.parquet` limit 2)")
-        .unOrdered()
-        .baselineColumns("l")
-        .baselineValues(schema.jsonString())
-        .go();
+  public void testCollectToListVarcharStreamAgg() throws Exception {
+    try {
+      client.alterSession(PlannerSettings.HASHAGG.getOptionName(), false);
+      testBuilder()
+          .sqlQuery("select collect_to_list_varchar(`date`) as l from " +
+              "(select * from cp.`store/json/clicks.json` limit 2)")
+          .unOrdered()
+          .baselineColumns("l")
+          .baselineValues(listOf("2014-04-26", "2014-04-20"))
+          .go();
+    } finally {
+      client.resetSession(PlannerSettings.HASHAGG.getOptionName());
+    }
   }
 
   @Test
-  public void testMergeSchemaFunction() throws Exception {
-    String schema = new SchemaBuilder()
-        .add("n_nationkey", TypeProtos.MinorType.INT)
-        .add("n_name", TypeProtos.MinorType.VARCHAR)
-        .add("n_regionkey", TypeProtos.MinorType.INT)
-        .add("n_comment", TypeProtos.MinorType.VARCHAR)
-        .build()
-        .jsonString();
+  public void testCollectToListVarcharHashAgg() throws Exception {
+    try {
+      client.alterSession(PlannerSettings.STREAMAGG.getOptionName(), false);
+      testBuilder()
+          .sqlQuery("select collect_to_list_varchar(`date`) as l from " +
+              "(select * from cp.`store/json/clicks.json` limit 2) group by 'a'")
+          .unOrdered()
+          .baselineColumns("l")
+          .baselineValues(listOf("2014-04-26", "2014-04-20"))
+          .go();
+    } finally {
+      client.resetSession(PlannerSettings.STREAMAGG.getOptionName());
+    }
+  }
 
-    testBuilder()
-        .sqlQuery("select merge_schema('%s') as l from " +
-            "(select * from cp.`tpch/nation.parquet` limit 2)", schema)
-        .unOrdered()
-        .baselineColumns("l")
-        .baselineValues(schema)
-        .go();
+  @Test
+  public void testSchemaFunctionStreamAgg() throws Exception {
+    try {
+      client.alterSession(PlannerSettings.HASHAGG.getOptionName(), false);
+      TupleMetadata schema = new SchemaBuilder()
+          .add("n_nationkey", TypeProtos.MinorType.INT)
+          .add("n_name", TypeProtos.MinorType.VARCHAR)
+          .add("n_regionkey", TypeProtos.MinorType.INT)
+          .add("n_comment", TypeProtos.MinorType.VARCHAR)
+          .build();
+
+      testBuilder()
+          .sqlQuery("select schema('n_nationkey', n_nationkey, " +
+              "'n_name', n_name, 'n_regionkey', n_regionkey, 'n_comment', n_comment) as l from " +
+              "(select * from cp.`tpch/nation.parquet` limit 2)")
+          .unOrdered()
+          .baselineColumns("l")
+          .baselineValues(schema.jsonString())
+          .go();
+    } finally {
+      client.resetSession(PlannerSettings.HASHAGG.getOptionName());
+    }
+  }
+
+  @Test
+  public void testSchemaFunctionHashAgg() throws Exception {
+    try {
+      client.alterSession(PlannerSettings.STREAMAGG.getOptionName(), false);
+      TupleMetadata schema = new SchemaBuilder()
+          .add("n_nationkey", TypeProtos.MinorType.INT)
+          .add("n_name", TypeProtos.MinorType.VARCHAR)
+          .add("n_regionkey", TypeProtos.MinorType.INT)
+          .add("n_comment", TypeProtos.MinorType.VARCHAR)
+          .build();
+
+      testBuilder()
+          .sqlQuery("select schema('n_nationkey', n_nationkey, " +
+              "'n_name', n_name, 'n_regionkey', n_regionkey, 'n_comment', n_comment) as l from " +
+              "(select * from cp.`tpch/nation.parquet` limit 2) group by 'a'")
+          .unOrdered()
+          .baselineColumns("l")
+          .baselineValues(schema.jsonString())
+          .go();
+    } finally {
+      client.resetSession(PlannerSettings.STREAMAGG.getOptionName());
+    }
+  }
+
+  @Test
+  public void testMergeSchemaFunctionStreamAgg() throws Exception {
+    try {
+      client.alterSession(PlannerSettings.HASHAGG.getOptionName(), false);
+      String schema = new SchemaBuilder()
+          .add("n_nationkey", TypeProtos.MinorType.INT)
+          .add("n_name", TypeProtos.MinorType.VARCHAR)
+          .add("n_regionkey", TypeProtos.MinorType.INT)
+          .add("n_comment", TypeProtos.MinorType.VARCHAR)
+          .build()
+          .jsonString();
+
+      testBuilder()
+          .sqlQuery("select merge_schema('%s') as l from " +
+              "(select * from cp.`tpch/nation.parquet` limit 2)", schema)
+          .unOrdered()
+          .baselineColumns("l")
+          .baselineValues(schema)
+          .go();
+    } finally {
+      client.resetSession(PlannerSettings.HASHAGG.getOptionName());
+    }
+  }
+
+  @Test
+  public void testMergeSchemaFunctionHashAgg() throws Exception {
+    try {
+      client.alterSession(PlannerSettings.STREAMAGG.getOptionName(), false);
+      String schema = new SchemaBuilder()
+          .add("n_nationkey", TypeProtos.MinorType.INT)
+          .add("n_name", TypeProtos.MinorType.VARCHAR)
+          .add("n_regionkey", TypeProtos.MinorType.INT)
+          .add("n_comment", TypeProtos.MinorType.VARCHAR)
+          .build()
+          .jsonString();
+
+      testBuilder()
+          .sqlQuery("select merge_schema('%s') as l from " +
+              "(select * from cp.`tpch/nation.parquet` limit 2) group by 'a'", schema)
+          .unOrdered()
+          .baselineColumns("l")
+          .baselineValues(schema)
+          .go();
+    } finally {
+      client.resetSession(PlannerSettings.STREAMAGG.getOptionName());
+    }
   }
 }

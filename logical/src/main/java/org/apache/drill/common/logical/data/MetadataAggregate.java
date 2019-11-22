@@ -33,6 +33,6 @@ public class MetadataAggregate extends SingleInputOperator {
 
   @Override
   public <T, X, E extends Throwable> T accept(LogicalVisitor<T, X, E> logicalVisitor, X value) throws E {
-    throw new UnsupportedOperationException("MetadataController does not support visitors");
+    throw new UnsupportedOperationException("MetadataAggregate does not support visitors");
   }
 }
