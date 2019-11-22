@@ -29,7 +29,6 @@ import org.apache.drill.test.ClusterTest;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
 import java.time.LocalDateTime;
 import java.time.Month;
 

@@ -58,10 +58,12 @@ public class TestFormatPluginOptionExtractor {
           break;
         case "json":
         case "sequencefile":
-        case "pcap":
         case "pcapng":
         case "avro":
           assertEquals(d.typeName, "(type: String)", d.presentParams());
+          break;
+        case "pcap":
+          assertEquals(d.typeName, "(type: String, sessionizeTCPStreams: boolean)", d.presentParams());
           break;
         case "httpd":
           assertEquals("(type: String, logFormat: String, timestampFormat: String)", d.presentParams());

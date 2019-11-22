@@ -34,13 +34,16 @@ public class PcapFormatConfig implements FormatPluginConfig {
   public List<String> extensions;
 
   @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+  public boolean sessionizeTCPStreams = false;
+
+  @JsonInclude(JsonInclude.Include.NON_DEFAULT)
   public List<String> getExtensions() {
     return extensions == null ? DEFAULT_EXTS : extensions;
   }
 
   @Override
   public int hashCode() {
-    return Arrays.hashCode(new Object[]{extensions});
+    return Arrays.hashCode(new Object[]{extensions, sessionizeTCPStreams});
   }
 
   @Override
@@ -52,6 +55,7 @@ public class PcapFormatConfig implements FormatPluginConfig {
       return false;
     }
     PcapFormatConfig other = (PcapFormatConfig) obj;
-    return Objects.equal(extensions, other.extensions);
+    return Objects.equal(extensions, other.extensions)
+      && Objects.equal(sessionizeTCPStreams, other.sessionizeTCPStreams);
   }
 }

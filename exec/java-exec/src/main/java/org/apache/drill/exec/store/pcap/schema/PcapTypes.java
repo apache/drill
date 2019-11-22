@@ -22,5 +22,6 @@ public enum PcapTypes {
   INTEGER,
   STRING,
   LONG,
-  TIMESTAMP
+  TIMESTAMP,
+  DURATION
 }
