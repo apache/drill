@@ -50,12 +50,12 @@
 #export DRILLBIT_MAX_PROC_MEM=${DRILLBIT_MAX_PROC_MEM:-"13G"}
 
 # Amount of heap memory for the Drillbit process. Values are those supported by
-# the Java -Xms option. The default is 4G.
+# the Java -Xms option. The recommended minimum is 4G.
 
 #export DRILL_HEAP=${DRILL_HEAP:-"4G"}
 
 # Maximum amount of direct memory to allocate to the Drillbit in the format
-# supported by -XX:MaxDirectMemorySize. Default is 8G.
+# supported by -XX:MaxDirectMemorySize. The recommended minimum is 8G.
 
 #export DRILL_MAX_DIRECT_MEMORY=${DRILL_MAX_DIRECT_MEMORY:-"8G"}
 
