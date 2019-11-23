@@ -36,7 +36,6 @@ import static org.junit.Assert.assertEquals;
 
 @Category({SqlTest.class, PlannerTest.class})
 public class TestStarQueries extends BaseTestQuery {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestStarQueries.class);
 
   @BeforeClass
   public static void setupTestFiles() {
@@ -298,7 +297,7 @@ public class TestStarQueries extends BaseTestQuery {
     try {
       test("select x.n_nationkey, x.n_name, x.n_regionkey, x.r_name from (select * from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey) x " );
     } catch (UserException e) {
-      logger.info("***** Test resulted in expected failure: " + e.getMessage());
+      // Expected
       throw e;
     }
   }

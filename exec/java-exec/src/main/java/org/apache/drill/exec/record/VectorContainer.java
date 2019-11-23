@@ -32,6 +32,7 @@ import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.SchemaChangeCallBack;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
@@ -124,9 +125,15 @@ public class VectorContainer implements VectorAccessible {
    * Transfer vectors from containerIn to this.
    */
   public void transferIn(VectorContainer containerIn) {
-    Preconditions.checkArgument(this.wrappers.size() == containerIn.wrappers.size());
-    for (int i = 0; i < this.wrappers.size(); ++i) {
-      containerIn.wrappers.get(i).transfer(this.wrappers.get(i));
+    rawTransferIn(containerIn);
+    setRecordCount(containerIn.getRecordCount());
+  }
+
+  @VisibleForTesting
+  public void rawTransferIn(VectorContainer containerIn) {
+    Preconditions.checkArgument(wrappers.size() == containerIn.wrappers.size());
+    for (int i = 0; i < wrappers.size(); ++i) {
+      containerIn.wrappers.get(i).transfer(wrappers.get(i));
     }
   }
 
@@ -237,14 +244,14 @@ public class VectorContainer implements VectorAccessible {
     * @param srcIndex The index of the row to copy from the source {@link VectorContainer}.
     * @return Position one above where the row was appended
     */
-    public int appendRow(VectorContainer srcContainer, int srcIndex) {
-      for (int vectorIndex = 0; vectorIndex < wrappers.size(); vectorIndex++) {
-        ValueVector destVector = wrappers.get(vectorIndex).getValueVector();
-        ValueVector srcVector = srcContainer.wrappers.get(vectorIndex).getValueVector();
-        destVector.copyEntry(recordCount, srcVector, srcIndex);
-      }
-      return incRecordCount();
+  public int appendRow(VectorContainer srcContainer, int srcIndex) {
+    for (int vectorIndex = 0; vectorIndex < wrappers.size(); vectorIndex++) {
+      ValueVector destVector = wrappers.get(vectorIndex).getValueVector();
+      ValueVector srcVector = srcContainer.wrappers.get(vectorIndex).getValueVector();
+      destVector.copyEntry(recordCount, srcVector, srcIndex);
     }
+    return incRecordCount();
+  }
 
   public TypedFieldId add(ValueVector vv) {
     schemaChanged();

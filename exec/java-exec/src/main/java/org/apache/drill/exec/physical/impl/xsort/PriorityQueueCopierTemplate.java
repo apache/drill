@@ -28,23 +28,23 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.VectorAccessible;
-import org.apache.drill.exec.record.VectorWrapper;
+import org.apache.drill.exec.record.VectorAccessibleUtilities;
 import org.apache.drill.exec.record.selection.SelectionVector4;
-import org.apache.drill.exec.vector.AllocationHelper;
+
 
 public abstract class PriorityQueueCopierTemplate implements PriorityQueueCopier {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PriorityQueueCopierTemplate.class);
 
   private SelectionVector4 vector4;
   private List<BatchGroup> batchGroups;
   private VectorAccessible hyperBatch;
   private VectorAccessible outgoing;
   private int size;
-  private int queueSize = 0;
+  private int queueSize;
 
   @Override
-  public void setup(FragmentContext context, BufferAllocator allocator, VectorAccessible hyperBatch, List<BatchGroup> batchGroups,
-                    VectorAccessible outgoing) throws SchemaChangeException {
+  public void setup(FragmentContext context, BufferAllocator allocator,
+      VectorAccessible hyperBatch, List<BatchGroup> batchGroups,
+      VectorAccessible outgoing) throws SchemaChangeException {
     this.hyperBatch = hyperBatch;
     this.batchGroups = batchGroups;
     this.outgoing = outgoing;
@@ -90,20 +90,14 @@ public abstract class PriorityQueueCopierTemplate implements PriorityQueueCopier
   }
 
   private void setValueCount(int count) {
-    for (VectorWrapper w: outgoing) {
-      w.getValueVector().getMutator().setValueCount(count);
-    }
+    VectorAccessibleUtilities.setValueCount(outgoing, count);
   }
 
   @Override
   public void close() throws IOException {
     vector4.clear();
-    for (final VectorWrapper<?> w: outgoing) {
-      w.getValueVector().clear();
-    }
-    for (final VectorWrapper<?> w : hyperBatch) {
-      w.clear();
-    }
+    VectorAccessibleUtilities.clear(outgoing);
+    VectorAccessibleUtilities.clear(hyperBatch);
 
     for (BatchGroup batchGroup : batchGroups) {
       batchGroup.close();
@@ -123,9 +117,7 @@ public abstract class PriorityQueueCopierTemplate implements PriorityQueueCopier
   }
 
   private void allocateVectors(int targetRecordCount) {
-    for (VectorWrapper w: outgoing) {
-      AllocationHelper.allocateNew(w.getValueVector(), targetRecordCount);
-    }
+    VectorAccessibleUtilities.allocateVectors(outgoing, targetRecordCount);
   }
 
   private void siftDown() {
@@ -162,8 +154,8 @@ public abstract class PriorityQueueCopierTemplate implements PriorityQueueCopier
     return doEval(sv1, sv2);
   }
 
-  public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") VectorAccessible incoming, @Named("outgoing") VectorAccessible outgoing);
+  public abstract void doSetup(@Named("context") FragmentContext context,
+      @Named("incoming") VectorAccessible incoming, @Named("outgoing") VectorAccessible outgoing);
   public abstract int doEval(@Named("leftIndex") int leftIndex, @Named("rightIndex") int rightIndex);
   public abstract void doCopy(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
-
 }

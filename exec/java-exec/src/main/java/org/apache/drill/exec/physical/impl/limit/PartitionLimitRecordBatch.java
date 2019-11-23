@@ -147,10 +147,7 @@ public class PartitionLimitRecordBatch extends AbstractSingleRecordBatch<Partiti
       incoming.getContainer().zeroVectors();
       outgoingSv.setRecordCount(0);
       outgoingSv.setBatchActualRecordCount(0);
-      // Must allocate vectors to allow for offset vectors which
-      // require a zero in the 0th position.
-      container.allocateNew();
-      container.setRecordCount(0);
+      container.setEmpty();
       // Release buffer for sv2 (if any)
       if (incomingSv != null) {
         incomingSv.clear();
@@ -162,16 +159,9 @@ public class PartitionLimitRecordBatch extends AbstractSingleRecordBatch<Partiti
       tp.transfer();
     }
 
-    // Must report the actual value count as the record
-    // count. This is NOT the input record count when the input
-    // is an SV2.
-    int inputValueCount = incoming.getContainer().getRecordCount();
-    container.setRecordCount(inputValueCount);
-
     // Allocate SV2 vectors for the record count size since we transfer all the vectors buffer from input record
     // batch to output record batch and later an SV2Remover copies the needed records.
     outgoingSv.allocateNew(inputRecordCount);
-    outgoingSv.setBatchActualRecordCount(inputValueCount);
     limit(inputRecordCount);
 
     // Release memory for incoming sv (if any)
@@ -224,7 +214,7 @@ public class PartitionLimitRecordBatch extends AbstractSingleRecordBatch<Partiti
       }
     }
 
-    outgoingSv.setRecordCount(svIndex);
+    setOutgoingRecordCount(inputRecordCount, svIndex);
   }
 
   private void updateOutputSV2(int svIndex, int incomingIndex) {
@@ -241,6 +231,16 @@ public class PartitionLimitRecordBatch extends AbstractSingleRecordBatch<Partiti
     } else {
       return partitionColumn.getAccessor().get(incomingIndex);
     }
+  }
+
+  private void setOutgoingRecordCount(int inputRecordCount, int outputCount) {
+    outgoingSv.setRecordCount(outputCount);
+    // Must report the actual value count as the record
+    // count. This is NOT the input record count when the input
+    // is an SV2.
+    int inputValueCount = incoming.getContainer().getRecordCount();
+    container.setRecordCount(inputValueCount);
+    outgoingSv.setBatchActualRecordCount(inputValueCount);
   }
 
   /**

@@ -21,7 +21,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.drill.PlanTestBase;
-import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
@@ -69,7 +68,8 @@ public class TestAnalyze extends BaseTestQuery {
           .baselineValues("`sales_district_id`", 110.0, 110.0, 23L, 8.0)
           .go();
     } finally {
-      test("ALTER SESSION SET `planner.slice_target` = " + ExecConstants.SLICE_TARGET_DEFAULT);
+      resetSessionOption("planner.slice_target");
+      resetSessionOption("store.format");
     }
   }
 
@@ -96,7 +96,8 @@ public class TestAnalyze extends BaseTestQuery {
           .baselineValues("`birth_date`", 1155.0, 1155.0, 52L, 10.0)
           .go();
     } finally {
-      test("ALTER SESSION SET `planner.slice_target` = " + ExecConstants.SLICE_TARGET_DEFAULT);
+      resetSessionOption("planner.slice_target");
+      resetSessionOption("store.format");
     }
   }
 
@@ -124,8 +125,9 @@ public class TestAnalyze extends BaseTestQuery {
               .baselineValues("`birth_date`", 1138.0, 1138.0, 38L, 10.001597699312988)
               .go();
     } finally {
-      test("ALTER SESSION SET `exec.statistics.deterministic_sampling` = false");
-      test("ALTER SESSION SET `planner.slice_target` = " + ExecConstants.SLICE_TARGET_DEFAULT);
+      resetSessionOption("exec.statistics.deterministic_sampling");
+      resetSessionOption("planner.slice_target");
+      resetSessionOption("store.format");
     }
   }
 
@@ -143,7 +145,9 @@ public class TestAnalyze extends BaseTestQuery {
       test("ALTER SESSION SET `planner.statistics.use` = true");
       test("SELECT * FROM dfs.tmp.`lineitem` l JOIN dfs.tmp.`orders` o ON l.l_orderkey = o.o_orderkey");
     } finally {
-      test("ALTER SESSION SET `planner.slice_target` = " + ExecConstants.SLICE_TARGET_DEFAULT);
+      resetSessionOption("planner.slice_target");
+      resetSessionOption("store.format");
+      resetSessionOption("planner.statistics.use");
     }
   }
 
@@ -166,7 +170,8 @@ public class TestAnalyze extends BaseTestQuery {
       verifyAnalyzeOutput("ANALYZE TABLE dfs.tmp.employee_basic4 COMPUTE STATISTICS",
           "16");
     } finally {
-      test("ALTER SESSION SET `planner.slice_target` = " + ExecConstants.SLICE_TARGET_DEFAULT);
+      resetSessionOption("planner.slice_target");
+      resetSessionOption("store.format");
     }
   }
 
@@ -204,7 +209,8 @@ public class TestAnalyze extends BaseTestQuery {
           .baselineValues("`dir1`", 120.0, 120.0, 4L, 2.0)
           .go();
     } finally {
-      test("ALTER SESSION SET `planner.slice_target` = " + ExecConstants.SLICE_TARGET_DEFAULT);
+      resetSessionOption("planner.slice_target");
+      resetSessionOption("store.format");
     }
   }
 
@@ -214,21 +220,26 @@ public class TestAnalyze extends BaseTestQuery {
     final String tmpLocation = "/multilevel/parquet";
     test("ALTER SESSION SET `planner.slice_target` = 1");
     test("ALTER SESSION SET `store.format` = 'parquet'");
-    test("CREATE TABLE dfs.tmp.parquetStale AS SELECT o_orderkey, o_custkey, o_orderstatus, " +
-         "o_totalprice, o_orderdate, o_orderpriority, o_clerk, o_shippriority, o_comment from dfs.`%s`", tmpLocation);
-    verifyAnalyzeOutput("ANALYZE TABLE dfs.tmp.parquetStale COMPUTE STATISTICS", "9");
-    verifyAnalyzeOutput("ANALYZE TABLE dfs.tmp.parquetStale COMPUTE STATISTICS",
-        "Table parquetStale has not changed since last ANALYZE!");
-    // Verify we recompute statistics once a new file/directory is added. Update the directory some
-    // time after ANALYZE so that the timestamps are different.
-    Thread.sleep(1000);
-    final String Q4 = "/multilevel/parquet/1996/Q4";
-    test("CREATE TABLE dfs.tmp.`parquetStale/1996/Q5` AS SELECT o_orderkey, o_custkey, o_orderstatus, " +
-         "o_totalprice, o_orderdate, o_orderpriority, o_clerk, o_shippriority, o_comment from dfs.`%s`", Q4);
-    verifyAnalyzeOutput("ANALYZE TABLE dfs.tmp.parquetStale COMPUTE STATISTICS", "9");
-    Thread.sleep(1000);
-    test("DROP TABLE dfs.tmp.`parquetStale/1996/Q5`");
-    verifyAnalyzeOutput("ANALYZE TABLE dfs.tmp.parquetStale COMPUTE STATISTICS", "9");
+    try {
+      test("CREATE TABLE dfs.tmp.parquetStale AS SELECT o_orderkey, o_custkey, o_orderstatus, " +
+           "o_totalprice, o_orderdate, o_orderpriority, o_clerk, o_shippriority, o_comment from dfs.`%s`", tmpLocation);
+      verifyAnalyzeOutput("ANALYZE TABLE dfs.tmp.parquetStale COMPUTE STATISTICS", "9");
+      verifyAnalyzeOutput("ANALYZE TABLE dfs.tmp.parquetStale COMPUTE STATISTICS",
+          "Table parquetStale has not changed since last ANALYZE!");
+      // Verify we recompute statistics once a new file/directory is added. Update the directory some
+      // time after ANALYZE so that the timestamps are different.
+      Thread.sleep(1000);
+      final String Q4 = "/multilevel/parquet/1996/Q4";
+      test("CREATE TABLE dfs.tmp.`parquetStale/1996/Q5` AS SELECT o_orderkey, o_custkey, o_orderstatus, " +
+           "o_totalprice, o_orderdate, o_orderpriority, o_clerk, o_shippriority, o_comment from dfs.`%s`", Q4);
+      verifyAnalyzeOutput("ANALYZE TABLE dfs.tmp.parquetStale COMPUTE STATISTICS", "9");
+      Thread.sleep(1000);
+      test("DROP TABLE dfs.tmp.`parquetStale/1996/Q5`");
+      verifyAnalyzeOutput("ANALYZE TABLE dfs.tmp.parquetStale COMPUTE STATISTICS", "9");
+    } finally {
+      resetSessionOption("planner.slice_target");
+      resetSessionOption("store.format");
+    }
   }
 
   @Test
@@ -236,99 +247,104 @@ public class TestAnalyze extends BaseTestQuery {
     //Test ndv/rowcount for scan
     test("ALTER SESSION SET `planner.slice_target` = 1");
     test("ALTER SESSION SET `store.format` = 'parquet'");
-    test("CREATE TABLE dfs.tmp.employeeUseStat AS SELECT * from cp.`employee.json`");
-    test("CREATE TABLE dfs.tmp.departmentUseStat AS SELECT * from cp.`department.json`");
-    test("ANALYZE TABLE dfs.tmp.employeeUseStat COMPUTE STATISTICS");
-    test("ANALYZE TABLE dfs.tmp.departmentUseStat COMPUTE STATISTICS");
-    test("ALTER SESSION SET `planner.statistics.use` = true");
-    String query = " select employee_id from dfs.tmp.employeeUseStat where department_id = 2";
-    String[] expectedPlan1 = {"Filter\\(condition.*\\).*rowcount = 96.25,.*",
-            "Scan.*columns=\\[`department_id`, `employee_id`\\].*rowcount = 1155.0.*"};
-    PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan1, new String[]{});
+    try {
+      test("CREATE TABLE dfs.tmp.employeeUseStat AS SELECT * from cp.`employee.json`");
+      test("CREATE TABLE dfs.tmp.departmentUseStat AS SELECT * from cp.`department.json`");
+      test("ANALYZE TABLE dfs.tmp.employeeUseStat COMPUTE STATISTICS");
+      test("ANALYZE TABLE dfs.tmp.departmentUseStat COMPUTE STATISTICS");
+      test("ALTER SESSION SET `planner.statistics.use` = true");
+      String query = " select employee_id from dfs.tmp.employeeUseStat where department_id = 2";
+      String[] expectedPlan1 = {"Filter\\(condition.*\\).*rowcount = 96.25,.*",
+              "Scan.*columns=\\[`department_id`, `employee_id`\\].*rowcount = 1155.0.*"};
+      PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan1, new String[]{});
 
-    query = " select employee_id from dfs.tmp.employeeUseStat where department_id IN (2, 5)";
-    String[] expectedPlan2 = {"Filter\\(condition.*\\).*rowcount = 192.5,.*",
-            "Scan.*columns=\\[`department_id`, `employee_id`\\].*rowcount = 1155.0.*"};
-    PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan2, new String[]{});
+      query = " select employee_id from dfs.tmp.employeeUseStat where department_id IN (2, 5)";
+      String[] expectedPlan2 = {"Filter\\(condition.*\\).*rowcount = 192.5,.*",
+              "Scan.*columns=\\[`department_id`, `employee_id`\\].*rowcount = 1155.0.*"};
+      PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan2, new String[]{});
 
-    query = "select employee_id from dfs.tmp.employeeUseStat where department_id IN (2, 5) and employee_id = 5";
-    String[] expectedPlan3 = {"Filter\\(condition.*\\).*rowcount = 1.0,.*",
-            "Scan.*columns=\\[`department_id`, `employee_id`\\].*rowcount = 1155.0.*"};
-    PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan3, new String[]{});
+      query = "select employee_id from dfs.tmp.employeeUseStat where department_id IN (2, 5) and employee_id = 5";
+      String[] expectedPlan3 = {"Filter\\(condition.*\\).*rowcount = 1.0,.*",
+              "Scan.*columns=\\[`department_id`, `employee_id`\\].*rowcount = 1155.0.*"};
+      PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan3, new String[]{});
 
-    query = " select emp.employee_id from dfs.tmp.employeeUseStat emp join dfs.tmp.departmentUseStat dept"
-        + " on emp.department_id = dept.department_id";
-    String[] expectedPlan4 = {"HashJoin\\(condition.*\\).*rowcount = 1155.0,.*",
-            "Scan.*columns=\\[`department_id`, `employee_id`\\].*rowcount = 1155.0.*",
-            "Scan.*columns=\\[`department_id`\\].*rowcount = 12.0.*"};
-    PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan4, new String[]{});
+      query = " select emp.employee_id from dfs.tmp.employeeUseStat emp join dfs.tmp.departmentUseStat dept"
+          + " on emp.department_id = dept.department_id";
+      String[] expectedPlan4 = {"HashJoin\\(condition.*\\).*rowcount = 1155.0,.*",
+              "Scan.*columns=\\[`department_id`, `employee_id`\\].*rowcount = 1155.0.*",
+              "Scan.*columns=\\[`department_id`\\].*rowcount = 12.0.*"};
+      PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan4, new String[]{});
 
-    query = " select emp.employee_id from dfs.tmp.employeeUseStat emp join dfs.tmp.departmentUseStat dept"
-            + " on emp.department_id = dept.department_id where dept.department_id = 5";
-    String[] expectedPlan5 = {"HashJoin\\(condition.*\\).*rowcount = 96.25,.*",
-            "Scan.*columns=\\[`department_id`, `employee_id`\\].*rowcount = 1155.0.*",
-            "Scan.*columns=\\[`department_id`\\].*rowcount = 12.0.*"};
-    PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan5, new String[]{});
+      query = " select emp.employee_id from dfs.tmp.employeeUseStat emp join dfs.tmp.departmentUseStat dept"
+              + " on emp.department_id = dept.department_id where dept.department_id = 5";
+      String[] expectedPlan5 = {"HashJoin\\(condition.*\\).*rowcount = 96.25,.*",
+              "Scan.*columns=\\[`department_id`, `employee_id`\\].*rowcount = 1155.0.*",
+              "Scan.*columns=\\[`department_id`\\].*rowcount = 12.0.*"};
+      PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan5, new String[]{});
 
-    query = " select emp.employee_id from dfs.tmp.employeeUseStat emp join dfs.tmp.departmentUseStat dept"
-            + " on emp.department_id = dept.department_id"
-            + " where dept.department_id = 5 and emp.employee_id = 10";
-    String[] expectedPlan6 = {"MergeJoin\\(condition.*\\).*rowcount = 1.0,.*",
-            "Filter\\(condition=\\[AND\\(=\\(\\$1, 10\\), =\\(\\$0, 5\\)\\)\\]\\).*rowcount = 1.0,.*",
-            "Scan.*columns=\\[`department_id`, `employee_id`\\].*rowcount = 1155.0.*",
-            "Filter\\(condition=\\[=\\(\\$0, 5\\)\\]\\).*rowcount = 1.0,.*",
-            "Scan.*columns=\\[`department_id`\\].*rowcount = 12.0.*"};
-    PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan6, new String[]{});
+      query = " select emp.employee_id from dfs.tmp.employeeUseStat emp join dfs.tmp.departmentUseStat dept"
+              + " on emp.department_id = dept.department_id"
+              + " where dept.department_id = 5 and emp.employee_id = 10";
+      String[] expectedPlan6 = {"MergeJoin\\(condition.*\\).*rowcount = 1.0,.*",
+              "Filter\\(condition=\\[AND\\(=\\(\\$1, 10\\), =\\(\\$0, 5\\)\\)\\]\\).*rowcount = 1.0,.*",
+              "Scan.*columns=\\[`department_id`, `employee_id`\\].*rowcount = 1155.0.*",
+              "Filter\\(condition=\\[=\\(\\$0, 5\\)\\]\\).*rowcount = 1.0,.*",
+              "Scan.*columns=\\[`department_id`\\].*rowcount = 12.0.*"};
+      PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan6, new String[]{});
 
-    query = " select emp.employee_id, count(*)"
-            + " from dfs.tmp.employeeUseStat emp"
-            + " group by emp.employee_id";
-    String[] expectedPlan7 = {"HashAgg\\(group=\\[\\{0\\}\\], EXPR\\$1=\\[COUNT\\(\\)\\]\\).*rowcount = 1155.0,.*",
-            "Scan.*columns=\\[`employee_id`\\].*rowcount = 1155.0.*"};
-    PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan7, new String[]{});
+      query = " select emp.employee_id, count(*)"
+              + " from dfs.tmp.employeeUseStat emp"
+              + " group by emp.employee_id";
+      String[] expectedPlan7 = {"HashAgg\\(group=\\[\\{0\\}\\], EXPR\\$1=\\[COUNT\\(\\)\\]\\).*rowcount = 1155.0,.*",
+              "Scan.*columns=\\[`employee_id`\\].*rowcount = 1155.0.*"};
+      PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan7, new String[]{});
 
-    query = " select emp.employee_id from dfs.tmp.employeeUseStat emp join dfs.tmp.departmentUseStat dept"
-            + " on emp.department_id = dept.department_id "
-            + " group by emp.employee_id";
-    String[] expectedPlan8 = {"HashAgg\\(group=\\[\\{0\\}\\]\\).*rowcount = 730.0992454469841,.*",
-            "HashJoin\\(condition.*\\).*rowcount = 1155.0,.*",
-            "Scan.*columns=\\[`department_id`, `employee_id`\\].*rowcount = 1155.0.*",
-            "Scan.*columns=\\[`department_id`\\].*rowcount = 12.0.*"};
-    PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan8, new String[]{});
+      query = " select emp.employee_id from dfs.tmp.employeeUseStat emp join dfs.tmp.departmentUseStat dept"
+              + " on emp.department_id = dept.department_id "
+              + " group by emp.employee_id";
+      String[] expectedPlan8 = {"HashAgg\\(group=\\[\\{0\\}\\]\\).*rowcount = 730.0992454469841,.*",
+              "HashJoin\\(condition.*\\).*rowcount = 1155.0,.*",
+              "Scan.*columns=\\[`department_id`, `employee_id`\\].*rowcount = 1155.0.*",
+              "Scan.*columns=\\[`department_id`\\].*rowcount = 12.0.*"};
+      PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan8, new String[]{});
 
-    query = "select emp.employee_id, dept.department_description"
-            + " from dfs.tmp.employeeUseStat emp join dfs.tmp.departmentUseStat dept"
-            + " on emp.department_id = dept.department_id "
-            + " group by emp.employee_id, emp.store_id, dept.department_description "
-            + " having dept.department_description = 'FINANCE'";
-    String[] expectedPlan9 = {"HashAgg\\(group=\\[\\{0, 1, 2\\}\\]\\).*rowcount = 60.84160378724867.*",
-            "HashJoin\\(condition.*\\).*rowcount = 96.25,.*",
-            "Scan.*columns=\\[`department_id`, `employee_id`, `store_id`\\].*rowcount = 1155.0.*",
-            "Filter\\(condition=\\[=\\(\\$1, 'FINANCE'\\)\\]\\).*rowcount = 1.0,.*",
-            "Scan.*columns=\\[`department_id`, `department_description`\\].*rowcount = 12.0.*"};
-    PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan9, new String[]{});
+      query = "select emp.employee_id, dept.department_description"
+              + " from dfs.tmp.employeeUseStat emp join dfs.tmp.departmentUseStat dept"
+              + " on emp.department_id = dept.department_id "
+              + " group by emp.employee_id, emp.store_id, dept.department_description "
+              + " having dept.department_description = 'FINANCE'";
+      String[] expectedPlan9 = {"HashAgg\\(group=\\[\\{0, 1, 2\\}\\]\\).*rowcount = 60.84160378724867.*",
+              "HashJoin\\(condition.*\\).*rowcount = 96.25,.*",
+              "Scan.*columns=\\[`department_id`, `employee_id`, `store_id`\\].*rowcount = 1155.0.*",
+              "Filter\\(condition=\\[=\\(\\$1, 'FINANCE'\\)\\]\\).*rowcount = 1.0,.*",
+              "Scan.*columns=\\[`department_id`, `department_description`\\].*rowcount = 12.0.*"};
+      PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan9, new String[]{});
 
-    query = " select emp.employee_id from dfs.tmp.employeeUseStat emp join dfs.tmp.departmentUseStat dept\n"
-            + " on emp.department_id = dept.department_id "
-            + " group by emp.employee_id, emp.store_id "
-            + " having emp.store_id = 7";
-    String[] expectedPlan10 = {"HashAgg\\(group=\\[\\{0, 1\\}\\]\\).*rowcount = 29.203969817879365.*",
-            "HashJoin\\(condition.*\\).*rowcount = 46.2,.*",
-            "Filter\\(condition=\\[=\\(\\$2, 7\\)\\]\\).*rowcount = 46.2,.*",
-            "Scan.*columns=\\[`department_id`, `employee_id`, `store_id`\\].*rowcount = 1155.0.*",
-            "Scan.*columns=\\[`department_id`\\].*rowcount = 12.0.*"};
-    PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan10, new String[]{});
+      query = " select emp.employee_id from dfs.tmp.employeeUseStat emp join dfs.tmp.departmentUseStat dept\n"
+              + " on emp.department_id = dept.department_id "
+              + " group by emp.employee_id, emp.store_id "
+              + " having emp.store_id = 7";
+      String[] expectedPlan10 = {"HashAgg\\(group=\\[\\{0, 1\\}\\]\\).*rowcount = 29.203969817879365.*",
+              "HashJoin\\(condition.*\\).*rowcount = 46.2,.*",
+              "Filter\\(condition=\\[=\\(\\$2, 7\\)\\]\\).*rowcount = 46.2,.*",
+              "Scan.*columns=\\[`department_id`, `employee_id`, `store_id`\\].*rowcount = 1155.0.*",
+              "Scan.*columns=\\[`department_id`\\].*rowcount = 12.0.*"};
+      PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan10, new String[]{});
 
-    query = " select emp.employee_id from dfs.tmp.employeeUseStat emp join dfs.tmp.departmentUseStat dept\n"
-            + " on emp.department_id = dept.department_id "
-            + " group by emp.employee_id "
-            + " having emp.employee_id = 7";
-    String[] expectedPlan11 = {"StreamAgg\\(group=\\[\\{0\\}\\]\\).*rowcount = 1.0.*",
-            "HashJoin\\(condition.*\\).*rowcount = 1.0,.*",
-            "Filter\\(condition=\\[=\\(\\$1, 7\\)\\]\\).*rowcount = 1.0.*",
-            "Scan.*columns=\\[`department_id`\\].*rowcount = 12.0.*",
-            "Scan.*columns=\\[`department_id`, `employee_id`\\].*rowcount = 1155.0.*"};
-    PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan11, new String[]{});
+      query = " select emp.employee_id from dfs.tmp.employeeUseStat emp join dfs.tmp.departmentUseStat dept\n"
+              + " on emp.department_id = dept.department_id "
+              + " group by emp.employee_id "
+              + " having emp.employee_id = 7";
+      String[] expectedPlan11 = {"StreamAgg\\(group=\\[\\{0\\}\\]\\).*rowcount = 1.0.*",
+              "HashJoin\\(condition.*\\).*rowcount = 1.0,.*",
+              "Filter\\(condition=\\[=\\(\\$1, 7\\)\\]\\).*rowcount = 1.0.*",
+              "Scan.*columns=\\[`department_id`\\].*rowcount = 12.0.*",
+              "Scan.*columns=\\[`department_id`, `employee_id`\\].*rowcount = 1155.0.*"};
+      PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan11, new String[]{});
+    } finally {
+      resetSessionOption("planner.slice_target");
+      resetSessionOption("store.format");
+    }
   }
 
   @Test
@@ -337,35 +353,41 @@ public class TestAnalyze extends BaseTestQuery {
     test("ALTER SESSION SET `store.format` = 'parquet'");
     test("ALTER SESSION SET `planner.statistics.use` = true");
     final String tmpLocation = "/multilevel/parquet";
-    // copy the data into the temporary location
-    test("DROP TABLE dfs.tmp.parquetStale");
-    test("CREATE TABLE dfs.tmp.parquetStale AS SELECT o_orderkey, o_custkey, o_orderstatus, " +
-            "o_totalprice, o_orderdate, o_orderpriority, o_clerk, o_shippriority, o_comment from dfs.`%s`", tmpLocation);
-    String query = "select count(distinct o_orderkey) from dfs.tmp.parquetStale";
-    verifyAnalyzeOutput("ANALYZE TABLE dfs.tmp.parquetStale COMPUTE STATISTICS", "9");
-    test("REFRESH TABLE METADATA dfs.tmp.parquetStale");
-    // Verify we recompute statistics once a new file/directory is added. Update the directory some
-    // time after ANALYZE so that the timestamps are different.
-    Thread.sleep(1000);
-    final String Q4 = "/multilevel/parquet/1996/Q4";
-    test("CREATE TABLE dfs.tmp.`parquetStale/1996/Q5` AS SELECT o_orderkey, o_custkey, o_orderstatus, " +
-            "o_totalprice, o_orderdate, o_orderpriority, o_clerk, o_shippriority, o_comment from dfs.`%s`", Q4);
-    // query should use STALE statistics
-    String[] expectedStalePlan = {"StreamAgg\\(group=\\[\\{0\\}\\]\\).*rowcount = 119.0.*",
-        "Scan.*rowcount = 130.0.*"};
-    PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedStalePlan, new String[]{});
-    // Query should use Parquet Metadata, since statistics not available. In this case, NDV is computed as
-    // 1/10*rowcount (Calcite default). Hence, NDV is 13.0 instead of the correct 119.0
-    test("DROP TABLE dfs.tmp.`parquetStale/.stats.drill`");
-    String[] expectedPlan1 = {"HashAgg\\(group=\\[\\{0\\}\\]\\).*rowcount = 13.0.*",
-        "Scan.*rowcount = 130.0.*"};
-    PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan1, new String[]{});
-    // query should use the new statistics. NDV remains unaffected since we copy the Q4 into Q5
-    verifyAnalyzeOutput("ANALYZE TABLE dfs.tmp.parquetStale COMPUTE STATISTICS", "9");
-    String[] expectedPlan2 = {"StreamAgg\\(group=\\[\\{0\\}\\]\\).*rowcount = 119.0.*",
-        "Scan.*rowcount = 130.0.*"};
-    PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan2, new String[]{});
-    test("DROP TABLE dfs.tmp.`parquetStale/1996/Q5`");
+    try {
+      // copy the data into the temporary location
+      test("DROP TABLE dfs.tmp.parquetStale");
+      test("CREATE TABLE dfs.tmp.parquetStale AS SELECT o_orderkey, o_custkey, o_orderstatus, " +
+              "o_totalprice, o_orderdate, o_orderpriority, o_clerk, o_shippriority, o_comment from dfs.`%s`", tmpLocation);
+      String query = "select count(distinct o_orderkey) from dfs.tmp.parquetStale";
+      verifyAnalyzeOutput("ANALYZE TABLE dfs.tmp.parquetStale COMPUTE STATISTICS", "9");
+      test("REFRESH TABLE METADATA dfs.tmp.parquetStale");
+      // Verify we recompute statistics once a new file/directory is added. Update the directory some
+      // time after ANALYZE so that the timestamps are different.
+      Thread.sleep(1000);
+      final String Q4 = "/multilevel/parquet/1996/Q4";
+      test("CREATE TABLE dfs.tmp.`parquetStale/1996/Q5` AS SELECT o_orderkey, o_custkey, o_orderstatus, " +
+              "o_totalprice, o_orderdate, o_orderpriority, o_clerk, o_shippriority, o_comment from dfs.`%s`", Q4);
+      // query should use STALE statistics
+      String[] expectedStalePlan = {"StreamAgg\\(group=\\[\\{0\\}\\]\\).*rowcount = 119.0.*",
+          "Scan.*rowcount = 130.0.*"};
+      PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedStalePlan, new String[]{});
+      // Query should use Parquet Metadata, since statistics not available. In this case, NDV is computed as
+      // 1/10*rowcount (Calcite default). Hence, NDV is 13.0 instead of the correct 119.0
+      test("DROP TABLE dfs.tmp.`parquetStale/.stats.drill`");
+      String[] expectedPlan1 = {"HashAgg\\(group=\\[\\{0\\}\\]\\).*rowcount = 13.0.*",
+          "Scan.*rowcount = 130.0.*"};
+      PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan1, new String[]{});
+      // query should use the new statistics. NDV remains unaffected since we copy the Q4 into Q5
+      verifyAnalyzeOutput("ANALYZE TABLE dfs.tmp.parquetStale COMPUTE STATISTICS", "9");
+      String[] expectedPlan2 = {"StreamAgg\\(group=\\[\\{0\\}\\]\\).*rowcount = 119.0.*",
+          "Scan.*rowcount = 130.0.*"};
+      PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan2, new String[]{});
+      test("DROP TABLE dfs.tmp.`parquetStale/1996/Q5`");
+    } finally {
+      resetSessionOption("planner.slice_target");
+      resetSessionOption("store.format");
+      resetSessionOption("planner.statistics.use");
+    }
   }
 
   // Test basic histogram creation functionality for int, bigint, double, date, timestamp and boolean data types.
@@ -436,9 +458,10 @@ public class TestAnalyze extends BaseTestQuery {
       String[] expectedPlan6 = {"Filter\\(condition.*\\).*rowcount = 1.0,.*",
         "Scan.*columns=\\[`store_id`\\].*rowcount = 1128.0.*"};
       PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan6, new String[]{});
-
     } finally {
-      test("ALTER SESSION SET `planner.slice_target` = " + ExecConstants.SLICE_TARGET_DEFAULT);
+      resetSessionOption("planner.slice_target");
+      resetSessionOption("store.format");
+      resetSessionOption("planner.statistics.use");
     }
   }
 
@@ -462,7 +485,8 @@ public class TestAnalyze extends BaseTestQuery {
               .baselineValues("`c_acctbal`", 11)
               .go();
     } finally {
-      test("ALTER SESSION SET `planner.slice_target` = " + ExecConstants.SLICE_TARGET_DEFAULT);
+      resetSessionOption("planner.slice_target");
+      resetSessionOption("store.format");
     }
   }
 
@@ -498,10 +522,10 @@ public class TestAnalyze extends BaseTestQuery {
               .go();
 
     } finally {
-      test("ALTER SESSION SET `planner.slice_target` = " + ExecConstants.SLICE_TARGET_DEFAULT);
+      resetSessionOption("planner.slice_target");
+      resetSessionOption("store.format");
     }
   }
-
 
   @Test
   public void testHistogramWithIntervalPredicate() throws Exception {
@@ -516,7 +540,8 @@ public class TestAnalyze extends BaseTestQuery {
       String[] expectedPlan1 = {"Filter\\(condition.*\\).*rowcount = 59?.*,.*", "Scan.*columns=\\[`o_orderdate`\\].*rowcount = 15000.0.*"};
       PlanTestBase.testPlanWithAttributesMatchingPatterns(query, expectedPlan1, new String[]{});
     } finally {
-      test("ALTER SESSION SET `planner.slice_target` = " + ExecConstants.SLICE_TARGET_DEFAULT);
+      resetSessionOption("planner.slice_target");
+      resetSessionOption("store.format");
     }
   }
 

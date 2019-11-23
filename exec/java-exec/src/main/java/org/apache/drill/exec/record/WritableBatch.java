@@ -31,10 +31,10 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 /**
- * A specialized version of record batch that can moves out buffers and preps them for writing.
+ * A specialized version of record batch that can moves out buffers and preps
+ * them for writing.
  */
 public class WritableBatch implements AutoCloseable {
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WritableBatch.class);
 
   private final RecordBatchDef def;
   private final DrillBuf[] buffers;
@@ -74,7 +74,8 @@ public class WritableBatch implements AutoCloseable {
   public void reconstructContainer(BufferAllocator allocator, VectorContainer container) {
     Preconditions.checkState(!cleared,
         "Attempted to reconstruct a container from a WritableBatch after it had been cleared");
-    if (buffers.length > 0) { /* If we have DrillBuf's associated with value vectors */
+    // If we have DrillBuf's associated with value vectors
+    if (buffers.length > 0) {
       int len = 0;
       for (DrillBuf b : buffers) {
         len += b.capacity();
@@ -82,7 +83,7 @@ public class WritableBatch implements AutoCloseable {
 
       DrillBuf newBuf = allocator.buffer(len);
       try {
-        /* Copy data from each buffer into the compound buffer */
+        // Copy data from each buffer into the compound buffer
         int offset = 0;
         for (DrillBuf buf : buffers) {
           newBuf.setBytes(offset, buf);
@@ -94,9 +95,9 @@ public class WritableBatch implements AutoCloseable {
 
         int bufferOffset = 0;
 
-        /*
-         * For each value vector slice up the appropriate size from the compound buffer and load it into the value vector
-         */
+        // For each value vector slice up the appropriate size from the
+        // compound buffer and load it into the value vector
+
         int vectorIndex = 0;
 
         for (VectorWrapper<?> vv : container) {
@@ -120,16 +121,11 @@ public class WritableBatch implements AutoCloseable {
       svMode = SelectionVectorMode.NONE;
     }
     container.buildSchema(svMode);
-
-    /* Set the record count in the value vector */
-    for (VectorWrapper<?> v : container) {
-      ValueVector.Mutator m = v.getValueVector().getMutator();
-      m.setValueCount(def.getRecordCount());
-    }
+    container.setValueCount(def.getRecordCount());
   }
 
   public void clear() {
-    if(cleared) {
+    if (cleared) {
       return;
     }
     for (DrillBuf buf : buffers) {

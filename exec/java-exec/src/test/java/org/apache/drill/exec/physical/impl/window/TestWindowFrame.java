@@ -36,6 +36,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 public class TestWindowFrame extends BaseTestQuery {
+
   @BeforeClass
   public static void setupMSortBatchSize() throws IOException {
     // make sure memory sorter outputs 20 rows per batch

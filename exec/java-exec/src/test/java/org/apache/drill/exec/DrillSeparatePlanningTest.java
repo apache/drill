@@ -51,6 +51,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
  */
 @Category({SlowTest.class, PlannerTest.class})
 public class DrillSeparatePlanningTest extends ClusterTest {
+
   @BeforeClass
   public static void setupFiles() {
     dirTestWatcher.copyResourceToRoot(Paths.get("multilevel", "json"));

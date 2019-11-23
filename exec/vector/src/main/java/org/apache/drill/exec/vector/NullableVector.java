@@ -25,7 +25,11 @@ public interface NullableVector extends ValueVector {
 
   public interface Mutator extends ValueVector.Mutator {
 
-    // Used by the vector accessors to force the last set value.
+    /**
+     * Used by the vector accessors to force the last set value.
+     * @param n the value of the last set field used to
+     * fill empties
+     */
 
     void setSetCount(int n);
   }

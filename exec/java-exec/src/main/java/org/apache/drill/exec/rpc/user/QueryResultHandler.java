@@ -43,6 +43,8 @@ import org.apache.drill.exec.rpc.RpcOutcomeListener;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.apache.drill.shaded.guava.com.google.common.collect.Queues;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Encapsulates the future management of query submissions.  This entails a
@@ -56,8 +58,8 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Queues;
  * handle this case and then do a switcheroo.
  */
 public class QueryResultHandler {
-  private static final org.slf4j.Logger logger =
-      org.slf4j.LoggerFactory.getLogger(QueryResultHandler.class);
+  private static final Logger logger =
+      LoggerFactory.getLogger(QueryResultHandler.class);
 
   /**
    * Current listener for results, for each active query.
@@ -74,7 +76,7 @@ public class QueryResultHandler {
   }
 
   public RpcConnectionHandler<UserToBitConnection> getWrappedConnectionHandler(
-      final RpcConnectionHandler<UserToBitConnection> handler) {
+      RpcConnectionHandler<UserToBitConnection> handler) {
     return new ChannelClosedHandler(handler);
   }
 
@@ -82,11 +84,11 @@ public class QueryResultHandler {
    * Maps internal low-level API protocol to {@link UserResultsListener}-level API protocol.
    * handles data result messages
    */
-  public void resultArrived( ByteBuf pBody ) throws RpcException {
-    final QueryResult queryResult = RpcBus.get( pBody, QueryResult.PARSER );
+  public void resultArrived(ByteBuf pBody) throws RpcException {
+    QueryResult queryResult = RpcBus.get(pBody, QueryResult.PARSER);
 
-    final QueryId queryId = queryResult.getQueryId();
-    final QueryState queryState = queryResult.getQueryState();
+    QueryId queryId = queryResult.getQueryId();
+    QueryState queryState = queryResult.getQueryState();
 
     if (logger.isDebugEnabled()) {
       logger.debug("resultArrived: queryState: {}, queryId = {}", queryState,
@@ -95,18 +97,18 @@ public class QueryResultHandler {
 
     assert queryResult.hasQueryState() : "received query result without QueryState";
 
-    final boolean isFailureResult = QueryState.FAILED == queryState;
+    boolean isFailureResult = QueryState.FAILED == queryState;
     // CANCELED queries are handled the same way as COMPLETED
-    final boolean isTerminalResult;
-    switch ( queryState ) {
+    boolean isTerminalResult;
+    switch (queryState) {
       case FAILED:
       case CANCELED:
       case COMPLETED:
         isTerminalResult = true;
         break;
       default:
-        logger.error( "Unexpected/unhandled QueryState " + queryState
-          + " (for query " + queryId +  ")" );
+        logger.error("Unexpected/unhandled QueryState " + queryState
+          + " (for query " + queryId +  ")");
         isTerminalResult = false;
         break;
     }
@@ -127,19 +129,19 @@ public class QueryResultHandler {
 
         try {
           resultsListener.queryCompleted(queryState);
-        } catch ( Exception e ) {
+        } catch (Exception e) {
           resultsListener.submissionFailed(UserException.systemError(e).build(logger));
         }
       } else {
         logger.warn("queryState {} was ignored", queryState);
       }
     } finally {
-      if ( isTerminalResult ) {
+      if (isTerminalResult) {
         // TODO:  What exactly are we checking for?  How should we really check
         // for it?
-        if ( (! ( resultsListener instanceof BufferingResultsListener )
-          || ((BufferingResultsListener) resultsListener).output != null ) ) {
-          queryIdToResultsListenersMap.remove( queryId, resultsListener );
+        if ((! (resultsListener instanceof BufferingResultsListener)
+          || ((BufferingResultsListener) resultsListener).output != null)) {
+          queryIdToResultsListenersMap.remove(queryId, resultsListener);
         }
       }
     }
@@ -149,50 +151,52 @@ public class QueryResultHandler {
    * Maps internal low-level API protocol to {@link UserResultsListener}-level API protocol.
    * handles query data messages
    */
-  public void batchArrived( ConnectionThrottle throttle,
-                            ByteBuf pBody, ByteBuf dBody ) throws RpcException {
-    final QueryData queryData = RpcBus.get( pBody, QueryData.PARSER );
+  public void batchArrived(ConnectionThrottle throttle,
+                            ByteBuf pBody, ByteBuf dBody) throws RpcException {
+    QueryData queryData = RpcBus.get(pBody, QueryData.PARSER);
     // Current batch coming in.
-    final DrillBuf drillBuf = (DrillBuf) dBody;
-    final QueryDataBatch batch = new QueryDataBatch( queryData, drillBuf );
+    DrillBuf drillBuf = (DrillBuf) dBody;
+    QueryDataBatch batch = new QueryDataBatch(queryData, drillBuf);
 
-    final QueryId queryId = queryData.getQueryId();
+    QueryId queryId = queryData.getQueryId();
 
     if (logger.isDebugEnabled()) {
       logger.debug("batchArrived: queryId = {}", QueryIdHelper.getQueryId(queryId));
     }
-    logger.trace( "batchArrived: batch = {}", batch );
+    logger.trace("batchArrived: batch = {}", batch);
 
-    final UserResultsListener resultsListener = newUserResultsListener(queryId);
+    UserResultsListener resultsListener = newUserResultsListener(queryId);
 
     // A data case--pass on via dataArrived
     try {
       resultsListener.dataArrived(batch, throttle);
       // That releases batch if successful.
-    } catch ( Exception e ) {
+    } catch (Exception e) {
       batch.release();
       resultsListener.submissionFailed(UserException.systemError(e).build(logger));
     }
   }
 
   /**
-   * Return {@link UserResultsListener} associated with queryId. Will create a new {@link BufferingResultsListener}
-   * if no listener found.
-   * @param queryId queryId we are getting the listener for
+   * Return {@link UserResultsListener} associated with queryId. Will create a
+   * new {@link BufferingResultsListener} if no listener found.
+   *
+   * @param queryId
+   *          queryId we are getting the listener for
    * @return {@link UserResultsListener} associated with queryId
    */
   private UserResultsListener newUserResultsListener(QueryId queryId) {
-    UserResultsListener resultsListener = queryIdToResultsListenersMap.get( queryId );
-    logger.trace( "For QueryId [{}], retrieved results listener {}", queryId, resultsListener );
-    if ( null == resultsListener ) {
+    UserResultsListener resultsListener = queryIdToResultsListenersMap.get(queryId);
+    logger.trace("For QueryId [{}], retrieved results listener {}", queryId, resultsListener);
+    if (null == resultsListener) {
       // WHO?? didn't get query ID response and set submission listener yet,
       // so install a buffering listener for now
 
       BufferingResultsListener bl = new BufferingResultsListener();
-      resultsListener = queryIdToResultsListenersMap.putIfAbsent( queryId, bl );
+      resultsListener = queryIdToResultsListenersMap.putIfAbsent(queryId, bl);
       // If we had a successful insertion, use that reference.  Otherwise, just
       // throw away the new buffering listener.
-      if ( null == resultsListener ) {
+      if (null == resultsListener) {
         resultsListener = bl;
       }
     }
@@ -201,7 +205,7 @@ public class QueryResultHandler {
 
   private static class BufferingResultsListener implements UserResultsListener {
 
-    private ConcurrentLinkedQueue<QueryDataBatch> results = Queues.newConcurrentLinkedQueue();
+    private final ConcurrentLinkedQueue<QueryDataBatch> results = Queues.newConcurrentLinkedQueue();
     private volatile UserException ex;
     private volatile QueryState queryState;
     private volatile UserResultsListener output;
@@ -252,8 +256,10 @@ public class QueryResultHandler {
     @Override
     public void submissionFailed(UserException ex) {
       assert queryState == null;
-      // there is one case when submissionFailed() is called even though the query didn't fail on the server side
-      // it happens when UserResultsListener.batchArrived() throws an exception that will be passed to
+      // there is one case when submissionFailed() is called even though the
+      // query didn't fail on the server side
+      // it happens when UserResultsListener.batchArrived() throws an exception
+      // that will be passed to
       // submissionFailed() by QueryResultHandler.dataArrived()
       queryState = QueryState.FAILED;
       synchronized (this) {
@@ -335,7 +341,7 @@ public class QueryResultHandler {
     }
 
     @Override
-    public void interrupted(final InterruptedException ex) {
+    public void interrupted(InterruptedException ex) {
       if (!isTerminal.compareAndSet(false, true)) {
         logger.warn("Received multiple responses to run query request.");
         return;
@@ -350,26 +356,27 @@ public class QueryResultHandler {
   }
 
   /**
-   * When a {@link UserToBitConnection connection} to a server is successfully created, this handler adds a
-   * listener to that connection that listens to connection closure. If the connection is closed, all active
+   * When a {@link UserToBitConnection connection} to a server is successfully
+   * created, this handler adds a listener to that connection that listens to
+   * connection closure. If the connection is closed, all active
    * {@link UserResultsListener result listeners} are failed.
    */
   private class ChannelClosedHandler implements RpcConnectionHandler<UserToBitConnection> {
 
     private final RpcConnectionHandler<UserToBitConnection> parentHandler;
 
-    public ChannelClosedHandler(final RpcConnectionHandler<UserToBitConnection> parentHandler) {
+    public ChannelClosedHandler(RpcConnectionHandler<UserToBitConnection> parentHandler) {
       this.parentHandler = parentHandler;
     }
 
     @Override
-    public void connectionSucceeded(final UserToBitConnection connection) {
+    public void connectionSucceeded(UserToBitConnection connection) {
       connection.getChannel().closeFuture().addListener(
           new GenericFutureListener<Future<? super Void>>() {
             @Override
             public void operationComplete(Future<? super Void> future)
                 throws Exception {
-              for (final UserResultsListener listener : queryIdToResultsListenersMap.values()) {
+              for (UserResultsListener listener : queryIdToResultsListenersMap.values()) {
                 listener.submissionFailed(UserException.connectionError()
                     .message("Connection %s closed unexpectedly. Drillbit down?",
                         connection.getName())

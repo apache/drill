@@ -37,6 +37,7 @@ import org.junit.experimental.categories.Category;
 
 @Category({SqlFunctionTest.class, OperatorTest.class, PlannerTest.class, UnlikelyTest.class})
 public class TestExampleQueries extends BaseTestQuery {
+
   @BeforeClass
   public static void setupTestFiles() {
     dirTestWatcher.copyResourceToRoot(Paths.get("tpchmulti"));

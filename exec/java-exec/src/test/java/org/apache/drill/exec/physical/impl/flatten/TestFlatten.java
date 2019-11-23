@@ -276,7 +276,7 @@ public class TestFlatten extends BaseTestQuery {
   @Test
   @Category(UnlikelyTest.class)
   public void drill1652() throws Exception {
-    if(RUN_ADVANCED_TESTS){
+    if (RUN_ADVANCED_TESTS) {
       test("select uid, flatten(transactions) from dfs.`tmp/bigfile.json`");
     }
   }
@@ -330,7 +330,7 @@ public class TestFlatten extends BaseTestQuery {
   public void testKVGenFlatten2() throws Exception {
     // currently runs
     // TODO - re-verify results by hand
-    if(RUN_ADVANCED_TESTS){
+    if (RUN_ADVANCED_TESTS) {
       test("select flatten(kvgen(visited_cellid_counts)) as mytb from dfs.`tmp/mapkv.json`");
     }
   }
@@ -351,7 +351,7 @@ public class TestFlatten extends BaseTestQuery {
 
     // FIXED BY RETURNING PROPER SCHEMA DURING FAST SCHEMA STEP
     // these types of problems are being solved more generally as we develp better support for chaning schema
-    if(RUN_ADVANCED_TESTS){
+    if (RUN_ADVANCED_TESTS) {
       test("select celltbl.catl from (\n" +
           "        select flatten(categories) catl from dfs.`tmp/yelp_academic_dataset_business.json` b limit 100\n" +
           "    )  celltbl where celltbl.catl = 'Doctors'");
@@ -360,7 +360,7 @@ public class TestFlatten extends BaseTestQuery {
 
   @Test
   public void countAggFlattened() throws Exception {
-    if(RUN_ADVANCED_TESTS){
+    if (RUN_ADVANCED_TESTS) {
       test("select celltbl.catl, count(celltbl.catl) from ( " +
           "select business_id, flatten(categories) catl from dfs.`tmp/yelp_academic_dataset_business.json` b limit 100 " +
           ")  celltbl group by celltbl.catl limit 10 ");
@@ -369,35 +369,33 @@ public class TestFlatten extends BaseTestQuery {
 
   @Test
   public void flattenAndAdditionalColumn() throws Exception {
-    if(RUN_ADVANCED_TESTS){
+    if (RUN_ADVANCED_TESTS) {
       test("select business_id, flatten(categories) from dfs.`tmp/yelp_academic_dataset_business.json` b");
     }
   }
 
   @Test
   public void testFailingFlattenAlone() throws Exception {
-    if(RUN_ADVANCED_TESTS){
+    if (RUN_ADVANCED_TESTS) {
       test("select flatten(categories) from dfs.`tmp/yelp_academic_dataset_business.json` b  ");
     }
   }
 
   @Test
   public void testDistinctAggrFlattened() throws Exception {
-    if(RUN_ADVANCED_TESTS){
+    if (RUN_ADVANCED_TESTS) {
       test(" select distinct(celltbl.catl) from (\n" +
           "        select flatten(categories) catl from dfs.`tmp/yelp_academic_dataset_business.json` b\n" +
           "    )  celltbl");
     }
-
   }
 
   @Test
   @Category(UnlikelyTest.class)
   public void testDrill1665() throws Exception {
-    if(RUN_ADVANCED_TESTS){
+    if (RUN_ADVANCED_TESTS) {
       test("select id, flatten(evnts) as rpt from dfs.`tmp/drill1665.json`");
     }
-
   }
 
   @Test
@@ -479,7 +477,6 @@ public class TestFlatten extends BaseTestQuery {
         .unOrdered()
         .jsonBaselineFile("flatten/drill-2106-result.json")
         .go();
-
   }
 
   @Test // see DRILL-2146

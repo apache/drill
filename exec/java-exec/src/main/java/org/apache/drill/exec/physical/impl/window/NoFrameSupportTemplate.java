@@ -26,18 +26,22 @@ import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.ValueVector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
 import java.util.List;
 
 
 /**
- * WindowFramer implementation that doesn't support the FRAME clause (will assume the default frame).
- * <br>According to the SQL standard, LEAD, LAG, ROW_NUMBER, NTILE and all ranking functions don't support the FRAME clause.
- * This class will handle such functions.
+ * WindowFramer implementation that doesn't support the FRAME clause (will
+ * assume the default frame). <p>
+ * According to the SQL standard, LEAD, LAG, ROW_NUMBER, NTILE and all ranking
+ * functions don't support the FRAME clause. This class will handle such
+ * functions.
  */
 public abstract class NoFrameSupportTemplate implements WindowFramer {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NoFrameSupportTemplate.class);
+  private static final Logger logger = LoggerFactory.getLogger(NoFrameSupportTemplate.class);
 
   private VectorContainer container;
   private VectorContainer internal;
@@ -53,8 +57,8 @@ public abstract class NoFrameSupportTemplate implements WindowFramer {
   private Partition partition; // current partition being processed
 
   @Override
-  public void setup(final List<WindowDataBatch> batches, final VectorContainer container, final OperatorContext oContext,
-                    final boolean requireFullPartition, final WindowPOP popConfig) throws SchemaChangeException {
+  public void setup(List<WindowDataBatch> batches, VectorContainer container, OperatorContext oContext,
+                    boolean requireFullPartition, WindowPOP popConfig) throws SchemaChangeException {
     this.container = container;
     this.batches = batches;
 
@@ -81,9 +85,7 @@ public abstract class NoFrameSupportTemplate implements WindowFramer {
   @Override
   public void doWork() throws DrillException {
     int currentRow = 0;
-
-    this.current = batches.get(0);
-
+    current = batches.get(0);
     outputCount = current.getRecordCount();
 
     while (currentRow < outputCount) {
@@ -108,10 +110,9 @@ public abstract class NoFrameSupportTemplate implements WindowFramer {
     }
   }
 
-  private void newPartition(final WindowDataBatch current, final int currentRow) throws SchemaChangeException {
+  private void newPartition(WindowDataBatch current, int currentRow) throws SchemaChangeException {
     partition = new Partition();
     updatePartitionSize(partition, currentRow);
-
     setupPartition(current, container);
   }
 
@@ -131,16 +132,19 @@ public abstract class NoFrameSupportTemplate implements WindowFramer {
   }
 
   /**
-   * process all rows (computes and writes function values) of current batch that are part of current partition.
-   * @param currentRow first unprocessed row
+   * Process all rows (computes and writes function values) of current batch
+   * that are part of current partition.
+   *
+   * @param currentRow
+   *          first unprocessed row
    * @return index of next unprocessed row
-   * @throws DrillException if it can't write into the container
+   * @throws DrillException
+   *           if it can't write into the container
    */
-  private int processPartition(final int currentRow) throws DrillException {
+  private int processPartition(int currentRow) throws DrillException {
     logger.trace("process partition {}, currentRow: {}, outputCount: {}", partition, currentRow, outputCount);
 
     setupCopyNext(current, container);
-
     copyPrevFromInternal();
 
     // copy remaining from current
@@ -198,15 +202,14 @@ public abstract class NoFrameSupportTemplate implements WindowFramer {
     }
   }
 
-  private void processRow(final int row) throws DrillException {
+  private void processRow(int row) throws DrillException {
     if (partition.isFrameDone()) {
       // because all peer rows share the same frame, we only need to compute and aggregate the frame once
-      final long peers = countPeers(row);
+      long peers = countPeers(row);
       partition.newFrame(peers);
     }
 
     outputRow(row, partition);
-
     partition.rowAggregated();
   }
 
@@ -214,7 +217,7 @@ public abstract class NoFrameSupportTemplate implements WindowFramer {
    * updates partition's length after computing the number of rows for the current the partition starting at the specified
    * row of the first batch. If !requiresFullPartition, this method will only count the rows in the current batch
    */
-  private void updatePartitionSize(final Partition partition, final int start) {
+  private void updatePartitionSize(Partition partition, int start) {
     logger.trace("compute partition size starting from {} on {} batches", start, batches.size());
 
     long length = 0;
@@ -226,7 +229,7 @@ public abstract class NoFrameSupportTemplate implements WindowFramer {
 
     outer:
     for (WindowDataBatch batch : batches) {
-      final int recordCount = batch.getRecordCount();
+      int recordCount = batch.getRecordCount();
 
       // check first container from start row, and subsequent containers from first row
       for (; row < recordCount; row++, length++) {
@@ -262,18 +265,18 @@ public abstract class NoFrameSupportTemplate implements WindowFramer {
   }
 
   /**
-   * count number of peer rows for current row
+   * Count number of peer rows for current row
    * @param start starting row of the current frame
    * @return num peer rows for current row
    * @throws SchemaChangeException
    */
-  private long countPeers(final int start) throws SchemaChangeException {
+  private long countPeers(int start) throws SchemaChangeException {
     long length = 0;
 
     // a single frame can include rows from multiple batches
     // start processing first batch and, if necessary, move to next batches
     for (WindowDataBatch batch : batches) {
-      final int recordCount = batch.getRecordCount();
+      int recordCount = batch.getRecordCount();
 
       // for every remaining row in the partition, count it if it's a peer row
       for (int row = (batch == current) ? start : 0; row < recordCount; row++, length++) {
@@ -308,12 +311,14 @@ public abstract class NoFrameSupportTemplate implements WindowFramer {
         + "]";
   }
 
-
   /**
-   * called once for each row after we evaluate all peer rows. Used to write a value in the row
+   * Called once for each row after we evaluate all peer rows. Used to write a
+   * value in the row
    *
-   * @param outIndex index of row
-   * @param partition object used by "computed" window functions
+   * @param outIndex
+   *          index of row
+   * @param partition
+   *          object used by "computed" window functions
    */
   public abstract void outputRow(@Named("outIndex") int outIndex,
                                  @Named("partition") Partition partition)
@@ -331,10 +336,13 @@ public abstract class NoFrameSupportTemplate implements WindowFramer {
                        throws SchemaChangeException;
 
   /**
-   * copies value(s) from inIndex row to outIndex row. Mostly used by LEAD. inIndex always points to the row next to
-   * outIndex
-   * @param inIndex source row of the copy
-   * @param outIndex destination row of the copy.
+   * Copies value(s) from inIndex row to outIndex row. Mostly used by LEAD.
+   * inIndex always points to the row next to outIndex
+   *
+   * @param inIndex
+   *          source row of the copy
+   * @param outIndex
+   *          destination row of the copy.
    */
   public abstract void copyNext(@Named("inIndex") int inIndex,
                                 @Named("outIndex") int outIndex)
@@ -344,10 +352,13 @@ public abstract class NoFrameSupportTemplate implements WindowFramer {
                        throws SchemaChangeException;
 
   /**
-   * copies value(s) from inIndex row to outIndex row. Mostly used by LAG. inIndex always points to the previous row
+   * Copies value(s) from inIndex row to outIndex row. Mostly used by LAG.
+   * inIndex always points to the previous row
    *
-   * @param inIndex source row of the copy
-   * @param outIndex destination row of the copy.
+   * @param inIndex
+   *          source row of the copy
+   * @param outIndex
+   *          destination row of the copy.
    */
   public abstract void copyPrev(@Named("inIndex") int inIndex,
                                 @Named("outIndex") int outIndex)
@@ -364,12 +375,12 @@ public abstract class NoFrameSupportTemplate implements WindowFramer {
                        throws SchemaChangeException;
 
   /**
-   * reset all window functions
+   * Reset all window functions
    */
   public abstract boolean resetValues() throws SchemaChangeException;
 
   /**
-   * compares two rows from different batches (can be the same), if they have the same value for the partition by
+   * Compares two rows from different batches (can be the same), if they have the same value for the partition by
    * expression
    * @param b1Index index of first row
    * @param b1 batch for first row
@@ -385,7 +396,7 @@ public abstract class NoFrameSupportTemplate implements WindowFramer {
                           throws SchemaChangeException;
 
   /**
-   * compares two rows from different batches (can be the same), if they have the same value for the order by
+   * Compares two rows from different batches (can be the same), if they have the same value for the order by
    * expression
    * @param b1Index index of first row
    * @param b1 batch for first row

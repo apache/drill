@@ -77,9 +77,6 @@ public class MockRecordBatch implements CloseableRecordBatch {
     this.allocator = context.getAllocator();
     this.container = new VectorContainer(allocator, schema);
     this.allOutcomes = iterOutcomes;
-    this.currentContainerIndex = 0;
-    this.currentOutcomeIndex = 0;
-    this.isDone = false;
   }
 
   @Deprecated
@@ -193,7 +190,7 @@ public class MockRecordBatch implements CloseableRecordBatch {
   @Override
   public IterOutcome next() {
 
-    if(isDone) {
+    if (isDone) {
       return IterOutcome.NONE;
     }
 
@@ -213,16 +210,18 @@ public class MockRecordBatch implements CloseableRecordBatch {
       switch (rowSet.indirectionType()) {
         case NONE:
         case TWO_BYTE:
-          container.transferIn(input);
-          if ( input.hasRecordCount() ) { // in case special test of uninitialized input container
-            container.setRecordCount(input.getRecordCount());
+          if (input.hasRecordCount()) { // in case special test of uninitialized input container
+            container.transferIn(input);
+          } else {
+            // Not normally a valid condition, supported here just for testing
+            container.rawTransferIn(input);
           }
           SelectionVector2 inputSv2 = ((RowSet.SingleRowSet) rowSet).getSv2();
 
           if (sv2 != null) {
             // Operators assume that new values for an Sv2 are transferred in.
             sv2.allocateNewSafe(inputSv2.getCount());
-            for (int i=0; i<inputSv2.getCount(); ++i) {
+            for (int i=0; i < inputSv2.getCount(); ++i) {
               sv2.setIndex(i, inputSv2.getIndex(i));
             }
             sv2.setRecordCount(inputSv2.getCount());

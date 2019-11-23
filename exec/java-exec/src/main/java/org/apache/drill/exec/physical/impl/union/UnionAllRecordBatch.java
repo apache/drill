@@ -338,11 +338,10 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
     public int getRemainingRecords() {
       return (totalRecordsToProcess - recordsProcessed);
     }
-
   }
 
   private class UnionInputIterator implements Iterator<Pair<IterOutcome, BatchStatusWrappper>> {
-    private final Stack<BatchStatusWrappper> batchStatusStack = new Stack<>();
+    private Stack<BatchStatusWrappper> batchStatusStack = new Stack<>();
 
     UnionInputIterator(IterOutcome leftOutCome, RecordBatch left, IterOutcome rightOutCome, RecordBatch right) {
       if (rightOutCome == IterOutcome.OK_NEW_SCHEMA) {

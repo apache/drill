@@ -34,7 +34,7 @@ public class VectorPrinter {
     if (capacity == 0) {
       return;
     }
-    int length = Math.min(maxPrint, capacity);
+    int length = Math.max(maxPrint, vector.getAccessor().getValueCount());
     printOffsets(vector, 0, length);
   }
 

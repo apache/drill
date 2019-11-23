@@ -57,8 +57,6 @@ public class TestHashAggrSpill extends DrillTest {
 
   /**
    *  A template for Hash Aggr spilling tests
-   *
-   * @throws Exception
    */
   private void testSpill(long maxMem, long numPartitions, long minBatches, int maxParallel, boolean fallback, boolean predict,
                          String sql, long expectedRows, int cycle, int fromPart, int toPart) throws Exception {
@@ -84,8 +82,6 @@ public class TestHashAggrSpill extends DrillTest {
   /**
    * Test "normal" spilling: Only 2 (or 3) partitions (out of 4) would require spilling
    * ("normal spill" means spill-cycle = 1 )
-   *
-   * @throws Exception
    */
   @Test
   public void testSimpleHashAggrSpill() throws Exception {
@@ -96,8 +92,6 @@ public class TestHashAggrSpill extends DrillTest {
   /**
    * Test with "needed memory" prediction turned off
    * (i.e., exercise code paths that catch OOMs from the Hash Table and recover)
-   *
-   * @throws Exception
    */
   @Test
   @Ignore("DRILL-7301")
@@ -126,9 +120,8 @@ public class TestHashAggrSpill extends DrillTest {
   }
 
   /**
-   * Test Secondary and Tertiary spill cycles - Happens when some of the spilled partitions cause more spilling as they are read back
-   *
-   * @throws Exception
+   * Test Secondary and Tertiary spill cycles - Happens when some of the spilled
+   * partitions cause more spilling as they are read back
    */
   @Test
   public void testHashAggrSecondaryTertiarySpill() throws Exception {
@@ -139,9 +132,8 @@ public class TestHashAggrSpill extends DrillTest {
   }
 
   /**
-   * Test with the "fallback" option disabled: When not enough memory available to allow spilling, then fail (Resource error) !!
-   *
-   * @throws Exception
+   * Test with the "fallback" option disabled: When not enough memory available
+   * to allow spilling, then fail (Resource error) !!
    */
   @Test
   public void testHashAggrFailWithFallbackDisabed() throws Exception {
@@ -158,10 +150,10 @@ public class TestHashAggrSpill extends DrillTest {
   }
 
   /**
-   * Test with the "fallback" option ON: When not enough memory is available to allow spilling (internally need enough memory to
-   * create multiple partitions), then behave like the pre-1.11 Hash Aggregate: Allocate unlimited memory, no spill.
-   *
-   * @throws Exception
+   * Test with the "fallback" option ON: When not enough memory is available to
+   * allow spilling (internally need enough memory to create multiple
+   * partitions), then behave like the pre-1.11 Hash Aggregate: Allocate
+   * unlimited memory, no spill.
    */
   @Test
   public void testHashAggrSuccessWithFallbackEnabled() throws Exception {

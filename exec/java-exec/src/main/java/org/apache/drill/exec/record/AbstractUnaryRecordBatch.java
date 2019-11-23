@@ -23,6 +23,8 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.vector.SchemaChangeCallBack;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The base class for operators that have a single input. The concrete implementations provide the
@@ -34,9 +36,9 @@ import org.apache.drill.exec.vector.SchemaChangeCallBack;
  * @param <T>
  */
 public abstract class AbstractUnaryRecordBatch<T extends PhysicalOperator> extends AbstractRecordBatch<T> {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(new Object() {}.getClass().getEnclosingClass());
+  private static final Logger logger = LoggerFactory.getLogger(new Object() {}.getClass().getEnclosingClass());
 
-  protected boolean outOfMemory = false;
+  protected boolean outOfMemory;
   protected SchemaChangeCallBack callBack = new SchemaChangeCallBack();
   private IterOutcome lastKnownOutcome;
 
@@ -140,18 +142,17 @@ public abstract class AbstractUnaryRecordBatch<T extends PhysicalOperator> exten
   protected abstract IterOutcome doWork();
 
   /**
-   * Default behavior to handle NULL input (aka FAST NONE): incoming return NONE before return a OK_NEW_SCHEMA:
-   * This could happen when the underneath Scan operators do not produce any batch with schema.
-   *
+   * Default behavior to handle NULL input (aka FAST NONE): incoming return NONE
+   * before return a OK_NEW_SCHEMA: This could happen when the underneath Scan
+   * operators do not produce any batch with schema.
    * <p>
-   * Notice that NULL input is different from input with an empty batch. In the later case, input provides
-   * at least a batch, thought it's empty.
-   *</p>
-   *
+   * Notice that NULL input is different from input with an empty batch. In the
+   * later case, input provides at least a batch, thought it's empty.
+   * </p>
    * <p>
-   * This behavior could be override in each individual operator, if the operator's semantics is to
-   * inject a batch with schema.
-   *</p>
+   * This behavior could be override in each individual operator, if the
+   * operator's semantics is to inject a batch with schema.
+   * </p>
    *
    * @return IterOutcome.NONE.
    */

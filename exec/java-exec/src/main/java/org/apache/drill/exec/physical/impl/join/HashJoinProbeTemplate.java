@@ -35,7 +35,7 @@ import org.apache.drill.exec.vector.ValueVector;
 
 import static org.apache.drill.exec.record.JoinBatchMemoryManager.LEFT_INDEX;
 
-public abstract class HashJoinProbeTemplate implements HashJoinProbe {
+public class HashJoinProbeTemplate implements HashJoinProbe {
 
   VectorContainer container; // the outgoing container
 
@@ -50,13 +50,13 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
   // joinControl determines how to handle INTERSECT_DISTINCT vs. INTERSECT_ALL
   private JoinControl joinControl;
 
-  private HashJoinBatch outgoingJoinBatch = null;
+  private HashJoinBatch outgoingJoinBatch;
 
   // Number of records to process on the probe side
-  private int recordsToProcess = 0;
+  private int recordsToProcess;
 
   // Number of records processed on the probe side
-  private int recordsProcessed = 0;
+  private int recordsProcessed;
 
   // Number of records in the output container
   private int outputRecords;
@@ -71,7 +71,7 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
   private ProbeState probeState = ProbeState.PROBE_PROJECT;
 
   // For outer or right joins, this is a list of unmatched records that needs to be projected
-  private IntArrayList unmatchedBuildIndexes = null;
+  private IntArrayList unmatchedBuildIndexes;
 
   private  HashPartition partitions[];
 
@@ -79,14 +79,14 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
   // probing later on the same chain of duplicates
   private HashPartition currPartition;
 
-  private int currRightPartition = 0; // for returning RIGHT/FULL
+  private int currRightPartition; // for returning RIGHT/FULL
   IntVector read_left_HV_vector; // HV vector that was read from the spilled batch
-  private int cycleNum = 0; // 1-primary, 2-secondary, 3-tertiary, etc.
+  private int cycleNum; // 1-primary, 2-secondary, 3-tertiary, etc.
   private HashJoinBatch.HashJoinSpilledPartition spilledInners[]; // for the outer to find the partition
   private boolean buildSideIsEmpty = true;
   private int numPartitions = 1; // must be 2 to the power of bitsInMask
-  private int partitionMask = 0; // numPartitions - 1
-  private int bitsInMask = 0; // number of bits in the MASK
+  private int partitionMask; // numPartitions - 1
+  private int bitsInMask; // number of bits in the MASK
   private int numberOfBuildSideColumns;
   private int targetOutputRecords;
   private boolean semiJoin;
@@ -96,6 +96,7 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
     this.targetOutputRecords = targetOutputRecords;
   }
 
+  @Override
   public int getOutputCount() {
     return outputRecords;
   }
@@ -143,7 +144,7 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
     this.recordsProcessed = 0;
 
     // A special case - if the left was an empty file
-    if ( leftStartState == IterOutcome.NONE ){
+    if (leftStartState == IterOutcome.NONE){
       changeToFinalProbeState();
     } else {
       this.recordsToProcess = probeBatch.getRecordCount();
@@ -151,16 +152,16 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
 
     // for those outer partitions that need spilling (cause their matching inners spilled)
     // initialize those partitions' current batches and hash-value vectors
-    for ( HashPartition partn : this.partitions) {
+    for (HashPartition partn : this.partitions) {
       partn.allocateNewCurrentBatchAndHV();
     }
 
     currRightPartition = 0; // In case it's a Right/Full outer join
 
     // Initialize the HV vector for the first (already read) left batch
-    if ( this.cycleNum > 0 ) {
-      if ( read_left_HV_vector != null ) { read_left_HV_vector.clear();}
-      if ( leftStartState != IterOutcome.NONE ) { // Skip when outer spill was empty
+    if (this.cycleNum > 0) {
+      if (read_left_HV_vector != null) { read_left_HV_vector.clear();}
+      if (leftStartState != IterOutcome.NONE) { // Skip when outer spill was empty
         read_left_HV_vector = (IntVector) probeBatch.getContainer().getLast();
       }
     }
@@ -178,6 +179,7 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
       destVector.copyEntry(container.getRecordCount(), srcVector, buildSrcIndex);
     }
   }
+
   /**
    * Append the given probe side row into the outgoing container, following the build side part
    * @param probeSrcContainer The container for the left/outer side
@@ -190,6 +192,7 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
       destVector.copyEntry(container.getRecordCount(), srcVector, probeSrcIndex);
     }
   }
+
   /**
    *  A special version of the VectorContainer's appendRow for the HashJoin; (following a probe) it
    *  copies the build and probe sides into the outgoing container. (It uses a composite
@@ -204,12 +207,14 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
   private int outputRow(ArrayList<VectorContainer> buildSrcContainers, int compositeBuildSrcIndex,
                         VectorContainer probeSrcContainer, int probeSrcIndex) {
 
-    if ( buildSrcContainers != null ) {
+    if (buildSrcContainers != null) {
       int buildBatchIndex = compositeBuildSrcIndex >>> 16;
       int buildOffset = compositeBuildSrcIndex & 65535;
       appendBuild(buildSrcContainers.get(buildBatchIndex), buildOffset);
     }
-    if ( probeSrcContainer != null ) { appendProbe(probeSrcContainer, probeSrcIndex); }
+    if (probeSrcContainer != null) {
+      appendProbe(probeSrcContainer, probeSrcIndex);
+    }
     return container.incRecordCount();
   }
 
@@ -221,7 +226,7 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
     while (outputRecords < targetOutputRecords && recordsProcessed < recordsToProcess) {
       outputRecords =
         outputRow(partitions[currBuildPart].getContainers(), unmatchedBuildIndexes.get(recordsProcessed),
-          null /* no probeBatch */, 0 /* no probe index */ );
+          null /* no probeBatch */, 0 /* no probe index */);
       recordsProcessed++;
     }
   }
@@ -248,8 +253,8 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
             recordsToProcess = 0;
             changeToFinalProbeState();
             // in case some outer partitions were spilled, need to spill their last batches
-            for ( HashPartition partn : partitions ) {
-              if ( ! partn.isSpilled() ) { continue; } // skip non-spilled
+            for (HashPartition partn : partitions) {
+              if (! partn.isSpilled()) { continue; } // skip non-spilled
               partn.completeAnOuterBatch(false);
               // update the partition's spill record with the outer side
               HashJoinBatch.HashJoinSpilledPartition sp = spilledInners[partn.getPartitionNum()];
@@ -262,7 +267,7 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
 
           case OK_NEW_SCHEMA:
             if (probeBatch.getSchema().equals(probeSchema)) {
-              for ( HashPartition partn : partitions ) { partn.updateBatches(); }
+              for (HashPartition partn : partitions) { partn.updateBatches(); }
 
             } else {
               throw SchemaChangeException.schemaChanged("Hash join does not support schema changes in probe side.",
@@ -278,7 +283,7 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
             if (recordsToProcess == 0) {
               continue;
             }
-            if ( cycleNum > 0 ) {
+            if (cycleNum > 0) {
               read_left_HV_vector = (IntVector) probeBatch.getContainer().getLast(); // Needed ?
             }
         }
@@ -287,8 +292,8 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
       int probeIndex = -1;
       // Check if we need to drain the next row in the probe side
       if (getNextRecord) {
-        if ( !buildSideIsEmpty ) {
-          int hashCode = ( cycleNum == 0 ) ?
+        if (!buildSideIsEmpty) {
+          int hashCode = (cycleNum == 0) ?
             partitions[0].getProbeHashCode(recordsProcessed)
             : read_left_HV_vector.getAccessor().get(recordsProcessed);
           int currBuildPart = hashCode & partitionMask;
@@ -299,7 +304,7 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
           currPartition = partitions[currBuildPart]; // inner if not spilled, else outer
 
           // If the matching inner partition was spilled
-          if ( outgoingJoinBatch.isSpilledInner(currBuildPart) ) {
+          if (outgoingJoinBatch.isSpilledInner(currBuildPart)) {
             // add this row to its outer partition (may cause a spill, when the batch is full)
 
             currPartition.appendOuterRow(hashCode, recordsProcessed);
@@ -312,8 +317,8 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
 
         }
 
-        if ( semiJoin ) {
-          if ( probeIndex != -1 ) {
+        if (semiJoin) {
+          if (probeIndex != -1) {
             // output the probe side only
             outputRecords =
               outputRow(null, 0, probeBatch.getContainer(), recordsProcessed);
@@ -392,7 +397,6 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
         }
       }
     }
-
   }
 
   /**
@@ -408,7 +412,7 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
     outputRecords = 0;
 
     // When handling spilled partitions, the state becomes DONE at the end of each partition
-    if ( probeState == ProbeState.DONE ) {
+    if (probeState == ProbeState.DONE) {
       return outputRecords; // that is zero
     }
 
@@ -422,7 +426,7 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
       do {
 
         if (unmatchedBuildIndexes == null) { // first time for this partition ?
-          if ( buildSideIsEmpty ) { return outputRecords; } // in case of an empty right
+          if (buildSideIsEmpty) { return outputRecords; } // in case of an empty right
           // Get this partition's list of build indexes that didn't match any record on the probe side
           unmatchedBuildIndexes = partitions[currRightPartition].getNextUnmatchedIndex();
           recordsProcessed = 0;
@@ -432,14 +436,14 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
         // Project the list of unmatched records on the build side
         executeProjectRightPhase(currRightPartition);
 
-        if ( recordsProcessed < recordsToProcess ) { // more records in this partition?
+        if (recordsProcessed < recordsToProcess) { // more records in this partition?
           return outputRecords;  // outgoing is full; report and come back later
         } else {
           currRightPartition++; // on to the next right partition
           unmatchedBuildIndexes = null;
         }
 
-      }   while ( currRightPartition < numPartitions );
+      }   while (currRightPartition < numPartitions);
 
       probeState = ProbeState.DONE; // last right partition was handled; we are done now
     }
