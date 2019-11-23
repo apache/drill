@@ -95,13 +95,6 @@ public class SpoolingRawBatchBuffer extends BaseRawBatchBuffer<SpoolingRawBatchB
     private final LinkedBlockingDeque<RawFragmentBatchWrapper> buffer = Queues.newLinkedBlockingDeque();
 
     @Override
-    public void addOomBatch(RawFragmentBatch batch) {
-      RawFragmentBatchWrapper batchWrapper = new RawFragmentBatchWrapper(batch, true);
-      batchWrapper.setOutOfMemory(true);
-      buffer.addFirst(batchWrapper);
-    }
-
-    @Override
     public RawFragmentBatch poll() throws IOException, InterruptedException {
       RawFragmentBatchWrapper batchWrapper = buffer.poll();
       if (batchWrapper != null) {
@@ -122,11 +115,6 @@ public class SpoolingRawBatchBuffer extends BaseRawBatchBuffer<SpoolingRawBatchB
         return batchWrapper.get();
       }
       return null;
-    }
-
-    @Override
-    public boolean checkForOutOfMemory() {
-      return buffer.peek().isOutOfMemory();
     }
 
     @Override

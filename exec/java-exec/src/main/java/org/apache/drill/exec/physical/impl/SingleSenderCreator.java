@@ -20,6 +20,7 @@ package org.apache.drill.exec.physical.impl;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.ops.AccountingDataTunnel;
 import org.apache.drill.exec.ops.ExecutorFragmentContext;
@@ -31,8 +32,10 @@ import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.FragmentWritableBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
+import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ControlsInjectorFactory;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 public class SingleSenderCreator implements RootCreator<SingleSender>{
 
@@ -55,6 +58,7 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
     private int recMajor;
     private volatile boolean ok = true;
     private volatile boolean done = false;
+    private SenderMemoryManager memoryManager;
 
     public enum Metric implements MetricDef {
       BYTES_SENT;
@@ -78,6 +82,8 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
           .build();
       tunnel = context.getDataTunnel(config.getDestination());
       tunnel.setTestInjectionControls(injector, context.getExecutionControls(), logger);
+      int exchangeBatchSizeLimit = (int) context.getOptions().getOption(ExecConstants.EXCHANGE_BATCH_SIZE_VALIDATOR);
+      this.memoryManager = new SenderMemoryManager(exchangeBatchSizeLimit, incoming);
     }
 
     @Override
@@ -118,22 +124,47 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
 
       case OK_NEW_SCHEMA:
       case OK:
-        final FragmentWritableBatch batch = new FragmentWritableBatch(
-            false, handle.getQueryId(), handle.getMajorFragmentId(),
-            handle.getMinorFragmentId(), recMajor, oppositeHandle.getMinorFragmentId(),
-            incoming.getWritableBatch().transfer(oContext.getAllocator()));
-        updateStats(batch);
-        stats.startWait();
-        try {
-          tunnel.sendRecordBatch(batch);
-        } finally {
-          stats.stopWait();
+        memoryManager.update();
+        // manager ensures that sizedBatchRowCount <= incoming recordcount
+        int sizedBatchRowCount = memoryManager.getOutputRowCount();
+        int incomingRowCount = incoming.getRecordCount();
+        if (sizedBatchRowCount == incomingRowCount) {
+          doSend(incoming.getWritableBatch().transfer(oContext.getAllocator()));
+          return true;
+        }
+        Preconditions.checkState(sizedBatchRowCount != 0);
+        int batchesToSend = incomingRowCount / sizedBatchRowCount;
+        int tailRowCount = incomingRowCount % sizedBatchRowCount;
+        int batchCount = 0;
+
+        while(batchCount < batchesToSend) {
+          int start = batchCount * sizedBatchRowCount;
+          final WritableBatch writableBatch = incoming.getWritableBatch(start, sizedBatchRowCount);
+          doSend(writableBatch.transfer(oContext.getAllocator()));
+          batchCount++;
+        }
+        if (tailRowCount != 0) {
+          int start = batchCount * sizedBatchRowCount;
+          doSend(incoming.getWritableBatch(start, tailRowCount).transfer(oContext.getAllocator()));
         }
         return true;
 
       case NOT_YET:
       default:
         throw new IllegalStateException();
+      }
+    }
+
+    private void doSend(WritableBatch writableBatch) {
+      final FragmentWritableBatch batch = new FragmentWritableBatch(
+          false, handle.getQueryId(), handle.getMajorFragmentId(),
+          handle.getMinorFragmentId(), recMajor, oppositeHandle.getMinorFragmentId(), writableBatch);
+      updateStats(batch);
+      stats.startWait();
+      try {
+        tunnel.sendRecordBatch(batch);
+      } finally {
+        stats.stopWait();
       }
     }
 

@@ -30,23 +30,16 @@ public class UnlimitedRawBatchBuffer extends BaseRawBatchBuffer<RawFragmentBatch
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UnlimitedRawBatchBuffer.class);
 
   private final int softlimit;
-  private final int startlimit;
 
   public UnlimitedRawBatchBuffer(FragmentContext context, int fragmentCount) {
     super(context, fragmentCount);
     this.softlimit = bufferSizePerSocket * fragmentCount;
-    this.startlimit = Math.max(softlimit/2, 1);
-    logger.trace("softLimit: {}, startLimit: {}", softlimit, startlimit);
+    logger.trace("softLimit: {}, startLimit: {}", softlimit);
     this.bufferQueue = new UnlimitedBufferQueue();
   }
 
   private class UnlimitedBufferQueue implements BufferQueue<RawFragmentBatch> {
     private final LinkedBlockingDeque<RawFragmentBatch> buffer = Queues.newLinkedBlockingDeque();
-
-    @Override
-    public void addOomBatch(RawFragmentBatch batch) {
-      buffer.addFirst(batch);
-    }
 
     @Override
     public RawFragmentBatch poll() throws IOException {
@@ -71,11 +64,6 @@ public class UnlimitedRawBatchBuffer extends BaseRawBatchBuffer<RawFragmentBatch
         batch.sendOk();
       }
       return batch;
-    }
-
-    @Override
-    public boolean checkForOutOfMemory() {
-      return context.getAllocator().isOverLimit();
     }
 
     @Override

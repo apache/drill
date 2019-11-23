@@ -835,4 +835,13 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
         container, outgoingPosition, Arrays.toString(incomingBatches), Arrays.toString(batchOffsets),
         Arrays.toString(tempBatchHolder), Arrays.toString(inputCounts), Arrays.toString(outputCounts));
   }
+
+  @Override
+  public WritableBatch getWritableBatch(int startIndex, int length) {
+    VectorContainer partialContainer = new VectorContainer(context.getAllocator(), getSchema());
+    outgoingContainer.transferOut(partialContainer, startIndex, length);
+    partialContainer.setRecordCount(length);
+    final WritableBatch batch = WritableBatch.get(partialContainer);
+    return batch;
+  }
 }

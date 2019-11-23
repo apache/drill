@@ -364,6 +364,13 @@ public class IteratorValidatorBatchIterator implements CloseableRecordBatch {
   }
 
   @Override
+  public WritableBatch getWritableBatch(int startIndex, int length) {
+    validateReadState("getWritableBatch()");
+    return incoming.getWritableBatch(startIndex, length);
+  }
+
+
+  @Override
   public void close() {
     // (Log construction and close() calls at same logging level to bracket
     // instance's activity.)

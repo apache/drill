@@ -140,6 +140,16 @@ public class VectorContainer implements VectorAccessible {
     }
   }
 
+  /**
+   * Transfer vectors from this to containerOut
+   */
+  public void transferOut(VectorContainer containerOut, int startIndex, int length) {
+    Preconditions.checkArgument(this.wrappers.size() == containerOut.wrappers.size());
+    for (int i = 0; i < this.wrappers.size(); ++i) {
+      this.wrappers.get(i).transferPartial(containerOut.wrappers.get(i), startIndex, length);
+    }
+  }
+
   public <T extends ValueVector> T addOrGet(MaterializedField field) {
     return addOrGet(field, null);
   }

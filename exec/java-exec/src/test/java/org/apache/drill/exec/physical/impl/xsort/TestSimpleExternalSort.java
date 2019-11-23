@@ -45,7 +45,7 @@ import org.junit.rules.TestRule;
 @Category({SlowTest.class})
 public class TestSimpleExternalSort extends DrillTest {
   @Rule
-  public final TestRule TIMEOUT = TestTools.getTimeoutRule(160_000);
+  public final TestRule TIMEOUT = TestTools.getTimeoutRule(180_000);
 
   @Rule
   public final BaseDirTestWatcher dirTestWatcher = new BaseDirTestWatcher();

@@ -584,6 +584,15 @@ public class ScanBatch implements CloseableRecordBatch {
   }
 
   @Override
+  public WritableBatch getWritableBatch(int startIndex, int length) {
+    VectorContainer partialContainer = new VectorContainer(context.getAllocator(), getSchema());
+    container.transferOut(partialContainer, startIndex, length);
+    partialContainer.setRecordCount(length);
+    final WritableBatch batch = WritableBatch.get(partialContainer);
+    return batch;
+  }
+
+  @Override
   public void close() throws Exception {
     container.clear();
     mutator.clear();

@@ -108,6 +108,15 @@ public class SpilledRecordbatch implements CloseableRecordBatch {
   public BatchSchema getSchema() { return schema; }
 
   @Override
+  public WritableBatch getWritableBatch(int startIndex, int length) {
+    VectorContainer partialContainer = new VectorContainer(context.getAllocator(), getSchema());
+    container.transferOut(partialContainer, startIndex, length);
+    partialContainer.setRecordCount(length);
+    final WritableBatch batch = WritableBatch.get(partialContainer);
+    return batch;
+  }
+
+  @Override
   public WritableBatch getWritableBatch() {
     return WritableBatch.get(this);
   }

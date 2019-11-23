@@ -262,6 +262,14 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
     return WritableBatch.getBatchNoHVWrap(valueCount, container, isSV2);
   }
 
+  public WritableBatch getWritableBatch(int startIndex, int length) {
+    VectorContainer partialContainer = new VectorContainer(allocator, getSchema());
+    container.transferOut(partialContainer, startIndex, length);
+    partialContainer.setRecordCount(length);
+    final WritableBatch batch = WritableBatch.get(partialContainer);
+    return batch;
+  }
+
   @Override
   public Iterator<VectorWrapper<?>> iterator() {
     return this.container.iterator();

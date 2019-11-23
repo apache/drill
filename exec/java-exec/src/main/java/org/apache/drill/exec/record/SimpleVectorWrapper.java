@@ -109,6 +109,13 @@ public class SimpleVectorWrapper<T extends ValueVector> implements VectorWrapper
   }
 
   @Override
+  public void transferPartial(VectorWrapper<?> destination, int startIndex, int length) {
+    Preconditions.checkArgument(destination instanceof SimpleVectorWrapper);
+    Preconditions.checkArgument(getField().getType().equals(destination.getField().getType()));
+    vector.makeTransferPair(((SimpleVectorWrapper<?>)destination).vector).splitAndTransfer(startIndex, length);
+  }
+
+  @Override
   public String toString() {
     if (vector == null) {
       return "null";
