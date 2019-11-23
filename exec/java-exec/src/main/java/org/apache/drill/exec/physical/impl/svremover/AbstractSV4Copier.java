@@ -23,8 +23,10 @@ import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 
 public abstract class AbstractSV4Copier extends AbstractCopier {
-  // Storing VectorWrapper reference instead of ValueVector[]. With EMIT outcome support underlying operator
-  // operator can generate multiple output batches with no schema changes which will change the ValueVector[]
+  // Storing VectorWrapper reference instead of ValueVector[]. With EMIT outcome
+  // support underlying operator
+  // operator can generate multiple output batches with no schema changes which
+  // will change the ValueVector[]
   // reference but not VectorWrapper reference.
   protected VectorWrapper<?>[] vvIn;
   private SelectionVector4 sv4;
@@ -32,21 +34,18 @@ public abstract class AbstractSV4Copier extends AbstractCopier {
   @Override
   public void setup(VectorAccessible incoming, VectorContainer outgoing) {
     super.setup(incoming, outgoing);
-    this.sv4 = incoming.getSelectionVector4();
+    sv4 = incoming.getSelectionVector4();
 
-    final int count = outgoing.getNumberOfColumns();
+    int count = outgoing.getNumberOfColumns();
     vvIn = new VectorWrapper[count];
 
-    {
-      int index = 0;
-
-      for (VectorWrapper vectorWrapper: incoming) {
-        vvIn[index] = vectorWrapper;
-        index++;
-      }
+    int index = 0;
+    for (VectorWrapper<?> vectorWrapper: incoming) {
+      vvIn[index++] = vectorWrapper;
     }
   }
 
+  @Override
   public void copyEntryIndirect(int inIndex, int outIndex) {
     copyEntry(sv4.get(inIndex), outIndex);
   }

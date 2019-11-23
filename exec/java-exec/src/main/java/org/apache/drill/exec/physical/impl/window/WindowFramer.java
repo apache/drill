@@ -17,6 +17,10 @@
  */
 package org.apache.drill.exec.physical.impl.window;
 
+import java.util.List;
+
+import javax.inject.Named;
+
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.compile.TemplateClassDefinition;
 import org.apache.drill.exec.exception.SchemaChangeException;
@@ -25,15 +29,15 @@ import org.apache.drill.exec.physical.config.WindowPOP;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
 
-import javax.inject.Named;
-import java.util.List;
-
 public interface WindowFramer {
-  TemplateClassDefinition<WindowFramer> NOFRAME_TEMPLATE_DEFINITION = new TemplateClassDefinition<>(WindowFramer.class, NoFrameSupportTemplate.class);
-  TemplateClassDefinition<WindowFramer> FRAME_TEMPLATE_DEFINITION = new TemplateClassDefinition<>(WindowFramer.class, FrameSupportTemplate.class);
+  TemplateClassDefinition<WindowFramer> NOFRAME_TEMPLATE_DEFINITION =
+      new TemplateClassDefinition<>(WindowFramer.class, NoFrameSupportTemplate.class);
+  TemplateClassDefinition<WindowFramer> FRAME_TEMPLATE_DEFINITION =
+      new TemplateClassDefinition<>(WindowFramer.class, FrameSupportTemplate.class);
 
-  void setup(final List<WindowDataBatch> batches, final VectorContainer container, final OperatorContext operatorContext,
-             final boolean requireFullPartition, final WindowPOP popConfig) throws SchemaChangeException;
+  void setup(final List<WindowDataBatch> batches, final VectorContainer container,
+      final OperatorContext operatorContext, final boolean requireFullPartition,
+      final WindowPOP popConfig) throws SchemaChangeException;
 
   /**
    * process the inner batch and write the aggregated values in the container

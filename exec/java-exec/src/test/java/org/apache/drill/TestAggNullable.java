@@ -26,7 +26,6 @@ import org.junit.experimental.categories.Category;
 
 @Category(OperatorTest.class)
 public class TestAggNullable extends BaseTestQuery {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestAggNullable.class);
 
   private static void enableAggr(boolean ha, boolean sa) throws Exception {
 
@@ -72,5 +71,4 @@ public class TestAggNullable extends BaseTestQuery {
     assertEquals(String.format("Received unexpected number of rows in output: expected=%d, received=%s",
         expectedRecordCount, actualRecordCount), expectedRecordCount, actualRecordCount);
   }
-
 }

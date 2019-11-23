@@ -35,33 +35,32 @@ import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.vector.IntVector;
-import org.apache.drill.exec.vector.ValueVector;
-
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * A RangePartitionRecordBatch is a run-time operator that provides the ability to divide up the input rows
- * into a fixed number of separate ranges or 'buckets' based on the values of a set of columns (the range
- * partitioning columns).
+ * Provides the ability to divide up the input rows into a fixed number of
+ * separate ranges or 'buckets' based on the values of a set of columns (the
+ * range partitioning columns).
  */
 public class RangePartitionRecordBatch extends AbstractSingleRecordBatch<RangePartitionSender> {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RangePartitionRecordBatch.class);
+  static final Logger logger = LoggerFactory.getLogger(RangePartitionRecordBatch.class);
 
-  private int numPartitions;
+  private final int numPartitions;
   private int recordCount;
   private final IntVector partitionIdVector;
   private final List<TransferPair> transfers;
 
   public RangePartitionRecordBatch(RangePartitionSender popConfig, RecordBatch incoming, FragmentContext context) throws OutOfMemoryException {
     super(popConfig, context, incoming);
-    this.numPartitions = popConfig.getDestinations().size();
+    numPartitions = popConfig.getDestinations().size();
 
     SchemaPath outputPath = popConfig.getPartitionFunction().getPartitionFieldRef();
     MaterializedField outputField = MaterializedField.create(outputPath.getAsNamePart().getName(), Types.required(TypeProtos.MinorType.INT));
-    this.partitionIdVector = (IntVector) TypeHelper.getNewVector(outputField, oContext.getAllocator());
-    this.transfers = Lists.newArrayList();
+    partitionIdVector = (IntVector) TypeHelper.getNewVector(outputField, oContext.getAllocator());
+    transfers = Lists.newArrayList();
   }
-
 
   @Override
   public void close() {
@@ -91,10 +90,7 @@ public class RangePartitionRecordBatch extends AbstractSingleRecordBatch<RangePa
       partitionIdVector.allocateNew(num);
 
       recordCount = projectRecords(num, 0);
-      for (VectorWrapper<?> v : container) {
-        ValueVector.Mutator m = v.getValueVector().getMutator();
-        m.setValueCount(recordCount);
-      }
+      container.setValueCount(recordCount);
     }
     // returning OK here is fine because the base class AbstractSingleRecordBatch
     // is handling the actual return status; thus if there was a new schema, the
@@ -169,8 +165,8 @@ public class RangePartitionRecordBatch extends AbstractSingleRecordBatch<RangePa
    * @param firstOutputIndex
    * @return the number of records projected
    */
-  private final int projectRecords(final int recordCount, int firstOutputIndex) {
-    final int countN = recordCount;
+  private final int projectRecords(int recordCount, int firstOutputIndex) {
+    int countN = recordCount;
     int counter = 0;
     for (int i = 0; i < countN; i++, firstOutputIndex++) {
       int partition = getPartition(i);
@@ -182,7 +178,6 @@ public class RangePartitionRecordBatch extends AbstractSingleRecordBatch<RangePa
     }
     return counter;
   }
-
 
   @Override
   public void dump() {

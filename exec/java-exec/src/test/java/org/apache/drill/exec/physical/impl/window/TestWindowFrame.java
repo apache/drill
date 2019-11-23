@@ -17,25 +17,26 @@
  */
 package org.apache.drill.exec.physical.impl.window;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Properties;
 
-import org.apache.drill.test.BaseTestQuery;
-import org.apache.drill.test.DrillTestWrapper;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.ExecConstants;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType;
+import org.apache.drill.test.BaseTestQuery;
+import org.apache.drill.test.DrillTestWrapper;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 public class TestWindowFrame extends BaseTestQuery {
+
   @BeforeClass
   public static void setupMSortBatchSize() throws IOException {
     // make sure memory sorter outputs 20 rows per batch

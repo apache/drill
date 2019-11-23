@@ -51,13 +51,15 @@ import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.ValueVector;
-
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class PartitionerTemplate implements Partitioner {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PartitionerTemplate.class);
+  static final Logger logger = LoggerFactory.getLogger(PartitionerTemplate.class);
 
-  // Always keep the recordCount as (2^x) - 1 to better utilize the memory allocation in ValueVectors
+  // Always keep the recordCount as (2^x) - 1 to better utilize the memory
+  // allocation in ValueVectors
   private static final int DEFAULT_RECORD_BATCH_SIZE = (1 << 10) - 1;
 
   private SelectionVector2 sv2;
@@ -68,7 +70,7 @@ public abstract class PartitionerTemplate implements Partitioner {
   protected FragmentContext context;
   private int start;
   private int end;
-  private List<OutgoingRecordBatch> outgoingBatches = Lists.newArrayList();
+  private final List<OutgoingRecordBatch> outgoingBatches = Lists.newArrayList();
 
   private int outgoingRecordBatchSize = DEFAULT_RECORD_BATCH_SIZE;
 
@@ -306,10 +308,14 @@ public abstract class PartitionerTemplate implements Partitioner {
 
     public void flush(boolean schemaChanged) throws IOException {
       if (dropAll) {
-        // If we are in dropAll mode, we still want to copy the data, because we can't stop copying a single outgoing
-        // batch with out stopping all outgoing batches. Other option is check for status of dropAll before copying
-        // every single record in copy method which has the overhead for every record all the time. Resetting the output
-        // count, reusing the same buffers and copying has overhead only for outgoing batches whose receiver has
+        // If we are in dropAll mode, we still want to copy the data, because we
+        // can't stop copying a single outgoing
+        // batch with out stopping all outgoing batches. Other option is check
+        // for status of dropAll before copying
+        // every single record in copy method which has the overhead for every
+        // record all the time. Resetting the output
+        // count, reusing the same buffers and copying has overhead only for
+        // outgoing batches whose receiver has
         // terminated.
 
         // Reset the count to 0 and use existing buffers for exhausting input where receiver of this batch is terminated
@@ -332,11 +338,7 @@ public abstract class PartitionerTemplate implements Partitioner {
         return;
       }
 
-      if (recordCount != 0) {
-        for (VectorWrapper<?> w : vectorContainer) {
-          w.getValueVector().getMutator().setValueCount(recordCount);
-        }
-      }
+      vectorContainer.setValueCount(recordCount);
 
       FragmentWritableBatch writableBatch = new FragmentWritableBatch(isLastBatch,
           handle.getQueryId(),
@@ -354,8 +356,10 @@ public abstract class PartitionerTemplate implements Partitioner {
         stats.stopWait();
       }
 
-      // If the current batch is the last batch, then set a flag to ignore any requests to flush the data
-      // This is possible when the receiver is terminated, but we still get data from input operator
+      // If the current batch is the last batch, then set a flag to ignore any
+      // requests to flush the data
+      // This is possible when the receiver is terminated, but we still get data
+      // from input operator
       if (isLastBatch) {
         dropAll = true;
       }
@@ -421,7 +425,6 @@ public abstract class PartitionerTemplate implements Partitioner {
       return recordCount;
     }
 
-
     @Override
     public long getTotalRecords() {
       return totalRecords;
@@ -459,6 +462,5 @@ public abstract class PartitionerTemplate implements Partitioner {
     public void clear(){
       vectorContainer.clear();
     }
-
   }
 }

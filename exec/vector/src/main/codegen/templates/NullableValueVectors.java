@@ -579,21 +579,21 @@ public final class ${className} extends BaseDataValueVector implements <#if type
     /**
      * Fill in missing values up to, but not including, the given
      * index.
-     * 
+     *
      * @param index the index about to be written, or the total
      * vector length about to be set
      */
-    
+
     @VisibleForTesting
     protected void fillEmpties(int index) {
       values.getMutator().fillEmpties(lastSet, index);
       while (index > bits.getValueCapacity()) {
         bits.reAlloc();
       }
-      
+
       // Set last set to the given index; which the caller
       // will write to
-      
+
       lastSet = index;
     }
 
@@ -753,7 +753,7 @@ public final class ${className} extends BaseDataValueVector implements <#if type
       values.getMutator().setValueCount(valueCount);
       bits.getMutator().setValueCount(valueCount);
     }
-    
+
     <#if type.major == "VarLen">
     /** Enables this wrapper container class to participate in bulk mutator logic */
     private final class VarLenBulkInputCallbackImpl implements VarLenBulkInput.BulkInputCallback<VarLenBulkEntry> {
@@ -853,7 +853,7 @@ public final class ${className} extends BaseDataValueVector implements <#if type
     public void setSetCount(int n) {
       <#if type.major = "VarLen">lastSet = n - 1;</#if>
     }
-    
+
     // For nullable vectors, exchanging buffers (done elsewhere)
     // requires also exchanging mutator state (done here.)
 

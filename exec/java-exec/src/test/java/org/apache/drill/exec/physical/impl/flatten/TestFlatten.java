@@ -388,7 +388,6 @@ public class TestFlatten extends BaseTestQuery {
           "        select flatten(categories) catl from dfs.`tmp/yelp_academic_dataset_business.json` b\n" +
           "    )  celltbl");
     }
-
   }
 
   @Test
@@ -397,7 +396,6 @@ public class TestFlatten extends BaseTestQuery {
     if(RUN_ADVANCED_TESTS){
       test("select id, flatten(evnts) as rpt from dfs.`tmp/drill1665.json`");
     }
-
   }
 
   @Test
@@ -479,7 +477,6 @@ public class TestFlatten extends BaseTestQuery {
         .unOrdered()
         .jsonBaselineFile("flatten/drill-2106-result.json")
         .go();
-
   }
 
   @Test // see DRILL-2146

@@ -58,6 +58,8 @@ import org.apache.drill.exec.vector.SchemaChangeCallBack;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.netty.buffer.DrillBuf;
 
@@ -65,7 +67,7 @@ import io.netty.buffer.DrillBuf;
  * Record batch used for a particular scan. Operators against one or more
  */
 public class ScanBatch implements CloseableRecordBatch {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScanBatch.class);
+  private static final Logger logger = LoggerFactory.getLogger(ScanBatch.class);
   private static final ControlsInjector injector = ControlsInjectorFactory.getInjector(ScanBatch.class);
 
   /** Main collection of fields' value vectors. */
@@ -79,7 +81,7 @@ public class ScanBatch implements CloseableRecordBatch {
   private BatchSchema schema;
   private final Mutator mutator;
   private boolean done;
-  private Iterator<Map<String, String>> implicitColumns;
+  private final Iterator<Map<String, String>> implicitColumns;
   private Map<String, String> implicitValues;
   private final BufferAllocator allocator;
   private final List<Map<String, String>> implicitColumnList;
@@ -179,18 +181,19 @@ public class ScanBatch implements CloseableRecordBatch {
   }
 
   /**
-   * This method is to perform scan specific actions when the scan needs to clean/reset readers and return NONE status
+   * This method is to perform scan specific actions when the scan needs to
+   * clean/reset readers and return NONE status
+   *
    * @return NONE
    */
   private IterOutcome cleanAndReturnNone() {
     if (isRepeatableScan) {
       readers = readerList.iterator();
-      return IterOutcome.NONE;
     } else {
       releaseAssets(); // All data has been read. Release resource.
       done = true;
-      return IterOutcome.NONE;
     }
+    return IterOutcome.NONE;
   }
 
   /**

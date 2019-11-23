@@ -34,6 +34,7 @@ public abstract class ProjectorTemplate implements Projector {
 
   private ImmutableList<TransferPair> transfers;
   private SelectionVector2 vector2;
+  @SuppressWarnings("unused")
   private SelectionVector4 vector4;
   private SelectionVectorMode svMode;
 
@@ -97,8 +98,10 @@ public abstract class ProjectorTemplate implements Projector {
     case TWO_BYTE:
       vector2 = incoming.getSelectionVector2();
       break;
-    default:
+    case NONE:
       break;
+    default:
+      throw new UnsupportedOperationException();
     }
     this.transfers = ImmutableList.copyOf(transfers);
     doSetup(context, incoming, outgoing);

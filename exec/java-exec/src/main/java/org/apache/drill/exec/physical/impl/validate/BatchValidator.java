@@ -22,19 +22,31 @@ import java.util.Map;
 
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.impl.ScanBatch;
+import org.apache.drill.exec.physical.impl.WriterRecordBatch;
+import org.apache.drill.exec.physical.impl.TopN.TopNBatch;
 import org.apache.drill.exec.physical.impl.aggregate.HashAggBatch;
 import org.apache.drill.exec.physical.impl.aggregate.StreamingAggBatch;
 import org.apache.drill.exec.physical.impl.filter.FilterRecordBatch;
 import org.apache.drill.exec.physical.impl.filter.RuntimeFilterRecordBatch;
 import org.apache.drill.exec.physical.impl.flatten.FlattenRecordBatch;
+import org.apache.drill.exec.physical.impl.join.HashJoinBatch;
 import org.apache.drill.exec.physical.impl.join.MergeJoinBatch;
 import org.apache.drill.exec.physical.impl.join.NestedLoopJoinBatch;
 import org.apache.drill.exec.physical.impl.limit.LimitRecordBatch;
 import org.apache.drill.exec.physical.impl.limit.PartitionLimitRecordBatch;
+import org.apache.drill.exec.physical.impl.mergereceiver.MergingRecordBatch;
+import org.apache.drill.exec.physical.impl.orderedpartitioner.OrderedPartitionRecordBatch;
 import org.apache.drill.exec.physical.impl.project.ProjectRecordBatch;
 import org.apache.drill.exec.physical.impl.protocol.OperatorRecordBatch;
+import org.apache.drill.exec.physical.impl.rangepartitioner.RangePartitionRecordBatch;
 import org.apache.drill.exec.physical.impl.svremover.RemovingRecordBatch;
+import org.apache.drill.exec.physical.impl.trace.TraceRecordBatch;
+import org.apache.drill.exec.physical.impl.union.UnionAllRecordBatch;
 import org.apache.drill.exec.physical.impl.unnest.UnnestRecordBatch;
+import org.apache.drill.exec.physical.impl.unorderedreceiver.UnorderedReceiverBatch;
+import org.apache.drill.exec.physical.impl.unpivot.UnpivotMapsRecordBatch;
+import org.apache.drill.exec.physical.impl.window.WindowFrameRecordBatch;
+import org.apache.drill.exec.physical.impl.xsort.managed.ExternalSortBatch;
 import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.SimpleVectorWrapper;
@@ -223,6 +235,18 @@ public class BatchValidator {
     rules.put(MergeJoinBatch.class, CheckMode.VECTORS);
     rules.put(NestedLoopJoinBatch.class, CheckMode.VECTORS);
     rules.put(LimitRecordBatch.class, CheckMode.VECTORS);
+    rules.put(MergingRecordBatch.class, CheckMode.VECTORS);
+    rules.put(OrderedPartitionRecordBatch.class, CheckMode.VECTORS);
+    rules.put(RangePartitionRecordBatch.class, CheckMode.VECTORS);
+    rules.put(TraceRecordBatch.class, CheckMode.VECTORS);
+    rules.put(UnionAllRecordBatch.class, CheckMode.VECTORS);
+    rules.put(UnorderedReceiverBatch.class, CheckMode.VECTORS);
+    rules.put(UnpivotMapsRecordBatch.class, CheckMode.VECTORS);
+    rules.put(WindowFrameRecordBatch.class, CheckMode.VECTORS);
+    rules.put(TopNBatch.class, CheckMode.VECTORS);
+    rules.put(HashJoinBatch.class, CheckMode.VECTORS);
+    rules.put(ExternalSortBatch.class, CheckMode.VECTORS);
+    rules.put(WriterRecordBatch.class, CheckMode.VECTORS);
     return rules;
   }
 
@@ -518,9 +542,13 @@ public class BatchValidator {
       // empty map vector that causes validation to fail.
       ValueVector child = internalMap.getChild(type.name());
       if (child == null) {
-        error(name, vector, String.format(
-            "Union vector includes type %s, but the internal map has no matching member",
-            type.name()));
+        // Disabling this check for now. TopNBatch, SortBatch
+        // and perhaps others will create vectors with a set of
+        // types, but won't actually populate some of the types.
+        //
+        // error(name, vector, String.format(
+        //     "Union vector includes type %s, but the internal map has no matching member",
+        //     type.name()));
       } else {
         validateVector(name + "-type-" + type.name(),
             valueCount, child);

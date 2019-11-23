@@ -126,7 +126,8 @@ public class TestHashAggrSpill extends DrillTest {
   }
 
   /**
-   * Test Secondary and Tertiary spill cycles - Happens when some of the spilled partitions cause more spilling as they are read back
+   * Test Secondary and Tertiary spill cycles - Happens when some of the spilled
+   * partitions cause more spilling as they are read back
    *
    * @throws Exception
    */
@@ -139,7 +140,8 @@ public class TestHashAggrSpill extends DrillTest {
   }
 
   /**
-   * Test with the "fallback" option disabled: When not enough memory available to allow spilling, then fail (Resource error) !!
+   * Test with the "fallback" option disabled: When not enough memory available
+   * to allow spilling, then fail (Resource error) !!
    *
    * @throws Exception
    */
@@ -158,8 +160,10 @@ public class TestHashAggrSpill extends DrillTest {
   }
 
   /**
-   * Test with the "fallback" option ON: When not enough memory is available to allow spilling (internally need enough memory to
-   * create multiple partitions), then behave like the pre-1.11 Hash Aggregate: Allocate unlimited memory, no spill.
+   * Test with the "fallback" option ON: When not enough memory is available to
+   * allow spilling (internally need enough memory to create multiple
+   * partitions), then behave like the pre-1.11 Hash Aggregate: Allocate
+   * unlimited memory, no spill.
    *
    * @throws Exception
    */

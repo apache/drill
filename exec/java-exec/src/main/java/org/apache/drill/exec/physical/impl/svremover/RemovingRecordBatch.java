@@ -43,14 +43,18 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
 
   @Override
   protected boolean setupNewSchema() throws SchemaChangeException {
-    // Don't clear off container just because an OK_NEW_SCHEMA was received from upstream. For cases when there is just
-    // change in container type but no actual schema change, RemovingRecordBatch should consume OK_NEW_SCHEMA and
-    // send OK to downstream instead. Since the output of RemovingRecordBatch is always going to be a regular container
+    // Don't clear off container just because an OK_NEW_SCHEMA was received from
+    // upstream. For cases when there is just
+    // change in container type but no actual schema change, RemovingRecordBatch
+    // should consume OK_NEW_SCHEMA and
+    // send OK to downstream instead. Since the output of RemovingRecordBatch is
+    // always going to be a regular container
     // change in incoming container type is not actual schema change.
     container.zeroVectors();
     copier = GenericCopierFactory.createAndSetupCopier(incoming, container, callBack);
 
-    // If there is an actual schema change then below condition will be true and it will send OK_NEW_SCHEMA
+    // If there is an actual schema change then below condition will be true and
+    // it will send OK_NEW_SCHEMA
     // downstream too
     if (container.isSchemaChanged()) {
       container.buildSchema(SelectionVectorMode.NONE);

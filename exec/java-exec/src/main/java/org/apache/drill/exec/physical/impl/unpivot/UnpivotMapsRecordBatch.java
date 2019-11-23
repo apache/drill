@@ -31,12 +31,15 @@ import org.apache.drill.exec.record.AbstractSingleRecordBatch;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TransferPair;
+import org.apache.drill.exec.record.VectorAccessibleUtilities;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.MapVector;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Unpivot maps. Assumptions are:
@@ -44,7 +47,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
  *  2) Each map contains the same number of fields and field names are also same (types could be different).
  *
  * Example input and output:
- * Schema of input:
+ * Schema of input: <pre>
  *    "schema"        : BIGINT - Schema number. For each schema change this number is incremented.
  *    "computed"      : BIGINT - What time is it computed?
  *    "columns" : MAP - Column names
@@ -69,22 +72,23 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
  *  "statscount"       : BIGINT
  *  "nonnullstatcount" : BIGINT
  *  .... one column for each map type ...
+ *  </pre>
  */
 public class UnpivotMapsRecordBatch extends AbstractSingleRecordBatch<UnpivotMaps> {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UnpivotMapsRecordBatch.class);
+  private static final Logger logger = LoggerFactory.getLogger(UnpivotMapsRecordBatch.class);
 
   private final List<String> mapFieldsNames;
   private boolean first = true;
-  private int keyIndex = 0;
-  private List<String> keyList = null;
+  private int keyIndex;
+  private List<String> keyList;
 
-  private Map<MaterializedField, Map<String, ValueVector>> dataSrcVecMap = null;
+  private Map<MaterializedField, Map<String, ValueVector>> dataSrcVecMap;
 
   // Map of non-map fields to VV in the incoming schema
-  private Map<MaterializedField, ValueVector> copySrcVecMap = null;
+  private Map<MaterializedField, ValueVector> copySrcVecMap;
 
   private List<TransferPair> transferList;
-  private int recordCount = 0;
+  private int recordCount;
 
   public UnpivotMapsRecordBatch(UnpivotMaps pop, RecordBatch incoming, FragmentContext context)
       throws OutOfMemoryException {
@@ -150,6 +154,7 @@ public class UnpivotMapsRecordBatch extends AbstractSingleRecordBatch<UnpivotMap
     }
   }
 
+  @Override
   public VectorContainer getOutgoingContainer() {
     return this.container;
   }
@@ -170,11 +175,10 @@ public class UnpivotMapsRecordBatch extends AbstractSingleRecordBatch<UnpivotMap
 
     keyIndex = (keyIndex + 1) % keyList.size();
     recordCount = outRecordCount;
+    container.setRecordCount(recordCount);
 
     if (keyIndex == 0) {
-      for (VectorWrapper w : incoming) {
-        w.clear();
-      }
+      VectorAccessibleUtilities.clear(incoming.getContainer());
     }
     return IterOutcome.OK;
   }
@@ -270,6 +274,7 @@ public class UnpivotMapsRecordBatch extends AbstractSingleRecordBatch<UnpivotMap
     container.clear();
     buildKeyList();
     buildOutputContainer();
+    container.setEmpty();
     return true;
   }
 

@@ -886,7 +886,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
 
     doAlloc(0);
     container.buildSchema(SelectionVectorMode.NONE);
-    container.setValueCount(0);
+    container.setEmpty();
     wasNone = true;
     return IterOutcome.OK_NEW_SCHEMA;
   }

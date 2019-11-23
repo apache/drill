@@ -27,7 +27,7 @@ public class GenericSV4Copier extends AbstractSV4Copier {
 
   public GenericSV4Copier(RecordBatch incomingBatch, VectorContainer outputContainer,
                           SchemaChangeCallBack callBack) {
-    for(VectorWrapper<?> vv : incomingBatch){
+    for (VectorWrapper<?> vv : incomingBatch) {
       ValueVector v = vv.getValueVectors()[0];
       v.makeTransferPair(outputContainer.addOrGet(v.getField(), callBack));
     }
@@ -37,7 +37,7 @@ public class GenericSV4Copier extends AbstractSV4Copier {
   public void copyEntry(int inIndex, int outIndex) {
     int inOffset = inIndex & 0xFFFF;
     int inVector = inIndex >>> 16;
-    for ( int i = 0;  i < vvIn.length;  i++ ) {
+    for (int i = 0;  i < vvIn.length;  i++) {
       ValueVector[] vectorsFromIncoming = vvIn[i].getValueVectors();
       vvOut[i].copyEntry(outIndex, vectorsFromIncoming[inVector], inOffset);
     }
