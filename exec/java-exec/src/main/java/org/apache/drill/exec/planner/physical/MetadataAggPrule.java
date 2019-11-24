@@ -22,6 +22,7 @@ import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.InvalidRelException;
 import org.apache.calcite.rel.RelCollation;
 import org.apache.calcite.rel.RelCollationImpl;
+import org.apache.calcite.rel.RelCollations;
 import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rel.RelNode;
 import org.apache.drill.common.expression.FieldReference;
@@ -108,7 +109,7 @@ public class MetadataAggPrule extends Prule {
 
     RelNode convertedInput = convert(input, PrelUtil.fixTraits(call, traits));
 
-    MetadataAggPrel newAgg = new MetadataAggPrel(
+    MetadataStreamAggPrel newAgg = new MetadataStreamAggPrel(
         aggregate.getCluster(),
         traits,
         convertedInput,
@@ -188,7 +189,7 @@ public class MetadataAggPrule extends Prule {
     @Override
     public RelNode convertChild(MetadataAggRel aggregate, RelNode child) {
       DrillDistributionTrait toDist = child.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE);
-      RelTraitSet traits = newTraitSet(Prel.DRILL_PHYSICAL, collation, toDist);
+      RelTraitSet traits = newTraitSet(Prel.DRILL_PHYSICAL, RelCollations.EMPTY, toDist);
       RelNode newInput = convert(child, traits);
 
       // maps group by expressions to themselves to be able to produce the second aggregation
@@ -196,24 +197,32 @@ public class MetadataAggPrule extends Prule {
           .map(namedExpression -> new NamedExpression(namedExpression.getExpr(), getArgumentReference(namedExpression)))
           .collect(Collectors.toList());
 
-      MetadataAggPrel phase1Agg = new MetadataAggPrel(
+      // use hash aggregation for the first stage to avoid sorting raw data
+      MetadataHashAggPrel phase1Agg = new MetadataHashAggPrel(
           aggregate.getCluster(),
           traits,
           newInput,
           aggregate.getContext().toBuilder().groupByExpressions(identityExpressions).build(),
           OperatorPhase.PHASE_1of2);
 
+      traits = newTraitSet(Prel.DRILL_PHYSICAL, collation, toDist).plus(distributionTrait);
+      SortPrel sort = new SortPrel(
+          aggregate.getCluster(),
+          traits,
+          phase1Agg,
+          (RelCollation) traits.getTrait(collation.getTraitDef()));
+
       int numEndPoints = PrelUtil.getSettings(phase1Agg.getCluster()).numEndPoints();
 
       HashToMergeExchangePrel exch =
           new HashToMergeExchangePrel(phase1Agg.getCluster(),
-              phase1Agg.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(distributionTrait),
-              phase1Agg,
+              traits,
+              sort,
               ImmutableList.copyOf(getDistributionFields(aggregate.getContext().groupByExpressions())),
               collation,
               numEndPoints);
 
-      return new MetadataAggPrel(
+      return new MetadataStreamAggPrel(
           aggregate.getCluster(),
           newTraitSet(Prel.DRILL_PHYSICAL, collation, DrillDistributionTrait.SINGLETON),
           exch,

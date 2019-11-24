@@ -19,7 +19,7 @@ package org.apache.drill.exec.physical.impl.metadata;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ops.ExecutorFragmentContext;
-import org.apache.drill.exec.physical.config.MetadataAggPOP;
+import org.apache.drill.exec.physical.config.MetadataStreamAggPOP;
 import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
@@ -27,12 +27,12 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 import java.util.List;
 
-public class MetadataAggBatchCreator implements BatchCreator<MetadataAggPOP> {
+public class MetadataStreamAggBatchCreator implements BatchCreator<MetadataStreamAggPOP> {
 
   @Override
   public CloseableRecordBatch getBatch(ExecutorFragmentContext context,
-      MetadataAggPOP config, List<RecordBatch> children) throws ExecutionSetupException {
+      MetadataStreamAggPOP config, List<RecordBatch> children) throws ExecutionSetupException {
     Preconditions.checkArgument(children.size() == 1);
-    return new MetadataAggBatch(config, children.iterator().next(), context);
+    return new MetadataStreamAggBatch(config, children.iterator().next(), context);
   }
 }

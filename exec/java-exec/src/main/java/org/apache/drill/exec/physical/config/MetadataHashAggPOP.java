@@ -20,29 +20,32 @@ package org.apache.drill.exec.physical.config;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.metastore.analyze.MetadataAggregateContext;
+import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.planner.physical.AggPrelBase.OperatorPhase;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 import java.util.Collections;
 
-@JsonTypeName("metadataAggregate")
-public class MetadataAggPOP extends StreamingAggregate {
+@JsonTypeName("metadataHashAggregate")
+public class MetadataHashAggPOP extends HashAggregate {
   private final MetadataAggregateContext context;
   private final OperatorPhase phase;
 
   @JsonCreator
-  public MetadataAggPOP(@JsonProperty("child") PhysicalOperator child,
+  public MetadataHashAggPOP(@JsonProperty("child") PhysicalOperator child,
       @JsonProperty("context") MetadataAggregateContext context,
       @JsonProperty("phase") OperatorPhase phase) {
-    super(child, context.groupByExpressions(), Collections.emptyList());
+    super(child, phase, context.groupByExpressions(), Collections.emptyList(), 1.0F);
     this.context = context;
     this.phase = phase;
+    Preconditions.checkArgument(context.createNewAggregations(),
+        "Hash aggregate for metadata collecting should be used only for creating new aggregations.");
   }
 
   @Override
   protected PhysicalOperator getNewWithChild(PhysicalOperator child) {
-    return new MetadataAggPOP(child, context, phase);
+    return new MetadataHashAggPOP(child, context, phase);
   }
 
   @JsonProperty

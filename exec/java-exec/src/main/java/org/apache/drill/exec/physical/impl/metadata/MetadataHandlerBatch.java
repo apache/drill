@@ -444,9 +444,9 @@ public class MetadataHandlerBatch extends AbstractSingleRecordBatch<MetadataHand
   }
 
   private void updateMetadataToHandle() {
-    RowSetReader reader = DirectRowSet.fromContainer(container).reader();
     // updates metadataToHandle to be able to fetch required data which wasn't returned by incoming batch
     if (metadataToHandle != null && !metadataToHandle.isEmpty()) {
+      RowSetReader reader = DirectRowSet.fromContainer(container).reader();
       switch (metadataType) {
         case ROW_GROUP: {
           String rgiColumnName = context.getOptions().getString(ExecConstants.IMPLICIT_ROW_GROUP_INDEX_COLUMN_LABEL);

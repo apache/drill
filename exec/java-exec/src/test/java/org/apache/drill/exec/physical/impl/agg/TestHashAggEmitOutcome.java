@@ -42,7 +42,8 @@ import static org.apache.drill.exec.record.RecordBatch.IterOutcome.NONE;
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK;
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK_NEW_SCHEMA;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.fail;
 
 @Category(OperatorTest.class)
 public class TestHashAggEmitOutcome extends BaseTestOpBatchEmitOutcome {
@@ -73,11 +74,11 @@ public class TestHashAggEmitOutcome extends BaseTestOpBatchEmitOutcome {
    * @param outputRowCounts - expected number of rows, in each output batch
    * @param outputOutcomes - the expected output outcomes
    */
-  private void testHashAggrEmit(int inp2_1[], int inp2_2[], String inp2_3[],  // first input batch
-                                int inp3_1[], int inp3_2[], String inp3_3[],  // second input batch
-                                String exp1_1[], int exp1_2[],            // first expected
-                                String exp2_1[], int exp2_2[],            // second expected
-                                int inpRowSet[], RecordBatch.IterOutcome inpOutcomes[],  // input batches + outcomes
+  private void testHashAggrEmit(int[] inp2_1, int[] inp2_2, String[] inp2_3,  // first input batch
+                                int[] inp3_1, int[] inp3_2, String[] inp3_3,  // second input batch
+                                String[] exp1_1, int[] exp1_2,            // first expected
+                                String[] exp2_1, int[] exp2_2,            // second expected
+                                int[] inpRowSet, RecordBatch.IterOutcome[] inpOutcomes,  // input batches + outcomes
                                 List<Integer> outputRowCounts,  // output row counts per each out batch
                                 List<RecordBatch.IterOutcome> outputOutcomes) // output outcomes
   {
@@ -134,12 +135,11 @@ public class TestHashAggEmitOutcome extends BaseTestOpBatchEmitOutcome {
         case 3: inputContainer.add(nonEmptyInputRowSet3.container());
           break;
         default:
-          assertTrue(false);
+          fail();
       }
     }
-    for (RecordBatch.IterOutcome out : inpOutcomes) {  // build the outcomes
-      inputOutcomes.add(out);
-    }
+    // build the outcomes
+    inputOutcomes.addAll(Arrays.asList(inpOutcomes));
 
     //
     //  Build the Hash Agg Batch operator
@@ -158,20 +158,21 @@ public class TestHashAggEmitOutcome extends BaseTestOpBatchEmitOutcome {
     //
     //  Iterate thru the next batches, and verify expected outcomes
     //
-    assertTrue( outputRowCounts.size() == outputOutcomes.size());
+    assertEquals(outputRowCounts.size(), outputOutcomes.size());
     boolean firstOne = true;
 
-    for (int ind = 0; ind < outputOutcomes.size(); ind++ ) {
+    for (int ind = 0; ind < outputOutcomes.size(); ind++) {
       RecordBatch.IterOutcome expOut = outputOutcomes.get(ind);
-      assertTrue(haBatch.next() == expOut );
-      if ( expOut == NONE ) { break; } // done
+      assertSame(expOut, haBatch.next());
+      if (expOut == NONE) {
+        break;
+      } // done
       RowSet actualRowSet = DirectRowSet.fromContainer(haBatch.getContainer());
       int expectedSize = outputRowCounts.get(ind);
       // System.out.println(expectedSize);
-      if ( 0 == expectedSize ) {
+      if (0 == expectedSize) {
         assertEquals(expectedSize, haBatch.getRecordCount());
-      }
-      else if ( firstOne ) {
+      } else if (firstOne) {
         firstOne = false;
         new RowSetComparison(expectedRowSet1).verify(actualRowSet);
       } else {
@@ -197,8 +198,8 @@ public class TestHashAggEmitOutcome extends BaseTestOpBatchEmitOutcome {
    */
   @Test
   public void testHashAggrWithEmptyDataSet() {
-    int inpRowSet[] = {0};
-    RecordBatch.IterOutcome inpOutcomes[] = {OK_NEW_SCHEMA};
+    int[] inpRowSet = {0};
+    RecordBatch.IterOutcome[] inpOutcomes = {OK_NEW_SCHEMA};
 
     List<Integer> outputRowCounts = Arrays.asList(0, 0);
     List<RecordBatch.IterOutcome> outputOutcomes = Arrays.asList(OK_NEW_SCHEMA, NONE);
@@ -213,8 +214,8 @@ public class TestHashAggEmitOutcome extends BaseTestOpBatchEmitOutcome {
    */
   @Test
   public void testHashAggrEmptyBatchEmitOutcome() {
-    int inpRowSet[] = {0, 0};
-    RecordBatch.IterOutcome inpOutcomes[] = {OK_NEW_SCHEMA, EMIT};
+    int[] inpRowSet = {0, 0};
+    RecordBatch.IterOutcome[] inpOutcomes = {OK_NEW_SCHEMA, EMIT};
 
     List<Integer> outputRowCounts = Arrays.asList(0, 0, 0);
     List<RecordBatch.IterOutcome> outputOutcomes = Arrays.asList(OK_NEW_SCHEMA, EMIT, NONE);
@@ -230,15 +231,15 @@ public class TestHashAggEmitOutcome extends BaseTestOpBatchEmitOutcome {
    */
   @Test
   public void testHashAggrNonEmptyBatchEmitOutcome() {
-    int inp2_1[]         = { 2,       2,       13,       13,      4};
-    int inp2_2[]         = {20,      20,      130,      130,     40};
-    String inp2_3[] = {"item2", "item2", "item13", "item13", "item4"};
+    int[] inp2_1 = {2, 2, 13, 13, 4};
+    int[] inp2_2 = {20, 20, 130, 130, 40};
+    String[] inp2_3 = {"item2", "item2", "item13", "item13", "item4"};
 
-    String exp1_1[] = {"item2", "item13", "item4"};
-    int exp1_2[]    = {     44,      286,     44};
+    String[] exp1_1 = {"item2", "item13", "item4"};
+    int[] exp1_2 = {44, 286, 44};
 
-    int inpRowSet[] = {0, 2};
-    RecordBatch.IterOutcome inpOutcomes[] = {OK_NEW_SCHEMA, EMIT};
+    int[] inpRowSet = {0, 2};
+    RecordBatch.IterOutcome[] inpOutcomes = {OK_NEW_SCHEMA, EMIT};
 
     List<Integer> outputRowCounts = Arrays.asList(0, 3, 0);
     List<RecordBatch.IterOutcome> outputOutcomes = Arrays.asList(OK_NEW_SCHEMA, EMIT, NONE);
@@ -252,15 +253,15 @@ public class TestHashAggEmitOutcome extends BaseTestOpBatchEmitOutcome {
    */
   @Test
   public void testHashAggrEmptyBatchFollowedByNonEmptyBatchEmitOutcome() {
-    int inp2_1[]          = {2,       13,       4,       0,        0,     0};
-    int inp2_2[]         = {20,      130,      40,    2000,     1300,  4000};
-    String inp2_3[] = {"item2", "item13", "item4", "item2", "item13", "item4"};
+    int[] inp2_1 = {2, 13, 4, 0, 0, 0};
+    int[] inp2_2 = {20, 130, 40, 2000, 1300, 4000};
+    String[] inp2_3 = {"item2", "item13", "item4", "item2", "item13", "item4"};
 
-    String exp1_1[] = {"item2", "item13", "item4"};
-    int exp1_2[]       = {2022,     1443,   4044};
+    String[] exp1_1 = {"item2", "item13", "item4"};
+    int[] exp1_2 = {2022, 1443, 4044};
 
-    int inpRowSet[] = {0, 0, 2};
-    RecordBatch.IterOutcome inpOutcomes[] = {OK_NEW_SCHEMA, EMIT, EMIT};
+    int[] inpRowSet = {0, 0, 2};
+    RecordBatch.IterOutcome[] inpOutcomes = {OK_NEW_SCHEMA, EMIT, EMIT};
 
     List<Integer> outputRowCounts = Arrays.asList(0, 0, 3, 0);
     List<RecordBatch.IterOutcome> outputOutcomes = Arrays.asList(OK_NEW_SCHEMA, EMIT, EMIT, NONE);
@@ -274,15 +275,15 @@ public class TestHashAggEmitOutcome extends BaseTestOpBatchEmitOutcome {
    */
   @Test
   public void testHashAggrMultipleEmptyBatchFollowedByNonEmptyBatchEmitOutcome() {
-    int inp2_1[]          = {2,       13,       4,       0,       1,        0,    1};
-    int inp2_2[]         = {20,      130,      40,       0,   11000,        0,   33000};
-    String inp2_3[] = {"item2", "item13", "item4", "item2", "item2", "item13", "item13"};
+    int[] inp2_1 = {2, 13, 4, 0, 1, 0, 1};
+    int[] inp2_2 = {20, 130, 40, 0, 11000, 0, 33000};
+    String[] inp2_3 = {"item2", "item13", "item4", "item2", "item2", "item13", "item13"};
 
-    String exp1_1[] = {"item2", "item13", "item4"};
-    int exp1_2[]      = {11023,    33144,     44};
+    String[] exp1_1 = {"item2", "item13", "item4"};
+    int[] exp1_2 = {11023, 33144, 44};
 
-    int inpRowSet[] = {0, 0, 0, 0, 2};
-    RecordBatch.IterOutcome inpOutcomes[] = {OK_NEW_SCHEMA, EMIT, EMIT, EMIT, EMIT};
+    int[] inpRowSet = {0, 0, 0, 0, 2};
+    RecordBatch.IterOutcome[] inpOutcomes = {OK_NEW_SCHEMA, EMIT, EMIT, EMIT, EMIT};
 
     List<Integer> outputRowCounts = Arrays.asList(0, 0, 0, 0, 3, 0);
     List<RecordBatch.IterOutcome> outputOutcomes = Arrays.asList(OK_NEW_SCHEMA, EMIT, EMIT, EMIT, EMIT, NONE);
@@ -300,18 +301,18 @@ public class TestHashAggEmitOutcome extends BaseTestOpBatchEmitOutcome {
    */
   @Test
   public void testHashAgrResetsAfterFirstEmitOutcome() {
-    int inp2_1[]          = {2,       3,       3,       3,       3,   3,   3,   3,   3,   3,   3, 2 };
-    int inp2_2[]         = {20,      30,      30,      30,      30,  30,  30,  30,  30,  30,  30, 20  };
-    String inp2_3[] = {"item2", "item3", "item3", "item3", "item3", "item3", "item3", "item3", "item3", "item3", "item3", "item2"};
+    int[] inp2_1 = {2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2};
+    int[] inp2_2 = {20, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 20};
+    String[] inp2_3 = {"item2", "item3", "item3", "item3", "item3", "item3", "item3", "item3", "item3", "item3", "item3", "item2"};
 
-    String exp1_1[] = {"item1"};
-    int exp1_2[]      = {11};
+    String[] exp1_1 = {"item1"};
+    int[] exp1_2 = {11};
 
-    String exp2_1[] = {"item2", "item3"};
-    int exp2_2[]        = {44,      330};
+    String[] exp2_1 = {"item2", "item3"};
+    int[] exp2_2 = {44, 330};
 
-    int inpRowSet[] = {1, 0, 2, 0};
-    RecordBatch.IterOutcome inpOutcomes[] = {OK_NEW_SCHEMA, EMIT, OK, EMIT};
+    int[] inpRowSet = {1, 0, 2, 0};
+    RecordBatch.IterOutcome[] inpOutcomes = {OK_NEW_SCHEMA, EMIT, OK, EMIT};
 
     List<Integer> outputRowCounts = Arrays.asList(0, 1, 2, 0);
     List<RecordBatch.IterOutcome> outputOutcomes = Arrays.asList(OK_NEW_SCHEMA, EMIT, EMIT, NONE);
@@ -327,11 +328,11 @@ public class TestHashAggEmitOutcome extends BaseTestOpBatchEmitOutcome {
   @Test
   public void testHashAggr_NonEmptyFirst_EmptyOKEmitOutcome() {
 
-    String exp1_1[] = {"item1"};
-    int exp1_2[]      = {11};
+    String[] exp1_1 = {"item1"};
+    int[] exp1_2 = {11};
 
-    int inpRowSet[] = {1, 0, 0, 0};
-    RecordBatch.IterOutcome inpOutcomes[] = {OK_NEW_SCHEMA, OK, EMIT, NONE};
+    int[] inpRowSet = {1, 0, 0, 0};
+    RecordBatch.IterOutcome[] inpOutcomes = {OK_NEW_SCHEMA, OK, EMIT, NONE};
 
     List<Integer> outputRowCounts = Arrays.asList(0, 1, 0);
     List<RecordBatch.IterOutcome> outputOutcomes = Arrays.asList(OK_NEW_SCHEMA, EMIT, NONE);
@@ -349,18 +350,18 @@ public class TestHashAggEmitOutcome extends BaseTestOpBatchEmitOutcome {
    */
   @Test
   public void testHashAggrMultipleOutputBatch() {
-    int inp2_1[]          = {4,       2,       5,       3,       5,      4};
-    int inp2_2[]         = {40,      20,      50,      30,      50,     40};
-    String inp2_3[] = {"item4", "item2", "item5", "item3", "item5", "item4"};
+    int[] inp2_1 = {4, 2, 5, 3, 5, 4};
+    int[] inp2_2 = {40, 20, 50, 30, 50, 40};
+    String[] inp2_3 = {"item4", "item2", "item5", "item3", "item5", "item4"};
 
-    String exp1_1[] = {"item1"};
-    int exp1_2[]      = {11};
+    String[] exp1_1 = {"item1"};
+    int[] exp1_2 = {11};
 
-    String exp2_1[] = {"item4", "item2", "item5", "item3"};
-    int exp2_2[]      = {   88,      22,     110,     33};
+    String[] exp2_1 = {"item4", "item2", "item5", "item3"};
+    int[] exp2_2 = {88, 22, 110, 33};
 
-    int inpRowSet[] = {1, 0, 2};
-    RecordBatch.IterOutcome inpOutcomes[] = {OK_NEW_SCHEMA, EMIT, OK};
+    int[] inpRowSet = {1, 0, 2};
+    RecordBatch.IterOutcome[] inpOutcomes = {OK_NEW_SCHEMA, EMIT, OK};
 
     List<Integer> outputRowCounts = Arrays.asList(0, 1, 4, 0);
     List<RecordBatch.IterOutcome> outputOutcomes = Arrays.asList(OK_NEW_SCHEMA, EMIT, OK, NONE);
@@ -374,18 +375,18 @@ public class TestHashAggEmitOutcome extends BaseTestOpBatchEmitOutcome {
    */
   @Test
   public void testHashAggrMultipleEMITOutcome() {
-    int inp2_1[]          = {2,       3};
-    int inp2_2[]         = {20,      30};
-    String inp2_3[] = {"item2", "item3"};
+    int[] inp2_1 = {2, 3};
+    int[] inp2_2 = {20, 30};
+    String[] inp2_3 = {"item2", "item3"};
 
-    String exp1_1[] = {"item1"};
-    int exp1_2[]      = {11};
+    String[] exp1_1 = {"item1"};
+    int[] exp1_2 = {11};
 
-    String exp2_1[] = {"item2", "item3"};
-    int exp2_2[]      = {   22,      33};
+    String[] exp2_1 = {"item2", "item3"};
+    int[] exp2_2 = {22, 33};
 
-    int inpRowSet[] = {1, 0, 2, 0};
-    RecordBatch.IterOutcome inpOutcomes[] = {OK_NEW_SCHEMA, EMIT, EMIT, EMIT};
+    int[] inpRowSet = {1, 0, 2, 0};
+    RecordBatch.IterOutcome[] inpOutcomes = {OK_NEW_SCHEMA, EMIT, EMIT, EMIT};
 
     List<Integer> outputRowCounts = Arrays.asList(0, 1, 2, 0, 0);
     List<RecordBatch.IterOutcome> outputOutcomes = Arrays.asList(OK_NEW_SCHEMA, EMIT, EMIT, EMIT, NONE);
@@ -399,15 +400,15 @@ public class TestHashAggEmitOutcome extends BaseTestOpBatchEmitOutcome {
    */
   @Test
   public void testHashAggrMultipleInputToSingleOutputBatch() {
-    int inp2_1[]          = {2};
-    int inp2_2[]         = {20};
-    String inp2_3[] = {"item2"};
+    int[] inp2_1 = {2};
+    int[] inp2_2 = {20};
+    String[] inp2_3 = {"item2"};
 
-    String exp1_1[] = {"item1", "item2"};
-    int exp1_2[]      = {   11,    22};
+    String[] exp1_1 = {"item1", "item2"};
+    int[] exp1_2 = {   11,    22};
 
-    int inpRowSet[] = {1, 0, 2, 0};
-    RecordBatch.IterOutcome inpOutcomes[] = {OK_NEW_SCHEMA, OK, OK, EMIT};
+    int[] inpRowSet = {1, 0, 2, 0};
+    RecordBatch.IterOutcome[] inpOutcomes = {OK_NEW_SCHEMA, OK, OK, EMIT};
 
     List<Integer> outputRowCounts = Arrays.asList(0, 2, 0);
     List<RecordBatch.IterOutcome> outputOutcomes = Arrays.asList(OK_NEW_SCHEMA, EMIT, NONE);
@@ -421,22 +422,22 @@ public class TestHashAggEmitOutcome extends BaseTestOpBatchEmitOutcome {
    */
   @Test
   public void testHashAggrMultipleInputToMultipleOutputBatch() {
-    int inp2_1[]          = {7,       2,       7,       3};
-    int inp2_2[]         = {70,      20,      70,      33};
-    String inp2_3[] = {"item7", "item1", "item7", "item3"};
+    int[] inp2_1 = {7, 2, 7, 3};
+    int[] inp2_2 = {70, 20, 70, 33};
+    String[] inp2_3 = {"item7", "item1", "item7", "item3"};
 
-    int inp3_1[]          = {17,       7,       3,       13,       9,       13};
-    int inp3_2[]         = {170,      71,      30,      130,     123,      130};
-    String inp3_3[] = {"item17", "item7", "item3", "item13", "item3", "item13"};
+    int[] inp3_1 = {17, 7, 3, 13, 9, 13};
+    int[] inp3_2 = {170, 71, 30, 130, 123, 130};
+    String[] inp3_3 = {"item17", "item7", "item3", "item13", "item3", "item13"};
 
-    String exp1_1[] = {"item1", "item7", "item3"};
-    int exp1_2[]      = {   33,     154,      36};
+    String[] exp1_1 = {"item1", "item7", "item3"};
+    int[] exp1_2 = {33, 154, 36};
 
-    String exp2_1[] = {"item17", "item7", "item3", "item13"};
-    int exp2_2[]      = {   187,      78,     165,      286};
+    String[] exp2_1 = {"item17", "item7", "item3", "item13"};
+    int[] exp2_2 = {187, 78, 165, 286};
 
-    int inpRowSet[] = {1, 0, 2, 0, 3, 0};
-    RecordBatch.IterOutcome inpOutcomes[] = {OK_NEW_SCHEMA, OK, EMIT, OK, OK, EMIT};
+    int[] inpRowSet = {1, 0, 2, 0, 3, 0};
+    RecordBatch.IterOutcome[] inpOutcomes = {OK_NEW_SCHEMA, OK, EMIT, OK, OK, EMIT};
 
     List<Integer> outputRowCounts = Arrays.asList(0, 3, 4, 0);
     List<RecordBatch.IterOutcome> outputOutcomes = Arrays.asList(OK_NEW_SCHEMA, EMIT, EMIT, NONE);
@@ -452,19 +453,19 @@ public class TestHashAggEmitOutcome extends BaseTestOpBatchEmitOutcome {
    */
   @Test
   public void testHashAggr_WithEmptyNonEmptyBatchesAndOKOutcome() {
-    int inp2_1[]    = {      2,       7,       3,       13,       13,      13};
-    int inp2_2[]    = {     20,      70,      33,      130,      130,     130};
-    String inp2_3[] = {"item1", "item7", "item3", "item13", "item13", "item13"};
+    int[] inp2_1 = {2, 7, 3, 13, 13, 13};
+    int[] inp2_2 = {20, 70, 33, 130, 130, 130};
+    String[] inp2_3 = {"item1", "item7", "item3", "item13", "item13", "item13"};
 
-    int inp3_1[]    = {     17,       23,       130,        0};
-    int inp3_2[]    = {    170,      230,      1300,        0};
-    String inp3_3[] = {"item7", "item23", "item130", "item130"};
+    int[] inp3_1 = {17, 23, 130, 0};
+    int[] inp3_2 = {170, 230, 1300, 0};
+    String[] inp3_3 = {"item7", "item23", "item130", "item130"};
 
-    String exp1_1[] = {"item1", "item7", "item3", "item13", "item23", "item130"};
-    int exp1_2[]    = {     33,     264,      36,      429,      253,      1430};
+    String[] exp1_1 = {"item1", "item7", "item3", "item13", "item23", "item130"};
+    int[] exp1_2 = {33, 264, 36, 429, 253, 1430};
 
-    int inpRowSet[] = {1, 0, 2, 0, 3, 0};
-    RecordBatch.IterOutcome inpOutcomes[] = {OK_NEW_SCHEMA, OK, OK, OK, OK, OK};
+    int[] inpRowSet = {1, 0, 2, 0, 3, 0};
+    RecordBatch.IterOutcome[] inpOutcomes = {OK_NEW_SCHEMA, OK, OK, OK, OK, OK};
 
     List<Integer> outputRowCounts = Arrays.asList(0, 6, 0);
     List<RecordBatch.IterOutcome> outputOutcomes = Arrays.asList(OK_NEW_SCHEMA, OK, NONE);

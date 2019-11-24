@@ -22,7 +22,7 @@ import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.SingleRel;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.config.MetadataAggPOP;
+import org.apache.drill.exec.physical.config.MetadataStreamAggPOP;
 import org.apache.drill.exec.planner.common.DrillRelNode;
 import org.apache.drill.exec.planner.physical.AggPrelBase.OperatorPhase;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
@@ -34,11 +34,11 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
-public class MetadataAggPrel extends SingleRel implements DrillRelNode, Prel {
+public class MetadataStreamAggPrel extends SingleRel implements DrillRelNode, Prel {
   private final MetadataAggregateContext context;
   private final OperatorPhase phase;
 
-  public MetadataAggPrel(RelOptCluster cluster, RelTraitSet traits, RelNode input,
+  public MetadataStreamAggPrel(RelOptCluster cluster, RelTraitSet traits, RelNode input,
       MetadataAggregateContext context, OperatorPhase phase) {
     super(cluster, traits, input);
     this.context = context;
@@ -48,7 +48,7 @@ public class MetadataAggPrel extends SingleRel implements DrillRelNode, Prel {
   @Override
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
     Prel child = (Prel) this.getInput();
-    MetadataAggPOP physicalOperator = new MetadataAggPOP(child.getPhysicalOperator(creator), context, phase);
+    MetadataStreamAggPOP physicalOperator = new MetadataStreamAggPOP(child.getPhysicalOperator(creator), context, phase);
     return creator.addMetadata(this, physicalOperator);
   }
 
@@ -80,7 +80,7 @@ public class MetadataAggPrel extends SingleRel implements DrillRelNode, Prel {
   @Override
   public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
     Preconditions.checkState(inputs.size() == 1);
-    return new MetadataAggPrel(getCluster(), traitSet, inputs.iterator().next(), context, phase);
+    return new MetadataStreamAggPrel(getCluster(), traitSet, inputs.iterator().next(), context, phase);
   }
 
   public OperatorPhase getPhase() {
