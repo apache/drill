@@ -45,7 +45,9 @@ import org.apache.drill.metastore.statistics.ColumnStatisticsKind;
 import org.apache.drill.metastore.statistics.ExactStatisticsConstants;
 import org.apache.drill.metastore.statistics.StatisticsKind;
 import org.apache.drill.metastore.statistics.TableStatisticsKind;
+import org.apache.drill.shaded.guava.com.google.common.collect.HashBasedTable;
 import org.apache.drill.shaded.guava.com.google.common.collect.Multimap;
+import org.apache.drill.shaded.guava.com.google.common.collect.Table;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -53,13 +55,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.function.IntFunction;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Rule which converts
@@ -137,58 +141,45 @@ public class ConvertMetadataAggregateToDirectScanRule extends RelOptRule {
     DrillTable drillTable = Utilities.getDrillTable(scan.getTable());
 
     Map<String, Class<?>> schema = new HashMap<>();
-    // map with index of specific field within record
-    Map<String, Integer> fieldIndexes = new HashMap<>();
-    int index = 0;
 
     // populates schema and fieldIndexes to be used when adding record values
     FormatSelection selection = (FormatSelection) drillTable.getSelection();
     // adds partition columns to the schema
     for (String partitionColumnName : ColumnExplorer.getPartitionColumnNames(selection.getSelection(), settings.getOptions())) {
       schema.put(partitionColumnName, String.class);
-      fieldIndexes.put(partitionColumnName, index++);
     }
 
-    String fqn = settings.getOptions().getOption(ExecConstants.IMPLICIT_FQN_COLUMN_LABEL).string_val;
     String rgi = settings.getOptions().getOption(ExecConstants.IMPLICIT_ROW_GROUP_INDEX_COLUMN_LABEL).string_val;
     String rgs = settings.getOptions().getOption(ExecConstants.IMPLICIT_ROW_GROUP_START_COLUMN_LABEL).string_val;
     String rgl = settings.getOptions().getOption(ExecConstants.IMPLICIT_ROW_GROUP_LENGTH_COLUMN_LABEL).string_val;
     String lmt = settings.getOptions().getOption(ExecConstants.IMPLICIT_LAST_MODIFIED_TIME_COLUMN_LABEL).string_val;
 
     // adds internal implicit columns to the schema
-    fieldIndexes.put(fqn, index++);
-    fieldIndexes.put(rgi, index++);
-    fieldIndexes.put(rgs, index++);
-    fieldIndexes.put(rgl, index++);
-    fieldIndexes.put(lmt, index++);
-    fieldIndexes.put(MetastoreAnalyzeConstants.SCHEMA_FIELD, index);
 
     schema.put(MetastoreAnalyzeConstants.SCHEMA_FIELD, String.class);
-    schema.put(fqn, String.class);
+    schema.put(MetastoreAnalyzeConstants.LOCATION_FIELD, String.class);
     schema.put(rgi, String.class);
     schema.put(rgs, String.class);
     schema.put(rgl, String.class);
     schema.put(lmt, String.class);
 
-    return populateRecords(interestingColumns, schema, fieldIndexes, scan, settings);
+    return populateRecords(interestingColumns, schema, scan, settings);
   }
 
   /**
    * Populates records list with row group metadata.
    */
   private DirectGroupScan populateRecords(Collection<SchemaPath> interestingColumns, Map<String, Class<?>> schema,
-      Map<String, Integer> fieldIndexes, DrillScanRel scan, PlannerSettings settings) throws IOException {
+      DrillScanRel scan, PlannerSettings settings) throws IOException {
     ParquetGroupScan parquetGroupScan = (ParquetGroupScan) scan.getGroupScan();
     DrillTable drillTable = Utilities.getDrillTable(scan.getTable());
 
-    int index = fieldIndexes.size();
     Multimap<Path, RowGroupMetadata> rowGroupsMetadataMap = parquetGroupScan.getMetadataProvider().getRowGroupsMetadataMap();
 
-    List<List<Object>> records = new ArrayList<>();
+    Table<String, Integer, Object> recordsTable = HashBasedTable.create();
     FormatSelection selection = (FormatSelection) drillTable.getSelection();
     List<String> partitionColumnNames = ColumnExplorer.getPartitionColumnNames(selection.getSelection(), settings.getOptions());
 
-    String fqn = settings.getOptions().getOption(ExecConstants.IMPLICIT_FQN_COLUMN_LABEL).string_val;
     String rgi = settings.getOptions().getOption(ExecConstants.IMPLICIT_ROW_GROUP_INDEX_COLUMN_LABEL).string_val;
     String rgs = settings.getOptions().getOption(ExecConstants.IMPLICIT_ROW_GROUP_START_COLUMN_LABEL).string_val;
     String rgl = settings.getOptions().getOption(ExecConstants.IMPLICIT_ROW_GROUP_LENGTH_COLUMN_LABEL).string_val;
@@ -198,18 +189,18 @@ public class ConvertMetadataAggregateToDirectScanRule extends RelOptRule {
     DrillFileSystem fileSystem =
         ImpersonationUtil.createFileSystem(ImpersonationUtil.getProcessUserName(), rawFs.getConf());
 
+    int rowIndex = 0;
     for (Map.Entry<Path, RowGroupMetadata> rgEntry : rowGroupsMetadataMap.entries()) {
       Path path = rgEntry.getKey();
       RowGroupMetadata rowGroupMetadata = rgEntry.getValue();
       List<String> partitionValues = ColumnExplorer.listPartitionValues(path, selection.getSelection().getSelectionRoot(), false);
-      List<Object> record = new ArrayList<>();
       for (int i = 0; i < partitionValues.size(); i++) {
         String partitionColumnName = partitionColumnNames.get(i);
-        record.add(fieldIndexes.get(partitionColumnName), partitionValues.get(i));
+        recordsTable.put(partitionColumnName, rowIndex, partitionValues.get(i));
       }
 
-      record.add(fieldIndexes.get(fqn), ColumnExplorer.ImplicitFileColumns.FQN.getValue(path));
-      record.add(fieldIndexes.get(rgi), rowGroupMetadata.getRowGroupIndex());
+      recordsTable.put(MetastoreAnalyzeConstants.LOCATION_FIELD, rowIndex, ColumnExplorer.ImplicitFileColumns.FQN.getValue(path));
+      recordsTable.put(rgi, rowIndex, String.valueOf(rowGroupMetadata.getRowGroupIndex()));
 
       if (interestingColumns == null) {
         interestingColumns = rowGroupMetadata.getColumnsStatistics().keySet();
@@ -232,12 +223,11 @@ public class ConvertMetadataAggregateToDirectScanRule extends RelOptRule {
             statsValue = columnStatistics.get(statisticsKind);
           }
           String columnStatisticsFieldName = AnalyzeColumnUtils.getColumnStatisticsFieldName(schemaPath.getRootSegmentPath(), statisticsKind);
-          fieldIndexes.putIfAbsent(columnStatisticsFieldName, index++);
-          record.add(fieldIndexes.get(columnStatisticsFieldName), statsValue);
           if (statsValue != null) {
             schema.putIfAbsent(
                 columnStatisticsFieldName,
                 statsValue.getClass());
+            recordsTable.put(columnStatisticsFieldName, rowIndex, statsValue);
           }
         }
       }
@@ -245,27 +235,39 @@ public class ConvertMetadataAggregateToDirectScanRule extends RelOptRule {
       // populates record list with row group metadata
       for (StatisticsKind<?> statisticsKind : AnalyzeColumnUtils.META_STATISTICS_FUNCTIONS.keySet()) {
         String metadataStatisticsFieldName = AnalyzeColumnUtils.getMetadataStatisticsFieldName(statisticsKind);
-        fieldIndexes.putIfAbsent(metadataStatisticsFieldName, index++);
-        record.add(fieldIndexes.get(metadataStatisticsFieldName), rowGroupMetadata.getStatistic(statisticsKind));
+        Object statisticsValue = rowGroupMetadata.getStatistic(statisticsKind);
+
+        if (statisticsValue != null) {
+          schema.putIfAbsent(metadataStatisticsFieldName, statisticsValue.getClass());
+          recordsTable.put(metadataStatisticsFieldName, rowIndex, statisticsValue);
+        }
       }
 
       // populates record list internal columns
-      record.add(fieldIndexes.get(MetastoreAnalyzeConstants.SCHEMA_FIELD), rowGroupMetadata.getSchema().jsonString());
-      record.add(fieldIndexes.get(rgs), Long.toString(rowGroupMetadata.getStatistic(() -> ExactStatisticsConstants.START)));
-      record.add(fieldIndexes.get(rgl), Long.toString(rowGroupMetadata.getStatistic(() -> ExactStatisticsConstants.LENGTH)));
-      record.add(fieldIndexes.get(lmt), String.valueOf(fileSystem.getFileStatus(path).getModificationTime()));
+      recordsTable.put(MetastoreAnalyzeConstants.SCHEMA_FIELD, rowIndex, rowGroupMetadata.getSchema().jsonString());
+      recordsTable.put(rgs, rowIndex, Long.toString(rowGroupMetadata.getStatistic(() -> ExactStatisticsConstants.START)));
+      recordsTable.put(rgl, rowIndex, Long.toString(rowGroupMetadata.getStatistic(() -> ExactStatisticsConstants.LENGTH)));
+      recordsTable.put(lmt, rowIndex, String.valueOf(fileSystem.getFileStatus(path).getModificationTime()));
 
-      records.add(record);
+      rowIndex++;
     }
-
-    LinkedHashMap<String, Class<?>> orderedSchema = new LinkedHashMap<>();
 
     // DynamicPojoRecordReader requires LinkedHashMap with fields order
     // which corresponds to the value position in record list.
-    // Sorts fieldIndexes by index and puts field names in required order to orderedSchema
-    fieldIndexes.entrySet().stream()
-        .sorted(Comparator.comparingInt(Map.Entry::getValue))
-        .forEach(entry -> orderedSchema.put(entry.getKey(), schema.get(entry.getKey())));
+    LinkedHashMap<String, Class<?>> orderedSchema = recordsTable.rowKeySet().stream()
+        .collect(Collectors.toMap(
+            Function.identity(),
+            column -> schema.getOrDefault(column, Integer.class),
+            (a, b) -> b,
+            LinkedHashMap::new));
+
+    IntFunction<List<Object>> collectRecord = currentIndex -> orderedSchema.keySet().stream()
+        .map(column -> recordsTable.get(column, currentIndex))
+        .collect(Collectors.toList());
+
+    List<List<Object>> records = IntStream.range(0, rowIndex)
+        .mapToObj(collectRecord)
+        .collect(Collectors.toList());
 
     DynamicPojoRecordReader<?> reader = new DynamicPojoRecordReader<>(orderedSchema, records);
 
