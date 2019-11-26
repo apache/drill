@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.physical.impl.unorderedreceiver;
 
+import io.netty.buffer.ByteBuf;
+
 import java.io.IOException;
 import java.util.Iterator;
 
@@ -51,8 +53,6 @@ import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ControlsInjectorFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import io.netty.buffer.ByteBuf;
 
 public class UnorderedReceiverBatch implements CloseableRecordBatch {
   private static final Logger logger = LoggerFactory.getLogger(UnorderedReceiverBatch.class);

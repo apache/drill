@@ -17,10 +17,6 @@
  */
 package org.apache.drill;
 
-import static org.junit.Assert.assertEquals;
-
-import java.nio.file.Paths;
-
 import org.apache.drill.categories.PlannerTest;
 import org.apache.drill.categories.SqlTest;
 import org.apache.drill.categories.UnlikelyTest;
@@ -33,6 +29,10 @@ import org.apache.drill.test.BaseTestQuery;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+
+import java.nio.file.Paths;
+
+import static org.junit.Assert.assertEquals;
 
 @Category({SqlTest.class, PlannerTest.class})
 public class TestStarQueries extends BaseTestQuery {

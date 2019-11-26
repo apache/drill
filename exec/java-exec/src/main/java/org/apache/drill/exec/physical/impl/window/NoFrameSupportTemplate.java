@@ -17,10 +17,6 @@
  */
 package org.apache.drill.exec.physical.impl.window;
 
-import java.util.List;
-
-import javax.inject.Named;
-
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.OperatorContext;
@@ -32,6 +28,9 @@ import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.inject.Named;
+import java.util.List;
 
 
 /**

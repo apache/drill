@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.physical.impl.xsort;
 
+import io.netty.buffer.DrillBuf;
+
 import java.io.IOException;
 import java.util.List;
 
@@ -29,7 +31,6 @@ import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorAccessibleUtilities;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 
-import io.netty.buffer.DrillBuf;
 
 public abstract class PriorityQueueCopierTemplate implements PriorityQueueCopier {
 

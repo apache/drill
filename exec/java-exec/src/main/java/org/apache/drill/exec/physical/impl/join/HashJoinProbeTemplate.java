@@ -17,12 +17,9 @@
  */
 package org.apache.drill.exec.physical.impl.join;
 
-import static org.apache.drill.exec.record.JoinBatchMemoryManager.LEFT_INDEX;
-
 import java.util.ArrayList;
 
-import org.apache.calcite.rel.core.JoinRelType;
-import org.apache.commons.lang3.tuple.Pair;
+import com.carrotsearch.hppc.IntArrayList;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.physical.impl.common.HashPartition;
 import org.apache.drill.exec.planner.common.JoinControl;
@@ -31,10 +28,12 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
+import org.apache.calcite.rel.core.JoinRelType;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.exec.vector.ValueVector;
 
-import com.carrotsearch.hppc.IntArrayList;
+import static org.apache.drill.exec.record.JoinBatchMemoryManager.LEFT_INDEX;
 
 public class HashJoinProbeTemplate implements HashJoinProbe {
 

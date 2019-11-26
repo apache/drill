@@ -25,24 +25,25 @@ import static org.junit.Assert.assertTrue;
 import java.nio.file.Paths;
 import java.util.List;
 
-import org.apache.drill.categories.PlannerTest;
-import org.apache.drill.categories.SlowTest;
-import org.apache.drill.exec.physical.rowSet.RowSet;
-import org.apache.drill.exec.physical.rowSet.RowSetReader;
-import org.apache.drill.exec.proto.BitControl.PlanFragment;
-import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
-import org.apache.drill.exec.proto.UserBitShared.QueryType;
-import org.apache.drill.exec.proto.UserProtos.QueryPlanFragments;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.test.ClientFixture;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.QueryBuilder.QuerySummary;
+import org.apache.drill.exec.physical.rowSet.RowSet;
+import org.apache.drill.exec.physical.rowSet.RowSetReader;
+import org.apache.drill.categories.PlannerTest;
+import org.apache.drill.categories.SlowTest;
+import org.apache.drill.exec.proto.BitControl.PlanFragment;
+import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.proto.UserBitShared.QueryType;
+import org.apache.drill.exec.proto.UserProtos.QueryPlanFragments;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 /**
  * Class to test different planning use cases (separate from query execution)
@@ -127,7 +128,6 @@ public class DrillSeparatePlanningTest extends ClusterTest {
       PlanFragment rootFragment = planFragments.getFragments(0);
       assertFalse(rootFragment.getLeafFragment());
 
-      client.queryBuilder().plan(planFragments.getFragmentsList()).print();
       QuerySummary summary = client.queryBuilder().plan(planFragments.getFragmentsList()).run();
       assertEquals(3, summary.recordCount());
     }
