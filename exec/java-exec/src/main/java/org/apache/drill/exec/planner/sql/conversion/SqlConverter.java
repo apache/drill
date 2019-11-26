@@ -63,6 +63,8 @@ import org.apache.drill.exec.planner.sql.parser.impl.DrillSqlParseException;
 import org.apache.drill.exec.planner.types.DrillRelDataTypeSystem;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.util.Utilities;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Class responsible for managing:
@@ -73,7 +75,7 @@ import org.apache.drill.exec.util.Utilities;
  * <ul/>
  */
 public class SqlConverter {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SqlConverter.class);
+  private static final Logger logger = LoggerFactory.getLogger(SqlConverter.class);
 
   private final JavaTypeFactory typeFactory;
   private final SqlParser.Config parserConfig;
@@ -137,7 +139,7 @@ public class SqlConverter {
         this::getDefaultSchema);
     this.opTab = new ChainedSqlOperatorTable(Arrays.asList(context.getDrillOperatorTable(), catalog));
     this.costFactory = (settings.useDefaultCosting()) ? null : new DrillCostBase.DrillCostFactory();
-    this.validator = new DrillValidator(opTab, catalog, typeFactory, parserConfig.conformance(), session.getOptions());
+    this.validator = new DrillValidator(opTab, catalog, typeFactory, parserConfig.conformance());
     validator.setIdentifierExpansion(true);
     cluster = null;
   }
@@ -158,7 +160,7 @@ public class SqlConverter {
     this.catalog = catalog;
     this.opTab = parent.opTab;
     this.planner = parent.planner;
-    this.validator = new DrillValidator(opTab, catalog, typeFactory, parserConfig.conformance(), parent.session.getOptions());
+    this.validator = new DrillValidator(opTab, catalog, typeFactory, parserConfig.conformance());
     this.temporarySchema = parent.temporarySchema;
     this.session = parent.session;
     this.drillConfig = parent.drillConfig;

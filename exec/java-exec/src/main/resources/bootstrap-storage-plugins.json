@@ -50,7 +50,8 @@
           "type" : "pcapng"
         },
         "avro" : {
-          "type" : "avro"
+          "type" : "avro",
+          "extensions" : [ "avro" ]
         },
         "sequencefile" : {
           "type" : "sequencefile",

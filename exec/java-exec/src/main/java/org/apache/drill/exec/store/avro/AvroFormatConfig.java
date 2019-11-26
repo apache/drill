@@ -17,23 +17,38 @@
  */
 package org.apache.drill.exec.store.avro;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 import org.apache.drill.common.logical.FormatPluginConfig;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+
 /**
  * Format plugin config for Avro data files.
  */
-@JsonTypeName("avro")
+@JsonTypeName(AvroFormatPlugin.DEFAULT_NAME)
+@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class AvroFormatConfig implements FormatPluginConfig {
+
+  public List<String> extensions = Collections.singletonList("avro");
 
   @Override
   public int hashCode() {
-    return 101; // XXX - WHAT IS THIS SUPPOSED TO BE?
+    return Objects.hash(extensions);
   }
 
   @Override
-  public boolean equals(Object obj) {
-    return obj instanceof AvroFormatConfig;
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    AvroFormatConfig that = (AvroFormatConfig) o;
+    return Objects.equals(extensions, that.extensions);
   }
 }

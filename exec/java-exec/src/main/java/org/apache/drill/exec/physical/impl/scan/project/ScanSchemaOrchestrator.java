@@ -232,7 +232,7 @@ public class ScanSchemaOrchestrator {
      * per batch for this scan. Readers can adjust this, but the adjustment is capped
      * at the value specified here
      *
-     * @param scanBatchSize maximum records per batch
+     * @param batchRecordLimit maximum records per batch
      */
 
     public void setBatchRecordLimit(int batchRecordLimit) {
@@ -250,7 +250,7 @@ public class ScanSchemaOrchestrator {
      * nullable int. This type is used for all missing columns. (Readers
      * that need per-column control need a different mechanism.)
      *
-     * @param nullType
+     * @param nullType the type to use for null columns
      */
 
     public void setNullType(MajorType nullType) {

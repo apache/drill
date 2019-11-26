@@ -20,10 +20,12 @@ package org.apache.drill.common.logical;
 import java.util.Set;
 
 import org.apache.drill.common.scanner.persistence.ScanResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+public abstract class FormatPluginConfigBase implements FormatPluginConfig {
 
-public abstract class FormatPluginConfigBase implements FormatPluginConfig{
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FormatPluginConfigBase.class);
+  private static final Logger logger = LoggerFactory.getLogger(FormatPluginConfigBase.class);
 
   /**
    * scan for implementations of see <b>FormatPlugin</b>.

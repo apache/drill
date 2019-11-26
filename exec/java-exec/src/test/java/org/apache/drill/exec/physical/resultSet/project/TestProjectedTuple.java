@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.drill.categories.RowSetTests;
@@ -76,7 +77,7 @@ public class TestProjectedTuple extends BaseTest {
 
     // Empty list means nothing is projected
 
-    RequestedTuple projSet = RequestedTupleImpl.parse(new ArrayList<SchemaPath>());
+    RequestedTuple projSet = RequestedTupleImpl.parse(Collections.emptyList());
     assertEquals(TupleProjectionType.NONE, projSet.type());
     assertTrue(projSet instanceof ImpliedTupleRequest);
     List<RequestedColumn> cols = projSet.projections();
@@ -297,7 +298,7 @@ public class TestProjectedTuple extends BaseTest {
     RequestedColumn wildcard = cols.get(0);
     assertEquals(ProjectionType.WILDCARD, wildcard.type());
     assertEquals(SchemaPath.DYNAMIC_STAR, wildcard.name());
-    assertTrue(! wildcard.isSimple());
+    assertFalse(wildcard.isSimple());
     assertTrue(wildcard.isWildcard());
     assertNull(wildcard.mapProjection());
     assertNull(wildcard.indexes());
@@ -326,7 +327,7 @@ public class TestProjectedTuple extends BaseTest {
     assertTrue(a.isArray());
     assertFalse(a.isSimple());
     assertFalse(a.isTuple());
-    boolean indexes[] = a.indexes();
+    boolean[] indexes = a.indexes();
     assertNotNull(indexes);
     assertEquals(4, indexes.length);
     assertFalse(indexes[0]);
@@ -335,15 +336,29 @@ public class TestProjectedTuple extends BaseTest {
     assertTrue(indexes[3]);
   }
 
+  /**
+   * Duplicate array entries are allowed to handle the
+   * use case of a[1], a[1].z. Each element is reported once;
+   * the project operator will create copies as needed.
+   */
   @Test
   public void testArrayDups() {
-    try {
-      RequestedTupleImpl.parse(
-          RowSetTestUtils.projectList("a[1]", "a[3]", "a[1]"));
-      fail();
-    } catch (UserException e) {
-      // Expected
-    }
+    RequestedTuple projSet = RequestedTupleImpl.parse(
+      RowSetTestUtils.projectList("a[1]", "a[3]", "a[1]", "a[3].z"));
+
+    List<RequestedColumn> cols = projSet.projections();
+    assertEquals(1, cols.size());
+
+    RequestedColumn a = cols.get(0);
+    assertEquals("a", a.name());
+    assertTrue(a.isArray());
+    boolean[] indexes = a.indexes();
+    assertNotNull(indexes);
+    assertEquals(4, indexes.length);
+    assertFalse(indexes[0]);
+    assertTrue(indexes[1]);
+    assertFalse(indexes[2]);
+    assertTrue(indexes[3]);
   }
 
   @Test

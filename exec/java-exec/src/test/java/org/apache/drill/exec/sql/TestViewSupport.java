@@ -790,13 +790,13 @@ public class TestViewSupport extends TestBaseViewSupport {
   }
 
   @Test // DRILL-6944
-  public void testMapTypeFullyQualifiedInNewlyCreatedView() throws Exception {
+  public void testMapTypeTreatedAsAnyInNewlyCreatedView() throws Exception {
     try {
       test("CREATE VIEW dfs.tmp.`mapf_view` AS SELECT `mapf` FROM dfs.`avro/map_string_to_long.avro`");
       testPlanWithAttributesMatchingPatterns("SELECT * FROM dfs.tmp.`mapf_view`", new String[]{
-          "Screen : rowType = RecordType\\(\\(VARCHAR\\(65535\\), BIGINT\\) MAP mapf\\)",
-          "Project\\(mapf=\\[\\$0\\]\\) : rowType = RecordType\\(\\(VARCHAR\\(65535\\), BIGINT\\) MAP mapf\\)",
-          "Scan.*avro/map_string_to_long.avro.*rowType = RecordType\\(\\(VARCHAR\\(65535\\), BIGINT\\) MAP mapf\\)"
+          "Screen : rowType = RecordType\\(ANY mapf\\)",
+          "Project\\(mapf=\\[\\$0\\]\\) : rowType = RecordType\\(ANY mapf\\)",
+          "Scan.*avro/map_string_to_long.avro.*rowType = RecordType\\(ANY mapf\\)"
       }, null);
     } finally {
       test("DROP VIEW IF EXISTS dfs.tmp.`mapf_view`");

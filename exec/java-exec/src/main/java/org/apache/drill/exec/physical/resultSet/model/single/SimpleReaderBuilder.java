@@ -31,7 +31,6 @@ import org.apache.drill.exec.physical.resultSet.model.MetadataProvider.VectorDes
 import org.apache.drill.exec.physical.resultSet.model.ReaderBuilder;
 import org.apache.drill.exec.physical.resultSet.model.ReaderIndex;
 import org.apache.drill.exec.physical.rowSet.IndirectRowIndex;
-import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetReaderImpl;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
@@ -57,7 +56,8 @@ import org.apache.drill.exec.vector.complex.UnionVector;
  * <p>
  * Derived classes handle the details of the various kinds of readers.
  * Today there is a single subclass that builds (test-time)
- * {@link RowSet} objects. The idea, however, is that we may eventually
+ * {@link org.apache.drill.exec.physical.rowSet.RowSet} objects.
+ * The idea, however, is that we may eventually
  * want to create a "result set reader" for use in internal operators,
  * in parallel to the "result set loader". The result set reader would
  * handle a stream of incoming batches. The extant RowSet class handles
@@ -200,7 +200,7 @@ public class SimpleReaderBuilder extends ReaderBuilder {
 
   private AbstractObjectReader buildUnion(UnionVector vector, VectorAccessor unionAccessor, VectorDescrip descrip) {
     final MetadataProvider provider = descrip.childProvider();
-    final AbstractObjectReader variants[] = new AbstractObjectReader[MinorType.values().length];
+    final AbstractObjectReader[] variants = new AbstractObjectReader[MinorType.values().length];
     int i = 0;
     for (final MinorType type : vector.getField().getType().getSubTypeList()) {
 
