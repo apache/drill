@@ -18,8 +18,6 @@
 package org.apache.drill.exec.planner.sql.conversion;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
@@ -29,25 +27,19 @@ import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
-import org.apache.calcite.sql.validate.SelectScope;
 import org.apache.calcite.sql.validate.SqlConformance;
 import org.apache.calcite.sql.validate.SqlValidatorCatalogReader;
 import org.apache.calcite.sql.validate.SqlValidatorImpl;
 import org.apache.calcite.sql.validate.SqlValidatorScope;
 import org.apache.calcite.sql.validate.SqlValidatorUtil;
 import org.apache.calcite.util.Static;
-import org.apache.drill.exec.server.options.OptionManager;
-import org.apache.drill.exec.store.ColumnExplorer;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 class DrillValidator extends SqlValidatorImpl {
 
-  private final OptionManager sessionOptions;
-
   DrillValidator(SqlOperatorTable opTab, SqlValidatorCatalogReader catalogReader,
-                 RelDataTypeFactory typeFactory, SqlConformance conformance, OptionManager sessionOptions) {
+                 RelDataTypeFactory typeFactory, SqlConformance conformance) {
     super(opTab, catalogReader, typeFactory, conformance);
-    this.sessionOptions = sessionOptions;
   }
 
   @Override
@@ -77,31 +69,6 @@ class DrillValidator extends SqlValidatorImpl {
       changeNamesIfTableIsTemporary(((SqlIdentifier) node));
     }
     return SqlValidatorUtil.getAlias(node, ordinal);
-  }
-
-  /**
-   * Checks that specified expression is not implicit column and
-   * adds it to a select list, ensuring that its alias does not
-   * clash with any existing expressions on the list.
-   * <p>
-   * This method may be used when {@link RelDataType#isDynamicStruct}
-   * method returns false. Each column from table row type except
-   * the implicit is added into specified list, aliases and fieldList.
-   * In the opposite case when {@link RelDataType#isDynamicStruct}
-   * returns true, only dynamic star is added into specified
-   * list, aliases and fieldList.
-   */
-  @Override
-  protected void addToSelectList(List<SqlNode> list,
-                                 Set<String> aliases,
-                                 List<Map.Entry<String, RelDataType>> fieldList,
-                                 SqlNode exp,
-                                 SelectScope scope,
-                                 final boolean includeSystemVars) {
-    if (!ColumnExplorer.initImplicitFileColumns(sessionOptions)
-        .containsKey(SqlValidatorUtil.getAlias(exp, -1))) {
-      super.addToSelectList(list, aliases, fieldList, exp, scope, includeSystemVars);
-    }
   }
 
   @Override

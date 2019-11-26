@@ -33,7 +33,7 @@ public abstract class AbstractConvertFromString extends AbstractWriteConverter {
 
   /**
    * Property to control how the conversion handles blanks. Blanks are
-   * zero-length text fields (after triming whitespace.)
+   * zero-length text fields (after trimming whitespace.)
    */
   public static final String BLANK_ACTION_PROP = "blank-as";
 
@@ -251,7 +251,7 @@ public abstract class AbstractConvertFromString extends AbstractWriteConverter {
   }
 
   @Override
-  public void setBytes(byte bytes[], int length) {
+  public void setBytes(byte[] bytes, int length) {
     setString(new String(bytes, 0, length, Charsets.UTF_8));
   }
 }

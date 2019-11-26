@@ -87,7 +87,7 @@ public interface ScalarWriter extends ColumnWriter {
    * @param value a value that matches the primary setter above, or null
    * to set the column to null
    *
-   * @See {@link ColumnWriter#setObject()} for the generic case
+   * @see ColumnWriter#setObject(Object) for the generic case
    */
 
   void setValue(Object value);

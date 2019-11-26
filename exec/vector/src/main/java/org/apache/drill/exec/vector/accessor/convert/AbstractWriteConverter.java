@@ -36,7 +36,7 @@ import org.joda.time.Period;
  * perform the type conversion, such as overriding "setString" to convert
  * from a string representation of a value to the actual format.
  * <p>
- * The {@link #setObject()} method works here: the object is passed
+ * The {@link #setObject(Object)} method works here: the object is passed
  * to this class's set methods, allowing, say, setting a string object
  * for an int column in the case above.
  */

@@ -34,7 +34,7 @@ public class BaseTest {
      */
     ProtobufPatcher.patch();
     /*
-     * Some libraries, such as Hadoop or HBase, depend on incompatible versions of Guava.
+     * Some libraries, such as Hadoop, HBase, Iceberg depend on incompatible versions of Guava.
      * This code adds back some methods to so that the libraries can work with single Guava version.
      */
     GuavaPatcher.patch();
