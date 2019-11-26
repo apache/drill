@@ -28,7 +28,7 @@ The Drill JDBC Driver `JAR` file must exist on a client machine so you can confi
 
    Or
 
-* Download a [TAR file for the latest Drill release](http://apache.osuosl.org/drill/) to a location on your client machine, and extract the file. On Windows, you may need to use a decompression utility, such as [7-zip](http://www.7-zip.org/). The driver is extracted to the following directory:  
+* Download a [TAR file for the latest Drill release](https://apache.osuosl.org/drill/) to a location on your client machine, and extract the file. On Windows, you may need to use a decompression utility, such as [7-zip](http://www.7-zip.org/). The driver is extracted to the following directory:  
    `<drill-installation_directory>/jars/jdbc-driver/drill-jdbc-all-<version>.jar`
 
 ## Using the JDBC URL for a Random Drillbit Connection 
