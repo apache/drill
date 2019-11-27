@@ -516,7 +516,13 @@ public abstract class AbstractGroupScanWithMetadata<P extends TableMetadataProvi
   // partition pruning methods start
   @Override
   public List<SchemaPath> getPartitionColumns() {
-    return partitionColumns != null ? partitionColumns : new ArrayList<>();
+    if (partitionColumns == null) {
+      partitionColumns = metadataProvider.getPartitionColumns();
+      if (partitionColumns == null) {
+        partitionColumns = new ArrayList<>();
+      }
+    }
+    return partitionColumns;
   }
 
   @JsonIgnore

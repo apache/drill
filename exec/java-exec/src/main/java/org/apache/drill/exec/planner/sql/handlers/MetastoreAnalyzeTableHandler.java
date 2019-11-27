@@ -37,6 +37,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.common.util.function.CheckedSupplier;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.metastore.ColumnNamesOptions;
 import org.apache.drill.exec.metastore.analyze.AnalyzeInfoProvider;
 import org.apache.drill.exec.metastore.analyze.MetadataAggregateContext;
 import org.apache.drill.exec.metastore.analyze.MetadataControllerContext;
@@ -116,12 +117,14 @@ public class MetastoreAnalyzeTableHandler extends DefaultSqlHandler {
           .build(logger);
     }
 
+    ColumnNamesOptions columnNamesOptions = new ColumnNamesOptions(context.getOptions());
+
     SqlIdentifier tableIdentifier = sqlAnalyzeTable.getTableIdentifier();
     // creates select with DYNAMIC_STAR column and analyze specific columns to obtain corresponding table scan
     SqlSelect scanSql = new SqlSelect(
         SqlParserPos.ZERO,
         SqlNodeList.EMPTY,
-        getColumnList(analyzeInfoProvider.getProjectionFields(table, getMetadataType(sqlAnalyzeTable), context.getOptions())),
+        getColumnList(analyzeInfoProvider.getProjectionFields(table, getMetadataType(sqlAnalyzeTable), columnNamesOptions)),
         tableIdentifier,
         null,
         null,
@@ -218,7 +221,9 @@ public class MetastoreAnalyzeTableHandler extends DefaultSqlHandler {
         .workspace(workspaceName)
         .build();
 
-    List<String> segmentColumns = analyzeInfoProvider.getSegmentColumns(table, context.getPlannerSettings().getOptions()).stream()
+    ColumnNamesOptions columnNamesOptions = new ColumnNamesOptions(context.getOptions());
+
+    List<String> segmentColumns = analyzeInfoProvider.getSegmentColumns(table, columnNamesOptions).stream()
         .map(SchemaPath::getRootSegmentPath)
         .collect(Collectors.toList());
     List<NamedExpression> segmentExpressions = segmentColumns.stream()
@@ -297,7 +302,7 @@ public class MetastoreAnalyzeTableHandler extends DefaultSqlHandler {
           .forEach(statisticsColumns::add);
     }
 
-    SchemaPath locationField = analyzeInfoProvider.getLocationField(config.getContext().getOptions());
+    SchemaPath locationField = analyzeInfoProvider.getLocationField(columnNamesOptions);
 
     if (analyzeInfoProvider.supportsMetadataType(MetadataType.ROW_GROUP) && metadataLevel.includes(MetadataType.ROW_GROUP)) {
       MetadataHandlerContext handlerContext = MetadataHandlerContext.builder()

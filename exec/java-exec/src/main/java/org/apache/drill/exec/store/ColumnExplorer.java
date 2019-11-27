@@ -31,6 +31,7 @@ import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.metastore.ColumnNamesOptions;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.store.dfs.FileSelection;
@@ -202,14 +203,13 @@ public class ColumnExplorer {
    * Returns list with partition column names.
    * For the case when table has several levels of nesting, max level is chosen.
    *
-   * @param selection     the source of file paths
-   * @param optionManager the source of session option value for partition column label
+   * @param selection          the source of file paths
+   * @param columnNamesOptions the source of session option value for partition column label
    * @return list with partition column names.
    */
-  public static List<String> getPartitionColumnNames(FileSelection selection, OptionManager optionManager) {
+  public static List<String> getPartitionColumnNames(FileSelection selection, ColumnNamesOptions columnNamesOptions) {
 
-    String partitionColumnLabel = optionManager.getString(
-        ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL);
+    String partitionColumnLabel = columnNamesOptions.partitionColumnNameLabel();
 
     return getPartitionColumnNames(selection, partitionColumnLabel);
   }

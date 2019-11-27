@@ -27,7 +27,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.metastore.ColumnNamesOptions;
 import org.apache.drill.exec.metastore.analyze.AnalyzeColumnUtils;
 import org.apache.drill.exec.metastore.analyze.MetadataAggregateContext;
 import org.apache.drill.exec.metastore.analyze.MetastoreAnalyzeConstants;
@@ -35,7 +35,6 @@ import org.apache.drill.exec.planner.physical.AggPrelBase;
 import org.apache.drill.exec.planner.types.DrillRelDataTypeSystem;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.metastore.metadata.MetadataType;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
@@ -53,14 +52,14 @@ import java.util.stream.StreamSupport;
 public class MetadataAggregateHelper {
   private final List<NamedExpression> valueExpressions;
   private final MetadataAggregateContext context;
-  private final OptionManager options;
+  private final ColumnNamesOptions columnNamesOptions;
   private final BatchSchema schema;
   private final AggPrelBase.OperatorPhase phase;
 
-  public MetadataAggregateHelper(MetadataAggregateContext context, OptionManager options,
+  public MetadataAggregateHelper(MetadataAggregateContext context, ColumnNamesOptions columnNamesOptions,
       BatchSchema schema, AggPrelBase.OperatorPhase phase) {
     this.context = context;
-    this.options = options;
+    this.columnNamesOptions = columnNamesOptions;
     this.schema = schema;
     this.phase = phase;
     this.valueExpressions = new ArrayList<>();
@@ -97,7 +96,7 @@ public class MetadataAggregateHelper {
       addSchemaCall(fieldsList);
       // adds any_value(`location`) call for SEGMENT level
       if (context.metadataLevel() == MetadataType.SEGMENT) {
-        addLocationAggCall(options.getString(ExecConstants.IMPLICIT_FQN_COLUMN_LABEL));
+        addLocationAggCall(columnNamesOptions.fullyQualifiedName());
       }
     } else {
       if (!context.createNewAggregations()) {
@@ -108,7 +107,7 @@ public class MetadataAggregateHelper {
       String locationField = MetastoreAnalyzeConstants.LOCATION_FIELD;
 
       if (context.createNewAggregations()) {
-        locationField = options.getString(ExecConstants.IMPLICIT_FQN_COLUMN_LABEL);
+        locationField = columnNamesOptions.fullyQualifiedName();
       }
 
       if (context.metadataLevel() == MetadataType.SEGMENT) {
@@ -119,8 +118,8 @@ public class MetadataAggregateHelper {
     }
 
     for (SchemaPath excludedColumn : excludedColumns) {
-      if (excludedColumn.equals(SchemaPath.getSimplePath(options.getString(ExecConstants.IMPLICIT_ROW_GROUP_START_COLUMN_LABEL)))
-          || excludedColumn.equals(SchemaPath.getSimplePath(options.getString(ExecConstants.IMPLICIT_ROW_GROUP_LENGTH_COLUMN_LABEL)))) {
+      if (excludedColumn.equals(SchemaPath.getSimplePath(columnNamesOptions.rowGroupStart()))
+          || excludedColumn.equals(SchemaPath.getSimplePath(columnNamesOptions.rowGroupLength()))) {
         LogicalExpression lastModifiedTime = new FunctionCall("any_value",
             Collections.singletonList(
                 FieldReference.getWithQuotedRef(excludedColumn.getRootSegmentPath())),
@@ -181,7 +180,7 @@ public class MetadataAggregateHelper {
    * Adds {@code max(`lastModifiedTime`)} function call to the value expressions list.
    */
   private void addLastModifiedCall() {
-    String lastModifiedColumn = options.getString(ExecConstants.IMPLICIT_LAST_MODIFIED_TIME_COLUMN_LABEL);
+    String lastModifiedColumn = columnNamesOptions.lastModifiedTime();
     LogicalExpression lastModifiedTime;
     if (createNewAggregations()) {
       lastModifiedTime = new FunctionCall("any_value",

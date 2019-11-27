@@ -154,7 +154,8 @@ public class FileMetadataInfoCollector implements MetadataInfoCollector {
     String selectionRoot = selection.getSelection().getSelectionRoot().toUri().getPath();
 
     if (!Objects.equals(metastoreInterestingColumns, interestingColumns)
-        && (metastoreInterestingColumns == null || !metastoreInterestingColumns.containsAll(interestingColumns))
+        && metastoreInterestingColumns != null &&
+        (interestingColumns == null || !metastoreInterestingColumns.containsAll(interestingColumns))
         || TableStatisticsKind.ANALYZE_METADATA_LEVEL.getValue(basicRequests.tableMetadata(tableInfo)).compareTo(metadataLevel) != 0) {
       // do not update table scan and lists of segments / files / row groups,
       // metadata should be recalculated

@@ -18,10 +18,9 @@
 package org.apache.drill.exec.metastore.analyze;
 
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.metastore.ColumnNamesOptions;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.planner.logical.DrillTable;
-import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.parquet.ParquetGroupScan;
 import org.apache.drill.metastore.metadata.MetadataType;
 
@@ -39,12 +38,12 @@ public class AnalyzeParquetInfoProvider extends AnalyzeFileInfoProvider {
   public static final String TABLE_TYPE_NAME = "PARQUET";
 
   @Override
-  public List<SchemaPath> getProjectionFields(DrillTable table, MetadataType metadataLevel, OptionManager options) throws IOException {
-    List<SchemaPath> columnList = new ArrayList<>(super.getProjectionFields(table, metadataLevel, options));
+  public List<SchemaPath> getProjectionFields(DrillTable table, MetadataType metadataLevel, ColumnNamesOptions columnNamesOptions) throws IOException {
+    List<SchemaPath> columnList = new ArrayList<>(super.getProjectionFields(table, metadataLevel, columnNamesOptions));
     if (metadataLevel.includes(MetadataType.ROW_GROUP)) {
-      columnList.add(SchemaPath.getSimplePath(options.getString(ExecConstants.IMPLICIT_ROW_GROUP_INDEX_COLUMN_LABEL)));
-      columnList.add(SchemaPath.getSimplePath(options.getString(ExecConstants.IMPLICIT_ROW_GROUP_START_COLUMN_LABEL)));
-      columnList.add(SchemaPath.getSimplePath(options.getString(ExecConstants.IMPLICIT_ROW_GROUP_LENGTH_COLUMN_LABEL)));
+      columnList.add(SchemaPath.getSimplePath(columnNamesOptions.rowGroupIndex()));
+      columnList.add(SchemaPath.getSimplePath(columnNamesOptions.rowGroupStart()));
+      columnList.add(SchemaPath.getSimplePath(columnNamesOptions.rowGroupLength()));
     }
     return Collections.unmodifiableList(columnList);
   }

@@ -19,7 +19,6 @@ package org.apache.drill.exec.planner.physical;
 
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelTraitSet;
-import org.apache.calcite.rel.InvalidRelException;
 import org.apache.calcite.rel.RelCollation;
 import org.apache.calcite.rel.RelCollationImpl;
 import org.apache.calcite.rel.RelCollations;
@@ -69,38 +68,34 @@ public class MetadataAggPrule extends Prule {
 
     RelTraitSet traits;
 
-    try {
-      if (aggregate.getContext().groupByExpressions().isEmpty()) {
-        DrillDistributionTrait singleDist = DrillDistributionTrait.SINGLETON;
-        RelTraitSet singleDistTrait = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(singleDist);
+    if (aggregate.getContext().groupByExpressions().isEmpty()) {
+      DrillDistributionTrait singleDist = DrillDistributionTrait.SINGLETON;
+      RelTraitSet singleDistTrait = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(singleDist);
 
-        createTransformRequest(call, aggregate, input, singleDistTrait);
+      createTransformRequest(call, aggregate, input, singleDistTrait);
+    } else {
+      // hash distribute on all grouping keys
+      DrillDistributionTrait distOnAllKeys =
+          new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED,
+              ImmutableList.copyOf(getDistributionFields(aggregate.getContext().groupByExpressions())));
+
+      PlannerSettings settings = PrelUtil.getPlannerSettings(call.getPlanner());
+      boolean smallInput =
+          input.estimateRowCount(input.getCluster().getMetadataQuery()) < settings.getSliceTarget();
+
+      // force 2-phase aggregation for bottom aggregate call
+      // to produce sort locally before aggregation is produced for large inputs
+      if (aggregate.getContext().createNewAggregations() && !smallInput) {
+        traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL);
+        RelNode convertedInput = convert(input, traits);
+
+        new TwoPhaseMetadataAggSubsetTransformer(call, collation, distOnAllKeys)
+            .go(aggregate, convertedInput);
       } else {
-        // hash distribute on all grouping keys
-        DrillDistributionTrait distOnAllKeys =
-            new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED,
-                ImmutableList.copyOf(getDistributionFields(aggregate.getContext().groupByExpressions())));
-
-        PlannerSettings settings = PrelUtil.getPlannerSettings(call.getPlanner());
-        boolean smallInput =
-            input.estimateRowCount(input.getCluster().getMetadataQuery()) < settings.getSliceTarget();
-
-        // force 2-phase aggregation for bottom aggregate call
-        // to produce sort locally before aggregation is produced for large inputs
-        if (aggregate.getContext().createNewAggregations() && !smallInput) {
-          traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL);
-          RelNode convertedInput = convert(input, traits);
-
-          new TwoPhaseMetadataAggSubsetTransformer(call, collation, distOnAllKeys)
-              .go(aggregate, convertedInput);
-        } else {
-          // TODO: DRILL-7433 - replace DrillDistributionTrait.SINGLETON with distOnAllKeys when palatalization for MetadataHandler is implemented
-          traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(collation).plus(DrillDistributionTrait.SINGLETON);
-          createTransformRequest(call, aggregate, input, traits);
-        }
+        // TODO: DRILL-7433 - replace DrillDistributionTrait.SINGLETON with distOnAllKeys when parallelization for MetadataHandler is implemented
+        traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(collation).plus(DrillDistributionTrait.SINGLETON);
+        createTransformRequest(call, aggregate, input, traits);
       }
-    } catch (InvalidRelException e) {
-      throw new RuntimeException(e);
     }
   }
 
@@ -174,7 +169,7 @@ public class MetadataAggPrule extends Prule {
    * {@link SubsetTransformer} for creating two-phase metadata aggregation.
    */
   private static class TwoPhaseMetadataAggSubsetTransformer
-      extends SubsetTransformer<MetadataAggRel, InvalidRelException> {
+      extends SubsetTransformer<MetadataAggRel, RuntimeException> {
 
     private final RelCollation collation;
     private final DrillDistributionTrait distributionTrait;

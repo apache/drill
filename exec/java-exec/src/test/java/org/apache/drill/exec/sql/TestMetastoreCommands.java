@@ -2047,16 +2047,16 @@ public class TestMetastoreCommands extends ClusterTest {
 
       String query = "select * from dfs.%s where o_orderpriority = '1-URGENT'";
       long expectedRowCount = 3;
-      int expectedNumFiles = 1;
 
       long actualRowCount = queryBuilder().sql(query, tableName).run().recordCount();
       assertEquals(expectedRowCount, actualRowCount);
-      String numFilesPattern = "numFiles=" + expectedNumFiles;
       String usedMetaPattern = "usedMetastore=true";
 
+      // do not match expected files number since CTAS may create
+      // different files number due to small planner.slice_target value
       queryBuilder().sql(query, tableName)
           .planMatcher()
-          .include(numFilesPattern, usedMetaPattern)
+          .include(usedMetaPattern)
           .exclude("Filter")
           .match();
     } finally {
@@ -2083,17 +2083,17 @@ public class TestMetastoreCommands extends ClusterTest {
 
       String query = String.format("select * from dfs.%s where o_orderpriority = '1-URGENT'", tableName);
       long expectedRowCount = 3;
-      int expectedNumFiles = 1;
 
       long actualRowCount = queryBuilder().sql(query).run().recordCount();
       assertEquals(expectedRowCount, actualRowCount);
 
-      String numFilesPattern = "numFiles=" + expectedNumFiles;
       String usedMetaPattern = "usedMetastore=true";
 
+      // do not match expected files number since CTAS may create
+      // different files number due to small planner.slice_target value
       queryBuilder().sql(query, tableName)
           .planMatcher()
-          .include(numFilesPattern, usedMetaPattern)
+          .include(usedMetaPattern)
           .exclude("Filter")
           .match();
     } finally {

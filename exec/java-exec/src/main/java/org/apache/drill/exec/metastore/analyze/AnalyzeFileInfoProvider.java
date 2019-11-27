@@ -23,10 +23,9 @@ import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.data.NamedExpression;
-import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.metastore.ColumnNamesOptions;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
-import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.ColumnExplorer;
 import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.store.dfs.FormatSelection;
@@ -47,7 +46,7 @@ import java.util.stream.Collectors;
 public abstract class AnalyzeFileInfoProvider implements AnalyzeInfoProvider {
 
   @Override
-  public List<SchemaPath> getSegmentColumns(DrillTable table, OptionManager options) throws IOException {
+  public List<SchemaPath> getSegmentColumns(DrillTable table, ColumnNamesOptions columnNamesOptions) throws IOException {
     FormatSelection selection = (FormatSelection) table.getSelection();
 
     FileSelection fileSelection = selection.getSelection();
@@ -55,16 +54,16 @@ public abstract class AnalyzeFileInfoProvider implements AnalyzeInfoProvider {
       fileSelection = FileMetadataInfoCollector.getExpandedFileSelection(fileSelection);
     }
 
-    return ColumnExplorer.getPartitionColumnNames(fileSelection, options).stream()
+    return ColumnExplorer.getPartitionColumnNames(fileSelection, columnNamesOptions).stream()
         .map(SchemaPath::getSimplePath)
         .collect(Collectors.toList());
   }
 
   @Override
-  public List<SchemaPath> getProjectionFields(DrillTable table, MetadataType metadataLevel, OptionManager options) throws IOException {
-    List<SchemaPath> projectionList = new ArrayList<>(getSegmentColumns(table, options));
-    projectionList.add(SchemaPath.getSimplePath(options.getString(ExecConstants.IMPLICIT_FQN_COLUMN_LABEL)));
-    projectionList.add(SchemaPath.getSimplePath(options.getString(ExecConstants.IMPLICIT_LAST_MODIFIED_TIME_COLUMN_LABEL)));
+  public List<SchemaPath> getProjectionFields(DrillTable table, MetadataType metadataLevel, ColumnNamesOptions columnNamesOptions) throws IOException {
+    List<SchemaPath> projectionList = new ArrayList<>(getSegmentColumns(table, columnNamesOptions));
+    projectionList.add(SchemaPath.getSimplePath(columnNamesOptions.fullyQualifiedName()));
+    projectionList.add(SchemaPath.getSimplePath(columnNamesOptions.lastModifiedTime()));
     return Collections.unmodifiableList(projectionList);
   }
 
@@ -77,8 +76,8 @@ public abstract class AnalyzeFileInfoProvider implements AnalyzeInfoProvider {
   }
 
   @Override
-  public SchemaPath getLocationField(OptionManager optionManager) {
-    return SchemaPath.getSimplePath(optionManager.getString(ExecConstants.IMPLICIT_FQN_COLUMN_LABEL));
+  public SchemaPath getLocationField(ColumnNamesOptions columnNamesOptions) {
+    return SchemaPath.getSimplePath(columnNamesOptions.fullyQualifiedName());
   }
 
   @Override

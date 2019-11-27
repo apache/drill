@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -141,6 +142,9 @@ public abstract class AbstractParquetGroupScan extends AbstractGroupScanWithMeta
    */
   @Override
   public List<EndpointAffinity> getOperatorAffinity() {
+    if (endpointAffinities == null) {
+      this.endpointAffinities = AffinityCreator.getAffinityMap(getRowGroupInfos());
+    }
     return endpointAffinities;
   }
 
@@ -370,11 +374,11 @@ public abstract class AbstractParquetGroupScan extends AbstractGroupScanWithMeta
 
     return getFilterer()
         .rowGroups(prunedRowGroups)
-        .table(getTableMetadata())
-        .partitions(getPartitionsMetadata())
-        .segments(getSegmentsMetadata())
+        .table(tableMetadata)
+        .partitions(partitions)
+        .segments(segments)
         .files(qualifiedFiles)
-        .nonInterestingColumns(getNonInterestingColumnsMetadata())
+        .nonInterestingColumns(nonInterestingColumnsMetadata)
         .matching(matchAllMetadata)
         .build();
   }
@@ -434,17 +438,9 @@ public abstract class AbstractParquetGroupScan extends AbstractGroupScanWithMeta
   }
 
   // protected methods block
-  @Override
-  protected void init() throws IOException {
-    super.init();
-
-    this.partitionColumns = metadataProvider.getPartitionColumns();
-    this.endpointAffinities = AffinityCreator.getAffinityMap(getRowGroupInfos());
-  }
-
   protected Multimap<Path, RowGroupMetadata> getRowGroupsMetadata() {
     if (rowGroups == null) {
-      rowGroups = ((ParquetMetadataProvider) metadataProvider).getRowGroupsMetadataMap();
+      rowGroups = metadataProvider.getRowGroupsMetadataMap();
     }
     return rowGroups;
   }
@@ -535,8 +531,6 @@ public abstract class AbstractParquetGroupScan extends AbstractGroupScanWithMeta
         newScan.fileSet = new HashSet<>(newScan.getRowGroupsMetadata().keySet());
       }
 
-      newScan.endpointAffinities = AffinityCreator.getAffinityMap(newScan.getRowGroupInfos());
-
       return newScan;
     }
 
@@ -598,7 +592,11 @@ public abstract class AbstractParquetGroupScan extends AbstractGroupScanWithMeta
         if (MapUtils.isNotEmpty(files)) {
           files = rowGroups.keySet().stream()
               .map(files::get)
-              .collect(Collectors.toMap(FileMetadata::getPath, Function.identity(), (o, n) -> n));
+              .collect(Collectors.toMap(
+                  FileMetadata::getPath,
+                  Function.identity(),
+                  (o, n) -> n,
+                  LinkedHashMap::new));
         }
       } else {
         this.rowGroups = prunedRowGroups;

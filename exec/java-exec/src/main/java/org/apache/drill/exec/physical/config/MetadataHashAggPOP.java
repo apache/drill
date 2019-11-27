@@ -37,10 +37,10 @@ public class MetadataHashAggPOP extends HashAggregate {
       @JsonProperty("context") MetadataAggregateContext context,
       @JsonProperty("phase") OperatorPhase phase) {
     super(child, phase, context.groupByExpressions(), Collections.emptyList(), 1.0F);
-    this.context = context;
-    this.phase = phase;
     Preconditions.checkArgument(context.createNewAggregations(),
         "Hash aggregate for metadata collecting should be used only for creating new aggregations.");
+    this.context = context;
+    this.phase = phase;
   }
 
   @Override

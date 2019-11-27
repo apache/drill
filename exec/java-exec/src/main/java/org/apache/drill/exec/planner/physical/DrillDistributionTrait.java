@@ -21,8 +21,8 @@ import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelTrait;
 import org.apache.calcite.plan.RelTraitDef;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
-
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 public class DrillDistributionTrait implements RelTrait {
@@ -33,24 +33,24 @@ public class DrillDistributionTrait implements RelTrait {
 
   public static DrillDistributionTrait DEFAULT = ANY;
 
-  private DistributionType type;
-  private final ImmutableList<DistributionField> fields;
+  private final DistributionType type;
+  private final List<DistributionField> fields;
   private PartitionFunction partitionFunction = null;
 
   public DrillDistributionTrait(DistributionType type) {
     assert (type == DistributionType.SINGLETON || type == DistributionType.RANDOM_DISTRIBUTED || type == DistributionType.ANY
             || type == DistributionType.ROUND_ROBIN_DISTRIBUTED || type == DistributionType.BROADCAST_DISTRIBUTED);
     this.type = type;
-    this.fields = ImmutableList.of();
+    this.fields = Collections.emptyList();
   }
 
-  public DrillDistributionTrait(DistributionType type, ImmutableList<DistributionField> fields) {
+  public DrillDistributionTrait(DistributionType type, List<DistributionField> fields) {
     assert (type == DistributionType.HASH_DISTRIBUTED || type == DistributionType.RANGE_DISTRIBUTED);
     this.type = type;
     this.fields = fields;
   }
 
-  public DrillDistributionTrait(DistributionType type, ImmutableList<DistributionField> fields,
+  public DrillDistributionTrait(DistributionType type, List<DistributionField> fields,
       PartitionFunction partitionFunction) {
     assert (type == DistributionType.HASH_DISTRIBUTED || type == DistributionType.RANGE_DISTRIBUTED);
     this.type = type;
@@ -105,7 +105,7 @@ public class DrillDistributionTrait implements RelTrait {
     return this.type;
   }
 
-  public ImmutableList<DistributionField> getFields() {
+  public List<DistributionField> getFields() {
     return fields;
   }
 
@@ -228,7 +228,7 @@ public class DrillDistributionTrait implements RelTrait {
 
     @Override
     public String toString() {
-      return String.format("%s[$%s]", fieldName, super.toString());
+      return String.format("%s(%s)", fieldName, getFieldId());
     }
   }
 }
