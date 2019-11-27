@@ -45,7 +45,7 @@ Drill lists information about the Drillbits that are running, such as the host n
 ## Using an Ad-Hoc Connection to Drill
 To use a custom connection to Drill, but not alter the connection string in `drill-conf` that you normally use, start the Drill shell on an ad-hoc basis using `sqlline`. For example, to start the Drill shell using a particular storage plugin as a schema, use the following command syntax: 
 
-`sqlline –u jdbc:drill:[schema=<storage plugin>;]zk=<zk name>[:<port>][,<zk name2>[:<port>]... ]`
+`sqlline -u jdbc:drill:[schema=<storage plugin>;]zk=<zk name>[:<port>][,<zk name2>[:<port>]... ]`
 
 ### sqlline Arguments and Connection Parameters
 
@@ -57,13 +57,13 @@ To use a custom connection to Drill, but not alter the connection string in `dri
 
 For example, start the Drill shell with the default schema being the `dfs` storage plugin:
 
-`bin/sqlline –u jdbc:drill:schema=dfs;zk=centos26`
+`bin/sqlline -u jdbc:drill:schema=dfs;zk=centos26`
 
 Specifying the storage plugin configuration name when you start up eliminates the need to enter `USE <schema name>` or specify the it in the FROM clause.
 
 The following command starts the Drill shell in a cluster configured to run ZooKeeper on three nodes:
 
-`bin/sqlline –u jdbc:drill:zk=cento23,centos24,centos26:5181`
+`bin/sqlline -u jdbc:drill:zk=cento23,centos24,centos26:5181`
 
 ## Making a Direct Drillbit Connection
 
