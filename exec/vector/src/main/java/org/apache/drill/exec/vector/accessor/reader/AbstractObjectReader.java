@@ -67,4 +67,14 @@ public abstract class AbstractObjectReader implements ObjectReader {
 
   @Override
   public ObjectType type() { return reader().type(); }
+
+  /**
+   * Create NULL reader for the type retaining the {@code schema()}
+   * and readers in case if the type is complex.
+   *
+   * @return special NULL reader associated with the type
+   */
+  protected AbstractObjectReader createNullReader() {
+    throw new UnsupportedOperationException("Null reader type is not supported for " + type());
+  }
 }

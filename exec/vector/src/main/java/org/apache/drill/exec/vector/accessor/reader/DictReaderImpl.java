@@ -18,6 +18,7 @@
 package org.apache.drill.exec.vector.accessor.reader;
 
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
+import org.apache.drill.exec.vector.accessor.ColumnReaderIndex;
 import org.apache.drill.exec.vector.accessor.ObjectReader;
 import org.apache.drill.exec.vector.accessor.ObjectType;
 import org.apache.drill.exec.vector.accessor.ValueType;
@@ -31,18 +32,31 @@ public class DictReaderImpl extends ArrayReaderImpl implements DictReader, Reade
 
   public static class DictObjectReader extends ArrayObjectReader {
 
+    private final DictReaderImpl dictReader;
+
     public DictObjectReader(DictReaderImpl dictReader) {
       super(dictReader);
+      this.dictReader = dictReader;
     }
 
     @Override
     public DictReader dict() {
       return (DictReader) array();
     }
+
+    @Override
+    protected AbstractObjectReader createNullReader() {
+      return new DictObjectReader(dictReader.getNullReader());
+    }
   }
 
   private final AbstractObjectReader keyReader;
   private final AbstractObjectReader valueReader;
+
+  /**
+   * The value reader instance which will be returned in case of not found {@code value}
+   */
+  private AbstractObjectReader nullValueReader;
 
   public DictReaderImpl(ColumnMetadata metadata, VectorAccessor va, AbstractTupleReader.TupleObjectReader entryObjectReader) {
     super(metadata, va, entryObjectReader);
@@ -64,7 +78,11 @@ public class DictReaderImpl extends ArrayReaderImpl implements DictReader, Reade
     if (find(key)) {
       return valueReader;
     }
-    return NullReader.instance();
+
+    if (nullValueReader == null) {
+      nullValueReader = valueReader.createNullReader();
+    }
+    return nullValueReader;
   }
 
   @Override
@@ -130,5 +148,48 @@ public class DictReaderImpl extends ArrayReaderImpl implements DictReader, Reade
     }
     buf.append("}");
     return buf.toString();
+  }
+
+  private DictReaderImpl getNullReader() {
+    return new NullDictReader(schema(), (AbstractTupleReader.TupleObjectReader) elementReader.createNullReader());
+  }
+
+  private static class NullDictReader extends DictReaderImpl {
+
+    private NullDictReader(ColumnMetadata metadata, AbstractTupleReader.TupleObjectReader entryObjectReader) {
+      super(metadata, null, entryObjectReader);
+      this.nullStateReader = NullStateReaders.NULL_STATE_READER;
+    }
+
+    @Override
+    public void bindIndex(ColumnReaderIndex index) {
+    }
+
+    @Override
+    public void bindNullState(NullStateReader nullStateReader) {
+    }
+
+    @Override
+    public void bindBuffer() {
+    }
+
+    @Override
+    public boolean isNull() {
+      return true;
+    }
+
+    @Override
+    public void reposition() {
+    }
+
+    @Override
+    public Map<Object, Object> getObject() {
+      return null;
+    }
+
+    @Override
+    public String getAsString() {
+      return "null";
+    }
   }
 }

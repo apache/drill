@@ -74,6 +74,11 @@ public class ArrayReaderImpl implements ArrayReader, ReaderEvents {
 
     @Override
     public ColumnReader reader() { return arrayReader; }
+
+    @Override
+    protected AbstractObjectReader createNullReader() {
+      return new ArrayObjectReader(arrayReader.getNullReader());
+    }
   }
 
   /**
@@ -130,7 +135,6 @@ public class ArrayReaderImpl implements ArrayReader, ReaderEvents {
      * Given a 0-based index relative to the current array, return an absolute offset
      * vector location for the array value.
      *
-     * @param index 0-based index into the current array
      * @return absolute offset vector location for the array value
      */
 
@@ -169,12 +173,12 @@ public class ArrayReaderImpl implements ArrayReader, ReaderEvents {
     public int logicalIndex() { return position; }
   }
 
+  protected final AbstractObjectReader elementReader;
+  protected ElementReaderIndex elementIndex;
+  protected NullStateReader nullStateReader;
   private final ColumnMetadata schema;
   private final VectorAccessor arrayAccessor;
   private final OffsetVectorReader offsetReader;
-  private final AbstractObjectReader elementReader;
-  protected ElementReaderIndex elementIndex;
-  protected NullStateReader nullStateReader;
 
   public ArrayReaderImpl(ColumnMetadata schema, VectorAccessor va,
       AbstractObjectReader elementReader) {
@@ -434,5 +438,61 @@ public class ArrayReaderImpl implements ArrayReader, ReaderEvents {
     }
     buf.append("]");
     return buf.toString();
+  }
+
+  private ArrayReaderImpl getNullReader() {
+    return new NullArrayReader(schema, elementReader.createNullReader());
+  }
+
+  private static class NullArrayReader extends ArrayReaderImpl {
+
+    private NullArrayReader(ColumnMetadata schema, AbstractObjectReader elementReader) {
+      super(schema, null, elementReader);
+      this.nullStateReader = NullStateReaders.NULL_STATE_READER;
+    }
+
+    @Override
+    public void bindIndex(ColumnReaderIndex index) {
+    }
+
+    @Override
+    public void bindNullState(NullStateReader nullStateReader) {
+    }
+
+    @Override
+    public void reposition() {
+    }
+
+    @Override
+    public boolean next() {
+      return false;
+    }
+
+    @Override
+    public int size() {
+      return -1;
+    }
+
+    @Override
+    public void setPosn(int posn) {
+    }
+
+    @Override
+    public void rewind() {
+    }
+
+    @Override
+    public void bindBuffer() {
+    }
+
+    @Override
+    public Object getObject() {
+      return null;
+    }
+
+    @Override
+    public String getAsString() {
+      return "null";
+    }
   }
 }

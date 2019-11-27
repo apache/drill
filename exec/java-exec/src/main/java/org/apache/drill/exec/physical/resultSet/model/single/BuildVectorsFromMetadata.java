@@ -70,12 +70,10 @@ public class BuildVectorsFromMetadata {
 
   private ValueVector buildVector(ColumnMetadata metadata) {
     switch (metadata.structureType()) {
+    case DICT:
+      return buildDict(metadata);
     case TUPLE:
-      if (!metadata.isDict()) {
-        return buildMap(metadata);
-      } else {
-        return buildDict(metadata);
-      }
+      return buildMap(metadata);
     case VARIANT:
       if (metadata.isArray()) {
         return builList(metadata);

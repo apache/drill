@@ -44,7 +44,7 @@ public class DictEntryReader extends AbstractTupleReader {
                                         AbstractObjectReader[] readers) {
     DictEntryReader entryReader = new DictEntryReader(schema, accessor, readers);
     entryReader.bindNullState(NullStateReaders.REQUIRED_STATE_READER);
-    return new TupleObjectReader(entryReader);
+    return new TupleObjectReader<>(entryReader);
   }
 
   public static TupleObjectReader build(ColumnMetadata schema,
@@ -78,5 +78,48 @@ public class DictEntryReader extends AbstractTupleReader {
   @Override
   public TupleMetadata tupleSchema() {
     return schema.tupleSchema();
+  }
+
+  @Override
+  protected DictEntryReader getNullReader() {
+    AbstractObjectReader[] nullReaders = new AbstractObjectReader[readers.length];
+    for (int i = 0; i < readers.length; i++) {
+      nullReaders[i] = readers[i].createNullReader();
+    }
+    return new NullEntryReader(schema, nullReaders);
+  }
+
+  private static class NullEntryReader extends DictEntryReader {
+
+    private NullEntryReader(ColumnMetadata metadata, AbstractObjectReader[] keyValueReaders) {
+      super(metadata, null, keyValueReaders);
+      this.nullStateReader = NullStateReaders.NULL_STATE_READER;
+    }
+
+    @Override
+    public void bindIndex(ColumnReaderIndex index) {
+    }
+
+    @Override
+    public void bindNullState(NullStateReader nullStateReader) {
+    }
+
+    @Override
+    public void bindBuffer() {
+    }
+
+    @Override
+    public void reposition() {
+    }
+
+    @Override
+    public Object getObject() {
+      return null;
+    }
+
+    @Override
+    public String getAsString() {
+      return "null";
+    }
   }
 }

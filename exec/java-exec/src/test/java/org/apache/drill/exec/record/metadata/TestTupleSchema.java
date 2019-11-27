@@ -947,7 +947,7 @@ public class TestTupleSchema extends SubOperatorTest {
     DictColumnMetadata dictCol = (DictColumnMetadata) col;
     assertNull(dictCol.parentTuple());
 
-    assertEquals(ColumnMetadata.StructureType.TUPLE, col.structureType());
+    assertEquals(ColumnMetadata.StructureType.DICT, col.structureType());
     assertFalse(col.isNullable());
     assertFalse(col.isArray());
     assertFalse(col.isVariableWidth());

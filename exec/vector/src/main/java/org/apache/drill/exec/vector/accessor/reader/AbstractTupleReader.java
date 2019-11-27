@@ -37,13 +37,14 @@ import org.apache.drill.exec.vector.accessor.VariantReader;
 
 public abstract class AbstractTupleReader implements TupleReader, ReaderEvents {
 
-  public static class TupleObjectReader extends AbstractObjectReader {
+  public static class TupleObjectReader<T extends AbstractTupleReader> extends AbstractObjectReader {
 
-    private final AbstractTupleReader tupleReader;
+    protected final T tupleReader;
 
-    public TupleObjectReader(AbstractTupleReader tupleReader) {
+    public TupleObjectReader(T tupleReader) {
       this.tupleReader = tupleReader;
     }
+
     @Override
     public TupleReader tuple() {
       return tupleReader;
@@ -64,12 +65,17 @@ public abstract class AbstractTupleReader implements TupleReader, ReaderEvents {
 
     @Override
     public ColumnReader reader() { return tupleReader; }
+
+    @Override
+    protected AbstractObjectReader createNullReader() {
+      return new TupleObjectReader<>(tupleReader.getNullReader());
+    }
   }
 
-  private final AbstractObjectReader readers[];
+  protected final AbstractObjectReader[] readers;
   protected NullStateReader nullStateReader;
 
-  protected AbstractTupleReader(AbstractObjectReader readers[]) {
+  protected AbstractTupleReader(AbstractObjectReader[] readers) {
     this.readers = readers;
   }
 
@@ -113,7 +119,8 @@ public abstract class AbstractTupleReader implements TupleReader, ReaderEvents {
   public ObjectReader column(String colName) {
     int index = tupleSchema().index(colName);
     if (index == -1) {
-      return null; }
+      return null;
+    }
     return readers[index];
   }
 
@@ -205,5 +212,9 @@ public abstract class AbstractTupleReader implements TupleReader, ReaderEvents {
     }
     buf.append("}");
     return buf.toString();
+  }
+
+  protected AbstractTupleReader getNullReader() {
+    throw new UnsupportedOperationException("Null reader is not supported for " + type());
   }
 }

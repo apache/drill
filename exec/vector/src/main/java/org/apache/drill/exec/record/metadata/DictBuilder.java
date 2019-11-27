@@ -172,6 +172,11 @@ public class DictBuilder implements SchemaContainer {
       builder.setWidth(type.getWidth());
     }
 
+    if (Types.isRepeated(type)) {
+      schema.add(SchemaBuilder.columnSchema(name, type.getMinorType(), type.getMode()));
+      return;
+    }
+
     schema.add(builder.build());
   }
 

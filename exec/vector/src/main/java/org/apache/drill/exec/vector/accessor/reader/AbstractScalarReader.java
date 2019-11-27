@@ -62,6 +62,11 @@ public abstract class AbstractScalarReader implements ScalarReader, ReaderEvents
 
     @Override
     public ColumnReader reader() { return scalarReader; }
+
+    @Override
+    protected AbstractObjectReader createNullReader() {
+      return nullReader(scalarReader.schema());
+    }
   }
 
   public static class NullReader extends AbstractScalarReader {

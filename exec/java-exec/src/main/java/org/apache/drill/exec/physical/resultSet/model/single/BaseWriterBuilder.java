@@ -100,7 +100,7 @@ public abstract class BaseWriterBuilder {
     if (vector.getField().getType().getMode() == DataMode.REPEATED) {
       ValueVector dataVector = ((RepeatedDictVector) vector).getDataVector();
       List<AbstractObjectWriter> writers = buildMap((AbstractMapVector) dataVector, descrip);
-      return ObjectDictWriter.buildDictArray((RepeatedDictVector) vector, descrip.metadata, writers);
+      return ObjectDictWriter.buildDictArray(descrip.metadata, (RepeatedDictVector) vector, writers);
     } else {
       List<AbstractObjectWriter> writers = buildMap((AbstractMapVector) vector, descrip);
       return ObjectDictWriter.buildDict(descrip.metadata, (DictVector) vector, writers);

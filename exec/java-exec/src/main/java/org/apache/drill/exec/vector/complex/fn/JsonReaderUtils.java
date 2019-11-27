@@ -181,6 +181,10 @@ public class JsonReaderUtils {
   private static void writeColumn(ColumnMetadata columnMetadata,
       BaseWriter.MapWriter fieldWriter, boolean allTextMode) {
     switch (columnMetadata.structureType()) {
+      case DICT:
+        writeSchemaColumns(
+            columnMetadata.tupleSchema(), fieldWriter.dict(columnMetadata.name()), allTextMode);
+        break;
       case TUPLE:
         writeSchemaColumns(
             columnMetadata.tupleSchema(), fieldWriter.map(columnMetadata.name()), allTextMode);
@@ -213,6 +217,9 @@ public class JsonReaderUtils {
   private static void writeArrayColumn(ColumnMetadata columnMetadata,
       BaseWriter.ListWriter fieldWriter, boolean allTextMode) {
     switch (columnMetadata.structureType()) {
+      case DICT:
+        writeSchemaColumns(columnMetadata.tupleSchema(), fieldWriter.dict(), allTextMode);
+        break;
       case TUPLE:
         writeSchemaColumns(columnMetadata.tupleSchema(), fieldWriter.map(), allTextMode);
         break;

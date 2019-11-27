@@ -69,4 +69,9 @@ public class DictColumnMetadata extends AbstractMapColumnMetadata {
   protected String getStringType() {
     return "MAP";
   }
+
+  @Override
+  public StructureType structureType() {
+    return StructureType.DICT;
+  }
 }

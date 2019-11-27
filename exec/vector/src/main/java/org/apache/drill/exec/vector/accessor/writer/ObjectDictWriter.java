@@ -25,6 +25,8 @@ import org.apache.drill.exec.vector.accessor.ObjectWriter;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.ValueType;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
+import org.apache.drill.exec.vector.accessor.writer.dummy.DummyArrayWriter;
+import org.apache.drill.exec.vector.accessor.writer.dummy.DummyDictWriter;
 import org.apache.drill.exec.vector.complex.DictVector;
 import org.apache.drill.exec.vector.complex.RepeatedDictVector;
 
@@ -40,8 +42,8 @@ public class ObjectDictWriter extends ObjectArrayWriter implements DictWriter {
 
   public static class DictObjectWriter extends AbstractArrayWriter.ArrayObjectWriter {
 
-    public DictObjectWriter(ObjectDictWriter dictWriter) {
-      super(dictWriter);
+    public DictObjectWriter(DictWriter dictWriter) {
+      super((AbstractArrayWriter) dictWriter);
     }
 
     @Override
@@ -60,25 +62,41 @@ public class ObjectDictWriter extends ObjectArrayWriter implements DictWriter {
 
   public static ObjectDictWriter.DictObjectWriter buildDict(ColumnMetadata metadata, DictVector vector,
                                                             List<AbstractObjectWriter> keyValueWriters) {
-    DictEntryWriter.DictEntryObjectWriter entryObjectWriter = DictEntryWriter.buildDictEntryWriter(metadata, keyValueWriters);
-    ObjectDictWriter objectDictWriter = new ObjectDictWriter(metadata, vector.getOffsetVector(), entryObjectWriter);
+    DictEntryWriter.DictEntryObjectWriter entryObjectWriter =
+        DictEntryWriter.buildDictEntryWriter(metadata, keyValueWriters, vector);
+    DictWriter objectDictWriter;
+    if (vector != null) {
+      objectDictWriter = new ObjectDictWriter(metadata, vector.getOffsetVector(), entryObjectWriter);
+    } else {
+      objectDictWriter = new DummyDictWriter(metadata, entryObjectWriter);
+    }
     return new ObjectDictWriter.DictObjectWriter(objectDictWriter);
   }
 
-  public static ArrayObjectWriter buildDictArray(RepeatedDictVector vector, ColumnMetadata metadata,
+  public static ArrayObjectWriter buildDictArray(ColumnMetadata metadata, RepeatedDictVector vector,
                                                  List<AbstractObjectWriter> keyValueWriters) {
-    final DictVector dataVector = (DictVector) vector.getDataVector();
+    final DictVector dataVector;
+    if (vector != null) {
+      dataVector = (DictVector) vector.getDataVector();
+    } else {
+      dataVector = null;
+    }
     ObjectDictWriter.DictObjectWriter dictWriter = buildDict(metadata, dataVector, keyValueWriters);
-    AbstractArrayWriter arrayWriter = new ObjectArrayWriter(metadata, vector.getOffsetVector(), dictWriter);
+    AbstractArrayWriter arrayWriter;
+    if (vector != null) {
+      arrayWriter = new ObjectArrayWriter(metadata, vector.getOffsetVector(), dictWriter);
+    } else {
+      arrayWriter = new DummyArrayWriter(metadata, dictWriter);
+    }
     return new ArrayObjectWriter(arrayWriter);
   }
 
-  private static final int FIELD_KEY_ORDINAL = 0;
-  private static final int FIELD_VALUE_ORDINAL = 1;
+  public static final int FIELD_KEY_ORDINAL = 0;
+  public static final int FIELD_VALUE_ORDINAL = 1;
 
   private final DictEntryWriter.DictEntryObjectWriter entryObjectWriter;
 
-  private ObjectDictWriter(ColumnMetadata schema, UInt4Vector offsetVector,
+  public ObjectDictWriter(ColumnMetadata schema, UInt4Vector offsetVector,
                            DictEntryWriter.DictEntryObjectWriter entryObjectWriter) {
     super(schema, offsetVector, entryObjectWriter);
     this.entryObjectWriter = entryObjectWriter;
@@ -107,25 +125,24 @@ public class ObjectDictWriter extends ObjectArrayWriter implements DictWriter {
   @Override
   @SuppressWarnings("unchecked")
   public void setObject(Object object) {
+    if (object == null) {
+      return;
+    }
+
     if (object instanceof Map) {
       Map<Object, Object> map = (Map<Object, Object>) object;
       for (Map.Entry<Object, Object> entry : map.entrySet()) {
-        entryObjectWriter.setObject(0, entry.getKey());
-        entryObjectWriter.setObject(1, entry.getValue());
+        entryObjectWriter.setKeyValue(entry.getKey(), entry.getValue());
         save();
       }
     } else {
-      if (object == null) {
-        return;
-      }
       int size = Array.getLength(object);
-      for (int i = 0; i < size; i++) {
-        Object value = Array.get(object, i);
-        int col = i % 2; // 0 corresponds to key and 1 - to value
-        entryObjectWriter.setObject(col, value);
-        if (col == 1) { // save only after key-value pair is written
-          save();
-        }
+      assert size % 2 == 0;
+      for (int i = 0; i < size; i += 2) {
+        Object key = Array.get(object, i);
+        Object value = Array.get(object, i + 1);
+        entryObjectWriter.setKeyValue(key, value);
+        save();
       }
     }
   }

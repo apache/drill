@@ -54,7 +54,7 @@ package org.apache.drill.exec.vector.accessor;
  * without having to first retrieve the variant (although the indirect
  * route is, of course, available.)
  *
- * @see {@link ArrayReader}
+ * @see ArrayReader
  */
 
 public interface ArrayWriter extends ColumnWriter {
@@ -87,6 +87,7 @@ public interface ArrayWriter extends ColumnWriter {
   TupleWriter tuple();
   ArrayWriter array();
   VariantWriter variant();
+  DictWriter dict();
 
   /**
    * When the array contains a tuple or an array, call <tt>save()</tt>

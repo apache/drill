@@ -21,6 +21,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.math.BigDecimal;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -261,5 +263,22 @@ public class RowSetUtilities {
 
   public static BigDecimal dec(String value) {
     return new BigDecimal(value);
+  }
+
+  /**
+   * Convenience method to bootstrap a map object given key-value sequence.
+   *
+   * @param entry key-value sequence
+   * @return map containing key-value pairs from passed sequence
+   */
+  public static Map<Object, Object> map(Object... entry) {
+    assert entry.length % 2 == 0 : "Array length should be even.";
+
+    // LinkedHashMap is chosen to preserve entry order
+    Map<Object, Object> map = new LinkedHashMap<>();
+    for (int i = 0; i < entry.length; i += 2) {
+      map.put(entry[i], entry[i + 1]);
+    }
+    return map;
   }
 }

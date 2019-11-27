@@ -75,16 +75,21 @@ public class UnionReaderImpl implements VariantReader, ReaderEvents {
 
     @Override
     public ColumnReader reader() { return reader; }
+
+    @Override
+    protected AbstractObjectReader createNullReader() {
+      return new UnionObjectReader(reader.getNullReader());
+    }
   }
 
   private final ColumnMetadata schema;
   private final VectorAccessor unionAccessor;
   private final VectorAccessor typeAccessor;
   private final UInt1ColumnReader typeReader;
-  private final AbstractObjectReader variants[];
+  private final AbstractObjectReader[] variants;
   protected NullStateReader nullStateReader;
 
-  public UnionReaderImpl(ColumnMetadata schema, VectorAccessor va, AbstractObjectReader variants[]) {
+  public UnionReaderImpl(ColumnMetadata schema, VectorAccessor va, AbstractObjectReader[] variants) {
     this.schema = schema;
     this.unionAccessor = va;
     typeReader = new UInt1ColumnReader();
@@ -115,6 +120,7 @@ public class UnionReaderImpl implements VariantReader, ReaderEvents {
       NullStateReader nullReader;
       MinorType type = MinorType.values()[i];
       switch(type) {
+      case DICT:
       case MAP:
       case LIST:
         nullReader = new NullStateReaders.ComplexMemberStateReader(typeReader, type);
@@ -267,5 +273,52 @@ public class UnionReaderImpl implements VariantReader, ReaderEvents {
       return "null";
     }
     return requireReader(type).getAsString();
+  }
+
+  private UnionReaderImpl getNullReader() {
+    AbstractObjectReader[] nullVariants = new AbstractObjectReader[variants.length];
+    for (int i = 0; i < variants.length; i++) {
+      nullVariants[i] = variants[i].createNullReader();
+    }
+    return new NullUnionReader(schema(), unionAccessor, nullVariants);
+  }
+
+  private static class NullUnionReader extends UnionReaderImpl {
+
+    private NullUnionReader(ColumnMetadata metadata, VectorAccessor va, AbstractObjectReader[] variants) {
+      super(metadata, va, variants);
+      this.nullStateReader = NullStateReaders.NULL_STATE_READER;
+    }
+
+    @Override
+    public void bindIndex(ColumnReaderIndex index) {
+    }
+
+    @Override
+    public void bindNullState(NullStateReader nullStateReader) {
+    }
+
+    @Override
+    public void bindBuffer() {
+    }
+
+    @Override
+    public boolean isNull() {
+      return true;
+    }
+
+    @Override
+    public void reposition() {
+    }
+
+    @Override
+    public Object getObject() {
+      return null;
+    }
+
+    @Override
+    public String getAsString() {
+      return "null";
+    }
   }
 }

@@ -18,6 +18,7 @@
 package org.apache.drill.exec.physical.rowSet;
 
 import static org.apache.drill.test.rowSet.RowSetUtilities.intArray;
+import static org.apache.drill.test.rowSet.RowSetUtilities.map;
 import static org.apache.drill.test.rowSet.RowSetUtilities.objArray;
 import static org.apache.drill.test.rowSet.RowSetUtilities.singleObjArray;
 import static org.junit.Assert.assertEquals;
@@ -30,7 +31,6 @@ import static org.junit.Assert.fail;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.drill.categories.RowSetTests;
@@ -600,8 +600,8 @@ public class TestRowSet extends SubOperatorTest {
     final TupleMetadata schema = new SchemaBuilder()
         .add("id", MinorType.INT)
         .addDict(dictName, MinorType.INT)
-        .value(MinorType.VARCHAR) // required int
-        .resumeSchema()
+          .value(MinorType.VARCHAR) // required int
+          .resumeSchema()
         .buildSchema();
     final ExtendableRowSet rowSet = fixture.rowSet(schema);
     final RowSetWriter writer = rowSet.writer();
@@ -709,29 +709,11 @@ public class TestRowSet extends SubOperatorTest {
     assertEquals(3, dictVector.getAccessor().getValueCount());
 
     final SingleRowSet expected = fixture.rowSetBuilder(schema)
-        .addRow(1, objArray(11, "a", 12, "b"))
-        .addRow(2, objArray(21, "c"))
-        .addRow(3, objArray(31, "d", 32, "e"))
+        .addRow(1, map(11, "a", 12, "b"))
+        .addRow(2, map(21, "c"))
+        .addRow(3, map(31, "d", 32, "e"))
         .build();
     RowSetUtilities.verify(expected, actual);
-  }
-
-  /**
-   * Utility method to bootstrap a map object easily.
-   *
-   * @param entry key-value sequence
-   * @return map containing key-value pairs from passed sequence
-   */
-  private Map<Object, Object> map(Object... entry) {
-    if (entry.length % 2 == 1) {
-      throw new IllegalArgumentException("Array length should be even.");
-    }
-
-    Map<Object, Object> map = new HashMap<>();
-    for (int i = 0; i < entry.length; i += 2) {
-      map.put(entry[i], entry[i + 1]);
-    }
-    return map;
   }
 
   @Test
@@ -742,11 +724,11 @@ public class TestRowSet extends SubOperatorTest {
     final TupleMetadata schema = new SchemaBuilder()
         .add("id", MinorType.INT)
         .addDict(dictName, MinorType.INT)
-        .mapValue()
-          .add("a", MinorType.INT)
-          .add("b", MinorType.VARDECIMAL, 8, bScale)
-          .resumeDict()
-        .resumeSchema()
+          .mapValue()
+            .add("a", MinorType.INT)
+            .add("b", MinorType.VARDECIMAL, 8, bScale)
+            .resumeDict()
+          .resumeSchema()
         .buildSchema();
     final ExtendableRowSet rowSet = fixture.rowSet(schema);
     final RowSetWriter writer = rowSet.writer();
@@ -887,12 +869,12 @@ public class TestRowSet extends SubOperatorTest {
     assertEquals(3, dictVector.getAccessor().getValueCount());
 
     final SingleRowSet expected = fixture.rowSetBuilder(schema)
-        .addRow(1, objArray(
+        .addRow(1, map(
             11, objArray(10, BigDecimal.valueOf(1.0)),
             12, objArray(11, BigDecimal.valueOf(2.0))
         ))
-        .addRow(2, objArray(21, objArray(20, BigDecimal.valueOf(3.0))))
-        .addRow(3, objArray(
+        .addRow(2, map(21, objArray(20, BigDecimal.valueOf(3.0))))
+        .addRow(3, map(
             31, objArray(30, BigDecimal.valueOf(4.0)),
             32, objArray(31, BigDecimal.valueOf(5.0)),
             33, objArray(32, BigDecimal.valueOf(6.0))
@@ -907,8 +889,8 @@ public class TestRowSet extends SubOperatorTest {
     final TupleMetadata schema = new SchemaBuilder()
         .add("id", MinorType.INT)
         .addDictArray(dictName, MinorType.INT)
-        .value(MinorType.VARCHAR)
-        .resumeSchema()
+          .value(MinorType.VARCHAR)
+          .resumeSchema()
         .buildSchema();
     final ExtendableRowSet rowSet = fixture.rowSet(schema);
     final RowSetWriter writer = rowSet.writer();
@@ -922,7 +904,7 @@ public class TestRowSet extends SubOperatorTest {
     final ArrayWriter dictArrayWriter = writer.column(1).array();
     assertEquals(ObjectType.ARRAY, dictArrayWriter.entryType());
 
-    DictWriter dictWriter = (DictWriter) dictArrayWriter.array();
+    DictWriter dictWriter = dictArrayWriter.dict();
 
     assertEquals(ValueType.INTEGER, dictWriter.keyType());
     assertEquals(ObjectType.SCALAR, dictWriter.valueType());
@@ -1068,11 +1050,11 @@ public class TestRowSet extends SubOperatorTest {
     assertEquals(3, vector.getAccessor().getValueCount());
 
     final SingleRowSet expected = fixture.rowSetBuilder(schema)
-        .addRow(1, objArray(objArray(1, "a", 2, "b"), objArray(3, "c")))
-        .addRow(2, objArray(singleObjArray(objArray(11, "d", 12, "e"))))
+        .addRow(1, objArray(map(1, "a", 2, "b"), map(3, "c")))
+        .addRow(2, objArray(singleObjArray(map(11, "d", 12, "e"))))
         .addRow(3, objArray(
-            objArray(21, "f", 22, "g", 23, "h"),
-            objArray(24, "i", 25, "j", 26, "k", 27, "l", 28, "m")))
+            map(21, "f", 22, "g", 23, "h"),
+            map(24, "i", 25, "j", 26, "k", 27, "l", 28, "m")))
         .build();
     RowSetUtilities.verify(expected, actual);
   }

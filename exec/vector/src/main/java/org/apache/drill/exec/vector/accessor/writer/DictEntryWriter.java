@@ -21,8 +21,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
+import org.apache.drill.exec.vector.accessor.ColumnReader;
 import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
+import org.apache.drill.exec.vector.complex.DictVector;
 
 /**
  * Writer for a Dict entry. The entry is a special kind of tuple.
@@ -35,8 +37,9 @@ public class DictEntryWriter extends AbstractTupleWriter {
       super(entryWriter);
     }
 
-    public void setObject(int col, Object value) {
-      tupleWriter.set(col, value);
+    void setKeyValue(Object key, Object value) {
+      tupleWriter.set(0, key);
+      tupleWriter.set(1, value);
     }
 
     @Override
@@ -48,10 +51,32 @@ public class DictEntryWriter extends AbstractTupleWriter {
     }
   }
 
+  private static class DummyDictEntryWriter extends DictEntryWriter {
+
+    DummyDictEntryWriter(ColumnMetadata schema, List<AbstractObjectWriter> writers) {
+      super(schema, writers);
+    }
+
+    @Override
+    public boolean isProjected() {
+      return false;
+    }
+
+    @Override
+    public void copy(ColumnReader from) {
+    }
+  }
+
   public static DictEntryObjectWriter buildDictEntryWriter(ColumnMetadata schema,
-                                                           List<AbstractObjectWriter> keyValueWriters) {
+                                                           List<AbstractObjectWriter> keyValueWriters,
+                                                           DictVector vector) {
     assert keyValueWriters.size() == 2;
-    DictEntryWriter dictEntryWriter = new DictEntryWriter(schema, keyValueWriters);
+    DictEntryWriter dictEntryWriter;
+    if (vector != null) {
+      dictEntryWriter = new DictEntryWriter(schema, keyValueWriters);
+    } else {
+      dictEntryWriter = new DummyDictEntryWriter(schema, keyValueWriters);
+    }
     return new DictEntryObjectWriter(dictEntryWriter);
   }
 

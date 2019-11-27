@@ -24,6 +24,7 @@ import org.apache.drill.exec.vector.accessor.ArrayWriter;
 import org.apache.drill.exec.vector.accessor.ColumnReader;
 import org.apache.drill.exec.vector.accessor.ColumnWriter;
 import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
+import org.apache.drill.exec.vector.accessor.DictWriter;
 import org.apache.drill.exec.vector.accessor.ObjectReader;
 import org.apache.drill.exec.vector.accessor.ObjectType;
 import org.apache.drill.exec.vector.accessor.ObjectWriter;
@@ -316,6 +317,11 @@ public abstract class AbstractArrayWriter implements ArrayWriter, WriterEvents {
   @Override
   public VariantWriter variant() {
     return elementObjWriter.variant();
+  }
+
+  @Override
+  public DictWriter dict() {
+    return elementObjWriter.dict();
   }
 
   @Override
