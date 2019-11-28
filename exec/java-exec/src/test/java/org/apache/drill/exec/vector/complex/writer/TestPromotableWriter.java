@@ -25,9 +25,10 @@ import org.apache.drill.exec.util.BatchPrinter;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
+import org.apache.drill.test.BaseTest;
 import org.junit.Test;
 
-public class TestPromotableWriter {
+public class TestPromotableWriter extends BaseTest {
 
   @Test
   public void list() throws Exception {

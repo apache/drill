@@ -34,13 +34,14 @@ import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
 import org.apache.drill.exec.vector.complex.writer.FieldWriter;
 import org.apache.drill.exec.vector.complex.writer.IntWriter;
+import org.apache.drill.test.BaseTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import io.netty.buffer.DrillBuf;
 
-public class VectorTest {
+public class VectorTest extends BaseTest {
 
   private static RootAllocator allocator;
 

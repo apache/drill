@@ -27,6 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.drill.categories.MongoStorageTest;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.apache.drill.test.BaseTest;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.junit.AfterClass;
@@ -67,7 +68,7 @@ import de.flapdoodle.embed.process.runtime.Network;
 @SuiteClasses({ TestMongoFilterPushDown.class, TestMongoProjectPushDown.class,
     TestMongoQueries.class, TestMongoChunkAssignment.class })
 @Category({SlowTest.class, MongoStorageTest.class})
-public class MongoTestSuit implements MongoTestConstants {
+public class MongoTestSuit extends BaseTest implements MongoTestConstants {
 
   private static final Logger logger = LoggerFactory.getLogger(MongoTestSuit.class);
   protected static MongoClient mongoClient;

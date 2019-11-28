@@ -24,6 +24,7 @@ import org.apache.drill.categories.SlowTest;
 import org.apache.drill.exec.ZookeeperTestUtil;
 import org.apache.drill.exec.store.kafka.cluster.EmbeddedKafkaCluster;
 import org.apache.drill.exec.store.kafka.decoders.MessageReaderFactoryTest;
+import org.apache.drill.test.BaseTest;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.CreateTopicsResult;
 import org.apache.kafka.clients.admin.NewTopic;
@@ -50,7 +51,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Category({KafkaStorageTest.class, SlowTest.class})
 @RunWith(Suite.class)
 @SuiteClasses({KafkaQueriesTest.class, MessageIteratorTest.class, MessageReaderFactoryTest.class, KafkaFilterPushdownTest.class})
-public class TestKafkaSuit {
+public class TestKafkaSuit extends BaseTest {
   private static final Logger logger = LoggerFactory.getLogger(LoggerFactory.class);
 
   private static final String LOGIN_CONF_RESOURCE_PATHNAME = "login.conf";

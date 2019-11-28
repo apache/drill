@@ -24,6 +24,7 @@ import org.apache.drill.metastore.statistics.ColumnStatistics;
 import org.apache.drill.metastore.statistics.ColumnStatisticsKind;
 import org.apache.drill.metastore.statistics.StatisticsHolder;
 import org.apache.drill.metastore.statistics.TableStatisticsKind;
+import org.apache.drill.test.BaseTest;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -36,7 +37,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 @Category(MetastoreTest.class)
-public class MetadataSerDeTest {
+public class MetadataSerDeTest extends BaseTest {
 
   @Test
   public void testStatisticsHolderSerialization() {

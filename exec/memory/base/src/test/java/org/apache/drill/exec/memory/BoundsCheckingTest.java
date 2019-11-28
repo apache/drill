@@ -20,6 +20,7 @@ package org.apache.drill.exec.memory;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
+import org.apache.drill.test.BaseTest;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -31,8 +32,7 @@ import io.netty.util.IllegalReferenceCountException;
 
 import static org.junit.Assert.fail;
 
-public class BoundsCheckingTest
-{
+public class BoundsCheckingTest extends BaseTest {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BoundsCheckingTest.class);
 
   private static boolean old;

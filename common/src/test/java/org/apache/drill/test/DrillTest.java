@@ -23,7 +23,6 @@ import java.lang.management.MemoryMXBean;
 import java.util.List;
 
 import org.apache.drill.common.util.DrillStringUtils;
-import org.apache.drill.common.util.GuavaPatcher;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -37,12 +36,11 @@ import org.slf4j.Logger;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class DrillTest {
+public class DrillTest extends BaseTest {
 
   protected static final ObjectMapper objectMapper;
 
   static {
-    GuavaPatcher.patch();
     System.setProperty("line.separator", "\n");
     objectMapper = new ObjectMapper();
   }

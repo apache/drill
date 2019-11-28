@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.drill.categories.KuduStorageTest;
+import org.apache.drill.test.BaseTest;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.apache.kudu.ColumnSchema;
@@ -41,7 +42,7 @@ import org.junit.experimental.categories.Category;
 
 @Ignore("requires remote kudu server")
 @Category(KuduStorageTest.class)
-public class TestKuduConnect {
+public class TestKuduConnect extends BaseTest {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestKuduConnect.class);
 
   public static final String KUDU_MASTER = "172.31.1.99";

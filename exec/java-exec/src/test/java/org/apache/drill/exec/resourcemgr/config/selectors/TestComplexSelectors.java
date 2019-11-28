@@ -25,6 +25,7 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.resourcemgr.config.exception.RMConfigException;
 import org.apache.drill.exec.server.options.OptionValue;
+import org.apache.drill.test.BaseTest;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -41,7 +42,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @Category(ResourceManagerTest.class)
-public final class TestComplexSelectors {
+public final class TestComplexSelectors extends BaseTest {
 
   private static final Map<String, String> tagSelectorConfig1 = new HashMap<>();
 

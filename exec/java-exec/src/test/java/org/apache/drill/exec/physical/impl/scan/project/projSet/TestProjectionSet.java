@@ -39,6 +39,7 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.accessor.convert.ColumnConversionFactory;
 import org.apache.drill.exec.vector.accessor.convert.ConvertStringToInt;
 import org.apache.drill.exec.vector.accessor.convert.StandardConversions;
+import org.apache.drill.test.BaseTest;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -57,7 +58,7 @@ import org.junit.experimental.categories.Category;
  */
 
 @Category(RowSetTests.class)
-public class TestProjectionSet {
+public class TestProjectionSet extends BaseTest {
 
   /**
    * Empty projection, no schema

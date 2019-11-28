@@ -42,11 +42,12 @@ import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.vector.VarCharVector;
+import org.apache.drill.test.BaseTest;
 import org.junit.Assert;
 import org.junit.Test;
 import java.util.Iterator;
 
-public class BloomFilterTest {
+public class BloomFilterTest extends BaseTest {
   public static DrillConfig c = DrillConfig.create();
 
   class TestRecordBatch implements RecordBatch {

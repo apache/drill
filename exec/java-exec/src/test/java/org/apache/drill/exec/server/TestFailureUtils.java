@@ -18,6 +18,7 @@
 package org.apache.drill.exec.server;
 
 import org.apache.drill.exec.exception.OutOfMemoryException;
+import org.apache.drill.test.BaseTest;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -25,7 +26,7 @@ import java.io.IOException;
 
 import static org.apache.drill.exec.server.FailureUtils.DIRECT_MEMORY_OOM_MESSAGE;
 
-public class TestFailureUtils {
+public class TestFailureUtils extends BaseTest {
   @Test
   public void testIsDirectMemoryOOM() {
     Assert.assertTrue(FailureUtils.isDirectMemoryOOM(new OutOfMemoryException()));

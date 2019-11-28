@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.test.BaseDirTestWatcher;
+import org.apache.drill.test.BaseTest;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -34,7 +35,7 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-public class TestDotDrillUtil {
+public class TestDotDrillUtil extends BaseTest {
 
   private static File tempDir;
   private static Path tempPath;

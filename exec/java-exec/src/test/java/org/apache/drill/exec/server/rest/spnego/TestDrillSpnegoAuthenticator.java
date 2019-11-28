@@ -30,6 +30,7 @@ import org.apache.drill.exec.server.rest.WebServerConstants;
 import org.apache.drill.exec.server.rest.auth.DrillSpnegoAuthenticator;
 import org.apache.drill.exec.server.rest.auth.DrillSpnegoLoginService;
 import org.apache.drill.test.BaseDirTestWatcher;
+import org.apache.drill.test.BaseTest;
 import org.apache.hadoop.security.authentication.util.KerberosName;
 import org.apache.hadoop.security.authentication.util.KerberosUtil;
 import org.apache.kerby.kerberos.kerb.client.JaasKrbUtil;
@@ -68,7 +69,7 @@ import static org.mockito.Mockito.verify;
  */
 @Ignore("See DRILL-5387")
 @Category(SecurityTest.class)
-public class TestDrillSpnegoAuthenticator {
+public class TestDrillSpnegoAuthenticator extends BaseTest {
 
   private static KerberosHelper spnegoHelper;
 

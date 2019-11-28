@@ -22,11 +22,12 @@ import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ErrorHelper;
 import org.apache.drill.common.util.DrillExceptionUtil;
 import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.test.BaseTest;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class DrillExceptionUtilTest {
+public class DrillExceptionUtilTest extends BaseTest {
   private static final String ERROR_MESSAGE = "Exception Test";
   private static final String NESTED_ERROR_MESSAGE = "Nested Exception";
 

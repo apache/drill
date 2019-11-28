@@ -66,7 +66,7 @@ import ch.qos.logback.classic.Level;
 // real test.
 
 @Ignore
-public class ExampleTest {
+public class ExampleTest extends BaseTest {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExampleTest.class);
 
   /**

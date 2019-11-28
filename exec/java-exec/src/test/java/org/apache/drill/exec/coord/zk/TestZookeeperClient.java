@@ -34,6 +34,7 @@ import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.ZookeeperTestUtil;
 import org.apache.drill.exec.exception.VersionMismatchException;
 import org.apache.drill.exec.store.sys.store.DataChangeVersion;
+import org.apache.drill.test.BaseTest;
 import org.apache.zookeeper.CreateMode;
 import org.junit.After;
 import org.junit.Assert;
@@ -46,7 +47,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-public class TestZookeeperClient {
+public class TestZookeeperClient extends BaseTest {
   private final static String root = "/test";
   private final static String path = "test-key";
   private final static String abspath = PathUtils.join(root, path);

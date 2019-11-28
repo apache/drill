@@ -18,12 +18,13 @@
 package org.apache.drill.exec.physical.impl.common;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.apache.drill.test.BaseTest;
 import org.junit.Assert;
 import org.junit.Test;
 
 import static org.apache.drill.exec.physical.impl.common.HashTable.BATCH_SIZE;
 
-public class HashTableAllocationTrackerTest {
+public class HashTableAllocationTrackerTest extends BaseTest {
   @Test
   public void testDoubleGetNextCall() {
     final HashTableConfig config = new HashTableConfig(100, true, .5f, Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList());

@@ -44,13 +44,14 @@ import org.apache.drill.exec.store.direct.DirectSubScan;
 import org.apache.drill.exec.store.mock.MockSubScanPOP;
 import org.apache.drill.exec.store.pojo.DynamicPojoRecordReader;
 
+import org.apache.drill.test.BaseTest;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectWriter;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
-public class TestOpSerialization {
+public class TestOpSerialization extends BaseTest {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestOpSerialization.class);
   private DrillConfig config;
   private PhysicalPlanReader reader;

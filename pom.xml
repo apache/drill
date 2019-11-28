@@ -753,26 +753,7 @@
               <goals>
                 <goal>test</goal>
               </goals>
-            <!-- TODO: Remove excludedGroups after DRILL-7393 is fixed. -->
-            <configuration>
-              <excludedGroups>org.apache.drill.categories.MetastoreTest,${excludedGroups}</excludedGroups>
-            </configuration>
           </execution>
-          <!--
-              All Metastore tests must run in separate a JVM to ensure
-              that Guava Preconditions class is patched before execution.
-              TODO: Remove execution block for metastore-test after DRILL-7393 is fixed.
-          -->
-            <execution>
-              <id>metastore-test</id>
-              <phase>test</phase>
-              <goals>
-                <goal>test</goal>
-              </goals>
-              <configuration>
-                <groups>org.apache.drill.categories.MetastoreTest</groups>
-              </configuration>
-            </execution>
           </executions>
           <dependencies>
             <dependency>

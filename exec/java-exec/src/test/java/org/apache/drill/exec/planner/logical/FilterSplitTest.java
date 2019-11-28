@@ -31,9 +31,10 @@ import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.drill.test.BaseTest;
 import org.junit.Test;
 
-public class FilterSplitTest {
+public class FilterSplitTest extends BaseTest {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FilterSplitTest.class);
 
   final JavaTypeFactory t = new JavaTypeFactoryImpl();

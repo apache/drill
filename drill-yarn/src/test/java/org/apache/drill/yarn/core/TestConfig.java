@@ -33,11 +33,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.drill.test.BaseTest;
 import org.junit.Test;
 
 import com.typesafe.config.Config;
 
-public class TestConfig {
+public class TestConfig extends BaseTest {
 
   /**
    * Mock config that lets us tinker with loading and environment access for

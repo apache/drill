@@ -30,6 +30,7 @@ import org.apache.drill.exec.record.BatchSchemaBuilder;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.vector.SchemaChangeCallBack;
 import org.apache.drill.test.BaseDirTestWatcher;
+import org.apache.drill.test.BaseTest;
 import org.apache.drill.test.OperatorFixture;
 import org.apache.drill.exec.physical.rowSet.DirectRowSet;
 import org.apache.drill.exec.physical.rowSet.RowSet;
@@ -38,7 +39,7 @@ import org.apache.drill.test.rowSet.RowSetComparison;
 import org.junit.Rule;
 import org.junit.Test;
 
-public abstract class AbstractGenericCopierTest {
+public abstract class AbstractGenericCopierTest extends BaseTest {
   @Rule
   public final BaseDirTestWatcher baseDirTestWatcher = new BaseDirTestWatcher();
 

@@ -17,6 +17,7 @@
  */
 package org.apache.drill.common.util.function;
 
+import org.apache.drill.test.BaseTest;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -24,7 +25,7 @@ import org.junit.rules.ExpectedException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class TestCheckedFunction {
+public class TestCheckedFunction extends BaseTest {
 
   @Rule
   public ExpectedException thrown = ExpectedException.none();

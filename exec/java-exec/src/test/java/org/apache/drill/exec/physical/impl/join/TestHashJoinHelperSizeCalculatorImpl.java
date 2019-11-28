@@ -20,10 +20,11 @@ package org.apache.drill.exec.physical.impl.join;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.test.BaseTest;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class TestHashJoinHelperSizeCalculatorImpl {
+public class TestHashJoinHelperSizeCalculatorImpl extends BaseTest {
   @Test
   public void simpleCalculateSize() {
     final long intSize =

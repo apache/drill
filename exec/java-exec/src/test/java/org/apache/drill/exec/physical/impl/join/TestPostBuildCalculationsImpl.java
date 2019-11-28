@@ -19,6 +19,7 @@ package org.apache.drill.exec.physical.impl.join;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.apache.drill.test.BaseTest;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -26,7 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class TestPostBuildCalculationsImpl {
+public class TestPostBuildCalculationsImpl extends BaseTest {
   @Test
   public void testProbeTooBig() {
     final int minProbeRecordsPerBatch = 10;

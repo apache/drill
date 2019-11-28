@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.parquet;
 import org.apache.drill.categories.ParquetTest;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.test.BaseTest;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
@@ -40,7 +41,7 @@ import java.io.IOException;
  * This test checks correctness of complex column detection in the Parquet file schema.
  */
 @Category({ParquetTest.class, UnlikelyTest.class})
-public class TestComplexColumnInSchema {
+public class TestComplexColumnInSchema extends BaseTest {
 
   /*
   Parquet schema:
