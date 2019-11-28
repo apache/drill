@@ -17,11 +17,12 @@
  */
 package org.apache.drill.exec.util;
 
+import org.apache.drill.test.BaseTest;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class TestArrayWrappedIntIntMap {
+public class TestArrayWrappedIntIntMap extends BaseTest {
   @Test
   public void testSimple() {
     ArrayWrappedIntIntMap map = new ArrayWrappedIntIntMap();

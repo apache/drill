@@ -21,6 +21,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.categories.SqlFunctionTest;
 import org.apache.drill.exec.udf.dynamic.JarBuilder;
 import org.apache.drill.exec.util.JarUtil;
+import org.apache.drill.test.BaseTest;
 import org.codehaus.janino.Java.CompilationUnit;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -47,7 +48,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 @Category(SqlFunctionTest.class)
-public class FunctionInitializerTest {
+public class FunctionInitializerTest extends BaseTest {
 
   @ClassRule
   public static final TemporaryFolder temporaryFolder = new TemporaryFolder();

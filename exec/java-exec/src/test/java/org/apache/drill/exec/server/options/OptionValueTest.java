@@ -17,10 +17,11 @@
  */
 package org.apache.drill.exec.server.options;
 
+import org.apache.drill.test.BaseTest;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class OptionValueTest {
+public class OptionValueTest extends BaseTest {
   @Test
   public void createBooleanKindTest() {
     final OptionValue createdValue = OptionValue.create(

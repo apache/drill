@@ -26,6 +26,7 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
 import org.apache.drill.categories.JdbcTest;
+import org.apache.drill.test.BaseTest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -41,7 +42,7 @@ import java.sql.SQLException;
  * methods.
  */
 @Category(JdbcTest.class)
-public class ConnectionTransactionMethodsTest {
+public class ConnectionTransactionMethodsTest extends BaseTest {
 
   private static Connection connection;
 

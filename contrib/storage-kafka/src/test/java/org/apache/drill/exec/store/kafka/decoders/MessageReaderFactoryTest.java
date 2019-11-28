@@ -20,12 +20,13 @@ package org.apache.drill.exec.store.kafka.decoders;
 import org.apache.drill.categories.KafkaStorageTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType;
+import org.apache.drill.test.BaseTest;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @Category({KafkaStorageTest.class})
-public class MessageReaderFactoryTest {
+public class MessageReaderFactoryTest extends BaseTest {
 
   @Test
   public void testShouldThrowExceptionAsMessageReaderIsNull() {

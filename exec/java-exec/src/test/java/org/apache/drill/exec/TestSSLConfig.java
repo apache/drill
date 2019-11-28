@@ -22,6 +22,7 @@ import org.apache.drill.categories.SecurityTest;
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.ssl.SSLConfig;
 import org.apache.drill.exec.ssl.SSLConfigBuilder;
+import org.apache.drill.test.BaseTest;
 import org.apache.drill.test.ConfigBuilder;
 import org.apache.hadoop.conf.Configuration;
 import org.junit.Test;
@@ -36,7 +37,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 @Category(SecurityTest.class)
-public class TestSSLConfig {
+public class TestSSLConfig extends BaseTest {
 
   @Test
   public void testMissingKeystorePath() throws Exception {

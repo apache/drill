@@ -32,6 +32,7 @@ import org.apache.drill.exec.store.TestOutputMutator;
 import org.apache.drill.exec.vector.complex.impl.SingleMapReaderImpl;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
+import org.apache.drill.test.BaseTest;
 import org.bson.BsonBinary;
 import org.bson.BsonBinarySubType;
 import org.bson.BsonBoolean;
@@ -52,7 +53,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public class TestBsonRecordReader {
+public class TestBsonRecordReader extends BaseTest {
   private BufferAllocator allocator;
   private VectorContainerWriter writer;
   private TestOutputMutator mutator;

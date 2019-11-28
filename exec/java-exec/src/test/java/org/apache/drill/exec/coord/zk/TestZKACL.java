@@ -31,6 +31,7 @@ import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.server.options.SystemOptionManager;
+import org.apache.drill.test.BaseTest;
 import org.apache.zookeeper.data.ACL;
 import org.junit.After;
 import org.junit.Assert;
@@ -43,7 +44,7 @@ import java.util.List;
 
 @Ignore("See DRILL-6823")
 @Category(SecurityTest.class)
-public class TestZKACL {
+public class TestZKACL extends BaseTest {
 
   private TestingServer server;
   private final static String cluster_config_znode = "test-cluster_config_znode";

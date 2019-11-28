@@ -17,13 +17,14 @@
  */
 package org.apache.drill.exec.record.metadata.schema.parser;
 
+import org.apache.drill.test.BaseTest;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
 
-public class TestParserErrorHandling {
+public class TestParserErrorHandling extends BaseTest {
 
   @Rule
   public ExpectedException thrown = ExpectedException.none();

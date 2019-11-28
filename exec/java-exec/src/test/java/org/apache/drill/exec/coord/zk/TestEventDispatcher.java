@@ -24,12 +24,13 @@ import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
 import org.apache.drill.exec.coord.store.TransientStoreConfig;
 import org.apache.drill.exec.coord.store.TransientStoreEvent;
 import org.apache.drill.exec.serialization.InstanceSerializer;
+import org.apache.drill.test.BaseTest;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-public class TestEventDispatcher {
+public class TestEventDispatcher extends BaseTest {
 
   private final static String key = "some-key";
   private final static String value = "some-data";

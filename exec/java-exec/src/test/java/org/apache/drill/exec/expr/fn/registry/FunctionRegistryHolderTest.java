@@ -21,6 +21,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.ArrayListMultimap
 import org.apache.drill.shaded.guava.com.google.common.collect.ListMultimap;
 import org.apache.drill.categories.SqlFunctionTest;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
+import org.apache.drill.test.BaseTest;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -45,7 +46,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
 @Category(SqlFunctionTest.class)
-public class FunctionRegistryHolderTest {
+public class FunctionRegistryHolderTest extends BaseTest {
 
   private static final String built_in = "built-in";
   private static final String udf_jar = "DrillUDF-1.0.jar";

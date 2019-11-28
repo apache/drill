@@ -30,6 +30,7 @@ import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.drill.test.BaseTest;
 import org.apache.drill.yarn.scripts.ScriptUtils.DrillbitRun;
 import org.apache.drill.yarn.scripts.ScriptUtils.RunResult;
 import org.apache.drill.yarn.scripts.ScriptUtils.ScriptRunner;
@@ -50,7 +51,7 @@ import org.junit.Test;
 
 // Turned of by default: works only in a developer setup
 @Ignore
-public class TestScripts {
+public class TestScripts extends BaseTest {
   static ScriptUtils context;
 
   @BeforeClass

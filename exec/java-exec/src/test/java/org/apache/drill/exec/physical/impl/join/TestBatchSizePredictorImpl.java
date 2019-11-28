@@ -18,10 +18,11 @@
 package org.apache.drill.exec.physical.impl.join;
 
 import org.apache.drill.exec.vector.IntVector;
+import org.apache.drill.test.BaseTest;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class TestBatchSizePredictorImpl {
+public class TestBatchSizePredictorImpl extends BaseTest {
   @Test
   public void testComputeMaxBatchSizeHash()
   {

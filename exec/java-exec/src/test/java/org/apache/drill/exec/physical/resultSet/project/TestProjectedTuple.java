@@ -33,6 +33,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.resultSet.impl.RowSetTestUtils;
 import org.apache.drill.exec.physical.resultSet.project.RequestedTuple.RequestedColumn;
 import org.apache.drill.exec.physical.resultSet.project.RequestedTuple.TupleProjectionType;
+import org.apache.drill.test.BaseTest;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -48,7 +49,7 @@ import org.junit.experimental.categories.Category;
  */
 
 @Category(RowSetTests.class)
-public class TestProjectedTuple {
+public class TestProjectedTuple extends BaseTest {
 
   @Test
   public void testProjectionAll() {

@@ -21,12 +21,13 @@ import static org.junit.Assert.assertEquals;
 
 import org.apache.drill.categories.MemoryTest;
 import org.apache.drill.exec.memory.Accountant.AllocationOutcome;
+import org.apache.drill.test.BaseTest;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @Category(MemoryTest.class)
-public class TestAccountant {
+public class TestAccountant extends BaseTest {
 
   @Test
   public void basic() {

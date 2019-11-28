@@ -27,6 +27,7 @@ import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.PrimitiveColumnMetadata;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.store.hive.HiveUtilities;
+import org.apache.drill.test.BaseTest;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.junit.Rule;
 import org.junit.Test;
@@ -36,7 +37,7 @@ import org.junit.rules.ExpectedException;
 import static org.junit.Assert.assertEquals;
 
 @Category({SlowTest.class})
-public class TestSchemaConversion {
+public class TestSchemaConversion extends BaseTest {
   private static final HiveToRelDataTypeConverter dataTypeConverter
       = new HiveToRelDataTypeConverter(new SqlTypeFactoryImpl(new DrillRelDataTypeSystem()));
 

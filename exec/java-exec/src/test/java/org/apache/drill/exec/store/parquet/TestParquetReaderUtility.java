@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.parquet;
 
 import org.apache.drill.categories.ParquetTest;
 import org.apache.drill.categories.UnlikelyTest;
+import org.apache.drill.test.BaseTest;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 
@@ -38,7 +39,7 @@ import java.io.IOException;
 import java.util.Map;
 
 @Category({ParquetTest.class, UnlikelyTest.class})
-public class TestParquetReaderUtility {
+public class TestParquetReaderUtility extends BaseTest {
 
   private static final String path = "src/test/resources/store/parquet/complex/complex.parquet";
   private static ParquetMetadata footer;

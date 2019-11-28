@@ -25,6 +25,7 @@ import org.apache.drill.exec.vector.accessor.InvalidAccessException;
 import org.apache.drill.exec.vector.accessor.SqlAccessor;
 import org.apache.drill.jdbc.SQLConversionOverflowException;
 import org.apache.drill.categories.JdbcTest;
+import org.apache.drill.test.BaseTest;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -39,7 +40,7 @@ import static org.junit.Assert.assertThat;
  * (Also see {@link org.apache.drill.jdbc.ResultSetGetMethodConversionsTest}.
  */
 @Category(JdbcTest.class)
-public class TypeConvertingSqlAccessorTest {
+public class TypeConvertingSqlAccessorTest extends BaseTest {
 
   /**
    * Base test stub(?) for accessors underlying TypeConvertingSqlAccessor.

@@ -21,14 +21,14 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.memory.RootAllocator;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.test.BaseTest;
 import org.junit.Assert;
 import org.junit.Test;
 
 /**
  * This test uses {@link VarCharVector} to test the template code in VariableLengthVector.
  */
-public class VariableLengthVectorTest
-{
+public class VariableLengthVectorTest extends BaseTest {
   /**
    * If the vector contains 1000 records, setting a value count of 1000 should work.
    */

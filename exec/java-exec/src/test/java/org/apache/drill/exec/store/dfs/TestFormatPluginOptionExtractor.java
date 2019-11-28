@@ -23,6 +23,7 @@ import org.apache.drill.common.scanner.RunTimeScan;
 import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.exec.store.easy.text.TextFormatPlugin.TextFormatConfig;
 import org.apache.drill.exec.store.image.ImageFormatConfig;
+import org.apache.drill.test.BaseTest;
 import org.junit.Test;
 
 import java.util.Collection;
@@ -31,7 +32,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 
-public class TestFormatPluginOptionExtractor {
+public class TestFormatPluginOptionExtractor extends BaseTest {
 
   @Test
   public void test() {

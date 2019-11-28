@@ -21,13 +21,14 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import org.apache.drill.categories.ResourceManagerTest;
 import org.apache.drill.exec.resourcemgr.config.exception.RMConfigException;
+import org.apache.drill.test.BaseTest;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import static org.junit.Assert.assertTrue;
 
 @Category(ResourceManagerTest.class)
-public class TestResourcePoolSelectors {
+public class TestResourcePoolSelectors extends BaseTest {
 
   @Test
   public void testNullSelectorConfig() throws Exception {

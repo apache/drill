@@ -26,6 +26,7 @@ import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.UserBitShared.FragmentState;
 import org.apache.drill.exec.rpc.control.ControlTunnel;
 import org.apache.drill.exec.rpc.control.Controller;
+import org.apache.drill.test.BaseTest;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -40,7 +41,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
-public class FragmentStatusReporterTest {
+public class FragmentStatusReporterTest extends BaseTest {
 
   private FragmentStatusReporter statusReporter;
 

@@ -15,24 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.expr;
+package org.apache.drill.test;
 
-import org.apache.drill.BaseTestQuery;
-import org.apache.drill.common.util.TestTools;
-import org.junit.Test;
+import org.apache.drill.common.util.GuavaPatcher;
+import org.apache.drill.common.util.ProtobufPatcher;
 
-public class TestPrune extends BaseTestQuery {
+public class BaseTest {
 
-  String MULTILEVEL = TestTools.getWorkingPath() + "/../java-exec/src/test/resources/multilevel";
-
-  @Test
-  public void pruneCompound() throws Exception {
-    test(String.format("select * from dfs.`%s/csv` where x is null and dir1 in ('Q1', 'Q2')", MULTILEVEL));
+  static {
+    /*
+     * HBase and MapR-DB clients use older version of protobuf,
+     * and override some methods that became final in recent versions.
+     * This code removes these final modifiers.
+     */
+    ProtobufPatcher.patch();
+    /*
+     * HBase client uses older version of Guava's Stopwatch API,
+     * while Drill ships with 18.x which has changes the scope of
+     * these API to 'package', this code make them accessible.
+     */
+    GuavaPatcher.patch();
   }
-
-  @Test
-  public void pruneSimple() throws Exception {
-    test(String.format("select * from dfs.`%s/csv` where dir1 in ('Q1', 'Q2')", MULTILEVEL));
-  }
-
 }

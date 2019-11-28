@@ -21,6 +21,7 @@ import org.apache.drill.categories.ParquetTest;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.store.parquet.metadata.MetadataVersion;
+import org.apache.drill.test.BaseTest;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -28,7 +29,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 @Category({ParquetTest.class, UnlikelyTest.class})
-public class TestParquetMetadataVersion {
+public class TestParquetMetadataVersion extends BaseTest {
 
   @Test
   public void testFirstLetter() throws Exception {

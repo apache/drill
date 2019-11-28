@@ -44,13 +44,14 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.store.SystemPlugin;
 import org.apache.drill.exec.store.ischema.InfoSchemaStoragePlugin;
 import org.apache.drill.exec.store.sys.SystemTablePlugin;
+import org.apache.drill.test.BaseTest;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @Category({SlowTest.class})
-public class TestClassPathScanner {
+public class TestClassPathScanner extends BaseTest {
 
   private static ScanResult result;
 

@@ -37,6 +37,7 @@ import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.jdbc.impl.DrillColumnMetaDataList;
 import org.apache.drill.categories.JdbcTest;
+import org.apache.drill.test.BaseTest;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -46,7 +47,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 @Category(JdbcTest.class)
-public class DrillColumnMetaDataListTest {
+public class DrillColumnMetaDataListTest extends BaseTest {
 
   private DrillColumnMetaDataList emptyList;
 

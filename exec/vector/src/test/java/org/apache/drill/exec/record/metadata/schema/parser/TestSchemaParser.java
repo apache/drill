@@ -21,6 +21,7 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.test.BaseTest;
 import org.joda.time.LocalDate;
 import org.junit.Test;
 
@@ -35,7 +36,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class TestSchemaParser {
+public class TestSchemaParser extends BaseTest {
 
   @Test
   public void checkQuotedIdWithEscapes() throws Exception {

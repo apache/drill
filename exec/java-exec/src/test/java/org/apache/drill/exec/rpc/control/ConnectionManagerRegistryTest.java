@@ -18,6 +18,7 @@
 package org.apache.drill.exec.rpc.control;
 
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.test.BaseTest;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -25,7 +26,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
-public class ConnectionManagerRegistryTest {
+public class ConnectionManagerRegistryTest extends BaseTest {
 
   private static final DrillbitEndpoint localEndpoint = DrillbitEndpoint.newBuilder()
     .setAddress("10.0.0.1")

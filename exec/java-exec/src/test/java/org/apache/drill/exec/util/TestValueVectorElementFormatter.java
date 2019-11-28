@@ -20,6 +20,7 @@ package org.apache.drill.exec.util;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.test.BaseTest;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -34,7 +35,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.when;
 
-public class TestValueVectorElementFormatter {
+public class TestValueVectorElementFormatter extends BaseTest {
 
   @Mock
   private OptionManager options;

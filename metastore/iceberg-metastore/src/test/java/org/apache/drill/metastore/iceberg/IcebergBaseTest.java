@@ -21,12 +21,11 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigValueFactory;
 import org.apache.drill.categories.MetastoreTest;
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.util.GuavaPatcher;
 import org.apache.drill.metastore.iceberg.config.IcebergConfigConstants;
+import org.apache.drill.test.BaseTest;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.experimental.categories.Category;
@@ -36,19 +35,13 @@ import org.junit.rules.TemporaryFolder;
 import java.io.File;
 
 @Category(MetastoreTest.class)
-public abstract class IcebergBaseTest {
+public abstract class IcebergBaseTest extends BaseTest {
 
   @ClassRule
   public static TemporaryFolder defaultFolder = new TemporaryFolder();
 
   @Rule
   public ExpectedException thrown = ExpectedException.none();
-
-  @BeforeClass
-  public static void setup() {
-    // patches Guava Preconditions class with missing methods
-    GuavaPatcher.patch();
-  }
 
   /**
    * Creates Hadoop configuration and sets local file system as default.

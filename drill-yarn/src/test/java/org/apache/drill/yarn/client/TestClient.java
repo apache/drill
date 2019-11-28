@@ -24,9 +24,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 
+import org.apache.drill.test.BaseTest;
 import org.junit.Test;
 
-public class TestClient {
+public class TestClient extends BaseTest {
 
   /**
    * Unchecked exception to allow capturing "exit" events without actually

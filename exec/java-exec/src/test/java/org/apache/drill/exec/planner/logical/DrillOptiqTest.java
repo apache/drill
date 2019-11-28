@@ -31,6 +31,7 @@ import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.drill.categories.PlannerTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.planner.types.DrillRelDataTypeSystem;
+import org.apache.drill.test.BaseTest;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -39,7 +40,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 @Category(PlannerTest.class)
-public class DrillOptiqTest {
+public class DrillOptiqTest extends BaseTest {
 
   /* Method checks if we raise the appropriate error while dealing with RexNode that cannot be converted to
    * equivalent Drill expressions

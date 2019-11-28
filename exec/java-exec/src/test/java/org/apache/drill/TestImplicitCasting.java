@@ -20,6 +20,7 @@ package org.apache.drill;
 import org.apache.drill.categories.SqlTest;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.resolver.TypeCastRules;
+import org.apache.drill.test.BaseTest;
 import org.junit.Test;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
@@ -30,7 +31,7 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 
 @Category(SqlTest.class)
-public class TestImplicitCasting {
+public class TestImplicitCasting extends BaseTest {
   @Test
   public void testTimeStampAndTime() {
     final List<TypeProtos.MinorType> inputTypes = Lists.newArrayList();

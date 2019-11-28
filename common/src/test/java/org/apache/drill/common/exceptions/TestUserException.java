@@ -19,13 +19,14 @@ package org.apache.drill.common.exceptions;
 
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType;
+import org.apache.drill.test.BaseTest;
 import org.junit.Assert;
 import org.junit.Test;
 
 /**
  * Test various use cases when creating user exceptions
  */
-public class TestUserException {
+public class TestUserException extends BaseTest {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory
       .getLogger("--ignore.as.this.is.for.testing.exceptions--");
 

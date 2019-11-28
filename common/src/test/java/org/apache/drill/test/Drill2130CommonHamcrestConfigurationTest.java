@@ -23,7 +23,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 import static org.hamcrest.CoreMatchers.equalTo;
 
-public class Drill2130CommonHamcrestConfigurationTest {
+public class Drill2130CommonHamcrestConfigurationTest extends BaseTest {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Drill2130CommonHamcrestConfigurationTest.class);
 
   @SuppressWarnings("unused")

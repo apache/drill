@@ -25,11 +25,12 @@ import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rel.RelFieldCollation.Direction;
 import org.apache.calcite.rel.RelFieldCollation.NullDirection;
+import org.apache.drill.test.BaseTest;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 
-public class OrderTest {
+public class OrderTest extends BaseTest {
 
   //////////
   // Order.Ordering tests:

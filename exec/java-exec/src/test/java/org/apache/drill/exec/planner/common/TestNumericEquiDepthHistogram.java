@@ -20,6 +20,7 @@ package org.apache.drill.exec.planner.common;
 import org.apache.drill.categories.PlannerTest;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.BoundType;
+import org.apache.drill.test.BaseTest;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.Assert;
@@ -27,7 +28,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Range;
 
 
 @Category(PlannerTest.class)
-public class TestNumericEquiDepthHistogram {
+public class TestNumericEquiDepthHistogram extends BaseTest {
 
   @Test
   public void testHistogramWithUniqueEndpoints() throws Exception {

@@ -30,13 +30,14 @@ import java.util.List;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.RootAllocatorFactory;
+import org.apache.drill.test.BaseTest;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import io.netty.buffer.DrillBuf;
 
-public class TestSqlPatterns {
+public class TestSqlPatterns extends BaseTest {
   BufferAllocator allocator;
   DrillBuf drillBuf;
   CharsetEncoder charsetEncoder;
