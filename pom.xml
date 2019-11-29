@@ -711,7 +711,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.8.0</version>
+          <version>3.8.1</version>
         </plugin>
         <plugin>
           <artifactId>maven-enforcer-plugin</artifactId>
@@ -923,7 +923,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-assembly-plugin</artifactId>
-          <version>3.1.0</version>
+          <version>3.2.0</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -933,10 +933,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-javadoc-plugin</artifactId>
-          <version>2.10.4</version> <!--the 3.0.1 version causes failures on the release:prepare stage-->
-          <configuration>
-            <additionalparam>-Xdoclint:none</additionalparam>
-          </configuration>
+          <version>3.1.1</version>
         </plugin>
 
         <!--Note: apache-21.pom has the latest versions of apache-rat-plugin, maven-dependency-plugin and
