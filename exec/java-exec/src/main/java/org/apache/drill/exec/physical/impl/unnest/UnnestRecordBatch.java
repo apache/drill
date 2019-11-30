@@ -295,6 +295,7 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
       remainderIndex = 0;
       logger.debug("IterOutcome: EMIT.");
     }
+    rowIdVector.getMutator().setValueCount(outputRecords);
     container.setValueCount(outputRecords);
 
     memoryManager.updateOutgoingStats(outputRecords);

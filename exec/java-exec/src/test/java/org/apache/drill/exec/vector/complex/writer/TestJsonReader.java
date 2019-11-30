@@ -81,6 +81,9 @@ public class TestJsonReader extends BaseTestQuery {
 
   @Test
   public void schemaChange() throws Exception {
+    // Verifies that the schema change does not cause a
+    // crash. A pretty minimal test.
+    // TODO: Verify actual results.
     test("select b from dfs.`vector/complex/writer/schemaChange/`");
   }
 
@@ -267,12 +270,15 @@ public class TestJsonReader extends BaseTestQuery {
 
   @Test
   public void testAllTextMode() throws Exception {
-    test("alter system set `store.json.all_text_mode` = true");
-    String[] queries = {"select * from cp.`store/json/schema_change_int_to_string.json`"};
-    long[] rowCounts = {3};
-    String filename = "/store/json/schema_change_int_to_string.json";
-    runTestsOnFile(filename, UserBitShared.QueryType.SQL, queries, rowCounts);
-    test("alter system set `store.json.all_text_mode` = false");
+    try {
+      alterSession(ExecConstants.JSON_ALL_TEXT_MODE, true);
+      String[] queries = {"select * from cp.`store/json/schema_change_int_to_string.json`"};
+      long[] rowCounts = {3};
+      String filename = "/store/json/schema_change_int_to_string.json";
+      runTestsOnFile(filename, UserBitShared.QueryType.SQL, queries, rowCounts);
+    } finally {
+      resetSessionOption(ExecConstants.JSON_ALL_TEXT_MODE);
+    }
   }
 
   @Test
@@ -293,58 +299,87 @@ public class TestJsonReader extends BaseTestQuery {
 
   @Test
   public void testNullWhereListExpected() throws Exception {
-    test("alter system set `store.json.all_text_mode` = true");
-    String[] queries = {"select * from cp.`store/json/null_where_list_expected.json`"};
-    long[] rowCounts = {3};
-    String filename = "/store/json/null_where_list_expected.json";
-    runTestsOnFile(filename, UserBitShared.QueryType.SQL, queries, rowCounts);
-    test("alter system set `store.json.all_text_mode` = false");
+    try {
+      alterSession(ExecConstants.JSON_ALL_TEXT_MODE, true);
+      String[] queries = {"select * from cp.`store/json/null_where_list_expected.json`"};
+      long[] rowCounts = {3};
+      String filename = "/store/json/null_where_list_expected.json";
+      runTestsOnFile(filename, UserBitShared.QueryType.SQL, queries, rowCounts);
+    }
+    finally {
+      resetSessionOption(ExecConstants.JSON_ALL_TEXT_MODE);
+    }
   }
 
   @Test
   public void testNullWhereMapExpected() throws Exception {
-    test("alter system set `store.json.all_text_mode` = true");
-    String[] queries = {"select * from cp.`store/json/null_where_map_expected.json`"};
-    long[] rowCounts = {3};
-    String filename = "/store/json/null_where_map_expected.json";
-    runTestsOnFile(filename, UserBitShared.QueryType.SQL, queries, rowCounts);
-    test("alter system set `store.json.all_text_mode` = false");
+    try {
+      alterSession(ExecConstants.JSON_ALL_TEXT_MODE, true);
+      String[] queries = {"select * from cp.`store/json/null_where_map_expected.json`"};
+      long[] rowCounts = {3};
+      String filename = "/store/json/null_where_map_expected.json";
+      runTestsOnFile(filename, UserBitShared.QueryType.SQL, queries, rowCounts);
+    }
+    finally {
+      resetSessionOption(ExecConstants.JSON_ALL_TEXT_MODE);
+    }
   }
 
   @Test
   public void ensureProjectionPushdown() throws Exception {
-    // Tests to make sure that we are correctly eliminating schema changing columns.  If completes, means that the projection pushdown was successful.
-    test("alter system set `store.json.all_text_mode` = false; "
-        + "select  t.field_1, t.field_3.inner_1, t.field_3.inner_2, t.field_4.inner_1 "
-        + "from cp.`store/json/schema_change_int_to_string.json` t");
+    try {
+      // Tests to make sure that we are correctly eliminating schema changing
+      // columns. If completes, means that the projection pushdown was
+      // successful.
+      test("alter system set `store.json.all_text_mode` = false; "
+          + "select  t.field_1, t.field_3.inner_1, t.field_3.inner_2, t.field_4.inner_1 "
+          + "from cp.`store/json/schema_change_int_to_string.json` t");
+    } finally {
+      resetSessionOption(ExecConstants.JSON_ALL_TEXT_MODE);
+    }
   }
 
-  // The project pushdown rule is correctly adding the projected columns to the scan, however it is not removing
-  // the redundant project operator after the scan, this tests runs a physical plan generated from one of the tests to
-  // ensure that the project is filtering out the correct data in the scan alone
+  // The project pushdown rule is correctly adding the projected columns to the
+  // scan, however it is not removing the redundant project operator after the
+  // scan, this tests runs a physical plan generated from one of the tests to
+  // ensure that the project is filtering out the correct data in the scan alone.
   @Test
   public void testProjectPushdown() throws Exception {
-    String[] queries = {Files.asCharSource(DrillFileUtils.getResourceAsFile("/store/json/project_pushdown_json_physical_plan.json"), Charsets.UTF_8).read()};
-    long[] rowCounts = {3};
-    String filename = "/store/json/schema_change_int_to_string.json";
-    test("alter system set `store.json.all_text_mode` = false");
-    runTestsOnFile(filename, UserBitShared.QueryType.PHYSICAL, queries, rowCounts);
+    try {
+      String[] queries = {Files.asCharSource(DrillFileUtils.getResourceAsFile(
+          "/store/json/project_pushdown_json_physical_plan.json"), Charsets.UTF_8).read()};
+      String filename = "/store/json/schema_change_int_to_string.json";
+      alterSession(ExecConstants.JSON_ALL_TEXT_MODE, false);
+      long[] rowCounts = {3};
+      runTestsOnFile(filename, UserBitShared.QueryType.PHYSICAL, queries, rowCounts);
 
-    List<QueryDataBatch> results = testPhysicalWithResults(queries[0]);
-    assertEquals(1, results.size());
-    // "`field_1`", "`field_3`.`inner_1`", "`field_3`.`inner_2`", "`field_4`.`inner_1`"
+      List<QueryDataBatch> results = testPhysicalWithResults(queries[0]);
+      assertEquals(1, results.size());
+      // "`field_1`", "`field_3`.`inner_1`", "`field_3`.`inner_2`", "`field_4`.`inner_1`"
 
-    RecordBatchLoader batchLoader = new RecordBatchLoader(getAllocator());
-    QueryDataBatch batch = results.get(0);
-    assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
+      RecordBatchLoader batchLoader = new RecordBatchLoader(getAllocator());
+      QueryDataBatch batch = results.get(0);
+      assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
 
-    // this used to be five.  It is now three.  This is because the plan doesn't have a project.
-    // Scanners are not responsible for projecting non-existent columns (as long as they project one column)
-    assertEquals(3, batchLoader.getSchema().getFieldCount());
-    testExistentColumns(batchLoader);
+      // this used to be five. It is now four. This is because the plan doesn't
+      // have a project. Scanners are not responsible for projecting non-existent
+      // columns (as long as they project one column)
+      //
+      // That said, the JSON format plugin does claim it can do project
+      // push-down, which means it will ensure columns for any column
+      // mentioned in the project list, in a form consistent with the schema
+      // path. In this case, `non_existent`.`nested`.`field` appears in
+      // the query. But, even more oddly, the missing field is inserted only
+      // if all text mode is true, omitted if all text mode is false.
+      // Seems overly complex.
+      assertEquals(3, batchLoader.getSchema().getFieldCount());
+      testExistentColumns(batchLoader);
 
-    batch.release();
-    batchLoader.clear();
+      batch.release();
+      batchLoader.clear();
+    } finally {
+      resetSessionOption(ExecConstants.JSON_ALL_TEXT_MODE);
+    }
   }
 
   @Test
@@ -360,32 +395,32 @@ public class TestJsonReader extends BaseTestQuery {
 
   private void testExistentColumns(RecordBatchLoader batchLoader) throws SchemaChangeException {
     VectorWrapper<?> vw = batchLoader.getValueAccessorById(
-        RepeatedBigIntVector.class, //
-        batchLoader.getValueVectorId(SchemaPath.getCompoundPath("field_1")).getFieldIds() //
+        RepeatedBigIntVector.class,
+        batchLoader.getValueVectorId(SchemaPath.getCompoundPath("field_1")).getFieldIds()
     );
     assertEquals("[1]", vw.getValueVector().getAccessor().getObject(0).toString());
     assertEquals("[5]", vw.getValueVector().getAccessor().getObject(1).toString());
     assertEquals("[5,10,15]", vw.getValueVector().getAccessor().getObject(2).toString());
 
     vw = batchLoader.getValueAccessorById(
-        IntVector.class, //
-        batchLoader.getValueVectorId(SchemaPath.getCompoundPath("field_3", "inner_1")).getFieldIds() //
+        IntVector.class,
+        batchLoader.getValueVectorId(SchemaPath.getCompoundPath("field_3", "inner_1")).getFieldIds()
     );
     assertNull(vw.getValueVector().getAccessor().getObject(0));
     assertEquals(2l, vw.getValueVector().getAccessor().getObject(1));
     assertEquals(5l, vw.getValueVector().getAccessor().getObject(2));
 
     vw = batchLoader.getValueAccessorById(
-        IntVector.class, //
-        batchLoader.getValueVectorId(SchemaPath.getCompoundPath("field_3", "inner_2")).getFieldIds() //
+        IntVector.class,
+        batchLoader.getValueVectorId(SchemaPath.getCompoundPath("field_3", "inner_2")).getFieldIds()
     );
     assertNull(vw.getValueVector().getAccessor().getObject(0));
     assertNull(vw.getValueVector().getAccessor().getObject(1));
     assertEquals(3l, vw.getValueVector().getAccessor().getObject(2));
 
     vw = batchLoader.getValueAccessorById(
-        RepeatedBigIntVector.class, //
-        batchLoader.getValueVectorId(SchemaPath.getCompoundPath("field_4", "inner_1")).getFieldIds() //
+        RepeatedBigIntVector.class,
+        batchLoader.getValueVectorId(SchemaPath.getCompoundPath("field_4", "inner_1")).getFieldIds()
     );
     assertEquals("[]", vw.getValueVector().getAccessor().getObject(0).toString());
     assertEquals("[1,2,3]", vw.getValueVector().getAccessor().getObject(1).toString());
@@ -440,7 +475,7 @@ public class TestJsonReader extends BaseTestQuery {
                       )
               ).go();
     } finally {
-      testNoResult("alter session set `exec.enable_union_type` = false");
+      resetSessionOption(ExecConstants.ENABLE_UNION_TYPE_KEY);
     }
   }
 
@@ -457,7 +492,7 @@ public class TestJsonReader extends BaseTestQuery {
               .baselineValues(13L, "BIGINT")
               .go();
     } finally {
-      testNoResult("alter session set `exec.enable_union_type` = false");
+      resetSessionOption(ExecConstants.ENABLE_UNION_TYPE_KEY);
     }
   }
 
@@ -477,7 +512,7 @@ public class TestJsonReader extends BaseTestQuery {
               .baselineValues(3L)
               .go();
     } finally {
-      testNoResult("alter session set `exec.enable_union_type` = false");
+      resetSessionOption(ExecConstants.ENABLE_UNION_TYPE_KEY);
     }
   }
 
@@ -495,7 +530,7 @@ public class TestJsonReader extends BaseTestQuery {
               .baselineValues(9L)
               .go();
     } finally {
-      testNoResult("alter session set `exec.enable_union_type` = false");
+      resetSessionOption(ExecConstants.ENABLE_UNION_TYPE_KEY);
     }
   }
 
@@ -512,7 +547,7 @@ public class TestJsonReader extends BaseTestQuery {
               .baselineValues(11.0)
               .go();
     } finally {
-      testNoResult("alter session set `exec.enable_union_type` = false");
+      resetSessionOption(ExecConstants.ENABLE_UNION_TYPE_KEY);
     }
   }
 
@@ -536,7 +571,7 @@ public class TestJsonReader extends BaseTestQuery {
               .baselineValues(20000L)
               .go();
     } finally {
-      testNoResult("alter session set `exec.enable_union_type` = false");
+      resetSessionOption(ExecConstants.ENABLE_UNION_TYPE_KEY);
     }
   }
 
@@ -565,7 +600,7 @@ public class TestJsonReader extends BaseTestQuery {
               .baselineValues(20000L)
               .go();
     } finally {
-      testNoResult("alter session set `exec.enable_union_type` = false");
+      resetSessionOption(ExecConstants.ENABLE_UNION_TYPE_KEY);
     }
   }
 
@@ -628,7 +663,7 @@ public class TestJsonReader extends BaseTestQuery {
         .go();
 
     } finally {
-      testNoResult("alter session set `store.json.all_text_mode` = false");
+      resetSessionOption(ExecConstants.JSON_ALL_TEXT_MODE);
     }
   }
 

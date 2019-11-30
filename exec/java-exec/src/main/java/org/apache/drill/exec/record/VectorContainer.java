@@ -553,4 +553,10 @@ public class VectorContainer implements VectorAccessible {
     // in the offset vectors that need it.
     setValueCount(0);
   }
+
+  public void copySchemaFrom(VectorAccessible other) {
+    for (VectorWrapper<?> wrapper : other) {
+      addOrGet(wrapper.getField());
+    }
+  }
 }

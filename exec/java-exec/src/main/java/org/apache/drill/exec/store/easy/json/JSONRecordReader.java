@@ -79,8 +79,8 @@ public class JSONRecordReader extends AbstractRecordReader {
    * @param columns  pathnames of columns/subfields to read
    * @throws OutOfMemoryException
    */
-  public JSONRecordReader(final FragmentContext fragmentContext, final Path inputPath, final DrillFileSystem fileSystem,
-      final List<SchemaPath> columns) throws OutOfMemoryException {
+  public JSONRecordReader(FragmentContext fragmentContext, Path inputPath, DrillFileSystem fileSystem,
+      List<SchemaPath> columns) throws OutOfMemoryException {
     this(fragmentContext, inputPath, null, fileSystem, columns);
   }
 
@@ -137,15 +137,15 @@ public class JSONRecordReader extends AbstractRecordReader {
   }
 
   @Override
-  public void setup(final OperatorContext context, final OutputMutator output) throws ExecutionSetupException {
+  public void setup(OperatorContext context, OutputMutator output) throws ExecutionSetupException {
     try{
       if (hadoopPath != null) {
-        this.stream = fileSystem.openPossiblyCompressedStream(hadoopPath);
+        stream = fileSystem.openPossiblyCompressedStream(hadoopPath);
       }
 
-      this.writer = new VectorContainerWriter(output, unionEnabled);
+      writer = new VectorContainerWriter(output, unionEnabled);
       if (isSkipQuery()) {
-        this.jsonReader = new CountingJsonReader(fragmentContext.getManagedBuffer(), enableNanInf, enableEscapeAnyChar);
+        jsonReader = new CountingJsonReader(fragmentContext.getManagedBuffer(), enableNanInf, enableEscapeAnyChar);
       } else {
         this.jsonReader = new JsonReader.Builder(fragmentContext.getManagedBuffer())
             .schemaPathColumns(ImmutableList.copyOf(getColumns()))
@@ -157,7 +157,7 @@ public class JSONRecordReader extends AbstractRecordReader {
             .build();
       }
       setupParser();
-    } catch (final Exception e){
+    } catch (Exception e){
       handleAndRaise("Failure reading JSON file", e);
     }
   }
@@ -182,7 +182,7 @@ public class JSONRecordReader extends AbstractRecordReader {
     int columnNr = -1;
 
     if (e instanceof JsonParseException) {
-      final JsonParseException ex = (JsonParseException) e;
+      JsonParseException ex = (JsonParseException) e;
       message = ex.getOriginalMessage();
       columnNr = ex.getLocation().getColumnNr();
     }
@@ -226,7 +226,8 @@ public class JSONRecordReader extends AbstractRecordReader {
           }
           ++parseErrorCount;
           if (printSkippedMalformedJSONRecordLineNumber) {
-            logger.debug("Error parsing JSON in " + hadoopPath.getName() + " : line nos :" + (recordCount + parseErrorCount));
+            logger.debug("Error parsing JSON in {}: line: {}",
+                hadoopPath.getName(), recordCount + parseErrorCount);
           }
           if (write == ReadState.JSON_RECORD_PARSE_EOF_ERROR) {
             break;
@@ -254,8 +255,9 @@ public class JSONRecordReader extends AbstractRecordReader {
 
   @Override
   public void close() throws Exception {
-    if(stream != null) {
+    if (stream != null) {
       stream.close();
+      stream = null;
     }
   }
 }

@@ -269,7 +269,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
     for (VectorWrapper<?> w : container) {
       AllocationHelper.allocatePrecomputedChildCount(w.getValueVector(), 0, 0, 0);
     }
-    container.setValueCount(0);
+    container.setEmpty();
     if (incoming.getRecordCount() > 0) {
       hashAggMemoryManager.update();
     }

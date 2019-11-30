@@ -184,5 +184,4 @@ public class RangePartitionRecordBatch extends AbstractSingleRecordBatch<RangePa
     logger.error("RangePartitionRecordBatch[container={}, numPartitions={}, recordCount={}, partitionIdVector={}]",
         container, numPartitions, recordCount, partitionIdVector);
   }
-
 }

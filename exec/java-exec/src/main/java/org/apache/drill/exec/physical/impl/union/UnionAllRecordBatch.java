@@ -18,6 +18,7 @@
 package org.apache.drill.exec.physical.impl.union;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -68,8 +69,8 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
 
   private final SchemaChangeCallBack callBack = new SchemaChangeCallBack();
   private UnionAller unionall;
-  private final List<TransferPair> transfers = Lists.newArrayList();
-  private final List<ValueVector> allocationVectors = Lists.newArrayList();
+  private final List<TransferPair> transfers = new ArrayList<>();
+  private final List<ValueVector> allocationVectors = new ArrayList<>();
   private int recordCount;
   private UnionInputIterator unionInputIterator;
 
@@ -341,7 +342,7 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
   }
 
   private class UnionInputIterator implements Iterator<Pair<IterOutcome, BatchStatusWrappper>> {
-    private Stack<BatchStatusWrappper> batchStatusStack = new Stack<>();
+    private final Stack<BatchStatusWrappper> batchStatusStack = new Stack<>();
 
     UnionInputIterator(IterOutcome leftOutCome, RecordBatch left, IterOutcome rightOutCome, RecordBatch right) {
       if (rightOutCome == IterOutcome.OK_NEW_SCHEMA) {

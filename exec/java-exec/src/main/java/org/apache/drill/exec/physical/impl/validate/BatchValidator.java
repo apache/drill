@@ -17,41 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.validate;
 
-import java.util.IdentityHashMap;
-import java.util.Map;
-
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.physical.impl.ScanBatch;
-import org.apache.drill.exec.physical.impl.WriterRecordBatch;
-import org.apache.drill.exec.physical.impl.TopN.TopNBatch;
-import org.apache.drill.exec.physical.impl.aggregate.HashAggBatch;
-import org.apache.drill.exec.physical.impl.aggregate.StreamingAggBatch;
-import org.apache.drill.exec.physical.impl.filter.FilterRecordBatch;
-import org.apache.drill.exec.physical.impl.filter.RuntimeFilterRecordBatch;
-import org.apache.drill.exec.physical.impl.flatten.FlattenRecordBatch;
-import org.apache.drill.exec.physical.impl.join.HashJoinBatch;
-import org.apache.drill.exec.physical.impl.join.MergeJoinBatch;
-import org.apache.drill.exec.physical.impl.join.NestedLoopJoinBatch;
-import org.apache.drill.exec.physical.impl.limit.LimitRecordBatch;
-import org.apache.drill.exec.physical.impl.limit.PartitionLimitRecordBatch;
-import org.apache.drill.exec.physical.impl.mergereceiver.MergingRecordBatch;
-import org.apache.drill.exec.physical.impl.orderedpartitioner.OrderedPartitionRecordBatch;
-import org.apache.drill.exec.physical.impl.metadata.MetadataHashAggBatch;
-import org.apache.drill.exec.physical.impl.metadata.MetadataStreamAggBatch;
-import org.apache.drill.exec.physical.impl.metadata.MetadataControllerBatch;
-import org.apache.drill.exec.physical.impl.metadata.MetadataHandlerBatch;
-import org.apache.drill.exec.physical.impl.project.ProjectRecordBatch;
-import org.apache.drill.exec.physical.impl.protocol.OperatorRecordBatch;
-import org.apache.drill.exec.physical.impl.rangepartitioner.RangePartitionRecordBatch;
-import org.apache.drill.exec.physical.impl.svremover.RemovingRecordBatch;
-import org.apache.drill.exec.physical.impl.trace.TraceRecordBatch;
-import org.apache.drill.exec.physical.impl.union.UnionAllRecordBatch;
-import org.apache.drill.exec.physical.impl.unnest.UnnestRecordBatch;
-import org.apache.drill.exec.physical.impl.unorderedreceiver.UnorderedReceiverBatch;
-import org.apache.drill.exec.physical.impl.unpivot.UnpivotMapsRecordBatch;
-import org.apache.drill.exec.physical.impl.window.WindowFrameRecordBatch;
-import org.apache.drill.exec.physical.impl.xsort.managed.ExternalSortBatch;
-import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.SimpleVectorWrapper;
 import org.apache.drill.exec.record.VectorAccessible;
@@ -200,89 +166,13 @@ public class BatchValidator {
     }
   }
 
-  private enum CheckMode {
-    /** No checking. */
-    NONE,
-    /** Check only batch, container counts. */
-    COUNTS,
-    /** Check vector value counts. */
-    VECTORS
-    };
-
-  private static final Map<Class<? extends CloseableRecordBatch>, CheckMode> checkRules = buildRules();
-
   private final ErrorReporter errorReporter;
 
   public BatchValidator(ErrorReporter errorReporter) {
     this.errorReporter = errorReporter;
   }
 
-  /**
-   * At present, most operators will not pass the checks here. The following
-   * table identifies those that should be checked, and the degree of check.
-   * Over time, this table should include all operators, and thus become
-   * unnecessary.
-   */
-  private static Map<Class<? extends CloseableRecordBatch>, CheckMode> buildRules() {
-    Map<Class<? extends CloseableRecordBatch>, CheckMode> rules = new IdentityHashMap<>();
-    rules.put(OperatorRecordBatch.class, CheckMode.VECTORS);
-    rules.put(ScanBatch.class, CheckMode.VECTORS);
-    rules.put(ProjectRecordBatch.class, CheckMode.VECTORS);
-    rules.put(FilterRecordBatch.class, CheckMode.VECTORS);
-    rules.put(PartitionLimitRecordBatch.class, CheckMode.VECTORS);
-    rules.put(UnnestRecordBatch.class, CheckMode.VECTORS);
-    rules.put(HashAggBatch.class, CheckMode.VECTORS);
-    rules.put(RemovingRecordBatch.class, CheckMode.VECTORS);
-    rules.put(StreamingAggBatch.class, CheckMode.VECTORS);
-    rules.put(RuntimeFilterRecordBatch.class, CheckMode.VECTORS);
-    rules.put(FlattenRecordBatch.class, CheckMode.VECTORS);
-    rules.put(MergeJoinBatch.class, CheckMode.VECTORS);
-    rules.put(NestedLoopJoinBatch.class, CheckMode.VECTORS);
-    rules.put(LimitRecordBatch.class, CheckMode.VECTORS);
-    rules.put(MergingRecordBatch.class, CheckMode.VECTORS);
-    rules.put(OrderedPartitionRecordBatch.class, CheckMode.VECTORS);
-    rules.put(RangePartitionRecordBatch.class, CheckMode.VECTORS);
-    rules.put(TraceRecordBatch.class, CheckMode.VECTORS);
-    rules.put(UnionAllRecordBatch.class, CheckMode.VECTORS);
-    rules.put(UnorderedReceiverBatch.class, CheckMode.VECTORS);
-    rules.put(UnpivotMapsRecordBatch.class, CheckMode.VECTORS);
-    rules.put(WindowFrameRecordBatch.class, CheckMode.VECTORS);
-    rules.put(TopNBatch.class, CheckMode.VECTORS);
-    rules.put(HashJoinBatch.class, CheckMode.VECTORS);
-    rules.put(ExternalSortBatch.class, CheckMode.VECTORS);
-    rules.put(WriterRecordBatch.class, CheckMode.VECTORS);
-    rules.put(MetadataStreamAggBatch.class, CheckMode.VECTORS);
-    rules.put(MetadataHashAggBatch.class, CheckMode.VECTORS);
-    rules.put(MetadataHandlerBatch.class, CheckMode.VECTORS);
-    rules.put(MetadataControllerBatch.class, CheckMode.VECTORS);
-    return rules;
-  }
-
-  private static CheckMode lookup(Object subject) {
-    CheckMode checkMode = checkRules.get(subject.getClass());
-    return checkMode == null ? CheckMode.NONE : checkMode;
-  }
-
   public static boolean validate(RecordBatch batch) {
-    // This is a handy place to trace batches as they flow up
-    // the DAG. Works best for single-threaded runs with few records.
-    // System.out.println(batch.getClass().getSimpleName());
-    // RowSetFormatter.print(batch);
-
-    CheckMode checkMode = lookup(batch);
-
-    // If no rule, don't check this batch.
-
-    if (checkMode == CheckMode.NONE) {
-
-      // As work proceeds, might want to log those batches not checked.
-      // For now, there are too many.
-
-      return true;
-    }
-
-    // All batches that do any checks will at least check counts.
-
     ErrorReporter reporter = errorReporter(batch);
     int rowCount = batch.getRecordCount();
     int valueCount = rowCount;
@@ -340,9 +230,7 @@ public class BatchValidator {
         break;
       }
     }
-    if (checkMode == CheckMode.VECTORS) {
-      new BatchValidator(reporter).validateBatch(batch, valueCount);
-    }
+    new BatchValidator(reporter).validateBatch(batch, valueCount);
     return reporter.errorCount() == 0;
   }
 

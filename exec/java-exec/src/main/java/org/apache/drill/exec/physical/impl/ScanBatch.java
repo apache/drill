@@ -575,7 +575,6 @@ public class ScanBatch implements CloseableRecordBatch {
     }
   }
 
-
   @Override
   public Iterator<VectorWrapper<?>> iterator() {
     return container.iterator();
