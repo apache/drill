@@ -199,8 +199,7 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
     }
   }
 
-  protected void buildSchema() throws SchemaChangeException {
-  }
+  protected void buildSchema() throws SchemaChangeException { }
 
   @Override
   public void kill(boolean sendUpstream) {

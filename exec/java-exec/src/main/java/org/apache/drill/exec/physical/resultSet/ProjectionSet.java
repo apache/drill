@@ -18,7 +18,7 @@
 package org.apache.drill.exec.physical.resultSet;
 
 import org.apache.drill.common.exceptions.CustomErrorContext;
-import org.apache.drill.exec.physical.resultSet.project.ProjectionType;
+import org.apache.drill.common.project.ProjectionType;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.vector.accessor.convert.ColumnConversionFactory;
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
@@ -87,7 +87,7 @@ public interface ProjectionSet {
     boolean isProjected();
 
     ColumnMetadata readSchema();
-    ColumnMetadata providedSchema();
+    ColumnMetadata outputSchema();
     ColumnConversionFactory conversionFactory();
     ProjectionSet mapProjection();
 
@@ -104,4 +104,17 @@ public interface ProjectionSet {
   ColumnReadProjection readProjection(ColumnMetadata col);
   ColumnReadProjection readDictProjection(ColumnMetadata col);
   boolean isEmpty();
+
+  /**
+   * Allows a reader to "sniff" the projection type for a column before
+   * actually creating the column. For example, JSON uses this so that
+   * it can create a "dummy" parser if a column is not projected. Doing
+   * so avoids having to create an actual column which, in JSON, could
+   * lead to schema conflicts, even if the column itself is unprojected.
+   * (A scalar column would conflict with a map, say.)
+   *
+   * @param colName name of a column within the tuple
+   * @return the type of projection, if any
+   */
+  ProjectionType projectionType(String colName);
 }

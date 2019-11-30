@@ -172,7 +172,11 @@ public class QueryResultHandler {
       resultsListener.dataArrived(batch, throttle);
       // That releases batch if successful.
     } catch (Exception e) {
-      batch.release();
+      try {
+        batch.release();
+      } catch (IllegalStateException e2) {
+        // Ignore, released twice
+      }
       resultsListener.submissionFailed(UserException.systemError(e).build(logger));
     }
   }

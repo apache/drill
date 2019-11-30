@@ -25,6 +25,7 @@ import java.util.Arrays;
 
 import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.physical.impl.validate.BatchValidator;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
@@ -137,7 +138,6 @@ public class TestResultSetLoaderOmittedValues extends SubOperatorTest {
     // Harvest the row and verify.
 
     RowSet actual = fixture.wrap(rsLoader.harvest());
-//    actual.print();
 
     TupleMetadata expectedSchema = new SchemaBuilder()
         .add("a", MinorType.INT)
@@ -210,6 +210,7 @@ public class TestResultSetLoaderOmittedValues extends SubOperatorTest {
     // Harvest and verify
 
     RowSet result = fixture.wrap(rsLoader.harvest());
+    BatchValidator.validate(result);
     assertEquals(rowNumber - 1, result.rowCount());
     RowSetReader reader = result.reader();
     int rowIndex = 0;
@@ -248,9 +249,9 @@ public class TestResultSetLoaderOmittedValues extends SubOperatorTest {
     // Verify that holes were preserved.
 
     result = fixture.wrap(rsLoader.harvest());
+    BatchValidator.validate(result);
     assertEquals(rowNumber, rsLoader.totalRowCount());
     assertEquals(rowNumber - startRowNumber + 1, result.rowCount());
-//    result.print();
     reader = result.reader();
     rowIndex = 0;
     while (reader.next()) {

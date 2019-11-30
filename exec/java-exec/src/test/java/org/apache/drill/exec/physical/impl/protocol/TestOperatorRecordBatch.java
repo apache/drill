@@ -32,15 +32,14 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.Limit;
 import org.apache.drill.exec.physical.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.exec.proto.UserBitShared.NamePart;
-import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
-import org.apache.drill.exec.record.BatchSchemaBuilder;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 import org.apache.drill.exec.record.TypedFieldId;
@@ -51,8 +50,11 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.exec.vector.VarCharVector;
 import org.apache.drill.test.SubOperatorTest;
+import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Test the implementation of the Drill Volcano iterator protocol that
@@ -61,7 +63,7 @@ import org.junit.experimental.categories.Category;
 
 @Category(RowSetTests.class)
 public class TestOperatorRecordBatch extends SubOperatorTest {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SubOperatorTest.class);
+  private static final Logger logger = LoggerFactory.getLogger(SubOperatorTest.class);
 
   /**
    * Mock operator executor that simply tracks each method call
@@ -115,11 +117,11 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
         return false;
       }
       if (nextCount == schemaChangeAt) {
-        BatchSchemaBuilder newSchema = new BatchSchemaBuilder(batchAccessor.schema());
-        newSchema.schemaBuilder()
-            .add("b", MinorType.VARCHAR);
-        VectorContainer newContainer = new VectorContainer(fixture.allocator(), newSchema.build());
-        batchAccessor.addBatch(newContainer);
+        VectorContainer container =  batchAccessor.container();
+        container.addOrGet(
+            MaterializedField.create("b", Types.required(MinorType.VARCHAR)));
+        container.buildSchema(SelectionVectorMode.NONE);
+        batchAccessor.addBatch(container);
       }
       return true;
     }
@@ -135,11 +137,11 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
   }
 
   private static VectorContainer mockBatch() {
-    SchemaBuilder schemaBuilder = new SchemaBuilder()
-      .add("a", MinorType.INT);
-    VectorContainer container = new VectorContainer(fixture.allocator(), new BatchSchemaBuilder()
-        .withSchemaBuilder(schemaBuilder)
-        .build());
+    TupleMetadata schema = new SchemaBuilder()
+        .add("a", MinorType.INT)
+        .build();
+    VectorContainer container = new VectorContainer(fixture.allocator());
+    container.addOrGet(schema.column(0));
     container.buildSchema(SelectionVectorMode.NONE);
     return container;
   }
@@ -352,11 +354,9 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
 
   @Test
   public void testBatchAccessor() {
-    SchemaBuilder schemaBuilder = new SchemaBuilder()
-      .add("a", MinorType.INT)
-      .add("b", MinorType.VARCHAR);
-    BatchSchema schema = new BatchSchemaBuilder()
-        .withSchemaBuilder(schemaBuilder)
+    TupleMetadata schema = new SchemaBuilder()
+        .add("a", MinorType.INT)
+        .add("b", MinorType.VARCHAR)
         .build();
     SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addRow(10, "fred")
@@ -367,7 +367,7 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
 
     try (OperatorRecordBatch opBatch = makeOpBatch(opExec)) {
       assertEquals(IterOutcome.OK_NEW_SCHEMA, opBatch.next());
-      assertEquals(schema, opBatch.getSchema());
+      RowSetUtilities.assertSchemasEqual(schema, opBatch.getSchema());
       assertEquals(2, opBatch.getRecordCount());
       assertSame(rs.container(), opBatch.getOutgoingContainer());
 

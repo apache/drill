@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.common.expression.PathSegment;
+import org.apache.drill.common.project.ProjectionType;
 
 /**
  * Represents a wildcard: SELECT * when used at the root tuple.

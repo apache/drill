@@ -47,9 +47,9 @@ public class OperatorStats {
   private long[] schemaCountByInput;
 
 
-  private boolean inProcessing = false;
-  private boolean inSetup = false;
-  private boolean inWait = false;
+  private boolean inProcessing;
+  private boolean inSetup;
+  private boolean inWait;
 
   protected long processingNanos;
   protected long setupNanos;
@@ -185,7 +185,7 @@ public class OperatorStats {
   public synchronized void batchReceived(int inputIndex, long records, boolean newSchema) {
     recordsReceivedByInput[inputIndex] += records;
     batchesReceivedByInput[inputIndex]++;
-    if(newSchema){
+    if (newSchema) {
       schemaCountByInput[inputIndex]++;
     }
   }

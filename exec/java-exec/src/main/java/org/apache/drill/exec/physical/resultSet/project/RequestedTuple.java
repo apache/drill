@@ -20,6 +20,7 @@ package org.apache.drill.exec.physical.resultSet.project;
 import java.util.List;
 
 import org.apache.drill.common.expression.PathSegment;
+import org.apache.drill.common.project.ProjectionType;
 
 /**
  * Represents the set of columns projected for a tuple (row or map.)

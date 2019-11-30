@@ -21,6 +21,7 @@ import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
+import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.FixedWidthVector;
 import org.apache.drill.exec.vector.NullableVector;
 import org.apache.drill.exec.vector.UInt4Vector;
@@ -36,6 +37,9 @@ import org.apache.drill.exec.vector.accessor.writer.WriterEvents;
  * Subclasses are specialized for offset vectors or values vectors.
  * (The "single vector" name contrasts with classes that manage compound
  * vectors, such as a data and offsets vector.)
+ * * <p>
+ * During overflow, it is critical to update the various stored vector
+ * lengths so that serialization/deserialization works correctly.
  */
 
 public abstract class SingleVectorState implements VectorState {
@@ -127,6 +131,23 @@ public abstract class SingleVectorState implements VectorState {
       ((VariableWidthVector) vector).allocateNew(size, cardinality);
       return vector.getAllocatedSize();
     }
+
+    @Override
+    public void rollover(int cardinality) {
+      super.rollover(cardinality);
+
+      // Adjust offset vector length
+
+      int offsetLength = writer.rowStartIndex() + 1;
+      VariableWidthVector varWidthVector = ((VariableWidthVector) backupVector);
+      UInt4Vector offsetVector = varWidthVector.getOffsetVector();
+      offsetVector.getMutator().setValueCount(offsetLength );
+
+      // Adjust data vector length.
+
+      ((BaseDataValueVector) backupVector).getBuffer().writerIndex(
+          offsetVector.getAccessor().get(offsetLength - 1));
+    }
   }
 
   /**
@@ -199,9 +220,10 @@ public abstract class SingleVectorState implements VectorState {
       // for the current row. We must subtract that offset from each copied
       // value to adjust the offset for the destination.
 
-      UInt4Vector.Accessor sourceAccessor = ((UInt4Vector) backupVector).getAccessor();
-      UInt4Vector.Mutator destMutator = ((UInt4Vector) mainVector).getMutator();
-      int offset = childWriter.rowStartIndex();
+      UInt4Vector sourceVector = ((UInt4Vector) backupVector);
+      final UInt4Vector.Accessor sourceAccessor = sourceVector.getAccessor();
+      final UInt4Vector.Mutator destMutator = ((UInt4Vector) mainVector).getMutator();
+      final int offset = childWriter.rowStartIndex();
       int newIndex = 1;
       ResultSetLoaderImpl.logger.trace("Offset vector: copy {} values from {} to {} with offset {}",
           Math.max(0, sourceEndIndex - sourceStartIndex + 1),
@@ -215,13 +237,20 @@ public abstract class SingleVectorState implements VectorState {
         destMutator.set(newIndex, sourceAccessor.get(src) - offset);
       }
 
+      // Adjust offset vector length
+
+      int offsetLength = writer.rowStartIndex() + 1;
+      sourceVector.getMutator().setValueCount(offsetLength );
+
+
       // Getting offsets right was a pain. If you modify this code,
       // you'll likely relive that experience. Enabling the next two
       // lines will help reveal some of the mystery around offsets and their
       // confusing off-by-one design.
 
-//      VectorPrinter.printOffsets((UInt4Vector) backupVector, sourceStartIndex - 1, sourceEndIndex - sourceStartIndex + 3);
-//      VectorPrinter.printOffsets((UInt4Vector) mainVector, 0, newIndex);
+      // VectorChecker.verifyOffsets("nested", sourceVector);
+      // VectorPrinter.printOffsets(sourceVector, sourceStartIndex - 1, sourceEndIndex - sourceStartIndex + 3);
+      // VectorPrinter.printOffsets((UInt4Vector) mainVector, 0, newIndex);
     }
   }
 

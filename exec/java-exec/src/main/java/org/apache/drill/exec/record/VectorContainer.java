@@ -166,7 +166,7 @@ public class VectorContainer implements VectorAccessible {
     final ValueVector vector;
     if (id != null) {
       vector = getValueAccessorById(id.getFieldIds()).getValueVector();
-      if (id.getFieldIds().length == 1 && !vector.getField().getType().equals(field.getType())) {
+      if (id.getFieldIds().length == 1 && !vector.getField().isEquivalent(field)) {
         final ValueVector newVector = TypeHelper.getNewVector(field, this.getAllocator(), callBack);
         replace(vector, newVector);
         return (T) newVector;

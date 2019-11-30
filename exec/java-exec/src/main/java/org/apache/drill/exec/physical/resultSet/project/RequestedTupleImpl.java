@@ -26,6 +26,7 @@ import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.PathSegment.ArraySegment;
 import org.apache.drill.common.expression.PathSegment.NameSegment;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.project.ProjectionType;
 import org.apache.drill.exec.record.metadata.TupleNameSpace;
 
 /**
@@ -274,14 +275,13 @@ public class RequestedTupleImpl implements RequestedTuple {
 
       member.projectAllElements();
       return;
-    } else if (member.hasIndex(index)) {
-      throw UserException
-        .validationError()
-        .message("Duplicate array index in project list: %s[%d]",
-            member.fullName(), index)
-        .build(logger);
     }
-    member.addIndex(index);
+    if (!member.hasIndex(index)) {
+
+      // Allow duplicate indexes. Example: z[0], z[0]['orange']
+
+      member.addIndex(index);
+    }
 
     // Drills SQL parser does not support map arrays: a[0].c
     // But, the SchemaPath does support them, so no harm in

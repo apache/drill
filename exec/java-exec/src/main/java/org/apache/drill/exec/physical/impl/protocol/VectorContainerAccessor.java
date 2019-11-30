@@ -34,6 +34,14 @@ import org.apache.drill.exec.record.selection.SelectionVector4;
  * Wraps a vector container and optional selection vector in an interface
  * simpler than the entire {@link RecordBatch}. This implementation hosts
  * a container only.
+ * <p>
+ * Separates the idea of a batch schema and data batch. The accessor
+ * can identify a schema even if it has no batches. This occurs for
+ * readers that can identify the schema, but produce no actual data.
+ * <p>
+ * This version is designed for the the scan operator which will
+ * produce a series of different vector containers (which, oddly, must
+ * all contain the same vectors.)
  */
 
 public class VectorContainerAccessor implements BatchAccessor {
@@ -69,7 +77,9 @@ public class VectorContainerAccessor implements BatchAccessor {
 
   public void addBatch(VectorContainer container) {
     setSchema(container);
-    batchCount++;
+    if (container != null) {
+      batchCount++;
+    }
   }
 
   public int batchCount() { return batchCount; }

@@ -45,6 +45,14 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonNode;
 
+/**
+ * Old-style JSON record reader. Not used when reading JSON files,
+ * but is used by some "mini-plan" unit tests, and by the VALUES
+ * reader. As a result, this reader cannot be removed and must be
+ * maintained until the other uses are converted to the new-style
+ * JSON reader.
+ */
+
 public class JSONRecordReader extends AbstractRecordReader {
   private static final Logger logger = LoggerFactory.getLogger(JSONRecordReader.class);
 

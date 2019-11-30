@@ -20,6 +20,7 @@ package org.apache.drill.exec.record.metadata;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -343,5 +344,21 @@ public abstract class AbstractColumnMetadata extends AbstractPropertied implemen
    */
   private String escapeSpecialSymbols(String value) {
     return value.replaceAll("(\\\\)|(`)", "\\\\$0");
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (o == this) {
+      return true;
+    }
+    if (o == null || !(getClass().isInstance(o))) {
+      return false;
+    }
+    AbstractColumnMetadata other = (AbstractColumnMetadata) o;
+    return Objects.equals(name, other.name) &&
+           type == other.type &&
+           mode == other.mode &&
+           precision == other.precision &&
+           scale == other.scale;
   }
 }

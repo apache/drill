@@ -176,15 +176,13 @@ public class SimpleReaderBuilder extends ReaderBuilder {
         buildMapMembers(vector,
             descrip.parent.childProvider(descrip.metadata)));
 
-    // Single map
-
-    if (! isArray) {
+    if (isArray) {
+      // Repeated map
+      return ArrayReaderImpl.buildTuple(descrip.metadata, va, mapReader);
+    } else {
+      // Single map
       return mapReader;
     }
-
-    // Repeated map
-
-    return ArrayReaderImpl.buildTuple(descrip.metadata, va, mapReader);
   }
 
   protected List<AbstractObjectReader> buildMapMembers(AbstractMapVector mapVector, MetadataProvider provider) {

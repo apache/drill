@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.physical.impl.scan.project.projSet;
 
+import org.apache.drill.common.project.ProjectionType;
 import org.apache.drill.exec.physical.resultSet.ProjectionSet;
-import org.apache.drill.exec.physical.resultSet.project.ProjectionType;
 import org.apache.drill.exec.physical.resultSet.project.RequestedTuple.RequestedColumn;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.vector.accessor.convert.ColumnConversionFactory;
@@ -58,7 +58,7 @@ public class ProjectedReadColumn extends AbstractReadColProj {
   }
 
   @Override
-  public ColumnMetadata providedSchema() {
+  public ColumnMetadata outputSchema() {
     return outputSchema == null ? readSchema : outputSchema;
   }
 

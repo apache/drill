@@ -206,16 +206,20 @@ public class BatchSchema implements Iterable<MaterializedField> {
    * @param t2
    * @return
    */
-  private boolean majorTypeEqual(MajorType t1, MajorType t2) {
+  private static boolean majorTypeEqual(MajorType t1, MajorType t2) {
     if (t1.equals(t2)) {
       return true;
     }
+    // TODO: the next two checks are redundant: equals does them.
     if (!t1.getMinorType().equals(t2.getMinorType())) {
       return false;
     }
     if (!t1.getMode().equals(t2.getMode())) {
       return false;
     }
+    // TODO: this does not do anything. The call to equals() above
+    // checks subtypes in a different way.
+    // Also, can just return the result of equals(), no need for an if.
     if (!Sets.newHashSet(t1.getSubTypeList()).equals(Sets.newHashSet(t2.getSubTypeList()))) {
       return false;
     }

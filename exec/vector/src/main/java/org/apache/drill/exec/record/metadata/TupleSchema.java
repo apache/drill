@@ -17,18 +17,19 @@
  */
 package org.apache.drill.exec.record.metadata;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import org.apache.drill.exec.record.MaterializedField;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import org.apache.drill.exec.record.MaterializedField;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 /**
  * Defines the schema of a tuple: either the top-level row or a nested
@@ -230,5 +231,25 @@ public class TupleSchema extends AbstractPropertied implements TupleMetadata {
   @Override
   public Map<String, String> properties() {
     return super.properties();
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (o == this) {
+      return true;
+    }
+    if (o == null || !(o instanceof TupleMetadata)) {
+      return false;
+    }
+    TupleMetadata other = (TupleMetadata) o;
+    if (size() != other.size()) {
+      return false;
+    }
+    for (int i = 0; i < size(); i++) {
+      if (!metadata(i).equals(other.metadata(i))) {
+        return false;
+      }
+    }
+    return true;
   }
 }
