@@ -64,8 +64,8 @@ import org.slf4j.LoggerFactory;
  *       "sales_city" : BIGINT - nonnullstatcount(sales_city)
  *       "cnt"        : BIGINT - nonnullstatcount(cnt)
  *   .... another map for next stats function ....
- *
- * Schema of output:
+ * </pre>
+ * Schema of output: <pre>
  *  "schema"           : BIGINT - Schema number. For each schema change this number is incremented.
  *  "computed"         : BIGINT - What time is this computed?
  *  "column"           : column name

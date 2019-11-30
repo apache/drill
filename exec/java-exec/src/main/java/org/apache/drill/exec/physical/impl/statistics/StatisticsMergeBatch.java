@@ -46,11 +46,12 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.MapVector;
 import org.apache.drill.metastore.statistics.Statistic;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- *
  * Example input and output:
- * Schema of incoming batch:
+ * Schema of incoming batch:<pre>
  *    "columns"       : MAP - Column names
  *       "region_id"  : VARCHAR
  *       "sales_city" : VARCHAR
@@ -65,7 +66,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
  *       "sales_city" : BIGINT - nonnullstatcount(sales_city)
  *       "cnt"        : BIGINT - nonnullstatcount(cnt)
  *   .... another map for next stats function ....
- * Schema of outgoing batch:
+ * </pre>Schema of outgoing batch:<pre>
  *    "schema" : BIGINT - Schema number. For each schema change this number is incremented.
  *    "computed" : DATE - What time is it computed?
  *    "columns"       : MAP - Column names
@@ -82,17 +83,27 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
  *       "sales_city" : BIGINT - nonnullstatcount(sales_city)
  *       "cnt"        : BIGINT - nonnullstatcount(cnt)
  *   .... another map for next stats function ....
+ * </pre>
+ * <p>
+ * Note that the above schema is not a valid Drill record batch: the varous
+ * vectors within a batch have differing value counts. That is, unlike a
+ * normal batch (in which each column has the same number of values, correlated
+ * across records), the vectors in the output of this batch are varying
+ * length. Most tools that work with batches <b>will not</b> work with
+ * this batch.
  */
+
 public class StatisticsMergeBatch extends AbstractSingleRecordBatch<StatisticsMerge> {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StatisticsMergeBatch.class);
-  private Map<String, String> functions;
+  private static final Logger logger = LoggerFactory.getLogger(StatisticsMergeBatch.class);
+
+  private final Map<String, String> functions;
   private boolean first = true;
-  private boolean finished = false;
-  private int schema = 0;
-  private int recordCount = 0;
-  private List<String> columnsList = null;
+  private boolean finished;
+  private int schema;
+  private int recordCount;
+  private List<String> columnsList;
   private double samplePercent = 100.0;
-  private List<MergedStatistic> mergedStatisticList = null;
+  private final List<MergedStatistic> mergedStatisticList;
 
   public StatisticsMergeBatch(StatisticsMerge popConfig, RecordBatch incoming,
       FragmentContext context) throws OutOfMemoryException {
@@ -112,20 +123,6 @@ public class StatisticsMergeBatch extends AbstractSingleRecordBatch<StatisticsMe
     MaterializedField outputField = MaterializedField.create(name, mle.getMajorType());
     ValueVector vector = TypeHelper.getNewVector(outputField, oContext.getAllocator());
     container.add(vector);
-  }
-
-  /*
-   * Adds the `name` column value vector in the `parent` map vector. These `name` columns are
-   * table columns for which statistics will be computed.
-   */
-  private ValueVector addMapVector(String name, MapVector parent, LogicalExpression expr)
-      throws SchemaChangeException {
-    LogicalExpression mle = PhysicalOperatorUtil.materializeExpression(expr, incoming, context);
-    Class<? extends ValueVector> vvc =
-        TypeHelper.getValueVectorClass(mle.getMajorType().getMinorType(),
-            mle.getMajorType().getMode());
-    ValueVector vector = parent.addOrGet(name, mle.getMajorType(), vvc);
-    return vector;
   }
 
   /*
@@ -229,8 +226,7 @@ public class StatisticsMergeBatch extends AbstractSingleRecordBatch<StatisticsMe
         }
       }
     }
-    container.setRecordCount(0);
-    recordCount = 0;
+    container.setEmpty();
     container.buildSchema(incoming.getSchema().getSelectionVectorMode());
   }
 
@@ -238,7 +234,7 @@ public class StatisticsMergeBatch extends AbstractSingleRecordBatch<StatisticsMe
    * Determines the MajorType based on the incoming value vector. Please look at the
    * comments above the class definition which describes the incoming/outgoing batch schema
    */
-  private void addVectorToOutgoingContainer(String outStatName, VectorWrapper vw)
+  private void addVectorToOutgoingContainer(String outStatName, VectorWrapper<?> vw)
       throws SchemaChangeException {
     // Input map vector
     MapVector inputVector = (MapVector) vw.getValueVector();
@@ -343,9 +339,7 @@ public class StatisticsMergeBatch extends AbstractSingleRecordBatch<StatisticsMe
   }
 
   @Override
-  public void dump() {
-
-  }
+  public void dump() { }
 
   @Override
   public IterOutcome innerNext() {

@@ -77,6 +77,7 @@ import org.apache.drill.exec.record.JoinBatchMemoryManager;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TypedFieldId;
+import org.apache.drill.exec.record.VectorAccessibleUtilities;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.util.record.RecordBatchStats;
@@ -703,9 +704,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
   private void killAndDrainUpstream(RecordBatch batch, IterOutcome upstream, boolean isLeft) {
       batch.kill(true);
       while (upstream == IterOutcome.OK_NEW_SCHEMA || upstream == IterOutcome.OK) {
-        for (VectorWrapper<?> wrapper : batch) {
-          wrapper.getValueVector().clear();
-        }
+        VectorAccessibleUtilities.clear(batch);
         upstream = next( isLeft ? HashJoinHelper.LEFT_INPUT : HashJoinHelper.RIGHT_INPUT, batch);
       }
   }

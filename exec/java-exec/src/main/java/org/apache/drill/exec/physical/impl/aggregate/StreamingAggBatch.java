@@ -187,9 +187,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
     if (!createAggregator()) {
       state = BatchState.DONE;
     }
-    for (VectorWrapper<?> w : container) {
-      w.getValueVector().allocateNew();
-    }
+    container.allocateNew();
 
     if (complexWriters != null) {
       container.buildSchema(SelectionVectorMode.NONE);

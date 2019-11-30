@@ -18,6 +18,7 @@
 package org.apache.drill.exec.physical.impl.window;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -47,7 +48,6 @@ import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.shaded.guava.com.google.common.collect.Iterables;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,7 +64,7 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
   private List<WindowDataBatch> batches;
 
   private WindowFramer[] framers;
-  private final List<WindowFunction> functions = Lists.newArrayList();
+  private final List<WindowFunction> functions = new ArrayList<>();
 
   private boolean noMoreBatches; // true when downstream returns NONE
   private BatchSchema schema;
@@ -75,7 +75,7 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
       RecordBatch incoming) throws OutOfMemoryException {
     super(popConfig, context);
     this.incoming = incoming;
-    batches = Lists.newArrayList();
+    batches = new ArrayList<>();
   }
 
   /**
@@ -260,17 +260,15 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
 
     logger.trace("creating framer(s)");
 
-    List<LogicalExpression> keyExprs = Lists.newArrayList();
-    List<LogicalExpression> orderExprs = Lists.newArrayList();
+    List<LogicalExpression> keyExprs = new ArrayList<>();
+    List<LogicalExpression> orderExprs = new ArrayList<>();
     boolean requireFullPartition = false;
 
     boolean useDefaultFrame = false; // at least one window function uses the DefaultFrameTemplate
     boolean useCustomFrame = false; // at least one window function uses the CustomFrameTemplate
 
     // all existing vectors will be transferred to the outgoing container in framer.doWork()
-    for (VectorWrapper<?> wrapper : batch) {
-      container.addOrGet(wrapper.getField());
-    }
+    container.copySchemaFrom(batch);
 
     // add aggregation vectors to the container, and materialize corresponding expressions
     for (NamedExpression ne : popConfig.getAggregations()) {

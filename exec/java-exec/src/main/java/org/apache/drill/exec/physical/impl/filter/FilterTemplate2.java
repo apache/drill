@@ -66,12 +66,7 @@ public abstract class FilterTemplate2 implements Filterer {
     if (recordCount == 0) {
       outgoingSelectionVector.setRecordCount(0);
       outgoingSelectionVector.setBatchActualRecordCount(0);
-
-      // Must allocate vectors, then set count to zero. Allocation
-      // is needed since offset vectors must contain at least one
-      // item (the required value of 0 in index location 0.)
-      outgoing.getContainer().allocateNew();
-      outgoing.getContainer().setValueCount(0);
+      outgoing.getContainer().setEmpty();
       return;
     }
     if (! outgoingSelectionVector.allocateNewSafe(recordCount)) {

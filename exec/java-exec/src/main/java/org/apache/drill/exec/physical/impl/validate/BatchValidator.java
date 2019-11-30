@@ -39,6 +39,7 @@ import org.apache.drill.exec.physical.impl.orderedpartitioner.OrderedPartitionRe
 import org.apache.drill.exec.physical.impl.project.ProjectRecordBatch;
 import org.apache.drill.exec.physical.impl.protocol.OperatorRecordBatch;
 import org.apache.drill.exec.physical.impl.rangepartitioner.RangePartitionRecordBatch;
+import org.apache.drill.exec.physical.impl.statistics.StatisticsMergeBatch;
 import org.apache.drill.exec.physical.impl.svremover.RemovingRecordBatch;
 import org.apache.drill.exec.physical.impl.trace.TraceRecordBatch;
 import org.apache.drill.exec.physical.impl.union.UnionAllRecordBatch;
@@ -214,45 +215,20 @@ public class BatchValidator {
   }
 
   /**
-   * At present, most operators will not pass the checks here. The following
-   * table identifies those that should be checked, and the degree of check.
-   * Over time, this table should include all operators, and thus become
-   * unnecessary.
+   * Most operators pass the tests here. However, some do not. In particular,
+   * the design of the statistcs mechanism "abuses" Drill batch structure and
+   * will not pass these tests (by design, it seems.) The classes set
+   * here are the <b>exceptions</b> to the normal tests.
    */
   private static Map<Class<? extends CloseableRecordBatch>, CheckMode> buildRules() {
     Map<Class<? extends CloseableRecordBatch>, CheckMode> rules = new IdentityHashMap<>();
-    rules.put(OperatorRecordBatch.class, CheckMode.VECTORS);
-    rules.put(ScanBatch.class, CheckMode.VECTORS);
-    rules.put(ProjectRecordBatch.class, CheckMode.VECTORS);
-    rules.put(FilterRecordBatch.class, CheckMode.VECTORS);
-    rules.put(PartitionLimitRecordBatch.class, CheckMode.VECTORS);
-    rules.put(UnnestRecordBatch.class, CheckMode.VECTORS);
-    rules.put(HashAggBatch.class, CheckMode.VECTORS);
-    rules.put(RemovingRecordBatch.class, CheckMode.VECTORS);
-    rules.put(StreamingAggBatch.class, CheckMode.VECTORS);
-    rules.put(RuntimeFilterRecordBatch.class, CheckMode.VECTORS);
-    rules.put(FlattenRecordBatch.class, CheckMode.VECTORS);
-    rules.put(MergeJoinBatch.class, CheckMode.VECTORS);
-    rules.put(NestedLoopJoinBatch.class, CheckMode.VECTORS);
-    rules.put(LimitRecordBatch.class, CheckMode.VECTORS);
-    rules.put(MergingRecordBatch.class, CheckMode.VECTORS);
-    rules.put(OrderedPartitionRecordBatch.class, CheckMode.VECTORS);
-    rules.put(RangePartitionRecordBatch.class, CheckMode.VECTORS);
-    rules.put(TraceRecordBatch.class, CheckMode.VECTORS);
-    rules.put(UnionAllRecordBatch.class, CheckMode.VECTORS);
-    rules.put(UnorderedReceiverBatch.class, CheckMode.VECTORS);
-    rules.put(UnpivotMapsRecordBatch.class, CheckMode.VECTORS);
-    rules.put(WindowFrameRecordBatch.class, CheckMode.VECTORS);
-    rules.put(TopNBatch.class, CheckMode.VECTORS);
-    rules.put(HashJoinBatch.class, CheckMode.VECTORS);
-    rules.put(ExternalSortBatch.class, CheckMode.VECTORS);
-    rules.put(WriterRecordBatch.class, CheckMode.VECTORS);
+    rules.put(StatisticsMergeBatch.class, CheckMode.NONE);
     return rules;
   }
 
   private static CheckMode lookup(Object subject) {
     CheckMode checkMode = checkRules.get(subject.getClass());
-    return checkMode == null ? CheckMode.NONE : checkMode;
+    return checkMode == null ? CheckMode.VECTORS : checkMode;
   }
 
   public static boolean validate(RecordBatch batch) {

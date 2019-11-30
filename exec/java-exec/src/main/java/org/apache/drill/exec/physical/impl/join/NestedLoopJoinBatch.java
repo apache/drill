@@ -87,10 +87,10 @@ public class NestedLoopJoinBatch extends AbstractBinaryRecordBatch<NestedLoopJoi
   private int outputRecords;
 
   // We accumulate all the batches on the right side in a hyper container.
-  private ExpandableHyperContainer rightContainer = new ExpandableHyperContainer();
+  private final ExpandableHyperContainer rightContainer = new ExpandableHyperContainer();
 
   // Record count of the individual batches in the right hyper container
-  private LinkedList<Integer> rightCounts = new LinkedList<>();
+  private final LinkedList<Integer> rightCounts = new LinkedList<>();
 
 
   // Generator mapping for the right side
@@ -372,9 +372,7 @@ public class NestedLoopJoinBatch extends AbstractBinaryRecordBatch<NestedLoopJoi
 
       if (leftUpstream != IterOutcome.NONE) {
         leftSchema = left.getSchema();
-        for (final VectorWrapper<?> vw : left) {
-          container.addOrGet(vw.getField());
-        }
+        container.copySchemaFrom(left);
       }
 
       if (rightUpstream != IterOutcome.NONE) {

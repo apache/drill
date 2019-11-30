@@ -25,13 +25,16 @@ import org.apache.drill.exec.record.AbstractSingleRecordBatch;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.WritableBatch;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVectorRemover>{
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RemovingRecordBatch.class);
+  private static final Logger logger = LoggerFactory.getLogger(RemovingRecordBatch.class);
 
   private Copier copier;
 
-  public RemovingRecordBatch(SelectionVectorRemover popConfig, FragmentContext context, RecordBatch incoming) throws OutOfMemoryException {
+  public RemovingRecordBatch(SelectionVectorRemover popConfig, FragmentContext context,
+      RecordBatch incoming) throws OutOfMemoryException {
     super(popConfig, context, incoming);
     logger.debug("Created.");
   }
