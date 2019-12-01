@@ -17,6 +17,17 @@
  */
 package org.apache.drill.exec.physical.impl.metadata;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
@@ -24,6 +35,7 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.metastore.analyze.AnalyzeColumnUtils;
+import org.apache.drill.exec.metastore.analyze.MetadataIdentifierUtils;
 import org.apache.drill.exec.metastore.analyze.MetastoreAnalyzeConstants;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.MetadataControllerPOP;
@@ -32,7 +44,6 @@ import org.apache.drill.exec.physical.rowSet.RowSetReader;
 import org.apache.drill.exec.planner.common.DrillStatsTable;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.physical.WriterPrel;
-import org.apache.drill.exec.metastore.analyze.MetadataIdentifierUtils;
 import org.apache.drill.exec.record.AbstractBinaryRecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.RecordBatch;
@@ -80,17 +91,6 @@ import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
 /**
  * Terminal operator for producing ANALYZE statement. This operator is responsible for converting
  * obtained metadata, fetching absent metadata from the Metastore and storing resulting metadata into the Metastore.
@@ -108,9 +108,9 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
 
   private boolean firstLeft = true;
   private boolean firstRight = true;
-  private boolean finished = false;
-  private boolean finishedRight = false;
-  private int recordCount = 0;
+  private boolean finished;
+  private boolean finishedRight;
+  private int recordCount;
 
   protected MetadataControllerBatch(MetadataControllerPOP popConfig,
       FragmentContext context, RecordBatch left, RecordBatch right) throws OutOfMemoryException {
@@ -127,12 +127,10 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
 
   protected boolean setupNewSchema() {
     container.clear();
-
     container.addOrGet(MetastoreAnalyzeConstants.OK_FIELD_NAME, Types.required(TypeProtos.MinorType.BIT), null);
     container.addOrGet(MetastoreAnalyzeConstants.SUMMARY_FIELD_NAME, Types.required(TypeProtos.MinorType.VARCHAR), null);
-
     container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
-
+    container.setEmpty();
     return true;
   }
 
