@@ -62,6 +62,7 @@ import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.store.PartitionExplorer;
+import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.sys.store.provider.LocalPersistentStoreProvider;
 import org.apache.drill.exec.testing.ExecutionControls;
 import org.apache.drill.exec.work.filter.RuntimeFilterWritable;
@@ -344,6 +345,10 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
     @Override
     public void requestMemory(RecordBatch requestor) {
       // Does nothing in a mock fragment.
+    }
+
+    public StoragePluginRegistry getStorageRegistry() {
+      return null;
     }
   }
 

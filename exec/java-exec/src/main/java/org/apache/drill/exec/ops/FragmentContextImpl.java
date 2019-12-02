@@ -68,6 +68,7 @@ import org.apache.drill.exec.server.options.OptionList;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.PartitionExplorer;
 import org.apache.drill.exec.store.SchemaConfig;
+import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.testing.ExecutionControls;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.exec.work.batch.IncomingBuffers;
@@ -254,6 +255,11 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
   @Override
   public PhysicalPlanReader getPlanReader() {
     return context.getPlanReader();
+  }
+
+  @Override
+  public StoragePluginRegistry getStorageRegistry() {
+    return context.getStorage();
   }
 
   @Override

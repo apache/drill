@@ -1,0 +1,94 @@
+{
+  "head" : {
+    "version" : 1,
+    "generator" : {
+      "type" : "ExplainHandler",
+      "info" : ""
+    },
+    "type" : "APACHE_DRILL_PHYSICAL",
+    "options" : [ ],
+    "queue" : 0,
+    "hasResourcePlan" : false,
+    "resultMode" : "EXEC"
+  },
+  "graph" : [ {
+    "pop" : "dummy-scan",
+    "@id" : 4,
+    "userName" : "dummy",
+    "scanSpec" : {
+      "schemaName" : "default",
+      "tableName" : "myTable"
+    },
+    "columns" : [ "`a`", "`b`" ],
+    "filters" : {
+      "andTerms" : [ {
+        "op" : "LE",
+        "colName" : "a",
+        "value" : {
+          "type" : "VARCHAR",
+          "value" : "foo"
+        }
+      } ]
+    },
+    "cost" : {
+      "memoryCost" : 1.6777216E7,
+      "outputRowCount" : 4500.0
+    },
+    "config" : {
+      "type" : "dummy",
+      "enableProjectPushDown" : true,
+      "enableFilterPushDown" : true,
+      "keepFilters" : false,
+      "enabled" : true
+    }
+  }, {
+    "pop" : "filter",
+    "@id" : 3,
+    "child" : 4,
+    "expr" : "greater_than_or_equal_to(`a`, 'bar') ",
+    "initialAllocation" : 1000000,
+    "maxAllocation" : 10000000000,
+    "cost" : {
+      "memoryCost" : 1.6777216E7,
+      "outputRowCount" : 2250.0
+    }
+  }, {
+    "pop" : "selection-vector-remover",
+    "@id" : 2,
+    "child" : 3,
+    "initialAllocation" : 1000000,
+    "maxAllocation" : 10000000000,
+    "cost" : {
+      "memoryCost" : 1.6777216E7,
+      "outputRowCount" : 2250.0
+    }
+  }, {
+    "pop" : "project",
+    "@id" : 1,
+    "exprs" : [ {
+      "ref" : "`a`",
+      "expr" : "`a`"
+    }, {
+      "ref" : "`b`",
+      "expr" : "`b`"
+    } ],
+    "child" : 2,
+    "outputProj" : true,
+    "initialAllocation" : 1000000,
+    "maxAllocation" : 10000000000,
+    "cost" : {
+      "memoryCost" : 1.6777216E7,
+      "outputRowCount" : 2250.0
+    }
+  }, {
+    "pop" : "screen",
+    "@id" : 0,
+    "child" : 1,
+    "initialAllocation" : 1000000,
+    "maxAllocation" : 10000000000,
+    "cost" : {
+      "memoryCost" : 1.6777216E7,
+      "outputRowCount" : 2250.0
+    }
+  } ]
+}

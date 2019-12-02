@@ -22,11 +22,21 @@ import java.util.List;
 
 import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.types.TypeProtos.MajorType;
-
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 public class FunctionCall extends LogicalExpressionBase implements Iterable<LogicalExpression> {
+
+  public static final String EQ_FN = "equal";
+  public static final String GT_FN = "greater_than";
+  public static final String NE_FN = "not_equal";
+  public static final String GE_FN = "greater_than_or_equal_to";
+  public static final String LT_FN = "less_than";
+  public static final String LE_FN = "less_than_or_equal_to";
+  public static final String LIKE_FN = "like";
+  public static final String IS_NULL = "isnull";
+  public static final String IS_NOT_NULL = "isnotnull";
+
   private final String name;
   public final ImmutableList<LogicalExpression> args;
   private final ExpressionPosition pos;
@@ -56,7 +66,7 @@ public class FunctionCall extends LogicalExpressionBase implements Iterable<Logi
   }
 
   @Override
-  public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E{
+  public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E {
     return visitor.visitFunctionCall(this, value);
   }
 
@@ -77,5 +87,4 @@ public class FunctionCall extends LogicalExpressionBase implements Iterable<Logi
     return "FunctionCall [func=" + name + ", args="
         + (args != null ? args.subList(0, Math.min(args.size(), maxLen)) : null) + ", pos=" + pos + "]";
   }
-
 }

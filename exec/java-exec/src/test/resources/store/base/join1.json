@@ -1,0 +1,159 @@
+{
+  "head" : {
+    "version" : 1,
+    "generator" : {
+      "type" : "ExplainHandler",
+      "info" : ""
+    },
+    "type" : "APACHE_DRILL_PHYSICAL",
+    "options" : [ ],
+    "queue" : 0,
+    "hasResourcePlan" : false,
+    "resultMode" : "EXEC"
+  },
+  "graph" : [ {
+    "pop" : "dummy-scan",
+    "@id" : 5,
+    "userName" : "dummy",
+    "cost" : {
+      "memoryCost" : 1.6777216E7,
+      "outputRowCount" : 5000.0
+    },
+    "scanSpec" : {
+      "schemaName" : "default",
+      "tableName" : "myTable",
+      "columns" : [ "`a`", "`b`" ],
+      "filters" : [ {
+        "op" : "EQ",
+        "colName" : "a",
+        "value" : {
+          "type" : "VARCHAR",
+          "value" : "bar"
+        }
+      } ]
+    },
+    "config" : {
+      "type" : "dummy",
+      "enabled" : true,
+      "supportProjectPushDown" : true,
+      "filterPushDownStyle" : "REMOVE"
+    }
+  }, {
+    "pop" : "dummy-scan",
+    "@id" : 6,
+    "userName" : "dummy",
+    "cost" : {
+      "memoryCost" : 1.6777216E7,
+      "outputRowCount" : 5000.0
+    },
+    "scanSpec" : {
+      "schemaName" : "default",
+      "tableName" : "myTable",
+      "columns" : [ "`a`", "`b`" ],
+      "filters" : [ {
+        "op" : "EQ",
+        "colName" : "a",
+        "value" : {
+          "type" : "VARCHAR",
+          "value" : "bar"
+        }
+      } ]
+    },
+    "config" : {
+      "type" : "dummy",
+      "enabled" : true,
+      "supportProjectPushDown" : true,
+      "filterPushDownStyle" : "REMOVE"
+    }
+  }, {
+    "pop" : "project",
+    "@id" : 4,
+    "exprs" : [ {
+      "ref" : "`a0`",
+      "expr" : "`a`"
+    }, {
+      "ref" : "`b0`",
+      "expr" : "`b`"
+    } ],
+    "child" : 6,
+    "outputProj" : false,
+    "initialAllocation" : 1000000,
+    "maxAllocation" : 10000000000,
+    "cost" : {
+      "memoryCost" : 1.6777216E7,
+      "outputRowCount" : 5000.0
+    }
+  }, {
+    "pop" : "hash-join",
+    "@id" : 3,
+    "left" : 4,
+    "right" : 5,
+    "conditions" : [ {
+      "relationship" : "EQUALS",
+      "left" : "`a0`",
+      "right" : "`a`"
+    } ],
+    "joinType" : "INNER",
+    "semiJoin" : false,
+    "isRowKeyJoin" : false,
+    "joinControl" : 0,
+    "initialAllocation" : 1000000,
+    "maxAllocation" : 10000000000,
+    "cost" : {
+      "memoryCost" : 88000.0,
+      "outputRowCount" : 5000.0
+    }
+  }, {
+    "pop" : "project",
+    "@id" : 2,
+    "exprs" : [ {
+      "ref" : "`a`",
+      "expr" : "`a`"
+    }, {
+      "ref" : "`b`",
+      "expr" : "`b`"
+    }, {
+      "ref" : "`b0`",
+      "expr" : "`b0`"
+    } ],
+    "child" : 3,
+    "outputProj" : false,
+    "initialAllocation" : 1000000,
+    "maxAllocation" : 10000000000,
+    "cost" : {
+      "memoryCost" : 1.6777216E7,
+      "outputRowCount" : 5000.0
+    }
+  }, {
+    "pop" : "project",
+    "@id" : 1,
+    "exprs" : [ {
+      "ref" : "`a`",
+      "expr" : "`a`"
+    }, {
+      "ref" : "`b`",
+      "expr" : "`b`"
+    }, {
+      "ref" : "`b0`",
+      "expr" : "`b0`"
+    } ],
+    "child" : 2,
+    "outputProj" : true,
+    "initialAllocation" : 1000000,
+    "maxAllocation" : 10000000000,
+    "cost" : {
+      "memoryCost" : 1.6777216E7,
+      "outputRowCount" : 5000.0
+    }
+  }, {
+    "pop" : "screen",
+    "@id" : 0,
+    "child" : 1,
+    "initialAllocation" : 1000000,
+    "maxAllocation" : 10000000000,
+    "cost" : {
+      "memoryCost" : 1.6777216E7,
+      "outputRowCount" : 5000.0
+    }
+  } ]
+}

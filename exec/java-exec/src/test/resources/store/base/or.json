@@ -1,0 +1,84 @@
+{
+  "head" : {
+    "version" : 1,
+    "generator" : {
+      "type" : "ExplainHandler",
+      "info" : ""
+    },
+    "type" : "APACHE_DRILL_PHYSICAL",
+    "options" : [ ],
+    "queue" : 0,
+    "hasResourcePlan" : false,
+    "resultMode" : "EXEC"
+  },
+  "graph" : [ {
+    "pop" : "dummy-scan",
+    "@id" : 4,
+    "userName" : "dummy",
+    "scanSpec" : {
+      "schemaName" : "default",
+      "tableName" : "myTable"
+    },
+    "columns" : [ "`a`", "`id`", "`b`" ],
+    "cost" : {
+      "memoryCost" : 1.6777216E7,
+      "outputRowCount" : 10000.0
+    },
+    "config" : {
+      "type" : "dummy",
+      "enableProjectPushDown" : true,
+      "enableFilterPushDown" : true,
+      "keepFilters" : false,
+      "enabled" : true
+    }
+  }, {
+    "pop" : "filter",
+    "@id" : 3,
+    "child" : 4,
+    "expr" : "booleanOr(equal(`a`, 'bar') , equal(`id`, 10) ) ",
+    "initialAllocation" : 1000000,
+    "maxAllocation" : 10000000000,
+    "cost" : {
+      "memoryCost" : 1.6777216E7,
+      "outputRowCount" : 2500.0
+    }
+  }, {
+    "pop" : "selection-vector-remover",
+    "@id" : 2,
+    "child" : 3,
+    "initialAllocation" : 1000000,
+    "maxAllocation" : 10000000000,
+    "cost" : {
+      "memoryCost" : 1.6777216E7,
+      "outputRowCount" : 2500.0
+    }
+  }, {
+    "pop" : "project",
+    "@id" : 1,
+    "exprs" : [ {
+      "ref" : "`a`",
+      "expr" : "`a`"
+    }, {
+      "ref" : "`b`",
+      "expr" : "`b`"
+    } ],
+    "child" : 2,
+    "outputProj" : true,
+    "initialAllocation" : 1000000,
+    "maxAllocation" : 10000000000,
+    "cost" : {
+      "memoryCost" : 1.6777216E7,
+      "outputRowCount" : 2500.0
+    }
+  }, {
+    "pop" : "screen",
+    "@id" : 0,
+    "child" : 1,
+    "initialAllocation" : 1000000,
+    "maxAllocation" : 10000000000,
+    "cost" : {
+      "memoryCost" : 1.6777216E7,
+      "outputRowCount" : 2500.0
+    }
+  } ]
+}

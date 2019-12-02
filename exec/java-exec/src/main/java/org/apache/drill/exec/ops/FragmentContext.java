@@ -36,6 +36,7 @@ import org.apache.drill.exec.proto.ExecProtos;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.testing.ExecutionControls;
 import org.apache.drill.exec.work.filter.RuntimeFilterWritable;
 
@@ -204,6 +205,14 @@ public interface FragmentContext extends UdfUtilities, AutoCloseable {
    * throw an <code>OutOfMemoryException</code>.
    */
   void requestMemory(RecordBatch requestor);
+
+  /*
+   * Get instance of the storage plugin registry to resolve storage plugin
+   * configs to their matching storage plugins.
+   *
+   * @return the storage plugin registry
+   */
+  StoragePluginRegistry getStorageRegistry();
 
   interface ExecutorState {
     /**

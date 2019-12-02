@@ -105,6 +105,7 @@ import java.util.Set;
 public enum PlannerPhase {
 
   LOGICAL_PRUNE_AND_JOIN("Logical Planning (with join and partition pruning)") {
+    @Override
     public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
       return PlannerPhase.mergedRuleSets(
           getDrillBasicRules(context),
@@ -116,6 +117,7 @@ public enum PlannerPhase {
   },
 
   WINDOW_REWRITE("Window Function rewrites") {
+    @Override
     public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
       return RuleSets.ofList(
           RuleInstance.CALC_INSTANCE,
@@ -125,6 +127,7 @@ public enum PlannerPhase {
   },
 
   SUBQUERY_REWRITE("Sub-queries rewrites") {
+    @Override
     public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
       return RuleSets.ofList(
           RuleInstance.SUB_QUERY_FILTER_REMOVE_RULE,
@@ -135,6 +138,7 @@ public enum PlannerPhase {
   },
 
   LOGICAL_PRUNE("Logical Planning (with partition pruning)") {
+    @Override
     public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
       return PlannerPhase.mergedRuleSets(
           getDrillBasicRules(context),
@@ -145,6 +149,7 @@ public enum PlannerPhase {
   },
 
   JOIN_PLANNING("LOPT Join Planning") {
+    @Override
     public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
       List<RelOptRule> rules = Lists.newArrayList();
       if (context.getPlannerSettings().isJoinOptimizationEnabled()) {
@@ -160,6 +165,7 @@ public enum PlannerPhase {
   },
 
   ROWKEYJOIN_CONVERSION("Convert Join to RowKeyJoin") {
+    @Override
     public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
       List<RelOptRule> rules = Lists.newArrayList();
       if (context.getPlannerSettings().isRowKeyJoinConversionEnabled()) {
@@ -173,6 +179,7 @@ public enum PlannerPhase {
   },
 
   SUM_CONVERSION("Convert SUM to $SUM0") {
+    @Override
     public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
       return PlannerPhase.mergedRuleSets(
           RuleSets.ofList(
@@ -184,24 +191,28 @@ public enum PlannerPhase {
   },
 
   PARTITION_PRUNING("Partition Prune Planning") {
+    @Override
     public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
       return PlannerPhase.mergedRuleSets(getPruneScanRules(context), getStorageRules(context, plugins, this));
     }
   },
 
   PHYSICAL_PARTITION_PRUNING("Physical Partition Prune Planning") {
+    @Override
     public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
       return PlannerPhase.mergedRuleSets(getPhysicalPruneScanRules(context), getStorageRules(context, plugins, this));
     }
   },
 
   DIRECTORY_PRUNING("Directory Prune Planning") {
+    @Override
     public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
       return PlannerPhase.mergedRuleSets(getDirPruneScanRules(context), getStorageRules(context, plugins, this));
     }
   },
 
   LOGICAL("Logical Planning (no pruning or join).") {
+    @Override
     public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
       return PlannerPhase.mergedRuleSets(
           PlannerPhase.getDrillBasicRules(context),
@@ -211,6 +222,7 @@ public enum PlannerPhase {
   },
 
   PHYSICAL("Physical Planning") {
+    @Override
     public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
       return PlannerPhase.mergedRuleSets(
           PlannerPhase.getPhysicalRules(context),
@@ -220,12 +232,14 @@ public enum PlannerPhase {
   },
 
   PRE_LOGICAL_PLANNING("Planning with Hep planner only for rules, which are failed for Volcano planner") {
+    @Override
     public RuleSet getRules (OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
       return PlannerPhase.getSetOpTransposeRules();
     }
   },
 
   TRANSITIVE_CLOSURE("Transitive closure") {
+    @Override
     public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {
       return getJoinTransitiveClosureRules();
     }
@@ -237,21 +251,40 @@ public enum PlannerPhase {
     this.description = description;
   }
 
+  /**
+   * Filter push-down is best done during logical planning so that the result can
+   * influence parallelization in the physical phase. The specific phase differs
+   * depending on which planning mode is enabled. This check hides those details
+   * from storage plugins that simply want to know "should I add my filter
+   * push-down rules in the given phase?"
+   *
+   * @return true if filter push-down rules should be applied in this phase
+   */
+  public boolean isFilterPushDownPhase() {
+    switch (this) {
+    case LOGICAL_PRUNE_AND_JOIN: // HEP is disabled
+    case PARTITION_PRUNING:      // HEP partition push-down enabled
+    case LOGICAL_PRUNE:          // HEP partition push-down disabled
+      return true;
+    default:
+      return false;
+    }
+  }
+
   public abstract RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins);
 
   private static RuleSet getStorageRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins,
       PlannerPhase phase) {
     final Builder<RelOptRule> rules = ImmutableSet.builder();
-    for(StoragePlugin plugin : plugins){
-      if(plugin instanceof AbstractStoragePlugin){
+    for (StoragePlugin plugin : plugins) {
+      if (plugin instanceof AbstractStoragePlugin) {
         rules.addAll(((AbstractStoragePlugin) plugin).getOptimizerRules(context, phase));
-      }else{
+      } else {
         rules.addAll(plugin.getOptimizerRules(context));
       }
     }
     return RuleSets.ofList(rules.build());
   }
-
 
   static final RelOptRule DRILL_JOIN_TO_MULTIJOIN_RULE =
       new JoinToMultiJoinRule(DrillJoinRel.class, DrillRelFactories.LOGICAL_BUILDER);
@@ -412,9 +445,7 @@ public enum PlannerPhase {
 
     return RuleSets.ofList(pruneRules);
   }
-  /**
-   *
-   */
+
   static RuleSet getIndexRules(OptimizerRulesContext optimizerRulesContext) {
     final PlannerSettings ps = optimizerRulesContext.getPlannerSettings();
     if (!ps.isIndexPlanningEnabled()) {
@@ -480,7 +511,6 @@ public enum PlannerPhase {
         .build();
 
     return RuleSets.ofList(pruneRules);
-
   }
 
   /**
