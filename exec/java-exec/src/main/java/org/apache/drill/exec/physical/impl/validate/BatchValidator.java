@@ -17,12 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.validate;
 
-import java.util.IdentityHashMap;
-import java.util.Map;
-
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.physical.impl.statistics.StatisticsMergeBatch;
-import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.SimpleVectorWrapper;
 import org.apache.drill.exec.record.VectorAccessible;
@@ -171,60 +166,13 @@ public class BatchValidator {
     }
   }
 
-  private enum CheckMode {
-    /** No checking. */
-    NONE,
-    /** Check only batch, container counts. */
-    COUNTS,
-    /** Check vector value counts. */
-    VECTORS
-    };
-
-  private static final Map<Class<? extends CloseableRecordBatch>, CheckMode> checkRules = buildRules();
-
   private final ErrorReporter errorReporter;
 
   public BatchValidator(ErrorReporter errorReporter) {
     this.errorReporter = errorReporter;
   }
 
-  /**
-   * Most operators pass the tests here. However, some do not. In particular,
-   * the design of the statistcs mechanism "abuses" Drill batch structure and
-   * will not pass these tests (by design, it seems.) The classes set
-   * here are the <b>exceptions</b> to the normal tests.
-   */
-  private static Map<Class<? extends CloseableRecordBatch>, CheckMode> buildRules() {
-    Map<Class<? extends CloseableRecordBatch>, CheckMode> rules = new IdentityHashMap<>();
-    rules.put(StatisticsMergeBatch.class, CheckMode.NONE);
-    return rules;
-  }
-
-  private static CheckMode lookup(Object subject) {
-    CheckMode checkMode = checkRules.get(subject.getClass());
-    return checkMode == null ? CheckMode.VECTORS : checkMode;
-  }
-
   public static boolean validate(RecordBatch batch) {
-    // This is a handy place to trace batches as they flow up
-    // the DAG. Works best for single-threaded runs with few records.
-    // System.out.println(batch.getClass().getSimpleName());
-    // RowSetFormatter.print(batch);
-
-    CheckMode checkMode = lookup(batch);
-
-    // If no rule, don't check this batch.
-
-    if (checkMode == CheckMode.NONE) {
-
-      // As work proceeds, might want to log those batches not checked.
-      // For now, there are too many.
-
-      return true;
-    }
-
-    // All batches that do any checks will at least check counts.
-
     ErrorReporter reporter = errorReporter(batch);
     int rowCount = batch.getRecordCount();
     int valueCount = rowCount;
@@ -282,9 +230,7 @@ public class BatchValidator {
         break;
       }
     }
-    if (checkMode == CheckMode.VECTORS) {
-      new BatchValidator(reporter).validateBatch(batch, valueCount);
-    }
+    new BatchValidator(reporter).validateBatch(batch, valueCount);
     return reporter.errorCount() == 0;
   }
 

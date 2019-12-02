@@ -81,8 +81,9 @@ public class TestJsonReader extends BaseTestQuery {
 
   @Test
   public void schemaChange() throws Exception {
-    // TODO: What is this testing? Presumably, we are simply
-    // testing for no crash-failure...
+    // Verifies that the schema change does not cause a
+    // crash. A pretty minimal test.
+    // TODO: Verify actual results.
     test("select b from dfs.`vector/complex/writer/schemaChange/`");
   }
 

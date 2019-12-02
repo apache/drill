@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.ValueExpressions;
@@ -84,13 +85,6 @@ import org.slf4j.LoggerFactory;
  *       "cnt"        : BIGINT - nonnullstatcount(cnt)
  *   .... another map for next stats function ....
  * </pre>
- * <p>
- * Note that the above schema is not a valid Drill record batch: the varous
- * vectors within a batch have differing value counts. That is, unlike a
- * normal batch (in which each column has the same number of values, correlated
- * across records), the vectors in the output of this batch are varying
- * length. Most tools that work with batches <b>will not</b> work with
- * this batch.
  */
 
 public class StatisticsMergeBatch extends AbstractSingleRecordBatch<StatisticsMerge> {
@@ -100,7 +94,6 @@ public class StatisticsMergeBatch extends AbstractSingleRecordBatch<StatisticsMe
   private boolean first = true;
   private boolean finished;
   private int schema;
-  private int recordCount;
   private List<String> columnsList;
   private double samplePercent = 100.0;
   private final List<MergedStatistic> mergedStatisticList;
@@ -302,9 +295,8 @@ public class StatisticsMergeBatch extends AbstractSingleRecordBatch<StatisticsMe
         }
       }
     }
-    ++recordCount;
     // Populate the number of records (1) inside the outgoing batch.
-    container.setRecordCount(1);
+    container.setValueCount(1);
     return IterOutcome.OK;
   }
 
@@ -398,6 +390,6 @@ public class StatisticsMergeBatch extends AbstractSingleRecordBatch<StatisticsMe
 
   @Override
   public int getRecordCount() {
-    return recordCount;
+    return container.getRecordCount();
   }
 }

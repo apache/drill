@@ -226,7 +226,7 @@ public class JSONRecordReader extends AbstractRecordReader {
           }
           ++parseErrorCount;
           if (printSkippedMalformedJSONRecordLineNumber) {
-            logger.debug("Error parsing JSON in {}: line nos: {}",
+            logger.debug("Error parsing JSON in {}: line: {}",
                 hadoopPath.getName(), recordCount + parseErrorCount);
           }
           if (write == ReadState.JSON_RECORD_PARSE_EOF_ERROR) {
@@ -255,7 +255,7 @@ public class JSONRecordReader extends AbstractRecordReader {
 
   @Override
   public void close() throws Exception {
-    if(stream != null) {
+    if (stream != null) {
       stream.close();
       stream = null;
     }
