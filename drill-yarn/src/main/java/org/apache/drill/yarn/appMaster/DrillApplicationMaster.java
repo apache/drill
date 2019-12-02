@@ -55,9 +55,8 @@ public class DrillApplicationMaster {
      */
     ProtobufPatcher.patch();
     /*
-     * HBase client uses older version of Guava's Stopwatch API,
-     * while Drill ships with 18.x which has changes the scope of
-     * these API to 'package', this code make them accessible.
+     * Some libraries, such as Hadoop or HBase, depend on incompatible versions of Guava.
+     * This code adds back some methods to so that the libraries can work with single Guava version.
      */
     GuavaPatcher.patch();
   }

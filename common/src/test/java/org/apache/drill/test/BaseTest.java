@@ -20,6 +20,10 @@ package org.apache.drill.test;
 import org.apache.drill.common.util.GuavaPatcher;
 import org.apache.drill.common.util.ProtobufPatcher;
 
+/**
+ * Contains patchers that must be executed at the very beginning of test runs.
+ * All Drill test classes should be inherited from it to avoid exceptions (e.g. NoSuchMethodError etc.).
+ */
 public class BaseTest {
 
   static {
@@ -30,9 +34,8 @@ public class BaseTest {
      */
     ProtobufPatcher.patch();
     /*
-     * HBase client uses older version of Guava's Stopwatch API,
-     * while Drill ships with 18.x which has changes the scope of
-     * these API to 'package', this code make them accessible.
+     * Some libraries, such as Hadoop or HBase, depend on incompatible versions of Guava.
+     * This code adds back some methods to so that the libraries can work with single Guava version.
      */
     GuavaPatcher.patch();
   }
