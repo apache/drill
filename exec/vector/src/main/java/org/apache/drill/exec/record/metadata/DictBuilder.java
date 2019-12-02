@@ -53,7 +53,7 @@ public class DictBuilder implements SchemaContainer {
     // nest a complex value only
     if (!DictVector.FIELD_VALUE_NAME.equals(column.name())) {
       String message = String.format(
-          "Dict supports nesting of complex '%s' only. Found: '%s'.", DictVector.FIELD_VALUE_NAME, column.name());
+          "Expected column with name '%s'. Found: '%s'.", DictVector.FIELD_VALUE_NAME, column.name());
       throw new IllegalArgumentException(message);
     }
 
@@ -65,7 +65,7 @@ public class DictBuilder implements SchemaContainer {
     schema.addColumn(column);
   }
 
-  DictBuilder key(TypeProtos.MinorType type) {
+  public DictBuilder key(TypeProtos.MinorType type) {
     TypeProtos.MajorType keyType = Types.withMode(type, TypeProtos.DataMode.REQUIRED);
     return key(keyType);
   }
@@ -80,7 +80,7 @@ public class DictBuilder implements SchemaContainer {
    * @throws IllegalStateException if key field is already set
    * @throws IllegalArgumentException if {@code type} is not supported (either complex or nullable)
    */
-  DictBuilder key(TypeProtos.MajorType type) {
+  public DictBuilder key(TypeProtos.MajorType type) {
     final String fieldName = DictVector.FIELD_KEY_NAME;
     if (isFieldSet(fieldName)) {
       throw new IllegalStateException(String.format("Filed '%s' is already defined.", fieldName));
@@ -208,10 +208,13 @@ public class DictBuilder implements SchemaContainer {
     return new RepeatedListBuilder(this, DictVector.FIELD_VALUE_NAME);
   }
 
+  public DictColumnMetadata buildColumn() {
+    return new DictColumnMetadata(name, mode, schema);
+  }
+
   public void build() {
     if (parent != null) {
-      DictColumnMetadata columnMetadata = new DictColumnMetadata(name, mode, schema);
-      parent.addColumn(columnMetadata);
+      parent.addColumn(buildColumn());
     }
   }
 
