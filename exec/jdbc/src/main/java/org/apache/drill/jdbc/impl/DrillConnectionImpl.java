@@ -109,17 +109,17 @@ public class DrillConnectionImpl extends AvaticaConnection
     super.setReadOnly(false);
 
     this.config = new DrillConnectionConfig(info);
-    try{
+    try {
       try {
         String connect = null;
 
         if (config.isLocal()) {
           try {
             Class.forName("org.eclipse.jetty.server.Handler");
-          } catch (final ClassNotFoundException e) {
+          } catch (ClassNotFoundException e) {
             throw new SQLNonTransientConnectionException(
                 "Running Drill in embedded mode using Drill's jdbc-all JDBC"
-                + " driver Jar file alone is not supported.",  e);
+                    + " driver Jar file alone is not supported.");
           }
 
           final DrillConfig dConfig = DrillConfig.create(info);
