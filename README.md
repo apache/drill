@@ -22,7 +22,7 @@ Please see the [Apache Drill Website](http://drill.apache.org/) or the [Apache D
 ## Join the community!
 Apache Drill is an Apache Foundation project and is seeking all types of users and contributions.
 Please say hello on the [Apache Drill mailing list](http://drill.apache.org/mailinglists/).You can also join our [Google Hangouts](http://drill.apache.org/community-resources/)
-or [join](https://bit.ly/2VM0XS8) our [Slack Channel](https://apache-drill.slack.com/) if you need help with using or developing Apache Drill.
+or [join](https://bit.ly/2VM0XS8) our [Slack Channel](https://join.slack.com/t/apache-drill/shared_invite/enQtNTQ4MjM1MDA3MzQ2LTJlYmUxMTRkMmUwYmQ2NTllYmFmMjU4MDk0NjYwZjBmYjg0MDZmOTE2ZDg0ZjBlYmI3Yjc4Y2I2NTQyNGVlZTc) if you need help with using or developing Apache Drill.
 (More information can be found on [Apache Drill website](http://drill.apache.org/)).
 
 ## Export Control
