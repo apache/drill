@@ -343,6 +343,7 @@
               <exclude>commons-beanutils:commons-beanutils:jar:*</exclude>
               <exclude>io.netty:netty-tcnative:jar:*</exclude>
               <exclude>com.fasterxml.woodstox:woodstox-core:jar:*</exclude>
+              <exclude>dnsjava:dnsjava:jar:*</exclude>
             </excludes>
           </artifactSet>
           <relocations>

@@ -929,6 +929,9 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-javadoc-plugin</artifactId>
           <version>3.1.1</version>
+          <configuration>
+            <doclint>none</doclint>
+          </configuration>
         </plugin>
 
         <!--Note: apache-21.pom has the latest versions of apache-rat-plugin, maven-dependency-plugin and
