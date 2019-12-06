@@ -31,7 +31,6 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.net.URL;
 
-import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;

@@ -19,10 +19,8 @@ package org.apache.drill.exec.store.base;
 
 import java.util.List;
 
-import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
-import org.apache.drill.exec.metastore.MetadataProviderManager;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
@@ -30,15 +28,12 @@ import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.server.options.OptionManager;
-import org.apache.drill.exec.server.options.SessionOptionManager;
-import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
+import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.base.BaseStoragePlugin.StoragePluginOptions;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
-import com.fasterxml.jackson.annotation.JacksonInject;
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -51,44 +46,67 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * source. The sub scan divides that scan into files, storage blocks or other
  * forms of parallelism.
  * <p>
- * You can use this class directly for the simplest of cases: a single minor
- * fragment that requires only schema, table and column names. This lets you get
- * something working quickly. You can then extend the scan spec if you need to
- * pass along more information, or extend this class to handle extended
- * plan-time behavior such as filter push-down.
+ * The group scan participates in both logical and physical planning. As
+ * noted below, logical plan information is JSON serialized, but physical
+ * plan information is not. The transition from logical
+ * to physical planning is not clear. The first call to
+ * {@link #getMinParallelizationWidth()} or
+ * {@link #getMaxParallelizationWidth()} is a good signal. The group scan
+ * is copied multiple times (each with more information) during logical
+ * planning, but is not copied during physical planning. This means that
+ * physical planning state can be thought of as transient: it should not
+ * be serialized or copied.
+ * <p>
+ * Because the group scan is part of the Calcite planning process, it is
+ * very helpful to understand the basics of query planning and how
+ * Calcite implements that process.
  *
  * <h4>Serialization</h4>
  *
- * The group scan is Jackson-serialized to create the logical plan. The logical
- * plan is not normally seen during normal SQL execution, but is used internally
- * for testing. Each subclass must choose which fields to serialize and which to
- * make ephemeral in-memory state. This is tricky. There are multiple cases:
+ * Drill provides the ability to serialize the logical plan. This is most
+ * easily seen by issuing the <code>EXPLAIN PLAN FOR</code> command for a
+ * query. The Jackson-serialized representation of the group scan appears
+ * in the JSON partition of the <code>EXPLAIN</code> output, while the
+ * <code>toString()</code> output appears in the text output of that
+ * command.
  * <p>
- * <ol>
- * <li>Materialize and serialize the data. This class serializes a "scan
- * specification" as the "scanSpec" attribute in JSON. Subclasses can add fields
- * to this class (if used only by the group scan) or to the scan spec (if shared
- * with the sub scan.)</li>
- * <li>Serialized ephemeral data. The base class marks the scan stats as a JSON
- * field, however the scan stats are usually recomputed each time they are
- * needed since they change as the scan is refined. This class will serialize
- * the storage plugin config, and gets that from the storage plugin itself.</li>
- * <li>Non-serialized materialized data. A base class of this class includes an
- * id which is not directly serialized. This class holds a reference to the
- * storage plugin.</li>
- * <li>Cached data. Advanced storage plugins work with an external system and
- * will want to cache metadata from that system. Such metadata should be cached
- * on the storage plugin, not in this class.</li>
- * </ol>
+ * Care must be taken when serializing: include only the <i>logical</i>
+ * plan information, omit the physical plan information.
+ * <p>
+ * Any fields that are part of the <i>logical</i> plan must be Jackson
+ * serializable. The following information should be serialized in the
+ * logical plan:
+ * <ul>
+ * <li>Information from the scan spec (from the table lookup in the
+ * schema) if relevant to the plugin.</li>
+ * <li>The list of columns projected in the scan.</li>
+ * <li>Any filters pushed into the query (in whatever form makes sense
+ * for the plugin.</li>
+ * <li>Any other plugin-specific logical plan information.</li>
+ * </ul>
+ * This base class (and its superclasses) serialize the plugin config,
+ * user name, column list and scan stats. The derived class should handle
+ * other fields.
+ * <p>
+ * On the other hand, the kinds of information should <i>not</i> be
+ * serialized:
+ * <ul>
+ * <li>The set of drillbits on which queries will run.</li>
+ * <li>The actual number of minor fragments that run scans.</li>
+ * <li>Other physical plan information.</li>
+ * <li>Cached data (such as the cached scan stats, etc.</li>
+ * </ul>
  * <p>
  * Jackson will use the constructor marked with <tt>@JsonCreator</tt> to
  * deserialize your group scan. If you create a subclass, and add fields, start
  * with the constructor from this class, then add your custom fields after the
- * fields defined here.
+ * fields defined here. Make liberal use of <code>@JsonProperty</code> to
+ * identify fields (getters) to be serialized, and <code>@JsonIgnore</code>
+ * for those that should not be serialized.
  *
  * <h4>Life Cycle</h4>
  *
- * Drill uses Calcite for planning. Calcite is very complex: it applies a series
+ * Drill uses Calcite for planning. Calcite is a bit complex: it applies a series
  * of rules to transform the query, then chooses the lowest cost among the
  * available transforms. As a result, the group scan object is continually
  * created and recreated. The following is a rough outline of these events.
@@ -127,42 +145,60 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * <p>
  * The easiest solution is simply to provide the needed constructors. For
  * special cases, you can override the <tt>clone()</tt> method itself.
+ * <p>
+ * Since Calcite is cost-based, it is important that the cost of the scan
+ * decrease after columns are pushed down. This can be done by reducing
+ * the disk I/O cost or reducing the CPU factor from 1.0 to, say, 0.75.
+ * See {@link DummyGroupScan} for an example.
  *
  * <h5>Intermediate Copies</h5>
  *
- * At multiple points, Calcite will create a simple copy of the node by invoking
+ * At multiple points during logical planning, Calcite will create
+ * a simple copy of the node by invoking
  * {@link GroupScan#getNewWithChildren(List<PhysicalOperator>)}. Scans never
  * have children, so this method should just make a copy. This base class
- * automatically invokes the the copy constructor
- * {@link #BaseGroupScan(BaseGroupScan)}. The code will invoke that constructor
- * on your derived class using Java introspection.
+ * delegates to {@link BaseStoragePlugin.ScanFactory} to make the copy.
  * <p>
- * At some point, Drill serializes the scan spec to JSON, then recreates the
- * group scan via one of the
- * {@link AbstractStoragePlugin#getPhysicalScan(String userName, JSONOptions selection, SessionOptionManager sessionOptions, MetadataProviderManager metadataProviderManager)}
- * methods. Each offer different levels of detail. The base scan will
- * automatically deserialize the scan spec, then call
- * {@link BaseStoragePlugin#newGroupScan(String, BaseScanSpec, SessionOptionManager, MetadataProviderManager)}
- * or the simpler {@link BaseStoragePlugin#newGroupScan(String, BaseScanSpec)}
- * to create a group scan. You must override one of these methods if you create
- * your own subclass.
+ * Calcite uses the schema to look up a table and obtain a scan spec.
+ * The scan spec is then serialized to JSON and passed back to the plugin
+ * to be deserialized and to create a group scan for the scan spec. The
+ * {#link BaseStoragePlugin} and {@link BaseStoragePlugin.ScanFactory}
+ * classes hide the details.
+ *
+ * <h4>Filter Push-Down</h5>
+ *
+ * If a plugin allows filter push-down, the plugin must add logical planning
+ * rules to implement the push down. The rules rewrite the group scan with
+ * the push-downs included (and optionally remove the filters from the
+ * query.) See {@link BaseFilterPushDownStragy} for details.
  *
  * <h5>Node Assignment</h5>
  *
  * Drill calls {@link #getMaxParallelizationWidth()} to determine how much it
- * can parallelize the scan. Drill calls {@link #applyAssignments(List)} to
+ * can parallelize the scan. If this method returns 1, Drill assumes that this
+ * is a single-threaded scan. If the return is 2 or greater, Drill will create
+ * a parallelized scan. This base class assumes a single-threaded scan.
+ * Override {@link #getMinParallelizationWidth()} and
+ * {@link #getMaxParallelizationWidth()} to enable parallelism.
+ * <p>
+ * Drill then calls {@link #applyAssignments(List)} to
  * declare the actual number of minor fragments (offered as Drillbit endpoints.)
  * Since most non-file scans don't care about node affinity, they can simply use
  * the {@link #endpointCount} variable to determine the number of minor
  * fragments which Drill will create.
  * <p>
- * Drill then calls {@link #getSpecificScan(int)}. If your scan is a simple
- * single scan, you can set the
- * {@link StoragePluginOptions#maxParallelizationWidth} value to 1 and assume
- * that Drill will create a single sub scan. Otherwise, you must pack your
- * "slices" (however this plugin defines them) into the available number of
- * minor fragments. This is done by having the sub scan hold a list of "slices",
- * then having the scan operator iterate over those slices.
+ * Drill then calls {@link #getSpecificScan(int)}. The number of minor fragments
+ * is the same as the number of endpoints offered above, which is determined by
+ * the min/max parallelization width and Drill configuration.
+ * <p>
+ * Your group scan may create a set of scan "segments". For example, to read
+ * a distributed database, there might be one segment per database server node.
+ * The physical planning process maps the segments into minor fragments.
+ * Ideally there will be one segment per minor fragment, but there may be
+ * multiple if Drill can offer fewer endpoints than requested. Thus, each
+ * specific scan might host multiple segments. Each plugin determines what
+ * that means for the target engine. At runtime, each segment translates to
+ * a distinct batch reader.
  *
  * <h4>The Storage Plugin</h4>
  *
@@ -194,22 +230,24 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * across the entire planning session. Group scans are created and deleted.
  * Although some of these are done via copies (and so could preserve data), the
  * <tt>getPhysicalScan()</tt> step is not a copy and discards all data except
- * that in the scan spec.
+ * that in the scan spec. Note, however, that if a query contains a join or
+ * a union, then the query will contain multiple group scans (one per table)
+ * but a single storage plugin instance.
  *
  * <h4>The Scan Specification</h4>
  *
- * Drill has the idea of a scan specification, as mentioned above. The "Base"
- * classes run with the idea to define a {@link BaseScanSpec} that holds data
- * shared between the group and sub scans. This approach avoids the need to copy
- * and serialize the data in two places, and allows the automatic copies
- * described above.
+ * Drill has the idea of a scan specification, as mentioned above. The scan
+ * spec transfers information from the schema table lookup to the group scan.
+ * Each plugin defines its own scan spec; there is no base class. At the
+ * least, include the table definition (whatever that means for the plugin.)
+ * The scan spec must be Jackson serializable.
+ * <p>
+ * Some plugins use the scan spec directly in the group scan (store it as
+ * a field), others do not. Choose the simplest design for your needs.
  * <p>
  * Your subclass should include other query-specific data needed at both plan
  * and run time such as file locations, partition information, filter push-downs
  * and so on.
- * <p>
- * Some existing plugins copy the data from group to sub scan, but this is not
- * necessary if you use the scan spec class.
  *
  * <h4>Costs</h4>
  *
@@ -223,7 +261,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * as REST), we may not have any good estimate at all.
  * <p>
  * In these cases, it helps to know how Drill uses the cost estimates. The scan
- * must occur, so there is no decsion about whether to use the scan or not. But,
+ * must occur, so there is no decision about whether to use the scan or not. But,
  * Drill has to decide which scan to put on which side of a join (the so-called
  * "build" and "probe" sides.) Further, Drill needs to know if the table is
  * small enough to "broadcast" the contents to all nodes.
@@ -237,32 +275,17 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * estimate (10K rows, 100M data, say) to force Drill to not consider broadcast,
  * and to avoid putting the table on the build side of a join unless some other
  * table is even larger.
- *
- * <h5>Projection Push-Down</h5>
- *
- * Suppose your plugin accepts projection push-down. You indicate this by
- * setting {@link StoragePluginOptions#supportsProjectPushDown} to <tt>true</tt>
- * in your storage plugin.
  * <p>
- * Calcite must decide whether to actually do the push down. While this seems
- * like an obvious improvement, Calcite wants the numbers. So, the cost of a
- * scan should be lower (if only by a bit) with project push-down than without.
- * (Also, the cost of a project operator will be removed with push-down, biasing
- * the choice in favor of push-down.
+ * Logical planning will include projection (column) push-down and optionally
+ * filter push-down. Each of these <i>must</i> reduce scan cost so that
+ * Calcite decides that doing them improves query performance.
  *
- * <h5>Filter Push-Down</h5>
+ * <h4>Projection Push-Down</h4>
  *
- * If your plugin supports filter push-down, then the cost with filters applied
- * must be lower than the cost without the filter push-down, or Calcite may not
- * choose to do the push-down. Filter push-down should reduce the number of rows
- * scanned, and that reduction (or even a crude estimate, such as 50%) needs to
- * be reflected in the cost.
- * <p>
- * Your filter push-down competes with Drill's own filter operator. If the
- * filter operator, along with a scan without push down, is less expensive than
- * a scan with push down, then Calcite will choose the former. Thus, the
- * selectivity of filter push down must exceed the selectivity which Drill uses
- * internally. (Drill uses the default selectivity defined by Calcite.)
+ * This base class assumes that the scan supports projection push-down. You
+ * get this "for free" if you use the EVF-based scan framework (that is,
+ * the result set loader and associated classes.) You are, however,
+ * responsible for updating costs based on projection push-down.
  *
  * <h4>EXPLAIN PLAN</tt>
  *
@@ -276,6 +299,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * those classes also uses {@link PlanStringBuilder}, or create the encoding
  * yourself in your own <tt>buildPlanString</tt> method. Test by calling the
  * method or by examining the output of an <tt>EXPLAIN</tt>.
+ * <p>
+ * Include only the logical planning fields. That is, include only the
+ * fields that also appear in the JSON serialized form of the group scan.
  */
 
 public abstract class BaseGroupScan extends AbstractGroupScan {
@@ -329,7 +355,8 @@ public abstract class BaseGroupScan extends AbstractGroupScan {
 
   @Override
   public boolean canPushdownProjects(List<SchemaPath> columns) {
-    return pluginOptions().supportsProjectPushDown;
+    // EVF (result set loader and so on) handles project push-down for us.
+    return true;
   }
 
   /**
@@ -354,12 +381,16 @@ public abstract class BaseGroupScan extends AbstractGroupScan {
    * single physical sub scan. That is, a sub scan operator should hold a list
    * of actual scans, and the scan operator should be ready to perform multiple
    * actual scans per sub-scan operator.
+   * <p>
+   * For convenience, returns 1 by default, which is the minimum. Derived
+   * classes should return a different number if they support filter push-down
+   * and parallelization.
    *
    * @return the number of sub-scans that this group scan will produce
    */
   @JsonIgnore
   @Override
-  public abstract int getMaxParallelizationWidth();
+  public int getMaxParallelizationWidth() { return 1; }
 
   @JsonIgnore
   @Override

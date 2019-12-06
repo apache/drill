@@ -10,7 +10,7 @@
  * <li>The storage plugin class,</li>
  * <li>The schema factory for the plugin (which says which schemas
  * or tables are available),<.li>
- * <li>The batch reader to read the data for the plugin.<.li>
+ * <li>The batch reader to read the data for the plugin.</li>
  * </ul>
  *
  * Super classes require a number of standard methods to make

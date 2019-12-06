@@ -76,6 +76,7 @@ public class DummyStoragePlugin
       storagePlugin.initFramework(builder, subScan);
       ReaderFactory readerFactory = new DummyReaderFactory(storagePlugin.config(), subScan);
       builder.setReaderFactory(readerFactory);
+      builder.setNullType(Types.optional(MinorType.VARCHAR));
       builder.setContext(
         new ChildErrorContext(builder.errorContext()) {
           @Override
@@ -96,8 +97,6 @@ public class DummyStoragePlugin
   private static StoragePluginOptions buildOptions(DummyStoragePluginConfig config) {
     StoragePluginOptions options = new StoragePluginOptions();
     options.supportsRead = true;
-    options.supportsProjectPushDown = config.enableProjectPushDown();
-    options.nullType = Types.optional(MinorType.VARCHAR);
     options.scanSpecType = new TypeReference<DummyScanSpec>() { };
     options.scanFactory = new DummyScanFactory();
     return options;

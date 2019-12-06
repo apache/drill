@@ -43,7 +43,6 @@ import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.drill.exec.planner.physical.FilterPrel;
 import org.apache.drill.exec.planner.physical.PrelUtil;
-import org.apache.drill.exec.planner.physical.ScanPrel;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
@@ -189,6 +188,11 @@ public class FilterPushDownStrategy {
 
     Pair<GroupScan, List<RexNode>> translated =
         listener.transform(scan.getGroupScan(), filterTerms.left, filterTerms.right);
+
+    // Listener abandoned effort. (Allows a stub early in development.)
+    if (translated == null) {
+      return;
+    }
 
     // Listener rejected the DNF terms
 

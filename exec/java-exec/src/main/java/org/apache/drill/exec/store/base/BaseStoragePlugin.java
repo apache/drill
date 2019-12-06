@@ -25,7 +25,6 @@ import org.apache.drill.common.exceptions.ChildErrorContext;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.StoragePluginConfig;
-import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.metastore.MetadataProviderManager;
 import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
@@ -47,28 +46,74 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+/**
+ * Base class for non-DFS storage plugins. Provides a number of convinces to
+ * abstract away some of the complexity around such plugins. The
+ * {@link StoragePluginOptions} class captures the many options that would
+ * otherwise be specified by overriding methods. The
+ * {@link BaseScanFactory} class provides methods to create various
+ * objects during planning and execution.
+ *
+ * @param <C> the storage plugin configuration class
+ */
+
 public abstract class BaseStoragePlugin<C extends StoragePluginConfig>
     extends AbstractStoragePlugin {
 
-  static final Logger logger = LoggerFactory.getLogger(BaseStoragePlugin.class);
-  static final ObjectMapper DEFAULT_MAPPER = new ObjectMapper();
+  private static final Logger logger = LoggerFactory.getLogger(BaseStoragePlugin.class);
+  protected static final ObjectMapper DEFAULT_MAPPER = new ObjectMapper();
+  public static final String DEFAULT_SCHEMA_NAME = "default";
 
   public static class StoragePluginOptions {
-    public boolean supportsRead;
+
+    /**
+     * Identifies if the plugin supports read.
+     * <code>true</code> by default.
+     */
+    public boolean supportsRead = true;
+
+    /**
+     * Identifies if the plugin supports writes (as in
+     * <code>CREATE TABLE AS</code>. <code>false</code
+     * by default.
+     */
     public boolean supportsWrite;
-    public boolean supportsProjectPushDown;
-    public MajorType nullType;
+
+    /**
+     * If the plugin supports read, the value of the
+     * {@link CoreOperatorType} for the scan operator.
+     */
     public int readerId;
+    /**
+     * If the plugin supports read, the value of the
+     * {@link CoreOperatorType} for the sink operator.
+     */
     public int writerId;
+
+    /**
+     * The Jackson type reference used to deserialize the
+     * scan spec created from the schema class for this plugin.
+     */
     public TypeReference<?> scanSpecType;
+
+    /**
+     * The Jackson object mapper to use to deserialize the
+     * scan spec. The default is fine for most cases.
+     */
     public ObjectMapper objectMapper = DEFAULT_MAPPER;
+
+    /**
+     * The scan factory used to create the group scan and
+     * batch readers. Due to circular dependencies, it may be
+     * more convenient to set this field after calling the
+     * super class constructor.
+     */
     public BaseScanFactory<?,?,?,?> scanFactory;
   }
 
   protected final C config;
   protected final StoragePluginOptions options;
   protected SchemaFactory schemaFactory;
-  public static final String DEFAULT_SCHEMA_NAME = "default";
 
   protected BaseStoragePlugin(DrillbitContext context, C config, String name, StoragePluginOptions options) {
     super(context, name);
@@ -124,12 +169,13 @@ public abstract class BaseStoragePlugin<C extends StoragePluginConfig>
     }
   }
 
+  /**
+   * Initialize the scan framework. The plugin should create the framework best
+   * for that plugin, then call this method to set up common attributes.
+   */
   public void initFramework(ScanFrameworkBuilder builder, BaseSubScan subScan) {
     builder.setProjection(subScan.columns());
     builder.setUserName(subScan.getUserName());
-    if (options.nullType != null) {
-      builder.setNullType(options.nullType);
-    }
 
     // Provide custom error context
 

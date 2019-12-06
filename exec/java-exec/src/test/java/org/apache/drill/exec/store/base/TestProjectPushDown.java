@@ -37,30 +37,19 @@ public class TestProjectPushDown extends ClusterTest {
     StoragePluginRegistry pluginRegistry = cluster.drillbit().getContext().getStorage();
     DummyStoragePluginConfig config1 =
         new DummyStoragePluginConfig(true, false, true);
-    pluginRegistry.createOrUpdate("pushOn", config1, true);
-
-    DummyStoragePluginConfig config2 =
-        new DummyStoragePluginConfig(false, false, true);
-    pluginRegistry.createOrUpdate("pushOff", config2, true);
+    pluginRegistry.createOrUpdate("dummy", config1, true);
   }
 
   @Test
   public void testPushDownEnabled() throws Exception {
-    String plan = client.queryBuilder().sql("SELECT a, b, c from pushOn.myTable").explainJson();
+    String plan = client.queryBuilder().sql("SELECT a, b, c from dummy.myTable").explainJson();
     // DRILL-7451: should be 0
     assertEquals(1, StringUtils.countMatches(plan, "\"pop\" : \"project\""));
   }
 
   @Test
-  public void testPushDownDisabled() throws Exception {
-    String plan = client.queryBuilder().sql("SELECT a, b, c from pushOff.myTable").explainJson();
-    // DRILL-7451: should be 1
-    assertEquals(2, StringUtils.countMatches(plan, "\"pop\" : \"project\""));
-  }
-
-  @Test
   public void testDummyReader() throws Exception {
-    RowSet results = client.queryBuilder().sql("SELECT a, b, c from pushOn.myTable").rowSet();
+    RowSet results = client.queryBuilder().sql("SELECT a, b, c from dummy.myTable").rowSet();
     assertEquals(3, results.rowCount());
     results.clear();
   }
