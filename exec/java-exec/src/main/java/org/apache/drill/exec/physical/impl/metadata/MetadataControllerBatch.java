@@ -363,6 +363,7 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
         .build();
   }
 
+  @SuppressWarnings("rawtypes")
   private List<TableMetadataUnit> getMetadataUnits(TupleReader reader, int nestingLevel) {
     List<TableMetadataUnit> metadataUnits = new ArrayList<>();
 
@@ -425,6 +426,7 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
     return metadataUnits;
   }
 
+  @SuppressWarnings("rawtypes")
   private PartitionMetadata getPartitionMetadata(TupleReader reader, List<StatisticsHolder> metadataStatistics,
       Map<SchemaPath, ColumnStatistics> columnStatistics, int nestingLevel) {
     List<String> segmentColumns = popConfig.getContext().segmentColumns();
@@ -456,11 +458,11 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
         .build();
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("rawtypes")
   private BaseTableMetadata getTableMetadata(TupleReader reader, List<StatisticsHolder> metadataStatistics,
       Map<SchemaPath, ColumnStatistics> columnStatistics) {
     List<StatisticsHolder> updatedMetaStats = new ArrayList<>(metadataStatistics);
-    updatedMetaStats.add(new StatisticsHolder(popConfig.getContext().analyzeMetadataLevel(), TableStatisticsKind.ANALYZE_METADATA_LEVEL));
+    updatedMetaStats.add(new StatisticsHolder<>(popConfig.getContext().analyzeMetadataLevel(), TableStatisticsKind.ANALYZE_METADATA_LEVEL));
 
     MetadataInfo metadataInfo = MetadataInfo.builder()
         .type(MetadataType.TABLE)
@@ -489,6 +491,7 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
     return tableMetadata;
   }
 
+  @SuppressWarnings("rawtypes")
   private SegmentMetadata getSegmentMetadata(TupleReader reader, List<StatisticsHolder> metadataStatistics,
       Map<SchemaPath, ColumnStatistics> columnStatistics, int nestingLevel) {
     List<String> segmentColumns = popConfig.getContext().segmentColumns();
@@ -497,17 +500,31 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
         ? reader.column(segmentColumns.iterator().next()).scalar().getString()
         : MetadataInfo.DEFAULT_SEGMENT_KEY;
 
-    List<String> partitionValues = segmentColumns.stream()
+    // for the case of multi-value segments, there is no nesting
+    // and therefore all values should be used when forming metadata identifier
+    if (popConfig.getContext().multiValueSegments()) {
+      nestingLevel = segmentColumns.size();
+    }
+
+    List<String> allPartitionValues = segmentColumns.stream()
         .limit(nestingLevel)
         .map(columnName -> reader.column(columnName).scalar().getString())
         .collect(Collectors.toList());
-    String metadataIdentifier = MetadataIdentifierUtils.getMetadataIdentifierKey(partitionValues);
+    String metadataIdentifier = MetadataIdentifierUtils.getMetadataIdentifierKey(allPartitionValues);
 
     MetadataInfo metadataInfo = MetadataInfo.builder()
         .type(MetadataType.SEGMENT)
         .key(segmentKey)
         .identifier(StringUtils.defaultIfEmpty(metadataIdentifier, null))
         .build();
+
+    int segmentLevel = nestingLevel - 1;
+
+    // for the case of multi-value segments, there is no nesting,
+    // so all partition column values should be used
+    List<String> partitionValues = popConfig.getContext().multiValueSegments()
+        ? allPartitionValues
+        : Collections.singletonList(allPartitionValues.get(segmentLevel));
 
     return SegmentMetadata.builder()
         .tableInfo(tableInfo)
@@ -516,13 +533,14 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
         .metadataStatistics(metadataStatistics)
         .path(new Path(reader.column(MetastoreAnalyzeConstants.LOCATION_FIELD).scalar().getString()))
         .locations(getIncomingLocations(reader))
-        .column(segmentColumns.size() > 0 ? SchemaPath.getSimplePath(segmentColumns.get(nestingLevel - 1)) : null)
+        .column(segmentColumns.size() > 0 ? SchemaPath.getSimplePath(segmentColumns.get(segmentLevel)) : null)
         .partitionValues(partitionValues)
         .lastModifiedTime(Long.parseLong(reader.column(columnNamesOptions.lastModifiedTime()).scalar().getString()))
         .schema(TupleMetadata.of(reader.column(MetastoreAnalyzeConstants.SCHEMA_FIELD).scalar().getString()))
         .build();
   }
 
+  @SuppressWarnings("rawtypes")
   private FileMetadata getFileMetadata(TupleReader reader, List<StatisticsHolder> metadataStatistics,
       Map<SchemaPath, ColumnStatistics> columnStatistics, int nestingLevel) {
     List<String> segmentColumns = popConfig.getContext().segmentColumns();
@@ -556,6 +574,7 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
         .build();
   }
 
+  @SuppressWarnings("rawtypes")
   private RowGroupMetadata getRowGroupMetadata(TupleReader reader,List<StatisticsHolder> metadataStatistics,
       Map<SchemaPath, ColumnStatistics> columnStatistics, int nestingLevel) {
 
@@ -594,7 +613,7 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
         .build();
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("rawtypes")
   private Map<SchemaPath, ColumnStatistics> getColumnStatistics(TupleReader reader, TupleMetadata columnMetadata, Long rowCount) {
     Multimap<String, StatisticsHolder> columnStatistics = ArrayListMultimap.create();
     Map<String, TypeProtos.MinorType> columnTypes = new HashMap<>();
@@ -602,9 +621,9 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
       String fieldName = AnalyzeColumnUtils.getColumnName(column.name());
 
       if (AnalyzeColumnUtils.isColumnStatisticsField(column.name())) {
-        StatisticsKind statisticsKind = AnalyzeColumnUtils.getStatisticsKind(column.name());
+        StatisticsKind<?> statisticsKind = AnalyzeColumnUtils.getStatisticsKind(column.name());
         columnStatistics.put(fieldName,
-            new StatisticsHolder(getConvertedColumnValue(reader.column(column.name())), statisticsKind));
+            new StatisticsHolder<>(getConvertedColumnValue(reader.column(column.name())), statisticsKind));
         if (statisticsKind.getName().equalsIgnoreCase(ColumnStatisticsKind.MIN_VALUE.getName())
             || statisticsKind.getName().equalsIgnoreCase(ColumnStatisticsKind.MAX_VALUE.getName())) {
           columnTypes.putIfAbsent(fieldName, column.type());
@@ -617,13 +636,13 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
       Map<String, StatisticsHolder> nullsCountColumnStatistics = new HashMap<>();
       columnStatistics.asMap().forEach((key, value) ->
           value.stream()
-              .filter(statisticsHolder -> statisticsHolder.getStatisticsKind() == ColumnStatisticsKind.NON_NULL_COUNT)
+              .filter(statisticsHolder -> statisticsHolder.getStatisticsKind() == ColumnStatisticsKind.NON_NULL_VALUES_COUNT)
               .findAny()
               .map(statisticsHolder -> (Long) statisticsHolder.getStatisticsValue())
               .ifPresent(nonNullCount ->
                   nullsCountColumnStatistics.put(
                       key,
-                      new StatisticsHolder(rowCount - nonNullCount, ColumnStatisticsKind.NULLS_COUNT))));
+                      new StatisticsHolder<>(rowCount - nonNullCount, ColumnStatisticsKind.NULLS_COUNT))));
 
       nullsCountColumnStatistics.forEach(columnStatistics::put);
     }
@@ -631,11 +650,11 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
     Map<SchemaPath, ColumnStatistics> resultingStats = new HashMap<>();
 
     columnStatistics.asMap().forEach((fieldName, statisticsHolders) ->
-        resultingStats.put(SchemaPath.parseFromString(fieldName), new ColumnStatistics(statisticsHolders, columnTypes.get(fieldName))));
+        resultingStats.put(SchemaPath.parseFromString(fieldName), new ColumnStatistics<>(statisticsHolders, columnTypes.get(fieldName))));
     return resultingStats;
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("rawtypes")
   private List<StatisticsHolder> getMetadataStatistics(TupleReader reader, TupleMetadata columnMetadata) {
     List<StatisticsHolder> metadataStatistics = new ArrayList<>();
     String rgs = columnNamesOptions.rowGroupStart();
@@ -644,15 +663,15 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
       String columnName = column.name();
       ObjectReader objectReader = reader.column(columnName);
       if (AnalyzeColumnUtils.isMetadataStatisticsField(columnName)) {
-        metadataStatistics.add(new StatisticsHolder(objectReader.getObject(),
+        metadataStatistics.add(new StatisticsHolder<>(objectReader.getObject(),
             AnalyzeColumnUtils.getStatisticsKind(columnName)));
       } else if (!objectReader.isNull()) {
         if (columnName.equals(rgs)) {
-          metadataStatistics.add(new StatisticsHolder(Long.parseLong(objectReader.scalar().getString()),
-              new BaseStatisticsKind(ExactStatisticsConstants.START, true)));
+          metadataStatistics.add(new StatisticsHolder<>(Long.parseLong(objectReader.scalar().getString()),
+              new BaseStatisticsKind<>(ExactStatisticsConstants.START, true)));
         } else if (columnName.equals(rgl)) {
-          metadataStatistics.add(new StatisticsHolder(Long.parseLong(objectReader.scalar().getString()),
-              new BaseStatisticsKind(ExactStatisticsConstants.LENGTH, true)));
+          metadataStatistics.add(new StatisticsHolder<>(Long.parseLong(objectReader.scalar().getString()),
+              new BaseStatisticsKind<>(ExactStatisticsConstants.LENGTH, true)));
         }
       }
     }
@@ -664,7 +683,7 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
       List<FieldConverter> fieldConverters = new ArrayList<>();
       int fieldId = 0;
 
-      for (VectorWrapper wrapper : right) {
+      for (VectorWrapper<?> wrapper : right) {
         if (wrapper.getField().getName().equalsIgnoreCase(WriterPrel.PARTITION_COMPARATOR_FIELD)) {
           continue;
         }

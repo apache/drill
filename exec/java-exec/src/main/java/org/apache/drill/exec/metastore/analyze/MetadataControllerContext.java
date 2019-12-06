@@ -44,6 +44,7 @@ public class MetadataControllerContext {
   private final List<MetadataInfo> metadataToHandle;
   private final List<MetadataInfo> metadataToRemove;
   private final MetadataType analyzeMetadataLevel;
+  private final boolean multiValueSegments;
 
   private MetadataControllerContext(MetadataControllerContextBuilder builder) {
     this.tableInfo = builder.tableInfo;
@@ -54,6 +55,7 @@ public class MetadataControllerContext {
     this.metadataToHandle = builder.metadataToHandle;
     this.metadataToRemove = builder.metadataToRemove;
     this.analyzeMetadataLevel = builder.analyzeMetadataLevel;
+    this.multiValueSegments = builder.multiValueSegments;
   }
 
   @JsonProperty
@@ -96,6 +98,18 @@ public class MetadataControllerContext {
     return analyzeMetadataLevel;
   }
 
+  /**
+   * Specifies whether metadata controller should create segments with multiple partition values.
+   * For example, Hive partitions contain multiple partition values within the same segment.
+   *
+   * @return {@code true} if metadata controller should create segments with multiple partition values,
+   * {@code false} otherwise
+   */
+  @JsonProperty
+  public boolean multiValueSegments() {
+    return multiValueSegments;
+  }
+
   @Override
   public String toString() {
     return new StringJoiner(",\n", MetadataControllerContext.class.getSimpleName() + "[", "]")
@@ -123,6 +137,7 @@ public class MetadataControllerContext {
     private List<MetadataInfo> metadataToHandle;
     private List<MetadataInfo> metadataToRemove;
     private MetadataType analyzeMetadataLevel;
+    private boolean multiValueSegments;
 
     public MetadataControllerContextBuilder tableInfo(TableInfo tableInfo) {
       this.tableInfo = tableInfo;
@@ -161,6 +176,11 @@ public class MetadataControllerContext {
 
     public MetadataControllerContextBuilder analyzeMetadataLevel(MetadataType metadataType) {
       this.analyzeMetadataLevel = metadataType;
+      return this;
+    }
+
+    public MetadataControllerContextBuilder multiValueSegments(boolean multiValueSegments) {
+      this.multiValueSegments = multiValueSegments;
       return this;
     }
 

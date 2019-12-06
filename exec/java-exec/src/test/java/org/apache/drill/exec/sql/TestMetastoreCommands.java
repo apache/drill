@@ -62,6 +62,9 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.nio.file.Paths;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -78,6 +81,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 @Category({SlowTest.class, MetastoreTest.class})
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class TestMetastoreCommands extends ClusterTest {
 
   private static final TupleMetadata SCHEMA = new SchemaBuilder()
@@ -360,8 +364,8 @@ public class TestMetastoreCommands extends ClusterTest {
         .columnsStatistics(DIR0_1994_Q1_SEGMENT_COLUMN_STATISTICS)
         .metadataStatistics(Arrays.asList(
             new StatisticsHolder<>(10L, TableStatisticsKind.ROW_COUNT),
-            new StatisticsHolder<>(1196L, new BaseStatisticsKind(ExactStatisticsConstants.LENGTH, true)),
-            new StatisticsHolder<>(4L, new BaseStatisticsKind(ExactStatisticsConstants.START, true))))
+            new StatisticsHolder<>(1196L, new BaseStatisticsKind<>(ExactStatisticsConstants.LENGTH, true)),
+            new StatisticsHolder<>(4L, new BaseStatisticsKind<>(ExactStatisticsConstants.START, true))))
         .path(new Path(tablePath, "1994/Q1/orders_94_q1.parquet"))
         .build();
 
@@ -438,7 +442,7 @@ public class TestMetastoreCommands extends ClusterTest {
           .columnsStatistics(DIR0_1994_Q1_SEGMENT_COLUMN_STATISTICS)
           .metadataStatistics(Collections.singletonList(new StatisticsHolder<>(10L, TableStatisticsKind.ROW_COUNT)))
           .locations(ImmutableSet.of(new Path(tablePath, "1994/Q1/orders_94_q1.parquet")))
-          .partitionValues(Arrays.asList("1994", "Q1"))
+          .partitionValues(Collections.singletonList("Q1"))
           .build();
 
       // verify segment for 1994
@@ -963,7 +967,6 @@ public class TestMetastoreCommands extends ClusterTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void testIncrementalAnalyzeNewParentSegment() throws Exception {
     String tableName = "multilevel/parquetNewParentSegment";
 
@@ -979,7 +982,7 @@ public class TestMetastoreCommands extends ClusterTest {
         columnStatistics.cloneWith(new ColumnStatistics<>(
             Arrays.asList(
                 new StatisticsHolder<>(160L, TableStatisticsKind.ROW_COUNT),
-                new StatisticsHolder<>(160L, ColumnStatisticsKind.NON_NULL_COUNT)))));
+                new StatisticsHolder<>(160L, ColumnStatisticsKind.NON_NULL_VALUES_COUNT)))));
 
     updatedStatistics.computeIfPresent(SchemaPath.getSimplePath("dir0"), (logicalExpressions, columnStatistics) ->
         columnStatistics.cloneWith(new ColumnStatistics<>(
@@ -1055,7 +1058,6 @@ public class TestMetastoreCommands extends ClusterTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void testIncrementalAnalyzeNewChildSegment() throws Exception {
     String tableName = "multilevel/parquetNewChildSegment";
 
@@ -1071,7 +1073,7 @@ public class TestMetastoreCommands extends ClusterTest {
         columnStatistics.cloneWith(new ColumnStatistics(
             Arrays.asList(
                 new StatisticsHolder<>(130L, TableStatisticsKind.ROW_COUNT),
-                new StatisticsHolder<>(130L, ColumnStatisticsKind.NON_NULL_COUNT)))));
+                new StatisticsHolder<>(130L, ColumnStatisticsKind.NON_NULL_VALUES_COUNT)))));
 
     updatedStatistics.computeIfPresent(SchemaPath.getSimplePath("dir1"), (logicalExpressions, columnStatistics) ->
         columnStatistics.cloneWith(new ColumnStatistics(
@@ -1140,7 +1142,6 @@ public class TestMetastoreCommands extends ClusterTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void testIncrementalAnalyzeNewFile() throws Exception {
     String tableName = "multilevel/parquetNewFile";
 
@@ -1156,7 +1157,7 @@ public class TestMetastoreCommands extends ClusterTest {
         columnStatistics.cloneWith(new ColumnStatistics(
             Arrays.asList(
                 new StatisticsHolder<>(130L, TableStatisticsKind.ROW_COUNT),
-                new StatisticsHolder<>(130L, ColumnStatisticsKind.NON_NULL_COUNT)))));
+                new StatisticsHolder<>(130L, ColumnStatisticsKind.NON_NULL_VALUES_COUNT)))));
 
     BaseTableMetadata expectedTableMetadata = BaseTableMetadata.builder()
         .tableInfo(tableInfo)
@@ -1556,7 +1557,6 @@ public class TestMetastoreCommands extends ClusterTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void testIncrementalAnalyzeUpdatedFile() throws Exception {
     String tableName = "multilevel/parquetUpdatedFile";
 
@@ -1772,7 +1772,6 @@ public class TestMetastoreCommands extends ClusterTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void testDefaultSegment() throws Exception {
     String tableName = "multilevel/parquet/1994/Q1";
     File table = dirTestWatcher.copyResourceToTestTmp(Paths.get(tableName), Paths.get(tableName));
@@ -1804,7 +1803,7 @@ public class TestMetastoreCommands extends ClusterTest {
         columnStatistics.cloneWith(new ColumnStatistics(
             Arrays.asList(
                 new StatisticsHolder<>(10L, TableStatisticsKind.ROW_COUNT),
-                new StatisticsHolder<>(10L, ColumnStatisticsKind.NON_NULL_COUNT)))));
+                new StatisticsHolder<>(10L, ColumnStatisticsKind.NON_NULL_VALUES_COUNT)))));
 
     BaseTableMetadata expectedTableMetadata = BaseTableMetadata.builder()
         .tableInfo(tableInfo)
@@ -2979,6 +2978,156 @@ public class TestMetastoreCommands extends ClusterTest {
     }
   }
 
+  @Test
+  public void testDescribeWithMetastore() throws Exception {
+    String tableName = "describeTable";
+
+    File table = dirTestWatcher.copyResourceToTestTmp(Paths.get("multilevel/parquet"), Paths.get(tableName));
+
+    try {
+      client.alterSession(PlannerSettings.STATISTICS_USE.getOptionName(), true);
+
+      testBuilder()
+          .sqlQuery("analyze table dfs.tmp.`%s` REFRESH METADATA", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.tmp.%s]", tableName))
+          .go();
+
+      testBuilder()
+          .sqlQuery("describe table dfs.tmp.`%s`", tableName)
+          .unOrdered()
+          .baselineColumns("COLUMN_NAME", "DATA_TYPE", "IS_NULLABLE")
+          .baselineValues("dir0", "CHARACTER VARYING", "YES")
+          .baselineValues("dir1", "CHARACTER VARYING", "YES")
+          .baselineValues("o_orderkey", "INTEGER", "NO")
+          .baselineValues("o_custkey", "INTEGER", "NO")
+          .baselineValues("o_orderstatus", "CHARACTER VARYING", "NO")
+          .baselineValues("o_totalprice", "DOUBLE", "NO")
+          .baselineValues("o_orderdate", "DATE", "NO")
+          .baselineValues("o_orderpriority", "CHARACTER VARYING", "NO")
+          .baselineValues("o_clerk", "CHARACTER VARYING", "NO")
+          .baselineValues("o_shippriority", "INTEGER", "NO")
+          .baselineValues("o_comment", "CHARACTER VARYING", "NO")
+          .go();
+    } finally {
+      run("analyze table dfs.tmp.`%s` drop metadata if exists", tableName);
+      client.resetSession(PlannerSettings.STATISTICS_USE.getOptionName());
+
+      FileUtils.deleteQuietly(table);
+    }
+  }
+
+  @Test
+  public void testSelectFromInfoSchemaTablesWithMetastore() throws Exception {
+    String tableName = "tableInInfoSchema";
+
+    File table = dirTestWatcher.copyResourceToTestTmp(Paths.get("multilevel/parquet"), Paths.get(tableName));
+
+    try {
+      testBuilder()
+          .sqlQuery("analyze table dfs.tmp.`%s` REFRESH METADATA", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.tmp.%s]", tableName))
+          .go();
+
+      LocalDateTime localDateTime = getLocalDateTime(getMaxLastModified(table));
+
+      String absolutePath = new Path(table.toURI().getPath()).toUri().getPath();
+      testBuilder()
+          .sqlQuery("select * from information_schema.`tables` where TABLE_NAME='%s'", tableName)
+          .unOrdered()
+          .baselineColumns("TABLE_CATALOG", "TABLE_SCHEMA", "TABLE_NAME", "TABLE_TYPE", "TABLE_SOURCE", "LOCATION", "NUM_ROWS", "LAST_MODIFIED_TIME")
+          .baselineValues("DRILL", "dfs.tmp", tableName, "TABLE", "PARQUET", absolutePath, 120L, localDateTime)
+          .go();
+    } finally {
+      run("analyze table dfs.tmp.`%s` drop metadata if exists", tableName);
+
+      FileUtils.deleteQuietly(table);
+    }
+  }
+
+  private LocalDateTime getLocalDateTime(long maxLastModified) {
+    return Instant.ofEpochMilli(maxLastModified)
+            .atZone(ZoneId.of("UTC"))
+            .withZoneSameLocal(ZoneId.systemDefault())
+            .toLocalDateTime();
+  }
+
+  @Test
+  public void testSelectFromInfoSchemaColumnsWithMetastore() throws Exception {
+    String tableName = "columnInInfoSchema";
+
+    File table = dirTestWatcher.copyResourceToTestTmp(Paths.get("multilevel/parquet"), Paths.get(tableName));
+
+    try {
+      client.alterSession(PlannerSettings.STATISTICS_USE.getOptionName(), true);
+
+      testBuilder()
+          .sqlQuery("analyze table dfs.tmp.`%s` REFRESH METADATA", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.tmp.%s]", tableName))
+          .go();
+
+      testBuilder()
+          .sqlQuery("select * from information_schema.`columns` where TABLE_NAME='%s' and COLUMN_NAME in ('dir0', 'o_orderkey', 'o_totalprice')", tableName)
+          .unOrdered()
+          .baselineColumns("TABLE_CATALOG", "TABLE_SCHEMA", "TABLE_NAME", "COLUMN_NAME", "ORDINAL_POSITION",
+              "COLUMN_DEFAULT", "IS_NULLABLE", "DATA_TYPE", "CHARACTER_MAXIMUM_LENGTH", "CHARACTER_OCTET_LENGTH",
+              "NUMERIC_PRECISION", "NUMERIC_PRECISION_RADIX", "NUMERIC_SCALE", "DATETIME_PRECISION", "INTERVAL_TYPE",
+              "INTERVAL_PRECISION", "COLUMN_SIZE", "COLUMN_FORMAT", "NUM_NULLS", "MIN_VAL", "MAX_VAL", "NDV", "EST_NUM_NON_NULLS", "IS_NESTED")
+          .baselineValues("DRILL", "dfs.tmp", tableName, "dir0", 1, null, "YES", "CHARACTER VARYING",
+              65535, 65535, null, null, null, null, null, null, 65535, null, 0L, "1994", "1996", null, null, false)
+          .baselineValues("DRILL", "dfs.tmp", tableName, "o_orderkey", 3, null, "NO", "INTEGER",
+              null, null, 0, 2, 0, null, null, null, 11, null, 0L, "1", "1319", 119.0, 120.0, false)
+          .baselineValues("DRILL", "dfs.tmp", tableName, "o_totalprice", 6, null, "NO", "DOUBLE",
+              null, null, 0, 2, 0, null, null, null, 24, null, 0L, "3266.69", "350110.21", 120.0, 120.0, false)
+          .go();
+    } finally {
+      run("analyze table dfs.tmp.`%s` drop metadata if exists", tableName);
+      client.resetSession(PlannerSettings.STATISTICS_USE.getOptionName());
+
+      FileUtils.deleteQuietly(table);
+    }
+  }
+
+  @Test
+  public void testSelectFromInfoSchemaPartitionsWithMetastore() throws Exception {
+    String tableName = "partitionInInfoSchema";
+
+    File table = dirTestWatcher.copyResourceToTestTmp(Paths.get("multilevel/parquet"), Paths.get(tableName));
+
+    try {
+      client.resetSession(ExecConstants.SLICE_TARGET);
+      testBuilder()
+          .sqlQuery("analyze table dfs.tmp.`%s` REFRESH METADATA", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.tmp.%s]", tableName))
+          .go();
+
+      File seg1994q1 = new File(table, "1994/Q1");
+      File seg1995q2 = new File(table, "1995/Q2");
+      testBuilder()
+          .sqlQuery("select * from information_schema.`partitions` where TABLE_NAME='%s' and METADATA_IDENTIFIER in ('1994/Q1', '1995/Q2') order by LOCATION", tableName)
+          .unOrdered()
+          .baselineColumns("TABLE_CATALOG", "TABLE_SCHEMA", "TABLE_NAME", "METADATA_KEY", "METADATA_TYPE",
+              "METADATA_IDENTIFIER", "PARTITION_COLUMN", "PARTITION_VALUE", "LOCATION", "LAST_MODIFIED_TIME")
+          .baselineValues("DRILL", "dfs.tmp", tableName, "1994", "SEGMENT", "1994/Q1", "`dir1`", "Q1",
+              new Path(seg1994q1.toURI().getPath()).toUri().getPath(), getLocalDateTime(getMaxLastModified(seg1994q1)))
+          .baselineValues("DRILL", "dfs.tmp", tableName, "1995", "SEGMENT", "1995/Q2", "`dir1`", "Q2",
+              new Path(seg1995q2.toURI().getPath()).toUri().getPath(), getLocalDateTime(getMaxLastModified(seg1995q2)))
+          .go();
+    } finally {
+      run("analyze table dfs.tmp.`%s` drop metadata if exists", tableName);
+      client.alterSession(ExecConstants.SLICE_TARGET, 1);
+
+      FileUtils.deleteQuietly(table);
+    }
+  }
+
   private static <T> ColumnStatistics<T> getColumnStatistics(T minValue, T maxValue,
       long rowCount, TypeProtos.MinorType minorType) {
     return new ColumnStatistics<>(
@@ -2986,7 +3135,7 @@ public class TestMetastoreCommands extends ClusterTest {
             new StatisticsHolder<>(minValue, ColumnStatisticsKind.MIN_VALUE),
             new StatisticsHolder<>(maxValue, ColumnStatisticsKind.MAX_VALUE),
             new StatisticsHolder<>(rowCount, TableStatisticsKind.ROW_COUNT),
-            new StatisticsHolder<>(rowCount, ColumnStatisticsKind.NON_NULL_COUNT),
+            new StatisticsHolder<>(rowCount, ColumnStatisticsKind.NON_NULL_VALUES_COUNT),
             new StatisticsHolder<>(0L, ColumnStatisticsKind.NULLS_COUNT)),
         minorType);
   }
