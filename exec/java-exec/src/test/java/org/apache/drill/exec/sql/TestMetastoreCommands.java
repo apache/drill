@@ -291,7 +291,7 @@ public class TestMetastoreCommands extends ClusterTest {
             .build())
         .path(new Path(tablePath, "1994"))
         .schema(SCHEMA)
-        .lastModifiedTime(new File(table, "1994").lastModified())
+        .lastModifiedTime(getMaxLastModified(new File(table, "1994")))
         .column(SchemaPath.getSimplePath("dir0"))
         .columnsStatistics(DIR0_1994_SEGMENT_COLUMN_STATISTICS)
         .metadataStatistics(Collections.singletonList(new StatisticsHolder<>(40L, TableStatisticsKind.ROW_COUNT)))
@@ -433,7 +433,7 @@ public class TestMetastoreCommands extends ClusterTest {
               .build())
           .path(new Path(new Path(tablePath, "1994"), "Q1"))
           .schema(SCHEMA)
-          .lastModifiedTime(new File(new File(table, "1994"), "Q1").lastModified())
+          .lastModifiedTime(getMaxLastModified(new File(new File(table, "1994"), "Q1")))
           .column(SchemaPath.getSimplePath("dir1"))
           .columnsStatistics(DIR0_1994_Q1_SEGMENT_COLUMN_STATISTICS)
           .metadataStatistics(Collections.singletonList(new StatisticsHolder<>(10L, TableStatisticsKind.ROW_COUNT)))
@@ -506,7 +506,7 @@ public class TestMetastoreCommands extends ClusterTest {
           .metadataStatistics(Arrays.asList(new StatisticsHolder<>(120L, TableStatisticsKind.ROW_COUNT),
               new StatisticsHolder<>(analyzeLevel, TableStatisticsKind.ANALYZE_METADATA_LEVEL)))
           .partitionKeys(Collections.emptyMap())
-          .lastModifiedTime(tablePath.lastModified())
+          .lastModifiedTime(getMaxLastModified(tablePath))
           .build();
 
       try {
@@ -609,7 +609,7 @@ public class TestMetastoreCommands extends ClusterTest {
         .metadataStatistics(Arrays.asList(new StatisticsHolder<>(120L, TableStatisticsKind.ROW_COUNT),
             new StatisticsHolder<>(MetadataType.ROW_GROUP, TableStatisticsKind.ANALYZE_METADATA_LEVEL)))
         .partitionKeys(Collections.emptyMap())
-        .lastModifiedTime(table.lastModified())
+        .lastModifiedTime(getMaxLastModified(table))
         .interestingColumns(Collections.singletonList(orderStatusPath))
         .build();
 
@@ -659,7 +659,7 @@ public class TestMetastoreCommands extends ClusterTest {
         .metadataStatistics(Arrays.asList(new StatisticsHolder<>(120L, TableStatisticsKind.ROW_COUNT),
             new StatisticsHolder<>(MetadataType.ROW_GROUP, TableStatisticsKind.ANALYZE_METADATA_LEVEL)))
         .partitionKeys(Collections.emptyMap())
-        .lastModifiedTime(table.lastModified())
+        .lastModifiedTime(getMaxLastModified(table))
         .interestingColumns(Collections.emptyList())
         .build();
 
@@ -713,7 +713,7 @@ public class TestMetastoreCommands extends ClusterTest {
         .metadataStatistics(Arrays.asList(new StatisticsHolder<>(120L, TableStatisticsKind.ROW_COUNT),
             new StatisticsHolder<>(MetadataType.ROW_GROUP, TableStatisticsKind.ANALYZE_METADATA_LEVEL)))
         .partitionKeys(Collections.emptyMap())
-        .lastModifiedTime(table.lastModified())
+        .lastModifiedTime(getMaxLastModified(table))
         .interestingColumns(Arrays.asList(orderStatusPath, orderDatePath))
         .build();
 
@@ -783,7 +783,7 @@ public class TestMetastoreCommands extends ClusterTest {
         .metadataStatistics(Arrays.asList(new StatisticsHolder<>(120L, TableStatisticsKind.ROW_COUNT),
             new StatisticsHolder<>(MetadataType.ROW_GROUP, TableStatisticsKind.ANALYZE_METADATA_LEVEL)))
         .partitionKeys(Collections.emptyMap())
-        .lastModifiedTime(table.lastModified())
+        .lastModifiedTime(getMaxLastModified(table))
         .interestingColumns(Collections.singletonList(orderStatusPath))
         .build();
 
@@ -861,7 +861,7 @@ public class TestMetastoreCommands extends ClusterTest {
         .metadataStatistics(Arrays.asList(new StatisticsHolder<>(120L, TableStatisticsKind.ROW_COUNT),
             new StatisticsHolder<>(MetadataType.ROW_GROUP, TableStatisticsKind.ANALYZE_METADATA_LEVEL)))
         .partitionKeys(Collections.emptyMap())
-        .lastModifiedTime(table.lastModified())
+        .lastModifiedTime(getMaxLastModified(table))
         .interestingColumns(Arrays.asList(orderStatusPath, orderDatePath))
         .build();
 
@@ -911,7 +911,7 @@ public class TestMetastoreCommands extends ClusterTest {
 
     TableInfo tableInfo = getTableInfo(tableName, "tmp");
 
-    long lastModifiedTime = table.lastModified();
+    long lastModifiedTime = getMaxLastModified(table);
 
     try {
       testBuilder()
@@ -994,7 +994,7 @@ public class TestMetastoreCommands extends ClusterTest {
         .metadataStatistics(Arrays.asList(new StatisticsHolder<>(160L, TableStatisticsKind.ROW_COUNT),
             new StatisticsHolder<>(MetadataType.ALL, TableStatisticsKind.ANALYZE_METADATA_LEVEL)))
         .partitionKeys(Collections.emptyMap())
-        .lastModifiedTime(table.lastModified())
+        .lastModifiedTime(getMaxLastModified(table))
         .build();
 
     try {
@@ -1086,7 +1086,7 @@ public class TestMetastoreCommands extends ClusterTest {
         .metadataStatistics(Arrays.asList(new StatisticsHolder<>(130L, TableStatisticsKind.ROW_COUNT),
             new StatisticsHolder<>(MetadataType.ALL, TableStatisticsKind.ANALYZE_METADATA_LEVEL)))
         .partitionKeys(Collections.emptyMap())
-        .lastModifiedTime(table.lastModified())
+        .lastModifiedTime(getMaxLastModified(table))
         .build();
 
     try {
@@ -1167,7 +1167,7 @@ public class TestMetastoreCommands extends ClusterTest {
         .metadataStatistics(Arrays.asList(new StatisticsHolder<>(130L, TableStatisticsKind.ROW_COUNT),
             new StatisticsHolder<>(MetadataType.ALL, TableStatisticsKind.ANALYZE_METADATA_LEVEL)))
         .partitionKeys(Collections.emptyMap())
-        .lastModifiedTime(table.lastModified())
+        .lastModifiedTime(getMaxLastModified(table))
         .build();
 
     try {
@@ -1608,7 +1608,8 @@ public class TestMetastoreCommands extends ClusterTest {
           Paths.get("multilevel", "parquet", "1994", "Q1", "orders_94_q1.parquet"),
           Paths.get(tableName, "1994", "Q4", "orders_94_q4.parquet"));
 
-      assertTrue(fileToUpdate.setLastModified(lastModified + 1000));
+      long newLastModified = lastModified + 1000;
+      assertTrue(fileToUpdate.setLastModified(newLastModified));
 
       testBuilder()
           .sqlQuery("ANALYZE TABLE dfs.tmp.`%s` REFRESH METADATA", tableName)
@@ -1644,7 +1645,7 @@ public class TestMetastoreCommands extends ClusterTest {
           .metadataStatistics(Arrays.asList(new StatisticsHolder<>(120L, TableStatisticsKind.ROW_COUNT),
               new StatisticsHolder<>(MetadataType.ALL, TableStatisticsKind.ANALYZE_METADATA_LEVEL)))
           .partitionKeys(Collections.emptyMap())
-          .lastModifiedTime(lastModified + 1000)
+          .lastModifiedTime(newLastModified)
           .build();
 
       assertEquals(expectedTableMetadata, actualTableMetadata);
@@ -1699,7 +1700,7 @@ public class TestMetastoreCommands extends ClusterTest {
         .metadataStatistics(Arrays.asList(new StatisticsHolder<>(120L, TableStatisticsKind.ROW_COUNT),
             new StatisticsHolder<>(MetadataType.FILE, TableStatisticsKind.ANALYZE_METADATA_LEVEL)))
         .partitionKeys(Collections.emptyMap())
-        .lastModifiedTime(table.lastModified())
+        .lastModifiedTime(getMaxLastModified(table))
         .build();
 
     try {
@@ -1752,7 +1753,7 @@ public class TestMetastoreCommands extends ClusterTest {
           .metadataStatistics(Arrays.asList(new StatisticsHolder<>(120L, TableStatisticsKind.ROW_COUNT),
               new StatisticsHolder<>(MetadataType.ROW_GROUP, TableStatisticsKind.ANALYZE_METADATA_LEVEL)))
           .partitionKeys(Collections.emptyMap())
-          .lastModifiedTime(table.lastModified())
+          .lastModifiedTime(getMaxLastModified(table))
           .build();
 
       assertEquals(expectedTableMetadata, actualTableMetadata);
@@ -1774,9 +1775,10 @@ public class TestMetastoreCommands extends ClusterTest {
   @SuppressWarnings("unchecked")
   public void testDefaultSegment() throws Exception {
     String tableName = "multilevel/parquet/1994/Q1";
-    Path tablePath = new Path(dirTestWatcher.getRootDir().toURI().getPath(), tableName);
+    File table = dirTestWatcher.copyResourceToTestTmp(Paths.get(tableName), Paths.get(tableName));
+    Path tablePath = new Path(table.toURI().getPath());
 
-    TableInfo tableInfo = getTableInfo(tableName, "default");
+    TableInfo tableInfo = getTableInfo(tableName, "tmp");
 
     Map<SchemaPath, ColumnStatistics> tableColumnStatistics = new HashMap<>(TABLE_COLUMN_STATISTICS);
     tableColumnStatistics.remove(SchemaPath.getSimplePath("dir0"));
@@ -1823,33 +1825,33 @@ public class TestMetastoreCommands extends ClusterTest {
         .metadataStatistics(Arrays.asList(new StatisticsHolder<>(10L, TableStatisticsKind.ROW_COUNT),
             new StatisticsHolder<>(MetadataType.ALL, TableStatisticsKind.ANALYZE_METADATA_LEVEL)))
         .partitionKeys(Collections.emptyMap())
-        .lastModifiedTime(new File(dirTestWatcher.getRootDir().toURI().getPath(), tableName).lastModified())
+        .lastModifiedTime(getMaxLastModified(table))
         .build();
 
     SegmentMetadata defaultSegment = SegmentMetadata.builder()
         .tableInfo(TableInfo.builder()
             .name(tableName)
             .storagePlugin("dfs")
-            .workspace("default")
+            .workspace("tmp")
             .build())
         .metadataInfo(MetadataInfo.builder()
             .type(MetadataType.SEGMENT)
             .key(MetadataInfo.DEFAULT_SEGMENT_KEY)
             .build())
-        .lastModifiedTime(new File(new File(dirTestWatcher.getRootDir().toURI().getPath(), tableName), "orders_94_q1.parquet").lastModified())
+        .lastModifiedTime(new File(table, "orders_94_q1.parquet").lastModified())
         .columnsStatistics(Collections.emptyMap())
         .metadataStatistics(Collections.emptyList())
-        .path(new Path(dirTestWatcher.getRootDir().toURI().getPath(), tableName))
+        .path(tablePath)
         .locations(ImmutableSet.of(
             new Path(tablePath, "orders_94_q1.parquet")))
         .build();
 
     try {
       testBuilder()
-          .sqlQuery("ANALYZE TABLE dfs.`%s` REFRESH METADATA", tableName)
+          .sqlQuery("ANALYZE TABLE dfs.tmp.`%s` REFRESH METADATA", tableName)
           .unOrdered()
           .baselineColumns("ok", "summary")
-          .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.default.%s]", tableName))
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.tmp.%s]", tableName))
           .go();
 
       BaseTableMetadata actualTableMetadata = cluster.drillbit().getContext()
@@ -1934,7 +1936,7 @@ public class TestMetastoreCommands extends ClusterTest {
         .metadataStatistics(Arrays.asList(new StatisticsHolder<>(5L, TableStatisticsKind.ROW_COUNT),
             new StatisticsHolder<>(MetadataType.ALL, TableStatisticsKind.ANALYZE_METADATA_LEVEL)))
         .partitionKeys(Collections.emptyMap())
-        .lastModifiedTime(table.lastModified())
+        .lastModifiedTime(getMaxLastModified(table))
         .build();
 
     try {
@@ -3009,7 +3011,27 @@ public class TestMetastoreCommands extends ClusterTest {
         .metadataStatistics(Arrays.asList(new StatisticsHolder<>(120L, TableStatisticsKind.ROW_COUNT),
             new StatisticsHolder<>(MetadataType.ALL, TableStatisticsKind.ANALYZE_METADATA_LEVEL)))
         .partitionKeys(Collections.emptyMap())
-        .lastModifiedTime(table.lastModified())
+        .lastModifiedTime(getMaxLastModified(table))
         .build();
+  }
+
+  /**
+   * Returns last modification time for specified file or max last modification time of child files
+   * if specified one is a directory.
+   *
+   * @param file file whose last modification time should be returned
+   * @return last modification time
+   */
+  private long getMaxLastModified(File file) {
+    if (file.isDirectory()) {
+      File[] files = file.listFiles();
+      assert files != null : "Cannot obtain directory files";
+      return Arrays.stream(files)
+          .mapToLong(this::getMaxLastModified)
+          .max()
+          .orElse(file.lastModified());
+    } else {
+      return file.lastModified();
+    }
   }
 }
