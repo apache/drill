@@ -125,14 +125,6 @@
       <artifactId>config</artifactId>
     </dependency>
 
-    <!-- Logging -->
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
-      <version>1.0.13</version>
-      <scope>test</scope>
-    </dependency>
-
     <!--  Testing -->
     <dependency>
       <groupId>org.apache.drill</groupId>
