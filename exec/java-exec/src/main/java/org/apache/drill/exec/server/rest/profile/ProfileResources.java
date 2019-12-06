@@ -84,7 +84,6 @@ public class ProfileResources {
   public static class ProfileInfo implements Comparable<ProfileInfo> {
     private static final int QUERY_SNIPPET_MAX_CHAR = 150;
     private static final int QUERY_SNIPPET_MAX_LINES = 8;
-
     public static final SimpleDateFormat format = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
 
     private final String queryId;
@@ -101,7 +100,7 @@ public class ProfileResources {
 
     public ProfileInfo(DrillConfig drillConfig, String queryId, long startTime, long endTime, String foreman, String query,
                        String state, String user, double totalCost, String queueName) {
-      this.queryId = queryId;
+      this.queryId = queryId.substring(queryId.lastIndexOf('/') + 1);
       this.startTime = startTime;
       this.endTime = endTime;
       this.time = new Date(startTime);
@@ -360,7 +359,7 @@ public class ProfileResources {
         return queryProfile;
       }
     } catch (final Exception e) {
-      throw new DrillRuntimeException("error while retrieving profile", e);
+      throw new DrillRuntimeException("Error while retrieving profile: " + e.getMessage(), e);
     }
 
     throw UserException.validationError()

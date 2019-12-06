@@ -40,6 +40,7 @@ public class ZookeeperPersistentStoreProvider extends BasePersistentStoreProvide
   public static final String DRILL_EXEC_SYS_STORE_PROVIDER_ZK_BLOBROOT = "drill.exec.sys.store.provider.zk.blobroot";
 
   private final CuratorFramework curator;
+  private final DrillConfig drillConfig;
   private final DrillFileSystem fs;
   private final Path blobRoot;
 
@@ -50,27 +51,27 @@ public class ZookeeperPersistentStoreProvider extends BasePersistentStoreProvide
   @VisibleForTesting
   public ZookeeperPersistentStoreProvider(final DrillConfig config, final CuratorFramework curator) throws StoreException {
     this.curator = curator;
-
-    if (config.hasPath(DRILL_EXEC_SYS_STORE_PROVIDER_ZK_BLOBROOT)) {
-      blobRoot = new Path(config.getString(DRILL_EXEC_SYS_STORE_PROVIDER_ZK_BLOBROOT));
+    this.drillConfig = config;
+    if (drillConfig.hasPath(DRILL_EXEC_SYS_STORE_PROVIDER_ZK_BLOBROOT)) {
+      blobRoot = new Path(drillConfig.getString(DRILL_EXEC_SYS_STORE_PROVIDER_ZK_BLOBROOT));
     }else{
       blobRoot = LocalPersistentStore.getLogDir();
     }
 
     try {
-      this.fs = LocalPersistentStore.getFileSystem(config, blobRoot);
+      this.fs = LocalPersistentStore.getFileSystem(drillConfig, blobRoot);
     } catch (IOException ex) {
       throw new StoreException("unable to get filesystem", ex);
     }
   }
 
   @Override
-  public <V> PersistentStore<V> getOrCreateStore(final PersistentStoreConfig<V> config) throws StoreException {
-    switch(config.getMode()){
+  public <V> PersistentStore<V> getOrCreateStore(final PersistentStoreConfig<V> storeConfig) throws StoreException {
+    switch(storeConfig.getMode()){
     case BLOB_PERSISTENT:
-      return new LocalPersistentStore<>(fs, blobRoot, config);
+      return new LocalPersistentStore<>(fs, blobRoot, storeConfig, drillConfig);
     case PERSISTENT:
-      final ZookeeperPersistentStore<V> store = new ZookeeperPersistentStore<>(curator, config);
+      final ZookeeperPersistentStore<V> store = new ZookeeperPersistentStore<>(curator, storeConfig);
       try {
         store.start();
       } catch (Exception e) {
@@ -83,12 +84,12 @@ public class ZookeeperPersistentStoreProvider extends BasePersistentStoreProvide
   }
 
   @Override
-  public <V> VersionedPersistentStore<V> getOrCreateVersionedStore(final PersistentStoreConfig<V> config) throws StoreException {
-    switch(config.getMode()){
+  public <V> VersionedPersistentStore<V> getOrCreateVersionedStore(final PersistentStoreConfig<V> storeConfig) throws StoreException {
+    switch(storeConfig.getMode()){
       case BLOB_PERSISTENT:
-        return new VersionedDelegatingStore<>(new LocalPersistentStore<>(fs, blobRoot, config));
+        return new VersionedDelegatingStore<>(new LocalPersistentStore<>(fs, blobRoot, storeConfig, drillConfig));
       case PERSISTENT:
-        final ZookeeperPersistentStore<V> store = new ZookeeperPersistentStore<>(curator, config);
+        final ZookeeperPersistentStore<V> store = new ZookeeperPersistentStore<>(curator, storeConfig);
         try {
           store.start();
         } catch (Exception e) {
