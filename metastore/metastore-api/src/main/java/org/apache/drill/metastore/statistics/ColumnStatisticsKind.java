@@ -92,7 +92,25 @@ public class ColumnStatisticsKind<T> extends BaseStatisticsKind<T> implements Co
       };
 
   /**
-   * Column statistics kind which represents number of non-null values for the specific column.
+   * Column statistics kind which represents exact number of non-null values for the specific column.
+   */
+  public static final ColumnStatisticsKind<Long> NON_NULL_VALUES_COUNT =
+      new ColumnStatisticsKind<Long>(ExactStatisticsConstants.NON_NULL_VALUES_COUNT, true) {
+        @Override
+        public Long mergeStatistics(List<? extends ColumnStatistics> statisticsList) {
+          long nonNullRowCount = 0;
+          for (ColumnStatistics<?> statistics : statisticsList) {
+            Long nnRowCount = statistics.get(this);
+            if (nnRowCount != null) {
+              nonNullRowCount += nnRowCount;
+            }
+          }
+          return nonNullRowCount;
+        }
+      };
+
+  /**
+   * Column statistics kind which represents estimated number of non-null values for the specific column.
    */
   public static final ColumnStatisticsKind<Double> NON_NULL_COUNT =
       new ColumnStatisticsKind<Double>(Statistic.NNROWCOUNT, false) {

@@ -21,6 +21,7 @@ import org.apache.calcite.sql.SqlKind;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.metastore.statistics.BaseStatisticsKind;
 import org.apache.drill.metastore.statistics.ColumnStatisticsKind;
+import org.apache.drill.metastore.statistics.ExactStatisticsConstants;
 import org.apache.drill.metastore.statistics.StatisticsKind;
 import org.apache.drill.metastore.statistics.TableStatisticsKind;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
@@ -30,19 +31,19 @@ import java.util.Map;
 public class AnalyzeColumnUtils {
   private static final String COLUMN_SEPARATOR = "$";
 
-  public static final Map<StatisticsKind, SqlKind> COLUMN_STATISTICS_FUNCTIONS = ImmutableMap.<StatisticsKind, SqlKind>builder()
+  public static final Map<StatisticsKind<?>, SqlKind> COLUMN_STATISTICS_FUNCTIONS = ImmutableMap.<StatisticsKind<?>, SqlKind>builder()
       .put(ColumnStatisticsKind.MAX_VALUE, SqlKind.MAX)
       .put(ColumnStatisticsKind.MIN_VALUE, SqlKind.MIN)
-      .put(ColumnStatisticsKind.NON_NULL_COUNT, SqlKind.COUNT)
+      .put(ColumnStatisticsKind.NON_NULL_VALUES_COUNT, SqlKind.COUNT)
       .put(TableStatisticsKind.ROW_COUNT, SqlKind.COUNT)
       .build();
 
-  public static final Map<StatisticsKind, TypeProtos.MinorType> COLUMN_STATISTICS_TYPES = ImmutableMap.<StatisticsKind, TypeProtos.MinorType>builder()
-      .put(ColumnStatisticsKind.NON_NULL_COUNT, TypeProtos.MinorType.BIGINT)
+  public static final Map<StatisticsKind<?>, TypeProtos.MinorType> COLUMN_STATISTICS_TYPES = ImmutableMap.<StatisticsKind<?>, TypeProtos.MinorType>builder()
+      .put(ColumnStatisticsKind.NON_NULL_VALUES_COUNT, TypeProtos.MinorType.BIGINT)
       .put(TableStatisticsKind.ROW_COUNT, TypeProtos.MinorType.BIGINT)
       .build();
 
-  public static final Map<StatisticsKind, SqlKind> META_STATISTICS_FUNCTIONS = ImmutableMap.<StatisticsKind, SqlKind>builder()
+  public static final Map<StatisticsKind<?>, SqlKind> META_STATISTICS_FUNCTIONS = ImmutableMap.<StatisticsKind<?>, SqlKind>builder()
       .put(TableStatisticsKind.ROW_COUNT, SqlKind.COUNT)
       .build();
 
@@ -65,21 +66,21 @@ public class AnalyzeColumnUtils {
    * @param fullName the source of {@link StatisticsKind} to obtain
    * @return {@link StatisticsKind} instance
    */
-  public static StatisticsKind getStatisticsKind(String fullName) {
+  public static StatisticsKind<?> getStatisticsKind(String fullName) {
     String statisticsIdentifier = fullName.split("\\" + COLUMN_SEPARATOR)[1];
     switch (statisticsIdentifier) {
-      case "minValue":
+      case ExactStatisticsConstants.MIN_VALUE:
         return ColumnStatisticsKind.MIN_VALUE;
-      case "maxValue":
+      case ExactStatisticsConstants.MAX_VALUE:
         return ColumnStatisticsKind.MAX_VALUE;
-      case "nullsCount":
+      case ExactStatisticsConstants.NULLS_COUNT:
         return ColumnStatisticsKind.NULLS_COUNT;
-      case "nonnullrowcount":
-        return ColumnStatisticsKind.NON_NULL_COUNT;
-      case "rowCount":
+      case ExactStatisticsConstants.NON_NULL_VALUES_COUNT:
+        return ColumnStatisticsKind.NON_NULL_VALUES_COUNT;
+      case ExactStatisticsConstants.ROW_COUNT:
         return TableStatisticsKind.ROW_COUNT;
     }
-    return new BaseStatisticsKind(statisticsIdentifier, false);
+    return new BaseStatisticsKind<>(statisticsIdentifier, false);
   }
 
   /**
@@ -93,7 +94,7 @@ public class AnalyzeColumnUtils {
    * @param statisticsKind statistics kind
    * @return analyze-specific field name which includes actual column name and statistics kind information
    */
-  public static String getColumnStatisticsFieldName(String columnName, StatisticsKind statisticsKind) {
+  public static String getColumnStatisticsFieldName(String columnName, StatisticsKind<?> statisticsKind) {
     return String.format("column%1$s%2$s%1$s%3$s", COLUMN_SEPARATOR, statisticsKind.getName(), columnName);
   }
 
@@ -105,7 +106,7 @@ public class AnalyzeColumnUtils {
    * @param statisticsKind statistics kind
    * @return analyze-specific field name for metadata statistics
    */
-  public static String getMetadataStatisticsFieldName(StatisticsKind statisticsKind) {
+  public static String getMetadataStatisticsFieldName(StatisticsKind<?> statisticsKind) {
     return String.format("metadata%s%s", COLUMN_SEPARATOR, statisticsKind.getName());
   }
 

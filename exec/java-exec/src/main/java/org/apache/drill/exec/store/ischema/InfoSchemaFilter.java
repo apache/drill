@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.ischema;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.exec.store.ischema.InfoSchemaFilter.ExprNode.Type;
 import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
@@ -45,6 +46,8 @@ public class InfoSchemaFilter {
     return exprRoot;
   }
 
+  // include type-info to be able to deserialize subclasses correctly
+  @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
   public static class ExprNode {
     @JsonProperty
     public Type type;
@@ -68,7 +71,8 @@ public class InfoSchemaFilter {
     public List<ExprNode> args;
 
     @JsonCreator
-    public FunctionExprNode(String function, List<ExprNode> args) {
+    public FunctionExprNode(@JsonProperty("function") String function,
+        @JsonProperty("args") List<ExprNode> args) {
       super(Type.FUNCTION);
       this.function = function;
       this.args = args;
@@ -90,7 +94,7 @@ public class InfoSchemaFilter {
     public String field;
 
     @JsonCreator
-    public FieldExprNode(String field) {
+    public FieldExprNode(@JsonProperty("field") String field) {
       super(Type.FIELD);
       this.field = field;
     }
@@ -106,7 +110,7 @@ public class InfoSchemaFilter {
     public String value;
 
     @JsonCreator
-    public ConstantExprNode(String value) {
+    public ConstantExprNode(@JsonProperty("value") String value) {
       super(Type.CONSTANT);
       this.value = value;
     }

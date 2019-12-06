@@ -263,7 +263,7 @@ public class MetadataHandlerBatch extends AbstractSingleRecordBatch<MetadataHand
     baseMetadata.getColumnsStatistics().entrySet().stream()
         .sorted(Comparator.comparing(e -> e.getKey().getRootSegmentPath()))
         .forEach(entry -> {
-          for (StatisticsKind statisticsKind : AnalyzeColumnUtils.COLUMN_STATISTICS_FUNCTIONS.keySet()) {
+          for (StatisticsKind<?> statisticsKind : AnalyzeColumnUtils.COLUMN_STATISTICS_FUNCTIONS.keySet()) {
             MinorType type = AnalyzeColumnUtils.COLUMN_STATISTICS_TYPES.get(statisticsKind);
             type = type != null ? type : entry.getValue().getComparatorType();
             schemaBuilder.addNullable(
@@ -272,7 +272,7 @@ public class MetadataHandlerBatch extends AbstractSingleRecordBatch<MetadataHand
           }
         });
 
-    for (StatisticsKind statisticsKind : AnalyzeColumnUtils.META_STATISTICS_FUNCTIONS.keySet()) {
+    for (StatisticsKind<?> statisticsKind : AnalyzeColumnUtils.META_STATISTICS_FUNCTIONS.keySet()) {
       schemaBuilder.addNullable(
           AnalyzeColumnUtils.getMetadataStatisticsFieldName(statisticsKind),
           AnalyzeColumnUtils.COLUMN_STATISTICS_TYPES.get(statisticsKind));

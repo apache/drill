@@ -201,16 +201,16 @@ public class ConvertMetadataAggregateToDirectScanRule extends RelOptRule {
 
       // populates record list with row group column metadata
       for (SchemaPath schemaPath : interestingColumns) {
-        ColumnStatistics columnStatistics = rowGroupMetadata.getColumnsStatistics().get(schemaPath);
+        ColumnStatistics<?> columnStatistics = rowGroupMetadata.getColumnsStatistics().get(schemaPath);
         if (IsPredicate.isNullOrEmpty(columnStatistics)) {
           logger.debug("Statistics for {} column wasn't found within {} row group.", schemaPath, path);
           return null;
         }
-        for (StatisticsKind statisticsKind : AnalyzeColumnUtils.COLUMN_STATISTICS_FUNCTIONS.keySet()) {
+        for (StatisticsKind<?> statisticsKind : AnalyzeColumnUtils.COLUMN_STATISTICS_FUNCTIONS.keySet()) {
           Object statsValue;
           if (statisticsKind.getName().equalsIgnoreCase(TableStatisticsKind.ROW_COUNT.getName())) {
             statsValue = TableStatisticsKind.ROW_COUNT.getValue(rowGroupMetadata);
-          } else if (statisticsKind.getName().equalsIgnoreCase(ColumnStatisticsKind.NON_NULL_COUNT.getName())) {
+          } else if (statisticsKind.getName().equalsIgnoreCase(ColumnStatisticsKind.NON_NULL_VALUES_COUNT.getName())) {
             statsValue = TableStatisticsKind.ROW_COUNT.getValue(rowGroupMetadata) - ColumnStatisticsKind.NULLS_COUNT.getFrom(columnStatistics);
           } else {
             statsValue = columnStatistics.get(statisticsKind);
