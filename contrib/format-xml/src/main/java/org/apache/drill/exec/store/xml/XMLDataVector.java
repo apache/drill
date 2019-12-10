@@ -20,7 +20,7 @@ package org.apache.drill.exec.store.xml;
 import java.util.Vector;
 
 public class XMLDataVector {
-  private Vector<String> keys;
+  private Vector keys;
 
   private Vector data;
 

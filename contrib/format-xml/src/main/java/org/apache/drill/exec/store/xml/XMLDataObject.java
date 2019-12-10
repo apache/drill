@@ -17,12 +17,10 @@
 
 package org.apache.drill.exec.store.xml;
 
-import java.util.Vector;
-
 public class XMLDataObject {
-  protected String key;
+  protected final String key;
 
-  protected Object value;
+  protected final Object value;
 
   public XMLDataObject(String k, Object v) {
     this.key = k;
@@ -38,6 +36,6 @@ public class XMLDataObject {
   }
 
   public String toString() {
-    return this.key + ": " + this.value.toString();
+    return key + ": " + value.toString();
   }
 }
