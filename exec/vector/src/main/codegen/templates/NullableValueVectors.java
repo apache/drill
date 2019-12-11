@@ -299,6 +299,15 @@ public final class ${className} extends BaseDataValueVector implements <#if type
     int bitsLength = bitsField.getBufferLength();
     SerializedField valuesField = metadata.getChild(1);
     values.load(valuesField, buffer.slice(bitsLength, capacity - bitsLength));
+    <#if type.major == "VarLen">
+
+    // Though a loaded vector should be read only,
+    // it can have its values set such as when copying
+    // with transfer pairs. Since lastSet is used when
+    // setting values, it must be set on vector load.
+
+    mutator.lastSet = accessor.getValueCount() - 1;
+    </#if>
   }
 
   @Override

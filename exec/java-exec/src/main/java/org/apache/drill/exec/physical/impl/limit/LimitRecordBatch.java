@@ -41,7 +41,7 @@ import static org.apache.drill.exec.record.RecordBatch.IterOutcome.NONE;
 public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
   private static final Logger logger = LoggerFactory.getLogger(LimitRecordBatch.class);
 
-  private SelectionVector2 outgoingSv;
+  private final SelectionVector2 outgoingSv;
   private SelectionVector2 incomingSv;
 
   // Start offset of the records
@@ -234,7 +234,8 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
     outgoingSv.setRecordCount(svIndex);
     outgoingSv.setBatchActualRecordCount(inputRecordCount);
     // Actual number of values in the container; not the number in
-    // the SV.
+    // the SV. Set record count, not value count. Value count is
+    // carried over from input vectors.
     container.setRecordCount(inputRecordCount);
     // Update the start offset
     recordStartOffset = 0;

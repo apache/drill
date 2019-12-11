@@ -25,6 +25,7 @@ import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.vector.BitVector;
 import org.apache.drill.exec.vector.FixedWidthVector;
+import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.NullableVector;
 import org.apache.drill.exec.vector.RepeatedBitVector;
 import org.apache.drill.exec.vector.UInt1Vector;
@@ -320,6 +321,19 @@ public class BatchValidator {
           "Outer value count = %d, but inner value count = %d",
           outerCount, valueCount));
     }
+    if (vector instanceof NullableVarCharVector) {
+
+      // Would ideally do for all vectors, but getLastSet()
+      // is visible per vector type, not on a super class.
+
+      NullableVarCharVector vwVector = (NullableVarCharVector) vector;
+      int lastSet = vwVector.getMutator().getLastSet();
+      if (lastSet != valueCount - 1) {
+        error(name, vector, String.format(
+            "Value count = %d, but last set = %d",
+            valueCount, lastSet));
+      }
+    }
     verifyIsSetVector(vector, (UInt1Vector) vector.getBitsVector());
     validateVector(name + "-values", valuesVector);
   }
@@ -331,7 +345,12 @@ public class BatchValidator {
 
   private void validateVarBinaryVector(String name, VarBinaryVector vector) {
     int dataLength = vector.getBuffer().writerIndex();
-    validateVarWidthVector(name, vector, dataLength);
+    int lastOffset = validateVarWidthVector(name, vector, dataLength);
+    if (lastOffset != dataLength) {
+      error(name, vector, String.format(
+          "Data vector has length %d, but offset vector has largest offset %d",
+          dataLength, lastOffset));
+    }
   }
 
   private void validateVarDecimalVector(String name, VarDecimalVector vector) {
@@ -339,9 +358,9 @@ public class BatchValidator {
     validateVarWidthVector(name, vector, dataLength);
   }
 
-  private void validateVarWidthVector(String name, VariableWidthVector vector, int dataLength) {
+  private int validateVarWidthVector(String name, VariableWidthVector vector, int dataLength) {
     int valueCount = vector.getAccessor().getValueCount();
-    validateOffsetVector(name + "-offsets", vector.getOffsetVector(),
+    return validateOffsetVector(name + "-offsets", vector.getOffsetVector(),
         valueCount, dataLength);
   }
 

@@ -48,60 +48,89 @@ import org.apache.drill.exec.testing.ControlsInjectorFactory;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.exec.work.foreman.DrillbitStatusListener;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.apache.drill.exec.server.FailureUtils.EXIT_CODE_HEAP_OOM;
 
 /**
  * <h2>Overview</h2>
  * <p>
- *   Responsible for running a single fragment on a single Drillbit. Listens/responds to status request and cancellation messages.
+ * Responsible for running a single fragment on a single Drillbit.
+ * Listens/responds to status request and cancellation messages.
  * </p>
  * <h2>Theory of Operation</h2>
  * <p>
- *  The {@link FragmentExecutor} runs a fragment's {@link RootExec} in the {@link FragmentExecutor#run()} method in a single thread. While a fragment is running
- *  it may be subject to termination requests. The {@link FragmentExecutor} is reponsible for gracefully handling termination requests for the {@link RootExec}. There
- *  are two types of termination messages:
- *  <ol>
- *    <li><b>Cancellation Request:</b> This signals that the fragment and therefore the {@link RootExec} need to terminate immediately.</li>
- *    <li><b>Receiver Finished:</b> This signals that a downstream receiver no longer needs anymore data. A fragment may recieve multiple receiver finished requests
- *    (one for each downstream receiver). The {@link RootExec} will only terminate once it has recieved {@link FragmentExecutor.EventType#RECEIVER_FINISHED} messages
- *    for all downstream receivers.</li>
- *  </ol>
+ * The {@link FragmentExecutor} runs a fragment's {@link RootExec} in the
+ * {@link FragmentExecutor#run()} method in a single thread. While a fragment is
+ * running it may be subject to termination requests. The
+ * {@link FragmentExecutor} is responsible for gracefully handling termination
+ * requests for the {@link RootExec}. There are two types of termination
+ * messages:
+ * <ol>
+ * <li><b>Cancellation Request:</b> This signals that the fragment and therefore
+ * the {@link RootExec} need to terminate immediately.</li>
+ * <li><b>Receiver Finished:</b> This signals that a downstream receiver no
+ * longer needs anymore data. A fragment may receive multiple receiver finished
+ * requests (one for each downstream receiver). The {@link RootExec} will only
+ * terminate once it has received
+ * {@link FragmentExecutor.EventType#RECEIVER_FINISHED} messages for all
+ * downstream receivers.</li>
+ * </ol>
  * </p>
  * <p>
- *   The {@link FragmentExecutor} processes termination requests appropriately for the {@link RootExec}. A <b>Cancellation Request</b> is signalled when
- *   {@link FragmentExecutor#cancel()} is called. A <b>Receiver Finished</b> event is signalled when {@link FragmentExecutor#receivingFragmentFinished(FragmentHandle)} is
- *   called. The way in which these signals are handled is the following:
+ * The {@link FragmentExecutor} processes termination requests appropriately for
+ * the {@link RootExec}. A <b>Cancellation Request</b> is signaled when
+ * {@link FragmentExecutor#cancel()} is called. A <b>Receiver Finished</b> event
+ * is signaled when
+ * {@link FragmentExecutor#receivingFragmentFinished(FragmentHandle)} is called.
+ * The way in which these signals are handled is the following:
  * </p>
  * <h3>Cancellation Request</h3>
  * <p>
- *   There are two ways in which a cancellation request can be handled when {@link FragmentExecutor#cancel()} is called.
- *   <ol>
- *     <li>The Cancellation Request is recieved before the {@link RootExec} for the fragment is even started. In this case we can cleanup resources allocated for the fragment
- *     and never start a {@link RootExec}</li>
- *     <li>The Cancellation Request is recieve after the {@link RootExec} for the fragment is started. In this the cancellation request is sent to the
- *     {@link FragmentEventProcessor}. If this is not the first cancellation request it is ignored. If this is the first cancellation request the {@link RootExec} for this
- *     fragment is terminated by interrupting it. Then the {@link FragmentExecutor#run()} thread proceeds to cleanup resources normally</li>
- *   </ol>
+ * There are two ways in which a cancellation request can be handled when
+ * {@link FragmentExecutor#cancel()} is called.
+ * <ol>
+ * <li>The Cancellation Request is received before the {@link RootExec} for the
+ * fragment is even started. In this case we can cleanup resources allocated for
+ * the fragment and never start a {@link RootExec}</li>
+ * <li>The Cancellation Request is receive after the {@link RootExec} for the
+ * fragment is started. In this the cancellation request is sent to the
+ * {@link FragmentEventProcessor}. If this is not the first cancellation request
+ * it is ignored. If this is the first cancellation request the {@link RootExec}
+ * for this fragment is terminated by interrupting it. Then the
+ * {@link FragmentExecutor#run()} thread proceeds to cleanup resources
+ * normally</li>
+ * </ol>
  * </p>
  * <h3>Receiver Finished</h3>
  * <p>
- *  When {@link FragmentExecutor#receivingFragmentFinished(FragmentHandle)} is called, the message is passed to the {@link FragmentEventProcessor} if we
- *  did not already recieve a Cancellation request. Then the finished message is queued in {@link FragmentExecutor#receiverFinishedQueue}. The {@link FragmentExecutor#run()} polls
- *  {@link FragmentExecutor#receiverFinishedQueue} and singlas the {@link RootExec} with {@link RootExec#receivingFragmentFinished(FragmentHandle)} appropriately.
+ * When {@link FragmentExecutor#receivingFragmentFinished(FragmentHandle)} is
+ * called, the message is passed to the {@link FragmentEventProcessor} if we did
+ * not already receive a Cancellation request. Then the finished message is
+ * queued in {@link FragmentExecutor#receiverFinishedQueue}. The
+ * {@link FragmentExecutor#run()} polls
+ * {@link FragmentExecutor#receiverFinishedQueue} and signals the
+ * {@link RootExec} with
+ * {@link RootExec#receivingFragmentFinished(FragmentHandle)} appropriately.
  * </p>
- * <h2>Possible Design Flaws / Poorly Defined Behavoir</h2>
+ * <h2>Possible Design Flaws / Poorly Defined Behavior</h2>
  * <p>
- *   There are still a few aspects of the {@link FragmentExecutor} design that are not clear.
- *   <ol>
- *     <li>If we get a <b>Receiver Finished</b> message for one downstream receiver, will we eventually get one from every downstream receiver?</li>
- *     <li>What happens when we process a <b>Receiver Finished</b> message for some (but not all) downstream receivers and then we cancel the fragment?</li>
- *     <li>What happens when we process a <b>Receiver Finished</b> message for some (but not all) downstream receivers and then we run out of data from the upstream?</li>
- *   </ol>
+ * There are still a few aspects of the {@link FragmentExecutor} design that are
+ * not clear.
+ * <ol>
+ * <li>If we get a <b>Receiver Finished</b> message for one downstream receiver,
+ * will we eventually get one from every downstream receiver?</li>
+ * <li>What happens when we process a <b>Receiver Finished</b> message for some
+ * (but not all) downstream receivers and then we cancel the fragment?</li>
+ * <li>What happens when we process a <b>Receiver Finished</b> message for some
+ * (but not all) downstream receivers and then we run out of data from the
+ * upstream?</li>
+ * </ol>
  * </p>
  */
 public class FragmentExecutor implements Runnable {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentExecutor.class);
+  private static final Logger logger = LoggerFactory.getLogger(FragmentExecutor.class);
   private static final ControlsInjector injector = ControlsInjectorFactory.getInjector(FragmentExecutor.class);
 
   private final String fragmentName;
@@ -542,7 +571,7 @@ public class FragmentExecutor implements Runnable {
    * This is especially important as fragments can take longer to start
    */
   private class FragmentEventProcessor extends EventProcessor<FragmentEvent> {
-    private AtomicBoolean terminate = new AtomicBoolean(false);
+    private final AtomicBoolean terminate = new AtomicBoolean(false);
 
     void cancel() {
       sendEvent(new FragmentEvent(EventType.CANCEL, null));
