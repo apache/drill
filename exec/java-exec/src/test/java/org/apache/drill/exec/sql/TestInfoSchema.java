@@ -18,6 +18,7 @@
 package org.apache.drill.exec.sql;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.drill.PlanTestBase;
 import org.apache.drill.categories.SqlTest;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.record.RecordBatchLoader;
@@ -435,25 +436,25 @@ public class TestInfoSchema extends BaseTestQuery {
 
   @Test
   public void describeSchemaOutput() throws Exception {
-    final List<QueryDataBatch> result = testSqlWithResults("describe schema dfs.tmp");
+    List<QueryDataBatch> result = testSqlWithResults("describe schema dfs.tmp");
     assertEquals(1, result.size());
-    final QueryDataBatch batch = result.get(0);
-    final RecordBatchLoader loader = new RecordBatchLoader(getDrillbitContext().getAllocator());
+    QueryDataBatch batch = result.get(0);
+    RecordBatchLoader loader = new RecordBatchLoader(getDrillbitContext().getAllocator());
     loader.load(batch.getHeader().getDef(), batch.getData());
 
     // check schema column value
-    final VectorWrapper schemaValueVector = loader.getValueAccessorById(
+    VectorWrapper<?> schemaValueVector = loader.getValueAccessorById(
         NullableVarCharVector.class,
         loader.getValueVectorId(SchemaPath.getCompoundPath("schema")).getFieldIds());
     String schema = schemaValueVector.getValueVector().getAccessor().getObject(0).toString();
     assertEquals("dfs.tmp", schema);
 
     // check properties column value
-    final VectorWrapper propertiesValueVector = loader.getValueAccessorById(
+    VectorWrapper<?> propertiesValueVector = loader.getValueAccessorById(
         NullableVarCharVector.class,
         loader.getValueVectorId(SchemaPath.getCompoundPath("properties")).getFieldIds());
     String properties = propertiesValueVector.getValueVector().getAccessor().getObject(0).toString();
-    final Map configMap = mapper.readValue(properties, Map.class);
+    Map<?, ?> configMap = mapper.readValue(properties, Map.class);
 
     // check some stable properties existence
     assertTrue(configMap.containsKey("connection"));
@@ -464,8 +465,8 @@ public class TestInfoSchema extends BaseTestQuery {
     // check some stable properties values
     assertEquals("file", configMap.get("type"));
 
-    final FileSystemConfig testConfig = (FileSystemConfig) bits[0].getContext().getStorage().getPlugin("dfs").getConfig();
-    final String tmpSchemaLocation = testConfig.getWorkspaces().get("tmp").getLocation();
+    FileSystemConfig testConfig = (FileSystemConfig) bits[0].getContext().getStorage().getPlugin("dfs").getConfig();
+    String tmpSchemaLocation = testConfig.getWorkspaces().get("tmp").getLocation();
     assertEquals(tmpSchemaLocation, configMap.get("location"));
 
     batch.release();
@@ -482,5 +483,16 @@ public class TestInfoSchema extends BaseTestQuery {
     test("desc schema dfs.tmp");
     test("desc information_schema.`catalogs`");
     test("desc table information_schema.`catalogs`");
+  }
+
+  @Test
+  public void testSerDe() throws Exception {
+    String sql = "select * from information_schema.`tables` where table_name = 'schemata' order by 1";
+
+    testBuilder()
+      .sqlQuery(sql)
+      .unOrdered()
+      .physicalPlanBaseline(PlanTestBase.getPhysicalJsonPlan(sql))
+      .go();
   }
 }

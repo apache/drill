@@ -441,6 +441,11 @@ public class TestBuilder {
         baselineTypeMap, baselineOptionSettingQueries, testOptionSettingQueries, highPerformanceComparison, expectedNumBatches);
   }
 
+  public BaselineQueryTestBuilder physicalPlanBaseline(String physicalPlan) {
+    return new BaselineQueryTestBuilder(physicalPlan, UserBitShared.QueryType.PHYSICAL, services, query, queryType, ordered, approximateEquality,
+      baselineTypeMap, baselineOptionSettingQueries, testOptionSettingQueries, highPerformanceComparison, expectedNumBatches);
+  }
+
   private String getDecimalPrecisionScaleInfo(TypeProtos.MajorType type) {
     String precision = "";
     switch(type.getMinorType()) {

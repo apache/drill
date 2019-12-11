@@ -80,7 +80,7 @@ public abstract class InfoSchemaPushFilterIntoRecordGenerator extends StoragePlu
   }
 
   protected void doMatch(RelOptRuleCall call, ScanPrel scan, ProjectPrel project, FilterPrel filter) {
-    final RexNode condition = filter.getCondition();
+    RexNode condition = filter.getCondition();
 
     InfoSchemaGroupScan groupScan = (InfoSchemaGroupScan) scan.getGroupScan();
     if (groupScan.isFilterPushedDown()) {
@@ -95,8 +95,7 @@ public abstract class InfoSchemaPushFilterIntoRecordGenerator extends StoragePlu
       return; //no filter push down ==> No transformation.
     }
 
-    final InfoSchemaGroupScan newGroupsScan = new InfoSchemaGroupScan(groupScan.getTable(), infoSchemaFilter);
-    newGroupsScan.setFilterPushedDown(true);
+    InfoSchemaGroupScan newGroupsScan = new InfoSchemaGroupScan(groupScan.getTable(), infoSchemaFilter);
 
     RelNode input = new ScanPrel(scan.getCluster(), filter.getTraitSet(), newGroupsScan, scan.getRowType(), scan.getTable());
     if (project != null) {

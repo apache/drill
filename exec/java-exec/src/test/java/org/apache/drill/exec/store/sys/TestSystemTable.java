@@ -62,6 +62,16 @@ public class TestSystemTable extends PlanTestBase {
   }
 
   @Test
+  public void testSerDe() throws Exception {
+    String sql = "select * from sys.functions where name = 'avg' limit 100";
+    testBuilder()
+      .sqlQuery(sql)
+      .unOrdered()
+      .physicalPlanBaseline(PlanTestBase.getPhysicalJsonPlan(sql))
+      .go();
+  }
+
+  @Test
   public void threadsTable() throws Exception {
     test("select * from sys.threads");
   }

@@ -72,6 +72,16 @@ public class PlanTestBase extends BaseTestQuery {
   }
 
   /**
+   * Converts given sql query into physical JSON plan representation.
+   *
+   * @param sql sql query
+   * @return physical plan in JSON format
+   */
+  public static String getPhysicalJsonPlan(String sql) throws Exception {
+    return getPlanInString("EXPLAIN PLAN for " + sql, JSON_FORMAT);
+  }
+
+  /**
    * Runs an explain plan query and check for expected regex patterns (in optiq
    * text format), also ensure excluded patterns are not found. Either list can
    * be empty or null to skip that part of the check.
