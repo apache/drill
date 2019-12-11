@@ -25,7 +25,7 @@ public class TestInfoSchemaFilterPushDown extends PlanTestBase {
   @Test
   public void testFilterPushdown_Equal() throws Exception {
     final String query = "SELECT * FROM INFORMATION_SCHEMA.`TABLES` WHERE TABLE_SCHEMA='INFORMATION_SCHEMA'";
-    final String scan = "Scan.*groupscan=\\[TABLES, filter=equal\\(Field=TABLE_SCHEMA,Literal=INFORMATION_SCHEMA\\)\\]";
+    final String scan = "Scan.*groupscan=\\[TABLES, filter=equal\\(Field=TABLE_SCHEMA,Literal=INFORMATION_SCHEMA\\)";
 
     testHelper(query, scan, false);
   }
@@ -33,7 +33,7 @@ public class TestInfoSchemaFilterPushDown extends PlanTestBase {
   @Test
   public void testFilterPushdown_NonEqual() throws Exception {
     final String query = "SELECT * FROM INFORMATION_SCHEMA.`TABLES` WHERE TABLE_SCHEMA <> 'INFORMATION_SCHEMA'";
-    final String scan = "Scan.*groupscan=\\[TABLES, filter=not_equal\\(Field=TABLE_SCHEMA,Literal=INFORMATION_SCHEMA\\)\\]";
+    final String scan = "Scan.*groupscan=\\[TABLES, filter=not_equal\\(Field=TABLE_SCHEMA,Literal=INFORMATION_SCHEMA\\)";
 
     testHelper(query, scan, false);
   }
@@ -41,7 +41,7 @@ public class TestInfoSchemaFilterPushDown extends PlanTestBase {
   @Test
   public void testFilterPushdown_Like() throws Exception {
     final String query = "SELECT * FROM INFORMATION_SCHEMA.`TABLES` WHERE TABLE_SCHEMA LIKE '%SCH%'";
-    final String scan = "Scan.*groupscan=\\[TABLES, filter=like\\(Field=TABLE_SCHEMA,Literal=%SCH%\\)\\]";
+    final String scan = "Scan.*groupscan=\\[TABLES, filter=like\\(Field=TABLE_SCHEMA,Literal=%SCH%\\)";
 
     testHelper(query, scan, false);
   }
@@ -49,7 +49,7 @@ public class TestInfoSchemaFilterPushDown extends PlanTestBase {
   @Test
   public void testFilterPushdown_LikeWithEscape() throws Exception {
     final String query = "SELECT * FROM INFORMATION_SCHEMA.`TABLES` WHERE TABLE_SCHEMA LIKE '%\\\\SCH%' ESCAPE '\\'";
-    final String scan = "Scan.*groupscan=\\[TABLES, filter=like\\(Field=TABLE_SCHEMA,Literal=%\\\\\\\\SCH%,Literal=\\\\\\)\\]";
+    final String scan = "Scan.*groupscan=\\[TABLES, filter=like\\(Field=TABLE_SCHEMA,Literal=%\\\\\\\\SCH%,Literal=\\\\\\)";
 
     testHelper(query, scan, false);
   }
@@ -60,7 +60,7 @@ public class TestInfoSchemaFilterPushDown extends PlanTestBase {
         "TABLE_SCHEMA = 'sys' AND " +
         "TABLE_NAME <> 'version'";
     final String scan = "Scan.*groupscan=\\[COLUMNS, filter=booleanand\\(equal\\(Field=TABLE_SCHEMA,Literal=sys\\)," +
-        "not_equal\\(Field=TABLE_NAME,Literal=version\\)\\)\\]";
+        "not_equal\\(Field=TABLE_NAME,Literal=version\\)\\)";
 
     testHelper(query, scan, false);
   }
@@ -72,7 +72,7 @@ public class TestInfoSchemaFilterPushDown extends PlanTestBase {
         "TABLE_NAME <> 'version' OR " +
         "TABLE_SCHEMA like '%sdfgjk%'";
     final String scan = "Scan.*groupscan=\\[COLUMNS, filter=booleanor\\(equal\\(Field=TABLE_SCHEMA,Literal=sys\\)," +
-        "not_equal\\(Field=TABLE_NAME,Literal=version\\),like\\(Field=TABLE_SCHEMA,Literal=%sdfgjk%\\)\\)\\]";
+        "not_equal\\(Field=TABLE_NAME,Literal=version\\),like\\(Field=TABLE_SCHEMA,Literal=%sdfgjk%\\)\\)";
 
     testHelper(query, scan, false);
   }
@@ -80,21 +80,21 @@ public class TestInfoSchemaFilterPushDown extends PlanTestBase {
   @Test
   public void testFilterPushDownWithProject_Equal() throws Exception {
     final String query = "SELECT COLUMN_NAME from INFORMATION_SCHEMA.`COLUMNS` WHERE TABLE_SCHEMA = 'INFORMATION_SCHEMA'";
-    final String scan = "Scan.*groupscan=\\[COLUMNS, filter=equal\\(Field=TABLE_SCHEMA,Literal=INFORMATION_SCHEMA\\)\\]";
+    final String scan = "Scan.*groupscan=\\[COLUMNS, filter=equal\\(Field=TABLE_SCHEMA,Literal=INFORMATION_SCHEMA\\)";
     testHelper(query, scan, false);
   }
 
   @Test
   public void testFilterPushDownWithProject_NotEqual() throws Exception {
     final String query = "SELECT COLUMN_NAME from INFORMATION_SCHEMA.`COLUMNS` WHERE TABLE_NAME <> 'TABLES'";
-    final String scan = "Scan.*groupscan=\\[COLUMNS, filter=not_equal\\(Field=TABLE_NAME,Literal=TABLES\\)\\]";
+    final String scan = "Scan.*groupscan=\\[COLUMNS, filter=not_equal\\(Field=TABLE_NAME,Literal=TABLES\\)";
     testHelper(query, scan, false);
   }
 
   @Test
   public void testFilterPushDownWithProject_Like() throws Exception {
     final String query = "SELECT COLUMN_NAME from INFORMATION_SCHEMA.`COLUMNS` WHERE TABLE_NAME LIKE '%BL%'";
-    final String scan = "Scan.*groupscan=\\[COLUMNS, filter=like\\(Field=TABLE_NAME,Literal=%BL%\\)\\]";
+    final String scan = "Scan.*groupscan=\\[COLUMNS, filter=like\\(Field=TABLE_NAME,Literal=%BL%\\)";
     testHelper(query, scan, false);
   }
 
@@ -107,7 +107,7 @@ public class TestInfoSchemaFilterPushDown extends PlanTestBase {
         "IS_NULLABLE = 'YES'"; // this is not expected to pushdown into scan
     final String scan = "Scan.*groupscan=\\[COLUMNS, " +
         "filter=booleanand\\(equal\\(Field=TABLE_SCHEMA,Literal=sys\\),equal\\(Field=TABLE_NAME,Literal=version\\)," +
-        "like\\(Field=COLUMN_NAME,Literal=commit%s\\)\\)\\]";
+        "like\\(Field=COLUMN_NAME,Literal=commit%s\\)\\)";
 
     testHelper(query, scan, true);
   }

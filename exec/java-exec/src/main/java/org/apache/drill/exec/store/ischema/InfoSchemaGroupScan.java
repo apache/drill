@@ -39,8 +39,6 @@ public class InfoSchemaGroupScan extends AbstractGroupScan {
   private final InfoSchemaTableType table;
   private final InfoSchemaFilter filter;
 
-  private boolean isFilterPushedDown = false;
-
   public InfoSchemaGroupScan(InfoSchemaTableType table) {
     this(table, null);
   }
@@ -57,7 +55,6 @@ public class InfoSchemaGroupScan extends AbstractGroupScan {
     super(that);
     this.table = that.table;
     this.filter = that.filter;
-    this.isFilterPushedDown = that.isFilterPushedDown;
   }
 
   @JsonProperty("table")
@@ -68,6 +65,12 @@ public class InfoSchemaGroupScan extends AbstractGroupScan {
   @JsonProperty("filter")
   public InfoSchemaFilter getSchemaFilter() {
     return filter;
+  }
+
+  @JsonIgnore
+  @Override
+  public List<SchemaPath> getColumns() {
+    return super.getColumns();
   }
 
   @Override
@@ -81,7 +84,8 @@ public class InfoSchemaGroupScan extends AbstractGroupScan {
     return new InfoSchemaSubScan(table, filter);
   }
 
-  public ScanStats getScanStats(){
+  @Override
+  public ScanStats getScanStats() {
     if (filter == null) {
       return ScanStats.TRIVIAL_TABLE;
     } else {
@@ -103,7 +107,7 @@ public class InfoSchemaGroupScan extends AbstractGroupScan {
 
   @Override
   public String getDigest() {
-    return this.table.toString() + ", filter=" + filter;
+    return table.toString() + ", filter=" + filter;
   }
 
   @Override
@@ -111,12 +115,8 @@ public class InfoSchemaGroupScan extends AbstractGroupScan {
     return new InfoSchemaGroupScan(this);
   }
 
-  public void setFilterPushedDown(boolean status) {
-    this.isFilterPushedDown = status;
-  }
-
   @JsonIgnore
   public boolean isFilterPushedDown() {
-    return isFilterPushedDown;
+    return filter != null;
   }
 }

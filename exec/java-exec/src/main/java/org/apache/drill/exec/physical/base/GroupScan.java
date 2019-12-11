@@ -37,7 +37,7 @@ import org.apache.hadoop.fs.Path;
 
 /**
  * A GroupScan operator represents all data which will be scanned by a given physical
- * plan.  It is the superset of all SubScans for the plan.
+ * plan. It is the superset of all SubScans for the plan.
  */
 public interface GroupScan extends Scan, HasAffinity {
 

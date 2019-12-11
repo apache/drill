@@ -42,7 +42,6 @@ import org.apache.drill.exec.store.StoragePluginRegistry;
 
 @JsonTypeName("sys")
 public class SystemTableScan extends AbstractGroupScan implements SubScan {
-  // private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SystemTableScan.class);
 
   private final SystemTable table;
   private final SystemTablePlugin plugin;
@@ -51,7 +50,6 @@ public class SystemTableScan extends AbstractGroupScan implements SubScan {
   @JsonCreator
   public SystemTableScan(@JsonProperty("table") SystemTable table,
                          @JsonProperty("maxRecordsToRead") int maxRecordsToRead,
-                         @JsonProperty("columns") List<SchemaPath> columns,
                          @JacksonInject StoragePluginRegistry engineRegistry) throws ExecutionSetupException {
     this(table, maxRecordsToRead, (SystemTablePlugin) engineRegistry.getPlugin(SystemTablePluginConfig.INSTANCE));
   }
@@ -83,6 +81,12 @@ public class SystemTableScan extends AbstractGroupScan implements SubScan {
 
   @Override
   public void applyAssignments(List<DrillbitEndpoint> endpoints) {
+  }
+
+  @JsonIgnore
+  @Override
+  public List<SchemaPath> getColumns() {
+    return super.getColumns();
   }
 
   @Override
@@ -178,7 +182,7 @@ public class SystemTableScan extends AbstractGroupScan implements SubScan {
 
   @Override
   public GroupScan applyLimit(int maxRecords) {
-    if (this.maxRecordsToRead == maxRecords) {
+    if (maxRecordsToRead == maxRecords) {
       return null;
     }
     return clone(this, maxRecords);
@@ -196,5 +200,4 @@ public class SystemTableScan extends AbstractGroupScan implements SubScan {
   public SystemTablePlugin getPlugin() {
     return plugin;
   }
-
 }
