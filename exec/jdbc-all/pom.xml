@@ -343,6 +343,9 @@
               <exclude>commons-beanutils:commons-beanutils:jar:*</exclude>
               <exclude>io.netty:netty-tcnative:jar:*</exclude>
               <exclude>com.fasterxml.woodstox:woodstox-core:jar:*</exclude>
+              <exclude>com.google.code.findbugs:jsr305:*</exclude>
+              <exclude>com.esri.geometry:esri-geometry-api:*</exclude>
+              <exclude>fr.bmartel:pcapngdecoder:*</exclude>
               <exclude>dnsjava:dnsjava:jar:*</exclude>
             </excludes>
           </artifactSet>
@@ -506,6 +509,8 @@
              <artifact>org.apache.calcite.avatica:*</artifact>
              <excludes>
                <exclude>META-INF/services/java.sql.Driver</exclude>
+               <!-- Excludes shaded slf4j to avoid conflicts when they are put into the fat jar -->
+               <exclude>org/slf4j/**</exclude>
              </excludes>
            </filter>
          </filters>
@@ -670,6 +675,9 @@
                     <exclude>commons-io:commons-io</exclude>
                     <exclude>commons-beanutils:commons-beanutils-core:jar:*</exclude>
                     <exclude>commons-beanutils:commons-beanutils:jar:*</exclude>
+                    <exclude>com.google.code.findbugs:jsr305:*</exclude>
+                    <exclude>com.esri.geometry:esri-geometry-api:*</exclude>
+                    <exclude>fr.bmartel:pcapngdecoder:*</exclude>
                   </excludes>
                 </artifactSet>
                 <relocations>
@@ -817,6 +825,8 @@
                     <artifact>org.apache.calcite.avatica:*</artifact>
                     <excludes>
                       <exclude>META-INF/services/java.sql.Driver</exclude>
+                      <!-- Excludes shaded slf4j to avoid conflicts when they are put into the fat jar -->
+                      <exclude>org/slf4j/**</exclude>
                     </excludes>
                   </filter>
                 </filters>
