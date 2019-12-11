@@ -19,7 +19,7 @@ package org.apache.drill.exec.compile;
 
 import java.lang.reflect.Modifier;
 import java.util.Collection;
-import java.util.Iterator;
+import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.drill.exec.compile.ClassTransformer.ClassSet;
@@ -30,15 +30,15 @@ import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.commons.ClassRemapper;
+import org.objectweb.asm.commons.MethodRemapper;
 import org.objectweb.asm.commons.Remapper;
-import org.objectweb.asm.commons.RemappingClassAdapter;
-import org.objectweb.asm.commons.RemappingMethodAdapter;
 import org.objectweb.asm.commons.SimpleRemapper;
 import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 
-import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Serves two purposes. Renames all inner classes references to the outer class to the new name. Also adds all the
@@ -46,10 +46,10 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
  */
 @SuppressWarnings("unused")
 class MergeAdapter extends ClassVisitor {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MergeAdapter.class);
+  private static final Logger logger = LoggerFactory.getLogger(MergeAdapter.class);
   private final ClassNode classToMerge;
   private final ClassSet set;
-  private final Set<String> mergingNames = Sets.newHashSet();
+  private final Set<String> mergingNames = new HashSet<>();
   private final boolean hasInit;
   private String name;
 
@@ -62,8 +62,8 @@ class MergeAdapter extends ClassVisitor {
     this.set = set;
 
     boolean hasInit = false;
-    for (Object o  : classToMerge.methods) {
-      String name = ((MethodNode)o).name;
+    for (MethodNode methodNode : classToMerge.methods) {
+      String name = methodNode.name;
       if (name.equals("<init>")) {
         continue;
       }
@@ -78,18 +78,12 @@ class MergeAdapter extends ClassVisitor {
 
   @Override
   public void visitInnerClass(String name, String outerName, String innerName, int access) {
-    // logger.debug(String.format("[Inner Class] Name: %s, outerName: %s, innerName: %s, templateName: %s, newName: %s.",
-    // name, outerName, innerName, templateName, newName));
-
     if (name.startsWith(set.precompiled.slash)) {
-//      outerName = outerName.replace(precompiled.slash, generated.slash);
       name = name.replace(set.precompiled.slash, set.generated.slash);
       int i = name.lastIndexOf('$');
       outerName = name.substring(0, i);
-      super.visitInnerClass(name, outerName, innerName, access);
-    } else {
-      super.visitInnerClass(name, outerName, innerName, access);
     }
+    super.visitInnerClass(name, outerName, innerName, access);
   }
 
   // visit the class
@@ -97,13 +91,10 @@ class MergeAdapter extends ClassVisitor {
   public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
     // use the access and names of the impl class.
     this.name = name;
-    if (name.contains("$")) {
-      super.visit(version, access, name, signature, superName, interfaces);
-    } else {
-      super.visit(version, access ^ Modifier.ABSTRACT | Modifier.FINAL, name, signature, superName, interfaces);
+    if (!name.contains("$")) {
+      access = access ^ Modifier.ABSTRACT | Modifier.FINAL;
     }
-
-//    this.cname = name;
+    super.visit(version, access, name, signature, superName, interfaces);
   }
 
   @Override
@@ -113,23 +104,15 @@ class MergeAdapter extends ClassVisitor {
 
     // skip all abstract methods as they should have implementations.
     if ((access & Modifier.ABSTRACT) != 0 || mergingNames.contains(name)) {
-
-//      logger.debug("Skipping copy of '{}()' since it is abstract or listed elsewhere.", arg1);
       return null;
     }
     if (signature != null) {
       signature = signature.replace(set.precompiled.slash, set.generated.slash);
     }
-    // if ((access & Modifier.PUBLIC) == 0) {
-    // access = access ^ Modifier.PUBLIC ^ Modifier.PROTECTED | Modifier.PRIVATE;
-    // }
+
     MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
-    if (!name.equals("<init>")) {
-      access = access | Modifier.FINAL;
-    } else {
-      if (hasInit) {
-        return new DrillInitMethodVisitor(this.name, mv);
-      }
+    if (name.equals("<init>") && hasInit) {
+      return new DrillInitMethodVisitor(this.name, mv);
     }
     return mv;
   }
@@ -137,28 +120,21 @@ class MergeAdapter extends ClassVisitor {
   @Override
   public void visitEnd() {
     // add all the fields of the class we're going to merge.
-    for (Iterator<?> it = classToMerge.fields.iterator(); it.hasNext();) {
-
-      // Special handling for nested classes. Drill uses non-static nested
-      // "inner" classes in some templates. Prior versions of Drill would
-      // create the generated nested classes as static, then this line
-      // would copy the "this$0" field to convert the static nested class
-      // into a non-static inner class. However, that approach is not
-      // compatible with plain-old Java compilation. Now, Drill generates
-      // the nested classes as non-static inner classes. As a result, we
-      // do not want to copy the hidden fields; we'll end up with two if
-      // we do.
-
-      FieldNode field = (FieldNode) it.next();
-      if (! field.name.startsWith("this$")) {
-        field.accept(this);
-      }
-    }
+    // Special handling for nested classes. Drill uses non-static nested
+    // "inner" classes in some templates. Prior versions of Drill would
+    // create the generated nested classes as static, then this line
+    // would copy the "this$0" field to convert the static nested class
+    // into a non-static inner class. However, that approach is not
+    // compatible with plain-old Java compilation. Now, Drill generates
+    // the nested classes as non-static inner classes. As a result, we
+    // do not want to copy the hidden fields; we'll end up with two if
+    // we do.
+    classToMerge.fields.stream()
+        .filter(field -> !field.name.startsWith("this$"))
+        .forEach(field -> field.accept(this));
 
     // add all the methods that we to include.
-    for (Iterator<?> it = classToMerge.methods.iterator(); it.hasNext();) {
-      MethodNode mn = (MethodNode) it.next();
-
+    for (MethodNode mn : classToMerge.methods) {
       if (mn.name.equals("<init>")) {
         continue;
       }
@@ -178,7 +154,7 @@ class MergeAdapter extends ClassVisitor {
       while (top.parent != null) {
         top = top.parent;
       }
-      mn.accept(new RemappingMethodAdapter(mn.access, mn.desc, mv,
+      mn.accept(new MethodRemapper(mv,
           new SimpleRemapper(top.precompiled.slash, top.generated.slash)));
 
     }
@@ -250,7 +226,7 @@ class MergeAdapter extends ClassVisitor {
         writerVisitor = new DrillCheckClassAdapter(CompilationConfig.ASM_API_VERSION,
             new CheckClassVisitorFsm(CompilationConfig.ASM_API_VERSION, writerVisitor), true);
       }
-      ClassVisitor remappingAdapter = new RemappingClassAdapter(writerVisitor, re);
+      ClassVisitor remappingAdapter = new ClassRemapper(writerVisitor, re);
       if (verifyBytecode) {
         remappingAdapter = new DrillCheckClassAdapter(CompilationConfig.ASM_API_VERSION,
             new CheckClassVisitorFsm(CompilationConfig.ASM_API_VERSION, remappingAdapter), true);
@@ -285,11 +261,11 @@ class MergeAdapter extends ClassVisitor {
   }
 
   private static class RemapClasses extends Remapper {
-    final Set<String> innerClasses = Sets.newHashSet();
-    ClassSet top;
-    ClassSet current;
+    private final Set<String> innerClasses = new HashSet<>();
+    private final ClassSet top;
+    private final ClassSet current;
 
-    public RemapClasses(final ClassSet set) {
+    public RemapClasses(ClassSet set) {
       current = set;
       ClassSet top = set;
       while (top.parent != null) {

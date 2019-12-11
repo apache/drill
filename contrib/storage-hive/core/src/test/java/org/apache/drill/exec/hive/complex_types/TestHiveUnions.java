@@ -37,6 +37,7 @@ import org.junit.experimental.categories.Category;
 import static org.apache.drill.test.TestBuilder.listOf;
 import static org.apache.drill.test.TestBuilder.mapOf;
 import static org.apache.drill.test.TestBuilder.mapOfObject;
+import static org.junit.Assume.assumeTrue;
 
 @Category({SlowTest.class, HiveStorageTest.class})
 public class TestHiveUnions extends ClusterTest {
@@ -45,6 +46,7 @@ public class TestHiveUnions extends ClusterTest {
 
   @BeforeClass
   public static void setUp() throws Exception {
+    assumeTrue("Skipping tests since Hive supports only JDK 8.", HiveTestUtilities.supportedJavaVersion());
     startCluster(ClusterFixture.builder(dirTestWatcher)
         .sessionOption(ExecConstants.HIVE_OPTIMIZE_PARQUET_SCAN_WITH_NATIVE_READER, true)
     );
@@ -54,7 +56,7 @@ public class TestHiveUnions extends ClusterTest {
   }
 
   @AfterClass
-  public static void tearDown() throws Exception {
+  public static void tearDown() {
     if (hiveTestFixture != null) {
       hiveTestFixture.getPluginManager().removeHivePluginFrom(cluster.drillbit());
     }

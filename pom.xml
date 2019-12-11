@@ -86,14 +86,14 @@
     <hbase.version>2.2.2</hbase.version>
     <fmpp.version>1.0</fmpp.version>
     <freemarker.version>2.3.28</freemarker.version>
-    <javassist.version>3.25.0-GA</javassist.version>
+    <javassist.version>3.26.0-GA</javassist.version>
     <msgpack.version>0.6.6</msgpack.version>
     <reflections.version>0.9.10</reflections.version>
     <avro.version>1.9.0</avro.version>
     <metrics.version>4.0.2</metrics.version>
     <jetty.version>9.3.25.v20180904</jetty.version>
     <jersey.version>2.25.1</jersey.version>
-    <asm.version>7.0</asm.version>
+    <asm.version>7.2</asm.version>
     <excludedGroups />
     <memoryMb>4096</memoryMb>
     <directMemoryMb>4096</directMemoryMb>
@@ -108,6 +108,7 @@
     <protobuf.version>3.6.1</protobuf.version>
     <codemodel.version>2.6</codemodel.version>
     <joda.version>2.10.5</joda.version>
+    <surefire.version>3.0.0-M4</surefire.version>
   </properties>
 
   <scm>
@@ -552,7 +553,7 @@
                   <version>[{$lowestMavenVersion},4)</version>
                 </requireMavenVersion>
                 <requireJavaVersion>
-                  <version>[1.8,12)</version>
+                  <version>[1.8,14)</version>
                 </requireJavaVersion>
               </rules>
             </configuration>
@@ -759,7 +760,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
-          <version>3.0.0-M3</version>
+          <version>${surefire.version}</version>
           <executions>
             <execution>
               <id>default-test</id>
@@ -773,7 +774,7 @@
             <dependency>
               <groupId>org.apache.maven.surefire</groupId>
               <artifactId>surefire-junit47</artifactId>
-              <version>3.0.0-M3</version>
+              <version>${surefire.version}</version>
             </dependency>
           </dependencies>
           <configuration>
@@ -914,6 +915,14 @@
               </goals>
             </execution>
           </executions>
+          <dependencies>
+            <!-- Specifies asm version which supports JDK 12+ -->
+            <dependency>
+              <groupId>org.ow2.asm</groupId>
+              <artifactId>asm</artifactId>
+              <version>${asm.version}</version>
+            </dependency>
+          </dependencies>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>

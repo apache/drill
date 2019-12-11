@@ -42,6 +42,7 @@ import static org.apache.drill.exec.expr.fn.impl.DateUtility.parseLocalDate;
 import static org.apache.drill.exec.hive.HiveTestUtilities.assertNativeScanUsed;
 import static org.apache.drill.test.TestBuilder.mapOf;
 import static org.apache.drill.test.TestBuilder.mapOfObject;
+import static org.junit.Assume.assumeTrue;
 
 @Category({SlowTest.class, HiveStorageTest.class})
 public class TestHiveStructs extends ClusterTest {
@@ -80,6 +81,7 @@ public class TestHiveStructs extends ClusterTest {
 
   @BeforeClass
   public static void setUp() throws Exception {
+    assumeTrue("Skipping tests since Hive supports only JDK 8.", HiveTestUtilities.supportedJavaVersion());
     startCluster(ClusterFixture.builder(dirTestWatcher)
         .sessionOption(ExecConstants.HIVE_OPTIMIZE_PARQUET_SCAN_WITH_NATIVE_READER, true));
     hiveTestFixture = HiveTestFixture.builder(dirTestWatcher).build();
@@ -88,7 +90,7 @@ public class TestHiveStructs extends ClusterTest {
   }
 
   @AfterClass
-  public static void tearDown() throws Exception {
+  public static void tearDown() {
     if (hiveTestFixture != null) {
       hiveTestFixture.getPluginManager().removeHivePluginFrom(cluster.drillbit());
     }

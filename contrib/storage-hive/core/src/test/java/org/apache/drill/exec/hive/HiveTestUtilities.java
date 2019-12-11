@@ -128,4 +128,13 @@ public class HiveTestUtilities {
     assertThat(plan, containsString("HiveDrillNativeParquetScan"));
   }
 
+  /**
+   * Current Hive version doesn't support JDK 9+.
+   * Checks whether used supported for Hive Java version.
+   *
+   * @return {@code true} if used supported for Hive Java version, {@code false} otherwise
+   */
+  public static boolean supportedJavaVersion() {
+    return System.getProperty("java.version").startsWith("1.8");
+  }
 }

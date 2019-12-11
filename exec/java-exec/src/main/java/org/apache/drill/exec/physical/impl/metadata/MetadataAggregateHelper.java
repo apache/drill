@@ -182,7 +182,8 @@ public class MetadataAggregateHelper {
   private void addLastModifiedCall() {
     String lastModifiedColumn = columnNamesOptions.lastModifiedTime();
     LogicalExpression lastModifiedTime;
-    if (createNewAggregations()) {
+    // it is enough to call any_value(`lmt`) for file metadata level or more specific metadata
+    if (context.metadataLevel().includes(MetadataType.FILE)) {
       lastModifiedTime = new FunctionCall("any_value",
           Collections.singletonList(
               FieldReference.getWithQuotedRef(lastModifiedColumn)),

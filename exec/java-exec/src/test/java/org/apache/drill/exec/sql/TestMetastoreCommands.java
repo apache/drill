@@ -528,7 +528,8 @@ public class TestMetastoreCommands extends ClusterTest {
             .basicRequests()
             .tableMetadata(tableInfo);
 
-        assertEquals(expectedTableMetadata, actualTableMetadata);
+        assertEquals(String.format("Table metadata mismatch for [%s] metadata level", analyzeLevel),
+            expectedTableMetadata, actualTableMetadata);
       } finally {
         run("analyze table dfs.tmp.`%s` drop metadata if exists", tableName);
       }
