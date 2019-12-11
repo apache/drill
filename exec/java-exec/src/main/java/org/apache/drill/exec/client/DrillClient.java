@@ -112,8 +112,8 @@ public class DrillClient implements Closeable, ConnectionThrottle {
   private volatile ClusterCoordinator clusterCoordinator;
   private volatile boolean connected = false;
   private final BufferAllocator allocator;
-  private int reconnectTimes;
-  private int reconnectDelay;
+  private final int reconnectTimes;
+  private final int reconnectDelay;
   private boolean supportComplexTypes;
   private final boolean ownsZkConnection;
   private final boolean ownsAllocator;
@@ -862,7 +862,7 @@ public class DrillClient implements Closeable, ConnectionThrottle {
 
     @Override
     public void dataArrived(QueryDataBatch result, ConnectionThrottle throttle) {
-      logger.debug("Result arrived:  Result: {}", result );
+      logger.debug("Result arrived:  Result: {}", result);
       results.add(result);
     }
 

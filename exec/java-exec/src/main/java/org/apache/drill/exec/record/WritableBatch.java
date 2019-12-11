@@ -163,8 +163,11 @@ public class WritableBatch implements AutoCloseable {
       vv.clear();
     }
 
-    RecordBatchDef batchDef = RecordBatchDef.newBuilder().addAllField(metadata).setRecordCount(recordCount)
-        .setCarriesTwoByteSelectionVector(isSV2).build();
+    RecordBatchDef batchDef = RecordBatchDef.newBuilder()
+        .addAllField(metadata)
+        .setRecordCount(recordCount)
+        .setCarriesTwoByteSelectionVector(isSV2)
+        .build();
     WritableBatch b = new WritableBatch(batchDef, buffers);
     return b;
   }

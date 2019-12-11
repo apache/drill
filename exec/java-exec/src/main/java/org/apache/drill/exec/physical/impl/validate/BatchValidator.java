@@ -25,6 +25,10 @@ import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.vector.BitVector;
 import org.apache.drill.exec.vector.FixedWidthVector;
+import org.apache.drill.exec.vector.NullableVar16CharVector;
+import org.apache.drill.exec.vector.NullableVarBinaryVector;
+import org.apache.drill.exec.vector.NullableVarCharVector;
+import org.apache.drill.exec.vector.NullableVarDecimalVector;
 import org.apache.drill.exec.vector.NullableVector;
 import org.apache.drill.exec.vector.RepeatedBitVector;
 import org.apache.drill.exec.vector.UInt1Vector;
@@ -321,8 +325,36 @@ public class BatchValidator {
           "Outer value count = %d, but inner value count = %d",
           outerCount, valueCount));
     }
+    int lastSet = getLastSet(vector);
+    if (lastSet != -2) {
+      if (lastSet != valueCount - 1) {
+        error(name, vector, String.format(
+            "Value count = %d, but last set = %d",
+            valueCount, lastSet));
+      }
+    }
     verifyIsSetVector(vector, (UInt1Vector) vector.getBitsVector());
     validateVector(name + "-values", valuesVector);
+  }
+
+  // getLastSet() is visible per vector type, not on a super class.
+  // There is no common nullable, variable width super class.
+
+  private int getLastSet(NullableVector vector) {
+    if (vector instanceof NullableVarCharVector) {
+      return ((NullableVarCharVector) vector).getMutator().getLastSet();
+    }
+    if (vector instanceof NullableVarBinaryVector) {
+      return ((NullableVarBinaryVector) vector).getMutator().getLastSet();
+    }
+    if (vector instanceof NullableVarDecimalVector) {
+      return ((NullableVarDecimalVector) vector).getMutator().getLastSet();
+    }
+    if (vector instanceof NullableVar16CharVector) {
+      return ((NullableVar16CharVector) vector).getMutator().getLastSet();
+    }
+    // Otherwise, return a value that is never legal for lastSet
+    return -2;
   }
 
   private void validateVarCharVector(String name, VarCharVector vector) {
@@ -332,7 +364,12 @@ public class BatchValidator {
 
   private void validateVarBinaryVector(String name, VarBinaryVector vector) {
     int dataLength = vector.getBuffer().writerIndex();
-    validateVarWidthVector(name, vector, dataLength);
+    int lastOffset = validateVarWidthVector(name, vector, dataLength);
+    if (lastOffset != dataLength) {
+      error(name, vector, String.format(
+          "Data vector has length %d, but offset vector has largest offset %d",
+          dataLength, lastOffset));
+    }
   }
 
   private void validateVarDecimalVector(String name, VarDecimalVector vector) {
@@ -340,9 +377,9 @@ public class BatchValidator {
     validateVarWidthVector(name, vector, dataLength);
   }
 
-  private void validateVarWidthVector(String name, VariableWidthVector vector, int dataLength) {
+  private int validateVarWidthVector(String name, VariableWidthVector vector, int dataLength) {
     int valueCount = vector.getAccessor().getValueCount();
-    validateOffsetVector(name + "-offsets", vector.getOffsetVector(),
+    return validateOffsetVector(name + "-offsets", vector.getOffsetVector(),
         valueCount, dataLength);
   }
 

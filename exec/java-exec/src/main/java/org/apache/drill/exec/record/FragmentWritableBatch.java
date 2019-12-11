@@ -23,25 +23,36 @@ import org.apache.drill.exec.proto.BitData.FragmentRecordBatch;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.RecordBatchDef;
 
-public class FragmentWritableBatch{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentWritableBatch.class);
+public class FragmentWritableBatch {
 
   private static RecordBatchDef EMPTY_DEF = RecordBatchDef.newBuilder().setRecordCount(0).build();
 
   private final ByteBuf[] buffers;
   private final FragmentRecordBatch header;
 
-  public FragmentWritableBatch(final boolean isLast, final QueryId queryId, final int sendMajorFragmentId, final int sendMinorFragmentId, final int receiveMajorFragmentId, final int receiveMinorFragmentId, final WritableBatch batch){
-    this(isLast, queryId, sendMajorFragmentId, sendMinorFragmentId, receiveMajorFragmentId, new int[]{receiveMinorFragmentId}, batch.getDef(), batch.getBuffers());
+  public FragmentWritableBatch(boolean isLast, QueryId queryId,
+      int sendMajorFragmentId, int sendMinorFragmentId,
+      int receiveMajorFragmentId, int receiveMinorFragmentId,
+      WritableBatch batch) {
+    this(isLast, queryId, sendMajorFragmentId, sendMinorFragmentId, receiveMajorFragmentId,
+        new int[]{receiveMinorFragmentId}, batch.getDef(), batch.getBuffers());
   }
 
-  public FragmentWritableBatch(final boolean isLast, final QueryId queryId, final int sendMajorFragmentId, final int sendMinorFragmentId, final int receiveMajorFragmentId, final int[] receiveMinorFragmentIds, final WritableBatch batch){
-    this(isLast, queryId, sendMajorFragmentId, sendMinorFragmentId, receiveMajorFragmentId, receiveMinorFragmentIds, batch.getDef(), batch.getBuffers());
+  public FragmentWritableBatch(boolean isLast, QueryId queryId,
+      int sendMajorFragmentId, int sendMinorFragmentId,
+      int receiveMajorFragmentId, int[] receiveMinorFragmentIds,
+      WritableBatch batch) {
+    this(isLast, queryId, sendMajorFragmentId, sendMinorFragmentId,
+        receiveMajorFragmentId, receiveMinorFragmentIds, batch.getDef(),
+        batch.getBuffers());
   }
 
-  private FragmentWritableBatch(final boolean isLast, final QueryId queryId, final int sendMajorFragmentId, final int sendMinorFragmentId, final int receiveMajorFragmentId, final int[] receiveMinorFragmentId, final RecordBatchDef def, final ByteBuf... buffers){
+  private FragmentWritableBatch(boolean isLast, QueryId queryId,
+      int sendMajorFragmentId, int sendMinorFragmentId,
+      int receiveMajorFragmentId, int[] receiveMinorFragmentId,
+      RecordBatchDef def, ByteBuf... buffers) {
     this.buffers = buffers;
-    final FragmentRecordBatch.Builder builder = FragmentRecordBatch.newBuilder()
+    FragmentRecordBatch.Builder builder = FragmentRecordBatch.newBuilder()
         .setIsLastBatch(isLast)
         .setDef(def)
         .setQueryId(queryId)
@@ -49,49 +60,60 @@ public class FragmentWritableBatch{
         .setSendingMajorFragmentId(sendMajorFragmentId)
         .setSendingMinorFragmentId(sendMinorFragmentId);
 
-    for(final int i : receiveMinorFragmentId){
-      builder.addReceivingMinorFragmentId(i);
+    for (int fragmentId : receiveMinorFragmentId) {
+      builder.addReceivingMinorFragmentId(fragmentId);
     }
 
     this.header = builder.build();
   }
 
-
-  public static FragmentWritableBatch getEmptyLast(final QueryId queryId, final int sendMajorFragmentId, final int sendMinorFragmentId, final int receiveMajorFragmentId, final int receiveMinorFragmentId){
-    return getEmptyLast(queryId, sendMajorFragmentId, sendMinorFragmentId, receiveMajorFragmentId, new int[]{receiveMinorFragmentId});
+  public static FragmentWritableBatch getEmptyLast(QueryId queryId,
+      int sendMajorFragmentId, int sendMinorFragmentId,
+      int receiveMajorFragmentId, int receiveMinorFragmentId) {
+    return getEmptyLast(queryId, sendMajorFragmentId, sendMinorFragmentId,
+        receiveMajorFragmentId, new int[]{receiveMinorFragmentId});
   }
 
-  public static FragmentWritableBatch getEmptyLast(final QueryId queryId, final int sendMajorFragmentId, final int sendMinorFragmentId, final int receiveMajorFragmentId, final int[] receiveMinorFragmentIds){
-    return new FragmentWritableBatch(true, queryId, sendMajorFragmentId, sendMinorFragmentId, receiveMajorFragmentId, receiveMinorFragmentIds, EMPTY_DEF);
+  public static FragmentWritableBatch getEmptyLast(QueryId queryId,
+      int sendMajorFragmentId, int sendMinorFragmentId,
+      int receiveMajorFragmentId, int[] receiveMinorFragmentIds) {
+    return new FragmentWritableBatch(true, queryId, sendMajorFragmentId,
+        sendMinorFragmentId, receiveMajorFragmentId, receiveMinorFragmentIds,
+        EMPTY_DEF);
   }
 
-
-  public static FragmentWritableBatch getEmptyLastWithSchema(final QueryId queryId, final int sendMajorFragmentId, final int sendMinorFragmentId,
-                                                             final int receiveMajorFragmentId, final int receiveMinorFragmentId, final BatchSchema schema){
-    return getEmptyBatchWithSchema(true, queryId, sendMajorFragmentId, sendMinorFragmentId, receiveMajorFragmentId,
+  public static FragmentWritableBatch getEmptyLastWithSchema(
+      QueryId queryId, int sendMajorFragmentId,
+      int sendMinorFragmentId, int receiveMajorFragmentId,
+      int receiveMinorFragmentId, BatchSchema schema) {
+    return getEmptyBatchWithSchema(true, queryId, sendMajorFragmentId,
+        sendMinorFragmentId, receiveMajorFragmentId,
         receiveMinorFragmentId, schema);
   }
 
-  public static FragmentWritableBatch getEmptyBatchWithSchema(final boolean isLast, final QueryId queryId, final int sendMajorFragmentId,
-      final int sendMinorFragmentId, final int receiveMajorFragmentId, final int receiveMinorFragmentId, final BatchSchema schema){
+  public static FragmentWritableBatch getEmptyBatchWithSchema(
+      boolean isLast, QueryId queryId, int sendMajorFragmentId,
+      int sendMinorFragmentId, int receiveMajorFragmentId,
+      int receiveMinorFragmentId, BatchSchema schema) {
 
-    final RecordBatchDef.Builder def = RecordBatchDef.newBuilder();
+    RecordBatchDef.Builder def = RecordBatchDef.newBuilder();
     if (schema != null) {
-      for (final MaterializedField field : schema) {
+      for (MaterializedField field : schema) {
         def.addField(field.getSerializedField());
       }
     }
-    return new FragmentWritableBatch(isLast, queryId, sendMajorFragmentId, sendMinorFragmentId, receiveMajorFragmentId,
+    return new FragmentWritableBatch(isLast, queryId, sendMajorFragmentId,
+        sendMinorFragmentId, receiveMajorFragmentId,
         new int[] { receiveMinorFragmentId }, def.build());
   }
 
-  public ByteBuf[] getBuffers(){
+  public ByteBuf[] getBuffers() {
     return buffers;
   }
 
   public long getByteCount() {
     long n = 0;
-    for (final ByteBuf buf : buffers) {
+    for (ByteBuf buf : buffers) {
       n += buf.readableBytes();
     }
     return n;
@@ -99,11 +121,5 @@ public class FragmentWritableBatch{
 
   public FragmentRecordBatch getHeader() {
     return header;
-
   }
-
-
-
-
-
 }

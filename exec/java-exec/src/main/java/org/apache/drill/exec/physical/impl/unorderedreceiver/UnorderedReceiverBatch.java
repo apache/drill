@@ -206,7 +206,7 @@ public class UnorderedReceiverBatch implements CloseableRecordBatch {
       stats.addLongStat(Metric.BYTES_RECEIVED, batch.getByteCount());
 
       batch.release();
-      if(schemaChanged) {
+      if (schemaChanged) {
         this.schema = batchLoader.getSchema();
         stats.batchReceived(0, rbd.getRecordCount(), true);
         lastOutcome = IterOutcome.OK_NEW_SCHEMA;
