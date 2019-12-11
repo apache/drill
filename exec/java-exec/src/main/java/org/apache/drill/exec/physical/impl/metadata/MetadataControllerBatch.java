@@ -363,7 +363,6 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
         .build();
   }
 
-  @SuppressWarnings("rawtypes")
   private List<TableMetadataUnit> getMetadataUnits(TupleReader reader, int nestingLevel) {
     List<TableMetadataUnit> metadataUnits = new ArrayList<>();
 
@@ -383,7 +382,7 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
       }
     }
 
-    List<StatisticsHolder> metadataStatistics = getMetadataStatistics(reader, columnMetadata);
+    List<StatisticsHolder<?>> metadataStatistics = getMetadataStatistics(reader, columnMetadata);
 
     Long rowCount = (Long) metadataStatistics.stream()
         .filter(statisticsHolder -> statisticsHolder.getStatisticsKind() == TableStatisticsKind.ROW_COUNT)
@@ -391,7 +390,7 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
         .map(StatisticsHolder::getStatisticsValue)
         .orElse(null);
 
-    Map<SchemaPath, ColumnStatistics> columnStatistics = getColumnStatistics(reader, columnMetadata, rowCount);
+    Map<SchemaPath, ColumnStatistics<?>> columnStatistics = getColumnStatistics(reader, columnMetadata, rowCount);
 
     MetadataType metadataType = MetadataType.valueOf(metadataColumnReader.scalar().getString());
 
@@ -426,9 +425,8 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
     return metadataUnits;
   }
 
-  @SuppressWarnings("rawtypes")
-  private PartitionMetadata getPartitionMetadata(TupleReader reader, List<StatisticsHolder> metadataStatistics,
-      Map<SchemaPath, ColumnStatistics> columnStatistics, int nestingLevel) {
+  private PartitionMetadata getPartitionMetadata(TupleReader reader, List<StatisticsHolder<?>> metadataStatistics,
+      Map<SchemaPath, ColumnStatistics<?>> columnStatistics, int nestingLevel) {
     List<String> segmentColumns = popConfig.getContext().segmentColumns();
 
     String segmentKey = segmentColumns.size() > 0
@@ -458,10 +456,9 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
         .build();
   }
 
-  @SuppressWarnings("rawtypes")
-  private BaseTableMetadata getTableMetadata(TupleReader reader, List<StatisticsHolder> metadataStatistics,
-      Map<SchemaPath, ColumnStatistics> columnStatistics) {
-    List<StatisticsHolder> updatedMetaStats = new ArrayList<>(metadataStatistics);
+  private BaseTableMetadata getTableMetadata(TupleReader reader, List<StatisticsHolder<?>> metadataStatistics,
+      Map<SchemaPath, ColumnStatistics<?>> columnStatistics) {
+    List<StatisticsHolder<?>> updatedMetaStats = new ArrayList<>(metadataStatistics);
     updatedMetaStats.add(new StatisticsHolder<>(popConfig.getContext().analyzeMetadataLevel(), TableStatisticsKind.ANALYZE_METADATA_LEVEL));
 
     MetadataInfo metadataInfo = MetadataInfo.builder()
@@ -483,7 +480,7 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
 
     if (context.getOptions().getOption(PlannerSettings.STATISTICS_USE)) {
       DrillStatsTable statistics = new DrillStatsTable(statisticsCollector.getStatistics());
-      Map<SchemaPath, ColumnStatistics> tableColumnStatistics =
+      Map<SchemaPath, ColumnStatistics<?>> tableColumnStatistics =
           ParquetTableMetadataUtils.getColumnStatistics(tableMetadata.getSchema(), statistics);
       tableMetadata = tableMetadata.cloneWithStats(tableColumnStatistics, DrillStatsTable.getEstimatedTableStats(statistics));
     }
@@ -491,9 +488,8 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
     return tableMetadata;
   }
 
-  @SuppressWarnings("rawtypes")
-  private SegmentMetadata getSegmentMetadata(TupleReader reader, List<StatisticsHolder> metadataStatistics,
-      Map<SchemaPath, ColumnStatistics> columnStatistics, int nestingLevel) {
+  private SegmentMetadata getSegmentMetadata(TupleReader reader, List<StatisticsHolder<?>> metadataStatistics,
+      Map<SchemaPath, ColumnStatistics<?>> columnStatistics, int nestingLevel) {
     List<String> segmentColumns = popConfig.getContext().segmentColumns();
 
     String segmentKey = segmentColumns.size() > 0
@@ -540,9 +536,8 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
         .build();
   }
 
-  @SuppressWarnings("rawtypes")
-  private FileMetadata getFileMetadata(TupleReader reader, List<StatisticsHolder> metadataStatistics,
-      Map<SchemaPath, ColumnStatistics> columnStatistics, int nestingLevel) {
+  private FileMetadata getFileMetadata(TupleReader reader, List<StatisticsHolder<?>> metadataStatistics,
+      Map<SchemaPath, ColumnStatistics<?>> columnStatistics, int nestingLevel) {
     List<String> segmentColumns = popConfig.getContext().segmentColumns();
 
     String segmentKey = segmentColumns.size() > 0
@@ -574,9 +569,8 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
         .build();
   }
 
-  @SuppressWarnings("rawtypes")
-  private RowGroupMetadata getRowGroupMetadata(TupleReader reader,List<StatisticsHolder> metadataStatistics,
-      Map<SchemaPath, ColumnStatistics> columnStatistics, int nestingLevel) {
+  private RowGroupMetadata getRowGroupMetadata(TupleReader reader,List<StatisticsHolder<?>> metadataStatistics,
+      Map<SchemaPath, ColumnStatistics<?>> columnStatistics, int nestingLevel) {
 
     List<String> segmentColumns = popConfig.getContext().segmentColumns();
     String segmentKey = segmentColumns.size() > 0
@@ -613,9 +607,8 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
         .build();
   }
 
-  @SuppressWarnings("rawtypes")
-  private Map<SchemaPath, ColumnStatistics> getColumnStatistics(TupleReader reader, TupleMetadata columnMetadata, Long rowCount) {
-    Multimap<String, StatisticsHolder> columnStatistics = ArrayListMultimap.create();
+  private Map<SchemaPath, ColumnStatistics<?>> getColumnStatistics(TupleReader reader, TupleMetadata columnMetadata, Long rowCount) {
+    Multimap<String, StatisticsHolder<?>> columnStatistics = ArrayListMultimap.create();
     Map<String, TypeProtos.MinorType> columnTypes = new HashMap<>();
     for (ColumnMetadata column : columnMetadata) {
       String fieldName = AnalyzeColumnUtils.getColumnName(column.name());
@@ -633,7 +626,7 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
 
     // adds NON_NULL_COUNT to use it during filter pushdown
     if (rowCount != null) {
-      Map<String, StatisticsHolder> nullsCountColumnStatistics = new HashMap<>();
+      Map<String, StatisticsHolder<?>> nullsCountColumnStatistics = new HashMap<>();
       columnStatistics.asMap().forEach((key, value) ->
           value.stream()
               .filter(statisticsHolder -> statisticsHolder.getStatisticsKind() == ColumnStatisticsKind.NON_NULL_VALUES_COUNT)
@@ -647,16 +640,15 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
       nullsCountColumnStatistics.forEach(columnStatistics::put);
     }
 
-    Map<SchemaPath, ColumnStatistics> resultingStats = new HashMap<>();
+    Map<SchemaPath, ColumnStatistics<?>> resultingStats = new HashMap<>();
 
     columnStatistics.asMap().forEach((fieldName, statisticsHolders) ->
         resultingStats.put(SchemaPath.parseFromString(fieldName), new ColumnStatistics<>(statisticsHolders, columnTypes.get(fieldName))));
     return resultingStats;
   }
 
-  @SuppressWarnings("rawtypes")
-  private List<StatisticsHolder> getMetadataStatistics(TupleReader reader, TupleMetadata columnMetadata) {
-    List<StatisticsHolder> metadataStatistics = new ArrayList<>();
+  private List<StatisticsHolder<?>> getMetadataStatistics(TupleReader reader, TupleMetadata columnMetadata) {
+    List<StatisticsHolder<?>> metadataStatistics = new ArrayList<>();
     String rgs = columnNamesOptions.rowGroupStart();
     String rgl = columnNamesOptions.rowGroupLength();
     for (ColumnMetadata column : columnMetadata) {
@@ -753,6 +745,8 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
       case FILE: {
         childLocations.add(new Path(reader.column(MetastoreAnalyzeConstants.LOCATION_FIELD).scalar().getString()));
       }
+      default:
+        break;
     }
 
     return childLocations;

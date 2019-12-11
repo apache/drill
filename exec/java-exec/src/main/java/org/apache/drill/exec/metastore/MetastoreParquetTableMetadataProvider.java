@@ -85,7 +85,7 @@ public class MetastoreParquetTableMetadataProvider implements ParquetTableMetada
   private Multimap<Path, RowGroupMetadata> rowGroups;
   private NonInterestingColumnsMetadata nonInterestingColumnsMetadata;
   // stores builder to provide lazy init for fallback ParquetTableMetadataProvider
-  private ParquetFileTableMetadataProviderBuilder fallbackBuilder;
+  private final ParquetFileTableMetadataProviderBuilder fallbackBuilder;
   private ParquetTableMetadataProvider fallback;
 
   private MetastoreParquetTableMetadataProvider(List<ReadEntryWithPath> entries,
@@ -259,12 +259,12 @@ public class MetastoreParquetTableMetadataProvider implements ParquetTableMetada
     if (nonInterestingColumnsMetadata == null) {
       TupleMetadata schema = getTableMetadata().getSchema();
 
-      List<StatisticsHolder> statistics = Collections.singletonList(new StatisticsHolder<>(Statistic.NO_COLUMN_STATS, ColumnStatisticsKind.NULLS_COUNT));
+      List<StatisticsHolder<?>> statistics = Collections.singletonList(new StatisticsHolder<>(Statistic.NO_COLUMN_STATS, ColumnStatisticsKind.NULLS_COUNT));
 
       List<SchemaPath> columnPaths = SchemaUtil.getSchemaPaths(schema);
       List<SchemaPath> interestingColumns = getInterestingColumns(columnPaths);
       // populates statistics for non-interesting columns and columns for which statistics wasn't collected
-      Map<SchemaPath, ColumnStatistics> columnsStatistics = columnPaths.stream()
+      Map<SchemaPath, ColumnStatistics<?>> columnsStatistics = columnPaths.stream()
           .filter(schemaPath -> !interestingColumns.contains(schemaPath)
               || SchemaPathUtils.getColumnMetadata(schemaPath, schema).isArray())
           .collect(Collectors.toMap(
@@ -315,7 +315,7 @@ public class MetastoreParquetTableMetadataProvider implements ParquetTableMetada
 
     // builder for fallback ParquetFileTableMetadataProvider
     // for the case when required metadata is absent in Metastore
-    private ParquetFileTableMetadataProviderBuilder fallback;
+    private final ParquetFileTableMetadataProviderBuilder fallback;
 
     public Builder(MetastoreMetadataProviderManager source) {
       this.metadataProviderManager = source;

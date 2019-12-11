@@ -46,21 +46,24 @@ public class TableMetadataUtils {
    * @param type type of the column
    * @return {@link Comparator} instance
    */
-  public static Comparator getComparator(TypeProtos.MinorType type) {
+  @SuppressWarnings("unchecked")
+  public static <T> Comparator<T> getComparator(TypeProtos.MinorType type) {
     switch (type) {
       case INTERVALDAY:
       case INTERVAL:
       case INTERVALYEAR:
-        return Comparator.nullsFirst(UnsignedBytes.lexicographicalComparator());
+        return (Comparator<T>) (Comparator<?>)
+            Comparator.nullsFirst(UnsignedBytes.lexicographicalComparator());
       case UINT1:
-        return Comparator.nullsFirst(UnsignedBytes::compare);
+        return (Comparator<T>)
+            Comparator.nullsFirst(UnsignedBytes::compare);
       case UINT2:
       case UINT4:
-        return Comparator.nullsFirst(Integer::compareUnsigned);
+        return (Comparator<T>) Comparator.nullsFirst(Integer::compareUnsigned);
       case UINT8:
-        return Comparator.nullsFirst(Long::compareUnsigned);
+        return (Comparator<T>) Comparator.nullsFirst(Long::compareUnsigned);
       default:
-        return getNaturalNullsFirstComparator();
+        return (Comparator<T>) getNaturalNullsFirstComparator();
     }
   }
 
@@ -83,14 +86,15 @@ public class TableMetadataUtils {
    * @param statisticsToCollect kinds of statistics that should be collected
    * @return list of merged metadata
    */
-  public static <T extends BaseMetadata> Map<SchemaPath, ColumnStatistics> mergeColumnsStatistics(
-      Collection<T> metadataList, Set<SchemaPath> columns, List<CollectableColumnStatisticsKind> statisticsToCollect) {
-    Map<SchemaPath, ColumnStatistics> columnsStatistics = new HashMap<>();
+  @SuppressWarnings({ "unchecked", "rawtypes" })
+  public static <T extends BaseMetadata> Map<SchemaPath, ColumnStatistics<?>> mergeColumnsStatistics(
+      Collection<T> metadataList, Set<SchemaPath> columns, List<CollectableColumnStatisticsKind<?>> statisticsToCollect) {
+    Map<SchemaPath, ColumnStatistics<?>> columnsStatistics = new HashMap<>();
 
     for (SchemaPath column : columns) {
-      List<ColumnStatistics> statisticsList = new ArrayList<>();
+      List<ColumnStatistics<?>> statisticsList = new ArrayList<>();
       for (T metadata : metadataList) {
-        ColumnStatistics statistics = metadata.getColumnsStatistics().get(column);
+        ColumnStatistics<?> statistics = metadata.getColumnsStatistics().get(column);
         if (statistics == null) {
           // schema change happened, set statistics which represents all nulls
           statistics = new ColumnStatistics(
@@ -99,12 +103,12 @@ public class TableMetadataUtils {
         }
         statisticsList.add(statistics);
       }
-      List<StatisticsHolder> statisticsHolders = new ArrayList<>();
-      for (CollectableColumnStatisticsKind statisticsKind : statisticsToCollect) {
+      List<StatisticsHolder<?>> statisticsHolders = new ArrayList<>();
+      for (CollectableColumnStatisticsKind<?> statisticsKind : statisticsToCollect) {
         Object mergedStatistic = statisticsKind.mergeStatistics(statisticsList);
         statisticsHolders.add(new StatisticsHolder<>(mergedStatistic, statisticsKind));
       }
-      Iterator<ColumnStatistics> iterator = statisticsList.iterator();
+      Iterator<ColumnStatistics<?>> iterator = statisticsList.iterator();
       // Use INT if statistics wasn't provided
       TypeProtos.MinorType comparatorType = iterator.hasNext() ? iterator.next().getComparatorType() : TypeProtos.MinorType.INT;
       columnsStatistics.put(column, new ColumnStatistics<>(statisticsHolders, comparatorType));
@@ -120,13 +124,13 @@ public class TableMetadataUtils {
    * @return new {@link TableMetadata} instance with updated statistics
    */
   public static TableMetadata updateRowCount(TableMetadata tableMetadata, Collection<? extends BaseMetadata> statistics) {
-    List<StatisticsHolder> newStats = new ArrayList<>();
+    List<StatisticsHolder<?>> newStats = new ArrayList<>();
 
     newStats.add(new StatisticsHolder<>(TableStatisticsKind.ROW_COUNT.mergeStatistics(statistics), TableStatisticsKind.ROW_COUNT));
 
     Set<SchemaPath> columns = tableMetadata.getColumnsStatistics().keySet();
 
-    Map<SchemaPath, ColumnStatistics> columnsStatistics =
+    Map<SchemaPath, ColumnStatistics<?>> columnsStatistics =
         mergeColumnsStatistics(statistics, columns,
             Collections.singletonList(ColumnStatisticsKind.NULLS_COUNT));
 

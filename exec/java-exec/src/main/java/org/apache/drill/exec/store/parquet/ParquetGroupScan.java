@@ -65,10 +65,10 @@ public class ParquetGroupScan extends AbstractParquetGroupScan {
   private final ParquetFormatPlugin formatPlugin;
   private final ParquetFormatConfig formatConfig;
 
-  private boolean usedMetadataCache; // false by default
+  private final boolean usedMetadataCache; // false by default
   // may change when filter push down / partition pruning is applied
-  private Path selectionRoot;
-  private Path cacheFileRoot;
+  private final Path selectionRoot;
+  private final Path cacheFileRoot;
 
   @SuppressWarnings("unused")
   @JsonCreator
@@ -198,6 +198,7 @@ public class ParquetGroupScan extends AbstractParquetGroupScan {
     return formatPlugin.getStorageConfig();
   }
 
+  @Override
   @JsonProperty
   public Path getSelectionRoot() {
     return selectionRoot;
@@ -288,7 +289,7 @@ public class ParquetGroupScan extends AbstractParquetGroupScan {
   }
 
   @Override
-  protected RowGroupScanFilterer getFilterer() {
+  protected RowGroupScanFilterer<?> getFilterer() {
     return new ParquetGroupScanFilterer(this);
   }
 

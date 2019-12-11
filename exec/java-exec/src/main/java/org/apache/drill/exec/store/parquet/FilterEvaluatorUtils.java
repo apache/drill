@@ -57,7 +57,6 @@ public class FilterEvaluatorUtils {
   private FilterEvaluatorUtils() {
   }
 
-  @SuppressWarnings("RedundantTypeArguments")
   public static RowsMatch evalFilter(LogicalExpression expr, MetadataBase.ParquetTableMetadataBase footer,
                                      int rowGroupIndex, OptionManager options, FragmentContext fragmentContext) {
     // Specifies type arguments explicitly to avoid compilation error caused by JDK-8066974
@@ -66,7 +65,7 @@ public class FilterEvaluatorUtils {
 
     RowGroupMetadata rowGroupMetadata = new ArrayList<>(ParquetTableMetadataUtils.getRowGroupsMetadata(footer).values()).get(rowGroupIndex);
     NonInterestingColumnsMetadata nonInterestingColumnsMetadata = ParquetTableMetadataUtils.getNonInterestingColumnsMeta(footer);
-    Map<SchemaPath, ColumnStatistics> columnsStatistics = rowGroupMetadata.getColumnsStatistics();
+    Map<SchemaPath, ColumnStatistics<?>> columnsStatistics = rowGroupMetadata.getColumnsStatistics();
 
     // Add column statistics of non-interesting columns if there are any
     columnsStatistics.putAll(nonInterestingColumnsMetadata.getColumnsStatistics());
@@ -78,7 +77,7 @@ public class FilterEvaluatorUtils {
         fragmentContext, fragmentContext.getFunctionRegistry(), new HashSet<>(schemaPathsInExpr));
   }
 
-  public static RowsMatch matches(LogicalExpression expr, Map<SchemaPath, ColumnStatistics> columnsStatistics, TupleMetadata schema,
+  public static RowsMatch matches(LogicalExpression expr, Map<SchemaPath, ColumnStatistics<?>> columnsStatistics, TupleMetadata schema,
                                   long rowCount, UdfUtilities udfUtilities, FunctionLookupContext functionImplementationRegistry,
                                   Set<SchemaPath> schemaPathsInExpr) {
     ErrorCollector errorCollector = new ErrorCollectorImpl();
@@ -95,21 +94,22 @@ public class FilterEvaluatorUtils {
     }
 
     Set<LogicalExpression> constantBoundaries = ConstantExpressionIdentifier.getConstantExpressionSet(materializedFilter);
-    FilterPredicate parquetPredicate = FilterBuilder.buildFilterPredicate(
+    FilterPredicate<?> parquetPredicate = FilterBuilder.buildFilterPredicate(
         materializedFilter, constantBoundaries, udfUtilities, true);
 
     return matches(parquetPredicate, columnsStatistics, rowCount, schema, schemaPathsInExpr);
   }
 
   @SuppressWarnings("unchecked")
-  public static RowsMatch matches(FilterPredicate parquetPredicate,
-                                  Map<SchemaPath, ColumnStatistics> columnsStatistics,
+  public static <T extends Comparable<T>> RowsMatch matches(FilterPredicate<T> parquetPredicate,
+                                  Map<SchemaPath, ColumnStatistics<?>> columnsStatistics,
                                   long rowCount,
                                   TupleMetadata fileMetadata,
                                   Set<SchemaPath> schemaPathsInExpr) {
     RowsMatch rowsMatch = RowsMatch.SOME;
     if (parquetPredicate != null) {
-      StatisticsProvider rangeExprEvaluator = new StatisticsProvider(columnsStatistics, rowCount);
+      @SuppressWarnings("rawtypes")
+      StatisticsProvider<T> rangeExprEvaluator = new StatisticsProvider(columnsStatistics, rowCount);
       rowsMatch = parquetPredicate.matches(rangeExprEvaluator);
     }
     return rowsMatch == RowsMatch.ALL && isRepeated(schemaPathsInExpr, fileMetadata) ? RowsMatch.SOME : rowsMatch;

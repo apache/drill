@@ -37,7 +37,7 @@ public interface Metadata {
    *
    * @return statistics stored in current metadata
    */
-  Map<SchemaPath, ColumnStatistics> getColumnsStatistics();
+  Map<SchemaPath, ColumnStatistics<?>> getColumnsStatistics();
 
   /**
    * Returns statistics for specified column stored in current metadata.
@@ -45,7 +45,7 @@ public interface Metadata {
    * @param columnName column whose statistics should be returned
    * @return statistics for specified column
    */
-  ColumnStatistics getColumnStatistics(SchemaPath columnName);
+  ColumnStatistics<?> getColumnStatistics(SchemaPath columnName);
 
   /**
    * Returns schema stored in current metadata represented as
@@ -70,7 +70,7 @@ public interface Metadata {
    * @param statisticsKind statistics kind to check
    * @return true if value which corresponds to the specified statistics kind is exact
    */
-  boolean containsExactStatistics(StatisticsKind statisticsKind);
+  boolean containsExactStatistics(StatisticsKind<?> statisticsKind);
 
   /**
    * Returns value of column statistics which corresponds to specified {@link StatisticsKind}

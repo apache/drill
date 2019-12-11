@@ -207,7 +207,7 @@ public abstract class BaseParquetMetadataProvider implements ParquetMetadataProv
   @Override
   public TableMetadata getTableMetadata() {
     if (tableMetadata == null) {
-      List<StatisticsHolder> tableStatistics = new ArrayList<>(DrillStatsTable.getEstimatedTableStats(statsTable));
+      List<StatisticsHolder<?>> tableStatistics = new ArrayList<>(DrillStatsTable.getEstimatedTableStats(statsTable));
       Map<SchemaPath, TypeProtos.MajorType> fields = ParquetTableMetadataUtils.resolveFields(parquetTableMetadata);
       Map<SchemaPath, TypeProtos.MajorType> intermediateFields = ParquetTableMetadataUtils.resolveIntermediateFields(parquetTableMetadata);
 
@@ -223,7 +223,7 @@ public abstract class BaseParquetMetadataProvider implements ParquetMetadataProv
         });
       }
 
-      Map<SchemaPath, ColumnStatistics> columnsStatistics;
+      Map<SchemaPath, ColumnStatistics<?>> columnsStatistics;
       if (collectMetadata) {
         Collection<? extends BaseMetadata> metadata = getFilesMetadataMap().values();
         if (metadata.isEmpty()) {
@@ -243,18 +243,18 @@ public abstract class BaseParquetMetadataProvider implements ParquetMetadataProv
         fields.forEach((columnPath, value) -> {
           long columnValueCount = getParquetGroupScanStatistics().getColumnValueCount(columnPath);
           // Adds statistics values itself if statistics is available
-          List<StatisticsHolder> stats = new ArrayList<>(DrillStatsTable.getEstimatedColumnStats(statsTable, columnPath));
+          List<StatisticsHolder<?>> stats = new ArrayList<>(DrillStatsTable.getEstimatedColumnStats(statsTable, columnPath));
           unhandledColumns.remove(columnPath);
 
           // adds statistics for partition columns
           stats.add(new StatisticsHolder<>(columnValueCount, TableStatisticsKind.ROW_COUNT));
           stats.add(new StatisticsHolder<>(getParquetGroupScanStatistics().getRowCount() - columnValueCount, ColumnStatisticsKind.NULLS_COUNT));
-          columnsStatistics.put(columnPath, new ColumnStatistics(stats, value.getMinorType()));
+          columnsStatistics.put(columnPath, new ColumnStatistics<>(stats, value.getMinorType()));
         });
 
         for (SchemaPath column : unhandledColumns) {
           columnsStatistics.put(column,
-              new ColumnStatistics(DrillStatsTable.getEstimatedColumnStats(statsTable, column)));
+              new ColumnStatistics<>(DrillStatsTable.getEstimatedColumnStats(statsTable, column)));
         }
       }
       MetadataInfo metadataInfo = MetadataInfo.builder().type(MetadataType.TABLE).build();
@@ -327,9 +327,9 @@ public abstract class BaseParquetMetadataProvider implements ParquetMetadataProv
           partitionPaths.forEach((path, value) -> partitionsForValue.put(value, path));
 
           partitionsForValue.asMap().forEach((partitionKey, value) -> {
-            Map<SchemaPath, ColumnStatistics> columnsStatistics = new HashMap<>();
+            Map<SchemaPath, ColumnStatistics<?>> columnsStatistics = new HashMap<>();
 
-            List<StatisticsHolder> statistics = new ArrayList<>();
+            List<StatisticsHolder<?>> statistics = new ArrayList<>();
             partitionKey = partitionKey == NULL_VALUE ? null : partitionKey;
             statistics.add(new StatisticsHolder<>(partitionKey, ColumnStatisticsKind.MIN_VALUE));
             statistics.add(new StatisticsHolder<>(partitionKey, ColumnStatisticsKind.MAX_VALUE));
@@ -381,6 +381,7 @@ public abstract class BaseParquetMetadataProvider implements ParquetMetadataProv
         .collect(Collectors.toList());
   }
 
+  @SuppressWarnings("unused")
   @Override
   public Map<Path, SegmentMetadata> getSegmentsMetadataMap() {
     if (segments == null) {
@@ -456,7 +457,7 @@ public abstract class BaseParquetMetadataProvider implements ParquetMetadataProv
    */
   private static <T extends BaseMetadata & LocationProvider> SegmentMetadata combineToSegmentMetadata(Collection<T> metadataList,
       SchemaPath column, Set<Path> metadataLocations) {
-    List<StatisticsHolder> segmentStatistics =
+    List<StatisticsHolder<?>> segmentStatistics =
         Collections.singletonList(
             new StatisticsHolder<>(
                 TableStatisticsKind.ROW_COUNT.mergeStatistics(metadataList),
@@ -485,6 +486,7 @@ public abstract class BaseParquetMetadataProvider implements ParquetMetadataProv
       if (entries.isEmpty() || !collectMetadata) {
         return Collections.emptyMap();
       }
+      @SuppressWarnings("unused")
       boolean addRowGroups = false;
       if (rowGroups == null) {
         rowGroups = LinkedListMultimap.create();

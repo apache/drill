@@ -138,7 +138,7 @@ public abstract class ParquetPushDownFilter extends StoragePluginOptimizerRule {
 
     final List<RexNode> qualifiedPredList = new ArrayList<>();
 
-    // list of predicates which cannot be converted to parquet filter predicate
+    // list of predicates which cannot be converted to Parquet filter predicate
     List<RexNode> nonConvertedPredList = new ArrayList<>();
 
     for (RexNode pred : predList) {
@@ -147,7 +147,7 @@ public abstract class ParquetPushDownFilter extends StoragePluginOptimizerRule {
             new DrillParseContext(PrelUtil.getPlannerSettings(call.getPlanner())), scan, pred);
 
         // checks whether predicate may be used for filter pushdown
-        FilterPredicate parquetFilterPredicate =
+        FilterPredicate<?> parquetFilterPredicate =
             groupScan.getFilterPredicate(drillPredicate,
                 optimizerContext,
                 optimizerContext.getFunctionRegistry(), optimizerContext.getPlannerSettings().getOptions(), false);
@@ -171,11 +171,11 @@ public abstract class ParquetPushDownFilter extends StoragePluginOptimizerRule {
     LogicalExpression conditionExp = DrillOptiq.toDrill(
         new DrillParseContext(PrelUtil.getPlannerSettings(call.getPlanner())), scan, qualifiedPred);
 
-    // Default - pass the original filter expr to (potentialy) be used at run-time
+    // Default - pass the original filter expr to (potentially) be used at run-time
     groupScan.setFilterForRuntime(conditionExp, optimizerContext); // later may remove or set to another filter (see below)
 
     Stopwatch timer = logger.isDebugEnabled() ? Stopwatch.createStarted() : null;
-    AbstractGroupScanWithMetadata newGroupScan = groupScan.applyFilter(conditionExp, optimizerContext,
+    AbstractGroupScanWithMetadata<?> newGroupScan = groupScan.applyFilter(conditionExp, optimizerContext,
         optimizerContext.getFunctionRegistry(), optimizerContext.getPlannerSettings().getOptions());
     if (timer != null) {
       logger.debug("Took {} ms to apply filter on parquet row groups. ", timer.elapsed(TimeUnit.MILLISECONDS));

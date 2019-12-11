@@ -74,13 +74,13 @@ public class ColumnStatistics<T> {
       .registerModule(new JodaModule())
       .readerFor(ColumnStatistics.class);
 
-  private final Map<String, StatisticsHolder> statistics;
+  private final Map<String, StatisticsHolder<?>> statistics;
   private final Comparator<T> valueComparator;
   private final TypeProtos.MinorType type;
 
   @JsonCreator
   @SuppressWarnings("unchecked")
-  public ColumnStatistics(@JsonProperty("statistics") Collection<StatisticsHolder> statistics,
+  public ColumnStatistics(@JsonProperty("statistics") Collection<StatisticsHolder<?>> statistics,
                           @JsonProperty("type") TypeProtos.MinorType type) {
     this.type = type;
     this.valueComparator = type != null
@@ -93,7 +93,7 @@ public class ColumnStatistics<T> {
             (a, b) -> a.getStatisticsKind().isExact() ? a : b));
   }
 
-  public ColumnStatistics(Collection<StatisticsHolder> statistics) {
+  public ColumnStatistics(Collection<StatisticsHolder<?>> statistics) {
     this(statistics, TypeProtos.MinorType.INT);
   }
 
@@ -105,7 +105,8 @@ public class ColumnStatistics<T> {
    */
   @SuppressWarnings("unchecked")
   public <V> V get(StatisticsKind<V> statisticsKind) {
-    StatisticsHolder<V> statisticsHolder = statistics.get(statisticsKind.getName());
+    StatisticsHolder<V> statisticsHolder = (StatisticsHolder<V>)
+        statistics.get(statisticsKind.getName());
     if (statisticsHolder != null) {
       return statisticsHolder.getStatisticsValue();
     }
@@ -118,7 +119,7 @@ public class ColumnStatistics<T> {
    * @param statisticsKind statistics kind to check
    * @return true if specified statistics kind is set
    */
-  public boolean contains(StatisticsKind statisticsKind) {
+  public boolean contains(StatisticsKind<?> statisticsKind) {
     return statistics.containsKey(statisticsKind.getName());
   }
 
@@ -129,8 +130,8 @@ public class ColumnStatistics<T> {
    * @param statisticsKind statistics kind to check
    * @return true if value which corresponds to the specified statistics kind is exact
    */
-  public boolean containsExact(StatisticsKind statisticsKind) {
-    StatisticsHolder statisticsHolder = statistics.get(statisticsKind.getName());
+  public boolean containsExact(StatisticsKind<?> statisticsKind) {
+    StatisticsHolder<?> statisticsHolder = statistics.get(statisticsKind.getName());
     if (statisticsHolder != null) {
       return statisticsHolder.getStatisticsKind().isExact();
     }
@@ -153,10 +154,10 @@ public class ColumnStatistics<T> {
    * @return new {@link ColumnStatistics} instance with overridden statistics
    */
   public ColumnStatistics<T> cloneWith(ColumnStatistics<T> sourceStatistics) {
-    Map<String, StatisticsHolder> newStats = new HashMap<>(this.statistics);
+    Map<String, StatisticsHolder<?>> newStats = new HashMap<>(this.statistics);
     sourceStatistics.statistics.values().forEach(statisticsHolder -> {
-      StatisticsKind statisticsKindToMerge = statisticsHolder.getStatisticsKind();
-      StatisticsHolder oldStatistics = statistics.get(statisticsKindToMerge.getName());
+      StatisticsKind<?> statisticsKindToMerge = statisticsHolder.getStatisticsKind();
+      StatisticsHolder<?> oldStatistics = statistics.get(statisticsKindToMerge.getName());
       if (oldStatistics == null
           || !oldStatistics.getStatisticsKind().isExact()
           || statisticsKindToMerge.isExact()) {
@@ -167,9 +168,14 @@ public class ColumnStatistics<T> {
     return new ColumnStatistics<>(newStats.values(), type);
   }
 
+  @SuppressWarnings("unchecked")
+  public ColumnStatistics<T> genericClone(ColumnStatistics<?> sourceStatistics) {
+    return cloneWith((ColumnStatistics<T>) sourceStatistics);
+  }
+
   @JsonProperty("statistics")
   @SuppressWarnings("unused") // used for serialization
-  private Collection<StatisticsHolder> getAll() {
+  private Collection<StatisticsHolder<?>> getAll() {
     return statistics.values();
   }
 
@@ -212,7 +218,7 @@ public class ColumnStatistics<T> {
         .toString();
   }
 
-  public static ColumnStatistics of(String columnStatistics) {
+  public static ColumnStatistics<?> of(String columnStatistics) {
     try {
       return OBJECT_READER.readValue(columnStatistics);
     } catch (IOException e) {

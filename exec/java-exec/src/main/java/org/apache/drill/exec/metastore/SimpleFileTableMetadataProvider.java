@@ -49,7 +49,7 @@ import java.util.Map;
 public class SimpleFileTableMetadataProvider implements TableMetadataProvider {
   private static final Logger logger = LoggerFactory.getLogger(SimpleFileTableMetadataProvider.class);
 
-  private TableMetadata tableMetadata;
+  private final TableMetadata tableMetadata;
 
   private SimpleFileTableMetadataProvider(TableMetadata tableMetadata) {
     this.tableMetadata = tableMetadata;
@@ -111,7 +111,7 @@ public class SimpleFileTableMetadataProvider implements TableMetadataProvider {
     private long lastModifiedTime = -1L;
     private TupleMetadata schema;
 
-    private MetadataProviderManager metadataProviderManager;
+    private final MetadataProviderManager metadataProviderManager;
 
     public Builder(MetadataProviderManager source) {
       this.metadataProviderManager = source;
@@ -147,7 +147,7 @@ public class SimpleFileTableMetadataProvider implements TableMetadataProvider {
       TableMetadataProvider source = metadataProviderManager.getTableMetadataProvider();
       if (source == null) {
         DrillStatsTable statsProvider = metadataProviderManager.getStatsProvider();
-        Map<SchemaPath, ColumnStatistics> columnsStatistics = new HashMap<>();
+        Map<SchemaPath, ColumnStatistics<?>> columnsStatistics = new HashMap<>();
 
         if (statsProvider != null) {
           if (!statsProvider.isMaterialized()) {
@@ -156,7 +156,7 @@ public class SimpleFileTableMetadataProvider implements TableMetadataProvider {
           if (statsProvider.isMaterialized()) {
             for (SchemaPath column : statsProvider.getColumns()) {
               columnsStatistics.put(column,
-                  new ColumnStatistics(DrillStatsTable.getEstimatedColumnStats(statsProvider, column)));
+                  new ColumnStatistics<>(DrillStatsTable.getEstimatedColumnStats(statsProvider, column)));
             }
           }
         }

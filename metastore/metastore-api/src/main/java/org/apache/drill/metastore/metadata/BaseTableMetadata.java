@@ -102,9 +102,8 @@ public class BaseTableMetadata extends BaseMetadata implements TableMetadata {
   }
 
   @Override
-  @SuppressWarnings("unchecked")
-  public BaseTableMetadata cloneWithStats(Map<SchemaPath, ColumnStatistics> columnStatistics, List<StatisticsHolder> tableStatistics) {
-    Map<String, StatisticsHolder> mergedTableStatistics = new HashMap<>(this.metadataStatistics);
+  public BaseTableMetadata cloneWithStats(Map<SchemaPath, ColumnStatistics<?>> columnStatistics, List<StatisticsHolder<?>> tableStatistics) {
+    Map<String, StatisticsHolder<?>> mergedTableStatistics = new HashMap<>(this.metadataStatistics);
 
     // overrides statistics value for the case when new statistics is exact or existing one was estimated
     tableStatistics.stream()
@@ -113,12 +112,12 @@ public class BaseTableMetadata extends BaseMetadata implements TableMetadata {
               || !this.metadataStatistics.get(statisticsHolder.getStatisticsKind().getName()).getStatisticsKind().isExact())
         .forEach(statisticsHolder -> mergedTableStatistics.put(statisticsHolder.getStatisticsKind().getName(), statisticsHolder));
 
-    Map<SchemaPath, ColumnStatistics> newColumnsStatistics = new HashMap<>(this.columnsStatistics);
+    Map<SchemaPath, ColumnStatistics<?>> newColumnsStatistics = new HashMap<>(this.columnsStatistics);
     this.columnsStatistics.forEach(
         (columnName, value) -> {
-          ColumnStatistics sourceStatistics = columnStatistics.get(columnName);
+          ColumnStatistics<?> sourceStatistics = columnStatistics.get(columnName);
           if (sourceStatistics != null) {
-            newColumnsStatistics.put(columnName, value.cloneWith(sourceStatistics));
+            newColumnsStatistics.put(columnName, value.genericClone(sourceStatistics));
           }
         });
 
@@ -148,6 +147,7 @@ public class BaseTableMetadata extends BaseMetadata implements TableMetadata {
     }
   }
 
+  @Override
   public BaseTableMetadataBuilder toBuilder() {
     return builder()
         .tableInfo(tableInfo)

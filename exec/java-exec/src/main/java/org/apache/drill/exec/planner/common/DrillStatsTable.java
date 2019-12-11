@@ -263,6 +263,7 @@ public class DrillStatsTable {
     @JsonProperty ("directories") List<DirectoryStatistics_v0> directoryStatistics;
     // Default constructor required for deserializer
     public Statistics_v0 () { }
+    @Override
     @JsonGetter ("directories")
     public List<DirectoryStatistics_v0> getDirectoryStatistics() {
       return directoryStatistics;
@@ -296,6 +297,7 @@ public class DrillStatsTable {
     List<DirectoryStatistics_v1> directoryStatistics;
     // Default constructor required for deserializer
     public Statistics_v1 () { }
+    @Override
     @JsonGetter ("directories")
     public List<DirectoryStatistics_v1> getDirectoryStatistics() {
       return directoryStatistics;
@@ -396,7 +398,7 @@ public class DrillStatsTable {
     }
     @JsonIgnore
     public void buildHistogram(byte[] tdigest_bytearray) {
-      int num_buckets = (int) Math.min(ndv, (long) DrillStatsTable.NUM_HISTOGRAM_BUCKETS);
+      int num_buckets = (int) Math.min(ndv, DrillStatsTable.NUM_HISTOGRAM_BUCKETS);
       this.histogram = HistogramUtils.buildHistogramFromTDigest(tdigest_bytearray, this.getType(),
               num_buckets, nonNullCount);
     }
@@ -479,9 +481,9 @@ public class DrillStatsTable {
    * @param statsProvider the source of statistics
    * @return list of {@link StatisticsKind} and statistics values
    */
-  public static List<StatisticsHolder> getEstimatedTableStats(DrillStatsTable statsProvider) {
+  public static List<StatisticsHolder<?>> getEstimatedTableStats(DrillStatsTable statsProvider) {
     if (statsProvider != null && statsProvider.isMaterialized()) {
-      List<StatisticsHolder> tableStatistics = Arrays.asList(
+      List<StatisticsHolder<?>> tableStatistics = Arrays.asList(
           new StatisticsHolder<>(statsProvider.getRowCount(), TableStatisticsKind.EST_ROW_COUNT),
           new StatisticsHolder<>(Boolean.TRUE, TableStatisticsKind.HAS_DESCRIPTIVE_STATISTICS));
       return tableStatistics;
@@ -496,9 +498,9 @@ public class DrillStatsTable {
    * @param fieldName     name of the columns whose statistics should be obtained
    * @return list of {@link StatisticsKind} and statistics values
    */
-  public static List<StatisticsHolder> getEstimatedColumnStats(DrillStatsTable statsProvider, SchemaPath fieldName) {
+  public static List<StatisticsHolder<?>> getEstimatedColumnStats(DrillStatsTable statsProvider, SchemaPath fieldName) {
     if (statsProvider != null && statsProvider.isMaterialized()) {
-      List<StatisticsHolder> statisticsValues = new ArrayList<>();
+      List<StatisticsHolder<?>> statisticsValues = new ArrayList<>();
       Double ndv = statsProvider.getNdv(fieldName);
       if (ndv != null) {
         statisticsValues.add(new StatisticsHolder<>(ndv, ColumnStatisticsKind.NDV));

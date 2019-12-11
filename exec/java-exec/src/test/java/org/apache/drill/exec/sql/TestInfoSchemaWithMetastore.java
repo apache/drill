@@ -209,21 +209,21 @@ public class TestInfoSchemaWithMetastore extends ClusterTest {
     schema.addColumn(varcharCol);
     schema.addColumn(timestampColumn);
 
-    Map<SchemaPath, ColumnStatistics> columnsStatistics = new HashMap<>();
+    Map<SchemaPath, ColumnStatistics<?>> columnsStatistics = new HashMap<>();
     columnsStatistics.put(SchemaPath.parseFromString("varchar_col"),
-      new ColumnStatistics(Arrays.asList(
+      new ColumnStatistics<>(Arrays.asList(
         new StatisticsHolder<>("aaa", ColumnStatisticsKind.MIN_VALUE),
         new StatisticsHolder<>("zzz", ColumnStatisticsKind.MAX_VALUE))));
     columnsStatistics.put(SchemaPath.parseFromString("struct_col.nested_struct.nested_struct_varchar"),
-      new ColumnStatistics(Arrays.asList(
+      new ColumnStatistics<>(Arrays.asList(
         new StatisticsHolder<>("bbb", ColumnStatisticsKind.MIN_VALUE),
         new StatisticsHolder<>("ccc", ColumnStatisticsKind.MAX_VALUE))));
     columnsStatistics.put(SchemaPath.parseFromString("bigint_col"),
-      new ColumnStatistics(Arrays.asList(
+      new ColumnStatistics<>(Arrays.asList(
         new StatisticsHolder<>(100L, ColumnStatisticsKind.NULLS_COUNT),
         new StatisticsHolder<>(10.5D, ColumnStatisticsKind.NDV))));
     columnsStatistics.put(SchemaPath.parseFromString("struct_col.struct_bigint"),
-      new ColumnStatistics(Collections.singletonList(
+      new ColumnStatistics<>(Collections.singletonList(
         new StatisticsHolder<>(10.5D, ColumnStatisticsKind.NON_NULL_COUNT))));
 
     ZonedDateTime currentTime = currentUtcTime();
