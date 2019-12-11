@@ -108,6 +108,7 @@
     <protobuf.version>3.6.1</protobuf.version>
     <codemodel.version>2.6</codemodel.version>
     <joda.version>2.10.5</joda.version>
+    <javax.el.version>3.0.0</javax.el.version>
   </properties>
 
   <scm>
@@ -1817,6 +1818,16 @@
         <groupId>joda-time</groupId>
         <artifactId>joda-time</artifactId>
         <version>${joda.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>javax.el</groupId>
+        <artifactId>javax.el-api</artifactId>
+        <version>${javax.el.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.glassfish</groupId>
+        <artifactId>javax.el</artifactId>
+        <version>${javax.el.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
