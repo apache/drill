@@ -18,9 +18,11 @@
 package org.apache.drill.metastore.exceptions;
 
 /**
- * Drill Metastore runtime exception to indicate that exception was caused by Drill Metastore.
- * Drill Metastore implementations can use or extend it to throw Metastore specific exceptions.
+ * Drill Metastore runtime exception to indicate that exception was caused by
+ * Drill Metastore. Drill Metastore implementations can use or extend it to
+ * throw Metastore specific exceptions.
  */
+@SuppressWarnings("serial")
 public class MetastoreException extends RuntimeException {
 
   public MetastoreException(String message, Throwable cause) {

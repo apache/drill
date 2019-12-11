@@ -81,7 +81,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 @Category({SlowTest.class, MetastoreTest.class})
-@SuppressWarnings({"rawtypes", "unchecked"})
 public class TestMetastoreCommands extends ClusterTest {
 
   private static final TupleMetadata SCHEMA = new SchemaBuilder()
@@ -98,7 +97,8 @@ public class TestMetastoreCommands extends ClusterTest {
       .add("o_comment", TypeProtos.MinorType.VARCHAR)
       .build();
 
-  private static final Map<SchemaPath, ColumnStatistics> TABLE_COLUMN_STATISTICS = ImmutableMap.<SchemaPath, ColumnStatistics>builder()
+  private static final Map<SchemaPath, ColumnStatistics<?>> TABLE_COLUMN_STATISTICS =
+      ImmutableMap.<SchemaPath, ColumnStatistics<?>>builder()
       .put(SchemaPath.getSimplePath("o_shippriority"),
           getColumnStatistics(0, 0, 120L, TypeProtos.MinorType.INT))
       .put(SchemaPath.getSimplePath("o_orderstatus"),
@@ -124,7 +124,8 @@ public class TestMetastoreCommands extends ClusterTest {
           getColumnStatistics(757382400000L, 850953600000L, 120L, TypeProtos.MinorType.DATE))
       .build();
 
-  private static final Map<SchemaPath, ColumnStatistics> DIR0_1994_SEGMENT_COLUMN_STATISTICS = ImmutableMap.<SchemaPath, ColumnStatistics>builder()
+  private static final Map<SchemaPath, ColumnStatistics<?>> DIR0_1994_SEGMENT_COLUMN_STATISTICS =
+      ImmutableMap.<SchemaPath, ColumnStatistics<?>>builder()
       .put(SchemaPath.getSimplePath("o_shippriority"),
           getColumnStatistics(0, 0, 40L, TypeProtos.MinorType.INT))
       .put(SchemaPath.getSimplePath("o_orderstatus"),
@@ -150,7 +151,8 @@ public class TestMetastoreCommands extends ClusterTest {
           getColumnStatistics(757382400000L, 788140800000L, 40L, TypeProtos.MinorType.DATE))
       .build();
 
-  private static final Map<SchemaPath, ColumnStatistics> DIR0_1994_Q1_SEGMENT_COLUMN_STATISTICS = ImmutableMap.<SchemaPath, ColumnStatistics>builder()
+  private static final Map<SchemaPath, ColumnStatistics<?>> DIR0_1994_Q1_SEGMENT_COLUMN_STATISTICS =
+      ImmutableMap.<SchemaPath, ColumnStatistics<?>>builder()
       .put(SchemaPath.getSimplePath("o_shippriority"),
           getColumnStatistics(0, 0, 10L, TypeProtos.MinorType.INT))
       .put(SchemaPath.getSimplePath("o_orderstatus"),
@@ -594,7 +596,7 @@ public class TestMetastoreCommands extends ClusterTest {
 
     TableInfo tableInfo = getTableInfo(tableName, "tmp");
 
-    Map<SchemaPath, ColumnStatistics> updatedTableColumnStatistics = new HashMap<>();
+    Map<SchemaPath, ColumnStatistics<?>> updatedTableColumnStatistics = new HashMap<>();
 
     SchemaPath orderStatusPath = SchemaPath.getSimplePath("o_orderstatus");
     SchemaPath dir0Path = SchemaPath.getSimplePath("dir0");
@@ -646,7 +648,7 @@ public class TestMetastoreCommands extends ClusterTest {
 
     TableInfo tableInfo = getTableInfo(tableName, "tmp");
 
-    Map<SchemaPath, ColumnStatistics> updatedTableColumnStatistics = new HashMap<>();
+    Map<SchemaPath, ColumnStatistics<?>> updatedTableColumnStatistics = new HashMap<>();
 
     SchemaPath dir0Path = SchemaPath.getSimplePath("dir0");
     SchemaPath dir1Path = SchemaPath.getSimplePath("dir1");
@@ -696,7 +698,7 @@ public class TestMetastoreCommands extends ClusterTest {
 
     TableInfo tableInfo = getTableInfo(tableName, "tmp");
 
-    Map<SchemaPath, ColumnStatistics> updatedTableColumnStatistics = new HashMap<>();
+    Map<SchemaPath, ColumnStatistics<?>> updatedTableColumnStatistics = new HashMap<>();
 
     SchemaPath orderStatusPath = SchemaPath.getSimplePath("o_orderstatus");
     SchemaPath orderDatePath = SchemaPath.getSimplePath("o_orderdate");
@@ -767,7 +769,7 @@ public class TestMetastoreCommands extends ClusterTest {
 
     TableInfo tableInfo = getTableInfo(tableName, "tmp");
 
-    Map<SchemaPath, ColumnStatistics> updatedTableColumnStatistics = new HashMap<>();
+    Map<SchemaPath, ColumnStatistics<?>> updatedTableColumnStatistics = new HashMap<>();
 
     SchemaPath orderStatusPath = SchemaPath.getSimplePath("o_orderstatus");
     SchemaPath orderDatePath = SchemaPath.getSimplePath("o_orderdate");
@@ -844,7 +846,7 @@ public class TestMetastoreCommands extends ClusterTest {
 
     TableInfo tableInfo = getTableInfo(tableName, "tmp");
 
-    Map<SchemaPath, ColumnStatistics> updatedTableColumnStatistics = new HashMap<>();
+    Map<SchemaPath, ColumnStatistics<?>> updatedTableColumnStatistics = new HashMap<>();
 
     SchemaPath orderStatusPath = SchemaPath.getSimplePath("o_orderstatus");
     SchemaPath orderDatePath = SchemaPath.getSimplePath("o_orderdate");
@@ -977,7 +979,7 @@ public class TestMetastoreCommands extends ClusterTest {
     TableInfo tableInfo = getTableInfo(tableName, "tmp");
 
     // updates statistics values due to new segment
-    Map<SchemaPath, ColumnStatistics> updatedStatistics = new HashMap<>(TABLE_COLUMN_STATISTICS);
+    Map<SchemaPath, ColumnStatistics<?>> updatedStatistics = new HashMap<>(TABLE_COLUMN_STATISTICS);
     updatedStatistics.replaceAll((logicalExpressions, columnStatistics) ->
         columnStatistics.cloneWith(new ColumnStatistics<>(
             Arrays.asList(
@@ -1068,15 +1070,15 @@ public class TestMetastoreCommands extends ClusterTest {
     TableInfo tableInfo = getTableInfo(tableName, "tmp");
 
     // updates statistics values due to new segment
-    Map<SchemaPath, ColumnStatistics> updatedStatistics = new HashMap<>(TABLE_COLUMN_STATISTICS);
+    Map<SchemaPath, ColumnStatistics<?>> updatedStatistics = new HashMap<>(TABLE_COLUMN_STATISTICS);
     updatedStatistics.replaceAll((logicalExpressions, columnStatistics) ->
-        columnStatistics.cloneWith(new ColumnStatistics(
+        columnStatistics.cloneWith(new ColumnStatistics<>(
             Arrays.asList(
                 new StatisticsHolder<>(130L, TableStatisticsKind.ROW_COUNT),
                 new StatisticsHolder<>(130L, ColumnStatisticsKind.NON_NULL_VALUES_COUNT)))));
 
     updatedStatistics.computeIfPresent(SchemaPath.getSimplePath("dir1"), (logicalExpressions, columnStatistics) ->
-        columnStatistics.cloneWith(new ColumnStatistics(
+        columnStatistics.cloneWith(new ColumnStatistics<>(
             Collections.singletonList(new StatisticsHolder<>("Q5", ColumnStatisticsKind.MAX_VALUE)))));
 
     BaseTableMetadata expectedTableMetadata = BaseTableMetadata.builder()
@@ -1152,9 +1154,9 @@ public class TestMetastoreCommands extends ClusterTest {
     TableInfo tableInfo = getTableInfo(tableName, "tmp");
 
     // updates statistics values due to new segment
-    Map<SchemaPath, ColumnStatistics> updatedStatistics = new HashMap<>(TABLE_COLUMN_STATISTICS);
+    Map<SchemaPath, ColumnStatistics<?>> updatedStatistics = new HashMap<>(TABLE_COLUMN_STATISTICS);
     updatedStatistics.replaceAll((logicalExpressions, columnStatistics) ->
-        columnStatistics.cloneWith(new ColumnStatistics(
+        columnStatistics.cloneWith(new ColumnStatistics<>(
             Arrays.asList(
                 new StatisticsHolder<>(130L, TableStatisticsKind.ROW_COUNT),
                 new StatisticsHolder<>(130L, ColumnStatisticsKind.NON_NULL_VALUES_COUNT)))));
@@ -1625,15 +1627,15 @@ public class TestMetastoreCommands extends ClusterTest {
           .basicRequests()
           .tableMetadata(tableInfo);
 
-      Map<SchemaPath, ColumnStatistics> tableColumnStatistics = new HashMap<>(TABLE_COLUMN_STATISTICS);
+      Map<SchemaPath, ColumnStatistics<?>> tableColumnStatistics = new HashMap<>(TABLE_COLUMN_STATISTICS);
       tableColumnStatistics.computeIfPresent(SchemaPath.getSimplePath("o_clerk"),
           (logicalExpressions, columnStatistics) ->
-              columnStatistics.cloneWith(new ColumnStatistics(
+              columnStatistics.cloneWith(new ColumnStatistics<>(
                   Collections.singletonList(new StatisticsHolder<>("Clerk#000000006", ColumnStatisticsKind.MIN_VALUE)))));
 
       tableColumnStatistics.computeIfPresent(SchemaPath.getSimplePath("o_totalprice"),
           (logicalExpressions, columnStatistics) ->
-              columnStatistics.cloneWith(new ColumnStatistics(
+              columnStatistics.cloneWith(new ColumnStatistics<>(
                   Collections.singletonList(new StatisticsHolder<>(328207.15, ColumnStatisticsKind.MAX_VALUE)))));
 
       BaseTableMetadata expectedTableMetadata = BaseTableMetadata.builder()
@@ -1779,7 +1781,7 @@ public class TestMetastoreCommands extends ClusterTest {
 
     TableInfo tableInfo = getTableInfo(tableName, "tmp");
 
-    Map<SchemaPath, ColumnStatistics> tableColumnStatistics = new HashMap<>(TABLE_COLUMN_STATISTICS);
+    Map<SchemaPath, ColumnStatistics<?>> tableColumnStatistics = new HashMap<>(TABLE_COLUMN_STATISTICS);
     tableColumnStatistics.remove(SchemaPath.getSimplePath("dir0"));
     tableColumnStatistics.remove(SchemaPath.getSimplePath("dir1"));
 
@@ -1800,7 +1802,7 @@ public class TestMetastoreCommands extends ClusterTest {
             getColumnStatistics(757382400000L, 764640000000L, 120L, TypeProtos.MinorType.DATE));
 
     tableColumnStatistics.replaceAll((logicalExpressions, columnStatistics) ->
-        columnStatistics.cloneWith(new ColumnStatistics(
+        columnStatistics.cloneWith(new ColumnStatistics<>(
             Arrays.asList(
                 new StatisticsHolder<>(10L, TableStatisticsKind.ROW_COUNT),
                 new StatisticsHolder<>(10L, ColumnStatisticsKind.NON_NULL_VALUES_COUNT)))));
@@ -1905,7 +1907,7 @@ public class TestMetastoreCommands extends ClusterTest {
             .resumeSchema()
         .build();
 
-    Map<SchemaPath, ColumnStatistics> columnStatistics = ImmutableMap.<SchemaPath, ColumnStatistics>builder()
+    Map<SchemaPath, ColumnStatistics<?>> columnStatistics = ImmutableMap.<SchemaPath, ColumnStatistics<?>>builder()
         .put(SchemaPath.getCompoundPath("user_info", "state"),
             getColumnStatistics("ct", "nj", 5L, TypeProtos.MinorType.VARCHAR))
         .put(SchemaPath.getSimplePath("date"),

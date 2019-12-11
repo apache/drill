@@ -34,19 +34,19 @@ import java.util.Map;
  * to NonInterestingColumnsMetadata.
  */
 public class NonInterestingColumnsMetadata implements Metadata {
-  private final Map<SchemaPath, ColumnStatistics> columnsStatistics;
+  private final Map<SchemaPath, ColumnStatistics<?>> columnsStatistics;
 
-  public NonInterestingColumnsMetadata(Map<SchemaPath, ColumnStatistics> columnsStatistics) {
+  public NonInterestingColumnsMetadata(Map<SchemaPath, ColumnStatistics<?>> columnsStatistics) {
     this.columnsStatistics = columnsStatistics;
   }
 
   @Override
-  public Map<SchemaPath, ColumnStatistics> getColumnsStatistics() {
+  public Map<SchemaPath, ColumnStatistics<?>> getColumnsStatistics() {
     return columnsStatistics;
   }
 
   @Override
-  public ColumnStatistics getColumnStatistics(SchemaPath columnName) {
+  public ColumnStatistics<?> getColumnStatistics(SchemaPath columnName) {
     return columnsStatistics.get(columnName);
   }
 
@@ -61,14 +61,13 @@ public class NonInterestingColumnsMetadata implements Metadata {
   }
 
   @Override
-  public boolean containsExactStatistics(StatisticsKind statisticsKind) {
+  public boolean containsExactStatistics(StatisticsKind<?> statisticsKind) {
     return false;
   }
 
   @Override
-  @SuppressWarnings("unchecked")
   public <V> V getStatisticsForColumn(SchemaPath columnName, StatisticsKind<V> statisticsKind) {
-    return (V) columnsStatistics.get(columnName).get(statisticsKind);
+    return columnsStatistics.get(columnName).get(statisticsKind);
   }
 
   @Override

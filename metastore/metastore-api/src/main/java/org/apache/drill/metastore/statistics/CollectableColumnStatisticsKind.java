@@ -32,5 +32,5 @@ public interface CollectableColumnStatisticsKind<V> extends StatisticsKind<V> {
    * @param statistics list of {@link ColumnStatistics} instances to be collected
    * @return column statistics value received by collecting specified {@link ColumnStatistics}
    */
-  Object mergeStatistics(List<? extends ColumnStatistics> statistics);
+  Object mergeStatistics(List<? extends ColumnStatistics<?>> statistics);
 }

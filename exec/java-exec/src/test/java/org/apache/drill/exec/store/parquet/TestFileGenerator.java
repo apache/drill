@@ -105,35 +105,6 @@ public class TestFileGenerator {
     props.fields.put("S_COMMENT", new FieldInfo("binary", "bin2", -1, bin2Vals, TypeProtos.MinorType.VARBINARY, props));
   }
 
-  private static abstract class ValueProducer {
-
-    public abstract void reset();
-    public abstract Object getValue();
-  }
-
-  private static class ValueRepeaterProducer extends ValueProducer {
-
-    WrapAroundCounter position;
-    Object[] values;
-
-    public ValueRepeaterProducer(Object[] values) {
-      this.values = values;
-      position = new WrapAroundCounter(values.length);
-    }
-
-    @Override
-    public void reset() {
-      position.reset();
-    }
-
-    @Override
-    public Object getValue() {
-      Object ret = values[position.val];
-      position.increment();
-      return ret;
-    }
-  }
-
   public static void generateParquetFile(String filename, ParquetTestProperties props) throws Exception {
 
     int currentBooleanByte = 0;

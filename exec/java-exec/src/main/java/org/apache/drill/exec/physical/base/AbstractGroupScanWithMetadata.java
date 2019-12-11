@@ -261,7 +261,7 @@ public abstract class AbstractGroupScanWithMetadata<P extends TableMetadataProvi
    * @return group scan with applied filter expression
    */
   @Override
-  public AbstractGroupScanWithMetadata applyFilter(LogicalExpression filterExpr, UdfUtilities udfUtilities,
+  public AbstractGroupScanWithMetadata<?> applyFilter(LogicalExpression filterExpr, UdfUtilities udfUtilities,
       FunctionImplementationRegistry functionImplementationRegistry, OptionManager optionManager) {
 
     // Builds filter for pruning. If filter cannot be built, null should be returned.
@@ -531,7 +531,6 @@ public abstract class AbstractGroupScanWithMetadata<P extends TableMetadataProvi
     return columnMetadata != null ? columnMetadata.majorType() : null;
   }
 
-  @SuppressWarnings("unchecked")
   @JsonIgnore
   public <T> T getPartitionValue(Path path, SchemaPath column, Class<T> clazz) {
     return getPartitionsMetadata().stream()
@@ -642,7 +641,7 @@ public abstract class AbstractGroupScanWithMetadata<P extends TableMetadataProvi
     // and files which belongs to that partitions may be returned
     protected MetadataType overflowLevel = MetadataType.NONE;
 
-    public GroupScanWithMetadataFilterer(AbstractGroupScanWithMetadata source) {
+    public GroupScanWithMetadataFilterer(AbstractGroupScanWithMetadata<?> source) {
       this.source = source;
     }
 
@@ -651,7 +650,7 @@ public abstract class AbstractGroupScanWithMetadata<P extends TableMetadataProvi
      *
      * @return implementation of {@link AbstractGroupScanWithMetadata} with filtered metadata
      */
-    public abstract AbstractGroupScanWithMetadata build();
+    public abstract AbstractGroupScanWithMetadata<?> build();
 
     public B table(TableMetadata tableMetadata) {
       this.tableMetadata = tableMetadata;
@@ -968,8 +967,7 @@ public abstract class AbstractGroupScanWithMetadata<P extends TableMetadataProvi
           filterPredicate = getFilterPredicate(filterExpression, udfUtilities,
               context, optionManager, true, true, schema);
         }
-        @SuppressWarnings("rawtypes")
-        Map<SchemaPath, ColumnStatistics> columnsStatistics = metadata.getColumnsStatistics();
+        Map<SchemaPath, ColumnStatistics<?>> columnsStatistics = metadata.getColumnsStatistics();
 
         // adds partition (dir) column statistics if it may be used during filter evaluation
         if (metadata instanceof LocationProvider && optionManager != null) {

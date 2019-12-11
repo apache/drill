@@ -511,6 +511,8 @@ public class TableMetadataUnit {
               rowGroupColumns.add(name);
               partitionColumns.add(name);
               break;
+            default:
+              throw new IllegalStateException(scope.name());
           }
         }
 

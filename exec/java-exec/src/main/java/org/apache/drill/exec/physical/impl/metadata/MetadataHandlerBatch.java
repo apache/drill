@@ -170,6 +170,8 @@ public class MetadataHandlerBatch extends AbstractSingleRecordBatch<MetadataHand
                   new ArrayList<>(metadataToHandle.values()));
           return populateContainer(segments);
         }
+        default:
+          break;
       }
     }
     return outcome;
@@ -194,7 +196,6 @@ public class MetadataHandlerBatch extends AbstractSingleRecordBatch<MetadataHand
     }
   }
 
-  @SuppressWarnings("unchecked")
   private <T extends BaseMetadata & LocationProvider> VectorContainer writeMetadata(List<T> metadataList) {
     BaseMetadata firstElement = metadataList.iterator().next();
 
@@ -304,7 +305,6 @@ public class MetadataHandlerBatch extends AbstractSingleRecordBatch<MetadataHand
     return new ResultSetLoaderImpl(container.getAllocator(), options);
   }
 
-  @SuppressWarnings("unchecked")
   private <T extends BaseMetadata & LocationProvider> VectorContainer writeMetadataUsingBatchSchema(List<T> metadataList) {
     Preconditions.checkArgument(!metadataList.isEmpty(), "Metadata list shouldn't be empty.");
 
@@ -413,6 +413,7 @@ public class MetadataHandlerBatch extends AbstractSingleRecordBatch<MetadataHand
     container.setEmpty();
   }
 
+  @Override
   protected boolean setupNewSchema() {
     setupSchemaFromContainer(incoming.getContainer());
     return true;
@@ -473,6 +474,8 @@ public class MetadataHandlerBatch extends AbstractSingleRecordBatch<MetadataHand
           }
           break;
         }
+        default:
+          break;
       }
     }
   }

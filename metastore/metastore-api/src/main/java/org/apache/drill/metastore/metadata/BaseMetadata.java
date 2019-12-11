@@ -42,8 +42,8 @@ public abstract class BaseMetadata implements Metadata {
   protected final TableInfo tableInfo;
   protected final MetadataInfo metadataInfo;
   protected final TupleMetadata schema;
-  protected final Map<SchemaPath, ColumnStatistics> columnsStatistics;
-  protected final Map<String, StatisticsHolder> metadataStatistics;
+  protected final Map<SchemaPath, ColumnStatistics<?>> columnsStatistics;
+  protected final Map<String, StatisticsHolder<?>> metadataStatistics;
   protected final long lastModifiedTime;
 
   protected <T extends BaseMetadataBuilder<T>> BaseMetadata(BaseMetadataBuilder<T> builder) {
@@ -60,12 +60,12 @@ public abstract class BaseMetadata implements Metadata {
   }
 
   @Override
-  public Map<SchemaPath, ColumnStatistics> getColumnsStatistics() {
+  public Map<SchemaPath, ColumnStatistics<?>> getColumnsStatistics() {
     return columnsStatistics;
   }
 
   @Override
-  public ColumnStatistics getColumnStatistics(SchemaPath columnName) {
+  public ColumnStatistics<?> getColumnStatistics(SchemaPath columnName) {
     return columnsStatistics.get(columnName);
   }
 
@@ -77,20 +77,20 @@ public abstract class BaseMetadata implements Metadata {
   @Override
   @SuppressWarnings("unchecked")
   public <V> V getStatistic(StatisticsKind<V> statisticsKind) {
-    StatisticsHolder<V> statisticsHolder = metadataStatistics.get(statisticsKind.getName());
+    StatisticsHolder<V> statisticsHolder = (StatisticsHolder<V>)
+        metadataStatistics.get(statisticsKind.getName());
     return statisticsHolder != null ? statisticsHolder.getStatisticsValue() : null;
   }
 
   @Override
-  public boolean containsExactStatistics(StatisticsKind statisticsKind) {
-    StatisticsHolder statisticsHolder = metadataStatistics.get(statisticsKind.getName());
+  public boolean containsExactStatistics(StatisticsKind<?> statisticsKind) {
+    StatisticsHolder<?> statisticsHolder = metadataStatistics.get(statisticsKind.getName());
     return statisticsHolder != null && statisticsHolder.getStatisticsKind().isExact();
   }
 
   @Override
-  @SuppressWarnings("unchecked")
   public <V> V getStatisticsForColumn(SchemaPath columnName, StatisticsKind<V> statisticsKind) {
-    return (V) columnsStatistics.get(columnName).get(statisticsKind);
+    return columnsStatistics.get(columnName).get(statisticsKind);
   }
 
   @Override
@@ -172,14 +172,14 @@ public abstract class BaseMetadata implements Metadata {
 
   protected abstract void toMetadataUnitBuilder(TableMetadataUnit.Builder builder);
 
-  protected abstract BaseMetadataBuilder toBuilder();
+  protected abstract BaseMetadataBuilder<?> toBuilder();
 
   public static abstract class BaseMetadataBuilder<T extends BaseMetadataBuilder<T>> {
     protected TableInfo tableInfo;
     protected MetadataInfo metadataInfo;
     protected TupleMetadata schema;
-    protected Map<SchemaPath, ColumnStatistics> columnsStatistics;
-    protected Collection<StatisticsHolder> metadataStatistics;
+    protected Map<SchemaPath, ColumnStatistics<?>> columnsStatistics;
+    protected Collection<StatisticsHolder<?>> metadataStatistics;
     protected long lastModifiedTime = UNDEFINED_TIME;
 
     public T tableInfo(TableInfo tableInfo) {
@@ -197,12 +197,12 @@ public abstract class BaseMetadata implements Metadata {
       return self();
     }
 
-    public T columnsStatistics(Map<SchemaPath, ColumnStatistics> columnsStatistics) {
+    public T columnsStatistics(Map<SchemaPath, ColumnStatistics<?>> columnsStatistics) {
       this.columnsStatistics = columnsStatistics;
       return self();
     }
 
-    public T metadataStatistics(Collection<StatisticsHolder> metadataStatistics) {
+    public T metadataStatistics(Collection<StatisticsHolder<?>> metadataStatistics) {
       this.metadataStatistics = metadataStatistics;
       return self();
     }

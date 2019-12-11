@@ -42,19 +42,19 @@ public class StatisticsHolder<T> {
   private static final ObjectReader OBJECT_READER = new ObjectMapper().readerFor(StatisticsHolder.class);
 
   private final T statisticsValue;
-  private final BaseStatisticsKind statisticsKind;
+  private final BaseStatisticsKind<?> statisticsKind;
 
   @JsonCreator
   public StatisticsHolder(@JsonProperty("statisticsValue") T statisticsValue,
-                          @JsonProperty("statisticsKind") BaseStatisticsKind statisticsKind) {
+                          @JsonProperty("statisticsKind") BaseStatisticsKind<?> statisticsKind) {
     this.statisticsValue = statisticsValue;
     this.statisticsKind = statisticsKind;
   }
 
   public StatisticsHolder(T statisticsValue,
-                          StatisticsKind statisticsKind) {
+                          StatisticsKind<?> statisticsKind) {
     this.statisticsValue = statisticsValue;
-    this.statisticsKind = (BaseStatisticsKind) statisticsKind;
+    this.statisticsKind = (BaseStatisticsKind<?>) statisticsKind;
   }
 
   @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS,
@@ -63,7 +63,7 @@ public class StatisticsHolder<T> {
     return statisticsValue;
   }
 
-  public StatisticsKind getStatisticsKind() {
+  public StatisticsKind<?> getStatisticsKind() {
     return statisticsKind;
   }
 
@@ -101,7 +101,7 @@ public class StatisticsHolder<T> {
         .toString();
   }
 
-  public static StatisticsHolder of(String serialized) {
+  public static StatisticsHolder<?> of(String serialized) {
     try {
       return OBJECT_READER.readValue(serialized);
     } catch (IOException e) {

@@ -229,7 +229,7 @@ public abstract class AbstractParquetGroupScan extends AbstractGroupScanWithMeta
    * @return group scan with applied filter expression
    */
   @Override
-  public AbstractGroupScanWithMetadata applyFilter(LogicalExpression filterExpr, UdfUtilities udfUtilities,
+  public AbstractGroupScanWithMetadata<?> applyFilter(LogicalExpression filterExpr, UdfUtilities udfUtilities,
       FunctionImplementationRegistry functionImplementationRegistry, OptionManager optionManager) {
     // Builds filter for pruning. If filter cannot be built, null should be returned.
     FilterPredicate<?> filterPredicate = getFilterPredicate(filterExpr, udfUtilities, functionImplementationRegistry, optionManager, true);
@@ -481,7 +481,7 @@ public abstract class AbstractParquetGroupScan extends AbstractGroupScanWithMeta
   protected abstract static class RowGroupScanFilterer<B extends RowGroupScanFilterer<B>> extends GroupScanWithMetadataFilterer<B> {
     protected Multimap<Path, RowGroupMetadata> rowGroups = LinkedListMultimap.create();
 
-    public RowGroupScanFilterer(AbstractGroupScanWithMetadata source) {
+    public RowGroupScanFilterer(AbstractGroupScanWithMetadata<?> source) {
       super(source);
     }
 

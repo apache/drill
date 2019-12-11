@@ -187,6 +187,7 @@ public class DrillRelMdSelectivity extends RelMdSelectivity {
             try {
               RexVisitor<Void> visitor =
                       new RexVisitorImpl<Void>(true) {
+                        @Override
                         public Void visitCall(RexCall call) {
                           if (call.getKind() != SqlKind.EQUALS) {
                             throw new Util.FoundOne(call);
@@ -294,7 +295,7 @@ public class DrillRelMdSelectivity extends RelMdSelectivity {
   private double computeEqualsSelectivity(TableMetadata tableMetadata, RexNode orPred, List<SchemaPath> fieldNames) {
     SchemaPath col = getColumn(orPred, fieldNames);
     if (col != null) {
-      ColumnStatistics columnStatistics = tableMetadata != null ? tableMetadata.getColumnStatistics(col) : null;
+      ColumnStatistics<?> columnStatistics = tableMetadata != null ? tableMetadata.getColumnStatistics(col) : null;
       Double ndv = columnStatistics != null ? ColumnStatisticsKind.NDV.getFrom(columnStatistics) : null;
       if (ndv != null) {
         return 1.00 / ndv;
@@ -307,7 +308,7 @@ public class DrillRelMdSelectivity extends RelMdSelectivity {
   private double computeRangeSelectivity(TableMetadata tableMetadata, RexNode orPred, List<SchemaPath> fieldNames) {
     SchemaPath col = getColumn(orPred, fieldNames);
     if (col != null) {
-      ColumnStatistics columnStatistics = tableMetadata != null ? tableMetadata.getColumnStatistics(col) : null;
+      ColumnStatistics<?> columnStatistics = tableMetadata != null ? tableMetadata.getColumnStatistics(col) : null;
       Histogram histogram = columnStatistics != null ? ColumnStatisticsKind.HISTOGRAM.getFrom(columnStatistics) : null;
       if (histogram != null) {
         Double totalCount = ColumnStatisticsKind.ROWCOUNT.getFrom(columnStatistics);
@@ -324,7 +325,7 @@ public class DrillRelMdSelectivity extends RelMdSelectivity {
   private double computeIsNotNullSelectivity(TableMetadata tableMetadata, RexNode orPred, List<SchemaPath> fieldNames) {
     SchemaPath col = getColumn(orPred, fieldNames);
     if (col != null) {
-      ColumnStatistics columnStatistics = tableMetadata != null ? tableMetadata.getColumnStatistics(col) : null;
+      ColumnStatistics<?> columnStatistics = tableMetadata != null ? tableMetadata.getColumnStatistics(col) : null;
       Double nonNullCount = columnStatistics != null ? ColumnStatisticsKind.NON_NULL_COUNT.getFrom(columnStatistics) : null;
       if (nonNullCount != null) {
         // Cap selectivity below Calcite Guess
@@ -423,6 +424,7 @@ public class DrillRelMdSelectivity extends RelMdSelectivity {
     try {
       RexVisitor<Void> visitor =
           new RexVisitorImpl<Void>(true) {
+            @Override
             public Void visitCall(RexCall call) {
               for (RexNode child : call.getOperands()) {
                 child.accept(this);
@@ -430,6 +432,7 @@ public class DrillRelMdSelectivity extends RelMdSelectivity {
               return super.visitCall(call);
             }
 
+            @Override
             public Void visitInputRef(RexInputRef inputRef) {
               throw new Util.FoundOne(inputRef);
             }

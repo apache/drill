@@ -59,8 +59,7 @@ public class ParquetGroupScanStatistics<T extends BaseMetadata & LocationProvide
     collect(rowGroupInfos);
   }
 
-  @SuppressWarnings("unchecked")
-  public ParquetGroupScanStatistics(ParquetGroupScanStatistics that) {
+  public ParquetGroupScanStatistics(ParquetGroupScanStatistics<T> that) {
     this.partitionValueMap = HashBasedTable.create(that.partitionValueMap);
     this.partitionColTypeMap = new HashMap<>(that.partitionColTypeMap);
     this.columnValueCounts = new HashMap<>(that.columnValueCounts);
@@ -101,9 +100,9 @@ public class ParquetGroupScanStatistics<T extends BaseMetadata & LocationProvide
     boolean first = true;
     for (T metadata : metadataList) {
       long localRowCount = TableStatisticsKind.ROW_COUNT.getValue(metadata);
-      for (Map.Entry<SchemaPath, ColumnStatistics> columnsStatistics : metadata.getColumnsStatistics().entrySet()) {
+      for (Map.Entry<SchemaPath, ColumnStatistics<?>> columnsStatistics : metadata.getColumnsStatistics().entrySet()) {
         SchemaPath schemaPath = columnsStatistics.getKey();
-        ColumnStatistics statistics = columnsStatistics.getValue();
+        ColumnStatistics<?> statistics = columnsStatistics.getValue();
         MutableLong emptyCount = new MutableLong();
         MutableLong previousCount = columnValueCounts.putIfAbsent(schemaPath, emptyCount);
         if (previousCount == null) {
@@ -164,7 +163,7 @@ public class ParquetGroupScanStatistics<T extends BaseMetadata & LocationProvide
    * @param rowCount         row count
    * @return whether column is a potential partition column
    */
-  private boolean checkForPartitionColumn(ColumnStatistics columnStatistics,
+  private boolean checkForPartitionColumn(ColumnStatistics<?> columnStatistics,
                                           boolean first,
                                           long rowCount,
                                           TypeProtos.MajorType type,
@@ -202,11 +201,11 @@ public class ParquetGroupScanStatistics<T extends BaseMetadata & LocationProvide
    * @param rowCount         rows count in column chunk
    * @return true if column has single value
    */
-  private boolean hasSingleValue(ColumnStatistics columnStatistics, long rowCount) {
+  private boolean hasSingleValue(ColumnStatistics<?> columnStatistics, long rowCount) {
     return columnStatistics != null && isSingleVal(columnStatistics, rowCount);
   }
 
-  private boolean isSingleVal(ColumnStatistics columnStatistics, long rowCount) {
+  private boolean isSingleVal(ColumnStatistics<?> columnStatistics, long rowCount) {
     Long numNulls = ColumnStatisticsKind.NULLS_COUNT.getFrom(columnStatistics);
     if (numNulls != null && numNulls != Statistic.NO_COLUMN_STATS) {
       Object min = columnStatistics.get(ColumnStatisticsKind.MIN_VALUE);

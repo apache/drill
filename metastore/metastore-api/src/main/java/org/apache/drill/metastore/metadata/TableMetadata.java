@@ -32,6 +32,7 @@ public interface TableMetadata extends Metadata {
 
   Path getLocation();
   long getLastModifiedTime();
-  TableMetadata cloneWithStats(Map<SchemaPath, ColumnStatistics> columnStatistics, List<StatisticsHolder> tableStatistics);
+  TableMetadata cloneWithStats(Map<SchemaPath, ColumnStatistics<?>> columnStatistics,
+      List<StatisticsHolder<?>> tableStatistics);
   List<SchemaPath> getInterestingColumns();
 }

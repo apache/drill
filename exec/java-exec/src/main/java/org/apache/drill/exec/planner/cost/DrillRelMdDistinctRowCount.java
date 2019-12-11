@@ -163,7 +163,7 @@ public class DrillRelMdDistinctRowCount extends RelMdDistinctRowCount{
       if (!groupKey.get(i)) {
         continue;
       }
-      ColumnStatistics columnStatistics = tableMetadata != null ?
+      ColumnStatistics<?> columnStatistics = tableMetadata != null ?
           tableMetadata.getColumnStatistics(SchemaPath.getSimplePath(colName)) : null;
       Double ndv = columnStatistics != null ? ColumnStatisticsKind.NDV.getFrom(columnStatistics) : null;
       // Skip NDV, if not available

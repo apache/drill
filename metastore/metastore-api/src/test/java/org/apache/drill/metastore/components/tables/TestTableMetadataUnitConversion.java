@@ -387,9 +387,9 @@ public class TestTableMetadataUnitConversion extends BaseTest {
 
     private final TableInfo fullTableInfo;
     private final TableInfo basicTableInfo;
-    private final Map<SchemaPath, ColumnStatistics> columnsStatistics;
+    private final Map<SchemaPath, ColumnStatistics<?>> columnsStatistics;
     private final Map<String, String> unitColumnsStatistics;
-    private final Collection<StatisticsHolder> metadataStatistics;
+    private final Collection<StatisticsHolder<?>> metadataStatistics;
     private final List<String> unitMetadataStatistics;
     private final TupleMetadata schema;
     private final String unitSchema;

@@ -99,6 +99,9 @@ public class BasicTablesTransformer {
         case PARTITION:
           partitions.add(PartitionMetadata.builder().metadataUnit(unit).build());
           break;
+        default:
+          // Ignore unsupported type
+          break;
       }
     }
     return new MetadataHolder(tables, segments, files, rowGroups, partitions);

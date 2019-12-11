@@ -102,7 +102,7 @@ public abstract class AbstractParquetScanBatchCreator {
       Path prevRowGroupPath = null;
       Metadata_V4.ParquetTableMetadata_v4 tableMetadataV4 = null;
       Metadata_V4.ParquetFileAndRowCountMetadata fileMetadataV4 = null;
-      FilterPredicate filterPredicate = null;
+      FilterPredicate<?> filterPredicate = null;
       Set<SchemaPath> schemaPathsInExpr = null;
       Set<SchemaPath> columnsInExpr = null;
       // for debug/info logging
@@ -135,7 +135,7 @@ public abstract class AbstractParquetScanBatchCreator {
         Here we could store a map from file names to footers, to prevent re-reading the footer for each row group in a file
         TODO - to prevent reading the footer again in the parquet record reader (it is read earlier in the ParquetStorageEngine)
         we should add more information to the RowGroupInfo that will be populated upon the first read to
-        provide the reader with all of th file meta-data it needs
+        provide the reader with all of the file meta-data it needs
         These fields will be added to the constructor below
         */
 
@@ -190,7 +190,7 @@ public abstract class AbstractParquetScanBatchCreator {
 
             MetadataBase.RowGroupMetadata rowGroupMetadata = fileMetadataV4.getFileMetadata().getRowGroups().get(rowGroup.getRowGroupIndex());
 
-            Map<SchemaPath, ColumnStatistics> columnsStatistics = ParquetTableMetadataUtils.getRowGroupColumnStatistics(tableMetadataV4, rowGroupMetadata);
+            Map<SchemaPath, ColumnStatistics<?>> columnsStatistics = ParquetTableMetadataUtils.getRowGroupColumnStatistics(tableMetadataV4, rowGroupMetadata);
 
             try {
               Map<SchemaPath, TypeProtos.MajorType> intermediateColumns =
