@@ -58,14 +58,14 @@ public interface FilterExpression {
    */
   interface Visitor<T> {
 
-    T visit(SimplePredicate.Equal expression);
-    T visit(SimplePredicate.NotEqual expression);
-    T visit(SimplePredicate.LessThan expression);
-    T visit(SimplePredicate.LessThanOrEqual expression);
-    T visit(SimplePredicate.GreaterThan expression);
-    T visit(SimplePredicate.GreaterThanOrEqual expression);
-    T visit(ListPredicate.In expression);
-    T visit(ListPredicate.NotIn expression);
+    T visit(SimplePredicate.Equal<?> expression);
+    T visit(SimplePredicate.NotEqual<?> expression);
+    T visit(SimplePredicate.LessThan<?> expression);
+    T visit(SimplePredicate.LessThanOrEqual<?> expression);
+    T visit(SimplePredicate.GreaterThan<?> expression);
+    T visit(SimplePredicate.GreaterThanOrEqual<?> expression);
+    T visit(ListPredicate.In<?> expression);
+    T visit(ListPredicate.NotIn<?> expression);
     T visit(IsPredicate.IsNull expression);
     T visit(IsPredicate.IsNotNull expression);
     T visit(SingleExpressionPredicate.Not expression);
