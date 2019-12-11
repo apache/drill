@@ -146,7 +146,7 @@ public class IcebergTableSchema {
     if (!(type instanceof Class)) {
       throw new IcebergMetastoreException("Unexpected generics type: " + type.getTypeName());
     }
-    Class typeArgument = (Class) type;
+    Class<?> typeArgument = (Class<?>) type;
     String typeSimpleName = typeArgument.getSimpleName().toLowerCase();
     org.apache.iceberg.types.Type icebergType = JAVA_TO_ICEBERG_TYPE_MAP.get(typeSimpleName);
     if (icebergType == null) {

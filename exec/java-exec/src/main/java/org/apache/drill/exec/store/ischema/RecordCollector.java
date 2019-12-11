@@ -345,7 +345,7 @@ public interface RecordCollector {
 
           String tableName = table.getTableInfo().name();
           if (filterEvaluator.shouldVisitColumn(schemaPath, tableName, columnName)) {
-            ColumnStatistics columnStatistics =
+            ColumnStatistics<?> columnStatistics =
               table.getColumnStatistics(SchemaPath.parseFromString(columnName));
             records.add(new Records.Column(IS_CATALOG_NAME, schemaPath, tableName, columnName,
               column, columnStatistics, currentIndex, isNested));
