@@ -395,7 +395,10 @@ public class TestInfoSchemaWithMetastore extends ClusterTest {
   }
 
   private ZonedDateTime currentUtcTime() {
-    ZonedDateTime currentTime = ZonedDateTime.of(LocalDateTime.now(), ZoneId.systemDefault());
+    // Java 9 and later returns LocalDateTime with nanoseconds precision,
+    // but Java 8 returns LocalDateTime with milliseconds precision
+    // and metastore stores last modified time in milliseconds
+    ZonedDateTime currentTime = ZonedDateTime.of(LocalDateTime.now().withNano(0), ZoneId.systemDefault());
     return currentTime.withZoneSameInstant(ZoneId.of("UTC"));
   }
 }

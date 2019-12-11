@@ -136,15 +136,9 @@
     </dependency>
 
     <dependency>
-      <groupId>com.sun.codemodel</groupId>
-      <artifactId>codemodel</artifactId>
-      <version>${codemodel.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>net.openhft</groupId>
-      <artifactId>compiler</artifactId>
-      <version>2.3.4</version>
+      <groupId>org.ow2.asm</groupId>
+      <artifactId>asm</artifactId>
+      <version>${asm.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

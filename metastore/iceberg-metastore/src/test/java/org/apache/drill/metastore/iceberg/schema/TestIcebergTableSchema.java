@@ -17,35 +17,27 @@
  */
 package org.apache.drill.metastore.iceberg.schema;
 
-import com.sun.codemodel.CodeWriter;
-import com.sun.codemodel.JAnnotationArrayMember;
-import com.sun.codemodel.JAnnotationUse;
-import com.sun.codemodel.JClass;
-import com.sun.codemodel.JClassAlreadyExistsException;
-import com.sun.codemodel.JCodeModel;
-import com.sun.codemodel.JDefinedClass;
-import com.sun.codemodel.JFieldVar;
-import com.sun.codemodel.JMod;
-import com.sun.codemodel.JPackage;
-import net.openhft.compiler.CompilerUtils;
 import org.apache.drill.metastore.MetastoreFieldDefinition;
 import org.apache.drill.metastore.iceberg.IcebergBaseTest;
 import org.apache.drill.metastore.iceberg.exceptions.IcebergMetastoreException;
-import org.apache.drill.metastore.metadata.MetadataType;
 import org.apache.iceberg.PartitionSpec;
 import org.apache.iceberg.Schema;
 import org.apache.iceberg.types.Types;
 import org.junit.Test;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.FieldVisitor;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
+import org.objectweb.asm.signature.SignatureVisitor;
+import org.objectweb.asm.signature.SignatureWriter;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
+import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
+import static org.objectweb.asm.Opcodes.V1_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -53,40 +45,36 @@ import static org.junit.Assert.assertNull;
 public class TestIcebergTableSchema extends IcebergBaseTest {
 
   @Test
-  public void testAllTypes() throws Exception {
+  public void testAllTypes() {
     Class<?> clazz = new ClassGenerator(getClass().getSimpleName() + "AllTypes") {
 
       @Override
-      void addFields(JDefinedClass jDefinedClass) {
-        JFieldVar stringField = jDefinedClass.field(DEFAULT_FIELD_MODE, String.class, "stringField");
+      void addFields(ClassWriter classWriter) {
+        FieldVisitor stringField = addField(classWriter, Opcodes.ACC_PRIVATE, "stringField", String.class);
         annotate(stringField);
 
-        JFieldVar intField = jDefinedClass.field(DEFAULT_FIELD_MODE, int.class, "intField");
+        FieldVisitor intField = addField(classWriter, Opcodes.ACC_PRIVATE, "intField", int.class);
         annotate(intField);
 
-        JFieldVar integerField = jDefinedClass.field(DEFAULT_FIELD_MODE, Integer.class, "integerField");
+        FieldVisitor integerField = addField(classWriter, Opcodes.ACC_PRIVATE, "integerField", Integer.class);
         annotate(integerField);
 
-        JFieldVar longField = jDefinedClass.field(DEFAULT_FIELD_MODE, Long.class, "longField");
+        FieldVisitor longField = addField(classWriter, Opcodes.ACC_PRIVATE, "longField", Long.class);
         annotate(longField);
 
-        JFieldVar floatField = jDefinedClass.field(DEFAULT_FIELD_MODE, Float.class, "floatField");
+        FieldVisitor floatField = addField(classWriter, Opcodes.ACC_PRIVATE, "floatField", Float.class);
         annotate(floatField);
 
-        JFieldVar doubleField = jDefinedClass.field(DEFAULT_FIELD_MODE, Double.class, "doubleField");
+        FieldVisitor doubleField = addField(classWriter, Opcodes.ACC_PRIVATE, "doubleField", Double.class);
         annotate(doubleField);
 
-        JFieldVar booleanField = jDefinedClass.field(DEFAULT_FIELD_MODE, Boolean.class, "booleanField");
+        FieldVisitor booleanField = addField(classWriter, Opcodes.ACC_PRIVATE, "booleanField", Boolean.class);
         annotate(booleanField);
 
-        JCodeModel jCodeModel = jDefinedClass.owner();
-
-        JClass listRef = jCodeModel.ref(List.class).narrow(String.class);
-        JFieldVar listField = jDefinedClass.field(DEFAULT_FIELD_MODE, listRef, "listField");
+        FieldVisitor listField = addField(classWriter, Opcodes.ACC_PRIVATE, "listField", List.class, String.class);
         annotate(listField);
 
-        JClass mapRef = jCodeModel.ref(Map.class).narrow(String.class, Float.class);
-        JFieldVar mapField = jDefinedClass.field(DEFAULT_FIELD_MODE, mapRef, "mapField");
+        FieldVisitor mapField = addField(classWriter, Opcodes.ACC_PRIVATE, "mapField", Map.class, String.class, Float.class);
         annotate(mapField);
       }
 
@@ -114,15 +102,15 @@ public class TestIcebergTableSchema extends IcebergBaseTest {
   }
 
   @Test
-  public void testIgnoreUnannotatedFields() throws Exception {
+  public void testIgnoreUnannotatedFields() {
     Class<?> clazz = new ClassGenerator(getClass().getSimpleName() + "IgnoreUnannotatedFields") {
 
       @Override
-      void addFields(JDefinedClass jDefinedClass) {
-        JFieldVar stringField = jDefinedClass.field(DEFAULT_FIELD_MODE, String.class, "stringField");
+      void addFields(ClassWriter classWriter) {
+        FieldVisitor stringField = addField(classWriter, Opcodes.ACC_PRIVATE, "stringField", String.class);
         annotate(stringField);
 
-        jDefinedClass.field(DEFAULT_FIELD_MODE, Integer.class, "integerField");
+        addField(classWriter, Opcodes.ACC_PRIVATE, "integerField", Integer.class);
       }
     }.generate();
 
@@ -132,16 +120,28 @@ public class TestIcebergTableSchema extends IcebergBaseTest {
   }
 
   @Test
-  public void testNestedComplexType() throws Exception {
+  public void testNestedComplexType() {
     Class<?> clazz = new ClassGenerator(getClass().getSimpleName() + "NestedComplexType") {
 
       @Override
-      void addFields(JDefinedClass jDefinedClass) {
-        JCodeModel jCodeModel = jDefinedClass.owner();
+      void addFields(ClassWriter classWriter) {
+        String descriptor = Type.getType(List.class).getDescriptor();
 
-        JClass nestedListRef = jCodeModel.ref(List.class).narrow(String.class);
-        JClass listRef = jCodeModel.ref(List.class).narrow(nestedListRef);
-        JFieldVar listField = jDefinedClass.field(DEFAULT_FIELD_MODE, listRef, "listField");
+        String signature = FieldSignatureBuilder.builder()
+            .declareType(List.class)
+            .startGeneric()
+                .declareType(List.class)
+                .startGeneric()
+                    .declareType(String.class)
+                    .endType()
+                .endGeneric()
+                .endType()
+            .endGeneric()
+            .endType()
+            .buildSignature();
+
+        FieldVisitor listField =
+            classWriter.visitField(Opcodes.ACC_PRIVATE, "stringField", descriptor, signature, null);
         annotate(listField);
       }
     }.generate();
@@ -152,12 +152,12 @@ public class TestIcebergTableSchema extends IcebergBaseTest {
   }
 
   @Test
-  public void testUnpartitionedPartitionSpec() throws Exception {
+  public void testUnpartitionedPartitionSpec() {
     Class<?> clazz = new ClassGenerator(getClass().getSimpleName() + "UnpartitionedPartitionSpec") {
 
       @Override
-      void addFields(JDefinedClass jDefinedClass) {
-        JFieldVar stringField = jDefinedClass.field(DEFAULT_FIELD_MODE, String.class, "stringField");
+      void addFields(ClassWriter classWriter) {
+        FieldVisitor stringField = addField(classWriter, Opcodes.ACC_PRIVATE, "stringField", String.class);
         annotate(stringField);
       }
     }.generate();
@@ -169,24 +169,24 @@ public class TestIcebergTableSchema extends IcebergBaseTest {
   }
 
   @Test
-  public void testPartitionedPartitionSpec() throws Exception {
+  public void testPartitionedPartitionSpec() {
     Class<?> clazz = new ClassGenerator(getClass().getSimpleName() + "PartitionedPartitionSpec") {
 
       @Override
-      void addFields(JDefinedClass jDefinedClass) {
-        JFieldVar partKey1 = jDefinedClass.field(DEFAULT_FIELD_MODE, String.class, "partKey1");
+      void addFields(ClassWriter classWriter) {
+        FieldVisitor partKey1 = addField(classWriter, Opcodes.ACC_PRIVATE, "partKey1", String.class);
         annotate(partKey1);
 
-        JFieldVar partKey2 = jDefinedClass.field(DEFAULT_FIELD_MODE, String.class, "partKey2");
+        FieldVisitor partKey2 = addField(classWriter, Opcodes.ACC_PRIVATE, "partKey2", String.class);
         annotate(partKey2);
 
-        JFieldVar partKey3 = jDefinedClass.field(DEFAULT_FIELD_MODE, String.class, "partKey3");
+        FieldVisitor partKey3 = addField(classWriter, Opcodes.ACC_PRIVATE, "partKey3", String.class);
         annotate(partKey3);
 
-        JFieldVar integerField = jDefinedClass.field(DEFAULT_FIELD_MODE, Integer.class, "integerField");
+        FieldVisitor integerField = addField(classWriter, Opcodes.ACC_PRIVATE, "integerField", Integer.class);
         annotate(integerField);
 
-        JFieldVar booleanField = jDefinedClass.field(DEFAULT_FIELD_MODE, Boolean.class, "booleanField");
+        FieldVisitor booleanField = addField(classWriter, Opcodes.ACC_PRIVATE, "booleanField", Boolean.class);
         annotate(booleanField);
       }
     }.generate();
@@ -216,15 +216,15 @@ public class TestIcebergTableSchema extends IcebergBaseTest {
   }
 
   @Test
-  public void testUnMatchingPartitionSpec() throws Exception {
+  public void testUnMatchingPartitionSpec() {
     Class<?> clazz = new ClassGenerator(getClass().getSimpleName() + "UnMatchingPartitionSpec") {
 
       @Override
-      void addFields(JDefinedClass jDefinedClass) {
-        JFieldVar partKey1 = jDefinedClass.field(DEFAULT_FIELD_MODE, String.class, "partKey1");
+      void addFields(ClassWriter classWriter) {
+        FieldVisitor partKey1 = addField(classWriter, Opcodes.ACC_PRIVATE, "partKey1", String.class);
         annotate(partKey1);
 
-        JFieldVar integerField = jDefinedClass.field(DEFAULT_FIELD_MODE, Integer.class, "integerField");
+        FieldVisitor integerField = addField(classWriter, Opcodes.ACC_PRIVATE, "integerField", Integer.class);
         annotate(integerField);
       }
     }.generate();
@@ -238,9 +238,7 @@ public class TestIcebergTableSchema extends IcebergBaseTest {
    * Generates and loads class at the runtime with specified fields.
    * Fields may or may not be annotated.
    */
-  private abstract class ClassGenerator {
-
-    final int DEFAULT_FIELD_MODE = JMod.PRIVATE;
+  private static abstract class ClassGenerator {
 
     private final String name;
 
@@ -248,53 +246,112 @@ public class TestIcebergTableSchema extends IcebergBaseTest {
       this.name = name;
     }
 
-    Class<?> generate() throws JClassAlreadyExistsException, IOException, ClassNotFoundException {
-      JCodeModel jCodeModel = prepareModel();
-      ByteArrayStreamCodeWriter codeWriter = new ByteArrayStreamCodeWriter();
-      jCodeModel.build(codeWriter);
+    Class<?> generate() {
+      ClassWriter classWriter = generateClass();
 
-      String sourceCode = codeWriter.sourceCode();
-      return CompilerUtils.CACHED_COMPILER.loadFromJava(name, sourceCode);
+      byte[] bytes = classWriter.toByteArray();
+      return new ClassLoader() {
+        public Class<?> injectClass(String name, byte[] classBytes) {
+          return defineClass(name, classBytes, 0, classBytes.length);
+        }
+      }.injectClass(name, bytes);
     }
 
-    private JCodeModel prepareModel() throws JClassAlreadyExistsException {
-      JCodeModel jCodeModel = new JCodeModel();
-      JPackage jPackage = jCodeModel._package("");
-      JDefinedClass jDefinedClass = jPackage._class(name);
-      addFields(jDefinedClass);
-      return jCodeModel;
-    }
+    public FieldVisitor addField(ClassWriter classWriter, int access, String fieldName, Class<?> clazz, Class<?>... genericTypes) {
+      String descriptor = Type.getType(clazz).getDescriptor();
 
-    void annotate(JFieldVar field) {
-      annotate(field, MetadataType.ALL);
-    }
+      String signature = null;
 
-    void annotate(JFieldVar field, MetadataType... scopes) {
-      JAnnotationUse annotate = field.annotate(MetastoreFieldDefinition.class);
-      assert scopes.length != 0;
-      JAnnotationArrayMember scopesParam = annotate.paramArray("scopes");
-      Stream.of(scopes).forEach(scopesParam::param);
-    }
-
-    abstract void addFields(JDefinedClass jDefinedClass);
-
-    private class ByteArrayStreamCodeWriter extends CodeWriter {
-
-      private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-
-      @Override
-      public OutputStream openBinary(JPackage pkg, String fileName) {
-        return outputStream;
+      if (genericTypes.length > 0) {
+        FieldSignatureBuilder fieldSignatureBuilder = FieldSignatureBuilder.builder()
+            .declareType(clazz)
+            .startGeneric();
+        for (Class<?> genericType : genericTypes) {
+          fieldSignatureBuilder
+              .declareType(genericType)
+              .endType();
+        }
+        signature = fieldSignatureBuilder
+            .endGeneric()
+            .endType()
+            .buildSignature();
       }
 
-      @Override
-      public void close() {
-        // no need to close byte array stream
-      }
+      return classWriter.visitField(access, fieldName, descriptor, signature, null);
+    }
 
-      String sourceCode() {
-        return new String(outputStream.toByteArray());
-      }
+    void annotate(FieldVisitor field) {
+      field.visitAnnotation(Type.getType(MetastoreFieldDefinition.class).getDescriptor(), true);
+    }
+
+    private ClassWriter generateClass() {
+      ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
+      classWriter.visit(V1_8, ACC_PUBLIC, name, null, Type.getInternalName(Object.class), null);
+      addFields(classWriter);
+      classWriter.visitEnd();
+
+      return classWriter;
+    }
+
+    abstract void addFields(ClassWriter classWriter);
+  }
+
+  /**
+   * Helper class for constructing field type signature string.
+   * <p>
+   * Example of usage:
+   * <p>
+   * Desired type: {@code List<Map<String, List<Integer>>>}
+   * <pre><code>
+   *         String signature = FieldSignatureBuilder.builder()
+   *           .declareType(List.class)
+   *           .startGeneric()
+   *               .declareType(Map.class)
+   *               .startGeneric()
+   *                   .declareType(String.class)
+   *                   .endType()
+   *                   .declareType(List.class)
+   *                   .startGeneric()
+   *                       .declareType(Integer.class)
+   *                       .endType()
+   *                   .endGeneric()
+   *                   .endType()
+   *               .endGeneric()
+   *               .endType()
+   *           .endGeneric()
+   *           .endType()
+   *           .buildSignature();
+   * </code></pre>
+   */
+  private static class FieldSignatureBuilder {
+    private final SignatureVisitor signatureVisitor = new SignatureWriter();
+
+    public FieldSignatureBuilder declareType(Class<?> clazz) {
+      signatureVisitor.visitClassType(Type.getInternalName(clazz));
+      return this;
+    }
+
+    public FieldSignatureBuilder startGeneric() {
+      signatureVisitor.visitTypeArgument('=');
+      return this;
+    }
+
+    public FieldSignatureBuilder endGeneric() {
+      signatureVisitor.visitSuperclass();
+      return this;
+    }
+
+    public FieldSignatureBuilder endType() {
+      signatureVisitor.visitEnd();
+      return this;
+    }
+
+    public String buildSignature() {
+      return signatureVisitor.toString();
+    }
+
+    public static FieldSignatureBuilder builder() {
+      return new FieldSignatureBuilder();
     }
   }
 }

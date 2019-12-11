@@ -24,11 +24,11 @@ import java.nio.file.Paths;
 import org.apache.drill.categories.HiveStorageTest;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.hive.HiveClusterTest;
 import org.apache.drill.exec.hive.HiveTestFixture;
 import org.apache.drill.exec.hive.HiveTestUtilities;
 import org.apache.drill.exec.util.StoragePluginTestUtils;
 import org.apache.drill.test.ClusterFixture;
-import org.apache.drill.test.ClusterTest;
 import org.apache.hadoop.hive.ql.Driver;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -45,7 +45,7 @@ import static org.apache.drill.test.TestBuilder.mapOf;
 import static org.apache.drill.test.TestBuilder.mapOfObject;
 
 @Category({SlowTest.class, HiveStorageTest.class})
-public class TestHiveMaps extends ClusterTest {
+public class TestHiveMaps extends HiveClusterTest {
 
   private static HiveTestFixture hiveTestFixture;
 
@@ -59,7 +59,7 @@ public class TestHiveMaps extends ClusterTest {
   }
 
   @AfterClass
-  public static void tearDown() throws Exception {
+  public static void tearDown() {
     if (hiveTestFixture != null) {
       hiveTestFixture.getPluginManager().removeHivePluginFrom(cluster.drillbit());
     }

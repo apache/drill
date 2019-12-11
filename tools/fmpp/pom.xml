@@ -82,7 +82,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-plugin-plugin</artifactId>
-        <version>3.4</version>
+        <version>3.6.0</version>
         <configuration>
           <goalPrefix>drill-fmpp</goalPrefix>
         </configuration>
@@ -102,6 +102,14 @@
             <phase>process-classes</phase>
           </execution>
          </executions>
+        <!-- Specifies asm version which supports JDK 9+ -->
+        <dependencies>
+          <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm</artifactId>
+            <version>${asm.version}</version>
+          </dependency>
+        </dependencies>
        </plugin>
     </plugins>
   </build>

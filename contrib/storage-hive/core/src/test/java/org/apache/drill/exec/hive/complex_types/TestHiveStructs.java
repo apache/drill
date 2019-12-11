@@ -23,13 +23,13 @@ import java.nio.file.Paths;
 import org.apache.drill.categories.HiveStorageTest;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.hive.HiveClusterTest;
 import org.apache.drill.exec.hive.HiveTestFixture;
 import org.apache.drill.exec.hive.HiveTestUtilities;
 import org.apache.drill.exec.util.JsonStringHashMap;
 import org.apache.drill.exec.util.StoragePluginTestUtils;
 import org.apache.drill.exec.util.Text;
 import org.apache.drill.test.ClusterFixture;
-import org.apache.drill.test.ClusterTest;
 import org.apache.hadoop.hive.ql.Driver;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -44,7 +44,7 @@ import static org.apache.drill.test.TestBuilder.mapOf;
 import static org.apache.drill.test.TestBuilder.mapOfObject;
 
 @Category({SlowTest.class, HiveStorageTest.class})
-public class TestHiveStructs extends ClusterTest {
+public class TestHiveStructs extends HiveClusterTest {
 
   private static final JsonStringHashMap<String, Object> STR_N0_ROW_1 = mapOf(
       "f_int", -3000, "f_string", new Text("AbbBBa"), "f_varchar", new Text("-c54g"), "f_char", new Text("Th"),
@@ -88,7 +88,7 @@ public class TestHiveStructs extends ClusterTest {
   }
 
   @AfterClass
-  public static void tearDown() throws Exception {
+  public static void tearDown() {
     if (hiveTestFixture != null) {
       hiveTestFixture.getPluginManager().removeHivePluginFrom(cluster.drillbit());
     }

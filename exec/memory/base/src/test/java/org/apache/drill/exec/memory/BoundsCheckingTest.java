@@ -17,9 +17,6 @@
  */
 package org.apache.drill.exec.memory;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-
 import org.apache.drill.test.BaseTest;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -29,55 +26,47 @@ import org.junit.Test;
 
 import io.netty.buffer.DrillBuf;
 import io.netty.util.IllegalReferenceCountException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public class BoundsCheckingTest extends BaseTest {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BoundsCheckingTest.class);
+  private static final Logger logger = LoggerFactory.getLogger(BoundsCheckingTest.class);
 
   private static boolean old;
 
   private RootAllocator allocator;
 
-  private static boolean setBoundsChecking(boolean enabled) throws Exception
-  {
-    Field field = BoundsChecking.class.getDeclaredField("BOUNDS_CHECKING_ENABLED");
-    Field modifiersField = Field.class.getDeclaredField("modifiers");
-    modifiersField.setAccessible(true);
-    modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
-    boolean old = field.getBoolean(null);
-    field.setAccessible(true);
-    field.set(null, enabled);
-    return old;
+  private static boolean setBoundsChecking(boolean enabled) {
+    String oldValue = System.setProperty(BoundsChecking.ENABLE_UNSAFE_BOUNDS_CHECK_PROPERTY, String.valueOf(enabled));
+    return Boolean.parseBoolean(oldValue);
   }
 
   @BeforeClass
-  public static void setBoundsCheckingEnabled() throws Exception
-  {
+  public static void setBoundsCheckingEnabled() {
     old = setBoundsChecking(true);
   }
 
   @AfterClass
-  public static void restoreBoundsChecking() throws Exception
-  {
+  public static void restoreBoundsChecking() {
     setBoundsChecking(old);
   }
 
   @Before
-  public void setupAllocator()
-  {
+  public void setupAllocator() {
     allocator = new RootAllocator(Integer.MAX_VALUE);
   }
 
   @After
-  public void closeAllocator()
-  {
+  public void closeAllocator() {
     allocator.close();
   }
 
   @Test
-  public void testLengthCheck()
-  {
+  public void testLengthCheck() {
+    assertTrue(BoundsChecking.BOUNDS_CHECKING_ENABLED);
     try {
       BoundsChecking.lengthCheck(null, 0, 0);
       fail("expecting NullPointerException");

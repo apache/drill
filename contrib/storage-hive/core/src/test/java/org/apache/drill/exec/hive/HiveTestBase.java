@@ -37,30 +37,35 @@ public class HiveTestBase extends PlanTestBase {
   public static final HiveTestFixture HIVE_TEST_FIXTURE;
 
   static {
-    // generate hive data common for all test classes using own dirWatcher
-    BaseDirTestWatcher generalDirWatcher = new BaseDirTestWatcher() {
-      {
+    if (HiveTestUtilities.supportedJavaVersion()) {
+      // generate hive data common for all test classes using own dirWatcher
+      BaseDirTestWatcher generalDirWatcher = new BaseDirTestWatcher() {
+        {
         /*
            Below protected method invoked to create directory DirWatcher.dir with path like:
            ./target/org.apache.drill.exec.hive.HiveTestBase123e4567-e89b-12d3-a456-556642440000.
            Then subdirectory with name 'root' will be used to hold metastore_db and other data shared between
            all derivatives of the class. Note that UUID suffix is necessary to avoid conflicts between forked JVMs.
         */
-        starting(Description.createSuiteDescription(HiveTestBase.class.getName().concat(UUID.randomUUID().toString())));
-      }
-    };
-    File baseDir = generalDirWatcher.getRootDir();
-    HIVE_TEST_FIXTURE = HiveTestFixture.builder(baseDir).build();
-    HiveTestDataGenerator dataGenerator = new HiveTestDataGenerator(generalDirWatcher, baseDir,
-        HIVE_TEST_FIXTURE.getWarehouseDir());
-    HIVE_TEST_FIXTURE.getDriverManager().runWithinSession(dataGenerator::generateData);
+          starting(Description.createSuiteDescription(HiveTestBase.class.getName().concat(UUID.randomUUID().toString())));
+        }
+      };
+      File baseDir = generalDirWatcher.getRootDir();
+      HIVE_TEST_FIXTURE = HiveTestFixture.builder(baseDir).build();
+      HiveTestDataGenerator dataGenerator = new HiveTestDataGenerator(generalDirWatcher, baseDir,
+          HIVE_TEST_FIXTURE.getWarehouseDir());
+      HIVE_TEST_FIXTURE.getDriverManager().runWithinSession(dataGenerator::generateData);
 
-    // set hook for clearing watcher's dir on JVM shutdown
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> FileUtils.deleteQuietly(generalDirWatcher.getDir())));
+      // set hook for clearing watcher's dir on JVM shutdown
+      Runtime.getRuntime().addShutdownHook(new Thread(() -> FileUtils.deleteQuietly(generalDirWatcher.getDir())));
+    } else {
+      HIVE_TEST_FIXTURE = null;
+    }
   }
 
   @BeforeClass
   public static void setUp() {
+    HiveTestUtilities.assumeJavaVersion();
     HIVE_TEST_FIXTURE.getPluginManager().addHivePluginTo(bits);
   }
 

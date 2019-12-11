@@ -133,7 +133,6 @@ public class TestDrillSpnegoAuthenticator extends BaseTest {
   /**
    * Test to verify response when request is sent for {@link WebServerConstants#SPENGO_LOGIN_RESOURCE_PATH} from
    * unauthenticated session. Expectation is client will receive response with Negotiate header.
-   * @throws Exception
    */
   @Test
   public void testNewSessionReqForSpnegoLogin() throws Exception {
@@ -154,7 +153,6 @@ public class TestDrillSpnegoAuthenticator extends BaseTest {
   /**
    * Test to verify response when request is sent for {@link WebServerConstants#SPENGO_LOGIN_RESOURCE_PATH} from
    * authenticated session. Expectation is server will find the authenticated UserIdentity.
-   * @throws Exception
    */
   @Test
   public void testAuthClientRequestForSpnegoLoginResource() throws Exception {
@@ -179,7 +177,6 @@ public class TestDrillSpnegoAuthenticator extends BaseTest {
    * Test to verify response when request is sent for any other resource other than
    * {@link WebServerConstants#SPENGO_LOGIN_RESOURCE_PATH} from authenticated session. Expectation is server will
    * find the authenticated UserIdentity and will not perform the authentication again for new resource.
-   * @throws Exception
    */
   @Test
   public void testAuthClientRequestForOtherPage() throws Exception {
@@ -203,8 +200,7 @@ public class TestDrillSpnegoAuthenticator extends BaseTest {
   /**
    * Test to verify that when request is sent for {@link WebServerConstants#LOGOUT_RESOURCE_PATH} then the UserIdentity
    * will be removed from the session and returned authentication will be null from
-   * {@link DrillSpnegoAuthenticator#validateRequest(ServletRequest, ServletResponse, boolean)}
-   * @throws Exception
+   * {@link DrillSpnegoAuthenticator#validateRequest(javax.servlet.ServletRequest, javax.servlet.ServletResponse, boolean)}
    */
   @Test
   public void testAuthClientRequestForLogOut() throws Exception {
@@ -228,7 +224,6 @@ public class TestDrillSpnegoAuthenticator extends BaseTest {
   /**
    * Test to verify authentication fails when client sends invalid SPNEGO token for the
    * {@link WebServerConstants#SPENGO_LOGIN_RESOURCE_PATH} resource.
-   * @throws Exception
    */
   @Test
   public void testSpnegoLoginInvalidToken() throws Exception {
@@ -242,28 +237,25 @@ public class TestDrillSpnegoAuthenticator extends BaseTest {
         spnegoHelper.clientKeytab.getAbsoluteFile());
 
     // Generate a SPNEGO token for the peer SERVER_PRINCIPAL from this CLIENT_PRINCIPAL
-    final String token = Subject.doAs(clientSubject, new PrivilegedExceptionAction<String>() {
-      @Override
-      public String run() throws Exception {
+    final String token = Subject.doAs(clientSubject, (PrivilegedExceptionAction<String>) () -> {
 
-        final GSSManager gssManager = GSSManager.getInstance();
-        GSSContext gssContext = null;
-        try {
-          final Oid oid = GSSUtil.GSS_SPNEGO_MECH_OID;
-          final GSSName serviceName = gssManager.createName(spnegoHelper.SERVER_PRINCIPAL, GSSName.NT_USER_NAME, oid);
+      final GSSManager gssManager = GSSManager.getInstance();
+      GSSContext gssContext = null;
+      try {
+        final Oid oid = GSSUtil.GSS_SPNEGO_MECH_OID;
+        final GSSName serviceName = gssManager.createName(spnegoHelper.SERVER_PRINCIPAL, GSSName.NT_USER_NAME, oid);
 
-          gssContext = gssManager.createContext(serviceName, oid, null, GSSContext.DEFAULT_LIFETIME);
-          gssContext.requestCredDeleg(true);
-          gssContext.requestMutualAuth(true);
+        gssContext = gssManager.createContext(serviceName, oid, null, GSSContext.DEFAULT_LIFETIME);
+        gssContext.requestCredDeleg(true);
+        gssContext.requestMutualAuth(true);
 
-          byte[] outToken = new byte[0];
-          outToken = gssContext.initSecContext(outToken, 0, outToken.length);
-          return Base64.encodeBase64String(outToken);
+        byte[] outToken = new byte[0];
+        outToken = gssContext.initSecContext(outToken, 0, outToken.length);
+        return Base64.encodeBase64String(outToken);
 
-        } finally {
-          if (gssContext != null) {
-            gssContext.dispose();
-          }
+      } finally {
+        if (gssContext != null) {
+          gssContext.dispose();
         }
       }
     });
