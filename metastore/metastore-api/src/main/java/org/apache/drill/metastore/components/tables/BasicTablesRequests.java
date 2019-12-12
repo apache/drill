@@ -819,7 +819,7 @@ public class BasicTablesRequests {
         }
 
         if (value instanceof List) {
-          List<?> list = (List) value;
+          List<?> list = (List<?>) value;
           if (list.isEmpty()) {
             return;
           }

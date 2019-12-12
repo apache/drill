@@ -511,6 +511,9 @@ public class TableMetadataUnit {
               rowGroupColumns.add(name);
               partitionColumns.add(name);
               break;
+            default:
+              // Throw an error?
+              break;
           }
         }
 

@@ -577,7 +577,7 @@ public class Records {
     }
 
     public Column(String catalog, String schemaName, String tableName, String columnName,
-                  ColumnMetadata columnMetadata, ColumnStatistics columnStatistics, int index,
+                  ColumnMetadata columnMetadata, ColumnStatistics<?> columnStatistics, int index,
                   boolean isNested) {
       this.TABLE_CATALOG = catalog;
       this.TABLE_SCHEMA = schemaName;

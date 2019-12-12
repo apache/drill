@@ -93,7 +93,6 @@ public class MetadataSerDeTest extends BaseTest {
         serializedColumnStatistics);
   }
 
-  @SuppressWarnings("unchecked")
   @Test
   public void testColumnStatisticsDeserialization() {
     List<StatisticsHolder<?>> statistics = Arrays.asList(

@@ -88,11 +88,11 @@ public class ComparisonPredicate<C extends Comparable<C>> extends LogicalExpress
   @Override
   @SuppressWarnings("unchecked")
   public RowsMatch matches(StatisticsProvider<C> evaluator) {
-    ColumnStatistics leftStat = left.accept(evaluator, null);
+    ColumnStatistics<BigInteger> leftStat = (ColumnStatistics<BigInteger>) left.accept(evaluator, null);
     if (IsPredicate.isNullOrEmpty(leftStat)) {
       return RowsMatch.SOME;
     }
-    ColumnStatistics rightStat = right.accept(evaluator, null);
+    ColumnStatistics<BigInteger> rightStat = (ColumnStatistics<BigInteger>) right.accept(evaluator, null);
     if (IsPredicate.isNullOrEmpty(rightStat)) {
       return RowsMatch.SOME;
     }
@@ -117,7 +117,7 @@ public class ComparisonPredicate<C extends Comparable<C>> extends LogicalExpress
         leftStat = adjustDecimalStatistics(leftStat, rightScale - leftScale);
       }
     }
-    return predicate.apply(leftStat, rightStat);
+    return predicate.apply((ColumnStatistics<C>) leftStat, (ColumnStatistics<C>) rightStat);
   }
 
   /**
@@ -127,7 +127,7 @@ public class ComparisonPredicate<C extends Comparable<C>> extends LogicalExpress
    * @param scale adjustment scale
    * @return adjusted statistics
    */
-  private ColumnStatistics adjustDecimalStatistics(ColumnStatistics<BigInteger> statistics, int scale) {
+  private ColumnStatistics<BigInteger> adjustDecimalStatistics(ColumnStatistics<BigInteger> statistics, int scale) {
     BigInteger min = new BigDecimal(ColumnStatisticsKind.MIN_VALUE.getValueStatistic(statistics))
         .setScale(scale, RoundingMode.HALF_UP).unscaledValue();
     BigInteger max = new BigDecimal(ColumnStatisticsKind.MAX_VALUE.getValueStatistic(statistics))
@@ -139,7 +139,7 @@ public class ComparisonPredicate<C extends Comparable<C>> extends LogicalExpress
   /**
    * If one rowgroup contains some null values, change the RowsMatch.ALL into RowsMatch.SOME (null values should be discarded by filter)
    */
-  private static RowsMatch checkNull(ColumnStatistics leftStat, ColumnStatistics rightStat) {
+  private static RowsMatch checkNull(ColumnStatistics<?> leftStat, ColumnStatistics<?> rightStat) {
     return !IsPredicate.hasNoNulls(leftStat) || !IsPredicate.hasNoNulls(rightStat) ? RowsMatch.SOME : RowsMatch.ALL;
   }
 

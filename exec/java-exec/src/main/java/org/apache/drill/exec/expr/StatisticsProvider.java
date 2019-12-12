@@ -48,12 +48,12 @@ import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
 
-public class StatisticsProvider<T extends Comparable<T>> extends AbstractExprVisitor<ColumnStatistics, Void, RuntimeException> {
+public class StatisticsProvider<T extends Comparable<T>> extends AbstractExprVisitor<ColumnStatistics<?>, Void, RuntimeException> {
 
-  private final Map<SchemaPath, ColumnStatistics> columnStatMap;
+  private final Map<SchemaPath, ColumnStatistics<?>> columnStatMap;
   private final long rowCount;
 
-  public StatisticsProvider(Map<SchemaPath, ColumnStatistics> columnStatMap, long rowCount) {
+  public StatisticsProvider(Map<SchemaPath, ColumnStatistics<?>> columnStatMap, long rowCount) {
     this.columnStatMap = columnStatMap;
     this.rowCount = rowCount;
   }
@@ -63,14 +63,14 @@ public class StatisticsProvider<T extends Comparable<T>> extends AbstractExprVis
   }
 
   @Override
-  public ColumnStatistics visitUnknown(LogicalExpression e, Void value) {
+  public ColumnStatistics<?> visitUnknown(LogicalExpression e, Void value) {
     // do nothing for the unknown expression
     return null;
   }
 
   @Override
-  public ColumnStatistics visitTypedFieldExpr(TypedFieldExpr typedFieldExpr, Void value) {
-    ColumnStatistics columnStatistics = columnStatMap.get(typedFieldExpr.getPath().getUnIndexed());
+  public ColumnStatistics<?> visitTypedFieldExpr(TypedFieldExpr typedFieldExpr, Void value) {
+    ColumnStatistics<?> columnStatistics = columnStatMap.get(typedFieldExpr.getPath().getUnIndexed());
     if (columnStatistics != null) {
       return columnStatistics;
     } else if (typedFieldExpr.getMajorType().equals(Types.OPTIONAL_INT)) {
@@ -132,7 +132,7 @@ public class StatisticsProvider<T extends Comparable<T>> extends AbstractExprVis
 
   @Override
   @SuppressWarnings("unchecked")
-  public ColumnStatistics visitFunctionHolderExpression(FunctionHolderExpression holderExpr, Void value) {
+  public ColumnStatistics<?> visitFunctionHolderExpression(FunctionHolderExpression holderExpr, Void value) {
     FuncHolder funcHolder = holderExpr.getHolder();
 
     if (!(funcHolder instanceof DrillSimpleFuncHolder)) {
@@ -143,7 +143,7 @@ public class StatisticsProvider<T extends Comparable<T>> extends AbstractExprVis
     String funcName = ((DrillSimpleFuncHolder) funcHolder).getRegisteredNames()[0];
 
     if (FunctionReplacementUtils.isCastFunction(funcName)) {
-      ColumnStatistics<T> stat = holderExpr.args.get(0).accept(this, null);
+      ColumnStatistics<T> stat = (ColumnStatistics<T>) holderExpr.args.get(0).accept(this, null);
       if (!IsPredicate.isNullOrEmpty(stat)) {
         return evalCastFunc(holderExpr, stat);
       }
@@ -151,7 +151,7 @@ public class StatisticsProvider<T extends Comparable<T>> extends AbstractExprVis
     return null;
   }
 
-  private ColumnStatistics evalCastFunc(FunctionHolderExpression holderExpr, ColumnStatistics<T> input) {
+  private ColumnStatistics<?> evalCastFunc(FunctionHolderExpression holderExpr, ColumnStatistics<T> input) {
     try {
       DrillSimpleFuncHolder funcHolder = (DrillSimpleFuncHolder) holderExpr.getHolder();
 

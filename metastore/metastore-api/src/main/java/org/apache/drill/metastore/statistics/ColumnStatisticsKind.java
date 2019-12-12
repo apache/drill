@@ -19,6 +19,7 @@ package org.apache.drill.metastore.statistics;
 
 import org.apache.drill.metastore.metadata.BaseMetadata;
 
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -33,7 +34,7 @@ public class ColumnStatisticsKind<T> extends BaseStatisticsKind<T> implements Co
   public static final ColumnStatisticsKind<Long> NULLS_COUNT =
       new ColumnStatisticsKind<Long>(ExactStatisticsConstants.NULLS_COUNT, true) {
         @Override
-        public Long mergeStatistics(List<? extends ColumnStatistics> statisticsList) {
+        public Long mergeStatistics(List<? extends ColumnStatistics<?>> statisticsList) {
           long nullsCount = 0;
           for (ColumnStatistics<?> statistics : statisticsList) {
             Long statNullsCount = statistics.get(this);
@@ -47,7 +48,7 @@ public class ColumnStatisticsKind<T> extends BaseStatisticsKind<T> implements Co
         }
 
         @Override
-        public Long getFrom(ColumnStatistics metadata) {
+        public Long getFrom(ColumnStatistics<?> metadata) {
           Long rowCount = super.getFrom(metadata);
           return rowCount != null ? rowCount : Statistic.NO_COLUMN_STATS;
         }
@@ -60,11 +61,12 @@ public class ColumnStatisticsKind<T> extends BaseStatisticsKind<T> implements Co
       new ColumnStatisticsKind<Object>(ExactStatisticsConstants.MIN_VALUE, true) {
         @Override
         @SuppressWarnings("unchecked")
-        public Object mergeStatistics(List<? extends ColumnStatistics> statisticsList) {
+        public Object mergeStatistics(List<? extends ColumnStatistics<?>> statisticsList) {
           Object minValue = null;
-          for (ColumnStatistics statistics : statisticsList) {
+          for (ColumnStatistics<?> statistics : statisticsList) {
             Object statMinValue = getValueStatistic(statistics);
-            if (statMinValue != null && (statistics.getValueComparator().compare(minValue, statMinValue) > 0 || minValue == null)) {
+            Comparator<Object> comp = (Comparator<Object>) statistics.getValueComparator();
+            if (statMinValue != null && (comp.compare(minValue, statMinValue) > 0 || minValue == null)) {
               minValue = statMinValue;
             }
           }
@@ -79,11 +81,12 @@ public class ColumnStatisticsKind<T> extends BaseStatisticsKind<T> implements Co
       new ColumnStatisticsKind<Object>(ExactStatisticsConstants.MAX_VALUE, true) {
         @Override
         @SuppressWarnings("unchecked")
-        public Object mergeStatistics(List<? extends ColumnStatistics> statisticsList) {
+        public Object mergeStatistics(List<? extends ColumnStatistics<?>> statisticsList) {
           Object maxValue = null;
-          for (ColumnStatistics statistics : statisticsList) {
+          for (ColumnStatistics<?> statistics : statisticsList) {
             Object statMaxValue = getValueStatistic(statistics);
-            if (statMaxValue != null && statistics.getValueComparator().compare(maxValue, statMaxValue) < 0) {
+            Comparator<Object> comp = (Comparator<Object>) statistics.getValueComparator();
+            if (statMaxValue != null && comp.compare(maxValue, statMaxValue) < 0) {
               maxValue = statMaxValue;
             }
           }
@@ -97,7 +100,7 @@ public class ColumnStatisticsKind<T> extends BaseStatisticsKind<T> implements Co
   public static final ColumnStatisticsKind<Long> NON_NULL_VALUES_COUNT =
       new ColumnStatisticsKind<Long>(ExactStatisticsConstants.NON_NULL_VALUES_COUNT, true) {
         @Override
-        public Long mergeStatistics(List<? extends ColumnStatistics> statisticsList) {
+        public Long mergeStatistics(List<? extends ColumnStatistics<?>> statisticsList) {
           long nonNullRowCount = 0;
           for (ColumnStatistics<?> statistics : statisticsList) {
             Long nnRowCount = statistics.get(this);
@@ -115,7 +118,7 @@ public class ColumnStatisticsKind<T> extends BaseStatisticsKind<T> implements Co
   public static final ColumnStatisticsKind<Double> NON_NULL_COUNT =
       new ColumnStatisticsKind<Double>(Statistic.NNROWCOUNT, false) {
         @Override
-        public Double mergeStatistics(List<? extends ColumnStatistics> statisticsList) {
+        public Double mergeStatistics(List<? extends ColumnStatistics<?>> statisticsList) {
           double nonNullRowCount = 0;
           for (ColumnStatistics<?> statistics : statisticsList) {
             Double nnRowCount = statistics.get(this);
@@ -133,7 +136,7 @@ public class ColumnStatisticsKind<T> extends BaseStatisticsKind<T> implements Co
   public static final ColumnStatisticsKind<Double> ROWCOUNT =
       new ColumnStatisticsKind<Double>(Statistic.ROWCOUNT, false) {
         @Override
-        public Double mergeStatistics(List<? extends ColumnStatistics> statisticsList) {
+        public Double mergeStatistics(List<? extends ColumnStatistics<?>> statisticsList) {
           double rowCount = 0;
           for (ColumnStatistics<?> statistics : statisticsList) {
             Double count = getFrom(statistics);
@@ -154,8 +157,8 @@ public class ColumnStatisticsKind<T> extends BaseStatisticsKind<T> implements Co
   /**
    * Column statistics kind which is the width of the specific column.
    */
-  public static final ColumnStatisticsKind AVG_WIDTH =
-      new ColumnStatisticsKind(Statistic.AVG_WIDTH, false);
+  public static final ColumnStatisticsKind<?> AVG_WIDTH =
+      new ColumnStatisticsKind<>(Statistic.AVG_WIDTH, false);
 
   /**
    * Column statistics kind which is the histogram of the specific column.
@@ -184,7 +187,7 @@ public class ColumnStatisticsKind<T> extends BaseStatisticsKind<T> implements Co
   }
 
   @Override
-  public T mergeStatistics(List<? extends ColumnStatistics> statistics) {
+  public T mergeStatistics(List<? extends ColumnStatistics<?>> statistics) {
     throw new UnsupportedOperationException("Cannot merge statistics for " + statisticKey);
   }
 }
