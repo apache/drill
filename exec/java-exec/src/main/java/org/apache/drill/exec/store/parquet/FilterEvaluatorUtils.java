@@ -57,6 +57,7 @@ public class FilterEvaluatorUtils {
   private FilterEvaluatorUtils() {
   }
 
+  @SuppressWarnings("RedundantTypeArguments")
   public static RowsMatch evalFilter(LogicalExpression expr, MetadataBase.ParquetTableMetadataBase footer,
                                      int rowGroupIndex, OptionManager options, FragmentContext fragmentContext) {
     // Specifies type arguments explicitly to avoid compilation error caused by JDK-8066974

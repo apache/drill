@@ -52,6 +52,14 @@ public class TableMetadataUtils {
       case INTERVALDAY:
       case INTERVAL:
       case INTERVALYEAR:
+        // This odd cast is needed because this method is poorly designed.
+        // The method is statically typed to type T. But, the type
+        // is selected dynamically at runtime via the type parameter.
+        // As a result, we are casting a comparator to the WRONG type
+        // in some cases. We have to remove the byte[] type, then force
+        // the type to T. This works because we should only use this
+        // case if T is byte[]. But, this is a horrible hack and should
+        // be fixed.
         return (Comparator<T>) (Comparator<?>)
             Comparator.nullsFirst(UnsignedBytes.lexicographicalComparator());
       case UINT1:
