@@ -835,4 +835,19 @@ public class TestParquetComplex extends BaseTestQuery {
         .baselineValues(2, TestBuilder.mapOfObject("a", 1, "b", 2, "c", 3))
         .go();
   }
+
+  @Test // DRILL-7473
+  public void testDictInRepeatedMap() throws Exception {
+    String query = "select struct_array[1].d as d from cp.`store/parquet/complex/map/parquet/repeated_struct_with_dict.parquet`";
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("d")
+        .baselineValuesForSingleColumn(
+            TestBuilder.mapOfObject(1, "a", 2, "b", 3, "c"),
+            TestBuilder.mapOfObject(),
+            TestBuilder.mapOfObject(1, "a", 2, "b")
+        )
+        .go();
+  }
 }

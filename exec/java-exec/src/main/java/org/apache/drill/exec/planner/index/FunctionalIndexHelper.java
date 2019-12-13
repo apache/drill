@@ -163,8 +163,7 @@ public class FunctionalIndexHelper {
       SchemaPath path = SchemaPath.parseFromString(f.getName());
       rowfields.add(new RelDataTypeFieldImpl(
           path.getRootSegmentPath(), rowfields.size(),
-          typeFactory.createMapType(typeFactory.createSqlType(SqlTypeName.VARCHAR),
-              typeFactory.createSqlType(SqlTypeName.ANY))
+          typeFactory.createSqlType(SqlTypeName.ANY)
       ));
       columns.add(path);
     }
