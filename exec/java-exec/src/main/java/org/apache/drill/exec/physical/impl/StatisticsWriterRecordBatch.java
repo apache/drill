@@ -96,7 +96,6 @@ public class StatisticsWriterRecordBatch extends AbstractRecordBatch<Writer> {
         upstream = next(incoming);
 
         switch(upstream) {
-          case OUT_OF_MEMORY:
           case STOP:
             return upstream;
 

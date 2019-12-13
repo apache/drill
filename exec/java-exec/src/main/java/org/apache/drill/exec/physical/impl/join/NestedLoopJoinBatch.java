@@ -177,8 +177,6 @@ public class NestedLoopJoinBatch extends AbstractBinaryRecordBatch<NestedLoopJoi
               batchMemoryManager.getRecordBatchSizer(RIGHT_INDEX), getRecordBatchStatsContext());
             addBatchToHyperContainer(right);
             break;
-          case OUT_OF_MEMORY:
-            return IterOutcome.OUT_OF_MEMORY;
           case NONE:
           case STOP:
             //TODO we got a STOP, shouldn't we stop immediately ?

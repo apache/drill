@@ -54,6 +54,7 @@ import org.apache.drill.exec.planner.PhysicalPlanReaderTestFactory;
 import org.apache.drill.exec.proto.ExecProtos;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
+import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
@@ -171,8 +172,8 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
     private final List<OperatorContext> contexts = Lists.newLinkedList();
 
 
-    private ExecutorState executorState = new OperatorFixture.MockExecutorState();
-    private ExecutionControls controls;
+    private final ExecutorState executorState = new OperatorFixture.MockExecutorState();
+    private final ExecutionControls controls;
 
     public MockFragmentContext(final DrillConfig config,
                                final OptionManager options,
@@ -338,6 +339,11 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
     @Override
     public MetastoreRegistry getMetastoreRegistry() {
       return null;
+    }
+
+    @Override
+    public void requestMemory(RecordBatch requestor) {
+      // Does nothing in a mock fragment.
     }
   }
 

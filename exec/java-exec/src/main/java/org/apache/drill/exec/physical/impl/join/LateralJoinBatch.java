@@ -53,7 +53,6 @@ import static org.apache.drill.exec.record.RecordBatch.IterOutcome.EMIT;
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.NONE;
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK;
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK_NEW_SCHEMA;
-import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OUT_OF_MEMORY;
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.STOP;
 
 /**
@@ -413,7 +412,7 @@ public class LateralJoinBatch extends AbstractBinaryRecordBatch<LateralJoinPOP> 
   }
 
   private boolean isTerminalOutcome(IterOutcome outcome) {
-    return (outcome == STOP || outcome == OUT_OF_MEMORY || outcome == NONE);
+    return (outcome == STOP || outcome == NONE);
   }
 
   /**
@@ -477,7 +476,6 @@ public class LateralJoinBatch extends AbstractBinaryRecordBatch<LateralJoinPOP> 
             leftJoinIndex = 0;
           }
           break;
-        case OUT_OF_MEMORY:
         case NONE:
         case STOP:
           // Not using =0 since if outgoing container is empty then no point returning anything
@@ -547,7 +545,6 @@ public class LateralJoinBatch extends AbstractBinaryRecordBatch<LateralJoinPOP> 
           rightJoinIndex = (right.getRecordCount() > 0) ? 0 : -1;
           needNewRightBatch = false;
           break;
-        case OUT_OF_MEMORY:
         case NONE:
         case STOP:
           needNewRightBatch = false;
@@ -924,9 +921,6 @@ public class LateralJoinBatch extends AbstractBinaryRecordBatch<LateralJoinPOP> 
       case STOP:
       case EMIT:
         state = BatchState.STOP;
-        return false;
-      case OUT_OF_MEMORY:
-        state = BatchState.OUT_OF_MEMORY;
         return false;
       case NONE:
       case NOT_YET:

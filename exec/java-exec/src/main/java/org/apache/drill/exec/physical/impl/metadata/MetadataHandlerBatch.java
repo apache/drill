@@ -124,7 +124,6 @@ public class MetadataHandlerBatch extends AbstractSingleRecordBatch<MetadataHand
         assert !firstBatch : "First batch should be OK_NEW_SCHEMA";
         doWorkInternal();
         // fall thru
-      case OUT_OF_MEMORY:
       case NOT_YET:
       case STOP:
         return outcome;

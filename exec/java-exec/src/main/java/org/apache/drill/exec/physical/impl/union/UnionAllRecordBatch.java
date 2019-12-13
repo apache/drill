@@ -129,7 +129,6 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
 
         switch (upstream) {
         case NONE:
-        case OUT_OF_MEMORY:
         case STOP:
           return upstream;
         case OK_NEW_SCHEMA:
@@ -391,7 +390,6 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
               batchMemoryManager.getRecordBatchSizer(topStatus.inputIndex),
               getRecordBatchStatsContext());
             return Pair.of(outcome, topStatus);
-          case OUT_OF_MEMORY:
           case STOP:
             batchStatusStack.pop();
             return Pair.of(outcome, topStatus);

@@ -94,7 +94,7 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
   private BatchSchema schema;
   private boolean schemaChanged = false;
   private PriorityQueue priorityQueue;
-  private TopN config;
+  private final TopN config;
   private SelectionVector4 sv4;
   private long countSincePurge;
   private int batchCount;
@@ -155,9 +155,6 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
         return;
       case STOP:
         state = BatchState.STOP;
-        return;
-      case OUT_OF_MEMORY:
-        state = BatchState.OUT_OF_MEMORY;
         return;
       case NONE:
         state = BatchState.DONE;
@@ -221,7 +218,6 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
           break outer;
         case NOT_YET:
           throw new UnsupportedOperationException();
-        case OUT_OF_MEMORY:
         case STOP:
           return lastKnownOutcome;
         case OK_NEW_SCHEMA:
@@ -663,7 +659,7 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
   }
 
   public static class SimpleSV4RecordBatch extends SimpleRecordBatch {
-    private SelectionVector4 sv4;
+    private final SelectionVector4 sv4;
 
     public SimpleSV4RecordBatch(VectorContainer container, SelectionVector4 sv4, FragmentContext context) {
       super(container, context);

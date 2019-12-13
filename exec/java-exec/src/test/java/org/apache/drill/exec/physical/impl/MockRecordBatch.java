@@ -256,7 +256,6 @@ public class MockRecordBatch implements CloseableRecordBatch {
         return currentOutcome;
       case NONE:
       case STOP:
-      case OUT_OF_MEMORY:
         isDone = true;
       case NOT_YET:
         container.setRecordCount(0);
@@ -328,7 +327,6 @@ public class MockRecordBatch implements CloseableRecordBatch {
 
     public Builder terminateWithError(IterOutcome errorOutcome) {
       Preconditions.checkArgument(errorOutcome != IterOutcome.STOP);
-      Preconditions.checkArgument(errorOutcome != IterOutcome.OUT_OF_MEMORY);
 
       iterOutcomes.add(errorOutcome);
       return this;

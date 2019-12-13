@@ -278,10 +278,9 @@ public class IteratorValidatorBatchIterator implements CloseableRecordBatch {
           validationState = ValidationState.TERMINAL;
           break;
         case NOT_YET:
-        case OUT_OF_MEMORY:
-          // NOT_YET and OUT_OF_MEMORY are allowed at any time, except if
+          // NOT_YET is allowed at any time, except if
           // terminated (checked above).
-          // NOT_YET and OUT_OF_MEMORY OK don't change high-level state.
+          // NOT_YET doesn't change high-level state.
           break;
         default:
           throw new AssertionError(

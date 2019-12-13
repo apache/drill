@@ -240,8 +240,6 @@ public class RecordIterator implements VectorAccessible {
             rbd.clear();
           }
           break;
-        case OUT_OF_MEMORY:
-          return lastOutcome;
         case NOT_YET:
         default:
           throw new UnsupportedOperationException("Unsupported outcome received " + lastOutcome);

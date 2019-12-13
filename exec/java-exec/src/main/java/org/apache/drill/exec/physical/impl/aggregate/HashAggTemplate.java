@@ -649,7 +649,6 @@ public abstract class HashAggTemplate implements HashAggregator {
       }
       // Handle various results from getting the next batch
       switch (outcome) {
-        case OUT_OF_MEMORY:
         case NOT_YET:
           return AggOutcome.RETURN_OUTCOME;
 
