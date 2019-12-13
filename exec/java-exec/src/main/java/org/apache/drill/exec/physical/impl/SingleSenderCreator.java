@@ -49,10 +49,10 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
 
     private final FragmentHandle oppositeHandle;
 
-    private RecordBatch incoming;
+    private final RecordBatch incoming;
     private AccountingDataTunnel tunnel;
-    private FragmentHandle handle;
-    private int recMajor;
+    private final FragmentHandle handle;
+    private final int recMajor;
     private volatile boolean ok = true;
     private volatile boolean done = false;
 
@@ -95,10 +95,7 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
         incoming.kill(true);
         out = IterOutcome.NONE;
       }
-//      logger.debug("Outcome of sender next {}", out);
       switch (out) {
-      case OUT_OF_MEMORY:
-        throw new OutOfMemoryException();
       case STOP:
       case NONE:
         // if we didn't do anything yet, send an empty schema.

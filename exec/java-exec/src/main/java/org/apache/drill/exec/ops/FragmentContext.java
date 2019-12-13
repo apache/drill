@@ -36,6 +36,7 @@ import org.apache.drill.exec.ops.QueryContext.SqlStatementType;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.proto.ExecProtos;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
+import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.testing.ExecutionControls;
 import org.apache.drill.exec.work.filter.RuntimeFilterWritable;
@@ -200,6 +201,15 @@ public interface FragmentContext extends UdfUtilities, AutoCloseable {
    * @return Metastore registry
    */
   MetastoreRegistry getMetastoreRegistry();
+
+  /**
+   * An operator is experiencing memory pressure. Asks the fragment
+   * executor to poll all operators to release an optional memory
+   * (such as by spilling.) The request is advisory. The caller should
+   * again try to allocate memory, and if the second request fails,
+   * throw an <code>OutOfMemoryException</code>.
+   */
+  void requestMemory(RecordBatch requestor);
 
   interface ExecutorState {
     /**

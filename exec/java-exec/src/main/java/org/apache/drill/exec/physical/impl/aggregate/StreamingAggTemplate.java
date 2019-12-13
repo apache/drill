@@ -136,9 +136,6 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
                     currentIndex = this.getVectorIndex(underlyingIndex);
                     break outer;
                   }
-                case OUT_OF_MEMORY:
-                  outcome = out;
-                  return AggOutcome.RETURN_OUTCOME;
                 case EMIT:
                   outerOutcome = EMIT;
                   if (incoming.getRecordCount() == 0) {

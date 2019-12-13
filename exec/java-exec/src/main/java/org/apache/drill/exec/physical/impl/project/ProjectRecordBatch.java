@@ -173,10 +173,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
 
           next = next(incoming);
           setLastKnownOutcome(next);
-          if (next == IterOutcome.OUT_OF_MEMORY) {
-            outOfMemory = true;
-            return next;
-          } else if (next == IterOutcome.NONE) {
+          if (next == IterOutcome.NONE) {
             // since this is first batch and we already got a NONE, need to set up the schema
             doAlloc(0);
             setValueCount(0);

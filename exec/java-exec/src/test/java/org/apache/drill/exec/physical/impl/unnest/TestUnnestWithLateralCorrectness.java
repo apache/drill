@@ -84,10 +84,10 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
   public void testUnnestFixedWidthColumn() {
 
     Object[][] data = {
-        { (Object) new int[] {1, 2},
-          (Object) new int[] {3, 4, 5}},
-        { (Object) new int[] {6, 7, 8, 9},
-          (Object) new int[] {10, 11, 12, 13, 14}}
+        { new int[] {1, 2},
+          new int[] {3, 4, 5}},
+        { new int[] {6, 7, 8, 9},
+          new int[] {10, 11, 12, 13, 14}}
     };
 
     // Create input schema
@@ -119,10 +119,10 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
   public void testUnnestVarWidthColumn() {
 
     Object[][] data = {
-        { (Object) new String[] {"", "zero"},
-          (Object) new String[] {"one", "two", "three"}},
-        { (Object) new String[] {"four", "five", "six", "seven"},
-          (Object) new String[] {"eight", "nine", "ten", "eleven", "twelve"}}
+        { new String[] {"", "zero"},
+          new String[] {"one", "two", "three"}},
+        { new String[] {"four", "five", "six", "seven"},
+          new String[] {"eight", "nine", "ten", "eleven", "twelve"}}
     };
 
     // Create input schema
@@ -174,11 +174,11 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
   public void testUnnestEmptyList() {
 
     Object[][] data = {
-        { (Object) new String[] {},
-          (Object) new String[] {}
+        { new String[] {},
+          new String[] {}
         },
-        { (Object) new String[] {},
-          (Object) new String[] {}
+        { new String[] {},
+          new String[] {}
         }
     };
 
@@ -208,14 +208,14 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
     // unnest column itself has changed
     Object[][] data = {
         {
-            (Object) new String[] {"0", "1"},
-            (Object) new String[] {"2", "3", "4"}
+            new String[] {"0", "1"},
+            new String[] {"2", "3", "4"}
         },
         {
-            (Object) new String[] {"5", "6" },
+            new String[] {"5", "6" },
         },
         {
-            (Object) new String[] {"9"}
+            new String[] {"9"}
         }
     };
 
@@ -253,14 +253,14 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
   public void testUnnestSchemaChange() {
     Object[][] data = {
         {
-            (Object) new String[] {"0", "1"},
-            (Object) new String[] {"2", "3", "4"}
+            new String[] {"0", "1"},
+            new String[] {"2", "3", "4"}
         },
         {
-            (Object) new String[] {"5", "6" },
+            new String[] {"5", "6" },
         },
         {
-            (Object) new int[] {9}
+            new int[] {9}
         }
     };
 
@@ -502,10 +502,10 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
   public void testUnnestNonArrayColumn() {
 
     Object[][] data = {
-        { (Object) new Integer (1),
-            (Object) new Integer (3)},
-        { (Object) new Integer (6),
-            (Object) new Integer (10)}
+        { new Integer (1),
+            new Integer (3)},
+        { new Integer (6),
+            new Integer (10)}
     };
 
     // Create input schema
@@ -668,7 +668,7 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
               if (!baseline[batchIndex][vectorIndex][valueIndex].equals(val)) {
                 fail("Test failed in validating unnest output. Value mismatch. Baseline value[" + vectorIndex + "][" + valueIndex
                     + "]" + ": "
-                    + ((Object[])baseline[batchIndex][vectorIndex])[valueIndex] + "   VV.getObject(valueIndex): " + val);
+                    + baseline[batchIndex][vectorIndex][valueIndex] + "   VV.getObject(valueIndex): " + val);
               }
             }
           }
@@ -824,8 +824,7 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
   }
 
   private boolean isTerminal(RecordBatch.IterOutcome outcome) {
-    return (outcome == RecordBatch.IterOutcome.NONE || outcome == RecordBatch.IterOutcome.STOP) || (outcome
-        == RecordBatch.IterOutcome.OUT_OF_MEMORY);
+    return (outcome == RecordBatch.IterOutcome.NONE || outcome == RecordBatch.IterOutcome.STOP);
   }
 
 
@@ -985,7 +984,7 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
               if (!baseline[batchIndex][vectorIndex][valueIndex].equals(val)) {
                 fail("Test failed in validating unnest output. Value mismatch. Baseline value[" + vectorIndex + "][" + valueIndex
                     + "]" + ": "
-                    + ((Object[])baseline[batchIndex][vectorIndex])[valueIndex] + "   VV.getObject(valueIndex): " + val);
+                    + baseline[batchIndex][vectorIndex][valueIndex] + "   VV.getObject(valueIndex): " + val);
               }
             }
           }

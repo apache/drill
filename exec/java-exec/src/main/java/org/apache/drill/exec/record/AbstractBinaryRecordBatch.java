@@ -79,11 +79,6 @@ public abstract class AbstractBinaryRecordBatch<T extends PhysicalOperator> exte
       return false;
     }
 
-    if (leftOutcome == IterOutcome.OUT_OF_MEMORY || rightOutcome == IterOutcome.OUT_OF_MEMORY) {
-      state = BatchState.OUT_OF_MEMORY;
-      return false;
-    }
-
     if (checkForEarlyFinish(leftOutcome, rightOutcome)) {
       state = BatchState.DONE;
       return false;

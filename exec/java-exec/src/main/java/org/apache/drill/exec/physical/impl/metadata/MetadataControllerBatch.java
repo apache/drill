@@ -159,7 +159,6 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
           // all incoming data was processed when returned OK_NEW_SCHEMA
           finishedLeft = !firstLeft;
           break outer;
-        case OUT_OF_MEMORY:
         case NOT_YET:
         case STOP:
           return outcome;
@@ -210,7 +209,6 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
           // all incoming data was processed
           finishedRight = true;
           break outer;
-        case OUT_OF_MEMORY:
         case NOT_YET:
         case STOP:
           return outcome;

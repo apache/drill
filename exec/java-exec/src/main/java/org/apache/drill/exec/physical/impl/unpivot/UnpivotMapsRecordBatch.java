@@ -112,7 +112,6 @@ public class UnpivotMapsRecordBatch extends AbstractSingleRecordBatch<UnpivotMap
     // Process according to upstream outcome
     switch (upStream) {
       case NONE:
-      case OUT_OF_MEMORY:
       case NOT_YET:
       case STOP:
         return upStream;

@@ -80,8 +80,8 @@ public interface RecordBatch extends VectorAccessible {
    *   </li>
    * </ol>
    * <p>
-   *   In addition to that basic sequence, {@link #NOT_YET} and
-   *   {@link #OUT_OF_MEMORY} values can appear anywhere in the subsequence
+   *   In addition to that basic sequence, {@link #NOT_YET}
+   *   values can appear anywhere in the subsequence
    *   before the terminal value ({@code NONE} or {@code STOP}).
    * </p>
    * <p>
@@ -94,10 +94,10 @@ public interface RecordBatch extends VectorAccessible {
    *   (The normal-completion return sequence is matched by the following
    *   regular-expression-style grammar:
    *   <pre>
-   *     ( ( NOT_YET | OUT_OF_MEMORY )*  OK_NEW_SCHEMA
-   *       ( NOT_YET | OUT_OF_MEMORY )*  OK )*
+   *     ( NOT_YET*  OK_NEW_SCHEMA
+   *       NOT_YET*  OK )*
    *     )+
-   *     ( NOT_YET | OUT_OF_+MEMORY )*  NONE
+   *     NOT_YET*  NONE
    *   </pre>
    *   )
    * </p>
@@ -194,19 +194,9 @@ public interface RecordBatch extends VectorAccessible {
      */
     NOT_YET(false),
 
-    /**
-     * Out of memory (not fatal).
-     * <p>
-     *   The call to {@link #next()},
-     *   including upstream operators, was unable to allocate memory
-     *   and did not read any records,
-     *   and the batch will have more results to return (at least completion or
-     *     abnormal termination ({@code NONE} or {@code STOP})).
-     *   The caller should release memory if it can (including by returning
-     *     {@code OUT_OF_MEMORY} to its caller) and call {@code next()} again.
-     * </p>
-     */
-    OUT_OF_MEMORY(true),
+    // Note: the former OUT_OF_MEMORY state was never really used.
+    // It is now handled by calling FragmentContext.requestMemory()
+    // at the point that the operator realizes it is short on memory.
 
     /**
      * Emit record to produce output batches.
@@ -233,7 +223,7 @@ public interface RecordBatch extends VectorAccessible {
      */
     EMIT(false);
 
-    private boolean error;
+    private final boolean error;
 
     IterOutcome(boolean error) {
       this.error = error;

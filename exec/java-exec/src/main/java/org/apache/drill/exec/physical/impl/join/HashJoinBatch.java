@@ -453,10 +453,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
 
     isEmpty.setValue(outcome == IterOutcome.NONE); // If we received NONE there is no data.
 
-    if (outcome == IterOutcome.OUT_OF_MEMORY) {
-      // We reached a termination state
-      state = BatchState.OUT_OF_MEMORY;
-    } else if (outcome == IterOutcome.STOP) {
+    if (outcome == IterOutcome.STOP) {
       // We reached a termination state
       state = BatchState.STOP;
     } else {
@@ -561,11 +558,6 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
 
           if (leftUpstream == IterOutcome.STOP || rightUpstream == IterOutcome.STOP) {
             state = BatchState.STOP;
-            return leftUpstream;
-          }
-
-          if (leftUpstream == IterOutcome.OUT_OF_MEMORY || rightUpstream == IterOutcome.OUT_OF_MEMORY) {
-            state = BatchState.OUT_OF_MEMORY;
             return leftUpstream;
           }
         }
@@ -1009,7 +1001,6 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
     boolean moreData = true;
     while (moreData) {
       switch (rightUpstream) {
-      case OUT_OF_MEMORY:
       case NONE:
       case NOT_YET:
       case STOP:

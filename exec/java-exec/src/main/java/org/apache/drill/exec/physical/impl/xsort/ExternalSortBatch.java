@@ -119,7 +119,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
   private boolean first = true;
   private int targetRecordCount;
   private final String fileName;
-  private Set<Path> currSpillDirs = Sets.newTreeSet();
+  private final Set<Path> currSpillDirs = Sets.newTreeSet();
   private int firstSpillBatchCount = 0;
   private int peakNumBatches = -1;
 
@@ -279,9 +279,6 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
       case STOP:
         state = BatchState.STOP;
         break;
-      case OUT_OF_MEMORY:
-        state = BatchState.OUT_OF_MEMORY;
-        break;
       case NONE:
         state = BatchState.DONE;
         break;
@@ -434,19 +431,6 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
             if (!success) {
               rbd.clear();
             }
-          }
-          break;
-        case OUT_OF_MEMORY:
-          logger.debug("received OUT_OF_MEMORY, trying to spill");
-          if (batchesSinceLastSpill > 2) {
-            final BatchGroup merged = mergeAndSpill(batchGroups);
-            if (merged != null) {
-              spilledBatchGroups.add(merged);
-              batchesSinceLastSpill = 0;
-            }
-          } else {
-            logger.debug("not enough batches to spill, sending OUT_OF_MEMORY downstream");
-            return IterOutcome.OUT_OF_MEMORY;
           }
           break;
         default:

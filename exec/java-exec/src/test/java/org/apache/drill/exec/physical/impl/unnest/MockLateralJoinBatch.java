@@ -45,7 +45,7 @@ import java.util.List;
  */
 public class MockLateralJoinBatch implements LateralContract, CloseableRecordBatch {
 
-  private RecordBatch incoming;
+  private final RecordBatch incoming;
 
   private int recordIndex = 0;
   private RecordBatch unnest;
@@ -57,7 +57,7 @@ public class MockLateralJoinBatch implements LateralContract, CloseableRecordBat
   private final FragmentContext context;
   private  final OperatorContext oContext;
 
-  private List<ValueVector> resultList = new ArrayList<>();
+  private final List<ValueVector> resultList = new ArrayList<>();
 
   public MockLateralJoinBatch(FragmentContext context, OperatorContext oContext, RecordBatch incoming) {
     this.context = context;
@@ -98,6 +98,7 @@ public class MockLateralJoinBatch implements LateralContract, CloseableRecordBat
     return unnest;
   }
 
+  @Override
   public IterOutcome next() {
 
     IterOutcome currentOutcome = incoming.next();
@@ -139,7 +140,6 @@ public class MockLateralJoinBatch implements LateralContract, CloseableRecordBat
         return currentOutcome;
       case NONE:
       case STOP:
-      case OUT_OF_MEMORY:
         isDone = true;
         return currentOutcome;
       case NOT_YET:

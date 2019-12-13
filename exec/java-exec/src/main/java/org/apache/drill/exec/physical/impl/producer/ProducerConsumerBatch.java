@@ -133,9 +133,6 @@ public class ProducerConsumerBatch extends AbstractRecordBatch<ProducerConsumer>
             case NONE:
               stop = true;
               break outer;
-            case OUT_OF_MEMORY:
-              queue.putFirst(RecordBatchDataWrapper.outOfMemory());
-              return;
             case STOP:
               queue.putFirst(RecordBatchDataWrapper.failed());
               return;

@@ -61,11 +61,11 @@ import com.sun.codemodel.JType;
 
 public class PartitionSenderRootExec extends BaseRootExec {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PartitionSenderRootExec.class);
-  private RecordBatch incoming;
-  private HashPartitionSender operator;
+  private final RecordBatch incoming;
+  private final HashPartitionSender operator;
   private PartitionerDecorator partitioner;
 
-  private ExchangeFragmentContext context;
+  private final ExchangeFragmentContext context;
   private final int outGoingBatchCount;
   private final HashPartitionSender popConfig;
   private final double cost;
@@ -74,14 +74,14 @@ public class PartitionSenderRootExec extends BaseRootExec {
   private final AtomicInteger remaingReceiverCount;
   private boolean done = false;
   private boolean first = true;
-  private boolean closeIncoming;
+  private final boolean closeIncoming;
 
   long minReceiverRecordCount = Long.MAX_VALUE;
   long maxReceiverRecordCount = Long.MIN_VALUE;
   protected final int numberPartitions;
   protected final int actualPartitions;
 
-  private IntArrayList terminations = new IntArrayList();
+  private final IntArrayList terminations = new IntArrayList();
 
   public enum Metric implements MetricDef {
     BATCHES_SENT,
@@ -174,9 +174,6 @@ public class PartitionSenderRootExec extends BaseRootExec {
           context.getExecutorState().fail(e.getCause());
         }
         return false;
-
-      case OUT_OF_MEMORY:
-        throw new OutOfMemoryException();
 
       case STOP:
         if (partitioner != null) {

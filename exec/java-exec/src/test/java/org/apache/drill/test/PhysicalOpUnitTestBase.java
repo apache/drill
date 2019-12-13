@@ -129,7 +129,7 @@ public class PhysicalOpUnitTestBase extends ExecTest {
 
   protected static class BatchIterator implements Iterable<VectorAccessible> {
 
-    private RecordBatch operator;
+    private final RecordBatch operator;
     public BatchIterator(RecordBatch operator) {
       this.operator = operator;
     }
@@ -148,8 +148,6 @@ public class PhysicalOpUnitTestBase extends ExecTest {
           if (lastResultOutcome == RecordBatch.IterOutcome.NONE
             || lastResultOutcome == RecordBatch.IterOutcome.STOP) {
             return false;
-          } else if (lastResultOutcome == RecordBatch.IterOutcome.OUT_OF_MEMORY) {
-            throw new RuntimeException("Operator ran out of memory");
           } else {
             return true;
           }

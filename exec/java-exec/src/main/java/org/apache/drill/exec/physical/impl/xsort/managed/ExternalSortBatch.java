@@ -288,9 +288,6 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
       case STOP:
         state = BatchState.STOP;
         break;
-      case OUT_OF_MEMORY:
-        state = BatchState.OUT_OF_MEMORY;
-        break;
       case NONE:
         state = BatchState.DONE;
         break;
@@ -426,19 +423,6 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
       // needed.
 
       sortImpl.addBatch(incoming);
-      break;
-    case OUT_OF_MEMORY:
-
-      // Note: it is highly doubtful that this code actually works. It
-      // requires that the upstream batches got to a safe place to run
-      // out of memory and that no work was in-flight and thus abandoned.
-      // Consider removing this case once resource management is in place.
-
-      logger.error("received OUT_OF_MEMORY, trying to spill");
-      if (! sortImpl.forceSpill()) {
-        throw UserException.memoryError("Received OUT_OF_MEMORY, but not enough batches to spill")
-          .build(logger);
-      }
       break;
     default:
       throw new IllegalStateException("Unexpected iter outcome: " + lastKnownOutcome);

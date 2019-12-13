@@ -195,8 +195,10 @@ public class UnorderedReceiverBatch implements CloseableRecordBatch {
       }
 
       if (context.getAllocator().isOverLimit()) {
-        lastOutcome = IterOutcome.OUT_OF_MEMORY;
-        return lastOutcome;
+        context.requestMemory(this);
+        if (context.getAllocator().isOverLimit()) {
+          throw new OutOfMemoryException("Allocator over limit");
+        }
       }
 
       RecordBatchDef rbd = batch.getHeader().getDef();

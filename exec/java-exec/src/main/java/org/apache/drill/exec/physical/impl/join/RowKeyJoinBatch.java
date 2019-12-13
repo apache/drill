@@ -52,7 +52,7 @@ public class RowKeyJoinBatch extends AbstractRecordBatch<RowKeyJoinPOP> implemen
   private IterOutcome rightUpstream = IterOutcome.NONE;
   private final List<TransferPair> transfers = Lists.newArrayList();
   private int recordCount = 0;
-  private SchemaChangeCallBack callBack = new SchemaChangeCallBack();
+  private final SchemaChangeCallBack callBack = new SchemaChangeCallBack();
   private RowKeyJoinState rkJoinState = RowKeyJoinState.INITIAL;
 
   public RowKeyJoinBatch(RowKeyJoinPOP config, FragmentContext context, RecordBatch left, RecordBatch right)
@@ -100,11 +100,6 @@ public class RowKeyJoinBatch extends AbstractRecordBatch<RowKeyJoinPOP> implemen
 
     leftUpstream = next(left);
 
-    if (leftUpstream == IterOutcome.OUT_OF_MEMORY || rightUpstream == IterOutcome.OUT_OF_MEMORY) {
-      state = BatchState.OUT_OF_MEMORY;
-      return;
-    }
-
     for (final VectorWrapper<?> v : left) {
       final TransferPair pair = v.getValueVector().makeTransferPair(
           container.addOrGet(v.getField(), callBack));
@@ -143,7 +138,6 @@ public class RowKeyJoinBatch extends AbstractRecordBatch<RowKeyJoinPOP> implemen
 
       switch(rightUpstream) {
       case NONE:
-      case OUT_OF_MEMORY:
       case STOP:
         rkJoinState = RowKeyJoinState.DONE;
         state = BatchState.DONE;

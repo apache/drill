@@ -99,7 +99,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
   private boolean firstBatch = true;
 
   // This map saves the mapping between outgoing column and incoming column.
-  private Map<String, String> columnMapping;
+  private final Map<String, String> columnMapping;
   private final HashAggMemoryManager hashAggMemoryManager;
 
   private final GeneratorMapping UPDATE_AGGR_INSIDE =
@@ -251,9 +251,6 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
       case NONE:
         state = BatchState.DONE;
         container.buildSchema(SelectionVectorMode.NONE);
-        return;
-      case OUT_OF_MEMORY:
-        state = BatchState.OUT_OF_MEMORY;
         return;
       case STOP:
         state = BatchState.STOP;

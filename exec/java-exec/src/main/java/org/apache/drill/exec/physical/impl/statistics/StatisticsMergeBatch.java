@@ -346,7 +346,6 @@ public class StatisticsMergeBatch extends AbstractSingleRecordBatch<StatisticsMe
         switch (outcome) {
           case NONE:
             break outer;
-          case OUT_OF_MEMORY:
           case NOT_YET:
           case STOP:
             return outcome;

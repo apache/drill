@@ -38,7 +38,6 @@ import org.slf4j.LoggerFactory;
 public abstract class AbstractUnaryRecordBatch<T extends PhysicalOperator> extends AbstractRecordBatch<T> {
   private static final Logger logger = LoggerFactory.getLogger(new Object() {}.getClass().getEnclosingClass());
 
-  protected boolean outOfMemory;
   protected SchemaChangeCallBack callBack = new SchemaChangeCallBack();
   private IterOutcome lastKnownOutcome;
 
@@ -90,8 +89,6 @@ public abstract class AbstractUnaryRecordBatch<T extends PhysicalOperator> exten
           container.buildSchema(SelectionVectorMode.NONE);
         }
         return upstream;
-      case OUT_OF_MEMORY:
-        return upstream;
       case OK_NEW_SCHEMA:
         if (state == BatchState.FIRST) {
           state = BatchState.NOT_FIRST;
@@ -120,11 +117,6 @@ public abstract class AbstractUnaryRecordBatch<T extends PhysicalOperator> exten
         // But if upstream is IterOutcome.OK_NEW_SCHEMA, we should return that
         if (out != IterOutcome.OK) {
           upstream = out;
-        }
-
-        if (outOfMemory) {
-          outOfMemory = false;
-          return IterOutcome.OUT_OF_MEMORY;
         }
 
         // Check if schema has changed

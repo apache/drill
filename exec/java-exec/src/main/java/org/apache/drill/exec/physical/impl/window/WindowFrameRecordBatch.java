@@ -116,7 +116,6 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
         case NONE:
           noMoreBatches = true;
           break;
-        case OUT_OF_MEMORY:
         case NOT_YET:
         case STOP:
           cleanup();
@@ -236,9 +235,6 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
       return;
     case STOP:
       state = BatchState.STOP;
-      return;
-    case OUT_OF_MEMORY:
-      state = BatchState.OUT_OF_MEMORY;
       return;
     default:
       break;

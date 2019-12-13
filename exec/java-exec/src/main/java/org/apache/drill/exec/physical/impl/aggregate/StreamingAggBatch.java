@@ -172,9 +172,6 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
         state = BatchState.DONE;
         container.buildSchema(SelectionVectorMode.NONE);
         return;
-      case OUT_OF_MEMORY:
-        state = BatchState.OUT_OF_MEMORY;
-        return;
       case STOP:
         state = BatchState.STOP;
         return;
@@ -242,7 +239,6 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
             return IterOutcome.OK;
           }
           // else fall thru
-        case OUT_OF_MEMORY:
         case NOT_YET:
         case STOP:
           return lastKnownOutcome;
