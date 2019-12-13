@@ -17,29 +17,18 @@
  */
 package org.apache.drill.exec.physical.rowSet;
 
-import org.apache.drill.exec.record.RecordBatchSizer;
 import org.apache.drill.exec.physical.resultSet.model.ReaderIndex;
-import org.apache.drill.exec.physical.resultSet.model.MetadataProvider.MetadataRetrieval;
-import org.apache.drill.exec.physical.resultSet.model.single.BaseReaderBuilder;
+import org.apache.drill.exec.physical.resultSet.model.single.SimpleReaderBuilder;
+import org.apache.drill.exec.physical.rowSet.RowSet.SingleRowSet;
+import org.apache.drill.exec.record.RecordBatchSizer;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.exec.physical.rowSet.RowSet.SingleRowSet;
 
 /**
  * Base class for row sets backed by a single record batch.
  */
 
 public abstract class AbstractSingleRowSet extends AbstractRowSet implements SingleRowSet {
-
-  public static class RowSetReaderBuilder extends BaseReaderBuilder {
-
-    public RowSetReader buildReader(AbstractSingleRowSet rowSet, ReaderIndex rowIndex) {
-      TupleMetadata schema = rowSet.schema();
-      return new RowSetReaderImpl(schema, rowIndex,
-          buildContainerChildren(rowSet.container(),
-              new MetadataRetrieval(schema)));
-    }
-  }
 
   protected AbstractSingleRowSet(AbstractSingleRowSet rowSet) {
     super(rowSet.container, rowSet.schema);
@@ -64,6 +53,6 @@ public abstract class AbstractSingleRowSet extends AbstractRowSet implements Sin
    * (non-map) vectors.
    */
   protected RowSetReader buildReader(ReaderIndex rowIndex) {
-    return new RowSetReaderBuilder().buildReader(this, rowIndex);
+    return SimpleReaderBuilder.build(container(), schema, rowIndex);
   }
 }

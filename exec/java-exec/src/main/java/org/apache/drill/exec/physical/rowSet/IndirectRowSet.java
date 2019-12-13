@@ -17,17 +17,16 @@
  */
 package org.apache.drill.exec.physical.rowSet;
 
+import java.util.Collections;
+import java.util.Set;
+
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.physical.resultSet.model.ReaderIndex;
 import org.apache.drill.exec.physical.resultSet.model.single.SingleSchemaInference;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.RecordBatchSizer;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.selection.SelectionVector2;
-
-import java.util.Collections;
-import java.util.Set;
 
 /**
  * Single row set coupled with an indirection (selection) vector,
@@ -35,31 +34,6 @@ import java.util.Set;
  */
 
 public class IndirectRowSet extends AbstractSingleRowSet {
-
-  /**
-   * Reader index that points to each row indirectly through the
-   * selection vector. The {@link #offset()} method points to the
-   * actual data row, while the {@link #logicalIndex()} method gives
-   * the position relative to the indirection vector. That is,
-   * the position increases monotonically, but the index jumps
-   * around as specified by the indirection vector.
-   */
-
-  private static class IndirectRowIndex extends ReaderIndex {
-
-    private final SelectionVector2 sv2;
-
-    public IndirectRowIndex(SelectionVector2 sv2) {
-      super(sv2.getCount());
-      this.sv2 = sv2;
-    }
-
-    @Override
-    public int offset() { return sv2.getIndex(position); }
-
-    @Override
-    public int hyperVectorIndex() { return 0; }
-  }
 
   private final SelectionVector2 sv2;
 
@@ -117,7 +91,8 @@ public class IndirectRowSet extends AbstractSingleRowSet {
 
   @Override
   public RowSetReader reader() {
-    return buildReader(new IndirectRowIndex(getSv2()));
+    IndirectRowIndex index = new IndirectRowIndex(getSv2());
+    return buildReader(index);
   }
 
   @Override

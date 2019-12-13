@@ -122,7 +122,7 @@ public class DirectRowSet extends AbstractSingleRowSet implements ExtendableRowS
 
   @Override
   public RowSetReader reader() {
-    return buildReader(new DirectRowIndex(rowCount()));
+    return buildReader(new DirectRowIndex(container));
   }
 
   @Override

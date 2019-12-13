@@ -23,10 +23,18 @@ import java.util.List;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.physical.resultSet.model.AbstractReaderBuilder;
+import org.apache.drill.exec.physical.impl.protocol.BatchAccessor;
 import org.apache.drill.exec.physical.resultSet.model.MetadataProvider;
+import org.apache.drill.exec.physical.resultSet.model.MetadataProvider.MetadataCreator;
+import org.apache.drill.exec.physical.resultSet.model.MetadataProvider.MetadataRetrieval;
 import org.apache.drill.exec.physical.resultSet.model.MetadataProvider.VectorDescrip;
+import org.apache.drill.exec.physical.resultSet.model.ReaderBuilder;
+import org.apache.drill.exec.physical.resultSet.model.ReaderIndex;
+import org.apache.drill.exec.physical.rowSet.IndirectRowIndex;
+import org.apache.drill.exec.physical.rowSet.RowSet;
+import org.apache.drill.exec.physical.rowSet.RowSetReaderImpl;
 import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.reader.AbstractObjectReader;
 import org.apache.drill.exec.vector.accessor.reader.AbstractScalarReader;
@@ -46,7 +54,7 @@ import org.apache.drill.exec.vector.complex.UnionVector;
  * <p>
  * Derived classes handle the details of the various kinds of readers.
  * Today there is a single subclass that builds (test-time)
- * {@link org.apache.drill.exec.physical.rowSet.RowSet} objects. The idea, however, is that we may eventually
+ * {@link RowSet} objects. The idea, however, is that we may eventually
  * want to create a "result set reader" for use in internal operators,
  * in parallel to the "result set loader". The result set reader would
  * handle a stream of incoming batches. The extant RowSet class handles
@@ -59,9 +67,43 @@ import org.apache.drill.exec.vector.complex.UnionVector;
  * quite complex.
  */
 
-public abstract class BaseReaderBuilder extends AbstractReaderBuilder {
+public class SimpleReaderBuilder extends ReaderBuilder {
 
-  protected List<AbstractObjectReader> buildContainerChildren(
+  private static final SimpleReaderBuilder INSTANCE = new SimpleReaderBuilder();
+
+  private SimpleReaderBuilder() { }
+
+  public static RowSetReaderImpl build(VectorContainer container,
+      TupleMetadata schema, ReaderIndex rowIndex) {
+    return new RowSetReaderImpl(schema, rowIndex,
+        INSTANCE.buildContainerChildren(container,
+           new MetadataRetrieval(schema)));
+  }
+
+  public static RowSetReaderImpl build(VectorContainer container, ReaderIndex rowIndex) {
+    MetadataCreator mdCreator = new MetadataCreator();
+    List<AbstractObjectReader> children = INSTANCE.buildContainerChildren(container,
+        mdCreator);
+    return new RowSetReaderImpl(mdCreator.tuple(), rowIndex, children);
+  }
+
+  public static RowSetReaderImpl build(BatchAccessor batch) {
+    return SimpleReaderBuilder.build(batch.container(),
+        readerIndex(batch));
+  }
+
+  public static ReaderIndex readerIndex(BatchAccessor batch) {
+    switch (batch.schema().getSelectionVectorMode()) {
+    case TWO_BYTE:
+      return new IndirectRowIndex(batch.selectionVector2());
+    case NONE:
+      return new DirectRowIndex(batch.container());
+    default:
+      throw new UnsupportedOperationException("Cannot use this method for a hyper-batch");
+    }
+  }
+
+  public List<AbstractObjectReader> buildContainerChildren(
       VectorContainer container, MetadataProvider mdProvider) {
     final List<AbstractObjectReader> readers = new ArrayList<>();
     for (int i = 0; i < container.getNumberOfColumns(); i++) {

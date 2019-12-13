@@ -15,26 +15,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.physical.resultSet.model.single;
+package org.apache.drill.exec.physical.rowSet;
 
 import org.apache.drill.exec.physical.resultSet.model.ReaderIndex;
-import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.record.selection.SelectionVector2;
 
 /**
- * Reader index that points directly to each row in the row set.
- * This index starts with pointing to the -1st row, so that the
- * reader can require a <tt>next()</tt> for every row, including
- * the first. (This is the JDBC <tt>RecordSet</tt> convention.)
+ * Reader index that points to each row indirectly through the
+ * selection vector. The {@link #offset()} method points to the
+ * actual data row, while the {@link #logicalIndex()} method gives
+ * the position relative to the indirection vector. That is,
+ * the position increases monotonically, but the index jumps
+ * around as specified by the indirection vector.
  */
 
-public class DirectRowIndex extends ReaderIndex {
+public class IndirectRowIndex extends ReaderIndex {
 
-  public DirectRowIndex(VectorContainer container) {
-    super(container.getRecordCount());
+  private final SelectionVector2 sv2;
+
+  public IndirectRowIndex(SelectionVector2 sv2) {
+    super(sv2.getCount());
+    this.sv2 = sv2;
   }
 
   @Override
-  public int offset() { return position; }
+  public int offset() { return sv2.getIndex(position); }
 
   @Override
   public int hyperVectorIndex() { return 0; }

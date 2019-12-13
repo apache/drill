@@ -15,27 +15,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.physical.resultSet.model.single;
+package org.apache.drill.exec.physical.rowSet;
 
 import org.apache.drill.exec.physical.resultSet.model.ReaderIndex;
-import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.record.selection.SelectionVector4;
+import org.apache.drill.exec.vector.accessor.impl.AccessorUtilities;
 
 /**
- * Reader index that points directly to each row in the row set.
- * This index starts with pointing to the -1st row, so that the
- * reader can require a <tt>next()</tt> for every row, including
- * the first. (This is the JDBC <tt>RecordSet</tt> convention.)
+ * Read-only row index into the hyper row set with batch and index
+ * values mapping via an SV4.
  */
 
-public class DirectRowIndex extends ReaderIndex {
+public class HyperRowIndex extends ReaderIndex {
 
-  public DirectRowIndex(VectorContainer container) {
-    super(container.getRecordCount());
+  private final SelectionVector4 sv4;
+
+  public HyperRowIndex(SelectionVector4 sv4) {
+    super(sv4.getCount());
+    this.sv4 = sv4;
   }
 
   @Override
-  public int offset() { return position; }
+  public int offset() {
+    return AccessorUtilities.sv4Index(sv4.get(position));
+  }
 
   @Override
-  public int hyperVectorIndex() { return 0; }
+  public int hyperVectorIndex( ) {
+    return AccessorUtilities.sv4Batch(sv4.get(position));
+  }
 }
