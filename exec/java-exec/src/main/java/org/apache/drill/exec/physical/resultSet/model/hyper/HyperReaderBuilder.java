@@ -23,8 +23,10 @@ import java.util.List;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.physical.resultSet.model.AbstractReaderBuilder;
-import org.apache.drill.exec.physical.resultSet.model.ReaderIndex;
+import org.apache.drill.exec.physical.impl.protocol.BatchAccessor;
+import org.apache.drill.exec.physical.resultSet.model.ReaderBuilder;
+import org.apache.drill.exec.physical.rowSet.HyperRowIndex;
+import org.apache.drill.exec.physical.rowSet.RowSetReaderImpl;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
@@ -33,7 +35,6 @@ import org.apache.drill.exec.record.metadata.VariantMetadata;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.ColumnReaderIndex;
-import org.apache.drill.exec.vector.accessor.impl.AccessorUtilities;
 import org.apache.drill.exec.vector.accessor.reader.AbstractObjectReader;
 import org.apache.drill.exec.vector.accessor.reader.ArrayReaderImpl;
 import org.apache.drill.exec.vector.accessor.reader.MapReader;
@@ -71,30 +72,26 @@ import org.apache.drill.exec.vector.accessor.reader.VectorAccessors.BaseHyperVec
  * the outer vector accessor.)
  */
 
-public abstract class BaseReaderBuilder extends AbstractReaderBuilder {
+public class HyperReaderBuilder extends ReaderBuilder {
 
-  /**
-   * Read-only row index into the hyper row set with batch and index
-   * values mapping via an SV4.
-   */
+  private static final HyperReaderBuilder INSTANCE = new HyperReaderBuilder();
 
-  public static class HyperRowIndex extends ReaderIndex {
+  private HyperReaderBuilder() { }
 
-    private final SelectionVector4 sv4;
+  public static RowSetReaderImpl build(VectorContainer container, TupleMetadata schema, SelectionVector4 sv4) {
+    HyperRowIndex rowIndex = new HyperRowIndex(sv4);
+    return new RowSetReaderImpl(schema, rowIndex,
+        INSTANCE.buildContainerChildren(container, schema));
+  }
 
-    public HyperRowIndex(SelectionVector4 sv4) {
-      super(sv4.getCount());
-      this.sv4 = sv4;
-    }
-
-    @Override
-    public int offset() {
-      return AccessorUtilities.sv4Index(sv4.get(position));
-    }
-
-    @Override
-    public int hyperVectorIndex( ) {
-      return AccessorUtilities.sv4Batch(sv4.get(position));
+  public static RowSetReaderImpl build(BatchAccessor batch) {
+    VectorContainer container = batch.container();
+    try {
+      return build(container,
+          new HyperSchemaInference().infer(container),
+          batch.selectionVector4());
+    } catch (SchemaChangeException e) {
+      throw new UnsupportedOperationException(e);
     }
   }
 

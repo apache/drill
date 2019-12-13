@@ -25,7 +25,6 @@ import org.apache.commons.io.output.StringBuilderWriter;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.physical.impl.protocol.BatchAccessor;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
-import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 
@@ -58,10 +57,6 @@ public class RowSetFormatter {
   }
 
   public static void print(BatchAccessor batch) {
-    RowSets.wrap(batch).print();
-  }
-
-  public static void print(RecordBatch batch) {
     RowSets.wrap(batch).print();
   }
 

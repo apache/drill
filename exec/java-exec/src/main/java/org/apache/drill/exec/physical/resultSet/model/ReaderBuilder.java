@@ -18,6 +18,11 @@
 package org.apache.drill.exec.physical.resultSet.model;
 
 import org.apache.drill.common.types.TypeProtos.DataMode;
+import org.apache.drill.exec.physical.impl.protocol.BatchAccessor;
+import org.apache.drill.exec.physical.resultSet.model.hyper.HyperReaderBuilder;
+import org.apache.drill.exec.physical.resultSet.model.single.SimpleReaderBuilder;
+import org.apache.drill.exec.physical.rowSet.RowSetReaderImpl;
+import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.vector.accessor.reader.AbstractObjectReader;
 import org.apache.drill.exec.vector.accessor.reader.ArrayReaderImpl;
@@ -25,7 +30,15 @@ import org.apache.drill.exec.vector.accessor.reader.BaseScalarReader;
 import org.apache.drill.exec.vector.accessor.reader.ColumnReaderFactory;
 import org.apache.drill.exec.vector.accessor.reader.VectorAccessor;
 
-public abstract class AbstractReaderBuilder {
+public abstract class ReaderBuilder {
+
+  public static RowSetReaderImpl buildReader(BatchAccessor batch) {
+    if (batch.schema().getSelectionVectorMode() == SelectionVectorMode.FOUR_BYTE) {
+      return HyperReaderBuilder.build(batch);
+    } else {
+      return SimpleReaderBuilder.build(batch);
+    }
+  }
 
   protected AbstractObjectReader buildScalarReader(VectorAccessor va, ColumnMetadata schema) {
     BaseScalarReader scalarReader = ColumnReaderFactory.buildColumnReader(va);
@@ -41,5 +54,4 @@ public abstract class AbstractReaderBuilder {
       throw new UnsupportedOperationException(mode.toString());
     }
   }
-
 }

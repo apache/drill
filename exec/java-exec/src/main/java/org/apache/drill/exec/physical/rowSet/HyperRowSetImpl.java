@@ -22,7 +22,7 @@ import java.util.List;
 
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.physical.resultSet.model.hyper.BaseReaderBuilder;
+import org.apache.drill.exec.physical.resultSet.model.hyper.HyperReaderBuilder;
 import org.apache.drill.exec.physical.resultSet.model.hyper.HyperSchemaInference;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
@@ -43,16 +43,6 @@ import org.apache.drill.exec.physical.rowSet.RowSet.HyperRowSet;
  */
 
 public class HyperRowSetImpl extends AbstractRowSet implements HyperRowSet {
-
-  public static class RowSetReaderBuilder extends BaseReaderBuilder {
-
-    public RowSetReader buildReader(HyperRowSet rowSet, SelectionVector4 sv4) {
-      TupleMetadata schema = rowSet.schema();
-      HyperRowIndex rowIndex = new HyperRowIndex(sv4);
-      return new RowSetReaderImpl(schema, rowIndex,
-          buildContainerChildren(rowSet.container(), schema));
-    }
-  }
 
   public static class HyperRowSetBuilderImpl implements HyperRowSetBuilder {
 
@@ -95,6 +85,7 @@ public class HyperRowSetImpl extends AbstractRowSet implements HyperRowSet {
       for (VectorContainer container : batches) {
         hyperContainer.addBatch(container);
       }
+      hyperContainer.setRecordCount(totalRowCount);
 
       // TODO: This has a bug. If the hyperset has two batches with unions,
       // and the first union contains only VARCHAR, while the second contains
@@ -160,7 +151,7 @@ public class HyperRowSetImpl extends AbstractRowSet implements HyperRowSet {
 
   @Override
   public RowSetReader reader() {
-    return new RowSetReaderBuilder().buildReader(this, sv4);
+    return HyperReaderBuilder.build(container(), schema, sv4);
   }
 
   @Override
