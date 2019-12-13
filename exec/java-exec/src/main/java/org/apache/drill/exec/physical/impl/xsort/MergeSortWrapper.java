@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.physical.impl.xsort.managed;
+package org.apache.drill.exec.physical.impl.xsort;
 
 import java.util.List;
 
@@ -36,7 +36,7 @@ import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.config.Sort;
 import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
 import org.apache.drill.exec.physical.impl.sort.SortRecordBatchBuilder;
-import org.apache.drill.exec.physical.impl.xsort.managed.SortImpl.SortResults;
+import org.apache.drill.exec.physical.impl.xsort.SortImpl.SortResults;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.HyperVectorWrapper;
 import org.apache.drill.exec.record.RecordBatch;
@@ -105,14 +105,14 @@ public class MergeSortWrapper extends BaseSortWrapper implements SortResults {
    * @return the sv4 for this operator
    */
 
-  public void merge(List<BatchGroup.InputBatch> batchGroups, int outputBatchSize) {
+  public void merge(List<InputBatch> batchGroups, int outputBatchSize) {
 
     // Add the buffered batches to a collection that MSorter can use.
     // The builder takes ownership of the batches and will release them if
     // an error occurs.
 
     builder = new SortRecordBatchBuilder(context.getAllocator());
-    for (BatchGroup.InputBatch group : batchGroups) {
+    for (InputBatch group : batchGroups) {
       RecordBatchData rbd = new RecordBatchData(group.getContainer(), context.getAllocator());
       rbd.setSv2(group.getSv2());
       builder.add(rbd);

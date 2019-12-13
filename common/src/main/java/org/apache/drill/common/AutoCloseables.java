@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Objects;
 
+import org.apache.drill.common.exceptions.UserException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,6 +74,14 @@ public class AutoCloseables {
    */
   public static void close(AutoCloseable... autoCloseables) throws Exception {
     close(Arrays.asList(autoCloseables));
+  }
+
+  public static void closeWithUserException(AutoCloseable... autoCloseables) {
+    try {
+      close(Arrays.asList(autoCloseables));
+    } catch (Exception e) {
+      throw UserException.dataReadError(e).build(LOGGER);
+    }
   }
 
   /**
