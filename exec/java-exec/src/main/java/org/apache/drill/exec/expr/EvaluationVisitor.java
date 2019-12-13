@@ -595,13 +595,6 @@ public class EvaluationVisitor {
 
         if (complex || repeated) {
 
-          if (e.getFieldId().isDict(depth)) {
-            JVar dictReader = generator.declareClassField("dictReader", generator.getModel()._ref(FieldReader.class));
-            eval.assign(dictReader, expr);
-
-            return new HoldingContainer(e.getMajorType(), dictReader, null, null, false, true);
-          }
-
           JVar complexReader = generator.declareClassField("reader", generator.getModel()._ref(FieldReader.class));
 
           if (isNullReaderLikely) {

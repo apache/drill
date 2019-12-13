@@ -85,6 +85,7 @@ public class FieldIdUtil {
       }
       // skip the first array segment as there is no corresponding child vector.
       seg = seg.getChild();
+      depth++;
 
       // multi-level numbered access to a repeated map is not possible so return if the next part is also an array
       // segment.

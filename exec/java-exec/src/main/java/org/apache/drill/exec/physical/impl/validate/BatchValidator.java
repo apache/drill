@@ -35,11 +35,10 @@ import org.apache.drill.exec.vector.VarCharVector;
 import org.apache.drill.exec.vector.VarDecimalVector;
 import org.apache.drill.exec.vector.VariableWidthVector;
 import org.apache.drill.exec.vector.ZeroVector;
+import org.apache.drill.exec.vector.complex.AbstractRepeatedMapVector;
 import org.apache.drill.exec.vector.complex.BaseRepeatedValueVector;
-import org.apache.drill.exec.vector.complex.DictVector;
 import org.apache.drill.exec.vector.complex.MapVector;
 import org.apache.drill.exec.vector.complex.RepeatedListVector;
-import org.apache.drill.exec.vector.complex.RepeatedMapVector;
 import org.apache.drill.exec.vector.complex.UnionVector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -293,14 +292,16 @@ public class BatchValidator {
       // structure to check.
     } else if (vector instanceof BaseRepeatedValueVector) {
       validateRepeatedVector(name, (BaseRepeatedValueVector) vector);
-    } else if (vector instanceof RepeatedMapVector) {
-      validateRepeatedMapVector(name, (RepeatedMapVector) vector);
+    } else if (vector instanceof AbstractRepeatedMapVector) { // RepeatedMapVector or DictVector
+      // In case of DictVector, keys and values vectors are not validated explicitly to avoid NPE
+      // when keys and values vectors are not set. This happens when output dict vector's keys and
+      // values are not constructed while copying values from input reader to dict writer and the
+      // input reader is an instance of NullReader for all rows which does not have schema.
+      validateRepeatedMapVector(name, (AbstractRepeatedMapVector) vector);
     } else if (vector instanceof MapVector) {
       validateMapVector(name, (MapVector) vector);
     } else if (vector instanceof RepeatedListVector) {
       validateRepeatedListVector(name, (RepeatedListVector) vector);
-    } else if (vector instanceof DictVector) {
-      validateDictVector(name, (DictVector) vector);
     } else if (vector instanceof UnionVector) {
       validateUnionVector(name, (UnionVector) vector);
     } else if (vector instanceof VarDecimalVector) {
@@ -397,22 +398,13 @@ public class BatchValidator {
     }
   }
 
-  private void validateRepeatedMapVector(String name,
-      RepeatedMapVector vector) {
+  private void validateRepeatedMapVector(String name, AbstractRepeatedMapVector vector) {
     int valueCount = vector.getAccessor().getValueCount();
     int elementCount = validateOffsetVector(name + "-offsets",
         vector.getOffsetVector(), valueCount, Integer.MAX_VALUE);
     for (ValueVector child: vector) {
       validateVector(elementCount, child);
     }
-  }
-
-  private void validateDictVector(String name, DictVector vector) {
-    int valueCount = vector.getAccessor().getValueCount();
-    int elementCount = validateOffsetVector(name + "-offsets",
-        vector.getOffsetVector(), valueCount, Integer.MAX_VALUE);
-    validateVector(elementCount, vector.getKeys());
-    validateVector(elementCount, vector.getValues());
   }
 
   private void validateRepeatedListVector(String name,
