@@ -38,29 +38,38 @@ public final class KerberosUtil {
    * Returns principal of format primary/instance@REALM.
    *
    * @param primary non-null primary component
-   * @param instance non-null instance component
+   * @param instance non-null instance component, can be empty string
    * @param realm non-null realm component
-   * @return principal of format primary/instance@REALM
+   * @return principal of format primary/instance@REALM or primary@REALM
    */
   public static String getPrincipalFromParts(final String primary, final String instance, final String realm) {
-    return checkNotNull(primary) + "/" +
-        checkNotNull(instance) + "@" +
-        checkNotNull(realm);
+    checkNotNull(primary);
+    checkNotNull(realm);
+
+    return primary +
+        ((instance != "") ? "/" + instance : "")
+        + "@" + realm;
   }
 
   /**
-   * Expects principal of the format primary/instance@REALM.
+   * Expects principal of the format primary/instance@REALM or primary@REALM.
    *
    * @param principal principal
    * @return components
    */
   public static String[] splitPrincipalIntoParts(final String principal) {
     final String[] components = principal.split("[/@]");
-    checkState(components.length == 3);
+    checkState(components.length < 4);
+    checkState(components.length > 1);
     checkNotNull(components[0]);
     checkNotNull(components[1]);
-    checkNotNull(components[2]);
-    return components;
+
+    if (components.length == 2) {
+      return new String[] { components[0], "", components[1] };
+    } else {
+      checkNotNull(components[2]);
+      return components;
+    }
   }
 
   public static String canonicalizeInstanceName(String instanceName, final String canonicalName) {

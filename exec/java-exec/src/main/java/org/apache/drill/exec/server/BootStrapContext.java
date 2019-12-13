@@ -135,10 +135,11 @@ public class BootStrapContext implements AutoCloseable {
         final String parts[] = KerberosUtil.splitPrincipalIntoParts(principal);
         if (parts.length != 3) {
           throw new DrillbitStartupException(
-              String.format("Invalid %s, Drill service principal must be of format: primary/instance@REALM",
-                ExecConstants.SERVICE_PRINCIPAL));
+            String.format("Invalid %s, Drill service principal must be of format 'primary/instance@REALM' or 'primary@REALM'",
+              ExecConstants.SERVICE_PRINCIPAL));
         }
-        parts[1] = KerberosUtil.canonicalizeInstanceName(parts[1], hostName);
+
+        parts[1] = (parts[1] == "") ? "" : KerberosUtil.canonicalizeInstanceName(parts[1], hostName);
 
         final String canonicalizedPrincipal = KerberosUtil.getPrincipalFromParts(parts[0], parts[1], parts[2]);
         final String keytab = config.getString(ExecConstants.SERVICE_KEYTAB_LOCATION);
