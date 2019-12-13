@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.physical.impl.xsort.managed;
+package org.apache.drill.exec.physical.impl.xsort;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -29,7 +29,7 @@ import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.config.Sort;
-import org.apache.drill.exec.physical.impl.xsort.managed.PriorityQueueCopierWrapper.BatchMerger;
+import org.apache.drill.exec.physical.impl.xsort.PriorityQueueCopierWrapper.BatchMerger;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
@@ -72,7 +72,7 @@ public class SortTestUtilities {
     List<SingleRowSet> expected = new ArrayList<>();
     String sortOrder = Ordering.ORDER_ASC;
     String nullOrder = Ordering.NULLS_UNSPECIFIED;
-    private OperatorFixture fixture;
+    private final OperatorFixture fixture;
 
     public CopierTester(OperatorFixture fixture) {
       this.fixture = fixture;
@@ -94,7 +94,7 @@ public class SortTestUtilities {
         List<BatchGroup> batches = new ArrayList<>();
         TupleMetadata schema = null;
         for (SingleRowSet rowSet : rowSets) {
-          batches.add(new BatchGroup.InputBatch(rowSet.container(), rowSet.getSv2(),
+          batches.add(new InputBatch(rowSet.container(), rowSet.getSv2(),
                       fixture.allocator(), rowSet.size()));
           if (schema == null) {
             schema = rowSet.schema();

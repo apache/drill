@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.physical.impl.xsort.managed;
+package org.apache.drill.exec.physical.impl.xsort;
 
 import java.io.IOException;
 import java.util.LinkedList;
@@ -25,34 +25,32 @@ import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.spill.SpillSet;
-import org.apache.drill.exec.physical.impl.xsort.managed.BatchGroup.SpilledRun;
-import org.apache.drill.exec.physical.impl.xsort.managed.SortImpl.SortResults;
+import org.apache.drill.exec.physical.impl.xsort.SortImpl.SortResults;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorInitializer;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Represents the set of spilled batches, including methods to spill and/or
  * merge a set of batches to produce a new spill file.
  */
-
 public class SpilledRuns {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SpilledRuns.class);
+  private static final Logger logger = LoggerFactory.getLogger(SpilledRuns.class);
 
   /**
    * Manages the set of spill directories and files.
    */
-
   private final SpillSet spillSet;
-  private final LinkedList<BatchGroup.SpilledRun> spilledRuns = Lists.newLinkedList();
+  private final LinkedList<SpilledRun> spilledRuns = Lists.newLinkedList();
 
   /**
    * Manages the copier used to merge a collection of batches into
    * a new set of batches.
    */
-
   private final PriorityQueueCopierWrapper copierHolder;
   private BatchSchema schema;
 
@@ -61,7 +59,6 @@ public class SpilledRuns {
   public SpilledRuns(OperatorContext opContext, SpillSet spillSet, PriorityQueueCopierWrapper copier) {
     this.context = opContext;
     this.spillSet = spillSet;
-//    copierHolder = new PriorityQueueCopierWrapper(opContext);
     copierHolder = copier;
   }
 
@@ -133,7 +130,7 @@ public class SpilledRuns {
     mergeAndSpill(batchesToSpill, spillBatchRowCount, allocHelper);
   }
 
-  private BatchGroup.SpilledRun safeMergeAndSpill(List<? extends BatchGroup> batchesToSpill, int spillBatchRowCount, VectorInitializer allocHelper) {
+  private SpilledRun safeMergeAndSpill(List<? extends BatchGroup> batchesToSpill, int spillBatchRowCount, VectorInitializer allocHelper) {
     try {
       return doMergeAndSpill(batchesToSpill, spillBatchRowCount, allocHelper);
     }
@@ -147,7 +144,7 @@ public class SpilledRuns {
     }
   }
 
-  private BatchGroup.SpilledRun doMergeAndSpill(List<? extends BatchGroup> batchesToSpill,
+  private SpilledRun doMergeAndSpill(List<? extends BatchGroup> batchesToSpill,
                         int spillBatchRowCount, VectorInitializer allocHelper) throws Throwable {
 
     // Merge the selected set of matches and write them to the
@@ -155,12 +152,12 @@ public class SpilledRuns {
     // with the just-written batch.
 
     String outputFile = spillSet.getNextSpillFile();
-    BatchGroup.SpilledRun newGroup = null;
+    SpilledRun newGroup = null;
     VectorContainer dest = new VectorContainer();
     try (AutoCloseable ignored = AutoCloseables.all(batchesToSpill);
          PriorityQueueCopierWrapper.BatchMerger merger = copierHolder.startMerge(schema, batchesToSpill,
                                          dest, spillBatchRowCount, allocHelper)) {
-      newGroup = new BatchGroup.SpilledRun(spillSet, outputFile, context.getAllocator());
+      newGroup = new SpilledRun(spillSet, outputFile, context.getAllocator());
       logger.trace("Spilling {} batches, into spill batches of {} rows, to {}",
           batchesToSpill.size(), spillBatchRowCount, outputFile);
 
@@ -175,7 +172,7 @@ public class SpilledRuns {
         //
         // note that addBatch also clears the merger's output container
 
-        newGroup.addBatch(dest);
+        newGroup.spillBatch(dest);
       }
       context.injectChecked(ExternalSortBatch.INTERRUPTION_WHILE_SPILLING, IOException.class);
       newGroup.closeWriter();
@@ -213,26 +210,7 @@ public class SpilledRuns {
       logger.debug("End of sort. Total write bytes: {}, Total read bytes: {}",
                    spillSet.getWriteBytes(), spillSet.getWriteBytes());
     }
-    RuntimeException ex = null;
-    try {
-      BatchGroup.closeAll(spilledRuns);
-      spilledRuns.clear();
-    } catch (RuntimeException e) {
-      ex = e;
-    }
-    try {
-      copierHolder.close();
-    } catch (RuntimeException e) {
-      ex = (ex == null) ? e : ex;
-    }
-    try {
-      spillSet.close();
-    } catch (RuntimeException e) {
-      ex = (ex == null) ? e : ex;
-    }
-    if (ex != null) {
-      throw ex;
-    }
+    AutoCloseables.closeWithUserException(() -> BatchGroup.closeAll(spilledRuns),
+        copierHolder::close, spillSet::close);
   }
-
 }

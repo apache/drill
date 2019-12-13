@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.physical.impl.xsort.managed;
+package org.apache.drill.exec.physical.impl.xsort;
 
 import static org.apache.drill.test.rowSet.RowSetUtilities.objArray;
 import static org.junit.Assert.fail;
@@ -28,17 +28,17 @@ import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.config.Sort;
-import org.apache.drill.exec.physical.impl.xsort.managed.SortTestUtilities.CopierTester;
+import org.apache.drill.exec.physical.impl.xsort.SortTestUtilities.CopierTester;
+import org.apache.drill.exec.physical.rowSet.RowSet.ExtendableRowSet;
+import org.apache.drill.exec.physical.rowSet.RowSet.SingleRowSet;
+import org.apache.drill.exec.physical.rowSet.RowSetWriter;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.test.OperatorFixture;
 import org.apache.drill.test.SubOperatorTest;
-import org.apache.drill.exec.physical.rowSet.RowSet.ExtendableRowSet;
-import org.apache.drill.exec.physical.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetUtilities;
-import org.apache.drill.exec.physical.rowSet.RowSetWriter;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

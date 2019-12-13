@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.physical.impl.xsort.managed;
+package org.apache.drill.exec.physical.impl.xsort;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.categories.OperatorTest;
@@ -47,7 +47,6 @@ import static org.junit.Assert.assertEquals;
 
 @Category(OperatorTest.class)
 public class TestSortEmitOutcome extends BaseTestOpBatchEmitOutcome {
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSortEmitOutcome.class);
 
   private ExternalSortBatch sortBatch;
 

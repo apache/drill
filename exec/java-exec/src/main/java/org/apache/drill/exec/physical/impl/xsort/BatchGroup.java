@@ -18,140 +18,77 @@
 package org.apache.drill.exec.physical.impl.xsort;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Iterator;
-import java.util.concurrent.TimeUnit;
 
+import org.apache.drill.common.AutoCloseables;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.cache.VectorAccessibleSerializable;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.SchemaUtil;
-import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
-import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
+/**
+ * Represents a group of batches spilled to disk.
+ * <p>
+ * The batches are defined by a schema which can change over time. When the schema changes,
+ * all existing and new batches are coerced into the new schema. Provides a
+ * uniform way to iterate over records for one or more batches whether
+ * the batches are in memory or on disk.
+ * <p>
+ * The <code>BatchGroup</code> operates in two modes as given by the two
+ * subclasses:
+ * <ul>
+ * <li>Input mode {@link InputBatch}: Used to buffer in-memory batches
+ * prior to spilling.</li>
+ * <li>Spill mode {@link SpilledRun}: Holds a "memento" to a set
+ * of batches written to disk. Acts as both a reader and writer for
+ * those batches.</li>
+ * </ul>
+ */
+public abstract class BatchGroup implements VectorAccessible, AutoCloseable {
+  static final Logger logger = LoggerFactory.getLogger(BatchGroup.class);
 
-public class BatchGroup implements VectorAccessible, AutoCloseable {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BatchGroup.class);
+  protected final BufferAllocator allocator;
+  protected VectorContainer currentContainer;
+  /**
+   * This class acts as both "holder" for a vector container and an iterator
+   * into that container when the sort enters the merge phase. (This should
+   * be revisited.) This field keeps track of the next record to merge
+   * during the merge phase.
+   */
+  protected int mergeIndex;
+  protected BatchSchema schema;
 
-  private VectorContainer currentContainer;
-  private SelectionVector2 sv2;
-  private int pointer = 0;
-  private FSDataInputStream inputStream;
-  private FSDataOutputStream outputStream;
-  private Path path;
-  private FileSystem fs;
-  private BufferAllocator allocator;
-  private int spilledBatches = 0;
-  private OperatorContext context;
-  private BatchSchema schema;
-
-  public BatchGroup(VectorContainer container, SelectionVector2 sv2, OperatorContext context) {
-    this.sv2 = sv2;
+  public BatchGroup(VectorContainer container, BufferAllocator allocator) {
     this.currentContainer = container;
-    this.context = context;
-  }
-
-  public BatchGroup(VectorContainer container, FileSystem fs, String path, OperatorContext context) {
-    currentContainer = container;
-    this.fs = fs;
-    this.path = new Path(path);
-    this.allocator = context.getAllocator();
-    this.context = context;
-  }
-
-  public SelectionVector2 getSv2() {
-    return sv2;
+    this.allocator = allocator;
   }
 
   /**
-   * Updates the schema for this batch group. The current as well as any deserialized batches will be coerced to this schema
+   * Updates the schema for this batch group. The current as well as any
+   * deserialized batches will be coerced to this schema.
    * @param schema
    */
   public void setSchema(BatchSchema schema) {
-    currentContainer = SchemaUtil.coerceContainer(currentContainer, schema, context);
+    currentContainer = SchemaUtil.coerceContainer(currentContainer, schema, allocator);
     this.schema = schema;
   }
 
-  public void addBatch(VectorContainer newContainer) throws IOException {
-    assert fs != null;
-    assert path != null;
-    if (outputStream == null) {
-      outputStream = fs.create(path);
-    }
-    int recordCount = newContainer.getRecordCount();
-    WritableBatch batch = WritableBatch.getBatchNoHVWrap(recordCount, newContainer, false);
-    VectorAccessibleSerializable outputBatch = new VectorAccessibleSerializable(batch, allocator);
-    Stopwatch watch = Stopwatch.createStarted();
-    outputBatch.writeToStream(outputStream);
-    newContainer.zeroVectors();
-    logger.debug("Took {} us to spill {} records", watch.elapsed(TimeUnit.MICROSECONDS), recordCount);
-    spilledBatches++;
-  }
-
-  private VectorContainer getBatch() throws IOException {
-    assert fs != null;
-    assert path != null;
-    if (inputStream == null) {
-      inputStream = fs.open(path);
-    }
-    VectorAccessibleSerializable vas = new VectorAccessibleSerializable(allocator);
-    Stopwatch watch = Stopwatch.createStarted();
-    vas.readFromStream(inputStream);
-    VectorContainer c =  vas.get();
-    if (schema != null) {
-      c = SchemaUtil.coerceContainer(c, schema, context);
-    }
-    logger.trace("Took {} us to read {} records", watch.elapsed(TimeUnit.MICROSECONDS), c.getRecordCount());
-    spilledBatches--;
-    currentContainer.zeroVectors();
-    Iterator<VectorWrapper<?>> wrapperIterator = c.iterator();
-    for (VectorWrapper<?> w : currentContainer) {
-      TransferPair pair = wrapperIterator.next().getValueVector().makeTransferPair(w.getValueVector());
-      pair.transfer();
-    }
-    currentContainer.setRecordCount(c.getRecordCount());
-    c.zeroVectors();
-    return c;
-  }
-
   public int getNextIndex() {
-    int val;
-    if (pointer == getRecordCount()) {
-      if (spilledBatches == 0) {
-        return -1;
-      }
-      try {
-        currentContainer.zeroVectors();
-        getBatch();
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
-      pointer = 1;
-      return 0;
+    if (mergeIndex == getRecordCount()) {
+      return -1;
     }
-    if (sv2 == null) {
-      val = pointer;
-      pointer++;
-      assert val < currentContainer.getRecordCount();
-    } else {
-      val = pointer;
-      pointer++;
-      assert val < currentContainer.getRecordCount();
-      val = sv2.getIndex(val);
-    }
-
+    int val = mergeIndex++;
+    assert val < currentContainer.getRecordCount();
     return val;
   }
 
@@ -162,24 +99,6 @@ public class BatchGroup implements VectorAccessible, AutoCloseable {
   @Override
   public void close() throws IOException {
     currentContainer.zeroVectors();
-    if (sv2 != null) {
-      sv2.clear();
-    }
-    if (outputStream != null) {
-      outputStream.close();
-    }
-    if (inputStream != null) {
-      inputStream.close();
-    }
-    if (fs != null && fs.exists(path)) {
-      fs.delete(path, false);
-    }
-  }
-
-  public void closeOutputStream() throws IOException {
-    if (outputStream != null) {
-      outputStream.close();
-    }
   }
 
   @Override
@@ -199,11 +118,11 @@ public class BatchGroup implements VectorAccessible, AutoCloseable {
 
   @Override
   public int getRecordCount() {
-    if (sv2 != null) {
-      return sv2.getCount();
-    } else {
-      return currentContainer.getRecordCount();
-    }
+    return currentContainer.getRecordCount();
+  }
+
+  public int getUnfilteredRecordCount() {
+    return currentContainer.getRecordCount();
   }
 
   @Override
@@ -221,4 +140,13 @@ public class BatchGroup implements VectorAccessible, AutoCloseable {
     throw new UnsupportedOperationException();
   }
 
+  public static void closeAll(Collection<? extends BatchGroup> groups) {
+    try {
+      AutoCloseables.close(groups);
+    } catch (Exception e) {
+      throw UserException.dataWriteError(e)
+        .message("Failure while flushing spilled data")
+        .build(logger);
+    }
+  }
 }

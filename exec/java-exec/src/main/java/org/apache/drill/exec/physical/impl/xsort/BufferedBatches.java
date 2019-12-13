@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.physical.impl.xsort.managed;
+package org.apache.drill.exec.physical.impl.xsort;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -26,7 +26,6 @@ import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
-import org.apache.drill.exec.physical.impl.xsort.managed.BatchGroup.InputBatch;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.SchemaUtil;
 import org.apache.drill.exec.record.VectorAccessible;
@@ -49,7 +48,7 @@ public class BufferedBatches {
    * or an in-memory merge.
    */
 
-  private LinkedList<BatchGroup.InputBatch> bufferedBatches = Lists.newLinkedList();
+  private final LinkedList<InputBatch> bufferedBatches = Lists.newLinkedList();
 
   private final SorterWrapper sorterWrapper;
 
@@ -167,7 +166,7 @@ public class BufferedBatches {
     RecordBatchData rbd = new RecordBatchData(convertedBatch, allocator);
     try {
       rbd.setSv2(sv2);
-      bufferedBatches.add(new BatchGroup.InputBatch(rbd.getContainer(), rbd.getSv2(), allocator, netSize));
+      bufferedBatches.add(new InputBatch(rbd.getContainer(), rbd.getSv2(), allocator, netSize));
 
     } catch (Throwable t) {
       rbd.clear();
@@ -200,8 +199,8 @@ public class BufferedBatches {
     return SpilledRuns.prepareSpillBatches(bufferedBatches, spillCount);
   }
 
-  public List<BatchGroup.InputBatch> removeAll() {
-    List<BatchGroup.InputBatch> batches = new ArrayList<>( );
+  public List<InputBatch> removeAll() {
+    List<InputBatch> batches = new ArrayList<>( );
     batches.addAll(bufferedBatches);
     bufferedBatches.clear();
     return batches;

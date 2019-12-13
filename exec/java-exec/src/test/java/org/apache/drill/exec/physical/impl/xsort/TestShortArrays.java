@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.physical.impl.xsort.managed;
+package org.apache.drill.exec.physical.impl.xsort;
 
 import static org.apache.drill.test.rowSet.RowSetUtilities.intArray;
 import static org.junit.Assert.assertEquals;

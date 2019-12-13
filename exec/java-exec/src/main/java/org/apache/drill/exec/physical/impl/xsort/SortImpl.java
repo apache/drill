@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.physical.impl.xsort.managed;
+package org.apache.drill.exec.physical.impl.xsort;
 
 import java.io.IOException;
 import java.util.List;
@@ -23,12 +23,10 @@ import java.util.List;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.OperatorContext;
+import org.apache.drill.exec.physical.impl.xsort.SortMemoryManager.MergeTask;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 import org.apache.drill.exec.record.RecordBatchSizer;
-import org.apache.drill.exec.physical.impl.xsort.MSortTemplate;
-import org.apache.drill.exec.physical.impl.xsort.managed.BatchGroup.InputBatch;
-import org.apache.drill.exec.physical.impl.xsort.managed.SortMemoryManager.MergeTask;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.VectorAccessible;
@@ -147,9 +145,9 @@ public class SortImpl {
 
     private boolean done;
     private final VectorContainer outputContainer;
-    private final BatchGroup.InputBatch batch;
+    private final InputBatch batch;
 
-    public SingleBatchResults(BatchGroup.InputBatch batch, VectorContainer outputContainer) {
+    public SingleBatchResults(InputBatch batch, VectorContainer outputContainer) {
       this.batch = batch;
       this.outputContainer = outputContainer;
     }
@@ -212,8 +210,8 @@ public class SortImpl {
   private final SortConfig config;
   private final SortMetrics metrics;
   private final SortMemoryManager memManager;
-  private VectorContainer outputBatch;
-  private OperatorContext context;
+  private final VectorContainer outputBatch;
+  private final OperatorContext context;
 
   /**
    * Memory allocator for this operator itself. Incoming batches are
