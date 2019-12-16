@@ -30,9 +30,12 @@ import org.apache.drill.test.TestTools;
 import org.apache.hadoop.hive.ql.CommandNeedRetryException;
 import org.apache.hadoop.hive.ql.Driver;
 import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
+import org.junit.AssumptionViolatedException;
 
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.startsWith;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assume.assumeThat;
 
 public class HiveTestUtilities {
 
@@ -136,5 +139,15 @@ public class HiveTestUtilities {
    */
   public static boolean supportedJavaVersion() {
     return System.getProperty("java.version").startsWith("1.8");
+  }
+
+  /**
+   * Checks if current version is supported by Hive.
+   *
+   * @throws AssumptionViolatedException if current version is not supported by Hive,
+   * so unit tests may be skipped.
+   */
+  public static void assumeJavaVersion() throws AssumptionViolatedException {
+    assumeThat("Skipping tests since Hive supports only JDK 8.", System.getProperty("java.version"), startsWith("1.8"));
   }
 }

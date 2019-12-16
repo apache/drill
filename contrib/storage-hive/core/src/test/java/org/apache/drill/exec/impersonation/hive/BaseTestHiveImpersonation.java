@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.calcite.schema.Schema.TableType;
-import org.apache.drill.exec.hive.HiveClusterTest;
+import org.apache.drill.exec.hive.HiveTestUtilities;
 import org.apache.drill.exec.impersonation.BaseTestImpersonation;
 import org.apache.drill.exec.store.hive.HiveStoragePluginConfig;
 import org.apache.drill.test.TestBuilder;
@@ -66,7 +66,7 @@ public class BaseTestHiveImpersonation extends BaseTestImpersonation {
 
   @BeforeClass
   public static void setUp() {
-    HiveClusterTest.checkJavaVersion();
+    HiveTestUtilities.assumeJavaVersion();
   }
 
   protected static void prepHiveConfAndData() throws Exception {

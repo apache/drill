@@ -65,7 +65,7 @@ public class HiveTestBase extends PlanTestBase {
 
   @BeforeClass
   public static void setUp() {
-    HiveClusterTest.checkJavaVersion();
+    HiveTestUtilities.assumeJavaVersion();
     HIVE_TEST_FIXTURE.getPluginManager().addHivePluginTo(bits);
   }
 

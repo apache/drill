@@ -20,8 +20,6 @@ package org.apache.drill.exec.hive;
 import org.apache.drill.test.ClusterTest;
 import org.junit.BeforeClass;
 
-import static org.junit.Assume.assumeTrue;
-
 /**
  * Base class for Hive cluster tests.
  */
@@ -29,6 +27,6 @@ public class HiveClusterTest extends ClusterTest {
 
   @BeforeClass
   public static void checkJavaVersion() {
-    assumeTrue("Skipping tests since Hive supports only JDK 8.", HiveTestUtilities.supportedJavaVersion());
+    HiveTestUtilities.assumeJavaVersion();
   }
 }

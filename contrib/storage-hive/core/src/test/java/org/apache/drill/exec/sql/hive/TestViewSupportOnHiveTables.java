@@ -21,7 +21,7 @@ import java.util.Objects;
 
 import org.apache.drill.categories.HiveStorageTest;
 import org.apache.drill.categories.SlowTest;
-import org.apache.drill.exec.hive.HiveClusterTest;
+import org.apache.drill.exec.hive.HiveTestUtilities;
 import org.apache.drill.exec.sql.TestBaseViewSupport;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -36,7 +36,7 @@ public class TestViewSupportOnHiveTables extends TestBaseViewSupport {
 
   @BeforeClass
   public static void setUp() {
-    HiveClusterTest.checkJavaVersion();
+    HiveTestUtilities.assumeJavaVersion();
     Objects.requireNonNull(HIVE_TEST_FIXTURE, "Failed to configure Hive storage plugin, " +
         "because HiveTestBase.HIVE_TEST_FIXTURE isn't initialized!")
         .getPluginManager().addHivePluginTo(bits);
