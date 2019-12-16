@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.impersonation.hive;
 
-import org.apache.drill.exec.hive.HiveTestUtilities;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.apache.drill.categories.HiveStorageTest;
@@ -49,7 +48,6 @@ import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTOREURIS;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_AUTO_CREATE_ALL;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_EXECUTE_SET_UGI;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_SCHEMA_VERIFICATION;
-import static org.junit.Assume.assumeTrue;
 
 @Category({SlowTest.class, HiveStorageTest.class})
 public class TestSqlStdBasedAuthorization extends BaseTestHiveImpersonation {
@@ -80,7 +78,6 @@ public class TestSqlStdBasedAuthorization extends BaseTestHiveImpersonation {
 
   @BeforeClass
   public static void setup() throws Exception {
-    assumeTrue("Skipping tests since Hive supports only JDK 8.", HiveTestUtilities.supportedJavaVersion());
     startMiniDfsCluster(TestSqlStdBasedAuthorization.class.getSimpleName());
     prepHiveConfAndData();
     setSqlStdBasedAuthorizationInHiveConf();

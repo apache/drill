@@ -298,8 +298,9 @@ public class TestIcebergTableSchema extends IcebergBaseTest {
 
   /**
    * Helper class for constructing field type signature string.
-   *
+   * <p>
    * Example of usage:
+   * <p>
    * Desired type: {@code List<Map<String, List<Integer>>>}
    * <pre><code>
    *         String signature = FieldSignatureBuilder.builder()
@@ -321,7 +322,6 @@ public class TestIcebergTableSchema extends IcebergBaseTest {
    *           .endType()
    *           .buildSignature();
    * </code></pre>
-   *
    */
   private static class FieldSignatureBuilder {
     private final SignatureVisitor signatureVisitor = new SignatureWriter();

@@ -25,7 +25,6 @@ import java.util.Map;
 import org.apache.calcite.schema.Schema.TableType;
 import org.apache.drill.categories.HiveStorageTest;
 import org.apache.drill.categories.SlowTest;
-import org.apache.drill.exec.hive.HiveTestUtilities;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.apache.hadoop.fs.Path;
@@ -54,7 +53,6 @@ import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_AUTO_CREAT
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_EXECUTE_SET_UGI;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_PRE_EVENT_LISTENERS;
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.METASTORE_SCHEMA_VERIFICATION;
-import static org.junit.Assume.assumeTrue;
 
 @Category({SlowTest.class, HiveStorageTest.class})
 public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation {
@@ -168,7 +166,6 @@ public class TestStorageBasedHiveAuthorization extends BaseTestHiveImpersonation
 
   @BeforeClass
   public static void setup() throws Exception {
-    assumeTrue("Skipping tests since Hive supports only JDK 8.", HiveTestUtilities.supportedJavaVersion());
     startMiniDfsCluster(TestStorageBasedHiveAuthorization.class.getName());
     prepHiveConfAndData();
     setStorabaseBasedAuthorizationInHiveConf();

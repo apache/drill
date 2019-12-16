@@ -28,8 +28,6 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.runner.Description;
 
-import static org.junit.Assume.assumeTrue;
-
 /**
  * Base class for Hive test. Takes care of generating and adding Hive test plugin before tests and deleting the
  * plugin after tests.
@@ -67,7 +65,7 @@ public class HiveTestBase extends PlanTestBase {
 
   @BeforeClass
   public static void setUp() {
-    assumeTrue("Skipping tests since Hive supports only JDK 8.", HiveTestUtilities.supportedJavaVersion());
+    HiveClusterTest.checkJavaVersion();
     HIVE_TEST_FIXTURE.getPluginManager().addHivePluginTo(bits);
   }
 

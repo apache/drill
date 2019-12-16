@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.calcite.schema.Schema.TableType;
+import org.apache.drill.exec.hive.HiveClusterTest;
 import org.apache.drill.exec.impersonation.BaseTestImpersonation;
 import org.apache.drill.exec.store.hive.HiveStoragePluginConfig;
 import org.apache.drill.test.TestBuilder;
@@ -34,6 +35,7 @@ import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.ql.Driver;
 import org.apache.hadoop.hive.shims.ShimLoader;
+import org.junit.BeforeClass;
 
 import static org.apache.drill.exec.hive.HiveTestUtilities.createDirWithPosixPermissions;
 import static org.apache.drill.exec.hive.HiveTestUtilities.executeQuery;
@@ -61,6 +63,11 @@ public class BaseTestHiveImpersonation extends BaseTestImpersonation {
   protected static final String partitionStudentDef = "CREATE TABLE %s.%s" +
       "(rownum INT, name STRING, gpa FLOAT, studentnum BIGINT) " +
       "partitioned by (age INT) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE";
+
+  @BeforeClass
+  public static void setUp() {
+    HiveClusterTest.checkJavaVersion();
+  }
 
   protected static void prepHiveConfAndData() throws Exception {
     hiveConf = new HiveConf();

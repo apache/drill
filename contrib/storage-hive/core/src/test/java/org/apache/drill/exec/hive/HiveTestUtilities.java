@@ -130,9 +130,9 @@ public class HiveTestUtilities {
 
   /**
    * Current Hive version doesn't support JDK 9+.
-   * Checks whether used supported for Hive Java version.
+   * Checks if current version is supported by Hive.
    *
-   * @return {@code true} if used supported for Hive Java version, {@code false} otherwise
+   * @return {@code true} if current version is supported by Hive, {@code false} otherwise
    */
   public static boolean supportedJavaVersion() {
     return System.getProperty("java.version").startsWith("1.8");
