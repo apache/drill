@@ -406,8 +406,19 @@ public class PcapBatchReader implements ManagedReader<FileSchemaNegotiator> {
     srcMacAddressWriter.setString(packet.getEthernetSource());
     dstMacAddressWriter.setString(packet.getEthernetDestination());
 
-    dstIPWriter.setString(packet.getDst_ip().getHostAddress());
-    srcIPWriter.setString(packet.getSrc_ip().getHostAddress());
+    String destinationIp = packet.getDestinationIpAddressString();
+    if (destinationIp == null) {
+      dstIPWriter.setNull();
+    } else {
+      dstIPWriter.setString(destinationIp);
+    }
+
+    String sourceIp = packet.getSourceIpAddressString();
+    if (sourceIp == null) {
+      srcIPWriter.setNull();
+    } else {
+      srcIPWriter.setString(sourceIp);
+    }
     srcPortWriter.setInt(packet.getSrc_port());
     dstPortWriter.setInt(packet.getDst_port());
     packetLengthWriter.setInt(packet.getPacketLength());

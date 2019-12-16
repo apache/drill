@@ -183,6 +183,24 @@ public class Packet implements Comparable<Packet> {
     return getIPAddress(false);
   }
 
+  public String getSourceIpAddressString() {
+    InetAddress address = getSrc_ip();
+    if (address == null) {
+      return null;
+    } else {
+      return address.getHostAddress();
+    }
+  }
+
+  public String getDestinationIpAddressString() {
+    InetAddress address = getDst_ip();
+    if (address == null) {
+      return null;
+    } else {
+      return address.getHostAddress();
+    }
+  }
+
   public String getEthernetSource() {
     return getEthernetAddress(PacketConstants.ETHER_SRC_OFFSET);
   }
