@@ -99,4 +99,20 @@ public class TestPcapEVFReader extends ClusterTest {
       .baselineValues(true, 16L)
       .go();
   }
+
+  @Test
+  public void testArpPcapFile() throws Exception {
+    String sql = "SELECT src_ip, dst_ip FROM cp.`store/pcap/arpWithNullIP.pcap` WHERE src_port=1";
+    testBuilder()
+      .sqlQuery(sql)
+      .ordered()
+      .baselineColumns("src_ip", "dst_ip")
+      .baselineValues((String)null, (String)null)
+      .baselineValues((String)null, (String)null)
+      .baselineValues((String)null, (String)null)
+      .baselineValues((String)null, (String)null)
+      .baselineValues((String)null, (String)null)
+      .baselineValues((String)null, (String)null)
+      .go();
+  }
 }
