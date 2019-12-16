@@ -100,8 +100,7 @@ public class BasicTablesTransformer {
           partitions.add(PartitionMetadata.builder().metadataUnit(unit).build());
           break;
         default:
-          // Throw an error?
-          break;
+          throw new IllegalStateException(metadataType.name());
       }
     }
     return new MetadataHolder(tables, segments, files, rowGroups, partitions);

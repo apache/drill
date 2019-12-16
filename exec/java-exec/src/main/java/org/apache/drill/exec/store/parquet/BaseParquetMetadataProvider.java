@@ -486,7 +486,6 @@ public abstract class BaseParquetMetadataProvider implements ParquetMetadataProv
       if (entries.isEmpty() || !collectMetadata) {
         return Collections.emptyMap();
       }
-      @SuppressWarnings("unused")
       boolean addRowGroups = false;
       if (rowGroups == null) {
         rowGroups = LinkedListMultimap.create();

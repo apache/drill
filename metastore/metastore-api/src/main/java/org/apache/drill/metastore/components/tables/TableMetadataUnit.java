@@ -512,8 +512,7 @@ public class TableMetadataUnit {
               partitionColumns.add(name);
               break;
             default:
-              // Throw an error?
-              break;
+              throw new IllegalStateException(scope.name());
           }
         }
 

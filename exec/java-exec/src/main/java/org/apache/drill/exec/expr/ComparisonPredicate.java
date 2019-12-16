@@ -88,11 +88,11 @@ public class ComparisonPredicate<C extends Comparable<C>> extends LogicalExpress
   @Override
   @SuppressWarnings("unchecked")
   public RowsMatch matches(StatisticsProvider<C> evaluator) {
-    ColumnStatistics<BigInteger> leftStat = (ColumnStatistics<BigInteger>) left.accept(evaluator, null);
+    ColumnStatistics<C> leftStat = (ColumnStatistics<C>) left.accept(evaluator, null);
     if (IsPredicate.isNullOrEmpty(leftStat)) {
       return RowsMatch.SOME;
     }
-    ColumnStatistics<BigInteger> rightStat = (ColumnStatistics<BigInteger>) right.accept(evaluator, null);
+    ColumnStatistics<C> rightStat = (ColumnStatistics<C>) right.accept(evaluator, null);
     if (IsPredicate.isNullOrEmpty(rightStat)) {
       return RowsMatch.SOME;
     }
@@ -112,12 +112,14 @@ public class ComparisonPredicate<C extends Comparable<C>> extends LogicalExpress
       int leftScale = left.getMajorType().getScale();
       int rightScale = right.getMajorType().getScale();
       if (leftScale > rightScale) {
-        rightStat = adjustDecimalStatistics(rightStat, leftScale - rightScale);
+        rightStat = (ColumnStatistics<C>) adjustDecimalStatistics(
+            (ColumnStatistics<BigInteger>) rightStat, leftScale - rightScale);
       } else if (leftScale < rightScale) {
-        leftStat = adjustDecimalStatistics(leftStat, rightScale - leftScale);
+        leftStat = (ColumnStatistics<C>) adjustDecimalStatistics(
+            (ColumnStatistics<BigInteger>) leftStat, rightScale - leftScale);
       }
     }
-    return predicate.apply((ColumnStatistics<C>) leftStat, (ColumnStatistics<C>) rightStat);
+    return predicate.apply(leftStat, rightStat);
   }
 
   /**
