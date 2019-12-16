@@ -84,15 +84,21 @@ public class HyperReaderBuilder extends ReaderBuilder {
         INSTANCE.buildContainerChildren(container, schema));
   }
 
-  public static RowSetReaderImpl build(BatchAccessor batch) {
+  /**
+   * Build a hyper-batch reader given a batch accessor.
+   *
+   * @param batch wrapper which provides the container and SV4
+   * @return a row set reader for the hyper-batch
+   * @throws SchemaChangeException if the individual batches have
+   * inconsistent schemas (say, a column in batch 1 is an INT, but in
+   * batch 2 it is a VARCHAR)
+   */
+
+  public static RowSetReaderImpl build(BatchAccessor batch) throws SchemaChangeException {
     VectorContainer container = batch.container();
-    try {
-      return build(container,
-          new HyperSchemaInference().infer(container),
-          batch.selectionVector4());
-    } catch (SchemaChangeException e) {
-      throw new UnsupportedOperationException(e);
-    }
+    return build(container,
+        new HyperSchemaInference().infer(container),
+        batch.selectionVector4());
   }
 
   /**

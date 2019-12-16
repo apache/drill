@@ -18,6 +18,7 @@
 package org.apache.drill.exec.physical.resultSet.model;
 
 import org.apache.drill.common.types.TypeProtos.DataMode;
+import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.physical.impl.protocol.BatchAccessor;
 import org.apache.drill.exec.physical.resultSet.model.hyper.HyperReaderBuilder;
 import org.apache.drill.exec.physical.resultSet.model.single.SimpleReaderBuilder;
@@ -34,7 +35,19 @@ public abstract class ReaderBuilder {
 
   public static RowSetReaderImpl buildReader(BatchAccessor batch) {
     if (batch.schema().getSelectionVectorMode() == SelectionVectorMode.FOUR_BYTE) {
-      return HyperReaderBuilder.build(batch);
+      try {
+        return HyperReaderBuilder.build(batch);
+      } catch (SchemaChangeException e) {
+
+        // The caller is responsible for ensuring that the hyper-batch
+        // has a consistent schema. If it is possible that the schema is
+        // inconsistent, then call the build() method directory and
+        // "do the right thing", which is pretty much to fail, as a
+        // hyper-batch is a very awkward place to discover an inconsistent
+        // schema.
+
+        throw new IllegalStateException("Hyper-batch contains an inconsistent schema", e);
+      }
     } else {
       return SimpleReaderBuilder.build(batch);
     }
