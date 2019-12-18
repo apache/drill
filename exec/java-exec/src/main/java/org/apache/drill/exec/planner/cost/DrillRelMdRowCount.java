@@ -18,12 +18,9 @@
 package org.apache.drill.exec.planner.cost;
 
 import java.io.IOException;
-import org.apache.calcite.rel.SingleRel;
 import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.core.Join;
-import org.apache.calcite.rel.core.Project;
-import org.apache.calcite.rel.core.Sort;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.core.Union;
 import org.apache.calcite.rel.metadata.ReflectiveRelMetadataProvider;
@@ -59,7 +56,7 @@ public class DrillRelMdRowCount extends RelMdRowCount{
           ((AggPrelBase) rel).getOperatorPhase() == AggPrelBase.OperatorPhase.PHASE_1of2) {
       // Phase 1 Aggregate would return rows in the range [NDV, input_rows]. Hence, use the
       // existing estimate of 1/10 * input_rows
-        Double rowCount = mq.getRowCount(rel.getInput()) / 10;
+        double rowCount = mq.getRowCount(rel.getInput()) / 10;
         Double ndv = mq.getDistinctRowCount(rel.getInput(), groupKey, null);
         // Use max of NDV and input_rows/10
         if (ndv != null) {
@@ -79,21 +76,6 @@ public class DrillRelMdRowCount extends RelMdRowCount{
 
   @Override
   public Double getRowCount(Union rel, RelMetadataQuery mq) {
-    return rel.estimateRowCount(mq);
-  }
-
-  @Override
-  public Double getRowCount(Project rel, RelMetadataQuery mq) {
-    return rel.estimateRowCount(mq);
-  }
-
-  @Override
-  public Double getRowCount(Sort rel, RelMetadataQuery mq) {
-    return rel.estimateRowCount(mq);
-  }
-
-  @Override
-  public Double getRowCount(SingleRel rel, RelMetadataQuery mq) {
     return rel.estimateRowCount(mq);
   }
 
