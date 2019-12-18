@@ -37,10 +37,7 @@ import org.junit.experimental.categories.Category;
 
 import java.math.BigDecimal;
 
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 
 /**
  * JDBC storage plugin tests against MySQL.
@@ -195,11 +192,12 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
   @Test
   public void pushdownJoin() throws Exception {
     String query = "select x.person_id from (select person_id from mysql.`drill_mysql_test`.person) x "
-            + "join (select person_id from mysql.`drill_mysql_test`.person) y on x.person_id = y.person_id ";
-    String plan = queryBuilder().sql(query).explainText();
-
-    assertThat("Query plan shouldn't contain Join operator",
-        plan, not(containsString("Join")));
+            + "join (select person_id from mysql.`drill_mysql_test`.person) y on x.person_id = y.person_id";
+    queryBuilder()
+        .sql(query)
+        .planMatcher()
+        .exclude("Join")
+        .match();
   }
 
   @Test
@@ -211,12 +209,11 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
             "ON e.first_name = s.first_name " +
             "WHERE e.last_name > 'hello'";
 
-    String plan = queryBuilder().sql(query).explainText();
-
-    assertThat("Query plan shouldn't contain Join operator",
-        plan, not(containsString("Join")));
-    assertThat("Query plan shouldn't contain Filter operator",
-        plan, not(containsString("Filter")));
+    queryBuilder()
+        .sql(query)
+        .planMatcher()
+        .exclude("Join", "Filter")
+        .match();
   }
 
   @Test
@@ -340,5 +337,16 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
         .baselineColumns("table_type")
         .baselineValuesForSingleColumn("SYSTEM VIEW", "TABLE", "VIEW")
         .go();
+  }
+
+  @Test
+  public void testLimitPushDown() throws Exception {
+    String query = "select person_id from mysql.`drill_mysql_test`.person limit 10";
+    queryBuilder()
+        .sql(query)
+        .planMatcher()
+        .include("Jdbc\\(.*LIMIT 10")
+        .exclude("Limit\\(")
+        .match();
   }
 }
