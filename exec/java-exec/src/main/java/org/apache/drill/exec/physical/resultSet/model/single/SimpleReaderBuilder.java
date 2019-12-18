@@ -57,8 +57,7 @@ import org.apache.drill.exec.vector.complex.UnionVector;
  * <p>
  * Derived classes handle the details of the various kinds of readers.
  * Today there is a single subclass that builds (test-time)
- * {@link org.apache.drill.exec.physical.rowSet.RowSet} objects.
- * The idea, however, is that we may eventually
+ * {@link RowSet} objects. The idea, however, is that we may eventually
  * want to create a "result set reader" for use in internal operators,
  * in parallel to the "result set loader". The result set reader would
  * handle a stream of incoming batches. The extant RowSet class handles
