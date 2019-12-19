@@ -3,9 +3,9 @@ title: "Connect a Data Source Introduction"
 date: 2018-11-02
 parent: "Connect a Data Source"
 ---
-A storage plugin is a software module for connecting Drill to data sources. A storage plugin typically optimizes execution of Drill queries, provides the location of the data, and configures the workspace and file formats for reading data. Several storage plugins are installed with Drill that you can configure to suit your environment. Through a storage plugin, Drill connects to a data source, such as a database, a file on a local or distributed file system, or a Hive metastore. 
+A storage plugin is a software module for connecting Drill to data sources. A storage plugin typically optimizes execution of Drill queries, provides the location of the data, and configures the workspace and file formats for reading data. Several storage plugins are installed with Drill. You can configure to storage plugins to suit your environment. Through a storage plugin, Drill connects to a data source, such as a database, a file on a local or distributed file system, or a Hive metastore. You can modify the default configuration of a storage plugin and give the new configuration a unique name. 
 
-You can modify the default configuration X of a storage plugin and give the new configuration a unique name Y. This document refers to Y as a different storage plugin, although it is actually just a reconfiguration of original interface. When you execute a query, Drill gets the storage plugin configuration name in one of several ways:
+When you execute a query, Drill gets the storage plugin configuration name in one of several ways:
 
 * The FROM clause of the query can identify the plugin to use.
 * The USE <plugin name> command can precede the query.
