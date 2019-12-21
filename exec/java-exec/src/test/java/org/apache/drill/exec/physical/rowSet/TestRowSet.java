@@ -23,7 +23,6 @@ import static org.apache.drill.test.rowSet.RowSetUtilities.objArray;
 import static org.apache.drill.test.rowSet.RowSetUtilities.singleObjArray;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -44,6 +43,7 @@ import org.apache.drill.exec.vector.VectorOverflowException;
 import org.apache.drill.exec.vector.accessor.ArrayReader;
 import org.apache.drill.exec.vector.accessor.ArrayWriter;
 import org.apache.drill.exec.vector.accessor.DictWriter;
+import org.apache.drill.exec.vector.accessor.KeyAccessor;
 import org.apache.drill.exec.vector.accessor.ObjectType;
 import org.apache.drill.exec.vector.accessor.ScalarReader;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
@@ -675,18 +675,25 @@ public class TestRowSet extends SubOperatorTest {
     assertFalse(dictReader.isNull()); // dict itself is not null
 
     dictReader.getAsString();
-    assertEquals("b", dictReader.getValueReader(12).scalar().getString());
-    assertEquals("a", dictReader.getValueReader(11).scalar().getString());
+
+    final KeyAccessor keyAccessor = dictReader.keyAccessor();
+    final ScalarReader valueReader = dictReader.valueReader().scalar();
+
+    assertTrue(keyAccessor.find(12));
+    assertEquals("b", valueReader.getString());
+    assertTrue(keyAccessor.find(11));
+    assertEquals("a", valueReader.getString());
 
     // compare entire dict
     Map<Object, Object> map = map(11, "a", 12, "b");
     assertEquals(map, dictReader.getObject());
 
-    // Row 2: get Object representation of value directly
+    // Row 2
 
     assertTrue(reader.next());
-    assertEquals("c", dictReader.get(21));
-    assertTrue(dictReader.getValueReader(22).isNull()); // the dict does not contain an entry with the key
+    assertFalse(keyAccessor.find(22)); // the dict does not contain an entry with the key
+    assertTrue(keyAccessor.find(21));
+    assertEquals("c", valueReader.getString());
 
     map = map(21, "c");
     assertEquals(map, dictReader.getObject());
@@ -695,8 +702,11 @@ public class TestRowSet extends SubOperatorTest {
 
     assertTrue(reader.next());
 
-    assertEquals("d", dictReader.get(31));
-    assertEquals("e", dictReader.get(32));
+    assertTrue(keyAccessor.find(31));
+    assertEquals("d", valueReader.getString());
+    assertFalse(keyAccessor.find(33));
+    assertTrue(keyAccessor.find(32));
+    assertEquals("e", valueReader.getString());
 
     map = map(31, "d", 32, "e");
     assertEquals(map, dictReader.getObject());
@@ -812,12 +822,15 @@ public class TestRowSet extends SubOperatorTest {
     assertEquals(ValueType.INTEGER, dictReader.keyColumnType());
     assertEquals(ObjectType.TUPLE, dictReader.valueColumnType());
 
+    final KeyAccessor keyAccessor = dictReader.keyAccessor();
+    final TupleReader valueReader = dictReader.valueReader().tuple();
+
     // Row 1: get value reader with its position set to entry corresponding to a key
 
     assertTrue(reader.next());
     assertFalse(dictReader.isNull()); // dict itself is not null
 
-    TupleReader valueReader = dictReader.getValueReader(12).tuple();
+    assertTrue(keyAccessor.find(12));
     assertEquals(11, valueReader.scalar("a").getInt());
     assertEquals(BigDecimal.valueOf(2.0), valueReader.scalar("b").getDecimal());
 
@@ -829,11 +842,12 @@ public class TestRowSet extends SubOperatorTest {
     );
     assertEquals(map, dictReader.getObject());
 
-    // Row 2: get value by key directly
+    // Row 2
 
     assertTrue(reader.next());
-    assertEquals(Arrays.asList(20, BigDecimal.valueOf(3.0)), dictReader.get(21));
-    assertTrue(dictReader.getValueReader(22).isNull());
+    assertFalse(keyAccessor.find(222));
+    assertTrue(keyAccessor.find(21));
+    assertEquals(Arrays.asList(20, BigDecimal.valueOf(3.0)), valueReader.getObject());
 
     map = map(21, Arrays.asList(20, BigDecimal.valueOf(3.0)));
     assertEquals(map, dictReader.getObject());
@@ -842,17 +856,16 @@ public class TestRowSet extends SubOperatorTest {
 
     assertTrue(reader.next());
 
-    valueReader = dictReader.getValueReader(32).tuple();
+    assertTrue(keyAccessor.find(32));
     assertFalse(valueReader.isNull());
     assertEquals(31, valueReader.scalar("a").getInt());
     assertEquals(BigDecimal.valueOf(5.0), valueReader.scalar("b").getDecimal());
 
-    valueReader = dictReader.getValueReader(31).tuple();
+    assertTrue(keyAccessor.find(31));
     assertEquals(30, valueReader.scalar("a").getInt());
     assertEquals(BigDecimal.valueOf(4.0), valueReader.scalar("b").getDecimal());
 
-    valueReader = dictReader.getValueReader(404).tuple();
-    assertTrue(valueReader.isNull());
+    assertFalse(keyAccessor.find(404));
 
     map = map(
         31, Arrays.asList(30, BigDecimal.valueOf(4.0)),
@@ -888,7 +901,7 @@ public class TestRowSet extends SubOperatorTest {
     final String dictName = "d";
     final TupleMetadata schema = new SchemaBuilder()
         .add("id", MinorType.INT)
-        .addDictArray(dictName, MinorType.INT)
+        .addDictArray(dictName, MinorType.FLOAT4)
           .value(MinorType.VARCHAR)
           .resumeSchema()
         .buildSchema();
@@ -906,27 +919,27 @@ public class TestRowSet extends SubOperatorTest {
 
     DictWriter dictWriter = dictArrayWriter.dict();
 
-    assertEquals(ValueType.INTEGER, dictWriter.keyType());
+    assertEquals(ValueType.DOUBLE, dictWriter.keyType());
     assertEquals(ObjectType.SCALAR, dictWriter.valueType());
 
     final ScalarWriter keyWriter = dictWriter.keyWriter();
     final ScalarWriter valueWriter = dictWriter.valueWriter().scalar();
-    assertEquals(ValueType.INTEGER, keyWriter.valueType());
+    assertEquals(ValueType.DOUBLE, keyWriter.valueType());
     assertEquals(ValueType.STRING, valueWriter.valueType());
 
     // Write data
 
     idWriter.setInt(1);
 
-    keyWriter.setInt(1);
+    keyWriter.setDouble(1);
     valueWriter.setString("a");
     dictWriter.save(); // advance to next entry position
-    keyWriter.setInt(2);
+    keyWriter.setDouble(2);
     valueWriter.setString("b");
     dictWriter.save();
     dictArrayWriter.save(); // advance to next array position
 
-    keyWriter.setInt(3);
+    keyWriter.setDouble(3);
     valueWriter.setString("c");
     dictWriter.save();
     dictArrayWriter.save();
@@ -935,10 +948,10 @@ public class TestRowSet extends SubOperatorTest {
 
     idWriter.setInt(2);
 
-    keyWriter.setInt(11);
+    keyWriter.setDouble(11);
     valueWriter.setString("d");
     dictWriter.save();
-    keyWriter.setInt(12);
+    keyWriter.setDouble(12);
     valueWriter.setString("e");
     dictWriter.save();
     dictArrayWriter.save();
@@ -947,30 +960,30 @@ public class TestRowSet extends SubOperatorTest {
 
     idWriter.setInt(3);
 
-    keyWriter.setInt(21);
+    keyWriter.setDouble(21);
     valueWriter.setString("f");
     dictWriter.save();
-    keyWriter.setInt(22);
+    keyWriter.setDouble(22);
     valueWriter.setString("g");
     dictWriter.save();
-    keyWriter.setInt(23);
+    keyWriter.setDouble(23);
     valueWriter.setString("h");
     dictWriter.save();
     dictArrayWriter.save();
 
-    keyWriter.setInt(24);
+    keyWriter.setDouble(24);
     valueWriter.setString("i");
     dictWriter.save();
-    keyWriter.setInt(25);
+    keyWriter.setDouble(25);
     valueWriter.setString("j");
     dictWriter.save();
-    keyWriter.setInt(26);
+    keyWriter.setDouble(26.5);
     valueWriter.setString("k");
     dictWriter.save();
-    keyWriter.setInt(27);
+    keyWriter.setDouble(27);
     valueWriter.setString("l");
     dictWriter.save();
-    keyWriter.setInt(28);
+    keyWriter.setDouble(28);
     valueWriter.setString("m");
     dictWriter.save();
     dictArrayWriter.save();
@@ -990,8 +1003,11 @@ public class TestRowSet extends SubOperatorTest {
     assertEquals(ObjectType.ARRAY, dictArrayReader.entryType());
 
     final DictReader dictReader = dictArrayReader.entry().dict();
-    assertEquals(ValueType.INTEGER, dictReader.keyColumnType());
+    assertEquals(ValueType.DOUBLE, dictReader.keyColumnType());
     assertEquals(ObjectType.SCALAR, dictReader.valueColumnType());
+
+    final KeyAccessor keyAccessor = dictReader.keyAccessor();
+    final ScalarReader valueReader = dictReader.valueReader().scalar();
 
     // Row 1
 
@@ -1000,44 +1016,58 @@ public class TestRowSet extends SubOperatorTest {
 
     assertTrue(dictArrayReader.next());
     assertFalse(dictArrayReader.isNull()); // first dict is not null
-    assertEquals("b", dictReader.getValueReader(2).getObject());
-    assertEquals("a", dictReader.getValueReader(1).getObject());
-    assertTrue(dictReader.getValueReader(404).isNull()); // no entry for given key
+
+    assertTrue(keyAccessor.find(2.0f));
+    assertEquals("b", valueReader.getObject());
+    assertTrue(keyAccessor.find(1.0f));
+    assertEquals("a", valueReader.getObject());
+    assertFalse(keyAccessor.find(1.1f)); // no entry for given key
 
     assertTrue(dictArrayReader.next());
-    assertEquals("c", dictReader.getValueReader(3).getObject());
-    assertTrue(dictReader.getValueReader(1).isNull());
 
-    assertEquals(Arrays.asList(map(1, "a", 2, "b"), map(3, "c")), dictArrayReader.getObject());
+    assertTrue(keyAccessor.find(3.0f));
+    assertEquals("c", valueReader.getObject());
+    assertFalse(keyAccessor.find(1.0f));
+
+    assertEquals(Arrays.asList(map(1.0, "a", 2.0, "b"), map(3.0, "c")), dictArrayReader.getObject());
 
     // Row 2
 
     assertTrue(reader.next());
 
     assertTrue(dictArrayReader.next());
-    assertEquals("d", dictReader.getValueReader(11).scalar().getString());
-    assertTrue(dictReader.getValueReader(1).scalar().isNull());
-    assertEquals("e", dictReader.getValueReader(12).scalar().getString());
+
+    assertTrue(keyAccessor.find(11.0f));
+    assertEquals("d", valueReader.getString());
+    assertFalse(keyAccessor.find(1.0f));
+    assertTrue(keyAccessor.find(12.0f));
+    assertEquals("e", valueReader.getString());
 
     // Row 3: use explicit positioning
 
     assertTrue(reader.next());
     dictArrayReader.setPosn(1);
-    assertEquals("i", dictReader.get(24));
-    assertEquals("k", dictReader.get(26));
-    assertEquals("m", dictReader.get(28));
-    assertNull(dictReader.get(35));
-    assertEquals("l", dictReader.get(27));
+    assertTrue(keyAccessor.find(24.0f));
+    assertEquals("i", valueReader.getString());
+    assertTrue(keyAccessor.find(26.5f));
+    assertEquals("k", valueReader.getString());
+    assertTrue(keyAccessor.find(28.0f));
+    assertEquals("m", valueReader.getString());
+    assertFalse(keyAccessor.find(35.0f));
+    assertTrue(keyAccessor.find(27.0f));
+    assertEquals("l", valueReader.getString());
 
-    Map<Object, Object> element1 = map(24, "i", 25, "j", 26, "k", 27, "l", 28, "m");
+    Map<Object, Object> element1 = map(24.0, "i", 25.0, "j", 26.5, "k", 27.0, "l", 28.0, "m");
     assertEquals(element1, dictReader.getObject());
 
     dictArrayReader.setPosn(0);
-    assertEquals("h", dictReader.getValueReader(23).getObject());
-    assertEquals("f", dictReader.getValueReader(21).getObject());
-    assertNull(dictReader.getValueReader(24).getObject());
+    assertTrue(keyAccessor.find(23.0f));
+    assertEquals("h", valueReader.getObject());
+    assertTrue(keyAccessor.find(21.0f));
+    assertEquals("f", valueReader.getObject());
+    assertFalse(keyAccessor.find(23.05f));
 
-    Map<Object, Object> element0 = map(21, "f", 22, "g", 23, "h");
+    Map<Object, Object> element0 = map(21.0, "f", 22.0, "g", 23.0, "h");
     assertEquals(element0, dictReader.getObject());
 
     assertEquals(Arrays.asList(element0, element1), dictArrayReader.getObject());
@@ -1050,11 +1080,11 @@ public class TestRowSet extends SubOperatorTest {
     assertEquals(3, vector.getAccessor().getValueCount());
 
     final SingleRowSet expected = fixture.rowSetBuilder(schema)
-        .addRow(1, objArray(map(1, "a", 2, "b"), map(3, "c")))
-        .addRow(2, objArray(singleObjArray(map(11, "d", 12, "e"))))
+        .addRow(1, objArray(map(1.0f, "a", 2.0f, "b"), map(3.0f, "c")))
+        .addRow(2, objArray(singleObjArray(map(11.0f, "d", 12.0f, "e"))))
         .addRow(3, objArray(
-            map(21, "f", 22, "g", 23, "h"),
-            map(24, "i", 25, "j", 26, "k", 27, "l", 28, "m")))
+            map(21.0f, "f", 22.0f, "g", 23.0f, "h"),
+            map(24.0f, "i", 25.0f, "j", 26.5f, "k", 27.0f, "l", 28.0f, "m")))
         .build();
     RowSetUtilities.verify(expected, actual);
   }

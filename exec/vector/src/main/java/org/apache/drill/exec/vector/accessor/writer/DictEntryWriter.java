@@ -70,7 +70,6 @@ public class DictEntryWriter extends AbstractTupleWriter {
   public static DictEntryObjectWriter buildDictEntryWriter(ColumnMetadata schema,
                                                            List<AbstractObjectWriter> keyValueWriters,
                                                            DictVector vector) {
-    assert keyValueWriters.size() == 2;
     DictEntryWriter dictEntryWriter;
     if (vector != null) {
       dictEntryWriter = new DictEntryWriter(schema, keyValueWriters);

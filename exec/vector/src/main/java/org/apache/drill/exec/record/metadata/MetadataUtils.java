@@ -140,6 +140,10 @@ public class MetadataUtils {
     return new DictColumnMetadata(field, fromFields(field.getChildren()));
   }
 
+  public static DictColumnMetadata newDict(MaterializedField field, TupleSchema schema) {
+    return new DictColumnMetadata(field.getName(), field.getDataMode(), schema);
+  }
+
   public static DictColumnMetadata newDict(String name, TupleMetadata schema) {
     return new DictColumnMetadata(name, DataMode.REQUIRED, (TupleSchema) schema);
   }

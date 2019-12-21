@@ -18,6 +18,7 @@
 package org.apache.drill.exec.physical.resultSet.impl;
 
 import static org.apache.drill.test.rowSet.RowSetUtilities.intArray;
+import static org.apache.drill.test.rowSet.RowSetUtilities.map;
 import static org.apache.drill.test.rowSet.RowSetUtilities.mapValue;
 import static org.apache.drill.test.rowSet.RowSetUtilities.objArray;
 import static org.junit.Assert.assertEquals;
@@ -42,6 +43,7 @@ import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.accessor.DictWriter;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.exec.physical.rowSet.RowSet;
@@ -594,5 +596,103 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
     } catch (UserException e) {
       assertTrue(e.getErrorType() == ErrorType.VALIDATION);
     }
+  }
+
+  @Test
+  public void testDictProjection() {
+
+    final String dictName1 = "d1";
+    final String dictName2 = "d2";
+
+    // There is no test for case when obtaining a value by key as this is not as simple projection
+    // as it is in case of map - there is a need to find a value corresponding to a key
+    // (the functionality is currently present in DictReader) and final column schema should be
+    // changed from dict structure with `key` and `value` children to a simple `value`.
+    List<SchemaPath> selection = RowSetTestUtils.projectList(dictName1);
+    TupleMetadata schema = new SchemaBuilder()
+        .addDict(dictName1, MinorType.VARCHAR)
+          .value(MinorType.INT)
+          .resumeSchema()
+        .addDict(dictName2, MinorType.VARCHAR)
+          .value(MinorType.INT)
+          .resumeSchema()
+        .buildSchema();
+    ResultSetOptions options = new OptionBuilder()
+        .setProjection(ProjectionSetFactory.build(selection))
+        .setSchema(schema)
+        .build();
+    ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
+    RowSetLoader rootWriter = rsLoader.writer();
+
+    // Verify the projected columns
+
+    TupleMetadata actualSchema = rootWriter.tupleSchema();
+    ColumnMetadata dictMetadata1 = actualSchema.metadata(dictName1);
+    DictWriter dictWriter1 = rootWriter.dict(dictName1);
+    assertTrue(dictMetadata1.isDict());
+    assertTrue(dictWriter1.isProjected());
+    assertEquals(2, dictMetadata1.tupleSchema().size());
+    assertTrue(dictWriter1.keyWriter().isProjected());
+    assertTrue(dictWriter1.valueWriter().isProjected());
+
+    ColumnMetadata dictMetadata2 = actualSchema.metadata(dictName2);
+    DictWriter dictWriter2 = rootWriter.dict(dictName2);
+    assertTrue(dictMetadata2.isDict());
+    assertFalse(dictWriter2.isProjected());
+    assertEquals(2, dictMetadata2.tupleSchema().size());
+    assertFalse(dictWriter2.keyWriter().isProjected());
+    assertFalse(dictWriter2.valueWriter().isProjected());
+
+    // Write a couple of rows.
+
+    rsLoader.startBatch();
+    rootWriter.start();
+    rootWriter
+        .addRow(map( "a", 1, "b", 2), map( "c", 3, "d", 4))
+        .addRow(map("a", 11, "b", 12), map("c", 13, "d", 14));
+
+    // Verify. Only the projected columns appear in the result set.
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .addDict(dictName1, MinorType.VARCHAR)
+          .value(MinorType.INT)
+          .resumeSchema()
+        .buildSchema();
+    SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
+        .addRow(map( "a", 1, "b", 2))
+        .addRow(map("a", 11, "b", 12))
+        .build();
+    RowSetUtilities.verify(expected, fixture.wrap(rsLoader.harvest()));
+    rsLoader.close();
+  }
+
+  @Test
+  public void testDictStringKeyAccess() {
+    List<SchemaPath> selection = RowSetTestUtils.projectList("col.a"); // the same as col['a'], but number is expected in brackets ([])
+    TupleMetadata schema = new SchemaBuilder()
+        .addDict("col", MinorType.VARCHAR)
+          .value(MinorType.INT)
+          .resumeSchema()
+        .buildSchema();
+    ResultSetOptions options = new OptionBuilder()
+        .setProjection(ProjectionSetFactory.build(selection))
+        .setSchema(schema)
+        .build();
+    new ResultSetLoaderImpl(fixture.allocator(), options); // no validation error
+  }
+
+  @Test
+  public void testDictNumericKeyAccess() {
+    List<SchemaPath> selection = RowSetTestUtils.projectList("col[0]");
+    TupleMetadata schema = new SchemaBuilder()
+        .addDict("col", MinorType.INT)
+        .value(MinorType.VARCHAR)
+        .resumeSchema()
+        .buildSchema();
+    ResultSetOptions options = new OptionBuilder()
+        .setProjection(ProjectionSetFactory.build(selection))
+        .setSchema(schema)
+        .build();
+    new ResultSetLoaderImpl(fixture.allocator(), options); // no validation error
   }
 }

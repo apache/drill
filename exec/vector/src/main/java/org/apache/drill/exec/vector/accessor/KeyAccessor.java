@@ -17,20 +17,24 @@
  */
 package org.apache.drill.exec.vector.accessor;
 
-public interface DictReader extends ArrayReader {
+import org.joda.time.Instant;
+import org.joda.time.LocalDate;
+import org.joda.time.LocalTime;
+import org.joda.time.Period;
 
-  KeyAccessor keyAccessor();
+import java.math.BigDecimal;
 
-  ObjectReader valueReader();
+public interface KeyAccessor {
 
-  /**
-   * Number of entries in the dict.
-   * @return the number of entries
-   */
-  @Override
-  int size();
-
-  ValueType keyColumnType();
-
-  ObjectType valueColumnType();
+  boolean find(boolean key);
+  boolean find(int key);
+  boolean find(BigDecimal key);
+  boolean find(double key);
+  boolean find(long key);
+  boolean find(String key);
+  boolean find(byte[] key);
+  boolean find(Period key);
+  boolean find(LocalDate key);
+  boolean find(LocalTime key);
+  boolean find(Instant key);
 }

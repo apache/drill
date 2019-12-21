@@ -29,18 +29,6 @@ import org.apache.drill.exec.vector.accessor.ColumnReaderIndex;
 
 public class MapReader extends AbstractTupleReader {
 
-  public static class MapObjectReader extends TupleObjectReader<MapReader> {
-
-    public MapObjectReader(MapReader mapReader) {
-      super(mapReader);
-    }
-
-    @Override
-    public AbstractObjectReader createNullReader() {
-      return new MapObjectReader(tupleReader.getNullReader());
-    }
-  }
-
   protected final ColumnMetadata schema;
 
   /**
@@ -68,7 +56,7 @@ public class MapReader extends AbstractTupleReader {
       AbstractObjectReader[] readers) {
     MapReader mapReader = new MapReader(schema, mapAccessor, readers);
     mapReader.bindNullState(NullStateReaders.REQUIRED_STATE_READER);
-    return new MapObjectReader(mapReader);
+    return new TupleObjectReader(mapReader);
   }
 
   public static AbstractObjectReader build(ColumnMetadata schema,
@@ -91,47 +79,4 @@ public class MapReader extends AbstractTupleReader {
 
   @Override
   public TupleMetadata tupleSchema() { return schema.tupleSchema(); }
-
-  @Override
-  protected MapReader getNullReader() {
-    AbstractObjectReader[] nullReaders = new AbstractObjectReader[readers.length];
-    for (int i = 0; i < readers.length; i++) {
-      nullReaders[i] = readers[i].createNullReader();
-    }
-    return new NullMapReader(schema, nullReaders);
-  }
-
-  private static class NullMapReader extends MapReader {
-
-    private NullMapReader(ColumnMetadata metadata, AbstractObjectReader[] readers) {
-      super(metadata, readers);
-      this.nullStateReader = NullStateReaders.NULL_STATE_READER;
-    }
-
-    @Override
-    public void bindIndex(ColumnReaderIndex index) {
-    }
-
-    @Override
-    public void bindNullState(NullStateReader nullStateReader) {
-    }
-
-    @Override
-    public void bindBuffer() {
-    }
-
-    @Override
-    public void reposition() {
-    }
-
-    @Override
-    public Object getObject() {
-      return null;
-    }
-
-    @Override
-    public String getAsString() {
-      return "null";
-    }
-  }
 }

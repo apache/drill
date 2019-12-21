@@ -102,5 +102,6 @@ public interface ProjectionSet {
 
   void setErrorContext(CustomErrorContext errorContext);
   ColumnReadProjection readProjection(ColumnMetadata col);
+  ColumnReadProjection readDictProjection(ColumnMetadata col);
   boolean isEmpty();
 }

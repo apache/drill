@@ -223,9 +223,9 @@ public class DictBuilder implements SchemaContainer {
     return (SchemaBuilder) parent;
   }
 
-  public DictBuilder resumeMap() {
+  public MapBuilder resumeMap() {
     build();
-    return (DictBuilder) parent;
+    return (MapBuilder) parent;
   }
 
   public RepeatedListBuilder resumeList() {

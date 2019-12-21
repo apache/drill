@@ -27,6 +27,7 @@ import org.apache.drill.exec.physical.resultSet.project.RequestedTuple.Requested
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.vector.complex.DictVector;
 
 /**
  * Perform a schema projection for the case of an explicit list of
@@ -78,6 +79,18 @@ public class ExplicitSchemaProjection extends ReaderLevelProjection {
     }
   }
 
+  private void resolveDictValueColumn(ResolvedTuple outputTuple,
+      RequestedColumn inputCol, TupleMetadata readerSchema) {
+    int tableColIndex = readerSchema.index(DictVector.FIELD_VALUE_NAME);
+    if (tableColIndex == -1) {
+      resolveNullColumn(outputTuple, inputCol);
+    } else {
+      resolveTableColumn(outputTuple, inputCol,
+          readerSchema.metadata(tableColIndex),
+          tableColIndex);
+    }
+  }
+
   private void resolveTableColumn(ResolvedTuple outputTuple,
       RequestedColumn requestedCol,
       ColumnMetadata column, int sourceIndex) {
@@ -88,7 +101,11 @@ public class ExplicitSchemaProjection extends ReaderLevelProjection {
     // that x is a map.
 
     if (requestedCol.isTuple()) {
-      resolveMap(outputTuple, requestedCol, column, sourceIndex);
+      if (column.isDict()) {
+        resolveDict(outputTuple, requestedCol, column, sourceIndex);
+      } else {
+        resolveMap(outputTuple, requestedCol, column, sourceIndex);
+      }
     }
 
     // Is the requested column implied to be an array?
@@ -158,10 +175,46 @@ public class ExplicitSchemaProjection extends ReaderLevelProjection {
     }
   }
 
+  private void resolveDict(ResolvedTuple outputTuple,
+                          RequestedColumn requestedCol, ColumnMetadata column,
+                          int sourceIndex) {
+
+    // If the actual column isn't a dict, then the request is invalid.
+
+    if (!column.isDict()) {
+      throw UserException
+          .validationError()
+          .message("Project list implies a dict column, but actual column is not a dict")
+          .addContext("Projected column:", requestedCol.fullName())
+          .addContext("Table column:", column.name())
+          .addContext("Type:", column.type().name())
+          .addContext(scanProj.context())
+          .build(logger);
+    }
+
+    ResolvedDictColumn dictColumn = new ResolvedDictColumn(outputTuple, column.schema(), sourceIndex);
+    resolveDictTuple(dictColumn.members(), requestedCol.mapProjection(), column.tupleSchema());
+
+    // The same as for Map
+    if (dictColumn.members().isSimpleProjection()) {
+      outputTuple.removeChild(dictColumn.members());
+      projectTableColumn(outputTuple, requestedCol, column, sourceIndex);
+    } else {
+      outputTuple.add(dictColumn);
+    }
+  }
+
   private void resolveTuple(ResolvedTuple mapTuple,
       RequestedTuple requestedTuple, TupleMetadata mapSchema) {
     for (RequestedColumn col : requestedTuple.projections()) {
       resolveColumn(mapTuple, col, mapSchema);
+    }
+  }
+
+  private void resolveDictTuple(ResolvedTuple mapTuple,
+      RequestedTuple requestedTuple, TupleMetadata mapSchema) {
+    for (RequestedColumn col : requestedTuple.projections()) {
+      resolveDictValueColumn(mapTuple, col, mapSchema);
     }
   }
 

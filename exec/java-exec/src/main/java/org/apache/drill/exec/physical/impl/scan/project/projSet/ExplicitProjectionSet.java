@@ -21,11 +21,13 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.physical.resultSet.ProjectionSet;
 import org.apache.drill.exec.physical.resultSet.project.ProjectionType;
+import org.apache.drill.exec.physical.resultSet.project.RequestedColumnImpl;
 import org.apache.drill.exec.physical.resultSet.project.RequestedTuple;
 import org.apache.drill.exec.physical.resultSet.project.RequestedTuple.RequestedColumn;
 import org.apache.drill.exec.physical.resultSet.project.RequestedTuple.TupleProjectionType;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.vector.accessor.convert.ColumnConversionFactory;
+import org.apache.drill.exec.vector.complex.DictVector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,16 +53,20 @@ public class ExplicitProjectionSet extends AbstractProjectionSet {
     if (reqCol == null) {
       return new UnprojectedReadColumn(col);
     }
+
+    return getReadProjection(col, reqCol);
+  }
+
+  private ColumnReadProjection getReadProjection(ColumnMetadata col, RequestedColumn reqCol) {
     ColumnMetadata outputSchema = outputSchema(col);
     validateProjection(reqCol, outputSchema == null ? col : outputSchema);
-    if (!col.isMap()) {
+    if (!col.isMap() && !col.isDict()) {
 
       // Non-map column.
 
       ColumnConversionFactory conv = conversion(col, outputSchema);
       return new ProjectedReadColumn(col, reqCol, outputSchema, conv);
-    }
-    else {
+    } else {
 
       // Maps are tuples. Create a tuple projection and wrap it in
       // a column projection.
@@ -84,7 +90,11 @@ public class ExplicitProjectionSet extends AbstractProjectionSet {
 
         mapProjection = new ExplicitProjectionSet(reqCol.mapProjection(), childConverter);
       }
-      return new ProjectedMapColumn(col, reqCol, outputSchema, mapProjection);
+      if (col.isMap()) {
+        return new ProjectedMapColumn(col, reqCol, outputSchema, mapProjection);
+      } else {
+        return new ProjectedDictColumn(col, reqCol, outputSchema, mapProjection);
+      }
     }
   }
 
@@ -107,6 +117,22 @@ public class ExplicitProjectionSet extends AbstractProjectionSet {
       .addContext("Column type:", Types.getSqlTypeName(readCol.majorType()))
       .addContext(errorContext)
       .build(logger);
+  }
+
+  @Override
+  public ColumnReadProjection readDictProjection(ColumnMetadata col) {
+    // Unlike for a MAP, requestedProj contains a key value, rather than nested field's name:
+    // create DICT's members somewhat artificially
+
+    assert DictVector.fieldNames.contains(col.name());
+    if (col.name().equals(DictVector.FIELD_KEY_NAME)) {
+      // This field is considered not projected but its
+      // vector and writer will be instantiated later.
+      return new UnprojectedReadColumn(col);
+    }
+
+    RequestedColumn reqCol = new RequestedColumnImpl(requestedProj, col.name()); // this is the 'value' column
+    return getReadProjection(col, reqCol);
   }
 
   @Override

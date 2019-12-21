@@ -766,6 +766,23 @@ public class AvroFormatTest extends BaseTestQuery {
   }
 
   @Test
+  public void testMapSchemaArrayValueGetByKeyElementByIndex() throws Exception {
+    String sql = "select map_array_value['key1'][3] element from dfs.`%s`";
+
+    TestBuilder testBuilder = testBuilder()
+        .sqlQuery(sql, generateMapSchema().getFileName())
+        .unOrdered()
+        .baselineColumns("element");
+
+    for (int i = 0; i < RECORD_COUNT; i++) {
+      double val = (double) (i + 1) * 3;
+      testBuilder.baselineValues(val);
+    }
+
+    testBuilder.go();
+  }
+
+  @Test
   public void testMapSchemaValueInFilter() throws Exception {
     String sql = "select map_field['key1'] val from dfs.`%s` where map_field['key1'] < %d";
 

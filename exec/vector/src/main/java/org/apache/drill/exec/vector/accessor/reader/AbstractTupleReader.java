@@ -37,11 +37,11 @@ import org.apache.drill.exec.vector.accessor.VariantReader;
 
 public abstract class AbstractTupleReader implements TupleReader, ReaderEvents {
 
-  public static class TupleObjectReader<T extends AbstractTupleReader> extends AbstractObjectReader {
+  public static class TupleObjectReader extends AbstractObjectReader {
 
-    protected final T tupleReader;
+    protected final AbstractTupleReader tupleReader;
 
-    public TupleObjectReader(T tupleReader) {
+    public TupleObjectReader(AbstractTupleReader tupleReader) {
       this.tupleReader = tupleReader;
     }
 
@@ -65,11 +65,6 @@ public abstract class AbstractTupleReader implements TupleReader, ReaderEvents {
 
     @Override
     public ColumnReader reader() { return tupleReader; }
-
-    @Override
-    protected AbstractObjectReader createNullReader() {
-      return new TupleObjectReader<>(tupleReader.getNullReader());
-    }
   }
 
   protected final AbstractObjectReader[] readers;
@@ -212,9 +207,5 @@ public abstract class AbstractTupleReader implements TupleReader, ReaderEvents {
     }
     buf.append("}");
     return buf.toString();
-  }
-
-  protected AbstractTupleReader getNullReader() {
-    throw new UnsupportedOperationException("Null reader is not supported for " + type());
   }
 }

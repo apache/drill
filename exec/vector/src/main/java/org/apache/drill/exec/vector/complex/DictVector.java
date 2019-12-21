@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
@@ -256,7 +257,12 @@ public final class DictVector extends AbstractRepeatedMapVector {
 
   @Override
   MajorType getLastPathType() {
-    return valueType;
+    if (Types.isRepeated(valueType)) {
+      return valueType;
+    }
+    return valueType.toBuilder()
+        .setMode(TypeProtos.DataMode.OPTIONAL)
+        .build();
   }
 
   @Override

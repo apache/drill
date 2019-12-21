@@ -75,6 +75,7 @@ public interface RequestedTuple {
     boolean isSimple();
     boolean isArray();
     boolean isTuple();
+    boolean isDict();
     String fullName();
     RequestedTuple mapProjection();
     boolean nameEquals(String target);

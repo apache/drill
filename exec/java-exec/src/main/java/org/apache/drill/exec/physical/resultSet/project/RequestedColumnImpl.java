@@ -73,6 +73,11 @@ public class RequestedColumnImpl implements RequestedColumn {
   @Override
   public boolean isTuple() { return type.isTuple(); }
 
+  @Override
+  public boolean isDict() {
+    return type.isDict();
+  }
+
   public RequestedTuple asTuple() {
     if (members == null) {
       members = new RequestedTupleImpl(this);
@@ -177,6 +182,10 @@ public class RequestedColumnImpl implements RequestedColumn {
       return "map column";
     case TUPLE_ARRAY:
       return "repeated map";
+    case DICT:
+      return "dict column";
+    case DICT_ARRAY:
+      return "repeated dict column";
     case WILDCARD:
       return "wildcard";
     default:
