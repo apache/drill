@@ -454,8 +454,8 @@ public class UserClient
       Thread.currentThread().setContextClassLoader(oldThreadCtxtCL);
 
       startSaslHandshake(connectionHandler, saslProperties, ugi, factory, RpcType.SASL_MESSAGE);
-    } catch (final IOException e) {
-      logger.error("Failed while doing setup for starting SASL handshake for connection", connection.getName());
+    } catch (IOException e) {
+      logger.error("Failed while doing setup for starting SASL handshake for connection {}", connection.getName());
       final Exception ex = new RpcException(String.format("Failed to initiate authentication for connection %s",
         connection.getName()), e);
       connectionHandler.connectionFailed(RpcConnectionHandler.FailureType.AUTHENTICATION, ex);

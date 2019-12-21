@@ -25,6 +25,8 @@ import javassist.CtMethod;
 import javassist.CtNewConstructor;
 import javassist.CtNewMethod;
 import javassist.Modifier;
+import javassist.scopedpool.ScopedClassPoolRepository;
+import javassist.scopedpool.ScopedClassPoolRepositoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,7 +56,7 @@ public class ProtobufPatcher {
    */
   private static void patchByteString() {
     try {
-      ClassPool classPool = ClassPool.getDefault();
+      ClassPool classPool = getClassPool();
       CtClass byteString = classPool.get("com.google.protobuf.ByteString");
       removeFinal(byteString.getDeclaredMethod("toString"));
       removeFinal(byteString.getDeclaredMethod("hashCode"));
@@ -92,7 +94,7 @@ public class ProtobufPatcher {
    */
   private static void patchGeneratedMessageLite() {
     try {
-      ClassPool classPool = ClassPool.getDefault();
+      ClassPool classPool = getClassPool();
       CtClass generatedMessageLite = classPool.get("com.google.protobuf.GeneratedMessageLite");
       removeFinal(generatedMessageLite.getDeclaredMethod("getParserForType"));
       removeFinal(generatedMessageLite.getDeclaredMethod("isInitialized"));
@@ -102,7 +104,8 @@ public class ProtobufPatcher {
       generatedMessageLite.addMethod(CtNewMethod.make("protected void makeExtensionsImmutable() { }", generatedMessageLite));
 
       // A constructor with this signature was removed. Adding it back.
-      generatedMessageLite.addConstructor(CtNewConstructor.make("protected GeneratedMessageLite(com.google.protobuf.GeneratedMessageLite.Builder builder) { }", generatedMessageLite));
+      String className = "com.google.protobuf.GeneratedMessageLite.Builder";
+      generatedMessageLite.addConstructor(CtNewConstructor.make("protected GeneratedMessageLite(" + className + " builder) { }", generatedMessageLite));
 
       // This single method was added instead of several abstract methods.
       // MapR-DB client doesn't use it, but it was added in overridden equals() method.
@@ -111,7 +114,8 @@ public class ProtobufPatcher {
           classPool.get("com.google.protobuf.GeneratedMessageLite$MethodToInvoke"),
           classPool.get("java.lang.Object"),
           classPool.get("java.lang.Object")});
-      addImplementation(dynamicMethod, "if ($1.equals(com.google.protobuf.GeneratedMessageLite.MethodToInvoke.GET_DEFAULT_INSTANCE)) {" +
+      className = "com.google.protobuf.GeneratedMessageLite.MethodToInvoke";
+      addImplementation(dynamicMethod, "if ($1.equals(" + className + ".GET_DEFAULT_INSTANCE)) {" +
           "  return this;" +
           "} else {" +
           "  return null;" +
@@ -130,7 +134,7 @@ public class ProtobufPatcher {
    */
   private static void patchGeneratedMessageLiteBuilder() {
     try {
-      ClassPool classPool = ClassPool.getDefault();
+      ClassPool classPool = getClassPool();
       CtClass builder = classPool.get("com.google.protobuf.GeneratedMessageLite$Builder");
       removeFinal(builder.getDeclaredMethod("isInitialized"));
       removeFinal(builder.getDeclaredMethod("clear"));
@@ -182,5 +186,18 @@ public class ProtobufPatcher {
     ctMethod.setBody(methodBody);
     int modifiers = Modifier.clear(ctMethod.getModifiers(), Modifier.ABSTRACT);
     ctMethod.setModifiers(modifiers);
+  }
+
+  /**
+   * Returns {@link javassist.scopedpool.ScopedClassPool} instance which uses the same class loader
+   * which was used for loading current class.
+   *
+   * @return {@link javassist.scopedpool.ScopedClassPool} instance
+   */
+  private static ClassPool getClassPool() {
+    ScopedClassPoolRepository classPoolRepository = ScopedClassPoolRepositoryImpl.getInstance();
+    // sets prune flag to false to avoid freezing and pruning classes right after obtaining CtClass instance
+    classPoolRepository.setPrune(false);
+    return classPoolRepository.createScopedClassPool(ProtobufPatcher.class.getClassLoader(), null);
   }
 }
