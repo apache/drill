@@ -77,7 +77,7 @@ public class ConnectionMultiListener<T extends EnumLite, CC extends ClientConnec
   private class ConnectionHandler implements GenericFutureListener<ChannelFuture> {
 
     @Override
-    public void operationComplete(ChannelFuture future) throws Exception {
+    public void operationComplete(ChannelFuture future) {
       boolean isInterrupted = false;
 
       // We want to wait for at least 120 secs when interrupts occur. Establishing a connection fails/succeeds quickly,
@@ -131,7 +131,7 @@ public class ConnectionMultiListener<T extends EnumLite, CC extends ClientConnec
 
   private class SSLConnectionHandler implements GenericFutureListener<Future<Channel>> {
     @Override
-    public void operationComplete(Future<Channel> future) throws Exception {
+    public void operationComplete(Future<Channel> future) {
       // send the handshake
       parent.send(handshakeSendHandler, handshakeValue, true);
     }
@@ -165,9 +165,9 @@ public class ConnectionMultiListener<T extends EnumLite, CC extends ClientConnec
       } catch (NonTransientRpcException ex) {
         logger.error("Failure while validating client and server sasl compatibility", ex);
         connectionListener.connectionFailed(RpcConnectionHandler.FailureType.AUTHENTICATION, ex);
-      } catch (Exception ex) {
-        logger.error("Failure while validating handshake", ex);
-        connectionListener.connectionFailed(RpcConnectionHandler.FailureType.HANDSHAKE_VALIDATION, ex);
+      } catch (Throwable t) {
+        logger.error("Failure while validating handshake", t);
+        connectionListener.connectionFailed(RpcConnectionHandler.FailureType.HANDSHAKE_VALIDATION, t);
       }
     }
 

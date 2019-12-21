@@ -342,7 +342,6 @@
               <exclude>commons-beanutils:commons-beanutils-core:jar:*</exclude>
               <exclude>commons-beanutils:commons-beanutils:jar:*</exclude>
               <exclude>io.netty:netty-tcnative:jar:*</exclude>
-              <exclude>com.fasterxml.woodstox:woodstox-core:jar:*</exclude>
               <exclude>com.google.code.findbugs:jsr305:*</exclude>
               <exclude>com.esri.geometry:esri-geometry-api:*</exclude>
               <exclude>fr.bmartel:pcapngdecoder:*</exclude>
@@ -409,7 +408,7 @@
             <relocation><pattern>org.apache.xpath.</pattern><shadedPattern>oadd.org.apache.xpath.</shadedPattern></relocation>
             <relocation><pattern>org.apache.zookeeper.</pattern><shadedPattern>oadd.org.apache.zookeeper.</shadedPattern></relocation>
             <relocation><pattern>org.apache.hadoop.</pattern><shadedPattern>oadd.org.apache.hadoop.</shadedPattern></relocation>
-            <relocation><pattern>com.fasterxml.woodstox.</pattern><shadedPattern>oadd.com.fasterxml.woodstox.</shadedPattern></relocation>
+            <relocation><pattern>com.ctc.wstx.</pattern><shadedPattern>oadd.com.ctc.wstx.</shadedPattern></relocation>
           </relocations>
           <transformers>
             <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">

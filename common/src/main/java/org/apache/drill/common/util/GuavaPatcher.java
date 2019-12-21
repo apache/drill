@@ -29,6 +29,8 @@ import javassist.CtClass;
 import javassist.CtConstructor;
 import javassist.CtMethod;
 import javassist.CtNewMethod;
+import javassist.scopedpool.ScopedClassPoolRepository;
+import javassist.scopedpool.ScopedClassPoolRepositoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +53,7 @@ public class GuavaPatcher {
    */
   private static void patchStopwatch() {
     try {
-      ClassPool cp = ClassPool.getDefault();
+      ClassPool cp = getClassPool();
       CtClass cc = cp.get("com.google.common.base.Stopwatch");
 
       // Expose the constructor for Stopwatch for old libraries who use the pattern new Stopwatch().start().
@@ -77,7 +79,7 @@ public class GuavaPatcher {
 
   private static void patchCloseables() {
     try {
-      ClassPool cp = ClassPool.getDefault();
+      ClassPool cp = getClassPool();
       CtClass cc = cp.get("com.google.common.io.Closeables");
 
       // Add back the Closeables.closeQuietly() method for old consumers.
@@ -100,7 +102,7 @@ public class GuavaPatcher {
    */
   private static void patchPreconditions() {
     try {
-      ClassPool cp = ClassPool.getDefault();
+      ClassPool cp = getClassPool();
       CtClass cc = cp.get("com.google.common.base.Preconditions");
 
       // Javassist does not support varargs, generate methods with varying number of arguments
@@ -191,5 +193,18 @@ public class GuavaPatcher {
     } catch (Exception e) {
       logger.warn("Unable to patch Guava classes.", e);
     }
+  }
+
+  /**
+   * Returns {@link javassist.scopedpool.ScopedClassPool} instance which uses the same class loader
+   * which was used for loading current class.
+   *
+   * @return {@link javassist.scopedpool.ScopedClassPool} instance
+   */
+  private static ClassPool getClassPool() {
+    ScopedClassPoolRepository classPoolRepository = ScopedClassPoolRepositoryImpl.getInstance();
+    // sets prune flag to false to avoid freezing and pruning classes right after obtaining CtClass instance
+    classPoolRepository.setPrune(false);
+    return classPoolRepository.createScopedClassPool(GuavaPatcher.class.getClassLoader(), null);
   }
 }
