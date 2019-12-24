@@ -55,6 +55,7 @@
     <module>storage-kudu</module>
     <module>storage-opentsdb</module>
     <module>storage-http</module>
+    <module>storage-elastic</module>
   </modules>
 
 </project>
