@@ -18,7 +18,7 @@
 
 package org.apache.drill.exec.store.elasticsearch;
 
-import org.elasticsearch.hadoop.rest.RestService.PartitionDefinition;
+import org.elasticsearch.hadoop.rest.PartitionDefinition;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

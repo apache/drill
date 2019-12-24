@@ -51,8 +51,8 @@ import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.hadoop.cfg.PropertiesSettings;
 import org.elasticsearch.hadoop.cfg.Settings;
+import org.elasticsearch.hadoop.rest.PartitionDefinition;
 import org.elasticsearch.hadoop.rest.RestService;
-import org.elasticsearch.hadoop.rest.RestService.PartitionDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -171,7 +171,11 @@ public class ElasticSearchGroupScan extends AbstractGroupScan {
       for (PartitionDefinition part : partitions) {
 
         // 这个region所处于的地址
-        regionsToScan.put(part, new ServerHost(part.nodeIp));
+        for (String ip : part.getLocations()) {
+          logger.debug("Adding ip: {}", ip);
+          regionsToScan.put(part, new ServerHost(ip));
+        }
+
         scanSizeInBytes += statsCalculator.getRegionSizeInBytes(part);
 
       }

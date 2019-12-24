@@ -18,13 +18,12 @@
 
 package org.apache.drill.exec.store.elasticsearch;
 
+import com.drew.lang.annotations.NotNull;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 
 import org.elasticsearch.client.Response;
-
-import javax.validation.constraints.NotNull;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -42,7 +41,7 @@ public class JsonHelper {
      * @param path path to child fields separated by '.' each.
      * @return a node that points to the path required, or a {@link com.fasterxml.jackson.databind.node.MissingNode}
      */
-    public static JsonNode getPath(@NotNull JsonNode node, @NotNull  String path) {
+    public static JsonNode getPath(@NotNull JsonNode node, @NotNull String path) {
         Preconditions.checkArgument(node != null);
         Preconditions.checkArgument(path != null);
         Iterator<String> fieldIterator = Arrays.asList(path.split("\\.")).iterator();
@@ -55,7 +54,7 @@ public class JsonHelper {
         return node;
     }
 
-    public static JsonNode readRespondeContentAsJsonTree(ObjectMapper mapper, Response response) throws IOException {
+    public static JsonNode readResponseContentAsJsonTree(ObjectMapper mapper, Response response) throws IOException {
         Preconditions.checkArgument(mapper != null);
         Preconditions.checkArgument(response != null);
         Preconditions.checkArgument(response.getEntity() != null);
@@ -64,7 +63,7 @@ public class JsonHelper {
         return mapper.readTree(response.getEntity().getContent());
     }
     
-    public static JsonNode readRespondeContentAsJsonTree(ObjectMapper mapper, InputStream in) throws IOException {
+    public static JsonNode readResponseContentAsJsonTree(ObjectMapper mapper, InputStream in) throws IOException {
         Preconditions.checkArgument(mapper != null);
         // 读取数据
         return mapper.readTree(in);

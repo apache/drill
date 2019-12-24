@@ -41,6 +41,11 @@
     </encoder>
   </appender>
 
+  <logger name="org.apache.drill.exec.store.elasticsearch" additivity="false">
+    <level value="debug" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
   <logger name="org.apache.drill" additivity="false">
     <level value="debug" />
     <appender-ref ref="FILE" />
@@ -51,10 +56,6 @@
     <appender-ref ref="SOCKET" />
   </logger>
 
-  <logger name="org.apache.drill.exec.store.elasticsearch" additivity="false">
-    <level value="debug" />
-    <appender-ref ref="STDOUT" />
-  </logger>
 
   <logger name="org.elasticsearch.client" additivity="false">
     <level value="debug" />

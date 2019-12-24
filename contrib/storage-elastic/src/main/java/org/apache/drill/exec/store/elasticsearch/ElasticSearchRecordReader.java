@@ -124,7 +124,7 @@ public class ElasticSearchRecordReader extends AbstractRecordReader {
 
 	@Override
 	public int next() {
-		if (this.cursor == null) {
+		if (cursor == null) {
 			logger.info("Initializing cursor");
 				// so in here ,it should put query fields in here.
 //				this.cursor = ElasticSearchCursor.scroll(this.plugin.getClient(), this.plugin.getObjectMapper(),
@@ -134,7 +134,11 @@ public class ElasticSearchRecordReader extends AbstractRecordReader {
 
 				InitializationUtils.setValueReaderIfNotSet(settings, JdkValueReader.class, commonlog);
 				PartitionReader partitionReader = RestService.createReader(settings, scanSpec.getPartitionDefinition(), commonlog);
-				this.cursor = partitionReader.scrollQuery();
+				try {
+					cursor = (Iterator) partitionReader.scrollQuery();
+				} catch (Exception e) {
+					logger.debug("Error initializing cursor: {}", e.getMessage());
+				}
 				
 			 
 		}

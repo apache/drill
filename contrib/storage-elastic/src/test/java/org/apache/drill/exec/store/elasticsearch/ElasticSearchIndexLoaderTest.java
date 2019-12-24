@@ -45,8 +45,8 @@ public class ElasticSearchIndexLoaderTest {
         ObjectMapper objectMapper = new ObjectMapper();
         this.restClient = Mockito.mock(RestClient.class);
         this.plugin = Mockito.mock(ElasticSearchStoragePlugin.class);
-        Mockito.when(this.plugin.getClient()).thenReturn(this.restClient);
-        Mockito.when(this.plugin.getObjectMapper()).thenReturn(objectMapper);
+        Mockito.when(plugin.getClient()).thenReturn(this.restClient);
+        Mockito.when(plugin.getObjectMapper()).thenReturn(objectMapper);
     }
 
     @Test

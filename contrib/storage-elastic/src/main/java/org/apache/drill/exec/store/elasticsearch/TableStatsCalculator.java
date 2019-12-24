@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.elasticsearch.hadoop.rest.RestService.PartitionDefinition;
+import org.elasticsearch.hadoop.rest.PartitionDefinition;
 
 /**
  * Computes size of each region for given table.
