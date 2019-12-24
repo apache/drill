@@ -1,6 +1,0 @@
-Manifest-Version: 1.0
-Built-By: hakim
-Build-Jdk: 1.7.0_71
-Created-By: Apache Maven
-Archiver-Version: Plexus Archiver
-
