@@ -1,0 +1,9 @@
+{
+  "storage":{
+    elasticsearch : {
+      type: "elasticsearch",
+      enabled: false,
+      hostsAndPorts: "http://localhost:9200"
+    }
+  }
+}
