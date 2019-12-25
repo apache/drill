@@ -109,7 +109,7 @@ For definitions of other URL components, see [Using the JDBC URL for a Random Dr
 
 ## Using the Drill Driver Class Name
 
-The class name for the JDBC driver is [org.apache.drill.jdbc.Driver]({{site.baseurl}}/api/1.2/jdbc/). For details, see the Apache Drill JDBC Driver version 1.2.0 [Javadoc]({{site.baseurl}}/api/1.2/jdbc/).  
+The class name for the JDBC driver is [org.apache.drill.jdbc.Driver]({{site.baseurl}}/apidocs/org/apache/drill/jdbc/Driver.html). For details, see the Apache Drill JDBC Driver [Javadoc]({{site.baseurl}}/apidocs/org/apache/drill/jdbc/package-summary.html).  
 
 Starting in Drill 1.16, the DrillStatement interface supports the setMaxRows method. The setMaxRows method sets a limit on the number of rows returned for a result set. The limit set is applied automatically at runtime. By default, there is no limit on the number of rows returned. See [Setting an Auto Limit on the Number of Rows Returned for Result Sets](https://drill.apache.org/docs/planning-and-execution-options/#setting-an-auto-limit-on-the-number-of-rows-returned-for-result-sets).  
  
