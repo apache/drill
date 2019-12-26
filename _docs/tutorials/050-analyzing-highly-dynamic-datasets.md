@@ -1,6 +1,6 @@
 ---
 title: "Analyzing Highly Dynamic Datasets"
-date: 2019-05-02
+date: 2019-12-26
 parent: "Tutorials"
 ---
 
@@ -33,7 +33,7 @@ The element names that you see in the `checkin_info` are unknown upfront and can
 Step 1: First download Drill, if you have not yet done so, onto your machine
 
     http://drill.apache.org/download/
-    tar -xvf apache-drill-1.16.0.tar
+    tar -xvf apache-drill-1.17.0.tar
 
 Install Drill locally on your desktop (embedded mode). You don’t need Hadoop.
 

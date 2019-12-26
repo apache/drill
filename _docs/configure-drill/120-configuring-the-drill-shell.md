@@ -1,11 +1,13 @@
 ---
 title: "Configuring the Drill Shell"
-date: 2019-05-02
+date: 2019-12-26
 parent: "Configure Drill"
 ---  
-Drill uses SQLLine as the Drill shell. SQLLine is a pure-Java console-based utility for connecting to relational databases and running SQL commands. 
+Drill uses SQLLine as the Drill shell. SQLLine is a pure-Java console-based utility for connecting to relational databases and running SQL commands.  
 
-Starting in Drill 1.16, Drill uses SQLLine 1.7. This upgrade changes the default Drill prompt to `apache drill>`. If you switch to a specific schema, for example `dfs.tmp`, the prompt includes the current schema, as shown:  
+Starting in Drill 1.17, Drill uses SQLLine 1.9. 
+
+Drill 1.16 uses SQLLine 1.7, which changes the default Drill prompt to `apache drill>`. If you switch to a specific schema, for example `dfs.tmp`, the prompt includes the current schema, as shown:  
   
 	use dfs.tmp;
 	+------+-------------------------------------+

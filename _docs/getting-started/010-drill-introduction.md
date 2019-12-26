@@ -1,6 +1,6 @@
 ---
 title: "Drill Introduction"
-date: 2019-05-02
+date: 2019-12-26
 parent: "Getting Started"
 ---
 Drill is an Apache open-source SQL query engine for Big Data exploration.
@@ -9,6 +9,36 @@ the semi-structured and rapidly evolving data coming from modern Big Data
 applications, while still providing the familiarity and ecosystem of ANSI SQL,
 the industry-standard query language. Drill provides plug-and-play integration
 with existing Apache Hive and Apache HBase deployments.   
+
+## What's New in Apache Drill 1.17  
+* <a href='https://issues.apache.org/jira/browse/DRILL-6540'>DRILL-6540</a> - Upgrade to HADOOP-3.0 libraries. The hadoop-winutils version that worked for previous releases does not work with Drill 1.17 and later. Use the hadoop-winutils version provided with Drill 1.17 or use custom hadoop-winutils built for Hadoop 3.2.0.  
+* <a href='https://issues.apache.org/jira/browse/DRILL-6739'>DRILL-6739</a> - Update Kafka libs to 2.0.0+ version
+* <a href='https://issues.apache.org/jira/browse/DRILL-7401'>DRILL-7401</a> - Upgrade to Sqlline 1.9 
+* <a href='https://issues.apache.org/jira/browse/DRILL-7200'>DRILL-7200</a> - Update Calcite to 1.19.0 / 1.20.0
+* <a href='https://issues.apache.org/jira/browse/DRILL-5674'>DRILL-5674</a> - Support for .zip compression
+* <a href='https://issues.apache.org/jira/browse/DRILL-6835'>DRILL-6835</a> - Schema provision using File / Table Function
+* <a href='https://issues.apache.org/jira/browse/DRILL-7337'>DRILL-7337</a> - Support for vararg UDFs 
+* <a href='https://issues.apache.org/jira/browse/DRILL-7096'>DRILL-7096</a> - Develop vector for canonical Map<K,V>
+* <a href='https://issues.apache.org/jira/browse/DRILL-7343'>DRILL-7343</a> - User-Agent UDFs added
+
+Hive complex types support:
+* <a href='https://issues.apache.org/jira/browse/DRILL-7251'>DRILL-7251</a> - Read Hive array without nulls
+* <a href='https://issues.apache.org/jira/browse/DRILL-7252'>DRILL-7252</a> - Read Hive map using Dict<K,V> vector
+* <a href='https://issues.apache.org/jira/browse/DRILL-7253'>DRILL-7253</a> - Read Hive struct without nulls
+* <a href='https://issues.apache.org/jira/browse/DRILL-7254'>DRILL-7254</a> - Read Hive union without nulls
+* <a href='https://issues.apache.org/jira/browse/DRILL-7268'>DRILL-7268</a> - Read Hive array with parquet native reader
+
+New format plugins support:
+* <a href='https://issues.apache.org/jira/browse/DRILL-4303'>DRILL-4303</a> - ESRI Shapefile (shp) format plugin
+* <a href='https://issues.apache.org/jira/browse/DRILL-7177'>DRILL-7177</a> - Format Plugin for Excel Files
+* <a href='https://issues.apache.org/jira/browse/DRILL-6096'>DRILL-6096</a> - Provide mechanisms to specify field delimiters and quoted text for TextRecordWriter   
+* Parquet format improvements, including runtime row group pruning (<a href='https://issues.apache.org/jira/browse/DRILL-7062'>DRILL-7062</a>), empty parquet creation (<a href='https://issues.apache.org/jira/browse/DRILL-7156'>DRILL-7156</a>), reading (<a href='https://issues.apache.org/jira/browse/DRILL-4517'>DRILL-4517</a>) support, and more.
+
+Metastore support:
+* <a href='https://issues.apache.org/jira/browse/DRILL-7272'>DRILL-7272</a> - Implement Drill Iceberg Metastore plugin
+* <a href='https://issues.apache.org/jira/browse/DRILL-7273'>DRILL-7273</a> - Create operator for handling metadata
+* <a href='https://issues.apache.org/jira/browse/DRILL-7357'>DRILL-7357</a> - Expose Drill Metastore data through INFORMATION_SCHEMA    
+
 
 ## What's New in Apache Drill 1.16  
 - [ANALYZE TABLE statement]({{site.baseurl}}/docs/analyze-table/) to computes statistics on Parquet data ([DRILL-1328](https://issues.apache.org/jira/browse/DRILL-1328))   
