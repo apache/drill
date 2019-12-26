@@ -70,9 +70,9 @@ $(document).ready(function() {
   <div class="news">News:
   </div>
   {% assign post = site.categories.blog[0] %}
-  <div><a href="https://www.meetup.com/Bay-Area-Apache-Drill-User-Group/events/260840985/">{% if post.news_title %}{{ post.news_title }}{% else %}{{ post.title }}{% endif %}</a><br/><span>({% include authors.html %})</span></div>
-  {% assign post = site.categories.blog[1] %}
   <div><a href="{{ post.url | prepend: site.baseurl }}">{% if post.news_title %}{{ post.news_title }}{% else %}{{ post.title }}{% endif %}</a><br/><span>({% include authors.html %})</span></div>
+  {% assign post = site.categories.blog[1] %}
+  <div><a href="https://www.meetup.com/Bay-Area-Apache-Drill-User-Group/events/260840985/">{% if post.news_title %}{{ post.news_title }}{% else %}{{ post.title }}{% endif %}</a><br/><span>({% include authors.html %})</span></div>
 </div>
 <div class="mw introWrapper">
   <table class="intro" cellpadding="0" cellspacing="0" align="center">
