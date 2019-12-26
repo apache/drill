@@ -19,22 +19,27 @@ with existing Apache Hive and Apache HBase deployments.
 * <a href='https://issues.apache.org/jira/browse/DRILL-6835'>DRILL-6835</a> - Schema provision using File / Table Function
 * <a href='https://issues.apache.org/jira/browse/DRILL-7337'>DRILL-7337</a> - Support for vararg UDFs 
 * <a href='https://issues.apache.org/jira/browse/DRILL-7096'>DRILL-7096</a> - Develop vector for canonical Map<K,V>
-* <a href='https://issues.apache.org/jira/browse/DRILL-7343'>DRILL-7343</a> - User-Agent UDFs added
+* <a href='https://issues.apache.org/jira/browse/DRILL-7343'>DRILL-7343</a> - User-Agent UDFs added  
 
-Hive complex types support:
-* <a href='https://issues.apache.org/jira/browse/DRILL-7251'>DRILL-7251</a> - Read Hive array without nulls
-* <a href='https://issues.apache.org/jira/browse/DRILL-7252'>DRILL-7252</a> - Read Hive map using Dict<K,V> vector
-* <a href='https://issues.apache.org/jira/browse/DRILL-7253'>DRILL-7253</a> - Read Hive struct without nulls
-* <a href='https://issues.apache.org/jira/browse/DRILL-7254'>DRILL-7254</a> - Read Hive union without nulls
-* <a href='https://issues.apache.org/jira/browse/DRILL-7268'>DRILL-7268</a> - Read Hive array with parquet native reader
 
-New format plugins support:
-* <a href='https://issues.apache.org/jira/browse/DRILL-4303'>DRILL-4303</a> - ESRI Shapefile (shp) format plugin
-* <a href='https://issues.apache.org/jira/browse/DRILL-7177'>DRILL-7177</a> - Format Plugin for Excel Files
-* <a href='https://issues.apache.org/jira/browse/DRILL-6096'>DRILL-6096</a> - Provide mechanisms to specify field delimiters and quoted text for TextRecordWriter   
-* Parquet format improvements, including runtime row group pruning (<a href='https://issues.apache.org/jira/browse/DRILL-7062'>DRILL-7062</a>), empty parquet creation (<a href='https://issues.apache.org/jira/browse/DRILL-7156'>DRILL-7156</a>), reading (<a href='https://issues.apache.org/jira/browse/DRILL-4517'>DRILL-4517</a>) support, and more.
+Hive complex types support:  
 
-Metastore support:
+* <a href='https://issues.apache.org/jira/browse/DRILL-7251'>DRILL-7251</a> - Read Hive array without nulls  
+* <a href='https://issues.apache.org/jira/browse/DRILL-7252'>DRILL-7252</a> - Read Hive map using Dict<K,V> vector  
+* <a href='https://issues.apache.org/jira/browse/DRILL-7253'>DRILL-7253</a> - Read Hive struct without nulls  
+* <a href='https://issues.apache.org/jira/browse/DRILL-7254'>DRILL-7254</a> - Read Hive union without nulls  
+* <a href='https://issues.apache.org/jira/browse/DRILL-7268'>DRILL-7268</a> - Read Hive array with parquet native reader  
+
+New format plugins support:  
+
+* <a href='https://issues.apache.org/jira/browse/DRILL-4303'>DRILL-4303</a> - ESRI Shapefile (shp) format plugin  
+* <a href='https://issues.apache.org/jira/browse/DRILL-7177'>DRILL-7177</a> - Format Plugin for Excel Files  
+* <a href='https://issues.apache.org/jira/browse/DRILL-6096'>DRILL-6096</a> - Provide mechanisms to specify field delimiters and quoted text for TextRecordWriter       
+* Parquet format improvements, including runtime row group pruning (<a href='https://issues.apache.org/jira/browse/DRILL-7062'>DRILL-7062</a>), empty parquet creation (<a href='https://issues.apache.org/jira/browse/DRILL-7156'>DRILL-7156</a>), reading (<a href='https://issues.apache.org/jira/browse/DRILL-4517'>DRILL-4517</a>) support, and more.  
+
+
+Metastore support:  
+
 * <a href='https://issues.apache.org/jira/browse/DRILL-7272'>DRILL-7272</a> - Implement Drill Iceberg Metastore plugin
 * <a href='https://issues.apache.org/jira/browse/DRILL-7273'>DRILL-7273</a> - Create operator for handling metadata
 * <a href='https://issues.apache.org/jira/browse/DRILL-7357'>DRILL-7357</a> - Expose Drill Metastore data through INFORMATION_SCHEMA    
