@@ -49,18 +49,41 @@ public class ElasticSearchIndexLoaderTest {
         Mockito.when(plugin.getObjectMapper()).thenReturn(objectMapper);
     }
 
+
+    /*
+    This test verifies if ES is getting aliases for search indexes.  Data is formatted as follows:
+    {
+  "collection-file-info-v00001": {
+    "aliases": {
+      "collection-file-info": {},
+      "collection-file-info-1": {}
+    }
+  },
+  "collection-file-info-v00002": {
+    "aliases": {
+      "collection-file-info-2": {},
+      "collection-file-info-3": {}
+    }
+  }
+}
+     */
+
     @Test
     public void getAliasesOk() throws Exception {
         Response mockResponse = Mockito.mock(Response.class);
         HttpEntity mockEntity = Mockito.mock(HttpEntity.class);
+        String jsonData = "{\"collection-file-info-v00001\":{\"aliases\":{\"collection-file-info\":{},\"collection-file-info-1\":{}}}," +
+          "\"collection-file-info-v00002\":{\"aliases\":{\"collection-file-info-2\":{},\"collection-file-info-3\":{}}}}";
+        System.out.println(jsonData);
         Mockito.when(mockResponse.getEntity()).thenReturn(mockEntity);
-        InputStream responseContent = IOUtils.toInputStream("{\"collection-file-info-v00001\":{\"aliases\":{\"collection-file-info\":{},\"collection-file-info-1\":{}}},\"collection-file-info-v00002\":{\"aliases\":{\"collection-file-info-2\":{},\"collection-file-info-3\":{}}}}");
+        InputStream responseContent = IOUtils.toInputStream(jsonData);
         try {
             Mockito.when(mockEntity.getContent()).thenReturn(responseContent);
             Mockito.when(restClient.performRequest("GET", "/_aliases")).thenReturn(mockResponse);
 
             ElasticSearchIndexLoader esil = new ElasticSearchIndexLoader(this.plugin);
             Collection<String> load = esil.load(ElasticSearchConstants.INDEXES);
+            System.out.println(load.toString());
             TestCase.assertEquals(4, load.size());
             TestCase.assertTrue(load.contains("collection-file-info"));
             TestCase.assertTrue(load.contains("collection-file-info-1"));

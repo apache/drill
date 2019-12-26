@@ -64,7 +64,7 @@ public class ElasticSearchCursor implements Iterator<JsonNode>, Closeable {
         // type 是子类型
         Response response = client.performRequest("POST", "/" + idxName + "/" + type + "/_search",
                 queryParams, requestBody, additionalHeaders);
-        JsonNode rootNode = JsonHelper.readRespondeContentAsJsonTree(objMapper, response);
+        JsonNode rootNode = JsonHelper.readResponseContentAsJsonTree(objMapper, response);
         // 遍历id
         JsonNode scrollIdNode = JsonHelper.getPath(rootNode, "_scroll_id");
         String scrollId;
@@ -122,7 +122,7 @@ public class ElasticSearchCursor implements Iterator<JsonNode>, Closeable {
                     Response response = this.client.performRequest("POST", "/_search/scroll", MapUtils.EMPTY_MAP,
                             new NStringEntity(this.scrollRequest, ContentType.APPLICATION_JSON), this.additionalHealders);
 
-                    JsonNode rootNode = JsonHelper.readRespondeContentAsJsonTree(objMapper, response);
+                    JsonNode rootNode = JsonHelper.readResponseContentAsJsonTree(objMapper, response);
                     JsonNode elementsNode = JsonHelper.getPath(rootNode, "hits.hits");
                     if (!elementsNode.isMissingNode() && elementsNode.isArray()) {
                         this.internalIterator = elementsNode.iterator();

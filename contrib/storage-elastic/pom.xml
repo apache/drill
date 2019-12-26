@@ -20,7 +20,7 @@
 
   <artifactId>drill-storage-elasticsearch</artifactId>
 
-  <name>contrib/elasticsearch-storage-plugin</name>
+  <name>contrib/storage-elasticsearch</name>
 
 
   <dependencies>
@@ -28,7 +28,6 @@
       <groupId>org.apache.drill.exec</groupId>
       <artifactId>drill-java-exec</artifactId>
       <version>${project.version}</version>
-      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.drill.contrib</groupId>
@@ -47,7 +46,6 @@
         </exclusion>
       </exclusions>
     </dependency>
-
     <dependency>
       <groupId>org.elasticsearch</groupId>
       <artifactId>elasticsearch-hadoop</artifactId>
@@ -70,48 +68,30 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
-
-<!--
   <build>
     <plugins>
- 
-
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-shade-plugin</artifactId>
-        <version>2.4.3</version>
+        <artifactId>maven-resources-plugin</artifactId>
         <executions>
           <execution>
-            <phase>package</phase>
+            <id>copy-java-sources</id>
+            <phase>process-sources</phase>
             <goals>
-              <goal>shade</goal>
+              <goal>copy-resources</goal>
             </goals>
             <configuration>
-              <artifactSet>
-                <!- - exclude all parent dependencies only to build fat-jar - ->
-                <excludes>
-                  <exclude>org.apache.drill.exec:drill-java-exec</exclude>
-                  <exclude>io-netty:netty-handler</exclude>
-                  <exclude>com.google.guava:guava</exclude>
-                  <exclude>org.slf4j:*</exclude>
-                  <exclude>commons-io:commons-io</exclude>
-                  <exclude>org.mockito:*</exclude>
-                  <exclude>org.xerial.snappy:*</exclude>
-                  <exclude>org.apache.kerby:*</exclude>
-                </excludes>
-              </artifactSet>
-              <!- - <minimizeJar>true</minimizeJar> - ->
-              <!- - See https://www.elastic.co/guide/en/elasticsearch/client/java-api/current/_embedding_jar_with_dependencies.html - ->
-              <transformers>
-                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
-              </transformers>
+              <outputDirectory>${basedir}/target/classes/org/apache/drill/exec/store/elasticsearch
+              </outputDirectory>
+              <resources>
+                <resource>
+                  <directory>src/main/java/org/apache/drill/exec/store/elasticsearch</directory>
+                  <filtering>true</filtering>
+                </resource>
+              </resources>
             </configuration>
           </execution>
         </executions>
       </plugin>
-      
-     
     </plugins>
   </build>
-   -->
 </project>

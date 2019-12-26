@@ -31,6 +31,8 @@ import com.google.common.cache.CacheLoader;
 import org.apache.drill.exec.store.elasticsearch.ElasticSearchStoragePlugin;
 import org.apache.drill.exec.store.elasticsearch.JsonHelper;
 import org.elasticsearch.client.Response;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -40,7 +42,7 @@ import java.util.Set;
 
 public class ElasticSearchIndexLoader extends CacheLoader<String, Collection<String>> {
 
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ElasticSearchIndexLoader.class);
+  private static final Logger logger = LoggerFactory.getLogger(ElasticSearchIndexLoader.class);
 
   private final ElasticSearchStoragePlugin plugin;
 
@@ -55,21 +57,21 @@ public class ElasticSearchIndexLoader extends CacheLoader<String, Collection<Str
     }
     Set<String> indexes = Sets.newHashSet();
     try {
-      // 拉取所有的表回来
+      // Pull all the tables back
       Response response = this.plugin.getClient().performRequest("GET", "/_aliases");
-      JsonNode jsonNode = JsonHelper.readRespondeContentAsJsonTree(this.plugin.getObjectMapper(), response);
+      JsonNode jsonNode = JsonHelper.readResponseContentAsJsonTree(this.plugin.getObjectMapper(), response);
       Iterator<Map.Entry<String, JsonNode>> fields = jsonNode.fields();
       while (fields.hasNext()) {
         Map.Entry<String, JsonNode> entry = fields.next();
         JsonNode aliases = JsonHelper.getPath(entry.getValue(), "aliases");
-        // 2.3.3 版本拉取回来的索引是这种状态 ObjectNode 为空的
+        // The index pulled back in version 2.3.3 is this state ObjectNode is empty
         if (!aliases.isMissingNode() && !(aliases instanceof ObjectNode)) {
           Iterator<String> aliasesIterator = aliases.fieldNames();
           while (aliasesIterator.hasNext()) {
             indexes.add(aliasesIterator.next());
           }
         } else {
-          // 所有的索引数据
+          // All index data
           indexes.add(entry.getKey());
         }
       }

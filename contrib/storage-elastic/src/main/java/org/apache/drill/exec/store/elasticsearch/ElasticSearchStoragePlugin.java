@@ -38,7 +38,7 @@ import com.google.common.collect.ImmutableSet;
  * Main ElasticSearch Plugin class to configure storage instance
  */
 public class ElasticSearchStoragePlugin extends AbstractStoragePlugin {
-    static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ElasticSearchStoragePlugin.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ElasticSearchStoragePlugin.class);
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private final String name;

@@ -64,8 +64,12 @@ public class ElasticSearchGroupScanTest {
         InputStream responseContentFirstDoc = IOUtils.toInputStream("{\"took\":28,\"timed_out\":false,\"terminated_early\":true,\"_shards\":{\"total\":3,\"successful\":3,\"failed\":0},\"hits\":{\"total\":1,\"max_score\":1.0,\"hits\":[{\"_index\":\"employee\",\"_type\":\"manager\",\"_id\":\"manager1\",\"_score\":1.0,\"_source\":{    \"name\" : \"manager1\",    \"employeeId\" : 1,    \"department\" : \"IT\"}}]}}");
         Mockito.when(mockEntityFirstDoc.getContent()).thenReturn(responseContentFirstDoc);
         try {
-            Mockito.when(restClient.performRequest("GET", "/"+ElasticSearchTestConstants.EMPLOYEE_IDX+"/"+ElasticSearchTestConstants.MANAGER_MAPPING+"/_count")).thenReturn(mockResponseNumDocs);
-            Mockito.when(restClient.performRequest("GET", "/"+ElasticSearchTestConstants.EMPLOYEE_IDX+"/"+ElasticSearchTestConstants.MANAGER_MAPPING+"/_search?size=1&terminate_after=1")).thenReturn(mockResponseFirstDoc);
+            Mockito.when(restClient
+              .performRequest("GET", "/"+ElasticSearchTestConstants.EMPLOYEE_IDX+"/"+ElasticSearchTestConstants.MANAGER_MAPPING+"/_count"))
+              .thenReturn(mockResponseNumDocs);
+            Mockito.when(restClient
+              .performRequest("GET", "/"+ElasticSearchTestConstants.EMPLOYEE_IDX+"/"+ElasticSearchTestConstants.MANAGER_MAPPING+"/_search?size=1&terminate_after=1"))
+              .thenReturn(mockResponseFirstDoc);
 
             ElasticSearchGroupScan esgp = new ElasticSearchGroupScan("testuser",
                     plugin,
