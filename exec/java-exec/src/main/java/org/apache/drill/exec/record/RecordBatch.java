@@ -60,7 +60,7 @@ public interface RecordBatch extends VectorAccessible {
    *   </li>
    * </ul>
    * <p>
-   *  <strong>Details</strong>:
+   *  <h4>Details</h4>
    * </p>
    * <p>
    *   For normal completion, the basic sequence of return values from calls to
@@ -91,16 +91,20 @@ public interface RecordBatch extends VectorAccessible {
    *   and that does not contain {@code NONE}, and ends with {@code STOP}.
    * </p>
    * <p>
-   *   (The normal-completion return sequence is matched by the following
+   *   The normal-completion return sequence is matched by the following
    *   regular-expression-style grammar:
    *   <pre>
    *     ( NOT_YET*  OK_NEW_SCHEMA
    *       NOT_YET*  OK )*
    *     )+
-   *     NOT_YET*  NONE
-   *   </pre>
-   *   )
+   *     NOT_YET*    NONE</pre>
    * </p>
+   * <h4>Obsolete Outcomes</h4>
+   *
+   * The former <tt>OUT_OF_MEMORY</tt> state was never really used.
+   * It is now handled by calling
+   * {@link FragmentContext#requestMemory()}
+   * at the point that the operator realizes it is short on memory.
    */
   enum IterOutcome {
     /**
@@ -193,10 +197,6 @@ public interface RecordBatch extends VectorAccessible {
      * </p>
      */
     NOT_YET(false),
-
-    // Note: the former OUT_OF_MEMORY state was never really used.
-    // It is now handled by calling FragmentContext.requestMemory()
-    // at the point that the operator realizes it is short on memory.
 
     /**
      * Emit record to produce output batches.
