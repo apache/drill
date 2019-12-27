@@ -172,8 +172,4 @@ public abstract class ContainerState {
       colState.close();
     }
   }
-
-  public boolean isDict() {
-    return false;
-  }
 }

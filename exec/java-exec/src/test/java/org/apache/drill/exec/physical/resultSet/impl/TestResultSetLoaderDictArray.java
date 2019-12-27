@@ -24,16 +24,22 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Arrays;
 import java.util.Iterator;
 
 import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.physical.impl.validate.BatchValidator;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.accessor.ArrayWriter;
 import org.apache.drill.exec.vector.accessor.DictWriter;
+import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.complex.DictVector;
 import org.apache.drill.exec.vector.complex.RepeatedDictVector;
 import org.apache.drill.test.SubOperatorTest;
@@ -257,6 +263,207 @@ public class TestResultSetLoaderDictArray extends SubOperatorTest {
             map("b", map("a", "b3", "c", "c3"), "a", map())))
         .build();
     RowSetUtilities.verify(expected, actual);
+
+    rsLoader.close();
+  }
+
+  /**
+   * Test that memory is released if the loader is closed with an active
+   * batch (that is, before the batch is harvested.)
+   */
+  @Test
+  public void testCloseWithoutHarvest() {
+    TupleMetadata schema = new SchemaBuilder()
+        .addDictArray("d", MinorType.INT)
+          .value(MinorType.VARCHAR)
+          .resumeSchema()
+        .buildSchema();
+    ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
+        .setSchema(schema)
+        .setRowCountLimit(ValueVector.MAX_ROW_COUNT)
+        .build();
+    ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
+    RowSetLoader rootWriter = rsLoader.writer();
+
+    ArrayWriter arrayWriter = rootWriter.array("d");
+    DictWriter dictWriter = arrayWriter.dict();
+    rsLoader.startBatch();
+    for (int i = 0; i < 40; i++) {
+      rootWriter.start();
+      for (int j = 0; j < 3; j++) {
+        dictWriter.keyWriter().setInt(i);
+        dictWriter.valueWriter().scalar().setString("b-" + i);
+        arrayWriter.save();
+      }
+      rootWriter.save();
+    }
+
+    // Don't harvest the batch. Allocator will complain if the
+    // loader does not release memory.
+
+    rsLoader.close();
+  }
+
+  @Test
+  public void testKeyOverflow() {
+    TupleMetadata schema = new SchemaBuilder()
+        .addDictArray("d", MinorType.VARCHAR)
+          .value(MinorType.INT)
+          .resumeSchema()
+        .buildSchema();
+    ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
+        .setRowCountLimit(ValueVector.MAX_ROW_COUNT)
+        .setSchema(schema)
+        .build();
+    ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
+    RowSetLoader rootWriter = rsLoader.writer();
+
+    rsLoader.startBatch();
+    byte[] key = new byte[523];
+    Arrays.fill(key, (byte) 'X');
+
+    int arraySize = 3; // number of dicts in each row
+    int dictSize = 1; // number of entries in each dict
+
+    // Number of rows should be driven by vector size.
+    // Our row count should include the overflow row
+
+    ArrayWriter arrayDictWriter = rootWriter.array(0);
+    DictWriter dictWriter = arrayDictWriter.dict();
+    ScalarWriter keyWriter = dictWriter.keyWriter();
+    ScalarWriter valueWriter = dictWriter.valueWriter().scalar();
+
+    int expectedCount = ValueVector.MAX_BUFFER_SIZE / (key.length * dictSize * arraySize);
+    System.out.println("expectedCoutn: " + expectedCount);
+    {
+      int count = 0;
+      while (! rootWriter.isFull()) {
+        rootWriter.start();
+        for (int i = 0; i < arraySize; i++) {
+          for (int j = 0; j < dictSize; j++) {
+            keyWriter.setBytes(key, key.length);
+            valueWriter.setInt(0); // acts as a placeholder, the actual value is not important
+            dictWriter.save(); // not necessary for scalars, just for completeness
+          }
+          arrayDictWriter.save();
+        }
+        rootWriter.save();
+        count++;
+      }
+
+      assertEquals(expectedCount + 1, count);
+      System.out.println("count: " + count);
+
+      // Loader's row count should include only "visible" rows
+
+      assertEquals(expectedCount, rootWriter.rowCount());
+
+      // Total count should include invisible and look-ahead rows.
+
+      assertEquals(expectedCount + 1, rsLoader.totalRowCount());
+
+      // Result should exclude the overflow row
+
+      VectorContainer container = rsLoader.harvest();
+      BatchValidator.validate(container);
+      RowSet result = fixture.wrap(container);
+      assertEquals(expectedCount, result.rowCount());
+      result.clear();
+    }
+
+    // Next batch should start with the overflow row
+
+    {
+      rsLoader.startBatch();
+      assertEquals(1, rootWriter.rowCount());
+      assertEquals(expectedCount + 1, rsLoader.totalRowCount());
+      VectorContainer container = rsLoader.harvest();
+      BatchValidator.validate(container);
+      RowSet result = fixture.wrap(container);
+      assertEquals(1, result.rowCount());
+      result.clear();
+    }
+
+    rsLoader.close();
+  }
+
+  @Test
+  public void testValueOverflow() {
+    TupleMetadata schema = new SchemaBuilder()
+        .addDictArray("d", MinorType.INT)
+          .value(MinorType.VARCHAR)
+          .resumeSchema()
+        .buildSchema();
+    ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
+        .setRowCountLimit(ValueVector.MAX_ROW_COUNT)
+        .setSchema(schema)
+        .build();
+    ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
+    RowSetLoader rootWriter = rsLoader.writer();
+
+    rsLoader.startBatch();
+    byte[] value = new byte[523];
+    Arrays.fill(value, (byte) 'X');
+
+    int arraySize = 2; // number of dicts in each row; array size is the same for every row to find expected row count easier
+    int dictSize = 4; // number of entries in each dict
+
+    // Number of rows should be driven by vector size.
+    // Our row count should include the overflow row
+
+    ArrayWriter arrayDictWriter = rootWriter.array(0);
+    DictWriter dictWriter = arrayDictWriter.dict();
+    ScalarWriter keyWriter = dictWriter.keyWriter();
+    ScalarWriter valueWriter = dictWriter.valueWriter().scalar();
+
+    int expectedCount = ValueVector.MAX_BUFFER_SIZE / (value.length * dictSize * arraySize);
+    {
+      int count = 0;
+      while (! rootWriter.isFull()) {
+        rootWriter.start();
+        for (int i = 0; i < arraySize; i++) {
+          for (int j = 0; j < dictSize; j++) {
+            keyWriter.setInt(0); // acts as a placeholder, the actual value is not important
+            valueWriter.setBytes(value, value.length);
+            dictWriter.save(); // not necessary for scalars, just for completeness
+          }
+          arrayDictWriter.save();
+        }
+        rootWriter.save();
+        count++;
+      }
+
+      assertEquals(expectedCount + 1, count);
+
+      // Loader's row count should include only "visible" rows
+
+      assertEquals(expectedCount, rootWriter.rowCount());
+
+      // Total count should include invisible and look-ahead rows.
+
+      assertEquals(expectedCount + 1, rsLoader.totalRowCount());
+
+      // Result should exclude the overflow row
+
+      VectorContainer container = rsLoader.harvest();
+      BatchValidator.validate(container);
+      RowSet result = fixture.wrap(container);
+      assertEquals(expectedCount, result.rowCount());
+      result.clear();
+    }
+
+    // Next batch should start with the overflow row
+
+    {
+      rsLoader.startBatch();
+      assertEquals(1, rootWriter.rowCount());
+      assertEquals(expectedCount + 1, rsLoader.totalRowCount());
+      VectorContainer container = rsLoader.harvest();
+      BatchValidator.validate(container);
+      RowSet result = fixture.wrap(container);
+      assertEquals(1, result.rowCount());
+      result.clear();
+    }
 
     rsLoader.close();
   }

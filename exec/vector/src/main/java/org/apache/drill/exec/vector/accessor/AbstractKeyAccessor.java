@@ -26,6 +26,8 @@ import java.math.BigDecimal;
 
 public class AbstractKeyAccessor implements KeyAccessor {
 
+  private static final String UNSUPPORTED_MESSAGE_TEMPLATE = "%s does not support a key of type %s.";
+
   protected final DictReader dictReader;
   protected final ScalarReader keyReader;
 
@@ -36,56 +38,61 @@ public class AbstractKeyAccessor implements KeyAccessor {
 
   @Override
   public boolean find(boolean key) {
-    throw new UnsupportedOperationException(this.getClass().getName() + " does not support boolean key.");
+    throw unsupported("boolean");
   }
 
   @Override
   public boolean find(int key) {
-    throw new UnsupportedOperationException(this.getClass().getName() + " does not support int key.");
+    throw unsupported("int");
   }
 
   @Override
   public boolean find(BigDecimal key) {
-    throw new UnsupportedOperationException(this.getClass().getName() + " does not support BigDecimal key.");
+    throw unsupported("BigDecimal");
   }
 
   @Override
   public boolean find(double key) {
-    throw new UnsupportedOperationException(this.getClass().getName() + " does not support double key.");
+    throw unsupported("double");
   }
 
   @Override
   public boolean find(long key) {
-    throw new UnsupportedOperationException(this.getClass().getName() + " does not support long key.");
+    throw unsupported("long");
   }
 
   @Override
   public boolean find(String key) {
-    throw new UnsupportedOperationException(this.getClass().getName() + " does not support String key.");
+    throw unsupported("String");
   }
 
   @Override
   public boolean find(byte[] key) {
-    throw new UnsupportedOperationException(this.getClass().getName() + " does not support byte[] key.");
+    throw unsupported("byte[]");
   }
 
   @Override
   public boolean find(Period key) {
-    throw new UnsupportedOperationException(this.getClass().getName() + " does not support Period key.");
+    throw unsupported("Period");
   }
 
   @Override
   public boolean find(LocalDate key) {
-    throw new UnsupportedOperationException(this.getClass().getName() + " does not support LocalDate key.");
+    throw unsupported("LocalDate");
   }
 
   @Override
   public boolean find(LocalTime key) {
-    throw new UnsupportedOperationException(this.getClass().getName() + " does not support LocalTime key.");
+    throw unsupported("LocalTime");
   }
 
   @Override
   public boolean find(Instant key) {
-    throw new UnsupportedOperationException(this.getClass().getName() + " does not support Instant key.");
+    throw unsupported("Instant");
+  }
+
+  private UnsupportedOperationException unsupported(String type) {
+    return new UnsupportedOperationException(String.format(
+        UNSUPPORTED_MESSAGE_TEMPLATE, this.getClass().getName(), type));
   }
 }

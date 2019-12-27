@@ -27,13 +27,16 @@ import static org.junit.Assert.assertTrue;
 import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.physical.impl.validate.BatchValidator;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.metadata.DictColumnMetadata;
 import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.DictWriter;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
@@ -44,6 +47,8 @@ import org.apache.drill.exec.physical.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+
+import java.util.Arrays;
 
 /**
  * Test (non-array) dict support in the result set loader and related classes.
@@ -488,6 +493,158 @@ public class TestResultSetLoaderDicts extends SubOperatorTest {
         .build();
 
     RowSetUtilities.verify(expected, actual);
+    rsLoader.close();
+  }
+
+  @Test
+  public void testKeyOverflow() {
+    TupleMetadata schema = new SchemaBuilder()
+        .addDict("d", MinorType.VARCHAR)
+          .value(MinorType.INT)
+          .resumeSchema()
+        .buildSchema();
+    ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
+        .setRowCountLimit(ValueVector.MAX_ROW_COUNT)
+        .setSchema(schema)
+        .build();
+    ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
+    RowSetLoader rootWriter = rsLoader.writer();
+
+    rsLoader.startBatch();
+    byte[] key = new byte[523];
+    Arrays.fill(key, (byte) 'X');
+
+    int dictSize = 4; // number of entries in each dict
+
+    // Number of rows should be driven by vector size.
+    // Our row count should include the overflow row
+
+    DictWriter dictWriter = rootWriter.dict(0);
+    ScalarWriter keyWriter = dictWriter.keyWriter();
+    ScalarWriter valueWriter = dictWriter.valueWriter().scalar();
+
+    int expectedCount = ValueVector.MAX_BUFFER_SIZE / (key.length * dictSize);
+    {
+      int count = 0;
+      while (! rootWriter.isFull()) {
+        rootWriter.start();
+        for (int i = 0; i < dictSize; i++) {
+          keyWriter.setBytes(key, key.length);
+          valueWriter.setInt(0); // acts as a placeholder, the actual value is not important
+          dictWriter.save(); // not necessary for scalars, just for completeness
+        }
+        rootWriter.save();
+        count++;
+      }
+
+      assertEquals(expectedCount + 1, count);
+
+      // Loader's row count should include only "visible" rows
+
+      assertEquals(expectedCount, rootWriter.rowCount());
+
+      // Total count should include invisible and look-ahead rows.
+
+      assertEquals(expectedCount + 1, rsLoader.totalRowCount());
+
+      // Result should exclude the overflow row
+
+      VectorContainer container = rsLoader.harvest();
+      BatchValidator.validate(container);
+      RowSet result = fixture.wrap(container);
+      assertEquals(expectedCount, result.rowCount());
+      result.clear();
+    }
+
+    // Next batch should start with the overflow row
+
+    {
+      rsLoader.startBatch();
+      assertEquals(1, rootWriter.rowCount());
+      assertEquals(expectedCount + 1, rsLoader.totalRowCount());
+      VectorContainer container = rsLoader.harvest();
+      BatchValidator.validate(container);
+      RowSet result = fixture.wrap(container);
+      assertEquals(1, result.rowCount());
+      result.clear();
+    }
+
+    rsLoader.close();
+  }
+
+  @Test
+  public void testValueOverflow() {
+    TupleMetadata schema = new SchemaBuilder()
+        .addDict("d", MinorType.INT)
+          .value(MinorType.VARCHAR)
+          .resumeSchema()
+        .buildSchema();
+    ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
+        .setRowCountLimit(ValueVector.MAX_ROW_COUNT)
+        .setSchema(schema)
+        .build();
+    ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
+    RowSetLoader rootWriter = rsLoader.writer();
+
+    rsLoader.startBatch();
+    byte[] value = new byte[523];
+    Arrays.fill(value, (byte) 'X');
+
+    int dictSize = 4; // number of entries in each dict
+
+    // Number of rows should be driven by vector size.
+    // Our row count should include the overflow row
+
+    DictWriter dictWriter = rootWriter.dict(0);
+    ScalarWriter keyWriter = dictWriter.keyWriter();
+    ScalarWriter valueWriter = dictWriter.valueWriter().scalar();
+
+    int expectedCount = ValueVector.MAX_BUFFER_SIZE / (value.length * dictSize);
+    {
+      int count = 0;
+      while (! rootWriter.isFull()) {
+        rootWriter.start();
+        for (int i = 0; i < dictSize; i++) {
+          keyWriter.setInt(0); // acts as a placeholder, the actual value is not important
+          valueWriter.setBytes(value, value.length);
+          dictWriter.save(); // not necessary for scalars, just for completeness
+        }
+        rootWriter.save();
+        count++;
+      }
+
+      assertEquals(expectedCount + 1, count);
+
+      // Loader's row count should include only "visible" rows
+
+      assertEquals(expectedCount, rootWriter.rowCount());
+
+      // Total count should include invisible and look-ahead rows.
+
+      assertEquals(expectedCount + 1, rsLoader.totalRowCount());
+
+      // Result should exclude the overflow row
+
+      VectorContainer container = rsLoader.harvest();
+      BatchValidator.validate(container);
+      RowSet result = fixture.wrap(container);
+      assertEquals(expectedCount, result.rowCount());
+      result.clear();
+    }
+
+    // Next batch should start with the overflow row
+
+    {
+      rsLoader.startBatch();
+      assertEquals(1, rootWriter.rowCount());
+      assertEquals(expectedCount + 1, rsLoader.totalRowCount());
+      VectorContainer container = rsLoader.harvest();
+      BatchValidator.validate(container);
+      RowSet result = fixture.wrap(container);
+      assertEquals(1, result.rowCount());
+      result.clear();
+    }
+
     rsLoader.close();
   }
 }

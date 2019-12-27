@@ -103,14 +103,14 @@ public class ColumnBuilder {
   public ColumnState buildColumn(ContainerState parent, ColumnMetadata columnSchema) {
 
     ColumnReadProjection colProj;
-    if (parent.isDict()) {
+    if (parent instanceof TupleState.DictState) {
       colProj = parent.projectionSet().readDictProjection(columnSchema);
     } else {
       colProj = parent.projectionSet().readProjection(columnSchema);
     }
     switch (colProj.providedSchema().structureType()) {
     case DICT:
-      return buildDict(parent, colProj, parent.isDict());
+      return buildDict(parent, colProj);
     case TUPLE:
       return buildMap(parent, colProj);
     case VARIANT:
@@ -192,14 +192,16 @@ public class ColumnBuilder {
   /**
    * Check if this is a special case when vector, writer and column state should be
    * created for a primitive field though the field itself is not projected. This is
-   * needed because {@code DICT}'s {@code keys} field is not projected but is needed
-   * to be initialized to ensure the dict vector is constructed properly.
+   * needed in case when {@code DICT}'s {@code value} is accessed by key, because
+   * {@code DICT}'s {@code keys} field is not projected but is needed to be initialized
+   * to ensure the dict vector is constructed properly ({@code DICT} should have both
+   * {@code keys} and {@code values} vectors as they are paired).
    *
    * @param parent container containing the primitive
    * @return {@code true} if the parent is {@code DICT} and its {@code value} is accessed by key
    */
   private boolean allowCreation(ContainerState parent) {
-    return parent.isDict() && !parent.projectionSet().isEmpty();
+    return parent instanceof TupleState.DictState && !parent.projectionSet().isEmpty();
   }
 
   /**
@@ -558,7 +560,7 @@ public class ColumnBuilder {
         arrayWriter, vectorState, listState);
   }
 
-  private ColumnState buildDict(ContainerState parent, ColumnReadProjection colProj, boolean valueProjected) {
+  private ColumnState buildDict(ContainerState parent, ColumnReadProjection colProj) {
     ColumnMetadata columnSchema = colProj.providedSchema();
 
     // When dynamically adding columns, must add the (empty)
@@ -571,13 +573,13 @@ public class ColumnBuilder {
     // Create the vector, vector state and writer.
 
     if (columnSchema.isArray()) {
-      return buildDictArray(parent, colProj, valueProjected);
+      return buildDictArray(parent, colProj);
     } else {
-      return buildSingleDict(parent, colProj, valueProjected);
+      return buildSingleDict(parent, colProj);
     }
   }
 
-  private ColumnState buildDictArray(ContainerState parent, ColumnReadProjection colProj, boolean valueProjected) {
+  private ColumnState buildDictArray(ContainerState parent, ColumnReadProjection colProj) {
     ColumnMetadata columnSchema = colProj.providedSchema();
 
     // Create the dict's offset vector.
@@ -613,15 +615,23 @@ public class ColumnBuilder {
     // Wrap the offset vector in a vector state
 
     VectorState offsetVectorState;
+    VectorState dictOffsetVectorState;
     if (!colProj.isProjected()) {
       offsetVectorState = new NullVectorState();
+      dictOffsetVectorState = new NullVectorState();
     } else {
+      AbstractArrayWriter arrayWriter = (AbstractArrayWriter) writer.array();
       offsetVectorState = new OffsetVectorState(
-          (((AbstractArrayWriter) writer.array()).offsetWriter()),
+          arrayWriter.offsetWriter(),
           offsetVector,
           writer.array().entry().events());
+      dictOffsetVectorState = new OffsetVectorState(
+          ((AbstractArrayWriter) arrayWriter.array()).offsetWriter(),
+          ((DictVector) repeatedDictVector.getDataVector()).getOffsetVector(),
+          writer.array().entry().dict().entry().events());
     }
-    final VectorState mapVectorState = new TupleState.DictVectorState(repeatedDictVector, offsetVectorState);
+    final VectorState mapVectorState =
+        new TupleState.DictArrayVectorState(repeatedDictVector, offsetVectorState, dictOffsetVectorState);
 
     // Assemble it all into the column state.
 
@@ -629,10 +639,10 @@ public class ColumnBuilder {
         parent.vectorCache().childCache(columnSchema.name()),
         colProj.mapProjection());
     return new TupleState.DictColumnState(
-        dictArrayState, writer, mapVectorState, parent.isVersioned(), valueProjected);
+        dictArrayState, writer, mapVectorState, parent.isVersioned());
   }
 
-  private ColumnState buildSingleDict(ContainerState parent, ColumnReadProjection colProj, boolean valueProjected) {
+  private ColumnState buildSingleDict(ContainerState parent, ColumnReadProjection colProj) {
     ColumnMetadata columnSchema = colProj.providedSchema();
 
     // Create the dict's offset vector.
@@ -674,13 +684,13 @@ public class ColumnBuilder {
           offsetVector,
           writer.dict().entry().events());
     }
-    final VectorState mapVectorState = new TupleState.DictVectorState(dictVector, offsetVectorState);
+    final VectorState mapVectorState = new TupleState.SingleDictVectorState(dictVector, offsetVectorState);
 
     // Assemble it all into the column state.
 
     final TupleState.SingleDictState dictArrayState = new TupleState.SingleDictState(parent.loader(), parent.vectorCache().childCache(columnSchema.name()),
         colProj.mapProjection());
     return new TupleState.DictColumnState(
-        dictArrayState, writer, mapVectorState, parent.isVersioned(), valueProjected);
+        dictArrayState, writer, mapVectorState, parent.isVersioned());
   }
 }

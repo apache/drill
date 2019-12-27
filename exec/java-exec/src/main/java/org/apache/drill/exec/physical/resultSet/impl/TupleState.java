@@ -579,14 +579,11 @@ public abstract class TupleState extends ContainerState
     protected final DictState dictState;
     protected boolean isVersioned;
     protected final ColumnMetadata outputSchema;
-    // Indicates if value is accessed by key
-    protected final boolean valueProjected;
 
     public DictColumnState(DictState dictState,
                           AbstractObjectWriter writer,
                           VectorState vectorState,
-                          boolean isVersioned,
-                          boolean valueProjected) {
+                          boolean isVersioned) {
       super(dictState.loader(), writer, vectorState);
       this.dictState = dictState;
       dictState.bindColumnState(this);
@@ -597,7 +594,6 @@ public abstract class TupleState extends ContainerState
         outputSchema = schema();
       }
       dictState.bindOutputSchema(outputSchema.tupleSchema());
-      this.valueProjected = valueProjected;
     }
 
     @Override
@@ -638,11 +634,6 @@ public abstract class TupleState extends ContainerState
     public void bindColumnState(ColumnState colState) {
       super.bindColumnState(colState);
       writer().bindListener(this);
-    }
-
-    @Override
-    public boolean isDict() {
-      return true;
     }
 
     @Override
@@ -700,14 +691,19 @@ public abstract class TupleState extends ContainerState
     }
   }
 
-  public static class DictVectorState implements VectorState {
+  public static abstract class DictVectorState<T extends ValueVector> implements VectorState {
 
-    private final ValueVector vector;
-    private final VectorState offsets;
+    protected final T vector;
+    protected final VectorState offsets;
 
-    public DictVectorState(ValueVector vector, VectorState offsets) {
+    public DictVectorState(T vector, VectorState offsets) {
       this.vector = vector;
       this.offsets = offsets;
+    }
+
+    @Override
+    public T vector() {
+      return vector;
     }
 
     @Override
@@ -735,12 +731,6 @@ public abstract class TupleState extends ContainerState
       offsets.close();
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    public ValueVector vector() {
-      return vector;
-    }
-
     public VectorState offsetVectorState() {
       return offsets;
     }
@@ -755,6 +745,53 @@ public abstract class TupleState extends ContainerState
       format.startObject(this)
           .attribute("field", vector != null ? vector.getField() : "null")
           .endObject();
+    }
+  }
+
+  public static class SingleDictVectorState extends DictVectorState<DictVector> {
+
+    public SingleDictVectorState(DictVector vector, VectorState offsets) {
+      super(vector, offsets);
+    }
+  }
+
+  public static class DictArrayVectorState extends DictVectorState<RepeatedDictVector> {
+
+    // offsets for the data vector
+    private final VectorState dictOffsets;
+
+    public DictArrayVectorState(RepeatedDictVector vector, VectorState offsets, VectorState dictOffsets) {
+      super(vector, offsets);
+      this.dictOffsets = dictOffsets;
+    }
+
+    @Override
+    public int allocate(int cardinality) {
+      return offsets.allocate(cardinality);
+    }
+
+    @Override
+    public void rollover(int cardinality) {
+      super.rollover(cardinality);
+      dictOffsets.rollover(cardinality);
+    }
+
+    @Override
+    public void harvestWithLookAhead() {
+      super.harvestWithLookAhead();
+      dictOffsets.harvestWithLookAhead();
+    }
+
+    @Override
+    public void startBatchWithLookAhead() {
+      super.startBatchWithLookAhead();
+      dictOffsets.harvestWithLookAhead();
+    }
+
+    @Override
+    public void close() {
+      super.close();
+      dictOffsets.close();
     }
   }
 }
