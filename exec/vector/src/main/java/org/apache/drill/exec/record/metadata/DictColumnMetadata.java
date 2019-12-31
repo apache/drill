@@ -21,6 +21,8 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.complex.DictVector;
 
+import java.util.stream.Collectors;
+
 public class DictColumnMetadata extends AbstractMapColumnMetadata {
 
   /**
@@ -79,8 +81,32 @@ public class DictColumnMetadata extends AbstractMapColumnMetadata {
   }
 
   @Override
-  protected String getStringType() {
-    return "MAP";
+  protected String internalTypeString() {
+    StringBuilder builder = new StringBuilder()
+      .append("MAP<");
+
+    ColumnMetadata key = keyColumnMetadata();
+    ColumnMetadata value = valueColumnMetadata();
+
+    // sometimes dict key and value are added after creating metadata class,
+    // and if `typeString` method was called prematurely, for example, in case of error
+    // add whatever was added in a form of columns with key / value names
+    if (key == null || value == null) {
+      builder.append(tupleSchema().toMetadataList().stream()
+        .map(ColumnMetadata::columnString)
+        .collect(Collectors.joining(", ")));
+    } else {
+      builder.append(key.typeString())
+        .append(", ")
+        .append(value.typeString());
+
+      if (TypeProtos.DataMode.REQUIRED == value.mode()) {
+        builder.append(" NOT NULL");
+      }
+    }
+
+    builder.append(">");
+    return builder.toString();
   }
 
   @Override

@@ -21,6 +21,8 @@ import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.MaterializedField;
 
+import java.util.stream.Collectors;
+
 /**
  * Describes a map and repeated map. Both are tuples that have a tuple
  * schema as part of the column definition.
@@ -71,7 +73,11 @@ public class MapColumnMetadata extends AbstractMapColumnMetadata {
   }
 
   @Override
-  protected String getStringType() {
-    return "STRUCT";
+  protected String internalTypeString() {
+    return "STRUCT<"
+      + tupleSchema().toMetadataList().stream()
+          .map(ColumnMetadata::columnString)
+          .collect(Collectors.joining(", "))
+      + ">";
   }
 }
