@@ -24,8 +24,6 @@ import org.apache.drill.exec.vector.ValueVector;
 
 public interface VectorWrapper<T extends ValueVector> {
 
-
-
   public Class<T> getVectorClass();
   public MaterializedField getField();
   public T getValueVector();
