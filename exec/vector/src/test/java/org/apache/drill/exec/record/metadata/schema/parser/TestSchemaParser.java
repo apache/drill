@@ -19,6 +19,7 @@ package org.apache.drill.exec.record.metadata.schema.parser;
 
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
+import org.apache.drill.exec.record.metadata.DictColumnMetadata;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.test.BaseTest;
@@ -191,23 +192,33 @@ public class TestSchemaParser extends BaseTest {
         .addArray(TypeProtos.MinorType.INT)
       .resumeSchema()
       .addMapArray("struct_array")
-        .addNullable("m1", TypeProtos.MinorType.INT)
-        .addNullable("m2", TypeProtos.MinorType.VARCHAR)
+        .addNullable("s1", TypeProtos.MinorType.INT)
+        .addNullable("s2", TypeProtos.MinorType.VARCHAR)
       .resumeSchema()
       .addRepeatedList("nested_array_struct")
         .addMapArray()
-          .addNullable("nm1", TypeProtos.MinorType.INT)
-          .addNullable("nm2", TypeProtos.MinorType.VARCHAR)
+          .addNullable("ns1", TypeProtos.MinorType.INT)
+          .addNullable("ns2", TypeProtos.MinorType.VARCHAR)
+        .resumeList()
+      .resumeSchema()
+      .addDictArray("map_array", TypeProtos.MinorType.VARCHAR)
+        .nullableValue(TypeProtos.MinorType.INT)
+      .resumeSchema()
+      .addRepeatedList("nested_map_array")
+        .addDictArray()
+          .key(TypeProtos.MinorType.VARCHAR)
+          .nullableValue(TypeProtos.MinorType.INT)
         .resumeList()
       .resumeSchema()
       .buildSchema();
 
     checkSchema("simple_array array<int>"
         + ", nested_array array<array<int>>"
-        + ", struct_array array<struct<m1 int, m2 varchar>>"
-        + ", nested_array_struct array<array<struct<nm1 int, nm2 varchar>>>",
+        + ", struct_array array<struct<s1 int, s2 varchar>>"
+        + ", nested_array_struct array<array<struct<ns1 int, ns2 varchar>>>"
+        + ", map_array array<map<varchar, int>>"
+        + ", nested_map_array array<array<map<varchar, int>>>",
       schema);
-
   }
 
   @Test
@@ -217,13 +228,66 @@ public class TestSchemaParser extends BaseTest {
         .addNullable("int_col", TypeProtos.MinorType.INT)
         .addArray("array_col", TypeProtos.MinorType.INT)
         .addMap("nested_struct")
-          .addNullable("m1", TypeProtos.MinorType.INT)
-          .addNullable("m2", TypeProtos.MinorType.VARCHAR)
+          .addNullable("s1", TypeProtos.MinorType.INT)
+          .addNullable("s2", TypeProtos.MinorType.VARCHAR)
+        .resumeMap()
+        .addDict("map_col", TypeProtos.MinorType.VARCHAR)
+          .nullableValue(TypeProtos.MinorType.INT)
         .resumeMap()
       .resumeSchema()
       .buildSchema();
 
-    checkSchema("struct_col struct<int_col int, array_col array<int>, nested_struct struct<m1 int, m2 varchar>>", schema);
+    checkSchema("struct_col struct<int_col int"
+      + ", array_col array<int>"
+      + ", nested_struct struct<s1 int, s2 varchar>"
+      + ", map_col map<varchar, int>"
+      + ">", schema);
+  }
+
+  @Test
+  public void testMap() throws Exception {
+    TupleMetadata schema = new SchemaBuilder()
+        .addDict("dict_col_simple", TypeProtos.MinorType.VARCHAR)
+          .nullableValue(TypeProtos.MinorType.INT)
+        .resumeSchema()
+        .addDict("dict_col_simple_ps", TypeProtos.MajorType.newBuilder()
+            .setMinorType(TypeProtos.MinorType.VARCHAR)
+            .setPrecision(50)
+            .setMode(TypeProtos.DataMode.REQUIRED)
+            .build())
+          .value(TypeProtos.MajorType.newBuilder()
+            .setMinorType(TypeProtos.MinorType.VARDECIMAL)
+            .setPrecision(10)
+            .setScale(2)
+            .setMode(TypeProtos.DataMode.REQUIRED)
+            .build())
+        .resumeSchema()
+        .addDict("dict_col_struct", TypeProtos.MinorType.INT)
+          .mapValue()
+            .add("sb", TypeProtos.MinorType.BIT)
+            .addNullable("si", TypeProtos.MinorType.INT)
+          .resumeDict()
+        .resumeSchema()
+        .addDict("dict_col_dict", TypeProtos.MinorType.VARCHAR)
+          .dictValue()
+            .key(TypeProtos.MinorType.INT)
+            .nullableValue(TypeProtos.MinorType.BIT)
+          .resumeDict()
+        .resumeSchema()
+        .addDict("dict_col_array", TypeProtos.MinorType.BIGINT)
+          .dictArrayValue()
+            .key(TypeProtos.MinorType.DATE)
+            .nullableValue(TypeProtos.MinorType.FLOAT8)
+          .resumeDict()
+        .resumeSchema()
+      .buildSchema();
+
+    checkSchema("dict_col_simple map<varchar, int>"
+      + ", dict_col_simple_ps map<varchar(50), decimal(10, 2) not null>"
+      + ", dict_col_struct map<int, struct<sb boolean not null, si int>>"
+      + ", dict_col_dict map<varchar, map<int, boolean>>"
+      + ", dict_col_array map<bigint, array<map<date, double>>>",
+      schema);
   }
 
   @Test
@@ -235,20 +299,41 @@ public class TestSchemaParser extends BaseTest {
 
   @Test
   public void testModeForStructType() throws Exception {
-    TupleMetadata schema  = SchemaExprParser.parseSchema("m struct<m1 int not null, m2 varchar>");
-    ColumnMetadata map = schema.metadata("m");
-    assertTrue(map.isMap());
-    assertEquals(TypeProtos.DataMode.REQUIRED, map.mode());
+    TupleMetadata schema  = SchemaExprParser.parseSchema("s struct<s1 int not null, s2 varchar>");
+    ColumnMetadata struct = schema.metadata("s");
+    assertTrue(struct.isMap());
+    assertEquals(TypeProtos.DataMode.REQUIRED, struct.mode());
 
-    TupleMetadata mapSchema = map.tupleSchema();
-    assertFalse(mapSchema.metadata("m1").isNullable());
-    assertTrue(mapSchema.metadata("m2").isNullable());
+    TupleMetadata mapSchema = struct.tupleSchema();
+    assertFalse(mapSchema.metadata("s1").isNullable());
+    assertTrue(mapSchema.metadata("s2").isNullable());
+  }
+
+  @Test
+  public void testModeForMapType() throws Exception {
+    TupleMetadata schema  = SchemaExprParser.parseSchema("m1 map<varchar, int>, m2 map<varchar not null, int not null>");
+
+    ColumnMetadata mapOptional = schema.metadata("m1");
+    assertTrue(mapOptional.isDict());
+    assertEquals(TypeProtos.DataMode.REQUIRED, mapOptional.mode());
+    DictColumnMetadata dictOptional = (DictColumnMetadata) mapOptional;
+    assertEquals(TypeProtos.DataMode.REQUIRED, dictOptional.keyColumnMetadata().mode());
+    assertEquals(TypeProtos.DataMode.OPTIONAL, dictOptional.valueColumnMetadata().mode());
+
+    ColumnMetadata mapRequired = schema.metadata("m2");
+    assertTrue(mapRequired.isDict());
+    assertEquals(TypeProtos.DataMode.REQUIRED, mapRequired.mode());
+    DictColumnMetadata dictRequired = (DictColumnMetadata) mapRequired;
+    assertEquals(TypeProtos.DataMode.REQUIRED, dictRequired.keyColumnMetadata().mode());
+    assertEquals(TypeProtos.DataMode.REQUIRED, dictRequired.valueColumnMetadata().mode());
   }
 
   @Test
   public void testModeForRepeatedType() throws Exception {
-    TupleMetadata schema = SchemaExprParser.parseSchema(
-      "a array<int>, aa array<array<int>>, ma array<struct<m1 int not null, m2 varchar>>");
+    TupleMetadata schema = SchemaExprParser.parseSchema("a array<int>"
+      + ", aa array<array<int>>"
+      + ", sa array<struct<s1 int not null, s2 varchar>>"
+      + ", ma array<map<varchar, array<int>>>");
 
     assertTrue(schema.metadata("a").isArray());
 
@@ -256,12 +341,19 @@ public class TestSchemaParser extends BaseTest {
     assertTrue(nestedArray.isArray());
     assertTrue(nestedArray.childSchema().isArray());
 
+    ColumnMetadata structArray = schema.metadata("sa");
+    assertTrue(structArray.isArray());
+    assertTrue(structArray.isMap());
+    TupleMetadata structSchema = structArray.tupleSchema();
+    assertFalse(structSchema.metadata("s1").isNullable());
+    assertTrue(structSchema.metadata("s2").isNullable());
+
     ColumnMetadata mapArray = schema.metadata("ma");
     assertTrue(mapArray.isArray());
-    assertTrue(mapArray.isMap());
-    TupleMetadata mapSchema = mapArray.tupleSchema();
-    assertFalse(mapSchema.metadata("m1").isNullable());
-    assertTrue(mapSchema.metadata("m2").isNullable());
+    assertTrue(mapArray.isDict());
+    DictColumnMetadata dictMetadata = (DictColumnMetadata) mapArray;
+    assertFalse(dictMetadata.keyColumnMetadata().isNullable());
+    assertTrue(dictMetadata.valueColumnMetadata().isArray());
   }
 
   @Test
@@ -360,5 +452,4 @@ public class TestSchemaParser extends BaseTest {
       }
     );
   }
-
 }

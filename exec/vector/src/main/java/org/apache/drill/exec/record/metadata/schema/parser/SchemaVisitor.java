@@ -22,11 +22,13 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
+import org.apache.drill.exec.record.metadata.DictBuilder;
 import org.apache.drill.exec.record.metadata.MapBuilder;
 import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.RepeatedListBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.metadata.TupleSchema;
+import org.apache.drill.exec.vector.complex.DictVector;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 import java.util.LinkedHashMap;
@@ -74,11 +76,10 @@ public class SchemaVisitor extends SchemaParserBaseVisitor<TupleMetadata> {
       }
       return columnMetadata;
     }
-
   }
 
   /**
-   * Visits various types of columns (primitive, map, array) and stores their metadata
+   * Visits various types of columns (primitive, struct, map, array) and stores their metadata
    * into {@link ColumnMetadata} class.
    */
   public static class ColumnVisitor extends SchemaParserBaseVisitor<ColumnMetadata> {
@@ -112,14 +113,20 @@ public class SchemaVisitor extends SchemaParserBaseVisitor<TupleMetadata> {
     }
 
     @Override
+    public ColumnMetadata visitMap_column(SchemaParser.Map_columnContext ctx) {
+      String name = ctx.column_id().accept(new IdVisitor());
+      // Drill does not distinguish between nullable and not null maps, by default they are not null
+      return ctx.map_type().accept(new TypeVisitor(name, TypeProtos.DataMode.REQUIRED));
+    }
+
+    @Override
     public ColumnMetadata visitComplex_array_column(SchemaParser.Complex_array_columnContext ctx) {
       String name = ctx.column_id().accept(new IdVisitor());
-      ColumnMetadata child = ctx.complex_array_type().complex_type().accept(new ArrayTypeVisitor(name));
+      ColumnMetadata child = ctx.complex_array_type().array_type().accept(new ArrayTypeVisitor(name));
       RepeatedListBuilder builder = new RepeatedListBuilder(null, name);
       builder.addColumn(child);
       return builder.buildColumn();
     }
-
   }
 
   /**
@@ -156,7 +163,7 @@ public class SchemaVisitor extends SchemaParserBaseVisitor<TupleMetadata> {
   }
 
   /**
-   * Visits simple and map types, storing their metadata into {@link ColumnMetadata} holder.
+   * Visits simple, struct and map types and stores their metadata into {@link ColumnMetadata} holder.
    */
   private static class TypeVisitor extends SchemaParserBaseVisitor<ColumnMetadata> {
 
@@ -273,8 +280,7 @@ public class SchemaVisitor extends SchemaParserBaseVisitor<TupleMetadata> {
 
     @Override
     public ColumnMetadata visitStruct_type(SchemaParser.Struct_typeContext ctx) {
-      // internally Drill refers to structs as maps and currently does not have true map notion
-      // Drill maps will be renamed to structs in future
+      // internally Drill refers to structs as maps
       MapBuilder builder = new MapBuilder(null, name, mode);
       ColumnDefVisitor visitor = new ColumnDefVisitor();
       ctx.columns().column_def().forEach(
@@ -283,15 +289,78 @@ public class SchemaVisitor extends SchemaParserBaseVisitor<TupleMetadata> {
       return builder.buildColumn();
     }
 
+    @Override
+    public ColumnMetadata visitMap_type(SchemaParser.Map_typeContext ctx) {
+      // internally Drill refers to maps as dicts
+      DictBuilder builder = new DictBuilder(null, name, mode);
+      builder.key(ctx.map_key_type_def().map_key_type().accept(MapKeyTypeVisitor.INSTANCE));
+
+      SchemaParser.Map_value_type_defContext valueDef = ctx.map_value_type_def();
+      TypeProtos.DataMode valueMode = valueDef.nullability() == null ? TypeProtos.DataMode.OPTIONAL : TypeProtos.DataMode.REQUIRED;
+      builder.addColumn(valueDef.map_value_type().accept(new MapValueTypeVisitor(valueMode)));
+      return builder.buildColumn();
+    }
+
     private ColumnMetadata constructColumn(TypeProtos.MajorType type) {
       MaterializedField field = MaterializedField.create(name, type);
       return MetadataUtils.fromField(field);
     }
-
   }
 
   /**
-   * Visits array type: simple (which has only on nested element: array<int>)
+   * Visits map key type and returns its {@link TypeProtos.MajorType} definition.
+   */
+  private static class MapKeyTypeVisitor extends SchemaParserBaseVisitor<TypeProtos.MajorType> {
+
+    // map key is always required
+    private static final TypeVisitor KEY_VISITOR = new TypeVisitor(DictVector.FIELD_KEY_NAME, TypeProtos.DataMode.REQUIRED);
+
+    static final MapKeyTypeVisitor INSTANCE = new MapKeyTypeVisitor();
+
+    @Override
+    public TypeProtos.MajorType visitMap_key_simple_type_def(SchemaParser.Map_key_simple_type_defContext ctx) {
+      return ctx.simple_type().accept(KEY_VISITOR).majorType();
+    }
+  }
+
+  /**
+   * Visits map value type and stores its metadata into {@link ColumnMetadata} holder.
+   */
+  private static class MapValueTypeVisitor extends SchemaParserBaseVisitor<ColumnMetadata> {
+
+    private final TypeProtos.DataMode mode;
+
+    MapValueTypeVisitor (TypeProtos.DataMode mode) {
+      this.mode = mode;
+    }
+
+    @Override
+    public ColumnMetadata visitMap_value_simple_type_def(SchemaParser.Map_value_simple_type_defContext ctx) {
+      return ctx.simple_type().accept(new TypeVisitor(DictVector.FIELD_VALUE_NAME, mode));
+    }
+
+    @Override
+    public ColumnMetadata visitMap_value_struct_type_def(SchemaParser.Map_value_struct_type_defContext ctx) {
+      // Drill does not distinguish between nullable and not null structs, by default they are not null
+      TypeProtos.DataMode structMode = TypeProtos.DataMode.REPEATED == mode ? mode : TypeProtos.DataMode.REQUIRED;
+      return ctx.struct_type().accept(new TypeVisitor(DictVector.FIELD_VALUE_NAME, structMode));
+    }
+
+    @Override
+    public ColumnMetadata visitMap_value_map_type_def(SchemaParser.Map_value_map_type_defContext ctx) {
+      // Drill does not distinguish between nullable and not null maps, by default they are not null
+      TypeProtos.DataMode mapMode = TypeProtos.DataMode.REPEATED == mode ? mode : TypeProtos.DataMode.REQUIRED;
+      return ctx.map_type().accept(new TypeVisitor(DictVector.FIELD_VALUE_NAME, mapMode));
+    }
+
+    @Override
+    public ColumnMetadata visitMap_value_array_type_def(SchemaParser.Map_value_array_type_defContext ctx) {
+      return ctx.array_type().accept(new ArrayTypeVisitor(DictVector.FIELD_VALUE_NAME));
+    }
+  }
+
+  /**
+   * Visits array type: simple (which has only one nested element: array<int>)
    * or complex (which has several nested elements: array<int<int>>).
    */
   private static class ArrayTypeVisitor extends SchemaParserBaseVisitor<ColumnMetadata> {
@@ -304,16 +373,43 @@ public class SchemaVisitor extends SchemaParserBaseVisitor<TupleMetadata> {
 
     @Override
     public ColumnMetadata visitSimple_array_type(SchemaParser.Simple_array_typeContext ctx) {
-      TypeVisitor visitor = new TypeVisitor(name, TypeProtos.DataMode.REPEATED);
-      return ctx.struct_type() == null ? ctx.simple_type().accept(visitor) : ctx.struct_type().accept(visitor);
+      SimpleArrayValueTypeVisitor visitor = new SimpleArrayValueTypeVisitor(name);
+      return ctx.simple_array_value_type().accept(visitor);
     }
 
     @Override
     public ColumnMetadata visitComplex_array_type(SchemaParser.Complex_array_typeContext ctx) {
       RepeatedListBuilder childBuilder = new RepeatedListBuilder(null, name);
-      ColumnMetadata child = ctx.complex_type().accept(new ArrayTypeVisitor(name));
+      ColumnMetadata child = ctx.array_type().accept(new ArrayTypeVisitor(name));
       childBuilder.addColumn(child);
       return childBuilder.buildColumn();
+    }
+  }
+
+  /**
+   * Visits simple array value type and stores its metadata into {@link ColumnMetadata} holder.
+   */
+  private static class SimpleArrayValueTypeVisitor extends SchemaParserBaseVisitor<ColumnMetadata> {
+
+    private final TypeVisitor typeVisitor;
+
+    SimpleArrayValueTypeVisitor(String name) {
+      this.typeVisitor = new TypeVisitor(name, TypeProtos.DataMode.REPEATED);
+    }
+
+    @Override
+    public ColumnMetadata visitArray_simple_type_def(SchemaParser.Array_simple_type_defContext ctx) {
+      return ctx.simple_type().accept(typeVisitor);
+    }
+
+    @Override
+    public ColumnMetadata visitArray_struct_type_def(SchemaParser.Array_struct_type_defContext ctx) {
+      return ctx.struct_type().accept(typeVisitor);
+    }
+
+    @Override
+    public ColumnMetadata visitArray_map_type_def(SchemaParser.Array_map_type_defContext ctx) {
+      return ctx.map_type().accept(typeVisitor);
     }
   }
 
