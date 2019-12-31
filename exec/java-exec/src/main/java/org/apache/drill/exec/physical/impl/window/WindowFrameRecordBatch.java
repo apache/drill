@@ -355,7 +355,7 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
     CodeGenerator<WindowFramer> codeGen = cg.getCodeGenerator();
     codeGen.plainJavaCapable(true);
     // Uncomment out this line to debug the generated code.
-    codeGen.saveCodeForDebugging(true);
+    // codeGen.saveCodeForDebugging(true);
 
     return context.getImplementationClass(codeGen);
   }
