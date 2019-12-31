@@ -16,17 +16,31 @@
 # limitations under the License.
 #
 
-# This Dockerfile may be used during development. It adds built binaries from distribution/target folder
-# into the target image based on openjdk:8u232-jdk image.
+# This Dockerfile is used for automated builds in DockerHub. It adds project sources into the build image, builds
+# Drill and copies built binaries into the target image based on openjdk:8u232-jdk image.
 
+# Uses intermediate image for building Drill to reduce target image size
+FROM maven:3.6-jdk-8 as build
+
+# Copy project sources into the container
+COPY . /src
+
+WORKDIR /src
+
+# Builds Drill
+RUN  mvn clean install -DskipTests -q
+
+# Get project version and copy built binaries into /opt/drill directory
+RUN VERSION=$(mvn -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec) \
+ && mkdir /opt/drill \
+ && mv distribution/target/apache-drill-${VERSION}/apache-drill-${VERSION}/* /opt/drill
+
+# Target image
 FROM openjdk:8u232-jdk
-
-# Project version defined in pom.xml is passed as an argument
-ARG VERSION
 
 RUN mkdir /opt/drill
 
-COPY target/apache-drill-$VERSION/apache-drill-$VERSION /opt/drill
+COPY --from=build /opt/drill /opt/drill
 
 # Starts Drill in embedded mode and connects to Sqlline
 ENTRYPOINT /opt/drill/bin/drill-embedded
