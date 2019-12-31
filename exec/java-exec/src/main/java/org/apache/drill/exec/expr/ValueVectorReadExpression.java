@@ -18,6 +18,8 @@
 package org.apache.drill.exec.expr;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.PathSegment;
@@ -29,11 +31,12 @@ import java.util.Iterator;
 
 /**
  * Wraps a value vector field to be read, providing metadata about the field.
- * Also may contain batch naming information to which this field belongs.
- * If such information is absent default namings will be used from mapping set during materialization.
+ * Also may contain batch naming information to which this field belongs. If
+ * such information is absent default naming will be used from mapping set
+ * during materialization.
  */
 public class ValueVectorReadExpression implements LogicalExpression {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ValueVectorReadExpression.class);
+  static final Logger logger = LoggerFactory.getLogger(ValueVectorReadExpression.class);
 
   private final TypedFieldId fieldId;
   private final BatchReference batchRef;
@@ -108,5 +111,4 @@ public class ValueVectorReadExpression implements LogicalExpression {
   public String toString() {
     return "ValueVectorReadExpression [fieldId=" + fieldId + "]";
   }
-
 }

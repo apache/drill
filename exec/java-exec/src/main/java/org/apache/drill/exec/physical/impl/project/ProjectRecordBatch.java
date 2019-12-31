@@ -379,8 +379,6 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
 
     ClassGenerator<Projector> cg = CodeGenerator.getRoot(Projector.TEMPLATE_DEFINITION, context.getOptions());
     cg.getCodeGenerator().plainJavaCapable(true);
-    // Uncomment out this line to debug the generated code.
-    // cg.getCodeGenerator().saveCodeForDebugging(true);
 
     IntHashSet transferFieldIds = new IntHashSet();
 
@@ -550,8 +548,8 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     try {
       CodeGenerator<Projector> codeGen = cg.getCodeGenerator();
       codeGen.plainJavaCapable(true);
-      // Uncomment out this line to debug the generated code.
-      //codeGen.saveCodeForDebugging(true);
+      // Uncomment this line to debug the generated code.
+      // codeGen.saveCodeForDebugging(true);
       this.projector = context.getImplementationClass(codeGen);
       projector.setup(context, incomingBatch, this, transfers);
     } catch (ClassTransformationException | IOException e) {

@@ -40,6 +40,13 @@ import com.sun.codemodel.JMod;
 import com.sun.codemodel.JOp;
 import com.sun.codemodel.JVar;
 
+/**
+ * Definition of a Drill function defined using the
+ * <code>@FunctionTemplate</code> annotation of the class which
+ * implements the function. Simple functions have
+ * input parameters as defined by member variables annotated
+ * with the <code>@Param</code> annotation.
+ */
 public class DrillSimpleFuncHolder extends DrillFuncHolder {
 
   private final String drillFuncClass;
@@ -78,28 +85,56 @@ public class DrillSimpleFuncHolder extends DrillFuncHolder {
     return (DrillSimpleFunc)Class.forName(drillFuncClass, true, classLoader).newInstance();
   }
 
+  /**
+   * Render the various code blocks for a simple function.
+   *
+   * @param classGenerator code generator
+   * @param inputVariables value holder references for each input value. Variables
+   * are in the same order as the declared function parameters
+   * @param workspaceJVars internal working variables as declared with the
+   * <code>@Workspece</code> annotations. These are simple variables, not
+   * Drill value holders
+   * @param holderExpr the function call expression
+   */
   @Override
   public HoldingContainer renderEnd(ClassGenerator<?> classGenerator, HoldingContainer[] inputVariables,
                                     JVar[] workspaceJVars, FunctionHolderExpression holderExpr) {
 
-    //If the function's annotation specifies a parameter has to be constant expression, but the HoldingContainer
-    //for the argument is not, then raise exception.
+    // If the function's annotation specifies a parameter has to be constant
+    // expression, but the HoldingContainer for the argument is not, then raise
+    // exception.
     for (int i = 0; i < inputVariables.length; i++) {
       if (getAttributeParameter(i).isConstant() && !inputVariables[i].isConstant()) {
-        throw new DrillRuntimeException(String.format("The argument '%s' of Function '%s' has to be constant!", getAttributeParameter(i).getName(), this.getRegisteredNames()[0]));
+        throw new DrillRuntimeException(String.format(
+            "The argument '%s' of Function '%s' has to be constant!",
+            getAttributeParameter(i).getName(), this.getRegisteredNames()[0]));
       }
     }
+    // Inline code from the function's setup block
     generateBody(classGenerator, BlockType.SETUP, setupBody(), inputVariables, workspaceJVars, true);
+
+    // Generate the wrapper, and inline code for, the function's eval block
     HoldingContainer c = generateEvalBody(classGenerator, inputVariables, evalBody(), workspaceJVars, holderExpr);
+
+    // Generate code for an aggregate functions reset block
     generateBody(classGenerator, BlockType.RESET, resetBody(), null, workspaceJVars, false);
+
+    // Inline code from the function's cleanup() method
     generateBody(classGenerator, BlockType.CLEANUP, cleanupBody(), null, workspaceJVars, false);
     return c;
   }
 
+  /**
+   * Generate the eval block for a simple function, including the null-handling wrapper,
+   * if requested.
+   *
+   * @see {@link #generateBody()}
+   */
   protected HoldingContainer generateEvalBody(ClassGenerator<?> g, HoldingContainer[] inputVariables, String body,
                                               JVar[] workspaceJVars, FunctionHolderExpression holderExpr) {
 
-    g.getEvalBlock().directStatement(String.format("//---- start of eval portion of %s function. ----//", getRegisteredNames()[0]));
+    g.getEvalBlock().directStatement(String.format(
+        "//---- start of eval portion of %s function. ----//", getRegisteredNames()[0]));
 
     JBlock sub = new JBlock(true, true);
     JBlock topSub = sub;
@@ -107,13 +142,15 @@ public class DrillSimpleFuncHolder extends DrillFuncHolder {
     MajorType returnValueType = getReturnType();
 
     // add outside null handling if it is defined.
+    // If defined, the actual eval is in the "else" block of the
+    // null checks.
     if (getNullHandling() == NullHandling.NULL_IF_NULL) {
       JExpression e = null;
       for (HoldingContainer v : inputVariables) {
         if (v.isOptional()) {
           JExpression isNullExpr;
           if (v.isReader()) {
-           isNullExpr = JOp.cond(v.getHolder().invoke("isSet"), JExpr.lit(1), JExpr.lit(0));
+            isNullExpr = JOp.cond(v.getHolder().invoke("isSet"), JExpr.lit(1), JExpr.lit(0));
           } else {
             isNullExpr = v.getIsSet();
           }
@@ -145,20 +182,26 @@ public class DrillSimpleFuncHolder extends DrillFuncHolder {
     // add the subblock after the out declaration.
     g.getEvalBlock().add(topSub);
 
+    JVar internalOutput = sub.decl(JMod.FINAL, g.getHolderType(returnValueType),
+        getReturnValue().getName(), JExpr._new(g.getHolderType(returnValueType)));
 
-    JVar internalOutput = sub.decl(JMod.FINAL, g.getHolderType(returnValueType), getReturnValue().getName(), JExpr._new(g.getHolderType(returnValueType)));
+    // Generate function body from source, including fields rendered as
+    // block local vars.
     addProtectedBlock(g, sub, body, inputVariables, workspaceJVars, false);
 
+    // Copy the output from the internal output parameter to the
+    // one known in the outer scope.
     List<String> holderFields = ValueHolderHelper.getHolderParams(returnValueType);
     for (String holderField : holderFields) {
       sub.assign(out.f(holderField), internalOutput.ref(holderField));
     }
 
     if (sub != topSub) {
-      sub.assign(out.f("isSet"),JExpr.lit(1));  // Assign null if NULL_IF_NULL mode
+      sub.assign(out.f("isSet"), JExpr.lit(1));  // Assign null if NULL_IF_NULL mode
     }
 
-    g.getEvalBlock().directStatement(String.format("//---- end of eval portion of %s function. ----//", getRegisteredNames()[0]));
+    g.getEvalBlock().directStatement(String.format(
+        "//---- end of eval portion of %s function. ----//", getRegisteredNames()[0]));
 
     return out;
   }

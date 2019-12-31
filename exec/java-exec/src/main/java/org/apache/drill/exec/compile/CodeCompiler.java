@@ -69,7 +69,7 @@ public class CodeCompiler {
 
         // Generate class as plain-old Java
 
-         logger.trace(String.format("Class %s generated as plain Java", cg.getClassName()));
+        logger.trace(String.format("Class %s generated as plain Java", cg.getClassName()));
         return classBuilder.getImplementationClass(cg);
       } else {
 

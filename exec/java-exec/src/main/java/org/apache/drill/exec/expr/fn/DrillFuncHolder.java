@@ -35,9 +35,11 @@ import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.ClassGenerator.BlockType;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.DrillFuncHolderExpr;
+import org.apache.drill.exec.expr.EvaluationVisitor.VectorVariableHolder;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.fn.output.OutputWidthCalculator;
+import org.apache.drill.exec.expr.holders.UnionHolder;
 import org.apache.drill.exec.expr.holders.ValueHolder;
 import org.apache.drill.exec.ops.UdfUtilities;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
@@ -56,8 +58,7 @@ import com.sun.codemodel.JType;
 import com.sun.codemodel.JVar;
 
 public abstract class DrillFuncHolder extends AbstractFuncHolder {
-
-  static final Logger logger = LoggerFactory.getLogger(DrillFuncHolder.class);
+  private static final Logger logger = LoggerFactory.getLogger(DrillFuncHolder.class);
 
   private final FunctionAttributes attributes;
   private final FunctionInitializer initializer;
@@ -73,11 +74,17 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
 
   /**
    * Check if function type supports provided null handling strategy.
-   * <p>Keep in mind that this method is invoked in {@link #DrillFuncHolder(FunctionAttributes, FunctionInitializer)}
-   * constructor so make sure not to use any state fields when overriding the method to avoid uninitialized state.</p>
+   * <p>
+   * Keep in mind that this method is invoked in
+   * {@link #DrillFuncHolder(FunctionAttributes, FunctionInitializer)}
+   * constructor so make sure not to use any state fields when overriding the
+   * method to avoid uninitialized state.
+   * </p>
    *
-   * @param nullHandling null handling strategy defined for a function
-   * @throws IllegalArgumentException if provided {@code nullHandling} is not supported
+   * @param nullHandling
+   *          null handling strategy defined for a function
+   * @throws IllegalArgumentException
+   *           if provided {@code nullHandling} is not supported
    */
   protected void checkNullHandling(NullHandling nullHandling) {
   }
@@ -184,105 +191,94 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
               ));
         } else {
           // Invalid injectable type provided, this should have been caught in FunctionConverter
-          throw new DrillRuntimeException("Invalid injectable type requested in UDF: " + ref.getType().getSimpleName());
+          throw new DrillRuntimeException("Invalid injectable type requested in UDF: " +
+                ref.getType().getSimpleName());
         }
-      } else {
-        //g.getBlock(BlockType.SETUP).assign(workspaceJVars[i], JExpr._new(jtype));
       }
     }
     return workspaceJVars;
   }
 
+  /**
+   * Generate the body of a Drill function by copying the source code of the
+   * corresponding function method into the generated output. For this to work,
+   * all symbol references must be absolute (they cannot refer to imports),
+   * or they must refer to local variables or class fields marked with an
+   * annotation.
+   * <p>
+   * To make this work, the function body is wrapped in a code block that
+   * simulates the class fields by declaring local variables of the same
+   * name, and assigning those variables based on the input and workspace
+   * variables provided.
+   * <p>
+   * This version is used for blocks other than the main eval block.
+   *
+   * @param g code generator
+   * @param bt type of the block to be added
+   * @param body source code of the block. Optional. Block will be omitted
+   * if the method body is null or empty
+   * @param inputVariables list of input variable bindings which match up to declared
+   * <code>@Param</code> member variables in order. The input variables have the
+   * same name as the parameters that they represent
+   * @param workspaceJVars list of workspace variables, structures the same as
+   * input variables
+   * @param workspaceOnly <code>true</code> if this is a setup block and
+   * we should declare only constant workspace variables, <code>false</code> to
+   * declare all variables
+   */
   protected void generateBody(ClassGenerator<?> g, BlockType bt, String body, HoldingContainer[] inputVariables,
-      JVar[] workspaceJVars, boolean decConstantInputOnly) {
-    if (!Strings.isNullOrEmpty(body) && !body.trim().isEmpty()) {
-      JBlock sub = new JBlock(true, true);
-      if (decConstantInputOnly) {
-        addProtectedBlock(g, sub, body, inputVariables, workspaceJVars, true);
-      } else {
-        addProtectedBlock(g, sub, body, null, workspaceJVars, false);
-      }
-      g.getBlock(bt).directStatement(String.format("/** start %s for function %s **/ ", bt.name(), attributes.getRegisteredNames()[0]));
-      g.getBlock(bt).add(sub);
-      g.getBlock(bt).directStatement(String.format("/** end %s for function %s **/ ", bt.name(), attributes.getRegisteredNames()[0]));
+      JVar[] workspaceJVars, boolean workspaceOnly) {
+    if (Strings.isNullOrEmpty(body) || body.trim().isEmpty()) {
+      return;
     }
+    g.getBlock(bt).directStatement(String.format(
+        "/** start %s for function %s **/ ", bt.name(), attributes.getRegisteredNames()[0]));
+
+    JBlock sub = new JBlock(true, true);
+    addProtectedBlock(g, sub, body, inputVariables, workspaceJVars, workspaceOnly);
+    g.getBlock(bt).add(sub);
+
+    g.getBlock(bt).directStatement(String.format(
+        "/** end %s for function %s **/ ", bt.name(), attributes.getRegisteredNames()[0]));
   }
 
-  protected void addProtectedBlock(ClassGenerator<?> g, JBlock sub, String body, HoldingContainer[] inputVariables,
-      JVar[] workspaceJVars, boolean decConstInputOnly) {
+  /**
+   * Generate the function block itself, without surrounding comments, and
+   * whether or not the method is empty.
+   */
+  protected void addProtectedBlock(ClassGenerator<?> g, JBlock sub, String body,
+      HoldingContainer[] inputVariables,
+      JVar[] workspaceJVars, boolean workspaceOnly) {
+
+    // Create the binding between simulated function fields and their values,
     if (inputVariables != null) {
+      // If VarArgs, all input variables go into a single array.
       if (isVarArg()) {
         declareVarArgArray(g.getModel(), sub, inputVariables);
       }
       for (int i = 0; i < inputVariables.length; i++) {
-        if (decConstInputOnly && !inputVariables[i].isConstant()) {
+        if (workspaceOnly && !inputVariables[i].isConstant()) {
           continue;
         }
-        declare(g.getModel(), sub, inputVariables[i], i);
+        declareInputVariable(g.getModel(), sub, inputVariables[i], i);
       }
     }
 
+    // Declare workspace variables
     JVar[] internalVars = new JVar[workspaceJVars.length];
     for (int i = 0; i < workspaceJVars.length; i++) {
-      if (decConstInputOnly) {
-        internalVars[i] = sub.decl(
-            g.getModel()._ref(attributes.getWorkspaceVars()[i].getType()),
-            attributes.getWorkspaceVars()[i].getName(), workspaceJVars[i]);
-      } else {
-        internalVars[i] = sub.decl(
-            g.getModel()._ref(attributes.getWorkspaceVars()[i].getType()),
-            attributes.getWorkspaceVars()[i].getName(), workspaceJVars[i]);
-      }
+      internalVars[i] = sub.decl(
+          g.getModel()._ref(attributes.getWorkspaceVars()[i].getType()),
+          attributes.getWorkspaceVars()[i].getName(), workspaceJVars[i]);
     }
 
+    // Add the source code for the block.
     Preconditions.checkNotNull(body);
     sub.directStatement(body);
 
     // reassign workspace variables back to global space.
     for (int i = 0; i < workspaceJVars.length; i++) {
       sub.assign(workspaceJVars[i], internalVars[i]);
-    }
-  }
-
-  /**
-   * Declares attribute parameter which corresponds to specified {@code currentIndex}
-   * in specified {@code jBlock} considering its type.
-   *
-   * @param model         code model to generate the code
-   * @param jBlock        block of code to be populated
-   * @param inputVariable input variable for current function
-   * @param currentIndex  index of current parameter
-   */
-  protected void declare(JCodeModel model, JBlock jBlock,
-      HoldingContainer inputVariable, int currentIndex) {
-    ValueReference parameter = getAttributeParameter(currentIndex);
-    if (parameter.isFieldReader()
-        && !inputVariable.isReader()
-        && !Types.isComplex(inputVariable.getMajorType())
-        && inputVariable.getMinorType() != MinorType.UNION) {
-      JType singularReaderClass = model._ref(
-          TypeHelper.getHolderReaderImpl(inputVariable.getMajorType().getMinorType(),
-          inputVariable.getMajorType().getMode()));
-      JType fieldReadClass = getParamClass(model, parameter, inputVariable.getHolder().type());
-      JInvocation reader = JExpr._new(singularReaderClass).arg(inputVariable.getHolder());
-      declare(jBlock, parameter, fieldReadClass, reader, currentIndex);
-    } else if (!parameter.isFieldReader()
-        && inputVariable.isReader()
-        && Types.isComplex(parameter.getType())) {
-      // For complex data-types (repeated maps/lists/dicts) the input to the aggregate will be a FieldReader. However, aggregate
-      // functions like ANY_VALUE, will assume the input to be a RepeatedMapHolder etc. Generate boilerplate code, to map
-      // from FieldReader to respective Holder.
-      if (Types.isComplex(parameter.getType())) {
-        JType holderClass = getParamClass(model, parameter, inputVariable.getHolder().type());
-        JAssignmentTarget holderVar = declare(jBlock, parameter, holderClass, JExpr._new(holderClass), currentIndex);
-        jBlock.assign(holderVar.ref("reader"), inputVariable.getHolder());
-      }
-    } else {
-      JExpression exprToAssign = inputVariable.getHolder();
-      if (parameter.isVarArg() && parameter.isFieldReader() && Types.isUnion(inputVariable.getMajorType())) {
-        exprToAssign = exprToAssign.ref("reader");
-      }
-      declare(jBlock, parameter, inputVariable.getHolder().type(), exprToAssign, currentIndex);
     }
   }
 
@@ -305,6 +301,161 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
     }
     JType paramClass = getParamClass(model, parameter, defaultType);
     jBlock.decl(paramClass.array(), parameter.getName(), JExpr.newArray(paramClass, inputVariables.length - getParamCount() + 1));
+  }
+
+  /**
+   * Generate the top part of a function call which simulates passing parameters
+   * into the function. Given the following declaration: <code><pre>
+   * public static class UnionIsBigInt implements DrillSimpleFunc {
+   *   @Param UnionHolder in;
+   * </pre></code>, we generate code like the following: <code><pre>
+   *  final BitHolder out = new BitHolder();
+   *  FieldReader in = reader4;
+   * </pre></code>
+   * <p>
+   * Declares attribute parameter which corresponds to specified {@code currentIndex}
+   * in specified {@code jBlock}. Parameters are those fields
+   * in the function declaration annotated with a <tt>@Param</tt> tag. Parameters
+   * or expressions can both be represented by either a <code>FieldReader</code>
+   * or a value holder. Perform conversion between the two as needed.
+   *
+   * @param model         code model to generate the code
+   * @param jBlock        block of code to be populated
+   * @param inputVariable input variable for current function
+   * @param currentIndex  index of current parameter
+   */
+  protected void declareInputVariable(JCodeModel model, JBlock jBlock,
+      HoldingContainer inputVariable, int currentIndex) {
+    ValueReference parameter = getAttributeParameter(currentIndex);
+    if (!inputVariable.isReader() && parameter.isFieldReader()) {
+      convertHolderToReader(model, jBlock, inputVariable, currentIndex, parameter);
+    } else if (inputVariable.isReader() && !parameter.isFieldReader()) {
+      convertReaderToHolder(model, jBlock, inputVariable, currentIndex, parameter);
+    } else {
+      assignParamDirectly(jBlock, inputVariable, currentIndex, parameter);
+    }
+  }
+
+  /**
+   * Convert an input variable (in the generated code) to a reader as declared
+   * on the input parameter.
+   */
+  private void convertHolderToReader(JCodeModel model, JBlock jBlock,
+      HoldingContainer inputVariable, int currentIndex,
+      ValueReference parameter) {
+    JVar inputHolder = inputVariable.getHolder();
+    MajorType inputSqlType = inputVariable.getMajorType();
+
+    // The parameter is a reader in this case.
+    JType paramClass = model._ref(FieldReader.class);
+    if (Types.isComplex(inputSqlType)) {
+        throw new UnsupportedOperationException(String.format(
+            "Cannot convert values of type %s from a holder to a reader",
+            inputSqlType.getMinorType().name()));
+    } else if (Types.isUnion(inputSqlType)) {
+      // For the UNION type, there is no simple conversion from
+      // a value holder to a reader.
+      //
+      // Prior to the fix for DRILL-7502, the parameter is redefined
+      // from type FieldReader to type UnionHolder. This is clearly
+      // wrong, but it worked in most cases. It DOES NOT work for the
+      // typeof() function, which needs a reader. Old code:
+
+      // assignParamDirectly(jBlock, inputVariable, currentIndex, parameter);
+
+      // A large amount of code depends on the UNION being represented
+      // as a UnionHolder, especially that for handling varying types.
+      // ExpressionTreeMaterializer.rewriteUnionFunction(), for example
+      // relies heavily on UnionHolder. As a result, we cannot simply
+      // change the "holder" for the UNION to be a reader, as is done
+      // for complex types.
+      //
+      // Run TestTopNSchemaChanges.testNumericTypes with saving of code
+      // enabled, and look at the second "PriorityQueueGen" for an example.
+
+      // One would think that the following should work: the UnionHolder
+      // has a reader field. However, that field is not set in the code
+      // gen path; only when creating a holder from a reader. Code which
+      // does NOT work:
+
+      // jBlock.decl(paramClass, parameter.getName(), inputHolder.ref("reader"));
+
+      // One solution that works (but is probably slow and redundant) is to
+      // obtain the reader directly from the underling value vector. We saved
+      // this information when defining the holder. We retrieve it here
+      // and insert the vector --> reader conversion.
+      VectorVariableHolder vvHolder = (VectorVariableHolder) inputVariable;
+      JVar readerVar = vvHolder.generateUnionReader();
+      declare(jBlock, parameter, paramClass, readerVar, currentIndex);
+
+      // TODO: This probably needs a more elegant solution, but this does
+      // work for now. Run TestTypeFns.testUnionType to verify.
+    } else {
+      // FooHolderReader param = new FooHolderReader(inputVar);
+      JType singularReaderClass = model._ref(
+          TypeHelper.getHolderReaderImpl(inputSqlType.getMinorType(),
+              inputSqlType.getMode()));
+      JInvocation reader = JExpr._new(singularReaderClass).arg(inputHolder);
+      declare(jBlock, parameter, paramClass, reader, currentIndex);
+    }
+  }
+
+  /**
+   * Convert an input value holder (in the generated code) into a value
+   * holder as declared on the input parameter.
+   */
+  private void convertReaderToHolder(JCodeModel model, JBlock jBlock,
+      HoldingContainer inputVariable, int currentIndex,
+      ValueReference parameter) {
+    JVar inputHolder = inputVariable.getHolder();
+    MajorType inputSqlType = inputVariable.getMajorType();
+    if (Types.isComplex(parameter.getType())) {
+      // For complex data-types (repeated maps/lists/dicts) the input to the
+      // aggregate will be a FieldReader. However, aggregate
+      // functions like ANY_VALUE, will assume the input to be a
+      // RepeatedMapHolder etc. Generate boilerplate code, to map
+      // from FieldReader to respective Holder.
+
+      // FooHolder param = new FooHolder();
+      // param.reader = inputVar;
+      JType holderClass = getParamClass(model, parameter, inputHolder.type());
+      JAssignmentTarget holderVar = declare(jBlock, parameter, holderClass, JExpr._new(holderClass), currentIndex);
+      jBlock.assign(holderVar.ref("reader"), inputHolder);
+    } else if (Types.isUnion(inputSqlType)) {
+      // Normally unions are generated as a UnionHolder. However, if a parameter
+      // is a FieldReader, then we must generate the union as a UnionReader.
+      // Then, if there is another function that use a holder, we can convert
+      // from the UnionReader to a UnionHolder.
+      //
+      // UnionHolder param = new UnionHolder();
+      // inputVar.read(param);
+      JType holderClass = model._ref(UnionHolder.class);
+      JAssignmentTarget paramVar = jBlock.decl(holderClass, parameter.getName(), JExpr._new(holderClass));
+      JInvocation readCall = inputHolder.invoke("read");
+      readCall.arg(paramVar);
+      jBlock.add(readCall);
+    } else {
+      throw new UnsupportedOperationException(String.format(
+          "Cannot convert values of type %s from a reader to a holder",
+          inputSqlType.getMinorType().name()));
+    }
+  }
+
+  /**
+   * The input variable and parameter are both either a holder or a
+   * field reader.
+   */
+  private void assignParamDirectly(JBlock jBlock,
+      HoldingContainer inputVariable, int currentIndex,
+      ValueReference parameter) {
+
+    // Declare parameter as the type of the input variable because
+    // if we get here, they must be the same type.
+    //
+    // InputType param = inputVar;
+    JVar inputHolder = inputVariable.getHolder();
+    declare(jBlock, parameter, inputHolder.type(),
+        inputHolder, currentIndex);
   }
 
   /**
@@ -342,10 +493,20 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
   protected JAssignmentTarget declare(JBlock jBlock, ValueReference parameter,
       JType paramClass, JExpression paramExpression, int currentIndex) {
     if (parameter.isVarArg()) {
+      // For VarArg, an array has already been generated:
+
+      // FieldReader[] in = new FieldReader[ 4 ] ;
+
+      // Here we assign the input value to the array:
+
+      // in[ 0 ] = new VarCharHolderReaderImpl(constant1);
       JAssignmentTarget arrayComponent = JExpr.ref(parameter.getName()).component(JExpr.lit(currentIndex - getParamCount() + 1));
       jBlock.assign(arrayComponent, paramExpression);
       return arrayComponent;
     } else {
+      // Actual define the input variable with an expression.
+      // Foo in = bar12;
+
       return jBlock.decl(paramClass, parameter.getName(), paramExpression);
     }
   }
@@ -353,21 +514,15 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
   public boolean matches(MajorType returnType, List<MajorType> argTypes) {
 
     if (!softCompare(returnType, attributes.getReturnValue().getType())) {
-      // logger.debug(String.format("Call [%s] didn't match as return type [%s] was different than expected [%s]. ",
-      // call.getDefinition().getName(), returnValue.type, call.getMajorType()));
       return false;
     }
 
     if (argTypes.size() != attributes.getParameters().length) {
-      // logger.debug(String.format("Call [%s] didn't match as the number of arguments provided [%d] were different than expected [%d]. ",
-      // call.getDefinition().getName(), parameters.length, call.args.size()));
       return false;
     }
 
     for (int i = 0; i < attributes.getParameters().length; i++) {
       if (!softCompare(getAttributeParameter(i).getType(), argTypes.get(i))) {
-        // logger.debug(String.format("Call [%s] didn't match as the argument [%s] didn't match the expected type [%s]. ",
-        // call.getDefinition().getName(), arg.getMajorType(), param.type));
         return false;
       }
     }
@@ -392,7 +547,7 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
   /**
    * Returns i-th function attribute parameter.
    * For the case when current function is vararg and specified index
-   * is greater than or equals to the attributes count, the last function attribute parameter  is returnedd.
+   * is greater than or equals to the attributes count, the last function attribute parameter  is returned.
    *
    * @param i index of function attribute parameter to  be returned
    * @return i-th function attribute parameter

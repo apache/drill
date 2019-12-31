@@ -35,13 +35,16 @@ import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import io.netty.buffer.DrillBuf;
 
 /**
- * The class contains additional functions for union types in addition to those in GUnionFunctions
+ * Contains additional functions for union types in addition to those in
+ * GUnionFunctions
  */
 public class UnionFunctions {
 
   /**
-   * Returns zero if the inputs have equivalent types. Two numeric types are considered equivalent, as are a combination
-   * of date/timestamp. If not equivalent, returns a value determined by the numeric value of the MinorType enum
+   * Returns zero if the inputs have equivalent types. Two numeric types are
+   * considered equivalent, as are a combination of date/timestamp. If not
+   * equivalent, returns a value determined by the numeric value of the
+   * MinorType enum
    */
   @FunctionTemplate(names = {"compareType"},
           scope = FunctionTemplate.FunctionScope.SIMPLE,
@@ -84,11 +87,9 @@ public class UnionFunctions {
   }
 
   /**
-   * Gives a type ordering modeled after the behavior of MongoDB
-   * Numeric types are first, folowed by string types, followed by binary, then boolean, then date, then timestamp
-   * Any other times will be sorted after that
-   * @param type
-   * @return
+   * Gives a type ordering modeled after the behavior of MongoDB Numeric types
+   * are first, followed by string types, followed by binary, then boolean, then
+   * date, then timestamp Any other times will be sorted after that
    */
   private static int getTypeValue(MinorType type) {
     if (TypeCastRules.isNumericType(type)) {
@@ -144,98 +145,7 @@ public class UnionFunctions {
 
     @Override
     public void eval() {
-
-      String typeName;
-      if (input.isSet()) {
-        typeName = input.getTypeString();
-      } else {
-        typeName = org.apache.drill.common.types.TypeProtos.MinorType.NULL.name();
-      }
-      byte[] type = typeName.getBytes();
-      buf = buf.reallocIfNeeded(type.length);
-      buf.setBytes(0, type);
-      out.buffer = buf;
-      out.start = 0;
-      out.end = type.length;
-    }
-  }
-
-  @FunctionTemplate(name = "sqlTypeOf",
-          scope = FunctionTemplate.FunctionScope.SIMPLE,
-          nulls = NullHandling.INTERNAL)
-  public static class GetSqlType implements DrillSimpleFunc {
-
-    @Param
-    FieldReader input;
-    @Output
-    VarCharHolder out;
-    @Inject
-    DrillBuf buf;
-
-    @Override
-    public void setup() {}
-
-    @Override
-    public void eval() {
-
-      String typeName = org.apache.drill.common.types.Types.getExtendedSqlTypeName(input.getType());
-      byte[] type = typeName.getBytes();
-      buf = buf.reallocIfNeeded(type.length);
-      buf.setBytes(0, type);
-      out.buffer = buf;
-      out.start = 0;
-      out.end = type.length;
-    }
-  }
-
-  @FunctionTemplate(name = "drillTypeOf",
-          scope = FunctionTemplate.FunctionScope.SIMPLE,
-          nulls = NullHandling.INTERNAL)
-  public static class GetDrillType implements DrillSimpleFunc {
-
-    @Param
-    FieldReader input;
-    @Output
-    VarCharHolder out;
-    @Inject
-    DrillBuf buf;
-
-    @Override
-    public void setup() {}
-
-    @Override
-    public void eval() {
-
       String typeName = input.getTypeString();
-      byte[] type = typeName.getBytes();
-      buf = buf.reallocIfNeeded(type.length);
-      buf.setBytes(0, type);
-      out.buffer = buf;
-      out.start = 0;
-      out.end = type.length;
-    }
-  }
-
-  @FunctionTemplate(name = "modeOf",
-          scope = FunctionTemplate.FunctionScope.SIMPLE,
-          nulls = NullHandling.INTERNAL)
-  public static class GetMode implements DrillSimpleFunc {
-
-    @Param
-    FieldReader input;
-    @Output
-    VarCharHolder out;
-    @Inject
-    DrillBuf buf;
-
-    @Override
-    public void setup() {}
-
-    @Override
-    public void eval() {
-
-      String typeName = org.apache.drill.common.types.Types.getSqlModeName(
-          input.getType());
       byte[] type = typeName.getBytes();
       buf = buf.reallocIfNeeded(type.length);
       buf.setBytes(0, type);

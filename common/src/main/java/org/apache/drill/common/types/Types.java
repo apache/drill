@@ -232,6 +232,7 @@ public class Types {
       case NULL:            return "NULL";
       case UNION:           return "UNION";
       case GENERIC_OBJECT:  return "JAVA_OBJECT";
+      case LIST:            return "LIST";
 
       // Internal types not actually used at level of SQL types(?):
 
@@ -254,9 +255,11 @@ public class Types {
    * if type is a decimal
    */
   public static String getExtendedSqlTypeName(MajorType type) {
-
-    String typeName = getSqlTypeName(type);
+    String typeName = getBaseSqlTypeName(type);
     switch (type.getMinorType()) {
+    case LIST:
+      typeName = "ARRAY";
+      break;
     case DECIMAL9:
     case DECIMAL18:
     case DECIMAL28SPARSE:

@@ -18,6 +18,7 @@
 package org.apache.drill.exec.vector.complex.impl;
 
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import org.apache.drill.exec.expr.holders.ValueHolder;
 import org.apache.drill.exec.util.Text;
@@ -198,5 +199,9 @@ public class SingleDictReaderImpl extends AbstractRepeatedMapReaderImpl<DictVect
           .append('>');
     }
     return sb.toString();
+  }
+
+  public MinorType getVectorType() {
+    return vector.getField().getType().getMinorType();
   }
 }

@@ -19,6 +19,7 @@ package org.apache.drill.exec.expr.fn.impl;
 
 import static org.junit.Assert.assertEquals;
 
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.test.ClusterFixture;
@@ -82,7 +83,7 @@ public class TestTypeFns extends ClusterTest {
 
     sql = "SELECT typeof(CAST(a AS " + castType + ")) FROM cp.`functions/null.json`";
     result = queryBuilder().sql(sql).singletonString();
-    assertEquals("NULL", result);
+    assertEquals(resultType, result);
   }
 
   private void doTypeOfTestSpecial(String expr, String value, String resultType) throws RpcException {
@@ -222,7 +223,7 @@ public class TestTypeFns extends ClusterTest {
         .sqlQuery(sql)
         .unOrdered()
         .baselineColumns("c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8", "c9")
-        .baselineValues("INT", "VARCHAR", "DATE", "TIME", "TIMESTAMP", "BIT", "VARDECIMAL", "BIT", "NULL")
+        .baselineValues("INT", "VARCHAR", "DATE", "TIME", "TIMESTAMP", "BIT", "VARDECIMAL", "BIT", "INT")
         .go();
   }
 
@@ -304,5 +305,44 @@ public class TestTypeFns extends ClusterTest {
         .baselineColumns("c1", "c2", "c3", "c4", "c5", "c6")
         .baselineValues(0, 1, -1, -1, 0, 0)
         .go();
+  }
+
+  @Test
+  public void testTypeOfWithFile() throws Exception {
+    // Column `x` does not actually appear in the file.
+    String sql ="SELECT typeof(bi) AS bi_t, typeof(fl) AS fl_t, typeof(st) AS st_t,\n" +
+                "       typeof(mp) AS mp_t, typeof(ar) AS ar_t, typeof(nu) AS nu_t,\n" +
+                "       typeof(x) AS x_t\n" +
+                "FROM cp.`jsoninput/allTypes.json`";
+     testBuilder()
+      .sqlQuery(sql)
+      .ordered()
+      .baselineColumns("bi_t",   "fl_t",   "st_t",    "mp_t", "ar_t",   "nu_t", "x_t")
+      .baselineValues( "BIGINT", "FLOAT8", "VARCHAR", "MAP",  "BIGINT", "NULL", "NULL")
+      .go();
+  }
+
+  @Test
+  public void testUnionType() throws Exception {
+    String sql ="SELECT typeof(a) AS t, modeof(a) AS m, drilltypeof(a) AS dt\n" +
+                "FROM cp.`jsoninput/union/c.json`";
+    try {
+      testBuilder()
+        .optionSettingQueriesForTestQuery("alter session set `exec.enable_union_type` = true")
+        .sqlQuery(sql)
+        .ordered()
+        .baselineColumns("t",       "m",        "dt")
+        .baselineValues( "VARCHAR", "NULLABLE", "UNION")
+        .baselineValues( "BIGINT",  "NULLABLE", "UNION")
+        .baselineValues( "FLOAT8",  "NULLABLE", "UNION")
+        // The following should probably provide the type of the list,
+        // and report cardinality as ARRAY.
+        .baselineValues( "LIST",    "NULLABLE", "UNION")
+        .baselineValues( "NULL",    "NULLABLE", "UNION")
+        .go();
+    }
+    finally {
+      client.resetSession(ExecConstants.ENABLE_UNION_TYPE_KEY);
+    }
   }
 }
