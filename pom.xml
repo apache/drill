@@ -99,7 +99,7 @@
     <directMemoryMb>4096</directMemoryMb>
     <rat.skip>true</rat.skip>
     <license.skip>true</license.skip>
-    <docker.repository>drill/apache-drill</docker.repository>
+    <docker.repository>apache/drill</docker.repository>
     <antlr.version>4.7.2</antlr.version>
     <lowestMavenVersion>3.3.3</lowestMavenVersion>
     <commons.net.version>3.6</commons.net.version>

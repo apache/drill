@@ -14,6 +14,7 @@ Please read [Environment.md](docs/dev/Environment.md) for setting up and running
 Please see the [Apache Drill Website](http://drill.apache.org/) or the [Apache Drill Documentation](http://drill.apache.org/docs/) for more information including:
 
  * Remote Execution Installation Instructions
+ * [Running Drill on Docker instructions](https://drill.apache.org/docs/running-drill-on-docker/)
  * Information about how to submit logical and distributed physical plans
  * More example queries and sample data
  * Find out ways to be involved or discuss Drill
