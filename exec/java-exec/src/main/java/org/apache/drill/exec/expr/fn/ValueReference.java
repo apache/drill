@@ -22,14 +22,19 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 
+/**
+ * Represents a declared variable (parameter) in a Drill function.
+ * This is a field declared with the <code>@Param</code> or
+ * <code>@Output</code> tags.
+ */
 public class ValueReference {
   private final MajorType type;
   private final String name;
-  private boolean isConstant = false;
-  private boolean isFieldReader = false;
-  private boolean isComplexWriter = false;
-  private boolean isInternal = false;
-  private boolean isVarArg = false;
+  private boolean isConstant;
+  private boolean isFieldReader;
+  private boolean isComplexWriter;
+  private boolean isInternal;
+  private boolean isVarArg;
 
   public ValueReference(MajorType type, String name) {
     Preconditions.checkNotNull(type);

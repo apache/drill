@@ -26,18 +26,20 @@ package org.apache.drill.exec.vector.complex.impl;
 <#include "/@includes/vv_imports.ftl" />
 
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 
 /*
  * This class is generated using freemarker and the ${.template_name} template.
  */
 @SuppressWarnings("unused")
 public class NullReader extends AbstractBaseReader implements FieldReader {
-  
+
   public static final NullReader INSTANCE = new NullReader();
   public static final NullReader EMPTY_LIST_INSTANCE = new NullReader(Types.repeated(TypeProtos.MinorType.NULL));
   public static final NullReader EMPTY_MAP_INSTANCE = new NullReader(Types.required(TypeProtos.MinorType.MAP));
   private MajorType type;
-  
+
   private NullReader() {
     type = Types.NULL;
   }
@@ -54,7 +56,7 @@ public class NullReader extends AbstractBaseReader implements FieldReader {
   public void read(ValueHolder holder) {
     throw new UnsupportedOperationException("NullReader cannot write into non-nullable holder");
   }
-  
+
   public void copyAsValue(MapWriter writer) {}
 
   public void copyAsValue(ListWriter writer) {}
@@ -73,7 +75,7 @@ public class NullReader extends AbstractBaseReader implements FieldReader {
   public void read(int arrayIndex, ${name}Holder holder) {
     throw new ArrayIndexOutOfBoundsException();
   }
-  
+
   public void copyAsValue(${minor.class}Writer writer) {}
   <#if minor.class == "VarDecimal">
   public void copyAsField(String name, ${minor.class}Writer writer, int precision, int scale) {}
@@ -85,57 +87,57 @@ public class NullReader extends AbstractBaseReader implements FieldReader {
     throw new ArrayIndexOutOfBoundsException();
   }
   </#list></#list>
-  
+
   public int size() {
     return 0;
   }
-  
+
   public boolean isSet() {
     return false;
   }
-  
+
   public boolean next() {
     return false;
   }
-  
+
   public RepeatedMapReader map() {
     return this;
   }
-  
+
   public RepeatedListReader list() {
     return this;
   }
-  
+
   public MapReader map(String name) {
     return this;
   }
-  
+
   public ListReader list(String name) {
     return this;
   }
-  
+
   public FieldReader reader(String name) {
     return this;
   }
-  
+
   public FieldReader reader() {
     return this;
   }
-  
+
   private void fail(String name) {
     throw new IllegalArgumentException(String.format("You tried to read a %s type when you are using a ValueReader of type %s.", name, this.getClass().getSimpleName()));
   }
-  
-  <#list ["Object", "BigDecimal", "Integer", "Long", "Boolean", 
+
+  <#list ["Object", "BigDecimal", "Integer", "Long", "Boolean",
           "Character", "LocalDate", "LocalTime", "LocalDateTime", "Period", "Double", "Float",
           "Text", "String", "Byte", "Short", "byte[]"] as friendlyType>
   <#assign safeType=friendlyType />
   <#if safeType=="byte[]"><#assign safeType="ByteArray" /></#if>
-  
+
   public ${friendlyType} read${safeType}(int arrayIndex) {
     return null;
   }
-  
+
   public ${friendlyType} read${safeType}() {
     return null;
   }

@@ -21,31 +21,35 @@ import java.util.List;
 
 import org.apache.drill.common.expression.fn.FuncHolder;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
-
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
+/**
+ * Represents an actual call (a reference) to a declared function.
+ * Holds the name used (functions can have multiple aliases), the
+ * function declaration, and the actual argument expressions used
+ * in this call. This might be better named
+ * <code>FunctionCallExpression</code> as it represents a use
+ * of a function. Subclasses hold references to the declaration
+ * depending on the type (Drill, Hive) of the function.
+ */
 public abstract class FunctionHolderExpression extends LogicalExpressionBase {
   public final ImmutableList<LogicalExpression> args;
   public final String nameUsed;
 
   /**
-   * A field reference identifies the output field and
-   * is used to reference that field in the generated classes.
+   * Identifies the output field. References that field in the
+   * generated classes.
    */
   private FieldReference fieldReference;
 
   public FunctionHolderExpression(String nameUsed, ExpressionPosition pos, List<LogicalExpression> args) {
     super(pos);
-    if (args == null) {
-      args = Lists.newArrayList();
-    }
-
-    if (!(args instanceof ImmutableList)) {
-      args = ImmutableList.copyOf(args);
-    }
-    this.args = (ImmutableList<LogicalExpression>) args;
     this.nameUsed = nameUsed;
+    if (args == null) {
+      this.args = ImmutableList.of();
+    } else {
+      this.args = ImmutableList.copyOf(args);
+    }
   }
 
   @Override
@@ -74,16 +78,17 @@ public abstract class FunctionHolderExpression extends LogicalExpressionBase {
   public abstract boolean isAggregating();
 
   /**
-   * is the function output non-deterministic?
+   * Is the function output non-deterministic?
    */
   public abstract boolean isRandom();
 
   /**
-   * @ return a copy of FunctionHolderExpression, with passed in argument list.
+   * @return a copy of FunctionHolderExpression, with passed in argument list.
    */
   public abstract FunctionHolderExpression copy(List<LogicalExpression> args);
 
-  /** Return the underlying function implementation holder. */
+  /** Return the underlying function implementation holder. That is,
+   * returns the function declaration. */
   public abstract FuncHolder getHolder();
 
   public FieldReference getFieldReference() {
@@ -97,5 +102,22 @@ public abstract class FunctionHolderExpression extends LogicalExpressionBase {
    */
   public void setFieldReference(FieldReference fieldReference) {
     this.fieldReference = fieldReference;
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder buf = new StringBuilder()
+        .append("[").append(getClass().getSimpleName())
+        .append(", ")
+        .append(nameUsed).append("(");
+    boolean first = true;
+    for (LogicalExpression arg : args) {
+      if (!first) {
+        buf.append(", ");
+      }
+      first = false;
+      buf.append(arg.toString());
+    }
+    return buf.append("]").toString();
   }
 }

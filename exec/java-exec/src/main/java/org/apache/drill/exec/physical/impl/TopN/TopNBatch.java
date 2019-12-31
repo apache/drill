@@ -67,6 +67,9 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractContainerVector;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sun.codemodel.JConditional;
 import com.sun.codemodel.JExpr;
 
@@ -81,7 +84,7 @@ import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK_NEW_SCHEMA
  * internally it maintains a priority queue backed by a heap with the size being same as limit value.
  */
 public class TopNBatch extends AbstractRecordBatch<TopN> {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TopNBatch.class);
+  static final Logger logger = LoggerFactory.getLogger(TopNBatch.class);
 
   private final MappingSet mainMapping = createMainMappingSet();
   private final MappingSet leftMapping = createLeftMappingSet();
@@ -92,7 +95,7 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
 
   private final RecordBatch incoming;
   private BatchSchema schema;
-  private boolean schemaChanged = false;
+  private boolean schemaChanged;
   private PriorityQueue priorityQueue;
   private final TopN config;
   private SelectionVector4 sv4;
@@ -100,10 +103,10 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
   private int batchCount;
   private Copier copier;
   private boolean first = true;
-  private int recordCount = 0;
+  private int recordCount;
   private IterOutcome lastKnownOutcome = OK;
   private boolean firstBatchForSchema = true;
-  private boolean hasOutputRecords = false;
+  private boolean hasOutputRecords;
 
   public TopNBatch(TopN popConfig, FragmentContext context, RecordBatch incoming) throws OutOfMemoryException {
     super(popConfig, context);
@@ -395,15 +398,17 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
     FunctionLookupContext functionLookupContext = context.getFunctionRegistry();
     CodeGenerator<PriorityQueue> cg = CodeGenerator.get(PriorityQueue.TEMPLATE_DEFINITION, optionSet);
     cg.plainJavaCapable(true);
-    // Uncomment out this line to debug the generated code.
     cg.saveCodeForDebugging(codegenDump);
+    // Uncomment out this line to debug the generated code.
+    // cg.saveCodeForDebugging(true);
     ClassGenerator<PriorityQueue> g = cg.getRoot();
     g.setMappingSet(mainMapping);
 
     for (Ordering od : orderings) {
       // first, we rewrite the evaluation stack for each side of the comparison.
       ErrorCollector collector = new ErrorCollectorImpl();
-      final LogicalExpression expr = ExpressionTreeMaterializer.materialize(od.getExpr(), batch, collector, functionLookupContext, unionTypeEnabled);
+      final LogicalExpression expr = ExpressionTreeMaterializer.materialize(od.getExpr(),
+          batch, collector, functionLookupContext, unionTypeEnabled);
       if (collector.hasErrors()) {
         throw new SchemaChangeException("Failure while materializing expression. " + collector.toErrorString());
       }
@@ -591,7 +596,7 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
       // across multiple record boundary unless a new schema is observed
       int index = 0;
       for (VectorWrapper<?> w : dataContainer) {
-        HyperVectorWrapper wrapper = (HyperVectorWrapper<?>) container.getValueVector(index++);
+        HyperVectorWrapper<?> wrapper = (HyperVectorWrapper<?>) container.getValueVector(index++);
         wrapper.updateVectorList(w.getValueVectors());
       }
       // Since the reference of SV4 is held by downstream operator and there is no schema change, so just copy the

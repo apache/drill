@@ -757,9 +757,9 @@ public class TypeCastRules {
   private static final int DATAMODE_CAST_COST = 1;
   private static final int VARARG_COST = Integer.MAX_VALUE / 2;
 
-  /*
-   * code decide whether it's legal to do implicit cast. -1 : not allowed for
-   * implicit cast > 0: cost associated with implicit cast. ==0: parms are
+  /**
+   * Decide whether it's legal to do implicit cast. -1 : not allowed for
+   * implicit cast > 0: cost associated with implicit cast. ==0: params are
    * exactly same type of arg. No need of implicit.
    */
   public static int getCost(List<MajorType> argumentTypes, DrillFuncHolder holder) {
@@ -772,12 +772,14 @@ public class TypeCastRules {
     // Indicates whether we used secondary cast rules
     boolean secondaryCast = false;
 
-    // number of arguments that could implicitly casts using precedence map or didn't require casting at all
+    // number of arguments that could implicitly casts using precedence map or
+    // didn't require casting at all
     int nCasts = 0;
 
     /*
-     * If we are determining function holder for decimal data type, we need to make sure the output type of
-     * the function can fit the precision that we need based on the input types.
+     * If we are determining function holder for decimal data type, we need to
+     * make sure the output type of the function can fit the precision that we
+     * need based on the input types.
      */
     if (holder.checkPrecisionRange()) {
       List<LogicalExpression> logicalExpressions = Lists.newArrayList();
@@ -800,12 +802,10 @@ public class TypeCastRules {
       //@Param FieldReader will match any type
       if (holder.isFieldReader(i)) {
 //        if (Types.isComplex(call.args.get(i).getMajorType()) ||Types.isRepeated(call.args.get(i).getMajorType()) )
-        // add the max cost when encountered with a field reader considering that it is the most expensive factor
-        // contributing to the cost.
+        // add the max cost when encountered with a field reader considering
+        // that it is the most expensive factor contributing to the cost.
         cost += ResolverTypePrecedence.MAX_IMPLICIT_CAST_COST;
         continue;
-//        else
-//          return -1;
       }
 
       if (!TypeCastRules.isCastableWithNullHandling(argType, paramType, holder.getNullHandling())) {
@@ -829,8 +829,8 @@ public class TypeCastRules {
 
       if (paramVal - argVal < 0) {
 
-        /* Precedence rules does not allow to implicitly cast, however check
-         * if the seconday rules allow us to cast
+        /* Precedence rules do not allow to implicit cast, however check
+         * if the secondary rules allow us to cast
          */
         Set<MinorType> rules;
         if ((rules = (ResolverTypePrecedence.secondaryImplicitCastRules.get(paramType.getMinorType()))) != null
@@ -841,7 +841,7 @@ public class TypeCastRules {
         }
       }
       // Check null vs non-null, using same logic as that in Types.softEqual()
-      // Only when the function uses NULL_IF_NULL, nullable and non-nullable are inter-changable.
+      // Only when the function uses NULL_IF_NULL, nullable and non-nullable are interchangeable.
       // Otherwise, the function implementation is not a match.
       if (argType.getMode() != paramType.getMode()) {
         // TODO - this does not seem to do what it is intended to
@@ -883,7 +883,7 @@ public class TypeCastRules {
         }
       }
 
-      // increase cost vor var arg functions to prioritize regular ones
+      // increase cost for var arg functions to prioritize regular ones
       Integer additionalCost = ResolverTypePrecedence.precedenceMap.get(holder.getParamMajorType(varArgIndex).getMinorType());
       cost += additionalCost != null ? additionalCost : VARARG_COST;
       cost += holder.getParamMajorType(varArgIndex).getMode() == DataMode.REQUIRED ? 0 : 1;

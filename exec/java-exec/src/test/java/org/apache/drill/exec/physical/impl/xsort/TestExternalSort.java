@@ -49,7 +49,6 @@ public class TestExternalSort extends BaseTestQuery {
    *          and later) sort
    * @throws Exception
    */
-
   @Test
   public void testNumericTypes() throws Exception {
     final int record_count = 10000;

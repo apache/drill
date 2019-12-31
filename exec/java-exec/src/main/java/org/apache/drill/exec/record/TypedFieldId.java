@@ -241,7 +241,7 @@ public class TypedFieldId {
         secondaryFinal = finalType;
       }
 
-      MajorType actualFinalType = finalType;
+      //MajorType actualFinalType = finalType;
       //MajorType secondaryFinal = finalType;
 
       // if this has an index, switch to required type for output

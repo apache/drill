@@ -40,7 +40,6 @@ import javax.inject.Inject;
 import java.nio.charset.Charset;
 
 public class StringFunctions{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StringFunctions.class);
 
   private StringFunctions() {}
 

@@ -8,6 +8,9 @@ To regenerate the sources after making changes to .proto files
 in your PATH (you may need to download and build it first). You can 
 download it from http://code.google.com/p/protobuf/downloads/list.
 
+Note: The Maven file has a dependence on exactly 3.6.1. Find it here:
+https://github.com/protocolbuffers/protobuf/releases/tag/v3.6.1
+
     Note: If generating sources on MAC follow below instructions:
 
               a) Download and install "brew"

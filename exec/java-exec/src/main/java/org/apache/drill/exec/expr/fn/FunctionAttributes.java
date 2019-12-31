@@ -23,17 +23,41 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 
 /**
- * Attributes of a function
- * Those are used in code generation and optimization.
+ * Attributes of a function used in code generation and optimization.
+ * Represents the values contained in the annotations of a Drill
+ * function.
  */
 public class FunctionAttributes {
 
+  /**
+   * Reference to the <code>@FunctionTemplate</code> annotation
+   * instance for the function.
+   */
   private final FunctionTemplate template;
-  private final String[] registeredNames;
-  private final ValueReference[] parameters;
-  private final ValueReference returnValue;
-  private final WorkspaceReference[] workspaceVars;
 
+  /**
+   * Function names (aliases). Some functions are known by multiple
+   * names.
+   */
+  private final String[] registeredNames;
+
+  /**
+   * Input parameters to the function. Indicated by the
+   * <code>@Param</code> annotation for Drill functions.
+   */
+  private final ValueReference[] parameters;
+
+  /**
+   * Single return value of the function. Indicated by the
+   * <code>@Output</code> annotation for Drill functions.
+   */
+  private final ValueReference returnValue;
+
+  /**
+   * Drill functions allow extra "workspace" variables indicated
+   * by the @Workspace annotation.
+   */
+  private final WorkspaceReference[] workspaceVars;
 
   public FunctionAttributes (FunctionTemplate template,
                              ValueReference[] parameters,

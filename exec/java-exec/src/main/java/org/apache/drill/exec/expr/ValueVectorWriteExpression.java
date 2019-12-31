@@ -28,8 +28,6 @@ import org.apache.drill.exec.record.TypedFieldId;
 import java.util.Iterator;
 
 public class ValueVectorWriteExpression implements LogicalExpression {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ValueVectorWriteExpression.class);
-
   private final TypedFieldId fieldId;
   private final LogicalExpression child;
   private final boolean safe;
@@ -52,7 +50,6 @@ public class ValueVectorWriteExpression implements LogicalExpression {
   public MajorType getMajorType() {
     return Types.NULL;
   }
-
 
   public boolean isSafe() {
     return safe;
@@ -90,6 +87,4 @@ public class ValueVectorWriteExpression implements LogicalExpression {
   public int getCumulativeCost() {
     return 0; // TODO
   }
-
-
 }

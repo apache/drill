@@ -89,7 +89,6 @@ public abstract class AbstractExprVisitor<T, VAL, EXCEP extends Exception> imple
     return visitUnknown(intExpr, value);
   }
 
-
   @Override
   public T visitDecimal9Constant(Decimal9Expression decExpr, VAL value) throws EXCEP {
     return visitUnknown(decExpr, value);
@@ -180,9 +179,18 @@ public abstract class AbstractExprVisitor<T, VAL, EXCEP extends Exception> imple
     return visitUnknown(e, value);
   }
 
+  /**
+   * Handles implementation-specific expressions not known to the visitor
+   * structure. Since there are no "visitFoo" methods for these "unknown"
+   * expressions, subclassses should use the functionally-equivalent
+   * <code>instanceof</code> approach to parse out these "unknown"
+   * expressions.
+   */
   @Override
   public T visitUnknown(LogicalExpression e, VAL value) throws EXCEP {
-    throw new UnsupportedOperationException(String.format("Expression of type %s not handled by visitor type %s.", e.getClass().getCanonicalName(), this.getClass().getCanonicalName()));
+    throw new UnsupportedOperationException(String.format(
+        "Expression of type %s not handled by visitor type %s.",
+        e.getClass().getCanonicalName(), this.getClass().getCanonicalName()));
   }
 
   @Override

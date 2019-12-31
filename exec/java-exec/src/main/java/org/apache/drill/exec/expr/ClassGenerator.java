@@ -48,6 +48,7 @@ import org.apache.drill.shaded.guava.com.google.common.base.Function;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+
 import com.sun.codemodel.JBlock;
 import com.sun.codemodel.JCatchBlock;
 import com.sun.codemodel.JClass;
@@ -66,13 +67,11 @@ import com.sun.codemodel.JType;
 import com.sun.codemodel.JVar;
 import org.apache.drill.exec.server.options.OptionSet;
 
-public class ClassGenerator<T>{
+public class ClassGenerator<T> {
 
   public static final GeneratorMapping DEFAULT_SCALAR_MAP = GM("doSetup", "doEval", null, null);
   public static final GeneratorMapping DEFAULT_CONSTANT_MAP = GM("doSetup", "doSetup", null, null);
   public static final String INNER_CLASS_FIELD_NAME = "innerClassField";
-
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ClassGenerator.class);
 
   public enum BlockType {SETUP, EVAL, RESET, CLEANUP}
 
@@ -97,36 +96,41 @@ public class ClassGenerator<T>{
   private JVar innerClassField;
 
   /**
-   * Assumed that field has 3 indexes within the constant pull: index of the CONSTANT_Fieldref_info +
-   * CONSTANT_Fieldref_info.name_and_type_index + CONSTANT_NameAndType_info.name_index.
-   * CONSTANT_NameAndType_info.descriptor_index has limited range of values, CONSTANT_Fieldref_info.class_index is
-   * the same for a single class, they will be taken into account later.
+   * Assume that field has 3 indexes within the constant pull: index of the<br>
+   * CONSTANT_Fieldref_info + CONSTANT_Fieldref_info.name_and_type_index + CONSTANT_NameAndType_info.name_index.
+   * CONSTANT_NameAndType_info.descriptor_index has limited range of values,
+   * CONSTANT_Fieldref_info.class_index is the same for a single class, they will
+   * be taken into account later.
    * <p>
    * Local variable has 1 index within the constant pool.
    * {@link org.objectweb.asm.MethodWriter#visitLocalVariable(String, String, String, Label, Label, int)}
    * <p>
-   * For upper estimation of max index value, suppose that each field and local variable uses different literal
-   * values that have two indexes, then the number of occupied indexes within the constant pull is
+   * For upper estimation of max index value, suppose that each field and local
+   * variable uses different literal values that have two indexes, then the
+   * number of occupied indexes within the constant pull is<br>
    * fieldCount * 3 + fieldCount * 2 + (index - fieldCount) * 3 => fieldCount * 2 + index * 3
    * <p>
-   * Assumed that method has 3 indexes within the constant pull: index of the CONSTANT_Methodref_info +
-   * CONSTANT_Methodref_info.name_and_type_index + CONSTANT_NameAndType_info.name_index.
+   * Assumed that method has 3 indexes within the constant pull: index of the
+   * CONSTANT_Methodref_info + CONSTANT_Methodref_info.name_and_type_index +
+   * CONSTANT_NameAndType_info.name_index.
    * <p>
-   * For the upper estimation of number of split methods suppose that each expression in the method uses single variable.
-   * Suppose that the max number of indexes within the constant pull occupied by fields and local variables is M,
-   * the number of split methods is N, number of abstract methods in the template is A, then splitted methods count is
+   * For the upper estimation of number of split methods suppose that each
+   * expression in the method uses single variable. Suppose that the max number
+   * of indexes within the constant pull occupied by fields and local variables
+   * is M, the number of split methods is N, number of abstract methods in the
+   * template is A, then splitted methods count is<br>
    * N = (M - A * N * 3) / 50 => N = M / (50 + A * 3)
    * <p>
-   * Additionally should be taken into account class references; fields and methods from the template,
-   * so reserves 1000 for them.
+   * Additionally should be taken into account class references; fields and
+   * methods from the template, so reserves 1000 for them.
    * <p>
-   * Then the size of the occupied part in the constant pull is
+   * Then the size of the occupied part in the constant pull is<br>
    * (fieldCount * 2 + index * 3 + 1000) * (1 + 3 / (50 + A * 3))
    */
   private long maxIndex;
 
-  private int index = 0;
-  private int labelIndex = 0;
+  private int index;
+  private int labelIndex;
   private MappingSet mappings;
 
   public static MappingSet getDefaultMapping() {
@@ -146,7 +150,7 @@ public class ClassGenerator<T>{
     this.optionManager = optionManager;
     constantVars = new HashMap<>();
 
-    blocks = (LinkedList<SizedJBlock>[]) new LinkedList[sig.size()];
+    blocks = new LinkedList[sig.size()];
     for (int i =0; i < sig.size(); i++) {
       blocks[i] = Lists.newLinkedList();
     }
@@ -210,12 +214,15 @@ public class ClassGenerator<T>{
   public JBlock getSetupBlock() {
     return getBlock(getCurrentMapping().getMethodName(BlockType.SETUP));
   }
+
   public JBlock getEvalBlock() {
     return getBlock(getCurrentMapping().getMethodName(BlockType.EVAL));
   }
+
   public JBlock getResetBlock() {
     return getBlock(getCurrentMapping().getMethodName(BlockType.RESET));
   }
+
   public JBlock getCleanupBlock() {
     return getBlock(getCurrentMapping().getMethodName(BlockType.CLEANUP));
   }
@@ -290,7 +297,6 @@ public class ClassGenerator<T>{
     JClass t = model.ref(SchemaChangeException.class);
     JType objClass = model.ref(Object.class);
     JBlock b = getSetupBlock();
-    //JExpr.newArray(model.INT).
 
     JVar fieldArr = b.decl(model.INT.array(), "fieldIds" + index++, JExpr.newArray(model.INT, fieldId.getFieldIds().length));
     int[] fieldIndices = fieldId.getFieldIds();
@@ -299,7 +305,7 @@ public class ClassGenerator<T>{
     }
 
     JInvocation invoke = batchName
-        .invoke("getValueAccessorById") //
+        .invoke("getValueAccessorById")
         .arg(vvClass.dotclass())
         .arg(fieldArr);
 
@@ -308,7 +314,8 @@ public class ClassGenerator<T>{
         getNextVar("tmp"),
         invoke.invoke(vectorAccess));
 
-    b._if(obj.eq(JExpr._null()))._then()._throw(JExpr._new(t).arg(JExpr.lit(String.format("Failure while loading vector %s with id: %s.", vv.name(), fieldId.toString()))));
+    b._if(obj.eq(JExpr._null()))._then()._throw(JExpr._new(t).arg(JExpr.lit(
+        String.format("Failure while loading vector %s with id: %s.", vv.name(), fieldId.toString()))));
     //b.assign(vv, JExpr.cast(retClass, ((JExpression) JExpr.cast(wrapperClass, obj)).invoke(vectorAccess)));
     b.assign(vv, JExpr.cast(retClass, obj));
     vvDeclaration.put(setup, vv);
@@ -414,7 +421,6 @@ public class ClassGenerator<T>{
    * @param mode the {@link BlkCreateMode block create mode}
    * for the new block.
    */
-
   private void rotateBlock(BlkCreateMode mode) {
     boolean blockRotated = false;
     for (LinkedList<SizedJBlock> b : blocks) {
@@ -433,7 +439,8 @@ public class ClassGenerator<T>{
   }
 
   /**
-   * Creates methods from the signature {@code sig} with body from the appropriate {@code blocks}.
+   * Creates methods from the signature {@code sig} with body from the
+   * appropriate {@code blocks}.
    */
   void flushCode() {
     if (innerClassGenerator != null) {
@@ -454,9 +461,9 @@ public class ClassGenerator<T>{
       int methodIndex = 0;
       int exprsInMethod = 0;
       boolean isVoidMethod = method.getReturnType() == void.class;
-      for(SizedJBlock sb : blocks[i++]) {
+      for (SizedJBlock sb : blocks[i++]) {
         JBlock b = sb.getBlock();
-        if(!b.isEmpty()) {
+        if (!b.isEmpty()) {
           if (optionManager != null &&
               exprsInMethod > optionManager.getOption(ExecConstants.CODE_GEN_EXP_IN_METHOD_SIZE_VALIDATOR)) {
             JMethod inner = clazz.method(JMod.PRIVATE, model._ref(method.getReturnType()), method.getMethodName() + methodIndex);
@@ -542,7 +549,7 @@ public class ClassGenerator<T>{
     if (innerClassGenerator != null && hasMaxIndexValue()) {
       return innerClassGenerator.declareClassField(prefix, t, init);
     }
-    return clazz.field(JMod.NONE, t, prefix + index++, init);
+    return clazz.field(JMod.NONE, t, getNextVar(prefix), init);
   }
 
   public Pair<Integer, JVar> declareClassConstField(String prefix, JType t,
@@ -551,15 +558,14 @@ public class ClassGenerator<T>{
   }
 
   /**
-   * declare a constant field for the class.
-   * argument {@code function} holds the constant value which
-   * returns a value holder must be set to the class field when the class instance created.
-   * the class field innerClassField will be created if innerClassGenerator exists.
+   * Declare a constant field for the class.
+   * The class field innerClassField will be created if innerClassGenerator exists.
    *
    * @param prefix the prefix name of class field
    * @param t the type of class field
    * @param init init expression
-   * @param function the function holds the constant value
+   * @param function holds the constant value which
+   * returns a value holder must be set to the class field when the class instance created.
    * @return the depth of nested class, class field
    */
   public Pair<Integer, JVar> declareClassConstField(String prefix, JType t, JExpression init,
@@ -571,7 +577,7 @@ public class ClassGenerator<T>{
       depth = nested.getKey() + 1;
       var = nested.getValue();
     } else {
-      var = clazz.field(JMod.NONE, t, prefix + index++, init);
+      var = clazz.field(JMod.NONE, t, getNextVar(prefix), init);
     }
     Pair<Integer, JVar> depthVar = Pair.of(depth, var);
     constantVars.put(depthVar, function);
@@ -591,7 +597,7 @@ public class ClassGenerator<T>{
   }
 
   /**
-   * Adds local variable declaration based on given name and type.
+   * Adds a local variable declaration based on given name and type.
    *
    * @param t major type
    * @param name variable name
@@ -602,24 +608,23 @@ public class ClassGenerator<T>{
     JType holderType = getHolderType(t);
     JVar var;
     if (includeNewInstance) {
-      var = getEvalBlock().decl(holderType, name + index, JExpr._new(holderType));
+      var = getEvalBlock().decl(holderType, getNextVar(name), JExpr._new(holderType));
     } else {
-      var = getEvalBlock().decl(holderType, name + index);
+      var = getEvalBlock().decl(holderType, getNextVar(name));
     }
     JFieldRef outputSet = null;
     if (t.getMode() == DataMode.OPTIONAL) {
       outputSet = var.ref("isSet");
     }
-    index++;
     return new HoldingContainer(t, var, var.ref("value"), outputSet);
   }
 
   public List<TypedFieldId> getWorkspaceTypes() {
-    return this.workspaceTypes;
+    return workspaceTypes;
   }
 
   public Map<WorkspaceReference, JVar> getWorkspaceVectors() {
-    return this.workspaceVectors;
+    return workspaceVectors;
   }
 
   /**
@@ -636,7 +641,6 @@ public class ClassGenerator<T>{
    * instance of that nested class using a well-defined name. This
    * method overrides the base class method defined for this purpose.</li>
    */
-
   public void preparePlainJava() {
 
     // If this generated class uses the "straight Java" technique
@@ -719,7 +723,6 @@ public class ClassGenerator<T>{
    * introspection package. But, Drill prefers Java 7 which only provides
    * parameter types.
    */
-
   private void addCtor(Class<?>[] parameters) {
     JMethod ctor = clazz.constructor(JMod.PUBLIC);
     JBlock body = ctor.body();
@@ -791,13 +794,17 @@ public class ClassGenerator<T>{
       }
       return true;
     }
-
   }
 
   /**
-   * Represents a (Nullable)?(Type)Holder instance.
+   * Represents a (Nullable)?(Type)Holder instance. Allows code
+   * gen to declare, set, work with and retrieve values from a holder.
+   * Holders exploit scalar replacement in Drill (or in Java): that
+   * the holder can, via code rewrites, be replaced by scalars that
+   * do the same job.
    */
-
+  // TODO: Might be better modeled as a set of classes for the special
+  // kinds of holders rather than a generic class and many if-statements.
   public static class HoldingContainer {
     private final JVar holder;
     private final JFieldRef value;
@@ -821,8 +828,18 @@ public class ClassGenerator<T>{
       this.isReader = isReader;
     }
 
+    public HoldingContainer(HoldingContainer from) {
+      this.holder = from.holder;
+      this.value =from. value;
+      this.isSet = from.isSet;
+      this.type = from.type;
+      this.isConstant = from.isConstant;
+      this.singularRepeated = from.singularRepeated;
+      this.isReader = from.isReader;
+    }
+
     public boolean isReader() {
-      return this.isReader;
+      return isReader;
     }
 
     public boolean isSingularRepeated() {
@@ -839,7 +856,7 @@ public class ClassGenerator<T>{
     }
 
     public boolean isConstant() {
-      return this.isConstant;
+      return isConstant;
     }
 
     public JVar getHolder() {
@@ -855,7 +872,8 @@ public class ClassGenerator<T>{
     }
 
     public JFieldRef getIsSet() {
-      Preconditions.checkNotNull(isSet, "You cannot access the isSet variable when operating on a non-nullable output value.");
+      Preconditions.checkNotNull(isSet,
+          "You cannot access the isSet variable when operating on a non-nullable output value.");
       return isSet;
     }
 
@@ -874,14 +892,13 @@ public class ClassGenerator<T>{
     /**
      * Convert holder to a string for debugging use.
      */
-
     @Override
     public String toString() {
       DebugStringBuilder buf = new DebugStringBuilder(this);
       if (isConstant()) {
         buf.append("const ");
       }
-      buf.append(holder.type().fullName())
+      buf.append(holder.type().name())
         .append(" ")
         .append(holder.name())
         .append(", ")
@@ -890,8 +907,10 @@ public class ClassGenerator<T>{
         .append(type.getMinorType().name())
         .append(", ");
       holder.generate(buf.formatter());
-      buf.append(", ");
-      value.generate(buf.formatter());
+      if (value != null) {
+        buf.append(", ");
+        value.generate(buf.formatter());
+      }
       return buf.toString();
     }
   }

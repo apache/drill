@@ -22,10 +22,13 @@ import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.exec.expr.stat.RowsMatch;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 public abstract class BooleanPredicate<C extends Comparable<C>> extends BooleanOperator implements FilterPredicate<C> {
+  private static final Logger logger = LoggerFactory.getLogger(BooleanPredicate.class);
 
   private BooleanPredicate(String name, List<LogicalExpression> args, ExpressionPosition pos) {
     super(name, args, pos);

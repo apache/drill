@@ -15,7 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import org.apache.drill.common.types.Types;
+import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.vector.complex.UnionVector;
 import org.apache.drill.exec.vector.complex.impl.NullReader;
 
 <@pp.dropOutputFile />
@@ -31,26 +34,22 @@ package org.apache.drill.exec.vector.complex.impl;
 /*
  * This class is generated using freemarker and the ${.template_name} template.
  */
-@SuppressWarnings("unused")
 public class UnionReader extends AbstractFieldReader {
 
-  private BaseReader[] readers = new BaseReader[45];
-  public UnionVector data;
-  
+  public final UnionVector data;
+  private final BaseReader[] readers = new BaseReader[UnionVector.TYPE_COUNT];
+
   public UnionReader(UnionVector data) {
     this.data = data;
   }
 
-  private static MajorType[] TYPES = new MajorType[45];
-
-  static {
-    for (MinorType minorType : MinorType.values()) {
-      TYPES[minorType.getNumber()] = Types.optional(minorType);
-    }
+  @Override
+  public MajorType getType() {
+    return UnionVector.TYPES[data.getTypeValue(idx())];
   }
 
-  public MajorType getType() {
-    return TYPES[data.getTypeValue(idx())];
+  public MinorType getVectorType() {
+    return data.getField().getType().getMinorType();
   }
 
   public boolean isSet(){
@@ -68,23 +67,27 @@ public class UnionReader extends AbstractFieldReader {
 
   private FieldReader getReaderForIndex(int index) {
     int typeValue = data.getTypeValue(index);
+    if (typeValue == UnionVector.NULL_MARKER) {
+      return NullReader.INSTANCE;
+    }
     FieldReader reader = (FieldReader) readers[typeValue];
     if (reader != null) {
       return reader;
     }
-    switch (typeValue) {
-    case 0:
-      return NullReader.INSTANCE;
-    case MinorType.MAP_VALUE:
+    // Warning: do not use valueOf as that uses Protobuf
+    // field numbers, not enum ordinals.
+    MinorType type = MinorType.values()[typeValue];
+    switch (type) {
+    case MAP:
       return (FieldReader) getMap();
-    case MinorType.DICT_VALUE:
+    case DICT:
       return (FieldReader) getDict();
-    case MinorType.LIST_VALUE:
+    case LIST:
       return (FieldReader) getList();
     <#list vv.types as type><#list type.minor as minor><#assign name = minor.class?cap_first />
     <#assign uncappedName = name?uncap_first/>
     <#if !minor.class?starts_with("Decimal")>
-    case MinorType.${name?upper_case}_VALUE:
+    case ${name?upper_case}:
       return (FieldReader) get${name}();
     </#if>
     </#list></#list>
@@ -99,7 +102,7 @@ public class UnionReader extends AbstractFieldReader {
     if (mapReader == null) {
       mapReader = (SingleMapReaderImpl) data.getMap().getReader();
       mapReader.setPosition(idx());
-      readers[MinorType.MAP_VALUE] = mapReader;
+      readers[MinorType.MAP.ordinal()] = mapReader;
     }
     return mapReader;
   }
@@ -110,7 +113,7 @@ public class UnionReader extends AbstractFieldReader {
     if (dictReader == null) {
       dictReader = (SingleDictReaderImpl) data.getDict().getReader();
       dictReader.setPosition(idx());
-      readers[MinorType.DICT_VALUE] = dictReader;
+      readers[MinorType.DICT.ordinal()] = dictReader;
     }
     return dictReader;
   }
@@ -121,7 +124,7 @@ public class UnionReader extends AbstractFieldReader {
     if (listReader == null) {
       listReader = new UnionListReader(data.getList());
       listReader.setPosition(idx());
-      readers[MinorType.LIST_VALUE] = listReader;
+      readers[MinorType.LIST.ordinal()] = listReader;
     }
     return listReader;
   }
@@ -146,9 +149,7 @@ public class UnionReader extends AbstractFieldReader {
   public ${friendlyType} read${safeType}() {
     return getReaderForIndex(idx()).read${safeType}();
   }
-
   </#list>
-
   <#list vv.types as type><#list type.minor as minor><#assign name = minor.class?cap_first />
           <#assign uncappedName = name?uncap_first/>
   <#assign boxedType = (minor.boxedType!type.boxedType) />
@@ -164,7 +165,7 @@ public class UnionReader extends AbstractFieldReader {
     if (${uncappedName}Reader == null) {
       ${uncappedName}Reader = new Nullable${name}ReaderImpl(data.get${name}Vector());
       ${uncappedName}Reader.setPosition(idx());
-      readers[MinorType.${name?upper_case}_VALUE] = ${uncappedName}Reader;
+      readers[MinorType.${name?upper_case}.ordinal()] = ${uncappedName}Reader;
     }
     return ${uncappedName}Reader;
   }
@@ -193,7 +194,7 @@ public class UnionReader extends AbstractFieldReader {
       }
     }
   }
-  
+
   public FieldReader reader(String name){
     return getMap().reader(name);
   }
@@ -205,7 +206,13 @@ public class UnionReader extends AbstractFieldReader {
   public boolean next() {
     return getReaderForIndex(idx()).next();
   }
+
+  @Override
+  public String getTypeString() {
+    if (isSet()) {
+      return getType().getMinorType().name();
+    } else {
+      return MinorType.NULL.name();
+    }
+  }
 }
-
-
-

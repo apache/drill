@@ -24,15 +24,36 @@ import org.apache.drill.common.types.TypeProtos;
 
 import java.util.List;
 
+/**
+ * Definition of a function as presented to code generation.
+ * Represents the common denominator between Drill and Hive
+ * functions.
+ */
 public interface FuncHolder {
 
   boolean isNested();
 
+  /**
+   * Return a reference to this function given a function alias and a
+   * list of actual arguments.
+   *
+   * @param name alias used in this specific call
+   * @param args expressions of the actual function arguments
+   * @param pos
+   * @return an expression that holds the function definition (this object),
+   * actual parameters and related information
+   */
   FunctionHolderExpression getExpr(String name, List<LogicalExpression> args, ExpressionPosition pos);
 
-  TypeProtos.MajorType getParamMajorType(int i);
-
+  /**
+   * Number of defined input parameters.
+   */
   int getParamCount();
+
+  /**
+   * Drill SQL type of an input parameter.
+   */
+  TypeProtos.MajorType getParamMajorType(int i);
 
   /**
    * Checks that the current function holder stores output value
@@ -41,5 +62,4 @@ public interface FuncHolder {
    * @return true if current function holder uses field writer to store the output value
    */
   boolean isComplexWriterFuncHolder();
-
 }

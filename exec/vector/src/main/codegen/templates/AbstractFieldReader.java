@@ -28,11 +28,9 @@ package org.apache.drill.exec.vector.complex.impl;
 /*
  * This class is generated using freemarker and the ${.template_name} template.
  */
-@SuppressWarnings("unused")
 public abstract class AbstractFieldReader extends AbstractBaseReader implements FieldReader {
 
-  public AbstractFieldReader() {
-  }
+  public MinorType getVectorType() { return getType().getMinorType(); }
 
   /**
    * Returns true if the current value of the reader is not null
@@ -51,7 +49,6 @@ public abstract class AbstractFieldReader extends AbstractBaseReader implements 
           "Text", "String", "Byte", "Short", "byte[]"] as friendlyType>
   <#assign safeType=friendlyType />
   <#if safeType=="byte[]"><#assign safeType="ByteArray" /></#if>
-
   public ${friendlyType} read${safeType}(int arrayIndex) {
     fail("read${safeType}(int arrayIndex)");
     return null;
@@ -63,7 +60,6 @@ public abstract class AbstractFieldReader extends AbstractBaseReader implements 
   }
 
   </#list>
-
   public void copyAsValue(MapWriter writer) {
     fail("copyAsValue(MapWriter writer)");
   }
@@ -78,7 +74,6 @@ public abstract class AbstractFieldReader extends AbstractBaseReader implements 
 
   <#list vv.types as type><#list type.minor as minor><#assign name = minor.class?cap_first />
   <#assign boxedType = (minor.boxedType!type.boxedType) />
-
   public void read(${name}Holder holder) {
     fail("${name}");
   }

@@ -113,7 +113,7 @@ public class FunctionGenerationHelper {
   private static LogicalExpression getFunctionExpression(String name, HoldingContainer... args) {
     List<MajorType> argTypes = new ArrayList<MajorType>(args.length);
     List<LogicalExpression> argExpressions = new ArrayList<LogicalExpression>(args.length);
-    for(HoldingContainer c : args) {
+    for (HoldingContainer c : args) {
       argTypes.add(c.getMajorType());
       argExpressions.add(new HoldingContainerExpression(c));
     }
@@ -132,7 +132,7 @@ public class FunctionGenerationHelper {
   private static LogicalExpression getTypeComparisonFunction(LogicalExpression comparisonFunction, HoldingContainer... args) {
     List<LogicalExpression> argExpressions = Lists.newArrayList();
     List<MajorType> argTypes = Lists.newArrayList();
-    for(HoldingContainer c : args) {
+    for (HoldingContainer c : args) {
       argTypes.add(c.getMajorType());
       argExpressions.add(new HoldingContainerExpression(c));
     }
@@ -175,5 +175,4 @@ public class FunctionGenerationHelper {
 
     return sb.toString();
   }
-
 }

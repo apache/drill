@@ -23,7 +23,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Marker annotation to determine which fields should be included as parameters for the function.
+ * Marker annotation to determine which fields should be included as parameters
+ * for the function.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD})
