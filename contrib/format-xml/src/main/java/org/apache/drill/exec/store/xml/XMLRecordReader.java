@@ -32,6 +32,8 @@ import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLInputFactory;
@@ -50,7 +52,7 @@ import java.util.Vector;
 
 public class XMLRecordReader extends AbstractRecordReader {
 
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(XMLRecordReader.class);
+  private static final Logger logger = LoggerFactory.getLogger(XMLRecordReader.class);
 
   private static final int MAX_RECORDS_PER_BATCH = 8096;
 
@@ -97,17 +99,17 @@ public class XMLRecordReader extends AbstractRecordReader {
   }
 
   public void setup(final OperatorContext context, final OutputMutator output) throws ExecutionSetupException {
-    this.writer = new VectorContainerWriter(output);
+    writer = new VectorContainerWriter(output);
     //Fields for nested maps & arrays
-    this.nested_field_name_stack = new Stack<String>();
-    this.nested_data_stack = new Stack<BaseWriter.MapWriter>();
+    nested_field_name_stack = new Stack<String>();
+    nested_data_stack = new Stack<BaseWriter.MapWriter>();
   }
 
   public int next() {
-    this.writer.allocate();
-    this.writer.reset();
+    writer.allocate();
+    writer.reset();
     boolean flatten = config.flatten;
-    boolean flatten_attributes = config.flatten_attributes;
+    boolean flatten_attributes = config.flattenAttributes;
 
     String field_value = "";
     String field_prefix = "";
