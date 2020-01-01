@@ -47,6 +47,7 @@ public class XMLFormatConfig implements FormatPluginConfig {
     return extensions;
   }
 
+
   @Override
   public int hashCode() {
     return Objects.hash(extensions, dataLevel);
