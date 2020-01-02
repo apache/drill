@@ -52,6 +52,7 @@ import org.apache.drill.exec.expr.ValueVectorReadExpression;
 import org.apache.drill.exec.expr.ValueVectorWriteExpression;
 import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.QueryCancelledException;
 import org.apache.drill.exec.physical.config.OrderedPartitionSender;
 import org.apache.drill.exec.physical.impl.sort.SortBatch;
 import org.apache.drill.exec.physical.impl.sort.SortRecordBatchBuilder;
@@ -259,15 +260,12 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
    * @return True if the given timeout is expired. False when interrupted and
    *         the fragment status is not runnable.
    */
-  private boolean waitUntilTimeOut(final long timeout) {
+  private void waitUntilTimeOut(final long timeout) {
     while(true) {
       try {
         Thread.sleep(timeout);
-        return true;
       } catch (final InterruptedException e) {
-        if (!context.getExecutorState().shouldContinue()) {
-          return false;
-        }
+        throw new QueryCancelledException();
       }
     }
   }
@@ -307,18 +305,14 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
         // TODO: this should be polling.
 
         if (val < fragmentsBeforeProceed) {
-          if (!waitUntilTimeOut(10)) {
-            return false;
-          }
+          waitUntilTimeOut(10);
         }
         for (int i = 0; i < 100 && finalTable == null; i++) {
           finalTable = tableMap.get(finalTableKey);
           if (finalTable != null) {
             break;
           }
-          if (!waitUntilTimeOut(10)) {
-            return false;
-          }
+          waitUntilTimeOut(10);
         }
         if (finalTable == null) {
           buildTable();

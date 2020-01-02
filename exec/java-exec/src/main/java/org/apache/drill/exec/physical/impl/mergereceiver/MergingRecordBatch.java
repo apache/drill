@@ -43,6 +43,7 @@ import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
 import org.apache.drill.exec.ops.ExchangeFragmentContext;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.MetricDef;
+import org.apache.drill.exec.ops.QueryCancelledException;
 import org.apache.drill.exec.physical.MinorFragmentEndpoint;
 import org.apache.drill.exec.physical.config.MergingReceiverPOP;
 import org.apache.drill.exec.proto.BitControl.FinishedReceiver;
@@ -151,7 +152,7 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
       // interruption and respond to it if it wants to.
       Thread.currentThread().interrupt();
 
-      return null;
+      throw new QueryCancelledException();
     } finally {
       stats.stopWait();
     }
@@ -194,97 +195,100 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
 
       // set up each (non-empty) incoming record batch
       final List<RawFragmentBatch> rawBatches = Lists.newArrayList();
-      int p = 0;
-      for (@SuppressWarnings("unused") final RawFragmentBatchProvider provider : fragProviders) {
-        RawFragmentBatch rawBatch;
-        // check if there is a batch in temp holder before calling getNext(), as it may have been used when building schema
-        if (tempBatchHolder[p] != null) {
-          rawBatch = tempBatchHolder[p];
-          tempBatchHolder[p] = null;
-        } else {
-          try {
-            rawBatch = getNext(p);
-          } catch (final IOException e) {
-            context.getExecutorState().fail(e);
-            return IterOutcome.STOP;
-          }
-        }
-        if (rawBatch == null && !context.getExecutorState().shouldContinue()) {
-          clearBatches(rawBatches);
-          return IterOutcome.STOP;
-        }
-
-        // If rawBatch is null, go ahead and add it to the list. We will create dummy batches
-        // for all null batches later.
-        if (rawBatch == null) {
-          createDummyBatch = true;
-          rawBatches.add(rawBatch);
-          p++; // move to next sender
-          continue;
-        }
-
-        if (fieldList == null && rawBatch.getHeader().getDef().getFieldCount() != 0) {
-          // save the schema to fix up empty batches with no schema if needed.
-            fieldList = rawBatch.getHeader().getDef().getFieldList();
-        }
-
-        if (rawBatch.getHeader().getDef().getRecordCount() != 0) {
-          rawBatches.add(rawBatch);
-        } else {
-          // keep reading till we get a batch with record count > 0 or we have no more batches to read i.e. we get null
-          try {
-            while ((rawBatch = getNext(p)) != null && rawBatch.getHeader().getDef().getRecordCount() == 0) {
-              // Do nothing
+      try {
+        int p = 0;
+        for (@SuppressWarnings("unused") final RawFragmentBatchProvider provider : fragProviders) {
+          RawFragmentBatch rawBatch;
+          // check if there is a batch in temp holder before calling getNext(), as it may have been used when building schema
+          if (tempBatchHolder[p] != null) {
+            rawBatch = tempBatchHolder[p];
+            tempBatchHolder[p] = null;
+          } else {
+            try {
+              rawBatch = getNext(p);
+            } catch (final IOException e) {
+              context.getExecutorState().fail(e);
+              return IterOutcome.STOP;
             }
-            if (rawBatch == null && !context.getExecutorState().shouldContinue()) {
+          }
+          checkContinue();
+
+          // If rawBatch is null, go ahead and add it to the list. We will create dummy batches
+          // for all null batches later.
+          if (rawBatch == null) {
+            checkContinue();
+            createDummyBatch = true;
+            rawBatches.add(rawBatch);
+            p++; // move to next sender
+            continue;
+          }
+
+          if (fieldList == null && rawBatch.getHeader().getDef().getFieldCount() != 0) {
+            // save the schema to fix up empty batches with no schema if needed.
+              fieldList = rawBatch.getHeader().getDef().getFieldList();
+          }
+
+          if (rawBatch.getHeader().getDef().getRecordCount() != 0) {
+            rawBatches.add(rawBatch);
+          } else {
+            // keep reading till we get a batch with record count > 0 or we have no more batches to read i.e. we get null
+            try {
+              while ((rawBatch = getNext(p)) != null && rawBatch.getHeader().getDef().getRecordCount() == 0) {
+                // Do nothing
+              }
+              if (rawBatch == null) {
+                checkContinue();
+                createDummyBatch = true;
+              }
+            } catch (final IOException e) {
+              context.getExecutorState().fail(e);
               clearBatches(rawBatches);
               return IterOutcome.STOP;
             }
-          } catch (final IOException e) {
-            context.getExecutorState().fail(e);
-            clearBatches(rawBatches);
-            return IterOutcome.STOP;
+            if (rawBatch == null || rawBatch.getHeader().getDef().getFieldCount() == 0) {
+              createDummyBatch = true;
+            }
+            // Even if rawBatch is null, go ahead and add it to the list.
+            // We will create dummy batches for all null batches later.
+            rawBatches.add(rawBatch);
           }
-          if (rawBatch == null || rawBatch.getHeader().getDef().getFieldCount() == 0) {
-            createDummyBatch = true;
-          }
-          // Even if rawBatch is null, go ahead and add it to the list.
-          // We will create dummy batches for all null batches later.
-          rawBatches.add(rawBatch);
+          p++;
         }
-        p++;
-      }
 
-      // If no batch arrived with schema from any of the providers, just return NONE.
-      if (fieldList == null) {
-        return IterOutcome.NONE;
-      }
+        // If no batch arrived with schema from any of the providers, just return NONE.
+        if (fieldList == null) {
+          return IterOutcome.NONE;
+        }
 
-      // Go through and fix schema for empty batches.
-      if (createDummyBatch) {
-        // Create dummy record batch definition with 0 record count
-        UserBitShared.RecordBatchDef dummyDef = UserBitShared.RecordBatchDef.newBuilder()
-            // we cannot use/modify the original field list as that is used by
-            // valid record batch.
-            // create a copy of field list with valuecount = 0 for all fields.
-            // This is for dummy schema generation.
-            .addAllField(createDummyFieldList(fieldList))
-            .setRecordCount(0)
-            .build();
+        // Go through and fix schema for empty batches.
+        if (createDummyBatch) {
+          // Create dummy record batch definition with 0 record count
+          UserBitShared.RecordBatchDef dummyDef = UserBitShared.RecordBatchDef.newBuilder()
+              // we cannot use/modify the original field list as that is used by
+              // valid record batch.
+              // create a copy of field list with valuecount = 0 for all fields.
+              // This is for dummy schema generation.
+              .addAllField(createDummyFieldList(fieldList))
+              .setRecordCount(0)
+              .build();
 
-        // Create dummy header
-        BitData.FragmentRecordBatch dummyHeader = BitData.FragmentRecordBatch.newBuilder()
-            .setIsLastBatch(true)
-            .setDef(dummyDef)
-            .build();
+          // Create dummy header
+          BitData.FragmentRecordBatch dummyHeader = BitData.FragmentRecordBatch.newBuilder()
+              .setIsLastBatch(true)
+              .setDef(dummyDef)
+              .build();
 
-        for (int i = 0; i < p; i++) {
-          RawFragmentBatch rawBatch = rawBatches.get(i);
-          if (rawBatch == null || rawBatch.getHeader().getDef().getFieldCount() == 0) {
-            rawBatch = new RawFragmentBatch(dummyHeader, null, null);
-            rawBatches.set(i, rawBatch);
+          for (int i = 0; i < p; i++) {
+            RawFragmentBatch rawBatch = rawBatches.get(i);
+            if (rawBatch == null || rawBatch.getHeader().getDef().getFieldCount() == 0) {
+              rawBatch = new RawFragmentBatch(dummyHeader, null, null);
+              rawBatches.set(i, rawBatch);
+            }
           }
         }
+      } catch (Throwable t) {
+        clearBatches(rawBatches);
+        throw t;
       }
 
       // allocate the incoming record batch loaders
@@ -375,9 +379,7 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
             } else {
               batchLoaders[b].clear();
               batchLoaders[b] = null;
-              if (!context.getExecutorState().shouldContinue()) {
-                return IterOutcome.STOP;
-              }
+              checkContinue();
             }
           } catch (IOException | SchemaChangeException e) {
             context.getExecutorState().fail(e);
@@ -413,8 +415,8 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
 
           assert nextBatch != null || inputCounts[node.batchId] == outputCounts[node.batchId]
               : String.format("Stream %d input count: %d output count %d", node.batchId, inputCounts[node.batchId], outputCounts[node.batchId]);
-          if (nextBatch == null && !context.getExecutorState().shouldContinue()) {
-            return IterOutcome.STOP;
+          if (nextBatch == null) {
+            checkContinue();
           }
         } catch (final IOException e) {
           context.getExecutorState().fail(e);
@@ -544,12 +546,7 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
         }
         final RawFragmentBatch batch = getNext(i);
         if (batch == null) {
-          if (!context.getExecutorState().shouldContinue()) {
-            state = BatchState.STOP;
-          } else {
-            state = BatchState.DONE;
-          }
-          break;
+          checkContinue();
         }
         if (batch.getHeader().getDef().getFieldCount() == 0) {
           i++;

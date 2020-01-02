@@ -57,7 +57,7 @@ import org.junit.experimental.categories.Category;
 import java.util.ArrayList;
 import java.util.List;
 
-import static junit.framework.TestCase.fail;
+import static org.junit.Assert.fail;
 
 @Category(OperatorTest.class)
 public class TestUnnestWithLateralCorrectness extends SubOperatorTest {

@@ -150,9 +150,7 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable {
       int totalCount = vector4.getTotalCount();
 
       // check if we're cancelled/failed recently
-      if (!context.getExecutorState().shouldContinue()) {
-        return;
-      }
+      context.getExecutorState().checkContinue();
 
       int outIndex = 0;
       Queue<Integer> newRunStarts = Queues.newLinkedBlockingQueue();

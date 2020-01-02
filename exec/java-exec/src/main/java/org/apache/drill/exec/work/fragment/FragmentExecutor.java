@@ -32,6 +32,7 @@ import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.QueryCancelledException;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.impl.ImplCreator;
 import org.apache.drill.exec.physical.impl.RootExec;
@@ -332,6 +333,8 @@ public class FragmentExecutor implements Runnable {
         }
       });
 
+    } catch (QueryCancelledException e) {
+      // Ignore: indicates query cancelled by this executor
     } catch (OutOfMemoryError | OutOfMemoryException e) {
       if (FailureUtils.isDirectMemoryOOM(e)) {
         fail(UserException.memoryError(e).build(logger));
@@ -527,6 +530,13 @@ public class FragmentExecutor implements Runnable {
     @Override
     public Throwable getFailureCause(){
       return deferredException.getException();
+    }
+
+    @Override
+    public void checkContinue() {
+      if (!shouldContinue()) {
+        throw new QueryCancelledException();
+      }
     }
   }
 
