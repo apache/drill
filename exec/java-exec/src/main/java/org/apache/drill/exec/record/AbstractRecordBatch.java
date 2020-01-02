@@ -109,19 +109,15 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
   }
 
   public final IterOutcome next(RecordBatch b) {
-    if(!context.getExecutorState().shouldContinue()) {
-      return IterOutcome.STOP;
-    }
+    checkContinue();
     return next(0, b);
   }
 
   public final IterOutcome next(int inputIndex, RecordBatch b) {
     IterOutcome next;
-    stats.stopProcessing();
     try {
-      if (!context.getExecutorState().shouldContinue()) {
-        return IterOutcome.STOP;
-      }
+      stats.stopProcessing();
+      checkContinue();
       next = b.next();
     } finally {
       stats.startProcessing();
@@ -266,5 +262,15 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
 
   public boolean isRecordBatchStatsLoggingEnabled() {
     return batchStatsContext.isEnableBatchSzLogging();
+  }
+
+  /**
+   * Checks if the query should continue. Throws a UserException if not.
+   * Operators should call this periodically to detect cancellation
+   * requests. The operator need not catch the exception: it will bubble
+   * up the operator tree and be handled like any other fatal error.
+   */
+  public void checkContinue() {
+    context.getExecutorState().checkContinue();
   }
 }

@@ -213,13 +213,34 @@ public interface FragmentContext extends UdfUtilities, AutoCloseable {
 
   interface ExecutorState {
     /**
-     * Tells individual operations whether they should continue. In some cases, an external event (typically cancellation)
-     * will mean that the fragment should prematurely exit execution. Long running operations should check this every so
-     * often so that Drill is responsive to cancellation operations.
+     * Tells individual operations whether they should continue. In some cases,
+     * an external event (typically cancellation) will mean that the fragment
+     * should prematurely exit execution. Long running operations should check
+     * this every so often so that Drill is responsive to cancellation
+     * operations.
      *
-     * @return False if the action should terminate immediately, true if everything is okay.
+     * @return False if the action should terminate immediately, true if
+     *         everything is okay.
      */
     boolean shouldContinue();
+
+    /**
+     * Check if an operation should continue. In some cases,
+     * an external event (typically cancellation) will mean that the fragment
+     * should prematurely exit execution. Long running operations should check
+     * this every so often so that Drill is responsive to cancellation
+     * operations.
+     * <p>
+     * Throws QueryCancelledException if the query (fragment) should stop.
+     * The fragment executor interprets this as an exception it, itself,
+     * requested, and will call the operator's close() method to release
+     * resources. Operators should not catch and handle this exception,
+     * and should only call this method when the operator holds no
+     * transient resources (such as local variables.)
+     *
+     * @throws QueryCancelledException if the query (fragment) should stop.
+     */
+    void checkContinue();
 
     /**
      * Inform the executor if a exception occurs and fragment should be failed.

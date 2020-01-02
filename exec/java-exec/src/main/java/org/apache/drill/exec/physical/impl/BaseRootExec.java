@@ -32,9 +32,11 @@ import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class BaseRootExec implements RootExec {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseRootExec.class);
+  private static final Logger logger = LoggerFactory.getLogger(BaseRootExec.class);
 
   public static final String ENABLE_BATCH_DUMP_CONFIG = "drill.exec.debug.dump_batches";
   protected OperatorStats stats;
@@ -85,11 +87,8 @@ public abstract class BaseRootExec implements RootExec {
 
   @Override
   public final boolean next() {
-    // Stats should have been initialized
     assert stats != null;
-    if (!fragmentContext.getExecutorState().shouldContinue()) {
-      return false;
-    }
+    fragmentContext.getExecutorState().checkContinue();
     try {
       stats.startProcessing();
       return innerNext();

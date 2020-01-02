@@ -30,6 +30,7 @@ import java.util.concurrent.locks.LockSupport;
 
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorStats;
+import org.apache.drill.exec.ops.QueryCancelledException;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ControlsInjectorFactory;
@@ -51,7 +52,7 @@ public final class PartitionerDecorator {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PartitionerDecorator.class);
   private static final ControlsInjector injector = ControlsInjectorFactory.getInjector(PartitionerDecorator.class);
 
-  private List<Partitioner> partitioners;
+  private final List<Partitioner> partitioners;
   private final OperatorStats stats;
   private final ExecutorService executor;
   private final FragmentContext context;
@@ -155,6 +156,7 @@ public final class PartitionerDecorator {
         testCountDownLatch.countDown();
       } catch (InterruptedException e) {
         logger.warn("fragment thread interrupted", e);
+        throw new QueryCancelledException();
       } catch (RejectedExecutionException e) {
         logger.warn("Failed to execute partitioner tasks. Execution service down?", e);
         executionException = new ExecutionException(e);
@@ -309,7 +311,7 @@ public final class PartitionerDecorator {
 
     private final GeneralExecuteIface iface;
     private final Partitioner partitioner;
-    private CountDownLatchInjection testCountDownLatch;
+    private final CountDownLatchInjection testCountDownLatch;
 
     private volatile ExecutionException exception;
 

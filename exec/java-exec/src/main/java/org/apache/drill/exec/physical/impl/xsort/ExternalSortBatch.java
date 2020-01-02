@@ -423,11 +423,8 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
       // No records to sort
       sortState = SortState.DONE;
       return NONE;
-    } else if (!context.getExecutorState().shouldContinue()) {
-      // Interrupted
-      sortState = SortState.DONE;
-      return STOP;
     } else {
+      checkContinue();
 
       // There is some data to be returned downstream.
       // We have to prepare output container

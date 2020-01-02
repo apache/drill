@@ -464,27 +464,22 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
     }
   }
 
-  public static class MockExecutorState implements FragmentContext.ExecutorState
-  {
+  public static class MockExecutorState
+      implements FragmentContext.ExecutorState {
     @Override
-    public boolean shouldContinue() {
-      return true;
-    }
+    public boolean shouldContinue() { return true; }
 
     @Override
-    public void fail(Throwable t) {
-
-    }
+    public void fail(Throwable t) { }
 
     @Override
-    public boolean isFailed() {
-      return false;
-    }
+    public boolean isFailed() { return false; }
 
     @Override
-    public Throwable getFailureCause() {
-      return null;
-    }
+    public Throwable getFailureCause() { return null; }
+
+    @Override
+    public void checkContinue() { }
   }
 
   public OperatorContext newOperatorContext(PhysicalOperator popConfig) {

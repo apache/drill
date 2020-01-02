@@ -47,12 +47,12 @@ public class SpilledRecordbatch implements CloseableRecordBatch {
   private VectorContainer container;
   private InputStream spillStream;
   private int spilledBatches;
-  private FragmentContext context;
-  private BatchSchema schema;
-  private SpillSet spillSet;
-  private String spillFile;
+  private final FragmentContext context;
+  private final BatchSchema schema;
+  private final SpillSet spillSet;
+  private final String spillFile;
   VectorAccessibleSerializable vas;
-  private IterOutcome initialOutcome;
+  private final IterOutcome initialOutcome;
   // Represents last outcome of next(). If an Exception is thrown
   // during the method's execution a value IterOutcome.STOP will be assigned.
   private IterOutcome lastOutcome;
@@ -134,10 +134,7 @@ public class SpilledRecordbatch implements CloseableRecordBatch {
   @Override
   public IterOutcome next() {
 
-    if (!context.getExecutorState().shouldContinue()) {
-      lastOutcome = IterOutcome.STOP;
-      return lastOutcome;
-    }
+    context.getExecutorState().checkContinue();
 
     if ( spilledBatches <= 0 ) { // no more batches to read in this partition
       this.close();
