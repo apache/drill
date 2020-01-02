@@ -17,13 +17,16 @@
  */
 package org.apache.drill.exec.record.metadata;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.vector.complex.DictVector;
 
 public class MetadataUtils {
 
@@ -141,7 +144,20 @@ public class MetadataUtils {
   }
 
   public static DictColumnMetadata newDict(MaterializedField field, TupleSchema schema) {
+    validateDictChildren(schema.toFieldList());
     return new DictColumnMetadata(field.getName(), field.getDataMode(), schema);
+  }
+
+  private static void validateDictChildren(List<MaterializedField> entryFields) {
+    Collection<String> children = entryFields.stream()
+        .map(MaterializedField::getName)
+        .collect(Collectors.toList());
+    String message = "DICT does not contain %s.";
+    if (!children.contains(DictVector.FIELD_KEY_NAME)) {
+      throw new IllegalStateException(String.format(message, DictVector.FIELD_KEY_NAME));
+    } else if (!children.contains(DictVector.FIELD_VALUE_NAME)) {
+      throw new IllegalStateException(String.format(message, DictVector.FIELD_VALUE_NAME));
+    }
   }
 
   public static DictColumnMetadata newDict(String name, TupleMetadata schema) {

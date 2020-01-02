@@ -60,6 +60,12 @@ public class RepeatedListBuilder implements SchemaContainer {
     return new MapBuilder(this, name, DataMode.REPEATED);
   }
 
+  public DictBuilder addDictArray() {
+    // Existing code uses the repeated list name as the name of
+    // the vector within the list.
+    return new DictBuilder(this, name, DataMode.REPEATED);
+  }
+
   public RepeatedListBuilder addArray(MinorType type) {
     // Existing code uses the repeated list name as the name of
     // the vector within the list.
@@ -125,6 +131,11 @@ public class RepeatedListBuilder implements SchemaContainer {
   public MapBuilder resumeMap() {
     build();
     return (MapBuilder) parent;
+  }
+
+  public DictBuilder resumeDict() {
+    build();
+    return (DictBuilder) parent;
   }
 
   @Override

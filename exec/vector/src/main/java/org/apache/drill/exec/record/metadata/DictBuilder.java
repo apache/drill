@@ -209,7 +209,17 @@ public class DictBuilder implements SchemaContainer {
   }
 
   public DictColumnMetadata buildColumn() {
+    validateKeyValuePresent();
     return new DictColumnMetadata(name, mode, schema);
+  }
+
+  private void validateKeyValuePresent() {
+    for (String fieldName : DictVector.fieldNames) {
+      ColumnMetadata columnMetadata = schema.metadata(fieldName);
+      if (columnMetadata == null) {
+        throw new IllegalStateException(String.format("Field %s is absent in DICT.", fieldName));
+      }
+    }
   }
 
   public void build() {

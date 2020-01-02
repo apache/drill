@@ -642,6 +642,17 @@ public class TestParquetComplex extends BaseTestQuery {
   }
 
   @Test
+  public void testDictArrayTypeOf() throws Exception {
+    String query = "select typeof(map_array) as type from cp.`store/parquet/complex/map/parquet/000000_0.parquet` limit 1";
+    testBuilder()
+        .sqlQuery(query)
+        .ordered()
+        .baselineColumns("type")
+        .baselineValuesForSingleColumn("ARRAY<DICT<BIGINT,INT>>")
+        .go();
+  }
+
+  @Test
   public void testDictTypeOf() throws Exception {
     String query = "select typeof(map_array[0]) as type from cp.`store/parquet/complex/map/parquet/000000_0.parquet` limit 1";
     testBuilder()

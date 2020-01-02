@@ -138,6 +138,6 @@ public class RepeatedDictReaderImpl extends AbstractFieldReader {
 
   @Override
   public String getTypeString() {
-    return "ARRAY<" + reader.getTypeString() + '>';
+    return "ARRAY<" + reader().getTypeString() + '>';
   }
 }
