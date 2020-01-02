@@ -49,32 +49,29 @@ public class ElasticSearchIndexLoaderTest {
         Mockito.when(plugin.getObjectMapper()).thenReturn(objectMapper);
     }
 
-
     /*
     This test verifies if ES is getting aliases for search indexes.  Data is formatted as follows:
     {
-  "collection-file-info-v00001": {
-    "aliases": {
-      "collection-file-info": {},
-      "collection-file-info-1": {}
+      "collection-file-info-v00001": {
+        "aliases": {
+          "collection-file-info": {},
+          "collection-file-info-1": {}
+        }
+      },
+      "collection-file-info-v00002": {
+        "aliases": {
+          "collection-file-info-2": {},
+          "collection-file-info-3": {}
+        }
+      }
     }
-  },
-  "collection-file-info-v00002": {
-    "aliases": {
-      "collection-file-info-2": {},
-      "collection-file-info-3": {}
-    }
-  }
-}
-     */
-
+    */
     @Test
     public void getAliasesOk() throws Exception {
         Response mockResponse = Mockito.mock(Response.class);
         HttpEntity mockEntity = Mockito.mock(HttpEntity.class);
         String jsonData = "{\"collection-file-info-v00001\":{\"aliases\":{\"collection-file-info\":{},\"collection-file-info-1\":{}}}," +
           "\"collection-file-info-v00002\":{\"aliases\":{\"collection-file-info-2\":{},\"collection-file-info-3\":{}}}}";
-        System.out.println(jsonData);
         Mockito.when(mockResponse.getEntity()).thenReturn(mockEntity);
         InputStream responseContent = IOUtils.toInputStream(jsonData);
         try {
@@ -94,6 +91,18 @@ public class ElasticSearchIndexLoaderTest {
         }
     }
 
+    // TODO Start Here:  Indexes w/o aliases are not being added to the list  IE Twitter not being added.
+
+    /*
+    {
+        "twitter":{},
+        "collection": {
+            "aliases":{ "collection-1":{},
+                        "collection-2":{}
+                      }
+         }
+     }
+     */
     @Test
     public void getIndexIfNoAlias() throws Exception {
         Response mockResponse = Mockito.mock(Response.class);

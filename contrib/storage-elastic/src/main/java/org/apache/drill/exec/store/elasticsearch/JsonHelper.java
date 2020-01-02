@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -46,7 +46,7 @@ public class JsonHelper {
         Preconditions.checkArgument(path != null);
         Iterator<String> fieldIterator = Arrays.asList(path.split("\\.")).iterator();
         JsonNode innerNode = node;
-        // 一层一层下去
+        // Layer by layer
         while (!innerNode.isMissingNode() && fieldIterator.hasNext()) {
             node = node.path(fieldIterator.next());
         }
@@ -59,13 +59,13 @@ public class JsonHelper {
         Preconditions.checkArgument(response != null);
         Preconditions.checkArgument(response.getEntity() != null);
         Preconditions.checkArgument(response.getEntity().getContent() != null);
-        // 读取数据
+        // Read data
         return mapper.readTree(response.getEntity().getContent());
     }
     
     public static JsonNode readResponseContentAsJsonTree(ObjectMapper mapper, InputStream in) throws IOException {
         Preconditions.checkArgument(mapper != null);
-        // 读取数据
+        // Read Data
         return mapper.readTree(in);
     }
 }

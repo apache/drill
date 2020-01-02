@@ -64,11 +64,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 
 @JsonTypeName("elasticsearch-scan")
 public class ElasticSearchGroupScan extends AbstractGroupScan {
@@ -85,8 +84,6 @@ public class ElasticSearchGroupScan extends AbstractGroupScan {
 
   private final List<SchemaPath> columns;
 
-  private Stopwatch watch;
-
   private boolean filterPushedDown = false;
 
   @JsonCreator
@@ -100,7 +97,6 @@ public class ElasticSearchGroupScan extends AbstractGroupScan {
     storagePluginConfig = plugin.getConfig();
     this.scanSpec = scanSpec;
     this.columns = columns;
-    this.watch = Stopwatch.createUnstarted();
     init();
   }
 
@@ -210,11 +206,9 @@ public class ElasticSearchGroupScan extends AbstractGroupScan {
 
   @Override
   public List<EndpointAffinity> getOperatorAffinity() {
-    watch.reset();
-    watch.start();
     Map<String, DrillbitEndpoint> endpointMap = new HashMap<String, DrillbitEndpoint>();
     for (DrillbitEndpoint ep : plugin.getContext().getBits()) {
-      // 该集群有些些机器
+      // The cluster has some machines
       endpointMap.put(ep.getAddress(), ep);
     }
 
@@ -230,7 +224,6 @@ public class ElasticSearchGroupScan extends AbstractGroupScan {
         }
       }
     }
-    logger.debug("Took {} µs to get operator affinity", watch.elapsed(TimeUnit.NANOSECONDS) / 1000);
     // The cluster has some machines
     return Lists.newArrayList(affinityMap.values());
   }
@@ -240,8 +233,6 @@ public class ElasticSearchGroupScan extends AbstractGroupScan {
    */
   @Override
   public void applyAssignments(List<DrillbitEndpoint> incomingEndpoints) {
-    watch.reset();
-    watch.start();
 
     final int numSlots = incomingEndpoints.size();
     Preconditions.checkArgument(numSlots <= regionsToScan.size(), String.format("Incoming endpoints %d is greater than number of scan regions %d", numSlots, regionsToScan.size()));
@@ -355,8 +346,6 @@ public class ElasticSearchGroupScan extends AbstractGroupScan {
 
     /* no slot should be empty at this point */
     assert (minHeap.peek() == null || minHeap.peek().size() > 0) : String.format("Unable to assign tasks to some endpoints.\nEndpoints: {}.\nAssignment Map: {}.", incomingEndpoints, endpointFragmentMapping.toString());
-
-    logger.debug("Built assignment map in {} µs.\nEndpoints: {}.\nAssignment Map: {}", watch.elapsed(TimeUnit.NANOSECONDS) / 1000, incomingEndpoints, endpointFragmentMapping.toString());
   }
 
   private ElasticSearchScanSpec regionInfoToSubScanSpec(PartitionDefinition part) {

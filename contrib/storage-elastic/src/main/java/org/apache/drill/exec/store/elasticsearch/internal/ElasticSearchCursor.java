@@ -59,13 +59,13 @@ public class ElasticSearchCursor implements Iterator<JsonNode>, Closeable {
         if (!MapUtils.isEmpty(additionalQueryParams)) {
             queryParams.putAll(additionalQueryParams);
         }
-        // 批量拉取数据
+        // Pull data in batches
         queryParams.put(SCROLL,SCROLLDURATION);
-        // type 是子类型
+        // type Is a subtype
         Response response = client.performRequest("POST", "/" + idxName + "/" + type + "/_search",
                 queryParams, requestBody, additionalHeaders);
         JsonNode rootNode = JsonHelper.readResponseContentAsJsonTree(objMapper, response);
-        // 遍历id
+        // Traversal id
         JsonNode scrollIdNode = JsonHelper.getPath(rootNode, "_scroll_id");
         String scrollId;
         if (!scrollIdNode.isMissingNode()) {
@@ -73,7 +73,7 @@ public class ElasticSearchCursor implements Iterator<JsonNode>, Closeable {
         } else {
             throw new DrillRuntimeException("Couldn't get '"+SCROLL+"' for cursor");
         }
-        // 命中个数
+        // Hits
         JsonNode totalHitsNode = JsonHelper.getPath(rootNode, "hits.total");
         long totalHits = 0;
         if (!totalHitsNode.isMissingNode()) {
@@ -82,7 +82,7 @@ public class ElasticSearchCursor implements Iterator<JsonNode>, Closeable {
             throw new DrillRuntimeException("Couldn't get 'hits.total' for cursor");
         }
 
-        //结果数据
+        // Result data
         JsonNode elementsNode = JsonHelper.getPath(rootNode, "hits.hits");
         Iterator<JsonNode> elementIterator;
         if (!elementsNode.isMissingNode() && elementsNode.isArray()) {
@@ -118,7 +118,7 @@ public class ElasticSearchCursor implements Iterator<JsonNode>, Closeable {
             if (!this.internalIterator.hasNext()) {
                 logger.debug("Internal storage depleted, lets scroll for more");
                 try {
-                	// 请求数据了
+                	// Requested data
                     Response response = this.client.performRequest("POST", "/_search/scroll", MapUtils.EMPTY_MAP,
                             new NStringEntity(this.scrollRequest, ContentType.APPLICATION_JSON), this.additionalHealders);
 

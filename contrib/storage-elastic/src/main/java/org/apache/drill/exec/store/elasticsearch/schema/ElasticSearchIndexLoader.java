@@ -64,8 +64,14 @@ public class ElasticSearchIndexLoader extends CacheLoader<String, Collection<Str
       while (fields.hasNext()) {
         Map.Entry<String, JsonNode> entry = fields.next();
         JsonNode aliases = JsonHelper.getPath(entry.getValue(), "aliases");
+
         // The index pulled back in version 2.3.3 is this state ObjectNode is empty
-        if (!aliases.isMissingNode() && !(aliases instanceof ObjectNode)) {
+        if (!(aliases.isMissingNode()) && !(aliases instanceof ObjectNode)) {
+          Iterator<String> aliasesIterator = aliases.fieldNames();
+          while (aliasesIterator.hasNext()) {
+            indexes.add(aliasesIterator.next());
+          }
+        } else if (! aliases.isNull()) {
           Iterator<String> aliasesIterator = aliases.fieldNames();
           while (aliasesIterator.hasNext()) {
             indexes.add(aliasesIterator.next());
