@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.physical.impl.flatten;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,7 +29,6 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
@@ -372,7 +370,7 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
   }
 
   @Override
-  protected boolean setupNewSchema() throws SchemaChangeException {
+  protected boolean setupNewSchema() {
     allocationVectors = new ArrayList<>();
     container.clear();
     List<NamedExpression> exprs = getExpressionList();
@@ -427,10 +425,7 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
 
       LogicalExpression expr = ExpressionTreeMaterializer.materialize(namedExpression.getExpr(),
           incoming, collector, context.getFunctionRegistry(), true);
-      if (collector.hasErrors()) {
-        throw new SchemaChangeException(String.format(
-            "Failure while trying to materialize incoming schema. Errors:\n %s.", collector.toErrorString()));
-      }
+      collector.reportErrors(logger);
       if (expr instanceof DrillFuncHolderExpr &&
           ((DrillFuncHolderExpr) expr).getHolder().isComplexWriterFuncHolder()) {
         // Need to process ComplexWriter function evaluation.
@@ -477,8 +472,8 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
     try {
       flattener = context.getImplementationClass(cg.getCodeGenerator());
       flattener.setup(context, incoming, this, transfers);
-    } catch (ClassTransformationException | IOException e) {
-      throw new SchemaChangeException("Failure while attempting to load generated class", e);
+    } catch (SchemaChangeException e) {
+      throw schemaChangeException(e, logger);
     }
     return true;
   }

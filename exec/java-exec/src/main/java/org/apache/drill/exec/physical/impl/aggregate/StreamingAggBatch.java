@@ -23,7 +23,6 @@ import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK;
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK_NEW_SCHEMA;
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.STOP;
 
-import java.io.IOException;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
@@ -36,7 +35,6 @@ import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.compile.sig.GeneratorMapping;
 import org.apache.drill.exec.compile.sig.MappingSet;
-import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
@@ -165,7 +163,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
   }
 
   @Override
-  public void buildSchema() throws SchemaChangeException {
+  public void buildSchema() {
     IterOutcome outcome = next(incoming);
     switch (outcome) {
       case NONE:
@@ -180,15 +178,13 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
     }
 
     incomingSchema = incoming.getSchema();
-    if (!createAggregator()) {
-      state = BatchState.DONE;
-    }
+    createAggregator();
     container.allocateNew();
 
     if (complexWriters != null) {
       container.buildSchema(SelectionVectorMode.NONE);
     }
-    container.setRecordCount(0);
+    container.setEmpty();
   }
 
   @Override
@@ -243,10 +239,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
         case STOP:
           return lastKnownOutcome;
         case OK_NEW_SCHEMA:
-          if (!createAggregator()) {
-            done = true;
-            return IterOutcome.STOP;
-          }
+          createAggregator();
           firstBatchForSchema = true;
           break;
         case EMIT:
@@ -422,22 +415,15 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
   }
 
   /**
-   * Creates a new Aggregator based on the current schema. If setup fails, this method is responsible for cleaning up
-   * and informing the context of the failure state, as well is informing the upstream operators.
-   *
-   * @return true if the aggregator was setup successfully. false if there was a failure.
+   * Creates a new Aggregator based on the current schema. If setup fails, this
+   * method is responsible for cleaning up and informing the context of the
+   * failure state, as well is informing the upstream operators.
    */
-  private boolean createAggregator() {
+  private void createAggregator() {
     logger.debug("Creating new aggregator.");
     try {
       stats.startSetup();
-      this.aggregator = createAggregatorInternal();
-      return true;
-    } catch (SchemaChangeException | ClassTransformationException | IOException ex) {
-      context.getExecutorState().fail(ex);
-      container.clear();
-      incoming.kill(false);
-      return false;
+      aggregator = createAggregatorInternal();
     } finally {
       stats.stopSetup();
     }
@@ -447,7 +433,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
     complexWriters.add(writer);
   }
 
-  protected StreamingAggregator createAggregatorInternal() throws SchemaChangeException, ClassTransformationException, IOException {
+  protected StreamingAggregator createAggregatorInternal() {
     ClassGenerator<StreamingAggregator> cg = CodeGenerator.getRoot(StreamingAggTemplate.TEMPLATE_DEFINITION, context.getOptions());
     cg.getCodeGenerator().plainJavaCapable(true);
     // Uncomment out this line to debug the generated code.
@@ -507,10 +493,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
       }
     }
 
-    if (collector.hasErrors()) {
-      throw new SchemaChangeException("Failure while materializing expression. " + collector.toErrorString());
-    }
-
+    collector.reportErrors(logger);
     setupIsSame(cg, keyExprs);
     setupIsSameApart(cg, keyExprs);
     addRecordValues(cg, valueExprs);
@@ -522,7 +505,11 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
 
     container.buildSchema(SelectionVectorMode.NONE);
     StreamingAggregator agg = context.getImplementationClass(cg);
-    agg.setup(oContext, incoming, this, maxOutputRowCount);
+    try {
+      agg.setup(oContext, incoming, this, maxOutputRowCount);
+    } catch (SchemaChangeException e) {
+      throw schemaChangeException(e, logger);
+    }
     allocateComplexWriters();
     return agg;
   }

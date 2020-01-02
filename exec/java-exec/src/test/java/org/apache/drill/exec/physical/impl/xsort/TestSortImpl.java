@@ -65,7 +65,6 @@ import io.netty.buffer.DrillBuf;
  * Tests the external sort implementation: the "guts" of the sort stripped of the
  * Volcano-protocol layer. Assumes the individual components are already tested.
  */
-
 @Category(OperatorTest.class)
 public class TestSortImpl extends DrillTest {
 
@@ -80,10 +79,8 @@ public class TestSortImpl extends DrillTest {
    * @param fixture operator fixture
    * @param sortOrder sort order as specified by {@link Ordering}
    * @param nullOrder null order as specified by {@link Ordering}
-   * @return the sort initialized sort implementation, ready to
-   * do work
+   * @return the initialized sort implementation, ready to do work
    */
-
   public static SortImpl makeSortImpl(OperatorFixture fixture,
                                String sortOrder, String nullOrder) {
     FieldReference expr = FieldReference.getWithQuotedRef("key");
@@ -114,7 +111,6 @@ public class TestSortImpl extends DrillTest {
    * harvests the output. Subclasses define the specifics of the sort,
    * define the input data, and validate the output data.
    */
-
   public static class SortTestFixture {
     private final OperatorFixture fixture;
     private final List<RowSet> inputSets = new ArrayList<>();
@@ -193,9 +189,7 @@ public class TestSortImpl extends DrillTest {
    *
    * @param results sort results iterator
    * @param dest container that holds the sort results
-   * @return
    */
-
   private static RowSet toRowSet(SortResults results, VectorContainer dest) {
     if (results.getSv4() != null) {
       return HyperRowSetImpl.fromContainer(dest, results.getSv4());
@@ -209,9 +203,7 @@ public class TestSortImpl extends DrillTest {
   /**
    * Test for null input (no input batches). Note that, in this case,
    * we never see a schema.
-   * @throws Exception
    */
-
   @Test
   public void testNullInput() throws Exception {
     try (OperatorFixture fixture = OperatorFixture.standardFixture(dirTestWatcher)) {
@@ -222,9 +214,7 @@ public class TestSortImpl extends DrillTest {
 
   /**
    * Test for an input with a schema, but only an empty input batch.
-   * @throws Exception
    */
-
   @Test
   public void testEmptyInput() throws Exception {
     try (OperatorFixture fixture = OperatorFixture.standardFixture(dirTestWatcher)) {
@@ -238,9 +228,7 @@ public class TestSortImpl extends DrillTest {
 
   /**
    * Degenerate case: single row in single batch.
-   * @throws Exception
    */
-
   @Test
   public void testSingleRow() throws Exception {
     try (OperatorFixture fixture = OperatorFixture.standardFixture(dirTestWatcher)) {
@@ -258,9 +246,7 @@ public class TestSortImpl extends DrillTest {
 
   /**
    * Degenerate case: two (unsorted) rows in single batch
-   * @throws Exception
    */
-
   @Test
   public void testSingleBatch() throws Exception {
     try (OperatorFixture fixture = OperatorFixture.standardFixture(dirTestWatcher)) {
@@ -279,11 +265,8 @@ public class TestSortImpl extends DrillTest {
   }
 
   /**
-   * Degenerate case, one row in each of two
-   * (unsorted) batches.
-   * @throws Exception
+   * Degenerate case, one row in each of two (unsorted) batches.
    */
-
   @Test
   public void testTwoBatches() throws Exception {
     try (OperatorFixture fixture = OperatorFixture.standardFixture(dirTestWatcher)) {
@@ -310,7 +293,6 @@ public class TestSortImpl extends DrillTest {
    * This ensures we visit each value twice, and that the sorted output will
    * be a continuous run of numbers in proper order.
    */
-
   public static class DataGenerator {
     private final OperatorFixture fixture;
     private final TupleMetadata schema;
@@ -340,7 +322,6 @@ public class TestSortImpl extends DrillTest {
      * @param target number of rows to generate
      * @return the prime step size
      */
-
     private static int guessStep(int target) {
       if (target < 10) {
         return 7;
@@ -374,7 +355,6 @@ public class TestSortImpl extends DrillTest {
    * Validate a sort output batch based on the expectation that the key
    * is an ordered sequence of integers, split across multiple batches.
    */
-
   public static class DataValidator {
     private final int targetCount;
     private final int batchSize;
@@ -417,7 +397,6 @@ public class TestSortImpl extends DrillTest {
    * @param dataGen input batch generator
    * @param validator validates output batches
    */
-
   public void runLargeSortTest(OperatorFixture fixture, DataGenerator dataGen,
                                DataValidator validator) {
     SortImpl sort = makeSortImpl(fixture, Ordering.ORDER_ASC, Ordering.NULLS_UNSPECIFIED);
@@ -460,7 +439,6 @@ public class TestSortImpl extends DrillTest {
    * @param fixture operator test fixture
    * @param rowCount number of rows to test
    */
-
   public void runJumboBatchTest(OperatorFixture fixture, int rowCount) {
     DataGenerator dataGen = new DataGenerator(fixture, rowCount, ValueVector.MAX_ROW_COUNT);
     DataValidator validator = new DataValidator(rowCount, ValueVector.MAX_ROW_COUNT);
@@ -470,8 +448,6 @@ public class TestSortImpl extends DrillTest {
   /**
    * Most tests have used small row counts because we want to probe specific bits
    * of interest. Try 1000 rows just to ensure things work
-   *
-   * @throws Exception
    */
   @Test
   public void testModerateBatch() throws Exception {
@@ -483,14 +459,10 @@ public class TestSortImpl extends DrillTest {
   /**
    * Hit the sort with the largest possible batch size to ensure nothing is lost
    * at the edges.
-   *
-   * @throws Exception
    */
-
   @Test
   public void testLargeBatch() throws Exception {
     try (OperatorFixture fixture = OperatorFixture.standardFixture(dirTestWatcher)) {
-//      partyOnMemory(fixture.allocator());
       runJumboBatchTest(fixture, ValueVector.MAX_ROW_COUNT);
     }
   }
@@ -502,7 +474,6 @@ public class TestSortImpl extends DrillTest {
    *
    * @param allocator - used for allocating Drillbuf
    */
-
   @SuppressWarnings("unused")
   private void partyOnMemory(BufferAllocator allocator) {
     DrillBuf bufs[] = new DrillBuf[10];
@@ -526,7 +497,6 @@ public class TestSortImpl extends DrillTest {
    * @param colCount number of data (non-key) columns
    * @param rowCount number of rows to generate
    */
-
   public void runWideRowsTest(OperatorFixture fixture, int colCount, int rowCount) {
     SchemaBuilder builder = new SchemaBuilder()
         .add("key", MinorType.INT);
@@ -563,10 +533,7 @@ public class TestSortImpl extends DrillTest {
 
   /**
    * Test wide rows with the stock copier.
-   *
-   * @throws Exception
    */
-
   @Test
   public void testWideRows() throws Exception {
     try (OperatorFixture fixture = OperatorFixture.standardFixture(dirTestWatcher)) {
@@ -583,10 +550,7 @@ public class TestSortImpl extends DrillTest {
    * mechanism itself (that has also already been tested.) Rather it is
    * to ensure that, when those components are integrated into the
    * sort implementation, that the whole assembly does the right thing.
-   *
-   * @throws Exception
    */
-
   @Test
   public void testSpill() throws Exception {
     OperatorFixture.Builder builder = OperatorFixture.builder(dirTestWatcher);

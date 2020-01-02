@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.physical.impl.partitionsender;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -27,7 +26,6 @@ import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
@@ -43,6 +41,7 @@ import org.apache.drill.exec.physical.config.HashPartitionSender;
 import org.apache.drill.exec.physical.impl.BaseRootExec;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
+import org.apache.drill.exec.record.AbstractRecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.CloseableRecordBatch;
@@ -55,12 +54,15 @@ import org.apache.drill.exec.vector.CopyUtil;
 
 import com.carrotsearch.hppc.IntArrayList;
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JExpression;
 import com.sun.codemodel.JType;
 
 public class PartitionSenderRootExec extends BaseRootExec {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PartitionSenderRootExec.class);
+  private static final Logger logger = LoggerFactory.getLogger(PartitionSenderRootExec.class);
   private final RecordBatch incoming;
   private final HashPartitionSender operator;
   private PartitionerDecorator partitioner;
@@ -200,11 +202,6 @@ public class PartitionSenderRootExec extends BaseRootExec {
           logger.error("Error while flushing outgoing batches", e);
           context.getExecutorState().fail(e.getCause());
           return false;
-        } catch (SchemaChangeException e) {
-          incoming.kill(false);
-          logger.error("Error while setting up partitioner", e);
-          context.getExecutorState().fail(e);
-          return false;
         }
       case OK:
         try {
@@ -225,11 +222,11 @@ public class PartitionSenderRootExec extends BaseRootExec {
   }
 
   @VisibleForTesting
-  protected void createPartitioner() throws SchemaChangeException {
+  protected void createPartitioner() {
     createClassInstances(actualPartitions);
   }
 
-  private List<Partitioner> createClassInstances(int actualPartitions) throws SchemaChangeException {
+  private List<Partitioner> createClassInstances(int actualPartitions) {
     // set up partitioning function
     final LogicalExpression expr = operator.getExpr();
     final ErrorCollector collector = new ErrorCollectorImpl();
@@ -242,11 +239,7 @@ public class PartitionSenderRootExec extends BaseRootExec {
     ClassGenerator<Partitioner> cgInner = cg.getInnerGenerator("OutgoingRecordBatch");
 
     final LogicalExpression materializedExpr = ExpressionTreeMaterializer.materialize(expr, incoming, collector, context.getFunctionRegistry());
-    if (collector.hasErrors()) {
-      throw new SchemaChangeException(String.format(
-          "Failure while trying to materialize incoming schema.  Errors:\n %s.",
-          collector.toErrorString()));
-    }
+    collector.reportErrors(logger);
 
     // generate code to copy from an incoming value vector to the destination partition's outgoing value vector
     JExpression bucket = JExpr.direct("bucket");
@@ -258,47 +251,44 @@ public class PartitionSenderRootExec extends BaseRootExec {
 
     CopyUtil.generateCopies(cgInner, incoming, incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.FOUR_BYTE);
 
+     // compile and setup generated code
+    List<Partitioner> subPartitioners = context.getImplementationClass(cg, actualPartitions);
+
+    final int divisor = Math.max(1, outGoingBatchCount/actualPartitions);
+    final int longTail = outGoingBatchCount % actualPartitions;
+    int startIndex = 0;
+    int endIndex = 0;
+
+    boolean success = false;
     try {
-      // compile and setup generated code
-      List<Partitioner> subPartitioners = context.getImplementationClass(cg, actualPartitions);
-
-      final int divisor = Math.max(1, outGoingBatchCount/actualPartitions);
-      final int longTail = outGoingBatchCount % actualPartitions;
-      int startIndex = 0;
-      int endIndex = 0;
-
-      boolean success = false;
-      try {
-        for (int i = 0; i < actualPartitions; i++) {
-          startIndex = endIndex;
-          endIndex = (i < actualPartitions - 1) ? startIndex + divisor : outGoingBatchCount;
-          if (i < longTail) {
-            endIndex++;
-          }
-          final OperatorStats partitionStats = new OperatorStats(stats, true);
-          subPartitioners.get(i).setup(context, incoming, popConfig, partitionStats, oContext,
-            cgInner, startIndex, endIndex);
+      for (int i = 0; i < actualPartitions; i++) {
+        startIndex = endIndex;
+        endIndex = (i < actualPartitions - 1) ? startIndex + divisor : outGoingBatchCount;
+        if (i < longTail) {
+          endIndex++;
         }
+        final OperatorStats partitionStats = new OperatorStats(stats, true);
+        subPartitioners.get(i).setup(context, incoming, popConfig, partitionStats, oContext,
+          cgInner, startIndex, endIndex);
+      }
 
-        partitioner = new PartitionerDecorator(subPartitioners, stats, context);
-        for (int index = 0; index < terminations.size(); index++) {
-          partitioner.getOutgoingBatches(terminations.buffer[index]).terminate();
-        }
-        terminations.clear();
+      partitioner = new PartitionerDecorator(subPartitioners, stats, context);
+      for (int index = 0; index < terminations.size(); index++) {
+        partitioner.getOutgoingBatches(terminations.buffer[index]).terminate();
+      }
+      terminations.clear();
 
-        success = true;
-      } finally {
-        if (!success) {
-          for (Partitioner p : subPartitioners) {
-            p.clear();
-          }
+      success = true;
+    } catch (SchemaChangeException e) {
+      throw AbstractRecordBatch.schemaChangeException(e, "Partition Sender", logger);
+    } finally {
+      if (!success) {
+        for (Partitioner p : subPartitioners) {
+          p.clear();
         }
       }
-      return subPartitioners;
-
-    } catch (ClassTransformationException | IOException e) {
-      throw new SchemaChangeException("Failure while attempting to load generated class", e);
     }
+    return subPartitioners;
   }
 
   /**

@@ -18,8 +18,6 @@
 package org.apache.drill.exec.physical.impl.metadata;
 
 import org.apache.drill.common.logical.data.NamedExpression;
-import org.apache.drill.exec.exception.ClassTransformationException;
-import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.metastore.ColumnNamesOptions;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.MetadataHashAggPOP;
@@ -27,7 +25,6 @@ import org.apache.drill.exec.physical.impl.aggregate.HashAggBatch;
 import org.apache.drill.exec.physical.impl.aggregate.HashAggregator;
 import org.apache.drill.exec.record.RecordBatch;
 
-import java.io.IOException;
 import java.util.List;
 
 public class MetadataHashAggBatch extends HashAggBatch {
@@ -38,8 +35,7 @@ public class MetadataHashAggBatch extends HashAggBatch {
   }
 
   @Override
-  protected HashAggregator createAggregatorInternal()
-      throws SchemaChangeException, ClassTransformationException, IOException {
+  protected HashAggregator createAggregatorInternal() {
     MetadataHashAggPOP popConfig = (MetadataHashAggPOP) this.popConfig;
 
     valueExpressions = new MetadataAggregateHelper(popConfig.getContext(),

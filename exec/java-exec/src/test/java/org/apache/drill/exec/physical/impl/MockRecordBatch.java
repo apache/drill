@@ -79,7 +79,6 @@ public class MockRecordBatch implements CloseableRecordBatch {
     this.allOutcomes = iterOutcomes;
   }
 
-  @Deprecated
   public MockRecordBatch(@Nullable FragmentContext context,
                          @Nullable OperatorContext oContext,
                          @NotNull List<VectorContainer> testContainers,

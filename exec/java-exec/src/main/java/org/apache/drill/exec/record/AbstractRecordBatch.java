@@ -20,6 +20,7 @@ package org.apache.drill.exec.record;
 import java.util.Iterator;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.OutOfMemoryException;
@@ -272,5 +273,16 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
    */
   public void checkContinue() {
     context.getExecutorState().checkContinue();
+  }
+
+  protected UserException schemaChangeException(SchemaChangeException e, Logger logger) {
+    return schemaChangeException(e, getClass().getSimpleName(), logger);
+  }
+
+  public static UserException schemaChangeException(SchemaChangeException e,
+      String operator, Logger logger) {
+    return UserException.schemaChangeError(e)
+      .addContext("Unexpected schema change in %s operator", operator)
+      .build(logger);
   }
 }

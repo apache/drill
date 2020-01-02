@@ -20,15 +20,15 @@ package org.apache.drill.exec.physical.impl.join;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.drill.categories.OperatorTest;
-import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.LateralJoinPOP;
 import org.apache.drill.exec.physical.impl.MockRecordBatch;
 import org.apache.drill.exec.planner.common.DrillLateralJoinRelBase;
+import org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType;
 import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorContainer;
@@ -2462,9 +2462,10 @@ public class TestLateralJoinCorrectness extends SubOperatorTest {
     try {
       ljBatch.next();
       fail();
+    } catch (UserException e) {
+      assertEquals(ErrorType.UNSUPPORTED_OPERATION, e.getErrorType());
     } catch (AssertionError | Exception error) {
-      assertTrue(error instanceof DrillRuntimeException);
-      assertTrue(error.getCause() instanceof SchemaChangeException);
+      fail();
     } finally {
       // Close all the resources for this test case
       ljBatch.close();

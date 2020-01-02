@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.physical.impl.aggregate;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -46,7 +45,6 @@ import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.compile.sig.GeneratorMapping;
 import org.apache.drill.exec.compile.sig.MappingSet;
-import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.CodeGenerator;
@@ -260,9 +258,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
     }
 
     incomingSchema = incoming.getSchema();
-    if (!createAggregator()) {
-      state = BatchState.DONE;
-    }
+    createAggregator();
     for (VectorWrapper<?> w : container) {
       AllocationHelper.allocatePrecomputedChildCount(w.getValueVector(), 0, 0, 0);
     }
@@ -367,16 +363,10 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
    * @return true if the aggregator was setup successfully. false if there was a
    *         failure.
    */
-  private boolean createAggregator() {
+  private void createAggregator() {
     try {
       stats.startSetup();
-      this.aggregator = createAggregatorInternal();
-      return true;
-    } catch (SchemaChangeException | ClassTransformationException | IOException ex) {
-      context.getExecutorState().fail(ex);
-      container.clear();
-      incoming.kill(false);
-      return false;
+      aggregator = createAggregatorInternal();
     } finally {
       stats.stopSetup();
     }
@@ -387,8 +377,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
     complexWriters.add(writer);
   }
 
-  protected HashAggregator createAggregatorInternal() throws SchemaChangeException, ClassTransformationException,
-      IOException {
+  protected HashAggregator createAggregatorInternal() {
     CodeGenerator<HashAggregator> top = CodeGenerator.get(HashAggregator.TEMPLATE_DEFINITION, context.getOptions());
     ClassGenerator<HashAggregator> cg = top.getRoot();
     ClassGenerator<HashAggregator> cgInner = cg.getInnerGenerator("BatchHolder");
@@ -430,9 +419,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
         throw UserException.unsupportedError(new UnsupportedOperationException("Union type not supported in aggregate functions")).build(logger);
       }
 
-      if (collector.hasErrors()) {
-        throw new SchemaChangeException("Failure while materializing expression. " + collector.toErrorString());
-      }
+      collector.reportErrors(logger);
 
       if (expr == null) {
         continue;

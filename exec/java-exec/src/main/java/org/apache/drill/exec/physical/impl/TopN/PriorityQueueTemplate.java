@@ -27,6 +27,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
+import org.apache.drill.exec.record.AbstractRecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.ExpandableHyperContainer;
 import org.apache.drill.exec.record.MaterializedField;
@@ -138,10 +139,14 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
   }
 
   @Override
-  public void generate() throws SchemaChangeException {
+  public void generate() {
     Stopwatch watch = Stopwatch.createStarted();
     final DrillBuf drillBuf = allocator.buffer(4 * queueSize);
-    finalSv4 = new SelectionVector4(drillBuf, queueSize, 4000);
+    try {
+      finalSv4 = new SelectionVector4(drillBuf, queueSize, 4000);
+    } catch (SchemaChangeException e) {
+      throw AbstractRecordBatch.schemaChangeException(e, "Priority Queue", logger);
+    }
     for (int i = queueSize - 1; i >= 0; i--) {
       finalSv4.set(i, pop());
     }

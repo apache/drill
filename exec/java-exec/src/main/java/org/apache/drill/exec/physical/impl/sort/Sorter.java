@@ -24,9 +24,10 @@ import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 
 public interface Sorter {
-  public void setup(FragmentContext context, SelectionVector4 vector4, VectorContainer hyperBatch) throws SchemaChangeException;
+  public void setup(FragmentContext context, SelectionVector4 vector4,
+      VectorContainer hyperBatch) throws SchemaChangeException;
   public void sort(SelectionVector4 vector4, VectorContainer container);
 
-  public static TemplateClassDefinition<Sorter> TEMPLATE_DEFINITION = new TemplateClassDefinition<Sorter>(Sorter.class, SortTemplate.class);
-
+  public static TemplateClassDefinition<Sorter> TEMPLATE_DEFINITION =
+      new TemplateClassDefinition<Sorter>(Sorter.class, SortTemplate.class);
 }

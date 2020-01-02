@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.physical.impl.project;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -38,8 +37,6 @@ import org.apache.drill.common.expression.fn.FunctionReplacementUtils;
 import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.exception.ClassTransformationException;
-import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.DrillFuncHolderExpr;
@@ -134,8 +131,7 @@ class ProjectionMaterializer {
     cg = CodeGenerator.getRoot(Projector.TEMPLATE_DEFINITION, options);
   }
 
-  public Projector generateProjector(FragmentContext context, boolean saveCode)
-      throws ClassTransformationException, IOException, SchemaChangeException {
+  public Projector generateProjector(FragmentContext context, boolean saveCode) {
     long setupNewSchemaStartTime = System.currentTimeMillis();
     setup();
     CodeGenerator<Projector> codeGen = cg.getCodeGenerator();
@@ -149,7 +145,7 @@ class ProjectionMaterializer {
     return projector;
   }
 
-  private void setup() throws SchemaChangeException {
+  private void setup() {
     List<NamedExpression> exprs = exprSpec != null ? exprSpec
         : inferExpressions();
     isAnyWildcard = isAnyWildcard(exprs);
@@ -226,8 +222,7 @@ class ProjectionMaterializer {
     return needed;
   }
 
-  private void setupExpression(NamedExpression namedExpression)
-      throws SchemaChangeException {
+  private void setupExpression(NamedExpression namedExpression) {
     result.clear();
     if (classify && namedExpression.getExpr() instanceof SchemaPath) {
       classifyExpr(namedExpression, result);
@@ -267,11 +262,7 @@ class ProjectionMaterializer {
     LogicalExpression expr = ExpressionTreeMaterializer.materialize(
         namedExpression.getExpr(), incomingBatch, collector,
         functionLookupContext, true, unionTypeEnabled);
-    if (collector.hasErrors()) {
-      throw new SchemaChangeException(String.format(
-          "Failure while trying to materialize incoming schema.  Errors:\n %s.",
-          collector.toErrorString()));
-    }
+    collector.reportErrors(logger);
 
     // Add value vector to transfer if direct reference and this is allowed,
     // otherwise, add to evaluation stack.
@@ -291,8 +282,7 @@ class ProjectionMaterializer {
     }
   }
 
-  private void setupImplicitColumnRef(NamedExpression namedExpression)
-      throws SchemaChangeException {
+  private void setupImplicitColumnRef(NamedExpression namedExpression) {
     // The value indicates which wildcard we are processing now
     Integer value = result.prefixMap.get(result.prefix);
     if (value != null && value == 1) {
@@ -335,11 +325,7 @@ class ProjectionMaterializer {
 
         LogicalExpression expr = ExpressionTreeMaterializer.materialize(
             originalPath, incomingBatch, collector, functionLookupContext);
-        if (collector.hasErrors()) {
-          throw new SchemaChangeException(String.format(
-              "Failure while trying to materialize incomingBatch schema.  Errors:\n %s.",
-              collector.toErrorString()));
-        }
+        collector.reportErrors(logger);
 
         ValueVectorWriteExpression write = batchBuilder.addOutputVector(name,
             expr);

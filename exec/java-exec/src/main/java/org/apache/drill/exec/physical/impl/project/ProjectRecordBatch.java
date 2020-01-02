@@ -19,13 +19,12 @@ package org.apache.drill.exec.physical.impl.project;
 
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.EMIT;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.Project;
@@ -135,11 +134,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
           } else if (next != IterOutcome.OK && next != IterOutcome.OK_NEW_SCHEMA && next != EMIT) {
             return next;
           } else if (next == IterOutcome.OK_NEW_SCHEMA) {
-            try {
-              setupNewSchema();
-            } catch (SchemaChangeException e) {
-              throw new RuntimeException(e);
-            }
+            setupNewSchema();
           }
           incomingRecordCount = incoming.getRecordCount();
           memoryManager.update();
@@ -150,9 +145,11 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     }
 
     if (complexWriters != null && getLastKnownOutcome() == EMIT) {
-      throw new UnsupportedOperationException("Currently functions producing complex types as output are not " +
-        "supported in project list for subquery between LATERAL and UNNEST. Please re-write the query using this " +
-        "function in the projection list of outermost query.");
+      throw UserException.unsupportedError()
+          .message("Currently functions producing complex types as output are not " +
+            "supported in project list for subquery between LATERAL and UNNEST. Please re-write the query using this " +
+            "function in the projection list of outermost query.")
+          .build(logger);
     }
 
     first = false;
@@ -233,7 +230,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     complexWriters.add(writer);
   }
 
-  public void doAlloc(int recordCount) {
+  private void doAlloc(int recordCount) {
     // Allocate vv in the allocationVectors.
     for (ValueVector v : allocationVectors) {
       AllocationHelper.allocateNew(v, recordCount);
@@ -247,7 +244,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     }
   }
 
-  public void setValueCount(int count) {
+  private void setValueCount(int count) {
     if (count == 0) {
       container.setEmpty();
       return;
@@ -270,7 +267,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
   }
 
   @Override
-  protected boolean setupNewSchema() throws SchemaChangeException {
+  protected boolean setupNewSchema() {
     setupNewSchemaFromInput(incoming);
     if (container.isSchemaChanged() || callBack.getSchemaChangedAndReset()) {
       container.buildSchema(SelectionVectorMode.NONE);
@@ -280,36 +277,38 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     }
   }
 
-  private void setupNewSchemaFromInput(RecordBatch incomingBatch) throws SchemaChangeException {
+  private void setupNewSchemaFromInput(RecordBatch incomingBatch) {
     // get the output batch size from config.
     int configuredBatchSize = (int) context.getOptions().getOption(ExecConstants.OUTPUT_BATCH_SIZE_VALIDATOR);
     setupNewSchema(incomingBatch, configuredBatchSize);
 
+    ProjectBatchBuilder batchBuilder = new ProjectBatchBuilder(this,
+        container, callBack, incomingBatch);
+    ProjectionMaterializer em = new ProjectionMaterializer(context.getOptions(),
+        incomingBatch, popConfig.getExprs(), context.getFunctionRegistry(),
+        batchBuilder, unionTypeEnabled);
+    boolean saveCode = false;
+    // Uncomment this line to debug the generated code.
+    // saveCode = true;
+    projector = em.generateProjector(context, saveCode);
     try {
-      ProjectBatchBuilder batchBuilder = new ProjectBatchBuilder(this,
-          container, callBack, incomingBatch);
-      ProjectionMaterializer em = new ProjectionMaterializer(context.getOptions(),
-          incomingBatch, popConfig.getExprs(), context.getFunctionRegistry(),
-          batchBuilder, unionTypeEnabled);
-      boolean saveCode = false;
-      // Uncomment this line to debug the generated code.
-      // saveCode = true;
-      projector = em.generateProjector(context, saveCode);
       projector.setup(context, incomingBatch, this, batchBuilder.transfers());
-    } catch (ClassTransformationException | IOException e) {
-      throw new SchemaChangeException("Failure while attempting to load generated class", e);
+    } catch (SchemaChangeException e) {
+      throw UserException.schemaChangeError(e)
+          .addContext("Unexpected schema change in the Project operator")
+          .build(logger);
     }
   }
 
   /**
-   * Handle Null input specially when Project operator is for query output. This happens when input return 0 batch
-   * (returns a FAST NONE directly).
+   * Handle Null input specially when Project operator is for query output.
+   * This happens when the input returns no batches (returns a FAST {@code NONE} directly).
    *
    * <p>
    * Project operator has to return a batch with schema derived using the following 3 rules:
    * </p>
    * <ul>
-   *  <li>Case 1:  *  ==>  expand into an empty list of columns. </li>
+   *  <li>Case 1:  * ==> expand into an empty list of columns. </li>
    *  <li>Case 2:  regular column reference ==> treat as nullable-int column </li>
    *  <li>Case 3:  expressions => Call ExpressionTreeMaterialization over an empty vector contain.
    *           Once the expression is materialized without error, use the output type of materialized
@@ -318,7 +317,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
    *
    * <p>
    * The batch is constructed with the above rules, and recordCount = 0.
-   * Returned with OK_NEW_SCHEMA to down-stream operator.
+   * Returned with {@code OK_NEW_SCHEMA} to down-stream operator.
    * </p>
    */
   @Override
@@ -331,14 +330,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
     emptyVC.buildSchema(SelectionVectorMode.NONE);
     RecordBatch emptyIncomingBatch = new SimpleRecordBatch(emptyVC, context);
 
-    try {
-      setupNewSchemaFromInput(emptyIncomingBatch);
-    } catch (SchemaChangeException e) {
-      kill(false);
-      logger.error("Failure during query", e);
-      context.getExecutorState().fail(e);
-      return IterOutcome.STOP;
-    }
+    setupNewSchemaFromInput(emptyIncomingBatch);
 
     doAlloc(0);
     container.buildSchema(SelectionVectorMode.NONE);
