@@ -49,13 +49,13 @@ public class ElasticSearchPluginConfig extends StoragePluginConfigBase {
     private static final long DEFAULT_CACHE_DURATION = 5;
     private static final TimeUnit DEFAULT_CACHE_TIMEUNIT = TimeUnit.MINUTES;
 
-    private final String hostsAndPorts;
-    private final String credentials;
-    private final String pathPrefix;
+    public final String hostsAndPorts;
+    public final String credentials;
+    public final String pathPrefix;
     private final Integer hashCode;
-    private final int maxRetryTimeoutMillis;
-    private final long cacheDuration;
-    private final TimeUnit cacheTimeUnit;
+    public final int maxRetryTimeoutMillis;
+    public final long cacheDuration;
+    public final TimeUnit cacheTimeUnit;
 
 
     /**
@@ -70,7 +70,7 @@ public class ElasticSearchPluginConfig extends StoragePluginConfigBase {
                                      @JsonProperty(value = "cacheDuration") long cacheDuration,
                                      @JsonProperty(value = "cacheTimeUnit") TimeUnit cacheTimeUnit) {
         if (!StringUtils.isEmpty(credentials)) {
-        	// 帐号密码
+        	// Account password
             this.credentials = credentials;
         } else {
             this.credentials = null;
@@ -91,6 +91,8 @@ public class ElasticSearchPluginConfig extends StoragePluginConfigBase {
             this.cacheTimeUnit = DEFAULT_CACHE_TIMEUNIT;
         }
 
+
+        // TODO Fix this...
         // Building hashcode
         HashCodeBuilder builder = new HashCodeBuilder(13,7);
         builder.append(this.hostsAndPorts)

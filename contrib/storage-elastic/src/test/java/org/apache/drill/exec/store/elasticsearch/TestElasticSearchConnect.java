@@ -39,6 +39,9 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
+
+// CSG Working
+
 @Ignore("requires remote ElasticSearch server")
 public class TestElasticSearchConnect {
 
@@ -72,7 +75,7 @@ public class TestElasticSearchConnect {
       Response response = restClient.performRequest("GET", "/_nodes");
       TestCase.assertNotNull(response);
     } catch (Exception e) {
-       assert(e.getMessage().contains("HTTP/1.1 401 Unauthorized"));
+      assert (e.getMessage().contains("HTTP/1.1 401 Unauthorized"));
     } finally {
       restClient.close();
     }
@@ -106,6 +109,5 @@ public class TestElasticSearchConnect {
       count++;
     }
     TestCase.assertEquals(19, count);
-
   }
 }
