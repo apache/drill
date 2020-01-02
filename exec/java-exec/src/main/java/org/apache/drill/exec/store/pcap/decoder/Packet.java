@@ -513,12 +513,14 @@ public class Packet implements Comparable<Packet> {
         case PacketConstants.AUTHENTICATION_V6:
         case PacketConstants.ENCAPSULATING_SECURITY_V6:
         case PacketConstants.MOBILITY_EXTENSION_V6:
+        case PacketConstants.HOST_IDENTITY_PROTOCOL:
+        case PacketConstants.SHIM6_PROTOCOL:
           nextHeader = getByte(raw, ipOffset + headerLength);
           headerLength += (getByte(raw, ipOffset + headerLength) + 1) * 8;
           break;
         default:
           //noinspection ConstantConditions
-          Preconditions.checkState(false, "Unknown V6 extension or protocol: ", nextHeader);
+          logger.warn("Unknown V6 extension or protocol: {}", nextHeader);
           return getByte(raw, ipOffset + headerLength);
       }
     }
