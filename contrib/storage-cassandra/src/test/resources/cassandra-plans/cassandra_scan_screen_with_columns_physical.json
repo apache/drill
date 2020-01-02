@@ -1,0 +1,33 @@
+{
+  head : {
+    type : "APACHE_DRILL_PHYSICAL",
+    version : 1,
+    generator : {
+      type : "manual"
+    }
+  },
+  graph : [ {
+    pop : "cassandra-scan",
+    @id : 1,
+    cassandraScanSpec : {
+      keyspace : "[KEYSPACE_NAME]",
+      table : "[TABLE_NAME]"
+    },
+    storage:
+    {
+      "type":"cassandra",
+      config : {
+        "cassandra.hosts" : ["127.0.0.1","127.0.0.2","127.0.0.3"],
+        "cassandra.port"  : 9042
+      }
+    },
+    columns: [
+    "id", "pog_id"
+    ]
+  },
+  {
+    pop : "screen",
+    @id : 2,
+    child : 1
+  } ]
+}
