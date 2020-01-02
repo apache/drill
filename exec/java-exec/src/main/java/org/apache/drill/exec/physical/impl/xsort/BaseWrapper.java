@@ -17,36 +17,22 @@
  */
 package org.apache.drill.exec.physical.impl.xsort;
 
-import java.io.IOException;
-
-import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.ops.OperatorContext;
+import org.slf4j.Logger;
 
 /**
  * Base class for code-generation-based tasks.
  */
-
 public abstract class BaseWrapper {
 
-  protected OperatorContext context;
+  protected final OperatorContext context;
 
   public BaseWrapper(OperatorContext context) {
     this.context = context;
   }
 
-  protected <T> T getInstance(CodeGenerator<T> cg, org.slf4j.Logger logger) {
-    try {
-      return context.getFragmentContext().getImplementationClass(cg);
-    } catch (ClassTransformationException e) {
-      throw UserException.unsupportedError(e)
-            .message("Code generation error - likely code error.")
-            .build(logger);
-    } catch (IOException e) {
-      throw UserException.resourceError(e)
-            .message("IO Error during code generation.")
-            .build(logger);
-    }
+  protected <T> T getInstance(CodeGenerator<T> cg, Logger logger) {
+    return context.getFragmentContext().getImplementationClass(cg);
   }
 }

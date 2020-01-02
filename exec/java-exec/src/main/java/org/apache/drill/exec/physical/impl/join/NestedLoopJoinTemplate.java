@@ -38,22 +38,20 @@ import static org.apache.drill.exec.record.JoinBatchMemoryManager.LEFT_INDEX;
  */
 public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
 
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NestedLoopJoinBatch.class);
-
   // Current left input batch being processed
-  private RecordBatch left = null;
+  private RecordBatch left;
 
   // Record count of the left batch currently being processed
-  private int leftRecordCount = 0;
+  private int leftRecordCount;
 
   // List of record counts per batch in the hyper container
-  private List<Integer> rightCounts = null;
+  private List<Integer> rightCounts;
 
   // Output batch
-  private NestedLoopJoinBatch outgoing = null;
+  private NestedLoopJoinBatch outgoing;
 
   // Iteration status tracker
-  private IterationStatusTracker tracker = new IterationStatusTracker();
+  private final IterationStatusTracker tracker = new IterationStatusTracker();
 
   private int targetOutputRecords;
 
@@ -67,6 +65,7 @@ public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
    * @param rightCounts Counts for each right container
    * @param outgoing Output batch
    */
+  @Override
   public void setupNestedLoopJoin(FragmentContext context,
                                   RecordBatch left,
                                   ExpandableHyperContainer rightContainer,
@@ -91,6 +90,7 @@ public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
    * @param joinType join type (INNER ot LEFT)
    * @return the number of records produced in the output batch
    */
+  @Override
   public int outputRecords(JoinRelType joinType) {
     int outputIndex = 0;
     while (leftRecordCount != 0) {
@@ -188,7 +188,6 @@ public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
             " found on the left side of NLJ.");
       case NONE:
       case NOT_YET:
-      case STOP:
         leftRecordCount = 0;
         break;
       case OK:
@@ -199,18 +198,22 @@ public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
           outgoing.getRecordBatchStatsContext());
         leftRecordCount = left.getRecordCount();
         break;
+      default:
     }
   }
 
+  @Override
   public abstract void doSetup(@Named("context") FragmentContext context,
                                @Named("rightContainer") VectorContainer rightContainer,
                                @Named("leftBatch") RecordBatch leftBatch,
                                @Named("outgoing") RecordBatch outgoing);
 
+  @Override
   public abstract void emitRight(@Named("batchIndex") int batchIndex,
                                  @Named("recordIndexWithinBatch") int recordIndexWithinBatch,
                                  @Named("outIndex") int outIndex);
 
+  @Override
   public abstract void emitLeft(@Named("leftIndex") int leftIndex,
                                 @Named("outIndex") int outIndex);
 

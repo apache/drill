@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.physical.impl.union;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -33,7 +32,6 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
@@ -92,7 +90,7 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
   }
 
   @Override
-  protected void buildSchema() throws SchemaChangeException {
+  protected void buildSchema() {
     if (! prefetchFirstBatchFromBothSides()) {
       state = BatchState.DONE;
       return;
@@ -117,37 +115,30 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
 
   @Override
   public IterOutcome innerNext() {
-    try {
-      while (true) {
-        if (!unionInputIterator.hasNext()) {
-          return IterOutcome.NONE;
-        }
-
-        Pair<IterOutcome, BatchStatusWrappper> nextBatch = unionInputIterator.next();
-        IterOutcome upstream = nextBatch.left;
-        BatchStatusWrappper batchStatus = nextBatch.right;
-
-        switch (upstream) {
-        case NONE:
-        case STOP:
-          return upstream;
-        case OK_NEW_SCHEMA:
-          return doWork(batchStatus, true);
-        case OK:
-          // skip batches with same schema as the previous one yet having 0 row.
-          if (batchStatus.batch.getRecordCount() == 0) {
-            VectorAccessibleUtilities.clear(batchStatus.batch);
-            continue;
-          }
-          return doWork(batchStatus, false);
-        default:
-          throw new IllegalStateException(String.format("Unknown state %s.", upstream));
-        }
+    while (true) {
+      if (!unionInputIterator.hasNext()) {
+        return IterOutcome.NONE;
       }
-    } catch (ClassTransformationException | IOException | SchemaChangeException ex) {
-      context.getExecutorState().fail(ex);
-      killIncoming(false);
-      return IterOutcome.STOP;
+
+      Pair<IterOutcome, BatchStatusWrappper> nextBatch = unionInputIterator.next();
+      IterOutcome upstream = nextBatch.left;
+      BatchStatusWrappper batchStatus = nextBatch.right;
+
+      switch (upstream) {
+      case NONE:
+        return upstream;
+      case OK_NEW_SCHEMA:
+        return doWork(batchStatus, true);
+      case OK:
+        // skip batches with same schema as the previous one yet having 0 row.
+        if (batchStatus.batch.getRecordCount() == 0) {
+          VectorAccessibleUtilities.clear(batchStatus.batch);
+          continue;
+        }
+        return doWork(batchStatus, false);
+      default:
+        throw new IllegalStateException(String.format("Unknown state %s.", upstream));
+      }
     }
   }
 
@@ -156,8 +147,7 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
     return recordCount;
   }
 
-  private IterOutcome doWork(BatchStatusWrappper batchStatus, boolean newSchema)
-      throws ClassTransformationException, IOException, SchemaChangeException {
+  private IterOutcome doWork(BatchStatusWrappper batchStatus, boolean newSchema) {
     Preconditions.checkArgument(batchStatus.batch.getSchema().getFieldCount() == container.getSchema().getFieldCount(),
         "Input batch and output batch have different field counthas!");
 
@@ -187,7 +177,7 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
     }
   }
 
-  private void createUnionAller(RecordBatch inputBatch) throws ClassTransformationException, IOException, SchemaChangeException {
+  private void createUnionAller(RecordBatch inputBatch) {
     transfers.clear();
     allocationVectors.clear();
 
@@ -219,28 +209,21 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
         MaterializedField outputField = vvOut.getField();
 
         LogicalExpression expr = ExpressionTreeMaterializer.materialize(inputPath, inputBatch, collector, context.getFunctionRegistry());
-
-        if (collector.hasErrors()) {
-          throw new SchemaChangeException(String.format("Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
-        }
+        collector.reportErrors(logger);
 
         // If the inputs' DataMode is required and the outputs' DataMode is not required
         // cast to the one with the least restriction
         if(inField.getType().getMode() == TypeProtos.DataMode.REQUIRED
             && outputField.getType().getMode() != TypeProtos.DataMode.REQUIRED) {
           expr = ExpressionTreeMaterializer.convertToNullableType(expr, inField.getType().getMinorType(), context.getFunctionRegistry(), collector);
-          if (collector.hasErrors()) {
-            throw new SchemaChangeException(String.format("Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
-          }
+          collector.reportErrors(logger);
         }
 
         // If two inputs' MinorTypes are different,
         // Insert a cast before the Union operation
         if(inField.getType().getMinorType() != outputField.getType().getMinorType()) {
           expr = ExpressionTreeMaterializer.addCastExpression(expr, outputField.getType(), context.getFunctionRegistry(), collector);
-          if (collector.hasErrors()) {
-            throw new SchemaChangeException(String.format("Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
-          }
+          collector.reportErrors(logger);
         }
 
         TypedFieldId fid = container.getValueVectorId(SchemaPath.getSimplePath(outputField.getName()));
@@ -255,7 +238,11 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
     }
 
     unionall = context.getImplementationClass(cg.getCodeGenerator());
-    unionall.setup(context, inputBatch, this, transfers);
+    try {
+      unionall.setup(context, inputBatch, this, transfers);
+    } catch (SchemaChangeException e) {
+      throw schemaChangeException(e, logger);
+    }
   }
 
   // The output table's column names always follow the left table,

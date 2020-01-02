@@ -18,9 +18,7 @@
 package org.apache.drill.exec.physical.impl.metadata;
 
 import org.apache.drill.common.logical.data.NamedExpression;
-import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
-import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.metastore.ColumnNamesOptions;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.MetadataStreamAggPOP;
@@ -28,24 +26,25 @@ import org.apache.drill.exec.physical.impl.aggregate.StreamingAggBatch;
 import org.apache.drill.exec.physical.impl.aggregate.StreamingAggregator;
 import org.apache.drill.exec.record.RecordBatch;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
- * Operator which adds aggregate calls for all incoming columns to calculate required metadata and produces aggregations.
- * If aggregation is performed on top of another aggregation, required aggregate calls for merging metadata will be added.
+ * Operator which adds aggregate calls for all incoming columns to calculate
+ * required metadata and produces aggregations. If aggregation is performed on
+ * top of another aggregation, required aggregate calls for merging metadata
+ * will be added.
  */
 public class MetadataStreamAggBatch extends StreamingAggBatch {
 
   private List<NamedExpression> valueExpressions;
 
-  public MetadataStreamAggBatch(MetadataStreamAggPOP popConfig, RecordBatch incoming, FragmentContext context) throws OutOfMemoryException {
+  public MetadataStreamAggBatch(MetadataStreamAggPOP popConfig,
+      RecordBatch incoming, FragmentContext context) throws OutOfMemoryException {
     super(popConfig, incoming, context);
   }
 
   @Override
-  protected StreamingAggregator createAggregatorInternal()
-      throws SchemaChangeException, ClassTransformationException, IOException {
+  protected StreamingAggregator createAggregatorInternal() {
     MetadataStreamAggPOP popConfig = (MetadataStreamAggPOP) this.popConfig;
 
     valueExpressions = new MetadataAggregateHelper(popConfig.getContext(),

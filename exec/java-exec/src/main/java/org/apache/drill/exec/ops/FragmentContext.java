@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.ops;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -27,7 +26,6 @@ import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTes
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.compile.CodeCompiler;
-import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.fn.FunctionLookupContext;
@@ -70,8 +68,7 @@ public interface FragmentContext extends UdfUtilities, AutoCloseable {
    * @param cg the class generator
    * @return an instance of the generated class
    */
-  <T> T getImplementationClass(final ClassGenerator<T> cg)
-      throws ClassTransformationException, IOException;
+  <T> T getImplementationClass(final ClassGenerator<T> cg);
 
   /**
    * Generates code for a class given a {@link CodeGenerator},
@@ -82,8 +79,7 @@ public interface FragmentContext extends UdfUtilities, AutoCloseable {
    * @param cg the code generator
    * @return an instance of the generated class
    */
-  <T> T getImplementationClass(final CodeGenerator<T> cg)
-      throws ClassTransformationException, IOException;
+  <T> T getImplementationClass(final CodeGenerator<T> cg);
 
   /**
    * Generates code for a class given a {@link ClassGenerator}, and returns the
@@ -94,8 +90,7 @@ public interface FragmentContext extends UdfUtilities, AutoCloseable {
    * @param cg the class generator
    * @return list of instances of the generated class
    */
-  <T> List<T> getImplementationClass(final ClassGenerator<T> cg, final int instanceCount)
-      throws ClassTransformationException, IOException;
+  <T> List<T> getImplementationClass(final ClassGenerator<T> cg, final int instanceCount);
 
   /**
    * Returns the statement type (e.g. SELECT, CTAS, ANALYZE) from the query context.
@@ -108,8 +103,7 @@ public interface FragmentContext extends UdfUtilities, AutoCloseable {
    * Get this node's identity.
    * @return A DrillbitEndpoint object.
    */
-  <T> List<T> getImplementationClass(final CodeGenerator<T> cg, final int instanceCount)
-      throws ClassTransformationException, IOException;
+  <T> List<T> getImplementationClass(final CodeGenerator<T> cg, final int instanceCount);
 
   /**
    * Return the set of execution controls used to inject faults into running

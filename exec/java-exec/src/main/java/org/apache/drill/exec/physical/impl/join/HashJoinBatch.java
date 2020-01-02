@@ -48,7 +48,6 @@ import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
@@ -347,7 +346,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
   }
 
   @Override
-  protected void buildSchema() throws SchemaChangeException {
+  protected void buildSchema() {
     // We must first get the schemas from upstream operators before we can build
     // our schema.
     boolean validSchema = prefetchFirstBatchFromBothSides();
@@ -373,11 +372,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
         setupHashTable();
       }
 
-      try {
-        hashJoinProbe = setupHashJoinProbe();
-      } catch (IOException | ClassTransformationException e) {
-        throw new SchemaChangeException(e);
-      }
+      hashJoinProbe = setupHashJoinProbe();
     }
 
     // If we have a valid schema, this will build a valid container.
@@ -680,14 +675,12 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
 
       return IterOutcome.NONE;
     } catch (SchemaChangeException e) {
-      context.getExecutorState().fail(e);
-      killIncoming(false);
-      return IterOutcome.STOP;
+      throw UserException.schemaChangeError(e).build(logger);
     }
   }
 
   /**
-   *  In case an upstream data is no longer needed, send a kill and flush any remaining batch
+   * In case an upstream data is no longer needed, send a kill and flush any remaining batch
    *
    * @param batch probe or build batch
    * @param upstream which upstream
@@ -703,7 +696,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
   private void killAndDrainLeftUpstream() { killAndDrainUpstream(probeBatch, leftUpstream, true); }
   private void killAndDrainRightUpstream() { killAndDrainUpstream(buildBatch, rightUpstream, false); }
 
-  private void setupHashTable() throws SchemaChangeException {
+  private void setupHashTable() {
     List<Comparator> comparators = Lists.newArrayListWithExpectedSize(conditions.size());
     conditions.forEach(cond->comparators.add(JoinUtils.checkAndReturnSupportedJoinComparator(cond)));
 
@@ -722,9 +715,11 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
       leftExpr = null;
     } else {
       if (probeBatch.getSchema().getSelectionVectorMode() != BatchSchema.SelectionVectorMode.NONE) {
-        String errorMsg = new StringBuilder().append("Hash join does not support probe batch with selection vectors. ").append("Probe batch has selection mode = ").append
-          (probeBatch.getSchema().getSelectionVectorMode()).toString();
-        throw new SchemaChangeException(errorMsg);
+        throw UserException.internalError(null)
+          .message("Hash join does not support probe batch with selection vectors.")
+          .addContext("Probe batch has selection mode",
+              (probeBatch.getSchema().getSelectionVectorMode()).toString())
+          .build(logger);
       }
     }
 
@@ -739,15 +734,13 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
     }
   }
 
-  private void setupHash64(HashTableConfig htConfig) throws SchemaChangeException {
+  private void setupHash64(HashTableConfig htConfig) {
     LogicalExpression[] keyExprsBuild = new LogicalExpression[htConfig.getKeyExprsBuild().size()];
     ErrorCollector collector = new ErrorCollectorImpl();
     int i = 0;
     for (NamedExpression ne : htConfig.getKeyExprsBuild()) {
       LogicalExpression expr = ExpressionTreeMaterializer.materialize(ne.getExpr(), buildBatch, collector, context.getFunctionRegistry());
-      if (collector.hasErrors()) {
-        throw new SchemaChangeException("Failure while materializing expression. " + collector.toErrorString());
-      }
+      collector.reportErrors(logger);
       if (expr == null) {
         continue;
       }
@@ -794,7 +787,9 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
     try {
       hash64 = hashHelper.getHash64(keyExprsBuild, buildSideTypeFieldIds);
     } catch (Exception e) {
-      throw new SchemaChangeException("Failed to construct a field's hash64 dynamic codes", e);
+      throw UserException.internalError(e)
+            .message("Failed to construct a field's hash64 dynamic codes")
+            .build(logger);
     }
   }
 
@@ -1344,13 +1339,13 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
       htStats.addStats(newStats);
     }
 
-    this.stats.setLongStat(Metric.NUM_BUCKETS, htStats.numBuckets);
-    this.stats.setLongStat(Metric.NUM_ENTRIES, htStats.numEntries);
-    this.stats.setLongStat(Metric.NUM_RESIZING, htStats.numResizing);
-    this.stats.setLongStat(Metric.RESIZING_TIME_MS, htStats.resizingTime);
-    this.stats.setLongStat(Metric.NUM_PARTITIONS, numPartitions);
-    this.stats.setLongStat(Metric.SPILL_CYCLE, spilledState.getCycle()); // Put 0 in case no spill
-    this.stats.setLongStat(Metric.SPILLED_PARTITIONS, numSpilled);
+    stats.setLongStat(Metric.NUM_BUCKETS, htStats.numBuckets);
+    stats.setLongStat(Metric.NUM_ENTRIES, htStats.numEntries);
+    stats.setLongStat(Metric.NUM_RESIZING, htStats.numResizing);
+    stats.setLongStat(Metric.RESIZING_TIME_MS, htStats.resizingTime);
+    stats.setLongStat(Metric.NUM_PARTITIONS, numPartitions);
+    stats.setLongStat(Metric.SPILL_CYCLE, spilledState.getCycle()); // Put 0 in case no spill
+    stats.setLongStat(Metric.SPILLED_PARTITIONS, numSpilled);
   }
 
   /**
@@ -1458,10 +1453,8 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
     super.close();
   }
 
-  public HashJoinProbe setupHashJoinProbe() throws ClassTransformationException, IOException {
-
+  public HashJoinProbe setupHashJoinProbe() {
     //  No real code generation !!
-
     return new HashJoinProbeTemplate();
   }
 

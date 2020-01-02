@@ -69,7 +69,6 @@ import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.fn.AbstractFuncHolder;
 import org.apache.drill.exec.expr.fn.DrillComplexWriterFuncHolder;
@@ -104,14 +103,10 @@ public class ExpressionTreeMaterializer {
   }
 
   public static LogicalExpression materializeAndCheckErrors(LogicalExpression expr,
-      VectorAccessible batch, FunctionLookupContext functionLookupContext)
-          throws SchemaChangeException {
+      VectorAccessible batch, FunctionLookupContext functionLookupContext) {
     ErrorCollector collector = new ErrorCollectorImpl();
     LogicalExpression e = ExpressionTreeMaterializer.materialize(expr, batch, collector, functionLookupContext, false, false);
-    if (collector.hasErrors()) {
-      throw new SchemaChangeException(String.format(
-          "Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
-    }
+    collector.reportErrors(logger);
     return e;
   }
 

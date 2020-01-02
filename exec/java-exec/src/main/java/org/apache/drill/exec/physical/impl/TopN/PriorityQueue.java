@@ -48,7 +48,7 @@ public interface PriorityQueue {
    * This method must be called before fetching the final priority queue hyper batch and final Sv4 vector.
    * @throws SchemaChangeException
    */
-  void generate() throws SchemaChangeException;
+  void generate();
 
   /**
    * Retrieves the final priority queue HyperBatch containing the results. <b>Note:</b> this should be called

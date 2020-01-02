@@ -300,7 +300,7 @@ public abstract class HashAggTemplate implements HashAggregator {
   @Override
   public void setup(HashAggregate hashAggrConfig, HashTableConfig htConfig, FragmentContext context, OperatorContext oContext,
                     RecordBatch incoming, HashAggBatch outgoing, LogicalExpression[] valueExprs, List<TypedFieldId> valueFieldIds,
-                    ClassGenerator<?> cg, TypedFieldId[] groupByOutFieldIds, VectorContainer outContainer, int extraRowBytes) throws SchemaChangeException, IOException {
+                    ClassGenerator<?> cg, TypedFieldId[] groupByOutFieldIds, VectorContainer outContainer, int extraRowBytes) {
 
     if (valueExprs == null || valueFieldIds == null) {
       throw new IllegalArgumentException("Invalid aggr value exprs or workspace variables.");
@@ -371,7 +371,11 @@ public abstract class HashAggTemplate implements HashAggregator {
     estRowWidth = extraRowBytes;
     estValuesRowWidth = extraRowBytes;
 
-    doSetup(incoming);
+    try {
+      doSetup(incoming);
+    } catch (SchemaChangeException e) {
+      throw HashAggBatch.schemaChangeException(e, "Hash Aggregate", logger);
+    }
   }
 
   /**
@@ -713,7 +717,6 @@ public abstract class HashAggTemplate implements HashAggregator {
 
           return AggOutcome.RETURN_OUTCOME;
 
-        case STOP:
         default:
           return AggOutcome.CLEANUP_AND_RETURN;
       }

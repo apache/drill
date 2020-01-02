@@ -32,7 +32,6 @@ import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.drill.exec.compile.sig.GeneratorMapping;
 import org.apache.drill.exec.compile.sig.MappingSet;
-import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
@@ -346,13 +345,7 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
       container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
 
       // generate code for merge operations (copy and compare)
-      try {
-        merger = createMerger();
-      } catch (final SchemaChangeException e) {
-        logger.error("Failed to generate code for MergingReceiver.  {}", e);
-        context.getExecutorState().fail(e);
-        return IterOutcome.STOP;
-      }
+      merger = createMerger();
 
       // allocate the priority queue with the generated comparator
       this.pqueue = new PriorityQueue<>(fragProviders.length, new Comparator<Node>() {
@@ -663,26 +656,28 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
    * @return instance of a new merger based on generated code
    * @throws SchemaChangeException
    */
-  private MergingReceiverGeneratorBase createMerger() throws SchemaChangeException {
+  private MergingReceiverGeneratorBase createMerger() {
+
+    final CodeGenerator<MergingReceiverGeneratorBase> cg =
+        CodeGenerator.get(MergingReceiverGeneratorBase.TEMPLATE_DEFINITION,
+            context.getOptions());
+    cg.plainJavaCapable(true);
+    // Uncomment out this line to debug the generated code.
+    // cg.saveCodeForDebugging(true);
+    final ClassGenerator<MergingReceiverGeneratorBase> g = cg.getRoot();
+
+    ExpandableHyperContainer batch = null;
+    boolean first = true;
+    for (final RecordBatchLoader loader : batchLoaders) {
+      if (first) {
+        batch = new ExpandableHyperContainer(loader);
+        first = false;
+      } else {
+        batch.addBatch(loader);
+      }
+    }
 
     try {
-      final CodeGenerator<MergingReceiverGeneratorBase> cg = CodeGenerator.get(MergingReceiverGeneratorBase.TEMPLATE_DEFINITION, context.getOptions());
-      cg.plainJavaCapable(true);
-      // Uncomment out this line to debug the generated code.
-      // cg.saveCodeForDebugging(true);
-      final ClassGenerator<MergingReceiverGeneratorBase> g = cg.getRoot();
-
-      ExpandableHyperContainer batch = null;
-      boolean first = true;
-      for (final RecordBatchLoader loader : batchLoaders) {
-        if (first) {
-          batch = new ExpandableHyperContainer(loader);
-          first = false;
-        } else {
-          batch.addBatch(loader);
-        }
-      }
-
       generateComparisons(g, batch);
 
       g.setMappingSet(COPIER_MAPPING_SET);
@@ -692,8 +687,8 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
 
       merger.doSetup(context, batch, container);
       return merger;
-    } catch (ClassTransformationException | IOException e) {
-      throw new SchemaChangeException(e);
+    } catch (SchemaChangeException e) {
+      throw schemaChangeException(e, logger);
     }
   }
 
