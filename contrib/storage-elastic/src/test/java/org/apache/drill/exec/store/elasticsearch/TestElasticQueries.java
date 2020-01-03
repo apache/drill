@@ -33,6 +33,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.TimeUnit;
+
 
 @Ignore("It requires an elasticsearch server running on localhost, port 9200 with init-script.sh script run on it")
 public class TestElasticQueries extends ClusterTest {
@@ -45,7 +47,7 @@ public class TestElasticQueries extends ClusterTest {
 
         StoragePluginRegistry pluginRegistry = cluster.drillbit().getContext().getStorage();
 
-        ElasticSearchPluginConfig esConfig = new ElasticSearchPluginConfig("", "http://localhost:9200", "", 100, 100, null);
+        ElasticSearchPluginConfig esConfig = new ElasticSearchPluginConfig("elastic:changeme", "http://localhost:9200", "", 100, 10, TimeUnit.MINUTES);
         esConfig.setEnabled(true);
 
         pluginRegistry.createOrUpdate("elasticsearch", esConfig, true);

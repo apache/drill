@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.codec.binary.Base64;
@@ -43,159 +44,172 @@ import org.slf4j.LoggerFactory;
 
 @JsonTypeName(ElasticSearchPluginConfig.NAME)
 public class ElasticSearchPluginConfig extends StoragePluginConfigBase {
-    public static final String NAME = "elasticsearch";
-    private static final Logger logger = LoggerFactory.getLogger(ElasticSearchPluginConfig.class);
-    private static final int DEFAULT_PORT = 9200;
-    private static final long DEFAULT_CACHE_DURATION = 5;
-    private static final TimeUnit DEFAULT_CACHE_TIMEUNIT = TimeUnit.MINUTES;
+  public static final String NAME = "elasticsearch";
 
-    public final String hostsAndPorts;
-    public final String credentials;
-    public final String pathPrefix;
-    private final Integer hashCode;
-    public final int maxRetryTimeoutMillis;
-    public final long cacheDuration;
-    public final TimeUnit cacheTimeUnit;
+  private static final Logger logger = LoggerFactory.getLogger(ElasticSearchPluginConfig.class);
 
+  private static final int DEFAULT_PORT = 9200;
 
-    /**
-     * Create ElasticSearch Plugin configuration
-     * @param credentials its format should be "[USERNAME]:[PASSWORD]". For example: 'me:myPassword'. In case of null or empty String, no Authorization will be used
-     * @param hostsAndPorts its format is a list of a [PROTOCOL]://[HOST]:[PORT] separated by ','. For example: 'http://localhost:9200,http://localhost:9201'
-     */
-    public ElasticSearchPluginConfig(@JsonProperty(value = "credentials") String credentials,
-                                     @JsonProperty(value = "hostsAndPorts", required = true) String hostsAndPorts,
-                                     @JsonProperty(value = "pathPrefix") String pathPrefix,
-                                     @JsonProperty(value = "maxRetryTimeoutMillis") int maxRetryTimeoutMillis,
-                                     @JsonProperty(value = "cacheDuration") long cacheDuration,
-                                     @JsonProperty(value = "cacheTimeUnit") TimeUnit cacheTimeUnit) {
-        if (!StringUtils.isEmpty(credentials)) {
-        	// Account password
-            this.credentials = credentials;
-        } else {
-            this.credentials = null;
-        }
-        this.hostsAndPorts = hostsAndPorts;
-        this.maxRetryTimeoutMillis = maxRetryTimeoutMillis;
-        this.pathPrefix = pathPrefix;
+  private static final long DEFAULT_CACHE_DURATION = 5;
 
-        if (cacheDuration > 0) {
-            this.cacheDuration = cacheDuration;
-        } else {
-            this.cacheDuration = DEFAULT_CACHE_DURATION;
-        }
+  private static final TimeUnit DEFAULT_CACHE_TIMEUNIT = TimeUnit.MINUTES;
 
-        if (cacheTimeUnit != null) {
-            this.cacheTimeUnit = cacheTimeUnit;
-        } else {
-            this.cacheTimeUnit = DEFAULT_CACHE_TIMEUNIT;
-        }
+  public final String hostsAndPorts;
+
+  public final String credentials;
+
+  public final String pathPrefix;
+
+  private final Integer hashCode;
+
+  public final int maxRetryTimeoutMillis;
+
+  public final long cacheDuration;
+
+  public final TimeUnit cacheTimeUnit;
 
 
-        // TODO Fix this...
-        // Building hashcode
-        HashCodeBuilder builder = new HashCodeBuilder(13,7);
-        builder.append(this.hostsAndPorts)
-                .append(this.credentials)
-                .append(this.maxRetryTimeoutMillis)
-                .append(this.pathPrefix)
-                .append(this.cacheDuration)
-                .append(this.cacheTimeUnit);
-        this.hashCode = builder.build();
+  /**
+   * Create ElasticSearch Plugin configuration
+   *
+   * @param credentials   its format should be "[USERNAME]:[PASSWORD]". For example: 'me:myPassword'. In case of null or empty String, no Authorization will be used
+   * @param hostsAndPorts its format is a list of a [PROTOCOL]://[HOST]:[PORT] separated by ','. For example: 'http://localhost:9200,http://localhost:9201'
+   */
+  public ElasticSearchPluginConfig(@JsonProperty(value = "credentials") String credentials,
+                                   @JsonProperty(value = "hostsAndPorts", required = true) String hostsAndPorts,
+                                   @JsonProperty(value = "pathPrefix") String pathPrefix,
+                                   @JsonProperty(value = "maxRetryTimeoutMillis") int maxRetryTimeoutMillis,
+                                   @JsonProperty(value = "cacheDuration") long cacheDuration,
+                                   @JsonProperty(value = "cacheTimeUnit") TimeUnit cacheTimeUnit) {
+    if (!StringUtils.isEmpty(credentials)) {
+      // Account password
+      this.credentials = credentials;
+    } else {
+      this.credentials = null;
+    }
+    this.hostsAndPorts = hostsAndPorts;
+    this.maxRetryTimeoutMillis = maxRetryTimeoutMillis;
+    this.pathPrefix = pathPrefix;
+
+    if (cacheDuration > 0) {
+      this.cacheDuration = cacheDuration;
+    } else {
+      this.cacheDuration = DEFAULT_CACHE_DURATION;
     }
 
-    @Override
-    public boolean equals(Object that) {
-        if (this == that) {
-            return true;
-        } else if (that == null || getClass() != that.getClass()) {
-            return false;
-        }
-        ElasticSearchPluginConfig thatConfig = (ElasticSearchPluginConfig) that;
-        return this.hostsAndPorts.equals(thatConfig.hostsAndPorts)
-                && (this.credentials == null ? thatConfig.credentials == null : this.credentials.equals(thatConfig.credentials))
-                && this.maxRetryTimeoutMillis == thatConfig.maxRetryTimeoutMillis
-                && this.cacheDuration == thatConfig.cacheDuration
-                && (this.pathPrefix == null ? thatConfig.pathPrefix == null : this.pathPrefix.equals(thatConfig.pathPrefix))
-                && (this.cacheTimeUnit == null ? thatConfig.cacheTimeUnit == null : this.cacheTimeUnit.equals(thatConfig.cacheTimeUnit));
+    if (cacheTimeUnit != null) {
+      this.cacheTimeUnit = cacheTimeUnit;
+    } else {
+      this.cacheTimeUnit = DEFAULT_CACHE_TIMEUNIT;
     }
 
-    @Override
-    public int hashCode() {
-        return this.hashCode;
-    }
 
-    public String getHostsAndPorts() {
-        return this.hostsAndPorts;
-    }
+    // TODO Fix this...
+    // Building hashcode
+    HashCodeBuilder builder = new HashCodeBuilder(13, 7);
+    builder
+      .append(this.hostsAndPorts)
+      .append(this.credentials)
+      .append(this.maxRetryTimeoutMillis)
+      .append(this.pathPrefix)
+      .append(this.cacheDuration)
+      .append(this.cacheTimeUnit);
+    hashCode = builder.build();
+  }
 
-    public String getCredentials() {
-        return credentials;
+  @Override
+  public boolean equals(Object that) {
+    if (this == that) {
+      return true;
+    } else if (that == null || getClass() != that.getClass()) {
+      return false;
     }
+    ElasticSearchPluginConfig thatConfig = (ElasticSearchPluginConfig) that;
+    return hostsAndPorts.equals(thatConfig.hostsAndPorts) &&
+      (Objects.equals(this.credentials, thatConfig.credentials)) &&
+      this.maxRetryTimeoutMillis == thatConfig.maxRetryTimeoutMillis &&
+      this.cacheDuration == thatConfig.cacheDuration &&
+      (Objects.equals(this.pathPrefix, thatConfig.pathPrefix)) &&
+      (Objects.equals(this.cacheTimeUnit, thatConfig.cacheTimeUnit));
+  }
 
-    public String getPathPrefix() {
-        return pathPrefix;
+  @Override
+  public int hashCode() {
+    return this.hashCode;
+  }
+
+  public String getHostsAndPorts() {
+    return this.hostsAndPorts;
+  }
+
+  public String getCredentials() {
+    return credentials;
+  }
+
+  public String getPathPrefix() {
+    return pathPrefix;
+  }
+
+  public int getMaxRetryTimeoutMillis() {
+    return maxRetryTimeoutMillis;
+  }
+
+  /**
+   * Creates and returns a client base on configuration
+   *
+   * @return a {@link RestClient} to work against elasticSearch
+   * @throws UnknownHostException
+   */
+  @JsonIgnore
+  public RestClient createClient() {
+    // Client created
+    RestClientBuilder clientBuilder = RestClient.builder(this.parseHostsAndPorts());
+
+    Header[] headers = buildHeaders();
+    if (headers != null) {
+      clientBuilder.setDefaultHeaders(headers);
     }
-
-    public int getMaxRetryTimeoutMillis() {
-        return maxRetryTimeoutMillis;
+    if (this.maxRetryTimeoutMillis > 0) {
+      clientBuilder.setMaxRetryTimeoutMillis(this.maxRetryTimeoutMillis);
     }
-
-    /**
-     * Creates and returns a client base on configuration
-     * @return a {@link RestClient} to work against elasticSearch
-     * @throws UnknownHostException
-     */
-    @JsonIgnore
-    public RestClient createClient() {
-    	// 创建客户端了
-        RestClientBuilder clientBuilder = RestClient.builder( this.parseHostsAndPorts());
-
-        Header[] headers = this.buildHeaders();
-        if (headers != null) {
-            clientBuilder.setDefaultHeaders(headers);
-        }
-        if (this.maxRetryTimeoutMillis > 0) {
-            clientBuilder.setMaxRetryTimeoutMillis(this.maxRetryTimeoutMillis);
-        }
-        if (!StringUtils.isEmpty(this.pathPrefix)) {
-        	// 请求路径前缀
-            clientBuilder.setPathPrefix(this.pathPrefix);
-        }
-        return clientBuilder.build();
+    if (!StringUtils.isEmpty(this.pathPrefix)) {
+      // Request path prefix
+      clientBuilder.setPathPrefix(this.pathPrefix);
     }
+    return clientBuilder.build();
+  }
 
-    private Header[] buildHeaders() {
-        Collection<Header> headers = new ArrayList<>();
-        if (!StringUtils.isEmpty(this.credentials)) {
-            headers.add(new BasicHeader("Authorization", "Basic " + Base64.encodeBase64String(this.credentials.getBytes())));
-        }
-        // 帐号密码
-        return (headers.isEmpty() ? null : (Header[]) headers.toArray());
+  private Header[] buildHeaders() {
+    List<Header> headers = new ArrayList<>();
+    if (!StringUtils.isEmpty(this.credentials)) {
+      headers.add(new BasicHeader("Authorization", "Basic " + Base64.encodeBase64String(this.credentials.getBytes())));
     }
+    // account password
+    return (headers.isEmpty() ? null :  headers.toArray(new Header[headers.size()]));
+  }
 
-    private HttpHost[] parseHostsAndPorts() {
-        Collection<HttpHost> rtnValue = new ArrayList<>();
-        List<String> hostPortList = Arrays.asList(this.hostsAndPorts.split(","));
-        for (String hostPort : hostPortList) {
-            String[] split = hostPort.split(":");
-            String protocol = split[0];
-            String host = split[1].replaceAll("/","");
-            int port = DEFAULT_PORT;
-            if (split.length > 2) {
-                port = Integer.parseInt(split[2]);
-            }
-            // 主机节点
-            rtnValue.add(new HttpHost(host, port, protocol));
-        }
-        return rtnValue.toArray(new HttpHost[0]);
+  private HttpHost[] parseHostsAndPorts() {
+    Collection<HttpHost> rtnValue = new ArrayList<>();
+    List<String> hostPortList = Arrays.asList(this.hostsAndPorts.split(","));
+    for (String hostPort : hostPortList) {
+      String[] split = hostPort.split(":");
+      String protocol = split[0];
+      String host = split[1].replaceAll("/", "");
+      int port = DEFAULT_PORT;
+      if (split.length > 2) {
+        port = Integer.parseInt(split[2]);
+      }
+      // Host node
+      rtnValue.add(new HttpHost(host, port, protocol));
     }
+    return rtnValue.toArray(new HttpHost[0]);
+  }
 
-    public long getCacheDuration() {
-        return this.cacheDuration;
-    }
+  public long getCacheDuration() {
+    return this.cacheDuration;
+  }
 
-    public TimeUnit getCacheTimeUnit() {
-        return this.cacheTimeUnit;
-    }
+  public TimeUnit getCacheTimeUnit() {
+    return this.cacheTimeUnit;
+  }
 }

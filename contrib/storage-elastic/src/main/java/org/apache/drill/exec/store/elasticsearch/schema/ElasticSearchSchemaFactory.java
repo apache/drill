@@ -18,8 +18,8 @@
 
 package org.apache.drill.exec.store.elasticsearch.schema;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.LoadingCache;
+import org.apache.drill.shaded.guava.com.google.common.cache.CacheBuilder;
+import org.apache.drill.shaded.guava.com.google.common.cache.LoadingCache;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.exec.store.elasticsearch.ElasticSearchStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
@@ -31,48 +31,45 @@ import java.util.concurrent.TimeUnit;
 
 public class ElasticSearchSchemaFactory implements SchemaFactory {
 
-    private static final String INDEXES = "indexes";
+  private static final String INDEXES = "indexes";
 
-    private final String schemaName;
-    private final ElasticSearchStoragePlugin plugin;
-    private final LoadingCache<String, Collection<String>> indexCache;
-    private final LoadingCache<String, Collection<String>> typeMappingCache;
+  private final String schemaName;
 
-    public ElasticSearchSchemaFactory(ElasticSearchStoragePlugin plugin, String schemaName, long cacheDuration, TimeUnit cacheTimeUnit) {
-        this.schemaName = schemaName;
-        this.plugin = plugin;
+  private final ElasticSearchStoragePlugin plugin;
 
-        // index 
-        this.indexCache = CacheBuilder //
-                .newBuilder() //
-                .expireAfterAccess(cacheDuration, cacheTimeUnit) //
-                .build(new ElasticSearchIndexLoader(this.plugin));
+  private final LoadingCache<String, Collection<String>> indexCache;
 
-        // index map type 
-        this.typeMappingCache = CacheBuilder //
-                .newBuilder() //
-                .expireAfterAccess(cacheDuration, cacheTimeUnit) //
-                .build(new ElasticSearchTypeMappingLoader(this.plugin));
-    }
+  private final LoadingCache<String, Collection<String>> typeMappingCache;
 
-    @Override
-    public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws IOException {
-    	// 这里注册进去了
-        ElasticSearchSchema schema = new ElasticSearchSchema(this.schemaName, this.plugin);
-        SchemaPlus hPlus = parent.add(schemaName, schema);
-        schema.setHolder(hPlus);
-    }
+  public ElasticSearchSchemaFactory(ElasticSearchStoragePlugin plugin, String schemaName, long cacheDuration, TimeUnit cacheTimeUnit) {
+    this.schemaName = schemaName;
+    this.plugin = plugin;
+
+    // index
+    indexCache = CacheBuilder.newBuilder().expireAfterAccess(cacheDuration, cacheTimeUnit).build(new ElasticSearchIndexLoader(plugin));
+
+    // index map type
+    typeMappingCache = CacheBuilder.newBuilder().expireAfterAccess(cacheDuration, cacheTimeUnit).build(new ElasticSearchTypeMappingLoader(plugin));
+  }
+
+  @Override
+  public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws IOException {
+    // Registered here
+    ElasticSearchSchema schema = new ElasticSearchSchema(this.schemaName, this.plugin);
+    SchemaPlus hPlus = parent.add(schemaName, schema);
+    schema.setHolder(hPlus);
+  }
 
 
-    public LoadingCache<String, Collection<String>> getIndexCache() {
-        return this.indexCache;
-    }
+  public LoadingCache<String, Collection<String>> getIndexCache() {
+    return this.indexCache;
+  }
 
-    public LoadingCache<String, Collection<String>> getTypeMappingCache() {
-        return this.typeMappingCache;
-    }
+  public LoadingCache<String, Collection<String>> getTypeMappingCache() {
+    return this.typeMappingCache;
+  }
 
-    public String getSchemaName() {
-        return this.schemaName;
-    }
+  public String getSchemaName() {
+    return this.schemaName;
+  }
 }

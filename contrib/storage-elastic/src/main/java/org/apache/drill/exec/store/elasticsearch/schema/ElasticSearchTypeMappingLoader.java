@@ -19,9 +19,9 @@
 package org.apache.drill.exec.store.elasticsearch.schema;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.common.cache.CacheLoader;
-import com.google.common.collect.Sets;
-import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.shaded.guava.com.google.common.cache.CacheLoader;
+import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 import org.apache.drill.exec.store.elasticsearch.ElasticSearchConstants;
 import org.apache.drill.exec.store.elasticsearch.ElasticSearchStoragePlugin;
 import org.apache.drill.exec.store.elasticsearch.JsonHelper;
@@ -38,47 +38,51 @@ import java.util.Set;
 
 public class ElasticSearchTypeMappingLoader extends CacheLoader<String, Collection<String>> {
 
-    static final Logger logger = LoggerFactory.getLogger(ElasticSearchTypeMappingLoader.class);
-    private final ElasticSearchStoragePlugin plugin;
+  private static final Logger logger = LoggerFactory.getLogger(ElasticSearchTypeMappingLoader.class);
 
-    public ElasticSearchTypeMappingLoader(ElasticSearchStoragePlugin plugin)  {
-        this.plugin = plugin;
-    }
+  private final ElasticSearchStoragePlugin plugin;
 
-    @Override
-    public Collection<String> load(String idxName) throws Exception {
-    	// 拉取这个索引的map元数据
-        Set<String> typeMappings = Sets.newHashSet();
-        try {
-            Response response = this.plugin.getClient().performRequest("GET", "/" + idxName);
-            JsonNode jsonNode = JsonHelper.readResponseContentAsJsonTree(this.plugin.getObjectMapper(),response);
-            Iterator<Map.Entry<String, JsonNode>> fields = jsonNode.fields();
-            while (fields.hasNext()) {
-                Map.Entry<String, JsonNode> entry = fields.next();
-                JsonNode mappings = JsonHelper.getPath(entry.getValue(), "mappings");
-                if (!mappings.isMissingNode()) {
-                    Iterator<String> typeMappingIterator = mappings.fieldNames();
-                    while (typeMappingIterator.hasNext()) {
-                        String typeMapping = typeMappingIterator.next();
-                        if (!ElasticSearchConstants.DEFAULT_MAPPING.equals(typeMapping)) {
-                            typeMappings.add(typeMapping);
-                        } else {
-                            logger.debug("Found default mapping on {}, skipping it", idxName);
-                        }
-                    }
-                } else {
-                    logger.warn("No typeMappings on {}", idxName);
-                    // 这个索引没有map类型
-                    typeMappings.add(entry.getKey());
-                }
+  public ElasticSearchTypeMappingLoader(ElasticSearchStoragePlugin plugin) {
+    this.plugin = plugin;
+  }
+
+  @Override
+  public Collection<String> load(String idxName) throws Exception {
+    // Pull map metadata for this index
+    Set<String> typeMappings = Sets.newHashSet();
+    try {
+      Response response = this.plugin.getClient().performRequest("GET", "/" + idxName);
+      JsonNode jsonNode = JsonHelper.readResponseContentAsJsonTree(this.plugin.getObjectMapper(), response);
+      Iterator<Map.Entry<String, JsonNode>> fields = jsonNode.fields();
+      while (fields.hasNext()) {
+        Map.Entry<String, JsonNode> entry = fields.next();
+        JsonNode mappings = JsonHelper.getPath(entry.getValue(), "mappings");
+        if (!mappings.isMissingNode()) {
+          Iterator<String> typeMappingIterator = mappings.fieldNames();
+          while (typeMappingIterator.hasNext()) {
+            String typeMapping = typeMappingIterator.next();
+            if (!ElasticSearchConstants.DEFAULT_MAPPING.equals(typeMapping)) {
+              typeMappings.add(typeMapping);
+            } else {
+              logger.debug("Found default mapping on {}, skipping it", idxName);
             }
-            return typeMappings;
-        } catch (RuntimeException me) {
-            logger.warn("Failure while loading typeMappings from ElasticSearch. {}",
-                    me.getMessage());
-            return Collections.emptyList();
-        } catch (Exception e) {
-            throw new DrillRuntimeException(e.getMessage(), e);
+          }
+        } else {
+          logger.warn("No typeMappings on {}", idxName);
+          // This index has no map type
+          typeMappings.add(entry.getKey());
         }
+      }
+      return typeMappings;
+    } catch (RuntimeException me) {
+      logger.warn("Failure while loading typeMappings from ElasticSearch. {}", me.getMessage());
+      return Collections.emptyList();
+    } catch (Exception e) {
+        throw UserException
+          .dataReadError()
+          .message("Could not read indexes from Elasticsearch")
+          .addContext(e.getMessage())
+          .build(logger);
     }
+  }
 }

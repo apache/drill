@@ -34,7 +34,6 @@ import java.util.Properties;
 import java.util.Queue;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -137,8 +136,6 @@ public class ElasticSearchGroupScan extends AbstractGroupScan {
 
   private NavigableMap<PartitionDefinition, ServerHost> regionsToScan;
 
-  private TableStatsCalculator statsCalculator;
-
   private long scanSizeInBytes = 0;
 
   private Map<Integer, List<ElasticSearchScanSpec>> endpointFragmentMapping;
@@ -153,14 +150,12 @@ public class ElasticSearchGroupScan extends AbstractGroupScan {
   private static final Comparator<List<ElasticSearchScanSpec>> LIST_SIZE_COMPARATOR_REV = Collections.reverseOrder(LIST_SIZE_COMPARATOR);
 
   private void init() {
-    // TODO: init whatever
     // Here is also expected to process in that process in advance
-
     logger.debug("Getting region locations");
 
     try {
 
-      statsCalculator = new TableStatsCalculator(scanSpec, plugin.getConfig(), storagePluginConfig);
+      TableStatsCalculator statsCalculator = new TableStatsCalculator(scanSpec, plugin.getConfig(), storagePluginConfig);
 
       regionsToScan = new TreeMap<PartitionDefinition, ServerHost>();
 
@@ -174,14 +169,14 @@ public class ElasticSearchGroupScan extends AbstractGroupScan {
 
       Properties properties = new Properties();
       properties.setProperty("es.nodes", host);
-      properties.setProperty("es.port", "" + port);
-      properties.setProperty("es.nodes.discovery", "true");
+      properties.setProperty("es.port", String.valueOf(port));
+      properties.setProperty("es.nodes.discovery", "false");
 
 
       Settings esCfg = new PropertiesSettings(properties);
 
       logger.debug("Config " + esCfg);
-      List<PartitionDefinition> partitions = RestService.findPartitions(esCfg, comlogger);
+      List<PartitionDefinition> partitions = RestService.findPartitions(esCfg, comlogger);  // TODO Start here... not finding partititions
       for (PartitionDefinition part : partitions) {
 
         // The address of this region
@@ -362,9 +357,7 @@ public class ElasticSearchGroupScan extends AbstractGroupScan {
     // ri.getEndKey())
     // .setSerializedFilter(spec.getSerializedFilter());
 
-    ElasticSearchScanSpec spec = new ElasticSearchScanSpec(scanSpec.getIndexName(), scanSpec.getTypeMappingName(), part);
-
-    return spec;
+    return new ElasticSearchScanSpec(scanSpec.getIndexName(), scanSpec.getTypeMappingName(), part);
   }
 
   @Override
@@ -380,7 +373,7 @@ public class ElasticSearchGroupScan extends AbstractGroupScan {
     // storagePluginConfig,
     // endpointFragmentMapping.get(minorFragmentId), columns);
     List<ElasticSearchScanSpec> specs = endpointFragmentMapping.get(minorFragmentId);
-    return new ElasticSearchSubScan(super.getUserName(), this.plugin, this.storagePluginConfig, specs, this.columns);
+    return new ElasticSearchSubScan(super.getUserName(), plugin, storagePluginConfig, specs, columns);
 
   }
 

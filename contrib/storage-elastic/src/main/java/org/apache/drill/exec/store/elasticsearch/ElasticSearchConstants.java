@@ -20,7 +20,6 @@ package org.apache.drill.exec.store.elasticsearch;
 
 
 public interface ElasticSearchConstants {
-
     public static final String INDEXES = "indexes";
     public static final String TYPES = "types";
     public static final String DEFAULT_MAPPING = "_default_";

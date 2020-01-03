@@ -29,56 +29,49 @@ import org.apache.drill.exec.store.mongo.MongoCompareFunctionProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ElasticSearchFilterBuilder extends
-    AbstractExprVisitor<ElasticSearchScanSpec, Void, RuntimeException> implements
-    ElasticSearchConstants {
-  static final Logger logger = LoggerFactory
-      .getLogger(ElasticSearchFilterBuilder.class);
+public class ElasticSearchFilterBuilder extends AbstractExprVisitor<ElasticSearchScanSpec, Void, RuntimeException> implements ElasticSearchConstants {
+  private static final Logger logger = LoggerFactory.getLogger(ElasticSearchFilterBuilder.class);
+
   final ElasticSearchGroupScan groupScan;
+
   final LogicalExpression le;
-	// 是不是所有的函数能转换的了
+
+  // Are all functions convertible
   private boolean allExpressionsConverted = true;
 
-  public ElasticSearchFilterBuilder(ElasticSearchGroupScan groupScan,
-      LogicalExpression conditionExp) {
+  public ElasticSearchFilterBuilder(ElasticSearchGroupScan groupScan, LogicalExpression conditionExp) {
     this.groupScan = groupScan;
     this.le = conditionExp;
   }
 
   public ElasticSearchScanSpec parseTree() {
-	  // 以观察者的方式来修改查询条件
-	  ElasticSearchScanSpec parsedSpec = le.accept(this, null);
+    // Modifying query conditions as observers
+    ElasticSearchScanSpec parsedSpec = le.accept(this, null);
     if (parsedSpec != null) {
-    	// 并上这一个条件,因为下面还没有使用的到
-      parsedSpec = mergeScanSpecs("booleanAnd", this.groupScan.getScanSpec(),
-          parsedSpec);
+      // And this condition, because the following has not been used yet
+      parsedSpec = mergeScanSpecs("booleanAnd", this.groupScan.getScanSpec(), parsedSpec);
     }
     return parsedSpec;
   }
 
-  private ElasticSearchScanSpec mergeScanSpecs(String functionName,
-		  ElasticSearchScanSpec leftScanSpec, ElasticSearchScanSpec rightScanSpec) {
+  private ElasticSearchScanSpec mergeScanSpecs(String functionName, ElasticSearchScanSpec leftScanSpec, ElasticSearchScanSpec rightScanSpec) {
     String newFilter = new String();
 
     switch (functionName) {
-    case "booleanAnd":
-      if (leftScanSpec.getFilters() != null
-          && rightScanSpec.getFilters() != null) {
-    	  // 两个条件并起来
-        newFilter = ElasticSearchUtils.andFilterAtIndex(leftScanSpec.getFilters(),
-            rightScanSpec.getFilters());
-      } else if (leftScanSpec.getFilters() != null) {
-        newFilter = leftScanSpec.getFilters();
-      } else {
-        newFilter = rightScanSpec.getFilters();
-      }
-      break;
-    case "booleanOr":
-      newFilter = ElasticSearchUtils.orFilterAtIndex(leftScanSpec.getFilters(),
-          rightScanSpec.getFilters());
+      case "booleanAnd":
+        if (leftScanSpec.getFilters() != null && rightScanSpec.getFilters() != null) {
+          // Combine the two conditions
+          newFilter = ElasticSearchUtils.andFilterAtIndex(leftScanSpec.getFilters(), rightScanSpec.getFilters());
+        } else if (leftScanSpec.getFilters() != null) {
+          newFilter = leftScanSpec.getFilters();
+        } else {
+          newFilter = rightScanSpec.getFilters();
+        }
+        break;
+      case "booleanOr":
+        newFilter = ElasticSearchUtils.orFilterAtIndex(leftScanSpec.getFilters(), rightScanSpec.getFilters());
     }
-    return new ElasticSearchScanSpec(groupScan.getScanSpec().getIndexName(), groupScan
-            .getScanSpec().getTypeMappingName(), groupScan.getScanSpec().getPartitionDefinition(),newFilter);
+    return new ElasticSearchScanSpec(groupScan.getScanSpec().getIndexName(), groupScan.getScanSpec().getTypeMappingName(), groupScan.getScanSpec().getPartitionDefinition(), newFilter);
   }
 
   public boolean isAllExpressionsConverted() {
@@ -86,8 +79,7 @@ public class ElasticSearchFilterBuilder extends
   }
 
   @Override
-  public ElasticSearchScanSpec visitUnknown(LogicalExpression e, Void value)
-      throws RuntimeException {
+  public ElasticSearchScanSpec visitUnknown(LogicalExpression e, Void value) throws RuntimeException {
     allExpressionsConverted = false;
     return null;
   }
@@ -99,42 +91,39 @@ public class ElasticSearchFilterBuilder extends
     String functionName = op.getName();
     for (int i = 0; i < args.size(); ++i) {
       switch (functionName) {
-      case "booleanAnd":
-      case "booleanOr":
-        if (nodeScanSpec == null) {
-        	// 对当前的表达式进行处理
-          nodeScanSpec = args.get(i).accept(this, null);
-        } else {
-        	ElasticSearchScanSpec scanSpec = args.get(i).accept(this, null);
-          if (scanSpec != null) {
-            nodeScanSpec = mergeScanSpecs(functionName, nodeScanSpec, scanSpec);
+        case "booleanAnd":
+        case "booleanOr":
+          if (nodeScanSpec == null) {
+            // Process the current expression
+            nodeScanSpec = args.get(i).accept(this, null);
           } else {
-        	  // 说明对这个表达式不知道怎么处理
-            allExpressionsConverted = false;
+            ElasticSearchScanSpec scanSpec = args.get(i).accept(this, null);
+            if (scanSpec != null) {
+              nodeScanSpec = mergeScanSpecs(functionName, nodeScanSpec, scanSpec);
+            } else {
+              // I don't know what to do with this expression
+              allExpressionsConverted = false;
+            }
           }
-        }
-        break;
+          break;
       }
     }
     return nodeScanSpec;
   }
 
   @Override
-  public ElasticSearchScanSpec visitFunctionCall(FunctionCall call, Void value)
-      throws RuntimeException {
-	  ElasticSearchScanSpec nodeScanSpec = null;
+  public ElasticSearchScanSpec visitFunctionCall(FunctionCall call, Void value) throws RuntimeException {
+    ElasticSearchScanSpec nodeScanSpec = null;
     String functionName = call.getName();
     org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList<LogicalExpression> args = call.args;
 
     if (MongoCompareFunctionProcessor.isCompareFunction(functionName)) {
-    	// 当是大小比较时,然后下面进行类型转换然后执行
-      MongoCompareFunctionProcessor processor = MongoCompareFunctionProcessor
-          .process(call);
+      // When it is a size comparison, then type conversion is then performed
+      MongoCompareFunctionProcessor processor = MongoCompareFunctionProcessor.process(call);
       if (processor.isSuccess()) {
         try {
-        	// 生成函数判断了
-          nodeScanSpec = createMongoScanSpec(processor.getFunctionName(),
-              processor.getPath(), processor.getValue());
+          // Generated function judged
+          nodeScanSpec = createMongoScanSpec(processor.getFunctionName(), processor.getPath(), processor.getValue());
         } catch (Exception e) {
           logger.error(" Failed to creare Filter ", e);
           // throw new RuntimeException(e.getMessage(), e);
@@ -142,21 +131,20 @@ public class ElasticSearchFilterBuilder extends
       }
     } else {
       switch (functionName) {
-      case "booleanAnd":
-      case "booleanOr":
-    	  ElasticSearchScanSpec leftScanSpec = args.get(0).accept(this, null);
-    	  ElasticSearchScanSpec rightScanSpec = args.get(1).accept(this, null);
-        if (leftScanSpec != null && rightScanSpec != null) {
-          nodeScanSpec = mergeScanSpecs(functionName, leftScanSpec,
-              rightScanSpec);
-        } else {
-        	// 说明未不是所有的函数能转换的了
-          allExpressionsConverted = false;
-          if ("booleanAnd".equals(functionName)) {
-            nodeScanSpec = leftScanSpec == null ? rightScanSpec : leftScanSpec;
+        case "booleanAnd":
+        case "booleanOr":
+          ElasticSearchScanSpec leftScanSpec = args.get(0).accept(this, null);
+          ElasticSearchScanSpec rightScanSpec = args.get(1).accept(this, null);
+          if (leftScanSpec != null && rightScanSpec != null) {
+            nodeScanSpec = mergeScanSpecs(functionName, leftScanSpec, rightScanSpec);
+          } else {
+            // Note that not all functions can be converted
+            allExpressionsConverted = false;
+            if ("booleanAnd".equals(functionName)) {
+              nodeScanSpec = leftScanSpec == null ? rightScanSpec : leftScanSpec;
+            }
           }
-        }
-        break;
+          break;
       }
     }
 
@@ -167,62 +155,59 @@ public class ElasticSearchFilterBuilder extends
     return nodeScanSpec;
   }
 
-  private ElasticSearchScanSpec createMongoScanSpec(String functionName,
-      SchemaPath field, Object fieldValue ) throws ClassNotFoundException,
-      IOException {
-	  // 执行函数操作
+  private ElasticSearchScanSpec createMongoScanSpec(String functionName, SchemaPath field, Object fieldValue) throws ClassNotFoundException, IOException {
+    // Perform function operations
     // extract the field name
     String fieldName = field.getRootSegmentPath();
     boolean strictPushDown = true;
-	
-	String queryFilter  = translateFilter(  functionName ,  fieldName, fieldValue ,  strictPushDown);
- 
-      // 执行完成了
-      return new ElasticSearchScanSpec(groupScan.getScanSpec().getIndexName(), groupScan
-          .getScanSpec().getTypeMappingName(), groupScan.getScanSpec().getPartitionDefinition(),queryFilter);
- 
+
+    String queryFilter = translateFilter(functionName, fieldName, fieldValue, strictPushDown);
+
+    // Execution is complete
+    return new ElasticSearchScanSpec(groupScan.getScanSpec().getIndexName(), groupScan.getScanSpec().getTypeMappingName(), groupScan.getScanSpec().getPartitionDefinition(), queryFilter);
+
   }
-  
-  private String translateFilter(String functionName ,String fieldName, Object fieldValue ,boolean strictPushDown){
-	  String queryFilter = "";
-	  
-	   switch (functionName) {
-	    case "equal":
-	      
-	      if (strictPushDown) queryFilter = String.format( "\"{\"term\":{\"%s\":%s}}\"" , fieldName ,fieldValue); 
-	      else queryFilter = String.format( "\"{\"query\":{\"match\":{\"%s\":%s}}}\"" , fieldName ,fieldValue);  
-	      
-	      break;
-	    case "not_equal":
-	      
-	      queryFilter = String.format( "\"{\"not\":{\"filter\":%s}}\"",translateFilter(  "equal" ,  fieldName,   fieldValue ,  strictPushDown));
-	      break;
-	    case "greater_than_or_equal_to":
-	      queryFilter =  String.format("\"{\"range\":{\"%s\":{\"gte\" :%s\"}}}" ,fieldName , fieldValue) ;
-	      break;
-	    case "greater_than":
-	    	 queryFilter =  String.format("\"{\"range\":{\"%s\":{\"gt\" :%s\"}}}" ,fieldName , fieldValue) ;
-	      break;
-	    case "less_than_or_equal_to":
-	    	 queryFilter =  String.format("\"{\"range\":{\"%s\":{\"lte\" :%s\"}}}" ,fieldName , fieldValue) ;
-	      break;
-	    case "less_than":
-	    	 queryFilter =  String.format("\"{\"range\":{\"%s\":{\"lt\" :%s\"}}}" ,fieldName , fieldValue) ;
-	      break;
-	    case "isnull":
-	    case "isNull":
-	    case "is null":
-	    	  queryFilter =   String.format("\"{\"missing\":{\"field\":\"%s\"}}\"", fieldName);
-	      break;
-	    case "isnotnull":
-	    case "isNotNull":
-	    case "is not null":
-	    	  queryFilter =   String.format("\"{\"exists\":{\"field\":\"%s\"}}\"", fieldName);
-	      break;
-	      default :
-	    	  throw new UnsupportedOperationException(functionName);
-	    }
-	   
-	   return queryFilter;
+
+  private String translateFilter(String functionName, String fieldName, Object fieldValue, boolean strictPushDown) {
+    String queryFilter = "";
+
+    switch (functionName) {
+      case "equal":
+
+        if (strictPushDown) queryFilter = String.format("\"{\"term\":{\"%s\":%s}}\"", fieldName, fieldValue);
+        else queryFilter = String.format("\"{\"query\":{\"match\":{\"%s\":%s}}}\"", fieldName, fieldValue);
+
+        break;
+      case "not_equal":
+
+        queryFilter = String.format("\"{\"not\":{\"filter\":%s}}\"", translateFilter("equal", fieldName, fieldValue, strictPushDown));
+        break;
+      case "greater_than_or_equal_to":
+        queryFilter = String.format("\"{\"range\":{\"%s\":{\"gte\" :%s\"}}}", fieldName, fieldValue);
+        break;
+      case "greater_than":
+        queryFilter = String.format("\"{\"range\":{\"%s\":{\"gt\" :%s\"}}}", fieldName, fieldValue);
+        break;
+      case "less_than_or_equal_to":
+        queryFilter = String.format("\"{\"range\":{\"%s\":{\"lte\" :%s\"}}}", fieldName, fieldValue);
+        break;
+      case "less_than":
+        queryFilter = String.format("\"{\"range\":{\"%s\":{\"lt\" :%s\"}}}", fieldName, fieldValue);
+        break;
+      case "isnull":
+      case "isNull":
+      case "is null":
+        queryFilter = String.format("\"{\"missing\":{\"field\":\"%s\"}}\"", fieldName);
+        break;
+      case "isnotnull":
+      case "isNotNull":
+      case "is not null":
+        queryFilter = String.format("\"{\"exists\":{\"field\":\"%s\"}}\"", fieldName);
+        break;
+      default:
+        throw new UnsupportedOperationException(functionName);
+    }
+
+    return queryFilter;
   }
 }

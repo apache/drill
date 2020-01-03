@@ -38,7 +38,6 @@ public class ElasticSearchScanSpec {
   public ElasticSearchScanSpec(@JsonProperty("indexName") String indexName, @JsonProperty("typeMappingName") String typeMappingName) {
     this.indexName = indexName;
     this.typeMappingName = typeMappingName;
-
   }
 
   @JsonCreator

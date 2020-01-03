@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import junit.framework.TestCase;
 import org.apache.commons.io.IOUtils;
 import org.apache.drill.exec.physical.base.ScanStats;
+import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.http.HttpEntity;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestClient;
@@ -32,6 +33,7 @@ import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.io.InputStream;
+
 
 public class ElasticSearchGroupScanTest {
 
@@ -45,9 +47,12 @@ public class ElasticSearchGroupScanTest {
         ObjectMapper objectMapper = new ObjectMapper();
         restClient = Mockito.mock(RestClient.class);
         plugin = Mockito.mock(ElasticSearchStoragePlugin.class);
+
+        ElasticSearchPluginConfig config = new ElasticSearchPluginConfig("", "http://localhost:9200", "", 1000, 1000, null);
+
         Mockito.when(plugin.getClient()).thenReturn(restClient);
         Mockito.when(plugin.getObjectMapper()).thenReturn(objectMapper);
-        Mockito.when(plugin.getConfig()).thenReturn(null);
+        Mockito.when(plugin.getConfig()).thenReturn(config);
     }
 
     @Test
