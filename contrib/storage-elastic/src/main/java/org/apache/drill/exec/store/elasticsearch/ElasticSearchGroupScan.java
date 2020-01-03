@@ -170,15 +170,18 @@ public class ElasticSearchGroupScan extends AbstractGroupScan {
       Properties properties = new Properties();
       properties.setProperty("es.nodes", host);
       properties.setProperty("es.port", String.valueOf(port));
-      properties.setProperty("es.nodes.discovery", "false");
+      properties.setProperty("es.nodes.discovery", "true");
 
+      String index = scanSpec.getIndexName();
+      String mappingName = scanSpec.getTypeMappingName();
+      String resource = index + "/" + mappingName;
+      properties.setProperty("es.resource.read",resource);
 
       Settings esCfg = new PropertiesSettings(properties);
 
       logger.debug("Config " + esCfg);
       List<PartitionDefinition> partitions = RestService.findPartitions(esCfg, comlogger);  // TODO Start here... not finding partititions
       for (PartitionDefinition part : partitions) {
-
         // The address of this region
         for (String ip : part.getLocations()) {
           logger.debug("Adding ip: {}", ip);

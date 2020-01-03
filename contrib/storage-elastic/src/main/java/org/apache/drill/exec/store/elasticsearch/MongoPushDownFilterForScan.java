@@ -34,18 +34,15 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.ImmutableList;
 
 /**
- * 这是一个优化器
- *
+ * This is an optimizer
  */
 public class MongoPushDownFilterForScan extends StoragePluginOptimizerRule {
-  private static final Logger logger = LoggerFactory
-      .getLogger(MongoPushDownFilterForScan.class);
+  private static final Logger logger = LoggerFactory.getLogger(MongoPushDownFilterForScan.class);
+
   public static final StoragePluginOptimizerRule INSTANCE = new MongoPushDownFilterForScan();
 
   private MongoPushDownFilterForScan() {
-    super(
-        RelOptHelper.some(FilterPrel.class, RelOptHelper.any(ScanPrel.class)),
-        "MongoPushDownFilterForScan");
+    super(RelOptHelper.some(FilterPrel.class, RelOptHelper.any(ScanPrel.class)), "MongoPushDownFilterForScan");
   }
 
   @Override
@@ -55,44 +52,39 @@ public class MongoPushDownFilterForScan extends StoragePluginOptimizerRule {
     final RexNode condition = filter.getCondition();
 
     ElasticSearchGroupScan groupScan = (ElasticSearchGroupScan) scan.getGroupScan();
-    // 是否已经下推了
+    // Has it been pushed down?
     if (groupScan.isFilterPushedDown()) {
       return;
     }
 
-    // 当没有时，就把这些条件重新下推一下
-    LogicalExpression conditionExp = DrillOptiq.toDrill(
-        new DrillParseContext(PrelUtil.getPlannerSettings(call.getPlanner())), scan, condition);
-    // 组装条件出来
-    ElasticSearchFilterBuilder mongoFilterBuilder = new ElasticSearchFilterBuilder(groupScan,
-        conditionExp);
+    // When not, push those conditions down again
+    LogicalExpression conditionExp = DrillOptiq.toDrill(new DrillParseContext(PrelUtil.getPlannerSettings(call.getPlanner())), scan, condition);
+    // Assembly conditions come out
+    ElasticSearchFilterBuilder mongoFilterBuilder = new ElasticSearchFilterBuilder(groupScan, conditionExp);
     ElasticSearchScanSpec newScanSpec = mongoFilterBuilder.parseTree();
     if (newScanSpec == null) {
       return; // no filter pushdown so nothing to apply.
     }
 
-    //把filter传了进去，已经基于这里进行数据的扫描了
+    // Pass the filter in, and have scanned the data based on this
     ElasticSearchGroupScan newGroupsScan = null;
-   
-      newGroupsScan = new ElasticSearchGroupScan(groupScan.getUserName(), groupScan.getStoragePlugin(),
-          newScanSpec, groupScan.getColumns());
-  
-    // 已经完成谓词下推了
+
+    newGroupsScan = new ElasticSearchGroupScan(groupScan.getUserName(), groupScan.getStoragePlugin(), newScanSpec, groupScan.getColumns());
+
+    // Predicate pushdown completed
     newGroupsScan.setFilterPushedDown(true);
 
-    final ScanPrel newScanPrel = ScanPrel.create(scan, filter.getTraitSet(),
-        newGroupsScan, scan.getRowType());
+    final ScanPrel newScanPrel = ScanPrel.create(scan, filter.getTraitSet(), newGroupsScan, scan.getRowType());
     if (mongoFilterBuilder.isAllExpressionsConverted()) {
       /*
        * Since we could convert the entire filter condition expression into an
        * Mongo filter, we can eliminate the filter operator altogether.
        */
-    	// 表示进行成功转换成这个表达式了
+      // Indicates successful conversion into this expression
       call.transformTo(newScanPrel);
     } else {
-    	// 由于有些fielter没有完全下推的了，所以在这里要复制一下
-      call.transformTo(filter.copy(filter.getTraitSet(),
-          ImmutableList.of((RelNode) newScanPrel)));
+      // Since some filters are not pushed down completely, copy it here
+      call.transformTo(filter.copy(filter.getTraitSet(), ImmutableList.of((RelNode) newScanPrel)));
     }
 
   }
@@ -105,5 +97,4 @@ public class MongoPushDownFilterForScan extends StoragePluginOptimizerRule {
     }
     return false;
   }
-
 }

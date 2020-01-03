@@ -18,19 +18,21 @@
 
 package org.apache.drill.exec.store.elasticsearch.schema;
 
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 import org.apache.calcite.schema.Table;
 import org.apache.drill.exec.store.elasticsearch.ElasticSearchPluginConfig;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.store.AbstractSchema;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
 public class ElasticSearchIndexSchema extends AbstractSchema {
-    static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ElasticSearchIndexSchema.class);
+    private static final Logger logger = LoggerFactory.getLogger(ElasticSearchIndexSchema.class);
 
     private final ElasticSearchSchema elasticSearchSchema;
     private final Set<String> typeMappings;

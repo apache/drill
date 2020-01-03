@@ -22,7 +22,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import junit.framework.TestCase;
 import org.apache.commons.io.IOUtils;
 import org.apache.drill.exec.physical.base.ScanStats;
-import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.http.HttpEntity;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestClient;
