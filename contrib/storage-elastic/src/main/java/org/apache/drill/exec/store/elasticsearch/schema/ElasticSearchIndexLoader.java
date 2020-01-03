@@ -20,14 +20,10 @@ package org.apache.drill.exec.store.elasticsearch.schema;
 
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.Sets;
-
-import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
+import org.apache.drill.shaded.guava.com.google.common.cache.CacheLoader;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.store.elasticsearch.ElasticSearchConstants;
-
-import com.google.common.cache.CacheLoader;
-
 import org.apache.drill.exec.store.elasticsearch.ElasticSearchStoragePlugin;
 import org.apache.drill.exec.store.elasticsearch.JsonHelper;
 import org.elasticsearch.client.Response;
@@ -64,20 +60,14 @@ public class ElasticSearchIndexLoader extends CacheLoader<String, Collection<Str
       while (fields.hasNext()) {
         Map.Entry<String, JsonNode> entry = fields.next();
         JsonNode aliases = JsonHelper.getPath(entry.getValue(), "aliases");
-
-        // The index pulled back in version 2.3.3 is this state ObjectNode is empty
-        if (!(aliases.isMissingNode()) && !(aliases instanceof ObjectNode)) {
-          Iterator<String> aliasesIterator = aliases.fieldNames();
-          while (aliasesIterator.hasNext()) {
-            indexes.add(aliasesIterator.next());
-          }
-        } else if (! aliases.isNull()) {
+        if (entry.getValue().has("aliases")) {
+          System.out.println(entry.getKey() + " has aliases");
           Iterator<String> aliasesIterator = aliases.fieldNames();
           while (aliasesIterator.hasNext()) {
             indexes.add(aliasesIterator.next());
           }
         } else {
-          // All index data
+          System.out.println(entry.getKey() + " does not have aliases.");
           indexes.add(entry.getKey());
         }
       }
@@ -86,7 +76,11 @@ public class ElasticSearchIndexLoader extends CacheLoader<String, Collection<Str
       logger.warn("Failure while loading indexes from ElasticSearch. {}", me.getMessage());
       return Collections.emptyList();
     } catch (Exception e) {
-      throw new DrillRuntimeException(e.getMessage(), e);
+      throw UserException
+        .dataReadError()
+        .message("Could not read indexes from Elasticsearch")
+        .addContext(e.getMessage())
+        .build(logger);
     }
   }
 }

@@ -79,7 +79,7 @@ public class ElasticSearchRecordReader extends AbstractRecordReader {
 		this.plugin = elasticSearchStoragePlugin;
 		this.fragmentContext = context;
 		this.scanSpec = elasticSearchScanSpec;
-		// 读取的字段
+		// Fields read
 		setColumns(columns);
 		// TODO: What does this mean?
 		this.unionEnabled = fragmentContext.getOptions().getOption(ExecConstants.ENABLE_UNION_TYPE);
@@ -99,11 +99,11 @@ public class ElasticSearchRecordReader extends AbstractRecordReader {
 			for (SchemaPath column : projectedColumns) {
 				String fieldName = column.getRootSegment().getPath();
 				transformed.add(column);
-				// just query for this field 只查询这些字段
+				// just query for this field
 				this.fields.add(fieldName);
 			}
 		} else {
-			// 查询所有字段
+			// Query all fields
 			transformed.add(SchemaPath.STAR_COLUMN);
 		}
 		return transformed;
@@ -142,7 +142,8 @@ public class ElasticSearchRecordReader extends AbstractRecordReader {
 				
 			 
 		}
-		// 重置数据
+
+		// Reset Data
 		writer.allocate();
 		writer.reset();
 
@@ -150,18 +151,18 @@ public class ElasticSearchRecordReader extends AbstractRecordReader {
 		Stopwatch watch = Stopwatch.createStarted();
 
 		try {
-			// 批量拉取
+			// Batch pull
 			while (docCount < BaseValueVector.INITIAL_VALUE_ALLOCATION && cursor.hasNext()) {
 				writer.setPosition(docCount);
 				JsonNode element = cursor.next();
-				// 读取这一层的数据了
+				// Read the data of this layer
 				JsonNode id = JsonHelper.getPath(element, "_id");
 				// HACK: This is done so we can poll _id from elastic into
 				// object content
 				ObjectNode content = (ObjectNode) JsonHelper.getPath(element, "_source");
 				content.put("_id", id.asText());
 				this.jsonReader.setSource(content);
-				// this is useing json
+				// this is using json
 				this.jsonReader.write(writer);
 				docCount++;
 			}

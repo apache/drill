@@ -33,6 +33,8 @@ import org.mockito.Mockito;
 import java.io.InputStream;
 import java.util.Collection;
 
+// CSG Working
+
 public class ElasticSearchIndexLoaderTest {
 
     @Mock
