@@ -14,6 +14,21 @@ gem install jekyll-redirect-from:0.9.1
 
 Please make sure that specific versions of libraries are installed since building the site with other versions may cause some issues like including md document index into the references, etc.
 
+# Documentation Guidelines
+
+The documentation pages are placed under `_docs`. Most files, in the YAML front matter, have three important parameters:
+
+* `title:` - This is the title of the page enclosed in quotation marks. Each page must have a *unique* title
+* `date:` - This field is needed for Jekyll to write a last-modified date. Initially, leave this field blank.
+* `parent:` - This is the title of the page's parent page. It should be empty for top-level sections/guides, and be identical to the title attribute of another page in all other cases.
+
+The name of the file itself doesn't matter except for the alphanumeric order of the filenames. Files that share the same parent are ordered alphanumerically. Note that the content of parent files is ignored, so add an overview/introduction child when needed.
+
+Best practices:
+
+* Prefix the filenames with `010-foo.md`, `020-bar.md`, `030-baz.md`, etc. This allows room to add files in-between (eg, `005-qux.md`).  
+* Use the slug of the title as the filename. For example, if the title is "Getting Started with Drill", name the file `...-getting-started-with-drill.md`. If you're not sure what the slug is, you should be able to see it in the URL and then adjust (the URLs are auto-generated based on the title attribute).
+
 # Developing and Previewing the Website
 
 To preview the website on your local machine:
@@ -44,7 +59,7 @@ done
 ```
 chmod +x pre-commit
 ```
-On any page you create, in addition to the title, and `parent:`, you now need to add `date:` to the front matter of any file you create. For example:
+On the page you create, in addition to the title, and `parent:`, you now need to add `date:` to the front matter of any file you create. For example:
 ```
 ---
 title: "Configuring Multitenant Resources"
@@ -99,18 +114,3 @@ git push
 ```
 
 The updates should then be live: <http://drill.apache.org>.
-
-# Documentation Guidelines
-
-The documentation pages are under `_docs`. Most files, in the YAML front matter, have three important parameters:
-
-* `title:` - This is the title of the page enclosed in quotation marks. Each page must have a *unique* title
-* `date:` - This field is needed for Jekyll to write a last-modified date. Initially, leave this field blank.
-* `parent:` - This is the title of the page's parent page. It should be empty for top-level sections/guides, and be identical to the title attribute of another page in all other cases.
-
-The name of the file itself doesn't matter except for the alphanumeric order of the filenames. Files that share the same parent are ordered alphanumerically. Note that the content of parent files is ignored, so add an overview/introduction child when needed.
-
-Best practices:
-
-* Prefix the filenames with `010-foo.md`, `020-bar.md`, `030-baz.md`, etc. This allows room to add files in-between (eg, `005-qux.md`).  
-* Use the slug of the title as the filename. For example, if the title is "Getting Started with Drill", name the file `...-getting-started-with-drill.md`. If you're not sure what the slug is, you should be able to see it in the URL and then adjust (the URLs are auto-generated based on the title attribute).  
