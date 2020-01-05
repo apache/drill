@@ -54,6 +54,7 @@ import org.elasticsearch.hadoop.cfg.PropertiesSettings;
 import org.elasticsearch.hadoop.cfg.Settings;
 import org.elasticsearch.hadoop.rest.PartitionDefinition;
 import org.elasticsearch.hadoop.rest.RestService;
+import org.elasticsearch.hadoop.util.SettingsUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -85,8 +86,27 @@ public class ElasticSearchGroupScan extends AbstractGroupScan {
 
   private boolean filterPushedDown = false;
 
+  private NavigableMap<PartitionDefinition, ServerHost> regionsToScan;
+
+  private long scanSizeInBytes = 0;
+
+  private Map<Integer, List<ElasticSearchScanSpec>> endpointFragmentMapping;
+
+  private static final Comparator<List<ElasticSearchScanSpec>> LIST_SIZE_COMPARATOR = new Comparator<List<ElasticSearchScanSpec>>() {
+    @Override
+    public int compare(List<ElasticSearchScanSpec> list1, List<ElasticSearchScanSpec> list2) {
+      return list1.size() - list2.size();
+    }
+  };
+
+  private static final Comparator<List<ElasticSearchScanSpec>> LIST_SIZE_COMPARATOR_REV = Collections.reverseOrder(LIST_SIZE_COMPARATOR);
+
   @JsonCreator
-  public ElasticSearchGroupScan(@JsonProperty("usernName") String userName, @JsonProperty("elasticSearchSpec") ElasticSearchScanSpec scanSpec, @JsonProperty("storage") ElasticSearchPluginConfig storagePluginConfig, @JsonProperty("columns") List<SchemaPath> columns, @JacksonInject StoragePluginRegistry pluginRegistry) throws IOException, ExecutionSetupException {
+  public ElasticSearchGroupScan(@JsonProperty("usernName") String userName,
+                                @JsonProperty("elasticSearchSpec") ElasticSearchScanSpec scanSpec,
+                                @JsonProperty("storage") ElasticSearchPluginConfig storagePluginConfig,
+                                @JsonProperty("columns") List<SchemaPath> columns,
+                                @JacksonInject StoragePluginRegistry pluginRegistry) throws IOException, ExecutionSetupException {
     this(userName, (ElasticSearchStoragePlugin) pluginRegistry.getPlugin(storagePluginConfig), scanSpec, columns);
   }
 
@@ -134,20 +154,6 @@ public class ElasticSearchGroupScan extends AbstractGroupScan {
     this.filterPushedDown = filterPushedDown;
   }
 
-  private NavigableMap<PartitionDefinition, ServerHost> regionsToScan;
-
-  private long scanSizeInBytes = 0;
-
-  private Map<Integer, List<ElasticSearchScanSpec>> endpointFragmentMapping;
-
-  private static final Comparator<List<ElasticSearchScanSpec>> LIST_SIZE_COMPARATOR = new Comparator<List<ElasticSearchScanSpec>>() {
-    @Override
-    public int compare(List<ElasticSearchScanSpec> list1, List<ElasticSearchScanSpec> list2) {
-      return list1.size() - list2.size();
-    }
-  };
-
-  private static final Comparator<List<ElasticSearchScanSpec>> LIST_SIZE_COMPARATOR_REV = Collections.reverseOrder(LIST_SIZE_COMPARATOR);
 
   private void init() {
     // Here is also expected to process in that process in advance
@@ -175,22 +181,21 @@ public class ElasticSearchGroupScan extends AbstractGroupScan {
       String index = scanSpec.getIndexName();
       String mappingName = scanSpec.getTypeMappingName();
       String resource = index + "/" + mappingName;
-      properties.setProperty("es.resource.read",resource);
+      properties.setProperty("es.resource.read", resource);
 
       Settings esCfg = new PropertiesSettings(properties);
 
-      logger.debug("Config " + esCfg);
-      List<PartitionDefinition> partitions = RestService.findPartitions(esCfg, comlogger);  // TODO Start here... not finding partititions
-      for (PartitionDefinition part : partitions) {
+      List<String> nodes = SettingsUtils.discoveredOrDeclaredNodes(esCfg);
+
+      //List<ElasticSearchRestService.PartitionDefinition> partitions = ElasticSearchRestService.findPartitions(esCfg, comlogger);
+      /*for (ElasticSearchRestService.PartitionDefinition part : partitions) {
         // The address of this region
         for (String ip : part.getLocations()) {
           logger.debug("Adding ip: {}", ip);
           regionsToScan.put(part, new ServerHost(ip));
         }
-
         scanSizeInBytes += statsCalculator.getRegionSizeInBytes(part);
-
-      }
+      }*/
     } catch (IOException e) {
       throw new DrillRuntimeException("Error getting region info for table: " + scanSpec.getIndexName(), e);
     }
@@ -348,18 +353,6 @@ public class ElasticSearchGroupScan extends AbstractGroupScan {
 
   private ElasticSearchScanSpec regionInfoToSubScanSpec(PartitionDefinition part) {
     // The query object is generated here
-    // HBaseScanSpec spec = hbaseScanSpec;
-    // return new HBaseSubScanSpec()
-    // .setTableName(spec.getTableName())
-    // .setRegionServer(regionsToScan.get(ri).getHostname())
-    // .setStartRow((!isNullOrEmpty(spec.getStartRow()) &&
-    // ri.containsRow(spec.getStartRow())) ? spec.getStartRow() :
-    // ri.getStartKey())
-    // .setStopRow((!isNullOrEmpty(spec.getStopRow()) &&
-    // ri.containsRow(spec.getStopRow())) ? spec.getStopRow() :
-    // ri.getEndKey())
-    // .setSerializedFilter(spec.getSerializedFilter());
-
     return new ElasticSearchScanSpec(scanSpec.getIndexName(), scanSpec.getTypeMappingName(), part);
   }
 
@@ -372,9 +365,6 @@ public class ElasticSearchGroupScan extends AbstractGroupScan {
 
     assert minorFragmentId < endpointFragmentMapping.size() : String.format("Mappings length [%d] should be greater than minor fragment id [%d] but it isn't.", endpointFragmentMapping.size(), minorFragmentId);
     // The results have been distributed before
-    // return new HBaseSubScan(getUserName(), storagePlugin,
-    // storagePluginConfig,
-    // endpointFragmentMapping.get(minorFragmentId), columns);
     List<ElasticSearchScanSpec> specs = endpointFragmentMapping.get(minorFragmentId);
     return new ElasticSearchSubScan(super.getUserName(), plugin, storagePluginConfig, specs, columns);
 

@@ -32,6 +32,7 @@ import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.concurrent.TimeUnit;
 
 
 public class ElasticSearchGroupScanTest {
@@ -47,7 +48,7 @@ public class ElasticSearchGroupScanTest {
         restClient = Mockito.mock(RestClient.class);
         plugin = Mockito.mock(ElasticSearchStoragePlugin.class);
 
-        ElasticSearchPluginConfig config = new ElasticSearchPluginConfig("", "http://localhost:9200", "", 1000, 1000, null);
+        ElasticSearchPluginConfig config = new ElasticSearchPluginConfig("", "http://localhost:9200", "", 100, 10, TimeUnit.SECONDS);
 
         Mockito.when(plugin.getClient()).thenReturn(restClient);
         Mockito.when(plugin.getObjectMapper()).thenReturn(objectMapper);
