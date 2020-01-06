@@ -19,7 +19,6 @@
 package org.apache.drill.exec.store.elasticsearch;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import junit.framework.TestCase;
 import org.apache.commons.io.IOUtils;
 import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.http.HttpEntity;
@@ -33,6 +32,9 @@ import org.mockito.Mockito;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.TimeUnit;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 
 public class ElasticSearchGroupScanTest {
@@ -81,11 +83,11 @@ public class ElasticSearchGroupScanTest {
                     new ElasticSearchScanSpec(ElasticSearchTestConstants.EMPLOYEE_IDX, ElasticSearchTestConstants.MANAGER_MAPPING),
                     null);
             ScanStats scanStats = esgp.getScanStats();
-            TestCase.assertNotNull(scanStats);
-            TestCase.assertEquals(1f,scanStats.getCpuCost());
-            TestCase.assertEquals(2,scanStats.getRecordCount());
-            TestCase.assertEquals(264f,scanStats.getDiskCost());
-            TestCase.assertEquals(ScanStats.GroupScanProperty.EXACT_ROW_COUNT,scanStats.getGroupScanProperty());
+            assertNotNull(scanStats);
+            assertEquals(1f,scanStats.getCpuCost(),0);
+            assertEquals(2.0,scanStats.getRecordCount(),0);
+            assertEquals(264f,scanStats.getDiskCost(),0);
+            assertEquals(ScanStats.GroupScanProperty.EXACT_ROW_COUNT,scanStats.getGroupScanProperty());
         } finally {
             IOUtils.closeQuietly(responseContentNumDocs);
             IOUtils.closeQuietly(responseContentFirstDoc);
@@ -108,11 +110,11 @@ public class ElasticSearchGroupScanTest {
                     new ElasticSearchScanSpec(ElasticSearchTestConstants.EMPLOYEE_IDX, ElasticSearchTestConstants.MANAGER_MAPPING),
                     null);
             ScanStats scanStats = esgp.getScanStats();
-            TestCase.assertNotNull(scanStats);
-            TestCase.assertEquals(1f,scanStats.getCpuCost());
-            TestCase.assertEquals(0,scanStats.getRecordCount());
-            TestCase.assertEquals(0f,scanStats.getDiskCost());
-            TestCase.assertEquals(ScanStats.GroupScanProperty.EXACT_ROW_COUNT,scanStats.getGroupScanProperty());
+            assertNotNull(scanStats);
+            assertEquals(1f,scanStats.getCpuCost(), 0);
+            assertEquals(0,scanStats.getRecordCount(), 0);
+            assertEquals(0f,scanStats.getDiskCost(), 0);
+            assertEquals(ScanStats.GroupScanProperty.EXACT_ROW_COUNT,scanStats.getGroupScanProperty());
         } finally {
             IOUtils.closeQuietly(responseContentNumDocs);
         }

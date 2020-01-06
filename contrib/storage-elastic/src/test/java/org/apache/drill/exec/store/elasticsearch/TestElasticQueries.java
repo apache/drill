@@ -47,7 +47,7 @@ public class TestElasticQueries extends ClusterTest {
 
         StoragePluginRegistry pluginRegistry = cluster.drillbit().getContext().getStorage();
 
-        ElasticSearchPluginConfig esConfig = new ElasticSearchPluginConfig("elastic:changeme", "http://localhost:9200", "", 100, 10, TimeUnit.MINUTES);
+        ElasticSearchPluginConfig esConfig = new ElasticSearchPluginConfig("elastic:changeme", "http://localhost:9200", "", 10000, 10, TimeUnit.MINUTES);
         esConfig.setEnabled(true);
 
         pluginRegistry.createOrUpdate("elasticsearch", esConfig, true);
