@@ -237,7 +237,7 @@ public class ElasticSearchGroupScan extends AbstractGroupScan {
   @Override
   public void applyAssignments(List<DrillbitEndpoint> incomingEndpoints) {
 
-    final int numSlots = incomingEndpoints.size();
+    int numSlots = incomingEndpoints.size();
     Preconditions.checkArgument(numSlots <= regionsToScan.size(), String.format("Incoming endpoints %d is greater than number of scan regions %d", numSlots, regionsToScan.size()));
 
     /*
