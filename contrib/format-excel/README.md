@@ -25,7 +25,7 @@ The plugin has many other configuration options listed below:
  column.
 * `lastColumn`: To define a region within a spreadsheet, this is the right-most column index. This is indexed from one. If set to `0` Drill will read all available columns. This
  is not inclusive, so if you ask for columns 2-5 you will get columns 2,3 and 4. 
-* `readAllColumnsAsVarChar`: When set to `true`, Drill will not attempt to infer column data types and will read everything as `VARCHAR`. Defaults to `false`;
+* `allTextMode`: When set to `true`, Drill will not attempt to infer column data types and will read everything as `VARCHAR`. Defaults to `false`;
 
 ## Usage
 You can specify the configuration at runtime via the `table()` function or in the storage plugin configuration. For instance, if you just want to query an Excel file, you could
@@ -50,7 +50,7 @@ ON t1.id = t2.id
 
 ### Known Limitations:
 At present, Drill requires that all columns be of the same data type. If they are not, Drill will throw an exception upon trying to read a column of mixed data type. If you are
- trying to query data with heterogenoeus columns, it will be necessary to set `readAllColumnsAsVarChar` to `true`. 
+ trying to query data with heterogenoeus columns, it will be necessary to set `allTextMode` to `true`. 
 
 An additional limitation is that Drill infers the column data type from the first row of data. If a column is `null` in the first row, Drill will default to a datatype of
  `VARCHAR`. However if in fact the column is `NUMERIC` this will cause errors. 

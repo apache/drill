@@ -382,6 +382,25 @@ public class TestExcelFormat extends ClusterTest {
     new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
+  @Test
+  public void testFileWithDoubleDates() throws Exception {
+    String sql = "SELECT `Close Date`, `Type` FROM table(cp.`excel/test_data.xlsx` (type=> 'excel', sheetName => 'comps')) WHERE style='Contemporary'";
+
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("Close Date", TypeProtos.MinorType.TIMESTAMP)
+      .addNullable("Type", TypeProtos.MinorType.VARCHAR)
+      .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow(1412294400000L, "Hi Rise")
+      .addRow(1417737600000L, "Hi Rise")
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
   private void generateCompressedFile(String fileName, String codecName, String outFileName) throws IOException {
     FileSystem fs = ExecTest.getLocalFileSystem();
     Configuration conf = fs.getConf();
