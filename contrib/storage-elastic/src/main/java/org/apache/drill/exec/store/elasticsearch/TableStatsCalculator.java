@@ -22,12 +22,14 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.elasticsearch.hadoop.rest.PartitionDefinition;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Computes size of each region for given table.
  */
 public class TableStatsCalculator {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TableStatsCalculator.class);
+  private static final Logger logger = LoggerFactory.getLogger(TableStatsCalculator.class);
 
   public static final long DEFAULT_ROW_COUNT = 1024L * 1024L;
 

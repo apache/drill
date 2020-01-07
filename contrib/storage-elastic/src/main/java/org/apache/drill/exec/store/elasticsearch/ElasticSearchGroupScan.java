@@ -185,17 +185,16 @@ public class ElasticSearchGroupScan extends AbstractGroupScan {
 
       Settings esCfg = new PropertiesSettings(properties);
 
-      List<String> nodes = SettingsUtils.discoveredOrDeclaredNodes(esCfg);
+      List<PartitionDefinition> partitions = RestService.findPartitions(esCfg, comlogger); // TODO Hangs here
 
-      //List<ElasticSearchRestService.PartitionDefinition> partitions = ElasticSearchRestService.findPartitions(esCfg, comlogger);
-      /*for (ElasticSearchRestService.PartitionDefinition part : partitions) {
+      for (PartitionDefinition part : partitions) {
         // The address of this region
         for (String ip : part.getLocations()) {
           logger.debug("Adding ip: {}", ip);
           regionsToScan.put(part, new ServerHost(ip));
         }
         scanSizeInBytes += statsCalculator.getRegionSizeInBytes(part);
-      }*/
+      }
     } catch (IOException e) {
       throw new DrillRuntimeException("Error getting region info for table: " + scanSpec.getIndexName(), e);
     }
