@@ -19,6 +19,7 @@
 package org.apache.drill.exec.store.elasticsearch;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -26,10 +27,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -39,10 +42,12 @@ import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.complex.fn.JsonReader;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
+import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
 import org.elasticsearch.hadoop.cfg.Settings;
 import org.elasticsearch.hadoop.rest.InitializationUtils;
 import org.elasticsearch.hadoop.rest.RestService;
 import org.elasticsearch.hadoop.rest.RestService.PartitionReader;
+import org.elasticsearch.hadoop.rest.ScrollQuery;
 import org.elasticsearch.hadoop.serialization.builder.JdkValueReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,19 +76,22 @@ public class ElasticSearchRecordReader extends AbstractRecordReader {
 
   private final Boolean readNumbersAsDouble;
 
+  private final ObjectMapper mapper;
+
   private Set<String> fields;
 
   private OperatorContext operatorContext;
 
   private VectorContainerWriter writer;
 
-  private Iterator<JsonNode> cursor;
+  private ScrollQuery cursor;
 
   private JsonReader jsonReader;
 
   private OutputMutator output;
 
   private PartitionReader partitionReader;
+
 
   public ElasticSearchRecordReader(ElasticSearchScanSpec elasticSearchScanSpec, List<SchemaPath> columns, FragmentContext context, ElasticSearchStoragePlugin elasticSearchStoragePlugin) {
     fields = new HashSet<>();
@@ -92,6 +100,8 @@ public class ElasticSearchRecordReader extends AbstractRecordReader {
     scanSpec = elasticSearchScanSpec;
     // Fields read
     setColumns(columns);
+
+    mapper = new ObjectMapper();
 
     unionEnabled = fragmentContext.getOptions().getOption(ExecConstants.ENABLE_UNION_TYPE);
 
@@ -121,7 +131,7 @@ public class ElasticSearchRecordReader extends AbstractRecordReader {
   public void setup(OperatorContext context, OutputMutator output) throws ExecutionSetupException {
     this.operatorContext = context;
     this.output = output;
-    this.writer = new VectorContainerWriter(output, this.unionEnabled);
+    writer = new VectorContainerWriter(output, this.unionEnabled);
 
     jsonReader = new JsonReader.Builder(fragmentContext.getManagedBuffer())
 			.schemaPathColumns(Lists.newArrayList(getColumns()))
@@ -139,7 +149,7 @@ public class ElasticSearchRecordReader extends AbstractRecordReader {
       InitializationUtils.setValueReaderIfNotSet(settings, JdkValueReader.class, commonlog);
       PartitionReader partitionReader = RestService.createReader(settings, scanSpec.getPartitionDefinition(), commonlog);
       try {
-        cursor = (Iterator) partitionReader.scrollQuery();
+        cursor = partitionReader.scrollQuery();
       } catch (Exception e) {
         logger.debug("Error initializing cursor: {}", e.getMessage());
       }
@@ -156,12 +166,17 @@ public class ElasticSearchRecordReader extends AbstractRecordReader {
       // Batch pull
       while (docCount < BaseValueVector.INITIAL_VALUE_ALLOCATION && cursor.hasNext()) {
         writer.setPosition(docCount);
-        JsonNode element = cursor.next();
+
+        Object[] element = cursor.next();
+        String data = mapper.writeValueAsString(element);
+        JsonNode jsonElement = mapper.readTree(data);
+
         // Read the data of this layer
-        JsonNode id = JsonHelper.getPath(element, "_id");
+        JsonNode id = JsonHelper.getPath(jsonElement, "_id");
+
         // This is done so we can poll _id from elastic into
         // object content
-        ObjectNode content = (ObjectNode) JsonHelper.getPath(element, "_source");
+        ObjectNode content = (ObjectNode) JsonHelper.getPath(jsonElement, "_source");
         content.put("_id", id.asText());
         jsonReader.setSource(content);
         // this is using json
@@ -172,10 +187,12 @@ public class ElasticSearchRecordReader extends AbstractRecordReader {
       writer.setValueCount(docCount);
       logger.debug("Took {} ms to get {} records", watch.elapsed(TimeUnit.MILLISECONDS), docCount);
       return docCount;
-    } catch (IOException e) {
-      String msg = "Failure while reading document. - Parser was at record: " + (docCount + 1);
-      logger.error(msg, e);
-      throw new DrillRuntimeException(msg, e);
+    } catch (Exception e) {
+      throw UserException
+        .dataReadError()
+        .message("Failure while reading document. - Parser was at record: " + (docCount + 1))
+        .addContext(e.getMessage())
+        .build(logger);
     }
   }
 
@@ -184,5 +201,8 @@ public class ElasticSearchRecordReader extends AbstractRecordReader {
     if (partitionReader != null) {
       partitionReader.close();
     }
+
+    cursor.close();
+    writer.close();
   }
 }
