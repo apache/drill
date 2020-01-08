@@ -315,7 +315,9 @@ public class ColumnReaderFactory {
               return new NullableFixedByteAlignedReaders.NullableDictionaryTimeStampReader(parentReader, columnDescriptor, columnChunkMetaData, fixedLength, (NullableTimeStampVector)valueVec, schemaElement);
             // DRILL-6670: handle TIMESTAMP_MICROS as INT64 with no logical type
             case TIMESTAMP_MICROS:
-              return new NullableFixedByteAlignedReaders.NullableDictionaryBigIntReader(parentReader, columnDescriptor, columnChunkMetaData, fixedLength, (NullableBigIntVector)valueVec, schemaElement);
+            case INT_64:
+              return new NullableFixedByteAlignedReaders.NullableDictionaryBigIntReader(parentReader,
+                columnDescriptor, columnChunkMetaData, fixedLength, (NullableBigIntVector) valueVec, schemaElement);
             default:
               throw new ExecutionSetupException("Unsupported nullable converted type " + convertedType + " for primitive type INT64");
           }
