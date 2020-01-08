@@ -30,7 +30,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.PriorityQueue;
-import java.util.Properties;
 import java.util.Queue;
 import java.util.Set;
 import java.util.TreeMap;
@@ -54,7 +53,7 @@ import org.elasticsearch.hadoop.cfg.PropertiesSettings;
 import org.elasticsearch.hadoop.cfg.Settings;
 import org.elasticsearch.hadoop.rest.PartitionDefinition;
 import org.elasticsearch.hadoop.rest.RestService;
-import org.elasticsearch.hadoop.util.SettingsUtils;
+import org.elasticsearch.hadoop.util.EsMajorVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,6 +67,12 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
+
+import static org.elasticsearch.hadoop.cfg.ConfigurationOptions.ES_RESOURCE_READ;
+import static org.elasticsearch.hadoop.cfg.ConfigurationOptions.ES_PORT;
+import static org.elasticsearch.hadoop.cfg.ConfigurationOptions.ES_NODES;
+import static org.elasticsearch.hadoop.cfg.ConfigurationOptions.ES_NODES_DISCOVERY;
+
 
 @JsonTypeName("elasticsearch-scan")
 public class ElasticSearchGroupScan extends AbstractGroupScan {
@@ -173,25 +178,39 @@ public class ElasticSearchGroupScan extends AbstractGroupScan {
       // Add root to Properties
       // Example code from https://github.com/elastic/elasticsearch-hadoop/blob/master/mr/src/test/java/org/elasticsearch/hadoop/util/SettingsUtilsTest.java
 
-      Properties properties = new Properties();
-      properties.setProperty("es.nodes", host);
-      properties.setProperty("es.port", String.valueOf(port));
-      properties.setProperty("es.nodes.discovery", "true");
 
       String index = scanSpec.getIndexName();
       String mappingName = scanSpec.getTypeMappingName();
       String resource = index + "/" + mappingName;
-      properties.setProperty("es.resource.read", resource);
+      //properties.setProperty(ES_RESOURCE_READ, resource);
 
-      Settings esCfg = new PropertiesSettings(properties);
+      //Settings esCfg = new PropertiesSettings(properties);
 
-      List<PartitionDefinition> partitions = RestService.findPartitions(esCfg, comlogger); // TODO Hangs here
+      // TODO Add ES Config Options in Plugin Config
+
+      Settings settings = new PropertiesSettings();
+      settings.setMaxDocsPerPartition(10000);
+      settings.setInternalVersion(EsMajorVersion.LATEST);
+      settings.setProperty(ES_NODES, host);
+      settings.setProperty(ES_PORT, String.valueOf(port));
+      settings.setProperty(ES_NODES_DISCOVERY, "false");
+      settings.setProperty(ES_RESOURCE_READ, resource);
+      settings.setProperty("es.nodes.wan.only", "true");
+
+
+      List<PartitionDefinition> partitions = RestService.findPartitions(settings, comlogger);
 
       for (PartitionDefinition part : partitions) {
         // The address of this region
-        for (String ip : part.getLocations()) {
-          logger.debug("Adding ip: {}", ip);
-          regionsToScan.put(part, new ServerHost(ip));
+
+        if (part.getLocations().length == 0) {
+          regionsToScan.put(part, new ServerHost(parsedHostsAndPorts.toString()));
+          part.settings().setNodes(parsedHostsAndPorts.toString());
+        } else {
+          for (String ip : part.getLocations()) {
+            logger.debug("Adding ip: {}", ip);
+            regionsToScan.put(part, new ServerHost(ip));
+          }
         }
         scanSizeInBytes += statsCalculator.getRegionSizeInBytes(part);
       }
@@ -242,8 +261,8 @@ public class ElasticSearchGroupScan extends AbstractGroupScan {
     /*
      * Minimum/Maximum number of assignment per slot
      */
-    final int minPerEndpointSlot = (int) Math.floor((double) regionsToScan.size() / numSlots);
-    final int maxPerEndpointSlot = (int) Math.ceil((double) regionsToScan.size() / numSlots);
+    int minPerEndpointSlot = (int) Math.floor((double) regionsToScan.size() / numSlots);
+    int maxPerEndpointSlot = (int) Math.ceil((double) regionsToScan.size() / numSlots);
 
     /*
      * initialize (endpoint index => HBaseSubScanSpec list) map
