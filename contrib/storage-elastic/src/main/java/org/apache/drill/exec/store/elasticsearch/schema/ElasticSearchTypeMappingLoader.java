@@ -51,14 +51,17 @@ public class ElasticSearchTypeMappingLoader extends CacheLoader<String, Collecti
     // Pull map metadata for this index
     Set<String> typeMappings = Sets.newHashSet();
     try {
-      Response response = this.plugin.getClient().performRequest("GET", "/" + idxName);
-      JsonNode jsonNode = JsonHelper.readResponseContentAsJsonTree(this.plugin.getObjectMapper(), response);
+      Response response = plugin.getClient().performRequest("GET", "/" + idxName);
+      JsonNode jsonNode = JsonHelper.readResponseContentAsJsonTree(plugin.getObjectMapper(), response);
       Iterator<Map.Entry<String, JsonNode>> fields = jsonNode.fields();
+
       while (fields.hasNext()) {
         Map.Entry<String, JsonNode> entry = fields.next();
         JsonNode mappings = JsonHelper.getPath(entry.getValue(), "mappings");
+
         if (!mappings.isMissingNode()) {
           Iterator<String> typeMappingIterator = mappings.fieldNames();
+
           while (typeMappingIterator.hasNext()) {
             String typeMapping = typeMappingIterator.next();
             if (!ElasticSearchConstants.DEFAULT_MAPPING.equals(typeMapping)) {

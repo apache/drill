@@ -24,50 +24,47 @@ import org.apache.calcite.schema.Table;
 import org.apache.drill.exec.store.elasticsearch.ElasticSearchPluginConfig;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.store.AbstractSchema;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
 public class ElasticSearchIndexSchema extends AbstractSchema {
-    private static final Logger logger = LoggerFactory.getLogger(ElasticSearchIndexSchema.class);
 
-    private final ElasticSearchSchema elasticSearchSchema;
-    private final Set<String> typeMappings;
+  private final ElasticSearchSchema elasticSearchSchema;
 
-    private final Map<String, DrillTable> drillTables = Maps.newHashMap();
+  private final Set<String> typeMappings;
 
-    public ElasticSearchIndexSchema(Collection<String> typeMappings, ElasticSearchSchema elasticSearchSchema, String name) {
-        super(elasticSearchSchema.getSchemaPath(), name);
-        this.elasticSearchSchema = elasticSearchSchema;
-        this.typeMappings = Sets.newHashSet(typeMappings);
+  private final Map<String, DrillTable> drillTables = Maps.newHashMap();
+
+  public ElasticSearchIndexSchema(Collection<String> typeMappings, ElasticSearchSchema elasticSearchSchema, String name) {
+    super(elasticSearchSchema.getSchemaPath(), name);
+    this.elasticSearchSchema = elasticSearchSchema;
+    this.typeMappings = Sets.newHashSet(typeMappings);
+  }
+
+  @Override
+  public Table getTable(String tableName) {
+    if (!typeMappings.contains(tableName)) { // table does not exist
+      return null;
     }
 
-    @Override
-    public Table getTable(String tableName) {
-        if (!typeMappings.contains(tableName)) { // table does not exist
-            return null;
-        }
-
-        if (! drillTables.containsKey(tableName)) {
-        	// 去拉取这个表数据 this.name == 'es' .
-            drillTables.put(tableName, elasticSearchSchema.getDrillTable(this.name, tableName));
-        }
-
-        return drillTables.get(tableName);
-
+    if (!drillTables.containsKey(tableName)) {
+      drillTables.put(tableName, elasticSearchSchema.getDrillTable(this.name, tableName));
     }
 
-    @Override
-    public Set<String> getTableNames() {
-        return typeMappings;
-    }
+    return drillTables.get(tableName);
 
-    @Override
-    public String getTypeName() {
-        return ElasticSearchPluginConfig.NAME;
-    }
+  }
+
+  @Override
+  public Set<String> getTableNames() {
+    return typeMappings;
+  }
+
+  @Override
+  public String getTypeName() {
+    return ElasticSearchPluginConfig.NAME;
+  }
 
 }

@@ -55,7 +55,7 @@ public class ElasticSearchFilterBuilder extends AbstractExprVisitor<ElasticSearc
   }
 
   private ElasticSearchScanSpec mergeScanSpecs(String functionName, ElasticSearchScanSpec leftScanSpec, ElasticSearchScanSpec rightScanSpec) {
-    String newFilter = new String();
+    String newFilter = "";
 
     switch (functionName) {
       case "booleanAnd":
@@ -169,13 +169,16 @@ public class ElasticSearchFilterBuilder extends AbstractExprVisitor<ElasticSearc
   }
 
   private String translateFilter(String functionName, String fieldName, Object fieldValue, boolean strictPushDown) {
-    String queryFilter = "";
+    String queryFilter;
 
     switch (functionName) {
       case "equal":
 
-        if (strictPushDown) queryFilter = String.format("\"{\"term\":{\"%s\":%s}}\"", fieldName, fieldValue);
-        else queryFilter = String.format("\"{\"query\":{\"match\":{\"%s\":%s}}}\"", fieldName, fieldValue);
+        if (strictPushDown) {
+          queryFilter = String.format("\"{\"term\":{\"%s\":%s}}\"", fieldName, fieldValue);
+        } else {
+          queryFilter = String.format("\"{\"query\":{\"match\":{\"%s\":%s}}}\"", fieldName, fieldValue);
+        }
 
         break;
       case "not_equal":

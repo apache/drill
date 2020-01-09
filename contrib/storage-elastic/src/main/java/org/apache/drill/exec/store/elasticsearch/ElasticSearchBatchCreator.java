@@ -21,6 +21,7 @@ package org.apache.drill.exec.store.elasticsearch;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ops.ExecutorFragmentContext;
 import org.apache.drill.exec.physical.base.GroupScan;
@@ -42,21 +43,23 @@ public class ElasticSearchBatchCreator implements BatchCreator<ElasticSearchSubS
   public CloseableRecordBatch getBatch(ExecutorFragmentContext context, ElasticSearchSubScan subScan, List<RecordBatch> children) throws ExecutionSetupException {
     Preconditions.checkArgument(children.isEmpty());
     List<RecordReader> readers = Lists.newArrayList();
-    List<SchemaPath> columns = null;
+    List<SchemaPath> columns;
     if ((columns = subScan.getColumns()) == null) {
       columns = GroupScan.ALL_COLUMNS;
     }
     try {
       for (ElasticSearchScanSpec spec : subScan.getElasticSearchScanSpecs()) {
-        // 这里应该批量读取数据的
+        // Read data in batches
         readers.add(new ElasticSearchRecordReader(spec, columns, context, subScan.getElasticSearchStoragePlugin()));
       }
     } catch (Exception e) {
-      logger.error("ElasticSearchRecordReader creation failed for subScan:  " + subScan + ".");
-      logger.error(e.getMessage(), e);
-      throw new ExecutionSetupException(e);
+      throw UserException
+        .resourceError()
+        .message("ElasticSearchRecordReader creation failed for subScan:  " + subScan + ".")
+        .addContext(e.getMessage())
+        .build(logger);
     }
-    logger.info("Number of record readers initialized : " + readers.size());
+    logger.debug("Number of record readers initialized: {}", readers.size());
     return new ScanBatch(subScan, context, readers);
   }
 }

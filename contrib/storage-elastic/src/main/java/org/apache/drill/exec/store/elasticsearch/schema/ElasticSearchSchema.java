@@ -36,75 +36,77 @@ import org.apache.drill.exec.store.elasticsearch.ElasticSearchStoragePlugin;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ElasticSearchSchema extends AbstractSchema {
 
-    static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ElasticSearchSchema.class);
-    private final Map<String, ElasticSearchIndexSchema> schemaMap = Maps.newHashMap();
-    private final ElasticSearchStoragePlugin plugin;
+  private static final Logger logger = LoggerFactory.getLogger(ElasticSearchSchema.class);
 
-    public ElasticSearchSchema(String name, ElasticSearchStoragePlugin plugin)
-    {
-        super(ImmutableList.<String> of(), name);
-        this.plugin = plugin;
-    }
+  private final Map<String, ElasticSearchIndexSchema> schemaMap = Maps.newHashMap();
 
-    @Override
-    public String getTypeName() {
-        return ElasticSearchPluginConfig.NAME;
-    }
+  private final ElasticSearchStoragePlugin plugin;
 
-    @Override
-    public AbstractSchema getSubSchema(String name) {
-    	// 拿这个索引的 元数据类型
-        Collection<String> typeMappings;
-        try {
-            if ( !this.schemaMap.containsKey(name)){
-                typeMappings = this.plugin.getSchemaFactory().getTypeMappingCache().get(name);
-                // index --> type map元数据类型
-                this.schemaMap.put(name, new ElasticSearchIndexSchema(typeMappings, this, name));
-            }
+  public ElasticSearchSchema(String name, ElasticSearchStoragePlugin plugin) {
+    super(ImmutableList.of(), name);
+    this.plugin = plugin;
+  }
 
-            return this.schemaMap.get(name);
-        } catch (ExecutionException e) {
-            logger.warn("Failure while attempting to access ElasticSearch Index '{}'.",
-                    name, e.getCause());
-            return null;
-        }
-    }
+  @Override
+  public String getTypeName() {
+    return ElasticSearchPluginConfig.NAME;
+  }
 
-    void setHolder(SchemaPlus plusOfThis) {
-        for (String s : getSubSchemaNames()) {
-            plusOfThis.add(s, getSubSchema(s));
-        }
-    }
-    
-    @Override
-    public Table getTable(String tableName){
-    	logger.info(String.format("table = [%s]", tableName));
-    	// 默认是索引表名
-      return this.getDrillTable(tableName, "");
-    }
+  @Override
+  public AbstractSchema getSubSchema(String name) {
+    // Take the metadata type of this index
+    Collection<String> typeMappings;
+    try {
+      if (!this.schemaMap.containsKey(name)) {
+        typeMappings = this.plugin.getSchemaFactory().getTypeMappingCache().get(name);
+        // index --> type map metadata type
+        this.schemaMap.put(name, new ElasticSearchIndexSchema(typeMappings, this, name));
+      }
 
-    @Override
-    public boolean showInInformationSchema() {
-        return false;
+      return this.schemaMap.get(name);
+    } catch (ExecutionException e) {
+      logger.warn("Failure while attempting to access ElasticSearch Index '{}'.", name, e.getCause());
+      return null;
     }
+  }
 
-    @Override
-    public Set<String> getSubSchemaNames() {
-        try {
-        	// get es all index
-            return Sets.newHashSet(this.plugin.getSchemaFactory().getIndexCache().get(ElasticSearchConstants.INDEXES));
-        } catch (ExecutionException e) {
-            logger.warn("Failure while getting ElasticSearch index list.", e);
-            return Collections.emptySet();
-        }
+  void setHolder(SchemaPlus plusOfThis) {
+    for (String s : getSubSchemaNames()) {
+      plusOfThis.add(s, getSubSchema(s));
     }
+  }
 
-    public DrillTable getDrillTable(String indexName, String typeMappingName) {
-    	//    get indexName/typeMappingName
-        ElasticSearchScanSpec elasticSearchScanSpec = new ElasticSearchScanSpec(indexName, typeMappingName);
-        return new DrillElasticsearchTable(this.plugin, this.plugin.getSchemaFactory().getSchemaName(), null, elasticSearchScanSpec);
+  @Override
+  public Table getTable(String tableName) {
+    logger.debug(String.format("table = [%s]", tableName));
+    // Index table name by default
+    return this.getDrillTable(tableName, "");
+  }
+
+  @Override
+  public boolean showInInformationSchema() {
+    return false;
+  }
+
+  @Override
+  public Set<String> getSubSchemaNames() {
+    try {
+      // get es all index
+      return Sets.newHashSet(plugin.getSchemaFactory().getIndexCache().get(ElasticSearchConstants.INDEXES));
+    } catch (ExecutionException e) {
+      logger.warn("Failure while getting ElasticSearch index list.", e);
+      return Collections.emptySet();
     }
+  }
+
+  public DrillTable getDrillTable(String indexName, String typeMappingName) {
+    // get indexName/typeMappingName
+    ElasticSearchScanSpec elasticSearchScanSpec = new ElasticSearchScanSpec(indexName, typeMappingName);
+    return new DrillElasticsearchTable(plugin, plugin.getSchemaFactory().getSchemaName(), null, elasticSearchScanSpec);
+  }
 }

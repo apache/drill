@@ -18,19 +18,14 @@
 
 package org.apache.drill.exec.store.elasticsearch;
 
-import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -42,7 +37,6 @@ import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.complex.fn.JsonReader;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
-import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
 import org.elasticsearch.hadoop.cfg.Settings;
 import org.elasticsearch.hadoop.rest.InitializationUtils;
 import org.elasticsearch.hadoop.rest.RestService;
@@ -54,9 +48,9 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 
 public class ElasticSearchRecordReader extends AbstractRecordReader {
 
@@ -143,7 +137,7 @@ public class ElasticSearchRecordReader extends AbstractRecordReader {
   @Override
   public int next() {
     if (cursor == null) {
-      logger.info("Initializing cursor");
+      logger.debug("Initializing cursor");
       Settings settings = scanSpec.getPartitionDefinition().settings();
 
       InitializationUtils.setValueReaderIfNotSet(settings, JdkValueReader.class, commonlog);
@@ -176,9 +170,12 @@ public class ElasticSearchRecordReader extends AbstractRecordReader {
 
         // This is done so we can poll _id from elastic into
         // object content
+
+        // TODO STart here... check if it is a missing node 
         ObjectNode content = (ObjectNode) JsonHelper.getPath(jsonElement, "_source");
         content.put("_id", id.asText());
         jsonReader.setSource(content);
+
         // this is using json
         jsonReader.write(writer);
         docCount++;

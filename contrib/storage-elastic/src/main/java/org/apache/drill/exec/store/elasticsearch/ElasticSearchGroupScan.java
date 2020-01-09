@@ -38,6 +38,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
@@ -118,9 +119,9 @@ public class ElasticSearchGroupScan extends AbstractGroupScan {
   public ElasticSearchGroupScan(String userName, ElasticSearchStoragePlugin plugin, ElasticSearchScanSpec scanSpec, List<SchemaPath> columns) {
     super(userName);
     this.plugin = plugin;
-    storagePluginConfig = plugin.getConfig();
     this.scanSpec = scanSpec;
     this.columns = columns;
+    storagePluginConfig = plugin.getConfig();
     init();
   }
 
@@ -168,7 +169,7 @@ public class ElasticSearchGroupScan extends AbstractGroupScan {
 
       TableStatsCalculator statsCalculator = new TableStatsCalculator(scanSpec, plugin.getConfig(), storagePluginConfig);
 
-      regionsToScan = new TreeMap<PartitionDefinition, ServerHost>();
+      regionsToScan = new TreeMap<>();
 
       // Get the connection from the plugin config
       URL parsedHostsAndPorts = new URL(storagePluginConfig.getHostsAndPorts());
@@ -182,9 +183,6 @@ public class ElasticSearchGroupScan extends AbstractGroupScan {
       String index = scanSpec.getIndexName();
       String mappingName = scanSpec.getTypeMappingName();
       String resource = index + "/" + mappingName;
-      //properties.setProperty(ES_RESOURCE_READ, resource);
-
-      //Settings esCfg = new PropertiesSettings(properties);
 
       // TODO Add ES Config Options in Plugin Config
 
@@ -227,7 +225,7 @@ public class ElasticSearchGroupScan extends AbstractGroupScan {
 
   @Override
   public List<EndpointAffinity> getOperatorAffinity() {
-    Map<String, DrillbitEndpoint> endpointMap = new HashMap<String, DrillbitEndpoint>();
+    Map<String, DrillbitEndpoint> endpointMap = new HashMap<>();
     for (DrillbitEndpoint ep : plugin.getContext().getBits()) {
       // The cluster has some machines
       endpointMap.put(ep.getAddress(), ep);
@@ -280,7 +278,7 @@ public class ElasticSearchGroupScan extends AbstractGroupScan {
      */
     // That machine is responsible for those slots, that is, how many tasks the process will run. In fact, it can be optimized. The same machine preferentially executes the requests of this machine.
     for (int i = 0; i < numSlots; ++i) {
-      endpointFragmentMapping.put(i, new ArrayList<ElasticSearchScanSpec>(maxPerEndpointSlot));
+      endpointFragmentMapping.put(i, new ArrayList<>(maxPerEndpointSlot));
       String hostname = incomingEndpoints.get(i).getAddress();
       // hostname --> slot
       Queue<Integer> hostIndexQueue = endpointHostIndexListMap.get(hostname);
@@ -322,8 +320,8 @@ public class ElasticSearchGroupScan extends AbstractGroupScan {
      * Build priority queues of slots, with ones which has tasks lesser than
      * 'minPerEndpointSlot' and another which have more.
      */
-    PriorityQueue<List<ElasticSearchScanSpec>> minHeap = new PriorityQueue<List<ElasticSearchScanSpec>>(numSlots, LIST_SIZE_COMPARATOR);
-    PriorityQueue<List<ElasticSearchScanSpec>> maxHeap = new PriorityQueue<List<ElasticSearchScanSpec>>(numSlots, LIST_SIZE_COMPARATOR_REV);
+    PriorityQueue<List<ElasticSearchScanSpec>> minHeap = new PriorityQueue<>(numSlots, LIST_SIZE_COMPARATOR);
+    PriorityQueue<List<ElasticSearchScanSpec>> maxHeap = new PriorityQueue<>(numSlots, LIST_SIZE_COMPARATOR_REV);
     for (List<ElasticSearchScanSpec> listOfScan : endpointFragmentMapping.values()) {
       if (listOfScan.size() < minPerEndpointSlot) {
         // Assignment task is less than average
@@ -341,7 +339,9 @@ public class ElasticSearchGroupScan extends AbstractGroupScan {
     if (regionsToAssignSet.size() > 0) {
       for (Entry<PartitionDefinition, ServerHost> regionEntry : regionsToAssignSet) {
         List<ElasticSearchScanSpec> smallestList = minHeap.poll();
+
         // Add to this node
+        assert smallestList != null;
         smallestList.add(regionInfoToSubScanSpec(regionEntry.getKey()));
         if (smallestList.size() < maxPerEndpointSlot) {
           minHeap.offer(smallestList);
@@ -356,6 +356,8 @@ public class ElasticSearchGroupScan extends AbstractGroupScan {
     while (minHeap.peek() != null && minHeap.peek().size() < minPerEndpointSlot) {
       List<ElasticSearchScanSpec> smallestList = minHeap.poll();
       List<ElasticSearchScanSpec> largestList = maxHeap.poll();
+
+      assert largestList != null;
       smallestList.add(largestList.remove(largestList.size() - 1));
       if (largestList.size() > minPerEndpointSlot) {
         maxHeap.offer(largestList);
@@ -376,16 +378,14 @@ public class ElasticSearchGroupScan extends AbstractGroupScan {
 
   @Override
   public SubScan getSpecificScan(int minorFragmentId) throws ExecutionSetupException {
-    // TODO: What is minor fragmentation id ?
-    // it shoud add many watch here
-    // return new ElasticSearchSubScan(super.getUserName(), this.plugin,
-    // this.storagePluginConfig, this.scanSpec, this.columns);
 
-    assert minorFragmentId < endpointFragmentMapping.size() : String.format("Mappings length [%d] should be greater than minor fragment id [%d] but it isn't.", endpointFragmentMapping.size(), minorFragmentId);
+    assert minorFragmentId < endpointFragmentMapping.size() : String.format("Mappings length [%d] should be greater than minor fragment id [%d] but it isn't.",
+      endpointFragmentMapping.size(),
+      minorFragmentId);
+
     // The results have been distributed before
     List<ElasticSearchScanSpec> specs = endpointFragmentMapping.get(minorFragmentId);
     return new ElasticSearchSubScan(super.getUserName(), plugin, storagePluginConfig, specs, columns);
-
   }
 
   @Override
@@ -415,36 +415,45 @@ public class ElasticSearchGroupScan extends AbstractGroupScan {
     // Pull statistics
     Response response;
     JsonNode jsonNode;
-    RestClient client = this.plugin.getClient();
+    RestClient client = plugin.getClient();
     try {
-      response = client.performRequest("GET", "/" + this.scanSpec.getIndexName() + "/" + this.scanSpec.getTypeMappingName() + "/_count");
-      jsonNode = JsonHelper.readResponseContentAsJsonTree(this.plugin.getObjectMapper(), response);
+      response = client.performRequest("GET", "/" + scanSpec.getIndexName() + "/" + scanSpec.getTypeMappingName() + "/_count");
+      jsonNode = JsonHelper.readResponseContentAsJsonTree(plugin.getObjectMapper(), response);
       // Get statistics
       JsonNode countNode = JsonHelper.getPath(jsonNode, "count");
       long numDocs = 0;
       if (!countNode.isMissingNode()) {
         numDocs = countNode.longValue();
       } else {
-        logger.warn("There are no documents in {}.{}?", this.scanSpec.getIndexName(), this.scanSpec.getTypeMappingName());
+        logger.warn("There are no documents in {}.{}?", scanSpec.getIndexName(), scanSpec.getTypeMappingName());
       }
       long docSize = 0;
       if (numDocs > 0) {
-        response = client.performRequest("GET", "/" + this.scanSpec.getIndexName() + "/" + this.scanSpec.getTypeMappingName() + "/_search?size=1&terminate_after=1");
+        response = client.performRequest("GET", "/" + scanSpec.getIndexName() + "/" + scanSpec.getTypeMappingName() + "/_search?size=1&terminate_after=1");
         jsonNode = JsonHelper.readResponseContentAsJsonTree(plugin.getObjectMapper(), response);
         JsonNode hits = JsonHelper.getPath(jsonNode, "hits.hits");
         if (!hits.isMissingNode()) {
-          // TODO: Is there another elegant way to get the JsonNode
-          // Content?
           // Take a piece of data
-          docSize = hits.elements().next().toString().getBytes().length;
+          docSize = hits
+            .elements()
+            .next()
+            .toString()
+            .getBytes()
+            .length;
         } else {
-          throw new DrillRuntimeException("Couldn't size any documents for " + this.scanSpec.getIndexName() + "." + this.scanSpec.getTypeMappingName());
+          throw UserException
+            .resourceError()
+            .message("Couldn't size any documents for " + scanSpec.getIndexName() + "." + scanSpec.getTypeMappingName())
+            .build(logger);
         }
       }
       // So you know how much data you have
       return new ScanStats(ScanStats.GroupScanProperty.EXACT_ROW_COUNT, numDocs, 1, docSize * numDocs);
     } catch (IOException e) {
-      throw new DrillRuntimeException(e.getMessage(), e);
+      throw UserException
+        .resourceError()
+        .message(e.getMessage())
+        .build(logger);
     }
   }
 }

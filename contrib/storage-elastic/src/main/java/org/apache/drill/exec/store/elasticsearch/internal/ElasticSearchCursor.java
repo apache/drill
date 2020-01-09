@@ -62,7 +62,12 @@ public class ElasticSearchCursor implements Iterator<JsonNode>, Closeable {
 
   private Iterator<JsonNode> internalIterator;
 
-  public static ElasticSearchCursor scroll(RestClient client, ObjectMapper objMapper, String idxName, String type, Map<String, String> additionalQueryParams, HttpEntity requestBody, Header... additionalHeaders) throws IOException {
+  public static ElasticSearchCursor scroll(RestClient client,
+                                           ObjectMapper objMapper,
+                                           String idxName,
+                                           String type,
+                                           Map<String, String> additionalQueryParams,
+                                           HttpEntity requestBody, Header... additionalHeaders) throws IOException {
     Map<String, String> queryParams = new HashMap<>();
     if (!MapUtils.isEmpty(additionalQueryParams)) {
       queryParams.putAll(additionalQueryParams);
@@ -84,7 +89,7 @@ public class ElasticSearchCursor implements Iterator<JsonNode>, Closeable {
     }
     // Hits
     JsonNode totalHitsNode = JsonHelper.getPath(rootNode, "hits.total");
-    long totalHits = 0;
+    long totalHits;
     if (!totalHitsNode.isMissingNode()) {
       totalHits = totalHitsNode.asLong();
     } else {
@@ -103,7 +108,11 @@ public class ElasticSearchCursor implements Iterator<JsonNode>, Closeable {
 
   }
 
-  private ElasticSearchCursor(RestClient client, ObjectMapper objMapper, String scrollId, long totalHits, Iterator<JsonNode> elementIterator, Header... headers) {
+  private ElasticSearchCursor(RestClient client,
+                              ObjectMapper objMapper,
+                              String scrollId,
+                              long totalHits,
+                              Iterator<JsonNode> elementIterator, Header... headers) {
     this.client = client;
     this.objMapper = objMapper;
     this.totalHits = totalHits;
@@ -115,7 +124,7 @@ public class ElasticSearchCursor implements Iterator<JsonNode>, Closeable {
 
   @Override
   public boolean hasNext() {
-    return (this.position < this.totalHits);
+    return (position < totalHits);
   }
 
   @Override
@@ -123,11 +132,11 @@ public class ElasticSearchCursor implements Iterator<JsonNode>, Closeable {
     //TODO: Code here
     JsonNode next;
     if (this.hasNext()) {
-      if (!this.internalIterator.hasNext()) {
+      if (!internalIterator.hasNext()) {
         logger.debug("Internal storage depleted, lets scroll for more");
         try {
           // Requested data
-          Response response = this.client.performRequest("POST", "/_search/scroll", MapUtils.EMPTY_MAP, new NStringEntity(this.scrollRequest, ContentType.APPLICATION_JSON), this.additionalHealders);
+          Response response = client.performRequest("POST", "/_search/scroll", MapUtils.EMPTY_MAP, new NStringEntity(scrollRequest, ContentType.APPLICATION_JSON), additionalHealders);
 
           JsonNode rootNode = JsonHelper.readResponseContentAsJsonTree(objMapper, response);
           JsonNode elementsNode = JsonHelper.getPath(rootNode, "hits.hits");
@@ -154,6 +163,6 @@ public class ElasticSearchCursor implements Iterator<JsonNode>, Closeable {
 
   @Override
   public void close() throws IOException {
-    // DO NOTHING
+    client.close();
   }
 }

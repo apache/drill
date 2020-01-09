@@ -31,8 +31,6 @@ import java.util.concurrent.TimeUnit;
 
 public class ElasticSearchSchemaFactory implements SchemaFactory {
 
-  private static final String INDEXES = "indexes";
-
   private final String schemaName;
 
   private final ElasticSearchStoragePlugin plugin;
@@ -55,21 +53,21 @@ public class ElasticSearchSchemaFactory implements SchemaFactory {
   @Override
   public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws IOException {
     // Registered here
-    ElasticSearchSchema schema = new ElasticSearchSchema(this.schemaName, this.plugin);
+    ElasticSearchSchema schema = new ElasticSearchSchema(schemaName, plugin);
     SchemaPlus hPlus = parent.add(schemaName, schema);
     schema.setHolder(hPlus);
   }
 
 
   public LoadingCache<String, Collection<String>> getIndexCache() {
-    return this.indexCache;
+    return indexCache;
   }
 
   public LoadingCache<String, Collection<String>> getTypeMappingCache() {
-    return this.typeMappingCache;
+    return typeMappingCache;
   }
 
   public String getSchemaName() {
-    return this.schemaName;
+    return schemaName;
   }
 }

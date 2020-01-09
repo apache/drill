@@ -126,11 +126,11 @@ public class ElasticSearchPluginConfig extends StoragePluginConfigBase {
     }
     ElasticSearchPluginConfig thatConfig = (ElasticSearchPluginConfig) that;
     return hostsAndPorts.equals(thatConfig.hostsAndPorts) &&
-      (Objects.equals(this.credentials, thatConfig.credentials)) &&
-      this.maxRetryTimeoutMillis == thatConfig.maxRetryTimeoutMillis &&
-      this.cacheDuration == thatConfig.cacheDuration &&
-      (Objects.equals(this.pathPrefix, thatConfig.pathPrefix)) &&
-      (Objects.equals(this.cacheTimeUnit, thatConfig.cacheTimeUnit));
+      (Objects.equals(credentials, thatConfig.credentials)) &&
+      maxRetryTimeoutMillis == thatConfig.maxRetryTimeoutMillis &&
+      cacheDuration == thatConfig.cacheDuration &&
+      (Objects.equals(pathPrefix, thatConfig.pathPrefix)) &&
+      (Objects.equals(cacheTimeUnit, thatConfig.cacheTimeUnit));
   }
 
   @Override
@@ -163,18 +163,18 @@ public class ElasticSearchPluginConfig extends StoragePluginConfigBase {
   @JsonIgnore
   public RestClient createClient() {
     // Client created
-    RestClientBuilder clientBuilder = RestClient.builder(this.parseHostsAndPorts());
+    RestClientBuilder clientBuilder = RestClient.builder(parseHostsAndPorts());
 
     Header[] headers = buildHeaders();
     if (headers != null) {
       clientBuilder.setDefaultHeaders(headers);
     }
-    if (this.maxRetryTimeoutMillis > 0) {
-      clientBuilder.setMaxRetryTimeoutMillis(this.maxRetryTimeoutMillis);
+    if (maxRetryTimeoutMillis > 0) {
+      clientBuilder.setMaxRetryTimeoutMillis(maxRetryTimeoutMillis);
     }
-    if (!StringUtils.isEmpty(this.pathPrefix)) {
+    if (!StringUtils.isEmpty(pathPrefix)) {
       // Request path prefix
-      clientBuilder.setPathPrefix(this.pathPrefix);
+      clientBuilder.setPathPrefix(pathPrefix);
     }
     return clientBuilder.build();
   }
@@ -190,7 +190,7 @@ public class ElasticSearchPluginConfig extends StoragePluginConfigBase {
 
   private HttpHost[] parseHostsAndPorts() {
     Collection<HttpHost> rtnValue = new ArrayList<>();
-    List<String> hostPortList = Arrays.asList(this.hostsAndPorts.split(","));
+    List<String> hostPortList = Arrays.asList(hostsAndPorts.split(","));
     for (String hostPort : hostPortList) {
       String[] split = hostPort.split(":");
       String protocol = split[0];
@@ -206,10 +206,10 @@ public class ElasticSearchPluginConfig extends StoragePluginConfigBase {
   }
 
   public long getCacheDuration() {
-    return this.cacheDuration;
+    return cacheDuration;
   }
 
   public TimeUnit getCacheTimeUnit() {
-    return this.cacheTimeUnit;
+    return cacheTimeUnit;
   }
 }
