@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.elasticsearch;
 
-import java.io.IOException;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -33,57 +32,25 @@ public class TableStatsCalculator {
 
   public static final long DEFAULT_ROW_COUNT = 1024L * 1024L;
 
-  private static final String DRILL_EXEC_HBASE_SCAN_SAMPLE_ROWS_COUNT = "drill.exec.hbase.scan.samplerows.count";
-
-  private static final int DEFAULT_SAMPLE_SIZE = 100;
-
   /**
    * Maps each region to its size in bytes.
    */
-  private Map<PartitionDefinition, Long> sizeMap = null;
+  private Map<PartitionDefinition, Long> sizeMap;
 
   private int avgRowSizeInBytes = 1;
 
-  private int colsPerRow = 1;
-
   /**
    * Computes size of each region for table.
-   *
-   * @param hbaseScanSpec
-   * @param config
-   * @throws IOException
    */
-  public TableStatsCalculator(  ElasticSearchScanSpec hbaseScanSpec, ElasticSearchPluginConfig config, ElasticSearchPluginConfig storageConfig) throws IOException {
-      sizeMap = new TreeMap<PartitionDefinition, Long>( );
-//
-//      Collection<ServerName> servers = clusterStatus.getServers();
-//      //iterate all cluster regions, filter regions from our table and compute their size
-//      for (ServerName serverName : servers) {
-//        ServerLoad serverLoad = clusterStatus.getLoad(serverName);
-//
-//        for (RegionLoad regionLoad : serverLoad.getRegionsLoad().values()) {
-//          byte[] regionId = regionLoad.getName();
-//
-//          if (tableRegions.contains(regionId)) {
-//        	  // region 的数据量大小
-//            long regionSizeMB = regionLoad.getMemStoreSizeMB() + regionLoad.getStorefileSizeMB();
-//            sizeMap.put(regionId, (regionSizeMB > 0 ? regionSizeMB : 1) * (1024*1024));
-//            if (logger.isDebugEnabled()) {
-//              logger.debug("Region " + regionLoad.getNameAsString() + " has size " + regionSizeMB + "MB");
-//            }
-//          }
-//        }
-//      }
-//      logger.debug("Region sizes calculated");
- 
 
+  public TableStatsCalculator(ElasticSearchPluginConfig storageConfig) {
+    sizeMap = new TreeMap<>();
   }
 
- 
   /**
    * Returns size of given region in bytes. Returns 0 if region was not found.
    */
-  public long getRegionSizeInBytes(PartitionDefinition part ) {
+  public long getRegionSizeInBytes(PartitionDefinition part) {
     if (sizeMap == null) {
       return (long) avgRowSizeInBytes * DEFAULT_ROW_COUNT; // 1 million rows
     } else {
@@ -96,13 +63,4 @@ public class TableStatsCalculator {
       }
     }
   }
-
-  public int getAvgRowSizeInBytes() {
-    return avgRowSizeInBytes;
-  }
-
-  public int getColsPerRow() {
-    return colsPerRow;
-  }
-
 }

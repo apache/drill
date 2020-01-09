@@ -16,65 +16,56 @@
  * limitations under the License.
  */
 package org.apache.drill.exec.store.elasticsearch;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 
+
+// TODO Write unit tests for this class
 public class ElasticSearchUtils {
 
-	 // 组装并的条件
-  public static String andFilterAtIndex(final String leftFilter,
-		  final String String) {
+  // 组装并的条件
+  public static String andFilterAtIndex(final String leftFilter, final String String) {
 //    Document andQueryFilter = new Document();
 //    List<Document> filters = new ArrayList<Document>();
 //    filters.add(leftFilter);
 //    filters.add(rightFilter);
 //    andQueryFilter.put("$and", filters);
-	  return String.format("\"{\"and\":{\"filters\":[%s, %s]}}\"");
+    return String.format("\"{\"and\":{\"filters\":[%s, %s]}}\"");
   }
 
-  public static String orFilterAtIndex(String leftFilter,
-		  String rightFilter) {
-	  //组装或的条件
+  public static String orFilterAtIndex(String leftFilter, String rightFilter) {
+    //组装或的条件
 //    Document orQueryFilter = new Document();
 //    List<Document> filters = new ArrayList<Document>();
 //    filters.add(leftFilter);
 //    filters.add(rightFilter);
 //    orQueryFilter.put("$or", filters);
-	  return String.format("\"{\"or\":{\"filters\":[%s, %s]}}\"");
+    return String.format("\"{\"or\":{\"filters\":[%s, %s]}}\"");
   }
 
-  public static Map<String, List<String>> mergeFilters(
-      Map<String, Object> minFilters, Map<String, Object> maxFilters) {
+  public static Map<String, List<String>> mergeFilters(Map<String, Object> minFilters, Map<String, Object> maxFilters) {
     Map<String, List<String>> filters = Maps.newHashMap();
     // 组装大于 和小于 的条件
-    
+
     for (Entry<String, Object> entry : minFilters.entrySet()) {
       List<String> list = filters.get(entry.getKey());
       if (list == null) {
         list = Lists.newArrayList();
         filters.put(entry.getKey(), list);
       }
-//      list.add(new Document(entry.getKey(), new Document("$gte",
-//          entry.getValue())));
-      
-      list.add(String.format("\"{\"range\":{\"%s\":{\"gt\" :%s\"}}}" ,entry.getKey() , entry.getValue()));
+
+      list.add(String.format("\"{\"range\":{\"%s\":{\"gt\" :%s\"}}}", entry.getKey(), entry.getValue()));
     }
 
     for (Entry<String, Object> entry : maxFilters.entrySet()) {
-      List<String> list = filters.get(entry.getKey());
-      if (list == null) {
-        list = Lists.newArrayList();
-        filters.put(entry.getKey(), list);
-      }
-//      list.add(new Document(entry.getKey(), new Document("$lt", entry
-//          .getValue())));
-      list.add(String.format("\"{\"range\":{\"%s\":{\"lt\" :%s\"}}}" ,entry.getKey() , entry.getValue()));
+      List<String> list = filters.computeIfAbsent(entry.getKey(), k -> Lists.newArrayList());
+      list.add(String.format("\"{\"range\":{\"%s\":{\"lt\" :%s\"}}}", entry.getKey(), entry.getValue()));
     }
     return filters;
   }
-
 }

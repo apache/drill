@@ -167,7 +167,7 @@ public class ElasticSearchGroupScan extends AbstractGroupScan {
 
     try {
 
-      TableStatsCalculator statsCalculator = new TableStatsCalculator(scanSpec, plugin.getConfig(), storagePluginConfig);
+      TableStatsCalculator statsCalculator = new TableStatsCalculator(storagePluginConfig);
 
       regionsToScan = new TreeMap<>();
 

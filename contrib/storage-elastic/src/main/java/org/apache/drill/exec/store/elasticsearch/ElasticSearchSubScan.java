@@ -23,7 +23,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.base.AbstractBase;
@@ -82,7 +82,7 @@ public class ElasticSearchSubScan extends AbstractBase implements SubScan {
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
     Preconditions.checkArgument(children.isEmpty());
-    return new ElasticSearchSubScan(super.getUserName(), this.elasticSearchStoragePlugin, this.elasticSearchPluginConfig, this.elasticSearchScanSpecs, this.columns);
+    return new ElasticSearchSubScan(super.getUserName(), elasticSearchStoragePlugin, elasticSearchPluginConfig, elasticSearchScanSpecs, columns);
   }
 
   @Override

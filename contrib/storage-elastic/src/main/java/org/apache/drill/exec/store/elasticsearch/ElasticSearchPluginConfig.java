@@ -18,7 +18,6 @@
 
 package org.apache.drill.exec.store.elasticsearch;
 
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -39,14 +38,10 @@ import org.elasticsearch.client.RestClientBuilder;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @JsonTypeName(ElasticSearchPluginConfig.NAME)
 public class ElasticSearchPluginConfig extends StoragePluginConfigBase {
   public static final String NAME = "elasticsearch";
-
-  private static final Logger logger = LoggerFactory.getLogger(ElasticSearchPluginConfig.class);
 
   private static final int DEFAULT_PORT = 9200;
 
@@ -158,7 +153,6 @@ public class ElasticSearchPluginConfig extends StoragePluginConfigBase {
    * Creates and returns a client base on configuration
    *
    * @return a {@link RestClient} to work against elasticSearch
-   * @throws UnknownHostException
    */
   @JsonIgnore
   public RestClient createClient() {
@@ -190,7 +184,7 @@ public class ElasticSearchPluginConfig extends StoragePluginConfigBase {
 
   private HttpHost[] parseHostsAndPorts() {
     Collection<HttpHost> rtnValue = new ArrayList<>();
-    List<String> hostPortList = Arrays.asList(hostsAndPorts.split(","));
+    String[] hostPortList = hostsAndPorts.split(",");
     for (String hostPort : hostPortList) {
       String[] split = hostPort.split(":");
       String protocol = split[0];

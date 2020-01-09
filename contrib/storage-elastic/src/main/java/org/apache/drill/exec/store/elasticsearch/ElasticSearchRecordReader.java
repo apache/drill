@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.MissingNode;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -172,13 +173,18 @@ public class ElasticSearchRecordReader extends AbstractRecordReader {
         // object content
 
         // TODO STart here... check if it is a missing node 
-        ObjectNode content = (ObjectNode) JsonHelper.getPath(jsonElement, "_source");
-        content.put("_id", id.asText());
-        jsonReader.setSource(content);
+        JsonNode responseNode =  JsonHelper.getPath(jsonElement, "_source");
+        if (responseNode instanceof MissingNode) {
+          // Do something...
+        } else {
+          ObjectNode content = (ObjectNode) responseNode;
+          content.put("_id", id.asText());
+          jsonReader.setSource(content);
 
-        // this is using json
-        jsonReader.write(writer);
-        docCount++;
+          // this is using json
+          jsonReader.write(writer);
+          docCount++;
+        }
       }
       jsonReader.ensureAtLeastOneField(writer);
       writer.setValueCount(docCount);
