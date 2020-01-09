@@ -61,6 +61,8 @@ public class TestElasticQueries extends ClusterTest {
         RowSet results = client.queryBuilder().sql(sql).rowSet();
         logger.debug("Query Results: {}", results.toString());
 
+        results.print();
+
     /*TupleMetadata expectedSchema = new SchemaBuilder()
       .add("SCHEMA_NAME", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
       .add("TYPE", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
