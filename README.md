@@ -16,7 +16,13 @@ Please make sure that specific versions of libraries are installed since buildin
 
 # Documentation Guidelines
 
-The documentation pages are placed under `_docs`. Most files, in the YAML front matter, have three important parameters:
+The documentation pages are placed under `_docs`. You can modify existing .md files, or you can create new .md files to add to the Apache Drill documentation site. Create pull requests to submit your documentation updates. 
+
+## Creating New MarkDown Files
+
+If you create new MarkDown (.md) files, include the required YAML front matter and name the file using the methods described in this section. 
+
+The YAML front matter has three important parameters:
 
 * `title:` - This is the title of the page enclosed in quotation marks. Each page must have a *unique* title
 * `date:` - This field is needed for Jekyll to write a last-modified date. Initially, leave this field blank.
