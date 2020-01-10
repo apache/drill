@@ -33,9 +33,9 @@ import org.apache.drill.exec.store.elasticsearch.ElasticSearchPluginConfig;
 import org.apache.drill.exec.store.elasticsearch.ElasticSearchScanSpec;
 import org.apache.drill.exec.store.elasticsearch.ElasticSearchStoragePlugin;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -107,6 +107,6 @@ public class ElasticSearchSchema extends AbstractSchema {
   public DrillTable getDrillTable(String indexName, String typeMappingName) {
     // get indexName/typeMappingName
     ElasticSearchScanSpec elasticSearchScanSpec = new ElasticSearchScanSpec(indexName, typeMappingName);
-    return new DrillElasticsearchTable(plugin, plugin.getSchemaFactory().getSchemaName(), null, elasticSearchScanSpec);
+    return new DrillElasticsearchTable(plugin, null, elasticSearchScanSpec);
   }
 }

@@ -124,8 +124,8 @@ public class ElasticSearchStoragePlugin extends AbstractStoragePlugin {
 
     @Override
     public Set<StoragePluginOptimizerRule> getPhysicalOptimizerRules(OptimizerRulesContext optimizerRulesContext) {
-  	  // 创建优化器
-      return ImmutableSet.of(MongoPushDownFilterForScan.INSTANCE);
+  	  // Create Optimizer
+      return ImmutableSet.of(ElasticSearchPushDownFilterForScan.INSTANCE);
     }
     
     

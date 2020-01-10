@@ -47,27 +47,30 @@ public class ElasticSearchIndexLoader extends CacheLoader<String, Collection<Str
   }
 
   @Override
-  public Collection<String> load(String key) throws Exception {
+  public Collection<String> load(String key) {
     if (!ElasticSearchConstants.INDEXES.equals(key)) {
       throw new UnsupportedOperationException();
     }
     Set<String> indexes = Sets.newHashSet();
     try {
       // Pull all the tables back
-      Response response = this.plugin.getClient().performRequest("GET", "/_aliases");
-      JsonNode jsonNode = JsonHelper.readResponseContentAsJsonTree(this.plugin.getObjectMapper(), response);
+      Response response = plugin.getClient().performRequest("GET", "/_aliases");
+      JsonNode jsonNode = JsonHelper.readResponseContentAsJsonTree(plugin.getObjectMapper(), response);
       Iterator<Map.Entry<String, JsonNode>> fields = jsonNode.fields();
+
       while (fields.hasNext()) {
         Map.Entry<String, JsonNode> entry = fields.next();
         JsonNode aliases = JsonHelper.getPath(entry.getValue(), "aliases");
         if (entry.getValue().has("aliases")) {
-          System.out.println(entry.getKey() + " has aliases");
+
+          logger.debug("{} has aliases", entry.getKey());
           Iterator<String> aliasesIterator = aliases.fieldNames();
+
           while (aliasesIterator.hasNext()) {
             indexes.add(aliasesIterator.next());
           }
         } else {
-          System.out.println(entry.getKey() + " does not have aliases.");
+          logger.debug( "{} does not have aliases.", entry.getKey());
           indexes.add(entry.getKey());
         }
       }

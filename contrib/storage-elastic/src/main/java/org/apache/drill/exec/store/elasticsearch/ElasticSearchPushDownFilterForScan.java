@@ -31,17 +31,17 @@ import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableList;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 
 /**
  * This is an optimizer
  */
-public class MongoPushDownFilterForScan extends StoragePluginOptimizerRule {
-  private static final Logger logger = LoggerFactory.getLogger(MongoPushDownFilterForScan.class);
+public class ElasticSearchPushDownFilterForScan extends StoragePluginOptimizerRule {
+  private static final Logger logger = LoggerFactory.getLogger(ElasticSearchPushDownFilterForScan.class);
 
-  public static final StoragePluginOptimizerRule INSTANCE = new MongoPushDownFilterForScan();
+  public static final StoragePluginOptimizerRule INSTANCE = new ElasticSearchPushDownFilterForScan();
 
-  private MongoPushDownFilterForScan() {
+  private ElasticSearchPushDownFilterForScan() {
     super(RelOptHelper.some(FilterPrel.class, RelOptHelper.any(ScanPrel.class)), "MongoPushDownFilterForScan");
   }
 
@@ -60,8 +60,8 @@ public class MongoPushDownFilterForScan extends StoragePluginOptimizerRule {
     // When not, push those conditions down again
     LogicalExpression conditionExp = DrillOptiq.toDrill(new DrillParseContext(PrelUtil.getPlannerSettings(call.getPlanner())), scan, condition);
     // Assembly conditions come out
-    ElasticSearchFilterBuilder mongoFilterBuilder = new ElasticSearchFilterBuilder(groupScan, conditionExp);
-    ElasticSearchScanSpec newScanSpec = mongoFilterBuilder.parseTree();
+    ElasticSearchFilterBuilder elasticSearchFilterBuilder = new ElasticSearchFilterBuilder(groupScan, conditionExp);
+    ElasticSearchScanSpec newScanSpec = elasticSearchFilterBuilder.parseTree();
     if (newScanSpec == null) {
       return; // no filter pushdown so nothing to apply.
     }
@@ -75,10 +75,10 @@ public class MongoPushDownFilterForScan extends StoragePluginOptimizerRule {
     newGroupsScan.setFilterPushedDown(true);
 
     final ScanPrel newScanPrel = ScanPrel.create(scan, filter.getTraitSet(), newGroupsScan, scan.getRowType());
-    if (mongoFilterBuilder.isAllExpressionsConverted()) {
+    if (elasticSearchFilterBuilder.isAllExpressionsConverted()) {
       /*
        * Since we could convert the entire filter condition expression into an
-       * Mongo filter, we can eliminate the filter operator altogether.
+       * ElasticSearch filter, we can eliminate the filter operator altogether.
        */
       // Indicates successful conversion into this expression
       call.transformTo(newScanPrel);
@@ -86,7 +86,6 @@ public class MongoPushDownFilterForScan extends StoragePluginOptimizerRule {
       // Since some filters are not pushed down completely, copy it here
       call.transformTo(filter.copy(filter.getTraitSet(), ImmutableList.of((RelNode) newScanPrel)));
     }
-
   }
 
   @Override

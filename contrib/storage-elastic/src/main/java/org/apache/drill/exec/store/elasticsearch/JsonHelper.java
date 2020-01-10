@@ -21,7 +21,7 @@ package org.apache.drill.exec.store.elasticsearch;
 import com.drew.lang.annotations.NotNull;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 import org.elasticsearch.client.Response;
 
@@ -35,37 +35,38 @@ import java.util.Iterator;
  */
 public class JsonHelper {
 
-    /**
-     * Find the node within the path given (separate fieldnames with '.'). It doesn't support cardinality.
-     * @param node
-     * @param path path to child fields separated by '.' each.
-     * @return a node that points to the path required, or a {@link com.fasterxml.jackson.databind.node.MissingNode}
-     */
-    public static JsonNode getPath(@NotNull JsonNode node, @NotNull String path) {
-        Preconditions.checkArgument(node != null);
-        Preconditions.checkArgument(path != null);
-        Iterator<String> fieldIterator = Arrays.asList(path.split("\\.")).iterator();
-        JsonNode innerNode = node;
-        // Layer by layer
-        while (!innerNode.isMissingNode() && fieldIterator.hasNext()) {
-            node = node.path(fieldIterator.next());
-        }
-
-        return node;
+  /**
+   * Find the node within the path given (separate fieldnames with '.'). It doesn't support cardinality.
+   *
+   * @param node
+   * @param path path to child fields separated by '.' each.
+   * @return a node that points to the path required, or a {@link com.fasterxml.jackson.databind.node.MissingNode}
+   */
+  public static JsonNode getPath(@NotNull JsonNode node, @NotNull String path) {
+    Preconditions.checkArgument(node != null);
+    Preconditions.checkArgument(path != null);
+    Iterator<String> fieldIterator = Arrays.asList(path.split("\\.")).iterator();
+    JsonNode innerNode = node;
+    // Layer by layer
+    while (!innerNode.isMissingNode() && fieldIterator.hasNext()) {
+      node = node.path(fieldIterator.next());
     }
 
-    public static JsonNode readResponseContentAsJsonTree(ObjectMapper mapper, Response response) throws IOException {
-        Preconditions.checkArgument(mapper != null);
-        Preconditions.checkArgument(response != null);
-        Preconditions.checkArgument(response.getEntity() != null);
-        Preconditions.checkArgument(response.getEntity().getContent() != null);
-        // Read data
-        return mapper.readTree(response.getEntity().getContent());
-    }
-    
-    public static JsonNode readResponseContentAsJsonTree(ObjectMapper mapper, InputStream in) throws IOException {
-        Preconditions.checkArgument(mapper != null);
-        // Read Data
-        return mapper.readTree(in);
-    }
+    return node;
+  }
+
+  public static JsonNode readResponseContentAsJsonTree(ObjectMapper mapper, Response response) throws IOException {
+    Preconditions.checkArgument(mapper != null);
+    Preconditions.checkArgument(response != null);
+    Preconditions.checkArgument(response.getEntity() != null);
+    Preconditions.checkArgument(response.getEntity().getContent() != null);
+    // Read data
+    return mapper.readTree(response.getEntity().getContent());
+  }
+
+  public static JsonNode readResponseContentAsJsonTree(ObjectMapper mapper, InputStream in) throws IOException {
+    Preconditions.checkArgument(mapper != null);
+    // Read Data
+    return mapper.readTree(in);
+  }
 }

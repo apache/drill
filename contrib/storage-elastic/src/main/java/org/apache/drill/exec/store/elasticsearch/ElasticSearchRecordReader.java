@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.MissingNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.drill.common.exceptions.UserException;
@@ -164,14 +165,13 @@ public class ElasticSearchRecordReader extends AbstractRecordReader {
         String data = mapper.writeValueAsString(element);
         JsonNode jsonElement = mapper.readTree(data);
 
-        // Read the data of this layer
-        JsonNode id = JsonHelper.getPath(jsonElement, "_id");
-
         // This is done so we can poll _id from elastic into
-
         JsonNode responseNode =  JsonHelper.getPath(jsonElement, "_source");
-
+        String id = jsonElement.get(0).asText();
         JsonNode jsonDocument = jsonElement.get(1);
+
+        // Add id to document
+        ((ObjectNode)jsonDocument).put("_id", id);
 
         if ( !(jsonDocument instanceof MissingNode)) {
           //ObjectNode content = (ObjectNode) responseNode;

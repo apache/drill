@@ -112,7 +112,7 @@ public class ElasticSearchGroupScan extends AbstractGroupScan {
                                 @JsonProperty("elasticSearchSpec") ElasticSearchScanSpec scanSpec,
                                 @JsonProperty("storage") ElasticSearchPluginConfig storagePluginConfig,
                                 @JsonProperty("columns") List<SchemaPath> columns,
-                                @JacksonInject StoragePluginRegistry pluginRegistry) throws IOException, ExecutionSetupException {
+                                @JacksonInject StoragePluginRegistry pluginRegistry) throws ExecutionSetupException {
     this(userName, (ElasticSearchStoragePlugin) pluginRegistry.getPlugin(storagePluginConfig), scanSpec, columns);
   }
 
@@ -179,7 +179,6 @@ public class ElasticSearchGroupScan extends AbstractGroupScan {
       // Add root to Properties
       // Example code from https://github.com/elastic/elasticsearch-hadoop/blob/master/mr/src/test/java/org/elasticsearch/hadoop/util/SettingsUtilsTest.java
 
-
       String index = scanSpec.getIndexName();
       String mappingName = scanSpec.getTypeMappingName();
       String resource = index + "/" + mappingName;
@@ -231,7 +230,7 @@ public class ElasticSearchGroupScan extends AbstractGroupScan {
       endpointMap.put(ep.getAddress(), ep);
     }
 
-    Map<DrillbitEndpoint, EndpointAffinity> affinityMap = new HashMap<DrillbitEndpoint, EndpointAffinity>();
+    Map<DrillbitEndpoint, EndpointAffinity> affinityMap = new HashMap<>();
     for (ServerHost server : regionsToScan.values()) {
       DrillbitEndpoint ep = endpointMap.get(server.getIp());
       if (ep != null) {
@@ -248,7 +247,8 @@ public class ElasticSearchGroupScan extends AbstractGroupScan {
   }
 
   /**
-   * @param incomingEndpoints
+   * Applies assignments to a list of ElasticSearch endpoints.
+   * @param incomingEndpoints list of incoming endpoints
    */
   @Override
   public void applyAssignments(List<DrillbitEndpoint> incomingEndpoints) {
@@ -281,11 +281,7 @@ public class ElasticSearchGroupScan extends AbstractGroupScan {
       endpointFragmentMapping.put(i, new ArrayList<>(maxPerEndpointSlot));
       String hostname = incomingEndpoints.get(i).getAddress();
       // hostname --> slot
-      Queue<Integer> hostIndexQueue = endpointHostIndexListMap.get(hostname);
-      if (hostIndexQueue == null) {
-        hostIndexQueue = Lists.newLinkedList();
-        endpointHostIndexListMap.put(hostname, hostIndexQueue);
-      }
+      Queue<Integer> hostIndexQueue = endpointHostIndexListMap.computeIfAbsent(hostname, k -> Lists.newLinkedList());
       hostIndexQueue.add(i);
     }
     // region --> hostname
@@ -377,7 +373,7 @@ public class ElasticSearchGroupScan extends AbstractGroupScan {
   }
 
   @Override
-  public SubScan getSpecificScan(int minorFragmentId) throws ExecutionSetupException {
+  public SubScan getSpecificScan(int minorFragmentId) {
 
     assert minorFragmentId < endpointFragmentMapping.size() : String.format("Mappings length [%d] should be greater than minor fragment id [%d] but it isn't.",
       endpointFragmentMapping.size(),
@@ -399,15 +395,14 @@ public class ElasticSearchGroupScan extends AbstractGroupScan {
   }
 
   @Override
-  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
+  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
     Preconditions.checkArgument(children.isEmpty());
     return new ElasticSearchGroupScan(this);
   }
 
   @Override
   public GroupScan clone(List<SchemaPath> columns) {
-    ElasticSearchGroupScan clone = new ElasticSearchGroupScan(this, columns);
-    return clone;
+    return new ElasticSearchGroupScan(this, columns);
   }
 
   @Override

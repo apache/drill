@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.store.elasticsearch.JsonHelper;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -85,15 +86,22 @@ public class ElasticSearchCursor implements Iterator<JsonNode>, Closeable {
     if (!scrollIdNode.isMissingNode()) {
       scrollId = scrollIdNode.asText();
     } else {
-      throw new DrillRuntimeException("Couldn't get '" + SCROLL + "' for cursor");
+      throw UserException
+        .dataReadError()
+        .message("Couldn't get %s for cursor", SCROLL)
+        .build(logger);
     }
+
     // Hits
     JsonNode totalHitsNode = JsonHelper.getPath(rootNode, "hits.total");
     long totalHits;
     if (!totalHitsNode.isMissingNode()) {
       totalHits = totalHitsNode.asLong();
     } else {
-      throw new DrillRuntimeException("Couldn't get 'hits.total' for cursor");
+      throw UserException
+        .dataReadError()
+        .message("Couldn't get 'hits.total' for cursor")
+        .build(logger);
     }
 
     // Result data
@@ -102,7 +110,10 @@ public class ElasticSearchCursor implements Iterator<JsonNode>, Closeable {
     if (!elementsNode.isMissingNode() && elementsNode.isArray()) {
       elementIterator = elementsNode.iterator();
     } else {
-      throw new DrillRuntimeException("Couldn't get 'hits.hits' for cursor");
+      throw UserException
+        .dataReadError()
+        .message("Couldn't get 'hits.hits' for cursor")
+        .build(logger);
     }
     return new ElasticSearchCursor(client, objMapper, scrollId, totalHits, elementIterator, additionalHeaders);
 
@@ -129,8 +140,7 @@ public class ElasticSearchCursor implements Iterator<JsonNode>, Closeable {
 
   @Override
   public JsonNode next() {
-    //TODO: Code here
-    JsonNode next;
+
     if (this.hasNext()) {
       if (!internalIterator.hasNext()) {
         logger.debug("Internal storage depleted, lets scroll for more");

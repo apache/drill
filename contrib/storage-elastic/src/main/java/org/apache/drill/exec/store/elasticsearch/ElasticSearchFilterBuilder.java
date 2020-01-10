@@ -28,13 +28,13 @@ import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.apache.drill.exec.store.mongo.MongoCompareFunctionProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+// TODO Unit Tests for this Class
 public class ElasticSearchFilterBuilder extends AbstractExprVisitor<ElasticSearchScanSpec, Void, RuntimeException> implements ElasticSearchConstants {
   private static final Logger logger = LoggerFactory.getLogger(ElasticSearchFilterBuilder.class);
 
-  final ElasticSearchGroupScan groupScan;
+  private final ElasticSearchGroupScan groupScan;
 
-  final LogicalExpression le;
+  private final LogicalExpression le;
 
   // Are all functions convertible
   private boolean allExpressionsConverted = true;

@@ -28,7 +28,6 @@
 
    public DrillElasticsearchTable(StoragePlugin plugin,
                                   String storageEngineName,
-                                  String userName,
                                   ElasticSearchScanSpec scanSpec) {
      super(plugin, storageEngineName, scanSpec);
    }
