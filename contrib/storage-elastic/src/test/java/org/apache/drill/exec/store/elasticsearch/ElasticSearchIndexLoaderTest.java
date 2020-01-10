@@ -33,8 +33,6 @@ import org.mockito.Mockito;
 import java.io.InputStream;
 import java.util.Collection;
 
-// CSG Working
-
 public class ElasticSearchIndexLoaderTest {
 
     @Mock
@@ -92,8 +90,6 @@ public class ElasticSearchIndexLoaderTest {
             IOUtils.closeQuietly(responseContent);
         }
     }
-
-    // TODO Start Here:  Indexes w/o aliases are not being added to the list  IE Twitter not being added.
 
     /*
     {

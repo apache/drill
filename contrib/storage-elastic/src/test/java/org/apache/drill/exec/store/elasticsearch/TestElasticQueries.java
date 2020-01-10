@@ -149,6 +149,5 @@ public class TestElasticQueries extends ClusterTest {
     runElasticSearchSQLVerifyCount(queryString, 19);
     queryString = String.format(ElasticSearchTestConstants.TEST_BOOLEAN_FILTER_QUERY_TEMPLATE2, ElasticSearchTestConstants.EMPLOYEE_IDX, ElasticSearchTestConstants.DEVELOPER_MAPPING);
     runElasticSearchSQLVerifyCount(queryString, 8);
-
   }*/
 }

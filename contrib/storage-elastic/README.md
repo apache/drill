@@ -25,3 +25,12 @@ The following configuration options are available:
   }
 }
 ```
+
+## Querying ElasticSearch from Drill
+Since Elasticsearch is a document database, each record is referred to as a document and these documents are stored in indexes. For Drill, to access docuemnts, you could 
+
+```sql
+SELECT *
+FROM es.<index>.<type>
+```
+
