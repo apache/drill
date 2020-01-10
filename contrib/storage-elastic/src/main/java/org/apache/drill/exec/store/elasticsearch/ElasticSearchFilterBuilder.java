@@ -25,7 +25,6 @@ import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
-import org.apache.drill.exec.store.mongo.MongoCompareFunctionProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 // TODO Unit Tests for this Class
@@ -117,9 +116,9 @@ public class ElasticSearchFilterBuilder extends AbstractExprVisitor<ElasticSearc
     String functionName = call.getName();
     org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList<LogicalExpression> args = call.args;
 
-    if (MongoCompareFunctionProcessor.isCompareFunction(functionName)) {
+    if (ElasticSearchCompareFunctionProcessor.isCompareFunction(functionName)) {
       // When it is a size comparison, then type conversion is then performed
-      MongoCompareFunctionProcessor processor = MongoCompareFunctionProcessor.process(call);
+      ElasticSearchCompareFunctionProcessor processor = ElasticSearchCompareFunctionProcessor.process(call);
       if (processor.isSuccess()) {
         try {
           // Generated function judged

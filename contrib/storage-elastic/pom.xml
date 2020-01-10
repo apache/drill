@@ -31,11 +31,6 @@
       <artifactId>drill-java-exec</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <dependency>
-      <groupId>org.apache.drill.contrib</groupId>
-      <artifactId>drill-mongo-storage</artifactId>
-      <version>${project.version}</version>
-    </dependency>
 
     <dependency>
       <groupId>org.elasticsearch.client</groupId>
