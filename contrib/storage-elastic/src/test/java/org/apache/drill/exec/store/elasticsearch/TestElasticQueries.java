@@ -26,6 +26,7 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
+import org.apache.drill.test.QueryRowSetIterator;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -55,13 +56,16 @@ public class TestElasticQueries extends ClusterTest {
 
     @Test
     public void testGetAllDevelopers() throws Exception {
-        String sql = String.format(ElasticSearchTestConstants.TEST_SELECT_ALL_QUERY_TEMPLATE, ElasticSearchTestConstants.EMPLOYEE_IDX, ElasticSearchTestConstants.DEVELOPER_MAPPING);
+        String sql = String.format(ElasticSearchTestConstants.TEST_SELECT_ALL_QUERY_TEMPLATE,
+          ElasticSearchTestConstants.EMPLOYEE_IDX,
+          ElasticSearchTestConstants.DEVELOPER_MAPPING);
+
         logger.debug("ES Query: {}", sql);
 
-        RowSet results = client.queryBuilder().sql(sql).rowSet();
+        QueryRowSetIterator results = client.queryBuilder().sql(sql).rowSetIterator();
         logger.debug("Query Results: {}", results.toString());
 
-        results.print();
+        results.printAll();
 
     /*TupleMetadata expectedSchema = new SchemaBuilder()
       .add("SCHEMA_NAME", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)

@@ -27,7 +27,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.MissingNode;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ExecConstants;
@@ -48,7 +47,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
@@ -123,7 +121,7 @@ public class ElasticSearchRecordReader extends AbstractRecordReader {
   }
 
   @Override
-  public void setup(OperatorContext context, OutputMutator output) throws ExecutionSetupException {
+  public void setup(OperatorContext context, OutputMutator output) {
     this.operatorContext = context;
     this.output = output;
     writer = new VectorContainerWriter(output, this.unionEnabled);
@@ -170,17 +168,15 @@ public class ElasticSearchRecordReader extends AbstractRecordReader {
         JsonNode id = JsonHelper.getPath(jsonElement, "_id");
 
         // This is done so we can poll _id from elastic into
-        // object content
 
-        // TODO STart here... check if it is a missing node 
         JsonNode responseNode =  JsonHelper.getPath(jsonElement, "_source");
-        if (responseNode instanceof MissingNode) {
-          // Do something...
-        } else {
-          ObjectNode content = (ObjectNode) responseNode;
-          content.put("_id", id.asText());
-          jsonReader.setSource(content);
 
+        JsonNode jsonDocument = jsonElement.get(1);
+
+        if ( !(jsonDocument instanceof MissingNode)) {
+          //ObjectNode content = (ObjectNode) responseNode;
+          //content.put("_id", id.asText());
+          jsonReader.setSource(jsonDocument);
           // this is using json
           jsonReader.write(writer);
           docCount++;
