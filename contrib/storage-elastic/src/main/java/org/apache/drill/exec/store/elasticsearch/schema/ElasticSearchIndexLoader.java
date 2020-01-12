@@ -26,6 +26,7 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.store.elasticsearch.ElasticSearchConstants;
 import org.apache.drill.exec.store.elasticsearch.ElasticSearchStoragePlugin;
 import org.apache.drill.exec.store.elasticsearch.JsonHelper;
+import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,7 +55,9 @@ public class ElasticSearchIndexLoader extends CacheLoader<String, Collection<Str
     Set<String> indexes = Sets.newHashSet();
     try {
       // Pull all the tables back
-      Response response = plugin.getClient().performRequest("GET", "/_aliases");
+      Response response = plugin.getClient().performRequest(new Request("GET", "/_aliases"));
+      logger.debug("Making GET request: {}", "/_aliases");
+
       JsonNode jsonNode = JsonHelper.readResponseContentAsJsonTree(plugin.getObjectMapper(), response);
       Iterator<Map.Entry<String, JsonNode>> fields = jsonNode.fields();
 

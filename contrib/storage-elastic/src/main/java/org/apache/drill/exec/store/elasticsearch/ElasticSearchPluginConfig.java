@@ -19,7 +19,6 @@
 package org.apache.drill.exec.store.elasticsearch;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -162,9 +161,6 @@ public class ElasticSearchPluginConfig extends StoragePluginConfigBase {
     Header[] headers = buildHeaders();
     if (headers != null) {
       clientBuilder.setDefaultHeaders(headers);
-    }
-    if (maxRetryTimeoutMillis > 0) {
-      clientBuilder.setMaxRetryTimeoutMillis(maxRetryTimeoutMillis);
     }
     if (!StringUtils.isEmpty(pathPrefix)) {
       // Request path prefix

@@ -20,7 +20,6 @@ package org.apache.drill.exec.store.elasticsearch.internal;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
@@ -29,6 +28,7 @@ import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.entity.ContentType;
 import org.apache.http.nio.entity.NStringEntity;
+import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestClient;
 import org.slf4j.Logger;
@@ -36,7 +36,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -69,15 +68,17 @@ public class ElasticSearchCursor implements Iterator<JsonNode>, Closeable {
                                            String type,
                                            Map<String, String> additionalQueryParams,
                                            HttpEntity requestBody, Header... additionalHeaders) throws IOException {
-    Map<String, String> queryParams = new HashMap<>();
-    if (!MapUtils.isEmpty(additionalQueryParams)) {
-      queryParams.putAll(additionalQueryParams);
-    }
-    // Pull data in batches
-    queryParams.put(SCROLL, SCROLLDURATION);
+    Request searchRequest = new Request("POST", "/" + idxName + "/" + type + "/_search");
 
-    // type Is a subtype
-    Response response = client.performRequest("POST", "/" + idxName + "/" + type + "/_search", queryParams, requestBody, additionalHeaders);
+    for (Map.Entry<String, String> entry : additionalQueryParams.entrySet()) {
+      String key = entry.getKey();
+      String value = entry.getValue();
+      searchRequest.addParameter(key, value);
+    }
+    searchRequest.addParameter(SCROLL, SCROLLDURATION);
+    searchRequest.setEntity(requestBody);
+
+    Response response = client.performRequest(searchRequest);
     JsonNode rootNode = JsonHelper.readResponseContentAsJsonTree(objMapper, response);
 
     // Traversal id
@@ -146,8 +147,10 @@ public class ElasticSearchCursor implements Iterator<JsonNode>, Closeable {
         logger.debug("Internal storage depleted, lets scroll for more");
         try {
           // Requested data
-          Response response = client.performRequest("POST", "/_search/scroll", MapUtils.EMPTY_MAP, new NStringEntity(scrollRequest, ContentType.APPLICATION_JSON), additionalHealders);
+          Request searchRequest = new Request("POST", "_search/scroll");
+          searchRequest.setEntity(new NStringEntity(scrollRequest, ContentType.APPLICATION_JSON));
 
+          Response response = client.performRequest(searchRequest);
           JsonNode rootNode = JsonHelper.readResponseContentAsJsonTree(objMapper, response);
           JsonNode elementsNode = JsonHelper.getPath(rootNode, "hits.hits");
           if (!elementsNode.isMissingNode() && elementsNode.isArray()) {

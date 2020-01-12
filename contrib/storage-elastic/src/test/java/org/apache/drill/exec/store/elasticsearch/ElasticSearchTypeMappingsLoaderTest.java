@@ -24,6 +24,7 @@ import java.util.Collection;
 import org.apache.commons.io.IOUtils;
 import org.apache.drill.exec.store.elasticsearch.schema.ElasticSearchTypeMappingLoader;
 import org.apache.http.HttpEntity;
+import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestClient;
 import org.junit.Before;
@@ -60,7 +61,8 @@ public class ElasticSearchTypeMappingsLoaderTest {
     InputStream responseContent = IOUtils.toInputStream("{\"employee\":{\"aliases\":{},\"mappings\":{\"developer\":{\"dynamic_templates\":[{\"disable_string_analyzing\":{\"match\":\"*\",\"match_mapping_type\":\"string\",\"mapping\":{\"index\":\"not_analyzed\",\"type\":\"string\"}}},{\"avoid_parsing_raws\":{\"match\":\"*Raw\",\"mapping\":{\"index\":\"not_analyzed\",\"type\":\"string\"}}}]}},\"settings\":{\"index\":{\"mapping\":{\"total_fields\":{\"limit\":\"10000\"}},\"number_of_shards\":\"11\",\"provided_name\":\"employee\",\"creation_date\":\"1491328427846\",\"number_of_replicas\":\"2\",\"uuid\":\"2WLTEDl6RAidfOPRsLwDZw\",\"version\":{\"created\":\"5030099\"}}}}}");
     try {
       Mockito.when(mockEntity.getContent()).thenReturn(responseContent);
-      Mockito.when(restClient.performRequest("GET", "/" + "employee")).thenReturn(mockResponse);
+      Mockito.when(restClient.performRequest(new Request("GET", "/" + "employee")))
+        .thenReturn(mockResponse);
 
       ElasticSearchTypeMappingLoader esil = new ElasticSearchTypeMappingLoader(plugin);
       Collection<String> load = esil.load("employee");
@@ -79,7 +81,8 @@ public class ElasticSearchTypeMappingsLoaderTest {
     InputStream responseContent = IOUtils.toInputStream("{\"" + ElasticSearchTestConstants.EMPLOYEE_IDX + "\":{\"aliases\":{},\"mappings\":{\"" + ElasticSearchConstants.DEFAULT_MAPPING + "\":{\"dynamic_templates\":[{\"disable_string_analyzing\":{\"match\":\"*\",\"match_mapping_type\":\"string\",\"mapping\":{\"index\":\"not_analyzed\",\"type\":\"string\"}}},{\"avoid_parsing_raws\":{\"match\":\"*Raw\",\"mapping\":{\"index\":\"not_analyzed\",\"type\":\"string\"}}}]}},\"settings\":{\"index\":{\"mapping\":{\"total_fields\":{\"limit\":\"10000\"}},\"number_of_shards\":\"11\",\"provided_name\":\"employee\",\"creation_date\":\"1491328427846\",\"number_of_replicas\":\"2\",\"uuid\":\"2WLTEDl6RAidfOPRsLwDZw\",\"version\":{\"created\":\"5030099\"}}}}}");
     try {
       Mockito.when(mockEntity.getContent()).thenReturn(responseContent);
-      Mockito.when(restClient.performRequest("GET", "/" + "employee")).thenReturn(mockResponse);
+      Mockito.when(restClient.performRequest(new Request("GET", "/" + "employee")))
+        .thenReturn(mockResponse);
 
       ElasticSearchTypeMappingLoader esil = new ElasticSearchTypeMappingLoader(this.plugin);
       Collection<String> load = esil.load("employee");

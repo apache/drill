@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.IOUtils;
 import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.http.HttpEntity;
+import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestClient;
 import org.junit.Before;
@@ -72,10 +73,10 @@ public class ElasticSearchGroupScanTest {
         Mockito.when(mockEntityFirstDoc.getContent()).thenReturn(responseContentFirstDoc);
         try {
             Mockito.when(restClient
-              .performRequest("GET", "/"+ElasticSearchTestConstants.EMPLOYEE_IDX+"/"+ElasticSearchTestConstants.MANAGER_MAPPING+"/_count"))
+              .performRequest(new Request("GET", "/"+ElasticSearchTestConstants.EMPLOYEE_IDX+"/"+ElasticSearchTestConstants.MANAGER_MAPPING+"/_count")))
               .thenReturn(mockResponseNumDocs);
             Mockito.when(restClient
-              .performRequest("GET", "/"+ElasticSearchTestConstants.EMPLOYEE_IDX+"/"+ElasticSearchTestConstants.MANAGER_MAPPING+"/_search?size=1&terminate_after=1"))
+              .performRequest(new Request("GET", "/"+ElasticSearchTestConstants.EMPLOYEE_IDX+"/"+ElasticSearchTestConstants.MANAGER_MAPPING+"/_search?size=1&terminate_after=1")))
               .thenReturn(mockResponseFirstDoc);
 
             ElasticSearchGroupScan esgp = new ElasticSearchGroupScan("testuser",
@@ -103,7 +104,8 @@ public class ElasticSearchGroupScanTest {
         Mockito.when(mockEntityNumDocs.getContent()).thenReturn(responseContentNumDocs);
 
         try {
-            Mockito.when(this.restClient.performRequest("GET", "/"+ElasticSearchTestConstants.EMPLOYEE_IDX+"/"+ElasticSearchTestConstants.MANAGER_MAPPING+"/_count")).thenReturn(mockResponseNumDocs);
+            Mockito.when(this.restClient.performRequest(new Request("GET", "/"+ElasticSearchTestConstants.EMPLOYEE_IDX+"/"+ElasticSearchTestConstants.MANAGER_MAPPING+"/_count")))
+              .thenReturn(mockResponseNumDocs);
 
             ElasticSearchGroupScan esgp = new ElasticSearchGroupScan("testuser",
                     plugin,

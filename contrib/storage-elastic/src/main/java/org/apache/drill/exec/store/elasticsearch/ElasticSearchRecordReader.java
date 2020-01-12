@@ -107,6 +107,7 @@ public class ElasticSearchRecordReader extends AbstractRecordReader {
   protected Collection<SchemaPath> transformColumns(Collection<SchemaPath> projectedColumns) {
     Set<SchemaPath> transformed = Sets.newLinkedHashSet();
     // TODO: See if we can only poll for selected columns
+
     if (!isStarQuery()) {
       for (SchemaPath column : projectedColumns) {
         String fieldName = column.getRootSegment().getPath();

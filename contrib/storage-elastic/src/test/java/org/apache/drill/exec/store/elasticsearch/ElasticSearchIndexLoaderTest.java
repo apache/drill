@@ -23,6 +23,7 @@ import junit.framework.TestCase;
 import org.apache.commons.io.IOUtils;
 import org.apache.drill.exec.store.elasticsearch.schema.ElasticSearchIndexLoader;
 import org.apache.http.HttpEntity;
+import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestClient;
 import org.junit.Before;
@@ -76,7 +77,8 @@ public class ElasticSearchIndexLoaderTest {
         InputStream responseContent = IOUtils.toInputStream(jsonData);
         try {
             Mockito.when(mockEntity.getContent()).thenReturn(responseContent);
-            Mockito.when(restClient.performRequest("GET", "/_aliases")).thenReturn(mockResponse);
+            Mockito.when(restClient.performRequest(new Request("GET", "/_aliases")))
+              .thenReturn(mockResponse);
 
             ElasticSearchIndexLoader esil = new ElasticSearchIndexLoader(this.plugin);
             Collection<String> load = esil.load(ElasticSearchConstants.INDEXES);
@@ -109,7 +111,8 @@ public class ElasticSearchIndexLoaderTest {
         InputStream responseContent = IOUtils.toInputStream("{\"twitter\":{},\"collection\":{\"aliases\":{\"collection-1\":{},\"collection-2\":{}}}}");
         try {
             Mockito.when(mockEntity.getContent()).thenReturn(responseContent);
-            Mockito.when(restClient.performRequest("GET", "/_aliases")).thenReturn(mockResponse);
+            Mockito.when(restClient.performRequest(new Request("GET", "/_aliases")))
+              .thenReturn(mockResponse);
 
             ElasticSearchIndexLoader esil = new ElasticSearchIndexLoader(plugin);
             Collection<String> load = esil.load(ElasticSearchConstants.INDEXES);

@@ -25,6 +25,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 import org.apache.drill.exec.store.elasticsearch.ElasticSearchConstants;
 import org.apache.drill.exec.store.elasticsearch.ElasticSearchStoragePlugin;
 import org.apache.drill.exec.store.elasticsearch.JsonHelper;
+import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +52,9 @@ public class ElasticSearchTypeMappingLoader extends CacheLoader<String, Collecti
     // Pull map metadata for this index
     Set<String> typeMappings = Sets.newHashSet();
     try {
-      Response response = plugin.getClient().performRequest("GET", "/" + idxName);
+      Response response = plugin.getClient().performRequest(new Request("GET", "/" + idxName));
+      logger.debug("Making GET request: {}","/" + idxName);
+
       JsonNode jsonNode = JsonHelper.readResponseContentAsJsonTree(plugin.getObjectMapper(), response);
       Iterator<Map.Entry<String, JsonNode>> fields = jsonNode.fields();
 

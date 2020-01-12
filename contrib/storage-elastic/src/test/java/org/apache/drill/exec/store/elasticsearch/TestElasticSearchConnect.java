@@ -27,6 +27,7 @@ import org.apache.drill.exec.store.elasticsearch.internal.ElasticSearchCursor;
 import org.apache.http.Header;
 import org.apache.http.HttpHost;
 import org.apache.http.message.BasicHeader;
+import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
@@ -58,7 +59,6 @@ public class TestElasticSearchConnect {
     if (headers != null && headers.length > 0) {
       clientBuilder.setDefaultHeaders(headers);
     }
-    clientBuilder.setMaxRetryTimeoutMillis(MAXRETRYTIMEOUTMILLIS);
     return clientBuilder.build();
   }
 
@@ -66,7 +66,7 @@ public class TestElasticSearchConnect {
   public void TryConnectWithoutCredentials() throws IOException {
     RestClient restClient = createClient(null);
     try {
-      Response response = restClient.performRequest("GET", "/_nodes");
+      Response response = restClient.performRequest(new Request("GET", "/_nodes"));
       TestCase.assertNotNull(response);
     } catch (Exception e) {
       assert (e.getMessage().contains("HTTP/1.1 401 Unauthorized"));
@@ -81,7 +81,7 @@ public class TestElasticSearchConnect {
     List<BasicHeader> headers = Arrays.asList(new BasicHeader("Authorization", "Basic " + Base64.encodeBase64String(CREDENTIALS.getBytes())));
     RestClient restClient = this.createClient((Header[]) headers.toArray());
     try {
-      Response response = restClient.performRequest("GET", "/_nodes");
+      Response response = restClient.performRequest(new Request("GET", "/_nodes"));
       TestCase.assertNotNull(response);
     } finally {
       restClient.close();

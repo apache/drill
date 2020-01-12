@@ -48,13 +48,13 @@ import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.hadoop.cfg.PropertiesSettings;
 import org.elasticsearch.hadoop.cfg.Settings;
 import org.elasticsearch.hadoop.rest.PartitionDefinition;
 import org.elasticsearch.hadoop.rest.RestService;
-import org.elasticsearch.hadoop.util.EsMajorVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -187,7 +187,6 @@ public class ElasticSearchGroupScan extends AbstractGroupScan {
 
       Settings settings = new PropertiesSettings();
       settings.setMaxDocsPerPartition(10000);
-      settings.setInternalVersion(EsMajorVersion.LATEST);
       settings.setProperty(ES_NODES, host);
       settings.setProperty(ES_PORT, String.valueOf(port));
       settings.setProperty(ES_NODES_DISCOVERY, "false");
@@ -412,7 +411,9 @@ public class ElasticSearchGroupScan extends AbstractGroupScan {
     JsonNode jsonNode;
     RestClient client = plugin.getClient();
     try {
-      response = client.performRequest("GET", "/" + scanSpec.getIndexName() + "/" + scanSpec.getTypeMappingName() + "/_count");
+      response = client.performRequest(new Request("GET", "/" + scanSpec.getIndexName() + "/" + scanSpec.getTypeMappingName() + "/_count"));
+      logger.debug("Making GET request: {}", "/" + scanSpec.getIndexName() + "/" + scanSpec.getTypeMappingName() + "/_count");
+
       jsonNode = JsonHelper.readResponseContentAsJsonTree(plugin.getObjectMapper(), response);
       // Get statistics
       JsonNode countNode = JsonHelper.getPath(jsonNode, "count");
@@ -424,7 +425,9 @@ public class ElasticSearchGroupScan extends AbstractGroupScan {
       }
       long docSize = 0;
       if (numDocs > 0) {
-        response = client.performRequest("GET", "/" + scanSpec.getIndexName() + "/" + scanSpec.getTypeMappingName() + "/_search?size=1&terminate_after=1");
+        response = client.performRequest(new Request("GET", "/" + scanSpec.getIndexName() + "/" + scanSpec.getTypeMappingName() + "/_search?size=1&terminate_after=1"));
+        logger.debug("Making GET request: {}", "/" + scanSpec.getIndexName() + "/" + scanSpec.getTypeMappingName() + "/_search?size=1&terminate_after=1");
+
         jsonNode = JsonHelper.readResponseContentAsJsonTree(plugin.getObjectMapper(), response);
         JsonNode hits = JsonHelper.getPath(jsonNode, "hits.hits");
         if (!hits.isMissingNode()) {
