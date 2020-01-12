@@ -153,6 +153,19 @@ public class TestElasticQueries extends ClusterTest {
     }
 
     @Test
+    public void testGreaterThanFilterQuery() throws Exception {
+        String sql = "SELECT `name`, employeeId FROM elasticsearch.employee.`developer` WHERE employeeID > 19";
+        testBuilder()
+          .sqlQuery(sql)
+          .unOrdered()
+          .baselineColumns( "name", "employeeId")
+          .baselineValues("developer19", 20L)
+          .baselineValues("developer20", 21L)
+          .go();
+    }
+
+
+    @Test
     public void testSimpleExplicitAllDocumentQuery() throws Exception {
             String sql = "SELECT SCHEMA_NAME, TYPE FROM INFORMATION_SCHEMA.`SCHEMATA` WHERE TYPE='elasticsearch'";
 
