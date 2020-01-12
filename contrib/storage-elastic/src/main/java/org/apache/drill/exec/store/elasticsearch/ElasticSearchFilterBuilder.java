@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.elasticsearch;
 
-import java.io.IOException;
 import java.util.List;
 
 import org.apache.drill.common.expression.BooleanOperator;
@@ -70,7 +69,8 @@ public class ElasticSearchFilterBuilder extends AbstractExprVisitor<ElasticSearc
       case "booleanOr":
         newFilter = ElasticSearchUtils.orFilterAtIndex(leftScanSpec.getFilters(), rightScanSpec.getFilters());
     }
-    return new ElasticSearchScanSpec(groupScan.getScanSpec().getIndexName(), groupScan.getScanSpec().getTypeMappingName(), groupScan.getScanSpec().getPartitionDefinition(), newFilter);
+    return new ElasticSearchScanSpec(groupScan.getScanSpec().getIndexName(), groupScan.getScanSpec().getTypeMappingName(), newFilter,
+      groupScan.getScanSpec().getPartitionDefinition());
   }
 
   public boolean isAllExpressionsConverted() {
@@ -122,7 +122,7 @@ public class ElasticSearchFilterBuilder extends AbstractExprVisitor<ElasticSearc
       if (processor.isSuccess()) {
         try {
           // Generated function judged
-          nodeScanSpec = createMongoScanSpec(processor.getFunctionName(), processor.getPath(), processor.getValue());
+          nodeScanSpec = createElasticsearchScanSpec(processor.getFunctionName(), processor.getPath(), processor.getValue());
         } catch (Exception e) {
           logger.error(" Failed to creare Filter ", e);
           // throw new RuntimeException(e.getMessage(), e);
@@ -154,7 +154,7 @@ public class ElasticSearchFilterBuilder extends AbstractExprVisitor<ElasticSearc
     return nodeScanSpec;
   }
 
-  private ElasticSearchScanSpec createMongoScanSpec(String functionName, SchemaPath field, Object fieldValue) throws ClassNotFoundException, IOException {
+  private ElasticSearchScanSpec createElasticsearchScanSpec(String functionName, SchemaPath field, Object fieldValue) {
     // Perform function operations
     // extract the field name
     String fieldName = field.getRootSegmentPath();
@@ -163,7 +163,8 @@ public class ElasticSearchFilterBuilder extends AbstractExprVisitor<ElasticSearc
     String queryFilter = translateFilter(functionName, fieldName, fieldValue, strictPushDown);
 
     // Execution is complete
-    return new ElasticSearchScanSpec(groupScan.getScanSpec().getIndexName(), groupScan.getScanSpec().getTypeMappingName(), groupScan.getScanSpec().getPartitionDefinition(), queryFilter);
+    return new ElasticSearchScanSpec(groupScan.getScanSpec().getIndexName(), groupScan.getScanSpec().getTypeMappingName(), queryFilter,
+      groupScan.getScanSpec().getPartitionDefinition());
 
   }
 

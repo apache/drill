@@ -39,9 +39,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
-
-// CSG Working
-
 @Ignore("requires remote ElasticSearch server")
 public class TestElasticSearchConnect {
 
@@ -55,9 +52,6 @@ public class TestElasticSearchConnect {
 
   private static final int MAXRETRYTIMEOUTMILLIS = 1000;
 
-  private static final String PATHPREFIX = null;
-
-  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
   private RestClient createClient(Header[] headers) {
     RestClientBuilder clientBuilder = RestClient.builder(new HttpHost(HOST, PORT, "http"));

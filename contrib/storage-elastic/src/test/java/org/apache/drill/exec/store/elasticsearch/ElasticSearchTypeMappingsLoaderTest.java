@@ -35,8 +35,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import junit.framework.TestCase;
 
-// CSG Working
-
 public class ElasticSearchTypeMappingsLoaderTest {
 
   @Mock

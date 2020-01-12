@@ -21,49 +21,22 @@ package org.apache.drill.exec.store.elasticsearch;
 
 import org.apache.drill.PlanTestBase;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.junit.Assert;
 import org.junit.BeforeClass;
-
-import java.util.List;
 
 public class ElasticTestBase extends PlanTestBase {
 
-    private static ElasticSearchStoragePlugin storagePlugin;
-    private static ElasticSearchPluginConfig storagePluginConfig;
-
     @BeforeClass
-    public static void setupBeforeClass() throws ExecutionSetupException {
-        initElasticSearchPlugin();
-    }
+  public static void setupBeforeClass() throws ExecutionSetupException {
+    initElasticSearchPlugin();
+  }
 
-    private static void initElasticSearchPlugin() throws ExecutionSetupException {
-        final StoragePluginRegistry pluginRegistry = getDrillbitContext().getStorage();
-        storagePlugin = (ElasticSearchStoragePlugin) pluginRegistry.getPlugin(ElasticSearchPluginConfig.NAME);
-        storagePluginConfig = storagePlugin.getConfig();
-        storagePluginConfig.setEnabled(true);
-        pluginRegistry.createOrUpdate(ElasticSearchPluginConfig.NAME, storagePluginConfig, true);
-    }
-
-    public void runElasticSearchSQLVerifyCount(String sql, int expectedRowCount)
-            throws Exception {
-        List<QueryDataBatch> results = runElasticSearchSQLWithResults(sql);
-        printResultAndVerifyRowCount(results, expectedRowCount);
-    }
-
-    public List<QueryDataBatch> runElasticSearchSQLWithResults(String sql)
-            throws Exception {
-        return testSqlWithResults(sql);
-    }
-
-    public void printResultAndVerifyRowCount(List<QueryDataBatch> results,
-                                             int expectedRowCount) throws SchemaChangeException {
-        int rowCount = printResult(results);
-        if (expectedRowCount != -1) {
-            Assert.assertEquals(expectedRowCount, rowCount);
-        }
-    }
+  private static void initElasticSearchPlugin() throws ExecutionSetupException {
+    final StoragePluginRegistry pluginRegistry = getDrillbitContext().getStorage();
+      ElasticSearchStoragePlugin storagePlugin = (ElasticSearchStoragePlugin) pluginRegistry.getPlugin(ElasticSearchPluginConfig.NAME);
+      ElasticSearchPluginConfig storagePluginConfig = storagePlugin.getConfig();
+    storagePluginConfig.setEnabled(true);
+    pluginRegistry.createOrUpdate(ElasticSearchPluginConfig.NAME, storagePluginConfig, true);
+  }
 
 }

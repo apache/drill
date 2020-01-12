@@ -18,6 +18,7 @@
 
 package org.apache.drill.exec.store.elasticsearch;
 
+import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
@@ -28,6 +29,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
+
+import static org.junit.Assert.assertEquals;
 
 
 @Ignore("It requires an elasticsearch server running on localhost, port 9200 with init-script.sh script run on it")
@@ -139,6 +142,39 @@ public class TestElasticQueries extends ClusterTest {
           .baselineValues("developer18", 19L)
           .baselineValues("developer20", 21L)
           .go();
+    }
+
+    @Test
+    public void testSerDe() throws Exception {
+        String sql = "SELECT COUNT(*) FROM elasticsearch.employee.`developer`";
+        String plan = queryBuilder().sql(sql).explainJson();
+        long cnt = queryBuilder().physical(plan).singletonLong();
+        assertEquals("Counts should match",19L, cnt);
+    }
+
+    @Test
+    public void testSimpleExplicitAllDocumentQuery() throws Exception {
+            String sql = "SELECT SCHEMA_NAME, TYPE FROM INFORMATION_SCHEMA.`SCHEMATA` WHERE TYPE='elasticsearch'";
+
+            RowSet results = client.queryBuilder().sql(sql).rowSet();
+            logger.debug("Query Results: {}", results.toString());
+
+            results.print();
+            /*TupleMetadata expectedSchema = new SchemaBuilder()
+              .add("SCHEMA_NAME", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+              .add("TYPE", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+              .buildSchema();
+
+            RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+              .addRow("api.mock", "http")
+              .addRow("api.mockpost", "http")
+              .addRow("api.stock", "http")
+              .addRow("api.sunrise", "http")
+              .addRow("api", "http")
+              .build();
+
+            new RowSetComparison(expected).verifyAndClearAll(results);*/
+
     }
 
   /*

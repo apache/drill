@@ -18,12 +18,15 @@
 
 package org.apache.drill.exec.store.elasticsearch;
 
+import com.fasterxml.jackson.annotation.JacksonInject;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.apache.drill.shaded.guava.com.google.common.base.MoreObjects;
 import org.elasticsearch.hadoop.rest.PartitionDefinition;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class ElasticSearchScanSpec {
+
   private final String indexName;
 
   private final String typeMappingName;
@@ -32,56 +35,56 @@ public class ElasticSearchScanSpec {
 
   private String filters;
 
-  private String queryFilter;
-
-  @JsonCreator
-  public ElasticSearchScanSpec(@JsonProperty("indexName") String indexName, @JsonProperty("typeMappingName") String typeMappingName) {
+  public ElasticSearchScanSpec( String indexName, String typeMappingName) {
     this.indexName = indexName;
     this.typeMappingName = typeMappingName;
   }
 
-  @JsonCreator
-  public ElasticSearchScanSpec(String indexName, String typeMappingName, PartitionDefinition partitionDefinition) {
-    this.indexName = indexName;
-    this.typeMappingName = typeMappingName;
-    this.partitionDefinition = partitionDefinition;
-  }
-
-
-  @JsonCreator
-  public ElasticSearchScanSpec(String indexName, String typeMappingName, PartitionDefinition partitionDefinition, String queryFilter) {
+  public ElasticSearchScanSpec( String indexName,
+                                String typeMappingName,
+                                PartitionDefinition partitionDefinition) {
     this.indexName = indexName;
     this.typeMappingName = typeMappingName;
     this.partitionDefinition = partitionDefinition;
-    this.queryFilter = queryFilter;
   }
 
+  @JsonCreator
+  public ElasticSearchScanSpec (@JsonProperty("indexName") String indexName,
+                                @JsonProperty("typeMappingName") String typeMappingName,
+                                @JsonProperty("queryFilter") String queryFilter,
+                                @JacksonInject PartitionDefinition partitionDefinition) {
+    this.indexName = indexName;
+    this.typeMappingName = typeMappingName;
+    this.partitionDefinition = partitionDefinition;
+    this.filters = queryFilter;
+  }
+
+  @JsonProperty("indexName")
   public String getIndexName() {
     return this.indexName;
   }
 
+  @JsonProperty("typeMappingName")
   public String getTypeMappingName() {
     return typeMappingName;
   }
 
+  @JsonProperty("filters")
   public String getFilters() {
     return filters;
   }
 
-  public void setFilters(String filters) {
-    this.filters = filters;
-  }
-
+  @JsonIgnore
   public PartitionDefinition getPartitionDefinition() {
     return partitionDefinition;
   }
 
-  public void setPartitionDefinition(PartitionDefinition partitionDefinition) {
-    this.partitionDefinition = partitionDefinition;
-  }
-
   @Override
   public String toString() {
-    return "ElasticSearchScanSpec [index=" + this.indexName + ", typeMapping=" + this.typeMappingName + "]";
+    return MoreObjects.toStringHelper(this)
+      .add("indexName", indexName)
+      .add("typeMappingName", typeMappingName)
+      .add("filters", filters)
+      .toString();
   }
 }
