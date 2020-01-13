@@ -22,6 +22,7 @@ import org.apache.drill.categories.SqlTest;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchemaBuilder;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
@@ -49,7 +50,9 @@ public class TestStarQueries extends BaseTestQuery {
       .sqlQuery("select n_name, *, n_name, n_name from cp.`tpch/nation.parquet`")
       .ordered()
       .csvBaselineFile("testframework/testStarQueries/testSelStarCommaSameColumnRepeated/q1.tsv")
-      .baselineTypes(TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR)
+      .baselineTypes(TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR,
+                     TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR,
+                     TypeProtos.MinorType.VARCHAR)
       .baselineColumns("n_name", "n_nationkey", "n_name0", "n_regionkey", "n_comment", "n_name00", "n_name1")
       .build().run();
 
@@ -57,7 +60,9 @@ public class TestStarQueries extends BaseTestQuery {
       .sqlQuery("select n_name, *, n_name, n_name from cp.`tpch/nation.parquet` limit 2")
       .ordered()
       .csvBaselineFile("testframework/testStarQueries/testSelStarCommaSameColumnRepeated/q2.tsv")
-      .baselineTypes(TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR)
+      .baselineTypes(TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR,
+                     TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR,
+                     TypeProtos.MinorType.VARCHAR)
       .baselineColumns("n_name", "n_nationkey", "n_name0", "n_regionkey", "n_comment", "n_name00", "n_name1")
       .build().run();
 
@@ -65,8 +70,10 @@ public class TestStarQueries extends BaseTestQuery {
       .sqlQuery("select *, n_name, *, n_name, n_name from cp.`tpch/nation.parquet`")
       .ordered()
       .csvBaselineFile("testframework/testStarQueries/testSelStarCommaSameColumnRepeated/q3.tsv")
-      .baselineTypes(TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR,
-            TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR)
+      .baselineTypes(TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT,
+                     TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT,
+                     TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR,
+                     TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR)
       .baselineColumns("n_nationkey", "n_name", "n_regionkey", "n_comment", "n_name0",
             "n_nationkey0", "n_name1", "n_regionkey0", "n_comment0", "n_name00", "n_name10")
       .build().run();
@@ -75,8 +82,10 @@ public class TestStarQueries extends BaseTestQuery {
       .sqlQuery("select *, n_name, *, n_name, n_name from cp.`tpch/nation.parquet` limit 2")
       .ordered()
       .csvBaselineFile("testframework/testStarQueries/testSelStarCommaSameColumnRepeated/q4.tsv")
-      .baselineTypes(TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR,
-            TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR)
+      .baselineTypes(TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT,
+                     TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT,
+                     TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR,
+                     TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR)
       .baselineColumns("n_nationkey", "n_name", "n_regionkey", "n_comment", "n_name0",
             "n_nationkey0", "n_name1", "n_regionkey0", "n_comment0", "n_name00", "n_name10")
       .build().run();
@@ -89,8 +98,10 @@ public class TestStarQueries extends BaseTestQuery {
       .sqlQuery("select *, n_name as extra, *, n_name as extra from cp.`tpch/nation.parquet`")
       .ordered()
       .csvBaselineFile("testframework/testStarQueries/testSelStarMultipleStarsRegularColumnAsAlias/q1.tsv")
-      .baselineTypes(TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR,
-              TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR)
+      .baselineTypes(TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT,
+                     TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT,
+                     TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR,
+                     TypeProtos.MinorType.VARCHAR)
       .baselineColumns("n_nationkey", "n_name", "n_regionkey", "n_comment", "extra", "n_nationkey0", "n_name0", "n_regionkey0", "n_comment0", "extra0")
       .build().run();
 
@@ -98,8 +109,10 @@ public class TestStarQueries extends BaseTestQuery {
       .sqlQuery("select *, n_name as extra, *, n_name as extra from cp.`tpch/nation.parquet` limit 2")
       .ordered()
       .csvBaselineFile("testframework/testStarQueries/testSelStarMultipleStarsRegularColumnAsAlias/q2.tsv")
-      .baselineTypes(TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR,
-              TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR)
+      .baselineTypes(TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT,
+                     TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT,
+                     TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR,
+                     TypeProtos.MinorType.VARCHAR)
       .baselineColumns("n_nationkey", "n_name", "n_regionkey", "n_comment", "extra", "n_nationkey0", "n_name0", "n_regionkey0", "n_comment0", "extra0")
       .build().run();
   }
@@ -111,7 +124,9 @@ public class TestStarQueries extends BaseTestQuery {
     .sqlQuery("select *, *, n_name from cp.`tpch/nation.parquet`")
     .ordered()
     .csvBaselineFile("testframework/testStarQueries/testSelStarMultipleStars/q1.tsv")
-    .baselineTypes(TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR)
+    .baselineTypes(TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT,
+                   TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR,
+                   TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR)
     .baselineColumns("n_nationkey", "n_name", "n_regionkey", "n_comment", "n_nationkey0", "n_name0", "n_regionkey0", "n_comment0", "n_name1")
     .build().run();
 
@@ -119,7 +134,9 @@ public class TestStarQueries extends BaseTestQuery {
     .sqlQuery("select *, *, n_name from cp.`tpch/nation.parquet` limit 2")
     .ordered()
     .csvBaselineFile("testframework/testStarQueries/testSelStarMultipleStars/q2.tsv")
-    .baselineTypes(TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR)
+    .baselineTypes(TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT,
+                   TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR,
+                   TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR)
     .baselineColumns("n_nationkey", "n_name", "n_regionkey", "n_comment", "n_nationkey0", "n_name0", "n_regionkey0", "n_comment0", "n_name1")
     .build().run();
   }
@@ -131,59 +148,107 @@ public class TestStarQueries extends BaseTestQuery {
     .sqlQuery("select *, n_nationkey, *, n_name from cp.`tpch/nation.parquet` limit 2")
     .ordered()
     .csvBaselineFile("testframework/testStarQueries/testSelStarWithAdditionalColumnLimit/q1.tsv")
-    .baselineTypes(TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.VARCHAR)
+    .baselineTypes(TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT,
+                   TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.INT,
+                   TypeProtos.MinorType.VARCHAR, TypeProtos.MinorType.INT, TypeProtos.MinorType.VARCHAR,
+                   TypeProtos.MinorType.VARCHAR)
     .baselineColumns("n_nationkey", "n_name", "n_regionkey", "n_comment", "n_nationkey0", "n_nationkey1", "n_name0", "n_regionkey0", "n_comment0", "n_name1")
     .build().run();
   }
 
-  @Test
-  public void testSelStarOrderBy() throws Exception{
-    testBuilder()
-        .ordered()
-        .sqlQuery(" select * from cp.`employee.json` order by last_name")
-        .sqlBaselineQuery(" select employee_id, full_name,first_name,last_name,position_id,position_title,store_id," +
-            " department_id,birth_date,hire_date,salary,supervisor_id,education_level,marital_status,gender,management_role " +
-            " from cp.`employee.json` " +
-            " order by last_name ")
-        .build().run();
+  public static final String ENABLE_V2_READER = "ALTER SESSION SET `" + ExecConstants.ENABLE_V2_JSON_READER_KEY + "` = %s";
 
+  @Test
+  public void testSelStarOrderBy() throws Exception {
+    // See DRILL-7522
+    String query = "select * from cp.`employee.json` order by last_name";
+    String baselineQueryHead = "select employee_id, full_name, first_name, last_name, position_id, position_title, store_id," +
+            " department_id, birth_date, hire_date, ";
+    String baselineQueryTail = "salary, supervisor_id, education_level, marital_status, gender, management_role " +
+            " from cp.`employee.json` " +
+            " order by last_name";
+    try {
+      testBuilder()
+          .ordered()
+          .optionSettingQueriesForTestQuery(ENABLE_V2_READER, "false")
+          .sqlQuery(query)
+          .sqlBaselineQuery(baselineQueryHead + baselineQueryTail)
+          .build().run();
+      testBuilder()
+          .ordered()
+          .optionSettingQueriesForTestQuery(ENABLE_V2_READER, "true")
+          .sqlQuery(query)
+          .sqlBaselineQuery(baselineQueryHead + "end_date, " + baselineQueryTail)
+          .build().run();
+    } finally {
+      resetSessionOption(ExecConstants.ENABLE_V2_JSON_READER_KEY);
+    }
   }
 
   @Test
   @Category(UnlikelyTest.class)
-  public void testSelStarOrderByLimit() throws Exception{
-    testBuilder()
-        .ordered()
-        .sqlQuery(" select * from cp.`employee.json` order by last_name limit 2")
-        .sqlBaselineQuery(" select employee_id, full_name,first_name,last_name,position_id,position_title,store_id," +
-            " department_id,birth_date,hire_date,salary,supervisor_id,education_level,marital_status,gender,management_role " +
-            " from cp.`employee.json` " +
-            " order by last_name limit 2")
-        .build().run();
-
+  public void testSelStarOrderByLimit() throws Exception {
+    // See DRILL-7522
+    String query = "select * from cp.`employee.json` order by last_name limit 2";
+    String baselineQueryHead = "select employee_id, full_name, first_name, last_name, position_id, position_title, store_id, " +
+            "department_id, birth_date, hire_date, ";
+    String baselineQueryTail = "salary, supervisor_id, education_level, marital_status, " +
+            "gender, management_role " +
+            "from cp.`employee.json` " +
+            "order by last_name limit 2";
+    try {
+      testBuilder()
+          .ordered()
+          .optionSettingQueriesForTestQuery(ENABLE_V2_READER, "false")
+          .sqlQuery(query)
+          .sqlBaselineQuery(baselineQueryHead + baselineQueryTail)
+          .build().run();
+      testBuilder()
+          .ordered()
+          .optionSettingQueriesForTestQuery(ENABLE_V2_READER, "true")
+          .sqlQuery(query)
+          .sqlBaselineQuery(baselineQueryHead + "end_date, " + baselineQueryTail)
+          .build().run();
+    } finally {
+      resetSessionOption(ExecConstants.ENABLE_V2_JSON_READER_KEY);
+    }
   }
 
   @Test
-  public void testSelStarPlusRegCol() throws Exception{
+  public void testSelStarPlusRegCol() throws Exception {
     testBuilder()
         .unOrdered()
         .sqlQuery("select *, n_nationkey as key2 from cp.`tpch/nation.parquet` order by n_name limit 2")
         .sqlBaselineQuery("select n_comment, n_name, n_nationkey, n_regionkey, n_nationkey as key2 from cp.`tpch/nation.parquet` order by n_name limit 2")
         .build().run();
-
   }
 
   @Test
-  public void testSelStarWhereOrderBy() throws Exception{
-    testBuilder()
-        .ordered()
-        .sqlQuery("select * from cp.`employee.json` where first_name = 'James' order by last_name")
-        .sqlBaselineQuery("select employee_id, full_name,first_name,last_name,position_id,position_title,store_id," +
-            " department_id,birth_date,hire_date,salary,supervisor_id,education_level,marital_status,gender,management_role " +
-            " from cp.`employee.json` " +
-            " where first_name = 'James' order by last_name")
-        .build().run();
+  public void testSelStarWhereOrderBy() throws Exception {
+    // See DRILL-7522
+    String query = "select * from cp.`employee.json` where first_name = 'James' order by last_name";
+    String baselineQueryHead = "select employee_id, full_name, first_name, last_name, position_id, position_title, store_id," +
+        " department_id, birth_date, hire_date, ";
+    String baselineQueryTail = "salary, supervisor_id, education_level, marital_status, gender,management_role " +
+        " from cp.`employee.json` " +
+        " where first_name = 'James' order by last_name";
 
+    try {
+      testBuilder()
+          .ordered()
+          .optionSettingQueriesForTestQuery(ENABLE_V2_READER, "false")
+          .sqlQuery(query)
+          .sqlBaselineQuery(baselineQueryHead + baselineQueryTail)
+          .build().run();
+      testBuilder()
+          .ordered()
+          .optionSettingQueriesForTestQuery(ENABLE_V2_READER, "true")
+          .sqlQuery(query)
+          .sqlBaselineQuery(baselineQueryHead + "end_date, " + baselineQueryTail)
+          .build().run();
+    } finally {
+      resetSessionOption(ExecConstants.ENABLE_V2_JSON_READER_KEY);
+    }
   }
 
   @Test
@@ -192,9 +257,10 @@ public class TestStarQueries extends BaseTestQuery {
     testBuilder()
         .ordered()
         .sqlQuery("select * from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey order by n.n_name")
-        .sqlBaselineQuery("select n.n_nationkey, n.n_name,n.n_regionkey,n.n_comment,r.r_regionkey,r.r_name, r.r_comment from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey order by n.n_name")
+        .sqlBaselineQuery("select n.n_nationkey, n.n_name,n.n_regionkey,n.n_comment,r.r_regionkey,r.r_name, r.r_comment " +
+                          "from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r " +
+                           "where n.n_regionkey = r.r_regionkey order by n.n_name")
         .build().run();
-
   }
 
   @Test
@@ -202,33 +268,37 @@ public class TestStarQueries extends BaseTestQuery {
     testBuilder()
         .ordered()
         .sqlQuery("select n.* from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey order by n.n_name")
-        .sqlBaselineQuery("select n.n_nationkey, n.n_name, n.n_regionkey, n.n_comment from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey order by n.n_name")
+        .sqlBaselineQuery("select n.n_nationkey, n.n_name, n.n_regionkey, n.n_comment " +
+                          "from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r " +
+                          "where n.n_regionkey = r.r_regionkey order by n.n_name")
         .build().run();
-
   }
 
   @Test
   public void testSelRightStarJoin() throws Exception {
     testBuilder()
         .ordered()
-        .sqlQuery("select r.* from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey order by n.n_name")
-        .sqlBaselineQuery("select r.r_regionkey, r.r_name, r.r_comment from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey order by n.n_name")
+        .sqlQuery("select r.* from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r " +
+                  "where n.n_regionkey = r.r_regionkey order by n.n_name")
+        .sqlBaselineQuery("select r.r_regionkey, r.r_name, r.r_comment " +
+                          "from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r " +
+                          "where n.n_regionkey = r.r_regionkey order by n.n_name")
         .build().run();
-
   }
 
   @Test
   public void testSelStarRegColConstJoin() throws Exception {
     testBuilder()
         .ordered()
-        .sqlQuery("select *, n.n_nationkey as n_nationkey0, 1 + 2 as constant from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey order by n.n_name")
+        .sqlQuery("select *, n.n_nationkey as n_nationkey0, 1 + 2 as constant " +
+                  "from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r " +
+                  "where n.n_regionkey = r.r_regionkey order by n.n_name")
         .sqlBaselineQuery(" select n.n_nationkey, n.n_name, n.n_regionkey, n.n_comment, r.r_regionkey, r.r_name, r.r_comment, " +
             " n.n_nationkey as n_nationkey0, 1 + 2 as constant " +
             " from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r " +
             " where n.n_regionkey = r.r_regionkey " +
             " order by n.n_name")
         .build().run();
-
   }
 
   @Test
@@ -236,9 +306,10 @@ public class TestStarQueries extends BaseTestQuery {
     testBuilder()
         .unOrdered()
         .sqlQuery("select n.*, r.* from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey")
-        .sqlBaselineQuery("select n.n_nationkey,n.n_name,n.n_regionkey,n.n_comment,r.r_regionkey,r.r_name,r.r_comment from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey order by n.n_name")
+        .sqlBaselineQuery("select n.n_nationkey,n.n_name,n.n_regionkey,n.n_comment,r.r_regionkey,r.r_name,r.r_comment " +
+                          "from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r " +
+                          "where n.n_regionkey = r.r_regionkey order by n.n_name")
         .build().run();
-
   }
 
   @Test
@@ -247,9 +318,9 @@ public class TestStarQueries extends BaseTestQuery {
         .unOrdered()
         .sqlQuery("select * from cp.`tpch/nation.parquet` n1, cp.`tpch/nation.parquet` n2 where n1.n_nationkey = n2.n_nationkey")
         .sqlBaselineQuery("select n1.n_nationkey,n1.n_name,n1.n_regionkey,n1.n_comment,n2.n_nationkey,n2.n_name,n2.n_regionkey, n2.n_comment " +
-            "from cp.`tpch/nation.parquet` n1, cp.`tpch/nation.parquet` n2 where n1.n_nationkey = n2.n_nationkey")
+                          "from cp.`tpch/nation.parquet` n1, cp.`tpch/nation.parquet` n2 " +
+                          "where n1.n_nationkey = n2.n_nationkey")
         .build().run();
-
   }
 
   @Test // DRILL-1293
@@ -295,7 +366,8 @@ public class TestStarQueries extends BaseTestQuery {
   @Test(expected = UserException.class)  // Should get "At line 1, column 8: Column 'n_nationkey' is ambiguous"
   public void testSelStarAmbiguousJoin() throws Exception {
     try {
-      test("select x.n_nationkey, x.n_name, x.n_regionkey, x.r_name from (select * from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey) x " );
+      test("select x.n_nationkey, x.n_name, x.n_regionkey, x.r_name from " +
+           "(select * from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey) x " );
     } catch (UserException e) {
       // Expected
       throw e;
@@ -312,9 +384,12 @@ public class TestStarQueries extends BaseTestQuery {
   public void testSelStarSubQPrefix() throws Exception {
     test("select t.n_nationkey, t.n_name, t.n_regionkey from (select * from cp.`tpch/nation.parquet`) t where t.n_regionkey > 1 order by t.n_name" );
 
-    test("select n.n_regionkey, count(*) as cnt from ( select * from ( select * from cp.`tpch/nation.parquet`) t where t.n_nationkey < 10 ) n where n.n_nationkey >1 group by n.n_regionkey order by n.n_regionkey ; ");
+    test("select n.n_regionkey, count(*) as cnt from " +
+         "( select * from ( select * from cp.`tpch/nation.parquet`) t where t.n_nationkey < 10 ) n " +
+         "where n.n_nationkey >1 group by n.n_regionkey order by n.n_regionkey ; ");
 
-    test("select t.n_regionkey, count(*) as cnt from (select * from cp.`tpch/nation.parquet`) t where t.n_nationkey > 1 group by t.n_regionkey order by t.n_regionkey;" );
+    test("select t.n_regionkey, count(*) as cnt from (select * from cp.`tpch/nation.parquet`) t " +
+         "where t.n_nationkey > 1 group by t.n_regionkey order by t.n_regionkey;" );
   }
 
   @Test  // Select * in SubQuery : regular columns appear in select clause, where, group by, order by.
@@ -384,7 +459,6 @@ public class TestStarQueries extends BaseTestQuery {
          " where x.n_nationkey > 5 \n" +
          " group by x.n_regionkey \n" +
          " order by cnt limit 5; ");
-
   }
 
   @Test // DRILL-595 : Join two CTE, each having select * : regular columns appear in the select , where and on clause, group by, order by.
@@ -411,19 +485,22 @@ public class TestStarQueries extends BaseTestQuery {
     testBuilder()
         .ordered()
         .sqlQuery("select *  from cp.`tpch/nation.parquet` order by substr(n_name, 2, 5) limit 3")
-        .sqlBaselineQuery("select n_comment, n_name, n_nationkey, n_regionkey from cp.`tpch/nation.parquet` order by substr(n_name, 2, 5) limit 3 ")
+        .sqlBaselineQuery("select n_comment, n_name, n_nationkey, n_regionkey " +
+                          "from cp.`tpch/nation.parquet` order by substr(n_name, 2, 5) limit 3 ")
         .build().run();
 
     testBuilder()
         .ordered()
         .sqlQuery("select *, n_nationkey + 5 as myexpr from cp.`tpch/nation.parquet` limit 3")
-        .sqlBaselineQuery("select n_comment, n_name, n_nationkey, n_regionkey, n_nationkey + 5 as myexpr from cp.`tpch/nation.parquet` order by n_nationkey limit 3")
+        .sqlBaselineQuery("select n_comment, n_name, n_nationkey, n_regionkey, n_nationkey + 5 as myexpr " +
+                          "from cp.`tpch/nation.parquet` order by n_nationkey limit 3")
         .build().run();
 
     testBuilder()
         .ordered()
         .sqlQuery("select *  from cp.`tpch/nation.parquet` where n_nationkey + 5 > 10 limit 3")
-        .sqlBaselineQuery("select n_comment, n_name, n_nationkey, n_regionkey  from cp.`tpch/nation.parquet` where n_nationkey + 5 > 10 order by n_nationkey limit 3")
+        .sqlBaselineQuery("select n_comment, n_name, n_nationkey, n_regionkey  from cp.`tpch/nation.parquet` " +
+                          "where n_nationkey + 5 > 10 order by n_nationkey limit 3")
         .build().run();
   }
 
@@ -435,7 +512,7 @@ public class TestStarQueries extends BaseTestQuery {
     testBuilder()
     .sqlQuery("select * from dfs.`multilevel/parquet` where dir0=1994 and dir1='Q1' order by dir0 limit 1")
     .ordered()
-    .baselineColumns("dir0", "dir1", "o_clerk", "o_comment", "o_custkey", "o_orderdate", "o_orderkey",  "o_orderpriority", "o_orderstatus", "o_shippriority",  "o_totalprice")
+    .baselineColumns("dir0", "dir1", "o_clerk", "o_comment", "o_custkey", "o_orderdate", "o_orderkey", "o_orderpriority", "o_orderstatus", "o_shippriority",  "o_totalprice")
     .baselineValues("1994", "Q1", "Clerk#000000743", "y pending requests integrate", 1292, mydate, 66, "5-LOW", "F",  0, 104190.66)
     .build().run();
   }
@@ -446,14 +523,16 @@ public class TestStarQueries extends BaseTestQuery {
     testBuilder()
         .unOrdered()
         .sqlQuery("select * from cp.`tpch/nation.parquet` where n_regionkey in (select r_regionkey from cp.`tpch/region.parquet`)")
-        .sqlBaselineQuery("select n_nationkey, n_name, n_regionkey, n_comment from cp.`tpch/nation.parquet` where n_regionkey in (select r_regionkey from cp.`tpch/region.parquet`)")
+        .sqlBaselineQuery("select n_nationkey, n_name, n_regionkey, n_comment from cp.`tpch/nation.parquet` " +
+                          "where n_regionkey in (select r_regionkey from cp.`tpch/region.parquet`)")
         .build().run();
 
     // multiple columns in "IN" subquery predicates.
     testBuilder()
         .unOrdered()
         .sqlQuery("select * from cp.`tpch/nation.parquet` where (n_nationkey, n_name) in ( select n_nationkey, n_name from cp.`tpch/nation.parquet`)")
-        .sqlBaselineQuery("select n_nationkey, n_name, n_regionkey, n_comment from cp.`tpch/nation.parquet` where (n_nationkey, n_name) in ( select n_nationkey, n_name from cp.`tpch/nation.parquet`)")
+        .sqlBaselineQuery("select n_nationkey, n_name, n_regionkey, n_comment from cp.`tpch/nation.parquet` " +
+                          "where (n_nationkey, n_name) in ( select n_nationkey, n_name from cp.`tpch/nation.parquet`)")
         .build().run();
 
     // Multiple in subquery predicates.
@@ -558,5 +637,4 @@ public class TestStarQueries extends BaseTestQuery {
         .build()
         .run();
   }
-
 }
