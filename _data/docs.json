@@ -21,7 +21,7 @@
             "title": "ALTER SYSTEM", 
             "url": "/docs/alter-system/"
         }, 
-        "ANALYZE TABLE": {
+        "ANALYZE TABLE COMPUTE STATISTICS": {
             "breadcrumbs": [
                 {
                     "title": "SQL Commands", 
@@ -36,11 +36,32 @@
             "next_title": "SET", 
             "next_url": "/docs/set/", 
             "parent": "SQL Commands", 
+            "previous_title": "ANALYZE TABLE REFRESH METADATA", 
+            "previous_url": "/docs/analyze-table-refresh-metadata/", 
+            "relative_path": "_docs/sql-reference/sql-commands/009-analyze-table-compute-statistics.md", 
+            "title": "ANALYZE TABLE COMPUTE STATISTICS", 
+            "url": "/docs/analyze-table-compute-statistics/"
+        }, 
+        "ANALYZE TABLE REFRESH METADATA": {
+            "breadcrumbs": [
+                {
+                    "title": "SQL Commands", 
+                    "url": "/docs/sql-commands/"
+                }, 
+                {
+                    "title": "SQL Reference", 
+                    "url": "/docs/sql-reference/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "ANALYZE TABLE COMPUTE STATISTICS", 
+            "next_url": "/docs/analyze-table-compute-statistics/", 
+            "parent": "SQL Commands", 
             "previous_title": "Supported SQL Commands", 
             "previous_url": "/docs/supported-sql-commands/", 
-            "relative_path": "_docs/sql-reference/sql-commands/009-analyze-table.md", 
-            "title": "ANALYZE TABLE", 
-            "url": "/docs/analyze-table/"
+            "relative_path": "_docs/sql-reference/sql-commands/007-analyze-table-refresh-metadata.md", 
+            "title": "ANALYZE TABLE REFRESH METADATA", 
+            "url": "/docs/analyze-table-refresh-metadata/"
         }, 
         "About SQL Function Examples": {
             "breadcrumbs": [
@@ -11315,8 +11336,8 @@
             "next_title": "REFRESH TABLE METADATA", 
             "next_url": "/docs/refresh-table-metadata/", 
             "parent": "SQL Commands", 
-            "previous_title": "ANALYZE TABLE", 
-            "previous_url": "/docs/analyze-table/", 
+            "previous_title": "ANALYZE TABLE COMPUTE STATISTICS", 
+            "previous_url": "/docs/analyze-table-compute-statistics/", 
             "relative_path": "_docs/sql-reference/sql-commands/010-set.md", 
             "title": "SET", 
             "url": "/docs/set/"
@@ -11404,8 +11425,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "ANALYZE TABLE", 
-                    "next_url": "/docs/analyze-table/", 
+                    "next_title": "ANALYZE TABLE REFRESH METADATA", 
+                    "next_url": "/docs/analyze-table-refresh-metadata/", 
                     "parent": "SQL Commands", 
                     "previous_title": "SQL Commands", 
                     "previous_url": "/docs/sql-commands/", 
@@ -11425,14 +11446,35 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "SET", 
-                    "next_url": "/docs/set/", 
+                    "next_title": "ANALYZE TABLE COMPUTE STATISTICS", 
+                    "next_url": "/docs/analyze-table-compute-statistics/", 
                     "parent": "SQL Commands", 
                     "previous_title": "Supported SQL Commands", 
                     "previous_url": "/docs/supported-sql-commands/", 
-                    "relative_path": "_docs/sql-reference/sql-commands/009-analyze-table.md", 
-                    "title": "ANALYZE TABLE", 
-                    "url": "/docs/analyze-table/"
+                    "relative_path": "_docs/sql-reference/sql-commands/007-analyze-table-refresh-metadata.md", 
+                    "title": "ANALYZE TABLE REFRESH METADATA", 
+                    "url": "/docs/analyze-table-refresh-metadata/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "SQL Commands", 
+                            "url": "/docs/sql-commands/"
+                        }, 
+                        {
+                            "title": "SQL Reference", 
+                            "url": "/docs/sql-reference/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "SET", 
+                    "next_url": "/docs/set/", 
+                    "parent": "SQL Commands", 
+                    "previous_title": "ANALYZE TABLE REFRESH METADATA", 
+                    "previous_url": "/docs/analyze-table-refresh-metadata/", 
+                    "relative_path": "_docs/sql-reference/sql-commands/009-analyze-table-compute-statistics.md", 
+                    "title": "ANALYZE TABLE COMPUTE STATISTICS", 
+                    "url": "/docs/analyze-table-compute-statistics/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -11449,8 +11491,8 @@
                     "next_title": "REFRESH TABLE METADATA", 
                     "next_url": "/docs/refresh-table-metadata/", 
                     "parent": "SQL Commands", 
-                    "previous_title": "ANALYZE TABLE", 
-                    "previous_url": "/docs/analyze-table/", 
+                    "previous_title": "ANALYZE TABLE COMPUTE STATISTICS", 
+                    "previous_url": "/docs/analyze-table-compute-statistics/", 
                     "relative_path": "_docs/sql-reference/sql-commands/010-set.md", 
                     "title": "SET", 
                     "url": "/docs/set/"
@@ -13067,8 +13109,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "ANALYZE TABLE", 
-                            "next_url": "/docs/analyze-table/", 
+                            "next_title": "ANALYZE TABLE REFRESH METADATA", 
+                            "next_url": "/docs/analyze-table-refresh-metadata/", 
                             "parent": "SQL Commands", 
                             "previous_title": "SQL Commands", 
                             "previous_url": "/docs/sql-commands/", 
@@ -13088,14 +13130,35 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "SET", 
-                            "next_url": "/docs/set/", 
+                            "next_title": "ANALYZE TABLE COMPUTE STATISTICS", 
+                            "next_url": "/docs/analyze-table-compute-statistics/", 
                             "parent": "SQL Commands", 
                             "previous_title": "Supported SQL Commands", 
                             "previous_url": "/docs/supported-sql-commands/", 
-                            "relative_path": "_docs/sql-reference/sql-commands/009-analyze-table.md", 
-                            "title": "ANALYZE TABLE", 
-                            "url": "/docs/analyze-table/"
+                            "relative_path": "_docs/sql-reference/sql-commands/007-analyze-table-refresh-metadata.md", 
+                            "title": "ANALYZE TABLE REFRESH METADATA", 
+                            "url": "/docs/analyze-table-refresh-metadata/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "SET", 
+                            "next_url": "/docs/set/", 
+                            "parent": "SQL Commands", 
+                            "previous_title": "ANALYZE TABLE REFRESH METADATA", 
+                            "previous_url": "/docs/analyze-table-refresh-metadata/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/009-analyze-table-compute-statistics.md", 
+                            "title": "ANALYZE TABLE COMPUTE STATISTICS", 
+                            "url": "/docs/analyze-table-compute-statistics/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -13112,8 +13175,8 @@
                             "next_title": "REFRESH TABLE METADATA", 
                             "next_url": "/docs/refresh-table-metadata/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "ANALYZE TABLE", 
-                            "previous_url": "/docs/analyze-table/", 
+                            "previous_title": "ANALYZE TABLE COMPUTE STATISTICS", 
+                            "previous_url": "/docs/analyze-table-compute-statistics/", 
                             "relative_path": "_docs/sql-reference/sql-commands/010-set.md", 
                             "title": "SET", 
                             "url": "/docs/set/"
@@ -14900,8 +14963,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "ANALYZE TABLE", 
-            "next_url": "/docs/analyze-table/", 
+            "next_title": "ANALYZE TABLE REFRESH METADATA", 
+            "next_url": "/docs/analyze-table-refresh-metadata/", 
             "parent": "SQL Commands", 
             "previous_title": "SQL Commands", 
             "previous_url": "/docs/sql-commands/", 
@@ -20703,8 +20766,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "ANALYZE TABLE", 
-                            "next_url": "/docs/analyze-table/", 
+                            "next_title": "ANALYZE TABLE REFRESH METADATA", 
+                            "next_url": "/docs/analyze-table-refresh-metadata/", 
                             "parent": "SQL Commands", 
                             "previous_title": "SQL Commands", 
                             "previous_url": "/docs/sql-commands/", 
@@ -20724,14 +20787,35 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "SET", 
-                            "next_url": "/docs/set/", 
+                            "next_title": "ANALYZE TABLE COMPUTE STATISTICS", 
+                            "next_url": "/docs/analyze-table-compute-statistics/", 
                             "parent": "SQL Commands", 
                             "previous_title": "Supported SQL Commands", 
                             "previous_url": "/docs/supported-sql-commands/", 
-                            "relative_path": "_docs/sql-reference/sql-commands/009-analyze-table.md", 
-                            "title": "ANALYZE TABLE", 
-                            "url": "/docs/analyze-table/"
+                            "relative_path": "_docs/sql-reference/sql-commands/007-analyze-table-refresh-metadata.md", 
+                            "title": "ANALYZE TABLE REFRESH METADATA", 
+                            "url": "/docs/analyze-table-refresh-metadata/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "SQL Commands", 
+                                    "url": "/docs/sql-commands/"
+                                }, 
+                                {
+                                    "title": "SQL Reference", 
+                                    "url": "/docs/sql-reference/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "SET", 
+                            "next_url": "/docs/set/", 
+                            "parent": "SQL Commands", 
+                            "previous_title": "ANALYZE TABLE REFRESH METADATA", 
+                            "previous_url": "/docs/analyze-table-refresh-metadata/", 
+                            "relative_path": "_docs/sql-reference/sql-commands/009-analyze-table-compute-statistics.md", 
+                            "title": "ANALYZE TABLE COMPUTE STATISTICS", 
+                            "url": "/docs/analyze-table-compute-statistics/"
                         }, 
                         {
                             "breadcrumbs": [
@@ -20748,8 +20832,8 @@
                             "next_title": "REFRESH TABLE METADATA", 
                             "next_url": "/docs/refresh-table-metadata/", 
                             "parent": "SQL Commands", 
-                            "previous_title": "ANALYZE TABLE", 
-                            "previous_url": "/docs/analyze-table/", 
+                            "previous_title": "ANALYZE TABLE COMPUTE STATISTICS", 
+                            "previous_url": "/docs/analyze-table-compute-statistics/", 
                             "relative_path": "_docs/sql-reference/sql-commands/010-set.md", 
                             "title": "SET", 
                             "url": "/docs/set/"

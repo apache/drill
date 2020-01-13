@@ -1,6 +1,6 @@
 ---
 title: "Drill Introduction"
-date: 2019-12-26
+date: 2020-01-13
 parent: "Getting Started"
 ---
 Drill is an Apache open-source SQL query engine for Big Data exploration.
@@ -46,7 +46,7 @@ Metastore support:
 
 
 ## What's New in Apache Drill 1.16  
-- [ANALYZE TABLE statement]({{site.baseurl}}/docs/analyze-table/) to computes statistics on Parquet data ([DRILL-1328](https://issues.apache.org/jira/browse/DRILL-1328))   
+- [ANALYZE TABLE statement]({{site.baseurl}}/docs/analyze-table-compute-statistics/) to computes statistics on Parquet data ([DRILL-1328](https://issues.apache.org/jira/browse/DRILL-1328))   
 - [CREATE OR REPLACE SCHEMA command]({{site.baseurl}}/docs/create-or-replace-schema/) to define a schema for text files ([DRILL-6964](https://issues.apache.org/jira/browse/DRILL-6964))   
 - [REFRESH TABLE METADATA command]({{site.baseurl}}/docs/refresh-table-metadata/) can generate metadata cache files for specific columns ([DRILL-7058](https://issues.apache.org/jira/browse/DRILL-7058))  
 - [SYSLOG (RFC-5424) Format Plugin]({{site.baseurl}}/docs/syslog-format-plugin/) ([DRILL-6582](https://issues.apache.org/jira/browse/DRILL-6582))
