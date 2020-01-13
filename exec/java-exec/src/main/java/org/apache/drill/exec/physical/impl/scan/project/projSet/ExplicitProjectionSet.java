@@ -21,11 +21,7 @@ import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.project.ProjectionType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.physical.resultSet.ProjectionSet;
-<<<<<<< HEAD
-import org.apache.drill.exec.physical.resultSet.project.ProjectionType;
 import org.apache.drill.exec.physical.resultSet.project.RequestedColumnImpl;
-=======
->>>>>>> DRILL-6953: EVF-based version of the JSON reader
 import org.apache.drill.exec.physical.resultSet.project.RequestedTuple;
 import org.apache.drill.exec.physical.resultSet.project.RequestedTuple.RequestedColumn;
 import org.apache.drill.exec.physical.resultSet.project.RequestedTuple.TupleProjectionType;
