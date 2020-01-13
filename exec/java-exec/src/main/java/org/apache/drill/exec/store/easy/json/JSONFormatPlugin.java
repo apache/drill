@@ -72,6 +72,7 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
   public static final String PLUGIN_NAME = "json";
   private static final String DEFAULT_EXTN = "json";
   private static final boolean IS_COMPRESSIBLE = true;
+
   public static class JsonReaderCreator extends FileReaderFactory {
 
     private final JsonOptions options;

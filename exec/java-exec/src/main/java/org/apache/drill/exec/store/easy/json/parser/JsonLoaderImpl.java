@@ -164,6 +164,7 @@ public class JsonLoaderImpl implements JsonLoader {
 
     public boolean useListType;
     public boolean detectTypeEarly;
+    public boolean enableEscapeAnyChar;
   }
 
   @SuppressWarnings("serial")

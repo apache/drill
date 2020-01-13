@@ -40,7 +40,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class JsonBatchReader implements ManagedReader<FileSchemaNegotiator> {
-
   private static final Logger logger = LoggerFactory.getLogger(JsonBatchReader.class);
 
   private DrillFileSystem fileSystem;
@@ -52,7 +51,7 @@ public class JsonBatchReader implements ManagedReader<FileSchemaNegotiator> {
   private RowSetLoader tableLoader;
 
   public JsonBatchReader(JsonOptions options) {
-   this.options = options == null ? new JsonOptions() : options;
+    this.options = options == null ? new JsonOptions() : options;
   }
 
   @Override
@@ -66,8 +65,9 @@ public class JsonBatchReader implements ManagedReader<FileSchemaNegotiator> {
     options.readNumbersAsDouble = embeddedContent == null && optionMgr.getBoolean(ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE);
     options.unionEnabled = embeddedContent == null && optionMgr.getBoolean(ExecConstants.ENABLE_UNION_TYPE_KEY);
     options.skipMalformedRecords = optionMgr.getBoolean(ExecConstants.JSON_READER_SKIP_INVALID_RECORDS_FLAG);
+    options.enableEscapeAnyChar = optionMgr.getBoolean(ExecConstants.JSON_READER_ESCAPE_ANY_CHAR);
     // Printing of malformed records is always enabled.
-//    options.printSkippedMalformedJSONRecordLineNumber = optionMgr.getBoolean(ExecConstants.JSON_READER_PRINT_INVALID_RECORDS_LINE_NOS_FLAG);
+    // options.printSkippedMalformedJSONRecordLineNumber = optionMgr.getBoolean(ExecConstants.JSON_READER_PRINT_INVALID_RECORDS_LINE_NOS_FLAG);
     options.allowNanInf = true;
 
     try {
