@@ -167,29 +167,46 @@ public abstract class AbstractGroupScanWithMetadata<P extends TableMetadataProvi
    */
   @Override
   public long getColumnValueCount(SchemaPath column) {
-    long tableRowCount, colNulls;
-    Long nulls;
     ColumnStatistics<?> columnStats = getTableMetadata().getColumnStatistics(column);
-    ColumnStatistics<?> nonInterestingColStats = null;
-    if (columnStats == null) {
-      nonInterestingColStats = getNonInterestingColumnsMetadata().getColumnStatistics(column);
-    }
+    ColumnStatistics<?> nonInterestingColStats = columnStats == null
+        ? getNonInterestingColumnsMetadata().getColumnStatistics(column) : null;
 
+    long tableRowCount;
     if (columnStats != null) {
       tableRowCount = TableStatisticsKind.ROW_COUNT.getValue(getTableMetadata());
     } else if (nonInterestingColStats != null) {
       tableRowCount = TableStatisticsKind.ROW_COUNT.getValue(getNonInterestingColumnsMetadata());
+      columnStats = nonInterestingColStats;
+    } else if (hasNestedStatsForColumn(column, getTableMetadata())
+        || hasNestedStatsForColumn(column, getNonInterestingColumnsMetadata())) {
+      // When statistics for nested field exists, this is complex column which is present in table.
+      // But its nested fields statistics can't be used to extract tableRowCount for this column.
+      // So NO_COLUMN_STATS returned here to avoid problems described in DRILL-7491.
+      return Statistic.NO_COLUMN_STATS;
     } else {
       return 0; // returns 0 if the column doesn't exist in the table.
     }
 
-    columnStats = columnStats != null ? columnStats : nonInterestingColStats;
-    nulls = ColumnStatisticsKind.NULLS_COUNT.getFrom(columnStats);
-    colNulls = nulls != null ? nulls : Statistic.NO_COLUMN_STATS;
+    Long nulls = ColumnStatisticsKind.NULLS_COUNT.getFrom(columnStats);
+    if (nulls == null || Statistic.NO_COLUMN_STATS == nulls || Statistic.NO_COLUMN_STATS == tableRowCount) {
+      return Statistic.NO_COLUMN_STATS;
+    } else {
+      return tableRowCount - nulls;
+    }
+  }
 
-    return Statistic.NO_COLUMN_STATS == tableRowCount
-            || Statistic.NO_COLUMN_STATS == colNulls
-            ? Statistic.NO_COLUMN_STATS : tableRowCount - colNulls;
+  /**
+   * For complex columns, stats may be present only for nested fields. For example, a column path is `a`,
+   * but stats present for `a`.`b`. So before making a decision that column is absent, the case needs
+   * to be tested.
+   *
+   * @param column   parent column path
+   * @param metadata metadata with column statistics
+   * @return whether stats exists for nested fields
+   */
+  private boolean hasNestedStatsForColumn(SchemaPath column, Metadata metadata) {
+    return metadata.getColumnsStatistics().keySet().stream()
+        .anyMatch(path -> path.contains(column));
   }
 
   @Override
