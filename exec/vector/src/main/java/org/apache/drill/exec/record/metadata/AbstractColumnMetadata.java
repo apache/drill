@@ -306,7 +306,7 @@ public abstract class AbstractColumnMetadata extends AbstractPropertied implemen
     builder.append(typeString());
 
     // Drill does not have nullability notion for complex types
-    if (!isNullable() && !isArray() && !isMap()) {
+    if (!isNullable() && !isArray() && !isMap() && !isDict()) {
       builder.append(" NOT NULL");
     }
 

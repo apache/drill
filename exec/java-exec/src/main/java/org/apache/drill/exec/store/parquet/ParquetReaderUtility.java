@@ -238,15 +238,14 @@ public class ParquetReaderUtility {
   }
 
   public static void correctDatesInMetadataCache(ParquetTableMetadataBase parquetTableMetadata) {
+    MetadataVersion metadataVersion = new MetadataVersion(parquetTableMetadata.getMetadataVersion());
     DateCorruptionStatus cacheFileCanContainsCorruptDates =
-        new MetadataVersion(parquetTableMetadata.getMetadataVersion()).compareTo(new MetadataVersion(3, 0)) >= 0 ?
+        metadataVersion.isAtLeast(3, 0) ?
         DateCorruptionStatus.META_SHOWS_NO_CORRUPTION : DateCorruptionStatus.META_UNCLEAR_TEST_VALUES;
     if (cacheFileCanContainsCorruptDates == DateCorruptionStatus.META_UNCLEAR_TEST_VALUES) {
-      boolean mdVersion_1_0 = new MetadataVersion(1, 0).equals(new MetadataVersion(parquetTableMetadata.getMetadataVersion()));
-      boolean mdVersion_2_0 = new MetadataVersion(2, 0).equals(new MetadataVersion(parquetTableMetadata.getMetadataVersion()));
       // Looking for the DATE data type of column names in the metadata cache file ("metadata_version" : "v2")
       String[] names = new String[0];
-      if (mdVersion_2_0) {
+      if (metadataVersion.isEqualTo(2, 0)) {
         for (ColumnTypeMetadata_v2 columnTypeMetadata :
             ((ParquetTableMetadata_v2) parquetTableMetadata).columnTypeInfo.values()) {
           if (OriginalType.DATE.equals(columnTypeMetadata.originalType)) {
@@ -261,7 +260,7 @@ public class ParquetReaderUtility {
         Long rowCount = rowGroupMetadata.getRowCount();
         for (ColumnMetadata columnMetadata : rowGroupMetadata.getColumns()) {
           // Setting Min/Max values for ParquetTableMetadata_v1
-          if (mdVersion_1_0) {
+          if (metadataVersion.isEqualTo(1, 0)) {
             OriginalType originalType = columnMetadata.getOriginalType();
             if (OriginalType.DATE.equals(originalType) && columnMetadata.hasSingleValue(rowCount) &&
                 (Integer) columnMetadata.getMaxValue() > ParquetReaderUtility.DATE_CORRUPTION_THRESHOLD) {
@@ -271,7 +270,7 @@ public class ParquetReaderUtility {
             }
           }
           // Setting Max values for ParquetTableMetadata_v2
-          else if (mdVersion_2_0 &&
+          else if (metadataVersion.isEqualTo(2, 0) &&
                    columnMetadata.getName() != null &&
                    Arrays.equals(columnMetadata.getName(), names) &&
                    columnMetadata.hasSingleValue(rowCount) &&
@@ -299,7 +298,8 @@ public class ParquetReaderUtility {
     boolean allowBinaryMetadata = allowBinaryMetadata(parquetTableMetadata.getDrillVersion(), readerConfig);
 
     // Setting Min / Max values for ParquetTableMetadata_v1
-    if (new MetadataVersion(1, 0).equals(new MetadataVersion(parquetTableMetadata.getMetadataVersion()))) {
+    MetadataVersion metadataVersion = new MetadataVersion(parquetTableMetadata.getMetadataVersion());
+    if (metadataVersion.isEqualTo(1, 0)) {
       for (ParquetFileMetadata file : parquetTableMetadata.getFiles()) {
         for (RowGroupMetadata rowGroupMetadata : file.getRowGroups()) {
           Long rowCount = rowGroupMetadata.getRowCount();
@@ -320,7 +320,7 @@ public class ParquetReaderUtility {
     int maxNumColumns = 0;
 
     // Setting Min / Max values for V2, V3 and V4 versions; for versions V3_3 and above need to do decoding
-    boolean needDecoding = new MetadataVersion(parquetTableMetadata.getMetadataVersion()).compareTo(new MetadataVersion(3, 3)) >= 0;
+    boolean needDecoding = metadataVersion.isAtLeast(3, 3);
     for (ParquetFileMetadata file : parquetTableMetadata.getFiles()) {
       if ( timer != null ) { // for debugging only
         maxRowGroups = Math.max(maxRowGroups, file.getRowGroups().size());
@@ -718,15 +718,17 @@ public class ParquetReaderUtility {
 
   /**
    * Converts list of {@link OriginalType}s to list of {@link org.apache.drill.common.types.TypeProtos.MajorType}s.
-   * <b>NOTE</b>: current implementation cares about {@link OriginalType#MAP} only
-   * converting it to {@link org.apache.drill.common.types.TypeProtos.MinorType#DICT}.
+   * <b>NOTE</b>: current implementation cares about {@link OriginalType#MAP} and {@link OriginalType#LIST} only
+   * converting it to {@link org.apache.drill.common.types.TypeProtos.MinorType#DICT}
+   * and {@link org.apache.drill.common.types.TypeProtos.MinorType#LIST} respectively.
    * Other original types are converted to {@code null}, because there is no certain correspondence
-   * (and, actually, a need because these types are used to differentiate between Drill's MAP and DICT types
+   * (and, actually, a need because these types are used to differentiate between Drill's MAP and DICT (and arrays of thereof) types
    * when constructing {@link org.apache.drill.exec.record.metadata.TupleSchema}) between these two.
    *
    * @param originalTypes list of Parquet's types
    * @return list containing either {@code null} or type with minor
-   *         type {@link org.apache.drill.common.types.TypeProtos.MinorType#DICT} values
+   *         type {@link org.apache.drill.common.types.TypeProtos.MinorType#DICT} or
+   *         {@link org.apache.drill.common.types.TypeProtos.MinorType#LIST} values
    */
   public static List<TypeProtos.MajorType> getComplexTypes(List<OriginalType> originalTypes) {
     List<TypeProtos.MajorType> result = new ArrayList<>();
@@ -735,11 +737,9 @@ public class ParquetReaderUtility {
     }
     for (OriginalType type : originalTypes) {
       if (type == OriginalType.MAP) {
-        TypeProtos.MajorType drillType = TypeProtos.MajorType.newBuilder()
-            .setMinorType(TypeProtos.MinorType.DICT)
-            .setMode(TypeProtos.DataMode.OPTIONAL)
-            .build();
-        result.add(drillType);
+        result.add(Types.required(TypeProtos.MinorType.DICT));
+      } else if (type == OriginalType.LIST) {
+        result.add(Types.required(TypeProtos.MinorType.LIST));
       } else {
         result.add(null);
       }
@@ -806,5 +806,28 @@ public class ParquetReaderUtility {
           && nestedField.asGroupType().getFieldCount() == 2;
     }
     return false;
+  }
+
+  /**
+   * Converts Parquet's {@link Type.Repetition} to Drill's {@link TypeProtos.DataMode}.
+   * @param repetition repetition to be converted
+   * @return data mode corresponding to Parquet's repetition
+   */
+  public static TypeProtos.DataMode getDataMode(Type.Repetition repetition) {
+    TypeProtos.DataMode mode;
+    switch (repetition) {
+      case REPEATED:
+        mode = TypeProtos.DataMode.REPEATED;
+        break;
+      case OPTIONAL:
+        mode = TypeProtos.DataMode.OPTIONAL;
+        break;
+      case REQUIRED:
+        mode = TypeProtos.DataMode.REQUIRED;
+        break;
+      default:
+        throw new IllegalArgumentException(String.format("Unknown Repetition: %s.", repetition));
+    }
+    return mode;
   }
 }
