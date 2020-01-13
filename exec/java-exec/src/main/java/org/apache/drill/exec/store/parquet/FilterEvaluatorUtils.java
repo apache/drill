@@ -113,7 +113,16 @@ public class FilterEvaluatorUtils {
       StatisticsProvider<T> rangeExprEvaluator = new StatisticsProvider(columnsStatistics, rowCount);
       rowsMatch = parquetPredicate.matches(rangeExprEvaluator);
     }
-    return rowsMatch == RowsMatch.ALL && isRepeated(schemaPathsInExpr, fileMetadata) ? RowsMatch.SOME : rowsMatch;
+
+    if (rowsMatch == RowsMatch.ALL && isMetaNotApplicable(schemaPathsInExpr, fileMetadata)) {
+      rowsMatch = RowsMatch.SOME;
+    }
+
+    return rowsMatch;
+  }
+
+  private static boolean isMetaNotApplicable(Set<SchemaPath> schemaPathsInExpr, TupleMetadata fileMetadata) {
+    return isRepeated(schemaPathsInExpr, fileMetadata) || isDictOrRepeatedMapChild(schemaPathsInExpr, fileMetadata);
   }
 
   private static boolean isRepeated(Set<SchemaPath> fields, TupleMetadata fileMetadata) {
@@ -121,6 +130,15 @@ public class FilterEvaluatorUtils {
       ColumnMetadata columnMetadata = SchemaPathUtils.getColumnMetadata(field, fileMetadata);
       TypeProtos.MajorType fieldType = columnMetadata != null ? columnMetadata.majorType() : null;
       if (fieldType != null && fieldType.getMode() == TypeProtos.DataMode.REPEATED) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static boolean isDictOrRepeatedMapChild(Set<SchemaPath> fields, TupleMetadata fileMetadata) {
+    for (SchemaPath field : fields) {
+      if (SchemaPathUtils.isFieldNestedInDictOrRepeatedMap(field, fileMetadata)) {
         return true;
       }
     }

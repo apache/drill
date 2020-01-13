@@ -47,21 +47,21 @@ public abstract class AbstractMapColumnMetadata extends AbstractColumnMetadata {
    * the children) of the materialized field provided.
    *
    * @param schema the schema to use
-   * @param mapSchema parent schema
+   * @param tupleSchema parent schema
    */
-  AbstractMapColumnMetadata(MaterializedField schema, TupleSchema mapSchema) {
+  AbstractMapColumnMetadata(MaterializedField schema, TupleSchema tupleSchema) {
     super(schema);
-    if (mapSchema == null) {
+    if (tupleSchema == null) {
       this.schema = new TupleSchema();
     } else {
-      this.schema = mapSchema;
+      this.schema = tupleSchema;
     }
     this.schema.bind(this);
   }
 
   public AbstractMapColumnMetadata(AbstractMapColumnMetadata from) {
     super(from);
-    schema = (TupleSchema) from.schema.copy();
+    schema = from.schema.copy();
   }
 
   public AbstractMapColumnMetadata(String name, MinorType type, DataMode mode, TupleSchema schema) {

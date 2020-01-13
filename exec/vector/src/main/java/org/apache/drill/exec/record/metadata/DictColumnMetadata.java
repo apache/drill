@@ -19,6 +19,7 @@ package org.apache.drill.exec.record.metadata;
 
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.vector.complex.DictVector;
 
 public class DictColumnMetadata extends AbstractMapColumnMetadata {
 
@@ -29,6 +30,14 @@ public class DictColumnMetadata extends AbstractMapColumnMetadata {
    */
   public DictColumnMetadata(MaterializedField schema) {
     this(schema, null);
+  }
+
+  public DictColumnMetadata(String name, TypeProtos.DataMode mode) {
+    this(name, mode, null);
+  }
+
+  public DictColumnMetadata(DictColumnMetadata from) {
+    super(from);
   }
 
   /**
@@ -42,12 +51,16 @@ public class DictColumnMetadata extends AbstractMapColumnMetadata {
     super(schema, tupleSchema);
   }
 
-  public DictColumnMetadata(DictColumnMetadata from) {
-    super(from);
+  DictColumnMetadata(String name, TypeProtos.DataMode mode, TupleSchema tupleSchema) {
+    super(name, TypeProtos.MinorType.DICT, mode, tupleSchema);
   }
 
-  public DictColumnMetadata(String name, TypeProtos.DataMode mode, TupleSchema mapSchema) {
-    super(name, TypeProtos.MinorType.DICT, mode, mapSchema);
+  public ColumnMetadata keyColumnMetadata() {
+    return schema.metadata(DictVector.FIELD_KEY_NAME);
+  }
+
+  public ColumnMetadata valueColumnMetadata() {
+    return schema.metadata(DictVector.FIELD_VALUE_NAME);
   }
 
   @Override
