@@ -21,6 +21,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.drill.PlanTestBase;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
@@ -153,25 +154,36 @@ public class TestAnalyze extends BaseTestQuery {
 
   @Test
   public void testAnalyzeSupportedFormats() throws Exception {
-    //Only allow computing statistics on PARQUET files.
+    // Only allow computing statistics on PARQUET files.
     try {
       test("ALTER SESSION SET `planner.slice_target` = 1");
       test("ALTER SESSION SET `store.format` = 'json'");
       test("CREATE TABLE dfs.tmp.employee_basic4 AS SELECT * from cp.`employee.json`");
-      //Should display not supported
+      // Should display not supported
       verifyAnalyzeOutput("ANALYZE TABLE dfs.tmp.employee_basic4 COMPUTE STATISTICS",
           "Table employee_basic4 is not supported by ANALYZE. "
           + "Support is currently limited to directory-based Parquet tables.");
 
+      // See DRILL-7522
+      alterSession(ExecConstants.ENABLE_V2_JSON_READER_KEY, false);
       test("DROP TABLE dfs.tmp.employee_basic4");
       test("ALTER SESSION SET `store.format` = 'parquet'");
       test("CREATE TABLE dfs.tmp.employee_basic4 AS SELECT * from cp.`employee.json`");
-      //Should complete successfully (16 columns in employee.json)
+      // Should complete successfully (16 columns in employee.json)
       verifyAnalyzeOutput("ANALYZE TABLE dfs.tmp.employee_basic4 COMPUTE STATISTICS",
           "16");
+
+      alterSession(ExecConstants.ENABLE_V2_JSON_READER_KEY, true);
+      test("DROP TABLE dfs.tmp.employee_basic4");
+      test("ALTER SESSION SET `store.format` = 'parquet'");
+      test("CREATE TABLE dfs.tmp.employee_basic4 AS SELECT * from cp.`employee.json`");
+      // Should complete successfully (16 columns in employee.json)
+      verifyAnalyzeOutput("ANALYZE TABLE dfs.tmp.employee_basic4 COMPUTE STATISTICS",
+          "17");
     } finally {
       resetSessionOption("planner.slice_target");
       resetSessionOption("store.format");
+      resetSessionOption(ExecConstants.ENABLE_V2_JSON_READER_KEY);
     }
   }
 
