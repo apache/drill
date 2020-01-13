@@ -20,6 +20,7 @@ package org.apache.drill.common.expression;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.Objects;
 
 import org.apache.drill.common.expression.PathSegment.ArraySegment;
 import org.apache.drill.common.expression.PathSegment.NameSegment;
@@ -334,36 +335,13 @@ public class SchemaPath extends LogicalExpressionBase {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null) {
-      return false;
-    }
-    if (!(obj instanceof SchemaPath)) {
-      return false;
-    }
-
-    SchemaPath other = (SchemaPath) obj;
-    if (rootSegment == null) {
-      return (other.rootSegment == null);
-    }
-    return rootSegment.equals(other.rootSegment);
+    return this == obj || obj instanceof SchemaPath
+        && Objects.equals(rootSegment, ((SchemaPath) obj).rootSegment);
   }
 
-  public boolean contains(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null) {
-      return false;
-    }
-    if (!(obj instanceof SchemaPath)) {
-      return false;
-    }
-
-    SchemaPath other = (SchemaPath) obj;
-    return rootSegment == null || rootSegment.contains(other.rootSegment);
+  public boolean contains(SchemaPath path) {
+    return this == path || path != null
+        && (rootSegment == null || rootSegment.contains(path.rootSegment));
   }
 
   @Override

@@ -861,4 +861,18 @@ public class TestParquetComplex extends BaseTestQuery {
         )
         .go();
   }
+
+  @Test // DRILL-7491
+  public void testCountOnComplexTypes() throws Exception {
+    String query = "SELECT " +
+        "COUNT(c13) cnt13, COUNT(c14) cnt14, " +
+        "COUNT(c15) cnt15, COUNT(c16) cnt16 " +
+        "FROM cp.`parquet/hive_all/hive_alltypes.parquet`";
+    testBuilder()
+        .sqlQuery(query)
+        .unOrdered()
+        .baselineColumns("cnt13", "cnt14", "cnt15", "cnt16")
+        .baselineValues(3L, 0L, 3L, 3L)
+        .go();
+  }
 }
