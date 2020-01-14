@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.store.jdbc;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.apache.drill.categories.JdbcStorageTest;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
@@ -36,11 +38,8 @@ import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
 
 /**
  * JDBC storage plugin tests against H2.
@@ -63,7 +62,10 @@ public class TestJdbcPluginWithH2IT extends ClusterTest {
          FileReader fileReader = new FileReader(scriptFile.getFile())) {
       RunScript.execute(connection, fileReader);
     }
-    JdbcStorageConfig jdbcStorageConfig = new JdbcStorageConfig("org.h2.Driver", connString, "root", "root", true);
+    Map<String, Object> sourceParameters =  new HashMap<>();
+    sourceParameters.put("maxIdle", 5);
+    sourceParameters.put("maxTotal", 5);
+    JdbcStorageConfig jdbcStorageConfig = new JdbcStorageConfig("org.h2.Driver", connString, "root", "root", true, sourceParameters);
     jdbcStorageConfig.setEnabled(true);
     cluster.defineStoragePlugin(ctx -> new JdbcStoragePlugin(jdbcStorageConfig, ctx, "h2"));
     cluster.defineStoragePlugin(ctx -> new JdbcStoragePlugin(jdbcStorageConfig, ctx, "h2o"));
@@ -112,18 +114,19 @@ public class TestJdbcPluginWithH2IT extends ClusterTest {
   }
 
   @Test
-  public void pushdownJoin() throws Exception {
+  public void pushDownJoin() throws Exception {
     String query = "select x.person_id from (select person_id from h2.tmp.drill_h2_test.person) x "
             + "join (select person_id from h2.tmp.drill_h2_test.person) y on x.person_id = y.person_id ";
 
-    String plan = queryBuilder().sql(query).explainText();
-
-    assertThat("Query plan shouldn't contain Join operator",
-        plan, not(containsString("Join")));
+    queryBuilder()
+        .sql(query)
+        .planMatcher()
+        .exclude("Join")
+        .match();
   }
 
   @Test
-  public void pushdownJoinAndFilterPushDown() throws Exception {
+  public void pushDownJoinAndFilterPushDown() throws Exception {
     String query = "select * from \n" +
         "h2.tmp.drill_h2_test.person e\n" +
         "INNER JOIN \n" +
@@ -131,25 +134,27 @@ public class TestJdbcPluginWithH2IT extends ClusterTest {
         "ON e.FIRST_NAME = s.FIRST_NAME\n" +
         "WHERE e.LAST_NAME > 'hello'";
 
-    String plan = queryBuilder().sql(query).explainText();
-
-    assertThat("Query plan shouldn't contain Join operator",
-        plan, not(containsString("Join")));
-    assertThat("Query plan shouldn't contain Filter operator",
-        plan, not(containsString("Filter")));
+    queryBuilder()
+        .sql(query)
+        .planMatcher()
+        .exclude("Join")
+        .exclude("Filter")
+        .match();
   }
 
   @Test
-  public void pushdownAggregation() throws Exception {
+  public void pushDownAggregation() throws Exception {
     String query = "select count(*) from h2.tmp.drill_h2_test.person";
-    String plan = queryBuilder().sql(query).explainText();
 
-    assertThat("Query plan shouldn't contain Aggregate operator",
-        plan, not(containsString("Aggregate")));
+    queryBuilder()
+        .sql(query)
+        .planMatcher()
+        .exclude("Aggregate")
+        .match();
   }
 
   @Test
-  public void pushdownDoubleJoinAndFilter() throws Exception {
+  public void pushDownDoubleJoinAndFilter() throws Exception {
     String query = "select * from \n" +
         "h2.tmp.drill_h2_test.person e\n" +
         "INNER JOIN \n" +
@@ -160,21 +165,22 @@ public class TestJdbcPluginWithH2IT extends ClusterTest {
         "ON e.person_ID = ed.person_ID\n" +
         "WHERE s.first_name > 'abc' and ed.first_name > 'efg'";
 
-    String plan = queryBuilder().sql(query).explainText();
-
-    assertThat("Query plan shouldn't contain Join operator",
-        plan, not(containsString("Join")));
-    assertThat("Query plan shouldn't contain Filter operator",
-        plan, not(containsString("Filter")));
+    queryBuilder()
+        .sql(query)
+        .planMatcher()
+        .exclude("Join")
+        .exclude("Filter")
+        .match();
   }
 
   @Test // DRILL-7340
-  public void twoPluginsPredicatesPushdown() throws Exception {
+  public void twoPluginsPredicatesPushDown() throws Exception {
     String query = "SELECT * " +
         "FROM h2.tmp.drill_h2_test.person l " +
         "INNER JOIN h2o.tmp.drill_h2_test.person r " +
         "ON l.person_id = r.person_id " +
         "WHERE l.first_name = 'first_name_1' AND r.last_name = 'last_name_1'";
+
     queryBuilder()
         .sql(query)
         .planMatcher()
@@ -208,12 +214,14 @@ public class TestJdbcPluginWithH2IT extends ClusterTest {
   }
 
   @Test
-  public void pushdownFilter() throws Exception {
+  public void pushDownFilter() throws Exception {
     String query = "select * from h2.tmp.drill_h2_test.person where person_ID = 1";
-    String plan = queryBuilder().sql(query).explainText();
 
-    assertThat("Query plan shouldn't contain Filter operator",
-        plan, not(containsString("Filter")));
+    queryBuilder()
+        .sql(query)
+        .planMatcher()
+        .exclude("Filter")
+        .match();
   }
 
   @Test
@@ -247,7 +255,6 @@ public class TestJdbcPluginWithH2IT extends ClusterTest {
   public void showTablesForInformationSchema() throws Exception {
     run("USE h2.tmp.`INFORMATION_SCHEMA`");
     String sql = "SHOW TABLES";
-    queryBuilder().sql(sql).printCsv();
     testBuilder()
         .sqlQuery(sql)
         .unOrdered()

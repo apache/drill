@@ -71,7 +71,7 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
 
     JdbcStorageConfig jdbcStorageConfig = new JdbcStorageConfig("com.mysql.cj.jdbc.Driver",
         String.format("jdbc:mysql://localhost:%s/%s?useJDBCCompliantTimezoneShift=true", mysqlPort, mysqlDBName),
-        "mysqlUser", "mysqlPass", false);
+        "mysqlUser", "mysqlPass", false, null);
     jdbcStorageConfig.setEnabled(true);
 
     cluster.defineStoragePlugin(ctx -> new JdbcStoragePlugin(jdbcStorageConfig, ctx, "mysql"));
@@ -80,7 +80,7 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
       // adds storage plugin with case insensitive table names
       JdbcStorageConfig jdbcCaseSensitiveStorageConfig = new JdbcStorageConfig("com.mysql.cj.jdbc.Driver",
           String.format("jdbc:mysql://localhost:%s/%s?useJDBCCompliantTimezoneShift=true", mysqlPort, mysqlDBName),
-          "mysqlUser", "mysqlPass", true);
+          "mysqlUser", "mysqlPass", true, null);
       jdbcCaseSensitiveStorageConfig.setEnabled(true);
       cluster.defineStoragePlugin(ctx -> new JdbcStoragePlugin(jdbcCaseSensitiveStorageConfig, ctx, "mysqlCaseInsensitive"));
     }
@@ -171,7 +171,7 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
   }
 
   @Test
-  public void pushdownJoin() throws Exception {
+  public void pushDownJoin() throws Exception {
     String query = "select x.person_id from (select person_id from mysql.`drill_mysql_test`.person) x "
             + "join (select person_id from mysql.`drill_mysql_test`.person) y on x.person_id = y.person_id";
     queryBuilder()
@@ -182,7 +182,7 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
   }
 
   @Test
-  public void pushdownJoinAndFilterPushDown() throws Exception {
+  public void pushDownJoinAndFilterPushDown() throws Exception {
     String query = "select * from " +
             "mysql.`drill_mysql_test`.person e " +
             "INNER JOIN " +
@@ -205,10 +205,12 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
   }
 
   @Test
-  public void emptyOutput() throws Exception {
+  public void emptyOutput() {
     String query = "select * from mysql.`drill_mysql_test`.person e limit 0";
 
-    run(query);
+    testBuilder()
+        .sqlQuery(query)
+        .expectsEmptyResultSet();
   }
 
   @Test
