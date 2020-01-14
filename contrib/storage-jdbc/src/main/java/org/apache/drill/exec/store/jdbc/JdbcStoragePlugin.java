@@ -17,6 +17,10 @@
  */
 package org.apache.drill.exec.store.jdbc;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
+import java.util.Map;
 import javax.sql.DataSource;
 import java.util.Set;
 
@@ -26,42 +30,37 @@ import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.sql.SqlDialect;
 import org.apache.calcite.sql.SqlDialectFactoryImpl;
 import org.apache.commons.dbcp2.BasicDataSource;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.drill.common.AutoCloseables;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
+import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JdbcStoragePlugin extends AbstractStoragePlugin {
 
+  private static final Logger logger = LoggerFactory.getLogger(JdbcStoragePlugin.class);
+
   private final JdbcStorageConfig config;
-  private final DataSource source;
+  private final BasicDataSource dataSource;
   private final SqlDialect dialect;
   private final DrillJdbcConvention convention;
 
   public JdbcStoragePlugin(JdbcStorageConfig config, DrillbitContext context, String name) {
     super(context, name);
     this.config = config;
-    BasicDataSource source = new BasicDataSource();
-    source.setDriverClassName(config.getDriver());
-    source.setUrl(config.getUrl());
-
-    if (config.getUsername() != null) {
-      source.setUsername(config.getUsername());
-    }
-
-    if (config.getPassword() != null) {
-      source.setPassword(config.getPassword());
-    }
-
-    this.source = source;
-    this.dialect = JdbcSchema.createDialect(SqlDialectFactoryImpl.INSTANCE, source);
+    this.dataSource = initDataSource(config);
+    this.dialect = JdbcSchema.createDialect(SqlDialectFactoryImpl.INSTANCE, dataSource);
     this.convention = new DrillJdbcConvention(dialect, name, this);
   }
 
-
   @Override
   public void registerSchemas(SchemaConfig config, SchemaPlus parent) {
-    JdbcCatalogSchema schema = new JdbcCatalogSchema(getName(), source, dialect, convention,
+    JdbcCatalogSchema schema = new JdbcCatalogSchema(getName(), dataSource, dialect, convention,
         !this.config.areTableNamesCaseInsensitive());
     SchemaPlus holder = parent.add(getName(), schema);
     schema.setHolder(holder);
@@ -77,8 +76,8 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
     return true;
   }
 
-  public DataSource getSource() {
-    return source;
+  public DataSource getDataSource() {
+    return dataSource;
   }
 
   public SqlDialect getDialect() {
@@ -88,5 +87,52 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
   @Override
   public Set<RelOptRule> getPhysicalOptimizerRules(OptimizerRulesContext context) {
     return convention.getRules();
+  }
+
+  @Override
+  public void close() {
+    AutoCloseables.closeSilently(dataSource);
+  }
+
+  /**
+   * Initializes {@link BasicDataSource} instance and configures it based on given
+   * storage plugin configuration.
+   * Basic parameters such as driver, url, user name and password are set using setters.
+   * Other source parameters are set dynamically by invoking setter based on given parameter name.
+   * If given parameter is absent, it will be ignored. If value is incorrect
+   * (for example, String is passed instead of int), data source initialization will fail.
+   * Parameter names should correspond to names available in documentation:
+   * <a href="https://commons.apache.org/proper/commons-dbcp/configuration.html">.
+   *
+   * @param config storage plugin config
+   * @return basic data source instance
+   * @throws UserException if unable to set source parameter
+   */
+  @VisibleForTesting
+  static BasicDataSource initDataSource(JdbcStorageConfig config) {
+    BasicDataSource dataSource = new BasicDataSource();
+    dataSource.setDriverClassName(config.getDriver());
+    dataSource.setUrl(config.getUrl());
+    dataSource.setUsername(config.getUsername());
+    dataSource.setPassword(config.getPassword());
+
+    MethodHandles.Lookup publicLookup = MethodHandles.publicLookup();
+    for (Map.Entry<String, Object> entry : config.getSourceParameters().entrySet()) {
+      try {
+        Class<?> parameterType = dataSource.getClass().getDeclaredField(entry.getKey()).getType();
+        MethodType methodType = MethodType.methodType(void.class, parameterType);
+        MethodHandle methodHandle = publicLookup.findVirtual(dataSource.getClass(),
+          "set" + StringUtils.capitalize(entry.getKey()), methodType);
+        methodHandle.invokeWithArguments(dataSource, entry.getValue());
+      } catch (ReflectiveOperationException e) {
+        logger.warn("Unable to find / access setter for parameter {}: {}", entry.getKey(), e.getMessage());
+      } catch (Throwable e) {
+        throw UserException.connectionError()
+          .message("Unable to set value %s for parameter %s", entry.getKey(), entry.getValue())
+          .addContext("Error message:", e.getMessage())
+          .build(logger);
+      }
+    }
+    return dataSource;
   }
 }

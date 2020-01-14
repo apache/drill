@@ -43,7 +43,7 @@ class JdbcExpressionCheck implements RexVisitor<Boolean> {
 
   private static final JdbcExpressionCheck INSTANCE = new JdbcExpressionCheck();
 
-  public static boolean isOnlyStandardExpressions(RexNode rex) {
+  static boolean isOnlyStandardExpressions(RexNode rex) {
     return rex.accept(INSTANCE);
   }
 
@@ -64,9 +64,9 @@ class JdbcExpressionCheck implements RexVisitor<Boolean> {
 
   @Override
   public Boolean visitCall(RexCall paramRexCall) {
-    if(paramRexCall.getOperator() instanceof DrillSqlOperator){
+    if (paramRexCall.getOperator() instanceof DrillSqlOperator) {
       return false;
-    }else{
+    } else {
       for (RexNode operand : paramRexCall.operands) {
         if (!operand.accept(this)) {
           return false;
@@ -81,9 +81,9 @@ class JdbcExpressionCheck implements RexVisitor<Boolean> {
       return false;
     }
 
-    final RexWindow window = over.getWindow();
+    RexWindow window = over.getWindow();
     for (RexFieldCollation orderKey : window.orderKeys) {
-      if (!((RexNode) orderKey.left).accept(this)) {
+      if (!orderKey.left.accept(this)) {
         return false;
       }
     }
@@ -132,5 +132,4 @@ class JdbcExpressionCheck implements RexVisitor<Boolean> {
   public Boolean visitPatternFieldRef(RexPatternFieldRef fieldRef) {
     return false;
   }
-
 }

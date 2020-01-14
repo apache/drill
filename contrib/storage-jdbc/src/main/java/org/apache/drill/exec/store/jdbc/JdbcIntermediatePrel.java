@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.jdbc;
 
-import java.io.IOException;
 import java.util.List;
 
 import org.apache.calcite.plan.RelOptCluster;
@@ -42,7 +41,7 @@ public class JdbcIntermediatePrel extends SinglePrel implements PrelFinalizable 
   }
 
   @Override
-  public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
+  public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) {
     throw new UnsupportedOperationException();
   }
 
@@ -67,7 +66,7 @@ public class JdbcIntermediatePrel extends SinglePrel implements PrelFinalizable 
   }
 
   @Override
-  public <T, X, E extends Throwable> T accept(PrelVisitor<T, X, E> logicalVisitor, X value) throws E {
+  public <T, X, E extends Throwable> T accept(PrelVisitor<T, X, E> logicalVisitor, X value) {
     throw new UnsupportedOperationException("This needs to be finalized before using a PrelVisitor.");
   }
 
@@ -75,5 +74,4 @@ public class JdbcIntermediatePrel extends SinglePrel implements PrelFinalizable 
   public boolean needsFinalColumnReordering() {
     return false;
   }
-
 }
