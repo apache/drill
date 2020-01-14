@@ -26,6 +26,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 // TODO Unit Tests for this Class
 public class ElasticSearchFilterBuilder extends AbstractExprVisitor<ElasticSearchScanSpec, Void, RuntimeException> implements ElasticSearchConstants {
   private static final Logger logger = LoggerFactory.getLogger(ElasticSearchFilterBuilder.class);

@@ -51,7 +51,7 @@ public class ElasticSearchSchemaFactory implements SchemaFactory {
   }
 
   @Override
-  public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws IOException {
+  public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) {
     // Registered here
     ElasticSearchSchema schema = new ElasticSearchSchema(schemaName, plugin);
     SchemaPlus hPlus = parent.add(schemaName, schema);

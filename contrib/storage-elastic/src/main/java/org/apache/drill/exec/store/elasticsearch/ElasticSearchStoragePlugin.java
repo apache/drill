@@ -84,7 +84,7 @@ public class ElasticSearchStoragePlugin extends AbstractStoragePlugin {
      */
     @Override
     public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws IOException {
-        this.schemaFactory.registerSchemas(schemaConfig, parent);
+        schemaFactory.registerSchemas(schemaConfig, parent);
     }
 
     /**
@@ -132,7 +132,7 @@ public class ElasticSearchStoragePlugin extends AbstractStoragePlugin {
     public RestClient getClient() { return this.client; }
 
     public ElasticSearchSchemaFactory getSchemaFactory() {
-        return this.schemaFactory;
+        return schemaFactory;
     }
 
     public ObjectMapper getObjectMapper() { return OBJECT_MAPPER; }

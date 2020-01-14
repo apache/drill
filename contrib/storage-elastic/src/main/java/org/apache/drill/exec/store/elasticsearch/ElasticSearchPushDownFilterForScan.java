@@ -18,7 +18,6 @@
 package org.apache.drill.exec.store.elasticsearch;
 
 import org.apache.calcite.plan.RelOptRuleCall;
-import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rex.RexNode;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.exec.planner.logical.DrillOptiq;
@@ -42,13 +41,13 @@ public class ElasticSearchPushDownFilterForScan extends StoragePluginOptimizerRu
   public static final StoragePluginOptimizerRule INSTANCE = new ElasticSearchPushDownFilterForScan();
 
   private ElasticSearchPushDownFilterForScan() {
-    super(RelOptHelper.some(FilterPrel.class, RelOptHelper.any(ScanPrel.class)), "MongoPushDownFilterForScan");
+    super(RelOptHelper.some(FilterPrel.class, RelOptHelper.any(ScanPrel.class)), "ElasticSearchPushDownFilterForScan");
   }
 
   @Override
   public void onMatch(RelOptRuleCall call) {
-    final ScanPrel scan = (ScanPrel) call.rel(1);
-    final FilterPrel filter = (FilterPrel) call.rel(0);
+    final ScanPrel scan = call.rel(1);
+    final FilterPrel filter = call.rel(0);
     final RexNode condition = filter.getCondition();
 
     ElasticSearchGroupScan groupScan = (ElasticSearchGroupScan) scan.getGroupScan();
@@ -67,7 +66,7 @@ public class ElasticSearchPushDownFilterForScan extends StoragePluginOptimizerRu
     }
 
     // Pass the filter in, and have scanned the data based on this
-    ElasticSearchGroupScan newGroupsScan = null;
+    ElasticSearchGroupScan newGroupsScan;
 
     newGroupsScan = new ElasticSearchGroupScan(groupScan.getUserName(), groupScan.getStoragePlugin(), newScanSpec, groupScan.getColumns());
 
@@ -84,13 +83,13 @@ public class ElasticSearchPushDownFilterForScan extends StoragePluginOptimizerRu
       call.transformTo(newScanPrel);
     } else {
       // Since some filters are not pushed down completely, copy it here
-      call.transformTo(filter.copy(filter.getTraitSet(), ImmutableList.of((RelNode) newScanPrel)));
+      call.transformTo(filter.copy(filter.getTraitSet(), ImmutableList.of(newScanPrel)));
     }
   }
 
   @Override
   public boolean matches(RelOptRuleCall call) {
-    final ScanPrel scan = (ScanPrel) call.rel(1);
+    final ScanPrel scan = call.rel(1);
     if (scan.getGroupScan() instanceof ElasticSearchGroupScan) {
       return super.matches(call);
     }

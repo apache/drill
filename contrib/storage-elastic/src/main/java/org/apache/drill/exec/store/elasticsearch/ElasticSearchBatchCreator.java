@@ -18,8 +18,8 @@
 
 package org.apache.drill.exec.store.elasticsearch;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -40,7 +40,9 @@ public class ElasticSearchBatchCreator implements BatchCreator<ElasticSearchSubS
   private static final Logger logger = LoggerFactory.getLogger(ElasticSearchBatchCreator.class);
 
   @Override
-  public CloseableRecordBatch getBatch(ExecutorFragmentContext context, ElasticSearchSubScan subScan, List<RecordBatch> children) throws ExecutionSetupException {
+  public CloseableRecordBatch getBatch(ExecutorFragmentContext context,
+                                       ElasticSearchSubScan subScan,
+                                       List<RecordBatch> children) throws ExecutionSetupException {
     Preconditions.checkArgument(children.isEmpty());
     List<RecordReader> readers = Lists.newArrayList();
     List<SchemaPath> columns;

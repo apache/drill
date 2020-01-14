@@ -48,7 +48,7 @@ public class ElasticSearchTypeMappingLoader extends CacheLoader<String, Collecti
   }
 
   @Override
-  public Collection<String> load(String idxName) throws Exception {
+  public Collection<String> load(String idxName) {
     // Pull map metadata for this index
     Set<String> typeMappings = Sets.newHashSet();
     try {
