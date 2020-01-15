@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableSet;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 
 public class CassandraStoragePlugin extends AbstractStoragePlugin {
     static final Logger logger = LoggerFactory.getLogger(CassandraStoragePlugin.class);

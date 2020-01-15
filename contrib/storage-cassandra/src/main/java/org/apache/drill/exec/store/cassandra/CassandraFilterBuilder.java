@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.cassandra;
 
-
 import java.util.List;
 
 import com.datastax.driver.core.querybuilder.Clause;

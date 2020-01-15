@@ -19,8 +19,6 @@
 package org.apache.drill.exec.store.cassandra;
 
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.collect.Maps;
 import org.apache.drill.common.logical.StoragePluginConfig;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -29,9 +27,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @JsonTypeName(CassandraStoragePluginConfig.NAME)
 public class CassandraStoragePluginConfig extends StoragePluginConfig {

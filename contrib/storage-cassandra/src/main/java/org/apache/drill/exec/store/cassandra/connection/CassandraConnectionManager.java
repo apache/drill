@@ -19,14 +19,12 @@
 package org.apache.drill.exec.store.cassandra.connection;
 
 import com.datastax.driver.core.Cluster;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.RemovalListener;
-import com.google.common.cache.RemovalNotification;
+import org.apache.drill.shaded.guava.com.google.common.cache.Cache;
+import org.apache.drill.shaded.guava.com.google.common.cache.CacheBuilder;
+import org.apache.drill.shaded.guava.com.google.common.cache.RemovalListener;
+import org.apache.drill.shaded.guava.com.google.common.cache.RemovalNotification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.net.UnknownHostException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -40,7 +38,7 @@ public class CassandraConnectionManager {
     hostConnectionMap = CacheBuilder.newBuilder().maximumSize(5).expireAfterAccess(10, TimeUnit.MINUTES).removalListener(new AddressCloser()).build();
   }
 
-  public synchronized static Cluster getCluster(List<String> hosts, int port) throws UnknownHostException {
+  public synchronized static Cluster getCluster(List<String> hosts, int port) {
     Cluster cluster = hostConnectionMap.getIfPresent(hosts);
     if (cluster == null || cluster.isClosed()) {
       Cluster.Builder builder = Cluster.builder();
@@ -48,6 +46,7 @@ public class CassandraConnectionManager {
         builder = builder.addContactPoints(host);
       }
       builder = builder.withPort(port);
+      builder = builder.withoutJMXReporting();
       cluster = builder.build();
 
       for (String host : hosts) {
@@ -64,7 +63,7 @@ public class CassandraConnectionManager {
     @Override
     public synchronized void onRemoval(RemovalNotification<String, Cluster> removal) {
       removal.getValue().close();
-      logger.debug("Closed connection to {}.", removal.getKey().toString());
+      logger.debug("Closed connection to {}.", removal.getKey());
     }
   }
 }

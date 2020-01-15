@@ -25,7 +25,7 @@ import org.apache.calcite.schema.Table;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.cassandra.CassandraSchemaFactory.CassandraSchema;
 
-import com.google.common.collect.Sets;
+import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 
 public class CassandraDatabaseSchema extends AbstractSchema {
     static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CassandraDatabaseSchema.class);

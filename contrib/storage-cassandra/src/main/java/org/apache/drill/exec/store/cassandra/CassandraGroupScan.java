@@ -61,421 +61,402 @@ import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 
 @JsonTypeName("cassandra-scan")
 public class CassandraGroupScan extends AbstractGroupScan implements DrillCassandraConstants {
-    private static final Logger logger = LoggerFactory.getLogger(CassandraGroupScan.class);
+  private static final Logger logger = LoggerFactory.getLogger(CassandraGroupScan.class);
 
-    private static final Comparator<List<CassandraSubScanSpec>> LIST_SIZE_COMPARATOR = new Comparator<List<CassandraSubScanSpec>>() {
-        @Override
-        public int compare(List<CassandraSubScanSpec> list1, List<CassandraSubScanSpec> list2) {
-            return list1.size() - list2.size();
+  private static final Comparator<List<CassandraSubScanSpec>> LIST_SIZE_COMPARATOR = new Comparator<List<CassandraSubScanSpec>>() {
+    @Override
+    public int compare(List<CassandraSubScanSpec> list1, List<CassandraSubScanSpec> list2) {
+      return list1.size() - list2.size();
+    }
+  };
+
+  private static final Comparator<List<CassandraSubScanSpec>> LIST_SIZE_COMPARATOR_REV = Collections.reverseOrder(LIST_SIZE_COMPARATOR);
+
+  private String userName;
+
+  private CassandraStoragePluginConfig storagePluginConfig;
+
+  private List<SchemaPath> columns;
+
+  private CassandraScanSpec cassandraScanSpec;
+
+  private CassandraStoragePlugin storagePlugin;
+
+  private Stopwatch watch = Stopwatch.createUnstarted();
+
+  private Map<Integer, List<CassandraSubScanSpec>> endpointFragmentMapping;
+
+  private Set<Host> keyspaceHosts;
+
+  private int totalAssignmentsTobeDone;
+
+  private boolean filterPushedDown = false;
+
+  private Map<String, CassandraPartitionToken> hostTokenMapping = new HashMap<>();
+
+  //private TableStatsCalculator statsCalculator;
+
+  private long scanSizeInBytes = 0;
+
+  private Metadata metadata;
+
+  private Cluster cluster;
+
+  private Session session;
+
+  private ResultSet rs;
+
+  @JsonCreator
+  public CassandraGroupScan(@JsonProperty("userName") String userName, @JsonProperty("cassandraScanSpec") CassandraScanSpec cassandraScanSpec, @JsonProperty("storage") CassandraStoragePluginConfig storagePluginConfig, @JsonProperty("columns") List<SchemaPath> columns, @JacksonInject StoragePluginRegistry pluginRegistry) throws IOException, ExecutionSetupException {
+    this(userName, (CassandraStoragePlugin) pluginRegistry.getPlugin(storagePluginConfig), cassandraScanSpec, columns);
+  }
+
+  public CassandraGroupScan(String userName, CassandraStoragePlugin storagePlugin, CassandraScanSpec scanSpec, List<SchemaPath> columns) {
+    super(userName);
+    this.storagePlugin = storagePlugin;
+    this.storagePluginConfig = storagePlugin.getConfig();
+    this.cassandraScanSpec = scanSpec;
+    this.columns = columns == null || columns.size() == 0 ? ALL_COLUMNS : columns;
+    init();
+  }
+
+  /**
+   * Private constructor, used for cloning.
+   *
+   * @param that The CassandraGroupScan to clone
+   */
+  private CassandraGroupScan(CassandraGroupScan that) {
+    super(that);
+    this.columns = that.columns;
+    this.cassandraScanSpec = that.cassandraScanSpec;
+    this.endpointFragmentMapping = that.endpointFragmentMapping;
+    this.keyspaceHosts = that.keyspaceHosts;
+    this.metadata = that.metadata;
+    this.storagePlugin = that.storagePlugin;
+    this.storagePluginConfig = that.storagePluginConfig;
+    this.filterPushedDown = that.filterPushedDown;
+    this.totalAssignmentsTobeDone = that.totalAssignmentsTobeDone;
+    this.hostTokenMapping = that.hostTokenMapping;
+    //this.statsCalculator = that.statsCalculator;
+    this.scanSizeInBytes = that.scanSizeInBytes;
+  }
+
+  @Override
+  public GroupScan clone(List<SchemaPath> columns) {
+    CassandraGroupScan newScan = new CassandraGroupScan(this);
+    newScan.columns = columns;
+    return newScan;
+  }
+
+  private void init() {
+    try {
+      logger.info(String.format("Getting cassandra session from host %s, port: %s.", storagePluginConfig.getHosts(), storagePluginConfig.getPort()));
+
+      cluster = CassandraConnectionManager.getCluster(storagePluginConfig.getHosts(), storagePluginConfig.getPort());
+
+      session = cluster.connect();
+
+      metadata = session.getCluster().getMetadata();
+
+      Charset charset = Charset.forName("UTF-8");
+      CharsetEncoder encoder = charset.newEncoder();
+
+      keyspaceHosts = session.getCluster().getMetadata().getAllHosts();
+
+      logger.debug("KeySpace hosts for Cassandra : {}", keyspaceHosts);
+
+      if (null == keyspaceHosts) {
+        logger.error(String.format("No Keyspace Hosts Found for Cassandra %s:%s .", storagePluginConfig.getHosts(), storagePluginConfig.getPort()));
+        throw new DrillRuntimeException(String.format("No Keyspace Hosts Found for Cassandra %s:%s .", storagePluginConfig.getHosts(), storagePluginConfig.getPort()));
+      }
+
+      String[] tokens = CassandraUtil.getPartitionTokens(metadata.getPartitioner(), keyspaceHosts.size());
+      int index = 0;
+      for (Host h : keyspaceHosts) {
+        CassandraPartitionToken token = new CassandraPartitionToken();
+        token.setLow(tokens[index]);
+        if (index + 1 < tokens.length) {
+          token.setHigh(tokens[index + 1]);
         }
-    };
+        hostTokenMapping.put(h.getAddress().getHostName(), token);
+        index++;
+      }
+      logger.debug("Host token mapping: {}", hostTokenMapping);
 
-    private static final Comparator<List<CassandraSubScanSpec>> LIST_SIZE_COMPARATOR_REV = Collections.reverseOrder(LIST_SIZE_COMPARATOR);
+      Statement q = QueryBuilder.select().all().from(cassandraScanSpec.getKeyspace(), cassandraScanSpec.getTable());
 
-    private String userName;
+      if (session.isClosed()) {
+        logger.error("Error in initializing CasandraGroupScan. Session Closed.");
+        throw new DrillRuntimeException("Error in initializing CasandraGroupScan. Session Closed.");
+      }
 
-    private CassandraStoragePluginConfig storagePluginConfig;
+      rs = session.execute(q);
+      this.totalAssignmentsTobeDone = rs.getAvailableWithoutFetching();
 
-    private List<SchemaPath> columns;
+    } catch (Exception e) {
+      logger.error("Error in initializing CasandraGroupScan, Error: " + e.getMessage());
+      throw new DrillRuntimeException(e);
+    }
+  }
 
-    private CassandraScanSpec cassandraScanSpec;
-
-    private CassandraStoragePlugin storagePlugin;
-
-    private Stopwatch watch = Stopwatch.createUnstarted();
-
-    private Map<Integer, List<CassandraSubScanSpec>> endpointFragmentMapping;
-
-    private Set<Host> keyspaceHosts;
-
-    private int totalAssignmentsTobeDone;
-
-    private boolean filterPushedDown = false;
-
-    private Map<String, CassandraPartitionToken> hostTokenMapping = new HashMap<>();
-
-    //private TableStatsCalculator statsCalculator;
-
-    private long scanSizeInBytes = 0;
-
-    private Metadata metadata;
-
-    private Cluster cluster;
-
-    private Session session;
-
-    private ResultSet rs;
-
-    @JsonCreator
-    public CassandraGroupScan(@JsonProperty("userName") String userName,
-                              @JsonProperty("cassandraScanSpec") CassandraScanSpec cassandraScanSpec,
-                              @JsonProperty("storage") CassandraStoragePluginConfig storagePluginConfig,
-                              @JsonProperty("columns") List<SchemaPath> columns,
-                              @JacksonInject StoragePluginRegistry pluginRegistry) throws IOException, ExecutionSetupException {
-        this (userName, (CassandraStoragePlugin) pluginRegistry.getPlugin(storagePluginConfig), cassandraScanSpec, columns);
+  @Override
+  public List<EndpointAffinity> getOperatorAffinity() {
+    watch.reset();
+    watch.start();
+    Map<String, DrillbitEndpoint> endpointMap = new HashMap<String, DrillbitEndpoint>();
+    for (DrillbitEndpoint ep : storagePlugin.getContext().getBits()) {
+      endpointMap.put(ep.getAddress(), ep);
     }
 
-    public CassandraGroupScan(String userName, CassandraStoragePlugin storagePlugin,
-                              CassandraScanSpec scanSpec, List<SchemaPath> columns) {
-        super(userName);
-        this.storagePlugin = storagePlugin;
-        this.storagePluginConfig = storagePlugin.getConfig();
-        this.cassandraScanSpec = scanSpec;
-        this.columns = columns == null || columns.size() == 0? ALL_COLUMNS : columns;
-        init();
+    logger.debug("Building affinity map. Endpoints: {}, KeyspaceHosts: {}", endpointMap, keyspaceHosts);
+
+    Map<DrillbitEndpoint, EndpointAffinity> affinityMap = new HashMap<DrillbitEndpoint, EndpointAffinity>();
+    for (Host host : keyspaceHosts) {
+      DrillbitEndpoint ep = endpointMap.get(host.getAddress().getHostName());
+      if (ep != null) {
+        EndpointAffinity affinity = affinityMap.get(ep);
+        if (affinity == null) {
+          affinityMap.put(ep, new EndpointAffinity(ep, 1));
+        } else {
+          affinity.addAffinity(1);
+        }
+      }
     }
 
-    /**
-     * Private constructor, used for cloning.
-     * @param that The CassandraGroupScan to clone
+    logger.debug("Took {} µs to get operator affinity", watch.elapsed(TimeUnit.NANOSECONDS) / 1000);
+
+    if (null == affinityMap || affinityMap.size() == 0) {
+      logger.debug("Affinity map is empty for CassandraGroupScan {}:{}", storagePluginConfig.getHosts(), storagePluginConfig.getPort());
+    }
+    return Lists.newArrayList(affinityMap.values());
+  }
+
+  /**
+   * @param incomingEndpoints
+   */
+  @Override
+  public void applyAssignments(List<DrillbitEndpoint> incomingEndpoints) {
+    watch.reset();
+    watch.start();
+
+    final int numSlots = incomingEndpoints.size();
+
+    Preconditions.checkArgument(numSlots <= totalAssignmentsTobeDone, String.format("Incoming endpoints %d is greater than number of chunks %d", numSlots, totalAssignmentsTobeDone));
+
+    final int minPerEndpointSlot = (int) Math.floor((double) totalAssignmentsTobeDone / numSlots);
+    final int maxPerEndpointSlot = (int) Math.ceil((double) totalAssignmentsTobeDone / numSlots);
+
+    /* Map for (index,endpoint)'s */
+    endpointFragmentMapping = Maps.newHashMapWithExpectedSize(numSlots);
+    /* Reverse mapping for above indexes */
+    Map<String, Queue<Integer>> endpointHostIndexListMap = Maps.newHashMap();
+
+    /*
+     * Initialize these two maps
      */
-    private CassandraGroupScan(CassandraGroupScan that) {
-        super(that);
-        this.columns = that.columns;
-        this.cassandraScanSpec = that.cassandraScanSpec;
-        this.endpointFragmentMapping = that.endpointFragmentMapping;
-        this.keyspaceHosts = that.keyspaceHosts;
-        this.metadata = that.metadata;
-        this.storagePlugin = that.storagePlugin;
-        this.storagePluginConfig = that.storagePluginConfig;
-        this.filterPushedDown = that.filterPushedDown;
-        this.totalAssignmentsTobeDone = that.totalAssignmentsTobeDone;
-        this.hostTokenMapping = that.hostTokenMapping;
-        //this.statsCalculator = that.statsCalculator;
-        this.scanSizeInBytes = that.scanSizeInBytes;
+    for (int i = 0; i < numSlots; ++i) {
+      endpointFragmentMapping.put(i, new ArrayList<CassandraSubScanSpec>(maxPerEndpointSlot));
+      String hostname = incomingEndpoints.get(i).getAddress();
+      Queue<Integer> hostIndexQueue = endpointHostIndexListMap.get(hostname);
+      if (hostIndexQueue == null) {
+        hostIndexQueue = Lists.newLinkedList();
+        endpointHostIndexListMap.put(hostname, hostIndexQueue);
+      }
+      hostIndexQueue.add(i);
     }
 
-    @Override
-    public GroupScan clone(List<SchemaPath> columns) {
-        CassandraGroupScan newScan = new CassandraGroupScan(this);
-        newScan.columns = columns;
-        return newScan;
+    Set<Host> hostsToAssignSet = Sets.newHashSet(keyspaceHosts);
+
+    for (Iterator<Host> hostIterator = hostsToAssignSet.iterator(); hostIterator.hasNext(); /*nothing*/) {
+      Host hostEntry = hostIterator.next();
+
+      Queue<Integer> endpointIndexlist = endpointHostIndexListMap.get(hostEntry.getAddress().getHostName());
+      if (endpointIndexlist != null) {
+        Integer slotIndex = endpointIndexlist.poll();
+        List<CassandraSubScanSpec> endpointSlotScanList = endpointFragmentMapping.get(slotIndex);
+        endpointSlotScanList.add(hostToSubScanSpec(hostEntry, storagePluginConfig.getHosts()));
+        // add to the tail of the slot list, to add more later in round robin fashion
+        endpointIndexlist.offer(slotIndex);
+        // this region has been assigned
+        hostIterator.remove();
+      }
     }
 
-    private void init() {
-        try {
-            logger.info(String.format("Getting cassandra session from host %s, port: %s.",
-                    storagePluginConfig.getHosts(), storagePluginConfig.getPort()));
-
-            cluster = CassandraConnectionManager.getCluster(storagePluginConfig.getHosts(),
-                    storagePluginConfig.getPort());
-
-            session = cluster.connect();
-
-            metadata =  session.getCluster().getMetadata();
-
-            Charset charset = Charset.forName("UTF-8");
-            CharsetEncoder encoder = charset.newEncoder();
-
-            keyspaceHosts = session.getCluster().getMetadata().getAllHosts();
-
-            logger.info("KeySpace hosts for Cassandra : {}", keyspaceHosts);
-
-            if(null == keyspaceHosts){
-                logger.error(String.format("No Keyspace Hosts Found for Cassandra %s:%s .",
-                        storagePluginConfig.getHosts(), storagePluginConfig.getPort()));
-                throw new DrillRuntimeException(String.format("No Keyspace Hosts Found for Cassandra %s:%s .",
-                        storagePluginConfig.getHosts(), storagePluginConfig.getPort()));
-            }
-
-            String[] tokens = CassandraUtil.getPartitionTokens(metadata.getPartitioner(), keyspaceHosts.size());
-            int index = 0;
-            for(Host h : keyspaceHosts){
-                CassandraPartitionToken token = new CassandraPartitionToken();
-                token.setLow(tokens[index]);
-                if(index+1 < tokens.length){
-                    token.setHigh(tokens[index+1]);
-                }
-                hostTokenMapping.put(h.getAddress().getHostName(), token);
-                index++;
-            }
-            logger.info("Host token mapping: {}", hostTokenMapping);
-
-            Statement q = QueryBuilder.select().all().from(cassandraScanSpec.getKeyspace(),
-                    cassandraScanSpec.getTable());
-
-            if(session.isClosed()){
-                logger.error("Error in initializing CasandraGroupScan. Session Closed.");
-                throw new DrillRuntimeException("Error in initializing CasandraGroupScan. Session Closed.");
-            }
-
-            rs = session.execute(q);
-            this.totalAssignmentsTobeDone = rs.getAvailableWithoutFetching();
-
-        }
-        catch(Exception e){
-            logger.error("Error in initializing CasandraGroupScan, Error: "+e.getMessage());
-            throw new DrillRuntimeException(e);
-        }
-    }
-
-    @Override
-    public List<EndpointAffinity> getOperatorAffinity() {
-        watch.reset();
-        watch.start();
-        Map<String, DrillbitEndpoint> endpointMap = new HashMap<String, DrillbitEndpoint>();
-        for (DrillbitEndpoint ep : storagePlugin.getContext().getBits()) {
-            endpointMap.put(ep.getAddress(), ep);
-        }
-
-        logger.info("Building affinity map. Endpoints: {}, KeyspaceHosts: {}", endpointMap, keyspaceHosts);
-
-        Map<DrillbitEndpoint, EndpointAffinity> affinityMap = new HashMap<DrillbitEndpoint, EndpointAffinity>();
-        for (Host host : keyspaceHosts) {
-            DrillbitEndpoint ep = endpointMap.get(host.getAddress().getHostName());
-            if (ep != null) {
-                EndpointAffinity affinity = affinityMap.get(ep);
-                if (affinity == null) {
-                    affinityMap.put(ep, new EndpointAffinity(ep, 1));
-                } else {
-                    affinity.addAffinity(1);
-                }
-            }
-        }
-
-        logger.debug("Took {} µs to get operator affinity", watch.elapsed(TimeUnit.NANOSECONDS) / 1000);
-
-        if(null == affinityMap || affinityMap.size()==0){
-            logger.info("Affinity map is empty for CassandraGroupScan {}:{}", storagePluginConfig.getHosts(), storagePluginConfig.getPort());
-        }
-        return Lists.newArrayList(affinityMap.values());
-    }
-
-    /**
-     *
-     * @param incomingEndpoints
+    /*
+     * Build priority queues of slots, with ones which has tasks lesser than 'minPerEndpointSlot' and another which have more.
      */
-    @Override
-    public void applyAssignments(List<DrillbitEndpoint> incomingEndpoints) {
-        watch.reset();
-        watch.start();
-
-        final int numSlots = incomingEndpoints.size();
-
-        Preconditions.checkArgument(numSlots <= totalAssignmentsTobeDone,
-                String.format("Incoming endpoints %d is greater than number of chunks %d",
-                        numSlots, totalAssignmentsTobeDone));
-
-        final int minPerEndpointSlot = (int) Math.floor((double) totalAssignmentsTobeDone / numSlots);
-        final int maxPerEndpointSlot = (int) Math.ceil((double) totalAssignmentsTobeDone / numSlots);
-
-        /* Map for (index,endpoint)'s */
-        endpointFragmentMapping = Maps.newHashMapWithExpectedSize(numSlots);
-        /* Reverse mapping for above indexes */
-        Map<String, Queue<Integer>> endpointHostIndexListMap = Maps.newHashMap();
-
-        /*
-         * Initialize these two maps
-         */
-        for (int i = 0; i < numSlots; ++i) {
-            endpointFragmentMapping.put(i, new ArrayList<CassandraSubScanSpec>(maxPerEndpointSlot));
-            String hostname = incomingEndpoints.get(i).getAddress();
-            Queue<Integer> hostIndexQueue = endpointHostIndexListMap.get(hostname);
-            if (hostIndexQueue == null) {
-                hostIndexQueue = Lists.newLinkedList();
-                endpointHostIndexListMap.put(hostname, hostIndexQueue);
-            }
-            hostIndexQueue.add(i);
-        }
-
-        Set<Host> hostsToAssignSet = Sets.newHashSet(keyspaceHosts);
-
-        for (Iterator<Host> hostIterator = hostsToAssignSet.iterator(); hostIterator.hasNext(); /*nothing*/) {
-            Host hostEntry = hostIterator.next();
-
-            Queue<Integer> endpointIndexlist = endpointHostIndexListMap.get(hostEntry.getAddress().getHostName());
-            if (endpointIndexlist != null) {
-                Integer slotIndex = endpointIndexlist.poll();
-                List<CassandraSubScanSpec> endpointSlotScanList = endpointFragmentMapping.get(slotIndex);
-                endpointSlotScanList.add(hostToSubScanSpec(hostEntry, storagePluginConfig.getHosts()));
-                // add to the tail of the slot list, to add more later in round robin fashion
-                endpointIndexlist.offer(slotIndex);
-                // this region has been assigned
-                hostIterator.remove();
-            }
-        }
-
-        /*
-         * Build priority queues of slots, with ones which has tasks lesser than 'minPerEndpointSlot' and another which have more.
-         */
-        PriorityQueue<List<CassandraSubScanSpec>> minHeap = new PriorityQueue<List<CassandraSubScanSpec>>(numSlots, LIST_SIZE_COMPARATOR);
-        PriorityQueue<List<CassandraSubScanSpec>> maxHeap = new PriorityQueue<List<CassandraSubScanSpec>>(numSlots, LIST_SIZE_COMPARATOR_REV);
-        for(List<CassandraSubScanSpec> listOfScan : endpointFragmentMapping.values()) {
-            if (listOfScan.size() < minPerEndpointSlot) {
-                minHeap.offer(listOfScan);
-            } else if (listOfScan.size() > minPerEndpointSlot) {
-                maxHeap.offer(listOfScan);
-            }
-        }
+    PriorityQueue<List<CassandraSubScanSpec>> minHeap = new PriorityQueue<List<CassandraSubScanSpec>>(numSlots, LIST_SIZE_COMPARATOR);
+    PriorityQueue<List<CassandraSubScanSpec>> maxHeap = new PriorityQueue<List<CassandraSubScanSpec>>(numSlots, LIST_SIZE_COMPARATOR_REV);
+    for (List<CassandraSubScanSpec> listOfScan : endpointFragmentMapping.values()) {
+      if (listOfScan.size() < minPerEndpointSlot) {
+        minHeap.offer(listOfScan);
+      } else if (listOfScan.size() > minPerEndpointSlot) {
+        maxHeap.offer(listOfScan);
+      }
+    }
 
     /*
      * Now, let's process any regions which remain unassigned and assign them to slots with minimum number of assignments.
      */
-        if (hostsToAssignSet.size() > 0) {
-            for (Host hostEntry : hostsToAssignSet) {
-                List<CassandraSubScanSpec> smallestList = minHeap.poll();
-                smallestList.add(hostToSubScanSpec(hostEntry, storagePluginConfig.getHosts()));
-                if (smallestList.size() < maxPerEndpointSlot) {
-                    minHeap.offer(smallestList);
-                }
-            }
+    if (hostsToAssignSet.size() > 0) {
+      for (Host hostEntry : hostsToAssignSet) {
+        List<CassandraSubScanSpec> smallestList = minHeap.poll();
+        smallestList.add(hostToSubScanSpec(hostEntry, storagePluginConfig.getHosts()));
+        if (smallestList.size() < maxPerEndpointSlot) {
+          minHeap.offer(smallestList);
         }
+      }
+    }
 
-        /*
-         * While there are slots with lesser than 'minPerEndpointSlot' unit work, balance from those with more.
-         */
-        try {
-            // If there is more work left
-            if(maxHeap.peek() != null && maxHeap.peek().size() > 0) {
-                while (minHeap.peek() != null && minHeap.peek().size() <= minPerEndpointSlot) {
-                    List<CassandraSubScanSpec> smallestList = minHeap.poll();
-                    List<CassandraSubScanSpec> largestList = maxHeap.poll();
+    /*
+     * While there are slots with lesser than 'minPerEndpointSlot' unit work, balance from those with more.
+     */
+    try {
+      // If there is more work left
+      if (maxHeap.peek() != null && maxHeap.peek().size() > 0) {
+        while (minHeap.peek() != null && minHeap.peek().size() <= minPerEndpointSlot) {
+          List<CassandraSubScanSpec> smallestList = minHeap.poll();
+          List<CassandraSubScanSpec> largestList = maxHeap.poll();
 
-                    smallestList.add(largestList.remove(largestList.size() - 1));
-                    if (largestList.size() > minPerEndpointSlot) {
-                        maxHeap.offer(largestList);
-                    }
-                    if (smallestList.size() <= minPerEndpointSlot) {
-                        minHeap.offer(smallestList);
-                    }
-                }
-            }
-        }catch(Exception e){
-            e.printStackTrace();
+          smallestList.add(largestList.remove(largestList.size() - 1));
+          if (largestList.size() > minPerEndpointSlot) {
+            maxHeap.offer(largestList);
+          }
+          if (smallestList.size() <= minPerEndpointSlot) {
+            minHeap.offer(smallestList);
+          }
         }
-
-
-        /* no slot should be empty at this point */
-        assert (minHeap.peek() == null || minHeap.peek().size() > 0) : String.format(
-                "Unable to assign tasks to some endpoints.\nEndpoints: {}.\nAssignment Map: {}.",
-                incomingEndpoints, endpointFragmentMapping.toString());
-
-        logger.debug("Built assignment map in {} µs.\nEndpoints: {}.\nAssignment Map: {}",
-                watch.elapsed(TimeUnit.NANOSECONDS)/1000, incomingEndpoints, endpointFragmentMapping.toString());
-
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
     }
 
-    private CassandraSubScanSpec hostToSubScanSpec(Host host, List<String> contactPoints) {
-        CassandraScanSpec spec = cassandraScanSpec;
-        CassandraPartitionToken token = hostTokenMapping.get(host.getAddress().getHostName());
 
-        return  new CassandraSubScanSpec()
-                .setTable(spec.getTable())
-                .setKeyspace(spec.getKeyspace())
-                .setFilter(spec.getFilters())
-                .setHosts(contactPoints)
-                .setPort(storagePluginConfig.getPort())
-                .setStartToken(token != null ? token.getLow() : null)
-                .setEndToken(token != null ? token.getHigh() : null);
+    /* no slot should be empty at this point */
+    assert (minHeap.peek() == null || minHeap.peek().size() > 0) : String.format("Unable to assign tasks to some endpoints.\nEndpoints: {}.\nAssignment Map: {}.", incomingEndpoints, endpointFragmentMapping.toString());
 
-    }
+    logger.debug("Built assignment map in {} µs.\nEndpoints: {}.\nAssignment Map: {}", watch.elapsed(TimeUnit.NANOSECONDS) / 1000, incomingEndpoints, endpointFragmentMapping.toString());
 
-    private boolean isNullOrEmpty(byte[] key) {
-        return key == null || key.length == 0;
-    }
+  }
 
-    @Override
-    public CassandraSubScan getSpecificScan(int minorFragmentId) {
-        assert minorFragmentId < endpointFragmentMapping.size() : String.format(
-                "Mappings length [%d] should be greater than minor fragment id [%d] but it isn't.", endpointFragmentMapping.size(),
-                minorFragmentId);
-        return new CassandraSubScan(storagePlugin, storagePluginConfig, endpointFragmentMapping.get(minorFragmentId), columns);
-    }
+  private CassandraSubScanSpec hostToSubScanSpec(Host host, List<String> contactPoints) {
+    CassandraScanSpec spec = cassandraScanSpec;
+    CassandraPartitionToken token = hostTokenMapping.get(host.getAddress().getHostName());
 
-    @Override
-    public int getMaxParallelizationWidth() {
-        return -1;
-    }
+    return new CassandraSubScanSpec()
+      .setTable(spec.getTable())
+      .setKeyspace(spec.getKeyspace())
+      .setFilter(spec.getFilters())
+      .setHosts(contactPoints)
+      .setPort(storagePluginConfig.getPort())
+      .setStartToken(token != null ? token.getLow() : null)
+      .setEndToken(token != null ? token.getHigh() : null);
 
-    @Override
-    public ScanStats getScanStats() {
-        //TODO
-        return ScanStats.TRIVIAL_TABLE;
-    }
+  }
 
-    @Override
-    @JsonIgnore
-    public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
-        Preconditions.checkArgument(children.isEmpty());
-        return new CassandraGroupScan(this);
-    }
+  private boolean isNullOrEmpty(byte[] key) {
+    return key == null || key.length == 0;
+  }
 
-    @JsonIgnore
-    public CassandraStoragePlugin getStoragePlugin() {
-        return storagePlugin;
-    }
+  @Override
+  public CassandraSubScan getSpecificScan(int minorFragmentId) {
+    assert minorFragmentId < endpointFragmentMapping.size() : String.format("Mappings length [%d] should be greater than minor fragment id [%d] but it isn't.", endpointFragmentMapping.size(), minorFragmentId);
+    return new CassandraSubScan(storagePlugin, storagePluginConfig, endpointFragmentMapping
+      .get(minorFragmentId), columns);
+  }
 
-    @JsonIgnore
-    public String getTableName() {
-        return getCassandraScanSpec().getTable();
-    }
+  @Override
+  public int getMaxParallelizationWidth() {
+    return -1;
+  }
 
-    @Override
-    public String getDigest() {
-        return toString();
-    }
+  @Override
+  public ScanStats getScanStats() {
+    //TODO
+    return ScanStats.TRIVIAL_TABLE;
+  }
 
-    @Override
-    public String toString() {
-        return "CassandraGroupScan [CassandraScanSpec="
-                + cassandraScanSpec + ", columns="
-                + columns + "]";
-    }
+  @Override
+  @JsonIgnore
+  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
+    Preconditions.checkArgument(children.isEmpty());
+    return new CassandraGroupScan(this);
+  }
 
-    @JsonProperty("storage")
-    public CassandraStoragePluginConfig getStorageConfig() {
-        return this.storagePluginConfig;
-    }
+  @JsonIgnore
+  public CassandraStoragePlugin getStoragePlugin() {
+    return storagePlugin;
+  }
 
-    @JsonProperty
-    public List<SchemaPath> getColumns() {
-        return columns;
-    }
+  @JsonIgnore
+  public String getTableName() {
+    return getCassandraScanSpec().getTable();
+  }
 
-    @JsonProperty
-    public CassandraScanSpec getCassandraScanSpec() {
-        return cassandraScanSpec;
-    }
+  @Override
+  public String getDigest() {
+    return toString();
+  }
 
-    @Override
-    @JsonIgnore
-    public boolean canPushdownProjects(List<SchemaPath> columns) {
-        return true;
-    }
+  @Override
+  public String toString() {
+    return "CassandraGroupScan [CassandraScanSpec=" + cassandraScanSpec + ", columns=" + columns + "]";
+  }
 
-    @JsonIgnore
-    public void setFilterPushedDown(boolean b) {
-        this.filterPushedDown = true;
-    }
+  @JsonProperty("storage")
+  public CassandraStoragePluginConfig getStorageConfig() {
+    return this.storagePluginConfig;
+  }
 
-    @JsonIgnore
-    public boolean isFilterPushedDown() {
-        return filterPushedDown;
-    }
+  @JsonProperty
+  public List<SchemaPath> getColumns() {
+    return columns;
+  }
 
-    /**
-     * Empty constructor, do not use, only for testing.
-     */
-    @VisibleForTesting
-    public CassandraGroupScan() {
-        super((String)null);
-    }
+  @JsonProperty
+  public CassandraScanSpec getCassandraScanSpec() {
+    return cassandraScanSpec;
+  }
 
-    /**
-     * Do not use, only for testing.
-     */
-    @VisibleForTesting
-    public void setCassandraScanSpec(CassandraScanSpec cassandraScanSpec) {
-        this.cassandraScanSpec = cassandraScanSpec;
-    }
+  @Override
+  @JsonIgnore
+  public boolean canPushdownProjects(List<SchemaPath> columns) {
+    return true;
+  }
+
+  @JsonIgnore
+  public void setFilterPushedDown(boolean b) {
+    this.filterPushedDown = true;
+  }
+
+  @JsonIgnore
+  public boolean isFilterPushedDown() {
+    return filterPushedDown;
+  }
+
+  /**
+   * Empty constructor, do not use, only for testing.
+   */
+  @VisibleForTesting
+  public CassandraGroupScan() {
+    super((String) null);
+  }
+
+  /**
+   * Do not use, only for testing.
+   */
+  @VisibleForTesting
+  public void setCassandraScanSpec(CassandraScanSpec cassandraScanSpec) {
+    this.cassandraScanSpec = cassandraScanSpec;
+  }
 
 }

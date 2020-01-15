@@ -32,14 +32,12 @@ import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.cassandra.CassandraStoragePlugin;
 import org.apache.drill.exec.store.cassandra.CassandraStoragePluginConfig;
 import org.apache.drill.exec.store.cassandra.connection.CassandraConnectionManager;
-import org.apache.drill.test.ClusterFixture;
-import org.apache.drill.test.ClusterTest;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
+import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
+import org.apache.drill.shaded.guava.com.google.common.io.Files;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,7 +50,7 @@ public class BaseCassandraTest extends BaseTestQuery implements CassandraTestCon
 
   protected static CassandraStoragePlugin storagePlugin;
 
-  protected static CassandraStoragePluginConfig storagePluginConfig;
+  protected static CassandraStoragePluginConfig cassandraStoragePluginConfig;
 
   private static boolean testTablesCreated;
 
@@ -60,17 +58,18 @@ public class BaseCassandraTest extends BaseTestQuery implements CassandraTestCon
   public static void setUpBeforeClass() throws Exception {
     BaseTestQuery.setupDefaultTestCluster();
 
+    pluginRegistry = getDrillbitContext().getStorage();
     List<String> hosts = new ArrayList<>();
     hosts.add("127.0.0.1");
 
-    CassandraStoragePluginConfig cassandraStoragePluginConfig = new CassandraStoragePluginConfig(hosts, 9042);
+    cassandraStoragePluginConfig = new CassandraStoragePluginConfig(hosts, 9042);
     pluginRegistry.createOrUpdate("cassandra", cassandraStoragePluginConfig, true);
 
     storagePlugin = (CassandraStoragePlugin) pluginRegistry.getPlugin("cassandra");
     cassandraStoragePluginConfig.setEnabled(true);
 
     if (!testTablesCreated) {
-      createTestCassandraTableIfNotExists(storagePluginConfig.getHosts(), storagePluginConfig.getPort());
+      createTestCassandraTableIfNotExists(cassandraStoragePluginConfig.getHosts(), cassandraStoragePluginConfig.getPort());
       testTablesCreated = true;
     }
   }
@@ -130,7 +129,7 @@ public class BaseCassandraTest extends BaseTestQuery implements CassandraTestCon
   }
 
   protected List<QueryDataBatch> runCassandraSQLlWithResults(String sql) throws Exception {
-    System.out.println("Running query:\n" + sql);
+    logger.info("Running query: {}", sql);
     return testSqlWithResults(sql);
   }
 

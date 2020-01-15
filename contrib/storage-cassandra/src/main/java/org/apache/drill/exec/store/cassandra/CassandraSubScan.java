@@ -38,8 +38,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterators;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import java.util.Collections;
 
 @JsonTypeName("cassandra-subscan")
 public class CassandraSubScan extends AbstractBase implements SubScan {
@@ -122,7 +122,7 @@ public class CassandraSubScan extends AbstractBase implements SubScan {
 
     @Override
     public Iterator<PhysicalOperator> iterator() {
-        return Iterators.emptyIterator();
+        return Collections.emptyIterator();
     }
 
     public static class CassandraSubScanSpec {

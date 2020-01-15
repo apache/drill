@@ -27,9 +27,11 @@ public class CassandraTest {
     public static void main(String[] args) {
         Cluster.Builder builder = Cluster.builder()
                 .addContactPoint("127.0.0.1")
+          .withoutJMXReporting()
                 .withPort(9042);
 
         Cluster cluster = builder.build();
+
         Session session = cluster.connect();
         ResultSet rs = session.execute("SELECT * FROM drilltest.trending_now");
 

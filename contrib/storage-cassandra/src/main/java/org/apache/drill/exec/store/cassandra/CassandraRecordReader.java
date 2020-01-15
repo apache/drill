@@ -18,7 +18,6 @@
 
 package org.apache.drill.exec.store.cassandra;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
@@ -38,7 +37,7 @@ import com.datastax.driver.core.Session;
 import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Select;
-import com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -196,7 +195,7 @@ public class CassandraRecordReader extends AbstractRecordReader implements Drill
                 }
             }
 
-        } catch (SchemaChangeException | IOException e) {
+        } catch (SchemaChangeException e) {
             throw new ExecutionSetupException("Failure in Cassandra Record Reader setup. Cause: ",e);
         }
     }
@@ -303,7 +302,7 @@ public class CassandraRecordReader extends AbstractRecordReader implements Drill
     public String getAsString(Row r, String colname){
         String value = null;
         try {
-            Class clazz = r.getColumnDefinitions().getType(colname).asJavaClass();
+            Class clazz = r.getColumnDefinitions().getType(colname).getClass();
 
             if (clazz.isInstance(Long.MIN_VALUE)) {
                 value = String.valueOf(r.getLong(colname));
@@ -330,8 +329,7 @@ public class CassandraRecordReader extends AbstractRecordReader implements Drill
             }
         }
         catch(Exception e){
-            throw new DrillRuntimeException(String.format("Unable to get Cassandra column: %s, of type: %s."
-                    , colname, r.getColumnDefinitions().getType(colname).asJavaClass().getCanonicalName()));
+            throw new DrillRuntimeException(String.format("Unable to get Cassandra column: %s, of type: %s.", colname, r.getColumnDefinitions().getType(colname).getClass().getCanonicalName()));
         }
         return value;
     }
