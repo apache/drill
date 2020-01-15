@@ -38,24 +38,15 @@ public class CassandraStoragePluginConfig extends StoragePluginConfig {
     static final Logger logger = LoggerFactory.getLogger(CassandraStoragePluginConfig.class);
 
     public static final String NAME = "cassandra";
-    public Map<String, Object> config;
 
-    @JsonIgnore
     private List<String> hosts;
 
-    @JsonIgnore
     private int port;
 
     @JsonCreator
-    public CassandraStoragePluginConfig(@JsonProperty("config") Map<String, Object> config) {
-        this.config = config;
-        if(config==null){
-            config = Maps.newHashMap();
-            return;
-        }
-
-        this.hosts = (ArrayList<String>)this.config.get(DrillCassandraConstants.CASSANDRA_CONFIG_HOSTS);
-        this.port = (Integer)this.config.get(DrillCassandraConstants.CASSANDRA_CONFIG_PORT);
+    public CassandraStoragePluginConfig( @JsonProperty("hosts") List<String> hosts, @JsonProperty("port") int port ) {
+        this.hosts = hosts;
+        this.port = port;
     }
 
     @Override
@@ -73,10 +64,6 @@ public class CassandraStoragePluginConfig extends StoragePluginConfig {
     @Override
     public int hashCode() {
         return this.hosts != null ? this.hosts.hashCode() : 0;
-    }
-
-    public Map<String, Object> getConfig() {
-        return config;
     }
 
     public List<String> getHosts() {

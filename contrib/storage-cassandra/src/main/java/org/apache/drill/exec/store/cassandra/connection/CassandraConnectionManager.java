@@ -30,46 +30,41 @@ import java.net.UnknownHostException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public class CassandraConnectionManager{
+public class CassandraConnectionManager {
 
-    private static final Logger logger = LoggerFactory.getLogger(CassandraConnectionManager.class);
+  private static final Logger logger = LoggerFactory.getLogger(CassandraConnectionManager.class);
 
-    private static Cache<String, Cluster> hostConnectionMap;
+  private static Cache<String, Cluster> hostConnectionMap;
 
-    static {
-        hostConnectionMap = CacheBuilder.newBuilder().maximumSize(5)
-                .expireAfterAccess(10, TimeUnit.MINUTES)
-                .removalListener(new AddressCloser()).build();
+  static {
+    hostConnectionMap = CacheBuilder.newBuilder().maximumSize(5).expireAfterAccess(10, TimeUnit.MINUTES).removalListener(new AddressCloser()).build();
+  }
+
+  public synchronized static Cluster getCluster(List<String> hosts, int port) throws UnknownHostException {
+    Cluster cluster = hostConnectionMap.getIfPresent(hosts);
+    if (cluster == null || cluster.isClosed()) {
+      Cluster.Builder builder = Cluster.builder();
+      for (String host : hosts) {
+        builder = builder.addContactPoints(host);
+      }
+      builder = builder.withPort(port);
+      cluster = builder.build();
+
+      for (String host : hosts) {
+        hostConnectionMap.put(host, cluster);
+      }
+
+      logger.debug("Created connection to {}.", hosts);
+      logger.debug("Number of sessions opened are {}.", hostConnectionMap.size());
     }
+    return cluster;
+  }
 
-    public synchronized static Cluster getCluster(List<String> hosts,  int port)
-            throws UnknownHostException {
-        Cluster cluster = hostConnectionMap.getIfPresent(hosts);
-        if (cluster == null || cluster.isClosed()) {
-            Cluster.Builder builder = Cluster.builder();
-            for(String host : hosts){
-                builder = builder.addContactPoints(host);
-            }
-            builder = builder.withPort(port);
-            cluster = builder.build();
-
-            for(String host : hosts) {
-                hostConnectionMap.put(host, cluster);
-            }
-
-            logger.debug("Created connection to {}.", hosts);
-            logger.debug("Number of sessions opened are {}.", hostConnectionMap.size());
-        }
-        return cluster;
+  private static class AddressCloser implements RemovalListener<String, Cluster> {
+    @Override
+    public synchronized void onRemoval(RemovalNotification<String, Cluster> removal) {
+      removal.getValue().close();
+      logger.debug("Closed connection to {}.", removal.getKey().toString());
     }
-
-    private static class AddressCloser implements
-            RemovalListener<String, Cluster> {
-        @Override
-        public synchronized void onRemoval(RemovalNotification<String, Cluster> removal) {
-                    removal.getValue().close();
-            ;
-            logger.debug("Closed connection to {}.", removal.getKey().toString());
-        }
-    }
+  }
 }

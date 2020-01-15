@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.cassandra;
 
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +28,7 @@ public class CassandraUtil {
 
   public static String[] getPartitionTokens(String partitionTechnique, int numberOfNodes) {
 
-    logger.info("Getting partition bounds for nodes. PartitionScheme: {}, Node Count: {}.", partitionTechnique, numberOfNodes);
+    logger.debug("Getting partition bounds for nodes. PartitionScheme: {}, Node Count: {}.", partitionTechnique, numberOfNodes);
 
     switch (partitionTechnique) {
       case "org.apache.cassandra.dht.Murmur3Partitioner":
@@ -77,15 +76,4 @@ public class CassandraUtil {
     }
     return tokens;
   }
-
-  public static void main(String[] args) {
-
-    String[] out = new CassandraUtil().getPartitionTokens("org.apache.cassandra.dht.Murmur3Partitioner", 5);
-
-    for (String s : out) {
-      System.out.println(s);
-    }
-  }
-
-
 }

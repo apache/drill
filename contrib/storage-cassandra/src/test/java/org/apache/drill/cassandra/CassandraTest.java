@@ -26,8 +26,7 @@ public class CassandraTest {
 
     public static void main(String[] args) {
         Cluster.Builder builder = Cluster.builder()
-                .addContactPoint("127.0.0.2")
-                .addContactPoint("127.0.0.3")
+                .addContactPoint("127.0.0.1")
                 .withPort(9042);
 
         Cluster cluster = builder.build();

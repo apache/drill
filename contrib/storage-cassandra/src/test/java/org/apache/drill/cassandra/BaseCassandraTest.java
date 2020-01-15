@@ -18,6 +18,7 @@
 package org.apache.drill.cassandra;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.datastax.driver.core.Cluster;
@@ -31,6 +32,8 @@ import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.cassandra.CassandraStoragePlugin;
 import org.apache.drill.exec.store.cassandra.CassandraStoragePluginConfig;
 import org.apache.drill.exec.store.cassandra.connection.CassandraConnectionManager;
+import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.ClusterTest;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -45,6 +48,8 @@ public class BaseCassandraTest extends BaseTestQuery implements CassandraTestCon
 
   private static final String CASSANDRA_STORAGE_PLUGIN_NAME = "cassandra";
 
+  private static StoragePluginRegistry pluginRegistry;
+
   protected static CassandraStoragePlugin storagePlugin;
 
   protected static CassandraStoragePluginConfig storagePluginConfig;
@@ -53,12 +58,16 @@ public class BaseCassandraTest extends BaseTestQuery implements CassandraTestCon
 
   @BeforeClass
   public static void setUpBeforeClass() throws Exception {
+    BaseTestQuery.setupDefaultTestCluster();
 
-    final StoragePluginRegistry pluginRegistry = getDrillbitContext().getStorage();
-    storagePlugin = (CassandraStoragePlugin) pluginRegistry.getPlugin(CASSANDRA_STORAGE_PLUGIN_NAME);
-    storagePluginConfig = storagePlugin.getConfig();
-    storagePluginConfig.setEnabled(true);
-    pluginRegistry.createOrUpdate(CASSANDRA_STORAGE_PLUGIN_NAME, storagePluginConfig, true);
+    List<String> hosts = new ArrayList<>();
+    hosts.add("127.0.0.1");
+
+    CassandraStoragePluginConfig cassandraStoragePluginConfig = new CassandraStoragePluginConfig(hosts, 9042);
+    pluginRegistry.createOrUpdate("cassandra", cassandraStoragePluginConfig, true);
+
+    storagePlugin = (CassandraStoragePlugin) pluginRegistry.getPlugin("cassandra");
+    cassandraStoragePluginConfig.setEnabled(true);
 
     if (!testTablesCreated) {
       createTestCassandraTableIfNotExists(storagePluginConfig.getHosts(), storagePluginConfig.getPort());

@@ -3,10 +3,8 @@
     "cassandra" : {
       "type":"cassandra",
       "enabled": false,
-      "config" : {
-        "cassandra.hosts" : ["127.0.0.1","127.0.0.2"],
-        "cassandra.port"  : 9042
-      }
+      "hosts" : ["127.0.0.1","127.0.0.2"],
+      "port"  : 9042
     }
   }
 }
