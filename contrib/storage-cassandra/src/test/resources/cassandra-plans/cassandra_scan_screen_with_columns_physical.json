@@ -16,10 +16,10 @@
     storage:
     {
       "type":"cassandra",
-      config : {
-        "cassandra.hosts" : ["127.0.0.1","127.0.0.2","127.0.0.3"],
-        "cassandra.port"  : 9042
-      }
+      "hosts": [
+        "127.0.0.1"
+      ],
+      "port": 9042
     },
     columns: [
     "id", "pog_id"

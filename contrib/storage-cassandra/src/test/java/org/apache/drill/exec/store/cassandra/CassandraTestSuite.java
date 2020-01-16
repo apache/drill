@@ -15,19 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.cassandra;
+package org.apache.drill.exec.store.cassandra;
 
-import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Suite;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class CassandraRecordReaderTest extends BaseCassandraTest implements CassandraTestConstants {
-
-    @Test
-    public void testPlanLocal() throws Exception {
-        runCassandraPhysicalVerifyCount(PHYSICAL_PLAN_SCAN, KEYSPACE_NAME, TABLE_NAME, 14);
-    }
-
-    @Test
-    public void testPlanLocalWithColumns() throws Exception {
-        runCassandraPhysicalVerifyCount(PHYSICAL_PLAN_SCAN_WITH_COLS, KEYSPACE_NAME, TABLE_NAME, 14);
-    }
+@RunWith(Suite.class)
+@Suite.SuiteClasses({
+        CassandraRecordReaderTest.class,
+        CassandraProjectPushdownTest.class,
+        CassandraFilterPushdownTest.class
+})
+public class CassandraTestSuite {
+    private static final Logger logger = LoggerFactory.getLogger(CassandraTestSuite.class);
 }

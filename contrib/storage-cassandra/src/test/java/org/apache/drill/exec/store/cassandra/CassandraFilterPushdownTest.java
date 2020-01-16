@@ -15,40 +15,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.cassandra;
+package org.apache.drill.exec.store.cassandra;
 
 import org.junit.Test;
 
 public class CassandraFilterPushdownTest extends BaseCassandraTest implements CassandraTestConstants {
 
-    @Test
-    public void testSelectAll() throws Exception{
-        runCassandraSQLVerifyCount(SELECT_ALL, 14);
-    }
+  @Test
+  public void testSelectAll() throws Exception{
+    runCassandraSQLVerifyCount(SELECT_ALL, 14);
+  }
 
-    @Test
-    public void testFilter() throws Exception{
-        runCassandraSQLVerifyCount(SELECT_QUERY_FILTER, 6);
-    }
+  @Test
+  public void testFilter() throws Exception{
+    runCassandraSQLVerifyCount(SELECT_QUERY_FILTER, 6);
+  }
 
-    @Test
-    public void testFilter1() throws Exception{
-        runCassandraSQLVerifyCount(SELECT_QUERY_FILTER_1, 4);
-    }
+  @Test
+  public void testFilter1() throws Exception{
+    runCassandraSQLVerifyCount(SELECT_QUERY_FILTER_1, 4);
+  }
 
-    @Test
-    public void testFilter2() throws Exception{
-        runCassandraSQLVerifyCount(SELECT_QUERY_FILTER_2, 4);
-    }
+  @Test
+  public void testFilter2() throws Exception{
+    runCassandraSQLVerifyCount(SELECT_QUERY_FILTER_2, 4);
+  }
 
-    @Test
-    public void testFilterWithOrCondition() throws Exception{
-        runCassandraSQLVerifyCount(SELECT_QUERY_FILTER_With_OR, 8);
-    }
+  @Test
+  public void testFilterWithOrCondition() throws Exception{
+    runCassandraSQLVerifyCount(SELECT_QUERY_FILTER_With_OR, 8);
+  }
 
-    @Test
-    public void testFilterWithAndCondition() throws Exception{
-        runCassandraSQLVerifyCount(SELECT_QUERY_FILTER_WITH_AND, 1);
-    }
+  @Test
+  public void testFilterWithAndCondition() throws Exception{
+    runCassandraSQLVerifyCount(SELECT_QUERY_FILTER_WITH_AND, 1);
+  }
 
 }

@@ -25,42 +25,41 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 
 public class CassandraScanSpec {
-    private String keyspace;
-    private String table;
+  private String keyspace;
 
-    @JsonIgnore
-    private List<Clause> filters;
+  private String table;
 
-    @JsonCreator
-    public CassandraScanSpec(@JsonProperty("keyspace") String keyspace,
-                         @JsonProperty("table") String table) {
-        this.keyspace = keyspace;
-        this.table = table;
-    }
+  @JsonIgnore
+  private List<Clause> filters;
 
-    public CassandraScanSpec(String keyspace, String table, List<Clause> filters) {
-        this.keyspace = keyspace;
-        this.table = table;
-        this.filters = filters;
-    }
+  @JsonCreator
+  public CassandraScanSpec(@JsonProperty("keyspace") String keyspace,
+                           @JsonProperty("table") String table) {
+    this.keyspace = keyspace;
+    this.table = table;
+  }
 
-    public String getKeyspace() {
-        return keyspace;
-    }
+  public CassandraScanSpec(String keyspace, String table, List<Clause> filters) {
+    this.keyspace = keyspace;
+    this.table = table;
+    this.filters = filters;
+  }
 
-    public String getTable() {
-        return table;
-    }
+  public String getKeyspace() {
+    return keyspace;
+  }
 
-    public List<Clause> getFilters() {
-        return filters;
-    }
+  public String getTable() {
+    return table;
+  }
+
+  public List<Clause> getFilters() {
+    return filters;
+  }
 
 
-    @Override
-    public String toString() {
-        return "CassandraScanSpec [keyspace=" + keyspace + ", table="
-                + table + ", filters=" + filters + "]";
-    }
-
+  @Override
+  public String toString() {
+    return "CassandraScanSpec [keyspace=" + keyspace + ", table=" + table + ", filters=" + filters + "]";
+  }
 }

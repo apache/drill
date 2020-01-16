@@ -18,7 +18,6 @@
 
 package org.apache.drill.exec.store.cassandra;
 
-import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
 import java.util.ArrayList;
@@ -116,7 +115,11 @@ public class CassandraGroupScan extends AbstractGroupScan implements DrillCassan
   private ResultSet rs;
 
   @JsonCreator
-  public CassandraGroupScan(@JsonProperty("userName") String userName, @JsonProperty("cassandraScanSpec") CassandraScanSpec cassandraScanSpec, @JsonProperty("storage") CassandraStoragePluginConfig storagePluginConfig, @JsonProperty("columns") List<SchemaPath> columns, @JacksonInject StoragePluginRegistry pluginRegistry) throws IOException, ExecutionSetupException {
+  public CassandraGroupScan(@JsonProperty("userName") String userName,
+                            @JsonProperty("cassandraScanSpec") CassandraScanSpec cassandraScanSpec,
+                            @JsonProperty("storage") CassandraStoragePluginConfig storagePluginConfig,
+                            @JsonProperty("columns") List<SchemaPath> columns,
+                            @JacksonInject StoragePluginRegistry pluginRegistry) throws ExecutionSetupException {
     this(userName, (CassandraStoragePlugin) pluginRegistry.getPlugin(storagePluginConfig), cassandraScanSpec, columns);
   }
 
@@ -159,7 +162,7 @@ public class CassandraGroupScan extends AbstractGroupScan implements DrillCassan
 
   private void init() {
     try {
-      logger.info(String.format("Getting cassandra session from host %s, port: %s.", storagePluginConfig.getHosts(), storagePluginConfig.getPort()));
+      logger.debug(String.format("Getting cassandra session from host %s, port: %s.", storagePluginConfig.getHosts(), storagePluginConfig.getPort()));
 
       cluster = CassandraConnectionManager.getCluster(storagePluginConfig.getHosts(), storagePluginConfig.getPort());
 
@@ -264,7 +267,7 @@ public class CassandraGroupScan extends AbstractGroupScan implements DrillCassan
      * Initialize these two maps
      */
     for (int i = 0; i < numSlots; ++i) {
-      endpointFragmentMapping.put(i, new ArrayList<CassandraSubScanSpec>(maxPerEndpointSlot));
+      endpointFragmentMapping.put(i, new ArrayList<>(maxPerEndpointSlot));
       String hostname = incomingEndpoints.get(i).getAddress();
       Queue<Integer> hostIndexQueue = endpointHostIndexListMap.get(hostname);
       if (hostIndexQueue == null) {

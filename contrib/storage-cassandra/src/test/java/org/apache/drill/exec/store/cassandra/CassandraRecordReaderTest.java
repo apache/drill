@@ -15,15 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.cassandra;
+package org.apache.drill.exec.store.cassandra;
 
 import org.junit.Test;
 
-public class CassandraProjectPushdownTest extends BaseCassandraTest implements CassandraTestConstants{
+public class CassandraRecordReaderTest extends BaseCassandraTest implements CassandraTestConstants {
 
     @Test
-    public void testProjection() throws Exception{
-        runCassandraSQLVerifyCount(SELECT_QUERY_PROJECT, 14);
+    public void testPlanLocal() throws Exception {
+        runCassandraPhysicalVerifyCount(PHYSICAL_PLAN_SCAN, KEYSPACE_NAME, TABLE_NAME, 14);
     }
 
+    @Test
+    public void testPlanLocalWithColumns() throws Exception {
+        runCassandraPhysicalVerifyCount(PHYSICAL_PLAN_SCAN_WITH_COLS, KEYSPACE_NAME, TABLE_NAME, 14);
+    }
 }

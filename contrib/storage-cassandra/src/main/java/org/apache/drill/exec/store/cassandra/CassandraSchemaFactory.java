@@ -49,7 +49,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 
 public class CassandraSchemaFactory implements SchemaFactory {
 
-  static final Logger logger = LoggerFactory.getLogger(CassandraSchemaFactory.class);
+  private static final Logger logger = LoggerFactory.getLogger(CassandraSchemaFactory.class);
 
   private static final String DATABASES = "keyspaces";
 
@@ -134,7 +134,7 @@ public class CassandraSchemaFactory implements SchemaFactory {
   class CassandraSchema extends AbstractSchema {
 
     public CassandraSchema(String name) {
-      super(ImmutableList.<String>of(), name);
+      super(ImmutableList.of(), name);
     }
 
     @Override

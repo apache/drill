@@ -35,7 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class CassandraScanBatchCreator implements BatchCreator<CassandraSubScan>{
-    static final Logger logger = LoggerFactory.getLogger(CassandraScanBatchCreator.class);
+    private static final Logger logger = LoggerFactory.getLogger(CassandraScanBatchCreator.class);
 
     @Override
     public ScanBatch getBatch(ExecutorFragmentContext context, CassandraSubScan subScan, List<RecordBatch> children)

@@ -60,277 +60,280 @@ import org.slf4j.LoggerFactory;
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
-public class CassandraRecordReader extends AbstractRecordReader implements DrillCassandraConstants{
-    private static final Logger logger = LoggerFactory.getLogger(CassandraRecordReader.class);
+public class CassandraRecordReader extends AbstractRecordReader implements DrillCassandraConstants {
+  private static final Logger logger = LoggerFactory.getLogger(CassandraRecordReader.class);
 
-    private static final int TARGET_RECORD_COUNT = 3000;
+  private static final int TARGET_RECORD_COUNT = 3000;
 
-    private Cluster cluster;
-    private Session session;
-    private ResultSet rs;
-    private Iterator<Row> it;
+  private Cluster cluster;
 
-    private NullableVarCharVector valueVector;
-    private OutputMutator outputMutator;
-    private Map<String, MapVector> familyVectorMap;
+  private Session session;
 
+  private ResultSet rs;
 
-    private String cassandraTableName;
+  private Iterator<Row> it;
 
-    private CassandraSubScan.CassandraSubScanSpec subScanSpec;
-    private String cassandraKeySpace;
-    private CassandraStoragePluginConfig cassandraConf;
-    private List<SchemaPath> projectedColumns;
-    private boolean allColumnsProjected;
+  private NullableVarCharVector valueVector;
 
-    private NullableVarCharVector vector;
-    private List<ValueVector> vectors = Lists.newArrayList();
+  private OutputMutator outputMutator;
 
-    private VarBinaryVector rowKeyVector;
+  private Map<String, MapVector> familyVectorMap;
 
 
-    private FragmentContext fragmentContext;
-    private OperatorContext operatorContext;
+  private String cassandraTableName;
 
-    public CassandraRecordReader(CassandraStoragePluginConfig conf, CassandraSubScan.CassandraSubScanSpec subScanSpec,
-                             List<SchemaPath> projectedColumns, FragmentContext context) {
-        this.cassandraTableName = Preconditions.checkNotNull(subScanSpec, "Cassandra reader needs a sub-scan spec").getTable();
-        this.cassandraKeySpace = Preconditions.checkNotNull(subScanSpec, "Cassandra reader needs a sub-scan spec").getKeyspace();
-        this.subScanSpec = subScanSpec;
-        this.projectedColumns = projectedColumns;
-        this.cassandraConf = conf;
+  private CassandraSubScan.CassandraSubScanSpec subScanSpec;
 
-        setColumns(projectedColumns);
-    }
+  private String cassandraKeySpace;
 
-    public OperatorContext getOperatorContext() {
-        return operatorContext;
-    }
+  private CassandraStoragePluginConfig cassandraConf;
 
-    public void setOperatorContext(OperatorContext operatorContext) {
-        this.operatorContext = operatorContext;
-    }
+  private List<SchemaPath> projectedColumns;
 
-    @Override
-    protected Collection<SchemaPath> transformColumns(Collection<SchemaPath> columns) {
-        //TODO:
-        return columns;
-    }
+  private boolean allColumnsProjected;
+
+  private NullableVarCharVector vector;
+
+  private List<ValueVector> vectors = Lists.newArrayList();
+
+  private VarBinaryVector rowKeyVector;
 
 
-    @Override
-    public void setup(OperatorContext context, OutputMutator output) throws ExecutionSetupException {
-        this.outputMutator = output;
-        this.operatorContext = context;
+  private FragmentContext fragmentContext;
 
-        try{
-            logger.debug("Opening scanner for Cassandra table '{}'.", cassandraTableName);
+  private OperatorContext operatorContext;
 
-            List<String> host = subScanSpec.getHosts();
-            int port = subScanSpec.getPort();
+  public CassandraRecordReader(CassandraStoragePluginConfig conf, CassandraSubScan.CassandraSubScanSpec subScanSpec, List<SchemaPath> projectedColumns, FragmentContext context) {
+    this.cassandraTableName = Preconditions.checkNotNull(subScanSpec, "Cassandra reader needs a sub-scan spec").getTable();
+    this.cassandraKeySpace = Preconditions.checkNotNull(subScanSpec, "Cassandra reader needs a sub-scan spec").getKeyspace();
+    this.subScanSpec = subScanSpec;
+    this.projectedColumns = projectedColumns;
+    this.cassandraConf = conf;
 
-            cluster = CassandraConnectionManager.getCluster(host, port);
-            session = cluster.connect();
+    setColumns(projectedColumns);
+  }
 
-            List<ColumnMetadata> partitioncols = session.getCluster().getMetadata()
-                    .getKeyspace(subScanSpec.getKeyspace()).getTable(subScanSpec.getTable()).getPartitionKey();
+  public OperatorContext getOperatorContext() {
+    return operatorContext;
+  }
 
-            String[] partitionkeys = new String[partitioncols.size()];
-            for(int index = 0; index < partitioncols.size(); index++){
-                partitionkeys[index] = partitioncols.get(index).getName();
-            }
+  public void setOperatorContext(OperatorContext operatorContext) {
+    this.operatorContext = operatorContext;
+  }
 
-            Statement q = null;
+  @Override
+  protected Collection<SchemaPath> transformColumns(Collection<SchemaPath> columns) {
+    //TODO:
+    return columns;
+  }
 
-            /* Check projected columns */
-            for(SchemaPath path : getColumns()){
-                if(path.getAsNamePart().getName().equals("*")){
-                    allColumnsProjected = true;
-                    break;
-                }
-            }
 
-            /* Project only required columns */
-            Select.Where where;
-            Select.Selection select = QueryBuilder.select();
-            if(allColumnsProjected){
-                where = select.all().from(subScanSpec.getKeyspace(), subScanSpec.getTable()).where();
-            }
-            else{
-                for(SchemaPath path : getColumns()){
-                    if(path.getAsNamePart().getName().equals("*")){
-                        continue;
-                    }
-                    else{
-                        select = select.column(path.getAsNamePart().getName());
-                    }
-                }
-                 where = select.from(subScanSpec.getKeyspace(), subScanSpec.getTable()).where();
-            }
+  @Override
+  public void setup(OperatorContext context, OutputMutator output) throws ExecutionSetupException {
+    this.outputMutator = output;
+    this.operatorContext = context;
 
-            if(subScanSpec.getStartToken() != null){
-                where = where.and(QueryBuilder.gte(QueryBuilder.token(partitionkeys), new Long(subScanSpec.getStartToken())));
-            }
-            if(subScanSpec.getEndToken() != null){
-                where = where.and(QueryBuilder.lt(QueryBuilder.token(partitionkeys), new Long(subScanSpec.getEndToken())));
-            }
+    try {
+      logger.debug("Opening scanner for Cassandra table '{}'.", cassandraTableName);
 
-            q = where;
-            rs = session.execute(q);
+      List<String> host = subScanSpec.getHosts();
+      int port = subScanSpec.getPort();
 
-            for(SchemaPath column : getColumns()){
-                if(column.getAsNamePart().getName().equals("*") ){
-                    Iterator<ColumnDefinitions.Definition> iter = rs.getColumnDefinitions().iterator();
+      cluster = CassandraConnectionManager.getCluster(host, port);
+      session = cluster.connect();
 
-                    /* Add all columns to ValueVector */
-                    while(iter.hasNext()) {
-                        ColumnDefinitions.Definition def = iter.next();
-                        MaterializedField field = MaterializedField.create(def.getName(), COLUMN_TYPE);
-                        vector = this.outputMutator.addField(field, NullableVarCharVector.class);
-                    }
-                }
-                else {
-                    MaterializedField field = MaterializedField.create(column.getRootSegment().getPath(), COLUMN_TYPE);
-                    vector = this.outputMutator.addField(field, NullableVarCharVector.class);
-                }
-            }
+      List<ColumnMetadata> partitioncols = session.getCluster().getMetadata().getKeyspace(subScanSpec.getKeyspace()).getTable(subScanSpec.getTable()).getPartitionKey();
 
-        } catch (SchemaChangeException e) {
-            throw new ExecutionSetupException("Failure in Cassandra Record Reader setup. Cause: ",e);
+      String[] partitionkeys = new String[partitioncols.size()];
+      for (int index = 0; index < partitioncols.size(); index++) {
+        partitionkeys[index] = partitioncols.get(index).getName();
+      }
+
+      Statement q = null;
+
+      /* Check projected columns */
+      for (SchemaPath path : getColumns()) {
+        if (path.getAsNamePart().getName().equals("**")) {
+          allColumnsProjected = true;
+          break;
         }
-    }
+      }
 
-    @Override
-    public int next() {
-        Stopwatch watch = Stopwatch.createUnstarted();
-        watch.start();
-        int rowCount = 0;
-        Row row=null;
-        int start, end, batchsize=0;
+      /* Project only required columns */
+      Select.Where where;
+      Select.Selection select = QueryBuilder.select();
+      if (allColumnsProjected) {
+        where = select.all().from(subScanSpec.getKeyspace(), subScanSpec.getTable()).where();
+      } else {
+        for (SchemaPath path : getColumns()) {
+          if (path.getAsNamePart().getName().equals("**")) {
+            continue;
+          } else {
+            select = select.column(path.getAsNamePart().getName());
+          }
+        }
+        where = select.from(subScanSpec.getKeyspace(), subScanSpec.getTable()).where();
+      }
+
+      if (subScanSpec.getStartToken() != null) {
+        where = where.and(QueryBuilder.gte(QueryBuilder.token(partitionkeys), new Long(subScanSpec.getStartToken())));
+      }
+      if (subScanSpec.getEndToken() != null) {
+        where = where.and(QueryBuilder.lt(QueryBuilder.token(partitionkeys), new Long(subScanSpec.getEndToken())));
+      }
+
+      q = where;
+      rs = session.execute(q);
+
+      for (SchemaPath column : getColumns()) {
+        if (column.getAsNamePart().getName().equals("**")) {
+          Iterator<ColumnDefinitions.Definition> iter = rs.getColumnDefinitions().iterator();
+
+          /* Add all columns to ValueVector */
+          while (iter.hasNext()) {
+            ColumnDefinitions.Definition def = iter.next();
+            MaterializedField field = MaterializedField.create(def.getName(), COLUMN_TYPE);
+            vector = this.outputMutator.addField(field, NullableVarCharVector.class);
+          }
+        } else {
+          MaterializedField field = MaterializedField.create(column.getRootSegment().getPath(), COLUMN_TYPE);
+          vector = this.outputMutator.addField(field, NullableVarCharVector.class);
+        }
+      }
+
+    } catch (SchemaChangeException e) {
+      throw new ExecutionSetupException("Failure in Cassandra Record Reader setup. Cause: ", e);
+    }
+  }
+
+  @Override
+  public int next() {
+    Stopwatch watch = Stopwatch.createUnstarted();
+    watch.start();
+    int rowCount = 0;
+    Row row = null;
+    int start, end, batchsize = 0;
+    start = end = -1;
+    try {
+      vectors = Lists.newArrayList();
+      // TODO: Use Batch Size - TARGET_RECORD_COUNT(3000)
+      for (; rs.iterator().hasNext(); rowCount++) {
+
+        if (operatorContext != null) {
+          operatorContext.getStats().startWait();
+        }
+        try {
+          if (rs.iterator().hasNext()) {
+            row = rs.iterator().next();
+          }
+        } finally {
+          if (operatorContext != null) {
+            operatorContext.getStats().stopWait();
+          }
+        }
+        if (row == null) {
+          break;
+        }
+
         start = end = -1;
-        try{
-            vectors = Lists.newArrayList();
-            // TODO: Use Batch Size - TARGET_RECORD_COUNT(3000)
-            for (; rs.iterator().hasNext(); rowCount++) {
+        for (SchemaPath col : getColumns()) {
 
-                if (operatorContext != null) {
-                    operatorContext.getStats().startWait();
-                }
-                try {
-                    if (rs.iterator().hasNext()) {
-                        row = rs.iterator().next();
-                    }
-                }finally {
-                    if (operatorContext != null) {
-                        operatorContext.getStats().stopWait();
-                    }
-                }
-                if (row == null) {
-                    break;
-                }
-
-                start = end = -1;
-                for (SchemaPath col : getColumns()){
-
-                    if(col.getAsNamePart().getName().equals("*") ){
-                        /* Add all columns to ValueVector */
-                        for(ColumnDefinitions.Definition def : row.getColumnDefinitions()){
-                            updateValueVector(row, def.getName(), rowCount);
-                        }
-                    }
-                    else {
-                        updateValueVector(row, col.getAsNamePart().getName(), rowCount);
-                    }
-                }
-                logger.debug("text scan batch size {}", batchsize);
+          if (col.getAsNamePart().getName().equals("**")) {
+            /* Add all columns to ValueVector */
+            for (ColumnDefinitions.Definition def : row.getColumnDefinitions()) {
+              updateValueVector(row, def.getName(), rowCount);
             }
-
-            for (ValueVector v : vectors) {
-                v.getMutator().setValueCount(rowCount);
-            }
-            logger.debug("Took {} ms to get {} records", watch.elapsed(TimeUnit.MILLISECONDS), rowCount);
-            return rowCount;
-        } catch (Exception e) {
-            if (operatorContext != null) {
-                operatorContext.getStats().stopWait();
-            }
-            throw new DrillRuntimeException(e);
+          } else {
+            updateValueVector(row, col.getAsNamePart().getName(), rowCount);
+          }
         }
+        logger.debug("text scan batch size {}", batchsize);
+      }
+
+      for (ValueVector v : vectors) {
+        v.getMutator().setValueCount(rowCount);
+      }
+      logger.debug("Took {} ms to get {} records", watch.elapsed(TimeUnit.MILLISECONDS), rowCount);
+      return rowCount;
+    } catch (Exception e) {
+      if (operatorContext != null) {
+        operatorContext.getStats().stopWait();
+      }
+      throw new DrillRuntimeException(e);
     }
+  }
 
-    private void updateValueVector(Row row, String colname, int rowCount){
-        try {
-            String val = getAsString(row, colname);
-            int start = 0;
-            int end = val.length();
+  private void updateValueVector(Row row, String colname, int rowCount) {
+    try {
+      String val = getAsString(row, colname);
+      int start = 0;
+      int end = val.length();
 
-            MaterializedField field = MaterializedField.create(colname, COLUMN_TYPE);
-            vector = outputMutator.addField(field, NullableVarCharVector.class);
+      MaterializedField field = MaterializedField.create(colname, COLUMN_TYPE);
+      vector = outputMutator.addField(field, NullableVarCharVector.class);
 
-            vector.getMutator().setSafe(rowCount, val.getBytes(), start, end - start);
-            vectors.add(vector);
-        } catch(Exception e){
-            e.printStackTrace();
+      vector.getMutator().setSafe(rowCount, val.getBytes(), start, end - start);
+      vectors.add(vector);
+    } catch (Exception e) {
+      e.printStackTrace();
 
-            throw new DrillRuntimeException(e);
-        }
+      throw new DrillRuntimeException(e);
     }
+  }
 
 
-    @Override
-    public void close() throws Exception{
-        try {
-            if (session != null) {
-                session.close();
-            }
-        } catch (Exception e) {
-            logger.error("Failure while closing Cassandra table. Error: {}", e.getMessage());
-            throw new DrillRuntimeException(String.format("Failure while closing Cassandra table. Error: %s",e.getMessage()));
-        }
+  @Override
+  public void close() throws Exception {
+    try {
+      if (session != null) {
+        session.close();
+      }
+    } catch (Exception e) {
+      logger.error("Failure while closing Cassandra table. Error: {}", e.getMessage());
+      throw new DrillRuntimeException(String.format("Failure while closing Cassandra table. Error: %s", e.getMessage()));
     }
+  }
 
 
+  /**
+   * Utility function to get the type of the column and return its String value.
+   * TODO: Convert to appropriate Drill Type.
+   *
+   * @param r
+   * @param colname
+   * @return
+   */
+  public String getAsString(Row r, String colname) {
+    String value = null;
+    try {
+      Class clazz = r.getColumnDefinitions().getType(colname).getClass();
 
-    /**
-     * Utility function to get the type of the column and return its String value.
-     * TODO: Convert to appropriate Drill Type.
-     *
-     * @param r
-     * @param colname
-     * @return
-     */
-    public String getAsString(Row r, String colname){
-        String value = null;
-        try {
-            Class clazz = r.getColumnDefinitions().getType(colname).getClass();
-
-            if (clazz.isInstance(Long.MIN_VALUE)) {
-                value = String.valueOf(r.getLong(colname));
-            } else if (clazz.isInstance(Boolean.FALSE)) {
-                value = String.valueOf(r.getBool(colname));
-            } else if (clazz.isInstance(Byte.MIN_VALUE)) {
-                value = String.valueOf(r.getBytes(colname));
-            } else if (clazz.isInstance(new Date())) {
-                value = String.valueOf(r.getDate(colname));
-            } else if (clazz.isInstance(BigDecimal.ZERO)) {
-                value = String.valueOf(r.getDecimal(colname));
-            } else if (clazz.isInstance(Double.MIN_VALUE)) {
-                value = String.valueOf(r.getDouble(colname));
-            } else if (clazz.isInstance(Float.MIN_VALUE)) {
-                value = String.valueOf(r.getFloat(colname));
-            } else if (clazz.isInstance(Integer.MIN_VALUE)) {
-                value = String.valueOf(r.getInt(colname));
-            } else if (clazz.isInstance(new String())) {
-                value = r.getString(colname);
-            } else if (clazz.isInstance(BigInteger.ZERO)) {
-                value = String.valueOf(r.getVarint(colname));
-            } else {
-                value = null;
-            }
-        }
-        catch(Exception e){
-            throw new DrillRuntimeException(String.format("Unable to get Cassandra column: %s, of type: %s.", colname, r.getColumnDefinitions().getType(colname).getClass().getCanonicalName()));
-        }
-        return value;
+      if (clazz.isInstance(Long.MIN_VALUE)) {
+        value = String.valueOf(r.getLong(colname));
+      } else if (clazz.isInstance(Boolean.FALSE)) {
+        value = String.valueOf(r.getBool(colname));
+      } else if (clazz.isInstance(Byte.MIN_VALUE)) {
+        value = String.valueOf(r.getBytes(colname));
+      } else if (clazz.isInstance(new Date())) {
+        value = String.valueOf(r.getDate(colname));
+      } else if (clazz.isInstance(BigDecimal.ZERO)) {
+        value = String.valueOf(r.getDecimal(colname));
+      } else if (clazz.isInstance(Double.MIN_VALUE)) {
+        value = String.valueOf(r.getDouble(colname));
+      } else if (clazz.isInstance(Float.MIN_VALUE)) {
+        value = String.valueOf(r.getFloat(colname));
+      } else if (clazz.isInstance(Integer.MIN_VALUE)) {
+        value = String.valueOf(r.getInt(colname));
+      } else if (clazz.isInstance(new String())) {
+        value = r.getString(colname);
+      } else if (clazz.isInstance(BigInteger.ZERO)) {
+        value = String.valueOf(r.getVarint(colname));
+      } else {
+        value = null;
+      }
+    } catch (Exception e) {
+      throw new DrillRuntimeException(String.format("Unable to get Cassandra column: %s, of type: %s.", colname, r.getColumnDefinitions().getType(colname).getClass().getCanonicalName()));
     }
+    return value;
+  }
 }

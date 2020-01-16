@@ -26,32 +26,35 @@ import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.cassandra.CassandraSchemaFactory.CassandraSchema;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CassandraDatabaseSchema extends AbstractSchema {
-    static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CassandraDatabaseSchema.class);
-    private final CassandraSchema cassandraSchema;
-    private final Set<String> tables;
+  private static final Logger logger = LoggerFactory.getLogger(CassandraDatabaseSchema.class);
 
-    public CassandraDatabaseSchema(List<String> tableList, CassandraSchema cassandraSchema,
-                               String name) {
-        super(cassandraSchema.getSchemaPath(), name);
-        this.cassandraSchema = cassandraSchema;
-        this.tables = Sets.newHashSet(tableList);
-    }
+  private final CassandraSchema cassandraSchema;
 
-    @Override
-    public Table getTable(String tableName) {
-        return cassandraSchema.getDrillTable(this.name, tableName);
-    }
+  private final Set<String> tables;
 
-    @Override
-    public Set<String> getTableNames() {
-        return tables;
-    }
+  public CassandraDatabaseSchema(List<String> tableList, CassandraSchema cassandraSchema, String name) {
+    super(cassandraSchema.getSchemaPath(), name);
+    this.cassandraSchema = cassandraSchema;
+    this.tables = Sets.newHashSet(tableList);
+  }
 
-    @Override
-    public String getTypeName() {
-        return CassandraStoragePluginConfig.NAME;
-    }
+  @Override
+  public Table getTable(String tableName) {
+    return cassandraSchema.getDrillTable(name, tableName);
+  }
+
+  @Override
+  public Set<String> getTableNames() {
+    return tables;
+  }
+
+  @Override
+  public String getTypeName() {
+    return CassandraStoragePluginConfig.NAME;
+  }
 
 }

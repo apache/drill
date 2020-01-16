@@ -18,53 +18,55 @@
 
 package org.apache.drill.exec.store.cassandra;
 
-
-import org.apache.drill.common.logical.StoragePluginConfig;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.apache.drill.common.logical.StoragePluginConfigBase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.util.List;
+import org.apache.drill.shaded.guava.com.google.common.base.Objects;
 
 @JsonTypeName(CassandraStoragePluginConfig.NAME)
-public class CassandraStoragePluginConfig extends StoragePluginConfig {
-    static final Logger logger = LoggerFactory.getLogger(CassandraStoragePluginConfig.class);
+public class CassandraStoragePluginConfig extends StoragePluginConfigBase {
 
-    public static final String NAME = "cassandra";
+  private static final Logger logger = LoggerFactory.getLogger(CassandraStoragePluginConfig.class);
 
-    private List<String> hosts;
+  public static final String NAME = "cassandra";
 
-    private int port;
+  public final List<String> hosts;
 
-    @JsonCreator
-    public CassandraStoragePluginConfig( @JsonProperty("hosts") List<String> hosts, @JsonProperty("port") int port ) {
-        this.hosts = hosts;
-        this.port = port;
+  public final int port;
+
+  @JsonCreator
+  public CassandraStoragePluginConfig(@JsonProperty("hosts") List<String> hosts,
+                                      @JsonProperty("port") int port ) {
+    logger.debug("Initializing Cassandra Plugin with hosts: {} and port {}", hosts.toString(), port);
+    this.hosts = hosts;
+    this.port = port;
+  }
+
+  @Override
+  public boolean equals(Object that) {
+    if (this == that) {
+      return true;
+    } else if (that == null || getClass() != that.getClass()) {
+      return false;
     }
+    CassandraStoragePluginConfig thatConfig = (CassandraStoragePluginConfig) that;
+    return (this.hosts == thatConfig.hosts) && this.port == thatConfig.port;
+  }
 
-    @Override
-    public boolean  equals(Object that) {
-        if (this == that) {
-            return true;
-        } else if (that == null || getClass() != that.getClass()) {
-            return false;
-        }
-        CassandraStoragePluginConfig thatConfig = (CassandraStoragePluginConfig) that;
-        return (this.hosts.equals(thatConfig.hosts)) && (this.port==thatConfig.port);
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(hosts, port);
+  }
 
-    }
+  @JsonProperty("hosts")
+  public List<String> getHosts() {
+    return hosts;
+  }
 
-    @Override
-    public int hashCode() {
-        return this.hosts != null ? this.hosts.hashCode() : 0;
-    }
-
-    public List<String> getHosts() {
-        return hosts;
-    }
-
-    public int getPort(){ return port; }
+  @JsonProperty("port")
+  public int getPort(){ return port; }
 }

@@ -19,69 +19,61 @@ package org.apache.drill.exec.store.cassandra;
 
 import java.io.IOException;
 import java.util.Set;
-
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.exec.store.SchemaConfig;
-
 import org.apache.drill.common.JSONOptions;
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 
 public class CassandraStoragePlugin extends AbstractStoragePlugin {
-    static final Logger logger = LoggerFactory.getLogger(CassandraStoragePlugin.class);
 
-    private DrillbitContext context;
-    private CassandraStoragePluginConfig cassandraConfig;
-    private CassandraSchemaFactory schemaFactory;
+  private final DrillbitContext context;
 
-    public CassandraStoragePlugin(CassandraStoragePluginConfig cassandraConfig,
-                              DrillbitContext context, String name) throws IOException,
-            ExecutionSetupException {
-        super(context, name);
-        this.context = context;
-        this.cassandraConfig = cassandraConfig;
-        this.schemaFactory = new CassandraSchemaFactory(this, name);
-    }
+  private final CassandraStoragePluginConfig cassandraConfig;
 
-    public DrillbitContext getContext() {
-        return this.context;
-    }
+  private final CassandraSchemaFactory schemaFactory;
 
-    @Override
-    public CassandraStoragePluginConfig getConfig() {
-        return cassandraConfig;
-    }
+  public CassandraStoragePlugin(CassandraStoragePluginConfig cassandraConfig, DrillbitContext context, String name) {
+    super(context, name);
+    this.context = context;
+    this.cassandraConfig = cassandraConfig;
+    this.schemaFactory = new CassandraSchemaFactory(this, name);
+  }
 
-    @Override
-    public boolean supportsRead() {
-        return true;
-    }
+  @Override
+  public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) {
+    schemaFactory.registerSchemas(schemaConfig, parent);
+  }
+
+  public DrillbitContext getContext() {
+    return context;
+  }
+
+  @Override
+  public CassandraStoragePluginConfig getConfig() {
+    return cassandraConfig;
+  }
+
+  @Override
+  public boolean supportsRead() {
+    return true;
+  }
 
 
-    @Override
-    public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection)
-            throws IOException {
-        CassandraScanSpec cassandraScanSpec = selection.getListWith(new ObjectMapper(),
-                new TypeReference<CassandraScanSpec>() {});
+  @Override
+  public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection) throws IOException {
+    CassandraScanSpec cassandraScanSpec = selection.getListWith(new ObjectMapper(), new TypeReference<CassandraScanSpec>() {});
+    return new CassandraGroupScan(userName, this, cassandraScanSpec, null);
+  }
 
-        return new CassandraGroupScan(userName, this, cassandraScanSpec, null);
-    }
+  public Set<StoragePluginOptimizerRule> getOptimizerRules() {
+    return ImmutableSet.of(CassandraPushDownFilterForScan.INSTANCE);
+  }
 
-    public Set<StoragePluginOptimizerRule> getOptimizerRules() {
-        return ImmutableSet.of(CassandraPushDownFilterForScan.INSTANCE);
-    }
 
-    @Override
-    public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws IOException {
-        schemaFactory.registerSchemas(schemaConfig, parent);
-    }
 }

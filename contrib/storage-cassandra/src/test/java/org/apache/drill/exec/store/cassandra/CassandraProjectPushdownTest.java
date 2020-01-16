@@ -15,19 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.cassandra;
+package org.apache.drill.exec.store.cassandra;
 
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.junit.Test;
 
-@RunWith(Suite.class)
-@Suite.SuiteClasses({
-        CassandraRecordReaderTest.class,
-        CassandraProjectPushdownTest.class,
-        CassandraFilterPushdownTest.class
-})
-public class CassandraTestSuite {
-    private static final Logger logger = LoggerFactory.getLogger(CassandraTestSuite.class);
+public class CassandraProjectPushdownTest extends BaseCassandraTest implements CassandraTestConstants{
+
+    @Test
+    public void testProjection() throws Exception{
+        runCassandraSQLVerifyCount(SELECT_QUERY_PROJECT, 14);
+    }
+
 }
