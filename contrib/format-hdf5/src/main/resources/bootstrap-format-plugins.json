@@ -1,0 +1,26 @@
+{
+  "storage":{
+    "dfs": {
+      "type": "file",
+      "formats": {
+        "hdf5": {
+          "type": "hdf5",
+          "extensions": [
+            "h5"
+          ]
+        }
+      }
+    },
+    "s3": {
+      "type": "file",
+      "formats": {
+        "hdf5": {
+          "type": "hdf5",
+          "extensions": [
+            "h5"
+          ]
+        }
+      }
+    }
+  }
+}

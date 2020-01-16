@@ -188,6 +188,12 @@
     </repository>
 
     <repository>
+      <id>jhdf5-repo</id>
+      <name>ImageJ Repository</name>
+      <url>https://maven.scijava.org/content/repositories/public/</url>
+    </repository>
+
+    <repository>
       <id>jitpack.io</id>
       <url>https://jitpack.io</url>
     </repository>
@@ -330,6 +336,7 @@
             <!-- Types log1, log2, sqllog and sqllog2, ssdlog are used to test he logRegex format plugin. -->
             <exclude>**/*.log1</exclude>
             <exclude>**/*.log2</exclude>
+            <exclude>**/*.h5</exclude>
             <exclude>**/*.sqllog</exclude>
             <exclude>**/*.sqllog2</exclude>
             <exclude>**/*.syslog</exclude>
@@ -615,6 +622,7 @@
               <exclude>**/*.woff2</exclude>
               <exclude>**/*.ks</exclude>
               <exclude>**/*.pcap</exclude>
+              <exclude>**/*.h5</exclude>
               <exclude>**/*.syslog</exclude>
               <exclude>**/*.xls</exclude>
               <exclude>**/*.xlsx</exclude>
