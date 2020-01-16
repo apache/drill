@@ -1,7 +1,6 @@
 package org.apache.drill.exec.store.cassandra;
 
 import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.exec.store.cassandra.CassandraStoragePluginConfig;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
 import org.junit.BeforeClass;

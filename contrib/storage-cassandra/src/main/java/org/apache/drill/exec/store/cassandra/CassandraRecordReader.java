@@ -237,7 +237,7 @@ public class CassandraRecordReader extends AbstractRecordReader implements Drill
 
         start = end = -1;
         for (SchemaPath col : getColumns()) {
-
+          // TODO Use isStarQuery
           if (col.getAsNamePart().getName().equals("**")) {
             /* Add all columns to ValueVector */
             for (ColumnDefinitions.Definition def : row.getColumnDefinitions()) {
@@ -304,11 +304,14 @@ public class CassandraRecordReader extends AbstractRecordReader implements Drill
    * @return
    */
   public String getAsString(Row r, String colname) {
-    String value = null;
+    String value;
     try {
       Class clazz = r.getColumnDefinitions().getType(colname).getClass();
 
-      if (clazz.isInstance(Long.MIN_VALUE)) {
+      String dataType = r.getColumnDefinitions().getType(colname).asFunctionParameterString();
+      logger.debug("Datatype: {}", dataType);
+
+      if (dataType.equalsIgnoreCase("long")) {
         value = String.valueOf(r.getLong(colname));
       } else if (clazz.isInstance(Boolean.FALSE)) {
         value = String.valueOf(r.getBool(colname));
@@ -318,21 +321,23 @@ public class CassandraRecordReader extends AbstractRecordReader implements Drill
         value = String.valueOf(r.getDate(colname));
       } else if (clazz.isInstance(BigDecimal.ZERO)) {
         value = String.valueOf(r.getDecimal(colname));
-      } else if (clazz.isInstance(Double.MIN_VALUE)) {
+      } else if (dataType.equalsIgnoreCase("double")) {
         value = String.valueOf(r.getDouble(colname));
-      } else if (clazz.isInstance(Float.MIN_VALUE)) {
+      } else if (dataType.equalsIgnoreCase("float")) {
         value = String.valueOf(r.getFloat(colname));
-      } else if (clazz.isInstance(Integer.MIN_VALUE)) {
+      } else if (dataType.equalsIgnoreCase("int")) {
         value = String.valueOf(r.getInt(colname));
-      } else if (clazz.isInstance(new String())) {
+      } else if (dataType.equalsIgnoreCase("varchar")) {
         value = r.getString(colname);
-      } else if (clazz.isInstance(BigInteger.ZERO)) {
-        value = String.valueOf(r.getVarint(colname));
+      } else if (dataType.equalsIgnoreCase("bigint")) {
+        long bigInt = r.getLong(colname);
+        value = String.valueOf(bigInt);
       } else {
-        value = null;
+        value = null;  // TODO Should not return null..
       }
     } catch (Exception e) {
-      throw new DrillRuntimeException(String.format("Unable to get Cassandra column: %s, of type: %s.", colname, r.getColumnDefinitions().getType(colname).getClass().getCanonicalName()));
+      throw new DrillRuntimeException(String.format("Unable to get Cassandra column: %s, of type: %s.", colname,
+        r.getColumnDefinitions().getType(colname).asFunctionParameterString()));
     }
     return value;
   }

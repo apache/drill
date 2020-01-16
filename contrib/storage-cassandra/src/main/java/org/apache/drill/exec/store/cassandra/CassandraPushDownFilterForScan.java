@@ -35,72 +35,72 @@ import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 
 public class CassandraPushDownFilterForScan extends StoragePluginOptimizerRule {
 
-    /* Flag to bypass filter pushdown   */
-    static final boolean BYPASS_CASSANDRA_FILTER_PUSHDOWN = true;
+  /* Flag to bypass filter pushdown   */
+  static final boolean BYPASS_CASSANDRA_FILTER_PUSHDOWN = true;
 
-    public static final StoragePluginOptimizerRule INSTANCE = new CassandraPushDownFilterForScan();
+  public static final StoragePluginOptimizerRule INSTANCE = new CassandraPushDownFilterForScan();
 
-    private CassandraPushDownFilterForScan() {
-        super(RelOptHelper.some(FilterPrel.class, RelOptHelper.any(ScanPrel.class)), "CassandraPushDownFilterForScan");
+  private CassandraPushDownFilterForScan() {
+    super(RelOptHelper.some(FilterPrel.class, RelOptHelper.any(ScanPrel.class)), "CassandraPushDownFilterForScan");
+  }
+
+  public CassandraPushDownFilterForScan(RelOptRuleOperand operand, String description) {
+    super(operand, description);
+  }
+
+  @Override
+  public void onMatch(RelOptRuleCall call) {
+    final ScanPrel scan = (ScanPrel) call.rel(1);
+    final FilterPrel filter = (FilterPrel) call.rel(0);
+    final RexNode condition = filter.getCondition();
+
+    CassandraGroupScan groupScan = (CassandraGroupScan)scan.getGroupScan();
+    if (groupScan.isFilterPushedDown()) {
+
+      /*
+       * The rule can get triggered again due to the transformed "scan => filter" sequence
+       * created by the earlier execution of this rule when we could not do a complete
+       * conversion of Optiq Filter's condition to Cassandra Filter. In such cases, we rely upon
+       * this flag to not do a re-processing of the rule on the already transformed call.
+       */
+      return;
     }
 
-    public CassandraPushDownFilterForScan(RelOptRuleOperand operand, String description) {
-        super(operand, description);
+    LogicalExpression conditionExp = DrillOptiq.toDrill(
+      new DrillParseContext(PrelUtil.getPlannerSettings(call.getPlanner())), scan, condition);
+    CassandraFilterBuilder cassandraFilterBuilder = new CassandraFilterBuilder(groupScan, conditionExp);
+    CassandraScanSpec newScanSpec = cassandraFilterBuilder.parseTree();
+
+    // TODO : Fix Pushdown
+    if(BYPASS_CASSANDRA_FILTER_PUSHDOWN){
+      return;
     }
 
-    @Override
-    public void onMatch(RelOptRuleCall call) {
-        final ScanPrel scan = (ScanPrel) call.rel(1);
-        final FilterPrel filter = (FilterPrel) call.rel(0);
-        final RexNode condition = filter.getCondition();
-
-        CassandraGroupScan groupScan = (CassandraGroupScan)scan.getGroupScan();
-        if (groupScan.isFilterPushedDown()) {
-
-          /*
-           * The rule can get triggered again due to the transformed "scan => filter" sequence
-           * created by the earlier execution of this rule when we could not do a complete
-           * conversion of Optiq Filter's condition to Cassandra Filter. In such cases, we rely upon
-           * this flag to not do a re-processing of the rule on the already transformed call.
-           */
-            return;
-        }
-
-        LogicalExpression conditionExp = DrillOptiq.toDrill(
-            new DrillParseContext(PrelUtil.getPlannerSettings(call.getPlanner())), scan, condition);
-        CassandraFilterBuilder cassandraFilterBuilder = new CassandraFilterBuilder(groupScan, conditionExp);
-        CassandraScanSpec newScanSpec = cassandraFilterBuilder.parseTree();
-
-        // TODO : Fix Pushdown
-        if(BYPASS_CASSANDRA_FILTER_PUSHDOWN){
-            return;
-        }
-
-        if (newScanSpec == null) {
-            return; //no filter pushdown ==> No transformation.
-        }
-
-        final CassandraGroupScan newGroupsScan = new CassandraGroupScan(groupScan.getUserName(), groupScan.getStoragePlugin(), newScanSpec, groupScan.getColumns());
-        newGroupsScan.setFilterPushedDown(true);
-
-        final ScanPrel newScanPrel = ScanPrel.create(scan, filter.getTraitSet(), newGroupsScan, scan.getRowType());
-        if (cassandraFilterBuilder.isAllExpressionsConverted()) {
-        /*
-        * Since we could convert the entire filter condition expression into an cassandra filter,
-        * we can eliminate the filter operator altogether.
-        */
-            call.transformTo(newScanPrel);
-        } else {
-            call.transformTo(filter.copy(filter.getTraitSet(), ImmutableList.of((RelNode)newScanPrel)));
-        }
+    if (newScanSpec == null) {
+      return; //no filter pushdown ==> No transformation.
     }
 
-    @Override
-    public boolean matches(RelOptRuleCall call) {
-        final ScanPrel scan = (ScanPrel) call.rel(1);
-        if (scan.getGroupScan() instanceof CassandraGroupScan) {
-            return super.matches(call);
-        }
-        return false;
+    final CassandraGroupScan newGroupsScan = new CassandraGroupScan(groupScan.getUserName(), groupScan.getStoragePlugin(), newScanSpec, groupScan.getColumns());
+    newGroupsScan.setFilterPushedDown(true);
+
+    final ScanPrel newScanPrel = ScanPrel.create(scan, filter.getTraitSet(), newGroupsScan, scan.getRowType());
+    if (cassandraFilterBuilder.isAllExpressionsConverted()) {
+      /*
+       * Since we could convert the entire filter condition expression into an cassandra filter,
+       * we can eliminate the filter operator altogether.
+       */
+      call.transformTo(newScanPrel);
+    } else {
+      call.transformTo(filter.copy(filter.getTraitSet(), ImmutableList.of((RelNode)newScanPrel)));
     }
+  }
+
+  @Override
+  public boolean matches(RelOptRuleCall call) {
+    final ScanPrel scan = (ScanPrel) call.rel(1);
+    if (scan.getGroupScan() instanceof CassandraGroupScan) {
+      return super.matches(call);
+    }
+    return false;
+  }
 }
