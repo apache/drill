@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.common.logical.StoragePluginConfigBase;
+import org.apache.drill.shaded.guava.com.google.common.base.MoreObjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.List;
@@ -46,22 +47,6 @@ public class CassandraStoragePluginConfig extends StoragePluginConfigBase {
     this.port = port;
   }
 
-  @Override
-  public boolean equals(Object that) {
-    if (this == that) {
-      return true;
-    } else if (that == null || getClass() != that.getClass()) {
-      return false;
-    }
-    CassandraStoragePluginConfig thatConfig = (CassandraStoragePluginConfig) that;
-    return (this.hosts == thatConfig.hosts) && this.port == thatConfig.port;
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hashCode(hosts, port);
-  }
-
   @JsonProperty("hosts")
   public List<String> getHosts() {
     return hosts;
@@ -69,4 +54,29 @@ public class CassandraStoragePluginConfig extends StoragePluginConfigBase {
 
   @JsonProperty("port")
   public int getPort(){ return port; }
+
+  @Override
+  public boolean equals(Object o) {
+    if (o == this) {
+      return true;
+    }
+    if (o == null || !(o instanceof CassandraStoragePluginConfig)) {
+      return false;
+    }
+    return Objects.equal(hosts, ((CassandraStoragePluginConfig) o).hosts) &&
+      Objects.equal(port, ((CassandraStoragePluginConfig) o).port);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(hosts, port);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+      .add("hosts", hosts)
+      .add("port", port)
+      .toString();
+  }
 }

@@ -5,11 +5,17 @@ import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.junit.Assert.assertEquals;
+
 public class CassandraQueryTest extends ClusterTest {
+
+  private static final Logger logger = LoggerFactory.getLogger(CassandraQueryTest.class);
 
   @BeforeClass
   public static void setup() throws Exception {
@@ -27,8 +33,25 @@ public class CassandraQueryTest extends ClusterTest {
   }
 
   @Test
-  public void test() throws Exception {
+  public void testSimpleStarQuery() throws Exception {
     String sql = "SELECT * FROM cassandra.drilltest.trending_now";
     queryBuilder().sql(sql).run();
+  }
+
+  @Test
+  public void testExplicitFields() throws Exception {
+    String sql = "SELECT `id`, `pog_id` FROM cassandra.drilltest.trending_now";
+    queryBuilder().sql(sql).run();
+  }
+
+  @Test
+  public void testSerDe() throws Exception {
+    String sql = "SELECT COUNT(*) as cnt FROM cassandra.drilltest.trending_now";
+    String plan = queryBuilder().sql(sql).explainJson();
+    logger.debug("Query plan: {}", plan);
+
+    long count = queryBuilder().physical(plan).singletonLong();
+
+    assertEquals("Counts should match",14L, count);
   }
 }

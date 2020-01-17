@@ -64,7 +64,6 @@ public class CassandraStoragePlugin extends AbstractStoragePlugin {
     return true;
   }
 
-
   @Override
   public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection) throws IOException {
     CassandraScanSpec cassandraScanSpec = selection.getListWith(new ObjectMapper(), new TypeReference<CassandraScanSpec>() {});
@@ -74,6 +73,4 @@ public class CassandraStoragePlugin extends AbstractStoragePlugin {
   public Set<StoragePluginOptimizerRule> getOptimizerRules() {
     return ImmutableSet.of(CassandraPushDownFilterForScan.INSTANCE);
   }
-
-
 }

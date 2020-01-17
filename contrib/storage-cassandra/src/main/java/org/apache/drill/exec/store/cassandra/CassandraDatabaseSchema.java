@@ -17,11 +17,14 @@
  */
 package org.apache.drill.exec.store.cassandra;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.calcite.schema.Table;
 
+import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.cassandra.CassandraSchemaFactory.CassandraSchema;
 
@@ -34,27 +37,47 @@ public class CassandraDatabaseSchema extends AbstractSchema {
 
   private final CassandraSchema cassandraSchema;
 
+  private final CassandraStoragePlugin plugin;
+
   private final Set<String> tables;
 
-  public CassandraDatabaseSchema(List<String> tableList, CassandraSchema cassandraSchema, String name) {
+  private final String pluginName;
+
+  private final String keyspaceName;
+
+  private final Map<String, DynamicDrillTable> activeTables = new HashMap<>();
+
+  public CassandraDatabaseSchema(CassandraStoragePlugin plugin, List<String> tableList, CassandraSchema cassandraSchema, String name) {
     super(cassandraSchema.getSchemaPath(), name);
     this.cassandraSchema = cassandraSchema;
     this.tables = Sets.newHashSet(tableList);
+    this.plugin = plugin;
+    this.keyspaceName = name;
+    this.pluginName = plugin.getName();
   }
 
   @Override
   public Table getTable(String tableName) {
-    return cassandraSchema.getDrillTable(name, tableName);
+    DynamicDrillTable table = activeTables.get(tableName);
+    if (table != null) {
+      return table;
+    } else {
+      return registerTable(tableName, new DynamicDrillTable(plugin, pluginName, new CassandraScanSpec(keyspaceName, tableName)));
+    }
   }
 
   @Override
   public Set<String> getTableNames() {
-    return tables;
+    return activeTables.keySet();
+  }
+
+  private DynamicDrillTable registerTable(String name, DynamicDrillTable table) {
+    activeTables.put(name, table);
+    return table;
   }
 
   @Override
   public String getTypeName() {
     return CassandraStoragePluginConfig.NAME;
   }
-
 }

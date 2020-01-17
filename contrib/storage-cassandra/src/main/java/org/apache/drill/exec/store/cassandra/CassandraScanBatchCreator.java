@@ -40,6 +40,9 @@ public class CassandraScanBatchCreator implements BatchCreator<CassandraSubScan>
     @Override
     public ScanBatch getBatch(ExecutorFragmentContext context, CassandraSubScan subScan, List<RecordBatch> children)
       throws ExecutionSetupException {
+
+        logger.debug("Entering scan batch creator: {}", subScan.toString());
+
         Preconditions.checkArgument(children.isEmpty());
         List<RecordReader> readers = Lists.newArrayList();
         List<SchemaPath> columns = null;

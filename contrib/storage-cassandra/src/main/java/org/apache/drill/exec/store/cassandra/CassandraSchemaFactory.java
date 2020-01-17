@@ -19,7 +19,9 @@ package org.apache.drill.exec.store.cassandra;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -29,9 +31,11 @@ import com.datastax.driver.core.KeyspaceMetadata;
 import com.datastax.driver.core.TableMetadata;
 import org.apache.calcite.schema.SchemaPlus;
 
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.store.AbstractSchema;
+import org.apache.drill.exec.store.AbstractSchemaFactory;
 import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.drill.exec.store.SchemaConfig;
 
@@ -47,7 +51,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 
 
-public class CassandraSchemaFactory implements SchemaFactory {
+public class CassandraSchemaFactory extends AbstractSchemaFactory {
 
   private static final Logger logger = LoggerFactory.getLogger(CassandraSchemaFactory.class);
 
@@ -64,6 +68,7 @@ public class CassandraSchemaFactory implements SchemaFactory {
   private final Cluster cluster;
 
   public CassandraSchemaFactory(CassandraStoragePlugin schema, String schemaName) {
+    super(schemaName);
     List<String> hosts = schema.getConfig().getHosts();
     int port = schema.getConfig().getPort();
 
@@ -88,6 +93,14 @@ public class CassandraSchemaFactory implements SchemaFactory {
       .build(new TableNameLoader());
   }
 
+  @Override
+  public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) {
+    CassandraSchema schema = new CassandraSchema(schemaName);
+    logger.debug("Registering {} {}", schema.getName(), schema.toString());
+
+    SchemaPlus schemaPlus = parent.add(schemaName, schema);
+    schema.setHolder(schemaPlus);
+  }
 
   /**
    * Utility class for fetching all the key spaces in cluster.
@@ -124,17 +137,12 @@ public class CassandraSchemaFactory implements SchemaFactory {
     }
   }
 
-  @Override
-  public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) {
-    CassandraSchema schema = new CassandraSchema(schemaName);
-    SchemaPlus schemaPlus = parent.add(schemaName, schema);
-    schema.setHolder(schemaPlus);
-  }
-
   class CassandraSchema extends AbstractSchema {
 
+    private final Map<String, DynamicDrillTable> activeTables = new HashMap<>();
+
     public CassandraSchema(String name) {
-      super(ImmutableList.of(), name);
+      super(Collections.emptyList(), name);
     }
 
     @Override
@@ -142,10 +150,9 @@ public class CassandraSchemaFactory implements SchemaFactory {
       List<String> tables;
       try {
         tables = tableCache.get(name);
-        return new CassandraDatabaseSchema(tables, this, name);
+        return new CassandraDatabaseSchema(plugin, tables, this, name);
       } catch (ExecutionException e) {
-        logger.warn("Failure while attempting to access Cassandra DataBase '{}'.", name, e.getCause());
-        return null;
+        throw new DrillRuntimeException(e);
       }
     }
 
@@ -157,7 +164,7 @@ public class CassandraSchemaFactory implements SchemaFactory {
 
     @Override
     public boolean showInInformationSchema() {
-      return false;
+      return true;
     }
 
     @Override

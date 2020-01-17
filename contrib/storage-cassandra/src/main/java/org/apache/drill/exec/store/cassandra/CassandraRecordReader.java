@@ -19,7 +19,6 @@
 package org.apache.drill.exec.store.cassandra;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 
 import java.util.Collection;
 import java.util.Date;
@@ -80,15 +79,15 @@ public class CassandraRecordReader extends AbstractRecordReader implements Drill
   private Map<String, MapVector> familyVectorMap;
 
 
-  private String cassandraTableName;
+  private final String cassandraTableName;
 
-  private CassandraSubScan.CassandraSubScanSpec subScanSpec;
+  private final CassandraSubScan.CassandraSubScanSpec subScanSpec;
 
-  private String cassandraKeySpace;
+  private final String cassandraKeySpace;
 
-  private CassandraStoragePluginConfig cassandraConf;
+  private final CassandraStoragePluginConfig cassandraConf;
 
-  private List<SchemaPath> projectedColumns;
+  private final List<SchemaPath> projectedColumns;
 
   private boolean allColumnsProjected;
 
@@ -149,11 +148,11 @@ public class CassandraRecordReader extends AbstractRecordReader implements Drill
         partitionkeys[index] = partitioncols.get(index).getName();
       }
 
-      Statement q = null;
+      Statement q;
 
       /* Check projected columns */
       for (SchemaPath path : getColumns()) {
-        if (path.getAsNamePart().getName().equals("**")) {
+        if (isStarQuery()) {
           allColumnsProjected = true;
           break;
         }
@@ -186,7 +185,7 @@ public class CassandraRecordReader extends AbstractRecordReader implements Drill
       rs = session.execute(q);
 
       for (SchemaPath column : getColumns()) {
-        if (column.getAsNamePart().getName().equals("**")) {
+        if (isStarQuery()) {
           Iterator<ColumnDefinitions.Definition> iter = rs.getColumnDefinitions().iterator();
 
           /* Add all columns to ValueVector */
@@ -235,10 +234,8 @@ public class CassandraRecordReader extends AbstractRecordReader implements Drill
           break;
         }
 
-        start = end = -1;
         for (SchemaPath col : getColumns()) {
-          // TODO Use isStarQuery
-          if (col.getAsNamePart().getName().equals("**")) {
+          if (isStarQuery()) {
             /* Add all columns to ValueVector */
             for (ColumnDefinitions.Definition def : row.getColumnDefinitions()) {
               updateValueVector(row, def.getName(), rowCount);
@@ -283,17 +280,17 @@ public class CassandraRecordReader extends AbstractRecordReader implements Drill
 
 
   @Override
-  public void close() throws Exception {
-    try {
-      if (session != null) {
-        session.close();
-      }
-    } catch (Exception e) {
-      logger.error("Failure while closing Cassandra table. Error: {}", e.getMessage());
-      throw new DrillRuntimeException(String.format("Failure while closing Cassandra table. Error: %s", e.getMessage()));
+  public void close() {
+    if (cluster != null) {
+      cluster.close();
+      cluster = null;
+    }
+
+    if (session!= null) {
+      session.close();
+      session = null;
     }
   }
-
 
   /**
    * Utility function to get the type of the column and return its String value.
