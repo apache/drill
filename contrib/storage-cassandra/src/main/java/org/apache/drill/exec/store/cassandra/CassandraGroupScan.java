@@ -215,14 +215,14 @@ public class CassandraGroupScan extends AbstractGroupScan implements DrillCassan
   public List<EndpointAffinity> getOperatorAffinity() {
     watch.reset();
     watch.start();
-    Map<String, DrillbitEndpoint> endpointMap = new HashMap<String, DrillbitEndpoint>();
+    Map<String, DrillbitEndpoint> endpointMap = new HashMap<>();
     for (DrillbitEndpoint ep : storagePlugin.getContext().getBits()) {
       endpointMap.put(ep.getAddress(), ep);
     }
 
     logger.debug("Building affinity map. Endpoints: {}, KeyspaceHosts: {}", endpointMap, keyspaceHosts);
 
-    Map<DrillbitEndpoint, EndpointAffinity> affinityMap = new HashMap<DrillbitEndpoint, EndpointAffinity>();
+    Map<DrillbitEndpoint, EndpointAffinity> affinityMap = new HashMap<>();
     for (Host host : keyspaceHosts) {
       DrillbitEndpoint ep = endpointMap.get(host.getAddress().getHostName());
       if (ep != null) {
@@ -360,6 +360,7 @@ public class CassandraGroupScan extends AbstractGroupScan implements DrillCassan
       .setKeyspace(spec.getKeyspace())
       .setFilter(spec.getFilters())
       .setHosts(contactPoints)
+      .setCluster(cluster)
       .setPort(storagePluginConfig.getPort())
       .setStartToken(token != null ? token.getLow() : null)
       .setEndToken(token != null ? token.getHigh() : null);
@@ -373,8 +374,7 @@ public class CassandraGroupScan extends AbstractGroupScan implements DrillCassan
   @Override
   public CassandraSubScan getSpecificScan(int minorFragmentId) {
     assert minorFragmentId < endpointFragmentMapping.size() : String.format("Mappings length [%d] should be greater than minor fragment id [%d] but it isn't.", endpointFragmentMapping.size(), minorFragmentId);
-    return new CassandraSubScan(storagePlugin, storagePluginConfig, endpointFragmentMapping
-      .get(minorFragmentId), columns);
+    return new CassandraSubScan(storagePlugin, storagePluginConfig, endpointFragmentMapping.get(minorFragmentId), columns, cluster, session);
   }
 
   @Override

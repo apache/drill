@@ -138,10 +138,12 @@ public class CassandraRecordReader extends AbstractRecordReader implements Drill
       List<String> host = subScanSpec.getHosts();
       int port = subScanSpec.getPort();
 
-      cluster = CassandraConnectionManager.getCluster(host, port);
-      session = cluster.connect();
+      cluster = subScanSpec.getCluster();
+      session = subScanSpec.getSession();
+      //cluster = CassandraConnectionManager.getCluster(host, port);
+      //session = cluster.connect();
 
-      List<ColumnMetadata> partitioncols = session.getCluster().getMetadata().getKeyspace(subScanSpec.getKeyspace()).getTable(subScanSpec.getTable()).getPartitionKey();
+      List<ColumnMetadata> partitioncols = cluster.getMetadata().getKeyspace(subScanSpec.getKeyspace()).getTable(subScanSpec.getTable()).getPartitionKey();
 
       String[] partitionkeys = new String[partitioncols.size()];
       for (int index = 0; index < partitioncols.size(); index++) {
@@ -150,6 +152,8 @@ public class CassandraRecordReader extends AbstractRecordReader implements Drill
 
       Statement q;
 
+
+      // TODO Not sure why this is here...
       /* Check projected columns */
       for (SchemaPath path : getColumns()) {
         if (isStarQuery()) {
@@ -182,6 +186,7 @@ public class CassandraRecordReader extends AbstractRecordReader implements Drill
       }
 
       q = where;
+      logger.debug("Query sent to Cassandra: {}", q);
       rs = session.execute(q);
 
       for (SchemaPath column : getColumns()) {
@@ -199,7 +204,6 @@ public class CassandraRecordReader extends AbstractRecordReader implements Drill
           vector = this.outputMutator.addField(field, NullableVarCharVector.class);
         }
       }
-
     } catch (SchemaChangeException e) {
       throw new ExecutionSetupException("Failure in Cassandra Record Reader setup. Cause: ", e);
     }

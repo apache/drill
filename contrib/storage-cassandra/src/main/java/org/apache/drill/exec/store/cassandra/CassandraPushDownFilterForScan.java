@@ -32,8 +32,12 @@ import org.apache.calcite.rex.RexNode;
 
 
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CassandraPushDownFilterForScan extends StoragePluginOptimizerRule {
+
+  private static final Logger logger = LoggerFactory.getLogger(CassandraDatabaseSchema.class);
 
   /* Flag to bypass filter pushdown   */
   static final boolean BYPASS_CASSANDRA_FILTER_PUSHDOWN = true;
@@ -46,6 +50,7 @@ public class CassandraPushDownFilterForScan extends StoragePluginOptimizerRule {
 
   public CassandraPushDownFilterForScan(RelOptRuleOperand operand, String description) {
     super(operand, description);
+    logger.debug("Filter push down started.");
   }
 
   @Override

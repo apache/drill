@@ -41,7 +41,33 @@ public class CassandraQueryTest extends ClusterTest {
   @Test
   public void testSimpleStarQuery() throws Exception {
     String sql = "SELECT * FROM cassandra.drilltest.trending_now";
-    queryBuilder().sql(sql).run();
+    QueryBuilder q = queryBuilder().sql(sql);
+    RowSet results = q.rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("id", TypeProtos.MinorType.VARCHAR)
+      .addNullable("pog_rank", TypeProtos.MinorType.VARCHAR)
+      .addNullable("pog_id", TypeProtos.MinorType.VARCHAR)
+      .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow("id0001", "1", "10001")
+      .addRow("id0005", "1", "10001")
+      .addRow("id0002", "1", "10001")
+      .addRow("id0002", "2", "10001")
+      .addRow("id0002", "3", "10001")
+      .addRow("id0006", "1", "10001")
+      .addRow("id0006", "2", "10001")
+      .addRow("id0004", "1", "10001")
+      .addRow("id0004", "2", "10001")
+      .addRow("id0004", "3", "10002")
+      .addRow("id0004", "4", "10002")
+      .addRow("id0004", "5", "10002")
+      .addRow("id0004", "6", "10002")
+      .addRow("id0003", "1", "10001")
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
   @Test
@@ -76,6 +102,24 @@ public class CassandraQueryTest extends ClusterTest {
   }
 
   @Test
+  public void testGreaterThanOrEqualTo() throws Exception {
+    String sql = "SELECT `id` FROM cassandra.drilltest.trending_now WHERE pog_rank >= 5";
+    QueryBuilder q = queryBuilder().sql(sql);
+    RowSet results = q.rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("id", TypeProtos.MinorType.VARCHAR)
+      .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow("id0004")
+      .addRow("id0004")
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
   public void testSerDe() throws Exception {
     String sql = "SELECT COUNT(*) as cnt FROM cassandra.drilltest.trending_now";
     String plan = queryBuilder().sql(sql).explainJson();
@@ -83,6 +127,6 @@ public class CassandraQueryTest extends ClusterTest {
 
     long count = queryBuilder().physical(plan).singletonLong();
 
-    assertEquals("Counts should match",14L, count);
+    assertEquals("Counts should match",1L, count);
   }
 }

@@ -29,8 +29,6 @@ import org.apache.drill.common.util.DrillFileUtils;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.exec.store.cassandra.CassandraStoragePlugin;
-import org.apache.drill.exec.store.cassandra.CassandraStoragePluginConfig;
 import org.apache.drill.exec.store.cassandra.connection.CassandraConnectionManager;
 import org.junit.AfterClass;
 import org.junit.Assert;

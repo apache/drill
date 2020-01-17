@@ -21,6 +21,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.Clause;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -39,6 +41,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+
 import java.util.Collections;
 
 @JsonTypeName("cassandra-subscan")
@@ -47,22 +50,29 @@ public class CassandraSubScan extends AbstractBase implements SubScan {
 
   @JsonProperty
   private final CassandraStoragePluginConfig cassandraPluginConfig;
+
   @JsonProperty
   private final List<SchemaPath> columns;
+
   @JsonProperty
   private final List<CassandraSubScanSpec> chunkScanSpecList;
 
   @JsonIgnore
   private final CassandraStoragePlugin cassandraStoragePlugin;
 
+  @JsonIgnore
+  private Cluster cluster;
+
+  @JsonIgnore
+  private Session session;
+
 
   @JsonCreator
-  public CassandraSubScan(
-    @JacksonInject("registry") StoragePluginRegistry registry,
-    @JsonProperty("cassandraPluginConfig") StoragePluginConfig cassandraPluginConfig,
-    @JsonProperty("chunkScanSpecList") LinkedList<CassandraSubScanSpec> chunkScanSpecList,
-    @JsonProperty("columns") List<SchemaPath> columns)
-    throws ExecutionSetupException {
+  public CassandraSubScan(@JacksonInject("registry") StoragePluginRegistry registry,
+                          @JsonProperty("cassandraPluginConfig") StoragePluginConfig cassandraPluginConfig,
+                          @JsonProperty("chunkScanSpecList") LinkedList<CassandraSubScanSpec> chunkScanSpecList,
+                          @JsonProperty("columns") List<SchemaPath> columns
+                          ) throws ExecutionSetupException {
 
     this.columns = columns;
     this.cassandraPluginConfig = (CassandraStoragePluginConfig) cassandraPluginConfig;
@@ -70,19 +80,26 @@ public class CassandraSubScan extends AbstractBase implements SubScan {
     this.chunkScanSpecList = chunkScanSpecList;
   }
 
-  public CassandraSubScan(CassandraStoragePlugin storagePlugin,
-                          CassandraStoragePluginConfig storagePluginConfig,
-                          List<CassandraSubScanSpec> chunkScanSpecList, List<SchemaPath> columns) {
+  public CassandraSubScan(CassandraStoragePlugin storagePlugin, CassandraStoragePluginConfig storagePluginConfig, List<CassandraSubScanSpec> chunkScanSpecList, List<SchemaPath> columns) {
     this.cassandraStoragePlugin = storagePlugin;
     this.cassandraPluginConfig = storagePluginConfig;
     this.columns = columns;
     this.chunkScanSpecList = chunkScanSpecList;
   }
 
+  public CassandraSubScan(CassandraStoragePlugin storagePlugin, CassandraStoragePluginConfig storagePluginConfig, List<CassandraSubScanSpec> chunkScanSpecList,
+                          List<SchemaPath> columns, Cluster cluster,
+                          Session session) {
+    this.cassandraStoragePlugin = storagePlugin;
+    this.cassandraPluginConfig = storagePluginConfig;
+    this.columns = columns;
+    this.chunkScanSpecList = chunkScanSpecList;
+    this.cluster = cluster;
+    this.session = session;
+  }
 
   @Override
-  public <T, X, E extends Throwable> T accept(
-    PhysicalVisitor<T, X, E> physicalVisitor, X value) throws E {
+  public <T, X, E extends Throwable> T accept(PhysicalVisitor<T, X, E> physicalVisitor, X value) throws E {
     return physicalVisitor.visitSubScan(this, value);
   }
 
@@ -105,11 +122,9 @@ public class CassandraSubScan extends AbstractBase implements SubScan {
   }
 
   @Override
-  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children)
-    throws ExecutionSetupException {
+  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
     Preconditions.checkArgument(children.isEmpty());
-    return new CassandraSubScan(cassandraStoragePlugin, cassandraPluginConfig,
-      chunkScanSpecList, columns);
+    return new CassandraSubScan(cassandraStoragePlugin, cassandraPluginConfig, chunkScanSpecList, columns, cluster, session);
   }
 
   @Override
@@ -126,12 +141,22 @@ public class CassandraSubScan extends AbstractBase implements SubScan {
   public static class CassandraSubScanSpec {
 
     protected String keyspace;
+
     protected String table;
+
     protected List<String> hosts;
+
     protected int port;
 
     protected String startToken;
+
     protected String endToken;
+
+    @JsonIgnore
+    protected Cluster cluster;
+
+    @JsonIgnore
+    protected Session session;
 
     @JsonIgnore
     protected List<Clause> filter;
@@ -142,8 +167,9 @@ public class CassandraSubScan extends AbstractBase implements SubScan {
                                 @JsonProperty("hosts") List<String> hosts,
                                 @JsonProperty("port") int port,
                                 @JsonProperty("startToken") String startToken,
-                                @JsonProperty("endToken") String endToken
-    ) {
+                                @JsonProperty("endToken") String endToken,
+                                @JacksonInject Cluster cluster,
+                                @JacksonInject Session session) {
       this.keyspace = keyspace;
       this.table = table;
       this.hosts = hosts;
@@ -151,6 +177,8 @@ public class CassandraSubScan extends AbstractBase implements SubScan {
       this.startToken = startToken;
       this.endToken = endToken;
       this.filter = filter;
+      this.session = session;
+      this.cluster = cluster;
     }
 
     CassandraSubScanSpec() {
@@ -211,6 +239,19 @@ public class CassandraSubScan extends AbstractBase implements SubScan {
       return this;
     }
 
+    public CassandraSubScanSpec setCluster(Cluster cluster) {
+      this.cluster = cluster;
+      return this;
+    }
+
+    public Cluster getCluster() {
+      return cluster;
+    }
+
+    public Session getSession() {
+      return session;
+    }
+
     public String getEndToken() {
       return endToken;
     }
@@ -222,9 +263,7 @@ public class CassandraSubScan extends AbstractBase implements SubScan {
 
     @Override
     public String toString() {
-      return "CassandraSubScanSpec [keyspace=" + keyspace + ", table="
-        + table + ", host=" + hosts +", port=" + port + ", startToken=" + startToken
-        + ", endToken=" + endToken + ", filter=" + filter + "]";
+      return "CassandraSubScanSpec [keyspace=" + keyspace + ", table=" + table + ", host=" + hosts + ", port=" + port + ", startToken=" + startToken + ", endToken=" + endToken + ", filter=" + filter + "]";
     }
   }
 }

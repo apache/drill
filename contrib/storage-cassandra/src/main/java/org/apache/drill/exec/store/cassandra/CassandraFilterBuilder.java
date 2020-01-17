@@ -32,16 +32,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class CassandraFilterBuilder extends
-  AbstractExprVisitor<CassandraScanSpec, Void, RuntimeException> implements
-  DrillCassandraConstants {
+public class CassandraFilterBuilder extends AbstractExprVisitor<CassandraScanSpec, Void, RuntimeException> implements DrillCassandraConstants {
   private static final Logger logger = LoggerFactory.getLogger(CassandraFilterBuilder.class);
+
   final CassandraGroupScan groupScan;
+
   final LogicalExpression le;
+
   private boolean allExpressionsConverted = true;
 
-  public CassandraFilterBuilder(CassandraGroupScan groupScan,
-                                LogicalExpression conditionExp) {
+  public CassandraFilterBuilder(CassandraGroupScan groupScan, LogicalExpression conditionExp) {
     this.groupScan = groupScan;
     this.le = conditionExp;
 
@@ -57,8 +57,7 @@ public class CassandraFilterBuilder extends
     return parsedSpec;
   }
 
-  private CassandraScanSpec mergeScanSpecs(String functionName,
-                                           CassandraScanSpec leftScanSpec, CassandraScanSpec rightScanSpec) {
+  private CassandraScanSpec mergeScanSpecs(String functionName, CassandraScanSpec leftScanSpec, CassandraScanSpec rightScanSpec) {
 
     List<Clause> newFilters = Lists.newArrayList();
     CassandraScanSpec scanSpec = null;
@@ -71,8 +70,7 @@ public class CassandraFilterBuilder extends
           newFilters.addAll(rightScanSpec.getFilters());
         }
 
-        scanSpec = new CassandraScanSpec(groupScan.getCassandraScanSpec().getKeyspace(),
-          groupScan.getCassandraScanSpec().getTable(), newFilters);
+        scanSpec = new CassandraScanSpec(groupScan.getCassandraScanSpec().getKeyspace(), groupScan.getCassandraScanSpec().getTable(), newFilters);
         break;
     }
 
@@ -84,8 +82,7 @@ public class CassandraFilterBuilder extends
   }
 
   @Override
-  public CassandraScanSpec visitUnknown(LogicalExpression e, Void value)
-    throws RuntimeException {
+  public CassandraScanSpec visitUnknown(LogicalExpression e, Void value) throws RuntimeException {
     allExpressionsConverted = false;
     return null;
   }
@@ -116,8 +113,7 @@ public class CassandraFilterBuilder extends
   }
 
   @Override
-  public CassandraScanSpec visitFunctionCall(FunctionCall call, Void value)
-    throws RuntimeException {
+  public CassandraScanSpec visitFunctionCall(FunctionCall call, Void value) throws RuntimeException {
 
     CassandraScanSpec nodeScanSpec = null;
     String functionName = call.getName();
@@ -156,7 +152,6 @@ public class CassandraFilterBuilder extends
   }
 
 
-
   private CassandraScanSpec createCassandraScanSpec(FunctionCall call, CassandraCompareFunctionsProcessor processor) {
     String functionName = processor.getFunctionName();
     SchemaPath field = processor.getPath();
@@ -190,8 +185,7 @@ public class CassandraFilterBuilder extends
     if (clause != null) {
       List<Clause> filters = Lists.newArrayList();
       filters.add(clause);
-      return new CassandraScanSpec(groupScan.getCassandraScanSpec().getKeyspace(),
-        groupScan.getCassandraScanSpec().getTable(), filters);
+      return new CassandraScanSpec(groupScan.getCassandraScanSpec().getKeyspace(), groupScan.getCassandraScanSpec().getTable(), filters);
     }
     // else
     return null;

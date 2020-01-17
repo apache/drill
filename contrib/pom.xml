@@ -53,6 +53,7 @@
     <module>format-xml</module>
     <module>storage-cassandra</module>
     <module>storage-hive</module>
+    <module>storage-cassandra</module>
     <module>storage-mongo</module>
     <module>storage-jdbc</module>
     <module>storage-kafka</module>

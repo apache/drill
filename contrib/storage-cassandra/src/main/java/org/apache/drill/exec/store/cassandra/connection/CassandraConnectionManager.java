@@ -35,10 +35,15 @@ public class CassandraConnectionManager {
   private static Cache<String, Cluster> hostConnectionMap;
 
   static {
-    hostConnectionMap = CacheBuilder.newBuilder().maximumSize(5).expireAfterAccess(10, TimeUnit.MINUTES).removalListener(new AddressCloser()).build();
+    hostConnectionMap = CacheBuilder
+      .newBuilder()
+      .maximumSize(5)
+      .expireAfterAccess(10, TimeUnit.MINUTES)
+      .removalListener(new AddressCloser()).build();
   }
 
   public synchronized static Cluster getCluster(List<String> hosts, int port) {
+
     Cluster cluster = hostConnectionMap.getIfPresent(hosts);
     if (cluster == null || cluster.isClosed()) {
       Cluster.Builder builder = Cluster.builder();
@@ -52,6 +57,9 @@ public class CassandraConnectionManager {
       for (String host : hosts) {
         hostConnectionMap.put(host, cluster);
       }
+      logger.debug("*****************************************");
+      logger.debug("Opening Cassandra Connection");
+      logger.debug("*****************************************");
 
       logger.debug("Created connection to {}.", hosts);
       logger.debug("Number of sessions opened are {}.", hostConnectionMap.size());

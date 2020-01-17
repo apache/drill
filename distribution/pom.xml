@@ -298,7 +298,7 @@
         </dependency>
         <dependency>
           <groupId>org.apache.drill.contrib</groupId>
-          <artifactId>drill-storage-cassandra</artifactId>
+          <artifactId>drill-cassandra-storage</artifactId>
           <version>${project.version}</version>
         </dependency>
         <dependency>
