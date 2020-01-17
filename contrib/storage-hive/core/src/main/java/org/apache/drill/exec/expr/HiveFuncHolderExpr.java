@@ -29,8 +29,8 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.fn.HiveFuncHolder;
 
 public class HiveFuncHolderExpr extends FunctionHolderExpression implements Iterable<LogicalExpression>{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillFuncHolderExpr.class);
-  private HiveFuncHolder holder;
+
+  private final HiveFuncHolder holder;
 
   public HiveFuncHolderExpr(String nameUsed, HiveFuncHolder holder, List<LogicalExpression> args, ExpressionPosition pos) {
     super(nameUsed, pos, args);

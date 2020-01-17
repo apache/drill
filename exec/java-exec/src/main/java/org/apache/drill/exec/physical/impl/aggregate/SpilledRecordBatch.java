@@ -25,13 +25,14 @@ import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.spill.SpillSet;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.CloseableRecordBatch;
-import org.apache.drill.exec.record.SimpleRecordBatch;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,9 +41,9 @@ import java.util.Iterator;
 /**
  * A class to replace "incoming" - instead scanning a spilled partition file
  */
-public class SpilledRecordbatch implements CloseableRecordBatch {
+public class SpilledRecordBatch implements CloseableRecordBatch {
 
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SimpleRecordBatch.class);
+  private static final Logger logger = LoggerFactory.getLogger(SpilledRecordBatch.class);
 
   private VectorContainer container;
   private InputStream spillStream;
@@ -57,7 +58,7 @@ public class SpilledRecordbatch implements CloseableRecordBatch {
   // during the method's execution a value IterOutcome.STOP will be assigned.
   private IterOutcome lastOutcome;
 
-  public SpilledRecordbatch(String spillFile, int spilledBatches, FragmentContext context, BatchSchema schema, OperatorContext oContext, SpillSet spillSet) {
+  public SpilledRecordBatch(String spillFile, int spilledBatches, FragmentContext context, BatchSchema schema, OperatorContext oContext, SpillSet spillSet) {
     this.context = context;
     this.schema = schema;
     this.spilledBatches = spilledBatches;
@@ -69,7 +70,7 @@ public class SpilledRecordbatch implements CloseableRecordBatch {
     try {
       this.spillStream = this.spillSet.openForInput(spillFile);
     } catch (IOException e) {
-      throw UserException.resourceError(e).build(HashAggBatch.logger);
+      throw UserException.resourceError(e).build(logger);
     }
 
     initialOutcome = next(); // initialize the container
@@ -148,7 +149,7 @@ public class SpilledRecordbatch implements CloseableRecordBatch {
     }
 
     if ( spillSet.getPosition(spillStream)  < 0 ) {
-      HashAggTemplate.logger.warn("Position is {} for stream {}", spillSet.getPosition(spillStream), spillStream.toString());
+      logger.warn("Position is {} for stream {}", spillSet.getPosition(spillStream), spillStream.toString());
     }
 
     try {
@@ -163,7 +164,7 @@ public class SpilledRecordbatch implements CloseableRecordBatch {
       }
     } catch (IOException e) {
       lastOutcome = IterOutcome.STOP;
-      throw UserException.dataReadError(e).addContext("Failed reading from a spill file").build(HashAggTemplate.logger);
+      throw UserException.dataReadError(e).addContext("Failed reading from a spill file").build(logger);
     } catch (Exception e) {
       lastOutcome = IterOutcome.STOP;
       throw e;
@@ -206,7 +207,6 @@ public class SpilledRecordbatch implements CloseableRecordBatch {
     }
     catch (IOException e) {
       /* ignore */
-    } finally {
     }
   }
 }

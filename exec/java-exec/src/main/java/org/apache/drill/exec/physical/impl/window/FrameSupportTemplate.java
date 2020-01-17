@@ -26,6 +26,8 @@ import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.ValueVector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
 import java.util.List;
@@ -37,7 +39,8 @@ import java.util.List;
  * This class will handle such functions even if the FRAME clause is not present.
  */
 public abstract class FrameSupportTemplate implements WindowFramer {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NoFrameSupportTemplate.class);
+
+  private static final Logger logger = LoggerFactory.getLogger(FrameSupportTemplate.class);
 
   private VectorContainer container;
   private VectorContainer internal;

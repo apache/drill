@@ -33,7 +33,7 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.config.HashJoinPOP;
 import org.apache.drill.exec.physical.impl.MockRecordBatch;
-import org.apache.drill.exec.physical.impl.aggregate.SpilledRecordbatch;
+import org.apache.drill.exec.physical.impl.aggregate.SpilledRecordBatch;
 import org.apache.drill.exec.physical.impl.join.HashJoinMemoryCalculator;
 import org.apache.drill.exec.physical.impl.join.HashJoinMemoryCalculatorImpl;
 import org.apache.drill.exec.physical.impl.join.JoinUtils;
@@ -227,7 +227,7 @@ public class HashPartitionTest extends BaseTest {
         final int batchesCount = hashPartition.getPartitionBatchesCount();
         hashPartition.closeWriter();
 
-        SpilledRecordbatch spilledBuildBatch = new SpilledRecordbatch(spillFile, batchesCount, context, buildSchema, operatorContext, spillSet);
+        SpilledRecordBatch spilledBuildBatch = new SpilledRecordBatch(spillFile, batchesCount, context, buildSchema, operatorContext, spillSet);
         final RowSet actual = DirectRowSet.fromContainer(spilledBuildBatch.getContainer());
 
         new RowSetComparison(actualBuildRowSet).verify(actual);

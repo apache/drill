@@ -43,7 +43,8 @@ import org.slf4j.LoggerFactory;
  * implicit column for rowId for each row.
  */
 public class PartitionLimitRecordBatch extends AbstractSingleRecordBatch<PartitionLimit> {
-  private static final Logger logger = LoggerFactory.getLogger(LimitRecordBatch.class);
+
+  private static final Logger logger = LoggerFactory.getLogger(PartitionLimitRecordBatch.class);
 
   private final SelectionVector2 outgoingSv;
   private SelectionVector2 incomingSv;

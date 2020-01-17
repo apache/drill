@@ -103,7 +103,6 @@ import java.util.Set;
  * Only rules which use DrillRelFactories should be used in this enum.
  */
 public enum PlannerPhase {
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillRuleSets.class);
 
   LOGICAL_PRUNE_AND_JOIN("Logical Planning (with join and partition pruning)") {
     public RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins) {

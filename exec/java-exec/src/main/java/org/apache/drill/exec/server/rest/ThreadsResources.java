@@ -32,7 +32,6 @@ import org.glassfish.jersey.server.mvc.Viewable;
 @Path("/threads")
 @RolesAllowed(DrillUserPrincipal.ADMIN_ROLE)
 public class ThreadsResources {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MetricsResources.class);
 
   @Inject UserAuthEnabled authEnabled;
   @Inject SecurityContext sc;
@@ -42,5 +41,4 @@ public class ThreadsResources {
   public Viewable getMetrics() {
     return ViewableWithPermissions.create(authEnabled.get(), "/rest/threads/threads.ftl", sc);
   }
-
 }

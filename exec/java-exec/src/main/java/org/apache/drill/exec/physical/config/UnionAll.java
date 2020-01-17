@@ -32,8 +32,6 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 
 public class UnionAll extends AbstractMultiple {
 
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Filter.class);
-
   @JsonCreator
   public UnionAll(@JsonProperty("children") List<PhysicalOperator> children) {
     super(children);

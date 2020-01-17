@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
  */
 public class RepeatedVarCharOutput extends BaseFieldOutput {
 
-  private static final Logger logger = LoggerFactory.getLogger(BaseFieldOutput.class);
+  private static final Logger logger = LoggerFactory.getLogger(RepeatedVarCharOutput.class);
 
   private final ScalarWriter columnWriter;
 

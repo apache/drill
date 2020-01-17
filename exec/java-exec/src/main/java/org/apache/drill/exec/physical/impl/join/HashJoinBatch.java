@@ -59,7 +59,7 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.MetricDef;
 import org.apache.drill.exec.physical.base.AbstractBase;
 import org.apache.drill.exec.physical.config.HashJoinPOP;
-import org.apache.drill.exec.physical.impl.aggregate.SpilledRecordbatch;
+import org.apache.drill.exec.physical.impl.aggregate.SpilledRecordBatch;
 import org.apache.drill.exec.physical.impl.common.AbstractSpilledPartitionMetadata;
 import org.apache.drill.exec.physical.impl.common.ChainedHashTable;
 import org.apache.drill.exec.physical.impl.common.Comparator;
@@ -638,15 +638,15 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
             }
 
             // Create a BUILD-side "incoming" out of the inner spill file of that partition
-            buildBatch = new SpilledRecordbatch(currSp.innerSpillFile, currSp.innerSpilledBatches, context, buildSchema, oContext, spillSet);
+            buildBatch = new SpilledRecordBatch(currSp.innerSpillFile, currSp.innerSpilledBatches, context, buildSchema, oContext, spillSet);
             // The above ctor call also got the first batch; need to update the outcome
-            rightUpstream = ((SpilledRecordbatch) buildBatch).getInitialOutcome();
+            rightUpstream = ((SpilledRecordBatch) buildBatch).getInitialOutcome();
 
             if (currSp.outerSpilledBatches > 0) {
               // Create a PROBE-side "incoming" out of the outer spill file of that partition
-              probeBatch = new SpilledRecordbatch(currSp.outerSpillFile, currSp.outerSpilledBatches, context, probeSchema, oContext, spillSet);
+              probeBatch = new SpilledRecordBatch(currSp.outerSpillFile, currSp.outerSpilledBatches, context, probeSchema, oContext, spillSet);
               // The above ctor call also got the first batch; need to update the outcome
-              leftUpstream = ((SpilledRecordbatch) probeBatch).getInitialOutcome();
+              leftUpstream = ((SpilledRecordBatch) probeBatch).getInitialOutcome();
             } else {
               probeBatch = left; // if no outer batch then reuse left - needed for updateIncoming()
               leftUpstream = IterOutcome.NONE;

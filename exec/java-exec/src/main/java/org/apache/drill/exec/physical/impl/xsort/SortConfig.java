@@ -20,9 +20,12 @@ package org.apache.drill.exec.physical.impl.xsort;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.server.options.OptionManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SortConfig {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExternalSortBatch.class);
+
+  private static final Logger logger = LoggerFactory.getLogger(SortConfig.class);
 
   /**
    * Smallest allowed output batch size. The smallest output batch

@@ -31,7 +31,6 @@ import org.junit.experimental.categories.Category;
 
 @Category(UnlikelyTest.class)
 public class TestDisabledFunctionality extends BaseTestQuery {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestExampleQueries.class);
 
   @Test(expected = UserException.class)  // see DRILL-2054
   public void testBooleanORWhereClause() throws Exception {

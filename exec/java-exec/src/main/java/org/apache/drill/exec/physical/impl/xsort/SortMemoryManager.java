@@ -18,6 +18,8 @@
 package org.apache.drill.exec.physical.impl.xsort;
 
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Computes the memory needs for input batches, spill batches and merge
@@ -60,7 +62,7 @@ import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTes
  * As a result, we can never be sure of the amount of memory needed for a
  * batch. So, we have to estimate based on a number of factors:
  * <ul>
- * <li>Uses the {@link RecordBatchSizer} to estimate the data size and
+ * <li>Uses the {@link org.apache.drill.exec.record.RecordBatchSizer} to estimate the data size and
  * buffer size of each incoming batch.</li>
  * <li>Estimates the internal fragmentation due to power-of-two rounding.</li>
  * <li>Configured preferences for spill and output batches.</li>
@@ -93,7 +95,8 @@ import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTes
  */
 
 public class SortMemoryManager {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExternalSortBatch.class);
+
+  private static final Logger logger = LoggerFactory.getLogger(SortMemoryManager.class);
 
   /**
    * Estimate for typical internal fragmentation in a buffer due to power-of-two
