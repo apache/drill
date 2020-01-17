@@ -1,8 +1,15 @@
 package org.apache.drill.exec.store.cassandra;
 
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.exec.physical.rowSet.RowSet;
+import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
+import org.apache.drill.test.QueryBuilder;
+import org.apache.drill.test.rowSet.RowSetComparison;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -25,7 +32,6 @@ public class CassandraQueryTest extends ClusterTest {
     List<String> hosts = new ArrayList<>();
     hosts.add("127.0.0.1");
 
-
     StoragePluginRegistry pluginRegistry = cluster.drillbit().getContext().getStorage();
     CassandraStoragePluginConfig config = new CassandraStoragePluginConfig(hosts, 9042);
     config.setEnabled(true);
@@ -41,7 +47,32 @@ public class CassandraQueryTest extends ClusterTest {
   @Test
   public void testExplicitFields() throws Exception {
     String sql = "SELECT `id`, `pog_id` FROM cassandra.drilltest.trending_now";
-    queryBuilder().sql(sql).run();
+    QueryBuilder q = queryBuilder().sql(sql);
+    RowSet results = q.rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("id", TypeProtos.MinorType.VARCHAR)
+      .addNullable("pog_id", TypeProtos.MinorType.VARCHAR)
+      .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow("id0001", "10001")
+      .addRow("id0005", "10001")
+      .addRow("id0002", "10001")
+      .addRow("id0002", "10001")
+      .addRow("id0002", "10001")
+      .addRow("id0006", "10001")
+      .addRow("id0006", "10001")
+      .addRow("id0004", "10001")
+      .addRow("id0004", "10001")
+      .addRow("id0004", "10002")
+      .addRow("id0004", "10002")
+      .addRow("id0004", "10002")
+      .addRow("id0004", "10002")
+      .addRow("id0003", "10001")
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
   @Test
