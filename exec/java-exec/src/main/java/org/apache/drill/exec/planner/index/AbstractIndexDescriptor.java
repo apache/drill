@@ -33,7 +33,6 @@ import org.apache.drill.exec.physical.base.IndexGroupScan;
  *
  */
 public abstract class AbstractIndexDescriptor extends DrillIndexDefinition implements IndexDescriptor {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractIndexDescriptor .class);
 
   public AbstractIndexDescriptor(List<LogicalExpression> indexCols,
                                  CollationContext indexCollationContext,

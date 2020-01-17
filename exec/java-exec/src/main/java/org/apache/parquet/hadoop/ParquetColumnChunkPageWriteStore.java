@@ -26,7 +26,6 @@ import java.util.Set;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
-import org.apache.drill.exec.store.parquet.ParquetDirectByteBufferAllocator;
 import org.apache.parquet.bytes.BytesInput;
 import org.apache.parquet.bytes.CapacityByteArrayOutputStream;
 import org.apache.parquet.column.ColumnDescriptor;
@@ -40,6 +39,8 @@ import org.apache.parquet.hadoop.CodecFactory.BytesCompressor;
 import org.apache.parquet.io.ParquetEncodingException;
 import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.bytes.ByteBufferAllocator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This is a copy of ColumnChunkPageWriteStore from parquet library except of OutputStream that is used here.
@@ -47,7 +48,8 @@ import org.apache.parquet.bytes.ByteBufferAllocator;
  * It will be no need in this class once PARQUET-1006 is resolved.
  */
 public class ParquetColumnChunkPageWriteStore implements PageWriteStore, Closeable {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetDirectByteBufferAllocator.class);
+
+  private static final Logger logger = LoggerFactory.getLogger(ParquetColumnChunkPageWriteStore.class);
 
   private static ParquetMetadataConverter parquetMetadataConverter = new ParquetMetadataConverter();
 

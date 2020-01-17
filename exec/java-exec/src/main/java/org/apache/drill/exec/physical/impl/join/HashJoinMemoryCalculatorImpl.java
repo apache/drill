@@ -28,12 +28,10 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.Set;
-import javax.annotation.Nullable;
 
 import static org.apache.drill.exec.physical.impl.join.HashJoinState.INITIALIZING;
 
 public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
-  private static final Logger log = LoggerFactory.getLogger(HashJoinMemoryCalculatorImpl.class);
 
   private final double safetyFactor;
   private final double fragmentationFactor;
@@ -144,7 +142,6 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
       return "No debugging for " + NoopBuildSidePartitioningImpl.class.getCanonicalName();
     }
 
-    @Nullable
     @Override
     public PostBuildCalculations next() {
       return new NoopPostBuildCalculationsImpl(recordsPerPartitionBatchProbe);
@@ -180,7 +177,7 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
    * </p>
    */
   public static class BuildSidePartitioningImpl implements BuildSidePartitioning {
-    public static final Logger log = LoggerFactory.getLogger(BuildSidePartitioning.class);
+    private static final Logger logger = LoggerFactory.getLogger(BuildSidePartitioningImpl.class);
 
     private final BatchSizePredictor.Factory batchSizePredictorFactory;
     private final HashTableSizeCalculator hashTableSizeCalculator;
@@ -322,7 +319,7 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
 
       calculateMemoryUsage();
 
-      log.debug("Creating {} partitions when {} initial partitions configured.", partitions, initialPartitions);
+      logger.debug("Creating {} partitions when {} initial partitions configured.", partitions, initialPartitions);
     }
 
     @Override
@@ -439,7 +436,7 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
         }
 
         message = phase + message;
-        log.warn(message);
+        logger.warn(message);
       }
     }
 
@@ -527,7 +524,6 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
       return false;
     }
 
-    @Nullable
     @Override
     public HashJoinMemoryCalculator next() {
       return null;
@@ -565,7 +561,8 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
    * </p>
    */
   public static class PostBuildCalculationsImpl implements PostBuildCalculations {
-    private static final Logger log = LoggerFactory.getLogger(PostBuildCalculationsImpl.class);
+
+    private static final Logger logger = LoggerFactory.getLogger(PostBuildCalculationsImpl.class);
 
     public static final int MIN_RECORDS_PER_PARTITION_BATCH_PROBE = 10;
 
@@ -703,7 +700,7 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
 
       if (memoryForPartitionBatches < 0) {
         // We just don't have enough memory. We should do our best though by using the minimum batch size.
-        log.warn("Not enough memory for probing:\n" +
+        logger.warn("Not enough memory for probing:\n" +
           "Memory available: {}\n" +
           "Max probe batch size: {}\n" +
           "Max output batch size: {}",
@@ -772,7 +769,6 @@ public class HashJoinMemoryCalculatorImpl implements HashJoinMemoryCalculator {
       return consumedMemory > memoryAvailable;
     }
 
-    @Nullable
     @Override
     public HashJoinMemoryCalculator next() {
       Preconditions.checkState(initialized);

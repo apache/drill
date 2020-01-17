@@ -81,7 +81,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class HashAggTemplate implements HashAggregator {
-  protected static final Logger logger = LoggerFactory.getLogger(HashAggregator.class);
+
+  protected static final Logger logger = LoggerFactory.getLogger(HashAggTemplate.class);
 
   private static final int VARIABLE_MAX_WIDTH_VALUE_SIZE = 50;
   private static final int VARIABLE_MIN_WIDTH_VALUE_SIZE = 8;
@@ -143,7 +144,7 @@ public abstract class HashAggTemplate implements HashAggregator {
   private HashAggUpdater updater;
   private final SpilledState<HashAggSpilledPartition> spilledState = new SpilledState<>();
   private SpillSet spillSet;
-  SpilledRecordbatch newIncoming; // when reading a spilled file - work like an "incoming"
+  SpilledRecordBatch newIncoming; // when reading a spilled file - work like an "incoming"
   private Writer writers[]; // a vector writer for each spilled partition
   private int spilledBatchesCount[]; // count number of batches spilled, in each partition
   private String spillFiles[];
@@ -1143,7 +1144,7 @@ public abstract class HashAggTemplate implements HashAggregator {
         // pick a spilled partition; set a new incoming ...
         HashAggSpilledPartition sp = spilledState.getNextSpilledPartition();
         // Create a new "incoming" out of the spilled partition spill file
-        newIncoming = new SpilledRecordbatch(sp.getSpillFile(), sp.getSpilledBatches(), context, schema, oContext, spillSet);
+        newIncoming = new SpilledRecordBatch(sp.getSpillFile(), sp.getSpilledBatches(), context, schema, oContext, spillSet);
         originalPartition = sp.getOriginPartition(); // used for the filename
         logger.trace("Reading back spilled original partition {} as an incoming",originalPartition);
         // Initialize .... new incoming, new set of partitions

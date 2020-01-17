@@ -52,7 +52,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 @RunWith(Suite.class)
 @SuiteClasses({KafkaQueriesTest.class, MessageIteratorTest.class, MessageReaderFactoryTest.class, KafkaFilterPushdownTest.class})
 public class TestKafkaSuit extends BaseTest {
-  private static final Logger logger = LoggerFactory.getLogger(LoggerFactory.class);
+
+  private static final Logger logger = LoggerFactory.getLogger(TestKafkaSuit.class);
 
   private static final String LOGIN_CONF_RESOURCE_PATHNAME = "login.conf";
 

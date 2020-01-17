@@ -48,12 +48,14 @@ import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.common.exceptions.RetryAfterSpillException;
 import org.apache.drill.exec.vector.VariableWidthVector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class HashTableTemplate implements HashTable {
 
   public static final int MAX_VARCHAR_SIZE = 8; // This is a bad heuristic which will be eliminated when the keys are removed from the HashTable.
 
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HashTable.class);
+  private static final Logger logger = LoggerFactory.getLogger(HashTableTemplate.class);
   private static final boolean EXTRA_DEBUG = false;
 
   private static final int EMPTY_SLOT = -1;

@@ -38,8 +38,6 @@ import static org.apache.drill.exec.record.JoinBatchMemoryManager.LEFT_INDEX;
  */
 public abstract class NestedLoopJoinTemplate implements NestedLoopJoin {
 
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NestedLoopJoinBatch.class);
-
   // Current left input batch being processed
   private RecordBatch left = null;
 

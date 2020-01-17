@@ -28,7 +28,7 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.impl.aggregate.SpilledRecordbatch;
+import org.apache.drill.exec.physical.impl.aggregate.SpilledRecordBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.server.options.OptionValue;
@@ -123,7 +123,7 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
       stats.startProcessing();
     }
 
-    if (b instanceof SpilledRecordbatch) {
+    if (b instanceof SpilledRecordBatch) {
       // Don't double count records which were already read and spilled.
       // TODO evaluate whether swapping out upstream record batch with a SpilledRecordBatch
       // is the right thing to do.

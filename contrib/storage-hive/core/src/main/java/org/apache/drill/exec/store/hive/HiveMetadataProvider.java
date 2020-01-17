@@ -41,6 +41,8 @@ import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.TextInputFormat;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
@@ -63,7 +65,8 @@ import java.util.stream.Collectors;
  * loaded, InputSplits are cached to speedup subsequent access.
  */
 public class HiveMetadataProvider {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveMetadataProvider.class);
+
+  private static final Logger logger = LoggerFactory.getLogger(HiveMetadataProvider.class);
 
   public static final int RECORD_SIZE = 1024;
 
@@ -393,7 +396,7 @@ public class HiveMetadataProvider {
    */
   public static class HiveStats {
 
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveStats.class);
+    private static final Logger logger = LoggerFactory.getLogger(HiveStats.class);
 
     private long numRows;
     private long sizeInBytes;

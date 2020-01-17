@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.testing;
 
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -39,6 +40,7 @@ import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.util.Pointer;
 import org.junit.Test;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TestPauseInjection extends BaseTestQuery {
 
@@ -53,10 +55,10 @@ public class TestPauseInjection extends BaseTestQuery {
   /**
    * Class whose methods we want to simulate pauses at run-time for testing
    * purposes. The class must have access to {@link org.apache.drill.exec.ops.QueryContext} or
-   * {@link FragmentContextImpl}.
+   * {@link org.apache.drill.exec.ops.FragmentContextImpl}.
    */
   private static class DummyClass {
-    private static final Logger logger = org.slf4j.LoggerFactory.getLogger(DummyClass.class);
+    private static final Logger logger = LoggerFactory.getLogger(DummyClass.class);
     private static final ControlsInjector injector = ControlsInjectorFactory.getInjector(DummyClass.class);
 
     private final QueryContext context;
@@ -136,7 +138,7 @@ public class TestPauseInjection extends BaseTestQuery {
     final long actualDuration = dummyClass.pauses();
     assertTrue(String.format("Test should stop for at least %d milliseconds.", expectedDuration),
       expectedDuration <= actualDuration);
-    assertTrue("No exception should be thrown.", ex.value == null);
+    assertNull("No exception should be thrown.", ex.value);
     try {
       queryContext.close();
     } catch (final Exception e) {
@@ -164,7 +166,7 @@ public class TestPauseInjection extends BaseTestQuery {
     final long actualDuration = dummyClass.pauses();
     assertTrue(String.format("Test should stop for at least %d milliseconds.", expectedDuration),
       expectedDuration <= actualDuration);
-    assertTrue("No exception should be thrown.", ex.value == null);
+    assertNull("No exception should be thrown.", ex.value);
     try {
       queryContext.close();
     } catch (final Exception e) {
@@ -218,7 +220,7 @@ public class TestPauseInjection extends BaseTestQuery {
         final DummyClass dummyClass = new DummyClass(queryContext, trigger);
         final long actualDuration = dummyClass.pauses();
         assertTrue(String.format("Test should stop for at least %d milliseconds.", expectedDuration), expectedDuration <= actualDuration);
-        assertTrue("No exception should be thrown.", ex.value == null);
+        assertNull("No exception should be thrown.", ex.value);
         try {
           queryContext.close();
         } catch (final Exception e) {
@@ -291,7 +293,7 @@ public class TestPauseInjection extends BaseTestQuery {
         final DummyClass dummyClass = new DummyClass(queryContext, trigger);
         final long actualDuration = dummyClass.pauses();
         assertTrue(String.format("Test should stop for at least %d milliseconds.", expectedDuration), expectedDuration <= actualDuration);
-        assertTrue("No exception should be thrown.", ex.value == null);
+        assertNull("No exception should be thrown.", ex.value);
         try {
           queryContext.close();
         } catch (final Exception e) {

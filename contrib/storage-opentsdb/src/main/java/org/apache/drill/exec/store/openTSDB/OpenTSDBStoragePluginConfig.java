@@ -25,24 +25,23 @@ import org.apache.drill.common.logical.StoragePluginConfigBase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.Objects;
 
 @JsonTypeName(OpenTSDBStoragePluginConfig.NAME)
 public class OpenTSDBStoragePluginConfig extends StoragePluginConfigBase {
 
-  private static final Logger log = LoggerFactory.getLogger(OpenTSDBStoragePluginConfig.class);
+  private static final Logger logger = LoggerFactory.getLogger(OpenTSDBStoragePluginConfig.class);
 
   public static final String NAME = "openTSDB";
 
   private final String connection;
 
   @JsonCreator
-  public OpenTSDBStoragePluginConfig(@JsonProperty("connection") String connection) throws IOException {
+  public OpenTSDBStoragePluginConfig(@JsonProperty("connection") String connection) {
     if (connection == null || connection.isEmpty()) {
       throw UserException.validationError()
               .message("Connection property must not be null. Check plugin configuration.")
-              .build(log);
+              .build(logger);
     }
     this.connection = connection;
   }

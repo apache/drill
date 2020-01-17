@@ -53,6 +53,8 @@ import org.apache.drill.exec.vector.VarCharVector;
 import org.apache.drill.test.SubOperatorTest;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Test the implementation of the Drill Volcano iterator protocol that
@@ -61,7 +63,8 @@ import org.junit.experimental.categories.Category;
 
 @Category(RowSetTests.class)
 public class TestOperatorRecordBatch extends SubOperatorTest {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SubOperatorTest.class);
+
+  private static final Logger logger = LoggerFactory.getLogger(TestOperatorRecordBatch.class);
 
   /**
    * Mock operator executor that simply tracks each method call

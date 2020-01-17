@@ -21,7 +21,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JavaType;
@@ -30,6 +29,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
@@ -274,7 +275,7 @@ public class PersistedOptionValue {
    */
   @SuppressWarnings("serial")
   public static class Deserializer extends StdDeserializer<PersistedOptionValue> {
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Deserializer.class);
+    private static final Logger logger = LoggerFactory.getLogger(Deserializer.class);
 
     private Deserializer() {
       super(PersistedOptionValue.class);
@@ -289,7 +290,7 @@ public class PersistedOptionValue {
     }
 
     @Override
-    public PersistedOptionValue deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+    public PersistedOptionValue deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
       ObjectCodec oc = p.getCodec();
       JsonNode node = oc.readTree(p);
       String value = null;

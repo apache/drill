@@ -62,7 +62,8 @@ import org.slf4j.LoggerFactory;
 
 public class HttpdLogFormatPlugin extends EasyFormatPlugin<HttpdLogFormatConfig> {
 
-  private static final Logger LOG = LoggerFactory.getLogger(HttpdLogFormatPlugin.class);
+  private static final Logger logger = LoggerFactory.getLogger(HttpdLogFormatPlugin.class);
+
   private static final String PLUGIN_EXTENSION = "httpd";
   private static final int VECTOR_MEMORY_ALLOCATION = 4095;
 
@@ -79,12 +80,12 @@ public class HttpdLogFormatPlugin extends EasyFormatPlugin<HttpdLogFormatConfig>
   }
 
   @Override
-  public TableStatistics readStatistics(FileSystem fs, Path statsTablePath) throws IOException {
+  public TableStatistics readStatistics(FileSystem fs, Path statsTablePath) {
     throw new UnsupportedOperationException("unimplemented");
   }
 
   @Override
-  public void writeStatistics(TableStatistics statistics, FileSystem fs, Path statsTablePath) throws IOException {
+  public void writeStatistics(TableStatistics statistics, FileSystem fs, Path statsTablePath) {
     throw new UnsupportedOperationException("unimplemented");
   }
 
@@ -123,7 +124,7 @@ public class HttpdLogFormatPlugin extends EasyFormatPlugin<HttpdLogFormatConfig>
           String parserField = HttpdParser.parserFormattedFieldName(drillField);
           fieldMapping.put(drillField, parserField);
         } catch (Exception e) {
-          LOG.info("Putting field: " + drillField + " into map", e);
+          logger.info("Putting field: {} into map", drillField, e);
         }
       }
       return fieldMapping;
@@ -132,7 +133,7 @@ public class HttpdLogFormatPlugin extends EasyFormatPlugin<HttpdLogFormatConfig>
     @Override
     public void setup(final OperatorContext context, final OutputMutator output) throws ExecutionSetupException {
       try {
-        /**
+        /*
          * Extract the list of field names for the parser to use if it is NOT a star query. If it is a star query just
          * pass through an empty map, because the parser is going to have to build all possibilities.
          */
@@ -166,7 +167,7 @@ public class HttpdLogFormatPlugin extends EasyFormatPlugin<HttpdLogFormatConfig>
               .addContext("Split Start", work.getStart())
               .addContext("Split Length", work.getLength())
               .addContext("Local Line Number", lineNumber.get())
-              .build(LOG);
+              .build(logger);
     }
 
     /**
@@ -203,7 +204,7 @@ public class HttpdLogFormatPlugin extends EasyFormatPlugin<HttpdLogFormatConfig>
           lineReader.close();
         }
       } catch (IOException e) {
-        LOG.warn("Failure while closing Httpd reader.", e);
+        logger.warn("Failure while closing Httpd reader.", e);
       }
     }
 
@@ -229,12 +230,12 @@ public class HttpdLogFormatPlugin extends EasyFormatPlugin<HttpdLogFormatConfig>
   }
 
   @Override
-  public RecordReader getRecordReader(final FragmentContext context, final DrillFileSystem dfs, final FileWork fileWork, final List<SchemaPath> columns, final String userName) throws ExecutionSetupException {
+  public RecordReader getRecordReader(final FragmentContext context, final DrillFileSystem dfs, final FileWork fileWork, final List<SchemaPath> columns, final String userName) {
     return new HttpdLogRecordReader(context, dfs, fileWork, columns);
   }
 
   @Override
-  public RecordWriter getRecordWriter(final FragmentContext context, final EasyWriter writer) throws IOException {
+  public RecordWriter getRecordWriter(final FragmentContext context, final EasyWriter writer) {
     throw new UnsupportedOperationException("Drill doesn't currently support writing HTTPd logs");
   }
 

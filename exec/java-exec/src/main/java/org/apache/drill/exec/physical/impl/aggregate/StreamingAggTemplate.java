@@ -34,7 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class StreamingAggTemplate implements StreamingAggregator {
-  private static final Logger logger = LoggerFactory.getLogger(StreamingAggregator.class);
+  private static final Logger logger = LoggerFactory.getLogger(StreamingAggTemplate.class);
   private static final boolean EXTRA_DEBUG = false;
   private int maxOutputRows = ValueVector.MAX_ROW_COUNT;
 

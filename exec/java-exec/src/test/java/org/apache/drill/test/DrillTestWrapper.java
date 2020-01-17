@@ -59,6 +59,8 @@ import org.apache.drill.exec.util.Text;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.junit.Assert;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * An object to encapsulate the options for a Drill unit test, as well as the execution methods to perform the tests and
@@ -68,7 +70,8 @@ import org.junit.Assert;
  * the BaseTestQuery class, and instance of the builder is accessible through the testBuilder() method.
  */
 public class DrillTestWrapper {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseTestQuery.class);
+
+  private static final Logger logger = LoggerFactory.getLogger(DrillTestWrapper.class);
 
   public interface TestServices {
     BufferAllocator allocator();

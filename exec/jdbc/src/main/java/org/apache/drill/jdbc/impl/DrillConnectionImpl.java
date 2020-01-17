@@ -69,6 +69,7 @@ import org.apache.drill.jdbc.JdbcApiSqlException;
 import org.slf4j.Logger;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Throwables;
+import org.slf4j.LoggerFactory;
 
 import static org.apache.drill.exec.util.StoragePluginTestUtils.DFS_PLUGIN_NAME;
 import static org.apache.drill.exec.util.StoragePluginTestUtils.ROOT_SCHEMA;
@@ -85,10 +86,9 @@ import static org.apache.drill.exec.util.StoragePluginTestUtils.updateSchemaLoca
 // (Was abstract to avoid errors _here_ if newer versions of JDBC added
 // interface methods, but now newer versions would probably use Java 8's default
 // methods for compatibility.)
-public class DrillConnectionImpl extends AvaticaConnection
-                          implements DrillConnection {
-  private static final org.slf4j.Logger logger =
-      org.slf4j.LoggerFactory.getLogger(DrillConnection.class);
+public class DrillConnectionImpl extends AvaticaConnection implements DrillConnection {
+
+  private static final Logger logger = LoggerFactory.getLogger(DrillConnectionImpl.class);
 
   final DrillStatementRegistry openStatementsRegistry = new DrillStatementRegistry();
   final DrillConnectionConfig config;

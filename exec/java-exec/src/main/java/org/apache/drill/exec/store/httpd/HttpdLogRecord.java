@@ -40,7 +40,8 @@ import java.util.Date;
 
 public class HttpdLogRecord {
 
-  private static final Logger LOG = LoggerFactory.getLogger(HttpdLogRecord.class);
+  private static final Logger logger = LoggerFactory.getLogger(HttpdLogRecord.class);
+
   private final Map<String, VarCharWriter> strings = Maps.newHashMap();
   private final Map<String, BigIntWriter> longs = Maps.newHashMap();
   private final Map<String, Float8Writer> doubles = Maps.newHashMap();
@@ -98,10 +99,10 @@ public class HttpdLogRecord {
     if (value != null) {
       final VarCharWriter w = strings.get(field);
       if (w != null) {
-        LOG.trace("Parsed field: {}, as string: {}", field, value);
+        logger.trace("Parsed field: {}, as string: {}", field, value);
         writeString(w, value);
       } else {
-        LOG.warn("No 'string' writer found for field: {}", field);
+        logger.warn("No 'string' writer found for field: {}", field);
       }
     }
   }
@@ -118,10 +119,10 @@ public class HttpdLogRecord {
     if (value != null) {
       final BigIntWriter w = longs.get(field);
       if (w != null) {
-        LOG.trace("Parsed field: {}, as long: {}", field, value);
+        logger.trace("Parsed field: {}, as long: {}", field, value);
         w.writeBigInt(value);
       } else {
-        LOG.warn("No 'long' writer found for field: {}", field);
+        logger.warn("No 'long' writer found for field: {}", field);
       }
     }
   }
@@ -147,10 +148,10 @@ public class HttpdLogRecord {
       }
       final TimeStampWriter tw = times.get(field);
       if (tw != null) {
-        LOG.trace("Parsed field: {}, as time: {}", field, value);
+        logger.trace("Parsed field: {}, as time: {}", field, value);
         tw.writeTimeStamp(ts);
       } else {
-        LOG.warn("No 'timestamp' writer found for field: {}", field);
+        logger.warn("No 'timestamp' writer found for field: {}", field);
       }
     }
   }
@@ -167,10 +168,10 @@ public class HttpdLogRecord {
     if (value != null) {
       final Float8Writer w = doubles.get(field);
       if (w != null) {
-        LOG.trace("Parsed field: {}, as double: {}", field, value);
+        logger.trace("Parsed field: {}, as double: {}", field, value);
         w.writeFloat8(value);
       } else {
-        LOG.warn("No 'double' writer found for field: {}", field);
+        logger.warn("No 'double' writer found for field: {}", field);
       }
     }
   }
@@ -187,7 +188,7 @@ public class HttpdLogRecord {
   public void setWildcard(String field, String value) {
     if (value != null) {
       final MapWriter mapWriter = getWildcardWriter(field);
-      LOG.trace("Parsed wildcard field: {}, as string: {}", field, value);
+      logger.trace("Parsed wildcard field: {}, as string: {}", field, value);
       final VarCharWriter w = mapWriter.varChar(cleanExtensions.get(field));
       writeString(w, value);
     }
@@ -205,7 +206,7 @@ public class HttpdLogRecord {
   public void setWildcard(String field, Long value) {
     if (value != null) {
       final MapWriter mapWriter = getWildcardWriter(field);
-      LOG.trace("Parsed wildcard field: {}, as long: {}", field, value);
+      logger.trace("Parsed wildcard field: {}, as long: {}", field, value);
       final BigIntWriter w = mapWriter.bigInt(cleanExtensions.get(field));
       w.writeBigInt(value);
     }
@@ -223,7 +224,7 @@ public class HttpdLogRecord {
   public void setWildcard(String field, Double value) {
     if (value != null) {
       final MapWriter mapWriter = getWildcardWriter(field);
-      LOG.trace("Parsed wildcard field: {}, as double: {}", field, value);
+      logger.trace("Parsed wildcard field: {}, as double: {}", field, value);
       final Float8Writer w = mapWriter.float8(cleanExtensions.get(field));
       w.writeFloat8(value);
     }
@@ -253,7 +254,7 @@ public class HttpdLogRecord {
             final String extension = field.substring(root.length() + 1);
             final String cleanExtension = HttpdParser.drillFormattedFieldName(extension);
             cleanExtensions.put(field, cleanExtension);
-            LOG.debug("Added extension: field='{}' with cleanExtension='{}'", field, cleanExtension);
+            logger.debug("Added extension: field='{}' with cleanExtension='{}'", field, cleanExtension);
           }
 
           /**
@@ -264,7 +265,7 @@ public class HttpdLogRecord {
             /**
              * Start and store this root map writer for later retrieval.
              */
-            LOG.debug("Starting new wildcard field writer: {}", field);
+            logger.debug("Starting new wildcard field writer: {}", field);
             writer.start();
             startedWildcards.put(field, writer);
             wildcardWriters.put(root, writer);
@@ -318,21 +319,21 @@ public class HttpdLogRecord {
      */
     if (hasWildcard) {
       final String cleanName = parserFieldName.substring(0, parserFieldName.length() - HttpdParser.PARSER_WILDCARD.length());
-      LOG.debug("Adding WILDCARD parse target: {} as {}, with field name: {}", parserFieldName, cleanName, drillFieldName);
+      logger.debug("Adding WILDCARD parse target: {} as {}, with field name: {}", parserFieldName, cleanName, drillFieldName);
       parser.addParseTarget(this.getClass().getMethod("setWildcard", String.class, String.class), parserFieldName);
       parser.addParseTarget(this.getClass().getMethod("setWildcard", String.class, Double.class), parserFieldName);
       parser.addParseTarget(this.getClass().getMethod("setWildcard", String.class, Long.class), parserFieldName);
       wildcards.put(cleanName, mapWriter.map(drillFieldName));
     } else if (type.contains(Casts.DOUBLE)) {
-      LOG.debug("Adding DOUBLE parse target: {}, with field name: {}", parserFieldName, drillFieldName);
+      logger.debug("Adding DOUBLE parse target: {}, with field name: {}", parserFieldName, drillFieldName);
       parser.addParseTarget(this.getClass().getMethod("set", String.class, Double.class), parserFieldName);
       doubles.put(parserFieldName, mapWriter.float8(drillFieldName));
     } else if (type.contains(Casts.LONG)) {
-      LOG.debug("Adding LONG parse target: {}, with field name: {}", parserFieldName, drillFieldName);
+      logger.debug("Adding LONG parse target: {}, with field name: {}", parserFieldName, drillFieldName);
       parser.addParseTarget(this.getClass().getMethod("set", String.class, Long.class), parserFieldName);
       longs.put(parserFieldName, mapWriter.bigInt(drillFieldName));
     } else {
-      LOG.debug("Adding STRING parse target: {}, with field name: {}", parserFieldName, drillFieldName);
+      logger.debug("Adding STRING parse target: {}, with field name: {}", parserFieldName, drillFieldName);
       if (parserFieldName.startsWith("TIME.STAMP:")) {
         parser.addParseTarget(this.getClass().getMethod("setTimestamp", String.class, String.class), parserFieldName);
         times.put(parserFieldName, mapWriter.timeStamp(drillFieldName));

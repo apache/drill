@@ -55,17 +55,16 @@ import org.apache.drill.exec.store.ischema.InfoSchemaConstants;
 import org.apache.drill.jdbc.SchemaChangeListener;
 import org.apache.drill.jdbc.SqlTimeoutException;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Queues;
-
 
 public class DrillCursor implements Cursor {
 
   ////////////////////////////////////////
   // ResultsListener:
   static class ResultsListener implements UserResultsListener {
-    private static final org.slf4j.Logger logger =
-        org.slf4j.LoggerFactory.getLogger(ResultsListener.class);
+    private static final Logger logger = LoggerFactory.getLogger(ResultsListener.class);
 
     private static volatile int nextInstanceId = 1;
 

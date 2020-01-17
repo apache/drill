@@ -39,6 +39,8 @@ import org.apache.drill.exec.record.selection.SelectionVector4;
 
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.apache.drill.exec.vector.ValueVector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.EMIT;
 
@@ -53,7 +55,8 @@ import static org.apache.drill.exec.record.RecordBatch.IterOutcome.EMIT;
  */
 
 public class SortImpl {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExternalSortBatch.class);
+
+  private static final Logger logger = LoggerFactory.getLogger(SortImpl.class);
 
   /**
    * Iterates over the final sorted results. Implemented differently
@@ -378,8 +381,8 @@ public class SortImpl {
 
   private void validateBatchSize(long actualBatchSize, long memoryDelta) {
     if (actualBatchSize != memoryDelta) {
-      ExternalSortBatch.logger.debug("Memory delta: {}, actual batch size: {}, Diff: {}",
-                   memoryDelta, actualBatchSize, memoryDelta - actualBatchSize);
+      logger.debug("Memory delta: {}, actual batch size: {}, Diff: {}",
+        memoryDelta, actualBatchSize, memoryDelta - actualBatchSize);
     }
   }
 

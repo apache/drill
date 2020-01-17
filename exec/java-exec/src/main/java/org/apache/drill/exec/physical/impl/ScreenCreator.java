@@ -19,7 +19,6 @@ package org.apache.drill.exec.physical.impl;
 
 import java.util.List;
 
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.ops.AccountingUserConnection;
 import org.apache.drill.exec.ops.ExecutorFragmentContext;
@@ -37,20 +36,21 @@ import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ControlsInjectorFactory;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ScreenCreator implements RootCreator<Screen> {
   private static final ControlsInjector injector = ControlsInjectorFactory.getInjector(ScreenCreator.class);
 
   @Override
-  public RootExec getRoot(ExecutorFragmentContext context, Screen config, List<RecordBatch> children)
-      throws ExecutionSetupException {
+  public RootExec getRoot(ExecutorFragmentContext context, Screen config, List<RecordBatch> children) {
     Preconditions.checkNotNull(children);
     Preconditions.checkArgument(children.size() == 1);
     return new ScreenRoot(context, children.iterator().next(), config);
   }
 
   public static class ScreenRoot extends BaseRootExec {
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScreenRoot.class);
+    private static final Logger logger = LoggerFactory.getLogger(ScreenRoot.class);
     private final RecordBatch incoming;
     private final RootFragmentContext context;
     private final AccountingUserConnection userConnection;
