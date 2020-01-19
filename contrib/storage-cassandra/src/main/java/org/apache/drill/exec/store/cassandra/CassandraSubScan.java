@@ -31,6 +31,7 @@ import org.apache.drill.exec.physical.base.AbstractBase;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.SubScan;
+import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -129,8 +130,7 @@ public class CassandraSubScan extends AbstractBase implements SubScan {
 
   @Override
   public int getOperatorType() {
-    /* Copied shamelessly from HBase SubScan */
-    return 1009;
+    return UserBitShared.CoreOperatorType.CASSANDRA_SUB_SCAN_VALUE;
   }
 
   @Override

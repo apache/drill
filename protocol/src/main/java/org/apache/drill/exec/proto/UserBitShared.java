@@ -409,6 +409,735 @@ public final class UserBitShared {
   }
 
   /**
+<<<<<<< HEAD
+=======
+   * Protobuf enum {@code exec.shared.CoreOperatorType}
+   */
+  public enum CoreOperatorType
+      implements com.google.protobuf.ProtocolMessageEnum {
+    /**
+     * <code>SINGLE_SENDER = 0;</code>
+     */
+    SINGLE_SENDER(0),
+    /**
+     * <code>BROADCAST_SENDER = 1;</code>
+     */
+    BROADCAST_SENDER(1),
+    /**
+     * <code>FILTER = 2;</code>
+     */
+    FILTER(2),
+    /**
+     * <code>HASH_AGGREGATE = 3;</code>
+     */
+    HASH_AGGREGATE(3),
+    /**
+     * <code>HASH_JOIN = 4;</code>
+     */
+    HASH_JOIN(4),
+    /**
+     * <code>MERGE_JOIN = 5;</code>
+     */
+    MERGE_JOIN(5),
+    /**
+     * <code>HASH_PARTITION_SENDER = 6;</code>
+     */
+    HASH_PARTITION_SENDER(6),
+    /**
+     * <code>LIMIT = 7;</code>
+     */
+    LIMIT(7),
+    /**
+     * <code>MERGING_RECEIVER = 8;</code>
+     */
+    MERGING_RECEIVER(8),
+    /**
+     * <code>ORDERED_PARTITION_SENDER = 9;</code>
+     */
+    ORDERED_PARTITION_SENDER(9),
+    /**
+     * <code>PROJECT = 10;</code>
+     */
+    PROJECT(10),
+    /**
+     * <code>UNORDERED_RECEIVER = 11;</code>
+     */
+    UNORDERED_RECEIVER(11),
+    /**
+     * <code>RANGE_PARTITION_SENDER = 12;</code>
+     */
+    RANGE_PARTITION_SENDER(12),
+    /**
+     * <code>SCREEN = 13;</code>
+     */
+    SCREEN(13),
+    /**
+     * <code>SELECTION_VECTOR_REMOVER = 14;</code>
+     */
+    SELECTION_VECTOR_REMOVER(14),
+    /**
+     * <code>STREAMING_AGGREGATE = 15;</code>
+     */
+    STREAMING_AGGREGATE(15),
+    /**
+     * <code>TOP_N_SORT = 16;</code>
+     */
+    TOP_N_SORT(16),
+    /**
+     * <code>EXTERNAL_SORT = 17;</code>
+     */
+    EXTERNAL_SORT(17),
+    /**
+     * <code>TRACE = 18;</code>
+     */
+    TRACE(18),
+    /**
+     * <code>UNION = 19;</code>
+     */
+    UNION(19),
+    /**
+     * <code>OLD_SORT = 20;</code>
+     */
+    OLD_SORT(20),
+    /**
+     * <code>PARQUET_ROW_GROUP_SCAN = 21;</code>
+     */
+    PARQUET_ROW_GROUP_SCAN(21),
+    /**
+     * <code>HIVE_SUB_SCAN = 22;</code>
+     */
+    HIVE_SUB_SCAN(22),
+    /**
+     * <code>SYSTEM_TABLE_SCAN = 23;</code>
+     */
+    SYSTEM_TABLE_SCAN(23),
+    /**
+     * <code>MOCK_SUB_SCAN = 24;</code>
+     */
+    MOCK_SUB_SCAN(24),
+    /**
+     * <code>PARQUET_WRITER = 25;</code>
+     */
+    PARQUET_WRITER(25),
+    /**
+     * <code>DIRECT_SUB_SCAN = 26;</code>
+     */
+    DIRECT_SUB_SCAN(26),
+    /**
+     * <code>TEXT_WRITER = 27;</code>
+     */
+    TEXT_WRITER(27),
+    /**
+     * <code>TEXT_SUB_SCAN = 28;</code>
+     */
+    TEXT_SUB_SCAN(28),
+    /**
+     * <code>JSON_SUB_SCAN = 29;</code>
+     */
+    JSON_SUB_SCAN(29),
+    /**
+     * <code>INFO_SCHEMA_SUB_SCAN = 30;</code>
+     */
+    INFO_SCHEMA_SUB_SCAN(30),
+    /**
+     * <code>COMPLEX_TO_JSON = 31;</code>
+     */
+    COMPLEX_TO_JSON(31),
+    /**
+     * <code>PRODUCER_CONSUMER = 32;</code>
+     */
+    PRODUCER_CONSUMER(32),
+    /**
+     * <code>HBASE_SUB_SCAN = 33;</code>
+     */
+    HBASE_SUB_SCAN(33),
+    /**
+     * <code>WINDOW = 34;</code>
+     */
+    WINDOW(34),
+    /**
+     * <code>NESTED_LOOP_JOIN = 35;</code>
+     */
+    NESTED_LOOP_JOIN(35),
+    /**
+     * <code>AVRO_SUB_SCAN = 36;</code>
+     */
+    AVRO_SUB_SCAN(36),
+    /**
+     * <code>PCAP_SUB_SCAN = 37;</code>
+     */
+    PCAP_SUB_SCAN(37),
+    /**
+     * <code>KAFKA_SUB_SCAN = 38;</code>
+     */
+    KAFKA_SUB_SCAN(38),
+    /**
+     * <code>KUDU_SUB_SCAN = 39;</code>
+     */
+    KUDU_SUB_SCAN(39),
+    /**
+     * <code>FLATTEN = 40;</code>
+     */
+    FLATTEN(40),
+    /**
+     * <code>LATERAL_JOIN = 41;</code>
+     */
+    LATERAL_JOIN(41),
+    /**
+     * <code>UNNEST = 42;</code>
+     */
+    UNNEST(42),
+    /**
+     * <code>HIVE_DRILL_NATIVE_PARQUET_ROW_GROUP_SCAN = 43;</code>
+     */
+    HIVE_DRILL_NATIVE_PARQUET_ROW_GROUP_SCAN(43),
+    /**
+     * <code>JDBC_SCAN = 44;</code>
+     */
+    JDBC_SCAN(44),
+    /**
+     * <code>REGEX_SUB_SCAN = 45;</code>
+     */
+    REGEX_SUB_SCAN(45),
+    /**
+     * <code>MAPRDB_SUB_SCAN = 46;</code>
+     */
+    MAPRDB_SUB_SCAN(46),
+    /**
+     * <code>MONGO_SUB_SCAN = 47;</code>
+     */
+    MONGO_SUB_SCAN(47),
+    /**
+     * <code>KUDU_WRITER = 48;</code>
+     */
+    KUDU_WRITER(48),
+    /**
+     * <code>OPEN_TSDB_SUB_SCAN = 49;</code>
+     */
+    OPEN_TSDB_SUB_SCAN(49),
+    /**
+     * <code>JSON_WRITER = 50;</code>
+     */
+    JSON_WRITER(50),
+    /**
+     * <code>HTPPD_LOG_SUB_SCAN = 51;</code>
+     */
+    HTPPD_LOG_SUB_SCAN(51),
+    /**
+     * <code>IMAGE_SUB_SCAN = 52;</code>
+     */
+    IMAGE_SUB_SCAN(52),
+    /**
+     * <code>SEQUENCE_SUB_SCAN = 53;</code>
+     */
+    SEQUENCE_SUB_SCAN(53),
+    /**
+     * <code>PARTITION_LIMIT = 54;</code>
+     */
+    PARTITION_LIMIT(54),
+    /**
+     * <code>PCAPNG_SUB_SCAN = 55;</code>
+     */
+    PCAPNG_SUB_SCAN(55),
+    /**
+     * <code>RUNTIME_FILTER = 56;</code>
+     */
+    RUNTIME_FILTER(56),
+    /**
+     * <code>ROWKEY_JOIN = 57;</code>
+     */
+    ROWKEY_JOIN(57),
+    /**
+     * <code>SYSLOG_SUB_SCAN = 58;</code>
+     */
+    SYSLOG_SUB_SCAN(58),
+    /**
+     * <code>STATISTICS_AGGREGATE = 59;</code>
+     */
+    STATISTICS_AGGREGATE(59),
+    /**
+     * <code>UNPIVOT_MAPS = 60;</code>
+     */
+    UNPIVOT_MAPS(60),
+    /**
+     * <code>STATISTICS_MERGE = 61;</code>
+     */
+    STATISTICS_MERGE(61),
+    /**
+     * <code>LTSV_SUB_SCAN = 62;</code>
+     */
+    LTSV_SUB_SCAN(62),
+    /**
+     * <code>HDF5_SUB_SCAN = 63;</code>
+     */
+    HDF5_SUB_SCAN(63),
+    /**
+     * <code>EXCEL_SUB_SCAN = 64;</code>
+     */
+    EXCEL_SUB_SCAN(64),
+    /**
+     * <code>SHP_SUB_SCAN = 65;</code>
+     */
+    SHP_SUB_SCAN(65),
+    /**
+     * <code>METADATA_HANDLER = 66;</code>
+     */
+    METADATA_HANDLER(66),
+    /**
+     * <code>METADATA_CONTROLLER = 67;</code>
+     */
+    METADATA_CONTROLLER(67),
+    /**
+     * <code>DRUID_SUB_SCAN = 68;</code>
+     */
+    DRUID_SUB_SCAN(68),
+    /**
+     * <code>SPSS_SUB_SCAN = 69;</code>
+     */
+    SPSS_SUB_SCAN(69),
+    /**
+     * <code>HTTP_SUB_SCAN = 70;</code>
+     */
+    HTTP_SUB_SCAN(70),
+    /**
+     * <code>CASSANDRA_SUB_SCAN = 72;</code>
+     */
+    CASSANDRA_SUB_SCAN(72),
+    ;
+
+    /**
+     * <code>SINGLE_SENDER = 0;</code>
+     */
+    public static final int SINGLE_SENDER_VALUE = 0;
+    /**
+     * <code>BROADCAST_SENDER = 1;</code>
+     */
+    public static final int BROADCAST_SENDER_VALUE = 1;
+    /**
+     * <code>FILTER = 2;</code>
+     */
+    public static final int FILTER_VALUE = 2;
+    /**
+     * <code>HASH_AGGREGATE = 3;</code>
+     */
+    public static final int HASH_AGGREGATE_VALUE = 3;
+    /**
+     * <code>HASH_JOIN = 4;</code>
+     */
+    public static final int HASH_JOIN_VALUE = 4;
+    /**
+     * <code>MERGE_JOIN = 5;</code>
+     */
+    public static final int MERGE_JOIN_VALUE = 5;
+    /**
+     * <code>HASH_PARTITION_SENDER = 6;</code>
+     */
+    public static final int HASH_PARTITION_SENDER_VALUE = 6;
+    /**
+     * <code>LIMIT = 7;</code>
+     */
+    public static final int LIMIT_VALUE = 7;
+    /**
+     * <code>MERGING_RECEIVER = 8;</code>
+     */
+    public static final int MERGING_RECEIVER_VALUE = 8;
+    /**
+     * <code>ORDERED_PARTITION_SENDER = 9;</code>
+     */
+    public static final int ORDERED_PARTITION_SENDER_VALUE = 9;
+    /**
+     * <code>PROJECT = 10;</code>
+     */
+    public static final int PROJECT_VALUE = 10;
+    /**
+     * <code>UNORDERED_RECEIVER = 11;</code>
+     */
+    public static final int UNORDERED_RECEIVER_VALUE = 11;
+    /**
+     * <code>RANGE_PARTITION_SENDER = 12;</code>
+     */
+    public static final int RANGE_PARTITION_SENDER_VALUE = 12;
+    /**
+     * <code>SCREEN = 13;</code>
+     */
+    public static final int SCREEN_VALUE = 13;
+    /**
+     * <code>SELECTION_VECTOR_REMOVER = 14;</code>
+     */
+    public static final int SELECTION_VECTOR_REMOVER_VALUE = 14;
+    /**
+     * <code>STREAMING_AGGREGATE = 15;</code>
+     */
+    public static final int STREAMING_AGGREGATE_VALUE = 15;
+    /**
+     * <code>TOP_N_SORT = 16;</code>
+     */
+    public static final int TOP_N_SORT_VALUE = 16;
+    /**
+     * <code>EXTERNAL_SORT = 17;</code>
+     */
+    public static final int EXTERNAL_SORT_VALUE = 17;
+    /**
+     * <code>TRACE = 18;</code>
+     */
+    public static final int TRACE_VALUE = 18;
+    /**
+     * <code>UNION = 19;</code>
+     */
+    public static final int UNION_VALUE = 19;
+    /**
+     * <code>OLD_SORT = 20;</code>
+     */
+    public static final int OLD_SORT_VALUE = 20;
+    /**
+     * <code>PARQUET_ROW_GROUP_SCAN = 21;</code>
+     */
+    public static final int PARQUET_ROW_GROUP_SCAN_VALUE = 21;
+    /**
+     * <code>HIVE_SUB_SCAN = 22;</code>
+     */
+    public static final int HIVE_SUB_SCAN_VALUE = 22;
+    /**
+     * <code>SYSTEM_TABLE_SCAN = 23;</code>
+     */
+    public static final int SYSTEM_TABLE_SCAN_VALUE = 23;
+    /**
+     * <code>MOCK_SUB_SCAN = 24;</code>
+     */
+    public static final int MOCK_SUB_SCAN_VALUE = 24;
+    /**
+     * <code>PARQUET_WRITER = 25;</code>
+     */
+    public static final int PARQUET_WRITER_VALUE = 25;
+    /**
+     * <code>DIRECT_SUB_SCAN = 26;</code>
+     */
+    public static final int DIRECT_SUB_SCAN_VALUE = 26;
+    /**
+     * <code>TEXT_WRITER = 27;</code>
+     */
+    public static final int TEXT_WRITER_VALUE = 27;
+    /**
+     * <code>TEXT_SUB_SCAN = 28;</code>
+     */
+    public static final int TEXT_SUB_SCAN_VALUE = 28;
+    /**
+     * <code>JSON_SUB_SCAN = 29;</code>
+     */
+    public static final int JSON_SUB_SCAN_VALUE = 29;
+    /**
+     * <code>INFO_SCHEMA_SUB_SCAN = 30;</code>
+     */
+    public static final int INFO_SCHEMA_SUB_SCAN_VALUE = 30;
+    /**
+     * <code>COMPLEX_TO_JSON = 31;</code>
+     */
+    public static final int COMPLEX_TO_JSON_VALUE = 31;
+    /**
+     * <code>PRODUCER_CONSUMER = 32;</code>
+     */
+    public static final int PRODUCER_CONSUMER_VALUE = 32;
+    /**
+     * <code>HBASE_SUB_SCAN = 33;</code>
+     */
+    public static final int HBASE_SUB_SCAN_VALUE = 33;
+    /**
+     * <code>WINDOW = 34;</code>
+     */
+    public static final int WINDOW_VALUE = 34;
+    /**
+     * <code>NESTED_LOOP_JOIN = 35;</code>
+     */
+    public static final int NESTED_LOOP_JOIN_VALUE = 35;
+    /**
+     * <code>AVRO_SUB_SCAN = 36;</code>
+     */
+    public static final int AVRO_SUB_SCAN_VALUE = 36;
+    /**
+     * <code>PCAP_SUB_SCAN = 37;</code>
+     */
+    public static final int PCAP_SUB_SCAN_VALUE = 37;
+    /**
+     * <code>KAFKA_SUB_SCAN = 38;</code>
+     */
+    public static final int KAFKA_SUB_SCAN_VALUE = 38;
+    /**
+     * <code>KUDU_SUB_SCAN = 39;</code>
+     */
+    public static final int KUDU_SUB_SCAN_VALUE = 39;
+    /**
+     * <code>FLATTEN = 40;</code>
+     */
+    public static final int FLATTEN_VALUE = 40;
+    /**
+     * <code>LATERAL_JOIN = 41;</code>
+     */
+    public static final int LATERAL_JOIN_VALUE = 41;
+    /**
+     * <code>UNNEST = 42;</code>
+     */
+    public static final int UNNEST_VALUE = 42;
+    /**
+     * <code>HIVE_DRILL_NATIVE_PARQUET_ROW_GROUP_SCAN = 43;</code>
+     */
+    public static final int HIVE_DRILL_NATIVE_PARQUET_ROW_GROUP_SCAN_VALUE = 43;
+    /**
+     * <code>JDBC_SCAN = 44;</code>
+     */
+    public static final int JDBC_SCAN_VALUE = 44;
+    /**
+     * <code>REGEX_SUB_SCAN = 45;</code>
+     */
+    public static final int REGEX_SUB_SCAN_VALUE = 45;
+    /**
+     * <code>MAPRDB_SUB_SCAN = 46;</code>
+     */
+    public static final int MAPRDB_SUB_SCAN_VALUE = 46;
+    /**
+     * <code>MONGO_SUB_SCAN = 47;</code>
+     */
+    public static final int MONGO_SUB_SCAN_VALUE = 47;
+    /**
+     * <code>KUDU_WRITER = 48;</code>
+     */
+    public static final int KUDU_WRITER_VALUE = 48;
+    /**
+     * <code>OPEN_TSDB_SUB_SCAN = 49;</code>
+     */
+    public static final int OPEN_TSDB_SUB_SCAN_VALUE = 49;
+    /**
+     * <code>JSON_WRITER = 50;</code>
+     */
+    public static final int JSON_WRITER_VALUE = 50;
+    /**
+     * <code>HTPPD_LOG_SUB_SCAN = 51;</code>
+     */
+    public static final int HTPPD_LOG_SUB_SCAN_VALUE = 51;
+    /**
+     * <code>IMAGE_SUB_SCAN = 52;</code>
+     */
+    public static final int IMAGE_SUB_SCAN_VALUE = 52;
+    /**
+     * <code>SEQUENCE_SUB_SCAN = 53;</code>
+     */
+    public static final int SEQUENCE_SUB_SCAN_VALUE = 53;
+    /**
+     * <code>PARTITION_LIMIT = 54;</code>
+     */
+    public static final int PARTITION_LIMIT_VALUE = 54;
+    /**
+     * <code>PCAPNG_SUB_SCAN = 55;</code>
+     */
+    public static final int PCAPNG_SUB_SCAN_VALUE = 55;
+    /**
+     * <code>RUNTIME_FILTER = 56;</code>
+     */
+    public static final int RUNTIME_FILTER_VALUE = 56;
+    /**
+     * <code>ROWKEY_JOIN = 57;</code>
+     */
+    public static final int ROWKEY_JOIN_VALUE = 57;
+    /**
+     * <code>SYSLOG_SUB_SCAN = 58;</code>
+     */
+    public static final int SYSLOG_SUB_SCAN_VALUE = 58;
+    /**
+     * <code>STATISTICS_AGGREGATE = 59;</code>
+     */
+    public static final int STATISTICS_AGGREGATE_VALUE = 59;
+    /**
+     * <code>UNPIVOT_MAPS = 60;</code>
+     */
+    public static final int UNPIVOT_MAPS_VALUE = 60;
+    /**
+     * <code>STATISTICS_MERGE = 61;</code>
+     */
+    public static final int STATISTICS_MERGE_VALUE = 61;
+    /**
+     * <code>LTSV_SUB_SCAN = 62;</code>
+     */
+    public static final int LTSV_SUB_SCAN_VALUE = 62;
+    /**
+     * <code>HDF5_SUB_SCAN = 63;</code>
+     */
+    public static final int HDF5_SUB_SCAN_VALUE = 63;
+    /**
+     * <code>EXCEL_SUB_SCAN = 64;</code>
+     */
+    public static final int EXCEL_SUB_SCAN_VALUE = 64;
+    /**
+     * <code>SHP_SUB_SCAN = 65;</code>
+     */
+    public static final int SHP_SUB_SCAN_VALUE = 65;
+    /**
+     * <code>METADATA_HANDLER = 66;</code>
+     */
+    public static final int METADATA_HANDLER_VALUE = 66;
+    /**
+     * <code>METADATA_CONTROLLER = 67;</code>
+     */
+    public static final int METADATA_CONTROLLER_VALUE = 67;
+    /**
+     * <code>DRUID_SUB_SCAN = 68;</code>
+     */
+    public static final int DRUID_SUB_SCAN_VALUE = 68;
+    /**
+     * <code>SPSS_SUB_SCAN = 69;</code>
+     */
+    public static final int SPSS_SUB_SCAN_VALUE = 69;
+    /**
+     * <code>HTTP_SUB_SCAN = 70;</code>
+     */
+    public static final int HTTP_SUB_SCAN_VALUE = 70;
+    /**
+     * <code>CASSANDRA_SUB_SCAN = 72;</code>
+     */
+    public static final int CASSANDRA_SUB_SCAN_VALUE = 72;
+
+
+    public final int getNumber() {
+      return value;
+    }
+
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     * @deprecated Use {@link #forNumber(int)} instead.
+     */
+    @java.lang.Deprecated
+    public static CoreOperatorType valueOf(int value) {
+      return forNumber(value);
+    }
+
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     */
+    public static CoreOperatorType forNumber(int value) {
+      switch (value) {
+        case 0: return SINGLE_SENDER;
+        case 1: return BROADCAST_SENDER;
+        case 2: return FILTER;
+        case 3: return HASH_AGGREGATE;
+        case 4: return HASH_JOIN;
+        case 5: return MERGE_JOIN;
+        case 6: return HASH_PARTITION_SENDER;
+        case 7: return LIMIT;
+        case 8: return MERGING_RECEIVER;
+        case 9: return ORDERED_PARTITION_SENDER;
+        case 10: return PROJECT;
+        case 11: return UNORDERED_RECEIVER;
+        case 12: return RANGE_PARTITION_SENDER;
+        case 13: return SCREEN;
+        case 14: return SELECTION_VECTOR_REMOVER;
+        case 15: return STREAMING_AGGREGATE;
+        case 16: return TOP_N_SORT;
+        case 17: return EXTERNAL_SORT;
+        case 18: return TRACE;
+        case 19: return UNION;
+        case 20: return OLD_SORT;
+        case 21: return PARQUET_ROW_GROUP_SCAN;
+        case 22: return HIVE_SUB_SCAN;
+        case 23: return SYSTEM_TABLE_SCAN;
+        case 24: return MOCK_SUB_SCAN;
+        case 25: return PARQUET_WRITER;
+        case 26: return DIRECT_SUB_SCAN;
+        case 27: return TEXT_WRITER;
+        case 28: return TEXT_SUB_SCAN;
+        case 29: return JSON_SUB_SCAN;
+        case 30: return INFO_SCHEMA_SUB_SCAN;
+        case 31: return COMPLEX_TO_JSON;
+        case 32: return PRODUCER_CONSUMER;
+        case 33: return HBASE_SUB_SCAN;
+        case 34: return WINDOW;
+        case 35: return NESTED_LOOP_JOIN;
+        case 36: return AVRO_SUB_SCAN;
+        case 37: return PCAP_SUB_SCAN;
+        case 38: return KAFKA_SUB_SCAN;
+        case 39: return KUDU_SUB_SCAN;
+        case 40: return FLATTEN;
+        case 41: return LATERAL_JOIN;
+        case 42: return UNNEST;
+        case 43: return HIVE_DRILL_NATIVE_PARQUET_ROW_GROUP_SCAN;
+        case 44: return JDBC_SCAN;
+        case 45: return REGEX_SUB_SCAN;
+        case 46: return MAPRDB_SUB_SCAN;
+        case 47: return MONGO_SUB_SCAN;
+        case 48: return KUDU_WRITER;
+        case 49: return OPEN_TSDB_SUB_SCAN;
+        case 50: return JSON_WRITER;
+        case 51: return HTPPD_LOG_SUB_SCAN;
+        case 52: return IMAGE_SUB_SCAN;
+        case 53: return SEQUENCE_SUB_SCAN;
+        case 54: return PARTITION_LIMIT;
+        case 55: return PCAPNG_SUB_SCAN;
+        case 56: return RUNTIME_FILTER;
+        case 57: return ROWKEY_JOIN;
+        case 58: return SYSLOG_SUB_SCAN;
+        case 59: return STATISTICS_AGGREGATE;
+        case 60: return UNPIVOT_MAPS;
+        case 61: return STATISTICS_MERGE;
+        case 62: return LTSV_SUB_SCAN;
+        case 63: return HDF5_SUB_SCAN;
+        case 64: return EXCEL_SUB_SCAN;
+        case 65: return SHP_SUB_SCAN;
+        case 66: return METADATA_HANDLER;
+        case 67: return METADATA_CONTROLLER;
+        case 68: return DRUID_SUB_SCAN;
+        case 69: return SPSS_SUB_SCAN;
+        case 70: return HTTP_SUB_SCAN;
+        case 72: return CASSANDRA_SUB_SCAN;
+        default: return null;
+      }
+    }
+
+    public static com.google.protobuf.Internal.EnumLiteMap<CoreOperatorType>
+        internalGetValueMap() {
+      return internalValueMap;
+    }
+    private static final com.google.protobuf.Internal.EnumLiteMap<
+        CoreOperatorType> internalValueMap =
+          new com.google.protobuf.Internal.EnumLiteMap<CoreOperatorType>() {
+            public CoreOperatorType findValueByNumber(int number) {
+              return CoreOperatorType.forNumber(number);
+            }
+          };
+
+    public final com.google.protobuf.Descriptors.EnumValueDescriptor
+        getValueDescriptor() {
+      return getDescriptor().getValues().get(ordinal());
+    }
+    public final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptorForType() {
+      return getDescriptor();
+    }
+    public static final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.UserBitShared.getDescriptor().getEnumTypes().get(3);
+    }
+
+    private static final CoreOperatorType[] VALUES = values();
+
+    public static CoreOperatorType valueOf(
+        com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+      if (desc.getType() != getDescriptor()) {
+        throw new java.lang.IllegalArgumentException(
+          "EnumValueDescriptor is not for this type.");
+      }
+      return VALUES[desc.getIndex()];
+    }
+
+    private final int value;
+
+    private CoreOperatorType(int value) {
+      this.value = value;
+    }
+
+    // @@protoc_insertion_point(enum_scope:exec.shared.CoreOperatorType)
+  }
+
+  /**
+>>>>>>> f1b0704a5 ([WIP] Connection delays fixed)
    * Protobuf enum {@code exec.shared.SaslStatus}
    */
   public enum SaslStatus

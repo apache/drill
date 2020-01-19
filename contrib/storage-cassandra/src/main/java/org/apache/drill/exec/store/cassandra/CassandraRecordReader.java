@@ -78,6 +78,7 @@ public class CassandraRecordReader extends AbstractRecordReader implements Drill
 
   private Map<String, MapVector> familyVectorMap;
 
+  private CassandraStoragePlugin plugin;
 
   private final String cassandraTableName;
 
@@ -97,17 +98,19 @@ public class CassandraRecordReader extends AbstractRecordReader implements Drill
 
   private VarBinaryVector rowKeyVector;
 
-
   private FragmentContext fragmentContext;
 
   private OperatorContext operatorContext;
 
-  public CassandraRecordReader(CassandraStoragePluginConfig conf, CassandraSubScan.CassandraSubScanSpec subScanSpec, List<SchemaPath> projectedColumns, FragmentContext context) {
+  public CassandraRecordReader(CassandraStoragePluginConfig conf, CassandraSubScan.CassandraSubScanSpec subScanSpec, List<SchemaPath> projectedColumns, FragmentContext context,
+                               CassandraStoragePlugin plugin) {
     this.cassandraTableName = Preconditions.checkNotNull(subScanSpec, "Cassandra reader needs a sub-scan spec").getTable();
     this.cassandraKeySpace = Preconditions.checkNotNull(subScanSpec, "Cassandra reader needs a sub-scan spec").getKeyspace();
     this.subScanSpec = subScanSpec;
     this.projectedColumns = projectedColumns;
     this.cassandraConf = conf;
+    this.plugin = plugin;
+
 
     setColumns(projectedColumns);
   }
@@ -138,10 +141,14 @@ public class CassandraRecordReader extends AbstractRecordReader implements Drill
       List<String> host = subScanSpec.getHosts();
       int port = subScanSpec.getPort();
 
-      cluster = subScanSpec.getCluster();
-      session = subScanSpec.getSession();
-      //cluster = CassandraConnectionManager.getCluster(host, port);
-      //session = cluster.connect();
+      if (plugin.getCluster() == null || plugin.getCluster().isClosed() ) {
+        System.out.println("Opening connection to Cassandra via Record reader.");
+        cluster = CassandraConnectionManager.getCluster(host, port);
+        session = cluster.connect();
+      } else {
+        cluster = plugin.getCluster();
+        session = plugin.getSession();
+      }
 
       List<ColumnMetadata> partitioncols = cluster.getMetadata().getKeyspace(subScanSpec.getKeyspace()).getTable(subScanSpec.getTable()).getPartitionKey();
 
@@ -285,7 +292,7 @@ public class CassandraRecordReader extends AbstractRecordReader implements Drill
 
   @Override
   public void close() {
-    if (cluster != null) {
+    /*if (cluster != null) {
       cluster.close();
       cluster = null;
     }
@@ -293,7 +300,7 @@ public class CassandraRecordReader extends AbstractRecordReader implements Drill
     if (session!= null) {
       session.close();
       session = null;
-    }
+    }*/
   }
 
   /**

@@ -164,9 +164,13 @@ public class CassandraGroupScan extends AbstractGroupScan implements DrillCassan
     try {
       logger.debug(String.format("Getting cassandra session from host %s, port: %s.", storagePluginConfig.getHosts(), storagePluginConfig.getPort()));
 
-      cluster = CassandraConnectionManager.getCluster(storagePluginConfig.getHosts(), storagePluginConfig.getPort());
-
-      session = cluster.connect();
+      if (storagePlugin.getCluster() == null || storagePlugin.getCluster().isClosed() ) {
+        cluster = CassandraConnectionManager.getCluster(storagePluginConfig.getHosts(), storagePluginConfig.getPort());
+        session = cluster.connect();
+      } else {
+        cluster = storagePlugin.getCluster();
+        session = storagePlugin.getSession();
+      }
 
       metadata = session.getCluster().getMetadata();
 
@@ -297,8 +301,8 @@ public class CassandraGroupScan extends AbstractGroupScan implements DrillCassan
     /*
      * Build priority queues of slots, with ones which has tasks lesser than 'minPerEndpointSlot' and another which have more.
      */
-    PriorityQueue<List<CassandraSubScanSpec>> minHeap = new PriorityQueue<List<CassandraSubScanSpec>>(numSlots, LIST_SIZE_COMPARATOR);
-    PriorityQueue<List<CassandraSubScanSpec>> maxHeap = new PriorityQueue<List<CassandraSubScanSpec>>(numSlots, LIST_SIZE_COMPARATOR_REV);
+    PriorityQueue<List<CassandraSubScanSpec>> minHeap = new PriorityQueue<>(numSlots, LIST_SIZE_COMPARATOR);
+    PriorityQueue<List<CassandraSubScanSpec>> maxHeap = new PriorityQueue<>(numSlots, LIST_SIZE_COMPARATOR_REV);
     for (List<CassandraSubScanSpec> listOfScan : endpointFragmentMapping.values()) {
       if (listOfScan.size() < minPerEndpointSlot) {
         minHeap.offer(listOfScan);

@@ -321,6 +321,103 @@ inline bool FragmentState_Parse(
   return ::PROTOBUF_NAMESPACE_ID::internal::ParseNamedEnum<FragmentState>(
     FragmentState_descriptor(), name, value);
 }
+<<<<<<< HEAD
+=======
+enum CoreOperatorType : int {
+  SINGLE_SENDER = 0,
+  BROADCAST_SENDER = 1,
+  FILTER = 2,
+  HASH_AGGREGATE = 3,
+  HASH_JOIN = 4,
+  MERGE_JOIN = 5,
+  HASH_PARTITION_SENDER = 6,
+  LIMIT = 7,
+  MERGING_RECEIVER = 8,
+  ORDERED_PARTITION_SENDER = 9,
+  PROJECT = 10,
+  UNORDERED_RECEIVER = 11,
+  RANGE_PARTITION_SENDER = 12,
+  SCREEN = 13,
+  SELECTION_VECTOR_REMOVER = 14,
+  STREAMING_AGGREGATE = 15,
+  TOP_N_SORT = 16,
+  EXTERNAL_SORT = 17,
+  TRACE = 18,
+  UNION = 19,
+  OLD_SORT = 20,
+  PARQUET_ROW_GROUP_SCAN = 21,
+  HIVE_SUB_SCAN = 22,
+  SYSTEM_TABLE_SCAN = 23,
+  MOCK_SUB_SCAN = 24,
+  PARQUET_WRITER = 25,
+  DIRECT_SUB_SCAN = 26,
+  TEXT_WRITER = 27,
+  TEXT_SUB_SCAN = 28,
+  JSON_SUB_SCAN = 29,
+  INFO_SCHEMA_SUB_SCAN = 30,
+  COMPLEX_TO_JSON = 31,
+  PRODUCER_CONSUMER = 32,
+  HBASE_SUB_SCAN = 33,
+  WINDOW = 34,
+  NESTED_LOOP_JOIN = 35,
+  AVRO_SUB_SCAN = 36,
+  PCAP_SUB_SCAN = 37,
+  KAFKA_SUB_SCAN = 38,
+  KUDU_SUB_SCAN = 39,
+  FLATTEN = 40,
+  LATERAL_JOIN = 41,
+  UNNEST = 42,
+  HIVE_DRILL_NATIVE_PARQUET_ROW_GROUP_SCAN = 43,
+  JDBC_SCAN = 44,
+  REGEX_SUB_SCAN = 45,
+  MAPRDB_SUB_SCAN = 46,
+  MONGO_SUB_SCAN = 47,
+  KUDU_WRITER = 48,
+  OPEN_TSDB_SUB_SCAN = 49,
+  JSON_WRITER = 50,
+  HTPPD_LOG_SUB_SCAN = 51,
+  IMAGE_SUB_SCAN = 52,
+  SEQUENCE_SUB_SCAN = 53,
+  PARTITION_LIMIT = 54,
+  PCAPNG_SUB_SCAN = 55,
+  RUNTIME_FILTER = 56,
+  ROWKEY_JOIN = 57,
+  SYSLOG_SUB_SCAN = 58,
+  STATISTICS_AGGREGATE = 59,
+  UNPIVOT_MAPS = 60,
+  STATISTICS_MERGE = 61,
+  LTSV_SUB_SCAN = 62,
+  HDF5_SUB_SCAN = 63,
+  EXCEL_SUB_SCAN = 64,
+  SHP_SUB_SCAN = 65,
+  METADATA_HANDLER = 66,
+  METADATA_CONTROLLER = 67,
+  DRUID_SUB_SCAN = 68,
+  SPSS_SUB_SCAN = 69,
+  HTTP_SUB_SCAN = 70
+  CASSANDRA_SUB_SCAN = 72
+};
+bool CoreOperatorType_IsValid(int value);
+const CoreOperatorType CoreOperatorType_MIN = SINGLE_SENDER;
+const CoreOperatorType CoreOperatorType_MAX = HTTP_SUB_SCAN;
+const CoreOperatorType CoreOperatorType_MAX = CASSANDRA_SUB_SCAN;
+const int CoreOperatorType_ARRAYSIZE = CoreOperatorType_MAX + 1;
+
+const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* CoreOperatorType_descriptor();
+template<typename T>
+inline const std::string& CoreOperatorType_Name(T enum_t_value) {
+  static_assert(::std::is_same<T, CoreOperatorType>::value ||
+    ::std::is_integral<T>::value,
+    "Incorrect type passed to function CoreOperatorType_Name.");
+  return ::PROTOBUF_NAMESPACE_ID::internal::NameOfEnum(
+    CoreOperatorType_descriptor(), enum_t_value);
+}
+inline bool CoreOperatorType_Parse(
+    const std::string& name, CoreOperatorType* value) {
+  return ::PROTOBUF_NAMESPACE_ID::internal::ParseNamedEnum<CoreOperatorType>(
+    CoreOperatorType_descriptor(), name, value);
+}
+>>>>>>> f1b0704a5 ([WIP] Connection delays fixed)
 enum SaslStatus : int {
   SASL_UNKNOWN = 0,
   SASL_START = 1,

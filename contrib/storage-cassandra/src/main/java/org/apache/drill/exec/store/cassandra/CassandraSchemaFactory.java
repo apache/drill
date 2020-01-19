@@ -38,7 +38,6 @@ import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.AbstractSchemaFactory;
 import org.apache.drill.exec.store.SchemaConfig;
 
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

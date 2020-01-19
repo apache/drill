@@ -19,7 +19,11 @@ package org.apache.drill.exec.store.cassandra;
 
 import java.io.IOException;
 import java.util.Set;
+
+import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.Session;
 import org.apache.calcite.schema.SchemaPlus;
+import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
@@ -28,6 +32,7 @@ import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.drill.exec.store.cassandra.connection.CassandraConnectionManager;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 
 public class CassandraStoragePlugin extends AbstractStoragePlugin {
@@ -38,11 +43,18 @@ public class CassandraStoragePlugin extends AbstractStoragePlugin {
 
   private final CassandraSchemaFactory schemaFactory;
 
+  private final Cluster cluster;
+
+  private final Session session;
+
   public CassandraStoragePlugin(CassandraStoragePluginConfig cassandraConfig, DrillbitContext context, String name) {
     super(context, name);
     this.context = context;
     this.cassandraConfig = cassandraConfig;
     this.schemaFactory = new CassandraSchemaFactory(this, name);
+
+    cluster = CassandraConnectionManager.getCluster(cassandraConfig.getHosts(), cassandraConfig.getPort());
+    session = cluster.connect();
   }
 
   @Override
@@ -73,4 +85,19 @@ public class CassandraStoragePlugin extends AbstractStoragePlugin {
   public Set<StoragePluginOptimizerRule> getOptimizerRules() {
     return ImmutableSet.of(CassandraPushDownFilterForScan.INSTANCE);
   }
+
+  public Cluster getCluster() {
+    return cluster;
+  }
+
+  public Session getSession() {
+    return session;
+  }
+
+  @Override
+  public void close() {
+    AutoCloseables.closeSilently(cluster);
+    AutoCloseables.closeSilently(session);
+  }
+
 }
