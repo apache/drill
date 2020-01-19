@@ -40,7 +40,7 @@ public class CassandraPushDownFilterForScan extends StoragePluginOptimizerRule {
   private static final Logger logger = LoggerFactory.getLogger(CassandraDatabaseSchema.class);
 
   /* Flag to bypass filter pushdown   */
-  static final boolean BYPASS_CASSANDRA_FILTER_PUSHDOWN = true;
+  static final boolean BYPASS_CASSANDRA_FILTER_PUSHDOWN = false;
 
   public static final StoragePluginOptimizerRule INSTANCE = new CassandraPushDownFilterForScan();
 
