@@ -25,13 +25,13 @@ import org.apache.calcite.schema.Table;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.util.DrillStringUtils;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.sql.DirectPlan;
 import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.planner.sql.parser.SqlDropTable;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.store.AbstractSchema;
-import org.apache.drill.exec.store.dfs.FileSelection;
 
 // SqlHandler for dropping a table.
 public class DropTableHandler extends DefaultSqlHandler {
@@ -54,7 +54,7 @@ public class DropTableHandler extends DefaultSqlHandler {
   @Override
   public PhysicalPlan getPlan(SqlNode sqlNode) {
     SqlDropTable dropTableNode = ((SqlDropTable) sqlNode);
-    String originalTableName = FileSelection.removeLeadingSlash(dropTableNode.getName());
+    String originalTableName = DrillStringUtils.removeLeadingSlash(dropTableNode.getName());
     SchemaPlus defaultSchema = config.getConverter().getDefaultSchema();
     List<String> tableSchema = dropTableNode.getSchema();
     DrillConfig drillConfig = context.getConfig();
