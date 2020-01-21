@@ -57,6 +57,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.parquet.io.api.Binary;
 import org.apache.parquet.schema.OriginalType;
 import org.apache.parquet.schema.PrimitiveType;
+import org.apache.parquet.schema.Type;
 import org.joda.time.DateTimeConstants;
 
 import java.math.BigDecimal;
@@ -264,7 +265,7 @@ public class ParquetTableMetadataUtils {
       SchemaPath colPath = SchemaPath.getCompoundPath(column.getName());
 
       Long nulls = column.getNulls();
-      if (!column.isNumNullsSet() || nulls == null) {
+      if (hasInvalidStatistics(column, tableMetadata)) {
         nulls = Statistic.NO_COLUMN_STATS;
       }
       PrimitiveType.PrimitiveTypeName primitiveType = getPrimitiveTypeName(tableMetadata, column);
@@ -278,6 +279,13 @@ public class ParquetTableMetadataUtils {
       columnsStatistics.put(colPath, new ColumnStatistics<>(statistics, type));
     }
     return columnsStatistics;
+  }
+
+  private static boolean hasInvalidStatistics(MetadataBase.ColumnMetadata column,
+        MetadataBase.ParquetTableMetadataBase tableMetadata) {
+    return !column.isNumNullsSet() || ((column.getMinValue() == null || column.getMaxValue() == null)
+        && column.getNulls() == 0
+        && tableMetadata.getRepetition(column.getName()) == Type.Repetition.REQUIRED);
   }
 
   /**

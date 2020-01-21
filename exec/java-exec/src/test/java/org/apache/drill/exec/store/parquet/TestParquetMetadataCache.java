@@ -30,7 +30,6 @@ import org.apache.drill.exec.store.parquet.metadata.MetadataVersion;
 import org.apache.drill.test.TestBuilder;
 import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -743,7 +742,6 @@ public class TestParquetMetadataCache extends PlanTestBase {
     }
   }
 
-  @Ignore // Statistics for INTERVAL is not available (see PARQUET-1064)
   @Test // DRILL-4139
   public void testIntervalDayPartitionPruning() throws Exception {
     final String intervalDayPartitionTable = "dfs.tmp.`interval_day_partition`";
@@ -769,7 +767,6 @@ public class TestParquetMetadataCache extends PlanTestBase {
     }
   }
 
-  @Ignore // Statistics for INTERVAL is not available (see PARQUET-1064)
   @Test // DRILL-4139
   public void testIntervalYearPartitionPruning() throws Exception {
     final String intervalYearPartitionTable = "dfs.tmp.`interval_yr_partition`";

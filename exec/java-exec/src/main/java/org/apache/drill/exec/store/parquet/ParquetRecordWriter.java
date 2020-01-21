@@ -255,8 +255,6 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
     int initialSlabSize = CapacityByteArrayOutputStream.initialSlabSizeHeuristic(64, pageSize, 10);
     // TODO: Replace ParquetColumnChunkPageWriteStore with ColumnChunkPageWriteStore from parquet library
     // once PARQUET-1006 will be resolved
-    pageStore = new ParquetColumnChunkPageWriteStore(codecFactory.getCompressor(codec), schema, initialSlabSize,
-        pageSize, new ParquetDirectByteBufferAllocator(oContext));
     ParquetProperties parquetProperties = ParquetProperties.builder()
         .withPageSize(pageSize)
         .withDictionaryEncoding(enableDictionary)
@@ -265,6 +263,10 @@ public class ParquetRecordWriter extends ParquetOutputRecordWriter {
         .withAllocator(new ParquetDirectByteBufferAllocator(oContext))
         .withValuesWriterFactory(new DefaultV1ValuesWriterFactory())
         .build();
+    pageStore = new ParquetColumnChunkPageWriteStore(codecFactory.getCompressor(codec), schema, initialSlabSize,
+        pageSize, parquetProperties.getAllocator(), parquetProperties.getPageWriteChecksumEnabled(),
+        parquetProperties.getColumnIndexTruncateLength()
+    );
     store = new ColumnWriteStoreV1(pageStore, parquetProperties);
     MessageColumnIO columnIO = new ColumnIOFactory(false).getColumnIO(this.schema);
     consumer = columnIO.getRecordWriter(store);
