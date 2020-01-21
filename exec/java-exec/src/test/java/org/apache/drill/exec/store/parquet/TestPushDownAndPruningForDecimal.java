@@ -18,7 +18,6 @@
 package org.apache.drill.exec.store.parquet;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.drill.PlanTestBase;
 import org.apache.drill.categories.ParquetTest;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.exec.ExecConstants;
@@ -27,7 +26,6 @@ import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
 import org.junit.After;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -43,9 +41,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -126,10 +121,12 @@ public class TestPushDownAndPruningForDecimal extends ClusterTest {
       for (String table : Arrays.asList(oldTable, newTable)) {
         String query = String.format("select val_int_32, val_int_64 from %s where %s = cast(1.00 as decimal(5, 2))", table, column);
 
-        String plan = client.queryBuilder().sql(query).explainText();
-        assertThat(plan, containsString("numRowGroups=1"));
-        assertThat(plan, containsString("usedMetadataFile=false"));
-        assertThat(plan, not(containsString("Filter")));
+        queryBuilder()
+            .sql(query)
+            .planMatcher()
+            .include("numRowGroups=1", "usedMetadataFile=false")
+            .exclude("Filter")
+            .match();
 
         client.testBuilder()
           .sqlQuery(query)
@@ -160,10 +157,12 @@ public class TestPushDownAndPruningForDecimal extends ClusterTest {
       for (String column : Arrays.asList("part_int_32", "part_int_64")) {
         String query = String.format("select val_int_32, val_int_64 from %s where %s = cast(2.00 as decimal(5,2))", table, column);
 
-        String plan = client.queryBuilder().sql(query).explainText();
-        assertThat(plan, containsString("numRowGroups=1"));
-        assertThat(plan, containsString("usedMetadataFile=true"));
-        assertThat(plan, not(containsString("Filter")));
+        queryBuilder()
+            .sql(query)
+            .planMatcher()
+            .include("numRowGroups=1", "usedMetadataFile=true")
+            .exclude("Filter")
+            .match();
 
         client.testBuilder()
           .sqlQuery(query)
@@ -188,10 +187,11 @@ public class TestPushDownAndPruningForDecimal extends ClusterTest {
       String query = String.format("select val_int_32, val_int_64 from %s where %s = cast(1.05 as decimal(5, 2))",
         table, column);
 
-      String plan = client.queryBuilder().sql(query).explainText();
-      // push down does not work for old int decimal types because stats is not read: PARQUET-1322
-      assertThat(plan, containsString("numRowGroups=2"));
-      assertThat(plan, containsString("usedMetadataFile=false"));
+      queryBuilder()
+          .sql(query)
+          .planMatcher()
+          .include("numRowGroups=2", "usedMetadataFile=false")
+          .match();
 
       client.testBuilder()
         .sqlQuery(query)
@@ -213,9 +213,11 @@ public class TestPushDownAndPruningForDecimal extends ClusterTest {
       String query = String.format("select val_int_32, val_int_64 from %s where %s = cast(1.05 as decimal(5, 2))",
         table, column);
 
-      String plan = client.queryBuilder().sql(query).explainText();
-      assertThat(plan, containsString("numRowGroups=1"));
-      assertThat(plan, containsString("usedMetadataFile=true"));
+      queryBuilder()
+          .sql(query)
+          .planMatcher()
+          .include("numRowGroups=1", "usedMetadataFile=true")
+          .match();
 
       client.testBuilder()
         .sqlQuery(query)
@@ -239,10 +241,11 @@ public class TestPushDownAndPruningForDecimal extends ClusterTest {
       String query = String.format("select val_int_32, val_int_64 from %s where %s = cast(20.25 as decimal(5, 2))",
         table, column);
 
-      String plan = client.queryBuilder().sql(query).explainText();
-      // push down does not work for old int decimal types because stats is not read: PARQUET-1322
-      assertThat(plan, containsString("numRowGroups=2"));
-      assertThat(plan, containsString("usedMetadataFile=true"));
+      queryBuilder()
+          .sql(query)
+          .planMatcher()
+          .include("numRowGroups=2", "usedMetadataFile=true")
+          .match();
 
       client.testBuilder()
         .sqlQuery(query)
@@ -269,9 +272,11 @@ public class TestPushDownAndPruningForDecimal extends ClusterTest {
       String query = String.format("select val_int_32, val_int_64 from %s where %s = cast(20.25 as decimal(5, 2))",
         table, column);
 
-      String plan = client.queryBuilder().sql(query).explainText();
-      assertThat(plan, containsString("numRowGroups=1"));
-      assertThat(plan, containsString("usedMetadataFile=false"));
+      queryBuilder()
+          .sql(query)
+          .planMatcher()
+          .include("numRowGroups=1", "usedMetadataFile=false")
+          .match();
 
       client.testBuilder()
         .sqlQuery(query)
@@ -299,9 +304,11 @@ public class TestPushDownAndPruningForDecimal extends ClusterTest {
       String query = String.format("select val_int_32, val_int_64 from %s where %s = cast(20.0 as decimal(5, 2))",
         table, column);
 
-      String plan = client.queryBuilder().sql(query).explainText();
-      assertThat(plan, containsString("numRowGroups=1"));
-      assertThat(plan, containsString("usedMetadataFile=true"));
+      queryBuilder()
+          .sql(query)
+          .planMatcher()
+          .include("numRowGroups=1", "usedMetadataFile=true")
+          .match();
 
       client.testBuilder()
         .sqlQuery(query)
@@ -331,10 +338,12 @@ public class TestPushDownAndPruningForDecimal extends ClusterTest {
         client.alterSession(ExecConstants.PARQUET_READER_STRINGS_SIGNED_MIN_MAX, optionValue);
         String query = String.format("select part_fixed, val_fixed from %s where part_fixed = cast(1.00 as decimal(5, 2))", table);
 
-        String plan = client.queryBuilder().sql(query).explainText();
-        assertThat(plan, containsString("numRowGroups=1"));
-        assertThat(plan, containsString("usedMetadataFile=false"));
-        assertThat(plan, not(containsString("Filter")));
+        queryBuilder()
+            .sql(query)
+            .planMatcher()
+            .include("numRowGroups=1", "usedMetadataFile=false")
+            .exclude("Filter")
+            .match();
 
         client.testBuilder()
           .sqlQuery(query)
@@ -359,10 +368,12 @@ public class TestPushDownAndPruningForDecimal extends ClusterTest {
       client.alterSession(ExecConstants.PARQUET_READER_STRINGS_SIGNED_MIN_MAX, optionValue);
       String query = String.format("select part_fixed, val_fixed from %s where part_fixed = cast(1.00 as decimal(5, 2))", table);
 
-      String plan = client.queryBuilder().sql(query).explainText();
-      assertThat(plan, containsString("numRowGroups=1"));
-      assertThat(plan, containsString("usedMetadataFile=true"));
-      assertThat(plan, not(containsString("Filter")));
+      queryBuilder()
+          .sql(query)
+          .planMatcher()
+          .include("numRowGroups=1", "usedMetadataFile=true")
+          .exclude("Filter")
+          .match();
 
       client.testBuilder()
         .sqlQuery(query)
@@ -387,10 +398,12 @@ public class TestPushDownAndPruningForDecimal extends ClusterTest {
       client.alterSession(ExecConstants.PARQUET_READER_STRINGS_SIGNED_MIN_MAX, optionValue);
       String query = String.format("select part_fixed, val_fixed from %s where part_fixed = cast(2.00 as decimal(5, 2))", table);
 
-      String plan = client.queryBuilder().sql(query).explainText();
-      assertThat(plan, containsString("numRowGroups=1"));
-      assertThat(plan, containsString("usedMetadataFile=true"));
-      assertThat(plan, not(containsString("Filter")));
+      queryBuilder()
+          .sql(query)
+          .planMatcher()
+          .include("numRowGroups=1", "usedMetadataFile=true")
+          .exclude("Filter")
+          .match();
 
       client.testBuilder()
         .sqlQuery(query)
@@ -411,10 +424,13 @@ public class TestPushDownAndPruningForDecimal extends ClusterTest {
   public void testOldFixedDecimalPushDownNoMeta() throws Exception {
     String table = createTable("old_fixed_decimal_push_down_no_meta", true);
     String query = String.format("select part_fixed, val_fixed from %s where val_fixed = cast(1.05 as decimal(5, 2))", table);
-    String plan = client.queryBuilder().sql(query).explainText();
+
+    queryBuilder()
+        .sql(query)
+        .planMatcher()
     // statistics for fixed decimal is not available for files generated prior to parquet 1.10.0 version
-    assertThat(plan, containsString("numRowGroups=2"));
-    assertThat(plan, containsString("usedMetadataFile=false"));
+        .include("numRowGroups=2", "usedMetadataFile=false")
+        .match();
 
     client.testBuilder()
       .sqlQuery(query)
@@ -439,9 +455,11 @@ public class TestPushDownAndPruningForDecimal extends ClusterTest {
 
     for (Map.Entry<String, String> property : properties.entrySet()) {
       client.alterSession(ExecConstants.PARQUET_READER_STRINGS_SIGNED_MIN_MAX, property.getKey());
-      String plan = client.queryBuilder().sql(query).explainText();
-      assertThat(plan, containsString(property.getValue()));
-      assertThat(plan, containsString("usedMetadataFile=true"));
+      queryBuilder()
+          .sql(query)
+          .planMatcher()
+          .include(property.getValue(), "usedMetadataFile=true")
+          .match();
 
       client.testBuilder()
         .sqlQuery(query)
@@ -463,9 +481,11 @@ public class TestPushDownAndPruningForDecimal extends ClusterTest {
 
     queryBuilder().sql(String.format("refresh table metadata %s", table)).run();
 
-    String plan = client.queryBuilder().sql(query).explainText();
-    assertThat(plan, containsString("numRowGroups=2"));
-    assertThat(plan, containsString("usedMetadataFile=true"));
+    queryBuilder()
+        .sql(query)
+        .planMatcher()
+        .include("numRowGroups=2", "usedMetadataFile=true")
+        .match();
 
     client.testBuilder()
       .sqlQuery(query)
@@ -491,9 +511,11 @@ public class TestPushDownAndPruningForDecimal extends ClusterTest {
       newTable, dataTable)).run();
 
     String query = String.format("select part_fixed, val_fixed from %s where val_fixed = cast(1.05 as decimal(5, 2))", newTable);
-    String plan = client.queryBuilder().sql(query).explainText();
-    assertThat(plan, containsString("numRowGroups=1"));
-    assertThat(plan, containsString("usedMetadataFile=false"));
+    queryBuilder()
+        .sql(query)
+        .planMatcher()
+        .include("numRowGroups=1", "usedMetadataFile=false")
+        .match();
 
     client.testBuilder()
       .sqlQuery(query)
@@ -507,9 +529,11 @@ public class TestPushDownAndPruningForDecimal extends ClusterTest {
     // metadata for binary is allowed only after Drill 1.15.0
     // set string signed option to true since test was written on Drill 1.15.0-SNAPSHOT version
     client.alterSession(ExecConstants.PARQUET_READER_STRINGS_SIGNED_MIN_MAX, "true");
-    plan = client.queryBuilder().sql(query).explainText();
-    assertThat(plan, containsString("numRowGroups=1"));
-    assertThat(plan, containsString("usedMetadataFile=true"));
+    queryBuilder()
+        .sql(query)
+        .planMatcher()
+        .include("numRowGroups=1", "usedMetadataFile=true")
+        .match();
 
     client.testBuilder()
       .sqlQuery(query)
@@ -535,10 +559,12 @@ public class TestPushDownAndPruningForDecimal extends ClusterTest {
       + "as select part_int_32 as part_binary, val_int_32 as val_binary from %s", newTable, dataTable)).run();
 
     String query = String.format("select part_binary, val_binary from %s where part_binary = cast(1.00 as decimal(5, 2))", newTable);
-    String plan = client.queryBuilder().sql(query).explainText();
-    assertThat(plan, containsString("numRowGroups=1"));
-    assertThat(plan, containsString("usedMetadataFile=false"));
-    assertThat(plan, not(containsString("Filter")));
+    queryBuilder()
+        .sql(query)
+        .planMatcher()
+        .include("numRowGroups=1", "usedMetadataFile=false")
+        .exclude("Filter")
+        .match();
 
     client.testBuilder()
       .sqlQuery(query)
@@ -551,10 +577,12 @@ public class TestPushDownAndPruningForDecimal extends ClusterTest {
 
     queryBuilder().sql(String.format("refresh table metadata %s", newTable)).run();
 
-    plan = client.queryBuilder().sql(query).explainText();
-    assertThat(plan, containsString("numRowGroups=1"));
-    assertThat(plan, containsString("usedMetadataFile=true"));
-    assertThat(plan, not(containsString("Filter")));
+    queryBuilder()
+        .sql(query)
+        .planMatcher()
+        .include("numRowGroups=1", "usedMetadataFile=true")
+        .exclude("Filter")
+        .match();
 
     client.testBuilder()
       .sqlQuery(query)
@@ -582,9 +610,11 @@ public class TestPushDownAndPruningForDecimal extends ClusterTest {
       + "as select part_int_32 as part_binary, val_int_32 as val_binary from %s", newTable, dataTable)).run();
 
     String query = String.format("select part_binary, val_binary from %s where val_binary = cast(1.05 as decimal(5, 2))", newTable);
-    String plan = client.queryBuilder().sql(query).explainText();
-    assertThat(plan, containsString("numRowGroups=1"));
-    assertThat(plan, containsString("usedMetadataFile=false"));
+    queryBuilder()
+        .sql(query)
+        .planMatcher()
+        .include("numRowGroups=1", "usedMetadataFile=false")
+        .match();
 
     client.testBuilder()
       .sqlQuery(query)
@@ -598,9 +628,11 @@ public class TestPushDownAndPruningForDecimal extends ClusterTest {
     // metadata for binary is allowed only after Drill 1.15.0
     // set string signed option to true, since test was written on Drill 1.15.0-SNAPSHOT version
     client.alterSession(ExecConstants.PARQUET_READER_STRINGS_SIGNED_MIN_MAX, "true");
-    plan = client.queryBuilder().sql(query).explainText();
-    assertThat(plan, containsString("numRowGroups=1"));
-    assertThat(plan, containsString("usedMetadataFile=true"));
+    queryBuilder()
+        .sql(query)
+        .planMatcher()
+        .include("numRowGroups=1", "usedMetadataFile=true")
+        .match();
 
     client.testBuilder()
       .sqlQuery(query)
@@ -624,10 +656,12 @@ public class TestPushDownAndPruningForDecimal extends ClusterTest {
     for (String decimalType : Arrays.asList("decimal(5, 0)", "decimal(10, 5)", "decimal(5, 1)")) {
       String query = String.format("select part, val from %s where part = cast(2.0 as %s)", newTable, decimalType);
 
-      String plan = client.queryBuilder().sql(query).explainText();
-      assertThat(plan, containsString("numRowGroups=1"));
-      assertThat(plan, containsString("usedMetadataFile=false"));
-      assertThat(plan, not(containsString("Filter")));
+      queryBuilder()
+          .sql(query)
+          .planMatcher()
+          .include("numRowGroups=1", "usedMetadataFile=false")
+          .exclude("Filter")
+          .match();
 
       client.testBuilder()
         .sqlQuery(query)
@@ -654,9 +688,11 @@ public class TestPushDownAndPruningForDecimal extends ClusterTest {
     for (String decimalType : Arrays.asList("decimal(5, 0)", "decimal(10, 5)", "decimal(5, 1)")) {
       String query = String.format("select part, val from %s where val = cast(20.0 as %s)", newTable, decimalType);
 
-      String plan = client.queryBuilder().sql(query).explainText();
-      assertThat(plan, containsString("numRowGroups=1"));
-      assertThat(plan, containsString("usedMetadataFile=false"));
+      queryBuilder()
+          .sql(query)
+          .planMatcher()
+          .include("numRowGroups=1", "usedMetadataFile=false")
+          .match();
 
       client.testBuilder()
         .sqlQuery(query)
@@ -667,7 +703,6 @@ public class TestPushDownAndPruningForDecimal extends ClusterTest {
     }
   }
 
-  @Ignore("Statistics for DECIMAL that has all nulls is not available (PARQUET-1341). Requires upgrade to Parquet 1.11.0")
   @Test
   public void testDecimalPruningWithNullPartition() throws Exception {
     List<String> ctasQueries = new ArrayList<>();
@@ -692,13 +727,26 @@ public class TestPushDownAndPruningForDecimal extends ClusterTest {
 
         long actualRowCount = client.queryBuilder().sql(query).run().recordCount();
         assertEquals("Row count does not match the expected value", expectedRowCount, actualRowCount);
-        PlanTestBase.testPlanMatchingPatterns(query, new String[]{"usedMetadataFile=false"}, new String[]{"Filter"});
+
+        queryBuilder()
+            .sql(query)
+            .planMatcher()
+            .include("usedMetadataFile=false")
+            .exclude("Filter")
+            .match();
 
         queryBuilder().sql(String.format("refresh table metadata %s", decimalPartitionTable)).run();
 
         actualRowCount = client.queryBuilder().sql(query).run().recordCount();
         assertEquals("Row count does not match the expected value", expectedRowCount, actualRowCount);
-        PlanTestBase.testPlanMatchingPatterns(query, new String[]{"usedMetadataFile=true"}, new String[]{"Filter"});
+
+
+        queryBuilder()
+            .sql(query)
+            .planMatcher()
+            .include("usedMetadataFile=true")
+            .exclude("Filter")
+            .match();
       } finally {
         client.runSqlSilently(String.format("drop table if exists %s", decimalPartitionTable));
       }

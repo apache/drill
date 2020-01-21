@@ -20,6 +20,7 @@ package org.apache.drill.exec.planner.logical;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.rel.RelNode;
+import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.expr.IsPredicate;
 import org.apache.drill.exec.metastore.ColumnNamesOptions;
@@ -30,6 +31,9 @@ import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.physical.PrelUtil;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
+import org.apache.drill.exec.record.metadata.DictColumnMetadata;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.ColumnExplorer;
 import org.apache.drill.exec.store.ColumnExplorer.ImplicitFileColumns;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
@@ -46,6 +50,7 @@ import org.apache.drill.metastore.statistics.ColumnStatisticsKind;
 import org.apache.drill.metastore.statistics.ExactStatisticsConstants;
 import org.apache.drill.metastore.statistics.StatisticsKind;
 import org.apache.drill.metastore.statistics.TableStatisticsKind;
+import org.apache.drill.metastore.util.SchemaPathUtils;
 import org.apache.drill.shaded.guava.com.google.common.collect.HashBasedTable;
 import org.apache.drill.shaded.guava.com.google.common.collect.Multimap;
 import org.apache.drill.shaded.guava.com.google.common.collect.Table;
@@ -202,6 +207,12 @@ public class ConvertMetadataAggregateToDirectScanRule extends RelOptRule {
       // populates record list with row group column metadata
       for (SchemaPath schemaPath : interestingColumns) {
         ColumnStatistics<?> columnStatistics = rowGroupMetadata.getColumnsStatistics().get(schemaPath);
+
+        // do not gather statistics for array columns as it is not supported by Metastore
+        if (containsArrayColumn(rowGroupMetadata.getSchema(), schemaPath)) {
+          return null;
+        }
+
         if (IsPredicate.isNullOrEmpty(columnStatistics)) {
           logger.debug("Statistics for {} column wasn't found within {} row group.", schemaPath, path);
           return null;
@@ -215,7 +226,7 @@ public class ConvertMetadataAggregateToDirectScanRule extends RelOptRule {
           } else {
             statsValue = columnStatistics.get(statisticsKind);
           }
-          String columnStatisticsFieldName = AnalyzeColumnUtils.getColumnStatisticsFieldName(schemaPath.getRootSegmentPath(), statisticsKind);
+          String columnStatisticsFieldName = AnalyzeColumnUtils.getColumnStatisticsFieldName(schemaPath.toExpr(), statisticsKind);
           if (statsValue != null) {
             schema.putIfAbsent(
                 columnStatisticsFieldName,
@@ -267,5 +278,32 @@ public class ConvertMetadataAggregateToDirectScanRule extends RelOptRule {
     ScanStats scanStats = new ScanStats(ScanStats.GroupScanProperty.EXACT_ROW_COUNT, records.size(), 1, schema.size());
 
     return new DirectGroupScan(reader, scanStats);
+  }
+
+  /**
+   * Checks whether schema path contains array segment.
+   *
+   * @param schema tuple schema
+   * @param schemaPath schema path
+   * @return {@code true} if any segment in the schema path is an array, {@code false} otherwise
+   */
+  private static boolean containsArrayColumn(TupleMetadata schema, SchemaPath schemaPath) {
+    ColumnMetadata columnMetadata = SchemaPathUtils.getColumnMetadata(schemaPath, schema);
+    PathSegment currentPath = schemaPath.getRootSegment();
+    ColumnMetadata currentColumn = columnMetadata;
+    do {
+      if (currentColumn.isArray()) {
+        return false;
+      } else if (columnMetadata.isMap()) {
+        currentPath = currentPath.getChild();
+        columnMetadata = columnMetadata.tupleSchema().metadata(currentPath.getNameSegment().getPath());
+      } else if (columnMetadata.isDict()) {
+        currentPath = currentPath.getChild();
+        columnMetadata = ((DictColumnMetadata) columnMetadata).valueColumnMetadata();
+      } else {
+        return true;
+      }
+    } while (columnMetadata != null);
+    return true;
   }
 }

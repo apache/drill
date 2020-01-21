@@ -49,7 +49,7 @@
     <shaded.guava.version>23.0</shaded.guava.version>
     <guava.version>19.0</guava.version>
     <forkCount>2</forkCount>
-    <parquet.version>1.10.0</parquet.version>
+    <parquet.version>1.11.0</parquet.version>
     <!--
       For development purposes to be able to use custom Calcite versions (e.g. not present in jitpack
       repository or from local repository) update this property to desired value (e.g. org.apache.calcite).
@@ -1683,7 +1683,7 @@
       <dependency>
         <groupId>org.apache.parquet</groupId>
         <artifactId>parquet-format</artifactId>
-        <version>2.5.0</version>
+        <version>2.8.0</version>
         <exclusions>
           <exclusion>
             <groupId>org.apache.hadoop</groupId>
