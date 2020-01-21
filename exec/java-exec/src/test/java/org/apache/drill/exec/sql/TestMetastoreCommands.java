@@ -3131,6 +3131,36 @@ public class TestMetastoreCommands extends ClusterTest {
     }
   }
 
+  @Test
+  public void testAnalyzeWithLeadingSlash() throws Exception {
+    String tableName = "tableWithLeadingSlash";
+    TableInfo tableInfo = getTableInfo("/" + tableName, "tmp");
+    try {
+      run("create table dfs.tmp.`%s` as\n" +
+          "select * from cp.`tpch/region.parquet`", tableName);
+
+      testBuilder()
+          .sqlQuery("analyze table dfs.tmp.`%s` REFRESH METADATA", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.tmp.%s]", tableName))
+          .go();
+
+      MetastoreTableInfo metastoreTableInfo = cluster.drillbit().getContext()
+          .getMetastoreRegistry()
+          .get()
+          .tables()
+          .basicRequests()
+          .metastoreTableInfo(tableInfo);
+
+      assertTrue("table metadata wasn't found", metastoreTableInfo.isExists());
+    } finally {
+      run("analyze table dfs.tmp.`%s` drop metadata", tableName);
+      run("drop table if exists dfs.tmp.`%s`", tableName);
+      client.resetSession(ExecConstants.METASTORE_ENABLED);
+    }
+  }
+
   private static <T> ColumnStatistics<T> getColumnStatistics(T minValue, T maxValue,
       long rowCount, TypeProtos.MinorType minorType) {
     return new ColumnStatistics<>(

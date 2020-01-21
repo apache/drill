@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import org.apache.drill.common.util.DrillStringUtils;
 import org.apache.drill.metastore.components.tables.TableMetadataUnit;
 import org.apache.drill.metastore.expressions.FilterExpression;
 
@@ -156,7 +157,8 @@ public class TableInfo {
     }
 
     public TableInfoBuilder name(String name) {
-      this.name = name;
+      // removes leading slash characters since such table names are equivalent
+      this.name = DrillStringUtils.removeLeadingSlash(name);
       return this;
     }
 

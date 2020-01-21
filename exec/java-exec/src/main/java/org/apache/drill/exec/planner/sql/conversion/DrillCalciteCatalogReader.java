@@ -35,11 +35,11 @@ import org.apache.calcite.sql.validate.SqlValidatorUtil;
 import org.apache.calcite.util.Util;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.util.DrillStringUtils;
 import org.apache.drill.exec.metastore.MetadataProviderManager;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.rpc.user.UserSession;
-import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.shaded.guava.com.google.common.cache.CacheBuilder;
 import org.apache.drill.shaded.guava.com.google.common.cache.CacheLoader;
 import org.apache.drill.shaded.guava.com.google.common.cache.LoadingCache;
@@ -101,7 +101,7 @@ class DrillCalciteCatalogReader extends CalciteCatalogReader {
 
   List<String> getTemporaryNames(List<String> names) {
     if (needsTemporaryTableCheck(names, session.getDefaultSchemaPath(), drillConfig)) {
-      String tableName = FileSelection.removeLeadingSlash(names.get(names.size() - 1));
+      String tableName = DrillStringUtils.removeLeadingSlash(names.get(names.size() - 1));
       String temporaryTableName = session.resolveTemporaryTableName(tableName);
       if (temporaryTableName != null) {
         List<String> temporaryNames = new ArrayList<>(SchemaUtilites.getSchemaPathAsList(temporarySchema));

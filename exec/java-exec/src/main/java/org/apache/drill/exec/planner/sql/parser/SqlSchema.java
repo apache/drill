@@ -29,11 +29,11 @@ import org.apache.calcite.sql.SqlSpecialOperator;
 import org.apache.calcite.sql.SqlWriter;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.util.SqlBasicVisitor;
+import org.apache.drill.common.util.DrillStringUtils;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;
 import org.apache.drill.exec.planner.sql.handlers.SchemaHandler;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerUtil;
-import org.apache.drill.exec.store.dfs.FileSelection;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -88,7 +88,7 @@ public abstract class SqlSchema extends DrillSqlCall {
   public String getTableName() {
     if (hasTable()) {
       String tableName = table.isSimple() ? table.getSimple() : table.names.get(table.names.size() - 1);
-      return FileSelection.removeLeadingSlash(tableName);
+      return DrillStringUtils.removeLeadingSlash(tableName);
     }
     return null;
   }

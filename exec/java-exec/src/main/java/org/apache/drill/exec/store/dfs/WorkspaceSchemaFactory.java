@@ -46,6 +46,7 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.scanner.persistence.ScanResult;
+import org.apache.drill.common.util.DrillStringUtils;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.dotdrill.DotDrillFile;
 import org.apache.drill.exec.dotdrill.DotDrillType;
@@ -410,7 +411,7 @@ public class WorkspaceSchemaFactory {
       try {
         try {
           files = DotDrillUtil.getDotDrills(getFS(), new Path(config.getLocation()),
-              FileSelection.removeLeadingSlash(tableName), DotDrillType.VIEW);
+              DrillStringUtils.removeLeadingSlash(tableName), DotDrillType.VIEW);
         } catch (AccessControlException e) {
           if (!schemaConfig.getIgnoreAuthErrors()) {
             logger.debug(e.getMessage());

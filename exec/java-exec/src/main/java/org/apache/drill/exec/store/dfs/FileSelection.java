@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.dfs;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.util.DrillStringUtils;
 import org.apache.drill.exec.util.DrillFileSystemUtil;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
@@ -269,7 +270,7 @@ public class FileSelection {
     Stopwatch timer = logger.isDebugEnabled() ? Stopwatch.createStarted() : null;
     boolean hasWildcard = path.contains(WILD_CARD);
 
-    Path combined = new Path(parent, removeLeadingSlash(path));
+    Path combined = new Path(parent, DrillStringUtils.removeLeadingSlash(path));
     if (!allowAccessOutsideWorkspace) {
       checkBackPaths(new Path(parent).toUri().getPath(), combined.toUri().getPath(), path);
     }
@@ -362,15 +363,6 @@ public class FileSelection {
       return DrillFileSystemUtil.createPathSafe(newRoot);
     } else {
       return new Path(stringRoot);
-    }
-  }
-
-  public static String removeLeadingSlash(String path) {
-    if (!path.isEmpty() && path.charAt(0) == '/') {
-      String newPath = path.substring(1);
-      return removeLeadingSlash(newPath);
-    } else {
-      return path;
     }
   }
 
