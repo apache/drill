@@ -25,7 +25,6 @@ import org.apache.drill.metastore.components.views.Views;
 import org.apache.drill.metastore.iceberg.components.tables.IcebergTables;
 import org.apache.drill.metastore.iceberg.config.IcebergConfigConstants;
 import org.apache.drill.metastore.iceberg.exceptions.IcebergMetastoreException;
-import org.apache.drill.metastore.iceberg.operate.ExpirationHandler;
 import org.apache.drill.metastore.iceberg.schema.IcebergTableSchema;
 import org.apache.drill.shaded.guava.com.google.common.collect.MapDifference;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
@@ -59,7 +58,6 @@ public class IcebergMetastore implements Metastore {
   private final org.apache.iceberg.Tables tables;
   private final String baseLocation;
   private final Map<String, String> commonProperties;
-  private final ExpirationHandler expirationHandler;
 
   /**
    * Table properties for each Iceberg table should be updated only once,
@@ -77,7 +75,6 @@ public class IcebergMetastore implements Metastore {
     this.tables = new HadoopTables(new Configuration(configuration));
     this.baseLocation = baseLocation(new Configuration(configuration));
     this.commonProperties = properties(IcebergConfigConstants.COMPONENTS_COMMON_PROPERTIES);
-    this.expirationHandler = new ExpirationHandler(config, new Configuration(configuration));
   }
 
   @Override
@@ -85,7 +82,7 @@ public class IcebergMetastore implements Metastore {
     Table table = loadTable(IcebergConfigConstants.COMPONENTS_TABLES_LOCATION,
       IcebergConfigConstants.COMPONENTS_TABLES_PROPERTIES,
       IcebergTables.SCHEMA, Tables.class);
-    return new IcebergTables(table, expirationHandler);
+    return new IcebergTables(table);
   }
 
   @Override
@@ -273,6 +270,5 @@ public class IcebergMetastore implements Metastore {
 
   @Override
   public void close() {
-    expirationHandler.close();
   }
 }

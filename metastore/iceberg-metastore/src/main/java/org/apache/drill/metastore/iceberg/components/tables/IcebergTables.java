@@ -58,9 +58,9 @@ public class IcebergTables implements Tables, MetastoreContext<TableMetadataUnit
   private final Table table;
   private final ExpirationHandler expirationHandler;
 
-  public IcebergTables(Table table, ExpirationHandler expirationHandler) {
+  public IcebergTables(Table table) {
     this.table = table;
-    this.expirationHandler = expirationHandler;
+    this.expirationHandler = new ExpirationHandler(table);
   }
 
   public MetastoreContext<TableMetadataUnit> context() {

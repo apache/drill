@@ -31,7 +31,7 @@
   <name>metastore/Drill Iceberg Metastore</name>
 
   <properties>
-    <iceberg.version>0.7.0-incubating</iceberg.version>
+    <iceberg.version>2d75130</iceberg.version>
     <caffeine.version>2.7.0</caffeine.version>
   </properties>
 
@@ -47,27 +47,27 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.iceberg</groupId>
+      <groupId>com.github.apache.incubator-iceberg</groupId>
       <artifactId>iceberg-parquet</artifactId>
       <version>${iceberg.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.iceberg</groupId>
+      <groupId>com.github.apache.incubator-iceberg</groupId>
       <artifactId>iceberg-data</artifactId>
       <version>${iceberg.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.iceberg</groupId>
+      <groupId>com.github.apache.incubator-iceberg</groupId>
       <artifactId>iceberg-core</artifactId>
       <version>${iceberg.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.iceberg</groupId>
+      <groupId>com.github.apache.incubator-iceberg</groupId>
       <artifactId>iceberg-common</artifactId>
       <version>${iceberg.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.iceberg</groupId>
+      <groupId>com.github.apache.incubator-iceberg</groupId>
       <artifactId>iceberg-api</artifactId>
       <version>${iceberg.version}</version>
     </dependency>
