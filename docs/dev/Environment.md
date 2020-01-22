@@ -22,7 +22,7 @@ Currently, the Apache Drill build process is known to work on Linux, Windows and
 ## Build
 
     cd drill
-    mvn clean install
+    mvn clean install -DskipTests
 
 ## Explode tarball in installation directory
    
