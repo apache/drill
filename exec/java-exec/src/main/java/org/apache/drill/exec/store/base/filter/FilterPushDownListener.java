@@ -38,7 +38,7 @@ import org.apache.drill.exec.physical.base.GroupScan;
  * a set of expressions joined by OR. The scan spits into multiple
  * scans, each scanning one of the partitions (or regions or
  * queries) identified by the case. This is an implementation of the
- * SQL <tt>IN</tt> clause.</dd>
+ * SQL {@code IN} clause.</dd>
  * <dl>
  * <p>
  * In both cases, the conditions are in the form of a
@@ -52,11 +52,10 @@ import org.apache.drill.exec.physical.base.GroupScan;
  * column, and that only the equality operator appears in the
  * terms.
  */
-
 public interface FilterPushDownListener {
 
   /**
-   * Prefix to display in filter rules
+   * @return a prefix to display in filter rules
    */
   String prefix();
 
@@ -67,6 +66,8 @@ public interface FilterPushDownListener {
    *   return scan.getGroupScan() instanceof MyGroupScan;
    * }
    * </pre></code>
+   * @return true if the given group scan is one this listener can
+   * handle, false otherwise
    */
   boolean isTargetScan(GroupScan groupScan);
 
@@ -77,36 +78,35 @@ public interface FilterPushDownListener {
    * Allows the group scan to mark in its own way whether the rule has
    * been applied.
    *
-   * @param scan the scan node
+   * @param groupScan the scan node
    * @return true if filter push-down should be applied
    */
-
   boolean needsApplication(GroupScan groupScan);
 
   /**
    * Determine if the given relational operator (which is already in the form
-   * <tt>&lt;col name> &lt;relop> &lt;const></tt>, qualifies for push down for
+   * {@code <col name> <relop> <const>}, qualifies for push down for
    * this scan.
    * <p>
    * If so, return an equivalent RelOp with the value normalized to what
    * the plugin needs. The returned value may be the same as the original
    * one if the value is already normalized.
    *
-   * @param scan the scan element. Use <tt>scan.getGroupScan()</tt> to get the
-   * group scan
+   * @param groupScan the scan element. Use {@code scan.getGroupScan()}
+   * to get the group scan
    * @param relOp the description of the relational operator expression
    * @return a normalized RelOp if this relop can be transformed into a filter
-   * push-down, <tt>null</tt> if not and thus the relop should remain in
+   * push-down, @{code null} if not and thus the relop should remain in
    * the Drill plan
+   * @see {@link ConstantHolder#normalize(org.apache.drill.common.types.TypeProtos.MinorType)}
    */
-
   RelOp accept(GroupScan groupScan, RelOp relOp);
 
   /**
    * Transform a normalized DNF term into a new scan. Normalized form is:
    * <br><code><pre>
    * (a AND b AND (x OR y))</pre></code><br>
-   * In which each <code>OR</code> term represents a scan partition. It
+   * In which each {@code OR} term represents a scan partition. It
    * is up to the code here to determine if the scan partition can be handled,
    * corresponds to a storage partition, or can be done as a separate
    * scan (as for a JDBC or REST plugin, say.)
@@ -117,18 +117,24 @@ public interface FilterPushDownListener {
    * to leave in the query. Those terms can be the ones passed in, or
    * new terms to handle special needs.
    *
-   * @param scan the scan node
-   * @param rexNode the Calcite OR node from which the list of relops was
-   * derived
-   * @param dnfTerms the list of OR conditions. All refer to the same column,
-   * and all are equality operators; only the values differ
+   * @param groupScan the scan node
+   * @param andTerms a list of the CNF (AND) terms, in which each is given
+   * by the Calcite AND node and the derived RelOp expression.
+   * @param orTerm the DNF (OR) term, if any, that includes the Calcite
+   * node for that term and the set of OR terms. Only provided if the OR
+   * term represents a simple list of values (all OR clauses are on the
+   * same column). The OR term itself is AND'ed with the CNF terms.
    * @return a pair of elements: a new scan (that represents the pushed filters),
    * and the original or new expression to appear in the WHERE clause
-   * joined by AND with any non-candidate expressions. One or the other must
-   * be non-null. Or, return null if the filter condition can't be handled
+   * joined by AND with any non-candidate expressions. That is, if analysis
+   * determines that the plugin can't handle (or cannot completely handle)
+   * a term, return the Calcite node for that term back as part of the
+   * return value and it will be left in the query. Any Calcite nodes
+   * not returned are removed from the query and it is the scan's responsibility
+   * to handle them. Either the group scan or the list of Calcite nodes
+   * must be non-null. Or, return null if the filter condition can't be handled
    * and the query should remain unchanged.
    */
-
   Pair<GroupScan, List<RexNode>> transform(GroupScan groupScan,
       List<Pair<RexNode, RelOp>> andTerms, Pair<RexNode, DisjunctionFilterSpec> orTerm);
 }

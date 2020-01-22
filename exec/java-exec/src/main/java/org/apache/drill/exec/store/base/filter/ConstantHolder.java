@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.store.base.filter;
 
+import java.math.BigDecimal;
+
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.store.base.PlanStringBuilder;
 import org.joda.time.DateTimeZone;
@@ -46,6 +48,17 @@ public class ConstantHolder {
     this.value = value;
   }
 
+  /**
+   * Convert a constant to the given type. Conversion is defined only for
+   * some types (where conversion makes sense) and only for some values
+   * (only those that would result in a valid conversion.)
+   *
+   * @param toType the target type
+   * @return a constant of the requested type
+   * @throws RuntimeException if the conversion is not legal
+   * @see {@link #normalize(MinorType)} for a "save" version of this
+   * method
+   */
   public ConstantHolder convertTo(MinorType toType) {
     if (type == toType) {
       return this;
@@ -59,11 +72,27 @@ public class ConstantHolder {
       return toTimestamp(null);
     case VARCHAR:
       return toVarChar();
+    case FLOAT8:
+      return toDouble();
+    case VARDECIMAL:
+      return toDecimal();
     default:
       throw conversionError(toType);
     }
   }
 
+  /**
+   * Normalize the constant to the given type. Return null if the constant
+   * cannot be converted. Use this test to determine if the constant is of
+   * a form that can be pushed down when push-down only supports certain
+   * types. In such a case, the query will likely fail at execution time
+   * when Drill tries to compare the remaining filter with an incompatible
+   * column type.
+   *
+   * @param toType the target type
+   * @return a constant of the requested type or null if the conversion
+   * is not defined or is not legal for the given value
+   */
   public ConstantHolder normalize(MinorType toType) {
     try {
       return convertTo(toType);
@@ -148,12 +177,76 @@ public class ConstantHolder {
     return new ConstantHolder(MinorType.TIMESTAMP, longValue);
   }
 
+  /**
+   * Convert the value to a String. Consider this as a debug tool as
+   * no attempt is made to format values in any particular way. Date, time,
+   * interval and bit values will appear as numbers, which is probably
+   * not what most target systems expect.
+   * @return the value as a string using the {@code toString()} method
+   * on the value
+   */
   public ConstantHolder toVarChar() {
     if (type == MinorType.VARCHAR) {
       return this;
     } else {
       return new ConstantHolder(MinorType.VARCHAR, value.toString());
     }
+  }
+
+  public ConstantHolder toDouble() {
+    if (type == MinorType.FLOAT8) {
+      return this;
+    }
+    double doubleValue;
+    switch (type) {
+    case BIGINT:
+      doubleValue = (Long) value;
+      break;
+    case INT:
+      doubleValue = (Integer) value;
+      break;
+    case VARCHAR:
+      try {
+        doubleValue = Double.parseDouble((String) value);
+      } catch (Exception e) {
+        throw conversionError(MinorType.FLOAT8);
+      }
+      break;
+    case VARDECIMAL:
+      doubleValue = ((BigDecimal) value).doubleValue();
+      break;
+    default:
+      throw conversionError(MinorType.FLOAT8);
+    }
+    return new ConstantHolder(MinorType.FLOAT8, doubleValue);
+  }
+
+  public ConstantHolder toDecimal() {
+    if (type == MinorType.VARDECIMAL) {
+      return this;
+    }
+    BigDecimal decimalValue;
+    switch (type) {
+    case BIGINT:
+      decimalValue = BigDecimal.valueOf((Long) value);
+      break;
+    case FLOAT8:
+      decimalValue = BigDecimal.valueOf((Double) value);
+      break;
+    case INT:
+      decimalValue = BigDecimal.valueOf((Integer) value);
+      break;
+    case VARCHAR:
+      try {
+        decimalValue = new BigDecimal((String) value);
+      } catch (Exception e) {
+        throw conversionError(MinorType.VARDECIMAL);
+      }
+      break;
+    default:
+      throw conversionError(MinorType.VARDECIMAL);
+    }
+    return new ConstantHolder(MinorType.VARDECIMAL, decimalValue);
   }
 
   public RuntimeException conversionError(MinorType toType) {

@@ -21,7 +21,6 @@ import static org.junit.Assert.assertEquals;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.exec.physical.rowSet.RowSet;
-import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
 import org.junit.BeforeClass;
@@ -34,22 +33,25 @@ public class TestProjectPushDown extends ClusterTest {
     ClusterFixtureBuilder builder = new ClusterFixtureBuilder(dirTestWatcher);
     startCluster(builder);
 
-    StoragePluginRegistry pluginRegistry = cluster.drillbit().getContext().getStorage();
-    DummyStoragePluginConfig config1 =
+    DummyStoragePluginConfig config =
         new DummyStoragePluginConfig(true, false, true);
-    pluginRegistry.createOrUpdate("dummy", config1, true);
+     cluster.defineStoragePlugin("dummy", config);
   }
 
   @Test
   public void testPushDownEnabled() throws Exception {
-    String plan = client.queryBuilder().sql("SELECT a, b, c from dummy.myTable").explainJson();
+    String plan = client.queryBuilder()
+        .sql("SELECT a, b, c from dummy.myTable")
+        .explainJson();
     // DRILL-7451: should be 0
     assertEquals(1, StringUtils.countMatches(plan, "\"pop\" : \"project\""));
   }
 
   @Test
   public void testDummyReader() throws Exception {
-    RowSet results = client.queryBuilder().sql("SELECT a, b, c from dummy.myTable").rowSet();
+    RowSet results = client.queryBuilder()
+        .sql("SELECT a, b, c from dummy.myTable")
+        .rowSet();
     assertEquals(3, results.rowCount());
     results.clear();
   }

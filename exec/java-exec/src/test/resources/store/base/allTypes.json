@@ -1,0 +1,207 @@
+{
+  "head" : {
+    "version" : 1,
+    "generator" : {
+      "type" : "ExplainHandler",
+      "info" : ""
+    },
+    "type" : "APACHE_DRILL_PHYSICAL",
+    "options" : [ ],
+    "queue" : 0,
+    "hasResourcePlan" : false,
+    "resultMode" : "EXEC"
+  },
+  "graph" : [ {
+    "pop" : "dummy-scan",
+    "@id" : 6,
+    "userName" : "dummy",
+    "scanSpec" : {
+      "schemaName" : "default",
+      "tableName" : "allTypes"
+    },
+    "columns" : [ "`**`", "`v`", "`b`", "`i`", "`l`", "`de`", "`da`", "`ti`", "`ts`", "`iy`", "`ids`" ],
+    "filters" : {
+      "andTerms" : [ {
+        "op" : "EQ",
+        "colName" : "v",
+        "value" : {
+          "type" : "VARCHAR",
+          "value" : "varchar"
+        }
+      }, {
+        "op" : "EQ",
+        "colName" : "i",
+        "value" : {
+          "type" : "VARCHAR",
+          "value" : "10"
+        }
+      }, {
+        "op" : "EQ",
+        "colName" : "l",
+        "value" : {
+          "type" : "VARCHAR",
+          "value" : "5000000000"
+        }
+      }, {
+        "op" : "EQ",
+        "colName" : "de",
+        "value" : {
+          "type" : "VARCHAR",
+          "value" : "123.45"
+        }
+      }, {
+        "op" : "EQ",
+        "colName" : "da",
+        "value" : {
+          "type" : "VARCHAR",
+          "value" : "1203724800000"
+        }
+      }, {
+        "op" : "EQ",
+        "colName" : "ti",
+        "value" : {
+          "type" : "VARCHAR",
+          "value" : "44614000"
+        }
+      }, {
+        "op" : "EQ",
+        "colName" : "ts",
+        "value" : {
+          "type" : "VARCHAR",
+          "value" : "1203769414456"
+        }
+      }, {
+        "op" : "EQ",
+        "colName" : "iy",
+        "value" : {
+          "type" : "VARCHAR",
+          "value" : "12"
+        }
+      }, {
+        "op" : "EQ",
+        "colName" : "ids",
+        "value" : {
+          "type" : "VARCHAR",
+          "value" : "<1, 37230000>"
+        }
+      } ]
+    },
+    "cost" : {
+      "memoryCost" : 1.6777216E7,
+      "outputRowCount" : 10.0
+    },
+    "config" : {
+      "type" : "dummy",
+      "enableProjectPushDown" : true,
+      "enableFilterPushDown" : true,
+      "keepFilters" : false,
+      "enabled" : true
+    }
+  }, {
+    "pop" : "project",
+    "@id" : 5,
+    "exprs" : [ {
+      "ref" : "`T0¦¦**`",
+      "expr" : "`**`"
+    }, {
+      "ref" : "`v`",
+      "expr" : "`v`"
+    }, {
+      "ref" : "`b`",
+      "expr" : "`b`"
+    }, {
+      "ref" : "`i`",
+      "expr" : "`i`"
+    }, {
+      "ref" : "`l`",
+      "expr" : "`l`"
+    }, {
+      "ref" : "`de`",
+      "expr" : "`de`"
+    }, {
+      "ref" : "`da`",
+      "expr" : "`da`"
+    }, {
+      "ref" : "`ti`",
+      "expr" : "`ti`"
+    }, {
+      "ref" : "`ts`",
+      "expr" : "`ts`"
+    }, {
+      "ref" : "`iy`",
+      "expr" : "`iy`"
+    }, {
+      "ref" : "`ids`",
+      "expr" : "`ids`"
+    } ],
+    "child" : 6,
+    "outputProj" : false,
+    "initialAllocation" : 1000000,
+    "maxAllocation" : 10000000000,
+    "cost" : {
+      "memoryCost" : 1.6777216E7,
+      "outputRowCount" : 10.0
+    }
+  }, {
+    "pop" : "filter",
+    "@id" : 4,
+    "child" : 5,
+    "expr" : "`b`",
+    "initialAllocation" : 1000000,
+    "maxAllocation" : 10000000000,
+    "cost" : {
+      "memoryCost" : 1.6777216E7,
+      "outputRowCount" : 2.5
+    }
+  }, {
+    "pop" : "selection-vector-remover",
+    "@id" : 3,
+    "child" : 4,
+    "initialAllocation" : 1000000,
+    "maxAllocation" : 10000000000,
+    "cost" : {
+      "memoryCost" : 1.6777216E7,
+      "outputRowCount" : 2.5
+    }
+  }, {
+    "pop" : "project",
+    "@id" : 2,
+    "exprs" : [ {
+      "ref" : "`T0¦¦**`",
+      "expr" : "`T0¦¦**`"
+    } ],
+    "child" : 3,
+    "outputProj" : true,
+    "initialAllocation" : 1000000,
+    "maxAllocation" : 10000000000,
+    "cost" : {
+      "memoryCost" : 1.6777216E7,
+      "outputRowCount" : 2.5
+    }
+  }, {
+    "pop" : "project",
+    "@id" : 1,
+    "exprs" : [ {
+      "ref" : "`**`",
+      "expr" : "`T0¦¦**`"
+    } ],
+    "child" : 2,
+    "outputProj" : true,
+    "initialAllocation" : 1000000,
+    "maxAllocation" : 10000000000,
+    "cost" : {
+      "memoryCost" : 1.6777216E7,
+      "outputRowCount" : 2.5
+    }
+  }, {
+    "pop" : "screen",
+    "@id" : 0,
+    "child" : 1,
+    "initialAllocation" : 1000000,
+    "maxAllocation" : 10000000000,
+    "cost" : {
+      "memoryCost" : 1.6777216E7,
+      "outputRowCount" : 2.5
+    }
+  } ]
+}

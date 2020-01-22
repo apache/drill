@@ -41,9 +41,12 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName("dummy-scan")
+// Force a specific order. Tests compare plans against "golden"
+// versions; forcing the order ensures that the plans don't have
+// trivial variations if we change this class.
 @JsonPropertyOrder({"userName", "scanSpec", "columns",
                     "filters", "cost", "config"})
-@JsonInclude(value=Include.NON_EMPTY, content=Include.NON_NULL)
+@JsonInclude(value = Include.NON_EMPTY, content = Include.NON_NULL)
 public class DummyGroupScan extends BaseGroupScan {
 
   private final DummyScanSpec scanSpec;
@@ -97,21 +100,20 @@ public class DummyGroupScan extends BaseGroupScan {
 
     // Pretend that "id" is a special integer column. Can handle
     // equality only.
-
     if (relOp.colName.contentEquals("id")) {
 
       // To allow easier testing, require exact type match: no
       // attempt at type conversion here.
-
       if (relOp.op != RelOp.Op.EQ || relOp.value.type != MinorType.INT) {
         return null;
       }
       return relOp;
     }
 
-    // All other columns apply only if projected
-
-    if (!FILTER_COLS.contains(relOp.colName)) {
+    // "allTypes" table filters everything. All other tables
+    // only project a fixed set of columns. Simulates a plugin
+    // which can project only some columns.
+    if (!scanSpec.tableName.equals("allTypes") && !FILTER_COLS.contains(relOp.colName)) {
       return null;
     }
 
@@ -119,14 +121,12 @@ public class DummyGroupScan extends BaseGroupScan {
     // others are left in the WHERE clause.
     // Neither are really implemented. Less-than lets us check
     // inverting operations for the const op col case.
-
     switch (relOp.op) {
     case EQ:
     case LT:
     case LE:
 
-      // Convert to target type (pretend all columns are VARCHAR)
-
+      // Convert to target type (pretend all columns are convertible to VARCHAR)
       return relOp.normalize(relOp.value.toVarChar());
     case IS_NULL:
     case IS_NOT_NULL:
@@ -136,42 +136,33 @@ public class DummyGroupScan extends BaseGroupScan {
     }
   }
 
-//  private boolean hasColumn(String colName) {
-//    for (SchemaPath col : scanSpec.columns()) {
-//      if (col.isLeaf() && col.getRootSegmentPath().contentEquals(colName)) {
-//        return true;
-//      }
-//    }
-//    return false;
-//  }
-
   @Override
   public ScanStats computeScanStats() {
 
     // No good estimates at all, just make up something.
-
+    // Simulates a REST call with no metadata; we just want to prevent
+    // Drill from thinking it can broadcast the result set. If a real
+    // source can estimate the row count, it should do so.
     int estRowCount = 10_000;
 
     // If filter push down, assume this reduces data size.
     // Need to get Calcite to choose this version rather
-    // than the un-filtered version.
-
+    // than the un-filtered version, so mimic the same
+    // selectivity that Calcite uses.
     estRowCount = FilterSpec.applySelectivity(filters, estRowCount);
 
-    // Assume no disk I/O. So we have to explain costs by reducing
-    // CPU.
-
+    // Pretend to be an HTTP client, so no disk I/O.
+    // Instead we have to explain costs by reducing CPU.
     double cpuRatio = 1.0;
 
     // If columns provided, then assume this saves data transfer
-
     if (getColumns() != BaseGroupScan.ALL_COLUMNS) {
       cpuRatio = 0.75;
     }
 
-    // Would like to reduce network costs, but not easy to do here since Drill
+    // Would like to reduce network costs to simulate an HTTP RPC
+    // call, but it is not easy to do here since Drill
     // scans assume we read from disk, not network.
-
     return new ScanStats(GroupScanProperty.NO_EXACT_ROW_COUNT, estRowCount, cpuRatio, 0);
   }
 

@@ -38,7 +38,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
  * scan. The config allows creating a storage plugin instance, as needed,
  * to implement the scan.
  *
- * @see {@link BaseGroupScan} for additional details of the scan
+ * @see BaseGroupScan {@code BaseGroupScan} for additional details of the scan
  * life-cycle.
  */
 
@@ -61,7 +61,7 @@ public class BaseSubScan extends AbstractSubScan {
       @JsonProperty("columns") List<SchemaPath> columns,
       @JacksonInject StoragePluginRegistry engineRegistry) {
     super(userName);
-    storagePlugin = BaseStoragePlugin.resolvePlugin(engineRegistry, config);
+    this.storagePlugin = BaseStoragePlugin.resolvePlugin(engineRegistry, config);
     this.columns = columns;
   }
 

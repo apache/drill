@@ -35,7 +35,6 @@ import org.apache.drill.exec.server.options.SessionOptionManager;
  * @param <GROUP> the group scan class
  * @param <SUB> the sub scan class
  */
-
 public abstract class BaseScanFactory<
       PLUGIN extends BaseStoragePlugin<?>,
       SPEC,

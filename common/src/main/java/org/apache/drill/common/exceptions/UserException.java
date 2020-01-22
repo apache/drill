@@ -96,6 +96,10 @@ public class UserException extends DrillRuntimeException {
     return new Builder(DrillPBError.ErrorType.SYSTEM, cause);
   }
 
+  public static Builder systemError() {
+    return new Builder(DrillPBError.ErrorType.SYSTEM, null);
+  }
+
   /**
    * Creates a new user exception builder.
    *

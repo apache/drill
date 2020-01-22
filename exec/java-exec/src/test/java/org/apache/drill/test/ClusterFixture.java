@@ -41,6 +41,7 @@ import java.util.function.Function;
 import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.FormatPluginConfig;
+import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ZookeeperHelper;
 import org.apache.drill.exec.client.DrillClient;
@@ -477,6 +478,17 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
       StoragePluginRegistryImpl registry = (StoragePluginRegistryImpl) drillbit.getContext().getStorage();
       StoragePlugin plugin = pluginFactory.apply(drillbit.getContext());
       registry.addPluginToPersistentStoreIfAbsent(plugin.getName(), plugin.getConfig(), plugin);
+    }
+  }
+
+  public void defineStoragePlugin(String name, StoragePluginConfig config) {
+    try {
+      for (Drillbit drillbit : drillbits()) {
+        StoragePluginRegistryImpl registry = (StoragePluginRegistryImpl) drillbit.getContext().getStorage();
+        registry.createOrUpdate(name, config, true);
+      }
+    } catch (ExecutionSetupException e) {
+      throw new IllegalStateException("Plugin definition failed", e);
     }
   }
 

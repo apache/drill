@@ -28,7 +28,15 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
-@JsonInclude(value=Include.NON_EMPTY, content=Include.NON_NULL)
+/**
+ * A description of the constant filter terms for a scan divided
+ * into CNF and DNF portions. The DNF portion contains expressions
+ * for a single column.
+ * <p>
+ * This form is Jackson-serializable so that it may be included in
+ * an execution plan (as is done in the "dummY" test mule.)
+ */
+@JsonInclude(value = Include.NON_EMPTY, content = Include.NON_NULL)
 @JsonPropertyOrder({"andTerms", "orTerms"})
 public class FilterSpec {
 
@@ -57,11 +65,17 @@ public class FilterSpec {
   /**
    * The number of partitions in the sense of scan "segments" given
    * by an OR clause. (May not correspond to HDFS file partitions.)
+   * Assumes that each OR term represents a partition: <pre><code>
+   * a < 10 OR a > 20 -- Two partitions
+   * a = 10 or a = 20 -- Two partitions
+   * a IN (10, 20) -- Two partitions</code></pre>
+   * <p>
+   * This is a simple assumption, specific cases may need a more
+   * complex strategy.
    *
    * @return the number of logical partitions, which is the number
    * of OR clause terms (or 1 if no OR terms exist)
    */
-
   public int partitionCount() {
     return orTerms == null ? 1 : orTerms.values.length;
   }
@@ -80,11 +94,9 @@ public class FilterSpec {
    * the selectivity of multiple columns. Place a lower limit of 0.001 on
    * the result, assuming the user wants to return some rows.
    *
-   * @param andTerms list of AND filters (in CNF form), or null if no
-   * filters apply to a scan
-   * @return selectivity of the filters
+   * @return selectivity of the filters, which may be used in computing
+   * the cost of a scan after pushing filters into the scan
    */
-
   public double cnfSelectivity() {
     if (andTerms == null || andTerms.isEmpty()) {
       return 1.0;
@@ -102,11 +114,8 @@ public class FilterSpec {
    * the CNF terms further reduce. Selectivity will be at least
    * 0.001, which assumes the user wants to return some rows.
    *
-   * @param andTerms and filters for the scan, or null if none
-   * @param orTerms or filters for the scan, or null if none
    * @return combined selectivity
    */
-
   public double selectivity() {
     double selectivity = cnfSelectivity();
     if (orTerms != null) {
@@ -120,8 +129,7 @@ public class FilterSpec {
    * that end. Apply the selectivity of a set of filters to the given
    * row count to produce a reduced row count.
    *
-   * @param andTerms and filters for the scan, or null if none
-   * @param orTerms or filters for the scan, or null if none
+   * @param filterSpec combined CNF and DNF terms, or null if no filter
    * @param rowCount original estimated row count before filtering
    * @return adjusted estimated row count after filtering
    */

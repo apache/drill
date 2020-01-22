@@ -17,21 +17,6 @@
  */
 package org.apache.drill.exec.store.base;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.Reader;
-import java.io.StringReader;
-import java.net.URL;
-
-import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
 import org.junit.BeforeClass;
@@ -45,33 +30,24 @@ import org.junit.Test;
  * planning push down, but then glosses over the details at run time.
  * The focus here are plans: the tests plan a query then compare the
  * actual plan against and expected ("golden") plan.
- * <p>
- * If comparison fails, the tests print the actual plan to the console.
- * Use this, when adding new tests, to create the initial "golden" file.
- * Also, on failures, actual output is written to
- * <code>/tmp/drill/store/base</code>. You can use your IDE to compare
- * the actual and golden files to understand changes. If the changes
- * are expected, use that same IDE to copy changes from the actual
- * to the golden file.
- * <p>
- * The JSON properties of the serialized classes are all controlled
- * to have a fixed order to ensure that files compare across test
- * runs.
  */
 public class TestFilterPushDown extends ClusterTest {
 
   private static final String BASE_SQL = "SELECT a, b FROM dummy.myTable";
   private static final String BASE_WHERE = BASE_SQL +  " WHERE ";
+  private static final PlanVerifier verifier = new PlanVerifier("/store/base/");
+
+  // Uncomment the next line to save failing plans to /tmp
+  // static { verifier.saveResults = true; }
 
   @BeforeClass
   public static void setup() throws Exception {
     ClusterFixtureBuilder builder = new ClusterFixtureBuilder(dirTestWatcher);
     startCluster(builder);
 
-    StoragePluginRegistry pluginRegistry = cluster.drillbit().getContext().getStorage();
     DummyStoragePluginConfig config =
         new DummyStoragePluginConfig(true, true, false);
-    pluginRegistry.createOrUpdate("dummy", config, true);
+    cluster.defineStoragePlugin("dummy", config);
   }
 
   //-------------------------------------------------
@@ -87,7 +63,6 @@ public class TestFilterPushDown extends ClusterTest {
 
   // Predicate mismatch on type (id should be INT, dummy does
   // not try to convert)
-
   @Test
   public void testTypeMismatch() throws Exception
   {
@@ -95,7 +70,6 @@ public class TestFilterPushDown extends ClusterTest {
   }
 
   // Unsupported relop type (dummy supports limited set)
-
   @Test
   public void testUnsupportedOp() throws Exception
   {
@@ -103,7 +77,6 @@ public class TestFilterPushDown extends ClusterTest {
   }
 
   // Column reference rather than constant
-
   @Test
   public void testNonConst() throws Exception
   {
@@ -111,7 +84,6 @@ public class TestFilterPushDown extends ClusterTest {
   }
 
   // Unknown column (dummy only knows columns a and b)
-
   @Test
   public void testUnsupportedCol() throws Exception
   {
@@ -119,7 +91,6 @@ public class TestFilterPushDown extends ClusterTest {
   }
 
   // Not simple col = const
-
   @Test
   public void testComplexPred() throws Exception
   {
@@ -127,7 +98,6 @@ public class TestFilterPushDown extends ClusterTest {
   }
 
   // Complex schema paths
-
   @Test
   public void testComplexCols() throws Exception
   {
@@ -135,7 +105,6 @@ public class TestFilterPushDown extends ClusterTest {
   }
 
   // OR, can't push
-
   @Test
   public void testGenericOr() throws Exception
   {
@@ -144,7 +113,6 @@ public class TestFilterPushDown extends ClusterTest {
 
   // Listener rejects one of the expressions within an OR,
   // must reject the entire OR clause. (Dummy rejects >.)
-
   @Test
   public void testRejectOneOrExpr() throws Exception
   {
@@ -153,7 +121,6 @@ public class TestFilterPushDown extends ClusterTest {
 
   // Or clause expressions accepted, but whole of OR is rejected
   // because it is not all = operators. (Dummy accepts <.)
-
   @Test
   public void testNonEqOr() throws Exception
   {
@@ -170,15 +137,13 @@ public class TestFilterPushDown extends ClusterTest {
   // Supported filter push-down cases
 
   // Single matching predicate
-
   @Test
   public void testSingleCol() throws Exception
   {
     verifyPlan(BASE_WHERE + "a = 'bar'", "singleCol.json");
   }
 
-    // Two matching predicates, one is implicit (not in project list)
-
+  // Two matching predicates, one is implicit (not in project list)
   @Test
   public void testTwoCols() throws Exception
   {
@@ -186,7 +151,6 @@ public class TestFilterPushDown extends ClusterTest {
   }
 
   // Pushed and unpushed conditions
-
   @Test
   public void testMixedPreds() throws Exception
   {
@@ -194,7 +158,6 @@ public class TestFilterPushDown extends ClusterTest {
   }
 
   // Reversed predicate
-
   @Test
   public void testReversed() throws Exception
   {
@@ -203,7 +166,6 @@ public class TestFilterPushDown extends ClusterTest {
 
   // Join, same project list from both scans. (Calcite does filter push down
   // only once into a scan node shared by both scans.)
-
   @Test
   @Ignore("DRILL-7457")
   public void testSimpleJoin() throws Exception
@@ -215,7 +177,6 @@ public class TestFilterPushDown extends ClusterTest {
 
   // Similar case, but different project lists. So, two scan nodes and two
   // sets of filter push downs. (Difference is: t2.b --> t2.c)
-
   @Test
   @Ignore("DRILL-7457")
   public void testComplexJoin() throws Exception
@@ -226,7 +187,6 @@ public class TestFilterPushDown extends ClusterTest {
   }
 
   // IS NULL and IS NOT NULL. Has only one argument.
-
   @Test
   public void testIsNull() throws Exception
   {
@@ -237,7 +197,6 @@ public class TestFilterPushDown extends ClusterTest {
   // BETWEEN. Calcite rewrites a BETWEEN x AND y into
   // a >= x AND a <= y.
   // Since the dummy plug-in only handles <=, the => is left in the query.
-
   @Test
   public void testBetween() throws Exception
   {
@@ -247,7 +206,6 @@ public class TestFilterPushDown extends ClusterTest {
 
   // IN clause, handled as a = 'bar' OR a = 'foo'.
   // Presumption is that this turns into multiple scans
-
   @Test
   public void testIn() throws Exception
   {
@@ -256,7 +214,6 @@ public class TestFilterPushDown extends ClusterTest {
   }
 
   // Equivalent to the above
-
   @Test
   public void testInLikeOr() throws Exception
   {
@@ -264,76 +221,44 @@ public class TestFilterPushDown extends ClusterTest {
     verifyPlan(sql, "in.json");
   }
 
-  // Test constant value conversion: Dummy will convert a to VARCHAR
-
+  /**
+   * Test constant value conversion: Dummy will convert a to VARCHAR
+   */
   @Test
   public void testTypeConversion() throws Exception
   {
     verifyPlan(BASE_WHERE + "a = 10", "typeConversion.json");
   }
 
-  public String basePath = "/store/base/";
-  public boolean saveResults = true;
+  /**
+   * Test all constant data types. The Dummy will convert all to VARCHAR.
+   */
+  @Test
+  // Fails due to an unexplained difference.
+  // Expected: "ref" : "`T[0]¦¦**`",
+  // Actual:   "ref" : "`T[252]¦¦**`",
+  // Only fails in Maven, not in the IDE. Are internal tables
+  // numbered per session?
+  @Ignore
+  public void testAllTypes() throws Exception
+  {
+    String sql = "SELECT * FROM dummy.allTypes WHERE\n" +
+        "    v = 'varchar'\n" +
+        "AND b = true\n" +
+        "AND i = 10\n" +
+        "AND l = 5000000000\n" + // 5,000,000,000, too big for INT
+        "AND de = 123.45\n" + // All float-likes are converted to DECIMAL
+        // See http://drill.apache.org/docs/date-time-and-timestamp/
+        "AND da = DATE '2008-2-23'\n" +
+        "AND ti = TIME '12:23:34'\n" +
+        "AND ts = TIMESTAMP '2008-2-23 12:23:34.456'\n" +
+        "AND iy = INTERVAL '1' YEAR\n" +
+        "AND ids = INTERVAL '1 10:20:30' DAY TO SECOND";
+     verifyPlan(sql, "allTypes.json");
+  }
 
   protected void verifyPlan(String sql, String expectedFile) throws Exception {
-    String plan = client.queryBuilder().sql(sql).explainJson();
-    verify(plan, expectedFile);
-  }
-
-  protected void verify(String actual, String relativePath) {
-    URL url = getClass().getResource(basePath + relativePath);
-    if (url == null) {
-      System.out.println(actual);
-    }
-    assertNotNull("Golden file is missing: " + relativePath, url);
-    File resource = new File(url.getPath());
-    try {
-      verify(actual, resource);
-    } catch (AssertionError e) {
-      if (saveResults) {
-        System.out.println(actual);
-        File dest = new File("/tmp/drill", basePath);
-        File destFile = new File(dest, relativePath);
-        dest.mkdirs();
-        try (PrintWriter out = new PrintWriter(destFile)) {
-          out.println(actual);
-        } catch (FileNotFoundException e1) {
-          // Warn user, but don't fail test
-          System.err.print("Cannnot save actual results to ");
-          System.err.println(destFile.getAbsolutePath());
-        }
-      }
-      throw e;
-    }
-  }
-
-  protected void verify(String actual, File resource) {
-    try (Reader expected = new FileReader(resource)) {
-      verify(new StringReader(actual), expected);
-    } catch (FileNotFoundException e) {
-      fail("Missing resource file: " + resource.getAbsolutePath());
-    } catch (IOException e) {
-      fail(e.getMessage());
-    }
-  }
-
-  private void verify(Reader actualReader, Reader expectedReader) throws IOException {
-    BufferedReader actual = new BufferedReader(actualReader);
-    BufferedReader expected = new BufferedReader(expectedReader);
-    for (;;) {
-      String aLine = actual.readLine();
-      String eLine = expected.readLine();
-      if (aLine == null && eLine == null) {
-        break;
-      }
-      if (eLine == null) {
-        fail("Too many actual lines");
-      }
-      if (aLine == null) {
-        fail("Missing actual lines");
-      }
-      assertEquals(eLine, aLine);
-    }
+    verifier.verifyPlan(client, sql, expectedFile);
   }
 }
 

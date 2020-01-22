@@ -34,6 +34,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 public class DummySchemaFactory extends AbstractSchemaFactory {
 
   public static final String MY_TABLE = "myTable";
+  public static final String ALL_TYPES_TABLE = "allTypes";
 
   private final DummyStoragePlugin plugin;
 
@@ -62,7 +63,7 @@ public class DummySchemaFactory extends AbstractSchemaFactory {
       if (table != null) {
         return table;
       }
-      if (MY_TABLE.contentEquals(name)) {
+      if (getTableNames().contains(name)) {
         DummyScanSpec scanSpec = new DummyScanSpec(BaseStoragePlugin.DEFAULT_SCHEMA_NAME, name);
         return registerTable(name,
             new DynamicDrillTable(plugin, plugin.getName(), scanSpec));
@@ -77,7 +78,7 @@ public class DummySchemaFactory extends AbstractSchemaFactory {
 
     @Override
     public Set<String> getTableNames() {
-      return Sets.newHashSet(MY_TABLE);
+      return Sets.newHashSet(MY_TABLE, ALL_TYPES_TABLE);
     }
 
     @Override

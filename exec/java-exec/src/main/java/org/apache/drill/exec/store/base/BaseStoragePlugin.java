@@ -56,7 +56,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  *
  * @param <C> the storage plugin configuration class
  */
-
 public abstract class BaseStoragePlugin<C extends StoragePluginConfig>
     extends AbstractStoragePlugin {
 
@@ -108,7 +107,7 @@ public abstract class BaseStoragePlugin<C extends StoragePluginConfig>
      * more convenient to set this field after calling the
      * super class constructor.
      */
-    public BaseScanFactory<?,?,?,?> scanFactory;
+    public BaseScanFactory<?, ?, ?, ?> scanFactory;
   }
 
   protected final C config;
@@ -154,16 +153,16 @@ public abstract class BaseStoragePlugin<C extends StoragePluginConfig>
     return groupScan;
   }
 
-  public <T extends BaseSubScan> CloseableRecordBatch createScan(ExecutorFragmentContext context, BaseSubScan subScan)
+  public CloseableRecordBatch createScan(ExecutorFragmentContext context, BaseSubScan subScan)
       throws ExecutionSetupException {
     try {
-      final ScanFrameworkBuilder builder =
+      ScanFrameworkBuilder builder =
             options.scanFactory.scanBuilderShim(this, context.getOptions(), subScan);
       return builder.buildScanOperator(context, subScan);
-    } catch (final UserException e) {
+    } catch (UserException e) {
       // Rethrow user exceptions directly
       throw e;
-    } catch (final Throwable e) {
+    } catch (Throwable e) {
       // Wrap all others
       throw new ExecutionSetupException(e);
     }
@@ -209,11 +208,11 @@ public abstract class BaseStoragePlugin<C extends StoragePluginConfig>
       StoragePlugin plugin = engineRegistry.getPlugin(config);
       if (plugin == null) {
         throw UserException.systemError(null)
-          .message("Cannot find storage plugin for", config.getClass().getCanonicalName())
+          .message("Cannot find storage plugin for %s", config.getClass().getCanonicalName())
           .build(logger);
       }
       if (!(plugin instanceof BaseStoragePlugin)) {
-        throw UserException.systemError(null)
+        throw UserException.systemError()
           .message("Storage plugin %s is of wrong class: %s but should be %s",
               plugin.getName(), plugin.getClass().getCanonicalName(),
               BaseStoragePlugin.class.getSimpleName())
@@ -222,7 +221,7 @@ public abstract class BaseStoragePlugin<C extends StoragePluginConfig>
       return (BaseStoragePlugin<?>) plugin;
     } catch (ExecutionSetupException e) {
       throw UserException.systemError(e)
-        .message("Cannot find storage plugin for", config.getClass().getCanonicalName())
+        .message("Cannot find storage plugin for %s", config.getClass().getCanonicalName())
         .build(logger);
     }
   }

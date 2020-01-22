@@ -251,26 +251,6 @@ public enum PlannerPhase {
     this.description = description;
   }
 
-  /**
-   * Filter push-down is best done during logical planning so that the result can
-   * influence parallelization in the physical phase. The specific phase differs
-   * depending on which planning mode is enabled. This check hides those details
-   * from storage plugins that simply want to know "should I add my filter
-   * push-down rules in the given phase?"
-   *
-   * @return true if filter push-down rules should be applied in this phase
-   */
-  public boolean isFilterPushDownPhase() {
-    switch (this) {
-    case LOGICAL_PRUNE_AND_JOIN: // HEP is disabled
-    case PARTITION_PRUNING:      // HEP partition push-down enabled
-    case LOGICAL_PRUNE:          // HEP partition push-down disabled
-      return true;
-    default:
-      return false;
-    }
-  }
-
   public abstract RuleSet getRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins);
 
   private static RuleSet getStorageRules(OptimizerRulesContext context, Collection<StoragePlugin> plugins,

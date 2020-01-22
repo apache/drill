@@ -47,6 +47,10 @@ public class DummyFilterPushDownListener implements FilterPushDownListener {
         new DummyFilterPushDownListener(config));
   }
 
+  /**
+   * Prefix that appears in logging of the Calcite rules used by
+   * filter push-down.
+   */
   @Override
   public String prefix() { return "Dummy"; }
 
@@ -55,6 +59,13 @@ public class DummyFilterPushDownListener implements FilterPushDownListener {
     return groupScan instanceof DummyGroupScan;
   }
 
+  /**
+   * Report if we need to apply the rule. Here it means not to
+   * apply the rules to this group scan if we've already done so.
+   * The rules may still be applied multiple times to different
+   * group scan "versions" as Calcite explores different plan
+   * variations.
+   */
   @Override
   public boolean needsApplication(GroupScan groupScan) {
     DummyGroupScan dummyScan = (DummyGroupScan) groupScan;
@@ -65,11 +76,18 @@ public class DummyFilterPushDownListener implements FilterPushDownListener {
   public RelOp accept(GroupScan groupScan, RelOp relOp) {
 
     // Determine if filter applies to this scan
-
     DummyGroupScan dummyScan = (DummyGroupScan) groupScan;
     return dummyScan.acceptFilter(relOp);
   }
 
+  /**
+   * Accept the analyzed constant expressions (or not.) Here, we let
+   * the group scan decide based on some ad-hoc rules established for
+   * testing. We return the the RexNodes if the plugin is configured
+   * to keep the nodes in the query, we discard them (claim that the
+   * scan will implement them) otherwise. This allows testing both
+   * paths. A real implementation would do one or the other.
+   */
   @Override
   public Pair<GroupScan, List<RexNode>> transform(GroupScan groupScan,
       List<Pair<RexNode, RelOp>> andTerms, Pair<RexNode, DisjunctionFilterSpec> orTerm) {
@@ -77,7 +95,9 @@ public class DummyFilterPushDownListener implements FilterPushDownListener {
     if (andTerms == null || andTerms.isEmpty()) {
       andExprs = null;
     } else {
-      andExprs = andTerms.stream().map(t -> t.right).collect(Collectors.toList());
+      andExprs = andTerms.stream()
+          .map(t -> t.right)
+          .collect(Collectors.toList());
     }
     DisjunctionFilterSpec orExprs;
     if (orTerm == null) {

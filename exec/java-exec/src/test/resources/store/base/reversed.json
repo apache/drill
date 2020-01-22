@@ -32,7 +32,7 @@
     },
     "cost" : {
       "memoryCost" : 1.6777216E7,
-      "outputRowCount" : 4500.0
+      "outputRowCount" : 5000.0
     },
     "config" : {
       "type" : "dummy",
@@ -57,7 +57,7 @@
     "maxAllocation" : 10000000000,
     "cost" : {
       "memoryCost" : 1.6777216E7,
-      "outputRowCount" : 4500.0
+      "outputRowCount" : 5000.0
     }
   }, {
     "pop" : "screen",
@@ -67,7 +67,7 @@
     "maxAllocation" : 10000000000,
     "cost" : {
       "memoryCost" : 1.6777216E7,
-      "outputRowCount" : 4500.0
+      "outputRowCount" : 5000.0
     }
   } ]
 }

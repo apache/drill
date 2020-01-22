@@ -21,22 +21,36 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.calcite.util.Pair;
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.ValueExpressions.BooleanExpression;
+import org.apache.drill.common.expression.ValueExpressions.DateExpression;
+import org.apache.drill.common.expression.ValueExpressions.DoubleExpression;
+import org.apache.drill.common.expression.ValueExpressions.FloatExpression;
 import org.apache.drill.common.expression.ValueExpressions.IntExpression;
+import org.apache.drill.common.expression.ValueExpressions.IntervalDayExpression;
+import org.apache.drill.common.expression.ValueExpressions.IntervalYearExpression;
 import org.apache.drill.common.expression.ValueExpressions.LongExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
+import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
+import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
+import org.apache.drill.common.expression.ValueExpressions.VarDecimalExpression;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.planner.PlannerPhase;
 
 public class FilterPushDownUtils {
 
   /**
    * Extracted selected constants from an argument. Finds literals, omits
    * expressions, columns and so on.
+   * <p>
+   * The core types (INT, BIGINT, BIT (Boolean), VARCHAR and VARDECIMAL) are
+   * known to work. The others may or may not work depending on Drill's
+   * parser/planner; testing is needed.
    */
 
   private static class ConstantExtractor extends AbstractExprVisitor<ConstantHolder, Void, RuntimeException> {
@@ -61,7 +75,60 @@ public class FilterPushDownUtils {
       return new ConstantHolder(MinorType.VARCHAR, expr.getString());
     }
 
+    // Float mapped to Double for storage to simplify clients
+    // Not clear that Drill generates floats rather than doubles.
     @Override
+    public ConstantHolder visitFloatConstant(FloatExpression expr, Void value) throws RuntimeException {
+      return new ConstantHolder(MinorType.FLOAT8, (double) expr.getFloat());
+    }
+
+    // Seems to not be used. Anything float-like is instead represented as a
+    // VarDecimal constant.
+    @Override
+    public ConstantHolder visitDoubleConstant(DoubleExpression expr, Void value) throws RuntimeException {
+      return new ConstantHolder(MinorType.FLOAT8, expr.getDouble());
+    }
+
+    // Legacy decimals no longer supported, so not implemented.
+
+    @Override
+    public ConstantHolder visitVarDecimalConstant(VarDecimalExpression expr, Void value) throws RuntimeException {
+      return new ConstantHolder(MinorType.VARDECIMAL, expr.getBigDecimal());
+    }
+
+    // Example: DATE '2008-2-23'
+    @Override
+    public ConstantHolder visitDateConstant(DateExpression expr, Void value) throws RuntimeException {
+      return new ConstantHolder(MinorType.DATE, expr.getDate());
+    }
+
+    // Example: TIME '12:23:34'
+    @Override
+    public ConstantHolder visitTimeConstant(TimeExpression expr, Void value) throws RuntimeException {
+      return new ConstantHolder(MinorType.TIME, expr.getTime());
+    }
+
+    // Example: TIMESTAMP '2008-2-23 12:23:34.456'
+    @Override
+    public ConstantHolder visitTimeStampConstant(TimeStampExpression expr, Void value) throws RuntimeException {
+      return new ConstantHolder(MinorType.TIMESTAMP, expr.getTimeStamp());
+    }
+
+    // Example: INTERVAL '1' YEAR
+    @Override
+    public ConstantHolder visitIntervalYearConstant(IntervalYearExpression expr, Void value) throws RuntimeException {
+      return new ConstantHolder(MinorType.INTERVALYEAR, expr.getIntervalYear());
+    }
+
+    // Example: INTERVAL '1 10:20:30' DAY TO SECOND
+    // This field has two parts, encoded as a Pair.
+    @Override
+    public ConstantHolder visitIntervalDayConstant(IntervalDayExpression expr, Void value) throws RuntimeException {
+      return new ConstantHolder(MinorType.INTERVALDAY,
+          Pair.of(expr.getIntervalDay(), expr.getIntervalMillis()));
+    }
+
+   @Override
     public ConstantHolder visitUnknown(LogicalExpression e, Void valueArg) throws RuntimeException {
       return null;
     }
@@ -244,4 +311,24 @@ public class FilterPushDownUtils {
   private static final ColRefExtractor COL_REF_EXTRACTOR = new ColRefExtractor();
 
   public static final RelOpExtractor REL_OP_EXTRACTOR = new RelOpExtractor();
+
+  /**
+   * Filter push-down is best done during logical planning so that the result can
+   * influence parallelization in the physical phase. The specific phase differs
+   * depending on which planning mode is enabled. This check hides those details
+   * from storage plugins that simply want to know "should I add my filter
+   * push-down rules in the given phase?"
+   *
+   * @return true if filter push-down rules should be applied in this phase
+   */
+  public static boolean isFilterPushDownPhase(PlannerPhase phase) {
+    switch (phase) {
+    case LOGICAL_PRUNE_AND_JOIN: // HEP is disabled
+    case PARTITION_PRUNING:      // HEP partition push-down enabled
+    case LOGICAL_PRUNE:          // HEP partition push-down disabled
+      return true;
+    default:
+      return false;
+    }
+  }
 }

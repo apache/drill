@@ -45,7 +45,6 @@ import org.apache.drill.exec.planner.physical.FilterPrel;
 import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 /**
  * Generalized filter push-down strategy which performs all the tree-walking
@@ -60,16 +59,14 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
  * }
  * </pre></code>
  */
-
 public class FilterPushDownStrategy {
 
   private static final Collection<String> BANNED_OPERATORS =
-      Lists.newArrayList("flatten");
+      Collections.singletonList("flatten");
 
   /**
    * Base rule that passes target information to the push-down strategy
    */
-
   private static abstract class AbstractFilterPushDownRule extends StoragePluginOptimizerRule {
 
     protected final FilterPushDownStrategy strategy;
@@ -84,7 +81,6 @@ public class FilterPushDownStrategy {
   /**
    * Calcite rule for FILTER --> PROJECT --> SCAN
    */
-
   private static class ProjectAndFilterRule extends AbstractFilterPushDownRule {
 
     private ProjectAndFilterRule(FilterPushDownStrategy strategy) {
@@ -114,7 +110,6 @@ public class FilterPushDownStrategy {
   /**
    * Calcite rule for FILTER --> SCAN
    */
-
   private static class FilterWithoutProjectRule extends AbstractFilterPushDownRule {
 
     private FilterWithoutProjectRule(FilterPushDownStrategy strategy) {
@@ -166,13 +161,11 @@ public class FilterPushDownStrategy {
   public void onMatch(RelOptRuleCall call, DrillFilterRel filter, DrillProjectRel project, DrillScanRel scan) {
 
     // Skip if rule has already been applied.
-
     if (!listener.needsApplication(scan.getGroupScan())) {
       return;
     }
 
     // Predicates which cannot be converted to a filter predicate
-
     List<RexNode> nonConvertedPreds = new ArrayList<>();
 
     List<Pair<RexNode, List<RelOp>>> cnfTerms =
@@ -195,14 +188,12 @@ public class FilterPushDownStrategy {
     }
 
     // Listener rejected the DNF terms
-
     GroupScan newGroupScan = translated.left;
     if (newGroupScan == null) {
       return;
     }
 
     // Gather unqualified and rewritten predicates
-
     List<RexNode> remainingPreds = new ArrayList<>();
     remainingPreds.addAll(nonConvertedPreds);
     if (translated.right != null) {
@@ -210,7 +201,6 @@ public class FilterPushDownStrategy {
     }
 
     // Replace the child with the new filter on top of the child/scan
-
     call.transformTo(
         rebuildTree(scan, newGroupScan, filter, project, remainingPreds));
   }
@@ -220,7 +210,6 @@ public class FilterPushDownStrategy {
       DrillProjectRel project, DrillScanRel scan) {
 
     // Get the filter expression
-
     RexNode condition;
     if (project == null) {
       condition = filter.getCondition();
@@ -232,7 +221,6 @@ public class FilterPushDownStrategy {
     // Skip if no expression or expression is trivial.
     // This seems to never happen because Calcite optimizes away
     // any expression of the form WHERE true, 1 = 1 or 0 = 1.
-
     if (condition == null || condition.isAlwaysTrue() || condition.isAlwaysFalse()) {
       return null;
     }
@@ -240,7 +228,6 @@ public class FilterPushDownStrategy {
     // Get a conjunctions of the filter condition. For each conjunction, if it refers
     // to ITEM or FLATTEN expression then it cannot be pushed down. Otherwise, it's
     // qualified to be pushed down.
-
     List<RexNode> filterPreds = RelOptUtil.conjunctions(
         RexUtil.toCnf(filter.getCluster().getRexBuilder(), condition));
 
@@ -263,7 +250,6 @@ public class FilterPushDownStrategy {
     }
 
     // Extract an AND term, which may be an OR expression.
-
     LogicalExpression drillPredicate = DrillOptiq.toDrill(parseContext, scan, pred);
     List<RelOp> relOps = drillPredicate.accept(FilterPushDownUtils.REL_OP_EXTRACTOR, null);
     if (relOps == null || relOps.isEmpty()) {
@@ -272,13 +258,11 @@ public class FilterPushDownStrategy {
 
     // Check if each term can be pushed down, and, if so, return a new RelOp
     // with the value normalized.
-
     List<RelOp> normalized = new ArrayList<>();
     for (RelOp relOp : relOps) {
       RelOp rewritten = listener.accept(scan.getGroupScan(), relOp);
 
       // Must discard the entire OR clause if any part is rejected
-
       if (rewritten == null) {
         return null;
       }
@@ -298,19 +282,21 @@ public class FilterPushDownStrategy {
    * (x AND y AND b)</pre></code>
    * <p>
    * Input is in the first form, output is in the second.
+   *
+   * @param cnfTerms List of (Calcite node, Relop) pairs that give the
+   * CNF terms. More than one RelOp can occur for each Calcite Rex node.
+   * @return a pair of CNF and DNF parts, each with their corresponding
+   * Calcite nodes, ready to pass to the {@link FilterPushDownListener.}
    */
-
   private Pair<List<Pair<RexNode, RelOp>>, Pair<RexNode, DisjunctionFilterSpec>>
       convertToFilterSpec(List<Pair<RexNode, List<RelOp>>> cnfTerms) {
 
     // If no qualified predicates, nothing to do.
-
     if (cnfTerms.isEmpty()) {
       return null;
     }
 
     // Any OR clauses?
-
     Pair<RexNode, List<RelOp>> orTerm = null;
     List<Pair<RexNode, RelOp>> andTerms = new ArrayList<>();
     for (Pair<RexNode, List<RelOp>> cnfTerm : cnfTerms) {
@@ -330,18 +316,15 @@ public class FilterPushDownStrategy {
 
       // No OR, all are simple CNF terms
       // ((x), (y)) --> ((x, y))
-
       return Pair.of(andTerms, null);
     }
 
     // If an OR clause, all must be on the same column, all
     // must be equality and all must be of the same type.
-
     List<RelOp> orRelops = orTerm.right;
     assert orRelops.size() > 1; // Sanity check
 
     // All OR terms must be equality
-
     for (RelOp relOp : orRelops) {
       if (relOp.op != RelOp.Op.EQ) {
         return null;
@@ -349,7 +332,6 @@ public class FilterPushDownStrategy {
     }
 
     // All must be for the same column and of the same type.
-
     RelOp first = orRelops.get(0);
     String colName = first.colName;
     MinorType valueType = first.value.type;
@@ -362,26 +344,35 @@ public class FilterPushDownStrategy {
       // The following should not happen if the listener is well-behaved:
       // converted all values for a column to a single type. But if the listener
       // is lazy, and did not do so, we reject the OR expression here.
-
       if (orRelop.value.type != valueType) {
         return null;
       }
     }
 
     // Convert to a disjunction filter
-
     Pair<RexNode, DisjunctionFilterSpec> disjunction =
         Pair.of(orTerm.left, new DisjunctionFilterSpec(orRelops));
     return Pair.of(andTerms, disjunction);
   }
 
+  /**
+   * Rebuilds the query plan subtree to include any substitutions and removals requested
+   * by the listener.
+   *
+   * @param oldScan the original scan node
+   * @param newGroupScan the optional replacement scan node given by the listener
+   * @param filter the original filter
+   * @param project the original optional project node
+   * @param remainingPreds the Calcite predicates which the listener *does not* handle
+   * and which should remain in the plan tree
+   * @return a rebuilt query subtree
+   */
   private RelNode rebuildTree(DrillScanRel oldScan, GroupScan newGroupScan, DrillFilterRel filter,
       DrillProjectRel project, List<RexNode> remainingPreds) {
 
     // Rebuild the subtree with transformed nodes.
 
     // Scan: new if available, else existing.
-
     RelNode newNode;
     if (newGroupScan == null) {
       newNode = oldScan;
@@ -391,19 +382,16 @@ public class FilterPushDownStrategy {
     }
 
     // Copy project, if exists
-
     if (project != null) {
       newNode = project.copy(project.getTraitSet(), Collections.singletonList(newNode));
     }
 
     // Add filter, if any predicates remain.
-
     if (!remainingPreds.isEmpty()) {
 
       // If some of the predicates weren't used in the filter, creates new filter with them
       // on top of current scan. Excludes the case when all predicates weren't used in the filter.
       // FILTER(a, b, c) --> SCAN becomes FILTER(a, d) --> SCAN
-
       newNode = filter.copy(filter.getTraitSet(), newNode,
           RexUtil.composeConjunction(
               filter.getCluster().getRexBuilder(),

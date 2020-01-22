@@ -54,7 +54,6 @@ public class DummyStoragePluginConfig extends StoragePluginConfig {
    * the plan, or remove them (because they are done (simulated)
    * in the reader.
    */
-
   private final boolean keepFilters;
 
   public DummyStoragePluginConfig(
@@ -77,6 +76,11 @@ public class DummyStoragePluginConfig extends StoragePluginConfig {
   public boolean keepFilters() { return keepFilters; }
 
   @Override
+  public int hashCode() {
+    return Objects.hashCode(enableProjectPushDown, enableFilterPushDown, keepFilters);
+  }
+
+  @Override
   public boolean equals(Object o) {
     if (o == this) {
       return true;
@@ -88,11 +92,6 @@ public class DummyStoragePluginConfig extends StoragePluginConfig {
     return enableProjectPushDown == other.enableProjectPushDown &&
            enableFilterPushDown == other.enableFilterPushDown &&
            keepFilters == other.keepFilters;
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hashCode(enableProjectPushDown, enableFilterPushDown, keepFilters);
   }
 
   @Override

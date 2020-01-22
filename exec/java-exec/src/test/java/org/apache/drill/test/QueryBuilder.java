@@ -700,6 +700,19 @@ public class QueryBuilder {
 
   /**
    * Submits explain plan statement
+   * and creates plan matcher instance based on return query plan
+   * in JSON format.
+   *
+   * @return plan matcher
+   * @throws Exception if the query fails
+   */
+  public PlanMatcher jsonPlanMatcher() throws Exception {
+    String plan = explainText();
+    return new PlanMatcher(plan);
+  }
+
+  /**
+   * Submits explain plan statement
    * and creates plan matcher instance based on return query plan with all attributes.
    *
    * @return plan matcher
@@ -839,9 +852,9 @@ public class QueryBuilder {
      *  <code>planMatcher.exclude("usedMetadataSummaryFile = true")</code></li>
      * </ul>
      *
-     *  Calling <code>planMatcher.match()</code> method would check that given patterns are present
-     *  or absent in the given plan. Method execution will fail with {@link AssertionError}
-     *  only if expected pattern was not matched or unexpected pattern was matched.
+     * Calling <code>planMatcher.match()</code> method would check that given patterns are present
+     * or absent in the given plan. Method execution will fail with {@link AssertionError}
+     * only if expected pattern was not matched or unexpected pattern was matched.
      */
     public void match() {
       included.forEach(pattern -> match(pattern, true));

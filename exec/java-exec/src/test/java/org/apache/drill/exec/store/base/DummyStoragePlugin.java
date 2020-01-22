@@ -37,6 +37,7 @@ import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.SessionOptionManager;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
+import org.apache.drill.exec.store.base.filter.FilterPushDownUtils;
 import org.apache.drill.exec.store.base.filter.RelOp;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 
@@ -108,9 +109,10 @@ public class DummyStoragePlugin
     // Push-down planning is done at the logical phase so it can
     // influence parallelization in the physical phase. Note that many
     // existing plugins perform filter push-down at the physical
-    // phase.
+    // phase, which also works fine if push-down is independent of
+    // parallelization.
 
-    if (phase.isFilterPushDownPhase() && config.enableFilterPushDown()) {
+    if (FilterPushDownUtils.isFilterPushDownPhase(phase) && config.enableFilterPushDown()) {
       return DummyFilterPushDownListener.rulesFor(optimizerContext, config);
     }
     return ImmutableSet.of();
