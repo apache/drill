@@ -27,9 +27,7 @@ import org.apache.drill.exec.planner.physical.ScanPrel;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.plan.RelOptRuleCall;
-import org.apache.calcite.plan.RelOptRuleOperand;
 import org.apache.calcite.rex.RexNode;
-
 
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.slf4j.Logger;
@@ -45,12 +43,8 @@ public class CassandraPushDownFilterForScan extends StoragePluginOptimizerRule {
   public static final StoragePluginOptimizerRule INSTANCE = new CassandraPushDownFilterForScan();
 
   private CassandraPushDownFilterForScan() {
-    super(RelOptHelper.some(FilterPrel.class, RelOptHelper.any(ScanPrel.class)), "CassandraPushDownFilterForScan");
-  }
 
-  public CassandraPushDownFilterForScan(RelOptRuleOperand operand, String description) {
-    super(operand, description);
-    logger.debug("Filter push down started.");
+    super(RelOptHelper.some(FilterPrel.class, RelOptHelper.any(ScanPrel.class)), "CassandraPushDownFilterForScan");
   }
 
   @Override

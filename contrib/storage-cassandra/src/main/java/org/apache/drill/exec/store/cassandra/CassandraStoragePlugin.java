@@ -24,6 +24,7 @@ import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.AutoCloseables;
+import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
@@ -41,7 +42,7 @@ public class CassandraStoragePlugin extends AbstractStoragePlugin {
 
   private final CassandraStoragePluginConfig cassandraConfig;
 
-  private final CassandraSchemaFactory schemaFactory;
+  private final DrillCassandraSchemaFactory schemaFactory;
 
   private final Cluster cluster;
 
@@ -51,7 +52,7 @@ public class CassandraStoragePlugin extends AbstractStoragePlugin {
     super(context, name);
     this.context = context;
     this.cassandraConfig = cassandraConfig;
-    this.schemaFactory = new CassandraSchemaFactory(this, name);
+    this.schemaFactory = new DrillCassandraSchemaFactory(this, name);
 
     cluster = CassandraConnectionManager.getCluster(cassandraConfig.getHosts(), cassandraConfig.getPort());
     session = cluster.connect();
@@ -82,7 +83,7 @@ public class CassandraStoragePlugin extends AbstractStoragePlugin {
     return new CassandraGroupScan(userName, this, cassandraScanSpec, null);
   }
 
-  public Set<StoragePluginOptimizerRule> getOptimizerRules() {
+  public Set<StoragePluginOptimizerRule> getPhysicalOptimizerRules(OptimizerRulesContext optimizerRulesContext) {
     return ImmutableSet.of(CassandraPushDownFilterForScan.INSTANCE);
   }
 

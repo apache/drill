@@ -49,6 +49,11 @@ limitations under the License.
       <artifactId>drill-java-exec</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.apache.calcite</groupId>
+      <artifactId>calcite-cassandra</artifactId>
+      <version>1.21.0</version>
+    </dependency>
 
     <!-- Test dependencies -->
     <dependency>

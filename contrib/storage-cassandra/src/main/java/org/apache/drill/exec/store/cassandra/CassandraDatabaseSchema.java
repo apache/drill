@@ -26,7 +26,7 @@ import org.apache.calcite.schema.Table;
 
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.store.AbstractSchema;
-import org.apache.drill.exec.store.cassandra.CassandraSchemaFactory.CassandraSchema;
+import org.apache.drill.exec.store.cassandra.DrillCassandraSchemaFactory.DrillCassandraSchema;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 import org.slf4j.Logger;
@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
 public class CassandraDatabaseSchema extends AbstractSchema {
   private static final Logger logger = LoggerFactory.getLogger(CassandraDatabaseSchema.class);
 
-  private final CassandraSchema cassandraSchema;
+  private final DrillCassandraSchema drillCassandraSchema;
 
   private final CassandraStoragePlugin plugin;
 
@@ -47,9 +47,9 @@ public class CassandraDatabaseSchema extends AbstractSchema {
 
   private final Map<String, DynamicDrillTable> activeTables = new HashMap<>();
 
-  public CassandraDatabaseSchema(CassandraStoragePlugin plugin, List<String> tableList, CassandraSchema cassandraSchema, String name) {
-    super(cassandraSchema.getSchemaPath(), name);
-    this.cassandraSchema = cassandraSchema;
+  public CassandraDatabaseSchema(CassandraStoragePlugin plugin, List<String> tableList, DrillCassandraSchema drillCassandraSchema, String name) {
+    super(drillCassandraSchema.getSchemaPath(), name);
+    this.drillCassandraSchema = drillCassandraSchema;
     this.tables = Sets.newHashSet(tableList);
     this.plugin = plugin;
     this.keyspaceName = name;

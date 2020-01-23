@@ -141,8 +141,11 @@ public class CassandraRecordReader extends AbstractRecordReader implements Drill
       List<String> host = subScanSpec.getHosts();
       int port = subScanSpec.getPort();
 
+
+      // Cassandra sessions are expensive to open, so the connection is opened in the
+      // Storage plugin class and closed when Drill is shut down OR when the storage plugin
+      // is disabled.
       if (plugin.getCluster() == null || plugin.getCluster().isClosed() ) {
-        System.out.println("Opening connection to Cassandra via Record reader.");
         cluster = CassandraConnectionManager.getCluster(host, port);
         session = cluster.connect();
       } else {
@@ -150,7 +153,11 @@ public class CassandraRecordReader extends AbstractRecordReader implements Drill
         session = plugin.getSession();
       }
 
-      List<ColumnMetadata> partitioncols = cluster.getMetadata().getKeyspace(subScanSpec.getKeyspace()).getTable(subScanSpec.getTable()).getPartitionKey();
+      List<ColumnMetadata> partitioncols = cluster
+        .getMetadata()
+        .getKeyspace(subScanSpec.getKeyspace())
+        .getTable(subScanSpec.getTable())
+        .getPartitionKey();
 
       String[] partitionkeys = new String[partitioncols.size()];
       for (int index = 0; index < partitioncols.size(); index++) {
@@ -159,20 +166,10 @@ public class CassandraRecordReader extends AbstractRecordReader implements Drill
 
       Statement q;
 
-
-      // TODO Not sure why this is here...
-      /* Check projected columns */
-      for (SchemaPath path : getColumns()) {
-        if (isStarQuery()) {
-          allColumnsProjected = true;
-          break;
-        }
-      }
-
       /* Project only required columns */
       Select.Where where;
       Select.Selection select = QueryBuilder.select();
-      if (allColumnsProjected) {
+      if (isStarQuery()) {
         where = select.all().from(subScanSpec.getKeyspace(), subScanSpec.getTable()).where();
       } else {
         for (SchemaPath path : getColumns()) {
@@ -292,15 +289,9 @@ public class CassandraRecordReader extends AbstractRecordReader implements Drill
 
   @Override
   public void close() {
-    /*if (cluster != null) {
-      cluster.close();
-      cluster = null;
-    }
-
-    if (session!= null) {
-      session.close();
-      session = null;
-    }*/
+    // Do nothing.
+    // We want to keep the Cassandra session open until Drill closes
+    return;
   }
 
   /**

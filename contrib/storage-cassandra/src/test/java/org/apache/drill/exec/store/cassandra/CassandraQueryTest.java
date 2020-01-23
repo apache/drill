@@ -102,6 +102,24 @@ public class CassandraQueryTest extends ClusterTest {
   }
 
   @Test
+  public void testEqualToFilter() throws Exception {
+    String sql = "SELECT `id` FROM cassandra.drilltest.trending_now WHERE pog_rank = 5";
+    QueryBuilder q = queryBuilder().sql(sql);
+    RowSet results = q.rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("id", TypeProtos.MinorType.VARCHAR)
+      .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow("id0004")
+      .addRow("id0004")
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
   public void testGreaterThanOrEqualTo() throws Exception {
     String sql = "SELECT `id` FROM cassandra.drilltest.trending_now WHERE pog_rank >= 5";
     QueryBuilder q = queryBuilder().sql(sql);

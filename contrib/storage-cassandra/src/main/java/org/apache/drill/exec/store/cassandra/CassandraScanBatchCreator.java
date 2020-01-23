@@ -35,28 +35,28 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class CassandraScanBatchCreator implements BatchCreator<CassandraSubScan>{
-    private static final Logger logger = LoggerFactory.getLogger(CassandraScanBatchCreator.class);
+  private static final Logger logger = LoggerFactory.getLogger(CassandraScanBatchCreator.class);
 
-    @Override
-    public ScanBatch getBatch(ExecutorFragmentContext context, CassandraSubScan subScan, List<RecordBatch> children)
-      throws ExecutionSetupException {
+  @Override
+  public ScanBatch getBatch(ExecutorFragmentContext context, CassandraSubScan subScan, List<RecordBatch> children)
+    throws ExecutionSetupException {
 
-        logger.debug("Entering scan batch creator: {}", subScan.toString());
+    logger.debug("Entering scan batch creator: {}", subScan.toString());
 
-        Preconditions.checkArgument(children.isEmpty());
-        List<RecordReader> readers = Lists.newArrayList();
-        List<SchemaPath> columns = null;
-        for(CassandraSubScan.CassandraSubScanSpec scanSpec : subScan.getChunkScanSpecList()){
-            try {
-                if ((columns = subScan.getColumns())==null) {
-                    columns = GroupScan.ALL_COLUMNS;
-                }
-                readers.add(new CassandraRecordReader(subScan.getCassandraStoragePlugin().getConfig(), scanSpec, columns, context, subScan.getCassandraStoragePlugin()));
-            } catch (Exception e1) {
-                throw new ExecutionSetupException(e1);
-            }
+    Preconditions.checkArgument(children.isEmpty());
+    List<RecordReader> readers = Lists.newArrayList();
+    List<SchemaPath> columns = null;
+    for(CassandraSubScan.CassandraSubScanSpec scanSpec : subScan.getChunkScanSpecList()){
+      try {
+        if ((columns = subScan.getColumns())==null) {
+          columns = GroupScan.ALL_COLUMNS;
         }
-        return new ScanBatch(subScan, context, readers);
+        readers.add(new CassandraRecordReader(subScan.getCassandraStoragePlugin().getConfig(), scanSpec, columns, context, subScan.getCassandraStoragePlugin()));
+      } catch (Exception e1) {
+        throw new ExecutionSetupException(e1);
+      }
     }
+    return new ScanBatch(subScan, context, readers);
+  }
 
 }
