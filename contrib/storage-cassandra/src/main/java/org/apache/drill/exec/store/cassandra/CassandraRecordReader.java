@@ -36,6 +36,7 @@ import com.datastax.driver.core.Session;
 import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Select;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -280,9 +281,10 @@ public class CassandraRecordReader extends AbstractRecordReader implements Drill
       vector.getMutator().setSafe(rowCount, val.getBytes(), start, end - start);
       vectors.add(vector);
     } catch (Exception e) {
-      e.printStackTrace();
-
-      throw new DrillRuntimeException(e);
+      throw UserException
+        .dataReadError()
+        .message("Error reading data from Cassandra: %s", e.getMessage())
+        .build(logger);
     }
   }
 
@@ -335,8 +337,12 @@ public class CassandraRecordReader extends AbstractRecordReader implements Drill
         value = null;  // TODO Should not return null..
       }
     } catch (Exception e) {
-      throw new DrillRuntimeException(String.format("Unable to get Cassandra column: %s, of type: %s.", colname,
-        r.getColumnDefinitions().getType(colname).asFunctionParameterString()));
+      throw UserException
+        .dataReadError()
+        .message("Unable to get Cassandra column: %s, of type: %s.", colname,
+          r.getColumnDefinitions().getType(colname).asFunctionParameterString())
+        .addContext(e.getMessage())
+        .build(logger);
     }
     return value;
   }

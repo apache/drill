@@ -143,8 +143,18 @@ public class DrillCassandraSchemaFactory extends AbstractSchemaFactory {
 
     private final Map<String, DynamicDrillTable> activeTables = new HashMap<>();
 
+    /*
+    public CassandraSchema(String host, int port, String keyspace, String username, String password,
+        SchemaPlus parentSchema, String name)
+     */
+
+    private final CassandraSchema cassandraSchema;
+
     public DrillCassandraSchema(String name) {
+
       super(Collections.emptyList(), name);
+      cassandraSchema = new CassandraSchema(plugin.getConfig().hosts.get(0),
+        plugin.getConfig().getPort(), )
     }
 
     @Override
