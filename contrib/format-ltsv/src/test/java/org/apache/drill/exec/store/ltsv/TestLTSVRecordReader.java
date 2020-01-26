@@ -19,7 +19,6 @@ package org.apache.drill.exec.store.ltsv;
 
 import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.physical.rowSet.RowSet;
@@ -27,8 +26,6 @@ import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.store.dfs.ZipCodec;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
@@ -50,8 +47,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -121,12 +116,28 @@ public class TestLTSVRecordReader extends ClusterTest {
 
   @Test
   public void testQueryWithConditions() throws Exception {
-    testBuilder()
-      .sqlQuery("SELECT * FROM cp.`ltsv/simple.ltsv` WHERE reqtime > 3.0")
-      .unOrdered()
-      .baselineColumns("host", "forwardedfor", "req", "status", "size", "referer", "ua", "reqtime", "apptime", "vhost")
-      .baselineValues("xxx.xxx.xxx.xxx", "-", "GET /v1/yyy HTTP/1.1", "200", "412", "-", "Java/1.8.0_201", "3.580", "3.580", "api.example.com")
-      .go();
+    String sql = "SELECT * FROM cp.`ltsv/simple.ltsv` WHERE reqtime > 3.0";
+
+    QueryBuilder q = client.queryBuilder().sql(sql);
+    RowSet results = q.rowSet();
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("host",  TypeProtos.MinorType.VARCHAR)
+      .addNullable("forwardedfor",  TypeProtos.MinorType.VARCHAR)
+      .addNullable("req",  TypeProtos.MinorType.VARCHAR)
+      .addNullable("status",  TypeProtos.MinorType.VARCHAR)
+      .addNullable("size",  TypeProtos.MinorType.VARCHAR)
+      .addNullable("referer",  TypeProtos.MinorType.VARCHAR)
+      .addNullable("ua",  TypeProtos.MinorType.VARCHAR)
+      .addNullable("reqtime",  TypeProtos.MinorType.VARCHAR)
+      .addNullable("apptime",  TypeProtos.MinorType.VARCHAR)
+      .addNullable("vhost",  TypeProtos.MinorType.VARCHAR)
+      .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow("xxx.xxx.xxx.xxx", "-", "GET /v1/yyy HTTP/1.1", "200", "412", "-", "Java/1.8.0_201", "3.580", "3.580", "api.example.com")
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
   }
 
   @Test

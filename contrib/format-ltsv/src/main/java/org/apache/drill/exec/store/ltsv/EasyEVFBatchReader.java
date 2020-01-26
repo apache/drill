@@ -55,7 +55,6 @@ public abstract class EasyEVFBatchReader implements ManagedReader<FileSchemaNego
 
   public BufferedReader reader;
 
-
   public EasyEVFBatchReader() {
   }
 

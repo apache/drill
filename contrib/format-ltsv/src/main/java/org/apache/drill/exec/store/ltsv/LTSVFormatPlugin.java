@@ -15,9 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.drill.exec.store.ltsv;
 
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
@@ -71,7 +71,8 @@ public class LTSVFormatPlugin extends EasyFormatPlugin<LTSVFormatPluginConfig> {
     return config;
   }
   @Override
-  public ManagedReader<? extends FileScanFramework.FileSchemaNegotiator> newBatchReader(EasySubScan scan, OptionManager options) throws ExecutionSetupException {
+  public ManagedReader<? extends FileScanFramework.FileSchemaNegotiator> newBatchReader(EasySubScan scan,
+                                                                                        OptionManager options) {
     return new LTSVBatchReader(formatConfig);
   }
 
