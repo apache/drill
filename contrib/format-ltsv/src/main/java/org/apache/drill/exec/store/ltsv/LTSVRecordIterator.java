@@ -7,9 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 
 public class LTSVRecordIterator implements Iterator {
 
@@ -89,7 +87,6 @@ public class LTSVRecordIterator implements Iterator {
   private void processRow() {
     // Start the row
     rowWriter.start();
-    List<String[]> fields = new ArrayList<>();
     for (String field : line.split("\t")) {
       int index = field.indexOf(":");
       if (index <= 0) {
