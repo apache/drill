@@ -19,6 +19,7 @@
 package org.apache.drill.exec.store.ltsv;
 
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
+import org.apache.drill.exec.store.easy.EasyEVFBatchReader;
 
 public class LTSVBatchReader extends EasyEVFBatchReader {
 

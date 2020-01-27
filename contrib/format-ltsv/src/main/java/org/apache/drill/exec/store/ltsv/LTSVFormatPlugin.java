@@ -21,12 +21,13 @@ package org.apache.drill.exec.store.ltsv;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework;
+import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
+import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileReaderFactory;
+import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileScanBuilder;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
-
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
 import org.apache.drill.exec.store.dfs.easy.EasySubScan;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
@@ -37,7 +38,7 @@ public class LTSVFormatPlugin extends EasyFormatPlugin<LTSVFormatPluginConfig> {
 
   private static final String DEFAULT_NAME = "ltsv";
 
-  public static class LTSVReaderFactory extends FileScanFramework.FileReaderFactory {
+  public static class LTSVReaderFactory extends FileReaderFactory {
     private final LTSVFormatPluginConfig ltsvFormatPluginConfig;
 
     public LTSVReaderFactory(LTSVFormatPluginConfig config) {
@@ -45,7 +46,7 @@ public class LTSVFormatPlugin extends EasyFormatPlugin<LTSVFormatPluginConfig> {
     }
 
     @Override
-    public ManagedReader<? extends FileScanFramework.FileSchemaNegotiator> newReader() {
+    public ManagedReader<? extends FileSchemaNegotiator> newReader() {
       return new LTSVBatchReader(ltsvFormatPluginConfig);
     }
   }
@@ -70,15 +71,15 @@ public class LTSVFormatPlugin extends EasyFormatPlugin<LTSVFormatPluginConfig> {
     config.useEnhancedScan = true;
     return config;
   }
+
   @Override
-  public ManagedReader<? extends FileScanFramework.FileSchemaNegotiator> newBatchReader(EasySubScan scan,
-                                                                                        OptionManager options) {
+  public ManagedReader<?extends FileSchemaNegotiator> newBatchReader(EasySubScan scan, OptionManager options) {
     return new LTSVBatchReader(formatConfig);
   }
 
   @Override
-  protected FileScanFramework.FileScanBuilder frameworkBuilder(OptionManager options, EasySubScan scan) {
-    FileScanFramework.FileScanBuilder builder = new FileScanFramework.FileScanBuilder();
+  protected FileScanBuilder frameworkBuilder(OptionManager options, EasySubScan scan) {
+    FileScanBuilder builder = new FileScanBuilder();
     builder.setReaderFactory(new LTSVReaderFactory(formatConfig));
     initScanBuilder(builder, scan);
     builder.setNullType(Types.optional(TypeProtos.MinorType.VARCHAR));

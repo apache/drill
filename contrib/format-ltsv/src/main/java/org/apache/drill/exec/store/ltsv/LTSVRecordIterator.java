@@ -19,6 +19,7 @@
 package org.apache.drill.exec.store.ltsv;
 
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -117,7 +118,7 @@ public class LTSVRecordIterator implements Iterator {
       String fieldName = field.substring(0, index);
       String fieldValue = field.substring(index + 1);
 
-      LTSVBatchReader.writeStringColumn(rowWriter, fieldName, fieldValue);
+      LTSVBatchReader.writeColumn(rowWriter, fieldName, fieldValue, TypeProtos.MinorType.VARCHAR);
     }
 
     // End the row
