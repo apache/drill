@@ -152,7 +152,7 @@ public class TestLTSVRecordReader extends ClusterTest {
       fail();
     } catch (UserException e) {
       assertEquals(UserBitShared.DrillPBError.ErrorType.DATA_READ, e.getErrorType());
-      assertTrue(e.getMessage().contains("Invalid LTSV format at line 1: time:30/Nov/2016:00:55:08 +0900	:xxx.xxx.xxx.xxx"));
+      assertTrue(e.getMessage().contains("Invalid LTSV format at line 1: time:30/Nov/2016:00:55:08 +0900"));
     }
   }
 
