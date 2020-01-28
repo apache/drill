@@ -18,7 +18,7 @@
 package org.apache.drill.common.exceptions;
 
 public class DrillRuntimeException extends RuntimeException {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillRuntimeException.class);
+
   private static final long serialVersionUID = -3796081521525479249L;
 
   public DrillRuntimeException() {
@@ -41,11 +41,11 @@ public class DrillRuntimeException extends RuntimeException {
     super(cause);
   }
 
-  public static void format(String format, Object...args) {
-    format(null, format, args);
+  public static DrillRuntimeException format(String format, Object...args) {
+    return format(null, format, args);
   }
 
-  public static void format(Throwable cause, String format, Object...args) {
+  public static DrillRuntimeException format(Throwable cause, String format, Object...args) {
     throw new DrillRuntimeException(String.format(format, args), cause);
   }
 
