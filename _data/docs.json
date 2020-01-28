@@ -3171,8 +3171,8 @@
                 }
             ], 
             "children": [], 
-            "next_title": "Identifying Performance Issues", 
-            "next_url": "/docs/identifying-performance-issues/", 
+            "next_title": "Drill Metastore", 
+            "next_url": "/docs/drill-metastore/", 
             "parent": "Query Plans and Tuning", 
             "previous_title": "Throttling", 
             "previous_url": "/docs/throttling/", 
@@ -4560,6 +4560,27 @@
             "title": "Drill Explorer Introduction", 
             "url": "/docs/drill-explorer-introduction/"
         }, 
+        "Drill Iceberg Metastore": {
+            "breadcrumbs": [
+                {
+                    "title": "Drill Metastore", 
+                    "url": "/docs/drill-metastore/"
+                }, 
+                {
+                    "title": "Performance Tuning", 
+                    "url": "/docs/performance-tuning/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Identifying Performance Issues", 
+            "next_url": "/docs/identifying-performance-issues/", 
+            "parent": "Drill Metastore", 
+            "previous_title": "Using Drill Metastore", 
+            "previous_url": "/docs/using-drill-metastore/", 
+            "relative_path": "_docs/performance-tuning/drill-metastore/020-drill-iceberg-metastore.md", 
+            "title": "Drill Iceberg Metastore", 
+            "url": "/docs/drill-iceberg-metastore/"
+        }, 
         "Drill Introduction": {
             "breadcrumbs": [
                 {
@@ -4576,6 +4597,66 @@
             "relative_path": "_docs/getting-started/010-drill-introduction.md", 
             "title": "Drill Introduction", 
             "url": "/docs/drill-introduction/"
+        }, 
+        "Drill Metastore": {
+            "breadcrumbs": [
+                {
+                    "title": "Performance Tuning", 
+                    "url": "/docs/performance-tuning/"
+                }
+            ], 
+            "children": [
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Drill Metastore", 
+                            "url": "/docs/drill-metastore/"
+                        }, 
+                        {
+                            "title": "Performance Tuning", 
+                            "url": "/docs/performance-tuning/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Drill Iceberg Metastore", 
+                    "next_url": "/docs/drill-iceberg-metastore/", 
+                    "parent": "Drill Metastore", 
+                    "previous_title": "Drill Metastore", 
+                    "previous_url": "/docs/drill-metastore/", 
+                    "relative_path": "_docs/performance-tuning/drill-metastore/010-using-drill-metastore.md", 
+                    "title": "Using Drill Metastore", 
+                    "url": "/docs/using-drill-metastore/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Drill Metastore", 
+                            "url": "/docs/drill-metastore/"
+                        }, 
+                        {
+                            "title": "Performance Tuning", 
+                            "url": "/docs/performance-tuning/"
+                        }
+                    ], 
+                    "children": [], 
+                    "next_title": "Identifying Performance Issues", 
+                    "next_url": "/docs/identifying-performance-issues/", 
+                    "parent": "Drill Metastore", 
+                    "previous_title": "Using Drill Metastore", 
+                    "previous_url": "/docs/using-drill-metastore/", 
+                    "relative_path": "_docs/performance-tuning/drill-metastore/020-drill-iceberg-metastore.md", 
+                    "title": "Drill Iceberg Metastore", 
+                    "url": "/docs/drill-iceberg-metastore/"
+                }
+            ], 
+            "next_title": "Using Drill Metastore", 
+            "next_url": "/docs/using-drill-metastore/", 
+            "parent": "Performance Tuning", 
+            "previous_title": "Controlling Parallelization to Balance Performance with Multi-Tenancy", 
+            "previous_url": "/docs/controlling-parallelization-to-balance-performance-with-multi-tenancy/", 
+            "relative_path": "_docs/performance-tuning/050-drill-metastore.md", 
+            "title": "Drill Metastore", 
+            "url": "/docs/drill-metastore/"
         }, 
         "Drill Plan Syntax": {
             "breadcrumbs": [
@@ -5478,8 +5559,8 @@
             "next_title": "Query Plans", 
             "next_url": "/docs/query-plans/", 
             "parent": "Performance Tuning", 
-            "previous_title": "Controlling Parallelization to Balance Performance with Multi-Tenancy", 
-            "previous_url": "/docs/controlling-parallelization-to-balance-performance-with-multi-tenancy/", 
+            "previous_title": "Drill Iceberg Metastore", 
+            "previous_url": "/docs/drill-iceberg-metastore/", 
             "relative_path": "_docs/performance-tuning/050-identifying-performance-issues.md", 
             "title": "Identifying Performance Issues", 
             "url": "/docs/identifying-performance-issues/"
@@ -8426,8 +8507,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Identifying Performance Issues", 
-                            "next_url": "/docs/identifying-performance-issues/", 
+                            "next_title": "Drill Metastore", 
+                            "next_url": "/docs/drill-metastore/", 
                             "parent": "Query Plans and Tuning", 
                             "previous_title": "Throttling", 
                             "previous_url": "/docs/throttling/", 
@@ -8444,6 +8525,66 @@
                     "relative_path": "_docs/performance-tuning/040-query-plans-and-tuning.md", 
                     "title": "Query Plans and Tuning", 
                     "url": "/docs/query-plans-and-tuning/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Performance Tuning", 
+                            "url": "/docs/performance-tuning/"
+                        }
+                    ], 
+                    "children": [
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Drill Metastore", 
+                                    "url": "/docs/drill-metastore/"
+                                }, 
+                                {
+                                    "title": "Performance Tuning", 
+                                    "url": "/docs/performance-tuning/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Drill Iceberg Metastore", 
+                            "next_url": "/docs/drill-iceberg-metastore/", 
+                            "parent": "Drill Metastore", 
+                            "previous_title": "Drill Metastore", 
+                            "previous_url": "/docs/drill-metastore/", 
+                            "relative_path": "_docs/performance-tuning/drill-metastore/010-using-drill-metastore.md", 
+                            "title": "Using Drill Metastore", 
+                            "url": "/docs/using-drill-metastore/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Drill Metastore", 
+                                    "url": "/docs/drill-metastore/"
+                                }, 
+                                {
+                                    "title": "Performance Tuning", 
+                                    "url": "/docs/performance-tuning/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Identifying Performance Issues", 
+                            "next_url": "/docs/identifying-performance-issues/", 
+                            "parent": "Drill Metastore", 
+                            "previous_title": "Using Drill Metastore", 
+                            "previous_url": "/docs/using-drill-metastore/", 
+                            "relative_path": "_docs/performance-tuning/drill-metastore/020-drill-iceberg-metastore.md", 
+                            "title": "Drill Iceberg Metastore", 
+                            "url": "/docs/drill-iceberg-metastore/"
+                        }
+                    ], 
+                    "next_title": "Using Drill Metastore", 
+                    "next_url": "/docs/using-drill-metastore/", 
+                    "parent": "Performance Tuning", 
+                    "previous_title": "Controlling Parallelization to Balance Performance with Multi-Tenancy", 
+                    "previous_url": "/docs/controlling-parallelization-to-balance-performance-with-multi-tenancy/", 
+                    "relative_path": "_docs/performance-tuning/050-drill-metastore.md", 
+                    "title": "Drill Metastore", 
+                    "url": "/docs/drill-metastore/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -8499,8 +8640,8 @@
                     "next_title": "Query Plans", 
                     "next_url": "/docs/query-plans/", 
                     "parent": "Performance Tuning", 
-                    "previous_title": "Controlling Parallelization to Balance Performance with Multi-Tenancy", 
-                    "previous_url": "/docs/controlling-parallelization-to-balance-performance-with-multi-tenancy/", 
+                    "previous_title": "Drill Iceberg Metastore", 
+                    "previous_url": "/docs/drill-iceberg-metastore/", 
                     "relative_path": "_docs/performance-tuning/050-identifying-performance-issues.md", 
                     "title": "Identifying Performance Issues", 
                     "url": "/docs/identifying-performance-issues/"
@@ -9652,8 +9793,8 @@
                         }
                     ], 
                     "children": [], 
-                    "next_title": "Identifying Performance Issues", 
-                    "next_url": "/docs/identifying-performance-issues/", 
+                    "next_title": "Drill Metastore", 
+                    "next_url": "/docs/drill-metastore/", 
                     "parent": "Query Plans and Tuning", 
                     "previous_title": "Throttling", 
                     "previous_url": "/docs/throttling/", 
@@ -15682,6 +15823,27 @@
             "title": "Using Drill Explorer", 
             "url": "/docs/using-drill-explorer/"
         }, 
+        "Using Drill Metastore": {
+            "breadcrumbs": [
+                {
+                    "title": "Drill Metastore", 
+                    "url": "/docs/drill-metastore/"
+                }, 
+                {
+                    "title": "Performance Tuning", 
+                    "url": "/docs/performance-tuning/"
+                }
+            ], 
+            "children": [], 
+            "next_title": "Drill Iceberg Metastore", 
+            "next_url": "/docs/drill-iceberg-metastore/", 
+            "parent": "Drill Metastore", 
+            "previous_title": "Drill Metastore", 
+            "previous_url": "/docs/drill-metastore/", 
+            "relative_path": "_docs/performance-tuning/drill-metastore/010-using-drill-metastore.md", 
+            "title": "Using Drill Metastore", 
+            "url": "/docs/using-drill-metastore/"
+        }, 
         "Using Drill with BI Tools": {
             "breadcrumbs": [
                 {
@@ -19835,8 +19997,8 @@
                                 }
                             ], 
                             "children": [], 
-                            "next_title": "Identifying Performance Issues", 
-                            "next_url": "/docs/identifying-performance-issues/", 
+                            "next_title": "Drill Metastore", 
+                            "next_url": "/docs/drill-metastore/", 
                             "parent": "Query Plans and Tuning", 
                             "previous_title": "Throttling", 
                             "previous_url": "/docs/throttling/", 
@@ -19853,6 +20015,66 @@
                     "relative_path": "_docs/performance-tuning/040-query-plans-and-tuning.md", 
                     "title": "Query Plans and Tuning", 
                     "url": "/docs/query-plans-and-tuning/"
+                }, 
+                {
+                    "breadcrumbs": [
+                        {
+                            "title": "Performance Tuning", 
+                            "url": "/docs/performance-tuning/"
+                        }
+                    ], 
+                    "children": [
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Drill Metastore", 
+                                    "url": "/docs/drill-metastore/"
+                                }, 
+                                {
+                                    "title": "Performance Tuning", 
+                                    "url": "/docs/performance-tuning/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Drill Iceberg Metastore", 
+                            "next_url": "/docs/drill-iceberg-metastore/", 
+                            "parent": "Drill Metastore", 
+                            "previous_title": "Drill Metastore", 
+                            "previous_url": "/docs/drill-metastore/", 
+                            "relative_path": "_docs/performance-tuning/drill-metastore/010-using-drill-metastore.md", 
+                            "title": "Using Drill Metastore", 
+                            "url": "/docs/using-drill-metastore/"
+                        }, 
+                        {
+                            "breadcrumbs": [
+                                {
+                                    "title": "Drill Metastore", 
+                                    "url": "/docs/drill-metastore/"
+                                }, 
+                                {
+                                    "title": "Performance Tuning", 
+                                    "url": "/docs/performance-tuning/"
+                                }
+                            ], 
+                            "children": [], 
+                            "next_title": "Identifying Performance Issues", 
+                            "next_url": "/docs/identifying-performance-issues/", 
+                            "parent": "Drill Metastore", 
+                            "previous_title": "Using Drill Metastore", 
+                            "previous_url": "/docs/using-drill-metastore/", 
+                            "relative_path": "_docs/performance-tuning/drill-metastore/020-drill-iceberg-metastore.md", 
+                            "title": "Drill Iceberg Metastore", 
+                            "url": "/docs/drill-iceberg-metastore/"
+                        }
+                    ], 
+                    "next_title": "Using Drill Metastore", 
+                    "next_url": "/docs/using-drill-metastore/", 
+                    "parent": "Performance Tuning", 
+                    "previous_title": "Controlling Parallelization to Balance Performance with Multi-Tenancy", 
+                    "previous_url": "/docs/controlling-parallelization-to-balance-performance-with-multi-tenancy/", 
+                    "relative_path": "_docs/performance-tuning/050-drill-metastore.md", 
+                    "title": "Drill Metastore", 
+                    "url": "/docs/drill-metastore/"
                 }, 
                 {
                     "breadcrumbs": [
@@ -19908,8 +20130,8 @@
                     "next_title": "Query Plans", 
                     "next_url": "/docs/query-plans/", 
                     "parent": "Performance Tuning", 
-                    "previous_title": "Controlling Parallelization to Balance Performance with Multi-Tenancy", 
-                    "previous_url": "/docs/controlling-parallelization-to-balance-performance-with-multi-tenancy/", 
+                    "previous_title": "Drill Iceberg Metastore", 
+                    "previous_url": "/docs/drill-iceberg-metastore/", 
                     "relative_path": "_docs/performance-tuning/050-identifying-performance-issues.md", 
                     "title": "Identifying Performance Issues", 
                     "url": "/docs/identifying-performance-issues/"
