@@ -1,6 +1,6 @@
 ---
 title: "Querying the INFORMATION SCHEMA"
-date: 2019-04-05
+date: 2020-01-30
 parent: "Query Data"
 ---  
 
@@ -17,6 +17,7 @@ context. You can query the following INFORMATION_SCHEMA tables:
   * COLUMNS 
   * VIEWS
   * FILES
+  * PARTITIONS
 
 ## SCHEMATA
 
@@ -73,7 +74,11 @@ type) for each column in each table or view.
 The VIEWS table returns the name and definition for each view in your
 databases. Note that file schemas are the canonical repository for views in
 Drill. Depending on how you create a view, the may only be displayed in Drill
-after it has been used.  
+after it has been used.
+
+## PARTITIONS
+
+The PARTITIONS table returns information about table partitions including partition columns, partition keys, etc. for each table.
 
 ## FILES
 
