@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.cassandra;
 
+import org.apache.calcite.adapter.cassandra.CassandraRel;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.exec.planner.logical.DrillOptiq;
 import org.apache.drill.exec.planner.logical.DrillParseContext;
@@ -37,14 +38,12 @@ public class CassandraPushDownFilterForScan extends StoragePluginOptimizerRule {
 
   private static final Logger logger = LoggerFactory.getLogger(CassandraDatabaseSchema.class);
 
-  /* Flag to bypass filter pushdown   */
-  static final boolean BYPASS_CASSANDRA_FILTER_PUSHDOWN = false;
-
   public static final StoragePluginOptimizerRule INSTANCE = new CassandraPushDownFilterForScan();
 
   private CassandraPushDownFilterForScan() {
 
-    super(RelOptHelper.some(FilterPrel.class, RelOptHelper.any(ScanPrel.class)), "CassandraPushDownFilterForScan");
+    //super(RelOptHelper.some(FilterPrel.class, RelOptHelper.any(ScanPrel.class)), "CassandraPushDownFilterForScan");
+    super(RelOptHelper.some(CassandraRel.class, RelOptHelper.any(ScanPrel.class)), "CassandraPushDownFilterForScan");
   }
 
   @Override
@@ -54,6 +53,8 @@ public class CassandraPushDownFilterForScan extends StoragePluginOptimizerRule {
     final RexNode condition = filter.getCondition();
 
     CassandraGroupScan groupScan = (CassandraGroupScan)scan.getGroupScan();
+
+    // TODO This is always true, hence filters NEVER get pushed down
     if (groupScan.isFilterPushedDown()) {
 
       /*
@@ -65,24 +66,21 @@ public class CassandraPushDownFilterForScan extends StoragePluginOptimizerRule {
       return;
     }
 
-    LogicalExpression conditionExp = DrillOptiq.toDrill(
-      new DrillParseContext(PrelUtil.getPlannerSettings(call.getPlanner())), scan, condition);
+    LogicalExpression conditionExp = DrillOptiq.toDrill(new DrillParseContext(PrelUtil.getPlannerSettings(call.getPlanner())), scan, condition);
     CassandraFilterBuilder cassandraFilterBuilder = new CassandraFilterBuilder(groupScan, conditionExp);
     CassandraScanSpec newScanSpec = cassandraFilterBuilder.parseTree();
-
-    // TODO : Fix Pushdown
-    if(BYPASS_CASSANDRA_FILTER_PUSHDOWN){
-      return;
-    }
 
     if (newScanSpec == null) {
       return; //no filter pushdown ==> No transformation.
     }
 
-    final CassandraGroupScan newGroupsScan = new CassandraGroupScan(groupScan.getUserName(), groupScan.getStoragePlugin(), newScanSpec, groupScan.getColumns());
-    newGroupsScan.setFilterPushedDown(true);
+    final CassandraGroupScan newGroupScan = new CassandraGroupScan(groupScan.getUserName(),
+      groupScan.getStoragePlugin(),
+      newScanSpec,
+      groupScan.getColumns());
+    newGroupScan.setFilterPushedDown(true);
 
-    final ScanPrel newScanPrel = ScanPrel.create(scan, filter.getTraitSet(), newGroupsScan, scan.getRowType());
+    final ScanPrel newScanPrel = ScanPrel.create(scan, filter.getTraitSet(), newGroupScan, scan.getRowType());
     if (cassandraFilterBuilder.isAllExpressionsConverted()) {
       /*
        * Since we could convert the entire filter condition expression into an cassandra filter,

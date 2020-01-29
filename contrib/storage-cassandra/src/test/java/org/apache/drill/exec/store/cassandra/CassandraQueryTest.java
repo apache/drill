@@ -143,8 +143,8 @@ public class CassandraQueryTest extends ClusterTest {
     String plan = queryBuilder().sql(sql).explainJson();
     logger.debug("Query plan: {}", plan);
 
-    long count = queryBuilder().physical(plan).singletonLong();
+    long cnt = queryBuilder().physical(plan).singletonLong();
 
-    assertEquals("Counts should match",1L, count);
+    assertEquals("Counts should match",1L, cnt);
   }
 }

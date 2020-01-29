@@ -81,15 +81,21 @@ public class CassandraSubScan extends AbstractBase implements SubScan {
     this.chunkScanSpecList = chunkScanSpecList;
   }
 
-  public CassandraSubScan(CassandraStoragePlugin storagePlugin, CassandraStoragePluginConfig storagePluginConfig, List<CassandraSubScanSpec> chunkScanSpecList, List<SchemaPath> columns) {
+  public CassandraSubScan(CassandraStoragePlugin storagePlugin,
+                          CassandraStoragePluginConfig storagePluginConfig,
+                          List<CassandraSubScanSpec> chunkScanSpecList,
+                          List<SchemaPath> columns) {
     this.cassandraStoragePlugin = storagePlugin;
     this.cassandraPluginConfig = storagePluginConfig;
     this.columns = columns;
     this.chunkScanSpecList = chunkScanSpecList;
   }
 
-  public CassandraSubScan(CassandraStoragePlugin storagePlugin, CassandraStoragePluginConfig storagePluginConfig, List<CassandraSubScanSpec> chunkScanSpecList,
-                          List<SchemaPath> columns, Cluster cluster,
+  public CassandraSubScan(CassandraStoragePlugin storagePlugin,
+                          CassandraStoragePluginConfig storagePluginConfig,
+                          List<CassandraSubScanSpec> chunkScanSpecList,
+                          List<SchemaPath> columns,
+                          Cluster cluster,
                           Session session) {
     this.cassandraStoragePlugin = storagePlugin;
     this.cassandraPluginConfig = storagePluginConfig;
@@ -158,7 +164,7 @@ public class CassandraSubScan extends AbstractBase implements SubScan {
     @JsonIgnore
     protected Session session;
 
-    @JsonIgnore
+    @JsonIgnore // TODO Filters not set
     protected List<Clause> filter;
 
     @JsonCreator
@@ -168,6 +174,7 @@ public class CassandraSubScan extends AbstractBase implements SubScan {
                                 @JsonProperty("port") int port,
                                 @JsonProperty("startToken") String startToken,
                                 @JsonProperty("endToken") String endToken,
+                                @JsonProperty("filter") List<Clause> filter,
                                 @JacksonInject Cluster cluster,
                                 @JacksonInject Session session) {
       this.keyspace = keyspace;

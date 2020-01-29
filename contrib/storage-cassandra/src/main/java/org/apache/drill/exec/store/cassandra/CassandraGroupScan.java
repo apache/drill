@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.cassandra;
 
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -102,8 +103,6 @@ public class CassandraGroupScan extends AbstractGroupScan implements DrillCassan
 
   private Map<String, CassandraPartitionToken> hostTokenMapping = new HashMap<>();
 
-  //private TableStatsCalculator statsCalculator;
-
   private long scanSizeInBytes = 0;
 
   private Metadata metadata;
@@ -149,7 +148,6 @@ public class CassandraGroupScan extends AbstractGroupScan implements DrillCassan
     this.filterPushedDown = that.filterPushedDown;
     this.totalAssignmentsTobeDone = that.totalAssignmentsTobeDone;
     this.hostTokenMapping = that.hostTokenMapping;
-    //this.statsCalculator = that.statsCalculator;
     this.scanSizeInBytes = that.scanSizeInBytes;
   }
 
@@ -174,7 +172,7 @@ public class CassandraGroupScan extends AbstractGroupScan implements DrillCassan
 
       metadata = session.getCluster().getMetadata();
 
-      Charset charset = Charset.forName("UTF-8");
+      Charset charset = StandardCharsets.UTF_8;
       CharsetEncoder encoder = charset.newEncoder();
 
       keyspaceHosts = session.getCluster().getMetadata().getAllHosts();
@@ -190,11 +188,12 @@ public class CassandraGroupScan extends AbstractGroupScan implements DrillCassan
       int index = 0;
       for (Host h : keyspaceHosts) {
         CassandraPartitionToken token = new CassandraPartitionToken();
+        assert tokens != null;
         token.setLow(tokens[index]);
         if (index + 1 < tokens.length) {
           token.setHigh(tokens[index + 1]);
         }
-        hostTokenMapping.put(h.getAddress().getHostName(), token);
+        hostTokenMapping.put(h.getEndPoint().resolve().getHostName(), token);
         index++;
       }
       logger.debug("Host token mapping: {}", hostTokenMapping);
@@ -207,7 +206,7 @@ public class CassandraGroupScan extends AbstractGroupScan implements DrillCassan
       }
 
       rs = session.execute(q);
-      this.totalAssignmentsTobeDone = rs.getAvailableWithoutFetching();
+      totalAssignmentsTobeDone = rs.getAvailableWithoutFetching();
 
     } catch (Exception e) {
       logger.error("Error in initializing CasandraGroupScan, Error: " + e.getMessage());
@@ -357,7 +356,7 @@ public class CassandraGroupScan extends AbstractGroupScan implements DrillCassan
 
   private CassandraSubScanSpec hostToSubScanSpec(Host host, List<String> contactPoints) {
     CassandraScanSpec spec = cassandraScanSpec;
-    CassandraPartitionToken token = hostTokenMapping.get(host.getAddress().getHostName());
+    CassandraPartitionToken token = hostTokenMapping.get(host.getEndPoint().resolve().getHostName());
 
     return new CassandraSubScanSpec()
       .setTable(spec.getTable())
@@ -386,9 +385,42 @@ public class CassandraGroupScan extends AbstractGroupScan implements DrillCassan
     return -1;
   }
 
+  /*  @Override
+  public ScanStats getScanStats() {
+    try{
+      MongoClient client = storagePlugin.getClient();
+      MongoDatabase db = client.getDatabase(scanSpec.getDbName());
+      MongoCollection<Document> collection = db.getCollection(scanSpec.getCollectionName());
+      long numDocs = collection.count();
+      float approxDiskCost = 0;
+      if (numDocs != 0) {
+        //toJson should use client's codec, otherwise toJson could fail on
+        // some types not known to DocumentCodec, e.g. DBRef.
+        final DocumentCodec codec =
+            new DocumentCodec(client.getMongoClientOptions().getCodecRegistry(), new BsonTypeClassMap());
+        String json = collection.find().first().toJson(codec);
+        approxDiskCost = json.getBytes().length * numDocs;
+      }
+      return new ScanStats(GroupScanProperty.EXACT_ROW_COUNT, numDocs, 1, approxDiskCost);
+    } catch (Exception e) {
+      throw new DrillRuntimeException(e.getMessage(), e);
+    }
+  }*/
+
+
   @Override
   public ScanStats getScanStats() {
     //TODO
+    if (storagePlugin.getCluster() == null || storagePlugin.getCluster().isClosed() ) {
+      cluster = CassandraConnectionManager.getCluster(storagePluginConfig.getHosts(), storagePluginConfig.getPort());
+      session = cluster.connect();
+    } else {
+      cluster = storagePlugin.getCluster();
+      session = storagePlugin.getSession();
+    }
+
+
+
     return ScanStats.TRIVIAL_TABLE;
   }
 

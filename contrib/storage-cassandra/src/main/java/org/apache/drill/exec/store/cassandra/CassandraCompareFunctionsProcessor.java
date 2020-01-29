@@ -223,5 +223,4 @@ public class CassandraCompareFunctionsProcessor extends AbstractExprVisitor<Bool
       .put("less_than", "greater_than")
       .build();
   }
-
 }

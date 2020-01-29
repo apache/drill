@@ -190,6 +190,11 @@ public class CassandraRecordReader extends AbstractRecordReader implements Drill
         where = where.and(QueryBuilder.lt(QueryBuilder.token(partitionkeys), new Long(subScanSpec.getEndToken())));
       }
 
+      if (subScanSpec.filter != null && subScanSpec.filter.size() > 0) {
+        logger.debug("Filters: {}", subScanSpec.filter.toString());
+      }
+
+
       q = where;
       logger.debug("Query sent to Cassandra: {}", q);
       rs = session.execute(q);
