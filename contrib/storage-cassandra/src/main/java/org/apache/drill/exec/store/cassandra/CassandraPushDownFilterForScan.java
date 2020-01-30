@@ -42,8 +42,8 @@ public class CassandraPushDownFilterForScan extends StoragePluginOptimizerRule {
 
   private CassandraPushDownFilterForScan() {
 
-    //super(RelOptHelper.some(FilterPrel.class, RelOptHelper.any(ScanPrel.class)), "CassandraPushDownFilterForScan");
-    super(RelOptHelper.some(CassandraRel.class, RelOptHelper.any(ScanPrel.class)), "CassandraPushDownFilterForScan");
+    super(RelOptHelper.some(FilterPrel.class, RelOptHelper.any(ScanPrel.class)), "CassandraPushDownFilterForScan");
+    //super(RelOptHelper.some(CassandraRel.class, RelOptHelper.any(ScanPrel.class)), "CassandraPushDownFilterForScan");
   }
 
   @Override

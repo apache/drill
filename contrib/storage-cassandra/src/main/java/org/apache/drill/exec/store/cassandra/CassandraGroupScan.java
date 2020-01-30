@@ -382,35 +382,17 @@ public class CassandraGroupScan extends AbstractGroupScan implements DrillCassan
 
   @Override
   public int getMaxParallelizationWidth() {
-    return -1;
-  }
-
-  /*  @Override
-  public ScanStats getScanStats() {
-    try{
-      MongoClient client = storagePlugin.getClient();
-      MongoDatabase db = client.getDatabase(scanSpec.getDbName());
-      MongoCollection<Document> collection = db.getCollection(scanSpec.getCollectionName());
-      long numDocs = collection.count();
-      float approxDiskCost = 0;
-      if (numDocs != 0) {
-        //toJson should use client's codec, otherwise toJson could fail on
-        // some types not known to DocumentCodec, e.g. DBRef.
-        final DocumentCodec codec =
-            new DocumentCodec(client.getMongoClientOptions().getCodecRegistry(), new BsonTypeClassMap());
-        String json = collection.find().first().toJson(codec);
-        approxDiskCost = json.getBytes().length * numDocs;
-      }
-      return new ScanStats(GroupScanProperty.EXACT_ROW_COUNT, numDocs, 1, approxDiskCost);
-    } catch (Exception e) {
-      throw new DrillRuntimeException(e.getMessage(), e);
+    if (storagePlugin.getCluster() == null || storagePlugin.getCluster().isClosed() ) {
+      cluster = CassandraConnectionManager.getCluster(storagePluginConfig.getHosts(), storagePluginConfig.getPort());
+    } else {
+      cluster = storagePlugin.getCluster();
     }
-  }*/
 
+    return cluster.getMetadata().getAllHosts().size();
+  }
 
   @Override
   public ScanStats getScanStats() {
-    //TODO
     if (storagePlugin.getCluster() == null || storagePlugin.getCluster().isClosed() ) {
       cluster = CassandraConnectionManager.getCluster(storagePluginConfig.getHosts(), storagePluginConfig.getPort());
       session = cluster.connect();
@@ -419,9 +401,27 @@ public class CassandraGroupScan extends AbstractGroupScan implements DrillCassan
       session = storagePlugin.getSession();
     }
 
+    // Get the number of columns in the keyspace
+    int numColumns = cluster
+      .getMetadata()
+      .getKeyspace(cassandraScanSpec.getKeyspace())
+      .getTable(cassandraScanSpec.getTable())
+      .getColumns()
+      .size();
 
+    // Guess on the per record size in bytes
+    int ESTIMATED_DATA_SIZE = 18700;
 
-    return ScanStats.TRIVIAL_TABLE;
+    long estimatedRowCount = 100000;
+
+    // If filters are applied, reduce the cost by half
+    if (cassandraScanSpec.getFilters() != null) {
+      estimatedRowCount = (long) (estimatedRowCount * 0.5);
+    }
+
+    double diskCost = ESTIMATED_DATA_SIZE * numColumns * estimatedRowCount;
+
+    return new ScanStats(ScanStats.GroupScanProperty.NO_EXACT_ROW_COUNT, estimatedRowCount, 1, diskCost);
   }
 
   @Override

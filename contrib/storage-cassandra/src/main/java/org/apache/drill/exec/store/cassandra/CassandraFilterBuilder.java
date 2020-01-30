@@ -52,7 +52,7 @@ public class CassandraFilterBuilder extends AbstractExprVisitor<CassandraScanSpe
     CassandraScanSpec parsedSpec = le.accept(this, null);
 
     if (parsedSpec != null) {
-      parsedSpec = mergeScanSpecs("booleanAnd", this.groupScan.getCassandraScanSpec(), parsedSpec);
+      parsedSpec = mergeScanSpecs("booleanAnd", groupScan.getCassandraScanSpec(), parsedSpec);
     }
     return parsedSpec;
   }
