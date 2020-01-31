@@ -1,12 +1,18 @@
 ---
 title: "Drill Iceberg Metastore"
 parent: "Drill Metastore"
-date:
+date: 2020-01-31
 ---
 
-Drill uses Iceberg Metastore implementation based on [Iceberg tables](http://iceberg.incubator.apache.org). For
- details on how to configure Iceberg Metastore implementation and its option descriptions, please refer to
- [Iceberg Metastore docs](https://github.com/apache/drill/blob/master/metastore/iceberg-metastore/README.md).
+Drill uses Iceberg Metastore implementation based on [Iceberg tables](http://iceberg.incubator.apache.org). For Drill 1.17,
+ this is default Drill Metastore implementation. For details on how to configure Iceberg Metastore implementation and
+ its option descriptions, please refer to [Iceberg Metastore docs](https://github.com/apache/drill/blob/master/metastore/iceberg-metastore/README.md).
+
+{% include startnote.html %}
+Iceberg table supports concurrent writes and transactions but they are only effective on file systems that support
+ atomic rename.
+If the file system does not support atomic rename, it could lead to inconsistencies during concurrent writes.
+{% include endnote.html %}
 
 ### Iceberg Tables Location
 

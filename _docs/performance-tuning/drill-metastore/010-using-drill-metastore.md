@@ -1,12 +1,12 @@
 ---
 title: "Using Drill Metastore"
 parent: "Drill Metastore"
-date: 2020-01-30
+date: 2020-01-31
 ---
 
 Drill 1.17 introduces the Drill Metastore which stores the table schema and table statistics. Statistics allow Drill to better create optimal query plans.
 
-The Metastore is an Beta feature; it is subject to change. We encourage you to try it and provide feedback.
+The Metastore is a Beta feature; it is subject to change. We encourage you to try it and provide feedback.
 Because the Metastore is in Beta, the SQL commands and Metastore formats may change in the next release.
 {% include startnote.html %}In Drill 1.17, this feature is supported for Parquet tables only and is disabled by default.{% include endnote.html %}
 
@@ -27,12 +27,10 @@ Once you enable the Metastore, the next step is to populate it with data. Drill 
  query performance. In general, large tables benefit from statistics more than small tables do.
 
 Unlike Hive, Drill does not require you to declare a schema. Instead, Drill infers the schema by scanning your table 
- and computes some metadata like MIN / MAX column values and NULLS COUNT designated as "metadata" to be able to
- produce more optimizations like filter push-down, etc. If `planner.statistics.use` option is enabled, this command
- will also calculate and store table statistics into Drill Metastore.
-
-Unlike Hive, Drill does not require you to declare a schema. Instead, Drill infers the schema by scanning your table
- in the same way as it is done during regular select.
+ in the same way as it is done during regular select and computes some metadata like `MIN` / `MAX` column values and
+ `NULLS_COUNT` designated as "metadata" to be able to produce more optimizations like filter push-down, etc. If
+ `planner.statistics.use` option is enabled, this command will also calculate and store table statistics into Drill
+ Metastore.
 
 ## Configuration
 
@@ -42,13 +40,24 @@ indicated in `drill-metastore-distrib.conf`.
 
 All configuration properties should reside in `drill.metastore` namespace.
 Metastore implementation based on class implementation config property `drill.metastore.implementation.class`.
+The default value is the following:
+
+```
+drill.metastore: {
+  implementation.class: "org.apache.drill.metastore.iceberg.IcebergMetastore"
+}
+```
+
+Note, that currently out of box Iceberg Metastore is available and is the default one. Though any custom
+ implementation can be added by placing the JAR into classpath which has the implementation of
+ `org.apache.drill.metastore.Metastore` interface and indicating custom class in the `drill.metastore.implementation.class`.
 
 ### Metastore Components
 
-Metastore can store metadata for various components: tables, views etc.
+Metastore can store metadata for various components: tables, views, etc.
 Current implementation provides fully functioning support for tables component.
 Views component support is not implemented but contains stub methods to show
-how new Metastore components like udfs, storage plugins, etc. be added in future.
+how new Metastore components like UDFs, storage plugins, etc. can be added in the future.
 
 ### Metastore Tables
 
@@ -56,15 +65,15 @@ Metastore Tables component contains metadata about Drill tables, including gener
 information about table segments, files, row groups, partitions.
 
 Full table metadata consists of two major concepts: general information and top-level segments metadata.
-Table general information contains basic table information and corresponds to `BaseTableMetadata` class.
+Table general information contains basic table information and corresponds to the `BaseTableMetadata` class.
 
-Table can be non-partitioned and partitioned. Non-partitioned tables, have only one top-level segment 
+A table can be non-partitioned and partitioned. Non-partitioned tables have only one top-level segment 
 which is called default (`MetadataInfo#DEFAULT_SEGMENT_KEY`). Partitioned tables may have several top-level segments.
-Each top-level segment can include metadata about inner segments, files, row groups and partitions.
+Each top-level segment can include metadata about inner segments, files, row groups, and partitions.
 
-Unique table identifier in Metastore Tables is combination of storage plugin, workspace and table name.
+A unique table identifier in Metastore Tables is a combination of storage plugin, workspace, and table name.
 Table metadata inside is grouped by top-level segments, unique identifier of the top-level segment and its metadata
-is storage plugin, workspace, table name and metadata key.
+is storage plugin, workspace, table name, and metadata key.
 
 ### Related Session/System Options
 
@@ -74,7 +83,7 @@ The following options are set via `ALTER SYSTEM SET`, or `ALTER SESSION SET` or 
 Enables Drill Metastore usage to be able to store table metadata during ANALYZE TABLE commands execution and to be able
  to read table metadata during regular queries execution or when querying some INFORMATION_SCHEMA tables. Default is `false`.
 - **metastore.metadata.store.depth_level**
-Specifies maximum level depth for collecting metadata. Same options as the _level_ option above. Default is `'ALL'`.
+Specifies the maximum level of depth for collecting metadata. Same options as the _level_ option above. Default is `'ALL'`.
 - **metastore.retrieval.retry_attempts**
 If you run the `ANALYZE TABLE` command at the same time as queries run, then the query can read incorrect or corrupt statistics.
 Drill will reload statistics and replan the query. This option specifies the maximum number of retry attempts. Default is `5`.
@@ -91,19 +100,32 @@ Enable `planner.statistics.use` to be able to use statistics during query planni
 - **metastore.metadata.ctas.auto-collect**
 Drill provides the [`CREATE TABLE AS`]({{site.baseurl}}/docs/create-or-replace-schema) commands to create new tables.
 This option causes Drill to gather schema and statistics for those tables automatically as they are written.
-This option is not active for now. Possible values: `'ALL'`, `'SCHEMA'`, `'NONE'`. Default is `'NONE'`.
+This option is not implemented for now. Possible values: `'ALL'`, `'SCHEMA'`, `'NONE'`. Default is `'NONE'`.
 - **drill.exec.storage.implicit.last_modified_time.column.label**
-Sets the implicit column name for the last modified time (`lmt`) column. Used when producing Metastore analyze.
+Sets the implicit column name for the last modified time (`lmt`) column. Used when producing Metastore analyze. You can
+ set the last modified time column name to custom name when current column name clashes which column name present in the
+ table. If your table contains a column name with the same name as an implicit column, the implicit column takes
+ priority and shadows column from the table.
 - **drill.exec.storage.implicit.row_group_index.column.label**
-Sets the implicit column name for the row group index (`rgi`) column. Used when producing Metastore analyze.
+Sets the implicit column name for the row group index (`rgi`) column. Used when producing Metastore analyze. You can
+ set row group index column name to custom name when current column name clashes which column name present in the
+ table. If your table contains a column name with the same name as an implicit column, the implicit column takes
+ priority and shadows column from the table.
 - **drill.exec.storage.implicit.row_group_length.column.label**
-Sets the implicit column name for the row group length (`rgl`) column. Used when producing Metastore analyze.
+Sets the implicit column name for the row group length (`rgl`) column. Used when producing Metastore analyze. You can
+ set row group length column name to custom name when current column name clashes which column name present in the
+ table. If your table contains a column name with the same name as an implicit column, the implicit column takes
+ priority and shadows column from the table.
 - **drill.exec.storage.implicit.row_group_start.column.label**
-Sets the implicit column name for the row group start (`rgs`) column. Used when producing Metastore analyze.
+Sets the implicit column name for the row group start (`rgs`) column. Used when producing Metastore analyze. You can
+ set row group start column name to custom name when current column name clashes which column name present in the
+ table. If your table contains a column name with the same name as an implicit column, the implicit column takes
+ priority and shadows column from the table.
 
 ## Incremental analysis
 
-If you have computed statistics for a table, and issue `ANALYZE TABLE` a second time, Drill will attempt to update statistics, called "incremental analysis."
+If you have computed statistics for a table, and issue `ANALYZE TABLE` a second time, Drill will attempt to update
+ statistics, called "incremental analysis."
 Incremental analysis will compute metadata only for files and partitions changed since the last analysis and reuse
  actual metadata from the Metastore where possible.
 
@@ -116,9 +138,9 @@ If either of these two conditions is false, Drill will perform a full analysis o
 ## General Information
 
 - Drill 1.17 supports the Metastore and `ANALYZE TABLE` only for tables stored as Parquet files and only when stored in the `DFS` storage plugin.
-- The first time you execute ANALYZE TABLE for a table, Drill will scan the entire tables (all files.)
-When you next issue the same command, Drill will scan only those files added since the previous run.
-The command will return the message if table statistics are up-to-date:
+- The first time you execute ANALYZE TABLE for a table, Drill will scan the entire table (all files.)
+When you issue the same command for the next time, Drill will scan only those files added since the previous run.
+The command will return the following message if table statistics are up-to-date:
 
 
 ```
@@ -133,24 +155,24 @@ apache drill (dfs.tmp)> analyze table lineitem refresh metadata;
 ### Metadata usage
 
 Drill uses the Metastore in several places. When you run a query with multiple directories, files or Parquet row groups,
-Drill will use statistics to "prune" the scan. That is, to identify those directories, files or row groups which
-do not contain data which your query needs. If you add new files or directories, and do not rerun `ANALYZE TABLE`,
-then Drill will assume that existing metadata is invalid and wouldn't use it. Periodically rerun `ANALYZE TABLE` so that
- Drill can use table metadata when possible.
+ Drill will use statistics to "prune" the scan. That is, to identify those directories, files or row groups that
+ do not contain data that your query needs. If you add new files or directories and do not rerun `ANALYZE TABLE`,
+ then Drill will assume that existing metadata is invalid and wouldn't use it. Periodically rerun `ANALYZE TABLE` so
+ that Drill can use table metadata when possible.
 
 ### Limitations
 
-This feature is currently in the alpha phase (preview, experimental) for Drill 1.17 and only applies to Parquet
+This feature is currently in the beta phase (preview, experimental) for Drill 1.17 and only applies to Parquet
  tables in this release. You must enable this feature through the `metastore.enabled` system/session option.
 
 ## Examples
 
-Examples throughout this topic use the files and directories described in the following section, Directory and File Setup.
+Examples throughout this topic use the files and directories described in the following section, Directory, and File Setup.
 
 ### Directory and File Setup
 
-Download [TPC-H sf1 tables](https://s3-us-west-1.amazonaws.com/drill-public/tpch/sf1/tpch_sf1_parquet.tar.gz) and unpack
- archive.
+Download [TPC-H sf1 tables](https://s3-us-west-1.amazonaws.com/drill-public/tpch/sf1/tpch_sf1_parquet.tar.gz) and
+ unpack archive.
 
 Create lineitem directory in `/tmp/` and two subdirectories under `/tmp/lineitem` named `s1` and `s2` and copy there table data:
 
@@ -172,7 +194,7 @@ SELECT count(*) FROM dfs.tmp.lineitem;
 1 row selected (0.291 seconds)
 ```
 
-Notice that the query plan contains group scan with `usedMetastore = false`:
+Notice that the query plan contains a group scan with `usedMetastore = false`:
 
 
 ```
@@ -182,6 +204,12 @@ Notice that the query plan contains group scan with `usedMetastore = false`:
 ```
 
 ### Computing and storing table metadata to Drill Metastore
+
+Enable Drill Metastore:
+
+```
+SET `metastore.enabled` = true;
+```
 
 Run [ANALYZE TABLE]({{site.baseurl}}/docs/analyze-table-refresh-metadata) command on the table, whose metadata should
  be computed and stored into the Drill Metastore:
@@ -199,7 +227,7 @@ apache drill> ANALYZE TABLE dfs.tmp.lineitem REFRESH METADATA;
 
 The output of this command provides the status of the command execution and its summary.
 
-Once, its metadata is collected and stored, it will be used when querying the table. To ensure that it was used, its
+Once, table metadata is collected and stored in the Metastore, it will be used when querying the table. To ensure that it was used, its
  info was added to the group scan (`usedMetastore=true` entry in `ParquetGroupScan`):
 
 
@@ -227,6 +255,8 @@ apache drill> ANALYZE TABLE dfs.tmp.lineitem REFRESH METADATA;
 ### Exposing Drill Metastore metadata through `INFORMATION_SCHEMA` tables
 
 Drill exposes some Metastore tables metadata through `INFORMATION_SCHEMA` tables.
+Note, that Metastore metadata will be exposed to the info schema, only if Metastore is enabled. If it is disabled, info
+ tables won't contain Metastore metadata.
 
 `TABLES` table includes the set of tables on which you have run `ANALYZE TABLE`.
 Description of Metastore-specific columns:
