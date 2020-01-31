@@ -47,7 +47,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
  * "Test mule" for the base storage plugin and the filter push down
  * framework.
  */
-
 public class DummyStoragePlugin
   extends BaseStoragePlugin<DummyStoragePluginConfig> {
 
@@ -103,6 +102,19 @@ public class DummyStoragePlugin
     return options;
   }
 
+  /**
+   * Add a Calcite rule to implement filter push-down. This plugin uses
+   * filters to define a set of "shards" to scan. Thus, the filters
+   * will influence the number of minor fragments. That can be done
+   * only if the filter push-down is done at logical planning time.
+   * Many other plugins, which do no use filters to determine the
+   * number of minor fragments, do filter push-down during physical
+   * planning.
+   *
+   * It turns out Drill has three different way to to logical planning.
+   * To avoid listing those phases here, the {@link FilterPushDownUtils}
+   * provides a convenience method to check all of them.
+   */
   @Override
   public Set<? extends StoragePluginOptimizerRule> getOptimizerRules(OptimizerRulesContext optimizerContext, PlannerPhase phase) {
 
@@ -118,6 +130,16 @@ public class DummyStoragePlugin
     return ImmutableSet.of();
   }
 
+  /**
+   * Example reader factory which creates the readers for the scan. A {@code SubScan}
+   * corresponds to a minor fragment, which includes one or more actual scans. (There
+   * will be more than one scan if the plugin asks for more minor fragments than
+   * Drill can provide.) This factory creates each of the scans one by one.
+   * <p>
+   * Since this is a dummy reader, the actual scan is rather lame; real plugins
+   * would do actual work with information passed from the {@code SubScan} and
+   * plugin configuration.
+   */
   private static class DummyReaderFactory implements ReaderFactory {
 
     private final DummyStoragePluginConfig config;

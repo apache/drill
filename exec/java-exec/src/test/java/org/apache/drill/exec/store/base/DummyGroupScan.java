@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.base;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.drill.common.expression.SchemaPath;
@@ -29,7 +30,6 @@ import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.base.filter.FilterSpec;
 import org.apache.drill.exec.store.base.filter.RelOp;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -40,6 +40,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
+/**
+ * Example of a simple group scan. Shows the multiple constructors needed.
+ * Tests project and filter-push down.
+ */
 @JsonTypeName("dummy-scan")
 // Force a specific order. Tests compare plans against "golden"
 // versions; forcing the order ensures that the plans don't have
@@ -52,6 +56,13 @@ public class DummyGroupScan extends BaseGroupScan {
   private final DummyScanSpec scanSpec;
   private final FilterSpec filters;
 
+  /**
+   * Constructor used to first create a "blank" group scan given a
+   * scan spec obtained from the {@link DummySchemaFactory}.
+   * @param storagePlugin storage plugin that provided the schema factory
+   * @param userName the OS user name of the user running the query
+   * @param scanSpec the scan spec created by the schema factory
+   */
   public DummyGroupScan(DummyStoragePlugin storagePlugin, String userName,
       DummyScanSpec scanSpec) {
     super(storagePlugin, userName, null);
@@ -59,12 +70,29 @@ public class DummyGroupScan extends BaseGroupScan {
     filters = null;
   }
 
+  /**
+   * Constructor used to add projection push-down columns to the
+   * group scan. Copies all fields from an existing group scan,
+   * adds a set of projected columns.
+   * <p>
+   * Note: Calcite is a cost-based optimizer (CBO). Calcite will
+   * choose this version of the group scan <b>only</b> if the cost
+   * is lower than the previous version. Adjust the cost estimate
+   * accordingly.
+   *
+   * @param from the group scan before projection push-down
+   * @param columns the set of columns to project
+   */
   public DummyGroupScan(DummyGroupScan from, List<SchemaPath> columns) {
     super(from.storagePlugin, from.getUserName(), columns);
     this.scanSpec = from.scanSpec;
     this.filters = from.filters;
   }
 
+  /**
+   * Group scans are serialized as part of the logical plan. This constructor
+   * is used to deserialize the group scan from JSON.
+   */
   @JsonCreator
   public DummyGroupScan(
       @JsonProperty("config") DummyStoragePluginConfig config,
@@ -78,6 +106,16 @@ public class DummyGroupScan extends BaseGroupScan {
     this.filters = filters;
   }
 
+  /**
+   * Copy constructor to add a filter push-down.
+   * <p>
+   * As with projection push down, the Calcite CBO will use this
+   * new copy <b>only</b> if the cost is lower than the original
+   * version. Adjust the cost to reflect filter push-down.
+   *
+   * @param from the original group scan.
+   * @param filters
+   */
   public DummyGroupScan(DummyGroupScan from, FilterSpec filters) {
     super(from);
     this.scanSpec = from.scanSpec;
@@ -94,13 +132,13 @@ public class DummyGroupScan extends BaseGroupScan {
     return filters != null && ! filters.isEmpty();
   }
 
-  private static final List<String> FILTER_COLS = ImmutableList.of("a", "b", "id");
+  private static final List<String> FILTER_COLS = Arrays.asList("a", "b", "id");
 
   public RelOp acceptFilter(RelOp relOp) {
 
     // Pretend that "id" is a special integer column. Can handle
     // equality only.
-    if (relOp.colName.contentEquals("id")) {
+    if ("id".equals(relOp.colName)) {
 
       // To allow easier testing, require exact type match: no
       // attempt at type conversion here.
@@ -113,7 +151,7 @@ public class DummyGroupScan extends BaseGroupScan {
     // "allTypes" table filters everything. All other tables
     // only project a fixed set of columns. Simulates a plugin
     // which can project only some columns.
-    if (!scanSpec.tableName.equals("allTypes") && !FILTER_COLS.contains(relOp.colName)) {
+    if (!"allTypes".equals(scanSpec.tableName) && !FILTER_COLS.contains(relOp.colName)) {
       return null;
     }
 
@@ -172,12 +210,26 @@ public class DummyGroupScan extends BaseGroupScan {
     return FilterSpec.parititonCount(filters);
   }
 
+  /**
+   * The max parallelization width should be thought of as the
+   * "minor fragment count." {@link #getScanStats()} will be called
+   * once for each minor fragment specified here.
+   */
   @Override
   @JsonIgnore
   public int getMaxParallelizationWidth() {
     return FilterSpec.parititonCount(filters);
   }
 
+  /**
+   * Convert the group scan into a physical scan description
+   * (the so-called "sub scan"). Generally scans one file block,
+   * one file, or so on. Here, we use the filter push-down to
+   * specify "shards" which we will (pretend) to scan.
+   *
+   * @param minorFragmentId minor fragment id from 0 to the
+   * number returned from {{@link #getMaxAllocation()}
+   */
   @Override
   public SubScan getSpecificScan(int minorFragmentId) {
     Preconditions.checkArgument(minorFragmentId < endpointCount);

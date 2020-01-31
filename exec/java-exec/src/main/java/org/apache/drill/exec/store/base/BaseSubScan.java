@@ -50,7 +50,7 @@ public class BaseSubScan extends AbstractSubScan {
 
   public BaseSubScan(BaseGroupScan groupScan) {
     super(groupScan.getUserName());
-    storagePlugin = groupScan.storagePlugin();
+    this.storagePlugin = groupScan.storagePlugin();
     this.columns = groupScan.getColumns();
   }
 

@@ -59,13 +59,15 @@ import org.apache.drill.metastore.statistics.StatisticsHolder;
 import org.apache.drill.metastore.statistics.StatisticsKind;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Wraps the stats table info including schema and tableName. Also materializes stats from storage
  * and keeps them in memory.
  */
 public class DrillStatsTable {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillStatsTable.class);
+  private static final Logger logger = LoggerFactory.getLogger(DrillStatsTable.class);
   // All the statistics versions till date
   public enum STATS_VERSION {V0, V1}
   // The current version
@@ -81,9 +83,9 @@ public class DrillStatsTable {
   private final Map<SchemaPath, Histogram> histogram = new HashMap<>();
   private double rowCount = -1;
   private final Map<SchemaPath, Long> nnRowCount = new HashMap<>();
-  private boolean materialized = false;
+  private boolean materialized;
   private DrillTable table;
-  private TableStatistics statistics = null;
+  private TableStatistics statistics;
 
   public DrillStatsTable(DrillTable table, String schemaName, String tableName, Path tablePath, FileSystem fs) {
     this.schemaName = schemaName;

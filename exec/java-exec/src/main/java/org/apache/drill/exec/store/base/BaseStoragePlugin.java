@@ -141,6 +141,12 @@ public abstract class BaseStoragePlugin<C extends StoragePluginConfig>
   @Override
   public boolean supportsWrite() { return options.supportsWrite; }
 
+  /**
+   * Create the initial group scan given a JSON serialized scan spec.
+   * Note that, despite the name, the returned value is a logical scan
+   * definition, not an actual physical scan operator, the operator comes
+   * much later.
+   */
   @Override
   public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection,
       SessionOptionManager sessionOptions, MetadataProviderManager metadataProviderManager) throws IOException {
@@ -153,6 +159,27 @@ public abstract class BaseStoragePlugin<C extends StoragePluginConfig>
     return groupScan;
   }
 
+  /**
+   * Create a scan operator for this plugin, given a {@code SubScan} which defines
+   * the scan. The sub scan includes one or more actual scans (which are implemented
+   * as readers.)
+   *
+   * <h4>Provided Schema</h4>
+   *
+   * Drill offers a "provided schema" mechanism which is currently a work in
+   * progress. Somehow the plugin has to obtain a schema; does not yet provide a
+   * general-purpose registry. For now, the schema factory would look up the
+   * schema in some plugin-specific way. The schema would then be passed as part
+   * of the scan spec to the group scan, then to the sub scan so it will be
+   * available here.
+   * <p>
+   * The plugin implementation can then use the schema by adding a single line of
+   * code:<pre><code>
+   * builder.typeConverterBuilder().providedSchema(subScan.getSchema());
+   * </code></pre>
+   * <p>
+   * This can, and should, be improved.
+   */
   public CloseableRecordBatch createScan(ExecutorFragmentContext context, BaseSubScan subScan)
       throws ExecutionSetupException {
     try {
@@ -207,7 +234,7 @@ public abstract class BaseStoragePlugin<C extends StoragePluginConfig>
     try {
       StoragePlugin plugin = engineRegistry.getPlugin(config);
       if (plugin == null) {
-        throw UserException.systemError(null)
+        throw UserException.systemError()
           .message("Cannot find storage plugin for %s", config.getClass().getCanonicalName())
           .build(logger);
       }

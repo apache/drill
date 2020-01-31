@@ -102,7 +102,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * identify fields (getters) to be serialized, and {@code @JsonIgnore}
  * for those that should not be serialized.
  */
-
 public abstract class BaseGroupScan extends AbstractGroupScan {
 
   protected final BaseStoragePlugin<?> storagePlugin;

@@ -32,7 +32,6 @@ import org.apache.calcite.rex.RexUtil;
 import org.apache.calcite.util.Pair;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
 import org.apache.drill.exec.planner.logical.DrillFilterRel;
@@ -79,7 +78,7 @@ public class FilterPushDownStrategy {
   }
 
   /**
-   * Calcite rule for FILTER --> PROJECT --> SCAN
+   * Custom rule passed to Calcite for FILTER --> PROJECT --> SCAN
    */
   private static class ProjectAndFilterRule extends AbstractFilterPushDownRule {
 
@@ -108,7 +107,7 @@ public class FilterPushDownStrategy {
   }
 
   /**
-   * Calcite rule for FILTER --> SCAN
+   * Custom rule passed to Calcite to handle FILTER --> SCAN
    */
   private static class FilterWithoutProjectRule extends AbstractFilterPushDownRule {
 
@@ -148,7 +147,7 @@ public class FilterPushDownStrategy {
   }
 
   public static Set<StoragePluginOptimizerRule> rulesFor(
-      OptimizerRulesContext optimizerContext, FilterPushDownListener listener) {
+      FilterPushDownListener listener) {
     return new FilterPushDownStrategy(listener).rules();
   }
 
@@ -286,7 +285,7 @@ public class FilterPushDownStrategy {
    * @param cnfTerms List of (Calcite node, Relop) pairs that give the
    * CNF terms. More than one RelOp can occur for each Calcite Rex node.
    * @return a pair of CNF and DNF parts, each with their corresponding
-   * Calcite nodes, ready to pass to the {@link FilterPushDownListener.}
+   * Calcite nodes, ready to pass to the {@link FilterPushDownListener}.
    */
   private Pair<List<Pair<RexNode, RelOp>>, Pair<RexNode, DisjunctionFilterSpec>>
       convertToFilterSpec(List<Pair<RexNode, List<RelOp>>> cnfTerms) {

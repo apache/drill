@@ -93,6 +93,8 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 import org.apache.drill.shaded.guava.com.google.common.util.concurrent.SettableFuture;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.netty.channel.EventLoopGroup;
 
@@ -103,7 +105,7 @@ import io.netty.channel.EventLoopGroup;
 public class DrillClient implements Closeable, ConnectionThrottle {
   public static final String DEFAULT_CLIENT_NAME = "Apache Drill Java client";
 
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillClient.class);
+  private static final Logger logger = LoggerFactory.getLogger(DrillClient.class);
 
   private static final ObjectMapper objectMapper = new ObjectMapper();
   private final DrillConfig config;

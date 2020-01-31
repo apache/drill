@@ -54,7 +54,6 @@ import java.util.concurrent.ExecutorService;
 import static org.apache.drill.shaded.guava.com.google.common.base.Preconditions.checkNotNull;
 
 public class DrillbitContext implements AutoCloseable {
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillbitContext.class);
 
   private final BootStrapContext context;
   private final PhysicalPlanReader reader;
@@ -270,11 +269,11 @@ public class DrillbitContext implements AutoCloseable {
 
   /**
    * Use the operator table built during startup when "exec.udf.use_dynamic" option
-   * is set to false.
+   * is set to false.<p>
    * This operator table has standard SQL functions, operators and drill
    * built-in user defined functions (UDFs).
    * It does not include dynamic user defined functions (UDFs) that get added/removed
-   * at run time.
+   * at run time.<p>
    * This operator table is meant to be used for high throughput,
    * low latency operational queries, for which cost of building operator table is
    * high, both in terms of CPU and heap memory usage.

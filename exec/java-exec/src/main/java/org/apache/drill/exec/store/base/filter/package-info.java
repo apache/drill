@@ -22,7 +22,7 @@
  * to a normalized form, and calling a listener to check if the predicates
  * are eligible for push-down, then to implement the push-down.
  * <p>
- * Some plugins may which to remove the pushed conditions. That way, Drill
+ * Some plugins may wish to remove the pushed conditions. That way, Drill
  * does not do work that the plugin has already done. In the ideal case,
  * Drill can omit a filter operator entirely.
  * <p>

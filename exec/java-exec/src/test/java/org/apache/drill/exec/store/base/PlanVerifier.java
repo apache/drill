@@ -45,7 +45,7 @@ import org.apache.drill.test.ClientFixture;
  * copy the plan to the golden file and run again.
  * <p>
  * If comparison fails, you can optionally ask the verifier to write the
- * output to {@code /tmp} so you can compare the golden and actual
+ * output to {@code /tmp/drill/test} so you can compare the golden and actual
  * outputs using your favorite diff tool to understand changes. If the changes
  * are expected, use that same IDE to copy changes from the actual
  * to the golden file.
@@ -64,15 +64,19 @@ public class PlanVerifier {
 
   private final String basePath;
 
-  /**
-   * Persist test results. Turn this on if you have failing tests.
-   ( Then, you can diff the actual and golden results in your favorite
-   * tool or IDE.
-   */
-  public boolean saveResults;
+  private boolean saveResults;
 
   public PlanVerifier(String goldenFileDir) {
     this.basePath = goldenFileDir;
+  }
+
+  /**
+   * Persist test results. Turn this on if you have failing tests.
+   * Then, you can diff the actual and golden results in your favorite
+   * tool or IDE.
+   */
+  public void saveResults(boolean flag) {
+    saveResults = flag;
   }
 
   protected void verifyPlan(ClientFixture client, String sql, String expectedFile) throws Exception {
@@ -139,7 +143,7 @@ public class PlanVerifier {
         if (aLine == null) {
           fail("Missing actual lines");
         }
-        assertEquals(eLine, aLine, "Line: " + lineNo);
+        assertEquals("Line: " + lineNo, eLine, aLine);
       }
     }
   }

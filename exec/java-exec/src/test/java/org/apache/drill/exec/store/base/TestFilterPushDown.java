@@ -37,8 +37,8 @@ public class TestFilterPushDown extends ClusterTest {
   private static final String BASE_WHERE = BASE_SQL +  " WHERE ";
   private static final PlanVerifier verifier = new PlanVerifier("/store/base/");
 
-  // Uncomment the next line to save failing plans to /tmp
-  // static { verifier.saveResults = true; }
+  // Uncomment the next line to save failing plans to /tmp/drill/test
+  // static { verifier.saveResults(true); }
 
   @BeforeClass
   public static void setup() throws Exception {
@@ -56,80 +56,69 @@ public class TestFilterPushDown extends ClusterTest {
   // No predicates
 
   @Test
-  public void testNoPushDown() throws Exception
-  {
+  public void testNoPushDown() throws Exception {
     verifyPlan(BASE_SQL, "noPushDown.json");
   }
 
   // Predicate mismatch on type (id should be INT, dummy does
   // not try to convert)
   @Test
-  public void testTypeMismatch() throws Exception
-  {
+  public void testTypeMismatch() throws Exception {
     verifyPlan(BASE_WHERE + "id = 'foo'", "typeMismatch.json");
   }
 
   // Unsupported relop type (dummy supports limited set)
   @Test
-  public void testUnsupportedOp() throws Exception
-  {
+  public void testUnsupportedOp() throws Exception {
     verifyPlan(BASE_WHERE + "a <> 'foo'", "unsupportedOp.json");
   }
 
   // Column reference rather than constant
   @Test
-  public void testNonConst() throws Exception
-  {
+  public void testNonConst() throws Exception {
    verifyPlan(BASE_WHERE + "a = b", "nonConstPred.json");
   }
 
   // Unknown column (dummy only knows columns a and b)
   @Test
-  public void testUnsupportedCol() throws Exception
-  {
+  public void testUnsupportedCol() throws Exception {
     verifyPlan(BASE_WHERE + "c = 'foo'", "unsupportedColPred.json");
   }
 
   // Not simple col = const
   @Test
-  public void testComplexPred() throws Exception
-  {
+  public void testComplexPred() throws Exception {
     verifyPlan(BASE_WHERE + "id + 10 = 20", "complexPred.json");
   }
 
   // Complex schema paths
   @Test
-  public void testComplexCols() throws Exception
-  {
+  public void testComplexCols() throws Exception {
     verifyPlan(BASE_WHERE + "a[10] = 'foo' AND myTable.b.c = 'bar'", "complexCols.json");
   }
 
   // OR, can't push
   @Test
-  public void testGenericOr() throws Exception
-  {
+  public void testGenericOr() throws Exception {
     verifyPlan(BASE_WHERE + "a = 'bar' OR id = 10", "or.json");
   }
 
   // Listener rejects one of the expressions within an OR,
   // must reject the entire OR clause. (Dummy rejects >.)
   @Test
-  public void testRejectOneOrExpr() throws Exception
-  {
+  public void testRejectOneOrExpr() throws Exception {
     verifyPlan(BASE_WHERE + "a = 'bar' OR a > 'foo'", "rejectOneOrExpr.json");
   }
 
   // Or clause expressions accepted, but whole of OR is rejected
   // because it is not all = operators. (Dummy accepts <.)
   @Test
-  public void testNonEqOr() throws Exception
-  {
+  public void testNonEqOr() throws Exception {
     verifyPlan(BASE_WHERE + "a = 'bar' OR a < 'foo'", "nonEqOr.json");
   }
 
   @Test
-  public void testDoubleOr() throws Exception
-  {
+  public void testDoubleOr() throws Exception {
     verifyPlan(BASE_WHERE + "(a = 'x' OR a = 'y') AND (a = 'a' OR a = 'b')", "doubleOr.json");
   }
 
@@ -138,29 +127,25 @@ public class TestFilterPushDown extends ClusterTest {
 
   // Single matching predicate
   @Test
-  public void testSingleCol() throws Exception
-  {
+  public void testSingleCol() throws Exception {
     verifyPlan(BASE_WHERE + "a = 'bar'", "singleCol.json");
   }
 
   // Two matching predicates, one is implicit (not in project list)
   @Test
-  public void testTwoCols() throws Exception
-  {
+  public void testTwoCols() throws Exception {
     verifyPlan(BASE_WHERE + "a = 'bar' AND id = 10", "twoCols.json");
   }
 
   // Pushed and unpushed conditions
   @Test
-  public void testMixedPreds() throws Exception
-  {
+  public void testMixedPreds() throws Exception {
     verifyPlan(BASE_WHERE + "a = 'bar' AND id = 10 AND c > 20", "mixedPreds.json");
   }
 
   // Reversed predicate
   @Test
-  public void testReversed() throws Exception
-  {
+  public void testReversed() throws Exception {
     verifyPlan(BASE_WHERE + "'bar' > a", "reversed.json");
   }
 
@@ -168,8 +153,7 @@ public class TestFilterPushDown extends ClusterTest {
   // only once into a scan node shared by both scans.)
   @Test
   @Ignore("DRILL-7457")
-  public void testSimpleJoin() throws Exception
-  {
+  public void testSimpleJoin() throws Exception {
     String sql =
         "SELECT t1.a, t1.b, t2.b FROM dummy.myTable t1, dummy.myTable t2 WHERE t1.a = t2.a AND t1.a = 'bar'";
     verifyPlan(sql, "join1.json");
@@ -179,8 +163,7 @@ public class TestFilterPushDown extends ClusterTest {
   // sets of filter push downs. (Difference is: t2.b --> t2.c)
   @Test
   @Ignore("DRILL-7457")
-  public void testComplexJoin() throws Exception
-  {
+  public void testComplexJoin() throws Exception {
     String sql =
         "SELECT t1.a, t1.b, t2.c FROM dummy.myTable t1, dummy.myTable t2 WHERE t1.a = t2.a AND t1.a = 'bar'";
     verifyPlan(sql, "join2.json");
@@ -188,8 +171,7 @@ public class TestFilterPushDown extends ClusterTest {
 
   // IS NULL and IS NOT NULL. Has only one argument.
   @Test
-  public void testIsNull() throws Exception
-  {
+  public void testIsNull() throws Exception {
     String sql = "SELECT a, b FROM dummy.myTable WHERE a IS NULL AND b IS NOT NULL";
     verifyPlan(sql, "isNull.json");
   }
@@ -198,8 +180,7 @@ public class TestFilterPushDown extends ClusterTest {
   // a >= x AND a <= y.
   // Since the dummy plug-in only handles <=, the => is left in the query.
   @Test
-  public void testBetween() throws Exception
-  {
+  public void testBetween() throws Exception {
     String sql = "SELECT a, b FROM dummy.myTable WHERE a BETWEEN 'bar' AND 'foo'";
     verifyPlan(sql, "between.json");
   }
@@ -207,16 +188,14 @@ public class TestFilterPushDown extends ClusterTest {
   // IN clause, handled as a = 'bar' OR a = 'foo'.
   // Presumption is that this turns into multiple scans
   @Test
-  public void testIn() throws Exception
-  {
+  public void testIn() throws Exception {
     String sql = "SELECT a, b FROM dummy.myTable WHERE a IN('bar', 'foo')";
     verifyPlan(sql, "in.json");
   }
 
   // Equivalent to the above
   @Test
-  public void testInLikeOr() throws Exception
-  {
+  public void testInLikeOr() throws Exception {
     String sql = "SELECT a, b FROM dummy.myTable WHERE a = 'bar' OR a = 'foo'";
     verifyPlan(sql, "in.json");
   }
@@ -225,8 +204,7 @@ public class TestFilterPushDown extends ClusterTest {
    * Test constant value conversion: Dummy will convert a to VARCHAR
    */
   @Test
-  public void testTypeConversion() throws Exception
-  {
+  public void testTypeConversion() throws Exception {
     verifyPlan(BASE_WHERE + "a = 10", "typeConversion.json");
   }
 
@@ -240,8 +218,7 @@ public class TestFilterPushDown extends ClusterTest {
   // Only fails in Maven, not in the IDE. Are internal tables
   // numbered per session?
   @Ignore
-  public void testAllTypes() throws Exception
-  {
+  public void testAllTypes() throws Exception {
     String sql = "SELECT * FROM dummy.allTypes WHERE\n" +
         "    v = 'varchar'\n" +
         "AND b = true\n" +

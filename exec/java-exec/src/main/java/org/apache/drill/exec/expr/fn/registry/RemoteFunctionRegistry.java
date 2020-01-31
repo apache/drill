@@ -43,6 +43,8 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -84,7 +86,7 @@ import static com.fasterxml.jackson.databind.SerializationFeature.INDENT_OUTPUT;
 public class RemoteFunctionRegistry implements AutoCloseable {
 
   private static final String REGISTRY_PATH = "registry";
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RemoteFunctionRegistry.class);
+  private static final Logger logger = LoggerFactory.getLogger(RemoteFunctionRegistry.class);
   private static final ObjectMapper mapper = new ObjectMapper().enable(INDENT_OUTPUT);
 
   private final TransientStoreListener unregistrationListener;

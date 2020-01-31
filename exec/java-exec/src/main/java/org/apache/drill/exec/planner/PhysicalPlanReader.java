@@ -46,9 +46,11 @@ import com.fasterxml.jackson.databind.deser.std.StdDelegatingDeserializer;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.apache.hadoop.fs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PhysicalPlanReader {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PhysicalPlanReader.class);
+  private static final Logger logger = LoggerFactory.getLogger(PhysicalPlanReader.class);
 
   private final ObjectReader physicalPlanReader;
   private final ObjectMapper mapper;
@@ -61,6 +63,7 @@ public class PhysicalPlanReader {
     ObjectMapper lpMapper = lpPersistance.getMapper();
 
     // Endpoint serializer/deserializer.
+    @SuppressWarnings("unchecked")
     SimpleModule serDeModule = new SimpleModule("PhysicalOperatorModule")
         .addSerializer(DrillbitEndpoint.class, new DrillbitEndpointSerDe.Se())
         .addDeserializer(DrillbitEndpoint.class, new DrillbitEndpointSerDe.De())

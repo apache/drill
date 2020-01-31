@@ -43,7 +43,7 @@ public class DummyFilterPushDownListener implements FilterPushDownListener {
 
   public static Set<StoragePluginOptimizerRule> rulesFor(
       OptimizerRulesContext optimizerRulesContext, DummyStoragePluginConfig config) {
-    return FilterPushDownStrategy.rulesFor(optimizerRulesContext,
+    return FilterPushDownStrategy.rulesFor(
         new DummyFilterPushDownListener(config));
   }
 
@@ -113,7 +113,9 @@ public class DummyFilterPushDownListener implements FilterPushDownListener {
     if (config.keepFilters()) {
       exprs = new ArrayList<>();
       if (andTerms != null) {
-        exprs.addAll(andTerms.stream().map(t -> t.left).collect(Collectors.toList()));
+        exprs.addAll(andTerms.stream()
+            .map(t -> t.left)
+            .collect(Collectors.toList()));
       }
       if (orTerm != null) {
         exprs.add(orTerm.left);
