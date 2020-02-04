@@ -66,14 +66,6 @@ On the other hand, if the test is more of a SQL or planner-level concept, then t
 
 ## Categories
 
-Currently Drill uses Travis to run smoke tests for every PR and commit. All of Drill's unit tests cannot be run on Travis because Drill's tests take longer to run than the
-maximum allowed container time for the free tier of Travis. In order to decide which tests are run on Travis and which tests are not, tests are categorized using JUnit's
-`@Category` annotation. Currently the following categories are excluded from Travis:
-
-  - **SlowTest:** Tests that are slow.
-  - **UnlikelyTest:** Tests that cover parts of the code that are rarely or never touched.
-  - **SecurityTest:** Corner case tests for security features.
-  
 To mark a test with a category you can do the following:
 
 ```
