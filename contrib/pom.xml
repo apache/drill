@@ -56,12 +56,4 @@
     <module>udfs</module>
   </modules>
 
-  <profiles>
-    <profile>
-      <id>travis</id>
-      <properties>
-        <skipTests>true</skipTests>
-      </properties>
-    </profile>
-  </profiles>
 </project>
