@@ -193,8 +193,6 @@ public class TestMetastoreCommands extends ClusterTest {
   public static void setUp() throws Exception {
     ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher);
     builder.configProperty(ExecConstants.ZK_ROOT, defaultFolder.getRoot().getPath());
-    builder.sessionOption(ExecConstants.METASTORE_ENABLED, true);
-    builder.sessionOption(ExecConstants.SLICE_TARGET, 1);
     startCluster(builder);
 
     dirTestWatcher.copyResourceToRoot(Paths.get("multilevel/parquet"));
@@ -2714,9 +2712,10 @@ public class TestMetastoreCommands extends ClusterTest {
 
   @Test
   public void testAnalyzeWithSampleStatistics() throws Exception {
-    String tableName = "dfs.tmp.employeeWithStatsFile";
+    String tableName = "employeeWithStatsFile";
 
     try {
+      run("use dfs.tmp");
       run("CREATE TABLE %s AS SELECT * from cp.`employee.json`", tableName);
 
       client.alterSession(PlannerSettings.STATISTICS_USE.getOptionName(), true);
@@ -2725,18 +2724,18 @@ public class TestMetastoreCommands extends ClusterTest {
           .sqlQuery("ANALYZE TABLE %s COLUMNS(department_id) REFRESH METADATA COMPUTE STATISTICS SAMPLE 95 PERCENT", tableName)
           .unOrdered()
           .baselineColumns("ok", "summary")
-          .baselineValues(true, String.format("Collected / refreshed metadata for table [%s]", tableName))
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.tmp.%s]", tableName))
           .go();
 
-      String query = "select employee_id from %s where department_id = 2";
+      String query = "select EST_NUM_NON_NULLS is not null as has_value\n" +
+          "from information_schema.`columns` where table_name='%s' and column_name='department_id'";
 
-      String expectedPlan1 = "Filter\\(condition.*\\).*rowcount = 96.25,";
-      String expectedPlan2 = "Scan.*columns=\\[`department_id`, `employee_id`].*rowcount = 1155.0";
-
-      queryBuilder().sql(query, tableName)
-          .detailedPlanMatcher()
-          .include(expectedPlan1, expectedPlan2)
-          .match();
+      testBuilder()
+          .sqlQuery(query, tableName)
+          .unOrdered()
+          .baselineColumns("has_value")
+          .baselineValues(true)
+          .go();
     } finally {
       run("analyze table %s drop metadata if exists", tableName);
       client.resetSession(PlannerSettings.STATISTICS_USE.getOptionName());
