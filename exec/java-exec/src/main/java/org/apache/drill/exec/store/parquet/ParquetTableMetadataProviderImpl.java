@@ -37,6 +37,8 @@ import org.apache.hadoop.fs.Path;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -126,22 +128,23 @@ public class ParquetTableMetadataProviderImpl extends BaseParquetMetadataProvide
    * @return list of cache files found in the given directory path
    */
   public List<Path> populateMetaPaths(Path p, DrillFileSystem fs) throws IOException {
-    List<Path> metaFilepaths = new ArrayList<>();
-    for (String filename : Metadata.CURRENT_METADATA_FILENAMES) {
-      metaFilepaths.add(new Path(p, filename));
-    }
-    for (String filename : Metadata.OLD_METADATA_FILENAMES) {
-      // Read the older version of metadata file if the current version of metadata cache files donot exist.
+    if (fs.isDirectory(p)) {
+      List<Path> metaFilepaths = Arrays.stream(Metadata.CURRENT_METADATA_FILENAMES)
+          .map(filename -> new Path(p, filename))
+          .collect(Collectors.toList());
+      for (String filename : Metadata.OLD_METADATA_FILENAMES) {
+        // Read the older version of metadata file if the current version of metadata cache files does not exist.
+        if (fileExists(fs, metaFilepaths)) {
+          return metaFilepaths;
+        }
+        metaFilepaths.clear();
+        metaFilepaths.add(new Path(p, filename));
+      }
       if (fileExists(fs, metaFilepaths)) {
         return metaFilepaths;
       }
-      metaFilepaths.clear();
-      metaFilepaths.add(new Path(p, filename));
     }
-    if (fileExists(fs, metaFilepaths)) {
-      return metaFilepaths;
-    }
-    return new ArrayList<>();
+    return Collections.emptyList();
   }
 
   public boolean fileExists(DrillFileSystem fs, List<Path> paths) throws IOException {
