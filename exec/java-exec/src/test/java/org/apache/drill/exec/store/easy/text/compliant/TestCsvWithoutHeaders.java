@@ -47,7 +47,6 @@ import org.junit.experimental.categories.Category;
  * and without an external schema. Data is represented with the
  * `columns` array column.
  */
-
 @Category(RowSetTests.class)
 public class TestCsvWithoutHeaders extends BaseCsvTest {
 
@@ -79,7 +78,6 @@ public class TestCsvWithoutHeaders extends BaseCsvTest {
   protected static void buildNestedTableWithoutHeaders() throws IOException {
 
     // Two-level partitioned table
-
     File rootDir = new File(testDir, PART_DIR);
     rootDir.mkdir();
     buildFile(new File(rootDir, ROOT_FILE), sampleData);
@@ -91,7 +89,6 @@ public class TestCsvWithoutHeaders extends BaseCsvTest {
   /**
    * Verify that the wildcard expands to the `columns` array
    */
-
   @Test
   public void testWildcard() throws IOException {
     String sql = "SELECT * FROM `dfs.data`.`%s`";
@@ -222,7 +219,6 @@ public class TestCsvWithoutHeaders extends BaseCsvTest {
    * data columns (so that data columns don't shift positions if
    * files are nested to another level.)
    */
-
   @Test
   public void testPartitionExpansion() throws IOException {
     String sql = "SELECT * FROM `dfs.data`.`%s`";
@@ -235,8 +231,8 @@ public class TestCsvWithoutHeaders extends BaseCsvTest {
 
     RowSet rowSet;
     if (SCHEMA_BATCH_ENABLED) {
-      // First batch is empty; just carries the schema.
 
+      // First batch is empty; just carries the schema.
       assertTrue(iter.hasNext());
       rowSet = iter.next();
       assertEquals(0, rowSet.rowCount());
@@ -244,13 +240,11 @@ public class TestCsvWithoutHeaders extends BaseCsvTest {
     }
 
     // Read the two data batches.
-
     for (int i = 0; i < 2; i++) {
       assertTrue(iter.hasNext());
       rowSet = iter.next();
 
       // Figure out which record this is and test accordingly.
-
       RowSetReader reader = rowSet.reader();
       assertTrue(reader.next());
       ArrayReader ar = reader.array(0);
@@ -279,7 +273,6 @@ public class TestCsvWithoutHeaders extends BaseCsvTest {
    * V2 message: DATA_READ ERROR: Selected column 'columns' must be an array index
    * @throws Exception
    */
-
   @Test
   public void testColumnsAsMap() throws Exception {
     String sql = "SELECT `%s`.columns.foo FROM `dfs.data`.`%s`";
@@ -298,7 +291,6 @@ public class TestCsvWithoutHeaders extends BaseCsvTest {
    * V2 message: INTERNAL_ERROR ERROR: 70000
    * @throws Exception
    */
-
   @Test
   public void testColumnsIndexOverflow() throws Exception {
     String sql = "SELECT columns[70000] FROM `dfs.data`.`%s`";

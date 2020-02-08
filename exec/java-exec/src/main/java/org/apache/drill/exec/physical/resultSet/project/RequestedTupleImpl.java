@@ -17,19 +17,14 @@
  */
 package org.apache.drill.exec.physical.resultSet.project;
 
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
-import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.expression.PathSegment;
-import org.apache.drill.common.expression.PathSegment.ArraySegment;
-import org.apache.drill.common.expression.PathSegment.NameSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.record.metadata.TupleNameSpace;
 
 /**
- * Represents an explicit projection at some tuple level.
+ * Represents an explicit projection at some tuple level. A tuple is the
+ * top-level row or a map.
  * <p>
  * A column is projected if it is explicitly listed in the selection list.
  * <p>
@@ -66,22 +61,41 @@ import org.apache.drill.exec.record.metadata.TupleNameSpace;
  * <li><tt>ArraySegment</tt> is the other kind of name part and represents
  * an array index such as the "[1]" in `columns`[1].</li>
  * <ul>
- * The parser here consumes only names, this mechanism does not consider
- * array indexes. As a result, there may be multiple projected columns that
- * map to the same projection here: `columns`[1] and `columns`[2] both map to
- * the name `columns`, for example.
+ * The parser considers names and array indexes. Example:<pre><code>
+ * a
+ * a.b
+ * a[2]
+ * a[2].b
+ * a[1][2][3]
+ * a[1][2][3].b.c
+ * a['foo'][0].b['bar']
+ * </code></pre>
+ *
+ * <h4>Usage</h4>
+ * The projection information is a <i>pattern</i> which supports queries of the
+ * form "is this column projected", and "if projected, is the projection consistent
+ * with such-and-so concrete type?" Clients should not try to work out the
+ * meaning of the pattern: doing so is very complex. Instead, do the following:
+ *
+ * <pre><code>
+ * String colName = ...;
+ * ColumnMetadata colDef = ...;
+ * InputTupleProjection tupleProj = ...
+ * if (tupleProj.isProjected(colName)) {
+ *   if (!tupleProj.isComsistentWith(colDef)) {
+ *     // Raise an error
+ *   }
+ *   // Handle a projected column.
+ * }</code></pre>
  */
-
 public class RequestedTupleImpl implements RequestedTuple {
 
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RequestedTupleImpl.class);
-  private static final Collection<SchemaPath> PROJECT_ALL = Collections.singletonList(SchemaPath.STAR_COLUMN);
-
   private final RequestedColumnImpl parent;
+  protected TupleProjectionType projectionType = TupleProjectionType.SOME;
   private final TupleNameSpace<RequestedColumn> projection = new TupleNameSpace<>();
 
   public RequestedTupleImpl() {
-    parent = null;
+    this.parent = null;
   }
 
   public RequestedTupleImpl(RequestedColumnImpl parent) {
@@ -100,194 +114,26 @@ public class RequestedTupleImpl implements RequestedTuple {
     return projection.get(colName.toLowerCase());
   }
 
-  private RequestedColumnImpl getImpl(String colName) {
+  protected RequestedColumnImpl getImpl(String colName) {
     return (RequestedColumnImpl) get(colName);
   }
 
-  @Override
-  public ProjectionType projectionType(String colName) {
+  protected RequestedColumn project(String colName) {
     RequestedColumn col = get(colName);
-    return col == null ? ProjectionType.UNPROJECTED : col.type();
-  }
-
-  @Override
-  public RequestedTuple mapProjection(String colName) {
-    RequestedColumnImpl col = getImpl(colName);
-    RequestedTuple mapProj = (col == null) ? null : col.mapProjection();
-    if (mapProj != null) {
-      return mapProj;
-    }
-
-    // No explicit information for the map. Members inherit the
-    // same projection as the map itself.
-
     if (col != null) {
-      return col.projectAllMembers(true);
-    }
-    return ImpliedTupleRequest.NO_MEMBERS;
-  }
-
-  /**
-   * Create a requested tuple projection from a rewritten top-level
-   * projection list. The columns within the list have already been parsed to
-   * pick out arrays, maps and scalars. The list must not include the
-   * wildcard: a wildcard list must be passed in as a null list. An
-   * empty list means project nothing. Null list means project all, else
-   * project only the columns in the list.
-   *
-   * @param projList top-level, parsed columns
-   * @return the tuple projection for the top-leel row
-   */
-
-  public static RequestedTuple build(List<RequestedColumn> projList) {
-    if (projList == null) {
-      return new ImpliedTupleRequest(true);
-    }
-    if (projList.isEmpty()) {
-      return ImpliedTupleRequest.NO_MEMBERS;
-    }
-    return new RequestedTupleImpl(projList);
-  }
-
-  /**
-   * Parse a projection list. The list should consist of a list of column names;
-   * or wildcards. An empty list means
-   * nothing is projected. A null list means everything is projected (that is, a
-   * null list here is equivalent to a wildcard in the SELECT statement.)
-   * <p>
-   * The projection list may include both a wildcard and column names (as in
-   * the case of implicit columns.) This results in a final list that both
-   * says that everything is projected, and provides the list of columns.
-   * <p>
-   * Parsing is used at two different times. First, to parse the list from
-   * the physical operator. This has the case above: an explicit wildcard
-   * and/or additional columns. Then, this class is used again to prepare the
-   * physical projection used when reading. In this case, wildcards should
-   * be removed, implicit columns pulled out, and just the list of read-level
-   * columns should remain.
-   *
-   * @param projList
-   *          the list of projected columns, or null if no projection is to be
-   *          done
-   * @return a projection set that implements the specified projection
-   */
-
-  public static RequestedTuple parse(Collection<SchemaPath> projList) {
-    if (projList == null) {
-      projList = PROJECT_ALL;
-    }
-    else if (projList.isEmpty()) {
-      return ImpliedTupleRequest.NO_MEMBERS;
-    }
-    RequestedTupleImpl projSet = new RequestedTupleImpl();
-    for (SchemaPath col : projList) {
-      projSet.parseSegment(col.getRootSegment());
-    }
-    return projSet;
-  }
-
-  @Override
-  public void parseSegment(PathSegment pathSeg) {
-    if (pathSeg.isLastPath()) {
-      parseLeaf((NameSegment) pathSeg);
-    } else if (pathSeg.getChild().isArray()) {
-      parseArray((NameSegment) pathSeg);
+      if (col instanceof RequestedColumnImpl) {
+        ((RequestedColumnImpl) col).bumpRefCount();
+      }
     } else {
-      parseInternal((NameSegment) pathSeg);
+      if (colName.equals(SchemaPath.DYNAMIC_STAR)) {
+        projectionType = TupleProjectionType.ALL;
+        col = new RequestedWildcardColumn(this, colName);
+      } else {
+        col = new RequestedColumnImpl(this, colName);
+      }
+      projection.add(colName, col);
     }
-  }
-
-  private void parseLeaf(NameSegment nameSeg) {
-    String name = nameSeg.getPath();
-    RequestedColumnImpl member = getImpl(name);
-    if (member == null) {
-      projection.add(name, new RequestedColumnImpl(this, name));
-      return;
-    }
-    if (member.isSimple() || member.isWildcard()) {
-      throw UserException
-        .validationError()
-        .message("Duplicate column in project list: %s",
-            member.fullName())
-        .build(logger);
-    }
-    if (member.isArray()) {
-
-      // Saw both a and a[x]. Occurs in project list.
-      // Project all elements.
-
-      member.projectAllElements();
-      return;
-    }
-
-    // Else the column is a known map.
-
-    assert member.isTuple();
-
-    // Allow both a.b (existing) and a (this column)
-    // Since we we know a is a map, and we've projected the
-    // whole map, modify the projection of the column to
-    // project the entire map.
-
-    member.projectAllMembers(true);
-  }
-
-  private void parseInternal(NameSegment nameSeg) {
-    String name = nameSeg.getPath();
-    RequestedColumnImpl member = getImpl(name);
-    RequestedTuple map;
-    if (member == null) {
-      // New member. Since this is internal, this new member
-      // must be a map.
-
-      member = new RequestedColumnImpl(this, name);
-      projection.add(name, member);
-      map = member.asTuple();
-    } else if (member.isTuple()) {
-
-      // Known map. Add to it.
-
-      map = member.asTuple();
-    } else {
-
-      // Member was previously projected by itself. We now
-      // know it is a map. So, project entire map. (Earlier
-      // we saw `a`. Now we see `a`.`b`.)
-
-      map = member.projectAllMembers(true);
-    }
-    map.parseSegment(nameSeg.getChild());
-  }
-
-  private void parseArray(NameSegment nameSeg) {
-    String name = nameSeg.getPath();
-    ArraySegment arraySeg = ((ArraySegment) nameSeg.getChild());
-    int index = arraySeg.getIndex();
-    RequestedColumnImpl member = getImpl(name);
-    if (member == null) {
-      member = new RequestedColumnImpl(this, name);
-      projection.add(name, member);
-    } else if (member.isSimple()) {
-
-      // Saw both a and a[x]. Occurs in project list.
-      // Project all elements.
-
-      member.projectAllElements();
-      return;
-    }
-
-    // Allow duplicate indexes. Example: z[0], z[0]['orange']
-    if (!member.hasIndex(index)) {
-      member.addIndex(index);
-    }
-
-    // Drills SQL parser does not support map arrays: a[0].c
-    // But, the SchemaPath does support them, so no harm in
-    // parsing them here.
-
-    if (! arraySeg.isLastPath()) {
-      parseInternal(nameSeg);
-    }
+    return col;
   }
 
   @Override
@@ -309,14 +155,39 @@ public class RequestedTupleImpl implements RequestedTuple {
    */
   @Override
   public TupleProjectionType type() {
-    if (projection.isEmpty()) {
-      return TupleProjectionType.NONE;
+    return projectionType;
+  }
+
+  @Override
+  public boolean isProjected(String colName) {
+    return projectionType == TupleProjectionType.ALL ? true : get(colName) != null;
+  }
+
+  @Override
+  public RequestedTuple mapProjection(String colName) {
+    switch (projectionType) {
+      case ALL:
+        return ImpliedTupleRequest.ALL_MEMBERS;
+      case NONE:
+        return ImpliedTupleRequest.NO_MEMBERS;
+      default:
+        RequestedColumnImpl colProj = getImpl(colName);
+        return colProj == null ? ImpliedTupleRequest.NO_MEMBERS : colProj.tuple();
     }
-    for (RequestedColumn col : projection) {
-      if (col.isWildcard()) {
-        return TupleProjectionType.ALL;
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder buf = new StringBuilder()
+        .append("{");
+    boolean first = true;
+    for (RequestedColumn col : projections()) {
+      if (!first) {
+        buf.append(", ");
       }
+      first = false;
+      buf.append(col.toString());
     }
-    return TupleProjectionType.SOME;
+    return buf.append("}").toString();
   }
 }

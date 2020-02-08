@@ -31,6 +31,9 @@ public class WildcardProjectionSet extends AbstractProjectionSet {
   }
 
   @Override
+  public boolean isProjected(String colName) { return true; }
+
+  @Override
   public ColumnReadProjection readProjection(ColumnMetadata col) {
     if (isSpecial(col)) {
       return new UnprojectedReadColumn(col);

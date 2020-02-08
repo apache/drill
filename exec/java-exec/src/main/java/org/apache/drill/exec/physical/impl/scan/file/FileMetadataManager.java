@@ -60,14 +60,12 @@ import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTes
  * <p>
  * This is the successor to {@link org.apache.drill.exec.store.ColumnExplorer}.
  */
-
 public class FileMetadataManager implements MetadataManager, ReaderProjectionResolver, VectorSource {
 
   /**
    * Automatically compute partition depth from files. Use only
    * for testing!
    */
-
   public static final int AUTO_PARTITION_DEPTH = -1;
 
   public static class FileMetadataOptions {
@@ -75,8 +73,12 @@ public class FileMetadataManager implements MetadataManager, ReaderProjectionRes
     private Path rootDir;
     private int partitionCount = AUTO_PARTITION_DEPTH;
     private List<Path> files;
+
+    /**
+     * Historically Drill will expand parition columns (dir0, dir1, ...)
+     * when the project list includes a wildcard.
+     */
     protected boolean useLegacyWildcardExpansion = true;
-    protected boolean useLegacyExpansionLocation;
 
     /**
       * Specify the selection root for a directory scan, if any.
@@ -112,21 +114,6 @@ public class FileMetadataManager implements MetadataManager, ReaderProjectionRes
       */
      public void useLegacyWildcardExpansion(boolean flag) {
        useLegacyWildcardExpansion = flag;
-     }
-
-     /**
-      * In legacy mode, above, Drill expands partition columns whenever the
-      * wildcard appears. Drill 1.1 - 1.11 put expanded partition columns after
-      * data columns. This is actually a better position as it minimizes changes
-      * the row layout for files at different depths. Drill 1.12 moved them before
-      * data columns: at the location of the wildcard.
-      * <p>
-      * This flag, when set, uses the Drill 1.12 position. Later enhancements
-      * can unset this flag to go back to the future: use the preferred location
-      * after other columns.
-      */
-     public void useLegacyExpansionLocation(boolean flag) {
-       useLegacyExpansionLocation = flag;
      }
   }
 

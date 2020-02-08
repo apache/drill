@@ -45,4 +45,7 @@ public class EmptyProjectionSet implements ProjectionSet {
 
   @Override
   public boolean isEmpty() { return true; }
+
+  @Override
+  public boolean isProjected(String colName) { return false; }
 }

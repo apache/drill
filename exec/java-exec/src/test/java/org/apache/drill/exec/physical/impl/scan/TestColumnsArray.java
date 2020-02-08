@@ -50,7 +50,6 @@ import org.junit.experimental.categories.Category;
  * Test the "columns" array mechanism integrated with the scan schema
  * orchestrator including simulating reading data.
  */
-
 @Category(RowSetTests.class)
 public class TestColumnsArray extends SubOperatorTest {
 

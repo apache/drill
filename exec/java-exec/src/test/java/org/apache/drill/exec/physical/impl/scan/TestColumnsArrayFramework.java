@@ -55,7 +55,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * Test the columns-array specific behavior in the columns scan framework.
  */
-
 @Category(RowSetTests.class)
 public class TestColumnsArrayFramework extends SubOperatorTest {
 
@@ -145,7 +144,6 @@ public class TestColumnsArrayFramework extends SubOperatorTest {
    * Test including a column other than "columns". Occurs when
    * using implicit columns.
    */
-
   @Test
   public void testNonColumnsProjection() {
 
@@ -178,7 +176,6 @@ public class TestColumnsArrayFramework extends SubOperatorTest {
   /**
    * Test projecting just the `columns` column.
    */
-
   @Test
   public void testColumnsProjection() {
 

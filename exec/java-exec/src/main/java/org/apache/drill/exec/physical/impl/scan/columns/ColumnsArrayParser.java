@@ -22,8 +22,8 @@ import org.apache.drill.exec.physical.impl.scan.project.AbstractUnresolvedColumn
 import org.apache.drill.exec.physical.impl.scan.project.ColumnProjection;
 import org.apache.drill.exec.physical.impl.scan.project.ScanLevelProjection;
 import org.apache.drill.exec.physical.impl.scan.project.ScanLevelProjection.ScanProjectionParser;
+import org.apache.drill.exec.physical.resultSet.project.RequestedColumn;
 import org.apache.drill.exec.physical.resultSet.project.RequestedColumnImpl;
-import org.apache.drill.exec.physical.resultSet.project.RequestedTuple.RequestedColumn;
 import org.apache.drill.exec.store.easy.text.TextFormatPlugin;
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.slf4j.Logger;
@@ -115,7 +115,7 @@ public class ColumnsArrayParser implements ScanProjectionParser {
 
   @Override
   public boolean parse(RequestedColumn inCol) {
-    if (! requireColumnsArray && ! allowOtherCols) {
+    if (!requireColumnsArray && !allowOtherCols) {
 
       // If we do not require the columns array, then we presume that
       // the reader does not provide arrays, so any use of the columns[x]
@@ -137,14 +137,14 @@ public class ColumnsArrayParser implements ScanProjectionParser {
           new RequestedColumnImpl(builder.rootProjection(), ColumnsScanFramework.COLUMNS_COL));
       return true;
     }
-    if (! inCol.nameEquals(ColumnsScanFramework.COLUMNS_COL)) {
+    if (!inCol.nameEquals(ColumnsScanFramework.COLUMNS_COL)) {
       return false;
     }
 
     // The columns column cannot be a map. That is, the following is
     // not allowed: columns.foo.
 
-    if (inCol.isTuple() && ! allowOtherCols) {
+    if (inCol.isTuple() && !allowOtherCols) {
       throw UserException
         .validationError()
         .message("Column `%s` has map elements, but must be an array", inCol.name())
@@ -175,11 +175,10 @@ public class ColumnsArrayParser implements ScanProjectionParser {
     // Special `columns` array column. Allow multiple, but
     // project only one.
 
-    if (columnsArrayCol != null) {
-      return;
+    if (columnsArrayCol == null) {
+      columnsArrayCol = new UnresolvedColumnsArrayColumn(inCol);
+      builder.addTableColumn(columnsArrayCol);
     }
-    columnsArrayCol = new UnresolvedColumnsArrayColumn(inCol);
-    builder.addTableColumn(columnsArrayCol);
   }
 
   @Override
@@ -197,7 +196,7 @@ public class ColumnsArrayParser implements ScanProjectionParser {
           .addContext(builder.context())
           .build(logger);
       }
-      if (requireColumnsArray && ! allowOtherCols) {
+      if (requireColumnsArray && !allowOtherCols) {
         throw UserException
           .validationError()
           .message("Only `columns` column is allowed. Found: " + col.name())

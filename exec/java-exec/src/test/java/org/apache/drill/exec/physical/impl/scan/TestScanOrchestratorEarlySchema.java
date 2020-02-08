@@ -53,41 +53,34 @@ import org.junit.experimental.categories.Category;
  * The tests here focus on the scan orchestrator itself; the tests assume
  * that tests for lower-level components have already passed.
  */
-
 @Category(RowSetTests.class)
 public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
 
   /**
    * Test SELECT * from an early-schema table of (a, b)
    */
-
   @Test
   public void testEarlySchemaWildcard() {
     ScanOrchestratorBuilder builder = new MockScanBuilder();
 
     // SELECT * ...
-
     builder.setProjection(RowSetTestUtils.projectAll());
     ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator(), builder);
 
     // ... FROM table
-
     ReaderSchemaOrchestrator reader = scanner.startReader();
 
     // file schema (a, b)
-
     TupleMetadata tableSchema = new SchemaBuilder()
         .add("a", MinorType.INT)
         .add("b", MinorType.VARCHAR)
         .buildSchema();
 
     // Create the table loader
-
     ResultSetLoader loader = reader.makeTableLoader(tableSchema);
 
     // Simulate a first reader in a scan that can provide an
     // empty batch to define schema.
-
     {
       reader.defineSchema();
       SingleRowSet expected = fixture.rowSetBuilder(tableSchema)
@@ -99,7 +92,6 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
     }
 
     // Create a batch of data.
-
     reader.startBatch();
     loader.writer()
       .addRow(1, "fred")
@@ -108,7 +100,6 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
     reader.endBatch();
 
     // Verify
-
     {
       SingleRowSet expected = fixture.rowSetBuilder(tableSchema)
           .addRow(1, "fred")
@@ -120,7 +111,6 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
     }
 
     // Second batch.
-
     reader.startBatch();
     loader.writer()
       .addRow(3, "barney")
@@ -129,7 +119,6 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
     reader.endBatch();
 
     // Verify
-
     {
       SingleRowSet expected = fixture.rowSetBuilder(tableSchema)
           .addRow(3, "barney")
@@ -142,7 +131,6 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
 
     // Explicit reader close. (All other tests are lazy, they
     // use an implicit close.)
-
     scanner.closeReader();
 
     scanner.close();
@@ -151,36 +139,30 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
   /**
    * Test SELECT a, b FROM table(a, b)
    */
-
   @Test
   public void testEarlySchemaSelectAll() {
     ScanOrchestratorBuilder builder = new MockScanBuilder();
 
     // SELECT a, b ...
-
     builder.setProjection(RowSetTestUtils.projectList("a", "b"));
     ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator(), builder);
 
     // ... FROM table
-
     ReaderSchemaOrchestrator reader = scanner.startReader();
 
     // file schema (a, b)
-
     TupleMetadata tableSchema = new SchemaBuilder()
         .add("a", MinorType.INT)
         .add("b", MinorType.VARCHAR)
         .buildSchema();
 
     // Create the table loader
-
     ResultSetLoader loader = reader.makeTableLoader(tableSchema);
 
     // Don't bother with an empty batch here or in other tests.
     // Simulates the second reader in a scan.
 
     // Create a batch of data.
-
     reader.startBatch();
     loader.writer()
       .addRow(1, "fred")
@@ -188,7 +170,6 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
     reader.endBatch();
 
     // Verify
-
     SingleRowSet expected = fixture.rowSetBuilder(tableSchema)
         .addRow(1, "fred")
         .addRow(2, "wilma")
@@ -203,29 +184,24 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
   /**
    * Test SELECT b, a FROM table(a, b)
    */
-
   @Test
   public void testEarlySchemaSelectAllReorder() {
     ScanOrchestratorBuilder builder = new MockScanBuilder();
 
     // SELECT b, a ...
-
     builder.setProjection(RowSetTestUtils.projectList("b", "a"));
     ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator(), builder);
 
     // ... FROM table
-
     ReaderSchemaOrchestrator reader = scanner.startReader();
 
     // file schema (a, b)
-
     TupleMetadata tableSchema = new SchemaBuilder()
         .add("a", MinorType.INT)
         .add("b", MinorType.VARCHAR)
         .buildSchema();
 
     // Create the table loader
-
     ResultSetLoader loader = reader.makeTableLoader(tableSchema);
 
     TupleMetadata expectedSchema = new SchemaBuilder()
@@ -234,7 +210,6 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
         .buildSchema();
 
     // Create a batch of data.
-
    reader.startBatch();
    loader.writer()
      .addRow(1, "fred")
@@ -242,7 +217,6 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
    reader.endBatch();
 
     // Verify
-
    SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
       .addRow("fred", 1)
       .addRow("wilma", 2)
@@ -258,29 +232,24 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
    * Test SELECT a, b, c FROM table(a, b)
    * c will be null
    */
-
   @Test
   public void testEarlySchemaSelectExtra() {
     ScanOrchestratorBuilder builder = new MockScanBuilder();
 
     // SELECT a, b, c ...
-
     builder.setProjection(RowSetTestUtils.projectList("a", "b", "c"));
     ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator(), builder);
 
     // ... FROM table
-
     ReaderSchemaOrchestrator reader = scanner.startReader();
 
     // file schema (a, b)
-
     TupleMetadata tableSchema = new SchemaBuilder()
         .add("a", MinorType.INT)
         .add("b", MinorType.VARCHAR)
         .buildSchema();
 
     // Create the table loader
-
     ResultSetLoader loader = reader.makeTableLoader(tableSchema);
 
     TupleMetadata expectedSchema = new SchemaBuilder()
@@ -289,8 +258,7 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
         .addNullable("c", MinorType.INT)
         .buildSchema();
 
-   // Create a batch of data.
-
+    // Create a batch of data.
     reader.startBatch();
     loader.writer()
       .addRow(1, "fred")
@@ -314,13 +282,11 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
    * Test SELECT a, b, c FROM table(a, b)
    * c will be null of type VARCHAR
    */
-
   @Test
   public void testEarlySchemaSelectExtraCustomType() {
     ScanOrchestratorBuilder builder = new MockScanBuilder();
 
     // Null columns of type VARCHAR
-
     MajorType nullType = MajorType.newBuilder()
         .setMinorType(MinorType.VARCHAR)
         .setMode(DataMode.OPTIONAL)
@@ -328,23 +294,19 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
     builder.setNullType(nullType);
 
     // SELECT a, b, c ...
-
     builder.setProjection(RowSetTestUtils.projectList("a", "b", "c"));
     ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator(), builder);
 
     // ... FROM table ...
-
     ReaderSchemaOrchestrator reader = scanner.startReader();
 
     // file schema (a, b)
-
     TupleMetadata tableSchema = new SchemaBuilder()
         .add("a", MinorType.INT)
         .add("b", MinorType.VARCHAR)
         .buildSchema();
 
     // Create the table loader
-
     ResultSetLoader loader = reader.makeTableLoader(tableSchema);
 
     TupleMetadata expectedSchema = new SchemaBuilder()
@@ -354,7 +316,6 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
         .buildSchema();
 
     // Create a batch of data.
-
     reader.startBatch();
     loader.writer()
       .addRow(1, "fred")
@@ -362,7 +323,6 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
     reader.endBatch();
 
     // Verify
-
     SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
       .addRow(1, "fred", null)
       .addRow(2, "wilma", null)
@@ -377,22 +337,18 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
   /**
    * Test SELECT a FROM table(a, b)
    */
-
   @Test
   public void testEarlySchemaSelectSubset() {
     ScanOrchestratorBuilder builder = new MockScanBuilder();
 
     // SELECT a ...
-
     builder.setProjection(RowSetTestUtils.projectList("a"));
     ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator(), builder);
 
     // ... FROM table
-
     ReaderSchemaOrchestrator reader = scanner.startReader();
 
     // file schema (a, b)
-
     TupleMetadata tableSchema = new SchemaBuilder()
         .add("a", MinorType.INT)
         .add("b", MinorType.VARCHAR)
@@ -404,7 +360,6 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
 
     // Verify that unprojected column is unprojected in the
     // table loader.
-
     assertFalse(loader.writer().column("b").isProjected());
 
     TupleMetadata expectedSchema = new SchemaBuilder()
@@ -412,7 +367,6 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
         .buildSchema();
 
     // Create a batch of data.
-
     reader.startBatch();
     loader.writer()
       .addRow(1, "fred")
@@ -420,7 +374,6 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
     reader.endBatch();
 
     // Verify
-
     SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
       .addRow(1)
       .addRow(2)
@@ -435,47 +388,39 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
   /**
    * Test SELECT - FROM table(a, b)
    */
-
   @Test
   public void testEarlySchemaSelectNone() {
     ScanOrchestratorBuilder builder = new MockScanBuilder();
 
     // SELECT ...
     // (Like SELECT COUNT(*) ...
-
     builder.setProjection(RowSetTestUtils.projectList());
     ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator(), builder);
 
     // ... FROM table
-
     ReaderSchemaOrchestrator reader = scanner.startReader();
 
     // file schema (a, b)
-
     TupleMetadata tableSchema = new SchemaBuilder()
         .add("a", MinorType.INT)
         .add("b", MinorType.VARCHAR)
         .buildSchema();
 
     // Create the table loader
-
     ResultSetLoader loader = reader.makeTableLoader(tableSchema);
 
     // Verify that unprojected column is unprojected in the
     // table loader.
-
     assertTrue(loader.isProjectionEmpty());
     assertFalse(loader.writer().column("a").isProjected());
     assertFalse(loader.writer().column("b").isProjected());
 
     // Verify empty batch.
-
     BatchSchema expectedSchema = new BatchSchemaBuilder()
         .withSchemaBuilder(new SchemaBuilder())
         .build();
 
     // Create a batch of data.
-
     reader.startBatch();
     loader.writer()
       .addRow(1, "fred")
@@ -483,10 +428,8 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
     reader.endBatch();
 
     // Verify
-
     {
       // Two rows, no data.
-
       SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
         .addRow()
         .addRow()
@@ -497,13 +440,11 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
     }
 
     // Fast path to fill in empty rows
-
     reader.startBatch();
     loader.skipRows(10);
     reader.endBatch();
 
     // Verify
-
     {
       VectorContainer output = scanner.output();
       assertEquals(10, output.getRecordCount());
@@ -517,37 +458,30 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
    * Test SELECT * from an early-schema table of () (that is,
    * a schema that consists of zero columns.
    */
-
   @Test
   public void testEmptySchema() {
     ScanOrchestratorBuilder builder = new MockScanBuilder();
 
     // SELECT * ...
-
     builder.setProjection(RowSetTestUtils.projectAll());
     ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator(), builder);
 
     // ... FROM table
-
     ReaderSchemaOrchestrator reader = scanner.startReader();
 
     // file schema ()
-
     TupleMetadata tableSchema = new SchemaBuilder()
         .buildSchema();
 
     // Create the table loader
-
     reader.makeTableLoader(tableSchema);
 
     // Create a batch of data. Because there are no columns, it does
     // not make sense to ready any rows.
-
     reader.startBatch();
     reader.endBatch();
 
     // Verify
-
     {
       SingleRowSet expected = fixture.rowSetBuilder(tableSchema)
           .build();
@@ -559,32 +493,26 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
     scanner.close();
   }
 
-
   /**
    * Test SELECT a from an early-schema table of () (that is,
    * a schema that consists of zero columns.
    */
-
   @Test
   public void testEmptySchemaExtra() {
     ScanOrchestratorBuilder builder = new MockScanBuilder();
 
     // SELECT * ...
-
     builder.setProjection(RowSetTestUtils.projectList("a"));
     ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator(), builder);
 
     // ... FROM table
-
     ReaderSchemaOrchestrator reader = scanner.startReader();
 
     // file schema ()
-
     TupleMetadata tableSchema = new SchemaBuilder()
         .buildSchema();
 
     // Create the table loader
-
     reader.makeTableLoader(tableSchema);
 
     TupleMetadata expectedSchema = new SchemaBuilder()
@@ -593,12 +521,10 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
 
     // Create a batch of data. Because there are no columns, it does
     // not make sense to ready any rows.
-
     reader.startBatch();
     reader.endBatch();
 
     // Verify
-
     SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
         .build();
     RowSetUtilities.verify(expected,
@@ -621,7 +547,6 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
    * The result in all cases should be
    * <tt>(a : BIGINT, b: VARCHAR)</tt>
    */
-
   @Test
   public void testTypeSmoothingExplicit() {
     ScanOrchestratorBuilder builder = new MockScanBuilder();
@@ -634,14 +559,12 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
     SchemaTracker tracker = new SchemaTracker();
 
     // SELECT * ...
-
     builder.setProjection(RowSetTestUtils.projectList("a", "b", "c"));
     ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator(), builder);
 
     int schemaVersion;
     {
       // ... FROM table1(a, b, c)
-
       ReaderSchemaOrchestrator reader = scanner.startReader();
       reader.makeTableLoader(table1Schema);
       reader.defineSchema();
@@ -657,7 +580,6 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
       //
       // B is dropped. But, it is nullable, so the vector cache
       // can supply the proper type to ensure continuity.
-
       TupleMetadata table2Schema = new SchemaBuilder()
           .add("A", MinorType.BIGINT)
           .addArray("C", MinorType.INT)
@@ -677,7 +599,6 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
       //
       // C is dropped. But, it is an array, which uses zero-elements
       // to indicate null, so the vector cache can fill in the type.
-
       TupleMetadata table3Schema = new SchemaBuilder()
           .add("A", MinorType.BIGINT)
           .addNullable("B", MinorType.VARCHAR)
@@ -698,7 +619,6 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
       // This version carries over a non-nullable BIGINT, but that
       // can't become a null column, so nullable BIGINT is substituted,
       // result in a schema change.
-
       TupleMetadata table2Schema = new SchemaBuilder()
           .addNullable("B", MinorType.VARCHAR)
           .addArray("C", MinorType.INT)
@@ -734,18 +654,15 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
    * As a side effect, makes sure that two identical tables (in this case,
    * separated by a different table) results in no schema change.
    */
-
   @Test
   public void testTypeSmoothing() {
     ScanOrchestratorBuilder builder = new MockScanBuilder();
 
     // SELECT a, b ...
-
     builder.setProjection(RowSetTestUtils.projectList("a", "b"));
     ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator(), builder);
 
     // file schema (a, b)
-
     TupleMetadata twoColSchema = new SchemaBuilder()
         .add("a", MinorType.INT)
         .addNullable("b", MinorType.VARCHAR, 10)
@@ -755,12 +672,10 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
     int schemaVersion;
     {
       // ... FROM table 1
-
       ReaderSchemaOrchestrator reader = scanner.startReader();
       ResultSetLoader loader = reader.makeTableLoader(twoColSchema);
 
       // Projection of (a, b) to (a, b)
-
       reader.startBatch();
       loader.writer()
           .addRow(10, "fred")
@@ -779,17 +694,14 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
     }
     {
       // ... FROM table 2
-
       ReaderSchemaOrchestrator reader = scanner.startReader();
 
       // File schema (a)
-
       TupleMetadata oneColSchema = new SchemaBuilder()
           .add("a", MinorType.INT)
           .buildSchema();
 
       // Projection of (a) to (a, b), reusing b from above.
-
       ResultSetLoader loader = reader.makeTableLoader(oneColSchema);
 
       reader.startBatch();
@@ -810,11 +722,9 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
     }
     {
       // ... FROM table 3
-
       ReaderSchemaOrchestrator reader = scanner.startReader();
 
       // Projection of (a, b), to (a, b), reusing b yet again
-
       ResultSetLoader loader = reader.makeTableLoader(twoColSchema);
 
       reader.startBatch();
@@ -845,7 +755,6 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
     ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator(), builder);
 
     // Most general schema: nullable, with precision.
-
     TupleMetadata schema1 = new SchemaBuilder()
         .addNullable("a", MinorType.VARCHAR, 10)
         .buildSchema();
@@ -859,7 +768,6 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
       ResultSetLoader loader = reader.makeTableLoader(schema1);
 
       // Create a batch
-
       reader.startBatch();
       loader.writer()
         .addRow("fred")
@@ -869,7 +777,6 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
       schemaVersion = tracker.schemaVersion();
 
       // Verify
-
       SingleRowSet expected = fixture.rowSetBuilder(schema1)
         .addRow("fred")
         .addRow("wilma")
@@ -883,7 +790,6 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
       // Table 2: required, use nullable
 
       // Required version.
-
       TupleMetadata schema2 = new SchemaBuilder()
           .add("a", MinorType.VARCHAR, 10)
           .buildSchema();
@@ -891,9 +797,7 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
       ReaderSchemaOrchestrator reader = scanner.startReader();
       ResultSetLoader loader = reader.makeTableLoader(schema2);
 
-
       // Create a batch
-
       reader.startBatch();
       loader.writer()
         .addRow("barney")
@@ -901,7 +805,6 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
       reader.endBatch();
 
       // Verify, using persistent schema
-
       tracker.trackSchema(scanner.output());
       assertEquals(schemaVersion, tracker.schemaVersion());
       SingleRowSet expected = fixture.rowSetBuilder(schema1)
@@ -917,7 +820,6 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
       // Table 3: narrower precision, use wider
 
       // Required version with narrower precision.
-
       TupleMetadata schema3 = new SchemaBuilder()
           .add("a", MinorType.VARCHAR, 5)
           .buildSchema();
@@ -926,7 +828,6 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
       ResultSetLoader loader = reader.makeTableLoader(schema3);
 
       // Create a batch
-
       reader.startBatch();
       loader.writer()
         .addRow("bam-bam")
@@ -934,7 +835,6 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
       reader.endBatch();
 
       // Verify, using persistent schema
-
       tracker.trackSchema(scanner.output());
       assertEquals(schemaVersion, tracker.schemaVersion());
 
@@ -956,7 +856,6 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
    * SELECT order, preserving vectors, so no schema change for column
    * reordering.
    */
-
   @Test
   public void testColumnReordering() {
 
@@ -985,11 +884,9 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
     int schemaVersion;
     {
       // ... FROM table 1
-
       ReaderSchemaOrchestrator reader = scanner.startReader();
 
       // Projection of (a, b, c) to (a, b, c)
-
       ResultSetLoader loader = reader.makeTableLoader(schema1);
 
       reader.startBatch();
@@ -1012,11 +909,9 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
     }
     {
       // ... FROM table 2
-
       ReaderSchemaOrchestrator reader = scanner.startReader();
 
       // Projection of (c, a, b) to (a, b, c)
-
       ResultSetLoader loader = reader.makeTableLoader(schema2);
 
       reader.startBatch();
@@ -1037,11 +932,9 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
     }
     {
       // ... FROM table 3
-
       ReaderSchemaOrchestrator reader = scanner.startReader();
 
       // Projection of (a, c, b) to (a, b, c)
-
       ResultSetLoader loader = reader.makeTableLoader(schema3);
 
       reader.startBatch();
@@ -1065,5 +958,4 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
   }
 
   // TODO: Start with early schema, but add columns
-
 }

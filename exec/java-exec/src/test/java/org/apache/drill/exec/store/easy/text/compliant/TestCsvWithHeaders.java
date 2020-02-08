@@ -60,7 +60,6 @@ import static org.junit.Assert.fail;
  *
  * @see TestHeaderBuilder
  */
-
 @Category(RowSetTests.class)
 public class TestCsvWithHeaders extends BaseCsvTest {
 
@@ -136,7 +135,6 @@ public class TestCsvWithHeaders extends BaseCsvTest {
   /**
    * Trivial case: empty header. This case should fail.
    */
-
   @Test
   public void testEmptyCsvHeaders() throws IOException {
     buildFile(EMPTY_HEADERS_FILE, emptyHeaders);
@@ -174,7 +172,6 @@ public class TestCsvWithHeaders extends BaseCsvTest {
     buildFile(EMPTY_BODY_FILE, emptyBody);
 
     // SELECT * query: expect schema-only result.
-
     RowSet rowSet = client.queryBuilder().sql(makeStatement(EMPTY_BODY_FILE)).rowSet();
     TupleMetadata expectedSchema = new SchemaBuilder()
         .add("a", MinorType.VARCHAR)
@@ -186,7 +183,6 @@ public class TestCsvWithHeaders extends BaseCsvTest {
     RowSetUtilities.verify(expected, rowSet);
 
     // Try again with COUNT(*)
-
     long count = client.queryBuilder().sql(COUNT_STAR, EMPTY_BODY_FILE).singletonLong();
     assertEquals(0, count);
   }
@@ -289,7 +285,6 @@ public class TestCsvWithHeaders extends BaseCsvTest {
    * of just one implicit column. V3 uses non-nullable VARCHAR for file
    * metadata columns.
    */
-
   @Test
   public void testImplicitColsExplicitSelect() throws IOException {
     String sql = "SELECT A, filename FROM `dfs.data`.`%s`";
@@ -311,7 +306,6 @@ public class TestCsvWithHeaders extends BaseCsvTest {
    * of just one implicit column. V3 uses non-nullable VARCHAR for file
    * metadata columns.
    */
-
   @Test
   public void testImplicitColWildcard() throws IOException {
     String sql = "SELECT *, filename FROM `dfs.data`.`%s`";
@@ -435,8 +429,8 @@ public class TestCsvWithHeaders extends BaseCsvTest {
 
     RowSet rowSet;
     if (SCHEMA_BATCH_ENABLED) {
-      // First batch is empty; just carries the schema.
 
+      // First batch is empty; just carries the schema.
       assertTrue(iter.hasNext());
       rowSet = iter.next();
       assertEquals(0, rowSet.rowCount());
@@ -444,13 +438,11 @@ public class TestCsvWithHeaders extends BaseCsvTest {
     }
 
     // Read the other two batches.
-
     for (int i = 0; i < 2; i++) {
       assertTrue(iter.hasNext());
       rowSet = iter.next();
 
       // Figure out which record this is and test accordingly.
-
       RowSetReader reader = rowSet.reader();
       assertTrue(reader.next());
       String col1 = reader.scalar(0).getString();
@@ -493,8 +485,8 @@ public class TestCsvWithHeaders extends BaseCsvTest {
 
     RowSet rowSet;
     if (SCHEMA_BATCH_ENABLED) {
-      // First batch is empty; just carries the schema.
 
+      // First batch is empty; just carries the schema.
       assertTrue(iter.hasNext());
       rowSet = iter.next();
       RowSetUtilities.verify(new RowSetBuilder(client.allocator(), expectedSchema).build(),
@@ -502,13 +494,11 @@ public class TestCsvWithHeaders extends BaseCsvTest {
     }
 
     // Read the two batches.
-
     for (int i = 0; i < 2; i++) {
       assertTrue(iter.hasNext());
       rowSet = iter.next();
 
       // Figure out which record this is and test accordingly.
-
       RowSetReader reader = rowSet.reader();
       assertTrue(reader.next());
       String aCol = reader.scalar("a").getString();
@@ -548,8 +538,8 @@ public class TestCsvWithHeaders extends BaseCsvTest {
 
     RowSet rowSet;
     if (SCHEMA_BATCH_ENABLED) {
-      // First batch is empty; just carries the schema.
 
+      // First batch is empty; just carries the schema.
       assertTrue(iter.hasNext());
       rowSet = iter.next();
       RowSetUtilities.verify(new RowSetBuilder(client.allocator(), expectedSchema).build(),
@@ -557,13 +547,11 @@ public class TestCsvWithHeaders extends BaseCsvTest {
     }
 
     // Read the two batches.
-
     for (int i = 0; i < 2; i++) {
       assertTrue(iter.hasNext());
       rowSet = iter.next();
 
       // Figure out which record this is and test accordingly.
-
       RowSetReader reader = rowSet.reader();
       assertTrue(reader.next());
       String aCol = reader.scalar("a").getString();

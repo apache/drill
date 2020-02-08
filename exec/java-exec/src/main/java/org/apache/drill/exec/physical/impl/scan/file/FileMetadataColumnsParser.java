@@ -25,7 +25,9 @@ import java.util.regex.Pattern;
 import org.apache.drill.exec.physical.impl.scan.project.ColumnProjection;
 import org.apache.drill.exec.physical.impl.scan.project.ScanLevelProjection;
 import org.apache.drill.exec.physical.impl.scan.project.ScanLevelProjection.ScanProjectionParser;
-import org.apache.drill.exec.physical.resultSet.project.RequestedTuple.RequestedColumn;
+import org.apache.drill.exec.physical.resultSet.project.RequestedColumn;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Parses the implicit file metadata columns out of a project list,
@@ -33,7 +35,7 @@ import org.apache.drill.exec.physical.resultSet.project.RequestedTuple.Requested
  */
 
 public class FileMetadataColumnsParser implements ScanProjectionParser {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FileMetadataColumnsParser.class);
+  private static final Logger logger = LoggerFactory.getLogger(FileMetadataColumnsParser.class);
 
   // Internal
 
@@ -45,8 +47,6 @@ public class FileMetadataColumnsParser implements ScanProjectionParser {
   // Output
 
   private boolean hasImplicitCols;
-
-  private boolean expandPartitionsAtEnd;
 
   public FileMetadataColumnsParser(FileMetadataManager metadataManager) {
     this.metadataManager = metadataManager;
@@ -69,11 +69,6 @@ public class FileMetadataColumnsParser implements ScanProjectionParser {
     if (defn != null) {
       return buildMetadataColumn(defn, inCol);
     }
-    if (inCol.isWildcard()) {
-      buildWildcard();
-
-      // Don't consider this a match.
-    }
     return false;
   }
 
@@ -81,15 +76,13 @@ public class FileMetadataColumnsParser implements ScanProjectionParser {
 
     // If the projected column is a map or array, then it shadows the
     // partition column. Example: dir0.x, dir0[2].
-
     if (! inCol.isSimple()) {
       logger.warn("Partition column {} is shadowed by a projected {}",
-          inCol.name(), inCol.summary());
+          inCol.name(), inCol.toString());
       return false;
     }
 
     // Partition column
-
     int partitionIndex = Integer.parseInt(m.group(1));
     if (! referencedPartitions.contains(partitionIndex)) {
       builder.addMetadataColumn(
@@ -98,7 +91,6 @@ public class FileMetadataColumnsParser implements ScanProjectionParser {
             partitionIndex));
 
       // Remember the partition for later wildcard expansion
-
       referencedPartitions.add(partitionIndex);
       hasImplicitCols = true;
     }
@@ -110,47 +102,24 @@ public class FileMetadataColumnsParser implements ScanProjectionParser {
 
     // If the projected column is a map or array, then it shadows the
     // metadata column. Example: filename.x, filename[2].
-
     if (! inCol.isSimple()) {
       logger.warn("File metadata column {} is shadowed by a projected {}",
-          inCol.name(), inCol.summary());
+          inCol.name(), inCol.toString());
       return false;
     }
 
     // File metadata (implicit) column
-
     builder.addMetadataColumn(new FileMetadataColumn(inCol.name(), defn));
     hasImplicitCols = true;
     return true;
   }
 
-  private void buildWildcard() {
-    if (!metadataManager.options().useLegacyWildcardExpansion) {
-      return;
-    }
-    if (metadataManager.options().useLegacyExpansionLocation) {
-
-      // Star column: this is a SELECT * query.
-
-      // Old-style wildcard handling inserts all partition columns in
-      // the scanner, removes them in Project.
-      // Fill in the file metadata columns. Can do here because the
-      // set is constant across all files.
-
-      expandPartitions();
-    } else {
-      expandPartitionsAtEnd = true;
-    }
-  }
-
   @Override
   public void validate() {
 
-    // Expand partitions if using a wildcard appears, if using the
-    // feature to expand partitions for wildcards, and we want the
-    // partitions after data columns.
-
-    if (expandPartitionsAtEnd) {
+    // Expand partitions when the projection includes a wildcard
+    // and when "legacy" partition expansion is enabled.
+    if (builder.projectAll() && metadataManager.options().useLegacyWildcardExpansion) {
       expandPartitions();
     }
   }

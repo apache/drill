@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.scan.project;
 
-import org.apache.drill.exec.physical.resultSet.project.RequestedTuple.RequestedColumn;
+import org.apache.drill.exec.physical.resultSet.project.RequestedColumn;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 
 /**

@@ -18,10 +18,8 @@
 package org.apache.drill.exec.physical.resultSet;
 
 import org.apache.drill.common.exceptions.CustomErrorContext;
-import org.apache.drill.exec.physical.resultSet.project.ProjectionType;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.vector.accessor.convert.ColumnConversionFactory;
-import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 
 /**
  * Provides a dynamic, run-time view of a projection set. Used by
@@ -74,7 +72,6 @@ public interface ProjectionSet {
    * indicates whether a reader column is projected, and if so, the attributes
    * of that projection.
    */
-
   public interface ColumnReadProjection {
 
     /**
@@ -83,23 +80,15 @@ public interface ProjectionSet {
      * from an explicit projection, or columns within a wildcard projection
      * where the column is "special" and is not expanded in the wildcard.
      */
-
     boolean isProjected();
 
     ColumnMetadata readSchema();
     ColumnMetadata providedSchema();
     ColumnConversionFactory conversionFactory();
     ProjectionSet mapProjection();
-
-    /**
-     * The projection type from the parse of the projection list,
-     * if available. Used for testing only. Don't use this in production
-     * code, let this class do the checks itself.
-     */
-    @VisibleForTesting
-    ProjectionType projectionType();
   }
 
+  boolean isProjected(String colName);
   void setErrorContext(CustomErrorContext errorContext);
   ColumnReadProjection readProjection(ColumnMetadata col);
   ColumnReadProjection readDictProjection(ColumnMetadata col);

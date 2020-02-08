@@ -18,6 +18,7 @@
 package org.apache.drill.exec.physical.resultSet.impl;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.drill.common.expression.SchemaPath;
@@ -30,7 +31,7 @@ public class RowSetTestUtils {
   public static List<SchemaPath> projectList(String... names) {
     List<SchemaPath> selected = new ArrayList<>();
     for (String name : names) {
-      if (name.equals(SchemaPath.DYNAMIC_STAR)) {
+      if (name.equals(SchemaPath.DYNAMIC_STAR) || name.equals("*")) {
         selected.add(SchemaPath.STAR_COLUMN);
       } else {
         selected.add(SchemaPath.parseFromString(name));
@@ -56,6 +57,10 @@ public class RowSetTestUtils {
   public static List<SchemaPath> projectAll() {
     return Lists.newArrayList(
         new SchemaPath[] {SchemaPath.STAR_COLUMN});
+  }
+
+  public static List<SchemaPath> projectNone() {
+    return Collections.emptyList();
   }
 
   @SafeVarargs

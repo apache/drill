@@ -17,19 +17,14 @@
  */
 package org.apache.drill.exec.physical.impl.scan.project.projSet;
 
-import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.physical.resultSet.ProjectionSet;
-import org.apache.drill.exec.physical.resultSet.project.ProjectionType;
+import org.apache.drill.exec.physical.resultSet.project.RequestedColumn;
 import org.apache.drill.exec.physical.resultSet.project.RequestedColumnImpl;
 import org.apache.drill.exec.physical.resultSet.project.RequestedTuple;
-import org.apache.drill.exec.physical.resultSet.project.RequestedTuple.RequestedColumn;
 import org.apache.drill.exec.physical.resultSet.project.RequestedTuple.TupleProjectionType;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.vector.accessor.convert.ColumnConversionFactory;
 import org.apache.drill.exec.vector.complex.DictVector;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Projection set based on an explicit set of columns provided
@@ -38,13 +33,17 @@ import org.slf4j.LoggerFactory;
  */
 
 public class ExplicitProjectionSet extends AbstractProjectionSet {
-  private static final Logger logger = LoggerFactory.getLogger(ExplicitProjectionSet.class);
 
   private final RequestedTuple requestedProj;
 
   public ExplicitProjectionSet(RequestedTuple requestedProj, TypeConverter typeConverter) {
     super(typeConverter);
     this.requestedProj = requestedProj;
+  }
+
+  @Override
+  public boolean isProjected(String colName) {
+    return requestedProj.get(colName) != null;
   }
 
   @Override
@@ -59,7 +58,7 @@ public class ExplicitProjectionSet extends AbstractProjectionSet {
 
   private ColumnReadProjection getReadProjection(ColumnMetadata col, RequestedColumn reqCol) {
     ColumnMetadata outputSchema = outputSchema(col);
-    validateProjection(reqCol, outputSchema == null ? col : outputSchema);
+    ProjectionChecker.validateProjection(reqCol, outputSchema == null ? col : outputSchema, errorContext);
     if (!col.isMap() && !col.isDict()) {
 
       // Non-map column.
@@ -73,7 +72,7 @@ public class ExplicitProjectionSet extends AbstractProjectionSet {
 
       TypeConverter childConverter = childConverter(outputSchema);
       ProjectionSet mapProjection;
-      if (! reqCol.type().isTuple() || reqCol.mapProjection().type() == TupleProjectionType.ALL) {
+      if (! reqCol.isTuple() || reqCol.tuple().type() == TupleProjectionType.ALL) {
 
         // Projection is simple: "m". This is equivalent to
         // (non-SQL) m.*
@@ -88,7 +87,7 @@ public class ExplicitProjectionSet extends AbstractProjectionSet {
         // projected; that case, while allowed in the RequestedTuple
         // implementation, can never occur in a SELECT list.)
 
-        mapProjection = new ExplicitProjectionSet(reqCol.mapProjection(), childConverter);
+        mapProjection = new ExplicitProjectionSet(reqCol.tuple(), childConverter);
       }
       if (col.isMap()) {
         return new ProjectedMapColumn(col, reqCol, outputSchema, mapProjection);
@@ -96,27 +95,6 @@ public class ExplicitProjectionSet extends AbstractProjectionSet {
         return new ProjectedDictColumn(col, reqCol, outputSchema, mapProjection);
       }
     }
-  }
-
-  public void validateProjection(RequestedColumn colReq, ColumnMetadata readCol) {
-    if (colReq == null || readCol == null) {
-      return;
-    }
-    ProjectionType type = colReq.type();
-    if (type == null) {
-      return;
-    }
-    ProjectionType neededType = ProjectionType.typeFor(readCol.majorType());
-    if (type.isCompatible(neededType)) {
-      return;
-    }
-    throw UserException.validationError()
-      .message("Column type not compatible with projection specification")
-      .addContext("Column:", readCol.name())
-      .addContext("Projection type:", type.label())
-      .addContext("Column type:", Types.getSqlTypeName(readCol.majorType()))
-      .addContext(errorContext)
-      .build(logger);
   }
 
   @Override

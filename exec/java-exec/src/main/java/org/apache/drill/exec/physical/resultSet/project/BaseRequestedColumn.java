@@ -15,23 +15,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.physical.impl.scan.columns;
+package org.apache.drill.exec.physical.resultSet.project;
 
-import org.apache.drill.exec.physical.impl.scan.project.ResolvedTableColumn;
-import org.apache.drill.exec.physical.impl.scan.project.VectorSource;
-import org.apache.drill.exec.physical.resultSet.project.RequestedColumn;
-import org.apache.drill.exec.record.MaterializedField;
+public abstract class BaseRequestedColumn implements RequestedColumn {
 
-public class ResolvedColumnsArrayColumn extends ResolvedTableColumn {
+  private final RequestedTuple parent;
+  private final String name;
 
-  private final RequestedColumn inCol;
-
-  public ResolvedColumnsArrayColumn(UnresolvedColumnsArrayColumn unresolved,
-      MaterializedField schema,
-      VectorSource source, int sourceIndex) {
-    super(unresolved.name(), schema, source, sourceIndex);
-    inCol = unresolved.element();
+  public BaseRequestedColumn(RequestedTuple parent, String name) {
+    this.parent = parent;
+    this.name = name;
   }
 
-  public boolean[] selectedIndexes() { return inCol.indexes(); }
+  public boolean isRoot() { return parent == null; }
+
+  @Override
+  public String name() { return name; }
+
+  @Override
+  public String fullName() {
+    final StringBuilder buf = new StringBuilder();
+    buildName(buf);
+    return buf.toString();
+  }
+
+  protected void buildName(StringBuilder buf) {
+    parent.buildName(buf);
+    buf.append('`')
+       .append(name)
+       .append('`');
+  }
+
+  @Override
+  public boolean nameEquals(String target) {
+    return name.equalsIgnoreCase(target);
+  }
 }

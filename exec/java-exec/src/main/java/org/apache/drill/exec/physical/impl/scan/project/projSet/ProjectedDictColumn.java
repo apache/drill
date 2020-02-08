@@ -18,8 +18,7 @@
 package org.apache.drill.exec.physical.impl.scan.project.projSet;
 
 import org.apache.drill.exec.physical.resultSet.ProjectionSet;
-import org.apache.drill.exec.physical.resultSet.project.ProjectionType;
-import org.apache.drill.exec.physical.resultSet.project.RequestedTuple;
+import org.apache.drill.exec.physical.resultSet.project.RequestedColumn;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 
 public class ProjectedDictColumn extends ProjectedReadColumn {
@@ -27,7 +26,7 @@ public class ProjectedDictColumn extends ProjectedReadColumn {
   private final ProjectionSet tupleProjection;
 
   public ProjectedDictColumn(ColumnMetadata readSchema,
-                            RequestedTuple.RequestedColumn requestedCol, ColumnMetadata outputSchema,
+                            RequestedColumn requestedCol, ColumnMetadata outputSchema,
                             ProjectionSet tupleProjection) {
     super(readSchema, requestedCol, outputSchema, null);
     this.tupleProjection = tupleProjection;
@@ -36,10 +35,5 @@ public class ProjectedDictColumn extends ProjectedReadColumn {
   @Override
   public ProjectionSet mapProjection() {
     return tupleProjection;
-  }
-
-  @Override
-  public ProjectionType projectionType() {
-    return super.projectionType().isArray() ? ProjectionType.DICT_ARRAY : ProjectionType.ARRAY;
   }
 }

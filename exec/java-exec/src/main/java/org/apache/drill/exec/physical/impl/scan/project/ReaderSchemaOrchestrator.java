@@ -34,7 +34,6 @@ import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTes
  * scan operator manages. Vectors are reused across readers, but via a vector
  * cache. All other state is distinct between readers.
  */
-
 public class ReaderSchemaOrchestrator implements VectorSource {
 
   private final ScanSchemaOrchestrator scanOrchestrator;
@@ -48,7 +47,6 @@ public class ReaderSchemaOrchestrator implements VectorSource {
    * schema changes in this output batch by absorbing trivial schema changes
    * that occur across readers.
    */
-
   private ResolvedRow rootTuple;
   private VectorContainer tableContainer;
 
@@ -88,7 +86,6 @@ public class ReaderSchemaOrchestrator implements VectorSource {
     options.setSchema(readerSchema);
 
     // Create the table loader
-
     tableLoader = new ResultSetLoaderImpl(scanOrchestrator.allocator, options.build());
     return tableLoader;
   }
@@ -111,22 +108,18 @@ public class ReaderSchemaOrchestrator implements VectorSource {
    * to the output batch. First, build the metadata and/or null columns for the
    * table row count. Then, merge the sources.
    */
-
   public void endBatch() {
 
     // Get the batch results in a container.
-
     tableContainer = tableLoader.harvest();
 
     // If the schema changed, set up the final projection based on
     // the new (or first) schema.
-
     if (prevTableSchemaVersion < tableLoader.schemaVersion()) {
       reviseOutputProjection();
     } else {
 
       // Fill in the null and metadata columns.
-
       populateNonDataColumns();
     }
     rootTuple.setRowCount(tableContainer.getRecordCount());
@@ -147,7 +140,6 @@ public class ReaderSchemaOrchestrator implements VectorSource {
    * only need be done if null columns were created when mapping from a prior
    * schema.
    */
-
   private void reviseOutputProjection() {
 
     // Do the table-schema level projection; the final matching
@@ -223,7 +215,6 @@ public class ReaderSchemaOrchestrator implements VectorSource {
    *
    * @param tableSchema newly arrived schema
    */
-
   private void doExplicitProjection(TupleMetadata tableSchema) {
     rootTuple = newRootTuple();
     new ExplicitSchemaProjection(scanOrchestrator.scanProj,

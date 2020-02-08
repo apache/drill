@@ -15,23 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.physical.impl.scan.columns;
+package org.apache.drill.exec.physical.resultSet.project;
 
-import org.apache.drill.exec.physical.impl.scan.project.ResolvedTableColumn;
-import org.apache.drill.exec.physical.impl.scan.project.VectorSource;
-import org.apache.drill.exec.physical.resultSet.project.RequestedColumn;
-import org.apache.drill.exec.record.MaterializedField;
-
-public class ResolvedColumnsArrayColumn extends ResolvedTableColumn {
-
-  private final RequestedColumn inCol;
-
-  public ResolvedColumnsArrayColumn(UnresolvedColumnsArrayColumn unresolved,
-      MaterializedField schema,
-      VectorSource source, int sourceIndex) {
-    super(unresolved.name(), schema, source, sourceIndex);
-    inCol = unresolved.element();
-  }
-
-  public boolean[] selectedIndexes() { return inCol.indexes(); }
+public interface QualifierContainer {
+  Qualifier qualifier();
+  Qualifier requireQualifier();
 }

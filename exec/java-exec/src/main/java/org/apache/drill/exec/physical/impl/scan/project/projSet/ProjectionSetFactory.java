@@ -23,8 +23,8 @@ import java.util.Map;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.impl.scan.project.projSet.TypeConverter.CustomTypeTransform;
 import org.apache.drill.exec.physical.resultSet.ProjectionSet;
+import org.apache.drill.exec.physical.resultSet.project.Projections;
 import org.apache.drill.exec.physical.resultSet.project.RequestedTuple;
-import org.apache.drill.exec.physical.resultSet.project.RequestedTupleImpl;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.vector.accessor.convert.ColumnConversionFactory;
 import org.apache.drill.exec.vector.accessor.convert.StandardConversions.ConversionDefn;
@@ -70,7 +70,7 @@ public class ProjectionSetFactory {
     if (selection == null) {
       return projectAll();
     }
-    return wrap(RequestedTupleImpl.parse(selection));
+    return wrap(Projections.parse(selection));
   }
 
   public static CustomTypeTransform simpleTransform(ColumnConversionFactory colFactory) {
