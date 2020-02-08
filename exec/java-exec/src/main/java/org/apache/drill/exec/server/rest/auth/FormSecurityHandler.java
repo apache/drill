@@ -24,9 +24,7 @@ import org.apache.drill.exec.server.rest.WebServerConstants;
 import org.eclipse.jetty.security.authentication.FormAuthenticator;
 import org.eclipse.jetty.util.security.Constraint;
 
-public class FormSecurityHanlder extends DrillHttpConstraintSecurityHandler {
-  //private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FormSecurityHanlder.class);
-
+public class FormSecurityHandler extends DrillHttpConstraintSecurityHandler {
   @Override
   public String getImplName() {
     return Constraint.__FORM_AUTH;
