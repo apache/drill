@@ -17,226 +17,99 @@
  */
 package org.apache.drill.exec.physical.resultSet.project;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import org.apache.drill.common.expression.PathSegment.NameSegment;
-import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.physical.resultSet.project.RequestedTuple.RequestedColumn;
 
 /**
  * Represents one name element. Like a {@link NameSegment}, except that this
  * version is an aggregate. If the projection list contains `a.b` and `a.c`,
  * then one name segment exists for a, and contains segments for both b and c.
  */
+public class RequestedColumnImpl extends BaseRequestedColumn implements QualifierContainer {
 
-public class RequestedColumnImpl implements RequestedColumn {
-
-  /**
-   * Special marker to indicate that that a) the item is an
-   * array, and b) that all indexes are to be projected.
-   * Used when seeing both a and a[x].
-   */
-
-  private static final Set<Integer> ALL_INDEXES = new HashSet<>();
-
-  private final RequestedTuple parent;
-  private final String name;
-  private RequestedTuple members;
-  private Set<Integer> indexes;
-  private ProjectionType type;
+  private int refCount = 1;
+  private Qualifier qualifier;
 
   public RequestedColumnImpl(RequestedTuple parent, String name) {
-    this.parent = parent;
-    this.name = name;
-    setType();
+    super(parent, name);
   }
 
-  public RequestedColumnImpl(RequestedTuple parent, String name, ProjectionType type) {
-    this.parent = parent;
-    this.name = name;
-    this.type = type;
-  }
+  protected void bumpRefCount() { refCount++; }
+
+  public int refCount() { return refCount; }
 
   @Override
-  public String name() { return name; }
-  @Override
-  public ProjectionType type() { return type; }
-  @Override
-  public boolean isWildcard() { return type == ProjectionType.WILDCARD; }
-  @Override
-  public boolean isSimple() { return type == ProjectionType.GENERAL; }
+  public Qualifier qualifier() { return qualifier; }
 
   @Override
-  public boolean isArray() { return type.isArray(); }
-
-  @Override
-  public boolean isTuple() { return type.isTuple(); }
-
-  @Override
-  public boolean isDict() {
-    return type.isDict();
-  }
-
-  public RequestedTuple asTuple() {
-    if (members == null) {
-      members = new RequestedTupleImpl(this);
-      setType();
+  public Qualifier requireQualifier() {
+    if (qualifier == null) {
+      qualifier = new Qualifier();
     }
-    return members;
+    return qualifier;
   }
 
-  public RequestedTuple projectAllMembers(boolean projectAll) {
-    members = projectAll ? ImpliedTupleRequest.ALL_MEMBERS : ImpliedTupleRequest.NO_MEMBERS;
-    setType();
-    return members;
+  @Override
+  public boolean isWildcard() { return false; }
+
+  @Override
+  public boolean isSimple() { return qualifier == null; }
+
+  @Override
+  public boolean isTuple() {
+    return qualifier != null && qualifier.isTuple();
   }
 
-  public void addIndex(int index) {
-    if (indexes == null) {
-      indexes = new HashSet<>();
+  @Override
+  public RequestedTuple tuple() {
+    if (!isTuple()) {
+      return ImpliedTupleRequest.ALL_MEMBERS;
     }
-    if (indexes != ALL_INDEXES) {
-      indexes.add(index);
-    }
-    setType();
+    return qualifier.tuple();
   }
 
-  public void projectAllElements() {
-    indexes = ALL_INDEXES;
-    setType();
+  @Override
+  public boolean isArray() {
+    return qualifier != null && qualifier.isArray();
   }
 
   @Override
   public boolean hasIndexes() {
-    return indexes != null && indexes != ALL_INDEXES;
+    return qualifier != null && qualifier.hasIndexes();
   }
 
   @Override
   public boolean hasIndex(int index) {
-    return hasIndexes() ? indexes.contains(index) : false;
+    return qualifier != null && qualifier.hasIndex(index);
   }
 
   @Override
   public int maxIndex() {
-    if (! hasIndexes()) {
-      return 0;
-    }
-    int max = 0;
-    for (final Integer index : indexes) {
-      max = Math.max(max, index);
-    }
-    return max;
+    return qualifier == null ? 0 : qualifier.maxIndex();
   }
 
   @Override
   public boolean[] indexes() {
-    if (! hasIndexes()) {
-      return null;
-    }
-    final int max = maxIndex();
-    final boolean map[] = new boolean[max+1];
-    for (final Integer index : indexes) {
-      map[index] = true;
-    }
-    return map;
+    return qualifier == null ? null : qualifier.indexArray();
   }
 
-  @Override
-  public String fullName() {
-    final StringBuilder buf = new StringBuilder();
-    buildName(buf);
-    return buf.toString();
-  }
-
-  public boolean isRoot() { return parent == null; }
-
-  private void setType() {
-    if (name.equals(SchemaPath.DYNAMIC_STAR)) {
-      type = ProjectionType.WILDCARD;
-    } else if (indexes != null && members != null) {
-      type = ProjectionType.TUPLE_ARRAY;
-    }
-    else if (indexes != null) {
-      type = ProjectionType.ARRAY;
-    } else if (members != null) {
-      type = ProjectionType.TUPLE;
-    } else {
-      type = ProjectionType.GENERAL;
-    }
-  }
-
-  protected void buildName(StringBuilder buf) {
-    parent.buildName(buf);
-    buf.append('`')
-       .append(name)
-       .append('`');
-  }
-
-  @Override
-  public String summary() {
-    switch (type) {
-    case ARRAY:
-      return "array column";
-    case TUPLE:
-      return "map column";
-    case TUPLE_ARRAY:
-      return "repeated map";
-    case DICT:
-      return "dict column";
-    case DICT_ARRAY:
-      return "repeated dict column";
-    case WILDCARD:
-      return "wildcard";
-    default:
-      return "column";
-    }
-  }
-
-  @Override
-  public boolean nameEquals(String target) {
-    return name.equalsIgnoreCase(target);
-  }
-
-  @Override
-  public RequestedTuple mapProjection() {
-    switch (type) {
-    case ARRAY:
-    case GENERAL:
-      // Don't know if the target is a tuple or not.
-
-      return ImpliedTupleRequest.ALL_MEMBERS;
-    case TUPLE:
-    case TUPLE_ARRAY:
-      return members == null ? ImpliedTupleRequest.ALL_MEMBERS : members;
-    case UNPROJECTED:
-      return ImpliedTupleRequest.NO_MEMBERS;
-    default:
-      return null;
-    }
-  }
-
+  /**
+   * Convert the projection to a string of the form:
+   * {@code a[0,1,4]['*']{b, c d}}.
+   * The information here s insufficient to specify a type,
+   * it only specifies a pattern to which types are compatible.
+   */
   @Override
   public String toString() {
-    final StringBuilder buf = new StringBuilder();
-    buf
-      .append("[")
-      .append(getClass().getSimpleName())
-      .append(" name=")
-      .append(name())
-      .append(", type=")
-      .append(summary());
-    if (isArray()) {
-      buf
-        .append(", array=")
-        .append(indexes);
+    final StringBuilder buf = new StringBuilder()
+        .append(name());
+    if (qualifier != null) {
+      buf.append(qualifier.toString());
     }
-    if (isTuple()) {
-      buf
-        .append(", tuple=")
-        .append(members);
-    }
-    buf.append("]");
     return buf.toString();
+  }
+
+  @Override
+  public int arrayDims() {
+    return qualifier == null ? 0 : qualifier.arrayDims();
   }
 }

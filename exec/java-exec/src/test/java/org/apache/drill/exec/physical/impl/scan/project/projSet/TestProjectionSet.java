@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.physical.impl.scan.project.projSet;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -32,7 +31,6 @@ import org.apache.drill.exec.physical.impl.scan.project.projSet.TypeConverter.Cu
 import org.apache.drill.exec.physical.resultSet.ProjectionSet;
 import org.apache.drill.exec.physical.resultSet.ProjectionSet.ColumnReadProjection;
 import org.apache.drill.exec.physical.resultSet.impl.RowSetTestUtils;
-import org.apache.drill.exec.physical.resultSet.project.ProjectionType;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
@@ -56,14 +54,12 @@ import org.junit.experimental.categories.Category;
  * of projection should be fully tested here, then just sanity tested
  * in the result set loader.
  */
-
 @Category(RowSetTests.class)
 public class TestProjectionSet extends BaseTest {
 
   /**
    * Empty projection, no schema
    */
-
   @Test
   public void testEmptyProjection() {
     ProjectionSet projSet = ProjectionSetFactory.projectNone();
@@ -85,7 +81,6 @@ public class TestProjectionSet extends BaseTest {
     assertSame(aSchema, aCol.providedSchema());
     assertNull(aCol.conversionFactory());
     assertSame(EmptyProjectionSet.PROJECT_NONE, aCol.mapProjection());
-    assertNull(aCol.projectionType());
 
     ColumnReadProjection mCol = projSet.readProjection(readSchema.metadata("m"));
     assertFalse(mCol.isProjected());
@@ -98,7 +93,6 @@ public class TestProjectionSet extends BaseTest {
   /**
    * Wildcard projection, no schema
    */
-
   @Test
   public void testWildcardProjection() {
     ProjectionSet projSet = ProjectionSetFactory.projectAll();
@@ -114,13 +108,11 @@ public class TestProjectionSet extends BaseTest {
     assertSame(aSchema, aCol.providedSchema());
     assertNull(aCol.conversionFactory());
     assertNull(aCol.mapProjection());
-    assertNull(aCol.projectionType());
   }
 
   /**
    * Wildcard projection, no schema
    */
-
   @Test
   public void testWildcardMapProjection() {
     ProjectionSet projSet = ProjectionSetFactory.projectAll();
@@ -143,7 +135,6 @@ public class TestProjectionSet extends BaseTest {
    * Wildcard projection, with schema. Some columns marked
    * as special; not expanded by wildcard.
    */
-
   @Test
   public void testWildcardAndSchemaProjection() {
     TupleMetadata readSchema = new SchemaBuilder()
@@ -198,7 +189,6 @@ public class TestProjectionSet extends BaseTest {
    * Wildcard projection, with schema. Some columns marked
    * as special; not expanded by wildcard.
    */
-
   @Test
   public void testWildcardAndSchemaMapProjection() {
     TupleMetadata readSchema = new SchemaBuilder()
@@ -265,7 +255,6 @@ public class TestProjectionSet extends BaseTest {
   /**
    * Wildcard and strict schema
    */
-
   @Test
   public void testWildcardAndStrictSchemaProjection() {
     TupleMetadata readSchema = new SchemaBuilder()
@@ -303,7 +292,6 @@ public class TestProjectionSet extends BaseTest {
   /**
    * Wildcard and strict schema
    */
-
   @Test
   public void testWildcardAndStrictMapSchemaProjection() {
     TupleMetadata readSchema = new SchemaBuilder()
@@ -369,7 +357,6 @@ public class TestProjectionSet extends BaseTest {
    * Also, sanity test of the builder for the project all,
    * project none cases.
    */
-
   @Test
   public void testExplicitProjection() {
     TupleMetadata readSchema = new SchemaBuilder()
@@ -388,7 +375,6 @@ public class TestProjectionSet extends BaseTest {
     assertSame(aSchema, aCol.providedSchema());
     assertNull(aCol.conversionFactory());
     assertNull(aCol.mapProjection());
-    assertEquals(ProjectionType.GENERAL, aCol.projectionType());
 
     ColumnReadProjection bCol = projSet.readProjection(readSchema.metadata("b"));
     assertFalse(bCol.isProjected());
@@ -431,13 +417,11 @@ public class TestProjectionSet extends BaseTest {
     assertSame(m1Schema, m1Col.readSchema());
     assertSame(m1Schema, m1Col.providedSchema());
     assertNull(m1Col.conversionFactory());
-    assertEquals(ProjectionType.TUPLE, m1Col.projectionType());
 
     // m1.c is projected
 
     ColumnReadProjection cCol = m1Col.mapProjection().readProjection(m1ReadSchema.metadata("c"));
     assertTrue(cCol.isProjected());
-    assertEquals(ProjectionType.GENERAL, cCol.projectionType());
 
     // but m1.d is not projected
 
@@ -446,13 +430,11 @@ public class TestProjectionSet extends BaseTest {
     // m2 is entirely projected
 
     ColumnReadProjection m2Col = projSet.readProjection(m2Schema);
-    assertEquals(ProjectionType.GENERAL, m2Col.projectionType());
     assertTrue(m2Col.isProjected());
     assertSame(m2Schema, m2Col.readSchema());
     assertSame(m2Schema, m2Col.providedSchema());
     assertNull(m2Col.conversionFactory());
     assertTrue(m2Col.mapProjection() instanceof WildcardProjectionSet);
-    assertEquals(ProjectionType.GENERAL, m2Col.projectionType());
     assertTrue(m2Col.mapProjection().readProjection(m2ReadSchema.metadata("e")).isProjected());
 
     // m3 is not projected at all
@@ -487,7 +469,6 @@ public class TestProjectionSet extends BaseTest {
 
     ColumnReadProjection m1Col = projSet.readProjection(m1Schema);
     assertTrue(m1Col.isProjected());
-    assertEquals(ProjectionType.TUPLE, m1Col.projectionType());
 
     // M1.c is projected
 
@@ -504,7 +485,6 @@ public class TestProjectionSet extends BaseTest {
    * That is, SELECT m is logically equivalent to SELECT m.*
    * and is subject to the strict schema projection rule.
    */
-
   @Test
   public void testImpliedWildcardWithStrictSchema() {
     TupleMetadata readSchema = new SchemaBuilder()
@@ -544,7 +524,6 @@ public class TestProjectionSet extends BaseTest {
    * Wildcard and none already tested above, here we test the
    * builder. With schema.
    */
-
   @Test
   public void testExplicitSchemaProjection() {
     TupleMetadata readSchema = new SchemaBuilder()
@@ -603,7 +582,6 @@ public class TestProjectionSet extends BaseTest {
   /**
    * Wildcard projection, no schema, custom column transform.
    */
-
   @Test
   public void testTransformConversion() {
     ColumnConversionFactory conv = StandardConversions.factory(ConvertStringToInt.class);

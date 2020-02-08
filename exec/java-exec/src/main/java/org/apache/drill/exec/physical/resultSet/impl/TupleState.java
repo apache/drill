@@ -90,7 +90,6 @@ import org.apache.drill.exec.vector.complex.RepeatedDictVector;
  * either one list of columns or another, the internal and external maps must
  * differ. The set of child vectors (except for child maps) are shared.
  */
-
 public abstract class TupleState extends ContainerState
   implements AbstractTupleWriter.TupleWriterListener {
 
@@ -125,7 +124,6 @@ public abstract class TupleState extends ContainerState
    * a structured: an ordered, named list of columns.) When looking for newly
    * added columns, they will always be at the end.
    */
-
   public static class MapColumnState extends BaseContainerColumnState {
     protected final MapState mapState;
     protected boolean isVersioned;
@@ -169,7 +167,6 @@ public abstract class TupleState extends ContainerState
      * </ul>
      * @return <tt>true</tt> if this map is versioned as described above
      */
-
     public boolean isVersioned() { return isVersioned; }
 
     @Override
@@ -181,7 +178,6 @@ public abstract class TupleState extends ContainerState
    * vector. The map vector itself is a pseudo-vector that is simply a
    * container for other vectors, and so needs no management itself.
    */
-
   public static class MapVectorState implements VectorState {
 
     private final AbstractMapVector mapVector;
@@ -243,14 +239,12 @@ public abstract class TupleState extends ContainerState
    * Note that by "row" we mean the set of vectors that define the
    * set of rows.
    */
-
   public static class RowState extends TupleState {
 
     /**
      * The row-level writer for stepping through rows as they are written,
      * and for accessing top-level columns.
      */
-
     private final RowSetLoaderImpl writer;
 
     /**
@@ -259,7 +253,6 @@ public abstract class TupleState extends ContainerState
      * consumer of the writers. Also excludes columns if added during
      * an overflow row.
      */
-
     private final VectorContainer outputContainer;
 
     public RowState(ResultSetLoaderImpl rsLoader, ResultVectorCache vectorCache) {
@@ -283,7 +276,6 @@ public abstract class TupleState extends ContainerState
      *
      * @return <tt>true</tt>
      */
-
     @Override
     protected boolean isVersioned() { return true; }
 
@@ -314,7 +306,6 @@ public abstract class TupleState extends ContainerState
    * The map state is associated with a map vector. This vector is built
    * either during harvest time (normal maps) or on the fly (union maps.)
    */
-
   public static abstract class MapState extends TupleState {
 
     public MapState(LoaderInternals events,
@@ -366,7 +357,6 @@ public abstract class TupleState extends ContainerState
      * that maps are materialized regardless of nesting depth within
      * a union.
      */
-
     @Override
     protected boolean isVersioned() {
       return ((MapColumnState) parentColumn).isVersioned();
@@ -400,7 +390,6 @@ public abstract class TupleState extends ContainerState
      * map, then it is the writer itself. If this is a map array,
      * then the tuple is nested inside the array.
      */
-
     @Override
     public AbstractTupleWriter writer() {
       return (AbstractTupleWriter) parentColumn.writer().tuple();
@@ -420,7 +409,6 @@ public abstract class TupleState extends ContainerState
      * map, then it is the writer itself. If this is a map array,
      * then the tuple is nested inside the array.
      */
-
     @Override
     public AbstractTupleWriter writer() {
       return (AbstractTupleWriter) parentColumn.writer().array().tuple();
@@ -433,13 +421,11 @@ public abstract class TupleState extends ContainerState
    * query does not project; the result set loader creates a dummy column
    * and dummy writer, then does not project the column to the output.)
    */
-
   protected final List<ColumnState> columns = new ArrayList<>();
 
   /**
    * Internal writer schema that matches the column list.
    */
-
   protected final TupleMetadata schema = new TupleSchema();
 
   /**
@@ -455,7 +441,6 @@ public abstract class TupleState extends ContainerState
    * not defer columns because of the muddy semantics (and infrequent use)
    * of unions.
    */
-
   protected TupleMetadata outputSchema;
 
   private int prevHarvestIndex = -1;
@@ -479,7 +464,6 @@ public abstract class TupleState extends ContainerState
    * @return ordered list of column states for the columns within
    * this tuple
    */
-
   public List<ColumnState> columns() { return columns; }
 
   public TupleMetadata schema() { return writer().tupleSchema(); }
@@ -518,12 +502,10 @@ public abstract class TupleState extends ContainerState
   protected void updateOutput(int curSchemaVersion) {
 
     // Scan all columns
-
     for (int i = 0; i < columns.size(); i++) {
       final ColumnState colState = columns.get(i);
 
       // Ignore unprojected columns
-
       if (! colState.writer().isProjected()) {
         continue;
       }
@@ -631,6 +613,7 @@ public abstract class TupleState extends ContainerState
       super(events, vectorCache, projectionSet);
     }
 
+    @Override
     public void bindColumnState(ColumnState colState) {
       super.bindColumnState(colState);
       writer().bindListener(this);
@@ -701,6 +684,7 @@ public abstract class TupleState extends ContainerState
       this.offsets = offsets;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public T vector() {
       return vector;

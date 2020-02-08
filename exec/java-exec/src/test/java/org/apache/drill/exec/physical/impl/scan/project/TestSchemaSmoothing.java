@@ -93,7 +93,6 @@ public class TestSchemaSmoothing extends SubOperatorTest {
 
   private FileMetadataOptions standardOptions(List<Path> files) {
     FileMetadataOptions options = new FileMetadataOptions();
-    options.useLegacyWildcardExpansion(false); // Don't expand partition columns for wildcard
     options.setSelectionRoot(new Path("hdfs:///w"));
     options.setFiles(files);
     return options;

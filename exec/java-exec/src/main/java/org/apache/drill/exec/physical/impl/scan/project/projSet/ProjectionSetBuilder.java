@@ -22,9 +22,9 @@ import java.util.Collection;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.resultSet.ProjectionSet;
+import org.apache.drill.exec.physical.resultSet.project.Projections;
 import org.apache.drill.exec.physical.resultSet.project.RequestedTuple;
 import org.apache.drill.exec.physical.resultSet.project.RequestedTuple.TupleProjectionType;
-import org.apache.drill.exec.physical.resultSet.project.RequestedTupleImpl;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 
 public class ProjectionSetBuilder {
@@ -52,7 +52,7 @@ public class ProjectionSetBuilder {
     if (projection == null) {
       parsedProjection = null;
     } else {
-      parsedProjection = RequestedTupleImpl.parse(projection);
+      parsedProjection = Projections.parse(projection);
     }
     return this;
   }
@@ -83,17 +83,17 @@ public class ProjectionSetBuilder {
 
     ProjectionSet projSet;
     switch (projType) {
-    case ALL:
-      projSet = new WildcardProjectionSet(typeConverter);
-      break;
-    case NONE:
-      projSet = ProjectionSetFactory.projectNone();
-      break;
-    case SOME:
-      projSet = new ExplicitProjectionSet(parsedProjection, typeConverter);
-      break;
-    default:
-      throw new IllegalStateException("Unexpected projection type: " + projType.toString());
+      case ALL:
+        projSet = new WildcardProjectionSet(typeConverter);
+        break;
+      case NONE:
+        projSet = ProjectionSetFactory.projectNone();
+        break;
+      case SOME:
+        projSet = new ExplicitProjectionSet(parsedProjection, typeConverter);
+        break;
+      default:
+        throw new IllegalStateException("Unexpected projection type: " + projType.toString());
     }
     projSet.setErrorContext(errorContext);
     return projSet;

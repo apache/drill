@@ -22,12 +22,14 @@ import java.util.List;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.impl.scan.project.AbstractUnresolvedColumn.UnresolvedColumn;
+import org.apache.drill.exec.physical.resultSet.project.RequestedColumn;
 import org.apache.drill.exec.physical.resultSet.project.RequestedTuple;
-import org.apache.drill.exec.physical.resultSet.project.RequestedTuple.RequestedColumn;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.complex.DictVector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Perform a schema projection for the case of an explicit list of
@@ -43,7 +45,7 @@ import org.apache.drill.exec.vector.complex.DictVector;
  */
 
 public class ExplicitSchemaProjection extends ReaderLevelProjection {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExplicitSchemaProjection.class);
+  private static final Logger logger = LoggerFactory.getLogger(ExplicitSchemaProjection.class);
 
   private final ScanLevelProjection scanProj;
 
@@ -148,7 +150,7 @@ public class ExplicitSchemaProjection extends ReaderLevelProjection {
 
     ResolvedMapColumn mapCol = new ResolvedMapColumn(outputTuple,
         column.schema(), sourceIndex);
-    resolveTuple(mapCol.members(), requestedCol.mapProjection(),
+    resolveTuple(mapCol.members(), requestedCol.tuple(),
         column.tupleSchema());
 
     // If the projection is simple, then just project the map column
@@ -193,7 +195,7 @@ public class ExplicitSchemaProjection extends ReaderLevelProjection {
     }
 
     ResolvedDictColumn dictColumn = new ResolvedDictColumn(outputTuple, column.schema(), sourceIndex);
-    resolveDictTuple(dictColumn.members(), requestedCol.mapProjection(), column.tupleSchema());
+    resolveDictTuple(dictColumn.members(), requestedCol.tuple(), column.tupleSchema());
 
     // The same as for Map
     if (dictColumn.members().isSimpleProjection()) {
@@ -301,7 +303,7 @@ public class ExplicitSchemaProjection extends ReaderLevelProjection {
   private ResolvedColumn resolveMapMembers(ResolvedTuple outputTuple, RequestedColumn col) {
     ResolvedMapColumn mapCol = new ResolvedMapColumn(outputTuple, col.name());
     ResolvedTuple members = mapCol.members();
-    for (RequestedColumn child : col.mapProjection().projections()) {
+    for (RequestedColumn child : col.tuple().projections()) {
       if (child.isTuple()) {
         members.add(resolveMapMembers(members, child));
       } else {

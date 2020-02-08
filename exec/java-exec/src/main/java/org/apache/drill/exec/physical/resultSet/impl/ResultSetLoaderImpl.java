@@ -39,13 +39,11 @@ import org.slf4j.LoggerFactory;
  *
  * @see {@link ResultSetLoader}
  */
-
 public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
 
   /**
    * Read-only set of options for the result set loader.
    */
-
   public static class ResultSetOptions {
     protected final int vectorSizeLimit;
     protected final int rowCountLimit;
@@ -95,13 +93,11 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
     /**
      * Before the first batch.
      */
-
     START,
 
     /**
      * Writing to a batch normally.
      */
-
     ACTIVE,
 
     /**
@@ -109,14 +105,12 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
      * to write to a temporary "overflow" batch until the
      * end of the current row.
      */
-
     OVERFLOW,
 
     /**
      * Temporary state to avoid batch-size related overflow while
      * an overflow is in progress.
      */
-
     IN_OVERFLOW,
 
     /**
@@ -124,14 +118,12 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
      * when saving a row.
      * No more writes allowed until harvesting the current batch.
      */
-
     FULL_BATCH,
 
     /**
      * Current batch was harvested: data is gone. No lookahead
      * batch exists.
      */
-
     HARVESTED,
 
     /**
@@ -155,13 +147,11 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
      * fine. The correct buffers are restored once a new batch is started
      * and the state moves to ACTIVE.
      */
-
     LOOK_AHEAD,
 
     /**
      * Mutator is closed: no more operations are allowed.
      */
-
     CLOSED
   }
 
@@ -170,26 +160,22 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
   /**
    * Options provided to this loader.
    */
-
   private final ResultSetOptions options;
 
   /**
    * Allocator for vectors created by this loader.
    */
-
   private final BufferAllocator allocator;
 
   /**
    * Builds columns (vector, writer, state).
    */
-
   private final ColumnBuilder columnBuilder;
 
   /**
    * Internal structure used to work with the vectors (real or dummy) used
    * by this loader.
    */
-
   private final RowState rootState;
 
   /**
@@ -200,21 +186,18 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
    * within the writer structure that points to the current position within
    * an array column.
    */
-
   private final WriterIndexImpl writerIndex;
 
   /**
    * The row-level writer for stepping through rows as they are written,
    * and for accessing top-level columns.
    */
-
   private final RowSetLoaderImpl rootWriter;
 
   /**
    * Tracks the state of the row set loader. Handling vector overflow requires
    * careful stepping through a variety of states as the write proceeds.
    */
-
   private State state = State.START;
 
   /**
@@ -223,7 +206,6 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
    * This allows very easy checks for schema changes: save the prior version number
    * and compare it against the current version number.
    */
-
   private int activeSchemaVersion;
 
   /**
@@ -234,21 +216,18 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
    * sees the schema as it existed at a prior version: the harvest schema
    * version.
    */
-
   private int harvestSchemaVersion;
 
   /**
    * Counts the batches harvested (sent downstream) from this loader. Does
    * not include the current, in-flight batch.
    */
-
   private int harvestBatchCount;
 
   /**
    * Counts the rows included in previously-harvested batches. Does not
    * include the number of rows in the current batch.
    */
-
   private int previousRowCount;
 
   /**
@@ -258,7 +237,6 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
    * overflow row is in effect, then this number is undefined (and should be
    * zero.)
    */
-
   private int pendingRowCount;
 
   /**
@@ -266,13 +244,11 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
    * adjusted between batches, perhaps based on the actual observed size of
    * input data.
    */
-
   private int targetRowCount;
 
   /**
    * Total bytes allocated to the current batch.
    */
-
   protected int accumulatedBatchSize;
 
   protected final ProjectionSet projectionSet;
@@ -399,7 +375,6 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
   /**
    * Start a batch to report only schema without data.
    */
-
   public void startEmptyBatch() {
     startBatch(true);
   }
@@ -484,7 +459,6 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
    * Called before writing a new row. Implementation of
    * {@link RowSetLoader#start()}.
    */
-
   protected void startRow() {
     switch (state) {
     case ACTIVE:
@@ -504,13 +478,12 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
    * Finalize the current row. Implementation of
    * {@link RowSetLoader#save()}.
    */
-
   protected void saveRow() {
     switch (state) {
     case ACTIVE:
       rootWriter.endArrayValue();
       rootWriter.saveRow();
-      if (! writerIndex.next()) {
+      if (!writerIndex.next()) {
         state = State.FULL_BATCH;
       }
 
@@ -550,11 +523,10 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
    * @return true if the batch is full (reached vector capacity or the
    * row count limit), false if more rows can be added
    */
-
   protected boolean isFull() {
     switch (state) {
     case ACTIVE:
-      return ! writerIndex.valid();
+      return !writerIndex.valid();
     case OVERFLOW:
     case FULL_BATCH:
       return true;
@@ -579,7 +551,6 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
    * @return the number of rows to be sent downstream for this
    * batch. Does not include the overflow row.
    */
-
   protected int rowCount() {
     switch (state) {
     case ACTIVE:
@@ -621,7 +592,7 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
 
   @Override
   public boolean isProjectionEmpty() {
-    return ! rootState.hasProjections();
+    return !rootState.hasProjections();
   }
 
   @Override
@@ -809,7 +780,6 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
    * This will occur if the target row count is incorrect for the
    * data size.
    */
-
   private void checkInitialAllocation() {
     if (options.maxBatchSize < 0) {
       logger.debug("Initial vector allocation: {}, no batch limit specified",

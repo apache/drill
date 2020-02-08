@@ -40,7 +40,6 @@ import org.apache.drill.exec.record.metadata.ColumnMetadata;
  * <li>A column state which orchestrates the above three items.</li>
  * <ul>
  */
-
 public abstract class ContainerState {
 
   protected final LoaderInternals loader;
@@ -51,7 +50,6 @@ public abstract class ContainerState {
    * Vector cache for this loader.
    * @see {@link OptionBuilder#setVectorCache()}.
    */
-
   protected final ResultVectorCache vectorCache;
 
   public ContainerState(LoaderInternals loader, ResultVectorCache vectorCache, ProjectionSet projectionSet) {
@@ -79,7 +77,6 @@ public abstract class ContainerState {
    *
    * @return <tt>true</tt> if versioned
    */
-
   protected abstract boolean isVersioned();
 
   protected LoaderInternals loader() { return loader; }
@@ -89,19 +86,15 @@ public abstract class ContainerState {
   public ColumnState addColumn(ColumnMetadata columnSchema) {
 
     // Create the vector, writer and column state
-
     ColumnState colState = loader.columnBuilder().buildColumn(this, columnSchema);
 
     // Add the column to this container
-
     addColumn(colState);
 
     // Set initial cardinality
-
     colState.updateCardinality(innerCardinality());
 
     // Allocate vectors if a batch is in progress.
-
     if (loader().writeable()) {
       colState.allocateVectors();
     }
@@ -116,7 +109,6 @@ public abstract class ContainerState {
    * this value is recursively pushed downward to compute the cardinality
    * of lists of maps that contains lists of maps, and so on.
    */
-
   public void updateCardinality() {
     int innerCardinality = innerCardinality();
     assert innerCardinality > 0;
@@ -129,7 +121,6 @@ public abstract class ContainerState {
    * Start a new batch by shifting the overflow buffers back into the main
    * write vectors and updating the writers.
    */
-
   public void startBatch(boolean schemaOnly) {
     for (ColumnState colState : columnStates()) {
       colState.startBatch(schemaOnly);
@@ -143,7 +134,6 @@ public abstract class ContainerState {
    * for some previous row, depending on exactly when and where the overflow
    * occurs.
    */
-
   public void rollover() {
     for (ColumnState colState : columnStates()) {
       colState.rollover();
@@ -155,7 +145,6 @@ public abstract class ContainerState {
    * vector for harvesting to send downstream. Set aside the look-ahead vector
    * and put the full vector buffer back into the active vector.
    */
-
   public void harvestWithLookAhead() {
     for (ColumnState colState : columnStates()) {
       colState.harvestWithLookAhead();
@@ -166,7 +155,6 @@ public abstract class ContainerState {
    * Clean up state (such as backup vectors) associated with the state
    * for each vector.
    */
-
   public void close() {
     for (ColumnState colState : columnStates()) {
       colState.close();

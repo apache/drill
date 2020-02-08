@@ -165,12 +165,12 @@ public class ScanSchemaOrchestrator {
     private MetadataManager metadataManager;
     private int scanBatchRecordLimit = DEFAULT_BATCH_ROW_COUNT;
     private int scanBatchByteLimit = DEFAULT_BATCH_BYTE_COUNT;
-    private List<ScanProjectionParser> parsers = new ArrayList<>();
-    private List<ReaderProjectionResolver> schemaResolvers = new ArrayList<>();
+    private final List<ScanProjectionParser> parsers = new ArrayList<>();
+    private final List<ReaderProjectionResolver> schemaResolvers = new ArrayList<>();
     private boolean useSchemaSmoothing;
     private boolean allowRequiredNullColumns;
     private List<SchemaPath> projection;
-    private TypeConverter.Builder typeConverterBuilder = TypeConverter.builder();
+    private final TypeConverter.Builder typeConverterBuilder = TypeConverter.builder();
 
     /**
      * Option that enables whether the scan operator starts with an empty
@@ -422,9 +422,9 @@ public class ScanSchemaOrchestrator {
 
     ScanProjectionParser parser = metadataManager.projectionParser();
     if (parser != null) {
-      // Insert in first position so that it is ensured to see
-      // any wildcard that exists
-      options.parsers.add(0, parser);
+      // Insert in last position to expand wildcards at
+      // the end of the tuple.
+      options.parsers.add(parser);
     }
 
     // Parse the projection list.
