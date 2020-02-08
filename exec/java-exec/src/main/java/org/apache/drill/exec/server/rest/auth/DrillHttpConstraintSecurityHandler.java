@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.server.rest.auth;
 
+import org.apache.drill.exec.rpc.security.plain.PlainFactory;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.server.DrillbitContext;
@@ -38,24 +39,33 @@ import static org.apache.drill.exec.server.rest.auth.DrillUserPrincipal.AUTHENTI
  **/
 public abstract class DrillHttpConstraintSecurityHandler extends ConstraintSecurityHandler {
 
-    @Override
-    public void doStart() throws Exception {
-        super.doStart();
+  @Override
+  public void doStart() throws Exception {
+    super.doStart();
+  }
+
+  @Override
+  public void doStop() throws Exception {
+    super.doStop();
+  }
+
+  public abstract void doSetup(DrillbitContext dbContext) throws DrillException;
+
+  public void setup(LoginAuthenticator authenticator, LoginService loginService) {
+    final Set<String> knownRoles = ImmutableSet.of(AUTHENTICATED_ROLE, ADMIN_ROLE);
+    setConstraintMappings(Collections.<ConstraintMapping>emptyList(), knownRoles);
+    setAuthenticator(authenticator);
+    setLoginService(loginService);
+  }
+
+  protected void requireAuthProvider(DrillbitContext dbContext, String name) throws DrillException {
+    // Check if PAMAuthenticator is available or not which is required for FORM authentication
+    if (!dbContext.getAuthProvider().containsFactory(PlainFactory.SIMPLE_NAME)) {
+      throw new DrillException(String.format("%1$s auth mechanism was configured but %2$s mechanism is not enabled to provide an " +
+        "authenticator. Please configure user authentication with %2$s mechanism and authenticator to use " +
+        "%1$s authentication", getImplName(), name));
     }
+  }
 
-    @Override
-    public void doStop() throws Exception {
-        super.doStop();
-    }
-
-    public abstract void doSetup(DrillbitContext dbContext) throws DrillException;
-
-    public void setup(LoginAuthenticator authenticator, LoginService loginService) {
-      final Set<String> knownRoles = ImmutableSet.of(AUTHENTICATED_ROLE, ADMIN_ROLE);
-      setConstraintMappings(Collections.<ConstraintMapping>emptyList(), knownRoles);
-      setAuthenticator(authenticator);
-      setLoginService(loginService);
-    }
-
-    public abstract String getImplName();
+  public abstract String getImplName();
 }

@@ -27,6 +27,7 @@ import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.rpc.security.AuthStringUtil;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.rest.WebServerConstants;
+import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.security.authentication.SessionAuthentication;
 import org.eclipse.jetty.server.Handler;
@@ -139,10 +140,14 @@ public class DrillHttpSecurityHandlerProvider extends ConstraintSecurityHandler 
       if (isSpnegoEnabled() && (!isFormEnabled() || uri.equals(WebServerConstants.SPENGO_LOGIN_RESOURCE_PATH))) {
         securityHandler = securityHandlers.get(Constraint.__SPNEGO_AUTH);
         securityHandler.handle(target, baseRequest, request, response);
+      } else if(isBasicEnabled() && request.getHeader(HttpHeader.AUTHORIZATION.asString()) != null) {
+        securityHandler = securityHandlers.get(Constraint.__BASIC_AUTH);
+        securityHandler.handle(target, baseRequest, request, response);
       } else if (isFormEnabled()) {
         securityHandler = securityHandlers.get(Constraint.__FORM_AUTH);
         securityHandler.handle(target, baseRequest, request, response);
       }
+
     }
     // If user has logged in, use the corresponding handler to handle the request
     else {
@@ -173,6 +178,10 @@ public class DrillHttpSecurityHandlerProvider extends ConstraintSecurityHandler 
 
   public boolean isFormEnabled() {
     return securityHandlers.containsKey(Constraint.__FORM_AUTH);
+  }
+
+  public boolean isBasicEnabled() {
+    return securityHandlers.containsKey(Constraint.__BASIC_AUTH);
   }
 
   /**
