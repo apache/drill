@@ -348,9 +348,7 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
     try {
       unnest.setup(context, incoming, this, transfers);
     } catch (SchemaChangeException e) {
-      throw UserException.schemaChangeError(e)
-        .addContext("Unexpected schema change in Unnest operator")
-        .build(logger);
+      throw schemaChangeException(e, logger);
     }
     setUnnestVector();
     return transferPair;
