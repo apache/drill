@@ -23,6 +23,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.calcite.rel.RelFieldCollation.Direction;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.FieldReference;
@@ -50,7 +51,6 @@ import org.apache.drill.exec.expr.ValueVectorReadExpression;
 import org.apache.drill.exec.expr.ValueVectorWriteExpression;
 import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.ops.QueryCancelledException;
 import org.apache.drill.exec.physical.config.OrderedPartitionSender;
 import org.apache.drill.exec.physical.impl.sort.SortBatch;
 import org.apache.drill.exec.physical.impl.sort.SortRecordBatchBuilder;
@@ -87,6 +87,8 @@ import com.sun.codemodel.JExpr;
  * value is determined by where each record falls in the partition table. This
  * column is used by PartitionSenderRootExec to determine which bucket to assign
  * each record to.
+ * <p>
+ * This code is not used.
  */
 public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPartitionSender> {
   static final Logger logger = LoggerFactory.getLogger(OrderedPartitionRecordBatch.class);
@@ -267,7 +269,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
       try {
         Thread.sleep(timeout);
       } catch (final InterruptedException e) {
-        throw new QueryCancelledException();
+        checkContinue();
       }
     }
   }
@@ -281,13 +283,9 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
    * table, and attempts to push the partition table to the distributed cache.
    * Whichever table gets pushed first becomes the table used by all fragments
    * for partitioning.
-   *
-   * @return True is successful. False if failed.
    */
-  private boolean getPartitionVectors() {
-    if (!saveSamples()) {
-      return false;
-    }
+  private void getPartitionVectors() {
+    saveSamples();
 
     CachedVectorContainer finalTable = null;
 
@@ -328,7 +326,6 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
     for (VectorWrapper<?> w : finalTable.get()) {
       partitionVectors.add(w.getValueVector());
     }
-    return true;
   }
 
   private void buildTable() {
@@ -398,17 +395,12 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
   }
 
   /**
-   * Creates a copier that does a project for every Nth record from a VectorContainer incoming into VectorContainer
-   * outgoing. Each Ordering in orderings generates a column, and evaluation of the expression associated with each
-   * Ordering determines the value of each column. These records will later be sorted based on the values in each
-   * column, in the same order as the orderings.
-   *
-   * @param sv4
-   * @param incoming
-   * @param outgoing
-   * @param orderings
-   * @return
-   * @throws SchemaChangeException
+   * Creates a copier that does a project for every Nth record from a
+   * VectorContainer incoming into VectorContainer outgoing. Each Ordering in
+   * orderings generates a column, and evaluation of the expression associated
+   * with each Ordering determines the value of each column. These records will
+   * later be sorted based on the values in each column, in the same order as
+   * the orderings.
    */
   private SampleCopier getCopier(SelectionVector4 sv4, VectorContainer incoming, VectorContainer outgoing,
       List<Ordering> orderings, List<ValueVector> localAllocationVectors) {
@@ -546,7 +538,6 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
    * in the partition table
    *
    * @param batch
-   * @throws SchemaChangeException
    */
   protected void setupNewSchema(VectorAccessible batch) {
     container.clear();
@@ -606,7 +597,9 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
     try {
       projector.setup(context, batch, this, transfers, partitionVectors, partitions, popConfig.getRef());
     } catch (SchemaChangeException e) {
-      throw schemaChangeException(e, logger);
+      throw UserException.schemaChangeError(e)
+        .addContext("Unexpected schema change in the Ordered Partitioner")
+        .build(logger);
     }
   }
 

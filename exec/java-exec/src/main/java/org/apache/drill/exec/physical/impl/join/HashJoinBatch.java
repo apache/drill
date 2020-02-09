@@ -96,7 +96,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This class implements the runtime execution for the Hash-Join operator
+ * Implements the runtime execution for the Hash-Join operator
  * supporting INNER, LEFT OUTER, RIGHT OUTER, and FULL OUTER joins
  * <p>
  * This implementation splits the incoming Build side rows into multiple
@@ -125,7 +125,6 @@ import org.slf4j.LoggerFactory;
  * greater) is a waste, indicating that the number of partitions chosen was too
  * small.
  */
-
 public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implements RowKeyJoin {
   private static final Logger logger = LoggerFactory.getLogger(HashJoinBatch.class);
 
@@ -687,12 +686,13 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP> implem
    * @param isLeft is it the left or right
    */
   private void killAndDrainUpstream(RecordBatch batch, IterOutcome upstream, boolean isLeft) {
-      batch.kill(true);
-      while (upstream == IterOutcome.OK_NEW_SCHEMA || upstream == IterOutcome.OK) {
-        VectorAccessibleUtilities.clear(batch);
-        upstream = next( isLeft ? HashJoinHelper.LEFT_INPUT : HashJoinHelper.RIGHT_INPUT, batch);
-      }
+    batch.kill(true);
+    while (upstream == IterOutcome.OK_NEW_SCHEMA || upstream == IterOutcome.OK) {
+      VectorAccessibleUtilities.clear(batch);
+      upstream = next( isLeft ? HashJoinHelper.LEFT_INPUT : HashJoinHelper.RIGHT_INPUT, batch);
+    }
   }
+
   private void killAndDrainLeftUpstream() { killAndDrainUpstream(probeBatch, leftUpstream, true); }
   private void killAndDrainRightUpstream() { killAndDrainUpstream(buildBatch, rightUpstream, false); }
 

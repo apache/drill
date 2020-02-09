@@ -18,6 +18,7 @@
 package org.apache.drill.exec.record;
 
 import org.apache.drill.exec.vector.AllocationHelper;
+import org.apache.drill.exec.vector.ValueVector;
 
 /**
  * VectorAccessible is an interface. Yet, several operations are done
@@ -34,6 +35,12 @@ public class VectorAccessibleUtilities {
   public static void clear(VectorAccessible va) {
     for (final VectorWrapper<?> w : va) {
       w.clear();
+    }
+  }
+
+  public static void clear(Iterable<ValueVector> iter) {
+    for (final ValueVector v : iter) {
+      v.clear();
     }
   }
 

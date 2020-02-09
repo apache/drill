@@ -126,7 +126,7 @@ public class MockRecordBatch implements CloseableRecordBatch {
   @Override
   public void close() {
     container.clear();
-    container.setRecordCount(0);
+    container.setEmpty();
     currentContainerIndex = 0;
     currentOutcomeIndex = 0;
     if (sv2 != null) {
@@ -291,8 +291,7 @@ public class MockRecordBatch implements CloseableRecordBatch {
   }
 
   @Override
-  public void dump() {
-  }
+  public void dump() { }
 
   public static class Builder {
     private final List<RowSet> rowSets = new ArrayList<>();

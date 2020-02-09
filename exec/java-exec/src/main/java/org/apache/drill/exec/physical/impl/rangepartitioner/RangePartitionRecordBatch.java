@@ -107,7 +107,7 @@ public class RangePartitionRecordBatch extends AbstractSingleRecordBatch<RangePa
    * @return True if the new schema differs from old schema, False otherwise
    */
   @Override
-  protected boolean setupNewSchema() throws SchemaChangeException {
+  protected boolean setupNewSchema() {
     container.clear();
 
     for (VectorWrapper<?> vw : incoming) {

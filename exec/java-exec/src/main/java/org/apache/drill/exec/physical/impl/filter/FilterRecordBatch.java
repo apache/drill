@@ -132,8 +132,9 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter> {
     if (container.isSchemaChanged()) {
       container.buildSchema(SelectionVectorMode.TWO_BYTE);
       return true;
+    } else {
+      return false;
     }
-    return false;
   }
 
   protected Filterer generateSV4Filterer() throws SchemaChangeException {

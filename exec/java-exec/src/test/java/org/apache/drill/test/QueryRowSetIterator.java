@@ -19,7 +19,6 @@ package org.apache.drill.test;
 
 import java.util.Iterator;
 
-import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.rowSet.DirectRowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetFormatter;
@@ -87,16 +86,12 @@ public class QueryRowSetIterator implements Iterator<DirectRowSet>, Iterable<Dir
     // Unload the batch and convert to a row set.
 
     final RecordBatchLoader loader = new RecordBatchLoader(allocator);
-    try {
-      loader.load(batch.getHeader().getDef(), batch.getData());
-      batch.release();
-      batch = null;
-      VectorContainer container = loader.getContainer();
-      container.setRecordCount(loader.getRecordCount());
-      return DirectRowSet.fromContainer(container);
-    } catch (SchemaChangeException e) {
-      throw new IllegalStateException(e);
-    }
+    loader.load(batch.getHeader().getDef(), batch.getData());
+    batch.release();
+    batch = null;
+    VectorContainer container = loader.getContainer();
+    container.setRecordCount(loader.getRecordCount());
+    return DirectRowSet.fromContainer(container);
   }
 
   public void printAll() {

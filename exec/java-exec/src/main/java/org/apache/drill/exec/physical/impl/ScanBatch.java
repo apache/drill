@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -40,6 +41,7 @@ import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TypedFieldId;
+import org.apache.drill.exec.record.VectorAccessibleUtilities;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.WritableBatch;
@@ -202,7 +204,7 @@ public class ScanBatch implements CloseableRecordBatch {
    * @return whether we could continue iteration
    * @throws Exception
    */
-  private boolean shouldContinueAfterNoRecords() throws Exception {
+  private boolean shouldContinueAfterNoRecords() {
     logger.trace("scan got 0 record.");
     if (isRepeatableScan) {
       if (!currentReader.hasNext()) {
@@ -212,13 +214,17 @@ public class ScanBatch implements CloseableRecordBatch {
       }
       return true;
     } else { // Regular scan
-      currentReader.close();
-      currentReader = null;
+      closeCurrentReader();
       return true; // In regular case, we always continue the iteration, if no more reader, we will break out at the head of loop
     }
   }
 
-  private IterOutcome internalNext() throws Exception {
+  private void closeCurrentReader() {
+    AutoCloseables.closeSilently(currentReader);
+    currentReader = null;
+  }
+
+  private IterOutcome internalNext() {
     while (true) {
       if (currentReader == null && !getNextReaderIfHas()) {
         logger.trace("currentReader is null");
@@ -281,18 +287,6 @@ public class ScanBatch implements CloseableRecordBatch {
       clearFieldVectorMap();
       lastOutcome = IterOutcome.STOP;
       throw UserException.memoryError(ex).build(logger);
-    } catch (ExecutionSetupException e) {
-      if (currentReader != null) {
-        try {
-          currentReader.close();
-        } catch (final Exception e2) {
-          logger.error("Close failed for reader " + currentReaderClassName, e2);
-        }
-      }
-      lastOutcome = IterOutcome.STOP;
-      throw UserException.internalError(e)
-          .addContext("Setup failed for", currentReaderClassName)
-          .build(logger);
     } catch (UserException ex) {
       lastOutcome = IterOutcome.STOP;
       throw ex;
@@ -309,15 +303,11 @@ public class ScanBatch implements CloseableRecordBatch {
   }
 
   private void clearFieldVectorMap() {
-    for (final ValueVector v : mutator.fieldVectorMap().values()) {
-      v.clear();
-    }
-    for (final ValueVector v : mutator.implicitFieldVectorMap.values()) {
-      v.clear();
-    }
+    VectorAccessibleUtilities.clear(mutator.fieldVectorMap().values());
+    VectorAccessibleUtilities.clear(mutator.implicitFieldVectorMap.values());
   }
 
-  private boolean getNextReaderIfHas() throws ExecutionSetupException {
+  private boolean getNextReaderIfHas() {
     if (!readers.hasNext()) {
       return false;
     }
@@ -326,8 +316,15 @@ public class ScanBatch implements CloseableRecordBatch {
       readers.remove();
     }
     implicitValues = implicitColumns.hasNext() ? implicitColumns.next() : null;
-    currentReader.setup(oContext, mutator);
     currentReaderClassName = currentReader.getClass().getSimpleName();
+    try {
+      currentReader.setup(oContext, mutator);
+    } catch (ExecutionSetupException e) {
+      closeCurrentReader();
+      throw UserException.executionError(e)
+          .addContext("Failed to setup reader", currentReaderClassName)
+          .build(logger);
+    }
     return true;
   }
 
@@ -405,7 +402,6 @@ public class ScanBatch implements CloseableRecordBatch {
     return fqn;
   }
 
-
   /**
    * Row set mutator implementation provided to record readers created by
    * this scan batch. Made visible so that tests can create this mutator
@@ -414,7 +410,6 @@ public class ScanBatch implements CloseableRecordBatch {
    * in turn, the only use of the generated vector readers in the vector
    * package.)
    */
-
   @VisibleForTesting
   public static class Mutator implements OutputMutator {
     /** Flag keeping track whether top-level schema has changed since last inquiry (via #isNewSchema}).
@@ -589,9 +584,7 @@ public class ScanBatch implements CloseableRecordBatch {
   public void close() throws Exception {
     container.clear();
     mutator.clear();
-    if (currentReader != null) {
-      currentReader.close();
-    }
+    closeCurrentReader();
   }
 
   @Override

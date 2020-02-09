@@ -39,10 +39,9 @@ import java.io.InputStream;
 import java.util.Iterator;
 
 /**
- * A class to replace "incoming" - instead scanning a spilled partition file
+ * Replaces "incoming" - instead scanning a spilled partition file
  */
 public class SpilledRecordBatch implements CloseableRecordBatch {
-
   private static final Logger logger = LoggerFactory.getLogger(SpilledRecordBatch.class);
 
   private VectorContainer container;
@@ -137,13 +136,13 @@ public class SpilledRecordBatch implements CloseableRecordBatch {
 
     context.getExecutorState().checkContinue();
 
-    if ( spilledBatches <= 0 ) { // no more batches to read in this partition
+    if (spilledBatches <= 0) { // no more batches to read in this partition
       this.close();
       lastOutcome = IterOutcome.NONE;
       return lastOutcome;
     }
 
-    if ( spillStream == null ) {
+    if (spillStream == null) {
       lastOutcome = IterOutcome.STOP;
       throw new IllegalStateException("Spill stream was null");
     }
@@ -153,7 +152,7 @@ public class SpilledRecordBatch implements CloseableRecordBatch {
     }
 
     try {
-      if ( container.getNumberOfColumns() > 0 ) { // container already initialized
+      if (container.getNumberOfColumns() > 0) { // container already initialized
         // Pass our container to the reader because other classes (e.g. HashAggBatch, HashTable)
         // may have a reference to this container (as an "incoming")
         vas.readFromStreamWithContainer(container, spillStream);
@@ -163,11 +162,12 @@ public class SpilledRecordBatch implements CloseableRecordBatch {
         container = vas.get();
       }
     } catch (IOException e) {
-      lastOutcome = IterOutcome.STOP;
-      throw UserException.dataReadError(e).addContext("Failed reading from a spill file").build(logger);
+      throw UserException.dataReadError(e)
+          .addContext("Failed reading from a spill file")
+          .build(logger);
     } catch (Exception e) {
-      lastOutcome = IterOutcome.STOP;
-      throw e;
+      // TODO: Catch the error closer to the cause and create a better error message.
+      throw UserException.executionError(e).build(logger);
     }
 
     spilledBatches--; // one less batch to read
@@ -206,7 +206,7 @@ public class SpilledRecordBatch implements CloseableRecordBatch {
       spillSet.delete(spillFile);
     }
     catch (IOException e) {
-      /* ignore */
+      // ignore
     }
   }
 }

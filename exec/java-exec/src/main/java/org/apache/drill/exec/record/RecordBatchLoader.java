@@ -75,7 +75,8 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
    * @throws SchemaChangeException
    *   TODO:  Clean:  DRILL-2933  load(...) never actually throws SchemaChangeException.
    */
-  public boolean load(RecordBatchDef def, DrillBuf buf) throws SchemaChangeException {
+  @SuppressWarnings("resource")
+  public boolean load(RecordBatchDef def, DrillBuf buf) {
     if (logger.isTraceEnabled()) {
       logger.trace("Loading record batch with def {} and data {}", def, buf);
       logger.trace("Load, ThreadID: {}\n{}", Thread.currentThread().getId(), new StackTrace());

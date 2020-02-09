@@ -17,10 +17,10 @@
  */
 package org.apache.drill.exec.physical.impl.window;
 
-import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.config.WindowPOP;
+import org.apache.drill.exec.record.AbstractRecordBatch;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
@@ -80,10 +80,10 @@ public abstract class NoFrameSupportTemplate implements WindowFramer {
   }
 
   /**
-   * processes all rows of the first batch.
+   * Processes all rows of the first batch.
    */
   @Override
-  public void doWork() throws DrillException {
+  public void doWork() {
     int currentRow = 0;
     current = batches.get(0);
     outputCount = current.getRecordCount();
@@ -103,17 +103,25 @@ public abstract class NoFrameSupportTemplate implements WindowFramer {
         newPartition(current, currentRow);
       }
 
-      currentRow = processPartition(currentRow);
+      try {
+        currentRow = processPartition(currentRow);
+      } catch (SchemaChangeException e) {
+        throw AbstractRecordBatch.schemaChangeException(e, "Window", logger);
+      }
       if (partition.isDone()) {
         cleanPartition();
       }
     }
   }
 
-  private void newPartition(WindowDataBatch current, int currentRow) throws SchemaChangeException {
+  private void newPartition(WindowDataBatch current, int currentRow) {
     partition = new Partition();
     updatePartitionSize(partition, currentRow);
-    setupPartition(current, container);
+    try {
+      setupPartition(current, container);
+    } catch (SchemaChangeException e) {
+      throw AbstractRecordBatch.schemaChangeException(e, "Window", logger);
+    }
   }
 
   private void cleanPartition() {
@@ -138,10 +146,9 @@ public abstract class NoFrameSupportTemplate implements WindowFramer {
    * @param currentRow
    *          first unprocessed row
    * @return index of next unprocessed row
-   * @throws DrillException
-   *           if it can't write into the container
+   * @throws SchemaChangeException
    */
-  private int processPartition(int currentRow) throws DrillException {
+  private int processPartition(int currentRow) throws SchemaChangeException {
     logger.trace("process partition {}, currentRow: {}, outputCount: {}", partition, currentRow, outputCount);
 
     setupCopyNext(current, container);
@@ -202,7 +209,7 @@ public abstract class NoFrameSupportTemplate implements WindowFramer {
     }
   }
 
-  private void processRow(int row) throws DrillException {
+  private void processRow(int row) throws SchemaChangeException {
     if (partition.isFrameDone()) {
       // because all peer rows share the same frame, we only need to compute and aggregate the frame once
       long peers = countPeers(row);

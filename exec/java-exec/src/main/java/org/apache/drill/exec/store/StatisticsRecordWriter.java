@@ -15,24 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-<@pp.dropOutputFile />
-<@pp.changeOutputFile name="org/apache/drill/exec/store/StatisticsRecordWriter.java" />
-<#include "/@includes/license.ftl" />
-
 package org.apache.drill.exec.store;
 
 import org.apache.drill.exec.record.VectorAccessible;
-import org.apache.drill.exec.store.EventBasedRecordWriter.FieldConverter;
-import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
 import java.io.IOException;
 import java.util.Map;
 
-/*
- * This class is generated using freemarker and the ${.template_name} template.
- */
-
-/** StatisticsRecordWriter interface. */
 public interface StatisticsRecordWriter extends StatisticsRecordCollector {
 
   /**
@@ -41,14 +30,14 @@ public interface StatisticsRecordWriter extends StatisticsRecordCollector {
    * @param writerOptions Contains key, value pair of settings.
    * @throws IOException
    */
-  void init(Map<String, String> writerOptions) throws IOException;
+  void init(Map<String, String> writerOptions);
 
   /**
    * Update the schema in RecordWriter. Called at least once before starting writing the records.
    * @param batch
    * @throws IOException
    */
-  void updateSchema(VectorAccessible batch) throws IOException;
+  void updateSchema(VectorAccessible batch);
 
   /**
    * Check if the writer should start a new partition, and if so, start a new partition
@@ -66,6 +55,6 @@ public interface StatisticsRecordWriter extends StatisticsRecordCollector {
    * @throws IOException
    */
   void flushBlockingWriter() throws IOException;
-  void abort() throws IOException;
-  void cleanup() throws IOException;
+  void abort();
+  void cleanup();
 }

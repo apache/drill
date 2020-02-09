@@ -20,34 +20,41 @@ package org.apache.drill.exec.physical.impl;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 
 /**
- * <h2>Functionality</h2>
- * <p>
- *   A FragmentRoot is a node which is the last processing node in a query plan. FragmentTerminals include Exchange
- *   output nodes and storage nodes.  They are there driving force behind the completion of a query.
+ * Node which is the last processing node in a query plan. FragmentTerminals
+ * include Exchange output nodes and storage nodes. They are there driving force
+ * behind the completion of a query.
  * </p>
- * <h2>Assumptions</h2>
- * <p>
- *   All implementations of {@link RootExec} assume that all their methods are called by the same thread.
- * </p>
+ * Assumes that all implementations of {@link RootExec} assume that all their
+ * methods are called by the same thread.
  */
 public interface RootExec extends AutoCloseable {
+
   /**
    * Do the next batch of work.
-   * @return Whether or not additional batches of work are necessary. False means that this fragment is done.
+   *
+   * @return Whether or not additional batches of work are necessary. False
+   *         means that this fragment is done.
    */
   boolean next();
 
   /**
-   * Inform sender that receiving fragment is finished and doesn't need any more data. This can be called multiple
-   * times (once for each downstream receiver). If all receivers are finished then a subsequent call to {@link #next()}
-   * will return false.
-   * @param handle The handle pointing to the downstream receiver that does not need anymore data.
+   * Inform sender that receiving fragment is finished and doesn't need any more
+   * data. This can be called multiple times (once for each downstream
+   * receiver). If all receivers are finished then a subsequent call to
+   * {@link #next()} will return false.
+   *
+   * @param handle
+   *          The handle pointing to the downstream receiver that does not need
+   *          anymore data.
    */
   void receivingFragmentFinished(FragmentHandle handle);
 
   /**
-   * Dump failed batches' state preceded by its parent's state to logs. Invoked when there is a
-   * failure during fragment execution.
+   * Dump failed batches' state preceded by its parent's state to logs. Invoked
+   * when there is a failure during fragment execution.
+   *
+   * @param t the exception thrown by an operator and which therefore
+   * records, in its stack trace, which operators were active on the stack
    */
-  void dumpBatches();
+  void dumpBatches(Throwable t);
 }

@@ -24,14 +24,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
-import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.exception.OutOfMemoryException;
-import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.PhysicalOperatorUtil;
@@ -47,8 +45,6 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.MapVector;
 import org.apache.drill.metastore.statistics.Statistic;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Example input and output:
@@ -86,9 +82,7 @@ import org.slf4j.LoggerFactory;
  *   .... another map for next stats function ....
  * </pre>
  */
-
 public class StatisticsMergeBatch extends AbstractSingleRecordBatch<StatisticsMerge> {
-  private static final Logger logger = LoggerFactory.getLogger(StatisticsMergeBatch.class);
 
   private final Map<String, String> functions;
   private boolean first = true;
@@ -110,8 +104,7 @@ public class StatisticsMergeBatch extends AbstractSingleRecordBatch<StatisticsMe
    * Creates key columns for the outgoing batch e.g. `schema`, `computed`. These columns are NOT
    * table columns for which statistics will be computed.
    */
-  private void createKeyColumn(String name, LogicalExpression expr)
-      throws SchemaChangeException {
+  private void createKeyColumn(String name, LogicalExpression expr) {
     LogicalExpression mle = PhysicalOperatorUtil.materializeExpression(expr, incoming, context);
     MaterializedField outputField = MaterializedField.create(name, mle.getMajorType());
     ValueVector vector = TypeHelper.getNewVector(outputField, oContext.getAllocator());
@@ -173,11 +166,12 @@ public class StatisticsMergeBatch extends AbstractSingleRecordBatch<StatisticsMe
     }
   }
 
-  /* Prepare the outgoing container. Generates the outgoing record batch schema.
+  /**
+   * Prepare the outgoing container. Generates the outgoing record batch schema.
    * Please look at the comments above the class definition which describes the
    * incoming/outgoing batch schema
    */
-  private void buildOutputContainer() throws SchemaChangeException {
+  private void buildOutputContainer() {
     // Populate the list of statistics which will be output in the schema
     for (VectorWrapper<?> vw : incoming) {
       for (String outputStatName : functions.keySet()) {
@@ -223,12 +217,13 @@ public class StatisticsMergeBatch extends AbstractSingleRecordBatch<StatisticsMe
     container.buildSchema(incoming.getSchema().getSelectionVectorMode());
   }
 
-  /* Adds a value vector corresponding to the statistic in the outgoing record batch.
-   * Determines the MajorType based on the incoming value vector. Please look at the
-   * comments above the class definition which describes the incoming/outgoing batch schema
+  /**
+   * Adds a value vector corresponding to the statistic in the outgoing record
+   * batch. Determines the MajorType based on the incoming value vector. Please
+   * look at the comments above the class definition which describes the
+   * incoming/outgoing batch schema
    */
-  private void addVectorToOutgoingContainer(String outStatName, VectorWrapper<?> vw)
-      throws SchemaChangeException {
+  private void addVectorToOutgoingContainer(String outStatName, VectorWrapper<?> vw) {
     // Input map vector
     MapVector inputVector = (MapVector) vw.getValueVector();
     assert inputVector.getPrimitiveVectors().size() > 0;
@@ -265,7 +260,8 @@ public class StatisticsMergeBatch extends AbstractSingleRecordBatch<StatisticsMe
     }
   }
 
-  /* Prepare the outgoing container. Populates the outgoing record batch data.
+  /**
+   * Prepare the outgoing container. Populates the outgoing record batch data.
    * Please look at the comments above the class definition which describes the
    * incoming/outgoing batch schema
    */
@@ -301,7 +297,7 @@ public class StatisticsMergeBatch extends AbstractSingleRecordBatch<StatisticsMe
   }
 
   @Override
-  protected boolean setupNewSchema() throws SchemaChangeException {
+  protected boolean setupNewSchema() {
     container.clear();
     // Generate the list of fields for which statistics will be merged
     buildColumnsList();
@@ -340,40 +336,34 @@ public class StatisticsMergeBatch extends AbstractSingleRecordBatch<StatisticsMe
     if (finished) {
       return IterOutcome.NONE;
     }
-    try {
-      outer: while (true) {
-        outcome = next(incoming);
-        switch (outcome) {
-          case NONE:
-            break outer;
-          case NOT_YET:
-          case STOP:
+    outer: while (true) {
+      outcome = next(incoming);
+      switch (outcome) {
+        case NONE:
+          break outer;
+        case NOT_YET:
+        case STOP:
+          return outcome;
+        case OK_NEW_SCHEMA:
+          if (first) {
+            first = false;
+            if (!setupNewSchema()) {
+              outcome = IterOutcome.OK;
+            }
             return outcome;
-          case OK_NEW_SCHEMA:
-            if (first) {
-              first = false;
-              if (!setupNewSchema()) {
-                outcome = IterOutcome.OK;
-              }
-              return outcome;
-            }
-            //fall through
-          case OK:
-            assert first == false : "First batch should be OK_NEW_SCHEMA";
-            IterOutcome out = doWork();
-            didSomeWork = true;
-            if (out != IterOutcome.OK) {
-              return out;
-            }
-            break;
-          default:
-            throw new UnsupportedOperationException("Unsupported upstream state " + outcome);
-        }
+          }
+          //fall through
+        case OK:
+          assert first == false : "First batch should be OK_NEW_SCHEMA";
+          IterOutcome out = doWork();
+          didSomeWork = true;
+          if (out != IterOutcome.OK) {
+            return out;
+          }
+          break;
+        default:
+          throw new UnsupportedOperationException("Unsupported upstream state " + outcome);
       }
-    } catch (SchemaChangeException ex) {
-      kill(false);
-      context.getExecutorState().fail(UserException.unsupportedError(ex).build(logger));
-      return IterOutcome.STOP;
     }
 
     // We can only get here if upstream is NONE i.e. no more batches. If we did some work prior to

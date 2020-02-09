@@ -19,21 +19,27 @@ package org.apache.drill.exec.record.selection;
 
 import io.netty.buffer.ByteBuf;
 
-import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.record.DeadBuf;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SelectionVector4 implements AutoCloseable {
+  static final Logger logger = LoggerFactory.getLogger(SelectionVector4.class);
 
   private ByteBuf data;
   private int recordCount;
   private int start;
   private int length;
 
-  public SelectionVector4(ByteBuf vector, int recordCount, int batchRecordCount) throws SchemaChangeException {
+  public SelectionVector4(ByteBuf vector, int recordCount, int batchRecordCount) {
     if (recordCount > Integer.MAX_VALUE / 4) {
-      throw new SchemaChangeException(String.format("Currently, Drill can only support allocations up to 2gb in size. " +
-          "You requested an allocation of %d bytes.", recordCount * 4L));
+      throw UserException.internalError(null)
+          .message(String.format(
+            "Currently, Drill can only support allocations up to 2gb in size. " +
+            "Query requested an allocation of %d bytes.", recordCount * 4L))
+          .build(logger);
     }
     this.recordCount = recordCount;
     this.start = 0;
@@ -43,8 +49,11 @@ public class SelectionVector4 implements AutoCloseable {
 
   public SelectionVector4(BufferAllocator allocator, int recordCount) {
     if (recordCount > Integer.MAX_VALUE / 4) {
-      throw new IllegalStateException(String.format("Currently, Drill can only support allocations up to 2gb in size. " +
-          "You requested an allocation of %d bytes.", recordCount * 4L));
+      throw UserException.internalError(null)
+          .message(String.format(
+              "Currently, Drill can only support allocations up to 2gb in size. " +
+              "Query requested an allocation of %d bytes.", recordCount * 4L))
+         .build(logger);
     }
     this.recordCount = recordCount;
     this.start = 0;
@@ -82,23 +91,24 @@ public class SelectionVector4 implements AutoCloseable {
   }
 
   /**
-   * Caution: This method shares the underlying buffer between this vector and the newly created one.
-   * @param batchRecordCount this will be used when creating the new vector
+   * Caution: This method shares the underlying buffer between this vector and
+   * the newly created one.
+   *
+   * @param batchRecordCount
+   *          this will be used when creating the new vector
    * @return Newly created single batch SelectionVector4.
    */
   public SelectionVector4 createNewWrapperCurrent(int batchRecordCount) {
-    try {
-      data.retain();
-      final SelectionVector4 sv4 = new SelectionVector4(data, recordCount, batchRecordCount);
-      sv4.start = this.start;
-      return sv4;
-    } catch (SchemaChangeException e) {
-      throw new IllegalStateException("This shouldn't happen.");
-    }
+    data.retain();
+    final SelectionVector4 sv4 = new SelectionVector4(data, recordCount, batchRecordCount);
+    sv4.start = this.start;
+    return sv4;
   }
 
   /**
-   * Caution: This method shares the underlying buffer between this vector and the newly created one.
+   * Caution: This method shares the underlying buffer between this vector and
+   * the newly created one.
+   *
    * @return Newly created single batch SelectionVector4.
    */
   public SelectionVector4 createNewWrapperCurrent() {
@@ -106,19 +116,15 @@ public class SelectionVector4 implements AutoCloseable {
   }
 
   public boolean next() {
-//    logger.debug("Next called. Start: {}, Length: {}, recordCount: " + recordCount, start, length);
-
     if (!hasNext()) {
       start = recordCount;
       length = 0;
-//      logger.debug("Setting count to zero.");
       return false;
     }
 
     start = start + length;
     int newEnd = Math.min(start + length, recordCount);
     length = newEnd - start;
-//    logger.debug("New start {}, new length {}", start, length);
     return true;
   }
 
@@ -142,8 +148,8 @@ public class SelectionVector4 implements AutoCloseable {
     this.recordCount = fromSV4.getTotalCount();
     this.length = fromSV4.getCount();
     this.data = fromSV4.getData();
-    // Need to retain the data buffer since if fromSV4 clears out the buffer it's not actually released unless the
-    // copied SV4 has also released it
+    // Need to retain the data buffer since if fromSV4 clears out the buffer
+    // it's not actually released unless the copied SV4 has also released it
     if (data != DeadBuf.DEAD_BUFFER) {
       this.data.retain();
     }

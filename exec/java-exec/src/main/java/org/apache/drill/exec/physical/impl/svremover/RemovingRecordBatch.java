@@ -18,7 +18,6 @@
 package org.apache.drill.exec.physical.impl.svremover;
 
 import org.apache.drill.exec.exception.OutOfMemoryException;
-import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.SelectionVectorRemover;
 import org.apache.drill.exec.record.AbstractSingleRecordBatch;
@@ -45,7 +44,7 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
   }
 
   @Override
-  protected boolean setupNewSchema() throws SchemaChangeException {
+  protected boolean setupNewSchema() {
     // Don't clear off container just because an OK_NEW_SCHEMA was received from
     // upstream. For cases when there is just
     // change in container type but no actual schema change, RemovingRecordBatch

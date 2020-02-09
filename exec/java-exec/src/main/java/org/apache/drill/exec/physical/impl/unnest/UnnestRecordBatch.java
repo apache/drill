@@ -194,11 +194,6 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
         stats.batchReceived(0, incoming.getRecordCount(), true);
         memoryManager.update();
         hasRemainder = incoming.getRecordCount() > 0;
-      } catch (SchemaChangeException ex) {
-        kill(false);
-        logger.error("Failure during query", ex);
-        context.getExecutorState().fail(ex);
-        return IterOutcome.STOP;
       } finally {
         stats.stopSetup();
       }
@@ -209,32 +204,25 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
       container.zeroVectors();
       // Check if schema has changed
       if (lateral.getRecordIndex() == 0) {
-        try {
-          boolean hasNewSchema = schemaChanged();
-          stats.batchReceived(0, incoming.getRecordCount(), hasNewSchema);
-          if (hasNewSchema) {
-            setupNewSchema();
-            hasRemainder = true;
-            memoryManager.update();
-            return OK_NEW_SCHEMA;
-          } else { // Unnest field schema didn't changed but new left empty/nonempty batch might come with OK_NEW_SCHEMA
-            // This means even though there is no schema change for unnest field the reference of unnest field
-            // ValueVector must have changed hence we should just refresh the transfer pairs and keep output vector
-            // same as before. In case when new left batch is received with SchemaChange but was empty Lateral will
-            // not call next on unnest and will change it's left outcome to OK. Whereas for non-empty batch next will
-            // be called on unnest by Lateral. Hence UNNEST cannot rely on lateral current outcome to setup transfer
-            // pair. It should do for each new left incoming batch.
-            resetUnnestTransferPair();
-            container.zeroVectors();
-          } // else
-          unnest.resetGroupIndex();
+        boolean hasNewSchema = schemaChanged();
+        stats.batchReceived(0, incoming.getRecordCount(), hasNewSchema);
+        if (hasNewSchema) {
+          setupNewSchema();
+          hasRemainder = true;
           memoryManager.update();
-        } catch (SchemaChangeException ex) {
-          kill(false);
-          logger.error("Failure during query", ex);
-          context.getExecutorState().fail(ex);
-          return IterOutcome.STOP;
-        }
+          return OK_NEW_SCHEMA;
+        } else { // Unnest field schema didn't changed but new left empty/nonempty batch might come with OK_NEW_SCHEMA
+          // This means even though there is no schema change for unnest field the reference of unnest field
+          // ValueVector must have changed hence we should just refresh the transfer pairs and keep output vector
+          // same as before. In case when new left batch is received with SchemaChange but was empty Lateral will
+          // not call next on unnest and will change it's left outcome to OK. Whereas for non-empty batch next will
+          // be called on unnest by Lateral. Hence UNNEST cannot rely on lateral current outcome to setup transfer
+          // pair. It should do for each new left incoming batch.
+          resetUnnestTransferPair();
+          container.zeroVectors();
+        } // else
+        unnest.resetGroupIndex();
+        memoryManager.update();
       }
       return doWork();
     }
@@ -350,20 +338,24 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
     return tp;
   }
 
-  private TransferPair resetUnnestTransferPair() throws SchemaChangeException {
+  private TransferPair resetUnnestTransferPair() {
     List<TransferPair> transfers = Lists.newArrayList();
     FieldReference fieldReference = new FieldReference(popConfig.getColumn());
     TransferPair transferPair = getUnnestFieldTransferPair(fieldReference);
     transfers.add(transferPair);
     logger.debug("Added transfer for unnest expression.");
     unnest.close();
-    unnest.setup(context, incoming, this, transfers);
+    try {
+      unnest.setup(context, incoming, this, transfers);
+    } catch (SchemaChangeException e) {
+      throw schemaChangeException(e, logger);
+    }
     setUnnestVector();
     return transferPair;
   }
 
   @Override
-  protected boolean setupNewSchema() throws SchemaChangeException {
+  protected boolean setupNewSchema() {
     Preconditions.checkNotNull(lateral);
     container.clear();
     MaterializedField rowIdField = MaterializedField.create(rowIdColumnName, Types.required(TypeProtos
@@ -380,13 +372,13 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
   }
 
   /**
-   * Compares the schema of the unnest column in the current incoming with the schema of
-   * the unnest column in the previous incoming.
-   * Also saves the schema for comparison in future iterations
+   * Compares the schema of the unnest column in the current incoming with the
+   * schema of the unnest column in the previous incoming. Also saves the schema
+   * for comparison in future iterations
    *
    * @return true if the schema has changed, false otherwise
    */
-  private boolean schemaChanged() throws SchemaChangeException {
+  private boolean schemaChanged() {
     unnestTypedFieldId = checkAndGetUnnestFieldId();
     MaterializedField thisField = incoming.getSchema().getColumn(unnestTypedFieldId.getFieldIds()[0]);
     MaterializedField prevField = unnestFieldMetadata;
@@ -430,12 +422,14 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
       memoryManager.getAvgOutputRowWidth(), memoryManager.getTotalOutputRecords());
   }
 
-  private TypedFieldId checkAndGetUnnestFieldId() throws SchemaChangeException {
+  private TypedFieldId checkAndGetUnnestFieldId() {
     TypedFieldId fieldId = incoming.getValueVectorId(popConfig.getColumn());
     if (fieldId == null) {
-      throw new SchemaChangeException(String.format("Unnest column %s not found inside the incoming record batch. " +
-          "This may happen if a wrong Unnest column name is used in the query. Please rerun query after fixing that.",
-        popConfig.getColumn()));
+      throw UserException.schemaChangeError(null)
+          .message(String.format("Unnest column %s not found inside the incoming record batch. " +
+              "This may happen if a wrong Unnest column name is used in the query. Please rerun query after fixing that.",
+              popConfig.getColumn()))
+          .build(logger);
     }
 
     return fieldId;

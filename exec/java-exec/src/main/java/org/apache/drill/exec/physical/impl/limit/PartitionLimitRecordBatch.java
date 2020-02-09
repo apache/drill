@@ -22,7 +22,6 @@ import static org.apache.drill.exec.record.RecordBatch.IterOutcome.EMIT;
 import java.util.List;
 
 import org.apache.drill.exec.exception.OutOfMemoryException;
-import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.PartitionLimit;
 import org.apache.drill.exec.record.AbstractSingleRecordBatch;
@@ -84,7 +83,7 @@ public class PartitionLimitRecordBatch extends AbstractSingleRecordBatch<Partiti
   }
 
   @Override
-  protected boolean setupNewSchema() throws SchemaChangeException {
+  protected boolean setupNewSchema() {
     container.clear();
     transfers.clear();
 

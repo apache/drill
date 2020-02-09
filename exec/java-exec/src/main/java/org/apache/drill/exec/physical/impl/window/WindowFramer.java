@@ -40,9 +40,10 @@ public interface WindowFramer {
 
   /**
    * process the inner batch and write the aggregated values in the container
+   * @throws SchemaChangeException
    * @throws DrillException
    */
-  void doWork() throws DrillException;
+  void doWork() throws SchemaChangeException;
 
   /**
    * @return number rows processed in last batch

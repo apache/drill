@@ -18,7 +18,6 @@
 package org.apache.drill.common.exceptions;
 
 public class DrillRuntimeException extends RuntimeException {
-
   private static final long serialVersionUID = -3796081521525479249L;
 
   public DrillRuntimeException() {

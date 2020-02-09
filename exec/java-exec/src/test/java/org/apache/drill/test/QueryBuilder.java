@@ -67,21 +67,18 @@ import static org.junit.Assert.assertEquals;
  * Builder for a Drill query. Provides all types of query formats,
  * and a variety of ways to run the query.
  */
-
 public class QueryBuilder {
 
   /**
    * Listener used to retrieve the query summary (only) asynchronously
    * using a {@link QuerySummaryFuture}.
    */
-
   public static class SummaryOnlyQueryEventListener implements UserResultsListener {
 
     /**
      * The future to be notified. Created here and returned by the
      * query builder.
      */
-
     private final QuerySummaryFuture future;
     private QueryId queryId;
     private int recordCount;
@@ -374,28 +371,24 @@ public class QueryBuilder {
     // Unload the batch and convert to a row set.
 
     RecordBatchLoader loader = new RecordBatchLoader(client.allocator());
-    try {
-      loader.load(resultBatch.getHeader().getDef(), resultBatch.getData());
-      resultBatch.release();
-      VectorContainer container = loader.getContainer();
-      container.setRecordCount(loader.getRecordCount());
+    loader.load(resultBatch.getHeader().getDef(), resultBatch.getData());
+    resultBatch.release();
+    VectorContainer container = loader.getContainer();
+    container.setRecordCount(loader.getRecordCount());
 
-      // Null results? Drill will return a single batch with no rows
-      // and no columns even if the scan (or other) operator returns
-      // no batches at all. For ease of testing, simply map this null
-      // result set to a null output row set that says "nothing at all
-      // was returned." Note that this is different than an empty result
-      // set which has a schema, but no rows.
+    // Null results? Drill will return a single batch with no rows
+    // and no columns even if the scan (or other) operator returns
+    // no batches at all. For ease of testing, simply map this null
+    // result set to a null output row set that says "nothing at all
+    // was returned." Note that this is different than an empty result
+    // set which has a schema, but no rows.
 
-      if (container.getRecordCount() == 0 && container.getNumberOfColumns() == 0) {
-        container.clear();
-        return null;
-      }
-
-      return DirectRowSet.fromContainer(container);
-    } catch (SchemaChangeException e) {
-      throw new IllegalStateException(e);
+    if (container.getRecordCount() == 0 && container.getNumberOfColumns() == 0) {
+      container.clear();
+      return null;
     }
+
+    return DirectRowSet.fromContainer(container);
   }
 
   public QueryRowSetIterator rowSetIterator() {

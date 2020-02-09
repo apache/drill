@@ -22,9 +22,9 @@ import io.netty.buffer.ByteBuf;
 import java.io.IOException;
 import java.util.Iterator;
 
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.exception.OutOfMemoryException;
-import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.ExchangeFragmentContext;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.MetricDef;
@@ -150,7 +150,7 @@ public class UnorderedReceiverBatch implements CloseableRecordBatch {
     return batchLoader.getValueAccessorById(clazz, ids);
   }
 
-  private RawFragmentBatch getNextBatch() throws IOException {
+  private RawFragmentBatch getNextBatch() {
     try {
       injector.injectInterruptiblePause(context.getExecutionControls(), "waiting-for-data", logger);
       return fragProvider.getNext();
@@ -161,6 +161,10 @@ public class UnorderedReceiverBatch implements CloseableRecordBatch {
       Thread.currentThread().interrupt();
 
       return null;
+    } catch (IOException e) {
+      throw UserException.dataReadError(e)
+          .addContext("Failure when reading incoming batch")
+          .build(logger);
     }
   }
 
@@ -215,13 +219,6 @@ public class UnorderedReceiverBatch implements CloseableRecordBatch {
         lastOutcome = IterOutcome.OK;
       }
       return lastOutcome;
-    } catch (SchemaChangeException | IOException ex) {
-      context.getExecutorState().fail(ex);
-      lastOutcome = IterOutcome.STOP;
-      return lastOutcome;
-    } catch (Exception e) {
-      lastOutcome = IterOutcome.STOP;
-      throw e;
     } finally {
       stats.stopProcessing();
     }
