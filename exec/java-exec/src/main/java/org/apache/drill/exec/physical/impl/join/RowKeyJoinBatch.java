@@ -22,7 +22,6 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.exec.exception.OutOfMemoryException;
-import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.RowKeyJoinPOP;
 import org.apache.drill.exec.record.AbstractRecordBatch;
@@ -36,10 +35,11 @@ import org.apache.drill.exec.vector.ValueVector;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Iterables;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RowKeyJoinBatch extends AbstractRecordBatch<RowKeyJoinPOP> implements RowKeyJoin {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RowKeyJoinBatch.class);
+  private static final Logger logger = LoggerFactory.getLogger(RowKeyJoinBatch.class);
 
   // primary table side record batch
   private final RecordBatch left;
@@ -51,7 +51,7 @@ public class RowKeyJoinBatch extends AbstractRecordBatch<RowKeyJoinPOP> implemen
   private IterOutcome leftUpstream = IterOutcome.NONE;
   private IterOutcome rightUpstream = IterOutcome.NONE;
   private final List<TransferPair> transfers = Lists.newArrayList();
-  private int recordCount = 0;
+  private int recordCount;
   private final SchemaChangeCallBack callBack = new SchemaChangeCallBack();
   private RowKeyJoinState rkJoinState = RowKeyJoinState.INITIAL;
 
@@ -82,7 +82,7 @@ public class RowKeyJoinBatch extends AbstractRecordBatch<RowKeyJoinPOP> implemen
   }
 
   @Override
-  protected void buildSchema() throws SchemaChangeException {
+  protected void buildSchema() {
     container.clear();
 
     rightUpstream = next(right);

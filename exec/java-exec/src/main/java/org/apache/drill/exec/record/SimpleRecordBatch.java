@@ -31,8 +31,8 @@ public class SimpleRecordBatch implements RecordBatch {
 
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SimpleRecordBatch.class);
 
-  private VectorContainer container;
-  private FragmentContext context;
+  private final VectorContainer container;
+  private final FragmentContext context;
 
   public SimpleRecordBatch(VectorContainer container, FragmentContext context) {
     this.container = container;

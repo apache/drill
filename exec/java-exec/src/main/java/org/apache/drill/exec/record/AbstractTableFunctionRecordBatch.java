@@ -24,16 +24,19 @@ import org.apache.drill.exec.physical.base.LateralContract;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 
 /**
- * Implements AbstractUnaryRecodBatch for operators that do not have an incoming record batch available at creation
- * time; the input is typically set up a few steps after creation. Table functions and operators like Unnest that
- * require input before they can produce output fall into this category.
- * Table functions can be associated with a Lateral operator in which case they simultaneously operate on the
- * same row as the Lateral operator. In this case the LateralContract member is not null and the table function uses the
- * lateral contract to keep in sync with the Lateral operator.
+ * Implements AbstractUnaryRecodBatch for operators that do not have an incoming
+ * record batch available at creation time; the input is typically set up a few
+ * steps after creation. Table functions and operators like Unnest that require
+ * input before they can produce output fall into this category. Table functions
+ * can be associated with a Lateral operator in which case they simultaneously
+ * operate on the same row as the Lateral operator. In this case the
+ * LateralContract member is not null and the table function uses the lateral
+ * contract to keep in sync with the Lateral operator.
+ *
  * @param <T>
  */
 public abstract class AbstractTableFunctionRecordBatch<T extends PhysicalOperator> extends
-    AbstractUnaryRecordBatch<T> implements TableFunctionContract{
+    AbstractUnaryRecordBatch<T> implements TableFunctionContract {
 
   protected RecordBatch incoming;
   protected LateralContract lateral;
@@ -48,12 +51,14 @@ public abstract class AbstractTableFunctionRecordBatch<T extends PhysicalOperato
     return incoming;
   }
 
+  @Override
   public void setIncoming(RecordBatch incoming) {
     Preconditions.checkArgument(this.incoming == null, "Incoming is already set. setIncoming cannot be called "
         + "multiple times.");
     this.incoming = incoming;
   }
 
+  @Override
   public void setIncoming(LateralContract incoming) {
     setIncoming(incoming.getIncoming());
     lateral = incoming;

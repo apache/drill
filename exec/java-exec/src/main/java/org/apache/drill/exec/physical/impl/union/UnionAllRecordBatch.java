@@ -25,6 +25,7 @@ import java.util.Stack;
 
 import org.apache.calcite.util.Pair;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.LogicalExpression;
@@ -241,7 +242,9 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
     try {
       unionall.setup(context, inputBatch, this, transfers);
     } catch (SchemaChangeException e) {
-      throw schemaChangeException(e, logger);
+      throw UserException.schemaChangeError(e)
+          .addContext("Unexpected schema change in Union operator")
+          .build(logger);
     }
   }
 

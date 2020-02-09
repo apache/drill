@@ -340,16 +340,12 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
       }
 
     case UPDATE_AGGREGATOR:
-      context.getExecutorState().fail(UserException.unsupportedError()
+      throw UserException.unsupportedError()
           .message(SchemaChangeException.schemaChanged(
               "Hash aggregate does not support schema change",
               incomingSchema,
               incoming.getSchema()).getMessage())
-          .build(logger));
-      close();
-      killIncoming(false);
-      firstBatch = false;
-      return IterOutcome.STOP;
+          .build(logger);
     default:
       throw new IllegalStateException(String.format("Unknown state %s.", out));
     }

@@ -51,7 +51,6 @@ import org.slf4j.LoggerFactory;
  * batches. The <tt>TransferPair</tt> abstraction fails if different
  * vectors appear across batches.
  */
-
 public class OperatorRecordBatch implements CloseableRecordBatch {
   static final Logger logger = LoggerFactory.getLogger(OperatorRecordBatch.class);
 
@@ -149,10 +148,6 @@ public class OperatorRecordBatch implements CloseableRecordBatch {
       driver.operatorContext().getStats().startProcessing();
       lastOutcome = driver.next();
       return lastOutcome;
-    } catch (Exception e) {
-      // mark batch as failed
-      lastOutcome = IterOutcome.STOP;
-      throw e;
     } finally {
       driver.operatorContext().getStats().stopProcessing();
     }

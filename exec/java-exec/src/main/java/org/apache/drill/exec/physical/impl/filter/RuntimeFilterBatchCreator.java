@@ -29,7 +29,9 @@ import java.util.List;
 
 public class RuntimeFilterBatchCreator implements BatchCreator<RuntimeFilterPOP>{
   @Override
-  public CloseableRecordBatch getBatch(ExecutorFragmentContext context, RuntimeFilterPOP config, List<RecordBatch> children) throws ExecutionSetupException {
+  public CloseableRecordBatch getBatch(ExecutorFragmentContext context,
+                   RuntimeFilterPOP config, List<RecordBatch> children)
+                       throws ExecutionSetupException {
     Preconditions.checkArgument(children.size() == 1);
     return new RuntimeFilterRecordBatch(config, children.iterator().next(), context);
   }

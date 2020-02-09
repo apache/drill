@@ -19,6 +19,7 @@ package org.apache.drill.exec.physical.impl.sort;
 
 import java.util.List;
 
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.LogicalExpression;
@@ -138,7 +139,9 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
     try {
       sorter.setup(context, getSelectionVector4(), this.container);
     } catch (SchemaChangeException e) {
-      throw schemaChangeException(e, logger);
+      throw UserException.schemaChangeError(e)
+          .addContext("Unexpected schema change in in-memory Sort operator")
+          .build(logger);
     }
     sorter.sort(getSelectionVector4(), this.container);
 

@@ -113,8 +113,8 @@ public class SimpleRootExec implements RootExec, Iterable<ValueVector> {
   }
 
   @Override
-  public void dumpBatches() {
-    screenRoot.dumpBatches();
+  public void dumpBatches(Throwable t) {
+    screenRoot.dumpBatches(t);
   }
 
   @Override

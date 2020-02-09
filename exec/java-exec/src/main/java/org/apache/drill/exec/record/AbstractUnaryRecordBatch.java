@@ -18,16 +18,13 @@
 package org.apache.drill.exec.record;
 
 import org.apache.drill.exec.exception.OutOfMemoryException;
-import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.vector.SchemaChangeCallBack;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
- * The base class for operators that have a single input. The concrete implementations provide the
+ * Base class for operators that have a single input. The concrete implementations provide the
  * input by implementing the getIncoming() method
  * Known implementations:  AbstractSingleRecordBatch and AbstractTableFunctionRecordBatch.
  * @see org.apache.drill.exec.record.AbstractRecordBatch
@@ -36,7 +33,6 @@ import org.slf4j.LoggerFactory;
  * @param <T>
  */
 public abstract class AbstractUnaryRecordBatch<T extends PhysicalOperator> extends AbstractRecordBatch<T> {
-  private static final Logger logger = LoggerFactory.getLogger(new Object() {}.getClass().getEnclosingClass());
 
   protected SchemaChangeCallBack callBack = new SchemaChangeCallBack();
   private IterOutcome lastKnownOutcome;
@@ -98,11 +94,6 @@ public abstract class AbstractUnaryRecordBatch<T extends PhysicalOperator> exten
           if (!setupNewSchema()) {
             upstream = IterOutcome.OK;
           }
-        } catch (SchemaChangeException ex) {
-          kill(false);
-          logger.error("Failure during query", ex);
-          context.getExecutorState().fail(ex);
-          return IterOutcome.STOP;
         } finally {
           stats.stopSetup();
         }
@@ -130,7 +121,7 @@ public abstract class AbstractUnaryRecordBatch<T extends PhysicalOperator> exten
     }
   }
 
-  protected abstract boolean setupNewSchema() throws SchemaChangeException;
+  protected abstract boolean setupNewSchema();
   protected abstract IterOutcome doWork();
 
   /**
@@ -150,7 +141,7 @@ public abstract class AbstractUnaryRecordBatch<T extends PhysicalOperator> exten
    */
   protected IterOutcome handleNullInput() {
     container.buildSchema(SelectionVectorMode.NONE);
-    container.setRecordCount(0);
+    container.setEmpty();
     return IterOutcome.NONE;
   }
 

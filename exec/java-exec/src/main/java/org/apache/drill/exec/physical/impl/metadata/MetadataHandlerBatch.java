@@ -72,8 +72,8 @@ import static org.apache.drill.exec.record.RecordBatch.IterOutcome.NONE;
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.STOP;
 
 /**
- * Operator responsible for handling metadata returned by incoming aggregate operators and fetching
- * required metadata form the Metastore.
+ * Responsible for handling metadata returned by incoming aggregate operators
+ * and fetching required metadata form the Metastore.
  */
 public class MetadataHandlerBatch extends AbstractSingleRecordBatch<MetadataHandlerPOP> {
   private static final Logger logger = LoggerFactory.getLogger(MetadataHandlerBatch.class);
@@ -128,11 +128,7 @@ public class MetadataHandlerBatch extends AbstractSingleRecordBatch<MetadataHand
       case STOP:
         return outcome;
       default:
-        context.getExecutorState()
-            .fail(new UnsupportedOperationException("Unsupported upstream state " + outcome));
-        close();
-        killIncoming(false);
-        return IterOutcome.STOP;
+        throw new UnsupportedOperationException("Unsupported upstream state " + outcome);
     }
   }
 

@@ -47,6 +47,7 @@ public class PhysicalOperatorUtil {
 
   /**
    * Helper method to create a list of {@code MinorFragmentEndpoint} instances from a
+   * Helper method to create a list of MinorFragmentEndpoint instances from a
    * given endpoint assignment list.
    *
    * @param endpoints

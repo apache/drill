@@ -55,9 +55,7 @@ import org.slf4j.LoggerFactory;
 import static org.apache.drill.exec.server.FailureUtils.EXIT_CODE_HEAP_OOM;
 
 /**
- * <h2>Overview</h2>
- * <p>
- * Responsible for running a single fragment on a single Drillbit.
+ * Runs a single fragment on a single Drillbit.
  * Listens/responds to status request and cancellation messages.
  * </p>
  * <h2>Theory of Operation</h2>
@@ -143,6 +141,7 @@ public class FragmentExecutor implements Runnable {
 
   private volatile RootExec root;
   private final AtomicReference<FragmentState> fragmentState = new AtomicReference<>(FragmentState.AWAITING_ALLOCATION);
+
   /**
    * Holds all of the messages sent by downstream receivers that have finished. The {@link FragmentExecutor#run()} thread reads from this queue and passes the
    * finished messages to the fragment's {@link RootExec} via the {@link RootExec#receivingFragmentFinished(FragmentHandle)} method.
@@ -209,11 +208,11 @@ public class FragmentExecutor implements Runnable {
      * before this check. This caused a concurrent modification exception as the list of operator
      * stats is iterated over while collecting info, and added to while building the operator tree.
      */
-    if (fragmentState.get() != FragmentState.RUNNING) {
+    if (fragmentState.get() == FragmentState.RUNNING) {
+      return statusReporter.getStatus(FragmentState.RUNNING);
+    } else {
       return null;
     }
-
-    return statusReporter.getStatus(FragmentState.RUNNING);
   }
 
   /**
@@ -237,32 +236,31 @@ public class FragmentExecutor implements Runnable {
   }
 
   private void cleanup(FragmentState state) {
-    if (root != null && fragmentState.get() == FragmentState.FAILED) {
-      root.dumpBatches();
-    }
-
     closeOutResources();
 
     updateState(state);
     // send the final state of the fragment. only the main execution thread can send the final state and it can
     // only be sent once.
     sendFinalState();
-
   }
 
   /**
-   * Resume all the pauses within the current context. Note that this method will be called from threads *other* than
-   * the one running this runnable(). Also, this method can be called multiple times.
+   * Resume all the pauses within the current context. Note that this method
+   * will be called from threads *other* than the one running this runnable().
+   * Also, this method can be called multiple times.
    */
   public synchronized void unpause() {
     fragmentContext.getExecutionControls().unpauseAll();
   }
 
   /**
-   * Inform this fragment that one of its downstream partners no longer needs additional records. This is most commonly
-   * called in the case that a limit query is executed.
+   * Inform this fragment that one of its downstream partners no longer needs
+   * additional records. This is most commonly called in the case that a limit
+   * query is executed.
    *
-   * @param handle The downstream FragmentHandle of the Fragment that needs no more records from this Fragment.
+   * @param handle
+   *          The downstream FragmentHandle of the Fragment that needs no more
+   *          records from this Fragment.
    */
   public void receivingFragmentFinished(final FragmentHandle handle) {
     eventProcessor.receiverFinished(handle);
@@ -283,7 +281,6 @@ public class FragmentExecutor implements Runnable {
     final String newThreadName = QueryIdHelper.getExecutorThreadName(fragmentHandle);
 
     try {
-
       myThread.setName(newThreadName);
 
       // if we didn't get the root operator when the executor was created, create it now.
@@ -337,6 +334,7 @@ public class FragmentExecutor implements Runnable {
       // Ignore: indicates query cancelled by this executor
     } catch (OutOfMemoryError | OutOfMemoryException e) {
       if (FailureUtils.isDirectMemoryOOM(e)) {
+        root.dumpBatches(e);
         fail(UserException.memoryError(e).build(logger));
       } else {
         // we have a heap out of memory error. The JVM is unstable, exit.
@@ -346,6 +344,7 @@ public class FragmentExecutor implements Runnable {
       // Swallow interrupted exceptions since we intentionally interrupt the root when cancelling a query
       logger.trace("Interrupted root: {}", root, e);
     } catch (Throwable t) {
+      root.dumpBatches(t);
       fail(t);
     } finally {
 
@@ -363,7 +362,6 @@ public class FragmentExecutor implements Runnable {
       clusterCoordinator.removeDrillbitStatusListener(drillbitStatusListener);
 
       myThread.setName(originalThreadName);
-
     }
   }
 
@@ -400,7 +398,6 @@ public class FragmentExecutor implements Runnable {
     statusReporter.close();
   }
 
-
   private void closeOutResources() {
 
     // first close the operators and release all memory.
@@ -416,7 +413,6 @@ public class FragmentExecutor implements Runnable {
 
     // then close the fragment context.
     fragmentContext.close();
-
   }
 
   private void warnStateChange(final FragmentState current, final FragmentState target) {

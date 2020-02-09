@@ -23,7 +23,6 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.exception.OutOfMemoryException;
-import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.UnpivotMaps;
@@ -116,38 +115,19 @@ public class UnpivotMapsRecordBatch extends AbstractSingleRecordBatch<UnpivotMap
       case STOP:
         return upStream;
       case OK_NEW_SCHEMA:
-        if (first) {
-          first = false;
-        }
-        try {
-          if (!setupNewSchema()) {
-            upStream = IterOutcome.OK;
-          } else {
-            return upStream;
-          }
-        } catch (SchemaChangeException ex) {
-          kill(false);
-          logger.error("Failure during query", ex);
-          context.getExecutorState().fail(ex);
-          return IterOutcome.STOP;
-        }
-        //fall through
+        first = false;
+        setupNewSchema();
+        return upStream;
+
       case OK:
         assert first == false : "First batch should be OK_NEW_SCHEMA";
-        try {
-          container.zeroVectors();
-          IterOutcome out = doWork();
-          // Preserve OK_NEW_SCHEMA unless doWork() runs into an issue
-          if (out != IterOutcome.OK) {
-            upStream = out;
-          }
-        } catch (Exception ex) {
-          kill(false);
-          logger.error("Failure during query", ex);
-          context.getExecutorState().fail(ex);
-          return IterOutcome.STOP;
+        container.zeroVectors();
+        IterOutcome out = doWork();
+        // Preserve OK_NEW_SCHEMA unless doWork() runs into an issue
+        if (out != IterOutcome.OK) {
+          upStream = out;
         }
-       return upStream;
+        return upStream;
       default:
         throw new UnsupportedOperationException("Unsupported upstream state " + upStream);
     }
@@ -269,7 +249,7 @@ public class UnpivotMapsRecordBatch extends AbstractSingleRecordBatch<UnpivotMap
   }
 
   @Override
-  protected boolean setupNewSchema() throws SchemaChangeException {
+  protected boolean setupNewSchema() {
     container.clear();
     buildKeyList();
     buildOutputContainer();

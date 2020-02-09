@@ -83,47 +83,47 @@ public class ScreenCreator implements RootCreator<Screen> {
       IterOutcome outcome = next(incoming);
       logger.trace("Screen Outcome {}", outcome);
       switch (outcome) {
-      case STOP:
-        return false;
-      case NONE:
-        if (firstBatch) {
-          // this is the only data message sent to the client and may contain the schema
-          QueryWritableBatch batch;
-          QueryData header = QueryData.newBuilder()
-            .setQueryId(context.getHandle().getQueryId())
-            .setRowCount(0)
-            .setDef(RecordBatchDef.getDefaultInstance())
-            .build();
-          batch = new QueryWritableBatch(header);
+        case STOP:
+          return false;
+        case NONE:
+          if (firstBatch) {
+            // this is the only data message sent to the client and may contain the schema
+            QueryWritableBatch batch;
+            QueryData header = QueryData.newBuilder()
+              .setQueryId(context.getHandle().getQueryId())
+              .setRowCount(0)
+              .setDef(RecordBatchDef.getDefaultInstance())
+              .build();
+            batch = new QueryWritableBatch(header);
 
+            stats.startWait();
+            try {
+              userConnection.sendData(batch);
+            } finally {
+              stats.stopWait();
+            }
+            firstBatch = false; // we don't really need to set this. But who knows!
+          }
+
+          return false;
+        case OK_NEW_SCHEMA:
+          materializer = new VectorRecordMaterializer(context, oContext, incoming);
+          //$FALL-THROUGH$
+        case OK:
+          injector.injectPause(context.getExecutionControls(), "sending-data", logger);
+          final QueryWritableBatch batch = materializer.convertNext();
+          updateStats(batch);
           stats.startWait();
           try {
             userConnection.sendData(batch);
           } finally {
             stats.stopWait();
           }
-          firstBatch = false; // we don't really need to set this. But who knows!
-        }
+          firstBatch = false;
 
-        return false;
-      case OK_NEW_SCHEMA:
-        materializer = new VectorRecordMaterializer(context, oContext, incoming);
-        //$FALL-THROUGH$
-      case OK:
-        injector.injectPause(context.getExecutionControls(), "sending-data", logger);
-        final QueryWritableBatch batch = materializer.convertNext();
-        updateStats(batch);
-        stats.startWait();
-        try {
-          userConnection.sendData(batch);
-        } finally {
-          stats.stopWait();
-        }
-        firstBatch = false;
-
-        return true;
-      default:
-        throw new UnsupportedOperationException();
+          return true;
+        default:
+          throw new UnsupportedOperationException();
       }
     }
 

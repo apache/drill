@@ -21,7 +21,6 @@ import java.util.List;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.exec.exception.OutOfMemoryException;
-import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.Limit;
 import org.apache.drill.exec.record.AbstractSingleRecordBatch;
@@ -114,7 +113,7 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
   }
 
   @Override
-  protected boolean setupNewSchema() throws SchemaChangeException {
+  protected boolean setupNewSchema() {
     container.clear();
     transfers.clear();
 
@@ -139,9 +138,9 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
     if (container.isSchemaChanged()) {
       container.buildSchema(BatchSchema.SelectionVectorMode.TWO_BYTE);
       return true;
+    } else {
+     return false;
     }
-
-    return false;
   }
 
   /**

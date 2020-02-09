@@ -26,7 +26,6 @@ import java.util.HashMap;
 
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
@@ -48,7 +47,7 @@ public class ParquetResultListener implements UserResultsListener {
   int count = 0;
   int totalRecords;
 
-  private boolean testValues;
+  private final boolean testValues;
   private final BufferAllocator allocator;
 
   int batchCounter = 1;
@@ -109,13 +108,7 @@ public class ParquetResultListener implements UserResultsListener {
     count += result.getHeader().getRowCount();
     boolean schemaChanged = false;
     final RecordBatchLoader batchLoader = new RecordBatchLoader(allocator);
-    try {
-      schemaChanged = batchLoader.load(result.getHeader().getDef(), result.getData());
-      // TODO:  Clean:  DRILL-2933:  That load(...) no longer throws
-      // SchemaChangeException, so check/clean catch clause below.
-    } catch (SchemaChangeException e) {
-      throw new RuntimeException(e);
-    }
+    schemaChanged = batchLoader.load(result.getHeader().getDef(), result.getData());
 
     // used to make sure each vector in the batch has the same number of records
     int valueCount = batchLoader.getRecordCount();
@@ -124,7 +117,7 @@ public class ParquetResultListener implements UserResultsListener {
     if (schemaChanged) {
     } // do not believe any change is needed for when the schema changes, with the current mock scan use case
 
-    for (final VectorWrapper vw : batchLoader) {
+    for (final VectorWrapper<?> vw : batchLoader) {
       final ValueVector vv = vw.getValueVector();
       currentField = props.fields.get(vv.getField().getName());
       if (!valuesChecked.containsKey(vv.getField().getName())) {
@@ -210,7 +203,7 @@ public class ParquetResultListener implements UserResultsListener {
       if (i % 50 == 0) {
         final StringBuilder sb = new StringBuilder();
 
-        for (VectorWrapper vw : batchLoader) {
+        for (VectorWrapper<?> vw : batchLoader) {
           ValueVector v = vw.getValueVector();
           sb.append(Strings.padStart(v.getField().getName(), 20, ' ') + " ");
         }
@@ -220,7 +213,7 @@ public class ParquetResultListener implements UserResultsListener {
 
       final StringBuilder sb = new StringBuilder();
 
-      for (final VectorWrapper vw : batchLoader) {
+      for (final VectorWrapper<?> vw : batchLoader) {
         final ValueVector v = vw.getValueVector();
         Object o = v.getAccessor().getObject(i);
         if (o instanceof byte[]) {

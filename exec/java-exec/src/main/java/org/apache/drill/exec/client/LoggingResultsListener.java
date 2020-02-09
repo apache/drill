@@ -24,7 +24,6 @@ import org.apache.drill.common.DrillAutoCloseables;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.client.QuerySubmitter.Format;
-import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.RootAllocatorFactory;
 import org.apache.drill.exec.proto.UserBitShared.QueryData;
@@ -76,13 +75,9 @@ public class LoggingResultsListener implements UserResultsListener {
     try {
       if (data != null) {
         count.addAndGet(header.getRowCount());
-        try {
-          loader.load(header.getDef(), data);
-          // TODO:  Clean:  DRILL-2933:  That load(...) no longer throws
-          // SchemaChangeException, so check/clean catch clause below.
-        } catch (SchemaChangeException e) {
-          submissionFailed(UserException.systemError(e).build(logger));
-        }
+        // TODO:  Clean:  DRILL-2933:  That load(...) no longer throws
+        // SchemaChangeException.
+        loader.load(header.getDef(), data);
 
         try {
           switch(format) {

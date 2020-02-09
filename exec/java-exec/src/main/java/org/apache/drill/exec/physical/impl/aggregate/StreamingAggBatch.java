@@ -21,7 +21,6 @@ import static org.apache.drill.exec.record.RecordBatch.IterOutcome.EMIT;
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.NONE;
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK;
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK_NEW_SCHEMA;
-import static org.apache.drill.exec.record.RecordBatch.IterOutcome.STOP;
 
 import java.util.List;
 
@@ -357,13 +356,10 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
           lastKnownOutcome = EMIT;
           return OK_NEW_SCHEMA;
         } else {
-          context.getExecutorState().fail(UserException.unsupportedError().message(SchemaChangeException
-              .schemaChanged("Streaming aggregate does not support schema changes", incomingSchema,
-                  incoming.getSchema()).getMessage()).build(logger));
-          close();
-          killIncoming(false);
-          lastKnownOutcome = STOP;
-          return IterOutcome.STOP;
+          throw UserException.schemaChangeError(SchemaChangeException.schemaChanged(
+                  "Streaming aggregate does not support schema changes", incomingSchema,
+                  incoming.getSchema()))
+              .build(logger);
         }
       default:
         throw new IllegalStateException(String.format("Unknown state %s.", aggOutcome));

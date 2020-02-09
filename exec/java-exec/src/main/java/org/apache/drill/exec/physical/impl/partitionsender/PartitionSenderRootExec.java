@@ -47,8 +47,8 @@ import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.FragmentWritableBatch;
 import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.exec.record.VectorAccessibleUtilities;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
-import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.vector.CopyUtil;
 
@@ -211,9 +211,7 @@ public class PartitionSenderRootExec extends BaseRootExec {
           incoming.kill(false);
           return false;
         }
-        for (VectorWrapper<?> v : incoming) {
-          v.clear();
-        }
+        VectorAccessibleUtilities.clear(incoming);
         return true;
       case NOT_YET:
       default:

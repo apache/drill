@@ -19,7 +19,6 @@ package org.apache.drill.exec.record;
 
 import java.util.Iterator;
 
-import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ExecConstants;
@@ -178,12 +177,6 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
           break;
       }
       return lastOutcome;
-    } catch (SchemaChangeException e) {
-      lastOutcome = IterOutcome.STOP;
-      throw new DrillRuntimeException(e);
-    } catch (Exception e) {
-      lastOutcome = IterOutcome.STOP;
-      throw e;
     } finally {
       stats.stopProcessing();
     }
@@ -200,8 +193,7 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
     }
   }
 
-  protected void buildSchema() throws SchemaChangeException {
-  }
+  protected void buildSchema() { }
 
   @Override
   public void kill(boolean sendUpstream) {
