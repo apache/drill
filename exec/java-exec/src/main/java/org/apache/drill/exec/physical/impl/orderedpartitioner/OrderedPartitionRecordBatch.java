@@ -208,9 +208,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
       try {
         sorter.setup(context, sv4, sortedSamples);
       } catch (SchemaChangeException e) {
-        throw UserException.schemaChangeError(e)
-          .addContext("Failure when setting up the sorter for the ordered partitioner")
-          .build(logger);
+        throw schemaChangeException(e, logger);
       }
       sorter.sort(sv4, sortedSamples);
 
@@ -357,9 +355,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
       try {
         sorter.setup(context, newSv4, allSamplesContainer);
       } catch (SchemaChangeException e) {
-        throw UserException.schemaChangeError(e)
-            .addContext("Unexpected schema change in Ordered Partitioner")
-            .build(logger);
+        throw schemaChangeException(e, logger);
       }
       sorter.sort(newSv4, allSamplesContainer);
 
@@ -440,9 +436,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
       sampleCopier.setupCopier(context, sv4, incoming, outgoing);
       return sampleCopier;
     } catch (SchemaChangeException e) {
-      throw UserException.schemaChangeError(e)
-          .addContext("Unexpected schema change in the Ordered Partitioner")
-          .build(logger);
+      throw schemaChangeException(e, logger);
     }
   }
 
@@ -544,7 +538,6 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
    * in the partition table
    *
    * @param batch
-   * @throws SchemaChangeException
    */
   protected void setupNewSchema(VectorAccessible batch) {
     container.clear();
