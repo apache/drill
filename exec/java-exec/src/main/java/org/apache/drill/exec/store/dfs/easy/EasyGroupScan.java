@@ -93,12 +93,15 @@ public class EasyGroupScan extends AbstractFileGroupScan {
       ) throws IOException, ExecutionSetupException {
     super(ImpersonationUtil.resolveUserName(userName));
     this.selection = FileSelection.create(null, files, selectionRoot);
-    this.formatPlugin = Preconditions.checkNotNull((EasyFormatPlugin<?>) engineRegistry.getFormatPlugin(storageConfig, formatConfig),
+    this.formatPlugin = Preconditions.checkNotNull((EasyFormatPlugin<?>)
+        engineRegistry.getFormatPlugin(storageConfig, formatConfig),
         "Unable to load format plugin for provided format config.");
     this.columns = columns == null ? ALL_COLUMNS : columns;
     this.selectionRoot = selectionRoot;
     SimpleFileTableMetadataProviderBuilder builder =
-        (SimpleFileTableMetadataProviderBuilder) new FileSystemMetadataProviderManager().builder(MetadataProviderManager.MetadataProviderKind.SCHEMA_STATS_ONLY);
+        (SimpleFileTableMetadataProviderBuilder)
+        new FileSystemMetadataProviderManager()
+        .builder(MetadataProviderManager.MetadataProviderKind.SCHEMA_STATS_ONLY);
 
     this.metadataProvider = builder.withLocation(selection.getSelectionRoot())
         .withSchema(schema)
@@ -116,7 +119,8 @@ public class EasyGroupScan extends AbstractFileGroupScan {
       ) throws IOException {
     super(userName);
     this.selection = Preconditions.checkNotNull(selection);
-    this.formatPlugin = Preconditions.checkNotNull(formatPlugin, "Unable to load format plugin for provided format config.");
+    this.formatPlugin = Preconditions.checkNotNull(formatPlugin,
+        "Unable to load format plugin for provided format config.");
     this.columns = columns == null ? ALL_COLUMNS : columns;
     this.selectionRoot = selectionRoot;
     if (metadataProviderManager == null) {
@@ -124,7 +128,8 @@ public class EasyGroupScan extends AbstractFileGroupScan {
       metadataProviderManager = new FileSystemMetadataProviderManager();
     }
     SimpleFileTableMetadataProviderBuilder builder =
-        (SimpleFileTableMetadataProviderBuilder) metadataProviderManager.builder(MetadataProviderManager.MetadataProviderKind.SCHEMA_STATS_ONLY);
+        (SimpleFileTableMetadataProviderBuilder) metadataProviderManager.builder(
+            MetadataProviderManager.MetadataProviderKind.SCHEMA_STATS_ONLY);
 
     this.metadataProvider = builder.withLocation(selection.getSelectionRoot())
         .build();

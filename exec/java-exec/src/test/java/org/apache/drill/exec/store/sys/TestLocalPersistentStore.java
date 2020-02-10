@@ -70,97 +70,104 @@ public class TestLocalPersistentStore extends BaseTest {
   @Test
   public void testAbsentGet() throws Exception {
     Path path = new Path(root.newFolder("absent-get").toURI().getPath());
-    LocalPersistentStore<String> store = new LocalPersistentStore<>(fs, path, DEFAULT_STORE_CONFIG);
+    try (LocalPersistentStore<String> store = new LocalPersistentStore<>(fs, path, DEFAULT_STORE_CONFIG);) {
 
-    assertNull(store.get("abc"));
+      assertNull(store.get("abc"));
 
-    ILLEGAL_KEYS.stream()
-      .map(store::get)
-      .forEach(Assert::assertNull);
+      ILLEGAL_KEYS.stream()
+        .map(store::get)
+        .forEach(Assert::assertNull);
+    }
   }
 
   @Test
   public void testContains() throws Exception {
     Path path = new Path(root.newFolder("contains").toURI().getPath());
-    LocalPersistentStore<String> store = new LocalPersistentStore<>(fs, path, DEFAULT_STORE_CONFIG);
-    store.put("abc", "desc");
+    try (LocalPersistentStore<String> store = new LocalPersistentStore<>(fs, path, DEFAULT_STORE_CONFIG);) {
+      store.put("abc", "desc");
 
-    ILLEGAL_KEYS.stream()
-      .map(store::contains)
-      .forEach(Assert::assertFalse);
+      ILLEGAL_KEYS.stream()
+        .map(store::contains)
+        .forEach(Assert::assertFalse);
 
-    assertFalse(store.contains("a"));
-    assertTrue(store.contains("abc"));
+      assertFalse(store.contains("a"));
+      assertTrue(store.contains("abc"));
+    }
   }
 
   @Test
   public void testPutAndGet() throws Exception {
     Path path = new Path(root.newFolder("put-and-get").toURI().getPath());
-    LocalPersistentStore<String> store = new LocalPersistentStore<>(fs, path, DEFAULT_STORE_CONFIG);
+    try (LocalPersistentStore<String> store = new LocalPersistentStore<>(fs, path, DEFAULT_STORE_CONFIG);) {
 
-    store.put("abc", "desc");
-    assertEquals("desc", store.get("abc"));
+      store.put("abc", "desc");
+      assertEquals("desc", store.get("abc"));
 
-    store.put("abc", "new-desc");
-    assertEquals("new-desc", store.get("abc"));
+      store.put("abc", "new-desc");
+      assertEquals("new-desc", store.get("abc"));
+    }
   }
 
   @Test
   public void testIllegalPut() throws Exception {
     Path path = new Path(root.newFolder("illegal-put").toURI().getPath());
-    LocalPersistentStore<String> store = new LocalPersistentStore<>(fs, path, DEFAULT_STORE_CONFIG);
+    try (LocalPersistentStore<String> store = new LocalPersistentStore<>(fs, path, DEFAULT_STORE_CONFIG);) {
 
-    ILLEGAL_KEYS.forEach(key -> {
-      try {
-        store.put(key, "desc");
-        fail(String.format("Key [%s] should be illegal, put in the store should have failed", key));
-      } catch (DrillRuntimeException e) {
-        assertTrue(e.getMessage().startsWith("Illegal storage key name"));
-      }
-    });
+      ILLEGAL_KEYS.forEach(key -> {
+        try {
+          store.put(key, "desc");
+          fail(String.format("Key [%s] should be illegal, put in the store should have failed", key));
+        } catch (DrillRuntimeException e) {
+          assertTrue(e.getMessage().startsWith("Illegal storage key name"));
+        }
+      });
+    }
   }
 
   @Test
   public void testPutIfAbsent() throws Exception {
     Path path = new Path(root.newFolder("put-if-absent").toURI().getPath());
-    LocalPersistentStore<String> store = new LocalPersistentStore<>(fs, path, DEFAULT_STORE_CONFIG);
+    try (LocalPersistentStore<String> store = new LocalPersistentStore<>(fs, path, DEFAULT_STORE_CONFIG);) {
 
-    assertTrue(store.putIfAbsent("abc", "desc"));
-    assertFalse(store.putIfAbsent("abc", "new-desc"));
-    assertEquals("desc", store.get("abc"));
+      assertTrue(store.putIfAbsent("abc", "desc"));
+      assertFalse(store.putIfAbsent("abc", "new-desc"));
+      assertEquals("desc", store.get("abc"));
+    }
   }
 
   @Test
   public void testIllegalPutIfAbsent() throws Exception {
     Path path = new Path(root.newFolder("illegal-put-if-absent").toURI().getPath());
-    LocalPersistentStore<String> store = new LocalPersistentStore<>(fs, path, DEFAULT_STORE_CONFIG);
+    try (LocalPersistentStore<String> store = new LocalPersistentStore<>(fs, path, DEFAULT_STORE_CONFIG);) {
 
-    ILLEGAL_KEYS.forEach(key -> {
-      try {
-        store.putIfAbsent(key, "desc");
-        fail(String.format("Key [%s] should be illegal, putIfAbsent in the store should have failed", key));
-      } catch (DrillRuntimeException e) {
-        assertTrue(e.getMessage().startsWith("Illegal storage key name"));
-      }
-    });
+      ILLEGAL_KEYS.forEach(key -> {
+        try {
+          store.putIfAbsent(key, "desc");
+          fail(String.format("Key [%s] should be illegal, putIfAbsent in the store should have failed", key));
+        } catch (DrillRuntimeException e) {
+          assertTrue(e.getMessage().startsWith("Illegal storage key name"));
+        }
+      });
+    }
   }
 
   @Test
   public void testRange() throws Exception {
     Path path = new Path(root.newFolder("range").toURI().getPath());
-    LocalPersistentStore<String> store = new LocalPersistentStore<>(fs, path, DEFAULT_STORE_CONFIG);
+    try (LocalPersistentStore<String> store = new LocalPersistentStore<>(fs, path, DEFAULT_STORE_CONFIG);) {
 
-    assertEquals(0, Lists.newArrayList(store.getRange(0, 10)).size());
+      assertEquals(0, Lists.newArrayList(store.getRange(0, 10)).size());
 
-    IntStream.range(0, 10)
-      .forEach(i -> store.put("key_" + i, "value_" + i));
+      IntStream.range(0, 10)
+        .forEach(i -> store.put("key_" + i, "value_" + i));
 
-    assertEquals(10, Lists.newArrayList(store.getRange(0, 20)).size());
-    assertEquals(10, Lists.newArrayList(store.getRange(0, 10)).size());
-    assertEquals(9, Lists.newArrayList(store.getRange(0, 9)).size());
-    assertEquals(0, Lists.newArrayList(store.getRange(10, 2)).size());
-    assertEquals(5, Lists.newArrayList(store.getRange(2, 5)).size());
-    assertEquals(0, Lists.newArrayList(store.getRange(0, 0)).size());
-    assertEquals(0, Lists.newArrayList(store.getRange(4, 0)).size());
+      assertEquals(10, Lists.newArrayList(store.getRange(0, 20)).size());
+      assertEquals(10, Lists.newArrayList(store.getRange(0, 10)).size());
+      assertEquals(9, Lists.newArrayList(store.getRange(0, 9)).size());
+      assertEquals(0, Lists.newArrayList(store.getRange(10, 2)).size());
+      assertEquals(5, Lists.newArrayList(store.getRange(2, 5)).size());
+      assertEquals(0, Lists.newArrayList(store.getRange(0, 0)).size());
+      assertEquals(0, Lists.newArrayList(store.getRange(4, 0)).size());
+    }
   }
 }

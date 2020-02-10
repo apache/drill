@@ -151,7 +151,7 @@ public class TestLogReader extends ClusterTest {
     pluginConfig.getFormats().put("date-log",logDateConfig);
     pluginConfig.getFormats().put("mysql-log", mysqlLogConfig);
     pluginConfig.getFormats().put("ssdlog", firewallConfig);
-    pluginRegistry.createOrUpdate("cp", pluginConfig, false);
+    pluginRegistry.put("cp", pluginConfig);
 
     // Config similar to the above, but with no type info. Types
     // will be provided via the provided schema mechanism. Column names

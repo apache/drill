@@ -42,7 +42,8 @@ public class MetadataVersion implements Comparable<MetadataVersion> {
   public MetadataVersion(String metadataVersion) {
     Matcher matcher = PATTERN.matcher(metadataVersion);
     if (!matcher.matches()) {
-      DrillRuntimeException.format("Could not parse metadata version '%s' using format '%s'", metadataVersion, FORMAT);
+      throw DrillRuntimeException.create(
+          "Could not parse metadata version '%s' using format '%s'", metadataVersion, FORMAT);
     }
     this.major = Integer.parseInt(matcher.group(1));
     this.minor = matcher.group(3) != null ? Integer.parseInt(matcher.group(3)) : 0;

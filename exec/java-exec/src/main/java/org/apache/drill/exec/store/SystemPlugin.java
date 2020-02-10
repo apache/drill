@@ -23,7 +23,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Is used to indicated system plugins which will be dynamically initialized during storage plugin registry init stage.
+ * Indicates system plugins which will be dynamically initialized during storage
+ * plugin registry init stage.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})

@@ -41,6 +41,8 @@ import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -48,8 +50,7 @@ import java.util.List;
 import java.util.UUID;
 
 public class CreateFunctionHandler extends DefaultSqlHandler {
-
-  private static org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CreateFunctionHandler.class);
+  private static Logger logger = LoggerFactory.getLogger(CreateFunctionHandler.class);
 
   public CreateFunctionHandler(SqlHandlerConfig config) {
     super(config);
@@ -106,7 +107,6 @@ public class CreateFunctionHandler extends DefaultSqlHandler {
       jarManager.cleanUp();
     }
   }
-
 
   /**
    * Instantiates coping of binary to local file system
@@ -341,6 +341,5 @@ public class CreateFunctionHandler extends DefaultSqlHandler {
         logger.warn(String.format("Error during deletion [%s]", path.toUri().getPath()), e);
       }
     }
-
   }
 }

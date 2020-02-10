@@ -8,6 +8,14 @@
         }
       }
     },
+    "cp": {
+      "type": "file",
+      "formats": {
+        "shp": {
+          "type": "shp"
+        }
+      }
+    },
     "s3": {
       "type": "file",
       "formats": {

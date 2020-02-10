@@ -226,7 +226,7 @@ public class HiveTestFixture {
         for (Drillbit drillbit : drillbits) {
           HiveStoragePluginConfig pluginConfig = new HiveStoragePluginConfig(new HashMap<>(pluginConf));
           pluginConfig.setEnabled(true);
-          drillbit.getContext().getStorage().createOrUpdate(pluginName, pluginConfig, true);
+          drillbit.getContext().getStorage().put(pluginName, pluginConfig);
         }
       } catch (ExecutionSetupException e) {
         throw new RuntimeException("Failed to add Hive storage plugin to drillbits", e);
@@ -238,7 +238,7 @@ public class HiveTestFixture {
     }
 
     public void removeHivePluginFrom(Iterable<Drillbit> drillbits) {
-      drillbits.forEach(bit -> bit.getContext().getStorage().deletePlugin(pluginName));
+      drillbits.forEach(bit -> bit.getContext().getStorage().remove(pluginName));
     }
 
     public void updateHivePlugin(Iterable<Drillbit> drillbits,
@@ -252,7 +252,7 @@ public class HiveTestFixture {
 
           HiveStoragePluginConfig newPluginConfig = storagePlugin.getConfig();
           newPluginConfig.getConfigProps().putAll(configOverride);
-          pluginRegistry.createOrUpdate(pluginName, newPluginConfig, true);
+          pluginRegistry.put(pluginName, newPluginConfig);
         }
       } catch (ExecutionSetupException e) {
         throw new RuntimeException("Failed to update Hive storage plugin for drillbits", e);

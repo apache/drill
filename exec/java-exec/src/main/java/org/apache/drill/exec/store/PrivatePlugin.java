@@ -17,10 +17,17 @@
  */
 package org.apache.drill.exec.store;
 
-import org.apache.drill.common.exceptions.DrillRuntimeException;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-public class BatchExceededException extends DrillRuntimeException {
-    public BatchExceededException(int capacity, int attempted) {
-        super("Batch exceeded in size. Capacity: " + capacity + ", Attempted: " + attempted);
-    }
+/**
+ * Indicates private plugins which will be excluded from automatic plugin
+ * discovery. Used for test classes which should only be used in the tests
+ * that need them.
+ */
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.TYPE})
+public @interface PrivatePlugin {
 }

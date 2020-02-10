@@ -62,7 +62,7 @@ public class TestSyslogFormat extends ClusterTest {
     final FileSystemConfig pluginConfig = (FileSystemConfig) plugin.getConfig();
     pluginConfig.getFormats().put("sample", sampleConfig);
     pluginConfig.getFormats().put("flat", flattenedDataConfig);
-    pluginRegistry.createOrUpdate("cp", pluginConfig, false);
+    pluginRegistry.put("cp", pluginConfig);
   }
 
   @Test
@@ -196,12 +196,13 @@ public class TestSyslogFormat extends ClusterTest {
             .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-            .addRow("Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko", "192.168.2.132", "0gvhdi5udjuqtweprbgoxilc", "SecureAuth0", "secureauthqa.gosecureauth.com", "SecureAuth Corporation", "Tester2", "27389", "192.168.2.132", "AUDIT", "4")
+            .addRow("Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko", "192.168.2.132",
+                    "0gvhdi5udjuqtweprbgoxilc", "SecureAuth0", "secureauthqa.gosecureauth.com", "SecureAuth Corporation",
+                    "Tester2", "27389", "192.168.2.132", "AUDIT", "4")
             .build();
 
     new RowSetComparison(expected).verifyAndClearAll(results);
   }
-
 
   @Test
   public void testStarFlattenedStructuredDataQuery() throws RpcException {
@@ -234,7 +235,11 @@ public class TestSyslogFormat extends ClusterTest {
             .buildSchema();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-            .addRow(1438811939693L, 6, 10, "INFO", "AUTHPRIV", "192.168.2.132", "SecureAuth0", "23108", "ID52020", "{SecureAuth@27389=[UserAgent=Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko, UserHostAddress=192.168.2.132, BrowserSession=0gvhdi5udjuqtweprbgoxilc, Realm=SecureAuth0, Appliance=secureauthqa.gosecureauth.com, Company=SecureAuth Corporation, UserID=Tester2, PEN=27389, HostName=192.168.2.132, Category=AUDIT, Priority=4]}", "Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko", "192.168.2.132", "0gvhdi5udjuqtweprbgoxilc", "SecureAuth0", "secureauthqa.gosecureauth.com", "SecureAuth Corporation", "Tester2", "27389", "192.168.2.132", "AUDIT", "4", "Found the user for retrieving user's profile")
+            .addRow(1438811939693L, 6, 10, "INFO", "AUTHPRIV", "192.168.2.132", "SecureAuth0", "23108", "ID52020",
+                    "{SecureAuth@27389=[UserAgent=Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko, UserHostAddress=192.168.2.132, BrowserSession=0gvhdi5udjuqtweprbgoxilc, Realm=SecureAuth0, Appliance=secureauthqa.gosecureauth.com, Company=SecureAuth Corporation, UserID=Tester2, PEN=27389, HostName=192.168.2.132, Category=AUDIT, Priority=4]}",
+                    "Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko", "192.168.2.132",
+                    "0gvhdi5udjuqtweprbgoxilc", "SecureAuth0", "secureauthqa.gosecureauth.com", "SecureAuth Corporation",
+                    "Tester2", "27389", "192.168.2.132", "AUDIT", "4", "Found the user for retrieving user's profile")
             .build();
 
     new RowSetComparison(expected).verifyAndClearAll(results);
@@ -294,7 +299,11 @@ public class TestSyslogFormat extends ClusterTest {
 
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-            .addRow(1438811939693L, 6, 10, "INFO", "AUTHPRIV", "192.168.2.132", "SecureAuth0", "23108", "", "{SecureAuth@27389=[UserAgent=Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko, UserHostAddress=192.168.2.132, BrowserSession=0gvhdi5udjuqtweprbgoxilc, Realm=SecureAuth0, Appliance=secureauthqa.gosecureauth.com, Company=SecureAuth Corporation, UserID=Tester2, PEN=27389, HostName=192.168.2.132, Category=AUDIT, Priority=4]}", "Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko", "192.168.2.132", "0gvhdi5udjuqtweprbgoxilc", "SecureAuth0", "secureauthqa.gosecureauth.com", "SecureAuth Corporation", "Tester2", "27389", "192.168.2.132", "AUDIT", "4", "Found the user for retrieving user's profile")
+            .addRow(1438811939693L, 6, 10, "INFO", "AUTHPRIV", "192.168.2.132", "SecureAuth0", "23108", "",
+                    "{SecureAuth@27389=[UserAgent=Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko, UserHostAddress=192.168.2.132, BrowserSession=0gvhdi5udjuqtweprbgoxilc, Realm=SecureAuth0, Appliance=secureauthqa.gosecureauth.com, Company=SecureAuth Corporation, UserID=Tester2, PEN=27389, HostName=192.168.2.132, Category=AUDIT, Priority=4]}",
+                    "Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko", "192.168.2.132",
+                    "0gvhdi5udjuqtweprbgoxilc", "SecureAuth0", "secureauthqa.gosecureauth.com", "SecureAuth Corporation",
+                    "Tester2", "27389", "192.168.2.132", "AUDIT", "4", "Found the user for retrieving user's profile")
             .build();
 
     new RowSetComparison(expected).verifyAndClearAll(results);

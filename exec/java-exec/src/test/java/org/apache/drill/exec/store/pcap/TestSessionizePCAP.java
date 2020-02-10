@@ -34,13 +34,10 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import java.time.format.DateTimeFormatter;
 
 import static org.junit.Assert.assertEquals;
 
 public class TestSessionizePCAP extends ClusterTest {
-
-  private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS");
 
   @BeforeClass
   public static void setup() throws Exception {

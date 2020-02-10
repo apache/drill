@@ -398,6 +398,10 @@ public class UserException extends DrillRuntimeException {
     return new Builder(DrillPBError.ErrorType.INTERNAL_ERROR, cause);
   }
 
+  public static Builder internalError() {
+    return new Builder(DrillPBError.ErrorType.INTERNAL_ERROR, null);
+  }
+
   /**
    * Indicates an unspecified error: code caught the exception, but does not have
    * visibility into the cause well enough to pick one of the more specific

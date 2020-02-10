@@ -63,9 +63,6 @@ public class TestExcelFormat extends ClusterTest {
   public static void setup() throws Exception {
     ClusterTest.startCluster(ClusterFixture.builder(dirTestWatcher));
 
-    ExcelFormatConfig formatConfig = new ExcelFormatConfig();
-    cluster.defineFormat("cp", "excel", formatConfig);
-
     // Needed for compressed file unit test
     dirTestWatcher.copyResourceToRoot(Paths.get("excel/"));
   }

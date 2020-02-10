@@ -17,26 +17,26 @@
  */
 package org.apache.drill.exec.planner.logical;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 
-import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.map.CaseInsensitiveMap;
-import org.apache.drill.common.scanner.ClassPathScanner;
-import org.apache.drill.common.scanner.persistence.ScanResult;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
-import org.apache.drill.shaded.guava.com.google.common.io.Resources;
 
+/**
+ * Map of storage plugin *configurations* indexed by name.
+ * Does not hold the storage plugin *connector* itself.
+ * <p>
+ * This class is serialized to JSON and represents the set of
+ * storage plugin configurations visible to Drill.
+ */
 public class StoragePlugins implements Iterable<Map.Entry<String, StoragePluginConfig>> {
 
   private final Map<String, StoragePluginConfig> storage;
@@ -48,17 +48,8 @@ public class StoragePlugins implements Iterable<Map.Entry<String, StoragePluginC
     this.storage = caseInsensitiveStorage;
   }
 
-  public static void main(String[] args) throws Exception{
-    DrillConfig config = DrillConfig.create();
-    ScanResult scanResult = ClassPathScanner.fromPrescan(config);
-    LogicalPlanPersistence lpp = new LogicalPlanPersistence(config, scanResult);
-    String data = Resources.toString(Resources.getResource("storage-engines.json"), Charsets.UTF_8);
-    StoragePlugins se = lpp.getMapper().readValue(data,  StoragePlugins.class);
-    ByteArrayOutputStream os = new ByteArrayOutputStream();
-    lpp.getMapper().writeValue(System.out, se);
-    lpp.getMapper().writeValue(os, se);
-    se = lpp.getMapper().readValue(new ByteArrayInputStream(os.toByteArray()), StoragePlugins.class);
-    System.out.println(se);
+  public StoragePlugins() {
+    this(new HashMap<>());
   }
 
   @JsonProperty("storage")
@@ -140,4 +131,7 @@ public class StoragePlugins implements Iterable<Map.Entry<String, StoragePluginC
     return storage.get(pluginName);
   }
 
+  public boolean isEmpty() {
+    return storage.isEmpty();
+  }
 }

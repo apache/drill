@@ -36,11 +36,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.function.Function;
 
 import org.apache.drill.common.config.DrillProperties;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.FormatPluginConfig;
+import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ZookeeperHelper;
 import org.apache.drill.exec.client.DrillClient;
@@ -50,16 +50,12 @@ import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.server.Drillbit;
-import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.store.SchemaFactory;
-import org.apache.drill.exec.store.StoragePlugin;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.StoragePluginRegistryImpl;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
-import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
-import org.apache.drill.exec.store.mock.MockStorageEngine;
 import org.apache.drill.exec.store.mock.MockStorageEngineConfig;
 import org.apache.drill.exec.store.sys.store.provider.ZookeeperPersistentStoreProvider;
 import org.apache.drill.exec.util.StoragePluginTestUtils;
@@ -68,6 +64,7 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.apache.drill.shaded.guava.com.google.common.io.Resources;
 import org.apache.drill.test.DrillTestWrapper.TestServices;
+import org.apache.hadoop.fs.FileSystem;
 
 /**
  * Test fixture to start a Drillbit with provide options, create a client, and
@@ -121,7 +118,8 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
       // storage. Profiles will go here when running in distributed
       // mode.
 
-      put(ZookeeperPersistentStoreProvider.DRILL_EXEC_SYS_STORE_PROVIDER_ZK_BLOBROOT, "/tmp/drill/tests");
+      put(ZookeeperPersistentStoreProvider.DRILL_EXEC_SYS_STORE_PROVIDER_ZK_BLOBROOT,
+          "/tmp/drill/tests");
     }
   };
 
@@ -152,7 +150,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
       // Translate exceptions to unchecked to avoid cluttering
       // tests. Failures will simply fail the test itself.
 
-      throw new IllegalStateException( "Cluster fixture setup failed", e );
+      throw new IllegalStateException("Cluster fixture setup failed", e);
     }
   }
 
@@ -278,19 +276,14 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
         builder.dirTestWatcher.getRootDir(), SchemaFactory.DEFAULT_WS_NAME);
 
     // Create the mock data plugin
-
     MockStorageEngineConfig config = MockStorageEngineConfig.INSTANCE;
-    MockStorageEngine plugin = new MockStorageEngine(
-        MockStorageEngineConfig.INSTANCE, bit.getContext(),
-        MockStorageEngineConfig.NAME);
     config.setEnabled(true);
-    ((StoragePluginRegistryImpl) pluginRegistry).addPluginToPersistentStoreIfAbsent(
-        MockStorageEngineConfig.NAME, config, plugin);
+    pluginRegistry.put(MockStorageEngineConfig.NAME, config);
   }
 
   private void applyOptions() throws Exception {
-    // Apply system options
 
+    // Apply system options
     if (builder.systemOptions != null) {
       for (ClusterFixtureBuilder.RuntimeOption option : builder.systemOptions) {
         clientFixture().alterSystem(option.key, option.value);
@@ -298,7 +291,6 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
     }
 
     // Apply session options.
-
     if (builder.sessionOptions != null) {
       for (ClusterFixtureBuilder.RuntimeOption option : builder.sessionOptions) {
         clientFixture().alterSession(option.key, option.value);
@@ -369,7 +361,6 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
    *
    * @return a JDBC connection to the default Drillbit
    */
-
   public Connection jdbcConnection() {
     try {
       Class.forName("org.apache.drill.jdbc.Driver");
@@ -398,14 +389,12 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
    * the test code to detect any state corruption which only shows
    * itself when shutting down resources (memory leaks, for example.)
    */
-
   @Override
   public void close() throws Exception {
     Exception ex = null;
 
     // Close clients. Clients remove themselves from the client
     // list.
-
     while (!clients.isEmpty()) {
       ex = safeClose(clients.get(0), ex);
     }
@@ -472,11 +461,14 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
     return ex;
   }
 
-  public void defineStoragePlugin(Function<DrillbitContext, StoragePlugin> pluginFactory) {
-    for (Drillbit drillbit : drillbits()) {
-      StoragePluginRegistryImpl registry = (StoragePluginRegistryImpl) drillbit.getContext().getStorage();
-      StoragePlugin plugin = pluginFactory.apply(drillbit.getContext());
-      registry.addPluginToPersistentStoreIfAbsent(plugin.getName(), plugin.getConfig(), plugin);
+  public void defineStoragePlugin(String name, StoragePluginConfig config) {
+    try {
+      for (Drillbit drillbit : drillbits()) {
+        StoragePluginRegistryImpl registry = (StoragePluginRegistryImpl) drillbit.getContext().getStorage();
+        registry.put(name, config);
+      }
+    } catch (ExecutionSetupException e) {
+      throw new IllegalStateException("Plugin definition failed", e);
     }
   }
 
@@ -489,7 +481,6 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
    * @param path directory location (usually local)
    * @param defaultFormat default format for files in the schema
    */
-
   public void defineWorkspace(String pluginName, String schemaName, String path,
       String defaultFormat) {
     defineWorkspace(pluginName, schemaName, path, defaultFormat, null);
@@ -504,7 +495,9 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
         // This functionality is supposed to work in tests. Change
         // exception to unchecked to make test code simpler.
 
-        throw new IllegalStateException(e);
+        throw new IllegalStateException(String.format(
+            "Failed to define a workspace for plugin %s, schema %s, path %s, default format %s",
+            pluginName, schemaName, path, defaultFormat), e);
       }
     }
   }
@@ -513,8 +506,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
       String schemaName, String path, String defaultFormat, FormatPluginConfig format)
       throws ExecutionSetupException {
     final StoragePluginRegistry pluginRegistry = drillbit.getContext().getStorage();
-    final FileSystemPlugin plugin = (FileSystemPlugin) pluginRegistry.getPlugin(pluginName);
-    final FileSystemConfig pluginConfig = (FileSystemConfig) plugin.getConfig();
+    final FileSystemConfig pluginConfig = (FileSystemConfig) pluginRegistry.getConfig(pluginName);
     final WorkspaceConfig newTmpWSConfig = new WorkspaceConfig(path, true, defaultFormat, false);
 
     Map<String, WorkspaceConfig> newWorkspaces = new HashMap<>();
@@ -549,15 +541,9 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
                              String pluginName,
                              Map<String, FormatPluginConfig> formats) throws ExecutionSetupException {
     StoragePluginRegistry pluginRegistry = drillbit.getContext().getStorage();
-    FileSystemPlugin plugin = (FileSystemPlugin) pluginRegistry.getPlugin(pluginName);
-    FileSystemConfig pluginConfig = (FileSystemConfig) plugin.getConfig();
-
-    Map<String, FormatPluginConfig> newFormats = new HashMap<>();
-    Optional.ofNullable(pluginConfig.getFormats())
-      .ifPresent(newFormats::putAll);
-    newFormats.putAll(formats);
-
-    updatePlugin(pluginRegistry, pluginName, pluginConfig, null, newFormats);
+    FileSystemConfig pluginConfig = (FileSystemConfig) pluginRegistry.getConfig(pluginName);
+    pluginConfig = pluginConfig.copyWithFormats(formats);
+    pluginRegistry.put(pluginName, pluginConfig);
   }
 
   private void updatePlugin(StoragePluginRegistry pluginRegistry,
@@ -572,7 +558,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
       newFormats == null ? pluginConfig.getFormats() : newFormats);
     newPluginConfig.setEnabled(pluginConfig.isEnabled());
 
-    pluginRegistry.createOrUpdate(pluginName, newPluginConfig, true);
+    pluginRegistry.put(pluginName, newPluginConfig);
   }
 
   public static final String EXPLAIN_PLAN_TEXT = "text";
@@ -584,8 +570,9 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
     Properties props = new Properties();
     props.putAll(ClusterFixture.TEST_CONFIGURATIONS);
     props.setProperty(ExecConstants.DRILL_TMP_DIR, dirTestWatcher.getTmpDir().getAbsolutePath());
-    props.setProperty(ExecConstants.UDF_DIRECTORY_ROOT, dirTestWatcher.getUdfDir().getAbsolutePath());
+    props.setProperty(ExecConstants.UDF_DIRECTORY_ROOT, dirTestWatcher.getHomeDir().getAbsolutePath());
     props.setProperty(ExecConstants.SYS_STORE_PROVIDER_LOCAL_PATH, dirTestWatcher.getStoreDir().getAbsolutePath());
+    props.setProperty(ExecConstants.UDF_DIRECTORY_FS, FileSystem.DEFAULT_FS);
 
     builder.configBuilder.configProps(props);
     return builder;
@@ -609,7 +596,6 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
    * Shim class to allow the {@link TestBuilder} class to work with the
    * cluster fixture.
    */
-
   public static class FixtureTestServices implements TestServices {
 
     private final ClientFixture client;
@@ -687,7 +673,6 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
    * @param resource path to the resource
    * @return the resource contents as a string
    */
-
   public static String loadResource(String resource) {
     try {
       return getResource(resource);
@@ -703,7 +688,6 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
    * @param path resource path with optional leading slash
    * @return same path without the leading slash
    */
-
   public static String trimSlash(String path) {
     if (path == null) {
       return path;
@@ -725,7 +709,6 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
    * @return location of the directory which can be used to create
    * temporary input files
    */
-
   public File makeDataDir(String key, String defaultFormat, FormatPluginConfig formatPluginConfig) {
     File dir = builder.dirTestWatcher.makeSubDir(Paths.get(key));
     defineWorkspace("dfs", key, dir.getAbsolutePath(), defaultFormat, formatPluginConfig);
@@ -747,7 +730,6 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
    *
    * @return query profile directory
    */
-
   public File getProfileDir() {
     File baseDir;
     if (usesZk) {
@@ -756,5 +738,13 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
       baseDir = getDrillTempDir();
     }
     return new File(baseDir, "profiles");
+  }
+
+  public StoragePluginRegistry storageRegistry() {
+    return drillbit().getContext().getStorage();
+  }
+
+  public StoragePluginRegistry storageRegistry(String name) {
+    return drillbit(name).getContext().getStorage();
   }
 }

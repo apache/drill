@@ -20,6 +20,8 @@ package org.apache.drill.exec.store.excel;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.exec.store.excel.ExcelBatchReader.ExcelReaderConfig;
 
@@ -34,6 +36,12 @@ public class ExcelFormatConfig implements FormatPluginConfig {
 
   // This is the theoretical maximum number of rows in an Excel spreadsheet
   private final int MAX_ROWS = 1048576;
+
+  // TODO: Bad things happen if fields change after created.
+  // That is, if this config is stored in the plugin registry, then
+  // later modified.
+  // Change all these to be private final, and add constructor.
+  // See DRILL-7612.
 
   public List<String> extensions = Collections.singletonList("xlsx");
 
@@ -86,7 +94,7 @@ public class ExcelFormatConfig implements FormatPluginConfig {
   @Override
   public int hashCode() {
     return Arrays.hashCode(
-      new Object[]{extensions, headerRow, lastRow, sheetName, firstColumn, lastColumn, allTextMode});
+      new Object[]{extensions, headerRow, lastRow, firstColumn, lastColumn, allTextMode, sheetName});
   }
 
   @Override
@@ -98,11 +106,25 @@ public class ExcelFormatConfig implements FormatPluginConfig {
       return false;
     }
     ExcelFormatConfig other = (ExcelFormatConfig) obj;
-    return Objects.equals(headerRow, other.headerRow)
+    return Objects.equals(extensions, other.extensions)
+      && Objects.equals(headerRow, other.headerRow)
       && Objects.equals(lastRow, other.lastRow)
       && Objects.equals(firstColumn, other.firstColumn)
       && Objects.equals(lastColumn, other.lastColumn)
-      && Objects.equals(sheetName, other.sheetName)
-      && Objects.equals(allTextMode, other.allTextMode);
+      && Objects.equals(allTextMode, other.allTextMode)
+      && Objects.equals(sheetName, other.sheetName);
+  }
+
+  @Override
+  public String toString() {
+    return new PlanStringBuilder(this)
+        .field("extensions", extensions)
+        .field("sheetName", sheetName)
+        .field("headerRow", headerRow)
+        .field("lastRow", lastRow)
+        .field("firstColumn", firstColumn)
+        .field("lastColumn", lastColumn)
+        .field("allTextMode", allTextMode)
+        .toString();
   }
 }

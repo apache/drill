@@ -33,13 +33,15 @@ import org.apache.drill.exec.store.SchemaConfig.SchemaConfigInfoProvider;
 import org.apache.drill.exec.util.ImpersonationUtil;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * Class which creates new schema trees. It keeps track of newly created schema trees and closes them safely as
- * part of {@link #close()}.
+ * Creates new schema trees. It keeps track of newly created schema trees and
+ * closes them safely as part of {@link #close()}.
  */
 public class SchemaTreeProvider implements AutoCloseable {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SchemaTreeProvider.class);
+  private static final Logger logger = LoggerFactory.getLogger(SchemaTreeProvider.class);
 
   private final DrillbitContext dContext;
   private final List<SchemaPlus> schemaTreesToClose;

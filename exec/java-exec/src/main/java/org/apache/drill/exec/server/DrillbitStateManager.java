@@ -72,8 +72,9 @@ public class DrillbitStateManager {
           throw new IllegalStateException("Cannot set drillbit to" + newState + "from" + currentState);
         }
         break;
+      default:
+        throw new IllegalArgumentException(newState.name());
     }
   }
-
 }
 

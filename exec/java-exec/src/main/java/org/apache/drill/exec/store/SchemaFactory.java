@@ -22,7 +22,7 @@ import org.apache.calcite.schema.SchemaPlus;
 import java.io.IOException;
 
 /**
- * StoragePlugins implements this interface to register the schemas they provide.
+ * Storage plugins implements this interface to register the schemas they provide.
  */
 public interface SchemaFactory {
 

@@ -33,6 +33,8 @@ import org.eclipse.jetty.security.authentication.SessionAuthentication;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.util.security.Constraint;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -47,12 +49,12 @@ import java.util.Set;
 
 
 public class DrillHttpSecurityHandlerProvider extends ConstraintSecurityHandler {
-
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillHttpSecurityHandlerProvider.class);
+  private static final Logger logger = LoggerFactory.getLogger(DrillHttpSecurityHandlerProvider.class);
 
   private final Map<String, DrillHttpConstraintSecurityHandler> securityHandlers =
       CaseInsensitiveMap.newHashMapWithExpectedSize(2);
 
+  @SuppressWarnings("unchecked")
   public DrillHttpSecurityHandlerProvider(DrillConfig config, DrillbitContext drillContext)
       throws DrillbitStartupException {
 
@@ -99,7 +101,8 @@ public class DrillHttpSecurityHandlerProvider extends ConstraintSecurityHandler 
     }
 
     if (securityHandlers.size() == 0) {
-      throw new DrillbitStartupException("Authentication is enabled for WebServer but none of the security mechanism " +
+      throw new DrillbitStartupException(
+          "Authentication is enabled for WebServer but none of the security mechanism " +
           "was configured properly. Please verify the configurations and try again.");
     }
 
@@ -165,6 +168,7 @@ public class DrillHttpSecurityHandlerProvider extends ConstraintSecurityHandler 
     }
   }
 
+  @Override
   public void doStop() throws Exception {
     super.doStop();
     for (DrillHttpConstraintSecurityHandler securityHandler : securityHandlers.values()) {
@@ -185,7 +189,7 @@ public class DrillHttpSecurityHandlerProvider extends ConstraintSecurityHandler 
   }
 
   /**
-   * Return's list of configured mechanisms for HTTP authentication. For backward
+   * Returns a list of configured mechanisms for HTTP authentication. For backward
    * compatibility if authentication is enabled it will include FORM mechanism by default.
    * @param config - {@link DrillConfig}
    * @return

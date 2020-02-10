@@ -40,12 +40,12 @@ public class DrillRuntimeException extends RuntimeException {
     super(cause);
   }
 
-  public static DrillRuntimeException format(String format, Object...args) {
-    return format(null, format, args);
+  public static DrillRuntimeException create(String format, Object...args) {
+    return create(null, format, args);
   }
 
-  public static DrillRuntimeException format(Throwable cause, String format, Object...args) {
-    throw new DrillRuntimeException(String.format(format, args), cause);
+  public static DrillRuntimeException create(Throwable cause, String format, Object...args) {
+    return new DrillRuntimeException(String.format(format, args), cause);
   }
 
   /**

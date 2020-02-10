@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.exception.OutOfMemoryException;
@@ -32,14 +34,14 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 public abstract class AbstractRecordReader implements RecordReader {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractRecordReader.class);
+  private static final Logger logger = LoggerFactory.getLogger(AbstractRecordReader.class);
 
   // For text reader, the default columns to read is "columns[0]".
   protected static final List<SchemaPath> DEFAULT_TEXT_COLS_TO_READ = ImmutableList.of(new SchemaPath(new PathSegment.NameSegment("columns", new PathSegment.ArraySegment(0))));
 
-  private Collection<SchemaPath> columns = null;
-  private boolean isStarQuery = false;
-  private boolean isSkipQuery = false;
+  private Collection<SchemaPath> columns;
+  private boolean isStarQuery;
+  private boolean isSkipQuery;
 
   @Override
   public String toString() {

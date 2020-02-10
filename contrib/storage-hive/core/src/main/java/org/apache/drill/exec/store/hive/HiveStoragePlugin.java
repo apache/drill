@@ -81,6 +81,7 @@ public class HiveStoragePlugin extends AbstractStoragePlugin {
     return hiveConf;
   }
 
+  @Override
   public HiveStoragePluginConfig getConfig() {
     return config;
   }

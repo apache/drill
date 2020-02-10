@@ -24,9 +24,7 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.categories.SqlFunctionTest;
 import org.apache.drill.common.config.ConfigConstants;
-import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserRemoteException;
-import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.VersionMismatchException;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.expr.fn.registry.LocalFunctionRegistry;
@@ -53,7 +51,6 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 
 import static org.apache.drill.test.HadoopUtils.hadoopToJavaPath;
@@ -102,13 +99,7 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
 
   @Before
   public void setupNewDrillbit() throws Exception {
-    File udfLocalDir = new File(dirTestWatcher.getUdfDir(), "local");
-    Properties overrideProps = new Properties();
-    overrideProps.setProperty(ExecConstants.UDF_DIRECTORY_ROOT, dirTestWatcher.getUdfDir().getAbsolutePath());
-    overrideProps.setProperty(ExecConstants.UDF_DIRECTORY_LOCAL, udfLocalDir.getAbsolutePath());
-    overrideProps.setProperty(ExecConstants.UDF_DIRECTORY_FS, FileSystem.DEFAULT_FS);
-    updateTestCluster(1, DrillConfig.create(overrideProps));
-
+    updateTestCluster(1, config);
     fsUri = getLocalFileSystem().getUri();
   }
 
@@ -566,9 +557,12 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
         .baselineValues(true, String.format(summary, defaultBinaryJar))
         .go();
 
-    thrown.expect(UserRemoteException.class);
-    thrown.expectMessage(containsString("No match found for function signature custom_lower(<CHARACTER>)"));
-    test("select custom_lower('A') from (values(1))");
+    try {
+      test("select custom_lower('A') from (values(1))");
+      fail();
+    } catch (UserRemoteException e) {
+      assertTrue(e.getMessage().contains("No match found for function signature custom_lower(<CHARACTER>)"));
+    }
 
     RemoteFunctionRegistry remoteFunctionRegistry = getDrillbitContext().getRemoteFunctionRegistry();
     Path registryPath = hadoopToJavaPath(remoteFunctionRegistry.getRegistryArea());

@@ -67,8 +67,8 @@ public class TestJdbcPluginWithH2IT extends ClusterTest {
     sourceParameters.put("maxTotal", 5);
     JdbcStorageConfig jdbcStorageConfig = new JdbcStorageConfig("org.h2.Driver", connString, "root", "root", true, sourceParameters);
     jdbcStorageConfig.setEnabled(true);
-    cluster.defineStoragePlugin(ctx -> new JdbcStoragePlugin(jdbcStorageConfig, ctx, "h2"));
-    cluster.defineStoragePlugin(ctx -> new JdbcStoragePlugin(jdbcStorageConfig, ctx, "h2o"));
+    cluster.defineStoragePlugin("h2", jdbcStorageConfig);
+    cluster.defineStoragePlugin("h2o", jdbcStorageConfig);
   }
 
   @Test

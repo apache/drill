@@ -19,7 +19,8 @@ package org.apache.drill.exec.expr.fn.registry;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.ArrayListMultimap;
 import org.apache.drill.shaded.guava.com.google.common.collect.ListMultimap;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.drill.common.AutoCloseables.Closeable;
 import org.apache.drill.common.concurrent.AutoCloseableLock;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
@@ -86,8 +87,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  *
  */
 public class FunctionRegistryHolder implements AutoCloseable {
-
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FunctionRegistryHolder.class);
+  private static final Logger logger = LoggerFactory.getLogger(FunctionRegistryHolder.class);
 
   private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
   private final AutoCloseableLock readLock = new AutoCloseableLock(readWriteLock.readLock());
@@ -200,7 +200,7 @@ public class FunctionRegistryHolder implements AutoCloseable {
   /**
    * Retrieves all function names associated with the jar from {@link #jars}.
    * Returns empty list if jar is not registered.
-   * This is read operation, so several users can perform this operation at the same time.
+   * This is a read operation, so several users can perform this operation at the same time.
    *
    * @param jarName jar name
    * @return list of functions names associated from the jar
@@ -217,7 +217,7 @@ public class FunctionRegistryHolder implements AutoCloseable {
    * Uses guava {@link ListMultimap} structure to return data.
    * If no functions present, will return empty {@link ListMultimap}.
    * If version holder is not null, updates it with current registry version number.
-   * This is read operation, so several users can perform this operation at the same time.
+   * This is a read operation, so several users can perform this operation at the same time.
    *
    * @param version version holder
    * @return all functions which their holders
@@ -237,7 +237,7 @@ public class FunctionRegistryHolder implements AutoCloseable {
 
   /**
    * Returns list of functions with list of function holders for each functions without version number.
-   * This is read operation, so several users can perform this operation at the same time.
+   * This is a read operation, so several users can perform this operation at the same time.
    *
    * @return all functions which their holders
    */
@@ -249,7 +249,7 @@ public class FunctionRegistryHolder implements AutoCloseable {
    * Returns list of functions with list of function signatures for each functions.
    * Uses guava {@link ListMultimap} structure to return data.
    * If no functions present, will return empty {@link ListMultimap}.
-   * This is read operation, so several users can perform this operation at the same time.
+   * This is a read operation, so several users can perform this operation at the same time.
    *
    * @return all functions which their signatures
    */
@@ -267,7 +267,7 @@ public class FunctionRegistryHolder implements AutoCloseable {
    * Returns all function holders associated with function name.
    * If function is not present, will return empty list.
    * If version holder is not null, updates it with current registry version number.
-   * This is read operation, so several users can perform this operation at the same time.
+   * This is a read operation, so several users can perform this operation at the same time.
    *
    * @param functionName function name
    * @param version version holder
@@ -285,7 +285,7 @@ public class FunctionRegistryHolder implements AutoCloseable {
 
   /**
    * Returns all function holders associated with function name without version number.
-   * This is read operation, so several users can perform this operation at the same time.
+   * This is a read operation, so several users can perform this operation at the same time.
    *
    * @param functionName function name
    * @return list of function holders
@@ -296,7 +296,7 @@ public class FunctionRegistryHolder implements AutoCloseable {
 
   /**
    * Checks is jar is present in {@link #jars}.
-   * This is read operation, so several users can perform this operation at the same time.
+   * This is a read operation, so several users can perform this operation at the same time.
    *
    * @param jarName jar name
    * @return true if jar exists, else false
@@ -309,7 +309,7 @@ public class FunctionRegistryHolder implements AutoCloseable {
 
   /**
    * Returns quantity of functions stored in {@link #functions}.
-   * This is read operation, so several users can perform this operation at the same time.
+   * This is a read operation, so several users can perform this operation at the same time.
    *
    * @return quantity of functions
    */
@@ -323,7 +323,7 @@ public class FunctionRegistryHolder implements AutoCloseable {
    * Looks which jar in {@link #jars} contains passed function signature.
    * First looks by function name and if found checks if such function has passed function signature.
    * Returns jar name if found matching function signature, else null.
-   * This is read operation, so several users can perform this operation at the same time.
+   * This is a read operation, so several users can perform this operation at the same time.
    *
    * @param functionName function name
    * @param functionSignature function signature

@@ -96,7 +96,7 @@ public class TestImpersonationDisabledWithMiniDFS extends BaseTestImpersonation 
 
   @AfterClass
   public static void removeMiniDfsBasedStorage() throws Exception {
-    getDrillbitContext().getStorage().deletePlugin(MINI_DFS_STORAGE_PLUGIN_NAME);
+    getDrillbitContext().getStorage().remove(MINI_DFS_STORAGE_PLUGIN_NAME);
     stopMiniDfsCluster();
   }
 }

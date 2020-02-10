@@ -57,8 +57,8 @@ public class BaseHBaseTest extends BaseTestQuery {
     storagePluginConfig.setEnabled(true);
     storagePluginConfig.setZookeeperPort(HBaseTestsSuite.getZookeeperPort());
 
-    storagePlugin = (HBaseStoragePlugin) pluginRegistry.createOrUpdate(HBASE_STORAGE_PLUGIN_NAME,
-        storagePluginConfig, true);
+    pluginRegistry.put(HBASE_STORAGE_PLUGIN_NAME, storagePluginConfig);
+    storagePlugin = (HBaseStoragePlugin) pluginRegistry.getPlugin(HBASE_STORAGE_PLUGIN_NAME);
   }
 
   @AfterClass
@@ -102,5 +102,4 @@ public class BaseHBaseTest extends BaseTestQuery {
   protected String canonizeHBaseSQL(String sql) {
     return sql.replace("[TABLE_NAME]", HBaseTestsSuite.TEST_TABLE_1.getNameAsString());
   }
-
 }

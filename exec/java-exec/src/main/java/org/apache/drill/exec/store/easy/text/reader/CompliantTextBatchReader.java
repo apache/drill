@@ -33,6 +33,8 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.metadata.TupleSchema;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.hadoop.mapred.FileSplit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.univocity.parsers.common.TextParsingException;
 
@@ -42,7 +44,7 @@ import io.netty.buffer.DrillBuf;
  * New text reader, complies with the RFC 4180 standard for text/csv files
  */
 public class CompliantTextBatchReader implements ManagedReader<ColumnsSchemaNegotiator> {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CompliantTextBatchReader.class);
+  private static final Logger logger = LoggerFactory.getLogger(CompliantTextBatchReader.class);
 
   private static final int MAX_RECORDS_PER_BATCH = 8096;
   private static final int READ_BUFFER = 1024 * 1024;

@@ -66,7 +66,7 @@ public class TestHTTPDLogReader extends ClusterTest {
     final FileSystemPlugin plugin = (FileSystemPlugin) pluginRegistry.getPlugin("cp");
     final FileSystemConfig pluginConfig = (FileSystemConfig) plugin.getConfig();
     pluginConfig.getFormats().put("sample", sampleConfig);
-    pluginRegistry.createOrUpdate("cp", pluginConfig, false);
+    pluginRegistry.put("cp", pluginConfig);
   }
 
   @Test

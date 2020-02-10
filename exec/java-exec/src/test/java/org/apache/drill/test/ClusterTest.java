@@ -70,7 +70,6 @@ import org.junit.ClassRule;
  * The try-with-resources block ensures that the cluster is shut down at
  * the end of each test method.
  */
-
 public class ClusterTest extends DrillTest {
 
   @ClassRule
@@ -94,7 +93,6 @@ public class ClusterTest extends DrillTest {
    * cluster fixture.
    * @return a test builder that works against the cluster fixture
    */
-
   public TestBuilder testBuilder() {
     return client.testBuilder();
   }
@@ -104,7 +102,6 @@ public class ClusterTest extends DrillTest {
    * cluster fixture.
    * @return the contents of the resource text file
    */
-
   public String getFile(String resource) throws IOException {
     return ClusterFixture.getResource(resource);
   }

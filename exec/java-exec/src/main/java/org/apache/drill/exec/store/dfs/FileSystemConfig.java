@@ -17,12 +17,16 @@
  */
 package org.apache.drill.exec.store.dfs;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 
@@ -73,14 +77,13 @@ public class FileSystemConfig extends StoragePluginConfig {
   }
 
   @Override
+  public String getValue(String key) {
+    return config == null ? null : config.get(key);
+  }
+
+  @Override
   public int hashCode() {
-    final int prime = 31;
-    int result = 1;
-    result = prime * result + ((config == null) ? 0 : config.hashCode());
-    result = prime * result + ((connection == null) ? 0 : connection.hashCode());
-    result = prime * result + ((formats == null) ? 0 : formats.hashCode());
-    result = prime * result + ((workspaces == null) ? 0 : workspaces.hashCode());
-    return result;
+    return Objects.hash(connection, config, formats, workspaces);
   }
 
   @Override
@@ -88,49 +91,55 @@ public class FileSystemConfig extends StoragePluginConfig {
     if (this == obj) {
       return true;
     }
-    if (obj == null) {
-      return false;
-    }
-    if (getClass() != obj.getClass()) {
+    if (obj == null || getClass() != obj.getClass()) {
       return false;
     }
     FileSystemConfig other = (FileSystemConfig) obj;
-    if (connection == null) {
-      if (other.connection != null) {
-        return false;
-      }
-    } else if (!connection.equals(other.connection)) {
-      return false;
-    }
-    if (formats == null) {
-      if (other.formats != null) {
-        return false;
-      }
-    } else if (!formats.equals(other.formats)) {
-      return false;
-    }
-    if (workspaces == null) {
-      if (other.workspaces != null) {
-        return false;
-      }
-    } else if (!workspaces.equals(other.workspaces)) {
-      return false;
-    }
-    if (config == null) {
-      if (other.config != null) {
-        return false;
-      }
-    } else if (!config.equals(other.config)) {
-      return false;
-    }
-    return true;
+    return Objects.equals(connection, other.connection) &&
+           Objects.equals(config, other.config) &&
+           Objects.equals(formats, other.formats) &&
+           Objects.equals(workspaces, other.workspaces);
   }
 
   @Override
-  public String getValue(String key) {
-    if (config != null) {
-      return config.get(key);
+  public String toString() {
+    return new PlanStringBuilder(this)
+        .field("connection", connection)
+        .field("config", config)
+        .field("formats", formats)
+        .field("workspaces", workspaces)
+        .toString();
+  }
+
+  /**
+   * Copy the file system configuration. This <b>must</b> be done prior
+   * to modifying a config already stored in the registry. The registry
+   * maintains a key based on config value.
+   * @return a copy of this config which may be modified
+   */
+  public FileSystemConfig copy() {
+    return copyWithFormats(null);
+  }
+
+  /**
+   * Copy this file system config with the set of new/replaced formats.
+   * This <b>must</b> be done if the file system config is already stored
+   * in the plugin registry
+   * @param newFormats optional new formats to add
+   * @return copy with the new formats
+   */
+  public FileSystemConfig copyWithFormats(Map<String, FormatPluginConfig> newFormats) {
+    // Must make copies of structures. Turns out that the constructor already
+    // copies workspaces, so we need not copy it here.
+    Map<String, String> configCopy = config == null ? null : new HashMap<>(config);
+    Map<String, FormatPluginConfig> formatsCopy =
+        formats == null ? null : new LinkedHashMap<>(formats);
+    if (newFormats != null) {
+      formatsCopy = formatsCopy == null ? new LinkedHashMap<>() : formatsCopy;
+      formatsCopy.putAll(newFormats);
     }
-    return null;
+    FileSystemConfig newConfig = new FileSystemConfig(connection, configCopy, workspaces, formatsCopy);
+    newConfig.setEnabled(isEnabled());
+    return newConfig;
   }
 }

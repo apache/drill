@@ -73,7 +73,7 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
     try {
       fs.mkdirs(basePath);
     } catch (IOException e) {
-      throw DrillRuntimeException.format(e, "Failure setting local persistent store path [%s]: %s",
+      throw DrillRuntimeException.create(e, "Failure setting local persistent store path [%s]: %s",
         basePath, e.getMessage());
     }
   }
@@ -113,7 +113,7 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
     try {
       fileStatuses = DrillFileSystemUtil.listFiles(fs, basePath, false, SYS_FILE_SUFFIX_FILTER);
     } catch (IOException e) {
-      throw DrillRuntimeException.format(e, "Unable to retrieve store data: %s", e.getMessage());
+      throw DrillRuntimeException.create(e, "Unable to retrieve store data: %s", e.getMessage());
     }
 
     if (fileStatuses.isEmpty()) {
@@ -151,7 +151,7 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
       byte[] bytes = IOUtils.toByteArray(is);
       return deserialize(path, bytes);
     } catch (IOException e) {
-      throw DrillRuntimeException.format(e, "Unable to retrieve store data for the path [%s]: %s",
+      throw DrillRuntimeException.create(e, "Unable to retrieve store data for the path [%s]: %s",
         path, e.getMessage());
     }
   }
@@ -179,7 +179,7 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
     try {
       fs.delete(path, false);
     } catch (IOException e) {
-      throw DrillRuntimeException.format(e, "Unable to delete store data for the path [%s]: %s",
+      throw DrillRuntimeException.create(e, "Unable to delete store data for the path [%s]: %s",
         path, e.getMessage());
     }
   }
@@ -226,7 +226,7 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
 
   private Path handleInvalidKey(String key, Throwable throwable, boolean failOnInvalidKey) {
     if (failOnInvalidKey) {
-      throw DrillRuntimeException.format(throwable, "Illegal storage key name: %s", key);
+      throw DrillRuntimeException.create(throwable, "Illegal storage key name: %s", key);
     } else {
       logger.debug("Illegal storage key name: {}", key, throwable);
       return null;
@@ -237,7 +237,7 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
     try {
       return path != null && fs.exists(path);
     } catch (IOException e) {
-      throw DrillRuntimeException.format(e, "Unable to check store file [%s] existence: %s",
+      throw DrillRuntimeException.create(e, "Unable to check store file [%s] existence: %s",
         path, e.getMessage());
     }
   }
@@ -246,7 +246,7 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
     try {
       return config.getSerializer().serialize(value);
     } catch (IOException e) {
-      throw DrillRuntimeException.format(e, "Unable serialize value for the store key [%s]: %s",
+      throw DrillRuntimeException.create(e, "Unable serialize value for the store key [%s]: %s",
         path, e.getMessage());
     }
   }
@@ -255,7 +255,7 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
     try {
       return config.getSerializer().deserialize(bytes);
     } catch (IOException e) {
-      throw DrillRuntimeException.format(e, "Unable deserialize value for the path [%s]: %s",
+      throw DrillRuntimeException.create(e, "Unable deserialize value for the path [%s]: %s",
         path, e.getMessage());
     }
   }
@@ -264,7 +264,7 @@ public class LocalPersistentStore<V> extends BasePersistentStore<V> {
     try (OutputStream os = fs.create(path)) {
       IOUtils.write(serialize(path, value), os);
     } catch (IOException e) {
-      throw DrillRuntimeException.format(e, "Unable to store data for the path [%s]: %s",
+      throw DrillRuntimeException.create(e, "Unable to store data for the path [%s]: %s",
         path, e.getMessage());
     }
   }

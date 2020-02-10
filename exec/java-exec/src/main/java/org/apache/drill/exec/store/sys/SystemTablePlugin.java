@@ -72,7 +72,7 @@ public class SystemTablePlugin extends AbstractStoragePlugin {
 
   @Override
   public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection, List<SchemaPath> columns) {
-    SystemTable table = selection.getWith(getContext().getLpPersistence(), SystemTable.class);
+    SystemTable table = selection.getWith(getContext().getLpPersistence().getMapper(), SystemTable.class);
     return new SystemTableScan(table, this);
   }
 

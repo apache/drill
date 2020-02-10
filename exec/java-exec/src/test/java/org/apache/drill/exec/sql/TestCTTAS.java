@@ -67,7 +67,7 @@ public class TestCTTAS extends BaseTestQuery {
         newWorkspaces,
         pluginConfig.getFormats());
     newPluginConfig.setEnabled(pluginConfig.isEnabled());
-    pluginRegistry.createOrUpdate(DFS_PLUGIN_NAME, newPluginConfig, true);
+    pluginRegistry.put(DFS_PLUGIN_NAME, newPluginConfig);
   }
 
   @Test

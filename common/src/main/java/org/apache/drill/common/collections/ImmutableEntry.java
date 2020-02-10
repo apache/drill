@@ -48,15 +48,24 @@ public class ImmutableEntry<K, V> implements Map.Entry<K, V>  {
 
   @Override
   public boolean equals(final Object other) {
-    if (other instanceof ImmutableEntry && other.getClass() == getClass()) {
-      final ImmutableEntry<K, V> entry = (ImmutableEntry<K, V>)other;
-      return Objects.equal(key, entry.key) && Objects.equal(value, entry.value);
+    if (other == this) {
+      return true;
     }
-    return false;
+    if (other == null || !(other instanceof  Map.Entry)) {
+      return false;
+    }
+    Map.Entry<?, ?> entry = (Map.Entry<?, ?>) other;
+    return Objects.equal(key, entry.getKey()) && Objects.equal(value, entry.getValue());
   }
 
   @Override
   public int hashCode() {
     return Objects.hashCode(key, value);
+  }
+
+  @Override
+  public String toString() {
+    return "(" + key.toString() + ", " +
+           value.toString() + ")";
   }
 }

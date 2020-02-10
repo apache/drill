@@ -305,7 +305,7 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
 
   @AfterClass
   public static void removeMiniDfsBasedStorage() {
-    getDrillbitContext().getStorage().deletePlugin(MINI_DFS_STORAGE_PLUGIN_NAME);
+    getDrillbitContext().getStorage().remove(MINI_DFS_STORAGE_PLUGIN_NAME);
     stopMiniDfsCluster();
   }
 }
