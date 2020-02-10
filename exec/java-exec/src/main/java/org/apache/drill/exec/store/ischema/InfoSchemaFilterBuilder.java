@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.ischema;
 
+import org.apache.drill.common.FunctionNames;
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.FieldReference;
@@ -30,8 +31,8 @@ import org.apache.drill.exec.store.ischema.InfoSchemaFilter.ExprNode;
 import org.apache.drill.exec.store.ischema.InfoSchemaFilter.FieldExprNode;
 import org.apache.drill.exec.store.ischema.InfoSchemaFilter.FunctionExprNode;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.apache.drill.exec.store.ischema.InfoSchemaConstants.CATS_COL_CATALOG_NAME;
@@ -73,12 +74,12 @@ public class InfoSchemaFilterBuilder extends AbstractExprVisitor<ExprNode, Void,
   public ExprNode visitFunctionCall(FunctionCall call, Void value) throws RuntimeException {
     final String funcName = call.getName().toLowerCase();
     switch (funcName) {
-      case "equal":
-      case "not equal":
-      case "notequal":
-      case "not_equal": {
-        final ExprNode col = call.args.get(0).accept(this, value);
-        final ExprNode constant = call.args.get(1).accept(this, value);
+      case FunctionNames.EQ:
+      case "not equal":  // TODO: Is this name correct?
+      case "notequal":   // TODO: Is this name correct?
+      case FunctionNames.NE: {
+        final ExprNode col = call.arg(0).accept(this, value);
+        final ExprNode constant = call.arg(1).accept(this, value);
 
         if (col instanceof FieldExprNode && constant instanceof ConstantExprNode) {
           return new FunctionExprNode(funcName, ImmutableList.of(col, constant));
@@ -86,10 +87,10 @@ public class InfoSchemaFilterBuilder extends AbstractExprVisitor<ExprNode, Void,
         break;
       }
 
-      case "like": {
-        final ExprNode col = call.args.get(0).accept(this, value);
-        final ExprNode pattern = call.args.get(1).accept(this, value);
-        final ExprNode escape = call.args.size() > 2 ? call.args.get(2).accept(this, value) : null;
+      case FunctionNames.LIKE: {
+        final ExprNode col = call.arg(0).accept(this, value);
+        final ExprNode pattern = call.arg(1).accept(this, value);
+        final ExprNode escape = call.argCount() > 2 ? call.arg(2).accept(this, value) : null;
 
         if (col instanceof FieldExprNode && pattern instanceof ConstantExprNode &&
             (escape == null || escape instanceof ConstantExprNode)) {
@@ -99,9 +100,10 @@ public class InfoSchemaFilterBuilder extends AbstractExprVisitor<ExprNode, Void,
         break;
       }
 
-      case "booleanand": {
-        List<ExprNode> args = Lists.newArrayList();
-        for(LogicalExpression arg : call.args) {
+      case FunctionNames.AND:
+      case "booleanand": {  // TODO: Is this name correct?
+        List<ExprNode> args = new ArrayList<>();
+        for(LogicalExpression arg : call.args()) {
           ExprNode exprNode = arg.accept(this, value);
           if (exprNode instanceof FunctionExprNode) {
             args.add(exprNode);
@@ -114,9 +116,10 @@ public class InfoSchemaFilterBuilder extends AbstractExprVisitor<ExprNode, Void,
         return visitUnknown(call, value);
       }
 
-      case "booleanor": {
-        List<ExprNode> args = Lists.newArrayList();
-        for(LogicalExpression arg : call.args) {
+      case FunctionNames.OR:
+      case "booleanor": {  // TODO: Is this name correct?
+        List<ExprNode> args = new ArrayList<>();
+        for(LogicalExpression arg : call.args()) {
           ExprNode exprNode = arg.accept(this, value);
           if (exprNode instanceof FunctionExprNode) {
             args.add(exprNode);

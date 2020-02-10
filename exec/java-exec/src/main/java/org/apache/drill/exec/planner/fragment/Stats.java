@@ -24,7 +24,7 @@ import java.util.List;
 
 public class Stats {
   private final ParallelizationInfoCollector collector = new ParallelizationInfoCollector();
-  private double maxCost = 0.0;
+  private double maxCost;
   private DistributionAffinity distributionAffinity = DistributionAffinity.NONE;
 
   public void addParallelizationInfo(ParallelizationInfo parallelizationInfo) {

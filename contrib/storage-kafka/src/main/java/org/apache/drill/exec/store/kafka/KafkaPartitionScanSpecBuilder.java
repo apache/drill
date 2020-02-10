@@ -17,11 +17,11 @@
  */
 package org.apache.drill.exec.store.kafka;
 
+import org.apache.drill.common.FunctionNames;
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
-import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
@@ -83,7 +83,7 @@ public class KafkaPartitionScanSpecBuilder
   @Override
   public List<KafkaPartitionScanSpec> visitBooleanOperator(BooleanOperator op, Void value) {
     Map<TopicPartition, KafkaPartitionScanSpec> specMap = Maps.newHashMap();
-    ImmutableList<LogicalExpression> args = op.args;
+    List<LogicalExpression> args = op.args();
     if (op.getName().equals("booleanOr")) {
 
       for (LogicalExpression expr : args) {
@@ -169,7 +169,7 @@ public class KafkaPartitionScanSpecBuilder
     ImmutableSet<TopicPartition> topicPartitions = fullScanSpec.keySet();
 
     for (TopicPartition partitions : topicPartitions) {
-      timesValMap.put(partitions, functionName.equals("greater_than") ? fieldValue+1 : fieldValue);
+      timesValMap.put(partitions, functionName.equals(FunctionNames.GT) ? fieldValue+1 : fieldValue);
     }
 
     Map<TopicPartition, OffsetAndTimestamp> offsetAndTimestamp = kafkaConsumer.offsetsForTimes(timesValMap);
@@ -202,7 +202,7 @@ public class KafkaPartitionScanSpecBuilder
     */
 
     switch (functionName) {
-      case "equal":
+      case FunctionNames.EQ:
         for (TopicPartition tp : topicPartitions) {
           if (fieldValue < fullScanSpec.get(tp).getStartOffset()) {
             //Offset does not exist
@@ -216,7 +216,7 @@ public class KafkaPartitionScanSpecBuilder
           }
         }
         break;
-      case "greater_than_or_equal_to":
+      case FunctionNames.GE:
         for (TopicPartition tp : topicPartitions) {
           //Ensure scan range is between startOffset and endOffset,
           long val = bindOffsetToRange(tp, fieldValue);
@@ -225,7 +225,7 @@ public class KafkaPartitionScanSpecBuilder
                   fullScanSpec.get(tp).getEndOffset()));
         }
         break;
-      case "greater_than":
+      case FunctionNames.GT:
         for (TopicPartition tp : topicPartitions) {
           //Ensure scan range is between startOffset and endOffset,
           long val = bindOffsetToRange(tp, fieldValue + 1);
@@ -234,7 +234,7 @@ public class KafkaPartitionScanSpecBuilder
                   val, fullScanSpec.get(tp).getEndOffset()));
         }
         break;
-      case "less_than_or_equal_to":
+      case FunctionNames.LE:
         for (TopicPartition tp : topicPartitions) {
           //Ensure scan range is between startOffset and endOffset,
           long val = bindOffsetToRange(tp, fieldValue+1);
@@ -244,7 +244,7 @@ public class KafkaPartitionScanSpecBuilder
                   fullScanSpec.get(tp).getStartOffset(), val));
         }
         break;
-      case "less_than":
+      case FunctionNames.LT:
         for (TopicPartition tp : topicPartitions) {
           //Ensure scan range is between startOffset and endOffset,
           long val = bindOffsetToRange(tp, fieldValue);
@@ -263,7 +263,7 @@ public class KafkaPartitionScanSpecBuilder
     ImmutableSet<TopicPartition> topicPartitions = fullScanSpec.keySet();
 
     switch (functionName) {
-      case "equal":
+      case FunctionNames.EQ:
         for (TopicPartition tp : topicPartitions) {
           if (tp.partition() == fieldValue) {
             scanSpecList.add(
@@ -273,7 +273,7 @@ public class KafkaPartitionScanSpecBuilder
           }
         }
         break;
-      case "not_equal":
+      case FunctionNames.NE:
         for (TopicPartition tp : topicPartitions) {
           if (tp.partition() != fieldValue) {
             scanSpecList.add(
@@ -283,7 +283,7 @@ public class KafkaPartitionScanSpecBuilder
           }
         }
         break;
-      case "greater_than_or_equal_to":
+      case FunctionNames.GE:
         for (TopicPartition tp : topicPartitions) {
           if (tp.partition() >= fieldValue) {
             scanSpecList.add(
@@ -293,7 +293,7 @@ public class KafkaPartitionScanSpecBuilder
           }
         }
         break;
-      case "greater_than":
+      case FunctionNames.GT:
         for (TopicPartition tp : topicPartitions) {
           if (tp.partition() > fieldValue) {
             scanSpecList.add(
@@ -303,7 +303,7 @@ public class KafkaPartitionScanSpecBuilder
           }
         }
         break;
-      case "less_than_or_equal_to":
+      case FunctionNames.LE:
         for (TopicPartition tp : topicPartitions) {
           if (tp.partition() <= fieldValue) {
             scanSpecList.add(
@@ -313,7 +313,7 @@ public class KafkaPartitionScanSpecBuilder
           }
         }
         break;
-      case "less_than":
+      case FunctionNames.LT:
         for (TopicPartition tp : topicPartitions) {
           if (tp.partition() < fieldValue) {
             scanSpecList.add(

@@ -39,7 +39,7 @@ public class ExactFunctionResolver implements FunctionResolver {
     int currCost;
 
     final List<TypeProtos.MajorType> argumentTypes = Lists.newArrayList();
-    for (LogicalExpression expression : call.args) {
+    for (LogicalExpression expression : call.args()) {
       argumentTypes.add(expression.getMajorType());
     }
 

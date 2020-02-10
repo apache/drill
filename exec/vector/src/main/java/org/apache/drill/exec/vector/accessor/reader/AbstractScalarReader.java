@@ -253,7 +253,7 @@ public abstract class AbstractScalarReader implements ScalarReader, ReaderEvents
     case PERIOD:
       return getPeriod().normalizedStandard().toString();
     default:
-      return getObject().toString();
+      return getValue().toString();
     }
   }
 }

@@ -139,12 +139,12 @@ class OjaiFunctionsProcessor extends AbstractExprVisitor<Void, Void, RuntimeExce
   @Override
   public Void visitFunctionCall(FunctionCall call, Void v) throws RuntimeException {
     final String functionName = call.getName();
-    final String fieldName = FieldPathHelper.schemaPath2FieldPath(getSchemaPathArg(call.args.get(0))).asPathString();
+    final String fieldName = FieldPathHelper.schemaPath2FieldPath(getSchemaPathArg(call.arg(0))).asPathString();
     switch(functionName) {
     case "ojai_sizeof": {
       // ojai_sizeof(field, "<rel-op>", <int-value>)
-      final String relOp = getStringArg(call.args.get(1));
-      final long size = getLongArg(call.args.get(2));
+      final String relOp = getStringArg(call.arg(1));
+      final long size = getLongArg(call.arg(2));
       queryCond = MapRDBImpl.newCondition()
           .sizeOf(fieldName, STRING_TO_RELOP.get(relOp), size)
           .build();
@@ -154,7 +154,7 @@ class OjaiFunctionsProcessor extends AbstractExprVisitor<Void, Void, RuntimeExce
     case "ojai_typeof":
     case "ojai_nottypeof": {
       // ojai_[not]typeof(field, <type-code>);
-      final int typeCode = getIntArg(call.args.get(1));
+      final int typeCode = getIntArg(call.arg(1));
       final Value.Type typeValue = Value.Type.valueOf(typeCode);
       queryCond = MapRDBImpl.newCondition();
       if (functionName.equals("ojai_typeof")) {
@@ -169,8 +169,7 @@ class OjaiFunctionsProcessor extends AbstractExprVisitor<Void, Void, RuntimeExce
     case "ojai_matches":
     case "ojai_notmatches": {
       // ojai_[not]matches(field, <regex>);
-      final SchemaPath schemaPath = getSchemaPathArg(call.args.get(0));
-      final String regex = getStringArg(call.args.get(1));
+      final String regex = getStringArg(call.arg(1));
       if (functionName.equals("ojai_matches")) {
         queryCond = MapRDBImpl.newCondition()
             .matches(fieldName, regex);
@@ -184,8 +183,7 @@ class OjaiFunctionsProcessor extends AbstractExprVisitor<Void, Void, RuntimeExce
 
     case "ojai_condition": {
       // ojai_condition(field, <serialized-condition>);
-      final SchemaPath schemaPath = getSchemaPathArg(call.args.get(0));
-      final String condString = getStringArg(call.args.get(1));
+       final String condString = getStringArg(call.arg(1));
       final byte[] condBytes = Base64.decodeBase64(condString);
       final ByteBuffer condBuffer = ByteBuffer.wrap(condBytes);
       queryCond = ConditionImpl.parseFrom(condBuffer);

@@ -18,6 +18,8 @@
 package org.apache.drill.exec.planner.logical;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelOptRuleOperand;
@@ -26,7 +28,7 @@ import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.planner.common.DrillRelOptUtil;
 
 public abstract class DrillPushLimitToScanRule extends RelOptRule {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillPushLimitToScanRule.class);
+  private static final Logger logger = LoggerFactory.getLogger(DrillPushLimitToScanRule.class);
 
   private DrillPushLimitToScanRule(RelOptRuleOperand operand, String description) {
     super(operand, DrillRelFactories.LOGICAL_BUILDER, description);
@@ -39,7 +41,7 @@ public abstract class DrillPushLimitToScanRule extends RelOptRule {
     public boolean matches(RelOptRuleCall call) {
       DrillLimitRel limitRel = call.rel(0);
       DrillScanRel scanRel = call.rel(1);
-      // For now only applies to Parquet. And pushdown only apply limit but not offset,
+      // For now only applies to Parquet. And pushdown only applies to LIMIT but not OFFSET,
       // so if getFetch() return null no need to run this rule.
       if (scanRel.getGroupScan().supportsLimitPushdown() && (limitRel.getFetch() != null)) {
         return true;

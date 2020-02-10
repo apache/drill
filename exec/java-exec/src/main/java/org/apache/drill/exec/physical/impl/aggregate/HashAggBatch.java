@@ -445,14 +445,14 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
           if (funcName.equals("sum") || funcName.equals("max") || funcName.equals("min")) {
             extraNonNullColumns++;
           }
-          List<LogicalExpression> args = ((FunctionCall) ne.getExpr()).args;
+          List<LogicalExpression> args = ((FunctionCall) ne.getExpr()).args();
           if (!args.isEmpty()) {
             if (args.get(0) instanceof SchemaPath) {
               columnMapping.put(outputField.getName(), ((SchemaPath) args.get(0)).getAsNamePart().getName());
             } else if (args.get(0) instanceof FunctionCall) {
               FunctionCall functionCall = (FunctionCall) args.get(0);
-              if (functionCall.args.get(0) instanceof SchemaPath) {
-                columnMapping.put(outputField.getName(), ((SchemaPath) functionCall.args.get(0)).getAsNamePart().getName());
+              if (functionCall.arg(0) instanceof SchemaPath) {
+                columnMapping.put(outputField.getName(), ((SchemaPath) functionCall.arg(0)).getAsNamePart().getName());
               }
             }
           }

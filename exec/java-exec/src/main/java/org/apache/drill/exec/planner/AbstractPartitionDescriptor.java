@@ -25,21 +25,23 @@ import org.apache.drill.exec.store.dfs.MetadataContext;
 import org.apache.hadoop.fs.Path;
 
 /**
- * Abstract base class for file system based partition descriptors and Hive partition descriptors.
- *
+ * Abstract base class for file system based partition descriptors and Hive
+ * partition descriptors.
  */
 public abstract class AbstractPartitionDescriptor implements PartitionDescriptor, Iterable<List<PartitionLocation>> {
 
   /**
-   * A sequence of sublists of partition locations combined into a single super list.
-   * The size of each sublist is at most {@link PartitionDescriptor#PARTITION_BATCH_SIZE}
-   * For example if the size is 3, the complete list could be: {(a, b, c), {d, e, f), (g, h)}
+   * A sequence of sublists of partition locations combined into a single super
+   * list. The size of each sublist is at most
+   * {@link PartitionDescriptor#PARTITION_BATCH_SIZE} For example if the size is
+   * 3, the complete list could be: {(a, b, c), {d, e, f), (g, h)}
    */
   protected List<List<PartitionLocation>> locationSuperList;
+
   /**
-   * Flag to indicate if the sublists of the partition locations has been created
+   * Indicates if the sublists of the partition locations has been created
    */
-  protected boolean sublistsCreated = false;
+  protected boolean sublistsCreated;
 
   /**
    * Create sublists of the partition locations, each sublist of size
@@ -64,11 +66,9 @@ public abstract class AbstractPartitionDescriptor implements PartitionDescriptor
     return false;
   }
 
-
   @Override
   public TableScan createTableScan(List<PartitionLocation> newPartitions, Path cacheFileRoot,
       boolean isAllPruned, MetadataContext metaContext) throws Exception {
     throw new UnsupportedOperationException();
   }
-
 }

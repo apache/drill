@@ -269,8 +269,7 @@ public class BuildFromSchema {
    */
 
   private ObjectWriter buildRepeatedList(ParentShim parent, ColumnMetadata colSchema) {
-    final ColumnMetadata seed = colSchema.cloneEmpty();
-    final ObjectWriter objWriter = parent.add(seed);
+    final ObjectWriter objWriter = parent.add(colSchema.cloneEmpty());
     final RepeatedListWriter listWriter = (RepeatedListWriter) objWriter.array();
     final ColumnMetadata elements = colSchema.childSchema();
     if (elements != null) {

@@ -21,14 +21,15 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PlanningSet implements Iterable<Wrapper> {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PlanningSet.class);
+  static final Logger logger = LoggerFactory.getLogger(PlanningSet.class);
 
   private final Map<Fragment, Wrapper> fragmentMap = Maps.newHashMap();
-  private int majorFragmentIdIndex = 0;
-
-  private Wrapper rootWrapper = null;
+  private int majorFragmentIdIndex;
+  private Wrapper rootWrapper;
 
   public Wrapper get(Fragment node) {
     Wrapper wrapper = fragmentMap.get(node);
@@ -42,7 +43,8 @@ public class PlanningSet implements Iterable<Wrapper> {
         // assign the upper 16 bits as the major fragment id.
         majorFragmentId = node.getSendingExchange().getChild().getOperatorId() >> 16;
 
-        // if they are not assigned, that means we mostly likely have an externally generated plan.  in this case, come up with a major fragmentid.
+        // if they are not assigned, that means we mostly likely have an externally generated plan.
+        // In this case, come up with a major fragmentid.
         if (majorFragmentId == 0) {
           majorFragmentId = majorFragmentIdIndex;
         }
@@ -84,5 +86,4 @@ public class PlanningSet implements Iterable<Wrapper> {
   public Wrapper getRootWrapper(){
     return rootWrapper;
   }
-
 }

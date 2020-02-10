@@ -25,6 +25,7 @@ public abstract class AbstractDbSubScan extends AbstractSubScan implements DbSub
     super(userName);
   }
 
+  @Override
   public boolean isRestrictedSubScan() {
     return false;
   }
@@ -33,5 +34,4 @@ public abstract class AbstractDbSubScan extends AbstractSubScan implements DbSub
   public void addJoinForRestrictedSubScan(RowKeyJoin batch) {
     throw new UnsupportedOperationException();
   }
-
 }

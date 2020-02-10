@@ -67,6 +67,8 @@ import org.apache.calcite.util.NlsString;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.work.ExecErrorConstants;
 
@@ -77,7 +79,7 @@ import static org.apache.drill.exec.planner.physical.PlannerSettings.ENABLE_DECI
  */
 public class DrillOptiq {
   public static final String UNSUPPORTED_REX_NODE_ERROR = "Cannot convert RexNode to equivalent Drill expression. ";
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillOptiq.class);
+  private static final Logger logger = LoggerFactory.getLogger(DrillOptiq.class);
 
   /**
    * Converts a tree of {@link RexNode} operators into a scalar expression in Drill syntax using one input.
@@ -110,7 +112,6 @@ public class DrillOptiq {
   }
 
   public static class RexToDrill extends RexVisitorImpl<LogicalExpression> {
-    private final List<RelNode> inputs;
     private final DrillParseContext context;
     private final List<RelDataTypeField> fieldList;
     private final RelDataType rowType;
@@ -119,8 +120,7 @@ public class DrillOptiq {
     RexToDrill(DrillParseContext context, List<RelNode> inputs) {
       super(true);
       this.context = context;
-      this.inputs = inputs;
-      this.fieldList = Lists.newArrayList();
+      this.fieldList = new ArrayList<>();
       if (inputs.size() > 0 && inputs.get(0)!=null) {
         this.rowType = inputs.get(0).getRowType();
         this.builder = inputs.get(0).getCluster().getRexBuilder();
@@ -157,7 +157,6 @@ public class DrillOptiq {
       this.context = context;
       this.rowType = rowType;
       this.builder = builder;
-      this.inputs = Lists.newArrayList();
       this.fieldList = rowType.getFieldList();
     }
 
@@ -192,17 +191,18 @@ public class DrillOptiq {
       case POSTFIX:
         logger.debug("Postfix");
         switch(call.getKind()){
-        case IS_NOT_NULL:
-        case IS_NOT_TRUE:
-        case IS_NOT_FALSE:
-        case IS_NULL:
-        case IS_TRUE:
-        case IS_FALSE:
-        case OTHER:
-          return FunctionCallFactory.createExpression(call.getOperator().getName().toLowerCase(),
-              ExpressionPosition.UNKNOWN, call.getOperands().get(0).accept(this));
+          case IS_NOT_NULL:
+          case IS_NOT_TRUE:
+          case IS_NOT_FALSE:
+          case IS_NULL:
+          case IS_TRUE:
+          case IS_FALSE:
+          case OTHER:
+            return FunctionCallFactory.createExpression(call.getOperator().getName().toLowerCase(),
+                ExpressionPosition.UNKNOWN, call.getOperands().get(0).accept(this));
+          default:
+            throw notImplementedException(syntax, call);
         }
-        throw notImplementedException(syntax, call);
       case PREFIX:
         LogicalExpression arg = call.getOperands().get(0).accept(this);
         switch(call.getKind()){
@@ -210,11 +210,12 @@ public class DrillOptiq {
             return FunctionCallFactory.createExpression(call.getOperator().getName().toLowerCase(),
                 ExpressionPosition.UNKNOWN, arg);
           case MINUS_PREFIX:
-            List<LogicalExpression> operands = Lists.newArrayList();
+            List<LogicalExpression> operands = new ArrayList<>();
             operands.add(call.getOperands().get(0).accept(this));
             return FunctionCallFactory.createExpression("u-", operands);
+          default:
+            throw notImplementedException(syntax, call);
         }
-        throw notImplementedException(syntax, call);
       case SPECIAL:
         switch(call.getKind()){
         case CAST:
@@ -234,7 +235,7 @@ public class DrillOptiq {
         case SIMILAR:
           return getDrillFunctionFromOptiqCall(call);
         case CASE:
-          List<LogicalExpression> caseArgs = Lists.newArrayList();
+          List<LogicalExpression> caseArgs = new ArrayList<>();
           for(RexNode r : call.getOperands()){
             caseArgs.add(r.accept(this));
           }
@@ -250,6 +251,8 @@ public class DrillOptiq {
               .setIfCondition(new IfCondition(caseArgs.get(i + 1), caseArgs.get(i))).build();
           }
           return elseExpression;
+
+        default:
         }
 
         if (call.getOperator() == SqlStdOperatorTable.ITEM) {
@@ -409,7 +412,7 @@ public class DrillOptiq {
     }
 
     private LogicalExpression doFunction(RexCall call, String funcName) {
-      List<LogicalExpression> args = Lists.newArrayList();
+      List<LogicalExpression> args = new ArrayList<>();
       for(RexNode r : call.getOperands()){
         args.add(r.accept(this));
       }
@@ -723,12 +726,11 @@ public class DrillOptiq {
         case MILLENNIUM:
           final String functionPostfix = StringUtils.capitalize(timeUnitStr.toLowerCase());
           return FunctionCallFactory.createExpression("date_trunc_" + functionPostfix, args.subList(1, 2));
+        default:
+          throw new UnsupportedOperationException("date_trunc function supports the following time units: " +
+              "YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, WEEK, QUARTER, DECADE, CENTURY, MILLENNIUM");
       }
-
-      throw new UnsupportedOperationException("date_trunc function supports the following time units: " +
-          "YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, WEEK, QUARTER, DECADE, CENTURY, MILLENNIUM");
     }
-
 
     @Override
     public LogicalExpression visitLiteral(RexLiteral literal) {

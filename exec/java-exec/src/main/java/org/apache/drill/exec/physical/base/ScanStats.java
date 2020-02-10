@@ -47,9 +47,10 @@ public class ScanStats {
   }
 
   /**
-   * Return if GroupScan knows the exact row count in the result of getSize() call.
-   * By default, group scan does not know the exact row count, before it scans every rows.
-   * Currently, parquet group scan will return the exact row count.
+   * Return whether GroupScan knows the exact row count in the result of getSize()
+   * call. By default, group scan does not know the exact row count, before it
+   * scans every rows. Currently, Parquet group scan will return the exact row
+   * count.
    *
    * @return group scan property
    */

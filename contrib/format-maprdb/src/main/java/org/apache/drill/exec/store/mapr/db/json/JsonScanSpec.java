@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.mapr.db.json;
 import java.nio.ByteBuffer;
 import java.util.List;
 
+import org.apache.drill.common.FunctionNames;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HConstants;
 import org.ojai.store.QueryCondition;
@@ -119,10 +120,10 @@ public class JsonScanSpec {
     if (this.condition != null && scanSpec.getCondition() != null) {
       QueryCondition newCond = MapRDBImpl.newCondition();
       switch (functionName) {
-      case "booleanAnd":
+      case FunctionNames.AND:
         newCond.and();
         break;
-      case "booleanOr":
+      case FunctionNames.OR:
         newCond.or();
         break;
       default:
@@ -148,5 +149,4 @@ public class JsonScanSpec {
         + fidInfo
         + "]";
   }
-
 }

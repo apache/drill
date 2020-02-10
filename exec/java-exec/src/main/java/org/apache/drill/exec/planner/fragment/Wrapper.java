@@ -39,28 +39,30 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 /**
- * A wrapping class that allows us to add additional information to each fragment node for planning purposes.
+ * Wrapper class that allows us to add additional information to each fragment
+ * node for planning purposes.
  */
 public class Wrapper {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Wrapper.class);
 
   private final Fragment node;
   private final int majorFragmentId;
   private int width = -1;
   private final Stats stats;
   private boolean endpointsAssigned;
-  private long initialAllocation = 0;
-  private long maxAllocation = 0;
+  private long initialAllocation;
+  private long maxAllocation;
   // Resources (i.e memory and cpu) are stored per drillbit in this map.
   // A Drillbit can have n number of minor fragments then the NodeResource
   // contains cumulative resources required for all the minor fragments
   // for that major fragment on that Drillbit.
   private Map<DrillbitEndpoint, NodeResource> nodeResourceMap;
 
-  // List of fragments this particular fragment depends on for determining its parallelization and endpoint assignments.
+  // List of fragments this particular fragment depends on for determining its
+  // parallelization and endpoint assignments.
   private final List<Wrapper> fragmentDependencies = Lists.newArrayList();
 
-  // a list of assigned endpoints. Technically, there could repeated endpoints in this list if we'd like to assign the
+  // List of assigned endpoints. Technically, there could repeated endpoints
+  // in this list if we'd like to assign the
   // same fragment multiple times to the same endpoint.
   private final List<DrillbitEndpoint> endpoints = Lists.newLinkedList();
 
@@ -68,7 +70,6 @@ public class Wrapper {
     this.majorFragmentId = majorFragmentId;
     this.node = node;
     this.stats = new Stats();
-    nodeResourceMap = null;
   }
 
   public Stats getStats() {
@@ -113,11 +114,13 @@ public class Wrapper {
     maxAllocation += memory;
   }
 
-  private class AssignEndpointsToScanAndStore extends AbstractPhysicalVisitor<Void, List<DrillbitEndpoint>, PhysicalOperatorSetupException>{
+  private class AssignEndpointsToScanAndStore extends
+      AbstractPhysicalVisitor<Void, List<DrillbitEndpoint>, PhysicalOperatorSetupException> {
 
     @Override
-    public Void visitExchange(Exchange exchange, List<DrillbitEndpoint> value) throws PhysicalOperatorSetupException {
-      if(exchange == node.getSendingExchange()){
+    public Void visitExchange(Exchange exchange, List<DrillbitEndpoint> value)
+        throws PhysicalOperatorSetupException {
+      if (exchange == node.getSendingExchange()) {
         return visitOp(exchange, value);
       }
       // stop on receiver exchange.
@@ -125,32 +128,36 @@ public class Wrapper {
     }
 
     @Override
-    public Void visitGroupScan(GroupScan groupScan, List<DrillbitEndpoint> value) throws PhysicalOperatorSetupException {
+    public Void visitGroupScan(GroupScan groupScan,
+        List<DrillbitEndpoint> value) throws PhysicalOperatorSetupException {
       groupScan.applyAssignments(value);
       return super.visitGroupScan(groupScan, value);
     }
 
     @Override
-    public Void visitSubScan(SubScan subScan, List<DrillbitEndpoint> value) throws PhysicalOperatorSetupException {
+    public Void visitSubScan(SubScan subScan, List<DrillbitEndpoint> value)
+        throws PhysicalOperatorSetupException {
       // TODO - implement this
       return visitOp(subScan, value);
     }
 
     @Override
-    public Void visitStore(Store store, List<DrillbitEndpoint> value) throws PhysicalOperatorSetupException {
+    public Void visitStore(Store store, List<DrillbitEndpoint> value)
+        throws PhysicalOperatorSetupException {
       store.applyAssignments(value);
       return super.visitStore(store, value);
     }
 
     @Override
-    public Void visitOp(PhysicalOperator op, List<DrillbitEndpoint> value) throws PhysicalOperatorSetupException {
+    public Void visitOp(PhysicalOperator op, List<DrillbitEndpoint> value)
+        throws PhysicalOperatorSetupException {
       return visitChildren(op, value);
     }
 
   }
 
-  public void assignEndpoints(List<DrillbitEndpoint> assignedEndpoints) throws
-      PhysicalOperatorSetupException {
+  public void assignEndpoints(List<DrillbitEndpoint> assignedEndpoints)
+      throws PhysicalOperatorSetupException {
     Preconditions.checkState(!endpointsAssigned);
     endpointsAssigned = true;
 
@@ -173,7 +180,8 @@ public class Wrapper {
 
   @Override
   public String toString() {
-    return "FragmentWrapper [majorFragmentId=" + majorFragmentId + ", width=" + width + ", stats=" + stats + "]";
+    return "FragmentWrapper [majorFragmentId=" + majorFragmentId + ", width="
+        + width + ", stats=" + stats + "]";
   }
 
   public List<DrillbitEndpoint> getAssignedEndpoints() {
@@ -197,7 +205,9 @@ public class Wrapper {
 
   /**
    * Is the endpoints assignment done for this fragment?
-   * @return True if the endpoints assignment done for this fragment. False otherwise.
+   *
+   * @return True if the endpoints assignment done for this fragment. False
+   *         otherwise.
    */
   public boolean isEndpointsAssignmentDone() {
     return endpointsAssigned;
@@ -205,6 +215,7 @@ public class Wrapper {
 
   /**
    * Get the list of fragements this particular fragment depends on.
+   *
    * @return The list of fragements this particular fragment depends on.
    */
   public List<Wrapper> getFragmentDependencies() {
@@ -212,9 +223,9 @@ public class Wrapper {
   }
 
   /**
-   * Compute the cpu resources required for all the minor fragments of this major fragment.
-   * This information is stored per DrillbitEndpoint. It is assumed that this function is
-   * called only once.
+   * Compute the cpu resources required for all the minor fragments of this
+   * major fragment. This information is stored per DrillbitEndpoint. It is
+   * assumed that this function is called only once.
    */
   public void computeCpuResources() {
     Preconditions.checkArgument(nodeResourceMap == null);
@@ -225,12 +236,12 @@ public class Wrapper {
       return result;
     };
 
-    Function<DrillbitEndpoint, NodeResource> cpuPerEndpoint = (endpoint) -> new NodeResource(1, 0);
+    Function<DrillbitEndpoint, NodeResource> cpuPerEndpoint =
+        endpoint -> new NodeResource(1, 0);
 
     nodeResourceMap = endpoints.stream()
-                               .collect(Collectors.groupingBy(Function.identity(),
-                                        Collectors.reducing(NodeResource.create(),
-                                                            cpuPerEndpoint, merge)));
+        .collect(Collectors.groupingBy(Function.identity(),
+            Collectors.reducing(NodeResource.create(), cpuPerEndpoint, merge)));
   }
 
   public Map<DrillbitEndpoint, NodeResource> getResourceMap() {

@@ -21,7 +21,7 @@ import org.apache.drill.exec.store.ColumnExplorer;
 import org.apache.hadoop.fs.Path;
 
 /**
- * Class defines a single partition in a DFS table.
+ * Defines a single partition in a DFS table.
  */
 public class DFSFilePartitionLocation extends SimplePartitionLocation {
   private final String[] dirs;
@@ -58,6 +58,4 @@ public class DFSFilePartitionLocation extends SimplePartitionLocation {
   public String[] getDirs() {
     return dirs;
   }
-
 }
-

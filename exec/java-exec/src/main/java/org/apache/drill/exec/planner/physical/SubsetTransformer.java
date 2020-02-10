@@ -18,6 +18,8 @@
 package org.apache.drill.exec.planner.physical;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.plan.ConventionTraitDef;
 import org.apache.calcite.plan.RelOptRule;
@@ -29,18 +31,18 @@ import org.apache.calcite.plan.volcano.RelSubset;
 import java.util.Set;
 
 public abstract class SubsetTransformer<T extends RelNode, E extends Exception> {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SubsetTransformer.class);
-
-  public abstract RelNode convertChild(T current, RelNode child) throws E;
-
-  public boolean forceConvert() {
-    return false;
-  }
+  private static final Logger logger = LoggerFactory.getLogger(SubsetTransformer.class);
 
   private final RelOptRuleCall call;
 
   public SubsetTransformer(RelOptRuleCall call) {
     this.call = call;
+  }
+
+  public abstract RelNode convertChild(T current, RelNode child) throws E;
+
+  public boolean forceConvert() {
+    return false;
   }
 
   public RelTraitSet newTraitSet(RelTrait... traits) {
@@ -49,7 +51,6 @@ public abstract class SubsetTransformer<T extends RelNode, E extends Exception> 
       set = set.plus(t);
     }
     return set;
-
   }
 
   public boolean go(T n, RelNode candidateSet) throws E {
@@ -105,9 +106,4 @@ public abstract class SubsetTransformer<T extends RelNode, E extends Exception> 
   private boolean isPhysical(RelNode n){
     return n.getTraitSet().getTrait(ConventionTraitDef.INSTANCE).equals(Prel.DRILL_PHYSICAL);
   }
-
-  private boolean isDefaultDist(RelNode n) {
-    return n.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE).equals(DrillDistributionTrait.DEFAULT);
-  }
-
 }

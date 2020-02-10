@@ -18,6 +18,7 @@
 package org.apache.drill.common.expression;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import org.apache.drill.common.expression.IfExpression.IfCondition;
 import org.apache.drill.common.expression.ValueExpressions.BooleanExpression;
@@ -43,7 +44,6 @@ import org.joda.time.Period;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 
 public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBuilder, RuntimeException>{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExpressionStringBuilder.class);
 
   static final ExpressionStringBuilder INSTANCE = new ExpressionStringBuilder();
 
@@ -67,7 +67,7 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
 
   @Override
   public Void visitFunctionCall(FunctionCall call, StringBuilder sb) throws RuntimeException {
-    ImmutableList<LogicalExpression> args = call.args;
+    List<LogicalExpression> args = call.args();
     sb.append(call.getName());
     sb.append("(");
     for (int i = 0; i < args.size(); i++) {

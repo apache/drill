@@ -23,6 +23,7 @@ import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.physical.PhysicalOperatorSetupException;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.List;
@@ -30,11 +31,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 /**
- * Implementation of {@link FragmentParallelizer} where fragment requires running on a given set of endpoints. Width
- * per node is depended on the affinity to the endpoint and total width (calculated using costs)
+ * Implementation of {@link FragmentParallelizer} where fragment requires
+ * running on a given set of endpoints. Width per node is depended on the
+ * affinity to the endpoint and total width (calculated using costs).
  */
 public class HardAffinityFragmentParallelizer implements FragmentParallelizer {
-  private static final Logger logger = org.slf4j.LoggerFactory.getLogger(HardAffinityFragmentParallelizer.class);
+  private static final Logger logger = LoggerFactory.getLogger(HardAffinityFragmentParallelizer.class);
 
   public static final HardAffinityFragmentParallelizer INSTANCE = new HardAffinityFragmentParallelizer();
 
@@ -53,7 +55,7 @@ public class HardAffinityFragmentParallelizer implements FragmentParallelizer {
 
     // Go through the affinity map and extract the endpoints that have mandatory assignment requirement
     final Map<DrillbitEndpoint, EndpointAffinity> endpointPool = Maps.newHashMap();
-    for(Entry<DrillbitEndpoint, EndpointAffinity> entry : pInfo.getEndpointAffinityMap().entrySet()) {
+    for (Entry<DrillbitEndpoint, EndpointAffinity> entry : pInfo.getEndpointAffinityMap().entrySet()) {
       if (entry.getValue().isAssignmentRequired()) {
         endpointPool.put(entry.getKey(), entry.getValue());
 

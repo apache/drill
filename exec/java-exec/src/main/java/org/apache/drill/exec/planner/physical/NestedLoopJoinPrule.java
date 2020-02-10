@@ -79,7 +79,6 @@ public class NestedLoopJoinPrule extends JoinPruleBase {
     if (!settings.isNestedLoopJoinEnabled()) {
       return;
     }
-    int[] joinFields = new int[2];
     DrillJoinRel join = (DrillJoinRel) call.rel(0);
     final RelNode left = join.getLeft();
     final RelNode right = join.getRight();
@@ -99,5 +98,4 @@ public class NestedLoopJoinPrule extends JoinPruleBase {
       tracer.warn(e.toString());
     }
   }
-
 }

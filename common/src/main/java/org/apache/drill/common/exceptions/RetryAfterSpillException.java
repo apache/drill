@@ -18,9 +18,10 @@
 package org.apache.drill.common.exceptions;
 
 /**
- *  A special exception to be caught by caller, who is supposed to free memory by spilling and try again
- *
+ * Special exception to be caught by caller, who is supposed to free memory by
+ * spilling and try again
  */
+@SuppressWarnings("serial")
 public class RetryAfterSpillException extends Exception {
 
 }

@@ -289,7 +289,7 @@ public abstract class ColumnState {
         // Remember that we have look-ahead values stashed away in the
         // backup vector.
 
-        state= State.LOOK_AHEAD;
+        state = State.LOOK_AHEAD;
         break;
 
       default:

@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.expr;
 
+import org.apache.drill.common.FunctionNames;
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.LogicalExpression;
@@ -56,7 +57,7 @@ public abstract class BooleanPredicate<C extends Comparable<C>> extends BooleanO
         RowsMatch resultMatch = RowsMatch.ALL;
         for (LogicalExpression child : this) {
           if (child instanceof FilterPredicate) {
-            switch (((FilterPredicate) child).matches(evaluator)) {
+            switch (((FilterPredicate<C>) child).matches(evaluator)) {
               case NONE:
                 return RowsMatch.NONE;  // No row comply to 1 filter part => can drop RG
               case SOME:
@@ -87,7 +88,7 @@ public abstract class BooleanPredicate<C extends Comparable<C>> extends BooleanO
         RowsMatch resultMatch = RowsMatch.NONE;
         for (LogicalExpression child : this) {
           if (child instanceof FilterPredicate) {
-            switch (((FilterPredicate) child).matches(evaluator)) {
+            switch (((FilterPredicate<C>) child).matches(evaluator)) {
               case ALL:
                 return RowsMatch.ALL;  // One at least is ALL => can drop filter but not RG
               case SOME:
@@ -104,9 +105,9 @@ public abstract class BooleanPredicate<C extends Comparable<C>> extends BooleanO
   public static <C extends Comparable<C>> LogicalExpression createBooleanPredicate(
       String function, String name, List<LogicalExpression> args, ExpressionPosition pos) {
     switch (function) {
-      case "booleanOr":
+      case FunctionNames.OR:
         return BooleanPredicate.<C>createOrPredicate(name, args, pos);
-      case "booleanAnd":
+      case FunctionNames.AND:
         return BooleanPredicate.<C>createAndPredicate(name, args, pos);
       default:
         logger.warn("Unknown Boolean '{}' predicate.", function);

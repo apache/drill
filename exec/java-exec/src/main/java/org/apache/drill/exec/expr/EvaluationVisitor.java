@@ -31,6 +31,7 @@ import java.util.Stack;
 
 import io.netty.buffer.DrillBuf;
 import org.apache.calcite.util.Pair;
+import org.apache.drill.common.FunctionNames;
 import org.apache.drill.common.expression.AnyValueExpression;
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.CastExpression;
@@ -250,9 +251,9 @@ public class EvaluationVisitor {
     @Override
     public HoldingContainer visitBooleanOperator(BooleanOperator op,
         ClassGenerator<?> generator) throws RuntimeException {
-      if (op.getName().equals("booleanAnd")) {
+      if (op.getName().equals(FunctionNames.AND)) {
         return visitBooleanAnd(op, generator);
-      } else if(op.getName().equals("booleanOr")) {
+      } else if(op.getName().equals(FunctionNames.OR)) {
         return visitBooleanOr(op, generator);
       } else {
         throw new UnsupportedOperationException(
@@ -1033,8 +1034,8 @@ public class EvaluationVisitor {
       //    null    true     null
       //    null    false    false
       //    null    null     null
-      for (int i = 0; i < op.args.size(); i++) {
-        arg = op.args.get(i).accept(this, generator);
+      for (LogicalExpression expr : op.args()) {
+        arg = expr.accept(this, generator);
 
         JBlock earlyExit = null;
         if (arg.isOptional()) {
@@ -1095,9 +1096,8 @@ public class EvaluationVisitor {
       //    null    true     true
       //    null    false    null
       //    null    null     null
-
-      for (int i = 0; i < op.args.size(); i++) {
-        arg = op.args.get(i).accept(this, generator);
+      for (LogicalExpression expr : op.args()) {
+        arg = expr.accept(this, generator);
 
         JBlock earlyExit = null;
         if (arg.isOptional()) {

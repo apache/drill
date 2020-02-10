@@ -57,7 +57,7 @@ public class CloneVisitor extends AbstractExprVisitor<LogicalExpression,Void,Run
   @Override
   public LogicalExpression visitFunctionCall(FunctionCall call, Void value) throws RuntimeException {
     List<LogicalExpression> args = Lists.newArrayList();
-    for (LogicalExpression arg : call.args) {
+    for (LogicalExpression arg : call.args()) {
       args.add(arg.accept(this, null));
     }
 

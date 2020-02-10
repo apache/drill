@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.mongo;
 
+import org.apache.drill.common.FunctionNames;
 import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.ConvertExpression;
 import org.apache.drill.common.expression.FunctionCall;
@@ -40,7 +41,7 @@ public class MongoCompareFunctionProcessor extends
     AbstractExprVisitor<Boolean, LogicalExpression, RuntimeException> {
   private Object value;
   private boolean success;
-  private boolean isEqualityFn;
+  private final boolean isEqualityFn;
   private SchemaPath path;
   private String functionName;
 
@@ -50,8 +51,8 @@ public class MongoCompareFunctionProcessor extends
 
   public static MongoCompareFunctionProcessor process(FunctionCall call) {
     String functionName = call.getName();
-    LogicalExpression nameArg = call.args.get(0);
-    LogicalExpression valueArg = call.args.size() == 2 ? call.args.get(1)
+    LogicalExpression nameArg = call.arg(0);
+    LogicalExpression valueArg = call.argCount() == 2 ? call.arg(1)
         : null;
     MongoCompareFunctionProcessor evaluator = new MongoCompareFunctionProcessor(
         functionName);
@@ -65,7 +66,7 @@ public class MongoCompareFunctionProcessor extends
             .get(functionName);
       }
       evaluator.success = nameArg.accept(evaluator, valueArg);
-    } else if (call.args.get(0) instanceof SchemaPath) {
+    } else if (call.arg(0) instanceof SchemaPath) {
       evaluator.success = true;
       evaluator.path = (SchemaPath) nameArg;
     }
@@ -247,18 +248,19 @@ public class MongoCompareFunctionProcessor extends
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
     COMPARE_FUNCTIONS_TRANSPOSE_MAP = builder
         // unary functions
-        .put("isnotnull", "isnotnull")
+        .put(FunctionNames.IS_NOT_NULL, FunctionNames.IS_NOT_NULL)
         .put("isNotNull", "isNotNull")
         .put("is not null", "is not null")
-        .put("isnull", "isnull")
+        .put(FunctionNames.IS_NULL, FunctionNames.IS_NULL)
         .put("isNull", "isNull")
         .put("is null", "is null")
         // binary functions
-        .put("equal", "equal").put("not_equal", "not_equal")
-        .put("greater_than_or_equal_to", "less_than_or_equal_to")
-        .put("greater_than", "less_than")
-        .put("less_than_or_equal_to", "greater_than_or_equal_to")
-        .put("less_than", "greater_than").build();
+        .put(FunctionNames.EQ, FunctionNames.EQ)
+        .put(FunctionNames.NE, FunctionNames.NE)
+        .put(FunctionNames.GE, FunctionNames.LE)
+        .put(FunctionNames.GT, FunctionNames.LT)
+        .put(FunctionNames.LE, FunctionNames.GE)
+        .put(FunctionNames.LT, FunctionNames.GT).build();
   }
 
 }

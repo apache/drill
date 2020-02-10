@@ -38,7 +38,7 @@ import java.util.Set;
 public interface ExecutorFragmentContext extends RootFragmentContext {
 
   /**
-   * @return The root allocator for the Drillbit.
+   * Returns the root allocator for the Drillbit.
    */
   BufferAllocator getRootAllocator();
 

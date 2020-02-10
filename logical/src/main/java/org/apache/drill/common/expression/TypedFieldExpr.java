@@ -45,16 +45,15 @@ public class TypedFieldExpr extends LogicalExpressionBase {
 
   @Override
   public TypeProtos.MajorType getMajorType() {
-    return this.type;
+    return type;
   }
 
   @Override
   public String toString() {
-    return this.path.getRootSegment().getPath() + "(" + type.getMinorType() + "_" + type.getMode() +")";
+    return path.getRootSegment().getPath() + "(" + type.getMinorType() + "_" + type.getMode() +")";
   }
 
   public SchemaPath getPath() {
-    return this.path;
+    return path;
   }
-
 }

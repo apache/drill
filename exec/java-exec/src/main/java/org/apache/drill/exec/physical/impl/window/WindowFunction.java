@@ -40,9 +40,11 @@ import org.apache.drill.exec.physical.config.WindowPOP;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorContainer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class WindowFunction {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WindowFunction.class);
+  private static final Logger logger = LoggerFactory.getLogger(WindowFunction.class);
 
   public enum Type {
     ROW_NUMBER,
@@ -96,9 +98,10 @@ public abstract class WindowFunction {
   abstract boolean supportsCustomFrames();
 
   /**
-   * @param pop window group definition
-   * @return true if this window function requires all batches of current partition to be available before processing
-   * the first batch
+   * @param pop
+   *          window group definition
+   * @return true if this window function requires all batches of current
+   *         partition to be available before processing the first batch
    */
   public boolean requiresFullPartition(final WindowPOP pop) {
     return true;
@@ -264,7 +267,7 @@ public abstract class WindowFunction {
     boolean materialize(final NamedExpression ne, final VectorContainer batch, final FunctionLookupContext registry)
         throws SchemaChangeException {
       final FunctionCall call = (FunctionCall) ne.getExpr();
-      final LogicalExpression argument = call.args.get(0);
+      final LogicalExpression argument = call.arg(0);
       final MaterializedField outputField = MaterializedField.create(ne.getRef().getAsNamePart().getName(), argument.getMajorType());
       batch.addOrGet(outputField).allocateNew();
       fieldId = batch.getValueVectorId(ne.getRef());
@@ -307,7 +310,7 @@ public abstract class WindowFunction {
     boolean materialize(final NamedExpression ne, final VectorContainer batch, final FunctionLookupContext registry)
         throws SchemaChangeException {
       final FunctionCall call = (FunctionCall) ne.getExpr();
-      final LogicalExpression input = ExpressionTreeMaterializer.materializeAndCheckErrors(call.args.get(0), batch, registry);
+      final LogicalExpression input = ExpressionTreeMaterializer.materializeAndCheckErrors(call.arg(0), batch, registry);
       if (input == null) {
         return false;
       }
@@ -355,7 +358,7 @@ public abstract class WindowFunction {
     boolean materialize(final NamedExpression ne, final VectorContainer batch, final FunctionLookupContext registry)
         throws SchemaChangeException {
       final FunctionCall call = (FunctionCall) ne.getExpr();
-      final LogicalExpression input = ExpressionTreeMaterializer.materializeAndCheckErrors(call.args.get(0), batch, registry);
+      final LogicalExpression input = ExpressionTreeMaterializer.materializeAndCheckErrors(call.arg(0), batch, registry);
       if (input == null) {
         return false;
       }
@@ -426,7 +429,7 @@ public abstract class WindowFunction {
     boolean materialize(final NamedExpression ne, final VectorContainer batch, final FunctionLookupContext registry)
         throws SchemaChangeException {
       final FunctionCall call = (FunctionCall) ne.getExpr();
-      final LogicalExpression input = ExpressionTreeMaterializer.materializeAndCheckErrors(call.args.get(0), batch, registry);
+      final LogicalExpression input = ExpressionTreeMaterializer.materializeAndCheckErrors(call.arg(0), batch, registry);
       if (input == null) {
         return false;
       }
@@ -442,6 +445,7 @@ public abstract class WindowFunction {
 
     @Override
     void generateCode(ClassGenerator<WindowFramer> cg) {
+
       // in DefaultFrameTemplate we call setupReadLastValue:
       //   setupReadLastValue(current, container)
       // and readLastValue:
@@ -449,8 +453,8 @@ public abstract class WindowFunction {
       //
       // this will generate the the following, pseudo, code:
       //   write current.source_last_value[frameLastRow] to container.last_value[row]
-
-      final GeneratorMapping mapping = GeneratorMapping.create("setupReadLastValue", "writeLastValue", "resetValues", "cleanup");
+      final GeneratorMapping mapping = GeneratorMapping.create(
+          "setupReadLastValue", "writeLastValue", "resetValues", "cleanup");
       final MappingSet mappingSet = new MappingSet("index", "outIndex", mapping, mapping);
 
       cg.setMappingSet(mappingSet);
@@ -487,17 +491,20 @@ public abstract class WindowFunction {
     boolean materialize(final NamedExpression ne, final VectorContainer batch, final FunctionLookupContext registry)
         throws SchemaChangeException {
       final FunctionCall call = (FunctionCall) ne.getExpr();
-      final LogicalExpression input = ExpressionTreeMaterializer.materializeAndCheckErrors(call.args.get(0), batch, registry);
+      final LogicalExpression input = ExpressionTreeMaterializer.materializeAndCheckErrors(
+          call.arg(0), batch, registry);
       if (input == null) {
         return false;
       }
 
-      final MaterializedField output = MaterializedField.create(ne.getRef().getAsNamePart().getName(), input.getMajorType());
+      final MaterializedField output = MaterializedField.create(
+          ne.getRef().getAsNamePart().getName(), input.getMajorType());
       batch.addOrGet(output).allocateNew();
       final TypedFieldId outputId = batch.getValueVectorId(ne.getRef());
 
       // write incoming.first_value[inIndex] to outgoing.first_value[outIndex]
-      writeFirstValueToFirstValue = new ValueVectorWriteExpression(outputId, new ValueVectorReadExpression(outputId), true);
+      writeFirstValueToFirstValue = new ValueVectorWriteExpression(outputId,
+          new ValueVectorReadExpression(outputId), true);
       // write incoming.source[inIndex] to outgoing.first_value[outIndex]
       writeInputToFirstValue = new ValueVectorWriteExpression(outputId, input, true);
       return true;
@@ -517,7 +524,8 @@ public abstract class WindowFunction {
         // so it basically copies the first value of current partition into the first row of internal.first_value
         // this is especially useful when handling multiple batches for the same partition where we need to keep
         // the first value of the partition somewhere after we release the first batch
-        final GeneratorMapping mapping = GeneratorMapping.create("setupSaveFirstValue", "saveFirstValue", null, null);
+        final GeneratorMapping mapping = GeneratorMapping.create(
+            "setupSaveFirstValue", "saveFirstValue", null, null);
         final MappingSet mappingSet = new MappingSet("index", "0", mapping, mapping);
 
         cg.setMappingSet(mappingSet);
@@ -534,7 +542,8 @@ public abstract class WindowFunction {
         //   write internal.first_value[0] to container.first_value[outIndex]
         //
         // so it basically copies the value stored in internal.first_value's first row into all rows of container.first_value
-        final GeneratorMapping mapping = GeneratorMapping.create("setupWriteFirstValue", "outputRow", "resetValues", "cleanup");
+        final GeneratorMapping mapping = GeneratorMapping.create(
+            "setupWriteFirstValue", "outputRow", "resetValues", "cleanup");
         final MappingSet mappingSet = new MappingSet("0", "outIndex", mapping, mapping);
         cg.setMappingSet(mappingSet);
         cg.addExpr(writeFirstValueToFirstValue);

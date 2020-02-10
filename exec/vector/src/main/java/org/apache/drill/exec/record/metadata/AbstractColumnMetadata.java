@@ -172,7 +172,6 @@ public abstract class AbstractColumnMetadata extends AbstractPropertied implemen
     // TODO: This converts each column to a MaterializedField in
     // order to do the comparison. This is done to avoid duplicating
     // the checks. Consider doing checks here at some point.
-
     return schema().isEquivalent(other.schema());
   }
 
@@ -278,6 +277,10 @@ public abstract class AbstractColumnMetadata extends AbstractPropertied implemen
     if (variantSchema() != null) {
       buf.append(", variant: ")
          .append(variantSchema().toString());
+    }
+    if (childSchema() != null) {
+      buf.append(", child: ")
+         .append(childSchema().toString());
     }
     if (tupleSchema() != null) {
       buf.append(", schema: ")

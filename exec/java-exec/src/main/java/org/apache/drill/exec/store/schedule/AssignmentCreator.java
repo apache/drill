@@ -36,13 +36,14 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Iterators;
 import org.apache.drill.shaded.guava.com.google.common.collect.ListMultimap;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * The AssignmentCreator is responsible for assigning a set of work units to the available slices.
+ * Responsible for assigning a set of work units to the available slices.
  */
 public class AssignmentCreator<T extends CompleteWork> {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AssignmentCreator.class);
-
+  static final Logger logger = LoggerFactory.getLogger(AssignmentCreator.class);
 
   /**
    * Comparator used to sort in order of decreasing affinity
@@ -56,24 +57,24 @@ public class AssignmentCreator<T extends CompleteWork> {
   };
 
   /**
-   * the maximum number of work units to assign to any minor fragment
+   * The maximum number of work units to assign to any minor fragment
    */
   private int maxWork;
 
   /**
    * The units of work to be assigned
    */
-  private List<T> units;
+  private final List<T> units;
 
   /**
    * Mappings
    */
-  private ArrayListMultimap<Integer, T> mappings = ArrayListMultimap.create();
+  private final ArrayListMultimap<Integer, T> mappings = ArrayListMultimap.create();
 
   /**
    * A list of DrillbitEndpoints, where the index in the list corresponds to the minor fragment id
    */
-  private List<DrillbitEndpoint> incomingEndpoints;
+  private final List<DrillbitEndpoint> incomingEndpoints;
 
   private AssignmentCreator(List<DrillbitEndpoint> incomingEndpoints, List<T> units) {
     this.incomingEndpoints = incomingEndpoints;
@@ -106,16 +107,16 @@ public class AssignmentCreator<T extends CompleteWork> {
     LinkedList<WorkEndpointListPair<T>> unassignedWorkList;
     Map<DrillbitEndpoint,FragIteratorWrapper> endpointIterators = getEndpointIterators();
 
-    // Assign upto maxCount per node based on locality.
+    // Assign up to maxCount per node based on locality.
     unassignedWorkList = assign(workList, endpointIterators, false);
 
-    // Assign upto minCount per node in a round robin fashion.
+    // Assign up to minCount per node in a round robin fashion.
     assignLeftovers(unassignedWorkList, endpointIterators, true);
 
-    // Assign upto maxCount + leftovers per node based on locality.
+    // Assign up to maxCount + leftovers per node based on locality.
     unassignedWorkList = assign(unassignedWorkList, endpointIterators,  true);
 
-    // Assign upto maxCount + leftovers per node in a round robin fashion.
+    // Assign up to maxCount + leftovers per node in a round robin fashion.
     assignLeftovers(unassignedWorkList, endpointIterators, false);
 
     if (unassignedWorkList.size() != 0) {
@@ -130,7 +131,7 @@ public class AssignmentCreator<T extends CompleteWork> {
    *
    * @param workList the list of work units to assign
    * @param endpointIterators the endpointIterators to assign to
-   * @param assignMaxLeftOvers whether to assign upto maximum including leftovers
+   * @param assignMaxLeftOvers whether to assign up to maximum including leftovers
    * @return a list of unassigned work units
    */
   private LinkedList<WorkEndpointListPair<T>> assign(List<WorkEndpointListPair<T>> workList,
@@ -160,7 +161,7 @@ public class AssignmentCreator<T extends CompleteWork> {
    *
    * @param unassignedWorkList the work units to assign
    * @param endpointIterators the endpointIterators to assign to
-   * @param assignMinimum wheterh to assign the minimum amount
+   * @param assignMinimum whether to assign the minimum amount
    */
   private void assignLeftovers(LinkedList<WorkEndpointListPair<T>> unassignedWorkList,
                                Map<DrillbitEndpoint,FragIteratorWrapper> endpointIterators,
@@ -183,7 +184,6 @@ public class AssignmentCreator<T extends CompleteWork> {
    * @return the list of WorkEndpointListPairs
    */
   private LinkedList<WorkEndpointListPair<T>> getWorkList() {
-    Stopwatch watch = Stopwatch.createStarted();
     LinkedList<WorkEndpointListPair<T>> workList = Lists.newLinkedList();
     for (T work : units) {
       List<Map.Entry<DrillbitEndpoint,Long>> entries = Lists.newArrayList();
@@ -220,7 +220,8 @@ public class AssignmentCreator<T extends CompleteWork> {
   }
 
   /**
-   *  A wrapper class around a work unit and its associated sort list of Endpoints (sorted by affinity in decreasing order)
+   * Wrapper class around a work unit and its associated sort list of Endpoints
+   * (sorted by affinity in decreasing order)
    */
   private static class WorkEndpointListPair<T> {
     T work;
@@ -239,7 +240,6 @@ public class AssignmentCreator<T extends CompleteWork> {
    * @return
    */
   private Map<DrillbitEndpoint,FragIteratorWrapper> getEndpointIterators() {
-    Stopwatch watch = Stopwatch.createStarted();
     Map<DrillbitEndpoint,FragIteratorWrapper> map = Maps.newLinkedHashMap();
     Map<DrillbitEndpoint,List<Integer>> mmap = Maps.newLinkedHashMap();
     for (int i = 0; i < incomingEndpoints.size(); i++) {
@@ -280,7 +280,7 @@ public class AssignmentCreator<T extends CompleteWork> {
   }
 
   /**
-   * A struct that holds a fragment iterator and keeps track of how many units have been assigned, as well as the maximum
+   * Holds a fragment iterator and keeps track of how many units have been assigned, as well as the maximum
    * number of assignment it will accept
    */
   private static class FragIteratorWrapper {
@@ -290,5 +290,4 @@ public class AssignmentCreator<T extends CompleteWork> {
     int minCount;
     Iterator<Integer> iter;
   }
-
 }

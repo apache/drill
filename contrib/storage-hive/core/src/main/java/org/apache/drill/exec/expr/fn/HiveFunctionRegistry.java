@@ -42,18 +42,20 @@ import org.apache.drill.exec.planner.sql.HiveUDFOperator;
 import org.apache.drill.exec.planner.sql.HiveUDFOperatorWithoutInference;
 import org.apache.drill.exec.planner.sql.TypeInferenceUtils;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
+import org.apache.drill.shaded.guava.com.google.common.collect.Multimap;
 import org.apache.hadoop.hive.ql.exec.Description;
 import org.apache.hadoop.hive.ql.exec.UDF;
 import org.apache.hadoop.hive.ql.udf.UDFType;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDF;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDFBridge;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.drill.shaded.guava.com.google.common.collect.ArrayListMultimap;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 
 public class HiveFunctionRegistry implements PluggableFunctionRegistry {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveFunctionRegistry.class);
+  private static final Logger logger = LoggerFactory.getLogger(HiveFunctionRegistry.class);
 
   /**
    * Map for renaming UDFs. Keys of the map represent UDF names which should be replaced
@@ -65,9 +67,9 @@ public class HiveFunctionRegistry implements PluggableFunctionRegistry {
           OracleSqlOperatorTable.TRANSLATE3.getName().toLowerCase())
       .build();
 
-  private ArrayListMultimap<String, Class<? extends GenericUDF>> methodsGenericUDF = ArrayListMultimap.create();
-  private ArrayListMultimap<String, Class<? extends UDF>> methodsUDF = ArrayListMultimap.create();
-  private HashSet<Class<?>> nonDeterministicUDFs = new HashSet<>();
+  private final Multimap<String, Class<? extends GenericUDF>> methodsGenericUDF = ArrayListMultimap.create();
+  private final Multimap<String, Class<? extends UDF>> methodsUDF = ArrayListMultimap.create();
+  private final Set<Class<?>> nonDeterministicUDFs = new HashSet<>();
 
   /**
    * Scan the classpath for implementation of GenericUDF/UDF interfaces,
@@ -116,7 +118,7 @@ public class HiveFunctionRegistry implements PluggableFunctionRegistry {
     }
   }
 
-  private <I> void register(Class<? extends I> clazz, ArrayListMultimap<String, Class<? extends I>> methods) {
+  private <I> void register(Class<? extends I> clazz, Multimap<String, Class<? extends I>> methods) {
     Description desc = clazz.getAnnotation(Description.class);
     Stream<String> namesStream;
     if (desc != null) {
@@ -168,11 +170,11 @@ public class HiveFunctionRegistry implements PluggableFunctionRegistry {
    */
   private HiveFuncHolder resolveFunction(FunctionCall call, boolean varCharToStringReplacement) {
     HiveFuncHolder holder;
-    MajorType[] argTypes = new MajorType[call.args.size()];
-    ObjectInspector[] argOIs = new ObjectInspector[call.args.size()];
-    for (int i=0; i<call.args.size(); i++) {
+    MajorType[] argTypes = new MajorType[call.argCount()];
+    ObjectInspector[] argOIs = new ObjectInspector[call.argCount()];
+    for (int i=0; i<call.argCount(); i++) {
       try {
-        argTypes[i] = call.args.get(i).getMajorType();
+        argTypes[i] = call.arg(i).getMajorType();
         argOIs[i] = ObjectInspectorHelper.getDrillObjectInspector(argTypes[i].getMode(), argTypes[i].getMinorType(),
             varCharToStringReplacement);
       } catch(Exception e) {
