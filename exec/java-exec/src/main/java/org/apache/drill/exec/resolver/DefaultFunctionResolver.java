@@ -41,7 +41,7 @@ public class DefaultFunctionResolver implements FunctionResolver {
 
     for (DrillFuncHolder h : methods) {
       final List<TypeProtos.MajorType> argumentTypes = Lists.newArrayList();
-      for (LogicalExpression expression : call.args) {
+      for (LogicalExpression expression : call.args()) {
         argumentTypes.add(expression.getMajorType());
       }
       currcost = TypeCastRules.getCost(argumentTypes, h);

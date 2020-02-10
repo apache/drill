@@ -119,7 +119,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
   }
 
   /**
-   * Builds the readers for the V3 text scan operator.
+   * Builds the readers row-set based scan operator.
    */
   private static class EasyReaderFactory extends FileReaderFactory {
 
@@ -128,7 +128,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
     private final FragmentContext context;
 
     public EasyReaderFactory(EasyFormatPlugin<? extends FormatPluginConfig> plugin,
-        final EasySubScan scan, FragmentContext context) {
+        EasySubScan scan, FragmentContext context) {
       this.plugin = plugin;
       this.scan = scan;
       this.context = context;
@@ -226,7 +226,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
    * boundaries. If not, the simple format engine will only split on file
    * boundaries.
    *
-   * @return {@code true} if splittable.
+   * @return {@code true} if splitable.
    */
   public boolean isBlockSplittable() { return easyConfig.blockSplittable; }
 
@@ -256,8 +256,8 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
     throw new ExecutionSetupException("Must implement getRecordReader() if using the legacy scanner.");
   }
 
-  protected CloseableRecordBatch getReaderBatch(final FragmentContext context,
-      final EasySubScan scan) throws ExecutionSetupException {
+  protected CloseableRecordBatch getReaderBatch(FragmentContext context,
+      EasySubScan scan) throws ExecutionSetupException {
     if (useEnhancedScan(context.getOptions())) {
       return buildScan(context, scan);
     } else {
@@ -448,9 +448,9 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
     }
   }
 
-  protected ScanStats getScanStats(final PlannerSettings settings, final EasyGroupScan scan) {
+  protected ScanStats getScanStats(PlannerSettings settings, EasyGroupScan scan) {
     long data = 0;
-    for (final CompleteFileWork work : scan.getWorkIterable()) {
+    for (CompleteFileWork work : scan.getWorkIterable()) {
       data += work.getTotalBytes();
     }
 

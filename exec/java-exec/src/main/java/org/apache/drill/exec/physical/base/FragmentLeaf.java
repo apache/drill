@@ -18,8 +18,8 @@
 package org.apache.drill.exec.physical.base;
 
 /**
- * A Physical Operator that can be the leaf node of one particular execution fragment. Typically includes Receivers and
- * Scans
+ * A Physical Operator that can be the leaf node of one particular execution
+ * fragment. Typically includes Receivers and Scans.
  */
 public interface FragmentLeaf extends PhysicalOperator {
 }

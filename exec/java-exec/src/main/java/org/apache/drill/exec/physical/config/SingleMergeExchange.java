@@ -36,7 +36,6 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName("single-merge-exchange")
 public class SingleMergeExchange extends AbstractExchange {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SingleMergeExchange.class);
 
   private final List<Ordering> orderExpr;
 
@@ -71,7 +70,8 @@ public class SingleMergeExchange extends AbstractExchange {
 
   @Override
   public Receiver getReceiver(int minorFragmentId) {
-    return new MergingReceiverPOP(senderMajorFragmentId, PhysicalOperatorUtil.getIndexOrderedEndpoints(senderLocations), orderExpr, false);
+    return new MergingReceiverPOP(senderMajorFragmentId,
+        PhysicalOperatorUtil.getIndexOrderedEndpoints(senderLocations), orderExpr, false);
   }
 
   @Override
@@ -83,5 +83,4 @@ public class SingleMergeExchange extends AbstractExchange {
   public List<Ordering> getOrderings() {
     return this.orderExpr;
   }
-
 }

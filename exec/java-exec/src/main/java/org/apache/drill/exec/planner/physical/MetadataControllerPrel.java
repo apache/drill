@@ -85,6 +85,7 @@ public class MetadataControllerPrel extends BiRel implements DrillRelNode, Prel 
     return PrelUtil.iter(getLeft(), getRight());
   }
 
+  @SuppressWarnings("deprecation")
   @Override
   protected RelDataType deriveRowType() {
     return getCluster().getTypeFactory().builder()

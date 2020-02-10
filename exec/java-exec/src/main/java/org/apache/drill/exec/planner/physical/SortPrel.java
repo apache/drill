@@ -143,6 +143,7 @@ public class SortPrel extends org.apache.calcite.rel.core.Sort implements Ordere
               fieldCollation.direction, fieldCollation.nullDirection));
     }
 
+    @SuppressWarnings("deprecation")
     RelCollation collationTrait = RelCollationImpl.of(relFieldCollations);
     RelTraitSet traits = RelTraitSet.createEmpty()
                                     .replace(this.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE))
@@ -166,5 +167,4 @@ public class SortPrel extends org.apache.calcite.rel.core.Sort implements Ordere
   public boolean canBeDropped() {
     return isRemovable;
   }
-
 }

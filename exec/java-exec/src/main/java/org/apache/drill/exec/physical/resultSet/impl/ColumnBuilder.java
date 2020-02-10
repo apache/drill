@@ -487,7 +487,7 @@ public class ColumnBuilder {
         columnSchema, vector, dummyElement);
 
     // Create the list vector state that tracks the list vector lifecycle.
-    // For a repeated list, we only care about
+
     final RepeatedListVectorState vectorState = new RepeatedListVectorState(
         arrayWriter, vector);
 

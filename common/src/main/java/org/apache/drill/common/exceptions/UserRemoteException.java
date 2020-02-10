@@ -22,9 +22,11 @@ import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 import static org.apache.drill.common.util.DrillExceptionUtil.getThrowable;
 
 /**
- * Wraps a DrillPBError object so we don't need to rebuilt it multiple times when sending it to the client. It also
- * gives access to the original exception className and message.
+ * Wraps a DrillPBError object so we don't need to rebuilt it multiple times
+ * when sending it to the client. It also gives access to the original exception
+ * className and message.
  */
+@SuppressWarnings("serial")
 public class UserRemoteException extends UserException {
 
   private final DrillPBError error;

@@ -108,7 +108,7 @@ public class TestParquetFilterPushDown extends PlanTestBase {
   };
 
   @Test
-  // Test filter evaluation directly without go through SQL queries.
+  // Test filter evaluation directly without going through SQL queries.
   public void testIntPredicateWithEval() throws Exception {
     // intTbl.parquet has only one int column
     //    intCol : [0, 100].
@@ -150,7 +150,6 @@ public class TestParquetFilterPushDown extends PlanTestBase {
     testParquetRowGroupFilterEval(footer, "intCol = 50 or intCol = 160", RowsMatch.SOME);
 
     //"nonExistCol" does not exist in the table. "AND" with a filter on exist column
-
     testParquetRowGroupFilterEval(footer, "intCol > 100 and nonExistCol = 100", RowsMatch.NONE);
     testParquetRowGroupFilterEval(footer, "intCol > 50 and nonExistCol = 100", RowsMatch.NONE); // since nonExistCol = 100 -> Unknown -> could drop.
     testParquetRowGroupFilterEval(footer, "nonExistCol = 100 and intCol > 50", RowsMatch.NONE); // since nonExistCol = 100 -> Unknown -> could drop.
@@ -162,7 +161,6 @@ public class TestParquetFilterPushDown extends PlanTestBase {
     // is ignored.
 
     //"nonExistCol" does not exist in the table. "OR" with a filter on exist column
-
     testParquetRowGroupFilterEval(footer, "intCol > 100 or nonExistCol = 100", RowsMatch.NONE); // nonExistCol = 100 -> could drop.
     testParquetRowGroupFilterEval(footer, "nonExistCol = 100 or intCol > 100", RowsMatch.NONE); // nonExistCol = 100 -> could drop.
 
@@ -726,6 +724,7 @@ public class TestParquetFilterPushDown extends PlanTestBase {
       runAndCheckResults(client, sql, expectedRows, numPartitions, numPruned);
     }
   }
+
   /**
    * Test runtime pruning
    *
@@ -757,5 +756,4 @@ public class TestParquetFilterPushDown extends PlanTestBase {
     long resultNumPruned = parquestScan0.getMetric(ParquetRecordReader.Metric.ROWGROUPS_PRUNED.ordinal());
     assertEquals(numPruned,resultNumPruned);
   }
-
 }

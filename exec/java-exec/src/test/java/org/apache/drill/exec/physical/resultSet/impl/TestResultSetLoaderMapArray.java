@@ -204,7 +204,6 @@ public class TestResultSetLoaderMapArray extends SubOperatorTest {
           mapValue(330, strArray("d3.3.1", "d1.2.2"))));
 
     // Verify the batch
-
     RowSet actual = fixture.wrap(rsLoader.harvest());
     SingleRowSet expected = fixture.rowSetBuilder(schema)
         .addRow(10, mapArray(

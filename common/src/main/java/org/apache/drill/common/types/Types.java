@@ -844,7 +844,6 @@ public class Types {
    * @return true if the two types have the same minor type, mode,
    * precision and scale
    */
-
   public static boolean isSameType(MajorType type1, MajorType type2) {
     return isSameTypeAndMode(type1, type2) &&
            type1.getScale() == type2.getScale() &&
@@ -870,7 +869,6 @@ public class Types {
    * But, unset fields are equivalent to 0. Can't use the protobuf-provided
    * isEquals() which treats set and unset fields as different.
    */
-
   public static boolean isEquivalent(MajorType type1, MajorType type2) {
 
     if (!isSameType(type1, type2)) {
@@ -878,7 +876,6 @@ public class Types {
     }
 
     // Subtypes are only for unions and are seldom used.
-
     if (type1.getMinorType() != MinorType.UNION) {
       return true;
     }
@@ -896,7 +893,6 @@ public class Types {
     }
 
     // Now it gets slow because subtype lists are not ordered.
-
     final List<MinorType> copy1 = new ArrayList<>(subtypes1);
     final List<MinorType> copy2 = new ArrayList<>(subtypes2);
     Collections.sort(copy1);
@@ -913,7 +909,6 @@ public class Types {
    * @return string key to use for this type in a union vector type
    * map
    */
-
   public static String typeKey(MinorType type) {
     return type.name().toLowerCase();
   }

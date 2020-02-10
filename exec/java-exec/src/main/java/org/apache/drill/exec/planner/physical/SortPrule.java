@@ -38,7 +38,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
  * For Logical Sort, it requires one single data stream as the output.
  *
  */
-public class SortPrule extends Prule{
+public class SortPrule extends Prule {
   public static final RelOptRule INSTANCE = new SortPrule();
 
   private SortPrule() {
@@ -48,7 +48,6 @@ public class SortPrule extends Prule{
   @Override
   public void onMatch(RelOptRuleCall call) {
     final DrillSortRel sort = call.rel(0);
-    final RelNode input = sort.getInput();
 
     // Keep the collation in logical sort. Convert input into a RelNode with 1) this collation, 2) Physical, 3) hash distributed on
 
@@ -59,12 +58,12 @@ public class SortPrule extends Prule{
     SortPrel child = new SortPrel(sort.getCluster(), traits.plus(sort.getCollation()),
             convert(sort.getInput(), traits), sort.getCollation(), false);
 
-    if(isSingleMode(call)){
+    if (isSingleMode(call)) {
       call.transformTo(child);
-    }else{
-      RelNode exch = new SingleMergeExchangePrel(sort.getCluster(), sort.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(DrillDistributionTrait.SINGLETON), child, sort.getCollation());
+    } else {
+      RelNode exch = new SingleMergeExchangePrel(sort.getCluster(), sort.getTraitSet().plus(
+          Prel.DRILL_PHYSICAL).plus(DrillDistributionTrait.SINGLETON), child, sort.getCollation());
       call.transformTo(exch);  // transform logical "sort" into "SingleMergeExchange".
-
     }
   }
 
@@ -77,5 +76,4 @@ public class SortPrule extends Prule{
     }
     return distFields;
   }
-
 }

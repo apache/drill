@@ -22,13 +22,14 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.parser.ExprLexer;
 import org.apache.drill.common.expression.parser.ExprParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Helper class for parsing logical expression.
  */
 public class LogicalExpressionParser {
-
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LogicalExpressionParser.class);
+  private static final Logger logger = LoggerFactory.getLogger(LogicalExpressionParser.class);
 
   /**
    * Initializes logical expression lexer and parser, add error listener that converts all
@@ -51,5 +52,4 @@ public class LogicalExpressionParser {
     logger.trace("Tokens: [{}]. Parsing details: [{}].", tokens.getText(), parseContext.toInfoString(parser));
     return parseContext.e;
   }
-
 }

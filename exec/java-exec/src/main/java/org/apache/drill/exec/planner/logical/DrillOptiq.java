@@ -110,6 +110,7 @@ public class DrillOptiq {
   }
 
   public static class RexToDrill extends RexVisitorImpl<LogicalExpression> {
+    @SuppressWarnings("unused")
     private final List<RelNode> inputs;
     private final DrillParseContext context;
     private final List<RelDataTypeField> fieldList;

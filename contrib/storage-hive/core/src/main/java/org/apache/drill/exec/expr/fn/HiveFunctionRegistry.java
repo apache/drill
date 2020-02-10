@@ -65,9 +65,9 @@ public class HiveFunctionRegistry implements PluggableFunctionRegistry {
           OracleSqlOperatorTable.TRANSLATE3.getName().toLowerCase())
       .build();
 
-  private ArrayListMultimap<String, Class<? extends GenericUDF>> methodsGenericUDF = ArrayListMultimap.create();
-  private ArrayListMultimap<String, Class<? extends UDF>> methodsUDF = ArrayListMultimap.create();
-  private HashSet<Class<?>> nonDeterministicUDFs = new HashSet<>();
+  private final ArrayListMultimap<String, Class<? extends GenericUDF>> methodsGenericUDF = ArrayListMultimap.create();
+  private final ArrayListMultimap<String, Class<? extends UDF>> methodsUDF = ArrayListMultimap.create();
+  private final HashSet<Class<?>> nonDeterministicUDFs = new HashSet<>();
 
   /**
    * Scan the classpath for implementation of GenericUDF/UDF interfaces,
@@ -168,11 +168,11 @@ public class HiveFunctionRegistry implements PluggableFunctionRegistry {
    */
   private HiveFuncHolder resolveFunction(FunctionCall call, boolean varCharToStringReplacement) {
     HiveFuncHolder holder;
-    MajorType[] argTypes = new MajorType[call.args.size()];
-    ObjectInspector[] argOIs = new ObjectInspector[call.args.size()];
-    for (int i=0; i<call.args.size(); i++) {
+    MajorType[] argTypes = new MajorType[call.argCount()];
+    ObjectInspector[] argOIs = new ObjectInspector[call.argCount()];
+    for (int i=0; i<call.argCount(); i++) {
       try {
-        argTypes[i] = call.args.get(i).getMajorType();
+        argTypes[i] = call.arg(i).getMajorType();
         argOIs[i] = ObjectInspectorHelper.getDrillObjectInspector(argTypes[i].getMode(), argTypes[i].getMinorType(),
             varCharToStringReplacement);
       } catch(Exception e) {

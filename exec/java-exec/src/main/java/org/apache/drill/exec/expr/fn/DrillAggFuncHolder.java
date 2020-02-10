@@ -19,7 +19,6 @@ package org.apache.drill.exec.expr.fn;
 
 import static org.apache.drill.shaded.guava.com.google.common.base.Preconditions.checkArgument;
 
-import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.types.TypeProtos;
@@ -44,7 +43,6 @@ import com.sun.codemodel.JMod;
 import com.sun.codemodel.JVar;
 
 class DrillAggFuncHolder extends DrillFuncHolder {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillAggFuncHolder.class);
 
   protected String setup() {
     return meth("setup");
@@ -81,50 +79,46 @@ class DrillAggFuncHolder extends DrillFuncHolder {
   @Override
   public JVar[] renderStart(ClassGenerator<?> g, HoldingContainer[] inputVariables, FieldReference fieldReference) {
     if (!g.getMappingSet().isHashAggMapping()) {  //Declare workspace vars for non-hash-aggregation.
-        JVar[] workspaceJVars = declareWorkspaceVariables(g);
-        generateBody(g, BlockType.SETUP, setup(), null, workspaceJVars, true);
-        return workspaceJVars;
+      JVar[] workspaceJVars = declareWorkspaceVariables(g);
+      generateBody(g, BlockType.SETUP, setup(), null, workspaceJVars, true);
+      return workspaceJVars;
       } else {  //Declare workspace vars and workspace vectors for hash aggregation.
 
-        JVar[] workspaceJVars = declareWorkspaceVectors(g);
+      JVar[] workspaceJVars = declareWorkspaceVectors(g);
 
-        JBlock setupBlock = g.getSetupBlock();
+      JBlock setupBlock = g.getSetupBlock();
 
-        //Loop through all workspace vectors, to get the minimum of size of all workspace vectors.
-        JVar sizeVar = setupBlock.decl(g.getModel().INT, "vectorSize", JExpr.lit(Integer.MAX_VALUE));
-        JClass mathClass = g.getModel().ref(Math.class);
-        for (int id = 0; id < getWorkspaceVars().length; id++) {
-          if (!getWorkspaceVars()[id].isInject()) {
-            setupBlock.assign(sizeVar,mathClass.staticInvoke("min").arg(sizeVar).arg(g.getWorkspaceVectors().get(getWorkspaceVars()[id]).invoke("getValueCapacity")));
-          }
+      //Loop through all workspace vectors, to get the minimum of size of all workspace vectors.
+      JVar sizeVar = setupBlock.decl(g.getModel().INT, "vectorSize", JExpr.lit(Integer.MAX_VALUE));
+      JClass mathClass = g.getModel().ref(Math.class);
+      for (int id = 0; id < getWorkspaceVars().length; id++) {
+        if (!getWorkspaceVars()[id].isInject()) {
+          setupBlock.assign(sizeVar,mathClass.staticInvoke("min").arg(sizeVar).arg(g.getWorkspaceVectors().get(getWorkspaceVars()[id]).invoke("getValueCapacity")));
         }
-
-        for (int i = 0; i < getWorkspaceVars().length; i++) {
-          if (!getWorkspaceVars()[i].isInject()) {
-            setupBlock.assign(workspaceJVars[i], JExpr._new(g.getHolderType(getWorkspaceVars()[i].getMajorType())));
-          }
-        }
-
-        //Use for loop to initialize entries in the workspace vectors.
-        JForLoop forLoop = setupBlock._for();
-        JVar ivar = forLoop.init(g.getModel().INT, "drill_internal_i", JExpr.lit(0));
-        forLoop.test(ivar.lt(sizeVar));
-        forLoop.update(ivar.assignPlus(JExpr.lit(1)));
-
-        JBlock subBlock = generateInitWorkspaceBlockHA(g, BlockType.SETUP, setup(), workspaceJVars, ivar);
-        forLoop.body().add(subBlock);
-        return workspaceJVars;
       }
 
+      for (int i = 0; i < getWorkspaceVars().length; i++) {
+        if (!getWorkspaceVars()[i].isInject()) {
+          setupBlock.assign(workspaceJVars[i], JExpr._new(g.getHolderType(getWorkspaceVars()[i].getMajorType())));
+        }
+      }
 
+      //Use for loop to initialize entries in the workspace vectors.
+      JForLoop forLoop = setupBlock._for();
+      JVar ivar = forLoop.init(g.getModel().INT, "drill_internal_i", JExpr.lit(0));
+      forLoop.test(ivar.lt(sizeVar));
+      forLoop.update(ivar.assignPlus(JExpr.lit(1)));
+
+      JBlock subBlock = generateInitWorkspaceBlockHA(g, BlockType.SETUP, setup(), workspaceJVars, ivar);
+      forLoop.body().add(subBlock);
+      return workspaceJVars;
+    }
   }
-
 
   @Override
   public void renderMiddle(ClassGenerator<?> g, HoldingContainer[] inputVariables, JVar[]  workspaceJVars) {
     addProtectedBlock(g, g.getBlock(BlockType.EVAL), add(), inputVariables, workspaceJVars, false);
   }
-
 
   @Override
   public HoldingContainer renderEnd(ClassGenerator<?> classGenerator, HoldingContainer[] inputVariables,
@@ -151,7 +145,6 @@ class DrillAggFuncHolder extends DrillFuncHolder {
 
     return out;
   }
-
 
   private JVar[] declareWorkspaceVectors(ClassGenerator<?> g) {
     JVar[] workspaceJVars = new JVar[getWorkspaceVars().length];
@@ -204,8 +197,9 @@ class DrillAggFuncHolder extends DrillFuncHolder {
     }
   }
 
-  /*
-   * This is customized version of "addProtectedBlock" for hash aggregation. It take one additional parameter "wsIndexVariable".
+  /**
+   * This is customized version of "addProtectedBlock" for hash aggregation. It
+   * take one additional parameter "wsIndexVariable".
    */
   private void addProtectedBlockHA(ClassGenerator<?> g, JBlock sub, String body, HoldingContainer[] inputVariables, JVar[] workspaceJVars, JExpression wsIndexVariable) {
     if (inputVariables != null) {
@@ -259,10 +253,7 @@ class DrillAggFuncHolder extends DrillFuncHolder {
       }
 
       sub.add(setMeth);
-
-      JClass drillRunTimeException = g.getModel().ref(DrillRuntimeException.class);
     }
-
   }
 
   @Override

@@ -87,7 +87,7 @@ public final class AggregateChecker implements ExprVisitor<Boolean, ErrorCollect
 
   @Override
   public Boolean visitBooleanOperator(BooleanOperator op, ErrorCollector errors) {
-    for (LogicalExpression arg : op.args) {
+    for (LogicalExpression arg : op.args()) {
       if (arg.accept(this, errors)) {
         return true;
       }
@@ -133,6 +133,7 @@ public final class AggregateChecker implements ExprVisitor<Boolean, ErrorCollect
   public Boolean visitBooleanConstant(BooleanExpression e, ErrorCollector errors) {
     return false;
   }
+  @Override
   public Boolean visitDecimal9Constant(Decimal9Expression decExpr, ErrorCollector errors) {
     return false;
   }

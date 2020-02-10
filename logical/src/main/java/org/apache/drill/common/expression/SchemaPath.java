@@ -156,8 +156,7 @@ public class SchemaPath extends LogicalExpressionBase {
    * @return un-indexed schema path
    */
   public SchemaPath getUnIndexed() {
-    NameSegment nameSegment = getUnIndexedNameSegment(rootSegment, null);
-    return new SchemaPath(nameSegment);
+    return new SchemaPath(getUnIndexedNameSegment(rootSegment, null));
   }
 
   /**

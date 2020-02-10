@@ -17,12 +17,14 @@
  */
 package org.apache.drill.exec.store.kafka;
 
+import org.apache.drill.common.FunctionNames;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class KafkaPartitionScanSpec {
-  private String topicName;
-  private int partitionId;
+  private final String topicName;
+  private final int partitionId;
   private long startOffset;
   private long endOffset;
 
@@ -55,7 +57,7 @@ public class KafkaPartitionScanSpec {
 
   public void mergeScanSpec(String functionName, KafkaPartitionScanSpec scanSpec) {
     switch (functionName) {
-      case "booleanAnd":
+      case FunctionNames.AND:
         //Reduce the scan range
         if (startOffset < scanSpec.startOffset) {
           startOffset = scanSpec.startOffset;
@@ -65,7 +67,7 @@ public class KafkaPartitionScanSpec {
           endOffset = scanSpec.endOffset;
         }
         break;
-      case "booleanOr":
+      case FunctionNames.OR:
         //Increase the scan range
         if (scanSpec.startOffset < startOffset) {
           startOffset = scanSpec.startOffset;
@@ -94,6 +96,7 @@ public class KafkaPartitionScanSpec {
                + startOffset + ", endOffset=" + endOffset + "]";
   }
 
+  @Override
   public KafkaPartitionScanSpec clone() {
     return new KafkaPartitionScanSpec(topicName, partitionId, startOffset, endOffset);
   }

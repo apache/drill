@@ -107,12 +107,12 @@ public class FilterEvaluatorUtils {
                                   long rowCount,
                                   TupleMetadata fileMetadata,
                                   Set<SchemaPath> schemaPathsInExpr) {
-    RowsMatch rowsMatch = RowsMatch.SOME;
-    if (parquetPredicate != null) {
-      @SuppressWarnings("rawtypes")
-      StatisticsProvider<T> rangeExprEvaluator = new StatisticsProvider(columnsStatistics, rowCount);
-      rowsMatch = parquetPredicate.matches(rangeExprEvaluator);
+    if (parquetPredicate == null) {
+      return RowsMatch.SOME;
     }
+    @SuppressWarnings("rawtypes")
+    StatisticsProvider<T> rangeExprEvaluator = new StatisticsProvider(columnsStatistics, rowCount);
+    RowsMatch rowsMatch = parquetPredicate.matches(rangeExprEvaluator);
 
     if (rowsMatch == RowsMatch.ALL && isMetaNotApplicable(schemaPathsInExpr, fileMetadata)) {
       rowsMatch = RowsMatch.SOME;

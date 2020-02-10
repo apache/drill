@@ -23,12 +23,11 @@ import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
 
 public class ExprHelper {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExprHelper.class);
-
-  private final static String COMPOUND_FAIL_MESSAGE = "The current Optiq based logical plan interpreter does not complicated expressions.  For Order By and Filter";
+  private final static String COMPOUND_FAIL_MESSAGE =
+      "The Calcite-based logical plan interpreter does not handle complicated expressions. For Order By and Filter";
 
   public static String getAggregateFieldName(FunctionCall c) {
-    List<LogicalExpression> exprs = c.args;
+    List<LogicalExpression> exprs = c.args();
     if (exprs.size() != 1) {
       throw new UnsupportedOperationException(COMPOUND_FAIL_MESSAGE);
     }
@@ -39,5 +38,4 @@ public class ExprHelper {
     //if(e instanceof SchemaPath) return ((SchemaPath) e).getPath().toString();
     throw new UnsupportedOperationException(COMPOUND_FAIL_MESSAGE);
   }
-
 }

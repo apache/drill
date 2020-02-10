@@ -76,8 +76,9 @@ public class StatisticsProvider<T extends Comparable<T>> extends AbstractExprVis
     } else if (typedFieldExpr.getMajorType().equals(Types.OPTIONAL_INT)) {
       // field does not exist.
       return StatisticsProvider.getColumnStatistics(null, null, rowCount, typedFieldExpr.getMajorType().getMinorType());
+    } else {
+      return null;
     }
-    return null;
   }
 
   @Override

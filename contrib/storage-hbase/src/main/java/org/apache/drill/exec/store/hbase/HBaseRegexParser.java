@@ -152,12 +152,12 @@ public class HBaseRegexParser {
   }
 
   private static String likeString(FunctionCall call) {
-    return ((QuotedString) call.args.get(1)).value;
+    return ((QuotedString) call.arg(1)).value;
   }
 
   private static Character escapeString(FunctionCall call) {
-    if (call.args.size() > 2) {
-      return ((QuotedString) call.args.get(2)).value.charAt(0);
+    if (call.argCount() > 2) {
+      return ((QuotedString) call.arg(2)).value.charAt(0);
     }
     return null;
   }

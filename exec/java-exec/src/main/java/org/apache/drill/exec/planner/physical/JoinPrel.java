@@ -43,14 +43,14 @@ import org.apache.calcite.rex.RexUtil;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.util.Pair;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- *
  * Base class for MergeJoinPrel and HashJoinPrel
- *
  */
 public abstract class JoinPrel extends DrillJoinRelBase implements Prel {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JoinPrel.class);
+  private static final Logger logger = LoggerFactory.getLogger(JoinPrel.class);
 
   protected final boolean isSemiJoin;
   protected JoinUtils.JoinCategory joincategory;
@@ -158,14 +158,16 @@ public abstract class JoinPrel extends DrillJoinRelBase implements Prel {
     }
   }
 
+  @Override
   public boolean isSemiJoin() {
     return isSemiJoin;
   }
 
-  /* A Drill physical rel which is semi join will have output row type with fields from only
-     left side of the join. Calcite's join rel expects to have the output row type from
-     left and right side of the join. This function is overloaded to not throw exceptions for
-     a Drill semi join physical rel.
+  /**
+   * A Drill physical rel which is semi join will have output row type with fields from only
+   * left side of the join. Calcite's join rel expects to have the output row type from
+   * left and right side of the join. This function is overloaded to not throw exceptions for
+   * a Drill semi join physical rel.
    */
   @Override public boolean isValid(Litmus litmus, Context context) {
     if (!this.isSemiJoin && !super.isValid(litmus, context)) {
@@ -186,6 +188,7 @@ public abstract class JoinPrel extends DrillJoinRelBase implements Prel {
       // fields, left fields, and right fields. Very similar to the
       // output row type, except that fields have not yet been made due
       // due to outer joins.
+      @SuppressWarnings("deprecation")
       RexChecker checker =
               new RexChecker(
                       getCluster().getTypeFactory().builder()

@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.mapr.db.json;
 
 import static com.mapr.db.rowcol.DBValueBuilderImpl.KeyValueBuilder;
 
+import org.apache.drill.common.FunctionNames;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
@@ -111,8 +112,8 @@ class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpr
 
   private static CompareFunctionsProcessor processWithEvaluator(FunctionCall call, CompareFunctionsProcessor evaluator) {
     String functionName = call.getName();
-    LogicalExpression nameArg = call.args.get(0);
-    LogicalExpression valueArg = call.args.size() >= 2 ? call.args.get(1) : null;
+    LogicalExpression nameArg = call.arg(0);
+    LogicalExpression valueArg = call.argCount() >= 2 ? call.arg(1) : null;
 
     if (VALUE_EXPRESSION_CLASSES.contains(nameArg.getClass())) {
       LogicalExpression swapArg = valueArg;
@@ -258,20 +259,20 @@ class CompareFunctionsProcessor extends AbstractExprVisitor<Boolean, LogicalExpr
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
     COMPARE_FUNCTIONS_TRANSPOSE_MAP = builder
      // unary functions
-        .put("isnotnull", "isnotnull")
+        .put(FunctionNames.IS_NOT_NULL, FunctionNames.IS_NOT_NULL)
         .put("isNotNull", "isNotNull")
         .put("is not null", "is not null")
-        .put("isnull", "isnull")
+        .put(FunctionNames.IS_NULL, FunctionNames.IS_NULL)
         .put("isNull", "isNull")
         .put("is null", "is null")
         // binary functions
         .put("like", "like")
-        .put("equal", "equal")
-        .put("not_equal", "not_equal")
-        .put("greater_than_or_equal_to", "less_than_or_equal_to")
-        .put("greater_than", "less_than")
-        .put("less_than_or_equal_to", "greater_than_or_equal_to")
-        .put("less_than", "greater_than")
+        .put(FunctionNames.EQ, FunctionNames.EQ)
+        .put(FunctionNames.NE, FunctionNames.NE)
+        .put(FunctionNames.GE, FunctionNames.LE)
+        .put(FunctionNames.GT, FunctionNames.LT)
+        .put(FunctionNames.LE, FunctionNames.GE)
+        .put(FunctionNames.LT, FunctionNames.GT)
         .build();
   }
 

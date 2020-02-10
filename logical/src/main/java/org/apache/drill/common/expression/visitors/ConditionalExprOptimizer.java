@@ -40,7 +40,7 @@ public class ConditionalExprOptimizer extends AbstractExprVisitor<LogicalExpress
   @Override
   public LogicalExpression visitBooleanOperator(BooleanOperator op, Void value) throws RuntimeException {
     List<LogicalExpression> newArgs = Lists.newArrayList();
-    newArgs.addAll(op.args);
+    newArgs.addAll(op.args());
     Collections.sort(newArgs, costComparator);
 
     return new BooleanOperator(op.getName(), newArgs, op.getPosition());

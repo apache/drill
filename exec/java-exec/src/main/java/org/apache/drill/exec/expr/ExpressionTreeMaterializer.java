@@ -256,7 +256,7 @@ public class ExpressionTreeMaterializer {
     sb.append(call.getName());
     sb.append("(");
     boolean first = true;
-    for(LogicalExpression e : call.args) {
+    for (LogicalExpression e : call.args()) {
       TypeProtos.MajorType mt = e.getMajorType();
       if (first) {
         first = false;
@@ -384,9 +384,9 @@ public class ExpressionTreeMaterializer {
     @Override
     public LogicalExpression visitBooleanOperator(BooleanOperator op, FunctionLookupContext functionLookupContext) {
       List<LogicalExpression> args = new ArrayList<>();
-      for (int i = 0; i < op.args.size(); ++i) {
-        LogicalExpression newExpr = op.args.get(i).accept(this, functionLookupContext);
-        assert newExpr != null : String.format("Materialization of %s return a null expression.", op.args.get(i));
+      for (LogicalExpression expr : op.args()) {
+        LogicalExpression newExpr = expr.accept(this, functionLookupContext);
+        assert newExpr != null : String.format("Materialization of %s return a null expression.", expr);
         args.add(newExpr);
       }
 
@@ -404,9 +404,9 @@ public class ExpressionTreeMaterializer {
 
       // Possibly convert input expressions with a rewritten expression.
       List<LogicalExpression> args = new ArrayList<>();
-      for (int i = 0; i < call.args.size(); ++i) {
-        LogicalExpression newExpr = call.args.get(i).accept(this, functionLookupContext);
-        assert newExpr != null : String.format("Materialization of %s returned a null expression.", call.args.get(i));
+      for (LogicalExpression expr : call.args()) {
+        LogicalExpression newExpr = expr.accept(this, functionLookupContext);
+        assert newExpr != null : String.format("Materialization of %s returned a null expression.", expr);
         args.add(newExpr);
       }
 
@@ -462,9 +462,8 @@ public class ExpressionTreeMaterializer {
       List<LogicalExpression> argsWithCast = new ArrayList<>();
 
       // Compare param type against arg type. Insert cast on top of arg, whenever necessary.
-      for (int i = 0; i < call.args.size(); ++i) {
-
-        LogicalExpression currentArg = call.args.get(i);
+      for (int i = 0; i < call.argCount(); ++i) {
+        LogicalExpression currentArg = call.arg(i);
 
         TypeProtos.MajorType parmType = matchedFuncHolder.getParamMajorType(i);
 
@@ -518,8 +517,8 @@ public class ExpressionTreeMaterializer {
       // Insert implicit cast function holder expressions if required
       List<LogicalExpression> extArgsWithCast = new ArrayList<>();
 
-      for (int i = 0; i < call.args.size(); ++i) {
-        LogicalExpression currentArg = call.args.get(i);
+      for (int i = 0; i < call.argCount(); ++i) {
+        final LogicalExpression currentArg = call.arg(i);
         TypeProtos.MajorType paramType = matchedNonDrillFuncHolder.getParamMajorType(i);
 
         if (Types.softEquals(paramType, currentArg.getMajorType(), true)) {
@@ -531,7 +530,7 @@ public class ExpressionTreeMaterializer {
             paramType = MajorType.newBuilder().setMinorType(paramType.getMinorType()).setMode(paramType.getMode()).
                 setScale(currentArg.getMajorType().getScale()).setPrecision(computePrecision(currentArg)).build();
           }
-          extArgsWithCast.add(addCastExpression(call.args.get(i), paramType, functionLookupContext, errorCollector));
+          extArgsWithCast.add(addCastExpression(currentArg, paramType, functionLookupContext, errorCollector));
         }
       }
 
@@ -539,7 +538,7 @@ public class ExpressionTreeMaterializer {
     }
 
     private boolean hasUnionInput(FunctionCall call) {
-      for (LogicalExpression arg : call.args) {
+      for (LogicalExpression arg : call.args()) {
         if (arg.getMajorType().getMinorType() == MinorType.UNION) {
           return true;
         }
@@ -555,11 +554,11 @@ public class ExpressionTreeMaterializer {
      * branch of the case statement
      */
     private LogicalExpression rewriteUnionFunction(FunctionCall call, FunctionLookupContext functionLookupContext) {
-      LogicalExpression[] args = new LogicalExpression[call.args.size()];
-      call.args.toArray(args);
+      LogicalExpression[] args = new LogicalExpression[call.argCount()];
+      call.args().toArray(args);
 
       for (int i = 0; i < args.length; i++) {
-        LogicalExpression arg = call.args.get(i);
+        LogicalExpression arg = call.arg(i);
         MajorType majorType = arg.getMajorType();
 
         if (majorType.getMinorType() != MinorType.UNION) {

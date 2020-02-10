@@ -140,6 +140,7 @@ public class TopNPrel extends SinglePrel implements OrderedRel,Prel {
               fieldCollation.direction, fieldCollation.nullDirection));
     }
 
+    @SuppressWarnings("deprecation")
     RelCollation collationTrait = RelCollationImpl.of(relFieldCollations);
     RelTraitSet traits = RelTraitSet.createEmpty()
                                     .replace(this.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE))

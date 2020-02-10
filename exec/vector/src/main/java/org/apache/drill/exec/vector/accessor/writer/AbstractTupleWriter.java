@@ -156,7 +156,7 @@ public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
    */
 
   static class MemberWriterIndex implements ColumnWriterIndex {
-    private ColumnWriterIndex baseIndex;
+    private final ColumnWriterIndex baseIndex;
 
     MemberWriterIndex(ColumnWriterIndex baseIndex) {
       this.baseIndex = baseIndex;
@@ -243,15 +243,15 @@ public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
   @Override
   public int addColumn(ColumnMetadata column) {
     verifyAddColumn(column.name());
-    final AbstractObjectWriter colWriter = (AbstractObjectWriter) listener.addColumn(this, column);
-    return addColumnWriter(colWriter);
+    return addColumnWriter(
+        (AbstractObjectWriter) listener.addColumn(this, column));
   }
 
   @Override
   public int addColumn(MaterializedField field) {
     verifyAddColumn(field.getName());
-    final AbstractObjectWriter colWriter = (AbstractObjectWriter) listener.addColumn(this, field);
-    return addColumnWriter(colWriter);
+    return addColumnWriter(
+        (AbstractObjectWriter) listener.addColumn(this, field));
   }
 
   private void verifyAddColumn(String colName) {
@@ -262,7 +262,7 @@ public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
     if (tupleSchema().column(colName) != null) {
       throw UserException
         .validationError()
-        .message("Duplicate column name: ", colName)
+        .message("Duplicate column name: %s", colName)
         .build(logger);
     }
   }

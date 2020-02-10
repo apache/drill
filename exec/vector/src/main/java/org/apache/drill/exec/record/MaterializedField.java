@@ -99,14 +99,14 @@ public class MaterializedField {
    * The type is immutable. But, it contains subtypes, used or lists
    * and unions. To add a subtype, we must create a whole new major type.
    * <p>
-   * It appears that the <tt>MaterializedField</tt> class was also meant
+   * It appears that the {@code MaterializedField} class was also meant
    * to be immutable. But, it holds the children for a map, and contains
    * methods to add children. So, it is not immutable.
    * <p>
    * This method allows evolving a list or union without the need to create
-   * a new <tt>MaterializedField</tt>. Doing so is problematic for nested
+   * a new {@code MaterializedField}. Doing so is problematic for nested
    * maps because the map (or list, or union) holds onto the
-   * <tt>MaterializedField</tt>'s of its children. There is no way for
+   * {@code MaterializedField}'s of its children. There is no way for
    * an inner map to reach out and change the child of its parent.
    * <p>
    * By allowing the non-critical metadata to change, we preserve the
@@ -227,7 +227,7 @@ public class MaterializedField {
    * tricky issue. The rules here:
    * <ul>
    * <li>The other schema is assumed to be non-null (unlike
-   * <tt>equals()</tt>).</li>
+   * {@code equals()}).</li>
    * <li>Names must be identical, ignoring case. (Drill, like SQL, is case
    * insensitive.)
    * <li>Type, mode, precision and scale must be identical.</li>
@@ -235,7 +235,7 @@ public class MaterializedField {
    * "$bits" and "$offsets" vector columns are not compared, as one schema may
    * be an "original" (without these hidden columns) while the other may come
    * from a vector (which has the hidden columns added. The standard
-   * <tt>equals()</tt> comparison does consider hidden columns.</li>
+   * {@code equals()} comparison does consider hidden columns.</li>
    * <li>For maps, the child columns are compared recursively. This version
    * requires that the two sets of columns appear in the same order. (It assumes
    * it is being used in a context where column indexes make sense.) Operators
@@ -274,10 +274,9 @@ public class MaterializedField {
    *
    * @param other
    *          another field
-   * @return <tt>true</tt> if the columns are identical according to the above
-   *         rules, <tt>false</tt> if they differ
+   * @return {@code true} if the columns are identical according to the above
+   *         rules, {@code false} if they differ
    */
-
   public boolean isEquivalent(MaterializedField other) {
     if (! name.equalsIgnoreCase(other.name)) {
       return false;
@@ -286,14 +285,12 @@ public class MaterializedField {
     // Requires full type equality, including fields such as precision and scale.
     // But, unset fields are equivalent to 0. Can't use the protobuf-provided
     // isEquals(), that treats set and unset fields as different.
-
     if (! Types.isEquivalent(type, other.type)) {
       return false;
     }
 
     // Compare children -- but only for maps, not the internal children
     // for Varchar, repeated or nullable types.
-
     if (type.getMinorType() != MinorType.MAP) {
       return true;
     }
@@ -307,7 +304,6 @@ public class MaterializedField {
 
     // Maps are name-based, not position. But, for our
     // purposes, we insist on identical ordering.
-
     final Iterator<MaterializedField> thisIter = children.iterator();
     final Iterator<MaterializedField> otherIter = other.children.iterator();
     while (thisIter.hasNext()) {
@@ -329,7 +325,6 @@ public class MaterializedField {
    * @param other the field to which this one is to be promoted
    * @return true if promotion is possible, false otherwise
    */
-
   public boolean isPromotableTo(MaterializedField other, boolean allowModeChange) {
     if (! name.equalsIgnoreCase(other.name)) {
       return false;
@@ -338,7 +333,6 @@ public class MaterializedField {
     // Requires full type equality, including fields such as precision and scale.
     // But, unset fields are equivalent to 0. Can't use the protobuf-provided
     // isEquals(), that treats set and unset fields as different.
-
     if (type.getMinorType() != other.type.getMinorType()) {
       return false;
     }
@@ -346,7 +340,6 @@ public class MaterializedField {
 
       // Modes differ, but type can be promoted from required to
       // nullable
-
       if (! allowModeChange) {
         return false;
       }
@@ -363,7 +356,6 @@ public class MaterializedField {
 
     // Compare children -- but only for maps, not the internal children
     // for Varchar, repeated or nullable types.
-
     if (type.getMinorType() != MinorType.MAP) {
       return true;
     }
@@ -377,7 +369,6 @@ public class MaterializedField {
 
     // Maps are name-based, not position. But, for our
     // purposes, we insist on identical ordering.
-
     final Iterator<MaterializedField> thisIter = children.iterator();
     final Iterator<MaterializedField> otherIter = other.children.iterator();
     while (thisIter.hasNext()) {
@@ -400,7 +391,6 @@ public class MaterializedField {
    *
    * @return materialized field string representation
    */
-
   public String toString(boolean includeChildren) {
     final int maxLen = 10;
     final StringBuilder builder = new StringBuilder();
@@ -449,6 +439,14 @@ public class MaterializedField {
   @Override
   public String toString() {
     return toString(true);
+  }
+
+  /**
+   * Return true if two fields have identical MinorType and Mode.
+   */
+  public boolean hasSameTypeAndMode(MaterializedField that) {
+    return (getType().getMinorType() == that.getType().getMinorType())
+        && (getType().getMode() == that.getType().getMode());
   }
 
   private String toString(Collection<?> collection, int maxLen) {

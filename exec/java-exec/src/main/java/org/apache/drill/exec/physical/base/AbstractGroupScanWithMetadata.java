@@ -108,7 +108,7 @@ public abstract class AbstractGroupScanWithMetadata<P extends TableMetadataProvi
   protected Set<Path> fileSet;
 
   // whether all files, partitions or row groups of this group scan fully match the filter
-  protected boolean matchAllMetadata = false;
+  protected boolean matchAllMetadata;
 
   protected boolean usedMetastore; // false by default
 
@@ -640,7 +640,7 @@ public abstract class AbstractGroupScanWithMetadata<P extends TableMetadataProvi
   protected abstract static class GroupScanWithMetadataFilterer<B extends GroupScanWithMetadataFilterer<B>> {
     protected final AbstractGroupScanWithMetadata<? extends TableMetadataProvider> source;
 
-    protected boolean matchAllMetadata = false;
+    protected boolean matchAllMetadata;
 
     protected TableMetadata tableMetadata;
     protected List<PartitionMetadata> partitions = Collections.emptyList();

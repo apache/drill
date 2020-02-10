@@ -21,6 +21,7 @@ import org.apache.drill.common.expression.fn.FunctionReplacementUtils;
 import org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
+import org.apache.drill.common.FunctionNames;
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.LogicalExpression;
@@ -52,8 +53,9 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * A visitor which visits a materialized logical expression, and build FilterPredicate
- * If a visitXXX method returns null, that means the corresponding filter branch is not qualified for push down.
+ * A visitor which visits a materialized logical expression, and build
+ * FilterPredicate If a visitXXX method returns null, that means the
+ * corresponding filter branch is not qualified for push down.
  */
 public class FilterBuilder extends AbstractExprVisitor<LogicalExpression, Set<LogicalExpression>, RuntimeException> {
   private static final Logger logger = LoggerFactory.getLogger(FilterBuilder.class);
@@ -73,16 +75,17 @@ public class FilterBuilder extends AbstractExprVisitor<LogicalExpression, Set<Lo
    *
    * @return metadata filter predicate
    */
-  public static FilterPredicate buildFilterPredicate(LogicalExpression expr,
+  public static FilterPredicate<?> buildFilterPredicate(LogicalExpression expr,
                                                      Set<LogicalExpression> constantBoundaries,
                                                      UdfUtilities udfUtilities,
                                                      boolean omitUnsupportedExprs) {
-    LogicalExpression logicalExpression = expr.accept(new FilterBuilder(udfUtilities, omitUnsupportedExprs), constantBoundaries);
+    LogicalExpression logicalExpression = expr.accept(
+        new FilterBuilder(udfUtilities, omitUnsupportedExprs), constantBoundaries);
     if (logicalExpression instanceof FilterPredicate) {
-      return (FilterPredicate) logicalExpression;
+      return (FilterPredicate<?>) logicalExpression;
     } else if (logicalExpression instanceof TypedFieldExpr) {
       // Calcite simplifies `= true` expression to field name, wrap it with is true predicate
-      return (FilterPredicate) IsPredicate.createIsPredicate(FunctionGenerationHelper.IS_TRUE, logicalExpression);
+      return (FilterPredicate<?>) IsPredicate.createIsPredicate(FunctionNames.IS_TRUE, logicalExpression);
     }
     logger.debug("Logical expression {} was not qualified for filter push down", logicalExpression);
     return null;
@@ -159,10 +162,10 @@ public class FilterBuilder extends AbstractExprVisitor<LogicalExpression, Set<Lo
     List<LogicalExpression> childPredicates = new ArrayList<>();
     String functionName = op.getName();
 
-    for (LogicalExpression arg : op.args) {
+    for (LogicalExpression arg : op.args()) {
       LogicalExpression childPredicate = arg.accept(this, value);
       if (childPredicate == null) {
-        if (functionName.equals("booleanOr") || !omitUnsupportedExprs) {
+        if (functionName.equals(FunctionNames.OR) || !omitUnsupportedExprs) {
           // we can't include any leg of the OR if any of the predicates cannot be converted
           // or prohibited omitting of unconverted operands
           return null;
@@ -220,7 +223,8 @@ public class FilterBuilder extends AbstractExprVisitor<LogicalExpression, Set<Lo
   }
 
   @Override
-  public LogicalExpression visitFunctionHolderExpression(FunctionHolderExpression funcHolderExpr, Set<LogicalExpression> value) {
+  public LogicalExpression visitFunctionHolderExpression(
+      FunctionHolderExpression funcHolderExpr, Set<LogicalExpression> value) {
     FuncHolder holder = funcHolderExpr.getHolder();
 
     if (!(holder instanceof DrillSimpleFuncHolder)) {
@@ -244,19 +248,15 @@ public class FilterBuilder extends AbstractExprVisitor<LogicalExpression, Set<Lo
 
     if (isCompareFunction(funcName)) {
       return handleCompareFunction(funcHolderExpr, value);
-    }
-
-    if (isIsFunction(funcName) || isNot(funcHolderExpr, funcName)) {
+    } else if (isIsFunction(funcName) || isNot(funcHolderExpr, funcName)) {
       return handleIsFunction(funcHolderExpr, value);
-    }
-
-    if (FunctionReplacementUtils.isCastFunction(funcName)) {
+    } else if (FunctionReplacementUtils.isCastFunction(funcName)) {
       List<LogicalExpression> newArgs = generateNewExpressions(funcHolderExpr.args, value);
       if (newArgs == null) {
         return null;
+      } else {
+        return funcHolderExpr.copy(newArgs);
       }
-
-      return funcHolderExpr.copy(newArgs);
     } else {
       return null;
     }

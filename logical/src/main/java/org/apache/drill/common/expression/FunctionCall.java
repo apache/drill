@@ -27,8 +27,12 @@ import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 public class FunctionCall extends LogicalExpressionBase implements Iterable<LogicalExpression> {
+
+  // See FunctionNames for a list of well-known built-in functions
+  // often used in filter push-down rules
+
   private final String name;
-  public final ImmutableList<LogicalExpression> args;
+  protected final ImmutableList<LogicalExpression> args;
   private final ExpressionPosition pos;
 
   public FunctionCall(String name, List<LogicalExpression> args, ExpressionPosition pos) {
@@ -46,17 +50,17 @@ public class FunctionCall extends LogicalExpressionBase implements Iterable<Logi
     this.pos = pos;
   }
 
-  public String getName() {
-    return name;
-  }
+  public String getName() { return name; }
 
   @Override
-  public ExpressionPosition getPosition() {
-    return pos;
-  }
+  public ExpressionPosition getPosition() { return pos; }
+
+  public List<LogicalExpression> args() { return args; }
+  public int argCount() { return args.size(); }
+  public LogicalExpression arg(int i) { return args.get(i); }
 
   @Override
-  public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E{
+  public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E {
     return visitor.visitFunctionCall(this, value);
   }
 
@@ -77,5 +81,4 @@ public class FunctionCall extends LogicalExpressionBase implements Iterable<Logi
     return "FunctionCall [func=" + name + ", args="
         + (args != null ? args.subList(0, Math.min(args.size(), maxLen)) : null) + ", pos=" + pos + "]";
   }
-
 }

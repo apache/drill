@@ -406,13 +406,13 @@ public class TestCsvWithHeaders extends BaseCsvTest {
   }
 
   /**
-   * Test partition expansion .
+   * Test partition expansion.
    * <p>
    * This test is tricky because it will return two data batches
    * (preceded by an empty schema batch.) File read order is random
    * so we have to expect the files in either order.
    * <p>
-   * V3, as in V2 before Drill 1.12, puts partition columns after
+   * V3 puts partition columns after
    * data columns (so that data columns don't shift positions if
    * files are nested to another level.)
    */

@@ -77,7 +77,7 @@ public class DrillDistributionTraitDef extends RelTraitDef<DrillDistributionTrai
       return null;
     }
 
-    switch(toDist.getType()){
+    switch (toDist.getType()) {
       // UnionExchange, HashToRandomExchange, OrderedPartitionExchange and BroadcastExchange destroy the ordering property,
       // therefore RelCollation is set to default, which is EMPTY.
       case SINGLETON:
@@ -105,5 +105,4 @@ public class DrillDistributionTraitDef extends RelTraitDef<DrillDistributionTrai
         return null;
     }
   }
-
 }

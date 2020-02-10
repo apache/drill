@@ -54,9 +54,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A Storage engine associated with a Hadoop FileSystem Implementation. Examples include HDFS, MapRFS, QuantacastFileSystem,
- * LocalFileSystem, as well Apache Drill specific CachedFileSystem, ClassPathFileSystem and LocalSyncableFileSystem.
- * Tables are file names, directories and path patterns. This storage engine delegates to FSFormatEngines but shares
+ * A Storage engine associated with a Hadoop FileSystem Implementation. Examples
+ * include HDFS, MapRFS, QuantacastFileSystem, LocalFileSystem, as well Apache
+ * Drill specific CachedFileSystem, ClassPathFileSystem and
+ * LocalSyncableFileSystem. Tables are file names, directories and path
+ * patterns. This storage engine delegates to FSFormatEngines but shares
  * references to the FileSystem configuration and path management.
  */
 public class FileSystemPlugin extends AbstractStoragePlugin {
@@ -118,11 +120,12 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
 
       // if the "default" workspace is not given add one.
       if (noWorkspace || !config.getWorkspaces().containsKey(DEFAULT_WS_NAME)) {
-        factories.add(new WorkspaceSchemaFactory(
-            this, DEFAULT_WS_NAME, name, WorkspaceConfig.DEFAULT, matchers, context.getLpPersistence(), context.getClasspathScan()));
+        factories.add(new WorkspaceSchemaFactory(this, DEFAULT_WS_NAME, name,
+            WorkspaceConfig.DEFAULT, matchers,
+            context.getLpPersistence(), context.getClasspathScan()));
       }
 
-      schemaFactory = new FileSystemSchemaFactory(name, factories);
+      this.schemaFactory = new FileSystemSchemaFactory(name, factories);
     } catch (IOException e) {
       throw new ExecutionSetupException("Failure setting up file system plugin.", e);
     }

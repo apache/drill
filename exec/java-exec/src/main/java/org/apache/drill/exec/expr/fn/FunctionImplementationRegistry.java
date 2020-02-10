@@ -204,7 +204,7 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
    */
   private String functionReplacement(FunctionCall functionCall) {
     String funcName = functionCall.getName();
-    if (functionCall.args.size() == 0) {
+    if (functionCall.argCount() == 0) {
       return funcName;
     }
     boolean castEmptyStringToNull = optionManager != null &&
@@ -212,7 +212,7 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
     if (!castEmptyStringToNull) {
       return funcName;
     }
-    MajorType majorType =  functionCall.args.get(0).getMajorType();
+    MajorType majorType =  functionCall.arg(0).getMajorType();
     DataMode dataMode = majorType.getMode();
     MinorType minorType = majorType.getMinorType();
     if (FunctionReplacementUtils.isReplacementNeeded(funcName, minorType)) {

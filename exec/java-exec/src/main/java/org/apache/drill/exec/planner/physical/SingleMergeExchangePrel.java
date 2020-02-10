@@ -42,7 +42,8 @@ public class SingleMergeExchangePrel extends ExchangePrel {
 
   private final RelCollation collation;
 
-  public SingleMergeExchangePrel(RelOptCluster cluster, RelTraitSet traitSet, RelNode input, RelCollation collation) {
+  public SingleMergeExchangePrel(RelOptCluster cluster, RelTraitSet traitSet,
+      RelNode input, RelCollation collation) {
     super(cluster, traitSet, input);
     this.collation = collation;
     assert input.getConvention() == Prel.DRILL_PHYSICAL;
@@ -81,6 +82,7 @@ public class SingleMergeExchangePrel extends ExchangePrel {
     return new SingleMergeExchangePrel(getCluster(), traitSet, sole(inputs), collation);
   }
 
+  @Override
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
     Prel child = (Prel) this.getInput();
 
@@ -131,5 +133,4 @@ public class SingleMergeExchangePrel extends ExchangePrel {
   public SelectionVectorMode getEncoding() {
     return SelectionVectorMode.NONE;
   }
-
 }

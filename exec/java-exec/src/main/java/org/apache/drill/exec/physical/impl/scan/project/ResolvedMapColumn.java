@@ -55,7 +55,6 @@ public class ResolvedMapColumn extends ResolvedColumn {
     // We may have to create a matching new output
     // map. Determine whether it is a single map or
     // an array.
-
     assert schema.getType().getMinorType() == MinorType.MAP;
     if (schema.getType().getMode() == DataMode.REPEATED) {
       members = new ResolvedMapArray(this);

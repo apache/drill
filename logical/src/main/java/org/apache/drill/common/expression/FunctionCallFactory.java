@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.drill.common.FunctionNames;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 
@@ -30,32 +31,32 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 public class FunctionCallFactory {
 
   private static final Map<String, String> OP_TO_FUNC_NAME = ImmutableMap.<String, String>builder()
-      .put("+", "add")
-      .put("-", "subtract")
-      .put("/", "divide")
-      .put("*", "multiply")
-      .put("%", "modulo")
-      .put("^", "xor")
-      .put("||", "concatOperator")
-      .put("or", "booleanOr")
-      .put("and", "booleanAnd")
-      .put(">", "greater_than")
-      .put("<", "less_than")
-      .put("==", "equal")
-      .put("=", "equal")
-      .put("!=", "not_equal")
-      .put("<>", "not_equal")
-      .put(">=", "greater_than_or_equal_to")
-      .put("<=", "less_than_or_equal_to")
-      .put("is null", "isnull")
-      .put("is not null", "isnotnull")
-      .put("is true", "istrue")
-      .put("is not true", "isnottrue")
-      .put("is false", "isfalse")
-      .put("is not false", "isnotfalse")
-      .put("similar to", "similar_to")
-      .put("!", "not")
-      .put("u-", "negative")
+      .put("+",   FunctionNames.ADD)
+      .put("-",   FunctionNames.SUBTRACT)
+      .put("/",   FunctionNames.DIVIDE)
+      .put("*",   FunctionNames.MULTIPLY)
+      .put("%",   FunctionNames.MODULO)
+      .put("^",   FunctionNames.XOR)
+      .put("||",  FunctionNames.CONCAT)
+      .put("or",  FunctionNames.OR)
+      .put("and", FunctionNames.AND)
+      .put(">",   FunctionNames.GT)
+      .put("<",   FunctionNames.LT)
+      .put("==",  FunctionNames.EQ)
+      .put("=",   FunctionNames.EQ)
+      .put("!=",  FunctionNames.NE)
+      .put("<>",  FunctionNames.NE)
+      .put(">=",  FunctionNames.GE)
+      .put("<=",  FunctionNames.LE)
+      .put("is null", FunctionNames.IS_NULL)
+      .put("is not null", FunctionNames.IS_NOT_NULL)
+      .put("is true", FunctionNames.IS_TRUE)
+      .put("is not true", FunctionNames.IS_NOT_TRUE)
+      .put("is false", FunctionNames.IS_FALSE)
+      .put("is not false", FunctionNames.IS_NOT_FALSE)
+      .put("similar to", FunctionNames.SIMILAR_TO)
+      .put("!",   FunctionNames.NOT)
+      .put("u-",  FunctionNames.NEGATE)
       .build();
 
   public static String convertToDrillFunctionName(String op) {
@@ -64,7 +65,7 @@ public class FunctionCallFactory {
 
   public static boolean isBooleanOperator(String funcName) {
     String drillFuncName  = convertToDrillFunctionName(funcName);
-    return drillFuncName.equals("booleanAnd") || drillFuncName.equals("booleanOr");
+    return drillFuncName.equals(FunctionNames.AND) || drillFuncName.equals(FunctionNames.OR);
   }
 
   /*
@@ -132,5 +133,4 @@ public class FunctionCallFactory {
     }
     return first;
   }
-
 }

@@ -42,6 +42,7 @@ public class HashPrelUtil {
   public static final String HASH_EXPR_NAME = "E_X_P_R_H_A_S_H_F_I_E_L_D";
 
   public static final int DIST_SEED = 1301011; // distribution seed
+
   /**
    * Interface for creating different forms of hash expression types.
    * @param <T>
@@ -63,6 +64,7 @@ public class HashPrelUtil {
       this.rexBuilder = rexBuilder;
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public RexNode createCall(String funcName, List<RexNode> inputFields) {
       final DrillSqlOperator op =
@@ -172,11 +174,10 @@ public class HashPrelUtil {
     return createHashExpression(ImmutableList.of(field), seed, HASH_HELPER_LOGICAL_EXPRESSION, hashAsDouble);
   }
 
-
   /**
    * Create a distribution hash expression.
    *
-   * @param fields  Distribution fields
+   * @param fields Distribution fields
    * @param rowType Row type
    * @return distribution hash expression
    */

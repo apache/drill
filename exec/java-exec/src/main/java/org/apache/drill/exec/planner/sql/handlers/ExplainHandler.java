@@ -41,9 +41,12 @@ import org.apache.drill.exec.planner.physical.explain.PrelSequencer;
 import org.apache.drill.exec.planner.sql.DirectPlan;
 import org.apache.drill.exec.util.Pointer;
 import org.apache.drill.exec.work.foreman.ForemanSetupException;
+import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ExplainHandler extends DefaultSqlHandler {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExplainHandler.class);
+  private static final Logger logger = LoggerFactory.getLogger(ExplainHandler.class);
 
   private ResultMode mode;
   private SqlExplainLevel level = SqlExplainLevel.ALL_ATTRIBUTES;
@@ -96,23 +99,22 @@ public class ExplainHandler extends DefaultSqlHandler {
     return node.operand(0);
   }
 
-
-  public static class LogicalExplain{
-    public String text;
-    public String json;
+  public static class LogicalExplain {
+    public final String text;
+    public final String json;
 
     public LogicalExplain(RelNode node, SqlExplainLevel level, QueryContext context) {
       this.text = RelOptUtil.toString(node, level);
       DrillImplementor implementor = new DrillImplementor(new DrillParseContext(context.getPlannerSettings()), ResultMode.LOGICAL);
-      implementor.go( (DrillRel) node);
+      implementor.go((DrillRel) node);
       LogicalPlan plan = implementor.getPlan();
       this.json = plan.unparse(context.getLpPersistence());
     }
   }
 
-  public static class PhysicalExplain{
-    public String text;
-    public String json;
+  public static class PhysicalExplain {
+    public final String text;
+    public final String json;
 
     public PhysicalExplain(RelNode node, PhysicalPlan plan, SqlExplainLevel level, QueryContext context) {
       this.text = PrelSequencer.printWithIds((Prel) node, level);
@@ -120,4 +122,15 @@ public class ExplainHandler extends DefaultSqlHandler {
     }
   }
 
+  // Debug-only tool to dump a plan to stdout for inspection
+
+  @VisibleForTesting
+  public static void printPlan(Prel node, QueryContext context) {
+    System.out.println(PrelSequencer.printWithIds(node, SqlExplainLevel.ALL_ATTRIBUTES));
+  }
+
+  @VisibleForTesting
+  public static void printPlan(RelNode node) {
+    System.out.println(RelOptUtil.toString(node, SqlExplainLevel.ALL_ATTRIBUTES));
+  }
 }
