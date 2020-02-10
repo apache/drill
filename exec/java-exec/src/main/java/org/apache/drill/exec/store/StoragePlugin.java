@@ -38,16 +38,33 @@ import org.apache.drill.exec.store.dfs.FormatPlugin;
  */
 public interface StoragePlugin extends SchemaFactory, AutoCloseable {
 
-  /** Indicates if Drill can read the table from this format.
+  String getName();
+
+  /**
+   * Initialize the storage plugin. The storage plugin will not be used until this method is called.
+   */
+  void start() throws IOException;
+
+  /**
+   * Indicates if Drill can read the table from this format.
   */
   boolean supportsRead();
 
-  /** Indicates if Drill can write a table to this format (e.g. as JSON, csv, etc.).
+  /**
+   * Indicates if Drill can write a table to this format (e.g. as JSON, csv, etc.).
    */
   boolean supportsWrite();
 
-  /** An implementation of this method will return one or more specialized rules that Drill query
-   *  optimizer can leverage in <i>physical</i> space. Otherwise, it should return an empty set.
+  /**
+   * Method returns a Jackson serializable object that extends a StoragePluginConfig.
+   *
+   * @return an extension of StoragePluginConfig
+  */
+  StoragePluginConfig getConfig();
+
+  /**
+   * An implementation of this method will return one or more specialized rules that Drill query
+   * optimizer can leverage in <i>physical</i> space. Otherwise, it should return an empty set.
    * @return an empty set or a set of plugin specific physical optimizer rules.
    */
   @Deprecated
@@ -70,7 +87,8 @@ public interface StoragePlugin extends SchemaFactory, AutoCloseable {
    * @param options (optional) session options
    * @return The physical scan operator for the particular GroupScan (read) node.
    */
-  AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection, SessionOptionManager options) throws IOException;
+  AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection,
+      SessionOptionManager options) throws IOException;
 
   /**
    * Get the physical scan operator for the particular GroupScan (read) node.
@@ -81,7 +99,8 @@ public interface StoragePlugin extends SchemaFactory, AutoCloseable {
    * @param providerManager manager for handling metadata providers
    * @return The physical scan operator for the particular GroupScan (read) node.
    */
-  AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection, SessionOptionManager options, MetadataProviderManager providerManager) throws IOException;
+  AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection,
+      SessionOptionManager options, MetadataProviderManager providerManager) throws IOException;
 
   /**
    * Get the physical scan operator for the particular GroupScan (read) node.
@@ -91,7 +110,8 @@ public interface StoragePlugin extends SchemaFactory, AutoCloseable {
    * @param columns (optional) The list of column names to scan from the data source.
    * @return The physical scan operator for the particular GroupScan (read) node.
   */
-  AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection, List<SchemaPath> columns) throws IOException;
+  AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection,
+      List<SchemaPath> columns) throws IOException;
 
   /**
    * Get the physical scan operator for the particular GroupScan (read) node.
@@ -102,7 +122,8 @@ public interface StoragePlugin extends SchemaFactory, AutoCloseable {
    * @param options (optional) session options
    * @return The physical scan operator for the particular GroupScan (read) node.
    */
-  AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection, List<SchemaPath> columns, SessionOptionManager options) throws IOException;
+  AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection,
+      List<SchemaPath> columns, SessionOptionManager options) throws IOException;
 
   /**
    * Get the physical scan operator for the particular GroupScan (read) node.
@@ -114,19 +135,8 @@ public interface StoragePlugin extends SchemaFactory, AutoCloseable {
    * @param providerManager manager for handling metadata providers
    * @return The physical scan operator for the particular GroupScan (read) node.
    */
-  AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection, List<SchemaPath> columns, SessionOptionManager options, MetadataProviderManager providerManager) throws IOException;
-
-  /**
-   * Method returns a Jackson serializable object that extends a StoragePluginConfig.
-   *
-   * @return an extension of StoragePluginConfig
-  */
-  StoragePluginConfig getConfig();
-
-  /**
-   * Initialize the storage plugin. The storage plugin will not be used until this method is called.
-   */
-  void start() throws IOException;
+  AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection,
+      List<SchemaPath> columns, SessionOptionManager options, MetadataProviderManager providerManager) throws IOException;
 
   /**
    * Allows to get the format plugin for current storage plugin based on appropriate format plugin config usage.
@@ -136,6 +146,4 @@ public interface StoragePlugin extends SchemaFactory, AutoCloseable {
    * @throws UnsupportedOperationException, if storage plugin doesn't support format plugins.
    */
   FormatPlugin getFormatPlugin(FormatPluginConfig config);
-
-  String getName();
 }

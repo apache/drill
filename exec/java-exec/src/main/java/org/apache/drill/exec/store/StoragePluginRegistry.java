@@ -22,40 +22,25 @@ import java.util.Map;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
-import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.store.dfs.FormatPlugin;
-import org.apache.drill.exec.store.sys.PersistentStore;
 
 public interface StoragePluginRegistry extends Iterable<Map.Entry<String, StoragePlugin>>, AutoCloseable {
-
-  String STORAGE_PLUGIN_REGISTRY_IMPL = "drill.exec.storage.registry";
-  String ACTION_ON_STORAGE_PLUGINS_OVERRIDE_FILE = "drill.exec.storage.action_on_plugins_override_file";
   String PSTORE_NAME = "sys.storage_plugins";
 
   /**
    * Initialize the storage plugin registry. Must be called before the registry is used.
-   *
-   * @throws DrillbitStartupException if drillbit startup fails
    */
-  void init() throws DrillbitStartupException;
+  void init();
 
   /**
-   * Delete a plugin by name
-   *
-   * @param name The name of the storage plugin to delete.
-   */
-  void deletePlugin(String name);
-
-  /**
-   * Create a plugin by name and configuration. If the plugin already exists, update the plugin
+   * Store a plugin by name and configuration. If the plugin already exists, update the plugin
    *
    * @param name The name of the plugin
    * @param config The plugin configuration
-   * @param persist Whether to persist the plugin for later use or treat it as ephemeral.
    * @return The StoragePlugin instance.
    * @throws ExecutionSetupException if plugin cannot be created
    */
-  StoragePlugin createOrUpdate(String name, StoragePluginConfig config, boolean persist) throws ExecutionSetupException;
+  void put(String name, StoragePluginConfig config) throws ExecutionSetupException;
 
   /**
    * Get a plugin by name. Create it based on the PStore saved definition if it doesn't exist.
@@ -76,12 +61,34 @@ public interface StoragePluginRegistry extends Iterable<Map.Entry<String, Storag
   StoragePlugin getPlugin(StoragePluginConfig config) throws ExecutionSetupException;
 
   /**
-   * Add a plugin to the registry using the provided name.
+   * Retrieve a plugin configuration by name.
    *
-   * @param name The name of the plugin
-   * @param plugin The StoragePlugin instance
+   * @param name
+   * @return
    */
-  void addEnabledPlugin(String name, StoragePlugin plugin);
+  StoragePluginConfig getConfig(String name);
+
+  /**
+   * Remove a plugin by name
+   *
+   * @param name The name of the storage plugin to remove
+   */
+  void remove(String name);
+
+  /**
+   * Returns a copy of the set of all stored plugin configurations,
+   * directly from the persistent store.
+   * @return map of stored plugin configurations
+   */
+  Map<String, StoragePluginConfig> storedConfigs();
+
+  /**
+   * Returns a copy of the set of enabled stored plugin configurations.
+   * The registry is refreshed against the persistent store prior
+   * to building the map.
+   * @return map of enabled, stored plugin configurations
+   */
+  Map<String, StoragePluginConfig> enabledConfigs();
 
   /**
    * Get the Format plugin for the FileSystemPlugin associated with the provided storage config and format config.
@@ -94,17 +101,9 @@ public interface StoragePluginRegistry extends Iterable<Map.Entry<String, Storag
   FormatPlugin getFormatPlugin(StoragePluginConfig storageConfig, FormatPluginConfig formatConfig) throws ExecutionSetupException;
 
   /**
-   * Get the PStore for this StoragePluginRegistry. (Used in the management layer.)
-   *
-   * @return PStore for StoragePlugin configuration objects.
-   */
-  PersistentStore<StoragePluginConfig> getStore();
-
-  /**
    * Get the Schema factory associated with this storage plugin registry.
    *
    * @return A SchemaFactory that can register the schemas associated with this plugin registry.
    */
   SchemaFactory getSchemaFactory();
-
 }

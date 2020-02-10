@@ -18,7 +18,8 @@
 package org.apache.drill.exec.store;
 
 /**
- * Abstract implementation of {@link SchemaFactory}, ensures that given schema name is always converted is lower case.
+ * Abstract implementation of {@link SchemaFactory}, ensures that given schema
+ * name is always converted is lower case.
  */
 public abstract class AbstractSchemaFactory implements SchemaFactory {
 

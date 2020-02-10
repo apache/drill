@@ -17,23 +17,24 @@
  */
 package org.apache.drill.exec.store;
 
-import org.apache.drill.common.logical.StoragePluginConfig;
-import org.apache.drill.exec.planner.logical.StoragePlugins;
-import org.apache.drill.exec.store.sys.PersistentStore;
+import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.scanner.persistence.ScanResult;
+import org.apache.drill.exec.server.DrillbitContext;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
- * Storage plugins handler is an additional service for updating storage plugins configs from the file
+ * Provides a loose coupling of the plugin registry to the resources it needs
+ * from elsewhere. Allows binding the registry via the {@code DrillbitContext}
+ * in production, and to ad-hoc versions in tests.
  */
-public interface StoragePluginsHandler {
+public interface PluginRegistryContext {
+  DrillConfig config();
+  ObjectMapper mapper();
+  ScanResult classpathScan();
 
-  /**
-   * Update incoming storage plugins configs from persistence store if present, otherwise bootstrap plugins configs.
-   *
-   * @param persistentStore the last storage plugins configs from persistence store
-   * @param bootstrapPlugins bootstrap storage plugins, which are used in case of first Drill start up
-   * @return all storage plugins, which should be loaded into persistence store
-   */
-  void loadPlugins(PersistentStore<StoragePluginConfig> persistentStore, StoragePlugins bootstrapPlugins);
-
+  // TODO: Remove this here and from StoragePlugin constructors.
+  // DrillbitContext is too complex and intimate to expose to
+  // extensions
+  DrillbitContext drillbitContext();
 }

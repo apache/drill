@@ -84,6 +84,8 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.security.AccessControlException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
@@ -93,7 +95,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 
 public class WorkspaceSchemaFactory {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WorkspaceSchemaFactory.class);
+  private static final Logger logger = LoggerFactory.getLogger(WorkspaceSchemaFactory.class);
 
   private final List<FormatMatcher> fileMatchers;
   private final List<FormatMatcher> dropFileMatchers;
@@ -290,9 +292,9 @@ public class WorkspaceSchemaFactory {
   public class WorkspaceSchema extends AbstractSchema implements ExpandingConcurrentMap.MapValueFactory<TableInstance, DrillTable> {
     private final ExpandingConcurrentMap<TableInstance, DrillTable> tables = new ExpandingConcurrentMap<>(this);
     private final SchemaConfig schemaConfig;
-    private DrillFileSystem fs;
+    private final DrillFileSystem fs;
     // Drill Process User file-system
-    private DrillFileSystem dpsFs;
+    private final DrillFileSystem dpsFs;
 
     public WorkspaceSchema(List<String> parentSchemaPath, String wsName, SchemaConfig schemaConfig, DrillFileSystem fs) {
       super(parentSchemaPath, wsName);
@@ -425,19 +427,20 @@ public class WorkspaceSchemaFactory {
 
         for (DotDrillFile f : files) {
           switch (f.getType()) {
-          case VIEW:
-            try {
-              return new DrillViewTable(getView(f), f.getOwner(), schemaConfig.getViewExpansionContext());
-            } catch (AccessControlException e) {
-              if (!schemaConfig.getIgnoreAuthErrors()) {
-                logger.debug(e.getMessage());
-                throw UserException.permissionError(e)
-                  .message("Not authorized to read view [%s] in schema [%s]", tableName, getFullSchemaName())
-                  .build(logger);
+            case VIEW:
+              try {
+                return new DrillViewTable(getView(f), f.getOwner(), schemaConfig.getViewExpansionContext());
+              } catch (AccessControlException e) {
+                if (!schemaConfig.getIgnoreAuthErrors()) {
+                  logger.debug(e.getMessage());
+                  throw UserException.permissionError(e)
+                    .message("Not authorized to read view [%s] in schema [%s]", tableName, getFullSchemaName())
+                    .build(logger);
+                }
+              } catch (IOException e) {
+                logger.warn("Failure while trying to load {}.view.drill file in workspace [{}]", tableName, getFullSchemaName(), e);
               }
-            } catch (IOException e) {
-              logger.warn("Failure while trying to load {}.view.drill file in workspace [{}]", tableName, getFullSchemaName(), e);
-            }
+            default:
           }
         }
       } catch (UnsupportedOperationException e) {

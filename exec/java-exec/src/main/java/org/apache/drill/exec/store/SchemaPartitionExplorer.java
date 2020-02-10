@@ -21,7 +21,7 @@ import java.util.List;
 
 /**
  * Exposes partition information for a particular schema.
- *
+ * <p>
  * For a more explanation of the current use of this interface see
  * the documentation in {@link PartitionExplorer}.
  */
@@ -32,7 +32,7 @@ public interface SchemaPartitionExplorer {
    * specified by partition columns and values. Individual storage
    * plugins will assign specific meaning to the parameters and return
    * values.
-   *
+   * <p>
    * For more info see docs in {@link PartitionExplorer}.
    *
    * @param partitionColumns a list of partitions to match

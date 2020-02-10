@@ -17,42 +17,5 @@
  */
 package org.apache.drill.common.logical;
 
-import java.util.Set;
-
-import org.apache.drill.common.scanner.persistence.ScanResult;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public abstract class FormatPluginConfigBase implements FormatPluginConfig {
-
-  private static final Logger logger = LoggerFactory.getLogger(FormatPluginConfigBase.class);
-
-  /**
-   * scan for implementations of see <b>FormatPlugin</b>.
-   *
-   * @param classpathScan - Drill configuration object, used to find the packages to scan
-   * @return - list of classes that implement the interface.
-   */
-  public static Set<Class<? extends FormatPluginConfig>> getSubTypes(final ScanResult classpathScan) {
-    final Set<Class<? extends FormatPluginConfig>> pluginClasses = classpathScan.getImplementations(FormatPluginConfig.class);
-    if (logger.isDebugEnabled()) {
-      StringBuilder sb = new StringBuilder();
-      sb.append("Found ");
-      sb.append(pluginClasses.size());
-      sb.append(" format plugin configuration classes:\n");
-      for (Class<?> c : pluginClasses) {
-        sb.append('\t');
-        sb.append(c.getName());
-        sb.append('\n');
-      }
-      logger.debug(sb.toString());
-    }
-    return pluginClasses;
-  }
-
-  @Override
-  public abstract boolean equals(Object o);
-
-  @Override
-  public abstract int hashCode();
 }

@@ -50,7 +50,6 @@ import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.shaded.guava.com.google.common.io.Resources;
 
 public class MockStorageEngine extends AbstractStoragePlugin {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MockStorageEngine.class);
 
   private final MockStorageEngineConfig configuration;
   private final MockSchema schema;
@@ -116,7 +115,7 @@ public class MockStorageEngine extends AbstractStoragePlugin {
 
   private static class MockSchema extends AbstractSchema {
 
-    private MockStorageEngine engine;
+    private final MockStorageEngine engine;
     private final Map<String, Table> tableCache = new WeakHashMap<>();
 
     public MockSchema(MockStorageEngine engine) {

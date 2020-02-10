@@ -22,6 +22,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.exceptions.ChildErrorContext;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
@@ -65,6 +67,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Text format plugin for CSV and other delimited text formats.
@@ -78,7 +81,6 @@ import java.util.Map;
  * to allow tight control of the size of produced batches (as well
  * as to support provided schema.)
  */
-
 public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextFormatConfig> {
   private final static String PLUGIN_NAME = "text";
 
@@ -108,14 +110,18 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
   @JsonInclude(Include.NON_DEFAULT)
   public static class TextFormatConfig implements FormatPluginConfig {
 
+    // TODO: Bad things happen if field change after created.
+    // Change all these to be private final, and add constructor.
+    // See DRILL-7612
+
     public List<String> extensions = Collections.emptyList();
     public String lineDelimiter = "\n";
     public char fieldDelimiter = '\n';
     public char quote = '"';
     public char escape = '"';
     public char comment = '#';
-    public boolean skipFirstLine = false;
-    public boolean extractHeader = false;
+    public boolean skipFirstLine;
+    public boolean extractHeader;
 
     public TextFormatConfig() { }
 
@@ -138,17 +144,8 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
 
     @Override
     public int hashCode() {
-      final int prime = 31;
-      int result = 1;
-      result = prime * result + comment;
-      result = prime * result + escape;
-      result = prime * result + ((extensions == null) ? 0 : extensions.hashCode());
-      result = prime * result + fieldDelimiter;
-      result = prime * result + ((lineDelimiter == null) ? 0 : lineDelimiter.hashCode());
-      result = prime * result + quote;
-      result = prime * result + (skipFirstLine ? 1231 : 1237);
-      result = prime * result + (extractHeader ? 1231 : 1237);
-      return result;
+      return Objects.hash(extensions, lineDelimiter, fieldDelimiter,
+          quote, escape, comment, skipFirstLine, extractHeader);
     }
 
     @Override
@@ -156,46 +153,32 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
       if (this == obj) {
         return true;
       }
-      if (obj == null) {
-        return false;
-      }
-      if (getClass() != obj.getClass()) {
+      if (obj == null || getClass() != obj.getClass()) {
         return false;
       }
       TextFormatConfig other = (TextFormatConfig) obj;
-      if (comment != other.comment) {
-        return false;
-      }
-      if (escape != other.escape) {
-        return false;
-      }
-      if (extensions == null) {
-        if (other.extensions != null) {
-          return false;
-        }
-      } else if (!extensions.equals(other.extensions)) {
-        return false;
-      }
-      if (fieldDelimiter != other.fieldDelimiter) {
-        return false;
-      }
-      if (lineDelimiter == null) {
-        if (other.lineDelimiter != null) {
-          return false;
-        }
-      } else if (!lineDelimiter.equals(other.lineDelimiter)) {
-        return false;
-      }
-      if (quote != other.quote) {
-        return false;
-      }
-      if (skipFirstLine != other.skipFirstLine) {
-        return false;
-      }
-      if (extractHeader != other.extractHeader) {
-        return false;
-      }
-      return true;
+      return Objects.equals(extensions, other.extensions) &&
+             Objects.equals(lineDelimiter, other.lineDelimiter) &&
+             Objects.equals(fieldDelimiter, other.fieldDelimiter) &&
+             Objects.equals(quote, other.quote) &&
+             Objects.equals(escape, other.escape) &&
+             Objects.equals(comment, other.comment) &&
+             Objects.equals(skipFirstLine, other.skipFirstLine) &&
+             Objects.equals(extractHeader, other.extractHeader);
+    }
+
+    @Override
+    public String toString() {
+      return new PlanStringBuilder(this)
+        .field("extensions", extensions)
+        .field("skipFirstLine", skipFirstLine)
+        .field("extractHeader", extractHeader)
+        .escapedField("fieldDelimiter", fieldDelimiter)
+        .escapedField("lineDelimiter", lineDelimiter)
+        .escapedField("quote", quote)
+        .escapedField("escape", escape)
+        .escapedField("comment", comment)
+        .toString();
     }
   }
 

@@ -31,7 +31,6 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
  * builder starts an embedded Drillbit, with the "dfs" name space,
  * a max width (parallelization) of 2.
  */
-
 public class ClusterFixtureBuilder {
 
   public static class RuntimeOption {
@@ -46,7 +45,6 @@ public class ClusterFixtureBuilder {
 
   // Values in the drill-module.conf file for values that are customized
   // in the defaults.
-
   public static final int DEFAULT_ZK_REFRESH = 500; // ms
 
   protected ConfigBuilder configBuilder = new ConfigBuilder();
@@ -195,7 +193,7 @@ public class ClusterFixtureBuilder {
    * @param bitNames array of (unique) Drillbit names
    * @return this builder
    */
-  public ClusterFixtureBuilder withBits(String bitNames[]) {
+  public ClusterFixtureBuilder withBits(String...bitNames) {
     this.bitNames = bitNames;
     bitCount = bitNames.length;
     return this;
@@ -276,8 +274,6 @@ public class ClusterFixtureBuilder {
    * {@link ClusterFixture#clientBuilder()}. Using the client builder
    * also lets you set client-side options in the rare cases that you
    * need them.
-   *
-   * @return
    */
   public ClusterFixture build() {
     return new ClusterFixture(this);

@@ -51,7 +51,6 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
 import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.exec.store.sys.PersistentStore;
 import org.glassfish.jersey.server.mvc.Viewable;
 
 import com.fasterxml.jackson.core.JsonParseException;
@@ -140,10 +139,7 @@ public class StorageResources {
   @Produces(MediaType.APPLICATION_JSON)
   public PluginConfigWrapper getPluginConfig(@PathParam("name") String name) {
     try {
-      PersistentStore<StoragePluginConfig> configStorage = storage.getStore();
-      if (configStorage.contains(name)) {
-        return new PluginConfigWrapper(name, configStorage.get(name));
-      }
+      return new PluginConfigWrapper(name, storage.getConfig(name));
     } catch (Exception e) {
       logger.error("Failure while trying to access storage config: {}", name, e);
     }
@@ -263,7 +259,7 @@ public class StorageResources {
   public List<PluginConfigWrapper> getConfigsFor(@PathParam("group") String pluginGroup) {
     pluginGroup = StringUtils.isNotEmpty(pluginGroup) ? pluginGroup.replace("/", "") : ALL_PLUGINS;
     return StreamSupport.stream(
-        Spliterators.spliteratorUnknownSize(storage.getStore().getAll(), Spliterator.ORDERED), false)
+        Spliterators.spliteratorUnknownSize(storage.storedConfigs().entrySet().iterator(), Spliterator.ORDERED), false)
             .filter(byPluginGroup(pluginGroup))
             .map(entry -> new PluginConfigWrapper(entry.getKey(), entry.getValue()))
             .sorted(PLUGIN_COMPARATOR)
@@ -310,7 +306,7 @@ public class StorageResources {
   @XmlRootElement
   public class JsonResult {
 
-    private String result;
+    private final String result;
 
     public JsonResult(String result) {
       this.result = result;

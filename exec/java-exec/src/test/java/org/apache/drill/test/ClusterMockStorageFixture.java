@@ -17,35 +17,38 @@
  */
 package org.apache.drill.test;
 
+import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.exec.store.StoragePluginRegistryImpl;
 import org.apache.drill.exec.store.mock.MockBreakageStorage;
-import org.apache.drill.exec.store.mock.MockStorageEngineConfig;
+import org.apache.drill.exec.store.mock.MockBreakageStorage.MockBreakageStorageEngineConfig;
 
 public class ClusterMockStorageFixture extends ClusterFixture {
+
   ClusterMockStorageFixture(ClusterFixtureBuilder builder) {
     super(builder);
-
   }
 
   /**
    * This should be called after bits are started
-   * @param name nthe mock storage name we are going to create
+   * @param name the mock storage name we are going to create
    */
   public void insertMockStorage(String name, boolean breakRegisterSchema) {
-    for (Drillbit bit : drillbits()) {
+    for (Drillbit bit: drillbits()) {
 
       // Bit name and registration.
       final StoragePluginRegistry pluginRegistry = bit.getContext().getStorage();
-      MockStorageEngineConfig config = MockStorageEngineConfig.INSTANCE;
-      MockBreakageStorage plugin = new MockBreakageStorage(
-          MockStorageEngineConfig.INSTANCE, bit.getContext(), name);
-      config.setEnabled(true);
-      ((StoragePluginRegistryImpl) pluginRegistry).addPluginToPersistentStoreIfAbsent(name, config, plugin);
+      MockBreakageStorage plugin;
+      try {
+        MockBreakageStorageEngineConfig config = MockBreakageStorageEngineConfig.INSTANCE;
+        config.setEnabled(true);
+        pluginRegistry.put(name, config);
+        plugin = (MockBreakageStorage) pluginRegistry.getPlugin(name);
+      } catch (ExecutionSetupException e) {
+        throw new IllegalStateException(e);
+      }
 
       plugin.setBreakRegister(breakRegisterSchema);
     }
   }
-
 }

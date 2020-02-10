@@ -29,9 +29,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @XmlRootElement
 public class PluginConfigWrapper {
 
-  private String name;
-  private StoragePluginConfig config;
-  private boolean exists;
+  private final String name;
+  private final StoragePluginConfig config;
+  private final boolean exists;
 
   @JsonCreator
   public PluginConfigWrapper(@JsonProperty("name") String name, @JsonProperty("config") StoragePluginConfig config) {
@@ -53,7 +53,7 @@ public class PluginConfigWrapper {
   }
 
   public void createOrUpdateInStorage(StoragePluginRegistry storage) throws ExecutionSetupException {
-    storage.createOrUpdate(name, config, true);
+    storage.put(name, config);
   }
 
   public boolean setEnabledInStorage(StoragePluginRegistry storage, boolean enabled) throws ExecutionSetupException {
@@ -70,7 +70,7 @@ public class PluginConfigWrapper {
 
   public boolean deleteFromStorage(StoragePluginRegistry storage) {
     if (exists) {
-      storage.deletePlugin(name);
+      storage.remove(name);
       return true;
     }
     return false;

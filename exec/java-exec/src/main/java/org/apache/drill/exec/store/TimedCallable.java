@@ -42,9 +42,13 @@ import org.apache.drill.shaded.guava.com.google.common.util.concurrent.MoreExecu
 import org.apache.drill.shaded.guava.com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
- * Class used to allow parallel executions of tasks in a simplified way. Also maintains and reports timings of task completion.
+ * Allows parallel executions of tasks in a simplified way. Also maintains and
+ * reports timings of task completion.
+ * <p>
  * TODO: look at switching to fork join.
- * @param <V> The time value that will be returned when the task is executed.
+ *
+ * @param <V>
+ *          The time value that will be returned when the task is executed.
  */
 public abstract class TimedCallable<V> implements Callable<V> {
   private static final Logger logger = LoggerFactory.getLogger(TimedCallable.class);

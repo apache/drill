@@ -74,7 +74,7 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
         "mysqlUser", "mysqlPass", false, null);
     jdbcStorageConfig.setEnabled(true);
 
-    cluster.defineStoragePlugin(ctx -> new JdbcStoragePlugin(jdbcStorageConfig, ctx, "mysql"));
+    cluster.defineStoragePlugin("mysql", jdbcStorageConfig);
 
     if (osName.startsWith("linux")) {
       // adds storage plugin with case insensitive table names
@@ -82,7 +82,7 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
           String.format("jdbc:mysql://localhost:%s/%s?useJDBCCompliantTimezoneShift=true", mysqlPort, mysqlDBName),
           "mysqlUser", "mysqlPass", true, null);
       jdbcCaseSensitiveStorageConfig.setEnabled(true);
-      cluster.defineStoragePlugin(ctx -> new JdbcStoragePlugin(jdbcCaseSensitiveStorageConfig, ctx, "mysqlCaseInsensitive"));
+      cluster.defineStoragePlugin("mysqlCaseInsensitive", jdbcCaseSensitiveStorageConfig);
     }
   }
 

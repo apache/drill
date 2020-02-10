@@ -46,9 +46,11 @@ public class TestImplicitFileColumns extends BaseTestQuery {
   public static final Path PARQUET_CHANGE_TBL = Paths.get("multilevel", "parquetWithSchemaChange");
   public static final Path CSV_TBL = Paths.get("multilevel", "csv");  // 1990/Q1/orders_1990_q1.csv, ..
 
+  @SuppressWarnings("serial")
   private static final JsonStringArrayList<Text> mainColumnValues = new JsonStringArrayList<Text>() {{
     add(new Text(MAIN));
   }};
+  @SuppressWarnings("serial")
   private static final JsonStringArrayList<Text> nestedColumnValues = new JsonStringArrayList<Text>() {{
     add(new Text(NESTED));
   }};

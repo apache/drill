@@ -63,8 +63,6 @@ public class TestHDF5Format extends ClusterTest {
     ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher);
     startCluster(builder);
 
-    HDF5FormatConfig formatConfig = new HDF5FormatConfig();
-    cluster.defineFormat("dfs", "hdf5", formatConfig);
     dirTestWatcher.copyResourceToRoot(Paths.get("hdf5/"));
   }
 

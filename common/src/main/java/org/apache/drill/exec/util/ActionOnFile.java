@@ -25,8 +25,11 @@ import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
- * It defines possible actions on the file and performs the necessary action
+ * Defines possible actions on the file and performs the necessary action
  */
 public enum ActionOnFile {
 
@@ -39,7 +42,8 @@ public enum ActionOnFile {
   },
 
   /**
-   * Rename the file by adding current timestamp value with "yyyyMMdd_HHmmss" format before last dot of original file name<p>
+   * Renames the file by adding current timestamp value with "yyyyMMdd_HHmmss"
+   * format before last dot of original file name<p>
    * Example:<br>
    * Original file name: "storage-plugins-override.conf"<br>
    * New file name: "storage-plugins-override-20180703_033354.conf"
@@ -63,7 +67,7 @@ public enum ActionOnFile {
   },
 
   /**
-   * It removes the file
+   * Removes the file
    */
   REMOVE {
     @Override
@@ -77,10 +81,10 @@ public enum ActionOnFile {
     }
   };
 
-  private static final org.slf4j.Logger logger =  org.slf4j.LoggerFactory.getLogger(ActionOnFile.class);
+  private static final Logger logger = LoggerFactory.getLogger(ActionOnFile.class);
 
   /**
-   * This is an action which should be performed on the file
+   * Action which should be performed on the file
    * @param url the file URL
    */
   public abstract void action(URL url);

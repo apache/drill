@@ -71,21 +71,24 @@ import org.apache.drill.exec.store.sys.store.DataChangeVersion;
 import org.apache.drill.exec.util.JarUtil;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * This class offers the registry for functions. Notably, in addition to Drill its functions
- * (in {@link LocalFunctionRegistry}), other PluggableFunctionRegistry (e.g., {@link org.apache.drill.exec.expr.fn.HiveFunctionRegistry})
- * is also registered in this class
+ * Registry for functions. Notably, in addition to Drill its functions (in
+ * {@link LocalFunctionRegistry}), other PluggableFunctionRegistry (e.g.,
+ * {@link org.apache.drill.exec.expr.fn.HiveFunctionRegistry}) is also
+ * registered in this class
  */
 public class FunctionImplementationRegistry implements FunctionLookupContext, AutoCloseable {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FunctionImplementationRegistry.class);
+  private static final Logger logger = LoggerFactory.getLogger(FunctionImplementationRegistry.class);
 
   private final LocalFunctionRegistry localFunctionRegistry;
   private final RemoteFunctionRegistry remoteFunctionRegistry;
   private final Path localUdfDir;
-  private boolean deleteTmpDir = false;
+  private boolean deleteTmpDir;
   private File tmpDir;
-  private List<PluggableFunctionRegistry> pluggableFuncRegistries = new ArrayList<>();
+  private final List<PluggableFunctionRegistry> pluggableFuncRegistries = new ArrayList<>();
   private OptionSet optionManager;
   private final boolean useDynamicUdfs;
 
@@ -109,7 +112,7 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
     // rather than a crash, we provide a boot-time option, set only by
     // tests, to disable DUDF lookup.
 
-    useDynamicUdfs = ! config.getBoolean(ExecConstants.UDF_DISABLE_DYNAMIC);
+    useDynamicUdfs = !config.getBoolean(ExecConstants.UDF_DISABLE_DYNAMIC);
     localFunctionRegistry = new LocalFunctionRegistry(classpathScan);
 
     Set<Class<? extends PluggableFunctionRegistry>> registryClasses =
@@ -623,5 +626,4 @@ public class FunctionImplementationRegistry implements FunctionLookupContext, Au
       FileUtils.deleteQuietly(new File(localDir, JarUtil.getSourceName(jarName)));
     }
   }
-
 }

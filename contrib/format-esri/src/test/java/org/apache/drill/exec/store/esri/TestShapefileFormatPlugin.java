@@ -43,8 +43,6 @@ public class TestShapefileFormatPlugin extends ClusterTest {
   public static void setup() throws Exception {
     ClusterTest.startCluster(ClusterFixture.builder(dirTestWatcher));
 
-    ShpFormatConfig formatConfig = new ShpFormatConfig();
-    cluster.defineFormat("dfs", "shp", formatConfig);
     dirTestWatcher.copyResourceToRoot(Paths.get("shapefiles/"));
   }
 

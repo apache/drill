@@ -67,7 +67,7 @@ public class PhysicalPlanReader {
         .addSerializer(MajorType.class, new MajorTypeSerDe.Se())
         .addDeserializer(MajorType.class, new MajorTypeSerDe.De())
         .addDeserializer(DynamicPojoRecordReader.class,
-            new StdDelegatingDeserializer<>(new DynamicPojoRecordReader.Converter(lpMapper)))
+            new StdDelegatingDeserializer<>(new DynamicPojoRecordReader.Converter<>(lpMapper)))
         .addSerializer(Path.class, new PathSerDe.Se());
 
     lpMapper.registerModule(serDeModule);
@@ -103,8 +103,10 @@ public class PhysicalPlanReader {
     if (op instanceof FragmentRoot) {
       return (FragmentRoot) op;
     } else {
-      throw new UnsupportedOperationException(String.format("The provided json fragment doesn't have a FragmentRoot " +
-          "as its root operator.  The operator was %s.", op.getClass().getCanonicalName()));
+      throw new UnsupportedOperationException(String.format(
+          "The provided json fragment doesn't have a FragmentRoot " +
+          "as its root operator. The operator was %s.",
+          op.getClass().getCanonicalName()));
     }
   }
 

@@ -66,7 +66,7 @@ public class JSONOptions {
   }
 
   @SuppressWarnings("unchecked")
-  public <T> T getWith(LogicalPlanPersistence lpPersistance, Class<T> c) {
+  public <T> T getWith(ObjectMapper mapper, Class<T> c) {
     try {
       if (opaque != null) {
         final Class<?> opaqueClass = opaque.getClass();
@@ -88,7 +88,7 @@ public class JSONOptions {
       }
 
       //logger.debug("Read tree {}", root);
-      return lpPersistance.getMapper().treeToValue(root, c);
+      return mapper.treeToValue(root, c);
     } catch (JsonProcessingException e) {
       throw new LogicalPlanParsingException(String.format("Failure while trying to convert late bound " +
         "json options to type of %s. Reference was originally located at line %d, column %d.",

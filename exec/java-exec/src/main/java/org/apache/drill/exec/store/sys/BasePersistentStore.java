@@ -26,5 +26,4 @@ public abstract class BasePersistentStore<V> implements PersistentStore<V> {
   public Iterator<Map.Entry<String, V>> getAll() {
     return getRange(0, Integer.MAX_VALUE);
   }
-
 }

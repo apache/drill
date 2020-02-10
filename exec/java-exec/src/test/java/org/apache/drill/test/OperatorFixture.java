@@ -62,6 +62,7 @@ import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.store.PartitionExplorer;
+import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 import org.apache.drill.exec.store.sys.store.provider.LocalPersistentStoreProvider;
 import org.apache.drill.exec.testing.ExecutionControls;
 import org.apache.drill.exec.work.filter.RuntimeFilterWritable;
@@ -72,6 +73,7 @@ import org.apache.drill.exec.physical.rowSet.IndirectRowSet;
 import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.physical.rowSet.RowSet.ExtendableRowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.security.UserGroupInformation;
 import java.util.concurrent.TimeUnit;
 
@@ -127,7 +129,8 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
         configBuilder.put(ExecConstants.SYS_STORE_PROVIDER_LOCAL_PATH, dirTestWatcher.getStoreDir().getAbsolutePath());
         configBuilder.put(ExecConstants.SPILL_DIRS, Lists.newArrayList(dirTestWatcher.getSpillDir().getAbsolutePath()));
         configBuilder.put(ExecConstants.HASHJOIN_SPILL_DIRS, Lists.newArrayList(dirTestWatcher.getSpillDir().getAbsolutePath()));
-        configBuilder.put(ExecConstants.UDF_DIRECTORY_ROOT, dirTestWatcher.getUdfDir().getAbsolutePath());
+        configBuilder.put(ExecConstants.UDF_DIRECTORY_ROOT, dirTestWatcher.getHomeDir().getAbsolutePath());
+        configBuilder.put(ExecConstants.UDF_DIRECTORY_FS, FileSystem.DEFAULT_FS);
       }
     }
 
@@ -350,7 +353,7 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
 
   private final SystemOptionManager options;
   private final MockFragmentContext context;
-  private LocalPersistentStoreProvider provider;
+  private PersistentStoreProvider provider;
 
   protected OperatorFixture(Builder builder) {
     config = builder.configBuilder().build();
@@ -358,21 +361,19 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
     options = createOptionManager();
     context = new MockFragmentContext(config, options, allocator, builder.scanExecutor, builder.scanDecoderExecutor);
     applySystemOptions(builder.systemOptions);
-   }
+  }
 
-   private void applySystemOptions(List<RuntimeOption> systemOptions) {
+  private void applySystemOptions(List<RuntimeOption> systemOptions) {
     for (RuntimeOption option : systemOptions) {
       options.setLocalOption(option.key, option.value);
     }
   }
 
-  public OptionManager getOptionManager()
-  {
+  public OptionManager getOptionManager() {
     return options;
   }
 
-  private SystemOptionManager createOptionManager()
-  {
+  private SystemOptionManager createOptionManager() {
     try {
       provider = new LocalPersistentStoreProvider(config);
       provider.start();
@@ -389,7 +390,7 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
     }
 
     return options;
-   }
+  }
 
   public FragmentContext getFragmentContext() { return context; }
 

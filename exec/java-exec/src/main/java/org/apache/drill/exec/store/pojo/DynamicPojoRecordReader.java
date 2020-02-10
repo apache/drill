@@ -98,8 +98,7 @@ public class DynamicPojoRecordReader<T> extends AbstractPojoRecordReader<List<T>
 
     private final ObjectMapper mapper;
 
-    public Converter(ObjectMapper mapper)
-    {
+    public Converter(ObjectMapper mapper) {
       this.mapper = mapper;
     }
 

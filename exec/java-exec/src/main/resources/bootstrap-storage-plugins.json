@@ -110,7 +110,13 @@
           "type" : "json",
           "extensions" : [ "json" ]
         },
-        "avro" : {
+        "pcap" : {
+          "type" : "pcap"
+        },
+        "pcapng" : {
+          "type" : "pcapng"
+        },
+       "avro" : {
           "type" : "avro"
         },
         "sequencefile" : {
@@ -143,6 +149,12 @@
         "json" : {
           "type" : "json",
           "extensions" : [ "json" ]
+        },
+        "pcap" : {
+          "type" : "pcap"
+        },
+        "pcapng" : {
+          "type" : "pcapng"
         },
         "parquet" : {
           "type" : "parquet"

@@ -32,6 +32,8 @@ import org.apache.drill.exec.store.sys.store.provider.InMemoryStoreProvider;
 import org.apache.drill.exec.util.AssertionUtil;
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -43,36 +45,43 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 /**
- *  <p> {@link OptionManager} that holds options within {@link org.apache.drill.exec.server.DrillbitContext}.
- * Only one instance of this class exists per drillbit. Options set at the system level affect the entire system and
- * persist between restarts.
- *  </p>
- *
- *  <p> All the system options are externalized into conf file. While adding a new system option
- *  a validator should be added and the default value for the option should be set in
- *  the conf files(example : drill-module.conf) under the namespace drill.exec.options.
- *  </p>
- *
- *  <p>
- *  The SystemOptionManager loads all the validators and the default values for the options are
- *  fetched from the config. The validators are populated with the default values fetched from
- *  the config. If the option is not set in the conf files config option is missing exception
- *  will be thrown.
- *  </p>
- *
- *  <p>
- *  If the option is set using ALTER, the value that is set will be returned. Else the default value
- *  that is loaded into validator from the config will be returned.
- *  </p>
+ * <p>
+ * {@link OptionManager} that holds options within
+ * {@link org.apache.drill.exec.server.DrillbitContext}. Only one instance of
+ * this class exists per drillbit. Options set at the system level affect the
+ * entire system and persist between restarts.
+ * </p>
+ * <p>
+ * All the system options are externalized into conf file. While adding a new
+ * system option a validator should be added and the default value for the
+ * option should be set in the conf files(example : drill-module.conf) under the
+ * namespace drill.exec.options.
+ * </p>
+ * <p>
+ * The SystemOptionManager loads all the validators and the default values for
+ * the options are fetched from the config. The validators are populated with
+ * the default values fetched from the config. If the option is not set in the
+ * conf files config option is missing exception will be thrown.
+ * </p>
+ * <p>
+ * If the option is set using ALTER, the value that is set will be returned.
+ * Else the default value that is loaded into validator from the config will be
+ * returned.
+ * </p>
  */
 public class SystemOptionManager extends BaseOptionManager implements AutoCloseable {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SystemOptionManager.class);
+  private static final Logger logger = LoggerFactory.getLogger(SystemOptionManager.class);
 
   /**
-   * Creates all the OptionDefinitions to be registered with the {@link SystemOptionManager}.
+   * Creates the {@code OptionDefinitions} to be registered with the {@link SystemOptionManager}.
    * @return A map
    */
   public static CaseInsensitiveMap<OptionDefinition> createDefaultOptionDefinitions() {
+    // The deprecation says not to use the option in code. But, for backward
+    // compatibility, we need to keep the old options in the table to avoid
+    // failures if users reference the options. So, ignore deprecation warnings
+    // here.
+    @SuppressWarnings("deprecation")
     final OptionDefinition[] definitions = new OptionDefinition[]{
       new OptionDefinition(PlannerSettings.CONSTANT_FOLDING),
       new OptionDefinition(PlannerSettings.EXCHANGE),
@@ -332,8 +341,8 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
    * NOTE: CRUD operations must use lowercase keys.
    */
   private PersistentStore<PersistedOptionValue> options;
-  private CaseInsensitiveMap<OptionDefinition> definitions;
-  private CaseInsensitiveMap<OptionValue> defaults;
+  private final CaseInsensitiveMap<OptionDefinition> definitions;
+  private final CaseInsensitiveMap<OptionValue> defaults;
 
   public SystemOptionManager(LogicalPlanPersistence lpPersistence, final PersistentStoreProvider provider,
                              final DrillConfig bootConfig) {
@@ -355,7 +364,6 @@ public class SystemOptionManager extends BaseOptionManager implements AutoClosea
    *
    * @param bootConfig Drill config
    */
-
   @VisibleForTesting
   public SystemOptionManager(final DrillConfig bootConfig) {
     this.provider = new InMemoryStoreProvider(100);

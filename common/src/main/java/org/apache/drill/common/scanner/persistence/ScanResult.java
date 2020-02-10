@@ -41,12 +41,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 import org.apache.drill.shaded.guava.com.google.common.collect.HashMultimap;
 import org.apache.drill.shaded.guava.com.google.common.collect.Multimap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The root doc of the scan result
  */
 public final class ScanResult {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScanResult.class);
+  private static final Logger logger = LoggerFactory.getLogger(ScanResult.class);
 
   private final List<String> scannedPackages;
   private final Set<String> scannedClasses;
@@ -126,7 +128,7 @@ public final class ScanResult {
   }
 
   /**
-   * This will load all the scanned classes for this parent as a side effect
+   * Loads all the scanned classes for this parent as a side effect
    * @param c the parent
    * @return all the classes found
    */
@@ -153,7 +155,6 @@ public final class ScanResult {
               result.size(), c.getName(), watch.elapsed(MILLISECONDS)));
     }
   }
-
 
   /**
    * @param c the annotation class name
@@ -209,5 +210,4 @@ public final class ScanResult {
         merge(annotatedClasses, other.annotatedClasses),
         newImplementations);
   }
-
 }

@@ -25,9 +25,21 @@ import java.io.IOException;
 
 public class MockBreakageStorage extends MockStorageEngine {
 
+  /**
+   * Each storage plugin requires a unique config class to allow
+   * config --> impl lookups to be unique.
+   */
+  public static class MockBreakageStorageEngineConfig extends MockStorageEngineConfig {
+    public static final MockBreakageStorageEngineConfig INSTANCE = new MockBreakageStorageEngineConfig("mock:///");
+
+    public MockBreakageStorageEngineConfig(String url) {
+      super(url);
+    }
+  }
+
   private boolean breakRegister;
 
-  public MockBreakageStorage(MockStorageEngineConfig configuration, DrillbitContext context, String name) {
+  public MockBreakageStorage(MockBreakageStorageEngineConfig configuration, DrillbitContext context, String name) {
     super(configuration, context, name);
     breakRegister = false;
   }
@@ -43,5 +55,4 @@ public class MockBreakageStorage extends MockStorageEngine {
     }
     super.registerSchemas(schemaConfig, parent);
   }
-
 }

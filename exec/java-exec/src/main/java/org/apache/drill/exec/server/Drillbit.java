@@ -104,7 +104,7 @@ public class Drillbit implements AutoCloseable {
   private final BootStrapContext context;
   private final WebServer webServer;
   private final int gracePeriod;
-  private DrillbitStateManager stateManager;
+  private final DrillbitStateManager stateManager;
   private GracefulShutdownThread gracefulShutdownThread;
   private Thread shutdownHook;
 
@@ -241,8 +241,8 @@ public class Drillbit implements AutoCloseable {
     logger.info("Startup completed ({} ms).", w.elapsed(TimeUnit.MILLISECONDS));
   }
 
-  /*
-    Wait uninterruptibly
+  /**
+   * Wait uninterruptibly
    */
   private void waitForGracePeriod() {
     ExtendedLatch exitLatch = new ExtendedLatch();
@@ -255,16 +255,15 @@ public class Drillbit implements AutoCloseable {
     }
   }
 
-  /*
-
-   */
   public void shutdown() {
     this.close();
   }
- /*
-  The drillbit is moved into Quiescent state and the drillbit waits for grace period amount of time.
-  Then drillbit moves into draining state and waits for all the queries and fragments to complete.
-  */
+
+  /**
+   * The drillbit is moved into Quiescent state and the drillbit waits for grace
+   * period amount of time. Then drillbit moves into draining state and waits
+   * for all the queries and fragments to complete.
+   */
   @Override
   public synchronized void close() {
     if (!stateManager.getState().equals(DrillbitState.ONLINE)) {
@@ -332,7 +331,6 @@ public class Drillbit implements AutoCloseable {
     if (interruptPollShutdown) {
       gracefulShutdownThread.interrupt();
     }
-
   }
 
   private void javaPropertiesToSystemOptions() {

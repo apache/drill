@@ -72,7 +72,5 @@ public class Scan extends SourceOperator {
     public Scan build() {
       return new Scan(storageEngine, selection);
     }
-
   }
-
 }

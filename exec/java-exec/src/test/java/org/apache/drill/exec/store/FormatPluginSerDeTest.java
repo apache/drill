@@ -135,6 +135,4 @@ public class FormatPluginSerDeTest extends PlanTestBase {
       PlanTestBase.testPhysicalPlanExecutionBasedOnQuery(query);
     }
   }
-
 }
-

@@ -63,7 +63,7 @@ public class InfoSchemaStoragePlugin extends AbstractStoragePlugin {
 
   @Override
   public InfoSchemaGroupScan getPhysicalScan(String userName, JSONOptions selection, List<SchemaPath> columns) {
-    InfoSchemaTableType table = selection.getWith(getContext().getLpPersistence(),  InfoSchemaTableType.class);
+    InfoSchemaTableType table = selection.getWith(getContext().getLpPersistence().getMapper(),  InfoSchemaTableType.class);
     return new InfoSchemaGroupScan(table);
   }
 

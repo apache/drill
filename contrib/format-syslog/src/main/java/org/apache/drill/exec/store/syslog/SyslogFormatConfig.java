@@ -47,7 +47,7 @@ public class SyslogFormatConfig implements FormatPluginConfig {
     return extensions;
   }
 
-  public void setExtensions(List ext) {
+  public void setExtensions(List<String> ext) {
     this.extensions = ext;
   }
 

@@ -17,33 +17,26 @@
  */
 package org.apache.drill.common.config;
 
-public final class ConfigConstants {
+public interface ConfigConstants {
 
   /** Default (base) configuration file name.  (Classpath resource pathname.) */
-  public static final String CONFIG_DEFAULT_RESOURCE_PATHNAME = "drill-default.conf";
+  String CONFIG_DEFAULT_RESOURCE_PATHNAME = "drill-default.conf";
 
   /** Module configuration files name.  (Classpath resource pathname.) */
-  public static final String DRILL_JAR_MARKER_FILE_RESOURCE_PATHNAME = "drill-module.conf";
+  String DRILL_JAR_MARKER_FILE_RESOURCE_PATHNAME = "drill-module.conf";
 
   /** Distribution Specific Override configuration file name.  (Classpath resource pathname.) */
-  public static final String CONFIG_DISTRIBUTION_RESOURCE_PATHNAME = "drill-distrib.conf";
+  String CONFIG_DISTRIBUTION_RESOURCE_PATHNAME = "drill-distrib.conf";
 
   /** Override configuration file name.  (Classpath resource pathname.) */
-  public static final String CONFIG_OVERRIDE_RESOURCE_PATHNAME = "drill-override.conf";
-
-  /** Override plugins configs file name.  (Classpath resource pathname.) */
-  public static final String STORAGE_PLUGINS_OVERRIDE_CONF = "storage-plugins-override.conf";
+  String CONFIG_OVERRIDE_RESOURCE_PATHNAME = "drill-override.conf";
 
   /** Default RM configuration file name. (Classpath resource pathname.) */
-  public static final String RM_CONFIG_DEFAULT_RESOURCE_PATHNAME = "drill-rm-default.conf";
+  String RM_CONFIG_DEFAULT_RESOURCE_PATHNAME = "drill-rm-default.conf";
 
   /** Distribution Specific RM Override configuration file name.  (Classpath resource pathname.) */
-  public static final String RM_CONFIG_DISTRIBUTION_RESOURCE_PATHNAME = "drill-rm-distrib.conf";
+  String RM_CONFIG_DISTRIBUTION_RESOURCE_PATHNAME = "drill-rm-distrib.conf";
 
   /** RM Override configuration file name. (Classpath resource pathname.) */
-  public static final String RM_CONFIG_OVERRIDE_RESOURCE_PATHNAME = "drill-rm-override.conf";
-
-  // suppress default constructor
-  private ConfigConstants() {
-  }
+  String RM_CONFIG_OVERRIDE_RESOURCE_PATHNAME = "drill-rm-override.conf";
 }

@@ -22,6 +22,7 @@ import io.netty.channel.EventLoopGroup;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.common.scanner.persistence.ScanResult;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.compile.CodeCompiler;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
@@ -109,8 +110,8 @@ public class DrillbitContext implements AutoCloseable {
     DrillConfig config = context.getConfig();
     lpPersistence = new LogicalPlanPersistence(config, classpathScan);
 
-    storagePlugins = config
-        .getInstance(StoragePluginRegistry.STORAGE_PLUGIN_REGISTRY_IMPL, StoragePluginRegistry.class, this);
+    storagePlugins = config.getInstance(
+        ExecConstants.STORAGE_PLUGIN_REGISTRY_IMPL, StoragePluginRegistry.class, this);
 
     reader = new PhysicalPlanReader(config, classpathScan, lpPersistence, endpoint, storagePlugins);
     operatorCreatorRegistry = new OperatorCreatorRegistry(classpathScan);

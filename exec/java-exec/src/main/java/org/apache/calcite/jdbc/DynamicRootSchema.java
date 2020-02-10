@@ -32,20 +32,22 @@ import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.StoragePlugin;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.SubSchemaWrapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * This class is to allow us loading schemas from storage plugins later when {@link #getSubSchema(String, boolean)}
+ * Loads schemas from storage plugins later when {@link #getSubSchema(String, boolean)}
  * is called.
  */
 public class DynamicRootSchema extends DynamicSchema {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DynamicRootSchema.class);
+  private static final Logger logger = LoggerFactory.getLogger(DynamicRootSchema.class);
 
-  private SchemaConfig schemaConfig;
-  private StoragePluginRegistry storages;
+  private final SchemaConfig schemaConfig;
+  private final StoragePluginRegistry storages;
 
   /** Creates a root schema. */
   DynamicRootSchema(StoragePluginRegistry storages, SchemaConfig schemaConfig) {

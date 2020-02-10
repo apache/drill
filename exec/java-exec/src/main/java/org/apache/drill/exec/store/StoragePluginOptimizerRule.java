@@ -26,5 +26,4 @@ public abstract class StoragePluginOptimizerRule extends RelOptRule {
   public StoragePluginOptimizerRule(RelOptRuleOperand operand, String description) {
     super(operand, DrillRelFactories.LOGICAL_BUILDER, description);
   }
-
 }

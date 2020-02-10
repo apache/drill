@@ -123,7 +123,7 @@ public class BaseTestHiveImpersonation extends BaseTestImpersonation {
   }
 
   protected static void addHiveStoragePlugin(final Map<String, String> hiveConfig) throws Exception {
-    getDrillbitContext().getStorage().createOrUpdate(hivePluginName, createHiveStoragePlugin(hiveConfig), true);
+    getDrillbitContext().getStorage().put(hivePluginName, createHiveStoragePlugin(hiveConfig));
   }
 
   protected void showTablesHelper(final String db, List<String> expectedTables) throws Exception {

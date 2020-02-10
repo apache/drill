@@ -23,7 +23,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 public abstract class StoragePluginConfig {
-
   private Boolean enabled;
 
   /**
@@ -34,7 +33,6 @@ public abstract class StoragePluginConfig {
   public boolean isEnabled() {
     return enabled != null && enabled;
   }
-
 
   public void setEnabled(Boolean enabled) {
     this.enabled = enabled;

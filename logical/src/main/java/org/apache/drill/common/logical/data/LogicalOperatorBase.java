@@ -20,11 +20,9 @@ package org.apache.drill.common.logical.data;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.drill.common.graph.GraphVisitor;
 import org.apache.drill.common.logical.ValidationError;
-import org.apache.drill.common.scanner.persistence.ScanResult;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -32,9 +30,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 
 public abstract class LogicalOperatorBase implements LogicalOperator{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LogicalOperatorBase.class);
 
-  private List<LogicalOperator> children = new ArrayList<LogicalOperator>();
+  private final List<LogicalOperator> children = new ArrayList<>();
 
   private String memo;
 
@@ -82,11 +79,5 @@ public abstract class LogicalOperatorBase implements LogicalOperator{
 
   public void setMemo(String memo) {
     this.memo = memo;
-  }
-
-  public static Set<Class<? extends LogicalOperator>> getSubTypes(final ScanResult classpathScan) {
-    final Set<Class<? extends LogicalOperator>> ops = classpathScan.getImplementations(LogicalOperator.class);
-    logger.debug("Found {} logical operator classes: {}.", ops.size(), ops);
-    return ops;
   }
 }

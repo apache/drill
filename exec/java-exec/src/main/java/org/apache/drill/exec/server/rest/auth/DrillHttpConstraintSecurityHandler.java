@@ -33,8 +33,9 @@ import static org.apache.drill.exec.server.rest.auth.DrillUserPrincipal.ADMIN_RO
 import static org.apache.drill.exec.server.rest.auth.DrillUserPrincipal.AUTHENTICATED_ROLE;
 
 /**
- * Accessor class that extends the ConstraintSecurityHandler to expose protected method's for start and stop of Handler.
- * This is needed since now {@link DrillHttpSecurityHandlerProvider} composes of 2 security handlers -
+ * Accessor class that extends the {@link ConstraintSecurityHandler} to expose
+ * protected method's for start and stop of Handler. This is needed since now
+ * {@code DrillHttpSecurityHandlerProvider} composes of 2 security handlers -
  * For FORM and SPNEGO and has responsibility to start/stop of those handlers.
  **/
 public abstract class DrillHttpConstraintSecurityHandler extends ConstraintSecurityHandler {

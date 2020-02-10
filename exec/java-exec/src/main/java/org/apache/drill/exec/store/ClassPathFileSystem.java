@@ -30,12 +30,13 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.util.Progressable;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.drill.shaded.guava.com.google.common.io.Resources;
 
 
-public class ClassPathFileSystem extends FileSystem{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ClassPathFileSystem.class);
+public class ClassPathFileSystem extends FileSystem {
+  static final Logger logger = LoggerFactory.getLogger(ClassPathFileSystem.class);
 
   static final String ERROR_MSG = "ClassPathFileSystem is read only.";
 
@@ -127,9 +128,5 @@ public class ClassPathFileSystem extends FileSystem{
   @Override
   public void setWorkingDirectory(Path arg0) {
     this.working = arg0;
-  }
-
-  public static void main(String[] args) throws Exception{
-    URI uri = new URI("classpath:///");
   }
 }

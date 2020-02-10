@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store;
 
+@SuppressWarnings("serial")
 public class PartitionNotFoundException extends Exception {
 
   public PartitionNotFoundException() { }
