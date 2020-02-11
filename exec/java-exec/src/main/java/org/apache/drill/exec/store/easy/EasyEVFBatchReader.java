@@ -18,6 +18,7 @@
 
 package org.apache.drill.exec.store.easy;
 
+import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
@@ -43,6 +44,10 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 
+
+/**
+ *
+ */
 public abstract class EasyEVFBatchReader implements ManagedReader<FileSchemaNegotiator> {
 
   private static final Logger logger = LoggerFactory.getLogger(EasyEVFBatchReader.class);
@@ -59,8 +64,6 @@ public abstract class EasyEVFBatchReader implements ManagedReader<FileSchemaNego
 
   public BufferedReader reader;
 
-  public EasyEVFBatchReader() {
-  }
 
   public RowSetLoader getRowWriter() {
     return rowWriter;
@@ -97,16 +100,9 @@ public abstract class EasyEVFBatchReader implements ManagedReader<FileSchemaNego
   @Override
   public void close() {
     try {
-      if (reader != null) {
-        reader.close();
-        reader = null;
-      }
-      if (fsStream != null) {
-        fsStream.close();
-        fsStream = null;
-      }
-    } catch (IOException e) {
-      logger.warn("Error closing batch Record Reader.");
+      AutoCloseables.close(reader, fsStream);
+    } catch (Exception e) {
+      logger.warn("Error closing LTSV Input Streams.");
     }
   }
 

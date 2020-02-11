@@ -61,7 +61,7 @@ public class TestLTSVRecordReader extends ClusterTest {
     ClusterTest.startCluster(ClusterFixture.builder(dirTestWatcher));
 
     LTSVFormatPluginConfig formatConfig = new LTSVFormatPluginConfig();
-    cluster.defineFormat("cp", "ltsv", formatConfig);
+    cluster.defineFormat("dfs", "ltsv", formatConfig);
 
     // Needed for compressed file unit test
     dirTestWatcher.copyResourceToRoot(Paths.get("ltsv/"));
@@ -69,7 +69,7 @@ public class TestLTSVRecordReader extends ClusterTest {
 
   @Test
   public void testWildcard() throws Exception {
-    String sql = "SELECT * FROM cp.`ltsv/simple.ltsv`";
+    String sql = "SELECT * FROM dfs.`ltsv/simple.ltsv`";
     QueryBuilder q = client.queryBuilder().sql(sql);
     RowSet results = q.rowSet();
 
@@ -96,7 +96,7 @@ public class TestLTSVRecordReader extends ClusterTest {
 
   @Test
   public void testSelectColumns() throws Exception {
-    String sql = "SELECT ua, reqtime FROM cp.`ltsv/simple.ltsv`";
+    String sql = "SELECT ua, reqtime FROM dfs.`ltsv/simple.ltsv`";
 
     QueryBuilder q = client.queryBuilder().sql(sql);
     RowSet results = q.rowSet();
@@ -116,7 +116,7 @@ public class TestLTSVRecordReader extends ClusterTest {
 
   @Test
   public void testQueryWithConditions() throws Exception {
-    String sql = "SELECT * FROM cp.`ltsv/simple.ltsv` WHERE reqtime > 3.0";
+    String sql = "SELECT * FROM dfs.`ltsv/simple.ltsv` WHERE reqtime > 3.0";
 
     QueryBuilder q = client.queryBuilder().sql(sql);
     RowSet results = q.rowSet();
@@ -142,13 +142,13 @@ public class TestLTSVRecordReader extends ClusterTest {
 
   @Test
   public void testSkipEmptyLines() throws Exception {
-    assertEquals(2, queryBuilder().sql("SELECT * FROM cp.`ltsv/emptylines.ltsv`").run().recordCount());
+    assertEquals(2, queryBuilder().sql("SELECT * FROM dfs.`ltsv/emptylines.ltsv`").run().recordCount());
   }
 
   @Test
   public void testReadException() throws Exception {
     try {
-      run("SELECT * FROM cp.`ltsv/invalid.ltsv`");
+      run("SELECT * FROM dfs.`ltsv/invalid.ltsv`");
       fail();
     } catch (UserException e) {
       assertEquals(UserBitShared.DrillPBError.ErrorType.DATA_READ, e.getErrorType());
@@ -158,7 +158,7 @@ public class TestLTSVRecordReader extends ClusterTest {
 
   @Test
   public void testSerDe() throws Exception {
-    String sql = "SELECT COUNT(*) as cnt FROM cp.`ltsv/simple.ltsv`";
+    String sql = "SELECT COUNT(*) as cnt FROM dfs.`ltsv/simple.ltsv`";
     String plan = queryBuilder().sql(sql).explainJson();
     long cnt = queryBuilder().physical(plan).singletonLong();
     assertEquals("Counts should match",2L, cnt);
@@ -185,6 +185,27 @@ public class TestLTSVRecordReader extends ClusterTest {
 
     new RowSetComparison(expected).verifyAndClearAll(results);
   }
+
+  /*@Test
+  public void testInlineSchema() throws Exception {
+    String sql = "SELECT ua, reqtime FROM table(dfs.`ltsv/simple.ltsv` (type=> 'ltsv', schema => 'inline(ua varchar not null, reqtime varchar not null)'))";
+
+    QueryBuilder q = client.queryBuilder().sql(sql);
+    RowSet results = q.rowSet();
+
+    results.print();
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("ua",  TypeProtos.MinorType.VARCHAR)
+      .addNullable("reqtime",  TypeProtos.MinorType.VARCHAR)
+      .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow("Java/1.8.0_131", "2.532")
+      .addRow("Java/1.8.0_201", "3.580")
+      .build();
+
+    new RowSetComparison(expected).verifyAndClearAll(results);
+  }*/
 
   private void generateCompressedFile(String fileName, String codecName, String outFileName) throws IOException {
     FileSystem fs = ExecTest.getLocalFileSystem();

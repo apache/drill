@@ -32,9 +32,9 @@ public class LTSVRecordIterator implements Iterator {
 
   private static final Logger logger = LoggerFactory.getLogger(LTSVRecordIterator.class);
 
-  private RowSetLoader rowWriter;
+  private final RowSetLoader rowWriter;
 
-  private BufferedReader reader;
+  private final BufferedReader reader;
 
   private String line;
 
@@ -49,8 +49,8 @@ public class LTSVRecordIterator implements Iterator {
       line = reader.readLine();
     } catch (IOException e) {
       throw UserException
-        .dataReadError()
-        .message("Error reading LTSV Data: {}", e.getMessage())
+        .dataReadError(e)
+        .message("Error reading LTSV Data: %s", e.getMessage())
         .build(logger);
     }
   }
@@ -70,7 +70,7 @@ public class LTSVRecordIterator implements Iterator {
       } catch (IOException e) {
         throw UserException
           .dataReadError()
-          .message("Error reading LTSV Data: {}", e.getMessage())
+          .message("Error reading LTSV Data: %s", e.getMessage())
           .build(logger);
       }
       return Boolean.TRUE;
@@ -93,7 +93,7 @@ public class LTSVRecordIterator implements Iterator {
     } catch (IOException e) {
       throw UserException
         .dataReadError()
-        .message("Error reading LTSV Data: {}", e.getMessage())
+        .message("Error reading LTSV Data: %s", e.getMessage())
         .build(logger);
     }
     return Boolean.TRUE;
