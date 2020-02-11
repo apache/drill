@@ -245,6 +245,7 @@ public final class ExecConstants {
   public static final String AUTHENTICATION_MECHANISMS = "drill.exec.security.auth.mechanisms";
   public static final String USER_AUTHENTICATION_ENABLED = "drill.exec.security.user.auth.enabled";
   public static final String USER_AUTHENTICATOR_IMPL = "drill.exec.security.user.auth.impl";
+  public static final String HTPASSWD_AUTHENTICATOR_PATH = "drill.exec.security.user.auth.htpasswd.path";
   public static final String PAM_AUTHENTICATOR_PROFILES = "drill.exec.security.user.auth.pam_profiles";
   public static final String BIT_AUTHENTICATION_ENABLED = "drill.exec.security.bit.auth.enabled";
   public static final String BIT_AUTHENTICATION_MECHANISM = "drill.exec.security.bit.auth.mechanism";
