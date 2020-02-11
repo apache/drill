@@ -555,12 +555,12 @@
   <pluginRepositories>
     <pluginRepository>
       <id>onejar-maven-plugin.googlecode.com</id>
-      <url>http://onejar-maven-plugin.googlecode.com/svn/mavenrepo</url>
+      <url>https://onejar-maven-plugin.googlecode.com/svn/mavenrepo</url>
     </pluginRepository>
     <pluginRepository>
       <id>scala-tools.org</id>
       <name>Scala-tools Maven2 Repository</name>
-      <url>http://scala-tools.org/repo-releases</url>
+      <url>https://scala-tools.org/repo-releases</url>
       <snapshots>
         <enabled>true</enabled>
       </snapshots>
