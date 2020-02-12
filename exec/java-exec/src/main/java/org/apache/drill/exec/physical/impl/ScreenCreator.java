@@ -123,7 +123,7 @@ public class ScreenCreator implements RootCreator<Screen> {
 
           return true;
         default:
-          throw new UnsupportedOperationException();
+          throw new UnsupportedOperationException(outcome.name());
       }
     }
 

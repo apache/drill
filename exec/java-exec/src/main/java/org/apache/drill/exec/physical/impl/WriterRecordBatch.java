@@ -53,12 +53,14 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
   private final String fragmentUniqueId;
   private BatchSchema schema;
 
-  public WriterRecordBatch(Writer writer, RecordBatch incoming, FragmentContext context, RecordWriter recordWriter) throws OutOfMemoryException {
+  public WriterRecordBatch(Writer writer, RecordBatch incoming, FragmentContext context,
+      RecordWriter recordWriter) throws OutOfMemoryException {
     super(writer, context, false);
     this.incoming = incoming;
 
     final FragmentHandle handle = context.getHandle();
-    fragmentUniqueId = String.format("%d_%d", handle.getMajorFragmentId(), handle.getMinorFragmentId());
+    fragmentUniqueId = String.format(
+        "%d_%d", handle.getMajorFragmentId(), handle.getMinorFragmentId());
     this.recordWriter = recordWriter;
   }
 
@@ -111,9 +113,8 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
           try {
             counter += eventBasedRecordWriter.write(incoming.getRecordCount());
           } catch (IOException e) {
-            // TODO: Better handled inside the write() method.
             throw UserException.dataWriteError(e)
-              .addContext("Failure when writing the record count")
+              .addContext("Failure when writing the batch")
               .build(logger);
           }
           logger.debug("Total records written so far: {}", counter);
@@ -161,9 +162,8 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
       try {
         recordWriter.updateSchema(incoming);
       } catch (IOException e) {
-        // TODO: This is better handled inside updateSchema()
         throw UserException.dataWriteError(e)
-          .addContext("Failure updating the statistics record writer schema")
+          .addContext("Failure updating record writer schema")
           .build(logger);
       }
       // Create two vectors for:

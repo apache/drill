@@ -52,6 +52,9 @@ public interface RootExec extends AutoCloseable {
   /**
    * Dump failed batches' state preceded by its parent's state to logs. Invoked
    * when there is a failure during fragment execution.
+   *
+   * @param t the exception thrown by an operator and which therefore
+   * records, in its stack trace, which operators were active on the stack
    */
   void dumpBatches(Throwable t);
 }

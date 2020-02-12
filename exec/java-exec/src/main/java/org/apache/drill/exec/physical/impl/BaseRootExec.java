@@ -204,7 +204,7 @@ public abstract class BaseRootExec implements RootExec {
     for (int i = dag.size() - 1; i >= 0; i--) {
       T leaf = dag.get(i);
       String opName = leaf.getClass().getName();
-      for(StackTraceElement element : trace) {
+      for (StackTraceElement element : trace) {
         String frameName = element.getClassName();
         if (frameName.contentEquals(opName)) {
           return leaf;

@@ -111,9 +111,8 @@ public class StatisticsWriterRecordBatch extends AbstractRecordBatch<Writer> {
           try {
             counter += statsRecordWriterImpl.writeStatistics(incoming.getRecordCount());
           } catch (IOException e) {
-            // TODO: Better handled inside the write() method.
             throw UserException.dataWriteError(e)
-              .addContext("Failure when writing the record count")
+              .addContext("Failure when writing statistics")
               .build(logger);
           }
           logger.debug("Total records written so far: {}", counter);
@@ -166,14 +165,7 @@ public class StatisticsWriterRecordBatch extends AbstractRecordBatch<Writer> {
     try {
       // update the schema in RecordWriter
       stats.startSetup();
-      try {
-        recordWriter.updateSchema(incoming);
-      } catch (IOException e) {
-        // TODO: This is better handled inside updateSchema()
-        throw UserException.dataWriteError(e)
-          .addContext("Failure updating the statistics record writer schema")
-          .build(logger);
-      }
+      recordWriter.updateSchema(incoming);
       // Create two vectors for:
       //   1. Fragment unique id.
       //   2. Summary: currently contains number of records written.
@@ -210,22 +202,9 @@ public class StatisticsWriterRecordBatch extends AbstractRecordBatch<Writer> {
       return;
     }
 
-    try {
-      //Perform any cleanup prior to closing the writer
-      recordWriter.cleanup();
-    } catch(IOException ex) {
-      context.getExecutorState().fail(ex);
-    } finally {
-      try {
-        if (!processed) {
-          recordWriter.abort();
-        }
-      } catch (IOException e) {
-        logger.error("Abort failed. There could be leftover output files.", e);
-      } finally {
-        recordWriter = null;
-      }
-    }
+    //Perform any cleanup prior to closing the writer
+    recordWriter.cleanup();
+    recordWriter = null;
   }
 
   @Override

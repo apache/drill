@@ -208,8 +208,6 @@ public class RuntimeFilterRecordBatch extends AbstractSingleRecordBatch<RuntimeF
    * incoming batch records and creates an SV2 to store indexes which passes the
    * filter condition. In case when RuntimeFilter is not available it just pass
    * through all the records from incoming batch to downstream.
-   *
-   * @throws SchemaChangeException
    */
   private void applyRuntimeFilter() {
     if (originalRecordCount <= 0) {

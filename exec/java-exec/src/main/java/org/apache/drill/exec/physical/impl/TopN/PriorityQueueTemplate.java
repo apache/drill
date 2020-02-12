@@ -42,6 +42,14 @@ import org.slf4j.LoggerFactory;
 public abstract class PriorityQueueTemplate implements PriorityQueue {
   private static final Logger logger = LoggerFactory.getLogger(PriorityQueueTemplate.class);
 
+  /**
+   * The estimated maximum queue size used with allocating the SV4
+   * for the queue. If the queue is larger, then a) we should probably
+   * be using a sort instead of top N, and b) the code will automatically
+   * grow the SV4 as needed up to the max supported size.
+   */
+  public static final int EST_MAX_QUEUE_SIZE = 4000;
+
   // This holds the min heap of the record indexes. Heapify condition is based on actual record though. Only records
   // meeting the heap condition have their indexes in this heap. Actual record are stored inside the hyperBatch. Since
   // hyperBatch contains ValueVectors from all the incoming batches, the indexes here consider both BatchNumber and
@@ -143,7 +151,7 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
   public void generate() {
     Stopwatch watch = Stopwatch.createStarted();
     final DrillBuf drillBuf = allocator.buffer(4 * queueSize);
-    finalSv4 = new SelectionVector4(drillBuf, queueSize, 4000);
+    finalSv4 = new SelectionVector4(drillBuf, queueSize, EST_MAX_QUEUE_SIZE);
     for (int i = queueSize - 1; i >= 0; i--) {
       finalSv4.set(i, pop());
     }

@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -219,15 +220,8 @@ public class ScanBatch implements CloseableRecordBatch {
   }
 
   private void closeCurrentReader() {
-    try {
-      if (currentReader != null) {
-        currentReader.close();
-      }
-    } catch (Exception e) {
-      logger.warn("Failure on closing reader: {}", e.getMessage());
-    } finally {
-      currentReader = null;
-    }
+    AutoCloseables.closeSilently(currentReader);
+    currentReader = null;
   }
 
   private IterOutcome internalNext() {

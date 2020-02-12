@@ -83,21 +83,16 @@ public class StatisticsRecordWriterImpl {
     }
   }
 
-  private void initFieldWriters() throws IOException {
+  private void initFieldWriters() {
     fieldConverters = Lists.newArrayList();
-    try {
-      int fieldId = 0;
-      for (VectorWrapper w : batch) {
-        if (w.getField().getName().equalsIgnoreCase(WriterPrel.PARTITION_COMPARATOR_FIELD)) {
-          continue;
-        }
-        FieldReader reader = w.getValueVector().getReader();
-        FieldConverter converter = getConverter(recordWriter, fieldId++, w.getField().getName(), reader);
-        fieldConverters.add(converter);
+    int fieldId = 0;
+    for (VectorWrapper<?> w : batch) {
+      if (w.getField().getName().equalsIgnoreCase(WriterPrel.PARTITION_COMPARATOR_FIELD)) {
+        continue;
       }
-    } catch(Exception e) {
-      logger.error("Failed to create FieldWriter.", e);
-      throw new IOException("Failed to initialize FieldWriters.", e);
+      FieldReader reader = w.getValueVector().getReader();
+      FieldConverter converter = getConverter(recordWriter, fieldId++, w.getField().getName(), reader);
+      fieldConverters.add(converter);
     }
   }
 
@@ -114,10 +109,13 @@ public class StatisticsRecordWriterImpl {
           return recordWriter.getNewNullable${minor.class}Converter(fieldId, fieldName, reader);
         case REPEATED:
           return recordWriter.getNewRepeated${minor.class}Converter(fieldId, fieldName, reader);
+        default:
+          throw new UnsupportedOperationException();
       }
       </#list>
       </#list>
+      default:
+        throw new UnsupportedOperationException();
     }
-    throw new UnsupportedOperationException();
   }
 }
