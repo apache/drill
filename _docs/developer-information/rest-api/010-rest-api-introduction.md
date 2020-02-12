@@ -487,7 +487,7 @@ If drill has authentication enabled, you will have to supply credentials when yo
 
 ### Basic authentication
 
-Apache Drill versions 1.18 and higher support HTTP's "Basic" authentication system, sendind the username & password in the `Authorization` header, encoded to base64 and joined using `:`.
+Apache Drill versions 1.18 and higher support HTTP's "Basic" authentication system, sending the username & password in the `Authorization` header, encoded to base64 and joined using `:`.
 
 Basic authentication support is controlled using `drill-override.conf`.  Add the string `"BASIC"` to `http.auth.mechanisms`.  Note that if the field is not currently set, it defaults to having `"FORM"` in it, so you probably want to include `"FORM"` if you set this field, so that Web UI users can still use the login form.
 
