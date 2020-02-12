@@ -481,4 +481,71 @@ Enclose option values of kind STRING in double quotation marks.
 
  -->
 
+## Authenticating REST API requests
+
+If drill has authentication enabled, you will have to supply credentials when you use the REST API.
+
+### Basic authentication
+
+Apache Drill versions 1.18 and higher support HTTP's "Basic" authentication system, sendind the username & password in the `Authorization` header, encoded to base64 and joined using `:`.
+
+Basic authentication support is controlled using `drill-override.conf`.  Add the string `"BASIC"` to `http.auth.mechanisms`.  Note that if the field is not currently set, it defaults to having `"FORM"` in it, so you probably want to include `"FORM"` if you set this field, so that Web UI users can still use the login form.
+
+Example:
+
+```
+http: {
+    enabled: true,
+    auth: {
+        # Http Auth mechanisms to configure. If not provided but user.auth is enabled
+        # then default value is ["FORM"].
+        mechanisms: ["BASIC", "FORM"]
+    }
+}
+```
+
+To authenticate requests using Basic authentication, send the appropriate `Authorization` header with each request using your HTTP client's options:
+
+    curl -kv \
+           -u drilluser:drillpassword  \
+           -X POST \
+           -H "Content-Type: application/json" \
+           -d '{"queryType":"SQL", "query": "select * from sys.version"}' \
+           http://localhost:8047/query.json
+
+### Form based authentication
+
+Form based authentication is enabled or disabled using `drill-override.conf`.  Add the string `"FORM"` to `http.auth.mechanisms` if it is set.  If `http.auth.mechanisms` is not set, `"FORM"` is enabled by default.
+
+Example:
+
+```
+http: {
+    enabled: true,
+    auth: {
+        # Http Auth mechanisms to configure. If not provided but user.auth is enabled
+        # then default value is ["FORM"].
+        mechanisms: ["BASIC", "FORM"]
+    }
+}
+```
+
+To authenticate requests using form-based authentication, you must use an HTTP client that saves cookies between requests.  Simulate a form submission to the same URL used in the Web UI / Console (`/j_security_check`)
+
+    curl -X POST \
+        -H "Content-Type: application/x-www-form-urlencoded" \
+        -k -c cookies.txt -s \
+        -d "j_username=drilluser" \
+        -d "j_password=drillpassword" \
+        http://localhost:8047/j_security_check
+
+
+In subsequent requests, use the cookie returned from that request:
+
+    curl -kv \
+           -b cookies.txt  \
+           -X POST \
+           -H "Content-Type: application/json" \
+           -d '{"queryType":"SQL", "query": "select * from sys.version"}' \
+           http://localhost:8047/query.json
 
