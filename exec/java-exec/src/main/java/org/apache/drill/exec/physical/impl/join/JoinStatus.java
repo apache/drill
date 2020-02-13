@@ -27,7 +27,6 @@ import org.apache.calcite.rel.core.JoinRelType;
  * Maintain join state.
  */
 public final class JoinStatus {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JoinStatus.class);
 
   public final RecordIterator left;
   public final RecordIterator right;
@@ -142,10 +141,6 @@ public final class JoinStatus {
    *  4. JoinOutcome.SCHEMA_CHANGED : one of the side has change in schema.
    */
   public JoinOutcome getOutcome() {
-    // on STOP, OUT_OF_MEMORY return FAILURE.
-    if (!ok || eitherMatches(IterOutcome.STOP)) {
-      return JoinOutcome.FAILURE;
-    }
     if (hasMoreData) {
       return JoinOutcome.BATCH_RETURNED;
     }

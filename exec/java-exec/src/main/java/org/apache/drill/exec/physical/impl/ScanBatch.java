@@ -174,12 +174,9 @@ public class ScanBatch implements CloseableRecordBatch {
   }
 
   @Override
-  public void kill(boolean sendUpstream) {
-    if (sendUpstream) {
-      done = true;
-    } else {
-      releaseAssets();
-    }
+  public void cancel() {
+    done = true;
+    releaseAssets();
   }
 
   /**
@@ -285,13 +282,10 @@ public class ScanBatch implements CloseableRecordBatch {
       return internalNext();
     } catch (OutOfMemoryException ex) {
       clearFieldVectorMap();
-      lastOutcome = IterOutcome.STOP;
       throw UserException.memoryError(ex).build(logger);
     } catch (UserException ex) {
-      lastOutcome = IterOutcome.STOP;
       throw ex;
     } catch (Exception ex) {
-      lastOutcome = IterOutcome.STOP;
       throw UserException.internalError(ex).build(logger);
     } finally {
       oContext.getStats().stopProcessing();
@@ -627,11 +621,6 @@ public class ScanBatch implements CloseableRecordBatch {
     }
 
     return true;
-  }
-
-  @Override
-  public boolean hasFailed() {
-    return lastOutcome == IterOutcome.STOP;
   }
 
   @Override

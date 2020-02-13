@@ -87,11 +87,6 @@ public class RowKeyJoinBatch extends AbstractRecordBatch<RowKeyJoinPOP> implemen
 
     rightUpstream = next(right);
 
-    if (leftUpstream == IterOutcome.STOP || rightUpstream == IterOutcome.STOP) {
-      state = BatchState.STOP;
-      return;
-    }
-
     if (right.getRecordCount() > 0) {
       // set the hasRowKeyBatch flag such that calling next() on the left input
       // would see the correct status
@@ -138,7 +133,6 @@ public class RowKeyJoinBatch extends AbstractRecordBatch<RowKeyJoinPOP> implemen
 
       switch(rightUpstream) {
       case NONE:
-      case STOP:
         rkJoinState = RowKeyJoinState.DONE;
         state = BatchState.DONE;
         return rightUpstream;
@@ -269,9 +263,9 @@ public class RowKeyJoinBatch extends AbstractRecordBatch<RowKeyJoinPOP> implemen
   }
 
   @Override
-  public void killIncoming(boolean sendUpstream) {
-    left.kill(sendUpstream);
-    right.kill(sendUpstream);
+  protected void cancelIncoming() {
+    left.cancel();
+    right.cancel();
   }
 
   @Override
@@ -285,5 +279,4 @@ public class RowKeyJoinBatch extends AbstractRecordBatch<RowKeyJoinPOP> implemen
     logger.error("RowKeyJoinBatch[container={}, left={}, right={}, hasRowKeyBatch={}, rkJoinState={}]",
         container, left, right, hasRowKeyBatch, rkJoinState);
   }
-
 }

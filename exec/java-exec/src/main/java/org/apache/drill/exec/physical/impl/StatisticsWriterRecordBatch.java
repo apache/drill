@@ -69,8 +69,8 @@ public class StatisticsWriterRecordBatch extends AbstractRecordBatch<Writer> {
   }
 
   @Override
-  protected void killIncoming(boolean sendUpstream) {
-    incoming.kill(sendUpstream);
+  protected void cancelIncoming() {
+    incoming.cancel();
   }
 
   @Override
@@ -97,9 +97,6 @@ public class StatisticsWriterRecordBatch extends AbstractRecordBatch<Writer> {
       upstream = next(incoming);
 
       switch(upstream) {
-        case STOP:
-          return upstream;
-
         case NOT_YET:
         case NONE:
           break;

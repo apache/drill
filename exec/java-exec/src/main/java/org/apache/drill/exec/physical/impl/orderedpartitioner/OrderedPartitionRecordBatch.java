@@ -135,6 +135,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
   private final String mapKey;
   private List<VectorContainer> sampledIncomingBatches;
 
+  @SuppressWarnings("null")
   public OrderedPartitionRecordBatch(OrderedPartitionSender pop, RecordBatch incoming, FragmentContext context) throws OutOfMemoryException {
     super(pop, context);
     this.incoming = incoming;
@@ -186,7 +187,6 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
         switch (upstream) {
         case NONE:
         case NOT_YET:
-        case STOP:
           upstreamNone = true;
           break outer;
         default:
@@ -441,8 +441,8 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
   }
 
   @Override
-  protected void killIncoming(boolean sendUpstream) {
-    incoming.kill(sendUpstream);
+  protected void cancelIncoming() {
+    incoming.cancel();
   }
 
   @Override
@@ -504,7 +504,6 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
     switch (upstream) {
     case NONE:
     case NOT_YET:
-    case STOP:
       close();
       recordCount = 0;
       return upstream;

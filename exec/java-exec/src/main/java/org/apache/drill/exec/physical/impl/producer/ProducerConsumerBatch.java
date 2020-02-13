@@ -50,7 +50,6 @@ public class ProducerConsumerBatch extends AbstractRecordBatch<ProducerConsumer>
   private final BlockingDeque<RecordBatchDataWrapper> queue;
   private int recordCount;
   private BatchSchema schema;
-  private boolean stop;
   private final CountDownLatch cleanUpLatch = new CountDownLatch(1); // used to wait producer to clean up
 
   protected ProducerConsumerBatch(final ProducerConsumer popConfig, final FragmentContext context, final RecordBatch incoming) throws OutOfMemoryException {
@@ -77,8 +76,6 @@ public class ProducerConsumerBatch extends AbstractRecordBatch<ProducerConsumer>
     }
     if (wrapper.finished) {
       return IterOutcome.NONE;
-    } else if (wrapper.failed) {
-      return IterOutcome.STOP;
     }
 
     recordCount = wrapper.batch.getRecordCount();
@@ -119,10 +116,8 @@ public class ProducerConsumerBatch extends AbstractRecordBatch<ProducerConsumer>
 
     @Override
     public void run() {
+      boolean stop = false;
       try {
-        if (stop) {
-          return;
-        }
         outer:
         while (true) {
           final IterOutcome upstream = incoming.next();
@@ -130,9 +125,6 @@ public class ProducerConsumerBatch extends AbstractRecordBatch<ProducerConsumer>
             case NONE:
               stop = true;
               break outer;
-            case STOP:
-              queue.putFirst(RecordBatchDataWrapper.failed());
-              return;
             case OK_NEW_SCHEMA:
             case OK:
               wrapper = RecordBatchDataWrapper.batch(new RecordBatchData(incoming, oContext.getAllocator()));
@@ -174,9 +166,7 @@ public class ProducerConsumerBatch extends AbstractRecordBatch<ProducerConsumer>
   }
 
   @Override
-  protected void killIncoming(final boolean sendUpstream) {
-    stop = true;
-  }
+  protected void cancelIncoming() { }
 
   @Override
   public void close() {
@@ -207,30 +197,24 @@ public class ProducerConsumerBatch extends AbstractRecordBatch<ProducerConsumer>
   private static class RecordBatchDataWrapper {
     final RecordBatchData batch;
     final boolean finished;
-    final boolean failed;
 
-    RecordBatchDataWrapper(final RecordBatchData batch, final boolean finished, final boolean failed) {
+    RecordBatchDataWrapper(final RecordBatchData batch, final boolean finished) {
       this.batch = batch;
       this.finished = finished;
-      this.failed = failed;
     }
 
     public static RecordBatchDataWrapper batch(final RecordBatchData batch) {
-      return new RecordBatchDataWrapper(batch, false, false);
+      return new RecordBatchDataWrapper(batch, false);
     }
 
     public static RecordBatchDataWrapper finished() {
-      return new RecordBatchDataWrapper(null, true, false);
-    }
-
-    public static RecordBatchDataWrapper failed() {
-      return new RecordBatchDataWrapper(null, false, true);
+      return new RecordBatchDataWrapper(null, true);
     }
   }
 
   @Override
   public void dump() {
-    logger.error("ProducerConsumerBatch[container={}, recordCount={}, schema={}, stop={}]",
-        container, recordCount, schema, stop);
+    logger.error("ProducerConsumerBatch[container={}, recordCount={}, schema={}]",
+        container, recordCount, schema);
   }
 }

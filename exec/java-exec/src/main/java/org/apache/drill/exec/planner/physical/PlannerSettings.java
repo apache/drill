@@ -31,15 +31,17 @@ import org.apache.drill.exec.server.options.TypeValidators.DoubleValidator;
 import org.apache.drill.exec.server.options.TypeValidators.PositiveLongValidator;
 import org.apache.drill.exec.server.options.TypeValidators.RangeDoubleValidator;
 import org.apache.drill.exec.server.options.TypeValidators.RangeLongValidator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.drill.exec.server.options.TypeValidators.MinRangeDoubleValidator;
 import org.apache.drill.exec.server.options.TypeValidators.MaxRangeDoubleValidator;
 import org.apache.calcite.plan.Context;
 
 public class PlannerSettings implements Context{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PlannerSettings.class);
+  private static final Logger logger = LoggerFactory.getLogger(PlannerSettings.class);
 
-  private int numEndPoints = 0;
-  private boolean useDefaultCosting = false; // True: use default Optiq costing, False: use Drill costing
+  private int numEndPoints;
+  private boolean useDefaultCosting; // True: use default Optiq costing, False: use Drill costing
   private boolean forceSingleMode;
 
   public static final int MAX_BROADCAST_THRESHOLD = Integer.MAX_VALUE;
@@ -48,21 +50,26 @@ public class PlannerSettings implements Context{
   // initial off heap memory allocation (1M)
   private static final long INITIAL_OFF_HEAP_ALLOCATION_IN_BYTES = 1024 * 1024;
   // default off heap memory for planning (256M)
+  @SuppressWarnings("unused")
   private static final long DEFAULT_MAX_OFF_HEAP_ALLOCATION_IN_BYTES = 256 * 1024 * 1024;
   // max off heap memory for planning (16G)
   private static final long MAX_OFF_HEAP_ALLOCATION_IN_BYTES = 16l * 1024 * 1024 * 1024;
 
   public static final OptionValidator CONSTANT_FOLDING = new BooleanValidator("planner.enable_constant_folding",
       new OptionDescription("If one side of a filter condition is a constant expression, constant folding evaluates the expression in the planning phase and replaces the expression with the constant value. For example, Drill can rewrite WHERE age + 5 < 42 as WHERE age < 37."));
-  public static final OptionValidator EXCHANGE = new BooleanValidator("planner.disable_exchanges",
+  public static final String DISABLE_EXCHANGE_OPTION = "planner.disable_exchanges";
+  public static final OptionValidator EXCHANGE = new BooleanValidator(DISABLE_EXCHANGE_OPTION,
       new OptionDescription("Toggles the state of hashing to a random exchange."));
-  public static final OptionValidator HASHAGG = new BooleanValidator("planner.enable_hashagg",
+  public static final String ENABLE_HASH_AGG_OPTION = "planner.enable_hashagg";
+  public static final OptionValidator HASHAGG = new BooleanValidator(ENABLE_HASH_AGG_OPTION,
       new OptionDescription("Enable hash aggregation; otherwise, Drill does a sort-based aggregation. Writes to disk. Enable is recommended."));
-  public static final OptionValidator STREAMAGG = new BooleanValidator("planner.enable_streamagg",
+  public static final String ENABLE_STREAM_AGG_OPTION = "planner.enable_streamagg";
+  public static final OptionValidator STREAMAGG = new BooleanValidator(ENABLE_STREAM_AGG_OPTION,
       new OptionDescription("Sort-based operation. Writes to disk."));
   public static final OptionValidator TOPN = new BooleanValidator("planner.enable_topn",
       new OptionDescription("Generates the topN plan for queries with the ORDER BY and LIMIT clauses."));
-  public static final OptionValidator HASHJOIN = new BooleanValidator("planner.enable_hashjoin",
+  public static final String ENABLE_HASH_JOIN_OPTION = "planner.enable_hashjoin";
+  public static final OptionValidator HASHJOIN = new BooleanValidator(ENABLE_HASH_JOIN_OPTION,
       new OptionDescription("Enable the memory hungry hash join. Drill assumes that a query will have adequate memory to complete and tries to use the fastest operations possible to complete the planned inner, left, right, or full outer joins using a hash table. Does not write to disk. Disabling hash join allows Drill to manage arbitrarily large data in a small memory footprint."));
   public static final OptionValidator SEMIJOIN = new BooleanValidator("planner.enable_semijoin",
           new OptionDescription("Enable the semi join optimization. Planner removes the distinct processing below the hash join and sets the semi join flag in hash join."));
@@ -481,6 +488,7 @@ public class PlannerSettings implements Context{
     return options.getOption(STATISTICS_MULTICOL_NDV_ADJUST_FACTOR);
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public <T> T unwrap(Class<T> clazz) {
     if(clazz == PlannerSettings.class){
@@ -489,6 +497,4 @@ public class PlannerSettings implements Context{
       return null;
     }
   }
-
-
 }

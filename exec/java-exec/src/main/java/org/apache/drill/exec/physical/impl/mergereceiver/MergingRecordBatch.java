@@ -531,12 +531,8 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
   }
 
   @Override
-  public void kill(final boolean sendUpstream) {
-    if (sendUpstream) {
-      informSenders();
-    } else {
-      close();
-    }
+  public void cancel() {
+    informSenders();
 
     for (final RawFragmentBatchProvider provider : fragProviders) {
       provider.kill(context);
@@ -587,9 +583,7 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
   }
 
   @Override
-  protected void killIncoming(final boolean sendUpstream) {
-    //No op
-  }
+  protected void cancelIncoming() { }
 
   private void checkSameSchemaAmongBatches(final RecordBatchLoader[] batchLoaders) {
     Preconditions.checkArgument(batchLoaders.length > 0, "0 batch is not allowed!");

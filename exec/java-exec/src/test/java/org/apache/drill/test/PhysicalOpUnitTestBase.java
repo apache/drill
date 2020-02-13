@@ -145,8 +145,7 @@ public class PhysicalOpUnitTestBase extends ExecTest {
             lastResultOutcome = operator.next();
             needToGrabNext = false;
           }
-          if (lastResultOutcome == RecordBatch.IterOutcome.NONE
-            || lastResultOutcome == RecordBatch.IterOutcome.STOP) {
+          if (lastResultOutcome == RecordBatch.IterOutcome.NONE) {
             return false;
           } else {
             return true;

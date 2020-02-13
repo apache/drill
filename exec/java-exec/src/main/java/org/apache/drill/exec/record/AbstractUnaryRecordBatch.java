@@ -44,9 +44,8 @@ public abstract class AbstractUnaryRecordBatch<T extends PhysicalOperator> exten
   protected abstract RecordBatch getIncoming();
 
   @Override
-  protected void killIncoming(boolean sendUpstream) {
-    final RecordBatch incoming = getIncoming();
-    incoming.kill(sendUpstream);
+  protected void cancelIncoming() {
+    getIncoming().cancel();
   }
 
   @Override
@@ -80,7 +79,6 @@ public abstract class AbstractUnaryRecordBatch<T extends PhysicalOperator> exten
         }
         return upstream;
       case NOT_YET:
-      case STOP:
         if (state == BatchState.FIRST) {
           container.buildSchema(SelectionVectorMode.NONE);
         }

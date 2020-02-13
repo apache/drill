@@ -105,7 +105,6 @@ public class SimpleRootExec implements RootExec, Iterable<ValueVector> {
   public boolean next() {
     switch (incoming.next()) {
     case NONE:
-    case STOP:
       return false;
     default:
       return true;

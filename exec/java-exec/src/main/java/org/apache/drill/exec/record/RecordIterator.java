@@ -191,7 +191,6 @@ public class RecordIterator implements VectorAccessible {
       nextBatch();
       switch (lastOutcome) {
         case NONE:
-        case STOP:
           // No more data, disallow reads unless reset is called.
           outerPosition = nextOuterPosition;
           lastBatchRead = true;

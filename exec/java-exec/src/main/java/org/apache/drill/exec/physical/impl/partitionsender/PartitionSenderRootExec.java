@@ -22,6 +22,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.LogicalExpression;
@@ -74,7 +75,7 @@ public class PartitionSenderRootExec extends BaseRootExec {
 
   private final AtomicIntegerArray remainingReceivers;
   private final AtomicInteger remaingReceiverCount;
-  private boolean done = false;
+  private boolean done;
   private boolean first = true;
   private final boolean closeIncoming;
 
@@ -153,7 +154,7 @@ public class PartitionSenderRootExec extends BaseRootExec {
     if (!done) {
       out = next(incoming);
     } else {
-      incoming.kill(true);
+      incoming.cancel();
       out = IterOutcome.NONE;
     }
 
@@ -171,15 +172,9 @@ public class PartitionSenderRootExec extends BaseRootExec {
             sendEmptyBatch(true);
           }
         } catch (ExecutionException e) {
-          incoming.kill(false);
-          logger.error("Error while creating partitioning sender or flushing outgoing batches", e);
-          context.getExecutorState().fail(e.getCause());
-        }
-        return false;
-
-      case STOP:
-        if (partitioner != null) {
-          partitioner.clear();
+          throw UserException.dataWriteError(e)
+            .addContext("Error while creating partitioning sender or flushing outgoing batches")
+            .build(logger);
         }
         return false;
 
@@ -198,18 +193,17 @@ public class PartitionSenderRootExec extends BaseRootExec {
             sendEmptyBatch(false);
           }
         } catch (ExecutionException e) {
-          incoming.kill(false);
-          logger.error("Error while flushing outgoing batches", e);
-          context.getExecutorState().fail(e.getCause());
-          return false;
+          throw UserException.dataWriteError(e)
+            .addContext("Error while flushing outgoing batches")
+            .build(logger);
         }
       case OK:
         try {
           partitioner.partitionBatch(incoming);
         } catch (ExecutionException e) {
-          context.getExecutorState().fail(e.getCause());
-          incoming.kill(false);
-          return false;
+          throw UserException.dataWriteError(e)
+            .addContext("Error while partitioning outgoing batches")
+            .build(logger);
         }
         VectorAccessibleUtilities.clear(incoming);
         return true;

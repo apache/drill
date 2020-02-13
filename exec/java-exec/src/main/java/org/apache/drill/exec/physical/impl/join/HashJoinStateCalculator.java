@@ -23,7 +23,7 @@ import javax.annotation.Nullable;
  * A {@link HashJoinStateCalculator} is a piece of code that compute the memory requirements for one of the states
  * in the {@link HashJoinState} enum.
  */
-public interface HashJoinStateCalculator<T extends HashJoinStateCalculator> {
+public interface HashJoinStateCalculator<T extends HashJoinStateCalculator<?>> {
   /**
    * Signifies that the current state is complete and returns the next {@link HashJoinStateCalculator}.
    * Returns null in the case where there is no next state.

@@ -567,7 +567,7 @@ import static org.junit.Assert.assertTrue;
         batchesProcessed++;
         if (batchesProcessed == execKill) {
           lateralJoinBatch.getContext().getExecutorState().fail(new DrillException("Testing failure of execution."));
-          lateralJoinBatch.kill(true);
+          lateralJoinBatch.cancel();
         }
         // else nothing to do
       }
@@ -716,8 +716,7 @@ import static org.junit.Assert.assertTrue;
   }
 
   private boolean isTerminal(RecordBatch.IterOutcome outcome) {
-    return (outcome == RecordBatch.IterOutcome.NONE || outcome == RecordBatch.IterOutcome.STOP);
+    return (outcome == RecordBatch.IterOutcome.NONE);
   }
-
 }
 

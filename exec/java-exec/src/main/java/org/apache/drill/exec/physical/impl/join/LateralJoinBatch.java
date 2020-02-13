@@ -56,7 +56,6 @@ import static org.apache.drill.exec.record.RecordBatch.IterOutcome.EMIT;
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.NONE;
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK;
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK_NEW_SCHEMA;
-import static org.apache.drill.exec.record.RecordBatch.IterOutcome.STOP;
 
 /**
  * RecordBatch implementation for the lateral join operator. Currently it's
@@ -352,7 +351,6 @@ public class LateralJoinBatch extends AbstractBinaryRecordBatch<LateralJoinPOP> 
 
     // EMIT outcome is not expected as part of first batch from either side
     if (leftUpstream == EMIT || rightUpstream == EMIT) {
-      state = BatchState.STOP;
       throw new IllegalStateException("Unexpected IterOutcome.EMIT received either from left or right side in " +
         "buildSchema phase");
     }
@@ -392,14 +390,9 @@ public class LateralJoinBatch extends AbstractBinaryRecordBatch<LateralJoinPOP> 
   }
 
   @Override
-  protected void killIncoming(boolean sendUpstream) {
-    this.left.kill(sendUpstream);
-    // Reset the left side outcome as STOP since as part of right kill when UNNEST will ask IterOutcome of left incoming
-    // from LATERAL and based on that it can make decision if the kill is coming from downstream to LATERAL or upstream
-    // to LATERAL. Like LIMIT operator being present downstream to LATERAL or upstream to LATERAL and downstream to
-    // UNNEST.
-    leftUpstream = STOP;
-    this.right.kill(sendUpstream);
+  protected void cancelIncoming() {
+    left.cancel();
+    right.cancel();
   }
 
   /* ****************************************************************************************************************
@@ -417,7 +410,7 @@ public class LateralJoinBatch extends AbstractBinaryRecordBatch<LateralJoinPOP> 
   }
 
   private boolean isTerminalOutcome(IterOutcome outcome) {
-    return (outcome == STOP || outcome == NONE);
+    return outcome == NONE;
   }
 
   /**
@@ -483,7 +476,6 @@ public class LateralJoinBatch extends AbstractBinaryRecordBatch<LateralJoinPOP> 
           }
           break;
         case NONE:
-        case STOP:
           // Not using =0 since if outgoing container is empty then no point returning anything
           if (outputIndex > 0) { // can only reach here from produceOutputBatch
             processLeftBatchInFuture = true;
@@ -554,7 +546,6 @@ public class LateralJoinBatch extends AbstractBinaryRecordBatch<LateralJoinPOP> 
           needNewRightBatch = false;
           break;
         case NONE:
-        case STOP:
           needNewRightBatch = false;
           break;
         case NOT_YET:
@@ -934,10 +925,7 @@ public class LateralJoinBatch extends AbstractBinaryRecordBatch<LateralJoinPOP> 
 
   private boolean setBatchState(IterOutcome outcome) {
     switch(outcome) {
-      case STOP:
       case EMIT:
-        state = BatchState.STOP;
-        return false;
       case NONE:
       case NOT_YET:
         state = BatchState.DONE;

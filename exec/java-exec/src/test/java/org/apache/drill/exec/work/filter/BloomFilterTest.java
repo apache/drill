@@ -79,7 +79,7 @@ public class BloomFilterTest extends SubOperatorTest {
     }
 
     @Override
-    public void kill(boolean sendUpstream) {
+    public void cancel() {
     }
 
     @Override
@@ -118,13 +118,7 @@ public class BloomFilterTest extends SubOperatorTest {
     }
 
     @Override
-    public void dump() {
-    }
-
-    @Override
-    public boolean hasFailed() {
-      return false;
-    }
+    public void dump() { }
   }
 
   @Test

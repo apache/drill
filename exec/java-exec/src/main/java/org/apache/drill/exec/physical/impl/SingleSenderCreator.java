@@ -53,7 +53,6 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
     private AccountingDataTunnel tunnel;
     private final FragmentHandle handle;
     private final int recMajor;
-    private volatile boolean ok = true;
     private volatile boolean done = false;
 
     public enum Metric implements MetricDef {
@@ -82,21 +81,15 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
 
     @Override
     public boolean innerNext() {
-      if (!ok) {
-        incoming.kill(false);
-
-        return false;
-      }
 
       IterOutcome out;
       if (!done) {
         out = next(incoming);
       } else {
-        incoming.kill(true);
+        incoming.cancel();
         out = IterOutcome.NONE;
       }
       switch (out) {
-      case STOP:
       case NONE:
         // if we didn't do anything yet, send an empty schema.
         final BatchSchema sendSchema = incoming.getSchema() == null ?

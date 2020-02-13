@@ -154,7 +154,7 @@ public class TestLateralJoinCorrectness extends SubOperatorTest {
    * @return
    */
   private boolean isTerminal(RecordBatch.IterOutcome outcome) {
-    return (outcome == RecordBatch.IterOutcome.NONE || outcome == RecordBatch.IterOutcome.STOP);
+    return (outcome == RecordBatch.IterOutcome.NONE);
   }
 
   /**

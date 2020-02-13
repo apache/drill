@@ -21,7 +21,6 @@ import static org.apache.drill.exec.record.RecordBatch.IterOutcome.EMIT;
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.NONE;
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK;
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.OK_NEW_SCHEMA;
-import static org.apache.drill.exec.record.RecordBatch.IterOutcome.STOP;
 
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.UserException;
@@ -333,9 +332,6 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
       container.buildSchema(SelectionVectorMode.NONE);
       container.setRecordCount(0);
       break;
-    case STOP:
-      state = BatchState.STOP;
-      break;
     case NONE:
       state = BatchState.DONE;
       break;
@@ -408,10 +404,6 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
         // all batches have been read at this record boundary
         break loop;
 
-      case STOP:
-        // Something went wrong.
-        return STOP;
-
       default:
         break;
       }
@@ -450,7 +442,6 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     }
     switch (lastKnownOutcome) {
     case NONE:
-    case STOP:
       return lastKnownOutcome;
 
     case OK_NEW_SCHEMA:
@@ -499,8 +490,8 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
   }
 
   @Override
-  protected void killIncoming(boolean sendUpstream) {
-    incoming.kill(sendUpstream);
+  protected void cancelIncoming() {
+    incoming.cancel();
   }
 
   /**

@@ -29,6 +29,7 @@ import org.apache.drill.categories.SqlFunctionTest;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.test.BaseTestQuery;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -172,15 +173,18 @@ public class TestExampleQueries extends BaseTestQuery {
 
   @Test
   public void testJoinMerge() throws Exception {
-    test("alter session set `planner.enable_hashjoin` = false");
-    test("select count(*) \n" +
-        "  from (select l.l_orderkey as x, c.c_custkey as y \n" +
-        "  from cp.`tpch/lineitem.parquet` l \n" +
-        "    left outer join cp.`tpch/customer.parquet` c \n" +
-        "      on l.l_orderkey = c.c_custkey) as foo\n" +
-        "  where x < 10000\n" +
-        "");
-    test("alter session set `planner.enable_hashjoin` = true");
+    alterSession(PlannerSettings.ENABLE_HASH_JOIN_OPTION, false);
+    try {
+      test("select count(*) \n" +
+          "  from (select l.l_orderkey as x, c.c_custkey as y \n" +
+          "  from cp.`tpch/lineitem.parquet` l \n" +
+          "    left outer join cp.`tpch/customer.parquet` c \n" +
+          "      on l.l_orderkey = c.c_custkey) as foo\n" +
+          "  where x < 10000\n" +
+          "");
+    } finally {
+      resetSessionOption(PlannerSettings.ENABLE_HASH_JOIN_OPTION);
+    }
   }
 
   @Test
@@ -293,15 +297,19 @@ public class TestExampleQueries extends BaseTestQuery {
   @Test
   @Ignore("DRILL-3004")
   public void testJoin() throws Exception {
-    test("alter session set `planner.enable_hashjoin` = false");
-    test("SELECT\n" +
-        "  nations.N_NAME,\n" +
-        "  regions.R_NAME\n" +
-        "FROM\n" +
-        "  cp.`tpch/nation.parquet` nations\n" +
-        "JOIN\n" +
-        "  cp.`tpch/region.parquet` regions\n" +
-        "  on nations.N_REGIONKEY = regions.R_REGIONKEY where 1 = 0");
+    try {
+      alterSession(PlannerSettings.ENABLE_HASH_JOIN_OPTION, false);
+      test("SELECT\n" +
+          "  nations.N_NAME,\n" +
+          "  regions.R_NAME\n" +
+          "FROM\n" +
+          "  cp.`tpch/nation.parquet` nations\n" +
+          "JOIN\n" +
+          "  cp.`tpch/region.parquet` regions\n" +
+          "  on nations.N_REGIONKEY = regions.R_REGIONKEY where 1 = 0");
+    } finally {
+      resetSessionOption(PlannerSettings.ENABLE_HASH_JOIN_OPTION);
+    }
   }
 
 
@@ -509,7 +517,12 @@ public class TestExampleQueries extends BaseTestQuery {
   public void testOrderByDiffColumnsInSubqAndOuter() throws Exception {
     String query = "select n.n_nationkey from  (select n_nationkey, n_regionkey from cp.`tpch/nation.parquet` order by n_regionkey) n  order by n.n_nationkey";
     // set slice_target = 1 to force exchanges
-    test("alter session set `planner.slice_target` = 1; " + query);
+    try {
+      alterSession(ExecConstants.SLICE_TARGET, 1);
+      test(query);
+    } finally {
+      resetSessionOption(ExecConstants.SLICE_TARGET);
+    }
   }
 
   @Test // DRILL-1846  (this tests issue with UnionExchange)
@@ -517,7 +530,12 @@ public class TestExampleQueries extends BaseTestQuery {
   public void testLimitInSubqAndOrderByOuter() throws Exception {
     String query = "select t2.n_nationkey from (select n_nationkey, n_regionkey from cp.`tpch/nation.parquet` t1 group by n_nationkey, n_regionkey limit 10) t2 order by t2.n_nationkey";
     // set slice_target = 1 to force exchanges
-    test("alter session set `planner.slice_target` = 1; " + query);
+    try {
+      alterSession(ExecConstants.SLICE_TARGET, 1);
+      test(query);
+    } finally {
+      resetSessionOption(ExecConstants.SLICE_TARGET);
+    }
   }
 
   @Test // DRILL-1788
@@ -531,7 +549,12 @@ public class TestExampleQueries extends BaseTestQuery {
   public void test2PhaseAggAfterOrderBy() throws Exception {
     String query = "select count(*) from (select o_custkey from cp.`tpch/orders.parquet` order by o_custkey)";
     // set slice_target = 1 to force exchanges and 2-phase aggregation
-    test("alter session set `planner.slice_target` = 1; " + query);
+    try {
+      alterSession(ExecConstants.SLICE_TARGET, 1);
+      test(query);
+    } finally {
+      resetSessionOption(ExecConstants.SLICE_TARGET);
+    }
   }
 
   @Test // DRILL-1867
@@ -578,18 +601,27 @@ public class TestExampleQueries extends BaseTestQuery {
   @Test
   public void testMultipleCountDistinctWithGroupBy() throws Exception {
     String query = "select n_regionkey, count(distinct n_nationkey), count(distinct n_name) from cp.`tpch/nation.parquet` group by n_regionkey;";
-    String hashagg_only = "alter session set `planner.enable_hashagg` = true; " +
-        "alter session set `planner.enable_streamagg` = false;";
-    String streamagg_only = "alter session set `planner.enable_hashagg` = false; " +
-        "alter session set `planner.enable_streamagg` = true;";
 
     // hash agg and streaming agg with default slice target (single phase aggregate)
-    test(hashagg_only + query);
-    test(streamagg_only + query);
-
     // hash agg and streaming agg with lower slice target (multiphase aggregate)
-    test("alter session set `planner.slice_target` = 1; " + hashagg_only + query);
-    test("alter session set `planner.slice_target` = 1; " + streamagg_only + query);
+    try {
+      alterSession(PlannerSettings.ENABLE_HASH_AGG_OPTION, true);
+      alterSession(PlannerSettings.ENABLE_STREAM_AGG_OPTION, false);
+      test(query);
+      alterSession(ExecConstants.SLICE_TARGET, 1);
+      test(query);
+      resetSessionOption(ExecConstants.SLICE_TARGET);
+
+      alterSession(PlannerSettings.ENABLE_HASH_AGG_OPTION, false);
+      alterSession(PlannerSettings.ENABLE_STREAM_AGG_OPTION, true);
+      test(query);
+      alterSession(ExecConstants.SLICE_TARGET, 1);
+      test(query);
+    } finally {
+      resetSessionOption(PlannerSettings.ENABLE_HASH_AGG_OPTION);
+      resetSessionOption(PlannerSettings.ENABLE_STREAM_AGG_OPTION);
+      resetSessionOption(ExecConstants.SLICE_TARGET);
+    }
   }
 
   @Test // DRILL-2019
@@ -826,12 +858,15 @@ public class TestExampleQueries extends BaseTestQuery {
 
   @Test // DRILL-2221
   public void createJsonWithEmptyList() throws Exception {
-    final String tableName = "jsonWithEmptyList";
-    test("USE dfs.tmp");
-    test("ALTER SESSION SET `store.format`='json'");
-    test("CREATE TABLE %s AS SELECT * FROM cp.`store/json/record_with_empty_list.json`", tableName);
-    test("SELECT COUNT(*) FROM %s", tableName);
-    test("ALTER SESSION SET `store.format`='parquet'");
+    try {
+      final String tableName = "jsonWithEmptyList";
+      test("USE dfs.tmp");
+      alterSession(ExecConstants.OUTPUT_FORMAT_OPTION, "json");
+      test("CREATE TABLE %s AS SELECT * FROM cp.`store/json/record_with_empty_list.json`", tableName);
+      test("SELECT COUNT(*) FROM %s", tableName);
+    } finally {
+      resetSessionOption(ExecConstants.OUTPUT_FORMAT_OPTION);
+    }
   }
 
   @Test // DRILL-2914
@@ -993,13 +1028,18 @@ public class TestExampleQueries extends BaseTestQuery {
         "where 1 = 0";
 
 
-    testBuilder()
-        .sqlQuery(query)
-        .expectsEmptyResultSet()
-        .optionSettingQueriesForTestQuery("ALTER SESSION SET `planner.enable_hashjoin` = false; " +
-            "ALTER SESSION SET `planner.disable_exchanges` = true")
-        .build()
-        .run();
+    try {
+      setSessionOption(PlannerSettings.DISABLE_EXCHANGE_OPTION, true);
+      setSessionOption(PlannerSettings.ENABLE_HASH_JOIN_OPTION, false);
+      testBuilder()
+          .sqlQuery(query)
+          .expectsEmptyResultSet()
+          .build()
+          .run();
+    } finally {
+      resetSessionOption(PlannerSettings.DISABLE_EXCHANGE_OPTION);
+      resetSessionOption(PlannerSettings.ENABLE_HASH_JOIN_OPTION);
+    }
   }
 
   @Test
@@ -1031,8 +1071,6 @@ public class TestExampleQueries extends BaseTestQuery {
         "create table mytable4  partition by (r_regionkey, r_comment) as " +
         "  select  r.* from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r " +
         "  where n.n_regionkey = r.r_regionkey");
-
-
   }
 
   @Test // DRILL-3210

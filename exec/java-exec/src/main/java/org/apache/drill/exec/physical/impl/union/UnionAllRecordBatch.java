@@ -84,12 +84,6 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
   }
 
   @Override
-  protected void killIncoming(boolean sendUpstream) {
-    left.kill(sendUpstream);
-    right.kill(sendUpstream);
-  }
-
-  @Override
   protected void buildSchema() {
     if (! prefetchFirstBatchFromBothSides()) {
       state = BatchState.DONE;
@@ -376,9 +370,6 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
             RecordBatchStats.logRecordBatchStats(topStatus.inputIndex == 0 ? RecordBatchIOType.INPUT_LEFT : RecordBatchIOType.INPUT_RIGHT,
               batchMemoryManager.getRecordBatchSizer(topStatus.inputIndex),
               getRecordBatchStatsContext());
-            return Pair.of(outcome, topStatus);
-          case STOP:
-            batchStatusStack.pop();
             return Pair.of(outcome, topStatus);
           case NONE:
             batchStatusStack.pop();

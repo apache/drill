@@ -69,11 +69,6 @@ public class RangePartitionRecordBatch extends AbstractSingleRecordBatch<RangePa
   }
 
   @Override
-  protected void killIncoming(boolean sendUpstream) {
-    incoming.kill(sendUpstream);
-  }
-
-  @Override
   public int getRecordCount() {
     return recordCount;
   }

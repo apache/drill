@@ -20,12 +20,10 @@ package org.apache.drill.exec.physical;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 
 
+@SuppressWarnings("serial")
 public class PhysicalOperatorSetupException extends ExecutionSetupException {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PhysicalOperatorSetupException.class);
 
-  public PhysicalOperatorSetupException() {
-    super();
-  }
+  public PhysicalOperatorSetupException() { }
 
   public PhysicalOperatorSetupException(String message, Throwable cause, boolean enableSuppression,
       boolean writableStackTrace) {
@@ -43,6 +41,4 @@ public class PhysicalOperatorSetupException extends ExecutionSetupException {
   public PhysicalOperatorSetupException(Throwable cause) {
     super(cause);
   }
-
-
 }

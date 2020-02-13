@@ -112,7 +112,6 @@ public class UnpivotMapsRecordBatch extends AbstractSingleRecordBatch<UnpivotMap
     switch (upStream) {
       case NONE:
       case NOT_YET:
-      case STOP:
         return upStream;
       case OK_NEW_SCHEMA:
         first = false;

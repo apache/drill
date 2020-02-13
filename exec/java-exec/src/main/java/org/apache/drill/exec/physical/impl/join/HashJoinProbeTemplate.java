@@ -248,7 +248,6 @@ public class HashJoinProbeTemplate implements HashJoinProbe {
         switch (leftUpstream) {
           case NONE:
           case NOT_YET:
-          case STOP:
             recordsProcessed = 0;
             recordsToProcess = 0;
             changeToFinalProbeState();
@@ -286,6 +285,8 @@ public class HashJoinProbeTemplate implements HashJoinProbe {
             if (cycleNum > 0) {
               read_left_HV_vector = (IntVector) probeBatch.getContainer().getLast(); // Needed ?
             }
+            break;
+          default:
         }
       }
 

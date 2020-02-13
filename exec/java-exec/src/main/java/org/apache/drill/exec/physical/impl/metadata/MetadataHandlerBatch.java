@@ -69,7 +69,6 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import static org.apache.drill.exec.record.RecordBatch.IterOutcome.NONE;
-import static org.apache.drill.exec.record.RecordBatch.IterOutcome.STOP;
 
 /**
  * Responsible for handling metadata returned by incoming aggregate operators
@@ -125,7 +124,6 @@ public class MetadataHandlerBatch extends AbstractSingleRecordBatch<MetadataHand
         doWorkInternal();
         // fall thru
       case NOT_YET:
-      case STOP:
         return outcome;
       default:
         throw new UnsupportedOperationException("Unsupported upstream state " + outcome);
@@ -135,7 +133,7 @@ public class MetadataHandlerBatch extends AbstractSingleRecordBatch<MetadataHand
   @Override
   public IterOutcome innerNext() {
     IterOutcome outcome = getLastKnownOutcome();
-    if (outcome != NONE && outcome != STOP) {
+    if (outcome != NONE) {
       outcome = super.innerNext();
     }
     // if incoming is exhausted, reads metadata which should be obtained from the Metastore

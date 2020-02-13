@@ -812,9 +812,8 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
   }
 
   private boolean isTerminal(RecordBatch.IterOutcome outcome) {
-    return (outcome == RecordBatch.IterOutcome.NONE || outcome == RecordBatch.IterOutcome.STOP);
+    return (outcome == RecordBatch.IterOutcome.NONE);
   }
-
 
   /**
    *     Run a plan like the following for various input batches :
@@ -921,7 +920,7 @@ public class TestUnnestWithLateralCorrectness extends SubOperatorTest {
           batchesProcessed++;
           if (batchesProcessed == execKill) {
             lateralJoinBatch1.getContext().getExecutorState().fail(new DrillException("Testing failure of execution."));
-            lateralJoinBatch1.kill(true);
+            lateralJoinBatch1.cancel();
           }
           // else nothing to do
         }
