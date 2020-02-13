@@ -18,6 +18,7 @@
 package org.apache.drill.exec.physical.resultSet.impl;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.drill.common.expression.SchemaPath;
@@ -59,7 +60,7 @@ public class RowSetTestUtils {
   }
 
   public static List<SchemaPath> projectNone() {
-    return new ArrayList<>();
+    return Collections.emptyList();
   }
 
   @SafeVarargs

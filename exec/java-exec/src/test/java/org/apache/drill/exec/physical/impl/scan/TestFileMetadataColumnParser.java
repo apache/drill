@@ -204,7 +204,7 @@ public class TestFileMetadataColumnParser extends SubOperatorTest {
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
     FileMetadataOptions options = standardOptions(filePath);
     options.useLegacyWildcardExpansion(true);
-     FileMetadataManager metadataManager = new FileMetadataManager(
+    FileMetadataManager metadataManager = new FileMetadataManager(
         fixture.getOptionManager(),
         options);
 

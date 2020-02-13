@@ -22,7 +22,7 @@ import java.util.List;
 /**
  * Represents the set of columns projected for a tuple (row or map.)
  * Each column may have structure: a set of referenced names or
- * array indicies.
+ * array indices.
  * <p>
  * Three variations exist:
  * <ul>
@@ -46,8 +46,8 @@ import java.util.List;
  * Wildcards will set the projection type to {@code ALL}, and will
  * be retained in the projection list. Retaining the wildcard
  * is important because multiple consumers insert columns at the
- * wildcard position. For example:<pre><code>
- * SELECT filename, *, filepath FROM ...</code></pre>
+ * wildcard position. For example:<br>
+ * {@code SELECT filename, *, filepath FROM ...}
  */
 public interface RequestedTuple {
 
