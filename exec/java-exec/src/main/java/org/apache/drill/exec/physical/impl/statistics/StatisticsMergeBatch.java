@@ -342,7 +342,6 @@ public class StatisticsMergeBatch extends AbstractSingleRecordBatch<StatisticsMe
         case NONE:
           break outer;
         case NOT_YET:
-        case STOP:
           return outcome;
         case OK_NEW_SCHEMA:
           if (first) {

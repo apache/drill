@@ -157,9 +157,6 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
         container.setRecordCount(0);
 
         return;
-      case STOP:
-        state = BatchState.STOP;
-        return;
       case NONE:
         state = BatchState.DONE;
         return;
@@ -223,8 +220,6 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
         break outer;
       case NOT_YET:
         throw new UnsupportedOperationException();
-      case STOP:
-        return lastKnownOutcome;
       case OK_NEW_SCHEMA:
         // only change in the case that the schema truly changes.  Artificial schema changes are ignored.
         // schema change handling in case when EMIT is also seen is same as without EMIT. i.e. only if union type
@@ -486,8 +481,8 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
   }
 
   @Override
-  protected void killIncoming(boolean sendUpstream) {
-    incoming.kill(sendUpstream);
+  protected void cancelIncoming() {
+    incoming.cancel();
   }
 
   /**

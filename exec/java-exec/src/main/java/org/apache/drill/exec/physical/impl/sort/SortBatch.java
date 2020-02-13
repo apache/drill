@@ -107,8 +107,6 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
         break outer;
       case NOT_YET:
         throw new UnsupportedOperationException();
-      case STOP:
-        return upstream;
       case OK_NEW_SCHEMA:
         // only change in the case that the schema truly changes.  Artificial schema changes are ignored.
         if (!incoming.getSchema().equals(schema)) {
@@ -205,8 +203,8 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
   }
 
   @Override
-  protected void killIncoming(boolean sendUpstream) {
-    incoming.kill(sendUpstream);
+  protected void cancelIncoming() {
+    incoming.cancel();
   }
 
   @Override

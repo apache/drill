@@ -118,10 +118,8 @@ public class UnorderedReceiverBatch implements CloseableRecordBatch {
   }
 
   @Override
-  public void kill(boolean sendUpstream) {
-    if (sendUpstream) {
-      informSenders();
-    }
+  public void cancel() {
+    informSenders();
     fragProvider.kill(context);
   }
 
@@ -292,10 +290,5 @@ public class UnorderedReceiverBatch implements CloseableRecordBatch {
   @Override
   public void dump() {
     logger.error("UnorderedReceiverBatch[batchLoader={}, schema={}]", batchLoader, schema);
-  }
-
-  @Override
-  public boolean hasFailed() {
-    return lastOutcome == IterOutcome.STOP;
   }
 }

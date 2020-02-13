@@ -35,7 +35,6 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
  * Holds the data for a particular record batch for later manipulation.
  */
 public class RecordBatchData {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RecordBatchData.class);
 
   private SelectionVector2 sv2;
   private int recordCount;
@@ -72,7 +71,7 @@ public class RecordBatchData {
 
   public List<ValueVector> getVectors() {
     List<ValueVector> vectors = Lists.newArrayList();
-    for (VectorWrapper w : container) {
+    for (VectorWrapper<?> w : container) {
       vectors.add(w.getValueVector());
     }
     return vectors;
@@ -98,5 +97,4 @@ public class RecordBatchData {
     }
     container.clear();
   }
-
 }

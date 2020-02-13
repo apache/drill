@@ -66,8 +66,6 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
   private boolean noMoreBatches; // true when downstream returns NONE
   private BatchSchema schema;
 
-  private boolean shouldStop; // true if we received an early termination request
-
   public WindowFrameRecordBatch(WindowPOP popConfig, FragmentContext context,
       RecordBatch incoming) throws OutOfMemoryException {
     super(popConfig, context);
@@ -88,21 +86,6 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
       return IterOutcome.NONE;
     }
 
-    if (shouldStop) {
-      if (!noMoreBatches) {
-        IterOutcome upstream = next(incoming);
-        while (upstream == IterOutcome.OK || upstream == IterOutcome.OK_NEW_SCHEMA) {
-          // Clear the memory for the incoming batch
-          for (VectorWrapper<?> wrapper : incoming) {
-            wrapper.getValueVector().clear();
-          }
-          upstream = next(incoming);
-        }
-      }
-
-      return IterOutcome.NONE;
-    }
-
     // keep saving incoming batches until the first unprocessed batch can be
     // processed, or upstream == NONE
     while (!noMoreBatches && !canDoWork()) {
@@ -114,7 +97,6 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
           noMoreBatches = true;
           break;
         case NOT_YET:
-        case STOP:
           cleanup();
           return upstream;
         case OK_NEW_SCHEMA:
@@ -228,11 +210,7 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
       state = BatchState.DONE;
       container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
       return;
-    case STOP:
-      state = BatchState.STOP;
-      return;
     default:
-      break;
     }
 
     try {
@@ -405,9 +383,8 @@ public class WindowFrameRecordBatch extends AbstractRecordBatch<WindowPOP> {
   }
 
   @Override
-  protected void killIncoming(boolean sendUpstream) {
-    shouldStop = true;
-    incoming.kill(sendUpstream);
+  protected void cancelIncoming() {
+    incoming.cancel();
   }
 
   @Override

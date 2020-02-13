@@ -32,18 +32,16 @@ import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.vector.IntVector;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class OrderedPartitionProjectorTemplate implements OrderedPartitionProjector {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OrderedPartitionProjectorTemplate.class);
+  static final Logger logger = LoggerFactory.getLogger(OrderedPartitionProjectorTemplate.class);
 
   private ImmutableList<TransferPair> transfers;
-//  private VectorContainer partitionVectors;
   private int partitions;
-//  private SelectionVector2 vector2;
-//  private SelectionVector4 vector4;
   private SelectionVectorMode svMode;
   private RecordBatch outBatch;
-//  private SchemaPath outputField;
   private IntVector partitionValues;
 
   public OrderedPartitionProjectorTemplate() throws SchemaChangeException{
@@ -83,12 +81,12 @@ public abstract class OrderedPartitionProjectorTemplate implements OrderedPartit
 
     this.svMode = incoming.getSchema().getSelectionVectorMode();
     this.outBatch = outgoing;
-//    this.outputField = outputField;
     partitionValues = (IntVector) outBatch.getValueAccessorById(IntVector.class, outBatch.getValueVectorId(outputField).getFieldIds()).getValueVector();
     switch(svMode){
     case FOUR_BYTE:
     case TWO_BYTE:
       throw new UnsupportedOperationException("Selection vector not supported");
+    default:
     }
     this.transfers = ImmutableList.copyOf(transfers);
     this.partitions = partitions;

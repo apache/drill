@@ -122,8 +122,8 @@ public class SpilledRecordBatch implements CloseableRecordBatch {
   public int getRecordCount() { return container.getRecordCount(); }
 
   @Override
-  public void kill(boolean sendUpstream) {
-    this.close(); // delete the current spill file
+  public void cancel() {
+    close(); // delete the current spill file
   }
 
   /**
@@ -143,7 +143,6 @@ public class SpilledRecordBatch implements CloseableRecordBatch {
     }
 
     if (spillStream == null) {
-      lastOutcome = IterOutcome.STOP;
       throw new IllegalStateException("Spill stream was null");
     }
 
@@ -184,11 +183,6 @@ public class SpilledRecordBatch implements CloseableRecordBatch {
   public void dump() {
     logger.error("SpilledRecordbatch[container={}, spilledBatches={}, schema={}, spillFile={}, spillSet={}]",
         container, spilledBatches, schema, spillFile, spillSet);
-  }
-
-  @Override
-  public boolean hasFailed() {
-    return lastOutcome == IterOutcome.STOP;
   }
 
   /**

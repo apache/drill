@@ -83,8 +83,6 @@ public class ScreenCreator implements RootCreator<Screen> {
       IterOutcome outcome = next(incoming);
       logger.trace("Screen Outcome {}", outcome);
       switch (outcome) {
-        case STOP:
-          return false;
         case NONE:
           if (firstBatch) {
             // this is the only data message sent to the client and may contain the schema

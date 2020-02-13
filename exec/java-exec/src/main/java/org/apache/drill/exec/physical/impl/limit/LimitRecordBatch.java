@@ -27,6 +27,7 @@ import org.apache.drill.exec.record.AbstractSingleRecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TransferPair;
+import org.apache.drill.exec.record.VectorAccessibleUtilities;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 
@@ -60,15 +61,13 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
   public IterOutcome innerNext() {
     if (!first && !needMoreRecords(numberOfRecords)) {
       outgoingSv.setRecordCount(0);
-      incoming.kill(true);
-
+      incoming.cancel();
       IterOutcome upStream = next(incoming);
 
       while (upStream == IterOutcome.OK || upStream == IterOutcome.OK_NEW_SCHEMA) {
         // Clear the memory for the incoming batch
-        for (VectorWrapper<?> wrapper : incoming) {
-          wrapper.getValueVector().clear();
-        }
+        VectorAccessibleUtilities.clear(incoming);
+
         // clear memory for incoming sv (if any)
         if (incomingSv != null) {
           incomingSv.clear();
@@ -78,9 +77,7 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
       // If EMIT that means leaf operator is UNNEST, in this case refresh the limit states and return EMIT.
       if (upStream == EMIT) {
         // Clear the memory for the incoming batch
-        for (VectorWrapper<?> wrapper : incoming) {
-          wrapper.getValueVector().clear();
-        }
+        VectorAccessibleUtilities.clear(incoming);
 
         // clear memory for incoming sv (if any)
         if (incomingSv != null) {
@@ -139,15 +136,16 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
       container.buildSchema(BatchSchema.SelectionVectorMode.TWO_BYTE);
       return true;
     } else {
-     return false;
+      return false;
     }
   }
 
   /**
-   * Gets the outcome to return from super implementation and then in case of EMIT outcome it refreshes the state of
-   * operator. Refresh is done to again apply limit on all the future incoming batches which will be part of next
+   * Gets the outcome to return from super implementation and then in case of
+   * EMIT outcome it refreshes the state of operator. Refresh is done to again
+   * apply limit on all the future incoming batches which will be part of next
    * record boundary.
-   * @param hasRemainder
+   *
    * @return - IterOutcome to send downstream
    */
   @Override
@@ -201,10 +199,13 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
   }
 
   /**
-   * limit call when incoming batch has number of records more than the start offset such that it can produce some
-   * output records. After first call of this method recordStartOffset should be 0 since we have already skipped the
+   * limit call when incoming batch has number of records more than the start
+   * offset such that it can produce some output records. After first call of
+   * this method recordStartOffset should be 0 since we have already skipped the
    * required number of records as part of first incoming record batch.
-   * @param inputRecordCount - number of records in incoming batch
+   *
+   * @param inputRecordCount
+   *          number of records in incoming batch
    */
   private void limit(int inputRecordCount) {
     int endRecordIndex;
@@ -240,8 +241,10 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
   }
 
   /**
-   * Method which returns if more output records are needed from LIMIT operator. When numberOfRecords is set to
-   * {@link Integer#MIN_VALUE} that means there is no end bound on LIMIT, so get all the records past start offset.
+   * Method which returns if more output records are needed from LIMIT operator.
+   * When numberOfRecords is set to {@link Integer#MIN_VALUE} that means there
+   * is no end bound on LIMIT, so get all the records past start offset.
+   *
    * @return - true - more output records is expected.
    *           false - limit bound is reached and no more record is expected
    */
@@ -261,8 +264,9 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
   }
 
   /**
-   * Reset the states for recordStartOffset and numberOfRecords based on the popConfig passed to the operator.
-   * This method is called for the outcome EMIT no matter if limit is reached or not.
+   * Reset the states for recordStartOffset and numberOfRecords based on the
+   * popConfig passed to the operator. This method is called for the outcome
+   * EMIT no matter if limit is reached or not.
    */
   private void refreshLimitState() {
     // Make sure startOffset is non-negative

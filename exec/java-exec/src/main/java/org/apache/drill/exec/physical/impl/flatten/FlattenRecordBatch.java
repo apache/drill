@@ -184,8 +184,8 @@ public class FlattenRecordBatch extends AbstractSingleRecordBatch<FlattenPOP> {
   }
 
   @Override
-  protected void killIncoming(boolean sendUpstream) {
-    super.killIncoming(sendUpstream);
+  protected void cancelIncoming() {
+    super.cancelIncoming();
     hasRemainder = false;
   }
 

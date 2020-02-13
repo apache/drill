@@ -55,8 +55,7 @@ public class SimpleRecordBatch implements RecordBatch {
   }
 
   @Override
-  public void kill(boolean sendUpstream) {
-  }
+  public void cancel() { }
 
   @Override
   public SelectionVector2 getSelectionVector2() {
@@ -106,10 +105,5 @@ public class SimpleRecordBatch implements RecordBatch {
   @Override
   public void dump() {
     logger.error("SimpleRecordBatch[container=" + container + "]");
-  }
-
-  @Override
-  public boolean hasFailed() {
-    return false;
   }
 }

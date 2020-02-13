@@ -631,6 +631,7 @@ public abstract class TupleState extends ContainerState
       super(events, vectorCache, projectionSet);
     }
 
+    @Override
     public void bindColumnState(ColumnState colState) {
       super.bindColumnState(colState);
       writer().bindListener(this);
@@ -701,6 +702,7 @@ public abstract class TupleState extends ContainerState
       this.offsets = offsets;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public T vector() {
       return vector;

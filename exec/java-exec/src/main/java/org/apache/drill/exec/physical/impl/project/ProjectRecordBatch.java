@@ -68,8 +68,8 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
   }
 
   @Override
-  protected void killIncoming(boolean sendUpstream) {
-    super.killIncoming(sendUpstream);
+  protected void cancelIncoming() {
+    super.cancelIncoming();
     hasRemainder = false;
   }
 

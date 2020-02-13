@@ -55,7 +55,6 @@ public class BloomFilterTest extends BaseTest {
 
     public TestRecordBatch(VectorContainer container) {
       this.container = container;
-
     }
 
     @Override
@@ -84,9 +83,7 @@ public class BloomFilterTest extends BaseTest {
     }
 
     @Override
-    public void kill(boolean sendUpstream) {
-
-    }
+    public void cancel() { }
 
     @Override
     public VectorContainer getOutgoingContainer() {
@@ -124,15 +121,8 @@ public class BloomFilterTest extends BaseTest {
     }
 
     @Override
-    public void dump() {
-    }
-
-    @Override
-    public boolean hasFailed() {
-      return false;
-    }
+    public void dump() { }
   }
-
 
   @Test
   public void testNotExist() throws Exception {
@@ -200,7 +190,6 @@ public class BloomFilterTest extends BaseTest {
     bit.close();
   }
 
-
   @Test
   public void testExist() throws Exception {
 
@@ -267,7 +256,6 @@ public class BloomFilterTest extends BaseTest {
     bitContext.close();
     bit.close();
   }
-
 
   @Test
   public void testMerged() throws Exception {

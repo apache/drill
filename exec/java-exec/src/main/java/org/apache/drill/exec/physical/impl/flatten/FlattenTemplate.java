@@ -23,7 +23,6 @@ import javax.inject.Named;
 
 import org.apache.drill.exec.exception.OversizedAllocationException;
 import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.RecordBatch;
@@ -42,7 +41,6 @@ public abstract class FlattenTemplate implements Flattener {
   private static final int OUTPUT_ROW_COUNT = ValueVector.MAX_ROW_COUNT;
 
   private ImmutableList<TransferPair> transfers;
-  private BufferAllocator outputAllocator;
   private SelectionVectorMode svMode;
   private RepeatedValueVector fieldToFlatten;
   private RepeatedValueVector.RepeatedAccessor accessor;
@@ -158,16 +156,16 @@ public abstract class FlattenTemplate implements Flattener {
         throw new UnsupportedOperationException("Flatten does not support selection vector inputs.");
       case TWO_BYTE:
         throw new UnsupportedOperationException("Flatten does not support selection vector inputs.");
+      default:
     }
     this.transfers = ImmutableList.copyOf(transfers);
-    outputAllocator = outgoing.getOutgoingContainer().getAllocator();
     doSetup(context, incoming, outgoing);
   }
 
   @Override
   public void resetGroupIndex() {
-    this.valueIndex = 0;
-    this.currentInnerValueIndex = 0;
+    valueIndex = 0;
+    currentInnerValueIndex = 0;
   }
 
   public abstract void doSetup(@Named("context") FragmentContext context,

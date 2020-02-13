@@ -150,7 +150,6 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
 
                 case NONE:
                   out = IterOutcome.OK_NEW_SCHEMA;
-                case STOP:
                 default:
                   lastOutcome = out;
                   outcome = out;
@@ -328,7 +327,6 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
                     continue outside;
                   }
                 }
-              case STOP:
               default:
                 lastOutcome = out;
                 outcome = out;

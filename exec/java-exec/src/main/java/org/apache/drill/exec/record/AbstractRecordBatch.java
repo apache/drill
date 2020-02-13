@@ -88,8 +88,6 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
     FIRST,
     /** The first data batch has already been returned. */
     NOT_FIRST,
-    /** The query most likely failed, we need to propagate STOP to the root. */
-    STOP,
     /** All work is done, no more data to be sent. */
     DONE
   }
@@ -141,7 +139,6 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
         logger.debug("Number of records in received batch: {}", b.getRecordCount());
         break;
       default:
-        break;
     }
 
     return next;
@@ -157,9 +154,6 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
           switch (state) {
             case DONE:
               lastOutcome = IterOutcome.NONE;
-              break;
-            case STOP:
-              lastOutcome = IterOutcome.STOP;
               break;
             default:
               state = BatchState.FIRST;
@@ -196,11 +190,11 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
   protected void buildSchema() { }
 
   @Override
-  public void kill(boolean sendUpstream) {
-    killIncoming(sendUpstream);
+  public void cancel() {
+    cancelIncoming();
   }
 
-  protected abstract void killIncoming(boolean sendUpstream);
+  protected abstract void cancelIncoming();
 
   @Override
   public void close() {
@@ -242,11 +236,6 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
   @Override
   public VectorContainer getContainer() {
     return container;
-  }
-
-  @Override
-  public boolean hasFailed() {
-    return lastOutcome == IterOutcome.STOP;
   }
 
   public RecordBatchStatsContext getRecordBatchStatsContext() {

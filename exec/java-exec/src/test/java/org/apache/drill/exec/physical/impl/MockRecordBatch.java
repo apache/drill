@@ -160,14 +160,9 @@ public class MockRecordBatch implements CloseableRecordBatch {
   }
 
   @Override
-  public void kill(boolean sendUpstream) {
+  public void cancel() {
     if (!limitWithUnnest) {
       isDone = true;
-      container.clear();
-      container.setRecordCount(0);
-      if (sv2 != null) {
-        sv2.clear();
-      }
     }
   }
 
@@ -254,7 +249,6 @@ public class MockRecordBatch implements CloseableRecordBatch {
         ++currentContainerIndex;
         return currentOutcome;
       case NONE:
-      case STOP:
         isDone = true;
       case NOT_YET:
         container.setRecordCount(0);
@@ -283,11 +277,6 @@ public class MockRecordBatch implements CloseableRecordBatch {
 
   public void useUnnestKillHandlingForLimit(boolean limitWithUnnest) {
     this.limitWithUnnest = limitWithUnnest;
-  }
-
-  @Override
-  public boolean hasFailed() {
-    return false;
   }
 
   @Override
@@ -324,8 +313,6 @@ public class MockRecordBatch implements CloseableRecordBatch {
     }
 
     public Builder terminateWithError(IterOutcome errorOutcome) {
-      Preconditions.checkArgument(errorOutcome != IterOutcome.STOP);
-
       iterOutcomes.add(errorOutcome);
       return this;
     }

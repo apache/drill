@@ -24,7 +24,6 @@ import org.junit.experimental.categories.Category;
 
 @Category({SqlTest.class, OperatorTest.class})
 public class TestCorrelation extends PlanTestBase {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestCorrelation.class);
 
   @Test  // DRILL-2962
   public void testScalarAggCorrelatedSubquery() throws Exception {

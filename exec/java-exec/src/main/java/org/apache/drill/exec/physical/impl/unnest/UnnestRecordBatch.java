@@ -145,7 +145,7 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
   }
 
   @Override
-  protected void killIncoming(boolean sendUpstream) {
+  protected void cancelIncoming() {
     //
     // In some cases we need to return a predetermined state from a call to next. These are:
     // 1) Kill is called due to an error occurring in the processing of the query. IterOutcome should be NONE
@@ -154,11 +154,7 @@ public class UnnestRecordBatch extends AbstractTableFunctionRecordBatch<UnnestPO
     // special handling is needed in that case.
     //
     Preconditions.checkNotNull(lateral);
-    // Do not call kill on incoming. Lateral Join has the responsibility for killing incoming
-    Preconditions.checkState(context.getExecutorState().isFailed() ||
-      lateral.getLeftOutcome() == IterOutcome.STOP, "Kill received by unnest with unexpected state. " +
-      "Neither the LateralOutcome is STOP nor executor state is failed");
-      logger.debug("Kill received. Stopping all processing");
+    logger.debug("Cancel received. Stopping all processing");
     state = BatchState.DONE;
     hasRemainder = false; // whatever the case, we need to stop processing the current row.
   }

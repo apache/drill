@@ -169,9 +169,6 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
         state = BatchState.DONE;
         container.buildSchema(SelectionVectorMode.NONE);
         return;
-      case STOP:
-        state = BatchState.STOP;
-        return;
       default:
         break;
     }
@@ -235,8 +232,6 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
           }
           // else fall thru
         case NOT_YET:
-        case STOP:
-          return lastKnownOutcome;
         case OK_NEW_SCHEMA:
           createAggregator();
           firstBatchForSchema = true;
@@ -650,8 +645,8 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
   }
 
   @Override
-  protected void killIncoming(boolean sendUpstream) {
-    incoming.kill(sendUpstream);
+  protected void cancelIncoming() {
+    incoming.cancel();
   }
 
   @Override

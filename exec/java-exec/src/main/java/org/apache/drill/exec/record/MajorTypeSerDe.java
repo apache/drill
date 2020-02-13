@@ -41,6 +41,7 @@ public class MajorTypeSerDe {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MajorTypeSerDe.class);
 
 
+  @SuppressWarnings("serial")
   public static class De extends StdDeserializer<MajorType> {
 
     public De() {
@@ -55,6 +56,7 @@ public class MajorTypeSerDe {
 
   }
 
+  @SuppressWarnings("serial")
   public static class Se extends StdSerializer<MajorType> {
 
     public Se() {

@@ -139,7 +139,6 @@ public class MockLateralJoinBatch implements LateralContract, CloseableRecordBat
         }
         return currentOutcome;
       case NONE:
-      case STOP:
         isDone = true;
         return currentOutcome;
       case NOT_YET:
@@ -163,15 +162,10 @@ public class MockLateralJoinBatch implements LateralContract, CloseableRecordBat
   }
 
   @Override
-  public boolean hasFailed() {
-    return false;
-  }
+  public void dump() { }
 
   @Override
-  public void dump() {
-  }
-
-  @Override public int getRecordCount() {
+  public int getRecordCount() {
     return 0;
   }
 
@@ -190,23 +184,28 @@ public class MockLateralJoinBatch implements LateralContract, CloseableRecordBat
     return context;
   }
 
-  @Override public BatchSchema getSchema() {
+  @Override
+  public BatchSchema getSchema() {
     return null;
   }
 
-  @Override public void kill(boolean sendUpstream) {
-    unnest.kill(sendUpstream);
+  @Override
+  public void cancel() {
+    unnest.cancel();
   }
 
-  @Override public VectorContainer getOutgoingContainer() {
+  @Override
+  public VectorContainer getOutgoingContainer() {
     return null;
   }
 
-  @Override public TypedFieldId getValueVectorId(SchemaPath path) {
+  @Override
+  public TypedFieldId getValueVectorId(SchemaPath path) {
     return null;
   }
 
-  @Override public VectorWrapper<?> getValueAccessorById(Class<?> clazz, int... ids) {
+  @Override
+  public VectorWrapper<?> getValueAccessorById(Class<?> clazz, int... ids) {
     return null;
   }
 
@@ -242,7 +241,8 @@ public class MockLateralJoinBatch implements LateralContract, CloseableRecordBat
   @Override
   public VectorContainer getContainer() { return null; }
 
-  @Override public Iterator<VectorWrapper<?>> iterator() {
+  @Override
+  public Iterator<VectorWrapper<?>> iterator() {
     return null;
   }
 }

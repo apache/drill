@@ -266,7 +266,7 @@ public class MergeSortWrapper extends BaseSortWrapper implements SortResults {
     } else {
       int index = 0;
       for (VectorWrapper<?> w : inputDataContainer) {
-        HyperVectorWrapper wrapper = (HyperVectorWrapper<?>) container.getValueVector(index++);
+        HyperVectorWrapper<?> wrapper = (HyperVectorWrapper<?>) container.getValueVector(index++);
         wrapper.updateVectorList(w.getValueVectors());
       }
     }

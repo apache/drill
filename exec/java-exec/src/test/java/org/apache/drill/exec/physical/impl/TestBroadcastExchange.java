@@ -88,6 +88,7 @@ public class TestBroadcastExchange extends PopUnitTestBase {
         }
         b.release();
       }
+      // Nothing done with count?
     }
   }
 
