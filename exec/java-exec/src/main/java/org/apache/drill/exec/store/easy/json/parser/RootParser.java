@@ -36,7 +36,7 @@ public abstract class RootParser implements ElementParser {
 
   public RootParser(JsonStructureParser structParser) {
     this.structParser = structParser;
-    this.rootObject = new ObjectParser(this, structParser.options().rootListener);
+    this.rootObject = new ObjectParser(this, structParser.rootListener());
   }
 
   public abstract boolean parseRoot(TokenIterator tokenizer);

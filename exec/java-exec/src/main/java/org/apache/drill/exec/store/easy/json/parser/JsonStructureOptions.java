@@ -17,7 +17,19 @@
  */
 package org.apache.drill.exec.store.easy.json.parser;
 
+/**
+ * Input to the JSON structure parser which defines guidelines
+ * for low-level parsing as well as listeners for higher-level
+ * semantics.
+ */
 public class JsonStructureOptions {
+
+  /**
+   * JSON returns values as typed tokens. If {@code allTextMode} is
+   * set, the structure parser converts all scalars (except {@code null})
+   * to text and forwards the values to the listener as text.
+   * Implements Drill's "all-text mode" for JSON.
+   */
   public boolean allTextMode;
 
   /**
@@ -31,11 +43,12 @@ public class JsonStructureOptions {
    * and treat it like a set of distinct records.
    */
   public boolean skipOuterList = true;
-  public boolean skipMalformedRecords;
 
   /**
-   * Top-level event listeners.
+   * If true, the structure parser will attempt to recover from JSON syntax
+   * errors by starting over at the next record boundary. The Jackson
+   * parser has limited recovery abilities. At present, recover can consume
+   * two or three valid records before it stabilizes.
    */
-  public ObjectListener rootListener;
-  public ErrorFactory errorFactory;
+  public boolean skipMalformedRecords;
 }

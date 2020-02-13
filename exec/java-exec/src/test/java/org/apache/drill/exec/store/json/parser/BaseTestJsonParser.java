@@ -294,16 +294,13 @@ public class BaseTestJsonParser {
     JsonStructureOptions options = new JsonStructureOptions();
     JsonStructureParser parser;
     ObjectListenerFixture rootObject = new ObjectListenerFixture();
-
-    public JsonParserFixture() {
-      options.rootListener = rootObject;
-      options.errorFactory = new ErrorFactoryFixture();
-    }
+    ErrorFactory errorFactory = new ErrorFactoryFixture();
 
     public void open(String json) {
       InputStream inStream = new
           ReaderInputStream(new StringReader(json));
-      parser = new JsonStructureParser(inStream, options);
+      parser = new JsonStructureParser(inStream, options, rootObject,
+          errorFactory);
     }
 
     public boolean next() {

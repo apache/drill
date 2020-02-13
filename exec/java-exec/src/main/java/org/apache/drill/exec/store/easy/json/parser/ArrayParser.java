@@ -19,6 +19,17 @@ package org.apache.drill.exec.store.easy.json.parser;
 
 import com.fasterxml.jackson.core.JsonToken;
 
+/**
+ * Parses a JSON array, which consists of a list of <i>elements</i>,
+ * represented by a {@code ValueListener}. There is a single listener
+ * for all the elements, which are presumed to be of the same type.
+ * <p>
+ * This parser <i>does not</i> attempt to parse an array as a poor-man's
+ * tuple: {@code [ 101, "fred", 23.45 ]}. The listener could handle this
+ * case. But, if we need to handle such a case, it would be better to
+ * create a new parser for that case, with an element listener per
+ * element as is done for objects.
+ */
 public class ArrayParser extends AbstractElementParser {
 
   private final ArrayListener arrayListener;
@@ -42,14 +53,14 @@ public class ArrayParser extends AbstractElementParser {
       // Position: [ (value, )* ^ ?
      JsonToken token = tokenizer.requireNext();
       switch (token) {
-      case END_ARRAY:
-        break top;
+        case END_ARRAY:
+          break top;
 
-      default:
-        tokenizer.unget(token);
-        arrayListener.onElement();
-        elementParser.parse(tokenizer);
-        break;
+        default:
+          tokenizer.unget(token);
+          arrayListener.onElement();
+          elementParser.parse(tokenizer);
+          break;
       }
     }
     arrayListener.onEnd();
