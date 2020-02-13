@@ -65,7 +65,7 @@ public class MongoStoragePluginConfig extends StoragePluginConfig {
   }
 
   @JsonIgnore
-  public MongoCredential getMongoCrendials() {
+  public MongoCredential getMongoCredentials() {
     return clientURI.getCredentials();
   }
 
