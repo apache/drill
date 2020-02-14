@@ -32,14 +32,16 @@ public class ColumnNamesOptions {
   private final String rowGroupStart;
   private final String rowGroupLength;
   private final String lastModifiedTime;
+  private final String projectMetadataColumn;
 
   public ColumnNamesOptions(OptionManager optionManager) {
-    this.fullyQualifiedName = optionManager.getOption(ExecConstants.IMPLICIT_FQN_COLUMN_LABEL).string_val;
-    this.partitionColumnNameLabel = optionManager.getOption(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL).string_val;
-    this.rowGroupIndex = optionManager.getOption(ExecConstants.IMPLICIT_ROW_GROUP_INDEX_COLUMN_LABEL).string_val;
-    this.rowGroupStart = optionManager.getOption(ExecConstants.IMPLICIT_ROW_GROUP_START_COLUMN_LABEL).string_val;
-    this.rowGroupLength = optionManager.getOption(ExecConstants.IMPLICIT_ROW_GROUP_LENGTH_COLUMN_LABEL).string_val;
-    this.lastModifiedTime = optionManager.getOption(ExecConstants.IMPLICIT_LAST_MODIFIED_TIME_COLUMN_LABEL).string_val;
+    this.fullyQualifiedName = optionManager.getOption(ExecConstants.IMPLICIT_FQN_COLUMN_LABEL_VALIDATOR);
+    this.partitionColumnNameLabel = optionManager.getOption(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL_VALIDATOR);
+    this.rowGroupIndex = optionManager.getOption(ExecConstants.IMPLICIT_ROW_GROUP_INDEX_COLUMN_LABEL_VALIDATOR);
+    this.rowGroupStart = optionManager.getOption(ExecConstants.IMPLICIT_ROW_GROUP_START_COLUMN_LABEL_VALIDATOR);
+    this.rowGroupLength = optionManager.getOption(ExecConstants.IMPLICIT_ROW_GROUP_LENGTH_COLUMN_LABEL_VALIDATOR);
+    this.lastModifiedTime = optionManager.getOption(ExecConstants.IMPLICIT_LAST_MODIFIED_TIME_COLUMN_LABEL_VALIDATOR);
+    this.projectMetadataColumn = optionManager.getOption(ExecConstants.IMPLICIT_PROJECT_METADATA_COLUMN_LABEL_VALIDATOR);
   }
 
   public String partitionColumnNameLabel() {
@@ -66,6 +68,10 @@ public class ColumnNamesOptions {
     return lastModifiedTime;
   }
 
+  public String projectMetadataColumn() {
+    return projectMetadataColumn;
+  }
+
   @Override
   public String toString() {
     return new StringJoiner(", ", ColumnNamesOptions.class.getSimpleName() + "[", "]")
@@ -75,6 +81,7 @@ public class ColumnNamesOptions {
         .add("rowGroupStart='" + rowGroupStart + "'")
         .add("rowGroupLength='" + rowGroupLength + "'")
         .add("lastModifiedTime='" + lastModifiedTime + "'")
+        .add("projectMetadataColumn='" + projectMetadataColumn + "'")
         .toString();
   }
 }

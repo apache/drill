@@ -77,7 +77,7 @@ public abstract class BaseParquetMetadataProvider implements ParquetMetadataProv
   /**
    * {@link HashBasedTable} cannot contain nulls, used this object to represent null values.
    */
-  static final Object NULL_VALUE = new Object();
+  public static final Object NULL_VALUE = new Object();
 
   protected final List<ReadEntryWithPath> entries;
   protected final ParquetReaderConfig readerConfig;

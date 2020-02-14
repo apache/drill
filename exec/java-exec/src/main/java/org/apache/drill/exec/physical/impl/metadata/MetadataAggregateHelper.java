@@ -22,7 +22,9 @@ import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.FunctionCall;
+import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.expression.NullExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.logical.data.NamedExpression;
@@ -55,6 +57,7 @@ public class MetadataAggregateHelper {
   private final ColumnNamesOptions columnNamesOptions;
   private final BatchSchema schema;
   private final AggPrelBase.OperatorPhase phase;
+  private final List<SchemaPath> excludedColumns;
 
   public MetadataAggregateHelper(MetadataAggregateContext context, ColumnNamesOptions columnNamesOptions,
       BatchSchema schema, AggPrelBase.OperatorPhase phase) {
@@ -63,6 +66,8 @@ public class MetadataAggregateHelper {
     this.schema = schema;
     this.phase = phase;
     this.valueExpressions = new ArrayList<>();
+    this.excludedColumns = new ArrayList<>(context.metadataColumns());
+    excludedColumns.add(SchemaPath.getSimplePath(columnNamesOptions.projectMetadataColumn()));
     createAggregatorInternal();
   }
 
@@ -71,8 +76,6 @@ public class MetadataAggregateHelper {
   }
 
   private void createAggregatorInternal() {
-    List<SchemaPath> excludedColumns = context.excludedColumns();
-
     // Iterates through input expressions and adds aggregate calls for table fields
     // to collect required statistics (MIN, MAX, COUNT, etc.) or aggregate calls to merge incoming metadata
     getUnflattenedFileds(Lists.newArrayList(schema), null)
@@ -117,16 +120,16 @@ public class MetadataAggregateHelper {
       }
     }
 
-    for (SchemaPath excludedColumn : excludedColumns) {
-      if (excludedColumn.equals(SchemaPath.getSimplePath(columnNamesOptions.rowGroupStart()))
-          || excludedColumn.equals(SchemaPath.getSimplePath(columnNamesOptions.rowGroupLength()))) {
-        LogicalExpression lastModifiedTime = new FunctionCall("any_value",
+    for (SchemaPath metadataColumns : context.metadataColumns()) {
+      if (metadataColumns.equals(SchemaPath.getSimplePath(columnNamesOptions.rowGroupStart()))
+          || metadataColumns.equals(SchemaPath.getSimplePath(columnNamesOptions.rowGroupLength()))) {
+        LogicalExpression anyValueCall = new FunctionCall("any_value",
             Collections.singletonList(
-                FieldReference.getWithQuotedRef(excludedColumn.getRootSegmentPath())),
+                FieldReference.getWithQuotedRef(metadataColumns.getRootSegmentPath())),
             ExpressionPosition.UNKNOWN);
 
-        valueExpressions.add(new NamedExpression(lastModifiedTime,
-            FieldReference.getWithQuotedRef(excludedColumn.getRootSegmentPath())));
+        valueExpressions.add(new NamedExpression(anyValueCall,
+            FieldReference.getWithQuotedRef(metadataColumns.getRootSegmentPath())));
       }
     }
 
@@ -207,9 +210,8 @@ public class MetadataAggregateHelper {
    */
   private void addCollectListCall(List<LogicalExpression> fieldList) {
     ArrayList<LogicalExpression> collectListArguments = new ArrayList<>(fieldList);
-    List<SchemaPath> excludedColumns = context.excludedColumns();
     // populate columns which weren't included in the schema, but should be collected to the COLLECTED_MAP_FIELD
-    for (SchemaPath logicalExpressions : excludedColumns) {
+    for (SchemaPath logicalExpressions : context.metadataColumns()) {
       // adds string literal with field name to the list
       collectListArguments.add(ValueExpressions.getChar(logicalExpressions.getRootSegmentPath(),
           DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getDefaultPrecision(SqlTypeName.VARCHAR)));
@@ -254,7 +256,7 @@ public class MetadataAggregateHelper {
   private void addMetadataAggregateCalls() {
     AnalyzeColumnUtils.META_STATISTICS_FUNCTIONS.forEach((statisticsKind, sqlKind) -> {
       LogicalExpression call = new FunctionCall(sqlKind.name(),
-          Collections.singletonList(ValueExpressions.getBigInt(1)), ExpressionPosition.UNKNOWN);
+          Collections.singletonList(FieldReference.getWithQuotedRef(columnNamesOptions.projectMetadataColumn())), ExpressionPosition.UNKNOWN);
       valueExpressions.add(
           new NamedExpression(call,
               FieldReference.getWithQuotedRef(AnalyzeColumnUtils.getMetadataStatisticsFieldName(statisticsKind))));
@@ -275,7 +277,6 @@ public class MetadataAggregateHelper {
     for (MaterializedField field : fields) {
       // statistics collecting is not supported for array types
       if (field.getType().getMode() != TypeProtos.DataMode.REPEATED) {
-        List<SchemaPath> excludedColumns = context.excludedColumns();
         // excludedColumns are applied for root fields only
         if (parentFields != null || !excludedColumns.contains(SchemaPath.getSimplePath(field.getName()))) {
           List<String> currentPath;
@@ -313,8 +314,19 @@ public class MetadataAggregateHelper {
       if (interestingColumns == null || interestingColumns.contains(fieldRef)) {
         // collect statistics for all or only interesting columns if they are specified
         AnalyzeColumnUtils.COLUMN_STATISTICS_FUNCTIONS.forEach((statisticsKind, sqlKind) -> {
+          // constructs "case when is not null projectMetadataColumn then column1 else null end" call
+          // to avoid using default values for required columns when data for empty result is obtained
+          LogicalExpression caseExpr = IfExpression.newBuilder()
+              .setIfCondition(new IfExpression.IfCondition(
+                  new FunctionCall(
+                      "isnotnull",
+                      Collections.singletonList(FieldReference.getWithQuotedRef(columnNamesOptions.projectMetadataColumn())),
+                      ExpressionPosition.UNKNOWN), fieldRef))
+              .setElse(NullExpression.INSTANCE)
+              .build();
+
           LogicalExpression call = new FunctionCall(sqlKind.name(),
-              Collections.singletonList(fieldRef), ExpressionPosition.UNKNOWN);
+              Collections.singletonList(caseExpr), ExpressionPosition.UNKNOWN);
           valueExpressions.add(
               new NamedExpression(call,
                   FieldReference.getWithQuotedRef(AnalyzeColumnUtils.getColumnStatisticsFieldName(fieldName, statisticsKind))));

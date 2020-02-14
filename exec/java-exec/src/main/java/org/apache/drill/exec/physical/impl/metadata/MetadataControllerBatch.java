@@ -586,9 +586,9 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
     Multimap<String, StatisticsHolder<?>> columnStatistics = ArrayListMultimap.create();
     Map<String, TypeProtos.MinorType> columnTypes = new HashMap<>();
     for (ColumnMetadata column : columnMetadata) {
-      String fieldName = AnalyzeColumnUtils.getColumnName(column.name());
 
       if (AnalyzeColumnUtils.isColumnStatisticsField(column.name())) {
+        String fieldName = AnalyzeColumnUtils.getColumnName(column.name());
         StatisticsKind<?> statisticsKind = AnalyzeColumnUtils.getStatisticsKind(column.name());
         columnStatistics.put(fieldName,
             new StatisticsHolder<>(getConvertedColumnValue(reader.column(column.name())), statisticsKind));

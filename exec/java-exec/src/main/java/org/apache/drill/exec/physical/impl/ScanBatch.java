@@ -29,6 +29,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
@@ -234,6 +235,21 @@ public class ScanBatch implements CloseableRecordBatch {
       logger.trace("currentReader.next return recordCount={}", recordCount);
       Preconditions.checkArgument(recordCount >= 0, "recordCount from RecordReader.next() should not be negative");
       boolean isNewSchema = mutator.isNewSchema();
+      // If scan is done for collecting metadata, additional implicit column `$project_metadata$`
+      // will be projected to handle the case when scan may return empty results (scan on empty file or row group).
+      // Scan will return single row for the case when empty file or row group is present with correct
+      // values of other implicit columns (like `fqn`, `rgi`), so this metadata will be stored to the Metastore.
+      if (implicitValues != null) {
+        String projectMetadataColumn = context.getOptions().getOption(ExecConstants.IMPLICIT_PROJECT_METADATA_COLUMN_LABEL_VALIDATOR);
+        if (recordCount > 0) {
+          // Sets the implicit value to false to signal that some results were returned and there is no need for creating an additional record.
+          implicitValues.replace(projectMetadataColumn, Boolean.FALSE.toString());
+        } else if (Boolean.parseBoolean(implicitValues.get(projectMetadataColumn))) {
+          recordCount++;
+          // Sets implicit value to null to avoid affecting resulting count value.
+          implicitValues.put(projectMetadataColumn, null);
+        }
+      }
       populateImplicitVectors();
       mutator.container.setValueCount(recordCount);
       oContext.getStats().batchReceived(0, recordCount, isNewSchema);

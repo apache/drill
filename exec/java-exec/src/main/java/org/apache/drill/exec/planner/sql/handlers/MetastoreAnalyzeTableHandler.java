@@ -406,13 +406,13 @@ public class MetastoreAnalyzeTableHandler extends DefaultSqlHandler {
     SchemaPath lastModifiedTimeField =
         SchemaPath.getSimplePath(config.getContext().getOptions().getString(ExecConstants.IMPLICIT_LAST_MODIFIED_TIME_COLUMN_LABEL));
 
-    List<SchemaPath> excludedColumns = Arrays.asList(locationField, lastModifiedTimeField);
+    List<SchemaPath> metadataColumns = Arrays.asList(locationField, lastModifiedTimeField);
 
     MetadataAggregateContext aggregateContext = MetadataAggregateContext.builder()
         .groupByExpressions(Collections.emptyList())
         .interestingColumns(statisticsColumns)
         .createNewAggregations(createNewAggregations)
-        .excludedColumns(excludedColumns)
+        .metadataColumns(metadataColumns)
         .metadataLevel(MetadataType.TABLE)
         .build();
 
@@ -433,7 +433,7 @@ public class MetastoreAnalyzeTableHandler extends DefaultSqlHandler {
     SchemaPath lastModifiedTimeField =
         SchemaPath.getSimplePath(config.getContext().getOptions().getString(ExecConstants.IMPLICIT_LAST_MODIFIED_TIME_COLUMN_LABEL));
 
-    List<SchemaPath> excludedColumns = Arrays.asList(lastModifiedTimeField, locationField);
+    List<SchemaPath> metadataColumns = Arrays.asList(lastModifiedTimeField, locationField);
 
     List<NamedExpression> groupByExpressions = new ArrayList<>(segmentExpressions);
 
@@ -441,7 +441,7 @@ public class MetastoreAnalyzeTableHandler extends DefaultSqlHandler {
         .groupByExpressions(groupByExpressions.subList(0, segmentLevel))
         .interestingColumns(statisticsColumns)
         .createNewAggregations(createNewAggregations)
-        .excludedColumns(excludedColumns)
+        .metadataColumns(metadataColumns)
         .metadataLevel(MetadataType.SEGMENT)
         .build();
 
@@ -461,7 +461,7 @@ public class MetastoreAnalyzeTableHandler extends DefaultSqlHandler {
     SchemaPath lastModifiedTimeField =
         SchemaPath.getSimplePath(config.getContext().getOptions().getString(ExecConstants.IMPLICIT_LAST_MODIFIED_TIME_COLUMN_LABEL));
 
-    List<SchemaPath> excludedColumns = Arrays.asList(lastModifiedTimeField, locationField);
+    List<SchemaPath> metadataColumns = Arrays.asList(lastModifiedTimeField, locationField);
 
     NamedExpression locationExpression =
         new NamedExpression(locationField, FieldReference.getWithQuotedRef(MetastoreAnalyzeConstants.LOCATION_FIELD));
@@ -472,7 +472,7 @@ public class MetastoreAnalyzeTableHandler extends DefaultSqlHandler {
         .groupByExpressions(fileGroupByExpressions)
         .interestingColumns(statisticsColumns)
         .createNewAggregations(createNewAggregations)
-        .excludedColumns(excludedColumns)
+        .metadataColumns(metadataColumns)
         .metadataLevel(MetadataType.FILE)
         .build();
 
@@ -505,13 +505,13 @@ public class MetastoreAnalyzeTableHandler extends DefaultSqlHandler {
     SchemaPath rowGroupLengthField =
         SchemaPath.getSimplePath(config.getContext().getOptions().getString(ExecConstants.IMPLICIT_ROW_GROUP_LENGTH_COLUMN_LABEL));
 
-    List<SchemaPath> excludedColumns = Arrays.asList(lastModifiedTimeField, locationField, rgiField, rowGroupStartField, rowGroupLengthField);
+    List<SchemaPath> metadataColumns = Arrays.asList(lastModifiedTimeField, locationField, rgiField, rowGroupStartField, rowGroupLengthField);
 
     MetadataAggregateContext aggregateContext = MetadataAggregateContext.builder()
         .groupByExpressions(rowGroupGroupByExpressions)
         .interestingColumns(statisticsColumns)
         .createNewAggregations(createNewAggregations)
-        .excludedColumns(excludedColumns)
+        .metadataColumns(metadataColumns)
         .metadataLevel(MetadataType.ROW_GROUP)
         .build();
 

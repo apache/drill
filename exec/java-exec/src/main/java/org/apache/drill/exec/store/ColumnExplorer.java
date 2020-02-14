@@ -311,6 +311,9 @@ public class ColumnExplorer {
         case ROW_GROUP_LENGTH:
           implicitValues.put(key, String.valueOf(length));
           break;
+        case PROJECT_METADATA:
+          implicitValues.put(key, Boolean.TRUE.toString());
+          break;
         case LAST_MODIFIED_TIME:
           try {
             implicitValues.put(key, String.valueOf(fs.getFileStatus(filePath).getModificationTime()));
@@ -509,7 +512,9 @@ public class ColumnExplorer {
 
     ROW_GROUP_START(ExecConstants.IMPLICIT_ROW_GROUP_START_COLUMN_LABEL),
 
-    ROW_GROUP_LENGTH(ExecConstants.IMPLICIT_ROW_GROUP_LENGTH_COLUMN_LABEL);
+    ROW_GROUP_LENGTH(ExecConstants.IMPLICIT_ROW_GROUP_LENGTH_COLUMN_LABEL),
+
+    PROJECT_METADATA(ExecConstants.IMPLICIT_PROJECT_METADATA_COLUMN_LABEL);
 
     private final String name;
 
