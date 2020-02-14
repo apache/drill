@@ -3160,6 +3160,316 @@ public class TestMetastoreCommands extends ClusterTest {
     }
   }
 
+  @Test
+  public void testAnalyzeEmptyNullableParquetTable() throws Exception {
+    File table = dirTestWatcher.copyResourceToRoot(Paths.get("parquet", "empty", "simple", "empty_simple.parquet"));
+
+    String tableName = "parquet/empty/simple/empty_simple.parquet";
+
+    TableInfo tableInfo = getTableInfo(tableName, "default");
+
+    TupleMetadata schema = new SchemaBuilder()
+        .addNullable("id", TypeProtos.MinorType.BIGINT)
+        .addNullable("name", TypeProtos.MinorType.VARCHAR)
+        .build();
+
+    Map<SchemaPath, ColumnStatistics<?>> columnStatistics = ImmutableMap.<SchemaPath, ColumnStatistics<?>>builder()
+        .put(SchemaPath.getSimplePath("name"),
+            getColumnStatistics(null, null, 0L, TypeProtos.MinorType.VARCHAR))
+        .put(SchemaPath.getSimplePath("id"),
+            getColumnStatistics(null, null, 0L, TypeProtos.MinorType.BIGINT))
+        .build();
+
+    BaseTableMetadata expectedTableMetadata = BaseTableMetadata.builder()
+        .tableInfo(tableInfo)
+        .metadataInfo(TABLE_META_INFO)
+        .schema(schema)
+        .location(new Path(table.toURI().getPath()))
+        .columnsStatistics(columnStatistics)
+        .metadataStatistics(Arrays.asList(new StatisticsHolder<>(0L, TableStatisticsKind.ROW_COUNT),
+            new StatisticsHolder<>(MetadataType.ALL, TableStatisticsKind.ANALYZE_METADATA_LEVEL)))
+        .partitionKeys(Collections.emptyMap())
+        .lastModifiedTime(getMaxLastModified(table))
+        .build();
+
+    try {
+      testBuilder()
+          .sqlQuery("ANALYZE TABLE dfs.`%s` REFRESH METADATA", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.default.%s]", tableName))
+          .go();
+
+      MetastoreTableInfo metastoreTableInfo = cluster.drillbit().getContext()
+          .getMetastoreRegistry()
+          .get()
+          .tables()
+          .basicRequests()
+          .metastoreTableInfo(tableInfo);
+
+      assertTrue("table metadata wasn't found", metastoreTableInfo.isExists());
+
+      BaseTableMetadata tableMetadata = cluster.drillbit().getContext()
+          .getMetastoreRegistry()
+          .get()
+          .tables()
+          .basicRequests()
+          .tableMetadata(tableInfo);
+
+      assertEquals(expectedTableMetadata, tableMetadata);
+
+      List<FileMetadata> filesMetadata = cluster.drillbit().getContext()
+          .getMetastoreRegistry()
+          .get()
+          .tables()
+          .basicRequests()
+          .filesMetadata(tableInfo, null, null);
+
+      assertEquals(1, filesMetadata.size());
+
+      List<RowGroupMetadata> rowGroupsMetadata = cluster.drillbit().getContext()
+          .getMetastoreRegistry()
+          .get()
+          .tables()
+          .basicRequests()
+          .rowGroupsMetadata(tableInfo, (String) null, null);
+
+      assertEquals(1, rowGroupsMetadata.size());
+    } finally {
+      run("analyze table dfs.`%s` drop metadata if exists", tableName);
+    }
+  }
+
+  @Test
+  public void testAnalyzeEmptyRequiredParquetTable() throws Exception {
+    String tableName = "analyze_empty_simple_required";
+
+    run("create table dfs.tmp.%s as select 1 as id, 'a' as name from (values(1)) where 1 = 2", tableName);
+
+    File table = new File(dirTestWatcher.getDfsTestTmpDir(), tableName);
+
+    TableInfo tableInfo = getTableInfo(tableName, "tmp");
+
+    TupleMetadata schema = new SchemaBuilder()
+        .add("id", TypeProtos.MinorType.INT)
+        .add("name", TypeProtos.MinorType.VARCHAR)
+        .build();
+
+    Map<SchemaPath, ColumnStatistics<?>> columnStatistics = ImmutableMap.<SchemaPath, ColumnStatistics<?>>builder()
+        .put(SchemaPath.getSimplePath("name"),
+            getColumnStatistics(null, null, 0L, TypeProtos.MinorType.VARCHAR))
+        .put(SchemaPath.getSimplePath("id"),
+            getColumnStatistics(null, null, 0L, TypeProtos.MinorType.INT))
+        .build();
+
+    BaseTableMetadata expectedTableMetadata = BaseTableMetadata.builder()
+        .tableInfo(tableInfo)
+        .metadataInfo(TABLE_META_INFO)
+        .schema(schema)
+        .location(new Path(table.toURI().getPath()))
+        .columnsStatistics(columnStatistics)
+        .metadataStatistics(Arrays.asList(new StatisticsHolder<>(0L, TableStatisticsKind.ROW_COUNT),
+            new StatisticsHolder<>(MetadataType.ALL, TableStatisticsKind.ANALYZE_METADATA_LEVEL)))
+        .partitionKeys(Collections.emptyMap())
+        .lastModifiedTime(getMaxLastModified(table))
+        .build();
+
+    try {
+      testBuilder()
+          .sqlQuery("ANALYZE TABLE dfs.tmp.`%s` REFRESH METADATA", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.tmp.%s]", tableName))
+          .go();
+
+      MetastoreTableInfo metastoreTableInfo = cluster.drillbit().getContext()
+          .getMetastoreRegistry()
+          .get()
+          .tables()
+          .basicRequests()
+          .metastoreTableInfo(tableInfo);
+
+      assertTrue("table metadata wasn't found", metastoreTableInfo.isExists());
+
+      BaseTableMetadata tableMetadata = cluster.drillbit().getContext()
+          .getMetastoreRegistry()
+          .get()
+          .tables()
+          .basicRequests()
+          .tableMetadata(tableInfo);
+
+      assertEquals(expectedTableMetadata, tableMetadata);
+
+      List<FileMetadata> filesMetadata = cluster.drillbit().getContext()
+          .getMetastoreRegistry()
+          .get()
+          .tables()
+          .basicRequests()
+          .filesMetadata(tableInfo, null, null);
+
+      assertEquals(1, filesMetadata.size());
+
+      List<RowGroupMetadata> rowGroupsMetadata = cluster.drillbit().getContext()
+          .getMetastoreRegistry()
+          .get()
+          .tables()
+          .basicRequests()
+          .rowGroupsMetadata(tableInfo, (String) null, null);
+
+      assertEquals(1, rowGroupsMetadata.size());
+    } finally {
+      run("analyze table dfs.tmp.`%s` drop metadata if exists", tableName);
+      run("drop table if exists dfs.tmp.`%s`", tableName);
+    }
+  }
+
+  @Test
+  public void testAnalyzeNonEmptyTableWithEmptyFile() throws Exception {
+    String tableName = "parquet_with_empty_file";
+
+    File table = dirTestWatcher.copyResourceToTestTmp(Paths.get("parquet", "empty", "simple"), Paths.get(tableName));
+
+    TableInfo tableInfo = getTableInfo(tableName, "tmp");
+
+    TupleMetadata schema = new SchemaBuilder()
+        .addNullable("id", TypeProtos.MinorType.BIGINT)
+        .addNullable("name", TypeProtos.MinorType.VARCHAR)
+        .build();
+
+    Map<SchemaPath, ColumnStatistics<?>> columnStatistics = ImmutableMap.<SchemaPath, ColumnStatistics<?>>builder()
+        .put(SchemaPath.getSimplePath("name"),
+            getColumnStatistics("Tom", "Tom", 1L, TypeProtos.MinorType.VARCHAR))
+        .put(SchemaPath.getSimplePath("id"),
+            getColumnStatistics(2L, 2L, 1L, TypeProtos.MinorType.BIGINT))
+        .build();
+
+    BaseTableMetadata expectedTableMetadata = BaseTableMetadata.builder()
+        .tableInfo(tableInfo)
+        .metadataInfo(TABLE_META_INFO)
+        .schema(schema)
+        .location(new Path(table.toURI().getPath()))
+        .columnsStatistics(columnStatistics)
+        .metadataStatistics(Arrays.asList(new StatisticsHolder<>(1L, TableStatisticsKind.ROW_COUNT),
+            new StatisticsHolder<>(MetadataType.ALL, TableStatisticsKind.ANALYZE_METADATA_LEVEL)))
+        .partitionKeys(Collections.emptyMap())
+        .lastModifiedTime(getMaxLastModified(table))
+        .build();
+
+    try {
+      testBuilder()
+          .sqlQuery("ANALYZE TABLE dfs.tmp.`%s` REFRESH METADATA", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.tmp.%s]", tableName))
+          .go();
+
+      MetastoreTableInfo metastoreTableInfo = cluster.drillbit().getContext()
+          .getMetastoreRegistry()
+          .get()
+          .tables()
+          .basicRequests()
+          .metastoreTableInfo(tableInfo);
+
+      assertTrue("table metadata wasn't found", metastoreTableInfo.isExists());
+
+      BaseTableMetadata tableMetadata = cluster.drillbit().getContext()
+          .getMetastoreRegistry()
+          .get()
+          .tables()
+          .basicRequests()
+          .tableMetadata(tableInfo);
+
+      assertEquals(expectedTableMetadata, tableMetadata);
+
+      List<FileMetadata> filesMetadata = cluster.drillbit().getContext()
+          .getMetastoreRegistry()
+          .get()
+          .tables()
+          .basicRequests()
+          .filesMetadata(tableInfo, null, null);
+
+      assertEquals(2, filesMetadata.size());
+
+      List<RowGroupMetadata> rowGroupsMetadata = cluster.drillbit().getContext()
+          .getMetastoreRegistry()
+          .get()
+          .tables()
+          .basicRequests()
+          .rowGroupsMetadata(tableInfo, (String) null, null);
+
+      assertEquals(2, rowGroupsMetadata.size());
+    } finally {
+      run("analyze table dfs.tmp.`%s` drop metadata if exists", tableName);
+    }
+  }
+
+  @Test
+  public void testSelectEmptyRequiredParquetTable() throws Exception {
+    String tableName = "empty_simple_required";
+
+    run("create table dfs.tmp.%s as select 1 as id, 'a' as name from (values(1)) where 1 = 2", tableName);
+
+    try {
+      testBuilder()
+          .sqlQuery("ANALYZE TABLE dfs.tmp.`%s` REFRESH METADATA", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.tmp.%s]", tableName))
+          .go();
+
+      String query = "select * from dfs.tmp.`%s`";
+
+      queryBuilder()
+          .sql(query, tableName)
+          .planMatcher()
+          .include("usedMetastore=true")
+          .match();
+
+      testBuilder()
+          .sqlQuery(query, tableName)
+          .unOrdered()
+          .baselineColumns("id", "name")
+          .expectsEmptyResultSet()
+          .go();
+    } finally {
+      run("analyze table dfs.tmp.`%s` drop metadata if exists", tableName);
+      run("drop table if exists dfs.tmp.`%s`", tableName);
+    }
+  }
+
+  @Test
+  public void testSelectNonEmptyTableWithEmptyFile() throws Exception {
+    String tableName = "parquet_with_empty_file";
+
+    dirTestWatcher.copyResourceToRoot(Paths.get("parquet", "empty", "simple"), Paths.get(tableName));
+
+    try {
+      testBuilder()
+          .sqlQuery("ANALYZE TABLE dfs.`%s` REFRESH METADATA", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.default.%s]", tableName))
+          .go();
+
+      String query = "select * from dfs.`%s`";
+
+      queryBuilder()
+          .sql(query, tableName)
+          .planMatcher()
+          .include("usedMetastore=true")
+          .match();
+
+      testBuilder()
+          .sqlQuery(query, tableName)
+          .unOrdered()
+          .baselineColumns("id", "name")
+          .baselineValues(2L, "Tom")
+          .go();
+    } finally {
+      run("analyze table dfs.`%s` drop metadata if exists", tableName);
+    }
+  }
+
   private static <T> ColumnStatistics<T> getColumnStatistics(T minValue, T maxValue,
       long rowCount, TypeProtos.MinorType minorType) {
     return new ColumnStatistics<>(

@@ -511,6 +511,11 @@ public final class ExecConstants {
       new OptionDescription("Available as of Drill 1.17. Sets the implicit column name for the lastModifiedTime column. " +
           "For internal usage when producing Metastore analyze."));
 
+  public static final String IMPLICIT_PROJECT_METADATA_COLUMN_LABEL = "drill.exec.storage.implicit.project_metadata.column.label";
+  public static final OptionValidator IMPLICIT_PROJECT_METADATA_COLUMN_LABEL_VALIDATOR = new StringValidator(IMPLICIT_PROJECT_METADATA_COLUMN_LABEL,
+      new OptionDescription("Available as of Drill 1.18. Sets the implicit column name for the $project_metadata$ column. " +
+          "For internal usage when producing Metastore analyze."));
+
   public static final String JSON_READ_NUMBERS_AS_DOUBLE = "store.json.read_numbers_as_double";
   public static final BooleanValidator JSON_READ_NUMBERS_AS_DOUBLE_VALIDATOR = new BooleanValidator(JSON_READ_NUMBERS_AS_DOUBLE,
       new OptionDescription("Reads numbers with or without a decimal point as DOUBLE. Prevents schema change errors."));
@@ -1108,14 +1113,14 @@ public final class ExecConstants {
    */
   public static final String METASTORE_USE_SCHEMA_METADATA = "metastore.metadata.use_schema";
   public static final BooleanValidator METASTORE_USE_SCHEMA_METADATA_VALIDATOR = new BooleanValidator(METASTORE_USE_SCHEMA_METADATA,
-      new OptionDescription("Enables schema usage, stored to the Metastore. Default is false. (Drill 1.17+)"));
+      new OptionDescription("Enables schema usage, stored to the Metastore. Default is true. (Drill 1.17+)"));
 
   /**
    * Option for enabling statistics usage, stored in the Metastore, at the planning stage.
    */
   public static final String METASTORE_USE_STATISTICS_METADATA = "metastore.metadata.use_statistics";
   public static final BooleanValidator METASTORE_USE_STATISTICS_METADATA_VALIDATOR = new BooleanValidator(METASTORE_USE_STATISTICS_METADATA,
-      new OptionDescription("Enables statistics usage, stored in the Metastore, at the planning stage. Default is false. (Drill 1.17+)"));
+      new OptionDescription("Enables statistics usage, stored in the Metastore, at the planning stage. Default is true. (Drill 1.17+)"));
 
   /**
    * Option for collecting schema and / or column statistics for every table after CTAS and CTTAS execution.

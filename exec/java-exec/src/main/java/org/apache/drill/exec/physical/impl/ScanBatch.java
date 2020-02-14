@@ -29,6 +29,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
@@ -237,6 +238,18 @@ public class ScanBatch implements CloseableRecordBatch {
       logger.trace("currentReader.next return recordCount={}", recordCount);
       Preconditions.checkArgument(recordCount >= 0, "recordCount from RecordReader.next() should not be negative");
       boolean isNewSchema = mutator.isNewSchema();
+      // adds additional record for the case of making scan for obtaining metadata if required
+      if (implicitValues != null) {
+        String projectMetadataColumn = context.getOptions().getOption(ExecConstants.IMPLICIT_PROJECT_METADATA_COLUMN_LABEL).string_val;
+        if (recordCount > 0) {
+          // sets implicit value to false to signalize that some results were returned and there is no need for creating additional record
+          implicitValues.replace(projectMetadataColumn, Boolean.FALSE.toString());
+        } else if (Boolean.parseBoolean(implicitValues.get(projectMetadataColumn))) {
+          recordCount++;
+          // sets implicit value to null to avoid affecting resulting count value
+          implicitValues.put(projectMetadataColumn, null);
+        }
+      }
       populateImplicitVectors();
       mutator.container.setValueCount(recordCount);
       oContext.getStats().batchReceived(0, recordCount, isNewSchema);
