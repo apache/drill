@@ -66,7 +66,7 @@ public class MetadataAggregateHelper {
     this.schema = schema;
     this.phase = phase;
     this.valueExpressions = new ArrayList<>();
-    this.excludedColumns = new ArrayList<>(context.nonSchemaColumns());
+    this.excludedColumns = new ArrayList<>(context.metadataColumns());
     excludedColumns.add(SchemaPath.getSimplePath(columnNamesOptions.projectMetadataColumn()));
     createAggregatorInternal();
   }
@@ -76,8 +76,6 @@ public class MetadataAggregateHelper {
   }
 
   private void createAggregatorInternal() {
-    List<SchemaPath> nonSchemaColumns = context.nonSchemaColumns();
-
     // Iterates through input expressions and adds aggregate calls for table fields
     // to collect required statistics (MIN, MAX, COUNT, etc.) or aggregate calls to merge incoming metadata
     getUnflattenedFileds(Lists.newArrayList(schema), null)
@@ -122,16 +120,16 @@ public class MetadataAggregateHelper {
       }
     }
 
-    for (SchemaPath nonSchemaColumn : nonSchemaColumns) {
-      if (nonSchemaColumn.equals(SchemaPath.getSimplePath(columnNamesOptions.rowGroupStart()))
-          || nonSchemaColumn.equals(SchemaPath.getSimplePath(columnNamesOptions.rowGroupLength()))) {
+    for (SchemaPath metadataColumns : context.metadataColumns()) {
+      if (metadataColumns.equals(SchemaPath.getSimplePath(columnNamesOptions.rowGroupStart()))
+          || metadataColumns.equals(SchemaPath.getSimplePath(columnNamesOptions.rowGroupLength()))) {
         LogicalExpression anyValueCall = new FunctionCall("any_value",
             Collections.singletonList(
-                FieldReference.getWithQuotedRef(nonSchemaColumn.getRootSegmentPath())),
+                FieldReference.getWithQuotedRef(metadataColumns.getRootSegmentPath())),
             ExpressionPosition.UNKNOWN);
 
         valueExpressions.add(new NamedExpression(anyValueCall,
-            FieldReference.getWithQuotedRef(nonSchemaColumn.getRootSegmentPath())));
+            FieldReference.getWithQuotedRef(metadataColumns.getRootSegmentPath())));
       }
     }
 
@@ -212,9 +210,8 @@ public class MetadataAggregateHelper {
    */
   private void addCollectListCall(List<LogicalExpression> fieldList) {
     ArrayList<LogicalExpression> collectListArguments = new ArrayList<>(fieldList);
-    List<SchemaPath> nonSchemaColumns = context.nonSchemaColumns();
     // populate columns which weren't included in the schema, but should be collected to the COLLECTED_MAP_FIELD
-    for (SchemaPath logicalExpressions : nonSchemaColumns) {
+    for (SchemaPath logicalExpressions : context.metadataColumns()) {
       // adds string literal with field name to the list
       collectListArguments.add(ValueExpressions.getChar(logicalExpressions.getRootSegmentPath(),
           DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM.getDefaultPrecision(SqlTypeName.VARCHAR)));

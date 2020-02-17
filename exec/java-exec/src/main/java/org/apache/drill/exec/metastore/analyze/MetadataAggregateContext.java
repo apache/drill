@@ -39,7 +39,7 @@ public class MetadataAggregateContext {
   /**
    * List of columns which do not belong to table schema, but used to pass some metadata information like file location, row group index, etc.
    */
-  private final List<SchemaPath> nonSchemaColumns;
+  private final List<SchemaPath> metadataColumns;
   private final boolean createNewAggregations;
   private final MetadataType metadataLevel;
 
@@ -47,7 +47,7 @@ public class MetadataAggregateContext {
     this.groupByExpressions = builder.groupByExpressions;
     this.interestingColumns = builder.interestingColumns;
     this.createNewAggregations = builder.createNewAggregations;
-    this.nonSchemaColumns = builder.nonSchemaColumns;
+    this.metadataColumns = builder.metadataColumns;
     this.metadataLevel = builder.metadataLevel;
   }
 
@@ -67,8 +67,8 @@ public class MetadataAggregateContext {
   }
 
   @JsonProperty
-  public List<SchemaPath> nonSchemaColumns() {
-    return nonSchemaColumns;
+  public List<SchemaPath> metadataColumns() {
+    return metadataColumns;
   }
 
   @JsonProperty
@@ -82,7 +82,7 @@ public class MetadataAggregateContext {
         .add("groupByExpressions=" + groupByExpressions)
         .add("interestingColumns=" + interestingColumns)
         .add("createNewAggregations=" + createNewAggregations)
-        .add("excludedColumns=" + nonSchemaColumns)
+        .add("excludedColumns=" + metadataColumns)
         .toString();
   }
 
@@ -95,7 +95,7 @@ public class MetadataAggregateContext {
         .groupByExpressions(groupByExpressions)
         .interestingColumns(interestingColumns)
         .createNewAggregations(createNewAggregations)
-        .nonSchemaColumns(nonSchemaColumns)
+        .metadataColumns(metadataColumns)
         .metadataLevel(metadataLevel);
   }
 
@@ -105,7 +105,7 @@ public class MetadataAggregateContext {
     private List<SchemaPath> interestingColumns;
     private Boolean createNewAggregations;
     private MetadataType metadataLevel;
-    private List<SchemaPath> nonSchemaColumns;
+    private List<SchemaPath> metadataColumns;
 
     public MetadataAggregateContextBuilder groupByExpressions(List<NamedExpression> groupByExpressions) {
       this.groupByExpressions = groupByExpressions;
@@ -127,15 +127,15 @@ public class MetadataAggregateContext {
       return this;
     }
 
-    public MetadataAggregateContextBuilder nonSchemaColumns(List<SchemaPath> nonSchemaColumns) {
-      this.nonSchemaColumns = nonSchemaColumns;
+    public MetadataAggregateContextBuilder metadataColumns(List<SchemaPath> metadataColumns) {
+      this.metadataColumns = metadataColumns;
       return this;
     }
 
     public MetadataAggregateContext build() {
       Objects.requireNonNull(groupByExpressions, "groupByExpressions were not set");
       Objects.requireNonNull(createNewAggregations, "createNewAggregations was not set");
-      Objects.requireNonNull(nonSchemaColumns, "nonSchemaColumns were not set");
+      Objects.requireNonNull(metadataColumns, "metadataColumns were not set");
       Objects.requireNonNull(metadataLevel, "metadataLevel was not set");
       return new MetadataAggregateContext(this);
     }

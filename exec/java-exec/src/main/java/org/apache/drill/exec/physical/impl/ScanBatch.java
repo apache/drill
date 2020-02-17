@@ -238,15 +238,18 @@ public class ScanBatch implements CloseableRecordBatch {
       logger.trace("currentReader.next return recordCount={}", recordCount);
       Preconditions.checkArgument(recordCount >= 0, "recordCount from RecordReader.next() should not be negative");
       boolean isNewSchema = mutator.isNewSchema();
-      // adds additional record for the case of making scan for obtaining metadata if required
+      // If scan is done for collecting metadata, additional implicit column `$project_metadata$`
+      // will be projected to handle the case when scan may return empty results (scan on empty file or row group).
+      // Scan will return single row for the case when empty file or row group is present with correct
+      // values of other implicit columns (like `fqn`, `rgi`), so this metadata will be stored to the Metastore.
       if (implicitValues != null) {
-        String projectMetadataColumn = context.getOptions().getOption(ExecConstants.IMPLICIT_PROJECT_METADATA_COLUMN_LABEL).string_val;
+        String projectMetadataColumn = context.getOptions().getOption(ExecConstants.IMPLICIT_PROJECT_METADATA_COLUMN_LABEL_VALIDATOR);
         if (recordCount > 0) {
-          // sets implicit value to false to signalize that some results were returned and there is no need for creating additional record
+          // Sets the implicit value to false to signal that some results were returned and there is no need for creating an additional record.
           implicitValues.replace(projectMetadataColumn, Boolean.FALSE.toString());
         } else if (Boolean.parseBoolean(implicitValues.get(projectMetadataColumn))) {
           recordCount++;
-          // sets implicit value to null to avoid affecting resulting count value
+          // Sets implicit value to null to avoid affecting resulting count value.
           implicitValues.put(projectMetadataColumn, null);
         }
       }
