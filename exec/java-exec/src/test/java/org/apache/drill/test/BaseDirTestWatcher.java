@@ -73,6 +73,7 @@ public class BaseDirTestWatcher extends DirTestWatcher {
   private File dfsTestTmpParentDir;
   private File dfsTestTmpDir;
   private File rootDir;
+  private File udfDir;
 
   /**
    * Creates a {@link BaseDirTestWatcher} which does not delete it's temp directories at the end of tests.
@@ -103,6 +104,7 @@ public class BaseDirTestWatcher extends DirTestWatcher {
     tmpDir = makeSubDir(Paths.get("tmp"));
     storeDir = makeSubDir(Paths.get("store"));
     dfsTestTmpParentDir = makeSubDir(Paths.get("dfsTestTmp"));
+    udfDir = makeSubDir(Paths.get("udf"));
 
     newDfsTestTmpDir();
   }
@@ -118,6 +120,7 @@ public class BaseDirTestWatcher extends DirTestWatcher {
       FileUtils.cleanDirectory(tmpDir);
       FileUtils.cleanDirectory(storeDir);
       FileUtils.cleanDirectory(dfsTestTmpDir);
+      FileUtils.cleanDirectory(udfDir);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -165,6 +168,14 @@ public class BaseDirTestWatcher extends DirTestWatcher {
 
   public File getSpillDir() {
     return spillDir;
+  }
+
+  /**
+   * Gets the temp directory that should be used as base directory for dynamic UDFs.
+   * @return The temp directory that should be used as base directory for dynamic UDFs.
+   */
+  public File getUdfDir() {
+    return udfDir;
   }
 
   /**

@@ -78,7 +78,6 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
 
   private static final String DEFAULT_JAR_NAME = "drill-custom-lower";
   private static URI fsUri;
-  private static File udfDir;
   private static File jarsDir;
   private static File buildDirectory;
   private static JarBuilder jarBuilder;
@@ -103,9 +102,10 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
 
   @Before
   public void setupNewDrillbit() throws Exception {
-    udfDir = dirTestWatcher.makeSubDir(Paths.get("udf"));
+    File udfLocalDir = new File(dirTestWatcher.getUdfDir(), "local");
     Properties overrideProps = new Properties();
-    overrideProps.setProperty(ExecConstants.UDF_DIRECTORY_ROOT, udfDir.getAbsolutePath());
+    overrideProps.setProperty(ExecConstants.UDF_DIRECTORY_ROOT, dirTestWatcher.getUdfDir().getAbsolutePath());
+    overrideProps.setProperty(ExecConstants.UDF_DIRECTORY_LOCAL, udfLocalDir.getAbsolutePath());
     overrideProps.setProperty(ExecConstants.UDF_DIRECTORY_FS, FileSystem.DEFAULT_FS);
     updateTestCluster(1, DrillConfig.create(overrideProps));
 
@@ -115,7 +115,6 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
   @After
   public void cleanup() throws Exception {
     closeClient();
-    FileUtils.cleanDirectory(udfDir);
     dirTestWatcher.clear();
   }
 
@@ -957,7 +956,7 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
     return spy;
   }
 
-  private class SimpleQueryRunner implements Runnable {
+  private static class SimpleQueryRunner implements Runnable {
 
     private final String query;
 
@@ -975,7 +974,7 @@ public class TestDynamicUDFSupport extends BaseTestQuery {
     }
   }
 
-  private class TestBuilderRunner implements Runnable {
+  private static class TestBuilderRunner implements Runnable {
 
     private final TestBuilder testBuilder;
 

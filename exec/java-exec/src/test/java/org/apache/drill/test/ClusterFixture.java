@@ -584,6 +584,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
     Properties props = new Properties();
     props.putAll(ClusterFixture.TEST_CONFIGURATIONS);
     props.setProperty(ExecConstants.DRILL_TMP_DIR, dirTestWatcher.getTmpDir().getAbsolutePath());
+    props.setProperty(ExecConstants.UDF_DIRECTORY_ROOT, dirTestWatcher.getUdfDir().getAbsolutePath());
     props.setProperty(ExecConstants.SYS_STORE_PROVIDER_LOCAL_PATH, dirTestWatcher.getStoreDir().getAbsolutePath());
 
     builder.configBuilder.configProps(props);
