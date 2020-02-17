@@ -51,6 +51,8 @@
     </div>
   </#if>
 
+  <#include "*/confirmationModals.ftl">
+
   <div class="row">
     <div class="col-md-12">
       <h3><span id="sizeLabel">Drillbits <span class="label label-primary" id="size">${model.getDrillbits()?size}</span>
@@ -223,18 +225,6 @@
       var size = $("#size").html();
       reloadMetrics();
       setInterval(reloadMetrics, refreshTime);
-      var hideShutdownBtns = setShutdownCtrl();
-
-      //Hide Shutdown buttons for remote HTTPS entries
-      function setShutdownCtrl() {
-        for (i = 1; i <= size; i++) {
-          let currentRow = $("#row-"+i);
-          if ( location.protocol == "https:" && (currentRow.find("#current").html() != "Current") ) {
-            //Hide Shutdown Button for remote nodes with HTTPS enabled
-            currentRow.find(".shutdownCtrl").css('display','none');
-          }
-        }
-      }
 
       //Gets a refresh time for graceful shutdown
       function getRefreshTime() {
@@ -350,17 +340,17 @@
                 currentRow.find("#shutdown").prop('disabled',true).css('opacity',0.5).css('cursor','not-allowed');
                 currentRow.find("#queriesCount").text("");
             } else {
-                if (status_map[key] == "ONLINE") {
+                if (status_map[key] === "ONLINE") {
                     currentRow.find("#status").text(status_map[key]).css('font-style','').prop('title','');
-                    //EnableShutdown IFF => !isAuthEnabled-&&-!HTTPS OR isAuthEnabled-&&-current
-                    if ( ( !${model.isAuthEnabled()?c} && location.protocol != "https:" ) || ( ${model.shouldShowAdminInfo()?c} && currentRow.find("#current").html() == "Current" ) ) {
+                    //EnableShutdown IFF => !isAuthEnabled OR isAuthEnabled-&&-current
+                    if ( ( !${model.isAuthEnabled()?c} ) || ( ${model.shouldShowAdminInfo()?c} && currentRow.find("#current").html() === "Current" ) ) {
                       currentRow.find("#shutdown").prop('disabled',false).css('opacity',1.0).css('cursor','pointer').attr('title','');
                     }
                 } else {
-                    if (currentRow.find("#current").html() == "Current") {
+                    if (currentRow.find("#current").html() === "Current") {
                         fillQueryCount(i);
                     }
-                    currentRow.find("#status").text(status_map[key]).css('font-style','').prop('title','');;
+                    currentRow.find("#status").text(status_map[key]).css('font-style', '').prop('title', '');
                 }
                 //Removing accounted key
                 delete bitMap[key];
@@ -433,15 +423,9 @@
         function shutdown(shutdownBtn) {
             let rowElem = $(shutdownBtn).parent().parent();
             let hostAddr = $(rowElem).find('#address').contents().get(0).nodeValue.trim();
-            let hostPort = $(rowElem).find('#httpPort').html();
-            // Always use the host address from the url for the current Drillbit. For details refer DRILL-6663
-            if ((rowElem.find("#current").html() == "Current")) {
-              hostAddr = location.hostname;
-            }
-            let host = hostAddr+":"+hostPort
+            let url = rowElem.find("#current").html() === "Current" ? "/gracefulShutdown" : "/gracefulShutdown/" + hostAddr;
 
-            if (confirm("Are you sure you want to shutdown Drillbit running on " + host + " node?")) {
-              let url = location.protocol + "//" + host + "/gracefulShutdown";
+            showConfirmationDialog("Are you sure you want to shutdown Drillbit running on " + hostAddr + " node?", function() {
               let result = $.ajax({
                     type: 'POST',
                     url: url,
@@ -454,7 +438,7 @@
                         shutdownBtn.prop('disabled',true).css('opacity',0.5);
                     }
               });
-            }
+            });
         }
         </#if>
 
@@ -475,52 +459,44 @@
 
       //Iterates through all the nodes for update
       function reloadMetrics() {
-          for (i = 1; i <= size; i++) {
-            //Skip metrics update for remote bits in HTTPS mode
-            if (i > 1 && location.protocol == "https:") {
-                break;
-            }
-            let currentRow = $("#row-"+i);
-            let address = "";
-            //For 'current' bit, address is referred to by location.hostname instead of FQDN ()
-            if (i == 1) {
-              address = location.hostname;
-            } else {
-              address = currentRow.find("#address").contents().get(0).nodeValue.trim();
-            }
-            let httpPort = currentRow.find("#httpPort").contents().get(0).nodeValue.trim();
-            updateMetricsHtml(address, httpPort, i);
+        for (i = 1; i <= size; i++) {
+          let currentRow = $("#row-" + i);
+          let address = "";
+          let isCurrent = false;
+          //For 'current' bit, address is referred to by location.hostname instead of FQDN ()
+          if (i === 1) {
+            isCurrent = true;
+          } else {
+            address = currentRow.find("#address").contents().get(0).nodeValue.trim();
           }
+          updateMetricsHtml(address, isCurrent, i);
+        }
       }
 
       //Update memory
-      function updateMetricsHtml(drillbit,webport,idx) {
-        /* NOTE: For remote drillbits:
-           If Authentication or SSL is enabled; we'll assume we don't have valid certificates
-        */
-        let remoteHost = location.protocol+"//"+drillbit+":"+webport;
-        //
+      function updateMetricsHtml(drillbit, isCurrent, idx) {
+        let drillbitURL = isCurrent ? "/status/metrics" : "/status/" + drillbit + "/metrics";
         let result = $.ajax({
           type: 'GET',
-          url: location.protocol+"//"+drillbit+":"+webport+"/status/metrics",
+          url: drillbitURL,
           dataType: "json",
-          error: function(data) {
+          error: function (data) {
             resetMetricsHtml(idx);
           },
-          complete: function(data) {
+          complete: function (data) {
             if (typeof data.responseJSON == 'undefined') {
-                resetMetricsHtml(idx);
-                return;
+              resetMetricsHtml(idx);
+              return;
             }
             let metrics = data.responseJSON['gauges'];
             //Memory
             let usedHeap = metrics['heap.used'].value;
-            let maxHeap  = metrics['heap.max'].value;
+            let maxHeap = metrics['heap.max'].value;
             let usedDirect = metrics['drill.allocator.root.used'].value;
             let peakDirect = metrics['drill.allocator.root.peak'].value;
-            let heapUsage    = computeMemUsage(usedHeap,maxHeap);
-            let directUsage  = computeMemUsage(usedDirect,peakDirect);
-            let rowElem = document.getElementById("row-"+idx);
+            let heapUsage = computeMemUsage(usedHeap, maxHeap);
+            let directUsage = computeMemUsage(usedDirect, peakDirect);
+            let rowElem = document.getElementById("row-" + idx);
             let heapElem = rowElem.getElementsByClassName("heap")[0];
             heapElem.innerHTML = heapUsage;
             let directElem = rowElem.getElementsByClassName("direct")[0];
@@ -529,7 +505,7 @@
             let dbitLoad = metrics['drillbit.load.avg'].value;
             let dbitLoadElem = rowElem.getElementsByClassName("bitload")[0];
             if (dbitLoad >= 0) {
-              dbitLoadElem.innerHTML = parseFloat(Math.round(dbitLoad * 10000)/100).toFixed(2) + "%";
+              dbitLoadElem.innerHTML = parseFloat(Math.round(dbitLoad * 10000) / 100).toFixed(2) + "%";
             } else {
               dbitLoadElem.innerHTML = nAText;
             }

@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.server.rest;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -32,6 +33,7 @@ import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -51,6 +53,7 @@ import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
 import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
 import org.apache.drill.exec.work.WorkManager;
+import org.apache.http.client.methods.HttpGet;
 import org.glassfish.jersey.server.mvc.Viewable;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -64,6 +67,7 @@ public class StatusResources {
   public static final String REST_API_SUFFIX = ".json";
   public static final String PATH_STATUS_JSON = "/status" + REST_API_SUFFIX;
   public static final String PATH_STATUS = "/status";
+  public static final String PATH_METRICS = PATH_STATUS + "/metrics";
   public static final String PATH_OPTIONS_JSON = "/options" + REST_API_SUFFIX;
   public static final String PATH_INTERNAL_OPTIONS_JSON = "/internal_options" + REST_API_SUFFIX;
   public static final String PATH_OPTIONS = "/options";
@@ -95,6 +99,14 @@ public class StatusResources {
   @Produces(MediaType.TEXT_HTML)
   public Viewable getStatus() {
     return ViewableWithPermissions.create(authEnabled.get(), "/rest/status.ftl", sc, getStatusJSON());
+  }
+
+  @GET
+  @Path(StatusResources.PATH_METRICS + "/{hostname}")
+  @Produces(MediaType.APPLICATION_JSON)
+  public String getMetrics(@PathParam("hostname") String hostname) throws Exception {
+    URL metricsURL = WebUtils.getDrillbitURL(work, request, hostname, StatusResources.PATH_METRICS);
+    return WebUtils.doHTTPRequest(new HttpGet(metricsURL.toURI()), work.getContext().getConfig());
   }
 
   private List<OptionWrapper> getSystemOptionsJSONHelper(boolean internal)
