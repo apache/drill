@@ -127,6 +127,7 @@ public class OperatorFixture extends BaseFixture implements AutoCloseable {
         configBuilder.put(ExecConstants.SYS_STORE_PROVIDER_LOCAL_PATH, dirTestWatcher.getStoreDir().getAbsolutePath());
         configBuilder.put(ExecConstants.SPILL_DIRS, Lists.newArrayList(dirTestWatcher.getSpillDir().getAbsolutePath()));
         configBuilder.put(ExecConstants.HASHJOIN_SPILL_DIRS, Lists.newArrayList(dirTestWatcher.getSpillDir().getAbsolutePath()));
+        configBuilder.put(ExecConstants.UDF_DIRECTORY_ROOT, dirTestWatcher.getUdfDir().getAbsolutePath());
       }
     }
 
