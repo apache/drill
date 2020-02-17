@@ -1,12 +1,12 @@
 ---
 title: "Drill Iceberg Metastore"
 parent: "Drill Metastore"
-date: 2020-01-31
+date: 2020-03-03
 ---
 
-Drill uses Iceberg Metastore implementation based on [Iceberg tables](http://iceberg.incubator.apache.org). For Drill 1.17,
- this is default Drill Metastore implementation. For details on how to configure Iceberg Metastore implementation and
- its option descriptions, please refer to [Iceberg Metastore docs](https://github.com/apache/drill/blob/master/metastore/iceberg-metastore/README.md).
+Drill's Metastore allows a variety of storage engines. Drill ships with a storage engine based on
+ [Iceberg tables](http://iceberg.incubator.apache.org). For Drill 1.17, this is default Drill Metastore
+ implementation.
 
 {% include startnote.html %}
 Iceberg table supports concurrent writes and transactions but they are only effective on file systems that support
@@ -16,21 +16,23 @@ If the file system does not support atomic rename, it could lead to inconsistenc
 
 ### Iceberg Tables Location
 
-Iceberg tables will reside on the file system in the location based on
-Iceberg Metastore base location `drill.metastore.iceberg.location.base_path` and component specific location.
-If Iceberg Metastore base location is `/drill/metastore/iceberg`
-and tables component location is `tables`. Iceberg table for tables component
-will be located in `/drill/metastore/iceberg/tables` folder.
+Iceberg is essentially a file system within a file. The Iceberg table is stored in a file system. In the tutorial we
+ stored the Metastore in your local file system. Drill is a distributed query engine, so production deployments MUST
+ store the Metastore on DFS such as HDFS.
 
-Metastore metadata will be stored inside Iceberg table location provided
-in the configuration file. Drill table metadata location will be constructed
-based on specific component storage keys. For example, for `tables` component,
-storage keys are storage plugin, workspace and table name: unique table identifier in Drill.
+Iceberg Metastore configuration can be set in `drill-metastore-distrib.conf` or `drill-metastore-override.conf` files.
+The default configuration is indicated in `drill-metastore-module.conf` file.
 
-Assume Iceberg table location is `/drill/metastore/iceberg/tables`, metadata for the table
-`dfs.tmp.nation` will be stored in the `/drill/metastore/iceberg/tables/dfs/tmp/nation` folder.
+Within the Metastore directory, the Metastore stores the data for each table as a set of records within a single Iceberg table.
 
-Example of base Metastore configuration file `drill-metastore-override.conf`, where Iceberg tables will be stored in
+Iceberg tables will reside on the file system in the location based on Iceberg Metastore base location
+ `drill.metastore.iceberg.location.base_path` configuration property and component specific location.
+Table metadata resides in the `${drill.metastore.iceberg.location.base_path}/tables` directory.
+
+If you ran through the [Tutorial]({{site.baseurl}}/docs/using-drill-metastore/#tutorial), Metastore files are stored in `/home/username/drill/metastore/iceberg/tables`.
+If you inspect this directory you will see the following directories `my-dfs/tmp/lineitem/`.
+
+Example of base Metastore configuration file `drill-metastore-override.conf`, where Iceberg tables are stored in
  hdfs:
 
 ```
@@ -45,19 +47,6 @@ drill.metastore.iceberg: {
   }
 }
 ```
-
-### Metadata Storage Format
-
-Iceberg tables support data storage in three formats: Parquet, Avro, ORC. Drill metadata will be stored in Parquet files.
-This format was chosen over others since it is column oriented and efficient in terms of disk I/O when specific
-columns need to be queried.
-
-Each Parquet file will hold information for one partition. Partition keys will depend on Metastore
-component characteristics. For example, for tables component, partitions keys are storage plugin, workspace,
-table name and metadata key.
-
-Parquet files name will be based on UUID to ensure uniqueness. If somehow collision occurs, modify operation
-in Metastore will fail.
 
 ### Iceberg metadata expiration
 

@@ -1,7 +1,7 @@
 ---
 title: "Using Drill Metastore"
 parent: "Drill Metastore"
-date: 2020-01-31
+date: 2020-03-03
 ---
 
 Drill 1.17 introduces the Drill Metastore which stores the table schema and table statistics. Statistics allow Drill to better create optimal query plans.
@@ -9,6 +9,32 @@ Drill 1.17 introduces the Drill Metastore which stores the table schema and tabl
 The Metastore is a Beta feature; it is subject to change. We encourage you to try it and provide feedback.
 Because the Metastore is in Beta, the SQL commands and Metastore formats may change in the next release.
 {% include startnote.html %}In Drill 1.17, this feature is supported for Parquet tables only and is disabled by default.{% include endnote.html %}
+
+## Drill Metastore introduction
+
+One of the main advantages of Drill is schema-on-read. But Drill can’t handle some cases with this approach, there
+ are the issues related to schema evolution or ambiguous schema.
+
+Significant benefits of schema-aware execution:
+
+ - At Planning time:
+    - Better scope for planning optimizations.
+    - Proper estimation of column widths since types are known, hence more accurate costing.
+    - Graceful early exit if certain data type validations fail.
+ - At Runtime:
+    - `SchemaChange` exceptions avoidance. All minor fragments will have a common understanding of the schema.
+
+Reading the data along with its statistics metadata helps to build more efficient plans and optimize query execution:
+
+ - Crucial for optimal join planning, 2-phase aggregation vs 1-phase aggregation planning, selectivity estimation of filter conditions, parallelization decisions.
+
+Taking into account the above points, existing query processing can be improved by:
+
+ - storing table schema and reusing it;
+ - collecting, storing and reusing table statistics to improve query planning.
+
+One of the main steps to resolve all these goals is providing the framework for metadata management named hereafter
+ as Drill Metastore.
 
 ## Enabling Drill Metastore
 
@@ -21,10 +47,10 @@ Alternatively, you can enable the option in the Drill Web UI at `http://<drill-h
 
 ## Computing and storing table metadata to Drill Metastore
 
-Once you enable the Metastore, the next step is to populate it with data. Drill can query a table whether that table
- has a Metastore entry or not. (If you are familiar with Hive, then you know that Hive requires that all tables have
- Hive Metastore entries before you can query them.) In Drill, only add data to the Metastore when doing so improves
- query performance. In general, large tables benefit from statistics more than small tables do.
+Once you enable the Metastore, the next step is to populate it with data. Metastore entries are optional. If you
+ query a table without a Metastore entry, Drill works with that table just as if the Metastore was disabled. In Drill,
+ only add data to the Metastore when doing so improves query performance. In general, large tables benefit from
+ statistics more than small tables do.
 
 Unlike Hive, Drill does not require you to declare a schema. Instead, Drill infers the schema by scanning your table 
  in the same way as it is done during regular select and computes some metadata like `MIN` / `MAX` column values and
@@ -34,12 +60,22 @@ Unlike Hive, Drill does not require you to declare a schema. Instead, Drill infe
 
 ## Configuration
 
-Default Metastore configuration is defined in `drill-metastore-default.conf` file.
-It can be overridden in `drill-metastore-override.conf`. Distribution configuration can be
-indicated in `drill-metastore-distrib.conf`.
+To configure the Metastore, create `$DRILL_HOME/conf/drill-metastore-override.conf` file.
+ This is a HOCON-format file, just like `drill-override.conf`. All Metastore configuration properties should reside in
+ `drill.metastore` namespace.
 
-All configuration properties should reside in `drill.metastore` namespace.
-Metastore implementation based on class implementation config property `drill.metastore.implementation.class`.
+### Metastore Implementations
+
+Drill Metastore offers an API that allows for any number of implementations. See
+ [metastore-api module docs](https://github.com/apache/drill/blob/master/metastore/metastore-api/README.md) for a description of the API.
+
+The default implementation is the [Iceberg Metastore]({{site.baseurl}}/docs/drill-iceberg-metastore) based on
+ [Iceberg tables](http://iceberg.incubator.apache.org) that provides support of transactions and concurrent writes. It
+ resides on the file system specified in Metastore configuration.
+
+To specify custom Metastore implementation, place the JAR which has the implementation of
+ `org.apache.drill.metastore.Metastore` interface into classpath and indicate custom class in the
+ `drill.metastore.implementation.class` config property.
 The default value is the following:
 
 ```
@@ -48,42 +84,52 @@ drill.metastore: {
 }
 ```
 
-Note, that currently out of box Iceberg Metastore is available and is the default one. Though any custom
- implementation can be added by placing the JAR into classpath which has the implementation of
- `org.apache.drill.metastore.Metastore` interface and indicating custom class in the `drill.metastore.implementation.class`.
-
 ### Metastore Components
 
-Metastore can store metadata for various components: tables, views, etc.
-Current implementation provides fully functioning support for tables component.
-Views component support is not implemented but contains stub methods to show
-how new Metastore components like UDFs, storage plugins, etc. can be added in the future.
+The Drill 1.17 version of the Metastore stores metadata about tables: the table schema and table statistics.
+The Metastore is an active subproject of Drill, See [DRILL-6552](https://issues.apache.org/jira/browse/DRILL-6552) for more information.
 
-### Metastore Tables
+### Table Metadata
 
-Metastore Tables component contains metadata about Drill tables, including general information, as well as
-information about table segments, files, row groups, partitions.
+Table Metadata includes the following info:
 
-Full table metadata consists of two major concepts: general information and top-level segments metadata.
-Table general information contains basic table information and corresponds to the `BaseTableMetadata` class.
+ - Table schema, column name, type, nullability, scale and precision if available, and other info. For details please
+  refer to [Schema provisioning]({{site.baseurl}}/docs/create-or-replace-schema/#usage-notes).
+ - Table statistics are of two kinds:
+    - Summary statistics: `MIN`, `MAX`, `NULL count`, etc.
+    - Detail statistics: histograms, `NDV`, etc.
 
-A table can be non-partitioned and partitioned. Non-partitioned tables have only one top-level segment 
-which is called default (`MetadataInfo#DEFAULT_SEGMENT_KEY`). Partitioned tables may have several top-level segments.
-Each top-level segment can include metadata about inner segments, files, row groups, and partitions.
+Schema information and summary statistics also computed and stored for table segments, files, row groups and partitions.
 
-A unique table identifier in Metastore Tables is a combination of storage plugin, workspace, and table name.
-Table metadata inside is grouped by top-level segments, unique identifier of the top-level segment and its metadata
-is storage plugin, workspace, table name, and metadata key.
+The detailed metadata schema is described [here](https://github.com/apache/drill/tree/master/metastore/metastore-api#metastore-tables).
+You can try out the metadata to get a sense of what is available, by using the
+ [Inspect the Metastore using `INFORMATION_SCHEMA` tables]({{site.baseurl}}/docs/using-drill-metastore/#inspect-the-metastore-using-information_schema-tables) tutorial.
+
+Every table described by the Metastore may be a bare file or one or more files that reside in one or more directories.
+
+If a table consists of a single directory or file, then it is non-partitioned. The single directory can contain any number of files.
+Larger tables tend to have subdirectories. Each subdirectory is a partition and such a table are called "partitioned".
+Please refer to [Exposing Drill Metastore metadata through `INFORMATION_SCHEMA` tables]({{site.baseurl}}/docs/using-drill-metastore/#exposing-drill-metastore-metadata-through-information_schema-tables)
+ for information, how to query partitions and segments metadata.
+
+A traditional database divides tables into schemas and tables.
+Drill can connect to any number of data sources, each of which may have its own schema.
+As a result, the Metastore labels tables with a combination of (plugin configuration name, workspace name, table name).
+Note that if before renaming any of these items, you must delete table's Metadata entry and recreate it after renaming.
 
 ### Related Session/System Options
 
-The following options are set via `ALTER SYSTEM SET`, or `ALTER SESSION SET` or via the Drill Web console.
+The Metastore provides a number of options to fit your environment. The default options are fine in most cases.
+The options are set via `ALTER SYSTEM SET`, `SET` (it is an alias for `ALTER SESSION SET`) or the Drill Web console.
+
+In general, admin should set the options via `ALTER SYSTEM` so that they take effect for all users.
+Setting options at the session level is an advanced topic.
 
 - **metastore.enabled**
 Enables Drill Metastore usage to be able to store table metadata during ANALYZE TABLE commands execution and to be able
  to read table metadata during regular queries execution or when querying some INFORMATION_SCHEMA tables. Default is `false`.
 - **metastore.metadata.store.depth_level**
-Specifies the maximum level of depth for collecting metadata. Same options as the _level_ option above. Default is `'ALL'`.
+Specifies the most-specific metadata kind to be collected with more general metadata kinds. Same options as the _level_ option above. Default is `'ALL'`.
 - **metastore.retrieval.retry_attempts**
 If you run the `ANALYZE TABLE` command at the same time as queries run, then the query can read incorrect or corrupt statistics.
 Drill will reload statistics and replan the query. This option specifies the maximum number of retry attempts. Default is `5`.
@@ -95,53 +141,42 @@ The `ANALYZE TABLE` command infers table schema as it gathers statistics. This o
 Disable this option if Drill has inferred the schema incorrectly, or schema will be provided separately (see [CREATE OR REPLACE SCHEMA]({{site.baseurl}}/docs/create-or-replace-schema)).
 Default is `true`.
 - **metastore.metadata.use_statistics**
-Enables obtaining table and column statistics, stored in the Metastore, at the planning stage. Default is `true`.
+Enables the Drill query planner to use table and column statistics stored in the Metastore. Default is `true`.
 Enable `planner.statistics.use` to be able to use statistics during query planning.
-- **metastore.metadata.ctas.auto-collect**
-Drill provides the [`CREATE TABLE AS`]({{site.baseurl}}/docs/create-or-replace-schema) commands to create new tables.
-This option causes Drill to gather schema and statistics for those tables automatically as they are written.
-This option is not implemented for now. Possible values: `'ALL'`, `'SCHEMA'`, `'NONE'`. Default is `'NONE'`.
 - **drill.exec.storage.implicit.last_modified_time.column.label**
 Sets the implicit column name for the last modified time (`lmt`) column. Used when producing Metastore analyze. You can
  set the last modified time column name to custom name when current column name clashes which column name present in the
  table. If your table contains a column name with the same name as an implicit column, the implicit column takes
- priority and shadows column from the table.
+ priority and shadows column from the table. Default is `lmt`.
 - **drill.exec.storage.implicit.row_group_index.column.label**
 Sets the implicit column name for the row group index (`rgi`) column. Used when producing Metastore analyze. You can
  set row group index column name to custom name when current column name clashes which column name present in the
  table. If your table contains a column name with the same name as an implicit column, the implicit column takes
- priority and shadows column from the table.
+ priority and shadows column from the table. Default is `rgi`.
 - **drill.exec.storage.implicit.row_group_length.column.label**
 Sets the implicit column name for the row group length (`rgl`) column. Used when producing Metastore analyze. You can
  set row group length column name to custom name when current column name clashes which column name present in the
  table. If your table contains a column name with the same name as an implicit column, the implicit column takes
- priority and shadows column from the table.
+ priority and shadows column from the table. Default is `rgl`.
 - **drill.exec.storage.implicit.row_group_start.column.label**
 Sets the implicit column name for the row group start (`rgs`) column. Used when producing Metastore analyze. You can
  set row group start column name to custom name when current column name clashes which column name present in the
  table. If your table contains a column name with the same name as an implicit column, the implicit column takes
- priority and shadows column from the table.
+ priority and shadows column from the table. Default is `rgs`.
 
-## Incremental analysis
+## Analyzing a table
 
-If you have computed statistics for a table, and issue `ANALYZE TABLE` a second time, Drill will attempt to update
- statistics, called "incremental analysis."
+You create Metastore metadata by running the [`ANALYZE TABLE`]({{site.baseurl}}/docs/analyze-table-refresh-metadata) command.
+The first time you run it, the Metastore will infer the schema and (depending on which options you have selected), populate statistics.
+
+Tables change over time. To keep the Metastore metadata up-to-date, you must periodically run `ANALYZE TABLE` again
+ on each changed table.
+When you do `ANALYZE TABLE` a second time, Drill will attempt to update statistics, called "incremental analysis".
+
 Incremental analysis will compute metadata only for files and partitions changed since the last analysis and reuse
  actual metadata from the Metastore where possible.
 
-Drill performs incremental analysis only when the `ANALYZE TABLE command` is identical to the previous command:
-- The list of columns in the `COLUMNS` clause is a subset of interesting columns from the previous run.
-- The metadata level in the LEVEL clause must be the same as the previous run.
-
-If either of these two conditions is false, Drill will perform a full analysis over the entire table.
-
-## General Information
-
-- Drill 1.17 supports the Metastore and `ANALYZE TABLE` only for tables stored as Parquet files and only when stored in the `DFS` storage plugin.
-- The first time you execute ANALYZE TABLE for a table, Drill will scan the entire table (all files.)
-When you issue the same command for the next time, Drill will scan only those files added since the previous run.
 The command will return the following message if table statistics are up-to-date:
-
 
 ```
 apache drill (dfs.tmp)> analyze table lineitem refresh metadata;
@@ -152,6 +187,11 @@ apache drill (dfs.tmp)> analyze table lineitem refresh metadata;
 +-------+---------------------------------------------------------+
 ```
 
+Table schemas evolve over time. If your table adds (or removes) columns, run `ANALYZE TABLE` with the new set of
+ columns. Drill will perform a full table analysis.
+
+## General Information
+
 ### Metadata usage
 
 Drill uses the Metastore in several places. When you run a query with multiple directories, files or Parquet row groups,
@@ -160,19 +200,78 @@ Drill uses the Metastore in several places. When you run a query with multiple d
  then Drill will assume that existing metadata is invalid and wouldn't use it. Periodically rerun `ANALYZE TABLE` so
  that Drill can use table metadata when possible.
 
-### Limitations
+### Exposing Drill Metastore metadata through `INFORMATION_SCHEMA` tables
 
-This feature is currently in the beta phase (preview, experimental) for Drill 1.17 and only applies to Parquet
- tables in this release. You must enable this feature through the `metastore.enabled` system/session option.
+Drill exposes some Metastore tables metadata through `INFORMATION_SCHEMA` tables.
+Note, that Metastore metadata will be exposed to the `INFORMATION_SCHEMA` only if Metastore is enabled. If it is disabled, info
+ tables won't contain Metastore metadata.
 
-## Examples
+`TABLES` table includes the set of tables on which you have run `ANALYZE TABLE`.
+Description of Metastore-specific columns:
 
-Examples throughout this topic use the files and directories described in the following section, Directory, and File Setup.
+|Column name            |Type       |Nullable   |Description                                                                                            |
+|-----------------------|-----------|-----------|-------------------------------------------------------------------------------------------------------|
+|`TABLE_SOURCE`         |VARCHAR    |YES        |Table data type: `PARQUET`, `CSV`, `JSON`                                                              |
+|`LOCATION`             |VARCHAR    |YES        |Table location: `/tmp/nation`                                                                          |
+|`NUM_ROWS`             |BIGINT     |YES        |Total number of rows in all files of the table. Null if not known                                      |
+|`LAST_MODIFIED_TIME`   |TIMESTAMP  |YES        |Timestamp of the most-recently modified file within the table. Updated on each `ANALYZE TABLE` run.    |
+
+The `COLUMNS` table describes the columns within each table. Only those columns listed in the `COLUMNS` clause of the
+ `ANALYZE TABLE` statement appear in this table.
+
+|Column name            |Type       |Nullable   |Description                                                                                                                                                                        |
+|-----------------------|-----------|-----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|`COLUMN_DEFAULT`       |VARCHAR    |YES        |Column default value.                                                                                                                                                              |
+|`COLUMN_FORMAT`        |VARCHAR    |YES        |Usually applicable for date time columns: `yyyy-MM-dd`. See [Format for Date, Time Conversion]({{site.baseurl}}/docs/create-or-replace-schema/#format-for-date-time-conversion).   |
+|`NUM_NULLS`            |BIGINT     |YES        |Number of rows which contain nulls for this column.                                                                                                                                |
+|`MIN_VAL`              |VARCHAR    |YES        |Minimum value of the column. For example: `'-273'`.                                                                                                                                |
+|`MAX_VAL`              |VARCHAR    |YES        |Maximum value of the column. For example: `'100500'`.                                                                                                                              |
+|`NDV`                  |FLOAT8     |YES        |Number of distinct values in column.                                                                                                                                               |
+|`EST_NUM_NON_NULLS`    |FLOAT8     |YES        |Estimated number of non null values.                                                                                                                                               |
+|`IS_NESTED`            |BIT        |NO         |If column is nested. Nested columns are extracted from columns with struct type.                                                                                                   |
+
+A table can be divided into directories, called "partitions". The `PARTITIONS` table contains an entry for each directory.
+
+|Column name            |Type       |Nullable   |Description                                                                                                                                                                        |
+|-----------------------|-----------|-----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|`TABLE_CATALOG`        |VARCHAR    |YES        |Table catalog (currently we have only one catalog): `DRILL`.                                                                                                                       |
+|`TABLE_SCHEMA`         |VARCHAR    |YES        |Table schema: `dfs.tmp`.                                                                                                                                                           |
+|`TABLE_NAME`           |VARCHAR    |YES        |Table name: `nation`.                                                                                                                                                              |
+|`METADATA_KEY`         |VARCHAR    |YES        |Top level segment key, the same for all nested segments and partitions: `part_int=3`.                                                                                              |
+|`METADATA_TYPE`        |VARCHAR    |YES        |`SEGMENT` or `PARTITION`. Partition here corresponds to "Drill partition", though segment corresponds to data parts like partitions in general case, for example, Hive partition.  |
+|`METADATA_IDENTIFIER`  |VARCHAR    |YES        |Current metadata identifier: `part_int=3/part_varchar=g`. It is unique value for segment or partition within the table.                                                            |
+|`PARTITION_COLUMN`     |VARCHAR    |YES        |Partition column name: `part_varchar`.                                                                                                                                             |
+|`PARTITION_VALUE`      |VARCHAR    |YES        |Partition column value: `g`.                                                                                                                                                       |
+|`LOCATION`             |VARCHAR    |YES        |Segment location, `null` for partitions: `/tmp/nation/part_int=3`.                                                                                                                 |
+|`LAST_MODIFIED_TIME`   |TIMESTAMP  |YES        |Last modification time.                                                                                                                                                            |
+
+### Limitations of the 1.17 release
+
+ - Applies to tables stored as Parquet files and only when stored in the `DFS` storage plugin.
+ - Disabled by default. You must enable this feature through the `metastore.enabled` system/session option.
+
+### Cheat sheet of `ANALYZE TABLE` commands
+
+ - Add a new table with `ANALYZE TABLE dfs.tmp.lineitem REFRESH METADATA` command.
+ - When table data (but not schema) changes, run `ANALYZE TABLE dfs.tmp.lineitem REFRESH METADATA` command.
+ - When the table schema changes, run `ANALYZE TABLE dfs.tmp.lineitem COLUMNS (col1, col2, ...) REFRESH METADATA` command.
+ - If partitions are added or removed, run `ANALYZE TABLE dfs.tmp.lineitem REFRESH METADATA` command.
+ - Remove table metadata by submitting `ANALYZE TABLE dfs.tmp.lineitem DROP METADATA` command.
+
+## Tutorial
+
+Examples throughout this topic use the files and directories described in the following section `Directory and File Setup`.
 
 ### Directory and File Setup
 
+The following examples are written for local file system, but Drill Metastore supports collecting metadata for tables
+ placed in any any of Drill's supported file systems. The examples work for both embedded and distributed Drill modes.
+
 Download [TPC-H sf1 tables](https://s3-us-west-1.amazonaws.com/drill-public/tpch/sf1/tpch_sf1_parquet.tar.gz) and
- unpack archive.
+ unpack archive to desired file system.
+
+Set up storage plugin for desired file system, as described here:
+ [Connecting Drill to a File System]({{site.baseurl}}/docs/file-system-storage-plugin/#connecting-drill-to-a-file-system).
 
 Create lineitem directory in `/tmp/` and two subdirectories under `/tmp/lineitem` named `s1` and `s2` and copy there table data:
 
@@ -196,14 +295,13 @@ SELECT count(*) FROM dfs.tmp.lineitem;
 
 Notice that the query plan contains a group scan with `usedMetastore = false`:
 
-
 ```
 00-00    Screen : rowType = RecordType(BIGINT EXPR$0): rowcount = 1.0, cumulative cost = {2.1 rows, 2.1 cpu, 1.0 io, 0.0 network, 0.0 memory}, id = 8410
 00-01      Project(EXPR$0=[$0]) : rowType = RecordType(BIGINT EXPR$0): rowcount = 1.0, cumulative cost = {2.0 rows, 2.0 cpu, 1.0 io, 0.0 network, 0.0 memory}, id = 8409
 00-02        DirectScan(groupscan=[selectionRoot = file:/tmp/lineitem, numFiles = 12, usedMetadataSummaryFile = false, usedMetastore = false, ...
 ```
 
-### Computing and storing table metadata to Drill Metastore
+### Compute table metadata and store in the Drill Metastore
 
 Enable Drill Metastore:
 
@@ -211,9 +309,10 @@ Enable Drill Metastore:
 SET `metastore.enabled` = true;
 ```
 
-Run [ANALYZE TABLE]({{site.baseurl}}/docs/analyze-table-refresh-metadata) command on the table, whose metadata should
- be computed and stored into the Drill Metastore:
+The above command enables the Metastore for just this one session.
 
+Run the [ANALYZE TABLE]({{site.baseurl}}/docs/analyze-table-refresh-metadata) command on the table, whose metadata should
+ be computed and stored into the Drill Metastore:
 
 ```
 apache drill> ANALYZE TABLE dfs.tmp.lineitem REFRESH METADATA;
@@ -227,9 +326,7 @@ apache drill> ANALYZE TABLE dfs.tmp.lineitem REFRESH METADATA;
 
 The output of this command provides the status of the command execution and its summary.
 
-Once, table metadata is collected and stored in the Metastore, it will be used when querying the table. To ensure that it was used, its
- info was added to the group scan (`usedMetastore=true` entry in `ParquetGroupScan`):
-
+Now that we've collected table metadata, we can use it when we query the table, by checking the `usedMetastore=true` entry in `ParquetGroupScan`:
 
 ```
 00-00    Screen : rowType = RecordType(BIGINT EXPR$0): rowcount = 1.0, cumulative cost = {2.1 rows, 2.1 cpu, 1.0 io, 0.0 network, 0.0 memory}, id = 8560
@@ -237,10 +334,9 @@ Once, table metadata is collected and stored in the Metastore, it will be used w
 00-02        DirectScan(groupscan=[selectionRoot = /tmp/lineitem, numFiles = 12, usedMetadataSummaryFile = false, usedMetastore = true, ...
 ```
 
-### Performing incremental analysis
+### Perform incremental analysis
 
-Rerun [ANALYZE TABLE]({{site.baseurl}}/docs/analyze-table-refresh-metadata) command on the table with previously collected metadata:
-
+Rerun [ANALYZE TABLE]({{site.baseurl}}/docs/analyze-table-refresh-metadata) command on the `lineitem` table:
 
 ```
 apache drill> ANALYZE TABLE dfs.tmp.lineitem REFRESH METADATA;
@@ -252,23 +348,9 @@ apache drill> ANALYZE TABLE dfs.tmp.lineitem REFRESH METADATA;
 1 row selected (0.249 seconds)
 ```
 
-### Exposing Drill Metastore metadata through `INFORMATION_SCHEMA` tables
+### Inspect the Metastore using INFORMATION_SCHEMA tables
 
-Drill exposes some Metastore tables metadata through `INFORMATION_SCHEMA` tables.
-Note, that Metastore metadata will be exposed to the info schema, only if Metastore is enabled. If it is disabled, info
- tables won't contain Metastore metadata.
-
-`TABLES` table includes the set of tables on which you have run `ANALYZE TABLE`.
-Description of Metastore-specific columns:
-
-|Column name            |Type       |Nullable   |Description                                                                                            |
-|-----------------------|-----------|-----------|-------------------------------------------------------------------------------------------------------|
-|`TABLE_SOURCE`         |VARCHAR    |YES        |Table data type: `PARQUET`, `CSV`, `JSON`                                                              |
-|`LOCATION`             |VARCHAR    |YES        |Table location: `/tmp/nation`                                                                          |
-|`NUM_ROWS`             |BIGINT     |YES        |The total number of rows in all files of the table. Null if not known                                  |
-|`LAST_MODIFIED_TIME`   |TIMESTAMP  |YES        |Timestamp of the most-recently modified file within the table. Updated on each `ANALYZE TABLE` run.    |
-
-Example of its content:
+Run the following query to inspect `lineitem` table metadata from `TABLES` table stored in the Metastore:
 
 ```
 apache drill> SELECT * FROM INFORMATION_SCHEMA.`TABLES` WHERE TABLE_NAME='lineitem';
@@ -280,21 +362,7 @@ apache drill> SELECT * FROM INFORMATION_SCHEMA.`TABLES` WHERE TABLE_NAME='lineit
 1 row selected (0.157 seconds)
 ```
 
-The `COLUMNS` table describes the columns within each table. Only those columns listed in the `COLUMNS` clause of the
- `ANALYZE TABLE` statement appear in this table.
-
-|Column name            |Type       |Nullable   |Description                                                                                                                                                                        |
-|-----------------------|-----------|-----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-|`COLUMN_DEFAULT`       |VARCHAR    |YES        |Column default value.                                                                                                                                                              |
-|`COLUMN_FORMAT`        |VARCHAR    |YES        |Usually applicable for date time columns: `yyyy-MM-dd`. See [Format for Date, Time Conversion]({{site.baseurl}}/docs/create-or-replace-schema/#format-for-date-time-conversion).   |
-|`NUM_NULLS`            |BIGINT     |YES        |The number of rows which contain nulls for this column.                                                                                                                            |
-|`MIN_VAL`              |VARCHAR    |YES        |The minimum value of the column expressed as a string. For example: `'-273'`.                                                                                                      |
-|`MAX_VAL`              |VARCHAR    |YES        |The maximum value of the column expressed as a string. For example: `'100500'`.                                                                                                    |
-|`NDV`                  |FLOAT8     |YES        |Number of distinct values in column, expressed in Double.                                                                                                                          |
-|`EST_NUM_NON_NULLS`    |FLOAT8     |YES        |Estimated number of non null values, expressed in Double.                                                                                                                          |
-|`IS_NESTED`            |BIT        |NO         |If column is nested. Nested columns are extracted from columns with struct type.                                                                                                   |
-
-Example of its content:
+To obtain columns with their types and descriptions within the `lineitem` table, run the following query:
 
 ```
 apache drill> SELECT * FROM INFORMATION_SCHEMA.`COLUMNS` WHERE TABLE_NAME='lineitem';
@@ -304,40 +372,13 @@ apache drill> SELECT * FROM INFORMATION_SCHEMA.`COLUMNS` WHERE TABLE_NAME='linei
 | DRILL         | dfs.tmp      | lineitem   | dir0            | 1                | null           | YES         | CHARACTER VARYING | 65535                    | 65535                  | null              | null                    | null          | null               | null          | null               | 65535       | null          | 0         | s1           | s2                                          | null      | null              | false     |
 | DRILL         | dfs.tmp      | lineitem   | l_orderkey      | 2                | null           | YES         | INTEGER           | null                     | null                   | 0                 | 2                       | 0             | null               | null          | null               | 11          | null          | 0         | 1            | 6000000                                     | 1499876.0 | 1.200243E7        | false     |
 | DRILL         | dfs.tmp      | lineitem   | l_partkey       | 3                | null           | YES         | INTEGER           | null                     | null                   | 0                 | 2                       | 0             | null               | null          | null               | 11          | null          | 0         | 1            | 200000                                      | 199857.0  | 1.200243E7        | false     |
-| DRILL         | dfs.tmp      | lineitem   | l_suppkey       | 4                | null           | YES         | INTEGER           | null                     | null                   | 0                 | 2                       | 0             | null               | null          | null               | 11          | null          | 0         | 1            | 10000                                       | 10001.0   | 1.200243E7        | false     |
-| DRILL         | dfs.tmp      | lineitem   | l_linenumber    | 5                | null           | YES         | INTEGER           | null                     | null                   | 0                 | 2                       | 0             | null               | null          | null               | 11          | null          | 0         | 1            | 7                                           | 7.0       | 1.200243E7        | false     |
-| DRILL         | dfs.tmp      | lineitem   | l_quantity      | 6                | null           | YES         | DOUBLE            | null                     | null                   | 0                 | 2                       | 0             | null               | null          | null               | 24          | null          | 0         | 1.0          | 50.0                                        | 50.0      | 1.200243E7        | false     |
-| DRILL         | dfs.tmp      | lineitem   | l_extendedprice | 7                | null           | YES         | DOUBLE            | null                     | null                   | 0                 | 2                       | 0             | null               | null          | null               | 24          | null          | 0         | 901.0        | 104949.5                                    | 933142.0  | 1.200243E7        | false     |
-| DRILL         | dfs.tmp      | lineitem   | l_discount      | 8                | null           | YES         | DOUBLE            | null                     | null                   | 0                 | 2                       | 0             | null               | null          | null               | 24          | null          | 0         | 0.0          | 0.1                                         | 11.0      | 1.200243E7        | false     |
-| DRILL         | dfs.tmp      | lineitem   | l_tax           | 9                | null           | YES         | DOUBLE            | null                     | null                   | 0                 | 2                       | 0             | null               | null          | null               | 24          | null          | 0         | 0.0          | 0.08                                        | 9.0       | 1.200243E7        | false     |
-| DRILL         | dfs.tmp      | lineitem   | l_returnflag    | 10               | null           | YES         | CHARACTER VARYING | 65535                    | 65535                  | null              | null                    | null          | null               | null          | null               | 65535       | null          | 0         | A            | R                                           | 3.0       | 1.200243E7        | false     |
-| DRILL         | dfs.tmp      | lineitem   | l_linestatus    | 11               | null           | YES         | CHARACTER VARYING | 65535                    | 65535                  | null              | null                    | null          | null               | null          | null               | 65535       | null          | 0         | F            | O                                           | 2.0       | 1.200243E7        | false     |
-| DRILL         | dfs.tmp      | lineitem   | l_shipdate      | 12               | null           | YES         | DATE              | null                     | null                   | null              | null                    | null          | 10                 | null          | null               | 10          | null          | 0         | 694310400000 | 912470400000                                | 2526.0    | 1.200243E7        | false     |
-| DRILL         | dfs.tmp      | lineitem   | l_commitdate    | 13               | null           | YES         | DATE              | null                     | null                   | null              | null                    | null          | 10                 | null          | null               | 10          | null          | 0         | 696816000000 | 909792000000                                | 2466.0    | 1.200243E7        | false     |
-| DRILL         | dfs.tmp      | lineitem   | l_receiptdate   | 14               | null           | YES         | DATE              | null                     | null                   | null              | null                    | null          | 10                 | null          | null               | 10          | null          | 0         | 694483200000 | 915062400000                                | 2554.0    | 1.200243E7        | false     |
-| DRILL         | dfs.tmp      | lineitem   | l_shipinstruct  | 15               | null           | YES         | CHARACTER VARYING | 65535                    | 65535                  | null              | null                    | null          | null               | null          | null               | 65535       | null          | 0         | COLLECT COD  | TAKE BACK RETURN                            | 4.0       | 1.200243E7        | false     |
-| DRILL         | dfs.tmp      | lineitem   | l_shipmode      | 16               | null           | YES         | CHARACTER VARYING | 65535                    | 65535                  | null              | null                    | null          | null               | null          | null               | 65535       | null          | 0         | AIR          | TRUCK                                       | 7.0       | 1.200243E7        | false     |
+...
 | DRILL         | dfs.tmp      | lineitem   | l_comment       | 17               | null           | YES         | CHARACTER VARYING | 65535                    | 65535                  | null              | null                    | null          | null               | null          | null               | 65535       | null          | 0         |  Tiresias    | zzle? slyly final platelets sleep quickly.  | 4586320.0 | 1.200243E7        | false     |
 +---------------+--------------+------------+-----------------+------------------+----------------+-------------+-------------------+--------------------------+------------------------+-------------------+-------------------------+---------------+--------------------+---------------+--------------------+-------------+---------------+-----------+--------------+---------------------------------------------+-----------+-------------------+-----------+
 17 rows selected (0.187 seconds)
 ```
 
-A table can be divided into directories, called "partitions". The `PARTITIONS` table contains an entry for each directory.
-
-|Column name            |Type       |Nullable   |Description                                                                                                                                                                        |
-|-----------------------|-----------|-----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-|`TABLE_CATALOG`        |VARCHAR    |YES        |Table catalog (currently we have only one catalog): `DRILL`.                                                                                                                       |
-|`TABLE_SCHEMA`         |VARCHAR    |YES        |Table schema: `dfs.tmp`.                                                                                                                                                           |
-|`TABLE_NAME`           |VARCHAR    |YES        |Table name: `nation`.                                                                                                                                                              |
-|`METADATA_KEY`         |VARCHAR    |YES        |Top level segment key, the same for all nested segments and partitions: `part_int=3`.                                                                                              |
-|`METADATA_TYPE`        |VARCHAR    |YES        |`SEGMENT` or `PARTITION`. Partition here corresponds to "Drill partition", though segment corresponds to data parts like partitions in general case, for example, Hive partition.  |
-|`METADATA_IDENTIFIER`  |VARCHAR    |YES        |Current metadata identifier: `part_int=3/part_varchar=g`. It is unique value for segment or partition within the table.                                                            |
-|`PARTITION_COLUMN`     |VARCHAR    |YES        |Partition column name: `part_varchar`.                                                                                                                                             |
-|`PARTITION_VALUE`      |VARCHAR    |YES        |Partition column value: `g`.                                                                                                                                                       |
-|`LOCATION`             |VARCHAR    |YES        |Segment location, `null` for partitions: `/tmp/nation/part_int=3`.                                                                                                                 |
-|`LAST_MODIFIED_TIME`   |TIMESTAMP  |YES        |Last modification time.                                                                                                                                                            |
-
-Example of its content:
+The sample `lineitem` table has two partitions. The `PARTITIONS` table contains an entry for each directory:
 
 ```
 apache drill (information_schema)> SELECT * FROM INFORMATION_SCHEMA.`PARTITIONS` WHERE TABLE_NAME='lineitem';
@@ -350,7 +391,9 @@ apache drill (information_schema)> SELECT * FROM INFORMATION_SCHEMA.`PARTITIONS`
 2 rows selected (0.149 seconds)
 ```
 
-### Dropping table metadata
+### Drop table metadata
+
+Once we are done exploring metadata we can drop the metadata for the `lineitem` table.
 
 Table metadata may be dropped using `ANALYZE TABLE DROP METADATA` command:
 
@@ -364,7 +407,12 @@ apache drill> ANALYZE TABLE dfs.tmp.lineitem DROP METADATA;
 1 row selected (0.291 seconds)
 ```
 
-### Collecting metadata for specific set of columns
+### Collect metadata for specific set of columns
+
+Next let's gather metadata for a subset of the columns in the `lineitem` table. You would do this to allow
+ Drill to optimize `WHERE` conditions on certain columns. Also, if file size or the number of columns grows large, it
+ can take too long to gather all statistics. Instead you can speed up analysis by gathering statistics only for
+ selected columns: those actually used in the `WHERE` clause.
 
 For the case when metadata for several columns should be computed and stored into the Metastore, the following command may be used:
 
@@ -389,19 +437,7 @@ apache drill (information_schema)> SELECT * FROM INFORMATION_SCHEMA.`COLUMNS` WH
 | DRILL         | dfs.tmp      | lineitem   | dir0            | 1                | null           | YES         | CHARACTER VARYING | 65535                    | 65535                  | null              | null                    | null          | null               | null          | null               | 65535       | null          | 0         | s1      | s2      | null      | null              | false     |
 | DRILL         | dfs.tmp      | lineitem   | l_orderkey      | 2                | null           | YES         | INTEGER           | null                     | null                   | 0                 | 2                       | 0             | null               | null          | null               | 11          | null          | 0         | 1       | 6000000 | 1499876.0 | 1.200243E7        | false     |
 | DRILL         | dfs.tmp      | lineitem   | l_partkey       | 3                | null           | YES         | INTEGER           | null                     | null                   | 0                 | 2                       | 0             | null               | null          | null               | 11          | null          | 0         | 1       | 200000  | 199857.0  | 1.200243E7        | false     |
-| DRILL         | dfs.tmp      | lineitem   | l_suppkey       | 4                | null           | YES         | INTEGER           | null                     | null                   | 0                 | 2                       | 0             | null               | null          | null               | 11          | null          | null      | null    | null    | null      | null              | false     |
-| DRILL         | dfs.tmp      | lineitem   | l_linenumber    | 5                | null           | YES         | INTEGER           | null                     | null                   | 0                 | 2                       | 0             | null               | null          | null               | 11          | null          | null      | null    | null    | null      | null              | false     |
-| DRILL         | dfs.tmp      | lineitem   | l_quantity      | 6                | null           | YES         | DOUBLE            | null                     | null                   | 0                 | 2                       | 0             | null               | null          | null               | 24          | null          | null      | null    | null    | null      | null              | false     |
-| DRILL         | dfs.tmp      | lineitem   | l_extendedprice | 7                | null           | YES         | DOUBLE            | null                     | null                   | 0                 | 2                       | 0             | null               | null          | null               | 24          | null          | null      | null    | null    | null      | null              | false     |
-| DRILL         | dfs.tmp      | lineitem   | l_discount      | 8                | null           | YES         | DOUBLE            | null                     | null                   | 0                 | 2                       | 0             | null               | null          | null               | 24          | null          | null      | null    | null    | null      | null              | false     |
-| DRILL         | dfs.tmp      | lineitem   | l_tax           | 9                | null           | YES         | DOUBLE            | null                     | null                   | 0                 | 2                       | 0             | null               | null          | null               | 24          | null          | null      | null    | null    | null      | null              | false     |
-| DRILL         | dfs.tmp      | lineitem   | l_returnflag    | 10               | null           | YES         | CHARACTER VARYING | 65535                    | 65535                  | null              | null                    | null          | null               | null          | null               | 65535       | null          | null      | null    | null    | null      | null              | false     |
-| DRILL         | dfs.tmp      | lineitem   | l_linestatus    | 11               | null           | YES         | CHARACTER VARYING | 65535                    | 65535                  | null              | null                    | null          | null               | null          | null               | 65535       | null          | null      | null    | null    | null      | null              | false     |
-| DRILL         | dfs.tmp      | lineitem   | l_shipdate      | 12               | null           | YES         | DATE              | null                     | null                   | null              | null                    | null          | 10                 | null          | null               | 10          | null          | null      | null    | null    | null      | null              | false     |
-| DRILL         | dfs.tmp      | lineitem   | l_commitdate    | 13               | null           | YES         | DATE              | null                     | null                   | null              | null                    | null          | 10                 | null          | null               | 10          | null          | null      | null    | null    | null      | null              | false     |
-| DRILL         | dfs.tmp      | lineitem   | l_receiptdate   | 14               | null           | YES         | DATE              | null                     | null                   | null              | null                    | null          | 10                 | null          | null               | 10          | null          | null      | null    | null    | null      | null              | false     |
-| DRILL         | dfs.tmp      | lineitem   | l_shipinstruct  | 15               | null           | YES         | CHARACTER VARYING | 65535                    | 65535                  | null              | null                    | null          | null               | null          | null               | 65535       | null          | null      | null    | null    | null      | null              | false     |
-| DRILL         | dfs.tmp      | lineitem   | l_shipmode      | 16               | null           | YES         | CHARACTER VARYING | 65535                    | 65535                  | null              | null                    | null          | null               | null          | null               | 65535       | null          | null      | null    | null    | null      | null              | false     |
+...
 | DRILL         | dfs.tmp      | lineitem   | l_comment       | 17               | null           | YES         | CHARACTER VARYING | 65535                    | 65535                  | null              | null                    | null          | null               | null          | null               | 65535       | null          | null      | null    | null    | null      | null              | false     |
 +---------------+--------------+------------+-----------------+------------------+----------------+-------------+-------------------+--------------------------+------------------------+-------------------+-------------------------+---------------+--------------------+---------------+--------------------+-------------+---------------+-----------+---------+---------+-----------+-------------------+-----------+
 17 rows selected (0.183 seconds)
