@@ -1,41 +1,25 @@
 ---
 title: "ANALYZE TABLE REFRESH METADATA"
 parent: "SQL Commands"
-date: 2020-01-30
+date: 2020-03-03
 ---
 
 Starting from Drill 1.17, you can store table metadata (including schema and computed statistics) into Drill Metastore.
 This metadata will be used when querying a table for more optimal plan creation.
-
-The Metastore is an Alpha feature; it is subject to change. We encourage you to try it and provide feedback.
-Because the Metastore is in Beta, the SQL commands and Metastore formats may change in the next release.
-{% include startnote.html %}In Drill 1.17, this feature is supported for Parquet tables only and is disabled by default.{% include endnote.html %}
 
 To use the Drill Metastore, you must enable it at the session or system level with one of the following commands:
 
 	SET `metastore.enabled` = true;
 	ALTER SYSTEM SET `metastore.enabled` = true;
 
-Alternatively, you can enable the option in the Drill Web UI at `http://<drill-hostname-or-ip-address>:8047/options`.
-
-Once you enable the Metastore, the next step is to populate it with data. Drill can query a table whether that table
- has a Metastore entry or not. (If you are familiar with Hive, then you know that Hive requires that all tables have
- Hive Metastore entries before you can query them.) In Drill, only add data to the Metastore when doing so improves
- query performance. In general, large tables benefit from statistics more than small tables do.
-
-Unlike Hive, Drill does not require you to declare a schema. Instead, Drill infers the schema by scanning your table 
- and computes some metadata like MIN / MAX column values and NULLS COUNT designated as "metadata" to be able to
- produce more optimizations like filter push-down, etc. If `planner.statistics.use` option is enabled, this command
- will also calculate and store table statistics into Drill Metastore.
-
-Unlike Hive, Drill does not require you to declare a schema. Instead, Drill infers the schema by scanning your table
- in the same way as it is done during regular select.
+Please refer to [Using Drill Metastore]({{site.baseurl}}/docs/using-drill-metastore) for more details about Drill Metastore including its purpose and how to use it.
 
 ## Syntax
 
 The ANALYZE TABLE REFRESH METADATA statement supports the following syntax:
 
-	ANALYZE TABLE [table_name] [COLUMNS {(col1, col2, ...) | NONE}]
+	ANALYZE TABLE [table_name | table({table function name}(parameters))]
+	[COLUMNS {(col1, col2, ...) | NONE}]
 	REFRESH METADATA ['level' LEVEL]
 	[{COMPUTE | ESTIMATE} | STATISTICS
 	[ SAMPLE number PERCENT ]]
@@ -45,6 +29,15 @@ The ANALYZE TABLE REFRESH METADATA statement supports the following syntax:
 *table_name*
 The name of the table or directory for which Drill will collect table metadata. If the table does not exist, the table
  is temporary or if you do not have permission to read the table, the command fails and metadata is not collected and stored.
+
+*table({table function name}(parameters))*
+Table function parameters. This syntax is only available since Drill 1.18.
+Example of table function parameters usage:
+
+    table(dfs.`table_name` (type => 'parquet', autoCorrectCorruptDates => true))
+
+For detailed information, please refer to
+ [Using the Formats Attributes as Table Function Parameters]({{site.baseurl}}/docs/plugin-configuration-basics/#using-the-formats-attributes-as-table-function-parameters)
 
 *COLUMNS (col1, col2, ...)*
 Optional names of the column(s) for which Drill will compute and store statistics. The stored schema will include all
