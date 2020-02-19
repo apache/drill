@@ -336,12 +336,20 @@
         <configuration>
           <excludes>
             <!-- Types log1, log2, sqllog and sqllog2, ssdlog are used to test he logRegex format plugin. -->
+            <exclude>**/clientlib/y2038/*.c</exclude> <!-- All the files here should have MIT License -->
+            <exclude>**/clientlib/y2038/*.h</exclude> <!-- All the files here should have MIT License -->
+            <exclude>**/resources/parquet/**/*</exclude>
+            <exclude>**/*.woff2</exclude>
+            <exclude>**/*.ks</exclude>
+            <exclude>**/*.pcap</exclude>
             <exclude>**/*.log1</exclude>
             <exclude>**/*.log2</exclude>
             <exclude>**/*.h5</exclude>
             <exclude>**/*.sqllog</exclude>
             <exclude>**/*.sqllog2</exclude>
             <exclude>**/*.syslog</exclude>
+            <exclude>**/*.xls</exclude>
+            <exclude>**/*.xlsx</exclude>
             <exclude>**/*.syslog1</exclude>
             <exclude>**/*.ssdlog</exclude>
             <exclude>**/*.ltsv</exclude>
@@ -353,6 +361,7 @@
             <exclude>**/*.json</exclude>
             <exclude>**/*.seq</exclude>
             <exclude>**/*.parquet</exclude>
+            <exclude>**/*.avro</exclude>
             <exclude>**/*.sql</exclude>
             <exclude>**/git.properties</exclude>
             <exclude>**/*.csv</exclude>
@@ -361,24 +370,18 @@
             <exclude>**/*.tsv</exclude>
             <exclude>**/*.txt</exclude>
             <exclude>**/*.ssv</exclude>
-            <exclude>**/drill-*.conf</exclude>
             <exclude>**/.buildpath</exclude>
-            <exclude>**/*.proto</exclude>
-            <exclude>**/*.fmpp</exclude>
             <exclude>**/target/**</exclude>
             <exclude>**/*.iml</exclude>
             <exclude>**/.idea/**</exclude>
-            <exclude>**/*.tdd</exclude>
             <exclude>**/*.project</exclude>
             <exclude>**/TAGS</exclude>
             <exclude>**/*.checkstyle</exclude>
             <exclude>**/.classpath</exclude>
             <exclude>**/.settings/**</exclude>
-            <exclude>.*/**</exclude>
             <exclude>**/*.patch</exclude>
             <exclude>**/*.pb.cc</exclude>
             <exclude>**/*.pb.h</exclude>
-            <exclude>**/*.linux</exclude>
             <exclude>**/client/*build*/**</exclude>
             <exclude>**/client/tags</exclude>
             <exclude>**/cmake_install.cmake</exclude>
@@ -390,7 +393,26 @@
             <exclude>**/*.autotools</exclude>
             <exclude>**/*.cproject</exclude>
             <exclude>**/*.drill</exclude>
+            <exclude>**/LICENSE</exclude>
+            <exclude>**/NOTICE</exclude>
+            <exclude>KEYS</exclude>
+            <exclude>header</exclude>
             <exclude>**/.drill.parquet_metadata</exclude>
+            <exclude>**/*.mov</exclude>
+            <exclude>**/*.mp4</exclude>
+            <exclude>**/*.avi</exclude>
+            <exclude>**/*.pcx</exclude>
+            <exclude>**/*.webp</exclude>
+            <exclude>**/*.pcapng</exclude>
+            <exclude>**/*.psd</exclude>
+            <exclude>**/*.pcx</exclude>
+            <exclude>**/*.log1</exclude>
+            <exclude>**/*.log2</exclude>
+            <exclude>**/*.sqllog</exclude>
+            <exclude>**/*.sqllog2</exclude>
+            <exclude>**/*.ltsv</exclude>
+            <exclude>**/*.wav</exclude>
+            <exclude>**/control</exclude>
             <!-- TODO DRILL-4336: try to avoid the need to add this -->
             <exclude>dependency-reduced-pom.xml</exclude>
             <exclude>**/*.prj</exclude>
@@ -620,17 +642,20 @@
               <exclude>**/clientlib/y2038/*.c</exclude> <!-- All the files here should have MIT License -->
               <exclude>**/clientlib/y2038/*.h</exclude> <!-- All the files here should have MIT License -->
               <exclude>**/resources/parquet/**/*</exclude>
-              <exclude>**/*.g</exclude>
               <exclude>**/*.woff2</exclude>
               <exclude>**/*.ks</exclude>
               <exclude>**/*.pcap</exclude>
+              <exclude>**/*.log1</exclude>
+              <exclude>**/*.log2</exclude>
               <exclude>**/*.h5</exclude>
+              <exclude>**/*.sqllog</exclude>
+              <exclude>**/*.sqllog2</exclude>
               <exclude>**/*.syslog</exclude>
               <exclude>**/*.xls</exclude>
               <exclude>**/*.xlsx</exclude>
               <exclude>**/*.syslog1</exclude>
-              <exclude>**/*.props</exclude>
-              <exclude>**/*.conf</exclude>
+              <exclude>**/*.ssdlog</exclude>
+              <exclude>**/*.ltsv</exclude>
               <exclude>**/*.log</exclude>
               <exclude>**/*.css</exclude>
               <exclude>**/*.js</exclude>
@@ -639,6 +664,7 @@
               <exclude>**/*.json</exclude>
               <exclude>**/*.seq</exclude>
               <exclude>**/*.parquet</exclude>
+              <exclude>**/*.avro</exclude>
               <exclude>**/*.sql</exclude>
               <exclude>**/git.properties</exclude>
               <exclude>**/*.csv</exclude>
@@ -647,24 +673,18 @@
               <exclude>**/*.tsv</exclude>
               <exclude>**/*.txt</exclude>
               <exclude>**/*.ssv</exclude>
-              <exclude>**/drill-*.conf</exclude>
               <exclude>**/.buildpath</exclude>
-              <exclude>**/*.proto</exclude>
-              <exclude>**/*.fmpp</exclude>
               <exclude>**/target/**</exclude>
               <exclude>**/*.iml</exclude>
               <exclude>**/.idea/**</exclude>
-              <exclude>**/*.tdd</exclude>
               <exclude>**/*.project</exclude>
               <exclude>**/TAGS</exclude>
               <exclude>**/*.checkstyle</exclude>
               <exclude>**/.classpath</exclude>
               <exclude>**/.settings/**</exclude>
-              <exclude>.*/**</exclude>
               <exclude>**/*.patch</exclude>
               <exclude>**/*.pb.cc</exclude>
               <exclude>**/*.pb.h</exclude>
-              <exclude>**/*.linux</exclude>
               <exclude>**/client/*build*/**</exclude>
               <exclude>**/client/tags</exclude>
               <exclude>**/cmake_install.cmake</exclude>
@@ -676,7 +696,6 @@
               <exclude>**/*.autotools</exclude>
               <exclude>**/*.cproject</exclude>
               <exclude>**/*.drill</exclude>
-              <exclude>**/*.plist</exclude>
               <exclude>**/LICENSE</exclude>
               <exclude>**/NOTICE</exclude>
               <exclude>KEYS</exclude>
@@ -699,6 +718,9 @@
               <exclude>**/control</exclude>
               <!-- TODO DRILL-4336: try to avoid the need to add this -->
               <exclude>dependency-reduced-pom.xml</exclude>
+              <exclude>**/*.prj</exclude>
+              <exclude>**/*.shp</exclude>
+              <exclude>**/*.dbf</exclude>
             </excludes>
             <mapping>
               <java>SLASHSTAR_STYLE</java>
@@ -724,6 +746,15 @@
               <submit_plan>SCRIPT_STYLE</submit_plan>
               <drill-embedded>SCRIPT_STYLE</drill-embedded>
               <conffiles>SCRIPT_STYLE</conffiles>
+              <!-- license format for login.conf files should precede the license format for *.conf files-->
+              <login.conf>SLASHSTAR_STYLE</login.conf>
+              <conf>SCRIPT_STYLE</conf>
+              <props>SCRIPT_STYLE</props>
+              <proto>DOUBLESLASH_STYLE</proto>
+              <fmpp>SCRIPT_STYLE</fmpp>
+              <tdd>SCRIPT_STYLE</tdd>
+              <linux>SLASHSTAR_STYLE</linux>
+              <plist>XML_STYLE</plist>
             </mapping>
           </configuration>
           <executions>
