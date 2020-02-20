@@ -110,7 +110,7 @@ public class TestAnalyze extends ClusterTest {
       client.alterSession(ExecConstants.OUTPUT_FORMAT_OPTION, "parquet");
       client.alterSession(ExecConstants.DETERMINISTIC_SAMPLING, true);
       run("CREATE TABLE dfs.tmp.employee_basic3 AS SELECT * from cp.`employee.json`");
-      run("ANALYZE TABLE dfs.tmp.employee_basic3 COMPUTE STATISTICS (employee_id, birth_date) SAMPLE 55 PERCENT");
+      run("ANALYZE TABLE table(dfs.tmp.employee_basic3 (type => 'parquet')) COMPUTE STATISTICS (employee_id, birth_date) SAMPLE 55 PERCENT");
 
       testBuilder()
           .sqlQuery("SELECT tbl.`columns`.`column` as `column`, tbl.`columns`.rowcount is not null as has_rowcount,"

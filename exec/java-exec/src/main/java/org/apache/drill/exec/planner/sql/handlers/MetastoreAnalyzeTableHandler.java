@@ -20,7 +20,6 @@ package org.apache.drill.exec.planner.sql.handlers;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.schema.Table;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
@@ -55,7 +54,6 @@ import org.apache.drill.exec.planner.logical.MetadataControllerRel;
 import org.apache.drill.exec.planner.logical.MetadataHandlerRel;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.physical.Prel;
-import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.planner.sql.parser.SqlMetastoreAnalyzeTable;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.dfs.FormatSelection;
@@ -105,27 +103,26 @@ public class MetastoreAnalyzeTableHandler extends DefaultSqlHandler {
     context.getOptions().setLocalOption(ExecConstants.METASTORE_ENABLED, false);
     SqlMetastoreAnalyzeTable sqlAnalyzeTable = unwrap(sqlNode, SqlMetastoreAnalyzeTable.class);
 
-    AbstractSchema drillSchema = SchemaUtilites.resolveToDrillSchema(
-        config.getConverter().getDefaultSchema(), sqlAnalyzeTable.getSchemaPath());
-    DrillTable table = getDrillTable(drillSchema, sqlAnalyzeTable.getName());
+    SqlNode tableRef = sqlAnalyzeTable.getTableRef();
 
-    AnalyzeInfoProvider analyzeInfoProvider = table.getGroupScan().getAnalyzeInfoProvider();
+    DrillTableInfo drillTableInfo = DrillTableInfo.getTableInfoHolder(tableRef, config);
+
+    AnalyzeInfoProvider analyzeInfoProvider = drillTableInfo.drillTable().getGroupScan().getAnalyzeInfoProvider();
 
     if (analyzeInfoProvider == null) {
       throw UserException.validationError()
-          .message("ANALYZE is not supported for group scan [%s]", table.getGroupScan())
+          .message("ANALYZE is not supported for group scan [%s]", drillTableInfo.drillTable().getGroupScan())
           .build(logger);
     }
 
     ColumnNamesOptions columnNamesOptions = new ColumnNamesOptions(context.getOptions());
 
-    SqlIdentifier tableIdentifier = sqlAnalyzeTable.getTableIdentifier();
     // creates select with DYNAMIC_STAR column and analyze specific columns to obtain corresponding table scan
     SqlSelect scanSql = new SqlSelect(
         SqlParserPos.ZERO,
         SqlNodeList.EMPTY,
-        getColumnList(analyzeInfoProvider.getProjectionFields(table, getMetadataType(sqlAnalyzeTable), columnNamesOptions)),
-        tableIdentifier,
+        getColumnList(analyzeInfoProvider.getProjectionFields(drillTableInfo.drillTable(), getMetadataType(sqlAnalyzeTable), columnNamesOptions)),
+        tableRef,
         null,
         null,
         null,
@@ -140,7 +137,7 @@ public class MetastoreAnalyzeTableHandler extends DefaultSqlHandler {
 
     RelNode relScan = convertedRelNode.getConvertedNode();
 
-    DrillRel drel = convertToDrel(relScan, drillSchema, table, sqlAnalyzeTable);
+    DrillRel drel = convertToDrel(relScan, sqlAnalyzeTable, drillTableInfo);
 
     Prel prel = convertToPrel(drel, validatedRowType);
     logAndSetTextPlan("Drill Physical", prel, logger);
@@ -148,31 +145,6 @@ public class MetastoreAnalyzeTableHandler extends DefaultSqlHandler {
     PhysicalPlan plan = convertToPlan(pop);
     log("Drill Plan", plan, logger);
     return plan;
-  }
-
-  private DrillTable getDrillTable(AbstractSchema drillSchema, String tableName) {
-    Table tableFromSchema = SqlHandlerUtil.getTableFromSchema(drillSchema, tableName);
-
-    if (tableFromSchema == null) {
-      throw UserException.validationError()
-          .message("No table with given name [%s] exists in schema [%s]", tableName, drillSchema.getFullSchemaName())
-          .build(logger);
-    }
-
-    switch (tableFromSchema.getJdbcTableType()) {
-      case TABLE:
-        if (tableFromSchema instanceof DrillTable) {
-          return  (DrillTable) tableFromSchema;
-        } else {
-          throw UserException.validationError()
-              .message("ANALYZE does not support [%s] table kind", tableFromSchema.getClass().getSimpleName())
-              .build(logger);
-        }
-      default:
-        throw UserException.validationError()
-            .message("ANALYZE does not support [%s] object type", tableFromSchema.getJdbcTableType())
-            .build(logger);
-    }
   }
 
   /**
@@ -203,18 +175,19 @@ public class MetastoreAnalyzeTableHandler extends DefaultSqlHandler {
   /**
    * Converts to Drill logical plan
    */
-  private DrillRel convertToDrel(RelNode relNode, AbstractSchema schema,
-      DrillTable table, SqlMetastoreAnalyzeTable sqlAnalyzeTable) throws ForemanSetupException, IOException {
+  private DrillRel convertToDrel(RelNode relNode, SqlMetastoreAnalyzeTable sqlAnalyzeTable, DrillTableInfo drillTableInfo) throws ForemanSetupException, IOException {
     RelBuilder relBuilder = LOGICAL_BUILDER.create(relNode.getCluster(), null);
 
+    DrillTable table = drillTableInfo.drillTable();
     AnalyzeInfoProvider analyzeInfoProvider = table.getGroupScan().getAnalyzeInfoProvider();
 
-    List<String> schemaPath = schema.getSchemaPath();
+    List<String> schemaPath = drillTableInfo.schemaPath();
     String pluginName = schemaPath.get(0);
     String workspaceName = Strings.join(schemaPath.subList(1, schemaPath.size()), AbstractSchema.SCHEMA_SEPARATOR);
 
+    String tableName = drillTableInfo.tableName();
     TableInfo tableInfo = TableInfo.builder()
-        .name(sqlAnalyzeTable.getName())
+        .name(tableName)
         .owner(table.getUserName())
         .type(analyzeInfoProvider.getTableTypeName())
         .storagePlugin(pluginName)
@@ -241,7 +214,7 @@ public class MetastoreAnalyzeTableHandler extends DefaultSqlHandler {
           .tables()
           .basicRequests();
     } catch (MetastoreException e) {
-      logger.error("Error when obtaining Metastore instance for table {}", sqlAnalyzeTable.getName(), e);
+      logger.error("Error when obtaining Metastore instance for table {}", tableName, e);
       DrillRel convertedRelNode = convertToRawDrel(
           relBuilder.values(
                 new String[]{MetastoreAnalyzeConstants.OK_FIELD_NAME, MetastoreAnalyzeConstants.SUMMARY_FIELD_NAME},

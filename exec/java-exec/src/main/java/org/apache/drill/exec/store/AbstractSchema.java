@@ -261,6 +261,8 @@ public abstract class AbstractSchema implements Schema, SchemaPartitionExplorer,
       Table table = getTable(name);
       if (table instanceof DrillTable) {
         return applyFunctionParameters((DrillTable) table, parameters, arguments);
+      } else if (table == null) {
+        return null;
       }
       throw new DrillRuntimeException(String.format("Table [%s] is not of Drill table instance. " +
         "Given instance is of [%s].", name, table.getClass().getName()));
