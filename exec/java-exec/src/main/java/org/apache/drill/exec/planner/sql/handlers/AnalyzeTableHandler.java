@@ -39,7 +39,6 @@ import org.apache.drill.exec.planner.logical.DrillAnalyzeRel;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.planner.logical.DrillScreenRel;
-import org.apache.drill.exec.planner.logical.DrillStoreRel;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.logical.DrillWriterRel;
 import org.apache.drill.exec.planner.physical.Prel;
@@ -100,40 +99,36 @@ public class AnalyzeTableHandler extends DefaultSqlHandler {
           .message("No table with given name [%s] exists in schema [%s]", tableName,
               drillSchema.getFullSchemaName())
           .build(logger);
-    }
-
-    if(! (table instanceof DrillTable)) {
+    } else if (!(table instanceof DrillTable)) {
       return DrillStatsTable.notSupported(context, tableName);
     }
 
-    if (table instanceof DrillTable) {
-      DrillTable drillTable = (DrillTable) table;
-      final Object selection = drillTable.getSelection();
-      if (!(selection instanceof FormatSelection)) {
-        return DrillStatsTable.notSupported(context, tableName);
-      }
-      // Do not support non-parquet tables
-      FormatSelection formatSelection = (FormatSelection) selection;
-      FormatPluginConfig formatConfig = formatSelection.getFormat();
-      if (!((formatConfig instanceof ParquetFormatConfig)
-            || ((formatConfig instanceof NamedFormatPluginConfig)
-                 && ((NamedFormatPluginConfig) formatConfig).name.equals("parquet")))) {
-        return DrillStatsTable.notSupported(context, tableName);
-      }
+    DrillTable drillTable = (DrillTable) table;
+    final Object selection = drillTable.getSelection();
+    if (!(selection instanceof FormatSelection)) {
+      return DrillStatsTable.notSupported(context, tableName);
+    }
+    // Do not support non-parquet tables
+    FormatSelection formatSelection = (FormatSelection) selection;
+    FormatPluginConfig formatConfig = formatSelection.getFormat();
+    if (!((formatConfig instanceof ParquetFormatConfig)
+          || ((formatConfig instanceof NamedFormatPluginConfig)
+               && ((NamedFormatPluginConfig) formatConfig).name.equals("parquet")))) {
+      return DrillStatsTable.notSupported(context, tableName);
+    }
 
-      FileSystemPlugin plugin = (FileSystemPlugin) drillTable.getPlugin();
-      DrillFileSystem fs = new DrillFileSystem(plugin.getFormatPlugin(
-          formatSelection.getFormat()).getFsConf());
+    FileSystemPlugin plugin = (FileSystemPlugin) drillTable.getPlugin();
+    DrillFileSystem fs = new DrillFileSystem(plugin.getFormatPlugin(
+        formatSelection.getFormat()).getFsConf());
 
-      Path selectionRoot = formatSelection.getSelection().getSelectionRoot();
-      if (!selectionRoot.toUri().getPath().endsWith(tableName) || !fs.getFileStatus(selectionRoot).isDirectory()) {
-        return DrillStatsTable.notSupported(context, tableName);
-      }
-      // Do not recompute statistics, if stale
-      Path statsFilePath = new Path(selectionRoot, DotDrillType.STATS.getEnding());
-      if (fs.exists(statsFilePath) && !isStatsStale(fs, statsFilePath)) {
-       return DrillStatsTable.notRequired(context, tableName);
-      }
+    Path selectionRoot = formatSelection.getSelection().getSelectionRoot();
+    if (!selectionRoot.toUri().getPath().endsWith(tableName) || !fs.getFileStatus(selectionRoot).isDirectory()) {
+      return DrillStatsTable.notSupported(context, tableName);
+    }
+    // Do not recompute statistics, if stale
+    Path statsFilePath = new Path(selectionRoot, DotDrillType.STATS.getEnding());
+    if (fs.exists(statsFilePath) && !isStatsStale(fs, statsFilePath)) {
+     return DrillStatsTable.notRequired(context, tableName);
     }
     // Convert the query to Drill Logical plan and insert a writer operator on top.
     DrillRel drel = convertToDrel(relScan, drillSchema, tableName, sqlAnalyzeTable.getSamplePercent());
@@ -200,10 +195,6 @@ public class AnalyzeTableHandler extends DefaultSqlHandler {
   protected DrillRel convertToDrel(RelNode relNode, AbstractSchema schema, String analyzeTableName,
       double samplePercent) throws SqlUnsupportedException {
     DrillRel convertedRelNode = convertToRawDrel(relNode);
-
-    if (convertedRelNode instanceof DrillStoreRel) {
-      throw new UnsupportedOperationException();
-    }
 
     final RelNode analyzeRel = new DrillAnalyzeRel(
         convertedRelNode.getCluster(), convertedRelNode.getTraitSet(), convertedRelNode, samplePercent);

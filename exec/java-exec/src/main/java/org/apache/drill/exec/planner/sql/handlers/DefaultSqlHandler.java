@@ -77,7 +77,6 @@ import org.apache.drill.exec.planner.logical.DrillProjectRel;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillRelFactories;
 import org.apache.drill.exec.planner.logical.DrillScreenRel;
-import org.apache.drill.exec.planner.logical.DrillStoreRel;
 import org.apache.drill.exec.planner.logical.PreProcessLogicalRel;
 import org.apache.drill.exec.planner.physical.DrillDistributionTrait;
 import org.apache.drill.exec.planner.physical.PhysicalPlanCreator;
@@ -275,23 +274,17 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
       // Convert SUM to $SUM0
       final RelNode convertedRelNodeWithSum0 = transform(PlannerType.HEP_BOTTOM_UP, PlannerPhase.SUM_CONVERSION, convertedRelNode);
 
-      final DrillRel drillRel = (DrillRel) convertedRelNodeWithSum0;
-
-      if (drillRel instanceof DrillStoreRel) {
-        throw new UnsupportedOperationException();
-      } else {
-
-        // If the query contains a limit 0 clause, disable distributed mode since it is overkill for determining schema.
-        if (FindLimit0Visitor.containsLimit0(convertedRelNodeWithSum0) &&
-            FindHardDistributionScans.canForceSingleMode(convertedRelNodeWithSum0)) {
-          context.getPlannerSettings().forceSingleMode();
-          if (context.getOptions().getOption(ExecConstants.LATE_LIMIT0_OPT)) {
-            return FindLimit0Visitor.addLimitOnTopOfLeafNodes(drillRel);
-          }
+      DrillRel drillRel = (DrillRel) convertedRelNodeWithSum0;
+      // If the query contains a limit 0 clause, disable distributed mode since it is overkill for determining schema.
+      if (FindLimit0Visitor.containsLimit0(convertedRelNodeWithSum0) &&
+          FindHardDistributionScans.canForceSingleMode(convertedRelNodeWithSum0)) {
+        context.getPlannerSettings().forceSingleMode();
+        if (context.getOptions().getOption(ExecConstants.LATE_LIMIT0_OPT)) {
+          drillRel = FindLimit0Visitor.addLimitOnTopOfLeafNodes(drillRel);
         }
-
-        return drillRel;
       }
+
+      return drillRel;
     } catch (RelOptPlanner.CannotPlanException ex) {
       logger.error(ex.getMessage());
 
