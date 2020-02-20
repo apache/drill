@@ -38,6 +38,7 @@ import org.apache.poi.ss.usermodel.CellValue;
 import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
@@ -270,15 +271,10 @@ public class ExcelBatchReader implements ManagedReader<FileSchemaNegotiator> {
    * @return The number of actual columns
    */
   private int getColumnCount() {
-    int columnCount;
+    int rowNumber = readerConfig.headerRow > 0 ? sheet.getFirstRowNum() : 0;
+    XSSFRow sheetRow = sheet.getRow(rowNumber);
 
-    if (readerConfig.headerRow >= 0) {
-      columnCount = sheet.getRow(sheet.getFirstRowNum()).getPhysicalNumberOfCells();
-    } else {
-      // Case for when the user defines the headerRow as -1 IE:  When there isn't a headerRow.
-      columnCount = sheet.getRow(0).getPhysicalNumberOfCells();
-    }
-    return columnCount;
+    return sheetRow != null ? sheetRow.getPhysicalNumberOfCells() : 0;
   }
 
   @Override
