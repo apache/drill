@@ -3470,6 +3470,36 @@ public class TestMetastoreCommands extends ClusterTest {
     }
   }
 
+  @Test
+  public void testTableFunctionForParquet() throws Exception {
+    String tableName = "corrupted_dates";
+    dirTestWatcher.copyResourceToRoot(Paths.get("parquet", "4203_corrupt_dates").resolve("mixed_drill_versions"), Paths.get(tableName));
+
+    // sets autoCorrectCorruptDates to false to store incorrect metadata which will be used during files and filter pruning
+    testBuilder()
+        .sqlQuery("analyze table table(dfs.`%s` (type => 'parquet', autoCorrectCorruptDates => false, enableStringsSignedMinMax=>false)) REFRESH METADATA", tableName)
+        .unOrdered()
+        .baselineColumns("ok", "summary")
+        .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.default.%s]", tableName))
+        .go();
+
+    queryBuilder()
+        .sql("select date_col from dfs.`%s` where date_col > '2016-01-01'", tableName)
+        .planMatcher()
+        .include("usedMetastore=true")
+        .exclude("Filter")
+        .match();
+  }
+
+  @Test
+  public void testTableFunctionWithDrop() throws Exception {
+    String tableName = "dropWitTableFunction";
+    dirTestWatcher.copyResourceToTestTmp(Paths.get("tpchmulti", "nation"), Paths.get(tableName));
+
+    thrown.expect(UserRemoteException.class);
+    run("analyze table table(dfs.tmp.`%s` (type => 'parquet', autoCorrectCorruptDates => false, enableStringsSignedMinMax=>false)) DROP METADATA", tableName);
+  }
+
   private static <T> ColumnStatistics<T> getColumnStatistics(T minValue, T maxValue,
       long rowCount, TypeProtos.MinorType minorType) {
     return new ColumnStatistics<>(

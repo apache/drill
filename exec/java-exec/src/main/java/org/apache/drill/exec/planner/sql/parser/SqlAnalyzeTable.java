@@ -20,7 +20,6 @@ package org.apache.drill.exec.planner.sql.parser;
 import java.util.List;
 
 import org.apache.calcite.sql.SqlCall;
-import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
@@ -30,7 +29,6 @@ import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.SqlSpecialOperator;
 import org.apache.calcite.sql.SqlWriter;
 import org.apache.calcite.sql.parser.SqlParserPos;
-import org.apache.calcite.util.Util;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.AnalyzeTableHandler;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;
@@ -47,21 +45,21 @@ public class SqlAnalyzeTable extends DrillSqlCall {
   public static final SqlSpecialOperator OPERATOR = new SqlSpecialOperator("ANALYZE_TABLE", SqlKind.OTHER_DDL) {
     public SqlCall createCall(SqlLiteral functionQualifier, SqlParserPos pos, SqlNode... operands) {
       Preconditions.checkArgument(operands.length == 4, "SqlAnalyzeTable.createCall() has to get 4 operands!");
-      return new SqlAnalyzeTable(pos, (SqlIdentifier) operands[0], (SqlLiteral) operands[1],
+      return new SqlAnalyzeTable(pos, operands[0], (SqlLiteral) operands[1],
           (SqlNodeList) operands[2], (SqlNumericLiteral) operands[3]
       );
     }
   };
 
-  private final SqlIdentifier tblName;
+  private final SqlNode tableRef;
   private final SqlLiteral estimate;
   private final SqlNodeList fieldList;
   private final SqlNumericLiteral samplePercent;
 
-  public SqlAnalyzeTable(SqlParserPos pos, SqlIdentifier tblName, SqlLiteral estimate,
+  public SqlAnalyzeTable(SqlParserPos pos, SqlNode tableRef, SqlLiteral estimate,
       SqlNodeList fieldList, SqlNumericLiteral samplePercent) {
     super(pos);
-    this.tblName = tblName;
+    this.tableRef = tableRef;
     this.estimate = estimate;
     this.fieldList = fieldList;
     this.samplePercent = samplePercent;
@@ -75,7 +73,7 @@ public class SqlAnalyzeTable extends DrillSqlCall {
   @Override
   public List<SqlNode> getOperandList() {
     final List<SqlNode> operands = Lists.newArrayListWithCapacity(4);
-    operands.add(tblName);
+    operands.add(tableRef);
     operands.add(estimate);
     operands.add(fieldList);
     operands.add(samplePercent);
@@ -86,7 +84,7 @@ public class SqlAnalyzeTable extends DrillSqlCall {
   public void unparse(SqlWriter writer, int leftPrec, int rightPrec) {
     writer.keyword("ANALYZE");
     writer.keyword("TABLE");
-    tblName.unparse(writer, leftPrec, rightPrec);
+    tableRef.unparse(writer, leftPrec, rightPrec);
     writer.keyword(estimate.booleanValue() ? "ESTIMATE" : "COMPUTE");
     writer.keyword("STATISTICS");
 
@@ -114,20 +112,8 @@ public class SqlAnalyzeTable extends DrillSqlCall {
     return getSqlHandler(config, null);
   }
 
-  public List<String> getSchemaPath() {
-    if (tblName.isSimple()) {
-      return ImmutableList.of();
-    }
-
-    return tblName.names.subList(0, tblName.names.size() - 1);
-  }
-
-  public SqlIdentifier getTableIdentifier() {
-    return tblName;
-  }
-
-  public String getName() {
-    return Util.last(tblName.names);
+  public SqlNode getTableRef() {
+    return tableRef;
   }
 
   public List<String> getFieldNames() {

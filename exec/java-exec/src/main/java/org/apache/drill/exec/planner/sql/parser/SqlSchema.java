@@ -30,13 +30,13 @@ import org.apache.calcite.sql.SqlWriter;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.util.SqlBasicVisitor;
 import org.apache.drill.common.util.DrillStringUtils;
+import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;
 import org.apache.drill.exec.planner.sql.handlers.SchemaHandler;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandlerUtil;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -79,10 +79,7 @@ public abstract class SqlSchema extends DrillSqlCall {
   }
 
   public List<String> getSchemaPath() {
-    if (hasTable()) {
-      return table.isSimple() ? Collections.emptyList() : table.names.subList(0, table.names.size() - 1);
-    }
-    return null;
+    return hasTable() ? SchemaUtilites.getSchemaPath(table) : null;
   }
 
   public String getTableName() {

@@ -19,6 +19,7 @@ package org.apache.drill.exec.planner.logical;
 
 import java.io.IOException;
 
+import org.apache.calcite.adapter.enumerable.EnumerableTableScan;
 import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rel.RelNode;
@@ -168,9 +169,9 @@ public abstract class DrillTable implements Table {
   }
 
   public RelNode toRel(RelOptTable.ToRelContext context, RelOptTable table) {
-    return new DrillScanRel(context.getCluster(),
-        context.getCluster().traitSetOf(DrillRel.DRILL_LOGICAL),
-        table);
+    // returns non-drill table scan to allow directory-based partition pruning
+    // before table group scan is created
+    return EnumerableTableScan.create(context.getCluster(), table);
   }
 
   @Override

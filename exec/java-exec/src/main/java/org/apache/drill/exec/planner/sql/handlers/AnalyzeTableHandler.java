@@ -70,12 +70,12 @@ public class AnalyzeTableHandler extends DefaultSqlHandler {
 
     verifyNoUnsupportedFunctions(sqlAnalyzeTable);
 
-    SqlIdentifier tableIdentifier = sqlAnalyzeTable.getTableIdentifier();
+    SqlNode tableRef = sqlAnalyzeTable.getTableRef();
     SqlSelect scanSql = new SqlSelect(
         SqlParserPos.ZERO,              /* position */
         SqlNodeList.EMPTY,              /* keyword list */
         getColumnList(sqlAnalyzeTable), /* select list */
-        tableIdentifier,                /* from */
+        tableRef,                       /* from */
         null,                           /* where */
         null,                           /* group by */
         null,                           /* having */
@@ -85,13 +85,14 @@ public class AnalyzeTableHandler extends DefaultSqlHandler {
         null                            /* fetch */
     );
 
-    final ConvertedRelNode convertedRelNode = validateAndConvert(rewrite(scanSql));
-    final RelDataType validatedRowType = convertedRelNode.getValidatedRowType();
+    ConvertedRelNode convertedRelNode = validateAndConvert(rewrite(scanSql));
+    RelDataType validatedRowType = convertedRelNode.getValidatedRowType();
 
-    final RelNode relScan = convertedRelNode.getConvertedNode();
-    final String tableName = sqlAnalyzeTable.getName();
-    final AbstractSchema drillSchema = SchemaUtilites.resolveToDrillSchema(
-        config.getConverter().getDefaultSchema(), sqlAnalyzeTable.getSchemaPath());
+    RelNode relScan = convertedRelNode.getConvertedNode();
+    DrillTableInfo drillTableInfo = DrillTableInfo.getTableInfoHolder(sqlAnalyzeTable.getTableRef(), config);
+    String tableName = drillTableInfo.tableName();
+    AbstractSchema drillSchema = SchemaUtilites.resolveToDrillSchema(
+        config.getConverter().getDefaultSchema(), drillTableInfo.schemaPath());
     Table table = SqlHandlerUtil.getTableFromSchema(drillSchema, tableName);
 
     if (table == null) {

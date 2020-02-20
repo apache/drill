@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.sql;
 
+import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
 import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
@@ -328,4 +329,16 @@ public class SchemaUtilites {
     return schema;
   }
 
+  /**
+   * Returns schema path which corresponds to the specified table identifier.
+   * If table identifier contains only table name, empty list will be returned.
+   *
+   * @param tableIdentifier table identifier
+   * @return schema path which corresponds to the specified table identifier
+   */
+  public static List<String> getSchemaPath(SqlIdentifier tableIdentifier) {
+    return tableIdentifier.isSimple()
+        ? Collections.emptyList()
+        : tableIdentifier.names.subList(0, tableIdentifier.names.size() - 1);
+  }
 }

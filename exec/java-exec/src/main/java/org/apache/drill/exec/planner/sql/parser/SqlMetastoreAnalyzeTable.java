@@ -18,7 +18,6 @@
 package org.apache.drill.exec.planner.sql.parser;
 
 import org.apache.calcite.sql.SqlCall;
-import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
@@ -28,7 +27,6 @@ import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.SqlSpecialOperator;
 import org.apache.calcite.sql.SqlWriter;
 import org.apache.calcite.sql.parser.SqlParserPos;
-import org.apache.calcite.util.Util;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.MetastoreAnalyzeTableHandler;
@@ -36,7 +34,6 @@ import org.apache.drill.exec.planner.sql.handlers.SqlHandlerConfig;
 import org.apache.drill.exec.util.Pointer;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -44,21 +41,21 @@ public class SqlMetastoreAnalyzeTable extends DrillSqlCall {
 
   public static final SqlSpecialOperator OPERATOR = new SqlSpecialOperator("METASTORE_ANALYZE_TABLE", SqlKind.OTHER_DDL) {
     public SqlCall createCall(SqlLiteral functionQualifier, SqlParserPos pos, SqlNode... operands) {
-      return new SqlMetastoreAnalyzeTable(pos, (SqlIdentifier) operands[0], (SqlNodeList) operands[1], operands[2],
+      return new SqlMetastoreAnalyzeTable(pos, operands[0], (SqlNodeList) operands[1], operands[2],
           (SqlLiteral) operands[3], (SqlNumericLiteral) operands[4]);
     }
   };
 
-  private final SqlIdentifier tableName;
+  private final SqlNode tableRef;
   private final SqlNodeList fieldList;
   private final SqlLiteral level;
   private final SqlLiteral estimate;
   private final SqlNumericLiteral samplePercent;
 
-  public SqlMetastoreAnalyzeTable(SqlParserPos pos, SqlIdentifier tableName, SqlNodeList fieldList,
+  public SqlMetastoreAnalyzeTable(SqlParserPos pos, SqlNode tableRef, SqlNodeList fieldList,
       SqlNode level, SqlLiteral estimate, SqlNumericLiteral samplePercent) {
     super(pos);
-    this.tableName = tableName;
+    this.tableRef = tableRef;
     this.fieldList = fieldList;
     this.level = level != null ? SqlLiteral.unchain(level) : null;
     this.estimate = estimate;
@@ -72,14 +69,14 @@ public class SqlMetastoreAnalyzeTable extends DrillSqlCall {
 
   @Override
   public List<SqlNode> getOperandList() {
-    return Arrays.asList(tableName, fieldList, level, estimate, samplePercent);
+    return Arrays.asList(tableRef, fieldList, level, estimate, samplePercent);
   }
 
   @Override
   public void unparse(SqlWriter writer, int leftPrec, int rightPrec) {
     writer.keyword("ANALYZE");
     writer.keyword("TABLE");
-    tableName.unparse(writer, leftPrec, rightPrec);
+    tableRef.unparse(writer, leftPrec, rightPrec);
     if (fieldList != null) {
       writer.keyword("COLUMNS");
       if (fieldList.size() > 0) {
@@ -120,20 +117,8 @@ public class SqlMetastoreAnalyzeTable extends DrillSqlCall {
     return getSqlHandler(config, null);
   }
 
-  public List<String> getSchemaPath() {
-    if (tableName.isSimple()) {
-      return Collections.emptyList();
-    }
-
-    return tableName.names.subList(0, tableName.names.size() - 1);
-  }
-
-  public SqlIdentifier getTableIdentifier() {
-    return tableName;
-  }
-
-  public String getName() {
-    return Util.last(tableName.names);
+  public SqlNode getTableRef() {
+    return tableRef;
   }
 
   public List<SchemaPath> getFieldNames() {

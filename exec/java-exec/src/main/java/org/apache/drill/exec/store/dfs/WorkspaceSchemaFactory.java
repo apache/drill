@@ -443,40 +443,8 @@ public class WorkspaceSchemaFactory {
       } catch (UnsupportedOperationException e) {
         logger.debug("The filesystem for this workspace does not support this operation.", e);
       }
-      final DrillTable table = tables.get(tableKey);
-      if (table != null) {
-        MetadataProviderManager providerManager = null;
-
-        if (schemaConfig.getOption(ExecConstants.METASTORE_ENABLED).bool_val) {
-          try {
-            MetastoreRegistry metastoreRegistry = plugin.getContext().getMetastoreRegistry();
-            TableInfo tableInfo = TableInfo.builder()
-                .storagePlugin(plugin.getName())
-                .workspace(schemaName)
-                .name(tableName)
-                .build();
-
-            MetastoreTableInfo metastoreTableInfo = metastoreRegistry.get()
-                .tables()
-                .basicRequests()
-                .metastoreTableInfo(tableInfo);
-            if (metastoreTableInfo.isExists()) {
-              providerManager = new MetastoreMetadataProviderManager(metastoreRegistry, tableInfo,
-                  new MetastoreMetadataProviderConfig(schemaConfig.getOption(ExecConstants.METASTORE_USE_SCHEMA_METADATA).bool_val,
-                      schemaConfig.getOption(ExecConstants.METASTORE_USE_STATISTICS_METADATA).bool_val,
-                      schemaConfig.getOption(ExecConstants.METASTORE_FALLBACK_TO_FILE_METADATA).bool_val));
-            }
-          } catch (MetastoreException e) {
-            logger.warn("Exception happened during obtaining Metastore instance.", e);
-          }
-        }
-        if (providerManager == null) {
-          providerManager = FileSystemMetadataProviderManager.init();
-        }
-        setMetadataTable(providerManager, table, tableName);
-        setSchema(providerManager, tableName);
-        table.setTableMetadataProviderManager(providerManager);
-      }
+      DrillTable table = tables.get(tableKey);
+      setMetadataProviderManager(table, tableName);
       return table;
     }
 
@@ -640,6 +608,7 @@ public class WorkspaceSchemaFactory {
           FormatPluginConfig formatConfig = optionExtractor.createConfigForTable(key);
           FormatSelection selection = new FormatSelection(formatConfig, newSelection);
           DrillTable drillTable = new DynamicDrillTable(plugin, storageEngineName, schemaConfig.getUserName(), selection);
+          setMetadataProviderManager(drillTable, key.sig.getName());
 
           List<TableParamDef> commonParams = key.sig.getCommonParams();
           if (commonParams.isEmpty()) {
@@ -654,6 +623,7 @@ public class WorkspaceSchemaFactory {
           for (final FormatMatcher matcher : dirMatchers) {
             try {
               DrillTable table = matcher.isReadable(getFS(), fileSelection, plugin, storageEngineName, schemaConfig);
+              setMetadataProviderManager(table, key.sig.getName());
               if (table != null) {
                 return table;
               }
@@ -670,6 +640,7 @@ public class WorkspaceSchemaFactory {
 
         for (final FormatMatcher matcher : fileMatchers) {
           DrillTable table = matcher.isReadable(getFS(), newSelection, plugin, storageEngineName, schemaConfig);
+          setMetadataProviderManager(table, key.sig.getName());
           if (table != null) {
             return table;
           }
@@ -719,6 +690,42 @@ public class WorkspaceSchemaFactory {
         logger.debug("Failed to find format matcher for file: {}", file, e);
       }
       return null;
+    }
+
+    private void setMetadataProviderManager(DrillTable table, String tableName) {
+      if (table != null) {
+        MetadataProviderManager providerManager = null;
+
+        if (schemaConfig.getOption(ExecConstants.METASTORE_ENABLED).bool_val) {
+          try {
+            MetastoreRegistry metastoreRegistry = plugin.getContext().getMetastoreRegistry();
+            TableInfo tableInfo = TableInfo.builder()
+                .storagePlugin(plugin.getName())
+                .workspace(schemaName)
+                .name(tableName)
+                .build();
+
+            MetastoreTableInfo metastoreTableInfo = metastoreRegistry.get()
+                .tables()
+                .basicRequests()
+                .metastoreTableInfo(tableInfo);
+            if (metastoreTableInfo.isExists()) {
+              providerManager = new MetastoreMetadataProviderManager(metastoreRegistry, tableInfo,
+                  new MetastoreMetadataProviderConfig(schemaConfig.getOption(ExecConstants.METASTORE_USE_SCHEMA_METADATA).bool_val,
+                      schemaConfig.getOption(ExecConstants.METASTORE_USE_STATISTICS_METADATA).bool_val,
+                      schemaConfig.getOption(ExecConstants.METASTORE_FALLBACK_TO_FILE_METADATA).bool_val));
+            }
+          } catch (MetastoreException e) {
+            logger.warn("Exception happened during obtaining Metastore instance. File system metadata provider will be used.", e);
+          }
+        }
+        if (providerManager == null) {
+          providerManager = FileSystemMetadataProviderManager.init();
+        }
+        setMetadataTable(providerManager, table, tableName);
+        setSchema(providerManager, tableName);
+        table.setTableMetadataProviderManager(providerManager);
+      }
     }
 
     @Override
