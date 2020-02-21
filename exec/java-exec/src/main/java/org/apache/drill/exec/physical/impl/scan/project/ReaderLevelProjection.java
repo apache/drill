@@ -58,7 +58,6 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
  * @see {@link ImplicitColumnExplorer}, the class from which this class
  * evolved
  */
-
 public class ReaderLevelProjection {
 
   /**
@@ -68,7 +67,6 @@ public class ReaderLevelProjection {
    * final projected columns. The metadata manager, for example, implements
    * this interface to map metadata columns.
    */
-
   public interface ReaderProjectionResolver {
     void startResolution();
     boolean resolveColumn(ColumnProjection col, ResolvedTuple tuple,

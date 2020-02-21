@@ -62,9 +62,9 @@ public class TestResultSetCopier extends SubOperatorTest {
 
     public BaseDataGen(TupleMetadata schema) {
       this.schema = schema;
-      ResultSetOptions options = new OptionBuilder()
-          .setSchema(schema)
-          .setVectorCache(new ResultVectorCacheImpl(fixture.allocator()))
+      ResultSetOptions options = new ResultSetOptionBuilder()
+          .readerSchema(schema)
+          .vectorCache(new ResultVectorCacheImpl(fixture.allocator()))
           .build();
       rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
     }
@@ -404,8 +404,8 @@ public class TestResultSetCopier extends SubOperatorTest {
 
     // Equivalent of operator start() method.
 
-    OptionBuilder options = new OptionBuilder()
-        .setRowCountLimit(12);
+    ResultSetOptionBuilder options = new ResultSetOptionBuilder()
+        .rowCountLimit(12);
     ResultSetCopier copier = new ResultSetCopierImpl(
         fixture.allocator(), dataGen.batchAccessor(), options);
 

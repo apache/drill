@@ -23,7 +23,6 @@ import org.apache.drill.exec.vector.accessor.ColumnWriter;
 import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 import org.apache.drill.exec.vector.accessor.ObjectType;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
-import org.apache.drill.exec.vector.accessor.convert.ColumnConversionFactory;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
 
 /**
@@ -32,7 +31,6 @@ import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
  * throw an exception; subclasses simply override the supported
  * method(s).
  */
-
 public abstract class AbstractScalarWriterImpl extends AbstractScalarWriter implements WriterEvents {
 
   /**
@@ -48,13 +46,10 @@ public abstract class AbstractScalarWriterImpl extends AbstractScalarWriter impl
    */
   public static class ScalarObjectWriter extends AbstractObjectWriter {
 
-    private final WriterEvents writerEvents;
-    private final ScalarWriter scalarWriter;
+    private final AbstractScalarWriterImpl scalarWriter;
 
-    public ScalarObjectWriter(AbstractScalarWriterImpl baseWriter,
-        ColumnConversionFactory conversionFactory) {
-      writerEvents = baseWriter;
-      scalarWriter = convertWriter(conversionFactory, baseWriter);
+    public ScalarObjectWriter(AbstractScalarWriterImpl baseWriter) {
+      scalarWriter = baseWriter;
     }
 
     @Override
@@ -64,14 +59,14 @@ public abstract class AbstractScalarWriterImpl extends AbstractScalarWriter impl
     public ColumnWriter writer() { return scalarWriter; }
 
     @Override
-    public WriterEvents events() { return writerEvents; }
+    public WriterEvents events() { return scalarWriter; }
 
     @Override
     public void dump(HierarchicalFormatter format) {
       format
         .startObject(this)
         .attribute("scalarWriter");
-      writerEvents.dump(format);
+      scalarWriter.dump(format);
       format.endObject();
     }
   }
@@ -84,7 +79,6 @@ public abstract class AbstractScalarWriterImpl extends AbstractScalarWriter impl
    * For example, all top-level, simple columns see the same row index.
    * All columns within a repeated map see the same (inner) index, etc.
    */
-
   protected ColumnWriterIndex vectorIndex;
 
   @Override

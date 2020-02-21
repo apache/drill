@@ -32,7 +32,6 @@ import org.apache.drill.exec.physical.impl.scan.project.ReaderSchemaOrchestrator
 import org.apache.drill.exec.physical.impl.scan.project.ScanSchemaOrchestrator;
 import org.apache.drill.exec.physical.impl.scan.project.ScanSchemaOrchestrator.ScanOrchestratorBuilder;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
-import org.apache.drill.exec.physical.resultSet.impl.RowSetTestUtils;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.VectorContainer;
@@ -40,6 +39,7 @@ import org.apache.drill.exec.record.BatchSchemaBuilder;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.test.SubOperatorTest;
+import org.apache.drill.exec.physical.rowSet.RowSetTestUtils;
 import org.apache.drill.exec.physical.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.junit.Test;
@@ -64,7 +64,7 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
     ScanOrchestratorBuilder builder = new MockScanBuilder();
 
     // SELECT * ...
-    builder.setProjection(RowSetTestUtils.projectAll());
+    builder.projection(RowSetTestUtils.projectAll());
     ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator(), builder);
 
     // ... FROM table
@@ -144,7 +144,7 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
     ScanOrchestratorBuilder builder = new MockScanBuilder();
 
     // SELECT a, b ...
-    builder.setProjection(RowSetTestUtils.projectList("a", "b"));
+    builder.projection(RowSetTestUtils.projectList("a", "b"));
     ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator(), builder);
 
     // ... FROM table
@@ -189,7 +189,7 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
     ScanOrchestratorBuilder builder = new MockScanBuilder();
 
     // SELECT b, a ...
-    builder.setProjection(RowSetTestUtils.projectList("b", "a"));
+    builder.projection(RowSetTestUtils.projectList("b", "a"));
     ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator(), builder);
 
     // ... FROM table
@@ -237,7 +237,7 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
     ScanOrchestratorBuilder builder = new MockScanBuilder();
 
     // SELECT a, b, c ...
-    builder.setProjection(RowSetTestUtils.projectList("a", "b", "c"));
+    builder.projection(RowSetTestUtils.projectList("a", "b", "c"));
     ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator(), builder);
 
     // ... FROM table
@@ -291,10 +291,10 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
         .setMinorType(MinorType.VARCHAR)
         .setMode(DataMode.OPTIONAL)
         .build();
-    builder.setNullType(nullType);
+    builder.nullType(nullType);
 
     // SELECT a, b, c ...
-    builder.setProjection(RowSetTestUtils.projectList("a", "b", "c"));
+    builder.projection(RowSetTestUtils.projectList("a", "b", "c"));
     ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator(), builder);
 
     // ... FROM table ...
@@ -342,7 +342,7 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
     ScanOrchestratorBuilder builder = new MockScanBuilder();
 
     // SELECT a ...
-    builder.setProjection(RowSetTestUtils.projectList("a"));
+    builder.projection(RowSetTestUtils.projectList("a"));
     ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator(), builder);
 
     // ... FROM table
@@ -394,7 +394,7 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
 
     // SELECT ...
     // (Like SELECT COUNT(*) ...
-    builder.setProjection(RowSetTestUtils.projectList());
+    builder.projection(RowSetTestUtils.projectList());
     ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator(), builder);
 
     // ... FROM table
@@ -463,7 +463,7 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
     ScanOrchestratorBuilder builder = new MockScanBuilder();
 
     // SELECT * ...
-    builder.setProjection(RowSetTestUtils.projectAll());
+    builder.projection(RowSetTestUtils.projectAll());
     ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator(), builder);
 
     // ... FROM table
@@ -502,7 +502,7 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
     ScanOrchestratorBuilder builder = new MockScanBuilder();
 
     // SELECT * ...
-    builder.setProjection(RowSetTestUtils.projectList("a"));
+    builder.projection(RowSetTestUtils.projectList("a"));
     ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator(), builder);
 
     // ... FROM table
@@ -559,7 +559,7 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
     SchemaTracker tracker = new SchemaTracker();
 
     // SELECT * ...
-    builder.setProjection(RowSetTestUtils.projectList("a", "b", "c"));
+    builder.projection(RowSetTestUtils.projectList("a", "b", "c"));
     ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator(), builder);
 
     int schemaVersion;
@@ -659,7 +659,7 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
     ScanOrchestratorBuilder builder = new MockScanBuilder();
 
     // SELECT a, b ...
-    builder.setProjection(RowSetTestUtils.projectList("a", "b"));
+    builder.projection(RowSetTestUtils.projectList("a", "b"));
     ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator(), builder);
 
     // file schema (a, b)
@@ -751,7 +751,7 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
   public void testModeSmoothing() {
     ScanOrchestratorBuilder builder = new MockScanBuilder();
     builder.enableSchemaSmoothing(true);
-    builder.setProjection(RowSetTestUtils.projectList("a"));
+    builder.projection(RowSetTestUtils.projectList("a"));
     ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator(), builder);
 
     // Most general schema: nullable, with precision.
@@ -861,7 +861,7 @@ public class TestScanOrchestratorEarlySchema extends SubOperatorTest {
 
     ScanOrchestratorBuilder builder = new MockScanBuilder();
     builder.enableSchemaSmoothing(true);
-    builder.setProjection(RowSetTestUtils.projectList("a", "b", "c"));
+    builder.projection(RowSetTestUtils.projectList("a", "b", "c"));
     ScanSchemaOrchestrator scanner = new ScanSchemaOrchestrator(fixture.allocator(), builder);
 
     TupleMetadata schema1 = new SchemaBuilder()

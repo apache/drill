@@ -63,14 +63,13 @@ public class TestResultSetLoaderDictArray extends SubOperatorTest {
           .value(MinorType.VARCHAR)
           .resumeSchema()
         .buildSchema();
-    ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
-        .setSchema(schema)
+    ResultSetLoaderImpl.ResultSetOptions options = new ResultSetOptionBuilder()
+        .readerSchema(schema)
         .build();
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
     RowSetLoader rootWriter = rsLoader.writer();
 
     // Verify structure and schema
-
     TupleMetadata actualSchema = rootWriter.tupleSchema();
     assertEquals(2, actualSchema.size());
     assertTrue(actualSchema.metadata(1).isArray());
@@ -81,7 +80,6 @@ public class TestResultSetLoaderDictArray extends SubOperatorTest {
     assertSame(actualSchema.metadata("d").tupleSchema(), dictWriter.schema().tupleSchema());
 
     // Write a couple of rows with arrays.
-
     rsLoader.startBatch();
     rootWriter
         .addRow(10, objArray(
@@ -96,7 +94,6 @@ public class TestResultSetLoaderDictArray extends SubOperatorTest {
         );
 
     // Verify the batch
-
     RowSet actual = fixture.wrap(rsLoader.harvest());
     RepeatedDictVector repeatedDictVector = (RepeatedDictVector) actual.container().getValueVector(1).getValueVector();
     MaterializedField dictArrayField = repeatedDictVector.getField(); // RepeatedDictVector contains one child - DictVector
@@ -131,14 +128,13 @@ public class TestResultSetLoaderDictArray extends SubOperatorTest {
           .repeatedValue(MinorType.VARCHAR)
           .resumeSchema()
         .buildSchema();
-    ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
-        .setSchema(schema)
+    ResultSetLoaderImpl.ResultSetOptions options = new ResultSetOptionBuilder()
+        .readerSchema(schema)
         .build();
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
     RowSetLoader rootWriter = rsLoader.writer();
 
     // Write a couple of rows
-
     rsLoader.startBatch();
     rootWriter
         .addRow(10, objArray(
@@ -151,7 +147,6 @@ public class TestResultSetLoaderDictArray extends SubOperatorTest {
             map(330, strArray("d3.3.1", "d1.2.2"))));
 
     // Verify the batch
-
     RowSet actual = fixture.wrap(rsLoader.harvest());
     SingleRowSet expected = fixture.rowSetBuilder(schema)
         .addRow(10, objArray(
@@ -176,14 +171,13 @@ public class TestResultSetLoaderDictArray extends SubOperatorTest {
           .value(MinorType.INT)
           .resumeSchema()
         .buildSchema();
-    ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
-        .setSchema(schema)
+    ResultSetLoaderImpl.ResultSetOptions options = new ResultSetOptionBuilder()
+        .readerSchema(schema)
         .build();
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
     RowSetLoader rootWriter = rsLoader.writer();
 
     // Write a couple of rows
-
     rsLoader.startBatch();
     rootWriter
         .addRow(10, objArray(
@@ -198,7 +192,6 @@ public class TestResultSetLoaderDictArray extends SubOperatorTest {
         );
 
     // Verify the batch
-
     RowSet actual = fixture.wrap(rsLoader.harvest());
     SingleRowSet expected = fixture.rowSetBuilder(schema)
         .addRow(10, objArray(
@@ -228,14 +221,13 @@ public class TestResultSetLoaderDictArray extends SubOperatorTest {
             .resumeDict()
         .resumeSchema()
         .buildSchema();
-    ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
-        .setSchema(schema)
+    ResultSetLoaderImpl.ResultSetOptions options = new ResultSetOptionBuilder()
+        .readerSchema(schema)
         .build();
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
     RowSetLoader rootWriter = rsLoader.writer();
 
     // Write a couple of rows
-
     rsLoader.startBatch();
     rootWriter
         .addRow(10, objArray(
@@ -249,7 +241,6 @@ public class TestResultSetLoaderDictArray extends SubOperatorTest {
             map("b", map("a", "b3", "c", "c3"), "a", map())));
 
     // Verify the batch
-
     RowSet actual = fixture.wrap(rsLoader.harvest());
     SingleRowSet expected = fixture.rowSetBuilder(schema)
         .addRow(10, objArray(
@@ -278,9 +269,9 @@ public class TestResultSetLoaderDictArray extends SubOperatorTest {
           .value(MinorType.VARCHAR)
           .resumeSchema()
         .buildSchema();
-    ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
-        .setSchema(schema)
-        .setRowCountLimit(ValueVector.MAX_ROW_COUNT)
+    ResultSetLoaderImpl.ResultSetOptions options = new ResultSetOptionBuilder()
+        .readerSchema(schema)
+        .rowCountLimit(ValueVector.MAX_ROW_COUNT)
         .build();
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
     RowSetLoader rootWriter = rsLoader.writer();
@@ -300,7 +291,6 @@ public class TestResultSetLoaderDictArray extends SubOperatorTest {
 
     // Don't harvest the batch. Allocator will complain if the
     // loader does not release memory.
-
     rsLoader.close();
   }
 
@@ -311,9 +301,9 @@ public class TestResultSetLoaderDictArray extends SubOperatorTest {
           .value(MinorType.INT)
           .resumeSchema()
         .buildSchema();
-    ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
-        .setRowCountLimit(ValueVector.MAX_ROW_COUNT)
-        .setSchema(schema)
+    ResultSetLoaderImpl.ResultSetOptions options = new ResultSetOptionBuilder()
+        .rowCountLimit(ValueVector.MAX_ROW_COUNT)
+        .readerSchema(schema)
         .build();
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
     RowSetLoader rootWriter = rsLoader.writer();
@@ -327,14 +317,13 @@ public class TestResultSetLoaderDictArray extends SubOperatorTest {
 
     // Number of rows should be driven by vector size.
     // Our row count should include the overflow row
-
     ArrayWriter arrayDictWriter = rootWriter.array(0);
     DictWriter dictWriter = arrayDictWriter.dict();
     ScalarWriter keyWriter = dictWriter.keyWriter();
     ScalarWriter valueWriter = dictWriter.valueWriter().scalar();
 
     int expectedCount = ValueVector.MAX_BUFFER_SIZE / (key.length * dictSize * arraySize);
-    System.out.println("expectedCoutn: " + expectedCount);
+    //System.out.println("expectedCoutn: " + expectedCount);
     {
       int count = 0;
       while (! rootWriter.isFull()) {
@@ -352,18 +341,15 @@ public class TestResultSetLoaderDictArray extends SubOperatorTest {
       }
 
       assertEquals(expectedCount + 1, count);
-      System.out.println("count: " + count);
+      //System.out.println("count: " + count);
 
       // Loader's row count should include only "visible" rows
-
       assertEquals(expectedCount, rootWriter.rowCount());
 
       // Total count should include invisible and look-ahead rows.
-
       assertEquals(expectedCount + 1, rsLoader.totalRowCount());
 
       // Result should exclude the overflow row
-
       VectorContainer container = rsLoader.harvest();
       BatchValidator.validate(container);
       RowSet result = fixture.wrap(container);
@@ -372,7 +358,6 @@ public class TestResultSetLoaderDictArray extends SubOperatorTest {
     }
 
     // Next batch should start with the overflow row
-
     {
       rsLoader.startBatch();
       assertEquals(1, rootWriter.rowCount());
@@ -394,9 +379,9 @@ public class TestResultSetLoaderDictArray extends SubOperatorTest {
           .value(MinorType.VARCHAR)
           .resumeSchema()
         .buildSchema();
-    ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
-        .setRowCountLimit(ValueVector.MAX_ROW_COUNT)
-        .setSchema(schema)
+    ResultSetLoaderImpl.ResultSetOptions options = new ResultSetOptionBuilder()
+        .rowCountLimit(ValueVector.MAX_ROW_COUNT)
+        .readerSchema(schema)
         .build();
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
     RowSetLoader rootWriter = rsLoader.writer();
@@ -410,7 +395,6 @@ public class TestResultSetLoaderDictArray extends SubOperatorTest {
 
     // Number of rows should be driven by vector size.
     // Our row count should include the overflow row
-
     ArrayWriter arrayDictWriter = rootWriter.array(0);
     DictWriter dictWriter = arrayDictWriter.dict();
     ScalarWriter keyWriter = dictWriter.keyWriter();
@@ -436,15 +420,12 @@ public class TestResultSetLoaderDictArray extends SubOperatorTest {
       assertEquals(expectedCount + 1, count);
 
       // Loader's row count should include only "visible" rows
-
       assertEquals(expectedCount, rootWriter.rowCount());
 
       // Total count should include invisible and look-ahead rows.
-
       assertEquals(expectedCount + 1, rsLoader.totalRowCount());
 
       // Result should exclude the overflow row
-
       VectorContainer container = rsLoader.harvest();
       BatchValidator.validate(container);
       RowSet result = fixture.wrap(container);
@@ -453,7 +434,6 @@ public class TestResultSetLoaderDictArray extends SubOperatorTest {
     }
 
     // Next batch should start with the overflow row
-
     {
       rsLoader.startBatch();
       assertEquals(1, rootWriter.rowCount());

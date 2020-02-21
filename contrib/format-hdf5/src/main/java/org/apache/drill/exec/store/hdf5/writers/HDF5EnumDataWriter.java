@@ -18,32 +18,33 @@
 
 package org.apache.drill.exec.store.hdf5.writers;
 
-import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.store.hdf5.HDF5Utils;
-import org.apache.drill.exec.vector.accessor.ScalarWriter;
+import org.apache.drill.exec.vector.accessor.ValueWriter;
+
+import ch.systemsx.cisd.hdf5.IHDF5Reader;
 
 public class HDF5EnumDataWriter extends HDF5DataWriter {
 
   private final String[] data;
 
-  private final ScalarWriter rowWriter;
+  private final ValueWriter colWriter;
 
   // This constructor is used when the data is a 1D column.  The column is inferred from the datapath
-  public HDF5EnumDataWriter(IHDF5Reader reader, RowSetLoader columnWriter, String datapath) {
-    super(reader, columnWriter, datapath);
+  public HDF5EnumDataWriter(IHDF5Reader reader, WriterSpec writerSpec, String datapath) {
+    super(reader, datapath);
     data = reader.readEnumArrayAsString(datapath);
 
     fieldName = HDF5Utils.getNameFromPath(datapath);
-    rowWriter = makeWriter(columnWriter, fieldName, TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL);
+    colWriter = writerSpec.makeWriter(fieldName, TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL);
   }
 
+  @Override
   public boolean write() {
     if (counter > data.length) {
       return false;
     } else {
-      rowWriter.setString(data[counter++]);
+      colWriter.setString(data[counter++]);
       return true;
     }
   }
@@ -51,6 +52,7 @@ public class HDF5EnumDataWriter extends HDF5DataWriter {
   @Override
   public int getDataSize() { return data.length; }
 
+  @Override
   public boolean hasNext() {
     return counter < data.length;
   }

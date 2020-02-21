@@ -39,7 +39,7 @@ public class FileMetadataColumnsParser implements ScanProjectionParser {
 
   // Internal
 
-  private final FileMetadataManager metadataManager;
+  private final ImplicitColumnManager metadataManager;
   private final Pattern partitionPattern;
   private ScanLevelProjection builder;
   private final Set<Integer> referencedPartitions = new HashSet<>();
@@ -48,7 +48,7 @@ public class FileMetadataColumnsParser implements ScanProjectionParser {
 
   private boolean hasImplicitCols;
 
-  public FileMetadataColumnsParser(FileMetadataManager metadataManager) {
+  public FileMetadataColumnsParser(ImplicitColumnManager metadataManager) {
     this.metadataManager = metadataManager;
     partitionPattern = Pattern.compile(metadataManager.partitionDesignator + "(\\d+)", Pattern.CASE_INSENSITIVE);
   }

@@ -56,25 +56,27 @@ import org.junit.Assert;
  * This class acts as an example of how to use the suite of reader
  * abstractions.
  */
-
 public class RowSetComparison {
 
   /**
    * Row set with the expected outcome of a test. This is the "golden"
    * copy defined in the test itself.
    */
-  private RowSet expected;
+  private final RowSet expected;
+
   /**
    * Some tests wish to ignore certain (top-level) columns. If a
    * mask is provided, then only those columns with a <tt>true</tt>
    * will be verified.
    */
-  private boolean[] mask;
+  private final boolean[] mask;
+
   /**
    * Floats and doubles do not compare exactly. This MathContext is used
    * to construct BigDecimals of the desired precision.
    */
   private MathContext scale = new MathContext(3);
+
   /**
    * Tests can skip the first n rows.
    */
@@ -148,7 +150,6 @@ public class RowSetComparison {
    * @param span the number of rows to compare
    * @return this builder
    */
-
   public RowSetComparison span(int span) {
     this.span = span;
     return this;
@@ -157,7 +158,8 @@ public class RowSetComparison {
   private void compareSchemasAndCounts(RowSet actual) {
     assertTrue("Schemas don't match.\n" +
       "Expected: " + expected.schema().toString() +
-      "\nActual:   " + actual.schema(), expected.schema().isEquivalent(actual.schema()));
+      "\nActual:   " + actual.schema(),
+      expected.schema().isEquivalent(actual.schema()));
     int testLength = getTestLength();
     int dataLength = offset + testLength;
     assertTrue("Missing expected rows", expected.rowCount() >= dataLength);
@@ -228,7 +230,6 @@ public class RowSetComparison {
    * Verify the actual rows using the rules defined in this builder
    * @param actual the actual results to verify
    */
-
   public void verify(RowSet actual) {
     compareSchemasAndCounts(actual);
     int testLength = getTestLength();
@@ -254,7 +255,6 @@ public class RowSetComparison {
    * for the actual result sets.
    * @param actual the actual results to verify
    */
-
   public void verifyAndClear(RowSet actual) {
     try {
       verify(actual);
@@ -268,7 +268,6 @@ public class RowSetComparison {
    * for both the expected and actual result sets.
    * @param actual the actual results to verify
    */
-
   public void verifyAndClearAll(RowSet actual) {
     try {
       verify(actual);

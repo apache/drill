@@ -20,6 +20,9 @@ package org.apache.drill.exec.physical.resultSet.project;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.drill.common.exceptions.CustomErrorContext;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
+
 /**
  * Represents a wildcard: SELECT * when used at the root tuple.
  * When used with maps, means selection of all map columns, either
@@ -64,6 +67,17 @@ public class ImpliedTupleRequest implements RequestedTuple {
   }
 
   @Override
+  public boolean isProjected(ColumnMetadata columnSchema) {
+    return allProjected ? !Projections.excludeFromWildcard(columnSchema) : false;
+  }
+
+  @Override
+  public boolean enforceProjection(ColumnMetadata columnSchema,
+      CustomErrorContext errorContext) {
+    return isProjected(columnSchema);
+  }
+
+  @Override
   public String toString() {
     StringBuilder buf = new StringBuilder()
         .append("{");
@@ -72,4 +86,7 @@ public class ImpliedTupleRequest implements RequestedTuple {
     }
     return buf.append("}").toString();
   }
+
+  @Override
+  public boolean isEmpty() { return !allProjected; }
 }

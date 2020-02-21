@@ -77,8 +77,8 @@ public class TestResultSetLoaderRepeatedList extends SubOperatorTest {
           .resumeSchema()
         .buildSchema();
 
-    final ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
-        .setSchema(schema)
+    final ResultSetLoaderImpl.ResultSetOptions options = new ResultSetOptionBuilder()
+        .readerSchema(schema)
         .build();
     final ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
 
@@ -148,7 +148,7 @@ public class TestResultSetLoaderRepeatedList extends SubOperatorTest {
           .resumeSchema()
         .buildSchema();
 
-    final ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
+    final ResultSetLoaderImpl.ResultSetOptions options = new ResultSetOptionBuilder()
         .build();
     final ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
     final RowSetLoader writer = rsLoader.writer();
@@ -181,7 +181,7 @@ public class TestResultSetLoaderRepeatedList extends SubOperatorTest {
           .resumeSchema()
         .buildSchema();
 
-    final ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
+    final ResultSetLoaderImpl.ResultSetOptions options = new ResultSetOptionBuilder()
         .build();
     final ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
     final RowSetLoader writer = rsLoader.writer();
@@ -291,9 +291,9 @@ public class TestResultSetLoaderRepeatedList extends SubOperatorTest {
           .resumeSchema()
         .buildSchema();
 
-    final ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
-        .setRowCountLimit(ValueVector.MAX_ROW_COUNT)
-        .setSchema(schema)
+    final ResultSetLoaderImpl.ResultSetOptions options = new ResultSetOptionBuilder()
+        .rowCountLimit(ValueVector.MAX_ROW_COUNT)
+        .readerSchema(schema)
         .build();
     final ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
     final RowSetLoader writer = rsLoader.writer();
@@ -436,8 +436,8 @@ public class TestResultSetLoaderRepeatedList extends SubOperatorTest {
         .addArray("cube", MinorType.VARCHAR, 3)
         .buildSchema();
 
-    final ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
-        .setSchema(schema)
+    final ResultSetLoaderImpl.ResultSetOptions options = new ResultSetOptionBuilder()
+        .readerSchema(schema)
         .build();
     final ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
 

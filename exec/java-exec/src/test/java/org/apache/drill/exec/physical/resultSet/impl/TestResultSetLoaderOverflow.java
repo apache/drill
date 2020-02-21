@@ -64,9 +64,9 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
     TupleMetadata schema = new SchemaBuilder()
         .add("s", MinorType.VARCHAR)
         .buildSchema();
-    ResultSetOptions options = new OptionBuilder()
-        .setRowCountLimit(ValueVector.MAX_ROW_COUNT)
-        .setSchema(schema)
+    ResultSetOptions options = new ResultSetOptionBuilder()
+        .rowCountLimit(ValueVector.MAX_ROW_COUNT)
+        .readerSchema(schema)
         .build();
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
     RowSetLoader rootWriter = rsLoader.writer();
@@ -133,10 +133,10 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
     TupleMetadata schema = new SchemaBuilder()
         .add("s", MinorType.VARCHAR)
         .buildSchema();
-    ResultSetOptions options = new OptionBuilder()
-        .setRowCountLimit(ValueVector.MAX_ROW_COUNT)
-        .setSchema(schema)
-        .setBatchSizeLimit(
+    ResultSetOptions options = new ResultSetOptionBuilder()
+        .rowCountLimit(ValueVector.MAX_ROW_COUNT)
+        .readerSchema(schema)
+        .batchSizeLimit(
             8 * 1024 * 1024 + // Data
             2 * ValueVector.MAX_ROW_COUNT * 4) // Offsets, doubled because of +1
         .build();
@@ -207,9 +207,9 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
     TupleMetadata schema = new SchemaBuilder()
         .add("s", MinorType.VARCHAR)
         .buildSchema();
-    ResultSetOptions options = new OptionBuilder()
-        .setRowCountLimit(ValueVector.MAX_ROW_COUNT)
-        .setSchema(schema)
+    ResultSetOptions options = new ResultSetOptionBuilder()
+        .rowCountLimit(ValueVector.MAX_ROW_COUNT)
+        .readerSchema(schema)
         .build();
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
     RowSetLoader rootWriter = rsLoader.writer();
@@ -250,9 +250,9 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
     TupleMetadata schema = new SchemaBuilder()
         .addArray("s", MinorType.VARCHAR)
         .buildSchema();
-    ResultSetOptions options = new OptionBuilder()
-        .setRowCountLimit(ValueVector.MAX_ROW_COUNT)
-        .setSchema(schema)
+    ResultSetOptions options = new ResultSetOptionBuilder()
+        .rowCountLimit(ValueVector.MAX_ROW_COUNT)
+        .readerSchema(schema)
         .build();
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
     RowSetLoader rootWriter = rsLoader.writer();
@@ -288,9 +288,9 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
     TupleMetadata schema = new SchemaBuilder()
         .addArray("s", MinorType.VARCHAR)
         .buildSchema();
-    ResultSetOptions options = new OptionBuilder()
-        .setRowCountLimit(ValueVector.MAX_ROW_COUNT)
-        .setSchema(schema)
+    ResultSetOptions options = new ResultSetOptionBuilder()
+        .rowCountLimit(ValueVector.MAX_ROW_COUNT)
+        .readerSchema(schema)
         .build();
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
     RowSetLoader rootWriter = rsLoader.writer();
@@ -402,9 +402,9 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
         .addArray("c", MinorType.INT)
         .addArray("d", MinorType.INT)
         .buildSchema();
-    ResultSetOptions options = new OptionBuilder()
-        .setRowCountLimit(ValueVector.MAX_ROW_COUNT)
-        .setSchema(schema)
+    ResultSetOptions options = new ResultSetOptionBuilder()
+        .rowCountLimit(ValueVector.MAX_ROW_COUNT)
+        .readerSchema(schema)
         .build();
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
     RowSetLoader rootWriter = rsLoader.writer();
@@ -629,9 +629,9 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
         .add("b", MinorType.VARCHAR)
         .addArray("c", MinorType.INT)
         .buildSchema();
-    ResultSetOptions options = new OptionBuilder()
-        .setRowCountLimit(ValueVector.MAX_ROW_COUNT)
-        .setSchema(schema)
+    ResultSetOptions options = new ResultSetOptionBuilder()
+        .rowCountLimit(ValueVector.MAX_ROW_COUNT)
+        .readerSchema(schema)
         .build();
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
     RowSetLoader rootWriter = rsLoader.writer();
@@ -688,9 +688,9 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
         .addNullable("b", MinorType.VARCHAR)
         .addNullable("c", MinorType.VARCHAR)
         .buildSchema();
-    ResultSetOptions options = new OptionBuilder()
-        .setRowCountLimit(ValueVector.MAX_ROW_COUNT)
-        .setSchema(schema)
+    ResultSetOptions options = new ResultSetOptionBuilder()
+        .rowCountLimit(ValueVector.MAX_ROW_COUNT)
+        .readerSchema(schema)
         .build();
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
     RowSetLoader rootWriter = rsLoader.writer();
@@ -752,9 +752,9 @@ public class TestResultSetLoaderOverflow extends SubOperatorTest {
     TupleMetadata schema = new SchemaBuilder()
         .add("s", MinorType.VARCHAR)
         .buildSchema();
-    ResultSetOptions options = new OptionBuilder()
-        .setRowCountLimit(ValueVector.MAX_ROW_COUNT)
-        .setSchema(schema)
+    ResultSetOptions options = new ResultSetOptionBuilder()
+        .rowCountLimit(ValueVector.MAX_ROW_COUNT)
+        .readerSchema(schema)
         .build();
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
     RowSetLoader rootWriter = rsLoader.writer();

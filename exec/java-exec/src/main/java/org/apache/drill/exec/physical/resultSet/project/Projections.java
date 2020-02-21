@@ -23,6 +23,7 @@ import java.util.List;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.PathSegment.ArraySegment;
 import org.apache.drill.common.expression.PathSegment.NameSegment;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.common.expression.SchemaPath;
 
 /**
@@ -155,5 +156,14 @@ public class Projections {
       return projectAll();
     }
     return new RequestedTupleImpl(projList);
+  }
+
+  /**
+   * Reports whether the column is a special column which should not be
+   * expanded in a wildcard. Used for specialized columns in readers
+   * such as the Log format.
+   */
+  public static boolean excludeFromWildcard(ColumnMetadata col) {
+    return col.booleanProperty(ColumnMetadata.EXCLUDE_FROM_WILDCARD);
   }
 }

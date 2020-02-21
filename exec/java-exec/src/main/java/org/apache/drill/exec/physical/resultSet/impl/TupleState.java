@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.apache.drill.exec.physical.resultSet.ProjectionSet;
 import org.apache.drill.exec.physical.resultSet.ResultVectorCache;
 import org.apache.drill.exec.physical.resultSet.impl.ColumnState.BaseContainerColumnState;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
@@ -256,7 +255,7 @@ public abstract class TupleState extends ContainerState
     private final VectorContainer outputContainer;
 
     public RowState(ResultSetLoaderImpl rsLoader, ResultVectorCache vectorCache) {
-      super(rsLoader, vectorCache, rsLoader.projectionSet);
+      super(rsLoader, vectorCache, rsLoader.projectionSet());
       writer = new RowSetLoaderImpl(rsLoader, schema);
       writer.bindListener(this);
       outputContainer = new VectorContainer(rsLoader.allocator());
@@ -310,7 +309,7 @@ public abstract class TupleState extends ContainerState
 
     public MapState(LoaderInternals events,
         ResultVectorCache vectorCache,
-        ProjectionSet projectionSet) {
+        ProjectionFilter projectionSet) {
       super(events, vectorCache, projectionSet);
     }
 
@@ -381,7 +380,7 @@ public abstract class TupleState extends ContainerState
 
     public SingleMapState(LoaderInternals events,
         ResultVectorCache vectorCache,
-        ProjectionSet projectionSet) {
+        ProjectionFilter projectionSet) {
       super(events, vectorCache, projectionSet);
     }
 
@@ -400,7 +399,7 @@ public abstract class TupleState extends ContainerState
 
     public MapArrayState(LoaderInternals events,
         ResultVectorCache vectorCache,
-        ProjectionSet projectionSet) {
+        ProjectionFilter projectionSet) {
       super(events, vectorCache, projectionSet);
     }
 
@@ -447,7 +446,7 @@ public abstract class TupleState extends ContainerState
 
   protected TupleState(LoaderInternals events,
       ResultVectorCache vectorCache,
-      ProjectionSet projectionSet) {
+      ProjectionFilter projectionSet) {
     super(events, vectorCache, projectionSet);
   }
 
@@ -609,7 +608,7 @@ public abstract class TupleState extends ContainerState
 
     public DictState(LoaderInternals events,
                     ResultVectorCache vectorCache,
-                    ProjectionSet projectionSet) {
+                    ProjectionFilter projectionSet) {
       super(events, vectorCache, projectionSet);
     }
 
@@ -637,7 +636,7 @@ public abstract class TupleState extends ContainerState
 
     public SingleDictState(LoaderInternals events,
                           ResultVectorCache vectorCache,
-                          ProjectionSet projectionSet) {
+                          ProjectionFilter projectionSet) {
       super(events, vectorCache, projectionSet);
     }
 
@@ -651,7 +650,7 @@ public abstract class TupleState extends ContainerState
 
     public DictArrayState(LoaderInternals events,
                          ResultVectorCache vectorCache,
-                         ProjectionSet projectionSet) {
+                         ProjectionFilter projectionSet) {
       super(events, vectorCache, projectionSet);
     }
 

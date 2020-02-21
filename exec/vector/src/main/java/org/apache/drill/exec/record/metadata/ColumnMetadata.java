@@ -59,6 +59,20 @@ public interface ColumnMetadata extends Propertied {
   String BLANK_AS_PROP = DRILL_PROP_PREFIX + "blank-as";
 
   /**
+   * Convert blanks to null values (if the column is nullable), or
+   * fill with the default value (non-nullable.)
+   */
+  String BLANK_AS_NULL = "null";
+
+  /**
+   * Convert blanks for numeric fields to 0. For non-numeric
+   * fields, convert to null (for nullable) or the default value
+   * (for non-nullable). Works best if non-numeric fields are declared
+   * as nullable.
+   */
+  String BLANK_AS_ZERO = "0";
+
+  /**
    * Indicates whether to project the column in a wildcard (*) query.
    * Special columns may be excluded from projection. Certain "special"
    * columns may be available only when explicitly requested. For example,

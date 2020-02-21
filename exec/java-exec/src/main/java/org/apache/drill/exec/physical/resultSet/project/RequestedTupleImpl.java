@@ -19,7 +19,9 @@ package org.apache.drill.exec.physical.resultSet.project;
 
 import java.util.List;
 
+import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleNameSpace;
 
 /**
@@ -164,6 +166,27 @@ public class RequestedTupleImpl implements RequestedTuple {
   }
 
   @Override
+  public boolean isProjected(ColumnMetadata columnSchema) {
+    if (!isProjected(columnSchema.name())) {
+      return false;
+    }
+    return projectionType == TupleProjectionType.ALL ?
+        !Projections.excludeFromWildcard(columnSchema) : true;
+  }
+
+  public boolean enforceProjection(ColumnMetadata columnSchema, CustomErrorContext errorContext) {
+    if (projectionType == TupleProjectionType.ALL) {
+      return true;
+    }
+    RequestedColumn reqCol = get(columnSchema.name());
+    if (reqCol == null) {
+      return false;
+    }
+    ProjectionChecker.validateProjection(reqCol, columnSchema, errorContext);
+    return true;
+  }
+
+  @Override
   public RequestedTuple mapProjection(String colName) {
     switch (projectionType) {
       case ALL:
@@ -190,4 +213,7 @@ public class RequestedTupleImpl implements RequestedTuple {
     }
     return buf.append("}").toString();
   }
+
+  @Override
+  public boolean isEmpty() { return projections().isEmpty(); }
 }

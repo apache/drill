@@ -20,14 +20,17 @@ package org.apache.drill.exec.store.easy.text.reader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.easy.text.TextFormatPlugin;
-import org.apache.drill.exec.vector.accessor.ScalarWriter;
+import org.apache.drill.exec.vector.accessor.ValueWriter;
 
 /**
- * Class is responsible for generating record batches for text file inputs. We generate
- * a record batch with a set of varchar vectors. A varchar vector contains all the field
- * values for a given column. Each record is a single value within each vector of the set.
+ * Class is responsible for generating record batches for text file inputs. We
+ * generate a record batch with a set of varchar vectors. A varchar vector
+ * contains all the field values for a given column. Each record is a single
+ * value within each vector of the set.
  */
 class FieldVarCharOutput extends BaseFieldOutput {
+
+  protected final ValueWriter[] colWriters;
 
   /**
    * We initialize and add the varchar vector for each incoming field in this
@@ -35,10 +38,11 @@ class FieldVarCharOutput extends BaseFieldOutput {
    *
    * @param writer row set writer
    */
-  FieldVarCharOutput(RowSetLoader writer) {
+  FieldVarCharOutput(RowSetLoader writer, ValueWriter[] colWriters) {
     super(writer,
         TextFormatPlugin.MAXIMUM_NUMBER_COLUMNS,
         makeMask(writer));
+    this.colWriters = colWriters;
   }
 
   private static boolean[] makeMask(RowSetLoader writer) {
@@ -57,7 +61,7 @@ class FieldVarCharOutput extends BaseFieldOutput {
   }
 
   @Override
-  protected ScalarWriter columnWriter() {
-    return writer.scalar(currentFieldIndex);
+  protected ValueWriter columnWriter() {
+    return colWriters[currentFieldIndex];
   }
 }

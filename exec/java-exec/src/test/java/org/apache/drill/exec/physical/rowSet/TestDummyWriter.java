@@ -75,8 +75,8 @@ public class TestDummyWriter extends SubOperatorTest {
 
     // We provide no vector. Factory should build us "dummy" writers.
 
-    writers.add(ColumnWriterFactory.buildColumnWriter(schema.metadata("a"), null, null));
-    writers.add(ColumnWriterFactory.buildColumnWriter(schema.metadata("b"), null, null));
+    writers.add(ColumnWriterFactory.buildColumnWriter(schema.metadata("a"), null));
+    writers.add(ColumnWriterFactory.buildColumnWriter(schema.metadata("b"), null));
     AbstractTupleWriter rootWriter = new RootWriterFixture(schema, writers);
 
     // Events are ignored.
@@ -142,15 +142,15 @@ public class TestDummyWriter extends SubOperatorTest {
     {
       TupleMetadata mapSchema = schema.metadata("m1").tupleSchema();
       List<AbstractObjectWriter> members = new ArrayList<>();
-      members.add(ColumnWriterFactory.buildColumnWriter(mapSchema.metadata("a"), null, null));
-      members.add(ColumnWriterFactory.buildColumnWriter(mapSchema.metadata("b"), null, null));
+      members.add(ColumnWriterFactory.buildColumnWriter(mapSchema.metadata("a"), null));
+      members.add(ColumnWriterFactory.buildColumnWriter(mapSchema.metadata("b"), null));
       writers.add(MapWriter.buildMapWriter(schema.metadata("m1"), null, members));
     }
 
     {
       TupleMetadata mapSchema = schema.metadata("m2").tupleSchema();
       List<AbstractObjectWriter> members = new ArrayList<>();
-      members.add(ColumnWriterFactory.buildColumnWriter(mapSchema.metadata("c"), null, null));
+      members.add(ColumnWriterFactory.buildColumnWriter(mapSchema.metadata("c"), null));
       writers.add(MapWriter.buildMapWriter(schema.metadata("m2"), null, members));
     }
 
@@ -215,8 +215,8 @@ public class TestDummyWriter extends SubOperatorTest {
     ColumnMetadata dictMetadata = schema.metadata(dictName);
     TupleMetadata dictSchema = dictMetadata.tupleSchema();
     List<AbstractObjectWriter> dictFields = new ArrayList<>();
-    dictFields.add(ColumnWriterFactory.buildColumnWriter(dictSchema.metadata(keyFieldName), null, null));
-    dictFields.add(ColumnWriterFactory.buildColumnWriter(dictSchema.metadata(valueFieldName), null, null));
+    dictFields.add(ColumnWriterFactory.buildColumnWriter(dictSchema.metadata(keyFieldName), null));
+    dictFields.add(ColumnWriterFactory.buildColumnWriter(dictSchema.metadata(valueFieldName), null));
     writers.add(ObjectDictWriter.buildDict(dictMetadata, null, dictFields));
 
     // Create key and value writers for dict array
@@ -224,8 +224,8 @@ public class TestDummyWriter extends SubOperatorTest {
     ColumnMetadata dictArrayMetadata = schema.metadata(dictArrayName);
     TupleMetadata dictArraySchema = dictArrayMetadata.tupleSchema();
     List<AbstractObjectWriter> dictArrayFields = new ArrayList<>();
-    dictArrayFields.add(ColumnWriterFactory.buildColumnWriter(dictArraySchema.metadata(keyFieldName), null, null));
-    dictArrayFields.add(ColumnWriterFactory.buildColumnWriter(dictArraySchema.metadata(valueFieldName), null, null));
+    dictArrayFields.add(ColumnWriterFactory.buildColumnWriter(dictArraySchema.metadata(keyFieldName), null));
+    dictArrayFields.add(ColumnWriterFactory.buildColumnWriter(dictArraySchema.metadata(valueFieldName), null));
     writers.add(ObjectDictWriter.buildDictArray(dictArrayMetadata, null, dictArrayFields));
 
     AbstractTupleWriter rootWriter = new RootWriterFixture(schema, writers);

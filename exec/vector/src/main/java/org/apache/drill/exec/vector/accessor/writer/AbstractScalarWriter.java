@@ -30,9 +30,8 @@ import org.joda.time.Period;
 
 /**
  * Base class for concrete scalar column writers including actual vector
- * writers, wrappers for nullable types, and shims used to convert types.
+ * writers, and wrappers for nullable types.
  */
-
 public abstract class AbstractScalarWriter implements ScalarWriter {
 
   @Override
@@ -81,4 +80,11 @@ public abstract class AbstractScalarWriter implements ScalarWriter {
   }
 
   public void bindListener(ColumnWriterListener listener) { }
+
+  @Override
+  public String toString() {
+    return "[" + getClass().getSimpleName() +
+        schema().toString() +
+        ", projected=" + isProjected() + "]";
+  }
 }

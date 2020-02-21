@@ -18,32 +18,33 @@
 
 package org.apache.drill.exec.store.hdf5.writers;
 
-import ch.systemsx.cisd.hdf5.IHDF5Reader;
-import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.exec.physical.resultSet.RowSetLoader;
-import org.apache.drill.exec.store.hdf5.HDF5Utils;
-import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import java.util.List;
+
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.exec.store.hdf5.HDF5Utils;
+import org.apache.drill.exec.vector.accessor.ValueWriter;
+
+import ch.systemsx.cisd.hdf5.IHDF5Reader;
 
 public class HDF5IntDataWriter extends HDF5DataWriter {
 
   private final int[] data;
 
-  private final ScalarWriter rowWriter;
+  private final ValueWriter colWriter;
 
   // This constructor is used when the data is a 1D column.  The column is inferred from the datapath
-  public HDF5IntDataWriter(IHDF5Reader reader, RowSetLoader columnWriter, String datapath) {
-    super(reader, columnWriter, datapath);
+  public HDF5IntDataWriter(IHDF5Reader reader, WriterSpec writerSpec, String datapath) {
+    super(reader, datapath);
     data = reader.readIntArray(datapath);
 
     fieldName = HDF5Utils.getNameFromPath(datapath);
 
-    rowWriter = makeWriter(columnWriter, fieldName, TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL);
+    colWriter = writerSpec.makeWriter(fieldName, TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL);
   }
 
   // This constructor is used when the data is part of a 2D array.  In this case the column name is provided in the constructor
-  public HDF5IntDataWriter(IHDF5Reader reader, RowSetLoader columnWriter, String datapath, String fieldName, int currentColumn) {
-    super(reader, columnWriter, datapath, fieldName, currentColumn);
+  public HDF5IntDataWriter(IHDF5Reader reader, WriterSpec writerSpec, String datapath, String fieldName, int currentColumn) {
+    super(reader, datapath, fieldName, currentColumn);
     // Get dimensions
     long[] dimensions = reader.object().getDataSetInformation(datapath).getDimensions();
     int[][] tempData;
@@ -54,31 +55,32 @@ public class HDF5IntDataWriter extends HDF5DataWriter {
     }
     data = tempData[currentColumn];
 
-    rowWriter = makeWriter(columnWriter, fieldName, TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL);
+    colWriter = writerSpec.makeWriter(fieldName, TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL);
   }
 
   // This constructor is used for compound data types.
-  public HDF5IntDataWriter(IHDF5Reader reader, RowSetLoader columnWriter, String fieldName, List<Integer> tempListData) {
-    super(reader, columnWriter, null);
+  public HDF5IntDataWriter(IHDF5Reader reader, WriterSpec writerSpec, String fieldName, List<Integer> tempListData) {
+    super(reader, null);
     this.fieldName = fieldName;
     data = new int[tempListData.size()];
     for (int i = 0; i < tempListData.size(); i++) {
       data[i] = tempListData.get(i);
     }
 
-    rowWriter = makeWriter(columnWriter, fieldName, TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL);
+    colWriter = writerSpec.makeWriter(fieldName, TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL);
   }
 
-
+  @Override
   public boolean write() {
     if (counter > data.length) {
       return false;
     } else {
-      rowWriter.setInt(data[counter++]);
+      colWriter.setInt(data[counter++]);
       return true;
     }
   }
 
+  @Override
   public boolean hasNext() {
     return counter < data.length;
   }
@@ -106,6 +108,7 @@ public class HDF5IntDataWriter extends HDF5DataWriter {
     return transposedMatrix;
   }
 
+  @Override
   public int getDataSize() {
     return data.length;
   }

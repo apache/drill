@@ -19,8 +19,6 @@ package org.apache.drill.exec.physical.resultSet.impl;
 
 import java.util.Collection;
 
-import org.apache.drill.exec.physical.impl.scan.project.projSet.ProjectionSetFactory;
-import org.apache.drill.exec.physical.resultSet.ProjectionSet;
 import org.apache.drill.exec.physical.resultSet.ResultVectorCache;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 
@@ -43,23 +41,23 @@ import org.apache.drill.exec.record.metadata.ColumnMetadata;
 public abstract class ContainerState {
 
   protected final LoaderInternals loader;
-  protected final ProjectionSet projectionSet;
+  protected final ProjectionFilter projectionSet;
   protected ColumnState parentColumn;
 
   /**
    * Vector cache for this loader.
-   * @see {@link OptionBuilder#setVectorCache()}.
+   * {@see ResultSetOptionBuilder#setVectorCache()}.
    */
   protected final ResultVectorCache vectorCache;
 
-  public ContainerState(LoaderInternals loader, ResultVectorCache vectorCache, ProjectionSet projectionSet) {
+  public ContainerState(LoaderInternals loader, ResultVectorCache vectorCache, ProjectionFilter projectionSet) {
     this.loader = loader;
     this.vectorCache = vectorCache;
     this.projectionSet = projectionSet;
   }
 
   public ContainerState(LoaderInternals loader, ResultVectorCache vectorCache) {
-    this(loader, vectorCache, ProjectionSetFactory.projectAll());
+    this(loader, vectorCache, ProjectionFilter.PROJECT_ALL);
   }
 
   public void bindColumnState(ColumnState parentState) {
@@ -69,19 +67,19 @@ public abstract class ContainerState {
   public abstract int innerCardinality();
   protected abstract void addColumn(ColumnState colState);
   protected abstract Collection<ColumnState> columnStates();
+  protected ProjectionFilter projection() { return projectionSet; }
 
   /**
    * Reports whether this container is subject to version management. Version
    * management adds columns to the output container at harvest time based on
    * whether they should appear in the output batch.
    *
-   * @return <tt>true</tt> if versioned
+   * @return {@code true} if versioned
    */
   protected abstract boolean isVersioned();
 
   protected LoaderInternals loader() { return loader; }
   public ResultVectorCache vectorCache() { return vectorCache; }
-  public ProjectionSet projectionSet() { return projectionSet; }
 
   public ColumnState addColumn(ColumnMetadata columnSchema) {
 

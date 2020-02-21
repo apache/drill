@@ -70,7 +70,6 @@ public class TestLogReader extends ClusterTest {
     ClusterTest.startCluster(ClusterFixture.builder(dirTestWatcher));
 
     // Define a regex format config for testing.
-
     defineRegexPlugin();
   }
 
@@ -80,18 +79,16 @@ public class TestLogReader extends ClusterTest {
     // Note: we can't use the ".log" extension; the Drill .gitignore
     // file ignores such files, so they'll never get committed. Instead,
     // make up a fake suffix.
-
     LogFormatConfig sampleConfig = new LogFormatConfig();
     sampleConfig.setExtension("log1");
     sampleConfig.setRegex(DATE_ONLY_PATTERN);
 
     sampleConfig.initSchema();
-    sampleConfig.getSchema().add( new LogFormatField("year", "INT"));
-    sampleConfig.getSchema().add( new LogFormatField("month", "INT"));
-    sampleConfig.getSchema().add( new LogFormatField("day", "INT"));
+    sampleConfig.getSchema().add(new LogFormatField("year", "INT"));
+    sampleConfig.getSchema().add(new LogFormatField("month", "INT"));
+    sampleConfig.getSchema().add(new LogFormatField("day", "INT"));
 
     // Full Drill log parser definition.
-
     LogFormatConfig logConfig = new LogFormatConfig();
     logConfig.setExtension("log1");
     logConfig.setRegex("(\\d\\d\\d\\d)-(\\d\\d)-(\\d\\d) " +
@@ -116,11 +113,11 @@ public class TestLogReader extends ClusterTest {
     logDateConfig.setRegex("(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}),(\\d+)\\s\\[(\\w+)\\]\\s([A-Z]+)\\s(.+)");
 
     logDateConfig.initSchema();
-    logDateConfig.getSchema().add( new LogFormatField( "entry_date", "TIMESTAMP", "yy-MM-dd hh:mm:ss"));
-    logDateConfig.getSchema().add( new LogFormatField( "pid", "INT"));
-    logDateConfig.getSchema().add( new LogFormatField( "location"));
-    logDateConfig.getSchema().add( new LogFormatField( "message_type"));
-    logDateConfig.getSchema().add( new LogFormatField( "message"));
+    logDateConfig.getSchema().add(new LogFormatField("entry_date", "TIMESTAMP", "yy-MM-dd hh:mm:ss"));
+    logDateConfig.getSchema().add(new LogFormatField("pid", "INT"));
+    logDateConfig.getSchema().add(new LogFormatField("location"));
+    logDateConfig.getSchema().add(new LogFormatField("message_type"));
+    logDateConfig.getSchema().add(new LogFormatField("message"));
 
     logDateConfig.setMaxErrors(3);
 
@@ -129,7 +126,6 @@ public class TestLogReader extends ClusterTest {
     mysqlLogConfig.setRegex("(\\d{6})\\s(\\d{2}:\\d{2}:\\d{2})\\s+(\\d+)\\s(\\w+)\\s+(.+)");
 
     // Firewall log file that requires date parsing
-
     LogFormatConfig firewallConfig = new LogFormatConfig();
     firewallConfig.setRegex("(\\w{3}\\s\\d{1,2}\\s\\d{4}\\s\\d{2}:\\d{2}:\\d{2})\\s+(\\w+)" +
             "\\[(\\d+)\\]:\\s(.*?(\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}).*?)");
@@ -156,24 +152,21 @@ public class TestLogReader extends ClusterTest {
     // Config similar to the above, but with no type info. Types
     // will be provided via the provided schema mechanism. Column names
     // are required so that the format and provided schemas match up.
-
     LogFormatConfig untypedConfig = new LogFormatConfig();
 
     untypedConfig.setExtension("logu");
     untypedConfig.setRegex(DATE_ONLY_PATTERN);
 
     untypedConfig.initSchema();
-    untypedConfig.getSchema().add( new LogFormatField("year"));
-    untypedConfig.getSchema().add( new LogFormatField("month"));
-    untypedConfig.getSchema().add( new LogFormatField("day"));
+    untypedConfig.getSchema().add(new LogFormatField("year"));
+    untypedConfig.getSchema().add(new LogFormatField("month"));
+    untypedConfig.getSchema().add(new LogFormatField("day"));
 
     // Create a test directory we can write to.
-
     schemaAndConfigDir = cluster.makeDataDir("sAndC", "logu", untypedConfig);
 
     // Empty configuration: regex and columns defined in the
     // provided schema
-
     LogFormatConfig emptyConfig = new LogFormatConfig();
     emptyConfig.setExtension("loge");
     schemaOnlyDir = cluster.makeDataDir("SOnly", "loge", emptyConfig);
@@ -315,7 +308,6 @@ public class TestLogReader extends ClusterTest {
   /**
    * Test log queries without a defined schema using select *
    */
-
   @Test
   public void testStarQueryNoSchema() throws RpcException {
     String sql = "SELECT * FROM cp.`regex/mysql.sqllog`";
@@ -409,7 +401,7 @@ public class TestLogReader extends ClusterTest {
         .addRow("070823 21:00:56       1 Query       select * from category", null )
         .addRow("070917 16:29:01      21 Query       select * from location", null )
         .addRow("070917 16:29:12      21 Query       select * from location where id = 1 LIMIT 1", null )
-        .addRow( null, "dfadkfjaldkjafsdfjlksdjflksjdlkfjsldkfjslkjl")
+        .addRow(null, "dfadkfjaldkjafsdfjlksdjflksjdlkfjsldkfjslkjl")
         .build();
 
     RowSetUtilities.verify(expected, results);
@@ -428,19 +420,16 @@ public class TestLogReader extends ClusterTest {
    * @return the SQL path for the table
    * @throws IOException if the file operations fail
    */
-
   private String buildTable(File dir, String ws, String tableName,
       String fileName, String resource) throws IOException {
 
     // We need to create a schema file. Create a temporary test
     // table.
-
     File tableDir = new File(dir, tableName);
     tableDir.mkdirs();
 
     // Copy the "simple.log1" data file. Use a distinct extension
     // configured above to provide field names but no types.
-
     File dest = new File(tableDir, fileName);
     URL url = getClass().getResource(resource);
     FileUtils.copyURLToFile(url, dest);
@@ -454,7 +443,6 @@ public class TestLogReader extends ClusterTest {
     try {
 
       // Define the provided table schema
-
       client.alterSession(ExecConstants.STORE_TABLE_USE_SCHEMA_FILE, true);
       String schemaSql = "create schema (`year` int not null, `month` int not null, " +
           "`day` int not null) " +
@@ -462,12 +450,10 @@ public class TestLogReader extends ClusterTest {
       run(schemaSql);
 
       // Run a query using the provided schema.
-
       String sql = "SELECT * FROM %s";
       RowSet results = client.queryBuilder().sql(sql, tablePath).rowSet();
 
       // Verify that the returned data used the schema.
-
       TupleMetadata expectedSchema = new SchemaBuilder()
           .add("year", MinorType.INT)
           .add("month", MinorType.INT)
@@ -491,7 +477,6 @@ public class TestLogReader extends ClusterTest {
    * other than the file extensions. The regex is provided by the provided
    * schema, but no columns are defined, so we use the columns[] array.
    */
-
   @Test
   public void testSchemaOnlyNoCols() throws Exception {
     String tablePath = buildTable(schemaOnlyDir, "sOnly", "noCols", "sample.loge", "/regex/simple.log1");
@@ -525,7 +510,6 @@ public class TestLogReader extends ClusterTest {
    * other than the file extensions. The provided schema includes both
    * the regex and the set of columns and types.
    */
-
   @Test
   public void testSchemaOnlyWithCols() throws Exception {
     String tablePath = buildTable(schemaOnlyDir, "sOnly", "withCols", "sample.loge", "/regex/simple.log1");
@@ -563,7 +547,6 @@ public class TestLogReader extends ClusterTest {
    * Corner case: provided schema has the regex and two of the three
    * columns, the third takes a default name and type.
    */
-
   @Test
   public void testSchemaOnlyWithMissingCols() throws Exception {
     String tablePath = buildTable(schemaOnlyDir, "sOnly", "missingCols", "sample.loge", "/regex/simple.log1");
@@ -600,7 +583,6 @@ public class TestLogReader extends ClusterTest {
    * Verify that an error is thrown if no pattern is provided in
    * the plugin config, table function or provided schema.
    */
-
   @Test
   public void testEmptyPattern() throws Exception {
     String tablePath = buildTable(tableFuncDir, "tf", "emptyRegex",
@@ -617,21 +599,18 @@ public class TestLogReader extends ClusterTest {
   /**
    * Test the ability to use table functions to specify the regex.
    */
-
   @Test
   public void testTableFunction() throws Exception {
     String tablePath = buildTable(tableFuncDir, "tf", "table1",
         "sample.logf", "/regex/simple.log1");
 
     // Run a query using a table function.
-
     String escaped = DATE_ONLY_PATTERN.replace("\\", "\\\\");
     String sql = "SELECT * FROM table(%s(type => '%s', regex => '%s', maxErrors => 10))";
     RowSet results = client.queryBuilder().sql(sql, tablePath,
         LogFormatPlugin.PLUGIN_NAME, escaped).rowSet();
 
     // Verify that the returned data used the schema.
-
     TupleMetadata expectedSchema = new SchemaBuilder()
         .addArray("columns", MinorType.VARCHAR)
         .buildSchema();
@@ -649,7 +628,6 @@ public class TestLogReader extends ClusterTest {
    * Test the use of a table function to provide the regex. Verify
    * that the plugin throws an error if no groups are defined.
    */
-
   @Test
   public void testTableFunctionNoGroups() throws Exception {
     String tablePath = buildTable(tableFuncDir, "tf", "noGroups",
@@ -671,7 +649,6 @@ public class TestLogReader extends ClusterTest {
    * including types. In this form, the regex must be provided by the
    * plugin config or (as in this test), as table properties.
    */
-
   @Test
   public void testTableFunctionWithSchema() throws Exception {
     String tablePath = buildTable(tableFuncDir, "tf", "table2",
@@ -688,7 +665,6 @@ public class TestLogReader extends ClusterTest {
          LogFormatPlugin.REGEX_PROP, escaped).rowSet();
 
       // Verify that the returned data used the schema.
-
       TupleMetadata expectedSchema = new SchemaBuilder()
           .addNullable("year", MinorType.INT)
           .addNullable("month", MinorType.INT)
@@ -714,7 +690,6 @@ public class TestLogReader extends ClusterTest {
    * and is found by the code before trying to treat "schema" as a schema.
    * So, this test is disabled.
    */
-
   @Test
   @Ignore("Use of schema conflicts with plugin field")
   public void testTableFunctionWithConfigAndSchema() throws Exception {
@@ -724,7 +699,6 @@ public class TestLogReader extends ClusterTest {
       client.alterSession(ExecConstants.STORE_TABLE_USE_SCHEMA_FILE, true);
 
       // Run a query using a table function.
-
       String escaped = DATE_ONLY_PATTERN.replace("\\", "\\\\");
       String sql = "SELECT * FROM table(%s(type => '%s', regex => '%s', " +
          "schema=>'inline=(`year` int, `month` int, `day` int)'))";
@@ -732,7 +706,6 @@ public class TestLogReader extends ClusterTest {
           LogFormatPlugin.PLUGIN_NAME, escaped).rowSet();
 
       // Verify that the returned data used the schema.
-
       TupleMetadata expectedSchema = new SchemaBuilder()
           .addNullable("year", MinorType.INT)
           .addNullable("month", MinorType.INT)
@@ -756,7 +729,6 @@ public class TestLogReader extends ClusterTest {
    * The following ensures that the plugin config works correctly
    * to serialize/deserialize values.
    */
-
   @Test
   public void testPluginSerialization() throws IOException {
     ObjectMapper mapper = new ObjectMapper();
@@ -767,9 +739,9 @@ public class TestLogReader extends ClusterTest {
     sampleConfig.setRegex(DATE_ONLY_PATTERN);
 
     sampleConfig.initSchema();
-    sampleConfig.getSchema().add( new LogFormatField("year", "INT"));
-    sampleConfig.getSchema().add( new LogFormatField("month", "INT"));
-    sampleConfig.getSchema().add( new LogFormatField("day", "INT"));
+    sampleConfig.getSchema().add(new LogFormatField("year", "INT"));
+    sampleConfig.getSchema().add(new LogFormatField("month", "INT"));
+    sampleConfig.getSchema().add(new LogFormatField("day", "INT"));
     String json = mapper.writeValueAsString(sampleConfig);
     LogFormatConfig result = mapper.readValue(json, LogFormatConfig.class);
 

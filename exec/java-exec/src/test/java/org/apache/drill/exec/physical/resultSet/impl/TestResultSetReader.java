@@ -55,9 +55,9 @@ public class TestResultSetReader extends SubOperatorTest {
           .add("id", MinorType.INT)
           .add("name", MinorType.VARCHAR)
           .build();
-      ResultSetOptions options = new OptionBuilder()
-          .setSchema(schema1)
-          .setVectorCache(new ResultVectorCacheImpl(fixture.allocator()))
+      ResultSetOptions options = new ResultSetOptionBuilder()
+          .readerSchema(schema1)
+          .vectorCache(new ResultVectorCacheImpl(fixture.allocator()))
           .build();
       rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
       state = State.SCHEMA1;

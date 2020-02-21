@@ -30,18 +30,18 @@ import org.apache.drill.exec.physical.impl.protocol.SchemaTracker;
 import org.apache.drill.exec.physical.impl.scan.ScanTestUtils;
 import org.apache.drill.exec.physical.impl.scan.ScanTestUtils.MockScanBuilder;
 import org.apache.drill.exec.physical.impl.scan.file.FileMetadataColumn;
-import org.apache.drill.exec.physical.impl.scan.file.FileMetadataManager;
-import org.apache.drill.exec.physical.impl.scan.file.FileMetadataManager.FileMetadataOptions;
+import org.apache.drill.exec.physical.impl.scan.file.ImplicitColumnManager;
+import org.apache.drill.exec.physical.impl.scan.file.ImplicitColumnManager.ImplicitColumnOptions;
 import org.apache.drill.exec.physical.impl.scan.project.NullColumnBuilder.NullBuilderBuilder;
 import org.apache.drill.exec.physical.impl.scan.project.ResolvedTuple.ResolvedRow;
 import org.apache.drill.exec.physical.impl.scan.project.ScanSchemaOrchestrator.ScanOrchestratorBuilder;
 import org.apache.drill.exec.physical.impl.scan.project.SchemaSmoother.IncompatibleSchemaException;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
-import org.apache.drill.exec.physical.resultSet.impl.RowSetTestUtils;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.test.SubOperatorTest;
+import org.apache.drill.exec.physical.rowSet.RowSetTestUtils;
 import org.apache.drill.exec.physical.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetComparison;
 import org.apache.hadoop.fs.Path;
@@ -91,8 +91,8 @@ import org.junit.experimental.categories.Category;
 @Category(RowSetTests.class)
 public class TestSchemaSmoothing extends SubOperatorTest {
 
-  private FileMetadataOptions standardOptions(List<Path> files) {
-    FileMetadataOptions options = new FileMetadataOptions();
+  private ImplicitColumnOptions standardOptions(List<Path> files) {
+    ImplicitColumnOptions options = new ImplicitColumnOptions();
     options.setSelectionRoot(new Path("hdfs:///w"));
     options.setFiles(files);
     return options;
@@ -111,7 +111,7 @@ public class TestSchemaSmoothing extends SubOperatorTest {
 
     Path filePathA = new Path("hdfs:///w/x/y/a.csv");
     Path filePathB = new Path("hdfs:///w/x/y/b.csv");
-    FileMetadataManager metadataManager = new FileMetadataManager(
+    ImplicitColumnManager metadataManager = new ImplicitColumnManager(
         fixture.getOptionManager(),
         standardOptions(Lists.newArrayList(filePathA, filePathB)));
 
@@ -588,7 +588,7 @@ public class TestSchemaSmoothing extends SubOperatorTest {
 
     Path filePathA = new Path("hdfs:///w/x/y/a.csv");
     Path filePathB = new Path("hdfs:///w/x/y/b.csv");
-    FileMetadataManager metadataManager = new FileMetadataManager(
+    ImplicitColumnManager metadataManager = new ImplicitColumnManager(
         fixture.getOptionManager(),
         standardOptions(Lists.newArrayList(filePathA, filePathB)));
 
@@ -635,7 +635,7 @@ public class TestSchemaSmoothing extends SubOperatorTest {
 
     Path filePathA = new Path("hdfs:///w/x/y/a.csv");
     Path filePathB = new Path("hdfs:///w/x/b.csv");
-    FileMetadataManager metadataManager = new FileMetadataManager(
+    ImplicitColumnManager metadataManager = new ImplicitColumnManager(
         fixture.getOptionManager(),
         standardOptions(Lists.newArrayList(filePathA, filePathB)));
 
@@ -682,7 +682,7 @@ public class TestSchemaSmoothing extends SubOperatorTest {
 
     Path filePathA = new Path("hdfs:///w/x/a.csv");
     Path filePathB = new Path("hdfs:///w/x/y/b.csv");
-    FileMetadataManager metadataManager = new FileMetadataManager(
+    ImplicitColumnManager metadataManager = new ImplicitColumnManager(
         fixture.getOptionManager(),
         standardOptions(Lists.newArrayList(filePathA, filePathB)));
 
@@ -818,7 +818,7 @@ public class TestSchemaSmoothing extends SubOperatorTest {
   public void testWildcardSmoothing() {
     ScanOrchestratorBuilder builder = new MockScanBuilder();
     builder.enableSchemaSmoothing(true);
-    builder.setProjection(RowSetTestUtils.projectAll());
+    builder.projection(RowSetTestUtils.projectAll());
     final ScanSchemaOrchestrator projector = new ScanSchemaOrchestrator(fixture.allocator(), builder);
 
     final TupleMetadata firstSchema = new SchemaBuilder()

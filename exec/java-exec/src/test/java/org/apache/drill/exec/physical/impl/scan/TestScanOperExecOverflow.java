@@ -73,7 +73,7 @@ public class TestScanOperExecOverflow extends BaseScanOperatorExecTest {
       TupleMetadata schema = new SchemaBuilder()
           .add("a", MinorType.VARCHAR)
           .buildSchema();
-      schemaNegotiator.setTableSchema(schema, true);
+      schemaNegotiator.tableSchema(schema, true);
       tableLoader = schemaNegotiator.build();
       return true;
     }
@@ -132,8 +132,8 @@ public class TestScanOperExecOverflow extends BaseScanOperatorExecTest {
 
     // Want overflow, set size and row counts at their limits.
 
-    builder.builder.setBatchByteLimit(ScanSchemaOrchestrator.MAX_BATCH_BYTE_SIZE);
-    builder.builder.setBatchRecordLimit(ScanSchemaOrchestrator.MAX_BATCH_ROW_COUNT);
+    builder.builder.batchByteLimit(ScanSchemaOrchestrator.MAX_BATCH_BYTE_SIZE);
+    builder.builder.batchRecordLimit(ScanSchemaOrchestrator.MAX_BATCH_ROW_COUNT);
     ScanFixture scanFixture = builder.build();
     ScanOperatorExec scan = scanFixture.scanOp;
 

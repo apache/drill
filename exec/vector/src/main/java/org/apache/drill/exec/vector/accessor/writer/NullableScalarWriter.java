@@ -26,7 +26,6 @@ import org.apache.drill.exec.vector.accessor.ColumnAccessors.UInt1ColumnWriter;
 import org.apache.drill.exec.vector.accessor.ColumnReader;
 import org.apache.drill.exec.vector.accessor.ColumnWriterIndex;
 import org.apache.drill.exec.vector.accessor.ValueType;
-import org.apache.drill.exec.vector.accessor.convert.ColumnConversionFactory;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
 import org.joda.time.Instant;
 import org.joda.time.LocalDate;
@@ -87,11 +86,9 @@ public class NullableScalarWriter extends AbstractScalarWriterImpl {
   }
 
   public static ScalarObjectWriter build(ColumnMetadata schema,
-      NullableVector nullableVector, BaseScalarWriter baseWriter,
-      ColumnConversionFactory conversionFactory) {
+      NullableVector nullableVector, BaseScalarWriter baseWriter) {
     return new ScalarObjectWriter(
-        new NullableScalarWriter(schema, nullableVector, baseWriter),
-        conversionFactory);
+        new NullableScalarWriter(schema, nullableVector, baseWriter));
   }
 
   public BaseScalarWriter bitsWriter() { return isSetWriter; }

@@ -27,9 +27,9 @@ import java.util.List;
 import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.physical.impl.scan.project.projSet.ProjectionSetFactory;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.impl.ResultSetLoaderImpl.ResultSetOptions;
+import org.apache.drill.exec.physical.resultSet.project.Projections;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
@@ -49,7 +49,6 @@ public class TestResultSetLoaderEmptyProject extends SubOperatorTest {
    * reporting those rows as a batch with no vectors but with the
    * desired row count.
    */
-
   @Test
   public void testEmptyTopSchema() {
     List<SchemaPath> selection = Lists.newArrayList();
@@ -57,16 +56,15 @@ public class TestResultSetLoaderEmptyProject extends SubOperatorTest {
         .add("a", MinorType.INT)
         .add("b", MinorType.INT)
         .buildSchema();
-    ResultSetOptions options = new OptionBuilder()
-        .setProjection(ProjectionSetFactory.build(selection))
-        .setSchema(schema)
+    ResultSetOptions options = new ResultSetOptionBuilder()
+        .projection(Projections.parse(selection))
+        .readerSchema(schema)
         .build();
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
 
     assertTrue(rsLoader.isProjectionEmpty());
 
     // Can't skip rows if batch not started.
-
     int rowCount = 100_000;
     try {
       rsLoader.skipRows(10);
@@ -76,7 +74,6 @@ public class TestResultSetLoaderEmptyProject extends SubOperatorTest {
     }
 
     // Loop to skip 100,000 rows. Should occur in two batches.
-
     rsLoader.startBatch();
     int skipped = rsLoader.skipRows(rowCount);
     assertEquals(skipped, ValueVector.MAX_ROW_COUNT);
@@ -105,7 +102,6 @@ public class TestResultSetLoaderEmptyProject extends SubOperatorTest {
    * Verify that a disjoint schema (projection does not overlap with
    * table schema) is treated the same as an empty projection.
    */
-
   @Test
   public void testDisjointSchema() {
     List<SchemaPath> selection = Lists.newArrayList(
@@ -115,9 +111,9 @@ public class TestResultSetLoaderEmptyProject extends SubOperatorTest {
         .add("c", MinorType.INT)
         .add("d", MinorType.INT)
         .buildSchema();
-    ResultSetOptions options = new OptionBuilder()
-        .setProjection(ProjectionSetFactory.build(selection))
-        .setSchema(schema)
+    ResultSetOptions options = new ResultSetOptionBuilder()
+        .projection(Projections.parse(selection))
+        .readerSchema(schema)
         .build();
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
 
@@ -128,7 +124,6 @@ public class TestResultSetLoaderEmptyProject extends SubOperatorTest {
   /**
    * Verify that skip rows works even if the the projection is non-empty.
    */
-
   @Test
   public void testNonEmptySchema() {
     List<SchemaPath> selection = Lists.newArrayList(
@@ -138,9 +133,9 @@ public class TestResultSetLoaderEmptyProject extends SubOperatorTest {
         .add("a", MinorType.INT)
         .add("b", MinorType.INT)
         .buildSchema();
-    ResultSetOptions options = new OptionBuilder()
-        .setProjection(ProjectionSetFactory.build(selection))
-        .setSchema(schema)
+    ResultSetOptions options = new ResultSetOptionBuilder()
+        .projection(Projections.parse(selection))
+        .readerSchema(schema)
         .build();
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
 
@@ -148,13 +143,11 @@ public class TestResultSetLoaderEmptyProject extends SubOperatorTest {
 
     // Skip 10 rows. Columns are of required types, so are filled
     // with zeros.
-
     rsLoader.startBatch();
     int rowCount = 10;
     rsLoader.skipRows(rowCount);
 
     // Verify
-
     RowSetBuilder builder = fixture.rowSetBuilder(schema);
     for (int i = 0; i < rowCount; i++) {
       builder.addRow(0, 0);
@@ -173,16 +166,15 @@ public class TestResultSetLoaderEmptyProject extends SubOperatorTest {
           .add("b", MinorType.INT)
           .resumeSchema()
         .buildSchema();
-    ResultSetOptions options = new OptionBuilder()
-        .setProjection(ProjectionSetFactory.build(selection))
-        .setSchema(schema)
+    ResultSetOptions options = new ResultSetOptionBuilder()
+        .projection(Projections.parse(selection))
+        .readerSchema(schema)
         .build();
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
 
     assertTrue(rsLoader.isProjectionEmpty());
 
     // Sanity test to verify row skipping with maps
-
     int rowCount = 5000;
     rsLoader.startBatch();
     int skipped = rsLoader.skipRows(rowCount);
@@ -196,13 +188,11 @@ public class TestResultSetLoaderEmptyProject extends SubOperatorTest {
     rsLoader.close();
   }
 
-
   /**
    * Test disjoint projection, but with maps. Project top-level columns
    * a, b, when those columns actually appear in a map which is not
    * projected.
    */
-
   @Test
   public void testDisjointMapProjection() {
     List<SchemaPath> selection = Lists.newArrayList(
@@ -214,9 +204,9 @@ public class TestResultSetLoaderEmptyProject extends SubOperatorTest {
           .add("b", MinorType.INT)
           .resumeSchema()
         .buildSchema();
-    ResultSetOptions options = new OptionBuilder()
-        .setProjection(ProjectionSetFactory.build(selection))
-        .setSchema(schema)
+    ResultSetOptions options = new ResultSetOptionBuilder()
+        .projection(Projections.parse(selection))
+        .readerSchema(schema)
         .build();
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
 

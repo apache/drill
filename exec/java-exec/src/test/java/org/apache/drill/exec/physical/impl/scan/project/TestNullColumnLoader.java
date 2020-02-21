@@ -223,9 +223,9 @@ public class TestNullColumnLoader extends SubOperatorTest {
     // Populate the cache with a column of each mode.
 
     final ResultVectorCacheImpl cache = new ResultVectorCacheImpl(fixture.allocator());
-    cache.addOrGet(SchemaBuilder.columnSchema("req", MinorType.FLOAT8, DataMode.REQUIRED));
-    final ValueVector opt = cache.addOrGet(SchemaBuilder.columnSchema("opt", MinorType.FLOAT8, DataMode.OPTIONAL));
-    final ValueVector rep = cache.addOrGet(SchemaBuilder.columnSchema("rep", MinorType.FLOAT8, DataMode.REPEATED));
+    cache.vectorFor(SchemaBuilder.columnSchema("req", MinorType.FLOAT8, DataMode.REQUIRED));
+    final ValueVector opt = cache.vectorFor(SchemaBuilder.columnSchema("opt", MinorType.FLOAT8, DataMode.OPTIONAL));
+    final ValueVector rep = cache.vectorFor(SchemaBuilder.columnSchema("rep", MinorType.FLOAT8, DataMode.REPEATED));
 
     // Use nullable Varchar for unknown null columns.
 
@@ -278,9 +278,9 @@ public class TestNullColumnLoader extends SubOperatorTest {
     // Populate the cache with a column of each mode.
 
     final ResultVectorCacheImpl cache = new ResultVectorCacheImpl(fixture.allocator());
-    cache.addOrGet(SchemaBuilder.columnSchema("req", MinorType.FLOAT8, DataMode.REQUIRED));
-    final ValueVector opt = cache.addOrGet(SchemaBuilder.columnSchema("opt", MinorType.FLOAT8, DataMode.OPTIONAL));
-    final ValueVector rep = cache.addOrGet(SchemaBuilder.columnSchema("rep", MinorType.FLOAT8, DataMode.REPEATED));
+    cache.vectorFor(SchemaBuilder.columnSchema("req", MinorType.FLOAT8, DataMode.REQUIRED));
+    final ValueVector opt = cache.vectorFor(SchemaBuilder.columnSchema("opt", MinorType.FLOAT8, DataMode.OPTIONAL));
+    final ValueVector rep = cache.vectorFor(SchemaBuilder.columnSchema("rep", MinorType.FLOAT8, DataMode.REPEATED));
 
     // Use nullable Varchar for unknown null columns.
 

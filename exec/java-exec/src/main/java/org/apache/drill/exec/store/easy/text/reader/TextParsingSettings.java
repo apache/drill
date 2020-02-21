@@ -18,16 +18,12 @@
 package org.apache.drill.exec.store.easy.text.reader;
 
 import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.exec.server.options.OptionManager;
-import org.apache.drill.exec.store.dfs.easy.EasySubScan;
 import org.apache.drill.exec.store.easy.text.TextFormatPlugin;
 import org.apache.drill.exec.store.easy.text.TextFormatPlugin.TextFormatConfig;
 import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
 
 public class TextParsingSettings {
 
-  private final String emptyValue = null;
-  private final boolean parseUnescapedQuotes = true;
   private final byte quote;
   private final byte quoteEscape;
   private final byte delimiter;
@@ -36,14 +32,14 @@ public class TextParsingSettings {
   private final long maxCharsPerColumn = TextFormatPlugin.MAX_CHARS_PER_COLUMN;
   private final byte normalizedNewLine = b('\n');
   private final byte[] newLineDelimiter;
-  private final boolean ignoreLeadingWhitespaces = false;
-  private final boolean ignoreTrailingWhitespaces = false;
   private final String lineSeparatorString = "\n";
   private boolean skipFirstLine;
-
   private final boolean headerExtractionEnabled;
-  private final boolean useRepeatedVarChar;
-  private final String providedHeaders[];
+
+  // Available only via table properties
+  private final boolean parseUnescapedQuotes;
+  private final boolean ignoreLeadingWhitespace;
+  private final boolean ignoreTrailingWhitespace;
 
   /**
    * Configure the properties for this one scan based on:
@@ -65,11 +61,12 @@ public class TextParsingSettings {
    * file with headers, the user can just customize the table properties.
    */
   public TextParsingSettings(TextFormatConfig config,
-      EasySubScan scan, OptionManager options) {
-    TupleMetadata providedSchema = scan.getSchema();
+      TupleMetadata providedSchema) {
     boolean extractHeaders = config.isHeaderExtractionEnabled();
     boolean skipFirst = config.isSkipFirstLine();
-    String providedHeaders[] = null;
+    boolean ignoreLeadingWhitespace = false;
+    boolean ignoreTrailingWhitespace = false;
+    boolean parseUnescapedQuotes = true;
     byte delimChar = bSafe(config.getFieldDelimiter(), "fieldDelimiter");
     byte commentChar = bSafe(config.getComment(), "comment");
     byte quoteChar = bSafe(config.getQuote(), "quote");
@@ -80,28 +77,31 @@ public class TextParsingSettings {
           TextFormatPlugin.HAS_HEADERS_PROP, extractHeaders);
       skipFirst = ! extractHeaders & providedSchema.booleanProperty(
           TextFormatPlugin.SKIP_FIRST_LINE_PROP, skipFirstLine);
-      if (!extractHeaders && ! providedSchema.isEmpty()) {
-        providedHeaders = new String[providedSchema.size()];
-        for (int i = 0; i < providedHeaders.length; i++) {
-          providedHeaders[i] = providedSchema.metadata(i).name();
-        }
-      }
+      skipFirst = ! extractHeaders & providedSchema.booleanProperty(
+          TextFormatPlugin.SKIP_FIRST_LINE_PROP, skipFirstLine);
+      ignoreLeadingWhitespace = providedSchema.booleanProperty(
+          TextFormatPlugin.TRIM_WHITESPACE_PROP, ignoreLeadingWhitespace);
+      ignoreTrailingWhitespace = providedSchema.booleanProperty(
+          TextFormatPlugin.TRIM_WHITESPACE_PROP, ignoreTrailingWhitespace);
+      parseUnescapedQuotes = providedSchema.booleanProperty(
+          TextFormatPlugin.PARSE_UNESCAPED_QUOTES_PROP, parseUnescapedQuotes);
       delimChar = overrideChar(providedSchema, TextFormatPlugin.DELIMITER_PROP, delimChar);
       quoteChar = overrideChar(providedSchema, TextFormatPlugin.QUOTE_PROP, quoteChar);
       quoteEscapeChar = overrideChar(providedSchema, TextFormatPlugin.QUOTE_ESCAPE_PROP, quoteEscapeChar);
       newlineDelim = newlineDelimBytes(providedSchema, newlineDelim);
       commentChar = commentChar(providedSchema, commentChar);
     }
-    skipFirstLine = !extractHeaders && skipFirst;
-    headerExtractionEnabled = extractHeaders;
-    this.providedHeaders = providedHeaders;
-    useRepeatedVarChar = !extractHeaders && providedHeaders == null;
+    this.skipFirstLine = !extractHeaders && skipFirst;
+    this.headerExtractionEnabled = extractHeaders;
 
-    quote = quoteChar;
-    quoteEscape = quoteEscapeChar;
-    newLineDelimiter = newlineDelim;
-    delimiter = delimChar;
-    comment = commentChar;
+    this.quote = quoteChar;
+    this.quoteEscape = quoteEscapeChar;
+    this.newLineDelimiter = newlineDelim;
+    this.delimiter = delimChar;
+    this.comment = commentChar;
+    this.ignoreLeadingWhitespace = ignoreLeadingWhitespace;
+    this.ignoreTrailingWhitespace = ignoreTrailingWhitespace;
+    this.parseUnescapedQuotes = parseUnescapedQuotes;
   }
 
   /**
@@ -109,7 +109,6 @@ public class TextParsingSettings {
    * or is a blank string, then uses the delimiter from the plugin config.
    * Else, if non-blank, uses the first character of the property value.
    */
-
   private static byte overrideChar(TupleMetadata providedSchema, String propName, byte configValue) {
     String value = providedSchema.property(propName);
     if (value == null || value.isEmpty()) {
@@ -126,7 +125,6 @@ public class TextParsingSettings {
    * match anything, and effectively disables the comment feature.
    * Else, if non-blank, uses the first character of the property value.
    */
-
   private static byte commentChar(TupleMetadata providedSchema, byte configValue) {
     String value = providedSchema.property(TextFormatPlugin.COMMENT_CHAR_PROP);
     if (value == null) {
@@ -162,10 +160,6 @@ public class TextParsingSettings {
 
   public void setSkipFirstLine(boolean skipFirstLine) {
     this.skipFirstLine = skipFirstLine;
-  }
-
-  public boolean isUseRepeatedVarChar() {
-    return useRepeatedVarChar;
   }
 
   private static byte bSafe(char c, String name) {
@@ -215,26 +209,13 @@ public class TextParsingSettings {
   }
 
   /**
-   * Returns the String representation of an empty value (defaults to null)
-   *
-   * <p>
-   * When reading, if the parser does not read any character from the input, and
-   * the input is within quotes, the empty is used instead of an empty string
-   *
-   * @return the String representation of an empty value
-   */
-  public String getEmptyValue() {
-    return emptyValue;
-  }
-
-  /**
    * Indicates whether the CSV parser should accept unescaped quotes inside
    * quoted values and parse them normally. Defaults to {@code true}.
    *
    * @return a flag indicating whether or not the CSV parser should accept
    *         unescaped quotes inside quoted values.
    */
-  public boolean isParseUnescapedQuotes() {
+  public boolean parseUnescapedQuotes() {
     return parseUnescapedQuotes;
   }
 
@@ -258,13 +239,11 @@ public class TextParsingSettings {
     return normalizedNewLine;
   }
 
-  public boolean isIgnoreLeadingWhitespaces() {
-    return ignoreLeadingWhitespaces;
+  public boolean ignoreLeadingWhitespace() {
+    return ignoreLeadingWhitespace;
   }
 
-  public boolean isIgnoreTrailingWhitespaces() {
-    return ignoreTrailingWhitespaces;
+  public boolean ignoreTrailingWhitespace() {
+    return ignoreTrailingWhitespace;
   }
-
-  public String[] providedHeaders() { return providedHeaders; }
 }

@@ -28,7 +28,7 @@ import org.apache.drill.exec.physical.config.MetadataHandlerPOP;
 import org.apache.drill.exec.metastore.analyze.AnalyzeColumnUtils;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
-import org.apache.drill.exec.physical.resultSet.impl.OptionBuilder;
+import org.apache.drill.exec.physical.resultSet.impl.ResultSetOptionBuilder;
 import org.apache.drill.exec.physical.resultSet.impl.ResultSetLoaderImpl;
 import org.apache.drill.exec.physical.rowSet.DirectRowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetReader;
@@ -291,8 +291,8 @@ public class MetadataHandlerBatch extends AbstractSingleRecordBatch<MetadataHand
         .addNullable(columnNamesOptions.lastModifiedTime(), MinorType.VARCHAR)
         .add(MetastoreAnalyzeConstants.METADATA_TYPE, MinorType.VARCHAR);
 
-    ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
-        .setSchema(schemaBuilder.buildSchema())
+    ResultSetLoaderImpl.ResultSetOptions options = new ResultSetOptionBuilder()
+        .readerSchema(schemaBuilder.buildSchema())
         .build();
 
     return new ResultSetLoaderImpl(container.getAllocator(), options);
@@ -390,8 +390,8 @@ public class MetadataHandlerBatch extends AbstractSingleRecordBatch<MetadataHand
       }
     }
 
-    ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
-        .setSchema(schemaBuilder.buildSchema())
+    ResultSetLoaderImpl.ResultSetOptions options = new ResultSetOptionBuilder()
+        .readerSchema(schemaBuilder.buildSchema())
         .build();
 
     return new ResultSetLoaderImpl(container.getAllocator(), options);

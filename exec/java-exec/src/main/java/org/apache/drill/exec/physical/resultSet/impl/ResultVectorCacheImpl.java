@@ -168,7 +168,7 @@ public class ResultVectorCacheImpl implements ResultVectorCache {
   }
 
   @Override
-  public ValueVector addOrGet(MaterializedField colSchema) {
+  public ValueVector vectorFor(MaterializedField colSchema) {
     VectorState vs = vectors.get(colSchema.getName());
 
     // If the vector is found, and is of the right type, reuse it.

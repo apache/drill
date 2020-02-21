@@ -18,37 +18,39 @@
 
 package org.apache.drill.exec.store.hdf5.writers;
 
-import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.store.hdf5.HDF5Utils;
-import org.apache.drill.exec.vector.accessor.ScalarWriter;
+import org.apache.drill.exec.vector.accessor.ValueWriter;
 import org.joda.time.Instant;
+
+import ch.systemsx.cisd.hdf5.IHDF5Reader;
 
 public class HDF5TimestampDataWriter extends HDF5DataWriter {
 
   private final long[] data;
 
-  private final ScalarWriter rowWriter;
+  private final ValueWriter colWriter;
 
   // This constructor is used when the data is a 1D column.  The column is inferred from the datapath
-  public HDF5TimestampDataWriter(IHDF5Reader reader, RowSetLoader columnWriter, String datapath) {
-    super(reader, columnWriter, datapath);
+  public HDF5TimestampDataWriter(IHDF5Reader reader, WriterSpec writerSpec, String datapath) {
+    super(reader, datapath);
     data = reader.time().readTimeStampArray(datapath);
 
     fieldName = HDF5Utils.getNameFromPath(datapath);
-    rowWriter = makeWriter(columnWriter, fieldName, TypeProtos.MinorType.TIMESTAMP, TypeProtos.DataMode.OPTIONAL);
+    colWriter = writerSpec.makeWriter(fieldName, TypeProtos.MinorType.TIMESTAMP, TypeProtos.DataMode.OPTIONAL);
   }
 
+  @Override
   public boolean write() {
     if (counter > data.length) {
       return false;
     } else {
-      rowWriter.setTimestamp(new Instant(data[counter++]));
+      colWriter.setTimestamp(new Instant(data[counter++]));
       return true;
     }
   }
 
+  @Override
   public boolean hasNext() {
     return counter < data.length;
   }

@@ -18,14 +18,14 @@
 
 package org.apache.drill.exec.store.hdf5.writers;
 
-import ch.systemsx.cisd.hdf5.IHDF5Reader;
-import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.exec.physical.resultSet.RowSetLoader;
-import org.apache.drill.exec.store.hdf5.HDF5Utils;
-import org.apache.drill.exec.vector.accessor.ScalarWriter;
-
 import java.util.Arrays;
 import java.util.List;
+
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.exec.store.hdf5.HDF5Utils;
+import org.apache.drill.exec.vector.accessor.ValueWriter;
+
+import ch.systemsx.cisd.hdf5.IHDF5Reader;
 
 public class HDF5StringDataWriter extends HDF5DataWriter {
 
@@ -33,33 +33,35 @@ public class HDF5StringDataWriter extends HDF5DataWriter {
 
   private final List<String> listData;
 
-  private final ScalarWriter rowWriter;
+  private final ValueWriter colWriter;
 
   // This constructor is used when the data is a 1D column.  The column is inferred from the datapath
-  public HDF5StringDataWriter(IHDF5Reader reader, RowSetLoader columnWriter, String datapath) {
-    super(reader, columnWriter, datapath);
+  public HDF5StringDataWriter(IHDF5Reader reader, WriterSpec writerSpec, String datapath) {
+    super(reader, datapath);
     data = reader.readStringArray(datapath);
     listData = Arrays.asList(data);
     fieldName = HDF5Utils.getNameFromPath(datapath);
-    rowWriter = makeWriter(columnWriter, fieldName, TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL);
+    colWriter = writerSpec.makeWriter(fieldName, TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL);
   }
 
-  public HDF5StringDataWriter(IHDF5Reader reader, RowSetLoader columnWriter, String fieldName, List<String> data) {
-    super(reader, columnWriter, null);
+  public HDF5StringDataWriter(IHDF5Reader reader, WriterSpec writerSpec, String fieldName, List<String> data) {
+    super(reader, null);
     this.fieldName = fieldName;
     this.listData = data;
-    rowWriter = makeWriter(columnWriter, fieldName, TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL);
+    colWriter = writerSpec.makeWriter(fieldName, TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL);
   }
 
+  @Override
   public boolean write() {
     if (counter > listData.size()) {
       return false;
     } else {
-      rowWriter.setString(listData.get(counter++));
+      colWriter.setString(listData.get(counter++));
       return true;
     }
   }
 
+  @Override
   public boolean hasNext() {
     return counter < data.length;
   }

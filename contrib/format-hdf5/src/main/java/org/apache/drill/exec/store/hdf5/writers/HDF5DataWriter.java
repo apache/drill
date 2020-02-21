@@ -18,20 +18,12 @@
 
 package org.apache.drill.exec.store.hdf5.writers;
 
-import ch.systemsx.cisd.hdf5.IHDF5Reader;
-import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.exec.physical.resultSet.RowSetLoader;
-import org.apache.drill.exec.record.metadata.ColumnMetadata;
-import org.apache.drill.exec.record.metadata.MetadataUtils;
-import org.apache.drill.exec.vector.accessor.ScalarWriter;
-import org.apache.drill.exec.vector.accessor.TupleWriter;
-
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class HDF5DataWriter {
-  protected final RowSetLoader columnWriter;
+import ch.systemsx.cisd.hdf5.IHDF5Reader;
 
+public abstract class HDF5DataWriter {
   protected final IHDF5Reader reader;
 
   protected final String datapath;
@@ -44,16 +36,13 @@ public abstract class HDF5DataWriter {
 
   protected Object[][] compoundData;
 
-  public HDF5DataWriter(IHDF5Reader reader, RowSetLoader columnWriter, String datapath) {
+  public HDF5DataWriter(IHDF5Reader reader, String datapath) {
     this.reader = reader;
-    this.columnWriter = columnWriter;
     this.datapath = datapath;
   }
 
-  public HDF5DataWriter(IHDF5Reader reader, RowSetLoader columnWriter, String datapath, String fieldName, int colCount) {
-    this.reader = reader;
-    this.columnWriter = columnWriter;
-    this.datapath = datapath;
+  public HDF5DataWriter(IHDF5Reader reader, String datapath, String fieldName, int colCount) {
+    this(reader, datapath);
     this.fieldName = fieldName;
     this.colCount = colCount;
   }
@@ -70,10 +59,11 @@ public abstract class HDF5DataWriter {
     return counter;
   }
 
-  public List<Object> getColumn(int columnIndex) {
-    List<Object> result = new ArrayList<>();
+  @SuppressWarnings("unchecked")
+  public <T> List<T> getColumn(int columnIndex) {
+    List<T> result = new ArrayList<>();
     for (Object[] compoundDatum : compoundData) {
-      result.add(compoundDatum[columnIndex]);
+      result.add((T) compoundDatum[columnIndex]);
     }
     return result;
   }
@@ -83,11 +73,4 @@ public abstract class HDF5DataWriter {
   public boolean isCompound() {
     return false;
   }
-
-  protected static ScalarWriter makeWriter(TupleWriter tupleWriter, String name, TypeProtos.MinorType type, TypeProtos.DataMode mode) {
-    ColumnMetadata colSchema = MetadataUtils.newScalar(name, type, mode);
-    int index = tupleWriter.addColumn(colSchema);
-    return tupleWriter.scalar(index);
-  }
-
 }
