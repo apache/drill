@@ -75,7 +75,7 @@ public class ResultSetCopierImpl implements ResultSetCopier {
   // Output state
 
   private final BufferAllocator allocator;
-  private final OptionBuilder writerOptions;
+  private final ResultSetOptionBuilder writerOptions;
   private ResultSetLoader resultSetWriter;
   private RowSetLoader rowWriter;
 
@@ -86,15 +86,15 @@ public class ResultSetCopierImpl implements ResultSetCopier {
   private CopyAll activeCopy;
 
   public ResultSetCopierImpl(BufferAllocator allocator, BatchAccessor inputBatch) {
-    this(allocator, inputBatch, new OptionBuilder());
+    this(allocator, inputBatch, new ResultSetOptionBuilder());
   }
 
   public ResultSetCopierImpl(BufferAllocator allocator, BatchAccessor inputBatch,
-      OptionBuilder outputOptions) {
+      ResultSetOptionBuilder outputOptions) {
     this.allocator = allocator;
     resultSetReader = new ResultSetReaderImpl(inputBatch);
     writerOptions = outputOptions;
-    writerOptions.setVectorCache(new ResultVectorCacheImpl(allocator));
+    writerOptions.vectorCache(new ResultVectorCacheImpl(allocator));
     state = State.START;
   }
 
@@ -194,7 +194,7 @@ public class ResultSetCopierImpl implements ResultSetCopier {
       resultSetWriter.close();
     }
     TupleMetadata schema = MetadataUtils.fromFields(resultSetReader.inputBatch().schema());
-    writerOptions.setSchema(schema);
+    writerOptions.readerSchema(schema);
     resultSetWriter = new ResultSetLoaderImpl(allocator, writerOptions.build());
     rowWriter = resultSetWriter.writer();
     currentSchemaVersion = resultSetReader.inputBatch().schemaVersion();

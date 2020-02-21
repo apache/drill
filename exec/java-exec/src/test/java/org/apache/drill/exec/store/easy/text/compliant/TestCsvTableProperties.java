@@ -53,7 +53,6 @@ import static org.junit.Assert.assertTrue;
  * @see TestSelectWithOption for similar tests using table
  * properties within SQL
  */
-
 @Category(RowSetTests.class)
 public class TestCsvTableProperties extends BaseCsvTest {
 
@@ -306,8 +305,7 @@ public class TestCsvTableProperties extends BaseCsvTest {
     "1,@foo@",
     "2,@foo~@bar@",
 
-    // Test proper handling of escapes. This was broken in V2.
-
+    // Test proper handling of escapes.
     "3,@foo~bar@",
     "4,@foo~~bar@"
   };
@@ -453,7 +451,6 @@ public class TestCsvTableProperties extends BaseCsvTest {
    * Verify that a custom newline character works, and that the symbol
    * '\n' can be used in SQL and is stored properly in the schema file.
    */
-
   @Test
   public void testNewlineProp() throws Exception {
     try {
@@ -530,7 +527,6 @@ public class TestCsvTableProperties extends BaseCsvTest {
    * properly quoted fields with proper escapes, no embedded newlines)
    * then things will work OK.
    */
-
   @Test
   public void testMessyQuotes() throws Exception {
    String tablePath = buildTable("messyQuotes", messyQuotesData);
@@ -546,5 +542,66 @@ public class TestCsvTableProperties extends BaseCsvTest {
         .addSingleCol(strArray("newline\nhere", "and here\"\n"))
         .build();
     RowSetUtilities.verify(expected, actual);
+  }
+
+  private static final String[] trimData = {
+      " 10 , fred ",
+      " 20, wilma "
+    };
+
+  /**
+   * Trim leading and trailing whitespace. This setting is currently
+   * only available via table properties.
+   */
+  @Test
+  public void testKeepWitespace() throws Exception {
+    try {
+      enableSchemaSupport();
+      String tablePath = buildTable("noTrim", trimData);
+      String sql = String.format("create schema (%s) " +
+          "for table %s PROPERTIES ('" +
+          TextFormatPlugin.HAS_HEADERS_PROP + "'='false', '" +
+          TextFormatPlugin.SKIP_FIRST_LINE_PROP + "'='false')",
+          COL_SCHEMA, tablePath);
+      run(sql);
+      RowSet actual = client.queryBuilder().sql(SELECT_ALL, tablePath).rowSet();
+
+      TupleMetadata expectedSchema = new SchemaBuilder()
+          .add("id", MinorType.INT)
+          .add("name", MinorType.VARCHAR)
+          .buildSchema();
+
+      // String-to-number conversion trims strings automatically
+      RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+          .addRow(10, " fred ")
+          .addRow(20, " wilma ")
+          .build();
+      RowSetUtilities.verify(expected, actual);
+    } finally {
+      resetSchemaSupport();
+    }
+  }
+
+ /**
+   * Trim leading and trailing whitespace. This setting is currently
+   * only available via table properties.
+   */
+  @Test
+  public void testTrimWitespace() throws Exception {
+    try {
+      enableSchemaSupport();
+      String tablePath = buildTable("trim", trimData);
+      String sql = String.format("create schema (%s) " +
+          "for table %s PROPERTIES ('" +
+          TextFormatPlugin.HAS_HEADERS_PROP + "'='false', '" +
+          TextFormatPlugin.SKIP_FIRST_LINE_PROP + "'='false', '" +
+          TextFormatPlugin.TRIM_WHITESPACE_PROP + "'='true')",
+          COL_SCHEMA, tablePath);
+      run(sql);
+      RowSet actual = client.queryBuilder().sql(SELECT_ALL, tablePath).rowSet();
+      RowSetUtilities.verify(expectedSchemaRows(), actual);
+    } finally {
+      resetSchemaSupport();
+    }
   }
 }

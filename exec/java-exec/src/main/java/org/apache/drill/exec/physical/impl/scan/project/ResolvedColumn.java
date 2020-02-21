@@ -34,7 +34,6 @@ import org.apache.drill.exec.record.metadata.ColumnMetadata;
  * along with a serialized record batch; each operator must rediscover
  * it after deserialization.
  */
-
 public abstract class ResolvedColumn implements ColumnProjection {
 
   private final VectorSource source;
@@ -65,7 +64,6 @@ public abstract class ResolvedColumn implements ColumnProjection {
    *
    * @return the MaterializedField representation of this column
    */
-
   public abstract MaterializedField schema();
 
   public void project(ResolvedTuple dest) {

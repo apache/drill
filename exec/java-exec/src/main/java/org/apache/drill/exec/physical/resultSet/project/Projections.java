@@ -23,6 +23,7 @@ import java.util.List;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.PathSegment.ArraySegment;
 import org.apache.drill.common.expression.PathSegment.NameSegment;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.common.expression.SchemaPath;
 
 /**
@@ -155,5 +156,9 @@ public class Projections {
       return projectAll();
     }
     return new RequestedTupleImpl(projList);
+  }
+
+  public static boolean isSpecial(ColumnMetadata col) {
+    return col.booleanProperty(ColumnMetadata.EXCLUDE_FROM_WILDCARD);
   }
 }

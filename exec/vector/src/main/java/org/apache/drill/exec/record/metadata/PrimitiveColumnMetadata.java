@@ -32,6 +32,8 @@ import org.joda.time.Period;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Primitive (non-map) column. Describes non-nullable, nullable and array types
@@ -47,10 +49,8 @@ import org.joda.time.format.ISODateTimeFormat;
  * should generally be set before invoking code that uses the metadata.</li>
  * </ul>
  */
-
 public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
-
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PrimitiveColumnMetadata.class);
+  private static final Logger logger = LoggerFactory.getLogger(PrimitiveColumnMetadata.class);
 
   public PrimitiveColumnMetadata(MaterializedField schema) {
     super(schema);
@@ -72,13 +72,12 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
       // The above getSize() method uses the deprecated getWidth()
       // method to get the expected VarChar size. If zero (which
       // it will be), try the revised precision field.
-
       int precision = majorType.getPrecision();
       if (precision > 0) {
         return precision;
       } else {
-        // TypeHelper includes the offset vector width
 
+        // TypeHelper includes the offset vector width
         return BasicTypeHelper.getSize(majorType) - 4;
       }
     } else {
@@ -102,7 +101,6 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
   public int expectedWidth() {
 
     // If the property is not set, estimate width from the type.
-
     int width = PropertyAccessor.getInt(this, EXPECTED_WIDTH_PROP);
     if (width == 0) {
       width = estimateWidth(majorType());
@@ -118,10 +116,10 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
 
   @Override
   public void setExpectedWidth(int width) {
+
     // The allocation utilities don't like a width of zero, so set to
     // 1 as the minimum. Adjusted to avoid trivial errors if the caller
     // makes an error.
-
     if (isVariableWidth()) {
       PropertyAccessor.set(this, EXPECTED_WIDTH_PROP, Math.max(1, width));
     }
@@ -281,7 +279,8 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
   }
 
   /**
-   * Converts given value instance into String literal representation based on column metadata type.
+   * Converts given value instance into String literal representation based on
+   * column metadata type.
    *
    * @param value value instance
    * @return value in string literal representation

@@ -30,7 +30,6 @@ import org.apache.drill.exec.record.MaterializedField;
  * in the project list), but which does not match any column in the table.
  * This kind of column gives rise to a map of null columns in the output.
  */
-
 public class ResolvedMapColumn extends ResolvedColumn {
 
   private final MaterializedField schema;

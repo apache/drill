@@ -124,6 +124,7 @@ public class SchemaTreeProvider implements AutoCloseable {
     final SchemaConfig schemaConfig = SchemaConfig.newBuilder(schemaUser, provider).build();
     return createFullRootSchema(schemaConfig);
   }
+
   /**
    * Create and return a Full SchemaTree with given <i>schemaConfig</i>.
    * @param schemaConfig
@@ -150,7 +151,6 @@ public class SchemaTreeProvider implements AutoCloseable {
           .addContext(contextString)
           .build(logger);
     }
-
   }
 
   @Override

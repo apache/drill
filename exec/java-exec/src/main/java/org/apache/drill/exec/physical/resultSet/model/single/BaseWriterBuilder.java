@@ -27,7 +27,6 @@ import org.apache.drill.exec.physical.resultSet.model.MetadataProvider;
 import org.apache.drill.exec.physical.resultSet.model.MetadataProvider.VectorDescrip;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.accessor.convert.ColumnConversionFactory;
 import org.apache.drill.exec.vector.accessor.writer.AbstractObjectWriter;
 import org.apache.drill.exec.vector.accessor.writer.ColumnWriterFactory;
 import org.apache.drill.exec.vector.accessor.writer.ListWriterImpl;
@@ -55,14 +54,7 @@ import org.apache.drill.exec.vector.complex.UnionVector;
  * variant (LIST, UNION) and tuple (MAP) columns, the tree grows
  * quite complex.
  */
-
 public abstract class BaseWriterBuilder {
-
-  private final ColumnConversionFactory conversionFactory;
-
-  protected BaseWriterBuilder(ColumnConversionFactory conversionFactory) {
-    this.conversionFactory = conversionFactory;
-  }
 
   protected List<AbstractObjectWriter> buildContainerChildren(VectorContainer container,
       MetadataProvider mdProvider) {
@@ -92,7 +84,7 @@ public abstract class BaseWriterBuilder {
         return buildList(vector, descrip);
 
       default:
-        return ColumnWriterFactory.buildColumnWriter(descrip.metadata, conversionFactory, vector);
+        return ColumnWriterFactory.buildColumnWriter(descrip.metadata, vector);
     }
   }
 
@@ -179,7 +171,6 @@ public abstract class BaseWriterBuilder {
 
       // If the list holds a union, then the list and union are collapsed
       // together in the metadata layer.
-
       dataMetadata = descrip;
     } else {
       dataMetadata = new VectorDescrip(descrip.childProvider(), 0, dataVector.getField());

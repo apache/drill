@@ -95,7 +95,7 @@ public class ExtendedMockBatchReader implements ManagedReader<SchemaNegotiator> 
                                           col.getConfig().getMajorType());
       schema.add(field);
     }
-    schemaNegotiator.setTableSchema(schema, true);
+    schemaNegotiator.tableSchema(schema, true);
 
     // Set the batch size. Ideally, we'd leave that to the framework based
     // on the bytes per batch. But, several legacy tests depend on a known,
@@ -106,7 +106,7 @@ public class ExtendedMockBatchReader implements ManagedReader<SchemaNegotiator> 
 
     final int batchSize = config.getBatchSize();
     if (batchSize > 0) {
-      schemaNegotiator.setBatchSize(batchSize);
+      schemaNegotiator.batchSize(batchSize);
     }
 
     loader = schemaNegotiator.build();

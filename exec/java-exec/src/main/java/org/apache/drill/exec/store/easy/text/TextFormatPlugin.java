@@ -59,7 +59,6 @@ import org.apache.drill.exec.store.easy.text.reader.CompliantTextBatchReader;
 import org.apache.drill.exec.store.easy.text.reader.TextParsingSettings;
 import org.apache.drill.exec.store.easy.text.writer.TextRecordWriter;
 import org.apache.drill.exec.store.schedule.CompleteFileWork;
-import org.apache.drill.exec.vector.accessor.convert.AbstractConvertFromString;
 import org.apache.hadoop.conf.Configuration;
 
 import java.io.IOException;
@@ -105,6 +104,8 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
   public static final String QUOTE_PROP = TEXT_PREFIX + "quote";
   public static final String QUOTE_ESCAPE_PROP = TEXT_PREFIX + "escape";
   public static final String LINE_DELIM_PROP = TEXT_PREFIX + "lineDelimiter";
+  public static final String TRIM_WHITESPACE_PROP = TEXT_PREFIX + "trim";
+  public static final String PARSE_UNESCAPED_QUOTES_PROP = TEXT_PREFIX + "parseQuotes";
 
   @JsonTypeName(PLUGIN_NAME)
   @JsonInclude(Include.NON_DEFAULT)
@@ -248,37 +249,28 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
       OptionManager options, EasySubScan scan) throws ExecutionSetupException {
     ColumnsScanBuilder builder = new ColumnsScanBuilder();
     initScanBuilder(builder, scan);
+
     TextParsingSettings settings =
-        new TextParsingSettings(getConfig(), scan, options);
+        new TextParsingSettings(getConfig(), scan.getSchema());
     builder.setReaderFactory(new ColumnsReaderFactory(settings));
 
     // If this format has no headers, or wants to skip them,
     // then we must use the columns column to hold the data.
-
-    builder.requireColumnsArray(settings.isUseRepeatedVarChar());
+    builder.requireColumnsArray(
+        ! settings.isHeaderExtractionEnabled() && builder.providedSchema() == null);
 
     // Text files handle nulls in an unusual way. Missing columns
     // are set to required Varchar and filled with blanks. Yes, this
     // means that the SQL statement or code cannot differentiate missing
     // columns from empty columns, but that is how CSV and other text
     // files have been defined within Drill.
-
-    builder.setNullType(Types.required(MinorType.VARCHAR));
-
-    // CSV maps blank columns to nulls (for nullable non-string columns),
-    // or to the default value (for non-nullable non-string columns.)
-
-    builder.typeConverterBuilder().setConversionProperty(
-        AbstractConvertFromString.BLANK_ACTION_PROP,
-        AbstractConvertFromString.BLANK_AS_NULL);
+    builder.nullType(Types.required(MinorType.VARCHAR));
 
     // The text readers use required Varchar columns to represent null columns.
-
     builder.allowRequiredNullColumns(true);
 
     // Provide custom error context
-
-    builder.setContext(
+    builder.errorContext(
         new ChildErrorContext(builder.errorContext()) {
           @Override
           public void addContext(UserException.Builder builder) {

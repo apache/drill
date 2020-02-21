@@ -252,7 +252,7 @@ public class RowSetUtilities {
   }
 
   /**
-   * Convenience method to verify the actual results, then free memory
+   * Verify the actual results, then free memory
    * for both the expected and actual result sets.
    * @param expected The expected results.
    * @param actual the actual results to verify.
@@ -266,7 +266,7 @@ public class RowSetUtilities {
   }
 
   /**
-   * Convenience method to bootstrap a map object given key-value sequence.
+   * Bootstrap a map object given key-value sequence.
    *
    * @param entry key-value sequence
    * @return map containing key-value pairs from passed sequence

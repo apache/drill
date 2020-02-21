@@ -68,9 +68,7 @@ import org.slf4j.LoggerFactory;
  * columns and must provide a message that helps the user identify
  * the likely original problem.
  */
-
 public class ColumnsArrayParser implements ScanProjectionParser {
-
   private static final Logger logger = LoggerFactory.getLogger(ColumnsArrayParser.class);
 
   // Config
@@ -79,7 +77,6 @@ public class ColumnsArrayParser implements ScanProjectionParser {
    * True if the project list must include either the columns[] array
    * or the wildcard.
    */
-
   private final boolean requireColumnsArray;
 
   /**
@@ -87,7 +84,6 @@ public class ColumnsArrayParser implements ScanProjectionParser {
    * the columns[] array. Handy if the plugin provides special columns such
    * as the log regex plugin.
    */
-
   private final boolean allowOtherCols;
 
   // Internals
@@ -174,7 +170,6 @@ public class ColumnsArrayParser implements ScanProjectionParser {
 
     // Special `columns` array column. Allow multiple, but
     // project only one.
-
     if (columnsArrayCol == null) {
       columnsArrayCol = new UnresolvedColumnsArrayColumn(inCol);
       builder.addTableColumn(columnsArrayCol);

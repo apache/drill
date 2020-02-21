@@ -51,7 +51,7 @@ public class ImplCreator {
 
   private final LinkedList<CloseableRecordBatch> operators = Lists.newLinkedList();
 
-  private ImplCreator() {}
+  private ImplCreator() { }
 
   private List<CloseableRecordBatch> getOperators() {
     return operators;

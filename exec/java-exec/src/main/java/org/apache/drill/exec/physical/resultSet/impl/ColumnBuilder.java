@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.physical.resultSet.ProjectionSet.ColumnReadProjection;
 import org.apache.drill.exec.physical.resultSet.impl.ColumnState.PrimitiveColumnState;
 import org.apache.drill.exec.physical.resultSet.impl.ListState.ListVectorState;
 import org.apache.drill.exec.physical.resultSet.impl.RepeatedListState.RepeatedListColumnState;
@@ -32,6 +31,7 @@ import org.apache.drill.exec.physical.resultSet.impl.SingleVectorState.SimpleVec
 import org.apache.drill.exec.physical.resultSet.impl.TupleState.MapArrayState;
 import org.apache.drill.exec.physical.resultSet.impl.TupleState.MapColumnState;
 import org.apache.drill.exec.physical.resultSet.impl.TupleState.MapVectorState;
+import org.apache.drill.exec.physical.resultSet.impl.TupleState.SingleDictState;
 import org.apache.drill.exec.physical.resultSet.impl.TupleState.SingleMapState;
 import org.apache.drill.exec.physical.resultSet.impl.UnionState.UnionColumnState;
 import org.apache.drill.exec.physical.resultSet.impl.UnionState.UnionVectorState;
@@ -87,7 +87,6 @@ import org.apache.drill.exec.vector.complex.UnionVector;
  * to be added empty, then the members to be added one by one. See
  * {@link BuildFromSchema} for the class that builds up a compound structure.
  */
-
 public class ColumnBuilder {
 
   /**
@@ -102,30 +101,17 @@ public class ColumnBuilder {
    */
   public ColumnState buildColumn(ContainerState parent, ColumnMetadata columnSchema) {
 
-    ColumnReadProjection colProj;
-    if (parent instanceof TupleState.DictState) {
-      colProj = parent.projectionSet().readDictProjection(columnSchema);
-    } else {
-      colProj = parent.projectionSet().readProjection(columnSchema);
-    }
-    switch (colProj.providedSchema().structureType()) {
-    case DICT:
-      return buildDict(parent, colProj);
-    case TUPLE:
-      return buildMap(parent, colProj);
-    case VARIANT:
-      // Variant: UNION or (non-repeated) LIST
-      if (columnSchema.isArray()) {
-        // (non-repeated) LIST (somewhat like a repeated UNION)
-        return buildList(parent, colProj);
-      } else {
-        // (Non-repeated) UNION
-        return buildUnion(parent, colProj);
-      }
-    case MULTI_ARRAY:
-      return buildRepeatedList(parent, colProj);
-    default:
-      return buildPrimitive(parent, colProj);
+    switch (columnSchema.structureType()) {
+      case DICT:
+        return buildDict(parent, columnSchema);
+      case TUPLE:
+        return buildMap(parent, columnSchema);
+      case VARIANT:
+        return buildVariant(parent, columnSchema);
+      case MULTI_ARRAY:
+        return buildRepeatedList(parent, columnSchema);
+      default:
+        return buildPrimitive(parent, columnSchema);
     }
   }
 
@@ -139,37 +125,30 @@ public class ColumnBuilder {
    * @param colProj implied projection type for the column
    * @return column state for the new column
    */
+  private ColumnState buildPrimitive(ContainerState parent, ColumnMetadata columnSchema) {
 
-  private ColumnState buildPrimitive(ContainerState parent, ColumnReadProjection colProj) {
-    ColumnMetadata columnSchema = colProj.providedSchema();
-
-    ValueVector vector;
-    if (!colProj.isProjected() && !allowCreation(parent)) {
-
-      // Column is not projected. No materialized backing for the column.
-
-      vector = null;
-    } else {
+    final ValueVector vector;
+    if (parent.projection().isProjected(columnSchema) || allowCreation(parent)) {
 
       // Create the vector for the column.
-
-      vector = parent.vectorCache().addOrGet(columnSchema.schema());
+      vector = parent.vectorCache().vectorFor(columnSchema.schema());
 
       // In permissive mode, the mode or precision of the vector may differ
       // from that requested. Update the schema to match.
-
-      if (parent.vectorCache().isPermissive() && ! vector.getField().isEquivalent(columnSchema.schema())) {
+      if (parent.vectorCache().isPermissive() && !vector.getField().isEquivalent(columnSchema.schema())) {
         columnSchema = ((PrimitiveColumnMetadata) columnSchema).mergeWith(vector.getField());
       }
+    } else {
+
+      // Column is not projected. No materialized backing for the column.
+      vector = null;
     }
 
     // Create the writer.
-
-    final AbstractObjectWriter colWriter = ColumnWriterFactory.buildColumnWriter(
-        columnSchema, colProj.conversionFactory(), vector);
+    final AbstractObjectWriter colWriter =
+        ColumnWriterFactory.buildColumnWriter(columnSchema, vector);
 
     // Build the vector state which manages the vector.
-
     VectorState vectorState;
     if (vector == null) {
       vectorState = new NullVectorState();
@@ -184,9 +163,7 @@ public class ColumnBuilder {
     }
 
     // Create the column state which binds the vector and writer together.
-
-    return new PrimitiveColumnState(parent.loader(), colWriter,
-        vectorState);
+    return new PrimitiveColumnState(parent.loader(), colWriter, vectorState);
   }
 
   /**
@@ -201,7 +178,7 @@ public class ColumnBuilder {
    * @return {@code true} if the parent is {@code DICT} and its {@code value} is accessed by key
    */
   private boolean allowCreation(ContainerState parent) {
-    return parent instanceof TupleState.DictState && !parent.projectionSet().isEmpty();
+    return parent instanceof TupleState.DictState && !parent.projection().isEmpty();
   }
 
   /**
@@ -214,88 +191,82 @@ public class ColumnBuilder {
    * @param colProj implied projection type for the column
    * @return column state for the map column
    */
-
-  private ColumnState buildMap(ContainerState parent, ColumnReadProjection colProj) {
-    ColumnMetadata columnSchema = colProj.providedSchema();
+  private ColumnState buildMap(ContainerState parent, ColumnMetadata columnSchema) {
 
     // When dynamically adding columns, must add the (empty)
     // map by itself, then add columns to the map via separate
     // calls.
-
     assert columnSchema.isMap();
     assert columnSchema.tupleSchema().isEmpty();
 
     // Create the vector, vector state and writer.
-
     if (columnSchema.isArray()) {
-      return buildMapArray(parent, colProj);
+      return buildMapArray(parent, columnSchema);
     } else {
-      return buildSingleMap(parent, colProj);
+      return buildSingleMap(parent, columnSchema);
     }
   }
 
-  private ColumnState buildSingleMap(ContainerState parent, ColumnReadProjection colProj) {
-    ColumnMetadata columnSchema = colProj.providedSchema();
+  private ColumnState buildSingleMap(ContainerState parent, ColumnMetadata columnSchema) {
 
-    MapVector vector;
-    VectorState vectorState;
-    if (!colProj.isProjected()) {
-      vector = null;
-      vectorState = new NullVectorState();
-    } else {
+    final ProjectionFilter projFilter = parent.projection();
+    final boolean isProjected = projFilter.isProjected(columnSchema);
+
+    final MapVector vector;
+    final VectorState vectorState;
+    if (isProjected) {
 
       // Don't get the map vector from the vector cache. Map vectors may
       // have content that varies from batch to batch. Only the leaf
       // vectors can be cached.
-
       assert columnSchema.tupleSchema().isEmpty();
       vector = new MapVector(columnSchema.schema(), parent.loader().allocator(), null);
       vectorState = new MapVectorState(vector, new NullVectorState());
+    } else {
+      vector = null;
+      vectorState = new NullVectorState();
     }
     final TupleObjectWriter mapWriter = MapWriter.buildMap(columnSchema, vector, new ArrayList<>());
     final SingleMapState mapState = new SingleMapState(parent.loader(),
         parent.vectorCache().childCache(columnSchema.name()),
-        colProj.mapProjection());
+        projFilter.mapProjection(isProjected, columnSchema.name()));
     return new MapColumnState(mapState, mapWriter, vectorState, parent.isVersioned());
   }
 
-  private ColumnState buildMapArray(ContainerState parent, ColumnReadProjection colProj) {
-    ColumnMetadata columnSchema = colProj.providedSchema();
+  private ColumnState buildMapArray(ContainerState parent, ColumnMetadata columnSchema) {
+
+    final ProjectionFilter projFilter = parent.projection();
+    final boolean isProjected = projFilter.isProjected(columnSchema);
 
     // Create the map's offset vector.
-
-    RepeatedMapVector mapVector;
-    UInt4Vector offsetVector;
-    if (!colProj.isProjected()) {
-      mapVector = null;
-      offsetVector = null;
-    } else {
+    final RepeatedMapVector mapVector;
+    final UInt4Vector offsetVector;
+    if (isProjected) {
 
       // Creating the map vector will create its contained vectors if we
       // give it a materialized field with children. So, instead pass a clone
       // without children so we can add them.
-
       final ColumnMetadata mapColSchema = columnSchema.cloneEmpty();
 
       // Don't get the map vector from the vector cache. Map vectors may
       // have content that varies from batch to batch. Only the leaf
       // vectors can be cached.
-
       assert columnSchema.tupleSchema().isEmpty();
       mapVector = new RepeatedMapVector(mapColSchema.schema(),
           parent.loader().allocator(), null);
       offsetVector = mapVector.getOffsetVector();
+    } else {
+      mapVector = null;
+      offsetVector = null;
     }
 
     // Create the writer using the offset vector
-
     final AbstractObjectWriter writer = MapWriter.buildMapArray(
         columnSchema, mapVector, new ArrayList<>());
 
     // Wrap the offset vector in a vector state
-
     VectorState offsetVectorState;
-    if (!colProj.isProjected()) {
+    if (!projFilter.isProjected(columnSchema)) {
       offsetVectorState = new NullVectorState();
     } else {
       offsetVectorState = new OffsetVectorState(
@@ -306,11 +277,22 @@ public class ColumnBuilder {
     final VectorState mapVectorState = new MapVectorState(mapVector, offsetVectorState);
 
     // Assemble it all into the column state.
-
     final MapArrayState mapState = new MapArrayState(parent.loader(),
         parent.vectorCache().childCache(columnSchema.name()),
-        colProj.mapProjection());
+        projFilter.mapProjection(isProjected, columnSchema.name()));
     return new MapColumnState(mapState, writer, mapVectorState, parent.isVersioned());
+  }
+
+  private ColumnState buildVariant(ContainerState parent,
+      ColumnMetadata columnSchema) {
+    // Variant: UNION or (non-repeated) LIST
+    if (columnSchema.isArray()) {
+      // (non-repeated) LIST (somewhat like a repeated UNION)
+      return buildList(parent, columnSchema);
+    } else {
+      // (Non-repeated) UNION
+      return buildUnion(parent, columnSchema);
+    }
   }
 
   /**
@@ -330,58 +312,49 @@ public class ColumnBuilder {
    * @param colProj column schema
    * @return column
    */
-  private ColumnState buildUnion(ContainerState parent, ColumnReadProjection colProj) {
-    ColumnMetadata columnSchema = colProj.providedSchema();
-    assert columnSchema.isVariant() && ! columnSchema.isArray();
+  private ColumnState buildUnion(ContainerState parent, ColumnMetadata columnSchema) {
+     assert columnSchema.isVariant() && ! columnSchema.isArray();
 
     // Create the union vector.
     // Don't get the union vector from the vector cache. Union vectors may
     // have content that varies from batch to batch. Only the leaf
     // vectors can be cached.
-
     assert columnSchema.variantSchema().size() == 0;
     final UnionVector vector = new UnionVector(columnSchema.schema(), parent.loader().allocator(), null);
 
     // Then the union writer.
-
     final UnionWriterImpl unionWriter = new UnionWriterImpl(columnSchema, vector, null);
     final VariantObjectWriter writer = new VariantObjectWriter(unionWriter);
 
     // The union vector state which manages the types vector.
-
     final UnionVectorState vectorState = new UnionVectorState(vector, unionWriter);
 
     // Create the manager for the columns within the union.
-
     final UnionState unionState = new UnionState(parent.loader(),
         parent.vectorCache().childCache(columnSchema.name()));
 
     // Bind the union state to the union writer to handle column additions.
-
     unionWriter.bindListener(unionState);
 
     // Assemble it all into a union column state.
-
     return new UnionColumnState(parent.loader(), writer, vectorState, unionState);
   }
 
-  private ColumnState buildList(ContainerState parent, ColumnReadProjection colProj) {
-    ColumnMetadata columnSchema = colProj.providedSchema();
+  private ColumnState buildList(ContainerState parent, ColumnMetadata columnSchema) {
 
     // If the list has declared a single type, and has indicated that this
     // is the only type expected, then build the list as a nullable array
     // of that type. Else, build the list as array of (a possibly empty)
     // union.
-
     final VariantMetadata variant = columnSchema.variantSchema();
     if (variant.isSimple()) {
       if (variant.size() == 1) {
-        return buildSimpleList(parent, colProj);
+        return buildSimpleList(parent, columnSchema);
       } else if (variant.size() == 0) {
         throw new IllegalArgumentException("Size of a non-expandable list can't be zero");
       }
     }
-    return buildUnionList(parent, colProj);
+    return buildUnionList(parent, columnSchema);
   }
 
   /**
@@ -391,52 +364,43 @@ public class ColumnBuilder {
    * <p>
    * List vectors (lists of optional values) are not supported in
    * Drill. The code here works up through the scan operator. But, other operators do
-   * not support the <tt>ListVector</tt> type.
+   * not support the {@code ListVector</tt> type.
    *
    * @param parent the parent (tuple, union or list) that holds this list
    * @param colProj metadata description of the list which must contain
    * exactly one subtype
    * @return the column state for the list
    */
-
-  private ColumnState buildSimpleList(ContainerState parent, ColumnReadProjection colProj) {
-    ColumnMetadata columnSchema = colProj.providedSchema();
+  private ColumnState buildSimpleList(ContainerState parent, ColumnMetadata columnSchema) {
 
     // The variant must have the one and only type.
-
     assert columnSchema.variantSchema().size() == 1;
     assert columnSchema.variantSchema().isSimple();
 
     // Create the manager for the one and only column within the list.
-
     final ListState listState = new ListState(parent.loader(),
         parent.vectorCache().childCache(columnSchema.name()));
 
     // Create the child vector, writer and state.
-
     final ColumnMetadata memberSchema = columnSchema.variantSchema().listSubtype();
     final ColumnState memberState = buildColumn(listState, memberSchema);
     listState.setSubColumn(memberState);
 
     // Create the list vector. Contains a single type.
-
     final ListVector listVector = new ListVector(columnSchema.schema().cloneEmpty(),
         parent.loader().allocator(), null);
     listVector.setChildVector(memberState.vector());
 
     // Create the list writer: an array of the one type.
-
     final ListWriterImpl listWriter = new ListWriterImpl(columnSchema,
         listVector, memberState.writer());
     final AbstractObjectWriter listObjWriter = new ArrayObjectWriter(listWriter);
 
     // Create the list vector state that tracks the list vector lifecycle.
-
     final ListVectorState vectorState = new ListVectorState(listWriter,
         memberState.writer().events(), listVector);
 
     // Assemble it all into a union column state.
-
     return new UnionColumnState(parent.loader(),
         listObjWriter, vectorState, listState);
   }
@@ -450,23 +414,19 @@ public class ColumnBuilder {
    * <p>
    * List vectors (lists of unions) are not supported in
    * Drill. The code here works up through the scan operator. But, other operators do
-   * not support the <tt>ListVector</tt> type.
+   * not support the {@code ListVector} type.
    *
    * @param parent the parent (tuple, union or list) that holds this list
    * @param colProj metadata description of the list (must be empty of
    * subtypes)
    * @return the column state for the list
    */
-
-  private ColumnState buildUnionList(ContainerState parent, ColumnReadProjection colProj) {
-    ColumnMetadata columnSchema = colProj.providedSchema();
+  private ColumnState buildUnionList(ContainerState parent, ColumnMetadata columnSchema) {
 
     // The variant must start out empty.
-
     assert columnSchema.variantSchema().size() == 0;
 
     // Create the union writer, bound to an empty list shim.
-
     final UnionWriterImpl unionWriter = new UnionWriterImpl(columnSchema);
     unionWriter.bindShim(new EmptyListShim());
     final VariantObjectWriter unionObjWriter = new VariantObjectWriter(unionWriter);
@@ -476,49 +436,40 @@ public class ColumnBuilder {
     // Don't get the list vector from the vector cache. List vectors may
     // have content that varies from batch to batch. Only the leaf
     // vectors can be cached.
-
     final ListVector listVector = new ListVector(columnSchema.schema(),
         parent.loader().allocator(), null);
 
     // Create the list vector state that tracks the list vector lifecycle.
-
     final ListVectorState vectorState = new ListVectorState(unionWriter, listVector);
 
     // Create the list writer: an array of unions.
-
     final AbstractObjectWriter listWriter = new ArrayObjectWriter(
         new ListWriterImpl(columnSchema, listVector, unionObjWriter));
 
     // Create the manager for the columns within the list (which may or
     // may not be grouped into a union.)
-
     final ListState listState = new ListState(parent.loader(),
         parent.vectorCache().childCache(columnSchema.name()));
 
     // Bind the union state to the union writer to handle column additions.
-
     unionWriter.bindListener(listState);
 
     // Assemble it all into a union column state.
-
     return new UnionColumnState(parent.loader(),
         listWriter, vectorState, listState);
   }
 
   private ColumnState buildRepeatedList(ContainerState parent,
-      ColumnReadProjection colProj) {
-    ColumnMetadata columnSchema = colProj.providedSchema();
+      ColumnMetadata columnSchema) {
 
     assert columnSchema.type() == MinorType.LIST;
     assert columnSchema.mode() == DataMode.REPEATED;
 
     // The schema provided must be empty. The caller must add
     // the element type after creating the repeated writer itself.
-
     assert columnSchema.childSchema() == null;
 
     // Build the repeated vector.
-
     final RepeatedListVector vector = new RepeatedListVector(
         columnSchema.emptySchema(), parent.loader().allocator(), null);
 
@@ -526,70 +477,59 @@ public class ColumnBuilder {
     // incrementally because it might be complex (a map or another
     // repeated list.) To start, use a dummy to avoid need for if-statements
     // everywhere.
-
     final ColumnMetadata dummyElementSchema = new PrimitiveColumnMetadata(
         MaterializedField.create(columnSchema.name(),
             Types.repeated(MinorType.NULL)));
     final AbstractObjectWriter dummyElement = ColumnWriterFactory.buildDummyColumnWriter(dummyElementSchema);
 
     // Create the list writer: an array of arrays.
-
     final AbstractObjectWriter arrayWriter = RepeatedListWriter.buildRepeatedList(
         columnSchema, vector, dummyElement);
 
     // Create the list vector state that tracks the list vector lifecycle.
     // For a repeated list, we only care about
-
     final RepeatedListVectorState vectorState = new RepeatedListVectorState(
         arrayWriter, vector);
 
     // Build the container that tracks the array contents
-
     final RepeatedListState listState = new RepeatedListState(
         parent.loader(),
         parent.vectorCache().childCache(columnSchema.name()));
 
     // Bind the list state as the list event listener.
-
     ((RepeatedListWriter) arrayWriter.array()).bindListener(listState);
 
     // Assemble it all into a column state. This state will
     // propagate events down to the (one and only) child state.
-
     return new RepeatedListColumnState(parent.loader(),
         arrayWriter, vectorState, listState);
   }
 
-  private ColumnState buildDict(ContainerState parent, ColumnReadProjection colProj) {
-    ColumnMetadata columnSchema = colProj.providedSchema();
+  private ColumnState buildDict(ContainerState parent, ColumnMetadata columnSchema) {
 
     // When dynamically adding columns, must add the (empty)
     // dict by itself, then add columns to the dict via separate
     // calls (the same way as is done for MAP).
-
     assert columnSchema.isDict();
     assert columnSchema.tupleSchema().isEmpty();
 
     // Create the vector, vector state and writer.
-
     if (columnSchema.isArray()) {
-      return buildDictArray(parent, colProj);
+      return buildDictArray(parent, columnSchema);
     } else {
-      return buildSingleDict(parent, colProj);
+      return buildSingleDict(parent, columnSchema);
     }
   }
 
-  private ColumnState buildDictArray(ContainerState parent, ColumnReadProjection colProj) {
-    ColumnMetadata columnSchema = colProj.providedSchema();
+  private ColumnState buildDictArray(ContainerState parent, ColumnMetadata columnSchema) {
+
+    final ProjectionFilter projFilter = parent.projection();
+    final boolean isProjected = projFilter.isProjected(columnSchema);
 
     // Create the dict's offset vector.
-
-    RepeatedDictVector repeatedDictVector;
-    UInt4Vector offsetVector;
-    if (!colProj.isProjected()) {
-      repeatedDictVector = null;
-      offsetVector = null;
-    } else {
+    final RepeatedDictVector repeatedDictVector;
+    final UInt4Vector offsetVector;
+    if (isProjected) {
 
       // Creating the dict vector will create its contained vectors if we
       // give it a materialized field with children. So, instead pass a clone
@@ -605,6 +545,9 @@ public class ColumnBuilder {
       repeatedDictVector = new RepeatedDictVector(dictColMetadata.schema(),
           parent.loader().allocator(), null);
       offsetVector = repeatedDictVector.getOffsetVector();
+    } else {
+      repeatedDictVector = null;
+      offsetVector = null;
     }
 
     // Create the writer using the offset vector
@@ -616,7 +559,7 @@ public class ColumnBuilder {
 
     VectorState offsetVectorState;
     VectorState dictOffsetVectorState;
-    if (!colProj.isProjected()) {
+    if (!projFilter.isProjected(columnSchema)) {
       offsetVectorState = new NullVectorState();
       dictOffsetVectorState = new NullVectorState();
     } else {
@@ -634,39 +577,37 @@ public class ColumnBuilder {
         new TupleState.DictArrayVectorState(repeatedDictVector, offsetVectorState, dictOffsetVectorState);
 
     // Assemble it all into the column state.
-
     final TupleState.DictArrayState dictArrayState = new TupleState.DictArrayState(parent.loader(),
         parent.vectorCache().childCache(columnSchema.name()),
-        colProj.mapProjection());
+        projFilter.mapProjection(isProjected, columnSchema.name()));
     return new TupleState.DictColumnState(
         dictArrayState, writer, mapVectorState, parent.isVersioned());
   }
 
-  private ColumnState buildSingleDict(ContainerState parent, ColumnReadProjection colProj) {
-    ColumnMetadata columnSchema = colProj.providedSchema();
+  private ColumnState buildSingleDict(ContainerState parent, ColumnMetadata columnSchema) {
+
+    final ProjectionFilter projFilter = parent.projection();
+    final boolean isProjected = projFilter.isProjected(columnSchema);
 
     // Create the dict's offset vector.
-
-    DictVector dictVector;
-    UInt4Vector offsetVector;
-    if (!colProj.isProjected()) {
-      dictVector = null;
-      offsetVector = null;
-    } else {
+    final DictVector dictVector;
+    final UInt4Vector offsetVector;
+    if (isProjected) {
 
       // Creating the dict vector will create its contained vectors if we
       // give it a materialized field with children. So, instead pass a clone
       // without children so we can add them.
-
       final ColumnMetadata dictColMetadata = columnSchema.cloneEmpty();
 
       // Don't get the dict vector from the vector cache. Dict vectors may
       // have content that varies from batch to batch. Only the leaf
       // vectors can be cached.
-
       assert columnSchema.tupleSchema().isEmpty();
       dictVector = new DictVector(dictColMetadata.schema(), parent.loader().allocator(), null);
       offsetVector = dictVector.getOffsetVector();
+    } else {
+      dictVector = null;
+      offsetVector = null;
     }
 
     // Create the writer using the offset vector
@@ -675,8 +616,8 @@ public class ColumnBuilder {
 
     // Wrap the offset vector in a vector state
 
-    VectorState offsetVectorState;
-    if (!colProj.isProjected()) {
+    final VectorState offsetVectorState;
+    if (!projFilter.isProjected(columnSchema)) {
       offsetVectorState = new NullVectorState();
     } else {
       offsetVectorState = new OffsetVectorState(
@@ -687,9 +628,8 @@ public class ColumnBuilder {
     final VectorState mapVectorState = new TupleState.SingleDictVectorState(dictVector, offsetVectorState);
 
     // Assemble it all into the column state.
-
-    final TupleState.SingleDictState dictArrayState = new TupleState.SingleDictState(parent.loader(), parent.vectorCache().childCache(columnSchema.name()),
-        colProj.mapProjection());
+    final SingleDictState dictArrayState = new SingleDictState(parent.loader(), parent.vectorCache().childCache(columnSchema.name()),
+        projFilter.mapProjection(isProjected, columnSchema.name()));
     return new TupleState.DictColumnState(
         dictArrayState, writer, mapVectorState, parent.isVersioned());
   }

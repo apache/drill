@@ -24,7 +24,7 @@ import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.impl.scan.project.AbstractUnresolvedColumn.UnresolvedColumn;
 import org.apache.drill.exec.physical.impl.scan.project.AbstractUnresolvedColumn.UnresolvedWildcardColumn;
-import org.apache.drill.exec.physical.impl.scan.project.projSet.ProjectionSetBuilder;
+import org.apache.drill.exec.physical.resultSet.impl.ProjectionFilter;
 import org.apache.drill.exec.physical.resultSet.project.ImpliedTupleRequest;
 import org.apache.drill.exec.physical.resultSet.project.Projections;
 import org.apache.drill.exec.physical.resultSet.project.RequestedTuple;
@@ -135,7 +135,6 @@ import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTes
  * @see {@link ImplicitColumnExplorer}, the class from which this class
  * evolved
  */
-
 public class ScanLevelProjection {
 
   /**
@@ -222,7 +221,7 @@ public class ScanLevelProjection {
   public static class Builder {
     private List<SchemaPath> projectionList;
     private final List<ScanProjectionParser> parsers = new ArrayList<>();
-    private TupleMetadata outputSchema;
+    private TupleMetadata providedSchema;
 
     /**
      * Context used with error messages.
@@ -247,12 +246,12 @@ public class ScanLevelProjection {
       return this;
     }
 
-    public Builder outputSchema(TupleMetadata outputSchema) {
-      this.outputSchema = outputSchema;
+    public Builder providedSchema(TupleMetadata providedSchema) {
+      this.providedSchema = providedSchema;
       return this;
     }
 
-    public Builder context(CustomErrorContext context) {
+    public Builder errorContext(CustomErrorContext context) {
       this.errorContext = context;
       return this;
     }
@@ -261,9 +260,9 @@ public class ScanLevelProjection {
       return new ScanLevelProjection(this);
     }
 
-    public TupleMetadata outputSchema( ) {
-      return outputSchema == null || outputSchema.size() == 0
-          ? null : outputSchema;
+    public TupleMetadata providedSchema( ) {
+      return providedSchema == null || providedSchema.size() == 0
+          ? null : providedSchema;
     }
 
     public List<SchemaPath> projectionList() {
@@ -282,7 +281,7 @@ public class ScanLevelProjection {
    */
   protected final CustomErrorContext errorContext;
   protected final List<SchemaPath> projectionList;
-  protected final TupleMetadata outputSchema;
+  protected final TupleMetadata readerSchema;
 
   // Configuration
 
@@ -307,13 +306,13 @@ public class ScanLevelProjection {
    * Projection definition passed to each reader. This is the set of
    * columns that the reader is asked to provide.
    */
-  protected RequestedTuple readerProjection;
+  protected ProjectionFilter readerProjection;
   protected ScanProjectionType projectionType;
 
   private ScanLevelProjection(Builder builder) {
     this.projectionList = builder.projectionList();
     this.parsers = builder.parsers;
-    this.outputSchema = builder.outputSchema();
+    this.readerSchema = builder.providedSchema();
     this.errorContext = builder.errorContext;
     doParse();
   }
@@ -344,7 +343,7 @@ public class ScanLevelProjection {
     return new Builder()
         .projection(projectionList)
         .parsers(parsers)
-        .outputSchema(outputSchema)
+        .providedSchema(outputSchema)
         .build();
   }
 
@@ -393,10 +392,11 @@ public class ScanLevelProjection {
     // projection. With a schema, we want the schema columns (which may
     // or may not correspond to reader columns.)
 
+    RequestedTuple rootProjection;
     if (projectionType == ScanProjectionType.EMPTY) {
-      readerProjection = ImpliedTupleRequest.NO_MEMBERS;
+      rootProjection = ImpliedTupleRequest.NO_MEMBERS;
     } else if (projectionType != ScanProjectionType.EXPLICIT) {
-      readerProjection = ImpliedTupleRequest.ALL_MEMBERS;
+      rootProjection = ImpliedTupleRequest.ALL_MEMBERS;
     } else {
       List<RequestedColumn> outputProj = new ArrayList<>();
       for (ColumnProjection col : outputCols) {
@@ -404,8 +404,10 @@ public class ScanLevelProjection {
           outputProj.add(((AbstractUnresolvedColumn) col).element());
         }
       }
-      readerProjection = Projections.build(outputProj);
+      rootProjection = Projections.build(outputProj);
     }
+    readerProjection = ProjectionFilter.filterFor(
+        rootProjection, readerSchema, errorContext);
   }
 
   /**
@@ -445,7 +447,7 @@ public class ScanLevelProjection {
     // placeholder to be filled in later with actual table columns.
     if (expanded) {
       projectionType =
-          outputSchema.booleanProperty(TupleMetadata.IS_STRICT_SCHEMA_PROP)
+          readerSchema.booleanProperty(TupleMetadata.IS_STRICT_SCHEMA_PROP)
           ? ScanProjectionType.STRICT_SCHEMA_WILDCARD
           : ScanProjectionType.SCHEMA_WILDCARD;
     } else if (wildcardPosn != -1) {
@@ -454,7 +456,7 @@ public class ScanLevelProjection {
   }
 
   private boolean expandOutputSchema() {
-    if (outputSchema == null) {
+    if (readerSchema == null) {
       return false;
     }
 
@@ -463,8 +465,8 @@ public class ScanLevelProjection {
     // Take the projection type from the output column's data type. That is,
     // INT[] is projected as ARRAY, etc.
 
-    for (int i = 0; i < outputSchema.size(); i++) {
-      ColumnMetadata col = outputSchema.metadata(i);
+    for (int i = 0; i < readerSchema.size(); i++) {
+      ColumnMetadata col = readerSchema.metadata(i);
 
       // Skip columns tagged as "special"; those that should not expand
       // automatically.
@@ -520,8 +522,8 @@ public class ScanLevelProjection {
 
   private void addTableColumn(RequestedColumn inCol) {
     ColumnMetadata outputCol = null;
-    if (outputSchema != null) {
-      outputCol = outputSchema.metadata(inCol.name());
+    if (readerSchema != null) {
+      outputCol = readerSchema.metadata(inCol.name());
     }
     addTableColumn(new UnresolvedColumn(inCol, outputCol));
   }
@@ -593,16 +595,11 @@ public class ScanLevelProjection {
 
   public RequestedTuple rootProjection() { return outputProjection; }
 
-  public ProjectionSetBuilder projectionSet() {
-    return new ProjectionSetBuilder()
-      .outputSchema(outputSchema)
-      .parsedProjection(readerProjection)
-      .errorContext(errorContext);
-  }
+  public ProjectionFilter readerProjection() { return readerProjection; }
 
-  public boolean hasOutputSchema() { return outputSchema != null; }
+  public boolean hasReaderSchema() { return readerSchema != null; }
 
-  public TupleMetadata outputSchema() { return outputSchema; }
+  public TupleMetadata readerSchema() { return readerSchema; }
 
   @Override
   public String toString() {

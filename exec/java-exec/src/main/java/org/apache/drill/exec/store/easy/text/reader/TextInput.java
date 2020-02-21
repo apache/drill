@@ -47,7 +47,7 @@ final class TextInput {
   private long charCount;
 
   /**
-   * The starting position in the file.
+   * Starting position in the file.
    */
   private final long startPos;
   private final long endPos;
@@ -72,16 +72,16 @@ final class TextInput {
   private int remByte = -1;
 
   /**
-   * The current position in the buffer.
+   * Current position in the buffer.
    */
   private int bufferPtr;
 
   /**
-   * The quantity of valid data in the buffer.
+   * Length of valid data in the buffer.
    */
   private int length = -1;
 
-  private boolean endFound = false;
+  private boolean endFound;
 
   /**
    * Creates a new instance with the mandatory characters for handling newlines
@@ -91,6 +91,8 @@ final class TextInput {
    * {@link TextParsingSettings#getNormalizedNewLine()}) that is used to replace any
    * lineSeparator sequence found in the input.
    */
+  // TODO: Remove the DrillBuf; we're getting no benefit from the round trip
+  // out to direct memory and back.
   TextInput(TextParsingSettings settings, InputStream input, DrillBuf readBuffer, long startPos, long endPos) {
     this.lineSeparator = settings.getNewLineDelimiter();
     byte normalizedLineSeparator = settings.getNormalizedNewLine();
@@ -98,7 +100,8 @@ final class TextInput {
     boolean isCompressed = input instanceof CompressionInputStream;
     Preconditions.checkArgument(!isCompressed || startPos == 0, "Cannot use split on compressed stream.");
 
-    // splits aren't allowed with compressed data.  The split length will be the compressed size which means we'll normally end prematurely.
+    // splits aren't allowed with compressed data.  The split length will be the
+    // compressed size which means we'll normally end prematurely.
     if (isCompressed && endPos > 0) {
       endPos = Long.MAX_VALUE;
     }

@@ -38,7 +38,6 @@ import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
  * @see {@link VectorContainerWriter}, the class which this class
  * replaces
  */
-
 public interface ResultSetLoader {
 
   public static final int DEFAULT_ROW_COUNT = BaseValueVector.INITIAL_VALUE_ALLOCATION;
@@ -46,15 +45,13 @@ public interface ResultSetLoader {
   /**
    * Context for error messages.
    */
-
-  CustomErrorContext context();
+  CustomErrorContext errorContext();
 
   /**
    * Current schema version. The version increments by one each time
    * a column is added.
    * @return the current schema version
    */
-
   int schemaVersion();
 
   /**
@@ -63,7 +60,6 @@ public interface ResultSetLoader {
    *
    * @param count target batch row count
    */
-
   void setTargetRowCount(int count);
 
   /**
@@ -72,7 +68,6 @@ public interface ResultSetLoader {
    *
    * @return the target row count for batches that this loader produces
    */
-
   int targetRowCount();
 
   /**
@@ -84,7 +79,6 @@ public interface ResultSetLoader {
    * in-flight batch, even if the batch has not yet reached the target
    * row count
    */
-
   int targetVectorSize();
 
   /**
@@ -93,7 +87,6 @@ public interface ResultSetLoader {
    * @return the number of batches produced including the current
    * one
    */
-
   int batchCount();
 
   /**
@@ -101,7 +94,6 @@ public interface ResultSetLoader {
    * current batch.
    * @return total row count
    */
-
   int totalRowCount();
 
   /**
@@ -112,14 +104,12 @@ public interface ResultSetLoader {
    * @return true if at least one row is available to harvest, false
    * otherwise
    */
-
   boolean hasRows();
 
   /**
    * Start a new row batch. Valid only when first started, or after the
    * previous batch has been harvested.
    */
-
   void startBatch();
 
   /**
@@ -129,7 +119,6 @@ public interface ResultSetLoader {
    *
    * @return writer for the top-level columns
    */
-
   RowSetLoader writer();
 
   /**
@@ -140,7 +129,6 @@ public interface ResultSetLoader {
    * @return true if the client can add a row to the loader, false if
    * not
    */
-
   boolean writeable();
 
   /**
@@ -160,7 +148,6 @@ public interface ResultSetLoader {
    * @param values column values in column index order
    * @return this loader
    */
-
   ResultSetLoader setRow(Object...values);
 
   /**
@@ -179,7 +166,6 @@ public interface ResultSetLoader {
    *         requested amount. If less, the client should call this method for
    *         multiple batches until the requested count is reached
    */
-
   int skipRows(int requestedCount);
 
   /**
@@ -199,7 +185,6 @@ public interface ResultSetLoader {
    * @return true if no columns are actually projected, false if at
    * least one column is projected
    */
-
   boolean isProjectionEmpty();
 
   /**
@@ -211,7 +196,6 @@ public interface ResultSetLoader {
    *
    * @return container used to publish results from this loader
    */
-
   VectorContainer outputContainer();
 
   /**
@@ -233,7 +217,6 @@ public interface ResultSetLoader {
    *
    * @return the row batch to send downstream
    */
-
   VectorContainer harvest();
 
   /**
@@ -243,7 +226,6 @@ public interface ResultSetLoader {
    * @return the extended schema of the harvested batch which includes
    * any allocation hints used when creating the batch
    */
-
   TupleMetadata harvestSchema();
 
   /**
@@ -252,7 +234,6 @@ public interface ResultSetLoader {
    *
    * @return real or dummy vector cache
    */
-
   ResultVectorCache vectorCache();
 
   /**
@@ -260,6 +241,5 @@ public interface ResultSetLoader {
    * available, or the caller wishes to cancel the current row batch
    * and complete.
    */
-
   void close();
 }

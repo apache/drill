@@ -19,6 +19,9 @@ package org.apache.drill.exec.physical.resultSet.project;
 
 import java.util.List;
 
+import org.apache.drill.common.exceptions.CustomErrorContext;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
+
 /**
  * Represents the set of columns projected for a tuple (row or map.)
  * Each column may have structure: a set of referenced names or
@@ -58,7 +61,20 @@ public interface RequestedTuple {
   TupleProjectionType type();
   RequestedColumn get(String colName);
   boolean isProjected(String colName);
+  boolean isProjected(ColumnMetadata columnSchema);
+  boolean enforceProjection(ColumnMetadata columnSchema, CustomErrorContext errorContext);
   RequestedTuple mapProjection(String colName);
   List<RequestedColumn> projections();
   void buildName(StringBuilder buf);
+
+  /**
+   * Report if the projection is empty as occurs in
+   * {@code SELECT COUNT(*) FROM ...}. This is <i>not</i> the
+   * same as asking if this tuple is unprojected, as that concept
+   * does not apply to tuples, only to the column that contains the
+   * tuple.
+   *
+   * @return {@code true} if the projection set is empty
+   */
+  boolean isEmpty();
 }

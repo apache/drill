@@ -82,9 +82,9 @@ public final class TextReader {
     this.workBuf = workBuf;
     this.settings = settings;
 
-    this.ignoreTrailingWhitespace = settings.isIgnoreTrailingWhitespaces();
-    this.ignoreLeadingWhitespace = settings.isIgnoreLeadingWhitespaces();
-    this.parseUnescapedQuotes = settings.isParseUnescapedQuotes();
+    this.ignoreTrailingWhitespace = settings.ignoreTrailingWhitespace();
+    this.ignoreLeadingWhitespace = settings.ignoreLeadingWhitespace();
+    this.parseUnescapedQuotes = settings.parseUnescapedQuotes();
     this.delimiter = settings.getDelimiter();
     this.quote = settings.getQuote();
     this.quoteEscape = settings.getQuoteEscape();

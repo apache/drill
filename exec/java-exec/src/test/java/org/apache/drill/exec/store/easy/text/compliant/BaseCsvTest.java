@@ -70,7 +70,6 @@ public class BaseCsvTest extends ClusterTest {
         .maxParallelization(maxParallelization));
 
     // Set up CSV storage plugin using headers.
-
     TextFormatConfig csvFormat = new TextFormatConfig();
     csvFormat.fieldDelimiter = ',';
     csvFormat.skipFirstLine = skipFirstLine;

@@ -23,6 +23,7 @@ import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.mapred.FsInput;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.physical.impl.scan.convert.StandardConversions;
 import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
@@ -42,7 +43,6 @@ import java.util.List;
 import java.util.stream.IntStream;
 
 public class AvroBatchReader implements ManagedReader<FileScanFramework.FileSchemaNegotiator> {
-
   private static final Logger logger = LoggerFactory.getLogger(AvroBatchReader.class);
 
   private Path filePath;
@@ -51,7 +51,7 @@ public class AvroBatchReader implements ManagedReader<FileScanFramework.FileSche
   private ResultSetLoader loader;
   private List<ColumnConverter> converters;
   // re-use container instance
-  private GenericRecord record = null;
+  private GenericRecord record;
 
   @Override
   public boolean open(FileScanFramework.FileSchemaNegotiator negotiator) {
@@ -69,11 +69,15 @@ public class AvroBatchReader implements ManagedReader<FileScanFramework.FileSche
       negotiator.userName(), negotiator.context().getFragmentContext().getQueryUserName());
 
     logger.debug("Avro file schema: {}", reader.getSchema());
-    TupleMetadata schema = AvroSchemaUtil.convert(reader.getSchema());
-    logger.debug("Avro file converted schema: {}", schema);
-    negotiator.setTableSchema(schema, true);
+    TupleMetadata readerSchema = AvroSchemaUtil.convert(reader.getSchema());
+    logger.debug("Avro file converted schema: {}", readerSchema);
+    TupleMetadata providedSchema = negotiator.providedSchema();
+    TupleMetadata tableSchema = StandardConversions.mergeSchemas(providedSchema, readerSchema);
+    logger.debug("Avro file table schema: {}", tableSchema);
+    negotiator.tableSchema(tableSchema, true);
     loader = negotiator.build();
-    converters = ColumnConvertersUtil.initConverters(schema, loader.writer());
+    ColumnConverterFactory factory = new ColumnConverterFactory(providedSchema);
+    converters = factory.initConverters(providedSchema, readerSchema, loader.writer());
 
     return true;
   }

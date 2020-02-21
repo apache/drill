@@ -23,6 +23,7 @@ import static org.apache.drill.test.rowSet.RowSetUtilities.mapValue;
 import static org.apache.drill.test.rowSet.RowSetUtilities.objArray;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -30,14 +31,17 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.common.exceptions.CustomErrorContext;
+import org.apache.drill.common.exceptions.EmptyErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.physical.impl.scan.project.projSet.ProjectionSetFactory;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.physical.resultSet.impl.ResultSetLoaderImpl.ResultSetOptions;
+import org.apache.drill.exec.physical.resultSet.project.Projections;
+import org.apache.drill.exec.physical.resultSet.project.RequestedTuple;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
@@ -47,6 +51,7 @@ import org.apache.drill.exec.vector.accessor.DictWriter;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.drill.exec.physical.rowSet.RowSet;
+import org.apache.drill.exec.physical.rowSet.RowSetTestUtils;
 import org.apache.drill.exec.physical.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.junit.Test;
@@ -55,7 +60,6 @@ import org.junit.experimental.categories.Category;
 /**
  * Test of the basics of the projection mechanism.
  */
-
 @Category(RowSetTests.class)
 public class TestResultSetLoaderProjection extends SubOperatorTest {
 
@@ -63,7 +67,6 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
    * Test imposing a selection mask between the client and the underlying
    * vector container.
    */
-
   @Test
   public void testProjectionStatic() {
     List<SchemaPath> selection = RowSetTestUtils.projectList("c", "b", "e");
@@ -73,9 +76,9 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
         .add("c", MinorType.INT)
         .add("d", MinorType.INT)
         .buildSchema();
-    ResultSetOptions options = new OptionBuilder()
-        .setProjection(ProjectionSetFactory.build(selection))
-        .setSchema(schema)
+    ResultSetOptions options = new ResultSetOptionBuilder()
+        .projection(Projections.parse(selection))
+        .readerSchema(schema)
         .build();
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
 
@@ -85,8 +88,8 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
   @Test
   public void testProjectionDynamic() {
     List<SchemaPath> selection = RowSetTestUtils.projectList("c", "b", "e");
-    ResultSetOptions options = new OptionBuilder()
-        .setProjection(ProjectionSetFactory.build(selection))
+    ResultSetOptions options = new ResultSetOptionBuilder()
+        .projection(Projections.parse(selection))
         .build();
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
     RowSetLoader rootWriter = rsLoader.writer();
@@ -102,7 +105,6 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
     RowSetLoader rootWriter = rsLoader.writer();
 
     // All columns appear, including non-projected ones.
-
     TupleMetadata actualSchema = rootWriter.tupleSchema();
     assertEquals(4, actualSchema.size());
     assertEquals("a", actualSchema.column(0).getName());
@@ -114,14 +116,12 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
     assertEquals(-1, actualSchema.index("e"));
 
     // Non-projected columns identify themselves
-
     assertFalse(rootWriter.column("a").isProjected());
     assertTrue(rootWriter.column("b").isProjected());
     assertTrue(rootWriter.column("c").isProjected());
     assertFalse(rootWriter.column("d").isProjected());
 
     // Write some data. Doesn't need much.
-
     rsLoader.startBatch();
     for (int i = 1; i < 3; i++) {
       rootWriter.start();
@@ -135,7 +135,6 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
     // Verify. Result should only have the projected
     // columns, only if defined by the loader, in the order
     // of definition.
-
     TupleMetadata expectedSchema = new SchemaBuilder()
         .add("b", MinorType.INT)
         .add("c", MinorType.INT)
@@ -145,7 +144,6 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
         .addRow(2, 20)
         .build();
     RowSet actual = fixture.wrap(rsLoader.harvest());
-//    actual.print();
     RowSetUtilities.verify(expected, actual);
     rsLoader.close();
   }
@@ -158,15 +156,14 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
         .addArray("a2", MinorType.INT)
         .addArray("a3", MinorType.INT)
         .buildSchema();
-    ResultSetOptions options = new OptionBuilder()
-        .setProjection(ProjectionSetFactory.build(selection))
-        .setSchema(schema)
+    ResultSetOptions options = new ResultSetOptionBuilder()
+        .projection(Projections.parse(selection))
+        .readerSchema(schema)
         .build();
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
     RowSetLoader rootWriter = rsLoader.writer();
 
     // Verify the projected columns
-
     TupleMetadata actualSchema = rootWriter.tupleSchema();
     assertTrue(actualSchema.metadata("a1").isArray());
     assertTrue(rootWriter.column("a1").isProjected());
@@ -178,7 +175,6 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
     assertFalse(rootWriter.column("a3").isProjected());
 
     // Write a couple of rows.
-
     rsLoader.startBatch();
     rootWriter.start();
     rootWriter
@@ -186,7 +182,6 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
       .addRow(intArray(11, 101), intArray(21, 201), intArray(31, 301));
 
     // Verify. Only the projected columns appear in the result set.
-
     TupleMetadata expectedSchema = new SchemaBuilder()
         .addArray("a1", MinorType.INT)
         .addArray("a2", MinorType.INT)
@@ -216,15 +211,14 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
           .add("f", MinorType.INT)
           .resumeSchema()
         .buildSchema();
-    ResultSetOptions options = new OptionBuilder()
-        .setProjection(ProjectionSetFactory.build(selection))
-        .setSchema(schema)
+    ResultSetOptions options = new ResultSetOptionBuilder()
+        .projection(Projections.parse(selection))
+        .readerSchema(schema)
         .build();
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
     RowSetLoader rootWriter = rsLoader.writer();
 
     // Verify the projected columns
-
     TupleMetadata actualSchema = rootWriter.tupleSchema();
     ColumnMetadata m1Md = actualSchema.metadata("m1");
     TupleWriter m1Writer = rootWriter.tuple("m1");
@@ -251,7 +245,6 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
     assertFalse(m3Writer.column("f").isProjected());
 
     // Write a couple of rows.
-
     rsLoader.startBatch();
     rootWriter.start();
     rootWriter
@@ -259,7 +252,6 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
       .addRow(mapValue(11, 12), mapValue(13, 14), mapValue(15, 16));
 
     // Verify. Only the projected columns appear in the result set.
-
     TupleMetadata expectedSchema = new SchemaBuilder()
       .addMap("m1")
         .add("a", MinorType.INT)
@@ -277,25 +269,248 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
     rsLoader.close();
   }
 
+  // Setup to test the various project/provided schema cases in
+  // ProjectionFilter, especially CompoundProjectionFilter
+  public ResultSetLoader setupProvidedSchema(boolean isStrict, List<SchemaPath> selection) {
+    TupleMetadata schema = new SchemaBuilder()
+        .addMap("m1")
+          .add("a", MinorType.INT)
+          .add("b", MinorType.INT)
+          .resumeSchema()
+        .addMap("m2")
+          .add("c", MinorType.INT)
+          .add("d", MinorType.INT)
+          .resumeSchema()
+        .addMap("m3")
+          .add("e", MinorType.INT)
+          .add("f", MinorType.INT)
+          .resumeSchema()
+        .buildSchema();
+
+    // Provided schema: disjoint set of above.
+    TupleMetadata providedSchema = new SchemaBuilder()
+        .addMap("m1") // Same
+          .add("a", MinorType.INT)
+          .add("b", MinorType.INT)
+          .add("z", MinorType.INT) // Add a column
+          .resumeSchema()
+        .addMap("m2") // Omit c
+          .add("d", MinorType.INT)
+          .resumeSchema()
+        // Omit all of m3
+        .addMap("m4") // Add m4
+          .add("g", MinorType.INT)
+          .add("h", MinorType.INT)
+          .resumeSchema()
+        .build();
+    providedSchema.setBooleanProperty(TupleMetadata.IS_STRICT_SCHEMA_PROP, isStrict);
+
+    RequestedTuple proj = Projections.parse(selection);
+    CustomErrorContext errorContext = new EmptyErrorContext();
+    ProjectionFilter projectionFilter = ProjectionFilter.filterFor(proj, providedSchema, errorContext);
+    ResultSetOptions options = new ResultSetOptionBuilder()
+        .projectionFilter(projectionFilter)
+        .readerSchema(schema)
+        .build();
+    ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
+
+    // Write a couple of rows.
+    rsLoader.startBatch();
+    RowSetLoader rootWriter = rsLoader.writer();
+    rootWriter.start();
+    rootWriter
+      .addRow(mapValue( 1,  2), mapValue( 3,  4), mapValue( 5,  6))
+      .addRow(mapValue(11, 12), mapValue(13, 14), mapValue(15, 16));
+
+    return rsLoader;
+  }
+
+  /**
+   * Projection is based on both the projection list and the
+   * provided schema, if strict.
+   */
+  @Test
+  public void testStrictFullMapProjectionWithSchema() {
+
+    // From the reader's perspective, m1, m2 and m3 are projected, m4 is not
+    // (the reader does not ask m4 to be created)
+    // m1.z is not requested, m2.c is, but is not projected.
+    // None of m3 is projected.
+    List<SchemaPath> selection = RowSetTestUtils.projectList("m1", "m2", "m3", "m4");
+    ResultSetLoader rsLoader = setupProvidedSchema(true, selection);
+    RowSetLoader rootWriter = rsLoader.writer();
+
+    // Verify the projected columns
+    TupleMetadata actualSchema = rootWriter.tupleSchema();
+    TupleWriter m1Writer = rootWriter.tuple("m1");
+    assertTrue(m1Writer.isProjected());
+    assertEquals(2, m1Writer.tupleSchema().size());
+    assertTrue(m1Writer.column("a").isProjected());
+    assertTrue(m1Writer.column("b").isProjected());
+
+    TupleWriter m2Writer = rootWriter.tuple("m2");
+    assertTrue(m2Writer.isProjected());
+    assertEquals(2, m2Writer.tupleSchema().size());
+    assertFalse(m2Writer.column("c").isProjected());
+    assertTrue(m2Writer.column("d").isProjected());
+
+    TupleWriter m3Writer = rootWriter.tuple("m3");
+    assertFalse(m3Writer.isProjected());
+    assertEquals(2, m3Writer.tupleSchema().size());
+    assertFalse(m3Writer.column("e").isProjected());
+    assertFalse(m3Writer.column("f").isProjected());
+
+    assertNull(actualSchema.metadata("m4"));
+
+    // Verify. Only the projected columns appear in the result set.
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addMap("m1")
+        .add("a", MinorType.INT)
+        .add("b", MinorType.INT)
+        .resumeSchema()
+      .addMap("m2")
+        .add("d", MinorType.INT)
+        .resumeSchema()
+      .build();
+    SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
+      .addRow(mapValue( 1,  2), mapValue( 4))
+      .addRow(mapValue(11, 12), mapValue(14))
+      .build();
+    RowSetUtilities.verify(expected, fixture.wrap(rsLoader.harvest()));
+    rsLoader.close();
+  }
+
+  /**
+   * Projection is based on both the projection list and the
+   * provided schema, if strict.
+   */
+  @Test
+  public void testStrictMapMemberProjectionWithSchema() {
+
+    // m1.a is projected and in the provided schema
+    // m1.b is not projected
+    // m1.z is projected, in the provided schema, but not in the reader schema
+    // m2.c is projected, in the reader schema, but not in the provided schema
+    // m3.f is projected, but m3 is not in the provided schema
+    // m4.g is projected, is in the provided schema, but not in the reader schema
+    List<SchemaPath> selection = RowSetTestUtils.projectList("m1.a", "m1.z", "m2.c", "m3.f", "m4.g");
+    ResultSetLoader rsLoader = setupProvidedSchema(true, selection);
+    RowSetLoader rootWriter = rsLoader.writer();
+
+    // Verify the projected columns
+    TupleMetadata actualSchema = rootWriter.tupleSchema();
+    TupleWriter m1Writer = rootWriter.tuple("m1");
+    assertTrue(m1Writer.isProjected());
+    assertEquals(2, m1Writer.tupleSchema().size());
+    assertTrue(m1Writer.column("a").isProjected());
+    assertFalse(m1Writer.column("b").isProjected());
+
+    TupleWriter m2Writer = rootWriter.tuple("m2");
+    assertTrue(m2Writer.isProjected());
+    assertEquals(2, m2Writer.tupleSchema().size());
+    assertFalse(m2Writer.column("c").isProjected());
+    assertFalse(m2Writer.column("d").isProjected());
+
+    TupleWriter m3Writer = rootWriter.tuple("m3");
+    assertFalse(m3Writer.isProjected());
+    assertEquals(2, m3Writer.tupleSchema().size());
+    assertFalse(m3Writer.column("e").isProjected());
+    assertFalse(m3Writer.column("f").isProjected());
+
+    assertNull(actualSchema.metadata("m4"));
+
+    // Verify. Only the projected columns appear in the result set.
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addMap("m1")
+        .add("a", MinorType.INT)
+        .resumeSchema()
+      .addMap("m2")
+        .resumeSchema()
+      .build();
+    SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
+      .addRow(mapValue( 1), mapValue())
+      .addRow(mapValue(11), mapValue())
+      .build();
+    RowSetUtilities.verify(expected, fixture.wrap(rsLoader.harvest()));
+    rsLoader.close();
+  }
+
+
+  /**
+   * Projection is based on both the projection list and the
+   * provided schema, if strict.
+   */
+  @Test
+  public void testNonStrictMapMemberProjectionWithSchema() {
+
+    // m1 is not projected, though in the provided schema
+    // m2.c is projected, in the reader schema, but not in the provided schema,
+    // but schema is non-strict, so is projected
+    // m2.d is projected and in both schemas
+    // m3.f is projected, but m3 is not in the provided schema, but since schema is
+    // non-strict, it is projected
+    // m4.g is projected, is in the provided schema, but not in the reader schema
+    List<SchemaPath> selection = RowSetTestUtils.projectList("m2.c", "m2.d", "m3.f", "m4.g");
+    ResultSetLoader rsLoader = setupProvidedSchema(false, selection);
+    RowSetLoader rootWriter = rsLoader.writer();
+
+    // Verify the projected columns
+    TupleMetadata actualSchema = rootWriter.tupleSchema();
+    TupleWriter m1Writer = rootWriter.tuple("m1");
+    assertFalse(m1Writer.isProjected());
+    assertEquals(2, m1Writer.tupleSchema().size());
+    assertFalse(m1Writer.column("a").isProjected());
+    assertFalse(m1Writer.column("b").isProjected());
+
+    TupleWriter m2Writer = rootWriter.tuple("m2");
+    assertTrue(m2Writer.isProjected());
+    assertEquals(2, m2Writer.tupleSchema().size());
+    assertTrue(m2Writer.column("c").isProjected());
+    assertTrue(m2Writer.column("d").isProjected());
+
+    TupleWriter m3Writer = rootWriter.tuple("m3");
+    assertTrue(m3Writer.isProjected());
+    assertEquals(2, m3Writer.tupleSchema().size());
+    assertFalse(m3Writer.column("e").isProjected());
+    assertTrue(m3Writer.column("f").isProjected());
+
+    assertNull(actualSchema.metadata("m4"));
+
+    // Verify. Only the projected columns appear in the result set.
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .addMap("m2")
+        .add("c", MinorType.INT)
+        .add("d", MinorType.INT)
+        .resumeSchema()
+      .addMap("m3")
+        .add("f", MinorType.INT)
+        .resumeSchema()
+      .build();
+    SingleRowSet expected = fixture.rowSetBuilder(expectedSchema)
+        .addRow(mapValue( 3,  4), mapValue( 6))
+        .addRow(mapValue(13, 14), mapValue(16))
+        .build();
+    RowSetUtilities.verify(expected, fixture.wrap(rsLoader.harvest()));
+    rsLoader.close();
+  }
+
   @Test
   public void testMapProjectionMemberAndMap() {
 
     // SELECT m1, m1.b
     // This really means project all of m1; m1.b is along for the ride.
-
     List<SchemaPath> selection = RowSetTestUtils.projectList("m1", "m1.b");
 
     // Define an "early" reader schema consistent with the projection.
-
     TupleMetadata schema = new SchemaBuilder()
         .addMap("m1")
           .add("a", MinorType.INT)
           .add("b", MinorType.INT)
           .resumeSchema()
         .buildSchema();
-    ResultSetOptions options = new OptionBuilder()
-        .setProjection(ProjectionSetFactory.build(selection))
-        .setSchema(schema)
+    ResultSetOptions options = new ResultSetOptionBuilder()
+        .projection(Projections.parse(selection))
+        .readerSchema(schema)
         .build();
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
     RowSetLoader rootWriter = rsLoader.writer();
@@ -312,7 +527,6 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
     assertTrue(m1Writer.column("b").isProjected());
 
     // Write a couple of rows.
-
     rsLoader.startBatch();
     rootWriter.start();
     rootWriter
@@ -321,7 +535,6 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
 
     // Verify. The whole map appears in the result set because the
     // project list included the whole map as well as a map member.
-
     SingleRowSet expected = fixture.rowSetBuilder(schema)
       .addSingleCol(mapValue( 1,  2))
       .addSingleCol(mapValue(11, 12))
@@ -335,7 +548,6 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
    * Only the projected array members should appear in the harvested
    * results.
    */
-
   @Test
   public void testMapArrayProjection() {
     List<SchemaPath> selection = RowSetTestUtils.projectList("m1", "m2.d");
@@ -353,15 +565,14 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
           .add("f", MinorType.INT)
           .resumeSchema()
         .buildSchema();
-    ResultSetOptions options = new OptionBuilder()
-        .setProjection(ProjectionSetFactory.build(selection))
-        .setSchema(schema)
+    ResultSetOptions options = new ResultSetOptionBuilder()
+        .projection(Projections.parse(selection))
+        .readerSchema(schema)
         .build();
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
     RowSetLoader rootWriter = rsLoader.writer();
 
     // Write a couple of rows.
-
     rsLoader.startBatch();
     rootWriter.addRow(
         objArray(objArray(10, 20), objArray(11, 21)),
@@ -373,7 +584,6 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
         objArray(objArray(150, 160), objArray(151, 162)));
 
     // Verify. Only the projected columns appear in the result set.
-
     TupleMetadata expectedSchema = new SchemaBuilder()
       .addMapArray("m1")
         .add("a", MinorType.INT)
@@ -402,7 +612,6 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
    * non-projected columns stay in the background and don't interfere
    * with overflow logic.
    */
-
   @Test
   public void testProjectWithOverflow() {
     List<SchemaPath> selection = RowSetTestUtils.projectList("small", "dummy");
@@ -410,10 +619,10 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
         .add("big", MinorType.VARCHAR)
         .add("small", MinorType.VARCHAR)
         .buildSchema();
-    ResultSetOptions options = new OptionBuilder()
-        .setRowCountLimit(ValueVector.MAX_ROW_COUNT)
-        .setProjection(ProjectionSetFactory.build(selection))
-        .setSchema(schema)
+    ResultSetOptions options = new ResultSetOptionBuilder()
+        .rowCountLimit(ValueVector.MAX_ROW_COUNT)
+        .projection(Projections.parse(selection))
+        .readerSchema(schema)
         .build();
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
     RowSetLoader rootWriter = rsLoader.writer();
@@ -437,26 +646,21 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
     // projected vector ("small"), not by the larger, unprojected
     // "big" vector.
     // Our row count should include the overflow row
-
     int expectedCount = ValueVector.MAX_BUFFER_SIZE / small.length;
     assertEquals(expectedCount + 1, count);
 
     // Loader's row count should include only "visible" rows
-
     assertEquals(expectedCount, rootWriter.rowCount());
 
     // Total count should include invisible and look-ahead rows.
-
     assertEquals(expectedCount + 1, rsLoader.totalRowCount());
 
     // Result should exclude the overflow row
-
     RowSet result = fixture.wrap(rsLoader.harvest());
     assertEquals(expectedCount, result.rowCount());
     result.clear();
 
     // Next batch should start with the overflow row
-
     rsLoader.startBatch();
     assertEquals(1, rootWriter.rowCount());
     assertEquals(expectedCount + 1, rsLoader.totalRowCount());
@@ -473,9 +677,9 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
     TupleMetadata schema = new SchemaBuilder()
         .add("col", MinorType.VARCHAR)
         .buildSchema();
-    ResultSetOptions options = new OptionBuilder()
-        .setProjection(ProjectionSetFactory.build(selection))
-        .setSchema(schema)
+    ResultSetOptions options = new ResultSetOptionBuilder()
+        .projection(Projections.parse(selection))
+        .readerSchema(schema)
         .build();
     try {
       new ResultSetLoaderImpl(fixture.allocator(), options);
@@ -491,9 +695,9 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
     TupleMetadata schema = new SchemaBuilder()
         .add("col", MinorType.VARCHAR)
         .buildSchema();
-    ResultSetOptions options = new OptionBuilder()
-        .setProjection(ProjectionSetFactory.build(selection))
-        .setSchema(schema)
+    ResultSetOptions options = new ResultSetOptionBuilder()
+        .projection(Projections.parse(selection))
+        .readerSchema(schema)
         .build();
     try {
       new ResultSetLoaderImpl(fixture.allocator(), options);
@@ -509,9 +713,9 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
     TupleMetadata schema = new SchemaBuilder()
         .add("col", MinorType.VARCHAR)
         .buildSchema();
-    ResultSetOptions options = new OptionBuilder()
-        .setProjection(ProjectionSetFactory.build(selection))
-        .setSchema(schema)
+    ResultSetOptions options = new ResultSetOptionBuilder()
+        .projection(Projections.parse(selection))
+        .readerSchema(schema)
         .build();
     try {
       new ResultSetLoaderImpl(fixture.allocator(), options);
@@ -527,9 +731,9 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
     TupleMetadata schema = new SchemaBuilder()
         .addArray("col", MinorType.VARCHAR)
         .buildSchema();
-    ResultSetOptions options = new OptionBuilder()
-        .setProjection(ProjectionSetFactory.build(selection))
-        .setSchema(schema)
+    ResultSetOptions options = new ResultSetOptionBuilder()
+        .projection(Projections.parse(selection))
+        .readerSchema(schema)
         .build();
     try {
       new ResultSetLoaderImpl(fixture.allocator(), options);
@@ -545,9 +749,9 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
     TupleMetadata schema = new SchemaBuilder()
         .addArray("col", MinorType.VARCHAR)
         .buildSchema();
-    ResultSetOptions options = new OptionBuilder()
-        .setProjection(ProjectionSetFactory.build(selection))
-        .setSchema(schema)
+    ResultSetOptions options = new ResultSetOptionBuilder()
+        .projection(Projections.parse(selection))
+        .readerSchema(schema)
         .build();
     try {
       new ResultSetLoaderImpl(fixture.allocator(), options);
@@ -565,9 +769,9 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
           .add("child", MinorType.VARCHAR)
           .resumeSchema()
         .buildSchema();
-    ResultSetOptions options = new OptionBuilder()
-        .setProjection(ProjectionSetFactory.build(selection))
-        .setSchema(schema)
+    ResultSetOptions options = new ResultSetOptionBuilder()
+        .projection(Projections.parse(selection))
+        .readerSchema(schema)
         .build();
     try {
       new ResultSetLoaderImpl(fixture.allocator(), options);
@@ -577,7 +781,6 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
     }
   }
 
-
   @Test
   public void testMapMapArrayConflict() {
     List<SchemaPath> selection = RowSetTestUtils.projectList("col[0].child");
@@ -586,9 +789,9 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
           .add("child", MinorType.VARCHAR)
           .resumeSchema()
         .buildSchema();
-    ResultSetOptions options = new OptionBuilder()
-        .setProjection(ProjectionSetFactory.build(selection))
-        .setSchema(schema)
+    ResultSetOptions options = new ResultSetOptionBuilder()
+        .projection(Projections.parse(selection))
+        .readerSchema(schema)
         .build();
     try {
       new ResultSetLoaderImpl(fixture.allocator(), options);
@@ -617,15 +820,14 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
           .value(MinorType.INT)
           .resumeSchema()
         .buildSchema();
-    ResultSetOptions options = new OptionBuilder()
-        .setProjection(ProjectionSetFactory.build(selection))
-        .setSchema(schema)
+    ResultSetOptions options = new ResultSetOptionBuilder()
+        .projection(Projections.parse(selection))
+        .readerSchema(schema)
         .build();
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
     RowSetLoader rootWriter = rsLoader.writer();
 
     // Verify the projected columns
-
     TupleMetadata actualSchema = rootWriter.tupleSchema();
     ColumnMetadata dictMetadata1 = actualSchema.metadata(dictName1);
     DictWriter dictWriter1 = rootWriter.dict(dictName1);
@@ -644,7 +846,6 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
     assertFalse(dictWriter2.valueWriter().isProjected());
 
     // Write a couple of rows.
-
     rsLoader.startBatch();
     rootWriter.start();
     rootWriter
@@ -652,7 +853,6 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
         .addRow(map("a", 11, "b", 12), map("c", 13, "d", 14));
 
     // Verify. Only the projected columns appear in the result set.
-
     TupleMetadata expectedSchema = new SchemaBuilder()
         .addDict(dictName1, MinorType.VARCHAR)
           .value(MinorType.INT)
@@ -674,9 +874,9 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
           .value(MinorType.INT)
           .resumeSchema()
         .buildSchema();
-    ResultSetOptions options = new OptionBuilder()
-        .setProjection(ProjectionSetFactory.build(selection))
-        .setSchema(schema)
+    ResultSetOptions options = new ResultSetOptionBuilder()
+        .projection(Projections.parse(selection))
+        .readerSchema(schema)
         .build();
     new ResultSetLoaderImpl(fixture.allocator(), options); // no validation error
   }
@@ -689,9 +889,9 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
         .value(MinorType.VARCHAR)
         .resumeSchema()
         .buildSchema();
-    ResultSetOptions options = new OptionBuilder()
-        .setProjection(ProjectionSetFactory.build(selection))
-        .setSchema(schema)
+    ResultSetOptions options = new ResultSetOptionBuilder()
+        .projection(Projections.parse(selection))
+        .readerSchema(schema)
         .build();
     new ResultSetLoaderImpl(fixture.allocator(), options); // no validation error
   }

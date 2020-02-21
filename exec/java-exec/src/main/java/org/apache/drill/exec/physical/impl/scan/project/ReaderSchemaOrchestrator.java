@@ -20,9 +20,8 @@ package org.apache.drill.exec.physical.impl.scan.project;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.exec.physical.impl.scan.project.NullColumnBuilder.NullBuilderBuilder;
 import org.apache.drill.exec.physical.impl.scan.project.ResolvedTuple.ResolvedRow;
-import org.apache.drill.exec.physical.impl.scan.project.projSet.ProjectionSetBuilder;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
-import org.apache.drill.exec.physical.resultSet.impl.OptionBuilder;
+import org.apache.drill.exec.physical.resultSet.impl.ResultSetOptionBuilder;
 import org.apache.drill.exec.physical.resultSet.impl.ResultSetLoaderImpl;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
@@ -67,11 +66,11 @@ public class ReaderSchemaOrchestrator implements VectorSource {
   }
 
   public ResultSetLoader makeTableLoader(CustomErrorContext errorContext, TupleMetadata readerSchema) {
-    OptionBuilder options = new OptionBuilder();
-    options.setRowCountLimit(Math.min(readerBatchSize, scanOrchestrator.options.scanBatchRecordLimit));
-    options.setVectorCache(scanOrchestrator.vectorCache);
-    options.setBatchSizeLimit(scanOrchestrator.options.scanBatchByteLimit);
-    options.setContext(errorContext);
+    ResultSetOptionBuilder options = new ResultSetOptionBuilder();
+    options.rowCountLimit(Math.min(readerBatchSize, scanOrchestrator.options.scanBatchRecordLimit));
+    options.vectorCache(scanOrchestrator.vectorCache);
+    options.batchSizeLimit(scanOrchestrator.options.scanBatchByteLimit);
+    options.errorContext(errorContext);
 
     // Set up a selection list if available and is a subset of
     // table columns. (Only needed for non-wildcard queries.)
@@ -79,11 +78,8 @@ public class ReaderSchemaOrchestrator implements VectorSource {
     // whether or not they exist in the up-front schema. Handles
     // the odd case where the reader claims a fixed schema, but
     // adds a column later.
-
-    ProjectionSetBuilder projBuilder = scanOrchestrator.scanProj.projectionSet();
-    projBuilder.typeConverter(scanOrchestrator.options.typeConverter);
-    options.setProjection(projBuilder.build());
-    options.setSchema(readerSchema);
+    options.projectionFilter(scanOrchestrator.scanProj.readerProjection);
+    options.readerSchema(readerSchema);
 
     // Create the table loader
     tableLoader = new ResultSetLoaderImpl(scanOrchestrator.allocator, options.build());
@@ -150,26 +146,25 @@ public class ReaderSchemaOrchestrator implements VectorSource {
       doSmoothedProjection(readerSchema);
     } else {
       switch(scanOrchestrator.scanProj.projectionType()) {
-      case EMPTY:
-      case EXPLICIT:
-        doExplicitProjection(readerSchema);
-        break;
-      case SCHEMA_WILDCARD:
-      case STRICT_SCHEMA_WILDCARD:
-        doStrictWildcardProjection(readerSchema);
-        break;
-      case WILDCARD:
-        doWildcardProjection(readerSchema);
-        break;
-      default:
-        throw new IllegalStateException(scanOrchestrator.scanProj.projectionType().toString());
+        case EMPTY:
+        case EXPLICIT:
+          doExplicitProjection(readerSchema);
+          break;
+        case SCHEMA_WILDCARD:
+        case STRICT_SCHEMA_WILDCARD:
+          doStrictWildcardProjection(readerSchema);
+          break;
+        case WILDCARD:
+          doWildcardProjection(readerSchema);
+          break;
+        default:
+          throw new IllegalStateException(scanOrchestrator.scanProj.projectionType().toString());
       }
     }
 
     // Combine metadata, nulls and batch data to form the final
     // output container. Columns are created by the metadata and null
     // loaders only in response to a batch, so create the first batch.
-
     rootTuple.buildNulls(scanOrchestrator.vectorCache);
     scanOrchestrator.metadataManager.define();
     populateNonDataColumns();
@@ -186,7 +181,6 @@ public class ReaderSchemaOrchestrator implements VectorSource {
    * Query contains a wildcard. The schema-level projection includes
    * all columns provided by the reader.
    */
-
   private void doWildcardProjection(TupleMetadata tableSchema) {
     rootTuple = newRootTuple();
     new WildcardProjection(scanOrchestrator.scanProj,
@@ -203,7 +197,7 @@ public class ReaderSchemaOrchestrator implements VectorSource {
     return new ResolvedRow(new NullBuilderBuilder()
         .setNullType(scanOrchestrator.options.nullType)
         .allowRequiredNullColumns(scanOrchestrator.options.allowRequiredNullColumns)
-        .setOutputSchema(scanOrchestrator.options.outputSchema())
+        .setOutputSchema(scanOrchestrator.options.providedSchema())
         .build());
   }
 

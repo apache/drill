@@ -58,13 +58,10 @@ public class DictEntryWriter extends AbstractTupleWriter {
     }
 
     @Override
-    public boolean isProjected() {
-      return false;
-    }
+    public boolean isProjected() { return false; }
 
     @Override
-    public void copy(ColumnReader from) {
-    }
+    public void copy(ColumnReader from) { }
   }
 
   public static DictEntryObjectWriter buildDictEntryWriter(ColumnMetadata schema,
@@ -111,7 +108,7 @@ public class DictEntryWriter extends AbstractTupleWriter {
   @Override
   public void setObject(Object value) {
     if (value instanceof Map.Entry) {
-      Map.Entry entry = (Map.Entry) value;
+      Map.Entry<?,?> entry = (Map.Entry<?,?>) value;
       set(0, entry.getKey());
       set(1, entry.getValue());
     } else {

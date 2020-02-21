@@ -474,8 +474,8 @@ public class TestResultSetLoaderProtocol extends SubOperatorTest {
         .addNullable("b", MinorType.INT)
         .add("c", MinorType.VARCHAR)
         .buildSchema();
-    ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
-        .setSchema(schema)
+    ResultSetLoaderImpl.ResultSetOptions options = new ResultSetOptionBuilder()
+        .readerSchema(schema)
         .build();
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
     RowSetLoader rootWriter = rsLoader.writer();
@@ -528,9 +528,9 @@ public class TestResultSetLoaderProtocol extends SubOperatorTest {
         .add("a", MinorType.INT)
         .add("b", MinorType.VARCHAR)
         .buildSchema();
-    ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
-        .setSchema(schema)
-        .setRowCountLimit(ValueVector.MAX_ROW_COUNT)
+    ResultSetLoaderImpl.ResultSetOptions options = new ResultSetOptionBuilder()
+        .readerSchema(schema)
+        .rowCountLimit(ValueVector.MAX_ROW_COUNT)
         .build();
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
     RowSetLoader rootWriter = rsLoader.writer();
@@ -585,9 +585,9 @@ public class TestResultSetLoaderProtocol extends SubOperatorTest {
         .add("a", MinorType.INT)
         .add("b", MinorType.VARCHAR)
         .buildSchema();
-    ResultSetLoaderImpl.ResultSetOptions options = new OptionBuilder()
-        .setSchema(schema)
-        .setRowCountLimit(ValueVector.MAX_ROW_COUNT)
+    ResultSetLoaderImpl.ResultSetOptions options = new ResultSetOptionBuilder()
+        .readerSchema(schema)
+        .rowCountLimit(ValueVector.MAX_ROW_COUNT)
         .build();
     ResultSetLoader rsLoader = new ResultSetLoaderImpl(fixture.allocator(), options);
     RowSetLoader rootWriter = rsLoader.writer();

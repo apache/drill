@@ -30,10 +30,10 @@ import org.apache.drill.exec.physical.impl.scan.columns.ColumnsArrayParser;
 import org.apache.drill.exec.physical.impl.scan.columns.ColumnsScanFramework;
 import org.apache.drill.exec.physical.impl.scan.columns.UnresolvedColumnsArrayColumn;
 import org.apache.drill.exec.physical.impl.scan.file.FileMetadataColumn;
-import org.apache.drill.exec.physical.impl.scan.file.FileMetadataManager;
-import org.apache.drill.exec.physical.impl.scan.file.FileMetadataManager.FileMetadataOptions;
+import org.apache.drill.exec.physical.impl.scan.file.ImplicitColumnManager;
+import org.apache.drill.exec.physical.impl.scan.file.ImplicitColumnManager.ImplicitColumnOptions;
 import org.apache.drill.exec.physical.impl.scan.project.ScanLevelProjection;
-import org.apache.drill.exec.physical.resultSet.impl.RowSetTestUtils;
+import org.apache.drill.exec.physical.rowSet.RowSetTestUtils;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.test.SubOperatorTest;
 import org.apache.hadoop.fs.Path;
@@ -218,8 +218,8 @@ public class TestColumnsArrayParser extends SubOperatorTest {
     }
   }
 
-  private FileMetadataOptions standardOptions(Path filePath) {
-    FileMetadataOptions options = new FileMetadataOptions();
+  private ImplicitColumnOptions standardOptions(Path filePath) {
+    ImplicitColumnOptions options = new ImplicitColumnOptions();
     options.useLegacyWildcardExpansion(false); // Don't expand partition columns for wildcard
     options.setSelectionRoot(new Path("hdfs:///w"));
     options.setFiles(Lists.newArrayList(filePath));
@@ -233,7 +233,7 @@ public class TestColumnsArrayParser extends SubOperatorTest {
   @Test
   public void testMetadataColumnsWithColumnsArray() {
     Path filePath = new Path("hdfs:///w/x/y/z.csv");
-    FileMetadataManager metadataManager = new FileMetadataManager(
+    ImplicitColumnManager metadataManager = new ImplicitColumnManager(
         fixture.getOptionManager(),
         standardOptions(filePath));
 

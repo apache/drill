@@ -64,7 +64,7 @@ public class AvroFormatPlugin extends EasyFormatPlugin<AvroFormatConfig> {
     FileScanFramework.FileScanBuilder builder = new FileScanFramework.FileScanBuilder();
     builder.setReaderFactory(new AvroReaderFactory());
     initScanBuilder(builder, scan);
-    builder.setNullType(Types.optional(TypeProtos.MinorType.VARCHAR));
+    builder.nullType(Types.optional(TypeProtos.MinorType.VARCHAR));
     return builder;
   }
 

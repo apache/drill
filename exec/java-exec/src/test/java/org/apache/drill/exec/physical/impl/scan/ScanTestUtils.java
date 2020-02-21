@@ -26,7 +26,7 @@ import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.base.AbstractSubScan;
 import org.apache.drill.exec.physical.base.Scan;
 import org.apache.drill.exec.physical.impl.scan.file.FileMetadataColumnDefn;
-import org.apache.drill.exec.physical.impl.scan.file.FileMetadataManager;
+import org.apache.drill.exec.physical.impl.scan.file.ImplicitColumnManager;
 import org.apache.drill.exec.physical.impl.scan.file.PartitionColumn;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedScanFramework.ScanFrameworkBuilder;
 import org.apache.drill.exec.physical.impl.scan.project.ReaderLevelProjection.ReaderProjectionResolver;
@@ -34,7 +34,7 @@ import org.apache.drill.exec.physical.impl.scan.project.ResolvedColumn;
 import org.apache.drill.exec.physical.impl.scan.project.ResolvedTuple;
 import org.apache.drill.exec.physical.impl.scan.project.ScanLevelProjection.ScanProjectionParser;
 import org.apache.drill.exec.physical.impl.scan.project.ScanSchemaOrchestrator.ScanOrchestratorBuilder;
-import org.apache.drill.exec.physical.resultSet.impl.RowSetTestUtils;
+import org.apache.drill.exec.physical.rowSet.RowSetTestUtils;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
@@ -66,19 +66,19 @@ public class ScanTestUtils {
     public abstract ScanFrameworkBuilder builder();
 
     public void projectAll() {
-      builder().setProjection(RowSetTestUtils.projectAll());
+      builder().projection(RowSetTestUtils.projectAll());
     }
 
     public void projectAllWithMetadata(int dirs) {
-      builder().setProjection(ScanTestUtils.projectAllWithMetadata(dirs));
+      builder().projection(ScanTestUtils.projectAllWithMetadata(dirs));
     }
 
     public void setProjection(String... projCols) {
-      builder().setProjection(RowSetTestUtils.projectList(projCols));
+      builder().projection(RowSetTestUtils.projectList(projCols));
     }
 
     public void setProjection(List<SchemaPath> projection) {
-      builder().setProjection(projection);
+      builder().projection(projection);
     }
 
     public ScanFixture build() {
@@ -150,7 +150,7 @@ public class ScanTestUtils {
    * @return schema with the metadata columns appended to the table columns
    */
 
-  public static TupleMetadata expandMetadata(TupleMetadata base, FileMetadataManager metadataProj, int dirCount) {
+  public static TupleMetadata expandMetadata(TupleMetadata base, ImplicitColumnManager metadataProj, int dirCount) {
     TupleMetadata metadataSchema = new TupleSchema();
     for (ColumnMetadata col : base) {
       metadataSchema.addColumn(col);

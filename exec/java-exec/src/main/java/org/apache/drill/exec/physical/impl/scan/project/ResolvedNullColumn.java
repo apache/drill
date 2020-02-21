@@ -27,7 +27,6 @@ import org.apache.drill.exec.record.metadata.ColumnMetadata;
  * mapping) and a null column spec (provides the information needed to create
  * the required null vectors.)
  */
-
 public class ResolvedNullColumn extends ResolvedColumn implements NullColumnSpec {
 
   private final String name;
@@ -60,14 +59,12 @@ public class ResolvedNullColumn extends ResolvedColumn implements NullColumnSpec
   public void setType(MajorType type) {
 
     // Adjust the default value if needed.
-
     if (this.type != null && type.getMinorType() != this.type.getMinorType()) {
       defaultValue = null;
     }
 
     // Update the actual type based on what the null-column
     // mechanism chose for this column.
-
     this.type = type;
   }
 

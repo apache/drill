@@ -22,19 +22,20 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.impl.scan.ScanTestUtils;
 import org.apache.drill.exec.physical.impl.scan.project.AbstractUnresolvedColumn.UnresolvedColumn;
 import org.apache.drill.exec.physical.impl.scan.project.AbstractUnresolvedColumn.UnresolvedWildcardColumn;
 import org.apache.drill.exec.physical.impl.scan.project.ScanLevelProjection.ScanProjectionType;
-import org.apache.drill.exec.physical.resultSet.ProjectionSet;
-import org.apache.drill.exec.physical.resultSet.ProjectionSet.ColumnReadProjection;
-import org.apache.drill.exec.physical.resultSet.impl.RowSetTestUtils;
+import org.apache.drill.exec.physical.resultSet.impl.ProjectionFilter;
 import org.apache.drill.exec.physical.resultSet.project.RequestedColumn;
 import org.apache.drill.exec.physical.resultSet.project.RequestedTuple;
+import org.apache.drill.exec.physical.rowSet.RowSetTestUtils;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
@@ -94,9 +95,9 @@ public class TestScanLevelProjection extends SubOperatorTest {
         .add("d", MinorType.INT)
         .buildSchema();
 
-    ProjectionSet projSet = scanProj.projectionSet().build();
-    assertTrue(projSet.readProjection(readerSchema.metadata("a")).isProjected());
-    assertFalse(projSet.readProjection(readerSchema.metadata("d")).isProjected());
+    ProjectionFilter projSet = scanProj.readerProjection();
+    assertTrue(projSet.isProjected(readerSchema.metadata("a")));
+    assertFalse(projSet.isProjected(readerSchema.metadata("d")));
   }
 
   /**
@@ -157,15 +158,10 @@ public class TestScanLevelProjection extends SubOperatorTest {
     // Verify the projection set as if we were a reader. Note that the
     // projection type is used here for testing; should not be used by
     // an actual reader.
-
-    ProjectionSet projSet = scanProj.projectionSet().build();
-    assertTrue(projSet.isProjected("a"));
-    ColumnReadProjection aProj = projSet.readProjection(readerSchema.metadata("a"));
-    assertTrue(aProj.isProjected());
-    ColumnReadProjection cProj = projSet.readProjection(readerSchema.metadata("c"));
-    assertTrue(cProj.isProjected());
-    assertFalse(projSet.readProjection(readerSchema.metadata("d")).isProjected());
-    assertFalse(projSet.isProjected("d"));
+    ProjectionFilter projSet = scanProj.readerProjection();
+    assertTrue(projSet.isProjected(readerSchema.metadata("a")));
+    assertTrue(projSet.isProjected(readerSchema.metadata("c")));
+    assertFalse(projSet.isProjected(readerSchema.metadata("d")));
   }
 
   /**
@@ -207,10 +203,9 @@ public class TestScanLevelProjection extends SubOperatorTest {
         .add("c", MinorType.INT)
         .buildSchema();
 
-    ProjectionSet projSet = scanProj.projectionSet().build();
-    ColumnReadProjection aProj = projSet.readProjection(readerSchema.metadata("a"));
-    assertTrue(aProj.isProjected());
-    assertFalse(projSet.readProjection(readerSchema.metadata("c")).isProjected());
+    ProjectionFilter projSet = scanProj.readerProjection();
+    assertTrue(projSet.isProjected(readerSchema.metadata("a")));
+    assertFalse(projSet.isProjected(readerSchema.metadata("c")));
   }
 
   /**
@@ -249,9 +244,9 @@ public class TestScanLevelProjection extends SubOperatorTest {
         .add("c", MinorType.INT)
         .buildSchema();
 
-    ProjectionSet projSet = scanProj.projectionSet().build();
-    assertTrue(projSet.readProjection(readerSchema.metadata("a")).isProjected());
-    assertTrue(projSet.readProjection(readerSchema.metadata("c")).isProjected());
+    ProjectionFilter projSet = scanProj.readerProjection();
+    assertTrue(projSet.isProjected(readerSchema.metadata("a")));
+    assertTrue(projSet.isProjected(readerSchema.metadata("c")));
   }
 
   /**
@@ -277,8 +272,8 @@ public class TestScanLevelProjection extends SubOperatorTest {
         .add("a", MinorType.INT)
         .buildSchema();
 
-    ProjectionSet projSet = scanProj.projectionSet().build();
-    assertFalse(projSet.readProjection(readerSchema.metadata("a")).isProjected());
+    ProjectionFilter projSet = scanProj.readerProjection();
+    assertFalse(projSet.isProjected(readerSchema.metadata("a")));
   }
 
   /**
@@ -310,9 +305,9 @@ public class TestScanLevelProjection extends SubOperatorTest {
         .add("c", MinorType.INT)
         .buildSchema();
 
-    ProjectionSet projSet = scanProj.projectionSet().build();
-    assertTrue(projSet.readProjection(readerSchema.metadata("a")).isProjected());
-    assertTrue(projSet.readProjection(readerSchema.metadata("c")).isProjected());
+    ProjectionFilter projSet = scanProj.readerProjection();
+    assertTrue(projSet.isProjected(readerSchema.metadata("a")));
+    assertTrue(projSet.isProjected(readerSchema.metadata("c")));
   }
 
   /**
@@ -345,14 +340,14 @@ public class TestScanLevelProjection extends SubOperatorTest {
   }
 
   @Test
-  public void testEmptyOutputSchema() {
-    TupleMetadata outputSchema = new SchemaBuilder().buildSchema();
+  public void testEmptyProvidedSchema() {
+    TupleMetadata providedSchema = new SchemaBuilder().buildSchema();
 
     // Simulate SELECT a
     final ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectList("a"),
         ScanTestUtils.parsers(),
-        outputSchema);
+        providedSchema);
 
     assertEquals(ScanProjectionType.EXPLICIT, scanProj.projectionType());
 
@@ -362,8 +357,8 @@ public class TestScanLevelProjection extends SubOperatorTest {
   }
 
   @Test
-  public void testOutputSchemaWildcard() {
-    TupleMetadata outputSchema = new SchemaBuilder()
+  public void testProvidedSchemaWildcard() {
+    TupleMetadata providedSchema = new SchemaBuilder()
         .add("a", MinorType.INT)
         .add("b", MinorType.BIGINT)
         .buildSchema();
@@ -371,7 +366,7 @@ public class TestScanLevelProjection extends SubOperatorTest {
     final ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectAll(),
         ScanTestUtils.parsers(),
-        outputSchema);
+        providedSchema);
 
     assertEquals(ScanProjectionType.SCHEMA_WILDCARD, scanProj.projectionType());
 
@@ -379,32 +374,32 @@ public class TestScanLevelProjection extends SubOperatorTest {
     ColumnProjection aCol = scanProj.columns().get(0);
     assertEquals("a", aCol.name());
     assertTrue(aCol instanceof UnresolvedColumn);
-    assertSame(outputSchema.metadata("a"), ((UnresolvedColumn) aCol).metadata());
+    assertSame(providedSchema.metadata("a"), ((UnresolvedColumn) aCol).metadata());
     ColumnProjection bCol = scanProj.columns().get(1);
     assertEquals("b", bCol.name());
     assertTrue(bCol instanceof UnresolvedColumn);
-    assertSame(outputSchema.metadata("b"), ((UnresolvedColumn) bCol).metadata());
+    assertSame(providedSchema.metadata("b"), ((UnresolvedColumn) bCol).metadata());
 
-    ProjectionSet projSet = scanProj.projectionSet().build();
-    assertTrue(projSet.readProjection(outputSchema.metadata("a")).isProjected());
-    assertTrue(projSet.readProjection(outputSchema.metadata("b")).isProjected());
+    ProjectionFilter projSet = scanProj.readerProjection();
+    assertTrue(projSet.isProjected(providedSchema.metadata("a")));
+    assertTrue(projSet.isProjected(providedSchema.metadata("b")));
   }
 
   @Test
-  public void testOutputSchemaWildcardSpecialCols() {
-    TupleMetadata outputSchema = new SchemaBuilder()
+  public void testProvidedSchemaWildcardSpecialCols() {
+    TupleMetadata providedSchema = new SchemaBuilder()
         .add("a", MinorType.INT)
         .add("b", MinorType.BIGINT)
         .add("c", MinorType.VARCHAR)
         .buildSchema();
 
     // Mark b as special; not expanded in wildcard.
-    outputSchema.metadata("b").setBooleanProperty(ColumnMetadata.EXCLUDE_FROM_WILDCARD, true);
+    providedSchema.metadata("b").setBooleanProperty(ColumnMetadata.EXCLUDE_FROM_WILDCARD, true);
 
     final ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectAll(),
         ScanTestUtils.parsers(),
-        outputSchema);
+        providedSchema);
 
     assertEquals(ScanProjectionType.SCHEMA_WILDCARD, scanProj.projectionType());
 
@@ -418,17 +413,17 @@ public class TestScanLevelProjection extends SubOperatorTest {
    * schema, except that the projection type is different.
    */
   @Test
-  public void testStrictOutputSchemaWildcard() {
-    TupleMetadata outputSchema = new SchemaBuilder()
+  public void testStrictProvidedSchemaWildcard() {
+    TupleMetadata providedSchema = new SchemaBuilder()
         .add("a", MinorType.INT)
         .add("b", MinorType.BIGINT)
         .buildSchema();
-    outputSchema.setProperty(TupleMetadata.IS_STRICT_SCHEMA_PROP, Boolean.TRUE.toString());
+    providedSchema.setProperty(TupleMetadata.IS_STRICT_SCHEMA_PROP, Boolean.TRUE.toString());
 
     final ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectAll(),
         ScanTestUtils.parsers(),
-        outputSchema);
+        providedSchema);
 
     assertEquals(ScanProjectionType.STRICT_SCHEMA_WILDCARD, scanProj.projectionType());
 
@@ -441,13 +436,132 @@ public class TestScanLevelProjection extends SubOperatorTest {
     // Make up a reader schema and test the projection set.
     TupleMetadata readerSchema = new SchemaBuilder()
         .add("a", MinorType.INT)
+        .add("b", MinorType.BIGINT)
+        .add("c", MinorType.INT)
+        .buildSchema();
+
+    ProjectionFilter projSet = scanProj.readerProjection();
+    assertTrue(projSet.isProjected(readerSchema.metadata("a")));
+    assertTrue(projSet.isProjected(readerSchema.metadata("b")));
+    assertFalse(projSet.isProjected(readerSchema.metadata("c")));
+  }
+
+  @Test
+  public void testProvidedSchemaTypeMismatch() {
+    TupleMetadata providedSchema = new SchemaBuilder()
+        .add("a", MinorType.INT)
+        .add("b", MinorType.BIGINT)
+        .buildSchema();
+
+    final ScanLevelProjection scanProj = ScanLevelProjection.build(
+        RowSetTestUtils.projectAll(),
+        ScanTestUtils.parsers(),
+        providedSchema);
+
+    // Make up a reader schema and test the projection set.
+    // Schema deliberately conflicts with the provided schema.
+    TupleMetadata readerSchema = new SchemaBuilder()
+        .add("a", MinorType.INT)
         .add("b", MinorType.INT)
         .add("c", MinorType.INT)
         .buildSchema();
 
-    ProjectionSet projSet = scanProj.projectionSet().build();
-    assertTrue(projSet.readProjection(readerSchema.metadata("a")).isProjected());
-    assertTrue(projSet.readProjection(readerSchema.metadata("b")).isProjected());
-    assertFalse(projSet.readProjection(readerSchema.metadata("c")).isProjected());
+    ProjectionFilter projSet = scanProj.readerProjection();
+    try {
+      projSet.isProjected(readerSchema.metadata("b"));
+      fail();
+    } catch (UserException e) {
+      // Expected
+    }
+  }
+
+  @Test
+  public void testProvidedSchemaModeMismatch() {
+    TupleMetadata providedSchema = new SchemaBuilder()
+        .add("a", MinorType.INT)
+        .add("b", MinorType.BIGINT)
+        .buildSchema();
+    providedSchema.setProperty(TupleMetadata.IS_STRICT_SCHEMA_PROP, Boolean.TRUE.toString());
+
+    final ScanLevelProjection scanProj = ScanLevelProjection.build(
+        RowSetTestUtils.projectAll(),
+        ScanTestUtils.parsers(),
+        providedSchema);
+
+    // Make up a reader schema and test the projection set.
+    // Mode deliberately conflicts with the provided schema
+    TupleMetadata readerSchema = new SchemaBuilder()
+        .add("a", MinorType.INT)
+        .addNullable("b", MinorType.INT)
+        .add("c", MinorType.INT)
+        .buildSchema();
+
+    ProjectionFilter projSet = scanProj.readerProjection();
+    try {
+      projSet.isProjected(readerSchema.metadata("b"));
+      fail();
+    } catch (UserException e) {
+      // Expected
+    }
+  }
+
+  /**
+   * Non-strict provided schema, reader that offers an extra column,
+   * projection list includes the column.
+   */
+  @Test
+  public void testNonStrictProvidedSchema() {
+    TupleMetadata providedSchema = new SchemaBuilder()
+        .add("a", MinorType.INT)
+        .add("b", MinorType.BIGINT)
+        .buildSchema();
+
+    final ScanLevelProjection scanProj = ScanLevelProjection.build(
+        RowSetTestUtils.projectList("a", "c"),
+        ScanTestUtils.parsers(),
+        providedSchema);
+
+    // Make up a reader schema and test the projection set.
+    TupleMetadata readerSchema = new SchemaBuilder()
+        .add("a", MinorType.INT)
+        .add("b", MinorType.BIGINT)
+        .add("c", MinorType.INT)
+        .buildSchema();
+
+    ProjectionFilter projSet = scanProj.readerProjection();
+    assertTrue(projSet.isProjected(readerSchema.metadata("a")));
+    assertFalse(projSet.isProjected(readerSchema.metadata("b")));
+    assertTrue(projSet.isProjected(readerSchema.metadata("c")));
+  }
+
+  /**
+   * Strict provided schema, reader that offers an extra column,
+   * projection list includes the column. However, column is
+   * not projected for reader.
+   */
+  @Test
+  public void testStrictProvidedSchema() {
+    TupleMetadata providedSchema = new SchemaBuilder()
+        .add("a", MinorType.INT)
+        .add("b", MinorType.BIGINT)
+        .buildSchema();
+    providedSchema.setProperty(TupleMetadata.IS_STRICT_SCHEMA_PROP, Boolean.TRUE.toString());
+
+    final ScanLevelProjection scanProj = ScanLevelProjection.build(
+        RowSetTestUtils.projectList("a", "c"),
+        ScanTestUtils.parsers(),
+        providedSchema);
+
+    // Make up a reader schema and test the projection set.
+    TupleMetadata readerSchema = new SchemaBuilder()
+        .add("a", MinorType.INT)
+        .add("b", MinorType.BIGINT)
+        .add("c", MinorType.INT)
+        .buildSchema();
+
+    ProjectionFilter projSet = scanProj.readerProjection();
+    assertTrue(projSet.isProjected(readerSchema.metadata("a")));
+    assertFalse(projSet.isProjected(readerSchema.metadata("b")));
+    assertFalse(projSet.isProjected(readerSchema.metadata("c")));
   }
 }

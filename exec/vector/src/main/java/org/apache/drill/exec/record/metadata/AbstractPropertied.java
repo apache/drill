@@ -34,7 +34,8 @@ public class AbstractPropertied implements Propertied {
     setProperties(from.properties);
   }
 
-  protected boolean hasProperties() {
+  @Override
+  public boolean hasProperties() {
     return properties != null && ! properties.isEmpty();
   }
 

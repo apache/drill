@@ -25,28 +25,8 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
 
 /**
  * Negotiates the table schema with the scanner framework and provides
- * context information for the reader. In a typical scan, the physical
- * plan provides the project list: the set of columns that the query
- * expects. Readers provide a table schema: the set of columns actually
- * available. The scan framework combines the two lists to determine
- * the available table columns that must be read, along with any additional
- * to be added. Additional columns can be file metadata (if the storage
- * plugin requests them), or can be null columns added for projected
- * columns that don't actually exist in the table.
- * <p>
- * The reader provides the table schema in one of two ways:
- * <ul>
- * <li>If the reader is of "early schema" type, then the reader calls
- * {@link #setTableSchema(TupleMetadata)} to provide that schema.</li>
- * <li>If the reader is of "late schema" type, then the reader discovers
- * the schema as the data is read, calling the
- * {@link RowSetLoader#addColumn()} method to add each column as it is
- * discovered.
- * <p>
- * Either way, the project list from the physical plan determines which
- * table columns are materialized and which are not. Readers are provided
- * for all table columns for readers that must read sequentially, but
- * only the materialized columns are written to value vectors.
+ * context information for the reader. Scans use either a "dynamic" or
+ * a defined schema.
  * <p>
  * Regardless of the schema type, the result of building the schema is a
  * result set loader used to prepare batches for use in the query. The reader
@@ -54,8 +34,69 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
  * values. Or for efficiency, the reader can check the column metadata to
  * determine if a column is projected, and if not, then don't even read
  * the column from the input source.
+ *
+ * <h4>Defined Schema</h4>
+ *
+ * If defined, the execution plan provides the output schema (presumably
+ * computed from an accurate metadata source.) The reader must populate
+ * the proscribed rows, performing column type conversions as needed.
+ * The reader can determine if the schema is defined by calling
+ * {@link hasOutputSchema()}.
+ * <p>
+ * At present, the scan framework filters the "provided schema" against
+ * the project list so that this class presents only the actual output
+ * schema. Future versions may do the filtering in the planner, but
+ * the result for readers will be the same either way.
+ *
+ * <h4>Dynamic Schema</h4>
+ *
+ * A dynamic schema occurs when the plan does not specify a schema.
+ * Drill is unique in its support for "schema on read" in the sense
+ * that Drill does not know the schema until the reader defines it at
+ * scan time.
+ * <p>
+ * The reader and scan framework coordinate to form the output schema.
+ * The reader offers the columns it has available. The scan framework
+ * uses the projection list to decide which to accept. Either way the
+ * scan framework provides a column reader for the column (returning a
+ * do-nothing "dummy" reader if the column is unprojected.)
+ * <p>
+ * With a dynamic schema, readers offer a schema in one of two ways:
+ * <p>
+ * The reader provides the table schema in one of two ways: early schema
+ * or late schema. Either way, the project list from the physical plan
+ * determines which
+ * table columns are materialized and which are not. Readers are provided
+ * for all table columns for readers that must read sequentially, but
+ * only the materialized columns are written to value vectors.
+ *
+ * <h4>Early Dynamic Schema</h4>
+ *
+ * Some readers can determine the source schema at the start of a scan.
+ * For example, a CSV file has headers, a Parquet file has footers, both
+ * of which define a schema. This case is called "early schema." The
+ * reader fefines the schema by calling
+ * {@link #tableSchema(TupleMetadata)} to provide the known schema.
+ *
+ * <h4>Late Dynamic Schema</h4>
+ *
+ * Other readers don't know the input schema until the reader actually
+ * reads the data. For example, JSON typically has no schema, but does
+ * have sufficient structure (name/value pairs) to infer one.
+ * <p>
+ * The late schema reader calls {@link RowSetLoader#addColumn()} to
+ * add each column as it is discovered during the scan.
+ * <p>
+ * Note that, to avoid schema conflicts, a late schema reader
+ * <i><b>must</b></i> define the full set of columns in the first batch,
+ * and must stick to that schema for all subsequent batches. This allows
+ * the reader to look one batch ahead to learn the columns.
+ * <p>
+ * Drill, however, cannot predict the future. Without a defined schema,
+ * downstream operators cannot know which columns might appear later
+ * in the scan, with which types. Today this is a strong guideline.
+ * Future versions may enforce this rule.
  */
-
 public interface SchemaNegotiator {
 
   OperatorContext context();
@@ -64,20 +105,43 @@ public interface SchemaNegotiator {
    * Specify an advanced error context which allows the reader to
    * fill in custom context values.
    */
-
   void setErrorContext(CustomErrorContext context);
 
-  /*
-   * The name of the user running the query.
+  /**
+   * Name of the user running the query.
    */
-
   String userName();
+
+  /**
+   * Report if the execution plan defines a provided schema. If so,
+   * the reader should use that schema, converting or ignoring columns
+   * as needed. A scan without a provided schema has a "dynamic" schema
+   * to be defined by the scan operator itself along with the column
+   * projection list.
+   *
+   * @return {@code true} if the execution plan defines the output
+   * schema, {@code false} if the schema should be computed dynamically
+   * from the source schema and column projections
+   */
+  boolean hasProvidedSchema();
+
+  /**
+   * Returns the provided schema, if defined. The provided schema is a
+   * description of the source schema viewed as a Drill schema.
+   *
+   * @return the output schema, if {@link #hasProvidedSchema()} returns
+   * {@code true}, {@code null} otherwise
+   */
+  TupleMetadata providedSchema();
 
   /**
    * Specify the table schema if this is an early-schema reader. Need
    * not be called for a late-schema readers. The schema provided here,
    * if any, is a base schema: the reader is free to discover additional
    * columns during the read.
+   * <p>
+   * Should only be called if the schema is dynamic, that is, if
+   * {@link #hasProvidedSchema()} returns false.
    *
    * @param schema the table schema if known at open time
    * @param isComplete true if the schema is complete: if it can be used
@@ -85,8 +149,7 @@ public interface SchemaNegotiator {
    * false if the schema is partial: if the reader must read rows to
    * determine the full schema
    */
-
-  void setTableSchema(TupleMetadata schema, boolean isComplete);
+  void tableSchema(TupleMetadata schema, boolean isComplete);
 
   /**
    * Set the preferred batch size (which may be overridden by the
@@ -94,8 +157,7 @@ public interface SchemaNegotiator {
    *
    * @param maxRecordsPerBatch preferred number of record per batch
    */
-
-  void setBatchSize(int maxRecordsPerBatch);
+  void batchSize(int maxRecordsPerBatch);
 
   /**
    * Build the schema, plan the required projections and static
@@ -108,7 +170,6 @@ public interface SchemaNegotiator {
    * @return the loader for the table with columns arranged in table
    * schema order
    */
-
   ResultSetLoader build();
 
   /**
@@ -123,7 +184,6 @@ public interface SchemaNegotiator {
    * row count, false if at least one column is projected and so
    * data must be written using the loader
    */
-
   boolean isProjectionEmpty();
 
   /**

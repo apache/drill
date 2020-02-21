@@ -254,7 +254,7 @@ public class PerformanceTool {
         vector.allocateNew(ROW_COUNT, 5 * ROW_COUNT);
         IntColumnWriter colWriter = new IntColumnWriter(vector.getDataVector());
         ColumnMetadata colSchema = MetadataUtils.fromField(vector.getField());
-        ArrayObjectWriter arrayWriter = ScalarArrayWriter.build(colSchema, vector, colWriter, null);
+        ArrayObjectWriter arrayWriter = ScalarArrayWriter.build(colSchema, vector, colWriter);
         TestWriterIndex index = new TestWriterIndex();
         arrayWriter.events().bindIndex(index);
         arrayWriter.events().startWrite();
