@@ -19,20 +19,24 @@ package org.apache.drill.exec.server.rest;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
+import org.apache.drill.exec.proto.UserProtos.QueryResultsMode;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
-import org.apache.drill.exec.proto.UserProtos.QueryResultsMode;
+import org.apache.drill.exec.rpc.user.InboundImpersonationManager;
+import org.apache.drill.exec.server.options.SessionOptionManager;
+import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.exec.work.WorkManager;
+import org.apache.parquet.Strings;
 
 import javax.xml.bind.annotation.XmlRootElement;
-
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.util.Collection;
@@ -48,13 +52,20 @@ public class QueryWrapper {
   private final String queryType;
   private final int autoLimitRowCount;
 
+  private final String userName;
+
   private static MemoryMXBean memMXBean = ManagementFactory.getMemoryMXBean();
 
   @JsonCreator
-  public QueryWrapper(@JsonProperty("query") String query, @JsonProperty("queryType") String queryType, @JsonProperty("autoLimit") String autoLimit) {
+  public QueryWrapper(
+    @JsonProperty("query") String query,
+    @JsonProperty("queryType") String queryType,
+    @JsonProperty("autoLimit") String autoLimit,
+    @JsonProperty("userName") String userName) {
     this.query = query;
     this.queryType = queryType.toUpperCase();
     this.autoLimitRowCount = autoLimit != null && autoLimit.matches("[0-9]+") ? Integer.valueOf(autoLimit) : 0;
+    this.userName = userName;
   }
 
   public String getQuery() {
@@ -75,6 +86,8 @@ public class QueryWrapper {
         .setResultsMode(QueryResultsMode.STREAM_FULL)
         .setAutolimitRowcount(autoLimitRowCount)
         .build();
+
+    applyUserName(workManager, webUserConnection);
 
     int defaultMaxRows = webUserConnection.getSession().getOptions().getOption(ExecConstants.QUERY_MAX_ROWS).num_val.intValue();
     int maxRows;
@@ -129,6 +142,30 @@ public class QueryWrapper {
 
     // Return the QueryResult.
     return new QueryResult(queryId, webUserConnection, webUserConnection.results);
+  }
+
+  private void applyUserName(WorkManager workManager, WebUserConnection webUserConnection) {
+    SessionOptionManager options = webUserConnection.getSession().getOptions();
+    DrillConfig config = workManager.getContext().getConfig();
+    if (!Strings.isNullOrEmpty(userName)) {
+      if (!config.getBoolean(ExecConstants.IMPERSONATION_ENABLED)) {
+        throw UserException.permissionError().message("User impersonation is not enabled").build(logger);
+      }
+      InboundImpersonationManager inboundImpersonationManager = new InboundImpersonationManager();
+      boolean isAdmin = !config.getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED) ||
+        ImpersonationUtil.hasAdminPrivileges(webUserConnection.getSession().getCredentials().getUserName(),
+          ExecConstants.ADMIN_USERS_VALIDATOR.getAdminUsers(options),
+          ExecConstants.ADMIN_USER_GROUPS_VALIDATOR.getAdminUserGroups(options));
+      if (isAdmin) {
+        // Admin user can impersonate any user they want to (when authentication is disabled, all users are admin)
+        webUserConnection.getSession().replaceUserCredentials(
+          inboundImpersonationManager,
+          UserBitShared.UserCredentials.newBuilder().setUserName(userName).build());
+      } else {
+        // Check configured impersonation rules to see if this user is allowed to impersonate the given user
+        inboundImpersonationManager.replaceUserOnSession(userName, webUserConnection.getSession());
+      }
+    }
   }
 
   //Detect possible excess heap

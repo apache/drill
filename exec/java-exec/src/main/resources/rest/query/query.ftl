@@ -43,15 +43,14 @@
 
 <#include "*/runningQuery.ftl">
 
-  <#if model.isOnlyImpersonationEnabled()>
-     <div class="form-group">
-       <label for="userName">User Name</label>
-       <input type="text" size="30" name="userName" id="userName" placeholder="User Name">
-     </div>
-  </#if>
-
   <form role="form" id="queryForm" action="/query" method="POST">
+    <#if model.isOnlyImpersonationEnabled()>
       <div class="form-group">
+        <label for="userName">User Name</label>
+        <input type="text" size="30" name="userName" id="userName" placeholder="User Name">
+      </div>
+    </#if>
+    <div class="form-group">
       <label for="queryType">Query Type</label>
       <div class="radio">
         <label>
