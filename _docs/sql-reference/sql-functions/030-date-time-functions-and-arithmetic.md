@@ -197,7 +197,7 @@ Add 1 day 2 and 1/2 hours and 45.100 seconds to the time 22:55:55.
     +---------------+
     1 row selected (0.106 seconds)  
 
-##DATE_DIFF  
+## DATE_DIFF  
 Returns the difference of a date/time and a number of days/hours, or of a date/time and date/time interval.  
 
 **NOTE:** You can use the Hive `DATEDIFF()` function in Drill with string values, as shown:  
@@ -231,7 +231,7 @@ However, for date and timestamp values, use the `DATE_DIFF` function and convert
 *interval* is the keyword interval.  
 *expr* is an interval expression, such as the name of a data source column containing interval data.  
 
-###DATE_DIFF Examples  
+### DATE_DIFF Examples  
 The following examples show how to use the syntax variations.  
 
 **DATE_DIFF(keyword literal, integer) Syntax Example**  
@@ -354,15 +354,15 @@ Returns the difference between a date/time and a number of days/hours, or betwee
 
 `DATE_SUB(keyword literal, integer)`  
 `DATE_SUB(keyword literal, interval expr)`  
-`DATE_ADD(column, integer)`  
+`DATE_SUB(column, integer)`  
 `DATE_SUB(column, interval expr)`  
 
 *keyword* is the word date, time, or timestamp.  
 *literal* is a date, time, or timestamp literal. For example, a date in yyyy-mm-dd format enclosed in single quotation marks.   
-*integer* is a number of days to subtract from the date, time, or timestamp.
+*integer* is a number of days to subtract from the date, time, or timestamp.  
 *column* is date, time, or timestamp data in the data source.  
 *interval* is the keyword interval.  
-*expr* is an interval expression, such as the name of a data source column containing interval data.
+*expr* is an interval expression, such as the name of a data source column containing interval data.  
 
 ### DATE_SUB Examples
 The following examples show how to apply the syntax variations.
@@ -679,17 +679,17 @@ SELECT UNIX_TIMESTAMP('2015-05-29 08:18:53.0', 'yyyy-MM-dd HH:mm:ss.SSS') FROM (
 1 row selected (0.171 seconds)  
 ```    
 
-##NEARESTDATE  
+## NEARESTDATE  
 Quickly and easily aggregates timestamp data by various units of time.   
 
 **Note:** Drill 1.16 and later supports the NEARESTDATE function.
 
-###NEARESTDATE Syntax  
+### NEARESTDATE Syntax  
 
 NEARESTDATE(*column*, '*interval*' )   
     
 
-###NEARESTDATE Usage Notes 
+### NEARESTDATE Usage Notes 
 * Use with COUNT and GROUP BY to aggregate timestamp data. 
 * *column* is a data source column with timestamp values.  
 * *interval* is any of the following units of time: 
@@ -707,7 +707,7 @@ NEARESTDATE(*column*, '*interval*' )
 	* 15SECOND
 	* SECOND  
 
-###NEARESTDATE Examples   
+### NEARESTDATE Examples   
 
 The following example uses the NEARESTDATE function to aggregate hire dates by year:
 
@@ -733,15 +733,15 @@ The following example applies the NEARESTDATE function to a timestamp value (201
 	+-----------------------+-----------------------+-----------------------+-----------------------+-----------------------+-----------------------+-----------------------+-----------------------+-----------------------+-----------------------+-----------------------+-----------------------+-----------------------+
 	
 
-##TIMESTAMPADD  
+## TIMESTAMPADD  
 Adds an interval of time, in the given time units, to a datetime expression.  
 
 **Note:** Drill 1.15 and later supports the TIMESTAMPADD function.   
 
-###TIMESTAMPADD Syntax  
+### TIMESTAMPADD Syntax  
 TIMESTAMPADD(*time\_unit, interval, datetime\_expression*)  
 
-###TIMESTAMPADD Usage Notes  
+### TIMESTAMPADD Usage Notes  
 - *datetime\_expression* is a column or literal with date, time, or timestamp values. 
 - *time\_unit* is any of the following: Nanosecond, Microsecond, Second, Minute, Hour, Day, Month, Year, Week, Quarter
 - *interval* is the amount of *time\_unit* to add. 
@@ -756,7 +756,7 @@ TIMESTAMPADD(*time\_unit, interval, datetime\_expression*)
 		+-----------+  
 
 
-###TIMESTAMPADD Examples  
+### TIMESTAMPADD Examples  
 
 Add three years to a date literal:  
 
@@ -790,15 +790,15 @@ Dates in column[0] before applying the TIMESTAMPADD function:
 	+-------------+
 
 
-##TIMESTAMPDIFF  
+## TIMESTAMPDIFF  
 Calculates an interval of time, in the given time units, by subtracting *datetime\_expression1* from *datetime\_expression2* (*datetime\_expression2* − *datetime\_expression1*).  
 
 **Note:** Drill 1.15 and later supports the TIMESTAMPDIFF function.       
 
-###TIMESTAMPDIFF Syntax  
+### TIMESTAMPDIFF Syntax  
 TIMESTAMPDIFF(*time\_unit, datetime\_expression1, datetime\_expression2*)  
 
-###TIMESTAMPDIFF Usage Notes  
+### TIMESTAMPDIFF Usage Notes  
 - *datetime\_expression* is a column or literal with date, time, or timestamp values. 
 - *time\_unit* is any of the following: Nanosecond, Microsecond, Second, Minute, Hour, Day, Month, Year, Week, Quarter
 - You can include two date expressions, or one date expression with one datetime expression. 
@@ -813,7 +813,7 @@ TIMESTAMPDIFF(*time\_unit, datetime\_expression1, datetime\_expression2*)
 		+---------+  
  
 
-###TIMESTAMPDIFF Examples   
+### TIMESTAMPDIFF Examples   
 
 Subtracts the date literal '1982-05-06' from the date literal '2018-12-26' and returns the difference in months:  
 	
