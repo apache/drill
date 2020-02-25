@@ -87,13 +87,51 @@
   </form>
 
   <script>
+    // Remember form field values over page reloads
+    $("input[type=text],input[type=checkbox],input[type=radio],select").each(function () {
+      var $input = $(this);
+      var savedKey = "saved_query_" + $input.attr("name");
+      var savedValue = sessionStorage.getItem(savedKey);
+      if ($input.attr("type") === "checkbox") {
+        if (savedValue === "true") {
+          $input.prop("checked", true);
+        }
+        if (savedValue === "false") {
+          $input.prop("checked", false);
+        }
+        $input.change(function () {
+          sessionStorage.setItem(savedKey, String($(this).prop("checked")));
+        });
+      } else if ($input.attr("type") === "radio") {
+        var value = $input.val();
+        if (savedValue === value) {
+          $input.prop("checked", true);
+        }
+        $input.change(function () {
+          sessionStorage.setItem(savedKey, $(this).val());
+        });
+      } else {
+        if (typeof savedValue === "string") {
+          $input.val(savedValue);
+        }
+        $input.change(function () {
+          sessionStorage.setItem(savedKey, $(this).val());
+        });
+      }
+    });
+    // Hidden text input for form-submission
+    var queryText = $('input[name="query"]');
     ace.require("ace/ext/language_tools");
     var editor = ace.edit("query-editor-format");
-    var queryText = $('input[name="query"]');
-    //Hidden text input for form-submission
     editor.getSession().on("change", function () {
-      queryText.val(editor.getSession().getValue());
+      var text = editor.getSession().getValue();
+      queryText.val(text);
+      sessionStorage.setItem("saved_query_query", text);
     });
+    var savedQueryText = sessionStorage.getItem('saved_query_query');
+    if (savedQueryText) {
+      editor.getSession().setValue(savedQueryText);
+    }
     editor.setAutoScrollEditorIntoView(true);
     editor.setOption("maxLines", 25);
     editor.setOption("minLines", 12);
