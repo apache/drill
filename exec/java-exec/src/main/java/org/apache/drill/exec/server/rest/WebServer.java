@@ -248,12 +248,6 @@ public class WebServer implements AutoCloseable {
       servletContextHandler.addFilter(CsrfTokenValidateFilter.class, path, EnumSet.of(DispatcherType.REQUEST));
     }
 
-    if (isOnlyImpersonationEnabled(workManager.getContext().getConfig())) {
-      for (String path : new String[]{"/query", "/query.json"}) {
-        servletContextHandler.addFilter(UserNameFilter.class, path, EnumSet.of(DispatcherType.REQUEST));
-      }
-    }
-
     if (config.getBoolean(ExecConstants.HTTP_CORS_ENABLED)) {
       FilterHolder holder = new FilterHolder(CrossOriginFilter.class);
       holder.setInitParameter(CrossOriginFilter.ALLOWED_ORIGINS_PARAM,

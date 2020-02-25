@@ -207,6 +207,12 @@ public class Drillbit implements AutoCloseable {
     return webServer.getPort();
   }
 
+  @VisibleForTesting
+  public WorkManager getManager() { return manager; }
+
+  @VisibleForTesting
+  public WebServer getWebServer() { return webServer; }
+
   public void run() throws Exception {
     final Stopwatch w = Stopwatch.createStarted();
     logger.debug("Startup begun.");

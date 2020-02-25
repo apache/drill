@@ -42,7 +42,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -96,10 +95,11 @@ public class QueryResources {
   @Produces(MediaType.TEXT_HTML)
   public Viewable submitQuery(@FormParam("query") String query,
                               @FormParam("queryType") String queryType,
-                              @FormParam("autoLimit") String autoLimit) throws Exception {
+                              @FormParam("autoLimit") String autoLimit,
+                              @FormParam("userName") String userName) throws Exception {
     try {
       final String trimmedQueryString = CharMatcher.is(';').trimTrailingFrom(query.trim());
-      final QueryResult result = submitQueryJSON(new QueryWrapper(trimmedQueryString, queryType, autoLimit));
+      final QueryResult result = submitQueryJSON(new QueryWrapper(trimmedQueryString, queryType, autoLimit, userName));
       List<Integer> rowsPerPageValues = work.getContext().getConfig().getIntList(ExecConstants.HTTP_WEB_CLIENT_RESULTSET_ROWS_PER_PAGE_VALUES);
       Collections.sort(rowsPerPageValues);
       final String rowsPerPageValuesAsStr = Joiner.on(",").join(rowsPerPageValues);

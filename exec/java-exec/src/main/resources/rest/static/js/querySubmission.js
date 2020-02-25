@@ -83,25 +83,6 @@ function doSubmitQueryWithAutoLimit() {
 //Submit Query
 function submitQuery() {
     popupAndWait();
-    //Submit query
-    $.ajax({
-        type: "POST",
-        beforeSend: function (request) {
-            if (typeof userName !== 'undefined' && userName !== null && userName.length > 0) {
-              request.setRequestHeader("User-Name", userName);
-            }
-        },
-        url: "/query",
-        data: $("#queryForm").serializeArray(),
-        success: function (response) {
-            closePopup();
-            var newDoc = document.open("text/html", "replace");
-            newDoc.write(response);
-            newDoc.close();
-        },
-        error: function (request, textStatus, errorThrown) {
-            closePopup();
-            alert(errorThrown);
-        }
-    });
+    $("#queryForm").submit();
+    $(window).bind("pageshow", function(event) { closePopup();});
 }
