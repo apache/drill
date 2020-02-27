@@ -17,25 +17,25 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import org.apache.calcite.plan.RelOptRule;
-import org.apache.drill.exec.planner.logical.DrillRelFactories;
+import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillValuesRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
-import org.apache.calcite.plan.RelOptRuleCall;
 
-public class ValuesPrule extends RelOptRule {
+public class ValuesPrule extends Prule {
 
   public static final ValuesPrule INSTANCE = new ValuesPrule();
 
   private ValuesPrule() {
-    super(RelOptHelper.any(DrillValuesRel.class), DrillRelFactories.LOGICAL_BUILDER, "Prel.ValuesPrule");
+    super(RelOptHelper.any(DrillValuesRel.class, DrillRel.DRILL_LOGICAL), "Prel.ValuesPrule");
   }
 
   @Override
   public void onMatch(final RelOptRuleCall call) {
-    final DrillValuesRel rel = call.rel(0);
+    DrillValuesRel rel = call.rel(0);
     call.transformTo(new ValuesPrel(rel.getCluster(), rel.getRowType(), rel.getTuples(),
-        rel.getTraitSet().plus(Prel.DRILL_PHYSICAL), rel.getContent()));
+      // force singleton execution since values rel contains all results and they cannot be split
+      rel.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(DrillDistributionTrait.SINGLETON),
+      rel.getContent()));
   }
-
 }
