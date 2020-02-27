@@ -19,6 +19,7 @@
 
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <artifactId>drill-contrib-parent</artifactId>
@@ -29,52 +30,52 @@
   <artifactId>drill-format-esri</artifactId>
   <name>contrib/format-esri</name>
 
-<dependencies>
-  <dependency>
-    <groupId>org.apache.drill.exec</groupId>
-    <artifactId>drill-java-exec</artifactId>
-    <version>${project.version}</version>
-  </dependency>
-  <dependency>
-    <groupId>com.esri.geometry</groupId>
-    <artifactId>esri-geometry-api</artifactId>
-    <version>2.2.3</version>
-  </dependency>
-  <dependency>
-    <groupId>org.jamel.dbf</groupId>
-    <artifactId>dbf-reader</artifactId>
-    <version>0.3.0</version>
-  </dependency>
-  <!-- Test dependencies -->
-  <dependency>
-    <groupId>org.apache.drill.exec</groupId>
-    <artifactId>drill-java-exec</artifactId>
-    <classifier>tests</classifier>
-    <version>${project.version}</version>
-    <scope>test</scope>
-  </dependency>
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.drill.exec</groupId>
+      <artifactId>drill-java-exec</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.esri.geometry</groupId>
+      <artifactId>esri-geometry-api</artifactId>
+      <version>2.2.3</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jamel.dbf</groupId>
+      <artifactId>dbf-reader</artifactId>
+      <version>0.3.0</version>
+    </dependency>
+    <!-- Test dependencies -->
+    <dependency>
+      <groupId>org.apache.drill.exec</groupId>
+      <artifactId>drill-java-exec</artifactId>
+      <classifier>tests</classifier>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
 
-  <dependency>
-    <groupId>org.apache.drill</groupId>
-    <artifactId>drill-common</artifactId>
-    <classifier>tests</classifier>
-    <version>${project.version}</version>
-    <scope>test</scope>
-  </dependency>
-  <dependency>
-    <groupId>org.apache.drill.contrib</groupId>
-    <artifactId>drill-udfs</artifactId>
-    <classifier>tests</classifier>
-    <version>${project.version}</version>
-    <scope>test</scope>
-  </dependency>
-
-  <dependency>
-    <groupId>org.apache.drill.contrib</groupId>
-    <artifactId>drill-udfs</artifactId>
-    <version>1.16.0</version>
-  </dependency>
-</dependencies>
+    <dependency>
+      <groupId>org.apache.drill</groupId>
+      <artifactId>drill-common</artifactId>
+      <classifier>tests</classifier>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.drill.contrib</groupId>
+      <artifactId>drill-udfs</artifactId>
+      <classifier>tests</classifier>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.drill.contrib</groupId>
+      <artifactId>drill-udfs</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
   <build>
     <plugins>
       <plugin>
