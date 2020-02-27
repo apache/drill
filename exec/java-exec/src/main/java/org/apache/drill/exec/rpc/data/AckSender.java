@@ -19,6 +19,9 @@ package org.apache.drill.exec.rpc.data;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.drill.exec.proto.BitData;
+import org.apache.drill.exec.rpc.Acks;
+import org.apache.drill.exec.rpc.Response;
 import org.apache.drill.exec.rpc.ResponseSender;
 
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
@@ -31,6 +34,7 @@ public class AckSender {
 
   private AtomicInteger count = new AtomicInteger(0);
   private ResponseSender sender;
+  private int everLargestAdviceCredit = Acks.NO_SUGGESTED_CREDIT;
 
   @VisibleForTesting
   public AckSender(ResponseSender sender) {
@@ -56,8 +60,27 @@ public class AckSender {
    * response upstream.
    */
   public void sendOk() {
+    sendOk(Acks.NO_SUGGESTED_CREDIT);
+  }
+
+  /**
+   * Decrement the number of references still holding on to this response. When the number of references hit zero, send
+   * response upstream. Ack for the dynamic credit model
+   * credit == -1 means Fail
+   * @param credit suggested credit value
+   */
+  public void sendOk(int credit) {
+    everLargestAdviceCredit = Math.max(everLargestAdviceCredit, credit);
     if (0 == count.decrementAndGet()) {
-      sender.send(DataRpcConfig.OK);
+      BitData.AckWithCredit ackWithCredit = BitData.AckWithCredit.newBuilder().setAllowedCredit(everLargestAdviceCredit).build();
+      Response ackResponse = new Response(BitData.RpcType.DATA_ACK_WITH_CREDIT, ackWithCredit);
+      sender.send(ackResponse);
     }
+  }
+
+  public void sendFail() {
+    BitData.AckWithCredit ackWithCredit = BitData.AckWithCredit.newBuilder().setAllowedCredit(Acks.FAIL_CREDIT).build();
+    Response ackFailResponse = new Response(BitData.RpcType.DATA_ACK_WITH_CREDIT, ackWithCredit);
+    sender.send(ackFailResponse);
   }
 }

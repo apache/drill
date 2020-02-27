@@ -579,4 +579,115 @@ public final class SchemaBitData
         }
     }
 
+    public static final class AckWithCredit
+    {
+        public static final org.apache.drill.exec.proto.SchemaBitData.AckWithCredit.MessageSchema WRITE =
+            new org.apache.drill.exec.proto.SchemaBitData.AckWithCredit.MessageSchema();
+        public static final org.apache.drill.exec.proto.SchemaBitData.AckWithCredit.BuilderSchema MERGE =
+            new org.apache.drill.exec.proto.SchemaBitData.AckWithCredit.BuilderSchema();
+        
+        public static class MessageSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.BitData.AckWithCredit>
+        {
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.BitData.AckWithCredit message) throws java.io.IOException
+            {
+                if(message.hasAllowedCredit())
+                    output.writeInt32(1, message.getAllowedCredit(), false);
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.BitData.AckWithCredit message)
+            {
+                return message.isInitialized();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaBitData.AckWithCredit.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaBitData.AckWithCredit.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.BitData.AckWithCredit> typeClass()
+            {
+                return org.apache.drill.exec.proto.BitData.AckWithCredit.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.BitData.AckWithCredit.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.BitData.AckWithCredit.class.getName();
+            }
+            //unused
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.BitData.AckWithCredit message) throws java.io.IOException {}
+            public org.apache.drill.exec.proto.BitData.AckWithCredit newMessage() { return null; }
+        }
+        public static class BuilderSchema implements io.protostuff.Schema<org.apache.drill.exec.proto.BitData.AckWithCredit.Builder>
+        {
+            public void mergeFrom(io.protostuff.Input input, org.apache.drill.exec.proto.BitData.AckWithCredit.Builder builder) throws java.io.IOException
+            {
+                for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
+                {
+                    switch(number)
+                    {
+                        case 0:
+                            return;
+                        case 1:
+                            builder.setAllowedCredit(input.readInt32());
+                            break;
+                        default:
+                            input.handleUnknownField(number, this);
+                    }
+                }
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.BitData.AckWithCredit.Builder builder)
+            {
+                return builder.isInitialized();
+            }
+            public org.apache.drill.exec.proto.BitData.AckWithCredit.Builder newMessage()
+            {
+                return org.apache.drill.exec.proto.BitData.AckWithCredit.newBuilder();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaBitData.AckWithCredit.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaBitData.AckWithCredit.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.BitData.AckWithCredit.Builder> typeClass()
+            {
+                return org.apache.drill.exec.proto.BitData.AckWithCredit.Builder.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.BitData.AckWithCredit.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.BitData.AckWithCredit.class.getName();
+            }
+            //unused
+            public void writeTo(io.protostuff.Output output, org.apache.drill.exec.proto.BitData.AckWithCredit.Builder builder) throws java.io.IOException {}
+        }
+        public static java.lang.String getFieldName(int number)
+        {
+            switch(number)
+            {
+                case 1: return "allowedCredit";
+                default: return null;
+            }
+        }
+        public static int getFieldNumber(java.lang.String name)
+        {
+            java.lang.Integer number = fieldMap.get(name);
+            return number == null ? 0 : number.intValue();
+        }
+        private static final java.util.HashMap<java.lang.String,java.lang.Integer> fieldMap = new java.util.HashMap<java.lang.String,java.lang.Integer>();
+        static
+        {
+            fieldMap.put("allowedCredit", 1);
+        }
+    }
+
 }

@@ -36,6 +36,8 @@ enum RpcType {
   SASL_MESSAGE = 4;
 
   REQ_RUNTIME_FILTER = 5; // send runtime filter data from HashJoin to Foreman, from Foreman to Scan nodes.
+
+  DATA_ACK_WITH_CREDIT = 6; // a ack for data tunnel,with a runtime suggested credit as a response.
 }
 
 message BitClientHandshake{
@@ -67,4 +69,8 @@ message RuntimeFilterBDef{
   repeated string probe_fields = 6; // probe fields with corresponding BloomFilters
   optional int32 hj_op_id = 7; // the operator id of the HashJoin which generates this RuntimeFilter
   optional int64 rf_identifier = 8; // the runtime filter identifier
+}
+
+message AckWithCredit{
+  optional int32 allowed_credit = 1; // the credit allowed the sender to send in batch granularity
 }

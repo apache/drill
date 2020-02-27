@@ -350,10 +350,12 @@ const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUT
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::control::Collector, incoming_minor_fragment_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::control::Collector, supports_out_of_order_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::control::Collector, is_spooling_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::control::Collector, enable_dynamic_fc_),
   0,
   ~0u,
   1,
   2,
+  3,
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::control::QueryContextInformation, _has_bits_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::control::QueryContextInformation, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -395,10 +397,10 @@ static const ::google::protobuf::internal::MigrationSchema schemas[] GOOGLE_PROT
   { 29, 35, sizeof(::exec::bit::control::InitializeFragments)},
   { 36, 43, sizeof(::exec::bit::control::CustomMessage)},
   { 45, 65, sizeof(::exec::bit::control::PlanFragment)},
-  { 80, 89, sizeof(::exec::bit::control::Collector)},
-  { 93, 102, sizeof(::exec::bit::control::QueryContextInformation)},
-  { 106, 114, sizeof(::exec::bit::control::WorkQueueStatus)},
-  { 117, 124, sizeof(::exec::bit::control::FinishedReceiver)},
+  { 80, 90, sizeof(::exec::bit::control::Collector)},
+  { 95, 104, sizeof(::exec::bit::control::QueryContextInformation)},
+  { 108, 116, sizeof(::exec::bit::control::WorkQueueStatus)},
+  { 119, 126, sizeof(::exec::bit::control::FinishedReceiver)},
 };
 
 static ::google::protobuf::Message const * const file_default_instances[] = {
@@ -462,32 +464,33 @@ void AddDescriptorsImpl() {
       "ls\022\024\n\014options_json\030\017 \001(\t\022:\n\007context\030\020 \001("
       "\0132).exec.bit.control.QueryContextInforma"
       "tion\022.\n\tcollector\030\021 \003(\0132\033.exec.bit.contr"
-      "ol.Collector\"\210\001\n\tCollector\022\"\n\032opposite_m"
+      "ol.Collector\"\243\001\n\tCollector\022\"\n\032opposite_m"
       "ajor_fragment_id\030\001 \001(\005\022#\n\027incoming_minor"
       "_fragment\030\002 \003(\005B\002\020\001\022\035\n\025supports_out_of_o"
-      "rder\030\003 \001(\010\022\023\n\013is_spooling\030\004 \001(\010\"w\n\027Query"
-      "ContextInformation\022\030\n\020query_start_time\030\001"
-      " \001(\003\022\021\n\ttime_zone\030\002 \001(\005\022\033\n\023default_schem"
-      "a_name\030\003 \001(\t\022\022\n\nsession_id\030\004 \001(\t\"f\n\017Work"
-      "QueueStatus\022(\n\010endpoint\030\001 \001(\0132\026.exec.Dri"
-      "llbitEndpoint\022\024\n\014queue_length\030\002 \001(\005\022\023\n\013r"
-      "eport_time\030\003 \001(\003\"h\n\020FinishedReceiver\022*\n\010"
-      "receiver\030\001 \001(\0132\030.exec.bit.FragmentHandle"
-      "\022(\n\006sender\030\002 \001(\0132\030.exec.bit.FragmentHand"
-      "le*\206\003\n\007RpcType\022\r\n\tHANDSHAKE\020\000\022\007\n\003ACK\020\001\022\013"
-      "\n\007GOODBYE\020\002\022\034\n\030REQ_INITIALIZE_FRAGMENTS\020"
-      "\003\022\027\n\023REQ_CANCEL_FRAGMENT\020\006\022\031\n\025REQ_RECEIV"
-      "ER_FINISHED\020\007\022\027\n\023REQ_FRAGMENT_STATUS\020\010\022\022"
-      "\n\016REQ_BIT_STATUS\020\t\022\024\n\020REQ_QUERY_STATUS\020\n"
-      "\022\024\n\020REQ_QUERY_CANCEL\020\017\022\030\n\024REQ_UNPAUSE_FR"
-      "AGMENT\020\020\022\016\n\nREQ_CUSTOM\020\021\022\030\n\024RESP_FRAGMEN"
-      "T_HANDLE\020\013\022\030\n\024RESP_FRAGMENT_STATUS\020\014\022\023\n\017"
-      "RESP_BIT_STATUS\020\r\022\025\n\021RESP_QUERY_STATUS\020\016"
-      "\022\017\n\013RESP_CUSTOM\020\022\022\020\n\014SASL_MESSAGE\020\023B+\n\033o"
-      "rg.apache.drill.exec.protoB\nBitControlH\001"
+      "rder\030\003 \001(\010\022\023\n\013is_spooling\030\004 \001(\010\022\031\n\021enabl"
+      "e_dynamic_fc\030\005 \001(\010\"w\n\027QueryContextInform"
+      "ation\022\030\n\020query_start_time\030\001 \001(\003\022\021\n\ttime_"
+      "zone\030\002 \001(\005\022\033\n\023default_schema_name\030\003 \001(\t\022"
+      "\022\n\nsession_id\030\004 \001(\t\"f\n\017WorkQueueStatus\022("
+      "\n\010endpoint\030\001 \001(\0132\026.exec.DrillbitEndpoint"
+      "\022\024\n\014queue_length\030\002 \001(\005\022\023\n\013report_time\030\003 "
+      "\001(\003\"h\n\020FinishedReceiver\022*\n\010receiver\030\001 \001("
+      "\0132\030.exec.bit.FragmentHandle\022(\n\006sender\030\002 "
+      "\001(\0132\030.exec.bit.FragmentHandle*\206\003\n\007RpcTyp"
+      "e\022\r\n\tHANDSHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\034"
+      "\n\030REQ_INITIALIZE_FRAGMENTS\020\003\022\027\n\023REQ_CANC"
+      "EL_FRAGMENT\020\006\022\031\n\025REQ_RECEIVER_FINISHED\020\007"
+      "\022\027\n\023REQ_FRAGMENT_STATUS\020\010\022\022\n\016REQ_BIT_STA"
+      "TUS\020\t\022\024\n\020REQ_QUERY_STATUS\020\n\022\024\n\020REQ_QUERY"
+      "_CANCEL\020\017\022\030\n\024REQ_UNPAUSE_FRAGMENT\020\020\022\016\n\nR"
+      "EQ_CUSTOM\020\021\022\030\n\024RESP_FRAGMENT_HANDLE\020\013\022\030\n"
+      "\024RESP_FRAGMENT_STATUS\020\014\022\023\n\017RESP_BIT_STAT"
+      "US\020\r\022\025\n\021RESP_QUERY_STATUS\020\016\022\017\n\013RESP_CUST"
+      "OM\020\022\022\020\n\014SASL_MESSAGE\020\023B+\n\033org.apache.dri"
+      "ll.exec.protoB\nBitControlH\001"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 2000);
+      descriptor, 2027);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "BitControl.proto", &protobuf_RegisterTypes);
   ::protobuf_ExecutionProtos_2eproto::AddDescriptors();
@@ -2878,6 +2881,7 @@ const int Collector::kOppositeMajorFragmentIdFieldNumber;
 const int Collector::kIncomingMinorFragmentFieldNumber;
 const int Collector::kSupportsOutOfOrderFieldNumber;
 const int Collector::kIsSpoolingFieldNumber;
+const int Collector::kEnableDynamicFcFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 Collector::Collector()
@@ -2894,15 +2898,15 @@ Collector::Collector(const Collector& from)
       incoming_minor_fragment_(from.incoming_minor_fragment_) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   ::memcpy(&opposite_major_fragment_id_, &from.opposite_major_fragment_id_,
-    static_cast<size_t>(reinterpret_cast<char*>(&is_spooling_) -
-    reinterpret_cast<char*>(&opposite_major_fragment_id_)) + sizeof(is_spooling_));
+    static_cast<size_t>(reinterpret_cast<char*>(&enable_dynamic_fc_) -
+    reinterpret_cast<char*>(&opposite_major_fragment_id_)) + sizeof(enable_dynamic_fc_));
   // @@protoc_insertion_point(copy_constructor:exec.bit.control.Collector)
 }
 
 void Collector::SharedCtor() {
   ::memset(&opposite_major_fragment_id_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&is_spooling_) -
-      reinterpret_cast<char*>(&opposite_major_fragment_id_)) + sizeof(is_spooling_));
+      reinterpret_cast<char*>(&enable_dynamic_fc_) -
+      reinterpret_cast<char*>(&opposite_major_fragment_id_)) + sizeof(enable_dynamic_fc_));
 }
 
 Collector::~Collector() {
@@ -2935,10 +2939,10 @@ void Collector::Clear() {
 
   incoming_minor_fragment_.Clear();
   cached_has_bits = _has_bits_[0];
-  if (cached_has_bits & 7u) {
+  if (cached_has_bits & 15u) {
     ::memset(&opposite_major_fragment_id_, 0, static_cast<size_t>(
-        reinterpret_cast<char*>(&is_spooling_) -
-        reinterpret_cast<char*>(&opposite_major_fragment_id_)) + sizeof(is_spooling_));
+        reinterpret_cast<char*>(&enable_dynamic_fc_) -
+        reinterpret_cast<char*>(&opposite_major_fragment_id_)) + sizeof(enable_dynamic_fc_));
   }
   _has_bits_.Clear();
   _internal_metadata_.Clear();
@@ -3015,6 +3019,20 @@ bool Collector::MergePartialFromCodedStream(
         break;
       }
 
+      // optional bool enable_dynamic_fc = 5;
+      case 5: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(40u /* 40 & 0xFF */)) {
+          set_has_enable_dynamic_fc();
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
+                 input, &enable_dynamic_fc_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
       default: {
       handle_unusual:
         if (tag == 0) {
@@ -3068,6 +3086,11 @@ void Collector::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteBool(4, this->is_spooling(), output);
   }
 
+  // optional bool enable_dynamic_fc = 5;
+  if (cached_has_bits & 0x00000008u) {
+    ::google::protobuf::internal::WireFormatLite::WriteBool(5, this->enable_dynamic_fc(), output);
+  }
+
   if (_internal_metadata_.have_unknown_fields()) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         _internal_metadata_.unknown_fields(), output);
@@ -3111,6 +3134,11 @@ void Collector::SerializeWithCachedSizes(
     target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(4, this->is_spooling(), target);
   }
 
+  // optional bool enable_dynamic_fc = 5;
+  if (cached_has_bits & 0x00000008u) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(5, this->enable_dynamic_fc(), target);
+  }
+
   if (_internal_metadata_.have_unknown_fields()) {
     target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields(), target);
@@ -3144,7 +3172,7 @@ size_t Collector::ByteSizeLong() const {
     total_size += data_size;
   }
 
-  if (_has_bits_[0 / 32] & 7u) {
+  if (_has_bits_[0 / 32] & 15u) {
     // optional int32 opposite_major_fragment_id = 1;
     if (has_opposite_major_fragment_id()) {
       total_size += 1 +
@@ -3159,6 +3187,11 @@ size_t Collector::ByteSizeLong() const {
 
     // optional bool is_spooling = 4;
     if (has_is_spooling()) {
+      total_size += 1 + 1;
+    }
+
+    // optional bool enable_dynamic_fc = 5;
+    if (has_enable_dynamic_fc()) {
       total_size += 1 + 1;
     }
 
@@ -3192,7 +3225,7 @@ void Collector::MergeFrom(const Collector& from) {
 
   incoming_minor_fragment_.MergeFrom(from.incoming_minor_fragment_);
   cached_has_bits = from._has_bits_[0];
-  if (cached_has_bits & 7u) {
+  if (cached_has_bits & 15u) {
     if (cached_has_bits & 0x00000001u) {
       opposite_major_fragment_id_ = from.opposite_major_fragment_id_;
     }
@@ -3201,6 +3234,9 @@ void Collector::MergeFrom(const Collector& from) {
     }
     if (cached_has_bits & 0x00000004u) {
       is_spooling_ = from.is_spooling_;
+    }
+    if (cached_has_bits & 0x00000008u) {
+      enable_dynamic_fc_ = from.enable_dynamic_fc_;
     }
     _has_bits_[0] |= cached_has_bits;
   }
@@ -3234,6 +3270,7 @@ void Collector::InternalSwap(Collector* other) {
   swap(opposite_major_fragment_id_, other->opposite_major_fragment_id_);
   swap(supports_out_of_order_, other->supports_out_of_order_);
   swap(is_spooling_, other->is_spooling_);
+  swap(enable_dynamic_fc_, other->enable_dynamic_fc_);
   swap(_has_bits_[0], other->_has_bits_[0]);
   _internal_metadata_.Swap(&other->_internal_metadata_);
 }

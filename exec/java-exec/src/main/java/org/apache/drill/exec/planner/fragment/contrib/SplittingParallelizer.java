@@ -24,6 +24,7 @@ import java.util.Set;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.util.DrillStringUtils;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.base.Exchange;
 import org.apache.drill.exec.physical.base.FragmentRoot;
@@ -60,9 +61,11 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 public class SplittingParallelizer extends DefaultQueryParallelizer {
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SplittingParallelizer.class);
+  private boolean enableDynamicFC;
 
   public SplittingParallelizer(boolean doMemoryPlanning, QueryContext context) {
     super(doMemoryPlanning, context);
+    this.enableDynamicFC = context.getOptions().getBoolean(ExecConstants.ENABLE_DYNAMIC_CREDIT_BASED_FC);
   }
 
   /**
@@ -204,7 +207,7 @@ public class SplittingParallelizer extends DefaultQueryParallelizer {
             .setMemInitial(initialAllocation)//
             .setMemMax(wrapper.getMaxAllocation()) // TODO - for some reason OOM is using leaf fragment max allocation divided by width
             .setCredentials(session.getCredentials())
-            .addAllCollector(CountRequiredFragments.getCollectors(root))
+            .addAllCollector(CountRequiredFragments.getCollectors(root, enableDynamicFC))
             .build();
 
         MinorFragmentDefn fragmentDefn = new MinorFragmentDefn(fragment, root, options);

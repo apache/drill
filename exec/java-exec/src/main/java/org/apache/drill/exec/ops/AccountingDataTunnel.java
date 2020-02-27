@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.ops;
 
-import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
+import org.apache.drill.exec.proto.BitData;
 import org.apache.drill.exec.record.FragmentWritableBatch;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
 import org.apache.drill.exec.rpc.data.DataTunnel;
@@ -33,9 +33,9 @@ import org.apache.drill.exec.work.filter.RuntimeFilterWritable;
 public class AccountingDataTunnel {
   private final DataTunnel tunnel;
   private final SendingAccountor sendingAccountor;
-  private final RpcOutcomeListener<Ack> statusHandler;
+  private final RpcOutcomeListener<BitData.AckWithCredit> statusHandler;
 
-  public AccountingDataTunnel(DataTunnel tunnel, SendingAccountor sendingAccountor, RpcOutcomeListener<Ack> statusHandler) {
+  public AccountingDataTunnel(DataTunnel tunnel, SendingAccountor sendingAccountor, RpcOutcomeListener<BitData.AckWithCredit> statusHandler) {
     this.tunnel = tunnel;
     this.sendingAccountor = sendingAccountor;
     this.statusHandler = statusHandler;

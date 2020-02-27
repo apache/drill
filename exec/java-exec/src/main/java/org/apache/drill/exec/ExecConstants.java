@@ -77,6 +77,7 @@ public final class ExecConstants {
   public static final String INCOMING_BUFFER_SIZE = "drill.exec.buffer.size";
   public static final String SPOOLING_BUFFER_DELETE = "drill.exec.buffer.spooling.delete";
   public static final String SPOOLING_BUFFER_MEMORY = "drill.exec.buffer.spooling.size";
+  public static final String UNLIMITED_BUFFER_MAX_MEMORY_SIZE = "drill.exec.buffer.unlimited_receiver.max_size";
   public static final String BATCH_PURGE_THRESHOLD = "drill.exec.sort.purge.threshold";
 
   // Spill boot-time Options common to all spilling operators
@@ -1152,7 +1153,6 @@ public final class ExecConstants {
   public static final BooleanValidator PARQUET_READER_ENABLE_MAP_SUPPORT_VALIDATOR = new BooleanValidator(
       PARQUET_READER_ENABLE_MAP_SUPPORT, new OptionDescription("Enables Drill Parquet reader to read Parquet MAP type correctly. (Drill 1.17+)"));
 
-  // ---------------------------------------
   // Storage-plugin related config constants
 
   // Bootstrap plugin files configuration keys
@@ -1166,4 +1166,10 @@ public final class ExecConstants {
 
   // Extra private plugin classes, used for testing
   public static final String PRIVATE_CONNECTORS = "drill.exec.storage.private_connectors";
+
+  public static final String ENABLE_DYNAMIC_CREDIT_BASED_FC = "exec.enable_dynamic_fc";
+  public static final BooleanValidator ENABLE_DYNAMIC_CREDIT_BASED_FC_VALIDATOR = new BooleanValidator(
+          ENABLE_DYNAMIC_CREDIT_BASED_FC, new OptionDescription("Enable dynamic credit based flow control.This feature allows " +
+          "the sender to send out its data more rapidly, but you should know that it has a risk to OOM when the system is solving parallel " +
+          "large queries until we have a more accurate resource manager."));
 }

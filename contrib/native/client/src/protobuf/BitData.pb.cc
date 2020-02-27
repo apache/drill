@@ -46,6 +46,11 @@ class RuntimeFilterBDefDefaultTypeInternal {
   ::google::protobuf::internal::ExplicitlyConstructed<RuntimeFilterBDef>
       _instance;
 } _RuntimeFilterBDef_default_instance_;
+class AckWithCreditDefaultTypeInternal {
+ public:
+  ::google::protobuf::internal::ExplicitlyConstructed<AckWithCredit>
+      _instance;
+} _AckWithCredit_default_instance_;
 }  // namespace data
 }  // namespace bit
 }  // namespace exec
@@ -109,14 +114,29 @@ static void InitDefaultsRuntimeFilterBDef() {
     {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 1, InitDefaultsRuntimeFilterBDef}, {
       &protobuf_UserBitShared_2eproto::scc_info_QueryId.base,}};
 
+static void InitDefaultsAckWithCredit() {
+  GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+  {
+    void* ptr = &::exec::bit::data::_AckWithCredit_default_instance_;
+    new (ptr) ::exec::bit::data::AckWithCredit();
+    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
+  }
+  ::exec::bit::data::AckWithCredit::InitAsDefaultInstance();
+}
+
+::google::protobuf::internal::SCCInfo<0> scc_info_AckWithCredit =
+    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsAckWithCredit}, {}};
+
 void InitDefaults() {
   ::google::protobuf::internal::InitSCC(&scc_info_BitClientHandshake.base);
   ::google::protobuf::internal::InitSCC(&scc_info_BitServerHandshake.base);
   ::google::protobuf::internal::InitSCC(&scc_info_FragmentRecordBatch.base);
   ::google::protobuf::internal::InitSCC(&scc_info_RuntimeFilterBDef.base);
+  ::google::protobuf::internal::InitSCC(&scc_info_AckWithCredit.base);
 }
 
-::google::protobuf::Metadata file_level_metadata[4];
+::google::protobuf::Metadata file_level_metadata[5];
 const ::google::protobuf::EnumDescriptor* file_level_enum_descriptors[1];
 
 const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
@@ -178,12 +198,20 @@ const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUT
   ~0u,
   4,
   5,
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::data::AckWithCredit, _has_bits_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::data::AckWithCredit, _internal_metadata_),
+  ~0u,  // no _extensions_
+  ~0u,  // no _oneof_case_
+  ~0u,  // no _weak_field_map_
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::data::AckWithCredit, allowed_credit_),
+  0,
 };
 static const ::google::protobuf::internal::MigrationSchema schemas[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
   { 0, 7, sizeof(::exec::bit::data::BitClientHandshake)},
   { 9, 16, sizeof(::exec::bit::data::BitServerHandshake)},
   { 18, 30, sizeof(::exec::bit::data::FragmentRecordBatch)},
   { 37, 50, sizeof(::exec::bit::data::RuntimeFilterBDef)},
+  { 58, 64, sizeof(::exec::bit::data::AckWithCredit)},
 };
 
 static ::google::protobuf::Message const * const file_default_instances[] = {
@@ -191,6 +219,7 @@ static ::google::protobuf::Message const * const file_default_instances[] = {
   reinterpret_cast<const ::google::protobuf::Message*>(&::exec::bit::data::_BitServerHandshake_default_instance_),
   reinterpret_cast<const ::google::protobuf::Message*>(&::exec::bit::data::_FragmentRecordBatch_default_instance_),
   reinterpret_cast<const ::google::protobuf::Message*>(&::exec::bit::data::_RuntimeFilterBDef_default_instance_),
+  reinterpret_cast<const ::google::protobuf::Message*>(&::exec::bit::data::_AckWithCredit_default_instance_),
 };
 
 void protobuf_AssignDescriptors() {
@@ -208,7 +237,7 @@ void protobuf_AssignDescriptorsOnce() {
 void protobuf_RegisterTypes(const ::std::string&) GOOGLE_PROTOBUF_ATTRIBUTE_COLD;
 void protobuf_RegisterTypes(const ::std::string&) {
   protobuf_AssignDescriptorsOnce();
-  ::google::protobuf::internal::RegisterAllTypes(file_level_metadata, 4);
+  ::google::protobuf::internal::RegisterAllTypes(file_level_metadata, 5);
 }
 
 void AddDescriptorsImpl() {
@@ -233,14 +262,15 @@ void AddDescriptorsImpl() {
       "ment_id\030\003 \001(\005\022\022\n\nto_foreman\030\004 \001(\010\022\"\n\032blo"
       "om_filter_size_in_bytes\030\005 \003(\005\022\024\n\014probe_f"
       "ields\030\006 \003(\t\022\020\n\010hj_op_id\030\007 \001(\005\022\025\n\rrf_iden"
-      "tifier\030\010 \001(\003*n\n\007RpcType\022\r\n\tHANDSHAKE\020\000\022\007"
-      "\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\024\n\020REQ_RECORD_BATCH"
-      "\020\003\022\020\n\014SASL_MESSAGE\020\004\022\026\n\022REQ_RUNTIME_FILT"
-      "ER\020\005B(\n\033org.apache.drill.exec.protoB\007Bit"
-      "DataH\001"
+      "tifier\030\010 \001(\003\"\'\n\rAckWithCredit\022\026\n\016allowed"
+      "_credit\030\001 \001(\005*\210\001\n\007RpcType\022\r\n\tHANDSHAKE\020\000"
+      "\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\024\n\020REQ_RECORD_BAT"
+      "CH\020\003\022\020\n\014SASL_MESSAGE\020\004\022\026\n\022REQ_RUNTIME_FI"
+      "LTER\020\005\022\030\n\024DATA_ACK_WITH_CREDIT\020\006B(\n\033org."
+      "apache.drill.exec.protoB\007BitDataH\001"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 926);
+      descriptor, 994);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "BitData.proto", &protobuf_RegisterTypes);
   ::protobuf_ExecutionProtos_2eproto::AddDescriptors();
@@ -274,6 +304,7 @@ bool RpcType_IsValid(int value) {
     case 3:
     case 4:
     case 5:
+    case 6:
       return true;
     default:
       return false;
@@ -1874,6 +1905,234 @@ void RuntimeFilterBDef::InternalSwap(RuntimeFilterBDef* other) {
 }
 
 
+// ===================================================================
+
+void AckWithCredit::InitAsDefaultInstance() {
+}
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
+const int AckWithCredit::kAllowedCreditFieldNumber;
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+
+AckWithCredit::AckWithCredit()
+  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
+  ::google::protobuf::internal::InitSCC(
+      &protobuf_BitData_2eproto::scc_info_AckWithCredit.base);
+  SharedCtor();
+  // @@protoc_insertion_point(constructor:exec.bit.data.AckWithCredit)
+}
+AckWithCredit::AckWithCredit(const AckWithCredit& from)
+  : ::google::protobuf::Message(),
+      _internal_metadata_(NULL),
+      _has_bits_(from._has_bits_) {
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  allowed_credit_ = from.allowed_credit_;
+  // @@protoc_insertion_point(copy_constructor:exec.bit.data.AckWithCredit)
+}
+
+void AckWithCredit::SharedCtor() {
+  allowed_credit_ = 0;
+}
+
+AckWithCredit::~AckWithCredit() {
+  // @@protoc_insertion_point(destructor:exec.bit.data.AckWithCredit)
+  SharedDtor();
+}
+
+void AckWithCredit::SharedDtor() {
+}
+
+void AckWithCredit::SetCachedSize(int size) const {
+  _cached_size_.Set(size);
+}
+const ::google::protobuf::Descriptor* AckWithCredit::descriptor() {
+  ::protobuf_BitData_2eproto::protobuf_AssignDescriptorsOnce();
+  return ::protobuf_BitData_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
+}
+
+const AckWithCredit& AckWithCredit::default_instance() {
+  ::google::protobuf::internal::InitSCC(&protobuf_BitData_2eproto::scc_info_AckWithCredit.base);
+  return *internal_default_instance();
+}
+
+
+void AckWithCredit::Clear() {
+// @@protoc_insertion_point(message_clear_start:exec.bit.data.AckWithCredit)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  allowed_credit_ = 0;
+  _has_bits_.Clear();
+  _internal_metadata_.Clear();
+}
+
+bool AckWithCredit::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
+  ::google::protobuf::uint32 tag;
+  // @@protoc_insertion_point(parse_start:exec.bit.data.AckWithCredit)
+  for (;;) {
+    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    tag = p.first;
+    if (!p.second) goto handle_unusual;
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // optional int32 allowed_credit = 1;
+      case 1: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(8u /* 8 & 0xFF */)) {
+          set_has_allowed_credit();
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &allowed_credit_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      default: {
+      handle_unusual:
+        if (tag == 0) {
+          goto success;
+        }
+        DO_(::google::protobuf::internal::WireFormat::SkipField(
+              input, tag, _internal_metadata_.mutable_unknown_fields()));
+        break;
+      }
+    }
+  }
+success:
+  // @@protoc_insertion_point(parse_success:exec.bit.data.AckWithCredit)
+  return true;
+failure:
+  // @@protoc_insertion_point(parse_failure:exec.bit.data.AckWithCredit)
+  return false;
+#undef DO_
+}
+
+void AckWithCredit::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // @@protoc_insertion_point(serialize_start:exec.bit.data.AckWithCredit)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  cached_has_bits = _has_bits_[0];
+  // optional int32 allowed_credit = 1;
+  if (cached_has_bits & 0x00000001u) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(1, this->allowed_credit(), output);
+  }
+
+  if (_internal_metadata_.have_unknown_fields()) {
+    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
+        _internal_metadata_.unknown_fields(), output);
+  }
+  // @@protoc_insertion_point(serialize_end:exec.bit.data.AckWithCredit)
+}
+
+::google::protobuf::uint8* AckWithCredit::InternalSerializeWithCachedSizesToArray(
+    bool deterministic, ::google::protobuf::uint8* target) const {
+  (void)deterministic; // Unused
+  // @@protoc_insertion_point(serialize_to_array_start:exec.bit.data.AckWithCredit)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  cached_has_bits = _has_bits_[0];
+  // optional int32 allowed_credit = 1;
+  if (cached_has_bits & 0x00000001u) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(1, this->allowed_credit(), target);
+  }
+
+  if (_internal_metadata_.have_unknown_fields()) {
+    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields(), target);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:exec.bit.data.AckWithCredit)
+  return target;
+}
+
+size_t AckWithCredit::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:exec.bit.data.AckWithCredit)
+  size_t total_size = 0;
+
+  if (_internal_metadata_.have_unknown_fields()) {
+    total_size +=
+      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
+        _internal_metadata_.unknown_fields());
+  }
+  // optional int32 allowed_credit = 1;
+  if (has_allowed_credit()) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::Int32Size(
+        this->allowed_credit());
+  }
+
+  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  SetCachedSize(cached_size);
+  return total_size;
+}
+
+void AckWithCredit::MergeFrom(const ::google::protobuf::Message& from) {
+// @@protoc_insertion_point(generalized_merge_from_start:exec.bit.data.AckWithCredit)
+  GOOGLE_DCHECK_NE(&from, this);
+  const AckWithCredit* source =
+      ::google::protobuf::internal::DynamicCastToGenerated<const AckWithCredit>(
+          &from);
+  if (source == NULL) {
+  // @@protoc_insertion_point(generalized_merge_from_cast_fail:exec.bit.data.AckWithCredit)
+    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+  } else {
+  // @@protoc_insertion_point(generalized_merge_from_cast_success:exec.bit.data.AckWithCredit)
+    MergeFrom(*source);
+  }
+}
+
+void AckWithCredit::MergeFrom(const AckWithCredit& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:exec.bit.data.AckWithCredit)
+  GOOGLE_DCHECK_NE(&from, this);
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (from.has_allowed_credit()) {
+    set_allowed_credit(from.allowed_credit());
+  }
+}
+
+void AckWithCredit::CopyFrom(const ::google::protobuf::Message& from) {
+// @@protoc_insertion_point(generalized_copy_from_start:exec.bit.data.AckWithCredit)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+void AckWithCredit::CopyFrom(const AckWithCredit& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:exec.bit.data.AckWithCredit)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool AckWithCredit::IsInitialized() const {
+  return true;
+}
+
+void AckWithCredit::Swap(AckWithCredit* other) {
+  if (other == this) return;
+  InternalSwap(other);
+}
+void AckWithCredit::InternalSwap(AckWithCredit* other) {
+  using std::swap;
+  swap(allowed_credit_, other->allowed_credit_);
+  swap(_has_bits_[0], other->_has_bits_[0]);
+  _internal_metadata_.Swap(&other->_internal_metadata_);
+}
+
+::google::protobuf::Metadata AckWithCredit::GetMetadata() const {
+  protobuf_BitData_2eproto::protobuf_AssignDescriptorsOnce();
+  return ::protobuf_BitData_2eproto::file_level_metadata[kIndexInFileMessages];
+}
+
+
 // @@protoc_insertion_point(namespace_scope)
 }  // namespace data
 }  // namespace bit
@@ -1891,6 +2150,9 @@ template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::exec::bit::data::FragmentRecordB
 }
 template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::exec::bit::data::RuntimeFilterBDef* Arena::CreateMaybeMessage< ::exec::bit::data::RuntimeFilterBDef >(Arena* arena) {
   return Arena::CreateInternal< ::exec::bit::data::RuntimeFilterBDef >(arena);
+}
+template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::exec::bit::data::AckWithCredit* Arena::CreateMaybeMessage< ::exec::bit::data::AckWithCredit >(Arena* arena) {
+  return Arena::CreateInternal< ::exec::bit::data::AckWithCredit >(arena);
 }
 }  // namespace protobuf
 }  // namespace google

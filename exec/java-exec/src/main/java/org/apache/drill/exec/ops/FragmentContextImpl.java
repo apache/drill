@@ -49,6 +49,7 @@ import org.apache.drill.exec.physical.impl.OperatorCreatorRegistry;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
+import org.apache.drill.exec.proto.BitData;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
@@ -153,6 +154,7 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
   };
 
   private final RpcOutcomeListener<Ack> statusHandler = new StatusHandler(exceptionConsumer, sendingAccountor);
+  private final RpcOutcomeListener<BitData.AckWithCredit> dataTunnelStatusHandler = new DataTunnelStatusHandler(exceptionConsumer, sendingAccountor);
   private final AccountingUserConnection accountingUserConnection;
   /** Stores constants and their holders by type */
   private final Map<String, Map<MinorType, ValueHolder>> constantValueHolderCache;
@@ -477,7 +479,7 @@ public class FragmentContextImpl extends BaseFragmentContext implements Executor
   public AccountingDataTunnel getDataTunnel(final DrillbitEndpoint endpoint) {
     AccountingDataTunnel tunnel = tunnels.get(endpoint);
     if (tunnel == null) {
-      tunnel = new AccountingDataTunnel(context.getDataConnectionsPool().getTunnel(endpoint), sendingAccountor, statusHandler);
+      tunnel = new AccountingDataTunnel(context.getDataConnectionsPool().getTunnel(endpoint), sendingAccountor, dataTunnelStatusHandler);
       tunnels.put(endpoint, tunnel);
     }
     return tunnel;

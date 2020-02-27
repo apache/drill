@@ -865,6 +865,8 @@ public final class SchemaBitControl
                     output.writeBool(3, message.getSupportsOutOfOrder(), false);
                 if(message.hasIsSpooling())
                     output.writeBool(4, message.getIsSpooling(), false);
+                if(message.hasEnableDynamicFc())
+                    output.writeBool(5, message.getEnableDynamicFc(), false);
             }
             public boolean isInitialized(org.apache.drill.exec.proto.BitControl.Collector message)
             {
@@ -916,6 +918,9 @@ public final class SchemaBitControl
                         case 4:
                             builder.setIsSpooling(input.readBool());
                             break;
+                        case 5:
+                            builder.setEnableDynamicFc(input.readBool());
+                            break;
                         default:
                             input.handleUnknownField(number, this);
                     }
@@ -960,6 +965,7 @@ public final class SchemaBitControl
                 case 2: return "incomingMinorFragment";
                 case 3: return "supportsOutOfOrder";
                 case 4: return "isSpooling";
+                case 5: return "enableDynamicFc";
                 default: return null;
             }
         }
@@ -975,6 +981,7 @@ public final class SchemaBitControl
             fieldMap.put("incomingMinorFragment", 2);
             fieldMap.put("supportsOutOfOrder", 3);
             fieldMap.put("isSpooling", 4);
+            fieldMap.put("enableDynamicFc", 5);
         }
     }
 

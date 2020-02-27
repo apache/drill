@@ -19,13 +19,13 @@ package org.apache.drill.exec.work.filter;
 
 import io.netty.buffer.DrillBuf;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+
 import org.apache.drill.exec.ops.AccountingDataTunnel;
 import org.apache.drill.exec.ops.Consumer;
+import org.apache.drill.exec.ops.DataTunnelStatusHandler;
 import org.apache.drill.exec.ops.SendingAccountor;
-import org.apache.drill.exec.ops.StatusHandler;
 import org.apache.drill.exec.proto.BitData;
 import org.apache.drill.exec.proto.CoordinationProtos;
-import org.apache.drill.exec.proto.GeneralRPCProtos;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
@@ -200,7 +200,7 @@ public class RuntimeFilterSink implements Closeable
           logger.warn("fail to broadcast a runtime filter to the probe side scan node", e);
         }
       };
-      RpcOutcomeListener<GeneralRPCProtos.Ack> statusHandler = new StatusHandler(exceptionConsumer, sendingAccountor);
+      RpcOutcomeListener<BitData.AckWithCredit> statusHandler = new DataTunnelStatusHandler(exceptionConsumer, sendingAccountor);
       AccountingDataTunnel accountingDataTunnel = new AccountingDataTunnel(dataTunnel, sendingAccountor, statusHandler);
       accountingDataTunnel.sendRuntimeFilter(runtimeFilterWritable);
     }
