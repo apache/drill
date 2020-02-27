@@ -45,6 +45,7 @@ import org.apache.drill.exec.store.hdf5.writers.HDF5LongDataWriter;
 import org.apache.drill.exec.store.hdf5.writers.HDF5MapDataWriter;
 import org.apache.drill.exec.store.hdf5.writers.HDF5StringDataWriter;
 import org.apache.drill.exec.store.hdf5.writers.HDF5TimestampDataWriter;
+import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.ArrayWriter;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
@@ -61,6 +62,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.BitSet;
 import java.util.Iterator;
@@ -92,6 +94,18 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
 
   private static final String LONG_COLUMN_NAME = "long_data";
 
+  private static final String DATA_SIZE_COLUMN_NAME = "data_size";
+
+  private static final String ELEMENT_COUNT_NAME = "element_count";
+
+  private static final String DATASET_DATA_TYPE_NAME = "dataset_data_type";
+
+  private static final String DIMENSIONS_FIELD_NAME = "dimensions";
+
+  private static final int PREVIEW_ROW_LIMIT = 20;
+
+  private static final int MAX_DATASET_SIZE = ValueVector.MAX_BUFFER_SIZE;
+
   private final HDF5ReaderConfig readerConfig;
 
   private final List<HDF5DataWriter> dataWriters;
@@ -113,6 +127,14 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
   private ScalarWriter dataTypeWriter;
 
   private ScalarWriter fileNameWriter;
+
+  private ScalarWriter dataSizeWriter;
+
+  private ScalarWriter elementCountWriter;
+
+  private ScalarWriter datasetTypeWriter;
+
+  private ScalarWriter dimensionsWriter;
 
   private long[] dimensions;
 
@@ -161,7 +183,11 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
       SchemaBuilder builder = new SchemaBuilder()
         .addNullable(PATH_COLUMN_NAME, TypeProtos.MinorType.VARCHAR)
         .addNullable(DATA_TYPE_COLUMN_NAME, TypeProtos.MinorType.VARCHAR)
-        .addNullable(FILE_NAME_COLUMN_NAME, TypeProtos.MinorType.VARCHAR);
+        .addNullable(FILE_NAME_COLUMN_NAME, TypeProtos.MinorType.VARCHAR)
+        .addNullable(DATA_SIZE_COLUMN_NAME,  TypeProtos.MinorType.BIGINT )
+        .addNullable(ELEMENT_COUNT_NAME,  TypeProtos.MinorType.BIGINT)
+        .addNullable(DATASET_DATA_TYPE_NAME, TypeProtos.MinorType.VARCHAR)
+        .addNullable(DIMENSIONS_FIELD_NAME, TypeProtos.MinorType.VARCHAR);
 
       negotiator.setTableSchema(builder.buildSchema(), false);
 
@@ -191,6 +217,10 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
       pathWriter = rowWriter.scalar(PATH_COLUMN_NAME);
       dataTypeWriter = rowWriter.scalar(DATA_TYPE_COLUMN_NAME);
       fileNameWriter = rowWriter.scalar(FILE_NAME_COLUMN_NAME);
+      dataSizeWriter = rowWriter.scalar(DATA_SIZE_COLUMN_NAME);
+      elementCountWriter = rowWriter.scalar(ELEMENT_COUNT_NAME);
+      datasetTypeWriter = rowWriter.scalar(DATASET_DATA_TYPE_NAME);
+      dimensionsWriter = rowWriter.scalar(DIMENSIONS_FIELD_NAME);
     }
     return true;
   }
@@ -389,6 +419,15 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
     }
 
     if (metadataRow.getDataType().equalsIgnoreCase("DATASET")) {
+
+      HDF5DataSetInformation dsInfo = hdf5Reader.object().getDataSetInformation(metadataRow.getPath());
+
+      // Project Dataset Metadata
+      dataSizeWriter.setLong(dsInfo.getSize());
+      elementCountWriter.setLong(dsInfo.getNumberOfElements());
+      datasetTypeWriter.setString(dsInfo.getTypeInformation().getDataClass().name());
+      dimensionsWriter.setString(Arrays.toString(dsInfo.getDimensions()));
+
       projectDataset(rowWriter, metadataRow.getPath());
     }
     rowWriter.save();
@@ -458,7 +497,7 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
 
   /**
    * This function writes one row of data in a metadata query. The number of dimensions here is n+1. So if the actual dataset is a 1D column, it will be written as a list.
-   * This is function is only called in metadata queries as the schema is not known in advance.
+   * This is function is only called in metadata queries as the schema is not known in advance. If the datasize is greater than 16MB, the function does not project the dataset
    *
    * @param rowWriter The rowWriter to which the data will be written
    * @param datapath The datapath from which the data will be read
@@ -467,6 +506,12 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
     String fieldName = HDF5Utils.getNameFromPath(datapath);
     IHDF5Reader reader = hdf5Reader;
     HDF5DataSetInformation dsInfo = reader.object().getDataSetInformation(datapath);
+
+    // If the dataset is larger than 16MB, do not project the dataset
+    if (dsInfo.getSize() > MAX_DATASET_SIZE) {
+      logger.warn("Dataset {} is greater than 16MB.  Data will be truncated in Metadata view.", datapath);
+    }
+
     long[] dimensions = dsInfo.getDimensions();
     //Case for single dimensional data
     if (dimensions.length <= 1) {
@@ -628,8 +673,9 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
     }
 
     ScalarWriter arrayWriter = rowWriter.column(index).array().scalar();
-    for (int value : list) {
-      arrayWriter.setInt(value);
+    int maxElements = Math.min(list.length, PREVIEW_ROW_LIMIT);
+    for (int i = 0; i < maxElements; i++) {
+      arrayWriter.setInt(list[i]);
     }
   }
 
@@ -671,7 +717,8 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
     // The strings within the inner array
     ScalarWriter intWriter = innerWriter.scalar();
 
-    for (int i = 0; i < rows; i++) {
+    int maxElements = Math.min(rows, PREVIEW_ROW_LIMIT);
+    for (int i = 0; i < maxElements; i++) {
       for (int k = 0; k < cols; k++) {
         intWriter.setInt(colData[i][k]);
       }
@@ -692,8 +739,9 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
     }
 
     ScalarWriter arrayWriter = rowWriter.column(index).array().scalar();
-    for (long l : list) {
-      arrayWriter.setLong(l);
+    int maxElements = Math.min(list.length, PREVIEW_ROW_LIMIT);
+    for (int i = 0; i < maxElements; i++) {
+      arrayWriter.setLong(list[i]);
     }
   }
 
@@ -710,8 +758,9 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
     }
 
     ScalarWriter arrayWriter = rowWriter.column(index).array().scalar();
-    for (String s : list) {
-      arrayWriter.setString(s);
+    int maxElements = Math.min(list.length, PREVIEW_ROW_LIMIT);
+    for (int i = 0; i < maxElements; i++) {
+      arrayWriter.setString(list[i]);
     }
   }
 
@@ -728,8 +777,9 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
     }
 
     ScalarWriter arrayWriter = rowWriter.column(index).array().scalar();
-    for (double v : list) {
-      arrayWriter.setDouble(v);
+    int maxElements = Math.min(list.length, PREVIEW_ROW_LIMIT);
+    for (int i = 0; i < maxElements; i++) {
+      arrayWriter.setDouble(list[i]);
     }
   }
 
@@ -746,8 +796,9 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
     }
 
     ScalarWriter arrayWriter = rowWriter.column(index).array().scalar();
-    for (float v : list) {
-      arrayWriter.setDouble(v);
+    int maxElements = Math.min(list.length, PREVIEW_ROW_LIMIT);
+    for (int i = 0; i < maxElements; i++) {
+      arrayWriter.setDouble(list[i]);
     }
   }
 
@@ -788,7 +839,8 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
     ArrayWriter innerWriter = listWriter.array();
     // The strings within the inner array
     ScalarWriter floatWriter = innerWriter.scalar();
-    for (int i = 0; i < rows; i++) {
+    int maxElements = Math.min(rows, PREVIEW_ROW_LIMIT);
+    for (int i = 0; i < maxElements; i++) {
       for (int k = 0; k < cols; k++) {
         floatWriter.setDouble(colData[i][k]);
       }
@@ -834,7 +886,8 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
     // The strings within the inner array
     ScalarWriter floatWriter = innerWriter.scalar();
 
-    for (int i = 0; i < rows; i++) {
+    int maxElements = Math.min(rows, PREVIEW_ROW_LIMIT);
+    for (int i = 0; i < maxElements; i++) {
       for (int k = 0; k < cols; k++) {
         floatWriter.setDouble(colData[i][k]);
       }
@@ -880,7 +933,8 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
     // The strings within the inner array
     ScalarWriter bigintWriter = innerWriter.scalar();
 
-    for (int i = 0; i < rows; i++) {
+    int maxElements = Math.min(rows, PREVIEW_ROW_LIMIT);
+    for (int i = 0; i < maxElements; i++) {
       for (int k = 0; k < cols; k++) {
         bigintWriter.setLong(colData[i][k]);
       }
@@ -946,7 +1000,11 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
           writeLongColumn(mapWriter, key, (Long) attrib.getValue());
           break;
         case INT:
-          writeIntColumn(mapWriter, key, (Integer) attrib.getValue());
+          //try {
+            writeIntColumn(mapWriter, key, (Integer) attrib.getValue());
+          //} catch (Exception e) {
+           // logger.warn("{} {}", key, attrib);
+          //}
           break;
         case FLOAT8:
           writeFloat8Column(mapWriter, key, (Double) attrib.getValue());
@@ -994,6 +1052,7 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
         }
       }
 
+
       // Case for auto-flatten
       if (readerConfig.defaultPath != null) {
         for (int row = 0; row < values.length; row++) {
@@ -1032,11 +1091,11 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
 
           SchemaBuilder innerSchema = new SchemaBuilder();
           MapBuilder mapBuilder = innerSchema.addMap(COMPOUND_DATA_FIELD_NAME);
-
           for (HDF5CompoundMemberInformation info : infos) {
             fieldNames.add(info.getName());
+            String compoundColumnDataType = info.getType().tryGetJavaType().getSimpleName();
 
-            switch (info.getType().tryGetJavaType().getSimpleName()) {
+            switch (compoundColumnDataType) {
               case "int":
                 mapBuilder.add(info.getName(), TypeProtos.MinorType.INT, TypeProtos.DataMode.REPEATED);
                 break;
@@ -1069,26 +1128,32 @@ public class HDF5BatchReader implements ManagedReader<FileSchemaNegotiator> {
           for (int col = 0; col < values[row].length; col++) {
             assert fieldNames != null;
             currentFieldName = fieldNames.get(col);
-            ArrayWriter innerWriter = listWriter.array(currentFieldName);
-            if (values[row][col] instanceof Integer) {
-              innerWriter.scalar().setInt((Integer) values[row][col]);
-            } else if (values[row][col] instanceof Short) {
-              innerWriter.scalar().setInt((Short) values[row][col]);
-            } else if (values[row][col] instanceof Byte) {
-              innerWriter.scalar().setInt((Byte) values[row][col]);
-            } else if (values[row][col] instanceof Long) {
-              innerWriter.scalar().setLong((Long) values[row][col]);
-            } else if (values[row][col] instanceof Float) {
-              innerWriter.scalar().setDouble((Float) values[row][col]);
-            } else if (values[row][col] instanceof Double) {
-              innerWriter.scalar().setDouble((Double) values[row][col]);
-            } else if (values[row][col] instanceof BitSet || values[row][col] instanceof Boolean) {
-              innerWriter.scalar().setBoolean((Boolean) values[row][col]);
-            } else if (values[row][col] instanceof String) {
-              innerWriter.scalar().setString((String) values[row][col]);
-            }
-            if (col == values[row].length) {
-              innerWriter.save();
+            try {
+              ArrayWriter innerWriter = listWriter.array(currentFieldName);
+              if (values[row][col] instanceof Integer) {
+                innerWriter.scalar().setInt((Integer) values[row][col]);
+              } else if (values[row][col] instanceof Short) {
+                innerWriter.scalar().setInt((Short) values[row][col]);
+              } else if (values[row][col] instanceof Byte) {
+                innerWriter.scalar().setInt((Byte) values[row][col]);
+              } else if (values[row][col] instanceof Long) {
+                innerWriter.scalar().setLong((Long) values[row][col]);
+              } else if (values[row][col] instanceof Float) {
+                innerWriter.scalar().setDouble((Float) values[row][col]);
+              } else if (values[row][col] instanceof Double) {
+                innerWriter.scalar().setDouble((Double) values[row][col]);
+              } else if (values[row][col] instanceof BitSet || values[row][col] instanceof Boolean) {
+                innerWriter.scalar().setBoolean((Boolean) values[row][col]);
+              } else if (values[row][col] instanceof String) {
+                innerWriter.scalar().setString((String) values[row][col]);
+              } else {
+                logger.warn("Skipping {}/{} due to unsupported data type.", resolvedPath, currentFieldName);
+              }
+              if (col == values[row].length) {
+                innerWriter.save();
+              }
+            } catch (TupleWriter.UndefinedColumnException e) {
+              logger.warn("Drill does not support maps and lists in HDF5 Compound fields. Skipping: {}/{}", resolvedPath, currentFieldName);
             }
           }
         }

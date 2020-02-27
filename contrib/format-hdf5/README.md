@@ -26,11 +26,11 @@ For most uses, the configuration below will suffice to enable Drill to query HDF
 Since HDF5 can be viewed as a file system within a file, a single file can contain many datasets. For instance, if you have a simple HDF5 file, a star query will produce the following result:
 ```
 apache drill> select * from dfs.test.`dset.h5`;
-+-------+-----------+-----------+--------------------------------------------------------------------------+
-| path  | data_type | file_name |                                 int_data                                 |
-+-------+-----------+-----------+--------------------------------------------------------------------------+
-| /dset | DATASET   | dset.h5   | [[1,2,3,4,5,6],[7,8,9,10,11,12],[13,14,15,16,17,18],[19,20,21,22,23,24]] |
-+-------+-----------+-----------+--------------------------------------------------------------------------+
++-------+-----------+-----------+-----------+---------------+--------------+------------------+-------------------+------------+--------------------------------------------------------------------------+
+| path  | data_type | file_name | data_size | element_count | is_timestamp | is_time_duration | dataset_data_type | dimensions |                                 int_data                                 |
++-------+-----------+-----------+-----------+---------------+--------------+------------------+-------------------+------------+--------------------------------------------------------------------------+
+| /dset | DATASET   | dset.h5   | 96        | 24            | false        | false            | INTEGER           | [4, 6]     | [[1,2,3,4,5,6],[7,8,9,10,11,12],[13,14,15,16,17,18],[19,20,21,22,23,24]] |
++-------+-----------+-----------+-----------+---------------+--------------+------------------+-------------------+------------+--------------------------------------------------------------------------+
 ```
 The actual data in this file is mapped to a column called int_data. In order to effectively access the data, you should use Drill's `FLATTEN()` function on the `int_data` column, which produces the following result.
 
@@ -68,6 +68,8 @@ However, a better way to query the actual data in an HDF5 file is to use the `de
  the plugin configuration, Drill will only return the data, rather than the file metadata.
  
  ** Note: Once you have determined which data set you are querying, it is advisable to use this method to query HDF5 data. **
+ 
+ ** Note: Datasets larger that 16MB will be truncated in the metadata view. **
  
  You can set the `defaultPath` variable in either the plugin configuration, or at query time using the `table()` function as shown in the example below:
  
@@ -123,12 +125,14 @@ FROM dfs.test.`browsing.h5` AS t1 WHERE t1.attributes.important = false;
 +---------+-----------+-------------+
 ```
 
-### Known Limitations
+### Limitations
 There are several limitations with the HDF5 format plugin in Drill.
 * Drill cannot read unsigned 64 bit integers. When the plugin encounters this data type, it will write an INFO message to the log.
 * While Drill can read compressed HDF5 files, Drill cannot read individual compressed fields within an HDF5 file.
 * HDF5 files can contain nested data sets of up to `n` dimensions. Since Drill works best with two dimensional data, datasets with more than two dimensions are reduced to 2
  dimensions.
+ * HDF5 has a `COMPOUND` data type. At present, Drill supports reading `COMPOUND` data types that contain multiple datasets. At present Drill does not support `COMPOUND` fields
+  with multidimesnional columns. Drill will ignore multidimensional columns within `COMPOUND` fields.
  
  [1]: https://en.wikipedia.org/wiki/Hierarchical_Data_Format
  [2]: https://www.hdfgroup.org
