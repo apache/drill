@@ -53,13 +53,15 @@ public abstract class BaseRawBatchBuffer<T> implements RawBatchBuffer {
   private int streamCounter;
   private final int fragmentCount;
   protected final FragmentContext context;
+  protected final boolean enableDynamicFC;
 
-  public BaseRawBatchBuffer(final FragmentContext context, final int fragmentCount) {
+  public BaseRawBatchBuffer(final FragmentContext context, final int fragmentCount, final boolean enableDynamicFC) {
     bufferSizePerSocket = context.getConfig().getInt(ExecConstants.INCOMING_BUFFER_SIZE);
 
     this.fragmentCount = fragmentCount;
     this.streamCounter = fragmentCount;
     this.context = context;
+    this.enableDynamicFC = enableDynamicFC;
   }
 
   /**

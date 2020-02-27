@@ -1227,6 +1227,13 @@ class Collector : public ::google::protobuf::Message /* @@protoc_insertion_point
   bool is_spooling() const;
   void set_is_spooling(bool value);
 
+  // optional bool enable_dynamic_fc = 5;
+  bool has_enable_dynamic_fc() const;
+  void clear_enable_dynamic_fc();
+  static const int kEnableDynamicFcFieldNumber = 5;
+  bool enable_dynamic_fc() const;
+  void set_enable_dynamic_fc(bool value);
+
   // @@protoc_insertion_point(class_scope:exec.bit.control.Collector)
  private:
   void set_has_opposite_major_fragment_id();
@@ -1235,6 +1242,8 @@ class Collector : public ::google::protobuf::Message /* @@protoc_insertion_point
   void clear_has_supports_out_of_order();
   void set_has_is_spooling();
   void clear_has_is_spooling();
+  void set_has_enable_dynamic_fc();
+  void clear_has_enable_dynamic_fc();
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
   ::google::protobuf::internal::HasBits<1> _has_bits_;
@@ -1244,6 +1253,7 @@ class Collector : public ::google::protobuf::Message /* @@protoc_insertion_point
   ::google::protobuf::int32 opposite_major_fragment_id_;
   bool supports_out_of_order_;
   bool is_spooling_;
+  bool enable_dynamic_fc_;
   friend struct ::protobuf_BitControl_2eproto::TableStruct;
 };
 // -------------------------------------------------------------------
@@ -2848,6 +2858,30 @@ inline void Collector::set_is_spooling(bool value) {
   set_has_is_spooling();
   is_spooling_ = value;
   // @@protoc_insertion_point(field_set:exec.bit.control.Collector.is_spooling)
+}
+
+// optional bool enable_dynamic_fc = 5;
+inline bool Collector::has_enable_dynamic_fc() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void Collector::set_has_enable_dynamic_fc() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void Collector::clear_has_enable_dynamic_fc() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void Collector::clear_enable_dynamic_fc() {
+  enable_dynamic_fc_ = false;
+  clear_has_enable_dynamic_fc();
+}
+inline bool Collector::enable_dynamic_fc() const {
+  // @@protoc_insertion_point(field_get:exec.bit.control.Collector.enable_dynamic_fc)
+  return enable_dynamic_fc_;
+}
+inline void Collector::set_enable_dynamic_fc(bool value) {
+  set_has_enable_dynamic_fc();
+  enable_dynamic_fc_ = value;
+  // @@protoc_insertion_point(field_set:exec.bit.control.Collector.enable_dynamic_fc)
 }
 
 // -------------------------------------------------------------------

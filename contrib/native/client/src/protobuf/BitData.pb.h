@@ -42,7 +42,7 @@ namespace protobuf_BitData_2eproto {
 struct TableStruct {
   static const ::google::protobuf::internal::ParseTableField entries[];
   static const ::google::protobuf::internal::AuxillaryParseTableField aux[];
-  static const ::google::protobuf::internal::ParseTable schema[4];
+  static const ::google::protobuf::internal::ParseTable schema[5];
   static const ::google::protobuf::internal::FieldMetadata field_metadata[];
   static const ::google::protobuf::internal::SerializationTable serialization_table[];
   static const ::google::protobuf::uint32 offsets[];
@@ -52,6 +52,9 @@ void AddDescriptors();
 namespace exec {
 namespace bit {
 namespace data {
+class AckWithCredit;
+class AckWithCreditDefaultTypeInternal;
+extern AckWithCreditDefaultTypeInternal _AckWithCredit_default_instance_;
 class BitClientHandshake;
 class BitClientHandshakeDefaultTypeInternal;
 extern BitClientHandshakeDefaultTypeInternal _BitClientHandshake_default_instance_;
@@ -69,6 +72,7 @@ extern RuntimeFilterBDefDefaultTypeInternal _RuntimeFilterBDef_default_instance_
 }  // namespace exec
 namespace google {
 namespace protobuf {
+template<> ::exec::bit::data::AckWithCredit* Arena::CreateMaybeMessage<::exec::bit::data::AckWithCredit>(Arena*);
 template<> ::exec::bit::data::BitClientHandshake* Arena::CreateMaybeMessage<::exec::bit::data::BitClientHandshake>(Arena*);
 template<> ::exec::bit::data::BitServerHandshake* Arena::CreateMaybeMessage<::exec::bit::data::BitServerHandshake>(Arena*);
 template<> ::exec::bit::data::FragmentRecordBatch* Arena::CreateMaybeMessage<::exec::bit::data::FragmentRecordBatch>(Arena*);
@@ -85,11 +89,12 @@ enum RpcType {
   GOODBYE = 2,
   REQ_RECORD_BATCH = 3,
   SASL_MESSAGE = 4,
-  REQ_RUNTIME_FILTER = 5
+  REQ_RUNTIME_FILTER = 5,
+  DATA_ACK_WITH_CREDIT = 6
 };
 bool RpcType_IsValid(int value);
 const RpcType RpcType_MIN = HANDSHAKE;
-const RpcType RpcType_MAX = REQ_RUNTIME_FILTER;
+const RpcType RpcType_MAX = DATA_ACK_WITH_CREDIT;
 const int RpcType_ARRAYSIZE = RpcType_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* RpcType_descriptor();
@@ -753,6 +758,120 @@ class RuntimeFilterBDef : public ::google::protobuf::Message /* @@protoc_inserti
   bool to_foreman_;
   ::google::protobuf::int32 hj_op_id_;
   ::google::protobuf::int64 rf_identifier_;
+  friend struct ::protobuf_BitData_2eproto::TableStruct;
+};
+// -------------------------------------------------------------------
+
+class AckWithCredit : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:exec.bit.data.AckWithCredit) */ {
+ public:
+  AckWithCredit();
+  virtual ~AckWithCredit();
+
+  AckWithCredit(const AckWithCredit& from);
+
+  inline AckWithCredit& operator=(const AckWithCredit& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  AckWithCredit(AckWithCredit&& from) noexcept
+    : AckWithCredit() {
+    *this = ::std::move(from);
+  }
+
+  inline AckWithCredit& operator=(AckWithCredit&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _internal_metadata_.unknown_fields();
+  }
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return _internal_metadata_.mutable_unknown_fields();
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const AckWithCredit& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const AckWithCredit* internal_default_instance() {
+    return reinterpret_cast<const AckWithCredit*>(
+               &_AckWithCredit_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    4;
+
+  void Swap(AckWithCredit* other);
+  friend void swap(AckWithCredit& a, AckWithCredit& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline AckWithCredit* New() const final {
+    return CreateMaybeMessage<AckWithCredit>(NULL);
+  }
+
+  AckWithCredit* New(::google::protobuf::Arena* arena) const final {
+    return CreateMaybeMessage<AckWithCredit>(arena);
+  }
+  void CopyFrom(const ::google::protobuf::Message& from) final;
+  void MergeFrom(const ::google::protobuf::Message& from) final;
+  void CopyFrom(const AckWithCredit& from);
+  void MergeFrom(const AckWithCredit& from);
+  void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) final;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const final;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      bool deterministic, ::google::protobuf::uint8* target) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(AckWithCredit* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional int32 allowed_credit = 1;
+  bool has_allowed_credit() const;
+  void clear_allowed_credit();
+  static const int kAllowedCreditFieldNumber = 1;
+  ::google::protobuf::int32 allowed_credit() const;
+  void set_allowed_credit(::google::protobuf::int32 value);
+
+  // @@protoc_insertion_point(class_scope:exec.bit.data.AckWithCredit)
+ private:
+  void set_has_allowed_credit();
+  void clear_has_allowed_credit();
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::internal::HasBits<1> _has_bits_;
+  mutable ::google::protobuf::internal::CachedSize _cached_size_;
+  ::google::protobuf::int32 allowed_credit_;
   friend struct ::protobuf_BitData_2eproto::TableStruct;
 };
 // ===================================================================
@@ -1427,9 +1546,39 @@ inline void RuntimeFilterBDef::set_rf_identifier(::google::protobuf::int64 value
   // @@protoc_insertion_point(field_set:exec.bit.data.RuntimeFilterBDef.rf_identifier)
 }
 
+// -------------------------------------------------------------------
+
+// AckWithCredit
+
+// optional int32 allowed_credit = 1;
+inline bool AckWithCredit::has_allowed_credit() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void AckWithCredit::set_has_allowed_credit() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void AckWithCredit::clear_has_allowed_credit() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void AckWithCredit::clear_allowed_credit() {
+  allowed_credit_ = 0;
+  clear_has_allowed_credit();
+}
+inline ::google::protobuf::int32 AckWithCredit::allowed_credit() const {
+  // @@protoc_insertion_point(field_get:exec.bit.data.AckWithCredit.allowed_credit)
+  return allowed_credit_;
+}
+inline void AckWithCredit::set_allowed_credit(::google::protobuf::int32 value) {
+  set_has_allowed_credit();
+  allowed_credit_ = value;
+  // @@protoc_insertion_point(field_set:exec.bit.data.AckWithCredit.allowed_credit)
+}
+
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

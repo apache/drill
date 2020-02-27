@@ -71,6 +71,7 @@ public abstract class SimpleParallelizer implements QueryParallelizer {
   private final int maxWidthPerNode;
   private final int maxGlobalWidth;
   private final double affinityFactor;
+  private boolean enableDynamicFC;
 
   protected SimpleParallelizer(QueryContext context) {
     OptionManager optionManager = context.getOptions();
@@ -82,6 +83,7 @@ public abstract class SimpleParallelizer implements QueryParallelizer {
     this.maxWidthPerNode = ExecConstants.MAX_WIDTH_PER_NODE.computeMaxWidth(cpu_load_average,maxWidth);
     this.maxGlobalWidth = optionManager.getOption(ExecConstants.MAX_WIDTH_GLOBAL_KEY).num_val.intValue();
     this.affinityFactor = optionManager.getOption(ExecConstants.AFFINITY_FACTOR_KEY).float_val.intValue();
+    this.enableDynamicFC = optionManager.getBoolean(ExecConstants.ENABLE_DYNAMIC_CREDIT_BASED_FC);
   }
 
   protected SimpleParallelizer(long parallelizationThreshold, int maxWidthPerNode, int maxGlobalWidth, double affinityFactor) {
@@ -312,7 +314,6 @@ public abstract class SimpleParallelizer implements QueryParallelizer {
       }
       // a fragment is self driven if it doesn't rely on any other exchanges.
       boolean isLeafFragment = node.getReceivingExchangePairs().size() == 0;
-
       // Create a minorFragment for each major fragment.
       for (int minorFragmentId = 0; minorFragmentId < wrapper.getWidth(); minorFragmentId++) {
         IndexedFragmentNode iNode = new IndexedFragmentNode(minorFragmentId, wrapper,
@@ -338,7 +339,7 @@ public abstract class SimpleParallelizer implements QueryParallelizer {
             .setMemInitial(wrapper.getInitialAllocation())
             .setMemMax(wrapper.getMaxAllocation())
             .setCredentials(session.getCredentials())
-            .addAllCollector(CountRequiredFragments.getCollectors(root))
+            .addAllCollector(CountRequiredFragments.getCollectors(root, enableDynamicFC))
             .build();
 
         MinorFragmentDefn fragmentDefn = new MinorFragmentDefn(fragment, root, options);
@@ -362,11 +363,16 @@ public abstract class SimpleParallelizer implements QueryParallelizer {
    */
 
   protected static class CountRequiredFragments extends AbstractPhysicalVisitor<Void, List<Collector>, RuntimeException> {
-    private static final CountRequiredFragments INSTANCE = new CountRequiredFragments();
+    private boolean enableDynamicFC;
 
-    public static List<Collector> getCollectors(PhysicalOperator root) {
+    CountRequiredFragments(boolean enableDynamicFC) {
+      this.enableDynamicFC = enableDynamicFC;
+    }
+
+    public static List<Collector> getCollectors(PhysicalOperator root, boolean enableDynamicFC) {
       List<Collector> collectors = Lists.newArrayList();
-      root.accept(INSTANCE, collectors);
+      CountRequiredFragments countRequiredFragments = new CountRequiredFragments(enableDynamicFC);
+      root.accept(countRequiredFragments, collectors);
       return collectors;
     }
 
@@ -382,6 +388,7 @@ public abstract class SimpleParallelizer implements QueryParallelizer {
         .setIsSpooling(receiver.isSpooling())
         .setOppositeMajorFragmentId(receiver.getOppositeMajorFragmentId())
         .setSupportsOutOfOrder(receiver.supportsOutOfOrderExchange())
+        .setEnableDynamicFc(enableDynamicFC)
           .addAllIncomingMinorFragment(list)
           .build());
       return null;

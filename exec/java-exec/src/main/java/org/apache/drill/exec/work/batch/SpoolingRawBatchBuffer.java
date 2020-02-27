@@ -59,6 +59,7 @@ public class SpoolingRawBatchBuffer extends BaseRawBatchBuffer<SpoolingRawBatchB
   private static final float STOP_SPOOLING_FRACTION = (float) 0.5;
   public static final long ALLOCATOR_INITIAL_RESERVATION = 1*1024*1024;
   public static final long ALLOCATOR_MAX_RESERVATION = 20L*1000*1000*1000;
+  private static final int SPOOLING_SENDER_CREDIT = 20;
 
   private enum SpoolingState {
     NOT_SPOOLING,
@@ -80,8 +81,8 @@ public class SpoolingRawBatchBuffer extends BaseRawBatchBuffer<SpoolingRawBatchB
   private Path path;
   private FSDataOutputStream outputStream;
 
-  public SpoolingRawBatchBuffer(FragmentContext context, int fragmentCount, int oppositeId, int bufferIndex) {
-    super(context, fragmentCount);
+  public SpoolingRawBatchBuffer(FragmentContext context, int fragmentCount, int oppositeId, int bufferIndex, boolean enableDynamicFC) {
+    super(context, fragmentCount, enableDynamicFC);
     this.allocator = context.getNewChildAllocator(
         "SpoolingRawBatchBufer", 100, ALLOCATOR_INITIAL_RESERVATION, ALLOCATOR_MAX_RESERVATION);
     this.threshold = context.getConfig().getLong(ExecConstants.SPOOLING_BUFFER_MEMORY);
@@ -350,7 +351,12 @@ public class SpoolingRawBatchBuffer extends BaseRawBatchBuffer<SpoolingRawBatchB
       this.available = available;
       this.latch = new CountDownLatch(available ? 0 : 1);
       if (available) {
-        batch.sendOk();
+        //As we can flush to disc ,we could let the sender to send the batch more rapidly
+        if (enableDynamicFC) {
+          batch.sendOk(SPOOLING_SENDER_CREDIT);
+        } else {
+          batch.sendOk();
+        }
       }
     }
 
@@ -374,8 +380,8 @@ public class SpoolingRawBatchBuffer extends BaseRawBatchBuffer<SpoolingRawBatchB
       if (batch.getBody() == null) {
         return 0;
       }
-      assert batch.getBody().readableBytes() >= 0;
-      return batch.getBody().readableBytes();
+      assert batch.getBody().capacity() >= 0;
+      return batch.getBody().capacity();
     }
 
     public void writeToStream(FSDataOutputStream stream) throws IOException {

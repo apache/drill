@@ -72,6 +72,14 @@ public final class BitData {
      * <code>REQ_RUNTIME_FILTER = 5;</code>
      */
     REQ_RUNTIME_FILTER(5),
+    /**
+     * <pre>
+     * a ack for data tunnel,with a runtime suggested credit as a response.
+     * </pre>
+     *
+     * <code>DATA_ACK_WITH_CREDIT = 6;</code>
+     */
+    DATA_ACK_WITH_CREDIT(6),
     ;
 
     /**
@@ -110,6 +118,14 @@ public final class BitData {
      * <code>REQ_RUNTIME_FILTER = 5;</code>
      */
     public static final int REQ_RUNTIME_FILTER_VALUE = 5;
+    /**
+     * <pre>
+     * a ack for data tunnel,with a runtime suggested credit as a response.
+     * </pre>
+     *
+     * <code>DATA_ACK_WITH_CREDIT = 6;</code>
+     */
+    public static final int DATA_ACK_WITH_CREDIT_VALUE = 6;
 
 
     public final int getNumber() {
@@ -132,6 +148,7 @@ public final class BitData {
         case 3: return REQ_RECORD_BATCH;
         case 4: return SASL_MESSAGE;
         case 5: return REQ_RUNTIME_FILTER;
+        case 6: return DATA_ACK_WITH_CREDIT;
         default: return null;
       }
     }
@@ -4372,6 +4389,543 @@ public final class BitData {
 
   }
 
+  public interface AckWithCreditOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:exec.bit.data.AckWithCredit)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <pre>
+     * the credit allowed the sender to send in batch granularity
+     * </pre>
+     *
+     * <code>optional int32 allowed_credit = 1;</code>
+     */
+    boolean hasAllowedCredit();
+    /**
+     * <pre>
+     * the credit allowed the sender to send in batch granularity
+     * </pre>
+     *
+     * <code>optional int32 allowed_credit = 1;</code>
+     */
+    int getAllowedCredit();
+  }
+  /**
+   * Protobuf type {@code exec.bit.data.AckWithCredit}
+   */
+  public  static final class AckWithCredit extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:exec.bit.data.AckWithCredit)
+      AckWithCreditOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use AckWithCredit.newBuilder() to construct.
+    private AckWithCredit(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private AckWithCredit() {
+      allowedCredit_ = 0;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private AckWithCredit(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 8: {
+              bitField0_ |= 0x00000001;
+              allowedCredit_ = input.readInt32();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.BitData.internal_static_exec_bit_data_AckWithCredit_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.apache.drill.exec.proto.BitData.internal_static_exec_bit_data_AckWithCredit_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.apache.drill.exec.proto.BitData.AckWithCredit.class, org.apache.drill.exec.proto.BitData.AckWithCredit.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int ALLOWED_CREDIT_FIELD_NUMBER = 1;
+    private int allowedCredit_;
+    /**
+     * <pre>
+     * the credit allowed the sender to send in batch granularity
+     * </pre>
+     *
+     * <code>optional int32 allowed_credit = 1;</code>
+     */
+    public boolean hasAllowedCredit() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <pre>
+     * the credit allowed the sender to send in batch granularity
+     * </pre>
+     *
+     * <code>optional int32 allowed_credit = 1;</code>
+     */
+    public int getAllowedCredit() {
+      return allowedCredit_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeInt32(1, allowedCredit_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(1, allowedCredit_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof org.apache.drill.exec.proto.BitData.AckWithCredit)) {
+        return super.equals(obj);
+      }
+      org.apache.drill.exec.proto.BitData.AckWithCredit other = (org.apache.drill.exec.proto.BitData.AckWithCredit) obj;
+
+      boolean result = true;
+      result = result && (hasAllowedCredit() == other.hasAllowedCredit());
+      if (hasAllowedCredit()) {
+        result = result && (getAllowedCredit()
+            == other.getAllowedCredit());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasAllowedCredit()) {
+        hash = (37 * hash) + ALLOWED_CREDIT_FIELD_NUMBER;
+        hash = (53 * hash) + getAllowedCredit();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static org.apache.drill.exec.proto.BitData.AckWithCredit parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.BitData.AckWithCredit parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.BitData.AckWithCredit parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.BitData.AckWithCredit parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.BitData.AckWithCredit parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.BitData.AckWithCredit parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.BitData.AckWithCredit parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static org.apache.drill.exec.proto.BitData.AckWithCredit parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.BitData.AckWithCredit parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static org.apache.drill.exec.proto.BitData.AckWithCredit parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.BitData.AckWithCredit parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static org.apache.drill.exec.proto.BitData.AckWithCredit parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(org.apache.drill.exec.proto.BitData.AckWithCredit prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code exec.bit.data.AckWithCredit}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:exec.bit.data.AckWithCredit)
+        org.apache.drill.exec.proto.BitData.AckWithCreditOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.apache.drill.exec.proto.BitData.internal_static_exec_bit_data_AckWithCredit_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.apache.drill.exec.proto.BitData.internal_static_exec_bit_data_AckWithCredit_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.apache.drill.exec.proto.BitData.AckWithCredit.class, org.apache.drill.exec.proto.BitData.AckWithCredit.Builder.class);
+      }
+
+      // Construct using org.apache.drill.exec.proto.BitData.AckWithCredit.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        allowedCredit_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.apache.drill.exec.proto.BitData.internal_static_exec_bit_data_AckWithCredit_descriptor;
+      }
+
+      @java.lang.Override
+      public org.apache.drill.exec.proto.BitData.AckWithCredit getDefaultInstanceForType() {
+        return org.apache.drill.exec.proto.BitData.AckWithCredit.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public org.apache.drill.exec.proto.BitData.AckWithCredit build() {
+        org.apache.drill.exec.proto.BitData.AckWithCredit result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public org.apache.drill.exec.proto.BitData.AckWithCredit buildPartial() {
+        org.apache.drill.exec.proto.BitData.AckWithCredit result = new org.apache.drill.exec.proto.BitData.AckWithCredit(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.allowedCredit_ = allowedCredit_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.apache.drill.exec.proto.BitData.AckWithCredit) {
+          return mergeFrom((org.apache.drill.exec.proto.BitData.AckWithCredit)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.apache.drill.exec.proto.BitData.AckWithCredit other) {
+        if (other == org.apache.drill.exec.proto.BitData.AckWithCredit.getDefaultInstance()) return this;
+        if (other.hasAllowedCredit()) {
+          setAllowedCredit(other.getAllowedCredit());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.apache.drill.exec.proto.BitData.AckWithCredit parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.apache.drill.exec.proto.BitData.AckWithCredit) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private int allowedCredit_ ;
+      /**
+       * <pre>
+       * the credit allowed the sender to send in batch granularity
+       * </pre>
+       *
+       * <code>optional int32 allowed_credit = 1;</code>
+       */
+      public boolean hasAllowedCredit() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <pre>
+       * the credit allowed the sender to send in batch granularity
+       * </pre>
+       *
+       * <code>optional int32 allowed_credit = 1;</code>
+       */
+      public int getAllowedCredit() {
+        return allowedCredit_;
+      }
+      /**
+       * <pre>
+       * the credit allowed the sender to send in batch granularity
+       * </pre>
+       *
+       * <code>optional int32 allowed_credit = 1;</code>
+       */
+      public Builder setAllowedCredit(int value) {
+        bitField0_ |= 0x00000001;
+        allowedCredit_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * the credit allowed the sender to send in batch granularity
+       * </pre>
+       *
+       * <code>optional int32 allowed_credit = 1;</code>
+       */
+      public Builder clearAllowedCredit() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        allowedCredit_ = 0;
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:exec.bit.data.AckWithCredit)
+    }
+
+    // @@protoc_insertion_point(class_scope:exec.bit.data.AckWithCredit)
+    private static final org.apache.drill.exec.proto.BitData.AckWithCredit DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new org.apache.drill.exec.proto.BitData.AckWithCredit();
+    }
+
+    public static org.apache.drill.exec.proto.BitData.AckWithCredit getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<AckWithCredit>
+        PARSER = new com.google.protobuf.AbstractParser<AckWithCredit>() {
+      @java.lang.Override
+      public AckWithCredit parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new AckWithCredit(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<AckWithCredit> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<AckWithCredit> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public org.apache.drill.exec.proto.BitData.AckWithCredit getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_bit_data_BitClientHandshake_descriptor;
   private static final 
@@ -4392,6 +4946,11 @@ public final class BitData {
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_exec_bit_data_RuntimeFilterBDef_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_exec_bit_data_AckWithCredit_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_exec_bit_data_AckWithCredit_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -4420,11 +4979,12 @@ public final class BitData {
       "ment_id\030\003 \001(\005\022\022\n\nto_foreman\030\004 \001(\010\022\"\n\032blo" +
       "om_filter_size_in_bytes\030\005 \003(\005\022\024\n\014probe_f" +
       "ields\030\006 \003(\t\022\020\n\010hj_op_id\030\007 \001(\005\022\025\n\rrf_iden" +
-      "tifier\030\010 \001(\003*n\n\007RpcType\022\r\n\tHANDSHAKE\020\000\022\007" +
-      "\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\024\n\020REQ_RECORD_BATCH" +
-      "\020\003\022\020\n\014SASL_MESSAGE\020\004\022\026\n\022REQ_RUNTIME_FILT" +
-      "ER\020\005B(\n\033org.apache.drill.exec.protoB\007Bit" +
-      "DataH\001"
+      "tifier\030\010 \001(\003\"\'\n\rAckWithCredit\022\026\n\016allowed" +
+      "_credit\030\001 \001(\005*\210\001\n\007RpcType\022\r\n\tHANDSHAKE\020\000" +
+      "\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\024\n\020REQ_RECORD_BAT" +
+      "CH\020\003\022\020\n\014SASL_MESSAGE\020\004\022\026\n\022REQ_RUNTIME_FI" +
+      "LTER\020\005\022\030\n\024DATA_ACK_WITH_CREDIT\020\006B(\n\033org." +
+      "apache.drill.exec.protoB\007BitDataH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -4465,6 +5025,12 @@ public final class BitData {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_exec_bit_data_RuntimeFilterBDef_descriptor,
         new java.lang.String[] { "QueryId", "MajorFragmentId", "MinorFragmentId", "ToForeman", "BloomFilterSizeInBytes", "ProbeFields", "HjOpId", "RfIdentifier", });
+    internal_static_exec_bit_data_AckWithCredit_descriptor =
+      getDescriptor().getMessageTypes().get(4);
+    internal_static_exec_bit_data_AckWithCredit_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_exec_bit_data_AckWithCredit_descriptor,
+        new java.lang.String[] { "AllowedCredit", });
     org.apache.drill.exec.proto.ExecProtos.getDescriptor();
     org.apache.drill.exec.proto.CoordinationProtos.getDescriptor();
     org.apache.drill.exec.proto.UserBitShared.getDescriptor();

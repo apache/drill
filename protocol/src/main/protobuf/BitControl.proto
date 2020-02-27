@@ -104,6 +104,7 @@ message Collector {
   repeated int32 incoming_minor_fragment = 2 [packed=true];
   optional bool supports_out_of_order = 3;
   optional bool is_spooling = 4;
+  optional bool enable_dynamic_fc = 5;
 }
 
 message QueryContextInformation {
