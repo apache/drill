@@ -52,7 +52,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 public class MongoStoragePlugin extends AbstractStoragePlugin {
-  static final Logger logger = LoggerFactory.getLogger(MongoStoragePlugin.class);
+  private static final Logger logger = LoggerFactory.getLogger(MongoStoragePlugin.class);
 
   private final MongoStoragePluginConfig mongoConfig;
   private final MongoSchemaFactory schemaFactory;
