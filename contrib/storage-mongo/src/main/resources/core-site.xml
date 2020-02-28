@@ -21,37 +21,32 @@
 <configuration>
 
     <property>
-        <name>fs.s3a.access.key</name>
-        <value>ENTER_YOUR_ACCESSKEY</value>
-    </property>
-
-    <property>
-        <name>fs.s3a.secret.key</name>
-        <value>ENTER_YOUR_SECRETKEY</value>
-    </property>
-
-    <property>
         <name>drill.exec.store.mongo.username</name>
-        <value>ENTER_YOUR_MONGO_USERNAME</value>
+        <value>test</value>
     </property>
 
     <property>
         <name>drill.exec.store.mongo.password</name>
-        <value>ENTER_YOUR_MONGO_PASSWORD</value>
+        <value>pw</value>
     </property>
 
-    <!--Use this property to specify one or more credential provider URIs instead of
-        configuring above credentials in plain text-->
-    <!--<property>
-        <name>hadoop.security.credential.provider.path</name>
-        <value>ENTER_YOUR_PROVIDER_PATH</value>
-    </property>-->
+    <property>
+        <name>drill.exec.store.mongosec.username</name>
+        <value>!@#$%//:+^*()</value>
+    </property>
 
-    <!--Set this property to true to avoid caching of S3 file system configuration properties,
-        so when you add/update a property (e.g. fs.s3a.secret.key) in S3 storage plugin its new value will be taken-->
-    <!--<property>
-        <name>fs.s3a.impl.disable.cache</name>
-        <value>true</value>
-    </property>-->
+    <property>
+        <name>drill.exec.store.mongosec.password</name>
+        <value>:;[]}{!@#/?$#@</value>
+    </property>
 
+    <property>
+        <name>drill.exec.store.mongomooch.username</name>
+        <value>mooch_${drill.exec.store.mongo.username}</value>
+    </property>
+
+    <property>
+        <name>drill.exec.store.mongomooch.password</name>
+        <value>mooch_${drill.exec.store.mongo.password}</value>
+    </property>
 </configuration>
