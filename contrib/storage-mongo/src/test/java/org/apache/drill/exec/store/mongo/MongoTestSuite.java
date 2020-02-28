@@ -17,35 +17,12 @@
  */
 package org.apache.drill.exec.store.mongo;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import org.apache.drill.categories.MongoStorageTest;
-import org.apache.drill.categories.SlowTest;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import org.apache.drill.test.BaseTest;
-import org.bson.Document;
-import org.bson.conversions.Bson;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
-import org.junit.runners.Suite.SuiteClasses;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.mongodb.MongoClient;
 import com.mongodb.ServerAddress;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Indexes;
-
 import de.flapdoodle.embed.mongo.Command;
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.MongodProcess;
@@ -63,14 +40,35 @@ import de.flapdoodle.embed.mongo.distribution.Version;
 import de.flapdoodle.embed.mongo.tests.MongosSystemForTestFactory;
 import de.flapdoodle.embed.process.config.IRuntimeConfig;
 import de.flapdoodle.embed.process.runtime.Network;
+import org.apache.drill.categories.MongoStorageTest;
+import org.apache.drill.categories.SlowTest;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.apache.drill.test.BaseTest;
+import org.bson.Document;
+import org.bson.conversions.Bson;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.junit.runners.Suite;
+import org.junit.runners.Suite.SuiteClasses;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @RunWith(Suite.class)
 @SuiteClasses({ TestMongoFilterPushDown.class, TestMongoProjectPushDown.class,
     TestMongoQueries.class, TestMongoChunkAssignment.class })
 @Category({SlowTest.class, MongoStorageTest.class})
-public class MongoTestSuit extends BaseTest implements MongoTestConstants {
+public class MongoTestSuite extends BaseTest implements MongoTestConstants {
 
-  private static final Logger logger = LoggerFactory.getLogger(MongoTestSuit.class);
+  private static final Logger logger = LoggerFactory.getLogger(MongoTestSuite.class);
   protected static MongoClient mongoClient;
 
   private static boolean distMode = Boolean.valueOf(System.getProperty("drill.mongo.tests.shardMode", "false"));
@@ -242,7 +240,7 @@ public class MongoTestSuit extends BaseTest implements MongoTestConstants {
 
   @BeforeClass
   public static void initMongo() throws Exception {
-    synchronized (MongoTestSuit.class) {
+    synchronized (MongoTestSuite.class) {
       if (initCount.get() == 0) {
         if (distMode) {
           logger.info("Executing tests in distributed mode");
@@ -282,7 +280,7 @@ public class MongoTestSuit extends BaseTest implements MongoTestConstants {
 
   @AfterClass
   public static void tearDownCluster() throws Exception {
-    synchronized (MongoTestSuit.class) {
+    synchronized (MongoTestSuite.class) {
       if (initCount.decrementAndGet() == 0) {
         try {
           if (mongoClient != null) {

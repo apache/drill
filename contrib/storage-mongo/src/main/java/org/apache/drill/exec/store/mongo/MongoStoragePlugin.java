@@ -17,13 +17,12 @@
  */
 package org.apache.drill.exec.store.mongo;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mongodb.MongoClient;
+import com.mongodb.MongoClientURI;
+import com.mongodb.MongoCredential;
+import com.mongodb.ServerAddress;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -34,41 +33,66 @@ import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.apache.drill.exec.store.mongo.schema.MongoSchemaFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.drill.shaded.guava.com.google.common.cache.Cache;
 import org.apache.drill.shaded.guava.com.google.common.cache.CacheBuilder;
 import org.apache.drill.shaded.guava.com.google.common.cache.RemovalListener;
 import org.apache.drill.shaded.guava.com.google.common.cache.RemovalNotification;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientURI;
-import com.mongodb.MongoCredential;
-import com.mongodb.ServerAddress;
+import org.apache.hadoop.conf.Configuration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 public class MongoStoragePlugin extends AbstractStoragePlugin {
-  static final Logger logger = LoggerFactory
-      .getLogger(MongoStoragePlugin.class);
+  private static final Logger logger = LoggerFactory.getLogger(MongoStoragePlugin.class);
 
   private final MongoStoragePluginConfig mongoConfig;
   private final MongoSchemaFactory schemaFactory;
   private final Cache<MongoCnxnKey, MongoClient> addressClientMap;
   private final MongoClientURI clientURI;
 
-  public MongoStoragePlugin(MongoStoragePluginConfig mongoConfig,
-      DrillbitContext context, String name) throws IOException,
-      ExecutionSetupException {
+  public MongoStoragePlugin(
+    MongoStoragePluginConfig mongoConfig,
+    DrillbitContext context,
+    String name) throws IOException, ExecutionSetupException {
     super(context, name);
     this.mongoConfig = mongoConfig;
-    this.clientURI = new MongoClientURI(this.mongoConfig.getConnection());
+    String connection = addCredentialsFromCredentialsProvider(this.mongoConfig.getConnection(), name);
+    this.clientURI = new MongoClientURI(connection);
     this.addressClientMap = CacheBuilder.newBuilder()
-        .expireAfterAccess(24, TimeUnit.HOURS)
-        .removalListener(new AddressCloser()).build();
+      .expireAfterAccess(24, TimeUnit.HOURS)
+      .removalListener(new AddressCloser()).build();
     this.schemaFactory = new MongoSchemaFactory(this, name);
+  }
+
+  private static final String addCredentialsFromCredentialsProvider(String connection, String name) {
+    MongoClientURI parsed = new MongoClientURI(connection);
+    if (parsed.getCredentials() == null) {
+      Configuration configuration = new Configuration();
+      try {
+        // The default connection has the name "mongo" but multiple connections can be added;
+        // each will need their own credentials.
+        char[] usernameChars = configuration.getPassword("drill.exec.store." + name + ".username");
+        char[] passwordChars = configuration.getPassword("drill.exec.store." + name + ".password");
+        if (usernameChars != null && passwordChars != null) {
+          String username = URLEncoder.encode(new String(usernameChars), "UTF-8");
+          String password = URLEncoder.encode(new String(passwordChars), "UTF-8");
+          String updatedUrl = connection.replaceFirst("://", "://" + username + ":" + password + "@");
+          return updatedUrl.toString();
+        }
+      } catch (IOException e) {
+        logger.error("Error fetching mongodb username and password from configuration", e);
+      }
+    }
+    return connection;
   }
 
   @Override
@@ -88,7 +112,8 @@ public class MongoStoragePlugin extends AbstractStoragePlugin {
 
   @Override
   public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection) throws IOException {
-    MongoScanSpec mongoScanSpec = selection.getListWith(new ObjectMapper(), new TypeReference<MongoScanSpec>() {});
+    MongoScanSpec mongoScanSpec = selection.getListWith(new ObjectMapper(), new TypeReference<MongoScanSpec>() {
+    });
     return new MongoGroupScan(userName, this, mongoScanSpec, null);
   }
 
@@ -99,10 +124,10 @@ public class MongoStoragePlugin extends AbstractStoragePlugin {
 
 
   private class AddressCloser implements
-      RemovalListener<MongoCnxnKey, MongoClient> {
+    RemovalListener<MongoCnxnKey, MongoClient> {
     @Override
     public synchronized void onRemoval(
-        RemovalNotification<MongoCnxnKey, MongoClient> removal) {
+      RemovalNotification<MongoCnxnKey, MongoClient> removal) {
       removal.getValue().close();
       logger.debug("Closed connection to {}.", removal.getKey().toString());
     }
