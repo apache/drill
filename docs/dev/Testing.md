@@ -172,6 +172,59 @@ class DrillBuf ...
     }
 ``` 
 
+# Simulating GitHub Actions
+
+Sometimes a test failure that occurs in the GitHub Actions CI cannot be reproduced locally.  You can try to run the tests in a more similar environment using https://github.com/nektos/act
+
+1. Install act according to its instructions
+2. Edit `.github/workflows/ci.yml` to remove extra "matrix" elements and adjust the maven command line to set the tests you are interested in: ```run: mvn install -Dsurefire.useFile=false -DtrimStackTrace=false -Dtest=org.apache.drill.exec.server.rest.TestQueryWrapper -DfailIfNoTests=false```
+3. Run `act -P ubuntu-latest=nektos/act-environments-ubuntu:18.04 --job build` to run the build
+
 # IntelliJ
 
-TBA
+IntelliJ IDEA has decent support for maven built in, IntelliJ IDEA users can use these steps to get up and running:
+
+First, import maven pom.xml as projects.
+
+Change settings in File > Settings > Build, Execution, Deployment > Build Tools > Maven:
+
+  1. Enable "Work Offline" to avoid checking for dependency updates on every run
+  2. Increase the "Thread Count" to speed up builds - a reasonable default is the number of CPU cores you have
+  3. Go to the "Runner" subsection
+  4. Enable "Delegate IDE build/run actions to Maven".  The IDE didn't seem to do things in a manner compatible with running the application
+  5. Enable "skip tests" you will probably want to run tests manually rather than every time you try to run something
+  6. To skip some uninteresting build steps, you can also set the following properties to `true`: `checkstyle.skip`, `findbugs.skip`, `license.skip`, `maven.javadoc.skip`, `rat.skip`, `skipIfEmpty`
+
+At this point you should be able to use the built-in IDE features to run tests
+
+Running/debugging Drillbit is also possible:
+  1. Create a new run configuration on the class `org.apache.drill.exec.server.Drillbit`
+  2. you have to create a run configuration and set the VM parameters:
+    
+    -Xms4G
+    -Xmx4G
+    -XX:MaxDirectMemorySize=8G
+    -XX:ReservedCodeCacheSize=1G
+    -Ddrill.exec.enable-epoll=false
+    -XX:MaxPermSize=512M
+    -XX:+CMSClassUnloadingEnabled
+    -XX:+UseG1GC
+    -Dlog.path=/opt/drill/log/drillbit.log
+    -Dlog.query.path=/opt/drill/log/drillbit_queries.json
+    -Xbootclasspath/a:/opt/drill/conf
+
+  3. Set environment variables:
+    
+    DRILL_HOST_NAME=localhost:8047
+    DRILL_LOG_DIR=/opt/drill/log
+
+  4. Edit `/opt/drill/conf/drill-override.conf` to set some options:
+  
+    drill.exec: {
+      zk.connect: "localhost:2181",
+      allow_loopback_address_binding: true,
+    }
+        
+  5. Install and run ZooKeeper on port 2181 (refer to ZooKeeper docs for this)
+  6. Run the Drillbit.  Note that which storage plugins are available depends on your classpath.
+ 
