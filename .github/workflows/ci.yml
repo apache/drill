@@ -32,6 +32,36 @@ jobs:
       matrix:
         # Java versions to run unit tests
         java: [ '1.8', '11', '13' ]
+        project:
+          - drill-fmpp-maven-plugin
+          - drill-protocol
+          - drill-common
+          - drill-logical
+          - drill-memory-base
+          - drill-rpc
+          - vector
+          - tpch-sample-data
+          - drill-metastore-api
+          - drill-iceberg-metastore
+          - drill-java-exec
+          - drill-jdbc
+          - drill-jdbc-all
+          - drill-yarn
+          - drill-kudu-storage
+          - drill-opentsdb-storage
+          - drill-mongo-storage
+          - drill-storage-hbase
+          - drill-jdbc-storage
+          - drill-hive-exec-shaded
+          - drill-storage-hive-core
+          - drill-storage-kafka
+          - drill-udfs
+          - drill-format-syslog
+          - drill-format-hdf5
+          - drill-format-ltsv
+          - drill-format-esri
+          - drill-format-excel
+          - drill-format-mapr
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -48,7 +78,7 @@ jobs:
         with:
           java-version: ${{ matrix.java }}
       - name: Build and test
-        run: mvn install
+        run: mvn -pl :${{ matrix.project }} -Dsurefire.useFile=false -DtrimStackTrace=false install
 
   checkstyle_protobuf:
     name: Run checkstyle and generate protobufs
