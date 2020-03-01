@@ -78,7 +78,7 @@ jobs:
         with:
           java-version: ${{ matrix.java }}
       - name: Build and test
-        run: mvn -pl :${{ matrix.project }} -Dsurefire.useFile=false -DtrimStackTrace=false --no-transfer-progress install
+        run: mvn -pl :${{ matrix.project }} -Dsurefire.useFile=false -DtrimStackTrace=false --no-transfer-progress --batch-mode install
 
   checkstyle_protobuf:
     name: Run checkstyle and generate protobufs
