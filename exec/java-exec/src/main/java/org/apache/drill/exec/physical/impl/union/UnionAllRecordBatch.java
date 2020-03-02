@@ -175,7 +175,7 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
     transfers.clear();
     allocationVectors.clear();
 
-    final ClassGenerator<UnionAller> cg = CodeGenerator.getRoot(UnionAller.TEMPLATE_DEFINITION, context.getOptions());
+    ClassGenerator<UnionAller> cg = CodeGenerator.getRoot(UnionAller.TEMPLATE_DEFINITION, context.getOptions());
     cg.getCodeGenerator().plainJavaCapable(true);
     // cg.getCodeGenerator().saveCodeForDebugging(true);
 
@@ -184,38 +184,43 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
       ValueVector vvIn = vw.getValueVector();
       ValueVector vvOut = container.getValueVector(index).getValueVector();
 
-      final ErrorCollector collector = new ErrorCollectorImpl();
-      // According to input data names, Minortypes, Datamodes, choose to
+      MaterializedField inField = vvIn.getField();
+      MaterializedField outputField = vvOut.getField();
+
+      ErrorCollector collector = new ErrorCollectorImpl();
+      // According to input data names, MinorTypes, DataModes, choose to
       // transfer directly,
       // rename columns or
-      // cast data types (Minortype or DataMode)
-      if (container.getSchema().getColumn(index).hasSameTypeAndMode(vvIn.getField())
-          && vvIn.getField().getType().getMinorType() != TypeProtos.MinorType.MAP // Per DRILL-5521, existing bug for map transfer
-          ) {
+      // cast data types (MinorType or DataMode)
+      if (outputField.hasSameTypeAndMode(inField)
+          && inField.getType().getMinorType() != TypeProtos.MinorType.MAP // Per DRILL-5521, existing bug for map transfer
+          && (!Types.areDecimalTypes(inField.getType(), outputField.getType())
+              || (Types.areDecimalTypes(outputField.getType(), inField.getType()) // scale should match for decimal data types
+                  && outputField.getType().getScale() == inField.getType().getScale()))) {
         // Transfer column
         TransferPair tp = vvIn.makeTransferPair(vvOut);
         transfers.add(tp);
-      } else if (vvIn.getField().getType().getMinorType() == TypeProtos.MinorType.NULL) {
+      } else if (inField.getType().getMinorType() == TypeProtos.MinorType.NULL) {
         continue;
       } else { // Copy data in order to rename the column
-        SchemaPath inputPath = SchemaPath.getSimplePath(vvIn.getField().getName());
-        MaterializedField inField = vvIn.getField();
-        MaterializedField outputField = vvOut.getField();
+        SchemaPath inputPath = SchemaPath.getSimplePath(inField.getName());
 
         LogicalExpression expr = ExpressionTreeMaterializer.materialize(inputPath, inputBatch, collector, context.getFunctionRegistry());
         collector.reportErrors(logger);
 
         // If the inputs' DataMode is required and the outputs' DataMode is not required
         // cast to the one with the least restriction
-        if(inField.getType().getMode() == TypeProtos.DataMode.REQUIRED
+        if (inField.getType().getMode() == TypeProtos.DataMode.REQUIRED
             && outputField.getType().getMode() != TypeProtos.DataMode.REQUIRED) {
           expr = ExpressionTreeMaterializer.convertToNullableType(expr, inField.getType().getMinorType(), context.getFunctionRegistry(), collector);
           collector.reportErrors(logger);
         }
 
-        // If two inputs' MinorTypes are different,
-        // Insert a cast before the Union operation
-        if(inField.getType().getMinorType() != outputField.getType().getMinorType()) {
+        // If two inputs' MinorTypes are different or types are decimal with different scales,
+        // inserts a cast before the Union operation
+        if (inField.getType().getMinorType() != outputField.getType().getMinorType()
+            || (Types.areDecimalTypes(outputField.getType(), inField.getType())
+                && outputField.getType().getScale() != inField.getType().getScale())) {
           expr = ExpressionTreeMaterializer.addCastExpression(expr, outputField.getType(), context.getFunctionRegistry(), collector);
           collector.reportErrors(logger);
         }
