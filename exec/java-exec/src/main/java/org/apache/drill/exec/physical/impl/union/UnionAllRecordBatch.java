@@ -30,6 +30,7 @@ import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.OutOfMemoryException;
@@ -175,7 +176,7 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
     transfers.clear();
     allocationVectors.clear();
 
-    final ClassGenerator<UnionAller> cg = CodeGenerator.getRoot(UnionAller.TEMPLATE_DEFINITION, context.getOptions());
+    ClassGenerator<UnionAller> cg = CodeGenerator.getRoot(UnionAller.TEMPLATE_DEFINITION, context.getOptions());
     cg.getCodeGenerator().plainJavaCapable(true);
     // cg.getCodeGenerator().saveCodeForDebugging(true);
 
@@ -184,38 +185,37 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
       ValueVector vvIn = vw.getValueVector();
       ValueVector vvOut = container.getValueVector(index).getValueVector();
 
-      final ErrorCollector collector = new ErrorCollectorImpl();
-      // According to input data names, Minortypes, Datamodes, choose to
+      MaterializedField inField = vvIn.getField();
+      MaterializedField outputField = vvOut.getField();
+
+      ErrorCollector collector = new ErrorCollectorImpl();
+      // According to input data names, MinorTypes, DataModes, choose to
       // transfer directly,
       // rename columns or
-      // cast data types (Minortype or DataMode)
-      if (container.getSchema().getColumn(index).hasSameTypeAndMode(vvIn.getField())
-          && vvIn.getField().getType().getMinorType() != TypeProtos.MinorType.MAP // Per DRILL-5521, existing bug for map transfer
-          ) {
+      // cast data types (MinorType or DataMode)
+      if (areAssignableTypes(inField.getType(), outputField.getType())) {
         // Transfer column
         TransferPair tp = vvIn.makeTransferPair(vvOut);
         transfers.add(tp);
-      } else if (vvIn.getField().getType().getMinorType() == TypeProtos.MinorType.NULL) {
+      } else if (inField.getType().getMinorType() == TypeProtos.MinorType.NULL) {
         continue;
       } else { // Copy data in order to rename the column
-        SchemaPath inputPath = SchemaPath.getSimplePath(vvIn.getField().getName());
-        MaterializedField inField = vvIn.getField();
-        MaterializedField outputField = vvOut.getField();
+        SchemaPath inputPath = SchemaPath.getSimplePath(inField.getName());
 
         LogicalExpression expr = ExpressionTreeMaterializer.materialize(inputPath, inputBatch, collector, context.getFunctionRegistry());
         collector.reportErrors(logger);
 
         // If the inputs' DataMode is required and the outputs' DataMode is not required
         // cast to the one with the least restriction
-        if(inField.getType().getMode() == TypeProtos.DataMode.REQUIRED
+        if (inField.getType().getMode() == TypeProtos.DataMode.REQUIRED
             && outputField.getType().getMode() != TypeProtos.DataMode.REQUIRED) {
           expr = ExpressionTreeMaterializer.convertToNullableType(expr, inField.getType().getMinorType(), context.getFunctionRegistry(), collector);
           collector.reportErrors(logger);
         }
 
-        // If two inputs' MinorTypes are different,
-        // Insert a cast before the Union operation
-        if(inField.getType().getMinorType() != outputField.getType().getMinorType()) {
+        // If two inputs' MinorTypes are different or types are decimal with different scales,
+        // inserts a cast before the Union operation
+        if (isCastRequired(inField.getType(), outputField.getType())) {
           expr = ExpressionTreeMaterializer.addCastExpression(expr, outputField.getType(), context.getFunctionRegistry(), collector);
           collector.reportErrors(logger);
         }
@@ -239,6 +239,38 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
     }
   }
 
+  /**
+   * Checks whether cast should be added for transitioning values from the one type to another one.
+   * {@code true} will be returned if minor types differ or scales differ for the decimal data type.
+   *
+   * @param first  first type
+   * @param second second type
+   * @return {@code true} if cast should be added, {@code false} otherwise
+   */
+  private boolean isCastRequired(MajorType first, MajorType second) {
+    return first.getMinorType() != second.getMinorType()
+        || (Types.areDecimalTypes(second.getMinorType(), first.getMinorType())
+            && second.getScale() != first.getScale());
+  }
+
+  /**
+   * Checks whether data may be transitioned between specified types without using casts.
+   * {@code true} will be returned if minor types and data modes are the same for non-decimal data types,
+   * or if minor types, data modes and scales are the same for decimal data types.
+   *
+   * @param first  first type
+   * @param second second type
+   * @return {@code true} if data may be transitioned between specified types without using casts,
+   * {@code false} otherwise
+   */
+  private boolean areAssignableTypes(MajorType first, MajorType second) {
+    boolean areDecimalTypes = Types.areDecimalTypes(first.getMinorType(), second.getMinorType());
+
+    return Types.isSameTypeAndMode(first, second)
+        && second.getMinorType() != TypeProtos.MinorType.MAP // Per DRILL-5521, existing bug for map transfer
+        && (!areDecimalTypes || first.getScale() == second.getScale()); // scale should match for decimal data types
+  }
+
   // The output table's column names always follow the left table,
   // where the output type is chosen based on DRILL's implicit casting rules
   private void inferOutputFieldsBothSide(final BatchSchema leftSchema, final BatchSchema rightSchema) {
@@ -250,8 +282,10 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
       MaterializedField leftField  = leftIter.next();
       MaterializedField rightField = rightIter.next();
 
-      if (leftField.hasSameTypeAndMode(rightField)) {
-        TypeProtos.MajorType.Builder builder = TypeProtos.MajorType.newBuilder().setMinorType(leftField.getType().getMinorType()).setMode(leftField.getDataMode());
+      if (Types.isSameTypeAndMode(leftField.getType(), rightField.getType())) {
+        MajorType.Builder builder = MajorType.newBuilder()
+            .setMinorType(leftField.getType().getMinorType())
+            .setMode(leftField.getDataMode());
         builder = Types.calculateTypePrecisionAndScale(leftField.getType(), rightField.getType(), builder);
         container.addOrGet(MaterializedField.create(leftField.getName(), builder.build()), callBack);
       } else if (Types.isUntypedNull(rightField.getType())) {
@@ -261,7 +295,7 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
       } else {
         // If the output type is not the same,
         // cast the column of one of the table to a data type which is the Least Restrictive
-        TypeProtos.MajorType.Builder builder = TypeProtos.MajorType.newBuilder();
+        MajorType.Builder builder = MajorType.newBuilder();
         if (leftField.getType().getMinorType() == rightField.getType().getMinorType()) {
           builder.setMinorType(leftField.getType().getMinorType());
           builder = Types.calculateTypePrecisionAndScale(leftField.getType(), rightField.getType(), builder);

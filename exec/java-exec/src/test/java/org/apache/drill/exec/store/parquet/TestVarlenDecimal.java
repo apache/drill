@@ -18,11 +18,18 @@
 package org.apache.drill.exec.store.parquet;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.categories.ParquetTest;
 import org.apache.drill.categories.UnlikelyTest;
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.TypeProtos.DataMode;
+import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.ClusterTest;
 import org.hamcrest.CoreMatchers;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -32,18 +39,25 @@ import org.junit.experimental.categories.Category;
 
 import java.math.BigDecimal;
 import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.List;
 
 @Category({ParquetTest.class, UnlikelyTest.class})
-public class TestVarlenDecimal extends BaseTestQuery {
+public class TestVarlenDecimal extends ClusterTest {
+
+  @BeforeClass
+  public static void setUp() throws Exception {
+    startCluster(ClusterFixture.builder(dirTestWatcher));
+  }
 
   @BeforeClass
   public static void enableDecimalDataType() {
-    setSessionOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY, true);
+    client.alterSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY, true);
   }
 
   @AfterClass
   public static void disableDecimalDataType() {
-    resetSessionOption(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);
+    client.resetSession(PlannerSettings.ENABLE_DECIMAL_DATA_TYPE_KEY);
   }
 
   private static final String DATAFILE = "cp.`parquet/varlenDecimal.parquet`";
@@ -89,11 +103,11 @@ public class TestVarlenDecimal extends BaseTestQuery {
 
     String tableName = "jsonWithDecimals";
     try {
-      alterSession(ExecConstants.OUTPUT_FORMAT_OPTION, "json");
+      client.alterSession(ExecConstants.OUTPUT_FORMAT_OPTION, "json");
 
       String bigDecimalValue = "987654321987654321987654321.987654321";
 
-      test(
+      run(
           "create table dfs.tmp.%s as\n" +
               "select cast('%s' as decimal(36, 9)) dec36", tableName, bigDecimalValue);
 
@@ -110,8 +124,8 @@ public class TestVarlenDecimal extends BaseTestQuery {
           .baselineValues(new BigDecimal(bigDecimalValue).doubleValue())
           .go();
     } finally {
-      resetSessionOption(ExecConstants.OUTPUT_FORMAT_OPTION);
-      test("drop table if exists dfs.tmp.%s", tableName);
+      client.resetSession(ExecConstants.OUTPUT_FORMAT_OPTION);
+      run("drop table if exists dfs.tmp.%s", tableName);
     }
   }
 
@@ -119,11 +133,11 @@ public class TestVarlenDecimal extends BaseTestQuery {
   public void testWriteReadCsv() throws Exception {
     String tableName = "csvWithDecimals";
     try {
-      alterSession(ExecConstants.OUTPUT_FORMAT_OPTION, "csvh");
+      client.alterSession(ExecConstants.OUTPUT_FORMAT_OPTION, "csvh");
 
       String bigDecimalValue = "987654321987654321987654321.987654321";
 
-      test(
+      run(
           "create table dfs.tmp.%s as\n" +
               "select cast('%s' as decimal(36, 9)) dec36", tableName, bigDecimalValue);
 
@@ -139,8 +153,41 @@ public class TestVarlenDecimal extends BaseTestQuery {
           .baselineValues(new BigDecimal(bigDecimalValue))
           .go();
     } finally {
-      resetSessionOption(ExecConstants.OUTPUT_FORMAT_OPTION);
-      test("drop table if exists dfs.tmp.%s", tableName);
+      client.resetSession(ExecConstants.OUTPUT_FORMAT_OPTION);
+      run("drop table if exists dfs.tmp.%s", tableName);
+    }
+  }
+
+  @Test
+  public void testUnionAllWithDifferentScales() throws Exception {
+    try {
+      run("create table dfs.tmp.t as select cast(999999999999999 as decimal(15,0)) as d");
+
+      String query = "select cast(1000 as decimal(10,1)) as d\n" +
+          "union all \n" +
+          "select 596.000 as d \n" +
+          "union all \n" +
+          "select d from dfs.tmp.t";
+
+      testBuilder()
+          .sqlQuery(query)
+          .unOrdered()
+          .baselineColumns("d")
+          .baselineValues(new BigDecimal("1000.000"))
+          .baselineValues(new BigDecimal("596.000"))
+          .baselineValues(new BigDecimal("999999999999999.000"))
+          .go();
+
+      List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Collections.singletonList(Pair.of(
+          SchemaPath.getSimplePath("d"),
+          Types.withPrecisionAndScale(MinorType.VARDECIMAL, DataMode.REQUIRED, 18, 3)));
+
+      testBuilder()
+          .sqlQuery(query)
+          .schemaBaseLine(expectedSchema)
+          .go();
+    } finally {
+      run("drop table if exists dfs.tmp.t");
     }
   }
 }
