@@ -90,7 +90,7 @@ public class SSLConfigServer extends SSLConfig {
     String keyPass = getConfigParam(ExecConstants.SSL_KEY_PASSWORD,
         resolveHadoopPropertyName(HADOOP_SSL_KEYSTORE_KEYPASSWORD_TPL_KEY, mode));
     keyPassword = keyPass.isEmpty() ? keyStorePassword : keyPass;
-    protocol = getConfigParamWithDefault(ExecConstants.SSL_PROTOCOL, DEFAULT_SSL_PROTOCOL);
+    protocol = config.getString(ExecConstants.SSL_PROTOCOL);
     // If provider is OPENSSL then to debug or run this code in an IDE, you will need to enable
     // the dependency on netty-tcnative with the correct classifier for the platform you use.
     // This can be done by enabling the openssl profile.
@@ -99,7 +99,7 @@ public class SSLConfigServer extends SSLConfig {
     // or from your local maven repository:
     // ~/.m2/repository/kr/motd/maven/os-maven-plugin/1.6.1/os-maven-plugin-1.6.1.jar
     // Note that installing this plugin may require you to start with a new workspace
-    provider = getConfigParamWithDefault(ExecConstants.SSL_PROVIDER, DEFAULT_SSL_PROVIDER);
+    provider = config.getString(ExecConstants.SSL_PROVIDER);
   }
 
   public void validateKeyStore() throws DrillException {
@@ -218,18 +218,6 @@ public class SSLConfigServer extends SSLConfig {
   private String getHadoopConfigParam(String name) {
     Preconditions.checkArgument(this.hadoopConfig != null);
     String value = hadoopConfig.get(name, "");
-    value = value.trim();
-    return value;
-  }
-
-  private String getConfigParamWithDefault(String name, String defaultValue) {
-    String value = "";
-    if (config.hasPath(name)) {
-      value = config.getString(name);
-    }
-    if (value.isEmpty()) {
-      value = defaultValue;
-    }
     value = value.trim();
     return value;
   }

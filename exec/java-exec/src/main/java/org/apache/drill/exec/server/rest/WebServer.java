@@ -22,13 +22,12 @@ import com.codahale.metrics.servlets.MetricsServlet;
 import com.codahale.metrics.servlets.ThreadDumpServlet;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.ssl.SSLConfig;
+import org.apache.drill.exec.server.rest.ssl.SslContextFactoryConfigurator;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.expr.fn.registry.FunctionHolder;
 import org.apache.drill.exec.expr.fn.registry.LocalFunctionRegistry;
@@ -40,15 +39,7 @@ import org.apache.drill.exec.server.options.OptionValidator.OptionDescription;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.server.rest.auth.DrillErrorHandler;
 import org.apache.drill.exec.server.rest.auth.DrillHttpSecurityHandlerProvider;
-import org.apache.drill.exec.ssl.SSLConfigBuilder;
 import org.apache.drill.exec.work.WorkManager;
-import org.bouncycastle.asn1.x500.X500NameBuilder;
-import org.bouncycastle.asn1.x500.style.BCStyle;
-import org.bouncycastle.cert.X509v3CertificateBuilder;
-import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
-import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
-import org.bouncycastle.operator.ContentSigner;
-import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.eclipse.jetty.http.HttpVersion;
 import org.eclipse.jetty.security.SecurityHandler;
 import org.eclipse.jetty.security.authentication.SessionAuthentication;
@@ -71,7 +62,6 @@ import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.glassfish.jersey.servlet.ServletContainer;
-import org.joda.time.DateTime;
 
 import javax.servlet.DispatcherType;
 import javax.servlet.http.HttpSession;
@@ -82,18 +72,11 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.KeyStore;
-import java.security.SecureRandom;
-import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.TreeSet;
@@ -161,26 +144,24 @@ public class WebServer implements AutoCloseable {
       return;
     }
 
-    final boolean authEnabled = config.getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED);
 
-    int port = config.getInt(ExecConstants.HTTP_PORT);
-    final boolean portHunt = config.getBoolean(ExecConstants.HTTP_PORT_HUNT);
-    final int acceptors = config.getInt(ExecConstants.HTTP_JETTY_SERVER_ACCEPTORS);
-    final int selectors = config.getInt(ExecConstants.HTTP_JETTY_SERVER_SELECTORS);
-    final int handlers = config.getInt(ExecConstants.HTTP_JETTY_SERVER_HANDLERS);
     final QueuedThreadPool threadPool = new QueuedThreadPool(2, 2);
     embeddedJetty = new Server(threadPool);
+
+    final boolean authEnabled = config.getBoolean(ExecConstants.USER_AUTHENTICATION_ENABLED);
     ServletContextHandler webServerContext = createServletContextHandler(authEnabled);
-    //Allow for Other Drillbits to make REST calls
-    FilterHolder filterHolder = new FilterHolder(CrossOriginFilter.class);
-    filterHolder.setInitParameter("allowedOrigins", "*");
-    //Allowing CORS for metrics only
-    webServerContext.addFilter(filterHolder, STATUS_METRICS_PATH, null);
     embeddedJetty.setHandler(webServerContext);
 
+    final int acceptors = config.getInt(ExecConstants.HTTP_JETTY_SERVER_ACCEPTORS);
+    final int selectors = config.getInt(ExecConstants.HTTP_JETTY_SERVER_SELECTORS);
+    int port = config.getInt(ExecConstants.HTTP_PORT);
     ServerConnector connector = createConnector(port, acceptors, selectors);
+
+    final int handlers = config.getInt(ExecConstants.HTTP_JETTY_SERVER_HANDLERS);
     threadPool.setMaxThreads(handlers + connector.getAcceptors() + connector.getSelectorManager().getSelectorCount());
     embeddedJetty.addConnector(connector);
+
+    final boolean portHunt = config.getBoolean(ExecConstants.HTTP_PORT_HUNT);
     for (int retry = 0; retry < PORT_HUNT_TRIES; retry++) {
       connector.setPort(port);
       try {
@@ -270,6 +251,12 @@ public class WebServer implements AutoCloseable {
       }
     }
 
+    //Allow for Other Drillbits to make REST calls
+    FilterHolder filterHolder = new FilterHolder(CrossOriginFilter.class);
+    filterHolder.setInitParameter("allowedOrigins", "*");
+    //Allowing CORS for metrics only
+    servletContextHandler.addFilter(filterHolder, STATUS_METRICS_PATH, null);
+
     return servletContextHandler;
   }
 
@@ -352,79 +339,9 @@ public class WebServer implements AutoCloseable {
    */
   private ServerConnector createHttpsConnector(int port, int acceptors, int selectors) throws Exception {
     logger.info("Setting up HTTPS connector for web server");
-
-    final SslContextFactory sslContextFactory = new SslContextFactory();
-    SSLConfig ssl = new SSLConfigBuilder()
-        .config(config)
-        .mode(SSLConfig.Mode.SERVER)
-        .initializeSSLContext(false)
-        .validateKeyStore(true)
-        .build();
-    if (ssl.isSslValid()) {
-      logger.info("Using configured SSL settings for web server");
-
-      sslContextFactory.setKeyStorePath(ssl.getKeyStorePath());
-      sslContextFactory.setKeyStorePassword(ssl.getKeyStorePassword());
-      sslContextFactory.setKeyManagerPassword(ssl.getKeyPassword());
-      if(ssl.hasTrustStorePath()){
-        sslContextFactory.setTrustStorePath(ssl.getTrustStorePath());
-        if(ssl.hasTrustStorePassword()){
-          sslContextFactory.setTrustStorePassword(ssl.getTrustStorePassword());
-        }
-      }
-    } else {
-      logger.info("Using generated self-signed SSL settings for web server");
-      final SecureRandom random = new SecureRandom();
-
-      // Generate a private-public key pair
-      final KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
-      keyPairGenerator.initialize(1024, random);
-      final KeyPair keyPair = keyPairGenerator.generateKeyPair();
-
-      final DateTime now = DateTime.now();
-
-      // Create builder for certificate attributes
-      final X500NameBuilder nameBuilder = new X500NameBuilder(BCStyle.INSTANCE)
-          .addRDN(BCStyle.OU, "Apache Drill (auth-generated)")
-          .addRDN(BCStyle.O, "Apache Software Foundation (auto-generated)")
-          .addRDN(BCStyle.CN, workManager.getContext().getEndpoint().getAddress());
-
-      final Date notBefore = now.minusMinutes(1).toDate();
-      final Date notAfter = now.plusYears(5).toDate();
-      final BigInteger serialNumber = new BigInteger(128, random);
-
-      // Create a certificate valid for 5years from now.
-      final X509v3CertificateBuilder certificateBuilder = new JcaX509v3CertificateBuilder(
-          nameBuilder.build(), // attributes
-          serialNumber,
-          notBefore,
-          notAfter,
-          nameBuilder.build(),
-          keyPair.getPublic());
-
-      // Sign the certificate using the private key
-      final ContentSigner contentSigner =
-          new JcaContentSignerBuilder("SHA256WithRSAEncryption").build(keyPair.getPrivate());
-      final X509Certificate certificate =
-          new JcaX509CertificateConverter().getCertificate(certificateBuilder.build(contentSigner));
-
-      // Check the validity
-      certificate.checkValidity(now.toDate());
-
-      // Make sure the certificate is self-signed.
-      certificate.verify(certificate.getPublicKey());
-
-      // Generate a random password for keystore protection
-      final String keyStorePasswd = RandomStringUtils.random(20);
-      final KeyStore keyStore = KeyStore.getInstance("JKS");
-      keyStore.load(null, null);
-      keyStore.setKeyEntry("DrillAutoGeneratedCert", keyPair.getPrivate(),
-          keyStorePasswd.toCharArray(), new java.security.cert.Certificate[]{certificate});
-
-      sslContextFactory.setKeyStore(keyStore);
-      sslContextFactory.setKeyStorePassword(keyStorePasswd);
-    }
-
+    SslContextFactory sslContextFactory = new SslContextFactoryConfigurator(config,
+        workManager.getContext().getEndpoint().getAddress())
+        .configureNewSslContextFactory();
     final HttpConfiguration httpsConfig = baseHttpConfig();
     httpsConfig.addCustomizer(new SecureRequestCustomizer());
 
