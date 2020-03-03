@@ -338,12 +338,9 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
    */
   private boolean loadEnabledPlugins() {
     Iterator<Entry<String, StoragePluginConfig>> allPlugins = pluginStore.load();
-    if (!allPlugins.hasNext()) {
-      // Nothing found, this is (likely) a new install and should be
-      // initialized
-      return false;
-    }
+    int count = 0;
     while (allPlugins.hasNext()) {
+      count++;
       Entry<String, StoragePluginConfig> plugin = allPlugins.next();
       String name = plugin.getKey();
       StoragePluginConfig config = plugin.getValue();
@@ -358,8 +355,8 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
         pluginStore.put(name, config);
       }
     }
-    // Found at least one entry, so this is an existing registry.
-    return true;
+    // If found at least one entry then this is an existing registry.
+    return count > 0;
   }
 
   @Override
@@ -429,8 +426,11 @@ public class StoragePluginRegistryImpl implements StoragePluginRegistry {
 
   @Override
   public StoragePluginConfig getConfig(String name) {
-    PluginHandle entry = getEntry(name);
-    return entry == null ? null : entry.config();
+    PluginHandle plugin = pluginCache.get(name);
+    if (plugin != null) {
+      return plugin.isIntrinsic() ? null : plugin.config();
+    }
+    return pluginStore.get(name);
   }
 
   // Gets a plugin with the named configuration
