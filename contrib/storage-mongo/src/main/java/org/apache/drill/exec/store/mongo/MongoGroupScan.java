@@ -81,7 +81,7 @@ public class MongoGroupScan extends AbstractGroupScan implements
 
   private static final Integer select = Integer.valueOf(1);
 
-  static final Logger logger = LoggerFactory.getLogger(MongoGroupScan.class);
+  private static final Logger logger = LoggerFactory.getLogger(MongoGroupScan.class);
 
   private static final Comparator<List<MongoSubScanSpec>> LIST_SIZE_COMPARATOR = new Comparator<List<MongoSubScanSpec>>() {
     @Override
@@ -110,7 +110,7 @@ public class MongoGroupScan extends AbstractGroupScan implements
 
   private Map<String, List<ChunkInfo>> chunksInverseMapping;
 
-  private Stopwatch watch = Stopwatch.createUnstarted();
+  private final Stopwatch watch = Stopwatch.createUnstarted();
 
   private boolean filterPushedDown = false;
 
@@ -122,7 +122,8 @@ public class MongoGroupScan extends AbstractGroupScan implements
       @JsonProperty("columns") List<SchemaPath> columns,
       @JacksonInject StoragePluginRegistry pluginRegistry) throws IOException,
       ExecutionSetupException {
-    this(userName, (MongoStoragePlugin) pluginRegistry.getPlugin(storagePluginConfig),
+    this(userName,
+        pluginRegistry.resolve(storagePluginConfig, MongoStoragePlugin.class),
         scanSpec, columns);
   }
 

@@ -62,7 +62,6 @@ import org.slf4j.LoggerFactory;
  * references to the FileSystem configuration and path management.
  */
 public class FileSystemPlugin extends AbstractStoragePlugin {
-
   private static final Logger logger = LoggerFactory.getLogger(FileSystemPlugin.class);
 
   /**

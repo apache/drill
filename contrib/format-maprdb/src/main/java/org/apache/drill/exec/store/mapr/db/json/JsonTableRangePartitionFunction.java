@@ -25,6 +25,8 @@ import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.store.mapr.db.MapRDBFormatPlugin;
 import org.apache.drill.exec.vector.ValueVector;
 import org.ojai.store.QueryCondition;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -42,8 +44,7 @@ import com.mapr.org.apache.hadoop.hbase.util.Bytes;
 
 @JsonTypeName("jsontable-range-partition-function")
 public class JsonTableRangePartitionFunction extends AbstractRangePartitionFunction {
-
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JsonTableRangePartitionFunction.class);
+  private static final Logger logger = LoggerFactory.getLogger(JsonTableRangePartitionFunction.class);
 
   @JsonProperty("refList")
   protected List<FieldReference> refList;

@@ -23,6 +23,9 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 public abstract class StoragePluginConfig {
+
+  // DO NOT include enabled status in equality and hash
+  // comparisons; doing so will break the plugin registry.
   private Boolean enabled;
 
   /**

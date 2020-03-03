@@ -31,6 +31,7 @@ import java.util.Set;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.store.PluginHandle.PluginType;
+import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.apache.drill.test.OperatorFixture;
 import org.junit.Test;
 
@@ -119,7 +120,7 @@ public class TestPluginsMap extends BasePluginRegistryTest {
   }
 
   @Test
-  public void testBasics() {
+  public void testBasics() throws PluginException {
     ConnectorHandle connector = fixtureConnector();
 
     StoragePluginFixtureConfig config1a = new StoragePluginFixtureConfig("ok1");
@@ -168,12 +169,11 @@ public class TestPluginsMap extends BasePluginRegistryTest {
     assertTrue(configs.contains(entry1.config()));
     assertTrue(configs.contains(entry2.config()));
 
-    // Convenience (but not optimistically locked) remove
-    map.remove(entry1);
+    map.remove(entry1.name());
     assertNull(map.get(entry1.name()));
     assertNull(map.get(entry1.config()));
 
-    map.remove(entry2);
+    map.remove(entry2.name());
 
     assertTrue(map.getNames().isEmpty());
     assertTrue(map.plugins().isEmpty());
@@ -183,7 +183,7 @@ public class TestPluginsMap extends BasePluginRegistryTest {
   }
 
   @Test
-  public void testRemoveByName() {
+  public void testRemoveByName() throws PluginException {
     ConnectorHandle connector = fixtureConnector();
 
     StoragePluginMap map = new StoragePluginMap();
@@ -208,7 +208,7 @@ public class TestPluginsMap extends BasePluginRegistryTest {
   }
 
   @Test
-  public void testSafePutRemove() {
+  public void testSafePutRemove() throws PluginException {
     ConnectorHandle connector = fixtureConnector();
 
     StoragePluginMap map = new StoragePluginMap();
@@ -232,10 +232,9 @@ public class TestPluginsMap extends BasePluginRegistryTest {
     assertSame(entry3, map.putIfAbsent(entry4));
 
     // Remove
-    assertFalse(map.remove(entry1)); // Already replaced
-    assertTrue(map.remove(entry2)); // currently in map
-    assertTrue(map.remove(entry3));
-    assertFalse(map.remove(entry4));
+    assertSame(entry2, map.remove(entry2.name())); // currently in map
+    assertSame(entry3, map.remove(entry3.name()));
+    assertNull(map.remove(entry4.name()));
 
     assertTrue(map.getNames().isEmpty());
     assertTrue(map.plugins().isEmpty());
@@ -245,7 +244,7 @@ public class TestPluginsMap extends BasePluginRegistryTest {
   }
 
   @Test
-  public void testReplace() {
+  public void testReplace() throws PluginException {
     ConnectorHandle connector = fixtureConnector();
 
     StoragePluginMap map = new StoragePluginMap();
@@ -274,7 +273,7 @@ public class TestPluginsMap extends BasePluginRegistryTest {
   }
 
   @Test
-  public void testSafeRemove() {
+  public void testSafeRemove() throws PluginException {
     ConnectorHandle connector = fixtureConnector();
 
     StoragePluginMap map = new StoragePluginMap();
@@ -349,9 +348,9 @@ public class TestPluginsMap extends BasePluginRegistryTest {
 
       // Remove by entry fails for the same reasons as above.
       try {
-        map.remove(sysEntry);
+        map.remove(sysEntry.name());
         fail();
-      } catch (IllegalArgumentException e) {
+      } catch (PluginException e) {
         // Expected
       }
       assertSame(sysEntry, map.get(sysPlugin.getName()));
@@ -375,7 +374,7 @@ public class TestPluginsMap extends BasePluginRegistryTest {
     }
   }
 
-  public void testClose() {
+  public void testClose() throws PluginException {
     ConnectorHandle connector = fixtureConnector();
 
     StoragePluginMap map = new StoragePluginMap();

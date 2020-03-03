@@ -77,6 +77,9 @@ public class BasePluginRegistryTest extends BaseTest {
     // for these tests.
     @Override
     public DrillbitContext drillbitContext() { return null; }
+
+    @Override
+    public ObjectMapper hoconMapper() { return mapper; }
   }
 
   public static class StoragePluginFixtureConfig extends StoragePluginConfig {
@@ -107,8 +110,8 @@ public class BasePluginRegistryTest extends BaseTest {
     public int hashCode() {
       return Objects.hash(mode);
     }
-
   }
+
   @PrivatePlugin
   public static class StoragePluginFixture extends AbstractStoragePlugin {
 

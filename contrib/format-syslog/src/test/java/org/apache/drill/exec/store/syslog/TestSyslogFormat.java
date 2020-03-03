@@ -17,14 +17,14 @@
  */
 package org.apache.drill.exec.store.syslog;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.rpc.RpcException;
-import org.apache.drill.exec.server.Drillbit;
-import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.exec.store.dfs.FileSystemConfig;
-import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.exec.physical.rowSet.RowSet;
@@ -48,21 +48,18 @@ public class TestSyslogFormat extends ClusterTest {
   }
 
   private static void defineSyslogPlugin() throws ExecutionSetupException {
+    Map<String, FormatPluginConfig> formats = new HashMap<>();
     SyslogFormatConfig sampleConfig = new SyslogFormatConfig();
     sampleConfig.setExtension("syslog");
+    formats.put("sample", sampleConfig);
 
     SyslogFormatConfig flattenedDataConfig = new SyslogFormatConfig();
     flattenedDataConfig.setExtension("syslog1");
     flattenedDataConfig.setFlattenStructuredData(true);
+    formats.put("flat", flattenedDataConfig);
 
     // Define a temporary plugin for the "cp" storage plugin.
-    Drillbit drillbit = cluster.drillbit();
-    final StoragePluginRegistry pluginRegistry = drillbit.getContext().getStorage();
-    final FileSystemPlugin plugin = (FileSystemPlugin) pluginRegistry.getPlugin("cp");
-    final FileSystemConfig pluginConfig = (FileSystemConfig) plugin.getConfig();
-    pluginConfig.getFormats().put("sample", sampleConfig);
-    pluginConfig.getFormats().put("flat", flattenedDataConfig);
-    pluginRegistry.put("cp", pluginConfig);
+    cluster.defineFormats("cp", formats);
   }
 
   @Test

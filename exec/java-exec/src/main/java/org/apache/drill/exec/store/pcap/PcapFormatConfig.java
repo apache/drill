@@ -19,31 +19,30 @@ package org.apache.drill.exec.store.pcap;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.logical.FormatPluginConfig;
-import org.apache.drill.shaded.guava.com.google.common.base.Objects;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 
-import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 @JsonTypeName(PcapFormatPlugin.PLUGIN_NAME)
 public class PcapFormatConfig implements FormatPluginConfig {
 
-  private static final List<String> DEFAULT_EXTS = ImmutableList.of(PcapFormatPlugin.PLUGIN_NAME);
-
-  public List<String> extensions;
+  public List<String> extensions = ImmutableList.of(PcapFormatPlugin.PLUGIN_NAME);
 
   @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-  public boolean sessionizeTCPStreams = false;
+  public boolean sessionizeTCPStreams;
 
   @JsonInclude(JsonInclude.Include.NON_DEFAULT)
   public List<String> getExtensions() {
-    return extensions == null ? DEFAULT_EXTS : extensions;
+    return extensions;
   }
 
   @Override
   public int hashCode() {
-    return Arrays.hashCode(new Object[]{extensions, sessionizeTCPStreams});
+    return Objects.hash(extensions, sessionizeTCPStreams);
   }
 
   @Override
@@ -55,7 +54,15 @@ public class PcapFormatConfig implements FormatPluginConfig {
       return false;
     }
     PcapFormatConfig other = (PcapFormatConfig) obj;
-    return Objects.equal(extensions, other.extensions)
-      && Objects.equal(sessionizeTCPStreams, other.sessionizeTCPStreams);
+    return Objects.equals(extensions, other.extensions) &&
+           Objects.equals(sessionizeTCPStreams, other.sessionizeTCPStreams);
+  }
+
+  @Override
+  public String toString() {
+    return new PlanStringBuilder(this)
+        .field("extensions", extensions)
+        .field("sessionizeTCPStreams", sessionizeTCPStreams)
+        .toString();
   }
 }

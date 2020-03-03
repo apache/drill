@@ -38,10 +38,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
-// Class containing information for reading a single Kudu tablet
+/**
+ * Information for reading a single Kudu tablet
+ */
 @JsonTypeName("kudu-sub-scan")
 public class KuduSubScan extends AbstractBase implements SubScan {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(KuduSubScan.class);
 
   private final KuduStoragePlugin kuduStoragePlugin;
   private final List<KuduSubScanSpec> tabletScanSpecList;
@@ -53,7 +54,7 @@ public class KuduSubScan extends AbstractBase implements SubScan {
                       @JsonProperty("tabletScanSpecList") LinkedList<KuduSubScanSpec> tabletScanSpecList,
                       @JsonProperty("columns") List<SchemaPath> columns) throws ExecutionSetupException {
     super((String) null);
-    kuduStoragePlugin = (KuduStoragePlugin) registry.getPlugin(kuduStoragePluginConfig);
+    kuduStoragePlugin = registry.resolve(kuduStoragePluginConfig, KuduStoragePlugin.class);
     this.tabletScanSpecList = tabletScanSpecList;
     this.columns = columns;
   }
@@ -118,23 +119,15 @@ public class KuduSubScan extends AbstractBase implements SubScan {
       this.endKey = endKey;
     }
 
-    public String getTableName() {
-      return tableName;
-    }
+    public String getTableName() { return tableName; }
 
-    public byte[] getStartKey() {
-      return startKey;
-    }
+    public byte[] getStartKey() { return startKey; }
 
-    public byte[] getEndKey() {
-      return endKey;
-    }
-
+    public byte[] getEndKey() { return endKey; }
   }
 
   @Override
   public int getOperatorType() {
     return CoreOperatorType.KUDU_SUB_SCAN_VALUE;
   }
-
 }

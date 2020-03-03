@@ -31,8 +31,6 @@ import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.Iterator;
@@ -41,9 +39,6 @@ import java.util.List;
 
 @JsonTypeName("openTSDB-sub-scan")
 public class OpenTSDBSubScan extends AbstractBase implements SubScan {
-
-  private static final Logger log =
-      LoggerFactory.getLogger(OpenTSDBSubScan.class);
 
   public final OpenTSDBStoragePluginConfig storage;
 
@@ -57,7 +52,7 @@ public class OpenTSDBSubScan extends AbstractBase implements SubScan {
                          @JsonProperty("tabletScanSpecList") LinkedList<OpenTSDBSubScanSpec> tabletScanSpecList,
                          @JsonProperty("columns") List<SchemaPath> columns) throws ExecutionSetupException {
     super((String) null);
-    openTSDBStoragePlugin = (OpenTSDBStoragePlugin) registry.getPlugin(storage);
+    openTSDBStoragePlugin = registry.resolve(storage, OpenTSDBStoragePlugin.class);
     this.tabletScanSpecList = tabletScanSpecList;
     this.storage = storage;
     this.columns = columns;

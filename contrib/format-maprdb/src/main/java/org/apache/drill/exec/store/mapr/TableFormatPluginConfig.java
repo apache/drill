@@ -34,5 +34,4 @@ public abstract class TableFormatPluginConfig implements FormatPluginConfig {
   }
 
   protected abstract boolean impEquals(Object obj);
-
 }

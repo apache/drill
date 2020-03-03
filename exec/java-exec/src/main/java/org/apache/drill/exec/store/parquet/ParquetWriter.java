@@ -26,6 +26,8 @@ import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.AbstractWriter;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.store.StorageStrategy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 
@@ -34,11 +36,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 @JsonTypeName("parquet-writer")
 public class ParquetWriter extends AbstractWriter {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetWriter.class);
+  static final Logger logger = LoggerFactory.getLogger(ParquetWriter.class);
 
 /** Version of Drill's Parquet writer. Increment this version (by 1) any time we make any format change to the file.
  * Format changes include:
@@ -66,8 +67,7 @@ public class ParquetWriter extends AbstractWriter {
           @JacksonInject StoragePluginRegistry engineRegistry) throws IOException, ExecutionSetupException {
 
     super(child);
-    this.formatPlugin = (ParquetFormatPlugin) engineRegistry.getFormatPlugin(storageConfig, new ParquetFormatConfig());
-    Preconditions.checkNotNull(formatPlugin, "Unable to load format plugin for provided format config.");
+    this.formatPlugin = engineRegistry.resolveFormat(storageConfig, new ParquetFormatConfig(), ParquetFormatPlugin.class);
     this.location = location;
     this.partitionColumns = partitionColumns;
     setStorageStrategy(storageStrategy);

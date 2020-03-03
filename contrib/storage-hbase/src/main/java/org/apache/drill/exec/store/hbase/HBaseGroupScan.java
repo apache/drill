@@ -56,6 +56,8 @@ import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Admin;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.RegionLocator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -69,7 +71,7 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 
 @JsonTypeName("hbase-scan")
 public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConstants {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBaseGroupScan.class);
+  private static final Logger logger = LoggerFactory.getLogger(HBaseGroupScan.class);
 
   private static final Comparator<List<HBaseSubScanSpec>> LIST_SIZE_COMPARATOR = (list1, list2) -> list1.size() - list2.size();
 
@@ -83,7 +85,7 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
 
   private HBaseStoragePlugin storagePlugin;
 
-  private Stopwatch watch = Stopwatch.createUnstarted();
+  private final Stopwatch watch = Stopwatch.createUnstarted();
 
   private Map<Integer, List<HBaseSubScanSpec>> endpointFragmentMapping;
 
@@ -103,7 +105,7 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
                         @JsonProperty("storage") HBaseStoragePluginConfig storagePluginConfig,
                         @JsonProperty("columns") List<SchemaPath> columns,
                         @JacksonInject StoragePluginRegistry pluginRegistry) throws IOException, ExecutionSetupException {
-    this (userName, (HBaseStoragePlugin) pluginRegistry.getPlugin(storagePluginConfig), hbaseScanSpec, columns);
+    this (userName, pluginRegistry.resolve(storagePluginConfig, HBaseStoragePlugin.class), hbaseScanSpec, columns);
   }
 
   public HBaseGroupScan(String userName, HBaseStoragePlugin storagePlugin, HBaseScanSpec scanSpec,

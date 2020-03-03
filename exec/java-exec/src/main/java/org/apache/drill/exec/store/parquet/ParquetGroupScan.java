@@ -88,8 +88,7 @@ public class ParquetGroupScan extends AbstractParquetGroupScan {
     Preconditions.checkNotNull(formatConfig);
 
     this.cacheFileRoot = cacheFileRoot;
-    this.formatPlugin =
-        Preconditions.checkNotNull((ParquetFormatPlugin) engineRegistry.getFormatPlugin(storageConfig, formatConfig));
+    this.formatPlugin = engineRegistry.resolveFormat(storageConfig, formatConfig, ParquetFormatPlugin.class);
     this.formatConfig = this.formatPlugin.getConfig();
     DrillFileSystem fs =
         ImpersonationUtil.createFileSystem(ImpersonationUtil.resolveUserName(userName), formatPlugin.getFsConf());

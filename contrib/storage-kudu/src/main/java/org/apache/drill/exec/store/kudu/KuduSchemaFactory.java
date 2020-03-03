@@ -34,11 +34,12 @@ import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.kudu.Schema;
 import org.apache.kudu.client.KuduTable;
 import org.apache.kudu.client.ListTablesResponse;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 
 public class KuduSchemaFactory extends AbstractSchemaFactory {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(KuduSchemaFactory.class);
+  private static final Logger logger = LoggerFactory.getLogger(KuduSchemaFactory.class);
 
   private final KuduStoragePlugin plugin;
 
@@ -84,7 +85,6 @@ public class KuduSchemaFactory extends AbstractSchemaFactory {
         logger.warn("Failure while retrieving kudu table {}", name, e);
         return null;
       }
-
     }
 
     @Override
@@ -111,7 +111,6 @@ public class KuduSchemaFactory extends AbstractSchemaFactory {
         public List<String> getPartitionColumns() {
           return Collections.emptyList();
         }
-
       };
     }
 
@@ -136,7 +135,5 @@ public class KuduSchemaFactory extends AbstractSchemaFactory {
     public String getTypeName() {
       return KuduStoragePluginConfig.NAME;
     }
-
   }
-
 }

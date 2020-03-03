@@ -44,6 +44,7 @@ public abstract class TableFormatMatcher extends FormatMatcher {
     return false;
   }
 
+  @Override
   public DrillTable isReadable(DrillFileSystem fs,
       FileSelection selection, FileSystemPlugin fsPlugin,
       String storageEngineName, SchemaConfig schemaConfig) throws IOException {
@@ -73,5 +74,4 @@ public abstract class TableFormatMatcher extends FormatMatcher {
    * by this format plugin. The path must point to a MapR table.
    */
   protected abstract boolean isSupportedTable(MapRFileStatus status) throws IOException;
-
 }

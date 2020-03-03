@@ -17,10 +17,8 @@
  */
 package org.apache.drill.exec.store.dfs.easy;
 
-import java.io.IOException;
 import java.util.List;
 
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.AbstractWriter;
@@ -33,11 +31,12 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @JsonTypeName("fs-writer")
 public class EasyWriter extends AbstractWriter {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EasyWriter.class);
+  static final Logger logger = LoggerFactory.getLogger(EasyWriter.class);
 
   private final String location;
   private final List<String> partitionColumns;
@@ -51,11 +50,10 @@ public class EasyWriter extends AbstractWriter {
       @JsonProperty("storageStrategy") StorageStrategy storageStrategy,
       @JsonProperty("storage") StoragePluginConfig storageConfig,
       @JsonProperty("format") FormatPluginConfig formatConfig,
-      @JacksonInject StoragePluginRegistry engineRegistry) throws IOException, ExecutionSetupException {
+      @JacksonInject StoragePluginRegistry engineRegistry) {
 
     super(child);
-    this.formatPlugin = (EasyFormatPlugin<?>) engineRegistry.getFormatPlugin(storageConfig, formatConfig);
-    Preconditions.checkNotNull(formatPlugin, "Unable to load format plugin for provided format config.");
+    this.formatPlugin = engineRegistry.resolveFormat(storageConfig, formatConfig, EasyFormatPlugin.class);
     this.location = location;
     this.partitionColumns = partitionColumns;
     setStorageStrategy(storageStrategy);

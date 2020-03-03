@@ -43,9 +43,9 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 public class FileSystemCreateTableEntry implements CreateTableEntry {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FileSystemCreateTableEntry.class);
 
-  private FileSystemConfig storageConfig;
-  private FormatPlugin formatPlugin;
-  private String location;
+  private final FileSystemConfig storageConfig;
+  private final FormatPlugin formatPlugin;
+  private final String location;
   private final List<String> partitionColumns;
   private final StorageStrategy storageStrategy;
 
@@ -58,7 +58,7 @@ public class FileSystemCreateTableEntry implements CreateTableEntry {
                                     @JacksonInject StoragePluginRegistry engineRegistry)
       throws ExecutionSetupException {
     this.storageConfig = storageConfig;
-    this.formatPlugin = engineRegistry.getFormatPlugin(storageConfig, formatConfig);
+    this.formatPlugin = engineRegistry.resolveFormat(storageConfig, formatConfig, FormatPlugin.class);
     this.location = location;
     this.partitionColumns = partitionColumns;
     this.storageStrategy = storageStrategy;

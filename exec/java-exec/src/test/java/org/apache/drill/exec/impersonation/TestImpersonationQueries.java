@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.impersonation;
 
+import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.apache.drill.exec.store.avro.AvroDataGenerator;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.apache.drill.categories.SecurityTest;
@@ -304,7 +305,7 @@ public class TestImpersonationQueries extends BaseTestImpersonation {
   }
 
   @AfterClass
-  public static void removeMiniDfsBasedStorage() {
+  public static void removeMiniDfsBasedStorage() throws PluginException {
     getDrillbitContext().getStorage().remove(MINI_DFS_STORAGE_PLUGIN_NAME);
     stopMiniDfsCluster();
   }

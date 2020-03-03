@@ -125,8 +125,8 @@ public class JsonTableGroupScan extends MapRDBGroupScan implements IndexGroupSca
                             @JsonProperty("columns") List<SchemaPath> columns,
                             @JsonProperty("schema") TupleMetadata schema,
                             @JacksonInject StoragePluginRegistry pluginRegistry) throws ExecutionSetupException, IOException {
-    this(userName, (AbstractStoragePlugin) pluginRegistry.getPlugin(storagePluginConfig),
-        (MapRDBFormatPlugin) pluginRegistry.getFormatPlugin(storagePluginConfig, formatPluginConfig),
+    this(userName, pluginRegistry.resolve(storagePluginConfig, AbstractStoragePlugin.class),
+        pluginRegistry.resolveFormat(storagePluginConfig, formatPluginConfig, MapRDBFormatPlugin.class),
         scanSpec, columns, new MapRDBStatistics(), FileSystemMetadataProviderManager.getMetadataProviderForSchema(schema));
   }
 
@@ -207,6 +207,7 @@ public class JsonTableGroupScan extends MapRDBGroupScan implements IndexGroupSca
     }
   }
 
+  @Override
   protected NavigableMap<TabletFragmentInfo, String> getRegionsToScan() {
     return getRegionsToScan(formatPlugin.getScanRangeSizeMB());
   }
@@ -271,6 +272,7 @@ public class JsonTableGroupScan extends MapRDBGroupScan implements IndexGroupSca
     return doNotAccessRegionsToScan;
   }
 
+  @Override
   protected MapRDBSubScanSpec getSubScanSpec(final TabletFragmentInfo tfi) {
     // XXX/TODO check filter/Condition
     final JsonScanSpec spec = scanSpec;
@@ -438,6 +440,7 @@ public class JsonTableGroupScan extends MapRDBGroupScan implements IndexGroupSca
     return !formatPluginConfig.isEnablePushdown();
   }
 
+  @Override
   @JsonIgnore
   public boolean canPushdownProjects(List<SchemaPath> columns) {
     return formatPluginConfig.isEnablePushdown();

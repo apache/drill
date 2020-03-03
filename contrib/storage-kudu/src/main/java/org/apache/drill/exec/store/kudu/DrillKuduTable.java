@@ -30,7 +30,6 @@ import org.apache.kudu.Type;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 public class DrillKuduTable extends DynamicDrillTable {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillKuduTable.class);
 
   private final Schema schema;
 

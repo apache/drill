@@ -21,12 +21,12 @@ public interface Constants {
   /**
    * openTSDB required constants for API call
    */
-  public static final String DEFAULT_TIME = "47y-ago";
-  public static final String SUM_AGGREGATOR = "sum";
+  String DEFAULT_TIME = "47y-ago";
+  String SUM_AGGREGATOR = "sum";
 
-  public static final String TIME_PARAM = "start";
-  public static final String END_TIME_PARAM = "end";
-  public static final String METRIC_PARAM = "metric";
-  public static final String AGGREGATOR_PARAM = "aggregator";
-  public static final String DOWNSAMPLE_PARAM = "downsample";
+  String TIME_PARAM = "start";
+  String END_TIME_PARAM = "end";
+  String METRIC_PARAM = "metric";
+  String AGGREGATOR_PARAM = "aggregator";
+  String DOWNSAMPLE_PARAM = "downsample";
 }

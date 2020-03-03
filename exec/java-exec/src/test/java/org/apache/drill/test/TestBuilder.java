@@ -64,7 +64,7 @@ public class TestBuilder {
   private Boolean ordered;
   private boolean approximateEquality;
   private double tolerance;
-  private TestServices services;
+  private final TestServices services;
   // Used to pass the type information associated with particular column names rather than relying on the
   // ordering of the columns in the CSV file, or the default type inferences when reading JSON, this is used for the
   // case where results of the test query are adding type casts to the baseline queries, this saves a little bit of
@@ -408,10 +408,6 @@ public class TestBuilder {
     return this;
   }
 
-  private boolean singleExplicitBaselineRecord() {
-    return baselineRecords != null;
-  }
-
   /**
    * Provide a SQL query to validate against.
    * @param baselineQuery
@@ -558,7 +554,7 @@ public class TestBuilder {
   }
 
   public class SchemaTestBuilder extends TestBuilder {
-    private List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema;
+    private final List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema;
     SchemaTestBuilder(TestServices services, Object query, UserBitShared.QueryType queryType,
         String baselineOptionSettingQueries, String testOptionSettingQueries, List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema) {
       super(services, query, queryType, false, false, null, baselineOptionSettingQueries, testOptionSettingQueries, false, -1);
@@ -598,7 +594,7 @@ public class TestBuilder {
   public class JSONTestBuilder extends TestBuilder {
 
     // path to the baseline file that will be inserted into the validation query
-    private String baselineFilePath;
+    private final String baselineFilePath;
 
     JSONTestBuilder(String baselineFile, TestServices services, Object query, UserBitShared.QueryType queryType, Boolean ordered,
                     boolean approximateEquality, Map<SchemaPath, TypeProtos.MajorType> baselineTypeMap,
@@ -627,8 +623,8 @@ public class TestBuilder {
     /**
      * Baseline query. Type of object depends on {@link #baselineQueryType}
      */
-    private Object baselineQuery;
-    private UserBitShared.QueryType baselineQueryType;
+    private final Object baselineQuery;
+    private final UserBitShared.QueryType baselineQueryType;
 
     BaselineQueryTestBuilder(Object baselineQuery, UserBitShared.QueryType baselineQueryType, TestServices services,
                              Object query, UserBitShared.QueryType queryType, Boolean ordered,

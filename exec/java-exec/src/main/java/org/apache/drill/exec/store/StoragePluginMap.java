@@ -23,12 +23,10 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.map.CaseInsensitiveMap;
+import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Holds maps to storage plugins. Supports name => plugin and config => plugin
@@ -56,7 +54,6 @@ import org.slf4j.LoggerFactory;
  * close. (The one exception is final close, which is done here.)
  */
 class StoragePluginMap implements Iterable<PluginHandle>, AutoCloseable {
-  private static final Logger logger = LoggerFactory.getLogger(StoragePluginMap.class);
 
   private final Map<String, PluginHandle> nameMap = CaseInsensitiveMap.newHashMap();
   private final Map<StoragePluginConfig, PluginHandle> configMap = new HashMap<>();
@@ -66,8 +63,9 @@ class StoragePluginMap implements Iterable<PluginHandle>, AutoCloseable {
    * the same plugin twice. Also safe for putting a different
    *
    * @return the replaced entry, if any, which the caller should close
+   * @throws PluginException for an attempt to replace a system plugin
    */
-  public synchronized PluginHandle put(PluginHandle plugin) {
+  public synchronized PluginHandle put(PluginHandle plugin) throws PluginException {
     PluginHandle oldPlugin = nameMap.put(plugin.name(), plugin);
     if (oldPlugin != null) {
       if (oldPlugin == plugin || oldPlugin.config().equals(plugin.config())) {
@@ -76,12 +74,7 @@ class StoragePluginMap implements Iterable<PluginHandle>, AutoCloseable {
       if (oldPlugin.isIntrinsic()) {
         // Put the old one back
         nameMap.put(oldPlugin.name(), oldPlugin);
-        throw UserException.permissionError()
-          .message("Attempt to replace a system plugin.")
-          .addContext("Plugin name", oldPlugin.name())
-          .addContext("Intrinsic plugin class", oldPlugin.config().getClass().getName())
-          .addContext("Attempted replacement", plugin.config().getClass().getName())
-          .build(logger);
+        throw PluginException.systemPluginException("replace", plugin.name());
       }
       configMap.remove(oldPlugin.config());
     }
@@ -127,19 +120,16 @@ class StoragePluginMap implements Iterable<PluginHandle>, AutoCloseable {
    * @param newPlugin the new plugin to insert
    * @return true if the new plugin was inserted, false if not because
    * the old plugin was not found in the map
+   * @throws PluginException for an attempt to replace a system plugin
    */
-  public synchronized boolean replace(PluginHandle oldPlugin, PluginHandle newPlugin) {
+  public synchronized boolean replace(PluginHandle oldPlugin, PluginHandle newPlugin)
+      throws PluginException {
     Preconditions.checkArgument(oldPlugin != null);
     Preconditions.checkArgument(newPlugin != null);
     Preconditions.checkArgument(oldPlugin.name().equalsIgnoreCase(newPlugin.name()));
     Preconditions.checkArgument(oldPlugin != newPlugin);
     if (oldPlugin.isIntrinsic()) {
-      throw UserException.permissionError()
-        .message("Attempt to replace a system plugin.")
-        .addContext("Plugin name", oldPlugin.name())
-        .addContext("Intrinsic plugin class", oldPlugin.config().getClass().getName())
-        .addContext("Attempted replacement", newPlugin.config().getClass().getName())
-        .build(logger);
+      throw PluginException.systemPluginException("replace", oldPlugin.name());
     }
     boolean ok = nameMap.replace(oldPlugin.name(), oldPlugin, newPlugin);
     if (ok) {
@@ -157,46 +147,20 @@ class StoragePluginMap implements Iterable<PluginHandle>, AutoCloseable {
    *
    * @return the doomed plugin if the plugin was removed, null if there was
    * no entry by the given name
+   * @throws PluginException for an attempt to remove a system plugin
    * @see {@link #remove(PluginHandle)
    */
-  public synchronized PluginHandle remove(String name) {
+  public synchronized PluginHandle remove(String name) throws PluginException {
     PluginHandle plugin = get(name);
     if (plugin == null) {
       return null;
     }
     if (plugin.isIntrinsic()) {
-      throw UserException.permissionError()
-        .message("Attempt to remove a system plugin.")
-        .addContext("Plugin name", plugin.name())
-        .addContext("Intrinsic plugin class", plugin.config().getClass().getName())
-        .build(logger);
+      throw PluginException.systemPluginException("remove", name);
     }
     nameMap.remove(name);
     configMap.remove(plugin.config(), plugin);
     return plugin;
-  }
-
-  /**
-   * Removes the plugin, but only if it is in the map. That is,
-   * resolves the name and removes the plugin only if it resolves
-   * to the given plugin.
-   *
-   * @return true if the plugin was removed and the caller
-   * should close it, false otherwise
-   */
-  public synchronized boolean remove(PluginHandle oldPlugin) {
-    if (oldPlugin.isIntrinsic()) {
-      throw UserException.permissionError()
-        .message("Attempt to remove a system plugin.")
-        .addContext("Plugin name", oldPlugin.name())
-        .addContext("Intrinsic plugin class", oldPlugin.config().getClass().getName())
-        .build(logger);
-    }
-    boolean ok = nameMap.remove(oldPlugin.name(), oldPlugin);
-    if (ok) {
-      configMap.remove(oldPlugin.config(), oldPlugin);
-    }
-    return ok;
   }
 
   /**
@@ -208,21 +172,23 @@ class StoragePluginMap implements Iterable<PluginHandle>, AutoCloseable {
    * @param name plugin name
    * @param oldConfig expected config of the doomed plugin
    * @return true if the plugin was removed and closed, false otherwise
+   * @throws PluginException for an attempt to remove a system plugin
    */
-  public synchronized PluginHandle remove(String name, StoragePluginConfig oldConfig) {
+  public synchronized PluginHandle remove(String name, StoragePluginConfig oldConfig) throws PluginException {
     PluginHandle oldEntry = nameMap.get(name);
     if (oldEntry == null || !oldEntry.config().equals(oldConfig)) {
       return null;
     }
     if (oldEntry.isIntrinsic()) {
-      throw UserException.permissionError()
-        .message("Attempt to remove a system plugin.")
-        .addContext("Plugin name", oldEntry.name())
-        .addContext("Intrinsic plugin class", oldEntry.config().getClass().getName())
-        .build(logger);
+      throw PluginException.systemPluginException("remove", name);
     }
     nameMap.remove(oldEntry.name());
-    configMap.remove(oldEntry.config());
+    if (configMap.remove(oldEntry.config()) != oldEntry) {
+      // This is a programming error.
+      throw new IllegalStateException(String.format(
+        "Config entry was modified while in the plugin cache: '%s', class %s",
+        name, oldConfig.getClass().getName()));
+    }
     return oldEntry;
   }
 
@@ -260,5 +226,9 @@ class StoragePluginMap implements Iterable<PluginHandle>, AutoCloseable {
       .forEach(e -> e.close());
     configMap.clear();
     nameMap.clear();
+  }
+
+  public Set<String> names() {
+    return nameMap.keySet();
   }
 }

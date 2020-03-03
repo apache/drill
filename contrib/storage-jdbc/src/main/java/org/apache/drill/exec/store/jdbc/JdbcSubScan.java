@@ -48,7 +48,7 @@ public class JdbcSubScan extends AbstractSubScan {
     super("");
     this.sql = sql;
     this.columns = columns;
-    this.plugin = (JdbcStoragePlugin) plugins.getPlugin(config);
+    this.plugin = plugins.resolve(config, JdbcStoragePlugin.class);
   }
 
   JdbcSubScan(String sql, List<SchemaPath> columns, JdbcStoragePlugin plugin) {

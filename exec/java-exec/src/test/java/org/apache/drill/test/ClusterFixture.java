@@ -38,7 +38,6 @@ import java.util.Optional;
 import java.util.Properties;
 
 import org.apache.drill.common.config.DrillProperties;
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.ExecConstants;
@@ -53,6 +52,7 @@ import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.apache.drill.exec.store.StoragePluginRegistryImpl;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
@@ -467,7 +467,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
         StoragePluginRegistryImpl registry = (StoragePluginRegistryImpl) drillbit.getContext().getStorage();
         registry.put(name, config);
       }
-    } catch (ExecutionSetupException e) {
+    } catch (PluginException e) {
       throw new IllegalStateException("Plugin definition failed", e);
     }
   }
@@ -491,7 +491,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
     for (Drillbit bit : drillbits()) {
       try {
         defineWorkspace(bit, pluginName, schemaName, path, defaultFormat, format);
-      } catch (ExecutionSetupException e) {
+      } catch (PluginException e) {
         // This functionality is supposed to work in tests. Change
         // exception to unchecked to make test code simpler.
 
@@ -504,9 +504,9 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
 
   private void defineWorkspace(Drillbit drillbit, String pluginName,
       String schemaName, String path, String defaultFormat, FormatPluginConfig format)
-      throws ExecutionSetupException {
+      throws PluginException {
     final StoragePluginRegistry pluginRegistry = drillbit.getContext().getStorage();
-    final FileSystemConfig pluginConfig = (FileSystemConfig) pluginRegistry.getConfig(pluginName);
+    final FileSystemConfig pluginConfig = (FileSystemConfig) pluginRegistry.getStoredConfig(pluginName);
     final WorkspaceConfig newTmpWSConfig = new WorkspaceConfig(path, true, defaultFormat, false);
 
     Map<String, WorkspaceConfig> newWorkspaces = new HashMap<>();
@@ -531,7 +531,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
     for (Drillbit bit : drillbits()) {
       try {
         defineFormats(bit, pluginName, formats);
-      } catch (ExecutionSetupException e) {
+      } catch (PluginException e) {
         throw new IllegalStateException(e);
       }
     }
@@ -539,10 +539,10 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
 
   private void defineFormats(Drillbit drillbit,
                              String pluginName,
-                             Map<String, FormatPluginConfig> formats) throws ExecutionSetupException {
+                             Map<String, FormatPluginConfig> formats) throws PluginException {
     StoragePluginRegistry pluginRegistry = drillbit.getContext().getStorage();
-    FileSystemConfig pluginConfig = (FileSystemConfig) pluginRegistry.getConfig(pluginName);
-    pluginConfig = pluginConfig.copyWithFormats(formats);
+    FileSystemConfig pluginConfig = (FileSystemConfig) pluginRegistry.copyConfig(pluginName);
+    pluginConfig.getFormats().putAll(formats);
     pluginRegistry.put(pluginName, pluginConfig);
   }
 
@@ -550,7 +550,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
                             String pluginName,
                             FileSystemConfig pluginConfig,
                             Map<String, WorkspaceConfig> newWorkspaces,
-                            Map<String, FormatPluginConfig> newFormats) throws ExecutionSetupException {
+                            Map<String, FormatPluginConfig> newFormats) throws PluginException {
     FileSystemConfig newPluginConfig = new FileSystemConfig(
       pluginConfig.getConnection(),
       pluginConfig.getConfig(),

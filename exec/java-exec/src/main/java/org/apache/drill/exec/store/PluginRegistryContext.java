@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public interface PluginRegistryContext {
   DrillConfig config();
   ObjectMapper mapper();
+  ObjectMapper hoconMapper();
   ScanResult classpathScan();
 
   // TODO: Remove this here and from StoragePlugin constructors.

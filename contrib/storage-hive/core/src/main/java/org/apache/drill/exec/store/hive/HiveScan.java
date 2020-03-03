@@ -44,6 +44,8 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.Table;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -55,7 +57,7 @@ import static org.apache.drill.exec.store.hive.HiveUtilities.createPartitionWith
 
 @JsonTypeName("hive-scan")
 public class HiveScan extends AbstractGroupScan {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveScan.class);
+  private static final Logger logger = LoggerFactory.getLogger(HiveScan.class);
 
   private static int HIVE_SERDE_SCAN_OVERHEAD_FACTOR_PER_COLUMN = 20;
 
@@ -78,7 +80,7 @@ public class HiveScan extends AbstractGroupScan {
                   @JacksonInject final StoragePluginRegistry pluginRegistry) throws ExecutionSetupException {
     this(userName,
         hiveReadEntry,
-        (HiveStoragePlugin) pluginRegistry.getPlugin(hiveStoragePluginConfig),
+        pluginRegistry.resolve(hiveStoragePluginConfig, HiveStoragePlugin.class),
         columns,
         null, confProperties);
   }

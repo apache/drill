@@ -26,9 +26,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.apache.drill.exec.store.hive.HiveStoragePlugin;
 import org.apache.drill.exec.store.hive.HiveStoragePluginConfig;
 import org.apache.drill.test.BaseDirTestWatcher;
@@ -228,7 +228,7 @@ public class HiveTestFixture {
           pluginConfig.setEnabled(true);
           drillbit.getContext().getStorage().put(pluginName, pluginConfig);
         }
-      } catch (ExecutionSetupException e) {
+      } catch (PluginException e) {
         throw new RuntimeException("Failed to add Hive storage plugin to drillbits", e);
       }
     }
@@ -238,7 +238,13 @@ public class HiveTestFixture {
     }
 
     public void removeHivePluginFrom(Iterable<Drillbit> drillbits) {
-      drillbits.forEach(bit -> bit.getContext().getStorage().remove(pluginName));
+      try {
+        for (Drillbit drillbit : drillbits) {
+          drillbit.getContext().getStorage().remove(pluginName);
+        }
+      } catch (PluginException e) {
+        throw new RuntimeException("Failed to remove Hive storage plugin for drillbits", e);
+      }
     }
 
     public void updateHivePlugin(Iterable<Drillbit> drillbits,
@@ -254,13 +260,11 @@ public class HiveTestFixture {
           newPluginConfig.getConfigProps().putAll(configOverride);
           pluginRegistry.put(pluginName, newPluginConfig);
         }
-      } catch (ExecutionSetupException e) {
+      } catch (PluginException e) {
         throw new RuntimeException("Failed to update Hive storage plugin for drillbits", e);
       }
     }
-
   }
-
 
   /**
    * Implements method for initialization and passing
@@ -275,8 +279,7 @@ public class HiveTestFixture {
      *  {@link HiveTestFixture}'s constructor will create instance,
      *  and API users will get it via {@link HiveTestFixture#getDriverManager()}.
      */
-    private HiveDriverManager() {
-    }
+    private HiveDriverManager() { }
 
     public void runWithinSession(Consumer<Driver> driverConsumer) {
       final HiveConf hiveConf = new HiveConf(SessionState.class);
@@ -289,7 +292,5 @@ public class HiveTestFixture {
         throw new RuntimeException("Exception was thrown while closing SessionState", e);
       }
     }
-
   }
-
 }

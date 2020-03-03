@@ -227,7 +227,7 @@ public class PluginBootstrapLoaderImpl implements PluginBootstrapLoader {
     }
     pluginsOverrideFileUrl = urlSet.iterator().next();
     try (InputStream is = pluginsOverrideFileUrl.openStream();) {
-      return context.mapper().readValue(is, StoragePlugins.class);
+      return context.hoconMapper().readValue(is, StoragePlugins.class);
     } catch (IOException e) {
       logger.error("Failures are obtained while loading file: '{}'. Proceeding without update.",
           upgradeFileName, e);
@@ -332,6 +332,6 @@ public class PluginBootstrapLoaderImpl implements PluginBootstrapLoader {
 
   private StoragePlugins getPluginsFromResource(URL resource) throws IOException {
     String pluginsData = Resources.toString(resource, Charsets.UTF_8);
-    return context.mapper().readValue(pluginsData, StoragePlugins.class);
+    return context.hoconMapper().readValue(pluginsData, StoragePlugins.class);
   }
 }
