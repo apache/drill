@@ -159,7 +159,7 @@ class DrillAggFuncHolder extends DrillFuncHolder {
     for (int i = 0; i < getWorkspaceVars().length; i++) {
       if (getWorkspaceVars()[i].isInject()) {
         workspaceJVars[i] = g.declareClassField("work", g.getModel()._ref(getWorkspaceVars()[i].getType()));
-        g.getBlock(BlockType.SETUP).assign(workspaceJVars[i], g.getMappingSet().getIncoming().invoke("getContext").invoke("getManagedBuffer"));
+        assignInjectableValue(g, workspaceJVars[i], getWorkspaceVars()[i]);
       } else {
         Preconditions.checkState(Types.isFixedWidthType(getWorkspaceVars()[i].getMajorType()), String.format("Workspace variable '%s' in aggregation function '%s' is not allowed to " +
             "have variable length type.", getWorkspaceVars()[i].getName(), getRegisteredNames()[0]));

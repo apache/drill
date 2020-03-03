@@ -1224,4 +1224,19 @@ public class TestAggregateFunctions extends ClusterTest {
       client.resetSession(PlannerSettings.STREAMAGG.getOptionName());
     }
   }
+
+  @Test
+  public void testInjectVariablesHashAgg() throws Exception {
+    try {
+      client.alterSession(PlannerSettings.STREAMAGG.getOptionName(), false);
+      testBuilder()
+          .sqlQuery("select tdigest(p.col_int) from " +
+              "cp.`parquet/alltypes_required.parquet` p group by p.col_flt")
+          .unOrdered()
+          .expectsNumRecords(4)
+          .go();
+    } finally {
+      client.resetSession(PlannerSettings.STREAMAGG.getOptionName());
+    }
+  }
 }
