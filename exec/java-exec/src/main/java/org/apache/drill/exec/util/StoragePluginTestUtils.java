@@ -24,9 +24,9 @@ import java.util.Optional;
 
 import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.store.dfs.WorkspaceConfig;
 
@@ -64,8 +64,8 @@ public class StoragePluginTestUtils {
   public static void updateSchemaLocation(final String pluginName,
                                           final StoragePluginRegistry pluginRegistry,
                                           final File tmpDirPath,
-                                          String... schemas) throws ExecutionSetupException {
-    final FileSystemConfig pluginConfig = (FileSystemConfig) pluginRegistry.getConfig(pluginName);
+                                          String... schemas) throws PluginException {
+    final FileSystemConfig pluginConfig = (FileSystemConfig) pluginRegistry.getStoredConfig(pluginName);
 
     Map<String, WorkspaceConfig> newWorkspaces = new HashMap<>();
     Optional.ofNullable(pluginConfig.getWorkspaces())
@@ -91,13 +91,13 @@ public class StoragePluginTestUtils {
     pluginRegistry.put(pluginName, newPluginConfig);
   }
 
-  public static void configureFormatPlugins(StoragePluginRegistry pluginRegistry) throws ExecutionSetupException {
+  public static void configureFormatPlugins(StoragePluginRegistry pluginRegistry) throws PluginException {
     configureFormatPlugins(pluginRegistry, CP_PLUGIN_NAME);
     configureFormatPlugins(pluginRegistry, DFS_PLUGIN_NAME);
   }
 
-  public static void configureFormatPlugins(StoragePluginRegistry pluginRegistry, String storagePlugin) throws ExecutionSetupException {
-    FileSystemConfig fileSystemConfig = (FileSystemConfig) pluginRegistry.getConfig(storagePlugin);
+  public static void configureFormatPlugins(StoragePluginRegistry pluginRegistry, String storagePlugin) throws PluginException {
+    FileSystemConfig fileSystemConfig = (FileSystemConfig) pluginRegistry.getStoredConfig(storagePlugin);
 
     Map<String, FormatPluginConfig> newFormats = new HashMap<>();
     Optional.ofNullable(fileSystemConfig.getFormats())

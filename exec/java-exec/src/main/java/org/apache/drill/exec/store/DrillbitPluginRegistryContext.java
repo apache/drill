@@ -33,16 +33,19 @@ public class DrillbitPluginRegistryContext implements PluginRegistryContext {
 
   private final DrillbitContext drillbitContext;
   private final ObjectMapper mapper;
+  private final ObjectMapper hoconMapper;
 
   public DrillbitPluginRegistryContext(DrillbitContext drillbitContext) {
     this.drillbitContext = drillbitContext;
+
+    mapper = drillbitContext.getLpPersistence().getMapper();
 
     // Specialized form of the persistence mechanism
     // to handle HOCON format in the override file
     LogicalPlanPersistence persistence = new LogicalPlanPersistence(drillbitContext.getConfig(),
         drillbitContext.getClasspathScan(),
         new ObjectMapper(new HoconFactory()));
-    mapper = persistence.getMapper();
+    hoconMapper = persistence.getMapper();
   }
 
   @Override
@@ -53,6 +56,11 @@ public class DrillbitPluginRegistryContext implements PluginRegistryContext {
   @Override
   public ObjectMapper mapper() {
     return mapper;
+  }
+
+  @Override
+  public ObjectMapper hoconMapper() {
+    return hoconMapper;
   }
 
   @Override

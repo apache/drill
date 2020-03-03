@@ -280,7 +280,8 @@ public class ClassicConnectorLocator implements ConnectorLocator {
         throw ((ExecutionSetupException) t);
       }
       throw new ExecutionSetupException(String.format(
-          "Failure setting up new storage plugin configuration for config %s", pluginConfig), t);
+          "Failure setting up new storage plugin configuration for config %s",
+          pluginConfig.getClass().getSimpleName()), t);
     }
   }
 

@@ -91,6 +91,8 @@ import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.JobConf;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -104,7 +106,7 @@ import java.util.stream.Collectors;
 import static org.apache.hadoop.hive.metastore.api.hive_metastoreConstants.META_TABLE_STORAGE;
 
 public class HiveUtilities {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveUtilities.class);
+  private static final Logger logger = LoggerFactory.getLogger(HiveUtilities.class);
 
   /**
    * Partition value is received in string format. Convert it into appropriate object based on the type.

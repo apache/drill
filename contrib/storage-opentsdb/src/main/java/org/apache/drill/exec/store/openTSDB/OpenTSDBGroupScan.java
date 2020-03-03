@@ -47,9 +47,9 @@ import static org.apache.drill.exec.store.openTSDB.Util.fromRowData;
 @JsonTypeName("openTSDB-scan")
 public class OpenTSDBGroupScan extends AbstractGroupScan {
 
-  private OpenTSDBStoragePluginConfig storagePluginConfig;
-  private OpenTSDBScanSpec openTSDBScanSpec;
-  private OpenTSDBStoragePlugin storagePlugin;
+  private final OpenTSDBStoragePluginConfig storagePluginConfig;
+  private final OpenTSDBScanSpec openTSDBScanSpec;
+  private final OpenTSDBStoragePlugin storagePlugin;
 
   private List<SchemaPath> columns;
 
@@ -58,7 +58,8 @@ public class OpenTSDBGroupScan extends AbstractGroupScan {
                            @JsonProperty("storage") OpenTSDBStoragePluginConfig openTSDBStoragePluginConfig,
                            @JsonProperty("columns") List<SchemaPath> columns,
                            @JacksonInject StoragePluginRegistry pluginRegistry) throws IOException, ExecutionSetupException {
-    this((OpenTSDBStoragePlugin) pluginRegistry.getPlugin(openTSDBStoragePluginConfig), openTSDBScanSpec, columns);
+    this(pluginRegistry.resolve(openTSDBStoragePluginConfig, OpenTSDBStoragePlugin.class),
+        openTSDBScanSpec, columns);
   }
 
   public OpenTSDBGroupScan(OpenTSDBStoragePlugin storagePlugin,

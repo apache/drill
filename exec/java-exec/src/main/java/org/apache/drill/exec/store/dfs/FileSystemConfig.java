@@ -31,7 +31,10 @@ import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+
 import org.apache.drill.common.map.CaseInsensitiveMap;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap.Builder;
 
 @JsonTypeName(FileSystemConfig.NAME)
 public class FileSystemConfig extends StoragePluginConfig {
@@ -49,7 +52,13 @@ public class FileSystemConfig extends StoragePluginConfig {
                           @JsonProperty("workspaces") Map<String, WorkspaceConfig> workspaces,
                           @JsonProperty("formats") Map<String, FormatPluginConfig> formats) {
     this.connection = connection;
-    this.config = config;
+
+    // Force creation of an empty map so that configs compare equal
+    Builder<String, String> builder = ImmutableMap.builder();
+    if (config != null) {
+      builder.putAll(config);
+    }
+    this.config = builder.build();
     Map<String, WorkspaceConfig> caseInsensitiveWorkspaces = CaseInsensitiveMap.newHashMap();
     Optional.ofNullable(workspaces).ifPresent(caseInsensitiveWorkspaces::putAll);
     this.workspaces = caseInsensitiveWorkspaces;

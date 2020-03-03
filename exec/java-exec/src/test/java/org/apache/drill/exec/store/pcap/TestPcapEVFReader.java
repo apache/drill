@@ -19,11 +19,6 @@
 package org.apache.drill.exec.store.pcap;
 
 import org.apache.drill.categories.RowSetTests;
-import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.server.Drillbit;
-import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.exec.store.dfs.FileSystemConfig;
-import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.junit.BeforeClass;
@@ -39,19 +34,7 @@ public class TestPcapEVFReader extends ClusterTest {
   @BeforeClass
   public static void setup() throws Exception {
     ClusterTest.startCluster(ClusterFixture.builder(dirTestWatcher));
-    definePlugin();
-  }
-
-  private static void definePlugin() throws ExecutionSetupException {
-    PcapFormatConfig sampleConfig = new PcapFormatConfig();
-
-    // Define a temporary plugin for the "cp" storage plugin.
-    Drillbit drillbit = cluster.drillbit();
-    final StoragePluginRegistry pluginRegistry = drillbit.getContext().getStorage();
-    final FileSystemPlugin plugin = (FileSystemPlugin) pluginRegistry.getPlugin("cp");
-    final FileSystemConfig pluginConfig = (FileSystemConfig) plugin.getConfig();
-    pluginConfig.getFormats().put("sample", sampleConfig);
-    pluginRegistry.put("cp", pluginConfig);
+    cluster.defineFormat("cp", "sample", new PcapFormatConfig());
   }
 
   @Test

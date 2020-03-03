@@ -24,13 +24,13 @@ import org.apache.calcite.linq4j.tree.Expressions;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.impl.AbstractSchema;
 import org.apache.calcite.util.BuiltInMethod;
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.exceptions.UserExceptionUtils;
 import org.apache.drill.exec.planner.sql.SchemaUtilites;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.StoragePlugin;
 import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.apache.drill.exec.store.SubSchemaWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -117,7 +117,7 @@ public class DynamicRootSchema extends DynamicSchema {
           schemaPlus.add(wrapper.getName(), wrapper);
         }
       }
-    } catch(ExecutionSetupException | IOException ex) {
+    } catch(PluginException | IOException ex) {
       logger.warn("Failed to load schema for \"" + schemaName + "\"!", ex);
       // We can't proceed further without a schema, throw a runtime exception.
       UserException.Builder exceptBuilder =

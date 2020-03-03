@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
 public class MongoFilterBuilder extends
     AbstractExprVisitor<MongoScanSpec, Void, RuntimeException> implements
     DrillMongoConstants {
-  static final Logger logger = LoggerFactory
+  private static final Logger logger = LoggerFactory
       .getLogger(MongoFilterBuilder.class);
   final MongoGroupScan groupScan;
   final LogicalExpression le;

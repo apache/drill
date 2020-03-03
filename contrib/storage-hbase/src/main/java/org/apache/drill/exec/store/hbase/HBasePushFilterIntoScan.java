@@ -40,7 +40,10 @@ public abstract class HBasePushFilterIntoScan extends StoragePluginOptimizerRule
     super(operand, description);
   }
 
-  public static final StoragePluginOptimizerRule FILTER_ON_SCAN = new HBasePushFilterIntoScan(RelOptHelper.some(FilterPrel.class, RelOptHelper.any(ScanPrel.class)), "HBasePushFilterIntoScan:Filter_On_Scan") {
+  public static final StoragePluginOptimizerRule FILTER_ON_SCAN =
+      new HBasePushFilterIntoScan(RelOptHelper.some(
+          FilterPrel.class, RelOptHelper.any(ScanPrel.class)),
+          "HBasePushFilterIntoScan:Filter_On_Scan") {
 
     @Override
     public void onMatch(RelOptRuleCall call) {

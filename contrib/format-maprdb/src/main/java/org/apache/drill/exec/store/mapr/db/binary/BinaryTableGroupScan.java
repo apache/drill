@@ -73,7 +73,7 @@ public class BinaryTableGroupScan extends MapRDBGroupScan implements DrillHBaseC
 
   public static final String TABLE_BINARY = "binary";
 
-  private HBaseScanSpec hbaseScanSpec;
+  private final HBaseScanSpec hbaseScanSpec;
 
   private HTableDescriptor hTableDesc;
 
@@ -87,8 +87,8 @@ public class BinaryTableGroupScan extends MapRDBGroupScan implements DrillHBaseC
                               @JsonProperty("columns") List<SchemaPath> columns,
                               @JsonProperty("schema") TupleMetadata schema,
                               @JacksonInject StoragePluginRegistry pluginRegistry) throws ExecutionSetupException, IOException {
-    this(userName, (AbstractStoragePlugin) pluginRegistry.getPlugin(storagePluginConfig),
-        (MapRDBFormatPlugin) pluginRegistry.getFormatPlugin(storagePluginConfig, formatPluginConfig),
+    this(userName, pluginRegistry.resolve(storagePluginConfig, AbstractStoragePlugin.class),
+        pluginRegistry.resolveFormat(storagePluginConfig, formatPluginConfig, MapRDBFormatPlugin.class),
         scanSpec, columns, null /* tableStats */, FileSystemMetadataProviderManager.getMetadataProviderForSchema(schema));
   }
 
@@ -160,6 +160,7 @@ public class BinaryTableGroupScan extends MapRDBGroupScan implements DrillHBaseC
   }
 
 
+  @Override
   protected MapRDBSubScanSpec getSubScanSpec(TabletFragmentInfo tfi) {
     HBaseScanSpec spec = hbaseScanSpec;
     return new MapRDBSubScanSpec(

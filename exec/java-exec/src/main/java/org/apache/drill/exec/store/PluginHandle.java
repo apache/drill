@@ -141,6 +141,8 @@ public class PluginHandle {
     logger.info("Creating storage plugin for {}", name);
     try {
       plugin = connector.newInstance(name, config);
+    } catch (UserException e) {
+      throw e;
     } catch (Exception e) {
       throw UserException.internalError(e)
         .addContext("Plugin name", name)
@@ -189,6 +191,9 @@ public class PluginHandle {
    * from/to ephemeral storage and the plugin cache, since those two
    * caches are not synchronized as a whole. Ensures that only one of the
    * threads in a race condition will transfer the actual plugin instance.
+   * <p>
+   * By definition, a plugin becomes disabled if it moves to ephemeral,
+   * enabled if it moves from ephemeral into stored status.
    */
   public synchronized PluginHandle transfer(PluginType type) {
     if (plugin == null) {

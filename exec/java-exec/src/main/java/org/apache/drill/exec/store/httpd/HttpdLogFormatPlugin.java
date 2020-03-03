@@ -61,7 +61,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class HttpdLogFormatPlugin extends EasyFormatPlugin<HttpdLogFormatConfig> {
-
   private static final Logger logger = LoggerFactory.getLogger(HttpdLogFormatPlugin.class);
 
   private static final String PLUGIN_EXTENSION = "httpd";
@@ -90,8 +89,7 @@ public class HttpdLogFormatPlugin extends EasyFormatPlugin<HttpdLogFormatConfig>
   }
 
   /**
-   * This class performs the work for the plugin. This is where all logic goes to read records. In this case httpd logs
-   * are lines terminated with a new line character.
+   * Reads httpd logs lines terminated with a newline character.
    */
   private class HttpdLogRecordReader extends AbstractRecordReader {
 
@@ -111,10 +109,11 @@ public class HttpdLogFormatPlugin extends EasyFormatPlugin<HttpdLogFormatConfig>
     }
 
     /**
-     * The query fields passed in are formatted in a way that Drill requires. Those must be cleaned up to work with the
-     * parser.
+     * The query fields passed in are formatted in a way that Drill requires.
+     * Those must be cleaned up to work with the parser.
      *
-     * @return Map with Drill field names as a key and Parser Field names as a value
+     * @return Map with Drill field names as a key and Parser Field names as a
+     *         value
      */
     private Map<String, String> makeParserFields() {
       Map<String, String> fieldMapping = new HashMap<>();
@@ -219,8 +218,9 @@ public class HttpdLogFormatPlugin extends EasyFormatPlugin<HttpdLogFormatConfig>
   }
 
   /**
-   * This plugin supports pushing down into the parser. Only fields specifically asked for within the configuration will
-   * be parsed. If no fields are asked for then all possible fields will be returned.
+   * This plugin supports pushing project down into the parser. Only fields
+   * specifically asked for within the configuration will be parsed. If no
+   * fields are asked for then all possible fields will be returned.
    *
    * @return true
    */
@@ -230,7 +230,8 @@ public class HttpdLogFormatPlugin extends EasyFormatPlugin<HttpdLogFormatConfig>
   }
 
   @Override
-  public RecordReader getRecordReader(final FragmentContext context, final DrillFileSystem dfs, final FileWork fileWork, final List<SchemaPath> columns, final String userName) {
+  public RecordReader getRecordReader(final FragmentContext context, final DrillFileSystem dfs,
+      final FileWork fileWork, final List<SchemaPath> columns, final String userName) {
     return new HttpdLogRecordReader(context, dfs, fileWork, columns);
   }
 

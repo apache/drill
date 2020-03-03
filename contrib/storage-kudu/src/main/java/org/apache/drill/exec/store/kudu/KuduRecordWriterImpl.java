@@ -34,6 +34,8 @@ import org.apache.kudu.client.KuduTable;
 import org.apache.kudu.client.CreateTableOptions;
 import org.apache.kudu.client.OperationResponse;
 import org.apache.kudu.client.SessionConfiguration.FlushMode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -41,7 +43,7 @@ import java.util.List;
 import java.util.Map;
 
 public class KuduRecordWriterImpl extends KuduRecordWriter {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(KuduRecordWriterImpl.class);
+  private static final Logger logger = LoggerFactory.getLogger(KuduRecordWriterImpl.class);
 
   private static final int FLUSH_FREQUENCY = 100;
 
@@ -49,7 +51,7 @@ public class KuduRecordWriterImpl extends KuduRecordWriter {
   private final String name;
   private final OperatorContext context;
   private KuduTable table;
-  private KuduSession session;
+  private final KuduSession session;
 
   private Insert insert;
   private int recordsSinceFlush;
@@ -63,9 +65,7 @@ public class KuduRecordWriterImpl extends KuduRecordWriter {
   }
 
   @Override
-  public void init(Map<String, String> writerOptions) throws IOException {
-
-  }
+  public void init(Map<String, String> writerOptions) throws IOException { }
 
   @Override
   public void updateSchema(VectorAccessible batch) throws IOException {
@@ -149,8 +149,7 @@ public class KuduRecordWriterImpl extends KuduRecordWriter {
   }
 
   @Override
-  public void abort() throws IOException {
-  }
+  public void abort() throws IOException { }
 
   private void flush() throws IOException {
     try {

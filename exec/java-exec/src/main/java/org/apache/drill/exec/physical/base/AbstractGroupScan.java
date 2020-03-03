@@ -71,7 +71,8 @@ public abstract class AbstractGroupScan extends AbstractBase implements GroupSca
 
   @Override
   public GroupScan clone(List<SchemaPath> columns) {
-    throw new UnsupportedOperationException(String.format("%s does not implement clone(columns) method!", this.getClass().getCanonicalName()));
+    throw new UnsupportedOperationException(String.format(
+        "%s does not implement clone(columns) method!", this.getClass().getCanonicalName()));
   }
 
   @Override

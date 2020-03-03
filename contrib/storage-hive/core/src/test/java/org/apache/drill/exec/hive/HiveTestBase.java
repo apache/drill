@@ -75,5 +75,4 @@ public class HiveTestBase extends PlanTestBase {
       HIVE_TEST_FIXTURE.getPluginManager().removeHivePluginFrom(bits);
     }
   }
-
 }

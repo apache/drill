@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -46,7 +47,10 @@ public class LogicalPlanPersistence {
   }
 
   public LogicalPlanPersistence(DrillConfig conf, ScanResult scanResult, ObjectMapper mapper) {
-    this.mapper = mapper;
+    // The UI allows comments in JSON. Since we use the mapper
+    // here to serialize plugin configs to/from the pe
+    this.mapper = mapper
+        .configure(JsonParser.Feature.ALLOW_COMMENTS, true);
 
     SimpleModule deserModule = new SimpleModule("LogicalExpressionDeserializationModule")
         .addDeserializer(LogicalExpression.class, new LogicalExpression.De(conf))

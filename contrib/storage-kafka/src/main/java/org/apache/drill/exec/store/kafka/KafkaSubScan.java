@@ -53,7 +53,7 @@ public class KafkaSubScan extends AbstractBase implements SubScan {
                       @JsonProperty("partitionSubScanSpecList") LinkedList<KafkaPartitionScanSpec> partitionSubScanSpecList)
       throws ExecutionSetupException {
     this(userName,
-        (KafkaStoragePlugin) registry.getPlugin(kafkaStoragePluginConfig),
+        registry.resolve(kafkaStoragePluginConfig, KafkaStoragePlugin.class),
         columns,
         partitionSubScanSpecList);
   }

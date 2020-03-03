@@ -20,19 +20,18 @@ package org.apache.drill.exec.store.log;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.rpc.RpcException;
-import org.apache.drill.exec.server.Drillbit;
-import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.exec.store.dfs.FileSystemConfig;
-import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
@@ -79,6 +78,7 @@ public class TestLogReader extends ClusterTest {
     // Note: we can't use the ".log" extension; the Drill .gitignore
     // file ignores such files, so they'll never get committed. Instead,
     // make up a fake suffix.
+    Map<String, FormatPluginConfig> formats = new HashMap<>();
     LogFormatConfig sampleConfig = new LogFormatConfig();
     sampleConfig.setExtension("log1");
     sampleConfig.setRegex(DATE_ONLY_PATTERN);
@@ -87,6 +87,7 @@ public class TestLogReader extends ClusterTest {
     sampleConfig.getSchema().add(new LogFormatField("year", "INT"));
     sampleConfig.getSchema().add(new LogFormatField("month", "INT"));
     sampleConfig.getSchema().add(new LogFormatField("day", "INT"));
+    formats.put("sample", sampleConfig);
 
     // Full Drill log parser definition.
     LogFormatConfig logConfig = new LogFormatConfig();
@@ -106,6 +107,7 @@ public class TestLogReader extends ClusterTest {
     logConfig.getSchema().add(new LogFormatField("level"));
     logConfig.getSchema().add(new LogFormatField("module"));
     logConfig.getSchema().add(new LogFormatField("message"));
+    formats.put("drill-log", logConfig);
 
     //Set up additional configs to check the time/date formats
     LogFormatConfig logDateConfig = new LogFormatConfig();
@@ -120,10 +122,12 @@ public class TestLogReader extends ClusterTest {
     logDateConfig.getSchema().add(new LogFormatField("message"));
 
     logDateConfig.setMaxErrors(3);
+    formats.put("date-log",logDateConfig);
 
     LogFormatConfig mysqlLogConfig = new LogFormatConfig();
     mysqlLogConfig.setExtension("sqllog");
     mysqlLogConfig.setRegex("(\\d{6})\\s(\\d{2}:\\d{2}:\\d{2})\\s+(\\d+)\\s(\\w+)\\s+(.+)");
+    formats.put("mysql-log", mysqlLogConfig);
 
     // Firewall log file that requires date parsing
     LogFormatConfig firewallConfig = new LogFormatConfig();
@@ -136,18 +140,10 @@ public class TestLogReader extends ClusterTest {
     firewallConfig.getSchema().add(new LogFormatField("pid", "INT"));
     firewallConfig.getSchema().add(new LogFormatField("message"));
     firewallConfig.getSchema().add(new LogFormatField("src_ip"));
+    formats.put("ssdlog", firewallConfig);
 
     // Define a temporary format plugin for the "cp" storage plugin.
-    Drillbit drillbit = cluster.drillbit();
-    final StoragePluginRegistry pluginRegistry = drillbit.getContext().getStorage();
-    final FileSystemPlugin plugin = (FileSystemPlugin) pluginRegistry.getPlugin("cp");
-    final FileSystemConfig pluginConfig = (FileSystemConfig) plugin.getConfig();
-    pluginConfig.getFormats().put("sample", sampleConfig);
-    pluginConfig.getFormats().put("drill-log", logConfig);
-    pluginConfig.getFormats().put("date-log",logDateConfig);
-    pluginConfig.getFormats().put("mysql-log", mysqlLogConfig);
-    pluginConfig.getFormats().put("ssdlog", firewallConfig);
-    pluginRegistry.put("cp", pluginConfig);
+    cluster.defineFormats("cp", formats);
 
     // Config similar to the above, but with no type info. Types
     // will be provided via the provided schema mechanism. Column names

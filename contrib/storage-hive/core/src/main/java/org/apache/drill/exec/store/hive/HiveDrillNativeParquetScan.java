@@ -65,7 +65,7 @@ public class HiveDrillNativeParquetScan extends AbstractParquetGroupScan {
                                     @JsonProperty("readerConfig") ParquetReaderConfig readerConfig,
                                     @JsonProperty("filter") LogicalExpression filter) throws IOException, ExecutionSetupException {
     super(ImpersonationUtil.resolveUserName(userName), columns, entries, readerConfig, filter);
-    this.hiveStoragePlugin = (HiveStoragePlugin) engineRegistry.getPlugin(hiveStoragePluginConfig);
+    this.hiveStoragePlugin = engineRegistry.resolve(hiveStoragePluginConfig, HiveStoragePlugin.class);
     this.confProperties = confProperties;
 
     this.metadataProvider = new HiveParquetTableMetadataProvider(entries, hivePartitionHolder, hiveStoragePlugin, readerConfig);

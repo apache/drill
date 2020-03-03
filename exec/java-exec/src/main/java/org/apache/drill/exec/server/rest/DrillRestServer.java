@@ -57,6 +57,8 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
 import org.glassfish.jersey.server.mvc.freemarker.FreemarkerMvcFeature;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.servlet.ServletContext;
@@ -72,7 +74,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DrillRestServer extends ResourceConfig {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillRestServer.class);
+  static final Logger logger = LoggerFactory.getLogger(DrillRestServer.class);
 
   public DrillRestServer(final WorkManager workManager, final ServletContext servletContext, final Drillbit drillbit) {
     register(DrillRoot.class);
@@ -121,12 +123,13 @@ public class DrillRestServer extends ResourceConfig {
     register(new AbstractBinder() {
       @Override
       protected void configure() {
+        DrillbitContext context = workManager.getContext();
         bind(drillbit).to(Drillbit.class);
         bind(workManager).to(WorkManager.class);
         bind(executor).to(EventExecutor.class);
-        bind(workManager.getContext().getLpPersistence().getMapper()).to(ObjectMapper.class);
-        bind(workManager.getContext().getStoreProvider()).to(PersistentStoreProvider.class);
-        bind(workManager.getContext().getStorage()).to(StoragePluginRegistry.class);
+        bind(context.getLpPersistence().getMapper()).to(ObjectMapper.class);
+        bind(context.getStoreProvider()).to(PersistentStoreProvider.class);
+        bind(context.getStorage()).to(StoragePluginRegistry.class);
         bind(new UserAuthEnabled(isAuthEnabled)).to(UserAuthEnabled.class);
         if (isAuthEnabled) {
           bindFactory(DrillUserPrincipalProvider.class).to(DrillUserPrincipal.class);
@@ -356,7 +359,7 @@ public class DrillRestServer extends ResourceConfig {
 
   // Returns whether auth is enabled or not in config
   public static class UserAuthEnabled {
-    private boolean value;
+    private final boolean value;
 
     public UserAuthEnabled(boolean value) {
       this.value = value;

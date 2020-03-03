@@ -64,7 +64,6 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 
 @JsonTypeName("kafka-scan")
 public class KafkaGroupScan extends AbstractGroupScan {
-
   private static final Logger logger = LoggerFactory.getLogger(KafkaGroupScan.class);
 
   // Assuming default average topic message size as 1KB, which will be used to
@@ -87,7 +86,7 @@ public class KafkaGroupScan extends AbstractGroupScan {
                         @JsonProperty("kafkaScanSpec") KafkaScanSpec scanSpec,
                         @JacksonInject StoragePluginRegistry pluginRegistry) throws ExecutionSetupException {
     this(userName,
-        (KafkaStoragePlugin) pluginRegistry.getPlugin(kafkaStoragePluginConfig),
+        pluginRegistry.resolve(kafkaStoragePluginConfig, KafkaStoragePlugin.class),
         columns,
         scanSpec);
   }

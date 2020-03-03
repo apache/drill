@@ -47,11 +47,13 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.thrift.TException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.apache.drill.exec.util.ImpersonationUtil.getProcessUserName;
 
 public class HiveSchemaFactory extends AbstractSchemaFactory {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveSchemaFactory.class);
+  private static final Logger logger = LoggerFactory.getLogger(HiveSchemaFactory.class);
 
   // MetaStoreClient created using process user credentials
   private final DrillHiveMetaStoreClient processUserMetastoreClient;
@@ -59,7 +61,6 @@ public class HiveSchemaFactory extends AbstractSchemaFactory {
   private final LoadingCache<String, DrillHiveMetaStoreClient> metaStoreClientLoadingCache;
 
   private final HiveStoragePlugin plugin;
-  private final HiveConf hiveConf;
   private final boolean isDrillImpersonationEnabled;
   private final boolean isHS2DoAsSet;
 
@@ -67,7 +68,6 @@ public class HiveSchemaFactory extends AbstractSchemaFactory {
     super(name);
     this.plugin = plugin;
 
-    this.hiveConf = hiveConf;
     isHS2DoAsSet = hiveConf.getBoolVar(ConfVars.HIVE_SERVER2_ENABLE_DOAS);
     isDrillImpersonationEnabled = plugin.getContext().getConfig().getBoolean(ExecConstants.IMPERSONATION_ENABLED);
 

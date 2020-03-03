@@ -66,8 +66,8 @@ public class MongoSubScan extends AbstractBase implements SubScan {
     super(userName);
     this.columns = columns;
     this.mongoPluginConfig = (MongoStoragePluginConfig) mongoPluginConfig;
-    this.mongoStoragePlugin = (MongoStoragePlugin) registry
-        .getPlugin(mongoPluginConfig);
+    this.mongoStoragePlugin = registry.resolve(
+        mongoPluginConfig, MongoStoragePlugin.class);
     this.chunkScanSpecList = chunkScanSpecList;
   }
 

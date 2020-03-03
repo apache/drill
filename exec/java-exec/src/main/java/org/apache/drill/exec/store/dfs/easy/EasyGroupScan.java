@@ -20,7 +20,6 @@ package org.apache.drill.exec.store.dfs.easy;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
@@ -90,12 +89,10 @@ public class EasyGroupScan extends AbstractFileGroupScan {
       @JsonProperty("columns") List<SchemaPath> columns,
       @JsonProperty("selectionRoot") Path selectionRoot,
       @JsonProperty("schema") TupleMetadata schema
-      ) throws IOException, ExecutionSetupException {
+      ) throws IOException {
     super(ImpersonationUtil.resolveUserName(userName));
     this.selection = FileSelection.create(null, files, selectionRoot);
-    this.formatPlugin = Preconditions.checkNotNull((EasyFormatPlugin<?>)
-        engineRegistry.getFormatPlugin(storageConfig, formatConfig),
-        "Unable to load format plugin for provided format config.");
+    this.formatPlugin = engineRegistry.resolveFormat(storageConfig, formatConfig, EasyFormatPlugin.class);
     this.columns = columns == null ? ALL_COLUMNS : columns;
     this.selectionRoot = selectionRoot;
     SimpleFileTableMetadataProviderBuilder builder =

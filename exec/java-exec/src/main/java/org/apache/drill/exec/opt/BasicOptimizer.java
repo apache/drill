@@ -19,7 +19,6 @@ package org.apache.drill.exec.opt;
 
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.logical.PlanProperties;
 import org.apache.drill.common.logical.StoragePluginConfig;
@@ -55,6 +54,7 @@ import org.apache.drill.exec.planner.common.DrillUnnestRelBase;
 import org.apache.drill.exec.rpc.UserClientConnection;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.StoragePlugin;
+import org.apache.drill.exec.store.StoragePluginRegistry.PluginException;
 import org.apache.calcite.rel.RelFieldCollation.Direction;
 import org.apache.calcite.rel.RelFieldCollation.NullDirection;
 
@@ -202,10 +202,10 @@ public class BasicOptimizer extends Optimizer {
                 scan.getStorageEngine()));
       }
       try {
-        final StoragePlugin storagePlugin = queryContext.getStorage().getPlugin(config);
+        final StoragePlugin storagePlugin = queryContext.getStorage().getPluginByConfig(config);
         final String user = userSession.getSession().getCredentials().getUserName();
         return storagePlugin.getPhysicalScan(user, scan.getSelection(), userSession.getSession().getOptions());
-      } catch (IOException | ExecutionSetupException e) {
+      } catch (IOException | PluginException e) {
         throw new OptimizerException("Failure while attempting to retrieve storage engine.", e);
       }
     }

@@ -46,5 +46,4 @@ public final class PluginErrorHandler {
   public static SchemaChangeException schemaChangeException(Logger logger, Throwable t, String format, Object... args) {
     return new SchemaChangeException(format, t, args);
   }
-
 }

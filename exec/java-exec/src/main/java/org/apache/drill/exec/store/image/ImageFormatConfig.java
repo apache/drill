@@ -19,7 +19,9 @@
 package org.apache.drill.exec.store.image;
 
 import java.util.List;
+import java.util.Objects;
 
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.logical.FormatPluginConfig;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -53,45 +55,31 @@ public class ImageFormatConfig implements FormatPluginConfig {
 
   @Override
   public int hashCode() {
-    final int prime = 31;
-    int result = 1;
-    result = prime * result + ((extensions == null) ? 0 : extensions.hashCode());
-    result = prime * result + (fileSystemMetadata ? 1231 : 1237);
-    result = prime * result + (descriptive ? 1231 : 1237);
-    result = prime * result + ((timeZone == null) ? 0 : timeZone.hashCode());
-    return result;
+    return Objects.hash(extensions, fileSystemMetadata, descriptive, timeZone);
   }
 
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
       return true;
-    } else if (obj == null) {
-      return false;
-    } else if (getClass() != obj.getClass()) {
+    }
+    if (obj == null || getClass() != obj.getClass()) {
       return false;
     }
     ImageFormatConfig other = (ImageFormatConfig) obj;
-    if (extensions == null) {
-      if (other.extensions != null) {
-        return false;
-      }
-    } else if (!extensions.equals(other.extensions)) {
-      return false;
-    }
-    if (fileSystemMetadata != other.fileSystemMetadata) {
-      return false;
-    }
-    if (descriptive != other.descriptive) {
-      return false;
-    }
-    if (timeZone == null) {
-      if (other.timeZone != null) {
-        return false;
-      }
-    } else if (!timeZone.equals(other.timeZone)) {
-      return false;
-    }
-    return true;
+    return Objects.equals(extensions, other.extensions) &&
+           Objects.equals(fileSystemMetadata, other.fileSystemMetadata) &&
+           Objects.equals(descriptive, other.descriptive) &&
+           Objects.equals(timeZone, other.timeZone);
+  }
+
+  @Override
+  public String toString() {
+    return new PlanStringBuilder(this)
+        .field("extensions", extensions)
+        .field("fileSystemMetadata", fileSystemMetadata)
+        .field("descriptive", descriptive)
+        .field("timeZone", timeZone)
+        .toString();
   }
 }
