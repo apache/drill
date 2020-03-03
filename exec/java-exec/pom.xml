@@ -29,6 +29,7 @@
   <name>exec/Java Execution Engine</name>
   <properties>
     <libpam4j.version>1.8-rev2</libpam4j.version>
+    <maprfs.version>6.1.0-mapr</maprfs.version>
   </properties>
 
   <dependencies>
@@ -666,6 +667,28 @@
     </profile>
     <profile>
       <id>mapr</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>add-mapr-sources</id>
+                <phase>generate-sources</phase>
+                <goals>
+                  <goal>add-source</goal>
+                </goals>
+                <configuration>
+                  <sources>
+                    <source>srcMapr/main/java</source>
+                  </sources>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
       <dependencies>
         <dependency>
           <groupId>com.mapr.hadoop</groupId>
@@ -675,6 +698,11 @@
         <dependency>
           <groupId>com.tdunning</groupId>
           <artifactId>json</artifactId>
+        </dependency>
+        <dependency>
+          <groupId>com.mapr.security</groupId>
+          <artifactId>mapr-security-web</artifactId>
+          <version>${maprfs.version}</version>
         </dependency>
       </dependencies>
     </profile>

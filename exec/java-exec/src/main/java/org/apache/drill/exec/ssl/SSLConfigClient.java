@@ -51,9 +51,14 @@ public class SSLConfigClient extends SSLConfig {
   public SSLConfigClient(Properties properties) throws DrillException {
     this.properties = properties;
     userSslEnabled = getBooleanProperty(DrillProperties.ENABLE_TLS);
-    trustStoreType = getStringProperty(DrillProperties.TRUSTSTORE_TYPE, "JKS");
-    trustStorePath = getStringProperty(DrillProperties.TRUSTSTORE_PATH, "");
-    trustStorePassword = getStringProperty(DrillProperties.TRUSTSTORE_PASSWORD, "");
+    SSLCredentialsProvider credentialsProvider = SSLCredentialsProvider.getSSLCredentialsProvider(
+        this::getStringProperty,
+        Mode.CLIENT,
+        getBooleanProperty(DrillProperties.USE_MAPR_SSL_CONFIG)
+    );
+    trustStoreType = credentialsProvider.getTrustStoreType(DrillProperties.TRUSTSTORE_TYPE, "JKS");
+    trustStorePath = credentialsProvider.getTrustStoreLocation(DrillProperties.TRUSTSTORE_PATH, "");
+    trustStorePassword = credentialsProvider.getTrustStorePassword(DrillProperties.TRUSTSTORE_PASSWORD, "");
     disableHostVerification = getBooleanProperty(DrillProperties.DISABLE_HOST_VERIFICATION);
     disableCertificateVerification = getBooleanProperty(DrillProperties.DISABLE_CERT_VERIFICATION);
     useSystemTrustStore = getBooleanProperty(DrillProperties.USE_SYSTEM_TRUSTSTORE);

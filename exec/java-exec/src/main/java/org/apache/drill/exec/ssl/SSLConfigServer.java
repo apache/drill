@@ -74,21 +74,25 @@ public class SSLConfigServer extends SSLConfig {
     }
     userSslEnabled =
         config.hasPath(ExecConstants.USER_SSL_ENABLED) && config.getBoolean(ExecConstants.USER_SSL_ENABLED);
-    trustStoreType = getConfigParam(ExecConstants.SSL_TRUSTSTORE_TYPE,
-        resolveHadoopPropertyName(HADOOP_SSL_TRUSTSTORE_TYPE_TPL_KEY, mode));
-    trustStorePath = getConfigParam(ExecConstants.SSL_TRUSTSTORE_PATH,
-        resolveHadoopPropertyName(HADOOP_SSL_TRUSTSTORE_LOCATION_TPL_KEY, mode));
-    trustStorePassword = getConfigParam(ExecConstants.SSL_TRUSTSTORE_PASSWORD,
-        resolveHadoopPropertyName(HADOOP_SSL_TRUSTSTORE_PASSWORD_TPL_KEY, mode));
-    keyStoreType = getConfigParam(ExecConstants.SSL_KEYSTORE_TYPE,
-        resolveHadoopPropertyName(HADOOP_SSL_KEYSTORE_TYPE_TPL_KEY, mode));
-    keyStorePath = getConfigParam(ExecConstants.SSL_KEYSTORE_PATH,
-        resolveHadoopPropertyName(HADOOP_SSL_KEYSTORE_LOCATION_TPL_KEY, mode));
-    keyStorePassword = getConfigParam(ExecConstants.SSL_KEYSTORE_PASSWORD,
-        resolveHadoopPropertyName(HADOOP_SSL_KEYSTORE_PASSWORD_TPL_KEY, mode));
+    SSLCredentialsProvider credentialsProvider = SSLCredentialsProvider.getSSLCredentialsProvider(
+        this::getConfigParam,
+        Mode.SERVER,
+        config.getBoolean(ExecConstants.SSL_USE_MAPR_CONFIG));
+    trustStoreType = credentialsProvider.getTrustStoreType(
+        ExecConstants.SSL_TRUSTSTORE_TYPE, resolveHadoopPropertyName(HADOOP_SSL_TRUSTSTORE_TYPE_TPL_KEY, mode));
+    trustStorePath = credentialsProvider.getTrustStoreLocation(
+        ExecConstants.SSL_TRUSTSTORE_PATH, resolveHadoopPropertyName(HADOOP_SSL_TRUSTSTORE_LOCATION_TPL_KEY, mode));
+    trustStorePassword = credentialsProvider.getTrustStorePassword(
+        ExecConstants.SSL_TRUSTSTORE_PASSWORD, resolveHadoopPropertyName(HADOOP_SSL_TRUSTSTORE_PASSWORD_TPL_KEY, mode));
+    keyStoreType = credentialsProvider.getKeyStoreType(
+        ExecConstants.SSL_KEYSTORE_TYPE, resolveHadoopPropertyName(HADOOP_SSL_KEYSTORE_TYPE_TPL_KEY, mode));
+    keyStorePath = credentialsProvider.getKeyStoreLocation(
+        ExecConstants.SSL_KEYSTORE_PATH, resolveHadoopPropertyName(HADOOP_SSL_KEYSTORE_LOCATION_TPL_KEY, mode));
+    keyStorePassword = credentialsProvider.getKeyStorePassword(
+        ExecConstants.SSL_KEYSTORE_PASSWORD, resolveHadoopPropertyName(HADOOP_SSL_KEYSTORE_PASSWORD_TPL_KEY, mode));
+    String keyPass = credentialsProvider.getKeyPassword(
+        ExecConstants.SSL_KEY_PASSWORD, resolveHadoopPropertyName(HADOOP_SSL_KEYSTORE_KEYPASSWORD_TPL_KEY, mode));
     // if no keypassword specified, use keystore password
-    String keyPass = getConfigParam(ExecConstants.SSL_KEY_PASSWORD,
-        resolveHadoopPropertyName(HADOOP_SSL_KEYSTORE_KEYPASSWORD_TPL_KEY, mode));
     keyPassword = keyPass.isEmpty() ? keyStorePassword : keyPass;
     protocol = config.getString(ExecConstants.SSL_PROTOCOL);
     // If provider is OPENSSL then to debug or run this code in an IDE, you will need to enable
