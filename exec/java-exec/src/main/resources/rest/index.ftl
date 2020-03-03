@@ -475,7 +475,7 @@
 
       //Update memory
       function updateMetricsHtml(drillbit, isCurrent, idx) {
-        let drillbitURL = isCurrent ? "/status/metrics" : "/status/" + drillbit + "/metrics";
+        let drillbitURL = isCurrent ? "/status/metrics" : "/status/metrics/" + drillbit;
         let result = $.ajax({
           type: 'GET',
           url: drillbitURL,
