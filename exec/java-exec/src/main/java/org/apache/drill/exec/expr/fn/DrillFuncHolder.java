@@ -173,30 +173,32 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
     for (int i = 0; i < attributes.getWorkspaceVars().length; i++) {
       WorkspaceReference ref = attributes.getWorkspaceVars()[i];
       JType jtype = g.getModel()._ref(ref.getType());
+      workspaceJVars[i] = g.declareClassField("work", jtype);
 
       if (ScalarReplacementTypes.CLASSES.contains(ref.getType())) {
-        workspaceJVars[i] = g.declareClassField("work", jtype);
         JBlock b = g.getBlock(SignatureHolder.DRILL_INIT_METHOD);
         b.assign(workspaceJVars[i], JExpr._new(jtype));
-      } else {
-        workspaceJVars[i] = g.declareClassField("work", jtype);
       }
 
       if (ref.isInject()) {
-        if (UdfUtilities.INJECTABLE_GETTER_METHODS.get(ref.getType()) != null) {
-          g.getBlock(BlockType.SETUP).assign(
-              workspaceJVars[i],
-              g.getMappingSet().getIncoming().invoke("getContext").invoke(
-                  UdfUtilities.INJECTABLE_GETTER_METHODS.get(ref.getType())
-              ));
-        } else {
-          // Invalid injectable type provided, this should have been caught in FunctionConverter
-          throw new DrillRuntimeException("Invalid injectable type requested in UDF: " +
-                ref.getType().getSimpleName());
-        }
+        assignInjectableValue(g, workspaceJVars[i], ref);
       }
     }
     return workspaceJVars;
+  }
+
+  protected void assignInjectableValue(ClassGenerator<?> g, JVar variable, WorkspaceReference ref) {
+    if (UdfUtilities.INJECTABLE_GETTER_METHODS.get(ref.getType()) != null) {
+      g.getBlock(BlockType.SETUP).assign(
+          variable,
+          g.getMappingSet().getIncoming().invoke("getContext").invoke(
+              UdfUtilities.INJECTABLE_GETTER_METHODS.get(ref.getType())
+          ));
+    } else {
+      // Invalid injectable type provided, this should have been caught in FunctionConverter
+      throw new DrillRuntimeException("Invalid injectable type requested in UDF: " +
+              ref.getType().getSimpleName());
+    }
   }
 
   /**
