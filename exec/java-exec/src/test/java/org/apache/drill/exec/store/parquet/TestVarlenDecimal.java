@@ -18,8 +18,14 @@
 package org.apache.drill.exec.store.parquet;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.categories.ParquetTest;
 import org.apache.drill.categories.UnlikelyTest;
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.TypeProtos.DataMode;
+import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.test.ClusterFixture;
@@ -33,6 +39,8 @@ import org.junit.experimental.categories.Category;
 
 import java.math.BigDecimal;
 import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.List;
 
 @Category({ParquetTest.class, UnlikelyTest.class})
 public class TestVarlenDecimal extends ClusterTest {
@@ -168,6 +176,15 @@ public class TestVarlenDecimal extends ClusterTest {
           .baselineValues(new BigDecimal("1000.000"))
           .baselineValues(new BigDecimal("596.000"))
           .baselineValues(new BigDecimal("999999999999999.000"))
+          .go();
+
+      List<Pair<SchemaPath, TypeProtos.MajorType>> expectedSchema = Collections.singletonList(Pair.of(
+          SchemaPath.getSimplePath("d"),
+          Types.withPrecisionAndScale(MinorType.VARDECIMAL, DataMode.REQUIRED, 18, 3)));
+
+      testBuilder()
+          .sqlQuery(query)
+          .schemaBaseLine(expectedSchema)
           .go();
     } finally {
       run("drop table if exists dfs.tmp.t");

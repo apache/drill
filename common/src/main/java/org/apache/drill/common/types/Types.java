@@ -138,7 +138,7 @@ public class Types {
    * @param types types to check
    * @return true if all specified types are decimal data type.
    */
-  public static boolean areDecimalTypes(MajorType... types) {
+  public static boolean areDecimalTypes(MinorType... types) {
     return Arrays.stream(types)
         .allMatch(Types::isDecimalType);
   }
@@ -821,9 +821,13 @@ public class Types {
         // - max integer digits number (precision - scale) for left and right;
         // - resulting scale.
         // So for the case of cast(9999 as decimal(4,0)) and cast(1.23 as decimal(3,2))
-        // resulting scale would be Max(0, 2) = 2 and resulting precision would be Max(4 - 0, 3 - 2) + 2 = 6.
+        // resulting scale would be Max(0, 2) = 2 and resulting precision
+        // would be Max(4 - 0, 3 - 2) + 2 = 6.
         // In this case, both values would fit into decimal(6, 2): 9999.00, 1.23
-        int precision = Math.max(leftType.getPrecision() - leftType.getScale(), rightType.getPrecision() - rightType.getScale()) + scale;
+        int leftNumberOfDigits = leftType.getPrecision() - leftType.getScale();
+        int rightNumberOfDigits = rightType.getPrecision() - rightType.getScale();
+        int precision = Math.max(leftNumberOfDigits, rightNumberOfDigits) + scale;
+
         typeBuilder.setPrecision(precision);
         typeBuilder.setScale(scale);
       }
@@ -837,15 +841,28 @@ public class Types {
    *
    * @param type1 first type
    * @param type2 second type
-   * @return true if the two types are are the same minor type, mode,
+   * @return true if the two types have the same minor type, mode,
    * precision and scale
    */
 
   public static boolean isSameType(MajorType type1, MajorType type2) {
-    return type1.getMinorType() == type2.getMinorType() &&
-           type1.getMode() == type2.getMode() &&
+    return isSameTypeAndMode(type1, type2) &&
            type1.getScale() == type2.getScale() &&
            type1.getPrecision() == type2.getPrecision();
+  }
+
+  /**
+   * Check if two "core" types have the same minor type and data mode,
+   * ignoring subtypes and children. Primarily for non-complex types.
+   *
+   * @param first  first type to check
+   * @param second second type to check
+   * @return {@code true} if the two types have the same minor type and mode,
+   * {@code false} otherwise
+   */
+  public static boolean isSameTypeAndMode(MajorType first, MajorType second) {
+    return first.getMinorType() == second.getMinorType()
+        && first.getMode() == second.getMode();
   }
 
   /**
