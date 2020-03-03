@@ -128,7 +128,7 @@ public class StorageResources {
         .map(plugin -> new StoragePluginModel(plugin, request))
         .collect(Collectors.toList());
     // Creating an empty model with CSRF token, if there are no storage plugins
-    if (model.size() == 0) {
+    if (model.isEmpty()) {
       model.add(new StoragePluginModel(null, request));
     }
     return ViewableWithPermissions.create(authEnabled.get(), "/rest/storage/list.ftl", sc, model);
@@ -315,7 +315,6 @@ public class StorageResources {
     public String getResult() {
       return result;
     }
-
   }
 
   /**

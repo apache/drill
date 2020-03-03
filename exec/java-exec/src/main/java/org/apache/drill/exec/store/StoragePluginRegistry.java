@@ -61,10 +61,10 @@ public interface StoragePluginRegistry extends Iterable<Map.Entry<String, Storag
   StoragePlugin getPlugin(StoragePluginConfig config) throws ExecutionSetupException;
 
   /**
-   * Retrieve a plugin configuration by name.
-   *
-   * @param name
-   * @return
+   * Retrieve a stored configuration by name. Returns only defined
+   * plugins (not system plugins). Returns both enabled and disabled
+   * plugins. Use this to obtain a plugin for editing (rather than
+   * for planning or executing a query.)
    */
   StoragePluginConfig getConfig(String name);
 

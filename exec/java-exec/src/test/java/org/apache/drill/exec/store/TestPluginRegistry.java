@@ -66,6 +66,8 @@ public class TestPluginRegistry extends BasePluginRegistryTest {
       // Bootstrap file loaded.
       assertNotNull(registry.getPlugin(StoragePluginTestUtils.CP_PLUGIN_NAME)); // Normal
       assertNotNull(registry.getPlugin("sys")); // System
+      assertNull(registry.getConfig("sys")); // Not editable
+
       assertNull(registry.getPlugin("bogus"));
 
       // Enabled plugins
@@ -78,6 +80,8 @@ public class TestPluginRegistry extends BasePluginRegistryTest {
       configMap = registry.storedConfigs();
       assertTrue(configMap.containsKey(StoragePluginTestUtils.CP_PLUGIN_NAME));
       assertTrue(configMap.containsKey("s3")); // Disabled, but still appears
+      assertNotNull(configMap.get("s3"));
+      assertSame(registry.getConfig("s3"), configMap.get("s3"));
       assertFalse(configMap.containsKey("sys"));
       int bootstrapCount = configMap.size();
 
