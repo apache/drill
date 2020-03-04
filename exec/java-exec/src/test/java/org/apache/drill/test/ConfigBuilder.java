@@ -27,8 +27,8 @@ import org.apache.drill.exec.memory.BoundsChecking;
 import org.apache.drill.exec.physical.impl.BaseRootExec;
 import org.apache.drill.exec.server.options.OptionDefinition;
 import org.apache.drill.exec.server.options.SystemOptionManager;
+import org.apache.drill.shaded.guava.com.google.common.primitives.Primitives;
 
-import java.util.Collection;
 import java.util.Map.Entry;
 import java.util.Properties;
 
@@ -115,10 +115,10 @@ public class ConfigBuilder {
       throw new IllegalArgumentException( "Cannot provide both a config resource and config properties.");
     }
 
-    if (value instanceof Collection) {
-      configProps.put(key, value);
-    } else {
+    if (value instanceof  String || Primitives.isWrapperType(value.getClass())) {
       configProps.put(key, value.toString());
+    } else {
+      configProps.put(key, value);
     }
 
     return this;
@@ -164,10 +164,11 @@ public class ConfigBuilder {
     // Filter out the collection type configs and other configs
     // which can be converted to string.
     for (Entry<Object, Object> entry : configProps.entrySet()) {
-      if (entry.getValue() instanceof Collection<?>) {
-        collectionProps.put(entry.getKey(), entry.getValue());
+      Object value = entry.getValue();
+      if (value instanceof String || Primitives.isWrapperType(value.getClass())) {
+        stringProps.setProperty(entry.getKey().toString(), value.toString());
       } else {
-        stringProps.setProperty(entry.getKey().toString(), entry.getValue().toString());
+        collectionProps.put(entry.getKey(), value);
       }
     }
 
