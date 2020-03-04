@@ -19,8 +19,8 @@
 -->
 <#include "*/generic.ftl">
 <#macro page_head>
-    <script type="text/javascript" language="javascript"  src="../static/js/jquery.dataTables-1.10.0.min.js"> </script>
-    <script type="text/javascript" language="javascript" src="../static/js/dataTables.colVis-1.1.0.min.js"></script>
+    <script type="text/javascript" language="javascript"  src="/static/js/jquery.dataTables-1.10.0.min.js"> </script>
+    <script type="text/javascript" language="javascript" src="/static/js/dataTables.colVis-1.1.0.min.js"></script>
     <link href="/static/css/dataTables.colVis-1.1.0.min.css" rel="stylesheet">
     <link href="/static/css/dataTables.jqueryui.css" rel="stylesheet">
     <link href="/static/css/jquery-ui-1.10.3.min.css" rel="stylesheet">
