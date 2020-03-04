@@ -213,7 +213,7 @@ public final class ExecConstants {
   public static final String HTTP_JETTY_SERVER_ACCEPTORS = "drill.exec.http.jetty.server.acceptors";
   public static final String HTTP_JETTY_SERVER_SELECTORS = "drill.exec.http.jetty.server.selectors";
   public static final String HTTP_JETTY_SERVER_HANDLERS = "drill.exec.http.jetty.server.handlers";
-
+  public static final String HTTP_JETTY_SERVER_RESPONSE_HEADERS = "drill.exec.http.jetty.server.response.headers";
   public static final String HTTP_JETTY_SSL_CONTEXT_FACTORY_OPTIONS_PREFIX = "drill.exec.http.jetty.server.sslContextFactory";
   public static final String HTTP_JETTY_SERVER_SSL_CONTEXT_FACTORY_CERT_ALIAS = "drill.exec.http.jetty.server.sslContextFactory.certAlias";
   public static final String HTTP_JETTY_SERVER_SSL_CONTEXT_FACTORY_CRL_PATH = "drill.exec.http.jetty.server.sslContextFactory.crlPath";

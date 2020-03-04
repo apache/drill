@@ -27,6 +27,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.DrillException;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.server.rest.header.ResponseHeadersSettingFilter;
 import org.apache.drill.exec.server.rest.ssl.SslContextFactoryConfigurator;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.expr.fn.registry.FunctionHolder;
@@ -250,6 +251,11 @@ public class WebServer implements AutoCloseable {
     filterHolder.setInitParameter("allowedOrigins", "*");
     //Allowing CORS for metrics only
     servletContextHandler.addFilter(filterHolder, STATUS_METRICS_PATH, null);
+
+    FilterHolder responseHeadersSettingFilter = new FilterHolder(ResponseHeadersSettingFilter.class);
+    responseHeadersSettingFilter.setInitParameters(ResponseHeadersSettingFilter.retrieveResponseHeaders(config));
+    servletContextHandler.addFilter(responseHeadersSettingFilter, "/*", EnumSet.of(DispatcherType.REQUEST));
+
 
     return servletContextHandler;
   }

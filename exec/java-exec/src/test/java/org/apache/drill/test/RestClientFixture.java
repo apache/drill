@@ -28,6 +28,8 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 
 import java.util.List;
 
@@ -78,6 +80,13 @@ public class RestClientFixture implements AutoCloseable {
     return baseTarget.path(StatusResources.PATH_INTERNAL_OPTIONS_JSON)
       .request(MediaType.APPLICATION_JSON)
       .get(new GenericType<List<StatusResources.OptionWrapper>>() {});
+  }
+
+  public MultivaluedMap<String, String> getResponseHeaders(String relativeResourcePath) {
+    Response response = baseTarget.path(relativeResourcePath)
+        .request(MediaType.TEXT_HTML)
+        .get();
+    return response.getStringHeaders();
   }
 
   /**
