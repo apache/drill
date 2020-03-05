@@ -17,9 +17,6 @@
  */
 package org.apache.drill.exec.physical.impl.project;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
@@ -32,9 +29,13 @@ import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.vector.FixedWidthVector;
 import org.apache.drill.exec.vector.SchemaChangeCallBack;
+import org.apache.drill.exec.vector.UntypedNullHolder;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Implements callbacks to build the physical vectors for the project
@@ -100,7 +101,11 @@ public class ProjectBatchBuilder implements ProjectionMaterializer.BatchBuilder 
     } else {
       projectBatch.complexFieldReferencesList.clear();
     }
-
+    // reserve place for complex field in container
+    ValueVector lateVv = container.addOrGet(
+        MaterializedField.create(ref.getLastSegment().getNameSegment().getPath(), UntypedNullHolder.TYPE),
+        callBack);
+    projectBatch.allocationVectors.add(lateVv);
     // save the field reference for later for getting schema when input is empty
     projectBatch.complexFieldReferencesList.add(ref);
     projectBatch.memoryManager.addComplexField(null); // this will just add an estimate to the row width

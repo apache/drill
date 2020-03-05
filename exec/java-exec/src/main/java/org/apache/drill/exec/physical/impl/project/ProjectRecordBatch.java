@@ -17,11 +17,6 @@
  */
 package org.apache.drill.exec.physical.impl.project;
 
-import static org.apache.drill.exec.record.RecordBatch.IterOutcome.EMIT;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.exec.ExecConstants;
@@ -29,20 +24,23 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.Project;
 import org.apache.drill.exec.record.AbstractSingleRecordBatch;
+import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
-import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.SimpleRecordBatch;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.util.record.RecordBatchStats;
 import org.apache.drill.exec.util.record.RecordBatchStats.RecordBatchIOType;
 import org.apache.drill.exec.vector.AllocationHelper;
-import org.apache.drill.exec.vector.UntypedNullHolder;
-import org.apache.drill.exec.vector.UntypedNullVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.apache.drill.exec.record.RecordBatch.IterOutcome.EMIT;
 
 public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
   private static final Logger logger = LoggerFactory.getLogger(ProjectRecordBatch.class);
@@ -120,17 +118,8 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
             // since this is first batch and we already got a NONE, need to set up the schema
             doAlloc(0);
             setValueCount(0);
-
-            // Only need to add the schema for the complex exprs because others should already have
-            // been setup during setupNewSchema
-            for (FieldReference fieldReference : complexFieldReferencesList) {
-              MaterializedField field = MaterializedField.create(fieldReference.getAsNamePart().getName(),
-                      UntypedNullHolder.TYPE);
-              container.add(new UntypedNullVector(field, container.getAllocator()));
-            }
-            container.buildSchema(SelectionVectorMode.NONE);
             wasNone = true;
-            return IterOutcome.OK_NEW_SCHEMA;
+            return IterOutcome.NONE;
           } else if (next != IterOutcome.OK && next != IterOutcome.OK_NEW_SCHEMA && next != EMIT) {
             return next;
           } else if (next == IterOutcome.OK_NEW_SCHEMA) {
@@ -323,6 +312,10 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project> {
   @Override
   protected IterOutcome handleNullInput() {
     if (!popConfig.isOutputProj()) {
+      BatchSchema incomingSchema = incoming.getSchema();
+      if (incomingSchema != null && incomingSchema.getFieldCount() > 0) {
+        setupNewSchemaFromInput(incoming);
+      }
       return super.handleNullInput();
     }
 
