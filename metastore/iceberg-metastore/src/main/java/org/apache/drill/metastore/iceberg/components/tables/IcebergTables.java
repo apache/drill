@@ -26,7 +26,7 @@ import org.apache.drill.metastore.operate.Metadata;
 import org.apache.drill.metastore.operate.Modify;
 import org.apache.drill.metastore.operate.Read;
 import org.apache.drill.metastore.components.tables.TableMetadataUnit;
-import org.apache.drill.metastore.iceberg.MetastoreContext;
+import org.apache.drill.metastore.iceberg.IcebergMetastoreContext;
 import org.apache.drill.metastore.iceberg.operate.IcebergMetadata;
 import org.apache.drill.metastore.iceberg.schema.IcebergTableSchema;
 import org.apache.drill.metastore.iceberg.operate.IcebergModify;
@@ -42,7 +42,7 @@ import java.util.List;
  * Metastore Tables component which stores tables metadata in the corresponding Iceberg table.
  * Provides methods to read and modify tables metadata.
  */
-public class IcebergTables implements Tables, MetastoreContext<TableMetadataUnit> {
+public class IcebergTables implements Tables, IcebergMetastoreContext<TableMetadataUnit> {
 
   /**
    * Metastore Tables component partition keys, order of partitioning will be determined based
@@ -64,7 +64,7 @@ public class IcebergTables implements Tables, MetastoreContext<TableMetadataUnit
     this.expirationHandler = new ExpirationHandler(table);
   }
 
-  public MetastoreContext<TableMetadataUnit> context() {
+  public IcebergMetastoreContext<TableMetadataUnit> context() {
     return this;
   }
 

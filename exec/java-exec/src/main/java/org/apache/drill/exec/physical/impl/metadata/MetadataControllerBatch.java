@@ -286,7 +286,7 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
       metadataUnits.addAll(getMetadataUnits(reader, 0));
     }
 
-    if (!metadataToHandle.isEmpty()) {
+    if (metadataToHandle != null) {
       // leaves only table metadata and metadata which belongs to segments to be overridden
       metadataUnits = metadataUnits.stream()
           .filter(tableMetadataUnit ->
@@ -308,7 +308,9 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
       metadataUnits.addAll(metadata);
     }
 
-    boolean insertDefaultSegment = metadataUnits.stream()
+    // checks whether metadataUnits contains not only table metadata before adding default segment
+    // to avoid case when only table metadata should be updated and / or root segments removed
+    boolean insertDefaultSegment = metadataUnits.size() > 1 && metadataUnits.stream()
         .noneMatch(metadataUnit -> metadataUnit.metadataType().equals(MetadataType.SEGMENT.name()));
 
     if (insertDefaultSegment) {
@@ -333,6 +335,7 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
     return tableMetadataUnit.toBuilder()
         .metadataType(MetadataType.SEGMENT.name())
         .metadataKey(MetadataInfo.DEFAULT_SEGMENT_KEY)
+        .metadataIdentifier(MetadataInfo.DEFAULT_SEGMENT_KEY)
         .owner(null)
         .tableType(null)
         .metadataStatistics(Collections.emptyList())

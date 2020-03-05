@@ -218,7 +218,7 @@ public class SchemaUtilites {
 
     if (isRootSchema(schema)) {
       throw UserException.validationError()
-          .message("Root schema is immutable. Creating or dropping tables/views is not allowed in root schema." +
+          .message("Root schema is immutable. Drill does not allow creating or deleting tables or views in the root schema. " +
               "Select a schema using 'USE schema' command.")
           .build(logger);
     }

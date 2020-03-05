@@ -64,6 +64,7 @@ public interface Modify<T> {
   /**
    * Executes list of provided metastore operations in one transaction if Metastore implementation
    * supports transactions, otherwise executes operations consecutively.
+   * All operations should be executed in the same order as they were added.
    */
   void execute();
 

@@ -21,12 +21,12 @@ import org.apache.drill.metastore.MetastoreColumn;
 import org.apache.drill.metastore.expressions.FilterExpression;
 import org.apache.drill.metastore.iceberg.IcebergBaseTest;
 import org.apache.drill.metastore.metadata.MetadataType;
+import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 import org.apache.iceberg.expressions.Expression;
 import org.apache.iceberg.expressions.Expressions;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -238,7 +238,7 @@ public class TestFilterTransformer extends IcebergBaseTest {
     Expression expected = Expressions.alwaysTrue();
 
     Expression actual = transformer.transform(
-      Arrays.asList(MetadataType.PARTITION, MetadataType.FILE, MetadataType.ALL));
+      Sets.newHashSet(MetadataType.PARTITION, MetadataType.FILE, MetadataType.ALL));
 
     assertEquals(expected.toString(), actual.toString());
   }
@@ -247,7 +247,7 @@ public class TestFilterTransformer extends IcebergBaseTest {
   public void testToFilterMetadataTypesOne() {
     Expression expected = Expressions.equal(MetastoreColumn.METADATA_TYPE.columnName(), MetadataType.PARTITION.name());
 
-    Expression actual = transformer.transform(Collections.singletonList(MetadataType.PARTITION));
+    Expression actual = transformer.transform(Collections.singleton(MetadataType.PARTITION));
 
     assertEquals(expected.toString(), actual.toString());
   }
@@ -258,7 +258,7 @@ public class TestFilterTransformer extends IcebergBaseTest {
       MetadataType.PARTITION.name(), MetadataType.FILE.name());
 
     Expression actual = transformer.transform(
-      Arrays.asList(MetadataType.PARTITION, MetadataType.FILE));
+      Sets.newHashSet(MetadataType.PARTITION, MetadataType.FILE));
 
     assertEquals(expected.toString(), actual.toString());
   }

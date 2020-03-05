@@ -17,7 +17,6 @@
  */
 package org.apache.drill.metastore.operate;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -30,9 +29,6 @@ import java.util.List;
  */
 public abstract class AbstractModify<T> implements Modify<T> {
 
-  protected final List<T> overwriteUnits = new ArrayList<>();
-  protected final List<Delete> deletes = new ArrayList<>();
-
   private final MetadataTypeValidator metadataTypeValidator;
 
   protected AbstractModify(MetadataTypeValidator metadataTypeValidator) {
@@ -40,15 +36,31 @@ public abstract class AbstractModify<T> implements Modify<T> {
   }
 
   @Override
-  public Modify<T> overwrite(List<T> units) {
-    overwriteUnits.addAll(units);
+  public final Modify<T> overwrite(List<T> units) {
+    addOverwrite(units);
     return this;
   }
 
   @Override
-  public Modify<T> delete(Delete delete) {
+  public final Modify<T> delete(Delete delete) {
     metadataTypeValidator.validate(delete.metadataTypes());
-    deletes.add(delete);
+    addDelete(delete);
     return this;
   }
+
+  /**
+   * Adds overwrite operation to the list of pending operations.
+   * Is used to ensure operations execution order.
+   *
+   * @param units list of Metastore metadata units
+   */
+  protected abstract void addOverwrite(List<T> units);
+
+  /**
+   * Adds delete operation to the list of pending operations.
+   * Is used to ensure operations execution order.
+   *
+   * @param delete Metastore delete operation holder
+   */
+  protected abstract void addDelete(Delete delete);
 }

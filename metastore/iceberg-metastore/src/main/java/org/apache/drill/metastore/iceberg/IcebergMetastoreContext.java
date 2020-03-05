@@ -27,7 +27,7 @@ import org.apache.iceberg.Table;
  *
  * @param <T> Metastore component unit type
  */
-public interface MetastoreContext<T> {
+public interface IcebergMetastoreContext<T> {
 
   /**
    * Returns Iceberg table implementation used as storage for Metastore component data.

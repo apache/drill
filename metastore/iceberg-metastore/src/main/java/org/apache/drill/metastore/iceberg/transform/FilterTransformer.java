@@ -26,6 +26,7 @@ import org.apache.iceberg.expressions.Expressions;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -34,10 +35,10 @@ import java.util.stream.Collectors;
  */
 public class FilterTransformer {
 
-  private final FilterExpression.Visitor<Expression> visitor = FilterExpressionVisitor.get();
+  private static final FilterExpression.Visitor<Expression> FILTER_VISITOR = FilterExpressionVisitor.get();
 
   public Expression transform(FilterExpression filter) {
-    return filter == null ? Expressions.alwaysTrue() : filter.accept(visitor);
+    return filter == null ? Expressions.alwaysTrue() : filter.accept(FILTER_VISITOR);
   }
 
   public Expression transform(Map<MetastoreColumn, Object> conditions) {
@@ -57,17 +58,17 @@ public class FilterTransformer {
       expressions.subList(2, expressions.size()).toArray(new Expression[0]));
   }
 
-  public Expression transform(List<MetadataType> metadataTypes) {
+  public Expression transform(Set<MetadataType> metadataTypes) {
     if (metadataTypes.contains(MetadataType.ALL)) {
       return Expressions.alwaysTrue();
     }
 
-    List<String> inConditionValues = metadataTypes.stream()
+    Set<String> inConditionValues = metadataTypes.stream()
       .map(Enum::name)
-      .collect(Collectors.toList());
+      .collect(Collectors.toSet());
 
     if (inConditionValues.size() == 1) {
-      return Expressions.equal(MetastoreColumn.METADATA_TYPE.columnName(), inConditionValues.get(0));
+      return Expressions.equal(MetastoreColumn.METADATA_TYPE.columnName(), inConditionValues.iterator().next());
     }
 
     return Expressions.in(MetastoreColumn.METADATA_TYPE.columnName(), inConditionValues);

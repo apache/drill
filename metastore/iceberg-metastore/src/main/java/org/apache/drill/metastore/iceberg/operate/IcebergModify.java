@@ -18,7 +18,7 @@
 package org.apache.drill.metastore.iceberg.operate;
 
 import org.apache.drill.metastore.expressions.FilterExpression;
-import org.apache.drill.metastore.iceberg.MetastoreContext;
+import org.apache.drill.metastore.iceberg.IcebergMetastoreContext;
 import org.apache.drill.metastore.iceberg.transform.OperationTransformer;
 import org.apache.drill.metastore.operate.AbstractModify;
 import org.apache.drill.metastore.operate.MetadataTypeValidator;
@@ -38,30 +38,37 @@ import java.util.List;
  */
 public class IcebergModify<T> extends AbstractModify<T> {
 
-  private final MetastoreContext<T> context;
+  private final OperationTransformer<T> transformer;
+  private final IcebergMetastoreContext<T> context;
+  private final List<IcebergOperation> operations = new ArrayList<>();
 
-  public IcebergModify(MetadataTypeValidator metadataTypeValidator, MetastoreContext<T> context) {
+  public IcebergModify(MetadataTypeValidator metadataTypeValidator, IcebergMetastoreContext<T> context) {
     super(metadataTypeValidator);
     this.context = context;
+    this.transformer = context.transformer().operation();
   }
 
   @Override
   public void execute() {
-    OperationTransformer<T> transformer = context.transformer().operation();
-    List<IcebergOperation> operations = new ArrayList<>(transformer.toOverwrite(overwriteUnits));
-    operations.addAll(transformer.toDelete(deletes));
-
     if (operations.isEmpty()) {
       return;
     }
-
     executeOperations(operations);
   }
 
   @Override
   public void purge() {
-    executeOperations(Collections.singletonList(
-      context.transformer().operation().toDelete((FilterExpression) null)));
+    executeOperations(Collections.singletonList(transformer.toDelete((FilterExpression) null)));
+  }
+
+  @Override
+  protected void addOverwrite(List<T> units) {
+    operations.addAll(transformer.toOverwrite(units));
+  }
+
+  @Override
+  protected void addDelete(org.apache.drill.metastore.operate.Delete delete) {
+    operations.add(transformer.toDelete(delete));
   }
 
   private void executeOperations(List<IcebergOperation> operations) {

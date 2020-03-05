@@ -15,18 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.metastore.iceberg.components.tables;
+package org.apache.drill.metastore.components.tables;
 
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigValueFactory;
+import org.apache.drill.categories.MetastoreTest;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.metastore.MetastoreColumn;
-import org.apache.drill.metastore.components.tables.BasicTablesRequests;
-import org.apache.drill.metastore.components.tables.BasicTablesTransformer;
-import org.apache.drill.metastore.components.tables.MetastoreTableInfo;
-import org.apache.drill.metastore.components.tables.TableMetadataUnit;
-import org.apache.drill.metastore.components.tables.Tables;
+import org.apache.drill.metastore.MetastoreRegistry;
+import org.apache.drill.metastore.TestData;
+import org.apache.drill.metastore.config.MetastoreConfigConstants;
 import org.apache.drill.metastore.expressions.FilterExpression;
-import org.apache.drill.metastore.iceberg.IcebergBaseTest;
-import org.apache.drill.metastore.iceberg.IcebergMetastore;
 import org.apache.drill.metastore.metadata.BaseTableMetadata;
 import org.apache.drill.metastore.metadata.FileMetadata;
 import org.apache.drill.metastore.metadata.MetadataInfo;
@@ -35,8 +34,11 @@ import org.apache.drill.metastore.metadata.PartitionMetadata;
 import org.apache.drill.metastore.metadata.RowGroupMetadata;
 import org.apache.drill.metastore.metadata.SegmentMetadata;
 import org.apache.drill.metastore.metadata.TableInfo;
-import org.junit.BeforeClass;
+import org.apache.drill.test.BaseTest;
+import org.junit.ClassRule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.rules.TemporaryFolder;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -50,19 +52,26 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-public class TestBasicRequests extends IcebergBaseTest {
+@Category(MetastoreTest.class)
+public abstract class AbstractBasicTablesRequestsTest extends BaseTest {
 
-  private static Tables tables;
-  private static BasicTablesRequests basicRequests;
-  private static TableMetadataUnit nationTable;
-  private static TableInfo nationTableInfo;
+  @ClassRule
+  public static TemporaryFolder defaultFolder = new TemporaryFolder();
 
-  @BeforeClass
-  public static void init() {
-    DrillConfig config = new DrillConfig(baseIcebergConfig(defaultFolder.getRoot()));
-    tables = new IcebergMetastore(config).tables();
-    prepareData(tables);
+  protected static Tables tables;
+  protected static BasicTablesRequests basicRequests;
+  protected static TableMetadataUnit nationTable;
+  protected static TableInfo nationTableInfo;
+
+  protected static void innerInit(Config config, Class<?> implementationClass) {
+    DrillConfig drillConfig = new DrillConfig(config
+      .withValue(MetastoreConfigConstants.USE_PROVIDED_CONFIG,
+        ConfigValueFactory.fromAnyRef(true))
+      .withValue(MetastoreConfigConstants.IMPLEMENTATION_CLASS,
+        ConfigValueFactory.fromAnyRef(implementationClass.getName())));
+    tables = new MetastoreRegistry(drillConfig).get().tables();
     basicRequests = tables.basicRequests();
+    prepareData(tables);
   }
 
   @Test
@@ -72,15 +81,6 @@ public class TestBasicRequests extends IcebergBaseTest {
     assertFalse(metastoreTableInfo.isExists());
     assertEquals(tableInfo, metastoreTableInfo.tableInfo());
     assertNull(metastoreTableInfo.lastModifiedTime());
-  }
-
-  @Test
-  public void testMetastoreTableInfoExistingTable() {
-    MetastoreTableInfo metastoreTableInfo = basicRequests.metastoreTableInfo(nationTableInfo);
-    assertTrue(metastoreTableInfo.isExists());
-    assertEquals(nationTableInfo, metastoreTableInfo.tableInfo());
-    assertEquals(nationTable.lastModifiedTime(), metastoreTableInfo.lastModifiedTime());
-    assertTrue(metastoreTableInfo.metastoreVersion() > 0);
   }
 
   @Test
@@ -181,66 +181,66 @@ public class TestBasicRequests extends IcebergBaseTest {
   @Test
   public void testSegmentMetadataByMetadataInfosAbsent() {
     List<SegmentMetadata> segmentMetadata = basicRequests.segmentsMetadata(
-        nationTableInfo,
-        Collections.singletonList(MetadataInfo.builder()
-            .type(MetadataType.SEGMENT)
-            .key("part_int=4")
-            .identifier("part_int=4")
-            .build()));
+      nationTableInfo,
+      Collections.singletonList(MetadataInfo.builder()
+        .type(MetadataType.SEGMENT)
+        .key("part_int=4")
+        .identifier("part_int=4")
+        .build()));
     assertTrue(segmentMetadata.isEmpty());
   }
 
   @Test
   public void testSegmentMetadataByMetadataInfosExisting() {
     List<SegmentMetadata> segmentMetadata = basicRequests.segmentsMetadata(
-        nationTableInfo,
-        Arrays.asList(
-            MetadataInfo.builder()
-                .type(MetadataType.SEGMENT)
-                .key("part_int=3")
-                .identifier("part_int=3/d3")
-                .build(),
-            MetadataInfo.builder()
-                .type(MetadataType.SEGMENT)
-                .key("part_int=3")
-                .identifier("part_int=3/d4")
-                .build())
-        );
+      nationTableInfo,
+      Arrays.asList(
+        MetadataInfo.builder()
+          .type(MetadataType.SEGMENT)
+          .key("part_int=3")
+          .identifier("part_int=3/d3")
+          .build(),
+        MetadataInfo.builder()
+          .type(MetadataType.SEGMENT)
+          .key("part_int=3")
+          .identifier("part_int=3/d4")
+          .build())
+    );
     assertEquals(2, segmentMetadata.size());
   }
 
   @Test
   public void testMetadataUnitsByMetadataInfosAbsent() {
     List<TableMetadataUnit> segmentMetadata = basicRequests.metadata(
-        nationTableInfo,
-        Collections.singletonList(MetadataInfo.builder()
-            .type(MetadataType.ROW_GROUP)
-            .key("part_int=4")
-            .identifier("part_int=4")
-            .build()));
+      nationTableInfo,
+      Collections.singletonList(MetadataInfo.builder()
+        .type(MetadataType.ROW_GROUP)
+        .key("part_int=4")
+        .identifier("part_int=4")
+        .build()));
     assertTrue(segmentMetadata.isEmpty());
   }
 
   @Test
   public void testMetadataUnitsByMetadataInfosExisting() {
     List<TableMetadataUnit> segmentMetadata = basicRequests.metadata(
-        nationTableInfo,
-        Arrays.asList(
-            MetadataInfo.builder()
-                .type(MetadataType.SEGMENT)
-                .key("part_int=3")
-                .identifier("part_int=3/d3")
-                .build(),
-            MetadataInfo.builder()
-                .type(MetadataType.SEGMENT)
-                .key("part_int=3")
-                .identifier("part_int=3/d4")
-                .build(),
-            MetadataInfo.builder()
-                .type(MetadataType.PARTITION)
-                .key("part_int=3")
-                .identifier("part_int=4/d5")
-                .build())
+      nationTableInfo,
+      Arrays.asList(
+        MetadataInfo.builder()
+          .type(MetadataType.SEGMENT)
+          .key("part_int=3")
+          .identifier("part_int=3/d3")
+          .build(),
+        MetadataInfo.builder()
+          .type(MetadataType.SEGMENT)
+          .key("part_int=3")
+          .identifier("part_int=3/d4")
+          .build(),
+        MetadataInfo.builder()
+          .type(MetadataType.PARTITION)
+          .key("part_int=3")
+          .identifier("part_int=4/d5")
+          .build())
     );
     assertEquals(2, segmentMetadata.size());
   }
@@ -248,30 +248,30 @@ public class TestBasicRequests extends IcebergBaseTest {
   @Test
   public void testFilesMetadataByMetadataInfosAbsent() {
     List<FileMetadata> segmentMetadata = basicRequests.filesMetadata(
-        nationTableInfo,
-        Collections.singletonList(MetadataInfo.builder()
-            .type(MetadataType.FILE)
-            .key("part_int=4")
-            .identifier("part_int=4/part_varchar=g/0_0_3.parquet")
-            .build()));
+      nationTableInfo,
+      Collections.singletonList(MetadataInfo.builder()
+        .type(MetadataType.FILE)
+        .key("part_int=4")
+        .identifier("part_int=4/part_varchar=g/0_0_3.parquet")
+        .build()));
     assertTrue(segmentMetadata.isEmpty());
   }
 
   @Test
   public void testFilesMetadataByMetadataInfosExisting() {
     List<FileMetadata> segmentMetadata = basicRequests.filesMetadata(
-        nationTableInfo,
-        Arrays.asList(
-            MetadataInfo.builder()
-                .type(MetadataType.FILE)
-                .key("part_int=4")
-                .identifier("part_int=4/part_varchar=g/0_0_0.parquet")
-                .build(),
-            MetadataInfo.builder()
-                .type(MetadataType.FILE)
-                .key("part_int=3")
-                .identifier("part_int=3/part_varchar=g/0_0_1.parquet")
-                .build())
+      nationTableInfo,
+      Arrays.asList(
+        MetadataInfo.builder()
+          .type(MetadataType.FILE)
+          .key("part_int=4")
+          .identifier("part_int=4/part_varchar=g/0_0_0.parquet")
+          .build(),
+        MetadataInfo.builder()
+          .type(MetadataType.FILE)
+          .key("part_int=3")
+          .identifier("part_int=3/part_varchar=g/0_0_1.parquet")
+          .build())
     );
     assertEquals(2, segmentMetadata.size());
   }
@@ -279,22 +279,22 @@ public class TestBasicRequests extends IcebergBaseTest {
   @Test
   public void testRowGroupsMetadataByMetadataKeysAndPathsAbsent() {
     List<RowGroupMetadata> segmentMetadata = basicRequests.rowGroupsMetadata(
-        nationTableInfo,
-        Collections.singletonList("part_int=4"),
-        Collections.singletonList("/tmp/nation/part_int=4/part_varchar=g/0_0_3.parquet"));
+      nationTableInfo,
+      Collections.singletonList("part_int=4"),
+      Collections.singletonList("/tmp/nation/part_int=4/part_varchar=g/0_0_3.parquet"));
     assertTrue(segmentMetadata.isEmpty());
   }
 
   @Test
   public void testRowGroupsByMetadataKeysAndPathsExisting() {
     List<RowGroupMetadata> segmentMetadata = basicRequests.rowGroupsMetadata(
-        nationTableInfo,
-        Arrays.asList(
-            "part_int=4",
-            "part_int=3"),
-        Arrays.asList(
-            "/tmp/nation/part_int=4/part_varchar=g/0_0_0.parquet",
-            "/tmp/nation/part_int=3/part_varchar=g/0_0_1.parquet")
+      nationTableInfo,
+      Arrays.asList(
+        "part_int=4",
+        "part_int=3"),
+      Arrays.asList(
+        "/tmp/nation/part_int=4/part_varchar=g/0_0_0.parquet",
+        "/tmp/nation/part_int=3/part_varchar=g/0_0_1.parquet")
     );
     assertEquals(2, segmentMetadata.size());
   }
@@ -302,32 +302,32 @@ public class TestBasicRequests extends IcebergBaseTest {
   @Test
   public void testRowGroupsMetadataByMetadataInfosAbsent() {
     List<RowGroupMetadata> segmentMetadata = basicRequests.rowGroupsMetadata(
-        nationTableInfo,
-        Collections.singletonList(MetadataInfo.builder()
-            .type(MetadataType.ROW_GROUP)
-            .key("part_int=4")
-            .identifier("part_int=4/part_varchar=g/0_0_3.parquet/1")
-            .build()));
+      nationTableInfo,
+      Collections.singletonList(MetadataInfo.builder()
+        .type(MetadataType.ROW_GROUP)
+        .key("part_int=4")
+        .identifier("part_int=4/part_varchar=g/0_0_3.parquet/1")
+        .build()));
     assertTrue(segmentMetadata.isEmpty());
   }
 
   @Test
   public void testRowGroupsMetadataByMetadataInfosExisting() {
-    List<RowGroupMetadata> segmentMetadata = basicRequests.rowGroupsMetadata(
-        nationTableInfo,
-        Arrays.asList(
-            MetadataInfo.builder()
-                .type(MetadataType.ROW_GROUP)
-                .key("part_int=4")
-                .identifier("part_int=4/part_varchar=g/0_0_0.parquet/1")
-                .build(),
-            MetadataInfo.builder()
-                .type(MetadataType.ROW_GROUP)
-                .key("part_int=3")
-                .identifier("part_int=3/part_varchar=g/0_0_1.parquet/1")
-                .build())
+    List<RowGroupMetadata> rowGroupMetadata = basicRequests.rowGroupsMetadata(
+      nationTableInfo,
+      Arrays.asList(
+        MetadataInfo.builder()
+          .type(MetadataType.ROW_GROUP)
+          .key("part_int=4")
+          .identifier("part_int=4/part_varchar=g/0_0_0.parquet/1")
+          .build(),
+        MetadataInfo.builder()
+          .type(MetadataType.ROW_GROUP)
+          .key("part_int=3")
+          .identifier("part_int=3/part_varchar=g/0_0_0.parquet/1")
+          .build())
     );
-    assertEquals(2, segmentMetadata.size());
+    assertEquals(2, rowGroupMetadata.size());
   }
 
   @Test
@@ -470,7 +470,7 @@ public class TestBasicRequests extends IcebergBaseTest {
    * @param tables Drill Metastore Tables instance
    */
   private static void prepareData(Tables tables) {
-    TableMetadataUnit basicUnit = basicUnit();
+    TableMetadataUnit basicUnit = TestData.basicTableMetadataUnit();
 
     nationTable = BaseTableMetadata.builder()
       .metadataUnit(basicUnit.toBuilder()
@@ -611,7 +611,7 @@ public class TestBasicRequests extends IcebergBaseTest {
 
     TableMetadataUnit nationRowGroup4 = basicRowGroup.toBuilder()
       .metadataKey("part_int=4")
-      .metadataIdentifier("part_int=4/part_varchar=g/0_0_0.parquet/1")
+      .metadataIdentifier("part_int=4/part_varchar=g/0_0_0.parquet/2")
       .location("/tmp/nation/part_int=4/part_varchar=g")
       .path("/tmp/nation/part_int=4/part_varchar=g/0_0_0.parquet")
       .rowGroupIndex(2)
@@ -634,44 +634,5 @@ public class TestBasicRequests extends IcebergBaseTest {
         nationRowGroup1, nationRowGroup2, nationRowGroup3, nationRowGroup4,
         regionTable)
       .execute();
-  }
-
-  /**
-   * Returns metadata unit where all fields are filled in.
-   * Note: data in the fields may be not exactly true to reality.
-   *
-   * @return basic metadata unit
-   */
-  private static TableMetadataUnit basicUnit() {
-    return TableMetadataUnit.builder()
-      .storagePlugin("dfs")
-      .workspace("tmp")
-      .tableName("test")
-      .owner("user")
-      .tableType("parquet")
-      .metadataType(MetadataType.NONE.name())
-      .metadataKey(MetadataInfo.GENERAL_INFO_KEY)
-      .location("/tmp/nation")
-      .interestingColumns(Arrays.asList("`id`", "`name`"))
-      .schema("{\"type\":\"tuple_schema\"," +
-        "\"columns\":[{\"name\":\"id\",\"type\":\"INT\",\"mode\":\"REQUIRED\"}," +
-        "{\"name\":\"name\",\"type\":\"VARCHAR\",\"mode\":\"REQUIRED\"}]," +
-        "\"properties\":{\"drill.strict\":\"true\"}}\n")
-      .columnsStatistics(Collections.singletonMap("`name`", "{\"statistics\":[{\"statisticsValue\":\"aaa\"," +
-        "\"statisticsKind\":{\"exact\":true,\"name\":\"minValue\"}},{\"statisticsValue\":\"zzz\"," +
-        "\"statisticsKind\":{\"exact\":true,\"name\":\"maxValue\"}}],\"type\":\"VARCHAR\"}"))
-      .metadataStatistics(Collections.singletonList("{\"statisticsValue\":2.1," +
-        "\"statisticsKind\":{\"name\":\"approx_count_distinct\"}}"))
-      .lastModifiedTime(System.currentTimeMillis())
-      .partitionKeys(Collections.singletonMap("dir0", "2018"))
-      .additionalMetadata("additional test metadata")
-      .metadataIdentifier("part_int=3/part_varchar=g/0_0_0.parquet")
-      .column("`id`")
-      .locations(Arrays.asList("/tmp/nation/1", "/tmp/nation/2"))
-      .partitionValues(Arrays.asList("1", "2"))
-      .path("/tmp/nation/1/0_0_0.parquet")
-      .rowGroupIndex(0)
-      .hostAffinity(Collections.singletonMap("host1", 0.1F))
-      .build();
   }
 }

@@ -63,13 +63,13 @@ import java.util.stream.Collectors;
  * Implementation of {@link MetadataInfoCollector} for file-based tables.
  */
 public class FileMetadataInfoCollector implements MetadataInfoCollector {
-  private final List<MetadataInfo> allMetaToHandle;
   private final List<MetadataInfo> metadataToRemove;
 
   private final BasicTablesRequests basicRequests;
   private final TableInfo tableInfo;
   private final MetadataType metadataLevel;
 
+  private List<MetadataInfo> allMetaToHandle;
   private List<MetadataInfo> rowGroupsInfo = Collections.emptyList();
   private List<MetadataInfo> filesInfo = Collections.emptyList();
   private Multimap<Integer, MetadataInfo> segmentsInfo = ArrayListMultimap.create();
@@ -84,7 +84,6 @@ public class FileMetadataInfoCollector implements MetadataInfoCollector {
     this.basicRequests = basicRequests;
     this.tableInfo = tableInfo;
     this.metadataLevel = metadataLevel;
-    this.allMetaToHandle = new ArrayList<>();
     this.metadataToRemove = new ArrayList<>();
     init(selection, settings, tableScanSupplier, interestingColumns, segmentColumnsCount);
   }
@@ -220,14 +219,12 @@ public class FileMetadataInfoCollector implements MetadataInfoCollector {
           .collect(Collectors.toList());
 
       List<MetadataInfo> segmentsToUpdate = getMetadataInfoList(selectionRoot, scanAndRemovedFiles, MetadataType.SEGMENT, 0);
-      Streams.concat(allSegments.values().stream(), allFilesInfo.stream(), allRowGroupsInfo.stream())
+      allMetaToHandle = Streams.concat(allSegments.values().stream(), allFilesInfo.stream(), allRowGroupsInfo.stream())
           .filter(child -> segmentsToUpdate.stream().anyMatch(parent -> MetadataIdentifierUtils.isMetadataKeyParent(parent.identifier(), child.identifier())))
           .filter(parent ->
               removedFilesMetadata.stream().noneMatch(child -> MetadataIdentifierUtils.isMetadataKeyParent(parent.identifier(), child.identifier()))
                   || filesInfo.stream().anyMatch(child -> MetadataIdentifierUtils.isMetadataKeyParent(parent.identifier(), child.identifier())))
-          .forEach(allMetaToHandle::add);
-
-      allMetaToHandle.addAll(segmentsToUpdate);
+          .collect(Collectors.toList());
 
       // removed top-level segments are handled separately since their metadata is not overridden when producing writing to the Metastore
       List<MetadataInfo> removedTopSegments = getMetadataInfoList(selectionRoot, removedFiles, MetadataType.SEGMENT, 0).stream()
@@ -236,6 +233,10 @@ public class FileMetadataInfoCollector implements MetadataInfoCollector {
                   && allFilesInfo.stream().noneMatch(child -> MetadataIdentifierUtils.isMetadataKeyParent(parent.identifier(), child.identifier())))
           .collect(Collectors.toList());
       metadataToRemove.addAll(removedTopSegments);
+
+      segmentsToUpdate.stream()
+          .filter(segment -> !removedTopSegments.contains(segment))
+          .forEach(allMetaToHandle::add);
     } else {
       // table metadata may still be actual
       outdated = false;

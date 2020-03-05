@@ -27,12 +27,15 @@ import org.apache.drill.metastore.metadata.PartitionMetadata;
 import org.apache.drill.metastore.metadata.RowGroupMetadata;
 import org.apache.drill.metastore.metadata.SegmentMetadata;
 import org.apache.drill.metastore.metadata.TableInfo;
+import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -262,9 +265,9 @@ public class BasicTablesRequests {
         .map(MetadataInfo::identifier)
         .collect(Collectors.toList());
 
-    List<MetadataType> metadataTypes = metadataInfos.stream()
+    Set<MetadataType> metadataTypes = metadataInfos.stream()
         .map(MetadataInfo::type)
-        .collect(Collectors.toList());
+        .collect(Collectors.toSet());
 
     RequestMetadata requestMetadata = RequestMetadata.builder()
         .tableInfo(tableInfo)
@@ -659,17 +662,17 @@ public class BasicTablesRequests {
    */
   public static class RequestMetadata {
 
-    private List<MetadataType> metadataTypes;
+    private Set<MetadataType> metadataTypes;
     private final FilterExpression filter;
     private final List<MetastoreColumn> columns;
 
-    private RequestMetadata(List<MetadataType> metadataTypes, FilterExpression filter, List<MetastoreColumn> columns) {
+    private RequestMetadata(Set<MetadataType> metadataTypes, FilterExpression filter, List<MetastoreColumn> columns) {
       this.metadataTypes = metadataTypes;
       this.filter = filter;
       this.columns = columns;
     }
 
-    public List<MetadataType> metadataTypes() {
+    public Set<MetadataType> metadataTypes() {
       return metadataTypes;
     }
 
@@ -697,7 +700,7 @@ public class BasicTablesRequests {
       private List<String> paths;
       private List<String> identifiers;
       private FilterExpression customFilter;
-      private List<MetadataType> metadataTypes = new ArrayList<>();
+      private Set<MetadataType> metadataTypes = new HashSet<>();
       private final List<MetastoreColumn> requestColumns = new ArrayList<>();
 
       public RequestMetadata.Builder metadataType(MetadataType metadataType) {
@@ -706,11 +709,11 @@ public class BasicTablesRequests {
       }
 
       public RequestMetadata.Builder metadataTypes(MetadataType... metadataTypes) {
-        this.metadataTypes.addAll(Arrays.asList(metadataTypes));
+        this.metadataTypes.addAll(Sets.newHashSet(metadataTypes));
         return this;
       }
 
-      public RequestMetadata.Builder metadataTypes(List<MetadataType> metadataTypes) {
+      public RequestMetadata.Builder metadataTypes(Set<MetadataType> metadataTypes) {
         this.metadataTypes.addAll(metadataTypes);
         return this;
       }

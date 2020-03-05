@@ -20,7 +20,7 @@ package org.apache.drill.metastore.operate;
 import org.apache.drill.metastore.exceptions.MetastoreException;
 import org.apache.drill.metastore.metadata.MetadataType;
 
-import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -30,9 +30,9 @@ import java.util.stream.Collectors;
 public interface MetadataTypeValidator {
 
   /**
-   * @return list of supported metadata types for concrete Metastore component unit
+   * @return set of supported metadata types for concrete Metastore component unit
    */
-  List<MetadataType> supportedMetadataTypes();
+  Set<MetadataType> supportedMetadataTypes();
 
   /**
    * Validates if given metadata types contain at least one metadata type
@@ -42,16 +42,16 @@ public interface MetadataTypeValidator {
    * @throws MetastoreException if no metadata types were provided
    *                            or given metadata types contain unsupported types
    */
-  default void validate(List<MetadataType> metadataTypes) {
+  default void validate(Set<MetadataType> metadataTypes) {
     if (metadataTypes == null || metadataTypes.isEmpty()) {
       throw new MetastoreException("Metadata type(s) must be indicated");
     }
 
-    List<MetadataType> supportedMetadataTypes = supportedMetadataTypes();
+    Set<MetadataType> supportedMetadataTypes = supportedMetadataTypes();
 
-    List<MetadataType> unsupportedMetadataTypes = metadataTypes.stream()
+    Set<MetadataType> unsupportedMetadataTypes = metadataTypes.stream()
       .filter(metadataType -> !supportedMetadataTypes.contains(metadataType))
-      .collect(Collectors.toList());
+      .collect(Collectors.toSet());
 
     if (!unsupportedMetadataTypes.isEmpty()) {
       throw new MetastoreException("Unsupported metadata types are detected: " + unsupportedMetadataTypes);
