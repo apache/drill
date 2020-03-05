@@ -22,10 +22,14 @@ import java.nio.file.Paths;
 
 import org.apache.drill.categories.HiveStorageTest;
 import org.apache.drill.categories.SlowTest;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.hive.HiveClusterTest;
 import org.apache.drill.exec.hive.HiveTestFixture;
 import org.apache.drill.exec.hive.HiveTestUtilities;
+import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.BatchSchemaBuilder;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.util.JsonStringHashMap;
 import org.apache.drill.exec.util.StoragePluginTestUtils;
 import org.apache.drill.exec.util.Text;
@@ -231,6 +235,21 @@ public class TestHiveStructs extends HiveClusterTest {
         .baselineValues(STR_N0_ROW_1)
         .baselineValues(STR_N0_ROW_2)
         .baselineValues(STR_N0_ROW_3)
+        .go();
+  }
+
+  @Test // DRILL-7429
+  public void testCorrectColumnOrdering() throws Exception {
+    BatchSchema expectedSchema = new BatchSchemaBuilder()
+        .withSchemaBuilder(new SchemaBuilder()
+            .addMap("a").resumeSchema()
+            .addNullable("b", TypeProtos.MinorType.INT))
+        .build();
+
+    String sql = "SELECT t.str_n0 a, rid b FROM hive.struct_tbl t LIMIT 1";
+    testBuilder()
+        .sqlQuery(sql)
+        .schemaBaseLine(expectedSchema)
         .go();
   }
 

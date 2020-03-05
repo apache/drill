@@ -198,6 +198,7 @@ public class UnionAllRecordBatch extends AbstractBinaryRecordBatch<UnionAll> {
         TransferPair tp = vvIn.makeTransferPair(vvOut);
         transfers.add(tp);
       } else if (inField.getType().getMinorType() == TypeProtos.MinorType.NULL) {
+        index++;
         continue;
       } else { // Copy data in order to rename the column
         SchemaPath inputPath = SchemaPath.getSimplePath(inField.getName());
