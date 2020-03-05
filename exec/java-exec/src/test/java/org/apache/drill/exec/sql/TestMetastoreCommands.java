@@ -556,12 +556,12 @@ public class TestMetastoreCommands extends ClusterTest {
             .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.tmp.%s]", tableName))
             .go();
 
-        List<MetadataType> emptyMetadataLevels = Arrays.stream(MetadataType.values())
+        Set<MetadataType> emptyMetadataLevels = Arrays.stream(MetadataType.values())
             .filter(metadataType -> metadataType.compareTo(analyzeLevel) > 0
                 // for the case when there are no segment metadata, default segment is present
                 && metadataType.compareTo(MetadataType.SEGMENT) > 0
                 && metadataType.compareTo(MetadataType.ALL) < 0)
-            .collect(Collectors.toList());
+            .collect(Collectors.toSet());
 
         BasicTablesRequests.RequestMetadata requestMetadata = BasicTablesRequests.RequestMetadata.builder()
             .tableInfo(tableInfo)

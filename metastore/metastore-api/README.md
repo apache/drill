@@ -352,6 +352,7 @@ and cannot be used together with overwrite or delete.
 Metastore component implementation may or may not support transactions. If transactions are supported,
 all operations in one `Modify` instance will be executed fully or not executed at all.
 If Metastore implementation does not support transactions, all operations will be executed consequently.
+Note: operations will be executed in the same order as they were added.
 
 ```
     metastore.tables().modify()

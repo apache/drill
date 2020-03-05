@@ -50,6 +50,7 @@ import org.slf4j.Logger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static org.apache.drill.exec.planner.types.DrillRelDataTypeSystem.DRILL_REL_DATATYPE_SYSTEM;
@@ -387,11 +388,13 @@ public interface RecordCollector {
 
         metadataHolder.segments().stream()
           .filter(segment -> filterEvaluator.shouldVisitTable(schemaPath, segment.getTableInfo().name(), Schema.TableType.TABLE))
+          .filter(segmentMetadata -> Objects.nonNull(segmentMetadata.getPartitionValues()))
           .map(segment -> Records.Partition.fromSegment(IS_CATALOG_NAME, schemaPath, segment))
           .forEach(records::addAll);
 
         metadataHolder.partitions().stream()
           .filter(partition -> filterEvaluator.shouldVisitTable(schemaPath, partition.getTableInfo().name(), Schema.TableType.TABLE))
+          .filter(partitionMetadata -> Objects.nonNull(partitionMetadata.getPartitionValues()))
           .map(partition -> Records.Partition.fromPartition(IS_CATALOG_NAME, schemaPath, partition))
           .forEach(records::addAll);
       }

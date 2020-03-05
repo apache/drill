@@ -34,7 +34,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 @Category(MetastoreTest.class)
-public class TestBasicTablesRequests extends BaseTest {
+public class TestBasicTablesRequestsRequestMetadata extends BaseTest {
 
   @Test
   public void testRequestMetadataWithoutRequestColumns() {
@@ -150,8 +150,8 @@ public class TestBasicTablesRequests extends BaseTest {
   @Test
   public void testRequestMetadataWithMetadataTypes() {
     BasicTablesRequests.RequestMetadata requestMetadata = BasicTablesRequests.RequestMetadata.builder()
-      .metadataTypes(MetadataType.TABLE, MetadataType.SEGMENT)
-      .metadataTypes(Arrays.asList(MetadataType.PARTITION, MetadataType.FILE))
+      .metadataTypes(MetadataType.TABLE, MetadataType.SEGMENT, MetadataType.PARTITION)
+      .metadataTypes(MetadataType.PARTITION, MetadataType.FILE)
       .build();
 
     assertEquals(4, requestMetadata.metadataTypes().size());

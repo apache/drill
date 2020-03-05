@@ -19,9 +19,9 @@ package org.apache.drill.metastore.components.tables;
 
 import org.apache.drill.metastore.metadata.MetadataType;
 import org.apache.drill.metastore.operate.MetadataTypeValidator;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.Set;
 
 /**
  * Implementation of {@link MetadataTypeValidator} interface which provides
@@ -31,7 +31,7 @@ public class TablesMetadataTypeValidator implements MetadataTypeValidator {
 
   public static final TablesMetadataTypeValidator INSTANCE = new TablesMetadataTypeValidator();
 
-  private static final List<MetadataType> SUPPORTED_METADATA_TYPES = Arrays.asList(
+  private static final Set<MetadataType> SUPPORTED_METADATA_TYPES = ImmutableSet.of(
     MetadataType.ALL,
     MetadataType.TABLE,
     MetadataType.SEGMENT,
@@ -40,7 +40,7 @@ public class TablesMetadataTypeValidator implements MetadataTypeValidator {
     MetadataType.PARTITION);
 
   @Override
-  public List<MetadataType> supportedMetadataTypes() {
+  public Set<MetadataType> supportedMetadataTypes() {
     return SUPPORTED_METADATA_TYPES;
   }
 }

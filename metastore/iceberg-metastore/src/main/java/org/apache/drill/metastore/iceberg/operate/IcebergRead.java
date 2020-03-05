@@ -18,7 +18,7 @@
 package org.apache.drill.metastore.iceberg.operate;
 
 import org.apache.drill.metastore.MetastoreColumn;
-import org.apache.drill.metastore.iceberg.MetastoreContext;
+import org.apache.drill.metastore.iceberg.IcebergMetastoreContext;
 import org.apache.drill.metastore.iceberg.transform.FilterTransformer;
 import org.apache.drill.metastore.operate.AbstractRead;
 import org.apache.drill.metastore.operate.MetadataTypeValidator;
@@ -35,13 +35,15 @@ import java.util.List;
  * Implementation of {@link Read} interface based on {@link AbstractRead} parent class.
  * Reads information from Iceberg table based on given filter expression.
  * Supports reading information for specific columns.
+ *
+ * @param <T> Metastore component unit type
  */
 public class IcebergRead<T> extends AbstractRead<T> {
 
-  private final MetastoreContext<T> context;
+  private final IcebergMetastoreContext<T> context;
   private final String[] defaultColumns;
 
-  public IcebergRead(MetadataTypeValidator metadataTypeValidator, MetastoreContext<T> context) {
+  public IcebergRead(MetadataTypeValidator metadataTypeValidator, IcebergMetastoreContext<T> context) {
     super(metadataTypeValidator);
     this.context = context;
     this.defaultColumns = context.table().schema().columns().stream()

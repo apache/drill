@@ -30,8 +30,21 @@ import java.util.StringJoiner;
  * Class that specifies metadata type and metadata information
  * which will be used for obtaining specific metadata from metastore.
  *
- * For example, for table-level metadata, it will be
- * {@code MetadataInfo[MetadataType.TABLE, MetadataInfo.GENERAL_INFO_KEY, null]}.
+ * For example:
+ * <li>For table metadata:
+ * {@code MetadataInfo[MetadataType.TABLE, MetadataInfo.GENERAL_INFO_KEY, MetadataInfo.GENERAL_INFO_KEY]}</li>
+ * <li>For default segment metadata:
+ * {@code MetadataInfo[MetadataType.SEGMENT, MetadataInfo.DEFAULT_SEGMENT_KEY, MetadataInfo.DEFAULT_SEGMENT_KEY]}</li>
+ * <li>For top-level segment metadata:
+ * {@code MetadataInfo[MetadataType.SEGMENT, "1994", "1994"]}</li>
+ * <li>For nested segment metadata:
+ * {@code MetadataInfo[MetadataType.SEGMENT, "1994", "1994/Q1"]}</li>
+ * <li>For file metadata:
+ * {@code MetadataInfo[MetadataType.FILE, "1994", "1994/Q1/0_0_0.parquet"]}</li>
+ * <li>For row group metadata:
+ * {@code MetadataInfo[MetadataType.ROW_GROUP, "1994", "1994/Q1/0_0_0.parquet/1"]}</li>
+ * <li>For partition metadata:
+ * {@code MetadataInfo[MetadataType.PARTITION, "1994", "1994/Q1/01"]}</li>
  */
 @JsonTypeName("metadataInfo")
 @JsonDeserialize(builder = MetadataInfo.MetadataInfoBuilder.class)
@@ -40,6 +53,8 @@ public class MetadataInfo {
   public static final String GENERAL_INFO_KEY = "GENERAL_INFO";
   public static final String DEFAULT_SEGMENT_KEY = "DEFAULT_SEGMENT";
   public static final String DEFAULT_COLUMN_PREFIX = "_$SEGMENT_";
+
+  private static final String UNDEFINED_KEY = "UNDEFINED_KEY";
 
   private final MetadataType type;
   private final String key;
@@ -67,9 +82,7 @@ public class MetadataInfo {
   }
 
   public void toMetadataUnitBuilder(TableMetadataUnit.Builder builder) {
-    if (type != null) {
-      builder.metadataType(type.name());
-    }
+    builder.metadataType(type.name());
     builder.metadataKey(key);
     builder.metadataIdentifier(identifier);
   }
@@ -136,6 +149,8 @@ public class MetadataInfo {
 
     public MetadataInfo build() {
       Objects.requireNonNull(type, "type was not set");
+      key = key == null ? UNDEFINED_KEY : key;
+      identifier = identifier == null ? key : identifier;
       return new MetadataInfo(this);
     }
   }

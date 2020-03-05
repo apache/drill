@@ -229,7 +229,7 @@ public class MetastoreAnalyzeTableHandler extends DefaultSqlHandler {
 
     MetastoreTableInfo metastoreTableInfo = basicRequests.metastoreTableInfo(tableInfo);
 
-    List<MetadataInfo> allMetaToHandle = new ArrayList<>();
+    List<MetadataInfo> allMetaToHandle = null;
     List<MetadataInfo> metadataToRemove = new ArrayList<>();
 
     // Step 1: checks whether table metadata is present in the Metastore to determine

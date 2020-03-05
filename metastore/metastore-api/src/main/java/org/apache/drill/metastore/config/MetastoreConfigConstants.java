@@ -44,7 +44,6 @@ public interface MetastoreConfigConstants {
    */
   String OVERRIDE_RESOURCE_FILE_NAME = "drill-metastore-override.conf";
 
-
   /**
    * Metastore configuration properties namespace.
    */
@@ -54,4 +53,10 @@ public interface MetastoreConfigConstants {
    * Indicates canonical class name of the Metastore implementation class.
    */
   String IMPLEMENTATION_CLASS = BASE + "implementation.class";
+
+  /**
+   * Indicates if provided Drill config should be used without looking for overridden / fallback
+   * resource files in the classpath. Used for testing only.
+   */
+  String USE_PROVIDED_CONFIG = BASE + "config.use_provided";
 }

@@ -22,7 +22,9 @@ import org.apache.drill.metastore.expressions.FilterExpression;
 import org.apache.drill.metastore.metadata.MetadataType;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Abstract implementation of {@link Read<T>} interface which contains
@@ -33,7 +35,7 @@ import java.util.List;
  */
 public abstract class AbstractRead<T> implements Read<T> {
 
-  protected final List<MetadataType> metadataTypes = new ArrayList<>();
+  protected final Set<MetadataType> metadataTypes = new HashSet<>();
   protected final List<MetastoreColumn> columns = new ArrayList<>();
   protected FilterExpression filter;
 
@@ -44,7 +46,7 @@ public abstract class AbstractRead<T> implements Read<T> {
   }
 
   @Override
-  public Read<T> metadataTypes(List<MetadataType> metadataTypes) {
+  public Read<T> metadataTypes(Set<MetadataType> metadataTypes) {
     this.metadataTypes.addAll(metadataTypes);
     return this;
   }

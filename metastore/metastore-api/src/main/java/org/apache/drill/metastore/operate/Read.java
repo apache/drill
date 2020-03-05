@@ -20,9 +20,11 @@ package org.apache.drill.metastore.operate;
 import org.apache.drill.metastore.MetastoreColumn;
 import org.apache.drill.metastore.expressions.FilterExpression;
 import org.apache.drill.metastore.metadata.MetadataType;
+import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Drill Metastore Read interface contains methods to be implemented in order
@@ -33,17 +35,17 @@ import java.util.List;
 public interface Read<T> {
 
   /**
-   * Provides list of metadata types to be read.
+   * Provides set of metadata types to be read.
    * Note: providing at least one metadata type is required.
    * If all metadata types should be read, {@link MetadataType#ALL} can be passed.
    *
-   * @param metadataTypes list of metadata types
+   * @param metadataTypes set of metadata types
    * @return current instance of Read interface implementation
    */
-  Read<T> metadataTypes(List<MetadataType> metadataTypes);
+  Read<T> metadataTypes(Set<MetadataType> metadataTypes);
 
   default Read<T> metadataType(MetadataType... metadataType) {
-    return metadataTypes(Arrays.asList(metadataType));
+    return metadataTypes(Sets.newHashSet(metadataType));
   }
 
   /**

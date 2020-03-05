@@ -20,11 +20,11 @@ package org.apache.drill.metastore.components.tables;
 import org.apache.drill.categories.MetastoreTest;
 import org.apache.drill.metastore.exceptions.MetastoreException;
 import org.apache.drill.metastore.metadata.MetadataType;
+import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 import org.apache.drill.test.BaseTest;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import java.util.Arrays;
 import java.util.Collections;
 
 import static org.hamcrest.CoreMatchers.startsWith;
@@ -36,13 +36,13 @@ public class TestTablesMetadataTypeValidator extends BaseTest {
 
   @Test
   public void testValidType() {
-    TablesMetadataTypeValidator.INSTANCE.validate(Collections.singletonList(MetadataType.ALL));
-    TablesMetadataTypeValidator.INSTANCE.validate(Collections.singletonList(MetadataType.TABLE));
+    TablesMetadataTypeValidator.INSTANCE.validate(Collections.singleton(MetadataType.ALL));
+    TablesMetadataTypeValidator.INSTANCE.validate(Collections.singleton(MetadataType.TABLE));
   }
 
   @Test
   public void testValidTypes() {
-    TablesMetadataTypeValidator.INSTANCE.validate(Arrays.asList(
+    TablesMetadataTypeValidator.INSTANCE.validate(Sets.newHashSet(
       MetadataType.TABLE,
       MetadataType.SEGMENT,
       MetadataType.FILE,
@@ -53,7 +53,7 @@ public class TestTablesMetadataTypeValidator extends BaseTest {
   @Test
   public void testInvalidType() {
     try {
-      TablesMetadataTypeValidator.INSTANCE.validate(Collections.singletonList(MetadataType.NONE));
+      TablesMetadataTypeValidator.INSTANCE.validate(Collections.singleton(MetadataType.NONE));
       fail();
     } catch (MetastoreException e) {
       assertThat(e.getMessage(), startsWith("Unsupported metadata types are detected"));
@@ -63,7 +63,7 @@ public class TestTablesMetadataTypeValidator extends BaseTest {
   @Test
   public void testValidAndInvalidTypes() {
     try {
-      TablesMetadataTypeValidator.INSTANCE.validate(Arrays.asList(
+      TablesMetadataTypeValidator.INSTANCE.validate(Sets.newHashSet(
         MetadataType.TABLE,
         MetadataType.ALL,
         MetadataType.NONE,

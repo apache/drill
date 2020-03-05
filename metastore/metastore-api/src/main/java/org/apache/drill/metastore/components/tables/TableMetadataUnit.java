@@ -53,6 +53,8 @@ public class TableMetadataUnit {
 
   public static final Schema SCHEMA = Schema.of(TableMetadataUnit.class, Builder.class);
 
+  public static final TableMetadataUnit EMPTY_UNIT = TableMetadataUnit.builder().build();
+
   @MetastoreFieldDefinition(column = MetastoreColumn.STORAGE_PLUGIN, scopes = {ALL}) private final String storagePlugin;
   @MetastoreFieldDefinition(column = MetastoreColumn.WORKSPACE,scopes = {ALL}) private final String workspace;
   @MetastoreFieldDefinition(column = MetastoreColumn.TABLE_NAME, scopes = {ALL}) private final String tableName;

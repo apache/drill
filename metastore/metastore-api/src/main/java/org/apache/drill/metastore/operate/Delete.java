@@ -19,23 +19,23 @@ package org.apache.drill.metastore.operate;
 
 import org.apache.drill.metastore.expressions.FilterExpression;
 import org.apache.drill.metastore.metadata.MetadataType;
+import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.StringJoiner;
 
 /**
  * Delete operation holder, it includes filter by which Metastore data will be deleted
- * and list of metadata types to which filter will be applied.
+ * and set of metadata types to which filter will be applied.
  *
- * Note: providing at list one metadata type is required.
+ * Note: providing at least one metadata type is required.
  * If delete operation should be applied to all metadata types,
  * {@link MetadataType#ALL} can be indicated.
  */
 public class Delete {
 
-  private final List<MetadataType> metadataTypes;
+  private final Set<MetadataType> metadataTypes;
   private final FilterExpression filter;
 
   private Delete(Builder builder) {
@@ -47,7 +47,7 @@ public class Delete {
     return new Builder();
   }
 
-  public List<MetadataType> metadataTypes() {
+  public Set<MetadataType> metadataTypes() {
     return metadataTypes;
   }
 
@@ -64,16 +64,16 @@ public class Delete {
   }
 
   public static class Builder {
-    private final List<MetadataType> metadataTypes = new ArrayList<>();
+    private final Set<MetadataType> metadataTypes = new HashSet<>();
     private FilterExpression filter;
 
-    public Builder metadataTypes(List<MetadataType> metadataTypes) {
+    public Builder metadataTypes(Set<MetadataType> metadataTypes) {
       this.metadataTypes.addAll(metadataTypes);
       return this;
     }
 
     public Builder metadataType(MetadataType... metadataTypes) {
-      return metadataTypes(Arrays.asList(metadataTypes));
+      return metadataTypes(Sets.newHashSet(metadataTypes));
     }
 
     public Builder filter(FilterExpression filter) {

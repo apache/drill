@@ -45,5 +45,6 @@
   <modules>
     <module>metastore-api</module>
     <module>iceberg-metastore</module>
+    <module>rdbms-metastore</module>
   </modules>
 </project>
