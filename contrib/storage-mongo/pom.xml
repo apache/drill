@@ -31,7 +31,7 @@
   <name>contrib/mongo-storage-plugin</name>
 
   <properties>
-     <mongo.TestSuite>**/MongoTestSuit.class</mongo.TestSuite>
+     <mongo.TestSuite>**/MongoTestSuite.class</mongo.TestSuite>
   </properties>
 
   <dependencies>

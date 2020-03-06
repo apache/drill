@@ -35,6 +35,7 @@ public interface MongoTestConstants {
   int MONGOS_PORT = 27017;
 
   String EMPLOYEE_DB = "employee";
+  String AUTHENTICATION_DB = "admin";
   String DONUTS_DB = "donuts";
 
   String DONUTS_COLLECTION = "donuts";
