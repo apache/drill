@@ -40,7 +40,7 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * JDBC storage plugin tests against MySQL.
- * Note: it requires libaio.so library in the system
+ * Note: it requires libaio1.so library on Linux
  */
 @Category(JdbcStorageTest.class)
 public class TestJdbcPluginWithMySQLIT extends ClusterTest {
@@ -53,7 +53,7 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
     String mysqlDBName = "drill_mysql_test";
     int mysqlPort = QueryTestUtil.getFreePortNumber(2215, 300);
 
-    MysqldConfig config = MysqldConfig.aMysqldConfig(Version.v5_6_21)
+    MysqldConfig config = MysqldConfig.aMysqldConfig(Version.v5_7_27)
         .withPort(mysqlPort)
         .withUser("mysqlUser", "mysqlPass")
         .withTimeZone(DateTimeZone.UTC.toTimeZone())

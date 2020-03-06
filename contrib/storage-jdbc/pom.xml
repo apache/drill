@@ -31,7 +31,9 @@
   <name>contrib/jdbc-storage-plugin</name>
 
   <properties>
-    <mysql.connector.version>8.0.13</mysql.connector.version>
+    <mysql.connector.version>8.0.19</mysql.connector.version>
+    <wix-embedded-mysql.version>4.6.1</wix-embedded-mysql.version>
+    <h2.version>1.4.200</h2.version>
   </properties>
 
   <dependencies>
@@ -69,13 +71,13 @@
     <dependency>
       <groupId>com.wix</groupId>
       <artifactId>wix-embedded-mysql</artifactId>
-      <version>4.2.0</version>
+      <version>${wix-embedded-mysql.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>com.h2database</groupId>
       <artifactId>h2</artifactId>
-      <version>1.4.197</version>
+      <version>${h2.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
