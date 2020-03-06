@@ -18,17 +18,20 @@
 package org.apache.drill.exec.store.mongo;
 
 import com.mongodb.MongoCredential;
+import org.apache.drill.categories.MongoStorageTest;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.test.BaseTest;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-import java.io.IOException;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
-public class TestMongoStoragePluginUsesCredentialsStore {
+@Category({MongoStorageTest.class})
+public class TestMongoStoragePluginUsesCredentialsStore extends BaseTest {
 
-  private void test(String expectedUserName, String expectedPassword, String connection, String name) throws IOException, ExecutionSetupException {
+  private void test(String expectedUserName, String expectedPassword, String connection, String name) throws ExecutionSetupException {
     MongoStoragePlugin plugin = new MongoStoragePlugin(new MongoStoragePluginConfig(
       connection), null, name);
     List<MongoCredential> creds = plugin.getClient().getCredentialsList();

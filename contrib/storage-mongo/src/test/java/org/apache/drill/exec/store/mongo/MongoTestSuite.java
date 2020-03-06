@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.mongo;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.ServerAddress;
 import com.mongodb.client.MongoCollection;
@@ -44,6 +45,7 @@ import org.apache.drill.categories.MongoStorageTest;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.test.BaseTest;
+import org.apache.hadoop.conf.Configuration;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.junit.AfterClass;
@@ -56,23 +58,26 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @RunWith(Suite.class)
-@SuiteClasses({ TestMongoFilterPushDown.class, TestMongoProjectPushDown.class,
-    TestMongoQueries.class, TestMongoChunkAssignment.class })
+@SuiteClasses({TestMongoFilterPushDown.class, TestMongoProjectPushDown.class,
+    TestMongoQueries.class, TestMongoChunkAssignment.class,
+    TestMongoStoragePluginUsesCredentialsStore.class})
 @Category({SlowTest.class, MongoStorageTest.class})
 public class MongoTestSuite extends BaseTest implements MongoTestConstants {
 
   private static final Logger logger = LoggerFactory.getLogger(MongoTestSuite.class);
   protected static MongoClient mongoClient;
 
-  private static boolean distMode = Boolean.valueOf(System.getProperty("drill.mongo.tests.shardMode", "false"));
-  private static boolean authEnabled = Boolean.valueOf(System.getProperty("drill.mongo.tests.authEnabled", "false"));
+  private static boolean distMode = Boolean.parseBoolean(System.getProperty("drill.mongo.tests.shardMode", "false"));
+  private static boolean authEnabled = Boolean.parseBoolean(System.getProperty("drill.mongo.tests.authEnabled", "false"));
   private static volatile String connectionURL = null;
   private static volatile AtomicInteger initCount = new AtomicInteger(0);
 
@@ -138,13 +143,12 @@ public class MongoTestSuite extends BaseTest implements MongoTestConstants {
 
       Storage replication = new Storage(null, CONFIG_REPLICA_SET, 0);
 
-      IMongodConfig mongodConfig = new MongodConfigBuilder()
+      return new MongodConfigBuilder()
           .version(Version.Main.V3_4)
           .net(new Net(LOCALHOST, configServerPort, Network.localhostIsIPv6()))
           .replication(replication)
           .shardServer(false)
           .configServer(true).cmdOptions(cmdOptions).build();
-      return mongodConfig;
     }
 
     private static IMongodConfig crateIMongodConfig(int mongodPort, boolean flag, String replicaName)
@@ -158,14 +162,13 @@ public class MongoTestSuite extends BaseTest implements MongoTestConstants {
         .build();
 
       Storage replication = new Storage(null, replicaName, 0);
-      IMongodConfig mongodConfig = new MongodConfigBuilder()
+
+      return new MongodConfigBuilder()
           .version(Version.Main.V3_4)
-        .shardServer(true)
+          .shardServer(true)
           .net(new Net(LOCALHOST, mongodPort, Network.localhostIsIPv6()))
           .configServer(flag).replication(replication).cmdOptions(cmdOptions)
           .build();
-
-      return mongodConfig;
     }
 
     private static IMongosConfig createIMongosConfig() throws IOException {
@@ -177,13 +180,12 @@ public class MongoTestSuite extends BaseTest implements MongoTestConstants {
         .verbose(false)
         .build();
 
-      IMongosConfig mongosConfig = new MongosConfigBuilder()
+      return new MongosConfigBuilder()
           .version(Version.Main.V3_4)
           .net(new Net(LOCALHOST, MONGOS_PORT, Network.localhostIsIPv6()))
           .replicaSet(CONFIG_REPLICA_SET)
           .configDB(LOCALHOST + ":" + CONFIG_SERVER_1_PORT)
           .cmdOptions(cmdOptions).build();
-      return mongosConfig;
     }
 
     private static void cleanup() {
@@ -220,6 +222,8 @@ public class MongoTestSuite extends BaseTest implements MongoTestConstants {
           mongodConfig);
       mongod = mongodExecutable.start();
       mongoClient = new MongoClient(new ServerAddress(LOCALHOST, MONGOS_PORT));
+
+      createMongoUser();
       createDbAndCollections(EMPLOYEE_DB, EMPINFO_COLLECTION, "employee_id");
       createDbAndCollections(EMPLOYEE_DB, SCHEMA_CHANGE_COLLECTION, "field_2");
       createDbAndCollections(EMPLOYEE_DB, EMPTY_COLLECTION, "field_2");
@@ -278,8 +282,29 @@ public class MongoTestSuite extends BaseTest implements MongoTestConstants {
     mongoCollection.createIndex(keys, indexOptions);
   }
 
+  private static void createMongoUser() throws IOException {
+    Configuration configuration = new Configuration();
+    String storeName = "mongo";
+    char[] usernameChars = configuration.getPassword(DrillMongoConstants.STORE_CONFIG_PREFIX + storeName + DrillMongoConstants.USERNAME_CONFIG_SUFFIX);
+    char[] passwordChars = configuration.getPassword(DrillMongoConstants.STORE_CONFIG_PREFIX + storeName + DrillMongoConstants.PASSWORD_CONFIG_SUFFIX);
+    if (usernameChars != null && passwordChars != null) {
+      String username = URLEncoder.encode(new String(usernameChars), "UTF-8");
+      String password = URLEncoder.encode(new String(passwordChars), "UTF-8");
+
+      BasicDBObject createUserCommand = new BasicDBObject("createUser", username)
+          .append("pwd", password)
+          .append("roles",
+              Collections.singletonList(
+                  new BasicDBObject("role", "readWrite")
+                      .append("db", AUTHENTICATION_DB)));
+
+      MongoDatabase db = mongoClient.getDatabase(AUTHENTICATION_DB);
+      db.runCommand(createUserCommand);
+    }
+  }
+
   @AfterClass
-  public static void tearDownCluster() throws Exception {
+  public static void tearDownCluster() {
     synchronized (MongoTestSuite.class) {
       if (initCount.decrementAndGet() == 0) {
         try {

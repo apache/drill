@@ -45,7 +45,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URLEncoder;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -60,9 +59,9 @@ public class MongoStoragePlugin extends AbstractStoragePlugin {
   private final MongoClientURI clientURI;
 
   public MongoStoragePlugin(
-    MongoStoragePluginConfig mongoConfig,
-    DrillbitContext context,
-    String name) throws IOException, ExecutionSetupException {
+      MongoStoragePluginConfig mongoConfig,
+      DrillbitContext context,
+      String name) throws ExecutionSetupException {
     super(context, name);
     this.mongoConfig = mongoConfig;
     String connection = addCredentialsFromCredentialsProvider(this.mongoConfig.getConnection(), name);
@@ -73,20 +72,22 @@ public class MongoStoragePlugin extends AbstractStoragePlugin {
     this.schemaFactory = new MongoSchemaFactory(this, name);
   }
 
-  private static final String addCredentialsFromCredentialsProvider(String connection, String name) {
+  private static String addCredentialsFromCredentialsProvider(String connection, String name) {
     MongoClientURI parsed = new MongoClientURI(connection);
     if (parsed.getCredentials() == null) {
       Configuration configuration = new Configuration();
       try {
         // The default connection has the name "mongo" but multiple connections can be added;
         // each will need their own credentials.
-        char[] usernameChars = configuration.getPassword("drill.exec.store." + name + ".username");
-        char[] passwordChars = configuration.getPassword("drill.exec.store." + name + ".password");
+        char[] usernameChars = configuration.getPassword(
+            DrillMongoConstants.STORE_CONFIG_PREFIX + name + DrillMongoConstants.USERNAME_CONFIG_SUFFIX);
+        char[] passwordChars = configuration.getPassword(
+            DrillMongoConstants.STORE_CONFIG_PREFIX + name + DrillMongoConstants.PASSWORD_CONFIG_SUFFIX);
         if (usernameChars != null && passwordChars != null) {
           String username = URLEncoder.encode(new String(usernameChars), "UTF-8");
           String password = URLEncoder.encode(new String(passwordChars), "UTF-8");
-          String updatedUrl = connection.replaceFirst("://", "://" + username + ":" + password + "@");
-          return updatedUrl.toString();
+          return connection.replaceFirst("://",
+              String.format("://%s:%s@", username, password));
         }
       } catch (IOException e) {
         logger.error("Error fetching mongodb username and password from configuration", e);
@@ -123,7 +124,7 @@ public class MongoStoragePlugin extends AbstractStoragePlugin {
   }
 
 
-  private class AddressCloser implements
+  private static class AddressCloser implements
     RemovalListener<MongoCnxnKey, MongoClient> {
     @Override
     public synchronized void onRemoval(
@@ -155,8 +156,7 @@ public class MongoStoragePlugin extends AbstractStoragePlugin {
     MongoClient client = addressClientMap.getIfPresent(key);
     if (client == null) {
       if (credential != null) {
-        List<MongoCredential> credentialList = Arrays.asList(credential);
-        client = new MongoClient(addresses, credentialList, clientURI.getOptions());
+        client = new MongoClient(addresses, credential, clientURI.getOptions());
       } else {
         client = new MongoClient(addresses, clientURI.getOptions());
       }
@@ -168,7 +168,7 @@ public class MongoStoragePlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public void close() throws Exception {
+  public void close() {
     addressClientMap.invalidateAll();
   }
 
