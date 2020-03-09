@@ -222,7 +222,6 @@ public class TestSchemaBuilder extends DrillTest {
     // optional list has one set of semantics (in ListVector, not
     // really supported), while a repeated list has entirely different
     // semantics (in the RepeatedListVector) and is supported.
-
     assertEquals(DataMode.OPTIONAL, list.mode());
 
     VariantMetadata variant = list.variantSchema();
@@ -390,7 +389,6 @@ public class TestSchemaBuilder extends DrillTest {
         .buildSchema();
 
     // Use name methods, just for variety
-
     ColumnMetadata a = schema.metadata("a");
     assertEquals(MinorType.VARDECIMAL, a.type());
     assertEquals(DataMode.OPTIONAL, a.mode());

@@ -206,4 +206,13 @@ public class VariantSchema implements VariantMetadata {
     copy.isSimple = isSimple;
     return copy;
   }
+
+  public VariantSchema copy() {
+    VariantSchema copy = new VariantSchema();
+    copy.isSimple = isSimple;
+    for (ColumnMetadata type : types.values()) {
+      copy.addType(type);
+    }
+    return copy;
+  }
 }
