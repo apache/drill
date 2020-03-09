@@ -87,6 +87,22 @@ public class TokenIterator {
         .toString();
   }
 
+  public int lineNumber() {
+    return parser.getCurrentLocation().getLineNr();
+  }
+
+  public int columnNumber() {
+    return parser.getCurrentLocation().getColumnNr();
+  }
+
+  public String token() {
+    try {
+      return parser.getText();
+    } catch (IOException e) {
+      return null;
+    }
+  }
+
   public JsonToken requireNext() {
     JsonToken token = next();
     if (token == null) {

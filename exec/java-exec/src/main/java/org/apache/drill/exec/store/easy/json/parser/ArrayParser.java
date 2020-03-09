@@ -17,12 +17,18 @@
  */
 package org.apache.drill.exec.store.easy.json.parser;
 
+import org.apache.drill.exec.store.easy.json.parser.ObjectListener.FieldType;
+
 import com.fasterxml.jackson.core.JsonToken;
 
 /**
  * Parses a JSON array, which consists of a list of <i>elements</i>,
  * represented by a {@code ValueListener}. There is a single listener
  * for all the elements, which are presumed to be of the same type.
+ * <p>
+ * The element is created when first encountered, either as part of field
+ * creation (<code>{a: [10]}</code>) or when later encountered in parsing
+ * (<code{a: []} {a: [10]}</code>).
  * <p>
  * This parser <i>does not</i> attempt to parse an array as a poor-man's
  * tuple: {@code [ 101, "fred", 23.45 ]}. The listener could handle this
@@ -32,13 +38,12 @@ import com.fasterxml.jackson.core.JsonToken;
  */
 public class ArrayParser extends AbstractElementParser {
 
-  private final ArrayListener arrayListener;
-  private final ValueParser elementParser;
+  private ValueParser elementParser;
+  private ArrayListener arrayListener;
 
-  public ArrayParser(ValueParser parent, ArrayListener arrayListener, ValueListener elementListener) {
+  public ArrayParser(ValueParser parent, ArrayListener arrayListener) {
     super(parent);
     this.arrayListener = arrayListener;
-    this.elementParser = new ValueParser(this, "[]", elementListener);
   }
 
   public ValueParser elementParser() { return elementParser; }
@@ -51,18 +56,58 @@ public class ArrayParser extends AbstractElementParser {
     arrayListener.onStart();
     top: for (;;) {
       // Position: [ (value, )* ^ ?
-     JsonToken token = tokenizer.requireNext();
+      JsonToken token = tokenizer.requireNext();
       switch (token) {
         case END_ARRAY:
           break top;
-
         default:
           tokenizer.unget(token);
-          arrayListener.onElement();
-          elementParser.parse(tokenizer);
-          break;
+          parseElement(tokenizer);
       }
     }
     arrayListener.onEnd();
+  }
+
+  private void parseElement(TokenIterator tokenizer) {
+    if (elementParser == null) {
+      detectElement(tokenizer);
+    }
+    arrayListener.onElementStart();
+    elementParser.parse(tokenizer);
+    arrayListener.onElementEnd();
+  }
+
+  private void detectElement(TokenIterator tokenizer) {
+    addElement(ValueDefFactory.lookAhead(tokenizer));
+  }
+
+  public void addElement(ValueDef valueDef) {
+    bindElement(arrayListener.element(valueDef));
+  }
+
+  public void bindElement(ValueListener elementListener) {
+    elementParser = new ValueParser(this, "[]", FieldType.TYPED);
+    elementParser.bindListener(elementListener);
+  }
+
+  public void bindListener(ArrayListener newListener) {
+    arrayListener = newListener;
+    if (elementParser != null) {
+      elementParser.bindListener(arrayListener.element(ValueDef.UNKNOWN));
+    }
+  }
+
+  /**
+   * Expand the structure of this array given a description of the
+   * look-ahead value. Skip if this is a 1D array of unknown type.
+   * If 2D or greater, then we must create the child array of one
+   * less dimension.
+    */
+  public void expandStructure(ValueDef valueDef) {
+    if (valueDef.dimensions() > 1 || !valueDef.type().isUnknown()) {
+      ValueDef elementDef = new ValueDef(valueDef.type(), valueDef.dimensions() - 1);
+      addElement(elementDef);
+      elementParser.expandStructure(elementDef);
+    }
   }
 }

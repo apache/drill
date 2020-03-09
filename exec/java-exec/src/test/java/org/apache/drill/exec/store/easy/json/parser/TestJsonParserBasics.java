@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.json.parser;
+package org.apache.drill.exec.store.easy.json.parser;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -23,13 +23,17 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.HashSet;
 
-import org.apache.drill.exec.store.easy.json.parser.JsonType;
+import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.exec.store.easy.json.parser.ObjectListener.FieldType;
+import org.apache.drill.exec.store.easy.json.parser.ValueDef.JsonType;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Tests JSON structure parser functionality excluding nested objects
  * and arrays. Tests the "happy path."
  */
+@Category(RowSetTests.class)
 public class TestJsonParserBasics extends BaseTestJsonParser {
 
   @Test
@@ -63,8 +67,8 @@ public class TestJsonParserBasics extends BaseTestJsonParser {
     assertEquals(1, fixture.rootObject.startCount);
     assertEquals(1, fixture.rootObject.fields.size());
     ValueListenerFixture a = fixture.field("a");
-    assertEquals(JsonType.BOOLEAN, a.type);
-    assertEquals(0, a.dimCount);
+    assertEquals(JsonType.BOOLEAN, a.valueDef.type());
+    assertEquals(0, a.valueDef.dimensions());
     assertEquals(0, a.nullCount);
     assertEquals(Boolean.TRUE, a.value);
     assertEquals(2, fixture.read());
@@ -80,7 +84,7 @@ public class TestJsonParserBasics extends BaseTestJsonParser {
     fixture.open(json);
     assertTrue(fixture.next());
     ValueListenerFixture a = fixture.field("a");
-    assertEquals(JsonType.INTEGER, a.type);
+    assertEquals(JsonType.INTEGER, a.valueDef.type());
     assertEquals(2, fixture.read());
     assertEquals(1, a.nullCount);
     assertEquals(100L, a.value);
@@ -94,7 +98,7 @@ public class TestJsonParserBasics extends BaseTestJsonParser {
     fixture.open(json);
     assertTrue(fixture.next());
     ValueListenerFixture a = fixture.field("a");
-    assertEquals(JsonType.FLOAT, a.type);
+    assertEquals(JsonType.FLOAT, a.valueDef.type());
     assertEquals(2, fixture.read());
     assertEquals(1, a.nullCount);
     assertEquals(2, a.valueCount);
@@ -111,7 +115,7 @@ public class TestJsonParserBasics extends BaseTestJsonParser {
     fixture.open(json);
     assertTrue(fixture.next());
     ValueListenerFixture a = fixture.field("a");
-    assertEquals(JsonType.FLOAT, a.type);
+    assertEquals(JsonType.FLOAT, a.valueDef.type());
     assertEquals(2, fixture.read());
     assertEquals(3, a.valueCount);
     assertEquals(Double.NEGATIVE_INFINITY, a.value);
@@ -125,7 +129,7 @@ public class TestJsonParserBasics extends BaseTestJsonParser {
     fixture.open(json);
     assertTrue(fixture.next());
     ValueListenerFixture a = fixture.field("a");
-    assertEquals(JsonType.STRING, a.type);
+    assertEquals(JsonType.STRING, a.valueDef.type());
     assertEquals(2, fixture.read());
     assertEquals(1, a.nullCount);
     assertEquals(2, a.valueCount);
@@ -140,7 +144,7 @@ public class TestJsonParserBasics extends BaseTestJsonParser {
     fixture.open(json);
     assertTrue(fixture.next());
     ValueListenerFixture a = fixture.field("a");
-    assertEquals(JsonType.STRING, a.type);
+    assertEquals(JsonType.STRING, a.valueDef.type());
     assertEquals("hi", a.value);
     assertTrue(fixture.next());
     assertEquals(10L, a.value);
@@ -255,24 +259,68 @@ public class TestJsonParserBasics extends BaseTestJsonParser {
     fixture.options.allTextMode = true;
     fixture.open(json);
 
-    assertTrue(fixture.next());
-    ValueListenerFixture a = fixture.field("a");
-    assertEquals("1", a.value);
+    fixture.expect("a",
+        new Object[] {"1", "foo", "true", "20.5", null});
+    assertFalse(fixture.next());
+    fixture.close();
+  }
 
-    assertTrue(fixture.next());
-    assertEquals("foo", a.value);
+  @Test
+  public void testColumnTextMode() {
+    final String json =
+        "{a: 1} {a: \"foo\"} {a: true} {a: 20.5} {a: null}";
+    JsonParserFixture fixture = new JsonParserFixture();
+    fixture.rootObject.fieldType = FieldType.TEXT;
+    fixture.open(json);
 
-    assertTrue(fixture.next());
-    assertEquals("true", a.value);
+    fixture.expect("a",
+        new Object[] {"1", "foo", "true", "20.5", null});
+    assertFalse(fixture.next());
+    fixture.close();
+  }
 
-    assertTrue(fixture.next());
-    assertEquals("20.5", a.value);
-    assertEquals(0, a.nullCount);
+  @Test
+  public void testJsonModeScalars() {
+    final String json =
+        "{a: 1} {a: \"foo\"} {a: true} {a: 20.5} {a: null}";
+    JsonParserFixture fixture = new JsonParserFixture();
+    fixture.rootObject.fieldType = FieldType.JSON;
+    fixture.open(json);
 
-    assertTrue(fixture.next());
-    assertEquals("20.5", a.value);
-    assertEquals(1, a.nullCount);
+    fixture.expect("a",
+        new Object[] {"1", "\"foo\"", "true", "20.5", "null"});
+    assertFalse(fixture.next());
+    fixture.close();
+  }
 
+  @Test
+  public void testJsonModeArrays() {
+    final String json =
+        "{a: []} {a: [null]} {a: [null, null]} {a: [[]]}\n" +
+        "{a: [1, \"foo\", true]} {a: [[1, 2], [3, 4]]}\n";
+    JsonParserFixture fixture = new JsonParserFixture();
+    fixture.rootObject.fieldType = FieldType.JSON;
+    fixture.open(json);
+
+    fixture.expect("a",
+        new Object[] {"[]", "[null]", "[null, null]", "[[]]",
+            "[1, \"foo\", true]", "[[1, 2], [3, 4]]"});
+    assertFalse(fixture.next());
+    fixture.close();
+  }
+
+  @Test
+  public void testJsonModeObjects() {
+    final String json =
+        "{a: {}} {a: {b: null}} {a: {b: null, b: null}}\n" +
+        "{a: {b: {c: {d: [{e: 10}, null, 20], f: \"foo\"}, g:30}, h: 40}}\n";
+    JsonParserFixture fixture = new JsonParserFixture();
+    fixture.rootObject.fieldType = FieldType.JSON;
+    fixture.open(json);
+
+    fixture.expect("a",
+        new Object[] {"{}", "{\"b\": null}", "{\"b\": null, \"b\": null}",
+            "{\"b\": {\"c\": {\"d\": [{\"e\": 10}, null, 20], \"f\": \"foo\"}, \"g\": 30}, \"h\": 40}"});
     assertFalse(fixture.next());
     fixture.close();
   }

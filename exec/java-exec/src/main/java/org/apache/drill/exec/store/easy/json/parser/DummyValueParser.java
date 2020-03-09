@@ -55,14 +55,12 @@ class DummyValueParser extends AbstractElementParser {
   public void parseTail(TokenIterator tokenizer) {
 
     // Parse (field: value)* }
-
     for (;;) {
       JsonToken token = tokenizer.requireNext();
       switch (token) {
 
         // Not exactly precise, but the JSON parser handles the
         // details.
-
         case END_OBJECT:
         case END_ARRAY:
           return;

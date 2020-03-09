@@ -62,16 +62,15 @@ package org.apache.drill.exec.store.easy.json.parser;
 public interface ValueListener {
 
   /**
-   * The field is to be treated as "all-text". Used when the parser-level
-   * setting for {@code allTextMode} is {@code false}; allows per-field
-   * overrides to, perhaps, ride over inconsistent scalar types for a
-   * single field.
-   *
-   * @return {@code true} if the field is to be read in "all-text mode" even
-   * if the global setting is off, {@code false} to read the field as
-   * typed values.
+   * Allows the object listener to revise the listener for a field,
+   * such as when a field starts null and resolves to some concrete
+   * type.
    */
-  boolean isText();
+  interface ValueHost {
+    void bindListener(ValueListener listener);
+  }
+
+  void bind(ValueHost host);
 
   /**
    * Called on parsing a {@code null} value for the field. Called whether
@@ -125,28 +124,18 @@ public interface ValueListener {
 
   /**
    * The parser has encountered a object value for the field for the first
-   * time. That is: {@code foo: {</code}.
+   * time. That is: <code>foo: {</code>.
    *
    * @return an object listener for the object
    */
   ObjectListener object();
 
   /**
-   * The parser has encountered a array value for the first
-   * time, and that array is scalar, null or empty.
+   * The parser has encountered a array value for the first time.
    *
-   * @param arrayDims the number of observed array dimensions
-   * @param type the observed JSON token type for the array element
+   * @param valueDef description of the array dimensions (if
+   * a multi-dimensional array) and type (if known)
    * @return an array listener for the array
    */
-  ArrayListener array(int arrayDims, JsonType type);
-
-  /**
-   * The parser has encountered a array value for the first
-   * time, and that array contains an object.
-   *
-   * @param arrayDims the number of observed array dimensions
-   * @return an array listener for the array
-   */
-  ArrayListener objectArray(int arrayDims);
+  ArrayListener array(ValueDef valueDef);
 }

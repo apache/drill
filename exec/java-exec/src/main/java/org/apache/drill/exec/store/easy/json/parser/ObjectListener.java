@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.store.easy.json.parser;
 
+import org.apache.calcite.model.JsonType;
+
 /**
  * Represents events on a object value. The object value may be a top-level
  * field or may be the element of an array. The listener gets an event when
@@ -52,6 +54,35 @@ package org.apache.drill.exec.store.easy.json.parser;
  */
 public interface ObjectListener {
 
+  enum FieldType {
+
+    /**
+     * The field is unprojected, ignore its content. No value listener
+     * is created.
+     */
+    IGNORE,
+
+    /**
+     * Parse the JSON object according to its type.
+     */
+    TYPED,
+
+    /**
+     * The field is to be treated as "all-text". Used when the parser-level
+     * setting for {@code allTextMode} is {@code false}; allows per-field
+     * overrides to, perhaps, ride over inconsistent scalar types for a
+     * single field. The listener will receive only strings.
+     */
+    TEXT,
+
+    /**
+     * Parse the value, and all its children, as JSON.
+     * That is, converts the parsed JSON back into a
+     * JSON string. The listener will receive only strings.
+     */
+    JSON
+  }
+
   /**
    * Called at the start of a set of values for an object. That is, called
    * when the structure parser accepts the <code>{</code> token.
@@ -59,73 +90,46 @@ public interface ObjectListener {
   void onStart();
 
   /**
-   * Called at the end of a set of values for an object. That is, called
-   * when the structure parser accepts the <code>}</code> token.
-   */
-  void onEnd();
-
-  /**
    * Called by the structure parser when it first sees a new field for
-   * and object to determine if that field is to be projected (is needed
-   * by the listener.) If not projected, the structure parser will not
+   * and object to determine how to parse the field.
+   * If not projected, the structure parser will not
    * ask for a value listener and will insert a "dummy" parser that will
    * free-wheel over any value of that field. As a result, unprojected
    * fields can not cause type errors: they are invisible as long as
    * they are syntactically valid.
+   * <p>
+   * The {@link FieldType#JSON} type says to parse the entire field, and
+   * its children, as a JSON string. The parser will ask for a value
+   * listener to accept the JSON text.
    *
    * @param key the object field name
-   * @return {@code true} if this listener wants to provide a listener
-   * for the field, {@code false} if the field should be ignored
+   * @return how the field should be parsed
    */
-  boolean isProjected(String key);
+  FieldType fieldType(String key);
 
   /**
-   * A new field has appeared with a scalar (or {@code null}) value.
-   * That is: {@code key: <scalar>}.
+   * The structure parser has just encountered a new field for this
+   * object. The {@link #fieldType(String)} indicated that the field is
+   * to be projected. This method performs any setup needed to handle the
+   * field, then returns a value listener to receive events for the
+   * field value. The value listener may be asked to create additional
+   * structure, such as arrays or nested objects.
    *
    * @param key the field name
-   * @param type the type as given by the JSON token for the value
-   * @return a value listener for the scalar value
+   * @param valueDef a description of the field as inferred by looking
+   * ahead some number of tokens in the input JSON. Provides both a data
+   * type and array depth (dimensions.) If the type is
+   * {@link JsonType#NONE EMPTY}, then the field is an empty array.
+   * If the type is {@link JsonType#NULL NULL}, then the value is null. In these
+   * cases, the listener can replace itself when an actual value appears
+   * later
+   * @return a listener to receive events for the newly-created field
    */
-  ValueListener addScalar(String key, JsonType type);
+  ValueListener addField(String key, ValueDef valueDef);
 
   /**
-   * A new field has appeared with a scalar, {@code null} or empty array
-   * value. That is, one of:
-   * <ul>
-   * <li><code>key: [+ &lt;scalar></code></li>
-   * <li><code>key: [+ null</code></li>
-   * <li><code>key: [+ ]</code></li>
-   * </ul>
-   * Where "[+" means one or more opening array elements.
-   *
-   * @param key the field name
-   * @param arrayDims number of dimensions observed in the first appearance
-   * of the array (more may appear later)
-   * @param type the observed type of the first element of the array, or
-   * {@link JsonType.NULL} if {@code null} was see, or
-   * {@link JsonType.EMPTY} if an empty array was seen
-   * @return a listener for the field itself which is prepared to
-   * return an array listener
+   * Called at the end of a set of values for an object. That is, called
+   * when the structure parser accepts the <code>}</code> token.
    */
-  ValueListener addArray(String key, int arrayDims, JsonType type);
-
-  /**
-   * A new field has appeared with an object value.
-   * That is: {@code key: <scalar>}.
-   *
-   * @param key the field name
-   * @return a value listener which assumes the value is an object
-   */
-  ValueListener addObject(String key);
-
-  /**
-   * A new field has appeared with an object array value.
-   * That is: <code>key: ]+ {</code>.
-   *
-   * @param key the field name
-   * @return a value listener which assumes the value is an object
-   * array
-   */
-  ValueListener addObjectArray(String key, int dims);
+  void onEnd();
 }

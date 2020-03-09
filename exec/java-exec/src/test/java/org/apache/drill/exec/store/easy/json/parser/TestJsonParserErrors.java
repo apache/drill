@@ -15,19 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.json.parser;
+package org.apache.drill.exec.store.easy.json.parser;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import org.apache.drill.categories.RowSetTests;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Tests the un-happy path cases in the JSON structure parser. Some
  * error cases can't occur because the Jackson parser catches them
  * first.
  */
+@Category(RowSetTests.class)
 public class TestJsonParserErrors extends BaseTestJsonParser {
 
   @Test
