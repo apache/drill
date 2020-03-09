@@ -204,6 +204,18 @@ public class JsonStructureParser {
 
   public int recoverableErrorCount() { return errorRecoveryCount; }
 
+  public int lineNumber() {
+    return tokenizer.lineNumber();
+  }
+
+  public int columnNumber() {
+    return tokenizer.columnNumber();
+  }
+
+  public String token() {
+    return tokenizer.token();
+  }
+
   public void close() {
     if (errorRecoveryCount > 0) {
       logger.warn("Read JSON input with {} recoverable error(s).",

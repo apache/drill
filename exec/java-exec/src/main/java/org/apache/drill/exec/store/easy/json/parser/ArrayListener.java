@@ -18,8 +18,8 @@
 package org.apache.drill.exec.store.easy.json.parser;
 
 /**
- * Represents one level within an array. The first time the parser sees
- * the array element, it will call one of the "Element" methods with the
+ * Represents one level within array. The first time the parser sees the array element,
+ * it will call the {@link #element(ValueDef)} method with the
  * look-ahead values visible to the parser. Since JSON is flexible, later
  * data shapes may not necessarily follow the first shape. The implementation
  * must handle this or throw an error if not supported.
@@ -44,15 +44,16 @@ package org.apache.drill.exec.store.easy.json.parser;
  * Three JSON-specific cases warrant attention:
  * <ol>
  * <li>The first occurrence of the array is empty: {@code [ ]}. In this case,
- * the structure parser will ask for an element child by providing the
- * {@link JsonType#EMPTY} type, which is not very useful, but is all that
- * the parser knows. The listener is responsible for implementing some kind of
- * "deferred type" logic to wait and see what kind of element appears
- * later..</li>
+ * the structure parser will defer asking for an element parser (and listener)
+ * until an actual value appears. The array listener is responsible for
+ * implementing some kind of "deferred type" logic to wait and see what
+ * kind of element appears later.</li>
  * <li>The first occurrence of the array has, as its first element, a
  * {@code null} value. The structure parser will ask this listener to create
  * an array child for the {@code null} value, but the listener has no type
- * information. Again, the listener is responsible for type-deferal.</li>
+ * information. Since null values must be recorded (so we know how many
+ * appear in each array), the listener is forced to choose a type. Choose
+ * wisely as there is no way to know what type will appear in the future.</li>
  * <li>A generalized form of the above is that the structure parser only
  * knows what it sees on the first element when it asks for an element
  * child. In a well-formed file, that first token will predict the type
@@ -81,8 +82,19 @@ package org.apache.drill.exec.store.easy.json.parser;
 public interface ArrayListener {
 
   /**
-   * Called at the start of a set of values for an array. That is, called
-   * when the structure parser accepts the {@code [} token.
+   * Provide an element listener for the first non-empty value
+   * seen for the array.
+   *
+   * @param valueDef description of the element (without the array
+   * dimensions)
+   * @return a listener to consume values of the array element
+   */
+  ValueListener element(ValueDef valueDef);
+
+  /**
+   * Called at the entrance to each level (dimension) of an array.
+   * That is, called when the structure parser accepts the {@code [}
+   * token.
    */
   void onStart();
 
@@ -91,61 +103,16 @@ public interface ArrayListener {
    * by its own listener which receives the value of the element (if
    * scalar) or element events (if structured.)
    */
-  void onElement();
+  void onElementStart();
+
+  /**
+   * Called after each element of the array.
+   */
+  void onElementEnd();
 
   /**
    * Called at the end of a set of values for an array. That is, called
    * when the structure parser accepts the {@code ]} token.
    */
   void onEnd();
-
-  /**
-   * The first element seen is a scalar, {@code null} or empty. That is,
-   * {@code [ <scalar>}, {@code [ null} or {@code [ ]}.
-   *
-   * @param type the JSON type of the object as given by the token
-   * which the Jackson parser returned for the value. The type can
-   * be {@code null}, which means that the parser does not know what
-   * actual type might occur later
-   * @return a value listener for the scalar type, or if {@code null},
-   * perhaps waiting for more information to commit to a type
-   */
-  ValueListener scalarElement(JsonType type);
-
-  /**
-   * The first element an array or scalars (or {@code null}.That is,
-   * {@code [ [+ <scalar>}.
-   *
-   * @param arrayDims the number of dimensions observed during the
-   * first-element parse, not including the surrounding array
-   * itself. As in all cases, there is no guarantee that
-   * that this number will remain valid later, and may be wrong if the
-   * first-seen element was empty: {@code []}.
-   * @return a listener for the value of the top-level element (which
-   * the listener can assume will turn out to be an array.)
-   */
-  ValueListener arrayElement(int arrayDims, JsonType type);
-
-  /**
-   * The first element seen for an array is an object. That is,
-   * <code>[ {</code>.
-   *
-   * @return a listener for the value of the top-level element (which
-   * the listener can assume will turn out to be an object.)
-   */
-  ValueListener objectElement();
-
-  /**
-   * The first element seen is an object array.That is,
-   * <code>[ [* {</code>.
-   *
-   * @param arrayDims the number of dimensions observed during the
-   * first-element parse, not including the surrounding array
-   * itself. As in all cases, there is no guarantee that
-   * that this number will remain valid later, and may be wrong if the
-   * first-seen element was empty: {@code []}.
-   * @return a listener for the value of the top-level element (which
-   * the listener can assume will turn out to be an array.)
-   */
-  ValueListener objectArrayElement(int arrayDims);
 }

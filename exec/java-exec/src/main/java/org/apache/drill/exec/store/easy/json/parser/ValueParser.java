@@ -17,6 +17,9 @@
  */
 package org.apache.drill.exec.store.easy.json.parser;
 
+import org.apache.drill.exec.store.easy.json.parser.ObjectListener.FieldType;
+import org.apache.drill.exec.store.easy.json.parser.ValueListener.ValueHost;
+
 import com.fasterxml.jackson.core.JsonToken;
 
 /**
@@ -36,7 +39,7 @@ import com.fasterxml.jackson.core.JsonToken;
  * Listeners can enforce one type only, or can be more flexible and
  * allow multiple types.
  */
-public class ValueParser extends AbstractElementParser {
+public class ValueParser extends AbstractElementParser implements ValueHost {
 
   private interface ValueHandler {
     void accept(TokenIterator tokenizer, JsonToken token);
@@ -107,33 +110,33 @@ public class ValueParser extends AbstractElementParser {
   }
 
   private final String key;
-  private final ValueListener listener;
-  private final ValueHandler valueHandler;
+  protected final ValueHandler valueHandler;
+  private ValueListener listener;
   private ObjectParser objectParser;
   private ArrayParser arrayParser;
 
-  public ValueParser(ElementParser parent, String key, ValueListener listener) {
+  public ValueParser(ElementParser parent, String key, FieldType type) {
     super(parent);
     this.key = key;
-    this.listener = listener;
-    if (listener.isText() || structParser().options().allTextMode) {
+    if (type == FieldType.TEXT || structParser().options().allTextMode) {
       valueHandler = new TextValueHandler();
     } else {
       valueHandler = new TypedValueHandler();
     }
   }
 
+  @Override
+  public void bindListener(ValueListener listener) {
+    this.listener = listener;
+    listener.bind(this);
+    if (arrayParser != null) {
+      arrayParser.bindListener(listener.array(ValueDef.UNKNOWN_ARRAY));
+    }
+  }
+
   public String key() { return key; }
 
   public ValueListener listener() { return listener; }
-
-  public void bindObjectParser(ObjectParser parser) {
-    objectParser = parser;
-  }
-
-  public void bindArrayParser(ArrayParser parser) {
-    arrayParser = parser;
-  }
 
   /**
    * Parses <code>true | false | null | integer | float | string|
@@ -148,17 +151,17 @@ public class ValueParser extends AbstractElementParser {
       if (objectParser == null) {
         // No object parser yet. May be that the value was null,
         // or may be that it changed types.
-        objectParser = ValueFactory.objectParser(this);
+        addObjectParser();
       }
       objectParser.parse(tokenizer);
       break;
 
     case START_ARRAY:
-      // Position: { ^
+      // Position: [ ^
       if (arrayParser == null) {
         // No array parser yet. May be that the value was null,
         // or may be that it changed types.
-        arrayParser = ValueFactory.createArrayParser(this, tokenizer);
+        addArrayParser(ValueDefFactory.arrayLookAhead(tokenizer));
       }
       arrayParser.parse(tokenizer);
       break;
@@ -169,6 +172,24 @@ public class ValueParser extends AbstractElementParser {
 
     default:
       valueHandler.accept(tokenizer, token);
+    }
+  }
+
+  public void addObjectParser() {
+    objectParser = new ObjectParser(this, listener().object());
+  }
+
+  private void addArrayParser(ValueDef valueDef) {
+    ArrayListener arrayListener = listener().array(valueDef);
+    arrayParser = new ArrayParser(this, arrayListener);
+    arrayParser.expandStructure(valueDef);
+  }
+
+  public void expandStructure(ValueDef valueDef) {
+    if (valueDef.isArray()) {
+      addArrayParser(valueDef);
+    } else if (valueDef.type().isObject()) {
+      addObjectParser();
     }
   }
 }

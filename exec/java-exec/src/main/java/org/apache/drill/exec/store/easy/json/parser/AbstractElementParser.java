@@ -18,6 +18,9 @@
 package org.apache.drill.exec.store.easy.json.parser;
 
 
+/**
+ * Abstract base class for all JSON element parsers.
+ */
 public abstract class AbstractElementParser implements ElementParser {
   final JsonStructureParser structParser;
   private final ElementParser parent;

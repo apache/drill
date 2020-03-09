@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.json.parser;
+package org.apache.drill.exec.store.easy.json.parser;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -23,13 +23,16 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import org.apache.drill.exec.store.easy.json.parser.JsonType;
+import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.exec.store.easy.json.parser.ValueDef.JsonType;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Tests array (including multi-dimensional and object) support
  * for the JSON structure parser.
  */
+@Category(RowSetTests.class)
 public class TestJsonParserArrays extends BaseTestJsonParser {
 
   @Test
@@ -45,21 +48,21 @@ public class TestJsonParserArrays extends BaseTestJsonParser {
 
     // Value of object.a
     ValueListenerFixture a = fixture.field("a");
-    assertEquals(JsonType.INTEGER, a.type);
-    assertEquals(1, a.dimCount);
+    assertEquals(JsonType.INTEGER, a.valueDef.type());
+    assertEquals(1, a.valueDef.dimensions());
 
     // Array aspect of a
     assertNotNull(a.arrayValue);
     ArrayListenerFixture aArray = a.arrayValue;
     assertEquals(1, aArray.startCount);
     assertEquals(aArray.startCount, aArray.endCount);
-    assertEquals(1, aArray.dimCount);
+    assertEquals(1, aArray.valueDef.dimensions());
 
     // Value of each element of array aspect of a
     assertNotNull(aArray.element);
     ValueListenerFixture aElement = aArray.element;
-    assertEquals(JsonType.INTEGER, aElement.type);
-    assertEquals(0, aElement.dimCount);
+    assertEquals(JsonType.INTEGER, aElement.valueDef.type());
+    assertEquals(0, aElement.valueDef.dimensions());
     assertNull(aElement.arrayValue);
     assertEquals(2, aElement.valueCount);
     assertEquals(100L, aElement.value);
@@ -105,8 +108,8 @@ public class TestJsonParserArrays extends BaseTestJsonParser {
     // {a: null}
     assertTrue(fixture.next());
     ValueListenerFixture a = fixture.field("a");
-    assertEquals(JsonType.NULL, a.type);
-    assertEquals(0, a.dimCount);
+    assertEquals(JsonType.NULL, a.valueDef.type());
+    assertEquals(0, a.valueDef.dimensions());
     assertNull(a.arrayValue);
 
     // See an array, can revise estimate of field type
@@ -114,7 +117,7 @@ public class TestJsonParserArrays extends BaseTestJsonParser {
     assertTrue(fixture.next());
     assertNotNull(a.arrayValue);
     ArrayListenerFixture aArray = a.arrayValue;
-    assertEquals(1, aArray.dimCount);
+    assertEquals(1, aArray.valueDef.dimensions());
     ValueListenerFixture aElement = aArray.element;
     assertEquals(2, aElement.valueCount);
     assertEquals(100L, aElement.value);
@@ -130,21 +133,22 @@ public class TestJsonParserArrays extends BaseTestJsonParser {
     JsonParserFixture fixture = new JsonParserFixture();
     fixture.open(json);
 
-    // Can't predict the future, all we know is a is an array.
+    // Can't predict the future, all we know is `a` is an array.
     // "{a: []}
     assertTrue(fixture.next());
     ValueListenerFixture a = fixture.field("a");
-    assertEquals(JsonType.EMPTY, a.type);
-    assertEquals(1, a.dimCount);
+    assertEquals(JsonType.EMPTY, a.valueDef.type());
+    assertEquals(1, a.valueDef.dimensions());
     assertNotNull(a.arrayValue);
     ArrayListenerFixture aArray = a.arrayValue;
-    assertEquals(1, aArray.dimCount);
-    ValueListenerFixture aElement = aArray.element;
-    assertEquals(JsonType.EMPTY, aElement.type);
+    assertEquals(1, aArray.valueDef.dimensions());
+    assertNull(aArray.element); // Saw no element yet
 
     // See elements, can revise estimate of element type
     // {a: [1, 100]}
     assertTrue(fixture.next());
+    ValueListenerFixture aElement = aArray.element;
+    assertNotNull(aElement);
     assertEquals(2, aElement.valueCount);
     assertEquals(100L, aElement.value);
 
@@ -155,43 +159,43 @@ public class TestJsonParserArrays extends BaseTestJsonParser {
   @Test
   public void test2DArray() {
     final String json =
-        "{a: [ [10, 1], [20, 2]]}\n" +
+        "{a: [[10, 1], [20, 2]]}\n" +
         "{a: [[null]]} {a: [[]]} {a: [null]} {a: null}";
     JsonParserFixture fixture = new JsonParserFixture();
     fixture.open(json);
 
-    // {a: [ [10, 1], [20, 2]]}
+    // {a: [[10, 1], [20, 2]]}
     assertTrue(fixture.next());
 
     // Value of a
     ValueListenerFixture a = fixture.field("a");
-    assertEquals(JsonType.INTEGER, a.type);
-    assertEquals(2, a.dimCount);
+    assertEquals(JsonType.INTEGER, a.valueDef.type());
+    assertEquals(2, a.valueDef.dimensions());
 
     // Array for a[]
     assertNotNull(a.arrayValue);
     ArrayListenerFixture outerArr = a.arrayValue;
-    assertEquals(2, outerArr.dimCount);
+    assertEquals(2, outerArr.valueDef.dimensions());
     assertEquals(1, outerArr.startCount);
     assertEquals(outerArr.startCount, outerArr.endCount);
 
     // Value of a[] elements
     ValueListenerFixture outerElement = outerArr.element;
-    assertEquals(JsonType.INTEGER, outerElement.type);
-    assertEquals(1, outerElement.dimCount);
+    assertEquals(JsonType.INTEGER, outerElement.valueDef.type());
+    assertEquals(1, outerElement.valueDef.dimensions());
     assertNotNull(outerElement.arrayValue);
 
     // Array for a[][]
     assertNotNull(outerElement.arrayValue);
     ArrayListenerFixture innerArr = outerElement.arrayValue;
-    assertEquals(1, innerArr.dimCount);
+    assertEquals(1, innerArr.valueDef.dimensions());
     assertEquals(2, innerArr.startCount);
     assertEquals(innerArr.startCount, innerArr.endCount);
 
     // Value of a[][] elements
     ValueListenerFixture innerElement = innerArr.element;
-    assertEquals(JsonType.INTEGER, innerElement.type);
-    assertEquals(0, innerElement.dimCount);
+    assertEquals(JsonType.INTEGER, innerElement.valueDef.type());
+    assertEquals(0, innerElement.valueDef.dimensions());
     assertEquals(4, innerElement.valueCount);
     assertEquals(0, innerElement.nullCount);
     assertEquals(2L, innerElement.value);
@@ -271,21 +275,21 @@ public class TestJsonParserArrays extends BaseTestJsonParser {
 
     // Value of object.a
     ValueListenerFixture a = fixture.field("a");
-    assertEquals(JsonType.OBJECT, a.type);
-    assertEquals(1, a.dimCount);
+    assertEquals(JsonType.OBJECT, a.valueDef.type());
+    assertEquals(1, a.valueDef.dimensions());
 
     // a[]
     assertNotNull(a.arrayValue);
     ArrayListenerFixture aArray = a.arrayValue;
     assertEquals(1, aArray.startCount);
     assertEquals(aArray.startCount, aArray.endCount);
-    assertEquals(1, aArray.dimCount);
+    assertEquals(1, aArray.valueDef.dimensions());
 
     // Value of each element of a[]
     assertNotNull(aArray.element);
     ValueListenerFixture aElement = aArray.element;
-    assertEquals(JsonType.OBJECT, aElement.type);
-    assertEquals(0, aElement.dimCount);
+    assertEquals(JsonType.OBJECT, aElement.valueDef.type());
+    assertEquals(0, aElement.valueDef.dimensions());
     assertNull(aElement.arrayValue);
     assertEquals(0, aElement.valueCount);
     assertEquals(0, aElement.nullCount);
@@ -317,21 +321,21 @@ public class TestJsonParserArrays extends BaseTestJsonParser {
 
     // Value of object.a
     ValueListenerFixture a = fixture.field("a");
-    assertEquals(JsonType.OBJECT, a.type);
-    assertEquals(2, a.dimCount);
+    assertEquals(JsonType.OBJECT, a.valueDef.type());
+    assertEquals(2, a.valueDef.dimensions());
 
     // a[]
     assertNotNull(a.arrayValue);
     ArrayListenerFixture outerArray = a.arrayValue;
     assertEquals(1, outerArray.startCount);
     assertEquals(outerArray.startCount, outerArray.endCount);
-    assertEquals(2, outerArray.dimCount);
+    assertEquals(2, outerArray.valueDef.dimensions());
 
     // Value of each element of a[]
     assertNotNull(outerArray.element);
     ValueListenerFixture outerElement = outerArray.element;
-    assertEquals(JsonType.OBJECT, outerElement.type);
-    assertEquals(1, outerElement.dimCount);
+    assertEquals(JsonType.OBJECT, outerElement.valueDef.type());
+    assertEquals(1, outerElement.valueDef.dimensions());
     assertEquals(0, outerElement.valueCount);
     assertEquals(0, outerElement.nullCount);
 
@@ -340,13 +344,13 @@ public class TestJsonParserArrays extends BaseTestJsonParser {
     ArrayListenerFixture innerArray = outerElement.arrayValue;
     assertEquals(2, innerArray.startCount);
     assertEquals(innerArray.startCount, innerArray.endCount);
-    assertEquals(1, innerArray.dimCount);
+    assertEquals(1, innerArray.valueDef.dimensions());
 
     // Value of each element of a[][]
     assertNotNull(innerArray.element);
     ValueListenerFixture innerElement = innerArray.element;
-    assertEquals(JsonType.OBJECT, innerElement.type);
-    assertEquals(0, innerElement.dimCount);
+    assertEquals(JsonType.OBJECT, innerElement.valueDef.type());
+    assertEquals(0, innerElement.valueDef.dimensions());
     assertEquals(0, innerElement.valueCount);
     assertEquals(0, innerElement.nullCount);
 
@@ -380,8 +384,8 @@ public class TestJsonParserArrays extends BaseTestJsonParser {
     assertEquals(4, fixture.read());
     ValueListenerFixture a = fixture.field("a");
     // Type first seen
-    assertEquals(JsonType.INTEGER, a.type);
-    assertEquals(1, a.dimCount);
+    assertEquals(JsonType.INTEGER, a.valueDef.type());
+    assertEquals(1, a.valueDef.dimensions());
 
     // Everything populated
 

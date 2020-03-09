@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.json.parser;
+package org.apache.drill.exec.store.easy.json.parser;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -23,12 +23,15 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import org.apache.drill.exec.store.easy.json.parser.JsonType;
+import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.exec.store.easy.json.parser.ValueDef.JsonType;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Tests nested object support in the JSON structure parser.
  */
+@Category(RowSetTests.class)
 public class TestJsonParserObjects extends BaseTestJsonParser {
 
   @Test
@@ -48,7 +51,7 @@ public class TestJsonParserObjects extends BaseTestJsonParser {
     assertEquals(1, custObj.startCount);
     assertEquals(custObj.startCount, custObj.endCount);
     ValueListenerFixture name = custObj.field("name");
-    assertEquals(JsonType.STRING, name.type);
+    assertEquals(JsonType.STRING, name.valueDef.type());
     assertEquals("fred", name.value);
 
     assertTrue(fixture.next());
