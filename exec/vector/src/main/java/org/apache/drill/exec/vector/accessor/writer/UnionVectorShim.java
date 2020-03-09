@@ -37,7 +37,6 @@ import org.apache.drill.exec.vector.complex.UnionVector;
  * list itself evolves from no type, to a single type and to
  * a union.
  */
-
 public class UnionVectorShim implements UnionShim {
 
   static class DefaultListener implements VariantWriterListener {
@@ -56,7 +55,6 @@ public class UnionVectorShim implements UnionShim {
       // which will create the member metadata. This means that the type
       // will already be in the variant schema by the time we add the
       // writer to the variant writer in a few steps from now.
-
       final ValueVector memberVector = shim.vector.getMember(type);
       final ColumnMetadata memberSchema = shim.writer.variantSchema().addType(type);
       return ColumnWriterFactory.buildColumnWriter(memberSchema, memberVector);
@@ -77,7 +75,6 @@ public class UnionVectorShim implements UnionShim {
    * says which union member holds the value for each row. The type vector
    * can also indicate if the value is null.
    */
-
   private final BaseScalarWriter typeWriter;
 
   public UnionVectorShim(UnionVector vector) {
@@ -118,7 +115,6 @@ public class UnionVectorShim implements UnionShim {
 
   // Unions are complex: the listener should bind to the individual components
   // as they are created.
-
   @Override
   public void bindListener(ColumnWriterListener listener) { }
 
@@ -128,7 +124,6 @@ public class UnionVectorShim implements UnionShim {
     // Not really necessary: the default value is 0.
     // This lets a caller change its mind after setting a
     // value.
-
     typeWriter.setInt(UnionVector.NULL_MARKER);
   }
 
@@ -175,7 +170,6 @@ public class UnionVectorShim implements UnionShim {
    *
    * @param colWriter the column writer to add
    */
-
   @Override
   public void addMember(AbstractObjectWriter colWriter) {
     addMemberWriter(colWriter);
@@ -189,11 +183,10 @@ public class UnionVectorShim implements UnionShim {
    * and provides this shim with the writer from the single-list shim.
    * In the latter case, the writer is already initialized and is already
    * part of the metadata for this list; so we don't want to call the
-   * list's <tt>addMember()</tt> and repeat those operations.
+   * list's {@code addMember()} and repeat those operations.
    *
    * @param colWriter the column (type) writer to add
    */
-
   public void addMemberWriter(AbstractObjectWriter colWriter) {
     final MinorType type = colWriter.schema().type();
     assert variants[type.ordinal()] == null;
@@ -288,7 +281,6 @@ public class UnionVectorShim implements UnionShim {
    *
    * @return the writer for the types vector
    */
-
   public AbstractScalarWriterImpl typeWriter() { return typeWriter; }
 
   @Override
@@ -306,7 +298,6 @@ public class UnionVectorShim implements UnionShim {
    * far. Tell the type writer that those positions have been
    * written so that they are not zero-filled.
    */
-
   public void initTypeIndex(int typeFillCount) {
     ((BaseFixedWidthWriter) typeWriter).setLastWriteIndex(typeFillCount);
   }

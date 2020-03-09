@@ -145,14 +145,25 @@ public class VariantColumnMetadata extends AbstractColumnMetadata {
 
   @Override
   public ColumnMetadata copy() {
-    // TODO Auto-generated method stub
-    assert false;
-    return null;
+    return new VariantColumnMetadata(name, type, mode, variantSchema.copy());
   }
 
   @Override
   public VariantMetadata variantSchema() {
     return variantSchema;
+  }
+
+  @Override
+  public String typeString() {
+    StringBuilder builder = new StringBuilder();
+    if (isArray()) {
+      builder.append("ARRAY<");
+    }
+    builder.append("UNION");
+    if (isArray()) {
+      builder.append(">");
+    }
+    return builder.toString();
   }
 
   @Override

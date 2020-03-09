@@ -20,6 +20,7 @@ package org.apache.drill.test.rowSet;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -76,6 +77,7 @@ public class RowSetComparison {
    * to construct BigDecimals of the desired precision.
    */
   private MathContext scale = new MathContext(3);
+
   /**
   * Floats and doubles do not compare exactly. This delta is used
   * by JUnit for such comparisons. This is not a general solution;
@@ -163,10 +165,13 @@ public class RowSetComparison {
   }
 
   private void compareSchemasAndCounts(RowSet actual) {
-    assertTrue("Schemas don't match.\n" +
-      "Expected: " + expected.schema().toString() +
-      "\nActual:   " + actual.schema(),
-      expected.schema().isEquivalent(actual.schema()));
+    if (!expected.schema().isEquivalent(actual.schema())) {
+      // Avoid building the error string on every comparison,
+      // only build on failures.
+      fail("Schemas don't match.\n" +
+        "Expected: " + expected.schema().toString() +
+        "\nActual:   " + actual.schema().toString());
+    }
     int testLength = getTestLength();
     int dataLength = offset + testLength;
     assertTrue("Missing expected rows", expected.rowCount() >= dataLength);
@@ -204,7 +209,7 @@ public class RowSetComparison {
   }
 
   /**
-   * Convenience method to verify the actual results, then free memory
+   * Verifies the actual results, then frees memory
    * for both the expected and actual result sets.
    * @param actual the actual results to verify
    */

@@ -54,7 +54,6 @@ import org.apache.drill.exec.record.metadata.VariantMetadata;
  *
  * @see {@link VariantReader}
  */
-
 public interface VariantWriter extends ColumnWriter {
 
   interface VariantWriterListener {
@@ -69,7 +68,6 @@ public interface VariantWriter extends ColumnWriter {
    *
    * @return metadata for the variant
    */
-
   VariantMetadata variantSchema();
 
   /**
@@ -78,7 +76,6 @@ public interface VariantWriter extends ColumnWriter {
    *
    * @return number of types in the variant
    */
-
   int size();
 
   /**
@@ -86,11 +83,10 @@ public interface VariantWriter extends ColumnWriter {
    * given type. (The storage will be created as needed during writing.)
    *
    * @param type data type
-   * @return <tt>true</tt> if a value of the given type has been written
+   * @return {@code true} if a value of the given type has been written
    * and storage allocated (or storage was allocated implicitly),
-   * <tt>false</tt> otherwise
+   * {@code false} otherwise
    */
-
   boolean hasType(MinorType type);
 
   ObjectWriter addMember(MinorType type);
@@ -107,7 +103,6 @@ public interface VariantWriter extends ColumnWriter {
    * @return the writer for that type without setting the type of the
    * current row.
    */
-
   ObjectWriter memberWriter(MinorType type);
 
   /**
@@ -116,7 +111,6 @@ public interface VariantWriter extends ColumnWriter {
    *
    * @param type type to set for the current row
    */
-
   void setType(MinorType type);
 
   /**
@@ -128,7 +122,6 @@ public interface VariantWriter extends ColumnWriter {
    * @param type type to set for the current row
    * @return writer for the type just set
    */
-
   ObjectWriter member(MinorType type);
   ScalarWriter scalar(MinorType type);
   TupleWriter tuple();
