@@ -67,7 +67,7 @@ class UserExceptionContext {
    * @param value context value
    */
   void add(String context, String value) {
-    add(context + " " + value);
+    add(deColon(context) + ": " + value);
   }
 
   /**
@@ -76,7 +76,7 @@ class UserExceptionContext {
    * @param value context value
    */
   void add(String context, long value) {
-    add(context + " " + value);
+    add(deColon(context) + ": " + value);
   }
 
   /**
@@ -85,7 +85,16 @@ class UserExceptionContext {
    * @param value context value
    */
   void add(String context, double value) {
-    add(context + " " + value);
+    add(deColon(context) + ": " + value);
+  }
+
+  private String deColon(String context) {
+    context = context.trim();
+    if (context.endsWith(":")) {
+      return context.substring(0, context.length() - 1);
+    } else {
+      return context;
+    }
   }
 
   /**
@@ -102,7 +111,7 @@ class UserExceptionContext {
    * @param value context value
    */
   void push(String context, String value) {
-    push(context + " " + value);
+    push(deColon(context) + ": " + value);
   }
 
   /**
@@ -111,7 +120,7 @@ class UserExceptionContext {
    * @param value context value
    */
   void push(String context, long value) {
-    push(context + " " + value);
+    push(deColon(context) + ": " + value);
   }
 
   /**
@@ -120,7 +129,7 @@ class UserExceptionContext {
    * @param value context value
    */
   void push(String context, double value) {
-    push(context + " " + value);
+    push(deColon(context) + ": " + value);
   }
 
   String getErrorId() {
