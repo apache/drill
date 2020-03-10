@@ -30,11 +30,11 @@ import org.apache.drill.test.ClusterTest;
 
 public class RestServerTest extends ClusterTest {
   protected QueryWrapper.QueryResult runQuery(String sql) throws Exception {
-    return runQuery(new QueryWrapper(sql, "SQL", null, null));
+    return runQuery(new QueryWrapper(sql, "SQL", null, null, null));
   }
 
   protected QueryWrapper.QueryResult runQueryWithUsername(String sql, String userName) throws Exception {
-    return runQuery(new QueryWrapper(sql, "SQL", null, userName));
+    return runQuery(new QueryWrapper(sql, "SQL", null, userName, null));
   }
 
   protected QueryWrapper.QueryResult runQuery(QueryWrapper q) throws Exception {
