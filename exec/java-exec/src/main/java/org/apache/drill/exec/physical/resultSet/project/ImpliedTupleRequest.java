@@ -68,7 +68,7 @@ public class ImpliedTupleRequest implements RequestedTuple {
 
   @Override
   public boolean isProjected(ColumnMetadata columnSchema) {
-    return allProjected ? !Projections.isSpecial(columnSchema) : false;
+    return allProjected ? !Projections.excludeFromWildcard(columnSchema) : false;
   }
 
   @Override

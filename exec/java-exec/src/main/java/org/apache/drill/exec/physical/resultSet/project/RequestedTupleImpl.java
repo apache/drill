@@ -171,7 +171,7 @@ public class RequestedTupleImpl implements RequestedTuple {
       return false;
     }
     return projectionType == TupleProjectionType.ALL ?
-        !Projections.isSpecial(columnSchema) : true;
+        !Projections.excludeFromWildcard(columnSchema) : true;
   }
 
   public boolean enforceProjection(ColumnMetadata columnSchema, CustomErrorContext errorContext) {

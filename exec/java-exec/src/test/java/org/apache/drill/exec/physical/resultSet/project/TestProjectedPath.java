@@ -45,6 +45,14 @@ public class TestProjectedPath {
   private static final ColumnMetadata LIST_COLUMN = listSchema().metadata("a");
   private static final ColumnMetadata DICT_INT_INT_COLUMN = dictSchema(MinorType.INT).metadata("a");
   private static final ColumnMetadata DICT_ARRAY_INT_INT_COLUMN = dictArraySchema(MinorType.INT).metadata("a");
+
+  // Commented out for now as the projected path does not (yet) have sufficient
+  // context to verify projection against a DICT. For other types, the rules are
+  // based purely on the type. (a[0] is for arrays, a.b is for maps.) But, for
+  // DICT, we must consider the type of the keys. So, (dict[0]) is valid if
+  // either the DICT is repeated, or it has an integer key. This logic was attempted,
+  // but turned out to be too complex and brittle, so was backed out for now. The tests
+  // are left here as a record of what we should eventually do.
 //  private static final ColumnMetadata DICT_BIGINT_INT_COLUMN = dictSchema(MinorType.BIGINT).metadata("a");
 //  private static final ColumnMetadata DICT_ARRAY_BIGINT_INT_COLUMN = dictArraySchema(MinorType.BIGINT).metadata("a");
 //  private static final ColumnMetadata DICT_VARCHAR_INT_COLUMN = dictSchema(MinorType.VARCHAR).metadata("a");

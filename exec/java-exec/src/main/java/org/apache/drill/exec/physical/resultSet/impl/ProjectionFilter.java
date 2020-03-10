@@ -82,7 +82,7 @@ public interface ProjectionFilter {
 
     @Override
     public boolean isProjected(ColumnMetadata columnSchema) {
-      return projectAll ? !Projections.isSpecial(columnSchema) : false;
+      return projectAll ? !Projections.excludeFromWildcard(columnSchema) : false;
     }
 
     @Override

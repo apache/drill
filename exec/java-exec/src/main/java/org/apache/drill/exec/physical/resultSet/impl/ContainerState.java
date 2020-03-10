@@ -46,7 +46,7 @@ public abstract class ContainerState {
 
   /**
    * Vector cache for this loader.
-   * @see {@link ResultSetOptionBuilder#setVectorCache()}.
+   * {@see ResultSetOptionBuilder#setVectorCache()}.
    */
   protected final ResultVectorCache vectorCache;
 

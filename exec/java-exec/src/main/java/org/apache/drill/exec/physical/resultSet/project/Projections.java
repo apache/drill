@@ -158,7 +158,12 @@ public class Projections {
     return new RequestedTupleImpl(projList);
   }
 
-  public static boolean isSpecial(ColumnMetadata col) {
+  /**
+   * Reports whether the column is a special column which should not be
+   * expanded in a wildcard. Used for specialized columns in readers
+   * such as the Log format.
+   */
+  public static boolean excludeFromWildcard(ColumnMetadata col) {
     return col.booleanProperty(ColumnMetadata.EXCLUDE_FROM_WILDCARD);
   }
 }
