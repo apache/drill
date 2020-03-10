@@ -63,6 +63,12 @@ simple_type
 | INTERVAL (YEAR | MONTH) # interval_year
 | INTERVAL (DAY | HOUR | MINUTE | SECOND)  # interval_day
 | INTERVAL # interval
+| UINT1 # unit1
+| UINT2 # unit2
+| UINT4 # unit4
+| UINT8 # unit8
+| TINYINT # tinyint
+| SMALLINT # smallint
 ;
 
 array_type: (simple_array_type | complex_array_type);

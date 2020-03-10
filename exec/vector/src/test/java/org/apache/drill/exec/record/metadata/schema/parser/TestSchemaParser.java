@@ -185,6 +185,21 @@ public class TestSchemaParser extends BaseTest {
   }
 
   @Test
+  public void testAdditionalParquetTypes() throws Exception {
+    TupleMetadata schema = new SchemaBuilder()
+      .addNullable("uint1_col", TypeProtos.MinorType.UINT1)
+      .addNullable("uint2_col", TypeProtos.MinorType.UINT2)
+      .addNullable("uint4_col", TypeProtos.MinorType.UINT4)
+      .addNullable("uint8_col", TypeProtos.MinorType.UINT8)
+      .addNullable("tinyint_col", TypeProtos.MinorType.TINYINT)
+      .addNullable("smallint_col", TypeProtos.MinorType.SMALLINT)
+      .buildSchema();
+
+    checkSchema("uint1_col uint1, uint2_col uint2, uint4_col uint4, uint8_col uint8, " +
+      "tinyint_col tinyint, smallint_col smallint", schema);
+  }
+
+  @Test
   public void testArray() throws Exception {
     TupleMetadata schema = new SchemaBuilder()
       .addArray("simple_array", TypeProtos.MinorType.INT)

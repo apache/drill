@@ -279,6 +279,36 @@ public class SchemaVisitor extends SchemaParserBaseVisitor<TupleMetadata> {
     }
 
     @Override
+    public ColumnMetadata visitUnit1(SchemaParser.Unit1Context ctx) {
+      return constructColumn(Types.withMode(TypeProtos.MinorType.UINT1, mode));
+    }
+
+    @Override
+    public ColumnMetadata visitUnit2(SchemaParser.Unit2Context ctx) {
+      return constructColumn(Types.withMode(TypeProtos.MinorType.UINT2, mode));
+    }
+
+    @Override
+    public ColumnMetadata visitUnit4(SchemaParser.Unit4Context ctx) {
+      return constructColumn(Types.withMode(TypeProtos.MinorType.UINT4, mode));
+    }
+
+    @Override
+    public ColumnMetadata visitUnit8(SchemaParser.Unit8Context ctx) {
+      return constructColumn(Types.withMode(TypeProtos.MinorType.UINT8, mode));
+    }
+
+    @Override
+    public ColumnMetadata visitTinyint(SchemaParser.TinyintContext ctx) {
+      return constructColumn(Types.withMode(TypeProtos.MinorType.TINYINT, mode));
+    }
+
+    @Override
+    public ColumnMetadata visitSmallint(SchemaParser.SmallintContext ctx) {
+      return constructColumn(Types.withMode(TypeProtos.MinorType.SMALLINT, mode));
+    }
+
+    @Override
     public ColumnMetadata visitStruct_type(SchemaParser.Struct_typeContext ctx) {
       // internally Drill refers to structs as maps
       MapBuilder builder = new MapBuilder(null, name, mode);
