@@ -58,6 +58,14 @@ MAP: 'MAP';
 STRUCT: 'STRUCT';
 ARRAY: 'ARRAY';
 
+// additional data types, primary used for Parquet
+UINT1: 'UINT1';
+UINT2: 'UINT2';
+UINT4: 'UINT4';
+UINT8: 'UINT8';
+TINYINT: 'TINYINT';
+SMALLINT: 'SMALLINT';
+
 // symbols
 COMMA: ',';
 REVERSE_QUOTE: '`';
