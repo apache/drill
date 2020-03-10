@@ -50,11 +50,19 @@ public class TestQueryWrapper extends RestServerTest {
   @Test
   public void testImpersonationDisabled() throws Exception {
     try {
-      QueryWrapper q = new QueryWrapper("SHOW SCHEMAS", "SQL", null, "alfred");
+      QueryWrapper q = new QueryWrapper("SHOW SCHEMAS", "SQL", null, "alfred", null);
       runQuery(q);
       fail("Should have thrown exception");
     } catch (UserException e) {
       assertThat(e.getMessage(), containsString("User impersonation is not enabled"));
     }
   }
+
+  @Test
+  public void testSpecifyDefaultSchema() throws Exception {
+    QueryWrapper.QueryResult result = runQuery(new QueryWrapper("SHOW FILES", "SQL", null, null, "dfs.tmp"));
+    // SHOW FILES will fail if default schema is not provided
+    assertEquals("COMPLETED", result.queryState);
+  }
+
 }

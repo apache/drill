@@ -96,10 +96,12 @@ public class QueryResources {
   public Viewable submitQuery(@FormParam("query") String query,
                               @FormParam("queryType") String queryType,
                               @FormParam("autoLimit") String autoLimit,
-                              @FormParam("userName") String userName) throws Exception {
+                              @FormParam("userName") String userName,
+                              @FormParam("defaultSchema") String defaultSchema) throws Exception {
     try {
+      // Apply options from the form fields, if provided
       final String trimmedQueryString = CharMatcher.is(';').trimTrailingFrom(query.trim());
-      final QueryResult result = submitQueryJSON(new QueryWrapper(trimmedQueryString, queryType, autoLimit, userName));
+      final QueryResult result = submitQueryJSON(new QueryWrapper(trimmedQueryString, queryType, autoLimit, userName, defaultSchema));
       List<Integer> rowsPerPageValues = work.getContext().getConfig().getIntList(ExecConstants.HTTP_WEB_CLIENT_RESULTSET_ROWS_PER_PAGE_VALUES);
       Collections.sort(rowsPerPageValues);
       final String rowsPerPageValuesAsStr = Joiner.on(",").join(rowsPerPageValues);
