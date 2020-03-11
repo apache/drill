@@ -32,12 +32,15 @@ import org.apache.drill.exec.proto.UserProtos.QueryResultsMode;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.user.InboundImpersonationManager;
+import org.apache.drill.exec.server.options.OptionDefinition;
+import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.server.options.SessionOptionManager;
 import org.apache.drill.exec.store.SchemaTreeProvider;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.exec.work.WorkManager;
 import org.apache.parquet.Strings;
 
+import javax.ws.rs.BadRequestException;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
@@ -55,6 +58,7 @@ public class QueryWrapper {
   private final int autoLimitRowCount;
   private final String userName;
   private final String defaultSchema;
+  private final Map<String, Object> options;
 
   private static MemoryMXBean memMXBean = ManagementFactory.getMemoryMXBean();
 
@@ -64,12 +68,14 @@ public class QueryWrapper {
     @JsonProperty("queryType") String queryType,
     @JsonProperty("autoLimit") String autoLimit,
     @JsonProperty("userName") String userName,
-    @JsonProperty("defaultSchema") String defaultSchema) {
+    @JsonProperty("defaultSchema") String defaultSchema,
+    @JsonProperty("options") Map<String, Object> options) {
     this.query = query;
     this.queryType = queryType.toUpperCase();
     this.autoLimitRowCount = autoLimit != null && autoLimit.matches("[0-9]+") ? Integer.valueOf(autoLimit) : 0;
     this.userName = userName;
     this.defaultSchema = defaultSchema;
+    this.options = options;
   }
 
   public String getQuery() {
@@ -86,21 +92,24 @@ public class QueryWrapper {
 
   public QueryResult run(final WorkManager workManager, final WebUserConnection webUserConnection) throws Exception {
     final RunQuery runQuery = RunQuery.newBuilder().setType(getType())
-        .setPlan(getQuery())
-        .setResultsMode(QueryResultsMode.STREAM_FULL)
-        .setAutolimitRowcount(autoLimitRowCount)
-        .build();
+      .setPlan(getQuery())
+      .setResultsMode(QueryResultsMode.STREAM_FULL)
+      .setAutolimitRowcount(autoLimitRowCount)
+      .build();
 
     applyUserName(workManager, webUserConnection);
 
-    int defaultMaxRows = webUserConnection.getSession().getOptions().getOption(ExecConstants.QUERY_MAX_ROWS).num_val.intValue();
+    applyOptions(webUserConnection);
+
+    SessionOptionManager options = webUserConnection.getSession().getOptions();
+
+    int defaultMaxRows = (int) options.getLong(ExecConstants.QUERY_MAX_ROWS);
     if (!Strings.isNullOrEmpty(defaultSchema)) {
-      SessionOptionManager options = webUserConnection.getSession().getOptions();
+      SessionOptionManager sessionOptions = webUserConnection.getSession().getOptions();
       SchemaTreeProvider schemaTreeProvider = new SchemaTreeProvider(workManager.getContext());
-      SchemaPlus rootSchema = schemaTreeProvider.createRootSchema(options);
+      SchemaPlus rootSchema = schemaTreeProvider.createRootSchema(sessionOptions);
       webUserConnection.getSession().setDefaultSchemaPath(defaultSchema, rootSchema);
     }
-
     int maxRows;
     if (autoLimitRowCount > 0 && defaultMaxRows > 0) {
       maxRows = Math.min(autoLimitRowCount, defaultMaxRows);
@@ -124,7 +133,8 @@ public class QueryWrapper {
     do {
       try {
         isComplete = webUserConnection.await(TimeUnit.SECONDS.toMillis(1)); //periodically timeout 1 sec to check heap
-      } catch (InterruptedException e) {}
+      } catch (InterruptedException e) {
+      }
       usagePercent = getHeapUsage();
       if (memoryFailureThreshold > 0 && usagePercent > memoryFailureThreshold) {
         nearlyOutOfHeapSpace = true;
@@ -134,10 +144,10 @@ public class QueryWrapper {
     //Fail if nearly out of heap space
     if (nearlyOutOfHeapSpace) {
       UserException almostOutOfHeapException = UserException.resourceError()
-          .message("There is not enough heap memory to run this query using the web interface. ")
-          .addContext("Please try a query with fewer columns or with a filter or limit condition to limit the data returned. ")
-          .addContext("You can also try an ODBC/JDBC client. ")
-          .build(logger);
+        .message("There is not enough heap memory to run this query using the web interface. ")
+        .addContext("Please try a query with fewer columns or with a filter or limit condition to limit the data returned. ")
+        .addContext("You can also try an ODBC/JDBC client. ")
+        .build(logger);
       //Add event
       workManager.getBee().getForemanForQueryId(queryId)
         .addToEventQueue(QueryState.FAILED, almostOutOfHeapException);
@@ -179,6 +189,54 @@ public class QueryWrapper {
     }
   }
 
+  private void applyOptions(WebUserConnection webUserConnection) throws BadRequestException {
+    if (options != null && !options.isEmpty()) {
+      SessionOptionManager sessionOptionManager = webUserConnection.getSession().getOptions();
+      for (Map.Entry<String, Object> entry : options.entrySet()) {
+        String name = entry.getKey();
+        OptionDefinition definition = sessionOptionManager.getOptionDefinition(name);
+        if (definition == null) {
+          throw UserException.validationError().message("Unsupported option '%s'", name).build(logger);
+        }
+        if (!(definition.getMetaData().getAccessibleScopes().inScopeOf(OptionValue.OptionScope.SESSION) || definition.getMetaData().getAccessibleScopes().inScopeOf(OptionValue.OptionScope.QUERY))) {
+          throw UserException.validationError().message("Option '%s' is not a session / query option", name).build(logger);
+        }
+        if (definition.getMetaData().isInternal()) {
+          throw UserException.validationError().message("Internal option '%s' cannot be set with query", name).build(logger);
+        }
+        Object value = entry.getValue();
+        switch (definition.getValidator().getKind()) {
+          case BOOLEAN:
+            if (!(value instanceof Boolean)) {
+              throw UserException.validationError().message("Expected boolean value for option '%s'", name).build(logger);
+            }
+            sessionOptionManager.setLocalOption(name, (Boolean) value);
+            break;
+          case DOUBLE:
+            if (!(value instanceof Number)) {
+              throw UserException.validationError().message("Expected number value for option '%s'", name).build(logger);
+            }
+            sessionOptionManager.setLocalOption(name, ((Number) value).doubleValue());
+            break;
+          case STRING:
+            if (!(value instanceof String)) {
+              throw UserException.validationError().message("Expected string value for option '%s'", name).build(logger);
+            }
+            sessionOptionManager.setLocalOption(name, (String) value);
+            break;
+          case LONG:
+            if (!(value instanceof Number)) {
+              throw UserException.validationError().message("Expected number value for option '%s'", name).build(logger);
+            }
+            sessionOptionManager.setLocalOption(name, ((Number) value).longValue());
+            break;
+          default:
+            throw UserException.validationError().message("Option '%s' has an unsupported type: %s", name, definition.getValidator().getKind().name()).build(logger);
+        }
+      }
+    }
+  }
+
   //Detect possible excess heap
   private float getHeapUsage() {
     return (float) memMXBean.getHeapMemoryUsage().getUsed() / memMXBean.getHeapMemoryUsage().getMax();
@@ -194,13 +252,13 @@ public class QueryWrapper {
 
     //DRILL-6847:  Modified the constructor so that the method has access to all the properties in webUserConnection
     public QueryResult(QueryId queryId, WebUserConnection webUserConnection, List<Map<String, String>> rows) {
-        this.queryId = QueryIdHelper.getQueryId(queryId);
-        this.columns = webUserConnection.columns;
-        this.metadata = webUserConnection.metadata;
-        this.queryState = webUserConnection.getQueryState();
-        this.rows = rows;
-        this.attemptedAutoLimit = webUserConnection.getAutoLimitRowCount();
-      }
+      this.queryId = QueryIdHelper.getQueryId(queryId);
+      this.columns = webUserConnection.columns;
+      this.metadata = webUserConnection.metadata;
+      this.queryState = webUserConnection.getQueryState();
+      this.rows = rows;
+      this.attemptedAutoLimit = webUserConnection.getAutoLimitRowCount();
+    }
 
     public String getQueryId() {
       return queryId;

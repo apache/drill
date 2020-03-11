@@ -17,16 +17,18 @@
  */
 package org.apache.drill.exec.server.rest;
 
+import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.server.options.OptionDefinition;
+import org.apache.drill.exec.server.options.SessionOptionManager;
+import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
+import org.apache.drill.exec.server.rest.QueryWrapper.QueryResult;
+import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
+import org.apache.drill.exec.work.WorkManager;
 import org.apache.drill.shaded.guava.com.google.common.base.CharMatcher;
 import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
-import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
-import org.apache.drill.exec.server.rest.QueryWrapper.QueryResult;
-import org.apache.drill.exec.work.WorkManager;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,15 +36,18 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -97,11 +102,13 @@ public class QueryResources {
                               @FormParam("queryType") String queryType,
                               @FormParam("autoLimit") String autoLimit,
                               @FormParam("userName") String userName,
-                              @FormParam("defaultSchema") String defaultSchema) throws Exception {
+                              @FormParam("defaultSchema") String defaultSchema,
+                              Form form) throws Exception {
     try {
       // Apply options from the form fields, if provided
+      Map<String, Object> options = readOptionsFromForm(form);
       final String trimmedQueryString = CharMatcher.is(';').trimTrailingFrom(query.trim());
-      final QueryResult result = submitQueryJSON(new QueryWrapper(trimmedQueryString, queryType, autoLimit, userName, defaultSchema));
+      final QueryResult result = submitQueryJSON(new QueryWrapper(trimmedQueryString, queryType, autoLimit, userName, defaultSchema, options));
       List<Integer> rowsPerPageValues = work.getContext().getConfig().getIntList(ExecConstants.HTTP_WEB_CLIENT_RESULTSET_ROWS_PER_PAGE_VALUES);
       Collections.sort(rowsPerPageValues);
       final String rowsPerPageValuesAsStr = Joiner.on(",").join(rowsPerPageValues);
@@ -110,6 +117,50 @@ public class QueryResources {
       logger.error("Query from Web UI Failed: {}", e);
       return ViewableWithPermissions.create(authEnabled.get(), "/rest/errorMessage.ftl", sc, e);
     }
+  }
+
+  private Map<String, Object> readOptionsFromForm(Form form) {
+    Map<String, Object> options = new HashMap<>();
+    SessionOptionManager sessionOptionManager = webUserConnection.getSession().getOptions();
+    for (Map.Entry<String, List<String>> pair : form.asMap().entrySet()) {
+      String name = pair.getKey();
+      OptionDefinition definition = sessionOptionManager.getOptionDefinition(name);
+      if (definition != null) {
+        String valueStr = pair.getValue().get(0);
+        if (!valueStr.isEmpty()) {
+          try {
+            Object value = null;
+            switch (definition.getValidator().getKind()) {
+              case BOOLEAN:
+                if ("true".equals(valueStr)) {
+                  value = true;
+                } else if ("false".equals(valueStr)) {
+                  value = false;
+                } else {
+                  throw new BadRequestException(String.format("Invalid boolean option value for %s: %s", name, valueStr));
+                }
+                break;
+              case DOUBLE:
+                value = Double.valueOf(valueStr);
+                break;
+              case STRING:
+                value = valueStr;
+                break;
+              case LONG:
+                value = Long.valueOf(valueStr);
+                break;
+              default:
+                throw new BadRequestException(String.format(
+                  "Unsupported option '%s' of type %s", name, definition.getValidator().getKind().toString()));
+            }
+            options.put(name, value);
+          } catch (NumberFormatException nfe) {
+            throw new BadRequestException(String.format("Invalid number option value for %s: %s", name, valueStr));
+          }
+        }
+      }
+    }
+    return options;
   }
 
   /**

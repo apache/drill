@@ -28,13 +28,26 @@ import org.apache.drill.exec.work.WorkManager;
 import org.apache.drill.exec.work.foreman.Foreman;
 import org.apache.drill.test.ClusterTest;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class RestServerTest extends ClusterTest {
   protected QueryWrapper.QueryResult runQuery(String sql) throws Exception {
-    return runQuery(new QueryWrapper(sql, "SQL", null, null, null));
+    return runQuery(new QueryWrapper(sql, "SQL", null, null, null, null));
   }
 
   protected QueryWrapper.QueryResult runQueryWithUsername(String sql, String userName) throws Exception {
-    return runQuery(new QueryWrapper(sql, "SQL", null, userName, null));
+    return runQuery(new QueryWrapper(sql, "SQL", null, userName, null, null));
+  }
+
+  protected QueryWrapper.QueryResult runQueryWithOptions(String sql, Map<String, Object> options) throws Exception {
+    return runQuery(new QueryWrapper(sql, "SQL", null, null, null, options));
+  }
+
+  protected QueryWrapper.QueryResult runQueryWithOption(String sql, String name, Object value) throws Exception {
+    Map<String, Object> options = new HashMap<>();
+    options.put(name, value);
+    return runQueryWithOptions(sql, options);
   }
 
   protected QueryWrapper.QueryResult runQuery(QueryWrapper q) throws Exception {
@@ -51,7 +64,6 @@ public class RestServerTest extends ClusterTest {
     WebUserConnection connection = new WebUserConnection.AnonWebUserConnection(webSessionResources);
     return q.run(cluster.drillbit().getManager(), connection);
   }
-
 
   protected UserBitShared.QueryProfile getQueryProfile(QueryWrapper.QueryResult result) {
     String queryId = result.getQueryId();
