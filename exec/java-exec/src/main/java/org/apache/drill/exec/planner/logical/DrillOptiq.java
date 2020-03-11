@@ -67,6 +67,8 @@ import org.apache.calcite.util.NlsString;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.work.ExecErrorConstants;
 
@@ -77,7 +79,7 @@ import static org.apache.drill.exec.planner.physical.PlannerSettings.ENABLE_DECI
  */
 public class DrillOptiq {
   public static final String UNSUPPORTED_REX_NODE_ERROR = "Cannot convert RexNode to equivalent Drill expression. ";
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillOptiq.class);
+  private static final Logger logger = LoggerFactory.getLogger(DrillOptiq.class);
 
   /**
    * Converts a tree of {@link RexNode} operators into a scalar expression in Drill syntax using one input.
@@ -110,8 +112,6 @@ public class DrillOptiq {
   }
 
   public static class RexToDrill extends RexVisitorImpl<LogicalExpression> {
-    @SuppressWarnings("unused")
-    private final List<RelNode> inputs;
     private final DrillParseContext context;
     private final List<RelDataTypeField> fieldList;
     private final RelDataType rowType;
@@ -120,7 +120,6 @@ public class DrillOptiq {
     RexToDrill(DrillParseContext context, List<RelNode> inputs) {
       super(true);
       this.context = context;
-      this.inputs = inputs;
       this.fieldList = Lists.newArrayList();
       if (inputs.size() > 0 && inputs.get(0)!=null) {
         this.rowType = inputs.get(0).getRowType();

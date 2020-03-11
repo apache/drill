@@ -37,6 +37,7 @@ import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexUtil;
@@ -188,10 +189,9 @@ public abstract class JoinPrel extends DrillJoinRelBase implements Prel {
       // fields, left fields, and right fields. Very similar to the
       // output row type, except that fields have not yet been made due
       // due to outer joins.
-      @SuppressWarnings("deprecation")
       RexChecker checker =
               new RexChecker(
-                      getCluster().getTypeFactory().builder()
+                  new RelDataTypeFactory.Builder(getCluster().getTypeFactory())
                               .addAll(getSystemFieldList())
                               .addAll(getLeft().getRowType().getFieldList())
                               .addAll(getRight().getRowType().getFieldList())

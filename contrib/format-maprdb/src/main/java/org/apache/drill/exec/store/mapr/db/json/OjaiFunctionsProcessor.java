@@ -169,7 +169,6 @@ class OjaiFunctionsProcessor extends AbstractExprVisitor<Void, Void, RuntimeExce
     case "ojai_matches":
     case "ojai_notmatches": {
       // ojai_[not]matches(field, <regex>);
-      //final SchemaPath schemaPath = getSchemaPathArg(call.arg(0));
       final String regex = getStringArg(call.arg(1));
       if (functionName.equals("ojai_matches")) {
         queryCond = MapRDBImpl.newCondition()
@@ -184,8 +183,7 @@ class OjaiFunctionsProcessor extends AbstractExprVisitor<Void, Void, RuntimeExce
 
     case "ojai_condition": {
       // ojai_condition(field, <serialized-condition>);
-      //final SchemaPath schemaPath = getSchemaPathArg(call.arg(0));
-      final String condString = getStringArg(call.arg(1));
+       final String condString = getStringArg(call.arg(1));
       final byte[] condBytes = Base64.decodeBase64(condString);
       final ByteBuffer condBuffer = ByteBuffer.wrap(condBytes);
       queryCond = ConditionImpl.parseFrom(condBuffer);

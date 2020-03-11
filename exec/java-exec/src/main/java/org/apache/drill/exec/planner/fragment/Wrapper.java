@@ -236,8 +236,8 @@ public class Wrapper {
       return result;
     };
 
-    Function<DrillbitEndpoint, NodeResource> cpuPerEndpoint = (
-        endpoint) -> new NodeResource(1, 0);
+    Function<DrillbitEndpoint, NodeResource> cpuPerEndpoint =
+        endpoint -> new NodeResource(1, 0);
 
     nodeResourceMap = endpoints.stream()
         .collect(Collectors.groupingBy(Function.identity(),

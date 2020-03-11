@@ -27,16 +27,6 @@ import java.util.Objects;
 
 public class DrillDistributionTrait implements RelTrait {
 
-  public enum DistributionType {
-    SINGLETON,
-    HASH_DISTRIBUTED,
-    RANGE_DISTRIBUTED,
-    RANDOM_DISTRIBUTED,
-    ROUND_ROBIN_DISTRIBUTED,
-    BROADCAST_DISTRIBUTED,
-    ANY
-  }
-
   public static DrillDistributionTrait SINGLETON = new DrillDistributionTrait(DistributionType.SINGLETON);
   public static DrillDistributionTrait RANDOM_DISTRIBUTED = new DrillDistributionTrait(DistributionType.RANDOM_DISTRIBUTED);
   public static DrillDistributionTrait ANY = new DrillDistributionTrait(DistributionType.ANY);
@@ -149,6 +139,16 @@ public class DrillDistributionTrait implements RelTrait {
   @Override
   public String toString() {
     return fields == null ? this.type.toString() : this.type.toString() + "(" + fields + ")";
+  }
+
+  public enum DistributionType {
+    SINGLETON,
+    HASH_DISTRIBUTED,
+    RANGE_DISTRIBUTED,
+    RANDOM_DISTRIBUTED,
+    ROUND_ROBIN_DISTRIBUTED,
+    BROADCAST_DISTRIBUTED,
+    ANY
   }
 
   public static class DistributionField {

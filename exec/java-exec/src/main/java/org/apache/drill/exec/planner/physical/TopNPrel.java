@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.calcite.rel.RelCollationImpl;
+import org.apache.calcite.rel.RelCollations;
 import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.type.SqlTypeName;
@@ -140,8 +141,7 @@ public class TopNPrel extends SinglePrel implements OrderedRel,Prel {
               fieldCollation.direction, fieldCollation.nullDirection));
     }
 
-    @SuppressWarnings("deprecation")
-    RelCollation collationTrait = RelCollationImpl.of(relFieldCollations);
+    RelCollation collationTrait = RelCollations.of(relFieldCollations);
     RelTraitSet traits = RelTraitSet.createEmpty()
                                     .replace(this.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE))
                                     .replace(collationTrait)

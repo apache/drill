@@ -47,15 +47,19 @@ class DrillAggFuncHolder extends DrillFuncHolder {
   protected String setup() {
     return meth("setup");
   }
+
   protected String reset() {
     return meth("reset", false);
   }
+
   protected String add() {
     return meth("add");
   }
+
   protected String output() {
     return meth("output");
   }
+
   protected String cleanup() {
     return meth("cleanup", false);
   }
@@ -82,7 +86,7 @@ class DrillAggFuncHolder extends DrillFuncHolder {
       JVar[] workspaceJVars = declareWorkspaceVariables(g);
       generateBody(g, BlockType.SETUP, setup(), null, workspaceJVars, true);
       return workspaceJVars;
-      } else {  //Declare workspace vars and workspace vectors for hash aggregation.
+    } else {  //Declare workspace vars and workspace vectors for hash aggregation.
 
       JVar[] workspaceJVars = declareWorkspaceVectors(g);
 
