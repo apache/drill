@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.store.easy.json.parser;
 
+import org.apache.calcite.model.JsonType;
+
 /**
  * Represents events on a object value. The object value may be a top-level
  * field or may be the element of an array. The listener gets an event when
@@ -52,7 +54,7 @@ package org.apache.drill.exec.store.easy.json.parser;
  */
 public interface ObjectListener {
 
-  public enum FieldType {
+  enum FieldType {
 
     /**
      * The field is unprojected, ignore its content. No value listener
@@ -105,6 +107,24 @@ public interface ObjectListener {
    */
   FieldType fieldType(String key);
 
+  /**
+   * The structure parser has just encountered a new field for this
+   * object. The {@link #fieldType(String)} indicated that the field is
+   * to be projected. This method performs any setup needed to handle the
+   * field, then returns a value listener to receive events for the
+   * field value. The value listener may be asked to create additional
+   * structure, such as arrays or nested objects.
+   *
+   * @param key the field name
+   * @param valueDef a description of the field as inferred by looking
+   * ahead some number of tokens in the input JSON. Provides both a data
+   * type and array depth (dimensions.) If the type is
+   * {@link JsonType#NONE EMPTY}, then the field is an empty array.
+   * If the type is {@link JsonType#NULL NULL}, then the value is null. In these
+   * cases, the listener can replace itself when an actual value appears
+   * later
+   * @return a listener to receive events for the newly-created field
+   */
   ValueListener addField(String key, ValueDef valueDef);
 
   /**

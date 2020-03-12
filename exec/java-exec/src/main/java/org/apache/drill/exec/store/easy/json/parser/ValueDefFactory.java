@@ -39,7 +39,7 @@ public class ValueDefFactory {
   }
 
   public static ValueDef lookAhead(TokenIterator tokenizer) {
-    ValueDefFactory factory= new ValueDefFactory(tokenizer);
+    ValueDefFactory factory = new ValueDefFactory(tokenizer);
     return new ValueDef(factory.jsonType, factory.arrayDims);
   }
 

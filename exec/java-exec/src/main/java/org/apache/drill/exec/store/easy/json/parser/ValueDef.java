@@ -19,7 +19,7 @@ package org.apache.drill.exec.store.easy.json.parser;
 
 /**
  * Description of a JSON value as inferred from looking ahead in
- * the JSON stream. Includs a type (which can be empty for an empty
+ * the JSON stream. Includes a type (which can be empty for an empty
  * array, or null), and an array size (which is 0 for simple values.)
  * <p>
  * To be clear, this is the JSON parser's best guess at a field type
@@ -75,10 +75,11 @@ public class ValueDef {
 
   @Override
   public String toString() {
-    String result = type.name();
+    StringBuilder buf = new StringBuilder()
+        .append(type.name());
     for (int i = 0; i < arrayDims; i++) {
-      result += "[]";
+      buf.append("[]");
     }
-    return result;
+    return buf.toString();
   }
 }
