@@ -15,26 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.metastore;
+package org.apache.drill.exec.metastore.store.parquet;
 
+import org.apache.drill.exec.metastore.store.FileTableMetadataProviderBuilder;
 import org.apache.hadoop.fs.Path;
 
+import java.io.IOException;
+
 /**
- * Interface for providing table, partition, file etc. metadata for specific parquet table.
+ * Builder for {@link ParquetTableMetadataProvider}.
  */
-public interface ParquetTableMetadataProvider extends ParquetMetadataProvider {
+public interface ParquetTableMetadataProviderBuilder<T extends ParquetTableMetadataProviderBuilder<T>>
+    extends ParquetMetadataProviderBuilder<T>, FileTableMetadataProviderBuilder<T> {
 
-  /**
-   * Whether metadata cache files are used for table which belongs to current metadata provider.
-   *
-   * @return true if metadata cache files are used
-   */
-  boolean isUsedMetadataCache();
+  T withCacheFileRoot(Path cacheFileRoot);
 
-  /**
-   * Returns root table path.
-   *
-   * @return root path of the table
-   */
-  Path getSelectionRoot();
+  T withCorrectCorruptedDates(boolean autoCorrectCorruptedDates);
+
+  @Override
+  ParquetTableMetadataProvider build() throws IOException;
 }

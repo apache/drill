@@ -15,16 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.metastore;
+package org.apache.drill.exec.metastore.store;
 
+import org.apache.drill.exec.metastore.MetadataProviderManager;
 import org.apache.drill.exec.planner.common.DrillStatsTable;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.metadata.schema.SchemaProvider;
-import org.apache.drill.exec.store.parquet.ParquetTableMetadataProviderImpl;
 import org.apache.drill.metastore.metadata.TableMetadataProvider;
-import org.apache.drill.metastore.metadata.TableMetadataProviderBuilder;
-
-import java.io.IOException;
 
 /**
  * Implementation of {@link MetadataProviderManager} which uses file system providers and returns
@@ -46,10 +43,9 @@ public class FileSystemMetadataProviderManager implements MetadataProviderManage
    *
    * @param schema table schema which should be provided
    * @return {@link TableMetadataProvider} which provides specified schema
-   * @throws IOException if exception has happened during {@link TableMetadataProvider} construction
    */
-  public static TableMetadataProvider getMetadataProviderForSchema(TupleMetadata schema) throws IOException {
-    return new FileSystemMetadataProviderManager().builder(MetadataProviderKind.SCHEMA_STATS_ONLY)
+  public static TableMetadataProvider getMetadataProviderForSchema(TupleMetadata schema) {
+    return new SimpleFileTableMetadataProvider.Builder(new FileSystemMetadataProviderManager())
         .withSchema(schema)
         .build();
   }
@@ -61,11 +57,10 @@ public class FileSystemMetadataProviderManager implements MetadataProviderManage
    *
    * @param providerManager metadata provider manager
    * @return {@link MetadataProviderManager} instance
-   * @throws IOException if exception has happened during {@link TableMetadataProvider} construction
    */
-  public static TableMetadataProvider getMetadataProvider(MetadataProviderManager providerManager) throws IOException {
+  public static TableMetadataProvider getMetadataProvider(MetadataProviderManager providerManager) {
     return providerManager == null
-        ? new FileSystemMetadataProviderManager().builder(MetadataProviderKind.SCHEMA_STATS_ONLY).build()
+        ? new SimpleFileTableMetadataProvider.Builder(new FileSystemMetadataProviderManager()).build()
         : providerManager.getTableMetadataProvider();
   }
 
@@ -99,14 +94,7 @@ public class FileSystemMetadataProviderManager implements MetadataProviderManage
     return tableMetadataProvider;
   }
 
-  @Override
-  public TableMetadataProviderBuilder builder(MetadataProviderKind kind) {
-    switch (kind) {
-      case PARQUET_TABLE:
-        return new ParquetTableMetadataProviderImpl.Builder(this);
-      case SCHEMA_STATS_ONLY:
-        return new SimpleFileTableMetadataProvider.Builder(this);
-    }
-    return null;
+  public boolean usesMetastore() {
+    return false;
   }
 }

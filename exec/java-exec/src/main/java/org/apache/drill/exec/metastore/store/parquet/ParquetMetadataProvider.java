@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.metastore;
+package org.apache.drill.exec.metastore.store.parquet;
 
 import org.apache.drill.exec.store.dfs.ReadEntryWithPath;
 import org.apache.drill.metastore.metadata.RowGroupMetadata;
@@ -53,7 +53,8 @@ public interface ParquetMetadataProvider extends TableMetadataProvider {
   List<Path> getLocations();
 
   /**
-   * Returns multimap of {@link RowGroupMetadata} instances which provides metadata for specific row group and its columns mapped to their locations.
+   * Returns multimap of {@link RowGroupMetadata} instances which provides metadata
+   * for specific row group and its columns mapped to their locations.
    *
    * @return multimap of {@link RowGroupMetadata} instances
    */

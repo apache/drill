@@ -31,7 +31,7 @@ import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.logical.StoragePluginConfig;
-import org.apache.drill.exec.metastore.FileSystemMetadataProviderManager;
+import org.apache.drill.exec.metastore.store.FileSystemMetadataProviderManager;
 import org.apache.drill.exec.metastore.MetadataProviderManager;
 import org.apache.drill.metastore.metadata.TableMetadataProvider;
 import org.apache.drill.exec.physical.base.SchemalessScan;

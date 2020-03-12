@@ -20,22 +20,20 @@ package org.apache.drill.exec.store.parquet;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
-import org.apache.drill.exec.exception.MetadataException;
-import org.apache.drill.exec.metastore.MetastoreParquetTableMetadataProvider;
+import org.apache.drill.exec.metastore.MetastoreMetadataProviderManager;
 import org.apache.drill.exec.metastore.analyze.AnalyzeInfoProvider;
 import org.apache.drill.exec.metastore.analyze.AnalyzeParquetInfoProvider;
-import org.apache.drill.exec.metastore.analyze.FileMetadataInfoCollector;
+import org.apache.drill.exec.metastore.store.parquet.MetastoreParquetTableMetadataProvider;
+import org.apache.drill.exec.metastore.store.parquet.ParquetTableMetadataProviderBuilder;
+import org.apache.drill.exec.metastore.store.parquet.ParquetTableMetadataProviderImpl;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.exec.metastore.FileSystemMetadataProviderManager;
+import org.apache.drill.exec.metastore.store.FileSystemMetadataProviderManager;
 import org.apache.drill.exec.metastore.MetadataProviderManager;
-import org.apache.drill.exec.metastore.ParquetTableMetadataProvider;
+import org.apache.drill.exec.metastore.store.parquet.ParquetTableMetadataProvider;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.metastore.metadata.LocationProvider;
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.ValueExpressions;
@@ -49,12 +47,10 @@ import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.store.dfs.ReadEntryWithPath;
 import org.apache.drill.exec.util.ImpersonationUtil;
-import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
@@ -82,7 +78,7 @@ public class ParquetGroupScan extends AbstractParquetGroupScan {
                           @JsonProperty("cacheFileRoot") Path cacheFileRoot,
                           @JsonProperty("readerConfig") ParquetReaderConfig readerConfig,
                           @JsonProperty("filter") LogicalExpression filter,
-                          @JsonProperty("schema") TupleMetadata schema) throws IOException, ExecutionSetupException {
+                          @JsonProperty("schema") TupleMetadata schema) throws IOException {
     super(ImpersonationUtil.resolveUserName(userName), columns, entries, readerConfig, filter);
     Preconditions.checkNotNull(storageConfig);
     Preconditions.checkNotNull(formatConfig);
@@ -93,9 +89,10 @@ public class ParquetGroupScan extends AbstractParquetGroupScan {
     DrillFileSystem fs =
         ImpersonationUtil.createFileSystem(ImpersonationUtil.resolveUserName(userName), formatPlugin.getFsConf());
 
-    // used metadata provider manager which takes metadata from file system to reduce calls into metastore when plan is submitted
-    ParquetFileTableMetadataProviderBuilder builder =
-        (ParquetFileTableMetadataProviderBuilder) new FileSystemMetadataProviderManager().builder(MetadataProviderManager.MetadataProviderKind.PARQUET_TABLE);
+    // used metadata provider manager which takes metadata from file system
+    // to reduce calls into metastore when plan is submitted
+    ParquetTableMetadataProviderBuilder<?> builder =
+        defaultTableMetadataProviderBuilder(new FileSystemMetadataProviderManager());
 
     this.metadataProvider = builder.withEntries(this.entries)
         .withSelectionRoot(selectionRoot)
@@ -142,25 +139,25 @@ public class ParquetGroupScan extends AbstractParquetGroupScan {
       metadataProviderManager = new FileSystemMetadataProviderManager();
     }
 
-    ParquetFileTableMetadataProviderBuilder builder =
-        (ParquetFileTableMetadataProviderBuilder) metadataProviderManager.builder(MetadataProviderManager.MetadataProviderKind.PARQUET_TABLE);
+    ParquetTableMetadataProviderBuilder<?> builder =
+        tableMetadataProviderBuilder(metadataProviderManager);
 
-    this.metadataProvider = builder
+    ParquetTableMetadataProvider metadataProvider = builder
         .withSelection(selection)
         .withReaderConfig(readerConfig)
         .withFileSystem(fs)
         .withCorrectCorruptedDates(formatConfig.areCorruptDatesAutoCorrected())
         .build();
 
-    ParquetTableMetadataProvider parquetTableMetadataProvider = (ParquetTableMetadataProvider) this.metadataProvider;
-    this.usedMetadataCache = parquetTableMetadataProvider.isUsedMetadataCache();
-    this.usedMetastore = parquetTableMetadataProvider instanceof MetastoreParquetTableMetadataProvider;
-    this.selectionRoot = parquetTableMetadataProvider.getSelectionRoot();
-    this.entries = parquetTableMetadataProvider.getEntries();
-    this.fileSet = parquetTableMetadataProvider.getFileSet();
+    this.usedMetadataCache = metadataProvider.isUsedMetadataCache();
+    this.usedMetastore = metadataProviderManager.usesMetastore();
+    this.selectionRoot = metadataProvider.getSelectionRoot();
+    this.entries = metadataProvider.getEntries();
+    this.fileSet = metadataProvider.getFileSet();
+    this.metadataProvider = metadataProvider;
 
     init();
-    checkMetadataConsistency(selection);
+    checkMetadataConsistency(selection, formatPlugin.getFsConf());
   }
 
   /**
@@ -208,12 +205,6 @@ public class ParquetGroupScan extends AbstractParquetGroupScan {
     return cacheFileRoot;
   }
 
-  @JsonProperty
-  @JsonIgnore(value = false)
-  @Override
-  public TupleMetadata getSchema() {
-    return super.getSchema();
-  }
   // getters for serialization / deserialization end
 
   @Override
@@ -312,41 +303,17 @@ public class ParquetGroupScan extends AbstractParquetGroupScan {
     return AnalyzeParquetInfoProvider.INSTANCE;
   }
 
-  /**
-   * Compares the last modified time of files obtained from specified selection with
-   * the Metastore last modified time to determine whether Metastore metadata
-   * is not outdated. If metadata is outdated, {@link MetadataException} will be thrown.
-   *
-   * @param selection the source of files to check
-   * @throws MetadataException if metadata is outdated
-   */
-  private void checkMetadataConsistency(FileSelection selection) throws IOException {
-    if (metadataProvider.checkMetadataVersion()) {
-      DrillFileSystem fileSystem =
-          ImpersonationUtil.createFileSystem(ImpersonationUtil.resolveUserName(getUserName()), formatPlugin.getFsConf());
+  @Override
+  protected ParquetTableMetadataProviderBuilder<?> defaultTableMetadataProviderBuilder(MetadataProviderManager source) {
+    return new ParquetTableMetadataProviderImpl.Builder(source);
+  }
 
-      List<FileStatus> fileStatuses = FileMetadataInfoCollector.getFileStatuses(selection, fileSystem);
-
-      long lastModifiedTime = metadataProvider.getTableMetadata().getLastModifiedTime();
-
-      Set<Path> removedFiles = new HashSet<>(metadataProvider.getFilesMetadataMap().keySet());
-      Set<Path> newFiles = new HashSet<>();
-
-      boolean isChanged = false;
-
-      for (FileStatus fileStatus : fileStatuses) {
-        if (!removedFiles.remove(Path.getPathWithoutSchemeAndAuthority(fileStatus.getPath()))) {
-          newFiles.add(fileStatus.getPath());
-        }
-        if (fileStatus.getModificationTime() > lastModifiedTime) {
-          isChanged = true;
-          break;
-        }
-      }
-
-      if (isChanged || !removedFiles.isEmpty() || !newFiles.isEmpty()) {
-        throw MetadataException.of(MetadataException.MetadataExceptionType.OUTDATED_METADATA);
-      }
+  @Override
+  protected ParquetTableMetadataProviderBuilder<?> tableMetadataProviderBuilder(MetadataProviderManager source) {
+    if (source.usesMetastore()) {
+      return new MetastoreParquetTableMetadataProvider.Builder((MetastoreMetadataProviderManager) source);
+    } else {
+      return defaultTableMetadataProviderBuilder(source);
     }
   }
 

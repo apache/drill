@@ -1112,8 +1112,8 @@ public class TestExampleQueries extends BaseTestQuery {
   @Test // see DRILL-3557
   @Category(UnlikelyTest.class)
   public void testEmptyCSVinDirectory() throws Exception {
-    test("explain plan for select * from dfs.`store/text/directoryWithEmpyCSV`");
-    test("explain plan for select * from cp.`store/text/directoryWithEmpyCSV/empty.csv`");
+    test("explain plan for select * from dfs.`store/text/directoryWithEmptyCSV`");
+    test("explain plan for select * from cp.`store/text/directoryWithEmptyCSV/empty.csv`");
   }
 
   @Test

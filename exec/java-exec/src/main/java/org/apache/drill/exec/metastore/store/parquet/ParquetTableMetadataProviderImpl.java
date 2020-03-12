@@ -15,18 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.parquet;
+package org.apache.drill.exec.metastore.store.parquet;
 
 import org.apache.drill.exec.metastore.MetadataProviderManager;
-import org.apache.drill.exec.metastore.ParquetMetadataProvider;
-import org.apache.drill.exec.metastore.ParquetTableMetadataProvider;
-import org.apache.drill.exec.planner.common.DrillStatsTable;
-import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.exec.record.metadata.schema.SchemaProvider;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.store.dfs.MetadataContext;
 import org.apache.drill.exec.store.dfs.ReadEntryWithPath;
+import org.apache.drill.exec.store.parquet.BaseParquetMetadataProvider;
+import org.apache.drill.exec.store.parquet.ParquetReaderUtility;
 import org.apache.drill.exec.store.parquet.metadata.Metadata;
 import org.apache.drill.exec.store.parquet.metadata.MetadataBase;
 import org.apache.drill.exec.util.DrillFileSystemUtil;
@@ -34,6 +31,8 @@ import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -46,9 +45,10 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class ParquetTableMetadataProviderImpl extends BaseParquetMetadataProvider implements ParquetTableMetadataProvider {
-
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetTableMetadataProviderImpl.class);
+public class ParquetTableMetadataProviderImpl extends BaseParquetMetadataProvider
+    implements ParquetTableMetadataProvider {
+  private static final Logger logger =
+      LoggerFactory.getLogger(ParquetTableMetadataProviderImpl.class);
 
   private final DrillFileSystem fs;
   private final MetadataContext metaContext;
@@ -58,56 +58,46 @@ public class ParquetTableMetadataProviderImpl extends BaseParquetMetadataProvide
   private final boolean corruptDatesAutoCorrected;
   private boolean usedMetadataCache; // false by default
 
-  private ParquetTableMetadataProviderImpl(List<ReadEntryWithPath> entries,
-                                           Path selectionRoot,
-                                           Path cacheFileRoot,
-                                           ParquetReaderConfig readerConfig,
-                                           DrillFileSystem fs,
-                                           boolean autoCorrectCorruptedDates,
-                                           ParquetMetadataProvider source,
-                                           TupleMetadata schema,
-                                           DrillStatsTable statsTable) throws IOException {
-    super(entries, readerConfig, selectionRoot != null ? selectionRoot.toUri().getPath() : "", selectionRoot, schema, statsTable);
-    this.fs = fs;
-    this.selectionRoot = selectionRoot;
-    this.cacheFileRoot = cacheFileRoot;
-    this.metaContext = new MetadataContext();
+  private ParquetTableMetadataProviderImpl(Builder builder) throws IOException {
+    super(builder);
 
-    this.corruptDatesAutoCorrected = autoCorrectCorruptedDates;
+    BaseParquetMetadataProvider source = (BaseParquetMetadataProvider) builder.metadataProviderManager().getTableMetadataProvider();
 
-    init((BaseParquetMetadataProvider) source);
-  }
+    this.fs = builder.fs;
+    if (builder.entries() != null) {
+      // reuse previously stored metadata
+      this.selectionRoot = builder.selectionRoot();
+      this.cacheFileRoot = builder.cacheFileRoot;
+      this.metaContext = new MetadataContext();
 
-  private ParquetTableMetadataProviderImpl(FileSelection selection,
-                                           ParquetReaderConfig readerConfig,
-                                           DrillFileSystem fs,
-                                           boolean autoCorrectCorruptedDates,
-                                           ParquetMetadataProvider source,
-                                           TupleMetadata schema,
-                                           DrillStatsTable statsTable) throws IOException {
-    super(readerConfig, new ArrayList<>(),
-        selection.getSelectionRoot() != null ? selection.getSelectionRoot().toUri().getPath() : "", selection.getSelectionRoot(), schema, statsTable);
+      this.corruptDatesAutoCorrected = builder.autoCorrectCorruptedDates;
 
-    this.fs = fs;
-    this.selectionRoot = selection.getSelectionRoot();
-    this.cacheFileRoot = selection.getCacheFileRoot();
+      init(source);
+    } else {
+      this.selectionRoot = builder.selection().getSelectionRoot();
+      this.cacheFileRoot = builder.selection().getCacheFileRoot();
 
-    MetadataContext metadataContext = selection.getMetaContext();
-    this.metaContext = metadataContext != null ? metadataContext : new MetadataContext();
+      MetadataContext metadataContext = builder.selection().getMetaContext();
+      this.metaContext = metadataContext != null ? metadataContext : new MetadataContext();
 
-    this.corruptDatesAutoCorrected = autoCorrectCorruptedDates;
+      this.corruptDatesAutoCorrected = builder.autoCorrectCorruptedDates;
 
-    FileSelection fileSelection = expandIfNecessary(selection);
-    if (fileSelection != null) {
-      if (checkForInitializingEntriesWithSelectionRoot()) {
-        // The fully expanded list is already stored as part of the fileSet
-        entries.add(new ReadEntryWithPath(fileSelection.getSelectionRoot()));
-      } else {
-        for (Path fileName : fileSelection.getFiles()) {
-          entries.add(new ReadEntryWithPath(fileName));
+      FileSelection fileSelection = expandIfNecessary(builder.selection());
+      if (fileSelection != null) {
+        if (checkForInitializingEntriesWithSelectionRoot()) {
+          // The fully expanded list is already stored as part of the fileSet
+          entries.add(new ReadEntryWithPath(fileSelection.getSelectionRoot()));
+        } else {
+          for (Path fileName : fileSelection.getFiles()) {
+            entries.add(new ReadEntryWithPath(fileName));
+          }
         }
+        init(source);
       }
-      init((BaseParquetMetadataProvider) source);
+    }
+    // store results into MetadataProviderManager to be able to use them when creating new instances
+    if (source == null || source.getRowGroupsMeta().size() < getRowGroupsMeta().size()) {
+      builder.metadataProviderManager().setTableMetadataProvider(this);
     }
   }
 
@@ -386,101 +376,43 @@ public class ParquetTableMetadataProviderImpl extends BaseParquetMetadataProvide
     return false;
   }
 
-  public static class Builder implements ParquetFileTableMetadataProviderBuilder {
-    private final MetadataProviderManager metadataProviderManager;
+  public static class Builder extends BaseParquetMetadataProvider.Builder<Builder>
+      implements ParquetTableMetadataProviderBuilder<Builder> {
 
-    private List<ReadEntryWithPath> entries;
-    private Path selectionRoot;
     private Path cacheFileRoot;
-    private ParquetReaderConfig readerConfig;
     private DrillFileSystem fs;
     private boolean autoCorrectCorruptedDates;
-    private TupleMetadata schema;
-
-    private FileSelection selection;
 
     public Builder(MetadataProviderManager source) {
-      this.metadataProviderManager = source;
+      super(source);
     }
 
     @Override
-    public ParquetFileTableMetadataProviderBuilder withEntries(List<ReadEntryWithPath> entries) {
-      this.entries = entries;
-      return this;
-    }
-
-    @Override
-    public ParquetFileTableMetadataProviderBuilder withSelectionRoot(Path selectionRoot) {
-      this.selectionRoot = selectionRoot;
-      return this;
-    }
-
-    @Override
-    public ParquetFileTableMetadataProviderBuilder withCacheFileRoot(Path cacheFileRoot) {
+    public Builder withCacheFileRoot(Path cacheFileRoot) {
       this.cacheFileRoot = cacheFileRoot;
       return this;
     }
 
     @Override
-    public ParquetFileTableMetadataProviderBuilder withReaderConfig(ParquetReaderConfig readerConfig) {
-      this.readerConfig = readerConfig;
-      return this;
-    }
-
-    @Override
-    public ParquetFileTableMetadataProviderBuilder withFileSystem(DrillFileSystem fs) {
+    public Builder withFileSystem(DrillFileSystem fs) {
       this.fs = fs;
       return this;
     }
 
     @Override
-    public ParquetFileTableMetadataProviderBuilder withCorrectCorruptedDates(boolean autoCorrectCorruptedDates) {
+    public Builder withCorrectCorruptedDates(boolean autoCorrectCorruptedDates) {
       this.autoCorrectCorruptedDates = autoCorrectCorruptedDates;
       return this;
     }
 
     @Override
-    public ParquetFileTableMetadataProviderBuilder withSelection(FileSelection selection) {
-      this.selection = selection;
-      return this;
-    }
-
-    @Override
-    public ParquetFileTableMetadataProviderBuilder withSchema(TupleMetadata schema) {
-      this.schema = schema;
+    protected Builder self() {
       return this;
     }
 
     @Override
     public ParquetTableMetadataProvider build() throws IOException {
-      ParquetTableMetadataProviderImpl provider;
-      SchemaProvider schemaProvider = metadataProviderManager.getSchemaProvider();
-      ParquetMetadataProvider source = (ParquetTableMetadataProvider) metadataProviderManager.getTableMetadataProvider();
-      DrillStatsTable statsProvider = metadataProviderManager.getStatsProvider();
-      // schema passed into the builder has greater priority
-      TupleMetadata schema = null;
-      try {
-        if (this.schema != null) {
-          schema = this.schema;
-        } else {
-          schema = schemaProvider != null ? schemaProvider.read().getSchema() : null;
-        }
-      } catch (IOException e) {
-        logger.debug("Unable to deserialize schema from schema file for table: " + (selection == null ? selectionRoot : selection.selectionRoot), e);
-      }
-      if (entries != null) {
-        // reuse previously stored metadata
-        provider = new ParquetTableMetadataProviderImpl(entries, selectionRoot, cacheFileRoot, readerConfig, fs, autoCorrectCorruptedDates,
-          source, schema, statsProvider);
-      } else {
-        provider = new ParquetTableMetadataProviderImpl(selection, readerConfig, fs, autoCorrectCorruptedDates,
-          source, schema, statsProvider);
-      }
-      // store results into FileSystemMetadataProviderManager to be able to use them when creating new instances
-      if (source == null || source.getRowGroupsMeta().size() < provider.getRowGroupsMeta().size()) {
-        metadataProviderManager.setTableMetadataProvider(provider);
-      }
-      return provider;
+      return new ParquetTableMetadataProviderImpl(this);
     }
   }
 }

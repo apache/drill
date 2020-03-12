@@ -38,7 +38,9 @@ import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.expr.FilterPredicate;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.metastore.ParquetMetadataProvider;
+import org.apache.drill.exec.metastore.MetadataProviderManager;
+import org.apache.drill.exec.metastore.store.parquet.ParquetMetadataProvider;
+import org.apache.drill.exec.metastore.store.parquet.ParquetMetadataProviderBuilder;
 import org.apache.drill.exec.ops.UdfUtilities;
 import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.physical.base.AbstractGroupScanWithMetadata;
@@ -73,10 +75,12 @@ import org.apache.hadoop.fs.Path;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class AbstractParquetGroupScan extends AbstractGroupScanWithMetadata<ParquetMetadataProvider> {
 
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractParquetGroupScan.class);
+  private static final Logger logger = LoggerFactory.getLogger(AbstractParquetGroupScan.class);
 
   protected List<ReadEntryWithPath> entries;
   protected Multimap<Path, RowGroupMetadata> rowGroups;
@@ -129,8 +133,23 @@ public abstract class AbstractParquetGroupScan extends AbstractGroupScanWithMeta
     return readerConfig;
   }
 
+  /**
+   * This method is excluded from serialization in this group scan
+   * since the actual files list to scan in this class is handled by {@link #entries} field.
+   */
+  @JsonIgnore
+  @Override
+  public Collection<Path> getFiles() {
+    return super.getFiles();
+  }
+
   @Override
   public boolean canPushdownProjects(List<SchemaPath> columns) {
+    return true;
+  }
+
+  @Override
+  public boolean supportsFilterPushDown() {
     return true;
   }
 
@@ -321,10 +340,6 @@ public abstract class AbstractParquetGroupScan extends AbstractGroupScanWithMeta
     }
   }
 
-  // narrows the return type
-  @Override
-  protected abstract RowGroupScanFilterer<? extends RowGroupScanFilterer<?>> getFilterer();
-
   protected Multimap<Path, RowGroupMetadata> pruneRowGroupsForFiles(Map<Path, FileMetadata> filteredFileMetadata) {
     Multimap<Path, RowGroupMetadata> prunedRowGroups = LinkedListMultimap.create();
     for (Path filteredPartition : filteredFileMetadata.keySet()) {
@@ -473,6 +488,13 @@ public abstract class AbstractParquetGroupScan extends AbstractGroupScanWithMeta
   // abstract methods block start
   protected abstract Collection<CoordinationProtos.DrillbitEndpoint> getDrillbits();
   protected abstract AbstractParquetGroupScan cloneWithFileSelection(Collection<Path> filePaths) throws IOException;
+
+  // narrows the return type
+  @Override
+  protected abstract ParquetMetadataProviderBuilder<?> defaultTableMetadataProviderBuilder(MetadataProviderManager source);
+
+  @Override
+  protected abstract RowGroupScanFilterer<? extends RowGroupScanFilterer<?>> getFilterer();
   // abstract methods block end
 
   /**

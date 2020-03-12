@@ -110,8 +110,12 @@ public class ClusterTest extends DrillTest {
     client.runQueriesAndLog(sqlQuery);
   }
 
-  public void runAndPrint(String sqlQuery) throws Exception {
+  public void runAndPrint(String sqlQuery) {
     client.runQueriesAndPrint(sqlQuery);
+  }
+
+  public void runAndPrint(String sqlQuery, Object... args) {
+    runAndPrint(String.format(sqlQuery, args));
   }
 
   public static void run(String query, Object... args) throws Exception {

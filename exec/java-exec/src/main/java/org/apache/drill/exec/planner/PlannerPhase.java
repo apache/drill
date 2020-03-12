@@ -91,7 +91,7 @@ import org.apache.drill.exec.planner.physical.WindowPrule;
 import org.apache.drill.exec.planner.physical.WriterPrule;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.StoragePlugin;
-import org.apache.drill.exec.store.parquet.ParquetPushDownFilter;
+import org.apache.drill.exec.store.parquet.FilePushDownFilter;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -464,8 +464,8 @@ public enum PlannerPhase {
             // Before we can make such change, we have to figure out how to adjust the selectivity
             // estimation of filter operator, after filter is pushed down to scan.
 
-            ParquetPushDownFilter.getFilterOnProject(optimizerRulesContext),
-            ParquetPushDownFilter.getFilterOnScan(optimizerRulesContext),
+            FilePushDownFilter.getFilterOnProject(optimizerRulesContext),
+            FilePushDownFilter.getFilterOnScan(optimizerRulesContext),
             DrillPushProjectIntoScanRule.DRILL_PHYSICAL_INSTANCE
         )
         .build();

@@ -221,4 +221,9 @@ public abstract class AbstractGroupScan extends AbstractBase implements GroupSca
   public AnalyzeInfoProvider getAnalyzeInfoProvider() {
     return null;
   }
+
+  @Override
+  public boolean supportsFilterPushDown() {
+    return false;
+  }
 }

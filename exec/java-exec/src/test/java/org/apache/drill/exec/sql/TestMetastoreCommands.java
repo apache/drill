@@ -52,13 +52,11 @@ import org.apache.drill.test.ClusterTest;
 import org.apache.hadoop.fs.Path;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
-import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.nio.file.Paths;
@@ -97,7 +95,7 @@ public class TestMetastoreCommands extends ClusterTest {
       .add("o_comment", TypeProtos.MinorType.VARCHAR)
       .build();
 
-  private static final Map<SchemaPath, ColumnStatistics<?>> TABLE_COLUMN_STATISTICS =
+  public static final Map<SchemaPath, ColumnStatistics<?>> TABLE_COLUMN_STATISTICS =
       ImmutableMap.<SchemaPath, ColumnStatistics<?>>builder()
       .put(SchemaPath.getSimplePath("o_shippriority"),
           getColumnStatistics(0, 0, 120L, TypeProtos.MinorType.INT))
@@ -124,7 +122,7 @@ public class TestMetastoreCommands extends ClusterTest {
           getColumnStatistics(757382400000L, 850953600000L, 120L, TypeProtos.MinorType.DATE))
       .build();
 
-  private static final Map<SchemaPath, ColumnStatistics<?>> DIR0_1994_SEGMENT_COLUMN_STATISTICS =
+  public static final Map<SchemaPath, ColumnStatistics<?>> DIR0_1994_SEGMENT_COLUMN_STATISTICS =
       ImmutableMap.<SchemaPath, ColumnStatistics<?>>builder()
       .put(SchemaPath.getSimplePath("o_shippriority"),
           getColumnStatistics(0, 0, 40L, TypeProtos.MinorType.INT))
@@ -151,7 +149,7 @@ public class TestMetastoreCommands extends ClusterTest {
           getColumnStatistics(757382400000L, 788140800000L, 40L, TypeProtos.MinorType.DATE))
       .build();
 
-  private static final Map<SchemaPath, ColumnStatistics<?>> DIR0_1994_Q1_SEGMENT_COLUMN_STATISTICS =
+  public static final Map<SchemaPath, ColumnStatistics<?>> DIR0_1994_Q1_SEGMENT_COLUMN_STATISTICS =
       ImmutableMap.<SchemaPath, ColumnStatistics<?>>builder()
       .put(SchemaPath.getSimplePath("o_shippriority"),
           getColumnStatistics(0, 0, 10L, TypeProtos.MinorType.INT))
@@ -178,13 +176,10 @@ public class TestMetastoreCommands extends ClusterTest {
           getColumnStatistics(757382400000L, 764640000000L, 10L, TypeProtos.MinorType.DATE))
       .build();
 
-  private static final MetadataInfo TABLE_META_INFO = MetadataInfo.builder()
+  public static final MetadataInfo TABLE_META_INFO = MetadataInfo.builder()
       .type(MetadataType.TABLE)
       .key(MetadataInfo.GENERAL_INFO_KEY)
       .build();
-
-  @ClassRule
-  public static TemporaryFolder defaultFolder = new TemporaryFolder();
 
   @Rule
   public ExpectedException thrown = ExpectedException.none();
@@ -192,7 +187,7 @@ public class TestMetastoreCommands extends ClusterTest {
   @BeforeClass
   public static void setUp() throws Exception {
     ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher);
-    builder.configProperty(ExecConstants.ZK_ROOT, defaultFolder.getRoot().getPath());
+    builder.configProperty(ExecConstants.ZK_ROOT, dirTestWatcher.getRootDir().getPath());
     startCluster(builder);
 
     dirTestWatcher.copyResourceToRoot(Paths.get("multilevel/parquet"));
@@ -2868,17 +2863,6 @@ public class TestMetastoreCommands extends ClusterTest {
   }
 
   @Test
-  public void testAnalyzeOnTextTable() throws Exception {
-    String tableName = "textTable.csv";
-
-    dirTestWatcher.copyResourceToTestTmp(Paths.get("store/text/data/regions.csv"), Paths.get(tableName));
-
-    thrown.expect(UserRemoteException.class);
-
-    run("analyze table dfs.tmp.`%s` REFRESH METADATA", tableName);
-  }
-
-  @Test
   public void testAnalyzeOnView() throws Exception {
     String viewName = "analyzeView";
 
@@ -2890,7 +2874,7 @@ public class TestMetastoreCommands extends ClusterTest {
   }
 
   @Test
-  public void testSelectWitOutdatedMetadataWithUpdatedFile() throws Exception {
+  public void testSelectWithOutdatedMetadataWithUpdatedFile() throws Exception {
     String tableName = "outdatedParquetUpdatedFile";
 
     File table = dirTestWatcher.copyResourceToTestTmp(Paths.get("multilevel/parquet"), Paths.get(tableName));
@@ -2939,7 +2923,7 @@ public class TestMetastoreCommands extends ClusterTest {
   }
 
   @Test
-  public void testSelectWitOutdatedMetadataWithNewFile() throws Exception {
+  public void testSelectWithOutdatedMetadataWithNewFile() throws Exception {
     String tableName = "outdatedParquetNewFile";
 
     File table = dirTestWatcher.copyResourceToTestTmp(Paths.get("multilevel/parquet"), Paths.get(tableName));
@@ -3156,7 +3140,6 @@ public class TestMetastoreCommands extends ClusterTest {
     } finally {
       run("analyze table dfs.tmp.`%s` drop metadata", tableName);
       run("drop table if exists dfs.tmp.`%s`", tableName);
-      client.resetSession(ExecConstants.METASTORE_ENABLED);
     }
   }
 
@@ -3439,7 +3422,7 @@ public class TestMetastoreCommands extends ClusterTest {
 
   @Test
   public void testSelectNonEmptyTableWithEmptyFile() throws Exception {
-    String tableName = "parquet_with_empty_file";
+    String tableName = "select_parquet_with_empty_file";
 
     dirTestWatcher.copyResourceToRoot(Paths.get("parquet", "empty", "simple"), Paths.get(tableName));
 
@@ -3475,20 +3458,24 @@ public class TestMetastoreCommands extends ClusterTest {
     String tableName = "corrupted_dates";
     dirTestWatcher.copyResourceToRoot(Paths.get("parquet", "4203_corrupt_dates").resolve("mixed_drill_versions"), Paths.get(tableName));
 
-    // sets autoCorrectCorruptDates to false to store incorrect metadata which will be used during files and filter pruning
-    testBuilder()
-        .sqlQuery("analyze table table(dfs.`%s` (type => 'parquet', autoCorrectCorruptDates => false, enableStringsSignedMinMax=>false)) REFRESH METADATA", tableName)
-        .unOrdered()
-        .baselineColumns("ok", "summary")
-        .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.default.%s]", tableName))
-        .go();
+    try {
+      // sets autoCorrectCorruptDates to false to store incorrect metadata which will be used during files and filter pruning
+      testBuilder()
+          .sqlQuery("analyze table table(dfs.`%s` (type => 'parquet', autoCorrectCorruptDates => false, enableStringsSignedMinMax=>false)) REFRESH METADATA", tableName)
+          .unOrdered()
+          .baselineColumns("ok", "summary")
+          .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.default.%s]", tableName))
+          .go();
 
-    queryBuilder()
-        .sql("select date_col from dfs.`%s` where date_col > '2016-01-01'", tableName)
-        .planMatcher()
-        .include("usedMetastore=true")
-        .exclude("Filter")
-        .match();
+      queryBuilder()
+          .sql("select date_col from dfs.`%s` where date_col > '2016-01-01'", tableName)
+          .planMatcher()
+          .include("usedMetastore=true")
+          .exclude("Filter")
+          .match();
+    } finally {
+      run("analyze table dfs.`%s` drop metadata if exists", tableName);
+    }
   }
 
   @Test
@@ -3500,7 +3487,7 @@ public class TestMetastoreCommands extends ClusterTest {
     run("analyze table table(dfs.tmp.`%s` (type => 'parquet', autoCorrectCorruptDates => false, enableStringsSignedMinMax=>false)) DROP METADATA", tableName);
   }
 
-  private static <T> ColumnStatistics<T> getColumnStatistics(T minValue, T maxValue,
+  public static <T> ColumnStatistics<T> getColumnStatistics(T minValue, T maxValue,
       long rowCount, TypeProtos.MinorType minorType) {
     return new ColumnStatistics<>(
         Arrays.asList(
@@ -3522,11 +3509,11 @@ public class TestMetastoreCommands extends ClusterTest {
         .build();
   }
 
-  private BaseTableMetadata getBaseTableMetadata(TableInfo tableInfo, File table) {
+  public static BaseTableMetadata getBaseTableMetadata(TableInfo tableInfo, File table, TupleMetadata schema) {
     return BaseTableMetadata.builder()
         .tableInfo(tableInfo)
         .metadataInfo(TABLE_META_INFO)
-        .schema(SCHEMA)
+        .schema(schema)
         .location(new Path(table.toURI().getPath()))
         .columnsStatistics(TABLE_COLUMN_STATISTICS)
         .metadataStatistics(Arrays.asList(new StatisticsHolder<>(120L, TableStatisticsKind.ROW_COUNT),
@@ -3536,6 +3523,10 @@ public class TestMetastoreCommands extends ClusterTest {
         .build();
   }
 
+  public static BaseTableMetadata getBaseTableMetadata(TableInfo tableInfo, File table) {
+    return getBaseTableMetadata(tableInfo, table, SCHEMA);
+  }
+
   /**
    * Returns last modification time for specified file or max last modification time of child files
    * if specified one is a directory.
@@ -3543,12 +3534,12 @@ public class TestMetastoreCommands extends ClusterTest {
    * @param file file whose last modification time should be returned
    * @return last modification time
    */
-  private long getMaxLastModified(File file) {
+  public static long getMaxLastModified(File file) {
     if (file.isDirectory()) {
       File[] files = file.listFiles();
       assert files != null : "Cannot obtain directory files";
       return Arrays.stream(files)
-          .mapToLong(this::getMaxLastModified)
+          .mapToLong(TestMetastoreCommands::getMaxLastModified)
           .max()
           .orElse(file.lastModified());
     } else {

@@ -44,12 +44,15 @@ import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.compile.sig.ConstantExpressionIdentifier;
+import org.apache.drill.exec.exception.MetadataException;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.FilterBuilder;
 import org.apache.drill.exec.expr.FilterPredicate;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.expr.fn.FunctionLookupContext;
 import org.apache.drill.exec.expr.stat.RowsMatch;
+import org.apache.drill.exec.metastore.MetadataProviderManager;
+import org.apache.drill.exec.metastore.analyze.FileMetadataInfoCollector;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
 import org.apache.drill.exec.ops.UdfUtilities;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
@@ -59,9 +62,11 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.metadata.TupleSchema;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.ColumnExplorer;
+import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.store.parquet.FilterEvaluatorUtils;
 import org.apache.drill.exec.store.parquet.ParquetTableMetadataUtils;
+import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.drill.metastore.metadata.BaseMetadata;
 import org.apache.drill.metastore.metadata.FileMetadata;
 import org.apache.drill.metastore.metadata.LocationProvider;
@@ -72,11 +77,14 @@ import org.apache.drill.metastore.metadata.PartitionMetadata;
 import org.apache.drill.metastore.metadata.SegmentMetadata;
 import org.apache.drill.metastore.metadata.TableMetadata;
 import org.apache.drill.metastore.metadata.TableMetadataProvider;
+import org.apache.drill.metastore.metadata.TableMetadataProviderBuilder;
 import org.apache.drill.metastore.statistics.ColumnStatistics;
 import org.apache.drill.metastore.statistics.ColumnStatisticsKind;
 import org.apache.drill.metastore.statistics.Statistic;
 import org.apache.drill.metastore.statistics.TableStatisticsKind;
 import org.apache.drill.metastore.util.SchemaPathUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -141,7 +149,6 @@ public abstract class AbstractGroupScanWithMetadata<P extends TableMetadataProvi
     return columns;
   }
 
-  @JsonIgnore
   @Override
   public Collection<Path> getFiles() {
     return fileSet;
@@ -426,7 +433,7 @@ public abstract class AbstractGroupScanWithMetadata<P extends TableMetadataProvi
     return FilterBuilder.buildFilterPredicate(materializedFilter, constantBoundaries, udfUtilities, omitUnsupportedExprs);
   }
 
-  @JsonIgnore
+  @JsonProperty
   public TupleMetadata getSchema() {
     // creates a copy of TupleMetadata from tableMetadata
     TupleMetadata tuple = new TupleSchema();
@@ -632,6 +639,62 @@ public abstract class AbstractGroupScanWithMetadata<P extends TableMetadataProvi
       nonInterestingColumnsMetadata = metadataProvider.getNonInterestingColumnsMetadata();
     }
     return nonInterestingColumnsMetadata;
+  }
+
+  /**
+   * Returns {@link TableMetadataProviderBuilder} instance based on specified
+   * {@link MetadataProviderManager} source.
+   *
+   * @param source metadata provider manager
+   * @return {@link TableMetadataProviderBuilder} instance
+   */
+  protected abstract TableMetadataProviderBuilder tableMetadataProviderBuilder(MetadataProviderManager source);
+
+  /**
+   * Returns {@link TableMetadataProviderBuilder} instance which may provide metadata
+   * without using Drill Metastore.
+   *
+   * @param source metadata provider manager
+   * @return {@link TableMetadataProviderBuilder} instance
+   */
+  protected abstract TableMetadataProviderBuilder defaultTableMetadataProviderBuilder(MetadataProviderManager source);
+
+  /**
+   * Compares the last modified time of files obtained from specified selection with
+   * the Metastore last modified time to determine whether Metastore metadata
+   * is up-to-date. If metadata is outdated, {@link MetadataException} will be thrown.
+   *
+   * @param selection the source of files to check
+   * @throws MetadataException if metadata is outdated
+   */
+  protected void checkMetadataConsistency(FileSelection selection, Configuration fsConf) throws IOException {
+    if (metadataProvider.checkMetadataVersion()) {
+      DrillFileSystem fileSystem =
+          ImpersonationUtil.createFileSystem(ImpersonationUtil.resolveUserName(getUserName()), fsConf);
+
+      List<FileStatus> fileStatuses = FileMetadataInfoCollector.getFileStatuses(selection, fileSystem);
+
+      long lastModifiedTime = metadataProvider.getTableMetadata().getLastModifiedTime();
+
+      Set<Path> removedFiles = new HashSet<>(metadataProvider.getFilesMetadataMap().keySet());
+      Set<Path> newFiles = new HashSet<>();
+
+      boolean isChanged = false;
+
+      for (FileStatus fileStatus : fileStatuses) {
+        if (!removedFiles.remove(Path.getPathWithoutSchemeAndAuthority(fileStatus.getPath()))) {
+          newFiles.add(fileStatus.getPath());
+        }
+        if (fileStatus.getModificationTime() > lastModifiedTime) {
+          isChanged = true;
+          break;
+        }
+      }
+
+      if (isChanged || !removedFiles.isEmpty() || !newFiles.isEmpty()) {
+        throw MetadataException.of(MetadataException.MetadataExceptionType.OUTDATED_METADATA);
+      }
+    }
   }
 
   /**

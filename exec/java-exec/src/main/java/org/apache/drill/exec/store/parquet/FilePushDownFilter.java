@@ -40,6 +40,8 @@ import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.planner.physical.ProjectPrel;
 import org.apache.drill.exec.planner.physical.ScanPrel;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -47,9 +49,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public abstract class ParquetPushDownFilter extends StoragePluginOptimizerRule {
+public abstract class FilePushDownFilter extends StoragePluginOptimizerRule {
 
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetPushDownFilter.class);
+  private static final Logger logger = LoggerFactory.getLogger(FilePushDownFilter.class);
 
   private static final Collection<String> BANNED_OPERATORS;
 
@@ -59,14 +61,14 @@ public abstract class ParquetPushDownFilter extends StoragePluginOptimizerRule {
   }
 
   public static RelOptRule getFilterOnProject(OptimizerRulesContext optimizerRulesContext) {
-    return new ParquetPushDownFilter(
+    return new FilePushDownFilter(
         RelOptHelper.some(FilterPrel.class, RelOptHelper.some(ProjectPrel.class, RelOptHelper.any(ScanPrel.class))),
-        "ParquetPushDownFilter:Filter_On_Project", optimizerRulesContext) {
+        "FilePushDownFilter:Filter_On_Project", optimizerRulesContext) {
 
       @Override
       public boolean matches(RelOptRuleCall call) {
         final ScanPrel scan = call.rel(2);
-        if (scan.getGroupScan() instanceof AbstractParquetGroupScan) {
+        if (scan.getGroupScan().supportsFilterPushDown()) {
           return super.matches(call);
         }
         return false;
@@ -84,14 +86,14 @@ public abstract class ParquetPushDownFilter extends StoragePluginOptimizerRule {
   }
 
   public static StoragePluginOptimizerRule getFilterOnScan(OptimizerRulesContext optimizerContext) {
-    return new ParquetPushDownFilter(
+    return new FilePushDownFilter(
         RelOptHelper.some(FilterPrel.class, RelOptHelper.any(ScanPrel.class)),
-        "ParquetPushDownFilter:Filter_On_Scan", optimizerContext) {
+        "FilePushDownFilter:Filter_On_Scan", optimizerContext) {
 
       @Override
       public boolean matches(RelOptRuleCall call) {
         final ScanPrel scan = call.rel(1);
-        if (scan.getGroupScan() instanceof AbstractParquetGroupScan) {
+        if (scan.getGroupScan().supportsFilterPushDown()) {
           return super.matches(call);
         }
         return false;
@@ -109,13 +111,13 @@ public abstract class ParquetPushDownFilter extends StoragePluginOptimizerRule {
   // private final boolean useNewReader;
   protected final OptimizerRulesContext optimizerContext;
 
-  private ParquetPushDownFilter(RelOptRuleOperand operand, String id, OptimizerRulesContext optimizerContext) {
+  private FilePushDownFilter(RelOptRuleOperand operand, String id, OptimizerRulesContext optimizerContext) {
     super(operand, id);
     this.optimizerContext = optimizerContext;
   }
 
   protected void doOnMatch(RelOptRuleCall call, FilterPrel filter, ProjectPrel project, ScanPrel scan) {
-    AbstractParquetGroupScan groupScan = (AbstractParquetGroupScan) scan.getGroupScan();
+    AbstractGroupScanWithMetadata<?> groupScan = (AbstractGroupScanWithMetadata<?>) scan.getGroupScan();
     if (groupScan.getFilter() != null && !groupScan.getFilter().equals(ValueExpressions.BooleanExpression.TRUE)) {
       return;
     }
@@ -138,7 +140,7 @@ public abstract class ParquetPushDownFilter extends StoragePluginOptimizerRule {
 
     final List<RexNode> qualifiedPredList = new ArrayList<>();
 
-    // list of predicates which cannot be converted to Parquet filter predicate
+    // list of predicates which cannot be converted to filter predicate
     List<RexNode> nonConvertedPredList = new ArrayList<>();
 
     for (RexNode pred : predList) {
@@ -147,13 +149,13 @@ public abstract class ParquetPushDownFilter extends StoragePluginOptimizerRule {
             new DrillParseContext(PrelUtil.getPlannerSettings(call.getPlanner())), scan, pred);
 
         // checks whether predicate may be used for filter pushdown
-        FilterPredicate<?> parquetFilterPredicate =
+        FilterPredicate<?> filterPredicate =
             groupScan.getFilterPredicate(drillPredicate,
                 optimizerContext,
                 optimizerContext.getFunctionRegistry(), optimizerContext.getPlannerSettings().getOptions(), false);
         // collects predicates that contain unsupported for filter pushdown expressions
         // to build filter with them
-        if (parquetFilterPredicate == null) {
+        if (filterPredicate == null) {
           nonConvertedPredList.add(pred);
         }
         qualifiedPredList.add(pred);
@@ -178,7 +180,7 @@ public abstract class ParquetPushDownFilter extends StoragePluginOptimizerRule {
     AbstractGroupScanWithMetadata<?> newGroupScan = groupScan.applyFilter(conditionExp, optimizerContext,
         optimizerContext.getFunctionRegistry(), optimizerContext.getPlannerSettings().getOptions());
     if (timer != null) {
-      logger.debug("Took {} ms to apply filter on parquet row groups. ", timer.elapsed(TimeUnit.MILLISECONDS));
+      logger.debug("Took {} ms to apply filter. ", timer.elapsed(TimeUnit.MILLISECONDS));
       timer.stop();
     }
 

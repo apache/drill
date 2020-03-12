@@ -15,20 +15,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.dfs.easy;
+package org.apache.drill.exec.metastore.store.parquet;
 
-import org.apache.drill.exec.metastore.SimpleFileTableMetadataProvider;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.store.dfs.FileSelection;
+import org.apache.drill.exec.store.dfs.ReadEntryWithPath;
+import org.apache.drill.exec.store.parquet.ParquetReaderConfig;
 import org.apache.drill.metastore.metadata.TableMetadataProviderBuilder;
 import org.apache.hadoop.fs.Path;
 
+import java.io.IOException;
+import java.util.List;
+
 /**
- * Builder for {@link SimpleFileTableMetadataProvider}.
+ * Base interface for builders of {@link ParquetMetadataProvider}.
  */
-public interface SimpleFileTableMetadataProviderBuilder extends TableMetadataProviderBuilder {
+public interface ParquetMetadataProviderBuilder<T extends ParquetMetadataProviderBuilder<T>>
+    extends TableMetadataProviderBuilder {
 
-  SimpleFileTableMetadataProviderBuilder withTableName(String tableName);
+  @Override
+  T withSchema(TupleMetadata schema);
 
-  SimpleFileTableMetadataProviderBuilder withLocation(Path location);
+  T withEntries(List<ReadEntryWithPath> entries);
 
-  SimpleFileTableMetadataProviderBuilder withLastModifiedTime(long lastModifiedTime);
+  T withSelectionRoot(Path selectionRoot);
+
+  T withReaderConfig(ParquetReaderConfig readerConfig);
+
+  T withSelection(FileSelection selection);
+
+  @Override
+  ParquetMetadataProvider build() throws IOException;
 }

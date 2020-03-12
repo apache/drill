@@ -15,13 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.metastore;
+package org.apache.drill.exec.metastore.store;
 
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.metastore.MetadataProviderManager;
 import org.apache.drill.exec.planner.common.DrillStatsTable;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.metadata.schema.SchemaProvider;
-import org.apache.drill.exec.store.dfs.easy.SimpleFileTableMetadataProviderBuilder;
+import org.apache.drill.exec.store.dfs.DrillFileSystem;
+import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.metastore.metadata.SegmentMetadata;
 import org.apache.drill.metastore.metadata.TableMetadataProvider;
 import org.apache.drill.metastore.statistics.ColumnStatistics;
@@ -47,7 +49,8 @@ import java.util.Map;
  * Metadata provider which supplies only table schema and / or table statistics if available.
  */
 public class SimpleFileTableMetadataProvider implements TableMetadataProvider {
-  private static final Logger logger = LoggerFactory.getLogger(SimpleFileTableMetadataProvider.class);
+  private static final Logger logger =
+      LoggerFactory.getLogger(SimpleFileTableMetadataProvider.class);
 
   private final TableMetadata tableMetadata;
 
@@ -97,7 +100,7 @@ public class SimpleFileTableMetadataProvider implements TableMetadataProvider {
 
   @Override
   public NonInterestingColumnsMetadata getNonInterestingColumnsMetadata() {
-    return null;
+    return new NonInterestingColumnsMetadata(Collections.emptyMap());
   }
 
   @Override
@@ -105,39 +108,30 @@ public class SimpleFileTableMetadataProvider implements TableMetadataProvider {
     return false;
   }
 
-  public static class Builder implements SimpleFileTableMetadataProviderBuilder {
-    private String tableName;
-    private Path location;
-    private long lastModifiedTime = -1L;
-    private TupleMetadata schema;
-
+  public static class Builder implements FileTableMetadataProviderBuilder<Builder> {
     private final MetadataProviderManager metadataProviderManager;
+
+    private FileSelection selection;
+    private TupleMetadata schema;
 
     public Builder(MetadataProviderManager source) {
       this.metadataProviderManager = source;
     }
 
     @Override
-    public SimpleFileTableMetadataProviderBuilder withTableName(String tableName) {
-      this.tableName = tableName;
-      return this;
-    }
-
-    @Override
-    public SimpleFileTableMetadataProviderBuilder withLocation(Path location) {
-      this.location = location;
-      return this;
-    }
-
-    @Override
-    public SimpleFileTableMetadataProviderBuilder withLastModifiedTime(long lastModifiedTime) {
-      this.lastModifiedTime = lastModifiedTime;
-      return this;
-    }
-
-    @Override
-    public SimpleFileTableMetadataProviderBuilder withSchema(TupleMetadata schema) {
+    public Builder withSchema(TupleMetadata schema) {
       this.schema = schema;
+      return this;
+    }
+
+    @Override
+    public Builder withSelection(FileSelection selection) {
+      this.selection = selection;
+      return this;
+    }
+
+    @Override
+    public Builder withFileSystem(DrillFileSystem fs) {
       return this;
     }
 
@@ -161,26 +155,27 @@ public class SimpleFileTableMetadataProvider implements TableMetadataProvider {
           }
         }
 
+        Path selectionRoot = selection != null ? selection.getSelectionRoot() : null;
+
         TupleMetadata schema = null;
-        try {
-          if (this.schema != null) {
-            schema = this.schema;
-          } else {
-            schema = schemaProvider != null ? schemaProvider.read().getSchema() : null;
+        if (this.schema == null && schemaProvider != null) {
+          try {
+            schema = schemaProvider.read().getSchema();
+          } catch (IOException | IllegalArgumentException e) {
+            logger.warn("Unable to read schema from schema provider [{}]: {}.\n" +
+                    "Query execution will continue without using the schema.",
+                selectionRoot, e.getMessage());
+            logger.trace("Error when reading the schema", e);
           }
-        } catch (IOException | IllegalArgumentException e) {
-          logger.debug("Unable to read schema from schema provider [{}]: {}", (tableName != null ? tableName : location), e.getMessage());
-          logger.trace("Error when reading the schema", e);
         }
         MetadataInfo metadataInfo = MetadataInfo.builder().type(MetadataType.TABLE).build();
         TableMetadata tableMetadata = BaseTableMetadata.builder()
             .tableInfo(TableInfo.UNKNOWN_TABLE_INFO)
             .metadataInfo(metadataInfo)
-            .location(location)
+            .location(selectionRoot)
             .schema(schema)
             .columnsStatistics(columnsStatistics)
             .metadataStatistics(DrillStatsTable.getEstimatedTableStats(statsProvider))
-            .lastModifiedTime(lastModifiedTime)
             .partitionKeys(Collections.emptyMap())
             .build();
 
