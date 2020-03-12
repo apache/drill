@@ -53,7 +53,7 @@ public class RepeatedListColumnMetadata extends AbstractColumnMetadata {
 
   public void childSchema(ColumnMetadata childMetadata) {
     Preconditions.checkState(childSchema == null);
-    Preconditions.checkArgument(childMetadata.mode() == DataMode.REPEATED);
+    Preconditions.checkArgument(childMetadata.isArray());
     childSchema = childMetadata;
   }
 
@@ -95,7 +95,6 @@ public class RepeatedListColumnMetadata extends AbstractColumnMetadata {
 
     // If there is no child, then we don't know the
     // dimensionality.
-
     return childSchema == null ? UNKNOWN_DIMENSIONS
         : childSchema.dimensions() + 1;
   }
@@ -104,5 +103,4 @@ public class RepeatedListColumnMetadata extends AbstractColumnMetadata {
   public String typeString() {
     return "ARRAY<" + childSchema.typeString() + ">";
   }
-
 }

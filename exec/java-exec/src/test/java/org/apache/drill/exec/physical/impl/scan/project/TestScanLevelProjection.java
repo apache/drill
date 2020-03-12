@@ -96,7 +96,9 @@ public class TestScanLevelProjection extends SubOperatorTest {
         .buildSchema();
 
     ProjectionFilter projSet = scanProj.readerProjection();
+    assertTrue(projSet.isProjected("a"));
     assertTrue(projSet.isProjected(readerSchema.metadata("a")));
+    assertFalse(projSet.isProjected("d"));
     assertFalse(projSet.isProjected(readerSchema.metadata("d")));
   }
 
@@ -159,8 +161,11 @@ public class TestScanLevelProjection extends SubOperatorTest {
     // projection type is used here for testing; should not be used by
     // an actual reader.
     ProjectionFilter projSet = scanProj.readerProjection();
+    assertTrue(projSet.isProjected("a"));
     assertTrue(projSet.isProjected(readerSchema.metadata("a")));
+    assertTrue(projSet.isProjected("c"));
     assertTrue(projSet.isProjected(readerSchema.metadata("c")));
+    assertFalse(projSet.isProjected("d"));
     assertFalse(projSet.isProjected(readerSchema.metadata("d")));
   }
 
@@ -204,7 +209,9 @@ public class TestScanLevelProjection extends SubOperatorTest {
         .buildSchema();
 
     ProjectionFilter projSet = scanProj.readerProjection();
+    assertTrue(projSet.isProjected("a"));
     assertTrue(projSet.isProjected(readerSchema.metadata("a")));
+    assertFalse(projSet.isProjected("c"));
     assertFalse(projSet.isProjected(readerSchema.metadata("c")));
   }
 
@@ -273,6 +280,7 @@ public class TestScanLevelProjection extends SubOperatorTest {
         .buildSchema();
 
     ProjectionFilter projSet = scanProj.readerProjection();
+    assertFalse(projSet.isProjected("a"));
     assertFalse(projSet.isProjected(readerSchema.metadata("a")));
   }
 
@@ -381,7 +389,9 @@ public class TestScanLevelProjection extends SubOperatorTest {
     assertSame(providedSchema.metadata("b"), ((UnresolvedColumn) bCol).metadata());
 
     ProjectionFilter projSet = scanProj.readerProjection();
+    assertTrue(projSet.isProjected("a"));
     assertTrue(projSet.isProjected(providedSchema.metadata("a")));
+    assertTrue(projSet.isProjected("b"));
     assertTrue(projSet.isProjected(providedSchema.metadata("b")));
   }
 
@@ -467,6 +477,7 @@ public class TestScanLevelProjection extends SubOperatorTest {
         .buildSchema();
 
     ProjectionFilter projSet = scanProj.readerProjection();
+    assertTrue(projSet.isProjected("b"));
     try {
       projSet.isProjected(readerSchema.metadata("b"));
       fail();
@@ -497,6 +508,7 @@ public class TestScanLevelProjection extends SubOperatorTest {
         .buildSchema();
 
     ProjectionFilter projSet = scanProj.readerProjection();
+    assertTrue(projSet.isProjected("b"));
     try {
       projSet.isProjected(readerSchema.metadata("b"));
       fail();
@@ -529,8 +541,11 @@ public class TestScanLevelProjection extends SubOperatorTest {
         .buildSchema();
 
     ProjectionFilter projSet = scanProj.readerProjection();
+    assertTrue(projSet.isProjected("a"));
     assertTrue(projSet.isProjected(readerSchema.metadata("a")));
+    assertFalse(projSet.isProjected("b"));
     assertFalse(projSet.isProjected(readerSchema.metadata("b")));
+    assertTrue(projSet.isProjected("c"));
     assertTrue(projSet.isProjected(readerSchema.metadata("c")));
   }
 
@@ -560,8 +575,11 @@ public class TestScanLevelProjection extends SubOperatorTest {
         .buildSchema();
 
     ProjectionFilter projSet = scanProj.readerProjection();
+    assertTrue(projSet.isProjected("a"));
     assertTrue(projSet.isProjected(readerSchema.metadata("a")));
+    assertFalse(projSet.isProjected("b"));
     assertFalse(projSet.isProjected(readerSchema.metadata("b")));
+    assertFalse(projSet.isProjected("c"));
     assertFalse(projSet.isProjected(readerSchema.metadata("c")));
   }
 }

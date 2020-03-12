@@ -25,8 +25,8 @@ import org.apache.drill.exec.planner.cost.PluginCost.CheckValid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public interface PluginConstants {
-  Logger logger = LoggerFactory.getLogger(PluginConstants.class);
+public class PluginConstants {
+  static final Logger logger = LoggerFactory.getLogger(PluginConstants.class);
 
   public final static CheckValid<Integer> alwaysValid = new CheckValid<Integer>() {
     @Override
@@ -36,7 +36,7 @@ public interface PluginConstants {
   };
 
   public final static CheckValid<Integer> isNonNegative = new CheckValid<Integer>() {
-     @Override
+    @Override
     public boolean isValid(Integer paramValue) {
       if (paramValue > 0 && paramValue <= Integer.MAX_VALUE) {
         return true;

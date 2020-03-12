@@ -67,6 +67,12 @@ public interface TupleWriter extends ColumnWriter {
   }
 
   /**
+   * Reports whether the given column is projected. Useful for
+   * clients that can simply skip over unprojected columns.
+   */
+  boolean isProjected(String columnName);
+
+  /**
    * Add a column to the tuple (row or map) that backs this writer. Support for
    * this operation depends on whether the client code has registered a listener
    * to implement the addition. Throws an exception if no listener is

@@ -76,6 +76,13 @@ public class RowSetComparison {
    * to construct BigDecimals of the desired precision.
    */
   private MathContext scale = new MathContext(3);
+  /**
+  * Floats and doubles do not compare exactly. This delta is used
+  * by JUnit for such comparisons. This is not a general solution;
+  * it assumes that tests won't create values that require more than
+  * three digits of precision.
+  */
+  private final double delta = 0.001;
 
   /**
    * Tests can skip the first n rows.
@@ -332,6 +339,16 @@ public class RowSetComparison {
         assertEquals(label + " - byte lengths differ", expected.length, actual.length);
         assertTrue(label, Arrays.areEqual(expected, actual));
         break;
+
+      // Double must be handled specially since BigDecimal cannot handle
+      // INF or NAN double values.
+      case DOUBLE:
+        assertEquals(label, ec.getDouble(), ac.getDouble(), delta);
+        break;
+
+      // repeated_contains is claimed to return a boolean,
+      // actually returns a count, but in a bit field. To test
+      // this function, we must treat BIT as an integer.
       default:
         assertEquals(label, getScalar(ec), getScalar(ac));
     }
@@ -352,8 +369,7 @@ public class RowSetComparison {
     }
   }
 
-  private void verifyArray(String label, ArrayReader ea,
-      ArrayReader aa) {
+  private void verifyArray(String label, ArrayReader ea, ArrayReader aa) {
     assertEquals(label + " - array element type", ea.entryType(), aa.entryType());
     assertEquals(label + " - array length", ea.size(), aa.size());
     int i = 0;

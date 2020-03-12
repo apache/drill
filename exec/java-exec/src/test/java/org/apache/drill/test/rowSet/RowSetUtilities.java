@@ -215,6 +215,14 @@ public class RowSetUtilities {
     return array;
   }
 
+  public static boolean[] boolArray(Boolean... elements) {
+    boolean[] array = new boolean[elements.length];
+    for (int i = 0; i < elements.length; i++) {
+      array[i] = elements[i];
+    }
+    return array;
+  }
+
   public static String[] strArray(String... elements) {
     return elements;
   }

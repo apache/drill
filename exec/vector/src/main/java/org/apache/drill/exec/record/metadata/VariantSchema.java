@@ -42,7 +42,7 @@ public class VariantSchema implements VariantMetadata {
     String name = Types.typeKey(type);
     switch (type) {
     case LIST:
-      return new VariantColumnMetadata(name, type, null);
+      return VariantColumnMetadata.list(name);
     case MAP:
       // Although maps do not have a bits vector, when used in a
       // union the map must be marked as optional since the union as a
@@ -175,8 +175,7 @@ public class VariantSchema implements VariantMetadata {
     //
     // Make up a synthetic union column to be used when building
     // a reader.
-
-    return new VariantColumnMetadata("$data", MinorType.UNION, this);
+    return VariantColumnMetadata.unionOf("$data", this);
   }
 
   @Override

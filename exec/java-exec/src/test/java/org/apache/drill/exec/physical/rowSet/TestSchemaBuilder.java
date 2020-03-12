@@ -46,7 +46,6 @@ import org.junit.experimental.categories.Category;
  * lists and repeated lists. This test verifies that it assembles the various
  * pieces correctly for the various nesting combinations.
  */
-
 @Category(RowSetTests.class)
 public class TestSchemaBuilder extends DrillTest {
 
@@ -94,7 +93,6 @@ public class TestSchemaBuilder extends DrillTest {
         .add(aField);
 
     // Internal method, does not return builder itself.
-
     builder.addColumn(bCol);
 
     TupleMetadata schema = builder.buildSchema();
@@ -116,7 +114,6 @@ public class TestSchemaBuilder extends DrillTest {
    * Tests creating a map within a row.
    * Also the basic map add column methods.
    */
-
   @Test
   public void testMapInRow() {
     TupleMetadata schema = new SchemaBuilder()
@@ -164,7 +161,6 @@ public class TestSchemaBuilder extends DrillTest {
    * Test building a union in the top-level schema.
    * Also tests the basic union add type methods.
    */
-
   @Test
   public void testUnionInRow() {
     TupleMetadata schema = new SchemaBuilder()
@@ -205,7 +201,6 @@ public class TestSchemaBuilder extends DrillTest {
   /**
    * Test building a list (of unions) in the top-level schema.
    */
-
   @Test
   public void testListInRow() {
     TupleMetadata schema = new SchemaBuilder()
@@ -252,7 +247,6 @@ public class TestSchemaBuilder extends DrillTest {
   /**
    * Test building a repeated list in the top-level schema.
    */
-
   @Test
   public void testRepeatedListInRow() {
     TupleMetadata schema = new SchemaBuilder()
@@ -320,7 +314,6 @@ public class TestSchemaBuilder extends DrillTest {
    * VarChar in lists, unions or repeated lists because these
    * cases are obscure and seldom (never?) used.
    */
-
   @Test
   public void testVarCharPrecision() {
     TupleMetadata schema = new SchemaBuilder()
@@ -348,7 +341,6 @@ public class TestSchemaBuilder extends DrillTest {
    * broken in Drill, so we don't bother about decimals in unions,
    * lists or repeated lists, though those methods could be added.
    */
-
   @Test
   public void testDecimal() {
     TupleMetadata schema = new SchemaBuilder()
@@ -485,7 +477,6 @@ public class TestSchemaBuilder extends DrillTest {
   /**
    * Verify that the map-in-map plumbing works.
    */
-
   @Test
   public void testMapInMap() {
     TupleMetadata schema = new SchemaBuilder()
@@ -512,7 +503,6 @@ public class TestSchemaBuilder extends DrillTest {
   /**
    * Verify that the union-in-map plumbing works.
    */
-
   @Test
   public void testUnionInMap() {
     TupleMetadata schema = new SchemaBuilder()
@@ -538,7 +528,6 @@ public class TestSchemaBuilder extends DrillTest {
   /**
    * Verify that the repeated list-in-map plumbing works.
    */
-
   @Test
   public void testRepeatedListInMap() {
     TupleMetadata schema = new SchemaBuilder()
@@ -620,7 +609,6 @@ public class TestSchemaBuilder extends DrillTest {
   // and repeated lists key off of the same type code: LIST, so it is
   // ambiguous which is supported. The schema builder muddles through this
   // case, but the rest of the code might not.
-
   @Test
   public void testListInUnion() {
     TupleMetadata schema = new SchemaBuilder()
@@ -645,7 +633,6 @@ public class TestSchemaBuilder extends DrillTest {
   }
 
   // Note: union-in-union not supported in Drill
-
   @Test
   public void testMapInRepeatedList() {
     TupleMetadata schema = new SchemaBuilder()
@@ -675,7 +662,6 @@ public class TestSchemaBuilder extends DrillTest {
    * Test that repeated lists can be nested to provide 3D or
    * higher dimensions.
    */
-
   @Test
   public void testRepeatedListInRepeatedList() {
     TupleMetadata schema = new SchemaBuilder()
@@ -800,7 +786,7 @@ public class TestSchemaBuilder extends DrillTest {
 
   @Test
   public void testStandaloneUnionBuilder() {
-    ColumnMetadata columnMetadata = new UnionBuilder("u", MinorType.VARCHAR)
+    ColumnMetadata columnMetadata = new UnionBuilder("u", MinorType.UNION)
       .addType(MinorType.INT)
       .addType(MinorType.VARCHAR)
       .buildColumn();
@@ -812,5 +798,4 @@ public class TestSchemaBuilder extends DrillTest {
     assertTrue(variantMetadata.hasType(MinorType.INT));
     assertTrue(variantMetadata.hasType(MinorType.VARCHAR));
   }
-
 }
