@@ -242,12 +242,12 @@ public class ScanBatch implements CloseableRecordBatch {
       if (implicitValues != null) {
         String projectMetadataColumn = context.getOptions().getOption(ExecConstants.IMPLICIT_PROJECT_METADATA_COLUMN_LABEL_VALIDATOR);
         if (recordCount > 0) {
-          // Sets the implicit value to false to signal that some results were returned and there is no need for creating an additional record.
-          implicitValues.replace(projectMetadataColumn, Boolean.FALSE.toString());
-        } else if (Boolean.parseBoolean(implicitValues.get(projectMetadataColumn))) {
+          // Sets the implicit value to null to signal that some results were returned and there is no need for creating an additional record.
+          implicitValues.replace(projectMetadataColumn, null);
+        } else if (Boolean.FALSE.toString().equals(implicitValues.get(projectMetadataColumn))) {
           recordCount++;
-          // Sets implicit value to null to avoid affecting resulting count value.
-          implicitValues.put(projectMetadataColumn, null);
+          // Sets implicit value to true to avoid affecting resulting count value.
+          implicitValues.put(projectMetadataColumn, Boolean.TRUE.toString());
         }
       }
       populateImplicitVectors();

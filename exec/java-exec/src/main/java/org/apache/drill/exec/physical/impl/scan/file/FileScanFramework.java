@@ -239,7 +239,8 @@ public class FileScanFramework extends ManagedScanFramework {
     options.implicitColumnOptions().setFiles(paths);
     metadataManager = new ImplicitColumnManager(
         context.getFragmentContext().getOptions(),
-        options.implicitColumnOptions());
+        options.implicitColumnOptions(),
+        dfs);
     builder.withImplicitColumns(metadataManager);
   }
 

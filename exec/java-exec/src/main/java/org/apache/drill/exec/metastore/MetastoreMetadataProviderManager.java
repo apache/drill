@@ -22,11 +22,9 @@ import org.apache.drill.exec.record.metadata.schema.SchemaProvider;
 import org.apache.drill.metastore.MetastoreRegistry;
 import org.apache.drill.metastore.metadata.TableInfo;
 import org.apache.drill.metastore.metadata.TableMetadataProvider;
-import org.apache.drill.metastore.metadata.TableMetadataProviderBuilder;
 
 /**
- * Implementation of {@link MetadataProviderManager} which uses Drill Metastore providers and returns
- * builders for metastore-based {@link TableMetadataProvider} instances.
+ * Implementation of {@link MetadataProviderManager} which uses Drill Metastore providers.
  */
 public class MetastoreMetadataProviderManager implements MetadataProviderManager {
 
@@ -88,13 +86,8 @@ public class MetastoreMetadataProviderManager implements MetadataProviderManager
     return config;
   }
 
-  @Override
-  public TableMetadataProviderBuilder builder(MetadataProviderKind kind) {
-    switch (kind) {
-      case PARQUET_TABLE:
-        return new MetastoreParquetTableMetadataProvider.Builder(this);
-    }
-    return null;
+  public boolean usesMetastore() {
+    return true;
   }
 
   public static class MetastoreMetadataProviderConfig {

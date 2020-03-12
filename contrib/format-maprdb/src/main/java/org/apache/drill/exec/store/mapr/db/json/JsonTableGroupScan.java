@@ -21,7 +21,6 @@ import static org.apache.drill.exec.planner.index.Statistics.ROWCOUNT_HUGE;
 import static org.apache.drill.exec.planner.index.Statistics.ROWCOUNT_UNKNOWN;
 import static org.apache.drill.exec.planner.index.Statistics.AVG_ROWSIZE_UNKNOWN;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,7 +64,7 @@ import org.apache.drill.exec.store.mapr.db.MapRDBSubScanSpec;
 import org.apache.drill.exec.store.mapr.db.MapRDBTableStats;
 import org.apache.drill.exec.store.mapr.db.TabletFragmentInfo;
 import org.apache.drill.exec.util.Utilities;
-import org.apache.drill.exec.metastore.FileSystemMetadataProviderManager;
+import org.apache.drill.exec.metastore.store.FileSystemMetadataProviderManager;
 import org.apache.drill.exec.metastore.MetadataProviderManager;
 import org.apache.drill.metastore.metadata.TableMetadataProvider;
 import org.codehaus.jackson.annotate.JsonCreator;
@@ -124,7 +123,7 @@ public class JsonTableGroupScan extends MapRDBGroupScan implements IndexGroupSca
                             @JsonProperty("format") MapRDBFormatPluginConfig formatPluginConfig,
                             @JsonProperty("columns") List<SchemaPath> columns,
                             @JsonProperty("schema") TupleMetadata schema,
-                            @JacksonInject StoragePluginRegistry pluginRegistry) throws ExecutionSetupException, IOException {
+                            @JacksonInject StoragePluginRegistry pluginRegistry) throws ExecutionSetupException {
     this(userName, pluginRegistry.resolve(storagePluginConfig, AbstractStoragePlugin.class),
         pluginRegistry.resolveFormat(storagePluginConfig, formatPluginConfig, MapRDBFormatPlugin.class),
         scanSpec, columns, new MapRDBStatistics(), FileSystemMetadataProviderManager.getMetadataProviderForSchema(schema));
@@ -132,7 +131,7 @@ public class JsonTableGroupScan extends MapRDBGroupScan implements IndexGroupSca
 
   public JsonTableGroupScan(String userName, AbstractStoragePlugin storagePlugin,
                             MapRDBFormatPlugin formatPlugin, JsonScanSpec scanSpec, List<SchemaPath> columns,
-                            MetadataProviderManager metadataProviderManager) throws IOException {
+                            MetadataProviderManager metadataProviderManager) {
     this(userName, storagePlugin, formatPlugin, scanSpec, columns,
         new MapRDBStatistics(), FileSystemMetadataProviderManager.getMetadataProvider(metadataProviderManager));
   }
@@ -476,8 +475,7 @@ public class JsonTableGroupScan extends MapRDBGroupScan implements IndexGroupSca
 
   @Override
   public RestrictedJsonTableGroupScan getRestrictedScan(List<SchemaPath> columns) {
-    try {
-      RestrictedJsonTableGroupScan newScan = new RestrictedJsonTableGroupScan(this.getUserName(),
+    RestrictedJsonTableGroupScan newScan = new RestrictedJsonTableGroupScan(this.getUserName(),
         (FileSystemPlugin) this.getStoragePlugin(),
         this.getFormatPlugin(),
         this.getScanSpec(),
@@ -485,11 +483,8 @@ public class JsonTableGroupScan extends MapRDBGroupScan implements IndexGroupSca
         this.getStatistics(),
         this.getSchema());
 
-      newScan.columns = columns;
-      return newScan;
-    } catch (IOException e) {
-      throw new DrillRuntimeException("Error happened when constructing RestrictedJsonTableGroupScan", e);
-    }
+    newScan.columns = columns;
+    return newScan;
   }
 
   /**

@@ -107,16 +107,9 @@ public class MetadataAggregateHelper {
         addCollectListCall(fieldsList);
       }
       addMergeSchemaCall();
-      String locationField = MetastoreAnalyzeConstants.LOCATION_FIELD;
-
-      if (context.createNewAggregations()) {
-        locationField = columnNamesOptions.fullyQualifiedName();
-      }
 
       if (context.metadataLevel() == MetadataType.SEGMENT) {
         addParentLocationAggCall();
-      } else {
-        addLocationAggCall(locationField);
       }
     }
 
@@ -255,8 +248,19 @@ public class MetadataAggregateHelper {
    */
   private void addMetadataAggregateCalls() {
     AnalyzeColumnUtils.META_STATISTICS_FUNCTIONS.forEach((statisticsKind, sqlKind) -> {
+      // constructs "case when projectMetadataColumn is null then 1 else null end" call
+      // to avoid affecting metadata rows into count results
+      LogicalExpression caseExpr = IfExpression.newBuilder()
+          .setIfCondition(new IfExpression.IfCondition(
+              new FunctionCall(
+                  "isnull",
+                  Collections.singletonList(FieldReference.getWithQuotedRef(columnNamesOptions.projectMetadataColumn())),
+                  ExpressionPosition.UNKNOWN), ValueExpressions.getBigInt(1)))
+          .setElse(NullExpression.INSTANCE)
+          .build();
+
       LogicalExpression call = new FunctionCall(sqlKind.name(),
-          Collections.singletonList(FieldReference.getWithQuotedRef(columnNamesOptions.projectMetadataColumn())), ExpressionPosition.UNKNOWN);
+          Collections.singletonList(caseExpr), ExpressionPosition.UNKNOWN);
       valueExpressions.add(
           new NamedExpression(call,
               FieldReference.getWithQuotedRef(AnalyzeColumnUtils.getMetadataStatisticsFieldName(statisticsKind))));
@@ -314,12 +318,12 @@ public class MetadataAggregateHelper {
       if (interestingColumns == null || interestingColumns.contains(fieldRef)) {
         // collect statistics for all or only interesting columns if they are specified
         AnalyzeColumnUtils.COLUMN_STATISTICS_FUNCTIONS.forEach((statisticsKind, sqlKind) -> {
-          // constructs "case when is not null projectMetadataColumn then column1 else null end" call
+          // constructs "case when projectMetadataColumn is null then column1 else null end" call
           // to avoid using default values for required columns when data for empty result is obtained
           LogicalExpression caseExpr = IfExpression.newBuilder()
               .setIfCondition(new IfExpression.IfCondition(
                   new FunctionCall(
-                      "isnotnull",
+                      "isnull",
                       Collections.singletonList(FieldReference.getWithQuotedRef(columnNamesOptions.projectMetadataColumn())),
                       ExpressionPosition.UNKNOWN), fieldRef))
               .setElse(NullExpression.INSTANCE)

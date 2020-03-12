@@ -17,9 +17,9 @@
  */
 package org.apache.drill.exec.store.hive;
 
+import org.apache.drill.exec.metastore.MetadataProviderManager;
 import org.apache.drill.exec.store.dfs.ReadEntryWithPath;
 import org.apache.drill.exec.store.parquet.BaseParquetMetadataProvider;
-import org.apache.drill.exec.store.parquet.ParquetReaderConfig;
 import org.apache.drill.exec.store.parquet.metadata.Metadata;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -45,43 +45,35 @@ public class HiveParquetTableMetadataProvider extends BaseParquetMetadataProvide
   private final HiveStoragePlugin hiveStoragePlugin;
   private final HivePartitionHolder hivePartitionHolder;
 
-  public HiveParquetTableMetadataProvider(List<ReadEntryWithPath> entries,
-                                         HivePartitionHolder hivePartitionHolder,
-                                         HiveStoragePlugin hiveStoragePlugin,
-                                         ParquetReaderConfig readerConfig) throws IOException {
-    super(entries, readerConfig);
-    this.hiveStoragePlugin = hiveStoragePlugin;
-    this.hivePartitionHolder = hivePartitionHolder;
+  private HiveParquetTableMetadataProvider(Builder builder) throws IOException {
+    super(builder);
 
-    init(null);
-  }
+    this.hiveStoragePlugin = builder.hiveStoragePlugin;
+    this.hivePartitionHolder = builder.hivePartitionHolder != null
+        ? builder.hivePartitionHolder
+        : new HivePartitionHolder();
 
-  public HiveParquetTableMetadataProvider(HiveStoragePlugin hiveStoragePlugin,
-                                          List<HiveMetadataProvider.LogicalInputSplit> logicalInputSplits,
-                                          ParquetReaderConfig readerConfig) throws IOException {
-    super(null, readerConfig);
-    this.hiveStoragePlugin = hiveStoragePlugin;
-    this.hivePartitionHolder = new HivePartitionHolder();
+    if (builder.logicalInputSplits != null) {
+      for (HiveMetadataProvider.LogicalInputSplit logicalInputSplit : builder.logicalInputSplits) {
+        Iterator<InputSplit> iterator = logicalInputSplit.getInputSplits().iterator();
+        // logical input split contains list of splits by files
+        // we need to read path of only one to get file path
+        assert iterator.hasNext();
+        InputSplit split = iterator.next();
+        assert split instanceof FileSplit;
+        FileSplit fileSplit = (FileSplit) split;
+        Path finalPath = fileSplit.getPath();
+        Path pathString = Path.getPathWithoutSchemeAndAuthority(finalPath);
+        entries.add(new ReadEntryWithPath(pathString));
 
-    for (HiveMetadataProvider.LogicalInputSplit logicalInputSplit : logicalInputSplits) {
-      Iterator<InputSplit> iterator = logicalInputSplit.getInputSplits().iterator();
-      // logical input split contains list of splits by files
-      // we need to read path of only one to get file path
-      assert iterator.hasNext();
-      InputSplit split = iterator.next();
-      assert split instanceof FileSplit;
-      FileSplit fileSplit = (FileSplit) split;
-      Path finalPath = fileSplit.getPath();
-      Path pathString = Path.getPathWithoutSchemeAndAuthority(finalPath);
-      entries.add(new ReadEntryWithPath(pathString));
-
-      // store partition values per path
-      Partition partition = logicalInputSplit.getPartition();
-      if (partition != null) {
-        hivePartitionHolder.add(pathString, partition.getValues());
+        // store partition values per path
+        Partition partition = logicalInputSplit.getPartition();
+        if (partition != null) {
+          hivePartitionHolder.add(pathString, partition.getValues());
+        }
       }
     }
-    init(null);
+    init((BaseParquetMetadataProvider) builder.metadataProviderManager().getTableMetadataProvider());
   }
 
   public HivePartitionHolder getHivePartitionHolder() {
@@ -100,5 +92,40 @@ public class HiveParquetTableMetadataProvider extends BaseParquetMetadataProvide
       fileStatusConfMap.put(fs.getFileStatus(Path.getPathWithoutSchemeAndAuthority(path)), fs);
     }
     parquetTableMetadata = Metadata.getParquetTableMetadata(fileStatusConfMap, readerConfig);
+  }
+
+  public static class Builder extends BaseParquetMetadataProvider.Builder<Builder> {
+    private HiveStoragePlugin hiveStoragePlugin;
+    private HivePartitionHolder hivePartitionHolder;
+    private List<HiveMetadataProvider.LogicalInputSplit> logicalInputSplits;
+
+    public Builder(MetadataProviderManager source) {
+      super(source);
+    }
+
+    protected Builder withHiveStoragePlugin(HiveStoragePlugin hiveStoragePlugin) {
+      this.hiveStoragePlugin = hiveStoragePlugin;
+      return self();
+    }
+
+    protected Builder withHivePartitionHolder(HivePartitionHolder hivePartitionHolder) {
+      this.hivePartitionHolder = hivePartitionHolder;
+      return self();
+    }
+
+    protected Builder withLogicalInputSplits(List<HiveMetadataProvider.LogicalInputSplit> logicalInputSplits) {
+      this.logicalInputSplits = logicalInputSplits;
+      return self();
+    }
+
+    @Override
+    protected Builder self() {
+      return this;
+    }
+
+    @Override
+    public HiveParquetTableMetadataProvider build() throws IOException {
+      return new HiveParquetTableMetadataProvider(this);
+    }
   }
 }

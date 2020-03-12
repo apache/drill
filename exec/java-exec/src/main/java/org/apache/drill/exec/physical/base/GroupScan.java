@@ -188,4 +188,13 @@ public interface GroupScan extends Scan, HasAffinity {
    */
   @JsonIgnore
   AnalyzeInfoProvider getAnalyzeInfoProvider();
+
+  /**
+   * Checks whether this group scan supports filter push down.
+   *
+   * @return {@code true} if this group scan supports filter push down,
+   * {@code false} otherwise
+   */
+  @JsonIgnore
+  boolean supportsFilterPushDown();
 }

@@ -34,9 +34,11 @@ import org.apache.drill.exec.physical.resultSet.ResultVectorCache;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.server.options.OptionSet;
-import org.apache.drill.exec.store.ColumnExplorer.ImplicitFileColumns;
+import org.apache.drill.exec.store.ColumnExplorer;
+import org.apache.drill.exec.store.ColumnExplorer.ImplicitFileColumn;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.shaded.guava.com.google.common.base.Strings;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
@@ -81,40 +83,36 @@ public class ImplicitColumnManager implements MetadataManager, ReaderProjectionR
     protected boolean useLegacyWildcardExpansion = true;
 
     /**
-      * Specify the selection root for a directory scan, if any.
-      * Used to populate partition columns. Also, specify the maximum
-      * partition depth.
-      *
-      * @param rootPath Hadoop file path for the directory
-      * @param partitionDepth maximum partition depth across all files
-      * within this logical scan operator (files in this scan may be
-      * shallower)
-      */
+     * Specify the selection root for a directory scan, if any.
+     * Used to populate partition columns. Also, specify the maximum
+     * partition depth.
+     *
+     * @param rootPath Hadoop file path for the directory
+     */
+    public void setSelectionRoot(Path rootPath) {
+      this.rootDir = rootPath;
+    }
 
-     public void setSelectionRoot(Path rootPath) {
-       this.rootDir = rootPath;
-     }
+    public void setPartitionDepth(int partitionDepth) {
+      this.partitionCount = partitionDepth;
+    }
 
-     public void setPartitionDepth(int partitionDepth) {
-       this.partitionCount = partitionDepth;
-     }
-
-     public void setFiles(List<Path> files) {
+    public void setFiles(List<Path> files) {
       this.files = files;
     }
 
-     /**
-      * Indicates whether to expand partition columns when the query contains a wildcard.
-      * Supports queries such as the following:<code><pre>
-      * select * from dfs.`partitioned-dir`</pre></code>
-      * In which the output columns will be (columns, dir0) if the partitioned directory
-      * has one level of nesting.
-      *
-      * See {@link TestImplicitFileColumns#testImplicitColumns}
-      */
-     public void useLegacyWildcardExpansion(boolean flag) {
-       useLegacyWildcardExpansion = flag;
-     }
+    /**
+     * Indicates whether to expand partition columns when the query contains a wildcard.
+     * Supports queries such as the following:<code><pre>
+     * select * from dfs.`partitioned-dir`</pre></code>
+     * In which the output columns will be (columns, dir0) if the partitioned directory
+     * has one level of nesting.
+     * <p>
+     * See {@code TestImplicitFileColumns#testImplicitColumns}
+     */
+    public void useLegacyWildcardExpansion(boolean flag) {
+      useLegacyWildcardExpansion = flag;
+    }
   }
 
   // Input
@@ -137,31 +135,24 @@ public class ImplicitColumnManager implements MetadataManager, ReaderProjectionR
   private final List<MetadataColumn> metadataColumns = new ArrayList<>();
   private ConstantColumnLoader loader;
   private VectorContainer outputContainer;
+  private FileSystem fs;
 
   /**
-   * Specifies whether to plan based on the legacy meaning of "*". See
-   * <a href="https://issues.apache.org/jira/browse/DRILL-5542">DRILL-5542</a>.
-   * If true, then the star column <i>includes</i> implicit and partition
-   * columns. If false, then star matches <i>only</i> table columns.
+   * Constructor for {@link ImplicitColumnManager} for managing the insertion of file metadata
+   * (AKA "implicit" and partition) columns.
    *
    * @param optionManager access to the options for this query; used
-   * too look up custom names for the metadata columns
-   * @param useLegacyWildcardExpansion true to use the legacy plan, false to use the revised
-   * semantics
-   * @param rootDir when scanning multiple files, the root directory for
-   * the file set. Unfortunately, the planner is ambiguous on this one; if the
-   * query is against a single file, then this variable holds the name of that
-   * one file, rather than a directory
-   * @param files the set of files to scan. Used to compute the maximum partition
-   * depth across all readers in this fragment
+   *                      too look up custom names for the metadata columns
+   * @param config        implicit column options
+   * @param fs            file system
    */
-
   public ImplicitColumnManager(OptionSet optionManager,
-      ImplicitColumnOptions config) {
+      ImplicitColumnOptions config, FileSystem fs) {
     this.options = config;
+    this.fs = fs;
 
     partitionDesignator = optionManager.getString(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL);
-    for (ImplicitFileColumns e : ImplicitFileColumns.values()) {
+    for (ImplicitFileColumn e : ColumnExplorer.getImplicitFileColumns()) {
       String colName = optionManager.getString(e.optionName());
       if (!Strings.isNullOrEmpty(colName)) {
         FileMetadataColumnDefn defn = new FileMetadataColumnDefn(colName, e);
@@ -199,6 +190,19 @@ public class ImplicitColumnManager implements MetadataManager, ReaderProjectionR
     }
   }
 
+  /**
+   * Constructor for {@link ImplicitColumnManager} for managing the insertion of file metadata
+   * (AKA "implicit" and partition) columns.
+   *
+   * @param optionManager access to the options for this query; used
+   *                      too look up custom names for the metadata columns
+   * @param config        implicit column options
+   */
+  public ImplicitColumnManager(OptionSet optionManager,
+      ImplicitColumnOptions config) {
+    this(optionManager, config, null);
+  }
+
   protected ImplicitColumnOptions options() { return options; }
 
   private int computeMaxPartition(List<Path> files) {
@@ -223,14 +227,14 @@ public class ImplicitColumnManager implements MetadataManager, ReaderProjectionR
    * option to do so is set.</li>
    * </ul>
    *
-   * @see {@link #useLegacyWildcardExpansion}
+   * @see ImplicitColumnOptions#useLegacyWildcardExpansion
    */
 
   @Override
   public ScanProjectionParser projectionParser() { return parser; }
 
   public FileMetadata fileMetadata(Path filePath) {
-    return new FileMetadata(filePath, scanRootDir);
+    return new FileMetadata(filePath, scanRootDir, fs);
   }
 
   public boolean hasImplicitCols() { return parser.hasImplicitCols(); }

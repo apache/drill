@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.mapr.db.json;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.NavigableMap;
 
@@ -26,7 +25,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.exec.metastore.FileSystemMetadataProviderManager;
+import org.apache.drill.exec.metastore.store.FileSystemMetadataProviderManager;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
@@ -61,7 +60,7 @@ public class RestrictedJsonTableGroupScan extends JsonTableGroupScan {
                                       @JsonProperty("scanSpec") JsonScanSpec scanSpec, /* scan spec of the original table */
                                       @JsonProperty("columns") List<SchemaPath> columns,
                                       @JsonProperty("") MapRDBStatistics statistics,
-                                      @JsonProperty("schema") TupleMetadata schema) throws IOException {
+                                      @JsonProperty("schema") TupleMetadata schema) {
     super(userName, storagePlugin, formatPlugin, scanSpec, columns,
         statistics, FileSystemMetadataProviderManager.getMetadataProviderForSchema(schema));
   }

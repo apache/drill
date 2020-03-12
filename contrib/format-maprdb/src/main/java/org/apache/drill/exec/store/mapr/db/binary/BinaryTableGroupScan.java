@@ -19,7 +19,6 @@ package org.apache.drill.exec.store.mapr.db.binary;
 
 import static org.apache.drill.exec.store.mapr.db.util.CommonFns.isNullOrEmpty;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.TreeMap;
 
@@ -47,7 +46,7 @@ import org.apache.drill.exec.store.mapr.db.MapRDBSubScan;
 import org.apache.drill.exec.store.mapr.db.MapRDBSubScanSpec;
 import org.apache.drill.exec.store.mapr.db.MapRDBTableStats;
 import org.apache.drill.exec.store.mapr.db.TabletFragmentInfo;
-import org.apache.drill.exec.metastore.FileSystemMetadataProviderManager;
+import org.apache.drill.exec.metastore.store.FileSystemMetadataProviderManager;
 import org.apache.drill.exec.metastore.MetadataProviderManager;
 import org.apache.drill.metastore.metadata.TableMetadataProvider;
 import org.apache.hadoop.conf.Configuration;
@@ -86,7 +85,7 @@ public class BinaryTableGroupScan extends MapRDBGroupScan implements DrillHBaseC
                               @JsonProperty("format") MapRDBFormatPluginConfig formatPluginConfig,
                               @JsonProperty("columns") List<SchemaPath> columns,
                               @JsonProperty("schema") TupleMetadata schema,
-                              @JacksonInject StoragePluginRegistry pluginRegistry) throws ExecutionSetupException, IOException {
+                              @JacksonInject StoragePluginRegistry pluginRegistry) throws ExecutionSetupException {
     this(userName, pluginRegistry.resolve(storagePluginConfig, AbstractStoragePlugin.class),
         pluginRegistry.resolveFormat(storagePluginConfig, formatPluginConfig, MapRDBFormatPlugin.class),
         scanSpec, columns, null /* tableStats */, FileSystemMetadataProviderManager.getMetadataProviderForSchema(schema));
@@ -94,7 +93,7 @@ public class BinaryTableGroupScan extends MapRDBGroupScan implements DrillHBaseC
 
   public BinaryTableGroupScan(String userName, AbstractStoragePlugin storagePlugin,
       MapRDBFormatPlugin formatPlugin, HBaseScanSpec scanSpec, List<SchemaPath> columns,
-      MetadataProviderManager metadataProviderManager) throws IOException {
+      MetadataProviderManager metadataProviderManager) {
     this(userName, storagePlugin, formatPlugin, scanSpec,
         columns, null /* tableStats */, FileSystemMetadataProviderManager.getMetadataProvider(metadataProviderManager));
   }

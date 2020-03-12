@@ -136,7 +136,7 @@ public class ShimBatchReader implements RowBatchReader, NegotiatorListener {
     // Having a correct row count, even if 0, is important to
     // the scan operator.
 
-    readerOrchestrator.endBatch();
+    readerOrchestrator.endBatch(eof);
 
     // Return EOF (false) only when the reader reports EOF
     // and the result set loader has drained its rows from either
