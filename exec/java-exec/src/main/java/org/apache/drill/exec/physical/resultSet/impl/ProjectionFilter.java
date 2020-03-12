@@ -43,6 +43,8 @@ public interface ProjectionFilter {
   ProjectionFilter PROJECT_ALL = new ImplicitProjectionFilter(true);
   ProjectionFilter PROJECT_NONE = new ImplicitProjectionFilter(false);
 
+  boolean isProjected(String colName);
+
   boolean isProjected(ColumnMetadata columnSchema);
 
   ProjectionFilter mapProjection(boolean isColProjected, String colName);
@@ -81,6 +83,11 @@ public interface ProjectionFilter {
     }
 
     @Override
+    public boolean isProjected(String name) {
+      return projectAll;
+    }
+
+    @Override
     public boolean isProjected(ColumnMetadata columnSchema) {
       return projectAll ? !Projections.excludeFromWildcard(columnSchema) : false;
     }
@@ -108,6 +115,11 @@ public interface ProjectionFilter {
     public DirectProjectionFilter(RequestedTuple projectionSet, CustomErrorContext errorContext) {
       this.projectionSet = projectionSet;
       this.errorContext = errorContext;
+    }
+
+    @Override
+    public boolean isProjected(String colName) {
+      return projectionSet.isProjected(colName);
     }
 
     @Override
@@ -151,6 +163,12 @@ public interface ProjectionFilter {
       this.providedSchema = providedSchema;
       this.errorContext = errorContext;
       this.isStrict = isStrict;
+    }
+
+    @Override
+    public boolean isProjected(String name) {
+      ColumnMetadata providedCol = providedSchema.metadata(name);
+      return providedCol != null || !isStrict;
     }
 
     @Override
@@ -207,6 +225,11 @@ public interface ProjectionFilter {
     public CompoundProjectionFilter(ProjectionFilter filter1, ProjectionFilter filter2) {
       this.filter1 = filter1;
       this.filter2 = filter2;
+    }
+
+    @Override
+    public boolean isProjected(String name) {
+      return filter1.isProjected(name) && filter2.isProjected(name);
     }
 
     @Override

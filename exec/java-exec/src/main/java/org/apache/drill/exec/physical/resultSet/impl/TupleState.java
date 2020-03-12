@@ -93,6 +93,153 @@ public abstract class TupleState extends ContainerState
   implements AbstractTupleWriter.TupleWriterListener {
 
   /**
+   * The set of columns added via the writers: includes both projected
+   * and unprojected columns. (The writer is free to add columns that the
+   * query does not project; the result set loader creates a dummy column
+   * and dummy writer, then does not project the column to the output.)
+   */
+  protected final List<ColumnState> columns = new ArrayList<>();
+
+  /**
+   * Internal writer schema that matches the column list.
+   */
+  protected final TupleMetadata schema = new TupleSchema();
+
+  /**
+   * Metadata description of the output container (for the row) or map
+   * (for map or repeated map.)
+   * <p>
+   * Rows and maps have an output schema which may differ from the internal schema.
+   * The output schema excludes unprojected columns. It also excludes
+   * columns added in an overflow row.
+   * <p>
+   * The output schema is built slightly differently for maps inside a
+   * union vs. normal top-level (or nested) maps. Maps inside a union do
+   * not defer columns because of the muddy semantics (and infrequent use)
+   * of unions.
+   */
+  protected TupleMetadata outputSchema;
+
+  private int prevHarvestIndex = -1;
+
+  protected TupleState(LoaderInternals events,
+      ResultVectorCache vectorCache,
+      ProjectionFilter projectionSet) {
+    super(events, vectorCache, projectionSet);
+  }
+
+  protected void bindOutputSchema(TupleMetadata outputSchema) {
+    this.outputSchema = outputSchema;
+  }
+
+  /**
+   * Returns an ordered set of the columns which make up the tuple.
+   * Column order is the same as that defined by the map's schema,
+   * to allow indexed access. New columns always appear at the end
+   * of the list to preserve indexes.
+   *
+   * @return ordered list of column states for the columns within
+   * this tuple
+   */
+  public List<ColumnState> columns() { return columns; }
+
+  public TupleMetadata schema() { return writer().tupleSchema(); }
+
+  public abstract AbstractTupleWriter writer();
+
+  @Override
+  public boolean isProjected(String colName) {
+    return projectionSet.isProjected(colName);
+  }
+
+  @Override
+  public ObjectWriter addColumn(TupleWriter tupleWriter, MaterializedField column) {
+    return addColumn(tupleWriter, MetadataUtils.fromField(column));
+  }
+
+  @Override
+  public ObjectWriter addColumn(TupleWriter tupleWriter, ColumnMetadata columnSchema) {
+    return BuildFromSchema.instance().buildColumn(this, columnSchema);
+  }
+
+  @Override
+  protected void addColumn(ColumnState colState) {
+    columns.add(colState);
+  }
+
+  public boolean hasProjections() {
+    for (final ColumnState colState : columns) {
+      if (colState.isProjected()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  @Override
+  protected Collection<ColumnState> columnStates() {
+    return columns;
+  }
+
+  protected void updateOutput(int curSchemaVersion) {
+
+    // Scan all columns
+    for (int i = 0; i < columns.size(); i++) {
+      final ColumnState colState = columns.get(i);
+
+      // Ignore unprojected columns
+      if (! colState.writer().isProjected()) {
+        continue;
+      }
+
+      // If this is a new column added since the last output, then we may have
+      // to add the column to this output. For the row itself, and for maps
+      // outside of unions, If the column was added after the output schema
+      // version cutoff, skip that column for now. But, if this tuple is
+      // within a union, then we always add all columns because union
+      // semantics are too muddy to play the deferred column game. Further,
+      // all columns in a map within a union must be nullable, so we know we
+      // can fill the column with nulls. (Something that is not true for
+      // normal maps.)
+
+      if (i > prevHarvestIndex && (! isVersioned() || colState.addVersion <= curSchemaVersion)) {
+        colState.buildOutput(this);
+        prevHarvestIndex = i;
+      }
+
+      // If the column is a map or a dict, then we have to recurse into it
+      // itself. If the map is inside a union, then the map's vectors
+      // already appear in the map vector, but we still must update the
+      // output schema.
+
+      if (colState.schema().isMap()) {
+        final MapState childMap = ((MapColumnState) colState).mapState();
+        childMap.updateOutput(curSchemaVersion);
+      } else if (colState.schema().isDict()) {
+        final DictState child = ((DictColumnState) colState).dictState();
+        child.updateOutput(curSchemaVersion);
+      }
+    }
+  }
+
+  public abstract int addOutputColumn(ValueVector vector, ColumnMetadata colSchema);
+
+  public TupleMetadata outputSchema() { return outputSchema; }
+
+  public void dump(HierarchicalFormatter format) {
+    format
+      .startObject(this)
+      .attributeArray("columns");
+    for (int i = 0; i < columns.size(); i++) {
+      format.element(i);
+      columns.get(i).dump(format);
+    }
+    format
+      .endArray()
+      .endObject();
+  }
+
+  /**
    * Represents a map column (either single or repeated). Includes maps that
    * are top-level, nested within other maps, or nested inside a union.
    * Schema management is a bit complex:
@@ -413,149 +560,6 @@ public abstract class TupleState extends ContainerState
       return (AbstractTupleWriter) parentColumn.writer().array().tuple();
     }
   }
-
-  /**
-   * The set of columns added via the writers: includes both projected
-   * and unprojected columns. (The writer is free to add columns that the
-   * query does not project; the result set loader creates a dummy column
-   * and dummy writer, then does not project the column to the output.)
-   */
-  protected final List<ColumnState> columns = new ArrayList<>();
-
-  /**
-   * Internal writer schema that matches the column list.
-   */
-  protected final TupleMetadata schema = new TupleSchema();
-
-  /**
-   * Metadata description of the output container (for the row) or map
-   * (for map or repeated map.)
-   * <p>
-   * Rows and maps have an output schema which may differ from the internal schema.
-   * The output schema excludes unprojected columns. It also excludes
-   * columns added in an overflow row.
-   * <p>
-   * The output schema is built slightly differently for maps inside a
-   * union vs. normal top-level (or nested) maps. Maps inside a union do
-   * not defer columns because of the muddy semantics (and infrequent use)
-   * of unions.
-   */
-  protected TupleMetadata outputSchema;
-
-  private int prevHarvestIndex = -1;
-
-  protected TupleState(LoaderInternals events,
-      ResultVectorCache vectorCache,
-      ProjectionFilter projectionSet) {
-    super(events, vectorCache, projectionSet);
-  }
-
-  protected void bindOutputSchema(TupleMetadata outputSchema) {
-    this.outputSchema = outputSchema;
-  }
-
-  /**
-   * Returns an ordered set of the columns which make up the tuple.
-   * Column order is the same as that defined by the map's schema,
-   * to allow indexed access. New columns always appear at the end
-   * of the list to preserve indexes.
-   *
-   * @return ordered list of column states for the columns within
-   * this tuple
-   */
-  public List<ColumnState> columns() { return columns; }
-
-  public TupleMetadata schema() { return writer().tupleSchema(); }
-
-  public abstract AbstractTupleWriter writer();
-
-  @Override
-  public ObjectWriter addColumn(TupleWriter tupleWriter, MaterializedField column) {
-    return addColumn(tupleWriter, MetadataUtils.fromField(column));
-  }
-
-  @Override
-  public ObjectWriter addColumn(TupleWriter tupleWriter, ColumnMetadata columnSchema) {
-    return BuildFromSchema.instance().buildColumn(this, columnSchema);
-  }
-
-  @Override
-  protected void addColumn(ColumnState colState) {
-    columns.add(colState);
-  }
-
-  public boolean hasProjections() {
-    for (final ColumnState colState : columns) {
-      if (colState.isProjected()) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  @Override
-  protected Collection<ColumnState> columnStates() {
-    return columns;
-  }
-
-  protected void updateOutput(int curSchemaVersion) {
-
-    // Scan all columns
-    for (int i = 0; i < columns.size(); i++) {
-      final ColumnState colState = columns.get(i);
-
-      // Ignore unprojected columns
-      if (! colState.writer().isProjected()) {
-        continue;
-      }
-
-      // If this is a new column added since the lastoutput, then we may have
-      // to add the column to this output. For the row itself, and for maps
-      // outside of unions, If the column wasadded after the output schema
-      // version cutoff, skip that column for now. But, if this tuple is
-      // within a union, then we always add all columns because union
-      // semantics are too muddy to play the deferred column game. Further,
-      // all columns in a map within a union must be nullable, so we know we
-      // can fill the column with nulls. (Something that is not true for
-      // normal maps.)
-
-      if (i > prevHarvestIndex && (! isVersioned() || colState.addVersion <= curSchemaVersion)) {
-        colState.buildOutput(this);
-        prevHarvestIndex = i;
-      }
-
-      // If the column is a map or a dict, then we have to recurse into it
-      // itself. If the map is inside a union, then the map's vectors
-      // already appear in the map vector, but we still must update the
-      // output schema.
-
-      if (colState.schema().isMap()) {
-        final MapState childMap = ((MapColumnState) colState).mapState();
-        childMap.updateOutput(curSchemaVersion);
-      } else if (colState.schema().isDict()) {
-        final DictState child = ((DictColumnState) colState).dictState();
-        child.updateOutput(curSchemaVersion);
-      }
-    }
-  }
-
-  public abstract int addOutputColumn(ValueVector vector, ColumnMetadata colSchema);
-
-  public TupleMetadata outputSchema() { return outputSchema; }
-
-  public void dump(HierarchicalFormatter format) {
-    format
-      .startObject(this)
-      .attributeArray("columns");
-    for (int i = 0; i < columns.size(); i++) {
-      format.element(i);
-      columns.get(i).dump(format);
-    }
-    format
-      .endArray()
-      .endObject();
-  }
-
   public static class DictColumnState extends BaseContainerColumnState {
     protected final DictState dictState;
     protected boolean isVersioned;

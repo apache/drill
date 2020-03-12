@@ -72,7 +72,7 @@ public class ValueParser extends AbstractElementParser implements ValueHost {
           listener.onString(tokenizer.stringValue());
           break;
         case VALUE_EMBEDDED_OBJECT:
-          listener.onEmbedddObject(tokenizer.stringValue());
+          listener.onEmbeddedObject(tokenizer.stringValue());
         default:
           // Won't get here: the Jackson parser catches
           // errors.

@@ -136,6 +136,10 @@ public class MetadataUtils {
     return new MapColumnMetadata(name, DataMode.REQUIRED, (TupleSchema) schema);
   }
 
+  public static MapColumnMetadata newMap(String name) {
+    return newMap(name, new TupleSchema());
+  }
+
   public static DictColumnMetadata newDict(MaterializedField field) {
     return new DictColumnMetadata(field, fromFields(field.getChildren()));
   }
@@ -162,15 +166,15 @@ public class MetadataUtils {
   }
 
   public static VariantColumnMetadata newVariant(MaterializedField field, VariantSchema schema) {
-    return new VariantColumnMetadata(field, schema);
+    return VariantColumnMetadata.unionOf(field, schema);
   }
 
   public static VariantColumnMetadata newVariant(String name, DataMode cardinality) {
     switch (cardinality) {
     case OPTIONAL:
-      return new VariantColumnMetadata(name, MinorType.UNION, new VariantSchema());
+      return VariantColumnMetadata.union(name);
     case REPEATED:
-      return new VariantColumnMetadata(name, MinorType.LIST, new VariantSchema());
+      return VariantColumnMetadata.list(name);
     default:
       throw new IllegalArgumentException();
     }
@@ -182,6 +186,10 @@ public class MetadataUtils {
 
   public static ColumnMetadata newMapArray(String name, TupleMetadata schema) {
     return new MapColumnMetadata(name, DataMode.REPEATED, (TupleSchema) schema);
+  }
+
+  public static ColumnMetadata newMapArray(String name) {
+    return newMapArray(name, new TupleSchema());
   }
 
   public static DictColumnMetadata newDictArray(String name) {

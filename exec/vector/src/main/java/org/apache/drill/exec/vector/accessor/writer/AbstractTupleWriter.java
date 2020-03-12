@@ -101,13 +101,11 @@ import org.slf4j.LoggerFactory;
  *     then that row's values are discarded. Then, the batch is ended.</li>
  * </ul>
  */
-
 public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
 
   /**
    * Generic object wrapper for the tuple writer.
    */
-
   public static class TupleObjectWriter extends AbstractObjectWriter {
 
     protected final AbstractTupleWriter tupleWriter;
@@ -141,12 +139,13 @@ public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
    * tuple writer. If no listener is bound, then an attempt to add a column
    * throws an exception.
    */
-
   public static interface TupleWriterListener {
 
     ObjectWriter addColumn(TupleWriter tuple, ColumnMetadata column);
 
     ObjectWriter addColumn(TupleWriter tuple, MaterializedField field);
+
+    boolean isProjected(String columnName);
   }
 
   /**
@@ -154,7 +153,6 @@ public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
    * on the call to <tt>nextElement().</tt> The increment
    * is done at the tuple level, not the column level.
    */
-
   static class MemberWriterIndex implements ColumnWriterIndex {
     private final ColumnWriterIndex baseIndex;
 
@@ -184,7 +182,7 @@ public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
   protected final List<AbstractObjectWriter> writers;
   protected ColumnWriterIndex vectorIndex;
   protected ColumnWriterIndex childIndex;
-  protected AbstractTupleWriter.TupleWriterListener listener;
+  protected TupleWriterListener listener;
   protected State state = State.IDLE;
 
   protected AbstractTupleWriter(TupleMetadata schema, List<AbstractObjectWriter> writers) {
@@ -225,7 +223,6 @@ public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
    *
    * @param colWriter the column writer to add
    */
-
   public int addColumnWriter(AbstractObjectWriter colWriter) {
     assert writers.size() == tupleSchema.size();
     final int colIndex = tupleSchema.addColumn(colWriter.schema());
@@ -238,6 +235,12 @@ public abstract class AbstractTupleWriter implements TupleWriter, WriterEvents {
       }
     }
     return colIndex;
+  }
+
+  @Override
+  public boolean isProjected(String columnName) {
+    return listener == null ? true
+        : listener.isProjected(columnName);
   }
 
   @Override

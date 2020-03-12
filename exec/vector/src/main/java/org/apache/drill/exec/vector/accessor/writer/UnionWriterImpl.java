@@ -346,6 +346,8 @@ public class UnionWriterImpl implements VariantWriter, WriterEvents {
   public void setObject(Object value) {
     if (value == null) {
       setNull();
+    } else if (value instanceof Boolean) {
+      scalar(MinorType.BIT).setBoolean((Boolean) value);
     } else if (value instanceof Integer) {
       scalar(MinorType.INT).setInt((Integer) value);
     } else if (value instanceof Long) {

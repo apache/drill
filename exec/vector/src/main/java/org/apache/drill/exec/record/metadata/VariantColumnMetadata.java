@@ -81,10 +81,48 @@ public class VariantColumnMetadata extends AbstractColumnMetadata {
     this.variantSchema = variantSchema;
   }
 
-  public VariantColumnMetadata(String name, MinorType type, VariantSchema variantSchema) {
-    super(name, type, DataMode.OPTIONAL);
-    this.variantSchema = variantSchema == null ? new VariantSchema() : variantSchema;
+  private VariantColumnMetadata(String name, MinorType type, DataMode mode,
+      VariantSchema variantSchema) {
+    super(name, type, mode);
+    this.variantSchema = variantSchema;
     this.variantSchema.bind(this);
+  }
+
+  public static VariantColumnMetadata union(String name) {
+    return unionOf(name, null);
+  }
+
+  public static VariantColumnMetadata unionOf(String name, VariantSchema variantSchema) {
+    return new VariantColumnMetadata(name, MinorType.UNION, DataMode.OPTIONAL,
+        variantSchemaFor(variantSchema));
+  }
+
+  public static VariantColumnMetadata unionOf(MaterializedField schema, VariantSchema variantSchema) {
+    return new VariantColumnMetadata(schema, variantSchemaFor(variantSchema));
+  }
+
+  public static VariantColumnMetadata list(String name) {
+    return new VariantColumnMetadata(name, MinorType.LIST, DataMode.OPTIONAL, new VariantSchema());
+  }
+
+  public static VariantColumnMetadata listOf(String name, VariantSchema variantSchema) {
+    return new VariantColumnMetadata(name, MinorType.LIST, DataMode.OPTIONAL,
+        variantSchemaFor(variantSchema));
+  }
+
+  public static VariantColumnMetadata variantOf(String name, MinorType type, VariantSchema variantSchema) {
+    switch (type) {
+      case UNION:
+        return unionOf(name, variantSchema);
+      case LIST:
+        return listOf(name, variantSchema);
+      default:
+        throw new IllegalArgumentException(type.name());
+    }
+  }
+
+  private static VariantSchema variantSchemaFor(VariantSchema variantSchema) {
+    return variantSchema == null ? new VariantSchema() : variantSchema;
   }
 
   @Override
@@ -96,11 +134,13 @@ public class VariantColumnMetadata extends AbstractColumnMetadata {
   public boolean isVariant() { return true; }
 
   @Override
-  public boolean isArray() { return type() == MinorType.LIST; }
+  public boolean isArray() {
+    return super.isArray() || type() == MinorType.LIST;
+  }
 
   @Override
   public ColumnMetadata cloneEmpty() {
-    return new VariantColumnMetadata(name, type, variantSchema.cloneEmpty());
+    return new VariantColumnMetadata(name, type, mode, new VariantSchema());
   }
 
   @Override
