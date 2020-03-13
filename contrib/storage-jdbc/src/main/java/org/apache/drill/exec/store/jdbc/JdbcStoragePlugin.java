@@ -17,20 +17,17 @@
  */
 package org.apache.drill.exec.store.jdbc;
 
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
-import java.util.Map;
 import javax.sql.DataSource;
+import java.util.Properties;
 import java.util.Set;
 
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import org.apache.calcite.adapter.jdbc.JdbcSchema;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.sql.SqlDialect;
 import org.apache.calcite.sql.SqlDialectFactoryImpl;
-import org.apache.commons.dbcp2.BasicDataSource;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
@@ -46,7 +43,7 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
   private static final Logger logger = LoggerFactory.getLogger(JdbcStoragePlugin.class);
 
   private final JdbcStorageConfig config;
-  private final BasicDataSource dataSource;
+  private final HikariDataSource dataSource;
   private final SqlDialect dialect;
   private final DrillJdbcConvention convention;
 
@@ -95,44 +92,34 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
   }
 
   /**
-   * Initializes {@link BasicDataSource} instance and configures it based on given
+   * Initializes {@link HikariDataSource} instance and configures it based on given
    * storage plugin configuration.
    * Basic parameters such as driver, url, user name and password are set using setters.
-   * Other source parameters are set dynamically by invoking setter based on given parameter name.
-   * If given parameter is absent, it will be ignored. If value is incorrect
-   * (for example, String is passed instead of int), data source initialization will fail.
-   * Parameter names should correspond to names available in documentation:
-   * <a href="https://commons.apache.org/proper/commons-dbcp/configuration.html">.
+   * Other source parameters are set dynamically through the properties. See the list
+   * of available Hikari properties: <a href="https://github.com/brettwooldridge/HikariCP">.
    *
    * @param config storage plugin config
-   * @return basic data source instance
-   * @throws UserException if unable to set source parameter
+   * @return Hikari data source instance
+   * @throws UserException if unable to configure Hikari data source
    */
   @VisibleForTesting
-  static BasicDataSource initDataSource(JdbcStorageConfig config) {
-    BasicDataSource dataSource = new BasicDataSource();
-    dataSource.setDriverClassName(config.getDriver());
-    dataSource.setUrl(config.getUrl());
-    dataSource.setUsername(config.getUsername());
-    dataSource.setPassword(config.getPassword());
+  static HikariDataSource initDataSource(JdbcStorageConfig config) {
+    try {
+      Properties properties = new Properties();
+      properties.putAll(config.getSourceParameters());
 
-    MethodHandles.Lookup publicLookup = MethodHandles.publicLookup();
-    for (Map.Entry<String, Object> entry : config.getSourceParameters().entrySet()) {
-      try {
-        Class<?> parameterType = dataSource.getClass().getDeclaredField(entry.getKey()).getType();
-        MethodType methodType = MethodType.methodType(void.class, parameterType);
-        MethodHandle methodHandle = publicLookup.findVirtual(dataSource.getClass(),
-          "set" + StringUtils.capitalize(entry.getKey()), methodType);
-        methodHandle.invokeWithArguments(dataSource, entry.getValue());
-      } catch (ReflectiveOperationException e) {
-        logger.warn("Unable to find / access setter for parameter {}: {}", entry.getKey(), e.getMessage());
-      } catch (Throwable e) {
-        throw UserException.connectionError()
-          .message("Unable to set value %s for parameter %s", entry.getKey(), entry.getValue())
-          .addContext("Error message:", e.getMessage())
-          .build(logger);
-      }
+      HikariConfig hikariConfig = new HikariConfig(properties);
+
+      hikariConfig.setDriverClassName(config.getDriver());
+      hikariConfig.setJdbcUrl(config.getUrl());
+      hikariConfig.setUsername(config.getUsername());
+      hikariConfig.setPassword(config.getPassword());
+
+      return new HikariDataSource(hikariConfig);
+    } catch (RuntimeException e) {
+      throw UserException.connectionError(e)
+        .message("Unable to configure data source: %s", e.getMessage())
+        .build(logger);
     }
-    return dataSource;
   }
 }
