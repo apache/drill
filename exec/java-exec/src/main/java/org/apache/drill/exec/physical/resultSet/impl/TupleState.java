@@ -192,9 +192,9 @@ public abstract class TupleState extends ContainerState
         continue;
       }
 
-      // If this is a new column added since the lastoutput, then we may have
+      // If this is a new column added since the last output, then we may have
       // to add the column to this output. For the row itself, and for maps
-      // outside of unions, If the column wasadded after the output schema
+      // outside of unions, If the column was added after the output schema
       // version cutoff, skip that column for now. But, if this tuple is
       // within a union, then we always add all columns because union
       // semantics are too muddy to play the deferred column game. Further,

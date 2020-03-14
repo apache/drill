@@ -89,7 +89,7 @@ import com.fasterxml.jackson.core.JsonToken;
  *
  * <h4>Comparison to Original JSON Reader</h4>
  *
- * This class replaces the {@link JsonReader} class used in Drill versions 1.12
+ * This class replaces the {@link JsonReader} class used in Drill versions 1.17
  * and before. Compared with the previous version, this implementation:
  * <ul>
  * <li>Materializes parse states as classes rather than as methods and
@@ -211,6 +211,9 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
    */
   @Override // JsonLoader
   public void endBatch() {
+
+    // Make a copy. Forcing resolution will remove the
+    // element from the original list.
     List<NullTypeMarker> copy = new ArrayList<>();
     copy.addAll(nullStates);
     for (NullTypeMarker marker : copy) {
@@ -275,13 +278,14 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
   }
 
   protected UserException typeConversionError(ColumnMetadata schema, ValueDef valueDef) {
-    String type = valueDef.type().name().toLowerCase();
+    StringBuilder buf = new StringBuilder()
+        .append(valueDef.type().name().toLowerCase());
     if (valueDef.isArray()) {
       for (int i = 0; i < valueDef.dimensions(); i++) {
-        type += "[]";
+        buf.append("[]");
       }
     }
-    return typeConversionError(schema, type);
+    return typeConversionError(schema, buf.toString());
   }
 
   protected UserException typeConversionError(ColumnMetadata schema, String tokenType) {

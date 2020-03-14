@@ -29,8 +29,8 @@ public class JsonLoaderOptions extends JsonStructureOptions {
   public boolean readNumbersAsDouble;
 
   /**
-   * Drill prior to version 1.8 would read a null string
-   * array element as the string "null". Drill 1.8 and later
+   * Drill prior to version 1.18 would read a null string
+   * array element as the string "null". Drill 1.18 and later
    * reads the same token as a blank string. This flag forces
    * the pre-1.18 behavior.
    * <p>

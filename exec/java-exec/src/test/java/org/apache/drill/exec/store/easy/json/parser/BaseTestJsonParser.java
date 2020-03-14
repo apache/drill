@@ -141,7 +141,7 @@ public class BaseTestJsonParser {
     }
 
     @Override
-    public void onEmbedddObject(String value) {
+    public void onEmbeddedObject(String value) {
       this.value = value;
       valueCount++;
     }

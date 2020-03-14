@@ -99,8 +99,8 @@ public class UnknownFieldListener extends AbstractValueListener implements NullT
   }
 
   @Override
-  public void onEmbedddObject(String value) {
-    resolveScalar(JsonType.EMBEDDED_OBJECT).onEmbedddObject(value);
+  public void onEmbeddedObject(String value) {
+    resolveScalar(JsonType.EMBEDDED_OBJECT).onEmbeddedObject(value);
   }
 
   @Override

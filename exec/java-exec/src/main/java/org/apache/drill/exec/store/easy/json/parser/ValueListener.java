@@ -120,7 +120,7 @@ public interface ValueListener {
    *
    * @param value the string value of the parsed token
    */
-  void onEmbedddObject(String value);
+  void onEmbeddedObject(String value);
 
   /**
    * The parser has encountered a object value for the field for the first

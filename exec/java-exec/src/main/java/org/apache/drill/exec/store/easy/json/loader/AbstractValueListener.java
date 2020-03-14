@@ -59,7 +59,7 @@ public abstract class AbstractValueListener implements ValueListener {
   }
 
   @Override
-  public void onEmbedddObject(String value) {
+  public void onEmbeddedObject(String value) {
     throw typeConversionError("object");
   }
 

@@ -22,7 +22,8 @@ import org.apache.drill.exec.record.metadata.ColumnMetadata;
 /**
  * Enhanced second-generation JSON loader which takes an input
  * source and creates a series of record batches using the
- * {@link ResultSetLoader} abstraction.
+ * {@link org.apache.drill.exec.physical.resultSet.ResultSetLoader
+ * ResultSetLoader} abstraction.
  */
 public interface JsonLoader {
 
@@ -36,7 +37,7 @@ public interface JsonLoader {
    * "all-text mode", but for a single column. That JSON field is
    * read as text regardless of the actual value. Applies only to
    * scalars.</li>
-   * <li>{@link JSON_LITERAL_MODE}: Causes the field, and all its
+   * <li>{@link #JSON_LITERAL_MODE}: Causes the field, and all its
    * children, to be read as literal JSON: the values are returned
    * as a valid JSON string.</li>
    * </li>
@@ -50,7 +51,8 @@ public interface JsonLoader {
    * Read one record of data.
    *
    * @return {@code true} if a record was loaded, {@code false} if EOF.
-   * @throws UserException for most errors
+   * @throws {org.apache.drill.common.exceptions.UserException
+   * for most errors
    * @throws RuntimeException for unexpected errors, most often due
    * to code errors
    */
