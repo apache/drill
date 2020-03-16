@@ -127,8 +127,7 @@ public class SqlMetastoreAnalyzeTable extends DrillSqlCall {
     }
 
     return fieldList.getList().stream()
-        .map(SqlNode::toString)
-        .map(SchemaPath::parseFromString)
+        .map(sqlNode -> SchemaPath.parseFromString(sqlNode.toSqlString(null, true).getSql()))
         .collect(Collectors.toList());
   }
 

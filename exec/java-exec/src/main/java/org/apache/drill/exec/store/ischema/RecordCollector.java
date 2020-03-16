@@ -23,6 +23,7 @@ import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ExecConstants;
@@ -318,7 +319,7 @@ public interface RecordCollector {
      * @param schemaPath schema name
      * @param table table instance
      * @param schema table or column schema
-     * @param parentColumnName parent column name if any
+     * @param parentColumnNames list of parent column names if any
      * @param columnIndex column index if any
      * @param isNested indicates if column is nested
      * @return list of column records
@@ -326,28 +327,31 @@ public interface RecordCollector {
     private List<Records.Column> columns(String schemaPath,
                                          BaseTableMetadata table,
                                          TupleMetadata schema,
-                                         String parentColumnName,
+                                         List<String> parentColumnNames,
                                          int columnIndex,
                                          boolean isNested) {
       List<Records.Column> records = new ArrayList<>();
       schema.toMetadataList().forEach(
         column -> {
-          // concat parent column name to use full column name, i.e. struct_col.nested_col
-          String columnName = parentColumnName == null ? column.name() : parentColumnName + "." + column.name();
+          List<String> columnNames = CollectionUtils.isEmpty(parentColumnNames) ? new ArrayList<>() : new ArrayList<>(parentColumnNames);
+          columnNames.add(column.name());
           // nested columns have the same index as their parent
           int currentIndex = columnIndex == UNDEFINED_INDEX ? schema.index(column.name()) : columnIndex;
           // if column is a map / struct, recursively scan nested columns
           if (column.isMap()) {
             List<Records.Column> mapRecords =
-              columns(schemaPath, table, column.tupleSchema(), columnName, currentIndex, true);
+              columns(schemaPath, table, column.tupleSchema(), columnNames, currentIndex, true);
             records.addAll(mapRecords);
           }
 
           String tableName = table.getTableInfo().name();
-          if (filterEvaluator.shouldVisitColumn(schemaPath, tableName, columnName)) {
+
+          // concat parent column names to use full column name, i.e. struct_col.nested_col
+          String columnPath = String.join(".", columnNames);
+          if (filterEvaluator.shouldVisitColumn(schemaPath, tableName, columnPath)) {
             ColumnStatistics<?> columnStatistics =
-              table.getColumnStatistics(SchemaPath.parseFromString(columnName));
-            records.add(new Records.Column(IS_CATALOG_NAME, schemaPath, tableName, columnName,
+              table.getColumnStatistics(SchemaPath.getCompoundPath(columnNames.toArray(new String[0])));
+            records.add(new Records.Column(IS_CATALOG_NAME, schemaPath, tableName, columnPath,
               column, columnStatistics, currentIndex, isNested));
           }
         });

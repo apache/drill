@@ -128,6 +128,7 @@ public class FileMetadataInfoCollector implements MetadataInfoCollector {
     List<SchemaPath> metastoreInterestingColumns =
         Optional.ofNullable(basicRequests.interestingColumnsAndPartitionKeys(tableInfo).interestingColumns())
             .map(metastoreInterestingColumnNames -> metastoreInterestingColumnNames.stream()
+                // interesting column names are escaped, so SchemaPath.parseFromString() should be used here
                 .map(SchemaPath::parseFromString)
                 .collect(Collectors.toList()))
         .orElse(null);

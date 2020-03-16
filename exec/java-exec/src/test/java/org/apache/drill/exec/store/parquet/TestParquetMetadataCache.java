@@ -944,9 +944,9 @@ public class TestParquetMetadataCache extends PlanTestBase {
 
   @Test
   public void testRefreshWithColumns() throws Exception {
-    test("refresh table metadata columns (o_custkey, o_orderdate) dfs.`%s`", TABLE_NAME_1);
+    test("refresh table metadata columns (`date`, o_orderdate) dfs.`%s`", TABLE_NAME_1);
     checkForMetadataFile(TABLE_NAME_1);
-    String query = String.format("select dir0, dir1, o_custkey, o_orderdate from dfs.`%s` " +
+    String query = String.format("select dir0, dir1, o_custkey as `date`, o_orderdate from dfs.`%s` " +
             " where dir0=1994 and dir1 in ('Q1', 'Q2')", TABLE_NAME_1);
     int expectedRowCount = 20;
     int actualRowCount = testSql(query);

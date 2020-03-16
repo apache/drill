@@ -3244,21 +3244,21 @@ public class TestMetastoreCommands extends ClusterTest {
   public void testAnalyzeEmptyRequiredParquetTable() throws Exception {
     String tableName = "analyze_empty_simple_required";
 
-    run("create table dfs.tmp.%s as select 1 as id, 'a' as name from (values(1)) where 1 = 2", tableName);
+    run("create table dfs.tmp.%s as select 1 as `date`, 'a' as name from (values(1)) where 1 = 2", tableName);
 
     File table = new File(dirTestWatcher.getDfsTestTmpDir(), tableName);
 
     TableInfo tableInfo = getTableInfo(tableName, "tmp");
 
     TupleMetadata schema = new SchemaBuilder()
-        .add("id", TypeProtos.MinorType.INT)
+        .add("date", TypeProtos.MinorType.INT)
         .add("name", TypeProtos.MinorType.VARCHAR)
         .build();
 
     Map<SchemaPath, ColumnStatistics<?>> columnStatistics = ImmutableMap.<SchemaPath, ColumnStatistics<?>>builder()
         .put(SchemaPath.getSimplePath("name"),
             getColumnStatistics(null, null, 0L, TypeProtos.MinorType.VARCHAR))
-        .put(SchemaPath.getSimplePath("id"),
+        .put(SchemaPath.getSimplePath("date"),
             getColumnStatistics(null, null, 0L, TypeProtos.MinorType.INT))
         .build();
 
@@ -3317,6 +3317,14 @@ public class TestMetastoreCommands extends ClusterTest {
           .rowGroupsMetadata(tableInfo, (String) null, null);
 
       assertEquals(1, rowGroupsMetadata.size());
+
+      testBuilder()
+          .sqlQuery("select COLUMN_NAME from INFORMATION_SCHEMA.`COLUMNS` where table_name='%s'", tableName)
+          .unOrdered()
+          .baselineColumns("COLUMN_NAME")
+          .baselineValues("date")
+          .baselineValues("name")
+          .go();
     } finally {
       run("analyze table dfs.tmp.`%s` drop metadata if exists", tableName);
       run("drop table if exists dfs.tmp.`%s`", tableName);
