@@ -148,7 +148,11 @@ public class RefreshMetadataHandler extends DefaultSqlHandler {
     if (columnList != null) {
       for (SqlNode column : columnList.getList()) {
         // Add only the root segment. Collect metadata for all the columns under that root segment
-        columnSet.add(SchemaPath.getSimplePath(SchemaPath.parseFromString(column.toString()).getRootSegmentPath()));
+        columnSet.add(
+            SchemaPath.getSimplePath(
+                SchemaPath.parseFromString(
+                        column.toSqlString(null, true).getSql())
+                    .getRootSegmentPath()));
       }
     }
     return columnSet;
