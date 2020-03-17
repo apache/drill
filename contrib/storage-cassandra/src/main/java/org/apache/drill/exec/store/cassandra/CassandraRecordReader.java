@@ -298,7 +298,6 @@ public class CassandraRecordReader extends AbstractRecordReader implements Drill
   public void close() {
     // Do nothing.
     // We want to keep the Cassandra session open until Drill closes
-    return;
   }
 
   /**

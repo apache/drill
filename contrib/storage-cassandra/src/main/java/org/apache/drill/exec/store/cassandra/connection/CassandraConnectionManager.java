@@ -63,7 +63,6 @@ public class CassandraConnectionManager {
       if (! (Strings.isNullOrEmpty(username) || Strings.isNullOrEmpty(password))) {
         builder = builder.withCredentials(username, password);
       }
-
       builder = builder.withoutJMXReporting();
       cluster = builder.build();
 
