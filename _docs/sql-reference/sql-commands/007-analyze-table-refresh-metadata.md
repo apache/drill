@@ -1,7 +1,7 @@
 ---
 title: "ANALYZE TABLE REFRESH METADATA"
 parent: "SQL Commands"
-date: 2020-03-03
+date: 2020-03-17
 ---
 
 Starting from Drill 1.17, you can store table metadata (including schema and computed statistics) into Drill Metastore.
@@ -34,10 +34,17 @@ The name of the table or directory for which Drill will collect table metadata. 
 Table function parameters. This syntax is only available since Drill 1.18.
 Example of table function parameters usage:
 
-    table(dfs.`table_name` (type => 'parquet', autoCorrectCorruptDates => true))
+     table(dfs.tmp.`text_nation` (type=>'text', fieldDelimiter=>',', extractHeader=>true,
+        schema=>'inline=(
+            `n_nationkey` INT not null,
+            `n_name` VARCHAR not null,
+            `n_regionkey` INT not null,
+            `n_comment` VARCHAR not null)'
+        ))
 
-For detailed information, please refer to
- [Using the Formats Attributes as Table Function Parameters]({{site.baseurl}}/docs/plugin-configuration-basics/#using-the-formats-attributes-as-table-function-parameters)
+Please refer to
+ [Specifying the Schema as Table Function Parameter]({{site.baseurl}}/docs/plugin-configuration-basics/#specifying-the-schema-as-table-function-parameter)
+ for the details.
 
 *COLUMNS (col1, col2, ...)*
 Optional names of the column(s) for which Drill will compute and store statistics. The stored schema will include all

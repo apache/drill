@@ -133,6 +133,8 @@ The following table describes the attributes you configure for storage plugins i
 
 You set the formats attributes, such as skipFirstLine, in the `formats` area of the storage plugin configuration. When setting attributes for text files, such as CSV, you also need to set the `sys.options` property `exec.storage.enable_new_text_reader` to true (the default). For more information and examples of using formats for text files, see ["Text Files: CSV, TSV, PSV"]({{site.baseurl}}{{site.baseurl}}/docs/text-files-csv-tsv-psv/).  
 
+# Table Function Parameters
+
 ## Using the Formats Attributes as Table Function Parameters
 
 In Drill version 1.4 and later, you can also set the formats attributes defined above on a per query basis. To pass parameters to the format plugin, use the table function syntax:  
@@ -146,6 +148,40 @@ For example, to read a CSV file and parse the header:
 fieldDelimiter => ',', extractHeader => true))``
 
 For more information about format plugin configuration see ["Text Files: CSV, TSV, PSV"]({{site.baseurl}}{{site.baseurl}}/docs/text-files-csv-tsv-psv/).  
+
+## Specifying the Schema as Table Function Parameter
+
+Table schemas normally reside in the root folder of each table. You can also specify a schema for an individual query
+ using a table function and specifying the `SCHEMA` property. You can combine the schema with format plugin properties.
+ The syntax is similar to the [CREATE OR REPLACE SCHEMA]({{site.baseurl}}/docs/create-or-replace-schema/#syntax):
+
+```
+SELECT a, b FROM TABLE (table_name(
+SCHEMA => 'inline=(column_name data_type [nullability] [format] [default] [properties {prop='val', ...})]'))
+```
+
+You can specify the schema inline within the query. For example:
+
+```
+select * from table(dfs.tmp.`text_table`(
+schema => 'inline=(col1 date properties {`drill.format` = `yyyy-MM-dd`}) 
+properties {`drill.strict` = `false`}'))
+```
+
+Alternatively, you can also specify the path to a schema file. For example:
+
+```
+select * from table(dfs.tmp.`text_table`(schema => 'path=`/tmp/my_schema`'))
+```
+
+The following example demonstrates applying provided schema alongside with format plugin table function parameters.
+Suppose that you have a CSV file with headers and with a custom extension: `csvh-test`. You can combine the schema with format plugin properties:
+
+```
+select * from table(dfs.tmp.`cars.csvh-test`(type => 'text', 
+fieldDelimiter => ',', extractHeader => true,
+schema => 'inline=(col1 date)'))
+```
 
 ## Using Other Attributes
 

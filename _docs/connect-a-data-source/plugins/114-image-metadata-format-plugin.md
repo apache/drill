@@ -1,6 +1,6 @@
 ---
 title: "Image Metadata Format Plugin"
-date: 2018-06-13 18:31:03 UTC
+date: 2020-03-17
 parent: "Connect a Data Source"
 ---
 
@@ -39,7 +39,7 @@ To configure Drill to read image metadata, you must modify the extensions sectio
 **Note:** The result does not include file names, but you can use [implicit columns]({{site.baseurl}}/docs/querying-a-file-system-introduction/#implicit-columns) to get file names, full paths, fully qualified names, and file suffixes.  
 
 
-##Attributes
+## Attributes
 
 The following table lists configuration attributes:  
 
@@ -49,54 +49,53 @@ fileSystemMetadata|true|Set to true to extract filesystem metadata including the
 descriptive|true|Set to true to extract metadata in a human-readable string format. Set false to extract metadata in a machine-readable typed format.
 timeZone|null|Specify the time zone to interpret the timestamp with no time zone information. If the timestamp includes the time zone information, this value is ignored. If null is set, the local time zone is used.  
 
-##Examples  
+## Examples  
+
+To follow along with the examples, start by downloading the following image to your `\tmp` directory.
+
+[![image]({{ site.baseurl }}/images/7671b34d6e8a4d050f75278f10f1a08.jpg)]({{ site.baseurl }}/images/7671b34d6e8a4d050f75278f10f1a08.jpg)
 
 A Drill query on a JPEG file with the property descriptive: true
 
-       0: jdbc:drill:zk=local> select FileName, * from dfs.`4349313028_f69ffa0257_o.jpg`;  
-       +----------+----------+--------------+--------+------------+-------------+--------------+----------+-----------+------------+-----------+----------+----------+------------+-----------+------------+-----------------+-----------------+------+------+----------+------------+------------------+-----+---------------+-----------+------+---------+----------+
-       | FileName | FileSize | FileDateTime | Format | PixelWidth | PixelHeight | BitsPerPixel | DPIWidth | DPIHeight | Orientaion | ColorMode | HasAlpha | Duration | VideoCodec | FrameRate | AudioCodec | AudioSampleSize | AudioSampleRate | JPEG | JFIF | ExifIFD0 | ExifSubIFD | Interoperability | GPS | ExifThumbnail | Photoshop | IPTC | Huffman | FileType |
-       +----------+----------+--------------+--------+------------+-------------+--------------+----------+-----------+------------+-----------+----------+----------+------------+-----------+------------+-----------------+-----------------+------+------+----------+------------+------------------+-----+---------------+-----------+------+---------+----------+
-       | 4349313028_f69ffa0257_o.jpg | 257213 bytes | Fri Mar 09 12:09:34 +08:00 2018 | JPEG | 1199 | 800 | 24 | 96 | 96 | Unknown (0) | RGB | false | 00:00:00 | Unknown | 0 | Unknown | 0 | 0 | {"CompressionType":"Baseline","DataPrecision":"8 bits","ImageHeight":"800 pixels","ImageWidth":"1199 pixels","NumberOfComponents":"3","Component1":"Y component: Quantization table 0, Sampling factors 2 horiz/2 vert","Component2":"Cb component: Quantization table 1, Sampling factors 1 horiz/1 vert","Component3":"Cr component: Quantization table 1, Sampling factors 1 horiz/1 vert"} | {"Version":"1.1","ResolutionUnits":"inch","XResolution":"96 dots","YResolution":"96 dots","ThumbnailWidthPixels":"0","ThumbnailHeightPixels":"0"} | {"Software":"Picasa 3.0"} | {"ExifVersion":"2.10","UniqueImageID":"d65e93b836d15a0c5e041e6b7258c76e"} | {"InteroperabilityIndex":"Unknown (    )","InteroperabilityVersion":"1.00"} | {"GPSVersionID":".022","GPSLatitudeRef":"N","GPSLatitude":"47° 32' 15.98\"","GPSLongitudeRef":"W","GPSLongitude":"-122° 2' 6.37\"","GPSAltitudeRef":"Sea level","GPSAltitude":"0 metres"} | {"Compression":"JPEG (old-style)","XResolution":"72 dots per inch","YResolution":"72 dots per inch","ResolutionUnit":"Inch","ThumbnailOffset":"414 bytes","ThumbnailLength":"7213 bytes"} | {} | {"Keywords":"135;2002;issaquah;police car;wa;washington"} | {"NumberOfTables":"4 Huffman tables"} | {"DetectedFileTypeName":"JPEG","DetectedFileTypeLongName":"Joint Photographic Experts Group","DetectedMIMEType":"image/jpeg","ExpectedFileNameExtension":"jpg"} |
-       +----------+----------+--------------+--------+------------+-------------+--------------+----------+-----------+------------+-----------+----------+----------+------------+-----------+------------+-----------------+-----------------+------+------+----------+------------+------------------+-----+---------------+-----------+------+---------+----------+
- 
+        select FileName, * from dfs.tmp.`7671b34d6e8a4d050f75278f10f1a08.jpg`;
+        +-------------------------------------+-------------+---------------------------------+--------+------------+-------------+--------------+-------------+----------+-----------+-----------+----------+----------+------------+-----------+------------+-----------------+-----------------+----------------------------------------------------------------------------------+------------------------------------------------------------------------------+----------------------------------------------------------------------------------+---------------------------------------------------------------------------+----------------------------------------------------------------------------------+---------------------------------------+----------------------------------------------------------------------------------+
+        |              FileName               |  FileSize   |          FileDateTime           | Format | PixelWidth | PixelHeight | BitsPerPixel | Orientaion  | DPIWidth | DPIHeight | ColorMode | HasAlpha | Duration | VideoCodec | FrameRate | AudioCodec | AudioSampleSize | AudioSampleRate |                                       JPEG                                       |                                 JpegComment                                  |                                       JFIF                                       |                                 ExifIFD0                                  |                                       GPS                                        |                Huffman                |                                     FileType                                     |
+        +-------------------------------------+-------------+---------------------------------+--------+------------+-------------+--------------+-------------+----------+-----------+-----------+----------+----------+------------+-----------+------------+-----------------+-----------------+----------------------------------------------------------------------------------+------------------------------------------------------------------------------+----------------------------------------------------------------------------------+---------------------------------------------------------------------------+----------------------------------------------------------------------------------+---------------------------------------+----------------------------------------------------------------------------------+
+        | 7671b34d6e8a4d050f75278f10f1a08.jpg | 45877 bytes | Tue Mar 17 21:37:09 +02:00 2020 | JPEG   | 604        | 453         | 24           | Unknown (0) | 0        | 0         | RGB       | false    | 00:00:00 | Unknown    | 0         | Unknown    | 0               | 0               | {"CompressionType":"Baseline","DataPrecision":"8 bits","ImageHeight":"453 pixels","ImageWidth":"604 pixels","NumberOfComponents":"3","Component1":"Y component: Quantization table 0, Sampling factors 2 horiz/2 vert","Component2":"Cb component: Quantization table 1, Sampling factors 1 horiz/1 vert","Component3":"Cr component: Quantization table 1, Sampling factors 1 horiz/1 vert"} | {"JPEGComment":"CREATOR: gd-jpeg v1.0 (using IJG JPEG v62), quality = 90\n"} | {"Version":"1.1","ResolutionUnits":"none","XResolution":"1 dot","YResolution":"1 dot","ThumbnailWidthPixels":"0","ThumbnailHeightPixels":"0"} | {"ResolutionUnit":"(No unit)","YCbCrPositioning":"Center of pixel array"} | {"GPSLatitudeRef":"N","GPSLatitude":"50° 27' 48.8\"","GPSLongitudeRef":"E","GPSLongitude":"30° 30' 31.21\""} | {"NumberOfTables":"4 Huffman tables"} | {"DetectedFileTypeName":"JPEG","DetectedFileTypeLongName":"Joint Photographic Experts Group","DetectedMIMEType":"image/jpeg","ExpectedFileNameExtension":"jpg"} |
+        +-------------------------------------+-------------+---------------------------------+--------+------------+-------------+--------------+-------------+----------+-----------+-----------+----------+----------+------------+-----------+------------+-----------------+-----------------+----------------------------------------------------------------------------------+------------------------------------------------------------------------------+----------------------------------------------------------------------------------+---------------------------------------------------------------------------+----------------------------------------------------------------------------------+---------------------------------------+----------------------------------------------------------------------------------+
 
 A Drill query on a JPEG file with the property descriptive: false    
 
-       0: jdbc:drill:zk=local> select FileName, * from dfs.`4349313028_f69ffa0257_o.jpg`;  
-       +----------+----------+--------------+--------+------------+-------------+--------------+----------+-----------+------------+-----------+----------+----------+------------+-----------+------------+-----------------+-----------------+------+------+----------+------------+------------------+-----+---------------+-----------+------+---------+----------+
-       | FileName | FileSize | FileDateTime | Format | PixelWidth | PixelHeight | BitsPerPixel | DPIWidth | DPIHeight | Orientaion | ColorMode | HasAlpha | Duration | VideoCodec | FrameRate | AudioCodec | AudioSampleSize | AudioSampleRate | JPEG | JFIF | ExifIFD0 | ExifSubIFD | Interoperability | GPS | ExifThumbnail | Photoshop | IPTC | Huffman | FileType |
-       +----------+----------+--------------+--------+------------+-------------+--------------+----------+-----------+------------+-----------+----------+----------+------------+-----------+------------+-----------------+-----------------+------+------+----------+------------+------------------+-----+---------------+-----------+------+---------+----------+
-       | 4349313028_f69ffa0257_o.jpg | 257213 | 2018-03-09 04:09:34.0 | JPEG | 1199 | 800 | 24 | 96.0 | 96.0 | 0 | RGB | false | 0 | Unknown | 0.0 | Unknown | 0 | 0.0 | {"CompressionType":0,"DataPrecision":8,"ImageHeight":800,"ImageWidth":1199,"NumberOfComponents":3,"Component1":{"ComponentId":1,"HorizontalSamplingFactor":2,"VerticalSamplingFactor":2,"QuantizationTableNumber":0},"Component2":{"ComponentId":2,"HorizontalSamplingFactor":1,"VerticalSamplingFactor":1,"QuantizationTableNumber":1},"Component3":{"ComponentId":3,"HorizontalSamplingFactor":1,"VerticalSamplingFactor":1,"QuantizationTableNumber":1}} | {"Version":257,"ResolutionUnits":1,"XResolution":96,"YResolution":96,"ThumbnailWidthPixels":0,"ThumbnailHeightPixels":0} | {"Software":"Picasa 3.0"} | {"ExifVersion":"0210","UniqueImageID":"d65e93b836d15a0c5e041e6b7258c76e"} | {"InteroperabilityIndex":"    ","InteroperabilityVersion":"0100"} | {"GPSVersionID":[0,0,2,2],"GPSLatitudeRef":"N","GPSLatitude":47.53777313232332,"GPSLongitudeRef":"W","GPSLongitude":-122.03510284423795,"GPSAltitudeRef":0,"GPSAltitude":0.0} | {"Compression":6,"XResolution":72.0,"YResolution":72.0,"ResolutionUnit":2,"ThumbnailOffset":414,"ThumbnailLength":7213} | {} | {"Keywords":["135","2002","issaquah","police car","wa","washington"]} | {"NumberOfTables":4} | {"DetectedFileTypeName":"JPEG","DetectedFileTypeLongName":"Joint Photographic Experts Group","DetectedMIMEType":"image/jpeg","ExpectedFileNameExtension":"jpg"} |
-       +----------+----------+--------------+--------+------------+-------------+--------------+----------+-----------+------------+-----------+----------+----------+------------+-----------+------------+-----  
+        select FileName, * from dfs.tmp.`7671b34d6e8a4d050f75278f10f1a08.jpg`;
+        +-------------------------------------+----------+-----------------------+--------+------------+-------------+--------------+------------+----------+-----------+-----------+----------+----------+------------+-----------+------------+-----------------+-----------------+----------------------------------------------------------------------------------+------------------------------------------------------------------------------+----------------------------------------------------------------------------------+-------------------------------------------+----------------------------------------------------------------------------------+----------------------+----------------------------------------------------------------------------------+
+        |              FileName               | FileSize |     FileDateTime      | Format | PixelWidth | PixelHeight | BitsPerPixel | Orientaion | DPIWidth | DPIHeight | ColorMode | HasAlpha | Duration | VideoCodec | FrameRate | AudioCodec | AudioSampleSize | AudioSampleRate |                                       JPEG                                       |                                 JpegComment                                  |                                       JFIF                                       |                 ExifIFD0                  |                                       GPS                                        |       Huffman        |                                     FileType                                     |
+        +-------------------------------------+----------+-----------------------+--------+------------+-------------+--------------+------------+----------+-----------+-----------+----------+----------+------------+-----------+------------+-----------------+-----------------+----------------------------------------------------------------------------------+------------------------------------------------------------------------------+----------------------------------------------------------------------------------+-------------------------------------------+----------------------------------------------------------------------------------+----------------------+----------------------------------------------------------------------------------+
+        | 7671b34d6e8a4d050f75278f10f1a08.jpg | 45877    | 2020-03-17 19:37:09.0 | JPEG   | 604        | 453         | 24           | 0          | 0.0      | 0.0       | RGB       | false    | 0        | Unknown    | 0.0       | Unknown    | 0               | 0.0             | {"CompressionType":0,"DataPrecision":8,"ImageHeight":453,"ImageWidth":604,"NumberOfComponents":3,"Component1":{"ComponentId":1,"HorizontalSamplingFactor":2,"VerticalSamplingFactor":2,"QuantizationTableNumber":0},"Component2":{"ComponentId":2,"HorizontalSamplingFactor":1,"VerticalSamplingFactor":1,"QuantizationTableNumber":1},"Component3":{"ComponentId":3,"HorizontalSamplingFactor":1,"VerticalSamplingFactor":1,"QuantizationTableNumber":1}} | {"JPEGComment":"CREATOR: gd-jpeg v1.0 (using IJG JPEG v62), quality = 90\n"} | {"Version":257,"ResolutionUnits":0,"XResolution":1,"YResolution":1,"ThumbnailWidthPixels":0,"ThumbnailHeightPixels":0} | {"ResolutionUnit":1,"YCbCrPositioning":1} | {"GPSLatitudeRef":"N","GPSLatitude":50.46355547157135,"GPSLongitudeRef":"E","GPSLongitude":30.508668422733077} | {"NumberOfTables":4} | {"DetectedFileTypeName":"JPEG","DetectedFileTypeLongName":"Joint Photographic Experts Group","DetectedMIMEType":"image/jpeg","ExpectedFileNameExtension":"jpg"} |
+        +-------------------------------------+----------+-----------------------+--------+------------+-------------+--------------+------------+----------+-----------+-----------+----------+----------+------------+-----------+------------+-----------------+-----------------+----------------------------------------------------------------------------------+------------------------------------------------------------------------------+----------------------------------------------------------------------------------+-------------------------------------------+----------------------------------------------------------------------------------+----------------------+----------------------------------------------------------------------------------+
 
 Retrieving GPS location data from the Exif metadata for the use of GIS functions.
 
-       0: jdbc:drill:zk=local> select t.GPS.GPSLatitude as lat, t.GPS.GPSLongitude as lon from dfs.`4349313028_f69ffa0257_o.jpg` t;
-       +--------------------+----------------------+
-       |        lat         |         lon          |
-       +--------------------+----------------------+
-       | 47.53777313232332  | -122.03510284423795  |
-       +--------------------+----------------------+  
-       
-Retrieving the images that are larger than 640 x 480 pixels.
-       
-       0: jdbc:drill:zk=local> select FileName, PixelWidth, PixelHeight from dfs.`/images/*.png` where PixelWidth >= 640 and PixelHeight >= 480;
-       +--------------------------+-------------+--------------+
-       |         FileName         | PixelWidth  | PixelHeight  |
-       +--------------------------+-------------+--------------+
-       | 1.png                    | 2788        | 1758         |
-       | 1500x500.png             | 1500        | 500          |
-       | 2.png                    | 2788        | 1758         |
-       | 9784873116914_1.png      | 874         | 1240         |
-       | Driven-Example-Load.png  | 1208        | 970          |
-       | features-diagram.png     | 1170        | 644          |
-       | hal1.png                 | 1223        | 772          |
-       | hal2.png                 | 1184        | 768          |
-       | image-3.png              | 1200        | 771          |
-       | image-4.png              | 1200        | 771          |
-       | image002.png             | 1689        | 695          |
-       +--------------------------+-------------+--------------+  
+        select t.GPS.GPSLatitude as lat, t.GPS.GPSLongitude as lon from dfs.tmp.`7671b34d6e8a4d050f75278f10f1a08.jpg` t;
+        +-------------------+--------------------+
+        |        lat        |        lon         |
+        +-------------------+--------------------+
+        | 50.46355547157135 | 30.508668422733077 |
+        +-------------------+--------------------+
+
+Download all `png` images from [Logos]({{ site.baseurl }}/images/logos/) page and place them to `/tmp/logos`
+ directory to examine the following example. 
+
+An example query to retrieve the images that are less than 640 x 480 pixels.
+
+        select FileName, PixelWidth, PixelHeight from dfs.tmp.`logos` where PixelWidth < 640 and PixelHeight < 480;
+        +---------------------+------------+-------------+
+        |      FileName       | PixelWidth | PixelHeight |
+        +---------------------+------------+-------------+
+        | redbusLogo.png      | 500        | 325         |
+        | option3-io-logo.png | 194        | 76          |
+        | sanchezLogo.png     | 235        | 85          |
+        | IORA_NUS.png        | 375        | 253         |
+        +---------------------+------------+-------------+
 
 ## Supported File Formats
 
@@ -798,6 +797,3 @@ EPS.ImageWidth|INTEGER|Width of the image in pixels
 EPS.ImageHeight|INTEGER|Height of the image in pixels
 EPS.ColorType|INTEGER|Color type: `1` (Bitmap/grayscale), `2` (Lab), `3`: RGB or `4` (CMYK)
 EPS.RamSize|INTEGER|Ram Size to keep the image in bytes  
-
-     
-       

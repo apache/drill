@@ -27,9 +27,9 @@ Drill supports the following file types:
     * Tab-separated values (TSV, type: text)
     * Pipe-separated values (PSV, type: text)
   * Structured data files:
-    * Avro (type: avro) (This file type is experimental. See [Querying Avro Files]({{site.baseurl}}/docs/querying-avro-files/).)
-    * JSON (type: json)
-    * Parquet (type: parquet)
+    * [Avro]({{site.baseurl}}/docs/querying-avro-files/) (type: avro)
+    * [JSON]({{site.baseurl}}/docs/querying-json-files/) (type: json)
+    * [Parquet]({{site.baseurl}}/docs/querying-parquet-files/) (type: parquet)
 
 The extensions for these file types must match the configuration settings for
 your registered storage plugins. For example, PSV files may be defined with a
