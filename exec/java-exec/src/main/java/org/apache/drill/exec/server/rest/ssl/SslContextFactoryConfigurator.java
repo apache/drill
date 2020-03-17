@@ -95,6 +95,7 @@ public class SslContextFactoryConfigurator {
     }
     sslFactory.setProtocol(sslConf.getProtocol());
     sslFactory.setIncludeProtocols(sslConf.getProtocol());
+    logger.info("Web server configured to use TLS protocol '{}'", sslConf.getProtocol());
     if (config.hasPath(ExecConstants.HTTP_JETTY_SSL_CONTEXT_FACTORY_OPTIONS_PREFIX)) {
       setStringIfPresent(ExecConstants.HTTP_JETTY_SERVER_SSL_CONTEXT_FACTORY_CERT_ALIAS, sslFactory::setCertAlias);
       setStringIfPresent(ExecConstants.HTTP_JETTY_SERVER_SSL_CONTEXT_FACTORY_CRL_PATH, sslFactory::setCrlPath);
