@@ -1,6 +1,6 @@
 ---
 title: "RDBMS Storage Plugin"
-date: 2018-12-08
+date: 2020-03-17
 parent: "Connect a Data Source"
 ---
 Apache Drill supports querying a number of RDBMS instances. This allows you to connect your traditional databases to your Drill cluster so you can have a single view of both your relational and NoSQL datasources in a single system. 
@@ -9,14 +9,25 @@ As with any source, Drill supports joins within and between all systems. Drill a
 
 ## Using the RDBMS Storage Plugin
 
-Drill is designed to work with any relational datastore that provides a JDBC driver. Drill is actively tested with Postgres, MySQL, Oracle, MSSQL and Apache Derby. For each system, you will follow three basic steps for setup:
+Drill is designed to work with any relational datastore that provides a JDBC driver. Drill is actively tested with
+ Postgres, MySQL, Oracle, MSSQL, Apache Derby and H2. For each system, you will follow three basic steps for setup:
 
   1. [Install Drill]({{ site.baseurl }}/docs/installing-drill-in-embedded-mode), if you do not already have it installed.
-  2. Copy your database's JDBC driver into the jars/3rdparty directory. (You'll need to do this on every node.)  
+  2. Copy your database's JDBC driver into the `jars/3rdparty` directory. (You'll need to do this on every node.)  
   3. Restart Drill. See [Starting Drill in Distributed Mode]({{site.baseurl}}/docs/starting-drill-in-distributed-mode/).
-  4. Add a new storage configuration to Drill through the Web UI. Example configurations for [Oracle](#Example-Oracle-Configuration), [SQL Server](#Example-SQL-Server-Configuration), [MySQL](#Example-MySQL-Configuration) and [Postgres](#Example-Postgres-Configuration) are provided below.
-  
-**Example: Working with MySQL**
+  4. Add a new storage configuration to Drill through the Web UI. Example configurations for [Oracle](#example-oracle-configuration), [SQL Server](#example-sql-server-configuration), [MySQL](#example-mysql-configuration) and [Postgres](#example-postgres-configuration) are provided below.
+
+## Setting data source parameters in the storage plugin configuration
+
+Starting from Drill 1.18.0, new JDBC storage plugin configuration property `sourceParameters` was introduced to allow
+ setting data source parameters described in [HikariCP](https://github.com/brettwooldridge/HikariCP#configuration-knobs-baby).
+ Parameters names with incorrect naming and parameter values which are of incorrect data type or illegal will fail
+ storage plugin to start up.
+
+See the [Example of Postgres Configuration with `sourceParameters` configuration property](#example-of-postgres-configuration-with-sourceparameters-configuration-property)
+section for the example of usage.
+
+### Example: Working with MySQL
 
 Drill communicates with MySQL through the JDBC driver using the configuration that you specify in the Web UI or through the [REST API]({{site.baseurl}}/docs/plugin-configuration-basics/#storage-plugin-rest-api).  
 
@@ -29,7 +40,7 @@ To configure the JDBC storage plugin:
 1. On the Storage tab, enter a name in **New Storage Plugin**. For example, enter `myplugin`.
    Each configuration registered with Drill must have a distinct name. Names are case-sensitive.  
 
-    {% include startnote.html %}The URL differs depending on your installation and configuration. See the [example configurations](#Example-Configurations) below for examples.{% include endnote.html %}  
+    {% include startnote.html %}The URL differs depending on your installation and configuration. See the example configurations below for examples.{% include endnote.html %}  
 1. Click **Create**.  
 1. In Configuration, set the required properties using JSON formatting as shown in the following example. Change the properties to match your environment.  
 
@@ -62,7 +73,7 @@ You can use the performance_schema database, which is installed with MySQL to qu
 ## Example Configurations
 
   
-**Example Oracle Configuration**
+### Example Oracle Configuration
 
 Download and install Oracle's Thin [ojdbc7.12.1.0.2.jar](http://www.oracle.com/technetwork/database/features/jdbc/default-2280470.html) driver and copy it to all nodes in your cluster.
 
@@ -70,10 +81,10 @@ Download and install Oracle's Thin [ojdbc7.12.1.0.2.jar](http://www.oracle.com/t
       type: "jdbc",
       enabled: true,
       driver: "oracle.jdbc.OracleDriver",
-      url:"jdbc:oracle:thin:user/password@1.2.3.4:1521/ORCL"
+      url: "jdbc:oracle:thin:user/password@1.2.3.4:1521/ORCL"
     }
 
-**Example SQL Server Configuration**
+### Example SQL Server Configuration
 
 For SQL Server, Drill has been tested with Microsoft's  [sqljdbc41.4.2.6420.100.jar](https://www.microsoft.com/en-US/download/details.aspx?id=11774) driver. Copy this jar file to all Drillbits. 
 
@@ -83,12 +94,12 @@ For SQL Server, Drill has been tested with Microsoft's  [sqljdbc41.4.2.6420.100.
       type: "jdbc",
       enabled: true,
       driver: "com.microsoft.sqlserver.jdbc.SQLServerDriver",
-      url:"jdbc:sqlserver://1.2.3.4:1433;databaseName=mydatabase",
-      username:"user",
-      password:"password"
+      url: "jdbc:sqlserver://1.2.3.4:1433;databaseName=mydatabase",
+      username: "user",
+      password: "password"
     }
 
-**Example MySQL Configuration**
+### Example MySQL Configuration
 
 For MySQL, Drill has been tested with MySQL's [mysql-connector-java-5.1.37-bin.jar](http://dev.mysql.com/downloads/connector/j/) driver. Copy this to all nodes.
 
@@ -96,14 +107,15 @@ For MySQL, Drill has been tested with MySQL's [mysql-connector-java-5.1.37-bin.j
       type: "jdbc",
       enabled: true,
       driver: "com.mysql.jdbc.Driver",
-      url:"jdbc:mysql://1.2.3.4",
-      username:"user",
-      password:"password"
+      url: "jdbc:mysql://1.2.3.4",
+      username: "user",
+      password: "password"
     }  
 
-**Example Postgres Configuration**
+### Example Postgres Configuration
 
-For Postgres, Drill has been tested with Postgres's [9.1-901-1.jdbc4](http://central.maven.org/maven2/org/postgresql/postgresql/) driver (any recent driver should work). Copy this driver file to all nodes.
+Drill is tested with the Postgres driver version [42.2.11](https://mvnrepository.com/artifact/org.postgresql/postgresql) (any recent driver should work).
+ Download and copy this driver jar to the `jars/3rdparty` folder on all nodes.
 
 {% include startnote.html %}You'll need to provide a database name as part of your JDBC connection string for Drill to correctly expose Postgres tables.{% include endnote.html %}
 
@@ -111,9 +123,9 @@ For Postgres, Drill has been tested with Postgres's [9.1-901-1.jdbc4](http://cen
       type: "jdbc",
       enabled: true,
       driver: "org.postgresql.Driver",
-      url:"jdbc:postgresql://1.2.3.4/mydatabase",
-      username:"user",
-      password:"password"
+      url: "jdbc:postgresql://1.2.3.4/mydatabase",
+      username: "user",
+      password: "password"
     }  
 
 You may need to qualify a table name with a schema name for Drill to return data. For example, when querying a table named ips, you must issue the query against public.ips, as shown in the following example:  
@@ -142,4 +154,20 @@ You may need to qualify a table name with a schema name for Drill to return data
        | 2 	| 1.2.3.5  |
        +-------+----------+
 
+### Example of Postgres Configuration with `sourceParameters` configuration property
 
+    {
+      type: "jdbc",
+      enabled: true,
+      driver: "org.postgresql.Driver",
+      url: "jdbc:postgresql://1.2.3.4/mydatabase?defaultRowFetchSize=2",
+      username: "user",
+      password: "password",
+      sourceParameters: {
+        "minimumIdle": 5,
+        "autoCommit": false,
+        "connectionTestQuery": "select version() as postgresql_version",
+        "dataSource.cachePrepStmts": true,
+        "dataSource.prepStmtCacheSize": 250
+      }
+    }  
