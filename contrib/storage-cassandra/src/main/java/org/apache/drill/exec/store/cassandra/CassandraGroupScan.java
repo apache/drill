@@ -163,7 +163,7 @@ public class CassandraGroupScan extends AbstractGroupScan implements DrillCassan
       logger.debug(String.format("Getting cassandra session from host %s, port: %s.", storagePluginConfig.getHosts(), storagePluginConfig.getPort()));
 
       if (storagePlugin.getCluster() == null || storagePlugin.getCluster().isClosed() ) {
-        cluster = CassandraConnectionManager.getCluster(storagePluginConfig.getHosts(), storagePluginConfig.getPort());
+        cluster = CassandraConnectionManager.getCluster(storagePluginConfig);
         session = cluster.connect();
       } else {
         cluster = storagePlugin.getCluster();
@@ -383,7 +383,7 @@ public class CassandraGroupScan extends AbstractGroupScan implements DrillCassan
   @Override
   public int getMaxParallelizationWidth() {
     if (storagePlugin.getCluster() == null || storagePlugin.getCluster().isClosed() ) {
-      cluster = CassandraConnectionManager.getCluster(storagePluginConfig.getHosts(), storagePluginConfig.getPort());
+      cluster = CassandraConnectionManager.getCluster(storagePluginConfig);
     } else {
       cluster = storagePlugin.getCluster();
     }
@@ -394,7 +394,7 @@ public class CassandraGroupScan extends AbstractGroupScan implements DrillCassan
   @Override
   public ScanStats getScanStats() {
     if (storagePlugin.getCluster() == null || storagePlugin.getCluster().isClosed() ) {
-      cluster = CassandraConnectionManager.getCluster(storagePluginConfig.getHosts(), storagePluginConfig.getPort());
+      cluster = CassandraConnectionManager.getCluster(storagePluginConfig);
       session = cluster.connect();
     } else {
       cluster = storagePlugin.getCluster();

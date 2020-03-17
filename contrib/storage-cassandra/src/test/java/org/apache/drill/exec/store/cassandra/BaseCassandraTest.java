@@ -60,8 +60,8 @@ public class BaseCassandraTest extends BaseTestQuery implements CassandraTestCon
     List<String> hosts = new ArrayList<>();
     hosts.add("127.0.0.1");
 
-    cassandraStoragePluginConfig = new CassandraStoragePluginConfig(hosts, 9042);
-    pluginRegistry.createOrUpdate("cassandra", cassandraStoragePluginConfig, true);
+    cassandraStoragePluginConfig = new CassandraStoragePluginConfig(hosts, 9042, "", "");
+    pluginRegistry.put("cassandra", cassandraStoragePluginConfig);
 
     storagePlugin = (CassandraStoragePlugin) pluginRegistry.getPlugin("cassandra");
     cassandraStoragePluginConfig.setEnabled(true);
@@ -75,7 +75,7 @@ public class BaseCassandraTest extends BaseTestQuery implements CassandraTestCon
   private static boolean createTestCassandraTableIfNotExists(List<String> host, int port) throws DrillException {
     try {
       logger.info("Initiating Cassandra Keyspace/Table for Test cases. Host: {}, Port: {}", host, port);
-      Cluster cluster = CassandraConnectionManager.getCluster(host, port);
+      Cluster cluster = CassandraConnectionManager.getCluster(new CassandraStoragePluginConfig(host, port, "", ""));
       Session session = cluster.connect();
 
       /* Create Schema: Keyspace */

@@ -24,6 +24,7 @@ import java.util.List;
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.Clause;
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
@@ -270,7 +271,15 @@ public class CassandraSubScan extends AbstractBase implements SubScan {
 
     @Override
     public String toString() {
-      return "CassandraSubScanSpec [keyspace=" + keyspace + ", table=" + table + ", host=" + hosts + ", port=" + port + ", startToken=" + startToken + ", endToken=" + endToken + ", filter=" + filter + "]";
+      return new PlanStringBuilder(this)
+        .field("keyspace", keyspace)
+        .field("table", table)
+        .field("host", hosts)
+        .field("port", port)
+        .field("startToken", startToken)
+        .field("endToken", endToken)
+        .field("filter", filter)
+        .toString();
     }
   }
 }

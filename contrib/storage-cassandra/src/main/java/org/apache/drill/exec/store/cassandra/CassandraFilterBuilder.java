@@ -90,7 +90,7 @@ public class CassandraFilterBuilder extends AbstractExprVisitor<CassandraScanSpe
   @Override
   public CassandraScanSpec visitBooleanOperator(BooleanOperator op, Void value) {
 
-    List<LogicalExpression> args = op.args;
+    List<LogicalExpression> args = op.args();
     CassandraScanSpec nodeScanSpec = null;
     String functionName = op.getName();
     for (int i = 0; i < args.size(); ++i) {
@@ -117,7 +117,7 @@ public class CassandraFilterBuilder extends AbstractExprVisitor<CassandraScanSpe
 
     CassandraScanSpec nodeScanSpec = null;
     String functionName = call.getName();
-    ImmutableList<LogicalExpression> args = call.args;
+    List<LogicalExpression> args = call.args();
 
     if (CassandraCompareFunctionsProcessor.isCompareFunction(functionName)) {
       CassandraCompareFunctionsProcessor processor = CassandraCompareFunctionsProcessor.process(call);

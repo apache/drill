@@ -19,10 +19,12 @@
 package org.apache.drill.exec.store.cassandra.connection;
 
 import com.datastax.driver.core.Cluster;
+import org.apache.drill.exec.store.cassandra.CassandraStoragePluginConfig;
 import org.apache.drill.shaded.guava.com.google.common.cache.Cache;
 import org.apache.drill.shaded.guava.com.google.common.cache.CacheBuilder;
 import org.apache.drill.shaded.guava.com.google.common.cache.RemovalListener;
 import org.apache.drill.shaded.guava.com.google.common.cache.RemovalNotification;
+import org.apache.parquet.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.List;
@@ -42,7 +44,12 @@ public class CassandraConnectionManager {
       .removalListener(new AddressCloser()).build();
   }
 
-  public synchronized static Cluster getCluster(List<String> hosts, int port) {
+  public synchronized static Cluster getCluster(CassandraStoragePluginConfig config) {
+
+    List<String> hosts = config.getHosts();
+    int port = config.getPort();
+    String username = config.getUsername();
+    String password = config.getPassword();
 
     Cluster cluster = hostConnectionMap.getIfPresent(hosts);
     if (cluster == null || cluster.isClosed()) {
@@ -51,6 +58,12 @@ public class CassandraConnectionManager {
         builder = builder.addContactPoints(host);
       }
       builder = builder.withPort(port);
+
+      // Add creds if present
+      if (! (Strings.isNullOrEmpty(username) || Strings.isNullOrEmpty(password))) {
+        builder = builder.withCredentials(username, password);
+      }
+
       builder = builder.withoutJMXReporting();
       cluster = builder.build();
 

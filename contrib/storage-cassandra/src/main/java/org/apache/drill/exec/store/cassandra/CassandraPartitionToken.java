@@ -17,32 +17,34 @@
  */
 package org.apache.drill.exec.store.cassandra;
 
+import org.apache.drill.common.PlanStringBuilder;
+
 public class CassandraPartitionToken {
 
-    private String low;
-    private String high;
+  private String low;
+  private String high;
 
-    public String getLow() {
-        return low;
-    }
+  public String getLow() {
+    return low;
+  }
 
-    public void setLow(String low) {
-        this.low = low;
-    }
+  public void setLow(String low) {
+    this.low = low;
+  }
 
-    public String getHigh() {
-        return high;
-    }
+  public String getHigh() {
+    return high;
+  }
 
-    public void setHigh(String high) {
-        this.high = high;
-    }
+  public void setHigh(String high) {
+    this.high = high;
+  }
 
-    @Override
-    public String toString() {
-        return "CassandraPartitionToken{" +
-                "low='" + low + '\'' +
-                ", high='" + high + '\'' +
-                '}';
-    }
+  @Override
+  public String toString() {
+    return new PlanStringBuilder(this)
+      .field("low", low)
+      .field("high", high)
+      .toString();
+  }
 }

@@ -147,7 +147,7 @@ public class CassandraRecordReader extends AbstractRecordReader implements Drill
       // Storage plugin class and closed when Drill is shut down OR when the storage plugin
       // is disabled.
       if (plugin.getCluster() == null || plugin.getCluster().isClosed() ) {
-        cluster = CassandraConnectionManager.getCluster(host, port);
+        cluster = CassandraConnectionManager.getCluster(cassandraConf);
         session = cluster.connect();
       } else {
         cluster = plugin.getCluster();

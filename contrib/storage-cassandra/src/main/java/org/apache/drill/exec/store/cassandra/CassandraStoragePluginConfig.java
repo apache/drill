@@ -21,8 +21,8 @@ package org.apache.drill.exec.store.cassandra;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.logical.StoragePluginConfigBase;
-import org.apache.drill.shaded.guava.com.google.common.base.MoreObjects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.List;
@@ -37,14 +37,22 @@ public class CassandraStoragePluginConfig extends StoragePluginConfigBase {
 
   public final List<String> hosts;
 
+  public final String username;
+
+  public final String password;
+
   public final int port;
 
   @JsonCreator
   public CassandraStoragePluginConfig(@JsonProperty("hosts") List<String> hosts,
-                                      @JsonProperty("port") int port ) {
+                                      @JsonProperty("port") int port,
+                                      @JsonProperty("username") String username,
+                                      @JsonProperty("password") String password) {
     logger.debug("Initializing Cassandra Plugin with hosts: {} and port {}", hosts.toString(), port);
     this.hosts = hosts;
     this.port = port;
+    this.username = username;
+    this.password = password;
   }
 
   @JsonProperty("hosts")
@@ -55,6 +63,14 @@ public class CassandraStoragePluginConfig extends StoragePluginConfigBase {
   @JsonProperty("port")
   public int getPort(){ return port; }
 
+  @JsonProperty("username")
+  public String getUsername() {
+    return username;
+  }
+
+  @JsonProperty("password")
+  public String getPassword() { return password; }
+
   @Override
   public boolean equals(Object o) {
     if (o == this) {
@@ -64,7 +80,9 @@ public class CassandraStoragePluginConfig extends StoragePluginConfigBase {
       return false;
     }
     return Objects.equal(hosts, ((CassandraStoragePluginConfig) o).hosts) &&
-      Objects.equal(port, ((CassandraStoragePluginConfig) o).port);
+      Objects.equal(port, ((CassandraStoragePluginConfig) o).port) &&
+      Objects.equal(username, ((CassandraStoragePluginConfig) o).username) &&
+      Objects.equal(password, ((CassandraStoragePluginConfig) o).password);
   }
 
   @Override
@@ -74,9 +92,11 @@ public class CassandraStoragePluginConfig extends StoragePluginConfigBase {
 
   @Override
   public String toString() {
-    return MoreObjects.toStringHelper(this)
-      .add("hosts", hosts)
-      .add("port", port)
+    return new PlanStringBuilder(this)
+      .field("hosts", hosts)
+      .field("port", port)
+      .field("username", username)
+      .field("password", password)  // This doesn't seem like a good idea to be able to view unmasked creds via DESCRIBE queries
       .toString();
   }
 }

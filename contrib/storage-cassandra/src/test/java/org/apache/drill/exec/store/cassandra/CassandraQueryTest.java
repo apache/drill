@@ -33,9 +33,9 @@ public class CassandraQueryTest extends ClusterTest {
     hosts.add("127.0.0.1");
 
     StoragePluginRegistry pluginRegistry = cluster.drillbit().getContext().getStorage();
-    CassandraStoragePluginConfig config = new CassandraStoragePluginConfig(hosts, 9042);
+    CassandraStoragePluginConfig config = new CassandraStoragePluginConfig(hosts, 9042, "", "");
     config.setEnabled(true);
-    pluginRegistry.createOrUpdate(CassandraStoragePluginConfig.NAME, config, true);
+    pluginRegistry.put(CassandraStoragePluginConfig.NAME, config);
   }
 
   @Test
@@ -121,7 +121,7 @@ public class CassandraQueryTest extends ClusterTest {
 
   @Test
   public void testGreaterThanOrEqualTo() throws Exception {
-    String sql = "SELECT `id` FROM cassandra.drilltest.trending_now WHERE pog_rank >= 5";
+    String sql = "SELECT `id` FROM cassandra.drilltest.trending_now WHERE CAST(pog_rank AS INT) >= 5";
     QueryBuilder q = queryBuilder().sql(sql);
     RowSet results = q.rowSet();
 

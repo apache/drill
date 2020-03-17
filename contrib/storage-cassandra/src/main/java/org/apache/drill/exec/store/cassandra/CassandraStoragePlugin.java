@@ -54,7 +54,7 @@ public class CassandraStoragePlugin extends AbstractStoragePlugin {
     this.cassandraConfig = cassandraConfig;
     this.schemaFactory = new DrillCassandraSchemaFactory(this, name);
 
-    cluster = CassandraConnectionManager.getCluster(cassandraConfig.getHosts(), cassandraConfig.getPort());
+    cluster = CassandraConnectionManager.getCluster(cassandraConfig);
     session = cluster.connect();
   }
 

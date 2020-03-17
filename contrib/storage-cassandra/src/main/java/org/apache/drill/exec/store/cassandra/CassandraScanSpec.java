@@ -21,6 +21,7 @@ import com.datastax.driver.core.querybuilder.Clause;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.drill.common.PlanStringBuilder;
 
 import java.util.List;
 
@@ -59,6 +60,10 @@ public class CassandraScanSpec {
 
   @Override
   public String toString() {
-    return "CassandraScanSpec [keyspace=" + keyspace + ", table=" + table + ", filters=" + filters + "]";
+    return new PlanStringBuilder(this)
+      .field("keyspace", keyspace)
+      .field("table", table)
+      .field("filters", filters)
+      .toString();
   }
 }
