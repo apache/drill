@@ -100,5 +100,4 @@ public class CassandraStoragePlugin extends AbstractStoragePlugin {
     AutoCloseables.closeSilently(cluster);
     AutoCloseables.closeSilently(session);
   }
-
 }

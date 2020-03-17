@@ -47,8 +47,8 @@ public class CassandraCompareFunctionsProcessor extends AbstractExprVisitor<Bool
 
   public static CassandraCompareFunctionsProcessor process(FunctionCall call) {
     String functionName = call.getName();
-    LogicalExpression nameArg = call.args.get(0);
-    LogicalExpression valueArg = call.args.size() >= 2 ? call.args.get(1) : null;
+    LogicalExpression nameArg = call.arg(0);
+    LogicalExpression valueArg = call.argCount() >= 2 ? call.arg(1) : null;
     CassandraCompareFunctionsProcessor evaluator = new CassandraCompareFunctionsProcessor(functionName);
 
     if (valueArg != null) { // binary function
@@ -59,7 +59,7 @@ public class CassandraCompareFunctionsProcessor extends AbstractExprVisitor<Bool
         evaluator.functionName = COMPARE_FUNCTIONS_TRANSPOSE_MAP.get(functionName);
       }
       evaluator.success = nameArg.accept(evaluator, valueArg);
-    } else if (call.args.get(0) instanceof SchemaPath) {
+    } else if (call.arg(0) instanceof SchemaPath) {
       evaluator.success = true;
       evaluator.path = (SchemaPath) nameArg;
     }

@@ -57,7 +57,6 @@ public class CassandraScanSpec {
     return filters;
   }
 
-
   @Override
   public String toString() {
     return "CassandraScanSpec [keyspace=" + keyspace + ", table=" + table + ", filters=" + filters + "]";
