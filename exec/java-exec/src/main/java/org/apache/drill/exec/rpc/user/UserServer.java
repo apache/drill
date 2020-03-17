@@ -137,6 +137,7 @@ public class UserServer extends BasicServer<RpcType, BitToUserConnection> {
           .initializeSSLContext(true)
           .validateKeyStore(true)
           .build();
+      logger.info("Rpc server configured to use TLS protocol '{}'", sslConfig.getProtocol());
     } catch (DrillException e) {
       throw new DrillbitStartupException(e.getMessage(), e.getCause());
     }
