@@ -162,6 +162,7 @@ public class WebServer implements AutoCloseable {
     threadPool.setMaxThreads(handlers + connector.getAcceptors() + connector.getSelectorManager().getSelectorCount());
     embeddedJetty.addConnector(connector);
 
+    embeddedJetty.setDumpAfterStart(config.getBoolean(ExecConstants.HTTP_JETTY_SERVER_DUMP_AFTER_START));
     final boolean portHunt = config.getBoolean(ExecConstants.HTTP_PORT_HUNT);
     for (int retry = 0; retry < PORT_HUNT_TRIES; retry++) {
       connector.setPort(port);

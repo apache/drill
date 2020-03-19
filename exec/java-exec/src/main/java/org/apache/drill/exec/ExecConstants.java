@@ -210,6 +210,7 @@ public final class ExecConstants {
   public static final String HTTP_PROFILES_PER_PAGE = "drill.exec.http.profiles_per_page";
   public static final String HTTP_PORT = "drill.exec.http.port";
   public static final String HTTP_PORT_HUNT = "drill.exec.http.porthunt";
+  public static final String HTTP_JETTY_SERVER_DUMP_AFTER_START = "drill.exec.http.jetty.server.dumpAfterStart";
   public static final String HTTP_JETTY_SERVER_ACCEPTORS = "drill.exec.http.jetty.server.acceptors";
   public static final String HTTP_JETTY_SERVER_SELECTORS = "drill.exec.http.jetty.server.selectors";
   public static final String HTTP_JETTY_SERVER_HANDLERS = "drill.exec.http.jetty.server.handlers";
