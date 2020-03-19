@@ -1660,6 +1660,11 @@
         </exclusions>
       </dependency>
       <dependency>
+        <groupId>com.mapr.security</groupId>
+        <artifactId>mapr-security-web</artifactId>
+        <version>${mapr.release.version}</version>
+      </dependency>
+      <dependency>
         <groupId>org.ojai</groupId>
         <artifactId>ojai</artifactId>
         <version>${ojai.version}</version>
