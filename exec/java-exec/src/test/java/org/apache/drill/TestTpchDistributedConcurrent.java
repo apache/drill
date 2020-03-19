@@ -26,18 +26,25 @@ import java.util.concurrent.Semaphore;
 
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.test.BaseTestQuery.SilentListener;
+import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.ClusterFixtureBuilder;
+import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.TestTools;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
-import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.test.QueryTestUtil;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.TestRule;
 
 import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -49,17 +56,18 @@ import static org.junit.Assert.assertNull;
  * any particular order of execution. We ignore the results.
  */
 @Category({SlowTest.class})
-public class TestTpchDistributedConcurrent extends BaseTestQuery {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestTpchDistributedConcurrent.class);
+public class TestTpchDistributedConcurrent extends ClusterTest {
+  private static final Logger logger = LoggerFactory.getLogger(TestTpchDistributedConcurrent.class);
 
-  @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(360000); // Longer timeout than usual.
+  @Rule
+  public final TestRule TIMEOUT = TestTools.getTimeoutRule(400_000); // 400 secs
 
   /*
    * Valid test names taken from TestTpchDistributed. Fuller path prefixes are
    * used so that tests may also be taken from other locations -- more variety
    * is better as far as this test goes.
    */
-  private final static String queryFile[] = {
+  private static final String[] queryFile = {
     "queries/tpch/01.sql",
     "queries/tpch/03.sql",
     "queries/tpch/04.sql",
@@ -80,44 +88,91 @@ public class TestTpchDistributedConcurrent extends BaseTestQuery {
     "queries/tpch/20.sql",
   };
 
-  private final static int TOTAL_QUERIES = 115;
-  private final static int CONCURRENT_QUERIES = 15;
-
-  private final static Random random = new Random(0xdeadbeef);
-  private final static String alterSession = "alter session set `planner.slice_target` = 10";
+  private static final int TOTAL_QUERIES = 115;
+  private static final int CONCURRENT_QUERIES = 15;
+  private static final Random random = new Random(0xdeadbeef);
 
   private int remainingQueries = TOTAL_QUERIES - CONCURRENT_QUERIES;
   private final Semaphore completionSemaphore = new Semaphore(0);
   private final Semaphore submissionSemaphore = new Semaphore(0);
   private final Set<UserResultsListener> listeners = Sets.newIdentityHashSet();
+  private final List<FailedQuery> failedQueries = new LinkedList<>();
   private Thread testThread = null; // used to interrupt semaphore wait in case of error
+
+  @BeforeClass
+  public static void setUp() throws Exception {
+    ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher)
+        .configProperty(ExecConstants.USER_RPC_TIMEOUT, 5_000);
+    startCluster(builder);
+  }
+
+  @Test
+  public void testConcurrentQueries() {
+    client.alterSession(ExecConstants.SLICE_TARGET, 10);
+
+    testThread = Thread.currentThread();
+    final QuerySubmitter querySubmitter = new QuerySubmitter();
+    querySubmitter.start();
+
+    // Kick off the initial queries. As they complete, they will submit more.
+    submissionSemaphore.release(CONCURRENT_QUERIES);
+
+    // Wait for all the queries to complete.
+    InterruptedException interruptedException = null;
+    try {
+      completionSemaphore.acquire(TOTAL_QUERIES);
+    } catch (InterruptedException e) {
+      interruptedException = e;
+
+      // List the failed queries.
+      for (FailedQuery fq : failedQueries) {
+        logger.error("{} failed with {}", fq.queryFile, fq.userEx);
+      }
+    }
+
+    // Stop the querySubmitter thread.
+    querySubmitter.interrupt();
+
+    if (interruptedException != null) {
+      logger.error("Interruped Exception ", interruptedException);
+    }
+
+    assertNull("Query error caused interruption", interruptedException);
+
+    int nListeners = listeners.size();
+    assertEquals(nListeners + " listeners still exist", 0, nListeners);
+
+    assertEquals("Didn't submit all queries", 0, remainingQueries);
+    assertEquals("Queries failed", 0, failedQueries.size());
+  }
+
+  private void submitRandomQuery() {
+    String filename = queryFile[random.nextInt(queryFile.length)];
+    String query;
+    try {
+      query = QueryTestUtil.normalizeQuery(getFile(filename)).replace(';', ' ');
+    } catch (IOException e) {
+      throw new RuntimeException("Caught exception", e);
+    }
+    UserResultsListener listener = new ChainingSilentListener(query);
+    queryBuilder()
+        .query(UserBitShared.QueryType.SQL, query)
+        .withListener(listener);
+    synchronized (this) {
+      listeners.add(listener);
+    }
+  }
 
   private static class FailedQuery {
     final String queryFile;
     final UserException userEx;
 
-    public FailedQuery(final String queryFile, final UserException userEx) {
+    public FailedQuery(String queryFile, UserException userEx) {
       this.queryFile = queryFile;
       this.userEx = userEx;
     }
   }
 
-  private final List<FailedQuery> failedQueries = new LinkedList<>();
-
-  private void submitRandomQuery() {
-    final String filename = queryFile[random.nextInt(queryFile.length)];
-    final String query;
-    try {
-      query = QueryTestUtil.normalizeQuery(getFile(filename)).replace(';', ' ');
-    } catch(IOException e) {
-      throw new RuntimeException("Caught exception", e);
-    }
-    final UserResultsListener listener = new ChainingSilentListener(query);
-    client.runQuery(UserBitShared.QueryType.SQL, query, listener);
-    synchronized(this) {
-      listeners.add(listener);
-    }
-  }
 
   private class ChainingSilentListener extends SilentListener {
     private final String query;
@@ -130,8 +185,7 @@ public class TestTpchDistributedConcurrent extends BaseTestQuery {
     public void queryCompleted(QueryState state) {
       super.queryCompleted(state);
 
-      completionSemaphore.release();
-      synchronized(TestTpchDistributedConcurrent.this) {
+      synchronized (TestTpchDistributedConcurrent.this) {
         final Object object = listeners.remove(this);
         assertNotNull("listener not found", object);
 
@@ -146,6 +200,7 @@ public class TestTpchDistributedConcurrent extends BaseTestQuery {
           --remainingQueries;
         }
       }
+      completionSemaphore.release();
     }
 
     @Override
@@ -154,7 +209,7 @@ public class TestTpchDistributedConcurrent extends BaseTestQuery {
 
       completionSemaphore.release();
       logger.error("submissionFailed for {} \nwith:", query, uex);
-      synchronized(TestTpchDistributedConcurrent.this) {
+      synchronized (TestTpchDistributedConcurrent.this) {
         final Object object = listeners.remove(this);
         assertNotNull("listener not found", object);
         failedQueries.add(new FailedQuery(query, uex));
@@ -166,10 +221,10 @@ public class TestTpchDistributedConcurrent extends BaseTestQuery {
   private class QuerySubmitter extends Thread {
     @Override
     public void run() {
-      while(true) {
+      while (true) {
         try {
           submissionSemaphore.acquire();
-        } catch(InterruptedException e) {
+        } catch (InterruptedException e) {
           logger.error("QuerySubmitter quitting.");
           return;
         }
@@ -177,51 +232,5 @@ public class TestTpchDistributedConcurrent extends BaseTestQuery {
         submitRandomQuery();
       }
     }
-  }
-
-  @Test
-  public void testConcurrentQueries() throws Exception {
-    QueryTestUtil.testRunAndLog(client, UserBitShared.QueryType.SQL, alterSession);
-
-    testThread = Thread.currentThread();
-    final QuerySubmitter querySubmitter = new QuerySubmitter();
-    querySubmitter.start();
-
-    // Kick off the initial queries. As they complete, they will submit more.
-    submissionSemaphore.release(CONCURRENT_QUERIES);
-
-    // Wait for all the queries to complete.
-    InterruptedException interruptedException = null;
-    try {
-      completionSemaphore.acquire(TOTAL_QUERIES);
-    } catch(InterruptedException e) {
-      interruptedException = e;
-
-      // List the failed queries.
-      for(final FailedQuery fq : failedQueries) {
-        logger.error(String.format("%s failed with %s", fq.queryFile, fq.userEx));
-      }
-    }
-
-    // Stop the querySubmitter thread.
-    querySubmitter.interrupt();
-
-    if (interruptedException != null) {
-      final StackTraceElement[] ste = interruptedException.getStackTrace();
-      final StringBuilder sb = new StringBuilder();
-      for(StackTraceElement s : ste) {
-        sb.append(s.toString());
-        sb.append('\n');
-      }
-      logger.error("Interruped Exception ", interruptedException);
-    }
-
-    assertNull("Query error caused interruption", interruptedException);
-
-    final int nListeners = listeners.size();
-    assertEquals(nListeners + " listeners still exist", 0, nListeners);
-
-    assertEquals("Didn't submit all queries", 0, remainingQueries);
-    assertEquals("Queries failed", 0, failedQueries.size());
   }
 }
