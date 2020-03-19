@@ -29,7 +29,6 @@
   <name>exec/Java Execution Engine</name>
   <properties>
     <libpam4j.version>1.8-rev2</libpam4j.version>
-    <maprfs.version>6.1.0-mapr</maprfs.version>
   </properties>
 
   <dependencies>
@@ -702,7 +701,6 @@
         <dependency>
           <groupId>com.mapr.security</groupId>
           <artifactId>mapr-security-web</artifactId>
-          <version>${maprfs.version}</version>
         </dependency>
       </dependencies>
     </profile>

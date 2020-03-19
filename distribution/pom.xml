@@ -437,6 +437,10 @@
           <groupId>com.mapr.db</groupId>
           <artifactId>maprdb-mapreduce</artifactId>
         </dependency>
+        <dependency>
+          <groupId>com.mapr.security</groupId>
+          <artifactId>mapr-security-web</artifactId>
+        </dependency>
       </dependencies>
       <build>
         <plugins>
