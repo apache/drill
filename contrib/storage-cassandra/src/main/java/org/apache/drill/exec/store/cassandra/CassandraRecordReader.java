@@ -207,11 +207,11 @@ public class CassandraRecordReader extends AbstractRecordReader implements Drill
           while (iter.hasNext()) {
             ColumnDefinitions.Definition def = iter.next();
             MaterializedField field = MaterializedField.create(def.getName(), COLUMN_TYPE);
-            vector = this.outputMutator.addField(field, NullableVarCharVector.class);
+            vector = outputMutator.addField(field, NullableVarCharVector.class);
           }
         } else {
           MaterializedField field = MaterializedField.create(column.getRootSegment().getPath(), COLUMN_TYPE);
-          vector = this.outputMutator.addField(field, NullableVarCharVector.class);
+          vector = outputMutator.addField(field, NullableVarCharVector.class);
         }
       }
     } catch (SchemaChangeException e) {
@@ -314,7 +314,7 @@ public class CassandraRecordReader extends AbstractRecordReader implements Drill
       Class clazz = r.getColumnDefinitions().getType(colname).getClass();
 
       String dataType = r.getColumnDefinitions().getType(colname).asFunctionParameterString();
-      logger.debug("Datatype: {}", dataType);
+      logger.debug("Colname: {}, Datatype: {}", colname, dataType);
 
       if (dataType.equalsIgnoreCase("long")) {
         value = String.valueOf(r.getLong(colname));
