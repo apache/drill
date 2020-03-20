@@ -33,7 +33,7 @@ jobs:
     strategy:
       matrix:
         # Java versions to run unit tests
-        java: [ '1.8', '11', '13' ]
+        java: [ '1.8', '11', '14' ]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
