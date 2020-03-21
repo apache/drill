@@ -167,6 +167,8 @@ public interface FragmentContext extends UdfUtilities, AutoCloseable {
 
   DrillBuf getManagedBuffer(int size);
 
+  BufferManager getManagedBufferManager();
+
   @Override
   void close();
 

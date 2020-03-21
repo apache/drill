@@ -122,4 +122,9 @@ public abstract class BaseFragmentContext implements FragmentContext {
   public QueryContext.SqlStatementType getSQLStatementType() {
     return null;
   }
+
+  @Override
+  public BufferManager getManagedBufferManager() {
+    return getBufferManager();
+  }
 }
