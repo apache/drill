@@ -17,7 +17,7 @@
 #
 
 data: {
-    drillDataType:  tdd(../data/Hive2DateTypes.tdd),
+    drillDataType:  tdd(../data/Hive3DateTypes.tdd),
     drillOI:        tdd(../data/HiveTypes.tdd)
 }
 freemarkerLinks: {

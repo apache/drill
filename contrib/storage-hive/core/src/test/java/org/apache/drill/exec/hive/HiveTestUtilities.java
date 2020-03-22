@@ -27,9 +27,10 @@ import java.util.Set;
 
 import org.apache.drill.test.QueryBuilder;
 import org.apache.drill.test.TestTools;
-import org.apache.hadoop.hive.ql.CommandNeedRetryException;
 import org.apache.hadoop.hive.ql.Driver;
 import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
+import org.apache.hadoop.util.ComparableVersion;
+import org.apache.hive.common.util.HiveVersionInfo;
 import org.junit.AssumptionViolatedException;
 
 import static org.hamcrest.CoreMatchers.containsString;
@@ -46,27 +47,19 @@ public class HiveTestUtilities {
   private static final Set<PosixFilePermission> ALL_POSIX_PERMISSIONS = EnumSet.allOf(PosixFilePermission.class);
 
   /**
-   * Execute the give <i>query</i> on given <i>hiveDriver</i> instance. If a {@link CommandNeedRetryException}
-   * exception is thrown, it tries upto 3 times before returning failure.
-   * @param hiveDriver
-   * @param query
+   * Execute the give <i>query</i> on given <i>hiveDriver</i> instance.
    */
   public static void executeQuery(Driver hiveDriver, String query) {
-    CommandProcessorResponse response = null;
-    boolean failed = false;
-    int retryCount = 3;
-
+    CommandProcessorResponse response;
     try {
       response = hiveDriver.run(query);
-    } catch(CommandNeedRetryException ex) {
-      if (--retryCount == 0) {
-        failed = true;
-      }
+    } catch (Exception e) {
+       throw new RuntimeException(e);
     }
 
-    if (failed || response.getResponseCode() != 0 ) {
+    if (response.getResponseCode() != 0 ) {
       throw new RuntimeException(String.format("Failed to execute command '%s', errorMsg = '%s'",
-          query, (response != null ? response.getErrorMessage() : "")));
+          query, response.getErrorMessage()));
     }
   }
 
@@ -139,6 +132,14 @@ public class HiveTestUtilities {
    */
   public static boolean supportedJavaVersion() {
     return System.getProperty("java.version").startsWith("1.8");
+  }
+
+  /**
+   * Checks whether current version is not less than hive 3.0
+   */
+  public static boolean isHive3() {
+    return new ComparableVersion(HiveVersionInfo.getVersion())
+        .compareTo(new ComparableVersion("3.0")) >= 0;
   }
 
   /**

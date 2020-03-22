@@ -27,14 +27,13 @@ import org.apache.drill.exec.hive.HiveTestUtilities;
 import org.apache.drill.exec.impersonation.BaseTestImpersonation;
 import org.apache.drill.exec.store.hive.HiveStoragePluginConfig;
 import org.apache.drill.test.TestBuilder;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
-import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.ql.Driver;
-import org.apache.hadoop.hive.shims.ShimLoader;
 import org.junit.BeforeClass;
 
 import static org.apache.drill.exec.hive.HiveTestUtilities.createDirWithPosixPermissions;
@@ -85,6 +84,9 @@ public class BaseTestHiveImpersonation extends BaseTestImpersonation {
     hiveConf.set(ConfVars.METASTORE_SCHEMA_VERIFICATION.varname, "false");
     hiveConf.set(ConfVars.METASTORE_AUTO_CREATE_ALL.varname, "true");
     hiveConf.set(ConfVars.HIVE_CBO_ENABLED.varname, "false");
+    hiveConf.set(ConfVars.HIVESTATSAUTOGATHER.varname, "false");
+    hiveConf.set(ConfVars.HIVESTATSCOLAUTOGATHER.varname, "false");
+    hiveConf.set(ConfVars.HIVESESSIONSILENT.varname, "true");
 
     // Set MiniDFS conf in HiveConf
     hiveConf.set(FS_DEFAULT_NAME_KEY, dfsConf.get(FS_DEFAULT_NAME_KEY));
@@ -97,11 +99,29 @@ public class BaseTestHiveImpersonation extends BaseTestImpersonation {
   }
 
   protected static void startHiveMetaStore() throws Exception {
-    final int port = MetaStoreUtils.findFreePort();
+    Class<?> metaStoreUtilsClass;
+    Class<?> hadoopThriftAuthBridgeClass;
+    Class<?> confClass;
+    Object hadoopThriftAuthBridge;
+    // TODO: remove reflection stuff when all supported profiles will be switched to Hive 3+ version
+    try {
+      metaStoreUtilsClass = Class.forName("org.apache.hadoop.hive.metastore.utils.MetaStoreUtils");
+      hadoopThriftAuthBridgeClass = Class.forName("org.apache.hadoop.hive.metastore.security.HadoopThriftAuthBridge");
+      hadoopThriftAuthBridge = hadoopThriftAuthBridgeClass.getDeclaredMethod("getBridge").invoke(null);
+      confClass = Configuration.class;
+    } catch (ClassNotFoundException e) {
+      metaStoreUtilsClass = Class.forName("org.apache.hadoop.hive.metastore.MetaStoreUtils");
+      hadoopThriftAuthBridgeClass = Class.forName("org.apache.hadoop.hive.thrift.HadoopThriftAuthBridge");
+      hadoopThriftAuthBridge = Class.forName("org.apache.hadoop.hive.shims.ShimLoader")
+          .getDeclaredMethod("getHadoopThriftAuthBridge").invoke(null);
+      confClass = HiveConf.class;
+    }
+    final int port = (int) metaStoreUtilsClass.getDeclaredMethod("findFreePort").invoke(null);
 
     hiveConf.set(METASTOREURIS.varname, "thrift://localhost:" + port);
 
-    MetaStoreUtils.startMetaStore(port, ShimLoader.getHadoopThriftAuthBridge(), hiveConf);
+    metaStoreUtilsClass.getDeclaredMethod("startMetaStore", int.class, hadoopThriftAuthBridgeClass, confClass)
+        .invoke(null, port, hadoopThriftAuthBridge, hiveConf);
   }
 
   protected static HiveStoragePluginConfig createHiveStoragePlugin(final Map<String, String> hiveConfig) throws Exception {

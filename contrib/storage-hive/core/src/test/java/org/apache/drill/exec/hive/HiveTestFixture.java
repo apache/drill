@@ -167,6 +167,8 @@ public class HiveTestFixture {
       driverOption(ConfVars.DYNAMICPARTITIONINGMODE, "nonstrict");
       driverOption(ConfVars.METASTORE_AUTO_CREATE_ALL, Boolean.toString(true));
       driverOption(ConfVars.METASTORE_SCHEMA_VERIFICATION, Boolean.toString(false));
+      driverOption(ConfVars.HIVE_MATERIALIZED_VIEW_ENABLE_AUTO_REWRITING, Boolean.toString(false));
+      driverOption(HiveConf.ConfVars.HIVESESSIONSILENT, Boolean.toString(true));
       driverOption(ConfVars.HIVE_CBO_ENABLED, Boolean.toString(false));
     }
 

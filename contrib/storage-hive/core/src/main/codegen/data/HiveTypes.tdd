@@ -96,24 +96,10 @@
       needOIForDrillType: true
     },
     {
-      hiveType: "TIMESTAMP",
-      hiveOI: "TimestampObjectInspector",
-      javaType: "java.sql.Timestamp",
-      drillType: "TimeStamp",
-      needOIForDrillType: true
-    },
-    {
       hiveType: "DECIMAL",
       hiveOI: "HiveDecimalObjectInspector",
       javaType: "org.apache.hadoop.hive.common.type.HiveDecimal",
       drillType: "VarDecimal",
-      needOIForDrillType: true
-    },
-    {
-      hiveType: "DATE",
-      hiveOI: "DateObjectInspector",
-      javaType: "java.sql.Date",
-      drillType: "Date",
       needOIForDrillType: true
     }
   ]
