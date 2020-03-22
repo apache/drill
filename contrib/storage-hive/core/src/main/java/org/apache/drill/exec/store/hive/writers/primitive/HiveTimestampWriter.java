@@ -18,21 +18,25 @@
 package org.apache.drill.exec.store.hive.writers.primitive;
 
 import org.apache.drill.exec.vector.complex.writer.TimeStampWriter;
-import org.apache.hadoop.hive.serde2.objectinspector.primitive.TimestampObjectInspector;
+import org.apache.hadoop.hive.serde2.objectinspector.PrimitiveObjectInspector;
+import org.apache.hadoop.hive.serde2.objectinspector.primitive.PrimitiveObjectInspectorUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
-public class HiveTimestampWriter extends AbstractSingleValueWriter<TimestampObjectInspector, TimeStampWriter> {
+import java.sql.Timestamp;
 
-  public HiveTimestampWriter(TimestampObjectInspector inspector, TimeStampWriter writer) {
+public class HiveTimestampWriter extends AbstractSingleValueWriter<PrimitiveObjectInspector, TimeStampWriter> {
+
+  public HiveTimestampWriter(PrimitiveObjectInspector inspector, TimeStampWriter writer) {
     super(inspector, writer);
   }
 
   @Override
   public void write(Object value) {
-    final java.sql.Timestamp timestampValue = inspector.getPrimitiveJavaObject(value);
-    final DateTime ts = new DateTime(timestampValue.getTime()).withZoneRetainFields(DateTimeZone.UTC);
-    writer.writeTimeStamp(ts.getMillis());
+    String timestampString = PrimitiveObjectInspectorUtils.getString(value, inspector);
+    long timestampMillis = new DateTime(Timestamp.valueOf(timestampString).getTime())
+        .withZoneRetainFields(DateTimeZone.UTC).getMillis();
+    writer.writeTimeStamp(timestampMillis);
   }
 
 }

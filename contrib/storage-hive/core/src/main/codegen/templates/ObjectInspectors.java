@@ -17,7 +17,8 @@
  */
 <@pp.dropOutputFile />
 
-<#list drillOI.map as entry>
+<#assign entries = drillDataType.map + drillOI.map />
+<#list entries as entry>
 <#if entry.needOIForDrillType == true>
 <@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/hive/Drill${entry.drillType}${entry.hiveOI}.java" />
 
@@ -32,12 +33,10 @@ import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.common.type.HiveVarchar;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.hive.serde2.io.ByteWritable;
-import org.apache.hadoop.hive.serde2.io.DateWritable;
 import org.apache.hadoop.hive.serde2.io.DoubleWritable;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.hadoop.hive.serde2.io.HiveVarcharWritable;
 import org.apache.hadoop.hive.serde2.io.ShortWritable;
-import org.apache.hadoop.hive.serde2.io.TimestampWritable;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.*;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 import org.apache.hadoop.io.BooleanWritable;
@@ -204,7 +203,7 @@ public class Drill${entry.drillType}${entry.hiveOI} {
 
 <#elseif entry.drillType == "TimeStamp">
     @Override
-    public java.sql.Timestamp getPrimitiveJavaObject(Object o) {
+    public ${entry.javaType} getPrimitiveJavaObject(Object o) {
     <#if mode == "Optional">
       if (o == null) {
         return null;
@@ -213,14 +212,18 @@ public class Drill${entry.drillType}${entry.hiveOI} {
     <#else>
       final TimeStampHolder h = (TimeStampHolder) o;
     </#if>
+    <#if entry.javaType == "org.apache.hadoop.hive.common.type.Timestamp">
+      return ${entry.javaType}.ofEpochMilli(h.value);
+    <#else>
       org.joda.time.LocalDateTime dateTime = new org.joda.time.LocalDateTime(h.value, org.joda.time.DateTimeZone.UTC);
       // use "toDate()" to get java.util.Date object with exactly the same fields as this Joda date-time.
       // See more in Javadoc for "LocalDateTime#toDate()"
-      return new java.sql.Timestamp(dateTime.toDate().getTime());
+      return new ${entry.javaType}(dateTime.toDate().getTime());
+    </#if>
     }
 
     @Override
-    public TimestampWritable getPrimitiveWritableObject(Object o) {
+    public ${entry.writableType} getPrimitiveWritableObject(Object o) {
     <#if mode == "Optional">
       if (o == null) {
         return null;
@@ -229,15 +232,19 @@ public class Drill${entry.drillType}${entry.hiveOI} {
     <#else>
       final TimeStampHolder h = (TimeStampHolder) o;
     </#if>
+    <#if entry.javaType == "org.apache.hadoop.hive.common.type.Timestamp">
+      return new ${entry.writableType}(${entry.javaType}.ofEpochMilli(h.value));
+    <#else>
       org.joda.time.LocalDateTime dateTime = new org.joda.time.LocalDateTime(h.value, org.joda.time.DateTimeZone.UTC);
       // use "toDate()" to get java.util.Date object with exactly the same fields as this Joda date-time.
       // See more in Javadoc for "LocalDateTime#toDate()"
-      return new TimestampWritable(new java.sql.Timestamp(dateTime.toDate().getTime()));
+      return new ${entry.writableType}(new ${entry.javaType}(dateTime.toDate().getTime()));
+    </#if>
     }
 
 <#elseif entry.drillType == "Date">
     @Override
-    public java.sql.Date getPrimitiveJavaObject(Object o) {
+    public ${entry.javaType} getPrimitiveJavaObject(Object o) {
     <#if mode == "Optional">
       if (o == null) {
         return null;
@@ -246,14 +253,18 @@ public class Drill${entry.drillType}${entry.hiveOI} {
     <#else>
       final DateHolder h = (DateHolder) o;
     </#if>
+    <#if entry.javaType == "org.apache.hadoop.hive.common.type.Date">
+      return org.apache.hadoop.hive.common.type.Date.ofEpochMilli(h.value);
+    <#else>
       org.joda.time.LocalDate localDate = new org.joda.time.LocalDate(h.value, org.joda.time.DateTimeZone.UTC);
       // Use "toDate()" to get java.util.Date object with exactly the same year the same year, month and day as Joda date.
       // See more in Javadoc for "LocalDate#toDate()"
-      return new java.sql.Date(localDate.toDate().getTime());
+      return new ${entry.javaType}(localDate.toDate().getTime());
+    </#if>
     }
 
     @Override
-    public DateWritable getPrimitiveWritableObject(Object o) {
+    public ${entry.writableType} getPrimitiveWritableObject(Object o) {
     <#if mode == "Optional">
       if (o == null) {
         return null;
@@ -262,10 +273,14 @@ public class Drill${entry.drillType}${entry.hiveOI} {
     <#else>
       final DateHolder h = (DateHolder) o;
     </#if>
+    <#if entry.javaType == "org.apache.hadoop.hive.common.type.Date">
+      return new ${entry.writableType}(org.apache.hadoop.hive.common.type.Date.ofEpochMilli(h.value));
+    <#else>
       org.joda.time.LocalDate localDate = new org.joda.time.LocalDate(h.value, org.joda.time.DateTimeZone.UTC);
       // Use "toDate()" to get java.util.Date object with exactly the same year the same year, month and day as Joda date.
       // See more in Javadoc for "LocalDate#toDate()"
-      return new DateWritable(new java.sql.Date(localDate.toDate().getTime()));
+      return new ${entry.writableType}(new ${entry.javaType}(localDate.toDate().getTime()));
+    </#if>
     }
 
 <#else>

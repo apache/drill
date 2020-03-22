@@ -18,21 +18,25 @@
 package org.apache.drill.exec.store.hive.writers.primitive;
 
 import org.apache.drill.exec.vector.complex.writer.DateWriter;
-import org.apache.hadoop.hive.serde2.objectinspector.primitive.DateObjectInspector;
+import org.apache.hadoop.hive.serde2.objectinspector.PrimitiveObjectInspector;
+import org.apache.hadoop.hive.serde2.objectinspector.primitive.PrimitiveObjectInspectorUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
-public class HiveDateWriter extends AbstractSingleValueWriter<DateObjectInspector, DateWriter> {
+import java.sql.Date;
 
-  public HiveDateWriter(DateObjectInspector inspector, DateWriter writer) {
+public class HiveDateWriter extends AbstractSingleValueWriter<PrimitiveObjectInspector, DateWriter> {
+
+  public HiveDateWriter(PrimitiveObjectInspector inspector, DateWriter writer) {
     super(inspector, writer);
   }
 
   @Override
   public void write(Object value) {
-    final java.sql.Date dateValue = inspector.getPrimitiveJavaObject(value);
-    final DateTime date = new DateTime(dateValue.getTime()).withZoneRetainFields(DateTimeZone.UTC);
-    writer.writeDate(date.getMillis());
+    String dateString = PrimitiveObjectInspectorUtils.getString(value, inspector);
+    long dateMillis = new DateTime(Date.valueOf(dateString).getTime())
+        .withZoneRetainFields(DateTimeZone.UTC).getMillis();
+    writer.writeDate(dateMillis);
   }
 
 }

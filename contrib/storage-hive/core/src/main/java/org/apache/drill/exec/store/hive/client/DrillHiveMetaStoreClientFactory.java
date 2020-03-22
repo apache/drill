@@ -24,8 +24,9 @@ import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.MetaException;
-import org.apache.hadoop.hive.shims.Utils;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.security.token.Token;
 
 /**
  * Provides factory methods for initialization of {@link DrillHiveMetaStoreClient} instances.
@@ -65,7 +66,7 @@ public final class DrillHiveMetaStoreClientFactory {
           // delegation tokens).
           String delegationToken = processUserMetaStoreClient.getDelegationToken(userName, userName);
           try {
-            Utils.setTokenStr(ugiForRpc, delegationToken, DrillHiveMetaStoreClientWithAuthorization.DRILL2HMS_TOKEN);
+            setTokenStr(ugiForRpc, delegationToken, DrillHiveMetaStoreClientWithAuthorization.DRILL2HMS_TOKEN);
           } catch (IOException e) {
             throw new DrillRuntimeException("Couldn't setup delegation token in the UGI for Hive MetaStoreClient", e);
           }
@@ -86,6 +87,37 @@ public final class DrillHiveMetaStoreClientFactory {
     } catch (final Exception e) {
       throw new DrillRuntimeException("Failure setting up HiveMetaStore client.", e);
     }
+  }
+
+  /**
+   * Create a delegation token object for the given token string and service.
+   * Add the token to given UGI
+   *
+   * @param ugi          user group information
+   * @param tokenStr     token string
+   * @param tokenService token service
+   * @throws IOException if error happened during decoding token string
+   */
+  public static void setTokenStr(UserGroupInformation ugi, String tokenStr, String tokenService)
+      throws IOException {
+    Token<?> delegationToken = createToken(tokenStr, tokenService);
+    ugi.addToken(delegationToken);
+  }
+
+  /**
+   * Create a new token using the given string and service
+   *
+   * @param tokenStr     token string
+   * @param tokenService token service
+   * @return {@link Token} instance with decoded string
+   * @throws IOException if error happened during decoding token string
+   */
+  private static Token<?> createToken(String tokenStr, String tokenService)
+      throws IOException {
+    Token<?> delegationToken = new Token<>();
+    delegationToken.decodeFromUrlString(tokenStr);
+    delegationToken.setService(new Text(tokenService));
+    return delegationToken;
   }
 
   /**

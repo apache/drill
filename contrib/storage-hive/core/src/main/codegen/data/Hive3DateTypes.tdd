@@ -16,10 +16,23 @@
 # limitations under the License.
 #
 
-data: {
-    drillDataType:  tdd(../data/Hive2DateTypes.tdd),
-    drillOI:        tdd(../data/HiveTypes.tdd)
-}
-freemarkerLinks: {
-    includes: includes/
+{
+  map: [
+    {
+      hiveType: "DATE",
+      hiveOI: "DateObjectInspector",
+      javaType: "org.apache.hadoop.hive.common.type.Date",
+      writableType: "org.apache.hadoop.hive.serde2.io.DateWritableV2",
+      drillType: "Date",
+      needOIForDrillType: true
+    },
+    {
+      hiveType: "TIMESTAMP",
+      hiveOI: "TimestampObjectInspector",
+      javaType: "org.apache.hadoop.hive.common.type.Timestamp",
+      writableType: "org.apache.hadoop.hive.serde2.io.TimestampWritableV2",
+      drillType: "TimeStamp",
+      needOIForDrillType: true
+    }
+  ]
 }

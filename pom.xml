@@ -81,7 +81,7 @@
       Currently Hive storage plugin only supports Apache Hive 2.3.2 or vendor specific variants of the
       Apache Hive 2.3.2. If the version is changed, make sure the jars and their dependencies are updated.
     -->
-    <hive.version>2.3.2</hive.version>
+    <hive.version>3.1.2</hive.version>
     <hadoop.version>3.2.1</hadoop.version>
     <hbase.version>2.2.2</hbase.version>
     <fmpp.version>1.0</fmpp.version>
@@ -112,6 +112,7 @@
     <surefire.version>3.0.0-M4</surefire.version>
     <commons.compress.version>1.19</commons.compress.version>
     <hikari.version>3.4.2</hikari.version>
+    <netty.version>4.0.48.Final</netty.version>
   </properties>
 
   <scm>
@@ -1002,13 +1003,11 @@
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-handler</artifactId>
-      <version>4.0.48.Final</version>
     </dependency>
 
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-common</artifactId>
-      <version>4.0.48.Final</version>
     </dependency>
 
     <dependency>
@@ -1690,6 +1689,16 @@
         <classifier>${netty.tcnative.classifier}</classifier>
         <scope>runtime</scope>
         <optional>true</optional>
+      </dependency>
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-handler</artifactId>
+        <version>${netty.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-common</artifactId>
+        <version>${netty.version}</version>
       </dependency>
       <dependency>
         <groupId>com.tdunning</groupId>

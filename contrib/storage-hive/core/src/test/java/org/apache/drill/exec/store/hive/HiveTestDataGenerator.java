@@ -25,6 +25,7 @@ import java.sql.Timestamp;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.drill.exec.hive.HiveTestUtilities;
 import org.apache.drill.shaded.guava.com.google.common.io.Resources;
 import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.BaseTestQuery;
@@ -442,7 +443,8 @@ public class HiveTestDataGenerator {
     executeQuery(hiveDriver, "CREATE OR REPLACE VIEW readtest_view AS SELECT * FROM readtest");
     executeQuery(hiveDriver, "CREATE VIEW IF NOT EXISTS hive_view AS SELECT * FROM kv");
     executeQuery(hiveDriver, "CREATE OR REPLACE VIEW kv_native_view AS SELECT * FROM kv_native");
-    executeQuery(hiveDriver, "CREATE MATERIALIZED VIEW IF NOT EXISTS hive_view_m AS SELECT * FROM kv WHERE key = 1");
+    String disableRewrite = HiveTestUtilities.isHive3() ? "DISABLE REWRITE" : "";
+    executeQuery(hiveDriver, String.format("CREATE MATERIALIZED VIEW IF NOT EXISTS hive_view_m %s AS SELECT * FROM kv WHERE key = 1", disableRewrite));
     executeQuery(hiveDriver, "CREATE OR REPLACE VIEW view_over_hive_view AS SELECT * FROM hive_view WHERE key BETWEEN 2 AND 3");
     executeQuery(hiveDriver, "CREATE OR REPLACE VIEW db1.two_table_view AS SELECT COUNT(dk.key) dk_key_count FROM db1.avro dk " +
         "INNER JOIN kv ON kv.key = dk.key");
@@ -592,7 +594,7 @@ public class HiveTestDataGenerator {
 
   private String generateTestDataWithHeadersAndFooters(String tableName, int rowCount, int headerLines, int footerLines) {
     StringBuilder sb = new StringBuilder();
-    sb.append("insert into table ").append(tableName).append(" (key, value) values ");
+    sb.append("insert into table ").append(tableName).append(" values ");
     sb.append(StringUtils.repeat("('key_header', 'value_header')", ",", headerLines));
     if (headerLines > 0) {
       sb.append(",");
