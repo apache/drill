@@ -42,7 +42,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.Iterator;
 
 
 /**
@@ -54,7 +53,7 @@ public abstract class EasyEVFBatchReader implements ManagedReader<FileSchemaNego
 
   public FileSplit split;
 
-  public Iterator fileIterator;
+  public EasyEVFIterator fileIterator;
 
   public ResultSetLoader loader;
 
@@ -63,7 +62,6 @@ public abstract class EasyEVFBatchReader implements ManagedReader<FileSchemaNego
   public InputStream fsStream;
 
   public BufferedReader reader;
-
 
   public RowSetLoader getRowWriter() {
     return rowWriter;

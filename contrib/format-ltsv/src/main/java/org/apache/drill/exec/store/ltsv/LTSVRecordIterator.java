@@ -21,14 +21,14 @@ package org.apache.drill.exec.store.ltsv;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
+import org.apache.drill.exec.store.easy.EasyEVFIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.Iterator;
 
-public class LTSVRecordIterator implements Iterator {
+public class LTSVRecordIterator implements EasyEVFIterator {
 
   private static final Logger logger = LoggerFactory.getLogger(LTSVRecordIterator.class);
 
@@ -55,13 +55,11 @@ public class LTSVRecordIterator implements Iterator {
     }
   }
 
-  @Override
   public boolean hasNext() {
     return line != null;
   }
 
-  @Override
-  public Boolean next() {
+  public boolean next() {
     // Skip empty lines
     if (line.trim().length() == 0) {
       try {
@@ -73,9 +71,9 @@ public class LTSVRecordIterator implements Iterator {
           .message("Error reading LTSV Data: %s", e.getMessage())
           .build(logger);
       }
-      return Boolean.TRUE;
+      return true;
     } else if (line == null) {
-      return Boolean.FALSE;
+      return false;
     }
 
     // Process the row
@@ -87,8 +85,8 @@ public class LTSVRecordIterator implements Iterator {
     // Get the next line
     try {
       line = reader.readLine();
-      if(line == null) {
-        return Boolean.FALSE;
+      if (line == null) {
+        return false;
       }
     } catch (IOException e) {
       throw UserException
@@ -96,7 +94,7 @@ public class LTSVRecordIterator implements Iterator {
         .message("Error reading LTSV Data: %s", e.getMessage())
         .build(logger);
     }
-    return Boolean.TRUE;
+    return true;
   }
 
   /**

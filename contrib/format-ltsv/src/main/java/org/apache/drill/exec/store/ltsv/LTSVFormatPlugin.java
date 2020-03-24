@@ -81,8 +81,8 @@ public class LTSVFormatPlugin extends EasyFormatPlugin<LTSVFormatPluginConfig> {
   protected FileScanBuilder frameworkBuilder(OptionManager options, EasySubScan scan) {
     FileScanBuilder builder = new FileScanBuilder();
     builder.setReaderFactory(new LTSVReaderFactory(formatConfig));
+    builder.nullType(Types.optional(TypeProtos.MinorType.VARCHAR));
     initScanBuilder(builder, scan);
-    builder.setNullType(Types.optional(TypeProtos.MinorType.VARCHAR));
     return builder;
   }
 }

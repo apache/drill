@@ -16,16 +16,9 @@
  * limitations under the License.
  */
 
-package org.apache.drill.exec.store.ltsv;
+package org.apache.drill.exec.store.easy;
 
-import org.apache.drill.exec.physical.impl.scan.file.FileScanFramework.FileSchemaNegotiator;
-import org.apache.drill.exec.store.easy.EasyEVFBatchReader;
+public interface EasyEVFIterator {
 
-public class LTSVBatchReader extends EasyEVFBatchReader {
-
-  public boolean open(FileSchemaNegotiator negotiator) {
-    super.open(negotiator);
-    super.fileIterator = new LTSVRecordIterator(getRowWriter(), reader);
-    return true;
-  }
+  boolean next();
 }
