@@ -26,12 +26,12 @@ import org.apache.drill.common.PlanStringBuilder;
 import java.util.List;
 
 public class CassandraScanSpec {
-  private String keyspace;
+  protected final String keyspace;
 
-  private String table;
+  protected final String table;
 
   @JsonIgnore
-  private List<Clause> filters;
+  protected List<Clause> filters;
 
   @JsonCreator
   public CassandraScanSpec(@JsonProperty("keyspace") String keyspace,

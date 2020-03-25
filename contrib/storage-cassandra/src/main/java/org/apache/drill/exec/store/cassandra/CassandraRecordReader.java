@@ -24,7 +24,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import com.datastax.driver.core.Cluster;
@@ -50,8 +49,6 @@ import org.apache.drill.exec.store.AbstractRecordReader;
 import org.apache.drill.exec.store.cassandra.connection.CassandraConnectionManager;
 import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.VarBinaryVector;
-import org.apache.drill.exec.vector.complex.MapVector;
 
 
 import org.slf4j.Logger;
@@ -63,21 +60,9 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 public class CassandraRecordReader extends AbstractRecordReader implements DrillCassandraConstants {
   private static final Logger logger = LoggerFactory.getLogger(CassandraRecordReader.class);
 
-  private static final int TARGET_RECORD_COUNT = 3000;
-
-  private Cluster cluster;
-
-  private Session session;
-
   private ResultSet rs;
 
-  private Iterator<Row> it;
-
-  private NullableVarCharVector valueVector;
-
   private OutputMutator outputMutator;
-
-  private Map<String, MapVector> familyVectorMap;
 
   private CassandraStoragePlugin plugin;
 
@@ -91,15 +76,9 @@ public class CassandraRecordReader extends AbstractRecordReader implements Drill
 
   private final List<SchemaPath> projectedColumns;
 
-  private boolean allColumnsProjected;
-
   private NullableVarCharVector vector;
 
   private List<ValueVector> vectors = Lists.newArrayList();
-
-  private VarBinaryVector rowKeyVector;
-
-  private FragmentContext fragmentContext;
 
   private OperatorContext operatorContext;
 
@@ -114,14 +93,6 @@ public class CassandraRecordReader extends AbstractRecordReader implements Drill
 
 
     setColumns(projectedColumns);
-  }
-
-  public OperatorContext getOperatorContext() {
-    return operatorContext;
-  }
-
-  public void setOperatorContext(OperatorContext operatorContext) {
-    this.operatorContext = operatorContext;
   }
 
   @Override
@@ -146,6 +117,8 @@ public class CassandraRecordReader extends AbstractRecordReader implements Drill
       // Cassandra sessions are expensive to open, so the connection is opened in the
       // Storage plugin class and closed when Drill is shut down OR when the storage plugin
       // is disabled.
+      Cluster cluster;
+      Session session;
       if (plugin.getCluster() == null || plugin.getCluster().isClosed() ) {
         cluster = CassandraConnectionManager.getCluster(cassandraConf);
         session = cluster.connect();

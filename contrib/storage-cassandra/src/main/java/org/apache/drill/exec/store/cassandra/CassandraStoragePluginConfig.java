@@ -87,7 +87,7 @@ public class CassandraStoragePluginConfig extends StoragePluginConfigBase {
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(hosts, port);
+    return Objects.hashCode(hosts, port, username, password);
   }
 
   @Override

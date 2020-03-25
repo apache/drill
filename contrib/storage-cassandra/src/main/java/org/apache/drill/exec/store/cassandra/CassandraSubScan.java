@@ -34,6 +34,7 @@ import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +45,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
-import java.util.Collections;
+import java.util.Objects;
 
 @JsonTypeName("cassandra-subscan")
 public class CassandraSubScan extends AbstractBase implements SubScan {
@@ -142,22 +143,22 @@ public class CassandraSubScan extends AbstractBase implements SubScan {
 
   @Override
   public Iterator<PhysicalOperator> iterator() {
-    return Collections.emptyIterator();
+    return ImmutableSet.<PhysicalOperator>of().iterator();
   }
 
   public static class CassandraSubScanSpec {
 
-    protected String keyspace;
+    public String keyspace;
 
-    protected String table;
+    public String table;
 
-    protected List<String> hosts;
+    public List<String> hosts;
 
-    protected int port;
+    public int port;
 
-    protected String startToken;
+    public String startToken;
 
-    protected String endToken;
+    public String endToken;
 
     @JsonIgnore
     protected Cluster cluster;
@@ -175,7 +176,7 @@ public class CassandraSubScan extends AbstractBase implements SubScan {
                                 @JsonProperty("port") int port,
                                 @JsonProperty("startToken") String startToken,
                                 @JsonProperty("endToken") String endToken,
-                                @JsonProperty("filter") List<Clause> filter,
+                                @JacksonInject("filter") List<Clause> filter,
                                 @JacksonInject Cluster cluster,
                                 @JacksonInject Session session) {
       this.keyspace = keyspace;
@@ -189,9 +190,8 @@ public class CassandraSubScan extends AbstractBase implements SubScan {
       this.cluster = cluster;
     }
 
-    CassandraSubScanSpec() {
-
-    }
+    // Needed for Group Scan
+    public CassandraSubScanSpec() {}
 
     public String getKeyspace() {
       return keyspace;
@@ -227,10 +227,6 @@ public class CassandraSubScan extends AbstractBase implements SubScan {
     public CassandraSubScanSpec setPort(int port) {
       this.port = port;
       return this;
-    }
-
-    public List<Clause> getFilter() {
-      return filter;
     }
 
     public CassandraSubScanSpec setFilter(List<Clause> filter) {
@@ -280,6 +276,29 @@ public class CassandraSubScan extends AbstractBase implements SubScan {
         .field("endToken", endToken)
         .field("filter", filter)
         .toString();
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(keyspace, table, hosts, port, startToken, endToken, filter);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj) {
+        return true;
+      }
+      if (obj == null || getClass() != obj.getClass()) {
+        return false;
+      }
+      CassandraSubScanSpec other = (CassandraSubScanSpec) obj;
+      return Objects.equals(keyspace, other)
+        && Objects.equals(table, other.table)
+        && Objects.equals(hosts, other.hosts)
+        && Objects.equals(port, other.port)
+        && Objects.equals(startToken, other.startToken)
+        && Objects.equals(endToken, other.endToken)
+        && Objects.equals(filter, other.filter);
     }
   }
 }

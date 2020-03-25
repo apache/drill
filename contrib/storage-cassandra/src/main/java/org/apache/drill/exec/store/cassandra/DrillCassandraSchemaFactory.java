@@ -29,7 +29,6 @@ import java.util.concurrent.TimeUnit;
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.KeyspaceMetadata;
 import com.datastax.driver.core.TableMetadata;
-import org.apache.calcite.adapter.cassandra.CassandraSchema;
 import org.apache.calcite.schema.SchemaPlus;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
@@ -59,13 +58,13 @@ public class DrillCassandraSchemaFactory extends AbstractSchemaFactory {
 
   private LoadingCache<String, List<String>> tableCache;
 
-  private final String schemaName;
+  public final String schemaName;
 
-  private final CassandraStoragePlugin plugin;
+  public final CassandraStoragePlugin plugin;
 
-  private final Cluster cluster;
+  public final Cluster cluster;
 
-  private final List<String> hosts;
+  public final List<String> hosts;
 
   public DrillCassandraSchemaFactory(CassandraStoragePlugin schema, String schemaName) {
     super(schemaName);
@@ -83,14 +82,14 @@ public class DrillCassandraSchemaFactory extends AbstractSchemaFactory {
     cluster = builder.build();
 
 
-    keyspaceCache = CacheBuilder //
-      .newBuilder() //
-      .expireAfterAccess(1, TimeUnit.MINUTES) //
+    keyspaceCache = CacheBuilder
+      .newBuilder()
+      .expireAfterAccess(1, TimeUnit.MINUTES)
       .build(new KeyspaceLoader());
 
-    tableCache = CacheBuilder //
-      .newBuilder() //
-      .expireAfterAccess(1, TimeUnit.MINUTES) //
+    tableCache = CacheBuilder
+      .newBuilder()
+      .expireAfterAccess(1, TimeUnit.MINUTES)
       .build(new TableNameLoader());
   }
 
@@ -102,7 +101,7 @@ public class DrillCassandraSchemaFactory extends AbstractSchemaFactory {
     SchemaPlus schemaPlus = parent.add(schemaName, schema);
     schema.setHolder(schemaPlus);
   }
-  
+
   /**
    * Utility class for fetching all the key spaces in cluster.
    */

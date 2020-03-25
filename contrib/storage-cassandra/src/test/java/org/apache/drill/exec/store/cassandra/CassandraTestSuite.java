@@ -24,10 +24,11 @@ import org.slf4j.LoggerFactory;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-        CassandraRecordReaderTest.class,
-        CassandraProjectPushdownTest.class,
-        CassandraFilterPushdownTest.class
+  CassandraRecordReaderTest.class,
+  CassandraProjectPushdownTest.class,
+  CassandraFilterPushdownTest.class,
+  CassandraQueryTest.class
 })
 public class CassandraTestSuite {
-    private static final Logger logger = LoggerFactory.getLogger(CassandraTestSuite.class);
+  private static final Logger logger = LoggerFactory.getLogger(CassandraTestSuite.class);
 }

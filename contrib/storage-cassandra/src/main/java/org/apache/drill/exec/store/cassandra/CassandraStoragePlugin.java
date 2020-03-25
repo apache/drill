@@ -32,7 +32,6 @@ import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.drill.exec.store.cassandra.connection.CassandraConnectionManager;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 
@@ -54,6 +53,8 @@ public class CassandraStoragePlugin extends AbstractStoragePlugin {
     this.cassandraConfig = cassandraConfig;
     this.schemaFactory = new DrillCassandraSchemaFactory(this, name);
 
+    // Creating a Cassandra Connection is expensive, so the connection is opened when the user enables the
+    // Cassandra storage plugin.
     cluster = CassandraConnectionManager.getCluster(cassandraConfig);
     session = cluster.connect();
   }
@@ -79,7 +80,7 @@ public class CassandraStoragePlugin extends AbstractStoragePlugin {
 
   @Override
   public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection) throws IOException {
-    CassandraScanSpec cassandraScanSpec = selection.getListWith(new ObjectMapper(), new TypeReference<CassandraScanSpec>() {});
+    CassandraScanSpec cassandraScanSpec = selection.getListWith(context.getLpPersistence().getMapper(), new TypeReference<CassandraScanSpec>() {});
     return new CassandraGroupScan(userName, this, cassandraScanSpec, null);
   }
 

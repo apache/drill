@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.store.cassandra;
 
-import org.apache.calcite.adapter.cassandra.CassandraRel;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.exec.planner.logical.DrillOptiq;
 import org.apache.drill.exec.planner.logical.DrillParseContext;
@@ -55,7 +54,7 @@ public class CassandraPushDownFilterForScan extends StoragePluginOptimizerRule {
     CassandraGroupScan groupScan = (CassandraGroupScan)scan.getGroupScan();
 
     // TODO This is always true, hence filters NEVER get pushed down
-    if (groupScan.isFilterPushedDown()) {
+    /*if (groupScan.isFilterPushedDown()) {
 
       /*
        * The rule can get triggered again due to the transformed "scan => filter" sequence
@@ -63,8 +62,8 @@ public class CassandraPushDownFilterForScan extends StoragePluginOptimizerRule {
        * conversion of Optiq Filter's condition to Cassandra Filter. In such cases, we rely upon
        * this flag to not do a re-processing of the rule on the already transformed call.
        */
-      return;
-    }
+      //return;
+    //}
 
     LogicalExpression conditionExp = DrillOptiq.toDrill(new DrillParseContext(PrelUtil.getPlannerSettings(call.getPlanner())), scan, condition);
     CassandraFilterBuilder cassandraFilterBuilder = new CassandraFilterBuilder(groupScan, conditionExp);

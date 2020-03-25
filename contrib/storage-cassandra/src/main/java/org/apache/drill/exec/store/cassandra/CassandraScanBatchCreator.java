@@ -43,7 +43,7 @@ public class CassandraScanBatchCreator implements BatchCreator<CassandraSubScan>
 
     logger.debug("Entering scan batch creator: {}", subScan.toString());
 
-    Preconditions.checkArgument(children.isEmpty());
+    Preconditions.checkArgument(children == null || children.isEmpty());
     List<RecordReader> readers = Lists.newArrayList();
     List<SchemaPath> columns = null;
     for(CassandraSubScan.CassandraSubScanSpec scanSpec : subScan.getChunkScanSpecList()){
