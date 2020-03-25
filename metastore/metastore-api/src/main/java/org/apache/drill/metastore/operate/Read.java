@@ -18,6 +18,7 @@
 package org.apache.drill.metastore.operate;
 
 import org.apache.drill.metastore.expressions.FilterExpression;
+import org.apache.drill.metastore.metadata.MetadataType;
 
 import java.util.Arrays;
 import java.util.List;
@@ -29,6 +30,20 @@ import java.util.List;
  * @param <T> component unit type
  */
 public interface Read<T> {
+
+  /**
+   * Provides list of metadata types to be read.
+   * Note: providing at least one metadata type is required.
+   * If all metadata types should be read, {@link MetadataType#ALL} can be passed.
+   *
+   * @param metadataTypes list of metadata types
+   * @return current instance of Read interface implementation
+   */
+  Read<T> metadataTypes(List<MetadataType> metadataTypes);
+
+  default Read<T> metadataType(MetadataType... metadataType) {
+    return metadataTypes(Arrays.asList(metadataType));
+  }
 
   /**
    * Provides filter expression by which metastore component data will be filtered.

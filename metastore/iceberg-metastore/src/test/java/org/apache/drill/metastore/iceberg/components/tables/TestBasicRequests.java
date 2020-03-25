@@ -114,8 +114,8 @@ public class TestBasicRequests extends IcebergBaseTest {
   public void testTablesMetadataAbsent() {
     List<BaseTableMetadata> tablesMetadata = basicRequests.tablesMetadata(
       FilterExpression.and(
-        FilterExpression.equal(IcebergTables.STORAGE_PLUGIN, "dfs"),
-        FilterExpression.equal(IcebergTables.WORKSPACE, "absent")));
+        FilterExpression.equal(TableInfo.STORAGE_PLUGIN, "dfs"),
+        FilterExpression.equal(TableInfo.WORKSPACE, "absent")));
     assertTrue(tablesMetadata.isEmpty());
   }
 
@@ -123,8 +123,8 @@ public class TestBasicRequests extends IcebergBaseTest {
   public void testTablesMetadataExisting() {
     List<BaseTableMetadata> baseTableMetadata = basicRequests.tablesMetadata(
       FilterExpression.and(
-        FilterExpression.equal(IcebergTables.STORAGE_PLUGIN, "dfs"),
-        FilterExpression.equal(IcebergTables.WORKSPACE, "tmp")));
+        FilterExpression.equal(TableInfo.STORAGE_PLUGIN, "dfs"),
+        FilterExpression.equal(TableInfo.WORKSPACE, "tmp")));
     assertTrue(baseTableMetadata.size() > 1);
   }
 
@@ -455,7 +455,7 @@ public class TestBasicRequests extends IcebergBaseTest {
   public void testCustomRequest() {
     BasicTablesRequests.RequestMetadata requestMetadata = BasicTablesRequests.RequestMetadata.builder()
       .column("n_nation")
-      .metadataType(MetadataType.PARTITION.name())
+      .metadataType(MetadataType.PARTITION)
       .build();
 
     List<TableMetadataUnit> units = basicRequests.request(requestMetadata);

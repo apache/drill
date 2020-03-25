@@ -64,14 +64,16 @@ public abstract class OperationTransformer<T> {
     return new Overwrite(dataFile, expression);
   }
 
-  public List<Delete> toDelete(List<FilterExpression> filters) {
-    return filters.stream()
-      .map(this::toDelete)
-      .collect(Collectors.toList());
-  }
-
   public Delete toDelete(FilterExpression filter) {
     return new Delete(context.transformer().filter().transform(filter));
+  }
+
+  public List<Delete> toDelete(List<org.apache.drill.metastore.operate.Delete> deletes) {
+    FilterTransformer filterTransformer = context.transformer().filter();
+    return deletes.stream()
+      // metadata types are ignored during delete since they are not part of the partition key
+      .map(delete -> new Delete(filterTransformer.transform(delete.filter())))
+      .collect(Collectors.toList());
   }
 
   /**

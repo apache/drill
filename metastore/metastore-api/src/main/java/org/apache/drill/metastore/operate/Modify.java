@@ -17,8 +17,6 @@
  */
 package org.apache.drill.metastore.operate;
 
-import org.apache.drill.metastore.expressions.FilterExpression;
-
 import java.util.Arrays;
 import java.util.List;
 
@@ -31,7 +29,7 @@ import java.util.List;
 public interface Modify<T> {
 
   /**
-   * Adds overwrite operation for the Metastore component. For Metastore Tables compoenent,
+   * Adds overwrite operation for the Metastore component. For Metastore Tables component,
    * can be used to add new table data or replace partially / fully existing.
    * For example, if one of the table segments has changed,
    * all this segment data and table general information must be replaced with updated data.
@@ -48,27 +46,32 @@ public interface Modify<T> {
   }
 
   /**
-   * Adds delete operation for the Metastore component based on the given filter expression.
+   * Adds delete operation for the Metastore component based on the filter expression and metadata types.
    * For example for Metastore Tables component, if table has two segments
    * and data for one of the segments needs to be deleted.
    * Thus filter must be based on unique identifier of the table's top-level segment:
-   * storagePlugin = 'dfs' and workspace = 'tmp' and tableName = 'nation' and metadataKey = 'part_int=3'
+   * storagePlugin = 'dfs' and workspace = 'tmp' and tableName = 'nation' and metadataKey = 'part_int=3'.
+   * Metadata types should include all metadata types present in this segment:
+   * SEGMENT, FILE, ROW_GROUP, PARTITION.
+   * If all table metadata should be deleted, ALL segment can be indicated along with unique table identifier:
+   * storagePlugin = 'dfs' and workspace = 'tmp' and tableName = 'nation'.
    *
-   * @param filter filter expression
+   * @param delete delete operation holder
    * @return current instance of Modify interface implementation
    */
-  Modify<T> delete(FilterExpression filter);
-
-  /**
-   * Deletes all data from the Metastore component.
-   *
-   * @return current instance of Modify interface implementation
-   */
-  Modify<T> purge();
+  Modify<T> delete(Delete delete);
 
   /**
    * Executes list of provided metastore operations in one transaction if Metastore implementation
    * supports transactions, otherwise executes operations consecutively.
    */
   void execute();
+
+  /**
+   * Deletes all data from the Metastore component.
+   * Note, this is terminal operation and it does not take into account
+   * any previously set delete operations or overwrite units,
+   * it just deletes all data.
+   */
+  void purge();
 }

@@ -26,8 +26,6 @@ import org.apache.drill.metastore.expressions.SingleExpressionPredicate;
 import org.apache.iceberg.expressions.Expression;
 import org.apache.iceberg.expressions.Expressions;
 
-import java.util.List;
-
 /**
  * Visits {@link FilterExpression} implementations and transforms them into Iceberg {@link Expression}.
  */
@@ -71,13 +69,12 @@ public class FilterExpressionVisitor implements FilterExpression.Visitor<Express
 
   @Override
   public Expression visit(ListPredicate.In<?> expression) {
-    return toInExpression(expression.reference(), expression.values());
+    return Expressions.in(expression.reference(), expression.values());
   }
 
   @Override
   public Expression visit(ListPredicate.NotIn<?> expression) {
-    Expression in = toInExpression(expression.reference(), expression.values());
-    return Expressions.not(in);
+    return Expressions.notIn(expression.reference(), expression.values());
   }
 
   @Override
@@ -108,11 +105,5 @@ public class FilterExpressionVisitor implements FilterExpression.Visitor<Express
     Expression right = expression.right().accept(this);
     Expression left = expression.left().accept(this);
     return Expressions.or(right, left);
-  }
-
-  private Expression toInExpression(String reference, List<?> values) {
-    return values.stream()
-      .map(value -> (Expression) Expressions.equal(reference, value))
-      .reduce(Expressions.alwaysFalse(), Expressions::or);
   }
 }

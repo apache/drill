@@ -289,7 +289,7 @@ public class FileMetadataInfoCollector implements MetadataInfoCollector {
         .tableInfo(tableInfo)
         .metadataKeys(metadataKeys)
         .paths(allFiles)
-        .metadataType(MetadataType.ROW_GROUP.name())
+        .metadataType(MetadataType.ROW_GROUP)
         .requestColumns(Arrays.asList(MetadataInfo.METADATA_KEY, MetadataInfo.METADATA_IDENTIFIER, MetadataInfo.METADATA_TYPE))
         .build();
 

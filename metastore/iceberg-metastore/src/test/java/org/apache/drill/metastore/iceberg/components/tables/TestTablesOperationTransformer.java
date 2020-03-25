@@ -26,6 +26,9 @@ import org.apache.drill.metastore.iceberg.operate.Delete;
 import org.apache.drill.metastore.iceberg.operate.Overwrite;
 import org.apache.drill.metastore.iceberg.transform.FilterTransformer;
 import org.apache.drill.metastore.iceberg.transform.OperationTransformer;
+import org.apache.drill.metastore.metadata.MetadataInfo;
+import org.apache.drill.metastore.metadata.MetadataType;
+import org.apache.drill.metastore.metadata.TableInfo;
 import org.apache.hadoop.fs.Path;
 import org.apache.iceberg.expressions.Expression;
 import org.apache.iceberg.expressions.Expressions;
@@ -62,7 +65,7 @@ public class TestTablesOperationTransformer extends IcebergBaseTest {
     TableKey tableKey = new TableKey(unit.storagePlugin(), unit.workspace(), unit.tableName());
 
     Map<String, Object> filterConditions = new HashMap<>(tableKey.toFilterConditions());
-    filterConditions.put(IcebergTables.METADATA_KEY, unit.metadataKey());
+    filterConditions.put(MetadataInfo.METADATA_KEY, unit.metadataKey());
 
     String location = tableKey.toLocation(TestTablesOperationTransformer.location);
     Expression expression = new FilterTransformer().transform(filterConditions);
@@ -97,8 +100,8 @@ public class TestTablesOperationTransformer extends IcebergBaseTest {
       FilterExpression.equal("workspace", "tmp"));
 
     Expression expected = Expressions.and(
-      Expressions.equal(IcebergTables.STORAGE_PLUGIN, "dfs"),
-      Expressions.equal(IcebergTables.WORKSPACE, "tmp"));
+      Expressions.equal(TableInfo.STORAGE_PLUGIN, "dfs"),
+      Expressions.equal(TableInfo.WORKSPACE, "tmp"));
 
     Delete operation = transformer.toDelete(filter);
 
@@ -107,8 +110,15 @@ public class TestTablesOperationTransformer extends IcebergBaseTest {
 
   @Test
   public void testToDeleteOperations() {
-    FilterExpression dfs = FilterExpression.equal("storagePlugin", "dfs");
-    FilterExpression s3 = FilterExpression.equal("storagePlugin", "s3");
+    org.apache.drill.metastore.operate.Delete dfs = org.apache.drill.metastore.operate.Delete.builder()
+      .metadataType(MetadataType.ALL)
+      .filter(FilterExpression.equal("storagePlugin", "dfs"))
+      .build();
+
+    org.apache.drill.metastore.operate.Delete s3 = org.apache.drill.metastore.operate.Delete.builder()
+      .metadataType(MetadataType.ALL)
+      .filter(FilterExpression.equal("storagePlugin", "s3"))
+      .build();
 
     List<Delete> operations = transformer.toDelete(Arrays.asList(dfs, s3));
 

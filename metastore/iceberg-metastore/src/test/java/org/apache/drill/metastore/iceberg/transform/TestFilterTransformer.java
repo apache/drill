@@ -19,11 +19,14 @@ package org.apache.drill.metastore.iceberg.transform;
 
 import org.apache.drill.metastore.expressions.FilterExpression;
 import org.apache.drill.metastore.iceberg.IcebergBaseTest;
+import org.apache.drill.metastore.metadata.MetadataInfo;
+import org.apache.drill.metastore.metadata.MetadataType;
 import org.apache.iceberg.expressions.Expression;
 import org.apache.iceberg.expressions.Expressions;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -97,7 +100,7 @@ public class TestFilterTransformer extends IcebergBaseTest {
 
   @Test
   public void testToFilterIn() {
-    Expression expected = Expressions.or(Expressions.equal("a", 1), Expressions.equal("a", 2));
+    Expression expected = Expressions.in("a", 1, 2);
     Expression actual = transformer.transform(FilterExpression.in("a", 1, 2));
 
     assertEquals(expected.toString(), actual.toString());
@@ -105,8 +108,7 @@ public class TestFilterTransformer extends IcebergBaseTest {
 
   @Test
   public void testToFilterNotIn() {
-    Expression expected = Expressions.not(
-      Expressions.or(Expressions.equal("a", 1), Expressions.equal("a", 2)));
+    Expression expected = Expressions.notIn("a", 1, 2);
     Expression actual = transformer.transform(FilterExpression.notIn("a", 1, 2));
 
     assertEquals(expected.toString(), actual.toString());
@@ -218,5 +220,77 @@ public class TestFilterTransformer extends IcebergBaseTest {
       Expressions.equal("c", 3), Expressions.equal("d", 4));
 
     assertEquals(expected.toString(), transformer.transform(conditions).toString());
+  }
+
+  @Test
+  public void testToFilterMetadataTypesAll() {
+    Expression expected = Expressions.alwaysTrue();
+
+    Expression actual = transformer.transform(
+      Arrays.asList(MetadataType.PARTITION, MetadataType.FILE, MetadataType.ALL));
+
+    assertEquals(expected.toString(), actual.toString());
+  }
+
+  @Test
+  public void testToFilterMetadataTypesOne() {
+    Expression expected = Expressions.equal(MetadataInfo.METADATA_TYPE, MetadataType.PARTITION.name());
+
+    Expression actual = transformer.transform(Collections.singletonList(MetadataType.PARTITION));
+
+    assertEquals(expected.toString(), actual.toString());
+  }
+
+  @Test
+  public void testToFilterMetadataTypesSeveral() {
+    Expression expected = Expressions.in(MetadataInfo.METADATA_TYPE,
+      MetadataType.PARTITION.name(), MetadataType.FILE.name());
+
+    Expression actual = transformer.transform(
+      Arrays.asList(MetadataType.PARTITION, MetadataType.FILE));
+
+    assertEquals(expected.toString(), actual.toString());
+  }
+
+  @Test
+  public void testCombineNone() {
+    Expression expected = Expressions.alwaysTrue();
+
+    Expression actual = transformer.combine();
+
+    assertEquals(expected.toString(), actual.toString());
+  }
+
+  @Test
+  public void testCombineOne() {
+    Expression expected = Expressions.equal("a", 1);
+
+    Expression actual = transformer.combine(expected);
+
+    assertEquals(expected.toString(), actual.toString());
+  }
+
+  @Test
+  public void testCombineTwo() {
+    Expression expected = Expressions.and(
+      Expressions.equal("a", 1), Expressions.equal("a", 2));
+
+    Expression actual = transformer.combine(
+      Expressions.equal("a", 1), Expressions.equal("a", 2));
+
+    assertEquals(expected.toString(), actual.toString());
+  }
+
+  @Test
+  public void testCombineFour() {
+    Expression expected = Expressions.and(
+      Expressions.equal("a", 1), Expressions.equal("a", 2),
+      Expressions.equal("a", 3), Expressions.equal("a", 4));
+
+    Expression actual = transformer.combine(
+      Expressions.equal("a", 1), Expressions.equal("a", 2),
+      Expressions.equal("a", 3), Expressions.equal("a", 4));
+
+    assertEquals(expected.toString(), actual.toString());
   }
 }

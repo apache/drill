@@ -18,6 +18,7 @@
 package org.apache.drill.metastore.iceberg.components.tables;
 
 import org.apache.drill.metastore.components.tables.TableMetadataUnit;
+import org.apache.drill.metastore.metadata.TableInfo;
 import org.apache.hadoop.fs.Path;
 
 import java.util.HashMap;
@@ -79,9 +80,9 @@ public class TableKey {
    */
   public Map<String, Object> toFilterConditions() {
     Map<String, Object> conditions = new HashMap<>();
-    conditions.put(IcebergTables.STORAGE_PLUGIN, storagePlugin);
-    conditions.put(IcebergTables.WORKSPACE, workspace);
-    conditions.put(IcebergTables.TABLE_NAME, tableName);
+    conditions.put(TableInfo.STORAGE_PLUGIN, storagePlugin);
+    conditions.put(TableInfo.WORKSPACE, workspace);
+    conditions.put(TableInfo.TABLE_NAME, tableName);
     return conditions;
   }
 

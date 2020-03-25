@@ -34,6 +34,7 @@ import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory;
 import org.apache.drill.exec.util.FileSystemUtil;
 import org.apache.drill.metastore.Metastore;
+import org.apache.drill.metastore.components.tables.BasicTablesRequests;
 import org.apache.drill.metastore.components.tables.BasicTablesTransformer;
 import org.apache.drill.metastore.components.tables.TableMetadataUnit;
 import org.apache.drill.metastore.expressions.FilterExpression;
@@ -366,15 +367,16 @@ public interface RecordCollector {
 
         BasicTablesTransformer.MetadataHolder metadataHolder;
         try {
-          List<TableMetadataUnit> units = metastore.tables().read()
-            .filter(FilterExpression.and(
+          BasicTablesRequests.RequestMetadata requestMetadata = BasicTablesRequests.RequestMetadata.builder()
+            .metadataTypes(MetadataType.SEGMENT, MetadataType.PARTITION)
+            .customFilter(FilterExpression.and(
               FilterExpression.equal(TableInfo.STORAGE_PLUGIN, drillSchema.getSchemaPath().get(0)),
               FilterExpression.equal(TableInfo.WORKSPACE, drillSchema.getSchemaPath().get(1)),
-              // include SEGMENT and PARTITION data only
-              FilterExpression.in(MetadataInfo.METADATA_TYPE, MetadataType.SEGMENT.name(), MetadataType.PARTITION.name()),
               // exclude DEFAULT_SEGMENT (used only for non-partitioned tables)
               FilterExpression.notEqual(MetadataInfo.METADATA_KEY, MetadataInfo.DEFAULT_SEGMENT_KEY)))
-            .execute();
+            .build();
+
+          List<TableMetadataUnit> units = metastore.tables().basicRequests().request(requestMetadata);
 
           metadataHolder = BasicTablesTransformer.all(units);
         } catch (Exception e) {

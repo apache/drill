@@ -77,6 +77,7 @@ import org.apache.drill.metastore.metadata.PartitionMetadata;
 import org.apache.drill.metastore.metadata.RowGroupMetadata;
 import org.apache.drill.metastore.metadata.SegmentMetadata;
 import org.apache.drill.metastore.metadata.TableInfo;
+import org.apache.drill.metastore.operate.Delete;
 import org.apache.drill.metastore.operate.Modify;
 import org.apache.drill.metastore.statistics.BaseStatisticsKind;
 import org.apache.drill.metastore.statistics.ColumnStatistics;
@@ -238,7 +239,10 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
 
     Modify<TableMetadataUnit> modify = tables.modify();
     if (!popConfig.getContext().metadataToRemove().isEmpty()) {
-      modify.delete(deleteFilter);
+      modify.delete(Delete.builder()
+        .metadataType(MetadataType.SEGMENT, MetadataType.FILE, MetadataType.ROW_GROUP, MetadataType.PARTITION)
+        .filter(deleteFilter)
+        .build());
     }
 
     MetastoreTableInfo metastoreTableInfo = popConfig.getContext().metastoreTableInfo();

@@ -20,6 +20,7 @@ package org.apache.drill.metastore.components.tables;
 import org.apache.drill.categories.MetastoreTest;
 import org.apache.drill.metastore.expressions.FilterExpression;
 import org.apache.drill.metastore.metadata.MetadataInfo;
+import org.apache.drill.metastore.metadata.MetadataType;
 import org.apache.drill.test.BaseTest;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -134,5 +135,25 @@ public class TestBasicTablesRequests extends BaseTest {
       customFilter);
 
     assertEquals(expected.toString(), requestMetadata.filter().toString());
+  }
+
+  @Test
+  public void testRequestMetadataWithMetadataType() {
+    BasicTablesRequests.RequestMetadata requestMetadata = BasicTablesRequests.RequestMetadata.builder()
+      .metadataType(MetadataType.TABLE)
+      .build();
+
+    assertEquals(1, requestMetadata.metadataTypes().size());
+    assertEquals(MetadataType.TABLE, requestMetadata.metadataTypes().iterator().next());
+  }
+
+  @Test
+  public void testRequestMetadataWithMetadataTypes() {
+    BasicTablesRequests.RequestMetadata requestMetadata = BasicTablesRequests.RequestMetadata.builder()
+      .metadataTypes(MetadataType.TABLE, MetadataType.SEGMENT)
+      .metadataTypes(Arrays.asList(MetadataType.PARTITION, MetadataType.FILE))
+      .build();
+
+    assertEquals(4, requestMetadata.metadataTypes().size());
   }
 }

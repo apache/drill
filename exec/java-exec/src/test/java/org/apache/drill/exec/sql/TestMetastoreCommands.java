@@ -38,6 +38,7 @@ import org.apache.drill.metastore.metadata.MetadataType;
 import org.apache.drill.metastore.metadata.RowGroupMetadata;
 import org.apache.drill.metastore.metadata.SegmentMetadata;
 import org.apache.drill.metastore.metadata.TableInfo;
+import org.apache.drill.metastore.operate.Delete;
 import org.apache.drill.metastore.statistics.BaseStatisticsKind;
 import org.apache.drill.metastore.statistics.ColumnStatistics;
 import org.apache.drill.metastore.statistics.ColumnStatisticsKind;
@@ -257,7 +258,10 @@ public class TestMetastoreCommands extends ClusterTest {
           .get()
           .tables()
           .modify()
-          .delete(tableInfo.toFilter())
+          .delete(Delete.builder()
+            .metadataType(MetadataType.ALL)
+            .filter(tableInfo.toFilter())
+            .build())
           .execute();
       run("drop table if exists dfs.tmp.`%s`", tableName);
       client.resetSession(ExecConstants.METASTORE_ENABLED);
@@ -552,12 +556,11 @@ public class TestMetastoreCommands extends ClusterTest {
             .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.tmp.%s]", tableName))
             .go();
 
-        List<String> emptyMetadataLevels = Arrays.stream(MetadataType.values())
+        List<MetadataType> emptyMetadataLevels = Arrays.stream(MetadataType.values())
             .filter(metadataType -> metadataType.compareTo(analyzeLevel) > 0
                 // for the case when there are no segment metadata, default segment is present
                 && metadataType.compareTo(MetadataType.SEGMENT) > 0
                 && metadataType.compareTo(MetadataType.ALL) < 0)
-            .map(Enum::name)
             .collect(Collectors.toList());
 
         BasicTablesRequests.RequestMetadata requestMetadata = BasicTablesRequests.RequestMetadata.builder()
@@ -566,12 +569,9 @@ public class TestMetastoreCommands extends ClusterTest {
             .build();
 
         List<TableMetadataUnit> metadataUnitList = cluster.drillbit().getContext()
-            .getMetastoreRegistry()
-            .get()
-            .tables()
-            .read()
-            .filter(requestMetadata.filter())
-            .execute();
+          .getMetastoreRegistry().get().tables()
+          .basicRequests()
+          .request(requestMetadata);
 
         assertTrue(
             String.format("Some metadata [%s] for [%s] analyze query level is present" + metadataUnitList, emptyMetadataLevels, analyzeLevel),
