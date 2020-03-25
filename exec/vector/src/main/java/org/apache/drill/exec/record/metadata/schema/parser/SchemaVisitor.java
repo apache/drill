@@ -28,6 +28,7 @@ import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.RepeatedListBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.metadata.TupleSchema;
+import org.apache.drill.exec.record.metadata.VariantColumnMetadata;
 import org.apache.drill.exec.vector.complex.DictVector;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
@@ -126,6 +127,13 @@ public class SchemaVisitor extends SchemaParserBaseVisitor<TupleMetadata> {
       RepeatedListBuilder builder = new RepeatedListBuilder(null, name);
       builder.addColumn(child);
       return builder.buildColumn();
+    }
+
+    @Override
+    public ColumnMetadata visitUnion_column(SchemaParser.Union_columnContext ctx) {
+      String name = ctx.column_id().accept(new IdVisitor());
+      // nullability for UNION types are ignored, since they can hold any value
+      return VariantColumnMetadata.union(name);
     }
   }
 
@@ -387,6 +395,11 @@ public class SchemaVisitor extends SchemaParserBaseVisitor<TupleMetadata> {
     public ColumnMetadata visitMap_value_array_type_def(SchemaParser.Map_value_array_type_defContext ctx) {
       return ctx.array_type().accept(new ArrayTypeVisitor(DictVector.FIELD_VALUE_NAME));
     }
+
+    @Override
+    public ColumnMetadata visitMap_value_union_type_def(SchemaParser.Map_value_union_type_defContext ctx) {
+      return VariantColumnMetadata.union(DictVector.FIELD_VALUE_NAME);
+    }
   }
 
   /**
@@ -421,9 +434,11 @@ public class SchemaVisitor extends SchemaParserBaseVisitor<TupleMetadata> {
    */
   private static class SimpleArrayValueTypeVisitor extends SchemaParserBaseVisitor<ColumnMetadata> {
 
+    private final String name;
     private final TypeVisitor typeVisitor;
 
     SimpleArrayValueTypeVisitor(String name) {
+      this.name = name;
       this.typeVisitor = new TypeVisitor(name, TypeProtos.DataMode.REPEATED);
     }
 
@@ -440,6 +455,11 @@ public class SchemaVisitor extends SchemaParserBaseVisitor<TupleMetadata> {
     @Override
     public ColumnMetadata visitArray_map_type_def(SchemaParser.Array_map_type_defContext ctx) {
       return ctx.map_type().accept(typeVisitor);
+    }
+
+    @Override
+    public ColumnMetadata visitArray_union_type_def(SchemaParser.Array_union_type_defContext ctx) {
+      return VariantColumnMetadata.list(name);
     }
   }
 

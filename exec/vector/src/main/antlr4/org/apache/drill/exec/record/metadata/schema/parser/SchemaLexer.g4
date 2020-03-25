@@ -57,6 +57,7 @@ SECOND: 'SECOND';
 MAP: 'MAP';
 STRUCT: 'STRUCT';
 ARRAY: 'ARRAY';
+UNION: 'UNION';
 
 // additional data types, primary used for Parquet
 UINT1: 'UINT1';

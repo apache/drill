@@ -225,6 +225,10 @@ public class TestSchemaParser extends BaseTest {
           .nullableValue(TypeProtos.MinorType.INT)
         .resumeList()
       .resumeSchema()
+      .addList("union_array")
+        .addType(TypeProtos.MinorType.BIGINT)
+        .addType(TypeProtos.MinorType.DATE)
+      .resumeSchema()
       .buildSchema();
 
     checkSchema("simple_array array<int>"
@@ -232,7 +236,8 @@ public class TestSchemaParser extends BaseTest {
         + ", struct_array array<struct<s1 int, s2 varchar>>"
         + ", nested_array_struct array<array<struct<ns1 int, ns2 varchar>>>"
         + ", map_array array<map<varchar, int>>"
-        + ", nested_map_array array<array<map<varchar, int>>>",
+        + ", nested_map_array array<array<map<varchar, int>>>"
+        + ", union_array array<union>",
       schema);
   }
 
@@ -249,6 +254,9 @@ public class TestSchemaParser extends BaseTest {
         .addDict("map_col", TypeProtos.MinorType.VARCHAR)
           .nullableValue(TypeProtos.MinorType.INT)
         .resumeMap()
+        .addUnion("union_col")
+          .addType(TypeProtos.MinorType.INT)
+        .resumeMap()
       .resumeSchema()
       .buildSchema();
 
@@ -256,6 +264,7 @@ public class TestSchemaParser extends BaseTest {
       + ", array_col array<int>"
       + ", nested_struct struct<s1 int, s2 varchar>"
       + ", map_col map<varchar, int>"
+      + ", union_col union"
       + ">", schema);
   }
 
@@ -295,14 +304,35 @@ public class TestSchemaParser extends BaseTest {
             .nullableValue(TypeProtos.MinorType.FLOAT8)
           .resumeDict()
         .resumeSchema()
+        .addDict("dict_col_union", TypeProtos.MinorType.BIGINT)
+          .unionValue()
+            .addType(TypeProtos.MinorType.INT)
+         .resumeDict()
+        .resumeSchema()
       .buildSchema();
 
     checkSchema("dict_col_simple map<varchar, int>"
       + ", dict_col_simple_ps map<varchar(50), decimal(10, 2) not null>"
       + ", dict_col_struct map<int, struct<sb boolean not null, si int>>"
       + ", dict_col_dict map<varchar, map<int, boolean>>"
-      + ", dict_col_array map<bigint, array<map<date, double>>>",
+      + ", dict_col_array map<bigint, array<map<date, double>>>"
+      + ", dict_col_union map<bigint, union>",
       schema);
+  }
+
+  @Test
+  public void testUnion() throws Exception {
+    TupleMetadata schema = new SchemaBuilder()
+      .addUnion("col_union_not_null")
+        .addType(TypeProtos.MinorType.INT)
+        .addType(TypeProtos.MinorType.VARCHAR)
+      .resumeSchema()
+      .addUnion("col_union_null")
+        .addType(TypeProtos.MinorType.INT)
+      .resumeSchema()
+      .buildSchema();
+
+    checkSchema("col_union_not_null union not null, col_union_null union", schema);
   }
 
   @Test
