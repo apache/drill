@@ -17,6 +17,7 @@
  */
 package org.apache.drill.metastore.iceberg.components.tables;
 
+import org.apache.drill.metastore.MetastoreColumn;
 import org.apache.drill.metastore.components.tables.TableMetadataUnit;
 import org.apache.hadoop.fs.Path;
 
@@ -77,11 +78,11 @@ public class TableKey {
    *
    * @return map of with condition references anf values
    */
-  public Map<String, Object> toFilterConditions() {
-    Map<String, Object> conditions = new HashMap<>();
-    conditions.put(IcebergTables.STORAGE_PLUGIN, storagePlugin);
-    conditions.put(IcebergTables.WORKSPACE, workspace);
-    conditions.put(IcebergTables.TABLE_NAME, tableName);
+  public Map<MetastoreColumn, Object> toFilterConditions() {
+    Map<MetastoreColumn, Object> conditions = new HashMap<>();
+    conditions.put(MetastoreColumn.STORAGE_PLUGIN, storagePlugin);
+    conditions.put(MetastoreColumn.WORKSPACE, workspace);
+    conditions.put(MetastoreColumn.TABLE_NAME, tableName);
     return conditions;
   }
 

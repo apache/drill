@@ -35,6 +35,13 @@ import java.lang.annotation.Target;
 public @interface MetastoreFieldDefinition {
 
   /**
+   * Indicates Metastore column which can be used in select or filter.
+   *
+   * @return column enum value
+   */
+  MetastoreColumn column();
+
+  /**
    * Indicated metadata types to which field belongs to.
    *
    * @return array of metadata types field belongs to

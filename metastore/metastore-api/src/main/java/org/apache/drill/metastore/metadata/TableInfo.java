@@ -23,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.apache.drill.common.util.DrillStringUtils;
+import org.apache.drill.metastore.MetastoreColumn;
 import org.apache.drill.metastore.components.tables.TableMetadataUnit;
 import org.apache.drill.metastore.expressions.FilterExpression;
 
@@ -43,10 +44,6 @@ public class TableInfo {
       .type(UNKNOWN)
       .owner(UNKNOWN)
       .build();
-
-  public static final String STORAGE_PLUGIN = "storagePlugin";
-  public static final String WORKSPACE = "workspace";
-  public static final String TABLE_NAME = "tableName";
 
   private final String storagePlugin;
   private final String workspace;
@@ -88,9 +85,9 @@ public class TableInfo {
   }
 
   public FilterExpression toFilter() {
-    FilterExpression storagePluginFilter = FilterExpression.equal(STORAGE_PLUGIN, storagePlugin);
-    FilterExpression workspaceFilter = FilterExpression.equal(WORKSPACE, workspace);
-    FilterExpression tableNameFilter = FilterExpression.equal(TABLE_NAME, name);
+    FilterExpression storagePluginFilter = FilterExpression.equal(MetastoreColumn.STORAGE_PLUGIN, storagePlugin);
+    FilterExpression workspaceFilter = FilterExpression.equal(MetastoreColumn.WORKSPACE, workspace);
+    FilterExpression tableNameFilter = FilterExpression.equal(MetastoreColumn.TABLE_NAME, name);
     return FilterExpression.and(storagePluginFilter, workspaceFilter, tableNameFilter);
   }
 

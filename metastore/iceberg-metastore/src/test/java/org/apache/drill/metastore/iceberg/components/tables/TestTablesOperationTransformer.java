@@ -18,6 +18,7 @@
 package org.apache.drill.metastore.iceberg.components.tables;
 
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.metastore.MetastoreColumn;
 import org.apache.drill.metastore.components.tables.TableMetadataUnit;
 import org.apache.drill.metastore.expressions.FilterExpression;
 import org.apache.drill.metastore.iceberg.IcebergBaseTest;
@@ -26,6 +27,7 @@ import org.apache.drill.metastore.iceberg.operate.Delete;
 import org.apache.drill.metastore.iceberg.operate.Overwrite;
 import org.apache.drill.metastore.iceberg.transform.FilterTransformer;
 import org.apache.drill.metastore.iceberg.transform.OperationTransformer;
+import org.apache.drill.metastore.metadata.MetadataType;
 import org.apache.hadoop.fs.Path;
 import org.apache.iceberg.expressions.Expression;
 import org.apache.iceberg.expressions.Expressions;
@@ -61,8 +63,8 @@ public class TestTablesOperationTransformer extends IcebergBaseTest {
 
     TableKey tableKey = new TableKey(unit.storagePlugin(), unit.workspace(), unit.tableName());
 
-    Map<String, Object> filterConditions = new HashMap<>(tableKey.toFilterConditions());
-    filterConditions.put(IcebergTables.METADATA_KEY, unit.metadataKey());
+    Map<MetastoreColumn, Object> filterConditions = new HashMap<>(tableKey.toFilterConditions());
+    filterConditions.put(MetastoreColumn.METADATA_KEY, unit.metadataKey());
 
     String location = tableKey.toLocation(TestTablesOperationTransformer.location);
     Expression expression = new FilterTransformer().transform(filterConditions);
@@ -93,12 +95,12 @@ public class TestTablesOperationTransformer extends IcebergBaseTest {
   @Test
   public void testToDeleteOperation() {
     FilterExpression filter = FilterExpression.and(
-      FilterExpression.equal("storagePlugin", "dfs"),
-      FilterExpression.equal("workspace", "tmp"));
+      FilterExpression.equal(MetastoreColumn.STORAGE_PLUGIN, "dfs"),
+      FilterExpression.equal(MetastoreColumn.WORKSPACE, "tmp"));
 
     Expression expected = Expressions.and(
-      Expressions.equal(IcebergTables.STORAGE_PLUGIN, "dfs"),
-      Expressions.equal(IcebergTables.WORKSPACE, "tmp"));
+      Expressions.equal(MetastoreColumn.STORAGE_PLUGIN.columnName(), "dfs"),
+      Expressions.equal(MetastoreColumn.WORKSPACE.columnName(), "tmp"));
 
     Delete operation = transformer.toDelete(filter);
 
@@ -107,8 +109,15 @@ public class TestTablesOperationTransformer extends IcebergBaseTest {
 
   @Test
   public void testToDeleteOperations() {
-    FilterExpression dfs = FilterExpression.equal("storagePlugin", "dfs");
-    FilterExpression s3 = FilterExpression.equal("storagePlugin", "s3");
+    org.apache.drill.metastore.operate.Delete dfs = org.apache.drill.metastore.operate.Delete.builder()
+      .metadataType(MetadataType.ALL)
+      .filter(FilterExpression.equal(MetastoreColumn.STORAGE_PLUGIN, "dfs"))
+      .build();
+
+    org.apache.drill.metastore.operate.Delete s3 = org.apache.drill.metastore.operate.Delete.builder()
+      .metadataType(MetadataType.ALL)
+      .filter(FilterExpression.equal(MetastoreColumn.STORAGE_PLUGIN, "s3"))
+      .build();
 
     List<Delete> operations = transformer.toDelete(Arrays.asList(dfs, s3));
 

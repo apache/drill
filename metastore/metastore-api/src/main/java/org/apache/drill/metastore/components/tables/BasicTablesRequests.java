@@ -17,6 +17,7 @@
  */
 package org.apache.drill.metastore.components.tables;
 
+import org.apache.drill.metastore.MetastoreColumn;
 import org.apache.drill.metastore.expressions.FilterExpression;
 import org.apache.drill.metastore.metadata.BaseTableMetadata;
 import org.apache.drill.metastore.metadata.FileMetadata;
@@ -40,13 +41,6 @@ import java.util.stream.Collectors;
  * to write filters and transformers from {@link TableMetadataUnit} class.
  */
 public class BasicTablesRequests {
-
-  public static final String LAST_MODIFIED_TIME = "lastModifiedTime";
-  public static final String PATH = "path";
-  public static final String LOCATION = "location";
-  public static final String COLUMN = "column";
-  public static final String INTERESTING_COLUMNS = "interestingColumns";
-  public static final String PARTITION_KEYS = "partitionKeys";
 
   private final Tables tables;
 
@@ -72,8 +66,8 @@ public class BasicTablesRequests {
     RequestMetadata requestMetadata = RequestMetadata.builder()
       .tableInfo(tableInfo)
       .metadataKey(MetadataInfo.GENERAL_INFO_KEY)
-      .metadataType(MetadataType.TABLE.name())
-      .requestColumns(LAST_MODIFIED_TIME)
+      .metadataType(MetadataType.TABLE)
+      .requestColumns(MetastoreColumn.LAST_MODIFIED_TIME)
       .build();
 
     long version = tables.metadata().version();
@@ -121,7 +115,7 @@ public class BasicTablesRequests {
     RequestMetadata requestMetadata = RequestMetadata.builder()
       .customFilter(filter)
       .metadataKey(MetadataInfo.GENERAL_INFO_KEY)
-      .metadataType(MetadataType.TABLE.name())
+      .metadataType(MetadataType.TABLE)
       .requestColumns(TableMetadataUnit.SCHEMA.tableColumns())
       .build();
 
@@ -172,7 +166,7 @@ public class BasicTablesRequests {
       .tableInfo(tableInfo)
       .locations(locations)
       .metadataKey(metadataKey)
-      .metadataType(MetadataType.SEGMENT.name())
+      .metadataType(MetadataType.SEGMENT)
       .requestColumns(TableMetadataUnit.SCHEMA.segmentColumns())
       .build();
 
@@ -202,7 +196,7 @@ public class BasicTablesRequests {
       .tableInfo(tableInfo)
       .locations(locations)
       .column(column)
-      .metadataType(MetadataType.SEGMENT.name())
+      .metadataType(MetadataType.SEGMENT)
       .requestColumns(TableMetadataUnit.SCHEMA.segmentColumns())
       .build();
 
@@ -237,7 +231,7 @@ public class BasicTablesRequests {
         .tableInfo(tableInfo)
         .metadataKeys(keys)
         .identifiers(identifiers)
-        .metadataType(MetadataType.SEGMENT.name())
+        .metadataType(MetadataType.SEGMENT)
         .requestColumns(TableMetadataUnit.SCHEMA.segmentColumns())
         .build();
 
@@ -253,6 +247,7 @@ public class BasicTablesRequests {
    *   select * from METASTORE
    *   where storage = 'dfs' and workspace = 'tmp' and tableName = 'nation'
    *   and identifier in ('part_int=3', …)
+   *   and metadataType in ('SEGMENT', …)
    * </pre>
    *
    * @param tableInfo table information
@@ -267,8 +262,8 @@ public class BasicTablesRequests {
         .map(MetadataInfo::identifier)
         .collect(Collectors.toList());
 
-    List<String> metadataTypes = metadataInfos.stream()
-        .map(metadataInfo -> metadataInfo.type().name())
+    List<MetadataType> metadataTypes = metadataInfos.stream()
+        .map(MetadataInfo::type)
         .collect(Collectors.toList());
 
     RequestMetadata requestMetadata = RequestMetadata.builder()
@@ -303,7 +298,7 @@ public class BasicTablesRequests {
       .tableInfo(tableInfo)
       .metadataKeys(metadataKeys)
       .column(column)
-      .metadataType(MetadataType.PARTITION.name())
+      .metadataType(MetadataType.PARTITION)
       .requestColumns(TableMetadataUnit.SCHEMA.partitionColumns())
       .build();
 
@@ -333,7 +328,7 @@ public class BasicTablesRequests {
       .tableInfo(tableInfo)
       .metadataKey(metadataKey)
       .paths(paths)
-      .metadataType(MetadataType.FILE.name())
+      .metadataType(MetadataType.FILE)
       .requestColumns(TableMetadataUnit.SCHEMA.fileColumns())
       .build();
 
@@ -368,7 +363,7 @@ public class BasicTablesRequests {
         .tableInfo(tableInfo)
         .metadataKeys(keys)
         .identifiers(identifiers)
-        .metadataType(MetadataType.FILE.name())
+        .metadataType(MetadataType.FILE)
         .requestColumns(TableMetadataUnit.SCHEMA.fileColumns())
         .build();
 
@@ -400,7 +395,7 @@ public class BasicTablesRequests {
       .tableInfo(tableInfo)
       .metadataKey(metadataKey)
       .path(path)
-      .metadataType(MetadataType.FILE.name())
+      .metadataType(MetadataType.FILE)
       .requestColumns(TableMetadataUnit.SCHEMA.fileColumns())
       .build();
 
@@ -430,7 +425,7 @@ public class BasicTablesRequests {
       .tableInfo(tableInfo)
       .metadataKey(metadataKey)
       .path(path)
-      .metadataType(MetadataType.ROW_GROUP.name())
+      .metadataType(MetadataType.ROW_GROUP)
       .requestColumns(TableMetadataUnit.SCHEMA.rowGroupColumns())
       .build();
 
@@ -460,7 +455,7 @@ public class BasicTablesRequests {
         .tableInfo(tableInfo)
         .metadataKeys(metadataKeys)
         .paths(paths)
-        .metadataType(MetadataType.ROW_GROUP.name())
+        .metadataType(MetadataType.ROW_GROUP)
         .requestColumns(TableMetadataUnit.SCHEMA.rowGroupColumns())
         .build();
 
@@ -495,7 +490,7 @@ public class BasicTablesRequests {
         .tableInfo(tableInfo)
         .metadataKeys(keys)
         .identifiers(identifiers)
-        .metadataType(MetadataType.ROW_GROUP.name())
+        .metadataType(MetadataType.ROW_GROUP)
         .requestColumns(TableMetadataUnit.SCHEMA.rowGroupColumns())
         .build();
 
@@ -525,7 +520,7 @@ public class BasicTablesRequests {
       .tableInfo(tableInfo)
       .metadataKeys(metadataKeys)
       .locations(locations)
-      .metadataTypes(Arrays.asList(MetadataType.SEGMENT.name(), MetadataType.FILE.name(), MetadataType.ROW_GROUP.name()))
+      .metadataTypes(MetadataType.SEGMENT, MetadataType.FILE, MetadataType.ROW_GROUP)
       .build();
 
     List<TableMetadataUnit> units = request(requestMetadata);
@@ -554,8 +549,8 @@ public class BasicTablesRequests {
       .tableInfo(tableInfo)
       .metadataKey(metadataKey)
       .locations(locations)
-      .metadataType(MetadataType.FILE.name())
-      .requestColumns(PATH, LAST_MODIFIED_TIME)
+      .metadataType(MetadataType.FILE)
+      .requestColumns(MetastoreColumn.PATH, MetastoreColumn.LAST_MODIFIED_TIME)
       .build();
 
     return request(requestMetadata).stream()
@@ -584,8 +579,8 @@ public class BasicTablesRequests {
     RequestMetadata requestMetadata = RequestMetadata.builder()
       .tableInfo(tableInfo)
       .locations(locations)
-      .metadataType(MetadataType.SEGMENT.name())
-      .requestColumns(MetadataInfo.METADATA_KEY, LAST_MODIFIED_TIME)
+      .metadataType(MetadataType.SEGMENT)
+      .requestColumns(MetastoreColumn.METADATA_KEY, MetastoreColumn.LAST_MODIFIED_TIME)
       .build();
 
     return request(requestMetadata).stream()
@@ -615,8 +610,8 @@ public class BasicTablesRequests {
     RequestMetadata requestMetadata = RequestMetadata.builder()
       .tableInfo(tableInfo)
       .metadataKey(MetadataInfo.GENERAL_INFO_KEY)
-      .metadataType(MetadataType.TABLE.name())
-      .requestColumns(INTERESTING_COLUMNS, PARTITION_KEYS)
+      .metadataType(MetadataType.TABLE)
+      .requestColumns(MetastoreColumn.INTERESTING_COLUMNS, MetastoreColumn.PARTITION_KEYS)
       .build();
 
     return retrieveSingleElement(request(requestMetadata));
@@ -630,6 +625,7 @@ public class BasicTablesRequests {
    */
   public List<TableMetadataUnit> request(RequestMetadata requestMetadata) {
     return tables.read()
+      .metadataTypes(requestMetadata.metadataTypes())
       .filter(requestMetadata.filter())
       .columns(requestMetadata.columns())
       .execute();
@@ -656,26 +652,32 @@ public class BasicTablesRequests {
   }
 
   /**
-   * Request metadata holder that provides request filters and columns.
+   * Request metadata holder that provides request metadata types, filters and columns.
    * Combines given filters using {@link FilterExpression.Operator#AND} operator.
    * Supports only {@link FilterExpression.Operator#EQUAL} and {@link FilterExpression.Operator#IN}
    * operators for predefined filter references, for other cases custom filter can be used.
    */
   public static class RequestMetadata {
 
+    private List<MetadataType> metadataTypes;
     private final FilterExpression filter;
-    private final List<String> columns;
+    private final List<MetastoreColumn> columns;
 
-    private RequestMetadata(FilterExpression filter, List<String> columns) {
+    private RequestMetadata(List<MetadataType> metadataTypes, FilterExpression filter, List<MetastoreColumn> columns) {
+      this.metadataTypes = metadataTypes;
       this.filter = filter;
       this.columns = columns;
+    }
+
+    public List<MetadataType> metadataTypes() {
+      return metadataTypes;
     }
 
     public FilterExpression filter() {
       return filter;
     }
 
-    public List<String> columns() {
+    public List<MetastoreColumn> columns() {
       return columns;
     }
 
@@ -689,15 +691,29 @@ public class BasicTablesRequests {
       private String location;
       private List<String> locations;
       private String column;
-      private String metadataType;
-      private List<String> metadataTypes;
       private String metadataKey;
       private List<String> metadataKeys;
       private String path;
       private List<String> paths;
       private List<String> identifiers;
       private FilterExpression customFilter;
-      private final List<String> requestColumns = new ArrayList<>();
+      private List<MetadataType> metadataTypes = new ArrayList<>();
+      private final List<MetastoreColumn> requestColumns = new ArrayList<>();
+
+      public RequestMetadata.Builder metadataType(MetadataType metadataType) {
+        this.metadataTypes.add(metadataType);
+        return this;
+      }
+
+      public RequestMetadata.Builder metadataTypes(MetadataType... metadataTypes) {
+        this.metadataTypes.addAll(Arrays.asList(metadataTypes));
+        return this;
+      }
+
+      public RequestMetadata.Builder metadataTypes(List<MetadataType> metadataTypes) {
+        this.metadataTypes.addAll(metadataTypes);
+        return this;
+      }
 
       public RequestMetadata.Builder tableInfo(TableInfo tableInfo) {
         this.tableInfo = tableInfo;
@@ -716,16 +732,6 @@ public class BasicTablesRequests {
 
       public RequestMetadata.Builder column(String column) {
         this.column = column;
-        return this;
-      }
-
-      public RequestMetadata.Builder metadataType(String metadataType) {
-        this.metadataType = metadataType;
-        return this;
-      }
-
-      public RequestMetadata.Builder metadataTypes(List<String> metadataTypes) {
-        this.metadataTypes = metadataTypes;
         return this;
       }
 
@@ -759,17 +765,17 @@ public class BasicTablesRequests {
         return this;
       }
 
-      public RequestMetadata.Builder requestColumns(List<String> requestColumns) {
+      public RequestMetadata.Builder requestColumns(List<MetastoreColumn> requestColumns) {
         this.requestColumns.addAll(requestColumns);
         return this;
       }
 
-      public RequestMetadata.Builder requestColumns(String... requestColumns) {
+      public RequestMetadata.Builder requestColumns(MetastoreColumn... requestColumns) {
         return requestColumns(Arrays.asList(requestColumns));
       }
 
       public RequestMetadata build() {
-        return new RequestMetadata(createFilter(), requestColumns);
+        return new RequestMetadata(metadataTypes, createFilter(), requestColumns);
       }
 
       private FilterExpression createFilter() {
@@ -777,16 +783,14 @@ public class BasicTablesRequests {
         if (tableInfo != null) {
           filters.add(tableInfo.toFilter());
         }
-        addFilter(LOCATION, location, filters);
-        addFilter(LOCATION, locations, filters);
-        addFilter(COLUMN, column, filters);
-        addFilter(MetadataInfo.METADATA_TYPE, metadataType, filters);
-        addFilter(MetadataInfo.METADATA_TYPE, metadataTypes, filters);
-        addFilter(MetadataInfo.METADATA_KEY, metadataKey, filters);
-        addFilter(MetadataInfo.METADATA_KEY, metadataKeys, filters);
-        addFilter(PATH, path, filters);
-        addFilter(PATH, paths, filters);
-        addFilter(MetadataInfo.METADATA_IDENTIFIER, identifiers, filters);
+        addFilter(MetastoreColumn.LOCATION, location, filters);
+        addFilter(MetastoreColumn.LOCATION, locations, filters);
+        addFilter(MetastoreColumn.COLUMN, column, filters);
+        addFilter(MetastoreColumn.METADATA_KEY, metadataKey, filters);
+        addFilter(MetastoreColumn.METADATA_KEY, metadataKeys, filters);
+        addFilter(MetastoreColumn.PATH, path, filters);
+        addFilter(MetastoreColumn.PATH, paths, filters);
+        addFilter(MetastoreColumn.METADATA_IDENTIFIER, identifiers, filters);
         if (customFilter != null) {
           filters.add(customFilter);
         }
@@ -809,11 +813,11 @@ public class BasicTablesRequests {
        * creates {@link FilterExpression.Operator#IN} filter, if List is empty, does nothing.
        * For all other cases, creates {@link FilterExpression.Operator#EQUAL} filter.
        *
-       * @param reference filter reference
+       * @param column Metastore column to which filter will be applied
        * @param value filter value
        * @param filters current list of filters
        */
-      private <T> void addFilter(String reference, T value, List<FilterExpression> filters) {
+      private <T> void addFilter(MetastoreColumn column, T value, List<FilterExpression> filters) {
         if (value == null) {
           return;
         }
@@ -823,11 +827,11 @@ public class BasicTablesRequests {
           if (list.isEmpty()) {
             return;
           }
-          filters.add(FilterExpression.in(reference, list));
+          filters.add(FilterExpression.in(column, list));
           return;
         }
 
-        filters.add(FilterExpression.equal(reference, value));
+        filters.add(FilterExpression.equal(column, value));
       }
     }
   }

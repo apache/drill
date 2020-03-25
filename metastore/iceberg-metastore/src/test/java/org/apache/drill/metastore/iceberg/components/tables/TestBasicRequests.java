@@ -18,6 +18,7 @@
 package org.apache.drill.metastore.iceberg.components.tables;
 
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.metastore.MetastoreColumn;
 import org.apache.drill.metastore.components.tables.BasicTablesRequests;
 import org.apache.drill.metastore.components.tables.BasicTablesTransformer;
 import org.apache.drill.metastore.components.tables.MetastoreTableInfo;
@@ -114,8 +115,8 @@ public class TestBasicRequests extends IcebergBaseTest {
   public void testTablesMetadataAbsent() {
     List<BaseTableMetadata> tablesMetadata = basicRequests.tablesMetadata(
       FilterExpression.and(
-        FilterExpression.equal(IcebergTables.STORAGE_PLUGIN, "dfs"),
-        FilterExpression.equal(IcebergTables.WORKSPACE, "absent")));
+        FilterExpression.equal(MetastoreColumn.STORAGE_PLUGIN, "dfs"),
+        FilterExpression.equal(MetastoreColumn.WORKSPACE, "absent")));
     assertTrue(tablesMetadata.isEmpty());
   }
 
@@ -123,8 +124,8 @@ public class TestBasicRequests extends IcebergBaseTest {
   public void testTablesMetadataExisting() {
     List<BaseTableMetadata> baseTableMetadata = basicRequests.tablesMetadata(
       FilterExpression.and(
-        FilterExpression.equal(IcebergTables.STORAGE_PLUGIN, "dfs"),
-        FilterExpression.equal(IcebergTables.WORKSPACE, "tmp")));
+        FilterExpression.equal(MetastoreColumn.STORAGE_PLUGIN, "dfs"),
+        FilterExpression.equal(MetastoreColumn.WORKSPACE, "tmp")));
     assertTrue(baseTableMetadata.size() > 1);
   }
 
@@ -455,7 +456,7 @@ public class TestBasicRequests extends IcebergBaseTest {
   public void testCustomRequest() {
     BasicTablesRequests.RequestMetadata requestMetadata = BasicTablesRequests.RequestMetadata.builder()
       .column("n_nation")
-      .metadataType(MetadataType.PARTITION.name())
+      .metadataType(MetadataType.PARTITION)
       .build();
 
     List<TableMetadataUnit> units = basicRequests.request(requestMetadata);

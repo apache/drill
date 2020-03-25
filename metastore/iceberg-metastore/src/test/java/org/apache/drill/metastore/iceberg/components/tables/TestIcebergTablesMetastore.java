@@ -19,7 +19,10 @@ package org.apache.drill.metastore.iceberg.components.tables;
 
 import com.typesafe.config.ConfigValueFactory;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.metastore.MetastoreColumn;
 import org.apache.drill.metastore.components.tables.Tables;
+import org.apache.drill.metastore.metadata.MetadataType;
+import org.apache.drill.metastore.operate.Delete;
 import org.apache.drill.metastore.operate.Metadata;
 import org.apache.drill.metastore.Metastore;
 import org.apache.drill.metastore.components.tables.TableMetadataUnit;
@@ -230,6 +233,7 @@ public class TestIcebergTablesMetastore extends IcebergBaseTest {
       .execute();
 
     List<TableMetadataUnit> units = tables.read()
+      .metadataType(MetadataType.ALL)
       .filter(tableInfo.toFilter())
       .execute();
 
@@ -260,8 +264,9 @@ public class TestIcebergTablesMetastore extends IcebergBaseTest {
       .execute();
 
     List<TableMetadataUnit> units = tables.read()
+      .metadataType(MetadataType.ALL)
       .filter(tableInfo.toFilter())
-      .columns("tableName", "metadataKey")
+      .columns(MetastoreColumn.TABLE_NAME, MetastoreColumn.METADATA_KEY)
       .execute();
 
     assertEquals(1, units.size());
@@ -274,8 +279,9 @@ public class TestIcebergTablesMetastore extends IcebergBaseTest {
     Tables tables = new IcebergMetastore(config).tables();
 
     List<TableMetadataUnit> units = tables.read()
-      .filter(FilterExpression.equal("storagePlugin", "dfs"))
-      .columns("tableName", "metadataKey")
+      .metadataType(MetadataType.ALL)
+      .filter(FilterExpression.equal(MetastoreColumn.STORAGE_PLUGIN, "dfs"))
+      .columns(MetastoreColumn.TABLE_NAME, MetastoreColumn.METADATA_KEY)
       .execute();
 
     assertTrue(units.isEmpty());
@@ -297,6 +303,7 @@ public class TestIcebergTablesMetastore extends IcebergBaseTest {
       .workspace(tableInfo.workspace())
       .tableName(tableInfo.name())
       .metadataKey("dir0")
+      .metadataType(MetadataType.TABLE.name())
       .tableType("parquet")
       .build();
 
@@ -305,6 +312,7 @@ public class TestIcebergTablesMetastore extends IcebergBaseTest {
       .execute();
 
     List<TableMetadataUnit> units = tables.read()
+      .metadataType(MetadataType.TABLE)
       .filter(tableInfo.toFilter())
       .execute();
 
@@ -316,6 +324,7 @@ public class TestIcebergTablesMetastore extends IcebergBaseTest {
       .workspace("tmp")
       .tableName("nation")
       .metadataKey("dir0")
+      .metadataType(MetadataType.TABLE.name())
       .tableType("text")
       .build();
 
@@ -324,6 +333,7 @@ public class TestIcebergTablesMetastore extends IcebergBaseTest {
       .execute();
 
     List<TableMetadataUnit> updatedUnits = tables.read()
+      .metadataType(MetadataType.TABLE)
       .filter(tableInfo.toFilter())
       .execute();
 
@@ -347,6 +357,7 @@ public class TestIcebergTablesMetastore extends IcebergBaseTest {
       .workspace(tableInfo.workspace())
       .tableName(tableInfo.name())
       .metadataKey("dir0")
+      .metadataType(MetadataType.SEGMENT.name())
       .build();
 
     TableMetadataUnit secondUnit = TableMetadataUnit.builder()
@@ -354,6 +365,7 @@ public class TestIcebergTablesMetastore extends IcebergBaseTest {
       .workspace(tableInfo.workspace())
       .tableName(tableInfo.name())
       .metadataKey("dir1")
+      .metadataType(MetadataType.SEGMENT.name())
       .build();
 
     tables.modify()
@@ -361,6 +373,7 @@ public class TestIcebergTablesMetastore extends IcebergBaseTest {
       .execute();
 
     List<TableMetadataUnit> units = tables.read()
+      .metadataType(MetadataType.SEGMENT)
       .filter(tableInfo.toFilter())
       .execute();
 
@@ -368,13 +381,17 @@ public class TestIcebergTablesMetastore extends IcebergBaseTest {
 
     FilterExpression deleteFilter = FilterExpression.and(
       tableInfo.toFilter(),
-      FilterExpression.equal("metadataKey", "dir0"));
+      FilterExpression.equal(MetastoreColumn.METADATA_KEY, "dir0"));
 
     tables.modify()
-      .delete(deleteFilter)
+      .delete(Delete.builder()
+        .metadataType(MetadataType.SEGMENT)
+        .filter(deleteFilter)
+        .build())
       .execute();
 
     List<TableMetadataUnit> updatedUnits = tables.read()
+      .metadataType(MetadataType.SEGMENT)
       .filter(tableInfo.toFilter())
       .execute();
 
@@ -398,6 +415,7 @@ public class TestIcebergTablesMetastore extends IcebergBaseTest {
       .workspace(tableInfo.workspace())
       .tableName(tableInfo.name())
       .metadataKey("dir0")
+      .metadataType(MetadataType.SEGMENT.name())
       .tableType("parquet")
       .build();
 
@@ -406,6 +424,7 @@ public class TestIcebergTablesMetastore extends IcebergBaseTest {
       .workspace(tableInfo.workspace())
       .tableName(tableInfo.name())
       .metadataKey("dir1")
+      .metadataType(MetadataType.SEGMENT.name())
       .tableType("parquet")
       .build();
 
@@ -414,6 +433,7 @@ public class TestIcebergTablesMetastore extends IcebergBaseTest {
       .execute();
 
     List<TableMetadataUnit> units = tables.read()
+      .metadataType(MetadataType.SEGMENT)
       .filter(tableInfo.toFilter())
       .execute();
 
@@ -421,22 +441,27 @@ public class TestIcebergTablesMetastore extends IcebergBaseTest {
 
     FilterExpression deleteFilter = FilterExpression.and(
       tableInfo.toFilter(),
-      FilterExpression.equal("metadataKey", "dir0"));
+      FilterExpression.equal(MetastoreColumn.METADATA_KEY, "dir0"));
 
     TableMetadataUnit updatedUnit = TableMetadataUnit.builder()
       .storagePlugin(tableInfo.storagePlugin())
       .workspace(tableInfo.workspace())
       .tableName(tableInfo.name())
       .metadataKey("dir1")
+      .metadataType(MetadataType.SEGMENT.name())
       .tableType("text")
       .build();
 
     tables.modify()
-      .delete(deleteFilter)
+      .delete(Delete.builder()
+        .metadataType(MetadataType.SEGMENT)
+        .filter(deleteFilter)
+        .build())
       .overwrite(updatedUnit)
       .execute();
 
     List<TableMetadataUnit> updatedUnits = tables.read()
+      .metadataType(MetadataType.SEGMENT)
       .filter(tableInfo.toFilter())
       .execute();
 
@@ -470,15 +495,16 @@ public class TestIcebergTablesMetastore extends IcebergBaseTest {
       .execute();
 
     List<TableMetadataUnit> initialUnits = tables.read()
+      .metadataType(MetadataType.ALL)
       .execute();
 
     assertEquals(2, initialUnits.size());
 
     tables.modify()
-      .purge()
-      .execute();
+      .purge();
 
     List<TableMetadataUnit> resultingUnits = tables.read()
+      .metadataType(MetadataType.ALL)
       .execute();
 
     assertTrue(resultingUnits.isEmpty());

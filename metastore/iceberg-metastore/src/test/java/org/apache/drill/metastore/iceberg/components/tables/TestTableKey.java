@@ -17,6 +17,7 @@
  */
 package org.apache.drill.metastore.iceberg.components.tables;
 
+import org.apache.drill.metastore.MetastoreColumn;
 import org.apache.drill.metastore.components.tables.TableMetadataUnit;
 import org.apache.drill.metastore.iceberg.IcebergBaseTest;
 import org.apache.hadoop.fs.Path;
@@ -58,10 +59,10 @@ public class TestTableKey extends IcebergBaseTest {
   public void testToFilterConditions() {
     TableKey tableKey = new TableKey("dfs", "tmp", "nation");
 
-    Map<String, Object> expected = new HashMap<>();
-    expected.put(IcebergTables.STORAGE_PLUGIN, "dfs");
-    expected.put(IcebergTables.WORKSPACE, "tmp");
-    expected.put(IcebergTables.TABLE_NAME, "nation");
+    Map<MetastoreColumn, Object> expected = new HashMap<>();
+    expected.put(MetastoreColumn.STORAGE_PLUGIN, "dfs");
+    expected.put(MetastoreColumn.WORKSPACE, "tmp");
+    expected.put(MetastoreColumn.TABLE_NAME, "nation");
 
     assertEquals(expected, tableKey.toFilterConditions());
   }

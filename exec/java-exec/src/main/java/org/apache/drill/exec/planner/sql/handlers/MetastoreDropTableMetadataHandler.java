@@ -30,7 +30,9 @@ import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.apache.drill.metastore.components.tables.MetastoreTableInfo;
 import org.apache.drill.metastore.components.tables.Tables;
 import org.apache.drill.metastore.exceptions.MetastoreException;
+import org.apache.drill.metastore.metadata.MetadataType;
 import org.apache.drill.metastore.metadata.TableInfo;
+import org.apache.drill.metastore.operate.Delete;
 import org.apache.parquet.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -84,8 +86,11 @@ public class MetastoreDropTableMetadataHandler extends DefaultSqlHandler {
       }
 
       tables.modify()
-          .delete(tableInfo.toFilter())
-          .execute();
+        .delete(Delete.builder()
+          .metadataType(MetadataType.ALL)
+          .filter(tableInfo.toFilter())
+          .build())
+        .execute();
     } catch (MetastoreException e) {
       logger.error("Error when dropping metadata for table {}", dropTableMetadata.getName(), e);
       return DirectPlan.createDirectPlan(context, false, e.getMessage());

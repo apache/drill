@@ -31,7 +31,7 @@
   <name>metastore/Drill Iceberg Metastore</name>
 
   <properties>
-    <iceberg.version>2d75130</iceberg.version>
+    <iceberg.version>93d51b9</iceberg.version>
     <caffeine.version>2.7.0</caffeine.version>
   </properties>
 
@@ -136,6 +136,12 @@
     <dependency>
       <groupId>org.ow2.asm</groupId>
       <artifactId>asm</artifactId>
+      <version>${asm.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.ow2.asm</groupId>
+      <artifactId>asm-tree</artifactId>
       <version>${asm.version}</version>
       <scope>test</scope>
     </dependency>

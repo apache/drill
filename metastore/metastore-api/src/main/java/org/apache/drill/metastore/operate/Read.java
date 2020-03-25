@@ -17,7 +17,9 @@
  */
 package org.apache.drill.metastore.operate;
 
+import org.apache.drill.metastore.MetastoreColumn;
 import org.apache.drill.metastore.expressions.FilterExpression;
+import org.apache.drill.metastore.metadata.MetadataType;
 
 import java.util.Arrays;
 import java.util.List;
@@ -29,6 +31,20 @@ import java.util.List;
  * @param <T> component unit type
  */
 public interface Read<T> {
+
+  /**
+   * Provides list of metadata types to be read.
+   * Note: providing at least one metadata type is required.
+   * If all metadata types should be read, {@link MetadataType#ALL} can be passed.
+   *
+   * @param metadataTypes list of metadata types
+   * @return current instance of Read interface implementation
+   */
+  Read<T> metadataTypes(List<MetadataType> metadataTypes);
+
+  default Read<T> metadataType(MetadataType... metadataType) {
+    return metadataTypes(Arrays.asList(metadataType));
+  }
 
   /**
    * Provides filter expression by which metastore component data will be filtered.
@@ -48,15 +64,15 @@ public interface Read<T> {
    * @param columns list of columns to be read from Metastore component
    * @return current instance of Read interface implementation
    */
-  Read<T> columns(List<String> columns);
+  Read<T> columns(List<MetastoreColumn> columns);
 
-  default Read<T> columns(String... columns) {
+  default Read<T> columns(MetastoreColumn... columns) {
     return columns(Arrays.asList(columns));
   }
 
   /**
    * Executes read operation from Metastore component, returns obtained result in a form
-   * of list of component units  which later can be transformed into suitable format.
+   * of list of component units which later can be transformed into suitable format.
    *
    * @return list of component units
    */

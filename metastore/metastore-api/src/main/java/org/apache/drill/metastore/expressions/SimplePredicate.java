@@ -17,27 +17,29 @@
  */
 package org.apache.drill.metastore.expressions;
 
+import org.apache.drill.metastore.MetastoreColumn;
+
 import java.util.StringJoiner;
 
 /**
- * Indicates simple predicate implementations which have reference and one value.
+ * Indicates simple predicate implementations which have column and one value.
  *
  * @param <T> predicate value type
  */
 public abstract class SimplePredicate<T> implements FilterExpression {
 
-  private final String reference;
+  private final MetastoreColumn column;
   private final Operator operator;
   private final T value;
 
-  protected SimplePredicate(String reference, Operator operator, T value) {
-    this.reference = reference;
+  protected SimplePredicate(MetastoreColumn column, Operator operator, T value) {
+    this.column = column;
     this.operator = operator;
     this.value = value;
   }
 
-  public String reference() {
-    return reference;
+  public MetastoreColumn column() {
+    return column;
   }
 
   public T value() {
@@ -52,7 +54,7 @@ public abstract class SimplePredicate<T> implements FilterExpression {
   @Override
   public String toString() {
     return new StringJoiner(", ", SimplePredicate.class.getSimpleName() + "[", "]")
-      .add("reference=" + reference)
+      .add("column=" + column)
       .add("operator=" + operator)
       .add("value=" + value)
       .toString();
@@ -66,8 +68,8 @@ public abstract class SimplePredicate<T> implements FilterExpression {
    */
   public static class Equal<T> extends SimplePredicate<T> {
 
-    public Equal(String reference, T value) {
-      super(reference, Operator.EQUAL, value);
+    public Equal(MetastoreColumn column, T value) {
+      super(column, Operator.EQUAL, value);
     }
 
     @Override
@@ -84,8 +86,8 @@ public abstract class SimplePredicate<T> implements FilterExpression {
    */
   public static class NotEqual<T> extends SimplePredicate<T> {
 
-    public NotEqual(String reference, T value) {
-      super(reference, Operator.NOT_EQUAL, value);
+    public NotEqual(MetastoreColumn column, T value) {
+      super(column, Operator.NOT_EQUAL, value);
     }
 
     @Override
@@ -102,8 +104,8 @@ public abstract class SimplePredicate<T> implements FilterExpression {
    */
   public static class LessThan<T> extends SimplePredicate<T> {
 
-    public LessThan(String reference, T value) {
-      super(reference, Operator.LESS_THAN, value);
+    public LessThan(MetastoreColumn column, T value) {
+      super(column, Operator.LESS_THAN, value);
     }
 
     @Override
@@ -120,8 +122,8 @@ public abstract class SimplePredicate<T> implements FilterExpression {
    */
   public static class LessThanOrEqual<T> extends SimplePredicate<T> {
 
-    public LessThanOrEqual(String reference, T value) {
-      super(reference, Operator.LESS_THAN_OR_EQUAL, value);
+    public LessThanOrEqual(MetastoreColumn column, T value) {
+      super(column, Operator.LESS_THAN_OR_EQUAL, value);
     }
 
     @Override
@@ -138,8 +140,8 @@ public abstract class SimplePredicate<T> implements FilterExpression {
    */
   public static class GreaterThan<T> extends SimplePredicate<T> {
 
-    public GreaterThan(String reference, T value) {
-      super(reference, Operator.GREATER_THAN, value);
+    public GreaterThan(MetastoreColumn column, T value) {
+      super(column, Operator.GREATER_THAN, value);
     }
 
     @Override
@@ -156,8 +158,8 @@ public abstract class SimplePredicate<T> implements FilterExpression {
    */
   public static class GreaterThanOrEqual<T> extends SimplePredicate<T> {
 
-    public GreaterThanOrEqual(String reference, T value) {
-      super(reference, Operator.GREATER_THAN_OR_EQUAL, value);
+    public GreaterThanOrEqual(MetastoreColumn column, T value) {
+      super(column, Operator.GREATER_THAN_OR_EQUAL, value);
     }
 
     @Override

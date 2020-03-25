@@ -17,28 +17,30 @@
  */
 package org.apache.drill.metastore.expressions;
 
+import org.apache.drill.metastore.MetastoreColumn;
+
 import java.util.List;
 import java.util.StringJoiner;
 
 /**
- * Indicates list predicate implementations which have reference and list of values.
+ * Indicates list predicate implementations which have column and list of values.
  *
  * @param <T> predicate value type
  */
 public abstract class ListPredicate<T> implements FilterExpression {
 
-  private final String reference;
+  private final MetastoreColumn column;
   private final Operator operator;
   private final List<T> values;
 
-  protected ListPredicate(String reference, Operator operator, List<T> values) {
-    this.reference = reference;
+  protected ListPredicate(MetastoreColumn column, Operator operator, List<T> values) {
+    this.column = column;
     this.operator = operator;
     this.values = values;
   }
 
-  public String reference() {
-    return reference;
+  public MetastoreColumn column() {
+    return column;
   }
 
   public List<T> values() {
@@ -53,7 +55,7 @@ public abstract class ListPredicate<T> implements FilterExpression {
   @Override
   public String toString() {
     return new StringJoiner(", ", ListPredicate.class.getSimpleName() + "[", "]")
-      .add("reference=" + reference)
+      .add("column=" + column)
       .add("operator=" + operator)
       .add("values=" + values)
       .toString();
@@ -67,8 +69,8 @@ public abstract class ListPredicate<T> implements FilterExpression {
    */
   public static class In<T> extends ListPredicate<T> {
 
-    public In(String reference, List<T> values) {
-      super(reference, Operator.IN, values);
+    public In(MetastoreColumn column, List<T> values) {
+      super(column, Operator.IN, values);
     }
 
     @Override
@@ -85,8 +87,8 @@ public abstract class ListPredicate<T> implements FilterExpression {
    */
   public static class NotIn<T> extends ListPredicate<T> {
 
-    public NotIn(String reference, List<T> values) {
-      super(reference, Operator.NOT_IN, values);
+    public NotIn(MetastoreColumn column, List<T> values) {
+      super(column, Operator.NOT_IN, values);
     }
 
     @Override

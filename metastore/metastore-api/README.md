@@ -75,9 +75,22 @@ Metastore component may or may not support properties depending on the implement
 If properties are supported, map with properties names and values is returned.
 otherwise empty map is returned. `Metadata#properties` is used to obtain properties information. 
 
-### Filter expression
+### Data filtering
 
-Metastore data can be read or deleted based on the filter expression.
+Metastore data can be read or deleted based on the filter expression and metadata types.
+
+#### Metadata types
+
+Each concrete Metastore component implementation supports specific metadata types
+which identify metadata inside Metastore component units. For example, for `tables`
+component, supported metadata types are` TABLE`, `SEGMENT`, `FILE`, `ROW_GROUP`, `PARTITION`.
+Metadata types are based on `org.apache.drill.metastore.metadata.MetadataType` enum names.
+
+Metadata types should be indicated during read or delete operations.
+If all metadata types are needed, `MetadataType#ALL` metadata type can be indicated.
+
+#### Filter expressions
+
 All filter expressions implement `FilterExpression` interface. 
 List of supported filter operators is indicated in `FilterExpression.Operator` enum.
 When filter expression is provided in read or delete operation, it's up to Metastore
@@ -87,8 +100,8 @@ For convenience, `FilterExpression.Visitor` can be implemented to traverse filte
 Filter expression can be simple and contain only one condition:
 
 ```
-FilterExpression storagePlugin = FilterExpression.equal("storagePlugin", "dfs");
-FilterExpression workspaces = FilterExpression.in("workspace", "root", "tmp");
+FilterExpression storagePlugin = FilterExpression.equal(MetastoreColumn.STORAGE_PLUGIN, "dfs");
+FilterExpression workspaces = FilterExpression.in(MetastoreColumn.WORKSPACE, "root", "tmp");
 
 ```
 
@@ -96,10 +109,11 @@ Or it can be complex and contain several conditions combined with `AND` or `OR` 
 
 ```
   FilterExpression filter = FilterExpression.and(
-    FilterExpression.equal("storagePlugin", "dfs"),
-    FilterExpression.in("workspace", "root", "tmp"));
+    FilterExpression.equal(MetastoreColumn.STORAGE_PLUGIN, "dfs"),
+    FilterExpression.in(MetastoreColumn.WORKSPACE, "root", "tmp"));
   
   metastore.tables().read()
+    .metadataType(MetadataType.TABLE)
     .filters(filter)
     .execute();
 ```
@@ -110,6 +124,7 @@ SQL-like equivalent for the above operation is:
   select * from METASTORE.TABLES
   where storagePlugin = 'dfs'
   and workspace in ('root', 'tmp')
+  and metadataType = 'TABLE'
 ```
 
 ### Metastore Read
@@ -117,6 +132,7 @@ SQL-like equivalent for the above operation is:
 In order to provide read functionality each component must implement `Read`.
 During implementation component unit type must be indicated.
 `Metastore.Read#columns` allows to specify list of columns to be retrieved from the Metastore component.
+Columns are represented by `MetastoreColumn` enum values.
 `Metastore.Read#filter` allows to specify filter expression by which data will be retrieved.
 `Metastore.Read#execute` executes read operation and returns the results.
 Data is returned in a form of list of component metadata units, it is caller responsibility to transform received
@@ -128,8 +144,9 @@ for all tables in the `dfs` storage plugin the following code can be used:
 
 ```
   List<TableMetadataUnit> units = metastore.tables().read()
-    .columns("tableName", "lastModifiedTime")
-    .filter(FilterExpression.equal("storagePlugin", "dfs")
+    .metadataType(MetadataType.TABLE)
+    .columns(MetastoreColumn.TABLE_NAME, MetastoreColumn.LAST_MODIFIED_TIME)
+    .filter(FilterExpression.equal(MetastoreColumn.STORAGE_PLUGIN, "dfs")
     .execute();
 ```
 
@@ -276,16 +293,18 @@ all segment information must be overwritten.
 
 #### Delete
 
-`Read#delete` deletes data from the Metastore component based on the provided filter expression.
+`Read#delete` deletes data from the Metastore component based on the provided delete operation.
+
+Delete operation consists of delete filter and metadata types.
 
 Assume metadata for table `dfs.tmp.nation` already exists in the Metastore `tables` component
-and caller needs to delete it. First, deletion filter must be created:
+and caller needs to delete it and all its metadata. First, deletion filter must be created:
 
 ```
-    FilterExpression filter = FilterExpression.and(
-      FilterExpression.equal("storagePlugin", "dfs"),
-      FilterExpression.equal("workspace", "tmp"),
-      FilterExpression.equal("tableName", "nation"));
+    FilterExpression deleteFilter = FilterExpression.and(
+      FilterExpression.equal(MetastoreColumn.STORAGE_PLUGIN, "dfs"),
+      FilterExpression.equal(MetastoreColumn.WORKSPACE, "tmp"),
+      FilterExpression.equal(MetastoreColumn.TABLE_NAME, "nation"));
 ```
 
 Such filter can be also generated using `TableInfo` class:
@@ -297,25 +316,35 @@ Such filter can be also generated using `TableInfo` class:
       .name("nation")
       .build();
       
-    FilterExpression filter = tableInfo.toFilter();  
+    FilterExpression deleteFilter = tableInfo.toFilter();  
+```
+
+Then metadata type should be indicated, since all table metadata needs to be deleted,
+`ALL` metadata type should be specified.
+
+```
+    Delete deleteOperation = Delete.builder()
+      .metadataType(MetadataType.ALL)
+      .filter(deleteFilter)
+      .build()
 ```
 
 Delete operation can be executed using the following code:
 
 ```
     metastore.tables().modify()
-      .delete(filter)
+      .delete(deleteOperation)
       .execute();
 ```
 
 #### Purge
 
-`Read#purge` deletes all data from the Metastore component.
+`Read#purge` deletes all data from the Metastore component. Purge is terminal operation
+and cannot be used together with overwrite or delete.
 
 ```
     metastore.tables().modify()
-      .purge()
-      .execute();
+      .purge();
 ```
 
 #### Transactions
@@ -328,7 +357,7 @@ If Metastore implementation does not support transactions, all operations will b
     metastore.tables().modify()
       .overwrite(tableUnit1, segmentUnit1)
       .overwrite(tableUnit2, segmentUnit2)
-      .delete(table3Filter)
-      .delete(table4Filter)
+      .delete(deleteOperation1)
+      .delete(deleteOperation2)
       .execute();
 ```
