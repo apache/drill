@@ -52,8 +52,8 @@ public class CassandraScanBatchCreator implements BatchCreator<CassandraSubScan>
           columns = GroupScan.ALL_COLUMNS;
         }
         readers.add(new CassandraRecordReader(subScan.getCassandraStoragePlugin().getConfig(), scanSpec, columns, context, subScan.getCassandraStoragePlugin()));
-      } catch (Exception e1) {
-        throw new ExecutionSetupException(e1);
+      } catch (Exception e) {
+        throw new ExecutionSetupException(e);
       }
     }
     return new ScanBatch(subScan, context, readers);

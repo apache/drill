@@ -44,7 +44,7 @@ public class CassandraConnectionManager {
       .removalListener(new AddressCloser()).build();
   }
 
-  public synchronized static Cluster getCluster(CassandraStoragePluginConfig config) {
+  public static Cluster getCluster(CassandraStoragePluginConfig config) {
 
     List<String> hosts = config.getHosts();
     int port = config.getPort();

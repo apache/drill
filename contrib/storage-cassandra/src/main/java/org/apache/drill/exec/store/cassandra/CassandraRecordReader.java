@@ -91,7 +91,6 @@ public class CassandraRecordReader extends AbstractRecordReader implements Drill
     this.cassandraConf = conf;
     this.plugin = plugin;
 
-
     setColumns(projectedColumns);
   }
 

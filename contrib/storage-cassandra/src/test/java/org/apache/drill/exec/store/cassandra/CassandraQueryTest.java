@@ -131,7 +131,6 @@ public class CassandraQueryTest extends ClusterTest {
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
       .addRow("id0004")
-      .addRow("id0004")
       .build();
 
     new RowSetComparison(expected).verifyAndClearAll(results);
