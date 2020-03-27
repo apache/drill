@@ -73,7 +73,8 @@ public class TestExcelFormat extends ClusterTest {
 
     testBuilder()
       .sqlQuery(sql)
-      .ordered().baselineColumns("id", "first_name", "last_name", "email", "gender", "birthdate", "balance", "order_count", "average_order")
+      .unOrdered()
+      .baselineColumns("id", "first_name", "last_name", "email", "gender", "birthdate", "balance", "order_count", "average_order")
       .baselineValues(1.0, "Cornelia", "Matej", "cmatej0@mtv.com", "Female", "10/31/1974", 735.29, 22.0, 33.42227272727273)
       .baselineValues(2.0, "Nydia", "Heintsch", "nheintsch1@godaddy.com", "Female", "12/10/1966", 784.14, 22.0, 35.64272727272727)
       .baselineValues(3.0, "Waiter", "Sherel", "wsherel2@utexas.edu", "Male", "3/12/1961", 172.36, 17.0, 10.138823529411766)
@@ -320,7 +321,7 @@ public class TestExcelFormat extends ClusterTest {
 
     testBuilder()
       .sqlQuery(sql)
-      .ordered()
+      .unOrdered()
       .baselineColumns("col1", "col2", "col3")
       .baselineValues(1.0,2.0,null)
       .baselineValues(2.0,4.0,null)
@@ -339,11 +340,12 @@ public class TestExcelFormat extends ClusterTest {
 
     testBuilder()
       .sqlQuery(sql)
-      .ordered().baselineColumns("col1", "col2")
-      .baselineValues("1.0", "Bob")
-      .baselineValues("2.0", "Steve")
-      .baselineValues("3.0", "Anne")
-      .baselineValues("Bob", "3.0")
+      .unOrdered()
+      .baselineColumns("col1", "col2")
+      .baselineValues("1", "Bob")
+      .baselineValues("2", "Steve")
+      .baselineValues("3", "Anne")
+      .baselineValues("Bob", "3")
       .go();
   }
 
