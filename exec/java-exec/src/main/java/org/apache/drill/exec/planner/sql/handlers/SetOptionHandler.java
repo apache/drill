@@ -26,6 +26,7 @@ import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.sql.DirectPlan;
 import org.apache.drill.exec.planner.sql.parser.DrillSqlSetOption;
+import org.apache.drill.exec.server.options.OptionDefinition;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.server.options.OptionValue.OptionScope;
@@ -63,9 +64,12 @@ public class SetOptionHandler extends AbstractSqlSetHandler {
     SqlNode optionValue = statement.getValue();
 
     if (optionValue == null) {
+      // OptionManager.getOptionDefinition() call ensures that the specified option name is valid
+      OptionDefinition optionDefinition = optionManager.getOptionDefinition(optionName);
       String value = String.valueOf(optionManager.getOption(optionName).getValue());
 
-      return DirectPlan.createDirectPlan(context, new SetOptionViewResult(optionName, value));
+      // obtains option name from OptionDefinition to use the name as defined in the option, rather than what the user provided
+      return DirectPlan.createDirectPlan(context, new SetOptionViewResult(optionDefinition.getValidator().getOptionName(), value));
     } else {
       if (optionScope == OptionValue.OptionScope.SYSTEM) {
         checkAdminPrivileges(context.getOptions());
