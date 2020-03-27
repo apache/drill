@@ -64,6 +64,11 @@
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>com.github.pjfanning</groupId>
+      <artifactId>excel-streaming-reader</artifactId>
+      <version>2.3.2</version>
+    </dependency>
   </dependencies>
   <build>
     <plugins>
