@@ -33,6 +33,7 @@ import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory;
 import org.apache.drill.exec.util.FileSystemUtil;
+import org.apache.drill.metastore.MetastoreColumn;
 import org.apache.drill.metastore.Metastore;
 import org.apache.drill.metastore.components.tables.BasicTablesRequests;
 import org.apache.drill.metastore.components.tables.BasicTablesTransformer;
@@ -41,7 +42,6 @@ import org.apache.drill.metastore.expressions.FilterExpression;
 import org.apache.drill.metastore.metadata.BaseTableMetadata;
 import org.apache.drill.metastore.metadata.MetadataInfo;
 import org.apache.drill.metastore.metadata.MetadataType;
-import org.apache.drill.metastore.metadata.TableInfo;
 import org.apache.drill.metastore.statistics.ColumnStatistics;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -234,7 +234,6 @@ public interface RecordCollector {
     private static final Logger logger = getLogger(MetastoreRecordCollector.class);
 
     public static final int UNDEFINED_INDEX = -1;
-    public static final String SCHEMA = "schema";
 
     private final Metastore metastore;
     private final FilterEvaluator filterEvaluator;
@@ -263,8 +262,8 @@ public interface RecordCollector {
         try {
           baseTableMetadata = metastore.tables().basicRequests()
             .tablesMetadata(FilterExpression.and(
-              FilterExpression.equal(TableInfo.STORAGE_PLUGIN, drillSchema.getSchemaPath().get(0)),
-              FilterExpression.equal(TableInfo.WORKSPACE, drillSchema.getSchemaPath().get(1))));
+              FilterExpression.equal(MetastoreColumn.STORAGE_PLUGIN, drillSchema.getSchemaPath().get(0)),
+              FilterExpression.equal(MetastoreColumn.WORKSPACE, drillSchema.getSchemaPath().get(1))));
         } catch (Exception e) {
           // ignore all exceptions related to Metastore data retrieval, return empty result
           logger.warn("Error while retrieving Metastore table data: {}", e.getMessage());
@@ -294,10 +293,10 @@ public interface RecordCollector {
         try {
           baseTableMetadata = metastore.tables().basicRequests()
             .tablesMetadata(FilterExpression.and(
-              FilterExpression.equal(TableInfo.STORAGE_PLUGIN, drillSchema.getSchemaPath().get(0)),
-              FilterExpression.equal(TableInfo.WORKSPACE, drillSchema.getSchemaPath().get(1)),
+              FilterExpression.equal(MetastoreColumn.STORAGE_PLUGIN, drillSchema.getSchemaPath().get(0)),
+              FilterExpression.equal(MetastoreColumn.WORKSPACE, drillSchema.getSchemaPath().get(1)),
               // exclude tables without schema
-              FilterExpression.isNotNull(SCHEMA)));
+              FilterExpression.isNotNull(MetastoreColumn.SCHEMA)));
         } catch (Exception e) {
           // ignore all exceptions related to Metastore data retrieval, return empty result
           logger.warn("Error while retrieving Metastore table data: {}", e.getMessage());
@@ -370,10 +369,10 @@ public interface RecordCollector {
           BasicTablesRequests.RequestMetadata requestMetadata = BasicTablesRequests.RequestMetadata.builder()
             .metadataTypes(MetadataType.SEGMENT, MetadataType.PARTITION)
             .customFilter(FilterExpression.and(
-              FilterExpression.equal(TableInfo.STORAGE_PLUGIN, drillSchema.getSchemaPath().get(0)),
-              FilterExpression.equal(TableInfo.WORKSPACE, drillSchema.getSchemaPath().get(1)),
+              FilterExpression.equal(MetastoreColumn.STORAGE_PLUGIN, drillSchema.getSchemaPath().get(0)),
+              FilterExpression.equal(MetastoreColumn.WORKSPACE, drillSchema.getSchemaPath().get(1)),
               // exclude DEFAULT_SEGMENT (used only for non-partitioned tables)
-              FilterExpression.notEqual(MetadataInfo.METADATA_KEY, MetadataInfo.DEFAULT_SEGMENT_KEY)))
+              FilterExpression.notEqual(MetastoreColumn.METADATA_KEY, MetadataInfo.DEFAULT_SEGMENT_KEY)))
             .build();
 
           List<TableMetadataUnit> units = metastore.tables().basicRequests().request(requestMetadata);

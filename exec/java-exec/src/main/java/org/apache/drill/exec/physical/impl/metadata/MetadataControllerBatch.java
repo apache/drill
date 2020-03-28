@@ -64,6 +64,7 @@ import org.apache.drill.exec.vector.accessor.ObjectReader;
 import org.apache.drill.exec.vector.accessor.ObjectType;
 import org.apache.drill.exec.vector.accessor.TupleReader;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
+import org.apache.drill.metastore.MetastoreColumn;
 import org.apache.drill.metastore.components.tables.MetastoreTableInfo;
 import org.apache.drill.metastore.components.tables.TableMetadataUnit;
 import org.apache.drill.metastore.components.tables.Tables;
@@ -234,7 +235,7 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
 
     for (MetadataInfo metadataInfo : popConfig.getContext().metadataToRemove()) {
       deleteFilter = FilterExpression.and(deleteFilter,
-          FilterExpression.equal(MetadataInfo.METADATA_KEY, metadataInfo.key()));
+          FilterExpression.equal(MetastoreColumn.METADATA_KEY, metadataInfo.key()));
     }
 
     Modify<TableMetadataUnit> modify = tables.modify();

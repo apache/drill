@@ -17,6 +17,7 @@
  */
 package org.apache.drill.metastore.components.tables;
 
+import org.apache.drill.metastore.MetastoreColumn;
 import org.apache.drill.metastore.MetastoreFieldDefinition;
 import org.apache.drill.metastore.exceptions.MetastoreException;
 import org.apache.drill.metastore.metadata.MetadataType;
@@ -52,31 +53,31 @@ public class TableMetadataUnit {
 
   public static final Schema SCHEMA = Schema.of(TableMetadataUnit.class, Builder.class);
 
-  @MetastoreFieldDefinition(scopes = {ALL}) private final String storagePlugin;
-  @MetastoreFieldDefinition(scopes = {ALL}) private final String workspace;
-  @MetastoreFieldDefinition(scopes = {ALL}) private final String tableName;
-  @MetastoreFieldDefinition(scopes = {TABLE}) private final String owner;
-  @MetastoreFieldDefinition(scopes = {TABLE}) private final String tableType;
-  @MetastoreFieldDefinition(scopes = {ALL}) private final String metadataType;
-  @MetastoreFieldDefinition(scopes = {ALL}) private final String metadataKey;
-  @MetastoreFieldDefinition(scopes = {TABLE, SEGMENT, FILE, ROW_GROUP}) private final String location;
-  @MetastoreFieldDefinition(scopes = {TABLE}) private final List<String> interestingColumns;
-  @MetastoreFieldDefinition(scopes = {ALL}) private final String schema;
-  @MetastoreFieldDefinition(scopes = {ALL}) private final Map<String, String> columnsStatistics;
-  @MetastoreFieldDefinition(scopes = {ALL}) private final List<String> metadataStatistics;
-  @MetastoreFieldDefinition(scopes = {ALL}) private final Long lastModifiedTime;
-  @MetastoreFieldDefinition(scopes = {TABLE}) private final Map<String, String> partitionKeys;
-  @MetastoreFieldDefinition(scopes = {ALL}) private final String additionalMetadata;
+  @MetastoreFieldDefinition(column = MetastoreColumn.STORAGE_PLUGIN, scopes = {ALL}) private final String storagePlugin;
+  @MetastoreFieldDefinition(column = MetastoreColumn.WORKSPACE,scopes = {ALL}) private final String workspace;
+  @MetastoreFieldDefinition(column = MetastoreColumn.TABLE_NAME, scopes = {ALL}) private final String tableName;
+  @MetastoreFieldDefinition(column = MetastoreColumn.OWNER, scopes = {TABLE}) private final String owner;
+  @MetastoreFieldDefinition(column = MetastoreColumn.TABLE_TYPE, scopes = {TABLE}) private final String tableType;
+  @MetastoreFieldDefinition(column = MetastoreColumn.METADATA_TYPE, scopes = {ALL}) private final String metadataType;
+  @MetastoreFieldDefinition(column = MetastoreColumn.METADATA_KEY, scopes = {ALL}) private final String metadataKey;
+  @MetastoreFieldDefinition(column = MetastoreColumn.LOCATION, scopes = {TABLE, SEGMENT, FILE, ROW_GROUP}) private final String location;
+  @MetastoreFieldDefinition(column = MetastoreColumn.INTERESTING_COLUMNS, scopes = {TABLE}) private final List<String> interestingColumns;
+  @MetastoreFieldDefinition(column = MetastoreColumn.SCHEMA, scopes = {ALL}) private final String schema;
+  @MetastoreFieldDefinition(column = MetastoreColumn.COLUMNS_STATISTICS, scopes = {ALL}) private final Map<String, String> columnsStatistics;
+  @MetastoreFieldDefinition(column = MetastoreColumn.METADATA_STATISTICS, scopes = {ALL}) private final List<String> metadataStatistics;
+  @MetastoreFieldDefinition(column = MetastoreColumn.LAST_MODIFIED_TIME, scopes = {ALL}) private final Long lastModifiedTime;
+  @MetastoreFieldDefinition(column = MetastoreColumn.PARTITION_KEYS, scopes = {TABLE}) private final Map<String, String> partitionKeys;
+  @MetastoreFieldDefinition(column = MetastoreColumn.ADDITIONAL_METADATA, scopes = {ALL}) private final String additionalMetadata;
 
-  @MetastoreFieldDefinition(scopes = {SEGMENT, FILE, ROW_GROUP, PARTITION}) private final String metadataIdentifier;
-  @MetastoreFieldDefinition(scopes = {SEGMENT, PARTITION}) private final String column;
-  @MetastoreFieldDefinition(scopes = {SEGMENT, PARTITION}) private final List<String> locations;
-  @MetastoreFieldDefinition(scopes = {SEGMENT, PARTITION}) private final List<String> partitionValues;
+  @MetastoreFieldDefinition(column = MetastoreColumn.METADATA_IDENTIFIER, scopes = {SEGMENT, FILE, ROW_GROUP, PARTITION}) private final String metadataIdentifier;
+  @MetastoreFieldDefinition(column = MetastoreColumn.COLUMN, scopes = {SEGMENT, PARTITION}) private final String column;
+  @MetastoreFieldDefinition(column = MetastoreColumn.LOCATIONS, scopes = {SEGMENT, PARTITION}) private final List<String> locations;
+  @MetastoreFieldDefinition(column = MetastoreColumn.PARTITION_VALUES, scopes = {SEGMENT, PARTITION}) private final List<String> partitionValues;
 
-  @MetastoreFieldDefinition(scopes = {SEGMENT, FILE, ROW_GROUP}) private final String path;
+  @MetastoreFieldDefinition(column = MetastoreColumn.PATH, scopes = {SEGMENT, FILE, ROW_GROUP}) private final String path;
 
-  @MetastoreFieldDefinition(scopes = {ROW_GROUP}) private final Integer rowGroupIndex;
-  @MetastoreFieldDefinition(scopes = {ROW_GROUP}) private final Map<String, Float> hostAffinity;
+  @MetastoreFieldDefinition(column = MetastoreColumn.ROW_GROUP_INDEX, scopes = {ROW_GROUP}) private final Integer rowGroupIndex;
+  @MetastoreFieldDefinition(column = MetastoreColumn.HOST_AFFINITY, scopes = {ROW_GROUP}) private final Map<String, Float> hostAffinity;
 
   private TableMetadataUnit(Builder builder) {
     this.storagePlugin = builder.storagePlugin;
@@ -437,19 +438,19 @@ public class TableMetadataUnit {
    */
   public static class Schema {
 
-    private final List<String> tableColumns;
-    private final List<String> segmentColumns;
-    private final List<String> fileColumns;
-    private final List<String> rowGroupColumns;
-    private final List<String> partitionColumns;
+    private final List<MetastoreColumn> tableColumns;
+    private final List<MetastoreColumn> segmentColumns;
+    private final List<MetastoreColumn> fileColumns;
+    private final List<MetastoreColumn> rowGroupColumns;
+    private final List<MetastoreColumn> partitionColumns;
     private final Map<String, MethodHandle> unitGetters;
     private final Map<String, MethodHandle> unitBuilderSetters;
 
-    private Schema(List<String> tableColumns,
-                   List<String> segmentColumns,
-                   List<String> fileColumns,
-                   List<String> rowGroupColumns,
-                   List<String> partitionColumns,
+    private Schema(List<MetastoreColumn> tableColumns,
+                   List<MetastoreColumn> segmentColumns,
+                   List<MetastoreColumn> fileColumns,
+                   List<MetastoreColumn> rowGroupColumns,
+                   List<MetastoreColumn> partitionColumns,
                    Map<String, MethodHandle> unitGetters,
                    Map<String, MethodHandle> unitBuilderSetters) {
       this.tableColumns = tableColumns;
@@ -469,11 +470,11 @@ public class TableMetadataUnit {
      * are the same as annotated fields names.
      */
     public static Schema of(Class<?> unitClass, Class<?> builderClass) {
-      List<String> tableColumns = new ArrayList<>();
-      List<String> segmentColumns = new ArrayList<>();
-      List<String> fileColumns = new ArrayList<>();
-      List<String> rowGroupColumns = new ArrayList<>();
-      List<String> partitionColumns = new ArrayList<>();
+      List<MetastoreColumn> tableColumns = new ArrayList<>();
+      List<MetastoreColumn> segmentColumns = new ArrayList<>();
+      List<MetastoreColumn> fileColumns = new ArrayList<>();
+      List<MetastoreColumn> rowGroupColumns = new ArrayList<>();
+      List<MetastoreColumn> partitionColumns = new ArrayList<>();
       Map<String, MethodHandle> unitGetters = new HashMap<>();
       Map<String, MethodHandle> unitBuilderSetters = new HashMap<>();
 
@@ -486,30 +487,30 @@ public class TableMetadataUnit {
           continue;
         }
 
-        String name = field.getName();
+        MetastoreColumn column = definition.column();
         for (MetadataType scope : definition.scopes()) {
           switch (scope) {
             case TABLE:
-              tableColumns.add(name);
+              tableColumns.add(column);
               break;
             case SEGMENT:
-              segmentColumns.add(name);
+              segmentColumns.add(column);
               break;
             case FILE:
-              fileColumns.add(name);
+              fileColumns.add(column);
               break;
             case ROW_GROUP:
-              rowGroupColumns.add(name);
+              rowGroupColumns.add(column);
               break;
             case PARTITION:
-              partitionColumns.add(name);
+              partitionColumns.add(column);
               break;
             case ALL:
-              tableColumns.add(name);
-              segmentColumns.add(name);
-              fileColumns.add(name);
-              rowGroupColumns.add(name);
-              partitionColumns.add(name);
+              tableColumns.add(column);
+              segmentColumns.add(column);
+              fileColumns.add(column);
+              rowGroupColumns.add(column);
+              partitionColumns.add(column);
               break;
             default:
               throw new IllegalStateException(scope.name());
@@ -518,10 +519,12 @@ public class TableMetadataUnit {
 
         Class<?> type = field.getType();
         try {
-          MethodHandle getter = gettersLookup.findVirtual(unitClass, name, MethodType.methodType(type));
-          unitGetters.put(name, getter);
-          MethodHandle setter = settersLookup.findVirtual(builderClass, name, MethodType.methodType(builderClass, type));
-          unitBuilderSetters.put(name, setter);
+          String fieldName = field.getName();
+          String columnName = column.columnName();
+          MethodHandle getter = gettersLookup.findVirtual(unitClass, fieldName, MethodType.methodType(type));
+          unitGetters.put(columnName, getter);
+          MethodHandle setter = settersLookup.findVirtual(builderClass, fieldName, MethodType.methodType(builderClass, type));
+          unitBuilderSetters.put(columnName, setter);
         } catch (ReflectiveOperationException e) {
           throw new MetastoreException(String.format("Unable to init unit setter / getter method handlers " +
               "for unit [%s] and its builder [%s] classes", unitClass.getSimpleName(), builderClass.getSimpleName()), e);
@@ -532,23 +535,23 @@ public class TableMetadataUnit {
         unitGetters, unitBuilderSetters);
     }
 
-    public List<String> tableColumns() {
+    public List<MetastoreColumn> tableColumns() {
       return tableColumns;
     }
 
-    public List<String> segmentColumns() {
+    public List<MetastoreColumn> segmentColumns() {
       return segmentColumns;
     }
 
-    public List<String> fileColumns() {
+    public List<MetastoreColumn> fileColumns() {
       return fileColumns;
     }
 
-    public List<String> rowGroupColumns() {
+    public List<MetastoreColumn> rowGroupColumns() {
       return rowGroupColumns;
     }
 
-    public List<String> partitionColumns() {
+    public List<MetastoreColumn> partitionColumns() {
       return partitionColumns;
     }
 

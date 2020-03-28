@@ -17,6 +17,7 @@
  */
 package org.apache.drill.metastore.operate;
 
+import org.apache.drill.metastore.MetastoreColumn;
 import org.apache.drill.metastore.expressions.FilterExpression;
 import org.apache.drill.metastore.metadata.MetadataType;
 
@@ -33,7 +34,7 @@ import java.util.List;
 public abstract class AbstractRead<T> implements Read<T> {
 
   protected final List<MetadataType> metadataTypes = new ArrayList<>();
-  protected final List<String> columns = new ArrayList<>();
+  protected final List<MetastoreColumn> columns = new ArrayList<>();
   protected FilterExpression filter;
 
   private final MetadataTypeValidator metadataTypeValidator;
@@ -55,7 +56,7 @@ public abstract class AbstractRead<T> implements Read<T> {
   }
 
   @Override
-  public Read<T> columns(List<String> columns) {
+  public Read<T> columns(List<MetastoreColumn> columns) {
     this.columns.addAll(columns);
     return this;
   }

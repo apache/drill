@@ -17,6 +17,7 @@
  */
 package org.apache.drill.metastore.iceberg.schema;
 
+import org.apache.drill.metastore.MetastoreColumn;
 import org.apache.drill.metastore.MetastoreFieldDefinition;
 import org.apache.drill.metastore.iceberg.exceptions.IcebergMetastoreException;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableMap;
@@ -73,7 +74,7 @@ public class IcebergTableSchema {
    * @param partitionKeys list of partition keys
    * @return instance of Iceberg table schema
    */
-  public static IcebergTableSchema of(Class<?> clazz, List<String> partitionKeys) {
+  public static IcebergTableSchema of(Class<?> clazz, List<MetastoreColumn> partitionKeys) {
     List<Types.NestedField> tableSchemaFields = new ArrayList<>();
     Types.NestedField[] partitionSpecSchemaFields = new Types.NestedField[partitionKeys.size()];
 
@@ -81,9 +82,12 @@ public class IcebergTableSchema {
     int complexTypesIndex = STARTING_COMPLEX_TYPES_INDEX;
 
     for (Field field : clazz.getDeclaredFields()) {
-      if (!field.isAnnotationPresent(MetastoreFieldDefinition.class)) {
+      MetastoreFieldDefinition definition = field.getAnnotation(MetastoreFieldDefinition.class);
+      if (definition == null) {
         continue;
       }
+
+      MetastoreColumn column = definition.column();
 
       String typeSimpleName = field.getType().getSimpleName().toLowerCase();
       org.apache.iceberg.types.Type icebergType = JAVA_TO_ICEBERG_TYPE_MAP.get(typeSimpleName);
@@ -111,11 +115,11 @@ public class IcebergTableSchema {
           "Unexpected type for class [%s]: %s", clazz.getCanonicalName(), typeSimpleName));
       }
 
-      Types.NestedField icebergField = Types.NestedField.optional(schemaIndex++, field.getName(), icebergType);
+      Types.NestedField icebergField = Types.NestedField.optional(schemaIndex++, column.columnName(), icebergType);
 
       tableSchemaFields.add(icebergField);
 
-      int partitionIndex = partitionKeys.indexOf(field.getName());
+      int partitionIndex = partitionKeys.indexOf(column);
       if (partitionIndex != -1) {
         partitionSpecSchemaFields[partitionIndex] = icebergField;
       }
@@ -161,8 +165,8 @@ public class IcebergTableSchema {
       return PartitionSpec.unpartitioned();
     }
     PartitionSpec.Builder builder = PartitionSpec.builderFor(schema);
-    schema.columns().
-      forEach(column -> builder.identity(column.name()));
+    schema.columns()
+      .forEach(column -> builder.identity(column.name()));
     return builder.build();
   }
 }

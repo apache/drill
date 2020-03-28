@@ -17,8 +17,8 @@
  */
 package org.apache.drill.metastore.iceberg.transform;
 
+import org.apache.drill.metastore.MetastoreColumn;
 import org.apache.drill.metastore.expressions.FilterExpression;
-import org.apache.drill.metastore.metadata.MetadataInfo;
 import org.apache.drill.metastore.metadata.MetadataType;
 import org.apache.iceberg.expressions.Expression;
 import org.apache.iceberg.expressions.Expressions;
@@ -40,13 +40,13 @@ public class FilterTransformer {
     return filter == null ? Expressions.alwaysTrue() : filter.accept(visitor);
   }
 
-  public Expression transform(Map<String, Object> conditions) {
+  public Expression transform(Map<MetastoreColumn, Object> conditions) {
     if (conditions == null || conditions.isEmpty()) {
       return Expressions.alwaysTrue();
     }
 
     List<Expression> expressions = conditions.entrySet().stream()
-      .map(entry -> Expressions.equal(entry.getKey(), entry.getValue()))
+      .map(entry -> Expressions.equal(entry.getKey().columnName(), entry.getValue()))
       .collect(Collectors.toList());
 
     if (expressions.size() == 1) {
@@ -67,10 +67,10 @@ public class FilterTransformer {
       .collect(Collectors.toList());
 
     if (inConditionValues.size() == 1) {
-      return Expressions.equal(MetadataInfo.METADATA_TYPE, inConditionValues.get(0));
+      return Expressions.equal(MetastoreColumn.METADATA_TYPE.columnName(), inConditionValues.get(0));
     }
 
-    return Expressions.in(MetadataInfo.METADATA_TYPE, inConditionValues);
+    return Expressions.in(MetastoreColumn.METADATA_TYPE.columnName(), inConditionValues);
   }
 
   public Expression combine(Expression... expressions) {

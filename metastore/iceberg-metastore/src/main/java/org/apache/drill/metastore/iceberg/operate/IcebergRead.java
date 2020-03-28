@@ -17,6 +17,7 @@
  */
 package org.apache.drill.metastore.iceberg.operate;
 
+import org.apache.drill.metastore.MetastoreColumn;
 import org.apache.drill.metastore.iceberg.MetastoreContext;
 import org.apache.drill.metastore.iceberg.transform.FilterTransformer;
 import org.apache.drill.metastore.operate.AbstractRead;
@@ -50,7 +51,11 @@ public class IcebergRead<T> extends AbstractRead<T> {
 
   @Override
   protected List<T> internalExecute() {
-    String[] selectedColumns = columns.isEmpty() ? defaultColumns : columns.toArray(new String[0]);
+    String[] selectedColumns = columns.isEmpty()
+      ? defaultColumns
+      : columns.stream()
+         .map(MetastoreColumn::columnName)
+         .toArray(String[]::new);
 
     FilterTransformer filterTransformer = context.transformer().filter();
     Expression rowFilter = filterTransformer.combine(

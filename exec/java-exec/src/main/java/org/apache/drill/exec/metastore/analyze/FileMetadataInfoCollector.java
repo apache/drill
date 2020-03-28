@@ -32,6 +32,7 @@ import org.apache.drill.exec.store.dfs.FileSelection;
 import org.apache.drill.exec.store.dfs.FormatSelection;
 import org.apache.drill.exec.util.DrillFileSystemUtil;
 import org.apache.drill.exec.util.ImpersonationUtil;
+import org.apache.drill.metastore.MetastoreColumn;
 import org.apache.drill.metastore.components.tables.BasicTablesRequests;
 import org.apache.drill.metastore.metadata.MetadataInfo;
 import org.apache.drill.metastore.metadata.MetadataType;
@@ -290,7 +291,7 @@ public class FileMetadataInfoCollector implements MetadataInfoCollector {
         .metadataKeys(metadataKeys)
         .paths(allFiles)
         .metadataType(MetadataType.ROW_GROUP)
-        .requestColumns(Arrays.asList(MetadataInfo.METADATA_KEY, MetadataInfo.METADATA_IDENTIFIER, MetadataInfo.METADATA_TYPE))
+        .requestColumns(Arrays.asList(MetastoreColumn.METADATA_KEY, MetastoreColumn.METADATA_IDENTIFIER, MetastoreColumn.METADATA_TYPE))
         .build();
 
     return basicRequests.request(requestMetadata).stream()

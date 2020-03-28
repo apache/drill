@@ -39,52 +39,52 @@ public class FilterExpressionVisitor implements FilterExpression.Visitor<Express
 
   @Override
   public Expression visit(SimplePredicate.Equal<?> expression) {
-    return Expressions.equal(expression.reference(), expression.value());
+    return Expressions.equal(expression.column().columnName(), expression.value());
   }
 
   @Override
   public Expression visit(SimplePredicate.NotEqual<?> expression) {
-    return Expressions.notEqual(expression.reference(), expression.value());
+    return Expressions.notEqual(expression.column().columnName(), expression.value());
   }
 
   @Override
   public Expression visit(SimplePredicate.LessThan<?> expression) {
-    return Expressions.lessThan(expression.reference(), expression.value());
+    return Expressions.lessThan(expression.column().columnName(), expression.value());
   }
 
   @Override
   public Expression visit(SimplePredicate.LessThanOrEqual<?> expression) {
-    return Expressions.lessThanOrEqual(expression.reference(), expression.value());
+    return Expressions.lessThanOrEqual(expression.column().columnName(), expression.value());
   }
 
   @Override
   public Expression visit(SimplePredicate.GreaterThan<?> expression) {
-    return Expressions.greaterThan(expression.reference(), expression.value());
+    return Expressions.greaterThan(expression.column().columnName(), expression.value());
   }
 
   @Override
   public Expression visit(SimplePredicate.GreaterThanOrEqual<?> expression) {
-    return Expressions.greaterThanOrEqual(expression.reference(), expression.value());
+    return Expressions.greaterThanOrEqual(expression.column().columnName(), expression.value());
   }
 
   @Override
   public Expression visit(ListPredicate.In<?> expression) {
-    return Expressions.in(expression.reference(), expression.values());
+    return Expressions.in(expression.column().columnName(), expression.values());
   }
 
   @Override
   public Expression visit(ListPredicate.NotIn<?> expression) {
-    return Expressions.notIn(expression.reference(), expression.values());
+    return Expressions.notIn(expression.column().columnName(), expression.values());
   }
 
   @Override
   public Expression visit(IsPredicate.IsNull expression) {
-    return Expressions.isNull(expression.reference());
+    return Expressions.isNull(expression.column().columnName());
   }
 
   @Override
   public Expression visit(IsPredicate.IsNotNull expression) {
-    return Expressions.notNull(expression.reference());
+    return Expressions.notNull(expression.column().columnName());
   }
 
   @Override

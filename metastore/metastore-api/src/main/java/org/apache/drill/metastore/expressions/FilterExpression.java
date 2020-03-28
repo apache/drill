@@ -17,6 +17,8 @@
  */
 package org.apache.drill.metastore.expressions;
 
+import org.apache.drill.metastore.MetastoreColumn;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
@@ -77,54 +79,54 @@ public interface FilterExpression {
     }
   }
 
-  static <T> FilterExpression equal(String reference, T value) {
-    return new SimplePredicate.Equal<>(reference, value);
+  static <T> FilterExpression equal(MetastoreColumn column, T value) {
+    return new SimplePredicate.Equal<>(column, value);
   }
 
-  static <T> FilterExpression notEqual(String reference, T value) {
-    return new SimplePredicate.NotEqual<>(reference, value);
+  static <T> FilterExpression notEqual(MetastoreColumn column, T value) {
+    return new SimplePredicate.NotEqual<>(column, value);
   }
 
-  static <T> FilterExpression lessThan(String reference, T value) {
-    return new SimplePredicate.LessThan<>(reference, value);
+  static <T> FilterExpression lessThan(MetastoreColumn column, T value) {
+    return new SimplePredicate.LessThan<>(column, value);
   }
 
-  static <T> FilterExpression lessThanOrEqual(String reference, T value) {
-    return new SimplePredicate.LessThanOrEqual<>(reference, value);
+  static <T> FilterExpression lessThanOrEqual(MetastoreColumn column, T value) {
+    return new SimplePredicate.LessThanOrEqual<>(column, value);
   }
 
-  static <T> FilterExpression greaterThan(String reference, T value) {
-    return new SimplePredicate.GreaterThan<>(reference, value);
+  static <T> FilterExpression greaterThan(MetastoreColumn column, T value) {
+    return new SimplePredicate.GreaterThan<>(column, value);
   }
 
-  static <T> FilterExpression greaterThanOrEqual(String reference, T value) {
-    return new SimplePredicate.GreaterThanOrEqual<>(reference, value);
+  static <T> FilterExpression greaterThanOrEqual(MetastoreColumn column, T value) {
+    return new SimplePredicate.GreaterThanOrEqual<>(column, value);
   }
 
-  static <T> FilterExpression in(String reference, List<T> values) {
-    return new ListPredicate.In<>(reference, values);
-  }
-
-  @SafeVarargs
-  static <T> FilterExpression in(String reference, T... values) {
-    return in(reference, Arrays.asList(values));
-  }
-
-  static <T> FilterExpression notIn(String reference, List<T> values) {
-    return new ListPredicate.NotIn<>(reference, values);
+  static <T> FilterExpression in(MetastoreColumn column, List<T> values) {
+    return new ListPredicate.In<>(column, values);
   }
 
   @SafeVarargs
-  static <T> FilterExpression notIn(String reference, T... values) {
-    return notIn(reference, Arrays.asList(values));
+  static <T> FilterExpression in(MetastoreColumn column, T... values) {
+    return in(column, Arrays.asList(values));
   }
 
-  static FilterExpression isNull(String reference) {
-    return new IsPredicate.IsNull(reference);
+  static <T> FilterExpression notIn(MetastoreColumn column, List<T> values) {
+    return new ListPredicate.NotIn<>(column, values);
   }
 
-  static FilterExpression isNotNull(String reference) {
-    return new IsPredicate.IsNotNull(reference);
+  @SafeVarargs
+  static <T> FilterExpression notIn(MetastoreColumn column, T... values) {
+    return notIn(column, Arrays.asList(values));
+  }
+
+  static FilterExpression isNull(MetastoreColumn column) {
+    return new IsPredicate.IsNull(column);
+  }
+
+  static FilterExpression isNotNull(MetastoreColumn column) {
+    return new IsPredicate.IsNotNull(column);
   }
 
   static FilterExpression not(FilterExpression expression) {

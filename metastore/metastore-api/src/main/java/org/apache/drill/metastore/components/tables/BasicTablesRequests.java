@@ -17,6 +17,7 @@
  */
 package org.apache.drill.metastore.components.tables;
 
+import org.apache.drill.metastore.MetastoreColumn;
 import org.apache.drill.metastore.expressions.FilterExpression;
 import org.apache.drill.metastore.metadata.BaseTableMetadata;
 import org.apache.drill.metastore.metadata.FileMetadata;
@@ -40,13 +41,6 @@ import java.util.stream.Collectors;
  * to write filters and transformers from {@link TableMetadataUnit} class.
  */
 public class BasicTablesRequests {
-
-  public static final String LAST_MODIFIED_TIME = "lastModifiedTime";
-  public static final String PATH = "path";
-  public static final String LOCATION = "location";
-  public static final String COLUMN = "column";
-  public static final String INTERESTING_COLUMNS = "interestingColumns";
-  public static final String PARTITION_KEYS = "partitionKeys";
 
   private final Tables tables;
 
@@ -73,7 +67,7 @@ public class BasicTablesRequests {
       .tableInfo(tableInfo)
       .metadataKey(MetadataInfo.GENERAL_INFO_KEY)
       .metadataType(MetadataType.TABLE)
-      .requestColumns(LAST_MODIFIED_TIME)
+      .requestColumns(MetastoreColumn.LAST_MODIFIED_TIME)
       .build();
 
     long version = tables.metadata().version();
@@ -556,7 +550,7 @@ public class BasicTablesRequests {
       .metadataKey(metadataKey)
       .locations(locations)
       .metadataType(MetadataType.FILE)
-      .requestColumns(PATH, LAST_MODIFIED_TIME)
+      .requestColumns(MetastoreColumn.PATH, MetastoreColumn.LAST_MODIFIED_TIME)
       .build();
 
     return request(requestMetadata).stream()
@@ -586,7 +580,7 @@ public class BasicTablesRequests {
       .tableInfo(tableInfo)
       .locations(locations)
       .metadataType(MetadataType.SEGMENT)
-      .requestColumns(MetadataInfo.METADATA_KEY, LAST_MODIFIED_TIME)
+      .requestColumns(MetastoreColumn.METADATA_KEY, MetastoreColumn.LAST_MODIFIED_TIME)
       .build();
 
     return request(requestMetadata).stream()
@@ -617,7 +611,7 @@ public class BasicTablesRequests {
       .tableInfo(tableInfo)
       .metadataKey(MetadataInfo.GENERAL_INFO_KEY)
       .metadataType(MetadataType.TABLE)
-      .requestColumns(INTERESTING_COLUMNS, PARTITION_KEYS)
+      .requestColumns(MetastoreColumn.INTERESTING_COLUMNS, MetastoreColumn.PARTITION_KEYS)
       .build();
 
     return retrieveSingleElement(request(requestMetadata));
@@ -667,9 +661,9 @@ public class BasicTablesRequests {
 
     private List<MetadataType> metadataTypes;
     private final FilterExpression filter;
-    private final List<String> columns;
+    private final List<MetastoreColumn> columns;
 
-    private RequestMetadata(List<MetadataType> metadataTypes, FilterExpression filter, List<String> columns) {
+    private RequestMetadata(List<MetadataType> metadataTypes, FilterExpression filter, List<MetastoreColumn> columns) {
       this.metadataTypes = metadataTypes;
       this.filter = filter;
       this.columns = columns;
@@ -683,7 +677,7 @@ public class BasicTablesRequests {
       return filter;
     }
 
-    public List<String> columns() {
+    public List<MetastoreColumn> columns() {
       return columns;
     }
 
@@ -704,7 +698,7 @@ public class BasicTablesRequests {
       private List<String> identifiers;
       private FilterExpression customFilter;
       private List<MetadataType> metadataTypes = new ArrayList<>();
-      private final List<String> requestColumns = new ArrayList<>();
+      private final List<MetastoreColumn> requestColumns = new ArrayList<>();
 
       public RequestMetadata.Builder metadataType(MetadataType metadataType) {
         this.metadataTypes.add(metadataType);
@@ -771,12 +765,12 @@ public class BasicTablesRequests {
         return this;
       }
 
-      public RequestMetadata.Builder requestColumns(List<String> requestColumns) {
+      public RequestMetadata.Builder requestColumns(List<MetastoreColumn> requestColumns) {
         this.requestColumns.addAll(requestColumns);
         return this;
       }
 
-      public RequestMetadata.Builder requestColumns(String... requestColumns) {
+      public RequestMetadata.Builder requestColumns(MetastoreColumn... requestColumns) {
         return requestColumns(Arrays.asList(requestColumns));
       }
 
@@ -789,14 +783,14 @@ public class BasicTablesRequests {
         if (tableInfo != null) {
           filters.add(tableInfo.toFilter());
         }
-        addFilter(LOCATION, location, filters);
-        addFilter(LOCATION, locations, filters);
-        addFilter(COLUMN, column, filters);
-        addFilter(MetadataInfo.METADATA_KEY, metadataKey, filters);
-        addFilter(MetadataInfo.METADATA_KEY, metadataKeys, filters);
-        addFilter(PATH, path, filters);
-        addFilter(PATH, paths, filters);
-        addFilter(MetadataInfo.METADATA_IDENTIFIER, identifiers, filters);
+        addFilter(MetastoreColumn.LOCATION, location, filters);
+        addFilter(MetastoreColumn.LOCATION, locations, filters);
+        addFilter(MetastoreColumn.COLUMN, column, filters);
+        addFilter(MetastoreColumn.METADATA_KEY, metadataKey, filters);
+        addFilter(MetastoreColumn.METADATA_KEY, metadataKeys, filters);
+        addFilter(MetastoreColumn.PATH, path, filters);
+        addFilter(MetastoreColumn.PATH, paths, filters);
+        addFilter(MetastoreColumn.METADATA_IDENTIFIER, identifiers, filters);
         if (customFilter != null) {
           filters.add(customFilter);
         }
@@ -819,11 +813,11 @@ public class BasicTablesRequests {
        * creates {@link FilterExpression.Operator#IN} filter, if List is empty, does nothing.
        * For all other cases, creates {@link FilterExpression.Operator#EQUAL} filter.
        *
-       * @param reference filter reference
+       * @param column Metastore column to which filter will be applied
        * @param value filter value
        * @param filters current list of filters
        */
-      private <T> void addFilter(String reference, T value, List<FilterExpression> filters) {
+      private <T> void addFilter(MetastoreColumn column, T value, List<FilterExpression> filters) {
         if (value == null) {
           return;
         }
@@ -833,11 +827,11 @@ public class BasicTablesRequests {
           if (list.isEmpty()) {
             return;
           }
-          filters.add(FilterExpression.in(reference, list));
+          filters.add(FilterExpression.in(column, list));
           return;
         }
 
-        filters.add(FilterExpression.equal(reference, value));
+        filters.add(FilterExpression.equal(column, value));
       }
     }
   }

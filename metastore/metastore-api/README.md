@@ -100,8 +100,8 @@ For convenience, `FilterExpression.Visitor` can be implemented to traverse filte
 Filter expression can be simple and contain only one condition:
 
 ```
-FilterExpression storagePlugin = FilterExpression.equal("storagePlugin", "dfs");
-FilterExpression workspaces = FilterExpression.in("workspace", "root", "tmp");
+FilterExpression storagePlugin = FilterExpression.equal(MetastoreColumn.STORAGE_PLUGIN, "dfs");
+FilterExpression workspaces = FilterExpression.in(MetastoreColumn.WORKSPACE, "root", "tmp");
 
 ```
 
@@ -109,8 +109,8 @@ Or it can be complex and contain several conditions combined with `AND` or `OR` 
 
 ```
   FilterExpression filter = FilterExpression.and(
-    FilterExpression.equal("storagePlugin", "dfs"),
-    FilterExpression.in("workspace", "root", "tmp"));
+    FilterExpression.equal(MetastoreColumn.STORAGE_PLUGIN, "dfs"),
+    FilterExpression.in(MetastoreColumn.WORKSPACE, "root", "tmp"));
   
   metastore.tables().read()
     .metadataType(MetadataType.TABLE)
@@ -132,6 +132,7 @@ SQL-like equivalent for the above operation is:
 In order to provide read functionality each component must implement `Read`.
 During implementation component unit type must be indicated.
 `Metastore.Read#columns` allows to specify list of columns to be retrieved from the Metastore component.
+Columns are represented by `MetastoreColumn` enum values.
 `Metastore.Read#filter` allows to specify filter expression by which data will be retrieved.
 `Metastore.Read#execute` executes read operation and returns the results.
 Data is returned in a form of list of component metadata units, it is caller responsibility to transform received
@@ -144,8 +145,8 @@ for all tables in the `dfs` storage plugin the following code can be used:
 ```
   List<TableMetadataUnit> units = metastore.tables().read()
     .metadataType(MetadataType.TABLE)
-    .columns("tableName", "lastModifiedTime")
-    .filter(FilterExpression.equal("storagePlugin", "dfs")
+    .columns(MetastoreColumn.TABLE_NAME, MetastoreColumn.LAST_MODIFIED_TIME)
+    .filter(FilterExpression.equal(MetastoreColumn.STORAGE_PLUGIN, "dfs")
     .execute();
 ```
 
@@ -301,9 +302,9 @@ and caller needs to delete it and all its metadata. First, deletion filter must 
 
 ```
     FilterExpression deleteFilter = FilterExpression.and(
-      FilterExpression.equal("storagePlugin", "dfs"),
-      FilterExpression.equal("workspace", "tmp"),
-      FilterExpression.equal("tableName", "nation"));
+      FilterExpression.equal(MetastoreColumn.STORAGE_PLUGIN, "dfs"),
+      FilterExpression.equal(MetastoreColumn.WORKSPACE, "tmp"),
+      FilterExpression.equal(MetastoreColumn.TABLE_NAME, "nation"));
 ```
 
 Such filter can be also generated using `TableInfo` class:

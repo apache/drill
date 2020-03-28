@@ -17,12 +17,11 @@
  */
 package org.apache.drill.metastore.iceberg.components.tables;
 
+import org.apache.drill.metastore.MetastoreColumn;
 import org.apache.drill.metastore.components.tables.Tables;
 import org.apache.drill.metastore.components.tables.TablesMetadataTypeValidator;
 import org.apache.drill.metastore.iceberg.operate.ExpirationHandler;
 import org.apache.drill.metastore.iceberg.operate.IcebergRead;
-import org.apache.drill.metastore.metadata.MetadataInfo;
-import org.apache.drill.metastore.metadata.TableInfo;
 import org.apache.drill.metastore.operate.Metadata;
 import org.apache.drill.metastore.operate.Modify;
 import org.apache.drill.metastore.operate.Read;
@@ -49,11 +48,11 @@ public class IcebergTables implements Tables, MetastoreContext<TableMetadataUnit
    * Metastore Tables component partition keys, order of partitioning will be determined based
    * on order in {@link List} holder.
    */
-  private static final List<String> PARTITION_KEYS = Arrays.asList(
-    TableInfo.STORAGE_PLUGIN,
-    TableInfo.WORKSPACE,
-    TableInfo.TABLE_NAME,
-    MetadataInfo.METADATA_KEY);
+  private static final List<MetastoreColumn> PARTITION_KEYS = Arrays.asList(
+    MetastoreColumn.STORAGE_PLUGIN,
+    MetastoreColumn.WORKSPACE,
+    MetastoreColumn.TABLE_NAME,
+    MetastoreColumn.METADATA_KEY);
 
   public static IcebergTableSchema SCHEMA = IcebergTableSchema.of(TableMetadataUnit.class, PARTITION_KEYS);
 

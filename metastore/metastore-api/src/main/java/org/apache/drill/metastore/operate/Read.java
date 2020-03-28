@@ -17,6 +17,7 @@
  */
 package org.apache.drill.metastore.operate;
 
+import org.apache.drill.metastore.MetastoreColumn;
 import org.apache.drill.metastore.expressions.FilterExpression;
 import org.apache.drill.metastore.metadata.MetadataType;
 
@@ -63,15 +64,15 @@ public interface Read<T> {
    * @param columns list of columns to be read from Metastore component
    * @return current instance of Read interface implementation
    */
-  Read<T> columns(List<String> columns);
+  Read<T> columns(List<MetastoreColumn> columns);
 
-  default Read<T> columns(String... columns) {
+  default Read<T> columns(MetastoreColumn... columns) {
     return columns(Arrays.asList(columns));
   }
 
   /**
    * Executes read operation from Metastore component, returns obtained result in a form
-   * of list of component units  which later can be transformed into suitable format.
+   * of list of component units which later can be transformed into suitable format.
    *
    * @return list of component units
    */

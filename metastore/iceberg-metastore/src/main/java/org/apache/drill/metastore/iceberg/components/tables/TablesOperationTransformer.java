@@ -17,11 +17,11 @@
  */
 package org.apache.drill.metastore.iceberg.components.tables;
 
+import org.apache.drill.metastore.MetastoreColumn;
 import org.apache.drill.metastore.components.tables.TableMetadataUnit;
 import org.apache.drill.metastore.iceberg.MetastoreContext;
 import org.apache.drill.metastore.iceberg.operate.Overwrite;
 import org.apache.drill.metastore.iceberg.transform.OperationTransformer;
-import org.apache.drill.metastore.metadata.MetadataInfo;
 import org.apache.iceberg.expressions.Expression;
 
 import java.util.Collection;
@@ -62,8 +62,8 @@ public class TablesOperationTransformer extends OperationTransformer<TableMetada
 
           String location = tableKey.toLocation(context.table().location());
 
-          Map<String, Object> filterConditions = new HashMap<>(tableKey.toFilterConditions());
-          filterConditions.put(MetadataInfo.METADATA_KEY, operationEntry.getKey());
+          Map<MetastoreColumn, Object> filterConditions = new HashMap<>(tableKey.toFilterConditions());
+          filterConditions.put(MetastoreColumn.METADATA_KEY, operationEntry.getKey());
           Expression expression = context.transformer().filter().transform(filterConditions);
 
           return toOverwrite(location, expression, operationEntry.getValue());

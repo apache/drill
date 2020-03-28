@@ -18,8 +18,8 @@
 package org.apache.drill.metastore.components.tables;
 
 import org.apache.drill.categories.MetastoreTest;
+import org.apache.drill.metastore.MetastoreColumn;
 import org.apache.drill.metastore.expressions.FilterExpression;
-import org.apache.drill.metastore.metadata.MetadataInfo;
 import org.apache.drill.metastore.metadata.MetadataType;
 import org.apache.drill.test.BaseTest;
 import org.junit.Test;
@@ -48,7 +48,7 @@ public class TestBasicTablesRequests extends BaseTest {
 
   @Test
   public void testRequestMetadataWithRequestColumns() {
-    List<String> requestColumns = Arrays.asList("col1", "col2");
+    List<MetastoreColumn> requestColumns = Arrays.asList(MetastoreColumn.STORAGE_PLUGIN, MetastoreColumn.SCHEMA);
     BasicTablesRequests.RequestMetadata requestMetadata = BasicTablesRequests.RequestMetadata.builder()
       .column("col")
       .metadataKeys(Arrays.asList("a", "b", "c"))
@@ -81,7 +81,7 @@ public class TestBasicTablesRequests extends BaseTest {
       .column("col")
       .build();
 
-    FilterExpression expected = FilterExpression.equal(BasicTablesRequests.COLUMN, "col");
+    FilterExpression expected = FilterExpression.equal(MetastoreColumn.COLUMN, "col");
 
     assertEquals(expected.toString(), requestMetadata.filter().toString());
   }
@@ -94,8 +94,8 @@ public class TestBasicTablesRequests extends BaseTest {
       .build();
 
     FilterExpression expected = FilterExpression.and(
-      FilterExpression.equal(BasicTablesRequests.LOCATION, "/tmp/dir"),
-      FilterExpression.equal(BasicTablesRequests.COLUMN, "col"));
+      FilterExpression.equal(MetastoreColumn.LOCATION, "/tmp/dir"),
+      FilterExpression.equal(MetastoreColumn.COLUMN, "col"));
 
     assertEquals(expected.toString(), requestMetadata.filter().toString());
   }
@@ -111,8 +111,8 @@ public class TestBasicTablesRequests extends BaseTest {
       .build();
 
     FilterExpression expected = FilterExpression.and(
-      FilterExpression.in(BasicTablesRequests.LOCATION, locations),
-      FilterExpression.in(MetadataInfo.METADATA_KEY, metadataKeys));
+      FilterExpression.in(MetastoreColumn.LOCATION, locations),
+      FilterExpression.in(MetastoreColumn.METADATA_KEY, metadataKeys));
 
     assertEquals(expected.toString(), requestMetadata.filter().toString());
   }
@@ -121,7 +121,7 @@ public class TestBasicTablesRequests extends BaseTest {
   public void testRequestMetadataWithCustomFilter() {
     String column = "col";
     List<String> metadataKeys = Arrays.asList("a", "b", "c");
-    FilterExpression customFilter = FilterExpression.equal("custom", true);
+    FilterExpression customFilter = FilterExpression.equal(MetastoreColumn.STORAGE_PLUGIN, "dfs");
 
     BasicTablesRequests.RequestMetadata requestMetadata = BasicTablesRequests.RequestMetadata.builder()
       .column(column)
@@ -130,8 +130,8 @@ public class TestBasicTablesRequests extends BaseTest {
       .build();
 
     FilterExpression expected = FilterExpression.and(
-      FilterExpression.equal(BasicTablesRequests.COLUMN, column),
-      FilterExpression.in(MetadataInfo.METADATA_KEY, metadataKeys),
+      FilterExpression.equal(MetastoreColumn.COLUMN, column),
+      FilterExpression.in(MetastoreColumn.METADATA_KEY, metadataKeys),
       customFilter);
 
     assertEquals(expected.toString(), requestMetadata.filter().toString());

@@ -17,6 +17,8 @@
  */
 package org.apache.drill.metastore.expressions;
 
+import org.apache.drill.metastore.MetastoreColumn;
+
 import java.util.StringJoiner;
 
 /**
@@ -24,16 +26,16 @@ import java.util.StringJoiner;
  */
 public abstract class IsPredicate implements FilterExpression {
 
-  private final String reference;
+  private final MetastoreColumn column;
   private final Operator operator;
 
-  protected IsPredicate(String reference, Operator operator) {
-    this.reference = reference;
+  protected IsPredicate(MetastoreColumn column, Operator operator) {
+    this.column = column;
     this.operator = operator;
   }
 
-  public String reference() {
-    return reference;
+  public MetastoreColumn column() {
+    return column;
   }
 
   @Override
@@ -44,7 +46,7 @@ public abstract class IsPredicate implements FilterExpression {
   @Override
   public String toString() {
     return new StringJoiner(", ", IsPredicate.class.getSimpleName() + "[", "]")
-      .add("reference=" + reference)
+      .add("column=" + column)
       .add("operator=" + operator)
       .toString();
   }
@@ -55,8 +57,8 @@ public abstract class IsPredicate implements FilterExpression {
    */
   public static class IsNull extends IsPredicate {
 
-    public IsNull(String reference) {
-      super(reference, Operator.IS_NULL);
+    public IsNull(MetastoreColumn column) {
+      super(column, Operator.IS_NULL);
     }
 
     @Override
@@ -71,8 +73,8 @@ public abstract class IsPredicate implements FilterExpression {
    */
   public static class IsNotNull extends IsPredicate {
 
-    public IsNotNull(String reference) {
-      super(reference, Operator.IS_NOT_NULL);
+    public IsNotNull(MetastoreColumn column) {
+      super(column, Operator.IS_NOT_NULL);
     }
 
     @Override

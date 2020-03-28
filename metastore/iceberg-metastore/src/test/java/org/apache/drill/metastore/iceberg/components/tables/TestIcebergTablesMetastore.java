@@ -19,6 +19,7 @@ package org.apache.drill.metastore.iceberg.components.tables;
 
 import com.typesafe.config.ConfigValueFactory;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.metastore.MetastoreColumn;
 import org.apache.drill.metastore.components.tables.Tables;
 import org.apache.drill.metastore.metadata.MetadataType;
 import org.apache.drill.metastore.operate.Delete;
@@ -265,7 +266,7 @@ public class TestIcebergTablesMetastore extends IcebergBaseTest {
     List<TableMetadataUnit> units = tables.read()
       .metadataType(MetadataType.ALL)
       .filter(tableInfo.toFilter())
-      .columns("tableName", "metadataKey")
+      .columns(MetastoreColumn.TABLE_NAME, MetastoreColumn.METADATA_KEY)
       .execute();
 
     assertEquals(1, units.size());
@@ -279,8 +280,8 @@ public class TestIcebergTablesMetastore extends IcebergBaseTest {
 
     List<TableMetadataUnit> units = tables.read()
       .metadataType(MetadataType.ALL)
-      .filter(FilterExpression.equal("storagePlugin", "dfs"))
-      .columns("tableName", "metadataKey")
+      .filter(FilterExpression.equal(MetastoreColumn.STORAGE_PLUGIN, "dfs"))
+      .columns(MetastoreColumn.TABLE_NAME, MetastoreColumn.METADATA_KEY)
       .execute();
 
     assertTrue(units.isEmpty());
@@ -380,7 +381,7 @@ public class TestIcebergTablesMetastore extends IcebergBaseTest {
 
     FilterExpression deleteFilter = FilterExpression.and(
       tableInfo.toFilter(),
-      FilterExpression.equal("metadataKey", "dir0"));
+      FilterExpression.equal(MetastoreColumn.METADATA_KEY, "dir0"));
 
     tables.modify()
       .delete(Delete.builder()
@@ -440,7 +441,7 @@ public class TestIcebergTablesMetastore extends IcebergBaseTest {
 
     FilterExpression deleteFilter = FilterExpression.and(
       tableInfo.toFilter(),
-      FilterExpression.equal("metadataKey", "dir0"));
+      FilterExpression.equal(MetastoreColumn.METADATA_KEY, "dir0"));
 
     TableMetadataUnit updatedUnit = TableMetadataUnit.builder()
       .storagePlugin(tableInfo.storagePlugin())

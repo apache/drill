@@ -17,7 +17,6 @@
  */
 package org.apache.drill.metastore.iceberg.transform;
 
-
 import org.apache.drill.metastore.iceberg.exceptions.IcebergMetastoreException;
 import org.apache.iceberg.Schema;
 import org.apache.iceberg.data.GenericRecord;
