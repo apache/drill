@@ -25,6 +25,7 @@ import com.datastax.driver.core.Session;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.AutoCloseables;
 import org.apache.drill.exec.ops.OptimizerRulesContext;
+import org.apache.drill.exec.planner.PlannerPhase;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
@@ -84,7 +85,9 @@ public class CassandraStoragePlugin extends AbstractStoragePlugin {
     return new CassandraGroupScan(userName, this, cassandraScanSpec, null);
   }
 
-  public Set<StoragePluginOptimizerRule> getPhysicalOptimizerRules(OptimizerRulesContext optimizerRulesContext) {
+  public Set<StoragePluginOptimizerRule> getOptimizerRules(OptimizerRulesContext optimizerRulesContext, PlannerPhase phase) {
+
+    // TODO Fix this...  Do the push down at the correct phase
     return ImmutableSet.of(CassandraPushDownFilterForScan.INSTANCE);
   }
 

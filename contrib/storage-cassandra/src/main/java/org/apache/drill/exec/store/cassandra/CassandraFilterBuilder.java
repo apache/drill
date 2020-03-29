@@ -43,7 +43,6 @@ public class CassandraFilterBuilder extends AbstractExprVisitor<CassandraScanSpe
   public CassandraFilterBuilder(CassandraGroupScan groupScan, LogicalExpression conditionExp) {
     this.groupScan = groupScan;
     this.le = conditionExp;
-
   }
 
   /* Called by CassandraPushDownFilterForScan */
@@ -76,6 +75,7 @@ public class CassandraFilterBuilder extends AbstractExprVisitor<CassandraScanSpe
     return scanSpec;
   }
 
+  // TODO Grammar?
   public boolean isAllExpressionsConverted() {
     return allExpressionsConverted;
   }

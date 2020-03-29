@@ -21,6 +21,33 @@ import org.junit.Test;
 
 public class CassandraFilterPushdownTest extends BaseCassandraTest implements CassandraTestConstants {
 
+  /*
+  SELECT_QUERY_FILTER
+  SELECT  *
+  FROM cassandra.drilltest.`trending_now` t
+  WHERE id = 'id0004';
+
+  SELECT_QUERY_FILTER_1
+  SELECT  *
+  FROM cassandra.drilltest.`trending_now` t
+  WHERE pog_id = 10002;
+
+    static final String SELECT_QUERY_FILTER_2 =
+            "SELECT * FROM  cassandra."+ KEYSPACE_NAME +".`"+ TABLE_NAME +"` t WHERE "
+                    +COL_NAME_1+" = 'id0004' and " +COL_NAME_2+" = '10002'";
+
+    static final String SELECT_QUERY_FILTER_With_OR =
+            "SELECT * FROM  cassandra."+ KEYSPACE_NAME +".`"+ TABLE_NAME +"` t WHERE " +
+                    "(" +COL_NAME_1+" = 'id0004' or "  +COL_NAME_1+" = 'id0002') and " +
+                    "(" +COL_NAME_2+" = '10001' or "+COL_NAME_2+" = '10002') " +
+                    "order by " + COL_NAME_2 +" asc, "+ COL_NAME_1 +" desc limit 8";
+
+    static final String SELECT_QUERY_FILTER_WITH_AND =
+            "SELECT * FROM  cassandra."+ KEYSPACE_NAME +".`"+ TABLE_NAME +"` t WHERE "
+                    +COL_NAME_1+" = 'id0004' and pog_rank = 2";
+   */
+
+
   @Test
   public void testSelectAll() throws Exception{
     runCassandraSQLVerifyCount(SELECT_ALL, 14);

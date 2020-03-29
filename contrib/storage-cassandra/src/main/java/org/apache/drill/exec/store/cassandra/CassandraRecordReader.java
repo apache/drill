@@ -33,6 +33,7 @@ import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.Statement;
+import com.datastax.driver.core.querybuilder.Clause;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Select;
 import org.apache.drill.common.exceptions.UserException;
@@ -143,7 +144,7 @@ public class CassandraRecordReader extends AbstractRecordReader implements Drill
       Select.Where where;
       Select.Selection select = QueryBuilder.select();
       if (isStarQuery()) {
-        where = select.all().from(subScanSpec.getKeyspace(), subScanSpec.getTable()).where();
+        where = select.all().from(subScanSpec.getKeyspace(), subScanSpec.getTable()).allowFiltering().where();
       } else {
         for (SchemaPath path : getColumns()) {
           if (path.getAsNamePart().getName().equals("**")) {
@@ -152,7 +153,7 @@ public class CassandraRecordReader extends AbstractRecordReader implements Drill
             select = select.column(path.getAsNamePart().getName());
           }
         }
-        where = select.from(subScanSpec.getKeyspace(), subScanSpec.getTable()).where();
+        where = select.from(subScanSpec.getKeyspace(), subScanSpec.getTable()).allowFiltering().where();
       }
 
       if (subScanSpec.getStartToken() != null) {
@@ -164,8 +165,11 @@ public class CassandraRecordReader extends AbstractRecordReader implements Drill
 
       if (subScanSpec.filter != null && subScanSpec.filter.size() > 0) {
         logger.debug("Filters: {}", subScanSpec.filter.toString());
+        for (Clause filter : subScanSpec.filter) {
+          logger.debug("In loop: {} ", filter.toString());
+          where = where.and(filter);
+        }
       }
-
 
       q = where;
       logger.debug("Query sent to Cassandra: {}", q);
