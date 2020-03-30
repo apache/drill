@@ -31,19 +31,18 @@ import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
-import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.store.cassandra.connection.CassandraConnectionManager;
-import org.apache.drill.exec.vector.NullableVarCharVector;
+import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Iterator;
 import java.util.List;
 
 public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
@@ -54,22 +53,34 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
 
   private final CassandraStoragePluginConfig config;
 
+  private final CassandraSubScan.CassandraSubScanSpec subScanSpec;
+
+  private final List<SchemaPath> projectedColumns;
+
   private Cluster cluster;
 
   private Session session;
 
   private ResultSetLoader resultLoader;
 
-  private ResultSet cassandr     ugin plugin) {
+  private ResultSet cassandraResultset;
+
+  public CassandraBatchReader(CassandraStoragePluginConfig conf, CassandraSubScan.CassandraSubScanSpec subScanSpec, List<SchemaPath> projectedColumns, FragmentContext context,
+                              CassandraStoragePlugin plugin) {
     this.plugin = plugin;
-    this.config = plugin.getConfig();
+    this.config = conf;
+    this.subScanSpec = subScanSpec;
+    this.projectedColumns = projectedColumns;
   }
 
   @Override
   public boolean open(SchemaNegotiator negotiator) {
     CustomErrorContext parentErrorContext = negotiator.parentErrorContext();
 
+    // Set up the Cassandra Cluster
     setupCluster();
+
+    // Setup the query
     setup();
 
     resultLoader = negotiator.build();
@@ -95,7 +106,7 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
     // Storage plugin class and closed when Drill is shut down OR when the storage plugin
     // is disabled.
     if (plugin.getCluster() == null || plugin.getCluster().isClosed() ) {
-      cluster = CassandraConnectionManager.getCluster(config.getHosts(), config.getPort());
+      cluster = CassandraConnectionManager.getCluster(config);
       session = cluster.connect();
     } else {
       cluster = plugin.getCluster();
@@ -103,11 +114,9 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
     }
   }
 
-  private void setup(OperatorContext context, OutputMutator output) throws ExecutionSetupException {
+  private void setup() {
 
     try {
-      logger.debug("Opening scanner for Cassandra table '{}'.", cassandraTableName);
-
       List<ColumnMetadata> partitioncols = cluster
         .getMetadata()
         .getKeyspace(subScanSpec.getKeyspace())
@@ -124,7 +133,7 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
       /* Project only required columns */
       Select.Where where;
       Select.Selection select = QueryBuilder.select();
-      if (isStarQuery()) {
+      if (Utilities.isStarQuery(projectedColumns)) {
         where = select.all().from(subScanSpec.getKeyspace(), subScanSpec.getTable()).allowFiltering().where();
       } else {
         for (SchemaPath path : getColumns()) {
@@ -154,13 +163,12 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
 
       q = where;
       logger.debug("Query sent to Cassandra: {}", q);
-      rs = session.execute(q);
+      cassandraResultset = session.execute(q);
 
-      for (SchemaPath column : getColumns()) {
+      /*for (SchemaPath column : getColumns()) {
         if (isStarQuery()) {
           Iterator<ColumnDefinitions.Definition> iter = rs.getColumnDefinitions().iterator();
 
-          /* Add all columns to ValueVector */
           while (iter.hasNext()) {
             ColumnDefinitions.Definition def = iter.next();
             MaterializedField field = MaterializedField.create(def.getName(), COLUMN_TYPE);
@@ -170,7 +178,7 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
           MaterializedField field = MaterializedField.create(column.getRootSegment().getPath(), COLUMN_TYPE);
           vector = outputMutator.addField(field, NullableVarCharVector.class);
         }
-      }
+      }*/
     } catch (Exception e) {
       throw UserException
         .resourceError(e)
