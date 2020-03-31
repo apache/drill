@@ -46,11 +46,14 @@ public class UserAgentFunctions {
     DrillBuf outBuffer;
 
     @Workspace
-    nl.basjes.parse.useragent.UserAgentAnalyzerDirect uaa;
+    nl.basjes.parse.useragent.UserAgentAnalyzer uaa;
+
+    @Workspace
+    java.util.List<String> allFields;
 
     public void setup() {
-      uaa = nl.basjes.parse.useragent.UserAgentAnalyzerDirect.newBuilder().dropTests().hideMatcherLoadStats().build();
-      uaa.getAllPossibleFieldNamesSorted();
+      uaa = org.apache.drill.exec.udfs.UserAgentAnalyzerProvider.getInstance();
+      allFields = uaa.getAllPossibleFieldNamesSorted();
     }
 
     public void eval() {
@@ -60,7 +63,7 @@ public class UserAgentFunctions {
 
       nl.basjes.parse.useragent.UserAgent agent = uaa.parse(userAgentString);
 
-      for (String fieldName : agent.getAvailableFieldNamesSorted()) {
+      for (String fieldName: allFields) {
 
         org.apache.drill.exec.expr.holders.VarCharHolder rowHolder = new org.apache.drill.exec.expr.holders.VarCharHolder();
         String field = agent.getValue(fieldName);
@@ -92,11 +95,14 @@ public class UserAgentFunctions {
     DrillBuf outBuffer;
 
     @Workspace
-    nl.basjes.parse.useragent.UserAgentAnalyzerDirect uaa;
+    nl.basjes.parse.useragent.UserAgentAnalyzer uaa;
+
+    @Workspace
+    java.util.List<String> allFields;
 
     public void setup() {
-      uaa = nl.basjes.parse.useragent.UserAgentAnalyzerDirect.newBuilder().dropTests().hideMatcherLoadStats().build();
-      uaa.getAllPossibleFieldNamesSorted();
+      uaa = org.apache.drill.exec.udfs.UserAgentAnalyzerProvider.getInstance();
+      allFields = uaa.getAllPossibleFieldNamesSorted();
     }
 
     public void eval() {
@@ -111,7 +117,7 @@ public class UserAgentFunctions {
 
       nl.basjes.parse.useragent.UserAgent agent = uaa.parse(userAgentString);
 
-      for (String fieldName : agent.getAvailableFieldNamesSorted()) {
+      for (String fieldName: allFields) {
 
         org.apache.drill.exec.expr.holders.VarCharHolder rowHolder = new org.apache.drill.exec.expr.holders.VarCharHolder();
         String field = agent.getValue(fieldName);
@@ -146,11 +152,10 @@ public class UserAgentFunctions {
     DrillBuf outBuffer;
 
     @Workspace
-    nl.basjes.parse.useragent.UserAgentAnalyzerDirect uaa;
+    nl.basjes.parse.useragent.UserAgentAnalyzer uaa;
 
     public void setup() {
-      uaa = nl.basjes.parse.useragent.UserAgentAnalyzerDirect.newBuilder().dropTests().hideMatcherLoadStats().build();
-      uaa.getAllPossibleFieldNamesSorted();
+      uaa = org.apache.drill.exec.udfs.UserAgentAnalyzerProvider.getInstance();
     }
 
     public void eval() {
