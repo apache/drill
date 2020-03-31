@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.easy.json.loader;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,8 +29,11 @@ import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.store.easy.json.parser.ErrorFactory;
 import org.apache.drill.exec.store.easy.json.parser.JsonStructureParser;
+import org.apache.drill.exec.store.easy.json.parser.JsonStructureParser.JsonStructureParserBuilder;
+import org.apache.drill.exec.store.easy.json.parser.JsonStructureParser.MessageParser;
 import org.apache.drill.exec.store.easy.json.parser.ValueDef;
 import org.apache.drill.exec.store.easy.json.parser.ValueDef.JsonType;
 import org.apache.drill.exec.vector.accessor.UnsupportedConversionError;
@@ -97,7 +101,7 @@ import com.fasterxml.jackson.core.JsonToken;
  * <li>Reports errors as {@link UserException} objects, complete with context
  * information, rather than as generic Java exception as in the prior version.</li>
  * <li>Moves parse options into a separate {@link JsonOptions} class.</li>
- * <li>Iteration protocol is simpler: simply call {@link #next()} until it returns
+ * <li>Iteration protocol is simpler: simply call {@link #readBatch()} until it returns
  * {@code false}. Errors are reported out-of-band via an exception.</li>
  * <li>The result set loader abstraction is perfectly happy with an empty schema.
  * For this reason, this version (unlike the original) does not make up a dummy
@@ -128,6 +132,60 @@ import com.fasterxml.jackson.core.JsonToken;
 public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
   protected static final Logger logger = LoggerFactory.getLogger(JsonLoaderImpl.class);
 
+  public static class JsonLoaderBuilder {
+    private ResultSetLoader rsLoader;
+    private TupleMetadata providedSchema;
+    private JsonLoaderOptions options;
+    private CustomErrorContext errorContext;
+    private InputStream stream;
+    private Reader reader;
+    private MessageParser messageParser;
+
+    public JsonLoaderBuilder resultSetLoader(ResultSetLoader rsLoader) {
+      this.rsLoader = rsLoader;
+      return this;
+    }
+
+    public JsonLoaderBuilder providedSchema(TupleMetadata providedSchema) {
+      this.providedSchema = providedSchema;
+      return this;
+    }
+
+    public JsonLoaderBuilder standardOptions(OptionSet optionSet) {
+      this.options = new JsonLoaderOptions(optionSet);
+      return this;
+    }
+
+    public JsonLoaderBuilder options(JsonLoaderOptions options) {
+      this.options = options;
+      return this;
+    }
+
+    public JsonLoaderBuilder errorContext(CustomErrorContext errorContext) {
+      this.errorContext = errorContext;
+      return this;
+    }
+
+    public JsonLoaderBuilder fromStream(InputStream stream) {
+      this.stream = stream;
+      return this;
+    }
+
+    public JsonLoaderBuilder fromReader(Reader reader) {
+      this.reader = reader;
+      return this;
+    }
+
+    public JsonLoaderBuilder messageParser(MessageParser messageParser) {
+      this.messageParser = messageParser;
+      return this;
+    }
+
+    public JsonLoader build() {
+      return new JsonLoaderImpl(this);
+    }
+  }
+
   interface NullTypeMarker {
     void forceResolution();
   }
@@ -146,30 +204,33 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
    * inference, and not JSON tokens have been seen which would hint
    * at a type. Not needed when a schema is provided.
    */
-
   // Using a simple list. Won't perform well if we have hundreds of
   // null fields; but then we've never seen such a pathologically bad
-  // case... Usually just one or two fields have deferred nulls.
+  // case. Usually just one or two fields have deferred nulls.
   private final List<NullTypeMarker> nullStates = new ArrayList<>();
 
-  public JsonLoaderImpl(ResultSetLoader rsLoader, TupleMetadata providedSchema,
-      JsonLoaderOptions options, CustomErrorContext errorContext,
-      InputStream stream) {
-    this.rsLoader = rsLoader;
-    this.options = options;
-    this.errorContext = errorContext;
-    this.rowListener = new TupleListener(this, rsLoader.writer(), providedSchema);
-    this.parser = new JsonStructureParser(stream, options, rowListener, this);
+  private JsonLoaderImpl(JsonLoaderBuilder builder) {
+    this.rsLoader = builder.rsLoader;
+    this.options = builder.options;
+    this.errorContext = builder. errorContext;
+    this.rowListener = new TupleListener(this, rsLoader.writer(), builder.providedSchema);
+    this.parser = new JsonStructureParserBuilder()
+            .fromStream(builder.stream)
+            .fromReader(builder.reader)
+            .options(builder.options)
+            .rootListener(rowListener)
+            .errorFactory(this)
+            .messageParser(builder.messageParser)
+            .build();
   }
 
   public JsonLoaderOptions options() { return options; }
 
   @Override // JsonLoader
-  public boolean next() {
+  public boolean readBatch() {
     if (eof) {
       return false;
     }
-    rsLoader.startBatch();
     RowSetLoader rowWriter = rsLoader.writer();
     while (rowWriter.start()) {
       if (parser.next()) {
@@ -179,6 +240,7 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
         break;
       }
     }
+    endBatch();
     return rsLoader.hasRows();
   }
 
@@ -209,8 +271,7 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
    * Bottom line: the user is responsible for not giving Drill
    * ambiguous data that would require Drill to predict the future.
    */
-  @Override // JsonLoader
-  public void endBatch() {
+  private void endBatch() {
 
     // Make a copy. Forcing resolution will remove the
     // element from the original list.
@@ -237,8 +298,7 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
   @Override // ErrorFactory
   public RuntimeException ioException(IOException e) {
     throw buildError(
-        UserException.dataReadError(e)
-          .addContext(errorContext));
+        UserException.dataReadError(e));
   }
 
   @Override // ErrorFactory

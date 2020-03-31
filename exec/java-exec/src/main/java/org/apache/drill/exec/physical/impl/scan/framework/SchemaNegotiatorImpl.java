@@ -21,7 +21,10 @@ import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.vector.ValueVector;
+
+import com.typesafe.config.Config;
 
 /**
  * Implementation of the schema negotiation between scan operator and
@@ -91,6 +94,16 @@ public class SchemaNegotiatorImpl implements SchemaNegotiator {
   @Override
   public OperatorContext context() {
     return framework.context();
+  }
+
+  @Override
+  public Config drillConfig() {
+    return context().getFragmentContext().getConfig();
+  }
+
+  @Override
+  public OptionSet queryOptions() {
+    return context().getFragmentContext().getOptions();
   }
 
   @Override

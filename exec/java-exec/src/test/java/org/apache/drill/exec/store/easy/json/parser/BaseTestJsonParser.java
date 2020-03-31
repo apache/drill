@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.io.input.ReaderInputStream;
+import org.apache.drill.exec.store.easy.json.parser.JsonStructureParser.JsonStructureParserBuilder;
 import org.apache.drill.exec.vector.accessor.UnsupportedConversionError;
 
 import com.fasterxml.jackson.core.JsonParseException;
@@ -252,16 +253,25 @@ public class BaseTestJsonParser {
   }
 
   protected static class JsonParserFixture {
+    JsonStructureParserBuilder builder;
     JsonStructureOptions options = new JsonStructureOptions();
     JsonStructureParser parser;
     ObjectListenerFixture rootObject = new ObjectListenerFixture();
     ErrorFactory errorFactory = new ErrorFactoryFixture();
 
+    public JsonParserFixture() {
+      builder = new JsonStructureParserBuilder();
+    }
+
     public void open(String json) {
       InputStream inStream = new
           ReaderInputStream(new StringReader(json));
-      parser = new JsonStructureParser(inStream, options, rootObject,
-          errorFactory);
+      builder
+          .fromStream(inStream)
+          .options(options)
+          .rootListener(rootObject)
+          .errorFactory(errorFactory);
+      parser = builder.build();
     }
 
     public boolean next() {

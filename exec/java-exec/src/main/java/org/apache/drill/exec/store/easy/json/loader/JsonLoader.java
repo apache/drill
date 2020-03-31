@@ -56,13 +56,7 @@ public interface JsonLoader {
    * @throws RuntimeException for unexpected errors, most often due
    * to code errors
    */
-  boolean next();
-
-  /**
-   * Indicates that a batch is complete. Tells the loader to materialize
-   * any deferred null fields. (See {@link TupleListener} for details.)
-   */
-  void endBatch();
+  boolean readBatch();
 
   /**
    * Releases resources held by this class including the input stream.

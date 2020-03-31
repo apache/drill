@@ -28,6 +28,7 @@ import org.apache.drill.exec.physical.resultSet.impl.ResultSetLoaderImpl;
 import org.apache.drill.exec.physical.resultSet.impl.ResultSetOptionBuilder;
 import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder;
 import org.apache.drill.test.SubOperatorTest;
 
 public class BaseJsonLoaderTest extends SubOperatorTest {
@@ -43,7 +44,13 @@ public class BaseJsonLoaderTest extends SubOperatorTest {
 
     public void open(InputStream is) {
       rsLoader = new ResultSetLoaderImpl(fixture.allocator(), rsLoaderOptions.build());
-      loader = new JsonLoaderImpl(rsLoader, providedSchema, jsonOptions, errorContext, is);
+      loader = new JsonLoaderBuilder()
+          .resultSetLoader(rsLoader)
+          .providedSchema(providedSchema)
+          .options(jsonOptions)
+          .errorContext(errorContext)
+          .fromStream(is)
+          .build();
     }
 
     public void open(String json) {
@@ -52,10 +59,10 @@ public class BaseJsonLoaderTest extends SubOperatorTest {
     }
 
     public RowSet next() {
-      if (!loader.next()) {
+      rsLoader.startBatch();
+      if (!loader.readBatch()) {
         return null;
       }
-      loader.endBatch();
       return fixture.wrap(rsLoader.harvest());
     }
 
