@@ -39,6 +39,8 @@
   </dependencies>
 
   <modules>
+    <module>data</module>
+    <module>udfs</module>
     <module>storage-hbase</module>
     <module>format-maprdb</module>
     <module>format-syslog</module>
@@ -52,8 +54,6 @@
     <module>storage-kafka</module>
     <module>storage-kudu</module>
     <module>storage-opentsdb</module>
-    <module>data</module>
-    <module>udfs</module>
   </modules>
 
 </project>
