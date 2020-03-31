@@ -19,7 +19,10 @@ package org.apache.drill.exec.store.easy.json.parser;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
 
+import org.apache.drill.exec.store.easy.json.parser.MessageParser.MessageContextException;
+import org.apache.drill.exec.store.easy.json.parser.RootParser.NestedRootArrayParser;
 import org.apache.drill.exec.store.easy.json.parser.RootParser.RootArrayParser;
 import org.apache.drill.exec.store.easy.json.parser.RootParser.RootObjectParser;
 import org.apache.drill.exec.store.easy.json.parser.TokenIterator.RecoverableJsonException;
@@ -59,6 +62,62 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class JsonStructureParser {
   protected static final Logger logger = LoggerFactory.getLogger(JsonStructureParser.class);
 
+  public static class JsonStructureParserBuilder {
+    private InputStream stream;
+    private Reader reader;
+    private JsonStructureOptions options;
+    private ObjectListener rootListener;
+    private ErrorFactory errorFactory;
+    private String dataPath;
+    private MessageParser messageParser;
+
+    public JsonStructureParserBuilder options(JsonStructureOptions options) {
+      this.options = options;
+      return this;
+    }
+
+    public JsonStructureParserBuilder rootListener(ObjectListener rootListener) {
+      this.rootListener = rootListener;
+      return this;
+    }
+
+    public JsonStructureParserBuilder errorFactory(ErrorFactory errorFactory) {
+      this.errorFactory = errorFactory;
+      return this;
+    }
+
+    public JsonStructureParserBuilder fromStream(InputStream stream) {
+      this.stream = stream;
+      return this;
+    }
+
+    public JsonStructureParserBuilder fromReader(Reader reader) {
+      this.reader = reader;
+      return this;
+    }
+
+    public JsonStructureParserBuilder messageParser(MessageParser messageParser) {
+      this.messageParser = messageParser;
+      return this;
+    }
+
+    public JsonStructureParserBuilder dataPath(String dataPath) {
+      this.dataPath = dataPath;
+      return this;
+    }
+
+    public JsonStructureParser build() {
+      if (dataPath != null) {
+        dataPath = dataPath.trim();
+        dataPath = dataPath.isEmpty() ? null : dataPath;
+      }
+      if (dataPath != null && messageParser == null) {
+        messageParser = new SimpleMessageParser(dataPath);
+      }
+      return new JsonStructureParser(this);
+    }
+  }
+
   private final JsonParser parser;
   private final JsonStructureOptions options;
   private final ObjectListener rootListener;
@@ -78,30 +137,49 @@ public class JsonStructureParser {
    * @param errorFactory factory for errors thrown for various
    * conditions
    */
-  public JsonStructureParser(InputStream stream, JsonStructureOptions options,
-      ObjectListener rootListener, ErrorFactory errorFactory) {
-    this.options = Preconditions.checkNotNull(options);
-    this.rootListener = Preconditions.checkNotNull(rootListener);
-    this.errorFactory = Preconditions.checkNotNull(errorFactory);
+  private JsonStructureParser(JsonStructureParserBuilder builder) {
+    this.options = Preconditions.checkNotNull(builder.options);
+    this.rootListener = Preconditions.checkNotNull(builder.rootListener);
+    this.errorFactory = Preconditions.checkNotNull(builder.errorFactory);
     try {
       ObjectMapper mapper = new ObjectMapper()
           .configure(JsonParser.Feature.ALLOW_COMMENTS, true)
           .configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true)
-          .configure(JsonParser.Feature.ALLOW_NON_NUMERIC_NUMBERS, options.allowNanInf);
+          .configure(JsonParser.Feature.ALLOW_NON_NUMERIC_NUMBERS, options.allowNanInf)
+          .configure(JsonParser.Feature.ALLOW_BACKSLASH_ESCAPING_ANY_CHARACTER, options.enableEscapeAnyChar);
 
-      parser = mapper.getFactory().createParser(stream);
+      if (builder.stream != null) {
+        parser = mapper.getFactory().createParser(builder.stream);
+      } else {
+        parser = mapper.getFactory().createParser(Preconditions.checkNotNull(builder.reader));
+      }
     } catch (JsonParseException e) {
       throw errorFactory().parseError("Failed to create the JSON parser", e);
     } catch (IOException e) {
       throw errorFactory().ioException(e);
     }
     tokenizer = new TokenIterator(parser, options, errorFactory());
-    rootState = makeRootState();
+    if (builder.messageParser == null) {
+      rootState = makeRootState();
+    } else {
+      rootState = makeCustomRoot(builder.messageParser);
+    }
   }
 
   public JsonStructureOptions options() { return options; }
   public ErrorFactory errorFactory() { return errorFactory; }
   public ObjectListener rootListener() { return rootListener; }
+
+  private RootParser makeCustomRoot(MessageParser messageParser) {
+    try {
+      if (! messageParser.parsePrefix(tokenizer)) {
+        return null;
+      }
+    } catch (MessageContextException e) {
+      throw errorFactory.messageParseError(e);
+    }
+    return new NestedRootArrayParser(this, messageParser);
+  }
 
   private RootParser makeRootState() {
     JsonToken token = tokenizer.next();

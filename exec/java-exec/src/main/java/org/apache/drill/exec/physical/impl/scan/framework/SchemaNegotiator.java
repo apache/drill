@@ -22,6 +22,9 @@ import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.server.options.OptionSet;
+
+import com.typesafe.config.Config;
 
 /**
  * Negotiates the table schema with the scanner framework and provides
@@ -100,6 +103,8 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
 public interface SchemaNegotiator {
 
   OperatorContext context();
+  Config drillConfig();
+  OptionSet queryOptions();
 
   /**
    * Specify an advanced error context which allows the reader to

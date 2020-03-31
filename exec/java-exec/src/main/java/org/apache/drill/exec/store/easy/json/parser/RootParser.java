@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.easy.json.parser;
 
+import org.apache.drill.exec.store.easy.json.parser.MessageParser.MessageContextException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -112,6 +113,39 @@ public abstract class RootParser implements ElementParser {
             tokenizer.context());
         return false;
       } else if (token == JsonToken.END_ARRAY) {
+        return false;
+      } else {
+        return parseRootObject(token, tokenizer);
+      }
+    }
+  }
+
+  public static class NestedRootArrayParser extends RootParser {
+
+    private final MessageParser messageParser;
+
+    public NestedRootArrayParser(JsonStructureParser structParser, MessageParser messageParser) {
+      super(structParser);
+      this.messageParser = messageParser;
+    }
+
+    @Override
+    public boolean parseRoot(TokenIterator tokenizer) {
+      JsonToken token = tokenizer.next();
+      if (token == null) {
+        // Position: { ... EOF ^
+        // Saw EOF, but no closing ]. Warn and ignore.
+        // Note that the Jackson parser won't let us get here;
+        // it will have already thrown a syntax error.
+        logger.warn("Failed to close outer array. {}",
+            tokenizer.context());
+        return false;
+      } else if (token == JsonToken.END_ARRAY) {
+        try {
+          messageParser.parseSuffix(tokenizer);
+        } catch (MessageContextException e) {
+          throw errorFactory().messageParseError(e);
+        }
         return false;
       } else {
         return parseRootObject(token, tokenizer);

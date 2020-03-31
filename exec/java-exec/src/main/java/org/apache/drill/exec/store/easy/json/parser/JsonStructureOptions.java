@@ -17,6 +17,9 @@
  */
 package org.apache.drill.exec.store.easy.json.parser;
 
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.server.options.OptionSet;
+
 /**
  * Input to the JSON structure parser which defines guidelines
  * for low-level parsing as well as listeners for higher-level
@@ -51,4 +54,15 @@ public class JsonStructureOptions {
    * two or three valid records before it stabilizes.
    */
   public boolean skipMalformedRecords;
+
+  public boolean enableEscapeAnyChar;
+
+  public JsonStructureOptions() { }
+
+  public JsonStructureOptions(OptionSet options) {
+    this.allTextMode = options.getBoolean(ExecConstants.JSON_ALL_TEXT_MODE);
+    this.allowNanInf = options.getBoolean(ExecConstants.JSON_READER_NAN_INF_NUMBERS);
+    this.skipMalformedRecords = options.getBoolean(ExecConstants.JSON_READER_SKIP_INVALID_RECORDS_FLAG);
+    this.enableEscapeAnyChar = options.getBoolean(ExecConstants.JSON_READER_ESCAPE_ANY_CHAR);
+  }
 }
