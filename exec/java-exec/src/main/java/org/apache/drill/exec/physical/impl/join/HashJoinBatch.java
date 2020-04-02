@@ -945,7 +945,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP>
       // everything in memory
       String message = String.format(
           "When using the minimum number of partitions %d we require %s memory but only have %s available. "
-              + "Forcing legacy behavoir of using unbounded memory in order to prevent regressions.",
+              + "Forcing legacy behavior of using unbounded memory in order to prevent regressions.",
           numPartitions,
           FileUtils.byteCountToDisplaySize(buildCalc.getMaxReservedMemory()),
           FileUtils.byteCountToDisplaySize(allocator.getLimit()));
@@ -984,7 +984,7 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP>
     // is enabled
     if (reason == null) {
       boolean fallbackEnabled = context.getOptions()
-          .getOption(ExecConstants.HASHJOIN_FALLBACK_ENABLED_KEY).bool_val;
+          .getBoolean(ExecConstants.HASHJOIN_FALLBACK_ENABLED_KEY);
       if (fallbackEnabled) {
         logger.warn(
             "Spilling is disabled - not enough memory available for internal partitioning. Falling back"
@@ -992,8 +992,9 @@ public class HashJoinBatch extends AbstractBinaryRecordBatch<HashJoinPOP>
       } else {
         throw UserException.resourceError().message(String.format(
             "Not enough memory for internal partitioning and fallback mechanism for "
-                + "HashJoin to use unbounded memory is disabled. Either enable fallback config %s using Alter "
-                + "session/system command or increase memory limit for Drillbit",
+                + "HashJoin to use unbounded memory is disabled.\n" +
+                "Either enable fallback option %s using ALTER "
+                + "SESSION/SYSTEM command or increase the memory limit for the Drillbit",
             ExecConstants.HASHJOIN_FALLBACK_ENABLED_KEY)).build(logger);
       }
     } else {

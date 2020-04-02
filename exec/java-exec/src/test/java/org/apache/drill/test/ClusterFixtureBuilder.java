@@ -214,7 +214,6 @@ public class ClusterFixtureBuilder {
     usingZk = true;
 
     // Using ZK. Turn refresh wait back on.
-
     return configProperty(ExecConstants.ZK_REFRESH, DEFAULT_ZK_REFRESH);
   }
 
@@ -236,7 +235,6 @@ public class ClusterFixtureBuilder {
     usingZk = true;
 
     // Using ZK. Turn refresh wait back on.
-
     configProperty(ExecConstants.ZK_REFRESH, DEFAULT_ZK_REFRESH);
     return this;
   }

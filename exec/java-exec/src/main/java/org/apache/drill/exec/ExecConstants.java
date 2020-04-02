@@ -162,7 +162,6 @@ public final class ExecConstants {
   public static final PositiveLongValidator HASHJOIN_RUNTIME_FILTER_MAX_WAITING_TIME = new PositiveLongValidator(HASHJOIN_RUNTIME_FILTER_MAX_WAITING_TIME_KEY, Character.MAX_VALUE, null);
 
 
-
   // Hash Aggregate Options
   public static final String HASHAGG_NUM_PARTITIONS_KEY = "exec.hashagg.num_partitions";
   public static final LongValidator HASHAGG_NUM_PARTITIONS_VALIDATOR = new RangeLongValidator(HASHAGG_NUM_PARTITIONS_KEY, 1, 128,
@@ -188,6 +187,12 @@ public final class ExecConstants {
   public static final String HASHAGG_FALLBACK_ENABLED_KEY = "drill.exec.hashagg.fallback.enabled";
   public static final BooleanValidator HASHAGG_FALLBACK_ENABLED_VALIDATOR = new BooleanValidator(HASHAGG_FALLBACK_ENABLED_KEY,
       new OptionDescription("Hash Aggregates ignore memory limits when enabled (true). When disabled (false), Hash Aggregates fail when memory is set too low."));
+
+  // Partitioner options
+  public static final String PARTITIONER_MEMORY_REDUCTION_THRESHOLD_KEY = "exec.partition.mem_throttle";
+  public static final LongValidator PARTITIONER_MEMORY_REDUCTION_THRESHOLD_VALIDATOR =
+      new RangeLongValidator(PARTITIONER_MEMORY_REDUCTION_THRESHOLD_KEY, 0, Integer.MAX_VALUE,
+      new OptionDescription("Linearly reduces partition sender buffer row count after this number of receivers. Default is 0 (disabled). (Since Drill 1.18)"));
 
   public static final String SSL_PROVIDER = "drill.exec.ssl.provider"; // valid values are "JDK", "OPENSSL" // default JDK
   public static final String SSL_PROTOCOL = "drill.exec.ssl.protocol"; // valid values are SSL, SSLV2, SSLV3, TLS, TLSV1, TLSv1.1, TLSv1.2(default)

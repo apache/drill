@@ -440,6 +440,14 @@ public class VectorContainer implements VectorAccessible {
     return wrappers.size();
   }
 
+  public void allocate(int recordCount) {
+    for (VectorWrapper<?> w : wrappers) {
+      ValueVector v = w.getValueVector();
+      v.setInitialCapacity(recordCount);
+      v.allocateNew();
+    }
+  }
+
   public void allocateNew() {
     for (VectorWrapper<?> w : wrappers) {
       w.getValueVector().allocateNew();
@@ -557,6 +565,12 @@ public class VectorContainer implements VectorAccessible {
   public void copySchemaFrom(VectorAccessible other) {
     for (VectorWrapper<?> wrapper : other) {
       addOrGet(wrapper.getField());
+    }
+  }
+
+  public void buildFrom(BatchSchema sourceSchema) {
+    for (MaterializedField field : sourceSchema) {
+      add(TypeHelper.getNewVector(field, allocator));
     }
   }
 }

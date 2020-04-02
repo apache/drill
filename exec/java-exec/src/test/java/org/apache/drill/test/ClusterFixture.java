@@ -80,7 +80,6 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
     {
       // Properties here mimic those in drill-root/pom.xml, Surefire plugin
       // configuration. They allow tests to run successfully in Eclipse.
-
       put(ExecConstants.SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE, false);
 
       // The CTTAS function requires that the default temporary workspace be
@@ -88,36 +87,30 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
       // dfs.tmp. But, the test setup marks dfs.tmp as read-only. To work
       // around this, tests are supposed to use dfs. So, we need to
       // set the default temporary workspace to dfs.tmp.
-
       put(ExecConstants.DEFAULT_TEMPORARY_WORKSPACE, DFS_TMP_SCHEMA);
       put(ExecConstants.HTTP_ENABLE, false);
       put("drill.catastrophic_to_standard_out", true);
 
       // Verbose errors.
-
       put(ExecConstants.ENABLE_VERBOSE_ERRORS_KEY, true);
 
       // See Drillbit.close. The Drillbit normally waits a specified amount
       // of time for ZK registration to drop. But, embedded Drillbits normally
       // don't use ZK, so no need to wait.
-
       put(ExecConstants.ZK_REFRESH, 0);
 
       // This is just a test, no need to be heavy-duty on threads.
       // This is the number of server and client RPC threads. The
       // production default is DEFAULT_SERVER_RPC_THREADS.
-
       put(ExecConstants.BIT_SERVER_RPC_THREADS, 2);
 
       // No need for many scanners except when explicitly testing that
       // behavior. Production default is DEFAULT_SCAN_THREADS
-
       put(ExecConstants.SCAN_THREADPOOL_SIZE, 4);
 
       // Define a useful root location for the ZK persistent
       // storage. Profiles will go here when running in distributed
       // mode.
-
       put(ZookeeperPersistentStoreProvider.DRILL_EXEC_SYS_STORE_PROVIDER_ZK_BLOBROOT,
           "/tmp/drill/tests");
     }
@@ -147,9 +140,9 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
       startDrillbits();
       applyOptions();
     } catch (Exception e) {
+
       // Translate exceptions to unchecked to avoid cluttering
       // tests. Failures will simply fail the test itself.
-
       throw new IllegalStateException("Cluster fixture setup failed", e);
     }
   }
@@ -158,7 +151,7 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
    * Set the client properties to be used by client fixture.
    */
   private void setClientProps() {
-      clientProps = builder.clientProps;
+    clientProps = builder.clientProps;
   }
 
   public Properties getClientProps() {
@@ -166,17 +159,17 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
   }
 
   private void configureZk() {
-    // Start ZK if requested.
 
+    // Start ZK if requested.
     String zkConnect;
     if (builder.zkHelper != null) {
-      // Case where the test itself started ZK and we're only using it.
 
+      // Case where the test itself started ZK and we're only using it.
       zkHelper = builder.zkHelper;
       ownsZK = false;
     } else if (builder.localZkCount > 0) {
-      // Case where we need a local ZK just for this test cluster.
 
+      // Case where we need a local ZK just for this test cluster.
       zkHelper = new ZookeeperHelper();
       zkHelper.startZookeeper(builder.localZkCount);
       ownsZK = true;
@@ -189,7 +182,6 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
       // in config properties defined at run time. Drill does not allow
       // combining locally-set properties and a config file: it is one
       // or the other.
-
       if (builder.configBuilder().hasResource()) {
         throw new IllegalArgumentException("Cannot specify a local ZK while using an external config file.");
       }
@@ -202,27 +194,27 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
   }
 
   private void createConfig() throws Exception {
+
     // Create a config
     // Because of the way DrillConfig works, we can set the ZK
     // connection string only if a property set is provided.
-
     config = builder.configBuilder.build();
 
     if (builder.usingZk) {
-      // Distribute drillbit using ZK (in-process or external)
 
+      // Distribute drillbit using ZK (in-process or external)
       serviceSet = null;
       usesZk = true;
     } else {
-      // Embedded Drillbit.
 
+      // Embedded Drillbit.
       serviceSet = RemoteServiceSet.getLocalServiceSet();
     }
   }
 
   private void startDrillbits() throws Exception {
-    // Start the Drillbits.
 
+    // Start the Drillbits.
     Preconditions.checkArgument(builder.bitCount > 0);
     int bitCount = builder.bitCount;
     for (int i = 0; i < bitCount; i++) {
@@ -230,7 +222,6 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
       bit.run();
 
       // Bit name and registration.
-
       String name;
       if (builder.bitNames != null && i < builder.bitNames.length) {
         name = builder.bitNames[i];
@@ -239,7 +230,6 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
         // Name the Drillbit by default. Most tests use one Drillbit,
         // so make the name simple: "drillbit." Only add a numeric suffix
         // when the test creates multiple bits.
-
         if (bitCount == 1) {
           name = DEFAULT_BIT_NAME;
         } else {
@@ -250,7 +240,6 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
 
       // Remember the first Drillbit, this is the default one returned from
       // drillbit().
-
       if (i == 0) {
         defaultDrillbit = bit;
       }
@@ -330,7 +319,6 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
    * @return a test client. Client will be closed when this cluster
    * fixture closes, or can be closed early
    */
-
   public ClientFixture client(String host, int port) {
     return clientBuilder()
       .property(DrillProperties.DRILLBIT_CONNECTION, String.format("%s:%d", host, port))
@@ -573,6 +561,8 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
     props.setProperty(ExecConstants.UDF_DIRECTORY_ROOT, dirTestWatcher.getHomeDir().getAbsolutePath());
     props.setProperty(ExecConstants.SYS_STORE_PROVIDER_LOCAL_PATH, dirTestWatcher.getStoreDir().getAbsolutePath());
     props.setProperty(ExecConstants.UDF_DIRECTORY_FS, FileSystem.DEFAULT_FS);
+    // ALTER SESSION profiles are seldom interesting
+    props.setProperty(ExecConstants.SKIP_ALTER_SESSION_QUERY_PROFILE, Boolean.TRUE.toString());
 
     builder.configBuilder.configProps(props);
     return builder;
@@ -640,7 +630,6 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
    * @param value the value to encode
    * @return the SQL-acceptable string equivalent
    */
-
   public static String stringify(Object value) {
     if (value == null) {
       return null;
@@ -654,8 +643,8 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
   }
 
   public static String getResource(String resource) throws IOException {
-    // Unlike the Java routines, Guava does not like a leading slash.
 
+    // Unlike the Java routines, Guava does not like a leading slash.
     final URL url = Resources.getResource(trimSlash(resource));
     if (url == null) {
       throw new IOException(

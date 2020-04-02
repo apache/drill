@@ -55,7 +55,7 @@ import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.UserClientConnection;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.FailureUtils;
-import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ControlsInjectorFactory;
 import org.apache.drill.exec.util.Pointer;
@@ -65,6 +65,8 @@ import org.apache.drill.exec.work.foreman.rm.QueryQueue.QueueTimeoutException;
 import org.apache.drill.exec.work.foreman.rm.QueryQueue.QueryQueueException;
 import org.apache.drill.exec.work.foreman.rm.QueryResourceManager;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Date;
@@ -93,8 +95,8 @@ import static org.apache.drill.exec.server.FailureUtils.EXIT_CODE_HEAP_OOM;
  */
 
 public class Foreman implements Runnable {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Foreman.class);
-  private static final org.slf4j.Logger queryLogger = org.slf4j.LoggerFactory.getLogger("query.logger");
+  private static final Logger logger = LoggerFactory.getLogger(Foreman.class);
+  private static final Logger queryLogger = LoggerFactory.getLogger("query.logger");
   private static final ControlsInjector injector = ControlsInjectorFactory.getInjector(Foreman.class);
 
   public enum ProfileOption { SYNC, ASYNC, NONE }
@@ -108,8 +110,7 @@ public class Foreman implements Runnable {
   private final QueryManager queryManager; // handles lower-level details of query execution
   private final DrillbitContext drillbitContext;
   private final UserClientConnection initiatingClient; // used to send responses
-  private boolean resume = false;
-  private final ProfileOption profileOption;
+  private boolean resume;
 
   private final QueryResourceManager queryRM;
 
@@ -122,7 +123,7 @@ public class Foreman implements Runnable {
   private String queryText;
 
   private RuntimeFilterRouter runtimeFilterRouter;
-  private boolean enableRuntimeFilter;
+  private final boolean enableRuntimeFilter;
 
   /**
    * Constructor. Sets up the Foreman, but does not initiate any execution.
@@ -154,10 +155,8 @@ public class Foreman implements Runnable {
     this.queryRM = drillbitContext.getResourceManager().newQueryRM(this);
     this.fragmentsRunner = new FragmentsRunner(bee, initiatingClient, drillbitContext, this);
     this.queryStateProcessor = new QueryStateProcessor(queryIdString, queryManager, drillbitContext, new ForemanResult());
-    this.profileOption = setProfileOption(queryContext.getOptions());
     this.enableRuntimeFilter = queryContext.getOptions().getOption(ExecConstants.HASHJOIN_ENABLE_RUNTIME_FILTER_KEY).bool_val;
   }
-
 
   /**
    * @return query id
@@ -326,11 +325,15 @@ public class Foreman implements Runnable {
     }
   }
 
-  private ProfileOption setProfileOption(OptionManager options) {
-    if (! options.getOption(ExecConstants.ENABLE_QUERY_PROFILE_VALIDATOR)) {
+  private ProfileOption getProfileOption(QueryContext queryContext) {
+    if (queryContext.isSkipProfileWrite()) {
       return ProfileOption.NONE;
     }
-    if (options.getOption(ExecConstants.QUERY_PROFILE_DEBUG_VALIDATOR)) {
+    OptionSet options = queryContext.getOptions();
+    if (!options.getBoolean(ExecConstants.ENABLE_QUERY_PROFILE_OPTION)) {
+      return ProfileOption.NONE;
+    }
+    if (options.getBoolean(ExecConstants.QUERY_PROFILE_DEBUG_OPTION)) {
       return ProfileOption.SYNC;
     } else {
       return ProfileOption.ASYNC;
@@ -792,8 +795,8 @@ public class Foreman implements Runnable {
 
       // Debug option: write query profile before sending final results so that
       // the client can be certain the profile exists.
-      final boolean skipProfileWrite = queryContext.isSkipProfileWrite();
-      if (profileOption == ProfileOption.SYNC && !skipProfileWrite) {
+      ProfileOption profileOption = getProfileOption(queryContext);
+      if (profileOption == ProfileOption.SYNC) {
         queryManager.writeFinalProfile(uex);
       }
 
@@ -823,7 +826,7 @@ public class Foreman implements Runnable {
       // storage write; query completion occurs in parallel with profile
       // persistence.
 
-      if (profileOption == ProfileOption.ASYNC && !skipProfileWrite) {
+      if (profileOption == ProfileOption.ASYNC) {
         queryManager.writeFinalProfile(uex);
       }
 
