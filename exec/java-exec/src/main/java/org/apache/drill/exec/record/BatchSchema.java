@@ -123,7 +123,6 @@ public class BatchSchema implements Iterable<MaterializedField> {
    * Hence we should make use of {@link BatchSchema#isEquivalent(BatchSchema)} method instead since
    * {@link MaterializedField#isEquivalent(MaterializedField)} method is updated to remove the reference check.
    */
-
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -145,7 +144,6 @@ public class BatchSchema implements Iterable<MaterializedField> {
 
     // Compare names.
     // (DRILL-5525: actually compares all fields.)
-
     if (!fields.equals(other.fields)) {
       return false;
     }
@@ -153,7 +151,6 @@ public class BatchSchema implements Iterable<MaterializedField> {
     // Compare types
     // (DRILL-5525: this code is redundant because any differences
     // will fail above.)
-
     for (int i = 0; i < fields.size(); i++) {
       MajorType t1 = fields.get(i).getType();
       MajorType t2 = other.fields.get(i).getType();
@@ -181,7 +178,6 @@ public class BatchSchema implements Iterable<MaterializedField> {
    * the {@link MaterializedField#isEquivalent(MaterializedField)} rules,
    * false otherwise
    */
-
   public boolean isEquivalent(BatchSchema other) {
     if (this == other) {
       return true;
@@ -209,17 +205,15 @@ public class BatchSchema implements Iterable<MaterializedField> {
   private boolean majorTypeEqual(MajorType t1, MajorType t2) {
     if (t1.equals(t2)) {
       return true;
-    }
-    if (!t1.getMinorType().equals(t2.getMinorType())) {
+    } else if (!t1.getMinorType().equals(t2.getMinorType())) {
       return false;
-    }
-    if (!t1.getMode().equals(t2.getMode())) {
+    } else if (!t1.getMode().equals(t2.getMode())) {
       return false;
-    }
-    if (!Sets.newHashSet(t1.getSubTypeList()).equals(Sets.newHashSet(t2.getSubTypeList()))) {
+    } else if (!Sets.newHashSet(t1.getSubTypeList()).equals(Sets.newHashSet(t2.getSubTypeList()))) {
       return false;
+    } else {
+      return true;
     }
-    return true;
   }
 
   /**
@@ -237,7 +231,6 @@ public class BatchSchema implements Iterable<MaterializedField> {
    * @param otherSchema the schema to merge with this one
    * @return the new, merged, schema
    */
-
   public BatchSchema merge(BatchSchema otherSchema) {
     if (selectionVectorMode != SelectionVectorMode.NONE ||
         otherSchema.selectionVectorMode != SelectionVectorMode.NONE) {
@@ -248,5 +241,18 @@ public class BatchSchema implements Iterable<MaterializedField> {
     mergedFields.addAll(this.fields);
     mergedFields.addAll(otherSchema.fields);
     return new BatchSchema(selectionVectorMode, mergedFields);
+  }
+
+  /**
+   * Format the schema into a multi-line format. Useful when debugging a query with
+   * a very wide schema as the usual single-line format is far too hard to read.
+   */
+  public String format() {
+    StringBuilder buf = new StringBuilder();
+    buf.append("Batch Schema:\n");
+    for (MaterializedField field : fields) {
+      field.format(buf, 1);
+    }
+    return buf.toString();
   }
 }

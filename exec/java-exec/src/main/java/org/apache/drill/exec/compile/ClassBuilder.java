@@ -29,6 +29,8 @@ import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.server.options.OptionSet;
 import org.codehaus.commons.compiler.CompileException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Implements the "plain Java" method of code generation and
@@ -76,10 +78,9 @@ import org.codehaus.commons.compiler.CompileException;
  * The setting to prefer plain Java is ignored for any remaining generated
  * classes not marked as plain Java capable.
  */
-
 public class ClassBuilder {
 
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ClassBuilder.class);
+  private static final Logger logger = LoggerFactory.getLogger(ClassBuilder.class);
   public static final String CODE_DIR_OPTION = CodeCompiler.COMPILE_BASE + ".code_dir";
 
   private final DrillConfig config;
@@ -95,7 +96,6 @@ public class ClassBuilder {
     // point your debugger to the directory set below, and you
     // can step into the code for debugging. Code is not saved
     // be default because doing so is expensive and unnecessary.
-
     codeDir = new File(config.getString(CODE_DIR_OPTION));
   }
 
@@ -109,7 +109,6 @@ public class ClassBuilder {
    * @return the class that the code generator defines
    * @throws ClassTransformationException
    */
-
   public Class<?> getImplementationClass(CodeGenerator<?> cg) throws ClassTransformationException {
     try {
       return compileClass(cg);
@@ -133,23 +132,19 @@ public class ClassBuilder {
     final long t1 = System.nanoTime();
 
     // Get the plain Java code.
-
     String code = cg.getGeneratedCode();
 
     // Get the class names (dotted, file path, etc.)
-
     String className = cg.getMaterializedClassName();
     ClassTransformer.ClassNames name = new ClassTransformer.ClassNames(className);
 
     // A key advantage of this method is that the code can be
     // saved and debugged, if needed.
-
     if (cg.isCodeToBeSaved()) {
       saveCode(code, name);
     }
 
     // Compile the code and load it into a class loader.
-
     CachedClassLoader classLoader = new CachedClassLoader();
     ClassCompilerSelector compilerSelector = new ClassCompilerSelector(classLoader, config, options);
     Map<String,byte[]> results = compilerSelector.compile(name, code);
@@ -165,7 +160,6 @@ public class ClassBuilder {
                   (System.nanoTime() - t1 + 500_000) / 1_000_000);
 
     // Get the class from the class loader.
-
     try {
       return classLoader.findClass(className);
     } catch (ClassNotFoundException e) {
@@ -184,7 +178,6 @@ public class ClassBuilder {
    * @param code the source code
    * @param name the class name
    */
-
   private void saveCode(String code, ClassNames name) {
 
     String pathName = name.slash + ".java";

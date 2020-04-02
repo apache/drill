@@ -69,6 +69,11 @@ public abstract class BaseOptionManager implements OptionManager {
   }
 
   @Override
+  public int getInt(String name) {
+    return (int) getLong(name);
+  }
+
+  @Override
   public long getLong(String name) {
     return getByType(name, Kind.LONG).num_val;
   }

@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -393,27 +394,9 @@ public class MaterializedField {
    */
   public String toString(boolean includeChildren) {
     final int maxLen = 10;
-    final StringBuilder builder = new StringBuilder();
-    builder
-      .append("[`")
-      .append(name)
-      .append("` (")
-      .append(type.getMinorType().name());
-
-    if (type.hasPrecision() && (type.getPrecision() > 0 || Types.isDecimalType(type))) {
-      builder.append("(");
-      builder.append(type.getPrecision());
-      if (type.hasScale() && type.getScale() > 0) {
-        builder.append(", ");
-        builder.append(type.getScale());
-      }
-      builder.append(")");
-    }
-
-    builder
-      .append(":")
-      .append(type.getMode().name())
-      .append(")");
+    final StringBuilder builder = new StringBuilder()
+      .append("[`");
+    prefix(builder);
 
     if (includeChildren) {
       if (type.getSubTypeCount() > 0) {
@@ -436,17 +419,63 @@ public class MaterializedField {
         .toString();
   }
 
+  private void prefix(StringBuilder builder) {
+    builder
+      .append(name)
+      .append("` (")
+      .append(type.getMinorType().name());
+
+    if (type.hasPrecision() && (type.getPrecision() > 0 || Types.isDecimalType(type))) {
+      builder.append("(");
+      builder.append(type.getPrecision());
+      if (type.hasScale() && type.getScale() > 0) {
+        builder.append(", ");
+        builder.append(type.getScale());
+      }
+      builder.append(")");
+    }
+
+    builder
+      .append(":")
+      .append(type.getMode().name())
+      .append(")");
+  }
+
   @Override
   public String toString() {
     return toString(true);
+  }
+
+  public String format() {
+    final StringBuilder builder = new StringBuilder();
+    format(builder, 0);
+    return builder.toString();
+  }
+
+  /**
+   * Format the field in a multi-line format, with children (but not subtypes)
+   * indented. Useful for wide rows where the single-line format is too hard
+   * to read.
+   */
+  public void format(StringBuilder builder, int level) {
+    builder.append(StringUtils.repeat(' ', level));
+    prefix(builder);
+    if (children != null && ! children.isEmpty()) {
+      builder.append(":\n");
+      for (MaterializedField child : children) {
+        child.format(builder, level + 1);
+      }
+    } else {
+      builder.append("\n");
+    }
   }
 
   /**
    * Return true if two fields have identical MinorType and Mode.
    */
   public boolean hasSameTypeAndMode(MaterializedField that) {
-    return (getType().getMinorType() == that.getType().getMinorType())
-        && (getType().getMode() == that.getType().getMode());
+    return getType().getMinorType() == that.getType().getMinorType()
+        && getType().getMode() == that.getType().getMode();
   }
 
   private String toString(Collection<?> collection, int maxLen) {
