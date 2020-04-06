@@ -15,48 +15,93 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec.store.cassandra;
 
 import java.util.List;
 
+import org.apache.drill.common.exceptions.ChildErrorContext;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ops.ExecutorFragmentContext;
-import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.impl.BatchCreator;
-import org.apache.drill.exec.physical.impl.ScanBatch;
+import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
+import org.apache.drill.exec.physical.impl.scan.framework.ManagedScanFramework;
+import org.apache.drill.exec.physical.impl.scan.framework.ManagedScanFramework.ReaderFactory;
+import org.apache.drill.exec.physical.impl.scan.framework.ManagedScanFramework.ScanFrameworkBuilder;
+import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
+import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.store.RecordReader;
-
+import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-public class CassandraScanBatchCreator implements BatchCreator<CassandraSubScan>{
-  private static final Logger logger = LoggerFactory.getLogger(CassandraScanBatchCreator.class);
+public class CassandraScanBatchCreator implements BatchCreator<CassandraSubScan> {
 
   @Override
-  public ScanBatch getBatch(ExecutorFragmentContext context, CassandraSubScan subScan, List<RecordBatch> children)
-    throws ExecutionSetupException {
+  public CloseableRecordBatch getBatch(ExecutorFragmentContext context, CassandraSubScan subScan, List<RecordBatch> children) throws ExecutionSetupException {
+    Preconditions.checkArgument(children.isEmpty());
 
-    logger.debug("Entering scan batch creator: {}", subScan.toString());
-
-    Preconditions.checkArgument(children == null || children.isEmpty());
-    List<RecordReader> readers = Lists.newArrayList();
-    List<SchemaPath> columns = null;
-    for(CassandraSubScan.CassandraSubScanSpec scanSpec : subScan.getChunkScanSpecList()){
-      try {
-        if ((columns = subScan.getColumns())==null) {
-          columns = GroupScan.ALL_COLUMNS;
-        }
-        readers.add(new CassandraRecordReader(subScan.getCassandraPluginConfig(), scanSpec, columns, context, subScan.getCassandraStoragePlugin()));
-      } catch (Exception e) {
-        throw new ExecutionSetupException(e);
-      }
+    try {
+      ScanFrameworkBuilder builder = createBuilder(context.getOptions(), subScan);
+      return builder.buildScanOperator(context, subScan);
+    } catch (UserException e) {
+      // Rethrow user exceptions directly
+      throw e;
+    } catch (Throwable e) {
+      // Wrap all others
+      throw new ExecutionSetupException(e);
     }
-    return new ScanBatch(subScan, context, readers);
   }
 
+  private ScanFrameworkBuilder createBuilder(OptionManager options, CassandraSubScan subScan) {
+    CassandraStoragePluginConfig config = subScan.getCassandraPluginConfig();
+    ScanFrameworkBuilder builder = new ScanFrameworkBuilder();
+    builder.projection(subScan.getColumns());
+    builder.setUserName(subScan.getUserName());
+
+    // Provide custom error context
+    builder.errorContext(new ChildErrorContext(builder.errorContext()) {
+      @Override
+      public void addContext(UserException.Builder builder) {
+        //builder.addContext("URL", subScan.getFullURL());
+      }
+    });
+
+    // Reader
+    ReaderFactory readerFactory = new HttpReaderFactory(config, subScan);
+    builder.setReaderFactory(readerFactory);
+    builder.nullType(Types.optional(MinorType.VARCHAR));
+    return builder;
+  }
+
+  private static class HttpReaderFactory implements ReaderFactory {
+
+    private final CassandraStoragePluginConfig config;
+
+    private final CassandraSubScan subScan;
+
+    private int count;
+
+    public HttpReaderFactory(CassandraStoragePluginConfig config, CassandraSubScan subScan) {
+      this.config = config;
+      this.subScan = subScan;
+    }
+
+    @Override
+    public void bind(ManagedScanFramework framework) {
+    }
+
+    @Override
+    public ManagedReader<SchemaNegotiator> next() {
+
+      // Only a single scan (in a single thread)
+      if (count++ == 0) {
+        return new CassandraBatchReader(config, subScan);
+      } else {
+        return null;
+      }
+    }
+  }
 }
+

@@ -28,12 +28,8 @@ import com.datastax.driver.core.querybuilder.Clause;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Select;
 import org.apache.drill.common.exceptions.CustomErrorContext;
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.ops.OperatorContext;
-import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
@@ -49,11 +45,11 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
 
   private static final Logger logger = LoggerFactory.getLogger(CassandraBatchReader.class);
 
-  private final CassandraStoragePlugin plugin;
-
   private final CassandraStoragePluginConfig config;
 
-  private final CassandraSubScan.CassandraSubScanSpec subScanSpec;
+  private final CassandraStoragePlugin plugin;
+
+  private final CassandraSubScan subScan;
 
   private final List<SchemaPath> projectedColumns;
 
@@ -65,12 +61,11 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
 
   private ResultSet cassandraResultset;
 
-  public CassandraBatchReader(CassandraStoragePluginConfig conf, CassandraSubScan.CassandraSubScanSpec subScanSpec, List<SchemaPath> projectedColumns, FragmentContext context,
-                              CassandraStoragePlugin plugin) {
-    this.plugin = plugin;
+  public CassandraBatchReader(CassandraStoragePluginConfig conf, CassandraSubScan subScam) {
     this.config = conf;
-    this.subScanSpec = subScanSpec;
-    this.projectedColumns = projectedColumns;
+    this.subScan = subScam;
+    this.projectedColumns = subScam.getColumns();
+    this.plugin = subScan.getCassandraStoragePlugin();
   }
 
   @Override
@@ -136,7 +131,7 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
       if (Utilities.isStarQuery(projectedColumns)) {
         where = select.all().from(subScanSpec.getKeyspace(), subScanSpec.getTable()).allowFiltering().where();
       } else {
-        for (SchemaPath path : getColumns()) {
+        for (SchemaPath path : projectedColumns) {
           if (path.getAsNamePart().getName().equals("**")) {
             continue;
           } else {
@@ -165,20 +160,17 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
       logger.debug("Query sent to Cassandra: {}", q);
       cassandraResultset = session.execute(q);
 
-      /*for (SchemaPath column : getColumns()) {
-        if (isStarQuery()) {
-          Iterator<ColumnDefinitions.Definition> iter = rs.getColumnDefinitions().iterator();
+      // Build the schema
 
-          while (iter.hasNext()) {
-            ColumnDefinitions.Definition def = iter.next();
-            MaterializedField field = MaterializedField.create(def.getName(), COLUMN_TYPE);
-            vector = outputMutator.addField(field, NullableVarCharVector.class);
-          }
-        } else {
-          MaterializedField field = MaterializedField.create(column.getRootSegment().getPath(), COLUMN_TYPE);
-          vector = outputMutator.addField(field, NullableVarCharVector.class);
-        }
-      }*/
+      for (SchemaPath column: projectedColumns) {
+        String colName = column.rootName();
+        String dataType = cassandraResultset
+          .getColumnDefinitions()
+          .getType(colName)
+          .toString();
+      }
+
+
     } catch (Exception e) {
       throw UserException
         .resourceError(e)
