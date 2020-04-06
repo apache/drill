@@ -23,6 +23,8 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
+import org.apache.drill.exec.expr.holders.Float8Holder;
+import org.apache.drill.exec.expr.holders.TimeStampHolder;
 
 
 public class TimeBucketFunctions {
@@ -59,9 +61,9 @@ public class TimeBucketFunctions {
       long timestamp = inputDate.value;
 
       // Get the interval in milliseconds and convert to nanoseconds
-      long intervalToAdd = interval.value * 1000000;
+      long groupByInterval = interval.value * 1000000;
 
-      out.value = timestamp - (timestamp % intervalToAdd);
+      out.value = timestamp - (timestamp % groupByInterval);
     }
   }
 
@@ -97,9 +99,85 @@ public class TimeBucketFunctions {
       long timestamp = inputDate.value;
 
       // Get the interval in milliseconds
-      long intervalToAdd = interval.value;
+      long groupByInterval = interval.value;
 
-      out.value = timestamp - (timestamp % intervalToAdd);
+      out.value = timestamp - (timestamp % groupByInterval);
+    }
+  }
+
+  /**
+   * This function is used for facilitating time series analysis by creating buckets of time intervals.  See
+   * https://blog.timescale.com/blog/simplified-time-series-analytics-using-the-time_bucket-function/ for usage. The function takes two arguments:
+   * 1. The timestamp (as a Drill timestamp)
+   * 2. The desired bucket interval IN milliseconds
+   *
+   * The function returns a BIGINT of the nearest time bucket.
+   */
+  @FunctionTemplate(name = "time_bucket",
+    scope = FunctionTemplate.FunctionScope.SIMPLE,
+    nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  public static class TimestampTimeBucketFunction implements DrillSimpleFunc {
+
+    @Param
+    TimeStampHolder inputDate;
+
+    @Param
+    BigIntHolder interval;
+
+    @Output
+    TimeStampHolder out;
+
+    @Override
+    public void setup() {
+    }
+
+    @Override
+    public void eval() {
+      // Get the timestamp in milliseconds
+      long timestamp = inputDate.value;
+
+      // Get the interval in milliseconds
+      long groupByInterval = interval.value;
+
+      out.value = (timestamp - (timestamp % groupByInterval));
+    }
+  }
+
+  /**
+   * This function is used for facilitating time series analysis by creating buckets of time intervals.  See
+   * https://blog.timescale.com/blog/simplified-time-series-analytics-using-the-time_bucket-function/ for usage. The function takes two arguments:
+   * 1. The timestamp (as a Drill timestamp)
+   * 2. The desired bucket interval IN milliseconds
+   *
+   * The function returns a BIGINT of the nearest time bucket.
+   */
+  @FunctionTemplate(name = "time_bucket",
+    scope = FunctionTemplate.FunctionScope.SIMPLE,
+    nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  public static class DoubleTimeBucketFunction implements DrillSimpleFunc {
+
+    @Param
+    Float8Holder inputDate;
+
+    @Param
+    BigIntHolder interval;
+
+    @Output
+    BigIntHolder out;
+
+    @Override
+    public void setup() {
+    }
+
+    @Override
+    public void eval() {
+      // Get the timestamp in milliseconds
+      long timestamp = java.lang.Math.round(inputDate.value);
+
+      // Get the interval in milliseconds
+      long groupByInterval = interval.value;
+
+      out.value = timestamp - (timestamp % groupByInterval);
     }
   }
 }
