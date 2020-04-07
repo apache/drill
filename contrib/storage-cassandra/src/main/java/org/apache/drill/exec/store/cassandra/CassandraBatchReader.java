@@ -22,6 +22,7 @@ import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.ColumnDefinitions;
 import com.datastax.driver.core.ColumnMetadata;
 import com.datastax.driver.core.ResultSet;
+import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.querybuilder.Clause;
@@ -30,11 +31,16 @@ import com.datastax.driver.core.querybuilder.Select;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.store.cassandra.connection.CassandraConnectionManager;
+import org.apache.drill.exec.store.cassandra.CassandraSubScan.CassandraSubScanSpec;
 import org.apache.drill.exec.util.Utilities;
+import org.apache.drill.exec.vector.accessor.ScalarWriter;
+import org.apache.drill.exec.vector.accessor.TupleWriter;
 import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,10 +67,10 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
 
   private ResultSet cassandraResultset;
 
-  public CassandraBatchReader(CassandraStoragePluginConfig conf, CassandraSubScan subScam) {
+  public CassandraBatchReader(CassandraStoragePluginConfig conf, CassandraSubScan subScan) {
     this.config = conf;
-    this.subScan = subScam;
-    this.projectedColumns = subScam.getColumns();
+    this.subScan = subScan;
+    this.projectedColumns = subScan.getColumns();
     this.plugin = subScan.getCassandraStoragePlugin();
   }
 
@@ -76,7 +82,7 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
     setupCluster();
 
     // Setup the query
-    setup();
+    setup(negotiator);
 
     resultLoader = negotiator.build();
     return true;
@@ -86,14 +92,14 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
     Stopwatch watch = Stopwatch.createUnstarted();
     watch.start();
 
-
     return false;
   }
 
 
   @Override
   public void close() {
-
+    // Do nothing.
+    // We want to keep the Cassandra session open until Drill closes
   }
 
   private void setupCluster() {
@@ -109,8 +115,9 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
     }
   }
 
-  private void setup() {
-
+  private void setup(SchemaNegotiator negotiator) {
+    CassandraSubScanSpec subScanSpec = subScan.getChunkScanSpecList().get(0); // TODO get the right subscan.. for now, get the first one.
+    SchemaBuilder builder = new SchemaBuilder();
     try {
       List<ColumnMetadata> partitioncols = cluster
         .getMetadata()
@@ -156,20 +163,34 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
         }
       }
 
-      q = where;
-      logger.debug("Query sent to Cassandra: {}", q);
-      cassandraResultset = session.execute(q);
+      logger.debug("Query sent to Cassandra: {}", where);
+      cassandraResultset = session.execute(where);
 
-      // Build the schema
+      Row row = cassandraResultset.one();
+      /* Add all columns to ValueVector */
+      int colPosition = 0;
+      for (ColumnDefinitions.Definition def : row.getColumnDefinitions()) {
+        String colName = def.getName();
+        String dataType = def.getType().toString();
 
-      for (SchemaPath column: projectedColumns) {
-        String colName = column.rootName();
-        String dataType = cassandraResultset
-          .getColumnDefinitions()
-          .getType(colName)
-          .toString();
+        // Create Schema
+        // TODO Add additional datatypes
+        switch (dataType) {
+          case "varchar":
+            builder.addNullable(colName, TypeProtos.MinorType.VARCHAR);
+            break;
+          case "int":
+            builder.addNullable(colName, TypeProtos.MinorType.INT);
+            break;
+          case "bigint":
+            builder.addNullable(colName, TypeProtos.MinorType.BIGINT);
+            break;
+        }
+
+        colPosition++;
       }
-
+      // Set the schema
+      negotiator.tableSchema(builder.buildSchema(), true);
 
     } catch (Exception e) {
       throw UserException

@@ -60,6 +60,7 @@ public class CassandraScanBatchCreator implements BatchCreator<CassandraSubScan>
     builder.projection(subScan.getColumns());
     builder.setUserName(subScan.getUserName());
 
+
     // Provide custom error context
     builder.errorContext(new ChildErrorContext(builder.errorContext()) {
       @Override
@@ -82,6 +83,8 @@ public class CassandraScanBatchCreator implements BatchCreator<CassandraSubScan>
     private final CassandraSubScan subScan;
 
     private int count;
+
+    // TODO Get the subScanSpec here...
 
     public HttpReaderFactory(CassandraStoragePluginConfig config, CassandraSubScan subScan) {
       this.config = config;

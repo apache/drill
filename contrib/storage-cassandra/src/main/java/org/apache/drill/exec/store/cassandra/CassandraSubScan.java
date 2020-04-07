@@ -146,9 +146,9 @@ public class CassandraSubScan extends AbstractBase implements SubScan {
     return ImmutableSet.<PhysicalOperator>of().iterator();
   }
 
-  public static class CassandraSubScanSpec {
+  public static class CassandraSubScanSpec  {
 
-    public String keyspace;
+    public  String keyspace;
 
     public String table;
 

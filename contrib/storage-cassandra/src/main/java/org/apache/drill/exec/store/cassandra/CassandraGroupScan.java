@@ -41,6 +41,7 @@ import com.datastax.driver.core.Session;
 import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -354,7 +355,7 @@ public class CassandraGroupScan extends AbstractGroupScan implements DrillCassan
 
   }
 
-  private CassandraSubScanSpec hostToSubScanSpec(Host host, List<String> contactPoints) {
+  public CassandraSubScanSpec hostToSubScanSpec(Host host, List<String> contactPoints) {
     CassandraScanSpec spec = cassandraScanSpec;
     CassandraPartitionToken token = hostTokenMapping.get(host.getEndPoint().resolve().getHostName());
 
@@ -448,7 +449,10 @@ public class CassandraGroupScan extends AbstractGroupScan implements DrillCassan
 
   @Override
   public String toString() {
-    return "CassandraGroupScan [CassandraScanSpec=" + cassandraScanSpec + ", columns=" + columns + "]";
+    return new PlanStringBuilder(this)
+      .field("CassandraScanSpec", cassandraScanSpec)
+      .field("columns", columns)
+      .toString();
   }
 
   @JsonProperty("storage")
