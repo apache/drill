@@ -35,16 +35,18 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
+import org.apache.drill.exec.physical.resultSet.RowSetLoader;
+import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.store.cassandra.connection.CassandraConnectionManager;
 import org.apache.drill.exec.store.cassandra.CassandraSubScan.CassandraSubScanSpec;
 import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
-import org.apache.drill.shaded.guava.com.google.common.base.Stopwatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
@@ -65,7 +67,14 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
 
   private ResultSetLoader resultLoader;
 
+  private RowSetLoader rowWriter;
+
   private ResultSet cassandraResultset;
+
+  private List<ScalarWriter> columnWriters;
+
+  private List<CassandraColumnWriter> cassandraColumnWriters;
+
 
   public CassandraBatchReader(CassandraStoragePluginConfig conf, CassandraSubScan subScan) {
     this.config = conf;
@@ -81,18 +90,39 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
     // Set up the Cassandra Cluster
     setupCluster();
 
+    resultLoader = negotiator.build();
+    rowWriter = resultLoader.writer();
+
     // Setup the query
     setup(negotiator);
 
-    resultLoader = negotiator.build();
     return true;
   }
 
+  // TODO Start here... map rows to EVF Vectors
    public boolean next() {
-    Stopwatch watch = Stopwatch.createUnstarted();
-    watch.start();
+     while (!rowWriter.isFull()) {
+       if (!processRow(rowWriter)) {
+         return false;
+       }
+     }
+     return true;
+  }
 
-    return false;
+  private boolean processRow(RowSetLoader rowWriter) {
+
+    if (!cassandraResultset.iterator().hasNext()) {
+      return false;
+    }
+    Row currentRow = cassandraResultset.iterator().next();
+    rowWriter.start();
+    int colPosition = 0;
+    for (ColumnDefinitions.Definition def : currentRow.getColumnDefinitions()) {
+      cassandraColumnWriters.get(colPosition).load(currentRow, def.getName());
+      colPosition++;
+    }
+    rowWriter.save();
+    return true;
   }
 
 
@@ -167,6 +197,10 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
       cassandraResultset = session.execute(where);
 
       Row row = cassandraResultset.one();
+
+      columnWriters = new ArrayList<>(row.getColumnDefinitions().size());
+      cassandraColumnWriters = new ArrayList<>();
+
       /* Add all columns to ValueVector */
       int colPosition = 0;
       for (ColumnDefinitions.Definition def : row.getColumnDefinitions()) {
@@ -178,12 +212,15 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
         switch (dataType) {
           case "varchar":
             builder.addNullable(colName, TypeProtos.MinorType.VARCHAR);
+            addColumnToArray(rowWriter, colName, TypeProtos.MinorType.VARCHAR);
             break;
           case "int":
             builder.addNullable(colName, TypeProtos.MinorType.INT);
+            addColumnToArray(rowWriter, colName, TypeProtos.MinorType.INT);
             break;
           case "bigint":
             builder.addNullable(colName, TypeProtos.MinorType.BIGINT);
+            addColumnToArray(rowWriter, colName, TypeProtos.MinorType.BIGINT);
             break;
         }
 
@@ -199,4 +236,80 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
         .build(logger);
     }
   }
+
+  private void addColumnToArray(TupleWriter rowWriter, String name, TypeProtos.MinorType type) {
+    int index = rowWriter.tupleSchema().index(name);
+    if (index == -1) {
+      org.apache.drill.exec.record.metadata.ColumnMetadata colSchema = MetadataUtils.newScalar(name, type, TypeProtos.DataMode.OPTIONAL);
+      index = rowWriter.addColumn(colSchema);
+    } else {
+      return;
+    }
+
+    columnWriters.add(rowWriter.scalar(index));
+    if (type == TypeProtos.MinorType.VARCHAR) {
+      cassandraColumnWriters.add(new StringColumnWriter(columnWriters.get(index)));
+    } else if (type == TypeProtos.MinorType.INT) {
+      cassandraColumnWriters.add(new IntColumnWriter(columnWriters.get(index)));
+    } else if (type == TypeProtos.MinorType.BIGINT) {
+      cassandraColumnWriters.add(new BigIntColumnWriter(columnWriters.get(index)));
+    }
+  }
+
+
+  public abstract class CassandraColumnWriter {
+
+    protected Row row;
+
+    protected String colName;
+
+    ScalarWriter columnWriter;
+
+    public CassandraColumnWriter(ScalarWriter columnWriter) {
+      this.columnWriter = columnWriter;
+    }
+
+    public abstract void load(Row row, String colName);
+  }
+
+  public class StringColumnWriter extends CassandraColumnWriter {
+
+    StringColumnWriter(ScalarWriter columnWriter) {
+      super(columnWriter);
+    }
+
+    public void load(Row row, String colName) {
+      String value = row.getString(colName);
+      if (value == null) {
+        columnWriter.setNull();
+      } else {
+        columnWriter.setString(value);
+      }
+    }
+  }
+
+  public class IntColumnWriter extends CassandraColumnWriter {
+
+    IntColumnWriter(ScalarWriter columnWriter) {
+      super(columnWriter);
+    }
+
+    public void load(Row row, String colName) {
+      int value = row.getInt(colName);
+      columnWriter.setInt(value);
+    }
+  }
+
+  public class BigIntColumnWriter extends CassandraColumnWriter {
+
+    BigIntColumnWriter(ScalarWriter columnWriter) {
+      super(columnWriter);
+    }
+
+    public void load(Row row, String colName) {
+      long value = row.getLong(colName);
+      columnWriter.setLong(value);
+    }
+  }
+
 }
