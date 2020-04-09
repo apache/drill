@@ -5,78 +5,50 @@
 
 #include <algorithm>
 
-#include <google/protobuf/stubs/common.h>
-#include <google/protobuf/stubs/port.h>
 #include <google/protobuf/io/coded_stream.h>
-#include <google/protobuf/wire_format_lite_inl.h>
+#include <google/protobuf/extension_set.h>
+#include <google/protobuf/wire_format_lite.h>
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/generated_message_reflection.h>
 #include <google/protobuf/reflection_ops.h>
 #include <google/protobuf/wire_format.h>
-// This is a temporary google only hack
-#ifdef GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
-#include "third_party/protobuf/version.h"
-#endif
 // @@protoc_insertion_point(includes)
-
+#include <google/protobuf/port_def.inc>
 namespace exec {
 }  // namespace exec
-namespace protobuf_SchemaDef_2eproto {
-void InitDefaults() {
-}
+static constexpr ::PROTOBUF_NAMESPACE_ID::Metadata* file_level_metadata_SchemaDef_2eproto = nullptr;
+static const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* file_level_enum_descriptors_SchemaDef_2eproto[1];
+static constexpr ::PROTOBUF_NAMESPACE_ID::ServiceDescriptor const** file_level_service_descriptors_SchemaDef_2eproto = nullptr;
+const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_SchemaDef_2eproto::offsets[1] = {};
+static constexpr ::PROTOBUF_NAMESPACE_ID::internal::MigrationSchema* schemas = nullptr;
+static constexpr ::PROTOBUF_NAMESPACE_ID::Message* const* file_default_instances = nullptr;
 
-const ::google::protobuf::EnumDescriptor* file_level_enum_descriptors[1];
-const ::google::protobuf::uint32 TableStruct::offsets[1] = {};
-static const ::google::protobuf::internal::MigrationSchema* schemas = NULL;
-static const ::google::protobuf::Message* const* file_default_instances = NULL;
+const char descriptor_table_protodef_SchemaDef_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) =
+  "\n\017SchemaDef.proto\022\004exec\032\013Types.proto*0\n\t"
+  "ValueMode\022\020\n\014VALUE_VECTOR\020\000\022\007\n\003RLE\020\001\022\010\n\004"
+  "DICT\020\002B0\n\033org.apache.drill.exec.protoB\017S"
+  "chemaDefProtosH\001"
+  ;
+static const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable*const descriptor_table_SchemaDef_2eproto_deps[1] = {
+  &::descriptor_table_Types_2eproto,
+};
+static ::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase*const descriptor_table_SchemaDef_2eproto_sccs[1] = {
+};
+static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_SchemaDef_2eproto_once;
+static bool descriptor_table_SchemaDef_2eproto_initialized = false;
+const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_SchemaDef_2eproto = {
+  &descriptor_table_SchemaDef_2eproto_initialized, descriptor_table_protodef_SchemaDef_2eproto, "SchemaDef.proto", 136,
+  &descriptor_table_SchemaDef_2eproto_once, descriptor_table_SchemaDef_2eproto_sccs, descriptor_table_SchemaDef_2eproto_deps, 0, 1,
+  schemas, file_default_instances, TableStruct_SchemaDef_2eproto::offsets,
+  file_level_metadata_SchemaDef_2eproto, 0, file_level_enum_descriptors_SchemaDef_2eproto, file_level_service_descriptors_SchemaDef_2eproto,
+};
 
-void protobuf_AssignDescriptors() {
-  AddDescriptors();
-  AssignDescriptors(
-      "SchemaDef.proto", schemas, file_default_instances, TableStruct::offsets,
-      NULL, file_level_enum_descriptors, NULL);
-}
-
-void protobuf_AssignDescriptorsOnce() {
-  static ::google::protobuf::internal::once_flag once;
-  ::google::protobuf::internal::call_once(once, protobuf_AssignDescriptors);
-}
-
-void protobuf_RegisterTypes(const ::std::string&) GOOGLE_PROTOBUF_ATTRIBUTE_COLD;
-void protobuf_RegisterTypes(const ::std::string&) {
-  protobuf_AssignDescriptorsOnce();
-}
-
-void AddDescriptorsImpl() {
-  InitDefaults();
-  static const char descriptor[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
-      "\n\017SchemaDef.proto\022\004exec\032\013Types.proto*0\n\t"
-      "ValueMode\022\020\n\014VALUE_VECTOR\020\000\022\007\n\003RLE\020\001\022\010\n\004"
-      "DICT\020\002B0\n\033org.apache.drill.exec.protoB\017S"
-      "chemaDefProtosH\001"
-  };
-  ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 136);
-  ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
-    "SchemaDef.proto", &protobuf_RegisterTypes);
-  ::protobuf_Types_2eproto::AddDescriptors();
-}
-
-void AddDescriptors() {
-  static ::google::protobuf::internal::once_flag once;
-  ::google::protobuf::internal::call_once(once, AddDescriptorsImpl);
-}
-// Force AddDescriptors() to be called at dynamic initialization time.
-struct StaticDescriptorInitializer {
-  StaticDescriptorInitializer() {
-    AddDescriptors();
-  }
-} static_descriptor_initializer;
-}  // namespace protobuf_SchemaDef_2eproto
+// Force running AddDescriptors() at dynamic initialization time.
+static bool dynamic_init_dummy_SchemaDef_2eproto = (  ::PROTOBUF_NAMESPACE_ID::internal::AddDescriptors(&descriptor_table_SchemaDef_2eproto), true);
 namespace exec {
-const ::google::protobuf::EnumDescriptor* ValueMode_descriptor() {
-  protobuf_SchemaDef_2eproto::protobuf_AssignDescriptorsOnce();
-  return protobuf_SchemaDef_2eproto::file_level_enum_descriptors[0];
+const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* ValueMode_descriptor() {
+  ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&descriptor_table_SchemaDef_2eproto);
+  return file_level_enum_descriptors_SchemaDef_2eproto[0];
 }
 bool ValueMode_IsValid(int value) {
   switch (value) {
@@ -92,9 +64,8 @@ bool ValueMode_IsValid(int value) {
 
 // @@protoc_insertion_point(namespace_scope)
 }  // namespace exec
-namespace google {
-namespace protobuf {
-}  // namespace protobuf
-}  // namespace google
+PROTOBUF_NAMESPACE_OPEN
+PROTOBUF_NAMESPACE_CLOSE
 
 // @@protoc_insertion_point(global_scope)
+#include <google/protobuf/port_undef.inc>

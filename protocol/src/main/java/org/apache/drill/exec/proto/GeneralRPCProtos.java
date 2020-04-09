@@ -85,6 +85,8 @@ public final class GeneralRPCProtos {
     }
 
     /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
      * @deprecated Use {@link #forNumber(int)} instead.
      */
     @java.lang.Deprecated
@@ -92,6 +94,10 @@ public final class GeneralRPCProtos {
       return forNumber(value);
     }
 
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     */
     public static RpcMode forNumber(int value) {
       switch (value) {
         case 0: return REQUEST;
@@ -154,10 +160,12 @@ public final class GeneralRPCProtos {
 
     /**
      * <code>optional bool ok = 1;</code>
+     * @return Whether the ok field is set.
      */
     boolean hasOk();
     /**
      * <code>optional bool ok = 1;</code>
+     * @return The ok.
      */
     boolean getOk();
   }
@@ -174,7 +182,13 @@ public final class GeneralRPCProtos {
       super(builder);
     }
     private Ack() {
-      ok_ = false;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new Ack();
     }
 
     @java.lang.Override
@@ -243,12 +257,14 @@ public final class GeneralRPCProtos {
     private boolean ok_;
     /**
      * <code>optional bool ok = 1;</code>
+     * @return Whether the ok field is set.
      */
     public boolean hasOk() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional bool ok = 1;</code>
+     * @return The ok.
      */
     public boolean getOk() {
       return ok_;
@@ -268,7 +284,7 @@ public final class GeneralRPCProtos {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeBool(1, ok_);
       }
       unknownFields.writeTo(output);
@@ -280,7 +296,7 @@ public final class GeneralRPCProtos {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(1, ok_);
       }
@@ -299,14 +315,13 @@ public final class GeneralRPCProtos {
       }
       org.apache.drill.exec.proto.GeneralRPCProtos.Ack other = (org.apache.drill.exec.proto.GeneralRPCProtos.Ack) obj;
 
-      boolean result = true;
-      result = result && (hasOk() == other.hasOk());
+      if (hasOk() != other.hasOk()) return false;
       if (hasOk()) {
-        result = result && (getOk()
-            == other.getOk());
+        if (getOk()
+            != other.getOk()) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -484,10 +499,10 @@ public final class GeneralRPCProtos {
         org.apache.drill.exec.proto.GeneralRPCProtos.Ack result = new org.apache.drill.exec.proto.GeneralRPCProtos.Ack(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          result.ok_ = ok_;
           to_bitField0_ |= 0x00000001;
         }
-        result.ok_ = ok_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -495,35 +510,35 @@ public final class GeneralRPCProtos {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -573,18 +588,22 @@ public final class GeneralRPCProtos {
       private boolean ok_ ;
       /**
        * <code>optional bool ok = 1;</code>
+       * @return Whether the ok field is set.
        */
       public boolean hasOk() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional bool ok = 1;</code>
+       * @return The ok.
        */
       public boolean getOk() {
         return ok_;
       }
       /**
        * <code>optional bool ok = 1;</code>
+       * @param value The ok to set.
+       * @return This builder for chaining.
        */
       public Builder setOk(boolean value) {
         bitField0_ |= 0x00000001;
@@ -594,6 +613,7 @@ public final class GeneralRPCProtos {
       }
       /**
        * <code>optional bool ok = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearOk() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -660,10 +680,12 @@ public final class GeneralRPCProtos {
 
     /**
      * <code>optional .exec.rpc.RpcMode mode = 1;</code>
+     * @return Whether the mode field is set.
      */
     boolean hasMode();
     /**
      * <code>optional .exec.rpc.RpcMode mode = 1;</code>
+     * @return The mode.
      */
     org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode getMode();
 
@@ -673,6 +695,7 @@ public final class GeneralRPCProtos {
      * </pre>
      *
      * <code>optional int32 coordination_id = 2;</code>
+     * @return Whether the coordinationId field is set.
      */
     boolean hasCoordinationId();
     /**
@@ -681,6 +704,7 @@ public final class GeneralRPCProtos {
      * </pre>
      *
      * <code>optional int32 coordination_id = 2;</code>
+     * @return The coordinationId.
      */
     int getCoordinationId();
 
@@ -690,6 +714,7 @@ public final class GeneralRPCProtos {
      * </pre>
      *
      * <code>optional int32 rpc_type = 3;</code>
+     * @return Whether the rpcType field is set.
      */
     boolean hasRpcType();
     /**
@@ -698,6 +723,7 @@ public final class GeneralRPCProtos {
      * </pre>
      *
      * <code>optional int32 rpc_type = 3;</code>
+     * @return The rpcType.
      */
     int getRpcType();
   }
@@ -715,8 +741,13 @@ public final class GeneralRPCProtos {
     }
     private RpcHeader() {
       mode_ = 0;
-      coordinationId_ = 0;
-      rpcType_ = 0;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new RpcHeader();
     }
 
     @java.lang.Override
@@ -802,12 +833,14 @@ public final class GeneralRPCProtos {
     private int mode_;
     /**
      * <code>optional .exec.rpc.RpcMode mode = 1;</code>
+     * @return Whether the mode field is set.
      */
     public boolean hasMode() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <code>optional .exec.rpc.RpcMode mode = 1;</code>
+     * @return The mode.
      */
     public org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode getMode() {
       @SuppressWarnings("deprecation")
@@ -823,9 +856,10 @@ public final class GeneralRPCProtos {
      * </pre>
      *
      * <code>optional int32 coordination_id = 2;</code>
+     * @return Whether the coordinationId field is set.
      */
     public boolean hasCoordinationId() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <pre>
@@ -833,6 +867,7 @@ public final class GeneralRPCProtos {
      * </pre>
      *
      * <code>optional int32 coordination_id = 2;</code>
+     * @return The coordinationId.
      */
     public int getCoordinationId() {
       return coordinationId_;
@@ -846,9 +881,10 @@ public final class GeneralRPCProtos {
      * </pre>
      *
      * <code>optional int32 rpc_type = 3;</code>
+     * @return Whether the rpcType field is set.
      */
     public boolean hasRpcType() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <pre>
@@ -856,6 +892,7 @@ public final class GeneralRPCProtos {
      * </pre>
      *
      * <code>optional int32 rpc_type = 3;</code>
+     * @return The rpcType.
      */
     public int getRpcType() {
       return rpcType_;
@@ -875,13 +912,13 @@ public final class GeneralRPCProtos {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeEnum(1, mode_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeInt32(2, coordinationId_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeInt32(3, rpcType_);
       }
       unknownFields.writeTo(output);
@@ -893,15 +930,15 @@ public final class GeneralRPCProtos {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(1, mode_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(2, coordinationId_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(3, rpcType_);
       }
@@ -920,23 +957,22 @@ public final class GeneralRPCProtos {
       }
       org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader other = (org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader) obj;
 
-      boolean result = true;
-      result = result && (hasMode() == other.hasMode());
+      if (hasMode() != other.hasMode()) return false;
       if (hasMode()) {
-        result = result && mode_ == other.mode_;
+        if (mode_ != other.mode_) return false;
       }
-      result = result && (hasCoordinationId() == other.hasCoordinationId());
+      if (hasCoordinationId() != other.hasCoordinationId()) return false;
       if (hasCoordinationId()) {
-        result = result && (getCoordinationId()
-            == other.getCoordinationId());
+        if (getCoordinationId()
+            != other.getCoordinationId()) return false;
       }
-      result = result && (hasRpcType() == other.hasRpcType());
+      if (hasRpcType() != other.hasRpcType()) return false;
       if (hasRpcType()) {
-        result = result && (getRpcType()
-            == other.getRpcType());
+        if (getRpcType()
+            != other.getRpcType()) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -1125,18 +1161,18 @@ public final class GeneralRPCProtos {
         org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader result = new org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
           to_bitField0_ |= 0x00000001;
         }
         result.mode_ = mode_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          result.coordinationId_ = coordinationId_;
           to_bitField0_ |= 0x00000002;
         }
-        result.coordinationId_ = coordinationId_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          result.rpcType_ = rpcType_;
           to_bitField0_ |= 0x00000004;
         }
-        result.rpcType_ = rpcType_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -1144,35 +1180,35 @@ public final class GeneralRPCProtos {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -1228,12 +1264,14 @@ public final class GeneralRPCProtos {
       private int mode_ = 0;
       /**
        * <code>optional .exec.rpc.RpcMode mode = 1;</code>
+       * @return Whether the mode field is set.
        */
       public boolean hasMode() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <code>optional .exec.rpc.RpcMode mode = 1;</code>
+       * @return The mode.
        */
       public org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode getMode() {
         @SuppressWarnings("deprecation")
@@ -1242,6 +1280,8 @@ public final class GeneralRPCProtos {
       }
       /**
        * <code>optional .exec.rpc.RpcMode mode = 1;</code>
+       * @param value The mode to set.
+       * @return This builder for chaining.
        */
       public Builder setMode(org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode value) {
         if (value == null) {
@@ -1254,6 +1294,7 @@ public final class GeneralRPCProtos {
       }
       /**
        * <code>optional .exec.rpc.RpcMode mode = 1;</code>
+       * @return This builder for chaining.
        */
       public Builder clearMode() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -1269,9 +1310,10 @@ public final class GeneralRPCProtos {
        * </pre>
        *
        * <code>optional int32 coordination_id = 2;</code>
+       * @return Whether the coordinationId field is set.
        */
       public boolean hasCoordinationId() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <pre>
@@ -1279,6 +1321,7 @@ public final class GeneralRPCProtos {
        * </pre>
        *
        * <code>optional int32 coordination_id = 2;</code>
+       * @return The coordinationId.
        */
       public int getCoordinationId() {
         return coordinationId_;
@@ -1289,6 +1332,8 @@ public final class GeneralRPCProtos {
        * </pre>
        *
        * <code>optional int32 coordination_id = 2;</code>
+       * @param value The coordinationId to set.
+       * @return This builder for chaining.
        */
       public Builder setCoordinationId(int value) {
         bitField0_ |= 0x00000002;
@@ -1302,6 +1347,7 @@ public final class GeneralRPCProtos {
        * </pre>
        *
        * <code>optional int32 coordination_id = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearCoordinationId() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -1317,9 +1363,10 @@ public final class GeneralRPCProtos {
        * </pre>
        *
        * <code>optional int32 rpc_type = 3;</code>
+       * @return Whether the rpcType field is set.
        */
       public boolean hasRpcType() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <pre>
@@ -1327,6 +1374,7 @@ public final class GeneralRPCProtos {
        * </pre>
        *
        * <code>optional int32 rpc_type = 3;</code>
+       * @return The rpcType.
        */
       public int getRpcType() {
         return rpcType_;
@@ -1337,6 +1385,8 @@ public final class GeneralRPCProtos {
        * </pre>
        *
        * <code>optional int32 rpc_type = 3;</code>
+       * @param value The rpcType to set.
+       * @return This builder for chaining.
        */
       public Builder setRpcType(int value) {
         bitField0_ |= 0x00000004;
@@ -1350,6 +1400,7 @@ public final class GeneralRPCProtos {
        * </pre>
        *
        * <code>optional int32 rpc_type = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearRpcType() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -1420,6 +1471,7 @@ public final class GeneralRPCProtos {
      * </pre>
      *
      * <code>optional .exec.rpc.RpcHeader header = 1;</code>
+     * @return Whether the header field is set.
      */
     boolean hasHeader();
     /**
@@ -1428,6 +1480,7 @@ public final class GeneralRPCProtos {
      * </pre>
      *
      * <code>optional .exec.rpc.RpcHeader header = 1;</code>
+     * @return The header.
      */
     org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader getHeader();
     /**
@@ -1445,6 +1498,7 @@ public final class GeneralRPCProtos {
      * </pre>
      *
      * <code>optional bytes protobuf_body = 2;</code>
+     * @return Whether the protobufBody field is set.
      */
     boolean hasProtobufBody();
     /**
@@ -1453,6 +1507,7 @@ public final class GeneralRPCProtos {
      * </pre>
      *
      * <code>optional bytes protobuf_body = 2;</code>
+     * @return The protobufBody.
      */
     com.google.protobuf.ByteString getProtobufBody();
 
@@ -1462,6 +1517,7 @@ public final class GeneralRPCProtos {
      * </pre>
      *
      * <code>optional bytes raw_body = 3;</code>
+     * @return Whether the rawBody field is set.
      */
     boolean hasRawBody();
     /**
@@ -1470,6 +1526,7 @@ public final class GeneralRPCProtos {
      * </pre>
      *
      * <code>optional bytes raw_body = 3;</code>
+     * @return The rawBody.
      */
     com.google.protobuf.ByteString getRawBody();
   }
@@ -1488,6 +1545,13 @@ public final class GeneralRPCProtos {
     private CompleteRpcMessage() {
       protobufBody_ = com.google.protobuf.ByteString.EMPTY;
       rawBody_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new CompleteRpcMessage();
     }
 
     @java.lang.Override
@@ -1516,7 +1580,7 @@ public final class GeneralRPCProtos {
               break;
             case 10: {
               org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+              if (((bitField0_ & 0x00000001) != 0)) {
                 subBuilder = header_.toBuilder();
               }
               header_ = input.readMessage(org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader.PARSER, extensionRegistry);
@@ -1578,9 +1642,10 @@ public final class GeneralRPCProtos {
      * </pre>
      *
      * <code>optional .exec.rpc.RpcHeader header = 1;</code>
+     * @return Whether the header field is set.
      */
     public boolean hasHeader() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000001) != 0);
     }
     /**
      * <pre>
@@ -1588,6 +1653,7 @@ public final class GeneralRPCProtos {
      * </pre>
      *
      * <code>optional .exec.rpc.RpcHeader header = 1;</code>
+     * @return The header.
      */
     public org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader getHeader() {
       return header_ == null ? org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader.getDefaultInstance() : header_;
@@ -1611,9 +1677,10 @@ public final class GeneralRPCProtos {
      * </pre>
      *
      * <code>optional bytes protobuf_body = 2;</code>
+     * @return Whether the protobufBody field is set.
      */
     public boolean hasProtobufBody() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <pre>
@@ -1621,6 +1688,7 @@ public final class GeneralRPCProtos {
      * </pre>
      *
      * <code>optional bytes protobuf_body = 2;</code>
+     * @return The protobufBody.
      */
     public com.google.protobuf.ByteString getProtobufBody() {
       return protobufBody_;
@@ -1634,9 +1702,10 @@ public final class GeneralRPCProtos {
      * </pre>
      *
      * <code>optional bytes raw_body = 3;</code>
+     * @return Whether the rawBody field is set.
      */
     public boolean hasRawBody() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000004) != 0);
     }
     /**
      * <pre>
@@ -1644,6 +1713,7 @@ public final class GeneralRPCProtos {
      * </pre>
      *
      * <code>optional bytes raw_body = 3;</code>
+     * @return The rawBody.
      */
     public com.google.protobuf.ByteString getRawBody() {
       return rawBody_;
@@ -1663,13 +1733,13 @@ public final class GeneralRPCProtos {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         output.writeMessage(1, getHeader());
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         output.writeBytes(2, protobufBody_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         output.writeBytes(3, rawBody_);
       }
       unknownFields.writeTo(output);
@@ -1681,15 +1751,15 @@ public final class GeneralRPCProtos {
       if (size != -1) return size;
 
       size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+      if (((bitField0_ & 0x00000001) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, getHeader());
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+      if (((bitField0_ & 0x00000002) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, protobufBody_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000004) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(3, rawBody_);
       }
@@ -1708,24 +1778,23 @@ public final class GeneralRPCProtos {
       }
       org.apache.drill.exec.proto.GeneralRPCProtos.CompleteRpcMessage other = (org.apache.drill.exec.proto.GeneralRPCProtos.CompleteRpcMessage) obj;
 
-      boolean result = true;
-      result = result && (hasHeader() == other.hasHeader());
+      if (hasHeader() != other.hasHeader()) return false;
       if (hasHeader()) {
-        result = result && getHeader()
-            .equals(other.getHeader());
+        if (!getHeader()
+            .equals(other.getHeader())) return false;
       }
-      result = result && (hasProtobufBody() == other.hasProtobufBody());
+      if (hasProtobufBody() != other.hasProtobufBody()) return false;
       if (hasProtobufBody()) {
-        result = result && getProtobufBody()
-            .equals(other.getProtobufBody());
+        if (!getProtobufBody()
+            .equals(other.getProtobufBody())) return false;
       }
-      result = result && (hasRawBody() == other.hasRawBody());
+      if (hasRawBody() != other.hasRawBody()) return false;
       if (hasRawBody()) {
-        result = result && getRawBody()
-            .equals(other.getRawBody());
+        if (!getRawBody()
+            .equals(other.getRawBody())) return false;
       }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
     }
 
     @java.lang.Override
@@ -1919,19 +1988,19 @@ public final class GeneralRPCProtos {
         org.apache.drill.exec.proto.GeneralRPCProtos.CompleteRpcMessage result = new org.apache.drill.exec.proto.GeneralRPCProtos.CompleteRpcMessage(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          if (headerBuilder_ == null) {
+            result.header_ = header_;
+          } else {
+            result.header_ = headerBuilder_.build();
+          }
           to_bitField0_ |= 0x00000001;
         }
-        if (headerBuilder_ == null) {
-          result.header_ = header_;
-        } else {
-          result.header_ = headerBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+        if (((from_bitField0_ & 0x00000002) != 0)) {
           to_bitField0_ |= 0x00000002;
         }
         result.protobufBody_ = protobufBody_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((from_bitField0_ & 0x00000004) != 0)) {
           to_bitField0_ |= 0x00000004;
         }
         result.rawBody_ = rawBody_;
@@ -1942,35 +2011,35 @@ public final class GeneralRPCProtos {
 
       @java.lang.Override
       public Builder clone() {
-        return (Builder) super.clone();
+        return super.clone();
       }
       @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.setField(field, value);
+        return super.setField(field, value);
       }
       @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
+        return super.clearField(field);
       }
       @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
+        return super.clearOneof(oneof);
       }
       @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
+        return super.setRepeatedField(field, index, value);
       }
       @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
+        return super.addRepeatedField(field, value);
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -2023,7 +2092,7 @@ public final class GeneralRPCProtos {
       }
       private int bitField0_;
 
-      private org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader header_ = null;
+      private org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader header_;
       private com.google.protobuf.SingleFieldBuilderV3<
           org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader, org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader.Builder, org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeaderOrBuilder> headerBuilder_;
       /**
@@ -2032,9 +2101,10 @@ public final class GeneralRPCProtos {
        * </pre>
        *
        * <code>optional .exec.rpc.RpcHeader header = 1;</code>
+       * @return Whether the header field is set.
        */
       public boolean hasHeader() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000001) != 0);
       }
       /**
        * <pre>
@@ -2042,6 +2112,7 @@ public final class GeneralRPCProtos {
        * </pre>
        *
        * <code>optional .exec.rpc.RpcHeader header = 1;</code>
+       * @return The header.
        */
       public org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader getHeader() {
         if (headerBuilder_ == null) {
@@ -2097,7 +2168,7 @@ public final class GeneralRPCProtos {
        */
       public Builder mergeHeader(org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader value) {
         if (headerBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001) &&
+          if (((bitField0_ & 0x00000001) != 0) &&
               header_ != null &&
               header_ != org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader.getDefaultInstance()) {
             header_ =
@@ -2184,9 +2255,10 @@ public final class GeneralRPCProtos {
        * </pre>
        *
        * <code>optional bytes protobuf_body = 2;</code>
+       * @return Whether the protobufBody field is set.
        */
       public boolean hasProtobufBody() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <pre>
@@ -2194,6 +2266,7 @@ public final class GeneralRPCProtos {
        * </pre>
        *
        * <code>optional bytes protobuf_body = 2;</code>
+       * @return The protobufBody.
        */
       public com.google.protobuf.ByteString getProtobufBody() {
         return protobufBody_;
@@ -2204,6 +2277,8 @@ public final class GeneralRPCProtos {
        * </pre>
        *
        * <code>optional bytes protobuf_body = 2;</code>
+       * @param value The protobufBody to set.
+       * @return This builder for chaining.
        */
       public Builder setProtobufBody(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -2220,6 +2295,7 @@ public final class GeneralRPCProtos {
        * </pre>
        *
        * <code>optional bytes protobuf_body = 2;</code>
+       * @return This builder for chaining.
        */
       public Builder clearProtobufBody() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -2235,9 +2311,10 @@ public final class GeneralRPCProtos {
        * </pre>
        *
        * <code>optional bytes raw_body = 3;</code>
+       * @return Whether the rawBody field is set.
        */
       public boolean hasRawBody() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000004) != 0);
       }
       /**
        * <pre>
@@ -2245,6 +2322,7 @@ public final class GeneralRPCProtos {
        * </pre>
        *
        * <code>optional bytes raw_body = 3;</code>
+       * @return The rawBody.
        */
       public com.google.protobuf.ByteString getRawBody() {
         return rawBody_;
@@ -2255,6 +2333,8 @@ public final class GeneralRPCProtos {
        * </pre>
        *
        * <code>optional bytes raw_body = 3;</code>
+       * @param value The rawBody to set.
+       * @return This builder for chaining.
        */
       public Builder setRawBody(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -2271,6 +2351,7 @@ public final class GeneralRPCProtos {
        * </pre>
        *
        * <code>optional bytes raw_body = 3;</code>
+       * @return This builder for chaining.
        */
       public Builder clearRawBody() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -2366,19 +2447,11 @@ public final class GeneralRPCProtos {
       "PING\020\003\022\010\n\004PONG\020\004B1\n\033org.apache.drill.exe" +
       "c.protoB\020GeneralRPCProtosH\001"
     };
-    com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-        new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
-          public com.google.protobuf.ExtensionRegistry assignDescriptors(
-              com.google.protobuf.Descriptors.FileDescriptor root) {
-            descriptor = root;
-            return null;
-          }
-        };
-    com.google.protobuf.Descriptors.FileDescriptor
+    descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
           org.apache.drill.exec.proto.CoordinationProtos.getDescriptor(),
-        }, assigner);
+        });
     internal_static_exec_rpc_Ack_descriptor =
       getDescriptor().getMessageTypes().get(0);
     internal_static_exec_rpc_Ack_fieldAccessorTable = new
