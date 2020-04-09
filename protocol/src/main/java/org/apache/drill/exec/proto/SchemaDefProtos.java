@@ -69,6 +69,8 @@ public final class SchemaDefProtos {
     }
 
     /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
      * @deprecated Use {@link #forNumber(int)} instead.
      */
     @java.lang.Deprecated
@@ -76,6 +78,10 @@ public final class SchemaDefProtos {
       return forNumber(value);
     }
 
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     */
     public static ValueMode forNumber(int value) {
       switch (value) {
         case 0: return VALUE_VECTOR;
@@ -144,19 +150,11 @@ public final class SchemaDefProtos {
       "DICT\020\002B0\n\033org.apache.drill.exec.protoB\017S" +
       "chemaDefProtosH\001"
     };
-    com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-        new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
-          public com.google.protobuf.ExtensionRegistry assignDescriptors(
-              com.google.protobuf.Descriptors.FileDescriptor root) {
-            descriptor = root;
-            return null;
-          }
-        };
-    com.google.protobuf.Descriptors.FileDescriptor
+    descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
           org.apache.drill.common.types.TypeProtos.getDescriptor(),
-        }, assigner);
+        });
     org.apache.drill.common.types.TypeProtos.getDescriptor();
   }
 

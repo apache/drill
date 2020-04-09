@@ -5,171 +5,151 @@
 
 #include <algorithm>
 
-#include <google/protobuf/stubs/common.h>
-#include <google/protobuf/stubs/port.h>
 #include <google/protobuf/io/coded_stream.h>
-#include <google/protobuf/wire_format_lite_inl.h>
+#include <google/protobuf/extension_set.h>
+#include <google/protobuf/wire_format_lite.h>
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/generated_message_reflection.h>
 #include <google/protobuf/reflection_ops.h>
 #include <google/protobuf/wire_format.h>
-// This is a temporary google only hack
-#ifdef GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
-#include "third_party/protobuf/version.h"
-#endif
 // @@protoc_insertion_point(includes)
-
-namespace protobuf_UserBitShared_2eproto {
-extern PROTOBUF_INTERNAL_EXPORT_protobuf_UserBitShared_2eproto ::google::protobuf::internal::SCCInfo<0> scc_info_QueryId;
-extern PROTOBUF_INTERNAL_EXPORT_protobuf_UserBitShared_2eproto ::google::protobuf::internal::SCCInfo<1> scc_info_RecordBatchDef;
-}  // namespace protobuf_UserBitShared_2eproto
+#include <google/protobuf/port_def.inc>
+extern PROTOBUF_INTERNAL_EXPORT_UserBitShared_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_QueryId_UserBitShared_2eproto;
+extern PROTOBUF_INTERNAL_EXPORT_UserBitShared_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_RecordBatchDef_UserBitShared_2eproto;
 namespace exec {
 namespace bit {
 namespace data {
 class BitClientHandshakeDefaultTypeInternal {
  public:
-  ::google::protobuf::internal::ExplicitlyConstructed<BitClientHandshake>
-      _instance;
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<BitClientHandshake> _instance;
 } _BitClientHandshake_default_instance_;
 class BitServerHandshakeDefaultTypeInternal {
  public:
-  ::google::protobuf::internal::ExplicitlyConstructed<BitServerHandshake>
-      _instance;
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<BitServerHandshake> _instance;
 } _BitServerHandshake_default_instance_;
 class FragmentRecordBatchDefaultTypeInternal {
  public:
-  ::google::protobuf::internal::ExplicitlyConstructed<FragmentRecordBatch>
-      _instance;
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<FragmentRecordBatch> _instance;
 } _FragmentRecordBatch_default_instance_;
 class RuntimeFilterBDefDefaultTypeInternal {
  public:
-  ::google::protobuf::internal::ExplicitlyConstructed<RuntimeFilterBDef>
-      _instance;
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<RuntimeFilterBDef> _instance;
 } _RuntimeFilterBDef_default_instance_;
 class AckWithCreditDefaultTypeInternal {
  public:
-  ::google::protobuf::internal::ExplicitlyConstructed<AckWithCredit>
-      _instance;
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<AckWithCredit> _instance;
 } _AckWithCredit_default_instance_;
 }  // namespace data
 }  // namespace bit
 }  // namespace exec
-namespace protobuf_BitData_2eproto {
-static void InitDefaultsBitClientHandshake() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::exec::bit::data::_BitClientHandshake_default_instance_;
-    new (ptr) ::exec::bit::data::BitClientHandshake();
-    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::exec::bit::data::BitClientHandshake::InitAsDefaultInstance();
-}
-
-::google::protobuf::internal::SCCInfo<0> scc_info_BitClientHandshake =
-    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsBitClientHandshake}, {}};
-
-static void InitDefaultsBitServerHandshake() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::exec::bit::data::_BitServerHandshake_default_instance_;
-    new (ptr) ::exec::bit::data::BitServerHandshake();
-    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::exec::bit::data::BitServerHandshake::InitAsDefaultInstance();
-}
-
-::google::protobuf::internal::SCCInfo<0> scc_info_BitServerHandshake =
-    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsBitServerHandshake}, {}};
-
-static void InitDefaultsFragmentRecordBatch() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::exec::bit::data::_FragmentRecordBatch_default_instance_;
-    new (ptr) ::exec::bit::data::FragmentRecordBatch();
-    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::exec::bit::data::FragmentRecordBatch::InitAsDefaultInstance();
-}
-
-::google::protobuf::internal::SCCInfo<2> scc_info_FragmentRecordBatch =
-    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 2, InitDefaultsFragmentRecordBatch}, {
-      &protobuf_UserBitShared_2eproto::scc_info_QueryId.base,
-      &protobuf_UserBitShared_2eproto::scc_info_RecordBatchDef.base,}};
-
-static void InitDefaultsRuntimeFilterBDef() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::exec::bit::data::_RuntimeFilterBDef_default_instance_;
-    new (ptr) ::exec::bit::data::RuntimeFilterBDef();
-    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::exec::bit::data::RuntimeFilterBDef::InitAsDefaultInstance();
-}
-
-::google::protobuf::internal::SCCInfo<1> scc_info_RuntimeFilterBDef =
-    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 1, InitDefaultsRuntimeFilterBDef}, {
-      &protobuf_UserBitShared_2eproto::scc_info_QueryId.base,}};
-
-static void InitDefaultsAckWithCredit() {
+static void InitDefaultsscc_info_AckWithCredit_BitData_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   {
     void* ptr = &::exec::bit::data::_AckWithCredit_default_instance_;
     new (ptr) ::exec::bit::data::AckWithCredit();
-    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
+    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
   }
   ::exec::bit::data::AckWithCredit::InitAsDefaultInstance();
 }
 
-::google::protobuf::internal::SCCInfo<0> scc_info_AckWithCredit =
-    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsAckWithCredit}, {}};
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_AckWithCredit_BitData_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_AckWithCredit_BitData_2eproto}, {}};
 
-void InitDefaults() {
-  ::google::protobuf::internal::InitSCC(&scc_info_BitClientHandshake.base);
-  ::google::protobuf::internal::InitSCC(&scc_info_BitServerHandshake.base);
-  ::google::protobuf::internal::InitSCC(&scc_info_FragmentRecordBatch.base);
-  ::google::protobuf::internal::InitSCC(&scc_info_RuntimeFilterBDef.base);
-  ::google::protobuf::internal::InitSCC(&scc_info_AckWithCredit.base);
+static void InitDefaultsscc_info_BitClientHandshake_BitData_2eproto() {
+  GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+  {
+    void* ptr = &::exec::bit::data::_BitClientHandshake_default_instance_;
+    new (ptr) ::exec::bit::data::BitClientHandshake();
+    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
+  }
+  ::exec::bit::data::BitClientHandshake::InitAsDefaultInstance();
 }
 
-::google::protobuf::Metadata file_level_metadata[5];
-const ::google::protobuf::EnumDescriptor* file_level_enum_descriptors[1];
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_BitClientHandshake_BitData_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_BitClientHandshake_BitData_2eproto}, {}};
 
-const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::data::BitClientHandshake, _has_bits_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::data::BitClientHandshake, _internal_metadata_),
+static void InitDefaultsscc_info_BitServerHandshake_BitData_2eproto() {
+  GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+  {
+    void* ptr = &::exec::bit::data::_BitServerHandshake_default_instance_;
+    new (ptr) ::exec::bit::data::BitServerHandshake();
+    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
+  }
+  ::exec::bit::data::BitServerHandshake::InitAsDefaultInstance();
+}
+
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_BitServerHandshake_BitData_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_BitServerHandshake_BitData_2eproto}, {}};
+
+static void InitDefaultsscc_info_FragmentRecordBatch_BitData_2eproto() {
+  GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+  {
+    void* ptr = &::exec::bit::data::_FragmentRecordBatch_default_instance_;
+    new (ptr) ::exec::bit::data::FragmentRecordBatch();
+    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
+  }
+  ::exec::bit::data::FragmentRecordBatch::InitAsDefaultInstance();
+}
+
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<2> scc_info_FragmentRecordBatch_BitData_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 2, 0, InitDefaultsscc_info_FragmentRecordBatch_BitData_2eproto}, {
+      &scc_info_QueryId_UserBitShared_2eproto.base,
+      &scc_info_RecordBatchDef_UserBitShared_2eproto.base,}};
+
+static void InitDefaultsscc_info_RuntimeFilterBDef_BitData_2eproto() {
+  GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+  {
+    void* ptr = &::exec::bit::data::_RuntimeFilterBDef_default_instance_;
+    new (ptr) ::exec::bit::data::RuntimeFilterBDef();
+    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
+  }
+  ::exec::bit::data::RuntimeFilterBDef::InitAsDefaultInstance();
+}
+
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_RuntimeFilterBDef_BitData_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 1, 0, InitDefaultsscc_info_RuntimeFilterBDef_BitData_2eproto}, {
+      &scc_info_QueryId_UserBitShared_2eproto.base,}};
+
+static ::PROTOBUF_NAMESPACE_ID::Metadata file_level_metadata_BitData_2eproto[5];
+static const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* file_level_enum_descriptors_BitData_2eproto[1];
+static constexpr ::PROTOBUF_NAMESPACE_ID::ServiceDescriptor const** file_level_service_descriptors_BitData_2eproto = nullptr;
+
+const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_BitData_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
+  PROTOBUF_FIELD_OFFSET(::exec::bit::data::BitClientHandshake, _has_bits_),
+  PROTOBUF_FIELD_OFFSET(::exec::bit::data::BitClientHandshake, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::data::BitClientHandshake, rpc_version_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::data::BitClientHandshake, channel_),
+  PROTOBUF_FIELD_OFFSET(::exec::bit::data::BitClientHandshake, rpc_version_),
+  PROTOBUF_FIELD_OFFSET(::exec::bit::data::BitClientHandshake, channel_),
   0,
   1,
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::data::BitServerHandshake, _has_bits_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::data::BitServerHandshake, _internal_metadata_),
+  PROTOBUF_FIELD_OFFSET(::exec::bit::data::BitServerHandshake, _has_bits_),
+  PROTOBUF_FIELD_OFFSET(::exec::bit::data::BitServerHandshake, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::data::BitServerHandshake, rpc_version_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::data::BitServerHandshake, authenticationmechanisms_),
+  PROTOBUF_FIELD_OFFSET(::exec::bit::data::BitServerHandshake, rpc_version_),
+  PROTOBUF_FIELD_OFFSET(::exec::bit::data::BitServerHandshake, authenticationmechanisms_),
   0,
   ~0u,
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::data::FragmentRecordBatch, _has_bits_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::data::FragmentRecordBatch, _internal_metadata_),
+  PROTOBUF_FIELD_OFFSET(::exec::bit::data::FragmentRecordBatch, _has_bits_),
+  PROTOBUF_FIELD_OFFSET(::exec::bit::data::FragmentRecordBatch, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::data::FragmentRecordBatch, query_id_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::data::FragmentRecordBatch, receiving_major_fragment_id_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::data::FragmentRecordBatch, receiving_minor_fragment_id_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::data::FragmentRecordBatch, sending_major_fragment_id_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::data::FragmentRecordBatch, sending_minor_fragment_id_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::data::FragmentRecordBatch, def_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::data::FragmentRecordBatch, islastbatch_),
+  PROTOBUF_FIELD_OFFSET(::exec::bit::data::FragmentRecordBatch, query_id_),
+  PROTOBUF_FIELD_OFFSET(::exec::bit::data::FragmentRecordBatch, receiving_major_fragment_id_),
+  PROTOBUF_FIELD_OFFSET(::exec::bit::data::FragmentRecordBatch, receiving_minor_fragment_id_),
+  PROTOBUF_FIELD_OFFSET(::exec::bit::data::FragmentRecordBatch, sending_major_fragment_id_),
+  PROTOBUF_FIELD_OFFSET(::exec::bit::data::FragmentRecordBatch, sending_minor_fragment_id_),
+  PROTOBUF_FIELD_OFFSET(::exec::bit::data::FragmentRecordBatch, def_),
+  PROTOBUF_FIELD_OFFSET(::exec::bit::data::FragmentRecordBatch, islastbatch_),
   0,
   2,
   ~0u,
@@ -177,19 +157,19 @@ const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUT
   4,
   1,
   5,
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::data::RuntimeFilterBDef, _has_bits_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::data::RuntimeFilterBDef, _internal_metadata_),
+  PROTOBUF_FIELD_OFFSET(::exec::bit::data::RuntimeFilterBDef, _has_bits_),
+  PROTOBUF_FIELD_OFFSET(::exec::bit::data::RuntimeFilterBDef, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::data::RuntimeFilterBDef, query_id_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::data::RuntimeFilterBDef, major_fragment_id_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::data::RuntimeFilterBDef, minor_fragment_id_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::data::RuntimeFilterBDef, to_foreman_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::data::RuntimeFilterBDef, bloom_filter_size_in_bytes_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::data::RuntimeFilterBDef, probe_fields_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::data::RuntimeFilterBDef, hj_op_id_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::data::RuntimeFilterBDef, rf_identifier_),
+  PROTOBUF_FIELD_OFFSET(::exec::bit::data::RuntimeFilterBDef, query_id_),
+  PROTOBUF_FIELD_OFFSET(::exec::bit::data::RuntimeFilterBDef, major_fragment_id_),
+  PROTOBUF_FIELD_OFFSET(::exec::bit::data::RuntimeFilterBDef, minor_fragment_id_),
+  PROTOBUF_FIELD_OFFSET(::exec::bit::data::RuntimeFilterBDef, to_foreman_),
+  PROTOBUF_FIELD_OFFSET(::exec::bit::data::RuntimeFilterBDef, bloom_filter_size_in_bytes_),
+  PROTOBUF_FIELD_OFFSET(::exec::bit::data::RuntimeFilterBDef, probe_fields_),
+  PROTOBUF_FIELD_OFFSET(::exec::bit::data::RuntimeFilterBDef, hj_op_id_),
+  PROTOBUF_FIELD_OFFSET(::exec::bit::data::RuntimeFilterBDef, rf_identifier_),
   0,
   1,
   2,
@@ -198,15 +178,15 @@ const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUT
   ~0u,
   4,
   5,
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::data::AckWithCredit, _has_bits_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::data::AckWithCredit, _internal_metadata_),
+  PROTOBUF_FIELD_OFFSET(::exec::bit::data::AckWithCredit, _has_bits_),
+  PROTOBUF_FIELD_OFFSET(::exec::bit::data::AckWithCredit, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::exec::bit::data::AckWithCredit, allowed_credit_),
+  PROTOBUF_FIELD_OFFSET(::exec::bit::data::AckWithCredit, allowed_credit_),
   0,
 };
-static const ::google::protobuf::internal::MigrationSchema schemas[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
+static const ::PROTOBUF_NAMESPACE_ID::internal::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
   { 0, 7, sizeof(::exec::bit::data::BitClientHandshake)},
   { 9, 16, sizeof(::exec::bit::data::BitServerHandshake)},
   { 18, 30, sizeof(::exec::bit::data::FragmentRecordBatch)},
@@ -214,87 +194,70 @@ static const ::google::protobuf::internal::MigrationSchema schemas[] GOOGLE_PROT
   { 58, 64, sizeof(::exec::bit::data::AckWithCredit)},
 };
 
-static ::google::protobuf::Message const * const file_default_instances[] = {
-  reinterpret_cast<const ::google::protobuf::Message*>(&::exec::bit::data::_BitClientHandshake_default_instance_),
-  reinterpret_cast<const ::google::protobuf::Message*>(&::exec::bit::data::_BitServerHandshake_default_instance_),
-  reinterpret_cast<const ::google::protobuf::Message*>(&::exec::bit::data::_FragmentRecordBatch_default_instance_),
-  reinterpret_cast<const ::google::protobuf::Message*>(&::exec::bit::data::_RuntimeFilterBDef_default_instance_),
-  reinterpret_cast<const ::google::protobuf::Message*>(&::exec::bit::data::_AckWithCredit_default_instance_),
+static ::PROTOBUF_NAMESPACE_ID::Message const * const file_default_instances[] = {
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::exec::bit::data::_BitClientHandshake_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::exec::bit::data::_BitServerHandshake_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::exec::bit::data::_FragmentRecordBatch_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::exec::bit::data::_RuntimeFilterBDef_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::exec::bit::data::_AckWithCredit_default_instance_),
 };
 
-void protobuf_AssignDescriptors() {
-  AddDescriptors();
-  AssignDescriptors(
-      "BitData.proto", schemas, file_default_instances, TableStruct::offsets,
-      file_level_metadata, file_level_enum_descriptors, NULL);
-}
+const char descriptor_table_protodef_BitData_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) =
+  "\n\rBitData.proto\022\rexec.bit.data\032\025Executio"
+  "nProtos.proto\032\022Coordination.proto\032\023UserB"
+  "itShared.proto\"]\n\022BitClientHandshake\022\023\n\013"
+  "rpc_version\030\001 \001(\005\0222\n\007channel\030\002 \001(\0162\027.exe"
+  "c.shared.RpcChannel:\010BIT_DATA\"K\n\022BitServ"
+  "erHandshake\022\023\n\013rpc_version\030\001 \001(\005\022 \n\030auth"
+  "enticationMechanisms\030\002 \003(\t\"\214\002\n\023FragmentR"
+  "ecordBatch\022&\n\010query_id\030\001 \001(\0132\024.exec.shar"
+  "ed.QueryId\022#\n\033receiving_major_fragment_i"
+  "d\030\002 \001(\005\022#\n\033receiving_minor_fragment_id\030\003"
+  " \003(\005\022!\n\031sending_major_fragment_id\030\004 \001(\005\022"
+  "!\n\031sending_minor_fragment_id\030\005 \001(\005\022(\n\003de"
+  "f\030\006 \001(\0132\033.exec.shared.RecordBatchDef\022\023\n\013"
+  "isLastBatch\030\007 \001(\010\"\350\001\n\021RuntimeFilterBDef\022"
+  "&\n\010query_id\030\001 \001(\0132\024.exec.shared.QueryId\022"
+  "\031\n\021major_fragment_id\030\002 \001(\005\022\031\n\021minor_frag"
+  "ment_id\030\003 \001(\005\022\022\n\nto_foreman\030\004 \001(\010\022\"\n\032blo"
+  "om_filter_size_in_bytes\030\005 \003(\005\022\024\n\014probe_f"
+  "ields\030\006 \003(\t\022\020\n\010hj_op_id\030\007 \001(\005\022\025\n\rrf_iden"
+  "tifier\030\010 \001(\003\"\'\n\rAckWithCredit\022\026\n\016allowed"
+  "_credit\030\001 \001(\005*\210\001\n\007RpcType\022\r\n\tHANDSHAKE\020\000"
+  "\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\024\n\020REQ_RECORD_BAT"
+  "CH\020\003\022\020\n\014SASL_MESSAGE\020\004\022\026\n\022REQ_RUNTIME_FI"
+  "LTER\020\005\022\030\n\024DATA_ACK_WITH_CREDIT\020\006B(\n\033org."
+  "apache.drill.exec.protoB\007BitDataH\001"
+  ;
+static const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable*const descriptor_table_BitData_2eproto_deps[3] = {
+  &::descriptor_table_Coordination_2eproto,
+  &::descriptor_table_ExecutionProtos_2eproto,
+  &::descriptor_table_UserBitShared_2eproto,
+};
+static ::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase*const descriptor_table_BitData_2eproto_sccs[5] = {
+  &scc_info_AckWithCredit_BitData_2eproto.base,
+  &scc_info_BitClientHandshake_BitData_2eproto.base,
+  &scc_info_BitServerHandshake_BitData_2eproto.base,
+  &scc_info_FragmentRecordBatch_BitData_2eproto.base,
+  &scc_info_RuntimeFilterBDef_BitData_2eproto.base,
+};
+static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_BitData_2eproto_once;
+static bool descriptor_table_BitData_2eproto_initialized = false;
+const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_BitData_2eproto = {
+  &descriptor_table_BitData_2eproto_initialized, descriptor_table_protodef_BitData_2eproto, "BitData.proto", 994,
+  &descriptor_table_BitData_2eproto_once, descriptor_table_BitData_2eproto_sccs, descriptor_table_BitData_2eproto_deps, 5, 3,
+  schemas, file_default_instances, TableStruct_BitData_2eproto::offsets,
+  file_level_metadata_BitData_2eproto, 5, file_level_enum_descriptors_BitData_2eproto, file_level_service_descriptors_BitData_2eproto,
+};
 
-void protobuf_AssignDescriptorsOnce() {
-  static ::google::protobuf::internal::once_flag once;
-  ::google::protobuf::internal::call_once(once, protobuf_AssignDescriptors);
-}
-
-void protobuf_RegisterTypes(const ::std::string&) GOOGLE_PROTOBUF_ATTRIBUTE_COLD;
-void protobuf_RegisterTypes(const ::std::string&) {
-  protobuf_AssignDescriptorsOnce();
-  ::google::protobuf::internal::RegisterAllTypes(file_level_metadata, 5);
-}
-
-void AddDescriptorsImpl() {
-  InitDefaults();
-  static const char descriptor[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
-      "\n\rBitData.proto\022\rexec.bit.data\032\025Executio"
-      "nProtos.proto\032\022Coordination.proto\032\023UserB"
-      "itShared.proto\"]\n\022BitClientHandshake\022\023\n\013"
-      "rpc_version\030\001 \001(\005\0222\n\007channel\030\002 \001(\0162\027.exe"
-      "c.shared.RpcChannel:\010BIT_DATA\"K\n\022BitServ"
-      "erHandshake\022\023\n\013rpc_version\030\001 \001(\005\022 \n\030auth"
-      "enticationMechanisms\030\002 \003(\t\"\214\002\n\023FragmentR"
-      "ecordBatch\022&\n\010query_id\030\001 \001(\0132\024.exec.shar"
-      "ed.QueryId\022#\n\033receiving_major_fragment_i"
-      "d\030\002 \001(\005\022#\n\033receiving_minor_fragment_id\030\003"
-      " \003(\005\022!\n\031sending_major_fragment_id\030\004 \001(\005\022"
-      "!\n\031sending_minor_fragment_id\030\005 \001(\005\022(\n\003de"
-      "f\030\006 \001(\0132\033.exec.shared.RecordBatchDef\022\023\n\013"
-      "isLastBatch\030\007 \001(\010\"\350\001\n\021RuntimeFilterBDef\022"
-      "&\n\010query_id\030\001 \001(\0132\024.exec.shared.QueryId\022"
-      "\031\n\021major_fragment_id\030\002 \001(\005\022\031\n\021minor_frag"
-      "ment_id\030\003 \001(\005\022\022\n\nto_foreman\030\004 \001(\010\022\"\n\032blo"
-      "om_filter_size_in_bytes\030\005 \003(\005\022\024\n\014probe_f"
-      "ields\030\006 \003(\t\022\020\n\010hj_op_id\030\007 \001(\005\022\025\n\rrf_iden"
-      "tifier\030\010 \001(\003\"\'\n\rAckWithCredit\022\026\n\016allowed"
-      "_credit\030\001 \001(\005*\210\001\n\007RpcType\022\r\n\tHANDSHAKE\020\000"
-      "\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\024\n\020REQ_RECORD_BAT"
-      "CH\020\003\022\020\n\014SASL_MESSAGE\020\004\022\026\n\022REQ_RUNTIME_FI"
-      "LTER\020\005\022\030\n\024DATA_ACK_WITH_CREDIT\020\006B(\n\033org."
-      "apache.drill.exec.protoB\007BitDataH\001"
-  };
-  ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 994);
-  ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
-    "BitData.proto", &protobuf_RegisterTypes);
-  ::protobuf_ExecutionProtos_2eproto::AddDescriptors();
-  ::protobuf_Coordination_2eproto::AddDescriptors();
-  ::protobuf_UserBitShared_2eproto::AddDescriptors();
-}
-
-void AddDescriptors() {
-  static ::google::protobuf::internal::once_flag once;
-  ::google::protobuf::internal::call_once(once, AddDescriptorsImpl);
-}
-// Force AddDescriptors() to be called at dynamic initialization time.
-struct StaticDescriptorInitializer {
-  StaticDescriptorInitializer() {
-    AddDescriptors();
-  }
-} static_descriptor_initializer;
-}  // namespace protobuf_BitData_2eproto
+// Force running AddDescriptors() at dynamic initialization time.
+static bool dynamic_init_dummy_BitData_2eproto = (  ::PROTOBUF_NAMESPACE_ID::internal::AddDescriptors(&descriptor_table_BitData_2eproto), true);
 namespace exec {
 namespace bit {
 namespace data {
-const ::google::protobuf::EnumDescriptor* RpcType_descriptor() {
-  protobuf_BitData_2eproto::protobuf_AssignDescriptorsOnce();
-  return protobuf_BitData_2eproto::file_level_enum_descriptors[0];
+const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* RpcType_descriptor() {
+  ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&descriptor_table_BitData_2eproto);
+  return file_level_enum_descriptors_BitData_2eproto[0];
 }
 bool RpcType_IsValid(int value) {
   switch (value) {
@@ -316,21 +279,25 @@ bool RpcType_IsValid(int value) {
 
 void BitClientHandshake::InitAsDefaultInstance() {
 }
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int BitClientHandshake::kRpcVersionFieldNumber;
-const int BitClientHandshake::kChannelFieldNumber;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+class BitClientHandshake::_Internal {
+ public:
+  using HasBits = decltype(std::declval<BitClientHandshake>()._has_bits_);
+  static void set_has_rpc_version(HasBits* has_bits) {
+    (*has_bits)[0] |= 1u;
+  }
+  static void set_has_channel(HasBits* has_bits) {
+    (*has_bits)[0] |= 2u;
+  }
+};
 
 BitClientHandshake::BitClientHandshake()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  ::google::protobuf::internal::InitSCC(
-      &protobuf_BitData_2eproto::scc_info_BitClientHandshake.base);
+  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:exec.bit.data.BitClientHandshake)
 }
 BitClientHandshake::BitClientHandshake(const BitClientHandshake& from)
-  : ::google::protobuf::Message(),
-      _internal_metadata_(NULL),
+  : ::PROTOBUF_NAMESPACE_ID::Message(),
+      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   ::memcpy(&rpc_version_, &from.rpc_version_,
@@ -355,25 +322,20 @@ void BitClientHandshake::SharedDtor() {
 void BitClientHandshake::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const ::google::protobuf::Descriptor* BitClientHandshake::descriptor() {
-  ::protobuf_BitData_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_BitData_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
 const BitClientHandshake& BitClientHandshake::default_instance() {
-  ::google::protobuf::internal::InitSCC(&protobuf_BitData_2eproto::scc_info_BitClientHandshake.base);
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_BitClientHandshake_BitData_2eproto.base);
   return *internal_default_instance();
 }
 
 
 void BitClientHandshake::Clear() {
 // @@protoc_insertion_point(message_clear_start:exec.bit.data.BitClientHandshake)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
   cached_has_bits = _has_bits_[0];
-  if (cached_has_bits & 3u) {
+  if (cached_has_bits & 0x00000003u) {
     rpc_version_ = 0;
     channel_ = 1;
   }
@@ -381,117 +343,78 @@ void BitClientHandshake::Clear() {
   _internal_metadata_.Clear();
 }
 
-bool BitClientHandshake::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
-  ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:exec.bit.data.BitClientHandshake)
-  for (;;) {
-    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
-    tag = p.first;
-    if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+const char* BitClientHandshake::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  _Internal::HasBits has_bits{};
+  while (!ctx->Done(&ptr)) {
+    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    CHK_(ptr);
+    switch (tag >> 3) {
       // optional int32 rpc_version = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(8u /* 8 & 0xFF */)) {
-          set_has_rpc_version();
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
-                 input, &rpc_version_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
+          _Internal::set_has_rpc_version(&has_bits);
+          rpc_version_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // optional .exec.shared.RpcChannel channel = 2 [default = BIT_DATA];
-      case 2: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(16u /* 16 & 0xFF */)) {
-          int value;
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
-                 input, &value)));
-          if (::exec::shared::RpcChannel_IsValid(value)) {
-            set_channel(static_cast< ::exec::shared::RpcChannel >(value));
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
+          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+          if (PROTOBUF_PREDICT_TRUE(::exec::shared::RpcChannel_IsValid(val))) {
+            _internal_set_channel(static_cast<::exec::shared::RpcChannel>(val));
           } else {
-            mutable_unknown_fields()->AddVarint(
-                2, static_cast< ::google::protobuf::uint64>(value));
+            ::PROTOBUF_NAMESPACE_ID::internal::WriteVarint(2, val, mutable_unknown_fields());
           }
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+        } else goto handle_unusual;
+        continue;
       default: {
       handle_unusual:
-        if (tag == 0) {
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->SetLastTag(tag);
           goto success;
         }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, _internal_metadata_.mutable_unknown_fields()));
-        break;
+        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        CHK_(ptr != nullptr);
+        continue;
       }
-    }
-  }
+    }  // switch
+  }  // while
 success:
-  // @@protoc_insertion_point(parse_success:exec.bit.data.BitClientHandshake)
-  return true;
+  _has_bits_.Or(has_bits);
+  return ptr;
 failure:
-  // @@protoc_insertion_point(parse_failure:exec.bit.data.BitClientHandshake)
-  return false;
-#undef DO_
+  ptr = nullptr;
+  goto success;
+#undef CHK_
 }
 
-void BitClientHandshake::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:exec.bit.data.BitClientHandshake)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  cached_has_bits = _has_bits_[0];
-  // optional int32 rpc_version = 1;
-  if (cached_has_bits & 0x00000001u) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(1, this->rpc_version(), output);
-  }
-
-  // optional .exec.shared.RpcChannel channel = 2 [default = BIT_DATA];
-  if (cached_has_bits & 0x00000002u) {
-    ::google::protobuf::internal::WireFormatLite::WriteEnum(
-      2, this->channel(), output);
-  }
-
-  if (_internal_metadata_.have_unknown_fields()) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        _internal_metadata_.unknown_fields(), output);
-  }
-  // @@protoc_insertion_point(serialize_end:exec.bit.data.BitClientHandshake)
-}
-
-::google::protobuf::uint8* BitClientHandshake::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
+::PROTOBUF_NAMESPACE_ID::uint8* BitClientHandshake::_InternalSerialize(
+    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:exec.bit.data.BitClientHandshake)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   cached_has_bits = _has_bits_[0];
   // optional int32 rpc_version = 1;
   if (cached_has_bits & 0x00000001u) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(1, this->rpc_version(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(1, this->_internal_rpc_version(), target);
   }
 
   // optional .exec.shared.RpcChannel channel = 2 [default = BIT_DATA];
   if (cached_has_bits & 0x00000002u) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteEnumToArray(
-      2, this->channel(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteEnumToArray(
+      2, this->_internal_channel(), target);
   }
 
-  if (_internal_metadata_.have_unknown_fields()) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields(), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:exec.bit.data.BitClientHandshake)
   return target;
@@ -501,40 +424,44 @@ size_t BitClientHandshake::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:exec.bit.data.BitClientHandshake)
   size_t total_size = 0;
 
-  if (_internal_metadata_.have_unknown_fields()) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        _internal_metadata_.unknown_fields());
-  }
-  if (_has_bits_[0 / 32] & 3u) {
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  cached_has_bits = _has_bits_[0];
+  if (cached_has_bits & 0x00000003u) {
     // optional int32 rpc_version = 1;
-    if (has_rpc_version()) {
+    if (cached_has_bits & 0x00000001u) {
       total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::Int32Size(
-          this->rpc_version());
+        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
+          this->_internal_rpc_version());
     }
 
     // optional .exec.shared.RpcChannel channel = 2 [default = BIT_DATA];
-    if (has_channel()) {
+    if (cached_has_bits & 0x00000002u) {
       total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::EnumSize(this->channel());
+        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(this->_internal_channel());
     }
 
   }
-  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
+        _internal_metadata_, total_size, &_cached_size_);
+  }
+  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
-void BitClientHandshake::MergeFrom(const ::google::protobuf::Message& from) {
+void BitClientHandshake::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_merge_from_start:exec.bit.data.BitClientHandshake)
   GOOGLE_DCHECK_NE(&from, this);
   const BitClientHandshake* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const BitClientHandshake>(
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<BitClientHandshake>(
           &from);
-  if (source == NULL) {
+  if (source == nullptr) {
   // @@protoc_insertion_point(generalized_merge_from_cast_fail:exec.bit.data.BitClientHandshake)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
   } else {
   // @@protoc_insertion_point(generalized_merge_from_cast_success:exec.bit.data.BitClientHandshake)
     MergeFrom(*source);
@@ -545,11 +472,11 @@ void BitClientHandshake::MergeFrom(const BitClientHandshake& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:exec.bit.data.BitClientHandshake)
   GOOGLE_DCHECK_NE(&from, this);
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   cached_has_bits = from._has_bits_[0];
-  if (cached_has_bits & 3u) {
+  if (cached_has_bits & 0x00000003u) {
     if (cached_has_bits & 0x00000001u) {
       rpc_version_ = from.rpc_version_;
     }
@@ -560,7 +487,7 @@ void BitClientHandshake::MergeFrom(const BitClientHandshake& from) {
   }
 }
 
-void BitClientHandshake::CopyFrom(const ::google::protobuf::Message& from) {
+void BitClientHandshake::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_copy_from_start:exec.bit.data.BitClientHandshake)
   if (&from == this) return;
   Clear();
@@ -578,21 +505,16 @@ bool BitClientHandshake::IsInitialized() const {
   return true;
 }
 
-void BitClientHandshake::Swap(BitClientHandshake* other) {
-  if (other == this) return;
-  InternalSwap(other);
-}
 void BitClientHandshake::InternalSwap(BitClientHandshake* other) {
   using std::swap;
+  _internal_metadata_.Swap(&other->_internal_metadata_);
+  swap(_has_bits_[0], other->_has_bits_[0]);
   swap(rpc_version_, other->rpc_version_);
   swap(channel_, other->channel_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
 }
 
-::google::protobuf::Metadata BitClientHandshake::GetMetadata() const {
-  protobuf_BitData_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_BitData_2eproto::file_level_metadata[kIndexInFileMessages];
+::PROTOBUF_NAMESPACE_ID::Metadata BitClientHandshake::GetMetadata() const {
+  return GetMetadataStatic();
 }
 
 
@@ -600,21 +522,22 @@ void BitClientHandshake::InternalSwap(BitClientHandshake* other) {
 
 void BitServerHandshake::InitAsDefaultInstance() {
 }
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int BitServerHandshake::kRpcVersionFieldNumber;
-const int BitServerHandshake::kAuthenticationMechanismsFieldNumber;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+class BitServerHandshake::_Internal {
+ public:
+  using HasBits = decltype(std::declval<BitServerHandshake>()._has_bits_);
+  static void set_has_rpc_version(HasBits* has_bits) {
+    (*has_bits)[0] |= 1u;
+  }
+};
 
 BitServerHandshake::BitServerHandshake()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  ::google::protobuf::internal::InitSCC(
-      &protobuf_BitData_2eproto::scc_info_BitServerHandshake.base);
+  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:exec.bit.data.BitServerHandshake)
 }
 BitServerHandshake::BitServerHandshake(const BitServerHandshake& from)
-  : ::google::protobuf::Message(),
-      _internal_metadata_(NULL),
+  : ::PROTOBUF_NAMESPACE_ID::Message(),
+      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_),
       authenticationmechanisms_(from.authenticationmechanisms_) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
@@ -623,6 +546,7 @@ BitServerHandshake::BitServerHandshake(const BitServerHandshake& from)
 }
 
 void BitServerHandshake::SharedCtor() {
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_BitServerHandshake_BitData_2eproto.base);
   rpc_version_ = 0;
 }
 
@@ -637,20 +561,15 @@ void BitServerHandshake::SharedDtor() {
 void BitServerHandshake::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const ::google::protobuf::Descriptor* BitServerHandshake::descriptor() {
-  ::protobuf_BitData_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_BitData_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
 const BitServerHandshake& BitServerHandshake::default_instance() {
-  ::google::protobuf::internal::InitSCC(&protobuf_BitData_2eproto::scc_info_BitServerHandshake.base);
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_BitServerHandshake_BitData_2eproto.base);
   return *internal_default_instance();
 }
 
 
 void BitServerHandshake::Clear() {
 // @@protoc_insertion_point(message_clear_start:exec.bit.data.BitServerHandshake)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
@@ -660,122 +579,85 @@ void BitServerHandshake::Clear() {
   _internal_metadata_.Clear();
 }
 
-bool BitServerHandshake::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
-  ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:exec.bit.data.BitServerHandshake)
-  for (;;) {
-    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
-    tag = p.first;
-    if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+const char* BitServerHandshake::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  _Internal::HasBits has_bits{};
+  while (!ctx->Done(&ptr)) {
+    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    CHK_(ptr);
+    switch (tag >> 3) {
       // optional int32 rpc_version = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(8u /* 8 & 0xFF */)) {
-          set_has_rpc_version();
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
-                 input, &rpc_version_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
+          _Internal::set_has_rpc_version(&has_bits);
+          rpc_version_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // repeated string authenticationMechanisms = 2;
-      case 2: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(18u /* 18 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->add_authenticationmechanisms()));
-          ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
-            this->authenticationmechanisms(this->authenticationmechanisms_size() - 1).data(),
-            static_cast<int>(this->authenticationmechanisms(this->authenticationmechanisms_size() - 1).length()),
-            ::google::protobuf::internal::WireFormat::PARSE,
-            "exec.bit.data.BitServerHandshake.authenticationMechanisms");
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 18)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            auto str = _internal_add_authenticationmechanisms();
+            ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+            #ifndef NDEBUG
+            ::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "exec.bit.data.BitServerHandshake.authenticationMechanisms");
+            #endif  // !NDEBUG
+            CHK_(ptr);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<18>(ptr));
+        } else goto handle_unusual;
+        continue;
       default: {
       handle_unusual:
-        if (tag == 0) {
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->SetLastTag(tag);
           goto success;
         }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, _internal_metadata_.mutable_unknown_fields()));
-        break;
+        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        CHK_(ptr != nullptr);
+        continue;
       }
-    }
-  }
+    }  // switch
+  }  // while
 success:
-  // @@protoc_insertion_point(parse_success:exec.bit.data.BitServerHandshake)
-  return true;
+  _has_bits_.Or(has_bits);
+  return ptr;
 failure:
-  // @@protoc_insertion_point(parse_failure:exec.bit.data.BitServerHandshake)
-  return false;
-#undef DO_
+  ptr = nullptr;
+  goto success;
+#undef CHK_
 }
 
-void BitServerHandshake::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:exec.bit.data.BitServerHandshake)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  cached_has_bits = _has_bits_[0];
-  // optional int32 rpc_version = 1;
-  if (cached_has_bits & 0x00000001u) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(1, this->rpc_version(), output);
-  }
-
-  // repeated string authenticationMechanisms = 2;
-  for (int i = 0, n = this->authenticationmechanisms_size(); i < n; i++) {
-    ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
-      this->authenticationmechanisms(i).data(), static_cast<int>(this->authenticationmechanisms(i).length()),
-      ::google::protobuf::internal::WireFormat::SERIALIZE,
-      "exec.bit.data.BitServerHandshake.authenticationMechanisms");
-    ::google::protobuf::internal::WireFormatLite::WriteString(
-      2, this->authenticationmechanisms(i), output);
-  }
-
-  if (_internal_metadata_.have_unknown_fields()) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        _internal_metadata_.unknown_fields(), output);
-  }
-  // @@protoc_insertion_point(serialize_end:exec.bit.data.BitServerHandshake)
-}
-
-::google::protobuf::uint8* BitServerHandshake::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
+::PROTOBUF_NAMESPACE_ID::uint8* BitServerHandshake::_InternalSerialize(
+    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:exec.bit.data.BitServerHandshake)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   cached_has_bits = _has_bits_[0];
   // optional int32 rpc_version = 1;
   if (cached_has_bits & 0x00000001u) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(1, this->rpc_version(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(1, this->_internal_rpc_version(), target);
   }
 
   // repeated string authenticationMechanisms = 2;
-  for (int i = 0, n = this->authenticationmechanisms_size(); i < n; i++) {
-    ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
-      this->authenticationmechanisms(i).data(), static_cast<int>(this->authenticationmechanisms(i).length()),
-      ::google::protobuf::internal::WireFormat::SERIALIZE,
+  for (int i = 0, n = this->_internal_authenticationmechanisms_size(); i < n; i++) {
+    const auto& s = this->_internal_authenticationmechanisms(i);
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::VerifyUTF8StringNamedField(
+      s.data(), static_cast<int>(s.length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::SERIALIZE,
       "exec.bit.data.BitServerHandshake.authenticationMechanisms");
-    target = ::google::protobuf::internal::WireFormatLite::
-      WriteStringToArray(2, this->authenticationmechanisms(i), target);
+    target = stream->WriteString(2, s, target);
   }
 
-  if (_internal_metadata_.have_unknown_fields()) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields(), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:exec.bit.data.BitServerHandshake)
   return target;
@@ -785,40 +667,44 @@ size_t BitServerHandshake::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:exec.bit.data.BitServerHandshake)
   size_t total_size = 0;
 
-  if (_internal_metadata_.have_unknown_fields()) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        _internal_metadata_.unknown_fields());
-  }
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
   // repeated string authenticationMechanisms = 2;
   total_size += 1 *
-      ::google::protobuf::internal::FromIntSize(this->authenticationmechanisms_size());
-  for (int i = 0, n = this->authenticationmechanisms_size(); i < n; i++) {
-    total_size += ::google::protobuf::internal::WireFormatLite::StringSize(
-      this->authenticationmechanisms(i));
+      ::PROTOBUF_NAMESPACE_ID::internal::FromIntSize(authenticationmechanisms_.size());
+  for (int i = 0, n = authenticationmechanisms_.size(); i < n; i++) {
+    total_size += ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+      authenticationmechanisms_.Get(i));
   }
 
   // optional int32 rpc_version = 1;
-  if (has_rpc_version()) {
+  cached_has_bits = _has_bits_[0];
+  if (cached_has_bits & 0x00000001u) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::Int32Size(
-        this->rpc_version());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
+        this->_internal_rpc_version());
   }
 
-  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
+        _internal_metadata_, total_size, &_cached_size_);
+  }
+  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
-void BitServerHandshake::MergeFrom(const ::google::protobuf::Message& from) {
+void BitServerHandshake::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_merge_from_start:exec.bit.data.BitServerHandshake)
   GOOGLE_DCHECK_NE(&from, this);
   const BitServerHandshake* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const BitServerHandshake>(
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<BitServerHandshake>(
           &from);
-  if (source == NULL) {
+  if (source == nullptr) {
   // @@protoc_insertion_point(generalized_merge_from_cast_fail:exec.bit.data.BitServerHandshake)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
   } else {
   // @@protoc_insertion_point(generalized_merge_from_cast_success:exec.bit.data.BitServerHandshake)
     MergeFrom(*source);
@@ -829,16 +715,16 @@ void BitServerHandshake::MergeFrom(const BitServerHandshake& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:exec.bit.data.BitServerHandshake)
   GOOGLE_DCHECK_NE(&from, this);
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   authenticationmechanisms_.MergeFrom(from.authenticationmechanisms_);
-  if (from.has_rpc_version()) {
-    set_rpc_version(from.rpc_version());
+  if (from._internal_has_rpc_version()) {
+    _internal_set_rpc_version(from._internal_rpc_version());
   }
 }
 
-void BitServerHandshake::CopyFrom(const ::google::protobuf::Message& from) {
+void BitServerHandshake::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_copy_from_start:exec.bit.data.BitServerHandshake)
   if (&from == this) return;
   Clear();
@@ -856,21 +742,16 @@ bool BitServerHandshake::IsInitialized() const {
   return true;
 }
 
-void BitServerHandshake::Swap(BitServerHandshake* other) {
-  if (other == this) return;
-  InternalSwap(other);
-}
 void BitServerHandshake::InternalSwap(BitServerHandshake* other) {
   using std::swap;
-  authenticationmechanisms_.InternalSwap(CastToBase(&other->authenticationmechanisms_));
-  swap(rpc_version_, other->rpc_version_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
   _internal_metadata_.Swap(&other->_internal_metadata_);
+  swap(_has_bits_[0], other->_has_bits_[0]);
+  authenticationmechanisms_.InternalSwap(&other->authenticationmechanisms_);
+  swap(rpc_version_, other->rpc_version_);
 }
 
-::google::protobuf::Metadata BitServerHandshake::GetMetadata() const {
-  protobuf_BitData_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_BitData_2eproto::file_level_metadata[kIndexInFileMessages];
+::PROTOBUF_NAMESPACE_ID::Metadata BitServerHandshake::GetMetadata() const {
+  return GetMetadataStatic();
 }
 
 
@@ -882,46 +763,67 @@ void FragmentRecordBatch::InitAsDefaultInstance() {
   ::exec::bit::data::_FragmentRecordBatch_default_instance_._instance.get_mutable()->def_ = const_cast< ::exec::shared::RecordBatchDef*>(
       ::exec::shared::RecordBatchDef::internal_default_instance());
 }
+class FragmentRecordBatch::_Internal {
+ public:
+  using HasBits = decltype(std::declval<FragmentRecordBatch>()._has_bits_);
+  static const ::exec::shared::QueryId& query_id(const FragmentRecordBatch* msg);
+  static void set_has_query_id(HasBits* has_bits) {
+    (*has_bits)[0] |= 1u;
+  }
+  static void set_has_receiving_major_fragment_id(HasBits* has_bits) {
+    (*has_bits)[0] |= 4u;
+  }
+  static void set_has_sending_major_fragment_id(HasBits* has_bits) {
+    (*has_bits)[0] |= 8u;
+  }
+  static void set_has_sending_minor_fragment_id(HasBits* has_bits) {
+    (*has_bits)[0] |= 16u;
+  }
+  static const ::exec::shared::RecordBatchDef& def(const FragmentRecordBatch* msg);
+  static void set_has_def(HasBits* has_bits) {
+    (*has_bits)[0] |= 2u;
+  }
+  static void set_has_islastbatch(HasBits* has_bits) {
+    (*has_bits)[0] |= 32u;
+  }
+};
+
+const ::exec::shared::QueryId&
+FragmentRecordBatch::_Internal::query_id(const FragmentRecordBatch* msg) {
+  return *msg->query_id_;
+}
+const ::exec::shared::RecordBatchDef&
+FragmentRecordBatch::_Internal::def(const FragmentRecordBatch* msg) {
+  return *msg->def_;
+}
 void FragmentRecordBatch::clear_query_id() {
-  if (query_id_ != NULL) query_id_->Clear();
-  clear_has_query_id();
+  if (query_id_ != nullptr) query_id_->Clear();
+  _has_bits_[0] &= ~0x00000001u;
 }
 void FragmentRecordBatch::clear_def() {
-  if (def_ != NULL) def_->Clear();
-  clear_has_def();
+  if (def_ != nullptr) def_->Clear();
+  _has_bits_[0] &= ~0x00000002u;
 }
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int FragmentRecordBatch::kQueryIdFieldNumber;
-const int FragmentRecordBatch::kReceivingMajorFragmentIdFieldNumber;
-const int FragmentRecordBatch::kReceivingMinorFragmentIdFieldNumber;
-const int FragmentRecordBatch::kSendingMajorFragmentIdFieldNumber;
-const int FragmentRecordBatch::kSendingMinorFragmentIdFieldNumber;
-const int FragmentRecordBatch::kDefFieldNumber;
-const int FragmentRecordBatch::kIsLastBatchFieldNumber;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
-
 FragmentRecordBatch::FragmentRecordBatch()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  ::google::protobuf::internal::InitSCC(
-      &protobuf_BitData_2eproto::scc_info_FragmentRecordBatch.base);
+  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:exec.bit.data.FragmentRecordBatch)
 }
 FragmentRecordBatch::FragmentRecordBatch(const FragmentRecordBatch& from)
-  : ::google::protobuf::Message(),
-      _internal_metadata_(NULL),
+  : ::PROTOBUF_NAMESPACE_ID::Message(),
+      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_),
       receiving_minor_fragment_id_(from.receiving_minor_fragment_id_) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  if (from.has_query_id()) {
+  if (from._internal_has_query_id()) {
     query_id_ = new ::exec::shared::QueryId(*from.query_id_);
   } else {
-    query_id_ = NULL;
+    query_id_ = nullptr;
   }
-  if (from.has_def()) {
+  if (from._internal_has_def()) {
     def_ = new ::exec::shared::RecordBatchDef(*from.def_);
   } else {
-    def_ = NULL;
+    def_ = nullptr;
   }
   ::memcpy(&receiving_major_fragment_id_, &from.receiving_major_fragment_id_,
     static_cast<size_t>(reinterpret_cast<char*>(&islastbatch_) -
@@ -930,6 +832,7 @@ FragmentRecordBatch::FragmentRecordBatch(const FragmentRecordBatch& from)
 }
 
 void FragmentRecordBatch::SharedCtor() {
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_FragmentRecordBatch_BitData_2eproto.base);
   ::memset(&query_id_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&islastbatch_) -
       reinterpret_cast<char*>(&query_id_)) + sizeof(islastbatch_));
@@ -948,36 +851,31 @@ void FragmentRecordBatch::SharedDtor() {
 void FragmentRecordBatch::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const ::google::protobuf::Descriptor* FragmentRecordBatch::descriptor() {
-  ::protobuf_BitData_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_BitData_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
 const FragmentRecordBatch& FragmentRecordBatch::default_instance() {
-  ::google::protobuf::internal::InitSCC(&protobuf_BitData_2eproto::scc_info_FragmentRecordBatch.base);
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_FragmentRecordBatch_BitData_2eproto.base);
   return *internal_default_instance();
 }
 
 
 void FragmentRecordBatch::Clear() {
 // @@protoc_insertion_point(message_clear_start:exec.bit.data.FragmentRecordBatch)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
   receiving_minor_fragment_id_.Clear();
   cached_has_bits = _has_bits_[0];
-  if (cached_has_bits & 3u) {
+  if (cached_has_bits & 0x00000003u) {
     if (cached_has_bits & 0x00000001u) {
-      GOOGLE_DCHECK(query_id_ != NULL);
+      GOOGLE_DCHECK(query_id_ != nullptr);
       query_id_->Clear();
     }
     if (cached_has_bits & 0x00000002u) {
-      GOOGLE_DCHECK(def_ != NULL);
+      GOOGLE_DCHECK(def_ != nullptr);
       def_->Clear();
     }
   }
-  if (cached_has_bits & 60u) {
+  if (cached_has_bits & 0x0000003cu) {
     ::memset(&receiving_major_fragment_id_, 0, static_cast<size_t>(
         reinterpret_cast<char*>(&islastbatch_) -
         reinterpret_cast<char*>(&receiving_major_fragment_id_)) + sizeof(islastbatch_));
@@ -986,236 +884,152 @@ void FragmentRecordBatch::Clear() {
   _internal_metadata_.Clear();
 }
 
-bool FragmentRecordBatch::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
-  ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:exec.bit.data.FragmentRecordBatch)
-  for (;;) {
-    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
-    tag = p.first;
-    if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+const char* FragmentRecordBatch::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  _Internal::HasBits has_bits{};
+  while (!ctx->Done(&ptr)) {
+    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    CHK_(ptr);
+    switch (tag >> 3) {
       // optional .exec.shared.QueryId query_id = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(10u /* 10 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
-               input, mutable_query_id()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+          ptr = ctx->ParseMessage(_internal_mutable_query_id(), ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // optional int32 receiving_major_fragment_id = 2;
-      case 2: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(16u /* 16 & 0xFF */)) {
-          set_has_receiving_major_fragment_id();
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
-                 input, &receiving_major_fragment_id_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
+          _Internal::set_has_receiving_major_fragment_id(&has_bits);
+          receiving_major_fragment_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // repeated int32 receiving_minor_fragment_id = 3;
-      case 3: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(24u /* 24 & 0xFF */)) {
-          DO_((::google::protobuf::internal::WireFormatLite::ReadRepeatedPrimitive<
-                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
-                 1, 24u, input, this->mutable_receiving_minor_fragment_id())));
-        } else if (
-            static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(26u /* 26 & 0xFF */)) {
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPackedPrimitiveNoInline<
-                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
-                 input, this->mutable_receiving_minor_fragment_id())));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 24)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            _internal_add_receiving_minor_fragment_id(::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr));
+            CHK_(ptr);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<24>(ptr));
+        } else if (static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 26) {
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::PackedInt32Parser(_internal_mutable_receiving_minor_fragment_id(), ptr, ctx);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // optional int32 sending_major_fragment_id = 4;
-      case 4: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(32u /* 32 & 0xFF */)) {
-          set_has_sending_major_fragment_id();
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
-                 input, &sending_major_fragment_id_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 32)) {
+          _Internal::set_has_sending_major_fragment_id(&has_bits);
+          sending_major_fragment_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // optional int32 sending_minor_fragment_id = 5;
-      case 5: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(40u /* 40 & 0xFF */)) {
-          set_has_sending_minor_fragment_id();
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
-                 input, &sending_minor_fragment_id_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 5:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 40)) {
+          _Internal::set_has_sending_minor_fragment_id(&has_bits);
+          sending_minor_fragment_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // optional .exec.shared.RecordBatchDef def = 6;
-      case 6: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(50u /* 50 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
-               input, mutable_def()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 6:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 50)) {
+          ptr = ctx->ParseMessage(_internal_mutable_def(), ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // optional bool isLastBatch = 7;
-      case 7: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(56u /* 56 & 0xFF */)) {
-          set_has_islastbatch();
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
-                 input, &islastbatch_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 7:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 56)) {
+          _Internal::set_has_islastbatch(&has_bits);
+          islastbatch_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       default: {
       handle_unusual:
-        if (tag == 0) {
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->SetLastTag(tag);
           goto success;
         }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, _internal_metadata_.mutable_unknown_fields()));
-        break;
+        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        CHK_(ptr != nullptr);
+        continue;
       }
-    }
-  }
+    }  // switch
+  }  // while
 success:
-  // @@protoc_insertion_point(parse_success:exec.bit.data.FragmentRecordBatch)
-  return true;
+  _has_bits_.Or(has_bits);
+  return ptr;
 failure:
-  // @@protoc_insertion_point(parse_failure:exec.bit.data.FragmentRecordBatch)
-  return false;
-#undef DO_
+  ptr = nullptr;
+  goto success;
+#undef CHK_
 }
 
-void FragmentRecordBatch::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:exec.bit.data.FragmentRecordBatch)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  cached_has_bits = _has_bits_[0];
-  // optional .exec.shared.QueryId query_id = 1;
-  if (cached_has_bits & 0x00000001u) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      1, this->_internal_query_id(), output);
-  }
-
-  // optional int32 receiving_major_fragment_id = 2;
-  if (cached_has_bits & 0x00000004u) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(2, this->receiving_major_fragment_id(), output);
-  }
-
-  // repeated int32 receiving_minor_fragment_id = 3;
-  for (int i = 0, n = this->receiving_minor_fragment_id_size(); i < n; i++) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(
-      3, this->receiving_minor_fragment_id(i), output);
-  }
-
-  // optional int32 sending_major_fragment_id = 4;
-  if (cached_has_bits & 0x00000008u) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(4, this->sending_major_fragment_id(), output);
-  }
-
-  // optional int32 sending_minor_fragment_id = 5;
-  if (cached_has_bits & 0x00000010u) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(5, this->sending_minor_fragment_id(), output);
-  }
-
-  // optional .exec.shared.RecordBatchDef def = 6;
-  if (cached_has_bits & 0x00000002u) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      6, this->_internal_def(), output);
-  }
-
-  // optional bool isLastBatch = 7;
-  if (cached_has_bits & 0x00000020u) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(7, this->islastbatch(), output);
-  }
-
-  if (_internal_metadata_.have_unknown_fields()) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        _internal_metadata_.unknown_fields(), output);
-  }
-  // @@protoc_insertion_point(serialize_end:exec.bit.data.FragmentRecordBatch)
-}
-
-::google::protobuf::uint8* FragmentRecordBatch::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
+::PROTOBUF_NAMESPACE_ID::uint8* FragmentRecordBatch::_InternalSerialize(
+    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:exec.bit.data.FragmentRecordBatch)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   cached_has_bits = _has_bits_[0];
   // optional .exec.shared.QueryId query_id = 1;
   if (cached_has_bits & 0x00000001u) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageToArray(
-        1, this->_internal_query_id(), deterministic, target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(
+        1, _Internal::query_id(this), target, stream);
   }
 
   // optional int32 receiving_major_fragment_id = 2;
   if (cached_has_bits & 0x00000004u) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(2, this->receiving_major_fragment_id(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(2, this->_internal_receiving_major_fragment_id(), target);
   }
 
   // repeated int32 receiving_minor_fragment_id = 3;
-  target = ::google::protobuf::internal::WireFormatLite::
-    WriteInt32ToArray(3, this->receiving_minor_fragment_id_, target);
+  for (int i = 0, n = this->_internal_receiving_minor_fragment_id_size(); i < n; i++) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(3, this->_internal_receiving_minor_fragment_id(i), target);
+  }
 
   // optional int32 sending_major_fragment_id = 4;
   if (cached_has_bits & 0x00000008u) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(4, this->sending_major_fragment_id(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(4, this->_internal_sending_major_fragment_id(), target);
   }
 
   // optional int32 sending_minor_fragment_id = 5;
   if (cached_has_bits & 0x00000010u) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(5, this->sending_minor_fragment_id(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(5, this->_internal_sending_minor_fragment_id(), target);
   }
 
   // optional .exec.shared.RecordBatchDef def = 6;
   if (cached_has_bits & 0x00000002u) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageToArray(
-        6, this->_internal_def(), deterministic, target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(
+        6, _Internal::def(this), target, stream);
   }
 
   // optional bool isLastBatch = 7;
   if (cached_has_bits & 0x00000020u) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(7, this->islastbatch(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteBoolToArray(7, this->_internal_islastbatch(), target);
   }
 
-  if (_internal_metadata_.have_unknown_fields()) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields(), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:exec.bit.data.FragmentRecordBatch)
   return target;
@@ -1225,76 +1039,80 @@ size_t FragmentRecordBatch::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:exec.bit.data.FragmentRecordBatch)
   size_t total_size = 0;
 
-  if (_internal_metadata_.have_unknown_fields()) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        _internal_metadata_.unknown_fields());
-  }
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
   // repeated int32 receiving_minor_fragment_id = 3;
   {
-    size_t data_size = ::google::protobuf::internal::WireFormatLite::
+    size_t data_size = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
       Int32Size(this->receiving_minor_fragment_id_);
     total_size += 1 *
-                  ::google::protobuf::internal::FromIntSize(this->receiving_minor_fragment_id_size());
+                  ::PROTOBUF_NAMESPACE_ID::internal::FromIntSize(this->_internal_receiving_minor_fragment_id_size());
     total_size += data_size;
   }
 
-  if (_has_bits_[0 / 32] & 63u) {
+  cached_has_bits = _has_bits_[0];
+  if (cached_has_bits & 0x0000003fu) {
     // optional .exec.shared.QueryId query_id = 1;
-    if (has_query_id()) {
+    if (cached_has_bits & 0x00000001u) {
       total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::MessageSize(
+        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
           *query_id_);
     }
 
     // optional .exec.shared.RecordBatchDef def = 6;
-    if (has_def()) {
+    if (cached_has_bits & 0x00000002u) {
       total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::MessageSize(
+        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
           *def_);
     }
 
     // optional int32 receiving_major_fragment_id = 2;
-    if (has_receiving_major_fragment_id()) {
+    if (cached_has_bits & 0x00000004u) {
       total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::Int32Size(
-          this->receiving_major_fragment_id());
+        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
+          this->_internal_receiving_major_fragment_id());
     }
 
     // optional int32 sending_major_fragment_id = 4;
-    if (has_sending_major_fragment_id()) {
+    if (cached_has_bits & 0x00000008u) {
       total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::Int32Size(
-          this->sending_major_fragment_id());
+        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
+          this->_internal_sending_major_fragment_id());
     }
 
     // optional int32 sending_minor_fragment_id = 5;
-    if (has_sending_minor_fragment_id()) {
+    if (cached_has_bits & 0x00000010u) {
       total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::Int32Size(
-          this->sending_minor_fragment_id());
+        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
+          this->_internal_sending_minor_fragment_id());
     }
 
     // optional bool isLastBatch = 7;
-    if (has_islastbatch()) {
+    if (cached_has_bits & 0x00000020u) {
       total_size += 1 + 1;
     }
 
   }
-  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
+        _internal_metadata_, total_size, &_cached_size_);
+  }
+  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
-void FragmentRecordBatch::MergeFrom(const ::google::protobuf::Message& from) {
+void FragmentRecordBatch::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_merge_from_start:exec.bit.data.FragmentRecordBatch)
   GOOGLE_DCHECK_NE(&from, this);
   const FragmentRecordBatch* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const FragmentRecordBatch>(
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<FragmentRecordBatch>(
           &from);
-  if (source == NULL) {
+  if (source == nullptr) {
   // @@protoc_insertion_point(generalized_merge_from_cast_fail:exec.bit.data.FragmentRecordBatch)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
   } else {
   // @@protoc_insertion_point(generalized_merge_from_cast_success:exec.bit.data.FragmentRecordBatch)
     MergeFrom(*source);
@@ -1305,17 +1123,17 @@ void FragmentRecordBatch::MergeFrom(const FragmentRecordBatch& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:exec.bit.data.FragmentRecordBatch)
   GOOGLE_DCHECK_NE(&from, this);
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   receiving_minor_fragment_id_.MergeFrom(from.receiving_minor_fragment_id_);
   cached_has_bits = from._has_bits_[0];
-  if (cached_has_bits & 63u) {
+  if (cached_has_bits & 0x0000003fu) {
     if (cached_has_bits & 0x00000001u) {
-      mutable_query_id()->::exec::shared::QueryId::MergeFrom(from.query_id());
+      _internal_mutable_query_id()->::exec::shared::QueryId::MergeFrom(from._internal_query_id());
     }
     if (cached_has_bits & 0x00000002u) {
-      mutable_def()->::exec::shared::RecordBatchDef::MergeFrom(from.def());
+      _internal_mutable_def()->::exec::shared::RecordBatchDef::MergeFrom(from._internal_def());
     }
     if (cached_has_bits & 0x00000004u) {
       receiving_major_fragment_id_ = from.receiving_major_fragment_id_;
@@ -1333,7 +1151,7 @@ void FragmentRecordBatch::MergeFrom(const FragmentRecordBatch& from) {
   }
 }
 
-void FragmentRecordBatch::CopyFrom(const ::google::protobuf::Message& from) {
+void FragmentRecordBatch::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_copy_from_start:exec.bit.data.FragmentRecordBatch)
   if (&from == this) return;
   Clear();
@@ -1351,12 +1169,10 @@ bool FragmentRecordBatch::IsInitialized() const {
   return true;
 }
 
-void FragmentRecordBatch::Swap(FragmentRecordBatch* other) {
-  if (other == this) return;
-  InternalSwap(other);
-}
 void FragmentRecordBatch::InternalSwap(FragmentRecordBatch* other) {
   using std::swap;
+  _internal_metadata_.Swap(&other->_internal_metadata_);
+  swap(_has_bits_[0], other->_has_bits_[0]);
   receiving_minor_fragment_id_.InternalSwap(&other->receiving_minor_fragment_id_);
   swap(query_id_, other->query_id_);
   swap(def_, other->def_);
@@ -1364,13 +1180,10 @@ void FragmentRecordBatch::InternalSwap(FragmentRecordBatch* other) {
   swap(sending_major_fragment_id_, other->sending_major_fragment_id_);
   swap(sending_minor_fragment_id_, other->sending_minor_fragment_id_);
   swap(islastbatch_, other->islastbatch_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
 }
 
-::google::protobuf::Metadata FragmentRecordBatch::GetMetadata() const {
-  protobuf_BitData_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_BitData_2eproto::file_level_metadata[kIndexInFileMessages];
+::PROTOBUF_NAMESPACE_ID::Metadata FragmentRecordBatch::GetMetadata() const {
+  return GetMetadataStatic();
 }
 
 
@@ -1380,39 +1193,54 @@ void RuntimeFilterBDef::InitAsDefaultInstance() {
   ::exec::bit::data::_RuntimeFilterBDef_default_instance_._instance.get_mutable()->query_id_ = const_cast< ::exec::shared::QueryId*>(
       ::exec::shared::QueryId::internal_default_instance());
 }
-void RuntimeFilterBDef::clear_query_id() {
-  if (query_id_ != NULL) query_id_->Clear();
-  clear_has_query_id();
-}
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int RuntimeFilterBDef::kQueryIdFieldNumber;
-const int RuntimeFilterBDef::kMajorFragmentIdFieldNumber;
-const int RuntimeFilterBDef::kMinorFragmentIdFieldNumber;
-const int RuntimeFilterBDef::kToForemanFieldNumber;
-const int RuntimeFilterBDef::kBloomFilterSizeInBytesFieldNumber;
-const int RuntimeFilterBDef::kProbeFieldsFieldNumber;
-const int RuntimeFilterBDef::kHjOpIdFieldNumber;
-const int RuntimeFilterBDef::kRfIdentifierFieldNumber;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+class RuntimeFilterBDef::_Internal {
+ public:
+  using HasBits = decltype(std::declval<RuntimeFilterBDef>()._has_bits_);
+  static const ::exec::shared::QueryId& query_id(const RuntimeFilterBDef* msg);
+  static void set_has_query_id(HasBits* has_bits) {
+    (*has_bits)[0] |= 1u;
+  }
+  static void set_has_major_fragment_id(HasBits* has_bits) {
+    (*has_bits)[0] |= 2u;
+  }
+  static void set_has_minor_fragment_id(HasBits* has_bits) {
+    (*has_bits)[0] |= 4u;
+  }
+  static void set_has_to_foreman(HasBits* has_bits) {
+    (*has_bits)[0] |= 8u;
+  }
+  static void set_has_hj_op_id(HasBits* has_bits) {
+    (*has_bits)[0] |= 16u;
+  }
+  static void set_has_rf_identifier(HasBits* has_bits) {
+    (*has_bits)[0] |= 32u;
+  }
+};
 
+const ::exec::shared::QueryId&
+RuntimeFilterBDef::_Internal::query_id(const RuntimeFilterBDef* msg) {
+  return *msg->query_id_;
+}
+void RuntimeFilterBDef::clear_query_id() {
+  if (query_id_ != nullptr) query_id_->Clear();
+  _has_bits_[0] &= ~0x00000001u;
+}
 RuntimeFilterBDef::RuntimeFilterBDef()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  ::google::protobuf::internal::InitSCC(
-      &protobuf_BitData_2eproto::scc_info_RuntimeFilterBDef.base);
+  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:exec.bit.data.RuntimeFilterBDef)
 }
 RuntimeFilterBDef::RuntimeFilterBDef(const RuntimeFilterBDef& from)
-  : ::google::protobuf::Message(),
-      _internal_metadata_(NULL),
+  : ::PROTOBUF_NAMESPACE_ID::Message(),
+      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_),
       bloom_filter_size_in_bytes_(from.bloom_filter_size_in_bytes_),
       probe_fields_(from.probe_fields_) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  if (from.has_query_id()) {
+  if (from._internal_has_query_id()) {
     query_id_ = new ::exec::shared::QueryId(*from.query_id_);
   } else {
-    query_id_ = NULL;
+    query_id_ = nullptr;
   }
   ::memcpy(&major_fragment_id_, &from.major_fragment_id_,
     static_cast<size_t>(reinterpret_cast<char*>(&rf_identifier_) -
@@ -1421,6 +1249,7 @@ RuntimeFilterBDef::RuntimeFilterBDef(const RuntimeFilterBDef& from)
 }
 
 void RuntimeFilterBDef::SharedCtor() {
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_RuntimeFilterBDef_BitData_2eproto.base);
   ::memset(&query_id_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&rf_identifier_) -
       reinterpret_cast<char*>(&query_id_)) + sizeof(rf_identifier_));
@@ -1438,20 +1267,15 @@ void RuntimeFilterBDef::SharedDtor() {
 void RuntimeFilterBDef::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const ::google::protobuf::Descriptor* RuntimeFilterBDef::descriptor() {
-  ::protobuf_BitData_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_BitData_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
 const RuntimeFilterBDef& RuntimeFilterBDef::default_instance() {
-  ::google::protobuf::internal::InitSCC(&protobuf_BitData_2eproto::scc_info_RuntimeFilterBDef.base);
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_RuntimeFilterBDef_BitData_2eproto.base);
   return *internal_default_instance();
 }
 
 
 void RuntimeFilterBDef::Clear() {
 // @@protoc_insertion_point(message_clear_start:exec.bit.data.RuntimeFilterBDef)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
@@ -1459,10 +1283,10 @@ void RuntimeFilterBDef::Clear() {
   probe_fields_.Clear();
   cached_has_bits = _has_bits_[0];
   if (cached_has_bits & 0x00000001u) {
-    GOOGLE_DCHECK(query_id_ != NULL);
+    GOOGLE_DCHECK(query_id_ != nullptr);
     query_id_->Clear();
   }
-  if (cached_has_bits & 62u) {
+  if (cached_has_bits & 0x0000003eu) {
     ::memset(&major_fragment_id_, 0, static_cast<size_t>(
         reinterpret_cast<char*>(&rf_identifier_) -
         reinterpret_cast<char*>(&major_fragment_id_)) + sizeof(rf_identifier_));
@@ -1471,272 +1295,177 @@ void RuntimeFilterBDef::Clear() {
   _internal_metadata_.Clear();
 }
 
-bool RuntimeFilterBDef::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
-  ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:exec.bit.data.RuntimeFilterBDef)
-  for (;;) {
-    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
-    tag = p.first;
-    if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+const char* RuntimeFilterBDef::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  _Internal::HasBits has_bits{};
+  while (!ctx->Done(&ptr)) {
+    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    CHK_(ptr);
+    switch (tag >> 3) {
       // optional .exec.shared.QueryId query_id = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(10u /* 10 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
-               input, mutable_query_id()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+          ptr = ctx->ParseMessage(_internal_mutable_query_id(), ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // optional int32 major_fragment_id = 2;
-      case 2: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(16u /* 16 & 0xFF */)) {
-          set_has_major_fragment_id();
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
-                 input, &major_fragment_id_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
+          _Internal::set_has_major_fragment_id(&has_bits);
+          major_fragment_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // optional int32 minor_fragment_id = 3;
-      case 3: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(24u /* 24 & 0xFF */)) {
-          set_has_minor_fragment_id();
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
-                 input, &minor_fragment_id_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 24)) {
+          _Internal::set_has_minor_fragment_id(&has_bits);
+          minor_fragment_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // optional bool to_foreman = 4;
-      case 4: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(32u /* 32 & 0xFF */)) {
-          set_has_to_foreman();
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
-                 input, &to_foreman_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 32)) {
+          _Internal::set_has_to_foreman(&has_bits);
+          to_foreman_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // repeated int32 bloom_filter_size_in_bytes = 5;
-      case 5: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(40u /* 40 & 0xFF */)) {
-          DO_((::google::protobuf::internal::WireFormatLite::ReadRepeatedPrimitive<
-                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
-                 1, 40u, input, this->mutable_bloom_filter_size_in_bytes())));
-        } else if (
-            static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(42u /* 42 & 0xFF */)) {
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPackedPrimitiveNoInline<
-                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
-                 input, this->mutable_bloom_filter_size_in_bytes())));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 5:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 40)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            _internal_add_bloom_filter_size_in_bytes(::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr));
+            CHK_(ptr);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<40>(ptr));
+        } else if (static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 42) {
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::PackedInt32Parser(_internal_mutable_bloom_filter_size_in_bytes(), ptr, ctx);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // repeated string probe_fields = 6;
-      case 6: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(50u /* 50 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->add_probe_fields()));
-          ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
-            this->probe_fields(this->probe_fields_size() - 1).data(),
-            static_cast<int>(this->probe_fields(this->probe_fields_size() - 1).length()),
-            ::google::protobuf::internal::WireFormat::PARSE,
-            "exec.bit.data.RuntimeFilterBDef.probe_fields");
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 6:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 50)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            auto str = _internal_add_probe_fields();
+            ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+            #ifndef NDEBUG
+            ::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "exec.bit.data.RuntimeFilterBDef.probe_fields");
+            #endif  // !NDEBUG
+            CHK_(ptr);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<50>(ptr));
+        } else goto handle_unusual;
+        continue;
       // optional int32 hj_op_id = 7;
-      case 7: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(56u /* 56 & 0xFF */)) {
-          set_has_hj_op_id();
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
-                 input, &hj_op_id_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 7:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 56)) {
+          _Internal::set_has_hj_op_id(&has_bits);
+          hj_op_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // optional int64 rf_identifier = 8;
-      case 8: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(64u /* 64 & 0xFF */)) {
-          set_has_rf_identifier();
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
-                 input, &rf_identifier_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 8:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 64)) {
+          _Internal::set_has_rf_identifier(&has_bits);
+          rf_identifier_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       default: {
       handle_unusual:
-        if (tag == 0) {
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->SetLastTag(tag);
           goto success;
         }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, _internal_metadata_.mutable_unknown_fields()));
-        break;
+        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        CHK_(ptr != nullptr);
+        continue;
       }
-    }
-  }
+    }  // switch
+  }  // while
 success:
-  // @@protoc_insertion_point(parse_success:exec.bit.data.RuntimeFilterBDef)
-  return true;
+  _has_bits_.Or(has_bits);
+  return ptr;
 failure:
-  // @@protoc_insertion_point(parse_failure:exec.bit.data.RuntimeFilterBDef)
-  return false;
-#undef DO_
+  ptr = nullptr;
+  goto success;
+#undef CHK_
 }
 
-void RuntimeFilterBDef::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:exec.bit.data.RuntimeFilterBDef)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  cached_has_bits = _has_bits_[0];
-  // optional .exec.shared.QueryId query_id = 1;
-  if (cached_has_bits & 0x00000001u) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      1, this->_internal_query_id(), output);
-  }
-
-  // optional int32 major_fragment_id = 2;
-  if (cached_has_bits & 0x00000002u) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(2, this->major_fragment_id(), output);
-  }
-
-  // optional int32 minor_fragment_id = 3;
-  if (cached_has_bits & 0x00000004u) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(3, this->minor_fragment_id(), output);
-  }
-
-  // optional bool to_foreman = 4;
-  if (cached_has_bits & 0x00000008u) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(4, this->to_foreman(), output);
-  }
-
-  // repeated int32 bloom_filter_size_in_bytes = 5;
-  for (int i = 0, n = this->bloom_filter_size_in_bytes_size(); i < n; i++) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(
-      5, this->bloom_filter_size_in_bytes(i), output);
-  }
-
-  // repeated string probe_fields = 6;
-  for (int i = 0, n = this->probe_fields_size(); i < n; i++) {
-    ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
-      this->probe_fields(i).data(), static_cast<int>(this->probe_fields(i).length()),
-      ::google::protobuf::internal::WireFormat::SERIALIZE,
-      "exec.bit.data.RuntimeFilterBDef.probe_fields");
-    ::google::protobuf::internal::WireFormatLite::WriteString(
-      6, this->probe_fields(i), output);
-  }
-
-  // optional int32 hj_op_id = 7;
-  if (cached_has_bits & 0x00000010u) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(7, this->hj_op_id(), output);
-  }
-
-  // optional int64 rf_identifier = 8;
-  if (cached_has_bits & 0x00000020u) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt64(8, this->rf_identifier(), output);
-  }
-
-  if (_internal_metadata_.have_unknown_fields()) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        _internal_metadata_.unknown_fields(), output);
-  }
-  // @@protoc_insertion_point(serialize_end:exec.bit.data.RuntimeFilterBDef)
-}
-
-::google::protobuf::uint8* RuntimeFilterBDef::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
+::PROTOBUF_NAMESPACE_ID::uint8* RuntimeFilterBDef::_InternalSerialize(
+    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:exec.bit.data.RuntimeFilterBDef)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   cached_has_bits = _has_bits_[0];
   // optional .exec.shared.QueryId query_id = 1;
   if (cached_has_bits & 0x00000001u) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageToArray(
-        1, this->_internal_query_id(), deterministic, target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(
+        1, _Internal::query_id(this), target, stream);
   }
 
   // optional int32 major_fragment_id = 2;
   if (cached_has_bits & 0x00000002u) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(2, this->major_fragment_id(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(2, this->_internal_major_fragment_id(), target);
   }
 
   // optional int32 minor_fragment_id = 3;
   if (cached_has_bits & 0x00000004u) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(3, this->minor_fragment_id(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(3, this->_internal_minor_fragment_id(), target);
   }
 
   // optional bool to_foreman = 4;
   if (cached_has_bits & 0x00000008u) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(4, this->to_foreman(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteBoolToArray(4, this->_internal_to_foreman(), target);
   }
 
   // repeated int32 bloom_filter_size_in_bytes = 5;
-  target = ::google::protobuf::internal::WireFormatLite::
-    WriteInt32ToArray(5, this->bloom_filter_size_in_bytes_, target);
+  for (int i = 0, n = this->_internal_bloom_filter_size_in_bytes_size(); i < n; i++) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(5, this->_internal_bloom_filter_size_in_bytes(i), target);
+  }
 
   // repeated string probe_fields = 6;
-  for (int i = 0, n = this->probe_fields_size(); i < n; i++) {
-    ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
-      this->probe_fields(i).data(), static_cast<int>(this->probe_fields(i).length()),
-      ::google::protobuf::internal::WireFormat::SERIALIZE,
+  for (int i = 0, n = this->_internal_probe_fields_size(); i < n; i++) {
+    const auto& s = this->_internal_probe_fields(i);
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::VerifyUTF8StringNamedField(
+      s.data(), static_cast<int>(s.length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::SERIALIZE,
       "exec.bit.data.RuntimeFilterBDef.probe_fields");
-    target = ::google::protobuf::internal::WireFormatLite::
-      WriteStringToArray(6, this->probe_fields(i), target);
+    target = stream->WriteString(6, s, target);
   }
 
   // optional int32 hj_op_id = 7;
   if (cached_has_bits & 0x00000010u) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(7, this->hj_op_id(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(7, this->_internal_hj_op_id(), target);
   }
 
   // optional int64 rf_identifier = 8;
   if (cached_has_bits & 0x00000020u) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(8, this->rf_identifier(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt64ToArray(8, this->_internal_rf_identifier(), target);
   }
 
-  if (_internal_metadata_.have_unknown_fields()) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields(), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:exec.bit.data.RuntimeFilterBDef)
   return target;
@@ -1746,84 +1475,88 @@ size_t RuntimeFilterBDef::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:exec.bit.data.RuntimeFilterBDef)
   size_t total_size = 0;
 
-  if (_internal_metadata_.have_unknown_fields()) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        _internal_metadata_.unknown_fields());
-  }
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
   // repeated int32 bloom_filter_size_in_bytes = 5;
   {
-    size_t data_size = ::google::protobuf::internal::WireFormatLite::
+    size_t data_size = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
       Int32Size(this->bloom_filter_size_in_bytes_);
     total_size += 1 *
-                  ::google::protobuf::internal::FromIntSize(this->bloom_filter_size_in_bytes_size());
+                  ::PROTOBUF_NAMESPACE_ID::internal::FromIntSize(this->_internal_bloom_filter_size_in_bytes_size());
     total_size += data_size;
   }
 
   // repeated string probe_fields = 6;
   total_size += 1 *
-      ::google::protobuf::internal::FromIntSize(this->probe_fields_size());
-  for (int i = 0, n = this->probe_fields_size(); i < n; i++) {
-    total_size += ::google::protobuf::internal::WireFormatLite::StringSize(
-      this->probe_fields(i));
+      ::PROTOBUF_NAMESPACE_ID::internal::FromIntSize(probe_fields_.size());
+  for (int i = 0, n = probe_fields_.size(); i < n; i++) {
+    total_size += ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+      probe_fields_.Get(i));
   }
 
-  if (_has_bits_[0 / 32] & 63u) {
+  cached_has_bits = _has_bits_[0];
+  if (cached_has_bits & 0x0000003fu) {
     // optional .exec.shared.QueryId query_id = 1;
-    if (has_query_id()) {
+    if (cached_has_bits & 0x00000001u) {
       total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::MessageSize(
+        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
           *query_id_);
     }
 
     // optional int32 major_fragment_id = 2;
-    if (has_major_fragment_id()) {
+    if (cached_has_bits & 0x00000002u) {
       total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::Int32Size(
-          this->major_fragment_id());
+        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
+          this->_internal_major_fragment_id());
     }
 
     // optional int32 minor_fragment_id = 3;
-    if (has_minor_fragment_id()) {
+    if (cached_has_bits & 0x00000004u) {
       total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::Int32Size(
-          this->minor_fragment_id());
+        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
+          this->_internal_minor_fragment_id());
     }
 
     // optional bool to_foreman = 4;
-    if (has_to_foreman()) {
+    if (cached_has_bits & 0x00000008u) {
       total_size += 1 + 1;
     }
 
     // optional int32 hj_op_id = 7;
-    if (has_hj_op_id()) {
+    if (cached_has_bits & 0x00000010u) {
       total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::Int32Size(
-          this->hj_op_id());
+        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
+          this->_internal_hj_op_id());
     }
 
     // optional int64 rf_identifier = 8;
-    if (has_rf_identifier()) {
+    if (cached_has_bits & 0x00000020u) {
       total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::Int64Size(
-          this->rf_identifier());
+        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int64Size(
+          this->_internal_rf_identifier());
     }
 
   }
-  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
+        _internal_metadata_, total_size, &_cached_size_);
+  }
+  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
-void RuntimeFilterBDef::MergeFrom(const ::google::protobuf::Message& from) {
+void RuntimeFilterBDef::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_merge_from_start:exec.bit.data.RuntimeFilterBDef)
   GOOGLE_DCHECK_NE(&from, this);
   const RuntimeFilterBDef* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const RuntimeFilterBDef>(
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<RuntimeFilterBDef>(
           &from);
-  if (source == NULL) {
+  if (source == nullptr) {
   // @@protoc_insertion_point(generalized_merge_from_cast_fail:exec.bit.data.RuntimeFilterBDef)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
   } else {
   // @@protoc_insertion_point(generalized_merge_from_cast_success:exec.bit.data.RuntimeFilterBDef)
     MergeFrom(*source);
@@ -1834,15 +1567,15 @@ void RuntimeFilterBDef::MergeFrom(const RuntimeFilterBDef& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:exec.bit.data.RuntimeFilterBDef)
   GOOGLE_DCHECK_NE(&from, this);
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   bloom_filter_size_in_bytes_.MergeFrom(from.bloom_filter_size_in_bytes_);
   probe_fields_.MergeFrom(from.probe_fields_);
   cached_has_bits = from._has_bits_[0];
-  if (cached_has_bits & 63u) {
+  if (cached_has_bits & 0x0000003fu) {
     if (cached_has_bits & 0x00000001u) {
-      mutable_query_id()->::exec::shared::QueryId::MergeFrom(from.query_id());
+      _internal_mutable_query_id()->::exec::shared::QueryId::MergeFrom(from._internal_query_id());
     }
     if (cached_has_bits & 0x00000002u) {
       major_fragment_id_ = from.major_fragment_id_;
@@ -1863,7 +1596,7 @@ void RuntimeFilterBDef::MergeFrom(const RuntimeFilterBDef& from) {
   }
 }
 
-void RuntimeFilterBDef::CopyFrom(const ::google::protobuf::Message& from) {
+void RuntimeFilterBDef::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_copy_from_start:exec.bit.data.RuntimeFilterBDef)
   if (&from == this) return;
   Clear();
@@ -1881,27 +1614,22 @@ bool RuntimeFilterBDef::IsInitialized() const {
   return true;
 }
 
-void RuntimeFilterBDef::Swap(RuntimeFilterBDef* other) {
-  if (other == this) return;
-  InternalSwap(other);
-}
 void RuntimeFilterBDef::InternalSwap(RuntimeFilterBDef* other) {
   using std::swap;
+  _internal_metadata_.Swap(&other->_internal_metadata_);
+  swap(_has_bits_[0], other->_has_bits_[0]);
   bloom_filter_size_in_bytes_.InternalSwap(&other->bloom_filter_size_in_bytes_);
-  probe_fields_.InternalSwap(CastToBase(&other->probe_fields_));
+  probe_fields_.InternalSwap(&other->probe_fields_);
   swap(query_id_, other->query_id_);
   swap(major_fragment_id_, other->major_fragment_id_);
   swap(minor_fragment_id_, other->minor_fragment_id_);
   swap(to_foreman_, other->to_foreman_);
   swap(hj_op_id_, other->hj_op_id_);
   swap(rf_identifier_, other->rf_identifier_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
 }
 
-::google::protobuf::Metadata RuntimeFilterBDef::GetMetadata() const {
-  protobuf_BitData_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_BitData_2eproto::file_level_metadata[kIndexInFileMessages];
+::PROTOBUF_NAMESPACE_ID::Metadata RuntimeFilterBDef::GetMetadata() const {
+  return GetMetadataStatic();
 }
 
 
@@ -1909,20 +1637,22 @@ void RuntimeFilterBDef::InternalSwap(RuntimeFilterBDef* other) {
 
 void AckWithCredit::InitAsDefaultInstance() {
 }
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int AckWithCredit::kAllowedCreditFieldNumber;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+class AckWithCredit::_Internal {
+ public:
+  using HasBits = decltype(std::declval<AckWithCredit>()._has_bits_);
+  static void set_has_allowed_credit(HasBits* has_bits) {
+    (*has_bits)[0] |= 1u;
+  }
+};
 
 AckWithCredit::AckWithCredit()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  ::google::protobuf::internal::InitSCC(
-      &protobuf_BitData_2eproto::scc_info_AckWithCredit.base);
+  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:exec.bit.data.AckWithCredit)
 }
 AckWithCredit::AckWithCredit(const AckWithCredit& from)
-  : ::google::protobuf::Message(),
-      _internal_metadata_(NULL),
+  : ::PROTOBUF_NAMESPACE_ID::Message(),
+      _internal_metadata_(nullptr),
       _has_bits_(from._has_bits_) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   allowed_credit_ = from.allowed_credit_;
@@ -1944,20 +1674,15 @@ void AckWithCredit::SharedDtor() {
 void AckWithCredit::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const ::google::protobuf::Descriptor* AckWithCredit::descriptor() {
-  ::protobuf_BitData_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_BitData_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
 const AckWithCredit& AckWithCredit::default_instance() {
-  ::google::protobuf::internal::InitSCC(&protobuf_BitData_2eproto::scc_info_AckWithCredit.base);
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_AckWithCredit_BitData_2eproto.base);
   return *internal_default_instance();
 }
 
 
 void AckWithCredit::Clear() {
 // @@protoc_insertion_point(message_clear_start:exec.bit.data.AckWithCredit)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
@@ -1966,85 +1691,59 @@ void AckWithCredit::Clear() {
   _internal_metadata_.Clear();
 }
 
-bool AckWithCredit::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
-  ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:exec.bit.data.AckWithCredit)
-  for (;;) {
-    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
-    tag = p.first;
-    if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+const char* AckWithCredit::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  _Internal::HasBits has_bits{};
+  while (!ctx->Done(&ptr)) {
+    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    CHK_(ptr);
+    switch (tag >> 3) {
       // optional int32 allowed_credit = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(8u /* 8 & 0xFF */)) {
-          set_has_allowed_credit();
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
-                 input, &allowed_credit_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
+          _Internal::set_has_allowed_credit(&has_bits);
+          allowed_credit_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       default: {
       handle_unusual:
-        if (tag == 0) {
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->SetLastTag(tag);
           goto success;
         }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, _internal_metadata_.mutable_unknown_fields()));
-        break;
+        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        CHK_(ptr != nullptr);
+        continue;
       }
-    }
-  }
+    }  // switch
+  }  // while
 success:
-  // @@protoc_insertion_point(parse_success:exec.bit.data.AckWithCredit)
-  return true;
+  _has_bits_.Or(has_bits);
+  return ptr;
 failure:
-  // @@protoc_insertion_point(parse_failure:exec.bit.data.AckWithCredit)
-  return false;
-#undef DO_
+  ptr = nullptr;
+  goto success;
+#undef CHK_
 }
 
-void AckWithCredit::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:exec.bit.data.AckWithCredit)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  cached_has_bits = _has_bits_[0];
-  // optional int32 allowed_credit = 1;
-  if (cached_has_bits & 0x00000001u) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(1, this->allowed_credit(), output);
-  }
-
-  if (_internal_metadata_.have_unknown_fields()) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        _internal_metadata_.unknown_fields(), output);
-  }
-  // @@protoc_insertion_point(serialize_end:exec.bit.data.AckWithCredit)
-}
-
-::google::protobuf::uint8* AckWithCredit::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
+::PROTOBUF_NAMESPACE_ID::uint8* AckWithCredit::_InternalSerialize(
+    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:exec.bit.data.AckWithCredit)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   cached_has_bits = _has_bits_[0];
   // optional int32 allowed_credit = 1;
   if (cached_has_bits & 0x00000001u) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(1, this->allowed_credit(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(1, this->_internal_allowed_credit(), target);
   }
 
-  if (_internal_metadata_.have_unknown_fields()) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields(), target);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields(), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:exec.bit.data.AckWithCredit)
   return target;
@@ -2054,32 +1753,36 @@ size_t AckWithCredit::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:exec.bit.data.AckWithCredit)
   size_t total_size = 0;
 
-  if (_internal_metadata_.have_unknown_fields()) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        _internal_metadata_.unknown_fields());
-  }
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
   // optional int32 allowed_credit = 1;
-  if (has_allowed_credit()) {
+  cached_has_bits = _has_bits_[0];
+  if (cached_has_bits & 0x00000001u) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::Int32Size(
-        this->allowed_credit());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
+        this->_internal_allowed_credit());
   }
 
-  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
+        _internal_metadata_, total_size, &_cached_size_);
+  }
+  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
-void AckWithCredit::MergeFrom(const ::google::protobuf::Message& from) {
+void AckWithCredit::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_merge_from_start:exec.bit.data.AckWithCredit)
   GOOGLE_DCHECK_NE(&from, this);
   const AckWithCredit* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const AckWithCredit>(
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<AckWithCredit>(
           &from);
-  if (source == NULL) {
+  if (source == nullptr) {
   // @@protoc_insertion_point(generalized_merge_from_cast_fail:exec.bit.data.AckWithCredit)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
   } else {
   // @@protoc_insertion_point(generalized_merge_from_cast_success:exec.bit.data.AckWithCredit)
     MergeFrom(*source);
@@ -2090,15 +1793,15 @@ void AckWithCredit::MergeFrom(const AckWithCredit& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:exec.bit.data.AckWithCredit)
   GOOGLE_DCHECK_NE(&from, this);
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
-  if (from.has_allowed_credit()) {
-    set_allowed_credit(from.allowed_credit());
+  if (from._internal_has_allowed_credit()) {
+    _internal_set_allowed_credit(from._internal_allowed_credit());
   }
 }
 
-void AckWithCredit::CopyFrom(const ::google::protobuf::Message& from) {
+void AckWithCredit::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_copy_from_start:exec.bit.data.AckWithCredit)
   if (&from == this) return;
   Clear();
@@ -2116,20 +1819,15 @@ bool AckWithCredit::IsInitialized() const {
   return true;
 }
 
-void AckWithCredit::Swap(AckWithCredit* other) {
-  if (other == this) return;
-  InternalSwap(other);
-}
 void AckWithCredit::InternalSwap(AckWithCredit* other) {
   using std::swap;
-  swap(allowed_credit_, other->allowed_credit_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
   _internal_metadata_.Swap(&other->_internal_metadata_);
+  swap(_has_bits_[0], other->_has_bits_[0]);
+  swap(allowed_credit_, other->allowed_credit_);
 }
 
-::google::protobuf::Metadata AckWithCredit::GetMetadata() const {
-  protobuf_BitData_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_BitData_2eproto::file_level_metadata[kIndexInFileMessages];
+::PROTOBUF_NAMESPACE_ID::Metadata AckWithCredit::GetMetadata() const {
+  return GetMetadataStatic();
 }
 
 
@@ -2137,24 +1835,23 @@ void AckWithCredit::InternalSwap(AckWithCredit* other) {
 }  // namespace data
 }  // namespace bit
 }  // namespace exec
-namespace google {
-namespace protobuf {
-template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::exec::bit::data::BitClientHandshake* Arena::CreateMaybeMessage< ::exec::bit::data::BitClientHandshake >(Arena* arena) {
+PROTOBUF_NAMESPACE_OPEN
+template<> PROTOBUF_NOINLINE ::exec::bit::data::BitClientHandshake* Arena::CreateMaybeMessage< ::exec::bit::data::BitClientHandshake >(Arena* arena) {
   return Arena::CreateInternal< ::exec::bit::data::BitClientHandshake >(arena);
 }
-template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::exec::bit::data::BitServerHandshake* Arena::CreateMaybeMessage< ::exec::bit::data::BitServerHandshake >(Arena* arena) {
+template<> PROTOBUF_NOINLINE ::exec::bit::data::BitServerHandshake* Arena::CreateMaybeMessage< ::exec::bit::data::BitServerHandshake >(Arena* arena) {
   return Arena::CreateInternal< ::exec::bit::data::BitServerHandshake >(arena);
 }
-template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::exec::bit::data::FragmentRecordBatch* Arena::CreateMaybeMessage< ::exec::bit::data::FragmentRecordBatch >(Arena* arena) {
+template<> PROTOBUF_NOINLINE ::exec::bit::data::FragmentRecordBatch* Arena::CreateMaybeMessage< ::exec::bit::data::FragmentRecordBatch >(Arena* arena) {
   return Arena::CreateInternal< ::exec::bit::data::FragmentRecordBatch >(arena);
 }
-template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::exec::bit::data::RuntimeFilterBDef* Arena::CreateMaybeMessage< ::exec::bit::data::RuntimeFilterBDef >(Arena* arena) {
+template<> PROTOBUF_NOINLINE ::exec::bit::data::RuntimeFilterBDef* Arena::CreateMaybeMessage< ::exec::bit::data::RuntimeFilterBDef >(Arena* arena) {
   return Arena::CreateInternal< ::exec::bit::data::RuntimeFilterBDef >(arena);
 }
-template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::exec::bit::data::AckWithCredit* Arena::CreateMaybeMessage< ::exec::bit::data::AckWithCredit >(Arena* arena) {
+template<> PROTOBUF_NOINLINE ::exec::bit::data::AckWithCredit* Arena::CreateMaybeMessage< ::exec::bit::data::AckWithCredit >(Arena* arena) {
   return Arena::CreateInternal< ::exec::bit::data::AckWithCredit >(arena);
 }
-}  // namespace protobuf
-}  // namespace google
+PROTOBUF_NAMESPACE_CLOSE
 
 // @@protoc_insertion_point(global_scope)
+#include <google/protobuf/port_undef.inc>
