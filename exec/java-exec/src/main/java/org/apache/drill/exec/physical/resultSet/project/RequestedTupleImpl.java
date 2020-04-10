@@ -112,6 +112,14 @@ public class RequestedTupleImpl implements RequestedTuple {
   }
 
   @Override
+  public int size() { return projection.count(); }
+
+  @Override
+  public RequestedColumn get(int i) {
+    return projection.get(i);
+  }
+
+  @Override
   public RequestedColumn get(String colName) {
     return projection.get(colName.toLowerCase());
   }
@@ -174,6 +182,7 @@ public class RequestedTupleImpl implements RequestedTuple {
         !Projections.excludeFromWildcard(columnSchema) : true;
   }
 
+  @Override
   public boolean enforceProjection(ColumnMetadata columnSchema, CustomErrorContext errorContext) {
     if (projectionType == TupleProjectionType.ALL) {
       return true;

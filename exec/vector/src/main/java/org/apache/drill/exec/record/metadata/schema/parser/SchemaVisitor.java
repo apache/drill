@@ -317,6 +317,13 @@ public class SchemaVisitor extends SchemaParserBaseVisitor<TupleMetadata> {
     }
 
     @Override
+    public ColumnMetadata visitDynamic(SchemaParser.DynamicContext ctx) {
+      // Dynamic columns carry no type or mode: that is what makes them
+      // dynamic.
+      return MetadataUtils.newDynamic(name);
+    }
+
+    @Override
     public ColumnMetadata visitStruct_type(SchemaParser.Struct_typeContext ctx) {
       // internally Drill refers to structs as maps
       MapBuilder builder = new MapBuilder(null, name, mode);

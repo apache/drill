@@ -71,6 +71,7 @@ simple_type
 | UINT8 # unit8
 | TINYINT # tinyint
 | SMALLINT # smallint
+| (LATE | DYNAMIC) # dynamic
 ;
 
 union_type: UNION;

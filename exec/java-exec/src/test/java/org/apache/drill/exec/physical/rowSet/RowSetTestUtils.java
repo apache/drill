@@ -18,13 +18,13 @@
 package org.apache.drill.exec.physical.rowSet;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 public class RowSetTestUtils {
 
@@ -57,7 +57,7 @@ public class RowSetTestUtils {
   }
 
   public static List<SchemaPath> projectAll() {
-    return Lists.newArrayList(
+    return Arrays.asList(
         new SchemaPath[] {SchemaPath.STAR_COLUMN});
   }
 

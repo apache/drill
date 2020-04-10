@@ -77,7 +77,7 @@ public class ImplicitColumnManager implements MetadataManager, ReaderProjectionR
     private List<Path> files;
 
     /**
-     * Historically Drill will expand parition columns (dir0, dir1, ...)
+     * Historically Drill will expand partition columns (dir0, dir1, ...)
      * when the project list includes a wildcard.
      */
     protected boolean useLegacyWildcardExpansion = true;
@@ -135,7 +135,7 @@ public class ImplicitColumnManager implements MetadataManager, ReaderProjectionR
   private final List<MetadataColumn> metadataColumns = new ArrayList<>();
   private ConstantColumnLoader loader;
   private VectorContainer outputContainer;
-  private FileSystem fs;
+  private final FileSystem fs;
 
   /**
    * Constructor for {@link ImplicitColumnManager} for managing the insertion of file metadata

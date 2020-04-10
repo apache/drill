@@ -240,7 +240,6 @@ public abstract class ColumnState {
    * for some previous row, depending on exactly when and where the overflow
    * occurs.
    */
-
   public void rollover() {
     assert state == State.NORMAL;
 
@@ -252,7 +251,6 @@ public abstract class ColumnState {
     // vector to double beyond the limit, but that will require a bit
     // of thought to get right -- and, of course, completely defeats
     // the purpose of limiting vector size to avoid memory fragmentation...
-
     if (loader.rowIndex() == 0) {
       throw UserException
         .memoryError("A single column value is larger than the maximum allowed size of 16 MB")
@@ -288,7 +286,6 @@ public abstract class ColumnState {
 
         // Remember that we have look-ahead values stashed away in the
         // backup vector.
-
         state = State.LOOK_AHEAD;
         break;
 

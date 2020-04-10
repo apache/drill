@@ -19,7 +19,7 @@ package org.apache.drill.exec.physical.resultSet.impl;
 
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.exec.physical.resultSet.project.Projections;
+import org.apache.drill.exec.physical.impl.scan.v3.schema.SchemaUtils;
 import org.apache.drill.exec.physical.resultSet.project.RequestedTuple;
 import org.apache.drill.exec.physical.resultSet.project.RequestedTuple.TupleProjectionType;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
@@ -28,7 +28,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Projection filter used when adding columns to the result set loader.
  * Provides a variety of ways to filter columns: no filtering, filter
  * by (parsed) projection list, or filter by projection list and
  * provided schema. Enforces consistency of actual reader schema and
@@ -42,32 +41,78 @@ public interface ProjectionFilter {
 
   ProjectionFilter PROJECT_ALL = new ImplicitProjectionFilter(true);
   ProjectionFilter PROJECT_NONE = new ImplicitProjectionFilter(false);
+  ProjResult NOT_PROJECTED = new ProjResult(false, null, PROJECT_NONE);
+  ProjResult PROJECTED = new ProjResult(true, null, PROJECT_ALL);
 
-  boolean isProjected(String colName);
+  public static class ProjResult {
+    public final boolean isProjected;
+    public final ColumnMetadata projection;
+    public final ProjectionFilter mapFilter;
 
-  boolean isProjected(ColumnMetadata columnSchema);
+    public ProjResult(boolean isProjected) {
+      this(isProjected, null, null);
+    }
 
-  ProjectionFilter mapProjection(boolean isColProjected, String colName);
+    public ProjResult(boolean isProjected, ColumnMetadata projection) {
+      this(isProjected, projection, null);
+    }
 
-  boolean isEmpty();
-
-  public static ProjectionFilter filterFor(RequestedTuple tupleProj,
-      CustomErrorContext errorContext) {
-    if (tupleProj.type() == TupleProjectionType.ALL) {
-      return PROJECT_ALL;
-    } else {
-      return new DirectProjectionFilter(tupleProj, errorContext);
+    public ProjResult(boolean isProjected, ColumnMetadata projection, ProjectionFilter mapFilter) {
+      this.isProjected = isProjected;
+      this.projection = projection;
+      this.mapFilter = mapFilter;
     }
   }
 
-  public static ProjectionFilter filterFor(RequestedTuple tupleProj,
-      TupleMetadata providedSchema, CustomErrorContext errorContext) {
-    if (providedSchema == null) {
-      return filterFor(tupleProj, errorContext);
+  ProjResult projection(ColumnMetadata columnSchema);
+
+  boolean isProjected(String colName);
+
+  boolean isEmpty();
+
+  public static ProjectionFilter projectionFilter(RequestedTuple tupleProj,
+      CustomErrorContext errorContext) {
+    switch (tupleProj.type()) {
+      case ALL:
+        return PROJECT_ALL;
+      case NONE:
+        return PROJECT_NONE;
+      default:
+        return new DirectProjectionFilter(tupleProj, errorContext);
     }
+  }
+
+  public static ProjectionFilter providedSchemaFilter(RequestedTuple tupleProj,
+      TupleMetadata providedSchema, CustomErrorContext errorContext) {
+    if (tupleProj.type() == TupleProjectionType.NONE) {
+      return PROJECT_NONE;
+    }
+    if (providedSchema == null) {
+      return projectionFilter(tupleProj, errorContext);
+    }
+    boolean strict = SchemaUtils.isStrict(providedSchema);
+    if (providedSchema.isEmpty()) {
+      if (strict) {
+        return PROJECT_NONE;
+      } else {
+        return projectionFilter(tupleProj, errorContext);
+      }
+    }
+    ProjectionFilter schemaFilter = strict ?
+        new SchemaProjectionFilter(providedSchema, errorContext) :
+        new TypeProjectionFilter(providedSchema, errorContext);
     return new CompoundProjectionFilter(
         new DirectProjectionFilter(tupleProj, errorContext),
-        new SchemaProjectionFilter(providedSchema, errorContext));
+        schemaFilter);
+  }
+
+  public static ProjectionFilter definedSchemaFilter(
+      TupleMetadata definedSchema, CustomErrorContext errorContext) {
+    if (definedSchema.isEmpty()) {
+      return PROJECT_NONE;
+    } else {
+      return new SchemaProjectionFilter(definedSchema, errorContext);
+    }
   }
 
   /**
@@ -83,18 +128,17 @@ public interface ProjectionFilter {
     }
 
     @Override
+    public ProjResult projection(ColumnMetadata col) {
+      if (SchemaUtils.isExcludedFromWildcard(col)) {
+        return NOT_PROJECTED;
+      } else {
+        return projectAll ? PROJECTED : NOT_PROJECTED;
+      }
+    }
+
+    @Override
     public boolean isProjected(String name) {
       return projectAll;
-    }
-
-    @Override
-    public boolean isProjected(ColumnMetadata columnSchema) {
-      return projectAll ? !Projections.excludeFromWildcard(columnSchema) : false;
-    }
-
-    @Override
-    public ProjectionFilter mapProjection(boolean isColProjected, String colName) {
-      return isColProjected ? this : PROJECT_NONE;
     }
 
     @Override
@@ -118,20 +162,18 @@ public interface ProjectionFilter {
     }
 
     @Override
+    public ProjResult projection(ColumnMetadata col) {
+      if (projectionSet.enforceProjection(col, errorContext)) {
+        return new ProjResult(true, null,
+            projectionFilter(projectionSet.mapProjection(col.name()), errorContext));
+      } else {
+        return NOT_PROJECTED;
+      }
+    }
+
+    @Override
     public boolean isProjected(String colName) {
       return projectionSet.isProjected(colName);
-    }
-
-    @Override
-    public boolean isProjected(ColumnMetadata columnSchema) {
-      return projectionSet.enforceProjection(columnSchema, errorContext);
-    }
-
-    @Override
-    public ProjectionFilter mapProjection(boolean isColProjected, String colName) {
-      return isColProjected ?
-        filterFor(projectionSet.mapProjection(colName), errorContext) :
-        PROJECT_NONE;
     }
 
     @Override
@@ -141,77 +183,113 @@ public interface ProjectionFilter {
   }
 
   /**
-   * Projection based on a provided schema. If the schema is strict, a reader column
-   * is projected only if that column appears in the provided schema. Non-strict
-   * schema allow additional reader columns.
-   * <p>
-   * If the column is found, enforces that the reader schema has the same type and
-   * mode as the provided column.
+   * Schema-based projection.
    */
-  public static class SchemaProjectionFilter implements ProjectionFilter {
-    private final TupleMetadata providedSchema;
-    private final CustomErrorContext errorContext;
-    private final boolean isStrict;
+  public abstract static class BaseSchemaProjectionFilter implements ProjectionFilter {
+    protected final TupleMetadata schema;
+    protected final CustomErrorContext errorContext;
 
-    public SchemaProjectionFilter(TupleMetadata providedSchema, CustomErrorContext errorContext) {
-      this(providedSchema,
-          providedSchema.booleanProperty(TupleMetadata.IS_STRICT_SCHEMA_PROP),
-          errorContext);
-    }
-
-    private SchemaProjectionFilter(TupleMetadata providedSchema, boolean isStrict, CustomErrorContext errorContext) {
-      this.providedSchema = providedSchema;
+    private BaseSchemaProjectionFilter(TupleMetadata schema, CustomErrorContext errorContext) {
+      this.schema = schema;
       this.errorContext = errorContext;
-      this.isStrict = isStrict;
     }
 
-    @Override
-    public boolean isProjected(String name) {
-      ColumnMetadata providedCol = providedSchema.metadata(name);
-      return providedCol != null || !isStrict;
-    }
-
-    @Override
-    public boolean isProjected(ColumnMetadata columnSchema) {
-      ColumnMetadata providedCol = providedSchema.metadata(columnSchema.name());
-      if (providedCol == null) {
-        return !isStrict;
+    protected void validateColumn(ColumnMetadata schemaCol, ColumnMetadata readerCol) {
+      if (schemaCol.isDynamic()) {
+        return;
       }
-      if (providedCol.type() != columnSchema.type() ||
-          providedCol.mode() != columnSchema.mode()) {
+      if (schemaCol.type() != readerCol.type() ||
+          schemaCol.mode() != readerCol.mode()) {
         throw UserException.validationError()
-          .message("Reader and provided column type mismatch")
-          .addContext("Provided column", providedCol.columnString())
-          .addContext("Reader column", columnSchema.columnString())
+          .message("Reader and scan column type conflict")
+          .addContext("Scan column", schemaCol.columnString())
+          .addContext("Reader column", readerCol.columnString())
           .addContext(errorContext)
           .build(logger);
       }
-      return true;
     }
 
-    @Override
-    public ProjectionFilter mapProjection(boolean isColProjected, String colName) {
-      if (!isColProjected) {
-        return PROJECT_NONE;
-      }
-      ColumnMetadata providedCol = providedSchema.metadata(colName);
-      if (providedCol == null) {
-        return PROJECT_ALL;
-      }
-      if (!providedCol.isMap()) {
+    protected void validateMap(ColumnMetadata schemaCol) {
+      if (!schemaCol.isMap()) {
         throw UserException.validationError()
-          .message("Reader expected a map column, but the the provided column is not a map")
-          .addContext("Provided column", providedCol.columnString())
-          .addContext("Reader column", colName)
+          .message("Reader expected a map column, but the the schema column is not a map")
+          .addContext("Provided column", schemaCol.columnString())
+          .addContext("Reader column", schemaCol.name())
           .addContext(errorContext)
           .build(logger);
       }
-      return new SchemaProjectionFilter(providedCol.tupleSchema(), isStrict, errorContext);
     }
 
     @Override
     public boolean isEmpty() {
-       return providedSchema.isEmpty();
+       return schema.isEmpty();
+    }
+  }
+
+  /**
+   * Projection based on a non-strict provided schema which enforces the type of known
+   * columns, but has no opinion about additional columns.
+   * <p>
+   * If the column is found, enforces that the reader schema has the same type and
+   * mode as the provided column.
+   */
+  public static class TypeProjectionFilter extends BaseSchemaProjectionFilter {
+
+    public TypeProjectionFilter(TupleMetadata providedSchema, CustomErrorContext errorContext) {
+      super(providedSchema, errorContext);
+    }
+
+    @Override
+    public ProjResult projection(ColumnMetadata col) {
+      ColumnMetadata providedCol = schema.metadata(col.name());
+      if (providedCol == null) {
+        return PROJECTED;
+      } else {
+        validateColumn(providedCol, col);
+        if (providedCol.isMap()) {
+          return new ProjResult(true, providedCol,
+              new TypeProjectionFilter(providedCol.tupleSchema(), errorContext));
+        } else {
+          return new ProjResult(true, providedCol);
+        }
+      }
+    }
+
+    @Override
+    public boolean isProjected(String name) {
+      return true;
+    }
+  }
+
+  /**
+   * Projection filter in which a schema exactly defines the set of allowed
+   * columns, and their types.
+   */
+  public static class SchemaProjectionFilter extends BaseSchemaProjectionFilter {
+
+    public SchemaProjectionFilter(TupleMetadata definedSchema, CustomErrorContext errorContext) {
+      super(definedSchema, errorContext);
+    }
+
+    @Override
+    public ProjResult projection(ColumnMetadata col) {
+      ColumnMetadata providedCol = schema.metadata(col.name());
+      if (providedCol == null) {
+        return NOT_PROJECTED;
+      } else {
+        validateColumn(providedCol, col);
+        if (providedCol.isMap()) {
+          return new ProjResult(true, providedCol,
+              new SchemaProjectionFilter(providedCol.tupleSchema(), errorContext));
+        } else {
+          return new ProjResult(true, providedCol);
+        }
+      }
+    }
+
+    @Override
+    public boolean isProjected(String name) {
+      return schema.metadata(name) != null;
     }
   }
 
@@ -228,37 +306,35 @@ public interface ProjectionFilter {
     }
 
     @Override
+    public ProjResult projection(ColumnMetadata col) {
+      ProjResult result1 = filter1.projection(col);
+      ProjResult result2 = filter2.projection(col);
+      if (!result1.isProjected || !result2.isProjected) {
+        return NOT_PROJECTED;
+      }
+      if (result1.mapFilter == null && result2.mapFilter == null) {
+        return result1;
+      }
+      if (result1.mapFilter == PROJECT_ALL) {
+        return result2;
+      }
+      if (result2.mapFilter == PROJECT_ALL) {
+        return result1;
+      }
+
+      return new ProjResult(true,
+          result1.projection == null ? result2.projection : result1.projection,
+          new CompoundProjectionFilter(result1.mapFilter, result2.mapFilter));
+    }
+
+    @Override
     public boolean isProjected(String name) {
       return filter1.isProjected(name) && filter2.isProjected(name);
     }
 
     @Override
-    public boolean isProjected(ColumnMetadata columnSchema) {
-      return filter1.isProjected(columnSchema) && filter2.isProjected(columnSchema);
-    }
-
-    @Override
-    public ProjectionFilter mapProjection(boolean isColProjected, String colName) {
-      ProjectionFilter childFilter1 = filter1.mapProjection(isColProjected, colName);
-      ProjectionFilter childFilter2 = filter2.mapProjection(isColProjected, colName);
-      if (childFilter1 == PROJECT_ALL) {
-        return childFilter2;
-      }
-      if (childFilter1 == PROJECT_NONE) {
-        return childFilter1;
-      }
-      if (childFilter2 == PROJECT_ALL) {
-        return childFilter1;
-      }
-      if (childFilter2 == PROJECT_NONE) {
-        return childFilter2;
-      }
-      return new CompoundProjectionFilter(childFilter1, childFilter2);
-    }
-
-    @Override
     public boolean isEmpty() {
-      return filter1.isEmpty() && filter2.isEmpty();
+      return filter1.isEmpty() || filter2.isEmpty();
     }
   }
 }

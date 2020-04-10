@@ -119,7 +119,5 @@ public class SchemaExprParser {
       }
       throw new SchemaParsingException(builder.toString());
     }
-
   }
-
 }

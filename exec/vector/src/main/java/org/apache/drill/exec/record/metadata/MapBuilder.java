@@ -110,6 +110,11 @@ public class MapBuilder implements SchemaContainer {
     return addDecimal(name, type, DataMode.REPEATED, precision, scale);
   }
 
+  public MapBuilder addDynamic(String name) {
+    tupleBuilder.addColumn(MetadataUtils.newDynamic(name));
+    return this;
+  }
+
   public MapBuilder addDecimal(String name, MinorType type,
       DataMode mode, int precision, int scale) {
     tupleBuilder.addDecimal(name, type, mode, precision, scale);

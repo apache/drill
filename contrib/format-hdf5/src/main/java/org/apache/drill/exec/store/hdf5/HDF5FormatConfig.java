@@ -43,7 +43,6 @@ public class HDF5FormatConfig implements FormatPluginConfig {
     return defaultPath;
   }
 
-
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {

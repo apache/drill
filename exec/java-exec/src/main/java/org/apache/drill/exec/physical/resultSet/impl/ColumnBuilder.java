@@ -24,6 +24,7 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.physical.resultSet.impl.ColumnState.PrimitiveColumnState;
 import org.apache.drill.exec.physical.resultSet.impl.ListState.ListVectorState;
+import org.apache.drill.exec.physical.resultSet.impl.ProjectionFilter.ProjResult;
 import org.apache.drill.exec.physical.resultSet.impl.RepeatedListState.RepeatedListColumnState;
 import org.apache.drill.exec.physical.resultSet.impl.RepeatedListState.RepeatedListVectorState;
 import org.apache.drill.exec.physical.resultSet.impl.SingleVectorState.OffsetVectorState;
@@ -128,7 +129,7 @@ public class ColumnBuilder {
   private ColumnState buildPrimitive(ContainerState parent, ColumnMetadata columnSchema) {
 
     final ValueVector vector;
-    if (parent.projection().isProjected(columnSchema) || allowCreation(parent)) {
+    if (parent.projection().projection(columnSchema).isProjected || allowCreation(parent)) {
 
       // Create the vector for the column.
       vector = parent.vectorCache().vectorFor(columnSchema.schema());
@@ -210,11 +211,11 @@ public class ColumnBuilder {
   private ColumnState buildSingleMap(ContainerState parent, ColumnMetadata columnSchema) {
 
     final ProjectionFilter projFilter = parent.projection();
-    final boolean isProjected = projFilter.isProjected(columnSchema);
+    final ProjResult projResult = projFilter.projection(columnSchema);
 
     final MapVector vector;
     final VectorState vectorState;
-    if (isProjected) {
+    if (projResult.isProjected) {
 
       // Don't get the map vector from the vector cache. Map vectors may
       // have content that varies from batch to batch. Only the leaf
@@ -229,19 +230,19 @@ public class ColumnBuilder {
     final TupleObjectWriter mapWriter = MapWriter.buildMap(columnSchema, vector, new ArrayList<>());
     final SingleMapState mapState = new SingleMapState(parent.loader(),
         parent.vectorCache().childCache(columnSchema.name()),
-        projFilter.mapProjection(isProjected, columnSchema.name()));
+        projResult.mapFilter);
     return new MapColumnState(mapState, mapWriter, vectorState, parent.isVersioned());
   }
 
   private ColumnState buildMapArray(ContainerState parent, ColumnMetadata columnSchema) {
 
     final ProjectionFilter projFilter = parent.projection();
-    final boolean isProjected = projFilter.isProjected(columnSchema);
+    final ProjResult projResult = projFilter.projection(columnSchema);
 
     // Create the map's offset vector.
     final RepeatedMapVector mapVector;
     final UInt4Vector offsetVector;
-    if (isProjected) {
+    if (projResult.isProjected) {
 
       // Creating the map vector will create its contained vectors if we
       // give it a materialized field with children. So, instead pass a clone
@@ -266,7 +267,7 @@ public class ColumnBuilder {
 
     // Wrap the offset vector in a vector state
     VectorState offsetVectorState;
-    if (!projFilter.isProjected(columnSchema)) {
+    if (!projResult.isProjected) {
       offsetVectorState = new NullVectorState();
     } else {
       offsetVectorState = new OffsetVectorState(
@@ -279,7 +280,7 @@ public class ColumnBuilder {
     // Assemble it all into the column state.
     final MapArrayState mapState = new MapArrayState(parent.loader(),
         parent.vectorCache().childCache(columnSchema.name()),
-        projFilter.mapProjection(isProjected, columnSchema.name()));
+        projResult.mapFilter);
     return new MapColumnState(mapState, writer, mapVectorState, parent.isVersioned());
   }
 
@@ -524,12 +525,12 @@ public class ColumnBuilder {
   private ColumnState buildDictArray(ContainerState parent, ColumnMetadata columnSchema) {
 
     final ProjectionFilter projFilter = parent.projection();
-    final boolean isProjected = projFilter.isProjected(columnSchema);
+    final ProjResult projResult = projFilter.projection(columnSchema);
 
     // Create the dict's offset vector.
     final RepeatedDictVector repeatedDictVector;
     final UInt4Vector offsetVector;
-    if (isProjected) {
+    if (projResult.isProjected) {
 
       // Creating the dict vector will create its contained vectors if we
       // give it a materialized field with children. So, instead pass a clone
@@ -559,7 +560,7 @@ public class ColumnBuilder {
 
     VectorState offsetVectorState;
     VectorState dictOffsetVectorState;
-    if (!projFilter.isProjected(columnSchema)) {
+    if (!projResult.isProjected) {
       offsetVectorState = new NullVectorState();
       dictOffsetVectorState = new NullVectorState();
     } else {
@@ -579,7 +580,7 @@ public class ColumnBuilder {
     // Assemble it all into the column state.
     final TupleState.DictArrayState dictArrayState = new TupleState.DictArrayState(parent.loader(),
         parent.vectorCache().childCache(columnSchema.name()),
-        projFilter.mapProjection(isProjected, columnSchema.name()));
+        projResult.mapFilter);
     return new TupleState.DictColumnState(
         dictArrayState, writer, mapVectorState, parent.isVersioned());
   }
@@ -587,12 +588,12 @@ public class ColumnBuilder {
   private ColumnState buildSingleDict(ContainerState parent, ColumnMetadata columnSchema) {
 
     final ProjectionFilter projFilter = parent.projection();
-    final boolean isProjected = projFilter.isProjected(columnSchema);
+    final ProjResult projResult = projFilter.projection(columnSchema);
 
     // Create the dict's offset vector.
     final DictVector dictVector;
     final UInt4Vector offsetVector;
-    if (isProjected) {
+    if (projResult.isProjected) {
 
       // Creating the dict vector will create its contained vectors if we
       // give it a materialized field with children. So, instead pass a clone
@@ -617,7 +618,7 @@ public class ColumnBuilder {
     // Wrap the offset vector in a vector state
 
     final VectorState offsetVectorState;
-    if (!projFilter.isProjected(columnSchema)) {
+    if (!projResult.isProjected) {
       offsetVectorState = new NullVectorState();
     } else {
       offsetVectorState = new OffsetVectorState(
@@ -629,7 +630,7 @@ public class ColumnBuilder {
 
     // Assemble it all into the column state.
     final SingleDictState dictArrayState = new SingleDictState(parent.loader(), parent.vectorCache().childCache(columnSchema.name()),
-        projFilter.mapProjection(isProjected, columnSchema.name()));
+        projResult.mapFilter);
     return new TupleState.DictColumnState(
         dictArrayState, writer, mapVectorState, parent.isVersioned());
   }

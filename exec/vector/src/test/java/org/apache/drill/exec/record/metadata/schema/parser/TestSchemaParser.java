@@ -497,4 +497,13 @@ public class TestSchemaParser extends BaseTest {
       }
     );
   }
+
+  @Test
+  public void testDynamicColumn() throws IOException {
+    String input = "(`a` LATE, `b` DYNAMIC)";
+    TupleMetadata schema = SchemaExprParser.parseSchema(input);
+    assertEquals(2, schema.size());
+    assertEquals("`a` DYNAMIC", schema.metadata("a").columnString());
+    assertEquals("`b` DYNAMIC", schema.metadata("b").columnString());
+  }
 }

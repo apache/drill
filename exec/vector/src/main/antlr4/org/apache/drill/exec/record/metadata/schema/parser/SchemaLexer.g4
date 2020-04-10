@@ -59,6 +59,10 @@ STRUCT: 'STRUCT';
 ARRAY: 'ARRAY';
 UNION: 'UNION';
 
+// dynamic columns
+LATE: 'LATE';
+DYNAMIC: 'DYNAMIC';
+
 // additional data types, primary used for Parquet
 UINT1: 'UINT1';
 UINT2: 'UINT2';

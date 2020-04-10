@@ -123,4 +123,19 @@ public abstract class AbstractMapColumnMetadata extends AbstractColumnMetadata {
    * @return type string representation
    */
   protected abstract String internalTypeString();
+
+  @Override
+  protected void appendContents(StringBuilder buf) {
+    buf.append(", schema: ")
+       .append(tupleSchema().toString());
+  }
+
+  @Override
+  public boolean isEquivalent(ColumnMetadata o) {
+    if (!super.isEquivalent(o)) {
+      return false;
+    }
+    AbstractMapColumnMetadata other = (AbstractMapColumnMetadata) o;
+    return schema.equals(other.schema);
+  }
 }

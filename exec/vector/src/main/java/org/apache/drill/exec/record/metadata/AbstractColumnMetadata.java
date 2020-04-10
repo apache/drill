@@ -20,6 +20,7 @@ package org.apache.drill.exec.record.metadata;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -38,24 +39,24 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 /**
  * Abstract definition of column metadata. Allows applications to create
- * specialized forms of a column metadata object by extending from this
- * abstract class.
+ * specialized forms of a column metadata object by extending from this abstract
+ * class.
  * <p>
- * Note that, by design, primitive columns do not have a link to their
- * tuple parent, or their index within that parent. This allows the same
- * metadata to be shared between two views of a tuple, perhaps physical
- * and projected views. This restriction does not apply to map columns,
- * since maps (and the row itself) will, by definition, differ between
- * the two views.
+ * Note that, by design, primitive columns do not have a link to their tuple
+ * parent, or their index within that parent. This allows the same metadata to
+ * be shared between two views of a tuple, perhaps physical and projected views.
+ * This restriction does not apply to map columns, since maps (and the row
+ * itself) will, by definition, differ between the two views.
  */
-@JsonAutoDetect(
-  fieldVisibility = JsonAutoDetect.Visibility.NONE,
-  getterVisibility = JsonAutoDetect.Visibility.NONE,
-  isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-  setterVisibility = JsonAutoDetect.Visibility.NONE)
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE,
+                getterVisibility = JsonAutoDetect.Visibility.NONE,
+                isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+                setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
-@JsonPropertyOrder({"name", "type", "mode", "format", "default", "properties"})
-public abstract class AbstractColumnMetadata extends AbstractPropertied implements ColumnMetadata {
+@JsonPropertyOrder({ "name", "type", "mode", "format", "default",
+    "properties" })
+public abstract class AbstractColumnMetadata extends AbstractPropertied
+    implements ColumnMetadata {
 
   // Capture the key schema information. We cannot use the MaterializedField
   // or MajorType because they encode child information that we encode here
@@ -68,11 +69,13 @@ public abstract class AbstractColumnMetadata extends AbstractPropertied implemen
   protected final int scale;
 
   @JsonCreator
-  public static AbstractColumnMetadata createColumnMetadata(@JsonProperty("name") String name,
-                                                            @JsonProperty("type") String type,
-                                                            @JsonProperty("mode") DataMode mode,
-                                                            @JsonProperty("properties") Map<String, String> properties) throws IOException {
-    ColumnMetadata columnMetadata = SchemaExprParser.parseColumn(name, type, mode);
+  public static AbstractColumnMetadata createColumnMetadata(
+      @JsonProperty("name") String name, @JsonProperty("type") String type,
+      @JsonProperty("mode") DataMode mode,
+      @JsonProperty("properties") Map<String, String> properties)
+      throws IOException {
+    ColumnMetadata columnMetadata = SchemaExprParser.parseColumn(name, type,
+        mode);
     columnMetadata.setProperties(properties);
     return (AbstractColumnMetadata) columnMetadata;
   }
@@ -99,11 +102,11 @@ public abstract class AbstractColumnMetadata extends AbstractPropertied implemen
 
   public AbstractColumnMetadata(AbstractColumnMetadata from) {
     super(from);
-    name = from.name;
-    type = from.type;
-    mode = from.mode;
-    precision = from.precision;
-    scale = from.scale;
+    this.name = from.name;
+    this.type = from.type;
+    this.mode = from.mode;
+    this.precision = from.precision;
+    this.scale = from.scale;
     setProperties(from.properties());
   }
 
@@ -119,10 +122,7 @@ public abstract class AbstractColumnMetadata extends AbstractPropertied implemen
 
   @Override
   public MajorType majorType() {
-    return MajorType.newBuilder()
-        .setMinorType(type())
-        .setMode(mode())
-        .build();
+    return MajorType.newBuilder().setMinorType(type()).setMode(mode()).build();
   }
 
   @JsonProperty("mode")
@@ -130,13 +130,19 @@ public abstract class AbstractColumnMetadata extends AbstractPropertied implemen
   public DataMode mode() { return mode; }
 
   @Override
-  public boolean isNullable() { return mode() == DataMode.OPTIONAL; }
+  public boolean isNullable() {
+    return mode() == DataMode.OPTIONAL;
+  }
 
   @Override
-  public boolean isArray() { return mode() == DataMode.REPEATED; }
+  public boolean isArray() {
+    return mode() == DataMode.REPEATED;
+  }
 
   @Override
-  public int dimensions() { return isArray() ? 1 : 0; }
+  public int dimensions() {
+    return isArray() ? 1 : 0;
+  }
 
   @Override
   public boolean isMap() { return false; }
@@ -148,9 +154,10 @@ public abstract class AbstractColumnMetadata extends AbstractPropertied implemen
   public boolean isMultiList() { return false; }
 
   @Override
-  public boolean isDict() {
-    return false;
-  }
+  public boolean isDict() { return false; }
+
+  @Override
+  public boolean isDynamic() { return false; }
 
   @Override
   public TupleMetadata tupleSchema() { return null; }
@@ -167,12 +174,26 @@ public abstract class AbstractColumnMetadata extends AbstractPropertied implemen
   }
 
   @Override
-  public boolean isEquivalent(ColumnMetadata other) {
+  public boolean isEquivalent(ColumnMetadata o) {
+    if (o == this) {
+      return true;
+    }
+    if (o == null || o.getClass() != getClass()) {
+      return false;
+    }
 
-    // TODO: This converts each column to a MaterializedField in
-    // order to do the comparison. This is done to avoid duplicating
-    // the checks. Consider doing checks here at some point.
-    return schema().isEquivalent(other.schema());
+    AbstractColumnMetadata other = (AbstractColumnMetadata) o;
+    // Note: don't compare properties; we seldom care if those are identical.
+    return name.equalsIgnoreCase(other.name) &&
+           Objects.equals(type, other.type) &&
+           Objects.equals(mode, other.mode);
+  }
+
+  public boolean equalsWithProperties(AbstractColumnMetadata other) {
+    if (!super.equals(other)) {
+      return false;
+    }
+    return isEquivalent(other);
   }
 
   @Override
@@ -182,8 +203,9 @@ public abstract class AbstractColumnMetadata extends AbstractPropertied implemen
   public void setExpectedWidth(int width) { }
 
   /**
-   * Returns precision for current column. For the case when precision is not set
-   * or column type does not support precision, negative value will be returned.
+   * Returns precision for current column. For the case when precision is not
+   * set or column type does not support precision, negative value will be
+   * returned.
    *
    * @return precision for current column
    */
@@ -191,8 +213,8 @@ public abstract class AbstractColumnMetadata extends AbstractPropertied implemen
   public int precision() { return -1; }
 
   /**
-   * Returns scale for current column. For the case when scale is not set
-   * or column type does not support scale, negative value will be returned.
+   * Returns scale for current column. For the case when scale is not set or
+   * column type does not support scale, negative value will be returned.
    *
    * @return scale for current column
    */
@@ -206,7 +228,8 @@ public abstract class AbstractColumnMetadata extends AbstractPropertied implemen
     // makes an error.
 
     if (isArray()) {
-      PropertyAccessor.set(this, EXPECTED_CARDINALITY_PROP, Math.max(1, childCount));
+      PropertyAccessor.set(this, EXPECTED_CARDINALITY_PROP,
+          Math.max(1, childCount));
     }
   }
 
@@ -214,7 +237,8 @@ public abstract class AbstractColumnMetadata extends AbstractPropertied implemen
   public int expectedElementCount() {
     if (isArray()) {
       // Not set means default size
-      return PropertyAccessor.getInt(this, EXPECTED_CARDINALITY_PROP, DEFAULT_ARRAY_SIZE);
+      return PropertyAccessor.getInt(this, EXPECTED_CARDINALITY_PROP,
+          DEFAULT_ARRAY_SIZE);
     } else {
       // Cardinality always 1 for optional, repeated modes
       return 1;
@@ -233,7 +257,8 @@ public abstract class AbstractColumnMetadata extends AbstractPropertied implemen
 
   @Override
   public DateTimeFormatter dateTimeFormatter() {
-    throw new UnsupportedOperationException("Date/time not supported for non-scalar columns");
+    throw new UnsupportedOperationException(
+        "Date/time not supported for non-scalar columns");
   }
 
   @Override
@@ -253,12 +278,14 @@ public abstract class AbstractColumnMetadata extends AbstractPropertied implemen
 
   @Override
   public Object valueFromString(String value) {
-    throw new UnsupportedOperationException("Value conversion not supported for non-scalar columns");
+    throw new UnsupportedOperationException(
+        "Value conversion not supported for non-scalar columns");
   }
 
   @Override
   public String valueToString(Object value) {
-    throw new UnsupportedOperationException("Value conversion not supported for non-scalar columns");
+    throw new UnsupportedOperationException(
+        "Value conversion not supported for non-scalar columns");
   }
 
   @JsonProperty("properties")
@@ -269,37 +296,23 @@ public abstract class AbstractColumnMetadata extends AbstractPropertied implemen
 
   @Override
   public String toString() {
-    final StringBuilder buf = new StringBuilder()
-        .append("[")
-        .append(getClass().getSimpleName())
-        .append(" ")
+    final StringBuilder buf = new StringBuilder().append("[")
+        .append(getClass().getSimpleName()).append(" ")
         .append(schema().toString(false));
-    if (variantSchema() != null) {
-      buf.append(", variant: ")
-         .append(variantSchema().toString());
-    }
-    if (childSchema() != null) {
-      buf.append(", child: ")
-         .append(childSchema().toString());
-    }
-    if (tupleSchema() != null) {
-      buf.append(", schema: ")
-         .append(tupleSchema().toString());
-    }
+    appendContents(buf);
     if (hasProperties()) {
-      buf.append(", properties: ")
-        .append(properties());
+      buf.append(", properties: ").append(properties());
     }
-    return buf
-        .append("]")
-        .toString();
+    return buf.append("]").toString();
   }
 
+  protected void appendContents(StringBuilder buf) { }
+
+  // All subclasses must implement this in a way that the
+  // parser can parse back to type the same instance.
   @JsonProperty("type")
   @Override
-  public String typeString() {
-    return majorType().toString();
-  }
+  public abstract String typeString();
 
   @Override
   public String columnString() {
@@ -325,12 +338,11 @@ public abstract class AbstractColumnMetadata extends AbstractPropertied implemen
       Map<String, String> copy = new HashMap<>(properties());
       copy.remove(FORMAT_PROP);
       copy.remove(DEFAULT_VALUE_PROP);
-      if (! copy.isEmpty()) {
+      if (!copy.isEmpty()) {
         builder.append(" PROPERTIES { ");
-        builder.append(copy.entrySet()
-          .stream()
-          .map(e -> String.format("'%s' = '%s'", e.getKey(), e.getValue()))
-          .collect(Collectors.joining(", ")));
+        builder.append(copy.entrySet().stream()
+            .map(e -> String.format("'%s' = '%s'", e.getKey(), e.getValue()))
+            .collect(Collectors.joining(", ")));
         builder.append(" }");
       }
     }
@@ -338,13 +350,30 @@ public abstract class AbstractColumnMetadata extends AbstractPropertied implemen
     return builder.toString();
   }
 
+  @Override
+  public boolean equals(Object o) {
+    // Equals not implemented in this class because we don't compare
+    // all fields. And, since this object should never be a key, we do
+    // not implement hashCode(). Per project conventions, if we don't
+    // implement hashCode(), we cannot implement equals().
+    throw new UnsupportedOperationException("Use isEquivalent() instead.");
+   }
+
+  public boolean equalsWithProperties(Object o) {
+    if (!equals(o)) {
+      return false;
+    }
+    return super.equals(o);
+  }
+
   /**
    * If given value contains backticks (`) or backslashes (\), escapes them.
    *
-   * @param value string value
+   * @param value
+   *          string value
    * @return updated value
    */
-  private String escapeSpecialSymbols(String value) {
+  protected String escapeSpecialSymbols(String value) {
     return value.replaceAll("(\\\\)|(`)", "\\\\$0");
   }
 }

@@ -34,11 +34,9 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.metadata.ColumnMetadata.StructureType;
-import org.apache.drill.test.SubOperatorTest;
+import org.apache.drill.test.BaseTest;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -46,14 +44,13 @@ import org.junit.experimental.categories.Category;
  * Test the tuple and column metadata, including extended attributes.
  */
 @Category(RowSetTests.class)
-public class TestTupleSchema extends SubOperatorTest {
+public class TestTupleSchema extends BaseTest {
 
   /**
    * Test a fixed-width, primitive, required column. Includes basic
    * tests common to all data types. (Basic tests are not repeated for
    * other types.)
    */
-
   @Test
   public void testRequiredFixedWidthColumn() {
 
@@ -61,11 +58,9 @@ public class TestTupleSchema extends SubOperatorTest {
     ColumnMetadata col = MetadataUtils.fromField(field);
 
     // Code may depend on the specific column class
-
     assertTrue(col instanceof PrimitiveColumnMetadata);
 
     // Generic checks
-
     assertEquals(ColumnMetadata.StructureType.PRIMITIVE, col.structureType());
     assertNull(col.tupleSchema());
     assertTrue(field.isEquivalent(col.schema()));
@@ -168,7 +163,6 @@ public class TestTupleSchema extends SubOperatorTest {
     assertFalse(col.isVariant());
 
     // A different precision is a different type.
-
     MaterializedField field2 = new ColumnBuilder("c", MinorType.VARCHAR)
         .setMode(DataMode.REQUIRED)
         .setPrecision(10)
@@ -186,7 +180,6 @@ public class TestTupleSchema extends SubOperatorTest {
     assertEquals(1, col.expectedElementCount());
 
     // If precision is provided, then that is the default width
-
     col = MetadataUtils.fromField(field2);
     assertEquals(10, col.expectedWidth());
   }
@@ -263,7 +256,6 @@ public class TestTupleSchema extends SubOperatorTest {
    * Tests a map column. Maps can only be required or repeated, not nullable.
    * (But, the columns in the map can be nullable.)
    */
-
   @Test
   public void testMapColumn() {
 
@@ -339,7 +331,6 @@ public class TestTupleSchema extends SubOperatorTest {
 
     // List modeled as a repeated element. Implementation is a bit
     // more complex, but does not affect this abstract description.
-
     assertFalse(col.isVariableWidth());
     doVariantTest(col);
   }
@@ -394,7 +385,6 @@ public class TestTupleSchema extends SubOperatorTest {
   /**
    * Test the basics of an empty root tuple (i.e. row) schema.
    */
-
   @Test
   public void testEmptyRootTuple() {
 
@@ -429,7 +419,6 @@ public class TestTupleSchema extends SubOperatorTest {
 
     // The full name method does not check if the column is actually
     // in the tuple.
-
     MaterializedField field = SchemaBuilder.columnSchema("c", MinorType.INT, DataMode.REQUIRED );
     ColumnMetadata col = MetadataUtils.fromField(field);
     assertEquals("c", root.fullName(col));
@@ -443,7 +432,6 @@ public class TestTupleSchema extends SubOperatorTest {
    * Test the basics of a non-empty root tuple (i.e. a row) using a pair
    * of primitive columns.
    */
-
   @Test
   public void testNonEmptyRootTuple() {
 
@@ -507,7 +495,6 @@ public class TestTupleSchema extends SubOperatorTest {
     assertFalse(emptyRoot.isEquivalent(root));
 
     // Same schema: the tuples are equivalent
-
     TupleMetadata root3 = new TupleSchema();
     root3.add(fieldA);
     root3.addColumn(colB);
@@ -515,7 +502,6 @@ public class TestTupleSchema extends SubOperatorTest {
     assertTrue(root.isEquivalent(root3));
 
     // Same columns, different order. The tuples are not equivalent.
-
     TupleMetadata root4 = new TupleSchema();
     root4.addColumn(colB);
     root4.add(fieldA);
@@ -523,13 +509,7 @@ public class TestTupleSchema extends SubOperatorTest {
     assertFalse(root.isEquivalent(root4));
 
     // A tuple is equivalent to its copy.
-
     assertTrue(root.isEquivalent(root.copy()));
-
-    // And it is equivalent to the round trip to a batch schema.
-
-    BatchSchema batchSchema = new BatchSchema(SelectionVectorMode.NONE, root.toFieldList());
-    assertTrue(root.isEquivalent(MetadataUtils.fromFields(batchSchema)));
   }
 
   /**
@@ -540,7 +520,6 @@ public class TestTupleSchema extends SubOperatorTest {
    * Here we build up the schema using the metadata schema, and generate a
    * materialized field from the metadata.
    */
-
   @Test
   public void testMapTupleFromMetadata() {
 
@@ -577,7 +556,6 @@ public class TestTupleSchema extends SubOperatorTest {
 
     // The full name contains quoted names if the contain dots.
     // This name is more for diagnostic than semantic purposes.
-
     assertEquals("a", root.fullName(0));
     assertEquals("a.`b.x`", mapA.fullName(0));
     assertEquals("a.`b.x`.`c.y`", mapB.fullName(0));
@@ -594,19 +572,16 @@ public class TestTupleSchema extends SubOperatorTest {
     // Note that the metadata layer does not store the materialized field.
     // (Doing so causes no end of synchronization problems.) So we test
     // for equivalence, not sameness.
-
     Iterator<MaterializedField> iterC = colC.schema().getChildren().iterator();
     assertTrue(fieldD.isEquivalent(iterC.next()));
     assertTrue(fieldE.isEquivalent(iterC.next()));
 
     // Copying should be deep.
-
     TupleMetadata root2 = root.copy();
     assertEquals(2, root2.metadata(0).tupleSchema().metadata(0).tupleSchema().metadata(0).tupleSchema().size());
     assert(root.isEquivalent(root2));
 
     // Generate a materialized field and compare.
-
     fieldA.addChild(fieldB);
     fieldB.addChild(fieldC);
     fieldC.addChild(fieldD);
@@ -618,7 +593,6 @@ public class TestTupleSchema extends SubOperatorTest {
   public void testMapTupleFromField() {
 
     // Create a materialized field with the desired structure.
-
     MaterializedField fieldA = SchemaBuilder.columnSchema("a", MinorType.MAP, DataMode.REQUIRED);
 
     MaterializedField fieldB = SchemaBuilder.columnSchema("b.x", MinorType.MAP, DataMode.REQUIRED);
@@ -634,12 +608,10 @@ public class TestTupleSchema extends SubOperatorTest {
     fieldC.addChild(fieldE);
 
     // Create a metadata schema from the field.
-
     TupleMetadata root = new TupleSchema();
     ColumnMetadata colA = root.add(fieldA);
 
     // Get the parts.
-
     TupleMetadata mapA = colA.tupleSchema();
     ColumnMetadata colB = mapA.metadata("b.x");
     TupleMetadata mapB = colB.tupleSchema();
@@ -650,7 +622,6 @@ public class TestTupleSchema extends SubOperatorTest {
 
     // Validate. Should be same as earlier test that started
     // with the metadata.
-
     assertEquals(1, root.size());
     assertEquals(1, mapA.size());
     assertEquals(1, mapB.size());
@@ -664,7 +635,6 @@ public class TestTupleSchema extends SubOperatorTest {
 
     // The full name contains quoted names if the contain dots.
     // This name is more for diagnostic than semantic purposes.
-
     assertEquals("a", root.fullName(0));
     assertEquals("a.`b.x`", mapA.fullName(0));
     assertEquals("a.`b.x`.`c.y`", mapB.fullName(0));
@@ -708,19 +678,6 @@ public class TestTupleSchema extends SubOperatorTest {
     assertEquals(2, types.size());
     assertTrue(types.contains(MinorType.BIGINT));
     assertTrue(types.contains(MinorType.VARCHAR));
-
-    BatchSchema batchSchema = new BatchSchema(SelectionVectorMode.NONE, schema.toFieldList());
-
-    MaterializedField field = batchSchema.getColumn(0);
-    assertEquals("u", field.getName());
-    MajorType majorType = field.getType();
-    assertEquals(MinorType.UNION, majorType.getMinorType());
-    assertEquals(DataMode.OPTIONAL, majorType.getMode());
-    assertEquals(2, majorType.getSubTypeCount());
-    List<MinorType> subtypes = majorType.getSubTypeList();
-    assertEquals(2, subtypes.size());
-    assertTrue(subtypes.contains(MinorType.BIGINT));
-    assertTrue(subtypes.contains(MinorType.VARCHAR));
   }
 
   @Test
@@ -739,7 +696,6 @@ public class TestTupleSchema extends SubOperatorTest {
     // Implementation shows through here: actual major
     // type is (LIST, OPTIONAL) even though the metadata
     // lies that this is a variant array.
-
     assertEquals(MinorType.LIST, col.type());
     assertEquals(DataMode.OPTIONAL, col.mode());
     assertTrue(col.isNullable());
@@ -758,19 +714,6 @@ public class TestTupleSchema extends SubOperatorTest {
     assertEquals(2, types.size());
     assertTrue(types.contains(MinorType.BIGINT));
     assertTrue(types.contains(MinorType.VARCHAR));
-
-    BatchSchema batchSchema = new BatchSchema(SelectionVectorMode.NONE, schema.toFieldList());
-
-    MaterializedField field = batchSchema.getColumn(0);
-    assertEquals("list", field.getName());
-    MajorType majorType = field.getType();
-    assertEquals(MinorType.LIST, majorType.getMinorType());
-    assertEquals(DataMode.OPTIONAL, majorType.getMode());
-    assertEquals(2, majorType.getSubTypeCount());
-    List<MinorType> subtypes = majorType.getSubTypeList();
-    assertEquals(2, subtypes.size());
-    assertTrue(subtypes.contains(MinorType.BIGINT));
-    assertTrue(subtypes.contains(MinorType.VARCHAR));
   }
 
   @Test

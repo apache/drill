@@ -59,6 +59,8 @@ public interface RequestedTuple {
   }
 
   TupleProjectionType type();
+  int size();
+  RequestedColumn get(int i);
   RequestedColumn get(String colName);
   boolean isProjected(String colName);
   boolean isProjected(ColumnMetadata columnSchema);

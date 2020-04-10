@@ -32,6 +32,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.metastore.ColumnNamesOptions;
+import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.store.dfs.FileSelection;
@@ -97,7 +98,7 @@ public class ColumnExplorer {
     Map<String, ImplicitFileColumns> map = CaseInsensitiveMap.newHashMap();
     for (ImplicitFileColumns e : ImplicitFileColumns.values()) {
       OptionValue optionValue;
-      if ((optionValue = optionManager.getOption(e.name)) != null) {
+      if ((optionValue = optionManager.getOption(e.optionName)) != null) {
         map.put(optionValue.string_val, e);
       }
     }
@@ -130,7 +131,7 @@ public class ColumnExplorer {
     List<String> implicitColumns = Lists.newArrayList();
     for (ImplicitFileColumns e : ImplicitFileColumns.values()) {
       OptionValue optionValue;
-      if ((optionValue = schemaConfig.getOption(e.name)) != null) {
+      if ((optionValue = schemaConfig.getOption(e.optionName)) != null) {
         implicitColumns.add(optionValue.string_val);
       }
     }
@@ -495,7 +496,7 @@ public class ColumnExplorer {
     /**
      * Fully qualified name, contains full path to file and file name
      */
-    FQN (ExecConstants.IMPLICIT_FQN_COLUMN_LABEL) {
+    FQN (ExecConstants.IMPLICIT_FQN_COLUMN_LABEL, ColumnMetadata.IMPLICIT_FQN) {
       @Override
       public String getValue(Path path) {
         return path.toUri().getPath();
@@ -505,7 +506,7 @@ public class ColumnExplorer {
     /**
      * Full path to file without file name
      */
-    FILEPATH (ExecConstants.IMPLICIT_FILEPATH_COLUMN_LABEL) {
+    FILEPATH (ExecConstants.IMPLICIT_FILEPATH_COLUMN_LABEL, ColumnMetadata.IMPLICIT_FILEPATH) {
       @Override
       public String getValue(Path path) {
         return path.getParent().toUri().getPath();
@@ -515,7 +516,7 @@ public class ColumnExplorer {
     /**
      * File name with extension without path
      */
-    FILENAME (ExecConstants.IMPLICIT_FILENAME_COLUMN_LABEL) {
+    FILENAME (ExecConstants.IMPLICIT_FILENAME_COLUMN_LABEL, ColumnMetadata.IMPLICIT_FILENAME) {
       @Override
       public String getValue(Path path) {
         return path.getName();
@@ -525,21 +526,36 @@ public class ColumnExplorer {
     /**
      * File suffix (without dot at the beginning)
      */
-    SUFFIX (ExecConstants.IMPLICIT_SUFFIX_COLUMN_LABEL) {
+    SUFFIX (ExecConstants.IMPLICIT_SUFFIX_COLUMN_LABEL, ColumnMetadata.IMPLICIT_SUFFIX) {
       @Override
       public String getValue(Path path) {
         return Files.getFileExtension(path.getName());
       }
     };
 
-    String name;
+    String optionName;
+    String propValue;
 
-    ImplicitFileColumns(String name) {
-      this.name = name;
-    }
+    ImplicitFileColumns(String optionName, String propValue) {
+      this.optionName = optionName;
+      this.propValue = propValue;
+     }
 
+    /**
+     * The name of the session/system option that gives the effective
+     * name of this implicit column when parsing columns by name.
+     */
     @Override
-    public String optionName() { return name; }
+    public String optionName() { return optionName; }
+
+    /**
+     * The name of the column property that indicates the implicit
+     * column type when using a provided schema. The property value
+     * lives in a name space separate from column names and so is
+     * fixed: it remains the same independent of system/session
+     * options.
+     */
+    public String propertyValue() { return propValue; }
 
     /**
      * Using file path calculates value for each implicit file column

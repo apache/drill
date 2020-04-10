@@ -20,6 +20,7 @@ package org.apache.drill.exec.record.metadata;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.drill.common.types.Types;
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -214,5 +215,26 @@ public class VariantSchema implements VariantMetadata {
       copy.addType(type);
     }
     return copy;
+  }
+
+  public boolean isEquivalent(VariantSchema other) {
+    // Ignore isSimple, it is a derived attribute
+    // Can't use equals(), do this the hard way.
+    if (types.size() != other.types.size()) {
+      return false;
+    }
+    if (!types.keySet().equals(other.types.keySet())) {
+      return false;
+    }
+    for (Entry<MinorType, ColumnMetadata> entry : types.entrySet()) {
+      ColumnMetadata otherType = other.types.get(entry.getKey());
+      if (otherType == null) {
+        return false;
+      }
+      if (!entry.getValue().isEquivalent(otherType)) {
+        return false;
+      }
+    }
+    return true;
   }
 }

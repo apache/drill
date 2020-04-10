@@ -30,18 +30,22 @@ import static org.junit.Assert.fail;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.EvfTests;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.EmptyErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.physical.impl.scan.v3.schema.SchemaUtils;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.physical.resultSet.impl.ResultSetLoaderImpl.ResultSetOptions;
 import org.apache.drill.exec.physical.resultSet.project.Projections;
 import org.apache.drill.exec.physical.resultSet.project.RequestedTuple;
+import org.apache.drill.exec.physical.rowSet.RowSet;
+import org.apache.drill.exec.physical.rowSet.RowSet.SingleRowSet;
+import org.apache.drill.exec.physical.rowSet.RowSetTestUtils;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError.ErrorType;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
@@ -50,9 +54,6 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.DictWriter;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
 import org.apache.drill.test.SubOperatorTest;
-import org.apache.drill.exec.physical.rowSet.RowSet;
-import org.apache.drill.exec.physical.rowSet.RowSetTestUtils;
-import org.apache.drill.exec.physical.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -60,7 +61,7 @@ import org.junit.experimental.categories.Category;
 /**
  * Test of the basics of the projection mechanism.
  */
-@Category(RowSetTests.class)
+@Category(EvfTests.class)
 public class TestResultSetLoaderProjection extends SubOperatorTest {
 
   /**
@@ -303,11 +304,13 @@ public class TestResultSetLoaderProjection extends SubOperatorTest {
           .add("h", MinorType.INT)
           .resumeSchema()
         .build();
-    providedSchema.setBooleanProperty(TupleMetadata.IS_STRICT_SCHEMA_PROP, isStrict);
+    if (isStrict) {
+      SchemaUtils.markStrict(providedSchema);
+    }
 
     RequestedTuple proj = Projections.parse(selection);
     CustomErrorContext errorContext = new EmptyErrorContext();
-    ProjectionFilter projectionFilter = ProjectionFilter.filterFor(proj, providedSchema, errorContext);
+    ProjectionFilter projectionFilter = ProjectionFilter.providedSchemaFilter(proj, providedSchema, errorContext);
     ResultSetOptions options = new ResultSetOptionBuilder()
         .projectionFilter(projectionFilter)
         .readerSchema(schema)

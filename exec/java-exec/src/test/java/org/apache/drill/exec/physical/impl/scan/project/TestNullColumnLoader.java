@@ -51,7 +51,6 @@ import org.junit.experimental.categories.Category;
  * can create the classic nullable Int null column, or one of
  * any other type and mode.
  */
-
 @Category(RowSetTests.class)
 public class TestNullColumnLoader extends SubOperatorTest {
 
@@ -67,7 +66,6 @@ public class TestNullColumnLoader extends SubOperatorTest {
 
     // For this test, we don't need the projection, so just
     // set it to null.
-
     return new ResolvedNullColumn(name, nullType, defaultValue, null, 0);
   }
 
@@ -76,7 +74,6 @@ public class TestNullColumnLoader extends SubOperatorTest {
    * cache. Specify no column type, the special NULL type, or a
    * predefined type. Output types should be set accordingly.
    */
-
   @Test
   public void testBasics() {
 
@@ -91,11 +88,9 @@ public class TestNullColumnLoader extends SubOperatorTest {
     final NullColumnLoader staticLoader = new NullColumnLoader(cache, defns, null, false);
 
     // Create a batch
-
     final VectorContainer output = staticLoader.load(2);
 
     // Verify values and types
-
     final TupleMetadata expectedSchema = new SchemaBuilder()
         .add("unspecified", NullColumnLoader.DEFAULT_NULL_TYPE)
         .add("nullType", NullColumnLoader.DEFAULT_NULL_TYPE)
@@ -118,7 +113,6 @@ public class TestNullColumnLoader extends SubOperatorTest {
    * column is ever INT (nullable or otherwise) and we want our null
    * columns to be (non-nullable) VARCHAR.
    */
-
   @Test
   public void testCustomNullType() {
 
@@ -131,7 +125,6 @@ public class TestNullColumnLoader extends SubOperatorTest {
 
     // Null required is an oxymoron, so is not tested.
     // Null type array does not make sense, so is not tested.
-
     final ResultVectorCache cache = new NullResultVectorCacheImpl(fixture.allocator());
     final MajorType nullType = MajorType.newBuilder()
         .setMinorType(MinorType.VARCHAR)
@@ -140,11 +133,9 @@ public class TestNullColumnLoader extends SubOperatorTest {
     final NullColumnLoader staticLoader = new NullColumnLoader(cache, defns, nullType, false);
 
     // Create a batch
-
     final VectorContainer output = staticLoader.load(2);
 
     // Verify values and types
-
     final TupleMetadata expectedSchema = new SchemaBuilder()
         .add("unspecified", nullType)
         .add("nullType", nullType)
@@ -163,7 +154,6 @@ public class TestNullColumnLoader extends SubOperatorTest {
    * Default values are only allowed for required "null" columns. For
    * nullable columns, NULL is already the default.
    */
-
   @Test
   public void testDefaultValue() {
 
@@ -177,11 +167,9 @@ public class TestNullColumnLoader extends SubOperatorTest {
     final NullColumnLoader staticLoader = new NullColumnLoader(cache, defns, nullType, false);
 
     // Create a batch
-
     final VectorContainer output = staticLoader.load(2);
 
     // Verify values and types
-
     final TupleMetadata expectedSchema = new SchemaBuilder()
         .add("int", MinorType.INT)
         .add("str", MinorType.VARCHAR)
@@ -210,7 +198,6 @@ public class TestNullColumnLoader extends SubOperatorTest {
    * This test ensures that the null column mechanism looks in that
    * vector cache when asked to create a nullable column.
    */
-
   @Test
   public void testCachedTypesMapToNullable() {
 
@@ -221,28 +208,23 @@ public class TestNullColumnLoader extends SubOperatorTest {
     defns.add(makeNullCol("unk"));
 
     // Populate the cache with a column of each mode.
-
     final ResultVectorCacheImpl cache = new ResultVectorCacheImpl(fixture.allocator());
     cache.vectorFor(SchemaBuilder.columnSchema("req", MinorType.FLOAT8, DataMode.REQUIRED));
     final ValueVector opt = cache.vectorFor(SchemaBuilder.columnSchema("opt", MinorType.FLOAT8, DataMode.OPTIONAL));
     final ValueVector rep = cache.vectorFor(SchemaBuilder.columnSchema("rep", MinorType.FLOAT8, DataMode.REPEATED));
 
     // Use nullable Varchar for unknown null columns.
-
     final MajorType nullType = Types.optional(MinorType.VARCHAR);
     final NullColumnLoader staticLoader = new NullColumnLoader(cache, defns, nullType, false);
 
     // Create a batch
-
     final VectorContainer output = staticLoader.load(2);
 
     // Verify vectors are reused
-
     assertSame(opt, output.getValueVector(1).getValueVector());
     assertSame(rep, output.getValueVector(2).getValueVector());
 
     // Verify values and types
-
     final TupleMetadata expectedSchema = new SchemaBuilder()
         .addNullable("req", MinorType.FLOAT8)
         .addNullable("opt", MinorType.FLOAT8)
@@ -265,7 +247,6 @@ public class TestNullColumnLoader extends SubOperatorTest {
    * empty values (zero or "") -- if the scan operator feels doing so would
    * be helpful.
    */
-
   @Test
   public void testCachedTypesAllowRequired() {
 
@@ -276,28 +257,23 @@ public class TestNullColumnLoader extends SubOperatorTest {
     defns.add(makeNullCol("unk"));
 
     // Populate the cache with a column of each mode.
-
     final ResultVectorCacheImpl cache = new ResultVectorCacheImpl(fixture.allocator());
     cache.vectorFor(SchemaBuilder.columnSchema("req", MinorType.FLOAT8, DataMode.REQUIRED));
     final ValueVector opt = cache.vectorFor(SchemaBuilder.columnSchema("opt", MinorType.FLOAT8, DataMode.OPTIONAL));
     final ValueVector rep = cache.vectorFor(SchemaBuilder.columnSchema("rep", MinorType.FLOAT8, DataMode.REPEATED));
 
     // Use nullable Varchar for unknown null columns.
-
     final MajorType nullType = Types.optional(MinorType.VARCHAR);
     final NullColumnLoader staticLoader = new NullColumnLoader(cache, defns, nullType, true);
 
     // Create a batch
-
     final VectorContainer output = staticLoader.load(2);
 
     // Verify vectors are reused
-
     assertSame(opt, output.getValueVector(1).getValueVector());
     assertSame(rep, output.getValueVector(2).getValueVector());
 
     // Verify values and types
-
     final TupleMetadata expectedSchema = new SchemaBuilder()
         .add("req", MinorType.FLOAT8)
         .addNullable("opt", MinorType.FLOAT8)
@@ -319,7 +295,6 @@ public class TestNullColumnLoader extends SubOperatorTest {
    * to pull in the null columns which the null column loader has
    * created.
    */
-
   @Test
   public void testNullColumnBuilder() {
 
@@ -334,11 +309,9 @@ public class TestNullColumnLoader extends SubOperatorTest {
     builder.build(cache);
 
     // Create a batch
-
     builder.load(2);
 
     // Verify values and types
-
     final TupleMetadata expectedSchema = new SchemaBuilder()
         .add("unspecified", NullColumnLoader.DEFAULT_NULL_TYPE)
         .add("nullType", NullColumnLoader.DEFAULT_NULL_TYPE)
@@ -363,7 +336,6 @@ public class TestNullColumnLoader extends SubOperatorTest {
   public void testNullColumnBuilderWithSchema() {
 
     // Note: upper case names in schema, lower case in "projection" list
-
     final TupleMetadata outputSchema = new SchemaBuilder()
         .add("IntReq", MinorType.INT)
         .add("StrReq", MinorType.VARCHAR)
@@ -390,11 +362,9 @@ public class TestNullColumnLoader extends SubOperatorTest {
     builder.build(cache);
 
     // Create a batch
-
     builder.load(2);
 
     // Verify values and types
-
     final TupleMetadata expectedSchema = new SchemaBuilder()
         .add("strReq", MinorType.VARCHAR)
         .addNullable("strOpt", MinorType.VARCHAR)
@@ -431,7 +401,6 @@ public class TestNullColumnLoader extends SubOperatorTest {
   public void testSchemaWithConflicts() {
 
     // Note: upper case names in schema, lower case in "projection" list
-
     final TupleMetadata outputSchema = new SchemaBuilder()
         .add("IntReq", MinorType.INT)
         .add("StrReq", MinorType.VARCHAR) // No default
@@ -457,11 +426,9 @@ public class TestNullColumnLoader extends SubOperatorTest {
     builder.build(cache);
 
     // Create a batch
-
     builder.load(2);
 
     // Verify values and types
-
     final TupleMetadata expectedSchema = new SchemaBuilder()
         .addNullable("strReq", MinorType.VARCHAR)
         .addNullable("strOpt", MinorType.VARCHAR)

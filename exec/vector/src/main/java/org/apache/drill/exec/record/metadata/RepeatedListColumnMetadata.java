@@ -103,4 +103,19 @@ public class RepeatedListColumnMetadata extends AbstractColumnMetadata {
   public String typeString() {
     return "ARRAY<" + childSchema.typeString() + ">";
   }
+
+  @Override
+  protected void appendContents(StringBuilder buf) {
+    buf.append(", child: ")
+       .append(childSchema().toString());
+  }
+
+  @Override
+  public boolean isEquivalent(ColumnMetadata o) {
+    if (!super.isEquivalent(o)) {
+      return false;
+    }
+    RepeatedListColumnMetadata other = (RepeatedListColumnMetadata) o;
+    return childSchema.isEquivalent(other.childSchema);
+  }
 }

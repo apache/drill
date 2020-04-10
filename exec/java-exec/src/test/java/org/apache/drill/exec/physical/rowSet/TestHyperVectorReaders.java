@@ -48,7 +48,6 @@ import org.junit.experimental.categories.Category;
  * <p>
  * This test does not cover repeated vectors; those tests should be added.
  */
-
 @Category(RowSetTests.class)
 public class TestHyperVectorReaders extends SubOperatorTest {
 
@@ -56,7 +55,6 @@ public class TestHyperVectorReaders extends SubOperatorTest {
    * Test the simplest case: a top-level required vector. Has no contained vectors.
    * This test focuses on the SV4 indirection mechanism itself.
    */
-
   @Test
   public void testRequired() {
     TupleMetadata schema = new SchemaBuilder()
@@ -87,13 +85,11 @@ public class TestHyperVectorReaders extends SubOperatorTest {
 
     // Build the hyper batch
     // [0, 10, 20, ... 190]
-
     HyperRowSet hyperSet = HyperRowSetImpl.fromRowSets(fixture.allocator(), rowSet1, rowSet2);
     assertEquals(20, hyperSet.rowCount());
 
     // Populate the indirection vector:
     // (1, 9), (0, 9), (1, 8), (0, 8), ... (0, 0)
-
     SelectionVector4 sv4 = hyperSet.getSv4();
     for (int i = 0; i < 20; i++) {
       int batch = i % 2;
@@ -102,7 +98,6 @@ public class TestHyperVectorReaders extends SubOperatorTest {
     }
 
     // Sanity check.
-
     for (int i = 0; i < 20; i++) {
       int batch = i % 2;
       int offset = 9 - i / 2;
@@ -113,7 +108,6 @@ public class TestHyperVectorReaders extends SubOperatorTest {
 
     // Verify reader
     // Expected: [190, 90, 180, 80, ... 0]
-
     RowSetReader reader = hyperSet.reader();
     for (int i = 0; i < 20; i++) {
       assertTrue(reader.next());
@@ -125,7 +119,6 @@ public class TestHyperVectorReaders extends SubOperatorTest {
     assertFalse(reader.next());
 
     // Validate using an expected result set.
-
     RowSetBuilder rsBuilder = fixture.rowSetBuilder(schema);
     for (int i = 0; i < 20; i++) {
       int batch = i % 2;
@@ -154,7 +147,6 @@ public class TestHyperVectorReaders extends SubOperatorTest {
         .build();
 
     // Build the hyper batch
-
     HyperRowSet hyperSet = HyperRowSetImpl.fromRowSets(fixture.allocator(), rowSet1, rowSet2);
     assertEquals(4, hyperSet.rowCount());
     SelectionVector4 sv4 = hyperSet.getSv4();
@@ -186,7 +178,6 @@ public class TestHyperVectorReaders extends SubOperatorTest {
    * This test verifies that each of the indirections does, in fact,
    * work as expected.
    */
-
   @Test
   public void testOptional() {
     TupleMetadata schema = new SchemaBuilder()
@@ -206,7 +197,6 @@ public class TestHyperVectorReaders extends SubOperatorTest {
         .build();
 
     // Build the hyper batch
-
     HyperRowSet hyperSet = HyperRowSetImpl.fromRowSets(fixture.allocator(), rowSet1, rowSet2);
     assertEquals(6, hyperSet.rowCount());
     SelectionVector4 sv4 = hyperSet.getSv4();
@@ -235,7 +225,6 @@ public class TestHyperVectorReaders extends SubOperatorTest {
    * varchar to add another level of indirection to the data offset
    * and data values vectors.)
    */
-
   @Test
   public void testRepeated() {
     TupleMetadata schema = new SchemaBuilder()
@@ -255,7 +244,6 @@ public class TestHyperVectorReaders extends SubOperatorTest {
         .build();
 
     // Build the hyper batch
-
     HyperRowSet hyperSet = HyperRowSetImpl.fromRowSets(fixture.allocator(), rowSet1, rowSet2);
     assertEquals(6, hyperSet.rowCount());
     SelectionVector4 sv4 = hyperSet.getSv4();
@@ -283,7 +271,6 @@ public class TestHyperVectorReaders extends SubOperatorTest {
    * map members. So, we can reach the map members either via the vector wrappers or
    * the original map vector.
    */
-
   @Test
   public void testMap() {
     TupleMetadata schema = new SchemaBuilder()
@@ -304,7 +291,6 @@ public class TestHyperVectorReaders extends SubOperatorTest {
         .build();
 
     // Build the hyper batch
-
     HyperRowSet hyperSet = HyperRowSetImpl.fromRowSets(fixture.allocator(), rowSet1, rowSet2);
     assertEquals(4, hyperSet.rowCount());
     SelectionVector4 sv4 = hyperSet.getSv4();
@@ -344,7 +330,6 @@ public class TestHyperVectorReaders extends SubOperatorTest {
         .build();
 
     // Build the hyper batch
-
     HyperRowSet hyperSet = HyperRowSetImpl.fromRowSets(fixture.allocator(), rowSet1, rowSet2);
     assertEquals(4, hyperSet.rowCount());
     SelectionVector4 sv4 = hyperSet.getSv4();
@@ -384,7 +369,6 @@ public class TestHyperVectorReaders extends SubOperatorTest {
         .build();
 
     // Build the hyper batch
-
     HyperRowSet hyperSet = HyperRowSetImpl.fromRowSets(fixture.allocator(), rowSet1, rowSet2);
     assertEquals(4, hyperSet.rowCount());
     SelectionVector4 sv4 = hyperSet.getSv4();
@@ -426,7 +410,6 @@ public class TestHyperVectorReaders extends SubOperatorTest {
         .build();
 
     // Build the hyper batch
-
     HyperRowSet hyperSet = HyperRowSetImpl.fromRowSets(fixture.allocator(), rowSet1, rowSet2);
     assertEquals(6, hyperSet.rowCount());
     SelectionVector4 sv4 = hyperSet.getSv4();
@@ -472,7 +455,6 @@ public class TestHyperVectorReaders extends SubOperatorTest {
         .build();
 
     // Build the hyper batch
-
     HyperRowSet hyperSet = HyperRowSetImpl.fromRowSets(fixture.allocator(), rowSet1, rowSet2);
     assertEquals(6, hyperSet.rowCount());
     SelectionVector4 sv4 = hyperSet.getSv4();
