@@ -78,8 +78,9 @@
     <logback.version>1.2.3</logback.version>
     <mockito.version>2.28.2</mockito.version>
     <!--
-      Currently Hive storage plugin only supports Apache Hive 2.3.2 or vendor specific variants of the
-      Apache Hive 2.3.2. If the version is changed, make sure the jars and their dependencies are updated.
+      Currently Hive storage plugin only supports Apache Hive 3.1.2 or vendor specific variants of the
+      Apache Hive 2.3.2. If the version is changed, make sure the jars and their dependencies are updated,
+      for example parquet-hadoop-bundle and derby dependencies.
     -->
     <hive.version>3.1.2</hive.version>
     <hadoop.version>3.2.1</hadoop.version>
@@ -91,7 +92,7 @@
     <reflections.version>0.9.10</reflections.version>
     <avro.version>1.9.1</avro.version>
     <metrics.version>4.0.2</metrics.version>
-    <jetty.version>9.3.25.v20180904</jetty.version>
+    <jetty.version>9.3.28.v20191105</jetty.version>
     <jersey.version>2.25.1</jersey.version>
     <asm.version>7.3.1</asm.version>
     <excludedGroups />
@@ -110,9 +111,12 @@
     <joda.version>2.10.5</joda.version>
     <javax.el.version>3.0.0</javax.el.version>
     <surefire.version>3.0.0-M4</surefire.version>
-    <commons.compress.version>1.19</commons.compress.version>
+    <commons.compress.version>1.20</commons.compress.version>
     <hikari.version>3.4.2</hikari.version>
     <netty.version>4.0.48.Final</netty.version>
+    <httpclient.version>4.5.12</httpclient.version>
+    <libthrift.version>0.13.0</libthrift.version>
+    <derby.version>10.14.2.0</derby.version>
   </properties>
 
   <scm>
@@ -606,10 +610,13 @@
                     <exclude>org.mortbay.jetty:servlet-api</exclude>
                     <exclude>org.mortbay.jetty:servlet-api-2.5</exclude>
                     <exclude>log4j:log4j</exclude>
+                    <exclude>org.apache.logging.log4j:log4j-core</exclude>
                     <exclude>jdk.tools:jdk.tools</exclude>
                     <exclude>org.json:json</exclude>
                     <exclude>org.beanshell:bsh</exclude>
                     <exclude>org.apache.calcite:*</exclude>
+                    <exclude>commons-httpclient:*</exclude>
+                    <exclude>tomcat:*</exclude>
                   </excludes>
                 </bannedDependencies>
               </rules>
@@ -1891,6 +1898,21 @@
         <artifactId>HikariCP</artifactId>
         <version>${hikari.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpclient</artifactId>
+        <version>${httpclient.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.thrift</groupId>
+        <artifactId>libthrift</artifactId>
+        <version>${libthrift.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.derby</groupId>
+        <artifactId>derby-project</artifactId>
+        <version>${derby.version}</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -2045,8 +2067,8 @@
                 <artifactId>jackson-jaxrs</artifactId>
               </exclusion>
               <exclusion>
-                  <groupId>io.netty</groupId>
-                  <artifactId>netty</artifactId>
+                <groupId>io.netty</groupId>
+                <artifactId>netty</artifactId>
               </exclusion>
             </exclusions>
           </dependency>
@@ -2192,8 +2214,12 @@
                 <artifactId>jackson-jaxrs</artifactId>
               </exclusion>
               <exclusion>
-                  <groupId>io.netty</groupId>
-                  <artifactId>netty</artifactId>
+                <groupId>io.netty</groupId>
+                <artifactId>netty</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>commons-httpclient</groupId>
+                <artifactId>commons-httpclient</artifactId>
               </exclusion>
             </exclusions>
           </dependency>
@@ -2886,6 +2912,10 @@
                 <groupId>io.netty</groupId>
                 <artifactId>netty-all</artifactId>
               </exclusion>
+              <exclusion>
+                <groupId>commons-httpclient</groupId>
+                <artifactId>commons-httpclient</artifactId>
+              </exclusion>
             </exclusions>
           </dependency>
           <dependency>
@@ -3311,6 +3341,14 @@
               <exclusion>
                 <groupId>org.apache.hbase</groupId>
                 <artifactId>hbase-annotations</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>tomcat</groupId>
+                <artifactId>jasper-compiler</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>tomcat</groupId>
+                <artifactId>jasper-runtime</artifactId>
               </exclusion>
             </exclusions>
           </dependency>

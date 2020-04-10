@@ -526,7 +526,7 @@
     <dependency>
       <groupId>nl.basjes.parse.httpdlog</groupId>
       <artifactId>httpdlog-parser</artifactId>
-      <version>5.2</version>
+      <version>5.3</version>
       <exclusions>
         <exclusion>
           <groupId>commons-codec</groupId>
