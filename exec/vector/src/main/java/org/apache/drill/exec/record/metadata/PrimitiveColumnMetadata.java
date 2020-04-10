@@ -18,6 +18,7 @@
 package org.apache.drill.exec.record.metadata;
 
 import java.math.BigDecimal;
+import java.util.Objects;
 
 import org.apache.drill.common.types.BooleanType;
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -95,7 +96,7 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
   }
 
   @Override
-  public ColumnMetadata.StructureType structureType() { return ColumnMetadata.StructureType.PRIMITIVE; }
+  public ColumnMetadata.StructureType structureType() { return StructureType.PRIMITIVE; }
 
   @Override
   public int expectedWidth() {
@@ -299,6 +300,36 @@ public class PrimitiveColumnMetadata extends AbstractColumnMetadata {
         return dateTimeFormatter().print((Instant) value);
       default:
        return value.toString();
+    }
+  }
+
+  @Override
+  public boolean isEquivalent(ColumnMetadata o) {
+    if (!super.isEquivalent(o)) {
+      return false;
+    }
+
+    PrimitiveColumnMetadata other = (PrimitiveColumnMetadata) o;
+    switch (type) {
+      case DECIMAL18:
+      case DECIMAL28DENSE:
+      case DECIMAL28SPARSE:
+      case DECIMAL38DENSE:
+      case DECIMAL38SPARSE:
+      case DECIMAL9:
+        return Objects.equals(precision, other.precision) &&
+               Objects.equals(scale, other.scale);
+      case VAR16CHAR:
+      case VARBINARY:
+      case VARCHAR:
+      case VARDECIMAL:
+        // Precision is a mess: it should not be needed, as indicated
+        // by -1. But, some MaterializedFields from vectors set the
+        // value to 0.
+        return (precision <= 0 && other.precision <= 0) ||
+                Objects.equals(precision, other.precision);
+      default:
+        return true;
     }
   }
 }

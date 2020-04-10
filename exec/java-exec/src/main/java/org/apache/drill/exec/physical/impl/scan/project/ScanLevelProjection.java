@@ -406,7 +406,7 @@ public class ScanLevelProjection {
       }
       rootProjection = Projections.build(outputProj);
     }
-    readerProjection = ProjectionFilter.filterFor(
+    readerProjection = ProjectionFilter.providedSchemaFilter(
         rootProjection, readerSchema, errorContext);
   }
 

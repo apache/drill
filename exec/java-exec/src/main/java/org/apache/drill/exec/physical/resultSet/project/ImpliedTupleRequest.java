@@ -48,6 +48,12 @@ public class ImpliedTupleRequest implements RequestedTuple {
   }
 
   @Override
+  public int size() { return 0; }
+
+  @Override
+  public RequestedColumn get(int i) { return null; }
+
+  @Override
   public RequestedColumn get(String colName) { return null; }
 
   @Override

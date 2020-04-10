@@ -90,6 +90,51 @@ public interface ColumnMetadata extends Propertied {
   int DEFAULT_ARRAY_SIZE = 10;
 
   /**
+   * Indicates that a provided schema column is an implicit column
+   * (one defined by Drill rather than the reader.) Allows the implicit
+   * schema to reify partition names, say, as reader-specific names.
+   * For example, {@code dir0} might be reified as {@code year}, etc.
+   * <p>
+   * Available when the underlying reader supports implicit columns.
+   * The value is the defined implicit column name (not the name
+   * set via system/session options.) Using the defined name makes
+   * the provided schema immune from runtime changes to column names.
+   * <p>
+   * As the result of adding this feature, any column <i>not</i>
+   * tagged as implicit is a reader column, even if that column
+   * happens to have the same (currently selected runtime) name
+   * as an implicit column.
+   */
+  String IMPLICIT_COL_TYPE = DRILL_PROP_PREFIX + "implicit";
+
+  /**
+   * Fully-qualified name implicit column type.
+   */
+  String IMPLICIT_FQN = "fqn";
+
+  /**
+   * File path implicit column type.
+   */
+  String IMPLICIT_FILEPATH = "filepath";
+
+  /**
+   * File name implicit column type.
+   */
+  String IMPLICIT_FILENAME = "filename";
+
+  /**
+   * File suffix implicit column type.
+   */
+  String IMPLICIT_SUFFIX = "suffix";
+
+  /**
+   * Prefix for partition directories. dir0 is the table root
+   * folder, dir1 the first subdirectory, and so on. Directories that
+   * don't exist in the actual file path take a {@code NULL} value.
+   */
+  String IMPLICIT_PARTITION_PREFIX = "dir";
+
+  /**
    * Rough characterization of Drill types into metadata categories.
    * Various aspects of Drill's type system are very, very messy.
    * However, Drill is defined by its code, not some abstract design,
@@ -134,7 +179,13 @@ public interface ColumnMetadata extends Propertied {
     /**
      * Dict or repeated dict.
      */
-    DICT
+    DICT,
+
+    /**
+     * Unknown, specified at runtime. (Only for logical columns,
+     * not for physical columns.)
+     */
+    DYNAMIC
   }
 
   StructureType structureType();
@@ -182,6 +233,17 @@ public interface ColumnMetadata extends Propertied {
   boolean isDict();
 
   /**
+   * Reports if the column is dynamic. A dynamic column is one with
+   * a "type to be named later." It is valid for describing a dynamic
+   * schema, but not for creating vectors; to create a vector the
+   * column must be resolved to a concrete type. The context should
+   * make it clear if any columns can be dynamic.
+   * @return {@code true} if the column does not yet have a concrete
+   * type, {@code false} if the column type is concrete
+   */
+  boolean isDynamic();
+
+  /**
    * Determine if the schema represents a column with a LIST type with
    * UNION elements. (Lists can be of a single
    * type (with nullable elements) or can be of unions.)
@@ -193,7 +255,7 @@ public interface ColumnMetadata extends Propertied {
   /**
    * Report whether one column is equivalent to another. Columns are equivalent
    * if they have the same name, type and structure (ignoring internal structure
-   * such as offset vectors.)
+   * such as properties.)
    */
   boolean isEquivalent(ColumnMetadata other);
 

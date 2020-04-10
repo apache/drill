@@ -19,6 +19,7 @@ package org.apache.drill.exec.record.metadata;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Base class for an object with properties. Defers property map creation
@@ -116,5 +117,37 @@ public class AbstractPropertied implements Propertied {
   @Override
   public void removeProperty(String key) {
     setProperty(key, null);
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (o == this) {
+      return true;
+    }
+    if (o == null) {
+      return false;
+    }
+
+    AbstractPropertied other = (AbstractPropertied) o;
+    // Objects are equal if neither have properties, even if one has
+    // a property object and the other does not.
+    if (!hasProperties() && !other.hasProperties()) {
+      return true;
+    }
+    if (!hasProperties() || !other.hasProperties()) {
+      return false;
+    }
+    return Objects.equals(properties, other.properties);
+  }
+
+  // Implemented as required to implement equals().
+  // But, properties are mutable; do not use this object
+  // as a key in a map.
+  @Override
+  public int hashCode() {
+    if (!hasProperties()) {
+      return 0;
+    }
+    return properties.hashCode();
   }
 }

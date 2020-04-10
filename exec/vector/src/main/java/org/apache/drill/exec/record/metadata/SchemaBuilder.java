@@ -71,7 +71,7 @@ public class SchemaBuilder implements SchemaContainer {
    * but they are each unique, so don't share "guts".)
    */
 
-  private TupleBuilder tupleBuilder = new TupleBuilder();
+  private final TupleBuilder tupleBuilder = new TupleBuilder();
 
   public SchemaBuilder() { }
 
@@ -101,6 +101,11 @@ public class SchemaBuilder implements SchemaContainer {
 
   public SchemaBuilder add(MaterializedField col) {
     tupleBuilder.add(col);
+    return this;
+  }
+
+  public SchemaBuilder add(ColumnMetadata column) {
+    addColumn(column);
     return this;
   }
 
@@ -163,6 +168,18 @@ public class SchemaBuilder implements SchemaContainer {
 
   public SchemaBuilder addArray(String name, MinorType type, int dims) {
     tupleBuilder.addArray(name,  type, dims);
+    return this;
+  }
+
+  public SchemaBuilder addDynamic(String name) {
+    tupleBuilder.addColumn(MetadataUtils.newDynamic(name));
+    return this;
+  }
+
+  public SchemaBuilder addAll(TupleMetadata from) {
+    for (ColumnMetadata col : from) {
+      tupleBuilder.addColumn(col.copy());
+    }
     return this;
   }
 

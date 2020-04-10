@@ -18,6 +18,7 @@
 package org.apache.drill.exec.physical.resultSet.impl;
 
 import org.apache.drill.common.exceptions.CustomErrorContext;
+import org.apache.drill.common.exceptions.EmptyErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
@@ -25,6 +26,7 @@ import org.apache.drill.exec.physical.resultSet.ResultVectorCache;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.physical.resultSet.impl.TupleState.RowState;
 import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.accessor.impl.HierarchicalFormatter;
@@ -72,13 +74,20 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
       vectorCache = builder.vectorCache;
       schema = builder.readerSchema;
       maxBatchSize = builder.maxBatchSize;
-      errorContext = builder.errorContext;
+      errorContext = builder.errorContext == null
+          ? EmptyErrorContext.INSTANCE : builder.errorContext;
       if (builder.projectionFilter != null) {
         projectionSet = builder.projectionFilter;
       } else if (builder.projectionSet != null) {
-        projectionSet = ProjectionFilter.filterFor(builder.projectionSet, errorContext);
+        projectionSet = ProjectionFilter.projectionFilter(builder.projectionSet, errorContext);
       } else {
         projectionSet = ProjectionFilter.PROJECT_ALL;
+      }
+      if (schema != null && MetadataUtils.hasDynamicColumns(schema)) {
+        throw UserException.validationError()
+          .message("Reader input schema must not contain dynamic columns")
+          .addContext(errorContext)
+          .build(logger);
       }
     }
 
