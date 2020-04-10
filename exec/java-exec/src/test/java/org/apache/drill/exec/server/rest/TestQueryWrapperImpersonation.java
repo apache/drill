@@ -19,6 +19,7 @@ package org.apache.drill.exec.server.rest;
 
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.exec.server.rest.RestQueryRunner.QueryResult;
 import org.apache.drill.test.ClusterFixture;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -27,6 +28,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 public final class TestQueryWrapperImpersonation extends RestServerTest {
+
   @BeforeClass
   public static void setupServer() throws Exception {
     startCluster(ClusterFixture.bareBuilder(dirTestWatcher)
@@ -36,7 +38,8 @@ public final class TestQueryWrapperImpersonation extends RestServerTest {
 
   @Test
   public void testImpersonation() throws Exception {
-    QueryWrapper.QueryResult result = runQueryWithUsername("SELECT CATALOG_NAME, SCHEMA_NAME FROM information_schema.SCHEMATA", "alfred");
+    QueryResult result = runQueryWithUsername(
+        "SELECT CATALOG_NAME, SCHEMA_NAME FROM information_schema.SCHEMATA", "alfred");
     UserBitShared.QueryProfile queryProfile = getQueryProfile(result);
     assertNotNull(queryProfile);
     assertEquals("alfred", queryProfile.getUser());
@@ -44,10 +47,10 @@ public final class TestQueryWrapperImpersonation extends RestServerTest {
 
   @Test
   public void testImpersonationEnabledButUserNameNotProvided() throws Exception {
-    QueryWrapper.QueryResult result = runQueryWithUsername("SELECT CATALOG_NAME, SCHEMA_NAME FROM information_schema.SCHEMATA", null);
+    QueryResult result = runQueryWithUsername(
+        "SELECT CATALOG_NAME, SCHEMA_NAME FROM information_schema.SCHEMATA", null);
     UserBitShared.QueryProfile queryProfile = getQueryProfile(result);
     assertNotNull(queryProfile);
     assertEquals("anonymous", queryProfile.getUser());
   }
-
 }

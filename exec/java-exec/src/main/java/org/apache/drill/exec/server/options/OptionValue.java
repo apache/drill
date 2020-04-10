@@ -22,27 +22,38 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.EnumSet;
 
 /**
  * <p>
- * An {@link OptionValue option value} is used internally by an {@link OptionManager} to store a run-time setting. This setting,
- * for example, could affect a query in an execution stage. Instances of this class are JSON serializable and can be stored
- * in a {@link PersistentStore persistent store} (see {@link SystemOptionManager#options}), or
- * in memory (see {@link InMemoryOptionManager#options}).
+ * An {@link OptionValue option value} is used internally by an
+ * {@link OptionManager} to store a run-time setting. This setting, for example,
+ * could affect a query in an execution stage. Instances of this class are JSON
+ * serializable and can be stored in a {@link PersistentStore persistent store}
+ * (see {@link SystemOptionManager#options}), or in memory (see
+ * {@link InMemoryOptionManager#options}).
  * </p>
  * <p>
- * {@link AccessibleScopes} defines the scopes at which the option can be set. If it can be set at System level or Session level or so on.
- * Whereas {@link OptionScope} defines the scope at which the option is being set. If the option is being set at the BOOT time
- * the scope of the option is BOOT. If it is set at SYSTEM level the scope is SYSTEM. Although they look similar there
- * is a fine level which differentiates both of them which is at which level of hierarchy they can be set and
- * at what at level of hierarchy they were actually set.
+ * {@link AccessibleScopes} defines the scopes at which the option can be set.
+ * If it can be set at System level or Session level or so on. Whereas
+ * {@link OptionScope} defines the scope at which the option is being set. If
+ * the option is being set at the BOOT time the scope of the option is BOOT. If
+ * it is set at SYSTEM level the scope is SYSTEM. Although they look similar
+ * there is a fine level which differentiates both of them which is at which
+ * level of hierarchy they can be set and at what at level of hierarchy they
+ * were actually set.
  * </p>
  */
 @JsonInclude(Include.NON_NULL)
 public class OptionValue implements Comparable<OptionValue> {
+  private static final Logger logger = LoggerFactory.getLogger(OptionValue.class);
+
   public static final String JSON_KIND = "kind";
   public static final String JSON_ACCESSIBLE_SCOPES = "accessibleScopes";
   public static final String JSON_NAME = "name";
@@ -114,21 +125,29 @@ public class OptionValue implements Comparable<OptionValue> {
 
   public static OptionValue create(Kind kind, AccessibleScopes accessibleScopes,
                                    String name, String val, OptionScope scope) {
-    switch (kind) {
-      case BOOLEAN:
-        return create(accessibleScopes, name, Boolean.valueOf(val), scope);
-      case STRING:
-        return create(accessibleScopes, name, val, scope);
-      case DOUBLE:
-        return create(accessibleScopes, name, Double.parseDouble(val), scope);
-      case LONG:
-        return create(accessibleScopes, name, Long.parseLong(val), scope);
-      default:
-        throw new IllegalArgumentException(String.format("Unsupported kind %s", kind));
+    try {
+      switch (kind) {
+        case BOOLEAN:
+          return create(accessibleScopes, name, Boolean.valueOf(val), scope);
+        case STRING:
+          return create(accessibleScopes, name, val, scope);
+        case DOUBLE:
+          return create(accessibleScopes, name, Double.parseDouble(val), scope);
+        case LONG:
+          return create(accessibleScopes, name, Long.parseLong(val), scope);
+        default:
+          throw new IllegalArgumentException(String.format("Unsupported kind %s", kind));
+      }
+    } catch (NumberFormatException e) {
+      throw UserException.validationError(e)
+        .message("'%s' is not a valid value option '%s' of type %s",
+            val.toString(), name, kind.name())
+        .build(logger);
     }
   }
 
-  public static OptionValue create(AccessibleScopes type, String name, Object val, OptionScope scope) {
+  public static OptionValue create(AccessibleScopes type, String name, Object val, OptionScope scope, Kind kind) {
+    Preconditions.checkArgument(val != null);
     if (val instanceof Boolean) {
       return create(type, name, ((Boolean) val).booleanValue(), scope);
     } else if (val instanceof Long) {
@@ -136,7 +155,7 @@ public class OptionValue implements Comparable<OptionValue> {
     } else if (val instanceof Integer) {
       return create(type, name, ((Integer) val).longValue(), scope);
     } else if (val instanceof String) {
-      return create(type, name, (String) val, scope);
+      return fromString(type, name, (String) val, scope, kind);
     } else if (val instanceof Double) {
       return create(type, name, ((Double) val).doubleValue(), scope);
     } else if (val instanceof Float) {
@@ -144,6 +163,41 @@ public class OptionValue implements Comparable<OptionValue> {
     }
 
     throw new IllegalArgumentException(String.format("Unsupported type %s", val.getClass()));
+  }
+
+  private static OptionValue fromString(AccessibleScopes type, String name,
+      String val, OptionScope scope, Kind kind) {
+    Preconditions.checkArgument(val != null);
+    val = val.trim();
+    try {
+      switch (kind) {
+        case BOOLEAN: {
+
+          // Strict enforcement of true or false, in any case
+          val = val.toLowerCase();
+          if (!val.equals("true") && !val.equals("false")) {
+            throw UserException.validationError()
+              .message("'%s' is not a valid value for option '%s' of type %s",
+                  val, name, kind.name())
+              .build(logger);
+          }
+          return create(type, name, Boolean.parseBoolean(val.toLowerCase()), scope);
+        }
+        case DOUBLE:
+          return create(type, name, Double.parseDouble(val), scope);
+        case LONG:
+          return create(type, name, Long.parseLong(val), scope);
+        case STRING:
+          return create(type, name, val, scope);
+        default:
+          throw new IllegalStateException(kind.name());
+      }
+    } catch (NumberFormatException e) {
+      throw UserException.validationError(e)
+        .message("'%s' is not a valid value for option '%s' of type %s",
+            val, name, kind.name())
+        .build(logger);
+    }
   }
 
   @JsonCreator

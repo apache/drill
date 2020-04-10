@@ -248,6 +248,11 @@ public class ClusterFixture extends BaseFixture implements AutoCloseable {
   }
 
   private void configureStoragePlugins(Drillbit bit) throws Exception {
+
+    // Skip plugins if not running in test mode.
+    if (builder.dirTestWatcher == null) {
+      return;
+    }
     // Create the dfs name space
     builder.dirTestWatcher.newDfsTestTmpDir();
 

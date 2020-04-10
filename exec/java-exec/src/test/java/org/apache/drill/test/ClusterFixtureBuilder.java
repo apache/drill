@@ -30,6 +30,15 @@ import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
  * Build a Drillbit and client with the options provided. The simplest
  * builder starts an embedded Drillbit, with the "dfs" name space,
  * a max width (parallelization) of 2.
+ * <p>
+ * Designed primarily for unit tests: the builders provide control
+ * over all aspects of the Drillbit or cluster. Can also be used to
+ * create an embedded Drillbit, use the zero-argument
+ * constructor which will omit creating set of test-only directories
+ * and will skip creating the test-only storage plugins and other
+ * configuration. In this mode, you should configure the builder
+ * to read from a config file, or specify all the non-default
+ * config options needed.
  */
 public class ClusterFixtureBuilder {
 
@@ -57,6 +66,10 @@ public class ClusterFixtureBuilder {
   protected boolean usingZk;
   protected Properties clientProps;
   protected final BaseDirTestWatcher dirTestWatcher;
+
+  public ClusterFixtureBuilder() {
+    this.dirTestWatcher = null;
+  }
 
   public ClusterFixtureBuilder(BaseDirTestWatcher dirTestWatcher) {
     this.dirTestWatcher = Preconditions.checkNotNull(dirTestWatcher);

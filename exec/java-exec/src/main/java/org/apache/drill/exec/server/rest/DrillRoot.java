@@ -58,6 +58,8 @@ import org.apache.drill.exec.work.foreman.rm.ResourceManager;
 import org.apache.drill.exec.work.foreman.rm.ThrottledResourceManager;
 import org.apache.http.client.methods.HttpPost;
 import org.glassfish.jersey.server.mvc.Viewable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 
@@ -66,7 +68,7 @@ import static org.apache.drill.exec.server.rest.auth.DrillUserPrincipal.ADMIN_RO
 @Path("/")
 @PermitAll
 public class DrillRoot {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillRoot.class);
+  private static final Logger logger = LoggerFactory.getLogger(DrillRoot.class);
 
   @Inject
   UserAuthEnabled authEnabled;
@@ -234,7 +236,7 @@ public class DrillRoot {
         endpoint1.getUserPort() == endpoint2.getUserPort();
   }
 
-  private Response setResponse(Map entity) {
+  private Response setResponse(Map<String, ?> entity) {
     return Response.ok()
             .entity(entity)
             .header("Access-Control-Allow-Origin", "*")

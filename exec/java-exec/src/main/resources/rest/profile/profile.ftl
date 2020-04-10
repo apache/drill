@@ -87,7 +87,7 @@
     //Injects Estimated Rows
     function injectEstimatedRows() {
       Object.keys(opRowCountMap).forEach(key => {
-        var tgtElem = $("td.estRowsAnchor[key='" + key + "']"); 
+        var tgtElem = $("td.estRowsAnchor[key='" + key + "']");
         var status = tgtElem.append("<div class='estRows' title='Estimated'>(" + opRowCountMap[key] + ")</div>");
       });
     }
@@ -164,18 +164,16 @@
     <div id="query-edit" class="tab-pane">
       <p>
 
-        <#if model.isOnlyImpersonationEnabled()>
+       <#-- DRILL-7697: merge with copy in query.ftl -->
+       <form role="form" id="queryForm" action="/query" method="POST">
+          <#if model.isOnlyImpersonationEnabled()>
+            <div class="form-group">
+              <label for="userName">User Name</label>
+              <input type="text" size="30" name="userName" id="userName" placeholder="User Name" value="${model.getProfile().user}">
+            </div>
+          </#if>
           <div class="form-group">
-            <label for="userName">User Name</label>
-            <input type="text" size="30" name="userName" id="userName" placeholder="User Name" value="${model.getProfile().user}">
-          </div>
-        </#if>
-
-        <form role="form" id="queryForm" action="/query" method="POST">
-          <div id="query-editor" class="form-group">${model.getProfile().query}</div>
-          <input class="form-control" id="query" name="query" type="hidden" value="${model.getProfile().query}"/>
-          <div style="padding:5px"><b>Hint: </b>Use <div id="keyboardHint" style="display:inline-block; font-style:italic"></div> to submit</div>
-          <div class="form-group">
+            <label for="queryType">Query type:&nbsp;&nbsp;</label>
             <div class="radio-inline">
               <label>
                 <input type="radio" name="queryType" id="sql" value="SQL" checked>
@@ -185,22 +183,39 @@
             <div class="radio-inline">
               <label>
                  <input type="radio" name="queryType" id="physical" value="PHYSICAL">
-                     PHYSICAL
+                     Physical
               </label>
             </div>
             <div class="radio-inline">
               <label>
                 <input type="radio" name="queryType" id="logical" value="LOGICAL">
-                    LOGICAL
+                    Logical
               </label>
             </div>
+
+            <div class="form-group">
+              <div style="display: inline-block"><label for="query">Query</label></div>
+              <div style="display: inline-block; float:right; padding-right:5%"><b>Hint: </b>Use
+                <div id="keyboardHint" style="display:inline-block; font-style:italic"></div> to submit</div>
+              <div id="query-editor">${model.getProfile().query}</div>
+              <input class="form-control" id="query" name="query" type="hidden" value="${model.getProfile().query}"/>
             </div>
+
             <div>
-              <button class="btn btn-default" type="button" id="rerunButton" onclick="<#if model.isOnlyImpersonationEnabled()>doSubmitQueryWithUserName()<#else>doSubmitQueryWithAutoLimit()</#if>">
-            Re-run query
+              <button class="btn btn-primary" type="button" id="rerunButton" onclick="<#if model.isOnlyImpersonationEnabled()>doSubmitQueryWithUserName()<#else>doSubmitQueryWithAutoLimit()</#if>">
+                Re-run query
               </button>
-              <input type="checkbox" name="forceLimit" value="limit" <#if model.hasAutoLimit()>checked</#if>> Limit results to <input type="text" id="autoLimit" name="autoLimit" min="0" value="<#if model.hasAutoLimit()>${model.getAutoLimit()?c}<#else>${model.getDefaultAutoLimit()?c}</#if>" size="6" pattern="[0-9]*"> rows <span class="glyphicon glyphicon-info-sign" title="Limits the number of records retrieved in the query. Ignored if query has a limit already" style="cursor:pointer"></span>
-            </div>
+              &nbsp;&nbsp;&nbsp;
+              <input type="checkbox" name="forceLimit" value="limit" <#if model.hasAutoLimit()>checked</#if>>
+                Limit results to <input type="text" id="autoLimit" name="autoLimit" min="0"
+                  value="<#if model.hasAutoLimit()>${model.getAutoLimit()?c}<#else>${model.getDefaultAutoLimit()?c}</#if>" size="6" pattern="[0-9]*">
+                  rows <span class="glyphicon glyphicon-info-sign" title="Limits the number of records retrieved in the query.
+                  Ignored if query has a limit already" style="cursor:pointer"></span>
+              &nbsp;&nbsp;&nbsp;
+              Default schema: <input type="text" size="10" name="defaultSchema" id="defaultSchema">
+                <span class="glyphicon glyphicon-info-sign" title="Set the default schema used to find table names
+                and for SHOW FILES and SHOW TABLES." style="cursor:pointer"></span>
+           </div>
             <input type="hidden" name="csrfToken" value="${model.getCsrfToken()}">
           </form>
       </p>
@@ -620,7 +635,7 @@
     document.getElementById('queryForm')
             .addEventListener('keydown', function(e) {
       if (!(e.keyCode == 13 && (e.metaKey || e.ctrlKey))) return;
-      if (e.target.form) 
+      if (e.target.form)
         <#if model.isOnlyImpersonationEnabled()>doSubmitQueryWithUserName()<#else>doSubmitQueryWithAutoLimit()</#if>;
     });
 

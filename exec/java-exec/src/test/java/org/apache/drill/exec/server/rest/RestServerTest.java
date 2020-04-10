@@ -20,24 +20,32 @@ package org.apache.drill.exec.server.rest;
 import io.netty.channel.DefaultChannelPromise;
 import io.netty.channel.local.LocalAddress;
 import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.options.SystemOptionManager;
+import org.apache.drill.exec.server.rest.QueryWrapper.RestQueryBuilder;
+import org.apache.drill.exec.server.rest.RestQueryRunner.QueryResult;
 import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
 import org.apache.drill.exec.work.WorkManager;
 import org.apache.drill.exec.work.foreman.Foreman;
 import org.apache.drill.test.ClusterTest;
 
 public class RestServerTest extends ClusterTest {
-  protected QueryWrapper.QueryResult runQuery(String sql) throws Exception {
-    return runQuery(new QueryWrapper(sql, "SQL", null, null, null));
+
+  protected QueryResult runQuery(String sql) throws Exception {
+    return runQuery(new RestQueryBuilder().query(sql).build());
   }
 
-  protected QueryWrapper.QueryResult runQueryWithUsername(String sql, String userName) throws Exception {
-    return runQuery(new QueryWrapper(sql, "SQL", null, userName, null));
+  protected QueryResult runQueryWithUsername(String sql, String userName) throws Exception {
+    return runQuery(
+        new RestQueryBuilder()
+          .query(sql)
+          .userName(userName)
+          .build());
   }
 
-  protected QueryWrapper.QueryResult runQuery(QueryWrapper q) throws Exception {
+  protected QueryResult runQuery(QueryWrapper q) throws Exception {
     SystemOptionManager systemOptions = cluster.drillbit().getContext().getOptionManager();
     DrillUserPrincipal principal = new DrillUserPrincipal.AnonDrillUserPrincipal();
     WebSessionResources webSessionResources = new WebSessionResources(
@@ -49,11 +57,10 @@ public class RestServerTest extends ClusterTest {
         .build(),
       new DefaultChannelPromise(null));
     WebUserConnection connection = new WebUserConnection.AnonWebUserConnection(webSessionResources);
-    return q.run(cluster.drillbit().getManager(), connection);
+    return new RestQueryRunner(q, cluster.drillbit().getManager(), connection).run();
   }
 
-
-  protected UserBitShared.QueryProfile getQueryProfile(QueryWrapper.QueryResult result) {
+  protected QueryProfile getQueryProfile(QueryResult result) {
     String queryId = result.getQueryId();
     WorkManager workManager = cluster.drillbit().getManager();
     Foreman f = workManager.getBee().getForemanForQueryId(QueryIdHelper.getQueryIdFromString(queryId));
@@ -65,5 +72,4 @@ public class RestServerTest extends ClusterTest {
     }
     return workManager.getContext().getProfileStoreContext().getCompletedProfileStore().get(queryId);
   }
-
 }

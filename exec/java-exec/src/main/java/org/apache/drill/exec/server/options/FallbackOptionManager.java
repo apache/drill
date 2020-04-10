@@ -22,13 +22,15 @@ import java.util.Iterator;
 import org.apache.drill.shaded.guava.com.google.common.collect.Iterables;
 
 /**
- * An {@link OptionManager} which allows for falling back onto another {@link OptionManager} when retrieving options.
+ * An {@link OptionManager} which allows for falling back onto another
+ * {@link OptionManager} when retrieving options.
  * <p/>
- * {@link FragmentOptionManager} and {@link SessionOptionManager} use {@link SystemOptionManager} as the fall back
- * manager. {@link QueryOptionManager} uses {@link SessionOptionManager} as the fall back manager.
+ * {@link FragmentOptionManager} and {@link SessionOptionManager} use
+ * {@link SystemOptionManager} as the fall back manager.
+ * {@link QueryOptionManager} uses {@link SessionOptionManager} as the fall back
+ * manager.
  */
 public abstract class FallbackOptionManager extends BaseOptionManager {
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FallbackOptionManager.class);
 
   protected final OptionManager fallback;
 
