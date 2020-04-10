@@ -17,15 +17,15 @@
  */
 package org.apache.drill.exec.server.rest;
 
-import org.apache.drill.shaded.guava.com.google.common.base.CharMatcher;
 import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.server.rest.DrillRestServer.UserAuthEnabled;
+import org.apache.drill.exec.server.rest.QueryWrapper.RestQueryBuilder;
+import org.apache.drill.exec.server.rest.RestQueryRunner.QueryResult;
 import org.apache.drill.exec.server.rest.auth.DrillUserPrincipal;
-import org.apache.drill.exec.server.rest.QueryWrapper.QueryResult;
 import org.apache.drill.exec.work.WorkManager;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.slf4j.Logger;
@@ -34,15 +34,18 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -90,7 +93,7 @@ public class QueryResources {
   public QueryResult submitQueryJSON(QueryWrapper query) throws Exception {
     try {
       // Run the query
-      return query.run(work, webUserConnection);
+      return new RestQueryRunner(query, work, webUserConnection).run();
     } finally {
       // no-op for authenticated user
       webUserConnection.cleanupSession();
@@ -105,12 +108,20 @@ public class QueryResources {
                               @FormParam("queryType") String queryType,
                               @FormParam("autoLimit") String autoLimit,
                               @FormParam("userName") String userName,
-                              @FormParam("defaultSchema") String defaultSchema) throws Exception {
+                              @FormParam("defaultSchema") String defaultSchema,
+                              Form form) throws Exception {
     try {
-      // Apply options from the form fields, if provided
-      final String trimmedQueryString = CharMatcher.is(';').trimTrailingFrom(query.trim());
-      final QueryResult result = submitQueryJSON(new QueryWrapper(trimmedQueryString, queryType, autoLimit, userName, defaultSchema));
-      List<Integer> rowsPerPageValues = work.getContext().getConfig().getIntList(ExecConstants.HTTP_WEB_CLIENT_RESULTSET_ROWS_PER_PAGE_VALUES);
+      final QueryResult result = submitQueryJSON(
+          new RestQueryBuilder()
+            .query(query)
+            .queryType(queryType)
+            .rowLimit(autoLimit)
+            .userName(userName)
+            .defaultSchema(defaultSchema)
+            .sessionOptions(readOptionsFromForm(form))
+            .build());
+      List<Integer> rowsPerPageValues = work.getContext().getConfig().getIntList(
+          ExecConstants.HTTP_WEB_CLIENT_RESULTSET_ROWS_PER_PAGE_VALUES);
       Collections.sort(rowsPerPageValues);
       final String rowsPerPageValuesAsStr = Joiner.on(",").join(rowsPerPageValues);
       return ViewableWithPermissions.create(authEnabled.get(), "/rest/query/result.ftl", sc, new TabularResult(result, rowsPerPageValuesAsStr));
@@ -118,6 +129,27 @@ public class QueryResources {
       logger.error("Query from Web UI Failed: {}", e);
       return ViewableWithPermissions.create(authEnabled.get(), "/rest/errorMessage.ftl", sc, e);
     }
+  }
+
+  /**
+   * Convert the form to a map. The form allows multiple values per key;
+   * discard the entry if empty, throw an error if more than one value.
+   */
+  private Map<String, String> readOptionsFromForm(Form form) {
+    Map<String, String> options = new HashMap<>();
+    for (Map.Entry<String, List<String>> pair : form.asMap().entrySet()) {
+      List<String> values = pair.getValue();
+       if (values.isEmpty()) {
+        continue;
+      }
+      if (values.size() > 1) {
+        throw new BadRequestException(String.format(
+            "Multiple values given for option '%s'", pair.getKey()));
+      }
+
+      options.put(pair.getKey(), values.get(0));
+    }
+    return options;
   }
 
   /**
@@ -225,5 +257,4 @@ public class QueryResources {
       return autoLimitedRowCount;
     }
   }
-
 }

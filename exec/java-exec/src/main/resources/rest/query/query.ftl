@@ -43,6 +43,7 @@
 
 <#include "*/runningQuery.ftl">
 
+  <#-- DRILL-7697: merge with copy in profile.ftl -->
   <form role="form" id="queryForm" action="/query" method="POST">
     <#if model.isOnlyImpersonationEnabled()>
       <div class="form-group">
@@ -51,49 +52,55 @@
       </div>
     </#if>
     <div class="form-group">
-      <label for="queryType">Query Type</label>
-      <div class="radio">
+      <label for="queryType">Query type:&nbsp;&nbsp;</label>
+      <div class="radio-inline">
         <label>
           <input type="radio" name="queryType" id="sql" value="SQL" checked>
           SQL
         </label>
       </div>
-      <div class="radio">
+      <div class="radio-inline">
         <label>
           <input type="radio" name="queryType" id="physical" value="PHYSICAL">
-          PHYSICAL
+          Physical
         </label>
       </div>
-      <div class="radio">
+      <div class="radio-inline">
         <label>
           <input type="radio" name="queryType" id="logical" value="LOGICAL">
-          LOGICAL
+          Logical
         </label>
       </div>
     </div>
+
     <div class="form-group">
       <div style="display: inline-block"><label for="query">Query</label></div>
-      <div style="display: inline-block; float:right; padding-right:5%"><b>Hint: </b>Use <div id="keyboardHint" style="display:inline-block; font-style:italic"></div> to submit</div>
+      <div style="display: inline-block; float:right; padding-right:5%"><b>Hint: </b>Use
+        <div id="keyboardHint" style="display:inline-block; font-style:italic"></div> to submit</div>
       <div id="query-editor-format"></div>
       <input class="form-control" type="hidden" id="query" name="query" autofocus/>
     </div>
 
-    <button class="btn btn-default" type="button" onclick="<#if model.isOnlyImpersonationEnabled()>doSubmitQueryWithUserName()<#else>doSubmitQueryWithAutoLimit()</#if>">
+    <button class="btn btn-primary" type="button" onclick="<#if model.isOnlyImpersonationEnabled()>doSubmitQueryWithUserName()<#else>doSubmitQueryWithAutoLimit()</#if>">
       Submit
     </button>
-    <input type="checkbox" name="forceLimit" value="limit" <#if model.isAutoLimitEnabled()>checked</#if>> Limit results to <input type="text" id="autoLimit" name="autoLimit" min="0" value="${model.getDefaultRowsAutoLimited()?c}" size="6" pattern="[0-9]*"> rows <span class="glyphicon glyphicon-info-sign" title="Limits the number of records retrieved in the query. Ignored if query has a limit already" style="cursor:pointer"></span>
-    <label for="defaultSchema">
-      Default Schema
-      <input type="text" name="defaultSchema" id="defaultSchema" list="enabledPlugins" placeholder="-- default schema --">
-      <datalist id="enabledPlugins">
-        <#list model.getEnabledPlugins() as pluginModel>
-          <#if pluginModel.getPlugin()?? && pluginModel.getPlugin().enabled() == true>
-            <option value="${pluginModel.getPlugin().getName()}">
-          </#if>
-        </#list>
-      </datalist>
-    </label>
-    <span class="glyphicon glyphicon-info-sign" title="Set the default schema used to find table names, and for SHOW FILES and SHOW TABLES" style="cursor:pointer"></span>
+    &nbsp;&nbsp;&nbsp;
+    <input type="checkbox" name="forceLimit" value="limit" <#if model.isAutoLimitEnabled()>checked</#if>>
+      Limit results to <input type="text" id="autoLimit" name="autoLimit" min="0" value="${model.getDefaultRowsAutoLimited()?c}" size="6" pattern="[0-9]*">
+      rows <span class="glyphicon glyphicon-info-sign" title="Limits the number of records retrieved in the query.
+      Ignored if query has a LIMIT clause." style="cursor:pointer"></span>
+    &nbsp;&nbsp;&nbsp;
+    Default schema:
+    <input type="text" name="defaultSchema" id="defaultSchema" list="enabledPlugins" placeholder="schema">
+    <datalist id="enabledPlugins">
+      <#list model.getEnabledPlugins() as pluginModel>
+        <#if pluginModel.getPlugin()?? && pluginModel.getPlugin().enabled() == true>
+          <option value="${pluginModel.getPlugin().getName()}">
+        </#if>
+      </#list>
+    </datalist>
+     <span class="glyphicon glyphicon-info-sign" title="Set the default schema used to find table names
+      and for SHOW FILES and SHOW TABLES." style="cursor:pointer"></span>
     <input type="hidden" name="csrfToken" value="${model.getCsrfToken()}">
   </form>
 
@@ -179,7 +186,7 @@
     document.getElementById('queryForm')
             .addEventListener('keydown', function(e) {
       if (!(e.keyCode == 13 && (e.metaKey || e.ctrlKey))) return;
-      if (e.target.form) //Submit [Wrapped] Query 
+      if (e.target.form) //Submit [Wrapped] Query
         <#if model.isOnlyImpersonationEnabled()>doSubmitQueryWithUserName()<#else>doSubmitQueryWithAutoLimit()</#if>;
     });
   </script>

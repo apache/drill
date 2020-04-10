@@ -63,6 +63,8 @@ import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.glassfish.jersey.servlet.ServletContainer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.DispatcherType;
 import javax.servlet.http.HttpSession;
@@ -88,6 +90,8 @@ import java.util.stream.Stream;
  * Wrapper class around jetty based web server.
  */
 public class WebServer implements AutoCloseable {
+  private static final Logger logger = LoggerFactory.getLogger(WebServer.class);
+
   private static final String ACE_MODE_SQL_TEMPLATE_JS = "ace.mode-sql.template.js";
   private static final String ACE_MODE_SQL_JS = "mode-sql.js";
   private static final String DRILL_FUNCTIONS_PLACEHOLDER = "__DRILL_FUNCTIONS__";
@@ -95,7 +99,6 @@ public class WebServer implements AutoCloseable {
   private static final String STATUS_THREADS_PATH = "/status/threads";
   private static final String STATUS_METRICS_PATH = "/status/metrics";
 
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WebServer.class);
   private static final String OPTIONS_DESCRIBE_JS = "options.describe.js";
   private static final String OPTIONS_DESCRIBE_TEMPLATE_JS = "options.describe.template.js";
 
@@ -144,7 +147,6 @@ public class WebServer implements AutoCloseable {
     if (!config.getBoolean(ExecConstants.HTTP_ENABLE)) {
       return;
     }
-
 
     final QueuedThreadPool threadPool = new QueuedThreadPool(2, 2);
     embeddedJetty = new Server(threadPool);
@@ -200,18 +202,20 @@ public class WebServer implements AutoCloseable {
     servletContextHandler.addServlet(new ServletHolder(new ThreadDumpServlet()), STATUS_THREADS_PATH);
 
     final ServletHolder staticHolder = new ServletHolder("static", DefaultServlet.class);
+
     // Get resource URL for Drill static assets, based on where Drill icon is located
     String drillIconResourcePath =
-        Resource.newClassPathResource(BASE_STATIC_PATH + DRILL_ICON_RESOURCE_RELATIVE_PATH).getURL().toString();
+        Resource.newClassPathResource(BASE_STATIC_PATH + DRILL_ICON_RESOURCE_RELATIVE_PATH).getURI().toString();
     staticHolder.setInitParameter("resourceBase",
         drillIconResourcePath.substring(0, drillIconResourcePath.length() - DRILL_ICON_RESOURCE_RELATIVE_PATH.length()));
     staticHolder.setInitParameter("dirAllowed", "false");
     staticHolder.setInitParameter("pathInfoOnly", "true");
     servletContextHandler.addServlet(staticHolder, "/static/*");
 
-    //Add Local path resource (This will allow access to dynamically created files like JavaScript)
+    // Add Local path resource (This will allow access to dynamically created files like JavaScript)
     final ServletHolder dynamicHolder = new ServletHolder("dynamic", DefaultServlet.class);
-    //Skip if unable to get a temp directory (e.g. during Unit tests)
+
+    // Skip if unable to get a temp directory (e.g. during Unit tests)
     if (getOrCreateTmpJavaScriptDir() != null) {
       dynamicHolder.setInitParameter("resourceBase", getOrCreateTmpJavaScriptDir().getAbsolutePath());
       dynamicHolder.setInitParameter("dirAllowed", "true");
@@ -220,7 +224,7 @@ public class WebServer implements AutoCloseable {
     }
 
     if (authEnabled) {
-      //DrillSecurityHandler is used to support SPNEGO and FORM authentication together
+      // DrillSecurityHandler is used to support SPNEGO and FORM authentication together
       servletContextHandler.setSecurityHandler(new DrillHttpSecurityHandlerProvider(config, workManager.getContext()));
       servletContextHandler.setSessionHandler(createSessionHandler(servletContextHandler.getSecurityHandler()));
     }
@@ -247,10 +251,11 @@ public class WebServer implements AutoCloseable {
       }
     }
 
-    //Allow for Other Drillbits to make REST calls
+    // Allow for Other Drillbits to make REST calls
     FilterHolder filterHolder = new FilterHolder(CrossOriginFilter.class);
     filterHolder.setInitParameter("allowedOrigins", "*");
-    //Allowing CORS for metrics only
+
+    // Allowing CORS for metrics only
     servletContextHandler.addFilter(filterHolder, STATUS_METRICS_PATH, null);
 
     FilterHolder responseHeadersSettingFilter = new FilterHolder(ResponseHeadersSettingFilter.class);
@@ -402,7 +407,6 @@ public class WebServer implements AutoCloseable {
     }
     return tmpJavaScriptDir;
   }
-
 
   /**
    * Generate Options Description JavaScript to serve http://drillhost/options ACE library search features

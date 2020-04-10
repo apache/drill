@@ -20,12 +20,13 @@ package org.apache.drill.exec.server.options;
 import java.util.Map;
 
 /**
- * This is an {@link OptionManager} that holds options in memory rather than in a persistent store. Options stored in
- * {@link SessionOptionManager}, {@link QueryOptionManager}, and {@link FragmentOptionManager} are held in memory
- * (see {@link #options}) whereas the {@link SystemOptionManager} stores options in a persistent store.
+ * This is an {@link OptionManager} that holds options in memory rather than in
+ * a persistent store. Options stored in {@link SessionOptionManager},
+ * {@link QueryOptionManager}, and {@link FragmentOptionManager} are held in
+ * memory (see {@link #options}) whereas the {@link SystemOptionManager} stores
+ * options in a persistent store.
  */
 public abstract class InMemoryOptionManager extends FallbackOptionManager {
-//  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(InMemoryOptionManager.class);
 
   protected final Map<String, OptionValue> options;
 

@@ -17,11 +17,15 @@
  */
 package org.apache.drill.exec.server.options;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
+import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.test.BaseTest;
-import org.junit.Assert;
 import org.junit.Test;
 
 public class OptionValueTest extends BaseTest {
+
   @Test
   public void createBooleanKindTest() {
     final OptionValue createdValue = OptionValue.create(
@@ -31,7 +35,7 @@ public class OptionValueTest extends BaseTest {
     final OptionValue expectedValue = OptionValue.create(
       OptionValue.AccessibleScopes.ALL, "myOption", true, OptionValue.OptionScope.SYSTEM);
 
-    Assert.assertEquals(expectedValue, createdValue);
+    assertEquals(expectedValue, createdValue);
   }
 
   @Test
@@ -43,7 +47,16 @@ public class OptionValueTest extends BaseTest {
     final OptionValue expectedValue = OptionValue.create(
       OptionValue.AccessibleScopes.ALL, "myOption", 1.5, OptionValue.OptionScope.SYSTEM);
 
-    Assert.assertEquals(expectedValue, createdValue);
+    assertEquals(expectedValue, createdValue);
+
+    try {
+      OptionValue.create(
+          OptionValue.Kind.DOUBLE, OptionValue.AccessibleScopes.ALL,
+          "myOption", "bogus", OptionValue.OptionScope.SYSTEM);
+      fail();
+    } catch (UserException e) {
+      // Expected
+    }
   }
 
   @Test
@@ -55,7 +68,16 @@ public class OptionValueTest extends BaseTest {
     final OptionValue expectedValue = OptionValue.create(
       OptionValue.AccessibleScopes.ALL, "myOption", 3000l, OptionValue.OptionScope.SYSTEM);
 
-    Assert.assertEquals(expectedValue, createdValue);
+    assertEquals(expectedValue, createdValue);
+
+    try {
+      OptionValue.create(
+          OptionValue.Kind.LONG, OptionValue.AccessibleScopes.ALL,
+          "myOption", "bogus", OptionValue.OptionScope.SYSTEM);
+      fail();
+    } catch (UserException e) {
+      // Expected
+    }
   }
 
   @Test
@@ -67,6 +89,6 @@ public class OptionValueTest extends BaseTest {
     final OptionValue expectedValue = OptionValue.create(
       OptionValue.AccessibleScopes.ALL, "myOption", "wabalubawubdub", OptionValue.OptionScope.SYSTEM);
 
-    Assert.assertEquals(expectedValue, createdValue);
+    assertEquals(expectedValue, createdValue);
   }
 }

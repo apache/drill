@@ -17,17 +17,22 @@
  */
 package org.apache.drill.exec.server.rest;
 
-import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.test.ClusterFixture;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.server.rest.QueryWrapper.RestQueryBuilder;
+import org.apache.drill.exec.server.rest.RestQueryRunner.QueryResult;
+import org.apache.drill.test.ClusterFixture;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 public class TestQueryWrapper extends RestServerTest {
 
@@ -40,7 +45,7 @@ public class TestQueryWrapper extends RestServerTest {
 
   @Test
   public void testShowSchemas() throws Exception {
-    QueryWrapper.QueryResult result = runQuery("SHOW SCHEMAS");
+    QueryResult result = runQuery("SHOW SCHEMAS");
     assertEquals("COMPLETED", result.queryState);
     assertNotEquals(0, result.rows.size());
     assertEquals(1, result.columns.size());
@@ -50,8 +55,10 @@ public class TestQueryWrapper extends RestServerTest {
   @Test
   public void testImpersonationDisabled() throws Exception {
     try {
-      QueryWrapper q = new QueryWrapper("SHOW SCHEMAS", "SQL", null, "alfred", null);
-      runQuery(q);
+      runQuery(new RestQueryBuilder()
+          .query("SHOW SCHEMAS")
+          .userName("alfred")
+          .build());
       fail("Should have thrown exception");
     } catch (UserException e) {
       assertThat(e.getMessage(), containsString("User impersonation is not enabled"));
@@ -60,9 +67,83 @@ public class TestQueryWrapper extends RestServerTest {
 
   @Test
   public void testSpecifyDefaultSchema() throws Exception {
-    QueryWrapper.QueryResult result = runQuery(new QueryWrapper("SHOW FILES", "SQL", null, null, "dfs.tmp"));
+    QueryResult result = runQuery(
+        new RestQueryBuilder()
+          .query("SHOW FILES")
+          .defaultSchema("dfs.tmp")
+          .build());
     // SHOW FILES will fail if default schema is not provided
     assertEquals("COMPLETED", result.queryState);
   }
 
+  protected QueryResult runQueryWithOption(String sql, String name, String value) throws Exception {
+    Map<String, String> options = new HashMap<>();
+    options.put(name, value);
+    return runQuery(
+        new RestQueryBuilder()
+        .query(sql)
+        .sessionOptions(options)
+        .build());
+  }
+
+  @Test
+  public void testOptionWithQuery() throws Exception {
+    runOptionTest(ExecConstants.ENABLE_VERBOSE_ERRORS_KEY, "true");   // Boolean
+    runOptionTest(ExecConstants.QUERY_MAX_ROWS, "10");                // Long
+    runOptionTest(ExecConstants.TEXT_ESTIMATED_ROW_SIZE_KEY, "10.5"); // Double
+    runOptionTest(ExecConstants.OUTPUT_FORMAT_OPTION, "json");        // String
+  }
+
+  public void runOptionTest(String option, String value) throws Exception {
+    String query = String.format("SELECT val FROM sys.options WHERE `name`='%s'", option);
+    String origValue = client.queryBuilder()
+        .sql(query)
+        .singletonString();
+    assertNotEquals(origValue, value,
+        "Not a valid test: new value is the same as the current value");
+    QueryResult result = runQueryWithOption(query, option, value);
+    assertEquals(1, result.rows.size());
+    assertEquals(1, result.columns.size());
+    assertEquals(value, result.rows.get(0).get("val"));
+  }
+
+  @Test
+  public void testInvalidOptionName() throws Exception {
+    try {
+      runQueryWithOption("SHOW SCHEMAS", "xxx", "s");
+      fail("Expected exception to be thrown");
+    } catch (Exception e) {
+      assertThat(e.getMessage(), containsString("The option 'xxx' does not exist."));
+    }
+  }
+
+  @Test
+  public void testInvalidBooleanOption() {
+    try {
+      runQueryWithOption("SHOW SCHEMAS", ExecConstants.ENABLE_VERBOSE_ERRORS_KEY, "not a boolean");
+      fail("Expected exception to be thrown");
+    } catch (Exception e) {
+      assertThat(e.getMessage(), containsString("not a valid value"));
+    }
+  }
+
+  @Test
+  public void testInvalidLongOption() {
+    try {
+      runQueryWithOption("SHOW SCHEMAS", ExecConstants.QUERY_MAX_ROWS, "bogus");
+      fail("Expected exception to be thrown");
+    } catch (Exception e) {
+      assertThat(e.getMessage(), containsString("not a valid value"));
+    }
+  }
+
+  @Test
+  public void testInvalidDoubleOption() {
+    try {
+      runQueryWithOption("SHOW SCHEMAS", ExecConstants.TEXT_ESTIMATED_ROW_SIZE_KEY, "bogus");
+      fail("Expected exception to be thrown");
+    } catch (Exception e) {
+      assertThat(e.getMessage(), containsString("not a valid value"));
+    }
+  }
 }

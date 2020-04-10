@@ -58,13 +58,15 @@ import org.apache.drill.exec.store.sys.PersistentStoreProvider;
 import org.apache.drill.exec.work.WorkManager;
 import org.apache.drill.exec.work.foreman.Foreman;
 import org.glassfish.jersey.server.mvc.Viewable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.drill.shaded.guava.com.google.common.base.Joiner;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 @Path("/")
 @RolesAllowed(DrillUserPrincipal.AUTHENTICATED_ROLE)
 public class ProfileResources {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProfileResources.class);
+  private static final Logger logger = LoggerFactory.getLogger(ProfileResources.class);
 
   @Inject
   UserAuthEnabled authEnabled;
@@ -208,9 +210,9 @@ public class ProfileResources {
 
   @XmlRootElement
   public class QProfiles {
-    private List<ProfileInfo> runningQueries;
-    private List<ProfileInfo> finishedQueries;
-    private List<String> errors;
+    private final List<ProfileInfo> runningQueries;
+    private final List<ProfileInfo> finishedQueries;
+    private final List<String> errors;
 
     public QProfiles(List<ProfileInfo> runningQueries, List<ProfileInfo> finishedQueries, List<String> errors) {
       this.runningQueries = runningQueries;
@@ -368,7 +370,6 @@ public class ProfileResources {
     .build(logger);
   }
 
-
   @GET
   @Path("/profiles/{queryid}.json")
   @Produces(MediaType.APPLICATION_JSON)
@@ -440,4 +441,3 @@ public class ProfileResources {
     }
   }
 }
-
