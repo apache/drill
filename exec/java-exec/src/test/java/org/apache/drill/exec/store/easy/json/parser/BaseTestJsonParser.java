@@ -64,37 +64,42 @@ public class BaseTestJsonParser {
 
     @Override
     public RuntimeException parseError(String msg, JsonParseException e) {
-      throw new JsonErrorFixture("parseError", msg, e);
+      return new JsonErrorFixture("parseError", msg, e);
     }
 
     @Override
     public RuntimeException ioException(IOException e) {
-      throw new JsonErrorFixture("ioException", "", e);
+      return new JsonErrorFixture("ioException", "", e);
     }
 
     @Override
     public RuntimeException structureError(String msg) {
-      throw new JsonErrorFixture("structureError", msg);
+      return new JsonErrorFixture("structureError", msg);
     }
 
     @Override
     public RuntimeException syntaxError(JsonParseException e) {
-      throw new JsonErrorFixture("syntaxError", "", e);
+      return new JsonErrorFixture("syntaxError", "", e);
     }
 
     @Override
     public RuntimeException typeError(UnsupportedConversionError e) {
-      throw new JsonErrorFixture("typeError", "", e);
+      return new JsonErrorFixture("typeError", "", e);
     }
 
     @Override
     public RuntimeException syntaxError(JsonToken token) {
-      throw new JsonErrorFixture("syntaxError", token.toString());
+      return new JsonErrorFixture("syntaxError", token.toString());
     }
 
     @Override
     public RuntimeException unrecoverableError() {
-      throw new JsonErrorFixture("unrecoverableError", "");
+      return new JsonErrorFixture("unrecoverableError", "");
+    }
+
+    @Override
+    public RuntimeException messageParseError(MessageParser.MessageContextException e) {
+      return new JsonErrorFixture("messageParseError", "Message parse error", e);
     }
   }
 

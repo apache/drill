@@ -69,8 +69,14 @@ public interface ErrorFactory {
   RuntimeException syntaxError(JsonToken token);
 
   /**
-   * Error recover is on, the structure parser tried to recover, but
+   * Error recovery is on, the structure parser tried to recover, but
    * encountered too many other errors and gave up.
    */
   RuntimeException unrecoverableError();
+
+  /**
+   * Parser is configured to find a message tag within the JSON
+   * and a syntax occurred when following the data path.
+   */
+  RuntimeException messageParseError(MessageParser.MessageContextException e);
 }

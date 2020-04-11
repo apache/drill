@@ -24,13 +24,10 @@ import static org.junit.Assert.assertTrue;
 import java.util.HashSet;
 
 import org.apache.drill.categories.RowSetTests;
-import org.apache.drill.exec.store.easy.json.parser.JsonStructureParser.MessageParser;
 import org.apache.drill.exec.store.easy.json.parser.ObjectListener.FieldType;
 import org.apache.drill.exec.store.easy.json.parser.ValueDef.JsonType;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import com.fasterxml.jackson.core.JsonToken;
 
 /**
  * Tests JSON structure parser functionality excluding nested objects
@@ -324,66 +321,6 @@ public class TestJsonParserBasics extends BaseTestJsonParser {
     fixture.expect("a",
         new Object[] {"{}", "{\"b\": null}", "{\"b\": null, \"b\": null}",
             "{\"b\": {\"c\": {\"d\": [{\"e\": 10}, null, 20], \"f\": \"foo\"}, \"g\": 30}, \"h\": 40}"});
-    assertFalse(fixture.next());
-    fixture.close();
-  }
-
-  /**
-   * Example message parser. A real parser would provide much better
-   * error messages for badly-formed JSON or error codes.
-   */
-  private static class MessageParserFixture implements MessageParser {
-
-    @Override
-    public boolean parsePrefix(TokenIterator tokenizer) {
-      assertEquals(JsonToken.START_OBJECT, tokenizer.requireNext());
-      assertEquals(JsonToken.FIELD_NAME, tokenizer.requireNext());
-      assertEquals(JsonToken.VALUE_STRING, tokenizer.requireNext());
-      if (!"ok".equals(tokenizer.stringValue())) {
-        return false;
-      }
-      assertEquals(JsonToken.FIELD_NAME, tokenizer.requireNext());
-      assertEquals(JsonToken.START_ARRAY, tokenizer.requireNext());
-      return true;
-    }
-
-    @Override
-    public void parseSuffix(TokenIterator tokenizer) {
-      assertEquals(JsonToken.END_OBJECT, tokenizer.requireNext());
-    }
-  }
-
-  /**
-   * Test the ability to wrap the data objects with a custom message
-   * structure, typical of a REST call.
-   */
-  @Test
-  public void testMessageParser() {
-    final String json =
-        "{ status: \"ok\", data: [{a: 0}, {a: 100}, {a: null}]}";
-    JsonParserFixture fixture = new JsonParserFixture();
-    fixture.builder.messageParser(new MessageParserFixture());
-    fixture.open(json);
-    assertTrue(fixture.next());
-    ValueListenerFixture a = fixture.field("a");
-    assertEquals(JsonType.INTEGER, a.valueDef.type());
-    assertEquals(2, fixture.read());
-    assertEquals(1, a.nullCount);
-    assertEquals(100L, a.value);
-    fixture.close();
-  }
-
-  /**
-   * Test the ability to cancel the data load if a message header
-   * indicates that there is no data.
-   */
-  @Test
-  public void testMessageParserEOF() {
-    final String json =
-        "{ status: \"fail\", data: [{a: 0}, {a: 100}, {a: null}]}";
-    JsonParserFixture fixture = new JsonParserFixture();
-    fixture.builder.messageParser(new MessageParserFixture());
-    fixture.open(json);
     assertFalse(fixture.next());
     fixture.close();
   }

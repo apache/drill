@@ -33,7 +33,8 @@ import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.store.easy.json.parser.ErrorFactory;
 import org.apache.drill.exec.store.easy.json.parser.JsonStructureParser;
 import org.apache.drill.exec.store.easy.json.parser.JsonStructureParser.JsonStructureParserBuilder;
-import org.apache.drill.exec.store.easy.json.parser.JsonStructureParser.MessageParser;
+import org.apache.drill.exec.store.easy.json.parser.MessageParser;
+import org.apache.drill.exec.store.easy.json.parser.MessageParser.MessageContextException;
 import org.apache.drill.exec.store.easy.json.parser.ValueDef;
 import org.apache.drill.exec.store.easy.json.parser.ValueDef.JsonType;
 import org.apache.drill.exec.vector.accessor.UnsupportedConversionError;
@@ -383,6 +384,16 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
           .message("JSON reader does not arrays deeper than two levels")
           .addContext("Field", key)
           .addContext("Array nesting", dims));
+  }
+
+  @Override
+  public RuntimeException messageParseError(MessageContextException e) {
+    return buildError(
+        UserException.validationError(e)
+          .message("Syntax error when parsing a JSON message")
+          .addContext(e.getMessage())
+          .addContext("Looking for field", e.nextElement)
+          .addContext("On token", e.token.name()));
   }
 
   protected UserException buildError(ColumnMetadata schema, UserException.Builder builder) {

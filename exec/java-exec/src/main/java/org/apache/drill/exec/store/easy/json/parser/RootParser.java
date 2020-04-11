@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.easy.json.parser;
 
-import org.apache.drill.exec.store.easy.json.parser.JsonStructureParser.MessageParser;
+import org.apache.drill.exec.store.easy.json.parser.MessageParser.MessageContextException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -141,7 +141,11 @@ public abstract class RootParser implements ElementParser {
             tokenizer.context());
         return false;
       } else if (token == JsonToken.END_ARRAY) {
-        messageParser.parseSuffix(tokenizer);
+        try {
+          messageParser.parseSuffix(tokenizer);
+        } catch (MessageContextException e) {
+          throw errorFactory().messageParseError(e);
+        }
         return false;
       } else {
         return parseRootObject(token, tokenizer);

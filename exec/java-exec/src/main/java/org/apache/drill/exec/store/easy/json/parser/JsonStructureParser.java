@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 
+import org.apache.drill.exec.store.easy.json.parser.MessageParser.MessageContextException;
 import org.apache.drill.exec.store.easy.json.parser.RootParser.NestedRootArrayParser;
 import org.apache.drill.exec.store.easy.json.parser.RootParser.RootArrayParser;
 import org.apache.drill.exec.store.easy.json.parser.RootParser.RootObjectParser;
@@ -61,17 +62,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class JsonStructureParser {
   protected static final Logger logger = LoggerFactory.getLogger(JsonStructureParser.class);
 
-  public interface MessageParser {
-    boolean parsePrefix(TokenIterator tokenizer);
-    void parseSuffix(TokenIterator tokenizer);
-  }
-
   public static class JsonStructureParserBuilder {
     private InputStream stream;
     private Reader reader;
     private JsonStructureOptions options;
     private ObjectListener rootListener;
     private ErrorFactory errorFactory;
+    private String dataPath;
     private MessageParser messageParser;
 
     public JsonStructureParserBuilder options(JsonStructureOptions options) {
@@ -104,7 +101,19 @@ public class JsonStructureParser {
       return this;
     }
 
+    public JsonStructureParserBuilder dataPath(String dataPath) {
+      this.dataPath = dataPath;
+      return this;
+    }
+
     public JsonStructureParser build() {
+      if (dataPath != null) {
+        dataPath = dataPath.trim();
+        dataPath = dataPath.isEmpty() ? null : dataPath;
+      }
+      if (dataPath != null && messageParser == null) {
+        messageParser = new SimpleMessageParser(dataPath);
+      }
       return new JsonStructureParser(this);
     }
   }
@@ -162,8 +171,12 @@ public class JsonStructureParser {
   public ObjectListener rootListener() { return rootListener; }
 
   private RootParser makeCustomRoot(MessageParser messageParser) {
-    if (! messageParser.parsePrefix(tokenizer)) {
-      return null;
+    try {
+      if (! messageParser.parsePrefix(tokenizer)) {
+        return null;
+      }
+    } catch (MessageContextException e) {
+      throw errorFactory.messageParseError(e);
     }
     return new NestedRootArrayParser(this, messageParser);
   }
