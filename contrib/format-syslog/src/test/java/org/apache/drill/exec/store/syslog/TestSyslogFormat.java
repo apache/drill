@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.syslog;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -49,14 +50,11 @@ public class TestSyslogFormat extends ClusterTest {
 
   private static void defineSyslogPlugin() throws ExecutionSetupException {
     Map<String, FormatPluginConfig> formats = new HashMap<>();
-    SyslogFormatConfig sampleConfig = new SyslogFormatConfig();
-    sampleConfig.setExtension("syslog");
-    formats.put("sample", sampleConfig);
+    formats.put("sample", new SyslogFormatConfig(
+        Collections.singletonList("syslog"), null, null));
 
-    SyslogFormatConfig flattenedDataConfig = new SyslogFormatConfig();
-    flattenedDataConfig.setExtension("syslog1");
-    flattenedDataConfig.setFlattenStructuredData(true);
-    formats.put("flat", flattenedDataConfig);
+    formats.put("flat", new SyslogFormatConfig(
+        Collections.singletonList("syslog1"), null, true));
 
     // Define a temporary plugin for the "cp" storage plugin.
     cluster.defineFormats("cp", formats);

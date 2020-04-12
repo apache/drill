@@ -34,7 +34,7 @@ public class TestPcapEVFReader extends ClusterTest {
   @BeforeClass
   public static void setup() throws Exception {
     ClusterTest.startCluster(ClusterFixture.builder(dirTestWatcher));
-    cluster.defineFormat("cp", "sample", new PcapFormatConfig());
+    cluster.defineFormat("cp", "sample", new PcapFormatConfig(null, null));
   }
 
   @Test

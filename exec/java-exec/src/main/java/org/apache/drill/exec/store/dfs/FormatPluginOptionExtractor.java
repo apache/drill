@@ -36,6 +36,9 @@ import org.apache.drill.exec.store.table.function.TableParamDef;
 import org.apache.drill.exec.store.table.function.TableSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 
 /**
@@ -58,7 +61,7 @@ final class FormatPluginOptionExtractor {
         LogicalPlanPersistence.getSubTypes(scanResult, FormatPluginConfig.class);
     for (Class<? extends FormatPluginConfig> pluginConfigClass : pluginConfigClasses) {
       FormatPluginOptionsDescriptor optionsDescriptor = new FormatPluginOptionsDescriptor(pluginConfigClass);
-      result.put(optionsDescriptor.typeName.toLowerCase(), optionsDescriptor);
+      result.put(optionsDescriptor.getTypeName().toLowerCase(), optionsDescriptor);
     }
     this.optionsByTypeName = unmodifiableMap(result);
   }
@@ -95,9 +98,10 @@ final class FormatPluginOptionExtractor {
    *          the signature and parameters (it should be one of the signatures
    *          returned by
    *          {@link FormatPluginOptionExtractor#getTableSignatures(String, List)})
+   * @param mapper
    * @return the config
    */
-  FormatPluginConfig createConfigForTable(TableInstance t) {
+  FormatPluginConfig createConfigForTable(TableInstance t, ObjectMapper mapper, FormatPluginConfig baseConfig) {
     if (!t.sig.getSpecificParams().get(0).getName().equals("type")) {
       throw UserException.parseError()
         .message("unknown first param for %s", t.sig)
@@ -120,6 +124,6 @@ final class FormatPluginOptionExtractor {
           .addContext("table", t.sig.getName())
           .build(logger);
     }
-    return optionsDescriptor.createConfigForTable(t);
+    return optionsDescriptor.createConfigForTable(t, mapper, baseConfig);
   }
 }

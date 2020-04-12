@@ -51,7 +51,7 @@ public class AvroFormatPlugin extends EasyFormatPlugin<AvroFormatConfig> {
     config.blockSplittable = true;
     config.compressible = false;
     config.supportsProjectPushdown = true;
-    config.extensions = formatConfig.extensions;
+    config.extensions = formatConfig.getExtensions();
     config.fsConf = fsConf;
     config.defaultName = DEFAULT_NAME;
     config.readerOperatorType = CoreOperatorType.AVRO_SUB_SCAN_VALUE;

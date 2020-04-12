@@ -138,6 +138,7 @@ public class JSONOptions {
       return root;
   }
 
+  @SuppressWarnings("serial")
   public static class De extends StdDeserializer<JSONOptions> {
 
     public De() {
@@ -158,9 +159,9 @@ public class JSONOptions {
         throw new IllegalArgumentException(String.format("Received something other than a JsonNode %s", n));
       }
     }
-
   }
 
+  @SuppressWarnings("serial")
   public static class Se extends StdSerializer<JSONOptions> {
 
     public Se() {
@@ -175,9 +176,6 @@ public class JSONOptions {
       } else {
         jgen.writeTree(value.root);
       }
-
     }
-
   }
-
 }

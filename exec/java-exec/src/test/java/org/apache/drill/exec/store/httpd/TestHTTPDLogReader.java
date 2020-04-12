@@ -45,8 +45,8 @@ public class TestHTTPDLogReader extends ClusterTest {
     ClusterTest.startCluster(ClusterFixture.builder(dirTestWatcher));
 
     // Define a temporary format plugin for the "cp" storage plugin.
-    HttpdLogFormatConfig sampleConfig = new HttpdLogFormatConfig();
-    sampleConfig.setLogFormat("%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\"");
+    HttpdLogFormatConfig sampleConfig = new HttpdLogFormatConfig(
+        "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\"", null);
     cluster.defineFormat("cp", "sample", sampleConfig);
   }
 

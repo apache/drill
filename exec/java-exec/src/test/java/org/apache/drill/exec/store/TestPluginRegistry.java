@@ -574,8 +574,16 @@ public class TestPluginRegistry extends BaseTest {
       assertFalse(fsConfig.getFormats().containsKey("bsv"));
 
       // Add a new format
-      TextFormatConfig bsv = new TextFormatConfig();
-      bsv.fieldDelimiter = '!';
+      TextFormatConfig bsv = new TextFormatConfig(
+          null,
+          null, // line delimiter
+          "!",  // field delimiter
+          null,  // quote
+          null,  // escape
+          null,  // comment
+          false, // skip first line
+          false  // extract header
+          );
       registry.putFormatPlugin(CP_PLUGIN_NAME, "bsv", bsv);
 
       config = registry.getStoredConfig(CP_PLUGIN_NAME);

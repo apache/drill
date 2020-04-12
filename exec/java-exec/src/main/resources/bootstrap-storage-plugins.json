@@ -19,17 +19,17 @@
         "psv" : {
           "type" : "text",
           "extensions" : [ "tbl" ],
-          "delimiter" : "|"
+          "fieldDelimiter" : "|"
         },
         "csv" : {
           "type" : "text",
           "extensions" : [ "csv" ],
-          "delimiter" : ","
+          "fieldDelimiter" : ","
         },
         "tsv" : {
           "type" : "text",
           "extensions" : [ "tsv" ],
-          "delimiter" : "\t"
+          "fieldDelimiter" : "\t"
         },
         "httpd" : {
           "type" : "httpd",
@@ -91,17 +91,17 @@
         "psv" : {
           "type" : "text",
           "extensions" : [ "tbl" ],
-          "delimiter" : "|"
+          "fieldDelimiter" : "|"
         },
         "csv" : {
           "type" : "text",
           "extensions" : [ "csv" ],
-          "delimiter" : ","
+          "fieldDelimiter" : ","
         },
         "tsv" : {
           "type" : "text",
           "extensions" : [ "tsv" ],
-          "delimiter" : "\t"
+          "fieldDelimiter" : "\t"
         },
         "parquet" : {
           "type" : "parquet"
@@ -126,7 +126,7 @@
         "csvh" : {
           "type" : "text",
           "extensions" : [ "csvh" ],
-          "delimiter" : ",",
+          "fieldDelimiter" : ",",
           "extractHeader" : true
         }
       },
@@ -139,12 +139,12 @@
         "csv" : {
           "type" : "text",
           "extensions" : [ "csv" ],
-          "delimiter" : ","
+          "fieldDelimiter" : ","
         },
         "tsv" : {
           "type" : "text",
           "extensions" : [ "tsv" ],
-          "delimiter" : "\t"
+          "fieldDelimiter" : "\t"
         },
         "json" : {
           "type" : "json",
@@ -165,7 +165,7 @@
         "csvh" : {
           "type" : "text",
           "extensions" : [ "csvh" ],
-          "delimiter" : ",",
+          "fieldDelimiter" : ",",
           "extractHeader" : true
         },
         "image" : {

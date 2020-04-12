@@ -18,27 +18,38 @@
 package org.apache.drill.exec.store.log;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.shaded.guava.com.google.common.base.Objects;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName(LogFormatPlugin.PLUGIN_NAME)
 public class LogFormatConfig implements FormatPluginConfig {
 
-  // Fields must be public for table functions to work: DRILL-6672
+  private final String regex;
+  private final String extension;
+  private final int maxErrors;
+  private final List<LogFormatField> schema;
 
-  public String regex;
-  public String extension;
-  public int maxErrors = 10;
-  public List<LogFormatField> schema;
-
-  // Required to keep Jackson happy
-  public LogFormatConfig() { }
+  @JsonCreator
+  public LogFormatConfig(
+      @JsonProperty("regex") String regex,
+      @JsonProperty("extension") String extension,
+      @JsonProperty("maxErrors") Integer maxErrors,
+      @JsonProperty("schema") List<LogFormatField> schema) {
+    this.regex = regex;
+    this.extension = extension;
+    this.maxErrors = maxErrors == null ? 10 : maxErrors;
+    this.schema = schema == null
+        ? ImmutableList.of() : schema;
+  }
 
   public String getRegex() {
     return regex;
@@ -56,26 +67,6 @@ public class LogFormatConfig implements FormatPluginConfig {
     return schema;
   }
 
-  public void setExtension(String ext) {
-    extension = ext;
-  }
-
-  public void setMaxErrors(int errors) {
-    maxErrors = errors;
-  }
-
-  public void setRegex(String regex) {
-    this.regex = regex;
-  }
-
-  public void setSchema(List<LogFormatField> schema) {
-    this.schema = schema;
-  }
-
-  public void initSchema() {
-    schema = new ArrayList<LogFormatField>();
-  }
-
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -86,19 +77,19 @@ public class LogFormatConfig implements FormatPluginConfig {
     }
     LogFormatConfig other = (LogFormatConfig) obj;
     return Objects.equal(regex, other.regex) &&
-        Objects.equal(maxErrors, other.maxErrors) &&
-        Objects.equal(schema, other.schema) &&
-        Objects.equal(extension, other.extension);
+           Objects.equal(maxErrors, other.maxErrors) &&
+           Objects.equal(schema, other.schema) &&
+           Objects.equal(extension, other.extension);
   }
 
   @Override
   public int hashCode() {
-    return Arrays.hashCode(new Object[]{regex, maxErrors, schema, extension});
+    return Objects.hashCode(regex, maxErrors, schema, extension);
   }
 
   @JsonIgnore
   public boolean hasSchema() {
-    return schema != null  &&  ! schema.isEmpty();
+    return schema != null && ! schema.isEmpty();
   }
 
   @JsonIgnore
@@ -132,5 +123,15 @@ public class LogFormatConfig implements FormatPluginConfig {
   public String getDateFormat(int fieldIndex) {
     LogFormatField field = getField(fieldIndex);
     return field == null ? null : field.getFormat();
+  }
+
+  @Override
+  public String toString() {
+    return new PlanStringBuilder(this)
+        .field("regex", regex)
+        .field("extension", extension)
+        .field("schema", schema)
+        .field("maxErrors", maxErrors)
+        .toString();
   }
 }

@@ -17,12 +17,15 @@
  */
 package org.apache.drill.exec.store.ltsv;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -30,21 +33,23 @@ import java.util.Objects;
 public class LTSVFormatPluginConfig implements FormatPluginConfig {
   private static final List<String> DEFAULT_EXTS = ImmutableList.of("ltsv");
 
-  public List<String> extensions;
+  private final List<String> extensions;
+
+  @JsonCreator
+  public LTSVFormatPluginConfig(
+      @JsonProperty("extensions") List<String> extensions) {
+    this.extensions = extensions == null ?
+        DEFAULT_EXTS : ImmutableList.copyOf(extensions);
+  }
 
   @JsonInclude(JsonInclude.Include.NON_DEFAULT)
   public List<String> getExtensions() {
-    if (extensions == null) {
-      // when loading an old JSONFormatConfig that doesn't contain an "extensions" attribute
-      return DEFAULT_EXTS;
-    }
     return extensions;
   }
 
   @Override
   public int hashCode() {
-    List<String> array = extensions != null ? extensions : DEFAULT_EXTS;
-    return Arrays.hashCode(array.toArray(new String[array.size()]));
+    return Objects.hash(extensions);
   }
 
   @Override
@@ -56,5 +61,12 @@ public class LTSVFormatPluginConfig implements FormatPluginConfig {
     }
     LTSVFormatPluginConfig that = (LTSVFormatPluginConfig) obj;
     return Objects.equals(extensions, that.extensions);
+  }
+
+  @Override
+  public String toString() {
+    return new PlanStringBuilder(this)
+        .field("extensions", extensions)
+        .toString();
   }
 }

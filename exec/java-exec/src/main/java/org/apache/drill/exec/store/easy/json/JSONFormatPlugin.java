@@ -21,7 +21,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
@@ -50,7 +52,9 @@ import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -62,12 +66,15 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
 
   private static final boolean IS_COMPRESSIBLE = true;
 
-  public JSONFormatPlugin(String name, DrillbitContext context, Configuration fsConf, StoragePluginConfig storageConfig) {
-    this(name, context, fsConf, storageConfig, new JSONFormatConfig());
+  public JSONFormatPlugin(String name, DrillbitContext context,
+      Configuration fsConf, StoragePluginConfig storageConfig) {
+    this(name, context, fsConf, storageConfig, new JSONFormatConfig(null));
   }
 
-  public JSONFormatPlugin(String name, DrillbitContext context, Configuration fsConf, StoragePluginConfig config, JSONFormatConfig formatPluginConfig) {
-    super(name, context, fsConf, config, formatPluginConfig, true, false, false, IS_COMPRESSIBLE, formatPluginConfig.getExtensions(), DEFAULT_NAME);
+  public JSONFormatPlugin(String name, DrillbitContext context,
+      Configuration fsConf, StoragePluginConfig config, JSONFormatConfig formatPluginConfig) {
+    super(name, context, fsConf, config, formatPluginConfig, true,
+          false, false, IS_COMPRESSIBLE, formatPluginConfig.getExtensions(), DEFAULT_NAME);
   }
 
   @Override
@@ -166,25 +173,25 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
 
   @JsonTypeName("json")
   public static class JSONFormatConfig implements FormatPluginConfig {
-
-    public List<String> extensions = ImmutableList.of("json");
     private static final List<String> DEFAULT_EXTS = ImmutableList.of("json");
+
+    private final List<String> extensions;
+
+    @JsonCreator
+    public JSONFormatConfig(
+        @JsonProperty("extensions") List<String> extensions) {
+      this.extensions = extensions == null ?
+          DEFAULT_EXTS : ImmutableList.copyOf(extensions);
+    }
 
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     public List<String> getExtensions() {
-      if (extensions == null) {
-        // when loading an old JSONFormatConfig that doesn't contain an "extensions" attribute
-        return DEFAULT_EXTS;
-      }
       return extensions;
     }
 
     @Override
     public int hashCode() {
-      int prime = 31;
-      int result = 1;
-      result = prime * result + ((extensions == null) ? 0 : extensions.hashCode());
-      return result;
+      return Objects.hash(extensions);
     }
 
     @Override
@@ -192,21 +199,18 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
       if (this == obj) {
         return true;
       }
-      if (obj == null) {
-        return false;
-      }
-      if (getClass() != obj.getClass()) {
+      if (obj == null || getClass() != obj.getClass()) {
         return false;
       }
       JSONFormatConfig other = (JSONFormatConfig) obj;
-      if (extensions == null) {
-        if (other.extensions != null) {
-          return false;
-        }
-      } else if (!extensions.equals(other.extensions)) {
-        return false;
-      }
-      return true;
+      return Objects.deepEquals(extensions, other.extensions);
+    }
+
+    @Override
+    public String toString() {
+      return new PlanStringBuilder(this)
+          .field("extensions", extensions)
+          .toString();
     }
   }
 

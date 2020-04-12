@@ -17,7 +17,9 @@
  */
 package org.apache.drill.exec.store.easy.sequencefile;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.drill.common.PlanStringBuilder;
@@ -29,7 +31,14 @@ import java.util.Objects;
 @JsonTypeName("sequencefile") @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class SequenceFileFormatConfig implements FormatPluginConfig {
 
-  public List<String> extensions = ImmutableList.of();
+  private final List<String> extensions;
+
+  @JsonCreator
+  public SequenceFileFormatConfig(
+      @JsonProperty("extensions") List<String> extensions) {
+    this.extensions = extensions == null ?
+        ImmutableList.of() : ImmutableList.copyOf(extensions);
+  }
 
   public List<String> getExtensions() {
     return extensions;

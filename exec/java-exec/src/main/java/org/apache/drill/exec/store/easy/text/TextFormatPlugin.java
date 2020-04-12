@@ -17,7 +17,8 @@
  */
 package org.apache.drill.exec.store.easy.text;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -59,10 +60,11 @@ import org.apache.drill.exec.store.easy.text.reader.CompliantTextBatchReader;
 import org.apache.drill.exec.store.easy.text.reader.TextParsingSettings;
 import org.apache.drill.exec.store.easy.text.writer.TextRecordWriter;
 import org.apache.drill.exec.store.schedule.CompleteFileWork;
+import org.apache.drill.shaded.guava.com.google.common.base.Strings;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.hadoop.conf.Configuration;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -111,37 +113,53 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
   @JsonInclude(Include.NON_DEFAULT)
   public static class TextFormatConfig implements FormatPluginConfig {
 
-    // TODO: Bad things happen if field change after created.
-    // Change all these to be private final, and add constructor.
-    // See DRILL-7612
+    public final List<String> extensions;
+    public final String lineDelimiter;
+    public final char fieldDelimiter;
+    public final char quote;
+    public final char escape;
+    public final char comment;
+    public final boolean skipFirstLine;
+    public final boolean extractHeader;
 
-    public List<String> extensions = Collections.emptyList();
-    public String lineDelimiter = "\n";
-    public char fieldDelimiter = '\n';
-    public char quote = '"';
-    public char escape = '"';
-    public char comment = '#';
-    public boolean skipFirstLine;
-    public boolean extractHeader;
+    @JsonCreator
+    public TextFormatConfig(
+        @JsonProperty("extensions") List<String> extensions,
+        @JsonProperty("lineDelimiter") String lineDelimiter,
+        // Drill 1.17 and before used "delimiter" in the
+        // bootstrap storage plugins file, assume many instances
+        // exist in the field.
+        @JsonAlias("delimiter")
+        @JsonProperty("fieldDelimiter") String fieldDelimiter,
+        @JsonProperty("quote") String quote,
+        @JsonProperty("escape") String escape,
+        @JsonProperty("comment") String comment,
+        @JsonProperty("skipFirstLine") Boolean skipFirstLine,
+        @JsonProperty("extractHeader") Boolean extractHeader) {
+      this.extensions = extensions == null ?
+          ImmutableList.of() : ImmutableList.copyOf(extensions);
+      this.lineDelimiter = lineDelimiter == null ? "\n" : lineDelimiter;
+      this.fieldDelimiter = Strings.isNullOrEmpty(fieldDelimiter) ? ',' : fieldDelimiter.charAt(0);
+      this.quote = Strings.isNullOrEmpty(quote) ? '"' : quote.charAt(0);
+      this.escape = Strings.isNullOrEmpty(escape) ? '"' : escape.charAt(0);
+      this.comment = Strings.isNullOrEmpty(comment) ? '#' : comment.charAt(0);
+      this.skipFirstLine = skipFirstLine == null ? false : skipFirstLine;
+      this.extractHeader = extractHeader == null ? false : extractHeader;
+    }
 
-    public TextFormatConfig() { }
+    public TextFormatConfig() {
+      this(null, null, null, null, null, null, null, null);
+    }
 
     public List<String> getExtensions() { return extensions; }
+    public String getLineDelimiter() { return lineDelimiter; }
+    public char getFieldDelimiter() { return fieldDelimiter; }
     public char getQuote() { return quote; }
     public char getEscape() { return escape; }
     public char getComment() { return comment; }
-    public String getLineDelimiter() { return lineDelimiter; }
-    public char getFieldDelimiter() { return fieldDelimiter; }
     public boolean isSkipFirstLine() { return skipFirstLine; }
-
-    @JsonIgnore
+    @JsonProperty("extractHeader")
     public boolean isHeaderExtractionEnabled() { return extractHeader; }
-
-    @Deprecated
-    @JsonProperty("delimiter")
-    public void setFieldDelimiter(char delimiter){
-      this.fieldDelimiter = delimiter;
-    }
 
     @Override
     public int hashCode() {

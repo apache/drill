@@ -43,9 +43,7 @@ public class TestSessionizePCAP extends ClusterTest {
   public static void setup() throws Exception {
     ClusterTest.startCluster(ClusterFixture.builder(dirTestWatcher));
 
-    PcapFormatConfig sampleConfig = new PcapFormatConfig();
-    sampleConfig.sessionizeTCPStreams = true;
-
+    PcapFormatConfig sampleConfig = new PcapFormatConfig(null, true);
     cluster.defineFormat("cp", "pcap", sampleConfig);
     dirTestWatcher.copyResourceToRoot(Paths.get("store/pcap/"));
   }

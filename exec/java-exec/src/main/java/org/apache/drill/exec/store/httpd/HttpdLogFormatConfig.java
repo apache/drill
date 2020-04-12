@@ -17,26 +17,41 @@
  */
 package org.apache.drill.exec.store.httpd;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.util.Objects;
+
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.logical.FormatPluginConfig;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName("httpd")
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class HttpdLogFormatConfig implements FormatPluginConfig {
 
-  public String logFormat;
-  public String timestampFormat = "dd/MMM/yyyy:HH:mm:ss ZZ";
+  public static final String DEFAULT_TS_FORMAT = "dd/MMM/yyyy:HH:mm:ss ZZ";
+
+  // No extensions?
+  private final String logFormat;
+  private final String timestampFormat;
+
+  @JsonCreator
+  public HttpdLogFormatConfig(
+      @JsonProperty("logFormat") String logFormat,
+      @JsonProperty("timestampFormat") String timestampFormat) {
+    this.logFormat = logFormat;
+    this.timestampFormat = timestampFormat == null
+        ? DEFAULT_TS_FORMAT : timestampFormat;
+  }
 
   /**
-   * @return the log formatting string.  This string is the config string from httpd.conf or similar config file.
+   * @return the log formatting string. This string is the config string from
+   *         httpd.conf or similar config file.
    */
   public String getLogFormat() {
     return logFormat;
-  }
-
-  public void setLogFormat(String format) {
-    this.logFormat = format;
   }
 
   /**
@@ -46,19 +61,9 @@ public class HttpdLogFormatConfig implements FormatPluginConfig {
     return timestampFormat;
   }
 
-  /**
-   * Sets the time stamp format
-   * @param timestamp
-   */
-  public void setTimestampFormat(String timestamp) {
-    this.timestampFormat = timestamp;
-  }
-
   @Override
   public int hashCode() {
-    int result = logFormat != null ? logFormat.hashCode() : 0;
-    result = 31 * result + (timestampFormat != null ? timestampFormat.hashCode() : 0);
-    return result;
+    return Objects.hash(logFormat, timestampFormat);
   }
 
   @Override
@@ -71,10 +76,15 @@ public class HttpdLogFormatConfig implements FormatPluginConfig {
     }
 
     HttpdLogFormatConfig that = (HttpdLogFormatConfig) o;
+    return Objects.equals(logFormat, that.logFormat) &&
+           Objects.equals(timestampFormat, that.timestampFormat);
+  }
 
-    if (logFormat != null ? !logFormat.equals(that.logFormat) : that.logFormat != null) {
-      return false;
-    }
-    return timestampFormat != null ? timestampFormat.equals(that.timestampFormat) : that.timestampFormat == null;
+  @Override
+  public String toString() {
+    return new PlanStringBuilder(this)
+        .field("log format", logFormat)
+        .field("timestamp format", timestampFormat)
+        .toString();
   }
 }

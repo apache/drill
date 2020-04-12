@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
@@ -32,6 +33,7 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.rpc.RpcException;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
@@ -79,94 +81,100 @@ public class TestLogReader extends ClusterTest {
     // file ignores such files, so they'll never get committed. Instead,
     // make up a fake suffix.
     Map<String, FormatPluginConfig> formats = new HashMap<>();
-    LogFormatConfig sampleConfig = new LogFormatConfig();
-    sampleConfig.setExtension("log1");
-    sampleConfig.setRegex(DATE_ONLY_PATTERN);
 
-    sampleConfig.initSchema();
-    sampleConfig.getSchema().add(new LogFormatField("year", "INT"));
-    sampleConfig.getSchema().add(new LogFormatField("month", "INT"));
-    sampleConfig.getSchema().add(new LogFormatField("day", "INT"));
-    formats.put("sample", sampleConfig);
-
-    // Full Drill log parser definition.
-    LogFormatConfig logConfig = new LogFormatConfig();
-    logConfig.setExtension("log1");
-    logConfig.setRegex("(\\d\\d\\d\\d)-(\\d\\d)-(\\d\\d) " +
-        "(\\d\\d):(\\d\\d):(\\d\\d),\\d+ " +
-        "\\[([^]]*)] (\\w+)\\s+(\\S+) - (.*)");
-
-    logConfig.initSchema();
-    logConfig.getSchema().add(new LogFormatField("year", "INT"));
-    logConfig.getSchema().add(new LogFormatField("month", "INT"));
-    logConfig.getSchema().add(new LogFormatField("day", "INT"));
-    logConfig.getSchema().add(new LogFormatField("hour", "INT"));
-    logConfig.getSchema().add(new LogFormatField("minute", "INT"));
-    logConfig.getSchema().add(new LogFormatField("second", "INT"));
-    logConfig.getSchema().add(new LogFormatField("thread"));
-    logConfig.getSchema().add(new LogFormatField("level"));
-    logConfig.getSchema().add(new LogFormatField("module"));
-    logConfig.getSchema().add(new LogFormatField("message"));
-    formats.put("drill-log", logConfig);
-
-    //Set up additional configs to check the time/date formats
-    LogFormatConfig logDateConfig = new LogFormatConfig();
-    logDateConfig.setExtension("log2");
-    logDateConfig.setRegex("(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}),(\\d+)\\s\\[(\\w+)\\]\\s([A-Z]+)\\s(.+)");
-
-    logDateConfig.initSchema();
-    logDateConfig.getSchema().add(new LogFormatField("entry_date", "TIMESTAMP", "yy-MM-dd hh:mm:ss"));
-    logDateConfig.getSchema().add(new LogFormatField("pid", "INT"));
-    logDateConfig.getSchema().add(new LogFormatField("location"));
-    logDateConfig.getSchema().add(new LogFormatField("message_type"));
-    logDateConfig.getSchema().add(new LogFormatField("message"));
-
-    logDateConfig.setMaxErrors(3);
-    formats.put("date-log",logDateConfig);
-
-    LogFormatConfig mysqlLogConfig = new LogFormatConfig();
-    mysqlLogConfig.setExtension("sqllog");
-    mysqlLogConfig.setRegex("(\\d{6})\\s(\\d{2}:\\d{2}:\\d{2})\\s+(\\d+)\\s(\\w+)\\s+(.+)");
-    formats.put("mysql-log", mysqlLogConfig);
-
-    // Firewall log file that requires date parsing
-    LogFormatConfig firewallConfig = new LogFormatConfig();
-    firewallConfig.setRegex("(\\w{3}\\s\\d{1,2}\\s\\d{4}\\s\\d{2}:\\d{2}:\\d{2})\\s+(\\w+)" +
-            "\\[(\\d+)\\]:\\s(.*?(\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}).*?)");
-    firewallConfig.setExtension("ssdlog");
-    firewallConfig.initSchema();
-    firewallConfig.getSchema().add(new LogFormatField("eventDate", "TIMESTAMP", "MMM dd yyyy HH:mm:ss"));
-    firewallConfig.getSchema().add(new LogFormatField("process_name"));
-    firewallConfig.getSchema().add(new LogFormatField("pid", "INT"));
-    firewallConfig.getSchema().add(new LogFormatField("message"));
-    firewallConfig.getSchema().add(new LogFormatField("src_ip"));
-    formats.put("ssdlog", firewallConfig);
+    formats.put("sample", dateOnlyConfig());
+    formats.put("drill-log", drillLogConfig());
+    formats.put("date-log", dateTimeConfig());
+    formats.put("mysql-log", mySqlConfig());
+    formats.put("ssdlog", firewallConfig());
 
     // Define a temporary format plugin for the "cp" storage plugin.
     cluster.defineFormats("cp", formats);
 
-    // Config similar to the above, but with no type info. Types
-    // will be provided via the provided schema mechanism. Column names
-    // are required so that the format and provided schemas match up.
-    LogFormatConfig untypedConfig = new LogFormatConfig();
-
-    untypedConfig.setExtension("logu");
-    untypedConfig.setRegex(DATE_ONLY_PATTERN);
-
-    untypedConfig.initSchema();
-    untypedConfig.getSchema().add(new LogFormatField("year"));
-    untypedConfig.getSchema().add(new LogFormatField("month"));
-    untypedConfig.getSchema().add(new LogFormatField("day"));
-
     // Create a test directory we can write to.
-    schemaAndConfigDir = cluster.makeDataDir("sAndC", "logu", untypedConfig);
+    schemaAndConfigDir = cluster.makeDataDir("sAndC", "logu", untypedDateOnlyConfig());
 
     // Empty configuration: regex and columns defined in the
     // provided schema
-    LogFormatConfig emptyConfig = new LogFormatConfig();
-    emptyConfig.setExtension("loge");
+    LogFormatConfig emptyConfig = new LogFormatConfig(
+        null, "loge", null, null);
     schemaOnlyDir = cluster.makeDataDir("SOnly", "loge", emptyConfig);
     tableFuncDir = cluster.makeDataDir("tf", "logf", emptyConfig);
+  }
+
+  private static LogFormatConfig dateOnlyConfig() {
+    List<LogFormatField> schema = Lists.newArrayList(
+        new LogFormatField("year", "INT"),
+        new LogFormatField("month", "INT"),
+        new LogFormatField("day", "INT"));
+    return new LogFormatConfig(
+        DATE_ONLY_PATTERN, "log1", null, schema);
+  }
+
+  // Config similar to the above, but with no type info. Types
+  // will be provided via the provided schema mechanism. Column names
+  // are required so that the format and provided schemas match up.
+  private static LogFormatConfig untypedDateOnlyConfig() {
+    List<LogFormatField> schema = Lists.newArrayList(
+        new LogFormatField("year"),
+        new LogFormatField("month"),
+        new LogFormatField("day"));
+    return new LogFormatConfig(
+        DATE_ONLY_PATTERN, "logu", null, schema);
+  }
+
+  // Full Drill log parser definition.
+  private static LogFormatConfig drillLogConfig() {
+    String regex = "(\\d\\d\\d\\d)-(\\d\\d)-(\\d\\d) " +
+        "(\\d\\d):(\\d\\d):(\\d\\d),\\d+ " +
+        "\\[([^]]*)] (\\w+)\\s+(\\S+) - (.*)";
+    List<LogFormatField> schema = Lists.newArrayList(
+        new LogFormatField("year", "INT"),
+        new LogFormatField("month", "INT"),
+        new LogFormatField("day", "INT"),
+        new LogFormatField("hour", "INT"),
+        new LogFormatField("minute", "INT"),
+        new LogFormatField("second", "INT"),
+        new LogFormatField("thread"),
+        new LogFormatField("level"),
+        new LogFormatField("module"),
+        new LogFormatField("message"));
+    return new LogFormatConfig(
+        regex, "log1", null, schema);
+  }
+
+  //Set up additional configs to check the time/date formats
+  private static LogFormatConfig dateTimeConfig() {
+    String regex = "(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}),(\\d+)\\s\\[(\\w+)\\]\\s([A-Z]+)\\s(.+)";
+    List<LogFormatField> schema = Lists.newArrayList(
+        new LogFormatField("entry_date", "TIMESTAMP", "yy-MM-dd hh:mm:ss"),
+        new LogFormatField("pid", "INT"),
+        new LogFormatField("location"),
+        new LogFormatField("message_type"),
+        new LogFormatField("message"));
+    return new LogFormatConfig(
+        regex, "log2", 3, schema);
+  }
+
+  private static LogFormatConfig mySqlConfig() {
+    String regex = "(\\d{6})\\s(\\d{2}:\\d{2}:\\d{2})\\s+(\\d+)\\s(\\w+)\\s+(.+)";
+    return new LogFormatConfig(
+        regex, "sqllog", null, null);
+  }
+
+  // Firewall log file that requires date parsing
+  private static LogFormatConfig firewallConfig() {
+    String regex =
+        "(\\w{3}\\s\\d{1,2}\\s\\d{4}\\s\\d{2}:\\d{2}:\\d{2})\\s+(\\w+)" +
+        "\\[(\\d+)\\]:\\s(.*?(\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}).*?)";
+    List<LogFormatField> schema = Lists.newArrayList(
+        new LogFormatField("eventDate", "TIMESTAMP", "MMM dd yyyy HH:mm:ss"),
+        new LogFormatField("process_name"),
+        new LogFormatField("pid", "INT"),
+        new LogFormatField("message"),
+        new LogFormatField("src_ip"));
+    return new LogFormatConfig(
+        regex, "ssdlog", null, schema);
   }
 
   @Test
@@ -730,14 +738,8 @@ public class TestLogReader extends ClusterTest {
     ObjectMapper mapper = new ObjectMapper();
     assertTrue(mapper.canSerialize(LogFormatPlugin.class));
 
-    LogFormatConfig sampleConfig = new LogFormatConfig();
-    sampleConfig.setExtension("log1");
-    sampleConfig.setRegex(DATE_ONLY_PATTERN);
+    LogFormatConfig sampleConfig = dateOnlyConfig();
 
-    sampleConfig.initSchema();
-    sampleConfig.getSchema().add(new LogFormatField("year", "INT"));
-    sampleConfig.getSchema().add(new LogFormatField("month", "INT"));
-    sampleConfig.getSchema().add(new LogFormatField("day", "INT"));
     String json = mapper.writeValueAsString(sampleConfig);
     LogFormatConfig result = mapper.readValue(json, LogFormatConfig.class);
 

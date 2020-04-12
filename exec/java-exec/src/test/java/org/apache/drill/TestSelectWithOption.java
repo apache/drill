@@ -139,8 +139,7 @@ public class TestSelectWithOption extends ClusterTest {
     String tableName = genCSVTable("testTextLineDelimiterWithCarriageReturn",
         "1, a\r",
         "2, b\r");
-    String lineDelimiter = new String(new char[]{92, 114, 92, 110}); // represents \r\n
-    testWithResult(format("select columns from table(%s(type=>'TeXT', lineDelimiter => '%s'))", tableName, lineDelimiter),
+    testWithResult(format("select columns from table(%s(type=>'TeXT', fieldDelimiter => '*', lineDelimiter => '\\r\\n'))", tableName),
         listOf("1, a"),
         listOf("2, b"));
   }
@@ -221,18 +220,20 @@ public class TestSelectWithOption extends ClusterTest {
     String csvTableName = genCSVTable("testVariationsCSV",
         "a,b",
         "c|d");
+    // The default field delimiter is ',', change it to something else.
     // Using the defaults in TextFormatConfig (the field delimiter is neither "," not "|")
-    testWithResult(format("select columns from table(%s (type => 'TeXT'))", csvTableName),
+    testWithResult(format("select columns from table(%s (type => 'TeXT', fieldDelimiter => '*'))", csvTableName),
       listOf("a,b"),
       listOf("c|d"));
     // the drill config file binds .csv to "," delimited
     testWithResult(format("select columns from %s", csvTableName),
           listOf("a", "b"),
           listOf("c|d"));
-    // setting the delimiter
-    testWithResult(format("select columns from table(%s (type => 'TeXT', fieldDelimiter => ','))", csvTableName),
+    // Default delimiter for csv
+    testWithResult(format("select columns from table(%s (type => 'TeXT'))", csvTableName),
         listOf("a", "b"),
         listOf("c|d"));
+    // Setting the delimiter
     testWithResult(format("select columns from table(%s (type => 'TeXT', fieldDelimiter => '|'))", csvTableName),
         listOf("a,b"),
         listOf("c", "d"));
@@ -250,7 +251,7 @@ public class TestSelectWithOption extends ClusterTest {
     // CSV would require:
     // "{""columns"": [""f"",""g""]}"
     // A bug in older versions appeared to have the perverse
-    // effect of allowing the above to kinds-sorta work.
+    // effect of allowing the above to kinda-sorta work.
     String[] jsonQueries = {
         format("select columns from table(%s(type => 'JSON'))", jsonTableName),
         // we can use named format plugin configurations too!
