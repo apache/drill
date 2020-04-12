@@ -17,10 +17,14 @@
  */
 package org.apache.drill.exec.store.avro;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.logical.FormatPluginConfig;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 
 import java.util.Collections;
 import java.util.List;
@@ -33,7 +37,16 @@ import java.util.Objects;
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class AvroFormatConfig implements FormatPluginConfig {
 
-  public List<String> extensions = Collections.singletonList("avro");
+  private final List<String> extensions;
+
+  @JsonCreator
+  public AvroFormatConfig(@JsonProperty("extensions") List<String> extensions) {
+    this.extensions = extensions == null
+        ? Collections.singletonList("avro")
+        : ImmutableList.copyOf(extensions);
+  }
+
+  public List<String> getExtensions() { return extensions; }
 
   @Override
   public int hashCode() {
@@ -50,5 +63,12 @@ public class AvroFormatConfig implements FormatPluginConfig {
     }
     AvroFormatConfig that = (AvroFormatConfig) o;
     return Objects.equals(extensions, that.extensions);
+  }
+
+  @Override
+  public String toString() {
+    return new PlanStringBuilder(this)
+        .field("extensions", extensions)
+        .toString();
   }
 }

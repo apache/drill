@@ -18,11 +18,15 @@
 
 package org.apache.drill.exec.store.hdf5;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.apache.drill.common.logical.FormatPluginConfig;
 
-import java.util.Arrays;
+import org.apache.drill.common.PlanStringBuilder;
+import org.apache.drill.common.logical.FormatPluginConfig;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -30,9 +34,18 @@ import java.util.Objects;
 @JsonTypeName(HDF5FormatPlugin.DEFAULT_NAME)
 public class HDF5FormatConfig implements FormatPluginConfig {
 
-  public List<String> extensions = Collections.singletonList("h5");
+  private final List<String> extensions;
+  private final String defaultPath;
 
-  public String defaultPath;
+  @JsonCreator
+  public HDF5FormatConfig(
+      @JsonProperty("extensions") List<String> extensions,
+      @JsonProperty("defaultPath") String defaultPath) {
+    this.extensions = extensions == null
+        ? Collections.singletonList("h5")
+        : ImmutableList.copyOf(extensions);
+    this.defaultPath = defaultPath;
+  }
 
   @JsonInclude(JsonInclude.Include.NON_DEFAULT)
   public List<String> getExtensions() {
@@ -42,7 +55,6 @@ public class HDF5FormatConfig implements FormatPluginConfig {
   public String getDefaultPath() {
     return defaultPath;
   }
-
 
   @Override
   public boolean equals(Object obj) {
@@ -54,11 +66,19 @@ public class HDF5FormatConfig implements FormatPluginConfig {
     }
     HDF5FormatConfig other = (HDF5FormatConfig) obj;
     return Objects.equals(extensions, other.getExtensions()) &&
-      Objects.equals(defaultPath, other.defaultPath);
+           Objects.equals(defaultPath, other.defaultPath);
   }
 
   @Override
   public int hashCode() {
-    return Arrays.hashCode(new Object[]{extensions, defaultPath});
+    return Objects.hash(extensions, defaultPath);
+  }
+
+  @Override
+  public String toString() {
+    return new PlanStringBuilder(this)
+        .field("extensions", extensions)
+        .field("default path", defaultPath)
+        .toString();
   }
 }

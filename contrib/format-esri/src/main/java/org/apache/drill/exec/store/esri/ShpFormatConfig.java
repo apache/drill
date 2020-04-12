@@ -18,12 +18,15 @@
 
 package org.apache.drill.exec.store.esri;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.apache.drill.common.logical.FormatPluginConfig;
 
-import java.util.Arrays;
-import java.util.Collections;
+import org.apache.drill.common.PlanStringBuilder;
+import org.apache.drill.common.logical.FormatPluginConfig;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
+
 import java.util.List;
 import java.util.Objects;
 
@@ -34,7 +37,14 @@ import java.util.Objects;
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class ShpFormatConfig implements FormatPluginConfig {
 
-  public List<String> extensions = Collections.singletonList("shp");
+  private final List<String> extensions;
+
+  @JsonCreator
+  public ShpFormatConfig(
+      @JsonProperty("extensions") List<String> extensions) {
+    this.extensions = extensions == null ?
+        ImmutableList.of("shp") : ImmutableList.copyOf(extensions);
+  }
 
   @JsonInclude(JsonInclude.Include.NON_DEFAULT)
   public List<String> getExtensions() {
@@ -42,14 +52,12 @@ public class ShpFormatConfig implements FormatPluginConfig {
   }
 
   public ShpBatchReader.ShpReaderConfig getReaderConfig(ShpFormatPlugin plugin) {
-    ShpBatchReader.ShpReaderConfig readerConfig = new ShpBatchReader.ShpReaderConfig(plugin);
-
-    return readerConfig;
+    return new ShpBatchReader.ShpReaderConfig(plugin);
   }
 
   @Override
   public int hashCode() {
-    return Arrays.hashCode(new Object[]{extensions});
+    return Objects.hash(extensions);
   }
 
   @Override
@@ -60,7 +68,14 @@ public class ShpFormatConfig implements FormatPluginConfig {
     if (obj == null || getClass() != obj.getClass()) {
       return false;
     }
-    ShpFormatConfig other = (ShpFormatConfig)obj;
+    ShpFormatConfig other = (ShpFormatConfig) obj;
     return Objects.equals(extensions, other.getExtensions());
+  }
+
+  @Override
+  public String toString() {
+    return new PlanStringBuilder(this)
+        .field("extensions", extensions)
+        .toString();
   }
 }

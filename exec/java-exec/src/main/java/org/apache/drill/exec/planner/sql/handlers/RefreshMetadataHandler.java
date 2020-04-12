@@ -113,7 +113,7 @@ public class RefreshMetadataHandler extends DefaultSqlHandler {
       FormatPluginConfig formatConfig = formatSelection.getFormat();
       if (!((formatConfig instanceof ParquetFormatConfig) ||
           ((formatConfig instanceof NamedFormatPluginConfig) &&
-            ((NamedFormatPluginConfig) formatConfig).name.equals("parquet")))) {
+            ((NamedFormatPluginConfig) formatConfig).getName().equals("parquet")))) {
         return notSupported(tableName);
       }
 

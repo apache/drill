@@ -160,7 +160,7 @@ public class PcapBatchReader implements ManagedReader<FileSchemaNegotiator> {
     public PcapReaderConfig(PcapFormatPlugin plugin) {
       this.plugin = plugin;
       this.config = plugin.getConfig();
-      this.sessionizeTCPStreams = config.sessionizeTCPStreams;
+      this.sessionizeTCPStreams = config.getSessionizeTCPStreams();
     }
   }
 

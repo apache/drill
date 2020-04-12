@@ -17,8 +17,10 @@
  */
 package org.apache.drill.exec.store.parquet;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Objects;
 
@@ -30,8 +32,19 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 @JsonTypeName("parquet") @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class ParquetFormatConfig implements FormatPluginConfig {
 
-  public boolean autoCorrectCorruptDates = true;
-  public boolean enableStringsSignedMinMax;
+  private final boolean autoCorrectCorruptDates;
+  private final boolean enableStringsSignedMinMax;
+
+  public ParquetFormatConfig() {
+    this(true, false);
+  }
+
+  @JsonCreator
+  public ParquetFormatConfig(@JsonProperty("autoCorrectCorruptDates") Boolean autoCorrectCorruptDates,
+      @JsonProperty("enableStringsSignedMinMax") boolean enableStringsSignedMinMax) {
+    this.autoCorrectCorruptDates = autoCorrectCorruptDates == null ? true : autoCorrectCorruptDates;
+    this.enableStringsSignedMinMax = enableStringsSignedMinMax;
+  }
 
   /**
    * @return true if auto correction of corrupt dates is enabled, false otherwise

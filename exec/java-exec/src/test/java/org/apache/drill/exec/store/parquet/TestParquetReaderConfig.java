@@ -96,6 +96,7 @@ public class TestParquetReaderConfig extends BaseTest {
 
   @Test
   public void testPriorityAssignmentForStringsSignedMinMax() throws Exception {
+    @SuppressWarnings("resource")
     SystemOptionManager options = new SystemOptionManager(DrillConfig.create()).init();
 
     // use value from format config
@@ -104,7 +105,7 @@ public class TestParquetReaderConfig extends BaseTest {
     assertEquals(formatConfig.isStringsSignedMinMaxEnabled(), readerConfig.enableStringsSignedMinMax());
 
     // change format config value
-    formatConfig.enableStringsSignedMinMax = true;
+    formatConfig = new ParquetFormatConfig(true, true);
     readerConfig = ParquetReaderConfig.builder().withFormatConfig(formatConfig).build();
     assertEquals(formatConfig.isStringsSignedMinMaxEnabled(), readerConfig.enableStringsSignedMinMax());
 

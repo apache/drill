@@ -29,7 +29,6 @@ import java.util.Set;
 
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.drill.common.JSONOptions;
-import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
@@ -77,12 +76,10 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
   private final Map<FormatPluginConfig, FormatPlugin> formatPluginsByConfig;
   private final FileSystemConfig config;
   private final Configuration fsConf;
-  private final LogicalPlanPersistence lpPersistance;
 
   public FileSystemPlugin(FileSystemConfig config, DrillbitContext context, String name) throws ExecutionSetupException {
     super(context, name);
     this.config = config;
-    this.lpPersistance = context.getLpPersistence();
 
     try {
       fsConf = new Configuration();
@@ -113,7 +110,7 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
         for (Map.Entry<String, WorkspaceConfig> space : config.getWorkspaces().entrySet()) {
           factories.add(new WorkspaceSchemaFactory(
               this, space.getKey(), name, space.getValue(), matchers,
-              context.getLpPersistence(), context.getClasspathScan()));
+              context.getLpPersistence().getMapper(), context.getClasspathScan()));
         }
       }
 
@@ -121,7 +118,7 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
       if (noWorkspace || !config.getWorkspaces().containsKey(DEFAULT_WS_NAME)) {
         factories.add(new WorkspaceSchemaFactory(this, DEFAULT_WS_NAME, name,
             WorkspaceConfig.DEFAULT, matchers,
-            context.getLpPersistence(), context.getClasspathScan()));
+            context.getLpPersistence().getMapper(), context.getClasspathScan()));
       }
 
       this.schemaFactory = new FileSystemSchemaFactory(name, factories);
@@ -186,7 +183,7 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
    * @return a new FormatCreator instance
    */
   protected FormatCreator newFormatCreator(FileSystemConfig config, DrillbitContext context, Configuration fsConf) {
-    return new FormatCreator(context, fsConf, config, context.getClasspathScan());
+    return new FormatCreator(context, fsConf, config);
   }
 
   @Override
@@ -223,7 +220,8 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
   public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection,
       List<SchemaPath> columns, SessionOptionManager options,
       MetadataProviderManager metadataProviderManager) throws IOException {
-    FormatSelection formatSelection = selection.getWith(lpPersistance.getMapper(), FormatSelection.class);
+    FormatSelection formatSelection = selection.getWith(
+        context.getLpPersistence().getMapper(), FormatSelection.class);
     FormatPlugin plugin = getFormatPlugin(formatSelection.getFormat());
     return plugin.getGroupScan(userName, formatSelection.getSelection(), columns,
         options, metadataProviderManager);
@@ -250,7 +248,7 @@ public class FileSystemPlugin extends AbstractStoragePlugin {
   @Override
   public FormatPlugin getFormatPlugin(FormatPluginConfig config) {
     if (config instanceof NamedFormatPluginConfig) {
-      return formatCreator.getFormatPluginByName(((NamedFormatPluginConfig) config).name);
+      return formatCreator.getFormatPluginByName(((NamedFormatPluginConfig) config).getName());
     }
 
     FormatPlugin plugin = formatPluginsByConfig.get(config);

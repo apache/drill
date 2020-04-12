@@ -56,32 +56,38 @@ public class TestTextWriter extends ClusterTest {
 
     Map<String, FormatPluginConfig> formats = new HashMap<>();
 
-    TextFormatConfig csv = new TextFormatConfig();
-    csv.extensions = Collections.singletonList("csv");
-    csv.lineDelimiter = "\n";
-    csv.fieldDelimiter = ',';
-    csv.quote = '"';
-    csv.escape = '"';
-    csv.extractHeader = true;
-    formats.put("csv", csv);
+    formats.put("csv", new TextFormatConfig(
+        Collections.singletonList("csv"),
+        "\n",  // line delimiter
+        ",",   // field delimiter
+        "\"",  // quote
+        "\"",  // escape
+        null,  // comment
+        false, // skip first line
+        true   // extract header
+        ));
 
-    TextFormatConfig tsv = new TextFormatConfig();
-    tsv.extensions = Collections.singletonList("tsv");
-    tsv.lineDelimiter = "\n";
-    tsv.fieldDelimiter = '\t';
-    tsv.quote = '"';
-    tsv.escape = '"';
-    tsv.extractHeader = true;
-    formats.put("tsv", tsv);
+    formats.put("tsv", new TextFormatConfig(
+        Collections.singletonList("tsv"),
+        "\n",  // line delimiter
+        "\t",  // field delimiter
+        "\"",  // quote
+        "\"",  // escape
+        null,  // comment
+        false, // skip first line
+        true   // extract header
+        ));
 
-    TextFormatConfig custom = new TextFormatConfig();
-    custom.extensions = Collections.singletonList("custom");
-    custom.lineDelimiter = "!";
-    custom.fieldDelimiter = '_';
-    custom.quote = '$';
-    custom.escape = '^';
-    custom.extractHeader = true;
-    formats.put("custom", custom);
+    formats.put("custom", new TextFormatConfig(
+        Collections.singletonList("custom"),
+        "!",   // line delimiter
+        "_",   // field delimiter
+        "$",   // quote
+        "^",   // escape
+        null,  // comment
+        false, // skip first line
+        true   // extract header
+        ));
 
     cluster.defineFormats("dfs", formats);
   }
@@ -245,8 +251,16 @@ public class TestTextWriter extends ClusterTest {
 
   @Test
   public void testLineDelimiterLengthLimit() throws Exception {
-    TextFormatConfig incorrect = new TextFormatConfig();
-    incorrect.lineDelimiter = "end";
+    TextFormatConfig incorrect = new TextFormatConfig(
+        null,
+        "end", // line delimiter
+        null,  // field delimiter
+        null,  // quote
+        null,  // escape
+        null,  // comment
+        false, // skip first line
+        false  // extract header
+        );
     cluster.defineFormat("dfs", "incorrect", incorrect);
 
     client.alterSession(ExecConstants.OUTPUT_FORMAT_OPTION, "incorrect");

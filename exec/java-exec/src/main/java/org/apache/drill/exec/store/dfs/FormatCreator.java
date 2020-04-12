@@ -27,16 +27,17 @@ import java.util.Map;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
-import org.apache.drill.common.scanner.persistence.ScanResult;
 import org.apache.drill.common.util.ConstructorChecker;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.hadoop.conf.Configuration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Responsible for instantiating format plugins
  */
 public class FormatCreator {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FormatCreator.class);
+  private static final Logger logger = LoggerFactory.getLogger(FormatCreator.class);
 
   private static final ConstructorChecker FORMAT_BASED = new ConstructorChecker(String.class, DrillbitContext.class,
       Configuration.class, StoragePluginConfig.class, FormatPluginConfig.class);
@@ -82,12 +83,11 @@ public class FormatCreator {
   FormatCreator(
       DrillbitContext context,
       Configuration fsConf,
-      FileSystemConfig storageConfig,
-      ScanResult classpathScan) {
+      FileSystemConfig storageConfig) {
     this.context = context;
     this.fsConf = fsConf;
     this.storageConfig = storageConfig;
-    this.pluginClasses = classpathScan.getImplementations(FormatPlugin.class);
+    this.pluginClasses = context.getClasspathScan().getImplementations(FormatPlugin.class);
     this.configConstructors = initConfigConstructors(pluginClasses);
 
     Map<String, FormatPlugin> plugins = new HashMap<>();

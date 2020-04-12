@@ -17,10 +17,11 @@
  */
 package org.apache.drill.exec.dotdrill;
 
-import org.apache.drill.common.config.LogicalPlanPersistence;
 import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.exec.util.ImpersonationUtil;
 import org.apache.hadoop.fs.FileStatus;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
@@ -29,13 +30,13 @@ import java.io.InputStream;
 
 public class DotDrillFile {
 
-  private FileStatus status;
-  private DotDrillType type;
-  private DrillFileSystem fs;
+  private final FileStatus status;
+  private final DotDrillType type;
+  private final DrillFileSystem fs;
 
   public static DotDrillFile create(DrillFileSystem fs, FileStatus status){
     for(DotDrillType d : DotDrillType.values()){
-      if(!status.isDir() && d.matches(status)){
+      if(!status.isDirectory() && d.matches(status)){
         return new DotDrillFile(fs, status, d);
       }
     }
@@ -75,10 +76,10 @@ public class DotDrillFile {
     return fileName.substring(0, fileName.lastIndexOf(type.getEnding()));
   }
 
-  public View getView(LogicalPlanPersistence lpPersistence) throws IOException {
+  public View getView(ObjectMapper mapper) throws IOException {
     Preconditions.checkArgument(type == DotDrillType.VIEW);
     try(InputStream is = fs.open(status.getPath())){
-      return lpPersistence.getMapper().readValue(is, View.class);
+      return mapper.readValue(is, View.class);
     }
   }
 }

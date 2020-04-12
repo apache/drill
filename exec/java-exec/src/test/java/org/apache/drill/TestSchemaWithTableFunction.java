@@ -142,7 +142,8 @@ public class TestSchemaWithTableFunction extends ClusterTest {
       client.alterSession(ExecConstants.OUTPUT_FORMAT_OPTION, "csv");
       run("create table %s as select columns[0] as id, columns[1] as name from %s", table, sourceTable);
 
-      String query = "select * from table(%s(type=>'text', fieldDelimiter=>',', extractHeader=>true " +
+      // Inherits other properties from CSV
+      String query = "select * from table(%s(type=>'text', extractHeader=>true " +
         ",schema=>'inline=(`id` int)')) where id = 1";
 
       testBuilder()

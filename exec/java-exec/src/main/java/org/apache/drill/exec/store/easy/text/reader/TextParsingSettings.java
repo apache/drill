@@ -32,7 +32,7 @@ public class TextParsingSettings {
   private final long maxCharsPerColumn = TextFormatPlugin.MAX_CHARS_PER_COLUMN;
   private final byte normalizedNewLine = b('\n');
   private final byte[] newLineDelimiter;
-  private final String lineSeparatorString = "\n";
+  private final String lineSeparatorString;
   private boolean skipFirstLine;
   private final boolean headerExtractionEnabled;
 
@@ -97,6 +97,7 @@ public class TextParsingSettings {
     this.quote = quoteChar;
     this.quoteEscape = quoteEscapeChar;
     this.newLineDelimiter = newlineDelim;
+    this.lineSeparatorString = new String(newLineDelimiter);
     this.delimiter = delimChar;
     this.comment = commentChar;
     this.ignoreLeadingWhitespace = ignoreLeadingWhitespace;
