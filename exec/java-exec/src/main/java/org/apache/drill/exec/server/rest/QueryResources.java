@@ -45,6 +45,7 @@ import javax.ws.rs.core.SecurityContext;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Path("/")
 @RolesAllowed(DrillUserPrincipal.AUTHENTICATED_ROLE)
@@ -66,13 +67,20 @@ public class QueryResources {
   @Inject
   HttpServletRequest request;
 
+  @Inject
+  StorageResources sr;
+
   @GET
   @Path("/query")
   @Produces(MediaType.TEXT_HTML)
   public Viewable getQuery() {
+    List<StorageResources.StoragePluginModel> enabledPlugins = sr.getConfigsFor("enabled")
+      .stream()
+      .map(plugin -> new StorageResources.StoragePluginModel(plugin, request))
+      .collect(Collectors.toList());
     return ViewableWithPermissions.create(
         authEnabled.get(), "/rest/query/query.ftl",
-        sc, new QueryPage(work, request));
+        sc, new QueryPage(work, enabledPlugins, request));
   }
 
   @POST
@@ -119,10 +127,12 @@ public class QueryResources {
     private final boolean onlyImpersonationEnabled;
     private final boolean autoLimitEnabled;
     private final int defaultRowsAutoLimited;
+    private final List<StorageResources.StoragePluginModel> enabledPlugins;
     private final String csrfToken;
 
-    public QueryPage(WorkManager work, HttpServletRequest request) {
+    public QueryPage(WorkManager work, List<StorageResources.StoragePluginModel> enabledPlugins, HttpServletRequest request) {
       DrillConfig config = work.getContext().getConfig();
+      this.enabledPlugins = enabledPlugins;
       //if impersonation is enabled without authentication, will provide mechanism to add user name to request header from Web UI
       onlyImpersonationEnabled = WebServer.isOnlyImpersonationEnabled(config);
       autoLimitEnabled = config.getBoolean(ExecConstants.HTTP_WEB_CLIENT_RESULTSET_AUTOLIMIT_CHECKED);
@@ -140,6 +150,10 @@ public class QueryResources {
 
     public int getDefaultRowsAutoLimited() {
       return defaultRowsAutoLimited;
+    }
+
+    public List<StorageResources.StoragePluginModel> getEnabledPlugins() {
+      return enabledPlugins;
     }
 
     public String getCsrfToken() {
