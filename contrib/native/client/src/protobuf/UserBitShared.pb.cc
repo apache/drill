@@ -1034,7 +1034,7 @@ void AddDescriptorsImpl() {
       "ATEMENT\020\005*\207\001\n\rFragmentState\022\013\n\007SENDING\020\000"
       "\022\027\n\023AWAITING_ALLOCATION\020\001\022\013\n\007RUNNING\020\002\022\014"
       "\n\010FINISHED\020\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAILED\020\005\022"
-      "\032\n\026CANCELLATION_REQUESTED\020\006*\344\n\n\020CoreOper"
+      "\032\n\026CANCELLATION_REQUESTED\020\006*\367\n\n\020CoreOper"
       "atorType\022\021\n\rSINGLE_SENDER\020\000\022\024\n\020BROADCAST"
       "_SENDER\020\001\022\n\n\006FILTER\020\002\022\022\n\016HASH_AGGREGATE\020"
       "\003\022\r\n\tHASH_JOIN\020\004\022\016\n\nMERGE_JOIN\020\005\022\031\n\025HASH"
@@ -1069,14 +1069,14 @@ void AddDescriptorsImpl() {
       "MERGE\020=\022\021\n\rLTSV_SUB_SCAN\020>\022\021\n\rHDF5_SUB_S"
       "CAN\020\?\022\022\n\016EXCEL_SUB_SCAN\020@\022\020\n\014SHP_SUB_SCA"
       "N\020A\022\024\n\020METADATA_HANDLER\020B\022\027\n\023METADATA_CO"
-      "NTROLLER\020C*g\n\nSaslStatus\022\020\n\014SASL_UNKNOWN"
-      "\020\000\022\016\n\nSASL_START\020\001\022\024\n\020SASL_IN_PROGRESS\020\002"
-      "\022\020\n\014SASL_SUCCESS\020\003\022\017\n\013SASL_FAILED\020\004B.\n\033o"
-      "rg.apache.drill.exec.protoB\rUserBitShare"
-      "dH\001"
+      "NTROLLER\020C\022\021\n\rHTTP_SUB_SCAN\020F*g\n\nSaslSta"
+      "tus\022\020\n\014SASL_UNKNOWN\020\000\022\016\n\nSASL_START\020\001\022\024\n"
+      "\020SASL_IN_PROGRESS\020\002\022\020\n\014SASL_SUCCESS\020\003\022\017\n"
+      "\013SASL_FAILED\020\004B.\n\033org.apache.drill.exec."
+      "protoB\rUserBitSharedH\001"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 5763);
+      descriptor, 5782);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "UserBitShared.proto", &protobuf_RegisterTypes);
   ::protobuf_Types_2eproto::AddDescriptors();
@@ -1323,6 +1323,7 @@ bool CoreOperatorType_IsValid(int value) {
     case 65:
     case 66:
     case 67:
+    case 70:
       return true;
     default:
       return false;

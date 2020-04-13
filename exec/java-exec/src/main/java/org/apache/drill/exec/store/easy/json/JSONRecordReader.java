@@ -70,6 +70,7 @@ public class JSONRecordReader extends AbstractRecordReader {
   private final boolean skipMalformedJSONRecords;
   private final boolean printSkippedMalformedJSONRecordLineNumber;
   private ReadState write;
+  private InputStream inputStream;
 
   /**
    * Create a JSON Record Reader that uses a file based input stream.
@@ -81,7 +82,7 @@ public class JSONRecordReader extends AbstractRecordReader {
    */
   public JSONRecordReader(FragmentContext fragmentContext, Path inputPath, DrillFileSystem fileSystem,
       List<SchemaPath> columns) throws OutOfMemoryException {
-    this(fragmentContext, inputPath, null, fileSystem, columns);
+    this(fragmentContext, inputPath, null, fileSystem, columns, false);
   }
 
   /**
@@ -94,16 +95,28 @@ public class JSONRecordReader extends AbstractRecordReader {
    */
   public JSONRecordReader(FragmentContext fragmentContext, JsonNode embeddedContent, DrillFileSystem fileSystem,
       List<SchemaPath> columns) throws OutOfMemoryException {
-    this(fragmentContext, null, embeddedContent, fileSystem, columns);
+    this(fragmentContext, null, embeddedContent, fileSystem, columns, false);
+  }
+
+  /**
+   * Create a JSON Record Reader that uses an InputStream directly
+   * @param fragmentContext The Drill Fragmement
+   * @param inputStream The inputStream from which data will be received
+   * @param columns  pathnames of columns/subfields to read
+   * @throws OutOfMemoryException
+   */
+  public JSONRecordReader(FragmentContext fragmentContext, List<SchemaPath> columns) throws OutOfMemoryException {
+    this(fragmentContext, null, null, null, columns, true);
   }
 
   private JSONRecordReader(FragmentContext fragmentContext, Path inputPath, JsonNode embeddedContent,
-      DrillFileSystem fileSystem, List<SchemaPath> columns) {
+      DrillFileSystem fileSystem, List<SchemaPath> columns, boolean hasInputStream) {
 
     Preconditions.checkArgument(
-        (inputPath == null && embeddedContent != null) ||
-        (inputPath != null && embeddedContent == null),
-        "One of inputPath or embeddedContent must be set but not both."
+        (inputPath == null && embeddedContent != null && !hasInputStream) ||
+        (inputPath != null && embeddedContent == null && !hasInputStream) ||
+          (inputPath == null && embeddedContent == null && hasInputStream),
+      "One of inputPath, inputStream or embeddedContent must be set but not all."
         );
 
     if (inputPath != null) {
@@ -170,6 +183,8 @@ public class JSONRecordReader extends AbstractRecordReader {
   private void setupParser() throws IOException {
     if (hadoopPath != null) {
       jsonReader.setSource(stream);
+    } else if (inputStream!= null) {
+      jsonReader.setSource(inputStream);
     } else {
       jsonReader.setSource(embeddedContent);
     }
@@ -253,11 +268,20 @@ public class JSONRecordReader extends AbstractRecordReader {
     runningRecordCount += recordCount;
   }
 
+  public void setInputStream(InputStream in) {
+    this.inputStream = in;
+  }
+
   @Override
   public void close() throws Exception {
     if (stream != null) {
       stream.close();
       stream = null;
+    }
+
+    if (inputStream != null) {
+      inputStream.close();
+      inputStream = null;
     }
   }
 }

@@ -109,7 +109,7 @@ public class TestJsonParserBasics extends BaseTestJsonParser {
   @Test
   public void testExtendedFloat() {
     final String json =
-        "{a: NaN} {a: Infinity} {a: -Infinity}";
+      "{a: NaN} {a: Infinity} {a: -Infinity}";
     JsonParserFixture fixture = new JsonParserFixture();
     fixture.options.allowNanInf = true;
     fixture.open(json);
@@ -158,8 +158,8 @@ public class TestJsonParserBasics extends BaseTestJsonParser {
   public void testRootTuple() {
     final String json =
       "{id: 1, name: \"Fred\", balance: 100.0}\n" +
-      "{id: 2, name: \"Barney\"}\n" +
-      "{id: 3, name: \"Wilma\", balance: 500.00}";
+        "{id: 2, name: \"Barney\"}\n" +
+        "{id: 3, name: \"Wilma\", balance: 500.00}";
     JsonParserFixture fixture = new JsonParserFixture();
     fixture.open(json);
     assertEquals(3, fixture.read());
@@ -235,7 +235,7 @@ public class TestJsonParserBasics extends BaseTestJsonParser {
   @Test
   public void testProjection() {
     final String json =
-        "{a: 1, b: [[{x: [[{y: []}]]}]]}\n" +
+      "{a: 1, b: [[{x: [[{y: []}]]}]]}\n" +
         "{a: 2}\n" +
         "{b: \"bar\"}";
     JsonParserFixture fixture = new JsonParserFixture();
@@ -254,13 +254,13 @@ public class TestJsonParserBasics extends BaseTestJsonParser {
   @Test
   public void testAllTextMode() {
     final String json =
-        "{a: 1} {a: \"foo\"} {a: true} {a: 20.5} {a: null}";
+      "{a: 1} {a: \"foo\"} {a: true} {a: 20.5} {a: null}";
     JsonParserFixture fixture = new JsonParserFixture();
     fixture.options.allTextMode = true;
     fixture.open(json);
 
     fixture.expect("a",
-        new Object[] {"1", "foo", "true", "20.5", null});
+      new Object[] {"1", "foo", "true", "20.5", null});
     assertFalse(fixture.next());
     fixture.close();
   }
@@ -268,13 +268,13 @@ public class TestJsonParserBasics extends BaseTestJsonParser {
   @Test
   public void testColumnTextMode() {
     final String json =
-        "{a: 1} {a: \"foo\"} {a: true} {a: 20.5} {a: null}";
+      "{a: 1} {a: \"foo\"} {a: true} {a: 20.5} {a: null}";
     JsonParserFixture fixture = new JsonParserFixture();
     fixture.rootObject.fieldType = FieldType.TEXT;
     fixture.open(json);
 
     fixture.expect("a",
-        new Object[] {"1", "foo", "true", "20.5", null});
+      new Object[] {"1", "foo", "true", "20.5", null});
     assertFalse(fixture.next());
     fixture.close();
   }
@@ -282,13 +282,13 @@ public class TestJsonParserBasics extends BaseTestJsonParser {
   @Test
   public void testJsonModeScalars() {
     final String json =
-        "{a: 1} {a: \"foo\"} {a: true} {a: 20.5} {a: null}";
+      "{a: 1} {a: \"foo\"} {a: true} {a: 20.5} {a: null}";
     JsonParserFixture fixture = new JsonParserFixture();
     fixture.rootObject.fieldType = FieldType.JSON;
     fixture.open(json);
 
     fixture.expect("a",
-        new Object[] {"1", "\"foo\"", "true", "20.5", "null"});
+      new Object[] {"1", "\"foo\"", "true", "20.5", "null"});
     assertFalse(fixture.next());
     fixture.close();
   }
@@ -296,15 +296,15 @@ public class TestJsonParserBasics extends BaseTestJsonParser {
   @Test
   public void testJsonModeArrays() {
     final String json =
-        "{a: []} {a: [null]} {a: [null, null]} {a: [[]]}\n" +
+      "{a: []} {a: [null]} {a: [null, null]} {a: [[]]}\n" +
         "{a: [1, \"foo\", true]} {a: [[1, 2], [3, 4]]}\n";
     JsonParserFixture fixture = new JsonParserFixture();
     fixture.rootObject.fieldType = FieldType.JSON;
     fixture.open(json);
 
     fixture.expect("a",
-        new Object[] {"[]", "[null]", "[null, null]", "[[]]",
-            "[1, \"foo\", true]", "[[1, 2], [3, 4]]"});
+      new Object[] {"[]", "[null]", "[null, null]", "[[]]",
+        "[1, \"foo\", true]", "[[1, 2], [3, 4]]"});
     assertFalse(fixture.next());
     fixture.close();
   }
@@ -312,15 +312,15 @@ public class TestJsonParserBasics extends BaseTestJsonParser {
   @Test
   public void testJsonModeObjects() {
     final String json =
-        "{a: {}} {a: {b: null}} {a: {b: null, b: null}}\n" +
+      "{a: {}} {a: {b: null}} {a: {b: null, b: null}}\n" +
         "{a: {b: {c: {d: [{e: 10}, null, 20], f: \"foo\"}, g:30}, h: 40}}\n";
     JsonParserFixture fixture = new JsonParserFixture();
     fixture.rootObject.fieldType = FieldType.JSON;
     fixture.open(json);
 
     fixture.expect("a",
-        new Object[] {"{}", "{\"b\": null}", "{\"b\": null, \"b\": null}",
-            "{\"b\": {\"c\": {\"d\": [{\"e\": 10}, null, 20], \"f\": \"foo\"}, \"g\": 30}, \"h\": 40}"});
+      new Object[] {"{}", "{\"b\": null}", "{\"b\": null, \"b\": null}",
+        "{\"b\": {\"c\": {\"d\": [{\"e\": 10}, null, 20], \"f\": \"foo\"}, \"g\": 30}, \"h\": 40}"});
     assertFalse(fixture.next());
     fixture.close();
   }

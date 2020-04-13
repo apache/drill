@@ -37,7 +37,7 @@ public class KuduStoragePlugin extends AbstractStoragePlugin {
   private final KuduClient client;
 
   public KuduStoragePlugin(KuduStoragePluginConfig configuration, DrillbitContext context, String name)
-      throws IOException {
+    throws IOException {
     super(context, name);
     this.schemaFactory = new KuduSchemaFactory(this, name);
     this.engineConfig = configuration;

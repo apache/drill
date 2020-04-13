@@ -37,14 +37,12 @@
       <artifactId>drill-protocol</artifactId>
       <version>${project.version}</version>
     </dependency>
-
     <dependency>
       <!-- add as provided scope so that we can compile TestTools.  Should only be ever used in a test scenario where someone else is bringing JUnit in. -->
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>${junit.version}</version>
     </dependency>
-
     <dependency>
       <groupId>com.typesafe</groupId>
       <artifactId>config</artifactId>
