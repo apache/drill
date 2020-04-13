@@ -159,6 +159,7 @@
       <useProjectArtifact>false</useProjectArtifact>
       <includes>
         <include>org.apache.zookeeper:zookeeper</include>
+        <include>org.apache.zookeeper:zookeeper-jute</include>
       </includes>
       <scope>runtime</scope>
     </dependencySet>

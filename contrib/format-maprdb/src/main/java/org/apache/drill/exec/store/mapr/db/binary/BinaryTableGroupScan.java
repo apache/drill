@@ -22,6 +22,7 @@ import static org.apache.drill.exec.store.mapr.db.util.CommonFns.isNullOrEmpty;
 import java.util.List;
 import java.util.TreeMap;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rex.RexNode;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
@@ -56,7 +57,6 @@ import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Admin;
 import org.apache.hadoop.hbase.client.RegionLocator;
-import org.codehaus.jackson.annotate.JsonCreator;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonIgnore;

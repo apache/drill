@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.mapr.db.impl.ConditionImpl;
 import com.mapr.db.impl.ConditionNode.RowkeyRange;
 
@@ -67,7 +68,6 @@ import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.exec.metastore.store.FileSystemMetadataProviderManager;
 import org.apache.drill.exec.metastore.MetadataProviderManager;
 import org.apache.drill.metastore.metadata.TableMetadataProvider;
-import org.codehaus.jackson.annotate.JsonCreator;
 import org.ojai.store.QueryCondition;
 
 import com.fasterxml.jackson.annotation.JacksonInject;

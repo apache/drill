@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.work.foreman;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.drill.exec.work.filter.RuntimeFilterRouter;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
@@ -64,7 +65,6 @@ import org.apache.drill.exec.work.WorkManager.WorkerBee;
 import org.apache.drill.exec.work.foreman.rm.QueryQueue.QueueTimeoutException;
 import org.apache.drill.exec.work.foreman.rm.QueryQueue.QueryQueueException;
 import org.apache.drill.exec.work.foreman.rm.QueryResourceManager;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -115,7 +115,7 @@ public class Foreman implements Runnable {
   private final QueryResourceManager queryRM;
 
   private final ResponseSendListener responseListener = new ResponseSendListener();
-  private final ConnectionClosedListener closeListener = new ConnectionClosedListener();
+  private final GenericFutureListener<Future<Void>> closeListener = future -> cancel();
   private final ChannelFuture closeFuture;
   private final FragmentsRunner fragmentsRunner;
   private final QueryStateProcessor queryStateProcessor;
@@ -602,6 +602,10 @@ public class Foreman implements Runnable {
         new BasicOptimizer.BasicOptimizationContext(queryContext), plan);
   }
 
+  public RuntimeFilterRouter getRuntimeFilterRouter() {
+    return runtimeFilterRouter;
+  }
+
   /**
    * Manages the end-state processing for Foreman.
    *
@@ -763,12 +767,7 @@ public class Foreman implements Runnable {
        * We only need to do this if the resultState differs from the last recorded state
        */
       if (resultState != queryStateProcessor.getState()) {
-        suppressingClose(new AutoCloseable() {
-          @Override
-          public void close() throws Exception {
-            queryStateProcessor.recordNewState(resultState);
-          }
-        });
+        suppressingClose(() -> queryStateProcessor.recordNewState(resultState));
       }
 
       // set query end time before writing final profile
@@ -853,17 +852,10 @@ public class Foreman implements Runnable {
     }
   }
 
-  private class ConnectionClosedListener implements GenericFutureListener<Future<Void>> {
-    @Override
-    public void operationComplete(Future<Void> future) throws Exception {
-      cancel();
-    }
-  }
-
   /**
    * Listens for the status of the RPC response sent to the user for the query.
    */
-  private class ResponseSendListener extends BaseRpcOutcomeListener<Ack> {
+  private static class ResponseSendListener extends BaseRpcOutcomeListener<Ack> {
     @Override
     public void failed(final RpcException ex) {
       logger.info("Failure while trying communicate query result to initiating client. " +
@@ -874,10 +866,6 @@ public class Foreman implements Runnable {
     public void interrupted(final InterruptedException e) {
       logger.warn("Interrupted while waiting for RPC outcome of sending final query result to initiating client.");
     }
-  }
-
-  public RuntimeFilterRouter getRuntimeFilterRouter() {
-    return runtimeFilterRouter;
   }
 
 }

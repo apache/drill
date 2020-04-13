@@ -63,7 +63,7 @@
     <sqlline.version>1.9.0</sqlline.version>
     <jackson.version>2.9.9</jackson.version>
     <jackson.databind.version>2.9.9</jackson.databind.version>
-    <zookeeper.version>3.4.12</zookeeper.version>
+    <zookeeper.version>3.5.7</zookeeper.version>
     <mapr.release.version>6.1.0-mapr</mapr.release.version>
     <ojai.version>3.0-mapr-1808</ojai.version>
     <kerby.version>1.0.0</kerby.version>
@@ -72,7 +72,7 @@
     <commons.io.version>2.4</commons.io.version>
     <hamcrest.core.version>1.3</hamcrest.core.version>
     <maven.embedder.version>3.5.3</maven.embedder.version>
-    <curator.version>2.7.1</curator.version>
+    <curator.version>4.3.0</curator.version>
     <wiremock.standalone.version>2.23.2</wiremock.standalone.version>
     <jmockit.version>1.47</jmockit.version>
     <logback.version>1.2.3</logback.version>
@@ -2293,6 +2293,14 @@
                 <groupId>io.netty</groupId>
                 <artifactId>netty</artifactId>
               </exclusion>
+              <exclusion>
+                <groupId>org.codehaus.jackson</groupId>
+                <artifactId>jackson-core-asl</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.codehaus.jackson</groupId>
+                <artifactId>jackson-mapper-asl</artifactId>
+              </exclusion>
             </exclusions>
           </dependency>
 
@@ -2656,8 +2664,8 @@
             <scope>test</scope>
             <exclusions>
               <exclusion>
-                  <groupId>io.netty</groupId>
-                  <artifactId>netty</artifactId>
+                <groupId>io.netty</groupId>
+                <artifactId>netty</artifactId>
               </exclusion>
               <exclusion>
                 <groupId>io.netty</groupId>
@@ -2815,6 +2823,9 @@
         <hbase.version>1.1.1-mapr-1602-m7-5.2.0</hbase.version>
         <hadoop.version>2.7.0-mapr-1808</hadoop.version>
         <zookeeper.version>3.4.11-mapr-1808</zookeeper.version>
+        <!-- TODO: Remove this property and use a common dependency of curator-test after ZooKeeper 3.5+
+        for MapR profile is released. See problem description in https://issues.apache.org/jira/browse/CURATOR-428 -->
+        <curator.test.version>2.13.0</curator.test.version>
       </properties>
       <dependencyManagement>
         <dependencies>
@@ -3148,8 +3159,16 @@
                 <artifactId>netty-all</artifactId>
               </exclusion>
               <exclusion>
-                  <groupId>io.netty</groupId>
-                  <artifactId>netty</artifactId>
+                <groupId>io.netty</groupId>
+                <artifactId>netty</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.codehaus.jackson</groupId>
+                <artifactId>jackson-core-asl</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.codehaus.jackson</groupId>
+                <artifactId>jackson-mapper-asl</artifactId>
               </exclusion>
             </exclusions>
           </dependency>
@@ -3183,8 +3202,8 @@
             <version>${hbase.version}</version>
             <exclusions>
               <exclusion>
-                  <groupId>io.netty</groupId>
-                  <artifactId>netty</artifactId>
+                <groupId>io.netty</groupId>
+                <artifactId>netty</artifactId>
               </exclusion>
               <exclusion>
                 <groupId>io.netty</groupId>
@@ -3225,6 +3244,14 @@
               <exclusion>
                 <groupId>com.sun.jersey</groupId>
                 <artifactId>jersey-client</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.codehaus.jackson</groupId>
+                <artifactId>jackson-core-asl</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.codehaus.jackson</groupId>
+                <artifactId>jackson-mapper-asl</artifactId>
               </exclusion>
             </exclusions>
           </dependency>
@@ -3349,6 +3376,18 @@
               <exclusion>
                 <groupId>tomcat</groupId>
                 <artifactId>jasper-runtime</artifactId>
+              </exclusion>
+            </exclusions>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.curator</groupId>
+            <artifactId>curator-test</artifactId>
+            <version>${curator.test.version}</version>
+            <scope>test</scope>
+            <exclusions>
+              <exclusion>
+                <groupId>log4j</groupId>
+                <artifactId>log4j</artifactId>
               </exclusion>
             </exclusions>
           </dependency>
