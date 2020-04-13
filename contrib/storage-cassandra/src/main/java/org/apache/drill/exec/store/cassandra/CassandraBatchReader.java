@@ -38,6 +38,7 @@ import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.cassandra.connection.CassandraConnectionManager;
 import org.apache.drill.exec.store.cassandra.CassandraSubScan.CassandraSubScanSpec;
 import org.apache.drill.exec.util.Utilities;
@@ -132,6 +133,7 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
     // We want to keep the Cassandra session open until Drill closes
   }
 
+
   private void setupCluster() {
     // Cassandra sessions are expensive to open, so the connection is opened in the
     // Storage plugin class and closed when Drill is shut down OR when the storage plugin
@@ -147,7 +149,7 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
 
   private void setup(SchemaNegotiator negotiator) {
     CassandraSubScanSpec subScanSpec = subScan.getChunkScanSpecList().get(0); // TODO get the right subscan.. for now, get the first one.
-    SchemaBuilder builder = new SchemaBuilder();
+
     try {
       List<ColumnMetadata> partitioncols = cluster
         .getMetadata()
@@ -165,6 +167,8 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
       /* Project only required columns */
       Select.Where where;
       Select.Selection select = QueryBuilder.select();
+
+      // Apply projected columns to query
       if (Utilities.isStarQuery(projectedColumns)) {
         where = select.all().from(subScanSpec.getKeyspace(), subScanSpec.getTable()).allowFiltering().where();
       } else {
@@ -178,6 +182,7 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
         where = select.from(subScanSpec.getKeyspace(), subScanSpec.getTable()).allowFiltering().where();
       }
 
+      // Apply start/end tokens
       if (subScanSpec.getStartToken() != null) {
         where = where.and(QueryBuilder.gte(QueryBuilder.token(partitionkeys), new Long(subScanSpec.getStartToken())));
       }
@@ -185,6 +190,7 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
         where = where.and(QueryBuilder.lt(QueryBuilder.token(partitionkeys), new Long(subScanSpec.getEndToken())));
       }
 
+      // Push down filters
       if (subScanSpec.filter != null && subScanSpec.filter.size() > 0) {
         logger.debug("Filters: {}", subScanSpec.filter.toString());
         for (Clause filter : subScanSpec.filter) {
@@ -193,41 +199,18 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
         }
       }
 
+      // Execute query
       logger.debug("Query sent to Cassandra: {}", where);
       cassandraResultset = session.execute(where);
 
-      Row row = cassandraResultset.one();
+      // Get the first row of data to build the Drill schema
+      Row firstRow = cassandraResultset.one();
 
-      columnWriters = new ArrayList<>(row.getColumnDefinitions().size());
+      columnWriters = new ArrayList<>(firstRow.getColumnDefinitions().size());
       cassandraColumnWriters = new ArrayList<>();
 
-      /* Add all columns to ValueVector */
-      int colPosition = 0;
-      for (ColumnDefinitions.Definition def : row.getColumnDefinitions()) {
-        String colName = def.getName();
-        String dataType = def.getType().toString();
-
-        // Create Schema
-        // TODO Add additional datatypes
-        switch (dataType) {
-          case "varchar":
-            builder.addNullable(colName, TypeProtos.MinorType.VARCHAR);
-            addColumnToArray(rowWriter, colName, TypeProtos.MinorType.VARCHAR);
-            break;
-          case "int":
-            builder.addNullable(colName, TypeProtos.MinorType.INT);
-            addColumnToArray(rowWriter, colName, TypeProtos.MinorType.INT);
-            break;
-          case "bigint":
-            builder.addNullable(colName, TypeProtos.MinorType.BIGINT);
-            addColumnToArray(rowWriter, colName, TypeProtos.MinorType.BIGINT);
-            break;
-        }
-
-        colPosition++;
-      }
       // Set the schema
-      negotiator.tableSchema(builder.buildSchema(), true);
+      negotiator.tableSchema(buildDrillSchema(firstRow), true);
 
     } catch (Exception e) {
       throw UserException
@@ -235,6 +218,42 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
         .message("Error starting Cassandra Storage Plugin: %s", e.getMessage())
         .build(logger);
     }
+  }
+
+
+  /**
+   * Builds the schema from the first row of data in the Cassandra data set.
+   * @param firstRow The first row of the Cassandra dataset
+   * @return A TupleMetadata object of the built schema
+   */
+  private TupleMetadata buildDrillSchema(Row firstRow) {
+    int colPosition = 0;
+    SchemaBuilder builder = new SchemaBuilder();
+    for (ColumnDefinitions.Definition def : firstRow.getColumnDefinitions()) {
+      String colName = def.getName();
+      String dataType = def.getType().toString();
+
+      // Create Schema
+      // TODO Add additional datatypes
+      switch (dataType) {
+        case "varchar":
+          builder.addNullable(colName, TypeProtos.MinorType.VARCHAR);
+          addColumnToArray(rowWriter, colName, TypeProtos.MinorType.VARCHAR);
+          break;
+        case "int":
+          builder.addNullable(colName, TypeProtos.MinorType.INT);
+          addColumnToArray(rowWriter, colName, TypeProtos.MinorType.INT);
+          break;
+        case "bigint":
+          builder.addNullable(colName, TypeProtos.MinorType.BIGINT);
+          addColumnToArray(rowWriter, colName, TypeProtos.MinorType.BIGINT);
+          break;
+      }
+
+      colPosition++;
+    }
+    return builder.build();
+
   }
 
   private void addColumnToArray(TupleWriter rowWriter, String name, TypeProtos.MinorType type) {
@@ -245,7 +264,6 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
     } else {
       return;
     }
-
     columnWriters.add(rowWriter.scalar(index));
     if (type == TypeProtos.MinorType.VARCHAR) {
       cassandraColumnWriters.add(new StringColumnWriter(columnWriters.get(index)));
