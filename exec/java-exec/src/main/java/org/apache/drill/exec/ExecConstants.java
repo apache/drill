@@ -1211,4 +1211,21 @@ public final class ExecConstants {
           ENABLE_DYNAMIC_CREDIT_BASED_FC, new OptionDescription("Enable dynamic credit based flow control.This feature allows " +
           "the sender to send out its data more rapidly, but you should know that it has a risk to OOM when the system is solving parallel " +
           "large queries until we have a more accurate resource manager."));
+
+  // HTTP proxy configuration (Drill config)
+  public static final String NET_PROXY_BASE = "drill.exec.net_proxy";
+  // HTTP proxy config
+  public static final String HTTP_PROXY_URL = NET_PROXY_BASE + ".http_url";
+  public static final String HTTP_PROXY_TYPE = NET_PROXY_BASE + ".http.type";
+  public static final String HTTP_PROXY_HOST = NET_PROXY_BASE + ".http.host";
+  public static final String HTTP_PROXY_PORT = NET_PROXY_BASE + ".http.port";
+  public static final String HTTP_PROXY_USER_NAME = NET_PROXY_BASE + ".http.user_name";
+  public static final String HTTP_PROXY_PASSWORD = NET_PROXY_BASE + ".http.password";
+  // HTTPS proxy config
+  public static final String HTTPS_PROXY_URL = NET_PROXY_BASE + ".https_url";
+  public static final String HTTPS_PROXY_TYPE = NET_PROXY_BASE + ".https.type";
+  public static final String HTTPS_PROXY_HOST = NET_PROXY_BASE + ".https.host";
+  public static final String HTTPS_PROXY_PORT = NET_PROXY_BASE + ".https.port";
+  public static final String HTTPS_PROXY_USER_NAME = NET_PROXY_BASE + ".https.user_name";
+  public static final String HTTPS_PROXY_PASSWORD = NET_PROXY_BASE + ".https.password";
 }

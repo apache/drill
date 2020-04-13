@@ -358,11 +358,12 @@ enum CoreOperatorType {
   EXCEL_SUB_SCAN = 64,
   SHP_SUB_SCAN = 65,
   METADATA_HANDLER = 66,
-  METADATA_CONTROLLER = 67
+  METADATA_CONTROLLER = 67,
+  HTTP_SUB_SCAN = 70
 };
 bool CoreOperatorType_IsValid(int value);
 const CoreOperatorType CoreOperatorType_MIN = SINGLE_SENDER;
-const CoreOperatorType CoreOperatorType_MAX = METADATA_CONTROLLER;
+const CoreOperatorType CoreOperatorType_MAX = HTTP_SUB_SCAN;
 const int CoreOperatorType_ARRAYSIZE = CoreOperatorType_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* CoreOperatorType_descriptor();

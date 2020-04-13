@@ -322,6 +322,27 @@ public class SchemaPath extends LogicalExpressionBase {
     return rootSegment;
   }
 
+  public String getAsUnescapedPath() {
+    StringBuilder sb = new StringBuilder();
+    PathSegment seg = getRootSegment();
+    if (seg.isArray()) {
+      throw new IllegalStateException("Drill doesn't currently support top level arrays");
+    }
+    sb.append(seg.getNameSegment().getPath());
+
+    while ( (seg = seg.getChild()) != null) {
+      if (seg.isNamed()) {
+        sb.append('.');
+        sb.append(seg.getNameSegment().getPath());
+      } else {
+        sb.append('[');
+        sb.append(seg.getArraySegment().getIndex());
+        sb.append(']');
+      }
+    }
+    return sb.toString();
+  }
+
   @Override
   public MajorType getMajorType() {
     return Types.LATE_BIND_TYPE;
