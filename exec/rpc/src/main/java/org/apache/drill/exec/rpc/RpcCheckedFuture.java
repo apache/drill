@@ -19,12 +19,12 @@ package org.apache.drill.exec.rpc;
 
 import io.netty.buffer.ByteBuf;
 
-import org.apache.drill.shaded.guava.com.google.common.util.concurrent.AbstractCheckedFuture;
+import org.apache.drill.common.concurrent.AbstractCheckedFuture;
 import org.apache.drill.shaded.guava.com.google.common.util.concurrent.ListenableFuture;
 
-public class RpcCheckedFuture<T> extends AbstractCheckedFuture<T, RpcException> implements DrillRpcFuture<T>{
+public class RpcCheckedFuture<T> extends AbstractCheckedFuture<T, RpcException> implements DrillRpcFuture<T> {
 
-  volatile ByteBuf buffer;
+  private volatile ByteBuf buffer;
 
   public RpcCheckedFuture(ListenableFuture<T> delegate) {
     super(delegate);

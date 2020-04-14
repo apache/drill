@@ -20,7 +20,7 @@ package org.apache.drill.common.exceptions;
 import java.io.IOException;
 
 @SuppressWarnings("serial")
-public class DrillIOException extends IOException{
+public class DrillIOException extends IOException {
 
   public DrillIOException() { }
 

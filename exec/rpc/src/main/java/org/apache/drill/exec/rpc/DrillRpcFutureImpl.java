@@ -19,16 +19,15 @@ package org.apache.drill.exec.rpc;
 
 import io.netty.buffer.ByteBuf;
 
-import org.apache.drill.shaded.guava.com.google.common.util.concurrent.AbstractCheckedFuture;
+import org.apache.drill.common.concurrent.AbstractCheckedFuture;
 import org.apache.drill.shaded.guava.com.google.common.util.concurrent.AbstractFuture;
 
-class DrillRpcFutureImpl<V> extends AbstractCheckedFuture<V, RpcException> implements DrillRpcFuture<V>, RpcOutcomeListener<V>{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillRpcFutureImpl.class);
-
+class DrillRpcFutureImpl<V> extends AbstractCheckedFuture<V, RpcException>
+    implements DrillRpcFuture<V>, RpcOutcomeListener<V> {
   private volatile ByteBuf buffer;
 
   public DrillRpcFutureImpl() {
-    super(new InnerFuture<V>());
+    super(new InnerFuture<>());
   }
 
   @Override
@@ -51,19 +50,19 @@ class DrillRpcFutureImpl<V> extends AbstractCheckedFuture<V, RpcException> imple
 
   @Override
   public void failed(RpcException ex) {
-    ( (InnerFuture<V>)delegate()).setException(ex);
+    ((InnerFuture<V>) delegate()).setException(ex);
   }
 
   @Override
   public void success(V value, ByteBuf buffer) {
     this.buffer = buffer;
-    ( (InnerFuture<V>)delegate()).setValue(value);
+    ((InnerFuture<V>) delegate()).setValue(value);
   }
 
   @Override
   public void interrupted(final InterruptedException ex) {
     // Propagate the interrupt to inner future
-    ( (InnerFuture<V>)delegate()).cancel(true);
+    delegate().cancel(true);
   }
 
   @Override
