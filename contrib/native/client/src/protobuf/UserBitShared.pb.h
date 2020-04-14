@@ -399,7 +399,6 @@ enum CoreOperatorType : int {
 };
 bool CoreOperatorType_IsValid(int value);
 const CoreOperatorType CoreOperatorType_MIN = SINGLE_SENDER;
-const CoreOperatorType CoreOperatorType_MAX = HTTP_SUB_SCAN;
 const CoreOperatorType CoreOperatorType_MAX = CASSANDRA_SUB_SCAN;
 const int CoreOperatorType_ARRAYSIZE = CoreOperatorType_MAX + 1;
 
