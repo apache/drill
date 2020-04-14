@@ -18,7 +18,7 @@
 
 package org.apache.drill.exec.store.spss;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
@@ -37,7 +37,7 @@ import java.nio.file.Paths;
 import static org.junit.Assert.assertEquals;
 import static org.apache.drill.test.QueryTestUtil.generateCompressedFile;
 
-@Category(RowSetTests.class)
+@Category(RowSetTest.class)
 public class TestSpssReader extends ClusterTest {
 
   @BeforeClass

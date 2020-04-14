@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.scan;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.base.AbstractSubScan;
@@ -44,7 +44,7 @@ import io.netty.buffer.DrillBuf;
  * set follows the same semantics as the original set.
  */
 
-@Category(RowSetTests.class)
+@Category(RowSetTest.class)
 public class TestScanBatchWriters extends SubOperatorTest {
 
   @Test

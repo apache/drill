@@ -24,7 +24,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.impl.validate.BatchValidator;
@@ -53,7 +53,7 @@ import java.util.Arrays;
 /**
  * Test (non-array) dict support in the result set loader and related classes.
  */
-@Category(RowSetTests.class)
+@Category(RowSetTest.class)
 public class TestResultSetLoaderDicts extends SubOperatorTest {
 
   @Test

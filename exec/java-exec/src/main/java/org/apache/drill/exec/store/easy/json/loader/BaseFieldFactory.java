@@ -75,7 +75,6 @@ public abstract class BaseFieldFactory implements FieldFactory {
 
   protected JsonLoaderImpl loader() { return loader; }
 
-  @Override
   public ValueParser scalarParserFor(FieldDefn fieldDefn, ColumnMetadata colSchema) {
     return scalarParserFor(fieldDefn.scalarWriterFor(colSchema));
   }

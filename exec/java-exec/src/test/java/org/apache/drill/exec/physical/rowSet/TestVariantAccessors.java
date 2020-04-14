@@ -26,7 +26,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.RowSet.ExtendableRowSet;
@@ -67,7 +67,7 @@ import org.junit.experimental.categories.Category;
  * and other operators. Some assembly required for future use.)
  */
 
-@Category(RowSetTests.class)
+@Category(RowSetTest.class)
 public class TestVariantAccessors extends SubOperatorTest {
 
   @Test

@@ -18,7 +18,7 @@
 
 package org.apache.drill.exec.store.xml;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.RowSet;
@@ -39,7 +39,7 @@ import static org.apache.drill.test.rowSet.RowSetUtilities.objArray;
 import static org.apache.drill.test.rowSet.RowSetUtilities.strArray;
 import static org.junit.Assert.assertEquals;
 
-@Category(RowSetTests.class)
+@Category(RowSetTest.class)
 public class TestXMLReader extends ClusterTest {
 
   @BeforeClass

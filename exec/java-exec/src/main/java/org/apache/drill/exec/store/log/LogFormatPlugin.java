@@ -34,7 +34,7 @@ import org.apache.drill.exec.record.metadata.Propertied;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
 import org.apache.drill.exec.store.dfs.easy.EasySubScan;
 import org.apache.drill.exec.store.log.LogBatchReader.LogReaderConfig;
@@ -144,7 +144,7 @@ public class LogFormatPlugin extends EasyFormatPlugin<LogFormatConfig> {
    */
   @Override
   protected FileScanBuilder frameworkBuilder(
-      OptionManager options, EasySubScan scan) throws ExecutionSetupException {
+      OptionSet options, EasySubScan scan) throws ExecutionSetupException {
 
     // Pattern and schema identical across readers; define
     // up front.

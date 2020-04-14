@@ -18,7 +18,7 @@
 
 package org.apache.drill.exec.store.hdf5;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -43,7 +43,7 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.apache.drill.test.QueryTestUtil.generateCompressedFile;
 
-@Category(RowSetTests.class)
+@Category(RowSetTest.class)
 public class TestHDF5Format extends ClusterTest {
 
   @BeforeClass

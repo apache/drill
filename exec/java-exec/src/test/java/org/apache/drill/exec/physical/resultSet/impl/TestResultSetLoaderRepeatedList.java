@@ -19,7 +19,7 @@ package org.apache.drill.exec.physical.resultSet.impl;
 
 import java.util.Arrays;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
@@ -64,7 +64,7 @@ import static org.junit.Assert.assertTrue;
  * actually, since the different "slices" need not have the same length...)
  * Repeated lists appear to be used only by JSON.
  */
-@Category(RowSetTests.class)
+@Category(RowSetTest.class)
 public class TestResultSetLoaderRepeatedList extends SubOperatorTest {
 
   @Test

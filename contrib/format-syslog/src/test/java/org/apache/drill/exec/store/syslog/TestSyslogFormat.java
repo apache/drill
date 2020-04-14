@@ -22,7 +22,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -43,7 +43,7 @@ import static org.apache.drill.test.QueryTestUtil.generateCompressedFile;
 import static org.apache.drill.test.rowSet.RowSetUtilities.mapArray;
 import static org.junit.Assert.assertEquals;
 
-@Category(RowSetTests.class)
+@Category(RowSetTest.class)
 public class TestSyslogFormat extends ClusterTest {
 
   @BeforeClass

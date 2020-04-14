@@ -23,7 +23,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.physical.impl.scan.ScanTestUtils.ScanFixture;
@@ -36,7 +36,7 @@ import org.junit.experimental.categories.Category;
  * Tests the basics of the scan operator protocol: error conditions,
  * etc.
  */
-@Category(RowSetTests.class)
+@Category(RowSetTest.class)
 public class TestScanOperExecBasics extends BaseScanOperatorExecTest {
 
   /**

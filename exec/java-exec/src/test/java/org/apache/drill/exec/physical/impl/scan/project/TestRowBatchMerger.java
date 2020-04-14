@@ -41,7 +41,7 @@ import io.netty.buffer.DrillBuf;
 import static org.apache.drill.test.rowSet.RowSetUtilities.mapValue;
 import static org.apache.drill.test.rowSet.RowSetUtilities.singleMap;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 
 import static org.apache.drill.test.rowSet.RowSetUtilities.mapArray;
 
@@ -55,7 +55,7 @@ import static org.apache.drill.test.rowSet.RowSetUtilities.mapArray;
  * vector.
  */
 
-@Category(RowSetTests.class)
+@Category(RowSetTest.class)
 public class TestRowBatchMerger extends SubOperatorTest {
 
   public static class RowSetSource implements VectorSource {

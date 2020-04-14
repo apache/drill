@@ -18,7 +18,7 @@
 
 package org.apache.drill.exec.store.excel;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -47,7 +47,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-@Category(RowSetTests.class)
+@Category(RowSetTest.class)
 public class TestExcelFormat extends ClusterTest {
 
   @BeforeClass

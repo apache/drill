@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.TestFixedWidthWriter.TestIndex;
@@ -48,7 +48,7 @@ import org.junit.experimental.categories.Category;
  * counts.)
  */
 
-@Category(RowSetTests.class)
+@Category(RowSetTest.class)
 public class TestOffsetVectorWriter extends SubOperatorTest {
 
   /**

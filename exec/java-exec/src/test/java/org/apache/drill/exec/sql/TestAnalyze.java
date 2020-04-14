@@ -152,25 +152,28 @@ public class TestAnalyze extends ClusterTest {
 
   @Test
   public void testAnalyzeSupportedFormats() throws Exception {
-    //Only allow computing statistics on PARQUET files.
+    // Only allow computing statistics on PARQUET files.
     try {
       client.alterSession(ExecConstants.SLICE_TARGET, 1);
       client.alterSession(ExecConstants.OUTPUT_FORMAT_OPTION, "json");
       run("CREATE TABLE dfs.tmp.employee_basic4 AS SELECT * from cp.`employee.json`");
-      //Should display not supported
+      // Should display not supported
       verifyAnalyzeOutput("ANALYZE TABLE dfs.tmp.employee_basic4 COMPUTE STATISTICS",
           "Table employee_basic4 is not supported by ANALYZE. "
           + "Support is currently limited to directory-based Parquet tables.");
 
+      // See DRILL-7522
+      client.alterSession(ExecConstants.ENABLE_V2_JSON_READER_KEY, false);
       run("DROP TABLE dfs.tmp.employee_basic4");
       client.alterSession(ExecConstants.OUTPUT_FORMAT_OPTION, "parquet");
       run("CREATE TABLE dfs.tmp.employee_basic4 AS SELECT * from cp.`employee.json`");
-      //Should complete successfully (16 columns in employee.json)
+      // Should complete successfully (16 columns in employee.json)
       verifyAnalyzeOutput("ANALYZE TABLE dfs.tmp.employee_basic4 COMPUTE STATISTICS",
           "16");
     } finally {
       client.resetSession(ExecConstants.SLICE_TARGET);
       client.resetSession(ExecConstants.OUTPUT_FORMAT_OPTION);
+      client.resetSession(ExecConstants.ENABLE_V2_JSON_READER_KEY);
     }
   }
 

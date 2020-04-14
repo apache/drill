@@ -100,9 +100,9 @@ public class ${holderMode}${name}HolderReaderImpl extends AbstractFieldReader {
     return BasicTypeHelper.getType(holder);
 <#else>
   <#if holderMode == "Repeated">
-    return repeatedHolder.TYPE;
+    return ${holderMode}${name}Holder.TYPE;
   <#else>
-    return holder.TYPE;
+    return ${nullMode}${name}Holder.TYPE;
   </#if>
 </#if>
   }
@@ -311,6 +311,7 @@ public void copyAsField(String name, MapWriter writer) {
 </#if>
     impl.vector.getMutator().setSafe(impl.idx(), repeatedHolder);
   }
+
 <#else>
   <#if !(minor.class == "Decimal9" || minor.class == "Decimal18")>
   public void copyAsValue(${minor.class?cap_first}Writer writer) {
@@ -318,7 +319,6 @@ public void copyAsField(String name, MapWriter writer) {
       writer.write${minor.class}(<#list fields as field>holder.${field.name}<#if field_has_next>, </#if></#list>);
     }
   }
-
     <#if minor.class == "VarDecimal">
   public void copyAsField(String name, MapWriter writer, int precision, int scale) {
     ${minor.class?cap_first}Writer impl = writer.${lowerName}(name, precision, scale);
@@ -330,6 +330,7 @@ public void copyAsField(String name, MapWriter writer) {
       impl.write${minor.class}(<#list fields as field>holder.${field.name}<#if field_has_next>,</#if></#list>);
     }
   }
+
   </#if>
 </#if>
 }

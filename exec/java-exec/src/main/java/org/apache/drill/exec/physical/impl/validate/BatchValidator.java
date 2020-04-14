@@ -18,6 +18,7 @@
 package org.apache.drill.exec.physical.impl.validate;
 
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.SimpleVectorWrapper;
 import org.apache.drill.exec.record.VectorAccessible;
@@ -245,6 +246,11 @@ public class BatchValidator {
     ErrorReporter reporter = errorReporter(batch);
     new BatchValidator(reporter).validateBatch(batch, batch.getRecordCount());
     return reporter.errorCount() == 0;
+  }
+
+
+  public static void validate(RowSet rowSet) {
+    validate(rowSet.container());
   }
 
   private static ErrorReporter errorReporter(VectorAccessible batch) {

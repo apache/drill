@@ -20,6 +20,7 @@ package org.apache.drill.exec.vector.complex.writer;
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.vector.complex.writer.TestJsonReader.TestWrapper;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.junit.After;
@@ -45,9 +46,23 @@ public class TestJsonEscapeAnyChar extends ClusterTest {
     FileUtils.writeStringToFile(testFile, JSON_DATA);
   }
 
+  public void runBoth(TestWrapper wrapper) throws Exception {
+    try {
+      enableV2Reader(false);
+      wrapper.apply();
+      enableV2Reader(true);
+      wrapper.apply();
+    } finally {
+      resetV2Reader();
+    }
+  }
+
   @Test
   public void testwithOptionEnabled() throws Exception {
+    runBoth(() -> doTestWithOptionEnabled());
+  }
 
+  private void doTestWithOptionEnabled() throws Exception {
     try {
       enableJsonReaderEscapeAnyChar();
       testBuilder()
@@ -61,9 +76,12 @@ public class TestJsonEscapeAnyChar extends ClusterTest {
       resetJsonReaderEscapeAnyChar();
     }
   }
-
   @Test
   public void testwithOptionDisabled() throws Exception {
+    runBoth(() -> doTestWithOptionDisabled());
+  }
+
+  private void doTestWithOptionDisabled() throws Exception {
     try {
       queryBuilder().sql(QUERY)
         .run();
@@ -78,6 +96,14 @@ public class TestJsonEscapeAnyChar extends ClusterTest {
 
   private void resetJsonReaderEscapeAnyChar() {
     client.alterSession(ExecConstants.JSON_READER_ESCAPE_ANY_CHAR, false);
+  }
+
+  private void enableV2Reader(boolean enable) {
+    client.alterSession(ExecConstants.ENABLE_V2_JSON_READER_KEY, enable);
+  }
+
+  private void resetV2Reader() {
+    client.resetSession(ExecConstants.ENABLE_V2_JSON_READER_KEY);
   }
 
   @After

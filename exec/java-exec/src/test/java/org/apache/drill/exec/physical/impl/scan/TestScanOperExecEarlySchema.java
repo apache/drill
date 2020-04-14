@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.exec.physical.impl.scan.ScanTestUtils.ScanFixture;
 import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
 import org.apache.drill.exec.physical.rowSet.RowSet.SingleRowSet;
@@ -35,7 +35,7 @@ import org.junit.experimental.categories.Category;
  * Test "early schema" readers: those that can declare a schema at
  * open time.
  */
-@Category(RowSetTests.class)
+@Category(RowSetTest.class)
 public class TestScanOperExecEarlySchema extends BaseScanOperatorExecTest {
 
   /**

@@ -20,7 +20,7 @@ package org.apache.drill.exec.physical.rowSet;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.RowSet.ExtendableRowSet;
 import org.apache.drill.exec.physical.rowSet.RowSet.SingleRowSet;
@@ -44,7 +44,7 @@ import org.junit.experimental.categories.Category;
  * so if the index works for one reader, it will for for all.
  */
 
-@Category(RowSetTests.class)
+@Category(RowSetTest.class)
 public class TestIndirectReaders extends SubOperatorTest {
 
   /**
