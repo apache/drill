@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.impl.scan.ScanTestUtils.ScanFixture;
 import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
@@ -40,7 +40,7 @@ import org.junit.experimental.categories.Category;
  * context of a single scan operator: it cannot help when a query has
  * multiple scans, each in its own fragment.
  */
-@Category(RowSetTests.class)
+@Category(RowSetTest.class)
 public class TestScanOperExecSmoothing extends BaseScanOperatorExecTest {
 
   private static class MockEarlySchemaReader2 extends MockEarlySchemaReader {

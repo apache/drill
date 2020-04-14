@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.phoenix.secured;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.RowSet;
@@ -35,7 +35,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Tag(SlowTest.TAG)
-@Tag(RowSetTests.TAG)
+@Tag(RowSetTest.TAG)
 public class SecuredPhoenixSQLTest extends SecuredPhoenixBaseTest {
 
   @Test

@@ -22,7 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
@@ -65,7 +65,7 @@ import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
  * things in a single query.
  */
 
-@Category(RowSetTests.class)
+@Category(RowSetTest.class)
 public class TestResultSetLoaderTorture extends SubOperatorTest {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestResultSetLoaderTorture.class);
 

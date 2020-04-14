@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.phoenix.secured;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.categories.SlowTest;
 import org.apache.drill.exec.store.phoenix.QueryServerBasicsIT;
 import org.apache.drill.test.BaseTest;
@@ -41,7 +41,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 })
 @Disabled
 @Tag(SlowTest.TAG)
-@Tag(RowSetTests.TAG)
+@Tag(RowSetTest.TAG)
 public class SecuredPhoenixTestSuite extends BaseTest {
 
   private static final org.slf4j.Logger logger = LoggerFactory.getLogger(SecuredPhoenixTestSuite.class);

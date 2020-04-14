@@ -27,20 +27,19 @@ import static org.junit.Assert.fail;
 
 import java.util.Iterator;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.Limit;
 import org.apache.drill.exec.physical.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.exec.proto.UserBitShared.NamePart;
-import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
-import org.apache.drill.exec.record.BatchSchemaBuilder;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 import org.apache.drill.exec.record.TypedFieldId;
@@ -51,6 +50,7 @@ import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.exec.vector.VarCharVector;
 import org.apache.drill.test.SubOperatorTest;
+import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
@@ -60,8 +60,7 @@ import org.slf4j.LoggerFactory;
  * Test the implementation of the Drill Volcano iterator protocol that
  * wraps the modular operator implementation.
  */
-
-@Category(RowSetTests.class)
+@Category(RowSetTest.class)
 public class TestOperatorRecordBatch extends SubOperatorTest {
   private static final Logger logger = LoggerFactory.getLogger(TestOperatorRecordBatch.class);
 
@@ -70,7 +69,6 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
    * and provides a light-weight vector container. Returns a
    * defined number of (batches) with an optional schema change.
    */
-
   private class MockOperatorExec implements OperatorExec {
 
     public boolean bindCalled;
@@ -117,11 +115,11 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
         return false;
       }
       if (nextCount == schemaChangeAt) {
-        BatchSchemaBuilder newSchema = new BatchSchemaBuilder(batchAccessor.schema());
-        newSchema.schemaBuilder()
-            .add("b", MinorType.VARCHAR);
-        VectorContainer newContainer = new VectorContainer(fixture.allocator(), newSchema.build());
-        batchAccessor.addBatch(newContainer);
+        VectorContainer container =  batchAccessor.container();
+        container.addOrGet(
+            MaterializedField.create("b", Types.required(MinorType.VARCHAR)));
+        container.buildSchema(SelectionVectorMode.NONE);
+        batchAccessor.addBatch(container);
       }
       return true;
     }
@@ -137,11 +135,11 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
   }
 
   private static VectorContainer mockBatch() {
-    SchemaBuilder schemaBuilder = new SchemaBuilder()
-      .add("a", MinorType.INT);
-    VectorContainer container = new VectorContainer(fixture.allocator(), new BatchSchemaBuilder()
-        .withSchemaBuilder(schemaBuilder)
-        .build());
+    TupleMetadata schema = new SchemaBuilder()
+        .add("a", MinorType.INT)
+        .build();
+    VectorContainer container = new VectorContainer(fixture.allocator());
+    container.addOrGet(schema.column(0));
     container.buildSchema(SelectionVectorMode.NONE);
     return container;
   }
@@ -155,7 +153,6 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
   /**
    * Simulate a normal run: return some batches, encounter a schema change.
    */
-
   @Test
   public void testNormalLifeCycle() {
     MockOperatorExec opExec = new MockOperatorExec();
@@ -167,24 +164,20 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
       assertNotNull(opBatch.getContext());
 
       // First call to next() builds schema
-
       assertEquals(IterOutcome.OK_NEW_SCHEMA, opBatch.next());
       assertTrue(opExec.bindCalled);
       assertTrue(opExec.buildSchemaCalled);
       assertEquals(0, opExec.nextCount);
 
       // Second call returns the first batch
-
       assertEquals(IterOutcome.OK, opBatch.next());
       assertEquals(1, opExec.nextCount);
 
       // Third call causes a schema change
-
       assertEquals(IterOutcome.OK_NEW_SCHEMA, opBatch.next());
       assertEquals(2, opExec.nextCount);
 
       // Fourth call reaches EOF
-
       assertEquals(IterOutcome.NONE, opBatch.next());
       assertEquals(3, opExec.nextCount);
 
@@ -201,7 +194,6 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
    * Simulate a truncated life cycle: next() is never called. Not a valid part
    * of the protocol; but should be ready anyway.
    */
-
   @Test
   public void testTruncatedLifeCycle() {
     MockOperatorExec opExec = new MockOperatorExec();
@@ -218,7 +210,6 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
   /**
    * Simulate reaching EOF when trying to create the schema.
    */
-
   @Test
   public void testSchemaEOF() {
     MockOperatorExec opExec = new MockOperatorExec();
@@ -237,7 +228,6 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
    * Simulate reaching EOF on the first batch. This simulated data source
    * discovered a schema, but had no data.
    */
-
   @Test
   public void testFirstBatchEOF() {
     MockOperatorExec opExec = new MockOperatorExec();
@@ -257,7 +247,6 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
   /**
    * Simulate the caller failing the operator before getting the schema.
    */
-
   @Test
   public void testFailEarly() {
     MockOperatorExec opExec = new MockOperatorExec();
@@ -298,7 +287,6 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
    * Simulate the caller failing the operator after EOF but before close.
    * This is a silly time to fail, but have to handle it anyway.
    */
-
   @Test
   public void testFailBeforeClose() {
     MockOperatorExec opExec = new MockOperatorExec();
@@ -312,7 +300,6 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
       opBatch.cancel();
 
       // Already hit EOF, so fail won't be passed along.
-
       assertFalse(opExec.cancelCalled);
     } catch (Exception e) {
       fail();
@@ -324,7 +311,6 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
    * Simulate the caller failing the operator after close.
    * This is violates the operator protocol, but have to handle it anyway.
    */
-
   @Test
   public void testFailAfterClose() {
     MockOperatorExec opExec = new MockOperatorExec();
@@ -351,14 +337,11 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
    * container operations. Probably an artifact of its history. In any event, make
    * sure those methods are passed through to the container accessor.
    */
-
   @Test
   public void testBatchAccessor() {
-    SchemaBuilder schemaBuilder = new SchemaBuilder()
-      .add("a", MinorType.INT)
-      .add("b", MinorType.VARCHAR);
-    BatchSchema schema = new BatchSchemaBuilder()
-        .withSchemaBuilder(schemaBuilder)
+    TupleMetadata schema = new SchemaBuilder()
+        .add("a", MinorType.INT)
+        .add("b", MinorType.VARCHAR)
         .build();
     SingleRowSet rs = fixture.rowSetBuilder(schema)
         .addRow(10, "fred")
@@ -369,7 +352,7 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
 
     try (OperatorRecordBatch opBatch = makeOpBatch(opExec)) {
       assertEquals(IterOutcome.OK_NEW_SCHEMA, opBatch.next());
-      assertEquals(schema, opBatch.getSchema());
+      RowSetUtilities.assertSchemasEqual(schema, opBatch.getSchema());
       assertEquals(2, opBatch.getRecordCount());
       assertSame(rs.container(), opBatch.getOutgoingContainer());
 
@@ -379,7 +362,6 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
 
       // Not a full test of the schema path; just make sure that the
       // pass-through to the Vector Container works.
-
       SchemaPath path = SchemaPath.create(NamePart.newBuilder().setName("a").build());
       TypedFieldId id = opBatch.getValueVectorId(path);
       assertEquals(MinorType.INT, id.getFinalType().getMinorType());
@@ -393,7 +375,6 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
       assertEquals(1, id.getFieldIds()[0]);
 
       // Sanity check of getValueAccessorById()
-
       VectorWrapper<?> w = opBatch.getValueAccessorById(IntVector.class, 0);
       assertNotNull(w);
       assertEquals("a", w.getValueVector().getField().getName());
@@ -404,7 +385,6 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
       // getWritableBatch() ?
 
       // No selection vectors
-
       try {
         opBatch.getSelectionVector2();
         fail();
@@ -439,7 +419,6 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
     int schemaVersion = opExec.batchAccessor().schemaVersion();
 
     // Be tidy: start at 1.
-
     assertEquals(1, schemaVersion);
 
     // Changing data does not trigger schema change
@@ -449,7 +428,6 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
     assertEquals(schemaVersion, opExec.batchAccessor().schemaVersion());
 
     // Different container, same vectors, does not trigger a change
-
     VectorContainer c2 = new VectorContainer(fixture.allocator());
     for (VectorWrapper<?> vw : container) {
       c2.add(vw.getValueVector());
@@ -463,7 +441,6 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
 
     // Replacing a vector with another of the same type does trigger
     // a change.
-
     VectorContainer c3 = new VectorContainer(fixture.allocator());
     c3.add(container.getValueVector(0).getValueVector());
     c3.add(TypeHelper.getNewVector(
@@ -475,12 +452,10 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
     schemaVersion = opExec.batchAccessor().schemaVersion();
 
     // No change if same schema again
-
     opExec.batchAccessor.addBatch(c3);
     assertEquals(schemaVersion, opExec.batchAccessor().schemaVersion());
 
     // Adding a vector triggers a change
-
     MaterializedField c = SchemaBuilder.columnSchema("c", MinorType.INT, DataMode.OPTIONAL);
     c3.add(TypeHelper.getNewVector(c, fixture.allocator(), null));
     c3.buildSchema(SelectionVectorMode.NONE);
@@ -489,12 +464,10 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
     schemaVersion = opExec.batchAccessor().schemaVersion();
 
     // No change if same schema again
-
     opExec.batchAccessor.addBatch(c3);
     assertEquals(schemaVersion, opExec.batchAccessor().schemaVersion());
 
     // Removing a vector triggers a change
-
     c3.remove(c3.getValueVector(2).getValueVector());
     c3.buildSchema(SelectionVectorMode.NONE);
     assertEquals(2, c3.getNumberOfColumns());
@@ -503,7 +476,6 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
     schemaVersion = opExec.batchAccessor().schemaVersion();
 
     // Clean up
-
     opExec.close();
     c2.clear();
     c3.clear();
@@ -512,7 +484,6 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
   /**
    * Test that an SV2 is properly handled by the proper container accessor.
    */
-
   @Test
   public void testSv2() {
     TupleMetadata schema = new SchemaBuilder()
@@ -542,7 +513,6 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
     assertTrue(opExec.closeCalled);
 
     // Must release SV2
-
     rs.clear();
   }
 
@@ -559,7 +529,6 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
   /**
    * Failure on the bind method.
    */
-
   @Test
   public void testWrappedExceptionOnBind() {
     MockOperatorExec opExec = new MockOperatorExec() {
@@ -654,7 +623,6 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
    * Failure on the second or subsequent calls to next(), when actually
    * fetching a record batch.
    */
-
   @Test
   public void testWrappedExceptionOnNext() {
     MockOperatorExec opExec = new MockOperatorExec() {
@@ -704,7 +672,6 @@ public class TestOperatorRecordBatch extends SubOperatorTest {
   /**
    * Failure when closing the operator implementation.
    */
-
   @Test
   public void testWrappedExceptionOnClose() {
     MockOperatorExec opExec = new MockOperatorExec() {

@@ -18,7 +18,7 @@
 
 package org.apache.drill.exec.store.json;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -39,7 +39,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-@Category(RowSetTests.class)
+@Category(RowSetTest.class)
 public class TestJsonModes extends ClusterTest {
 
   @BeforeClass

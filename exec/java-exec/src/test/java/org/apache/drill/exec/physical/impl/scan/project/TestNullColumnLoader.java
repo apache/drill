@@ -25,7 +25,7 @@ import java.util.List;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.physical.impl.scan.project.NullColumnBuilder.NullBuilderBuilder;
 import org.apache.drill.exec.physical.resultSet.ResultVectorCache;
@@ -51,7 +51,7 @@ import org.junit.experimental.categories.Category;
  * can create the classic nullable Int null column, or one of
  * any other type and mode.
  */
-@Category(RowSetTests.class)
+@Category(RowSetTest.class)
 public class TestNullColumnLoader extends SubOperatorTest {
 
   private ResolvedNullColumn makeNullCol(String name, MajorType nullType) {

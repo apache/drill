@@ -27,7 +27,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.RowSet.SingleRowSet;
@@ -63,7 +63,7 @@ import org.junit.experimental.categories.Category;
  * on to the result set loader tests.
  */
 
-@Category(RowSetTests.class)
+@Category(RowSetTest.class)
 public class TestRepeatedListAccessors extends SubOperatorTest {
 
   /**

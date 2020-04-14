@@ -28,7 +28,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.impl.scan.ScanTestUtils.ScanFixture;
@@ -64,7 +64,7 @@ import org.junit.experimental.categories.Category;
  * Focuses on the file metadata itself, assumes that other tests have
  * verified the underlying mechanisms.
  */
-@Category(RowSetTests.class)
+@Category(RowSetTest.class)
 public class TestFileScanFramework extends SubOperatorTest {
 
   private static final String MOCK_FILE_NAME = "foo.csv";

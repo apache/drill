@@ -69,7 +69,6 @@ import org.apache.drill.exec.vector.complex.UnionVector;
  * variant (LIST, UNION) and tuple (MAP) columns, the tree grows
  * quite complex.
  */
-
 public class SimpleReaderBuilder extends ReaderBuilder {
 
   private static final SimpleReaderBuilder INSTANCE = new SimpleReaderBuilder();
@@ -133,7 +132,6 @@ public class SimpleReaderBuilder extends ReaderBuilder {
       case LATE:
 
         // Occurs for a list with no type: a list of nulls.
-
         return AbstractScalarReader.nullReader(descrip.metadata);
       default:
         return buildScalarReader(va, descrip.metadata);
@@ -169,22 +167,19 @@ public class SimpleReaderBuilder extends ReaderBuilder {
     final boolean isArray = mode == DataMode.REPEATED;
 
     // Map type
-
     final AbstractObjectReader mapReader = MapReader.build(
         descrip.metadata,
         isArray ? null : va,
         buildMapMembers(vector,
             descrip.parent.childProvider(descrip.metadata)));
 
-    // Single map
-
-    if (! isArray) {
+    if (isArray) {
+      // Repeated map
+      return ArrayReaderImpl.buildTuple(descrip.metadata, va, mapReader);
+    } else {
+      // Single map
       return mapReader;
     }
-
-    // Repeated map
-
-    return ArrayReaderImpl.buildTuple(descrip.metadata, va, mapReader);
   }
 
   protected List<AbstractObjectReader> buildMapMembers(AbstractMapVector mapVector, MetadataProvider provider) {
@@ -208,7 +203,6 @@ public class SimpleReaderBuilder extends ReaderBuilder {
       // Will throw an exception for unsupported types.
       // so call this only if the MajorType reports that the type
       // already exists.
-
       final ValueVector memberVector = vector.getMember(type);
       final VectorDescrip memberDescrip = new VectorDescrip(provider, i++, memberVector.getField());
       variants[type.ordinal()] = buildVectorReader(memberVector, memberDescrip);
@@ -262,7 +256,6 @@ public class SimpleReaderBuilder extends ReaderBuilder {
    * then the union must also be not null. (Experience will show whether
    * existing code does, in fact, follow that convention.)
    */
-
   private AbstractObjectReader build1DList(ListVector vector, VectorAccessor listAccessor,
       VectorDescrip listDescrip) {
     final ValueVector dataVector = vector.getDataVector();
@@ -272,7 +265,6 @@ public class SimpleReaderBuilder extends ReaderBuilder {
       // At the metadata level, a list always holds a union. But, at the
       // implementation layer, a union of a single type is collapsed out
       // to leave just a list of that single type.
-
       dataMetadata = listDescrip;
     } else {
       dataMetadata = new VectorDescrip(listDescrip.childProvider(), 0, dataVector.getField());

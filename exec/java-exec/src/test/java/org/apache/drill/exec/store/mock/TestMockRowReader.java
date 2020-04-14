@@ -27,7 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.categories.UnlikelyTest;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -52,7 +52,7 @@ import org.junit.experimental.categories.Category;
  * scan operator, without the rest of Drill. A side effect is that this
  * also tests the scan mechanism itself.
  */
-@Category({RowSetTests.class, UnlikelyTest.class})
+@Category({RowSetTest.class, UnlikelyTest.class})
 public class TestMockRowReader extends SubOperatorTest {
 
   private static ScanFixture buildScan(MockSubScanPOP config,

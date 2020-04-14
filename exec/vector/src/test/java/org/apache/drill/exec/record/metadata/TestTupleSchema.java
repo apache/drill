@@ -32,7 +32,7 @@ import java.util.List;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.metadata.ColumnMetadata.StructureType;
@@ -43,7 +43,7 @@ import org.junit.experimental.categories.Category;
 /**
  * Test the tuple and column metadata, including extended attributes.
  */
-@Category(RowSetTests.class)
+@Category(RowSetTest.class)
 public class TestTupleSchema extends BaseTest {
 
   /**

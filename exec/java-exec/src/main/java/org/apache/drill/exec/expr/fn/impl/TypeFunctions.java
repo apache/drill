@@ -33,7 +33,6 @@ import io.netty.buffer.DrillBuf;
  * Type functions for all types. See UnionFunctions for type functions
  * specifically for the UNION type.
  */
-
 public class TypeFunctions {
 
   @FunctionTemplate(name = "sqlTypeOf",

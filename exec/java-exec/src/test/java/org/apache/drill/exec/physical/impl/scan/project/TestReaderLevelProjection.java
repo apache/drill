@@ -27,7 +27,7 @@ import static org.junit.Assert.fail;
 
 import java.util.List;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.impl.scan.ScanTestUtils;
@@ -49,7 +49,7 @@ import org.junit.experimental.categories.Category;
  * combines these to map out the actual projection.
  */
 
-@Category(RowSetTests.class)
+@Category(RowSetTest.class)
 public class TestReaderLevelProjection extends SubOperatorTest {
 
   /**

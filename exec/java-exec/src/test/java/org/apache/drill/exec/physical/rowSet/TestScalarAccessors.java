@@ -33,7 +33,7 @@ import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.util.Arrays;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
@@ -77,7 +77,7 @@ import org.junit.experimental.categories.Category;
 // TODO: Var16Char
 // TODO: Bit
 
-@Category(RowSetTests.class)
+@Category(RowSetTest.class)
 public class TestScalarAccessors extends SubOperatorTest {
 
   @Test

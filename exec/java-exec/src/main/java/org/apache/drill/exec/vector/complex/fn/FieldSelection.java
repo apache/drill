@@ -170,5 +170,4 @@ public class FieldSelection {
       return root.fixNodes();
     }
   }
-
 }

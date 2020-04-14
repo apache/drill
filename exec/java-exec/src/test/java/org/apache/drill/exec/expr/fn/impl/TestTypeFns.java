@@ -307,19 +307,50 @@ public class TestTypeFns extends ClusterTest {
         .go();
   }
 
+  /**
+   * The V1 JSON reader appears to omit missing columns.
+   */
   @Test
-  public void testTypeOfWithFile() throws Exception {
-    // Column `x` does not actually appear in the file.
-    String sql ="SELECT typeof(bi) AS bi_t, typeof(fl) AS fl_t, typeof(st) AS st_t,\n" +
-                "       typeof(mp) AS mp_t, typeof(ar) AS ar_t, typeof(nu) AS nu_t,\n" +
-                "       typeof(x) AS x_t\n" +
-                "FROM cp.`jsoninput/allTypes.json`";
-     testBuilder()
-      .sqlQuery(sql)
-      .ordered()
-      .baselineColumns("bi_t",   "fl_t",   "st_t",    "mp_t", "ar_t",   "nu_t", "x_t")
-      .baselineValues( "BIGINT", "FLOAT8", "VARCHAR", "MAP",  "BIGINT", "NULL", "NULL")
-      .go();
+  public void testTypeOfWithFileV1() throws Exception {
+    try {
+      enableV2Reader(false);
+      // Column `x` does not actually appear in the file.
+      String sql ="SELECT typeof(bi) AS bi_t, typeof(fl) AS fl_t, typeof(st) AS st_t,\n" +
+                  "       typeof(mp) AS mp_t, typeof(ar) AS ar_t, typeof(nu) AS nu_t,\n" +
+                  "       typeof(x) AS x_t\n" +
+                  "FROM cp.`jsoninput/allTypes.json`";
+       testBuilder()
+        .sqlQuery(sql)
+        .ordered()
+        .baselineColumns("bi_t",   "fl_t",   "st_t",    "mp_t", "ar_t",   "nu_t", "x_t")
+        .baselineValues( "BIGINT", "FLOAT8", "VARCHAR", "MAP",  "BIGINT", "NULL", "NULL")
+        .go();
+    } finally {
+      resetV2Reader();
+    }
+  }
+
+  /**
+   * The V2 JSON reader fills in missing columns with a nullable VARCHAR.
+   */
+  @Test
+  public void testTypeOfWithFileV2() throws Exception {
+    try {
+      enableV2Reader(true);
+      // Column `x` does not actually appear in the file.
+      String sql ="SELECT typeof(bi) AS bi_t, typeof(fl) AS fl_t, typeof(st) AS st_t,\n" +
+                  "       typeof(mp) AS mp_t, typeof(ar) AS ar_t, typeof(nu) AS nu_t,\n" +
+                  "       typeof(x) AS x_t\n" +
+                  "FROM cp.`jsoninput/allTypes.json`";
+       testBuilder()
+        .sqlQuery(sql)
+        .ordered()
+        .baselineColumns("bi_t",   "fl_t",   "st_t",    "mp_t", "ar_t",   "nu_t",    "x_t")
+        .baselineValues( "BIGINT", "FLOAT8", "VARCHAR", "MAP",  "BIGINT", "VARCHAR", "VARCHAR")
+        .go();
+    } finally {
+      resetV2Reader();
+    }
   }
 
   @Test
@@ -344,5 +375,13 @@ public class TestTypeFns extends ClusterTest {
     finally {
       client.resetSession(ExecConstants.ENABLE_UNION_TYPE_KEY);
     }
+  }
+
+  private void enableV2Reader(boolean enable) throws Exception {
+    client.alterSession(ExecConstants.ENABLE_V2_JSON_READER_KEY, enable);
+  }
+
+  private void resetV2Reader() throws Exception {
+    client.resetSession(ExecConstants.ENABLE_V2_JSON_READER_KEY);
   }
 }

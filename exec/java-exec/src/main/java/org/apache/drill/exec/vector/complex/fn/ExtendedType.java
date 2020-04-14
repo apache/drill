@@ -35,7 +35,4 @@ public enum ExtendedType {
   ExtendedType(String name) {
     this.serialized = new SerializedString(name);
   }
-
-
-
 }

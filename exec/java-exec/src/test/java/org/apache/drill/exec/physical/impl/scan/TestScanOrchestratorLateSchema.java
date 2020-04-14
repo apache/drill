@@ -19,7 +19,7 @@ package org.apache.drill.exec.physical.impl.scan;
 
 import static org.junit.Assert.assertFalse;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.impl.scan.ScanTestUtils.MockScanBuilder;
@@ -47,7 +47,7 @@ import org.junit.experimental.categories.Category;
  * that tests for lower-level components have already passed.
  */
 
-@Category(RowSetTests.class)
+@Category(RowSetTest.class)
 public class TestScanOrchestratorLateSchema extends SubOperatorTest {
 
   /**

@@ -22,6 +22,7 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertFalse;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.util.List;
@@ -35,15 +36,32 @@ import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.rpc.user.QueryDataBatch;
 import org.apache.drill.exec.vector.VarCharVector;
+import org.apache.drill.exec.vector.complex.writer.TestJsonReader.TestWrapper;
 import org.apache.drill.test.BaseTestQuery;
 import org.junit.Ignore;
 import org.junit.Test;
 
+// TODO: Move to JSON reader package after code review
+// TODO: Split or rename: this tests mor than NanInf
 public class TestJsonNanInf extends BaseTestQuery {
 
+  public void runBoth(TestWrapper wrapper) throws Exception {
+    try {
+      enableV2Reader(false);
+      wrapper.apply();
+      enableV2Reader(true);
+      wrapper.apply();
+    } finally {
+      resetV2Reader();
+    }
+  }
 
   @Test
   public void testNanInfSelect() throws Exception {
+    runBoth(() -> doTestNanInfSelect());
+  }
+
+  private void doTestNanInfSelect() throws Exception {
     String table = "nan_test.json";
     File file = new File(dirTestWatcher.getRootDir(), table);
     String json = "{\"nan_col\":NaN, \"inf_col\":Infinity}";
@@ -65,6 +83,10 @@ public class TestJsonNanInf extends BaseTestQuery {
   @Test
   @Ignore // see DRILL-6018
   public void testExcludePositiveInfinity() throws Exception {
+    runBoth(() -> doTestExcludePositiveInfinity());
+  }
+
+  private void doTestExcludePositiveInfinity() throws Exception {
     String table = "nan_test.json";
     File file = new File(dirTestWatcher.getRootDir(), table);
     String json = "[{\"nan_col\":NaN, \"inf_col\":Infinity}," +
@@ -87,6 +109,10 @@ public class TestJsonNanInf extends BaseTestQuery {
   @Test
   @Ignore // see DRILL-6018
   public void testExcludeNegativeInfinity() throws Exception {
+    runBoth(() -> doTestExcludeNegativeInfinity());
+  }
+
+  private void doTestExcludeNegativeInfinity() throws Exception {
     String table = "nan_test.json";
     File file = new File(dirTestWatcher.getRootDir(), table);
     String json = "[{\"nan_col\":NaN, \"inf_col\":-Infinity}," +
@@ -109,6 +135,10 @@ public class TestJsonNanInf extends BaseTestQuery {
   @Test
   @Ignore // see DRILL-6018
   public void testIncludePositiveInfinity() throws Exception {
+    runBoth(() -> doTestIncludePositiveInfinity());
+  }
+
+  private void doTestIncludePositiveInfinity() throws Exception {
     String table = "nan_test.json";
     File file = new File(dirTestWatcher.getRootDir(), table);
     String json = "[{\"nan_col\":NaN, \"inf_col\":Infinity}," +
@@ -130,6 +160,10 @@ public class TestJsonNanInf extends BaseTestQuery {
 
   @Test
   public void testExcludeNan() throws Exception {
+    runBoth(() -> doTestExcludeNan());
+  }
+
+  private void doTestExcludeNan() throws Exception {
     String table = "nan_test.json";
     File file = new File(dirTestWatcher.getRootDir(), table);
     String json = "[{\"nan_col\":NaN, \"inf_col\":-Infinity}," +
@@ -149,9 +183,12 @@ public class TestJsonNanInf extends BaseTestQuery {
     }
   }
 
-
   @Test
   public void testIncludeNan() throws Exception {
+    runBoth(() -> doTestIncludeNan());
+  }
+
+  private void doTestIncludeNan() throws Exception {
     String table = "nan_test.json";
     File file = new File(dirTestWatcher.getRootDir(), table);
     String json = "[{\"nan_col\":NaN, \"inf_col\":-Infinity}," +
@@ -171,8 +208,12 @@ public class TestJsonNanInf extends BaseTestQuery {
     }
   }
 
-  @Test(expected = UserRemoteException.class)
+  @Test
   public void testNanInfFailure() throws Exception {
+    runBoth(() -> doTestNanInfFailure());
+  }
+
+  private void doTestNanInfFailure() throws Exception {
     String table = "nan_test.json";
     File file = new File(dirTestWatcher.getRootDir(), table);
     test("alter session set `%s` = false", ExecConstants.JSON_READER_NAN_INF_NUMBERS);
@@ -180,9 +221,9 @@ public class TestJsonNanInf extends BaseTestQuery {
     try {
       FileUtils.writeStringToFile(file, json);
       test("select * from dfs.`%s`;", table);
+      fail();
     } catch (UserRemoteException e) {
       assertThat(e.getMessage(), containsString("Error parsing JSON"));
-      throw e;
     } finally {
       resetSessionOption(ExecConstants.JSON_READER_NAN_INF_NUMBERS);
       FileUtils.deleteQuietly(file);
@@ -191,6 +232,10 @@ public class TestJsonNanInf extends BaseTestQuery {
 
   @Test
   public void testCreateTableNanInf() throws Exception {
+    runBoth(() -> doTestCreateTableNanInf());
+  }
+
+  private void doTestCreateTableNanInf() throws Exception {
     String table = "nan_test.json";
     File file = new File(dirTestWatcher.getRootDir(), table);
     String json = "{\"nan_col\":NaN, \"inf_col\":Infinity}";
@@ -217,6 +262,10 @@ public class TestJsonNanInf extends BaseTestQuery {
 
   @Test
   public void testConvertFromJsonFunction() throws Exception {
+    runBoth(() -> doTestConvertFromJsonFunction());
+  }
+
+  private void doTestConvertFromJsonFunction() throws Exception {
     String table = "nan_test.csv";
     File file = new File(dirTestWatcher.getRootDir(), table);
     String csv = "col_0, {\"nan_col\":NaN}";
@@ -234,10 +283,12 @@ public class TestJsonNanInf extends BaseTestQuery {
     }
   }
 
-
-
   @Test
   public void testLargeStringBinary() throws Exception {
+    runBoth(() -> doTestLargeStringBinary());
+  }
+
+  private void doTestLargeStringBinary() throws Exception {
     String chunk = "0123456789";
     StringBuilder builder = new StringBuilder();
     for (int i = 0; i < 1000; i++) {
@@ -249,6 +300,10 @@ public class TestJsonNanInf extends BaseTestQuery {
 
   @Test
   public void testConvertToJsonFunction() throws Exception {
+    runBoth(() -> doTestConvertToJsonFunction());
+  }
+
+  private void doTestConvertToJsonFunction() throws Exception {
     String table = "nan_test.csv";
     File file = new File(dirTestWatcher.getRootDir(), table);
     String csv = "col_0, {\"nan_col\":NaN}";
@@ -290,6 +345,10 @@ public class TestJsonNanInf extends BaseTestQuery {
 
   @Test
   public void testOrderByWithNaN() throws Exception {
+    runBoth(() -> doTestOrderByWithNaN());
+  }
+
+  private void doTestOrderByWithNaN() throws Exception {
     String table_name = "nan_test.json";
     String json = "{\"name\":\"obj1\", \"attr1\":1, \"attr2\":2, \"attr3\":3, \"attr4\":NaN}\n" +
         "{\"name\":\"obj1\", \"attr1\":1, \"attr2\":2, \"attr3\":4, \"attr4\":Infinity}\n" +
@@ -319,6 +378,10 @@ public class TestJsonNanInf extends BaseTestQuery {
 
   @Test
   public void testNestedLoopJoinWithNaN() throws Exception {
+    runBoth(() -> doTestNestedLoopJoinWithNaN());
+  }
+
+  private void doTestNestedLoopJoinWithNaN() throws Exception {
     String table_name = "nan_test.json";
     String json = "{\"name\":\"object1\", \"attr1\":1, \"attr2\":2, \"attr3\":3, \"attr4\":NaN}\n" +
             "{\"name\":\"object1\", \"attr1\":1, \"attr2\":2, \"attr3\":3, \"attr4\":NaN}\n" +
@@ -358,6 +421,10 @@ public class TestJsonNanInf extends BaseTestQuery {
 
   @Test
   public void testHashJoinWithNaN() throws Exception {
+    runBoth(() -> doTestHashJoinWithNaN());
+  }
+
+  private void doTestHashJoinWithNaN() throws Exception {
     String table_name = "nan_test.json";
     String json = "{\"name\":\"obj1\", \"attr1\":1, \"attr2\":2, \"attr3\":3, \"attr4\":NaN}\n" +
             "{\"name\":\"obj1\", \"attr1\":1, \"attr2\":2, \"attr3\":4, \"attr4\":Infinity}\n" +
@@ -386,9 +453,12 @@ public class TestJsonNanInf extends BaseTestQuery {
     }
   }
 
-
   @Test
   public void testMergeJoinWithNaN() throws Exception {
+    runBoth(() -> doTestMergeJoinWithNaN());
+  }
+
+  private void doTestMergeJoinWithNaN() throws Exception {
     String table_name = "nan_test.json";
     String json = "{\"name\":\"obj1\", \"attr1\":1, \"attr2\":2, \"attr3\":3, \"attr4\":NaN}\n" +
             "{\"name\":\"obj1\", \"attr1\":1, \"attr2\":2, \"attr3\":4, \"attr4\":Infinity}\n" +
@@ -417,4 +487,11 @@ public class TestJsonNanInf extends BaseTestQuery {
     }
   }
 
+  private void enableV2Reader(boolean enable) throws Exception {
+    alterSession(ExecConstants.ENABLE_V2_JSON_READER_KEY, enable);
+  }
+
+  private void resetV2Reader() throws Exception {
+    resetSessionOption(ExecConstants.ENABLE_V2_JSON_READER_KEY);
+  }
 }

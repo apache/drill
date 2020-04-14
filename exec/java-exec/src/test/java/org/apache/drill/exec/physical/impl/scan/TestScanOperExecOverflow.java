@@ -23,7 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.impl.scan.ScanTestUtils.ScanFixture;
 import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
@@ -37,7 +37,7 @@ import org.junit.experimental.categories.Category;
 /**
  * Test vector overflow in the context of the scan operator.
  */
-@Category(RowSetTests.class)
+@Category(RowSetTest.class)
 public class TestScanOperExecOverflow extends BaseScanOperatorExecTest {
 
   /**

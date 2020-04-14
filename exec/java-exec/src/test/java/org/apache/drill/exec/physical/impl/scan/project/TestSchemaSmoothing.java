@@ -24,7 +24,7 @@ import static org.junit.Assert.fail;
 
 import java.util.List;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.RowSetTest;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.impl.protocol.SchemaTracker;
 import org.apache.drill.exec.physical.impl.scan.ScanTestUtils;
@@ -87,7 +87,7 @@ import org.junit.experimental.categories.Category;
  * because such an algorithm would require time-travel: looking into
  * the future to know what data will be scanned.)
  */
-@Category(RowSetTests.class)
+@Category(RowSetTest.class)
 public class TestSchemaSmoothing extends SubOperatorTest {
 
   private ImplicitColumnOptions standardOptions(List<Path> files) {

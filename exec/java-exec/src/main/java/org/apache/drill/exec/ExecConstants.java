@@ -471,6 +471,9 @@ public final class ExecConstants {
   public static final OptionValidator PARQUET_COMPLEX_BATCH_NUM_RECORDS_VALIDATOR = new RangeLongValidator(PARQUET_COMPLEX_BATCH_NUM_RECORDS, 1, ValueVector.MAX_ROW_COUNT -1,
       new OptionDescription("Complex Parquet Reader maximum number of records per batch."));
 
+  public static final String ENABLE_V2_JSON_READER_KEY = "store.json.enable_v2_reader";
+  public static final BooleanValidator ENABLE_V2_JSON_READER_VALIDATOR = new BooleanValidator(ENABLE_V2_JSON_READER_KEY,
+      new OptionDescription("Enable the experimental \"version 2\" JSON reader."));
   public static final String JSON_ALL_TEXT_MODE = "store.json.all_text_mode";
   public static final BooleanValidator JSON_READER_ALL_TEXT_MODE_VALIDATOR = new BooleanValidator(JSON_ALL_TEXT_MODE,
       new OptionDescription("Drill reads all data from the JSON files as VARCHAR. Prevents schema change errors."));
