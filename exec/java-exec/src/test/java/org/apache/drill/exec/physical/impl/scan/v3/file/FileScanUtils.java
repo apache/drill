@@ -17,11 +17,11 @@
  */
 package org.apache.drill.exec.physical.impl.scan.v3.file;
 
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.rowSet.RowSetTestUtils;
+import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 
 public class FileScanUtils {
 
@@ -38,7 +38,10 @@ public class FileScanUtils {
   }
 
   public static List<SchemaPath> expandMetadata(int dirCount) {
-    List<String> selected = Arrays.asList(
+    // Use of Guava rather than Arrays.asList() because
+    // we need a mutable list so we an add the partition
+    // columns.
+    List<String> selected = Lists.newArrayList(
         FULLY_QUALIFIED_NAME_COL,
         FILE_PATH_COL,
         FILE_NAME_COL,

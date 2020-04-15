@@ -108,7 +108,6 @@ import org.slf4j.LoggerFactory;
  * CSV file with headers in which the header line is empty.</li>
  * </ul>
  */
-
 public class ScanOperatorExec implements OperatorExec {
 
   private enum State {
@@ -192,7 +191,6 @@ public class ScanOperatorExec implements OperatorExec {
     // Spin though readers looking for the first that has enough data
     // to provide a schema. Skips empty, missing or otherwise "null"
     // readers.
-
     nextAction(true);
     if (state != State.END) {
       return true;
@@ -201,7 +199,6 @@ public class ScanOperatorExec implements OperatorExec {
     // Reader count check done here because readers are passed as
     // an iterator, not list. We don't know the count until we've
     // seen EOF from the iterator.
-
     if (readerCount == 0) {
 
       // The scan operator cannot handle the case that no readers are
@@ -211,7 +208,6 @@ public class ScanOperatorExec implements OperatorExec {
       // This exception can be softened if the operator stack is enhanced
       // to handle "empty batches" in the most extreme case: no schema,
       // no data.
-
       throw UserException.executionError(
           new ExecutionSetupException("A scan batch must contain at least one reader."))
         .build(logger);
@@ -224,25 +220,24 @@ public class ScanOperatorExec implements OperatorExec {
     try {
       switch (state) {
 
-      case READER:
-      case START: // Occurs if no schema batch
-        // Read another batch from the list of row readers. Keeps opening,
-        // reading from, and closing readers as needed to locate a batch, or
-        // until all readers are exhausted. Terminates when a batch is read,
-        // or all readers are exhausted.
+        case READER:
+        case START: // Occurs if no schema batch
+          // Read another batch from the list of row readers. Keeps opening,
+          // reading from, and closing readers as needed to locate a batch, or
+          // until all readers are exhausted. Terminates when a batch is read,
+          // or all readers are exhausted.
+          nextAction(false);
+          return state != State.END;
 
-        nextAction(false);
-        return state != State.END;
+        case EMPTY:
+          state = State.END;
+          return false;
 
-      case EMPTY:
-        state = State.END;
-        return false;
+        case END:
+          return false;
 
-      case END:
-        return false;
-
-      default:
-        throw new IllegalStateException("Unexpected state: " + state);
+        default:
+          throw new IllegalStateException("Unexpected state: " + state);
       }
     } catch (final Throwable t) {
       state = State.FAILED;
@@ -254,7 +249,6 @@ public class ScanOperatorExec implements OperatorExec {
     for (;;) {
 
       // If have a reader, read a batch
-
       if (readerState != null) {
         boolean hasData;
         if (readSchema) {
@@ -269,7 +263,6 @@ public class ScanOperatorExec implements OperatorExec {
       }
 
       // Another reader available?
-
       if (! nextReader()) {
         finalizeResults();
         return;
@@ -277,8 +270,7 @@ public class ScanOperatorExec implements OperatorExec {
       state = State.READER;
 
       // Is the reader usable?
-
-      if (! readerState.open()) {
+      if (!readerState.open()) {
         closeReader();
       }
     }
@@ -292,7 +284,6 @@ public class ScanOperatorExec implements OperatorExec {
    * iterator protocol, this means no return of OK_NEW_SCHEMA, just
    * an immediate return of NONE.
    */
-
   private void finalizeResults() {
     if (allowEmptyResult &&
         containerAccessor.batchCount() == 0 &&
@@ -302,10 +293,12 @@ public class ScanOperatorExec implements OperatorExec {
       // one had a schema. Any zero-sized batch produced by a reader
       // was cleared when closing the reader. Recreate a valid empty
       // batch here to return downstream.
-
       containerAccessor.container().setEmpty();
       state = State.EMPTY;
     } else {
+      if (containerAccessor.container() != null) {
+        containerAccessor.container().setRecordCount(0);
+      }
       state = State.END;
     }
   }
@@ -316,11 +309,9 @@ public class ScanOperatorExec implements OperatorExec {
    * @return true if another reader is active, false if no more
    * readers are available
    */
-
   private boolean nextReader() {
 
     // Get the next reader, if any.
-
     final RowBatchReader reader = factory.nextReader();
     if (reader == null) {
       return false;
@@ -328,7 +319,6 @@ public class ScanOperatorExec implements OperatorExec {
     readerCount++;
 
     // Open the reader. This can fail.
-
     readerState = new ReaderState(this, reader);
     return true;
   }
@@ -336,7 +326,6 @@ public class ScanOperatorExec implements OperatorExec {
   /**
    * Close the current reader.
    */
-
   private void closeReader() {
     try {
       readerState.close();
@@ -355,7 +344,6 @@ public class ScanOperatorExec implements OperatorExec {
       state = State.FAILED;
 
       // Close early.
-
       closeAll();
     }
   }
@@ -373,11 +361,9 @@ public class ScanOperatorExec implements OperatorExec {
    * twice: once when canceling, once when closing. Designed to be
    * safe on the second call.
    */
-
   private void closeAll() {
 
     // May throw an unchecked exception
-
     try {
       if (readerState != null) {
         closeReader();

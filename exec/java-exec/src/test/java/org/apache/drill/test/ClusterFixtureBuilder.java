@@ -102,7 +102,6 @@ public class ClusterFixtureBuilder {
     // TypeSafe gets unhappy about a leading slash, but other functions
     // require it. Silently discard the leading slash if given to
     // preserve the test writer's sanity.
-
     configBuilder.resource(ClusterFixture.trimSlash(configResource));
     return this;
   }

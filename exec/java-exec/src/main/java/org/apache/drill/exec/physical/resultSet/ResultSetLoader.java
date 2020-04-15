@@ -188,6 +188,15 @@ public interface ResultSetLoader {
   boolean isProjectionEmpty();
 
   /**
+   * Returns the active output schema; the schema used by the writers,
+   * minus any unprojected columns. This is usually the same as the
+   * output schema, but may differ if the writer adds columns during
+   * an overflow row. Unlike the output schema, this schema is defined
+   * as long as the loader is open.
+   */
+  TupleMetadata activeSchema();
+
+  /**
    * Returns the output container which holds (or will hold) batches
    * from this loader. For use when the container is needed prior
    * to "harvesting" a batch. The data is not valid until
@@ -226,7 +235,7 @@ public interface ResultSetLoader {
    * @return the extended schema of the harvested batch which includes
    * any allocation hints used when creating the batch
    */
-  TupleMetadata harvestSchema();
+  TupleMetadata outputSchema();
 
   /**
    * Peek at the internal vector cache for readers that need a bit of help

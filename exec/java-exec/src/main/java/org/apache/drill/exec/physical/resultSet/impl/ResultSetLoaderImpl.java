@@ -712,8 +712,13 @@ public class ResultSetLoaderImpl implements ResultSetLoader, LoaderInternals {
   }
 
   @Override
-  public TupleMetadata harvestSchema() {
+  public TupleMetadata outputSchema() {
     return rootState.outputSchema();
+  }
+
+  @Override
+  public TupleMetadata activeSchema() {
+    return rootState.schema();
   }
 
   @Override

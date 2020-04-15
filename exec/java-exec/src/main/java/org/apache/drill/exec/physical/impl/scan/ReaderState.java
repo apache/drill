@@ -226,7 +226,7 @@ class ReaderState {
       // Handle this by immediately moving to EOF. The scanner will quietly
       // pass over this reader and move onto the next, if any.
 
-      if (! reader.open()) {
+      if (!reader.open()) {
         state = State.EOF;
         return false;
       }
@@ -308,20 +308,17 @@ class ReaderState {
    * to read the schema.
    * @throws UserException for all errors
    */
-
   protected boolean buildSchema() {
 
     if (reader.defineSchema()) {
 
       // Bind the output container to the output of the scan operator.
       // This returns an empty batch with the schema filled in.
-
       scanOp.containerAccessor.setSchema(reader.output());
       return true;
     }
 
     // Late schema. Read a batch.
-
     if (! next()) {
       return false;
     }
@@ -333,7 +330,6 @@ class ReaderState {
     // The reader returned actual data. Just forward the schema
     // in the operator's container, saving the data for next time
     // in a dummy container.
-
     assert lookahead == null;
     lookahead = new VectorContainer(scanOp.context.getAllocator(), scanOp.containerAccessor.schema());
     lookahead.setRecordCount(0);
@@ -350,7 +346,6 @@ class ReaderState {
    * false if EOF was hit
    * @throws UserException for all reader errors
    */
-
   protected boolean next() {
     switch (state) {
     case LOOK_AHEAD:
@@ -404,11 +399,9 @@ class ReaderState {
    * @return true if a batch was read, false if the reader hit EOF
    * @throws UserException for all reader errors
    */
-
   private boolean readBatch() {
 
     // Try to read a batch. This may fail. If so, clean up the mess.
-
     boolean more;
     try {
       more = reader.next();
@@ -419,7 +412,6 @@ class ReaderState {
       // Occurs when a specific data value to be converted to another type
       // is not valid for that conversion. For example, providing the value
       // "foo" to a string-to-int conversion.
-
       throw UserException.unsupportedError(e)
         .message("Invalid data value for automatic type conversion")
         .addContext("Read failed for reader", reader.name())
@@ -431,25 +423,27 @@ class ReaderState {
     }
 
     VectorContainer output = reader.output();
-    if (! more) {
+    if (!more) {
       state = State.EOF;
+      if (output == null) {
+        return false;
+      }
 
       // The reader can indicate EOF (they can't return any more rows)
       // while returning a non-empty final batch. This is the typical
       // case with files: the reader read some records and then hit
       // EOF. Avoids the need for the reader to keep an EOF state.
-
       if (output.getRecordCount() == 0) {
 
         // No results, possibly from the first batch.
         // If the scan has no schema, but this (possibly empty) reader
         // does have a schema, then pass along this empty batch
         // as a candidate empty result set of the entire scan.
-
         if (scanOp.containerAccessor.schemaVersion() == 0 &&
             reader.schemaVersion() > 0) {
           scanOp.containerAccessor.setSchema(output);
         }
+        output.zeroVectors();
         return false;
       }
 
@@ -462,7 +456,6 @@ class ReaderState {
     // reader. (This is not a hard and fast rule, only a definition:
     // a reader that starts with a schema, but later changes it, has
     // morphed from an early- to late-schema reader.)
-
     scanOp.containerAccessor.addBatch(output);
     return true;
   }
@@ -471,14 +464,12 @@ class ReaderState {
    * Close the current reader. The hard part is handling the possible
    * error conditions, and cleaning up despite those errors.
    */
-
   void close() {
     if (state == State.CLOSED) {
       return;
     }
 
     // Close the reader. This can fail.
-
     try {
       reader.close();
     } catch (UserException e) {
@@ -490,7 +481,6 @@ class ReaderState {
     } finally {
 
       // Will not throw exceptions
-
       if (lookahead != null) {
         lookahead.clear();
         lookahead = null;
