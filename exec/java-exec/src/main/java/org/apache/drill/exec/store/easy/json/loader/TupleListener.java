@@ -17,11 +17,11 @@
  */
 package org.apache.drill.exec.store.easy.json.loader;
 
+import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.MetadataUtils;
-import org.apache.drill.exec.record.metadata.RepeatedListBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.easy.json.loader.AbstractArrayListener.ObjectArrayListener;
 import org.apache.drill.exec.store.easy.json.loader.AbstractArrayListener.ScalarArrayListener;
@@ -36,6 +36,7 @@ import org.apache.drill.exec.store.easy.json.parser.ValueListener;
 import org.apache.drill.exec.vector.accessor.ArrayWriter;
 import org.apache.drill.exec.vector.accessor.ObjectWriter;
 import org.apache.drill.exec.vector.accessor.TupleWriter;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 /**
  * Accepts { name : value ... }
@@ -164,11 +165,11 @@ public class TupleListener implements ObjectListener {
    */
   @Override
   public ValueListener addField(String key, ValueDef valueDef) {
-    ColumnMetadata colSchema = providedColumn(key);
-    if (colSchema != null) {
-      return listenerFor(colSchema);
+    ColumnMetadata providedCol = providedColumn(key);
+    if (providedCol != null) {
+      return listenerForSchema(providedCol);
     } else {
-      return listenerFor(key, valueDef);
+      return listenerForValue(key, valueDef);
     }
   }
 
@@ -177,101 +178,173 @@ public class TupleListener implements ObjectListener {
   }
 
   /**
-   * Build a column and its listener based on a provided schema.
+   * Build a column and its listener based a provided schema.
+   * The user is responsible to ensure that the provided schema
+   * accurately reflects the structure of the JSON being parsed.
    */
-  private ValueListener listenerFor(ColumnMetadata colSchema) {
-    switch (colSchema.structureType()) {
-      case PRIMITIVE:
-        if (colSchema.isArray()) {
+  private ValueListener listenerForSchema(ColumnMetadata providedCol) {
+    switch (providedCol.structureType()) {
+
+      case PRIMITIVE: {
+        ColumnMetadata colSchema = providedCol.copy();
+        if (providedCol.isArray()) {
           return scalarArrayListenerFor(colSchema);
         } else {
           return scalarListenerFor(colSchema);
         }
-      case TUPLE:
-        if (colSchema.isArray()) {
-          return objectArrayListenerFor(colSchema);
+      }
+
+      case TUPLE: {
+        // Propagate the provided map schema into the object
+        // listener as a provided tuple schema.
+        ColumnMetadata colSchema = providedCol.cloneEmpty();
+        TupleMetadata providedSchema = providedCol.tupleSchema();
+        if (providedCol.isArray()) {
+          return objectArrayListenerFor(colSchema, providedSchema);
         } else {
-          return objectListenerFor(colSchema);
+          return objectListenerFor(colSchema, providedSchema);
         }
-      case VARIANT:
-        if (colSchema.isArray()) {
+      }
+
+      case VARIANT: {
+        // A variant can contain multiple types. The schema does not
+        // declare the types; rather they are discovered by the reader.
+        // That is, there is no VARIANT<INT, DOUBLE>, there is just VARIANT.
+        ColumnMetadata colSchema = providedCol.cloneEmpty();
+        if (providedCol.isArray()) {
           return variantArrayListenerFor(colSchema);
         } else {
           return variantListenerFor(colSchema);
         }
+      }
+
       case MULTI_ARRAY:
-        return repeatedListListenerFor(colSchema);
+        return multiDimArrayListenerForSchema(providedCol);
+
       default:
+        throw loader.unsupportedType(providedCol);
     }
-    throw loader.unsupportedType(colSchema);
   }
 
   /**
    * Build a column and its listener based on a look-ahead hint.
    */
-  protected ValueListener listenerFor(String key, ValueDef valueDef) {
+  protected ValueListener listenerForValue(String key, ValueDef valueDef) {
     if (!valueDef.isArray()) {
       if (valueDef.type().isUnknown()) {
         return unknownListenerFor(key);
       } else if (valueDef.type().isObject()) {
-        return objectListenerFor(key, null);
+        return objectListenerForValue(key);
       } else {
-        return scalarListenerFor(key, valueDef.type());
+        return scalarListenerForValue(key, valueDef.type());
       }
     } else if (valueDef.dimensions() == 1) {
       if (valueDef.type().isUnknown()) {
         return unknownArrayListenerFor(key, valueDef);
       } else if (valueDef.type().isObject()) {
-        return objectArrayListenerFor(key, null);
+        return objectArrayListenerForValue(key);
       } else {
-        return arrayListenerFor(key, valueDef.type());
+        return scalarArrayListenerForValue(key, valueDef.type());
       }
-    } else if (valueDef.dimensions() == 2) {
+    } else {
       if (valueDef.type().isUnknown()) {
         return unknownArrayListenerFor(key, valueDef);
       } else if (valueDef.type().isObject()) {
-        return repeatedListOfObjectsListenerFor(key, null);
+        return multiDimObjectArrayListenerForValue(key, valueDef);
       } else {
-        return repeatedListListenerFor(key, valueDef);
+        return multiDimScalarArrayListenerForValue(key, valueDef);
       }
-    } else {
-      throw loader.unsupportedArrayException(key, valueDef.dimensions());
     }
   }
 
-  public ScalarListener scalarListenerFor(String key, JsonType jsonType) {
-    ColumnMetadata colSchema = MetadataUtils.newScalar(key,
-        Types.optional(scalarTypeFor(key, jsonType)));
-    return scalarListenerFor(colSchema);
+  /**
+   * Create a scalar column and listener given the definition of a JSON
+   * scalar value.
+   */
+  public ScalarListener scalarListenerForValue(String key, JsonType jsonType) {
+    return scalarListenerFor(MetadataUtils.newScalar(key,
+        Types.optional(scalarTypeFor(key, jsonType))));
   }
 
-  private ObjectWriter addFieldWriter(ColumnMetadata colSchema) {
-    int index = tupleWriter.addColumn(colSchema);
-    return tupleWriter.column(index);
-  }
-
+  /**
+   * Create a scalar column and listener given the column schema.
+   */
   public ScalarListener scalarListenerFor(ColumnMetadata colSchema) {
     return ScalarListener.listenerFor(loader, addFieldWriter(colSchema));
   }
 
-  public ObjectValueListener objectListenerFor(ColumnMetadata providedCol) {
-    return objectListenerFor(providedCol.name(), providedCol.tupleSchema());
+  /**
+   * Create a scalar array column and listener given the definition of a JSON
+   * array of scalars.
+   */
+  public ArrayValueListener scalarArrayListenerForValue(String key, JsonType jsonType) {
+    return scalarArrayListenerFor(MetadataUtils.newScalar(key,
+        Types.repeated(scalarTypeFor(key, jsonType))));
   }
 
-  public ObjectValueListener objectListenerFor(String key, TupleMetadata providedSchema) {
+  /**
+   * Create a multi- (2+) dimensional scalar array from a JSON value description.
+   */
+  private ValueListener multiDimScalarArrayListenerForValue(String key, ValueDef valueDef) {
+    return multiDimScalarArrayListenerFor(
+        repeatedListSchemaFor(key, valueDef.dimensions(),
+            MetadataUtils.newScalar(key, scalarTypeFor(key, valueDef.type()), DataMode.REPEATED)),
+        valueDef.dimensions());
+  }
+
+  /**
+   * Create a multi- (2+) dimensional scalar array from a column schema and dimension
+   * count hint.
+   */
+  private ValueListener multiDimScalarArrayListenerFor(ColumnMetadata colSchema, int dims) {
+    return RepeatedListValueListener.multiDimScalarArrayFor(loader,
+        addFieldWriter(colSchema), dims);
+  }
+
+  /**
+   * Create a scalar array column and array listener for the given column
+   * schema.
+   */
+  public ArrayValueListener scalarArrayListenerFor(ColumnMetadata colSchema) {
+    return new ScalarArrayValueListener(loader, colSchema,
+        new ScalarArrayListener(loader, colSchema,
+            scalarListenerFor(colSchema)));
+  }
+
+  /**
+   * Create a map column and its associated object value listener for the
+   * a JSON object value given the value's key.
+   */
+  public ObjectValueListener objectListenerForValue(String key) {
     ColumnMetadata colSchema = MetadataUtils.newMap(key);
+    return objectListenerFor(colSchema, colSchema.tupleSchema());
+  }
+
+  /**
+   * Create a map column and its associated object value listener for the
+   * given key and optional provided schema.
+   */
+  public ObjectValueListener objectListenerFor(ColumnMetadata colSchema, TupleMetadata providedSchema) {
     return new ObjectValueListener(loader, colSchema,
         new TupleListener(loader, addFieldWriter(colSchema).tuple(),
             providedSchema));
   }
 
-  public ArrayValueListener objectArrayListenerFor(ColumnMetadata providedCol) {
-    return objectArrayListenerFor(providedCol.name(), providedCol.tupleSchema());
+  /**
+   * Create a map array column and its associated object array listener
+   * for the given key.
+   */
+  public ArrayValueListener objectArrayListenerForValue(String key) {
+    ColumnMetadata colSchema = MetadataUtils.newMapArray(key);
+    return objectArrayListenerFor(colSchema, colSchema.tupleSchema());
   }
 
+  /**
+   * Create a map array column and its associated object array listener
+   * for the given column schema and optional provided schema.
+   */
   public ArrayValueListener objectArrayListenerFor(
-      String key, TupleMetadata providedSchema) {
-    ColumnMetadata colSchema = MetadataUtils.newMapArray(key);
+      ColumnMetadata colSchema, TupleMetadata providedSchema) {
     ArrayWriter arrayWriter = addFieldWriter(colSchema).array();
     return new ObjectArrayValueListener(loader, colSchema,
         new ObjectArrayListener(loader, arrayWriter,
@@ -279,10 +352,125 @@ public class TupleListener implements ObjectListener {
                 new TupleListener(loader, arrayWriter.tuple(), providedSchema))));
   }
 
-  public ArrayValueListener arrayListenerFor(String key, JsonType jsonType) {
-    ColumnMetadata colSchema = MetadataUtils.newScalar(key,
-        Types.repeated(scalarTypeFor(key, jsonType)));
-    return scalarArrayListenerFor(colSchema);
+  /**
+   * Create a RepeatedList which contains (empty) Map objects using the provided
+   * schema. That is, create a multi-dimensional array of maps.
+   * The map fields are created on the fly, optionally using the provided schema.
+   */
+  private ValueListener multiDimObjectArrayListenerForValue(String key, ValueDef valueDef) {
+    return multiDimObjectArrayListenerFor(
+        repeatedListSchemaFor(key, valueDef.dimensions(),
+            MetadataUtils.newMapArray(key)),
+        valueDef.dimensions(), null);
+  }
+
+  /**
+   * Create a multi- (2+) dimensional scalar array from a column schema, dimension
+   * count hint, and optional provided schema.
+   */
+  private ValueListener multiDimObjectArrayListenerFor(ColumnMetadata colSchema,
+      int dims, TupleMetadata providedSchema) {
+    return RepeatedListValueListener.multiDimObjectArrayFor(loader,
+        addFieldWriter(colSchema), dims, providedSchema);
+  }
+
+  /**
+   * Create a variant (UNION) column and its associated listener given
+   * a column schema.
+   */
+  private ValueListener variantListenerFor(ColumnMetadata colSchema) {
+    return new VariantListener(loader, addFieldWriter(colSchema).variant());
+  }
+
+  /**
+   * Create a variant array (LIST) column and its associated listener given
+   * a column schema.
+   */
+  private ValueListener variantArrayListenerFor(ColumnMetadata colSchema) {
+    return new ListListener(loader, addFieldWriter(colSchema));
+  }
+
+  /**
+   * Create a RepeatedList which contains Unions. (Actually, this is an
+   * array of List objects internally.) The variant is variable, it makes no
+   * sense to specify a schema for the variant. Also, omitting the schema
+   * save a large amount of complexity that will likely never be needed.
+   */
+  @SuppressWarnings("unused")
+  private ValueListener repeatedListOfVariantListenerFor(String key, ValueDef valueDef) {
+    return multiDimVariantArrayListenerFor(
+        MetadataUtils.newVariant(key, DataMode.REPEATED),
+        valueDef.dimensions());
+  }
+
+  /**
+   * Create a multi- (2+) dimensional variant array from a column schema and dimension
+   * count hint. This is actually an (n-1) dimensional array of lists, where a LISt
+   * is a repeated UNION.
+   */
+  private ValueListener multiDimVariantArrayListenerFor(ColumnMetadata colSchema, int dims) {
+    return RepeatedListValueListener.repeatedVariantListFor(loader,
+        addFieldWriter(colSchema));
+  }
+
+  /**
+   * Create a repeated list column and its multiple levels of inner structure
+   * from a provided schema. Repeated lists can nest to any number of levels to
+   * provide any number of dimensions. In general, if an array is <i>n</i>-dimensional,
+   * then there are <i>n</i>-1 repeated lists with some array type as the
+   * innermost dimension.
+   */
+  private ValueListener multiDimArrayListenerForSchema(ColumnMetadata providedSchema) {
+    // Parse the stack of repeated lists to count the "outer" dimensions and
+    // to locate the innermost array (the "list" which is "repeated").
+    int dims = 1; // For inner array
+    ColumnMetadata elementSchema = providedSchema;
+    while (MetadataUtils.isRepeatedList(elementSchema)) {
+      dims++;
+      elementSchema = elementSchema.childSchema();
+      Preconditions.checkArgument(elementSchema != null);
+    }
+
+    ColumnMetadata colSchema = repeatedListSchemaFor(providedSchema.name(), dims,
+        elementSchema.cloneEmpty());
+    switch (elementSchema.structureType()) {
+
+      case PRIMITIVE:
+        return multiDimScalarArrayListenerFor(colSchema, dims);
+
+      case TUPLE:
+        return multiDimObjectArrayListenerFor(colSchema,
+            dims, elementSchema.tupleSchema());
+
+      case VARIANT:
+        return multiDimVariantArrayListenerFor(colSchema, dims);
+
+      default:
+        throw loader.unsupportedType(providedSchema);
+    }
+  }
+
+  /**
+   * Create a listener when we don't have type information. For the case
+   * {@code null} appears before other values.
+   */
+  private ValueListener unknownListenerFor(String key) {
+    return new UnknownFieldListener(this, key);
+  }
+
+  /**
+   * Create a listener when we don't have type information. For the case
+   * {@code []} appears before other values.
+   */
+  private ValueListener unknownArrayListenerFor(String key, ValueDef valueDef) {
+    UnknownFieldListener fieldListener = new UnknownFieldListener(this, key);
+    fieldListener.array(valueDef);
+    return fieldListener;
+  }
+
+  private ObjectWriter addFieldWriter(ColumnMetadata colSchema) {
+    int index = tupleWriter.addColumn(colSchema);
+    return tupleWriter.column(index);
   }
 
   /**
@@ -321,85 +509,17 @@ public class TupleListener implements ObjectListener {
     }
   }
 
-  public ArrayValueListener scalarArrayListenerFor(ColumnMetadata colSchema) {
-    return new ScalarArrayValueListener(loader, colSchema,
-        new ScalarArrayListener(loader, colSchema,
-            scalarListenerFor(colSchema)));
-  }
-
   /**
-   * Create a listener when we don't have type information. For the case
-   * {@code null} appears before other values.
+   * Build up a repeated list column definition given a specification of the
+   * number of dimensions and the JSON type. Creation of the element type is
+   * via a closure that builds the needed schema.
    */
-  private ValueListener unknownListenerFor(String key) {
-    return new UnknownFieldListener(this, key);
-  }
-
-  /**
-   * Create a listener when we don't have type information. For the case
-   * {@code []} appears before other values.
-   */
-  private ValueListener unknownArrayListenerFor(String key, ValueDef valueDef) {
-    UnknownFieldListener fieldListener = new UnknownFieldListener(this, key);
-    fieldListener.array(valueDef);
-    return fieldListener;
-  }
-
-  private ValueListener variantListenerFor(ColumnMetadata colSchema) {
-    return new VariantListener(loader, addFieldWriter(colSchema).variant());
-  }
-
-  private ValueListener variantArrayListenerFor(ColumnMetadata colSchema) {
-    return new ListListener(loader, addFieldWriter(colSchema));
-  }
-
-  private ValueListener repeatedListListenerFor(String key, ValueDef valueDef) {
-    ColumnMetadata colSchema = new RepeatedListBuilder(key)
-        .addArray(scalarTypeFor(key, valueDef.type()))
-        .buildColumn();
-    return repeatedListListenerFor(colSchema);
-  }
-
-  /**
-   * Create a RepeatedList which contains (empty) Map objects using the provided
-   * schema. The map fields are created on the fly from the provided schema.
-   */
-  private ValueListener repeatedListOfObjectsListenerFor(String key, ColumnMetadata providedCol) {
-    ColumnMetadata colSchema = new RepeatedListBuilder(key)
-        .addMapArray()
-          .resumeList()
-        .buildColumn();
-    TupleMetadata providedSchema = providedCol == null ? null
-        : providedCol.childSchema().tupleSchema();
-    return RepeatedListValueListener.repeatedObjectListFor(loader,
-        addFieldWriter(colSchema), providedSchema);
-  }
-
-  /**
-   * Create a RepeatedList which contains Unions. (Actually, this is an
-   * array of List objects internally.) The variant is variable, it makes no
-   * sense to specify a schema for the variant. Also, omitting the schema
-   * save a large amount of complexity that will likely never be needed.
-   */
-  private ValueListener repeatedListOfVariantListenerFor(String key) {
-    ColumnMetadata colSchema = new RepeatedListBuilder(key)
-        .addList()
-          .resumeList()
-        .buildColumn();
-    return RepeatedListValueListener.repeatedVariantListFor(loader,
-        addFieldWriter(colSchema));
-  }
-
-  private ValueListener repeatedListListenerFor(ColumnMetadata colSchema) {
-    ColumnMetadata childSchema = colSchema.childSchema();
-    if (childSchema != null) {
-      if (childSchema.isMap()) {
-        return repeatedListOfObjectsListenerFor(colSchema.name(), colSchema);
-      }
-      if (childSchema.isVariant()) {
-        return repeatedListOfVariantListenerFor(colSchema.name());
-      }
+  private ColumnMetadata repeatedListSchemaFor(String key, int dims,
+      ColumnMetadata innerArray) {
+    ColumnMetadata prev = innerArray;
+    for (int i = 1; i < dims; i++) {
+      prev = MetadataUtils.newRepeatedList(key, prev);
     }
-    return RepeatedListValueListener.repeatedListFor(loader, addFieldWriter(colSchema));
+    return prev;
   }
 }

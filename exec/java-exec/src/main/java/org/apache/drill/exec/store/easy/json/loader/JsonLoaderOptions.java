@@ -29,6 +29,7 @@ import org.apache.drill.exec.store.easy.json.parser.JsonStructureOptions;
 public class JsonLoaderOptions extends JsonStructureOptions {
 
   public boolean readNumbersAsDouble;
+  public boolean unionEnabled;
 
   /**
    * Drill prior to version 1.18 would read a null string
@@ -49,5 +50,6 @@ public class JsonLoaderOptions extends JsonStructureOptions {
   public JsonLoaderOptions(OptionSet options) {
     super(options);
     this.readNumbersAsDouble = options.getBoolean(ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE);
+    this.unionEnabled = options.getBoolean(ExecConstants.ENABLE_UNION_TYPE_KEY);
   }
 }

@@ -26,6 +26,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.RowSet;
@@ -33,6 +34,7 @@ import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Test scalar arrays. Without a schema, the first array token
@@ -44,6 +46,7 @@ import org.junit.Test;
  * Verifies that null array elements are converted to a default
  * value for the type (false, 0 or empty string.)
  */
+@Category(RowSetTests.class)
 public class TestScalarArrays extends BaseJsonLoaderTest {
 
   @Test

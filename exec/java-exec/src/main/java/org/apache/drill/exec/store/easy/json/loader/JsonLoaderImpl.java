@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.CustomErrorContext;
+import org.apache.drill.common.exceptions.EmptyErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
@@ -183,6 +184,13 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
     }
 
     public JsonLoader build() {
+      // Defaults, primarily for testing.
+      if (options == null) {
+        options = new JsonLoaderOptions();
+      }
+      if (errorContext == null) {
+        errorContext  = EmptyErrorContext.INSTANCE;
+      }
       return new JsonLoaderImpl(this);
     }
   }
@@ -313,6 +321,7 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
   public RuntimeException syntaxError(JsonParseException e) {
     throw buildError(
         UserException.dataReadError(e)
+          .message("Error parsing JSON - %s", e.getMessage())
           .addContext("Syntax error"));
   }
 
@@ -376,14 +385,6 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
           .message("JSON reader does not support the JSON data type")
           .addContext("Field", key)
           .addContext("JSON type", jsonType.toString()));
-  }
-
-  public UserException unsupportedArrayException(String key, int dims) {
-    return buildError(
-        UserException.validationError()
-          .message("JSON reader does not arrays deeper than two levels")
-          .addContext("Field", key)
-          .addContext("Array nesting", dims));
   }
 
   @Override
