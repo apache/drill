@@ -105,7 +105,7 @@ public class UnknownFieldListener extends AbstractValueListener implements NullT
 
   @Override
   public ObjectListener object() {
-    return resolveScalar(JsonType.OBJECT).object();
+    return resolveTo(parentTuple.objectListenerForValue(key)).object();
   }
 
   /**
@@ -115,7 +115,7 @@ public class UnknownFieldListener extends AbstractValueListener implements NullT
    */
   protected ValueListener resolveScalar(JsonType type) {
     if (unknownArray == null) {
-      return resolveTo(parentTuple.scalarListenerFor(key, type));
+      return resolveTo(parentTuple.scalarListenerForValue(key, type));
     } else {
 
       // Saw {a: []}, {a: 10}. Since we infer that 10 is a
@@ -154,11 +154,11 @@ public class UnknownFieldListener extends AbstractValueListener implements NullT
     if (unknownArray == null) {
       logger.warn("Ambiguous type! JSON field {}" +
           " contains all nulls. Assuming VARCHAR.", key);
-      resolveTo(parentTuple.scalarListenerFor(key, JsonType.STRING));
+      resolveTo(parentTuple.scalarListenerForValue(key, JsonType.STRING));
     } else {
       logger.warn("Ambiguous type! JSON array field {}" +
           " contains all empty arrays. Assuming repeated VARCHAR.", key);
-      resolveTo(parentTuple.arrayListenerFor(key, JsonType.STRING));
+      resolveTo(parentTuple.scalarArrayListenerForValue(key, JsonType.STRING));
     }
   }
 
@@ -168,7 +168,7 @@ public class UnknownFieldListener extends AbstractValueListener implements NullT
           " starts with null element. Assuming repeated VARCHAR.", key);
       valueDef = new ValueDef(JsonType.STRING, valueDef.dimensions());
     }
-    return resolveTo(parentTuple.listenerFor(key, valueDef));
+    return resolveTo(parentTuple.listenerForValue(key, valueDef));
   }
 
   /**

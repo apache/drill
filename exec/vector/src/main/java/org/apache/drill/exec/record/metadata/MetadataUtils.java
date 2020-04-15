@@ -304,4 +304,9 @@ public class MetadataUtils {
     }
     return false;
   }
+
+  public static boolean isRepeatedList(ColumnMetadata col) {
+    return col.type() == MinorType.LIST &&
+           col.mode() == DataMode.REPEATED;
+  }
 }

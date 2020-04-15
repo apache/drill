@@ -36,28 +36,33 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
- * Parser for JSON that converts a stream of tokens from the Jackson JSON
- * parser into a set of events on listeners structured to follow the
- * data structure of the incoming data. JSON can assume many forms. This
- * class assumes that the data is in a tree structure that corresponds
- * to the Drill row structure: a series of object with (mostly) the
- * same schema. Members of the top-level object can be Drill types:
- * scalars, arrays, nested objects (Drill "MAP"s), and so on.
+ * Parser for a subset of the <a href="http://jsonlines.org/">jsonlines</a>
+ * format. In particular, supports line-delimited JSON objects, or a single
+ * array which holds a list of JSON objects.
  * <p>
- * The structure parser follows the structure of the incoming data,
- * whatever it might be. This class imposes no semantic rules on that
- * data, it just "calls 'em as it sees 'em" as they say. The listeners
- * are responsible for deciding if the data data makes sense, and if
- * so, how it should be handled.
+ * Alternatively, a message parser can provide a path to an array of JSON
+ * objects within a messages such as a REST response.
  * <p>
- * The root listener will receive an event to fields in the top-level
- * object as those fields first appear. Each field is a value object
- * and can correspond to a scalar, array, another object, etc. The
- * type of the value is declared when known, but sometimes it is not
- * known, such as if the value is {@code null}. And, of course, according
- * to JSON, the value is free to change from one row to the next. The
- * listener decides it if wants to handle such "schema change", and if
- * so, how.
+ * Implemented as a parser which converts a stream of tokens from the Jackson
+ * JSON parser into a set of events on listeners structured to follow the data
+ * structure of the incoming data. JSON can assume many forms. This class
+ * assumes that the data is in a tree structure that corresponds to the Drill
+ * row structure: a series of object with (mostly) the same schema. Members of
+ * the top-level object can be Drill types: scalars, arrays, nested objects
+ * (Drill "MAP"s), and so on.
+ * <p>
+ * The structure parser follows the structure of the incoming data, whatever it
+ * might be. This class imposes no semantic rules on that data, it just "calls
+ * 'em as it sees 'em" as they say. The listeners are responsible for deciding
+ * if the data data makes sense, and if so, how it should be handled.
+ * <p>
+ * The root listener will receive an event to fields in the top-level object as
+ * those fields first appear. Each field is a value object and can correspond to
+ * a scalar, array, another object, etc. The type of the value is declared when
+ * known, but sometimes it is not known, such as if the value is {@code null}.
+ * And, of course, according to JSON, the value is free to change from one row
+ * to the next. The listener decides it if wants to handle such "schema change",
+ * and if so, how.
  */
 public class JsonStructureParser {
   protected static final Logger logger = LoggerFactory.getLogger(JsonStructureParser.class);

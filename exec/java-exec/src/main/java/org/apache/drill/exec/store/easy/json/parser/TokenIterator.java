@@ -128,6 +128,8 @@ public class TokenIterator {
   public String textValue() {
     try {
       return parser.getText();
+    } catch (JsonParseException e) {
+      throw errorFactory.syntaxError(e);
     } catch (IOException e) {
       throw errorFactory.ioException(e);
     }
@@ -136,6 +138,8 @@ public class TokenIterator {
   public long longValue() {
     try {
       return parser.getLongValue();
+    } catch (JsonParseException e) {
+      throw errorFactory.syntaxError(e);
     } catch (IOException e) {
       throw errorFactory.ioException(e);
     } catch (UnsupportedConversionError e) {
@@ -146,6 +150,8 @@ public class TokenIterator {
   public String stringValue() {
     try {
       return parser.getValueAsString();
+    } catch (JsonParseException e) {
+      throw errorFactory.syntaxError(e);
     } catch (IOException e) {
       throw errorFactory.ioException(e);
     } catch (UnsupportedConversionError e) {
@@ -156,6 +162,8 @@ public class TokenIterator {
   public double doubleValue() {
     try {
       return parser.getValueAsDouble();
+    } catch (JsonParseException e) {
+      throw errorFactory.syntaxError(e);
     } catch (IOException e) {
       throw errorFactory.ioException(e);
     } catch (UnsupportedConversionError e) {

@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.store.easy.json.loader;
 
+import java.util.function.Function;
+
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.easy.json.loader.AbstractArrayListener.ObjectArrayListener;
@@ -48,44 +50,65 @@ public class RepeatedListValueListener extends AbstractValueListener {
 
   private RepeatedListValueListener(JsonLoaderImpl loader, ObjectWriter writer,
       ValueListener elementListener) {
+    this(loader,  writer,
+        new RepeatedArrayListener(loader, writer.schema(),
+            writer.array(), elementListener));
+  }
+
+  private RepeatedListValueListener(JsonLoaderImpl loader, ObjectWriter writer,
+      RepeatedArrayListener outerArrayListener) {
     super(loader);
     this.repeatedListWriter = writer;
-    this.outerArrayListener = new RepeatedArrayListener(loader, writer.schema(),
-        writer.array(), elementListener);
+    this.outerArrayListener = outerArrayListener;
   }
 
   /**
    * Create a repeated list listener for a scalar value.
    */
-  public static ValueListener repeatedListFor(JsonLoaderImpl loader, ObjectWriter writer) {
-    ColumnMetadata elementSchema = writer.schema().childSchema();
-     return wrapInnerArray(loader, writer,
-        new ScalarArrayListener(loader, elementSchema,
-            ScalarListener.listenerFor(loader, writer.array().entry())));
+  public static ValueListener multiDimScalarArrayFor(JsonLoaderImpl loader, ObjectWriter writer, int dims) {
+    return buildOuterArrays(loader, writer, dims,
+        innerWriter ->
+          new ScalarArrayListener(loader, innerWriter.schema(),
+              ScalarListener.listenerFor(loader, innerWriter))
+        );
   }
 
   /**
    * Create a repeated list listener for a Map.
    */
-  public static ValueListener repeatedObjectListFor(JsonLoaderImpl loader,
-      ObjectWriter writer, TupleMetadata providedSchema) {
-    ArrayWriter outerArrayWriter = writer.array();
-    ArrayWriter innerArrayWriter = outerArrayWriter.array();
-    return wrapInnerArray(loader, writer,
-        new ObjectArrayListener(loader, innerArrayWriter,
-            new ObjectValueListener(loader, outerArrayWriter.entry().schema(),
-                new TupleListener(loader, innerArrayWriter.tuple(), providedSchema))));
+  public static ValueListener multiDimObjectArrayFor(JsonLoaderImpl loader,
+      ObjectWriter writer, int dims, TupleMetadata providedSchema) {
+    return buildOuterArrays(loader, writer, dims,
+        innerWriter ->
+          new ObjectArrayListener(loader, innerWriter.array(),
+              new ObjectValueListener(loader, innerWriter.array().entry().schema(),
+                  new TupleListener(loader, innerWriter.array().tuple(), providedSchema))));
   }
 
   /**
-   * Given the inner array, wrap it to produce the repeated list.
+   * Create layers of repeated list listeners around the type-specific
+   * array. If the JSON has three array levels, the outer two are repeated
+   * lists, the inner is type-specific: say an array of {@code BIGINT} or
+   * a map array.
    */
-  private static ValueListener wrapInnerArray(JsonLoaderImpl loader, ObjectWriter writer,
-      ArrayListener innerArrayListener) {
-    return new RepeatedListValueListener(loader, writer,
-        new RepeatedListElementListener(loader,
-            writer.schema(), writer.array().array(),
-            innerArrayListener));
+  public static ValueListener buildOuterArrays(JsonLoaderImpl loader, ObjectWriter writer, int dims,
+      Function<ObjectWriter, ArrayListener> innerCreator) {
+    ColumnMetadata colSchema = writer.schema();
+    ObjectWriter writers[] = new ObjectWriter[dims];
+    writers[0] = writer;
+    for (int i = 1; i < dims; i++) {
+      writers[i] = writers[i-1].array().entry();
+    }
+    ArrayListener prevArrayListener = innerCreator.apply(writers[dims - 1]);
+    RepeatedArrayListener innerArrayListener = null;
+    for (int i = dims - 2; i >= 0; i--) {
+      innerArrayListener = new RepeatedArrayListener(loader, colSchema,
+          writers[i].array(),
+          new RepeatedListElementListener(loader, colSchema,
+              writers[i+1].array(), prevArrayListener));
+      prevArrayListener = innerArrayListener;
+    }
+    return new RepeatedListValueListener(loader, writer, innerArrayListener);
   }
 
   /**

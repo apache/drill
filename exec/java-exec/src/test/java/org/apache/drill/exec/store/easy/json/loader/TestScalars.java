@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.resultSet.project.Projections;
@@ -31,6 +32,7 @@ import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Tests JSON scalar handling. Without a schema, the first non-null value
@@ -44,6 +46,7 @@ import org.junit.Test;
  * to a few messy rows a billion rows in, or due to the order that the scanners
  * see the data.
  */
+@Category(RowSetTests.class)
 public class TestScalars extends BaseJsonLoaderTest {
 
   /**

@@ -24,20 +24,20 @@ import static org.apache.drill.test.rowSet.RowSetUtilities.singleObjArray;
 import static org.apache.drill.test.rowSet.RowSetUtilities.strArray;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
-import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.categories.RowSetTests;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
- * Tests repeated lists to form a 2D array of various data types.
+ * Tests repeated lists to form a 2D or 3D array of various data types.
  */
+@Category(RowSetTests.class)
 public class TestRepeatedList extends BaseJsonLoaderTest {
 
   @Test
@@ -173,21 +173,6 @@ public class TestRepeatedList extends BaseJsonLoaderTest {
   }
 
   @Test
-  public void test3DScalars() {
-    String json =
-        "{a: [[[1, 2]]]]}";
-    JsonLoaderFixture loader = new JsonLoaderFixture();
-    loader.open(json);
-    try {
-      loader.next();
-      fail();
-    } catch (UserException e) {
-      assertTrue(e.getMessage().contains("arrays deeper than two levels"));
-    }
-    loader.close();
-  }
-
-  @Test
   public void test2DObjects() {
     String json =
         "{a: [[{b: 1}, {b: 2}], [{b: 3}, {b: 4}, {b: 5}]]}\n" +
@@ -293,6 +278,148 @@ public class TestRepeatedList extends BaseJsonLoaderTest {
         .addSingleCol(objArray(
             objArray(mapValue(1L), 2L),
             objArray(mapValue(3L), "four", mapValue(5L))))
+        .build();
+    RowSetUtilities.verify(expected, results);
+    assertNull(loader.next());
+    loader.close();
+  }
+
+  @Test
+  public void test3DScalars() {
+    String json =
+        "{a: [[[1, 2], [3, 4]], [[5, 6], [7, 8]]]}";
+    JsonLoaderFixture loader = new JsonLoaderFixture();
+    loader.open(json);
+    RowSet results = loader.next();
+    assertNotNull(results);
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .addRepeatedList("a")
+          .addDimension()
+            .addArray(MinorType.BIGINT)
+            .resumeList()
+          .resumeSchema()
+        .build();
+    RowSet expected = fixture.rowSetBuilder(expectedSchema)
+        .addSingleCol(objArray(
+            objArray(longArray(1L, 2L), longArray(3L, 4L)),
+            objArray(longArray(5L, 6L), longArray(7L, 8L))))
+        .build();
+    RowSetUtilities.verify(expected, results);
+    assertNull(loader.next());
+    loader.close();
+  }
+
+  @Test
+  public void testNullTo3DScalars() {
+    String json =
+        "{a: null}\n" +
+        "{a: [[[1, 2], [3, 4]], [[5, 6], [7, 8]]]}";
+    JsonLoaderFixture loader = new JsonLoaderFixture();
+    loader.open(json);
+    RowSet results = loader.next();
+    assertNotNull(results);
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .addRepeatedList("a")
+          .addDimension()
+            .addArray(MinorType.BIGINT)
+            .resumeList()
+          .resumeSchema()
+        .build();
+    RowSet expected = fixture.rowSetBuilder(expectedSchema)
+        .addSingleCol(objArray())
+        .addSingleCol(objArray(
+            objArray(longArray(1L, 2L), longArray(3L, 4L)),
+            objArray(longArray(5L, 6L), longArray(7L, 8L))))
+        .build();
+    RowSetUtilities.verify(expected, results);
+    assertNull(loader.next());
+    loader.close();
+  }
+
+  @Test
+  public void testUnknownTo3DScalars() {
+    String json =
+        "{a: []}\n" +
+        "{a: [[[1, 2], [3, 4]], [[5, 6], [7, 8]]]}";
+    JsonLoaderFixture loader = new JsonLoaderFixture();
+    loader.open(json);
+    RowSet results = loader.next();
+    assertNotNull(results);
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .addRepeatedList("a")
+          .addDimension()
+            .addArray(MinorType.BIGINT)
+            .resumeList()
+          .resumeSchema()
+        .build();
+    RowSet expected = fixture.rowSetBuilder(expectedSchema)
+        .addSingleCol(objArray())
+        .addSingleCol(objArray(
+            objArray(longArray(1L, 2L), longArray(3L, 4L)),
+            objArray(longArray(5L, 6L), longArray(7L, 8L))))
+        .build();
+    RowSetUtilities.verify(expected, results);
+    assertNull(loader.next());
+    loader.close();
+  }
+
+  @Test
+  public void test3DObjects() {
+    String json =
+        "{a: [[[{n: 1}, {n: 2}], [{n: 3}, {n: 4}]], " +
+             "[[{n: 5}, {n: 6}], [{n: 7}, {n: 8}]]]}";
+    JsonLoaderFixture loader = new JsonLoaderFixture();
+    loader.open(json);
+    RowSet results = loader.next();
+    assertNotNull(results);
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .addRepeatedList("a")
+          .addDimension()
+            .addMapArray()
+              .addNullable("n", MinorType.BIGINT)
+              .resumeList()
+            .resumeList()
+          .resumeSchema()
+        .build();
+    RowSet expected = fixture.rowSetBuilder(expectedSchema)
+        .addSingleCol(objArray(
+            objArray(objArray(mapValue(1L), mapValue(2L)), objArray(mapValue(3L), mapValue(4L))),
+            objArray(objArray(mapValue(5L), mapValue(6L)), objArray(mapValue(7L), mapValue(8L)))))
+        .build();
+    RowSetUtilities.verify(expected, results);
+    assertNull(loader.next());
+    loader.close();
+  }
+
+  @Test
+  public void testUnknownTo3DObjects() {
+    String json =
+        "{a: []}\n" +
+        "{a: [[[{n: 1}, {n: 2}], [{n: 3}, {n: 4}]], " +
+             "[[{n: 5}, {n: 6}], [{n: 7}, {n: 8}]]]}";
+    JsonLoaderFixture loader = new JsonLoaderFixture();
+    loader.open(json);
+    RowSet results = loader.next();
+    assertNotNull(results);
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .addRepeatedList("a")
+          .addDimension()
+            .addMapArray()
+              .addNullable("n", MinorType.BIGINT)
+              .resumeList()
+            .resumeList()
+          .resumeSchema()
+        .build();
+    RowSet expected = fixture.rowSetBuilder(expectedSchema)
+        .addSingleCol(objArray())
+        .addSingleCol(objArray(
+            objArray(objArray(mapValue(1L), mapValue(2L)), objArray(mapValue(3L), mapValue(4L))),
+            objArray(objArray(mapValue(5L), mapValue(6L)), objArray(mapValue(7L), mapValue(8L)))))
         .build();
     RowSetUtilities.verify(expected, results);
     assertNull(loader.next());
