@@ -25,7 +25,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.EvfTests;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
@@ -54,7 +54,7 @@ import org.junit.experimental.categories.Category;
  * current "V3" version. The tests here verify this behavior.
  */
 
-@Category(RowSetTests.class)
+@Category(EvfTests.class)
 public class TestPartitionRace extends BaseCsvTest {
 
   @BeforeClass

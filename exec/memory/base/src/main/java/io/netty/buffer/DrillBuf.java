@@ -36,6 +36,8 @@ import org.apache.drill.exec.memory.BoundsChecking;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.BufferManager;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.netty.util.internal.PlatformDependent;
 
@@ -45,7 +47,7 @@ import io.netty.util.internal.PlatformDependent;
  */
 @SuppressWarnings("unused")
 public final class DrillBuf extends AbstractByteBuf implements AutoCloseable {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillBuf.class);
+  private static final Logger logger = LoggerFactory.getLogger(DrillBuf.class);
 
   private static final AtomicLong idGenerator = new AtomicLong(0);
 

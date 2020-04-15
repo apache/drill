@@ -57,7 +57,8 @@ import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.Credentials;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.util.Progressable;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 
@@ -69,8 +70,8 @@ import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
  * measure IO wait time and tracking file open/close operations.
  */
 public class DrillFileSystem extends FileSystem implements OpenFileTracker {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillFileSystem.class);
-  private final static boolean TRACKING_ENABLED = AssertionUtil.isAssertionsEnabled();
+  private static final Logger logger = LoggerFactory.getLogger(DrillFileSystem.class);
+  private static final boolean TRACKING_ENABLED = AssertionUtil.isAssertionsEnabled();
 
   public static final String UNDERSCORE_PREFIX = "_";
   public static final String DOT_PREFIX = ".";

@@ -307,6 +307,6 @@ public class NullableScalarWriter extends AbstractScalarWriterImpl {
   @Override
   public void setDefaultValue(Object value) {
     throw new UnsupportedOperationException(
-        "Default values not supported for nullable types:" + value);
+        "Default values not supported for nullable types: " + value);
   }
 }
