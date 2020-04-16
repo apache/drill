@@ -20,7 +20,7 @@
 # Drill and copies built binaries into the target image based on openjdk:8u232-jdk image.
 
 # Uses intermediate image for building Drill to reduce target image size
-FROM maven:3.6-jdk-8 as build
+FROM maven:3.6.3-jdk-8 as build
 
 # Copy project sources into the container
 COPY . /src
