@@ -34,7 +34,7 @@
         <div class="modal-footer">
         <table border="0px" width="100%"><tr>
         <td align="left" id="stopWatch">Elapsed Time: 00:00</td><td align="right">
-          <button type="button" class="btn btn-default" title="Check profiles in new tab" onclick="window.open(&#39;/profiles&#39;)">Check Status <span class="glyphicon glyphicon-new-window"></span></button>
+          <button type="button" class="btn btn-light" title="Check profiles in new tab" onclick="window.open(&#39;/profiles&#39;)">Check Status <span class="material-icons">open_in_new</span></button>
           </td>
           </tr>
           </table>

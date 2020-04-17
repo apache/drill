@@ -29,12 +29,10 @@
 </#macro>
 
 <#macro page_body>
-  <div class="page-header">
-  </div>
 
   <#include "*/confirmationModals.ftl">
 
-  <h4 class="col-xs-6">Plugin Management</h4>
+  <h4 class="col-xs-6 mx-3">Plugin Management</h4>
   <table style="margin: 10px" class="table">
     <tbody>
     <tr>
@@ -42,7 +40,7 @@
         <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#new-plugin-modal">
           Create
         </button>
-        <button type="button" class="btn btn-primary" name="all" data-toggle="modal" data-target="#pluginsModal">
+        <button type="button" class="btn btn-secondary" name="all" data-toggle="modal" data-target="#pluginsModal">
           Export all
         </button>
       </td>
@@ -50,74 +48,77 @@
     </tbody>
   </table>
 
-  <div class="page-header" style="margin: 5px;"></div>
+  <div class="pb-2 mt-4 mb-2 border-bottom" style="margin: 5px;"></div>
 
-  <div class="table-responsive col-sm-12 col-md-6 col-lg-5 col-xl-5">
-    <h4>Enabled Storage Plugins</h4>
-    <table class="table table-hover">
-      <tbody>
-        <#list model as pluginModel>
-          <#if pluginModel.getPlugin()?? && pluginModel.getPlugin().enabled() == true>
-            <tr>
-              <td style="border:none; max-width: 200px; overflow: hidden; text-overflow: ellipsis;">
-                ${pluginModel.getPlugin().getName()}
-              </td>
-              <td style="border:none;">
-                <button type="button" class="btn btn-primary" onclick="doUpdate('${pluginModel.getPlugin().getName()}')">
-                  Update
-                </button>
-                <button type="button" class="btn btn-warning" onclick="doEnable('${pluginModel.getPlugin().getName()}', false)">
-                  Disable
-                </button>
-                <button type="button" class="btn" name="${pluginModel.getPlugin().getName()}" data-toggle="modal"
-                        data-target="#pluginsModal">
-                  Export
-                </button>
-              </td>
-            </tr>
-          </#if>
-        </#list>
-      </tbody>
-    </table>
+  <div class="container-fluid">
+    <div class="row">
+      <div class="table-responsive col-sm-12 col-md-6 col-lg-5 col-xl-5">
+        <h4>Enabled Storage Plugins</h4>
+        <table class="table table-hover">
+          <tbody>
+            <#list model as pluginModel>
+              <#if pluginModel.getPlugin()?? && pluginModel.getPlugin().enabled() == true>
+                <tr>
+                  <td style="border:none; max-width: 200px; overflow: hidden; text-overflow: ellipsis;">
+                    ${pluginModel.getPlugin().getName()}
+                  </td>
+                  <td style="border:none;">
+                    <button type="button" class="btn btn-primary" onclick="doUpdate('${pluginModel.getPlugin().getName()}')">
+                      Update
+                    </button>
+                    <button type="button" class="btn btn-warning" onclick="doEnable('${pluginModel.getPlugin().getName()}', false)">
+                      Disable
+                    </button>
+                    <button type="button" class="btn btn-secondary" name="${pluginModel.getPlugin().getName()}" data-toggle="modal"
+                            data-target="#pluginsModal">
+                      Export
+                    </button>
+                  </td>
+                </tr>
+              </#if>
+            </#list>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="table-responsive col-sm-12 col-md-6 col-lg-7 col-xl-7">
+        <h4>Disabled Storage Plugins</h4>
+        <table class="table table-hover">
+          <tbody>
+            <#list model as pluginModel>
+              <#if pluginModel.getPlugin()?? && pluginModel.getPlugin().enabled() == false>
+                <tr>
+                  <td style="border:none; max-width: 200px; overflow: hidden; text-overflow: ellipsis;">
+                    ${pluginModel.getPlugin().getName()}
+                  </td>
+                  <td style="border:none;">
+                    <button type="button" class="btn btn-primary" onclick="doUpdate('${pluginModel.getPlugin().getName()}')">
+                      Update
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="doEnable('${pluginModel.getPlugin().getName()}', true)">
+                      Enable
+                    </button>
+                    <button type="button" class="btn btn-secondary" name="${pluginModel.getPlugin().getName()}" data-toggle="modal"
+                            data-target="#pluginsModal">
+                      Export
+                    </button>
+                  </td>
+                </tr>
+              </#if>
+            </#list>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
-
-  <div class="table-responsive col-sm-12 col-md-6 col-lg-7 col-xl-7">
-    <h4>Disabled Storage Plugins</h4>
-    <table class="table table-hover">
-      <tbody>
-        <#list model as pluginModel>
-          <#if pluginModel.getPlugin()?? && pluginModel.getPlugin().enabled() == false>
-            <tr>
-              <td style="border:none; max-width: 200px; overflow: hidden; text-overflow: ellipsis;">
-                ${pluginModel.getPlugin().getName()}
-              </td>
-              <td style="border:none;">
-                <button type="button" class="btn btn-primary" onclick="doUpdate('${pluginModel.getPlugin().getName()}')">
-                  Update
-                </button>
-                <button type="button" class="btn btn-success" onclick="doEnable('${pluginModel.getPlugin().getName()}', true)">
-                  Enable
-                </button>
-                <button type="button" class="btn" name="${pluginModel.getPlugin().getName()}" data-toggle="modal"
-                        data-target="#pluginsModal">
-                  Export
-                </button>
-              </td>
-            </tr>
-          </#if>
-        </#list>
-      </tbody>
-    </table>
-  </div>
-
 
   <#-- Modal window for exporting plugin config (including group plugins modal) -->
   <div class="modal fade" id="pluginsModal" tabindex="-1" role="dialog" aria-labelledby="exportPlugin" aria-hidden="true">
     <div class="modal-dialog modal-sm" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
           <h4 class="modal-title" id="exportPlugin">Plugin config</h4>
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
         </div>
         <div class="modal-body">
           <div id="format" style="display: inline-block; position: relative;">
@@ -160,7 +161,7 @@
         </div>
 
         <div class="modal-footer">
-          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
           <button type="button" id="export" class="btn btn-primary">Export</button>
         </div>
       </div>
@@ -173,8 +174,8 @@
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
           <h4 class="modal-title" id="configuration">New Storage Plugin</h4>
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
         </div>
         <div class="modal-body">
 
@@ -187,13 +188,13 @@
                 </textarea>
             </div>
             <div style="text-align: right; margin: 10px">
-              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
               <button type="submit" class="btn btn-primary" onclick="doCreate()">Create</button>
             </div>
             <input type="hidden" name="csrfToken" value="${model[0].getCsrfToken()}">
           </form>
 
-          <div id="message" class="hidden alert alert-info">
+          <div id="message" class="d-none alert alert-info">
           </div>
         </div>
       </div>

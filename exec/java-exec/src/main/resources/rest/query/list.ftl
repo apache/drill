@@ -22,8 +22,6 @@
 </#macro>
 
 <#macro page_body>
-  <div class="page-header">
-  </div>
   <h3>Under Construction.</h3>
 </#macro>
 

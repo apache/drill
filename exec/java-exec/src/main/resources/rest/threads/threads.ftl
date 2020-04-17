@@ -22,12 +22,9 @@
 </#macro>
 
 <#macro page_body>
-  <div class="page-header">
-  </div>
   <p align="right">Auto Refresh <span class="badge badge-pill badge-info" id="refreshTimeLabel"></span>
-    <button id="clippy" type="button" class="btn btn-default btn-sm" onClick="copyThreads();" title="Copy To Clipboard"> 
-      <!-- Refer: https://glyphicons.bootstrapcheatsheets.com/# for correct rendering -->
-      <span class="glyphicon glyphicon-copy" style="font-size:180%">&#xe205;</span>
+    <button id="clippy" type="button" class="btn btn-light btn-sm" onClick="copyThreads();" title="Copy To Clipboard">
+      <span class="material-icons" style="font-size:180%">file_copy</span>
     </button>
   </p>
   <div id="mainDiv" role="main">
@@ -39,7 +36,7 @@
     document.getElementById('refreshTimeLabel').innerHTML = refreshInterval+" sec"; 
     var update = function() {
       $.get(statusUrl, function(data) {
-        $("#mainDiv").html("<pre>" + data + "</pre>");
+        $("#mainDiv").html("<pre class=\"bg-light border p-2\">" + data + "</pre>");
       });
     };
 

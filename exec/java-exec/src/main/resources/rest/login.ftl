@@ -22,7 +22,6 @@
 </#macro>
 
 <#macro page_body>
-  <div class="page-header"></div>
   <div align="center" class="table-responsive">
     <form role="form" name="input" action="/j_security_check" method="POST">
       <fieldset>
@@ -34,7 +33,7 @@
           <h4>Log In to Drill Web Console</h4></br>
           <p><input type="text" size="30" name="j_username" placeholder="Username" autofocus></p>
           <p><input type="password" size="30" name="j_password" placeholder="Password"></p>
-          <p><button type="submit" class="btn btn-default">Log In</button> </p>
+          <p><button type="submit" class="btn btn-light">Log In</button> </p>
         </div>
       </fieldset>
     </form>

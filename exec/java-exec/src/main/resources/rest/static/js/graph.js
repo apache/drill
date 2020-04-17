@@ -214,7 +214,7 @@ $(window).on('load',(function () {
     function buildtimingchart (svgdest, timetable) {
         var chartprops = {
             "w" : 850,
-            "h" : 70,
+            "h" : 20,
             "svg" : svgdest,
             "bheight" : 2,
             "bpad" : 0,
@@ -223,7 +223,7 @@ $(window).on('load',(function () {
             "colorer" : null,
         };
 
-        chartprops.h = timetable.length * (chartprops.bheight + chartprops.bpad * 2)
+        chartprops.h = Math.max(timetable.length * (chartprops.bheight + chartprops.bpad * 2), chartprops.h);
 
         chartprops.svg
             .attr("width", chartprops.w + 2 * chartprops.margin)
@@ -330,7 +330,7 @@ $(window).on('load',(function () {
             .attr("transform", "rotate(-90)")
             .attr("y", 0)
             // Aligning to center of Y-axis with minimum Svg height
-            .attr("x",0 - Math.max(chartprops.h/2 + chartprops.margin, 36))
+            .attr("x",0 - Math.max(chartprops.h/2 + chartprops.margin, 40))
             .attr("dy", "1.5em")
             .style("text-anchor", "middle")
             .html("Fragments"); 
