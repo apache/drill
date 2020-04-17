@@ -13,7 +13,7 @@ Starting in Drill 1.15, you can build and deploy Apache Drill on the MapR platfo
 ## Prerequisites
 Apache Drill requires:  
   
-- Apache Maven 3.3.1 or later  
+- Apache Maven 3.6.3 or later  
 - Oracle or OpenJDK 8   
 
 Apache Drill on the MapR platform also requires:  
