@@ -101,7 +101,7 @@
     <license.skip>true</license.skip>
     <docker.repository>apache/drill</docker.repository>
     <antlr.version>4.8-1</antlr.version>
-    <maven.version>3.6.3</maven.version>
+    <maven.version>3.6.0</maven.version>
     <commons.net.version>3.6</commons.net.version>
     <commons.validator.version>1.6</commons.validator.version>
     <commons.text.version>1.6</commons.text.version>
