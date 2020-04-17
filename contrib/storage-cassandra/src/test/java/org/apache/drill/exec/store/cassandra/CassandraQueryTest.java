@@ -68,6 +68,8 @@ public class CassandraQueryTest extends ClusterTest {
       .addNullable("pog_id", TypeProtos.MinorType.BIGINT)
       .buildSchema();
 
+    results.print();
+
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
       .addRow("id0001", 1, 10001L)
       .addRow("id0005", 1, 10001L)
@@ -101,6 +103,7 @@ public class CassandraQueryTest extends ClusterTest {
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
       .addRow("id0001", 10001L)
+      .addRow("id0005", 10001L)
       .addRow("id0002", 10001L)
       .addRow("id0002", 10001L)
       .addRow("id0002", 10001L)
@@ -161,6 +164,6 @@ public class CassandraQueryTest extends ClusterTest {
 
     long cnt = queryBuilder().physical(plan).singletonLong();
 
-    assertEquals("Counts should match",1L, cnt);
+    assertEquals("Counts should match",13L, cnt);
   }
 }

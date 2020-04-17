@@ -70,13 +70,13 @@ public class CassandraScanBatchCreator implements BatchCreator<CassandraSubScan>
     });
 
     // Reader
-    ReaderFactory readerFactory = new HttpReaderFactory(config, subScan);
+    ReaderFactory readerFactory = new CassandraReaderFactory(config, subScan);
     builder.setReaderFactory(readerFactory);
     builder.nullType(Types.optional(MinorType.VARCHAR));
     return builder;
   }
 
-  private static class HttpReaderFactory implements ReaderFactory {
+  private static class CassandraReaderFactory implements ReaderFactory {
 
     private final CassandraStoragePluginConfig config;
 
@@ -86,7 +86,7 @@ public class CassandraScanBatchCreator implements BatchCreator<CassandraSubScan>
 
     // TODO Get the subScanSpec here...
 
-    public HttpReaderFactory(CassandraStoragePluginConfig config, CassandraSubScan subScan) {
+    public CassandraReaderFactory(CassandraStoragePluginConfig config, CassandraSubScan subScan) {
       this.config = config;
       this.subScan = subScan;
     }

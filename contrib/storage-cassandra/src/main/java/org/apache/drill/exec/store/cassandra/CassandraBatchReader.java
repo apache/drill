@@ -29,21 +29,18 @@ import com.datastax.driver.core.querybuilder.Clause;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Select;
 import org.apache.drill.common.exceptions.CustomErrorContext;
-import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
-import org.apache.drill.exec.record.metadata.MetadataUtils;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.cassandra.connection.CassandraConnectionManager;
 import org.apache.drill.exec.store.cassandra.CassandraSubScan.CassandraSubScanSpec;
 import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
-import org.apache.drill.exec.vector.accessor.TupleWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,11 +59,11 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
 
   private final List<SchemaPath> projectedColumns;
 
+  private final List<CassandraColumnWriter> cassandraColumnWriters;
+
   private Cluster cluster;
 
   private Session session;
-
-  private ResultSetLoader resultLoader;
 
   private CassandraSubScanSpec subScanSpec;
 
@@ -74,9 +71,7 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
 
   private ResultSet cassandraResultset;
 
-  private List<ScalarWriter> columnWriters;
-
-  private List<CassandraColumnWriter> cassandraColumnWriters;
+  private Row firstRow;
 
 
   public CassandraBatchReader(CassandraStoragePluginConfig conf, CassandraSubScan subScan) {
@@ -84,6 +79,10 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
     this.subScan = subScan;
     this.projectedColumns = subScan.getColumns();
     this.plugin = subScan.getCassandraStoragePlugin();
+    this.subScanSpec = subScan.getChunkScanSpecList().get(0); // TODO get the right subscan.. for now, get the first one.
+
+    cassandraColumnWriters = new ArrayList<>();
+
   }
 
   @Override
@@ -92,42 +91,69 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
 
     // Set up the Cassandra Cluster
     setupCluster();
+    firstRow = getFirstRow();
 
-    resultLoader = negotiator.build();
+    // Build the Schema
+    SchemaBuilder builder = new SchemaBuilder();
+    TupleMetadata drillSchema = buildDrillSchema(builder, firstRow);
+    negotiator.tableSchema(drillSchema, true);
+    ResultSetLoader resultLoader = negotiator.build();
+
+    // Create ScalarWriters
     rowWriter = resultLoader.writer();
-
-    // Setup the query
-    setup(negotiator);
+    populateWriterArray(firstRow);
 
     return true;
   }
 
-  // TODO Start here... map rows to EVF Vectors
-   public boolean next() {
-     while (!rowWriter.isFull()) {
-       if (!processRow(rowWriter)) {
-         return false;
-       }
-     }
-     return true;
+  @Override
+  public boolean next() {
+    // Process the first row
+    Row currentRow = firstRow;
+
+    while (!rowWriter.isFull()) {
+
+      // Case for empty set
+      if (firstRow == null) {
+        return false;
+      }
+
+      processRow(currentRow);
+
+      // If there are no more rows left, stop processing
+      if (!cassandraResultset.iterator().hasNext()) {
+        return false;
+      } else {
+        currentRow = cassandraResultset.iterator().next();
+      }
+    }
+    return true;
   }
 
-  private boolean processRow(RowSetLoader rowWriter) {
+  private void processRow(Row currentRow) {
+    rowWriter.start();
+    for (int i = 0; i < currentRow.getColumnDefinitions().size(); i++) {
+      CassandraColumnWriter writer = cassandraColumnWriters.get(i);
+      writer.load(currentRow);
+    }
+    rowWriter.save();
+  }
 
+ /* private boolean processRow(RowSetLoader rowWriter) {
     if (!cassandraResultset.iterator().hasNext()) {
       return false;
     }
     Row currentRow = cassandraResultset.iterator().next();
     rowWriter.start();
-    int colPosition = 0;
-    for (ColumnDefinitions.Definition def : currentRow.getColumnDefinitions()) {
-      cassandraColumnWriters.get(colPosition).load(currentRow, def.getName());
-      colPosition++;
+
+    for (int i = 0; i < currentRow.getColumnDefinitions().size(); i++) {
+      CassandraColumnWriter writer = cassandraColumnWriters.get(i);
+      writer.load(currentRow);
     }
+
     rowWriter.save();
     return true;
-  }
-
+  }*/
 
   @Override
   public void close() {
@@ -135,7 +161,9 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
     // We want to keep the Cassandra session open until Drill closes
   }
 
-
+  /**
+   * Initializes the Cassandra cluster and sessions
+   */
   private void setupCluster() {
     // Cassandra sessions are expensive to open, so the connection is opened in the
     // Storage plugin class and closed when Drill is shut down OR when the storage plugin
@@ -149,37 +177,19 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
     }
   }
 
-  private void setup(SchemaNegotiator negotiator) {
-    subScanSpec = subScan.getChunkScanSpecList().get(0); // TODO get the right subscan.. for now, get the first one.
+  private Row getFirstRow() {
+    // Get Cassandra Partition Keys
+    String[] partitionkeys = getPartitionKeys();
 
-    try {
-      // Get Cassandra Partition Keys
-      String[] partitionkeys = getPartitionKeys();
+    // Define query
+    Statement cassandraQuery = buildQuery(partitionkeys);
 
-      // Define query
-      Statement cassandraQuery = buildQuery(partitionkeys);
+    // Execute query
+    logger.debug("Query sent to Cassandra: {}", cassandraQuery);
+    cassandraResultset = session.execute(cassandraQuery);
 
-      // Execute query
-      logger.debug("Query sent to Cassandra: {}", cassandraQuery);
-      cassandraResultset = session.execute(cassandraQuery);
-
-      // Get the first row of data to build the Drill schema
-      Row firstRow = cassandraResultset.one();
-
-      columnWriters = new ArrayList<>(firstRow.getColumnDefinitions().size());
-      cassandraColumnWriters = new ArrayList<>();
-
-      // Set the schema
-      SchemaBuilder builder = new SchemaBuilder();
-      negotiator.tableSchema(buildDrillSchema(builder, firstRow), true);
-      negotiator.build();
-
-    } catch (Exception e) {
-      throw UserException
-        .resourceError(e)
-        .message("Error starting Cassandra Storage Plugin: %s", e.getMessage())
-        .build(logger);
-    }
+    // Get the first row of data to build the Drill schema
+    return cassandraResultset.one();
   }
 
   private String[] getPartitionKeys() {
@@ -251,81 +261,69 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
       return builder.buildSchema();
     }
 
-    int colPosition = 0;
     for (ColumnDefinitions.Definition def : firstRow.getColumnDefinitions()) {
       String colName = def.getName();
       String dataType = def.getType().toString();
 
-      // Create Schema
-      // TODO Add additional datatypes
+      // TODO Add other datatypes supported by Cassandra
       switch (dataType) {
         case "varchar":
           builder.addNullable(colName, TypeProtos.MinorType.VARCHAR);
-          addColumnToArray(rowWriter, colName, TypeProtos.MinorType.VARCHAR);
           break;
         case "int":
           builder.addNullable(colName, TypeProtos.MinorType.INT);
-          addColumnToArray(rowWriter, colName, TypeProtos.MinorType.INT);
           break;
         case "bigint":
           builder.addNullable(colName, TypeProtos.MinorType.BIGINT);
-          addColumnToArray(rowWriter, colName, TypeProtos.MinorType.BIGINT);
           break;
       }
-
-      colPosition++;
     }
-    return builder.build();
-
+    return builder.buildSchema();
   }
 
-  private void addColumnToArray(TupleWriter rowWriter, String name, TypeProtos.MinorType type) {
-    int index = rowWriter.tupleSchema().index(name);
-    if (index == -1) {
-      org.apache.drill.exec.record.metadata.ColumnMetadata colSchema = MetadataUtils.newScalar(name, type, TypeProtos.DataMode.OPTIONAL);
-      index = rowWriter.addColumn(colSchema);
-    } else {
+  private void populateWriterArray(Row firstRow) {
+    // Case for empty result set
+    if (firstRow == null || firstRow.getColumnDefinitions().size() == 0) {
       return;
     }
-    columnWriters.add(rowWriter.scalar(index));
-    if (type == TypeProtos.MinorType.VARCHAR) {
-      cassandraColumnWriters.add(new StringColumnWriter(columnWriters.get(index)));
-    } else if (type == TypeProtos.MinorType.INT) {
-      cassandraColumnWriters.add(new IntColumnWriter(columnWriters.get(index)));
-    } else if (type == TypeProtos.MinorType.BIGINT) {
-      cassandraColumnWriters.add(new BigIntColumnWriter(columnWriters.get(index)));
+
+    for (ColumnDefinitions.Definition def : firstRow.getColumnDefinitions()) {
+      String colName = def.getName();
+      String dataType = def.getType().toString();
+      switch (dataType) {
+        case "varchar":
+          cassandraColumnWriters.add(new StringColumnWriter(colName, rowWriter));
+          break;
+        case "int":
+          cassandraColumnWriters.add(new IntColumnWriter(colName, rowWriter));
+          break;
+        case "bigint":
+          cassandraColumnWriters.add(new BigIntColumnWriter(colName, rowWriter));
+          break;
+        default:
+          logger.warn("Unknown data type: {} for column {}", dataType, colName);
+      }
     }
   }
 
-
-  public static class CassandraColumnWriter {
-
-    protected Row row;
+  public abstract class CassandraColumnWriter {
 
     protected String colName;
 
     ScalarWriter columnWriter;
 
-    public CassandraColumnWriter(ScalarWriter columnWriter) {
-      this.columnWriter = columnWriter;
-    }
-
-    public void define(SchemaBuilder builder) {};
-
-    public void load(Row row, String colName) {};
+    public void load(Row row) {};
   }
 
-  public static class StringColumnWriter extends CassandraColumnWriter {
+  public class StringColumnWriter extends CassandraColumnWriter {
 
-    StringColumnWriter(ScalarWriter columnWriter) {
-      super(columnWriter);
+    StringColumnWriter(String colName, RowSetLoader rowWriter) {
+      this.colName = colName;
+      columnWriter = rowWriter.scalar(colName);
     }
 
-    public void define(SchemaBuilder builder) {
-      builder.addNullable(colName, TypeProtos.MinorType.VARCHAR);
-    }
-
-    public void load(Row row, String colName) {
+    @Override
+    public void load(Row row) {
       String value = row.getString(colName);
       if (value == null) {
         columnWriter.setNull();
@@ -335,36 +333,31 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
     }
   }
 
-  public static class IntColumnWriter extends CassandraColumnWriter {
+  public class IntColumnWriter extends CassandraColumnWriter {
 
-    IntColumnWriter(ScalarWriter columnWriter) {
-      super(columnWriter);
+    IntColumnWriter(String colName, RowSetLoader rowWriter) {
+      this.colName = colName;
+      columnWriter = rowWriter.scalar(colName);
     }
 
-    public void define(SchemaBuilder builder) {
-      builder.addNullable(colName, TypeProtos.MinorType.INT);
-    }
-
-    public void load(Row row, String colName) {
+    @Override
+    public void load(Row row) {
       int value = row.getInt(colName);
       columnWriter.setInt(value);
     }
   }
 
-  public static class BigIntColumnWriter extends CassandraColumnWriter {
+  public class BigIntColumnWriter extends CassandraColumnWriter {
 
-    BigIntColumnWriter(ScalarWriter columnWriter) {
-      super(columnWriter);
+    BigIntColumnWriter(String colName, RowSetLoader rowWriter) {
+      this.colName = colName;
+      columnWriter = rowWriter.scalar(colName);
     }
 
-    public void define(SchemaBuilder builder) {
-      builder.addNullable(colName, TypeProtos.MinorType.BIGINT);
-    }
-
-    public void load(Row row, String colName) {
+    @Override
+    public void load(Row row) {
       long value = row.getLong(colName);
       columnWriter.setLong(value);
     }
   }
-
 }
