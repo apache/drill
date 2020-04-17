@@ -32,8 +32,6 @@
 </#macro>
 
 <#macro page_body>
-  <div class="page-header">
-  </div>
   <div id="message" class="alert alert-info alert-dismissable" style="font-family: courier,monospace;">
     <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
     Sample SQL query: <strong>SELECT * FROM cp.`employee.json` LIMIT 20</strong>
@@ -51,33 +49,35 @@
         <input type="text" size="30" name="userName" id="userName" placeholder="User Name">
       </div>
     </#if>
-    <div class="form-group">
-      <label for="queryType">Query type:&nbsp;&nbsp;</label>
-      <div class="radio-inline">
-        <label>
-          <input type="radio" name="queryType" id="sql" value="SQL" checked>
-          SQL
-        </label>
-      </div>
-      <div class="radio-inline">
-        <label>
-          <input type="radio" name="queryType" id="physical" value="PHYSICAL">
-          Physical
-        </label>
-      </div>
-      <div class="radio-inline">
-        <label>
-          <input type="radio" name="queryType" id="logical" value="LOGICAL">
-          Logical
-        </label>
+    <div class="container-fluid">
+      <div class="form-group row">
+        <label class="font-weight-bold" for="queryType">Query type:&nbsp;&nbsp;</label>
+        <div class="form-check">
+          <label class="font-weight-bold">
+            <input type="radio" name="queryType" id="sql" value="SQL" checked>
+            SQL
+          </label>
+        </div>
+        <div class="form-check">
+          <label class="font-weight-bold">
+            <input type="radio" name="queryType" id="physical" value="PHYSICAL">
+            Physical
+          </label>
+        </div>
+        <div class="form-check">
+          <label class="font-weight-bold">
+            <input type="radio" name="queryType" id="logical" value="LOGICAL">
+            Logical
+          </label>
+        </div>
       </div>
     </div>
 
     <div class="form-group">
-      <div style="display: inline-block"><label for="query">Query</label></div>
+      <div style="display: inline-block"><label class="font-weight-bold" for="query">Query</label></div>
       <div style="display: inline-block; float:right; padding-right:5%"><b>Hint: </b>Use
         <div id="keyboardHint" style="display:inline-block; font-style:italic"></div> to submit</div>
-      <div id="query-editor-format"></div>
+      <div id="query-editor-format" class="border"></div>
       <input class="form-control" type="hidden" id="query" name="query" autofocus/>
     </div>
 
@@ -87,8 +87,8 @@
     &nbsp;&nbsp;&nbsp;
     <input type="checkbox" name="forceLimit" value="limit" <#if model.isAutoLimitEnabled()>checked</#if>>
       Limit results to <input type="text" id="autoLimit" name="autoLimit" min="0" value="${model.getDefaultRowsAutoLimited()?c}" size="6" pattern="[0-9]*">
-      rows <span class="glyphicon glyphicon-info-sign" title="Limits the number of records retrieved in the query.
-      Ignored if query has a LIMIT clause." style="cursor:pointer"></span>
+      rows <span class="material-icons" title="Limits the number of records retrieved in the query.
+      Ignored if query has a LIMIT clause." style="cursor:pointer">info</span>
     &nbsp;&nbsp;&nbsp;
     Default schema:
     <input type="text" name="defaultSchema" id="defaultSchema" list="enabledPlugins" placeholder="schema">
@@ -99,8 +99,8 @@
         </#if>
       </#list>
     </datalist>
-     <span class="glyphicon glyphicon-info-sign" title="Set the default schema used to find table names
-      and for SHOW FILES and SHOW TABLES." style="cursor:pointer"></span>
+     <span class="material-icons" title="Set the default schema used to find table names
+      and for SHOW FILES and SHOW TABLES." style="cursor:pointer">info</span>
     <input type="hidden" name="csrfToken" value="${model.getCsrfToken()}">
   </form>
 
@@ -166,7 +166,6 @@
     document.getElementById('query-editor-format').style.fontSize='13px';
     document.getElementById('query-editor-format').style.fontFamily='courier,monospace';
     document.getElementById('query-editor-format').style.lineHeight='1.5';
-    document.getElementById('query-editor-format').style.width='98%';
     document.getElementById('query-editor-format').style.margin='auto';
     editor.setOptions({
       enableSnippets: true,

@@ -28,8 +28,6 @@
 </#macro>
 
 <#macro page_body>
-  <div class="page-header">
-  </div>
   <h3>Configuration</h3>
   <form id="updateForm" role="form" action="/storage/create_update" method="POST">
     <input type="hidden" name="name" value="${model.getPlugin().getName()}" />
@@ -38,22 +36,22 @@
       <textarea class="form-control" id="config" name="config" data-editor="json" style="display: none;" >
       </textarea>
     </div>
-    <a class="btn btn-default" href="/storage">Back</a>
-    <button class="btn btn-default" type="submit" onclick="doUpdate();">Update</button>
+    <a class="btn btn-secondary" href="/storage">Back</a>
+    <button class="btn btn-primary" type="submit" onclick="doUpdate();">Update</button>
     <#if model.getPlugin().enabled()>
-      <a id="enabled" class="btn btn-default">Disable</a>
+      <a id="enabled" class="btn btn-warning">Disable</a>
     <#else>
-      <a id="enabled" class="btn btn-primary">Enable</a>
+      <a id="enabled" class="btn btn-success text-white">Enable</a>
     </#if>
-    <button type="button" class="btn btn-default export" name="${model.getPlugin().getName()}" data-toggle="modal"
+    <button type="button" class="btn btn-secondary export" name="${model.getPlugin().getName()}" data-toggle="modal"
             data-target="#pluginsModal">
       Export
     </button>
-    <a id="del" class="btn btn-danger" onclick="deleteFunction()">Delete</a>
+    <a id="del" class="btn btn-danger text-white" onclick="deleteFunction()">Delete</a>
     <input type="hidden" name="csrfToken" value="${model.getCsrfToken()}">
   </form>
   <br>
-  <div id="message" class="hidden alert alert-info">
+  <div id="message" class="d-none alert alert-info">
   </div>
 
   <#include "*/confirmationModals.ftl">
@@ -63,8 +61,8 @@
     <div class="modal-dialog modal-sm" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
           <h4 class="modal-title" id="exportPlugin">Plugin config</h4>
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
         </div>
         <div class="modal-body">
           <div id="format" style="display: inline-block; position: relative;">
@@ -84,7 +82,7 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
           <button type="button" id="export" class="btn btn-primary">Export</button>
         </div>
       </div>
@@ -124,7 +122,7 @@
       }
       function proceed() {
         $.get("/storage/" + encodeURIComponent("${model.getPlugin().getName()}") + "/enable/<#if model.getPlugin().enabled()>false<#else>true</#if>", function(data) {
-          $("#message").removeClass("hidden").text(data.result).alert();
+          $("#message").removeClass("d-none").text(data.result).alert();
           setTimeout(function() { location.reload(); }, 800);
         });
       }

@@ -126,39 +126,40 @@
 </#macro>
 
 <#macro page_body>
-  <div class="page-header">
-  </div>
+
+   <#include "*/alertModals.ftl">
+   <#include "*/runningQuery.ftl">
+
   <h3>Query and Planning</h3>
   <ul id="query-tabs" class="nav nav-tabs" role="tablist">
-    <li><a href="#query-query" role="tab" data-toggle="tab">Query</a></li>
-    <li><a href="#query-physical" role="tab" data-toggle="tab">Physical Plan</a></li>
-    <li><a href="#query-visual" role="tab" data-toggle="tab">Visualized Plan</a></li>
-    <li><a href="#query-edit" role="tab" data-toggle="tab">Edit Query</a></li>
+    <li class="nav-item"><a href="#query-query" role="tab" data-toggle="tab" class="nav-link">Query</a></li>
+    <li class="nav-item"><a href="#query-physical" role="tab" data-toggle="tab" class="nav-link">Physical Plan</a></li>
+    <li class="nav-item"><a href="#query-visual" role="tab" data-toggle="tab" class="nav-link">Visualized Plan</a></li>
+    <li class="nav-item"><a href="#query-edit" role="tab" data-toggle="tab" class="nav-link">Edit Query</a></li>
     <#if model.hasError()>
-        <li><a href="#query-error" role="tab" data-toggle="tab">Error</a></li>
+        <li class="nav-item"><a href="#query-error" role="tab" data-toggle="tab" class="nav-link">Error</a></li>
     </#if>
   </ul>
   <div id="query-content" class="tab-content">
     <div id="query-query" class="tab-pane" style="background-color: #ffffff">
-      <p><pre id="query-text" name="query-text"  style="background-color: #f5f5f5; font-family:courier,monospace">${model.getProfile().query}</pre></p>
+      <p><pre id="query-text" class="border" name="query-text"  style="background-color: #f5f5f5; font-family:courier,monospace">${model.getProfile().query}</pre></p>
       <#if model.hasAutoLimit()>
-          <div name="autoLimitWarning" style="cursor:help" class="panel panel-warning" title="WebUI Queries allow restricting the number of rows returned to avoid the server to hold excessive number of results rows in memory.&#10;This helps maintain server stability with faster response if the entire resultset will not be visualized in the browser">
-            <div class="panel-heading">
-            <span class="glyphicon glyphicon-pushpin" style="font-size:125%"></span>
+          <div name="autoLimitWarning" style="cursor:help" class="card bg-warning" title="WebUI Queries allow restricting the number of rows returned to avoid the server to hold excessive number of results rows in memory.&#10;This helps maintain server stability with faster response if the entire resultset will not be visualized in the browser">
+            <div class="card-header">
             <b>WARNING:</b> Query result was <b>automatically</b> limited to <span style="font-style:italic;font-weight:bold">${model.getAutoLimit()} rows</span>
             </div>
           </div>
       </#if>
     </div>
     <div id="query-physical" class="tab-pane">
-      <p><pre>${model.profile.plan}</pre></p>
+      <p><pre class="bg-light border p-2">${model.profile.plan}</pre></p>
     </div>
     <div id="query-visual" class="tab-pane">
       <div style='padding: 15px 15px;'>
-        <button type='button' class='btn btn-default' onclick='popUpAndPrintPlan();'><span class="glyphicon glyphicon-print"></span> Print Plan</button>
+        <button type='button' class='btn btn-light' onclick='popUpAndPrintPlan();'><span class="material-icons">print</span> Print Plan</button>
       </div>
       <div>
-        <svg id="query-visual-canvas" class="center-block"></svg>
+        <svg id="query-visual-canvas" class="d-block mx-auto"></svg>
       </div>
     </div>
     <div id="query-edit" class="tab-pane">
@@ -173,31 +174,35 @@
             </div>
           </#if>
           <div class="form-group">
-            <label for="queryType">Query type:&nbsp;&nbsp;</label>
-            <div class="radio-inline">
-              <label>
-                <input type="radio" name="queryType" id="sql" value="SQL" checked>
+            <div class="container-fluid">
+              <div class="row">
+                <label class="font-weight-bold" for="queryType">Query type:&nbsp;&nbsp;</label>
+                <div class="form-check">
+                  <label class="font-weight-bold">
+                    <input type="radio" name="queryType" id="sql" value="SQL" checked>
                     SQL
-              </label>
-            </div>
-            <div class="radio-inline">
-              <label>
-                 <input type="radio" name="queryType" id="physical" value="PHYSICAL">
-                     Physical
-              </label>
-            </div>
-            <div class="radio-inline">
-              <label>
-                <input type="radio" name="queryType" id="logical" value="LOGICAL">
+                  </label>
+                </div>
+                <div class="form-check">
+                  <label class="font-weight-bold">
+                    <input type="radio" name="queryType" id="physical" value="PHYSICAL">
+                    Physical
+                  </label>
+                </div>
+                <div class="form-check">
+                  <label class="font-weight-bold">
+                    <input type="radio" name="queryType" id="logical" value="LOGICAL">
                     Logical
-              </label>
+                  </label>
+                </div>
+              </div>
             </div>
 
             <div class="form-group">
-              <div style="display: inline-block"><label for="query">Query</label></div>
+              <div style="display: inline-block"><label class="font-weight-bold" for="query">Query</label></div>
               <div style="display: inline-block; float:right; padding-right:5%"><b>Hint: </b>Use
                 <div id="keyboardHint" style="display:inline-block; font-style:italic"></div> to submit</div>
-              <div id="query-editor">${model.getProfile().query}</div>
+              <div id="query-editor" class="border">${model.getProfile().query}</div>
               <input class="form-control" id="query" name="query" type="hidden" value="${model.getProfile().query}"/>
             </div>
 
@@ -209,24 +214,22 @@
               <input type="checkbox" name="forceLimit" value="limit" <#if model.hasAutoLimit()>checked</#if>>
                 Limit results to <input type="text" id="autoLimit" name="autoLimit" min="0"
                   value="<#if model.hasAutoLimit()>${model.getAutoLimit()?c}<#else>${model.getDefaultAutoLimit()?c}</#if>" size="6" pattern="[0-9]*">
-                  rows <span class="glyphicon glyphicon-info-sign" title="Limits the number of records retrieved in the query.
-                  Ignored if query has a limit already" style="cursor:pointer"></span>
+                  rows <span class="material-icons" title="Limits the number of records retrieved in the query.
+                  Ignored if query has a limit already" style="cursor:pointer">info</span>
               &nbsp;&nbsp;&nbsp;
               Default schema: <input type="text" size="10" name="defaultSchema" id="defaultSchema">
-                <span class="glyphicon glyphicon-info-sign" title="Set the default schema used to find table names
-                and for SHOW FILES and SHOW TABLES." style="cursor:pointer"></span>
+                <span class="material-icons" title="Set the default schema used to find table names
+                and for SHOW FILES and SHOW TABLES." style="cursor:pointer">info</span>
            </div>
             <input type="hidden" name="csrfToken" value="${model.getCsrfToken()}">
+          </div>
           </form>
       </p>
-
-<#include "*/alertModals.ftl">
-<#include "*/runningQuery.ftl">
 
       <p>
       <form action="/profiles/cancel/${model.queryId}" method="GET">
         <div class="form-group">
-          <button type="submit" class="btn btn-default">Cancel query</button>
+          <button type="submit" class="btn btn-warning">Cancel query</button>
         </div>
       </form>
         </p>
@@ -234,23 +237,23 @@
     </div>
     <#if model.hasError()>
       <div id="query-error" class="tab-pane fade">
-        <p><pre>${model.getProfile().error?trim}</pre></p>
+        <p><pre class="bg-light border p-2">${model.getProfile().error?trim}</pre></p>
         <p>Failure node: ${model.getProfile().errorNode}</p>
         <p>Error ID: ${model.getProfile().errorId}</p>
 
-        <div class="page-header"></div>
+        <div class="pb-2 mt-4 mb-2 border-bottom"></div>
         <h3>Verbose Error Message</h3>
-        <div class="panel panel-default">
-          <div class="panel-heading">
-            <h4 class="panel-title">
-              <a data-toggle="collapse" href="#error-message-overview">
+        <div class="card">
+          <div class="card-header">
+            <h4>
+              <a class="text-secondary"data-toggle="collapse" href="#error-message-overview">
                  Overview
               </a>
             </h4>
           </div>
-          <div id="error-message-overview" class="panel-collapse collapse">
-            <div class="panel-body">
-              <pre>${model.getProfile().verboseError?trim}</pre>
+          <div id="error-message-overview" class="collapse">
+            <div class="card-body">
+              <pre class="bg-light border p-2">${model.getProfile().verboseError?trim}</pre>
             </div>
           </div>
         </div>
@@ -262,7 +265,7 @@
   <#assign queueName = model.getProfile().getQueueName() />
   <#assign queued = queueName != "" && queueName != "-" />
 
-  <div class="page-header"></div>
+  <div class="pb-2 mt-4 mb-2 border-bottom"></div>
   <h3>Query Profile: <span style='font-size:85%'>${model.getQueryId()}</span>
   <#if model.getQueryStateDisplayName() == "Prepared" || model.getQueryStateDisplayName() == "Planning" || model.getQueryStateDisplayName() == "Enqueued" || model.getQueryStateDisplayName() == "Starting" || model.getQueryStateDisplayName() == "Running">
     <div  style="display: inline-block;">
@@ -280,24 +283,24 @@
         <div class="modal-body" style="line-height:2">
           Cancellation issued for Query ID:<br>${model.getQueryId()}
         </div>
-        <div class="modal-footer"><button type="button" class="btn btn-default" onclick="refreshStatus()">Close</button></div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" onclick="refreshStatus()">Close</button></div>
       </div>
     </div>
   </div>
   </#if>
   </h3>
 
-  <div class="panel-group" id="query-profile-accordion">
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        <h4 class="panel-title">
-          <a data-toggle="collapse" href="#query-profile-overview">
+  <div id="query-profile-accordion">
+    <div class="card">
+      <div class="card-header">
+        <h4>
+          <a class="text-secondary" data-toggle="collapse" href="#query-profile-overview">
               Overview
           </a>
         </h4>
       </div>
-      <div id="query-profile-overview" class="panel-collapse collapse in">
-        <div class="panel-body">
+      <div id="query-profile-overview" class="collapse show">
+        <div class="card-body">
           <table class="table table-bordered">
             <thead>
             <tr>
@@ -326,16 +329,16 @@
       </div>
     </div>
 
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        <h4 class="panel-title">
-          <a data-toggle="collapse" href="#query-profile-duration">
+    <div class="card">
+      <div class="card-header">
+        <h4>
+          <a class="text-secondary" data-toggle="collapse" href="#query-profile-duration">
              Duration
           </a>
         </h4>
       </div>
-      <div id="query-profile-duration" class="panel-collapse collapse in">
-        <div class="panel-body">
+      <div id="query-profile-duration" class="collapse show">
+        <div class="card-body">
           <table class="table table-bordered">
             <thead>
               <tr>
@@ -366,18 +369,18 @@
   <#assign sessionOptions = model.getSessionOptions()>
   <#assign queryOptions = model.getQueryOptions()>
   <#if (sessionOptions?keys?size > 0 || queryOptions?keys?size > 0) >
-    <div class="page-header"></div>
+    <div class="pb-2 mt-4 mb-2 border-bottom"></div>
     <h3>Options</h3>
-    <div class="panel-group" id="options-accordion">
-      <div class="panel panel-default">
-        <div class="panel-heading">
-          <h4 class="panel-title">
-            <a data-toggle="collapse" href="#options-overview">
+    <div id="options-accordion">
+      <div class="card">
+        <div class="card-header">
+          <h4>
+            <a class="text-secondary" data-toggle="collapse" href="#options-overview">
               Overview
             </a>
           </h4>
         </div>
-        <div id="options-overview" class="panel-collapse collapse in">
+        <div id="options-overview" class="collapse show">
           <@list_options options=sessionOptions scope="Session" />
           <@list_options options=queryOptions scope="Query" />
         </div>
@@ -385,40 +388,40 @@
     </div>
   </#if>
 
-  <div class="page-header"></div>
+  <div class="pb-2 mt-4 mb-2 border-bottom"></div>
   <h3>Fragment Profiles</h3>
 
-  <div class="panel-group" id="fragment-accordion">
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        <h4 class="panel-title">
-          <a data-toggle="collapse" href="#fragment-overview">
+  <div id="fragment-accordion">
+    <div class="card">
+      <div class="card-header">
+        <h4>
+          <a class="text-secondary"data-toggle="collapse" href="#fragment-overview">
             Overview
           </a>
         </h4>
       </div>
-      <div id="fragment-overview" class="panel-collapse collapse">
-        <div class="panel-body">
-          <svg id="fragment-overview-canvas" class="center-block"></svg>
-          <div id="noProgressWarning" style="display:none;cursor:help" class="panel panel-warning">
-            <div class="panel-heading" title="Check if any of the Drillbits are waiting for data from a SCAN operator, or might actually be hung with its VM thread being busy." style="cursor:pointer">
-            <span class="glyphicon glyphicon-alert" style="font-size:125%">&#xe209;</span> <b>WARNING:</b> No fragments have made any progress in the last <b>${model.getNoProgressWarningThreshold()}</b> seconds. (See <span style="font-style:italic;font-weight:bold">Last Progress</span> below)
+      <div id="fragment-overview" class="collapse">
+        <div class="card-body">
+          <svg id="fragment-overview-canvas" class="d-block mx-auto"></svg>
+          <div id="noProgressWarning" style="display:none;cursor:help" class="card bg-warning">
+            <div class="card-header" title="Check if any of the Drillbits are waiting for data from a SCAN operator, or might actually be hung with its VM thread being busy." style="cursor:pointer">
+            <span class="material-icons" style="font-size:125%">warning</span> <b>WARNING:</b> No fragments have made any progress in the last <b>${model.getNoProgressWarningThreshold()}</b> seconds. (See <span style="font-style:italic;font-weight:bold">Last Progress</span> below)
             </div>
           </div>
           ${model.getFragmentsOverview()?no_esc}
         </div>
       </div>
       <#list model.getFragmentProfiles() as frag>
-      <div class="panel panel-default">
-        <div class="panel-heading">
-          <h4 class="panel-title">
-            <a data-toggle="collapse" href="#${frag.getId()}">
+      <div class="card">
+        <div class="card-header">
+          <h4>
+            <a class="text-secondary"data-toggle="collapse" href="#${frag.getId()}">
               ${frag.getDisplayName()}
             </a>
           </h4>
         </div>
-        <div id="${frag.getId()}" class="panel-collapse collapse">
-          <div class="panel-body">
+        <div id="${frag.getId()}" class="collapse">
+          <div class="card-body">
             ${frag.getContent()?no_esc}
           </div>
         </div>
@@ -427,9 +430,9 @@
     </div>
   </div>
 
-  <div class="page-header"></div>
+  <div class="pb-2 mt-4 mb-2 border-bottom"></div>
   <h3>Operator Profiles
- <button onclick="toggleEstimates('Rows')" class="btn" style="font-size:60%; float:right">Show/Hide Estimated Rows</button></h3>
+ <button onclick="toggleEstimates('Rows')" class="btn btn-light" style="font-size:60%; float:right">Show/Hide Estimated Rows</button></h3>
 
  <style>
   .estRows {
@@ -439,33 +442,32 @@
     display:<#if model.showEstimatedRows()>block<#else>none</#if>;
   }
 </style>
-  <div class="panel-group" id="operator-accordion">
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        <h4 class="panel-title">
-          <a data-toggle="collapse" href="#operator-overview">
+  <div id="operator-accordion">
+    <div class="card">
+      <div class="card-header">
+        <h4>
+          <a class="text-secondary"data-toggle="collapse" href="#operator-overview">
             Overview
           </a>
         </h4>
       </div>
-      <div id="operator-overview" class="panel-collapse collapse">
-        <div class="panel-body">
+      <div id="operator-overview" class="collapse">
+        <div class="card-body">
       <#if model.hasAutoLimit()>
-          <div name="autoLimitWarning" style="cursor:help" class="panel panel-warning" title="WebUI Queries allow restricting the number of rows returned to avoid the server to hold excessive number of results rows in memory.&#10;This helps maintain server stability with faster response if the entire resultset will not be visualized in the browser">
-            <div class="panel-heading">
-            <span class="glyphicon glyphicon-pushpin" style="font-size:125%"></span>
+          <div name="autoLimitWarning" style="cursor:help" class="card bg-warning" title="WebUI Queries allow restricting the number of rows returned to avoid the server to hold excessive number of results rows in memory.&#10;This helps maintain server stability with faster response if the entire resultset will not be visualized in the browser">
+            <div class="card-header">
             <b>WARNING:</b> Query result was <b>automatically</b> limited to <span style="font-style:italic;font-weight:bold">${model.getAutoLimit()} rows</span>
             </div>
           </div>
       </#if>
-          <div id="spillToDiskWarning" style="display:none;cursor:help" class="panel panel-warning" title="Spills occur because a buffered operator didn't get enough memory to hold data in memory. Increase the memory or ensure that number of spills &lt; 2">
-            <div class="panel-heading"><span class="glyphicon glyphicon-alert" style="font-size:125%">&#xe209;</span> <b>WARNING:</b> Some operators have data spilled to disk. This will result in performance loss. (See <span style="font-style:italic;font-weight:bold">Avg Peak Memory</span> and <span style="font-style:italic;font-weight:bold">Max Peak Memory</span> below)
+          <div id="spillToDiskWarning" style="display:none;cursor:help" class="card bg-warning" title="Spills occur because a buffered operator didn't get enough memory to hold data in memory. Increase the memory or ensure that number of spills &lt; 2">
+            <div class="card-header"><span class="material-icons" style="font-size:125%">warning</span> <b>WARNING:</b> Some operators have data spilled to disk. This will result in performance loss. (See <span style="font-style:italic;font-weight:bold">Avg Peak Memory</span> and <span style="font-style:italic;font-weight:bold">Max Peak Memory</span> below)
             <button type="button" class="close" onclick="closeWarning('spillToDiskWarning')" style="font-size:180%">&times;</button>
             </div>
           </div>
-          <div id="longScanWaitWarning" style="display:none;cursor:help" class="panel panel-warning">
-            <div class="panel-heading" title="Check if any of the Drillbits are waiting for data from a SCAN operator, or might actually be hung with its VM thread being busy." style="cursor:pointer">
-            <span class="glyphicon glyphicon-alert" style="font-size:125%">&#xe209;</span> <b>WARNING:</b> Some of the SCAN operators spent more time waiting for the data than processing it. (See <span style="font-style:italic;font-weight:bold">Avg Wait Time</span> as compared to <span style="font-style:italic;font-weight:bold">Average Process Time</span> for the <b>SCAN</b> operators below)
+          <div id="longScanWaitWarning" style="display:none;cursor:help" class="card bg-warning">
+            <div class="card-header" title="Check if any of the Drillbits are waiting for data from a SCAN operator, or might actually be hung with its VM thread being busy." style="cursor:pointer">
+            <span class="material-icons" style="font-size:125%">warning</span> <b>WARNING:</b> Some of the SCAN operators spent more time waiting for the data than processing it. (See <span style="font-style:italic;font-weight:bold">Avg Wait Time</span> as compared to <span style="font-style:italic;font-weight:bold">Average Process Time</span> for the <b>SCAN</b> operators below)
             <button type="button" class="close" onclick="closeWarning('longScanWaitWarning')" style="font-size:180%">&times;</button>
             </div>
           </div>
@@ -475,28 +477,28 @@
     </div>
 
     <#list model.getOperatorProfiles() as op>
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        <h4 class="panel-title">
-          <a data-toggle="collapse" href="#${op.getId()}">
+    <div class="card">
+      <div class="card-header">
+        <h4>
+          <a class="text-secondary"data-toggle="collapse" href="#${op.getId()}">
             ${op.getDisplayName()}
           </a>
         </h4>
       </div>
-      <div id="${op.getId()}" class="panel-collapse collapse">
-        <div class="panel-body">
+      <div id="${op.getId()}" class="collapse">
+        <div class="card-body">
           ${op.getContent()?no_esc}
         </div>
-        <div class="panel panel-info">
-          <div class="panel-heading">
-            <h4 class="panel-title">
-              <a data-toggle="collapse" href="#${op.getId()}-metrics">
+        <div class="card">
+          <div class="card-header bg-info">
+            <h4>
+              <a class="text-white"data-toggle="collapse" href="#${op.getId()}-metrics">
                 Operator Metrics
               </a>
             </h4>
           </div>
-          <div id="${op.getId()}-metrics" class="panel-collapse collapse">
-            <div class="panel-body" style="display:block;overflow-x:auto">
+          <div id="${op.getId()}-metrics" class="collapse">
+            <div class="card-body" style="display:block;overflow-x:auto">
               ${op.getMetricsTable()?no_esc}
             </div>
           </div>
@@ -506,23 +508,23 @@
     </#list>
   </div>
 
-  <div class="page-header"></div>
+  <div class="pb-2 mt-4 mb-2 border-bottom"></div>
   <h3>Full JSON Profile</h3>
 
   <div class="span4 collapse-group" id="full-json-profile">
-    <a class="btn btn-default" data-toggle="collapse" data-target="#full-json-profile-json">JSON profile</a>
+    <a class="btn btn-light" data-toggle="collapse" data-target="#full-json-profile-json">JSON profile</a>
     <br> <br>
-    <pre class="collapse" id="full-json-profile-json">
+    <pre class="collapse bg-light border p-2" id="full-json-profile-json">
     </pre>
   </div>
-  <div class="page-header">
+  <div class="pb-2 mt-4 mb-2 border-bottom">
   </div> <br>
 
     <script>
     //Inject Spilled Tags
     $(window).on('load', function () {
-      injectIconByClass("spill-tag","glyphicon-download-alt");
-      injectIconByClass("time-skew-tag","glyphicon-time");
+      injectIconByClass("spill-tag","get_app");
+      injectIconByClass("time-skew-tag","schedule");
       injectSlowScanIcon();
       //Building RowCount
       buildRowCountMap();
@@ -536,7 +538,7 @@
         var i;
         for (i = 0; i < tagElemList.length; i++) {
             var content = tagElemList[i].innerHTML;
-            tagElemList[i].innerHTML = "<span class=\"glyphicon " + tagIcon + "\">&nbsp;</span>" + content;
+            tagElemList[i].innerHTML = "<span class=\"material-icons\">" + tagIcon + "</span>" + content;
         }
     }
 
@@ -569,7 +571,6 @@
     document.getElementById('query-query').style.fontSize='13px';
     document.getElementById('query-query').style.fontFamily='courier,monospace';
     document.getElementById('query-query').style.lineHeight='1.5';
-    document.getElementById('query-query').style.width='98%';
     document.getElementById('query-query').style.margin='auto';
     viewer.resize();
     viewer.setReadOnly(true);
@@ -605,7 +606,6 @@
     document.getElementById('query-editor').style.fontSize='13px';
     document.getElementById('query-editor').style.fontFamily='courier,monospace';
     document.getElementById('query-editor').style.lineHeight='1.5';
-    document.getElementById('query-editor').style.width='98%';
     document.getElementById('query-editor').style.margin='auto';
     document.getElementById('query-editor').style.backgroundColor='#ffffff';
     editor.setOptions({
@@ -659,7 +659,7 @@
 
 <#macro list_options options scope>
  <#if (options?keys?size > 0) >
-   <div class="panel-body">
+   <div class="card-body">
      <h4>${scope} Options</h4>
      <table id="${scope}_options_table" class="table table-bordered">
        <thead>

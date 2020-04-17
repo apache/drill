@@ -22,7 +22,7 @@
 </#macro>
 
 <#macro page_body>
-  <div class="page-header">
+  <div class="pb-2 mt-4 mb-2 border-bottom">
     <div class="alert alert-success">
       <strong>${model.getValue()}</strong>
     </div>

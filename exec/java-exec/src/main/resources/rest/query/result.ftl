@@ -27,36 +27,38 @@
 </#macro>
 
 <#macro page_body>
-  <div class="page-header">
-  </div>
   <div>
-  <table><tr>
-    <td align='left'>
-      <button type="button"  title="Open in new window" onclick="popOutProfile('${model.getQueryId()}');" class="btn btn-default btn-sm">
-      <b>Query Profile:</b> ${model.getQueryId()} <#switch model.getQueryState()>
-        <#case "COMPLETED">
-          <span class="label label-success">
-          <#break>
-        <#case "CANCELED">
-          <span class="label label-warning">
-          <#break>
-        <#case "FAILED">
-          <span class="label label-danger">
-          <#break>
-        <#default>
-          <span class="label label-default">
-      </#switch>${model.getQueryState()}</span>&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-new-window"/></button>
-     </td>
-     <td align="right" width="100%">
-       <div class="input-group">
-         <span class="input-group-addon" style="font-size:95%">Delimiter </span>
-         <input id="delimitBy" type="text" class="form-control input-sm" name="delimitBy" title="Specify delimiter" placeholder="Required" maxlength="2" size="2" value=",">
-       </div></td><td>
-       <button type="button"  title="Export visible table as CSV. Show ALL rows to export entire resultSet" onclick="exportTableAsCsv('${model.getQueryId()}');" class="btn btn-default btn-sm">
-       <b>Export </b> <span class="glyphicon glyphicon-export"/></button>
-     </td>
-  </tr>
-  </table>
+  <div class="container-fluid px-0 py-1">
+    <div class="row">
+      <div class="table-responsive col-10">
+        <button type="button"  title="Open in new window" onclick="popOutProfile('${model.getQueryId()}');" class="btn btn-light btn-sm">
+          <b>Query Profile:</b> ${model.getQueryId()} <#switch model.getQueryState()>
+            <#case "COMPLETED">
+          <span class="badge badge-success">
+        <#break>
+              <#case "CANCELED">
+        <span class="badge badge-warning">
+        <#break>
+            <#case "FAILED">
+        <span class="badge badge-danger">
+        <#break>
+            <#default>
+        <span class="badge badge-light">
+    </#switch>${model.getQueryState()}</span>&nbsp;&nbsp;&nbsp;<span class="material-icons">open_in_new</span></button>
+      </div>
+      <div class="table-responsive col-2">
+        <div class="input-group">
+          <div class="input-group-prepend">
+            <span class="input-group-text" style="font-size:95%">Delimiter </span>
+          </div>
+          <input id="delimitBy" type="text" class="form-control input-sm" name="delimitBy" title="Specify delimiter" placeholder="Required" maxlength="2" size="2" value=",">
+          <button type="button"  title="Export visible table as CSV. Show ALL rows to export entire resultSet" onclick="exportTableAsCsv('${model.getQueryId()}');" class="btn btn-light btn-sm">
+            <b>Export </b> <span class="material-icons">import_export</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
   </div>
   <#if model.isEmpty()>
     <div class="jumbotron">

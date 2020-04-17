@@ -20,8 +20,8 @@
 <#include "*/generic.ftl">
 <#macro page_head>
 
-<script src="/static/js/jquery.dataTables-1.10.16.min.js"></script>
-<link href="/static/css/drill-dataTables.sortable.css" rel="stylesheet">
+<script src="/static/js/datatables.min.js"></script>
+<link href="/static/css/datatables.min.css" rel="stylesheet">
 <script>
     $(document).ready(function() {
       $.each(["running","completed"], function(i, key) {
@@ -39,12 +39,12 @@
           "sDom": '<"top"lftip><"bottom"><"clear">',
           //Customized info labels
           "language": {
-              "lengthMenu": "Display _MENU_ profiles per page",
+              "lengthMenu": "<b>Display </b>_MENU_<b> profiles per page</b>",
               "zeroRecords": "No matching profiles found!",
               "info": "Showing page _PAGE_ of _PAGES_ ",
               "infoEmpty": "No profiles available",
               "infoFiltered": "(filtered _TOTAL_ from _MAX_)",
-              "search": "Search Profiles  "
+              "search": "<b>Search Profiles  </b>"
           }
         } );
       } );
@@ -104,16 +104,13 @@
   }
 
   /* Add spaces between pagination links */
-  #profileList_completed_paginate *, #profileList_running_paginate * { 
-    padding-right: 0.35em; 
+  #profileList_completed_paginate *, #profileList_running_paginate * {
     float:left 
   }
 </style>
 </#macro>
 
 <#macro page_body>
-  <div class="page-header">
-  </div>
   <#if (model.getErrors()?size > 0) >
     <div id="message" class="alert alert-danger alert-dismissable">
         <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
@@ -138,13 +135,13 @@
             <h4 class="modal-title" id="cancelTitle"></h4>
           </div>
           <div class="modal-body" style="line-height:2" ><h3 id="cancelText">Cancellation Status</h3></div>
-          <div class="modal-footer"><button type="button" class="btn btn-default" onclick="refreshStatus()">Close</button></div>
+          <div class="modal-footer"><button type="button" class="btn btn-secondary" onclick="refreshStatus()">Close</button></div>
         </div>
       </div>
     </div>
 
     <@list_queries queries=model.getRunningQueries() stateList="running" />
-    <div class="page-header">
+    <div class="pb-2 mt-4 mb-2 border-bottom">
     </div>
   <#else>
     <div id="message" class="alert alert-info alert-dismissable">
@@ -196,8 +193,8 @@
 
 <#macro list_queries queries stateList>
     <div class="table-responsive">
-        <table id="profileList_${stateList}" class="table table-hover sortable dataTable" role="grid">
-            <thead>
+        <table id="profileList_${stateList}" class="table table-hover table-striped table-bordered sortable dataTable" role="grid">
+            <thead class="">
             <tr role="row">
                 <#if stateList == "running" >
                 <th><input type="checkbox" name="selectToggle" onClick="toggleRunningSelection(this)" /></th>

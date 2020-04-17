@@ -22,16 +22,14 @@
 </#macro>
 
 <#macro page_body>
-  <div class="page-header">
-  </div>
 <!-- Rendering Panel -->
-  <div class="panel panel-danger">
-    <div class="panel-heading" style="white-space:pre;font-size:110%;padding:0px 0px">
-      <span class="glyphicon glyphicon-alert" style="font-size:125%;">&#xe209;</span>   <strong>${model.getClass().getSimpleName()} :</strong> 	${model.getMessage()?split("\n")[0]}
+  <div class="card mb-2">
+    <div class="card-header bg-danger text-white" style="white-space:pre;font-size:110%;padding:0px 0px">
+      <span class="material-icons" style="font-size:125%;">warning</span>   <strong>${model.getClass().getSimpleName()} :</strong> 	${model.getMessage()?split("\n")[0]}
     </div>
-    <div class="panel-body"><span style="font-family:courier,monospace;white-space:pre-wrap">${model}</span></div>
+    <div class="card-body"><span style="font-family:courier,monospace;white-space:pre-wrap">${model}</span></div>
   </div>
-  <a class="btn btn-default" id="backBtn" style="display:inline" onclick="window.history.back()"><span class="glyphicon glyphicon-step-backward"></span> Back</a>
+  <a class="btn btn-light" id="backBtn" style="display:inline" onclick="window.history.back()"><span class="material-icons">skip_previous</span> Back</a>
 </#macro>
 
 <@page_html/>

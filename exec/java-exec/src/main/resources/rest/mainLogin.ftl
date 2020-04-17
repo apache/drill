@@ -22,8 +22,6 @@
 </#macro>
 
 <#macro page_body>
-  <div class="page-header">
-  </div>
   <div class="container container-table">
     <div align="center" class="table-responsive">
       <#if model?? && model.isFormEnabled()>
