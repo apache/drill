@@ -68,6 +68,8 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
 
   private ResultSetLoader resultLoader;
 
+  private CassandraSubScanSpec subScanSpec;
+
   private RowSetLoader rowWriter;
 
   private ResultSet cassandraResultset;
@@ -148,60 +150,18 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
   }
 
   private void setup(SchemaNegotiator negotiator) {
-    CassandraSubScanSpec subScanSpec = subScan.getChunkScanSpecList().get(0); // TODO get the right subscan.. for now, get the first one.
+    subScanSpec = subScan.getChunkScanSpecList().get(0); // TODO get the right subscan.. for now, get the first one.
 
     try {
-      List<ColumnMetadata> partitioncols = cluster
-        .getMetadata()
-        .getKeyspace(subScanSpec.getKeyspace())
-        .getTable(subScanSpec.getTable())
-        .getPartitionKey();
+      // Get Cassandra Partition Keys
+      String[] partitionkeys = getPartitionKeys();
 
-      String[] partitionkeys = new String[partitioncols.size()];
-      for (int index = 0; index < partitioncols.size(); index++) {
-        partitionkeys[index] = partitioncols.get(index).getName();
-      }
-
-      Statement q;
-
-      /* Project only required columns */
-      Select.Where where;
-      Select.Selection select = QueryBuilder.select();
-
-      // Apply projected columns to query
-      if (Utilities.isStarQuery(projectedColumns)) {
-        where = select.all().from(subScanSpec.getKeyspace(), subScanSpec.getTable()).allowFiltering().where();
-      } else {
-        for (SchemaPath path : projectedColumns) {
-          if (path.getAsNamePart().getName().equals("**")) {
-            continue;
-          } else {
-            select = select.column(path.getAsNamePart().getName());
-          }
-        }
-        where = select.from(subScanSpec.getKeyspace(), subScanSpec.getTable()).allowFiltering().where();
-      }
-
-      // Apply start/end tokens
-      if (subScanSpec.getStartToken() != null) {
-        where = where.and(QueryBuilder.gte(QueryBuilder.token(partitionkeys), new Long(subScanSpec.getStartToken())));
-      }
-      if (subScanSpec.getEndToken() != null) {
-        where = where.and(QueryBuilder.lt(QueryBuilder.token(partitionkeys), new Long(subScanSpec.getEndToken())));
-      }
-
-      // Push down filters
-      if (subScanSpec.filter != null && subScanSpec.filter.size() > 0) {
-        logger.debug("Filters: {}", subScanSpec.filter.toString());
-        for (Clause filter : subScanSpec.filter) {
-          logger.debug("In loop: {} ", filter.toString());
-          where = where.and(filter);
-        }
-      }
+      // Define query
+      Statement cassandraQuery = buildQuery(partitionkeys);
 
       // Execute query
-      logger.debug("Query sent to Cassandra: {}", where);
-      cassandraResultset = session.execute(where);
+      logger.debug("Query sent to Cassandra: {}", cassandraQuery);
+      cassandraResultset = session.execute(cassandraQuery);
 
       // Get the first row of data to build the Drill schema
       Row firstRow = cassandraResultset.one();
@@ -210,7 +170,9 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
       cassandraColumnWriters = new ArrayList<>();
 
       // Set the schema
-      negotiator.tableSchema(buildDrillSchema(firstRow), true);
+      SchemaBuilder builder = new SchemaBuilder();
+      negotiator.tableSchema(buildDrillSchema(builder, firstRow), true);
+      negotiator.build();
 
     } catch (Exception e) {
       throw UserException
@@ -220,15 +182,76 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
     }
   }
 
+  private String[] getPartitionKeys() {
+    List<ColumnMetadata> partitioncols = cluster
+      .getMetadata()
+      .getKeyspace(subScanSpec.getKeyspace())
+      .getTable(subScanSpec.getTable())
+      .getPartitionKey();
+
+    String[] partitionkeys = new String[partitioncols.size()];
+    for (int index = 0; index < partitioncols.size(); index++) {
+      partitionkeys[index] = partitioncols.get(index).getName();
+    }
+    return partitionkeys;
+  }
+
+  /**
+   * Build the query which is sent to Cassandra.  This method also includes pushdowns from Drill
+   * @param partitionkeys These are the Cassandra Partition keys to indicate where the data is physically stored.
+   * @return A fully built Cassandra query
+   */
+  private Statement buildQuery(String[] partitionkeys) {
+
+    /* Project only required columns */
+    Select.Where where;
+    Select.Selection select = QueryBuilder.select();
+
+    // Apply projected columns to query
+    if (Utilities.isStarQuery(projectedColumns)) {
+      where = select.all().from(subScanSpec.getKeyspace(), subScanSpec.getTable()).allowFiltering().where();
+    } else {
+      for (SchemaPath path : projectedColumns) {
+        if (path.getAsNamePart().getName().equals("**")) {
+          continue;
+        } else {
+          select = select.column(path.getAsNamePart().getName());
+        }
+      }
+      where = select.from(subScanSpec.getKeyspace(), subScanSpec.getTable()).allowFiltering().where();
+    }
+
+    // Apply start/end tokens
+    if (subScanSpec.getStartToken() != null) {
+      where = where.and(QueryBuilder.gte(QueryBuilder.token(partitionkeys), new Long(subScanSpec.getStartToken())));
+    }
+    if (subScanSpec.getEndToken() != null) {
+      where = where.and(QueryBuilder.lt(QueryBuilder.token(partitionkeys), new Long(subScanSpec.getEndToken())));
+    }
+
+    // Push down filters
+    if (subScanSpec.filter != null && subScanSpec.filter.size() > 0) {
+      logger.debug("Filters: {}", subScanSpec.filter.toString());
+      for (Clause filter : subScanSpec.filter) {
+        logger.debug("In loop: {} ", filter.toString());
+        where = where.and(filter);
+      }
+    }
+    return where;
+  }
 
   /**
    * Builds the schema from the first row of data in the Cassandra data set.
    * @param firstRow The first row of the Cassandra dataset
    * @return A TupleMetadata object of the built schema
    */
-  private TupleMetadata buildDrillSchema(Row firstRow) {
+  private TupleMetadata buildDrillSchema(SchemaBuilder builder, Row firstRow) {
+    // Case for empty result set
+    if (firstRow == null || firstRow.getColumnDefinitions().size() == 0) {
+      return builder.buildSchema();
+    }
+
     int colPosition = 0;
-    SchemaBuilder builder = new SchemaBuilder();
     for (ColumnDefinitions.Definition def : firstRow.getColumnDefinitions()) {
       String colName = def.getName();
       String dataType = def.getType().toString();
@@ -275,7 +298,7 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
   }
 
 
-  public abstract class CassandraColumnWriter {
+  public static class CassandraColumnWriter {
 
     protected Row row;
 
@@ -287,13 +310,19 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
       this.columnWriter = columnWriter;
     }
 
-    public abstract void load(Row row, String colName);
+    public void define(SchemaBuilder builder) {};
+
+    public void load(Row row, String colName) {};
   }
 
-  public class StringColumnWriter extends CassandraColumnWriter {
+  public static class StringColumnWriter extends CassandraColumnWriter {
 
     StringColumnWriter(ScalarWriter columnWriter) {
       super(columnWriter);
+    }
+
+    public void define(SchemaBuilder builder) {
+      builder.addNullable(colName, TypeProtos.MinorType.VARCHAR);
     }
 
     public void load(Row row, String colName) {
@@ -306,10 +335,14 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
     }
   }
 
-  public class IntColumnWriter extends CassandraColumnWriter {
+  public static class IntColumnWriter extends CassandraColumnWriter {
 
     IntColumnWriter(ScalarWriter columnWriter) {
       super(columnWriter);
+    }
+
+    public void define(SchemaBuilder builder) {
+      builder.addNullable(colName, TypeProtos.MinorType.INT);
     }
 
     public void load(Row row, String colName) {
@@ -318,10 +351,14 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
     }
   }
 
-  public class BigIntColumnWriter extends CassandraColumnWriter {
+  public static class BigIntColumnWriter extends CassandraColumnWriter {
 
     BigIntColumnWriter(ScalarWriter columnWriter) {
       super(columnWriter);
+    }
+
+    public void define(SchemaBuilder builder) {
+      builder.addNullable(colName, TypeProtos.MinorType.BIGINT);
     }
 
     public void load(Row row, String colName) {
