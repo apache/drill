@@ -21,6 +21,7 @@ package org.apache.drill.exec.store.cassandra;
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.ColumnDefinitions;
 import com.datastax.driver.core.ColumnMetadata;
+import com.datastax.driver.core.LocalDate;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
@@ -41,9 +42,12 @@ import org.apache.drill.exec.store.cassandra.connection.CassandraConnectionManag
 import org.apache.drill.exec.store.cassandra.CassandraSubScan.CassandraSubScanSpec;
 import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
+import org.joda.time.Instant;
+import org.joda.time.LocalTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -138,22 +142,6 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
     }
     rowWriter.save();
   }
-
- /* private boolean processRow(RowSetLoader rowWriter) {
-    if (!cassandraResultset.iterator().hasNext()) {
-      return false;
-    }
-    Row currentRow = cassandraResultset.iterator().next();
-    rowWriter.start();
-
-    for (int i = 0; i < currentRow.getColumnDefinitions().size(); i++) {
-      CassandraColumnWriter writer = cassandraColumnWriters.get(i);
-      writer.load(currentRow);
-    }
-
-    rowWriter.save();
-    return true;
-  }*/
 
   @Override
   public void close() {
@@ -265,17 +253,44 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
       String colName = def.getName();
       String dataType = def.getType().toString();
 
-      // TODO Add other datatypes supported by Cassandra
+      // TODO Add all other datatypes supported by Cassandra
       switch (dataType) {
+        case "ascii":
+        case "text":
         case "varchar":
           builder.addNullable(colName, TypeProtos.MinorType.VARCHAR);
           break;
         case "int":
           builder.addNullable(colName, TypeProtos.MinorType.INT);
           break;
+        case "varint":
         case "bigint":
           builder.addNullable(colName, TypeProtos.MinorType.BIGINT);
           break;
+        case "smallint":
+        case "tinyint":
+          builder.addNullable(colName, TypeProtos.MinorType.SMALLINT);
+          break;
+        case "float":
+          builder.addNullable(colName, TypeProtos.MinorType.FLOAT4);
+          break;
+        case "double":
+          builder.addNullable(colName, TypeProtos.MinorType.FLOAT8);
+          break;
+        case "timestamp":
+          builder.addNullable(colName, TypeProtos.MinorType.TIMESTAMP);
+          break;
+        case "date":
+          builder.addNullable(colName, TypeProtos.MinorType.DATE);
+          break;
+        case "time":
+          builder.addNullable(colName, TypeProtos.MinorType.TIME);
+          break;
+        case "boolean":
+          builder.addNullable(colName, TypeProtos.MinorType.BIT);
+          break;
+        default:
+          logger.warn("Unknown data type: {} for column {}", dataType, colName);
       }
     }
     return builder.buildSchema();
@@ -291,14 +306,42 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
       String colName = def.getName();
       String dataType = def.getType().toString();
       switch (dataType) {
+        case "ascii":
+        case "text":
         case "varchar":
           cassandraColumnWriters.add(new StringColumnWriter(colName, rowWriter));
           break;
         case "int":
           cassandraColumnWriters.add(new IntColumnWriter(colName, rowWriter));
           break;
+        case "varint":
         case "bigint":
           cassandraColumnWriters.add(new BigIntColumnWriter(colName, rowWriter));
+          break;
+        case "smallint":
+        case "tinyint":
+          cassandraColumnWriters.add(new SmallIntColumnWriter(colName, rowWriter));
+          break;
+        case "float":
+          cassandraColumnWriters.add(new FloatColumnWriter(colName, rowWriter));
+          break;
+        case "double":
+          cassandraColumnWriters.add(new DoubleColumnWriter(colName, rowWriter));
+          break;
+        case "decimal":
+          cassandraColumnWriters.add(new DecimalColumnWriter(colName, rowWriter));
+          break;
+        case "timestamp":
+          cassandraColumnWriters.add(new TimestampColumnWriter(colName, rowWriter));
+          break;
+        case "time":
+          cassandraColumnWriters.add(new TimeColumnWriter(colName, rowWriter));
+          break;
+        case "date":
+          cassandraColumnWriters.add(new DateColumnWriter(colName, rowWriter));
+          break;
+        case "boolean":
+          cassandraColumnWriters.add(new BooleanColumnWriter(colName, rowWriter));
           break;
         default:
           logger.warn("Unknown data type: {} for column {}", dataType, colName);
@@ -358,6 +401,118 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
     public void load(Row row) {
       long value = row.getLong(colName);
       columnWriter.setLong(value);
+    }
+  }
+
+  public class SmallIntColumnWriter extends CassandraColumnWriter {
+
+    SmallIntColumnWriter(String colName, RowSetLoader rowWriter) {
+      this.colName = colName;
+      columnWriter = rowWriter.scalar(colName);
+    }
+
+    @Override
+    public void load(Row row) {
+      short value = row.getShort(colName);
+      columnWriter.setInt(value);
+    }
+  }
+
+  public class FloatColumnWriter extends CassandraColumnWriter {
+
+    FloatColumnWriter(String colName, RowSetLoader rowWriter) {
+      this.colName = colName;
+      columnWriter = rowWriter.scalar(colName);
+    }
+
+    @Override
+    public void load(Row row) {
+      float value = row.getFloat(colName);
+      columnWriter.setDouble(value);
+    }
+  }
+  public class DoubleColumnWriter extends CassandraColumnWriter {
+
+    DoubleColumnWriter(String colName, RowSetLoader rowWriter) {
+      this.colName = colName;
+      columnWriter = rowWriter.scalar(colName);
+    }
+
+    @Override
+    public void load(Row row) {
+      double value = row.getDouble(colName);
+      columnWriter.setDouble(value);
+    }
+  }
+
+  public class DecimalColumnWriter extends CassandraColumnWriter {
+
+    DecimalColumnWriter(String colName, RowSetLoader rowWriter) {
+      this.colName = colName;
+      columnWriter = rowWriter.scalar(colName);
+    }
+
+    @Override
+    public void load(Row row) {
+      BigDecimal value = row.getDecimal(colName);
+      columnWriter.setDecimal(value);
+    }
+  }
+
+  public class TimestampColumnWriter extends CassandraColumnWriter {
+
+    TimestampColumnWriter(String colName, RowSetLoader rowWriter) {
+      this.colName = colName;
+      columnWriter = rowWriter.scalar(colName);
+    }
+
+    @Override
+    public void load(Row row) {
+      Instant value = new Instant(row.getTimestamp(colName));
+      columnWriter.setTimestamp(value);
+    }
+  }
+
+  public class DateColumnWriter extends CassandraColumnWriter {
+
+    DateColumnWriter(String colName, RowSetLoader rowWriter) {
+      this.colName = colName;
+      columnWriter = rowWriter.scalar(colName);
+    }
+
+    @Override
+    public void load(Row row) {
+      LocalDate value = row.getDate(colName);
+      org.joda.time.LocalDate d = new org.joda.time.LocalDate(value.getYear(), value.getMonth(), value.getDay());
+      columnWriter.setDate(d);
+    }
+  }
+
+  public class TimeColumnWriter extends CassandraColumnWriter {
+
+    TimeColumnWriter(String colName, RowSetLoader rowWriter) {
+      this.colName = colName;
+      columnWriter = rowWriter.scalar(colName);
+    }
+
+    @Override
+    public void load(Row row) {
+      long value = row.getTime(colName);
+      columnWriter.setTime(new LocalTime(value));
+    }
+  }
+
+  public class BooleanColumnWriter extends CassandraColumnWriter {
+
+    BooleanColumnWriter(String colName, RowSetLoader rowWriter) {
+      this.colName = colName;
+      columnWriter = rowWriter.scalar(colName);
+    }
+
+    @Override
+    public void load(Row row) {
+      boolean value = row.getBool(colName);
+      columnWriter.setBoolean(value);
     }
   }
 }
