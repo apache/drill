@@ -50,6 +50,7 @@
     <guava.version>19.0</guava.version>
     <forkCount>2</forkCount>
     <parquet.version>1.11.0</parquet.version>
+    <parquet.format.version>2.8.0</parquet.format.version>
     <!--
       For development purposes to be able to use custom Calcite versions (e.g. not present in jitpack
       repository or from local repository) update this property to desired value (e.g. org.apache.calcite).
@@ -61,8 +62,7 @@
     <avatica.version>1.15.0</avatica.version>
     <janino.version>3.0.11</janino.version>
     <sqlline.version>1.9.0</sqlline.version>
-    <jackson.version>2.9.9</jackson.version>
-    <jackson.databind.version>2.9.9</jackson.databind.version>
+    <jackson.version>2.10.3</jackson.version>
     <zookeeper.version>3.5.7</zookeeper.version>
     <mapr.release.version>6.1.0-mapr</mapr.release.version>
     <ojai.version>3.0-mapr-1808</ojai.version>
@@ -106,6 +106,7 @@
     <commons.validator.version>1.6</commons.validator.version>
     <commons.text.version>1.6</commons.text.version>
     <protobuf.version>3.11.1</protobuf.version>
+    <protostuff.version>1.7.1</protostuff.version>
     <codemodel.version>2.6</codemodel.version>
     <joda.version>2.10.5</joda.version>
     <javax.el.version>3.0.0</javax.el.version>
@@ -117,6 +118,15 @@
     <libthrift.version>0.13.0</libthrift.version>
     <derby.version>10.14.2.0</derby.version>
     <commons.cli.version>1.4</commons.cli.version>
+    <snakeyaml.version>1.26</snakeyaml.version>
+    <commons.lang3.version>3.10</commons.lang3.version>
+    <typesafe.config.version>1.0.0</typesafe.config.version>
+    <commons.codec.version>1.14</commons.codec.version>
+    <metadata.extractor.version>2.13.0</metadata.extractor.version>
+    <xalan.version>2.7.2</xalan.version>
+    <xerces.version>2.12.0</xerces.version>
+    <commons.configuration.version>1.10</commons.configuration.version>
+    <commons.beanutils.version>1.9.4</commons.beanutils.version>
   </properties>
 
   <scm>
@@ -617,6 +627,7 @@
                     <exclude>org.apache.calcite:*</exclude>
                     <exclude>commons-httpclient:*</exclude>
                     <exclude>tomcat:*</exclude>
+                    <exclude>commons-beanutils:commons-beanutils-core</exclude>
                   </excludes>
                 </bannedDependencies>
               </rules>
@@ -1004,7 +1015,7 @@
     <dependency>
       <groupId>commons-codec</groupId>
       <artifactId>commons-codec</artifactId>
-      <version>1.10</version>
+      <version>${commons.codec.version}</version>
     </dependency>
 
     <dependency>
@@ -1558,7 +1569,7 @@
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-databind</artifactId>
-        <version>${jackson.databind.version}</version>
+        <version>${jackson.version}</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
@@ -1735,7 +1746,7 @@
       <dependency>
         <groupId>org.apache.parquet</groupId>
         <artifactId>parquet-format</artifactId>
-        <version>2.8.0</version>
+        <version>${parquet.format.version}</version>
         <exclusions>
           <exclusion>
             <groupId>org.apache.hadoop</groupId>
@@ -1765,12 +1776,12 @@
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-lang3</artifactId>
-        <version>3.2</version>
+        <version>${commons.lang3.version}</version>
       </dependency>
       <dependency>
         <groupId>com.typesafe</groupId>
         <artifactId>config</artifactId>
-        <version>1.0.0</version>
+        <version>${typesafe.config.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.zookeeper</groupId>
@@ -1874,6 +1885,16 @@
         <version>${protobuf.version}</version>
       </dependency>
       <dependency>
+        <groupId>io.protostuff</groupId>
+        <artifactId>protostuff-core</artifactId>
+        <version>${protostuff.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.protostuff</groupId>
+        <artifactId>protostuff-json</artifactId>
+        <version>${protostuff.version}</version>
+      </dependency>
+      <dependency>
         <groupId>joda-time</groupId>
         <artifactId>joda-time</artifactId>
         <version>${joda.version}</version>
@@ -1917,6 +1938,48 @@
         <groupId>commons-cli</groupId>
         <artifactId>commons-cli</artifactId>
         <version>${commons.cli.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.yaml</groupId>
+        <artifactId>snakeyaml</artifactId>
+        <version>${snakeyaml.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.drewnoakes</groupId>
+        <artifactId>metadata-extractor</artifactId>
+        <version>${metadata.extractor.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>xerces</groupId>
+        <artifactId>xercesImpl</artifactId>
+        <version>${xerces.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>xalan</groupId>
+        <artifactId>xalan</artifactId>
+        <version>${xalan.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>commons-configuration</groupId>
+        <artifactId>commons-configuration</artifactId>
+        <version>${commons.configuration.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>commons-beanutils</groupId>
+        <artifactId>commons-beanutils</artifactId>
+        <version>${commons.beanutils.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -2705,12 +2768,12 @@
           <dependency>
             <groupId>xerces</groupId>
             <artifactId>xercesImpl</artifactId>
-            <version>2.11.0</version>
+            <version>${xerces.version}</version>
           </dependency>
           <dependency>
             <groupId>xalan</groupId>
             <artifactId>xalan</artifactId>
-            <version>2.7.1</version>
+            <version>${xalan.version}</version>
           </dependency>
           <dependency>
             <groupId>net.sf.jpam</groupId>
@@ -3126,12 +3189,12 @@
           <dependency>
             <groupId>xerces</groupId>
             <artifactId>xercesImpl</artifactId>
-            <version>2.11.0</version>
+            <version>${xerces.version}</version>
           </dependency>
           <dependency>
             <groupId>xalan</groupId>
             <artifactId>xalan</artifactId>
-            <version>2.7.1</version>
+            <version>${xalan.version}</version>
           </dependency>
           <dependency>
           	<groupId>org.apache.parquet</groupId>

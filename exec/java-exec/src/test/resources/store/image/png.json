@@ -14,12 +14,6 @@
   "AudioCodec" : "Unknown",
   "AudioSampleSize" : "0",
   "AudioSampleRate" : "0",
-  "FileType" : {
-    "DetectedFileTypeName" : "PNG",
-    "DetectedFileTypeLongName" : "Portable Network Graphics",
-    "DetectedMIMEType" : "image/png",
-    "ExpectedFileNameExtension" : "png"
-  },
   "PNGIHDR" : {
     "ImageWidth" : "128",
     "ImageHeight" : "174",
@@ -29,19 +23,8 @@
     "FilterMethod" : "Adaptive",
     "InterlaceMethod" : "No Interlace"
   },
-  "PNGTEXt" : {
-    "TextualData" : [
-      "date:create: 2015-06-22T09:06:26-04:00",
-      "date:modify: 2015-06-22T09:06:26-04:00"
-    ]
-  },
   "PNGSRGB" : {
     "SRGBRenderingIntent" : "Perceptual"
-  },
-  "PNGPHYs" : {
-    "PixelsPerUnitX" : "2835",
-    "PixelsPerUnitY" : "2835",
-    "UnitSpecifier" : "Metres"
   },
   "PNGChromaticities" : {
     "WhitePointX" : "31269",
@@ -53,5 +36,21 @@
     "BlueX" : "15000",
     "BlueY" : "5999"
   },
-  "PNGBKGD" : { }
+  "PNGBKGD" : {
+    "BackgroundColor" : "R 255, G 255, B 255"
+  },
+  "PNGPHYs" : {
+    "PixelsPerUnitX" : "2835",
+    "PixelsPerUnitY" : "2835",
+    "UnitSpecifier" : "Metres"
+  },
+  "PNGTEXt" : {
+    "TextualData" : [ "date:create: 2015-06-22T09:06:26-04:00", "date:modify: 2015-06-22T09:06:26-04:00" ]
+  },
+  "FileType" : {
+    "DetectedFileTypeName" : "PNG",
+    "DetectedFileTypeLongName" : "Portable Network Graphics",
+    "DetectedMIMEType" : "image/png",
+    "ExpectedFileNameExtension" : "png"
+  }
 }

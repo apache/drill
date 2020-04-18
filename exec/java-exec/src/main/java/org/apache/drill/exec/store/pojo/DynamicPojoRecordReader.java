@@ -92,7 +92,7 @@ public class DynamicPojoRecordReader<T> extends AbstractPojoRecordReader<List<T>
    * An utility class that converts from {@link com.fasterxml.jackson.databind.JsonNode}
    * to DynamicPojoRecordReader during physical plan fragment deserialization.
    */
-  public static class Converter<T> extends StdConverter<JsonNode, DynamicPojoRecordReader<T>> {
+  public static class Converter extends StdConverter<JsonNode, DynamicPojoRecordReader> {
     private static final TypeReference<LinkedHashMap<String, Class<?>>> schemaType =
         new TypeReference<LinkedHashMap<String, Class<?>>>() {};
 
@@ -103,15 +103,15 @@ public class DynamicPojoRecordReader<T> extends AbstractPojoRecordReader<List<T>
     }
 
     @Override
-    public DynamicPojoRecordReader<T> convert(JsonNode value) {
-      LinkedHashMap<String, Class<T>> schema = mapper.convertValue(value.get("schema"), schemaType);
-      List<List<T>> records = new ArrayList<>();
+    public DynamicPojoRecordReader convert(JsonNode value) {
+      LinkedHashMap<String, Class<?>> schema = mapper.convertValue(value.get("schema"), schemaType);
+      List<List<?>> records = new ArrayList<>();
 
       JsonNode serializedRecords = value.get("records");
       for (JsonNode serializedRecord : serializedRecords) {
-        List<T> record = new ArrayList<>(schema.size());
+        List<Object> record = new ArrayList<>(schema.size());
         Iterator<JsonNode> recordsIterator = serializedRecord.elements();
-        for (Class<T> fieldType : schema.values()) {
+        for (Class<?> fieldType : schema.values()) {
           record.add(mapper.convertValue(recordsIterator.next(), fieldType));
         }
         records.add(record);
