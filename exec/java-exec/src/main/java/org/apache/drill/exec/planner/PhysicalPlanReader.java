@@ -67,7 +67,7 @@ public class PhysicalPlanReader {
         .addSerializer(MajorType.class, new MajorTypeSerDe.Se())
         .addDeserializer(MajorType.class, new MajorTypeSerDe.De())
         .addDeserializer(DynamicPojoRecordReader.class,
-            new StdDelegatingDeserializer<>(new DynamicPojoRecordReader.Converter<>(lpMapper)))
+            new StdDelegatingDeserializer<>(new DynamicPojoRecordReader.Converter(lpMapper)))
         .addSerializer(Path.class, new PathSerDe.Se());
 
     lpMapper.registerModule(serDeModule);
