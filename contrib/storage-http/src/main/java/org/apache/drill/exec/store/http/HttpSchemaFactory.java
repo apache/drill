@@ -18,12 +18,14 @@
 package org.apache.drill.exec.store.http;
 
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
+import java.util.Map.Entry;
 
 import org.apache.calcite.schema.SchemaPlus;
+import org.apache.calcite.schema.Table;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.map.CaseInsensitiveMap;
+import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.AbstractSchemaFactory;
 import org.apache.drill.exec.store.SchemaConfig;
@@ -35,67 +37,87 @@ public class HttpSchemaFactory extends AbstractSchemaFactory {
 
   private final HttpStoragePlugin plugin;
 
-  public HttpSchemaFactory(HttpStoragePlugin plugin, String schemaName) {
-    super(schemaName);
+  public HttpSchemaFactory(HttpStoragePlugin plugin) {
+    super(plugin.getName());
     this.plugin = plugin;
   }
 
   @Override
   public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) {
-    HttpSchema schema = new HttpSchema(getName());
+    HttpSchema schema = new HttpSchema(plugin);
     logger.debug("Registering {} {}", schema.getName(), schema.toString());
 
     SchemaPlus schemaPlus = parent.add(getName(), schema);
     schema.setHolder(schemaPlus);
   }
 
-  class HttpSchema extends AbstractSchema {
+  protected static class HttpSchema extends AbstractSchema {
 
-    public HttpSchema(String name) {
-      super(Collections.emptyList(), name);
+    private final HttpStoragePlugin plugin;
+    private final Map<String, HttpAPIConnectionSchema> subSchemas = CaseInsensitiveMap.newHashMap();
+    private final Map<String, HttpApiConfig> tables = CaseInsensitiveMap.newHashMap();
+    private final Map<String, DynamicDrillTable> activeTables = CaseInsensitiveMap.newHashMap();
+
+    public HttpSchema(HttpStoragePlugin plugin) {
+      super(Collections.emptyList(), plugin.getName());
+      this.plugin = plugin;
+      for (Entry<String, HttpApiConfig> entry : plugin.getConfig().connections().entrySet()) {
+        String configName = entry.getKey();
+        HttpApiConfig config = entry.getValue();
+        if (config.requireTail()) {
+          subSchemas.put(configName, new HttpAPIConnectionSchema(this, configName, plugin));
+        } else {
+          tables.put(configName, config);
+        }
+      }
     }
 
     void setHolder(SchemaPlus plusOfThis) {
-      for (String s : getSubSchemaNames()) {
-        plusOfThis.add(s, getSubSchemaKnownExists(s));
+      for (Entry<String, HttpAPIConnectionSchema> entry : subSchemas.entrySet()) {
+        plusOfThis.add(entry.getKey(), entry.getValue());
       }
-    }
-
-    @Override
-    public Set<String> getSubSchemaNames() {
-      HttpStoragePluginConfig config = plugin.getConfig();
-      Map<String, HttpAPIConfig> connections = config.connections();
-      Set<String> subSchemaNames = new HashSet<>();
-
-      // Get the possible subschemas.
-      for (Map.Entry<String, HttpAPIConfig> entry : connections.entrySet()) {
-        subSchemaNames.add(entry.getKey());
-      }
-      return subSchemaNames;
     }
 
     @Override
     public AbstractSchema getSubSchema(String name) {
-      if (plugin.getConfig().connections().containsKey(name)) {
-        return getSubSchemaKnownExists(name);
+      HttpAPIConnectionSchema subSchema = subSchemas.get(name);
+      if (subSchema != null) {
+        return subSchema;
+      } else if (tables.containsKey(name)) {
+        return null;
       } else {
         throw UserException
           .connectionError()
-          .message("API '{}' does not exist in HTTP Storage plugin '{}'", name, getName())
+          .message("API '%s' does not exist in HTTP storage plugin '%s'", name, getName())
           .build(logger);
       }
     }
 
-    /**
-     * Helper method to get subschema when we know it exists (already checked the existence)
-     */
-    private HttpAPIConnectionSchema getSubSchemaKnownExists(String name) {
-      return new HttpAPIConnectionSchema(this, name, plugin);
+    @Override
+    public Table getTable(String name) {
+      DynamicDrillTable table = activeTables.get(name);
+      if (table != null) {
+        return table;
+      }
+      HttpApiConfig config = tables.get(name);
+      if (config != null) {
+        // Register a new table
+        return registerTable(name, new DynamicDrillTable(plugin, plugin.getName(),
+            new HttpScanSpec(plugin.getName(), name, null,
+                plugin.getConfig().copyForPlan(name))));
+      } else {
+        return null; // Unknown table
+      }
     }
 
     @Override
     public String getTypeName() {
       return HttpStoragePluginConfig.NAME;
+    }
+
+    private DynamicDrillTable registerTable(String name, DynamicDrillTable table) {
+      activeTables.put(name, table);
+      return table;
     }
   }
 }

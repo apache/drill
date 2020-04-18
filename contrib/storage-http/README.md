@@ -1,9 +1,11 @@
 # Generic REST API Storage Plugin
 
-This plugin is intended to enable you to query APIs over HTTP/REST. At this point, the API reader will only accept JSON as input however in the future, it may be possible to
- add additional format readers to allow for APIs which return XML, CSV or other formats.
+The HTTP storage plugin lets you query APIs over HTTP/REST. The plugin
+expects JSON responses.
 
-Note:  This plugin should **NOT** be used for interacting with tools which have REST APIs such as Splunk or Solr. It will not be performant for those use cases.
+The HTTP plugin is new in Drill 1.18 and is an Alpha feature. It works well, and we
+enourage you to use it and provide feedback. However, we reserve the right to change
+the plugin based on that feedback.
 
 ## Configuration
 
@@ -15,7 +17,7 @@ To configure the plugin, create a new storage plugin, and add the following conf
   "cacheResults": true,
   "connections": {},
   "timeout": 0,
-  "proxyHost": null, 
+  "proxyHost": null,
   "proxyPort": 0,
   "proxyType": null,
   "proxyUsername": null,
@@ -24,46 +26,216 @@ To configure the plugin, create a new storage plugin, and add the following conf
 }
 ```
 The required options are:
+
 * `type`:  This should be `http`
 * `cacheResults`:  Enable caching of the HTTP responses.  Defaults to `false`
 * `timeout`:  Sets the response timeout in seconds. Defaults to `0` which is no timeout.
 * `connections`:  This field contains the details for individual connections. See the section *Configuring API Connections for Details*.
 
-You can configure Drill to work behind a corporate proxy. Details are listed below. 
+You can configure Drill to work behind a corporate proxy. Details are listed below.
 
 ### Configuring the API Connections
 
 The HTTP Storage plugin allows you to configure multiple APIS which you can query directly from this plugin. To do so, first add a `connections` parameter to the configuration
 . Next give the connection a name, which will be used in queries.  For instance `stockAPI` or `jira`.
 
-The `connection` can accept the following options:
-* `url`: The base URL which Drill will query. You should include the ending slash if there are additional arguments which you are passing.
-* `method`: The request method. Must be `get` or `post`. Other methods are not allowed and will default to `GET`.
-* `headers`: Often APIs will require custom headers as part of the authentication. This field allows you to define key/value pairs which are submitted with the http request
-.  The format is:
+The `connection` property can accept the following options.
+
+#### URL
+
+`url`: The base URL which Drill will query.
+
+`requireTail`: Set to `true` if the query must contain an additional part of the service
+URL as a table name, `false` if the URL needs no additional suffix other than that
+provided by `WHERE` clause filters. (See below.)
+
+
+If your service requires parameters, you have three choices. Suppose your connection is called
+`sunrise`. First, can include them directly in your URL if the parameters a fixed for a given
+service:
+
+```json
+url: "https://api.sunrise-sunset.org/json?lat=36.7201600&lng=-4.4203400&date=2019-10-02",
+requireTail: false
+```
+
+Query your table like this:
+
+```sql
+SELECT * FROM api.sunrise;
+```
+
+Second, you can specify the base URL here and the full URL in your query. Use this form if the
+parameters define a table-like concept (the set of data to return):
+
+```json
+url: "https://api.sunrise-sunset.org/json",
+requireTail: true
+```
+
+SQL query:
+
+```sql
+SELECT * FROM api.sunrise.`?lat=36.7201600&lng=-4.4203400&date=2019-10-02`
+```
+
+If the URL requires a tail, specify it as if it were a table name. (See example
+below.) Drill directly appends the "tail" to the base URL to create the final URL.
+
+Third, you can use the `params` field below to specify the parameters as filters
+if the parameters specify which data sets to return:
+
+```json
+url: "https://api.sunrise-sunset.org/json",
+requireTail: false,
+params: ["lat", "lng", "date"]
+```
+
+SQL query:
+
+```sql
+SELECT * FROM api.sunrise
+WHERE `lat` = 36.7201600 AND `lng` = -4.4203400 AND `date` = '2019-10-02'
+```
+
+In this case, Drill appends the parameters to the URL, adding a question mark
+to separate the two.
+
+#### Method
+
+`method`: The request method. Must be `GET` or `POST`. Other methods are not allowed and will default to `GET`.
+
+`postBody`: Contains data, in the form of key value pairs, which are sent during a `POST` request.
+The post body should be in the of a block of text with key/value pairs:
+
+```json
+postBody: "key1=value1
+key2=value2"
+```
+
+#### Headers
+
+`headers`: Often APIs will require custom headers as part of the authentication. This field allows
+you to define key/value pairs which are submitted with the http request. The format is:
+
 ```json
 headers: {
    "key1": "Value1",
    "key2": "Value2"
+   }
+```
+
+#### Query Parmeters as Filters
+
+* `params`: Allows you to map SQL `WHERE` clause conditions to query parameters.
+
+```json
+url: "https://api.sunrise-sunset.org/json",
+params: ["lat", "lng", "date"]
+```
+
+SQL query:
+
+```sql
+SELECT * FROM api.sunrise
+WHERE `lat` = 36.7201600 AND `lng` = -4.4203400 AND `date` = '2019-10-02'
+```
+
+HTTP parameters are untyped; Drill converts any value you provide into a string.
+Drill allows you to use any data type which can convert unambiguously to a string:
+`BIT`, `INT`, `BIGINT`, `FLOAT4`, `FLOAT8`, `VARDECIMAL`, `VARCHAR`. The `BIT` type
+is translated to `true` and `false`. Note that none of the date or interval types
+are allowed: each of those requires formatting.
+
+Note the need for back-tick quotes around the names;
+`date` is a reserved word. Notice also that the date is a string because of
+the formatting limitation mentioned above.
+
+Only equality conditions can be translated to parameters. The above filters are
+translated to:
+
+```
+lat=36.7201600&lng=-4.4203400&date=2019-10-02
+```
+
+If your query contains other conditions (`!=`, `<`, etc.) then those conditions are applied
+in Drill after the REST service returns the data.
+
+Only fields listed in the `params` config filed will become parameters, all other
+experssions are handled within Drill as explained above.
+
+At present, Drill requires the values to be literals (constants). Drill does not
+currently allow expressions. That is, the following will not become an HTTP parameter:
+
+```sql
+WHERE `lat` = 36 + 0.7201600
+```
+
+Drill will add parameters to the URL in the order listed in the config. Use this
+feature if the API is strict about parameter ordering.
+
+At present Drill does not enforce that parameters are provided in the query: Drill
+assumes parameters are optional.
+
+### Data Path
+
+REST responses often have structure beyond the data you want to query. For example:
+
+```json
+ "results":
+ {
+   "sunrise":"7:27:02 AM",
+   "sunset":"5:05:55 PM",
+   "solar_noon":"12:16:28 PM",
+   "day_length":"9:38:53",
+   "civil_twilight_begin":"6:58:14 AM",
+   "civil_twilight_end":"5:34:43 PM",
+   "nautical_twilight_begin":"6:25:47 AM",
+   "nautical_twilight_end":"6:07:10 PM",
+   "astronomical_twilight_begin":"5:54:14 AM",
+   "astronomical_twilight_end":"6:38:43 PM"
+ },
+  "status":"OK"
 }
 ```
-* `authType`: If your API requires authentication, specify the authentication type. At the time of implementation, the plugin only supports basic authentication, however, the
- plugin will likely support OAUTH2 in the future. Defaults to `none`. If the `authType` is set to `basic`, `username` and `password` must be set in the configuration as well.
- * `username`: The username for basic authentication.
- * `password`: The password for basic authentication.
- * `postBody`: Contains data, in the form of key value pairs, which are sent during a `POST` request. Post body should be in the form:
- ```
-key1=value1
-key2=value2
+
+Drill can handle JSON structures such as the above; you can use SQL to obtain the
+results you want. However, the SQL will be simpler if we skip over the portions we
+don't want and simply read the `results` fields as our SQL fields. We do that with
+the `dataPath` configuration:
+
+```json
+dataPath: "results"
 ```
+
+The `dataPath` can contain any number of fields, for example: `"response/content/data"`.
+Drill will ignore all JSON content outside of the data path.
+
+At present, there is no provision to check the `status` code in a response such
+as that shown above. Drill assumes that the server will uses HTTP status codes to
+indicate a bad request or other error.
+
+#### Authorization
+
+`authType`: If your API requires authentication, specify the authentication
+type. At the time of implementation, the plugin only supports basic authentication, however, the
+plugin will likely support OAUTH2 in the future. Defaults to `none`.
+If the `authType` is set to `basic`, `username` and `password` must be set in the configuration as well.
+
+`username`: The username for basic authentication.
+
+`password`: The password for basic authentication.
 
 ## Usage
 
-This plugin is different from other plugins in that it the table component of the `FROM` clause is different. In normal Drill queries, the `FROM` clause is constructed as follows:
+This plugin is different from other plugins in that it the table component of the `FROM` clause
+is different. In normal Drill queries, the `FROM` clause is constructed as follows:
+
 ```sql
 FROM <storage plugin>.<schema>.<table>
 ```
 For example, you might have:
+
 ```sql
 FROM dfs.test.`somefile.csv`
 
@@ -72,12 +244,17 @@ FROM dfs.test.`somefile.csv`
 FROM mongo.stats.sales_data
 ```
 
-The HTTP/REST plugin the `FROM` clause enables you to pass arguments to your REST call. The structure is:
+The HTTP/REST plugin the `FROM` clause enables you to pass arguments to your REST call if you
+set the `requireTail` property to `true`. The structure is:
+
 ```sql
 FROM <plugin>.<connection>.<arguments>
 --Actual example:
- FROM http.sunrise.`/json?lat=36.7201600&lng=-4.4203400&date=today`
+FROM http.sunrise.`/json?lat=36.7201600&lng=-4.4203400&date=today`
 ```
+
+Or, as explained above, you can have the URL act like a table and pass parameters
+using a `WHERE` clause "filter" conditions.
 
 ## Proxy Setup
 
@@ -98,7 +275,9 @@ handle proxies.
 ### Boot Configuration
 
 You can also specify proxy configuration in the `drill-override.conf` file.
-See `drill-override-example.conf` for a template.
+See `drill-override-example.conf` for a template. Use the boot configuration
+is an attribute of your network environment. Doing so will ensure every
+Drillbit and every HTTP/HTTPS request uses the same proxy configuration.
 
 First, you can use the same form of URL you would use with the environment
 variables:
@@ -125,9 +304,6 @@ The valid proxy types are `none`, `http` and `socks`. Blank is the same
 as `none`.
 
 Again, there is a parallel section for HTTPS.
-
-Either of these approaches is preferred if the proxy is an attribute of your
-network environment and is the same for all external HTTP/HTTPS requests.
 
 ### In the HTTP Storage Plugin Config
 
@@ -170,34 +346,36 @@ The API sunrise-sunset.org returns data in the following format:
   "status":"OK"
 }
 ```
+
 To query this API, set the configuration as follows:
 
 ```json
-
- {
-   "type": "http",
-   "cacheResults": false,
-   "enabled": true,
-   "timeout": 5,
-   "connections": {
-     "sunrise": {
-       "url": "https://api.sunrise-sunset.org/",
-       "method": "GET",
-       "headers": null,
-       "authType": "none",
-       "userName": null,
-       "password": null,
-       "postBody": null
-     }
-   }
-}
+{
+  "type": "http",
+  "cacheResults": false,
+  "enabled": true,
+  "timeout": 5,
+  "connections": {
+    "sunrise": {
+      "url": "https://api.sunrise-sunset.org/json",
+      "requireTail": true,
+      "method": "GET",
+      "headers": null,
+      "authType": "none",
+      "userName": null,
+      "password": null,
+      "postBody": null
+    }
+  }
 
 ```
+
 Then, to execute a query:
+
 ```sql
-    SELECT api_results.results.sunrise AS sunrise,
-    api_results.results.sunset AS sunset
-    FROM http.sunrise.`/json?lat=36.7201600&lng=-4.4203400&date=today` AS api_results;
+SELECT api_results.results.sunrise AS sunrise,
+       api_results.results.sunset AS sunset
+FROM   http.sunrise.`?lat=36.7201600&lng=-4.4203400&date=today` AS api_results;
 ```
 Which yields the following results:
 ```
@@ -209,29 +387,61 @@ Which yields the following results:
 1 row selected (0.632 seconds)
 ```
 
+#### Using Parameters
+
+We can improvide the above configuration to use `WHERE` clause filters and
+a `dataPath` to skip over the unwanted parts of the message
+body. Set the configuration as follows:
+
+```json
+{
+  "type": "http",
+  "cacheResults": false,
+  "enabled": true,
+  "timeout": 5,
+  "connections": {
+    "sunrise": {
+      "url": "https://api.sunrise-sunset.org/json",
+      "requireTail": false,
+      "method": "GET",
+      "dataPath": "results",
+      "headers": null,
+      "params": [ "lat", "lng", "date" ],
+      "authType": "none",
+      "userName": null,
+      "password": null,
+      "postBody": null
+    }
+  }
+
+```
+Then, to execute a query:
+
+```sql
+SELECT sunrise, sunset
+FROM   http.sunrise
+WHERE  `lat` = 36.7201600 AND `lng` = -4.4203400 AND `date` = 'today'
+```
+
+Which yields the same results as before.
+
 ### Example 2: JIRA
 
-JIRA Cloud has a REST API which is [documented here](https://developer.atlassian.com/cloud/jira/platform/rest/v3/?utm_source=%2Fcloud%2Fjira%2Fplatform%2Frest%2F&utm_medium=302).
+JIRA Cloud has a REST API which is
+[documented here](https://developer.atlassian.com/cloud/jira/platform/rest/v3/?utm_source=%2Fcloud%2Fjira%2Fplatform%2Frest%2F&utm_medium=302).
 
 To connect Drill to JIRA Cloud, use the following configuration:
+
 ```json
 {
   "type": "http",
   "cacheResults": false,
   "timeout": 5,
   "connections": {
-    "sunrise": {
-      "url": "https://api.sunrise-sunset.org/",
-      "method": "GET",
-      "headers": null,
-      "authType": "none",
-      "userName": null,
-      "password": null,
-      "postBody": null
-    },
     "jira": {
       "url": "https://<project>.atlassian.net/rest/api/3/",
       "method": "GET",
+      "dataPath": "issues",
       "headers": {
         "Accept": "application/json"
       },
@@ -245,36 +455,32 @@ To connect Drill to JIRA Cloud, use the following configuration:
 }
 ```
 
-Once you've configured Drill to query the API, you can now easily access any of your data in JIRA. The JIRA API returns highly nested data, however with a little preparation, it
- is pretty straightforward to transform it into a more useful table. For instance, the
- query below:
+Once you've configured Drill to query the API, you can now easily access any of your data in JIRA.
+The JIRA API returns highly nested data, however with a little preparation, it
+is pretty straightforward to transform it into a more useful table. For instance, the
+query below:
+
 ```sql
-SELECT jira_data.issues.key AS key,
-jira_data.issues.fields.issueType.name AS issueType,
-SUBSTR(jira_data.issues.fields.created, 1, 10) AS created,
-SUBSTR(jira_data.issues.fields.updated, 1, 10) AS updated,
-jira_data.issues.fields.assignee.displayName as assignee,
-jira_data.issues.fields.creator.displayName as creator,
-jira_data.issues.fields.summary AS summary,
-jira_data.issues.fields.status.name AS currentStatus,
-jira_data.issues.fields.priority.name AS priority,
-jira_data.issues.fields.labels AS labels,
-jira_data.issues.fields.subtasks AS subtasks
-FROM (
-SELECT flatten(t1.issues) as issues
-FROM http.jira.`search?jql=project=<project>&&maxResults=100` AS t1
-) AS jira_data
+SELECT key,
+       t.fields.issueType.name AS issueType,
+       SUBSTR(t.fields.created, 1, 10) AS created,
+       SUBSTR(t.fields.updated, 1, 10) AS updated,
+       t.fields.assignee.displayName as assignee,
+       t.fields.creator.displayName as creator,
+       t.fields.summary AS summary,
+       t.fields.status.name AS currentStatus,
+       t.fields.priority.name AS priority,
+       t.fields.labels AS labels,
+       t.fields.subtasks AS subtasks
+FROM http.jira.`search?jql=project%20%3D%20<project>&&maxResults=100 AS t`
 ```
+
 The query below counts the number of issues by priority:
 
 ```sql
-SELECT
-jira_data.issues.fields.priority.name AS priority,
-COUNT(*) AS issue_count
-FROM (
-SELECT flatten(t1.issues) as issues
-FROM http.jira.`search?jql=project=<project>&maxResults=100` AS t1
-) AS jira_data
+SELECT t.fields.priority.name AS priority,
+       COUNT(*) AS issue_count
+FROM http.jira.`search?jql=project%20%3D%20<project>&&maxResults=100` AS t
 GROUP BY priority
 ORDER BY issue_count DESC
 ```
@@ -284,18 +490,62 @@ ORDER BY issue_count DESC
 
 ## Limitations
 
-1. The plugin is supposed to follow redirects, however if you are using Authentication, you may encounter errors or empty responses if you are counting on the endpoint for
+1. The plugin is supposed to follow redirects, however if you are using authentication,
+   you may encounter errors or empty responses if you are counting on the endpoint for
    redirection.
 
-2. At this time, the plugin does not support any authentication other than basic authentication. Future functionality may include OAUTH2 authentication and/or PKI
-  authentication for REST APIs.
+2. At this time, the plugin does not support any authentication other than basic authentication.
 
-3. This plugin does not implement filter pushdowns. Filter pushdown has the potential to improve performance.
+3. This plugin does not implement join filter pushdowns (only constant plushdowns are
+   supported). Join pushdown has the potential to improve performance if you use the HTTP service
+   joined to another table.
 
-4. This plugin only reads JSON responses. Future functionality may include the ability to parse XML, CSV or other common rest responses.
+4. This plugin only reads JSON responses.
 
-5. At this time `POST` bodies can only be in the format of key/value pairs. Some APIs accept JSON based `POST` bodies and this is not currently supported.
+5. `POST` bodies can only be in the format of key/value pairs. Some APIs accept
+    JSON based `POST` bodies but this is not currently supported.
 
-6. The returned message should contain only records, as a JSON array of objects (or as a series of JSON objects as in a JSON file). The
-   present version does not yet have the ability to ignore message "overhead" such as status codes, etc.  You can of course, select individual fields in your query to ignore
-    "overhead" fields. 
+6. When using `dataPath`, the returned message should a single JSON object. The field
+   pointed to by the `dataPath` should contain a single JSON object or an array of objects.
+
+7. When not using `dataPath`, the response should be a single JSON object, an array of
+   JSON objects, or a series of line-delimited JSON objects (the so-called
+   [jsonlines](http://jsonlines.org/) format.)
+
+8. Parameters are considered optional; no error will be given if a query omits
+   parameters. An enhancement would be to mark parameters as required: all are required
+   or just some. If parameters are required, but omitted, the report service will
+   likely return an error.
+
+## Troubleshooting
+
+If anything goes wrong, Drill will provide a detailed error message, including URL:
+
+```
+DATA_READ ERROR: Failed to read the HTTP response body
+
+Error message: Read timed out
+Connection: sunrise
+Plugin: api
+URL: https://api.sunrise-sunset.org/json?lat=36.7201600&lng=-4.4203400&date=today
+Fragment: 0:0
+```
+
+If using a "tail" in the query, verify that the tail is quoted using back-ticks
+as shown in the examples.
+
+Check that the URL is correct. If not, check the plugin configuration properties
+described above to find out why the pieces were assembed as you want.
+
+If the query works but delivers unexpected results, check the Drill log file.
+Drill logs a message like the following at the info level when opening the HTTP connection:
+
+```
+Connection: sunrise, Method: GET,
+  URL: https://api.sunrise-sunset.org/json?lat=36.7201600&lng=-4.4203400&date=today
+```
+
+If the query runs, but produces odd results, try a simple `SELECT *` query. This may reveal
+if there is unexpected message context in addition to the data. Use the `dataPath` property
+to ignore the extra content.
+

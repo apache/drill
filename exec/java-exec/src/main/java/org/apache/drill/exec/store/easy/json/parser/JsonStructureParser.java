@@ -22,7 +22,8 @@ import java.io.InputStream;
 import java.io.Reader;
 
 import org.apache.drill.exec.store.easy.json.parser.MessageParser.MessageContextException;
-import org.apache.drill.exec.store.easy.json.parser.RootParser.NestedRootArrayParser;
+import org.apache.drill.exec.store.easy.json.parser.RootParser.EmbeddedArrayParser;
+import org.apache.drill.exec.store.easy.json.parser.RootParser.EmbeddedObjectParser;
 import org.apache.drill.exec.store.easy.json.parser.RootParser.RootArrayParser;
 import org.apache.drill.exec.store.easy.json.parser.RootParser.RootObjectParser;
 import org.apache.drill.exec.store.easy.json.parser.TokenIterator.RecoverableJsonException;
@@ -38,7 +39,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 /**
  * Parser for a subset of the <a href="http://jsonlines.org/">jsonlines</a>
  * format. In particular, supports line-delimited JSON objects, or a single
- * array which holds a list of JSON objects.
+ * array which holds a list of JSON objects. Although jsonlines requires
+ * a newline separator between objects, this parser is more relaxed: it
+ * allows any whitespace, or no whitespace at all. It simply looks for the
+ * pattern <code>{ ... } { ... }</code> with reading top-level objects.
  * <p>
  * Alternatively, a message parser can provide a path to an array of JSON
  * objects within a messages such as a REST response.
@@ -164,6 +168,10 @@ public class JsonStructureParser {
       throw errorFactory().ioException(e);
     }
     tokenizer = new TokenIterator(parser, options, errorFactory());
+
+    // Parse to the start of the data object(s), and create a root
+    // state to parse objects and watch for the end of data.
+    // The root state parses one object on each next() call.
     if (builder.messageParser == null) {
       rootState = makeRootState();
     } else {
@@ -174,17 +182,6 @@ public class JsonStructureParser {
   public JsonStructureOptions options() { return options; }
   public ErrorFactory errorFactory() { return errorFactory; }
   public ObjectListener rootListener() { return rootListener; }
-
-  private RootParser makeCustomRoot(MessageParser messageParser) {
-    try {
-      if (! messageParser.parsePrefix(tokenizer)) {
-        return null;
-      }
-    } catch (MessageContextException e) {
-      throw errorFactory.messageParseError(e);
-    }
-    return new NestedRootArrayParser(this, messageParser);
-  }
 
   private RootParser makeRootState() {
     JsonToken token = tokenizer.next();
@@ -212,6 +209,29 @@ public class JsonStructureParser {
       // Won't get here because the Jackson parser catches errors.
       default:
         throw errorFactory().syntaxError(token);
+    }
+  }
+
+  private RootParser makeCustomRoot(MessageParser messageParser) {
+    try {
+      if (!messageParser.parsePrefix(tokenizer)) {
+        return null;
+      }
+    } catch (MessageContextException e) {
+      throw errorFactory.messageParseError(e);
+    }
+    JsonToken token = tokenizer.requireNext();
+    switch (token) {
+      case VALUE_NULL:
+        // If the value is null, just treat it as no data.
+        return null;
+      case START_ARRAY:
+        return new EmbeddedArrayParser(this, messageParser);
+      case START_OBJECT:
+        tokenizer.unget(token);
+        return new EmbeddedObjectParser(this, messageParser);
+      default:
+        throw new IllegalStateException("Message parser misbehaved: " + token.name());
     }
   }
 

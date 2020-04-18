@@ -306,9 +306,15 @@ public abstract class ColumnState {
 
   public int innerCardinality() {
     ColumnMetadata schema = schema();
-    return schema.isArray()
-        ? cardinality * schema.expectedElementCount()
-        : cardinality;
+    if (schema.isArray()) {
+      // Multiply out the cardinality, but place reasonable limits:
+      // at least one row per inner array, limit by max row count to
+      // prevent cardinality explosions or deeply nested arrays.
+      int elementCount = Math.max(1, schema.expectedElementCount());
+      return Math.min(ValueVector.MAX_ROW_COUNT, cardinality * elementCount);
+    } else {
+      return cardinality;
+    }
   }
 
   public void buildOutput(TupleState tupleState) {

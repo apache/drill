@@ -56,7 +56,6 @@ public class HttpScanBatchCreator implements BatchCreator<HttpSubScan> {
 
   private ScanFrameworkBuilder createBuilder(OptionManager options,
       HttpSubScan subScan) {
-    HttpStoragePluginConfig config = subScan.config();
     ScanFrameworkBuilder builder = new ScanFrameworkBuilder();
     builder.projection(subScan.columns());
     builder.setUserName(subScan.getUserName());
@@ -66,12 +65,13 @@ public class HttpScanBatchCreator implements BatchCreator<HttpSubScan> {
         new ChildErrorContext(builder.errorContext()) {
           @Override
           public void addContext(UserException.Builder builder) {
-            builder.addContext("URL", subScan.getFullURL());
+            builder.addContext("Connection", subScan.tableSpec().connection());
+            builder.addContext("Plugin", subScan.tableSpec().pluginName());
           }
         });
 
     // Reader
-    ReaderFactory readerFactory = new HttpReaderFactory(config, subScan);
+    ReaderFactory readerFactory = new HttpReaderFactory(subScan);
     builder.setReaderFactory(readerFactory);
     builder.nullType(Types.optional(MinorType.VARCHAR));
     return builder;
@@ -79,12 +79,10 @@ public class HttpScanBatchCreator implements BatchCreator<HttpSubScan> {
 
   private static class HttpReaderFactory implements ReaderFactory {
 
-    private final HttpStoragePluginConfig config;
     private final HttpSubScan subScan;
     private int count;
 
-    public HttpReaderFactory(HttpStoragePluginConfig config, HttpSubScan subScan) {
-      this.config = config;
+    public HttpReaderFactory(HttpSubScan subScan) {
       this.subScan = subScan;
     }
 
@@ -96,7 +94,7 @@ public class HttpScanBatchCreator implements BatchCreator<HttpSubScan> {
 
       // Only a single scan (in a single thread)
       if (count++ == 0) {
-        return new HttpBatchReader(config, subScan);
+        return new HttpBatchReader(subScan);
       } else {
         return null;
       }

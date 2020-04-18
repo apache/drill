@@ -18,10 +18,11 @@
 package org.apache.drill.exec.store.http;
 
 import org.apache.calcite.schema.Table;
+import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.store.AbstractSchema;
+import org.apache.drill.exec.store.http.HttpSchemaFactory.HttpSchema;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -31,18 +32,14 @@ import java.util.Set;
  */
 public class HttpAPIConnectionSchema extends AbstractSchema {
 
-  private final Map<String, DynamicDrillTable> activeTables = new HashMap<>();
-
   private final HttpStoragePlugin plugin;
+  private final Map<String, DynamicDrillTable> activeTables = CaseInsensitiveMap.newHashMap();
 
-  private final String pluginName;
-
-  public HttpAPIConnectionSchema(HttpSchemaFactory.HttpSchema httpSchema,
+  public HttpAPIConnectionSchema(HttpSchema parent,
                                  String name,
                                  HttpStoragePlugin plugin) {
-    super(httpSchema.getSchemaPath(), name);
+    super(parent.getSchemaPath(), name);
     this.plugin = plugin;
-    pluginName = plugin.getName();
   }
 
   @Override
@@ -61,13 +58,15 @@ public class HttpAPIConnectionSchema extends AbstractSchema {
    */
   @Override
   public Table getTable(String tableName) {
-    DynamicDrillTable table = activeTables.get(name);
+    DynamicDrillTable table = activeTables.get(tableName);
     if (table != null) {
       // Return the found table
       return table;
     } else {
       // Register a new table
-      return registerTable(name, new DynamicDrillTable(plugin, pluginName, new HttpScanSpec(pluginName, name, tableName, plugin.getConfig())));
+      return registerTable(tableName, new DynamicDrillTable(plugin, plugin.getName(),
+          new HttpScanSpec(plugin.getName(), name, tableName,
+              plugin.getConfig().copyForPlan(name))));
     }
   }
 

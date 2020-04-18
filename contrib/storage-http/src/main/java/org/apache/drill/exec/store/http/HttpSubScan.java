@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.http;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -38,19 +39,20 @@ import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 public class HttpSubScan extends AbstractBase implements SubScan {
 
   private final HttpScanSpec tableSpec;
-  private final HttpStoragePluginConfig config;
   private final List<SchemaPath> columns;
+  private final Map<String, String> filters;
 
   @JsonCreator
   public HttpSubScan(
-    @JsonProperty("config") HttpStoragePluginConfig config,
     @JsonProperty("tableSpec") HttpScanSpec tableSpec,
-    @JsonProperty("columns") List<SchemaPath> columns) {
+    @JsonProperty("columns") List<SchemaPath> columns,
+    @JsonProperty("filters") Map<String, String> filters) {
     super("user-if-needed");
-    this.config = config;
     this.tableSpec = tableSpec;
     this.columns = columns;
+    this.filters = filters;
   }
+
   @JsonProperty("tableSpec")
   public HttpScanSpec tableSpec() {
     return tableSpec;
@@ -61,21 +63,9 @@ public class HttpSubScan extends AbstractBase implements SubScan {
     return columns;
   }
 
-  @JsonProperty("config")
-  public HttpStoragePluginConfig config() {
-    return config;
-  }
-
-  @JsonIgnore
-  public String getURL() {
-    return tableSpec.getURL();
-  }
-
-  @JsonIgnore
-  public String getFullURL() {
-    String selectedConnection = tableSpec.database();
-    String url = config.connections().get(selectedConnection).url();
-    return url + tableSpec.tableName();
+  @JsonProperty("filters")
+  public Map<String, String> filters() {
+    return filters;
   }
 
  @Override
@@ -86,7 +76,7 @@ public class HttpSubScan extends AbstractBase implements SubScan {
 
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
-    return new HttpSubScan(config, tableSpec, columns);
+    return new HttpSubScan(tableSpec, columns, filters);
   }
 
   @Override
@@ -105,13 +95,13 @@ public class HttpSubScan extends AbstractBase implements SubScan {
     return new PlanStringBuilder(this)
       .field("tableSpec", tableSpec)
       .field("columns", columns)
-      .field("config", config)
+      .field("filters", filters)
       .toString();
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(tableSpec,columns,config);
+    return Objects.hash(tableSpec, columns, filters);
   }
 
   @Override
@@ -125,6 +115,6 @@ public class HttpSubScan extends AbstractBase implements SubScan {
     HttpSubScan other = (HttpSubScan) obj;
     return Objects.equals(tableSpec, other.tableSpec)
       && Objects.equals(columns, other.columns)
-      && Objects.equals(config, other.config);
+      && Objects.equals(filters, other.filters);
   }
 }

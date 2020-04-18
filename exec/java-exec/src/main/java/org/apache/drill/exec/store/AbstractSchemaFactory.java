@@ -32,5 +32,4 @@ public abstract class AbstractSchemaFactory implements SchemaFactory {
   public String getName() {
     return name;
   }
-
 }

@@ -44,7 +44,9 @@ public class TestJsonParserMessage extends BaseTestJsonParser {
         return false;
       }
       assertEquals(JsonToken.FIELD_NAME, tokenizer.requireNext());
-      assertEquals(JsonToken.START_ARRAY, tokenizer.requireNext());
+      JsonToken token = tokenizer.requireNext();
+      assertEquals(JsonToken.START_ARRAY, token);
+      tokenizer.unget(token);
       return true;
     }
 
@@ -65,10 +67,9 @@ public class TestJsonParserMessage extends BaseTestJsonParser {
     JsonParserFixture fixture = new JsonParserFixture();
     fixture.builder.messageParser(new MessageParserFixture());
     fixture.open(json);
-    assertTrue(fixture.next());
+    assertEquals(3, fixture.read());
     ValueListenerFixture a = fixture.field("a");
     assertEquals(JsonType.INTEGER, a.valueDef.type());
-    assertEquals(2, fixture.read());
     assertEquals(1, a.nullCount);
     assertEquals(100L, a.value);
     fixture.close();
@@ -89,17 +90,40 @@ public class TestJsonParserMessage extends BaseTestJsonParser {
     fixture.close();
   }
 
+  /**
+   * Test the case where the returned message has a single data
+   * object: <code>{ data: { ... } }</code>.
+   */
   @Test
-  public void testDataPath() {
+  public void testDataPathObject() {
     final String json =
-        "{ status: \"ok\", data: [{a: 0}, {a: 100}, {a: null}]}";
+        "{ status: \"ok\", data: {a: 100}}";
     JsonParserFixture fixture = new JsonParserFixture();
     fixture.builder.dataPath("data");
     fixture.open(json);
     assertTrue(fixture.next());
     ValueListenerFixture a = fixture.field("a");
     assertEquals(JsonType.INTEGER, a.valueDef.type());
-    assertEquals(2, fixture.read());
+    assertEquals(0, a.nullCount);
+    assertEquals(100L, a.value);
+    assertFalse(fixture.next());
+    fixture.close();
+  }
+
+  /**
+   * Test the case where the returned message has an array
+   * objects: <code>{ data: [ { ... }, { ... } ... ] }</code>.
+   */
+  @Test
+  public void testDataPathArray() {
+    final String json =
+        "{ status: \"ok\", data: [{a: 0}, {a: 100}, {a: null}]}";
+    JsonParserFixture fixture = new JsonParserFixture();
+    fixture.builder.dataPath("data");
+    fixture.open(json);
+    assertEquals(3, fixture.read());
+    ValueListenerFixture a = fixture.field("a");
+    assertEquals(JsonType.INTEGER, a.valueDef.type());
     assertEquals(1, a.nullCount);
     assertEquals(100L, a.value);
     fixture.close();
@@ -124,12 +148,18 @@ public class TestJsonParserMessage extends BaseTestJsonParser {
     fixture.close();
   }
 
+  /**
+   * Test the case where the returned message has a null in place
+   * of the data: <code>{ data: null }</code>. This is harmlessly
+   * treated as no data and is needed for the case where the
+   * message normally returns a single object.
+   */
   @Test
   public void testDataPathNull() {
     final String json =
         "{ status: \"fail\", data: null}";
     JsonParserFixture fixture = new JsonParserFixture();
-    fixture.builder.messageParser(new MessageParserFixture());
+    fixture.builder.dataPath("data");
     fixture.open(json);
     assertFalse(fixture.next());
     fixture.close();
@@ -149,22 +179,6 @@ public class TestJsonParserMessage extends BaseTestJsonParser {
   @Test
   public void testDataPathErrorRoot() {
     final String json = "\"Bogus!\"";
-    JsonParserFixture fixture = new JsonParserFixture();
-    fixture.builder.dataPath("data");
-    try {
-      fixture.open(json);
-      fail();
-    } catch (JsonErrorFixture e) {
-      assertTrue(e.errorType.equals("messageParseError"));
-      assertTrue(e.getCause() instanceof MessageParser.MessageContextException);
-    }
-    fixture.close();
-  }
-
-  @Test
-  public void testDataPathErrorLeaf() {
-    final String json =
-        "{ status: \"bogus\", data: { notValid: \"must be array\"}}";
     JsonParserFixture fixture = new JsonParserFixture();
     fixture.builder.dataPath("data");
     try {

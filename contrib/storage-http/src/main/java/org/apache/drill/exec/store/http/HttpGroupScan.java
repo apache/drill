@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.http;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -31,10 +32,10 @@ import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.ScanStats;
-import org.apache.drill.exec.physical.base.ScanStats.GroupScanProperty;
 import org.apache.drill.exec.physical.base.SubScan;
-import org.apache.drill.exec.planner.cost.DrillCostBase;
+import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 
@@ -43,46 +44,89 @@ public class HttpGroupScan extends AbstractGroupScan {
 
   private final List<SchemaPath> columns;
   private final HttpScanSpec httpScanSpec;
-  private final HttpStoragePluginConfig config;
+  private final Map<String, String> filters;
+  private final ScanStats scanStats;
+  private final double filterSelectivity;
 
-  public HttpGroupScan (
-    HttpStoragePluginConfig config,
-    HttpScanSpec scanSpec,
-    List<SchemaPath> columns) {
+  // Used only in planner, not serialized
+  private int hashCode;
+
+  /**
+   * Creates a new group scan from the storage plugin.
+   */
+  public HttpGroupScan (HttpScanSpec scanSpec) {
     super("no-user");
-    this.config = config;
     this.httpScanSpec = scanSpec;
-    this.columns = columns;
+    this.columns = ALL_COLUMNS;
+    this.filters = null;
+    this.filterSelectivity = 0.0;
+    this.scanStats = computeScanStats();
   }
 
+  /**
+   * Copies the group scan during many stages of Calcite operation.
+   */
   public HttpGroupScan(HttpGroupScan that) {
     super(that);
-    config = that.config();
-    httpScanSpec = that.httpScanSpec();
-    columns = that.getColumns();
-  }
-
-  public HttpGroupScan(HttpGroupScan that, List<SchemaPath> columns) {
-    super("no-user");
-    this.columns = columns;
-    this.config = that.config;
     this.httpScanSpec = that.httpScanSpec;
+    this.columns = that.columns;
+    this.filters = that.filters;
+    this.filterSelectivity = that.filterSelectivity;
+
+    // Calcite makes many copies in the later stage of planning
+    // without changing anything. Retain the previous stats.
+    this.scanStats = that.scanStats;
   }
 
+  /**
+   * Applies columns. Oddly called multiple times, even when
+   * the scan already has columns.
+   */
+  public HttpGroupScan(HttpGroupScan that, List<SchemaPath> columns) {
+    super(that);
+    this.columns = columns;
+    this.httpScanSpec = that.httpScanSpec;
+
+    // Oddly called later in planning, after earlier assigning columns,
+    // to again assign columns. Retain filters, but compute new stats.
+    this.filters = that.filters;
+    this.filterSelectivity = that.filterSelectivity;
+    this.scanStats = computeScanStats();
+  }
+
+  /**
+   * Adds a filter to the scan.
+   */
+  public HttpGroupScan(HttpGroupScan that, Map<String, String> filters,
+      double filterSelectivity) {
+    super(that);
+    this.columns = that.columns;
+    this.httpScanSpec = that.httpScanSpec;
+
+    // Applies a filter.
+    this.filters = filters;
+    this.filterSelectivity = filterSelectivity;
+    this.scanStats = computeScanStats();
+  }
+
+  /**
+   * Deserialize a group scan. Not called in normal operation. Probably used
+   * only if Drill executes a logical plan.
+   */
   @JsonCreator
   public HttpGroupScan(
-    @JsonProperty("config") HttpStoragePluginConfig config,
     @JsonProperty("columns") List<SchemaPath> columns,
-    @JsonProperty("httpScanSpec") HttpScanSpec httpScanSpec
+    @JsonProperty("httpScanSpec") HttpScanSpec httpScanSpec,
+    @JsonProperty("filters") Map<String, String> filters,
+    @JsonProperty("filterSelectivity") double selectivity
   ) {
     super("no-user");
-    this.config = config;
     this.columns = columns;
     this.httpScanSpec = httpScanSpec;
+    this.filters = filters;
+    this.filterSelectivity = selectivity;
+    this.scanStats = computeScanStats();
   }
-
-  @JsonProperty("config")
-  public HttpStoragePluginConfig config() { return config; }
 
   @JsonProperty("columns")
   public List<SchemaPath> columns() { return columns; }
@@ -90,11 +134,14 @@ public class HttpGroupScan extends AbstractGroupScan {
   @JsonProperty("httpScanSpec")
   public HttpScanSpec httpScanSpec() { return httpScanSpec; }
 
+  @JsonProperty("filters")
+  public Map<String, String> filters() { return filters; }
+
+  @JsonProperty("filterSelectivity")
+  public double selectivity() { return filterSelectivity; }
+
   @Override
-  public void applyAssignments(List<DrillbitEndpoint> endpoints) {
-    // No filter pushdowns yet, so this method does nothing
-    return;
-  }
+  public void applyAssignments(List<DrillbitEndpoint> endpoints) { }
 
   @Override
   @JsonIgnore
@@ -107,9 +154,14 @@ public class HttpGroupScan extends AbstractGroupScan {
     return true;
   }
 
+  @JsonIgnore
+  public HttpApiConfig getHttpConfig() {
+    return httpScanSpec.connectionConfig();
+  }
+
   @Override
   public SubScan getSpecificScan(int minorFragmentId) {
-    return new HttpSubScan(config, httpScanSpec, columns);
+    return new HttpSubScan(httpScanSpec, columns, filters);
   }
 
   @Override
@@ -118,6 +170,7 @@ public class HttpGroupScan extends AbstractGroupScan {
   }
 
   @Override
+  @JsonIgnore
   public String getDigest() {
     return toString();
   }
@@ -130,26 +183,71 @@ public class HttpGroupScan extends AbstractGroupScan {
 
   @Override
   public ScanStats getScanStats() {
-    int estRowCount = 10_000;
-    int rowWidth = columns == null ? 200 : 100;
-    int estDataSize = estRowCount * 200 * rowWidth;
-    int estCpuCost = DrillCostBase.PROJECT_CPU_COST;
-    return new ScanStats(GroupScanProperty.NO_EXACT_ROW_COUNT,
-        estRowCount, estCpuCost, estDataSize);
+
+    // Since this class is immutable, compute stats once and cache
+    // them. If the scan changes (adding columns, adding filters), we
+    // get a new scan without cached stats.
+    return scanStats;
+  }
+
+  private ScanStats computeScanStats() {
+
+    // If this config allows filters, then make the default
+    // cost very high to force the planner to choose the version
+    // with filters.
+    if (allowsFilters() && !hasFilters()) {
+      return new ScanStats(ScanStats.GroupScanProperty.ESTIMATED_TOTAL_COST,
+          1E9, 1E112, 1E12);
+    }
+
+    // No good estimates at all, just make up something.
+    double estRowCount = 10_000;
+
+    // NOTE this was important! if the predicates don't make the query more
+    // efficient they won't get pushed down
+    if (hasFilters()) {
+      estRowCount *= filterSelectivity;
+    }
+
+    double estColCount = Utilities.isStarQuery(columns) ? DrillScanRel.STAR_COLUMN_COST : columns.size();
+    double valueCount = estRowCount * estColCount;
+    double cpuCost = valueCount;
+    double ioCost = valueCount;
+
+    // Force the caller to use our costs rather than the
+    // defaults (which sets IO cost to zero).
+    return new ScanStats(ScanStats.GroupScanProperty.ESTIMATED_TOTAL_COST,
+        estRowCount, cpuCost, ioCost);
+  }
+
+  @JsonIgnore
+  public boolean hasFilters() {
+    return filters != null;
   }
 
   @Override
   public String toString() {
     return new PlanStringBuilder(this)
-      .field("httpScanSpec", httpScanSpec)
+      .field("scan spec", httpScanSpec)
       .field("columns", columns)
-      .field("httpStoragePluginConfig", config)
+      .field("filters", filters)
       .toString();
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(httpScanSpec, columns, config);
+
+    // Hash code is cached since Calcite calls this method many times.
+    if (hashCode == 0) {
+      // Don't include cost; it is derived.
+      hashCode = Objects.hash(httpScanSpec, columns, filters);
+    }
+    return hashCode;
+  }
+
+  @JsonIgnore
+  public boolean allowsFilters() {
+    return getHttpConfig().params() != null;
   }
 
   @Override
@@ -160,9 +258,11 @@ public class HttpGroupScan extends AbstractGroupScan {
     if (obj == null || getClass() != obj.getClass()) {
       return false;
     }
+
+    // Don't include cost; it is derived.
     HttpGroupScan other = (HttpGroupScan) obj;
     return Objects.equals(httpScanSpec, other.httpScanSpec())
-      && Objects.equals(columns, other.columns())
-      && Objects.equals(config, other.config());
+        && Objects.equals(columns, other.columns())
+        && Objects.equals(filters, other.filters());
   }
 }

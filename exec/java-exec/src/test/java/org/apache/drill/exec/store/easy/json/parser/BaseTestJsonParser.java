@@ -329,6 +329,16 @@ public class BaseTestJsonParser {
     fixture.close();
   }
 
+  protected static void expectOpenError(String json, String kind) {
+    JsonParserFixture fixture = new JsonParserFixture();
+    try {
+      fixture.open(json);
+      fail();
+    } catch (JsonErrorFixture e) {
+      assertEquals(kind, e.errorType);
+    }
+  }
+
   protected static void expectError(JsonParserFixture fixture, String kind) {
     try {
       fixture.read();

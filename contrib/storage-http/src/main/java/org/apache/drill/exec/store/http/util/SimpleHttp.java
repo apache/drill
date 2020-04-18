@@ -21,19 +21,20 @@ import okhttp3.Authenticator;
 import okhttp3.Cache;
 import okhttp3.Credentials;
 import okhttp3.FormBody;
+import okhttp3.HttpUrl;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.OkHttpClient.Builder;
 import okhttp3.Request;
 import okhttp3.Response;
-
 import okhttp3.Route;
 
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.exec.store.http.HttpAPIConfig;
-import org.apache.drill.exec.store.http.HttpAPIConfig.HttpMethods;
+import org.apache.drill.exec.store.http.HttpApiConfig;
+import org.apache.drill.exec.store.http.HttpApiConfig.HttpMethod;
 import org.apache.drill.exec.store.http.HttpStoragePluginConfig;
+import org.apache.drill.exec.store.http.HttpSubScan;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,73 +59,20 @@ public class SimpleHttp {
   private static final Logger logger = LoggerFactory.getLogger(SimpleHttp.class);
 
   private final OkHttpClient client;
-  private final HttpStoragePluginConfig config;
-  private final HttpAPIConfig apiConfig;
+  private final HttpSubScan scanDefn;
   private final File tempDir;
   private final HttpProxyConfig proxyConfig;
   private final CustomErrorContext errorContext;
+  private final HttpUrl url;
 
-  public SimpleHttp(HttpStoragePluginConfig config, File tempDir,
-      String connectionName, HttpProxyConfig proxyConfig,
-      CustomErrorContext errorContext) {
-    this.config = config;
+  public SimpleHttp(HttpSubScan scanDefn, HttpUrl url, File tempDir,
+      HttpProxyConfig proxyConfig, CustomErrorContext errorContext) {
+    this.scanDefn = scanDefn;
+    this.url = url;
     this.tempDir = tempDir;
-    this.apiConfig = config.connections().get(connectionName);
     this.proxyConfig = proxyConfig;
     this.errorContext = errorContext;
     this.client = setupHttpClient();
-  }
-
-  public InputStream getInputStream(String urlStr) {
-    Request.Builder requestBuilder;
-
-    requestBuilder = new Request.Builder()
-        .url(urlStr);
-
-    // The configuration does not allow for any other request types other than POST and GET.
-    if (apiConfig.getMethodType() == HttpMethods.POST) {
-      // Handle POST requests
-      FormBody.Builder formBodyBuilder = buildPostBody();
-      requestBuilder.post(formBodyBuilder.build());
-    }
-
-    // Add headers to request
-    if (apiConfig.headers() != null) {
-      for (Map.Entry<String, String> entry : apiConfig.headers().entrySet()) {
-        requestBuilder.addHeader(entry.getKey(), entry.getValue());
-      }
-    }
-
-    // Build the request object
-    Request request = requestBuilder.build();
-
-    try {
-      // Execute the request
-      Response response = client
-        .newCall(request)
-        .execute();
-
-      // If the request is unsuccessful, throw a UserException
-      if (!response.isSuccessful()) {
-        throw UserException
-          .dataReadError()
-          .message("Error retrieving data from HTTP Storage Plugin: %d %s",
-              response.code(), response.message())
-          .addContext(errorContext)
-          .build(logger);
-      }
-      logger.debug("HTTP Request for {} successful.", urlStr);
-      logger.debug("Response Headers: {} ", response.headers().toString());
-
-      // Return the InputStream of the response
-      return Objects.requireNonNull(response.body()).byteStream();
-    } catch (IOException e) {
-      throw UserException
-        .dataReadError(e)
-        .message("Error retrieving data from HTTP Storage Plugin: %s", e.getMessage())
-        .addContext(errorContext)
-        .build(logger);
-    }
   }
 
   /**
@@ -138,20 +86,23 @@ public class SimpleHttp {
     // Set up the HTTP Cache.   Future possibilities include making the cache size and retention configurable but
     // right now it is on or off.  The writer will write to the Drill temp directory if it is accessible and
     // output a warning if not.
+    HttpStoragePluginConfig config = scanDefn.tableSpec().config();
     if (config.cacheResults()) {
       setupCache(builder);
     }
 
     // If the API uses basic authentication add the authentication code.
+    HttpApiConfig apiConfig = scanDefn.tableSpec().connectionConfig();
     if (apiConfig.authType().toLowerCase().equals("basic")) {
       logger.debug("Adding Interceptor");
       builder.addInterceptor(new BasicAuthInterceptor(apiConfig.userName(), apiConfig.password()));
     }
 
     // Set timeouts
-    builder.connectTimeout(config.timeout(), TimeUnit.SECONDS);
-    builder.writeTimeout(config.timeout(), TimeUnit.SECONDS);
-    builder.readTimeout(config.timeout(), TimeUnit.SECONDS);
+    int timeout = Math.max(1, config.timeout());
+    builder.connectTimeout(timeout, TimeUnit.SECONDS);
+    builder.writeTimeout(timeout, TimeUnit.SECONDS);
+    builder.readTimeout(timeout, TimeUnit.SECONDS);
 
     // Set the proxy configuration
 
@@ -182,6 +133,67 @@ public class SimpleHttp {
     }
 
     return builder.build();
+  }
+
+  public String url() { return url.toString(); }
+
+  public InputStream getInputStream() {
+
+    Request.Builder requestBuilder = new Request.Builder()
+        .url(url);
+
+    // The configuration does not allow for any other request types other than POST and GET.
+    HttpApiConfig apiConfig = scanDefn.tableSpec().connectionConfig();
+    if (apiConfig.getMethodType() == HttpMethod.POST) {
+      // Handle POST requests
+      FormBody.Builder formBodyBuilder = buildPostBody(apiConfig.postBody());
+      requestBuilder.post(formBodyBuilder.build());
+    }
+
+    // Log the URL and method to aid in debugging user issues.
+    logger.info("Connection: {}, Method {}, URL: {}",
+        scanDefn.tableSpec().connection(),
+        apiConfig.getMethodType().name(), url());
+
+    // Add headers to request
+    if (apiConfig.headers() != null) {
+      for (Map.Entry<String, String> entry : apiConfig.headers().entrySet()) {
+        requestBuilder.addHeader(entry.getKey(), entry.getValue());
+      }
+    }
+
+    // Build the request object
+    Request request = requestBuilder.build();
+
+    try {
+      // Execute the request
+      Response response = client
+        .newCall(request)
+        .execute();
+
+      // If the request is unsuccessful, throw a UserException
+      if (!response.isSuccessful()) {
+        throw UserException
+          .dataReadError()
+          .message("HTTP request failed")
+          .addContext("Response code", response.code())
+          .addContext("Response message", response.message())
+          .addContext(errorContext)
+          .build(logger);
+      }
+      logger.debug("HTTP Request for {} successful.", url());
+      logger.debug("Response Headers: {} ", response.headers().toString());
+
+      // Return the InputStream of the response
+      return Objects.requireNonNull(response.body()).byteStream();
+    } catch (IOException e) {
+      throw UserException
+        .dataReadError(e)
+        .message("Failed to read the HTTP response body")
+        .addContext("Error message", e.getMessage())
+        .addContext(errorContext)
+        .build(logger);
+    }
   }
 
   /**
@@ -225,11 +237,11 @@ public class SimpleHttp {
    *
    * @return FormBody.Builder The populated formbody builder
    */
-  private FormBody.Builder buildPostBody() {
+  private FormBody.Builder buildPostBody(String postBody) {
     final Pattern postBodyPattern = Pattern.compile("^.+=.+$");
 
     FormBody.Builder formBodyBuilder = new FormBody.Builder();
-    String[] lines = apiConfig.postBody().split("\\r?\\n");
+    String[] lines = postBody.split("\\r?\\n");
     for(String line : lines) {
 
       // If the string is in the format key=value split it,

@@ -26,28 +26,30 @@ import org.apache.drill.common.PlanStringBuilder;
 @JsonTypeName("http-scan-spec")
 public class HttpScanSpec {
 
-  protected final String schemaName;
-
-  protected final String database;
-
-  protected final String tableName;
-
-  protected final HttpStoragePluginConfig config;
+  private final String pluginName;
+  private final String connectionName;
+  private final String tableName;
+  private final HttpStoragePluginConfig config;
 
   @JsonCreator
-  public HttpScanSpec(@JsonProperty("schemaName") String schemaName,
-                      @JsonProperty("database") String database,
+  public HttpScanSpec(@JsonProperty("pluginName") String pluginName,
+                      @JsonProperty("connection") String connectionName,
                       @JsonProperty("tableName") String tableName,
                       @JsonProperty("config") HttpStoragePluginConfig config) {
-    this.schemaName = schemaName;
-    this.database = database;
+    this.pluginName = pluginName;
+    this.connectionName = connectionName;
     this.tableName = tableName;
     this.config = config;
   }
 
-  @JsonProperty("database")
-  public String database() {
-    return database;
+  @JsonProperty("pluginName")
+  public String pluginName() {
+    return pluginName;
+  }
+
+  @JsonProperty("connection")
+  public String connection() {
+    return connectionName;
   }
 
   @JsonProperty("tableName")
@@ -55,16 +57,26 @@ public class HttpScanSpec {
     return tableName;
   }
 
+  @JsonProperty("config")
+  public HttpStoragePluginConfig config() {
+    return config;
+  }
+
   @JsonIgnore
   public String getURL() {
-    return database;
+    return connectionName;
+  }
+
+  @JsonIgnore
+  public HttpApiConfig connectionConfig() {
+    return config.getConnection(connectionName);
   }
 
   @Override
   public String toString() {
     return new PlanStringBuilder(this)
-      .field("schemaName", schemaName)
-      .field("database", database)
+      .field("schemaName", pluginName)
+      .field("database", connectionName)
       .field("tableName", tableName)
       .field("config", config)
       .toString();
