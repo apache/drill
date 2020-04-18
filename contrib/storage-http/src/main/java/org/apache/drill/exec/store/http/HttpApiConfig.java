@@ -19,33 +19,56 @@ package org.apache.drill.exec.store.http;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList;
 import org.apache.parquet.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public class HttpAPIConfig {
-  private static final Logger logger = LoggerFactory.getLogger(HttpAPIConfig.class);
+public class HttpApiConfig {
+  private static final Logger logger = LoggerFactory.getLogger(HttpApiConfig.class);
 
   private final String url;
 
-  private final HttpMethods method;
+  /**
+   * Whether this API configuration represents a schema (with the
+   * table providing additional parts of the URL), or if this
+   * API represents a table (the URL is complete except for
+   * parameters specified in the WHERE clause.)
+   */
+  private final boolean requireTail;
 
-  private final Map<String, String> headers;
-
-  private final String authType;
-
-  private final String userName;
-
-  private final String password;
+  private final HttpMethod method;
 
   private final String postBody;
 
-  public enum HttpMethods {
+  private final Map<String, String> headers;
+
+  /**
+   * List of query parameters which can be used in the SQL WHERE clause
+   * to push filters to the REST request as HTTP query parameters.
+   */
+  private final List<String> params;
+
+  /**
+   * Path within the message to the JSON object, or array of JSON
+   * objects, which contain the actual data. Allows a request to
+   * skip over "overhead" such as status codes. Must be a slash-delimited
+   * set of JSON field names.
+   */
+  private final String dataPath;
+
+  private final String authType;
+  private final String userName;
+  private final String password;
+
+  public enum HttpMethod {
     /**
      * Value for HTTP GET method
      */
@@ -56,17 +79,21 @@ public class HttpAPIConfig {
     POST;
   }
 
-  public HttpAPIConfig(@JsonProperty("url") String url,
+  public HttpApiConfig(@JsonProperty("url") String url,
                        @JsonProperty("method") String method,
                        @JsonProperty("headers") Map<String, String> headers,
                        @JsonProperty("authType") String authType,
                        @JsonProperty("userName") String userName,
                        @JsonProperty("password") String password,
-                       @JsonProperty("postBody") String postBody) {
+                       @JsonProperty("postBody") String postBody,
+                       @JsonProperty("params") List<String> params,
+                       @JsonProperty("dataPath") String dataPath,
+                       @JsonProperty("requireTail") Boolean requireTail) {
 
     this.headers = headers;
     this.method = Strings.isNullOrEmpty(method)
-        ? HttpMethods.GET : HttpMethods.valueOf(method.trim().toUpperCase());
+        ? HttpMethod.GET : HttpMethod.valueOf(method.trim().toUpperCase());
+    this.url = url;
 
     // Get the request method.  Only accept GET and POST requests.  Anything else will default to GET.
     switch (this.method) {
@@ -86,19 +113,18 @@ public class HttpAPIConfig {
         .build(logger);
     }
 
-    // Put a trailing slash on the URL if it is missing
-    if (url.charAt(url.length() - 1) != '/') {
-      this.url = url + "/";
-    } else {
-      this.url = url;
-    }
-
     // Get the authentication method. Future functionality will include OAUTH2 authentication but for now
     // Accept either basic or none.  The default is none.
     this.authType = Strings.isNullOrEmpty(authType) ? "none" : authType;
     this.userName = userName;
     this.password = password;
     this.postBody = postBody;
+    this.params = params == null || params.isEmpty() ? null :
+      ImmutableList.copyOf(params);
+    this.dataPath = Strings.isNullOrEmpty(dataPath) ? null : dataPath;
+
+    // Default to true for backward compatibility with first PR.
+    this.requireTail = requireTail == null ? true : requireTail;
   }
 
   @JsonProperty("url")
@@ -122,26 +148,39 @@ public class HttpAPIConfig {
   @JsonProperty("postBody")
   public String postBody() { return postBody; }
 
+  @JsonProperty("params")
+  public List<String> params() { return params; }
+
+  @JsonProperty("dataPath")
+  public String dataPath() { return dataPath; }
+
+  @JsonProperty("requireTail")
+  public boolean requireTail() { return requireTail; }
+
   @JsonIgnore
-  public HttpMethods getMethodType() {
-    return HttpMethods.valueOf(this.method());
+  public HttpMethod getMethodType() {
+    return HttpMethod.valueOf(this.method());
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(url, method, headers, authType, userName, password, postBody);
+    return Objects.hash(url, method, requireTail, params, headers,
+        authType, userName, password, postBody);
   }
 
   @Override
   public String toString() {
     return new PlanStringBuilder(this)
       .field("url", url)
+      .field("require tail", requireTail)
       .field("method", method)
+      .field("dataPath", dataPath)
       .field("headers", headers)
       .field("authType", authType)
       .field("username", userName)
-      .field("password", password)
+      .maskedField("password", password)
       .field("postBody", postBody)
+      .field("filterFields", params)
       .toString();
   }
 
@@ -153,13 +192,16 @@ public class HttpAPIConfig {
     if (obj == null || getClass() != obj.getClass()) {
       return false;
     }
-    HttpAPIConfig other = (HttpAPIConfig) obj;
+    HttpApiConfig other = (HttpApiConfig) obj;
     return Objects.equals(url, other.url)
       && Objects.equals(method, other.method)
       && Objects.equals(headers, other.headers)
       && Objects.equals(authType, other.authType)
       && Objects.equals(userName, other.userName)
       && Objects.equals(password, other.password)
-      && Objects.equals(postBody, other.postBody);
+      && Objects.equals(postBody, other.postBody)
+      && Objects.equals(params, other.params)
+      && Objects.equals(dataPath, other.dataPath)
+      && Objects.equals(requireTail, other.requireTail);
   }
 }

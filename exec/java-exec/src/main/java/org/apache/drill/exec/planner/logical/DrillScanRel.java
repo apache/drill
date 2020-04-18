@@ -29,7 +29,6 @@ import org.apache.drill.common.logical.data.Scan;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.planner.common.DrillScanRelBase;
-import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.planner.torel.ConversionContext;
@@ -47,18 +46,18 @@ import org.apache.drill.exec.util.Utilities;
  * GroupScan of a Drill table.
  */
 public class DrillScanRel extends DrillScanRelBase implements DrillRel {
-  private final static int STAR_COLUMN_COST = 10000;
-  private PlannerSettings settings;
-  private List<SchemaPath> columns;
-  private final boolean partitionFilterPushdown;
-  final private RelDataType rowType;
+  public static final int STAR_COLUMN_COST = 10_000;
 
-  /** Creates a DrillScan. */
+  private PlannerSettings settings;
+  private final List<SchemaPath> columns;
+  private final boolean partitionFilterPushdown;
+  private final RelDataType rowType;
+
   public DrillScanRel(final RelOptCluster cluster, final RelTraitSet traits,
                       final RelOptTable table) {
     this(cluster, traits, table, false);
   }
-  /** Creates a DrillScan. */
+
   public DrillScanRel(final RelOptCluster cluster, final RelTraitSet traits,
                       final RelOptTable table, boolean partitionFilterPushdown) {
     // By default, scan does not support project pushdown.
@@ -67,13 +66,11 @@ public class DrillScanRel extends DrillScanRelBase implements DrillRel {
     this.settings = PrelUtil.getPlannerSettings(cluster.getPlanner());
   }
 
-  /** Creates a DrillScan. */
   public DrillScanRel(final RelOptCluster cluster, final RelTraitSet traits,
                       final RelOptTable table, final RelDataType rowType, final List<SchemaPath> columns) {
     this(cluster, traits, table, rowType, columns, false);
   }
 
-  /** Creates a DrillScan. */
   public DrillScanRel(final RelOptCluster cluster, final RelTraitSet traits,
                       final RelOptTable table, final RelDataType rowType, final List<SchemaPath> columns, boolean partitionFilterPushdown) {
     super(cluster, traits, table, columns);
@@ -99,15 +96,6 @@ public class DrillScanRel extends DrillScanRelBase implements DrillRel {
     this.settings = PrelUtil.getPlannerSettings(cluster.getPlanner());
     this.partitionFilterPushdown = partitionFilterPushdown;
   }
-
-//
-//  private static GroupScan getCopy(GroupScan scan){
-//    try {
-//      return (GroupScan) scan.getNewWithChildren((List<PhysicalOperator>) (Object) Collections.emptyList());
-//    } catch (ExecutionSetupException e) {
-//      throw new DrillRuntimeException("Unexpected failure while coping node.", e);
-//    }
-//  }
 
   public List<SchemaPath> getColumns() {
     return this.columns;
@@ -142,34 +130,45 @@ public class DrillScanRel extends DrillScanRelBase implements DrillRel {
     return getGroupScan().getScanStats(settings).getRecordCount();
   }
 
-  /// TODO: this method is same as the one for ScanPrel...eventually we should consolidate
-  /// this and few other methods in a common base class which would be extended
-  /// by both logical and physical rels.
+  // TODO: this method is same as the one for ScanPrel...eventually we should consolidate
+  // this and few other methods in a common base class which would be extended
+  // by both logical and physical rels.
+  // TODO: Further changes may have caused the versions to diverge.
+  // TODO: Does not compute IO cost by default, but should. Changing that may break
+  // existing plugins.
   @Override
   public RelOptCost computeSelfCost(final RelOptPlanner planner, RelMetadataQuery mq) {
     final ScanStats stats = getGroupScan().getScanStats(settings);
-    int columnCount = getRowType().getFieldCount();
-    double ioCost = 0;
-    boolean isStarQuery = Utilities.isStarQuery(columns);
-
-    if (isStarQuery) {
-      columnCount = STAR_COLUMN_COST;
-    }
+    int columnCount = Utilities.isStarQuery(columns) ? STAR_COLUMN_COST : getRowType().getFieldCount();
 
     // double rowCount = RelMetadataQuery.getRowCount(this);
-    double rowCount = stats.getRecordCount();
-    if (rowCount < 1) {
-      rowCount = 1;
+    double rowCount = Math.max(1, stats.getRecordCount());
+
+    double valueCount = rowCount * columnCount;
+    if (PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
+      // TODO: makeCost() wants a row count, but we provide a value count.
+      // Likely a bug, but too risky to change as it may affect existing plugins.
+      // If we do make the fix, then the default costing path is the same as the
+      // full cost path.
+      // TODO: At this late date, with many plugins exploiting (if only by
+      // accident) the default costing here, it is not clear if we even want
+      // the planner to control the cost model. That is, remove this path.
+      return planner.getCostFactory().makeCost(valueCount, stats.getCpuCost(), stats.getDiskCost());
     }
 
-    if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
-      return planner.getCostFactory().makeCost(rowCount * columnCount, stats.getCpuCost(), stats.getDiskCost());
+    double cpuCost;
+    double ioCost;
+    if (stats.getGroupScanProperty().hasFullCost()) {
+      cpuCost = stats.getCpuCost();
+      ioCost = stats.getDiskCost();
+    } else {
+      // for now, assume cpu cost is proportional to row count and number of columns
+      cpuCost = valueCount;
+
+      // Default io cost should be proportional to valueCount
+      ioCost = 0;
     }
-
-    double cpuCost = rowCount * columnCount; // for now, assume cpu cost is proportional to row count and number of columns
-
-    DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
-    return costFactory.makeCost(rowCount, cpuCost, ioCost, 0);
+    return planner.getCostFactory().makeCost(rowCount, cpuCost, ioCost);
   }
 
   public boolean partitionFilterPushdown() {
@@ -192,5 +191,4 @@ public class DrillScanRel extends DrillScanRelBase implements DrillRel {
 
     return projectedColumns;
   }
-
 }

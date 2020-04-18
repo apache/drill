@@ -152,6 +152,7 @@ public class DrillCostBase implements DrillRelOptCost {
     return network;
   }
 
+  @Override
   public double getMemory() {
     return memory;
   }
@@ -307,29 +308,34 @@ public class DrillCostBase implements DrillRelOptCost {
       return new DrillCostBase(dRows, dCpu, dIo, dNetwork, dMemory);
     }
 
+    @Override
     public RelOptCost makeCost(double dRows, double dCpu, double dIo, double dNetwork) {
       return new DrillCostBase(dRows, dCpu, dIo, dNetwork, 0);
     }
 
+    @Override
     public RelOptCost makeCost(double dRows, double dCpu, double dIo) {
       return new DrillCostBase(dRows, dCpu, dIo, 0, 0);
     }
 
+    @Override
     public RelOptCost makeHugeCost() {
       return DrillCostBase.HUGE;
     }
 
+    @Override
     public RelOptCost makeInfiniteCost() {
       return DrillCostBase.INFINITY;
     }
 
+    @Override
     public RelOptCost makeTinyCost() {
       return DrillCostBase.TINY;
     }
 
+    @Override
     public RelOptCost makeZeroCost() {
       return DrillCostBase.ZERO;
     }
   }
-
 }

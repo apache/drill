@@ -38,6 +38,7 @@ public interface MessageParser {
       this.nextElement = nextElement;
     }
   }
+
   boolean parsePrefix(TokenIterator tokenizer) throws MessageContextException;
   void parseSuffix(TokenIterator tokenizer) throws MessageContextException;
 }

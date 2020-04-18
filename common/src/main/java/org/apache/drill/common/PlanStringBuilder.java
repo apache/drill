@@ -107,6 +107,11 @@ public class PlanStringBuilder {
     return field(key, StringEscapeUtils.escapeJava(value));
   }
 
+  public PlanStringBuilder maskedField(String key, String value) {
+    // Intentionally ignore length
+    return field(key, value == null ? null : "*******");
+  }
+
   private void startField(String key) {
     if (fieldCount++ != 0) {
       buf.append(", ");

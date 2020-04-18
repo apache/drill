@@ -24,9 +24,9 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -41,7 +41,7 @@ import org.apache.drill.shaded.guava.com.google.common.base.Charsets;
 import org.apache.drill.shaded.guava.com.google.common.io.Files;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
-import org.apache.drill.test.rowSet.RowSetComparison;
+import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -49,8 +49,6 @@ import org.junit.Test;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
-import okio.Buffer;
-import okio.Okio;
 
 /**
  * Tests the HTTP Storage plugin. Since the plugin makes use of REST requests,
@@ -74,34 +72,75 @@ public class TestHttpPlugin extends ClusterTest {
     TEST_JSON_RESPONSE = Files.asCharSource(DrillFileUtils.getResourceAsFile("/data/response.json"), Charsets.UTF_8).read();
 
     dirTestWatcher.copyResourceToRoot(Paths.get("data/"));
+    makeLiveConfig();
+    makeMockConfig();
+  }
+
+  /**
+   * Create configs against live external servers. Must be tested manually, and
+   * subject to the whims of the external site. Timeout is 10 seconds to allow
+   * for real-world delays.
+   */
+  private static void makeLiveConfig() {
+
+    HttpApiConfig sunriseConfig = new HttpApiConfig("https://api.sunrise-sunset.org/json", "GET", null, null, null, null, null, null, null, null);
+    HttpApiConfig sunriseWithParamsConfig = new HttpApiConfig("https://api.sunrise-sunset.org/json", "GET", null, null, null, null, null,
+        Arrays.asList("lat", "lng", "date"), "results", false);
+
+    HttpApiConfig stockConfig = new HttpApiConfig("https://api.worldtradingdata.com/api/v1/stock?symbol=SNAP,TWTR,VOD" +
+      ".L&api_token=zuHlu2vZaehdZN6GmJdTiVlp7xgZn6gl6sfgmI4G6TY4ej0NLOzvy0TUl4D4", "get", null, null, null, null, null, null, null, null);
+
+    Map<String, HttpApiConfig> configs = new HashMap<>();
+    configs.put("stock", stockConfig);
+    configs.put("sunrise", sunriseConfig);
+    configs.put("sunrise2", sunriseWithParamsConfig);
+
+    HttpStoragePluginConfig mockStorageConfigWithWorkspace = new HttpStoragePluginConfig(false, configs, 10, "", 80, "", "", "");
+    mockStorageConfigWithWorkspace.setEnabled(true);
+    cluster.defineStoragePlugin("live", mockStorageConfigWithWorkspace);
+  }
+
+  /**
+   * Create configs for an in-process mock server. Used for normal automated unit
+   * testing. Timeout is short to allow for timeout testing. The mock server is
+   * useful, but won't catch bugs related to real-world server glitches.
+   */
+  private static void makeMockConfig() {
 
     Map<String, String> headers = new HashMap<>();
     headers.put("header1", "value1");
     headers.put("header2", "value2");
 
-    HttpAPIConfig mockConfig = new HttpAPIConfig("http://localhost:8091/", "GET", headers, "basic", "user", "pass",null);
+    // Use the mock server with HTTP parameters passed as  table name.
+    // The connection acts like a schema.
+    // Ignores the message body except for data.
+    HttpApiConfig mockSchema = new HttpApiConfig("http://localhost:8091/json", "GET", headers,
+        "basic", "user", "pass", null, null, "results", null);
 
-    HttpAPIConfig sunriseConfig = new HttpAPIConfig("https://api.sunrise-sunset.org/", "GET", null, null, null, null, null);
+    // Use the mock server with the HTTP parameters passed as WHERE
+    // clause filters. The connection acts like a table.
+    // Ignores the message body except for data.
+    // This is the preferred approach, the base URL contains as much info as possible;
+    // all other parameters are specified in SQL. See README for an example.
+    HttpApiConfig mockTable = new HttpApiConfig("http://localhost:8091/json", "GET", headers,
+        "basic", "user", "pass", null, Arrays.asList("lat", "lng", "date"), "results", false);
 
-    HttpAPIConfig stockConfig = new HttpAPIConfig("https://api.worldtradingdata.com/api/v1/stock?symbol=SNAP,TWTR,VOD" +
-      ".L&api_token=zuHlu2vZaehdZN6GmJdTiVlp7xgZn6gl6sfgmI4G6TY4ej0NLOzvy0TUl4D4", "get", null, null, null, null, null);
+    HttpApiConfig mockPostConfig = new HttpApiConfig("http://localhost:8091/", "POST", headers, null, null, null, "key1=value1\nkey2=value2", null, null, null);
 
-    HttpAPIConfig mockPostConfig = new HttpAPIConfig("http://localhost:8091/", "POST", headers, null, null, null,"key1=value1\nkey2=value2");
-
-    Map<String, HttpAPIConfig> configs = new HashMap<>();
-    configs.put("stock", stockConfig);
-    configs.put("sunrise", sunriseConfig);
-    configs.put("mock", mockConfig);
+    Map<String, HttpApiConfig> configs = new HashMap<>();
+    configs.put("sunrise", mockSchema);
+    configs.put("mocktable", mockTable);
     configs.put("mockpost", mockPostConfig);
 
     HttpStoragePluginConfig mockStorageConfigWithWorkspace = new HttpStoragePluginConfig(false, configs, 2, "", 80, "", "", "");
     mockStorageConfigWithWorkspace.setEnabled(true);
-    cluster.defineStoragePlugin("api", mockStorageConfigWithWorkspace);
+    cluster.defineStoragePlugin("local", mockStorageConfigWithWorkspace);
   }
 
   @Test
   public void verifyPluginConfig() throws Exception {
-    String sql = "SELECT SCHEMA_NAME, TYPE FROM INFORMATION_SCHEMA.`SCHEMATA` WHERE TYPE='http'";
+    String sql = "SELECT SCHEMA_NAME, TYPE FROM INFORMATION_SCHEMA.`SCHEMATA` WHERE TYPE='http'\n" +
+        "ORDER BY SCHEMA_NAME";
 
     RowSet results = client.queryBuilder().sql(sql).rowSet();
 
@@ -110,15 +149,17 @@ public class TestHttpPlugin extends ClusterTest {
       .add("TYPE", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
       .buildSchema();
 
+    // Expect table-like connections to NOT appear here.
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow("api.mock", "http")
-      .addRow("api.mockpost", "http")
-      .addRow("api.stock", "http")
-      .addRow("api.sunrise", "http")
-      .addRow("api", "http")
-      .build();
+        .addRow("live", "http") // For table-like connections
+        .addRow("live.stock", "http")
+        .addRow("live.sunrise", "http")
+        .addRow("local", "http")
+        .addRow("local.mockpost", "http")
+        .addRow("local.sunrise", "http")
+        .build();
 
-    new RowSetComparison(expected).verifyAndClearAll(results);
+    RowSetUtilities.verify(expected, results);
   }
 
   /**
@@ -152,7 +193,7 @@ public class TestHttpPlugin extends ClusterTest {
   @Test
   @Ignore("Requires Remote Server")
   public void simpleStarQuery() throws Exception {
-    String sql = "SELECT * FROM api.sunrise.`/json?lat=36.7201600&lng=-4.4203400&date=2019-10-02`";
+    String sql = "SELECT * FROM live.sunrise.`?lat=36.7201600&lng=-4.4203400&date=2019-10-02`";
 
     RowSet results = client.queryBuilder().sql(sql).rowSet();
 
@@ -173,19 +214,69 @@ public class TestHttpPlugin extends ClusterTest {
       .build();
 
     RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-      .addRow( mapValue("6:13:58 AM", "5:59:55 PM", "12:06:56 PM", "11:45:57", "5:48:14 AM", "6:25:38 PM", "5:18:16 AM", "6:55:36 PM", "4:48:07 AM", "7:25:45 PM"), "OK")
+      .addRow(mapValue("6:13:58 AM", "5:59:55 PM", "12:06:56 PM", "11:45:57",
+                       "5:48:14 AM", "6:25:38 PM", "5:18:16 AM", "6:55:36 PM",
+                       "4:48:07 AM", "7:25:45 PM"), "OK")
       .build();
 
-    int resultCount =  results.rowCount();
-    new RowSetComparison(expected).verifyAndClearAll(results);
+    RowSetUtilities.verify(expected, results);
+  }
 
-    assertEquals(1,  resultCount);
+  /**
+   * As above, but we return only the contents of {@code results}, and use
+   * filter push-down for the arguments.
+   *
+   * @throws Exception
+   */
+  @Test
+  @Ignore("Requires Remote Server")
+  public void wildcardQueryWithParams() throws Exception {
+    String sql =
+        "SELECT * FROM live.sunrise2\n" +
+        "WHERE `lat`=36.7201600 AND `lng`=-4.4203400 AND `date`='2019-10-02'";
+
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+      .add("sunrise", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+      .add("sunset", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+      .add("solar_noon", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+      .add("day_length", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+      .add("civil_twilight_begin", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+      .add("civil_twilight_end", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+      .add("nautical_twilight_begin", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+      .add("nautical_twilight_end", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+      .add("astronomical_twilight_begin", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+      .add("astronomical_twilight_end", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+      .build();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow("6:13:58 AM", "5:59:55 PM", "12:06:56 PM", "11:45:57", "5:48:14 AM",
+              "6:25:38 PM", "5:18:16 AM", "6:55:36 PM", "4:48:07 AM", "7:25:45 PM")
+      .build();
+
+    RowSetUtilities.verify(expected, results);
   }
 
   @Test
   @Ignore("Requires Remote Server")
   public void simpleSpecificQuery() throws Exception {
-    String sql = "SELECT t1.results.sunrise AS sunrise, t1.results.sunset AS sunset FROM api.sunrise.`/json?lat=36.7201600&lng=-4.4203400&date=2019-10-02` AS t1";
+    String sql = "SELECT t1.results.sunrise AS sunrise, t1.results.sunset AS sunset\n" +
+                 "FROM live.sunrise.`?lat=36.7201600&lng=-4.4203400&date=2019-10-02` AS t1";
+    doSimpleSpecificQuery(sql);
+  }
+
+  @Test
+  @Ignore("Requires Remote Server")
+  public void simpleSpecificQueryWithParams() throws Exception {
+    String sql =
+        "SELECT sunrise, sunset\n" +
+        "FROM live.sunrise2\n" +
+        "WHERE `lat`=36.7201600 AND `lng`=-4.4203400 AND `date`='2019-10-02'";
+    doSimpleSpecificQuery(sql);
+  }
+
+  private void doSimpleSpecificQuery(String sql) throws Exception {
 
     RowSet results = client.queryBuilder().sql(sql).rowSet();
 
@@ -198,7 +289,7 @@ public class TestHttpPlugin extends ClusterTest {
       .addRow("6:13:58 AM", "5:59:55 PM")
       .build();
 
-    new RowSetComparison(expected).verifyAndClearAll(results);
+    RowSetUtilities.verify(expected, results);
   }
 
   @Test
@@ -210,15 +301,27 @@ public class TestHttpPlugin extends ClusterTest {
           .setBody(TEST_JSON_RESPONSE)
       );
 
-      String sql = "SELECT COUNT(*) FROM api.mock.`/json?lat=36.7201600&lng=-4.4203400&date=2019-10-02`";
+      String sql = "SELECT COUNT(*) FROM local.sunrise.`?lat=36.7201600&lng=-4.4203400&date=2019-10-02`";
       String plan = queryBuilder().sql(sql).explainJson();
       long cnt = queryBuilder().physical(plan).singletonLong();
-      assertEquals("Counts should match",1L, cnt);
+      assertEquals("Counts should match", 1L, cnt);
     }
   }
 
   @Test
   public void simpleTestWithMockServer() throws Exception {
+    String sql = "SELECT * FROM local.sunrise.`?lat=36.7201600&lng=-4.4203400&date=2019-10-02`";
+    doSimpleTestWithMockServer(sql);
+  }
+
+  @Test
+  public void simpleTestWithMockServerWithParams() throws Exception {
+    String sql = "SELECT * FROM local.mocktable\n" +
+                 "WHERE `lat` = 36.7201600 AND `lng` = -4.4203400 AND `date` = '2019-10-02'";
+    doSimpleTestWithMockServer(sql);
+  }
+
+  private void doSimpleTestWithMockServer(String sql) throws Exception {
     try (MockWebServer server = startServer()) {
 
       server.enqueue(
@@ -226,11 +329,9 @@ public class TestHttpPlugin extends ClusterTest {
           .setBody(TEST_JSON_RESPONSE)
       );
 
-      String sql = "SELECT * FROM api.mock.`json?lat=36.7201600&lng=-4.4203400&date=2019-10-02`";
       RowSet results = client.queryBuilder().sql(sql).rowSet();
 
       TupleMetadata expectedSchema = new SchemaBuilder()
-        .addMap("results")
         .add("sunrise", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
         .add("sunset", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
         .add("solar_noon", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
@@ -241,18 +342,13 @@ public class TestHttpPlugin extends ClusterTest {
         .add("nautical_twilight_end", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
         .add("astronomical_twilight_begin", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
         .add("astronomical_twilight_end", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
-        .resumeSchema()
-        .add("status", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
         .build();
 
       RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow(mapValue("6:13:58 AM", "5:59:55 PM", "12:06:56 PM", "11:45:57", "5:48:14 AM", "6:25:38 PM", "5:18:16 AM", "6:55:36 PM", "4:48:07 AM", "7:25:45 PM"), "OK")
+        .addRow("6:13:58 AM", "5:59:55 PM", "12:06:56 PM", "11:45:57", "5:48:14 AM", "6:25:38 PM", "5:18:16 AM", "6:55:36 PM", "4:48:07 AM", "7:25:45 PM")
         .build();
 
-      int resultCount =  results.rowCount();
-      new RowSetComparison(expected).verifyAndClearAll(results);
-
-      assertEquals(1,  resultCount);
+      RowSetUtilities.verify(expected, results);
     }
   }
 
@@ -266,7 +362,7 @@ public class TestHttpPlugin extends ClusterTest {
           .setBody(TEST_JSON_RESPONSE)
       );
 
-      String sql = "SELECT * FROM api.mockPost.`json?lat=36.7201600&lng=-4.4203400&date=2019-10-02`";
+      String sql = "SELECT * FROM local.mockPost.`json?lat=36.7201600&lng=-4.4203400&date=2019-10-02`";
       RowSet results = client.queryBuilder().sql(sql).rowSet();
 
       TupleMetadata expectedSchema = new SchemaBuilder()
@@ -289,14 +385,12 @@ public class TestHttpPlugin extends ClusterTest {
         .addRow(mapValue("6:13:58 AM", "5:59:55 PM", "12:06:56 PM", "11:45:57", "5:48:14 AM", "6:25:38 PM", "5:18:16 AM", "6:55:36 PM", "4:48:07 AM", "7:25:45 PM"), "OK")
         .build();
 
-      int resultCount =  results.rowCount();
-      new RowSetComparison(expected).verifyAndClearAll(results);
+      RowSetUtilities.verify(expected, results);
 
       RecordedRequest recordedRequest = server.takeRequest();
       assertEquals("POST", recordedRequest.getMethod());
       assertEquals(recordedRequest.getHeader("header1"), "value1");
       assertEquals(recordedRequest.getHeader("header2"), "value2");
-      assertEquals(1,  resultCount);
     }
   }
 
@@ -309,7 +403,7 @@ public class TestHttpPlugin extends ClusterTest {
           .setBody(TEST_JSON_RESPONSE)
       );
 
-      String sql = "SELECT t1.results.sunrise AS sunrise, t1.results.sunset AS sunset FROM api.mock.`/json?lat=36.7201600&lng=-4.4203400&date=2019-10-02` AS t1";
+      String sql = "SELECT sunrise, sunset FROM local.sunrise.`?lat=36.7201600&lng=-4.4203400&date=2019-10-02` AS t1";
 
       RowSet results = client.queryBuilder().sql(sql).rowSet();
 
@@ -322,7 +416,7 @@ public class TestHttpPlugin extends ClusterTest {
         .addRow("6:13:58 AM", "5:59:55 PM")
         .build();
 
-      new RowSetComparison(expected).verifyAndClearAll(results);
+      RowSetUtilities.verify(expected, results);
     }
   }
 
@@ -336,7 +430,7 @@ public class TestHttpPlugin extends ClusterTest {
           .throttleBody(64, 4, TimeUnit.SECONDS)
       );
 
-      String sql = "SELECT t1.results.sunrise AS sunrise, t1.results.sunset AS sunset FROM api.mock.`/json?lat=36.7201600&lng=-4.4203400&date=2019-10-02` AS t1";
+      String sql = "SELECT sunrise AS sunrise, sunset AS sunset FROM local.sunrise.`?lat=36.7201600&lng=-4.4203400&date=2019-10-02` AS t1";
 
       try {
         client.queryBuilder().sql(sql).rowSet();
@@ -356,15 +450,16 @@ public class TestHttpPlugin extends ClusterTest {
           .setBody("")
       );
 
-      String sql = "SELECT * FROM api.mock.`/json?lat=36.7201600&lng=-4.4203400&date=2019-10-02`";
+      String sql = "SELECT * FROM local.sunrise.`?lat=36.7201600&lng=-4.4203400&date=2019-10-02`";
 
       RowSet results = client.queryBuilder().sql(sql).rowSet();
       assertNull(results);
     }
   }
 
-  // Note that, in this test, the response is not empty. Instead, the
-  // response has a single row with no columns.
+  // The connection expects a response object of the form
+  // { results: { ... } }, but there is no such object, which
+  // is treated as a null (no data, no schema) result set.
   @Test
   public void testEmptyJSONObjectResponse() throws Exception {
     try (MockWebServer server = startServer()) {
@@ -374,7 +469,41 @@ public class TestHttpPlugin extends ClusterTest {
           .setBody("{}")
       );
 
-      String sql = "SELECT * FROM api.mock.`/json?lat=36.7201600&lng=-4.4203400&date=2019-10-02`";
+      String sql = "SELECT * FROM local.sunrise.`?lat=36.7201600&lng=-4.4203400&date=2019-10-02`";
+
+      RowSet results = client.queryBuilder().sql(sql).rowSet();
+      assertNull(results);
+    }
+  }
+
+  @Test
+  public void testNullContent() throws Exception {
+    try (MockWebServer server = startServer()) {
+
+      server.enqueue(
+        new MockResponse().setResponseCode(200)
+          .setBody("{results: null}")
+      );
+
+      String sql = "SELECT * FROM local.sunrise.`?lat=36.7201600&lng=-4.4203400&date=2019-10-02`";
+
+      RowSet results = client.queryBuilder().sql(sql).rowSet();
+      assertNull(results);
+    }
+  }
+
+  // Note that, in this test, the response is not empty. Instead, the
+  // response has a single row with no columns.
+  @Test
+  public void testEmptyContent() throws Exception {
+    try (MockWebServer server = startServer()) {
+
+      server.enqueue(
+        new MockResponse().setResponseCode(200)
+          .setBody("{results: {} }")
+      );
+
+      String sql = "SELECT * FROM local.sunrise.`?lat=36.7201600&lng=-4.4203400&date=2019-10-02`";
 
       RowSet results = client.queryBuilder().sql(sql).rowSet();
 
@@ -385,7 +514,7 @@ public class TestHttpPlugin extends ClusterTest {
         .addRow()
         .build();
 
-      new RowSetComparison(expected).verifyAndClearAll(results);
+      RowSetUtilities.verify(expected, results);
     }
   }
 
@@ -398,13 +527,18 @@ public class TestHttpPlugin extends ClusterTest {
           .setBody("{}")
       );
 
-      String sql = "SELECT * FROM api.mock.`/json?lat=36.7201600&lng=-4.4203400&date=2019-10-02`";
+      String sql = "SELECT * FROM local.sunrise.`?lat=36.7201600&lng=-4.4203400&date=2019-10-02`";
 
       try {
         client.queryBuilder().sql(sql).rowSet();
         fail();
       } catch (Exception e) {
-        assertTrue(e.getMessage().contains("DATA_READ ERROR: Error retrieving data from HTTP Storage Plugin: 404 Client Error"));
+        String msg = e.getMessage();
+        assertTrue(msg.contains("DATA_READ ERROR: HTTP request failed"));
+        assertTrue(msg.contains("Response code: 404"));
+        assertTrue(msg.contains("Response message: Client Error"));
+        assertTrue(msg.contains("Connection: sunrise"));
+        assertTrue(msg.contains("Plugin: local"));
       }
     }
   }
@@ -418,12 +552,10 @@ public class TestHttpPlugin extends ClusterTest {
           .setBody(TEST_JSON_RESPONSE)
       );
 
-      String sql = "SELECT * FROM api.mock.`json?lat=36.7201600&lng=-4.4203400&date=2019-10-02`";
+      String sql = "SELECT * FROM local.sunrise.`?lat=36.7201600&lng=-4.4203400&date=2019-10-02`";
       RowSet results = client.queryBuilder().sql(sql).rowSet();
 
-
       TupleMetadata expectedSchema = new SchemaBuilder()
-        .addMap("results")
         .add("sunrise", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
         .add("sunset", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
         .add("solar_noon", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
@@ -434,36 +566,20 @@ public class TestHttpPlugin extends ClusterTest {
         .add("nautical_twilight_end", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
         .add("astronomical_twilight_begin", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
         .add("astronomical_twilight_end", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
-        .resumeSchema()
-        .add("status", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
         .build();
 
       RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-        .addRow( mapValue("6:13:58 AM", "5:59:55 PM", "12:06:56 PM", "11:45:57", "5:48:14 AM", "6:25:38 PM", "5:18:16 AM", "6:55:36 PM", "4:48:07 AM", "7:25:45 PM"), "OK")
+        .addRow("6:13:58 AM", "5:59:55 PM", "12:06:56 PM", "11:45:57", "5:48:14 AM",
+                "6:25:38 PM", "5:18:16 AM", "6:55:36 PM", "4:48:07 AM", "7:25:45 PM")
         .build();
 
-      int resultCount =  results.rowCount();
-      new RowSetComparison(expected).verifyAndClearAll(results);
-
-      assertEquals(1,  resultCount);
+      RowSetUtilities.verify(expected, results);
 
       RecordedRequest request = server.takeRequest();
       assertEquals("value1", request.getHeader("header1"));
       assertEquals("value2", request.getHeader("header2"));
       assertEquals("Basic dXNlcjpwYXNz", request.getHeader("Authorization"));
     }
-  }
-
-  /**
-   * Helper function to convert files to a readable input steam.
-   * @param file The input file to be read
-   * @return A buffer to the file
-   * @throws IOException If the file is unreadable, throws an IOException
-   */
-  private Buffer fileToBytes(File file) throws IOException {
-    Buffer result = new Buffer();
-    result.writeAll(Okio.source(file));
-    return result;
   }
 
   /**

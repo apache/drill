@@ -141,6 +141,7 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
     private CustomErrorContext errorContext;
     private InputStream stream;
     private Reader reader;
+    private String dataPath;
     private MessageParser messageParser;
 
     public JsonLoaderBuilder resultSetLoader(ResultSetLoader rsLoader) {
@@ -180,6 +181,11 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
 
     public JsonLoaderBuilder messageParser(MessageParser messageParser) {
       this.messageParser = messageParser;
+      return this;
+    }
+
+    public JsonLoaderBuilder dataPath(String dataPath) {
+      this.dataPath = dataPath;
       return this;
     }
 
@@ -230,6 +236,7 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
             .rootListener(rowListener)
             .errorFactory(this)
             .messageParser(builder.messageParser)
+            .dataPath(builder.dataPath)
             .build();
   }
 

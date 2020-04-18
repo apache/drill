@@ -26,7 +26,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 /**
- * Tests the un-happy path cases in the JSON structure parser. Some
+ * Tests the unhappy path cases in the JSON structure parser. Some
  * error cases can't occur because the Jackson parser catches them
  * first.
  */
@@ -60,6 +60,26 @@ public class TestJsonParserErrors extends BaseTestJsonParser {
   @Test
   public void testBlankKey() {
     expectError("{\"  \": 10}", "structureError");
+  }
+
+  @Test
+  public void testRootScalar() {
+    expectOpenError("10", "syntaxError");
+  }
+
+  // Should we treat a root null as an empty result set?
+  @Test
+  public void testRootNull() {
+    expectOpenError("null", "syntaxError");
+  }
+
+  @Test
+  public void testRootArrayScalar() {
+    expectError("[ {a: \"ok\" }, 10 ]", "syntaxError");
+  }
+  @Test
+  public void testRootArrayNull() {
+    expectError("[ {a: \"ok\" }, null ]", "syntaxError");
   }
 
   @Test

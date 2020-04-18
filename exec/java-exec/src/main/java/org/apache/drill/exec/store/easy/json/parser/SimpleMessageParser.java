@@ -25,7 +25,7 @@ import com.fasterxml.jackson.core.JsonToken;
  * A message parser which accepts a path to the data encoded as a
  * slash-separated string. Given the following JSON message:
  *
- * <pre><code:
+ * <pre><code>
  * { status: {
  *     succeeded: true,
  *     runTimeMs: 123,
@@ -49,6 +49,19 @@ import com.fasterxml.jackson.core.JsonToken;
  * If the data path is not found then this class reports EOF of
  * the whole data stream. It may have skipped over the actual payload
  * if the path is mis-configured.
+ * <p>
+ * The payload can also be a single JSON object:
+ * <pre><code>
+ *   response: {
+ *     field1: "value1",
+ *     field2: "value2",
+ *     ...
+ *     },
+ * </code></pre>
+ * <p>
+ * This parser "ungets" the value token (start object or start
+ * array) so that the structure parser can determine which case
+ * to handle.
  */
 public class SimpleMessageParser implements MessageParser {
 
@@ -99,13 +112,14 @@ public class SimpleMessageParser implements MessageParser {
     JsonToken token = tokenizer.requireNext();
     if (level == path.length - 1) {
       switch (token) {
-      case VALUE_NULL:
-        return false;
-      case START_ARRAY:
-        return true;
-      default:
-        throw new MessageContextException(token,
-            path[level], "Expected JSON array for final path element");
+        case VALUE_NULL:
+        case START_ARRAY:
+        case START_OBJECT:
+          tokenizer.unget(token);
+          return true;
+        default:
+          throw new MessageContextException(token,
+              path[level], "Expected JSON array for final path element");
       }
     }
     if (token != JsonToken.START_OBJECT) {

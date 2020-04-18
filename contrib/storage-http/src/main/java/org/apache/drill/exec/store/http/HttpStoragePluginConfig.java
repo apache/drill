@@ -23,11 +23,13 @@ import org.apache.drill.common.map.CaseInsensitiveMap;
 import org.apache.drill.common.logical.StoragePluginConfigBase;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -38,7 +40,7 @@ public class HttpStoragePluginConfig extends StoragePluginConfigBase {
 
   public static final String NAME = "http";
 
-  public final Map<String, HttpAPIConfig> connections;
+  public final Map<String, HttpApiConfig> connections;
 
   public final boolean cacheResults;
 
@@ -59,7 +61,7 @@ public class HttpStoragePluginConfig extends StoragePluginConfigBase {
 
   @JsonCreator
   public HttpStoragePluginConfig(@JsonProperty("cacheResults") Boolean cacheResults,
-                                 @JsonProperty("connections") Map<String, HttpAPIConfig> connections,
+                                 @JsonProperty("connections") Map<String, HttpApiConfig> connections,
                                  @JsonProperty("timeout") Integer timeout,
                                  @JsonProperty("proxyHost") String proxyHost,
                                  @JsonProperty("proxyPort") Integer proxyPort,
@@ -107,6 +109,22 @@ public class HttpStoragePluginConfig extends StoragePluginConfigBase {
     return value.isEmpty() ? null : value;
   }
 
+  /**
+   * Create a copy of the plugin config with only the indicated connection.
+   * The copy is used in the query plan to avoid including unnecessary information.
+   */
+  public HttpStoragePluginConfig copyForPlan(String connectionName) {
+    return new HttpStoragePluginConfig(
+        cacheResults, configFor(connectionName), timeout,
+        proxyHost, proxyPort, proxyType, proxyUsername, proxyPassword);
+  }
+
+  private Map<String, HttpApiConfig> configFor(String connectionName) {
+    Map<String, HttpApiConfig> single = new HashMap<>();
+    single.put(connectionName, getConnection(connectionName));
+    return single;
+  }
+
   @Override
   public boolean equals(Object that) {
     if (this == that) {
@@ -133,7 +151,7 @@ public class HttpStoragePluginConfig extends StoragePluginConfigBase {
       .field("proxyHost", proxyHost)
       .field("proxyPort", proxyPort)
       .field("proxyUsername", proxyUsername)
-      .field("proxyPassword", proxyPassword)
+      .maskedField("proxyPassword", proxyPassword)
       .field("proxyType", proxyType)
       .toString();
   }
@@ -148,7 +166,7 @@ public class HttpStoragePluginConfig extends StoragePluginConfigBase {
   public boolean cacheResults() { return cacheResults; }
 
   @JsonProperty("connections")
-  public Map<String, HttpAPIConfig> connections() { return connections; }
+  public Map<String, HttpApiConfig> connections() { return connections; }
 
   @JsonProperty("timeout")
   public int timeout() { return timeout;}
@@ -167,4 +185,9 @@ public class HttpStoragePluginConfig extends StoragePluginConfigBase {
 
   @JsonProperty("proxyType")
   public String proxyType() { return proxyType; }
+
+  @JsonIgnore
+  public HttpApiConfig getConnection(String connectionName) {
+    return connections.get(connectionName);
+  }
 }
