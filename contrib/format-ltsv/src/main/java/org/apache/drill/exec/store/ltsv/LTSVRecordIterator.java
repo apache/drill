@@ -55,10 +55,6 @@ public class LTSVRecordIterator implements EasyEVFIterator {
     }
   }
 
-  public boolean hasNext() {
-    return line != null;
-  }
-
   public boolean next() {
     // Skip empty lines
     if (line.trim().length() == 0) {
