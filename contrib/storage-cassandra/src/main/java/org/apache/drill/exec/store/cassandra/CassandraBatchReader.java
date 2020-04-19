@@ -349,7 +349,7 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
     }
   }
 
-  public abstract class CassandraColumnWriter {
+  public abstract static class CassandraColumnWriter {
 
     protected String colName;
 
@@ -358,7 +358,7 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
     public void load(Row row) {};
   }
 
-  public class StringColumnWriter extends CassandraColumnWriter {
+  public static class StringColumnWriter extends CassandraColumnWriter {
 
     StringColumnWriter(String colName, RowSetLoader rowWriter) {
       this.colName = colName;
@@ -376,7 +376,7 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
     }
   }
 
-  public class IntColumnWriter extends CassandraColumnWriter {
+  public static class IntColumnWriter extends CassandraColumnWriter {
 
     IntColumnWriter(String colName, RowSetLoader rowWriter) {
       this.colName = colName;
@@ -390,7 +390,7 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
     }
   }
 
-  public class BigIntColumnWriter extends CassandraColumnWriter {
+  public static class BigIntColumnWriter extends CassandraColumnWriter {
 
     BigIntColumnWriter(String colName, RowSetLoader rowWriter) {
       this.colName = colName;
@@ -404,7 +404,7 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
     }
   }
 
-  public class SmallIntColumnWriter extends CassandraColumnWriter {
+  public static class SmallIntColumnWriter extends CassandraColumnWriter {
 
     SmallIntColumnWriter(String colName, RowSetLoader rowWriter) {
       this.colName = colName;
@@ -418,7 +418,7 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
     }
   }
 
-  public class FloatColumnWriter extends CassandraColumnWriter {
+  public static class FloatColumnWriter extends CassandraColumnWriter {
 
     FloatColumnWriter(String colName, RowSetLoader rowWriter) {
       this.colName = colName;
@@ -431,7 +431,7 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
       columnWriter.setDouble(value);
     }
   }
-  public class DoubleColumnWriter extends CassandraColumnWriter {
+  public static class DoubleColumnWriter extends CassandraColumnWriter {
 
     DoubleColumnWriter(String colName, RowSetLoader rowWriter) {
       this.colName = colName;
@@ -445,7 +445,7 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
     }
   }
 
-  public class DecimalColumnWriter extends CassandraColumnWriter {
+  public static class DecimalColumnWriter extends CassandraColumnWriter {
 
     DecimalColumnWriter(String colName, RowSetLoader rowWriter) {
       this.colName = colName;
@@ -459,7 +459,7 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
     }
   }
 
-  public class TimestampColumnWriter extends CassandraColumnWriter {
+  public static class TimestampColumnWriter extends CassandraColumnWriter {
 
     TimestampColumnWriter(String colName, RowSetLoader rowWriter) {
       this.colName = colName;
@@ -473,7 +473,7 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
     }
   }
 
-  public class DateColumnWriter extends CassandraColumnWriter {
+  public static class DateColumnWriter extends CassandraColumnWriter {
 
     DateColumnWriter(String colName, RowSetLoader rowWriter) {
       this.colName = colName;
@@ -488,7 +488,7 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
     }
   }
 
-  public class TimeColumnWriter extends CassandraColumnWriter {
+  public static class TimeColumnWriter extends CassandraColumnWriter {
 
     TimeColumnWriter(String colName, RowSetLoader rowWriter) {
       this.colName = colName;
@@ -502,7 +502,7 @@ public class CassandraBatchReader implements ManagedReader<SchemaNegotiator> {
     }
   }
 
-  public class BooleanColumnWriter extends CassandraColumnWriter {
+  public static class BooleanColumnWriter extends CassandraColumnWriter {
 
     BooleanColumnWriter(String colName, RowSetLoader rowWriter) {
       this.colName = colName;

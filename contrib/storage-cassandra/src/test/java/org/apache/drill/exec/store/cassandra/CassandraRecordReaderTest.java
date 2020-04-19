@@ -21,13 +21,13 @@ import org.junit.Test;
 
 public class CassandraRecordReaderTest extends BaseCassandraTest implements CassandraTestConstants {
 
-    @Test
-    public void testPlanLocal() throws Exception {
-        runCassandraPhysicalVerifyCount(PHYSICAL_PLAN_SCAN, KEYSPACE_NAME, TABLE_NAME, 14);
-    }
+  @Test
+  public void testPlanLocal() throws Exception {
+    runCassandraPhysicalVerifyCount(PHYSICAL_PLAN_SCAN, KEYSPACE_NAME, TABLE_NAME, 14);
+  }
 
-    @Test
-    public void testPlanLocalWithColumns() throws Exception {
-        runCassandraPhysicalVerifyCount(PHYSICAL_PLAN_SCAN_WITH_COLS, KEYSPACE_NAME, TABLE_NAME, 14);
-    }
+  @Test
+  public void testPlanLocalWithColumns() throws Exception {
+    runCassandraPhysicalVerifyCount(PHYSICAL_PLAN_SCAN_WITH_COLS, KEYSPACE_NAME, TABLE_NAME, 14);
+  }
 }
