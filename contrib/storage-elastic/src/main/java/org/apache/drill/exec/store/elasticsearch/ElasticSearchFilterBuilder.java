@@ -86,7 +86,7 @@ public class ElasticSearchFilterBuilder extends AbstractExprVisitor<ElasticSearc
 
   @Override
   public ElasticSearchScanSpec visitBooleanOperator(BooleanOperator op, Void value) {
-    List<LogicalExpression> args = op.args;
+    List<LogicalExpression> args = op.args();
     ElasticSearchScanSpec nodeScanSpec = null;
     String functionName = op.getName();
     for (int i = 0; i < args.size(); ++i) {
@@ -115,7 +115,7 @@ public class ElasticSearchFilterBuilder extends AbstractExprVisitor<ElasticSearc
   public ElasticSearchScanSpec visitFunctionCall(FunctionCall call, Void value) throws RuntimeException {
     ElasticSearchScanSpec nodeScanSpec = null;
     String functionName = call.getName();
-    org.apache.drill.shaded.guava.com.google.common.collect.ImmutableList<LogicalExpression> args = call.args;
+    List<LogicalExpression> args = call.args();
 
     if (ElasticSearchCompareFunctionProcessor.isCompareFunction(functionName)) {
       // When it is a size comparison, then type conversion is then performed

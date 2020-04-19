@@ -87,7 +87,10 @@ public class ElasticSearchRecordReader extends AbstractRecordReader {
   private PartitionReader partitionReader;
 
 
-  public ElasticSearchRecordReader(ElasticSearchScanSpec elasticSearchScanSpec, List<SchemaPath> columns, FragmentContext context, ElasticSearchStoragePlugin elasticSearchStoragePlugin) {
+  public ElasticSearchRecordReader(ElasticSearchScanSpec elasticSearchScanSpec,
+                                   List<SchemaPath> columns,
+                                   FragmentContext context,
+                                   ElasticSearchStoragePlugin elasticSearchStoragePlugin) {
     fields = new HashSet<>();
     plugin = elasticSearchStoragePlugin;
     fragmentContext = context;

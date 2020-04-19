@@ -27,16 +27,16 @@ import org.junit.BeforeClass;
 public class ElasticTestBase extends PlanTestBase {
 
     @BeforeClass
-  public static void setupBeforeClass() throws ExecutionSetupException {
+  public static void setupBeforeClass() throws ExecutionSetupException, StoragePluginRegistry.PluginException {
     initElasticSearchPlugin();
   }
 
-  private static void initElasticSearchPlugin() throws ExecutionSetupException {
+  private static void initElasticSearchPlugin() throws ExecutionSetupException, StoragePluginRegistry.PluginException {
     final StoragePluginRegistry pluginRegistry = getDrillbitContext().getStorage();
       ElasticSearchStoragePlugin storagePlugin = (ElasticSearchStoragePlugin) pluginRegistry.getPlugin(ElasticSearchPluginConfig.NAME);
       ElasticSearchPluginConfig storagePluginConfig = storagePlugin.getConfig();
     storagePluginConfig.setEnabled(true);
-    pluginRegistry.createOrUpdate(ElasticSearchPluginConfig.NAME, storagePluginConfig, true);
+    pluginRegistry.put(ElasticSearchPluginConfig.NAME, storagePluginConfig);
   }
 
 }

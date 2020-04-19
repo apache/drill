@@ -23,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -37,6 +38,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 @JsonTypeName("elasticsearch-read")
 public class ElasticSearchSubScan extends AbstractBase implements SubScan {
@@ -113,5 +115,33 @@ public class ElasticSearchSubScan extends AbstractBase implements SubScan {
   // this should scan for many spec
   public List<ElasticSearchScanSpec> getElasticSearchScanSpecs() {
     return elasticSearchScanSpecs;
+  }
+
+  @Override
+  public String toString() {
+    return new PlanStringBuilder(this)
+      .field("elasticSearchPluginConfig", elasticSearchPluginConfig)
+      .field("columns", columns)
+      .field("elasticSearchScanSpecs", elasticSearchScanSpecs)
+      .toString();
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(elasticSearchScanSpecs ,columns, elasticSearchPluginConfig);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    ElasticSearchSubScan other = (ElasticSearchSubScan) obj;
+    return Objects.equals(elasticSearchScanSpecs, other.elasticSearchScanSpecs)
+      && Objects.equals(columns, other.columns)
+      && Objects.equals(elasticSearchPluginConfig, other.elasticSearchPluginConfig);
   }
 }

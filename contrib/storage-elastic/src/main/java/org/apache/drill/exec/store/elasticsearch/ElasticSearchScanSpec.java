@@ -20,7 +20,7 @@ package org.apache.drill.exec.store.elasticsearch;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.apache.drill.shaded.guava.com.google.common.base.MoreObjects;
+import org.apache.drill.common.PlanStringBuilder;
 import org.elasticsearch.hadoop.rest.PartitionDefinition;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -81,10 +81,10 @@ public class ElasticSearchScanSpec {
 
   @Override
   public String toString() {
-    return MoreObjects.toStringHelper(this)
-      .add("indexName", indexName)
-      .add("typeMappingName", typeMappingName)
-      .add("filters", filters)
+    return new PlanStringBuilder(this)
+      .field("indexName", indexName)
+      .field("typeMappingName", typeMappingName)
+      .field("filters", filters)
       .toString();
   }
 }

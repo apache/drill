@@ -74,7 +74,6 @@ import static org.elasticsearch.hadoop.cfg.ConfigurationOptions.ES_PORT;
 import static org.elasticsearch.hadoop.cfg.ConfigurationOptions.ES_NODES;
 import static org.elasticsearch.hadoop.cfg.ConfigurationOptions.ES_NODES_DISCOVERY;
 
-
 @JsonTypeName("elasticsearch-scan")
 public class ElasticSearchGroupScan extends AbstractGroupScan {
 

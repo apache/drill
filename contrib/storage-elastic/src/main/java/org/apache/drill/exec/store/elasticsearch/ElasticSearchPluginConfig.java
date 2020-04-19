@@ -27,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.logical.StoragePluginConfigBase;
 import org.apache.http.Header;
 import org.apache.http.HttpHost;
@@ -125,6 +126,18 @@ public class ElasticSearchPluginConfig extends StoragePluginConfigBase {
       cacheDuration == thatConfig.cacheDuration &&
       (Objects.equals(pathPrefix, thatConfig.pathPrefix)) &&
       (Objects.equals(cacheTimeUnit, thatConfig.cacheTimeUnit));
+  }
+
+  @Override
+  public String toString() {
+    return new PlanStringBuilder(this)
+      .field("hostsAndPorts", hostsAndPorts)
+      .field("credentials", credentials)
+      .field("maxRetryTimeoutMillis", maxRetryTimeoutMillis)
+      .field("cacheDuration", cacheDuration)
+      .field("pathPrefix", pathPrefix)
+      .field("cacheTimeUnit", cacheTimeUnit)
+      .toString();
   }
 
   @Override
