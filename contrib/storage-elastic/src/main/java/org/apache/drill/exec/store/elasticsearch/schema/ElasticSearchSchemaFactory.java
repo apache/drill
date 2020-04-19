@@ -25,7 +25,6 @@ import org.apache.drill.exec.store.elasticsearch.ElasticSearchStoragePlugin;
 import org.apache.drill.exec.store.SchemaConfig;
 import org.apache.drill.exec.store.SchemaFactory;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 

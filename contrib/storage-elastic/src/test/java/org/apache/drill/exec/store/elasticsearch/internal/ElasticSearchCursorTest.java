@@ -35,7 +35,6 @@ import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
 
 public class ElasticSearchCursorTest {
 

@@ -25,10 +25,10 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.logical.StoragePluginConfigBase;
+import org.apache.drill.shaded.guava.com.google.common.base.Strings;
 import org.apache.http.Header;
 import org.apache.http.HttpHost;
 import org.apache.http.message.BasicHeader;
@@ -76,7 +76,7 @@ public class ElasticSearchPluginConfig extends StoragePluginConfigBase {
                                    @JsonProperty(value = "maxRetryTimeoutMillis") int maxRetryTimeoutMillis,
                                    @JsonProperty(value = "cacheDuration") long cacheDuration,
                                    @JsonProperty(value = "cacheTimeUnit") TimeUnit cacheTimeUnit) {
-    if (!StringUtils.isEmpty(credentials)) {
+    if (!Strings.isNullOrEmpty(credentials)) {
       // Account password
       this.credentials = credentials;
     } else {
@@ -175,7 +175,7 @@ public class ElasticSearchPluginConfig extends StoragePluginConfigBase {
     if (headers != null) {
       clientBuilder.setDefaultHeaders(headers);
     }
-    if (!StringUtils.isEmpty(pathPrefix)) {
+    if (!Strings.isNullOrEmpty(pathPrefix)) {
       // Request path prefix
       clientBuilder.setPathPrefix(pathPrefix);
     }
@@ -184,7 +184,7 @@ public class ElasticSearchPluginConfig extends StoragePluginConfigBase {
 
   private Header[] buildHeaders() {
     List<Header> headers = new ArrayList<>();
-    if (!StringUtils.isEmpty(this.credentials)) {
+    if (!Strings.isNullOrEmpty(this.credentials)) {
       headers.add(new BasicHeader("Authorization", "Basic " + Base64.encodeBase64String(this.credentials.getBytes())));
     }
     // account password

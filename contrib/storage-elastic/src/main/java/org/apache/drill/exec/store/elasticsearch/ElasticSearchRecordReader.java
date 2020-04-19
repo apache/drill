@@ -132,10 +132,10 @@ public class ElasticSearchRecordReader extends AbstractRecordReader {
     writer = new VectorContainerWriter(output, this.unionEnabled);
 
     jsonReader = new JsonReader.Builder(fragmentContext.getManagedBuffer())
-			.schemaPathColumns(Lists.newArrayList(getColumns()))
-			.allTextMode(enableAllTextMode)
-			.readNumbersAsDouble(readNumbersAsDouble)
-			.build();
+      .schemaPathColumns(Lists.newArrayList(getColumns()))
+      .allTextMode(enableAllTextMode)
+      .readNumbersAsDouble(readNumbersAsDouble)
+      .build();
   }
 
   @Override

@@ -32,108 +32,108 @@ import org.apache.drill.exec.store.elasticsearch.schema.ElasticSearchSchemaFacto
 import org.elasticsearch.client.RestClient;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableSet;
+import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 
 /**
  * Main ElasticSearch Plugin class to configure storage instance
  */
 public class ElasticSearchStoragePlugin extends AbstractStoragePlugin {
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ElasticSearchStoragePlugin.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ElasticSearchStoragePlugin.class);
 
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private final String name;
-    private final DrillbitContext context;
-    private final ElasticSearchPluginConfig config;
-    private final ElasticSearchSchemaFactory schemaFactory;
-    private RestClient client;
+  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+  private final String name;
+  private final DrillbitContext context;
+  private final ElasticSearchPluginConfig config;
+  private final ElasticSearchSchemaFactory schemaFactory;
+  private RestClient client;
 
-    /**
-     * Constructor of instance
-     * @param config configuration for this instance
-     * @param context drillbit context
-     * @param name name of the storagePlugin instance
-     * @throws IOException may be thrown in case construction of instance fails
-     */
-    public ElasticSearchStoragePlugin(ElasticSearchPluginConfig config, DrillbitContext context, String name) throws IOException {
-        super(context, name);
-        this.context = context;
-        this.name = name;
-        this.config = config;
+  /**
+   * Constructor of instance
+   * @param config configuration for this instance
+   * @param context drillbit context
+   * @param name name of the storagePlugin instance
+   * @throws IOException may be thrown in case construction of instance fails
+   */
+  public ElasticSearchStoragePlugin(ElasticSearchPluginConfig config, DrillbitContext context, String name) throws IOException {
+    super(context, name);
+    this.context = context;
+    this.name = name;
+    this.config = config;
 
-        this.schemaFactory = new ElasticSearchSchemaFactory(this, name, this.config.getCacheDuration(), this.config.getCacheTimeUnit());
+    this.schemaFactory = new ElasticSearchSchemaFactory(this, name, this.config.getCacheDuration(), this.config.getCacheTimeUnit());
+  }
+
+  public DrillbitContext getContext() {
+    return this.context;
+  }
+
+  /**
+   *
+   * @return return instance configuration
+   */
+  @Override
+  public ElasticSearchPluginConfig getConfig() {
+    return this.config;
+  }
+
+  /**
+   * {@inheritDoc}
+   * @param schemaConfig
+   * @param parent
+   * @throws IOException
+   */
+  @Override
+  public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws IOException {
+    schemaFactory.registerSchemas(schemaConfig, parent);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public boolean supportsRead() {
+    return true;
+  }
+
+  @Override
+  public void start() throws IOException {
+    if (client == null) {
+      client = config.createClient();
+      logger.debug("Client created");
+    } else {
+      logger.warn("Already created");
     }
-    
-    public DrillbitContext getContext() {
-        return this.context;
-      }
+  }
 
-    /**
-     *
-     * @return return instance configuration
-     */
-    @Override
-    public ElasticSearchPluginConfig getConfig() {
-        return this.config;
+  @Override
+  public void close() throws IOException {
+    if (client != null) {
+      client.close();
+      client = null;
+      logger.debug("Client closed");
+    } else {
+      logger.warn("Client not started or already closed");
     }
+  }
 
-    /**
-     * {@inheritDoc}
-     * @param schemaConfig
-     * @param parent
-     * @throws IOException
-     */
-    @Override
-    public void registerSchemas(SchemaConfig schemaConfig, SchemaPlus parent) throws IOException {
-        schemaFactory.registerSchemas(schemaConfig, parent);
-    }
+  @Override
+  public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection) throws IOException {
+    ElasticSearchScanSpec elasticSearchScanSpec = selection.getListWith(this.getObjectMapper(), new TypeReference<ElasticSearchScanSpec>() {});
+    return new ElasticSearchGroupScan(userName, this, elasticSearchScanSpec, null);
+  }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean supportsRead() {
-        return true;
-    }
+  @Override
+  public Set<StoragePluginOptimizerRule> getPhysicalOptimizerRules(OptimizerRulesContext optimizerRulesContext) {
+    // Create Optimizer
+    return ImmutableSet.of(ElasticSearchPushDownFilterForScan.INSTANCE);
+  }
 
-    @Override
-    public void start() throws IOException {
-        if (client == null) {
-            client = config.createClient();
-            logger.debug("Client created");
-        } else {
-            logger.warn("Already created");
-        }
-    }
 
-    @Override
-    public void close() throws IOException {
-        if (client != null) {
-            client.close();
-            client = null;
-            logger.debug("Client closed");
-        } else {
-            logger.warn("Client not started or already closed");
-        }
-    }
+  public RestClient getClient() { return this.client; }
 
-    @Override
-    public AbstractGroupScan getPhysicalScan(String userName, JSONOptions selection) throws IOException {
-        ElasticSearchScanSpec elasticSearchScanSpec = selection.getListWith(this.getObjectMapper(), new TypeReference<ElasticSearchScanSpec>() {});
-        return new ElasticSearchGroupScan(userName, this, elasticSearchScanSpec, null);
-    }
+  public ElasticSearchSchemaFactory getSchemaFactory() {
+    return schemaFactory;
+  }
 
-    @Override
-    public Set<StoragePluginOptimizerRule> getPhysicalOptimizerRules(OptimizerRulesContext optimizerRulesContext) {
-  	  // Create Optimizer
-      return ImmutableSet.of(ElasticSearchPushDownFilterForScan.INSTANCE);
-    }
-    
-    
-    public RestClient getClient() { return this.client; }
-
-    public ElasticSearchSchemaFactory getSchemaFactory() {
-        return schemaFactory;
-    }
-
-    public ObjectMapper getObjectMapper() { return OBJECT_MAPPER; }
+  public ObjectMapper getObjectMapper() { return OBJECT_MAPPER; }
 }

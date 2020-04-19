@@ -20,7 +20,6 @@ package org.apache.drill.exec.store.elasticsearch.internal;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.store.elasticsearch.JsonHelper;
@@ -38,7 +37,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.NoSuchElementException;
+
 
 public class ElasticSearchCursor implements Iterator<JsonNode>, Closeable {
 
@@ -163,7 +162,8 @@ public class ElasticSearchCursor implements Iterator<JsonNode>, Closeable {
         }
       }
     } else {
-      throw new NoSuchElementException();
+      //throw new NoSuchElementException();
+      logger.warn("No such element.");
     }
     position++;
     return internalIterator.next();
@@ -171,7 +171,8 @@ public class ElasticSearchCursor implements Iterator<JsonNode>, Closeable {
 
   @Override
   public void remove() {
-    throw new NotImplementedException();
+    logger.warn("Remove not implemented.");
+    //throw new NotImplementedException();
   }
 
   @Override
