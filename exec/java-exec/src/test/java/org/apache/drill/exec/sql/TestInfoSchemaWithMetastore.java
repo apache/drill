@@ -44,10 +44,8 @@ import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
 import org.apache.hadoop.fs.Path;
 import org.junit.BeforeClass;
-import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.rules.TemporaryFolder;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -71,15 +69,12 @@ public class TestInfoSchemaWithMetastore extends ClusterTest {
     InfoSchemaConstants.TBLS_COL_NUM_ROWS,
     InfoSchemaConstants.TBLS_COL_LAST_MODIFIED_TIME);
 
-  @ClassRule
-  public static TemporaryFolder root = new TemporaryFolder();
-
   private static Metastore metastore;
 
   @BeforeClass
   public static void setup() throws Exception {
     ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher);
-    builder.configProperty(ExecConstants.ZK_ROOT, root.getRoot().toString());
+    builder.configProperty(ExecConstants.ZK_ROOT, dirTestWatcher.getRootDir().getAbsolutePath());
     builder.sessionOption(ExecConstants.METASTORE_ENABLED, true);
     startCluster(builder);
     MetastoreRegistry metastoreRegistry = client.cluster().drillbit().getContext().getMetastoreRegistry();

@@ -188,7 +188,7 @@ public class TestMetastoreCommands extends ClusterTest {
   @BeforeClass
   public static void setUp() throws Exception {
     ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher);
-    builder.configProperty(ExecConstants.ZK_ROOT, dirTestWatcher.getRootDir().getPath());
+    builder.configProperty(ExecConstants.ZK_ROOT, dirTestWatcher.getRootDir().getAbsolutePath());
     startCluster(builder);
 
     dirTestWatcher.copyResourceToRoot(Paths.get("multilevel/parquet"));
@@ -1869,7 +1869,7 @@ public class TestMetastoreCommands extends ClusterTest {
 
       assertEquals(defaultSegment, segmentMetadata.get(0));
     } finally {
-      run("analyze table dfs.`%s` drop metadata if exists", tableName);
+      run("analyze table dfs.tmp.`%s` drop metadata if exists", tableName);
     }
   }
 
@@ -2255,7 +2255,7 @@ public class TestMetastoreCommands extends ClusterTest {
           .baselineValues(true, String.format("Collected / refreshed metadata for table [dfs.default.%s]", tableName))
           .go();
 
-      String query = "select * from  dfs.`%s`";
+      String query = "select * from dfs.`%s`";
       long expectedRowCount = 50;
       int expectedNumFiles = 2;
 
@@ -2270,7 +2270,7 @@ public class TestMetastoreCommands extends ClusterTest {
           .include(numFilesPattern, usedMetaPattern)
           .match();
     } finally {
-      run("analyze table dfs.tmp.`%s` drop metadata if exists", tableName);
+      run("analyze table dfs.`%s` drop metadata if exists", tableName);
       run("drop table if exists dfs.`%s`", tableName);
     }
   }
