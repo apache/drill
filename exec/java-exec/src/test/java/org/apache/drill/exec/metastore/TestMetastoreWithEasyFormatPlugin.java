@@ -74,7 +74,7 @@ import static org.junit.Assert.assertTrue;
 @Category({SlowTest.class, MetastoreTest.class})
 public class TestMetastoreWithEasyFormatPlugin extends ClusterTest {
 
-  private static String SCHEMA_STRING = "'inline=(" +
+  private static final String SCHEMA_STRING = "'inline=(" +
       "`o_orderkey` INT not null, " +
       "`o_custkey` INT not null, " +
       "`o_orderstatus` VARCHAR not null, " +
@@ -105,7 +105,7 @@ public class TestMetastoreWithEasyFormatPlugin extends ClusterTest {
   @BeforeClass
   public static void setUp() throws Exception {
     ClusterFixtureBuilder builder = ClusterFixture.builder(dirTestWatcher);
-    builder.configProperty(ExecConstants.ZK_ROOT, dirTestWatcher.getRootDir().getPath());
+    builder.configProperty(ExecConstants.ZK_ROOT, dirTestWatcher.getRootDir().getAbsolutePath());
     startCluster(builder);
   }
 
@@ -1087,7 +1087,6 @@ public class TestMetastoreWithEasyFormatPlugin extends ClusterTest {
           .sql("select * from dfs.tmp.`%s` limit 21", tableName)
           .planMatcher()
           .include("Limit", "numFiles=3")
-          .exclude("bird is the word")
           .match();
     } finally {
       run("analyze table dfs.tmp.`%s` drop metadata if exists", tableName);
