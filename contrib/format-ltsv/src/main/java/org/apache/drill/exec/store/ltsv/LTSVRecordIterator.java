@@ -62,13 +62,12 @@ public class LTSVRecordIterator implements EasyEVFIterator {
       throw UserException
         .dataReadError(e)
         .message("Error reading LTSV Data: %s", e.getMessage())
-        .addContext("Line %d: %s", recordCount + 1 , line)
+        .addContext("Line %d: %s", recordCount, line)
         .build(logger);
     }
 
     // Process the row
     processRow();
-
 
     return true;
   }
@@ -84,7 +83,7 @@ public class LTSVRecordIterator implements EasyEVFIterator {
       if (index <= 0) {
         throw UserException
           .dataReadError()
-          .message("Invalid LTSV format at line %d: %s", recordCount + 1, line)
+          .message("Invalid LTSV format at line %d: %s", recordCount, line)
           .build(logger);
       }
 
