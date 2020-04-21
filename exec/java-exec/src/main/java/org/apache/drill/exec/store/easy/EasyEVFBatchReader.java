@@ -120,8 +120,8 @@ public abstract class EasyEVFBatchReader implements ManagedReader<FileSchemaNego
 
   @Override
   public boolean next() {
-    while (!rowWriter.isFull()) {
-      if (!fileIterator.next()) {
+    while (rowWriter.start()) {
+      if (!fileIterator.nextRow()) {
         return false;
       }
     }

@@ -42,44 +42,21 @@ public class LTSVRecordIterator implements EasyEVFIterator {
   public LTSVRecordIterator(RowSetLoader rowWriter, BufferedReader reader) {
     this.rowWriter = rowWriter;
     this.reader = reader;
-
-    // Get the first line
-    try {
-      line = reader.readLine();
-    } catch (IOException e) {
-      throw UserException
-        .dataReadError(e)
-        .message("Error reading LTSV Data: %s", e.getMessage())
-        .build(logger);
-    }
   }
 
-  public boolean next() {
-    // Skip empty lines
-    if (line.trim().length() == 0) {
-      try {
-        // Advance the line to the next line
-        line = reader.readLine();
-      } catch (IOException e) {
-        throw UserException
-          .dataReadError(e)
-          .message("Error reading LTSV Data: %s", e.getMessage())
-          .build(logger);
-      }
-      return true;
-    }
-
-    // Process the row
-    processRow();
-
-    // Increment record counter
-    recordCount++;
-
-    // Get the next line
+  public boolean nextRow() {
+    // Get the line
     try {
       line = reader.readLine();
+
+      // Increment record counter
+      recordCount++;
+
       if (line == null) {
         return false;
+      } else if (line.trim().length() == 0) {
+        // Skip empty lines
+        return true;
       }
     } catch (IOException e) {
       throw UserException
@@ -88,6 +65,11 @@ public class LTSVRecordIterator implements EasyEVFIterator {
         .addContext("Line %d: %s", recordCount + 1 , line)
         .build(logger);
     }
+
+    // Process the row
+    processRow();
+
+
     return true;
   }
 
@@ -96,8 +78,7 @@ public class LTSVRecordIterator implements EasyEVFIterator {
    * finally recording it in the current Drill row.
    */
   private void processRow() {
-    // Start the row
-    rowWriter.start();
+
     for (String field : line.split("\t")) {
       int index = field.indexOf(":");
       if (index <= 0) {

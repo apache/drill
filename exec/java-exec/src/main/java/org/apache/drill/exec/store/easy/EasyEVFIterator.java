@@ -24,5 +24,5 @@ package org.apache.drill.exec.store.easy;
  */
 public interface EasyEVFIterator {
 
-  boolean next();
+  boolean nextRow();
 }

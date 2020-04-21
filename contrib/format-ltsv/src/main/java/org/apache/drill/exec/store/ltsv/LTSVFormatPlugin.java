@@ -33,7 +33,10 @@ import org.apache.drill.exec.store.dfs.easy.EasySubScan;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.hadoop.conf.Configuration;
 
-
+/**
+ * Enables Drill to query data in Labeled Tab Separated Values (LTSV) format.
+ * <a href="http://ltsv.org" target="_blank">LTSV Spec</a>
+ */
 public class LTSVFormatPlugin extends EasyFormatPlugin<LTSVFormatPluginConfig> {
 
   private static final String DEFAULT_NAME = "ltsv";
