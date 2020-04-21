@@ -32,7 +32,6 @@ import org.apache.drill.exec.vector.accessor.TupleWriter;
 import org.apache.hadoop.mapred.FileSplit;
 import org.joda.time.Instant;
 import org.joda.time.LocalDate;
-import org.joda.time.LocalTime;
 import org.joda.time.Period;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,10 +40,44 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 
 
 /**
+ * To create a format plugin, there is often a great deal of cut/pasted code. The EasyEVFBatchReader
+ * is intended to allow developers of new format plugins to focus their energy on code that is truly unique
+ * for each format.
+ * <p>
+ * To create a new format plugin, simply extend this class, and overwrite the open() method as shown below in the
+ * snippet below. The code that is unique for the formats will be contained in the iterator class which
+ * <p>
+ * With respect to schema creation, there are three basic situations:
+ * <ol>
+ *   <li>Schema is known before opening the file</li>
+ *   <li>Schema is known (and unchanging) after reading the first row of data</li>
+ *   <li>Schmea is completely flexible, IE: not consistent and not known after first row.</li>
+ * </ol>
+ *
+ * This class inmplements a series of methods to facilitate schema creation. However, to achieve the best
+ * possible performance, it is vital to use the correct methods to map the schema. Drill will perform fastest when
+ * the schema is known in advance and the writers can be stored in a data structure which minimizes the amount of string
+ * comparisons.
+ *
+ * <b>Current state</b>
+ * For the third scenario, where the schema is not consistent, there are a collection of functions, all named <pre>writeDataType()</pre>
+ * which accept a ScalarWriter, column name and value. These functions first check to see whether the column has been added to the schema, if not
+ * it adds it. If it has been added, the value will be added to the column.
+ *
+ * <p>
+ *
+ *   <pre>
+ *   public boolean open(FileSchemaNegotiator negotiator) {
+ *     super.open(negotiator);
+ *     super.fileIterator = new LTSVRecordIterator(getRowWriter(), reader);
+ *     return true;
+ *   }
+ *   </pre>
  *
  */
 public abstract class EasyEVFBatchReader implements ManagedReader<FileSchemaNegotiator> {
@@ -79,6 +112,7 @@ public abstract class EasyEVFBatchReader implements ManagedReader<FileSchemaNego
       throw UserException
         .dataReadError(e)
         .message(String.format("Failed to open input file: %s", split.getPath()))
+        .addContext(e.getMessage())
         .build(logger);
     }
     return true;
@@ -99,57 +133,197 @@ public abstract class EasyEVFBatchReader implements ManagedReader<FileSchemaNego
     try {
       AutoCloseables.close(reader, fsStream);
     } catch (Exception e) {
-      logger.warn("Error closing LTSV Input Streams.");
+      logger.warn("Error closing Input Streams.");
     }
   }
 
   /**
-   * This function should be used when writing Drill columns when the schema is not fixed or known in advance. At present only simple data types are
-   * supported with this function.  If the column is not present in the schema, this function will add it first.
-   * @param rowWriter The RowSetWriter to which the data is to be written
-   * @param name The field name
-   * @param value The field value.  Cannot be a primitive.
-   * @param type The Drill data type of the field.
+   * Writes a string column.  This function should be used when the schema is not known in advance or cannot be inferred from the first
+   * row of data.
+   * @param rowWriter The rowWriter object
+   * @param fieldName The name of the field to be written
+   * @param value The value to be written
    */
-  public static void writeColumn(TupleWriter rowWriter, String name, Object value, TypeProtos.MinorType type) {
-    int index = rowWriter.tupleSchema().index(name);
+  public static void writeStringColumn(TupleWriter rowWriter, String fieldName, String value) {
+    int index = rowWriter.tupleSchema().index(fieldName);
     if (index == -1) {
-      ColumnMetadata colSchema = MetadataUtils.newScalar(name, type, TypeProtos.DataMode.OPTIONAL);
+      ColumnMetadata colSchema = MetadataUtils.newScalar(fieldName, TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL);
       index = rowWriter.addColumn(colSchema);
     }
     ScalarWriter colWriter = rowWriter.scalar(index);
-    switch (type) {
-      case INT:
-        colWriter.setInt((Integer)value);
-        break;
-      case BIGINT:
-        colWriter.setLong((Long)value);
-        break;
-      case VARCHAR:
-        colWriter.setString((String)value);
-        break;
-      case FLOAT4:
-      case FLOAT8:
-        colWriter.setDouble((Double)value);
-        break;
-      case DATE:
-        colWriter.setDate((LocalDate) value);
-        break;
-      case BIT:
-        colWriter.setBoolean((Boolean)value);
-        break;
-      case TIMESTAMP:
-      case TIMESTAMPTZ:
-        colWriter.setTimestamp((Instant) value);
-        break;
-      case TIME:
-        colWriter.setTime((LocalTime) value);
-        break;
-      case INTERVAL:
-        colWriter.setPeriod((Period)value);
-        break;
-      default:
-        logger.warn("Does not support data type {}", type.toString());
+
+    // Case for null string
+    if (value == null) {
+      colWriter.setNull();
     }
+
+    colWriter.setString(value);
+  }
+
+  /**
+   * Writes a boolean column.  This function should be used when the schema is not known in advance or cannot be inferred from the first
+   * row of data.
+   * @param rowWriter The rowWriter object
+   * @param fieldName The name of the field to be written
+   * @param value The value to be written to the Drill vector
+   */
+  public static void writeBooleanColumn(TupleWriter rowWriter, String fieldName, boolean value) {
+    int index = rowWriter.tupleSchema().index(fieldName);
+    if (index == -1) {
+      ColumnMetadata colSchema = MetadataUtils.newScalar(fieldName, TypeProtos.MinorType.BIT, TypeProtos.DataMode.OPTIONAL);
+      index = rowWriter.addColumn(colSchema);
+    }
+    ScalarWriter colWriter = rowWriter.scalar(index);
+    colWriter.setBoolean(value);
+  }
+
+  /**
+   * Writes a string column.  This function should be used when the schema is not known in advance or cannot be inferred from the first
+   * row of data.
+   * @param rowWriter The rowWriter object
+   * @param fieldName The name of the field to be written
+   * @param value The value to be written.  Must be a org.joda.time.LocalDate object.
+   */
+  public static void writeDateColumn(TupleWriter rowWriter, String fieldName, LocalDate value) {
+    int index = rowWriter.tupleSchema().index(fieldName);
+    if (index == -1) {
+      ColumnMetadata colSchema = MetadataUtils.newScalar(fieldName, TypeProtos.MinorType.DATE, TypeProtos.DataMode.OPTIONAL);
+      index = rowWriter.addColumn(colSchema);
+    }
+    ScalarWriter colWriter = rowWriter.scalar(index);
+    if (value == null) {
+      colWriter.setNull();
+    }
+
+    colWriter.setDate(value);
+  }
+
+  /**
+   * Writes a timestamp column.  This function should be used when the schema is not known in advance or cannot be inferred from the first
+   * row of data.
+   * @param rowWriter The rowWriter object
+   * @param fieldName The name of the field to be written
+   * @param value The value to be written.  Must be a org.joda.time.Instant object.
+   */
+  public static void writeTimestampColumn(TupleWriter rowWriter, String fieldName, Instant value) {
+    int index = rowWriter.tupleSchema().index(fieldName);
+    if (index == -1) {
+      ColumnMetadata colSchema = MetadataUtils.newScalar(fieldName, TypeProtos.MinorType.TIMESTAMP, TypeProtos.DataMode.OPTIONAL);
+      index = rowWriter.addColumn(colSchema);
+    }
+    ScalarWriter colWriter = rowWriter.scalar(index);
+    if (value == null) {
+      colWriter.setNull();
+    }
+    colWriter.setTimestamp(value);
+  }
+
+  /**
+   * Writes a vardecimal column.  This function should be used when the schema is not known in advance or cannot be inferred from the first
+   * row of data.
+   * @param rowWriter The rowWriter object
+   * @param fieldName The name of the field to be written
+   * @param value The value to be written
+   */
+  public static void writeDecimalColumn(TupleWriter rowWriter, String fieldName, BigDecimal value) {
+    int index = rowWriter.tupleSchema().index(fieldName);
+    if (index == -1) {
+      ColumnMetadata colSchema = MetadataUtils.newScalar(fieldName, TypeProtos.MinorType.VARDECIMAL, TypeProtos.DataMode.OPTIONAL);
+      index = rowWriter.addColumn(colSchema);
+    }
+    ScalarWriter colWriter = rowWriter.scalar(index);
+    if (value == null) {
+      colWriter.setNull();
+    }
+
+    colWriter.setDecimal(value);
+  }
+
+  /**
+   * Writes a double column.  This function should be used when the schema is not known in advance or cannot be inferred from the first
+   * row of data.
+   * @param rowWriter The rowWriter object
+   * @param fieldName The name of the field to be written
+   * @param value The value to be written
+   */
+  public static void writeDoubleColumn(TupleWriter rowWriter, String fieldName, double value) {
+    int index = rowWriter.tupleSchema().index(fieldName);
+    if (index == -1) {
+      ColumnMetadata colSchema = MetadataUtils.newScalar(fieldName, TypeProtos.MinorType.FLOAT8, TypeProtos.DataMode.OPTIONAL);
+      index = rowWriter.addColumn(colSchema);
+    }
+    ScalarWriter colWriter = rowWriter.scalar(index);
+    colWriter.setDouble(value);
+  }
+
+  /**
+   * Writes a float column.  This function should be used when the schema is not known in advance or cannot be inferred from the first
+   * row of data.
+   * @param rowWriter The rowWriter object
+   * @param fieldName The name of the field to be written
+   * @param value The value to be written
+   */
+  public static void writeFloatColumn(TupleWriter rowWriter, String fieldName, float value) {
+    int index = rowWriter.tupleSchema().index(fieldName);
+    if (index == -1) {
+      ColumnMetadata colSchema = MetadataUtils.newScalar(fieldName, TypeProtos.MinorType.FLOAT4, TypeProtos.DataMode.OPTIONAL);
+      index = rowWriter.addColumn(colSchema);
+    }
+    ScalarWriter colWriter = rowWriter.scalar(index);
+    colWriter.setDouble(value);
+  }
+
+  /**
+   * Writes an int column.  This function should be used when the schema is not known in advance or cannot be inferred from the first
+   * row of data.
+   * @param rowWriter The rowWriter object
+   * @param fieldName The name of the field to be written
+   * @param value The value to be written
+   */
+  public static void writeIntColumn(TupleWriter rowWriter, String fieldName, int value) {
+    int index = rowWriter.tupleSchema().index(fieldName);
+    if (index == -1) {
+      ColumnMetadata colSchema = MetadataUtils.newScalar(fieldName, TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL);
+      index = rowWriter.addColumn(colSchema);
+    }
+    ScalarWriter colWriter = rowWriter.scalar(index);
+    colWriter.setInt(value);
+  }
+
+  /**
+   * Writes a long column.  This function should be used when the schema is not known in advance or cannot be inferred from the first
+   * row of data.
+   * @param rowWriter The rowWriter object
+   * @param fieldName The name of the field to be written
+   * @param value The value to be written
+   */
+  public static void writeBigIntColumn(TupleWriter rowWriter, String fieldName, long value) {
+    int index = rowWriter.tupleSchema().index(fieldName);
+    if (index == -1) {
+      ColumnMetadata colSchema = MetadataUtils.newScalar(fieldName, TypeProtos.MinorType.INT, TypeProtos.DataMode.OPTIONAL);
+      index = rowWriter.addColumn(colSchema);
+    }
+    ScalarWriter colWriter = rowWriter.scalar(index);
+    colWriter.setLong(value);
+  }
+
+  /**
+   * Writes an Interval column.  This function should be used when the schema is not known in advance or cannot be inferred from the first
+   * row of data.
+   * @param rowWriter The rowWriter object
+   * @param fieldName The name of the field to be written
+   * @param value The value to be written
+   */
+  public static void writeIntervalColumn(TupleWriter rowWriter, String fieldName, Period value) {
+    int index = rowWriter.tupleSchema().index(fieldName);
+    if (index == -1) {
+      ColumnMetadata colSchema = MetadataUtils.newScalar(fieldName, TypeProtos.MinorType.INTERVAL, TypeProtos.DataMode.OPTIONAL);
+      index = rowWriter.addColumn(colSchema);
+    }
+    ScalarWriter colWriter = rowWriter.scalar(index);
+    if (value == null) {
+      colWriter.setNull();
+    }
+    colWriter.setPeriod(value);
   }
 }

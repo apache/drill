@@ -18,6 +18,10 @@
 
 package org.apache.drill.exec.store.easy;
 
+/**
+ * This basic interface is used to to create format plugins. Objects which implement this interface should be passed to
+ * an object which extends the EasyEVFBatchReader class.
+ */
 public interface EasyEVFIterator {
 
   boolean next();

@@ -39,15 +39,15 @@ public class LTSVFormatPlugin extends EasyFormatPlugin<LTSVFormatPluginConfig> {
   private static final String DEFAULT_NAME = "ltsv";
 
   public static class LTSVReaderFactory extends FileReaderFactory {
-    private final LTSVFormatPluginConfig ltsvFormatPluginConfig;
+    private final LTSVFormatPluginConfig config;
 
     public LTSVReaderFactory(LTSVFormatPluginConfig config) {
-      ltsvFormatPluginConfig = config;
+      this.config = config;
     }
 
     @Override
     public ManagedReader<? extends FileSchemaNegotiator> newReader() {
-      return new LTSVBatchReader(ltsvFormatPluginConfig);
+      return new LTSVBatchReader();
     }
   }
 
@@ -74,7 +74,7 @@ public class LTSVFormatPlugin extends EasyFormatPlugin<LTSVFormatPluginConfig> {
 
   @Override
   public ManagedReader<?extends FileSchemaNegotiator> newBatchReader(EasySubScan scan, OptionManager options) {
-    return new LTSVBatchReader(formatConfig);
+    return new LTSVBatchReader();
   }
 
   @Override

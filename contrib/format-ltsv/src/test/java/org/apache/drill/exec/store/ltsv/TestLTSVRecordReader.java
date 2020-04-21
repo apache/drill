@@ -60,7 +60,7 @@ public class TestLTSVRecordReader extends ClusterTest {
   public static void setup() throws Exception {
     startCluster(ClusterFixture.builder(dirTestWatcher));
 
-    LTSVFormatPluginConfig formatConfig = new LTSVFormatPluginConfig();
+    LTSVFormatPluginConfig formatConfig = new LTSVFormatPluginConfig(null);
     cluster.defineFormat("dfs", "ltsv", formatConfig);
 
     // Needed for compressed file unit test
@@ -184,6 +184,29 @@ public class TestLTSVRecordReader extends ClusterTest {
       .build();
 
     new RowSetComparison(expected).verifyAndClearAll(results);
+  }
+
+  @Test
+  public void testInlineSchema() throws Exception {
+
+    String sql = "SELECT ua, reqtime FROM table(dfs.`ltsv/simple.ltsv` (type => 'ltsv', schema => 'inline=(ua varchar not null, reqtime varchar)'))";
+    RowSet results = client.queryBuilder().sql(sql).rowSet();
+
+    results.print();
+    assertTrue(true);
+
+    // Verify that the returned data used the schema.
+    /*TupleMetadata expectedSchema = new SchemaBuilder()
+      .addNullable("ua",  TypeProtos.MinorType.VARCHAR)
+      .addNullable("reqtime",  TypeProtos.MinorType.VARCHAR)
+      .buildSchema();
+
+    RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+      .addRow("Java/1.8.0_131", "2.532")
+      .addRow("Java/1.8.0_201", "3.580")
+      .build();
+
+    new RowSetComparison(expected).unorderedVerifyAndClearAll(results);*/
   }
 
   private void generateCompressedFile(String fileName, String codecName, String outFileName) throws IOException {

@@ -19,7 +19,6 @@
 package org.apache.drill.exec.store.ltsv;
 
 import org.apache.drill.common.exceptions.UserException;
-import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.store.easy.EasyEVFIterator;
 import org.slf4j.Logger;
@@ -63,13 +62,11 @@ public class LTSVRecordIterator implements EasyEVFIterator {
         line = reader.readLine();
       } catch (IOException e) {
         throw UserException
-          .dataReadError()
+          .dataReadError(e)
           .message("Error reading LTSV Data: %s", e.getMessage())
           .build(logger);
       }
       return true;
-    } else if (line == null) {
-      return false;
     }
 
     // Process the row
@@ -86,8 +83,9 @@ public class LTSVRecordIterator implements EasyEVFIterator {
       }
     } catch (IOException e) {
       throw UserException
-        .dataReadError()
+        .dataReadError(e)
         .message("Error reading LTSV Data: %s", e.getMessage())
+        .addContext("Line %d: %s", recordCount + 1 , line)
         .build(logger);
     }
     return true;
@@ -112,7 +110,7 @@ public class LTSVRecordIterator implements EasyEVFIterator {
       String fieldName = field.substring(0, index);
       String fieldValue = field.substring(index + 1);
 
-      LTSVBatchReader.writeColumn(rowWriter, fieldName, fieldValue, TypeProtos.MinorType.VARCHAR);
+      LTSVBatchReader.writeStringColumn(rowWriter, fieldName, fieldValue);
     }
 
     // End the row
