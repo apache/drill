@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.store.easy.json.parser;
 
-import org.apache.drill.exec.store.easy.json.parser.ObjectListener.FieldType;
-
 import com.fasterxml.jackson.core.JsonToken;
 
 /**
@@ -38,15 +36,19 @@ import com.fasterxml.jackson.core.JsonToken;
  */
 public class ArrayParser extends AbstractElementParser {
 
-  private ValueParser elementParser;
-  private ArrayListener arrayListener;
+  private final ArrayListener arrayListener;
+  private final ElementParser elementParser;
 
-  public ArrayParser(ValueParser parent, ArrayListener arrayListener) {
-    super(parent);
+  public ArrayParser(JsonStructureParser structParser, ArrayListener arrayListener, ElementParser elementParser) {
+    super(structParser);
     this.arrayListener = arrayListener;
+    this.elementParser = elementParser;
   }
 
-  public ValueParser elementParser() { return elementParser; }
+  public ElementParser elementParser() { return elementParser; }
+
+  @SuppressWarnings("unchecked")
+  public <T extends ArrayListener> T listener() { return (T) arrayListener; }
 
   /**
    * Parses <code>[ ^ ((value)(, (value)* )? ]</code>
@@ -69,45 +71,8 @@ public class ArrayParser extends AbstractElementParser {
   }
 
   private void parseElement(TokenIterator tokenizer) {
-    if (elementParser == null) {
-      detectElement(tokenizer);
-    }
     arrayListener.onElementStart();
     elementParser.parse(tokenizer);
     arrayListener.onElementEnd();
-  }
-
-  private void detectElement(TokenIterator tokenizer) {
-    addElement(ValueDefFactory.lookAhead(tokenizer));
-  }
-
-  public void addElement(ValueDef valueDef) {
-    bindElement(arrayListener.element(valueDef));
-  }
-
-  public void bindElement(ValueListener elementListener) {
-    elementParser = new ValueParser(this, "[]", FieldType.TYPED);
-    elementParser.bindListener(elementListener);
-  }
-
-  public void bindListener(ArrayListener newListener) {
-    arrayListener = newListener;
-    if (elementParser != null) {
-      elementParser.bindListener(arrayListener.element(ValueDef.UNKNOWN));
-    }
-  }
-
-  /**
-   * Expand the structure of this array given a description of the
-   * look-ahead value. Skip if this is a 1D array of unknown type.
-   * If 2D or greater, then we must create the child array of one
-   * less dimension.
-    */
-  public void expandStructure(ValueDef valueDef) {
-    if (valueDef.dimensions() > 1 || !valueDef.type().isUnknown()) {
-      ValueDef elementDef = new ValueDef(valueDef.type(), valueDef.dimensions() - 1);
-      addElement(elementDef);
-      elementParser.expandStructure(elementDef);
-    }
   }
 }

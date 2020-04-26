@@ -460,11 +460,14 @@ public final class ExecConstants {
   public static final String JSON_ALL_TEXT_MODE = "store.json.all_text_mode";
   public static final BooleanValidator JSON_READER_ALL_TEXT_MODE_VALIDATOR = new BooleanValidator(JSON_ALL_TEXT_MODE,
       new OptionDescription("Drill reads all data from the JSON files as VARCHAR. Prevents schema change errors."));
-  public static final BooleanValidator JSON_EXTENDED_TYPES = new BooleanValidator("store.json.extended_types",
+  public static final String JSON_EXTENDED_TYPES_KEY = "store.json.extended_types";
+  public static final BooleanValidator JSON_EXTENDED_TYPES = new BooleanValidator(JSON_EXTENDED_TYPES_KEY,
       new OptionDescription("Turns on special JSON structures that Drill serializes for storing more type information than the four basic JSON types."));
-  public static final BooleanValidator JSON_WRITER_UGLIFY = new BooleanValidator("store.json.writer.uglify",
+  public static final String JSON_WRITER_UGLIFY_KEY = "store.json.writer.uglify";
+  public static final BooleanValidator JSON_WRITER_UGLIFY = new BooleanValidator(JSON_WRITER_UGLIFY_KEY,
       new OptionDescription("Enables Drill to return compact JSON output files; Drill does not separate records. Default is false. (Drill 1.4+)"));
-  public static final BooleanValidator JSON_WRITER_SKIPNULLFIELDS = new BooleanValidator("store.json.writer.skip_null_fields",
+  public static final String JSON_WRITER_SKIP_NULL_FIELDS_KEY = "store.json.writer.skip_null_fields";
+  public static final BooleanValidator JSON_WRITER_SKIPNULLFIELDS = new BooleanValidator(JSON_WRITER_SKIP_NULL_FIELDS_KEY,
       new OptionDescription("Enables Drill to skip extraneous NULL fields in JSON output files when executing the CTAS statement. Default is true. (Drill 1.6+)"));
   public static final String JSON_READER_SKIP_INVALID_RECORDS_FLAG = "store.json.reader.skip_invalid_records";
   public static final BooleanValidator JSON_SKIP_MALFORMED_RECORDS_VALIDATOR = new BooleanValidator(JSON_READER_SKIP_INVALID_RECORDS_FLAG,

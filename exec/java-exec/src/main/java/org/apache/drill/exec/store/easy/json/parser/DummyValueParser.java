@@ -23,11 +23,11 @@ import com.fasterxml.jackson.core.JsonToken;
  * Parse and ignore an unprojected value. The parsing just "free wheels", we
  * care only about matching brackets, but not about other details.
  */
-class DummyValueParser extends AbstractElementParser {
+public class DummyValueParser implements ElementParser {
 
-  public DummyValueParser(ElementParser parent) {
-    super(parent);
-  }
+  public static final ElementParser INSTANCE = new DummyValueParser();
+
+  private DummyValueParser() { }
 
   @Override
   public void parse(TokenIterator tokenizer) {
@@ -38,21 +38,12 @@ class DummyValueParser extends AbstractElementParser {
         parseTail(tokenizer);
         break;
 
-      case VALUE_NULL:
-      case VALUE_EMBEDDED_OBJECT:
-      case VALUE_FALSE:
-      case VALUE_TRUE:
-      case VALUE_NUMBER_FLOAT:
-      case VALUE_NUMBER_INT:
-      case VALUE_STRING:
-        break;
-
       default:
-        throw errorFactory().syntaxError(token);
+        break;
     }
   }
 
-  public void parseTail(TokenIterator tokenizer) {
+  private void parseTail(TokenIterator tokenizer) {
 
     // Parse (field: value)* }
     while (true) {

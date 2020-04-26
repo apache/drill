@@ -33,7 +33,5 @@ package org.apache.drill.exec.store.easy.json.parser;
  * parsed.
  */
 public interface ElementParser {
-  ElementParser parent();
-  JsonStructureParser structParser();
   void parse(TokenIterator tokenizer);
 }

@@ -34,7 +34,7 @@ public class TokenIterator {
    * error is detected within a record. Allows for recovery.
    */
   @SuppressWarnings("serial")
-  class RecoverableJsonException extends RuntimeException {
+  public static class RecoverableJsonException extends RuntimeException {
   }
 
   private final JsonParser parser;
@@ -169,5 +169,21 @@ public class TokenIterator {
     } catch (UnsupportedConversionError e) {
       throw errorFactory.typeError(e);
     }
+  }
+
+  public byte[] binaryValue() {
+    try {
+      return parser.getBinaryValue();
+    } catch (JsonParseException e) {
+      throw errorFactory.syntaxError(e);
+    } catch (IOException e) {
+      throw errorFactory.ioException(e);
+    } catch (UnsupportedConversionError e) {
+      throw errorFactory.typeError(e);
+    }
+  }
+
+  public RuntimeException invalidValue(JsonToken token) {
+    return errorFactory.structureError("Unexpected JSON value: " + token.name());
   }
 }

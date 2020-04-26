@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.store.easy.json.parser;
 
+import com.fasterxml.jackson.core.JsonToken;
+
 /**
  * Description of a JSON value as inferred from looking ahead in
  * the JSON stream. Includes a type (which can be empty for an empty
@@ -59,10 +61,14 @@ public class ValueDef {
   }
 
   public static final ValueDef UNKNOWN_ARRAY = new ValueDef(JsonType.UNKNOWN, 1);
-  public static final ValueDef UNKNOWN = new ValueDef(JsonType.UNKNOWN, 0);
+  public static final ValueDef UNKNOWN = new ValueDef(JsonType.UNKNOWN);
 
   private final int arrayDims;
   private final JsonType type;
+
+  public ValueDef(JsonType type) {
+    this(type, 0);
+  }
 
   public ValueDef(JsonType type, int dims) {
     this.type = type;
@@ -81,5 +87,30 @@ public class ValueDef {
       buf.append("[]");
     }
     return buf.toString();
+  }
+
+  public static JsonType jsonTypeFor(JsonToken token) {
+    switch (token) {
+
+      case VALUE_NULL:
+        return JsonType.NULL;
+
+      case VALUE_FALSE:
+      case VALUE_TRUE:
+        return JsonType.BOOLEAN;
+
+      case VALUE_NUMBER_INT:
+        return JsonType.INTEGER;
+
+      case VALUE_NUMBER_FLOAT:
+        return JsonType.FLOAT;
+
+      case VALUE_STRING:
+      case VALUE_EMBEDDED_OBJECT:
+        return JsonType.STRING;
+
+      default:
+        throw new IllegalStateException("Not a scalar type: " + token.name());
+    }
   }
 }

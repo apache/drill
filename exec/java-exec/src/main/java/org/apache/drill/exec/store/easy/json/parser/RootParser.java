@@ -33,7 +33,7 @@ import com.fasterxml.jackson.core.JsonToken;
  * requires newline separators between objects, this parser allows
  * any amount of whitespace, including none.
  */
-public abstract class RootParser implements ElementParser {
+public abstract class RootParser {
   protected static final Logger logger = LoggerFactory.getLogger(RootParser.class);
 
   private final JsonStructureParser structParser;
@@ -41,7 +41,7 @@ public abstract class RootParser implements ElementParser {
 
   public RootParser(JsonStructureParser structParser) {
     this.structParser = structParser;
-    this.rootObject = new ObjectParser(this, structParser.rootListener());
+    this.rootObject = structParser.fieldFactory().rootParser();
   }
 
   /**
@@ -53,14 +53,6 @@ public abstract class RootParser implements ElementParser {
    * end of data was reached.
    */
   public abstract boolean parseRoot(TokenIterator tokenizer);
-
-  // Generic parsing not allowed at the root since the root must
-  // report EOF. Use parseRoot() instead.
-  @Override
-  public void parse(TokenIterator tokenizer) {
-    throw new UnsupportedOperationException(
-        "Call parseRoot() at the root level to check for EOF.");
-  }
 
   /**
    * Parse one data object. This is the "root" object which may contain
@@ -93,12 +85,6 @@ public abstract class RootParser implements ElementParser {
   protected ErrorFactory errorFactory() {
     return structParser.errorFactory();
   }
-
-  @Override
-  public ElementParser parent() { return null; }
-
-  @Override
-  public JsonStructureParser structParser() { return structParser; }
 
   /**
    * Parser for a <a href="http://jsonlines.org/">jsonlines</a>-style

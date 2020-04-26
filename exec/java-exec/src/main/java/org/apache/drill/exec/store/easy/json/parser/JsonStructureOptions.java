@@ -28,14 +28,6 @@ import org.apache.drill.exec.server.options.OptionSet;
 public class JsonStructureOptions {
 
   /**
-   * JSON returns values as typed tokens. If {@code allTextMode} is
-   * set, the structure parser converts all scalars (except {@code null})
-   * to text and forwards the values to the listener as text.
-   * Implements Drill's "all-text mode" for JSON.
-   */
-  public boolean allTextMode;
-
-  /**
    * Allow Infinity and NaN for float values.
    */
 
@@ -60,7 +52,6 @@ public class JsonStructureOptions {
   public JsonStructureOptions() { }
 
   public JsonStructureOptions(OptionSet options) {
-    this.allTextMode = options.getBoolean(ExecConstants.JSON_ALL_TEXT_MODE);
     this.allowNanInf = options.getBoolean(ExecConstants.JSON_READER_NAN_INF_NUMBERS);
     this.skipMalformedRecords = options.getBoolean(ExecConstants.JSON_READER_SKIP_INVALID_RECORDS_FLAG);
     this.enableEscapeAnyChar = options.getBoolean(ExecConstants.JSON_READER_ESCAPE_ANY_CHAR);

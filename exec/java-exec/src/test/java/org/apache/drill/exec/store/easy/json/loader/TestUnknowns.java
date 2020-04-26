@@ -24,7 +24,7 @@ import static org.apache.drill.test.rowSet.RowSetUtilities.strArray;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.JsonTest;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
@@ -39,7 +39,7 @@ import org.junit.experimental.categories.Category;
  * deciding on the column type. Hitting the end of batch, or an array
  * that contains only null values, forces resolution to VARCHAR.
  */
-@Category(RowSetTests.class)
+@Category(JsonTest.class)
 public class TestUnknowns extends BaseJsonLoaderTest {
 
   @Test
@@ -231,10 +231,35 @@ public class TestUnknowns extends BaseJsonLoaderTest {
   }
 
   @Test
-  public void testArrayToNull() {
+  public void testArrayToNullJson() {
+    String json =
+        "{a: []} {a: [null]} {a: [\"foo\"] }\n" +
+        "{a: [ 10, [20], { b: 30 } ] }";
+    JsonLoaderFixture loader = new JsonLoaderFixture();
+    loader.open(json);
+    RowSet results = loader.next();
+    assertNotNull(results);
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .addArray("a", MinorType.VARCHAR)
+        .build();
+    RowSet expected = fixture.rowSetBuilder(expectedSchema)
+        .addSingleCol(strArray())
+        .addSingleCol(strArray("null"))
+        .addSingleCol(strArray("\"foo\""))
+        .addSingleCol(strArray("10", "[20]", "{\"b\": 30}"))
+        .build();
+    RowSetUtilities.verify(expected, results);
+    assertNull(loader.next());
+    loader.close();
+  }
+
+  @Test
+  public void testArrayToNullVarchar() {
     String json =
         "{a: []} {a: [null]} {a: [\"foo\"]}";
     JsonLoaderFixture loader = new JsonLoaderFixture();
+    loader.jsonOptions.unknownsAsJson = false;
     loader.open(json);
     RowSet results = loader.next();
     assertNotNull(results);

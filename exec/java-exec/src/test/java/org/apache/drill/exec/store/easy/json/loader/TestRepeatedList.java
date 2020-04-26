@@ -25,7 +25,7 @@ import static org.apache.drill.test.rowSet.RowSetUtilities.strArray;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.JsonTest;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
@@ -37,7 +37,7 @@ import org.junit.experimental.categories.Category;
 /**
  * Tests repeated lists to form a 2D or 3D array of various data types.
  */
-@Category(RowSetTests.class)
+@Category(JsonTest.class)
 public class TestRepeatedList extends BaseJsonLoaderTest {
 
   @Test
@@ -102,7 +102,7 @@ public class TestRepeatedList extends BaseJsonLoaderTest {
         .build();
 
     JsonLoaderFixture loader = new JsonLoaderFixture();
-    loader.providedSchema = schema;
+    loader.builder.providedSchema(schema);
     loader.open(json);
     RowSet results = loader.next();
     assertNotNull(results);
@@ -138,7 +138,7 @@ public class TestRepeatedList extends BaseJsonLoaderTest {
         .build();
     RowSet expected = fixture.rowSetBuilder(expectedSchema)
         .addSingleCol(null)
-        .addSingleCol(singleObjArray(strArray("")))
+        .addSingleCol(singleObjArray(strArray("null")))
         .addSingleCol(objArray(
             strArray("1", "2"), strArray("3", "4", "5")))
         .build();
@@ -217,7 +217,7 @@ public class TestRepeatedList extends BaseJsonLoaderTest {
         .build();
 
     JsonLoaderFixture loader = new JsonLoaderFixture();
-    loader.providedSchema = schema;
+    loader.builder.providedSchema(schema);
     loader.open(json);
     RowSet results = loader.next();
     assertNotNull(results);
@@ -251,7 +251,7 @@ public class TestRepeatedList extends BaseJsonLoaderTest {
         .build();
 
     JsonLoaderFixture loader = new JsonLoaderFixture();
-    loader.providedSchema = schema;
+    loader.builder.providedSchema(schema);
     loader.open(json);
     RowSet results = loader.next();
     assertNotNull(results);
@@ -420,6 +420,32 @@ public class TestRepeatedList extends BaseJsonLoaderTest {
         .addSingleCol(objArray(
             objArray(objArray(mapValue(1L), mapValue(2L)), objArray(mapValue(3L), mapValue(4L))),
             objArray(objArray(mapValue(5L), mapValue(6L)), objArray(mapValue(7L), mapValue(8L)))))
+        .build();
+    RowSetUtilities.verify(expected, results);
+    assertNull(loader.next());
+    loader.close();
+  }
+
+  @Test
+  public void testForced2DArrayResolve() {
+    String json =
+        "{a: null} {a: []} {a: [[]]}\n" +
+        "{a: [[\"foo\"], [20]]}";
+    JsonLoaderFixture loader = new JsonLoaderFixture();
+    loader.open(json);
+    RowSet results = loader.next();
+    assertNotNull(results);
+
+    TupleMetadata expectedSchema = new SchemaBuilder()
+        .addRepeatedList("a")
+          .addArray(MinorType.VARCHAR)
+          .resumeSchema()
+        .build();
+    RowSet expected = fixture.rowSetBuilder(expectedSchema)
+        .addSingleCol(objArray())
+        .addSingleCol(objArray())
+        .addSingleCol(singleObjArray(strArray()))
+        .addSingleCol(objArray(strArray("\"foo\""), strArray("20")))
         .build();
     RowSetUtilities.verify(expected, results);
     assertNull(loader.next());

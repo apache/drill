@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.easy.json.parser;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.util.function.Function;
 
 import org.apache.drill.exec.store.easy.json.parser.MessageParser.MessageContextException;
 import org.apache.drill.exec.store.easy.json.parser.RootParser.EmbeddedArrayParser;
@@ -34,6 +35,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.core.json.JsonReadFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
@@ -75,7 +77,7 @@ public class JsonStructureParser {
     private InputStream stream;
     private Reader reader;
     private JsonStructureOptions options;
-    private ObjectListener rootListener;
+    private Function<JsonStructureParser, ObjectParser> parserFactory;
     private ErrorFactory errorFactory;
     private String dataPath;
     private MessageParser messageParser;
@@ -85,8 +87,9 @@ public class JsonStructureParser {
       return this;
     }
 
-    public JsonStructureParserBuilder rootListener(ObjectListener rootListener) {
-      this.rootListener = rootListener;
+    public JsonStructureParserBuilder parserFactory(
+        Function<JsonStructureParser, ObjectParser> parserFactory) {
+      this.parserFactory = parserFactory;
       return this;
     }
 
@@ -129,10 +132,10 @@ public class JsonStructureParser {
 
   private final JsonParser parser;
   private final JsonStructureOptions options;
-  private final ObjectListener rootListener;
   private final ErrorFactory errorFactory;
   private final TokenIterator tokenizer;
   private final RootParser rootState;
+  private final FieldParserFactory fieldFactory;
   private int errorRecoveryCount;
 
   /**
@@ -148,14 +151,15 @@ public class JsonStructureParser {
    */
   private JsonStructureParser(JsonStructureParserBuilder builder) {
     this.options = Preconditions.checkNotNull(builder.options);
-    this.rootListener = Preconditions.checkNotNull(builder.rootListener);
     this.errorFactory = Preconditions.checkNotNull(builder.errorFactory);
     try {
       ObjectMapper mapper = new ObjectMapper()
           .configure(JsonParser.Feature.ALLOW_COMMENTS, true)
           .configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true)
-          .configure(JsonParser.Feature.ALLOW_NON_NUMERIC_NUMBERS, options.allowNanInf)
-          .configure(JsonParser.Feature.ALLOW_BACKSLASH_ESCAPING_ANY_CHARACTER, options.enableEscapeAnyChar);
+          .configure(JsonReadFeature.ALLOW_NON_NUMERIC_NUMBERS.mappedFeature(),
+              options.allowNanInf)
+          .configure(JsonReadFeature.ALLOW_BACKSLASH_ESCAPING_ANY_CHARACTER.mappedFeature(),
+              options.enableEscapeAnyChar);
 
       if (builder.stream != null) {
         parser = mapper.getFactory().createParser(builder.stream);
@@ -168,6 +172,8 @@ public class JsonStructureParser {
       throw errorFactory().ioException(e);
     }
     tokenizer = new TokenIterator(parser, options, errorFactory());
+    fieldFactory = new FieldParserFactory(this,
+        Preconditions.checkNotNull(builder.parserFactory));
 
     // Parse to the start of the data object(s), and create a root
     // state to parse objects and watch for the end of data.
@@ -181,7 +187,7 @@ public class JsonStructureParser {
 
   public JsonStructureOptions options() { return options; }
   public ErrorFactory errorFactory() { return errorFactory; }
-  public ObjectListener rootListener() { return rootListener; }
+  public FieldParserFactory fieldFactory() { return fieldFactory; }
 
   private RootParser makeRootState() {
     JsonToken token = tokenizer.next();
@@ -245,7 +251,7 @@ public class JsonStructureParser {
         return rootState.parseRoot(tokenizer);
       } catch (RecoverableJsonException e) {
         if (! recover()) {
-          return false;
+          throw errorFactory().structureError("Unrecoverable error - " + e.getMessage());
         }
       }
     }

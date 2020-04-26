@@ -17,17 +17,19 @@
  */
 package org.apache.drill.exec.store.easy.json.loader;
 
+import static org.apache.drill.test.rowSet.RowSetUtilities.dec;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import org.apache.drill.categories.RowSetTests;
+import java.time.Duration;
+import java.time.LocalDateTime;
+
+import org.apache.drill.categories.JsonTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.physical.resultSet.project.Projections;
 import org.apache.drill.exec.physical.rowSet.RowSet;
-import org.apache.drill.exec.physical.rowSet.RowSetTestUtils;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.test.rowSet.RowSetUtilities;
@@ -46,7 +48,7 @@ import org.junit.experimental.categories.Category;
  * to a few messy rows a billion rows in, or due to the order that the scanners
  * see the data.
  */
-@Category(RowSetTests.class)
+@Category(JsonTest.class)
 public class TestScalars extends BaseJsonLoaderTest {
 
   /**
@@ -127,7 +129,7 @@ public class TestScalars extends BaseJsonLoaderTest {
         .build();
 
     JsonLoaderFixture loader = new JsonLoaderFixture();
-    loader.providedSchema = schema;
+    loader.builder.providedSchema(schema);
     loader.open(json);
     RowSet results = loader.next();
     assertNotNull(results);
@@ -255,7 +257,7 @@ public class TestScalars extends BaseJsonLoaderTest {
         .build();
 
     JsonLoaderFixture loader = new JsonLoaderFixture();
-    loader.providedSchema = schema;
+    loader.builder.providedSchema(schema);
     loader.open(json);
     RowSet results = loader.next();
     assertNotNull(results);
@@ -390,7 +392,7 @@ public class TestScalars extends BaseJsonLoaderTest {
         .build();
 
     JsonLoaderFixture loader = new JsonLoaderFixture();
-    loader.providedSchema = schema;
+    loader.builder.providedSchema(schema);
     loader.jsonOptions.allowNanInf = true;
     loader.open(json);
     RowSet results = loader.next();
@@ -504,7 +506,7 @@ public class TestScalars extends BaseJsonLoaderTest {
         .build();
 
     JsonLoaderFixture loader = new JsonLoaderFixture();
-    loader.providedSchema = schema;
+    loader.builder.providedSchema(schema);
     loader.open(json);
     RowSet results = loader.next();
     assertNotNull(results);
@@ -527,26 +529,159 @@ public class TestScalars extends BaseJsonLoaderTest {
   }
 
   @Test
-  public void testProjection() {
+  public void testProvidedSchemaNumbers() {
     String json =
-        "{a: 10, b: true}\n" +
-        "{a: 20, b: [\"what?\"]}\n" +
-        "{a: 30, b: {c: \"oh, my!\"}}";
+
+        // null is ambiguous
+        "{s: null, i: null, bi: null, f4: null, f8: null, d: null}\n" +
+        // Strings are also
+        "{s: \"10\", i: \"10\", bi: \"10\", f4: \"10\", f8: \"10\", d: \"10\"}\n" +
+        "{             f4: \"10.5\", f8: \"10.5\", d: \"10.5\"}\n" +
+        "{             f4: \"-1e5\", f8: \"-1e5\", d: \"-1e5\"}\n" +
+
+        // Float-only values
+        "{             f4: \"NaN\", f8: \"NaN\"}\n" +
+        "{             f4: \"Infinity\", f8: \"Infinity\"}\n" +
+        "{             f4: \"-Infinity\", f8: \"-Infinity\"}\n" +
+
+        // Large decimal
+        "{d: \"123456789012345678901234.5678\" }\n" +
+
+        // Ambiguous numbers
+        "{s: 10, i: 10, bi: 10, f4: 10, f8: 10, d: 10}\n" +
+        "{             f4: 10.5, f8: 10.5, d: 10.5}\n" +
+        "{             f4: -1e5, f8: -1e5, d: -1e5}\n" +
+
+        // Float-only values
+        "{             f4: NaN, f8: NaN}\n" +
+        "{             f4: Infinity, f8: Infinity}\n" +
+        "{             f4: -Infinity, f8: -Infinity}\n" +
+
+        // Large decimal
+        "{d: 123456789012345678901234.5678 }\n";
+    TupleMetadata schema = new SchemaBuilder()
+        .addNullable("s", MinorType.SMALLINT)
+        .addNullable("i", MinorType.INT)
+        .addNullable("bi", MinorType.BIGINT)
+        .addNullable("f4", MinorType.FLOAT4)
+        .addNullable("f8", MinorType.FLOAT8)
+        .addNullable("d", MinorType.VARDECIMAL, 38, 4)
+        .build();
 
     JsonLoaderFixture loader = new JsonLoaderFixture();
-    loader.rsLoaderOptions.projection(
-        Projections.parse(RowSetTestUtils.projectList("a")));
+    loader.jsonOptions.allowNanInf = true;
+    loader.builder.providedSchema(schema);
     loader.open(json);
     RowSet results = loader.next();
     assertNotNull(results);
 
-    TupleMetadata expectedSchema = new SchemaBuilder()
-        .addNullable("a", MinorType.BIGINT)
+    RowSet expected = fixture.rowSetBuilder(schema)
+        //      s     i     bi    f4    f8    d
+        .addRow(null, null, null, null, null, null)
+        .addRow(10,   10,   10,   10,   10,   dec("10"))
+        .addRow(null, null, null, 10.5, 10.5D, dec("10.5"))
+        .addRow(null, null, null, -1e5,  -1e5D, dec("-1e5"))
+        .addRow(null, null, null, Float.NaN, Double.NaN, null)
+        .addRow(null, null, null, Float.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, null)
+        .addRow(null, null, null, Float.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, null)
+        .addRow(null, null, null, null, null, dec("123456789012345678901234.5678"))
+        .addRow(10,   10,   10,   10,   10,   dec("10"))
+        .addRow(null, null, null, 10.5, 10.5D, dec("10.5"))
+        .addRow(null, null, null, -1e5,  -1e5D, dec("-1e5"))
+        .addRow(null, null, null, Float.NaN, Double.NaN, null)
+        .addRow(null, null, null, Float.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, null)
+        .addRow(null, null, null, Float.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, null)
+        .addRow(null, null, null, null, null, dec("123456789012345678901234.5678"))
         .build();
-    RowSet expected = fixture.rowSetBuilder(expectedSchema)
-        .addRow(10)
-        .addRow(20)
-        .addRow(30)
+    RowSetUtilities.verify(expected, results);
+    assertNull(loader.next());
+    loader.close();
+  }
+
+  @Test
+  public void testProvidedSchemaWithDates() {
+    LocalDateTime local = LocalDateTime.of(2020, 4, 21, 11, 22, 33, 456_000_000);
+    LocalDateTime localEpoch = LocalDateTime.of(1970, 1, 1, 0, 0, 0);
+    long localTs = Duration.between(localEpoch, local).toMillis();
+    LocalDateTime localDate = LocalDateTime.of(2020, 4, 21, 0, 0, 0);
+    long localDateTs = Duration.between(localEpoch, localDate).toMillis();
+    int localTimeTs = (int) (localTs - localDateTs);
+    String json =
+        "{ts: null, d: null, t: null}\n" +
+        "{ts: \"2020-04-21T11:22:33.456\", d: \"2020-04-21\", t: \"11:22:33.456\"}\n" +
+        "{ts: " + localTs + ", d: " + localDateTs + ", t: " + localTimeTs + "}\n";
+    TupleMetadata schema = new SchemaBuilder()
+        .addNullable("ts", MinorType.TIMESTAMP)
+        .addNullable("d", MinorType.DATE)
+        .addNullable("t", MinorType.TIME)
+        .build();
+
+    JsonLoaderFixture loader = new JsonLoaderFixture();
+    loader.builder.providedSchema(schema);
+    loader.open(json);
+    RowSet results = loader.next();
+    assertNotNull(results);
+
+    RowSet expected = fixture.rowSetBuilder(schema)
+        .addRow(null, null, null)
+        .addRow(localTs, localDateTs, localTimeTs)
+        .addRow(localTs, localDateTs, localTimeTs)
+        .build();
+    RowSetUtilities.verify(expected, results);
+    assertNull(loader.next());
+    loader.close();
+  }
+
+  @Test
+  public void testProvidedSchemaWithIntervals() {
+    String json =
+        "{i: null, iy: null, id: null}\n" +
+        "{i: \"P1Y2M3DT4H5M6S\", iy: \"P1Y2M\", id: \"P3DT4H5M6S\"}";
+    TupleMetadata schema = new SchemaBuilder()
+        .addNullable("i", MinorType.INTERVAL)
+        .addNullable("iy", MinorType.INTERVALYEAR)
+        .addNullable("id", MinorType.INTERVALDAY)
+        .build();
+
+    JsonLoaderFixture loader = new JsonLoaderFixture();
+    loader.builder.providedSchema(schema);
+    loader.open(json);
+    RowSet results = loader.next();
+    assertNotNull(results);
+
+    org.joda.time.Period full = org.joda.time.Period.years(1).withMonths(2)
+        .withDays(3).withHours(4).withMinutes(5).withSeconds(6);
+    org.joda.time.Period ym = org.joda.time.Period.years(1).withMonths(2);
+    org.joda.time.Period dhms = org.joda.time.Period.days(3).withHours(4)
+        .withMinutes(5).withSeconds(6);
+    RowSet expected = fixture.rowSetBuilder(schema)
+        .addRow(null, null, null)
+        .addRow(full, ym, dhms)
+        .build();
+    RowSetUtilities.verify(expected, results);
+    assertNull(loader.next());
+    loader.close();
+  }
+
+  @Test
+  public void testProvidedSchemaWithBinary() {
+    String json =
+        "{b: null}\n" +
+        "{b: \"ZHJpbGw=\"}";
+    TupleMetadata schema = new SchemaBuilder()
+        .addNullable("b", MinorType.VARBINARY)
+        .build();
+
+    JsonLoaderFixture loader = new JsonLoaderFixture();
+    loader.builder.providedSchema(schema);
+    loader.open(json);
+    RowSet results = loader.next();
+    assertNotNull(results);
+
+    byte[] bytes = "Drill".getBytes();
+    RowSet expected = fixture.rowSetBuilder(schema)
+        .addSingleCol(null)
+        .addSingleCol(bytes)
         .build();
     RowSetUtilities.verify(expected, results);
     assertNull(loader.next());

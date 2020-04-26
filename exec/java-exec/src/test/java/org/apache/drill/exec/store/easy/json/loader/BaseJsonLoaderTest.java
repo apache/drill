@@ -27,7 +27,6 @@ import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.impl.ResultSetLoaderImpl;
 import org.apache.drill.exec.physical.resultSet.impl.ResultSetOptionBuilder;
 import org.apache.drill.exec.physical.rowSet.RowSet;
-import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl.JsonLoaderBuilder;
 import org.apache.drill.test.SubOperatorTest;
 
@@ -36,17 +35,16 @@ public class BaseJsonLoaderTest extends SubOperatorTest {
   protected static class JsonLoaderFixture {
 
     public ResultSetOptionBuilder rsLoaderOptions = new ResultSetOptionBuilder();
-    public TupleMetadata providedSchema;
+    public JsonLoaderBuilder builder = new JsonLoaderBuilder();
     public JsonLoaderOptions jsonOptions = new JsonLoaderOptions();
-    public CustomErrorContext errorContext = new EmptyErrorContext();
+    public CustomErrorContext errorContext = EmptyErrorContext.INSTANCE;
     private ResultSetLoader rsLoader;
     private JsonLoader loader;
 
     public void open(InputStream is) {
       rsLoader = new ResultSetLoaderImpl(fixture.allocator(), rsLoaderOptions.build());
-      loader = new JsonLoaderBuilder()
+      loader = builder
           .resultSetLoader(rsLoader)
-          .providedSchema(providedSchema)
           .options(jsonOptions)
           .errorContext(errorContext)
           .fromStream(is)

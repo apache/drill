@@ -28,7 +28,10 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetWriter;
+import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.metadata.MetadataUtils;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.ValueType;
@@ -227,6 +230,14 @@ public class RowSetUtilities {
     return elements;
   }
 
+  public static BigDecimal[] decArray(BigDecimal... elements) {
+    return elements;
+  }
+
+  public static byte[][] binArray(byte[]... elements) {
+    return elements;
+  }
+
   public static int[] intArray(Integer... elements) {
     int[] array = new int[elements.length];
     for (int i = 0; i < elements.length; i++) {
@@ -288,5 +299,9 @@ public class RowSetUtilities {
       map.put(entry[i], entry[i + 1]);
     }
     return map;
+  }
+
+  public static void assertSchemasEqual(TupleMetadata expected, BatchSchema actual) {
+    assertTrue(expected.isEquivalent(MetadataUtils.fromFields(actual)));
   }
 }

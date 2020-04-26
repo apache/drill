@@ -82,16 +82,6 @@ package org.apache.drill.exec.store.easy.json.parser;
 public interface ArrayListener {
 
   /**
-   * Provide an element listener for the first non-empty value
-   * seen for the array.
-   *
-   * @param valueDef description of the element (without the array
-   * dimensions)
-   * @return a listener to consume values of the array element
-   */
-  ValueListener element(ValueDef valueDef);
-
-  /**
    * Called at the entrance to each level (dimension) of an array.
    * That is, called when the structure parser accepts the {@code [}
    * token.
