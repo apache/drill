@@ -208,7 +208,12 @@ public class MetadataUtils {
     return new PrimitiveColumnMetadata(name, type);
   }
 
-  private static ColumnMetadata newDecimal(String name, MinorType type, DataMode mode,
+  public static ColumnMetadata newDecimal(String name, DataMode mode,
+      int precision, int scale) {
+    return newDecimal(name, MinorType.VARDECIMAL, mode, precision, scale);
+  }
+
+  public static ColumnMetadata newDecimal(String name, MinorType type, DataMode mode,
       int precision, int scale) {
     if (precision < 0 ) {
       throw new IllegalArgumentException("Precision cannot be negative : " +

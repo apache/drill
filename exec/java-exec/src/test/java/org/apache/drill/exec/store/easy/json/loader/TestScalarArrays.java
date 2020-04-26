@@ -18,15 +18,15 @@
 package org.apache.drill.exec.store.easy.json.loader;
 
 import static org.apache.drill.test.rowSet.RowSetUtilities.boolArray;
-import static org.apache.drill.test.rowSet.RowSetUtilities.longArray;
 import static org.apache.drill.test.rowSet.RowSetUtilities.doubleArray;
+import static org.apache.drill.test.rowSet.RowSetUtilities.longArray;
 import static org.apache.drill.test.rowSet.RowSetUtilities.strArray;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import org.apache.drill.categories.RowSetTests;
+import org.apache.drill.categories.JsonTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.RowSet;
@@ -46,7 +46,7 @@ import org.junit.experimental.categories.Category;
  * Verifies that null array elements are converted to a default
  * value for the type (false, 0 or empty string.)
  */
-@Category(RowSetTests.class)
+@Category(JsonTest.class)
 public class TestScalarArrays extends BaseJsonLoaderTest {
 
   @Test
@@ -110,7 +110,7 @@ public class TestScalarArrays extends BaseJsonLoaderTest {
         .addArray("a", MinorType.BIT)
         .build();
     JsonLoaderFixture loader = new JsonLoaderFixture();
-    loader.providedSchema = schema;
+    loader.builder.providedSchema(schema);
     loader.open(json);
     RowSet results = loader.next();
     assertNotNull(results);
@@ -217,7 +217,7 @@ public class TestScalarArrays extends BaseJsonLoaderTest {
         .build();
 
     JsonLoaderFixture loader = new JsonLoaderFixture();
-    loader.providedSchema = schema;
+    loader.builder.providedSchema(schema);
     loader.open(json);
     RowSet results = loader.next();
     assertNotNull(results);
@@ -295,7 +295,7 @@ public class TestScalarArrays extends BaseJsonLoaderTest {
         .build();
 
     JsonLoaderFixture loader = new JsonLoaderFixture();
-    loader.providedSchema = schema;
+    loader.builder.providedSchema(schema);
     loader.open(json);
     RowSet results = loader.next();
     assertNotNull(results);
@@ -373,7 +373,7 @@ public class TestScalarArrays extends BaseJsonLoaderTest {
         .build();
 
     JsonLoaderFixture loader = new JsonLoaderFixture();
-    loader.providedSchema = schema;
+    loader.builder.providedSchema(schema);
     loader.open(json);
     RowSet results = loader.next();
     assertNotNull(results);
@@ -403,7 +403,7 @@ public class TestScalarArrays extends BaseJsonLoaderTest {
       loader.next();
       fail();
     } catch (UserException e) {
-      assertTrue(e.getMessage().contains("integer[][]"));
+      assertTrue(e.getMessage().contains("Structure value found where scalar expected"));
     } finally {
       loader.close();
     }
@@ -422,7 +422,7 @@ public class TestScalarArrays extends BaseJsonLoaderTest {
       loader.next();
       fail();
     } catch (UserException e) {
-      assertTrue(e.getMessage().contains("object"));
+      assertTrue(e.getMessage().contains("JSON array expected"));
     } finally {
       loader.close();
     }

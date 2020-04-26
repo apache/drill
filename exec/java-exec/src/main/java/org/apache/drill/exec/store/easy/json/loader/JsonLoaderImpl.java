@@ -31,11 +31,13 @@ import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.server.options.OptionSet;
+import org.apache.drill.exec.store.easy.json.extended.ExtendedTypeFieldFactory;
 import org.apache.drill.exec.store.easy.json.parser.ErrorFactory;
 import org.apache.drill.exec.store.easy.json.parser.JsonStructureParser;
 import org.apache.drill.exec.store.easy.json.parser.JsonStructureParser.JsonStructureParserBuilder;
 import org.apache.drill.exec.store.easy.json.parser.MessageParser;
 import org.apache.drill.exec.store.easy.json.parser.MessageParser.MessageContextException;
+import org.apache.drill.exec.store.easy.json.parser.TokenIterator.RecoverableJsonException;
 import org.apache.drill.exec.store.easy.json.parser.ValueDef;
 import org.apache.drill.exec.store.easy.json.parser.ValueDef.JsonType;
 import org.apache.drill.exec.vector.accessor.UnsupportedConversionError;
@@ -132,7 +134,7 @@ import com.fasterxml.jackson.core.JsonToken;
  * </ul>
  */
 public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
-  protected static final Logger logger = LoggerFactory.getLogger(JsonLoaderImpl.class);
+  private static final Logger logger = LoggerFactory.getLogger(JsonLoaderImpl.class);
 
   public static class JsonLoaderBuilder {
     private ResultSetLoader rsLoader;
@@ -208,8 +210,8 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
   private final ResultSetLoader rsLoader;
   private final JsonLoaderOptions options;
   private final CustomErrorContext errorContext;
-  private final TupleListener rowListener;
   private final JsonStructureParser parser;
+  private final FieldFactory fieldFactory;
   private boolean eof;
 
   /**
@@ -228,19 +230,37 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
     this.rsLoader = builder.rsLoader;
     this.options = builder.options;
     this.errorContext = builder. errorContext;
-    this.rowListener = new TupleListener(this, rsLoader.writer(), builder.providedSchema);
-    this.parser = new JsonStructureParserBuilder()
+    this.fieldFactory = buildFieldFactory(builder);
+    this.parser = buildParser(builder);
+  }
+
+  private JsonStructureParser buildParser(JsonLoaderBuilder builder) {
+    return new JsonStructureParserBuilder()
             .fromStream(builder.stream)
             .fromReader(builder.reader)
             .options(builder.options)
-            .rootListener(rowListener)
+            .parserFactory(parser ->
+                new TupleParser(parser, JsonLoaderImpl.this, rsLoader.writer(), builder.providedSchema))
             .errorFactory(this)
             .messageParser(builder.messageParser)
             .dataPath(builder.dataPath)
             .build();
   }
 
+  private FieldFactory buildFieldFactory(JsonLoaderBuilder builder) {
+    FieldFactory factory = new InferredFieldFactory(this);
+    if (options.enableExtendedTypes) {
+      factory = new ExtendedTypeFieldFactory(this, factory);
+    }
+    if (builder.providedSchema != null) {
+      factory = new ProvidedFieldFactory(this, factory);
+    }
+    return factory;
+  }
+
   public JsonLoaderOptions options() { return options; }
+  public JsonStructureParser parser() { return parser; }
+  public FieldFactory fieldFactory() { return fieldFactory; }
 
   @Override // JsonLoader
   public boolean readBatch() {
@@ -319,9 +339,13 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
 
   @Override // ErrorFactory
   public RuntimeException structureError(String msg) {
-    throw buildError(
-        UserException.dataReadError()
-          .message(msg));
+    if (options.skipMalformedRecords) {
+      throw new RecoverableJsonException();
+    } else {
+      throw buildError(
+          UserException.dataReadError()
+            .message(msg));
+    }
   }
 
   @Override // ErrorFactory
@@ -341,9 +365,13 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
 
   @Override // ErrorFactory
   public RuntimeException syntaxError(JsonToken token) {
-    throw buildError(
-        UserException.dataReadError()
-          .addContext("Syntax error on token", token.toString()));
+    if (options.skipMalformedRecords) {
+      throw new RecoverableJsonException();
+    } else {
+      throw buildError(
+          UserException.dataReadError()
+            .message("Syntax error on token", token.toString()));
+    }
   }
 
   @Override // ErrorFactory
@@ -354,7 +382,7 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
           .addContext("Recovery attempts", parser.recoverableErrorCount()));
   }
 
-  protected UserException typeConversionError(ColumnMetadata schema, ValueDef valueDef) {
+  public UserException typeConversionError(ColumnMetadata schema, ValueDef valueDef) {
     StringBuilder buf = new StringBuilder()
         .append(valueDef.type().name().toLowerCase());
     if (valueDef.isArray()) {
@@ -365,19 +393,25 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
     return typeConversionError(schema, buf.toString());
   }
 
-  protected UserException typeConversionError(ColumnMetadata schema, String tokenType) {
+  public UserException typeConversionError(ColumnMetadata schema, String tokenType) {
     return buildError(schema,
         UserException.dataReadError()
           .message("Type of JSON token is not compatible with its column")
           .addContext("JSON token type", tokenType));
   }
 
-  protected UserException dataConversionError(ColumnMetadata schema, String tokenType, String value) {
+  public UserException dataConversionError(ColumnMetadata schema, String tokenType, String value) {
     return buildError(schema,
         UserException.dataReadError()
           .message("Type of JSON token is not compatible with its column")
           .addContext("JSON token type", tokenType)
           .addContext("JSON token", value));
+  }
+
+  public UserException nullDisallowedError(ColumnMetadata schema) {
+    return buildError(schema,
+        UserException.dataReadError()
+          .message("JSON value \"null\" for a column that does not allow null values"));
   }
 
   public UserException unsupportedType(ColumnMetadata schema) {
@@ -404,7 +438,7 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
           .addContext("On token", e.token.name()));
   }
 
-  protected UserException buildError(ColumnMetadata schema, UserException.Builder builder) {
+  public UserException buildError(ColumnMetadata schema, UserException.Builder builder) {
     return buildError(builder
         .addContext("Column", schema.name())
         .addContext("Column type", schema.typeString()));
@@ -412,12 +446,16 @@ public class JsonLoaderImpl implements JsonLoader, ErrorFactory {
 
   protected UserException buildError(UserException.Builder builder) {
     builder
-      .addContext(errorContext)
-      .addContext("Line", parser.lineNumber())
-      .addContext("Position", parser.columnNumber());
-    String token = parser.token();
-    if (token != null) {
-      builder.addContext("Near token", token);
+      .addContext(errorContext);
+    if (parser != null) {
+      // Parser is not set during bootstrap to find the start of data
+      builder
+        .addContext("Line", parser.lineNumber())
+        .addContext("Position", parser.columnNumber());
+      String token = parser.token();
+      if (token != null) {
+        builder.addContext("Near token", token);
+      }
     }
     return builder.build(logger);
   }

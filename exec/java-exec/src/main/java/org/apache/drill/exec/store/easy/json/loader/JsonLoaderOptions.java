@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.easy.json.loader;
 
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.store.easy.json.parser.JsonStructureOptions;
@@ -28,6 +29,18 @@ import org.apache.drill.exec.store.easy.json.parser.JsonStructureOptions;
  */
 public class JsonLoaderOptions extends JsonStructureOptions {
 
+  /**
+   * JSON returns values as typed tokens. If {@code allTextMode} is
+   * set, the structure parser converts all scalars (except {@code null})
+   * to text and forwards the values to the listener as text.
+   * Implements Drill's "all-text mode" for JSON.
+   */
+  public boolean allTextMode;
+
+  /**
+   * Forces all numbers to be double, even if the first number that
+   * appears is an integer.
+   */
   public boolean readNumbersAsDouble;
   public boolean unionEnabled;
 
@@ -45,11 +58,35 @@ public class JsonLoaderOptions extends JsonStructureOptions {
    */
   public boolean classicArrayNulls;
 
+  /**
+   * If a field contains all nulls, all empty arrays, or the first
+   * non-empty array contains a null ({@code [ null, ... ]}, then the
+   * default action is to read the column as JSON: literally convert
+   * the values (of any JSON complexity) to JSON string of that structure.
+   * If {@code false}, then uses the default type.
+   */
+  public boolean unknownsAsJson = true;
+
+  /**
+   * Type to use for a field which contains all nulls, or all empty
+   * arrays. Also the default type for an array that starts with the
+   * {@code null} value, if {@link #unknownsAsJson} is {@code false}.
+   */
+  public MinorType nullType = MinorType.VARCHAR;
+
+  /**
+   * Enable support for Mongo-style extended types:<br>
+   * <code> { field: { "$type": value }, ... }<?code>
+   */
+  public boolean enableExtendedTypes;
+
   public JsonLoaderOptions() { }
 
   public JsonLoaderOptions(OptionSet options) {
     super(options);
+    this.allTextMode = options.getBoolean(ExecConstants.JSON_ALL_TEXT_MODE);
     this.readNumbersAsDouble = options.getBoolean(ExecConstants.JSON_READ_NUMBERS_AS_DOUBLE);
     this.unionEnabled = options.getBoolean(ExecConstants.ENABLE_UNION_TYPE_KEY);
+    this.enableExtendedTypes = options.getBoolean(ExecConstants.JSON_EXTENDED_TYPES_KEY);
   }
 }

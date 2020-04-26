@@ -17,11 +17,6 @@
  */
 package org.apache.drill.exec.store.easy.json.parser;
 
-import org.apache.drill.exec.store.easy.json.parser.ObjectListener.FieldType;
-import org.apache.drill.exec.store.easy.json.parser.ValueListener.ValueHost;
-
-import com.fasterxml.jackson.core.JsonToken;
-
 /**
  * Parses a JSON value. JSON allows any value type to appear anywhere a
  * value is allowed; this parser reflects that rule. The associated listener
@@ -39,157 +34,12 @@ import com.fasterxml.jackson.core.JsonToken;
  * Listeners can enforce one type only, or can be more flexible and
  * allow multiple types.
  */
-public class ValueParser extends AbstractElementParser implements ValueHost {
+public abstract class ValueParser extends AbstractElementParser {
 
-  private interface ValueHandler {
-    void accept(TokenIterator tokenizer, JsonToken token);
-  }
+  protected ValueListener listener;
 
-  /**
-   * Parses <code>true | false | null | integer | float | string |<br>
-   *              embedded-object</code>
-   * <p>
-   * Forwards the result as a typed value.
-   */
-  public class TypedValueHandler implements ValueHandler {
-
-    @Override
-    public void accept(TokenIterator tokenizer, JsonToken token) {
-      switch (token) {
-        case VALUE_TRUE:
-          listener.onBoolean(true);
-          break;
-        case VALUE_FALSE:
-          listener.onBoolean(false);
-          break;
-        case VALUE_NUMBER_INT:
-          listener.onInt(tokenizer.longValue());
-          break;
-        case VALUE_NUMBER_FLOAT:
-          listener.onFloat(tokenizer.doubleValue());
-          break;
-        case VALUE_STRING:
-          listener.onString(tokenizer.stringValue());
-          break;
-        case VALUE_EMBEDDED_OBJECT:
-          listener.onEmbeddedObject(tokenizer.stringValue());
-        default:
-          // Won't get here: the Jackson parser catches
-          // errors.
-          throw errorFactory().syntaxError(token);
-      }
-    }
-  }
-
-  /**
-   * Parses <code>true | false | null | integer | float | string |<br>
-   *              embedded-object</code>
-   * <p>
-   * Forwards the result as a string.
-   */
-  public class TextValueHandler implements ValueHandler {
-
-    @Override
-    public void accept(TokenIterator tokenizer, JsonToken token) {
-      switch (token) {
-        case VALUE_EMBEDDED_OBJECT:
-        case VALUE_FALSE:
-        case VALUE_TRUE:
-        case VALUE_NUMBER_FLOAT:
-        case VALUE_NUMBER_INT:
-        case VALUE_STRING:
-          listener.onString(tokenizer.textValue());
-          break;
-
-        default:
-          // Won't get here: the Jackson parser catches
-          // errors.
-          throw errorFactory().syntaxError(token);
-      }
-    }
-  }
-
-  private final String key;
-  protected final ValueHandler valueHandler;
-  private ValueListener listener;
-  private ObjectParser objectParser;
-  private ArrayParser arrayParser;
-
-  public ValueParser(ElementParser parent, String key, FieldType type) {
-    super(parent);
-    this.key = key;
-    if (type == FieldType.TEXT || structParser().options().allTextMode) {
-      valueHandler = new TextValueHandler();
-    } else {
-      valueHandler = new TypedValueHandler();
-    }
-  }
-
-  @Override
-  public void bindListener(ValueListener listener) {
+  public ValueParser(JsonStructureParser structParser, ValueListener listener) {
+    super(structParser);
     this.listener = listener;
-    listener.bind(this);
-    if (arrayParser != null) {
-      arrayParser.bindListener(listener.array(ValueDef.UNKNOWN_ARRAY));
-    }
-  }
-
-  public String key() { return key; }
-
-  public ValueListener listener() { return listener; }
-
-  /**
-   * Parses <code>true | false | null | integer | float | string|
-   *              embedded-object | { ... } | [ ... ]</code>
-   */
-  @Override
-  public void parse(TokenIterator tokenizer) {
-    JsonToken token = tokenizer.requireNext();
-    switch (token) {
-    case START_OBJECT:
-      // Position: { ^
-      if (objectParser == null) {
-        // No object parser yet. May be that the value was null,
-        // or may be that it changed types.
-        addObjectParser();
-      }
-      objectParser.parse(tokenizer);
-      break;
-
-    case START_ARRAY:
-      // Position: [ ^
-      if (arrayParser == null) {
-        // No array parser yet. May be that the value was null,
-        // or may be that it changed types.
-        addArrayParser(ValueDefFactory.arrayLookAhead(tokenizer));
-      }
-      arrayParser.parse(tokenizer);
-      break;
-
-    case VALUE_NULL:
-      listener.onNull();
-      break;
-
-    default:
-      valueHandler.accept(tokenizer, token);
-    }
-  }
-
-  public void addObjectParser() {
-    objectParser = new ObjectParser(this, listener().object());
-  }
-
-  private void addArrayParser(ValueDef valueDef) {
-    ArrayListener arrayListener = listener().array(valueDef);
-    arrayParser = new ArrayParser(this, arrayListener);
-    arrayParser.expandStructure(valueDef);
-  }
-
-  public void expandStructure(ValueDef valueDef) {
-    if (valueDef.isArray()) {
-      addArrayParser(valueDef);
-    } else if (valueDef.type().isObject()) {
-      addObjectParser();
-    }
   }
 }

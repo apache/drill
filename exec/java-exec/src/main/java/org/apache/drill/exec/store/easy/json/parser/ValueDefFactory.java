@@ -72,27 +72,8 @@ public class ValueDefFactory {
         jsonType = JsonType.NULL;
         break;
 
-      case VALUE_FALSE:
-      case VALUE_TRUE:
-        jsonType = JsonType.BOOLEAN;
-        break;
-
-      case VALUE_NUMBER_INT:
-        jsonType = JsonType.INTEGER;
-        break;
-
-      case VALUE_NUMBER_FLOAT:
-        jsonType = JsonType.FLOAT;
-        break;
-
-      case VALUE_STRING:
-        jsonType = JsonType.STRING;
-        break;
-
       default:
-        // Won't get here: the Jackson parser catches
-        // errors.
-        throw tokenizer.errorFactory().syntaxError(token);
+        jsonType = ValueDef.jsonTypeFor(token);
     }
     tokenizer.unget(token);
   }
