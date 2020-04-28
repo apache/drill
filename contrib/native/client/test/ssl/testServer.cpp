@@ -102,7 +102,7 @@ class server
             : io_service_(io_service),
             acceptor_(io_service,
                     boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)),
-            context_(io_service, boost::asio::ssl::context::sslv23)
+            context_(boost::asio::ssl::context::sslv23)
     {
         context_.set_options(
                 boost::asio::ssl::context::default_workarounds
