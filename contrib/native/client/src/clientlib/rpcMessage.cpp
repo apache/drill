@@ -205,9 +205,9 @@ bool encode(DataBuf& buf, const OutBoundRpcMessage& msg) {
     header.set_rpc_type(msg.m_rpc_type);
 
     // calcute the length of the message
-    int header_length = header.ByteSize();
-    int proto_body_length = msg.m_pbody->ByteSize();
-    int full_length = HEADER_TAG_LENGTH + CodedOutputStream::VarintSize32(header_length) + header_length + \
+    long header_length = header.ByteSizeLong();
+    long proto_body_length = msg.m_pbody->ByteSizeLong();
+    long full_length = HEADER_TAG_LENGTH + CodedOutputStream::VarintSize32(header_length) + header_length + \
                       PROTOBUF_BODY_TAG_LENGTH + CodedOutputStream::VarintSize32(proto_body_length) + proto_body_length;
 
     /*

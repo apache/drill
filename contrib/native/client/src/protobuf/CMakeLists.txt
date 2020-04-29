@@ -17,7 +17,7 @@
 #
 
 # Find Protobufs
-find_package(Protobuf REQUIRED)
+find_package(Protobuf ${PROTOBUF_MINIMUM_VERSION} REQUIRED)
 include_directories(${PROTOBUF_INCLUDE_DIR})
 
 #Generate Protobuf code
