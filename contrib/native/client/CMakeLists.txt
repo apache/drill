@@ -25,6 +25,13 @@ cmake_policy(SET CMP0043 NEW)
 cmake_policy(SET CMP0048 NEW)
 enable_testing()
 
+#
+# required version for dependencies
+#
+set (BOOST_MINIMUM_VERSION 1.54.0)
+set (PROTOBUF_MINIMUM_VERSION 3.6.1)
+
+
 set (DRILL_ROOT ${CMAKE_SOURCE_DIR}/../../..)
 if (NOT DEFINED DRILL_VERSION)
     message("Detecting Drill version:")
@@ -100,7 +107,7 @@ else()
     #    set(Boost_NAMESPACE drill_boost)
 endif()
 
-find_package(Boost 1.54.0 REQUIRED COMPONENTS regex system date_time chrono thread random)
+find_package(Boost ${BOOST_MINIMUM_VERSION} REQUIRED COMPONENTS regex system date_time chrono thread random)
 include_directories(${Boost_INCLUDE_DIRS})
 
 
@@ -127,7 +134,7 @@ endif()
 
 
 # Find Protobufs
-find_package(Protobuf REQUIRED )
+find_package(Protobuf ${PROTOBUF_MINIMUM_VERSION} REQUIRED)
 include_directories(${PROTOBUF_INCLUDE_DIR})
 
 if (MSVC)
