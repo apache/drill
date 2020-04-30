@@ -1220,7 +1220,7 @@ public class TestRowSet extends SubOperatorTest {
       // away the last row because the row set abstraction does not
       // implement vector overflow other than throwing an exception.
 
-      for (;;) {
+      while (true) {
         writer.scalar(0).setInt(count);
         writer.scalar(1).setString(varCharValue);
 

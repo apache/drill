@@ -396,7 +396,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     // Loop over all input batches
 
     IterOutcome result = OK;
-    loop: for (;;) {
+    loop: while (true) {
       result = loadBatch();
       switch (result) {
       case NONE:

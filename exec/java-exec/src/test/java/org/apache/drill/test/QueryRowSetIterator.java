@@ -52,7 +52,7 @@ public class QueryRowSetIterator implements Iterator<DirectRowSet>, Iterable<Dir
 
   @Override
   public boolean hasNext() {
-    for (;;) {
+    while (true) {
       QueryEvent event = listener.get();
       state = event.state;
       batch = null;

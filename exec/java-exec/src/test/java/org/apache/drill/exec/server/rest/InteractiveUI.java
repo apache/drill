@@ -32,7 +32,7 @@ public class InteractiveUI extends ClusterTest {
     builder.configBuilder().put(ExecConstants.HTTP_ENABLE, true);
     try {
       startCluster(builder);
-      for (;;) {
+      while (true) {
         Thread.sleep(1000);
       }
     } catch (Exception e) {

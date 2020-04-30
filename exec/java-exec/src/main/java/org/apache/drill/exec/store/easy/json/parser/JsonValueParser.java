@@ -74,7 +74,7 @@ public class JsonValueParser extends AbstractElementParser {
     // Accept value* ]
 
     boolean first = true;
-    for (;;) {
+    while (true) {
       JsonToken token = tokenizer.requireNext();
       if (token == JsonToken.END_ARRAY) {
         json.append(tokenizer.textValue());
@@ -93,7 +93,7 @@ public class JsonValueParser extends AbstractElementParser {
     // Accept (field: value)* }
 
     boolean first = true;
-    for (;;) {
+    while (true) {
       JsonToken token = tokenizer.requireNext();
       if (token == JsonToken.END_OBJECT) {
         json.append(tokenizer.textValue());

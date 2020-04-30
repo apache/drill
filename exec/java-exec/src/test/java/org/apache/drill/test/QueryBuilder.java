@@ -709,8 +709,7 @@ public class QueryBuilder {
     int batchCount = 0;
     QueryId queryId = null;
     QueryState state;
-    loop:
-    for (;;) {
+    loop: while (true) {
       QueryEvent event = listener.get();
       switch (event.type)
       {

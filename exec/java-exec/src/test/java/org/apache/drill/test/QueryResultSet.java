@@ -32,7 +32,7 @@ import org.apache.drill.exec.physical.rowSet.RowSet;
  */
 
 public class QueryResultSet {
-  private BufferingQueryEventListener listener;
+  private final BufferingQueryEventListener listener;
   private boolean eof;
   private int recordCount = 0;
   private int batchCount = 0;
@@ -58,7 +58,7 @@ public class QueryResultSet {
     if (eof) {
       return null;
     }
-    for (;;) {
+    while (true) {
       QueryEvent event = listener.get();
       switch (event.type)
       {

@@ -42,8 +42,8 @@ import org.apache.hadoop.yarn.security.AMRMTokenIdentifier;
  */
 
 public class YarnRMClient {
-  private YarnConfiguration conf;
-  private YarnClient yarnClient;
+  private final YarnConfiguration conf;
+  private final YarnClient yarnClient;
 
   /**
    * Application ID. Semantics are such that each session of Drill-on-YARN works
@@ -126,7 +126,7 @@ public class YarnRMClient {
     ApplicationReport appReport;
     YarnApplicationState appState;
     ApplicationAttemptId attemptId;
-    for (;;) {
+    while (true) {
       appReport = getAppReport();
       appState = appReport.getYarnApplicationState();
       attemptId = appReport.getCurrentApplicationAttemptId();
@@ -160,7 +160,7 @@ public class YarnRMClient {
   public void waitForCompletion() throws YarnClientException {
     ApplicationReport appReport;
     YarnApplicationState appState;
-    for (;;) {
+    while (true) {
       appReport = getAppReport();
       appState = appReport.getYarnApplicationState();
       if (appState == YarnApplicationState.FINISHED

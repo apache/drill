@@ -146,7 +146,7 @@ public class HiveStoragePlugin extends AbstractStoragePlugin {
     } catch (Throwable e) {
       // Unwrap exception
       Throwable ex = e;
-      for (;;) {
+      while (true) {
         // Case for failing on an invalid cached connection
         if (ex instanceof MetaException ||
             // Case for a timed-out impersonated connection, and

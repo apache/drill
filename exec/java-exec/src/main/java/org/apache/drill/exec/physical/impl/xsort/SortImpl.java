@@ -539,7 +539,7 @@ public class SortImpl {
     // a single last pass.
 
     loop:
-    for (;;) {
+    while (true) {
       MergeTask task = memManager.consolidateBatches(
           allocator.getAllocatedMemory(),
           bufferedBatches.size(),

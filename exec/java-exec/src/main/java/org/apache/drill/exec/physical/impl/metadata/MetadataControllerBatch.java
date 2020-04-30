@@ -36,6 +36,7 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.exception.OutOfMemoryException;
 import org.apache.drill.exec.metastore.ColumnNamesOptions;
 import org.apache.drill.exec.metastore.analyze.AnalyzeColumnUtils;
+import org.apache.drill.exec.metastore.analyze.MetadataControllerContext;
 import org.apache.drill.exec.metastore.analyze.MetadataIdentifierUtils;
 import org.apache.drill.exec.metastore.analyze.MetastoreAnalyzeConstants;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -105,18 +106,16 @@ import org.slf4j.LoggerFactory;
 public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataControllerPOP> {
   private static final Logger logger = LoggerFactory.getLogger(MetadataControllerBatch.class);
 
+  enum State { RIGHT, LEFT, WRITE, FINISHED }
+
   private final Tables tables;
   private final TableInfo tableInfo;
   private final Map<String, MetadataInfo> metadataToHandle;
-  private final StatisticsRecordCollector statisticsCollector;
-  private final List<TableMetadataUnit> metadataUnits;
+  private final StatisticsRecordCollector statisticsCollector = new StatisticsCollectorImpl();
+  private final List<TableMetadataUnit> metadataUnits = new ArrayList<>();
   private final ColumnNamesOptions columnNamesOptions;
 
-  private boolean firstLeft = true;
-  private boolean firstRight = true;
-  private boolean finished;
-  private boolean finishedRight;
-  private int recordCount;
+  private State state = State.RIGHT;
 
   protected MetadataControllerBatch(MetadataControllerPOP popConfig,
       FragmentContext context, RecordBatch left, RecordBatch right) throws OutOfMemoryException {
@@ -127,95 +126,59 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
         ? null
         : popConfig.getContext().metadataToHandle().stream()
             .collect(Collectors.toMap(MetadataInfo::identifier, Function.identity()));
-    this.metadataUnits = new ArrayList<>();
-    this.statisticsCollector = new StatisticsCollectorImpl();
     this.columnNamesOptions = new ColumnNamesOptions(context.getOptions());
-  }
-
-  protected boolean setupNewSchema() {
-    container.clear();
-    container.addOrGet(MetastoreAnalyzeConstants.OK_FIELD_NAME, Types.required(TypeProtos.MinorType.BIT), null);
-    container.addOrGet(MetastoreAnalyzeConstants.SUMMARY_FIELD_NAME, Types.required(TypeProtos.MinorType.VARCHAR), null);
-    container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
-    container.setEmpty();
-    return true;
   }
 
   @Override
   public IterOutcome innerNext() {
-    IterOutcome outcome;
-    boolean finishedLeft;
-    if (finished) {
-      return IterOutcome.NONE;
-    }
+    while (state != State.FINISHED) {
+      switch (state) {
+        case RIGHT: {
 
-    if (!finishedRight) {
-      outcome = handleRightIncoming();
-      if (outcome != null) {
-        return outcome;
-      }
-    }
-
-    outer:
-    while (true) {
-      outcome = next(0, left);
-      switch (outcome) {
-        case NONE:
-          // all incoming data was processed when returned OK_NEW_SCHEMA
-          finishedLeft = !firstLeft;
-          break outer;
-        case NOT_YET:
-          return outcome;
-        case OK_NEW_SCHEMA:
-          if (firstLeft) {
-            firstLeft = false;
-            if (!setupNewSchema()) {
-              outcome = IterOutcome.OK;
-            }
-            IterOutcome out = handleLeftIncoming();
-            if (out != IterOutcome.OK) {
-              return out;
-            }
+          // Can only return NOT_YET
+          IterOutcome outcome = handleRightIncoming();
+          if (outcome != null) {
             return outcome;
           }
-          //fall through
-        case OK:
-          assert !firstLeft : "First batch should be OK_NEW_SCHEMA";
-          IterOutcome out = handleLeftIncoming();
-          if (out != IterOutcome.OK) {
-            return out;
+          break;
+        }
+        case LEFT: {
+
+          // Can only return NOT_YET
+          IterOutcome outcome = handleLeftIncoming();
+          if (outcome != null) {
+            return outcome;
           }
           break;
+        }
+        case WRITE:
+          writeToMetastore();
+          createSummary();
+          state = State.FINISHED;
+          return IterOutcome.OK_NEW_SCHEMA;
+
+        case FINISHED:
+          break;
+
         default:
-          throw new UnsupportedOperationException("Unsupported upstream state " + outcome);
+          throw new IllegalStateException(state.name());
       }
     }
-
-    if (finishedLeft) {
-      IterOutcome out = writeToMetastore();
-      finished = true;
-      return out;
-    }
-    return outcome;
+    return IterOutcome.NONE;
   }
 
   private IterOutcome handleRightIncoming() {
-    IterOutcome outcome;
     outer:
     while (true) {
-      outcome = next(0, right);
+      IterOutcome outcome = next(0, right);
       switch (outcome) {
         case NONE:
-          // all incoming data was processed
-          finishedRight = true;
+          state = State.LEFT;
           break outer;
         case NOT_YET:
           return outcome;
         case OK_NEW_SCHEMA:
-          firstRight = false;
-          //fall through
         case OK:
-          assert !firstRight : "First batch should be OK_NEW_SCHEMA";
           appendStatistics(statisticsCollector);
           break;
         default:
@@ -226,14 +189,30 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
   }
 
   private IterOutcome handleLeftIncoming() {
-    metadataUnits.addAll(getMetadataUnits(left.getContainer()));
-    return IterOutcome.OK;
+    while (true) {
+      IterOutcome outcome = next(0, left);
+      switch (outcome) {
+        case NONE:
+          // all incoming data was processed when returned OK_NEW_SCHEMA
+          state = State.WRITE;
+          return null;
+        case NOT_YET:
+          return outcome;
+        case OK_NEW_SCHEMA:
+        case OK:
+          metadataUnits.addAll(getMetadataUnits(left.getContainer()));
+          break;
+        default:
+          throw new UnsupportedOperationException("Unsupported upstream state " + outcome);
+      }
+    }
   }
 
-  private IterOutcome writeToMetastore() {
-    FilterExpression deleteFilter = popConfig.getContext().tableInfo().toFilter();
+  private void writeToMetastore() {
+    MetadataControllerContext mdContext = popConfig.getContext();
+    FilterExpression deleteFilter = mdContext.tableInfo().toFilter();
 
-    for (MetadataInfo metadataInfo : popConfig.getContext().metadataToRemove()) {
+    for (MetadataInfo metadataInfo : mdContext.metadataToRemove()) {
       deleteFilter = FilterExpression.and(deleteFilter,
           FilterExpression.equal(MetastoreColumn.METADATA_KEY, metadataInfo.key()));
     }
@@ -246,8 +225,7 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
         .build());
     }
 
-    MetastoreTableInfo metastoreTableInfo = popConfig.getContext().metastoreTableInfo();
-
+    MetastoreTableInfo metastoreTableInfo = mdContext.metastoreTableInfo();
     if (tables.basicRequests().hasMetastoreTableInfoChanged(metastoreTableInfo)) {
       throw UserException.executionError(null)
         .message("Metadata for table [%s] was changed before analyze is finished", tableInfo.name())
@@ -256,7 +234,10 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
 
     modify.overwrite(metadataUnits)
         .execute();
+  }
 
+  private void createSummary() {
+    container.clear();
     BitVector bitVector =
         container.addOrGet(MetastoreAnalyzeConstants.OK_FIELD_NAME, Types.required(TypeProtos.MinorType.BIT), null);
     VarCharVector varCharVector =
@@ -272,11 +253,8 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
             popConfig.getContext().tableInfo().workspace(),
             popConfig.getContext().tableInfo().name()).getBytes());
 
-    bitVector.getMutator().setValueCount(1);
-    varCharVector.getMutator().setValueCount(1);
-    container.setRecordCount(++recordCount);
-
-    return IterOutcome.OK;
+    container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
+    container.setValueCount(1);
   }
 
   private List<TableMetadataUnit> getMetadataUnits(VectorContainer container) {
@@ -696,7 +674,6 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
       default:
         return objectReader.getObject();
     }
-
   }
 
   private Set<Path> getIncomingLocations(TupleReader reader) {
@@ -748,6 +725,6 @@ public class MetadataControllerBatch extends AbstractBinaryRecordBatch<MetadataC
 
   @Override
   public int getRecordCount() {
-    return recordCount;
+    return container.getRecordCount();
   }
 }

@@ -32,8 +32,6 @@ import java.util.List;
 @JsonTypeName("streaming-aggregate")
 public class StreamingAggregate extends AbstractSingle {
 
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StreamingAggregate.class);
-
   private final List<NamedExpression> keys;
   private final List<NamedExpression> exprs;
 
@@ -68,5 +66,4 @@ public class StreamingAggregate extends AbstractSingle {
   public int getOperatorType() {
     return CoreOperatorType.STREAMING_AGGREGATE_VALUE;
   }
-
 }
