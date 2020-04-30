@@ -77,7 +77,7 @@ public class DistributedQueryQueue implements QueryQueue {
      * as the user changes system options. This value captures the value
      * calculated at the time that this lease was granted.
      */
-    private long queryMemory;
+    private final long queryMemory;
 
     public DistributedQueueLease(QueryId queryId, String queueName,
                     DistributedLease lease, long queryMemory) {
@@ -197,9 +197,9 @@ public class DistributedQueryQueue implements QueryQueue {
   }
 
   private long memoryPerNode;
-  private SystemOptionManager optionManager;
+  private final SystemOptionManager optionManager;
   private ConfigSet configSet;
-  private ClusterCoordinator clusterCoordinator;
+  private final ClusterCoordinator clusterCoordinator;
   private long nextRefreshTime;
   private long memoryPerSmallQuery;
   private long memoryPerLargeQuery;
@@ -335,7 +335,7 @@ public class DistributedQueryQueue implements QueryQueue {
 
   private void release(QueueLease lease) {
     DistributedQueueLease theLease = (DistributedQueueLease) lease;
-    for (;;) {
+    while (true) {
       try {
         theLease.lease.close();
         theLease.lease = null;

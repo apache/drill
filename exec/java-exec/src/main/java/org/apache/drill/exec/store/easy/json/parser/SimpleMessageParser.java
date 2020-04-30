@@ -87,7 +87,7 @@ public class SimpleMessageParser implements MessageParser {
   }
 
   private boolean parseToElement(TokenIterator tokenizer, int level) throws MessageContextException {
-    for (;;) {
+    while (true) {
       JsonToken token = tokenizer.requireNext();
       switch (token) {
         case FIELD_NAME:

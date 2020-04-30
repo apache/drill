@@ -246,7 +246,7 @@ public class ScanOperatorExec implements OperatorExec {
   }
 
   private void nextAction(boolean readSchema) {
-    for (;;) {
+    while (true) {
 
       // If have a reader, read a batch
       if (readerState != null) {

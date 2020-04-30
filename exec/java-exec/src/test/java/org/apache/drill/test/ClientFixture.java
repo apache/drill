@@ -94,7 +94,7 @@ public class ClientFixture implements AutoCloseable {
     }
   }
 
-  private ClusterFixture cluster;
+  private final ClusterFixture cluster;
   private DrillClient client;
 
   public ClientFixture(ClientBuilder builder) throws RpcException {
@@ -326,7 +326,7 @@ public class ClientFixture implements AutoCloseable {
     public String parseNext() throws IOException {
       boolean eof = false;
       StringBuilder buf = new StringBuilder();
-      for (;;) {
+      while (true) {
         int c = in.read();
         if (c == -1) {
           eof = true;
@@ -339,7 +339,7 @@ public class ClientFixture implements AutoCloseable {
         if (c == '"' || c == '\'' || c == '`') {
           int quote = c;
           boolean escape = false;
-          for (;;) {
+          while (true) {
             c = in.read();
             if (c == -1) {
               throw new IllegalArgumentException("Mismatched quote: " + (char) c);
@@ -363,7 +363,7 @@ public class ClientFixture implements AutoCloseable {
   public int exec(Reader in) throws IOException {
     StatementParser parser = new StatementParser(in);
     int count = 0;
-    for (;;) {
+    while (true) {
       String stmt = parser.parseNext();
       if (stmt == null) {
         logger.debug("----");

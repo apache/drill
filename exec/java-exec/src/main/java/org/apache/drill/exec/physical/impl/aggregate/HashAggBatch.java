@@ -70,7 +70,6 @@ import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.util.record.RecordBatchStats;
 import org.apache.drill.exec.util.record.RecordBatchStats.RecordBatchIOType;
-import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.FixedWidthVector;
 import org.apache.drill.exec.vector.ValueVector;
 
@@ -256,10 +255,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
 
     incomingSchema = incoming.getSchema();
     createAggregator();
-    for (VectorWrapper<?> w : container) {
-      AllocationHelper.allocatePrecomputedChildCount(w.getValueVector(), 0, 0, 0);
-    }
-    container.setEmpty();
+    container.allocatePrecomputedChildCount(0, 0, 0);
     if (incoming.getRecordCount() > 0) {
       hashAggMemoryManager.update();
     }

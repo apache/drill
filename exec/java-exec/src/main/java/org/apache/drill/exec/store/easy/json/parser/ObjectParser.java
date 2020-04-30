@@ -101,8 +101,7 @@ public class ObjectParser extends AbstractElementParser {
     listener.onStart();
 
     // Parse (field: value)* }
-
-    top: for (;;) {
+    top: while (true) {
       JsonToken token = tokenizer.requireNext();
       // Position: { (key: value)* ? ^
       switch (token) {

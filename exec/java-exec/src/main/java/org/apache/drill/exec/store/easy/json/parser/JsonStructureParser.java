@@ -240,7 +240,7 @@ public class JsonStructureParser {
       // Only occurs for an empty document
       return false;
     }
-    for (;;) {
+    while (true) {
       try {
         return rootState.parseRoot(tokenizer);
       } catch (RecoverableJsonException e) {
@@ -264,8 +264,8 @@ public class JsonStructureParser {
   private boolean recover() {
     logger.warn("Attempting recovery from JSON syntax error. " + tokenizer.context());
     boolean firstAttempt = true;
-    for (;;) {
-      for (;;) {
+    while (true) {
+      while (true) {
         try {
           if (parser.isClosed()) {
             throw errorFactory().unrecoverableError();

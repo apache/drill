@@ -54,7 +54,7 @@ public class ArrayParser extends AbstractElementParser {
   @Override
   public void parse(TokenIterator tokenizer) {
     arrayListener.onStart();
-    top: for (;;) {
+    top: while (true) {
       // Position: [ (value, )* ^ ?
       JsonToken token = tokenizer.requireNext();
       switch (token) {

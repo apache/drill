@@ -412,7 +412,7 @@ public class TestResultSetCopier extends SubOperatorTest {
     // Equivalent of an entire operator run
 
     int start = 1;
-    for (;;) {
+    while (true) {
 
       // Equivalent of operator next() method
 

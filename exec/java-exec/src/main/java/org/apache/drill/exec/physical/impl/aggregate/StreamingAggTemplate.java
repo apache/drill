@@ -173,15 +173,15 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
         return AggOutcome.CLEANUP_AND_RETURN;
       }
 
-      outside: while(true) {
+      outside: while (true) {
         // loop through existing records, adding as necessary.
-        if(!processRemainingRecordsInBatch()) {
+        if (!processRemainingRecordsInBatch()) {
           // output batch is full. Return.
           return setOkAndReturn(outerOutcome);
         }
         // if the current batch came with an EMIT, we're done since if we are here it means output batch consumed all
         // the rows in incoming batch
-        if(outerOutcome == EMIT) {
+        if (outerOutcome == EMIT) {
           // output the last record
           outputToBatch(previousIndex);
           resetIndex();
@@ -492,8 +492,7 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
   }
 
   @Override
-  public void cleanup() {
-  }
+  public void cleanup() { }
 
   @Override
   public String toString() {
