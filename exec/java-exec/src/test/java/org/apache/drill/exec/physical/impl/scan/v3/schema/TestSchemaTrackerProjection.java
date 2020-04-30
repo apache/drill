@@ -19,13 +19,14 @@ package org.apache.drill.exec.physical.impl.scan.v3.schema;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Collection;
 import java.util.Collections;
 
-import org.apache.drill.categories.EvfTests;
+import org.apache.drill.categories.EvfTest;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.EmptyErrorContext;
 import org.apache.drill.common.expression.SchemaPath;
@@ -41,7 +42,7 @@ import org.junit.experimental.categories.Category;
  * Test the first step of scan schema resolution: translating from the
  * projection parser to a dynamic schema ready for resolution.
  */
-@Category(EvfTests.class)
+@Category(EvfTest.class)
 public class TestSchemaTrackerProjection extends BaseTest {
   private static final CustomErrorContext ERROR_CONTEXT = EmptyErrorContext.INSTANCE;
 
@@ -55,7 +56,7 @@ public class TestSchemaTrackerProjection extends BaseTest {
     ProjectionSchemaTracker tracker = schemaTracker(
         Collections.emptyList());
     assertTrue(tracker.isResolved());
-    assertEquals(0, tracker.schemaVersion());
+    assertEquals(1, tracker.schemaVersion());
     assertSame(ScanSchemaTracker.ProjectionType.NONE, tracker.projectionType());
     assertTrue(tracker.internalSchema().toSchema().isEmpty());
     ProjectionFilter filter = tracker.projectionFilter(ERROR_CONTEXT);
@@ -67,7 +68,7 @@ public class TestSchemaTrackerProjection extends BaseTest {
     ProjectionSchemaTracker tracker = schemaTracker(
         RowSetTestUtils.projectAll());
     assertFalse(tracker.isResolved());
-    assertEquals(0, tracker.schemaVersion());
+    assertEquals(1, tracker.schemaVersion());
     assertSame(ScanSchemaTracker.ProjectionType.ALL, tracker.projectionType());
     assertTrue(tracker.internalSchema().toSchema().isEmpty());
     ProjectionFilter filter = tracker.projectionFilter(ERROR_CONTEXT);
@@ -81,6 +82,8 @@ public class TestSchemaTrackerProjection extends BaseTest {
     assertFalse(tracker.isResolved());
     assertTrue(0 < tracker.schemaVersion());
     assertSame(ScanSchemaTracker.ProjectionType.ALL, tracker.projectionType());
+    assertNotNull(tracker.columnProjection("a"));
+    assertNotNull(tracker.columnProjection("b"));
     TupleMetadata schema = tracker.internalSchema().toSchema();
     assertEquals(2, schema.size());
     assertTrue(schema.metadata(0).isDynamic());
@@ -99,5 +102,22 @@ public class TestSchemaTrackerProjection extends BaseTest {
     assertTrue(schema.metadata(0).isDynamic());
     ProjectionFilter filter = tracker.projectionFilter(ERROR_CONTEXT);
     assertTrue(filter instanceof DynamicSchemaFilter);
+  }
+
+  @Test
+  public void testExplicitArray() {
+    ProjectionSchemaTracker tracker = schemaTracker(
+        RowSetTestUtils.projectList("a[1]", "a[3]"));
+    assertSame(ScanSchemaTracker.ProjectionType.SOME, tracker.projectionType());
+
+    ProjectedColumn projCol = tracker.columnProjection("a");
+    assertNotNull(projCol);
+    boolean[] indexes = projCol.indexes();
+    assertNotNull(indexes);
+    assertEquals(4, indexes.length);
+    assertFalse(indexes[0]);
+    assertTrue(indexes[1]);
+    assertFalse(indexes[2]);
+    assertTrue(indexes[3]);
   }
 }

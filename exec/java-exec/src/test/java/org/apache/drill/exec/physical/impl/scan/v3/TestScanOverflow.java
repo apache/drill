@@ -23,7 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 
-import org.apache.drill.categories.EvfTests;
+import org.apache.drill.categories.EvfTest;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.impl.scan.ScanOperatorExec;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
@@ -35,7 +35,7 @@ import org.junit.experimental.categories.Category;
 /**
  * Test vector overflow in the context of the scan operator.
  */
-@Category(EvfTests.class)
+@Category(EvfTest.class)
 public class TestScanOverflow extends BaseScanTest {
 
   /**

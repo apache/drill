@@ -135,6 +135,7 @@ public class ScanLifecycle {
   private final ScanLifecycleBuilder options;
   private final ScanSchemaTracker schemaTracker;
   private final ReaderFactory<?> readerFactory;
+  private int batchCount;
 
   /**
    * Cache used to preserve the same vectors from one output batch to the
@@ -146,17 +147,20 @@ public class ScanLifecycle {
    */
   private final ResultVectorCacheImpl vectorCache;
 
-  public ScanLifecycle(OperatorContext context, ScanLifecycleBuilder options) {
+  public ScanLifecycle(OperatorContext context, ScanLifecycleBuilder builder) {
     this.context = context;
-    this.options = options;
+    this.options = builder;
     this.schemaTracker = new ScanSchemaConfigBuilder()
-        .projection(options.projection())
-        .definedSchema(options.definedSchema())
-        .providedSchema(options.providedSchema())
-        .allowSchemaChange(options.allowSchemaChange())
+        .projection(builder.projection())
+        .definedSchema(builder.definedSchema())
+        .providedSchema(builder.providedSchema())
+        .allowSchemaChange(builder.allowSchemaChange())
         .build();
+    if (builder.schemaValidator() != null) {
+      builder.schemaValidator().validate(schemaTracker);
+    }
     this.vectorCache = new ResultVectorCacheImpl(allocator(), false);
-    this.readerFactory = options.readerFactory();
+    this.readerFactory = builder.readerFactory();
   }
 
   public OperatorContext context() { return context; }
@@ -167,6 +171,8 @@ public class ScanLifecycle {
   public boolean hasOutputSchema() { return schemaTracker.isResolved(); }
   public CustomErrorContext errorContext() { return options.errorContext(); }
   public BufferAllocator allocator() { return context.getAllocator(); }
+  public void tallyBatch() { batchCount++; }
+  public int batchCount() { return batchCount; }
 
   public RowBatchReader nextReader() {
     if (readerFactory.hasNext()) {

@@ -18,6 +18,7 @@
 package org.apache.drill.exec.physical.impl.scan.v3.schema;
 
 import org.apache.drill.common.exceptions.CustomErrorContext;
+import org.apache.drill.exec.physical.impl.scan.v3.file.ImplicitColumnMarker;
 import org.apache.drill.exec.physical.impl.scan.v3.schema.DynamicSchemaFilter.RowSchemaFilter;
 import org.apache.drill.exec.physical.resultSet.impl.ProjectionFilter;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
@@ -39,10 +40,6 @@ public class SchemaBasedTracker extends AbstractSchemaTracker {
     super(errorContext);
     this.definedSchema = definedSchema;
     schema.copyFrom(definedSchema);
-    checkResolved();
-
-    // If not resolved, should not have used this tracker.
-    Preconditions.checkState(isResolved);
 
     ScanSchemaTracker.ProjectionType projType;
     if (schema.size() == 0) {
@@ -51,13 +48,24 @@ public class SchemaBasedTracker extends AbstractSchemaTracker {
       projType = ScanSchemaTracker.ProjectionType.SOME;
     }
     schema.setProjectionType(projType);
+    checkResolved();
+
+    // If not resolved, should not have used this tracker.
+    Preconditions.checkState(isResolved);
   }
 
+  /**
+   * Validate a projection list (provided as an argument) against a
+   * defined schema already held by this tracker. Ensures that, when we
+   * have both a defined schema and projection list, that they are
+   * consistent.
+   *
+   * @param projection the parsed projection list
+   */
   public void validateProjection(TupleMetadata projection) {
-    if (projection == null) {
-      return;
+    if (projection != null) {
+      validateProjection(projection, definedSchema);
     }
-    validateProjection(projection, definedSchema);
   }
 
   @Override
@@ -85,10 +93,13 @@ public class SchemaBasedTracker extends AbstractSchemaTracker {
   }
 
   @Override
-  public void expandImplicitCol(ColumnMetadata resolved) {
+  public void expandImplicitCol(ColumnMetadata resolved, ImplicitColumnMarker marker) {
     throw new IllegalStateException("Can't expand a defined schema.");
   }
 
   @Override
   public int schemaVersion() { return 1; }
+
+  @Override
+  public ProjectedColumn columnProjection(String colName) { return null; }
 }

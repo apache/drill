@@ -20,8 +20,10 @@ package org.apache.drill.exec.physical.impl.scan.v3.schema;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.drill.common.map.CaseInsensitiveMap;
+import org.apache.drill.exec.physical.impl.scan.v3.file.ImplicitColumnMarker;
 import org.apache.drill.exec.physical.impl.scan.v3.schema.ScanSchemaTracker.ProjectionType;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
@@ -65,11 +67,10 @@ public class MutableTupleSchema {
    */
   public static class ColumnHandle {
     private ColumnMetadata col;
-    private boolean isImplicit;
+    private ImplicitColumnMarker marker;
 
     public ColumnHandle(ColumnMetadata col) {
       this.col = col;
-      this.isImplicit = SchemaUtils.isImplicit(col);
     }
 
     public String name() {
@@ -85,19 +86,18 @@ public class MutableTupleSchema {
       this.col = col;
     }
 
-    private void resolveImplicit(ColumnMetadata col) {
+    private void resolveImplicit(ColumnMetadata col, ImplicitColumnMarker marker) {
       SchemaUtils.mergeColProperties(this.col, col);
       this.col = col;
-      markImplicit();
+      markImplicit(marker);
     }
 
-    public void markImplicit() {
-      Preconditions.checkState(SchemaUtils.isImplicit(col));
-      isImplicit = true;
+    public void markImplicit(ImplicitColumnMarker marker) {
+      this.marker = marker;
     }
 
     public ColumnMetadata column() { return col; }
-    public boolean isImplicit() { return isImplicit; }
+    public boolean isImplicit() { return marker != null; }
 
     @Override
     public String toString() {
@@ -105,8 +105,8 @@ public class MutableTupleSchema {
     }
   }
 
-  protected final List<MutableTupleSchema.ColumnHandle> columns = new ArrayList<>();
-  protected final Map<String, MutableTupleSchema.ColumnHandle> nameIndex =
+  protected final List<ColumnHandle> columns = new ArrayList<>();
+  protected final Map<String, ColumnHandle> nameIndex =
       CaseInsensitiveMap.newHashMap();
   private ProjectionType projType;
   private int insertPoint = -1;
@@ -114,6 +114,10 @@ public class MutableTupleSchema {
 
   public void setProjectionType(ScanSchemaTracker.ProjectionType type) {
     this.projType = type;
+
+    // For project none, an empty schema is valid, so
+    // force a bump in schema version.
+    version++;
   }
 
   public void setInsertPoint(int insertPoint) {
@@ -130,9 +134,9 @@ public class MutableTupleSchema {
    * Provide the list of partially-resolved columns. Primarily for
    * the implicit column parser.
    */
-  public List<MutableTupleSchema.ColumnHandle> columns() { return columns; }
+  public List<ColumnHandle> columns() { return columns; }
 
-  public MutableTupleSchema.ColumnHandle find(String colName) {
+  public ColumnHandle find(String colName) {
     return nameIndex.get(colName);
   }
 
@@ -147,31 +151,52 @@ public class MutableTupleSchema {
   }
 
   public void add(ColumnMetadata col) {
-    MutableTupleSchema.ColumnHandle holder = new ColumnHandle(col);
+    ColumnHandle holder = new ColumnHandle(col);
     columns.add(holder);
     addIndex(holder);
     version++;
   }
 
-  public void addIndex(MutableTupleSchema.ColumnHandle holder) {
+  public void addIndex(ColumnHandle holder) {
     if (nameIndex.put(holder.column().name(), holder) != null) {
       throw new IllegalArgumentException("Duplicate scan projection column: " + holder.name());
     }
   }
 
-  public void insert(int posn, ColumnMetadata col) {
-    MutableTupleSchema.ColumnHandle holder = new ColumnHandle(col);
+  public ColumnHandle insert(int posn, ColumnMetadata col) {
+    ColumnHandle holder = new ColumnHandle(col);
     columns.add(posn, holder);
     addIndex(holder);
     version++;
+    return holder;
   }
 
-  public void insert(ColumnMetadata col) {
-    insert(insertPoint++, col);
+  public ColumnHandle insert(ColumnMetadata col) {
+    return insert(insertPoint++, col);
+  }
+
+  /**
+   * Move a column from its current position (which must be past the insert point)
+   * to the insert point. An index entry already exists. Special operation done
+   * when matching a provided schema to a projection list that includes a wildcard
+   * and explicitly projected columns. Works around unfortunate behavior in the
+   * planner.
+   */
+  public void moveIfExplicit(String colName) {
+    ColumnHandle holder = find(colName);
+    Objects.requireNonNull(holder);
+    int posn = columns.indexOf(holder);
+    if (posn == insertPoint) {
+      insertPoint++;
+    } else if (posn > insertPoint) {
+      columns.remove(posn);
+      columns.add(insertPoint++, holder);
+      version++;
+    }
   }
 
   public boolean isResolved() {
-    for (MutableTupleSchema.ColumnHandle handle : columns) {
+    for (ColumnHandle handle : columns) {
       if (!isColumnResolved(handle.column())) {
         return false;
       }
@@ -197,14 +222,14 @@ public class MutableTupleSchema {
 
   public TupleMetadata toSchema() {
     TupleMetadata schema = new TupleSchema();
-    for (MutableTupleSchema.ColumnHandle col : columns) {
+    for (ColumnHandle col : columns) {
       schema.addColumn(col.column());
     }
     return schema;
   }
 
-  public void resolveImplicit(ColumnHandle col, ColumnMetadata resolved) {
-    col.resolveImplicit(resolved);
+  public void resolveImplicit(ColumnHandle col, ColumnMetadata resolved, ImplicitColumnMarker marker) {
+    col.resolveImplicit(resolved, marker);
     version++;
   }
 
@@ -217,4 +242,6 @@ public class MutableTupleSchema {
     col.resolve(resolved);
     version++;
   }
+
+  public boolean isEmpty() { return columns.isEmpty(); }
 }

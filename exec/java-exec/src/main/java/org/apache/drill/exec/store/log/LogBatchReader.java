@@ -90,7 +90,7 @@ public class LogBatchReader implements ManagedReader<FileSchemaNegotiator> {
       writers = new ValueWriter[readerSchema.size()];
       for (int i = 0; i < writers.length; i++) {
         ColumnMetadata colSchema = readerSchema.metadata(i);
-        writers[i] = conversions.converter(rowWriter.scalar(i), colSchema);
+        writers[i] = conversions.converterFor(rowWriter.scalar(i), colSchema);
       }
     }
 
@@ -178,9 +178,9 @@ public class LogBatchReader implements ManagedReader<FileSchemaNegotiator> {
       if (saveMatchedRows) {
         // Save using the defined columns
         TupleMetadata providedSchema = config.providedSchema;
-        StandardConversions conversions = new StandardConversions(
-            providedSchema == null || !providedSchema.hasProperties() ?
-                null : providedSchema.properties());
+        StandardConversions conversions = StandardConversions.builder()
+            .withSchema(providedSchema)
+            .build();
         vectorWriter = new ScalarGroupWriter(writer, config.readerSchema, conversions);
       }
     }

@@ -82,6 +82,7 @@ public class TestScanOperExecOuputSchema extends BaseScanOperatorExecTest {
     private void buildWriters(TupleMetadata providedSchema,
         TupleMetadata schema) {
       RowSetLoader rowWriter = tableLoader.writer();
+      StandardConversions conversions = StandardConversions.builder().build();
       for (int i = 0; i < schema.size(); i++) {
         ColumnMetadata colSchema = schema.metadata(i);
         String colName = colSchema.name();
@@ -96,7 +97,7 @@ public class TestScanOperExecOuputSchema extends BaseScanOperatorExecTest {
           writers.add(colSchema.name(), rowWriter.scalar(colIndex));
         } else {
           writers.add(colSchema.name(),
-              StandardConversions.converterFor(rowWriter.scalar(colSchema.name()), colSchema));
+              conversions.converterFor(rowWriter.scalar(colSchema.name()), colSchema));
         }
       }
     }

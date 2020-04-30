@@ -32,6 +32,7 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.impl.scan.convert.StandardConversions.ConversionDefn;
 import org.apache.drill.exec.physical.impl.scan.convert.StandardConversions.ConversionType;
+import org.apache.drill.exec.physical.impl.scan.v3.FixedReceiver;
 import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.physical.rowSet.RowSet.SingleRowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
@@ -70,13 +71,13 @@ public class TestDirectConverter extends SubOperatorTest {
     }
 
     public ConversionTestFixture withProperties(Map<String,String> props) {
-      conversions = new StandardConversions(props);
+      conversions = StandardConversions.builder().withProperties(props).build();
       return this;
     }
 
     private StandardConversions conversions() {
       if (conversions == null) {
-        conversions = new StandardConversions();
+        conversions = StandardConversions.builder().build();
       }
       return conversions;
     }
@@ -92,7 +93,7 @@ public class TestDirectConverter extends SubOperatorTest {
 
       // Test uses simple row writer; no support for adding columns.
       assertNotNull(colWriter);
-      ValueWriter converter = conversions().converter(colWriter, source);
+      ValueWriter converter = conversions().converterFor(colWriter, source);
       assertNotNull(converter);
       rowFormat.add(source.name(), converter);
     }
@@ -136,7 +137,7 @@ public class TestDirectConverter extends SubOperatorTest {
       .add("d", MinorType.VARCHAR)
       .build();
 
-    TupleMetadata mergedSchema = StandardConversions.mergeSchemas(providedSchema, readerSchema);
+    TupleMetadata mergedSchema = FixedReceiver.Builder.mergeSchemas(providedSchema, readerSchema);
     assertTrue(expected.isEquivalent(mergedSchema));
     assertTrue(mergedSchema.booleanProperty("foo"));
   }
@@ -680,6 +681,7 @@ public class TestDirectConverter extends SubOperatorTest {
    */
   @Test
   public void testBasicConversionType() {
+    StandardConversions conversions = StandardConversions.builder().build();
     TupleMetadata schema = new SchemaBuilder()
         .add("ti", MinorType.TINYINT)
         .add("si", MinorType.SMALLINT)
@@ -700,84 +702,84 @@ public class TestDirectConverter extends SubOperatorTest {
     ColumnMetadata stringCol = schema.metadata("str");
 
     // TinyInt --> x
-    expect(ConversionType.NONE, StandardConversions.analyze(tinyIntCol, tinyIntCol));
-    expect(ConversionType.IMPLICIT, StandardConversions.analyze(tinyIntCol, smallIntCol));
-    expect(ConversionType.IMPLICIT, StandardConversions.analyze(tinyIntCol, intCol));
-    expect(ConversionType.IMPLICIT, StandardConversions.analyze(tinyIntCol, bigIntCol));
-    expect(ConversionType.IMPLICIT, StandardConversions.analyze(tinyIntCol, float4Col));
-    expect(ConversionType.IMPLICIT, StandardConversions.analyze(tinyIntCol, float8Col));
-    expect(ConversionType.IMPLICIT, StandardConversions.analyze(tinyIntCol, decimalCol));
-    expect(ConversionType.EXPLICIT, StandardConversions.analyze(tinyIntCol, stringCol));
+    expect(ConversionType.NONE, conversions.analyze(tinyIntCol, tinyIntCol));
+    expect(ConversionType.IMPLICIT, conversions.analyze(tinyIntCol, smallIntCol));
+    expect(ConversionType.IMPLICIT, conversions.analyze(tinyIntCol, intCol));
+    expect(ConversionType.IMPLICIT, conversions.analyze(tinyIntCol, bigIntCol));
+    expect(ConversionType.IMPLICIT, conversions.analyze(tinyIntCol, float4Col));
+    expect(ConversionType.IMPLICIT, conversions.analyze(tinyIntCol, float8Col));
+    expect(ConversionType.IMPLICIT, conversions.analyze(tinyIntCol, decimalCol));
+    expect(ConversionType.EXPLICIT, conversions.analyze(tinyIntCol, stringCol));
 
     // SmallInt --> x
-    expect(ConversionType.IMPLICIT_UNSAFE, StandardConversions.analyze(smallIntCol, tinyIntCol));
-    expect(ConversionType.NONE, StandardConversions.analyze(smallIntCol, smallIntCol));
-    expect(ConversionType.IMPLICIT, StandardConversions.analyze(smallIntCol, intCol));
-    expect(ConversionType.IMPLICIT, StandardConversions.analyze(smallIntCol, bigIntCol));
-    expect(ConversionType.IMPLICIT, StandardConversions.analyze(smallIntCol, float4Col));
-    expect(ConversionType.IMPLICIT, StandardConversions.analyze(smallIntCol, float8Col));
-    expect(ConversionType.IMPLICIT, StandardConversions.analyze(smallIntCol, decimalCol));
-    expect(ConversionType.EXPLICIT, StandardConversions.analyze(smallIntCol, stringCol));
+    expect(ConversionType.IMPLICIT_UNSAFE, conversions.analyze(smallIntCol, tinyIntCol));
+    expect(ConversionType.NONE, conversions.analyze(smallIntCol, smallIntCol));
+    expect(ConversionType.IMPLICIT, conversions.analyze(smallIntCol, intCol));
+    expect(ConversionType.IMPLICIT, conversions.analyze(smallIntCol, bigIntCol));
+    expect(ConversionType.IMPLICIT, conversions.analyze(smallIntCol, float4Col));
+    expect(ConversionType.IMPLICIT, conversions.analyze(smallIntCol, float8Col));
+    expect(ConversionType.IMPLICIT, conversions.analyze(smallIntCol, decimalCol));
+    expect(ConversionType.EXPLICIT, conversions.analyze(smallIntCol, stringCol));
 
     // Int --> x
-    expect(ConversionType.IMPLICIT_UNSAFE, StandardConversions.analyze(intCol, tinyIntCol));
-    expect(ConversionType.IMPLICIT_UNSAFE, StandardConversions.analyze(intCol, smallIntCol));
-    expect(ConversionType.NONE, StandardConversions.analyze(intCol, intCol));
-    expect(ConversionType.IMPLICIT, StandardConversions.analyze(intCol, bigIntCol));
-    expect(ConversionType.IMPLICIT, StandardConversions.analyze(intCol, float4Col));
-    expect(ConversionType.IMPLICIT, StandardConversions.analyze(intCol, float8Col));
-    expect(ConversionType.IMPLICIT, StandardConversions.analyze(intCol, decimalCol));
-    expect(ConversionType.EXPLICIT, StandardConversions.analyze(intCol, stringCol));
+    expect(ConversionType.IMPLICIT_UNSAFE, conversions.analyze(intCol, tinyIntCol));
+    expect(ConversionType.IMPLICIT_UNSAFE, conversions.analyze(intCol, smallIntCol));
+    expect(ConversionType.NONE, conversions.analyze(intCol, intCol));
+    expect(ConversionType.IMPLICIT, conversions.analyze(intCol, bigIntCol));
+    expect(ConversionType.IMPLICIT, conversions.analyze(intCol, float4Col));
+    expect(ConversionType.IMPLICIT, conversions.analyze(intCol, float8Col));
+    expect(ConversionType.IMPLICIT, conversions.analyze(intCol, decimalCol));
+    expect(ConversionType.EXPLICIT, conversions.analyze(intCol, stringCol));
 
     // BigInt --> x
-    expect(ConversionType.IMPLICIT_UNSAFE, StandardConversions.analyze(bigIntCol, tinyIntCol));
-    expect(ConversionType.IMPLICIT_UNSAFE, StandardConversions.analyze(bigIntCol, smallIntCol));
-    expect(ConversionType.IMPLICIT_UNSAFE, StandardConversions.analyze(bigIntCol, intCol));
-    expect(ConversionType.NONE, StandardConversions.analyze(bigIntCol, bigIntCol));
-    expect(ConversionType.IMPLICIT, StandardConversions.analyze(bigIntCol, float4Col));
-    expect(ConversionType.IMPLICIT, StandardConversions.analyze(bigIntCol, float8Col));
-    expect(ConversionType.IMPLICIT, StandardConversions.analyze(bigIntCol, decimalCol));
-    expect(ConversionType.EXPLICIT, StandardConversions.analyze(bigIntCol, stringCol));
+    expect(ConversionType.IMPLICIT_UNSAFE, conversions.analyze(bigIntCol, tinyIntCol));
+    expect(ConversionType.IMPLICIT_UNSAFE, conversions.analyze(bigIntCol, smallIntCol));
+    expect(ConversionType.IMPLICIT_UNSAFE, conversions.analyze(bigIntCol, intCol));
+    expect(ConversionType.NONE, conversions.analyze(bigIntCol, bigIntCol));
+    expect(ConversionType.IMPLICIT, conversions.analyze(bigIntCol, float4Col));
+    expect(ConversionType.IMPLICIT, conversions.analyze(bigIntCol, float8Col));
+    expect(ConversionType.IMPLICIT, conversions.analyze(bigIntCol, decimalCol));
+    expect(ConversionType.EXPLICIT, conversions.analyze(bigIntCol, stringCol));
 
     // Float4 --> x
-    expect(ConversionType.IMPLICIT_UNSAFE, StandardConversions.analyze(float4Col, tinyIntCol));
-    expect(ConversionType.IMPLICIT_UNSAFE, StandardConversions.analyze(float4Col, smallIntCol));
-    expect(ConversionType.IMPLICIT_UNSAFE, StandardConversions.analyze(float4Col, intCol));
-    expect(ConversionType.IMPLICIT_UNSAFE, StandardConversions.analyze(float4Col, bigIntCol));
-    expect(ConversionType.NONE, StandardConversions.analyze(float4Col, float4Col));
-    expect(ConversionType.IMPLICIT, StandardConversions.analyze(float4Col, float8Col));
-    expect(ConversionType.IMPLICIT, StandardConversions.analyze(float4Col, decimalCol));
-    expect(ConversionType.EXPLICIT, StandardConversions.analyze(float4Col, stringCol));
+    expect(ConversionType.IMPLICIT_UNSAFE, conversions.analyze(float4Col, tinyIntCol));
+    expect(ConversionType.IMPLICIT_UNSAFE, conversions.analyze(float4Col, smallIntCol));
+    expect(ConversionType.IMPLICIT_UNSAFE, conversions.analyze(float4Col, intCol));
+    expect(ConversionType.IMPLICIT_UNSAFE, conversions.analyze(float4Col, bigIntCol));
+    expect(ConversionType.NONE, conversions.analyze(float4Col, float4Col));
+    expect(ConversionType.IMPLICIT, conversions.analyze(float4Col, float8Col));
+    expect(ConversionType.IMPLICIT, conversions.analyze(float4Col, decimalCol));
+    expect(ConversionType.EXPLICIT, conversions.analyze(float4Col, stringCol));
 
     // Float8 --> x
-    expect(ConversionType.IMPLICIT_UNSAFE, StandardConversions.analyze(float8Col, tinyIntCol));
-    expect(ConversionType.IMPLICIT_UNSAFE, StandardConversions.analyze(float8Col, smallIntCol));
-    expect(ConversionType.IMPLICIT_UNSAFE, StandardConversions.analyze(float8Col, intCol));
-    expect(ConversionType.IMPLICIT_UNSAFE, StandardConversions.analyze(float8Col, bigIntCol));
-    expect(ConversionType.IMPLICIT_UNSAFE, StandardConversions.analyze(float8Col, float4Col));
-    expect(ConversionType.NONE, StandardConversions.analyze(float8Col, float8Col));
-    expect(ConversionType.IMPLICIT, StandardConversions.analyze(float8Col, decimalCol));
-    expect(ConversionType.EXPLICIT, StandardConversions.analyze(float8Col, stringCol));
+    expect(ConversionType.IMPLICIT_UNSAFE, conversions.analyze(float8Col, tinyIntCol));
+    expect(ConversionType.IMPLICIT_UNSAFE, conversions.analyze(float8Col, smallIntCol));
+    expect(ConversionType.IMPLICIT_UNSAFE, conversions.analyze(float8Col, intCol));
+    expect(ConversionType.IMPLICIT_UNSAFE, conversions.analyze(float8Col, bigIntCol));
+    expect(ConversionType.IMPLICIT_UNSAFE, conversions.analyze(float8Col, float4Col));
+    expect(ConversionType.NONE, conversions.analyze(float8Col, float8Col));
+    expect(ConversionType.IMPLICIT, conversions.analyze(float8Col, decimalCol));
+    expect(ConversionType.EXPLICIT, conversions.analyze(float8Col, stringCol));
 
     // Decimal --> x
-    expect(ConversionType.EXPLICIT, StandardConversions.analyze(decimalCol, tinyIntCol));
-    expect(ConversionType.EXPLICIT, StandardConversions.analyze(decimalCol, smallIntCol));
-    expect(ConversionType.EXPLICIT, StandardConversions.analyze(decimalCol, intCol));
-    expect(ConversionType.EXPLICIT, StandardConversions.analyze(decimalCol, bigIntCol));
-    expect(ConversionType.EXPLICIT, StandardConversions.analyze(decimalCol, float4Col));
-    expect(ConversionType.EXPLICIT, StandardConversions.analyze(decimalCol, float8Col));
-    expect(ConversionType.NONE, StandardConversions.analyze(decimalCol, decimalCol));
-    expect(ConversionType.EXPLICIT, StandardConversions.analyze(decimalCol, stringCol));
+    expect(ConversionType.EXPLICIT, conversions.analyze(decimalCol, tinyIntCol));
+    expect(ConversionType.EXPLICIT, conversions.analyze(decimalCol, smallIntCol));
+    expect(ConversionType.EXPLICIT, conversions.analyze(decimalCol, intCol));
+    expect(ConversionType.EXPLICIT, conversions.analyze(decimalCol, bigIntCol));
+    expect(ConversionType.EXPLICIT, conversions.analyze(decimalCol, float4Col));
+    expect(ConversionType.EXPLICIT, conversions.analyze(decimalCol, float8Col));
+    expect(ConversionType.NONE, conversions.analyze(decimalCol, decimalCol));
+    expect(ConversionType.EXPLICIT, conversions.analyze(decimalCol, stringCol));
 
     // VarChar --> x
-    expect(ConversionType.EXPLICIT, StandardConversions.analyze(stringCol, tinyIntCol));
-    expect(ConversionType.EXPLICIT, StandardConversions.analyze(stringCol, smallIntCol));
-    expect(ConversionType.EXPLICIT, StandardConversions.analyze(stringCol, intCol));
-    expect(ConversionType.EXPLICIT, StandardConversions.analyze(stringCol, bigIntCol));
-    expect(ConversionType.EXPLICIT, StandardConversions.analyze(stringCol, float4Col));
-    expect(ConversionType.EXPLICIT, StandardConversions.analyze(stringCol, float8Col));
-    expect(ConversionType.EXPLICIT, StandardConversions.analyze(stringCol, decimalCol));
-    expect(ConversionType.NONE, StandardConversions.analyze(stringCol, stringCol));
+    expect(ConversionType.EXPLICIT, conversions.analyze(stringCol, tinyIntCol));
+    expect(ConversionType.EXPLICIT, conversions.analyze(stringCol, smallIntCol));
+    expect(ConversionType.EXPLICIT, conversions.analyze(stringCol, intCol));
+    expect(ConversionType.EXPLICIT, conversions.analyze(stringCol, bigIntCol));
+    expect(ConversionType.EXPLICIT, conversions.analyze(stringCol, float4Col));
+    expect(ConversionType.EXPLICIT, conversions.analyze(stringCol, float8Col));
+    expect(ConversionType.EXPLICIT, conversions.analyze(stringCol, decimalCol));
+    expect(ConversionType.NONE, conversions.analyze(stringCol, stringCol));
   }
 
   /**
@@ -785,6 +787,7 @@ public class TestDirectConverter extends SubOperatorTest {
    */
   @Test
   public void testSpecialConversionType() {
+    StandardConversions conversions = StandardConversions.builder().build();
     TupleMetadata schema = new SchemaBuilder()
         .add("time", MinorType.TIME)
         .add("date", MinorType.DATE)
@@ -807,40 +810,40 @@ public class TestDirectConverter extends SubOperatorTest {
     ColumnMetadata stringCol = schema.metadata("str");
 
     // TIME
-    expect(ConversionType.NONE, StandardConversions.analyze(timeCol, timeCol));
-    expect(ConversionType.EXPLICIT, StandardConversions.analyze(timeCol, stringCol));
-    expect(ConversionType.EXPLICIT, StandardConversions.analyze(stringCol, timeCol));
-    expect(ConversionType.IMPLICIT, StandardConversions.analyze(intCol, timeCol));
-    expect(ConversionType.IMPLICIT, StandardConversions.analyze(timeCol, intCol));
+    expect(ConversionType.NONE, conversions.analyze(timeCol, timeCol));
+    expect(ConversionType.EXPLICIT, conversions.analyze(timeCol, stringCol));
+    expect(ConversionType.EXPLICIT, conversions.analyze(stringCol, timeCol));
+    expect(ConversionType.IMPLICIT, conversions.analyze(intCol, timeCol));
+    expect(ConversionType.IMPLICIT, conversions.analyze(timeCol, intCol));
 
     // DATE
-    expect(ConversionType.NONE, StandardConversions.analyze(dateCol, dateCol));
-    expect(ConversionType.EXPLICIT, StandardConversions.analyze(dateCol, stringCol));
-    expect(ConversionType.EXPLICIT, StandardConversions.analyze(stringCol, dateCol));
-    expect(ConversionType.IMPLICIT, StandardConversions.analyze(bigIntCol, dateCol));
-    expect(ConversionType.IMPLICIT, StandardConversions.analyze(dateCol, bigIntCol));
+    expect(ConversionType.NONE, conversions.analyze(dateCol, dateCol));
+    expect(ConversionType.EXPLICIT, conversions.analyze(dateCol, stringCol));
+    expect(ConversionType.EXPLICIT, conversions.analyze(stringCol, dateCol));
+    expect(ConversionType.IMPLICIT, conversions.analyze(bigIntCol, dateCol));
+    expect(ConversionType.IMPLICIT, conversions.analyze(dateCol, bigIntCol));
 
     // TIMESTAMP
-    expect(ConversionType.NONE, StandardConversions.analyze(tsCol, tsCol));
-    expect(ConversionType.EXPLICIT, StandardConversions.analyze(tsCol, stringCol));
-    expect(ConversionType.EXPLICIT, StandardConversions.analyze(stringCol, tsCol));
-    expect(ConversionType.IMPLICIT, StandardConversions.analyze(bigIntCol, tsCol));
-    expect(ConversionType.IMPLICIT, StandardConversions.analyze(tsCol, bigIntCol));
+    expect(ConversionType.NONE, conversions.analyze(tsCol, tsCol));
+    expect(ConversionType.EXPLICIT, conversions.analyze(tsCol, stringCol));
+    expect(ConversionType.EXPLICIT, conversions.analyze(stringCol, tsCol));
+    expect(ConversionType.IMPLICIT, conversions.analyze(bigIntCol, tsCol));
+    expect(ConversionType.IMPLICIT, conversions.analyze(tsCol, bigIntCol));
 
     // INTERVAL
-    expect(ConversionType.NONE, StandardConversions.analyze(intervalCol, intervalCol));
-    expect(ConversionType.EXPLICIT, StandardConversions.analyze(intervalCol, stringCol));
-    expect(ConversionType.EXPLICIT, StandardConversions.analyze(stringCol, intervalCol));
+    expect(ConversionType.NONE, conversions.analyze(intervalCol, intervalCol));
+    expect(ConversionType.EXPLICIT, conversions.analyze(intervalCol, stringCol));
+    expect(ConversionType.EXPLICIT, conversions.analyze(stringCol, intervalCol));
 
     // INTERVALYEAR
-    expect(ConversionType.NONE, StandardConversions.analyze(yearCol, yearCol));
-    expect(ConversionType.EXPLICIT, StandardConversions.analyze(yearCol, stringCol));
-    expect(ConversionType.EXPLICIT, StandardConversions.analyze(stringCol, yearCol));
+    expect(ConversionType.NONE, conversions.analyze(yearCol, yearCol));
+    expect(ConversionType.EXPLICIT, conversions.analyze(yearCol, stringCol));
+    expect(ConversionType.EXPLICIT, conversions.analyze(stringCol, yearCol));
 
     // INTERVALDAY
-    expect(ConversionType.NONE, StandardConversions.analyze(dayCol, dayCol));
-    expect(ConversionType.EXPLICIT, StandardConversions.analyze(dayCol, stringCol));
-    expect(ConversionType.EXPLICIT, StandardConversions.analyze(stringCol, dayCol));
+    expect(ConversionType.NONE, conversions.analyze(dayCol, dayCol));
+    expect(ConversionType.EXPLICIT, conversions.analyze(dayCol, stringCol));
+    expect(ConversionType.EXPLICIT, conversions.analyze(stringCol, dayCol));
   }
 
   /**

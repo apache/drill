@@ -27,7 +27,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.drill.categories.EvfTests;
+import org.apache.drill.categories.EvfTest;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.impl.scan.v3.schema.ScanProjectionParser.ProjectionParseResult;
 import org.apache.drill.exec.physical.rowSet.RowSetTestUtils;
@@ -46,7 +46,7 @@ import org.junit.experimental.categories.Category;
  * parsing; the only bits not tested here is that which is
  * inherently specific to some use case.
  */
-@Category(EvfTests.class)
+@Category(EvfTest.class)
 public class TestProjectionParser extends BaseTest {
 
   /**

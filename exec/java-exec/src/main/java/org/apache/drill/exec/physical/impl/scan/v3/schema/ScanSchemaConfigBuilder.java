@@ -71,6 +71,8 @@ public class ScanSchemaConfigBuilder {
     if (errorContext == null) {
       errorContext = EmptyErrorContext.INSTANCE;
     }
+
+    // Parse the projection list
     ProjectionParseResult result;
     if (projectionList == null) {
       result = null;
@@ -78,21 +80,45 @@ public class ScanSchemaConfigBuilder {
       result = ScanProjectionParser.parse(projectionList);
     }
 
+    // If a strict schema is provided, then no schema changes are allowed.
     if (providedSchema != null && SchemaUtils.isStrict(providedSchema)) {
       allowSchemaChange = false;
     }
+
+    // Figure out the schema tracker to use
     if (definedSchema == null) {
+
+      // No defined schema: this is a projection-based tracker, possibly
+      // constrained by a provided schema.
       ProjectionSchemaTracker tracker = new ProjectionSchemaTracker(result, allowSchemaChange, errorContext);
+
+      // Apply the provided schema. Doing so forces resolution of the projection
+      // list just appled above.
       if (providedSchema != null) {
         tracker.applyProvidedSchema(providedSchema);
       }
       return tracker;
     } else {
+
+      // Defined schema case, which is supported only via tests at present;
+      // the planner can't yet produce a defined schema.
+
+      // A defined schema can include dynamic columns (those with no type.) If
+      // so, treat the dynamic schema as combination of a projection list and a
+      // provided schema.
       if (!MetadataUtils.hasDynamicColumns(definedSchema)) {
         SchemaBasedTracker tracker = new SchemaBasedTracker(definedSchema, errorContext);
-        tracker.validateProjection(result.dynamicSchema);
+
+        // A projection list is not required. But, if provided, it must be consistent
+        // with the defined schema.
+        if (result != null) {
+          tracker.validateProjection(result.dynamicSchema);
+        }
         return tracker;
       } else {
+
+        // The defined schema has not dynamic columns: it is fully defined, just like
+        // in a "classic" DB. Use a schema-driven schema tracker.
         return new ProjectionSchemaTracker(definedSchema, result, errorContext);
       }
     }

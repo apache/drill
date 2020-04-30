@@ -21,7 +21,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 
-import org.apache.drill.categories.EvfTests;
+import org.apache.drill.categories.EvfTest;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -49,7 +49,7 @@ import org.junit.experimental.categories.Category;
  * can create the classic nullable Int null column, or one of
  * any other type and mode.
  */
-@Category(EvfTests.class)
+@Category(EvfTest.class)
 public class TestMissingColumnLoader extends SubOperatorTest {
 
   /**

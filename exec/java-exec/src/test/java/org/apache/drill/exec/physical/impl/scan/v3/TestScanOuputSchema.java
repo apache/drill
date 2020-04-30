@@ -20,7 +20,7 @@ package org.apache.drill.exec.physical.impl.scan.v3;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import org.apache.drill.categories.EvfTests;
+import org.apache.drill.categories.EvfTest;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.physical.impl.scan.ScanOperatorExec;
@@ -43,7 +43,7 @@ import org.junit.experimental.categories.Category;
  * defines the schema to be output from the scan operator, and forces
  * conversions between reader and output data types.
  */
-@Category(EvfTests.class)
+@Category(EvfTest.class)
 public class TestScanOuputSchema extends BaseScanTest {
 
   private static class MockSimpleReader implements ManagedReader {
@@ -78,6 +78,7 @@ public class TestScanOuputSchema extends BaseScanTest {
     private void buildWriters(TupleMetadata providedSchema,
         TupleMetadata schema) {
       RowSetLoader rowWriter = tableLoader.writer();
+      StandardConversions conversions = StandardConversions.builder().build();
       for (int i = 0; i < schema.size(); i++) {
         ColumnMetadata colSchema = schema.metadata(i);
         String colName = colSchema.name();
@@ -92,7 +93,7 @@ public class TestScanOuputSchema extends BaseScanTest {
           writers.add(colSchema.name(), rowWriter.scalar(colIndex));
         } else {
           writers.add(colSchema.name(),
-              StandardConversions.converterFor(rowWriter.scalar(colSchema.name()), colSchema));
+              conversions.converterFor(rowWriter.scalar(colSchema.name()), colSchema));
         }
       }
     }

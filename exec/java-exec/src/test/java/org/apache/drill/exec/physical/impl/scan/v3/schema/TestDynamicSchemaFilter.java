@@ -24,7 +24,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
-import org.apache.drill.categories.EvfTests;
+import org.apache.drill.categories.EvfTest;
 import org.apache.drill.common.exceptions.EmptyErrorContext;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
@@ -39,7 +39,7 @@ import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-@Category(EvfTests.class)
+@Category(EvfTest.class)
 public class TestDynamicSchemaFilter {
 
   private static final ColumnMetadata A_COL =

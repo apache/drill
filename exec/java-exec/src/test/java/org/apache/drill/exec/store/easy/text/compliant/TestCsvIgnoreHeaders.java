@@ -22,7 +22,7 @@ import static org.apache.drill.test.rowSet.RowSetUtilities.strArray;
 import java.io.File;
 import java.io.IOException;
 
-import org.apache.drill.categories.EvfTests;
+import org.apache.drill.categories.EvfTest;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
@@ -33,7 +33,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-@Category(EvfTests.class)
+@Category(EvfTest.class)
 public class TestCsvIgnoreHeaders extends BaseCsvTest{
 
   private static String withHeaders[] = {

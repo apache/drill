@@ -24,7 +24,7 @@ import static org.junit.Assert.fail;
 
 import java.util.Iterator;
 
-import org.apache.drill.categories.EvfTests;
+import org.apache.drill.categories.EvfTest;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
@@ -47,7 +47,7 @@ import org.junit.experimental.categories.Category;
  * The focus here is on the schema mechanism, which can be explored
  * with simple tables of just a few rows.
  */
-@Category(EvfTests.class)
+@Category(EvfTest.class)
 public class TestCsvWithSchema extends BaseCsvTest {
 
   protected static final String FILE1_NAME = "file1.csv";

@@ -23,7 +23,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import org.apache.drill.categories.EvfTests;
+import org.apache.drill.categories.EvfTest;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.EmptyErrorContext;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -44,7 +44,7 @@ import org.junit.experimental.categories.Category;
  * defined schema, scan schema, reader schema and missing columns schemas
  * must all be trees, and must all be kept in sync.
  */
-@Category(EvfTests.class)
+@Category(EvfTest.class)
 public class TestScanSchemaTrackerMaps extends BaseTest {
   private static final CustomErrorContext ERROR_CONTEXT = EmptyErrorContext.INSTANCE;
 

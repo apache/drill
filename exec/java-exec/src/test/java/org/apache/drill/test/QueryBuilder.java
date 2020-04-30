@@ -329,12 +329,11 @@ public class QueryBuilder {
    * Run the query and return the first non-empty batch as a
    * {@link DirectRowSet} object that can be inspected directly
    * by the code using a {@link RowSetReader}.
-   * <p>
    *
    * @see #rowSetIterator() for a version that reads a series of
    * batches as row sets.
    * @return a row set that represents the first non-empty batch returned from
-   * the query
+   * the query, or {@code null} if the query returns no data (no batches)
    * @throws RpcException if anything goes wrong
    */
   public DirectRowSet rowSet() throws RpcException {

@@ -23,7 +23,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import org.apache.drill.categories.EvfTests;
+import org.apache.drill.categories.EvfTest;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.physical.impl.scan.ScanOperatorExec;
@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
  * Tests the basics of the scan operator protocol: error conditions,
  * etc.
  */
-@Category(EvfTests.class)
+@Category(EvfTest.class)
 public class TestScanBasics extends BaseScanTest {
   private static final Logger logger = LoggerFactory.getLogger(TestScanBasics.class);
 

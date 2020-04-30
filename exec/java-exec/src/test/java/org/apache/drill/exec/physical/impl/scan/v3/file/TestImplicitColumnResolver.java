@@ -22,21 +22,20 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 
-import org.apache.drill.categories.EvfTests;
+import org.apache.drill.categories.EvfTest;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.EmptyErrorContext;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.impl.scan.ScanTestUtils;
-import org.apache.drill.exec.physical.impl.scan.v3.schema.ImplicitColumnResolver;
-import org.apache.drill.exec.physical.impl.scan.v3.schema.ImplicitColumnResolver.ImplicitColumnOptions;
-import org.apache.drill.exec.physical.impl.scan.v3.schema.ImplicitColumnResolver.ParseResult;
-import org.apache.drill.exec.physical.impl.scan.v3.schema.MutableTupleSchema;
 import org.apache.drill.exec.physical.impl.scan.v3.schema.MutableTupleSchema.ColumnHandle;
+import org.apache.drill.exec.physical.impl.scan.v3.file.ImplicitColumnResolver.ImplicitColumnOptions;
+import org.apache.drill.exec.physical.impl.scan.v3.file.ImplicitColumnResolver.ParseResult;
 import org.apache.drill.exec.physical.impl.scan.v3.schema.ProjectionSchemaTracker;
 import org.apache.drill.exec.physical.impl.scan.v3.schema.ScanProjectionParser;
 import org.apache.drill.exec.physical.impl.scan.v3.schema.ScanProjectionParser.ProjectionParseResult;
@@ -49,11 +48,14 @@ import org.apache.drill.exec.physical.rowSet.RowSetTestUtils;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.store.dfs.DrillFileSystem;
 import org.apache.drill.test.SubOperatorTest;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-@Category(EvfTests.class)
+@Category(EvfTest.class)
 public class TestImplicitColumnResolver extends SubOperatorTest {
 
   private static final CustomErrorContext ERROR_CONTEXT = EmptyErrorContext.INSTANCE;
@@ -77,7 +79,7 @@ public class TestImplicitColumnResolver extends SubOperatorTest {
   }
 
   private boolean isImplicit(List<ColumnHandle> cols, int index) {
-    return SchemaUtils.isImplicit(cols.get(index).column());
+    return cols.get(index).isImplicit();
   }
 
   @Test
@@ -87,6 +89,7 @@ public class TestImplicitColumnResolver extends SubOperatorTest {
     ParseResult result = parseFixture.parseImplicit();
     assertTrue(result.columns().isEmpty());
     assertTrue(result.schema().isEmpty());
+    assertFalse(result.isMetadataScan());
   }
 
   /**
@@ -103,6 +106,7 @@ public class TestImplicitColumnResolver extends SubOperatorTest {
             ScanTestUtils.SUFFIX_COL));
     ParseResult result = parseFixture.parseImplicit();
 
+    assertFalse(result.isMetadataScan());
     assertEquals(4, result.columns().size());
 
     TupleMetadata expected = new SchemaBuilder()
@@ -132,6 +136,7 @@ public class TestImplicitColumnResolver extends SubOperatorTest {
     ParserFixture parseFixture = new ParserFixture(
         RowSetTestUtils.projectList(dir2, dir1, dir0, "a"));
     ParseResult result = parseFixture.parseImplicit();
+    assertFalse(result.isMetadataScan());
     assertEquals(3, result.columns().size());
 
     TupleMetadata expected = new SchemaBuilder()
@@ -156,6 +161,7 @@ public class TestImplicitColumnResolver extends SubOperatorTest {
         .maxPartitionDepth(3)
         .useLegacyWildcardExpansion(true);
     ParseResult result = parseFixture.parseImplicit();
+    assertFalse(result.isMetadataScan());
     assertEquals(3, result.columns().size());
 
     TupleMetadata expected = new SchemaBuilder()
@@ -535,12 +541,6 @@ public class TestImplicitColumnResolver extends SubOperatorTest {
     assertTrue(schemaTracker.isResolved());
     assertSame(ProjectionType.SOME, schemaTracker.projectionType());
 
-    // Implicit columns should be marked
-    MutableTupleSchema internalSchema = schemaTracker.internalSchema();
-    assertFalse(internalSchema.find("a").isImplicit());
-    assertTrue(internalSchema.find(ScanTestUtils.FILE_NAME_COL).isImplicit());
-    assertTrue(internalSchema.find(ScanTestUtils.partitionColName(2)).isImplicit());
-
     ImplicitColumnOptions options = new ImplicitColumnOptions()
         .optionSet(fixture.getOptionManager());
     ImplicitColumnResolver parser = new ImplicitColumnResolver(options, ERROR_CONTEXT);
@@ -551,5 +551,63 @@ public class TestImplicitColumnResolver extends SubOperatorTest {
     assertEquals(3, readerInputSchema.size());
 
     assertEquals(definedSchema, schemaTracker.outputSchema());
+  }
+
+  /**
+   * Test including internal implicit columns in the project list.
+   * @throws IOException
+   */
+  @Test
+  public void testInternalImplicitColumnSelection() throws IOException {
+    // Simulate SELECT lmt, $project_metadata$", rgi, rgs, rgl ...
+    Configuration conf = new Configuration();
+    conf.set(FileSystem.FS_DEFAULT_NAME_KEY, FileSystem.DEFAULT_FS);
+    DrillFileSystem dfs = new DrillFileSystem(conf);
+    ParserFixture parseFixture = new ParserFixture(
+        RowSetTestUtils.projectList("a",
+            ScanTestUtils.LAST_MODIFIED_TIME_COL,
+            ScanTestUtils.PROJECT_METADATA_COL,
+            ScanTestUtils.ROW_GROUP_INDEX_COL,
+            ScanTestUtils.ROW_GROUP_START_COL,
+            ScanTestUtils.ROW_GROUP_LENGTH_COL));
+    parseFixture.options.dfs(dfs);
+    ParseResult result = parseFixture.parseImplicit();
+
+    assertTrue(result.isMetadataScan());
+    assertEquals(5, result.columns().size());
+
+    TupleMetadata expected = new SchemaBuilder()
+        .add(ScanTestUtils.LAST_MODIFIED_TIME_COL, MinorType.VARCHAR)
+        .addNullable(ScanTestUtils.PROJECT_METADATA_COL, MinorType.VARCHAR)
+        .add(ScanTestUtils.ROW_GROUP_INDEX_COL, MinorType.VARCHAR)
+        .add(ScanTestUtils.ROW_GROUP_START_COL, MinorType.VARCHAR)
+        .add(ScanTestUtils.ROW_GROUP_LENGTH_COL, MinorType.VARCHAR)
+        .build();
+    assertEquals(expected, result.schema());
+
+    List<ColumnHandle> cols = parseFixture.tracker.internalSchema().columns();
+    assertFalse(isImplicit(cols, 0));
+    assertTrue(isImplicit(cols, 1));
+    assertTrue(isImplicit(cols, 2));
+    assertTrue(isImplicit(cols, 3));
+    assertTrue(isImplicit(cols, 4));
+    assertTrue(isImplicit(cols, 5));
+  }
+
+  @Test
+  public void testProvidedImplicitColInternal() {
+    TupleMetadata providedSchema = new SchemaBuilder()
+        .add("myLmt", MinorType.INT)
+        .build();
+    SchemaUtils.markImplicit(providedSchema.metadata("myLmt"), ScanTestUtils.LAST_MODIFIED_TIME_COL);
+
+    ParserFixture parseFixture = new ParserFixture(
+        RowSetTestUtils.projectAll());
+    parseFixture.tracker.applyProvidedSchema(providedSchema);
+    try {
+      parseFixture.parseImplicit();
+    } catch (UserException e) {
+      assertTrue(e.getMessage().contains("references an undefined implicit column type"));
+    }
   }
 }

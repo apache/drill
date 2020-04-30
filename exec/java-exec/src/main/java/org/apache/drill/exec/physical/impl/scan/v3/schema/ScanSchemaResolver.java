@@ -82,13 +82,14 @@ public class ScanSchemaResolver {
    * Indicates the source of the schema to be analyzed.
    * Each schema type has subtly different rules. The
    * schema type allows us to inject those differences inline
-   * within the resolution process. Also, each schema caries
+   * within the resolution process. Also, each schema carries
    * a tag used for error reporting.
    */
   public enum SchemaType {
     STRICT_PROVIDED_SCHEMA("Provided"),
     LENIENT_PROVIDED_SCHEMA("Provided"),
     EARLY_READER_SCHEMA("Reader"),
+    FIRST_READER_SCHEMA("Reader"),
     READER_SCHEMA("Reader"),
     MISSING_COLS("Missing columns");
 
@@ -105,41 +106,64 @@ public class ScanSchemaResolver {
 
   private final MutableTupleSchema schema;
   private final SchemaType mode;
-  private final boolean isProjectAll;
   private final boolean allowMapAdditions;
   private final String source;
   private final CustomErrorContext errorContext;
+  private final boolean allowColumnReorder;
 
   public ScanSchemaResolver(MutableTupleSchema schema, SchemaType mode,
       boolean allowMapAdditions,
       CustomErrorContext errorContext) {
     this.schema = schema;
-    this.isProjectAll = schema.projectionType() == ProjectionType.ALL;
     this.mode = mode;
     this.errorContext = errorContext;
     this.allowMapAdditions = allowMapAdditions;
     this.source = mode.source();
+    switch (mode) {
+      case STRICT_PROVIDED_SCHEMA:
+      case LENIENT_PROVIDED_SCHEMA:
+      case EARLY_READER_SCHEMA:
+      case FIRST_READER_SCHEMA:
+
+        // Allow reordering columns with projection is of the form
+        // *, foo. Move bar to its place in the schema (foo, bar) rather
+        // than at the end, as with implicit columns.
+        this.allowColumnReorder = schema.projectionType() == ProjectionType.ALL;
+        break;
+      default:
+        this.allowColumnReorder = false;
+    }
   }
 
   public void applySchema(TupleMetadata sourceSchema) {
     switch (schema.projectionType()) {
       case ALL:
+        projectSchema(sourceSchema);
+        if (mode == SchemaType.STRICT_PROVIDED_SCHEMA) {
+          schema.setProjectionType(ScanSchemaTracker.ProjectionType.SOME);
+        }
+        break;
       case SOME:
         projectSchema(sourceSchema);
         break;
       default:
         // Do nothing
     }
-    if (mode == SchemaType.STRICT_PROVIDED_SCHEMA && isProjectAll) {
-      schema.setProjectionType(ScanSchemaTracker.ProjectionType.SOME);
-    }
   }
 
   /**
-   * A project list can contain implicit columns in
-   * addition to the wildcard. The wildcard defines the
-   * <i>insert point</i>: the point at which reader-defined
-   * columns are inserted as found.
+   * A project list can contain implicit columns in addition to the wildcard.
+   * The wildcard defines the <i>insert point</i>: the point at which
+   * reader-defined columns are inserted as found. This version applies a
+   * provided schema to a projection. If we are given a query of the form
+   * {@code SELECT * FROM foo ORDER BY bar}, Drill will give us a projection
+   * list of the form {@code [`**`, `bar`]} and normal projection processing
+   * will project all provided columns, except {@code bar}, in place of the
+   * wildcard. Since this behavior differs from all other DBs, we apply special
+   * processing, we move the projection column into the next wildcard position
+   * as if Drill did not include the extra column projection. This is a hack,
+   * but one that helps with ease-of-use. We apply the same rule to the first
+   * reader schema for the same reason.
    */
   private void projectSchema(TupleMetadata sourceSchema) {
     for (ColumnMetadata colSchema : sourceSchema) {
@@ -148,6 +172,9 @@ public class ScanSchemaResolver {
         insertColumn(colSchema);
       } else {
         mergeColumn(existing, colSchema);
+        if (allowColumnReorder) {
+          schema.moveIfExplicit(colSchema.name());
+        }
       }
     }
   }
@@ -160,8 +187,9 @@ public class ScanSchemaResolver {
    */
   private void insertColumn(ColumnMetadata col) {
     switch (mode) {
+      case FIRST_READER_SCHEMA:
       case READER_SCHEMA:
-        if (!isProjectAll) {
+        if (schema.projectionType() != ProjectionType.ALL) {
           throw new IllegalStateException(
               "Reader should not have projected an unprojected column: " + col.name());
         }
@@ -169,7 +197,7 @@ public class ScanSchemaResolver {
       case EARLY_READER_SCHEMA:
       case LENIENT_PROVIDED_SCHEMA:
       case STRICT_PROVIDED_SCHEMA:
-        if (!isProjectAll || SchemaUtils.isExcludedFromWildcard(col)) {
+        if (schema.projectionType() != ProjectionType.ALL || SchemaUtils.isExcludedFromWildcard(col)) {
           return;
         }
         break;
@@ -200,16 +228,9 @@ public class ScanSchemaResolver {
     switch (mode) {
       case LENIENT_PROVIDED_SCHEMA:
       case STRICT_PROVIDED_SCHEMA:
-        // With a wilcard, there should be no existing column unless
-        // the planner projected an implicit column and the provided
-        // schema defines that same implicit column.
-        if (isProjectAll && !SchemaUtils.isImplicit(colSchema)) {
-          throw UserException.validationError()
-            .message("Provided schema column name conflicts with presumed implicit column name")
-            .addContext("Column", colSchema.name())
-            .addContext(errorContext)
-            .build(logger);
-        }
+        // Even with a wildcard, the planner may add additional columns.
+        // Example SELECT * FROM foo ORDER BY bar
+        // The planner will provide us with [`*`, `bar`]
         break;
       case EARLY_READER_SCHEMA:
         // If the reader offers a column which duplicates an implicit column,
@@ -341,6 +362,7 @@ public class ScanSchemaResolver {
       case LENIENT_PROVIDED_SCHEMA:
       case STRICT_PROVIDED_SCHEMA:
         break;
+      case FIRST_READER_SCHEMA:
       case READER_SCHEMA:
         if (!allowMapAdditions) {
           throw new IllegalStateException("Reader should not have projected column: " + readerCol.name());

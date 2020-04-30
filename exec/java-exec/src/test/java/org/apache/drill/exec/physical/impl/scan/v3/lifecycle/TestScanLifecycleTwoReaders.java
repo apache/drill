@@ -21,7 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import org.apache.drill.categories.EvfTests;
+import org.apache.drill.categories.EvfTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.physical.impl.scan.RowBatchReader;
 import org.apache.drill.exec.physical.impl.scan.v3.ManagedReader;
@@ -37,7 +37,7 @@ import org.junit.experimental.categories.Category;
  * Test two readers in succession in various cases: empty readers, normal readers,
  * type conflicts, etc.
  */
-@Category(EvfTests.class)
+@Category(EvfTest.class)
 public class TestScanLifecycleTwoReaders extends BaseTestScanLifecycle {
 
   /**

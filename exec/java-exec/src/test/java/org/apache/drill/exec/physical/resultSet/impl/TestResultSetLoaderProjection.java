@@ -30,7 +30,7 @@ import static org.junit.Assert.fail;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.drill.categories.EvfTests;
+import org.apache.drill.categories.EvfTest;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.EmptyErrorContext;
 import org.apache.drill.common.exceptions.UserException;
@@ -61,7 +61,7 @@ import org.junit.experimental.categories.Category;
 /**
  * Test of the basics of the projection mechanism.
  */
-@Category(EvfTests.class)
+@Category(EvfTest.class)
 public class TestResultSetLoaderProjection extends SubOperatorTest {
 
   /**

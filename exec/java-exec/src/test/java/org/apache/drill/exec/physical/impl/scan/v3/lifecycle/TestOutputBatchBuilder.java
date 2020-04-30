@@ -22,7 +22,7 @@ import static org.apache.drill.test.rowSet.RowSetUtilities.mapValue;
 import java.util.Arrays;
 import java.util.Collections;
 
-import org.apache.drill.categories.EvfTests;
+import org.apache.drill.categories.EvfTest;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.impl.scan.v3.lifecycle.OutputBatchBuilder.BatchSource;
 import org.apache.drill.exec.physical.rowSet.RowSet;
@@ -36,7 +36,7 @@ import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-@Category(EvfTests.class)
+@Category(EvfTest.class)
 public class TestOutputBatchBuilder extends SubOperatorTest {
 
   public TupleMetadata firstSchema() {

@@ -34,69 +34,67 @@ import org.apache.drill.exec.physical.resultSet.impl.ResultSetLoaderImpl;
 import org.apache.drill.exec.physical.resultSet.impl.ResultSetOptionBuilder;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Manages the schema and batch construction for a managed reader.
- * Allows the reader itself to be as simple as possible. This class
- * implements the basic {@link RowBatchReader} protocol based on
- * three methods, and converts it to the two-method protocol of
- * the managed reader. The {@code open()} call of the
+ * Manages the schema and batch construction for a managed reader. Allows the
+ * reader itself to be as simple as possible. This class implements the basic
+ * {@link RowBatchReader} protocol based on three methods, and converts it to
+ * the two-method protocol of the managed reader. The {@code open()} call of the
  * {@code RowBatchReader} is combined with the constructor of the
- * {@link ManagedReader}, enforcing the rule that the managed reader
- * is created just-in-time when it is to be used, which avoids
- * accidentally holding resources for the life of the scan.
+ * {@link ManagedReader}, enforcing the rule that the managed reader is created
+ * just-in-time when it is to be used, which avoids accidentally holding
+ * resources for the life of the scan. Also allows most of the reader's fields
+ * to be {@code final}.
  * <p>
- * Coordinates the components that wrap a reader to create the final
- * output batch:
+ * Coordinates the components that wrap a reader to create the final output
+ * batch:
  * <ul>
- * <li>The actual reader which load (possibly a subset of) the
- * columns requested from the input source.</li>
- * <li>Implicit columns manager instance which populates implicit
- * file columns, partition columns, and Drill's internal metadata
- * columns.</li>
- * <li>The missing columns handler which "makes up" values for projected
- * columns not read by the reader.</li>
- * <li>Batch assembler, which combines the three sources of vectors
- * to create the output batch with the schema specified by the
- * schema tracker.</li>
+ * <li>The actual reader which loads (possibly a subset of) the columns requested
+ * from the input source.</li>
+ * <li>Implicit columns manager instance which populates implicit file columns,
+ * partition columns, and Drill's internal implicit columns.</li>
+ * <li>The missing columns handler which "makes up" values for projected columns
+ * not read by the reader.</li>
+ * <li>Batch assembler, which combines the three sources of vectors to create
+ * the output batch with the schema specified by the schema tracker.</li>
  * </ul>
  * <p>
  * This class coordinates the reader-visible aspects of the scan:
  * <ul>
- * <li>The {@link SchemaNegotiator} (or subclass) which provides
- * schema-related input to the reader and which creates the reader's
- * {@link ResultSetLoader}, among other tasks. The schema negotiator
- * is specific to each kind of scan and is thus created via the
- * {@link ScanLifecycleBuilder}.</li>
- * <li>The reader, which is designed to be as simple as possible,
- * with all generic overhead tasks handled by this "shim" between
- * the scan operator and the actual reader implementation.</li>
+ * <li>The {@link SchemaNegotiator} (or subclass) which provides schema-related
+ * input to the reader and which creates the reader's {@link ResultSetLoader},
+ * among other tasks. The schema negotiator is specific to each kind of scan and
+ * is thus created via the {@link ScanLifecycleBuilder}.</li>
+ * <li>The reader, which is designed to be as simple as possible, with all
+ * generic overhead tasks handled by this "shim" between the scan operator and
+ * the actual reader implementation.</li>
  * </ul>
  * <p>
- * The reader is schema-driven. See {@link ScanSchemaTracker} for
- * an overview.
+ * The reader is schema-driven. See {@link ScanSchemaTracker} for an overview.
  * <ul>
- * <li>The reader is given a <i>reader input schema</i>, via the
- * schema negotiator, which specifies the desired output schema.
- * The schema can be fully dynamic (a wildcard), fully defined (a
- * prior reader already chose column types), or a hybrid.</li>
- * <li>The reader can load a subset of columns. Those that are
- * left out become "missing columns" to be filled in by this
- * class.</li>
- * <li>The <i>reader output schema</i> along with implicit and missing
- * columns, together define the scan's output schema.</li>
+ * <li>The reader is given a <i>reader input schema</i>, via the schema
+ * negotiator, which specifies the desired output schema. The schema can be
+ * fully dynamic (a wildcard), fully defined (a prior reader already chose
+ * column types), or a hybrid.</li>
+ * <li>The reader can load a subset of columns. Those that are left out become
+ * "missing columns" to be filled in by this class.</li>
+ * <li>The <i>reader output schema</i> along with implicit and missing columns,
+ * together define the scan's output schema.</li>
  * </ul>
  * <p>
- * The framework handles the projection task so the
- * reader does not have to worry about it. Reading an unwanted column
- * is low cost: the result set loader will have provided a "dummy" column
- * writer that simply discards the value. This is just as fast as having the
- * reader use if-statements or a table to determine which columns to save.
+ * The framework handles the projection task so the reader does not have to
+ * worry about it. Reading an unwanted column is low cost: the result set loader
+ * will have provided a "dummy" column writer that simply discards the value.
+ * This is just as fast as having the reader use if-statements or a table to
+ * determine which columns to save.
  */
 public class ReaderLifecycle implements RowBatchReader {
   private static final Logger logger = LoggerFactory.getLogger(ReaderLifecycle.class);
+
+  private enum State { START, DATA, FINAL, EOF }
 
   private final ScanLifecycle scanLifecycle;
   protected final TupleMetadata readerInputSchema;
@@ -107,12 +105,7 @@ public class ReaderLifecycle implements RowBatchReader {
   private StaticBatchBuilder implicitColumnsLoader;
   private StaticBatchBuilder missingColumnsHandler;
   private OutputBatchBuilder outputBuilder;
-
-  /**
-   * True once the reader reports EOF. This shim may keep going for another
-   * batch to handle any look-ahead row on the last batch.
-   */
-  private boolean eof;
+  private State state = State.START;
 
   public ReaderLifecycle(ScanLifecycle scanLifecycle) {
     this.scanLifecycle = scanLifecycle;
@@ -136,6 +129,8 @@ public class ReaderLifecycle implements RowBatchReader {
   public String name() {
     return reader.getClass().getSimpleName();
   }
+
+  public ResultSetLoader tableLoader() { return tableLoader; }
 
   @Override
   public boolean open() {
@@ -168,6 +163,7 @@ public class ReaderLifecycle implements RowBatchReader {
   }
 
   public ResultSetLoader buildLoader() {
+    Preconditions.checkState(state == State.START);
     ResultSetOptionBuilder options = new ResultSetOptionBuilder()
         .rowCountLimit(Math.min(schemaNegotiator.batchSize, scanOptions().scanBatchRecordLimit()))
         .vectorCache(scanLifecycle.vectorCache())
@@ -176,12 +172,12 @@ public class ReaderLifecycle implements RowBatchReader {
         .projectionFilter(schemaTracker().projectionFilter(errorContext()))
         .readerSchema(schemaNegotiator.readerSchema);
 
-    // Resolve the scan scame if possible.
+    // Resolve the scan schema if possible.
     applyEarlySchema();
 
     // Create the table loader
     tableLoader = new ResultSetLoaderImpl(scanLifecycle.allocator(), options.build());
-    implicitColumnsLoader = schemaNegotiator.implicitColumnsLoader();
+    state = State.DATA;
     return tableLoader;
   }
 
@@ -205,12 +201,12 @@ public class ReaderLifecycle implements RowBatchReader {
 
   @Override
   public boolean defineSchema() {
-    if (!schemaNegotiator.isSchemaComplete()) {
-      return false;
+    boolean hasSchema = schemaNegotiator.isSchemaComplete() && schemaTracker().isResolved();
+    if (hasSchema) {
+      tableLoader.startBatch();
+      endBatch();
     }
-    tableLoader.startBatch();
-    endBatch();
-    return true;
+    return hasSchema;
   }
 
   @Override
@@ -218,7 +214,7 @@ public class ReaderLifecycle implements RowBatchReader {
 
     // The reader may report EOF, but the result set loader might
     // have a lookahead row.
-    if (isEof()) {
+    if (state == State.EOF) {
       return false;
     }
 
@@ -230,9 +226,11 @@ public class ReaderLifecycle implements RowBatchReader {
     // a new batch just to learn about EOF. Don't read if the reader
     // already reported EOF. In that case, we're just processing any last
     // lookahead row in the result set loader.
-    if (!eof) {
+    if (state == State.DATA) {
       try {
-        eof = !reader.next();
+        if (!reader.next()) {
+          state = State.FINAL;
+        }
       } catch (UserException e) {
         throw e;
       } catch (Exception e) {
@@ -252,11 +250,7 @@ public class ReaderLifecycle implements RowBatchReader {
     // Return EOF (false) only when the reader reports EOF
     // and the result set loader has drained its rows from either
     // this batch or lookahead rows.
-    return !isEof();
-  }
-
-  public boolean isEof() {
-    return eof && !tableLoader.hasRows();
+    return state != State.EOF;
   }
 
   /**
@@ -265,24 +259,21 @@ public class ReaderLifecycle implements RowBatchReader {
    * table row count. Then, merge the sources.
    */
   private void endBatch() {
+
+    // Let the schema negotiator finish up the batch. Needed for metadata
+    // scans on files.
+    // TODO: Modify the metadata system to handle non-file scans, then
+    // generalize the implicit columns parser, identify a new field to
+    // replace/augment fqn, and handle empty scans here.
+    schemaNegotiator.onEndBatch();
+
+    // Get the output batch
     VectorContainer readerOutput = tableLoader.harvest();
 
-    // Corner case: Reader produced no rows and defined no schema.
-    // We assume this is a null file and skip it as if we got an
-    // EOF from the constructor. There may be some actual case in
-    // which a file is known to have no records and no columns,
-    // which is an empty file. At present, there is no way to differentiate
-    // an intentional empty file from a null file.
-    if (readerOutput.getRecordCount() == 0 && tableLoader.schemaVersion() == 0) {
-      readerOutput.clear();
-      return;
-    }
-
-    // If not the first batch, and there are no rows, discard the batch
-    // as it adds no new information.
-    if (readerOutput.getRecordCount() == 0 && tableLoader.batchCount() > 1) {
+    if (readerOutput.getRecordCount() == 0 && !returnEmptyBatch(readerOutput)) {
       readerOutput.clear();
       outputBuilder = null;
+      state = State.EOF;
       return;
     }
 
@@ -292,6 +283,40 @@ public class ReaderLifecycle implements RowBatchReader {
       reviseOutputProjection(tableLoader.outputSchema());
     }
     buildOutputBatch(readerOutput);
+    scanLifecycle.tallyBatch();
+  }
+
+  /**
+   * The reader returned no data. Determine if this batch should be
+   * returned (return {@code true}), or if the empty batch should
+   * be returned to convey schema information. (return {@code false}).
+   */
+  private boolean returnEmptyBatch(VectorContainer readerOutput) {
+
+    // If the batch is not the first, then it conveys no new info.
+    if (scanLifecycle.batchCount() > 0) {
+      return false;
+    }
+
+    // Corner case: Reader produced no rows and defined no schema.
+    // There are three sub-cases. In the first, the reader is "late-schema",
+    // it discovers schema as it reads, and did not read anything. In
+    // this case, we assume this is a null file and skip it as if we got an
+    // EOF from the constructor.
+    //
+    // The second sub-case is as above, but a schema was provided. In this
+    // case, we can produce an empty result set to convey that schema.
+    //
+    // A third, possible, but very obscure case occurs in which a file
+    // is known to have no records and no columns. At present, there is
+    // no way to differentiate an intentional empty file from a null file.
+    if (tableLoader.schemaVersion() == 0) {
+      return schemaTracker().isResolved();
+    }
+
+    // Otherwise, we did define a schema on the first batch of the scan
+    // so we need to return it.
+    return true;
   }
 
   private void reviseOutputProjection(TupleMetadata readerOutputSchema) {
@@ -313,6 +338,12 @@ public class ReaderLifecycle implements RowBatchReader {
   }
 
   private void buildOutputBatch(VectorContainer readerContainer) {
+
+    // Create the implicit columns loader loader after the first
+    // batch so we can report if the file is empty.
+    if (tableLoader.batchCount() == 1) {
+      implicitColumnsLoader = schemaNegotiator.implicitColumnsLoader();
+    }
 
     // Get the batch results in a container.
     int rowCount = readerContainer.getRecordCount();
@@ -353,7 +384,7 @@ public class ReaderLifecycle implements RowBatchReader {
 
   @Override
   public int schemaVersion() {
-    return tableLoader.schemaVersion();
+    return schemaTracker().schemaVersion();
   }
 
   @Override

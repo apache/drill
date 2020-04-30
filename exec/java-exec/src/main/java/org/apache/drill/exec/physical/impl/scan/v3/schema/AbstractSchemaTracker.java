@@ -41,6 +41,13 @@ public abstract class AbstractSchemaTracker implements ScanSchemaTracker {
     this.errorContext = errorContext;
   }
 
+  /**
+   * Validate a projection list against a defined-schema tuple. Recursively walks
+   * the tree of maps to validate all nested tuples.
+   *
+   * @param projection the parsed projection list
+   * @param schema the defined schema to validate against
+   */
   protected static void validateProjection(TupleMetadata projection, TupleMetadata schema) {
     if (projection == null || SchemaUtils.isProjectAll(projection)) {
       return;
@@ -77,8 +84,25 @@ public abstract class AbstractSchemaTracker implements ScanSchemaTracker {
   @Override
   public int schemaVersion() { return schema.version(); }
 
+  /**
+   * Determine if the schema is resolved. It is resolved if the
+   * schema itself is resolved. Since an empty schema is resolved, for the
+   * {@code SELECT *} case, we require at least one column, which means
+   * that something (provided schema, early reader schema) has provided
+   * us with a schema. Once resolved, a schema can never become
+   * unresolved: readers are not allowed to add dynamic columns.
+   */
   protected void checkResolved() {
-    isResolved = schema.isResolved();
+    if (isResolved) {
+      return;
+    }
+    switch (projectionType()) {
+    case ALL:
+      isResolved = !schema.isEmpty() && schema.isResolved();
+      break;
+    default:
+      isResolved = schema.isResolved();
+    }
   }
 
   @Override
@@ -102,9 +126,8 @@ public abstract class AbstractSchemaTracker implements ScanSchemaTracker {
   private TupleMetadata implicitColumns() {
     TupleMetadata implicitCols = new TupleSchema();
     for (ColumnHandle handle : schema.columns()) {
-      ColumnMetadata col = handle.column();
-      if (SchemaUtils.isImplicit(col)) {
-        implicitCols.addColumn(col);
+      if (handle.isImplicit()) {
+        implicitCols.addColumn(handle.column());
       }
     }
     return implicitCols;

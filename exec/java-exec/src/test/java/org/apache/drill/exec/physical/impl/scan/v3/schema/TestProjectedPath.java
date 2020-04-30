@@ -20,7 +20,7 @@ package org.apache.drill.exec.physical.impl.scan.v3.schema;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import org.apache.drill.categories.EvfTests;
+import org.apache.drill.categories.EvfTest;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.physical.impl.scan.v3.schema.ScanProjectionParser.ProjectionParseResult;
@@ -37,7 +37,7 @@ import org.junit.experimental.categories.Category;
  * to see if the projection path is consistent with the type. Tests here
  * verify the consistency checks.
  */
-@Category(EvfTests.class)
+@Category(EvfTest.class)
 public class TestProjectedPath {
 
   // INT is a proxy for all scalar columns.

@@ -87,7 +87,6 @@ import org.junit.experimental.categories.Category;
  * because such an algorithm would require time-travel: looking into
  * the future to know what data will be scanned.)
  */
-
 @Category(RowSetTests.class)
 public class TestSchemaSmoothing extends SubOperatorTest {
 
@@ -103,12 +102,10 @@ public class TestSchemaSmoothing extends SubOperatorTest {
    * discrete is just to run the basic lifecycle in a way that
    * is compatible with the schema-persistence version.
    */
-
   @Test
   public void testDiscrete() {
 
     // Set up the file metadata manager
-
     Path filePathA = new Path("hdfs:///w/x/y/a.csv");
     Path filePathB = new Path("hdfs:///w/x/y/b.csv");
     ImplicitColumnManager metadataManager = new ImplicitColumnManager(
@@ -116,18 +113,15 @@ public class TestSchemaSmoothing extends SubOperatorTest {
         standardOptions(Lists.newArrayList(filePathA, filePathB)));
 
     // Set up the scan level projection
-
     ScanLevelProjection scanProj = ScanLevelProjection.build(
         RowSetTestUtils.projectList(ScanTestUtils.FILE_NAME_COL, "a", "b"),
         ScanTestUtils.parsers(metadataManager.projectionParser()));
 
     {
       // Define a file a.csv
-
       metadataManager.startFile(filePathA);
 
       // Build the output schema from the (a, b) table schema
-
       TupleMetadata twoColSchema = new SchemaBuilder()
           .add("a", MinorType.INT)
           .addNullable("b", MinorType.VARCHAR, 10)
@@ -139,7 +133,6 @@ public class TestSchemaSmoothing extends SubOperatorTest {
           ScanTestUtils.resolvers(metadataManager));
 
       // Verify the full output schema
-
       TupleMetadata expectedSchema = new SchemaBuilder()
           .add("filename", MinorType.VARCHAR)
           .add("a", MinorType.INT)
@@ -147,21 +140,18 @@ public class TestSchemaSmoothing extends SubOperatorTest {
           .buildSchema();
 
       // Verify
-
       List<ResolvedColumn> columns = rootTuple.columns();
       assertEquals(3, columns.size());
       assertTrue(ScanTestUtils.schema(rootTuple).isEquivalent(expectedSchema));
       assertEquals(ScanTestUtils.FILE_NAME_COL, columns.get(0).name());
       assertEquals("a.csv", ((FileMetadataColumn) columns.get(0)).value());
       assertTrue(columns.get(1) instanceof ResolvedTableColumn);
-   }
+    }
     {
       // Define a file b.csv
-
       metadataManager.startFile(filePathB);
 
       // Build the output schema from the (a) table schema
-
       TupleMetadata oneColSchema = new SchemaBuilder()
           .add("a", MinorType.INT)
           .buildSchema();
@@ -177,7 +167,6 @@ public class TestSchemaSmoothing extends SubOperatorTest {
       // vector level as part of vector persistence.) During projection, it is
       // marked with type NULL so that the null column builder will fill in
       // the proper type.
-
       TupleMetadata expectedSchema = new SchemaBuilder()
           .add("filename", MinorType.VARCHAR)
           .add("a", MinorType.INT)
@@ -185,7 +174,6 @@ public class TestSchemaSmoothing extends SubOperatorTest {
           .buildSchema();
 
       // Verify
-
       List<ResolvedColumn> columns = rootTuple.columns();
       assertEquals(3, columns.size());
       assertTrue(ScanTestUtils.schema(rootTuple).isEquivalent(expectedSchema));
@@ -200,7 +188,6 @@ public class TestSchemaSmoothing extends SubOperatorTest {
    * Low-level test of the smoothing projection, including the exceptions
    * it throws when things are not going its way.
    */
-
   @Test
   public void testSmoothingProjection() {
     final ScanLevelProjection scanProj = ScanLevelProjection.build(
@@ -208,7 +195,6 @@ public class TestSchemaSmoothing extends SubOperatorTest {
         ScanTestUtils.parsers());
 
     // Table 1: (a: nullable bigint, b)
-
     final TupleMetadata schema1 = new SchemaBuilder()
         .addNullable("a", MinorType.BIGINT)
         .addNullable("b", MinorType.VARCHAR)
@@ -225,7 +211,6 @@ public class TestSchemaSmoothing extends SubOperatorTest {
     }
 
     // Table 2: (a: nullable bigint, c), column omitted, original schema preserved
-
     final TupleMetadata schema2 = new SchemaBuilder()
         .addNullable("a", MinorType.BIGINT)
         .add("c", MinorType.FLOAT8)
@@ -243,7 +228,6 @@ public class TestSchemaSmoothing extends SubOperatorTest {
     }
 
     // Table 3: (a, c, d), column added, must replan schema
-
     final TupleMetadata schema3 = new SchemaBuilder()
         .addNullable("a", MinorType.BIGINT)
         .addNullable("b", MinorType.VARCHAR)
@@ -262,7 +246,6 @@ public class TestSchemaSmoothing extends SubOperatorTest {
     }
 
     // Table 4: (a: double), change type must replan schema
-
     final TupleMetadata schema4 = new SchemaBuilder()
         .addNullable("a", MinorType.FLOAT8)
         .addNullable("b", MinorType.VARCHAR)
@@ -280,7 +263,6 @@ public class TestSchemaSmoothing extends SubOperatorTest {
     }
 
     // Table 5: Drop a non-nullable column, must replan
-
     final TupleMetadata schema6 = new SchemaBuilder()
         .addNullable("a", MinorType.BIGINT)
         .addNullable("b", MinorType.VARCHAR)
@@ -302,7 +284,6 @@ public class TestSchemaSmoothing extends SubOperatorTest {
    * schema. Discard prior schema. Turn off auto expansion of
    * metadata for a simpler test.
    */
-
   @Test
   public void testSmaller() {
     final ScanLevelProjection scanProj = ScanLevelProjection.build(
@@ -340,7 +321,6 @@ public class TestSchemaSmoothing extends SubOperatorTest {
    * Case in which the table schema and prior are disjoint
    * sets. Discard the prior schema.
    */
-
   @Test
   public void testDisjoint() {
     final ScanLevelProjection scanProj = ScanLevelProjection.build(
@@ -377,7 +357,6 @@ public class TestSchemaSmoothing extends SubOperatorTest {
   /**
    * Column names match, but types differ. Discard the prior schema.
    */
-
   @Test
   public void testDifferentTypes() {
     final ScanLevelProjection scanProj = ScanLevelProjection.build(
@@ -411,7 +390,6 @@ public class TestSchemaSmoothing extends SubOperatorTest {
    * schema (though, the output is no different than if we discarded
    * the prior schema...)
    */
-
   @Test
   public void testSameSchemas() {
     final ScanLevelProjection scanProj = ScanLevelProjection.build(
@@ -446,7 +424,6 @@ public class TestSchemaSmoothing extends SubOperatorTest {
    * The prior and table schemas are identical, but the cases of names differ.
    * Preserve the case of the first schema.
    */
-
   @Test
   public void testDifferentCase() {
     final ScanLevelProjection scanProj = ScanLevelProjection.build(
@@ -481,7 +458,6 @@ public class TestSchemaSmoothing extends SubOperatorTest {
    * Can't preserve the prior schema if it had required columns
    * where the new schema has no columns.
    */
-
   @Test
   public void testRequired() {
     final ScanLevelProjection scanProj = ScanLevelProjection.build(
@@ -513,7 +489,6 @@ public class TestSchemaSmoothing extends SubOperatorTest {
    * Preserve the prior schema if table is a subset and missing columns
    * are nullable or repeated.
    */
-
   @Test
   public void testMissingNullableColumns() {
     final ScanLevelProjection scanProj = ScanLevelProjection.build(
@@ -546,7 +521,6 @@ public class TestSchemaSmoothing extends SubOperatorTest {
    * Preserve the prior schema if table is a subset. Map the table
    * columns to the output using the prior schema ordering.
    */
-
   @Test
   public void testReordering() {
     final ScanLevelProjection scanProj = ScanLevelProjection.build(
@@ -580,12 +554,10 @@ public class TestSchemaSmoothing extends SubOperatorTest {
    * If using the legacy wildcard expansion, reuse schema if partition paths
    * are the same length.
    */
-
   @Test
   public void testSamePartitionLength() {
 
     // Set up the file metadata manager
-
     Path filePathA = new Path("hdfs:///w/x/y/a.csv");
     Path filePathB = new Path("hdfs:///w/x/y/b.csv");
     ImplicitColumnManager metadataManager = new ImplicitColumnManager(
@@ -593,9 +565,8 @@ public class TestSchemaSmoothing extends SubOperatorTest {
         standardOptions(Lists.newArrayList(filePathA, filePathB)));
 
     // Set up the scan level projection
-
     ScanLevelProjection scanProj = ScanLevelProjection.build(
-        ScanTestUtils.projectAllWithMetadata(2),
+        ScanTestUtils.projectAllWithAllImplicit(2),
         ScanTestUtils.parsers(metadataManager.projectionParser()));
 
     // Define the schema smoother
@@ -608,7 +579,7 @@ public class TestSchemaSmoothing extends SubOperatorTest {
         .add("b", MinorType.VARCHAR)
         .buildSchema();
 
-    TupleMetadata expectedSchema = ScanTestUtils.expandMetadata(tableSchema, metadataManager, 2);
+    TupleMetadata expectedSchema = ScanTestUtils.expandImplicit(tableSchema, metadataManager, 2);
     {
       metadataManager.startFile(filePathA);
       ResolvedRow rootTuple = doResolve(smoother, tableSchema);
@@ -627,12 +598,10 @@ public class TestSchemaSmoothing extends SubOperatorTest {
    * is shorter than the previous. (Unneeded partitions will be set to null by the
    * scan projector.)
    */
-
   @Test
   public void testShorterPartitionLength() {
 
     // Set up the file metadata manager
-
     Path filePathA = new Path("hdfs:///w/x/y/a.csv");
     Path filePathB = new Path("hdfs:///w/x/b.csv");
     ImplicitColumnManager metadataManager = new ImplicitColumnManager(
@@ -640,13 +609,11 @@ public class TestSchemaSmoothing extends SubOperatorTest {
         standardOptions(Lists.newArrayList(filePathA, filePathB)));
 
     // Set up the scan level projection
-
     ScanLevelProjection scanProj = ScanLevelProjection.build(
-        ScanTestUtils.projectAllWithMetadata(2),
+        ScanTestUtils.projectAllWithAllImplicit(2),
         ScanTestUtils.parsers(metadataManager.projectionParser()));
 
     // Define the schema smoother
-
     SchemaSmoother smoother = new SchemaSmoother(scanProj,
         ScanTestUtils.resolvers(metadataManager));
 
@@ -655,7 +622,7 @@ public class TestSchemaSmoothing extends SubOperatorTest {
         .add("b", MinorType.VARCHAR)
         .buildSchema();
 
-    TupleMetadata expectedSchema = ScanTestUtils.expandMetadata(tableSchema, metadataManager, 2);
+    TupleMetadata expectedSchema = ScanTestUtils.expandImplicit(tableSchema, metadataManager, 2);
     {
       metadataManager.startFile(filePathA);
       ResolvedRow rootTuple = doResolve(smoother, tableSchema);
@@ -674,12 +641,10 @@ public class TestSchemaSmoothing extends SubOperatorTest {
    * schema even if the new partition path is longer than the previous.
    * Because all file names are provided up front.
    */
-
   @Test
   public void testLongerPartitionLength() {
 
     // Set up the file metadata manager
-
     Path filePathA = new Path("hdfs:///w/x/a.csv");
     Path filePathB = new Path("hdfs:///w/x/y/b.csv");
     ImplicitColumnManager metadataManager = new ImplicitColumnManager(
@@ -687,13 +652,11 @@ public class TestSchemaSmoothing extends SubOperatorTest {
         standardOptions(Lists.newArrayList(filePathA, filePathB)));
 
     // Set up the scan level projection
-
     ScanLevelProjection scanProj = ScanLevelProjection.build(
-        ScanTestUtils.projectAllWithMetadata(2),
+        ScanTestUtils.projectAllWithAllImplicit(2),
         ScanTestUtils.parsers(metadataManager.projectionParser()));
 
     // Define the schema smoother
-
     SchemaSmoother smoother = new SchemaSmoother(scanProj,
         ScanTestUtils.resolvers(metadataManager));
 
@@ -702,7 +665,7 @@ public class TestSchemaSmoothing extends SubOperatorTest {
         .add("b", MinorType.VARCHAR)
         .buildSchema();
 
-    TupleMetadata expectedSchema = ScanTestUtils.expandMetadata(tableSchema, metadataManager, 2);
+    TupleMetadata expectedSchema = ScanTestUtils.expandImplicit(tableSchema, metadataManager, 2);
     {
       metadataManager.startFile(filePathA);
       ResolvedRow rootTuple = doResolve(smoother, tableSchema);
@@ -719,7 +682,6 @@ public class TestSchemaSmoothing extends SubOperatorTest {
   /**
    * Integrated test across multiple schemas at the batch level.
    */
-
   @Test
   public void testSmoothableSchemaBatches() {
     final ScanLevelProjection scanProj = ScanLevelProjection.build(

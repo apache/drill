@@ -95,10 +95,10 @@ public abstract class AbstractConvertFromString extends DirectConverter {
    * @param properties optional framework-specific properties
    * @return a function to call to prepare each string value for conversion
    */
-  private Function<String,String> buildPrepare(ColumnMetadata schema,
+  private Function<String, String> buildPrepare(ColumnMetadata schema,
       Map<String, String> properties) {
 
-    String blankProp = properties.get(ColumnMetadata.BLANK_AS_PROP);
+    String blankProp = properties == null ? null : properties.get(ColumnMetadata.BLANK_AS_PROP);
     if (blankProp != null) {
       switch (blankProp.toLowerCase()) {
         case ColumnMetadata.BLANK_AS_ZERO:

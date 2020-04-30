@@ -24,12 +24,17 @@ import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.EmptyErrorContext;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
+import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.impl.protocol.OperatorDriver;
+import org.apache.drill.exec.physical.impl.protocol.OperatorRecordBatch;
 import org.apache.drill.exec.physical.impl.scan.ScanOperatorExec;
 import org.apache.drill.exec.physical.impl.scan.v3.lifecycle.ScanEventListener;
 import org.apache.drill.exec.physical.impl.scan.v3.lifecycle.ScanLifecycle;
+import org.apache.drill.exec.physical.impl.scan.v3.schema.ScanSchemaTracker;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
+import org.apache.drill.exec.server.options.OptionSet;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.shaded.guava.com.google.common.annotations.VisibleForTesting;
 
@@ -80,6 +85,11 @@ public class ScanLifecycleBuilder {
     }
   }
 
+  public interface SchemaValidator {
+    void validate(ScanSchemaTracker schema);
+  }
+
+  private OptionSet options;
   private ReaderFactory<?> readerFactory;
   protected String userName;
   protected MajorType nullType;
@@ -133,9 +143,23 @@ public class ScanLifecycleBuilder {
   protected boolean allowSchemaChange = true;
 
   /**
+   * Optional schema validator to perform per-scan checks of the
+   * projection or resolved schema.
+   */
+  protected SchemaValidator schemaValidator;
+
+  /**
    * Context for error messages.
    */
   protected CustomErrorContext errorContext;
+
+  public void options(OptionSet options) {
+    this.options = options;
+  }
+
+  public OptionSet options() {
+    return options;
+  }
 
   public void readerFactory(ReaderFactory<?> readerFactory) {
     this.readerFactory = readerFactory;
@@ -258,6 +282,12 @@ public class ScanLifecycleBuilder {
     return readerFactory;
   }
 
+  public void schemaValidator(SchemaValidator schemaValidator) {
+    this.schemaValidator = schemaValidator;
+  }
+
+  public SchemaValidator schemaValidator() { return schemaValidator; }
+
   public ScanLifecycle build(OperatorContext context) {
     return new ScanLifecycle(context, this);
   }
@@ -266,6 +296,10 @@ public class ScanLifecycleBuilder {
   public ScanOperatorExec buildScan() {
     return new ScanOperatorExec(
         new ScanEventListener(this),
-        !disableEmptyResults);
+             !disableEmptyResults);
+  }
+
+  public OperatorRecordBatch buildScanOperator(FragmentContext fragContext, PhysicalOperator pop) {
+    return new OperatorRecordBatch(fragContext, pop, buildScan(), enableSchemaBatch);
   }
 }

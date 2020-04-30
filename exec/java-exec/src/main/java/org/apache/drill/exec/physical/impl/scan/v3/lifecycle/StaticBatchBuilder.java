@@ -74,7 +74,9 @@ public abstract class StaticBatchBuilder {
       for (int i = 0; i < rowCount; i++) {
         writer.start();
         for (int j = 0; j < n; j++) {
-          writers[j].setValue(values[j]);
+          if (values[j] != null) {
+            writers[j].setValue(values[j]);
+          }
         }
         writer.save();
       }

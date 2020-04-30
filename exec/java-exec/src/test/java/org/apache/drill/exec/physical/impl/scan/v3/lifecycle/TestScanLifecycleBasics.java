@@ -23,7 +23,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
-import org.apache.drill.categories.EvfTests;
+import org.apache.drill.categories.EvfTest;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.physical.impl.scan.RowBatchReader;
@@ -34,13 +34,14 @@ import org.apache.drill.exec.physical.impl.scan.v3.SchemaNegotiator;
 import org.apache.drill.exec.physical.impl.scan.v3.schema.ScanSchemaTracker.ProjectionType;
 import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetTestUtils;
+import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-@Category(EvfTests.class)
+@Category(EvfTest.class)
 public class TestScanLifecycleBasics extends BaseTestScanLifecycle {
 
   /**
@@ -122,11 +123,17 @@ public class TestScanLifecycleBasics extends BaseTestScanLifecycle {
     // Early schema: so output schema is available after open
     assertTrue(scan.hasOutputSchema());
     assertEquals(SCHEMA, scan.outputSchema());
-    assertFalse(reader.next());
-    reader.close();
+    assertTrue(reader.next());
+    VectorContainer result = reader.output();
+    assertEquals(0, result.getRecordCount());
+    result.zeroVectors();
 
     // Early schema with no additional columns discovered
     assertEquals(SCHEMA, scan.outputSchema());
+
+    // But, no second batch.
+    assertFalse(reader.next());
+    reader.close();
     scan.close();
   }
 

@@ -19,15 +19,15 @@ package org.apache.drill.exec.physical.impl.scan.v3.file;
 
 import java.util.List;
 
-import org.apache.drill.exec.ops.OperatorContext;
+import org.apache.drill.exec.physical.impl.scan.v3.file.ImplicitColumnResolver.ImplicitColumnOptions;
+import org.apache.drill.exec.physical.impl.scan.v3.file.ImplicitColumnResolver.ParseResult;
 import org.apache.drill.exec.physical.impl.scan.v3.lifecycle.StaticBatchBuilder;
 import org.apache.drill.exec.physical.impl.scan.v3.lifecycle.StaticBatchBuilder.RepeatedBatchBuilder;
-import org.apache.drill.exec.physical.impl.scan.v3.schema.ImplicitColumnResolver;
 import org.apache.drill.exec.physical.impl.scan.v3.schema.ScanSchemaTracker;
-import org.apache.drill.exec.physical.impl.scan.v3.schema.ImplicitColumnResolver.ColumnMarker;
-import org.apache.drill.exec.physical.impl.scan.v3.schema.ImplicitColumnResolver.ImplicitColumnOptions;
-import org.apache.drill.exec.physical.impl.scan.v3.schema.ImplicitColumnResolver.ParseResult;
 import org.apache.drill.exec.physical.resultSet.ResultVectorCache;
+import org.apache.drill.exec.server.options.OptionSet;
+import org.apache.drill.exec.store.dfs.DrillFileSystem;
+import org.apache.drill.exec.store.dfs.easy.FileWork;
 import org.apache.hadoop.fs.Path;
 
 /**
@@ -41,26 +41,37 @@ import org.apache.hadoop.fs.Path;
  */
 public class ImplicitFileColumnsHandler {
 
+  private final DrillFileSystem dfs;
   private final ImplicitColumnResolver parser;
   private final ResultVectorCache vectorCache;
   private final Path rootDir;
   private final ParseResult parseResult;
+  private final boolean isCompressible;
 
-  public ImplicitFileColumnsHandler(OperatorContext context, FileScanLifecycleBuilder scanOptions,
+  public ImplicitFileColumnsHandler(DrillFileSystem dfs, OptionSet options,
+      FileScanLifecycleBuilder scanOptions,
       ResultVectorCache vectorCache, ScanSchemaTracker schemaTracker) {
-    ImplicitColumnOptions options = new ImplicitColumnOptions()
-        .optionSet(context.getFragmentContext().getOptions())
+    ImplicitColumnOptions implicitOptions = new ImplicitColumnOptions()
+        .optionSet(options)
+        .dfs(dfs)
         .maxPartitionDepth(scanOptions.maxPartitionDepth())
         .useLegacyWildcardExpansion(scanOptions.useLegacyWildcardExpansion());
+    this.dfs = dfs;
     this.rootDir = scanOptions.rootDir();
-    this.parser = new ImplicitColumnResolver(options, scanOptions.errorContext());
+    this.parser = new ImplicitColumnResolver(implicitOptions, scanOptions.errorContext());
     this.vectorCache = vectorCache;
     this.parseResult = parser.parse(schemaTracker);
+    this.isCompressible = scanOptions.isCompressible();
   }
 
-  public StaticBatchBuilder forFile(Path filePath) {
-    FileDescrip fileInfo = new FileDescrip(filePath, rootDir);
-    List<ColumnMarker> columns = parseResult.columns();
+  public FileDescrip makeDescrip(FileWork fileWork) {
+    FileDescrip descrip = new FileDescrip(dfs, fileWork, rootDir);
+    descrip.setCompressible(isCompressible);
+    return descrip;
+  }
+
+  public StaticBatchBuilder forFile(FileDescrip fileInfo) {
+    List<ImplicitColumnMarker> columns = parseResult.columns();
     if (columns.isEmpty()) {
       return null;
     }
@@ -70,4 +81,6 @@ public class ImplicitFileColumnsHandler {
     }
     return new RepeatedBatchBuilder(vectorCache, parseResult.schema(), values);
   }
+
+  public boolean isMetadataScan() { return parseResult.isMetadataScan(); }
 }
