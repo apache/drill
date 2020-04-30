@@ -24,21 +24,13 @@ import java.util.Map;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.exec.record.metadata.TupleSchema;
 import org.apache.drill.exec.vector.accessor.ScalarWriter;
 import org.apache.drill.exec.vector.accessor.ValueWriter;
 
 /**
  * Factory for standard conversions as outlined in the package header.
- * Can be used in two ways:
- * <ul>
- * <li>As an object with a default set of properties that apply to
- * all columns.</li>
- * <li>As a set of static functions which operate on each column
- * individually.</li>
- * </ul>
- * The object form is more typical: it allows the provided schema to
- * set general blank-handling behavior at the tuple level.
+ * Use the builder to add schema-wide properties from a provided schema,
+ * from context-specific properties or both.
  * <p>
  * The class provides two kinds of information:
  * <p>
@@ -111,6 +103,42 @@ public class StandardConversions {
     }
   }
 
+  public static class Builder {
+
+    private final Map<String, String> properties = new HashMap<>();
+
+    public Builder withSchema(TupleMetadata providedSchema) {
+      if (providedSchema != null && providedSchema.hasProperties()) {
+        properties.putAll(providedSchema.properties());
+      }
+      return this;
+    }
+
+    public Builder withProperties(Map<String, String> properties) {
+      if (properties != null) {
+        this.properties.putAll(properties);
+      }
+      return this;
+    }
+
+    public Builder property(String key, String value) {
+      if (value == null) {
+        properties.remove(key);
+      } else {
+        properties.put(key, value);
+      }
+      return this;
+    }
+
+    public Builder blankAs(String value) {
+      return property(ColumnMetadata.BLANK_AS_PROP, value);
+    }
+
+    public StandardConversions build() {
+      return new StandardConversions(properties);
+    }
+  }
+
   public static final ConversionDefn IMPLICIT =
       new ConversionDefn(ConversionType.IMPLICIT);
   public static final ConversionDefn IMPLICIT_UNSAFE =
@@ -120,32 +148,14 @@ public class StandardConversions {
 
   private final Map<String, String> properties;
 
-  public StandardConversions() {
-    this.properties = null;
-  }
-
-  public StandardConversions(Map<String,String> properties) {
+  private StandardConversions(Map<String, String> properties) {
     this.properties = properties;
   }
 
-  public StandardConversions(String blankAsProp) {
-    if (blankAsProp == null) {
-      this.properties = null;
-    } else {
-      this.properties = new HashMap<>();
-      this.properties.put(ColumnMetadata.BLANK_AS_PROP, blankAsProp);
-    }
-  }
+  public static Builder builder() { return new Builder(); }
 
-  public StandardConversions(TupleMetadata providedSchema) {
-    if (providedSchema == null || !providedSchema.hasProperties()) {
-      this.properties = null;
-    } else {
-      this.properties = providedSchema.properties();
-    }
-  }
-
-  private Map<String,String> merge(Map<String,String> specificProps) {
+  private static Map<String, String> mergeProperties(Map<String, String> properties,
+      Map<String, String> specificProps) {
     if (properties == null) {
       return specificProps;
     } else if (specificProps == null) {
@@ -157,15 +167,19 @@ public class StandardConversions {
     return merged;
   }
 
-  public static DirectConverter newInstance(
+  private Map<String, String> mergeProperties(Map<String, String> specificProps) {
+    return mergeProperties(properties, specificProps);
+  }
+
+  public DirectConverter newInstance(
       Class<? extends DirectConverter> conversionClass, ScalarWriter baseWriter,
-      Map<String,String> properties) {
+      Map<String, String> properties) {
 
     // Try the Converter(ScalerWriter writer, Map<String, String> props) constructor first.
     // This first form is optional.
     try {
       final Constructor<? extends DirectConverter> ctor = conversionClass.getDeclaredConstructor(ScalarWriter.class, Map.class);
-      return ctor.newInstance(baseWriter, properties);
+      return ctor.newInstance(baseWriter, mergeProperties(properties));
     } catch (final ReflectiveOperationException e) {
       // Ignore
     }
@@ -174,7 +188,7 @@ public class StandardConversions {
     return newInstance(conversionClass, baseWriter);
   }
 
-  public static DirectConverter newInstance(
+  public DirectConverter newInstance(
       Class<? extends DirectConverter> conversionClass, ScalarWriter baseWriter) {
     try {
       final Constructor<? extends DirectConverter> ctor = conversionClass.getDeclaredConstructor(ScalarWriter.class);
@@ -196,11 +210,11 @@ public class StandardConversions {
    * @return a description of the conversion needed (if any), along with the
    * standard conversion class, if available
    */
-  public static ConversionDefn analyze(ColumnMetadata inputSchema, ColumnMetadata outputSchema) {
+  public ConversionDefn analyze(ColumnMetadata inputSchema, ColumnMetadata outputSchema) {
     return analyze(inputSchema.type(), outputSchema);
   }
 
-  public static ConversionDefn analyze(MinorType inputType, ColumnMetadata outputSchema) {
+  public ConversionDefn analyze(MinorType inputType, ColumnMetadata outputSchema) {
     if (inputType == outputSchema.type()) {
       return new ConversionDefn(ConversionType.NONE);
     }
@@ -364,8 +378,7 @@ public class StandardConversions {
     return EXPLICIT;
   }
 
-  public static Class<? extends DirectConverter> convertFromVarchar(
-      ColumnMetadata outputDefn) {
+  public Class<? extends DirectConverter> convertFromVarchar(ColumnMetadata outputDefn) {
     switch (outputDefn.type()) {
       case BIT:
         return ConvertStringToBoolean.class;
@@ -404,75 +417,33 @@ public class StandardConversions {
    *
    * @param scalarWriter the output column writer
    * @param inputType the type of the input data
-   * @param properties optional properties for some string-based conversions
+   * @param columnProps optional properties for some string-based conversions
    * @return a column converter, if needed and available, the input writer if
    * no conversion is needed, or null if there is no conversion available
    */
-  public static ValueWriter converterFor(ScalarWriter scalarWriter, MinorType inputType, Map<String, String> properties) {
+  public ValueWriter converterFor(ScalarWriter scalarWriter, MinorType inputType, Map<String, String> columnProps) {
     ConversionDefn defn = analyze(inputType, scalarWriter.schema());
     switch (defn.type) {
       case EXPLICIT:
         if (defn.conversionClass != null) {
-          return newInstance(defn.conversionClass, scalarWriter, properties);
+          return newInstance(defn.conversionClass, scalarWriter, columnProps);
         } else {
           return null;
         }
       case IMPLICIT:
       case IMPLICIT_UNSAFE:
-        return newInstance(defn.conversionClass, scalarWriter, properties);
+        return newInstance(defn.conversionClass, scalarWriter, columnProps);
       default:
         return scalarWriter;
     }
   }
 
-  public static ValueWriter converterFor(ScalarWriter scalarWriter, MinorType inputType) {
+  public ValueWriter converterFor(ScalarWriter scalarWriter, MinorType inputType) {
     return converterFor(scalarWriter, inputType, null);
   }
 
-  public static ValueWriter converterFor(ScalarWriter scalarWriter, ColumnMetadata inputSchema) {
-    return converterFor(scalarWriter, inputSchema.type(), inputSchema.properties());
-  }
-
-  public ValueWriter converter(ScalarWriter scalarWriter, ColumnMetadata inputSchema) {
+  public ValueWriter converterFor(ScalarWriter scalarWriter, ColumnMetadata inputSchema) {
     return converterFor(scalarWriter, inputSchema.type(),
-        merge(inputSchema.properties()));
-  }
-
-  public ValueWriter converter(ScalarWriter scalarWriter, MinorType inputType) {
-    return converterFor(scalarWriter, inputType, properties);
-  }
-
-  /**
-   * Given a desired provided schema and an actual reader schema, create a merged
-   * schema that contains the provided column where available, but the reader
-   * column otherwise. Copies provided properties to the output schema.
-   * <p>
-   * The result is the schema to use when creating column writers: it reflects
-   * the type of the target vector. The reader is responsible for converting from
-   * the (possibly different) reader column type to the provided column type.
-   * <p>
-   * Note: the provided schema should only contain types that the reader is prepared
-   * to offer: there is no requirement that the reader support every possible conversion,
-   * only those that make sense for that one reader.
-   *
-   * @param providedSchema the provided schema from {@code CREATE SCHEMA}
-   * @param readerSchema the set of column types that the reader can provide
-   * "natively"
-   * @return a merged schema to use when creating the {@code ResultSetLoader}
-   */
-  public static TupleMetadata mergeSchemas(TupleMetadata providedSchema,
-      TupleMetadata readerSchema) {
-    if (providedSchema == null) {
-      return readerSchema;
-    }
-    final TupleMetadata tableSchema = new TupleSchema();
-    for (ColumnMetadata readerCol : readerSchema) {
-      final ColumnMetadata providedCol = providedSchema.metadata(readerCol.name());
-      tableSchema.addColumn(providedCol == null ? readerCol : providedCol);
-    }
-    if (providedSchema.hasProperties()) {
-      tableSchema.properties().putAll(providedSchema.properties());
-    }
-    return tableSchema;
+        inputSchema.hasProperties() ? inputSchema.properties() : null);
   }
 }

@@ -78,7 +78,6 @@ public interface RowSetLoader extends TupleWriter {
    *          variable-length argument list of column values
    * @return this writer
    */
-
   RowSetLoader addRow(Object... values);
 
   /**
@@ -89,7 +88,6 @@ public interface RowSetLoader extends TupleWriter {
    * @param value value of the one and only column
    * @return this writer
    */
-
   RowSetLoader addSingleCol(Object value);
 
   /**
@@ -107,7 +105,6 @@ public interface RowSetLoader extends TupleWriter {
    *
    * @return true if another row can be written, false if not
    */
-
   boolean isFull();
 
   /**
@@ -116,7 +113,6 @@ public interface RowSetLoader extends TupleWriter {
    *
    * @return number of rows to be sent downstream
    */
-
   int rowCount();
 
   /**
@@ -128,7 +124,6 @@ public interface RowSetLoader extends TupleWriter {
    *
    * @return the current write index
    */
-
   int rowIndex();
 
   /**
@@ -151,7 +146,6 @@ public interface RowSetLoader extends TupleWriter {
    *
    * @return true if another row can be added, false if the batch is full
    */
-
   boolean start();
 
   /**
@@ -160,6 +154,5 @@ public interface RowSetLoader extends TupleWriter {
    * to recover from partially-written rows that turn out to contain errors.
    * Done automatically if using <tt>setRow()</tt>.
    */
-
   void save();
 }

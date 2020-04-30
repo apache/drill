@@ -23,7 +23,7 @@ import java.io.FileOutputStream;
 import java.nio.file.Paths;
 import java.util.List;
 
-import org.apache.drill.categories.EvfTests;
+import org.apache.drill.categories.EvfTest;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
 import org.apache.drill.test.BaseTestQuery;
 import org.apache.drill.test.TestBuilder;
@@ -31,7 +31,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-@Category(EvfTests.class)
+@Category(EvfTest.class)
 public class TestCsvHeader extends BaseTestQuery{
 
   private static final String ROOT = "store/text/data/cars.csvh";

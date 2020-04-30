@@ -121,21 +121,18 @@ public class QueryBuilder {
    * The future used to wait for the completion of an async query. Returns
    * just the summary of the query.
    */
-
   public static class QuerySummaryFuture implements Future<QuerySummary> {
 
     /**
      * Synchronizes the listener thread and the test thread that
      * launched the query.
      */
-
     private final CountDownLatch lock = new CountDownLatch(1);
     private QuerySummary summary;
 
     /**
      * Unsupported at present.
      */
-
     @Override
     public boolean cancel(boolean mayInterruptIfRunning) {
       throw new UnsupportedOperationException();
@@ -144,7 +141,6 @@ public class QueryBuilder {
     /**
      * Always returns false.
      */
-
     @Override
     public boolean isCancelled() { return false; }
 
@@ -160,7 +156,6 @@ public class QueryBuilder {
     /**
      * Not supported at present, just does a non-timeout get.
      */
-
     @Override
     public QuerySummary get(long timeout, TimeUnit unit) throws InterruptedException {
       return get();
@@ -335,19 +330,17 @@ public class QueryBuilder {
    * Run the query and return the first non-empty batch as a
    * {@link DirectRowSet} object that can be inspected directly
    * by the code using a {@link RowSetReader}.
-   * <p>
    *
    * @see #rowSetIterator() for a version that reads a series of
    * batches as row sets.
    * @return a row set that represents the first non-empty batch returned from
-   * the query
+   * the query, or {@code null} if the query returns no data (no batches)
    * @throws RpcException if anything goes wrong
    */
   public DirectRowSet rowSet() throws RpcException {
 
     // Ignore all but the first non-empty batch.
     // Always return the last batch, which may be empty.
-
     QueryDataBatch resultBatch = null;
     for (QueryDataBatch batch : results()) {
       if (resultBatch == null) {
@@ -363,13 +356,11 @@ public class QueryBuilder {
     }
 
     // No results?
-
     if (resultBatch == null) {
       return null;
     }
 
     // Unload the batch and convert to a row set.
-
     RecordBatchLoader loader = new RecordBatchLoader(client.allocator());
     loader.load(resultBatch.getHeader().getDef(), resultBatch.getData());
     resultBatch.release();
@@ -382,7 +373,6 @@ public class QueryBuilder {
     // result set to a null output row set that says "nothing at all
     // was returned." Note that this is different than an empty result
     // set which has a schema, but no rows.
-
     if (container.getRecordCount() == 0 && container.getNumberOfColumns() == 0) {
       container.clear();
       return null;

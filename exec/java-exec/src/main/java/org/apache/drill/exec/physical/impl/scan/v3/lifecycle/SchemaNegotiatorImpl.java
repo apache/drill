@@ -23,6 +23,7 @@ import org.apache.drill.exec.physical.impl.scan.v3.ManagedReader;
 import org.apache.drill.exec.physical.impl.scan.v3.ReaderFactory;
 import org.apache.drill.exec.physical.impl.scan.v3.SchemaNegotiator;
 import org.apache.drill.exec.physical.impl.scan.v3.ManagedReader.EarlyEofException;
+import org.apache.drill.exec.physical.impl.scan.v3.schema.ProjectedColumn;
 import org.apache.drill.exec.physical.impl.scan.v3.schema.ScanSchemaTracker.ProjectionType;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
@@ -73,6 +74,11 @@ public class SchemaNegotiatorImpl implements SchemaNegotiator {
   }
 
   @Override
+  public ProjectedColumn projectionFor(String colName) {
+    return readerLifecycle.scanLifecycle().schemaTracker().columnProjection(colName);
+  }
+
+  @Override
   public TupleMetadata providedSchema() {
     return readerLifecycle.scanOptions().providedSchema();
   }
@@ -92,6 +98,7 @@ public class SchemaNegotiatorImpl implements SchemaNegotiator {
     return baseErrorContext;
   }
 
+  @Override
   public CustomErrorContext errorContext() {
     return readerErrorContext == null ? baseErrorContext : readerErrorContext;
   }
@@ -151,4 +158,6 @@ public class SchemaNegotiatorImpl implements SchemaNegotiator {
   public ManagedReader newReader(ReaderFactory<?> readerFactory) throws EarlyEofException {
     return ((ReaderFactory<SchemaNegotiator>) readerFactory).next(this);
   }
+
+  protected void onEndBatch() { }
 }

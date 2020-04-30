@@ -19,6 +19,7 @@ package org.apache.drill.exec.physical.impl.scan.v3;
 
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.exec.ops.OperatorContext;
+import org.apache.drill.exec.physical.impl.scan.v3.schema.ProjectedColumn;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
@@ -116,6 +117,13 @@ public interface SchemaNegotiator {
   void setErrorContext(CustomErrorContext context);
 
   /**
+   * Returns the error context to use for this reader: either the
+   * parent or the reader-specific context set in
+   * {@link #setErrorContext(CustomErrorContext)}.
+   */
+  CustomErrorContext errorContext();
+
+  /**
    * Name of the user running the query.
    */
   String userName();
@@ -133,6 +141,8 @@ public interface SchemaNegotiator {
    * data must be written using the loader
    */
   boolean isProjectionEmpty();
+
+  ProjectedColumn projectionFor(String colName);
 
   /**
    * Returns the provided schema, if defined. The provided schema is a

@@ -18,9 +18,6 @@
 package org.apache.drill.exec.physical.impl.scan.v3.file;
 
 import org.apache.drill.exec.physical.impl.scan.v3.SchemaNegotiator;
-import org.apache.drill.exec.store.dfs.DrillFileSystem;
-import org.apache.drill.exec.store.dfs.easy.FileWork;
-import org.apache.hadoop.mapred.FileSplit;
 
 /**
  * The file schema negotiator provides access to the Drill file system
@@ -29,20 +26,9 @@ import org.apache.hadoop.mapred.FileSplit;
 public interface FileSchemaNegotiator extends SchemaNegotiator {
 
   /**
-   * Gives the Drill file system for this operator.
+   * Gives the file description which holds the Drill file system,
+   * split, file work and format-specific properties. Can open the
+   * file and provides information used to populate implicit columns.
    */
-  DrillFileSystem fileSystem();
-
-  /**
-   * Describes the file split (path and block offset) for this scan.
-   *
-   * @return Hadoop file split object with the file path, block
-   * offset, and length.
-   */
-  FileSplit split();
-
-  /**
-   * Returns Drill's version of the Hadoop file split.
-   */
-  FileWork fileWork();
+  FileDescrip file();
 }

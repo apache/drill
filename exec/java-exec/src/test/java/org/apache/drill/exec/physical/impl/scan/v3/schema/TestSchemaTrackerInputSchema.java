@@ -27,7 +27,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.function.Consumer;
 
-import org.apache.drill.categories.EvfTests;
+import org.apache.drill.categories.EvfTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -47,7 +47,7 @@ import org.junit.experimental.categories.Category;
  * before any data is seen. There are subtle differences explored
  * here and in {@link TestSchemaTrackerEarlyReaderSchema}.
  */
-@Category(EvfTests.class)
+@Category(EvfTest.class)
 public class TestSchemaTrackerInputSchema extends BaseTestSchemaTracker {
 
   private void testBoth(Collection<SchemaPath> projList, TupleMetadata schema,
@@ -173,25 +173,6 @@ public class TestSchemaTrackerInputSchema extends BaseTestSchemaTracker {
       // Verify column properties are merged
       assertEquals(MOCK_VALUE, schema.metadata("a").property(MOCK_PROP));
     });
-  }
-
-  /**
-   * Verify a reasonable error if the name of an implied implicit
-   * column (one that appears with a wildcard) conflicts with a
-   * provided column name. We cannot project two columns with that
-   * same name. Does not occur for a reader schema.
-   */
-  @Test
-  public void testWithWildcardImplicitConflict() {
-    ProjectionSchemaTracker tracker = trackerFor(
-        RowSetTestUtils.projectList("a", SchemaPath.DYNAMIC_STAR, "y"));
-    try {
-      tracker.applyProvidedSchema(SCHEMA);
-      fail();
-    } catch (UserException e) {
-      assertTrue(e.getMessage().contains("implicit"));
-      assertTrue(e.getMessage().contains("Column: a"));
-    }
   }
 
   @Test

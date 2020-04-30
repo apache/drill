@@ -22,7 +22,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import org.apache.drill.categories.EvfTests;
+import org.apache.drill.categories.EvfTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.exec.physical.impl.scan.RowBatchReader;
 import org.apache.drill.exec.physical.impl.scan.v3.ManagedReader;
@@ -35,7 +35,7 @@ import org.junit.experimental.categories.Category;
  * Verifies proper handling of errors from a reader, including use of the
  * scan and reader error contexts.
  */
-@Category(EvfTests.class)
+@Category(EvfTest.class)
 public class TestReaderErrors extends BaseTestScanLifecycle {
 
   @Test

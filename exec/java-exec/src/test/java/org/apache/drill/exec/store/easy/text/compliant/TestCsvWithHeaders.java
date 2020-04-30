@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Iterator;
 
-import org.apache.drill.categories.EvfTests;
+import org.apache.drill.categories.EvfTest;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.rowSet.DirectRowSet;
@@ -60,7 +60,7 @@ import static org.junit.Assert.fail;
  *
  * @see TestHeaderBuilder
  */
-@Category(EvfTests.class)
+@Category(EvfTest.class)
 public class TestCsvWithHeaders extends BaseCsvTest {
 
   private static final String TEST_FILE_NAME = "basic.csv";

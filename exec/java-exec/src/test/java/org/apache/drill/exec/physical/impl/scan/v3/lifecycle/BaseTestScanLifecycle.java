@@ -135,7 +135,6 @@ public class BaseTestScanLifecycle extends SubOperatorTest {
     public void close() {}
   }
 
-
   /**
    * Mock reader with no data or schema, indicated by an early EOF
    * exception.

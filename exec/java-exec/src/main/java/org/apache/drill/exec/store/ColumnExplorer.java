@@ -317,7 +317,7 @@ public class ColumnExplorer {
    * @param length   row group length
    * @return implicit column value for specified implicit file column
    */
-  private static String getImplicitColumnValue(ImplicitFileColumn column, Path filePath,
+  public static String getImplicitColumnValue(ImplicitFileColumn column, Path filePath,
       FileSystem fs, Integer index, Long start, Long length) {
     if (column instanceof ImplicitFileColumns) {
       ImplicitFileColumns fileColumn = (ImplicitFileColumns) column;
@@ -359,9 +359,10 @@ public class ColumnExplorer {
   }
 
   /**
-   * Returns list of implicit file columns which includes all elements from {@link ImplicitFileColumns},
-   * {@link ImplicitInternalFileColumns#LAST_MODIFIED_TIME} and {@link ImplicitInternalFileColumns#USE_METADATA}
-   * columns.
+   * Returns list of implicit file columns which includes all elements from
+   * {@link ImplicitFileColumns},
+   * {@link ImplicitInternalFileColumns#LAST_MODIFIED_TIME} and
+   * {@link ImplicitInternalFileColumns#USE_METADATA} columns.
    *
    * @return list of implicit file columns
    */

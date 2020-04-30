@@ -26,7 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 
-import org.apache.drill.categories.EvfTests;
+import org.apache.drill.categories.EvfTest;
 import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.TestEmptyInputSql;
@@ -47,7 +47,7 @@ import org.junit.experimental.categories.Category;
  * and without an external schema. Data is represented with the
  * `columns` array column.
  */
-@Category(EvfTests.class)
+@Category(EvfTest.class)
 public class TestCsvWithoutHeaders extends BaseCsvTest {
 
   private static final String TEST_FILE_NAME = "simple.csv";

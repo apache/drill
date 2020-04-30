@@ -263,7 +263,7 @@ public class ScanOperatorExec implements OperatorExec {
       }
 
       // Another reader available?
-      if (! nextReader()) {
+      if (!nextReader()) {
         finalizeResults();
         return;
       }

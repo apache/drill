@@ -25,7 +25,7 @@ import static org.junit.Assert.fail;
 
 import java.util.Collections;
 
-import org.apache.drill.categories.EvfTests;
+import org.apache.drill.categories.EvfTest;
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.impl.scan.RowBatchReader;
@@ -43,7 +43,7 @@ import org.apache.hadoop.fs.Path;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-@Category(EvfTests.class)
+@Category(EvfTest.class)
 public class TestFileScanLifecycle extends BaseTestScanLifecycle implements MockFileNames {
 
   /**

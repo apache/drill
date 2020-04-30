@@ -18,13 +18,13 @@
 package org.apache.drill.exec.physical.impl.scan.v3.schema;
 
 import org.apache.drill.common.exceptions.CustomErrorContext;
+import org.apache.drill.exec.physical.impl.scan.v3.file.ImplicitColumnMarker;
 import org.apache.drill.exec.physical.impl.scan.v3.schema.DynamicSchemaFilter.RowSchemaFilter;
 import org.apache.drill.exec.physical.impl.scan.v3.schema.ScanProjectionParser.ProjectionParseResult;
 import org.apache.drill.exec.physical.impl.scan.v3.schema.ScanSchemaResolver.SchemaType;
 import org.apache.drill.exec.physical.resultSet.impl.ProjectionFilter;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
-import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
 /**
  * Schema tracker for the "normal" case in which schema starts from a simple
@@ -37,6 +37,7 @@ public class ProjectionSchemaTracker extends AbstractSchemaTracker {
   private final TupleMetadata projection;
   private final boolean allowSchemaChange;
   private int implicitInsertPoint;
+  private int readerSchemaCount;
   private boolean allowMapAdditions = true;
 
   public ProjectionSchemaTracker(TupleMetadata definedSchema,
@@ -47,16 +48,16 @@ public class ProjectionSchemaTracker extends AbstractSchemaTracker {
     this.allowSchemaChange = false;
     schema.copyFrom(definedSchema);
     validateProjection(parseResult.dynamicSchema, definedSchema);
-    checkResolved();
 
-    ScanSchemaTracker.ProjectionType projType;
+    ProjectionType projType;
     if (schema.size() == 0) {
-      projType = ScanSchemaTracker.ProjectionType.NONE;
+      projType = ProjectionType.NONE;
     } else {
-      projType = ScanSchemaTracker.ProjectionType.SOME;
+      projType = ProjectionType.SOME;
     }
     schema.setProjectionType(projType);
     this.implicitInsertPoint = -1;
+    checkResolved();
   }
 
   public ProjectionSchemaTracker(ProjectionParseResult parseResult, boolean allowSchemaChange,
@@ -67,21 +68,26 @@ public class ProjectionSchemaTracker extends AbstractSchemaTracker {
     this.schema.copyFrom(projection);
 
     // Work out the projection type: wildcard, empty, or explicit.
-    ScanSchemaTracker.ProjectionType projType;
+    ProjectionType projType;
     if (parseResult.isProjectAll()) {
-      projType = ScanSchemaTracker.ProjectionType.ALL;
+      projType = ProjectionType.ALL;
     } else if (projection.isEmpty()) {
-      projType = ScanSchemaTracker.ProjectionType.NONE;
+      projType = ProjectionType.NONE;
       this.isResolved = true;
       this.allowMapAdditions = false;
     } else {
-      projType = ScanSchemaTracker.ProjectionType.SOME;
+      projType = ProjectionType.SOME;
     }
     this.schema.setProjectionType(projType);
 
     // If wildcard, record the wildcard position.
     this.schema.setInsertPoint(parseResult.wildcardPosn);
     this.implicitInsertPoint = parseResult.wildcardPosn;
+  }
+
+  @Override
+  public ProjectedColumn columnProjection(String colName) {
+    return (ProjectedColumn) projection.metadata(colName);
   }
 
   public void applyProvidedSchema(TupleMetadata providedSchema) {
@@ -132,6 +138,8 @@ public class ProjectionSchemaTracker extends AbstractSchemaTracker {
   public ProjectionFilter projectionFilter(CustomErrorContext errorContext) {
     switch (projectionType()) {
       case ALL:
+
+        // Empty schema implies we've only seen the wildcard this far.
         if (schema.size() == 0) {
           return ProjectionFilter.PROJECT_ALL;
         }
@@ -146,7 +154,17 @@ public class ProjectionSchemaTracker extends AbstractSchemaTracker {
   @Override
   public void applyReaderSchema(TupleMetadata readerOutputSchema,
       CustomErrorContext errorContext) {
-    new ScanSchemaResolver(schema, SchemaType.READER_SCHEMA, allowMapAdditions, errorContext)
+    SchemaType schemaType;
+
+    // The first reader can reposition columns projected with a wildcard,
+    // other readers cannot as we want to preserve column order after the
+    // first batch.
+    if (readerSchemaCount == 0 && allowSchemaChange) {
+      schemaType = SchemaType.FIRST_READER_SCHEMA;
+    } else {
+      schemaType = SchemaType.READER_SCHEMA;
+    }
+    new ScanSchemaResolver(schema, schemaType, allowMapAdditions, errorContext)
         .applySchema(readerOutputSchema);
     if (!allowSchemaChange) {
       allowMapAdditions = false;
@@ -155,11 +173,11 @@ public class ProjectionSchemaTracker extends AbstractSchemaTracker {
       }
     }
     checkResolved();
+    readerSchemaCount++;
   }
 
   @Override
-  public void expandImplicitCol(ColumnMetadata resolved) {
-    Preconditions.checkArgument(SchemaUtils.isImplicit(resolved));
-    schema.insert(implicitInsertPoint++, resolved);
+  public void expandImplicitCol(ColumnMetadata resolved, ImplicitColumnMarker marker) {
+    schema.insert(implicitInsertPoint++, resolved).markImplicit(marker);
   }
 }

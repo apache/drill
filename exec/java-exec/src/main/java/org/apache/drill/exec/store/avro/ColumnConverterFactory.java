@@ -21,6 +21,7 @@ import org.apache.avro.generic.GenericFixed;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.util.Utf8;
 import org.apache.drill.exec.physical.impl.scan.convert.StandardConversions;
+import org.apache.drill.exec.physical.impl.scan.v3.FixedReceiver;
 import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
@@ -57,7 +58,7 @@ public class ColumnConverterFactory {
     if (providedSchema == null) {
       standardConversions = null;
     } else {
-      standardConversions = new StandardConversions(providedSchema.properties());
+      standardConversions = StandardConversions.builder().withSchema(providedSchema).build();
     }
   }
 
@@ -157,7 +158,7 @@ public class ColumnConverterFactory {
     if (standardConversions == null) {
       valueWriter = scalarWriter;
     } else {
-      valueWriter = standardConversions.converter(scalarWriter, readerSchema);
+      valueWriter = standardConversions.converterFor(scalarWriter, readerSchema);
     }
     return buildScalar(readerSchema, valueWriter);
   }
@@ -246,7 +247,7 @@ public class ColumnConverterFactory {
       TupleWriter tupleWriter, List<ColumnConverter> converters) {
     // fill in tuple schema for cases when it contains recursive named record types
     TupleMetadata readerSchema = AvroSchemaUtil.convert(genericRecord.getSchema());
-    TupleMetadata tableSchema = StandardConversions.mergeSchemas(providedSchema, readerSchema);
+    TupleMetadata tableSchema = FixedReceiver.Builder.mergeSchemas(providedSchema, readerSchema);
     tableSchema.toMetadataList().forEach(tupleWriter::addColumn);
 
     IntStream.range(0, tableSchema.size())

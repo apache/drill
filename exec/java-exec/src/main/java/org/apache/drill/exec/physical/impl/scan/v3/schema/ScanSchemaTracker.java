@@ -18,6 +18,7 @@
 package org.apache.drill.exec.physical.impl.scan.v3.schema;
 
 import org.apache.drill.common.exceptions.CustomErrorContext;
+import org.apache.drill.exec.physical.impl.scan.v3.file.ImplicitColumnMarker;
 import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
 import org.apache.drill.exec.physical.resultSet.impl.ProjectionFilter;
 import org.apache.drill.exec.record.metadata.ColumnMetadata;
@@ -305,6 +306,11 @@ public interface ScanSchemaTracker {
   ProjectionType projectionType();
 
   /**
+   * Return the projection for a column, if any.
+   */
+  ProjectedColumn columnProjection(String colName);
+
+  /**
    * Is the scan schema resolved? The schema is resolved depending on the
    * complex lifecycle explained in the class comment. Resolution occurs
    * when the wildcard (if any) is expanded, and all explicit projection
@@ -349,7 +355,7 @@ public interface ScanSchemaTracker {
    * then determines which partition columns are needed and calls this
    * method to add each one.
    */
-  void expandImplicitCol(ColumnMetadata resolved);
+  void expandImplicitCol(ColumnMetadata resolved, ImplicitColumnMarker marker);
 
   /**
    * Indicate that implicit column parsing is complete. Returns the implicit

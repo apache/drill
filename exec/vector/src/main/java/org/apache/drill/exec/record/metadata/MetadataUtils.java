@@ -236,6 +236,10 @@ public class MetadataUtils {
     return new PrimitiveColumnMetadata(field);
   }
 
+  public static boolean isScalar(ColumnMetadata col) {
+    return isScalar(col.type());
+  }
+
   public static boolean isScalar(MinorType type) {
     return !isComplex(type);
   }

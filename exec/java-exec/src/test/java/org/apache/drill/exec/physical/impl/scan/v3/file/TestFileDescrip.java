@@ -18,45 +18,41 @@
 package org.apache.drill.exec.physical.impl.scan.v3.file;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import org.apache.drill.categories.EvfTests;
+import java.io.IOException;
+
+import org.apache.drill.categories.EvfTest;
+import org.apache.drill.exec.store.dfs.DrillFileSystem;
+import org.apache.drill.exec.store.schedule.CompleteFileWork.FileWorkImpl;
 import org.apache.drill.test.BaseTest;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-@Category(EvfTests.class)
+@Category(EvfTest.class)
 public class TestFileDescrip extends BaseTest {
 
-  /**
-   * Degenerate case: no file or root
-   */
-  @Test
-  public void testEmpty() {
-    FileDescrip fd = new FileDescrip(null, null);
-    assertFalse(fd.isSet());
-    assertNull(fd.filePath());
-    assertEquals(0, fd.dirPathLength());
-    assertNull(fd.partition(0));
+  private static final DrillFileSystem dfs;
+
+  static {
+    Configuration conf = new Configuration();
+    conf.set(FileSystem.FS_DEFAULT_NAME_KEY, FileSystem.DEFAULT_FS);
+    try {
+      dfs = new DrillFileSystem(conf);
+    } catch (IOException e) {
+      throw new IllegalStateException(e);
+    }
   }
 
-  /**
-   * Degenerate case: no file path, but with as selection root
-   * Should never occur in practice.
-   */
-  @Test
-  public void testNoPath() {
-    Path root = new Path("hdfs://a/b");
-    FileDescrip fd = new FileDescrip(null, root);
-    assertFalse(fd.isSet());
-    assertNull(fd.filePath());
-    assertEquals(0, fd.dirPathLength());
-    assertNull(fd.partition(0));
+  private FileDescrip fileDescrip(Path input, Path root) {
+    return new FileDescrip(dfs,
+        new FileWorkImpl(0, 1000, input),
+        root);
   }
 
   /**
@@ -65,9 +61,8 @@ public class TestFileDescrip extends BaseTest {
    */
   @Test
   public void testNoRoot() {
-    Path input = new Path("hdfs://foo.csv");
-    FileDescrip fd = new FileDescrip(input, null);
-    assertTrue(fd.isSet());
+    Path input = new Path("file:///foo.csv");
+    FileDescrip fd = fileDescrip(input, null);
     assertSame(input, fd.filePath());
     assertEquals(0, fd.dirPathLength());
     assertNull(fd.partition(0));
@@ -78,9 +73,8 @@ public class TestFileDescrip extends BaseTest {
    */
   @Test
   public void testSingleFile() {
-    Path input = new Path("hdfs://a/b/c/foo.csv");
-    FileDescrip fd = new FileDescrip(input, null);
-    assertTrue(fd.isSet());
+    Path input = new Path("file:///a/b/c/foo.csv");
+    FileDescrip fd = fileDescrip(input, null);
     assertSame(input, fd.filePath());
     assertEquals(0, fd.dirPathLength());
     assertNull(fd.partition(0));
@@ -91,10 +85,9 @@ public class TestFileDescrip extends BaseTest {
    */
   @Test
   public void testRootFile() {
-    Path root = new Path("hdfs://a/b");
-    Path input = new Path("hdfs://a/b/foo.csv");
-    FileDescrip fd = new FileDescrip(input, root);
-    assertTrue(fd.isSet());
+    Path root = new Path("file:///a/b");
+    Path input = new Path("file:///a/b/foo.csv");
+    FileDescrip fd = fileDescrip(input, root);
     assertSame(input, fd.filePath());
     assertEquals(0, fd.dirPathLength());
     assertNull(fd.partition(0));
@@ -105,10 +98,9 @@ public class TestFileDescrip extends BaseTest {
    */
   @Test
   public void testBelowRoot() {
-    Path root = new Path("hdfs://a/b");
-    Path input = new Path("hdfs://a/b/c/foo.csv");
-    FileDescrip fd = new FileDescrip(input, root);
-    assertTrue(fd.isSet());
+    Path root = new Path("file:///a/b");
+    Path input = new Path("file:///a/b/c/foo.csv");
+    FileDescrip fd = fileDescrip(input, root);
     assertSame(input, fd.filePath());
     assertEquals(1, fd.dirPathLength());
     assertEquals("c", fd.partition(0));
@@ -121,10 +113,10 @@ public class TestFileDescrip extends BaseTest {
    */
   @Test
   public void testAboveRoot() {
-    Path root = new Path("hdfs://a/b");
-    Path input = new Path("hdfs://a/foo.csv");
+    Path root = new Path("file:///a/b");
+    Path input = new Path("file:///a/foo.csv");
     try {
-      new FileDescrip(input, root);
+      fileDescrip(input, root);
       fail();
     } catch (IllegalArgumentException e) {
       // Expected
@@ -137,10 +129,10 @@ public class TestFileDescrip extends BaseTest {
    */
   @Test
   public void testDisjointPath() {
-    Path root = new Path("hdfs://a/b");
-    Path input = new Path("hdfs://d/foo.csv");
+    Path root = new Path("file:///a/b");
+    Path input = new Path("file:///d/foo.csv");
     try {
-      new FileDescrip(input, root);
+      fileDescrip(input, root);
       fail();
     } catch (IllegalArgumentException e) {
       // Expected

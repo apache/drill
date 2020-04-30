@@ -44,7 +44,9 @@ public class WriterSpec {
     this.tupleWriter = tupleWriter;
     this.providedSchema = providedSchema;
     this.errorContext = errorContext;
-    this.conversions = new StandardConversions(providedSchema);
+    this.conversions = StandardConversions.builder()
+        .withSchema(providedSchema)
+        .build();
   }
 
   public ValueWriter makeWriter(String name, MinorType type, DataMode mode) {
@@ -56,7 +58,7 @@ public class WriterSpec {
       return tupleWriter.scalar(index);
     } else {
       int index = tupleWriter.addColumn(providedCol);
-      return conversions.converter(tupleWriter.scalar(index), type);
+      return conversions.converterFor(tupleWriter.scalar(index), type);
     }
   }
 }

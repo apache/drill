@@ -23,10 +23,11 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import org.apache.drill.categories.EvfTests;
+import org.apache.drill.categories.EvfTest;
 import org.apache.drill.common.exceptions.CustomErrorContext;
 import org.apache.drill.common.exceptions.EmptyErrorContext;
 import org.apache.drill.common.exceptions.UserException;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.physical.impl.scan.v3.schema.ScanSchemaTracker.ProjectionType;
@@ -43,7 +44,7 @@ import org.junit.experimental.categories.Category;
  * Test the scan operator schema tracker which computes the final
  * output schema from a variety of sources.
  */
-@Category(EvfTests.class)
+@Category(EvfTest.class)
 public class TestScanSchemaTracker extends BaseTest {
   private static final CustomErrorContext ERROR_CONTEXT = EmptyErrorContext.INSTANCE;
 
@@ -294,6 +295,38 @@ public class TestScanSchemaTracker extends BaseTest {
     assertEquals(expected, outputSchema);
   }
 
+  /**
+   * Test for a query of the form:<br>
+   * {code SELECT * FROM t ORDER BY a}<br>
+   * in which we get a projection list of the form<br<
+   * {@code [`**`, `a`]<br>
+   * If we are given a provided schema of {@code (a, b, c)},
+   * the "natural" expansion will be @{code (b, c, a)}, but we
+   * add a hack to get what the user expects: @{code (a, b, c)}.
+   * The "natural" expansion occurs because the projection list says
+   * "all all columns to the wildcard position except those mentioned
+   * elsewhere". We essentially redefine it as "add or move all columns
+   * in provided schema order."
+   */
+  @Test
+  public void testWildcardWithExplicitWithProvided() {
+
+    // Simulate SELECT *, a ...
+    final ScanSchemaConfigBuilder builder = new ScanSchemaConfigBuilder()
+        .projection(RowSetTestUtils.projectList(
+            SchemaPath.DYNAMIC_STAR, "a"));
+
+    final TupleMetadata providedSchema = new SchemaBuilder()
+        .add("a", MinorType.INT)
+        .add("b", MinorType.BIGINT)
+        .add("c", MinorType.VARCHAR)
+        .buildSchema();
+    builder.providedSchema(providedSchema);
+    final ScanSchemaTracker schemaTracker = builder.build();
+    assertTrue(schemaTracker.isResolved());
+    assertEquals(providedSchema, schemaTracker.outputSchema());
+  }
+
   @Test
   public void testStrictProvidedSchemaWithWildcard() {
 
@@ -467,4 +500,57 @@ public class TestScanSchemaTracker extends BaseTest {
     final TupleMetadata outputSchema = schemaTracker.outputSchema();
     assertTrue(outputSchema.isEmpty());
   }
+
+  /**
+   * Test for a query of the form:<br>
+   * {code SELECT * FROM t ORDER BY a}<br>
+   * in which we get a projection list of the form<br<
+   * {@code [`**`, `a`]<br>
+   * If we are given a reader schema of {@code (a, b, c)},
+   * the "natural" expansion will be @{code (b, c, a)}, but we
+   * add a hack to get what the user expects: @{code (a, b, c)}.
+   * The "natural" expansion occurs because the projection list says
+   * "all all columns to the wildcard position except those mentioned
+   * elsewhere". We essentially redefine it as "add or move all columns
+   * in provided schema order."
+   */
+  @Test
+  public void testWildcardWithExplicitWithReaderSchema() {
+
+    // Simulate SELECT *, a ...
+    final ScanSchemaConfigBuilder builder = new ScanSchemaConfigBuilder()
+        .projection(RowSetTestUtils.projectList(
+            SchemaPath.DYNAMIC_STAR, "a"));
+
+    final TupleMetadata readerOutputSchema = new SchemaBuilder()
+        .add("a", MinorType.INT)
+        .add("b", MinorType.BIGINT)
+        .add("c", MinorType.VARCHAR)
+        .buildSchema();
+    final ScanSchemaTracker schemaTracker = builder.build();
+    schemaTracker.applyReaderSchema(readerOutputSchema, ERROR_CONTEXT);
+    assertTrue(schemaTracker.isResolved());
+    assertEquals(readerOutputSchema, schemaTracker.outputSchema());
+  }
+
+  @Test
+  public void testWildcardWithExplicitWithProvidedAndReaderSchema() {
+
+    // Simulate SELECT *, a ...
+    final ScanSchemaConfigBuilder builder = new ScanSchemaConfigBuilder()
+        .projection(RowSetTestUtils.projectList(
+            SchemaPath.DYNAMIC_STAR, "a"));
+
+    final TupleMetadata providedSchema = new SchemaBuilder()
+        .add("a", MinorType.INT)
+        .add("b", MinorType.BIGINT)
+        .add("c", MinorType.VARCHAR)
+        .buildSchema();
+    builder.providedSchema(providedSchema);
+    final ScanSchemaTracker schemaTracker = builder.build();
+    schemaTracker.applyReaderSchema(providedSchema, ERROR_CONTEXT);
+    assertTrue(schemaTracker.isResolved());
+    assertEquals(providedSchema, schemaTracker.outputSchema());
+  }
+
 }

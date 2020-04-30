@@ -19,8 +19,6 @@ package org.apache.drill.exec.store.easy.text.reader;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.apache.drill.common.exceptions.UserException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -160,7 +158,7 @@ public class CompliantTextBatchReader implements ManagedReader<ColumnsSchemaNego
     for (int i = 0; i < fieldNames.length; i++) {
       ScalarWriter colWriter = writer.scalar(fieldNames[i]);
       if (writer.isProjected()) {
-        colWriters[i] = conversions.converter(colWriter, MinorType.VARCHAR);
+        colWriters[i] = conversions.converterFor(colWriter, MinorType.VARCHAR);
       } else {
         colWriters[i] = colWriter;
       }
@@ -220,7 +218,7 @@ public class CompliantTextBatchReader implements ManagedReader<ColumnsSchemaNego
     StandardConversions conversions = conversions(providedSchema);
     ValueWriter[] colWriters = new ValueWriter[providedSchema.size()];
     for (int i = 0; i < colWriters.length; i++) {
-      colWriters[i] = conversions.converter(
+      colWriters[i] = conversions.converterFor(
           writer.scalar(providedSchema.metadata(i).name()), MinorType.VARCHAR);
     }
     return new ConstrainedFieldOutput(writer, colWriters);
@@ -248,14 +246,10 @@ public class CompliantTextBatchReader implements ManagedReader<ColumnsSchemaNego
 
     // CSV maps blank columns to nulls (for nullable non-string columns),
     // or to the default value (for non-nullable non-string columns.)
-    Map<String, String> props = providedSchema.properties();
-    if (props == null) {
-      return new StandardConversions(ColumnMetadata.BLANK_AS_NULL);
-    } else {
-      props = new HashMap<>(props);
-      props.put(ColumnMetadata.BLANK_AS_PROP, ColumnMetadata.BLANK_AS_NULL);
-      return new StandardConversions(props);
-    }
+    return StandardConversions.builder()
+      .withSchema(providedSchema)
+      .blankAs(ColumnMetadata.BLANK_AS_NULL)
+      .build();
   }
 
   /**

@@ -77,9 +77,10 @@ public class FileScanLifecycle extends ScanLifecycle {
 
     // Create the implicit columns manager
     this.implicitColumnsHandler = new ImplicitFileColumnsHandler(
-        context, options, vectorCache(), schemaTracker());
+        dfs, context.getFragmentContext().getOptions(),
+        options, vectorCache(), schemaTracker());
 
-    // Bind the reader factory which intializes the list
+    // Bind the reader factory which initializes the list
     // of splits from the builder.
     FileReaderFactory readerFactory = (FileReaderFactory) readerFactory();
     readerFactory.bind(this);

@@ -22,7 +22,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import org.apache.drill.categories.EvfTests;
+import org.apache.drill.categories.EvfTest;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.impl.scan.ScanOperatorExec;
@@ -40,7 +40,7 @@ import org.junit.experimental.categories.Category;
  * Test "late schema" readers: those like JSON that discover their schema
  * as they read data.
  */
-@Category(EvfTests.class)
+@Category(EvfTest.class)
 public class TestScanLateSchema extends BaseScanTest {
 
   /**

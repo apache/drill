@@ -21,6 +21,6 @@ package org.apache.drill.categories;
  * A category for tests that test the "Extended Vector Framework"
  * (EVF): the mechanism that drives the plugin-based scan operator.
  */
-public interface EvfTests {
+public interface EvfTest {
   // Junit category marker
 }

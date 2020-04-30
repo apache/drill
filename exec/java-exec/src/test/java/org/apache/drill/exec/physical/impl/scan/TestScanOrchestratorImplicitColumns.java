@@ -131,7 +131,7 @@ public class TestScanOrchestratorImplicitColumns extends SubOperatorTest {
 
     // Verify
 
-    TupleMetadata expectedSchema = ScanTestUtils.expandMetadata(tableSchema, metadataManager, 2);
+    TupleMetadata expectedSchema = ScanTestUtils.expandImplicit(tableSchema, metadataManager, 2);
 
     String fqn = ImplicitFileColumns.FQN.getValue(filePath);
     String filePathValue = ImplicitFileColumns.FILEPATH.getValue(filePath);

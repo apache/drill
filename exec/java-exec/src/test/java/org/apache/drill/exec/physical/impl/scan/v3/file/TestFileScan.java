@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import org.apache.drill.categories.EvfTests;
+import org.apache.drill.categories.EvfTest;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
@@ -43,7 +43,7 @@ import org.junit.experimental.categories.Category;
  * Focuses on the file implicit columns, assumes that other tests have
  * verified the underlying mechanisms.
  */
-@Category(EvfTests.class)
+@Category(EvfTest.class)
 public class TestFileScan extends BaseFileScanTest {
 
   /**
@@ -57,8 +57,9 @@ public class TestFileScan extends BaseFileScanTest {
     public MockLateSchemaReader(FileSchemaNegotiator negotiator) {
 
       // Verify the path
-      assertEquals(MOCK_FILE_SYSTEM_NAME, negotiator.fileWork().getPath().toString());
-      assertEquals(MOCK_FILE_SYSTEM_NAME, negotiator.split().getPath().toString());
+      assertEquals(MOCK_FILE_SYSTEM_NAME, negotiator.file().filePath().toString());
+      assertEquals(MOCK_FILE_SYSTEM_NAME, negotiator.file().fileWork().getPath().toString());
+      assertEquals(MOCK_FILE_SYSTEM_NAME, negotiator.file().split().getPath().toString());
 
       // No schema or file, just build the table loader.
       tableLoader = negotiator.build();
