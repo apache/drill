@@ -172,7 +172,7 @@ public class ReaderLifecycle implements RowBatchReader {
         .projectionFilter(schemaTracker().projectionFilter(errorContext()))
         .readerSchema(schemaNegotiator.readerSchema);
 
-    // Resolve the scan scheme if possible.
+    // Resolve the scan schema if possible.
     applyEarlySchema();
 
     // Create the table loader

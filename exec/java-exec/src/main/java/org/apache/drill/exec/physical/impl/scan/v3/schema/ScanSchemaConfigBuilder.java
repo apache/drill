@@ -89,7 +89,7 @@ public class ScanSchemaConfigBuilder {
     if (definedSchema == null) {
 
       // No defined schema: this is a projection-based tracker, possibly
-      // constrainted by a provided schema.
+      // constrained by a provided schema.
       ProjectionSchemaTracker tracker = new ProjectionSchemaTracker(result, allowSchemaChange, errorContext);
 
       // Apply the provided schema. Doing so forces resolution of the projection
